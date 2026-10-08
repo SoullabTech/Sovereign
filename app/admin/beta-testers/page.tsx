@@ -25,6 +25,7 @@ type Tester = {
   onboarded: boolean;
   signInMethods: string[];
   signInReady: boolean;
+  signals: { flag: boolean; role: boolean; pipeline: boolean };
   earlyFieldAdmitted: boolean;
   subscriptionActive: boolean;
   subscriptionExpiresAt: string | null;
@@ -41,9 +42,12 @@ type Payload = {
     needsReview: number;
     earlyField: number;
     onboarded: number;
+    bySignal: { flag: number; role: number; pipeline: number };
+    unlinkedPipelineContacts: number;
   };
   authority: {
-    betaCohort: string;
+    model: string;
+    signals: { id: string; label: string; source: string; governs: string }[];
     platformAccess: string;
     subscriptionGatesOrdinaryPlatform: boolean;
     earlyFieldSeparate: boolean;
@@ -110,12 +114,13 @@ export default function BetaTestersAdmin() {
           <div>
             <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-amber-300/80">
               <ShieldCheck className="h-4 w-4" />
-              Authoritative production roster
+              Production roster, all beta signals
             </div>
             <h1 className="text-3xl font-semibold tracking-tight text-white">Beta Testers</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
-              This view reads the production <code className="text-slate-300">members.tester</code> cohort.
-              It does not use the old browser-local beta list.
+              Everyone who carries any beta signal. &ldquo;Beta tester&rdquo; is not one fact here: the Field Lab
+              flag, the beta role and the founder-pipeline contact are separate records, each governing something
+              different. None is treated as the truth, so the gaps between them are visible. Read-only.
             </p>
           </div>
           <button
@@ -153,13 +158,13 @@ export default function BetaTestersAdmin() {
         {loading && !data ? (
           <div className="flex min-h-64 items-center justify-center gap-3 text-slate-400">
             <Loader2 className="h-5 w-5 animate-spin" />
-            Reading the production beta cohort…
+            Reading the production beta signals…
           </div>
         ) : data ? (
           <>
             <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {[
-                { label: 'Beta testers', value: data.summary.total, icon: Users },
+                { label: 'Members with any signal', value: data.summary.total, icon: Users },
                 { label: 'Sign-in ready', value: data.summary.signInReady, icon: KeyRound },
                 { label: 'Early Field', value: data.summary.earlyField, icon: FlaskConical },
                 { label: 'Onboarded', value: data.summary.onboarded, icon: CheckCircle2 },
@@ -171,6 +176,20 @@ export default function BetaTestersAdmin() {
                     <Icon className="h-4 w-4 text-slate-500" />
                   </div>
                   <div className="mt-2 text-2xl font-semibold text-white">{value}</div>
+                </div>
+              ))}
+            </section>
+
+            <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { label: 'Field Lab flag', value: data.summary.bySignal.flag },
+                { label: 'Beta role', value: data.summary.bySignal.role },
+                { label: 'Pipeline contact (active)', value: data.summary.bySignal.pipeline },
+                { label: 'Pipeline contacts with no member link', value: data.summary.unlinkedPipelineContacts },
+              ].map(({ label, value }) => (
+                <div key={label} className="rounded-xl border border-slate-800 bg-slate-900/35 p-4">
+                  <div className="text-xs text-slate-400">{label}</div>
+                  <div className="mt-1 text-xl font-semibold text-white">{value}</div>
                 </div>
               ))}
             </section>
@@ -189,11 +208,12 @@ export default function BetaTestersAdmin() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[1040px] text-left text-sm">
+                <table className="w-full min-w-[1200px] text-left text-sm">
                   <thead className="border-b border-slate-800 bg-slate-950/35 text-xs uppercase tracking-wide text-slate-500">
                     <tr>
                       <th className="px-4 py-3 font-medium">Member</th>
                       <th className="px-4 py-3 font-medium">Sign in</th>
+                      <th className="px-4 py-3 font-medium">Signals</th>
                       <th className="px-4 py-3 font-medium">Platform</th>
                       <th className="px-4 py-3 font-medium">Early Field</th>
                       <th className="px-4 py-3 font-medium">Tier</th>
@@ -220,6 +240,26 @@ export default function BetaTestersAdmin() {
                             )) : (
                               <span className="text-xs text-rose-300">No known account-bound path</span>
                             )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex flex-wrap gap-1.5">
+                            {([
+                              ['flag', 'Flag'],
+                              ['role', 'Role'],
+                              ['pipeline', 'Pipeline'],
+                            ] as const).map(([key, label]) => (
+                              <span
+                                key={key}
+                                className={
+                                  tester.signals[key]
+                                    ? 'rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-200'
+                                    : 'rounded-full border border-slate-800 px-2 py-1 text-xs text-slate-600 line-through'
+                                }
+                              >
+                                {label}
+                              </span>
+                            ))}
                           </div>
                         </td>
                         <td className="px-4 py-4">
@@ -254,8 +294,8 @@ export default function BetaTestersAdmin() {
                     ))}
                     {filtered.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
-                          No beta testers match this search.
+                        <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
+                          No members match this search.
                         </td>
                       </tr>
                     )}
@@ -265,9 +305,11 @@ export default function BetaTestersAdmin() {
             </section>
 
             <section className="grid gap-3 text-xs text-slate-500 md:grid-cols-3">
-              <div className="rounded-lg border border-slate-800 bg-slate-900/30 p-3">
-                <span className="text-slate-400">Beta authority:</span> {data.authority.betaCohort}
-              </div>
+              {data.authority.signals.map((sig) => (
+                <div key={sig.id} className="rounded-lg border border-slate-800 bg-slate-900/30 p-3">
+                  <span className="text-slate-400">{sig.label}:</span> {sig.source} &mdash; {sig.governs}
+                </div>
+              ))}
               <div className="rounded-lg border border-slate-800 bg-slate-900/30 p-3">
                 <span className="text-slate-400">Ordinary platform:</span> {data.authority.platformAccess}
               </div>

@@ -149,7 +149,7 @@
     "typecheck:scripts": "tsc -p tsconfig.scripts.json --noEmit",
     "check:member-id-log": "npx tsx scripts/guards/member-id-log-gate.ts",
     "check:member-id-log:baseline": "npx tsx scripts/guards/member-id-log-gate.ts --update",
-    "ci:sovereignty": "npm run check:no-supabase && npm run check:migration-lock-timeout && npm run check:no-vendor-voices && npm run check:voice-provenance && npm run check:no-openai && npm run check:member-id-log && npm run test -- lib/tts/__tests__/voiceIdentityContract.test.ts --silent",
+    "ci:sovereignty": "npm run check:no-supabase && npm run check:migration-lock-timeout && npm run check:no-vendor-voices && npm run check:voice-provenance && npm run check:no-openai && npm run check:member-id-log && npm run matrix:safety-crisis && npm run test -- lib/tts/__tests__/voiceIdentityContract.test.ts __tests__/voice-crisis-speech-act-01.test.ts --silent",
     "ci:guard": "jest scripts/ci/maia-route-guard.test.ts --testPathPattern='maia-route-guard' --passWithNoTests=false",
     "preflight": "bash scripts/check-dark-text-opacity.sh && npm run check:no-supabase && npm run check:migration-lock-timeout && npm run check:no-direct-anthropic && npm run check:no-vendor-voices && npm run check:voice-provenance && npm run check:no-openai && npm run check:member-owned-boundary && npm run ci:guard && bash scripts/preflight-compose-config.sh && echo '\u2705 Preflight passed: opacity + supabase + direct-anthropic + vendor voices + voice-provenance + provider-governance + member-owned-boundary + route-guard + docker checks clean'",
     "biomarkers:report": "npx tsx scripts/report-biomarker-metrics.ts",
@@ -215,6 +215,7 @@
     "jarvis:report": "node scripts/builder/session.mjs report",
     "jarvis:providers": "node scripts/builder/opencode-provider.mjs list",
     "jarvis:provider:proof": "node scripts/builder/__tests__/opencode-adapter-governance-proof.mjs",
+    "jarvis:jev:proof": "node scripts/builder/__tests__/jarvis-jev-advisory-v1-proof.mjs && node scripts/builder/__tests__/jarvis-jev-advisory-v1-matrix.mjs && node scripts/builder/__tests__/jev-packet-projection-v1-proof.mjs",
     "jarvis:proof": "node scripts/builder/__tests__/session-proof.mjs && node scripts/builder/__tests__/rate-proof.mjs && node scripts/builder/__tests__/incident-scenario-proof.mjs && node scripts/builder/__tests__/work-unit-proof.mjs && node scripts/builder/__tests__/run-check-proof.mjs && node scripts/builder/__tests__/delegate-workspace-convergence-proof.mjs && node scripts/builder/__tests__/session-liveness-authority-proof.mjs && node scripts/builder/__tests__/claude-adapter-governance-proof.mjs && node scripts/builder/__tests__/opencode-adapter-governance-proof.mjs",
     "typecheck:s3-constitutional": "tsc -p tsconfig.s3-constitutional.json",
     "typecheck:epistemic-join": "tsc -p tsconfig.epistemic-join.json",
@@ -224,6 +225,7 @@
     "matrix:epistemic-join-i4": "tsx tests/constitutional/epistemic-join/i4-integration-shadow-matrix.ts",
     "witness:epistemic-join-i4-db": "bash scripts/witness/epistemic-join-i4-shadow-db-witness.sh",
     "matrix:s3-constitutional": "tsx tests/constitutional/s3/matrix.ts",
+    "matrix:safety-crisis": "tsx tests/constitutional/safety-crisis/matrix.ts",
     "typecheck:h1-cohort-gate": "node scripts/typecheck-h1-cohort-gate.mjs",
     "matrix:h1-cohort-gate": "tsx tests/constitutional/h1-cohort-gate/matrix.ts",
     "typecheck:s3-substrate": "node scripts/typecheck-s3-substrate.mjs",
@@ -292,7 +294,8 @@
     "matrix:founder-workspace": "node tests/constitutional/founder-workspace/matrix.mjs && node tests/constitutional/founder-workspace/b2-matrix.mjs && node tests/constitutional/founder-workspace/b3-matrix.mjs && node tests/constitutional/founder-workspace/b4-matrix.mjs",
     "matrix:voice-doorway": "node tests/constitutional/voice-doorway/matrix.mjs",
     "project:programme-state": "node scripts/builder/founder-workspace/project-programme-state.mjs --summary",
-    "observe:instruments": "node scripts/builder/founder-workspace/observe-instruments.mjs"
+    "observe:instruments": "node scripts/builder/founder-workspace/observe-instruments.mjs",
+    "matrix:safety-crisis-continuation": "tsx tests/constitutional/safety-crisis-continuation/matrix.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",

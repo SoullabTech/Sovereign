@@ -40,8 +40,14 @@
  *   strike-through over their own words for them to police.
  */
 
+import { randomUUID } from 'node:crypto';
 import { query } from '@/lib/db/postgres';
 import { runStructured } from '@/lib/ai/structured/router';
+import type { DispatchObservation } from '@/lib/ai/structured/dispatch';
+import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
+import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
+import { shouldConfirmCrossing } from '@/lib/disclosure/crossingConfirmation';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import type { StructuredRequest } from '@/lib/ai/structured/types';
 import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers-studio/canonicalWriterTurn';
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
@@ -71,6 +77,7 @@ import {
 } from '../editorialScope/sequence';
 import { assembleEditorialCognition, type AssemblyRefusal } from './assembly';
 import { persistMaiaEditorialOutcome, type MaiaOutcomeRefusal, type MaiaOutcomeResult } from './maiaOutcome';
+import { detectNoopAdjustment, type NoopAdjustmentReason } from './noopProposal';
 
 /** ⭐ The capability owns its model pin. ⛔ Never chosen by HTTP. */
 export const EDITORIAL_MODEL = process.env.MAIA_EDITORIAL_MODEL || 'claude-opus-5';
@@ -144,6 +151,12 @@ export type EditorialTurnRefusal =
   /** The structured seam refused. ⛔ There is no fallback below this. */
   | 'structured_refused'
   /**
+   * ⭐ Authorization or accountability for the crossing could not be
+   * established. ⛔ NOTHING was sent — the refusal happens before the author's
+   * words enter cognition, which is the whole point of putting it here.
+   */
+  | 'disclosure_unavailable'
+  /**
    * ⭐⭐ THE PROPOSAL IS IN SOMEONE ELSE'S VOCABULARY, far past what the
    * writer's latitude could plausibly mean. ⛔ Below the bound this is REPORTED
    * and nothing is blocked — a studio that teaches shows the writer the thing.
@@ -162,7 +175,13 @@ export type EditorialTurnRefusal =
    * ⭐⭐ THE PROPOSAL EXCEEDED THE AUTHOR'S DECLARED LATITUDE.
    * ⛔ Nothing was written, and the wording is not shown.
    */
-  | ScopeRefusal;
+  | ScopeRefusal
+  /**
+   * ⭐⭐ THE PROPOSAL REPEATS MAIA'S OWN IMMEDIATELY PRECEDING WORDING,
+   * BYTE-IDENTICAL, AT THE EXACT FROZEN PREDECESSOR THIS TURN WAS INVOKED
+   * AGAINST (EA-NOOP-ADJUSTMENT-01). ⛔ Nothing was written.
+   */
+  | NoopAdjustmentReason;
 
 export type EditorialTurnResult =
   | {
@@ -183,6 +202,14 @@ export type EditorialTurnResult =
       readonly ok: false;
       readonly reason: EditorialTurnRefusal;
       readonly detail?: string;
+      /**
+        * ⭐ Present only on `structured_refused`: whether a provider response was
+        * observed. ⛔ This is what lets a disclosure receipt say whether the
+        * crossing happened, since `reason` alone cannot — an HTTP error and a
+        * refused connection are the same refusal with different `detail`.
+        * ⚠️ `unknown` is a real answer, not a missing one.
+        */
+      readonly dispatch?: DispatchObservation;
       /** ⭐ Present only on a scope refusal, so the writer can be told in counts. */
       readonly scope?: { readonly measure: ScopeMeasure; readonly wouldPassAtLatitude: number | null };
       /** ⭐ Present on a voice refusal, so the writer sees WHICH words. */
@@ -234,6 +261,60 @@ export async function runEditorialTurn(
   const teachingBlocks: CandidateBlock[] = teaching.active
     ? [{ producerId: 'computed.teaching_intelligence', text: teaching.directive }]
     : [];
+  /* ⭐⭐ THE BOUNDARY — authorization AND accountability, before the author's
+   * words become part of what MAIA is given.
+   *
+   * Founder ruling 2026-09-21: external editorial processing requires
+   * authorization before dispatch AND a durable record naming destination and
+   * disclosed context. `establishDisclosureBoundary` does both in that order —
+   * consent first and fail-closed, then an `attempted` receipt — and returns
+   * permission only when both hold.
+   *
+   * ⭐ WHY HERE AND NOT IN THE ROUTE, where every other boundary is established.
+   * The identities a receipt must name — the Work and the section — are derived
+   * from the thread's locus, which is resolved by `assembleEditorialCognition`.
+   * ⛔ The route does not hold them, and a receipt naming coordinates the caller
+   * supplied rather than the ones the crossing used would be evidence of the
+   * wrong thing.
+   *
+   * ⚠️ AND THE NARROWING, STATED RATHER THAN PAPERED OVER. Assembly has already
+   * read the locus text into this process. The boundary therefore precedes prose
+   * entering COGNITION — which is what `->maia_cognition` names and what a
+   * refusal here prevents — ⛔ but it does NOT precede prose being read from the
+   * database. Making authority precede the read as well requires splitting the
+   * locus read so identity resolves before text, which would touch the frozen
+   * locus the scope law measures against. ⭐ That is the stronger ordering and it
+   * is OWED; it is not what this repair does.
+   */
+  const disclosureId = randomUUID();
+  const boundary = await establishDisclosureBoundary({
+    requestId: input.exchangeId,
+    posture: TurnPosture.resolve({ sanctuary: false }),
+    memberId,
+    sessionId: threadId,
+    disclosure: {
+      disclosureId,
+      boundary: 'writers_studio.editorial_turn->maia_cognition',
+      sourceClass: 'work',
+      participationBasis: 'member_invoked',
+      sourceRef: assembly.manuscriptId,
+      /* ⭐ `passage`, and therefore ⛔ NO `sectionRef`. The disclosed thing is the
+         locus, not the section; naming the containing section would materially
+         narrow reconstruction, which the receipt type and a CHECK both refuse. */
+      scopeKind: 'passage',
+      gesture: 'work_with_this',
+    },
+  });
+  if (!mayCrossBoundary(boundary)) {
+    /* ⛔ Nothing assembled into cognition, nothing dispatched. The member's act
+       stands; only the crossing was refused. */
+    return {
+      ok: false, reason: 'disclosure_unavailable',
+      detail: boundary.kind === 'consent_unavailable' ? boundary.reason : boundary.outcome.kind,
+    };
+  }
+
+
   const declaredWriterContext = await writerUnderstandingContextForManuscript(
     memberId,
     assembly.manuscriptId,
@@ -334,7 +415,32 @@ export async function runEditorialTurn(
   };
   const structured = await runStructured(request);
   if (!structured.ok) {
-    return { ok: false, reason: 'structured_refused', detail: structured.refusal };
+    /* ⭐ `detail` stays the refusal CLASS, unchanged — the caller's contract is
+       not rewritten here. ⛔ What is added is the delivery fact, which the class
+       cannot carry: `provider_unavailable` covers both a request that arrived
+       and was rejected and one that never left. */
+    /* ⭐⭐ CONFIRM FROM ARRIVAL, NOT FROM SUCCESS — founder ruling 2026-09-21.
+     * A provider that answered received the words, whatever it answered. ⛔ A
+     * refusal is not evidence of non-arrival.
+     *
+     * ⚠️ `unknown` does NOT confirm. A timeout may have arrived and been lost,
+     * and the receipt stays `attempted`, which the table defines as *a crossing
+     * MAY have occurred and was not confirmed* — ⛔ never as nothing crossed.
+     * That is the honest state and it needs no new vocabulary. */
+    if (shouldConfirmCrossing({ kind: 'refusal', dispatch: structured.dispatch })) {
+      await confirmDisclosureCrossed(disclosureId);
+    }
+    return {
+      ok: false, reason: 'structured_refused', detail: structured.refusal,
+      dispatch: structured.dispatch,
+    };
+  }
+  /* ⭐ A result came back, so the words demonstrably arrived.
+   * ⛔ Confirmation is part of accountability, not telemetry. A failed receipt
+   * confirmation may never be followed by admission/persistence and a 200. */
+  if (shouldConfirmCrossing({ kind: 'result' })) {
+    const confirmed = await confirmDisclosureCrossed(disclosureId);
+    if (!confirmed) return { ok: false, reason: 'disclosure_unavailable' };
   }
 
   /* 6 ⛔ ADMISSION. A refusal here reaches no transaction, and prose is never
@@ -396,6 +502,26 @@ export async function runEditorialTurn(
   } | null = null;
 
   if (admission.outcome.kind === 'reply_with_proposal') {
+    /* 6a2 ⭐⭐ THE NO-OP LAW — EA-NOOP-ADJUSTMENT-01.
+     *
+     * ⛔ Measured against the EXACT frozen predecessor this turn was invoked
+     * against (`invocation.authoredAgainstVersionId`), re-read fresh through
+     * the reviewed proposal-work model — never the chain's current head,
+     * which may have moved since invocation, and never any other version in
+     * the lineage. ⭐ Exact byte equality only; a member-authored predecessor
+     * with identical wording, or a candidate that merely matches an older,
+     * non-immediate version, is not this law's business.
+     *
+     * ⛔⛔ REFUSES THE WHOLE TURN, same as the scope law below — never
+     * downgraded to `reply_only`, never repaired by keeping `reply` alone.
+     */
+    const noop = await detectNoopAdjustment({
+      memberId, chainId: invocation.chainId,
+      authoredAgainstVersionId: invocation.authoredAgainstVersionId,
+      candidateReplacementText: admission.outcome.proposal.replacementText,
+    });
+    if (noop.isNoop) return { ok: false, reason: noop.reason, detail: noop.detail };
+
     const verdict = judgeProposalScope(
       invocation.locusText, admission.outcome.proposal.replacementText, scope);
     if (!verdict.ok) {

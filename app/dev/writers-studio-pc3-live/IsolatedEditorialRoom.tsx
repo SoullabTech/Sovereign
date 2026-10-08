@@ -52,6 +52,13 @@ const MAX_LEFT = 68;
 const clamp = (value: number) => Math.max(MIN_LEFT, Math.min(MAX_LEFT, value));
 
 const SESSION_PREF_KEY = 'writers-studio:p4r1:focus-view';
+const EDIT_STRENGTH_LABEL: Record<EditorialLatitude, string> = {
+  1: 'Light',
+  2: 'Careful',
+  3: 'Moderate',
+  4: 'Substantial',
+  5: 'Heavy',
+};
 
 type FocusLayout = 'balanced' | 'passage' | 'maia' | 'stacked' | 'custom';
 type ReadingSize = 'large' | 'larger' | 'largest';
@@ -288,7 +295,7 @@ export default function IsolatedEditorialRoom({
             {layout === 'custom' ? 'Custom · ' : ''}{Math.round(leftPercent)} / {100 - Math.round(leftPercent)}
           </span>
           <span className="p4r1-isolated-latitude-status" title={LATITUDE_BANDS[editingLatitude].description}>
-            Revision · {LATITUDE_BANDS[editingLatitude].label}
+            Edit · {EDIT_STRENGTH_LABEL[editingLatitude]}
           </span>
 
           <details className="p4r1-isolated-menu">
@@ -340,8 +347,8 @@ export default function IsolatedEditorialRoom({
                   <span>How MAIA works with your words</span>
                 </div>
                 <label className="p4r1-latitude-label" htmlFor="p4r1-editing-latitude">
-                  <span>Revision latitude</span>
-                  <b>{LATITUDE_BANDS[editingLatitude].label}</b>
+                  <span>Edit strength</span>
+                  <b>{EDIT_STRENGTH_LABEL[editingLatitude]}</b>
                 </label>
                 <input
                   id="p4r1-editing-latitude"
@@ -352,14 +359,14 @@ export default function IsolatedEditorialRoom({
                   step={1}
                   value={editingLatitude}
                   disabled={busy}
-                  aria-valuetext={LATITUDE_BANDS[editingLatitude].label}
+                  aria-valuetext={EDIT_STRENGTH_LABEL[editingLatitude]}
                   onChange={(event) => onEditingLatitude(Number(event.target.value) as EditorialLatitude)}
                 />
                 <div className="p4r1-latitude-scale" aria-hidden="true">
-                  {EDITORIAL_LATITUDES.map((value) => <span key={value}>{LATITUDE_BANDS[value].label}</span>)}
+                  {EDITORIAL_LATITUDES.map((value) => <span key={value}>{EDIT_STRENGTH_LABEL[value]}</span>)}
                 </div>
                 <p className="p4r1-latitude-description">{LATITUDE_BANDS[editingLatitude].description}</p>
-                <p className="p4r1-latitude-law">This controls how far a proposed revision may move from your wording. Nothing is applied without you.</p>
+                <p className="p4r1-latitude-law">Light stays close to your wording. Heavy allows a larger recast. Your voice remains the reference, and nothing is applied without you.</p>
 
                 <div className="p4r1-working-axis">
                   <label className="p4r1-latitude-label" htmlFor="p4r1-working-pace">

@@ -105,7 +105,7 @@ describe('provenance and the pinned model', () => {
     expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-04');
   });
 
-  it('under sovereign mode the seam refuses and no fallback is attempted', async () => {
+  it('under sovereign mode the structured seam refuses with no cloud fallback', async () => {
     const prev = process.env.MAIA_INFERENCE_MODE;
     process.env.MAIA_INFERENCE_MODE = 'sovereign';
     try {

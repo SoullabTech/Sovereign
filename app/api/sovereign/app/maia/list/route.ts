@@ -94,6 +94,8 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
+import { assessCrisisWithCheckIn, classifyCheckInAnswer, crisisLogLine, maiaAskedAboutSafety, CRISIS_REFERRAL } from '@/lib/safety/crisisAssessment';
+import { takeSafetyCheckIn, clearSafetyCheckIn, markSafetyCheckIn } from '@/lib/safety/crisisCheckIn';
 import { withoutClientPromptAuthority } from '@/lib/sovereign/clientPromptAuthority';
 import { launchRelationalFieldShadow } from '@/lib/maia/relational-field-shadow/runner';
 // F1 durable turn acceptance (audit 2026-08-10): this route is the serving
@@ -323,6 +325,12 @@ export async function POST(req: NextRequest) {
     }, 503);
   }
 
+  // SAFETY-CRISIS-01: the deterministic referral for a CLEAR crisis signal. Set
+  // once the member's message is known, and attached to EVERY response from that
+  // point on, including error and timeout responses: a member who has said they
+  // are about to end their life must see the referral even if cognition fails.
+  let safetyReferral: typeof CRISIS_REFERRAL | undefined;
+
   try {
     const body = await withTimeoutLabeled('req.json', req.json().catch(() => ({})), 2000, start);
     const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, exchangeId: clientExchangeId, commandOnly, ...meta } = body as {
@@ -458,6 +466,29 @@ export async function POST(req: NextRequest) {
           durabilityErr?.message ?? durabilityErr
         );
       }
+    }
+
+    // 🆘 SAFETY-CRISIS-01: server-side crisis assessment of the member's
+    // own words. Typed turns, web voice, desktop native voice and salvaged drafts
+    // all converge here, so every path is assessed once and identically.
+    // Recognition/member response is separate from human-delivery authority.
+    // CLEAR → deterministic 988 / Crisis Text Line referral + server-authored
+    // safety context for MAIA. AMBIGUOUS → safety context only. If MAIA asks
+    // directly about safety, a short-lived server-memory flag lets an affirmative
+    // answer ("yes") escalate on the next turns.
+    //
+    // Continuation authority is SESSION-BOUND. If the request has no sessionId,
+    // there is deliberately no cross-turn carry. Never fall back to memberId:
+    // that could let one session inherit another session's safety standing.
+    // The log line is content-free and suppressed under Sanctuary.
+    const crisisCheckInKey = acceptedSessionId ?? '';
+    const crisisAssessment = assessCrisisWithCheckIn(message, takeSafetyCheckIn(crisisCheckInKey));
+    if (crisisAssessment.tier === 'clear' || classifyCheckInAnswer(message) === 'negative') {
+      clearSafetyCheckIn(crisisCheckInKey);
+    }
+    if (crisisAssessment.tier === 'clear') safetyReferral = CRISIS_REFERRAL;
+    if (crisisAssessment.tier !== 'none' && !isSanctuary) {
+      console.warn(crisisLogLine(crisisAssessment, '/api/sovereign/app/maia/list'));
     }
 
     // TII-03 — PURE COMMAND ACCEPTANCE: post-F1, pre-O8/F2/cognition.
@@ -657,6 +688,7 @@ export async function POST(req: NextRequest) {
         return jsonWithCors(req, {
           message: fieldSafety.message,
           elementalNote: fieldSafety.elementalNote,
+          ...(safetyReferral ? { safetyReferral } : {}),
           route: {
             endpoint: '/api/sovereign/app/maia',
             type: 'Sovereign Consciousness Interface',
@@ -1639,6 +1671,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       getMaiaResponse({
         sessionId: session.id,
         input: message,
+        // 🆘 SAFETY-CRISIS-01: the route's assessment (including a confirmed
+        // check-in) is the one cognition uses. Typed and top-level, never meta.
+        crisisAssessment,
         includeAudio: includeAudio || false,
         voiceProfile: voiceProfile,
         // R1 serving-route witness (2026-08-13): declared at the HTTP boundary. Note
@@ -1812,6 +1847,12 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // Conditions: Care/counsel mode + turn 3+ + meaningful length + no anchor already present + not sanctuary
     // Applied before telemetry so the shape evaluator sees the final anchored text.
     let sovereignText = orchestratorResult.text ?? '';
+
+    // 🆘 SAFETY-CRISIS-01: if this was an AMBIGUOUS turn and MAIA actually asked
+    // the member directly about safety, hold the check-in for the next turns.
+    if (crisisAssessment.tier === 'ambiguous' && maiaAskedAboutSafety(sovereignText)) {
+      markSafetyCheckIn(crisisCheckInKey);
+    }
 
     // 🧱 MAIA TURN DURABLE (F1 — second half of durable turn acceptance)
     //
@@ -2001,6 +2042,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // Unified response structure for new three-tier system with voice integration
     const responseData: any = {
       message: sovereignText,  // Uses closing-anchored text for counsel mode turns
+      // 🆘 SAFETY-CRISIS-01: deterministic referral on a CLEAR signal; absent otherwise.
+      ...(safetyReferral ? { safetyReferral } : {}),
       // 🌀 STATE VECTOR: Consciousness state reading (if check-in detected)
       stateVector: orchestratorResult.stateVector || null,
       // 🌿 PRACTICE: Recommended practice from state vector routing
@@ -2166,6 +2209,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       console.error(`🚨 Provider unavailable (pre-generation) after ${duration}ms:`, err.message);
       return jsonWithCors(req, {
         error: 'PROVIDER_UNAVAILABLE',
+        ...(safetyReferral ? { safetyReferral } : {}),
         status: "Something went wrong in my processing layer just now. I'm not retrieving or responding reliably at the moment. Please try again in a moment.",
         route: {
           endpoint: '/api/sovereign/app/maia',
@@ -2187,6 +2231,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       console.error(`🚨 All providers unavailable after ${duration}ms:`, err.message);
       return jsonWithCors(req, {
         error: 'PROVIDERS_UNAVAILABLE',
+        ...(safetyReferral ? { safetyReferral } : {}),
         status: 'Language providers offline (Claude + Ollama). Check API keys and model availability.',
         route: {
           endpoint: '/api/sovereign/app/maia',
@@ -2206,6 +2251,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       console.error(`❌ Sovereign MAIA timeout after ${duration}ms`);
       return jsonWithCors(req, {
         error: 'SOVEREIGN_TIMEOUT',
+        ...(safetyReferral ? { safetyReferral } : {}),
         status: 'Request timed out. Try a shorter message or wait a moment.',
         route: {
           endpoint: '/api/sovereign/app/maia',
@@ -2224,6 +2270,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // Final fallback - neutral status message, not MAIA-voice
     return jsonWithCors(req, {
       error: 'SYSTEM_ERROR',
+      ...(safetyReferral ? { safetyReferral } : {}),
       status: 'Service temporarily unavailable. Please try again.',
       route: {
         endpoint: '/api/sovereign/app/maia',

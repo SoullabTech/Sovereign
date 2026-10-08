@@ -12,14 +12,16 @@ describe('Writer Studio immediate manuscript-selection support', () => {
   const writeRoom = read('app/writers-studio/full-redesign/WriteRoom.tsx');
   const css = read('app/dev/writers-studio-full-redesign-review/full-redesign-review.css');
 
-  it('keeps blank lines as paragraph boundaries while tolerating whitespace-only blank lines', () => {
+  it('keeps blank lines as paragraph boundaries while reflowing PDF hard wraps inside them', () => {
     expect(pc3Paragraphs('first hard\nwrap\n \nsecond')).toEqual(['first hard\nwrap', 'second']);
   });
 
-  it('lets imported hard-wrap newlines reflow as prose while keeping real paragraph spacing', () => {
+  it('typesets prose at a readable measure with visible paragraph rhythm', () => {
     expect(css).toContain('.fr-write-editor {');
     expect(css).toContain('white-space: normal');
-    expect(css).toContain('.fr-write-editor p { margin: 0 0 38px;');
+    expect(css).toContain('.fr-write-editor p { margin: 0 0 30px;');
+    expect(css).toContain("p[data-write-block='epigraph']");
+    expect(css).toContain("p[data-write-block='subhead']");
   });
 
   it('treats a Write rail choice as an attentional act even when it is already open', () => {
@@ -41,12 +43,17 @@ describe('Writer Studio immediate manuscript-selection support', () => {
     expect(developController).toContain("kind: 'section'");
   });
 
-  it('replaces the generic overview with immediate selected-place support', () => {
-    expect(developView).toContain('setRailSelectionId(sectionId);');
+  it('uses the relational locus overlay for subsections but lets chapter roots reveal chapter review', () => {
+    expect(developView).toContain('const selectsChapterRoot = chapter?.root.draftSectionId === sectionId');
+    expect(developView).toContain('setRailSelectionId(selectsChapterRoot ? null : sectionId)');
+    expect(developView).toContain('ChapterReviewPanel own it');
     expect(developView).toContain('data-develop-locus=');
     expect(developView).toContain('Chapter selected');
     expect(developView).toContain('Section selected');
-    expect(developView).toContain('without going through the whole-Work material first');
+    expect(developView).toContain('data-develop-locus-support=');
+    expect(developView).toContain('I’m with you in this');
+    expect(developView).toContain('Talk with MAIA');
+    expect(developView).toContain('Nothing is read automatically.');
     expect(developView).toContain('onSection={selectManuscriptLocus}');
   });
 });

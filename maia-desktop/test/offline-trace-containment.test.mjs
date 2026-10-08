@@ -26,3 +26,15 @@ test('external beta verifier fails closed on unexpected Cabin root entries', () 
   assert.match(verifyPackage, /unexpected cabin-runtime root entry/);
   assert.match(verifyPackage, /\.git/);
 });
+
+
+test('offline Cabin disables Next runtime disk cache so signed resources remain immutable', () => {
+  const nextConfig = fs.readFileSync(
+    path.join(repoRoot, 'next.config.js'),
+    'utf8',
+  );
+  assert.match(
+    nextConfig,
+    /isrFlushToDisk:\s*process\.env\.MAIA_CABIN_MODE === 'offline' \? false : true/,
+  );
+});

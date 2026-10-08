@@ -631,12 +631,18 @@
 .fr-shell[data-appearance='night'] .fr-write-fc, .fr-shell[data-appearance='night'] .fr-write-return { border-color: var(--fr-action-line); }
 
 .fr-write-scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
-.fr-write-page { width: min(980px, calc(100% - 64px)); margin: 0 auto; padding: 8px 0 40px; }
-.fr-write-title { margin: 0 0 22px; font-family: var(--fr-serif-stack); font-size: 44px; font-weight: 500; line-height: 1.2; letter-spacing: -.01em; color: var(--fr-title); text-wrap: balance; }
-.fr-write-editor { font-family: var(--fr-serif-stack); font-size: 22px; line-height: 1.68; color: var(--fr-ink); caret-color: var(--fr-action); white-space: normal; overflow-wrap: break-word; }
+.fr-write-page { width: min(780px, calc(100% - 72px)); margin: 0 auto; padding: 18px 0 56px; }
+.fr-shell[data-canvas='full'] .fr-write-page { width: min(840px, calc(100% - 96px)); }
+.fr-write-title { margin: 0 0 34px; font-family: var(--fr-serif-stack); font-size: 44px; font-weight: 500; line-height: 1.16; letter-spacing: -.012em; color: var(--fr-title); text-wrap: balance; }
+.fr-write-editor { font-family: var(--fr-serif-stack); font-size: 21px; line-height: 1.72; color: var(--fr-ink); caret-color: var(--fr-action); white-space: normal; overflow-wrap: break-word; }
 .fr-shell .fr-write-editor:focus, .fr-shell .fr-write-editor:focus-visible { outline: none; }
-.fr-write-editor p { margin: 0 0 38px; white-space: normal; }
+.fr-write-editor p { margin: 0 0 30px; white-space: normal; }
 .fr-write-editor p:last-child { margin-bottom: 0; }
+.fr-write-editor p[data-write-block='epigraph'] { margin: 2px 0 42px; padding-left: 26px; border-left: 1px solid var(--fr-line); font-style: italic; font-size: .94em; line-height: 1.72; color: var(--fr-ink2); }
+.fr-write-editor p[data-write-block='subhead'] { margin: 48px 0 20px; font-size: 1.18em; line-height: 1.28; font-weight: 600; color: var(--fr-title); }
+.fr-write-editor p[data-write-block='list'] { white-space: pre-line; margin: 8px 0 30px; padding-left: 18px; }
+/* Prose View suppresses print/PDF folios. They remain in the canonical source and typesetting block model; they are simply not manuscript prose. */
+.fr-write-editor p[data-write-block='folio'] { display: none; }
 .fr-write-editor p[data-held] { padding: 7px 14px; border-radius: 4px; background: var(--fr-held-passage); color: var(--fr-action-deep); }
 .fr-write-editor ::selection { background: color-mix(in srgb, var(--fr-action) 20%, transparent); }
 .fr-write-editor p[data-held]::selection { background: color-mix(in srgb, var(--fr-action) 11%, transparent); }
@@ -655,12 +661,12 @@
 .fr-write-rail { height: 100%; overflow-y: auto; scrollbar-width: thin; padding: 28px 0 20px; }
 .fr-write-rail-head { margin: 0 0 14px; padding: 0 24px; font-family: var(--fr-sans-stack); font-size: 11.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--fr-ink2); }
 .fr-write-chapters { list-style: none; margin: 0; padding: 0 0 0 12px; display: grid; gap: 6px; }
-.fr-write-chapters button { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 11px 20px 12px 12px; text-align: left;
+.fr-write-chapters button { width: 100%; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 11px 20px 12px 12px; text-align: left;
   border-left: 2px solid transparent; border-radius: 0 6px 6px 0; }
 .fr-write-chapters button:hover { background: var(--fr-panel-soft); }
 .fr-write-chapters button[aria-current='true'] { background: var(--fr-action-soft); border-left-color: var(--fr-action); }
 .fr-write-ch-no { font-family: var(--fr-serif-stack); font-size: 17px; line-height: 22px; color: var(--fr-title); }
-.fr-write-ch-title { font-family: var(--fr-serif-stack); font-size: 15.5px; line-height: 20px; color: var(--fr-ink2); }
+.fr-write-ch-title { display: block; max-width: 100%; white-space: normal; overflow-wrap: anywhere; font-family: var(--fr-serif-stack); font-size: 15.5px; line-height: 20px; color: var(--fr-ink2); }
 
 /* derived responsive contraction — 1280/1024 keep the authority composition;
    390 keeps it usable and truthful (manuscript first), not a mobile design (PC10). */

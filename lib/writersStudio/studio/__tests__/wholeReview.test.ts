@@ -52,6 +52,42 @@ describe('D4R1 whole Review aggregate', () => {
       manifest.readingIds.includes(truth.address.readingId))).toBe(true);
   });
 
+
+  it('keeps an all-lenses-none Review ready and empty without inventing findings', () => {
+    const allNone = REVIEW_DEVELOPMENTAL_LENSES.map((lens, index) => ({
+      reading: {
+        ...READING,
+        id: idFor(lens, index),
+        scope: { ...READING.scope, commissionedLens: lens },
+        outcome: 'none' as const,
+        observations: [],
+      },
+      assessment: { reading: { state: 'current' as const }, observations: {} },
+      sections: SECTIONS,
+    }));
+    const allNoneManifest: ChapterReviewManifest = {
+      ...manifest,
+      readingIds: allNone.map((payload) => payload.reading.id),
+    };
+
+    const out = mapWholeReview({
+      manifest: allNoneManifest,
+      payloads: allNone,
+      host: HOST,
+      currentRevision: 7,
+    });
+    expect(out.kind).toBe('ready');
+    if (out.kind !== 'ready') return;
+    expect(out.view.findings).toEqual([]);
+    expect(out.view.coverage).toMatchObject({
+      read: manifest.sectionIds.length,
+      total: manifest.sectionIds.length,
+    });
+    expect(out.view.lenses.every((lens) =>
+      lens.availability.kind === 'read-nothing-noticed')).toBe(true);
+    expect(out.durable).toEqual({});
+  });
+
   it('refuses to pose as current after the Work revision moves', () => {
     const out = mapWholeReview({ manifest, payloads, host: HOST, currentRevision: 8 });
     expect(out).toMatchObject({ kind: 'unavailable', reason: 'current_revision_moved' });

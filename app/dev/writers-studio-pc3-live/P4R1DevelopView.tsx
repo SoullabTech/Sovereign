@@ -13,11 +13,12 @@ import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/con
 import type { ReadingView } from '@/lib/writersStudio/developPresentation';
 import type { ReadingSummary } from '@/lib/writersStudio/developClient';
 import type { LiveThemesPayload, LiveGovernedTheme, LiveThemeCandidate } from '@/lib/writersStudio/themes/liveTypes';
-import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
+import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { DevelopPreparation } from '@/lib/writersStudio/developPreparationClient';
 import type { WholeManuscriptAttentionMap, AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import type { WriterUnderstanding, WriterUnderstandingDraft } from '@/lib/writersStudio/writerUnderstanding';
 import type { IntellectualLineageOrientation } from '@/lib/writersStudio/intellectualLineageOrientation';
+import { requestStructureReading } from '@/lib/writersStudio/reviewClient';
 import type {
   ChapterLineageCandidate,
   ChapterLineageScan,
@@ -97,6 +98,49 @@ const QUESTION: Record<Exclude<DevelopField, 'overview'>, string> = {
   reader: 'What does the reader already know here, and where might orientation be lost?',
 };
 
+const FRIENDLY_PHENOMENON: Record<string, { title: string; lead: string }> = {
+  recurrence: {
+    title: 'Something is returning here',
+    lead: 'MAIA noticed an idea, image, phrase, or gesture coming back. The useful question is what changes each time it returns — not whether repetition is automatically a problem.',
+  },
+  'unresolved thread': {
+    title: 'Something may still be open',
+    lead: 'MAIA noticed something introduced here that is not yet taken up again in what she read. That can be intentional. It is worth asking whether the openness feels alive or unfinished to you.',
+  },
+  'register shift': {
+    title: 'The way the chapter speaks changes here',
+    lead: 'MAIA noticed a change in voice, distance, tense, or mode of telling. The question is whether the change serves the movement you want.',
+  },
+  'prospective reference': {
+    title: 'The text points forward',
+    lead: 'MAIA noticed language that asks the reader to hold something for later. It may be useful to see whether that promise feels clear and well placed.',
+  },
+  're-explanation / first-mention': {
+    title: 'An idea may be arriving twice',
+    lead: 'MAIA noticed something being introduced or explained in a way that may overlap with an earlier moment. The question is whether the second arrival deepens the idea or simply repeats it.',
+  },
+  movement: {
+    title: 'The chapter changes direction here',
+    lead: 'MAIA noticed a shift in what the section is doing. We can look at what opens, what closes, and whether that movement feels true to the chapter.',
+  },
+  'term drift': {
+    title: 'A word may be changing meaning',
+    lead: 'MAIA noticed a term carrying a different sense here than elsewhere. That may be growth, nuance, or confusion; the manuscript itself has to decide which.',
+  },
+  'positional asymmetry': {
+    title: 'The weight is uneven across the chapter',
+    lead: 'MAIA noticed that something is concentrated in one part of the chapter more than another. That is not a flaw by itself; it may reveal where the chapter is doing its deepest work.',
+  },
+};
+
+function friendlyObservation(phenomenonLabel: string | null | undefined) {
+  const key = (phenomenonLabel ?? '').trim().toLowerCase();
+  return FRIENDLY_PHENOMENON[key] ?? {
+    title: 'There is something here worth looking at together',
+    lead: 'MAIA noticed a pattern in this reading. You do not need to accept it as a verdict. The useful next move is to see whether it helps you understand what this part of the Work is doing.',
+  };
+}
+
 export type DevelopScopeChoice =
   | { kind: 'whole' }
   | { kind: 'section'; sectionId: string; label: string }
@@ -129,6 +173,25 @@ export interface P4R1DevelopViewProps {
   attentionError: string | null;
   attentionProgress: string | null;
   selectedAttentionItemId: string | null;
+  chapterReview: WholeManuscriptAttentionMap | null;
+  chapterReviewBusy: boolean;
+  chapterNeedsCheckpoint: boolean;
+  chapterReviewError: string | null;
+  chapterReviewProgress: string | null;
+  chapterScorecard: WholeManuscriptAttentionMap | null;
+  previousChapterScorecard: WholeManuscriptAttentionMap | null;
+  previousChapterScoreRevision: number | null;
+  chapterScoreBusy: boolean;
+  chapterScoreError: string | null;
+  chapterMinimalPath: WholeManuscriptAttentionMap | null;
+  chapterMinimalPathBusy: boolean;
+  chapterMinimalPathError: string | null;
+  chapterBookFit: WholeManuscriptAttentionMap | null;
+  chapterBookFitBusy: boolean;
+  chapterBookFitError: string | null;
+  chapterMovement: WholeManuscriptAttentionMap | null;
+  chapterMovementBusy: boolean;
+  chapterMovementError: string | null;
   writerUnderstanding: WriterUnderstanding | null;
   writerUnderstandingBusy: boolean;
   writerUnderstandingError: string | null;
@@ -156,9 +219,15 @@ export interface P4R1DevelopViewProps {
   onReading: (readingId: string) => void;
   onScope: (scope: DevelopScopeChoice) => void;
   onCommission: () => void;
+  onReadChapter: () => void;
+  onCheckpointAndReadChapter: () => void;
+  onReadChapterInBook: () => void;
+  onReadChapterMovement: () => void;
+  onScoreChapter: () => void;
+  onMinimalPathChapter: () => void;
   onCommissionAttentionMap: () => void;
   onShowAttentionItem: (itemId: string, sectionId: string) => void;
-  onWorkWithAttentionItem: (itemId: string, sectionId: string) => void;
+  onWorkWithAttentionItem: (itemId: string, sectionId: string, source: 'chapter-review' | 'minimal-path' | 'attention-map') => void;
   onDiscussAttentionItem: (item: AttentionItem) => void;
   onSaveWriterUnderstanding: (draft: WriterUnderstandingDraft) => void;
   onReflectDevelopmentalProcess: () => void;
@@ -258,6 +327,152 @@ function SavedReadings({ field, summaries, loading, onReading }: {
         </button>
       ))}
     </div>
+  );
+}
+
+function sectionWordCount(section: RebuildSection): number {
+  let body = section.body ?? '';
+  const heading = section.heading?.trim();
+  if (heading && body.trimStart().startsWith(heading)) {
+    body = body.trimStart().slice(heading.length);
+  }
+  return body.trim() ? body.trim().split(/\s+/).length : 0;
+}
+
+function openingEpigraph(section: RebuildSection): string | null {
+  let body = section.body ?? '';
+  const heading = section.heading?.trim();
+  if (heading && body.trimStart().startsWith(heading)) {
+    body = body.trimStart().slice(heading.length);
+  }
+  const opening = body.trim().split(/\n\s*\n+/)[0]?.trim() ?? '';
+  if (!opening || opening.length > 900) return null;
+  return /^[“"‘']/.test(opening) ? opening : null;
+}
+
+function ChapterShape({ manuscriptId, sections, scope }: {
+  manuscriptId: string;
+  sections: readonly RebuildSection[];
+  scope: Extract<DevelopScopeChoice, { kind: 'chapter' }>;
+}) {
+  const [recovering, setRecovering] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const from = sections.findIndex((section) => section.draftSectionId === scope.fromSectionId);
+  const to = sections.findIndex((section) => section.draftSectionId === scope.toSectionId);
+  if (from < 0 || to < from) return null;
+
+  const chapter = sections.slice(from, to + 1);
+  const root = chapter[0] ?? null;
+  const epigraph = root ? openingEpigraph(root) : null;
+  const chapterWords = chapter.reduce((sum, section) => sum + sectionWordCount(section), 0);
+
+  // Only an explicit heading depth is structural evidence. Generic ALL-CAPS
+  // cuts are useful ingestion coordinates, but they are not authored hierarchy.
+  const explicit = chapter
+    .map((section, index) => ({ section, index }))
+    .filter(({ section }) => Boolean(section.heading?.trim()) && section.headingDepth !== null)
+    .filter(({ section }) => section.draftSectionId !== root?.draftSectionId);
+
+  const detectedOnly = chapter
+    .filter((section) => Boolean(section.heading?.trim()) && section.headingDepth === null);
+
+  const wordsInExplicitSpan = (index: number, depth: number): number => {
+    let end = chapter.length;
+    for (let i = index + 1; i < chapter.length; i += 1) {
+      const nextDepth = chapter[i]?.headingDepth;
+      if (nextDepth !== null && nextDepth !== undefined && nextDepth <= depth) {
+        end = i;
+        break;
+      }
+    }
+    return chapter.slice(index, end)
+      .reduce((sum, section) => sum + sectionWordCount(section), 0);
+  };
+
+  return (
+    <section className="fr-card p4r1-chapter-shape" aria-label="Chapter shape from the manuscript">
+      <span className="p4r1-eyebrow">The chapter as it is</span>
+      <h3>{scope.label}</h3>
+      <p>
+        {chapterWords.toLocaleString()} words in this chapter span. Writer’s Studio separates structure the
+        manuscript explicitly preserved from headings the import merely detected, so an ingestion cut is never
+        presented as an authored section.
+      </p>
+      {epigraph ? (
+        <blockquote className="p4r1-chapter-epigraph">
+          <span>Opening epigraph</span>
+          <p>{epigraph}</p>
+        </blockquote>
+      ) : null}
+
+      {explicit.length > 0 ? (
+        <>
+          <span className="p4r1-eyebrow">Explicit structure preserved by the manuscript</span>
+          <ol className="p4r1-chapter-outline">
+            {explicit.map(({ section, index }) => (
+              <li key={section.draftSectionId} data-depth={section.headingDepth ?? undefined}>
+                <span>{section.heading?.trim()}</span>
+                <small>
+                  {wordsInExplicitSpan(index, section.headingDepth ?? 3).toLocaleString()} words
+                </small>
+              </li>
+            ))}
+          </ol>
+        </>
+      ) : (
+        <p>
+          No subchapter hierarchy survived this import with enough evidence to call it authored structure.
+          MAIA should not infer one from storage boundaries.
+        </p>
+      )}
+
+      {detectedOnly.length > 0 ? (
+        <div className="p4r1-structure-recovery" data-structure-recovery>
+          <b>Some of this chapter’s hierarchy was lost in import.</b>
+          <p>
+            Writer’s Studio can see the headings, but some of their levels were lost in import.
+            MAIA can suggest the chapter’s shape. You can correct it before anything changes.
+          </p>
+          <button
+            type="button"
+            disabled={recovering}
+            onClick={async () => {
+              if (recovering) return;
+              setRecovering(true);
+              setRecoveryError(null);
+              const result = await requestStructureReading(manuscriptId);
+              setRecovering(false);
+              if (!result.ok) {
+                setRecoveryError('MAIA could not prepare a structure proposal just now. Nothing changed.');
+                return;
+              }
+              window.location.assign(result.reviewPath);
+            }}
+          >
+            {recovering ? 'Reading the manuscript…' : 'Restore chapter structure'}
+          </button>
+          {recoveryError ? <p role="status">{recoveryError}</p> : null}
+        </div>
+      ) : null}
+
+      {detectedOnly.length > 0 ? (
+        <details className="p4r1-chapter-detected">
+          <summary>Import details</summary>
+          <p>
+            {detectedOnly.length} headings were detected whose level was not preserved. They remain visible
+            without being treated as chapters or numbered sections.
+          </p>
+          <ol className="p4r1-chapter-outline">
+            {detectedOnly.map((section) => (
+              <li key={section.draftSectionId}>
+                <span>{section.heading?.trim()}</span>
+                <small>level unconfirmed</small>
+              </li>
+            ))}
+          </ol>
+        </details>
+      ) : null}
+    </section>
   );
 }
 
@@ -378,13 +593,25 @@ function ReadingField({
           </span>
         </div>
 
-        <blockquote>{observation.observation}</blockquote>
+        {(() => {
+          const friendly = friendlyObservation(observation.phenomenonLabel);
+          return (
+            <div className="p4r1-discovery-human">
+              <h4>{friendly.title}</h4>
+              <p>{friendly.lead}</p>
+              <details>
+                <summary>See the saved reading in full</summary>
+                <blockquote>{observation.observation}</blockquote>
+              </details>
+            </div>
+          );
+        })()}
 
         <div className="p4r1-discovery-plain">
-          <b>Why this may be worth looking at</b>
+          <b>You do not have to decide what this means alone</b>
           <p>
-            This is an observation from the exact reading shown above. It is not a grade or a required change.
-            You can follow it into the manuscript, talk it through, or simply move on.
+            MAIA can put the reading into ordinary language, show you the exact places she was responding to,
+            and stay with the question while you decide whether anything here matters for your Work.
           </p>
         </div>
 
@@ -395,7 +622,7 @@ function ReadingField({
               className="p4r1-discovery-primary"
               onClick={() => onWorkWithObservation(reading.id, observation.key, workSectionId)}
             >
-              Work with this
+              Stay with this in Write
             </button>
           ) : null}
           {sectionId ? (
@@ -403,14 +630,14 @@ function ReadingField({
               type="button"
               onClick={() => onGoToObservation(reading.id, observation.key, sectionId)}
             >
-              Show me where
+              Show me in the manuscript
             </button>
           ) : null}
           <button type="button" onClick={() => onTalkObservation(observation.key)}>
-            Talk this through
+            Talk with MAIA
           </button>
           <button type="button" onClick={() => onTeachObservation(observation.key)}>
-            Teach me why
+            Help me understand
           </button>
           <button type="button" onClick={() => onDeepObservation(observation.key)}>
             Go deeper
@@ -1309,6 +1536,305 @@ function ChapterLineagePanel({
   );
 }
 
+function ChapterReviewPanel({
+  map,
+  busy,
+  needsCheckpoint,
+  progress,
+  error,
+  onRead,
+  onCheckpointAndRead,
+  onField,
+  onWrite,
+  onEdit,
+  scorecard,
+  previousScorecard,
+  previousScoreRevision,
+  scoreBusy,
+  scoreError,
+  minimalPath,
+  minimalPathBusy,
+  minimalPathError,
+  bookFit,
+  bookFitBusy,
+  bookFitError,
+  movement,
+  movementBusy,
+  movementError,
+  onBookFit,
+  onMovement,
+  onScore,
+  onMinimalPath,
+}: {
+  map: WholeManuscriptAttentionMap | null;
+  busy: boolean;
+  needsCheckpoint: boolean;
+  progress: string | null;
+  error: string | null;
+  onRead: () => void;
+  onCheckpointAndRead: () => void;
+  onField: (field: DevelopField) => void;
+  onWrite: () => void;
+  onEdit: (itemId: string, sectionId: string, source: 'chapter-review' | 'minimal-path') => void;
+  scorecard: WholeManuscriptAttentionMap | null;
+  previousScorecard: WholeManuscriptAttentionMap | null;
+  previousScoreRevision: number | null;
+  scoreBusy: boolean;
+  scoreError: string | null;
+  minimalPath: WholeManuscriptAttentionMap | null;
+  minimalPathBusy: boolean;
+  minimalPathError: string | null;
+  bookFit: WholeManuscriptAttentionMap | null;
+  bookFitBusy: boolean;
+  bookFitError: string | null;
+  movement: WholeManuscriptAttentionMap | null;
+  movementBusy: boolean;
+  movementError: string | null;
+  onBookFit: () => void;
+  onMovement: () => void;
+  onScore: () => void;
+  onMinimalPath: () => void;
+}) {
+  if (!map) {
+    return (
+      <section className="fr-card p4r1-chapter-review" data-chapter-review="empty">
+        <span className="p4r1-eyebrow">Start here</span>
+        <h3>Let MAIA read this chapter.</h3>
+        <p>
+          She’ll tell you what she thinks the chapter is doing, what is already working,
+          and where she would focus next. No jargon. Nothing changes.
+        </p>
+        {needsCheckpoint ? (
+          <div className="p4r1-chapter-read-snapshot">
+            <p>
+              This chapter has changed since the last reading snapshot. Save the current draft so
+              MAIA reads exactly what is on the page now. Your words will not change.
+            </p>
+            <button
+              type="button"
+              className="p4r1-commission"
+              disabled={busy}
+              onClick={onCheckpointAndRead}
+            >
+              {busy ? (progress ?? 'Saving the current draft…') : 'Save current draft & read'}
+            </button>
+          </div>
+        ) : (
+          <button type="button" className="p4r1-commission" disabled={busy} onClick={onRead}>
+            {busy ? (progress ?? 'MAIA is reading the chapter…') : 'Read this chapter'}
+          </button>
+        )}
+        {error ? <p className="p4r1-error" role="status">{error}</p> : null}
+      </section>
+    );
+  }
+
+  const byBand = (band: string) => map.items.find((item) => item.band === band) ?? null;
+  const strength = byBand('begin-here');
+  const grasp = byBand('next');
+  const friction = byBand('later');
+  const start = byBand('watch');
+
+  return (
+    <section className="fr-card p4r1-chapter-review" data-chapter-review="ready">
+      <span className="p4r1-eyebrow">MAIA read the chapter</span>
+      {strength ? (
+        <div className="p4r1-chapter-review-lead">
+          <h3>{strength.label}</h3>
+          <p>{strength.notice}</p>
+          <small>{strength.whyItMatters}</small>
+        </div>
+      ) : null}
+
+      {grasp ? (
+        <div className="p4r1-chapter-review-point">
+          <b>What I think this chapter is doing</b>
+          <p>{grasp.notice}</p>
+        </div>
+      ) : null}
+
+      {friction ? (
+        <div className="p4r1-chapter-review-point">
+          <b>What may need attention</b>
+          <p>{friction.notice}</p>
+        </div>
+      ) : null}
+
+      {start ? (
+        <div className="p4r1-chapter-review-point">
+          <b>Where I’d start</b>
+          <p>{start.notice}</p>
+        </div>
+      ) : null}
+
+      <div className="p4r1-chapter-review-actions">
+        <button type="button" disabled={bookFitBusy} onClick={onBookFit}>
+          {bookFitBusy ? 'Reading the book around this chapter…' : 'How does this chapter fit the book?'}
+        </button>
+        <button type="button" disabled={movementBusy} onClick={onMovement}>
+          {movementBusy ? 'Looking at the chapter’s movement…' : 'Show me the chapter’s movement'}
+        </button>
+        <button type="button" disabled={minimalPathBusy} onClick={onMinimalPath}>
+          {minimalPathBusy ? 'Finding the highest-leverage changes…' : 'Show me what to strengthen'}
+        </button>
+        {start?.sectionIds[0] ? (
+          <button
+            type="button"
+            className="p4r1-chapter-review-primary"
+            onClick={() => onEdit(start.id, start.sectionIds[0]!, 'chapter-review')}
+          >
+            Show me an edited version
+          </button>
+        ) : (
+          <button type="button" className="p4r1-chapter-review-primary" onClick={onWrite}>Work on the writing</button>
+        )}
+        {!scorecard ? (
+          <button type="button" disabled={scoreBusy} onClick={onScore}>
+            {scoreBusy ? 'Building scorecard…' : 'Chapter scorecard'}
+          </button>
+        ) : null}
+        {scorecard ? (
+          <button type="button" disabled={minimalPathBusy} onClick={onMinimalPath}>
+            {minimalPathBusy ? 'Finding the smallest high-leverage changes…' : 'Minimal path to 5/5'}
+          </button>
+        ) : null}
+      </div>
+
+      {bookFitError ? <p className="p4r1-error" role="status">{bookFitError}</p> : null}
+      {bookFit ? (
+        <section className="p4r1-chapter-expansion" data-chapter-book-fit>
+          <span className="p4r1-eyebrow">In the book</span>
+          {bookFit.items.map((item) => (
+            <div key={item.id}>
+              <b>{item.label}</b>
+              <p>{item.notice}</p>
+            </div>
+          ))}
+          <details><summary>Why MAIA thinks this</summary>{bookFit.items.map((item) => <p key={item.id}>{item.whyItMatters}</p>)}</details>
+        </section>
+      ) : null}
+
+      {movementError ? <p className="p4r1-error" role="status">{movementError}</p> : null}
+      {movement ? (
+        <section className="p4r1-chapter-expansion" data-chapter-movement>
+          <span className="p4r1-eyebrow">Inside the chapter</span>
+          {movement.items.map((item) => (
+            <div key={item.id}>
+              <b>{item.label}</b>
+              <p>{item.notice}</p>
+            </div>
+          ))}
+          <details><summary>Why MAIA thinks this</summary>{movement.items.map((item) => <p key={item.id}>{item.whyItMatters}</p>)}</details>
+        </section>
+      ) : null}
+
+      {scoreError ? <p className="p4r1-error" role="status">{scoreError}</p> : null}
+      {scorecard ? (() => {
+        const dimensions = ['Clarity', 'Coherence', 'Reader orientation', 'Voice', 'Momentum'];
+        const scored = scorecard.items.filter((item) => dimensions.includes(item.label));
+        const extras = scorecard.items.filter((item) => !dimensions.includes(item.label));
+        return (
+          <div className="p4r1-chapter-scorecard" data-chapter-scorecard>
+            <div className="p4r1-chapter-scorecard-head">
+              <b>Chapter scorecard</b>
+              <span>Optional craft guide · not a grade · fixed to this chapter revision</span>
+            </div>
+            {scored.map((item) => {
+              const score = item.notice.match(/^([1-5]\/5)\b/)?.[1] ?? '—';
+              return (
+                <details key={item.id}>
+                  <summary>
+                    <b>{item.label}</b>
+                    <span>{score}</span>
+                  </summary>
+                  <p>{item.notice}</p>
+                  <small>{item.whyItMatters}</small>
+                </details>
+              );
+            })}
+            {extras.length > 0 ? (
+              <details className="p4r1-chapter-scorecard-extra">
+                <summary>Other thing MAIA noticed</summary>
+                {extras.map((item) => (
+                  <div key={item.id}>
+                    <b>{item.label}</b>
+                    <p>{item.notice}</p>
+                    <small>{item.whyItMatters}</small>
+                  </div>
+                ))}
+              </details>
+            ) : null}
+            {previousScorecard ? (
+              <section className="p4r1-score-comparison" data-chapter-score-comparison>
+                <div>
+                  <b>Since the previous saved chapter revision</b>
+                  <span>This is a craft comparison, not a grade{previousScoreRevision !== null ? ` · previous revision ${previousScoreRevision}` : ''}.</span>
+                </div>
+                {dimensions.map((dimension) => {
+                  const currentItem = scorecard.items.find((item) => item.label === dimension);
+                  const previousItem = previousScorecard.items.find((item) => item.label === dimension);
+                  const currentScore = Number(currentItem?.notice.match(/^([1-5])\/5\b/)?.[1] ?? NaN);
+                  const previousScore = Number(previousItem?.notice.match(/^([1-5])\/5\b/)?.[1] ?? NaN);
+                  if (!Number.isFinite(currentScore) || !Number.isFinite(previousScore)) return null;
+                  const movement = currentScore > previousScore
+                    ? 'Moved upward on this rubric.'
+                    : currentScore < previousScore
+                      ? 'Worth another look; the revision may have traded something here.'
+                      : 'Held steady.';
+                  return (
+                    <article key={dimension}>
+                      <b>{dimension}</b>
+                      <span>{previousScore}/5 → {currentScore}/5</span>
+                      <small>{movement}</small>
+                    </article>
+                  );
+                })}
+              </section>
+            ) : null}
+          </div>
+        );
+      })() : null}
+
+      {minimalPathError ? <p className="p4r1-error" role="status">{minimalPathError}</p> : null}
+      {minimalPath ? (
+        <section className="p4r1-chapter-expansion p4r1-minimal-path" data-chapter-minimal-path>
+          <span className="p4r1-eyebrow">Minimal path to 5/5</span>
+          <h4>Start with the few changes that do the most work.</h4>
+          <p>Light and moderate edits first. Major rewriting only if a smaller move cannot solve the problem.</p>
+          {minimalPath.items.map((item) => (
+            <article key={item.id}>
+              <b>{item.label}</b>
+              <p>{item.notice}</p>
+              <small>{item.whyItMatters}</small>
+              {item.sectionIds[0] ? (
+                <button
+                  type="button"
+                  className="p4r1-minimal-path-action"
+                  onClick={() => onEdit(item.id, item.sectionIds[0]!, 'minimal-path')}
+                >
+                  Work on this →
+                </button>
+              ) : null}
+            </article>
+          ))}
+        </section>
+      ) : null}
+
+      <details className="p4r1-chapter-review-details">
+        <summary>Why MAIA thinks this</summary>
+        {map.items.map((item) => (
+          <div key={item.id}>
+            <b>{item.label}</b>
+            <p>{item.whyItMatters}</p>
+          </div>
+        ))}
+      </details>
+
+      {error ? <p className="p4r1-error" role="status">{error}</p> : null}
+    </section>
+  );
+}
+
 function AttentionMapPanel({
   map,
   busy,
@@ -1330,83 +1856,160 @@ function AttentionMapPanel({
   onWork: (itemId: string, sectionId: string) => void;
   onDiscuss: (item: AttentionItem) => void;
 }) {
-  const bands: ReadonlyArray<{ id: AttentionItem['band']; label: string }> = [
-    { id: 'begin-here', label: 'Begin here' },
-    { id: 'next', label: 'Next' },
-    { id: 'later', label: 'Later' },
-    { id: 'watch', label: 'Watch' },
-  ];
+  const [pace, setPace] = useState<WorkingPace>(DEFAULT_WORKING_STYLE.pace);
+  const [cursor, setCursor] = useState(0);
 
   useEffect(() => {
-    if (!map || !selectedItemId || typeof document === 'undefined') return;
-    const node = document.getElementById('attention-' + selectedItemId);
-    window.requestAnimationFrame(() => node?.scrollIntoView({ block: 'center' }));
-  }, [map, selectedItemId]);
+    const sync = () => setPace(readWorkingStyle().pace);
+    sync();
+    window.addEventListener('writers-studio-working-style-changed', sync as EventListener);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener('writers-studio-working-style-changed', sync as EventListener);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
+
+  useEffect(() => {
+    setCursor(0);
+  }, [map?.commissionedAt]);
 
   if (!map) {
     return (
-      <section className="fr-card p4r1-attention-map">
-        <span className="p4r1-eyebrow">Whole-manuscript attention</span>
-        <h3>Where would your attention have the most leverage?</h3>
-        <p>MAIA can read the whole current manuscript through all eight developmental lenses, then synthesize the frozen evidence from macro to micro.</p>
-        <button type="button" className="p4r1-commission" disabled={busy} onClick={onCommission}>
-          {busy ? (progress ?? 'MAIA is reviewing the whole manuscript…') : 'Review the whole manuscript'}
+      <section className="fr-card p4r1-attention-map p4r1-editorial-pass" data-editorial-pass="empty">
+        <span className="p4r1-eyebrow">Edit with MAIA</span>
+        <h3>Let MAIA go through the manuscript with you.</h3>
+        <p>
+          MAIA can read the whole current manuscript, find the places where an edit may help,
+          and bring them to you in order. She can offer revision directions and alternate wording.
+          You decide what, if anything, to use.
+        </p>
+        <button type="button" className="p4r1-commission p4r1-editorial-pass-start" disabled={busy} onClick={onCommission}>
+          {busy ? (progress ?? 'MAIA is reading through the manuscript…') : 'Start an editorial pass'}
         </button>
+        <p className="p4r1-editorial-pass-boundary">
+          Nothing is changed or applied while she reads. Your Revision latitude still governs how far any proposed edit may go.
+        </p>
         {error ? <p className="p4r1-error" role="status">{error}</p> : null}
       </section>
     );
   }
 
+  const items = map.items.filter((item) => item.sectionIds.length > 0);
+  const safeCursor = items.length === 0 ? 0 : Math.min(cursor, items.length - 1);
+  const windowSize = pace === 'guided' ? 3 : 1;
+  const shownItems = pace === 'mapped'
+    ? items
+    : items.slice(safeCursor, safeCursor + windowSize);
+  const canAdvance = pace !== 'mapped' && items.length > windowSize;
+
+  const advance = () => {
+    if (items.length === 0) return;
+    const step = pace === 'guided' ? 3 : 1;
+    setCursor((current) => (current + step) % items.length);
+  };
+
   return (
-    <section className="fr-card p4r1-attention-map">
-      <span className="p4r1-eyebrow">Whole-manuscript Attention Map</span>
-      <h3>Macro → micro</h3>
-      <p>Ordered because you explicitly asked where attention may have the most leverage. Every item remains bound to frozen evidence.</p>
-      {bands.map((band) => {
-        const items = map.items.filter((item) => item.band === band.id);
-        if (items.length === 0) return null;
-        return (
-          <div key={band.id} className="p4r1-attention-band">
-            <h4>{band.label}</h4>
-            {items.map((item) => {
-              const sectionId = item.sectionIds[0]!;
-              return (
-                <details
-                  key={item.id}
-                  id={'attention-' + item.id}
-                  className="p4r1-attention-item"
-                  open={selectedItemId === item.id ? true : undefined}
-                  data-attention-item={item.id}
-                  data-attention-return={selectedItemId === item.id ? 'true' : undefined}
-                >
-                  <summary><b>{item.label}</b><span>{item.scale.replace('-', ' ')}</span></summary>
-                  <p>{item.notice}</p>
-                  <p><b>Why it matters:</b> {item.whyItMatters}</p>
-                  {item.uncertainty ? <p><b>Uncertainty:</b> {item.uncertainty}</p> : null}
-                  <div className="p4r1-dance-followup-actions">
-                    <button type="button" onClick={() => onShow(item.id, sectionId)}>Show me where</button>
-                    <button type="button" onClick={() => onDiscuss(item)}>Talk this through</button>
-                    <button type="button" onClick={() => onWork(item.id, sectionId)}>Work with this</button>
+    <section className="fr-card p4r1-attention-map p4r1-editorial-pass" data-editorial-pass="ready">
+      <div className="p4r1-editorial-pass-head">
+        <div>
+          <span className="p4r1-eyebrow">Editorial pass</span>
+          <h3>Work through the manuscript, one edit at a time.</h3>
+          <p>
+            MAIA has read across the current manuscript. Open any suggestion to see the exact passage
+            and ask for edit options. Nothing changes until you explicitly apply a version.
+          </p>
+        </div>
+        <span className="p4r1-editorial-pass-pace">{PACE_COPY[pace].label}</span>
+      </div>
+
+      {items.length === 0 ? (
+        <p className="p4r1-empty">MAIA did not find an evidenced place to bring forward for editing in this pass.</p>
+      ) : (
+        <div className="p4r1-editorial-pass-items">
+          {shownItems.map((item, shownIndex) => {
+            const sectionId = item.sectionIds[0]!;
+            const absoluteIndex = pace === 'mapped' ? items.indexOf(item) : safeCursor + shownIndex;
+            return (
+              <article
+                key={item.id}
+                id={'attention-' + item.id}
+                className="p4r1-editorial-pass-item"
+                data-attention-item={item.id}
+                data-attention-return={selectedItemId === item.id ? 'true' : undefined}
+              >
+                <span className="p4r1-eyebrow">Suggestion {absoluteIndex + 1} of {items.length}</span>
+                <h4>{item.label}</h4>
+                <p>{item.notice}</p>
+                <div className="p4r1-editorial-pass-actions">
+                  <button type="button" className="p4r1-editorial-pass-primary" onClick={() => onWork(item.id, sectionId)}>
+                    Show edit options
+                  </button>
+                  <button type="button" onClick={() => onDiscuss(item)}>Talk first</button>
+                  <button type="button" onClick={() => onShow(item.id, sectionId)}>See in manuscript</button>
+                </div>
+                <details className="p4r1-attention-evidence">
+                  <summary>Why MAIA brought this forward</summary>
+                  <div>
+                    <p>{item.whyItMatters}</p>
+                    {item.uncertainty ? <p><b>What remains uncertain:</b> {item.uncertainty}</p> : null}
+                    <details>
+                      <summary>Evidence · {item.evidence.length}</summary>
+                      <div className="p4r1-attention-evidence-list">
+                        {item.evidence.map((ref) => (
+                          <blockquote key={`${ref.readingId}:${ref.observationKey}`}>
+                            <span>{ref.lens}</span>
+                            <p>{ref.observation}</p>
+                          </blockquote>
+                        ))}
+                      </div>
+                    </details>
                   </div>
-                  <details className="p4r1-attention-evidence">
-                    <summary>
-                      See the evidence · {item.evidence.length} frozen observation{item.evidence.length === 1 ? '' : 's'}
-                    </summary>
-                    <div className="p4r1-attention-evidence-list">
-                      {item.evidence.map((ref) => (
-                        <blockquote key={`${ref.readingId}:${ref.observationKey}`}>
-                          <span>{ref.lens}</span>
-                          <p>{ref.observation}</p>
-                        </blockquote>
-                      ))}
-                    </div>
-                  </details>
                 </details>
-              );
-            })}
-          </div>
-        );
-      })}
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      {canAdvance ? (
+        <button type="button" className="p4r1-noticing-next p4r1-editorial-pass-next" onClick={advance}>
+          {pace === 'intimate' ? 'Next edit suggestion' : 'Next suggestions'}
+        </button>
+      ) : null}
+
+      <details className="p4r1-editorial-pass-map">
+        <summary>See the full editorial map</summary>
+        <div>
+          {([
+            ['begin-here', 'Begin here'],
+            ['next', 'Next'],
+            ['later', 'Later'],
+            ['watch', 'Watch'],
+          ] as const).map(([bandId, label]) => {
+            const bandItems = items.filter((item) => item.band === bandId);
+            if (bandItems.length === 0) return null;
+            return (
+              <div key={bandId} className="p4r1-attention-band">
+                <h4>{label}</h4>
+                {bandItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      const index = items.findIndex((candidate) => candidate.id === item.id);
+                      setCursor(Math.max(0, index));
+                    }}
+                  >
+                    <b>{item.label}</b>
+                    <span>{item.scale.replace('-', ' ')}</span>
+                  </button>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      </details>
     </section>
   );
 }
@@ -1443,7 +2046,13 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const selectedRailLabel = selectedRailSection?.heading?.trim() || 'Selected place';
 
   const selectManuscriptLocus = (sectionId: string) => {
-    setRailSelectionId(sectionId);
+    const chapter = chapterSpanFor(props.sections, sectionId);
+    const selectsChapterRoot = chapter?.root.draftSectionId === sectionId;
+
+    /* A chapter root is already a complete Develop subject. Let the canonical
+       ChapterReviewPanel own it so completed analysis is not covered by the
+       generic relational locus overlay. Subsections still use that overlay. */
+    setRailSelectionId(selectsChapterRoot ? null : sectionId);
     setTalking(false);
     setDialoguePrompt('');
     setAttentionConversationDraft('');
@@ -1649,9 +2258,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               </span>
               <h3>{selectedRailLabel}</h3>
               <p>
-                This is the active developmental place now. Choose what you want to understand
-                and MAIA will stay with this chapter or section rather than making you work
-                through the whole-Work dashboard first.
+                I’m with you here. We can begin by talking about what this chapter or section is trying to become,
+                or you can ask me to look through one particular lens. You do not need to translate your question into editorial language first.
               </p>
               <div className="p4r1-locus-actions">
                 <button
@@ -1663,7 +2271,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                     'Help me understand what it is doing, what may be alive or unresolved here, and ask me one useful question before suggesting changes.',
                   ].join('\n\n'))}
                 >
-                  Talk about this
+                  Talk with MAIA
                 </button>
                 <button type="button" onClick={() => props.onMode('write')}>Open in Write</button>
               </div>
@@ -1673,16 +2281,17 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               <span className="p4r1-eyebrow">Look at this place through</span>
               <div className="p4r1-locus-lens-grid">
                 {([
-                  ['structure', 'Structure'],
-                  ['arc', 'Arc'],
-                  ['themes', 'Themes'],
-                  ['voice', 'Voice'],
-                  ['coherence', 'Coherence'],
-                  ['continuity', 'Continuity'],
-                  ['reader', 'Reader'],
-                ] as const).map(([field, label]) => (
+                  ['structure', 'How is this shaped?', 'See how the parts fit, repeat, or may be carrying too much.'],
+                  ['arc', 'Where is this going?', 'Follow the movement of the chapter and what changes as it unfolds.'],
+                  ['themes', 'What keeps returning?', 'Notice recurring ideas, images, questions, or gestures.'],
+                  ['voice', 'How does it sound?', 'Listen for where the voice holds, shifts, or changes distance.'],
+                  ['coherence', 'Does it hold together?', 'Look for places where meaning strengthens, drifts, or contradicts itself.'],
+                  ['continuity', 'What carries through?', 'Notice what is picked up, dropped, promised, or already happened.'],
+                  ['reader', 'How might a reader meet this?', 'Look at orientation, timing, and what the reader knows at each point.'],
+                ] as const).map(([field, label, detail]) => (
                   <button key={field} type="button" onClick={() => props.onField(field)}>
-                    {label}
+                    <b>{label}</b>
+                    <span>{detail}</span>
                   </button>
                 ))}
               </div>
@@ -1701,6 +2310,52 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
           </div>
         ) : (
         <div className="p4r1-intent-arrival">
+          <ChapterReviewPanel
+            map={props.chapterReview}
+            busy={props.chapterReviewBusy}
+            needsCheckpoint={props.chapterNeedsCheckpoint}
+            progress={props.chapterReviewProgress}
+            error={props.chapterReviewError}
+            onRead={props.onReadChapter}
+            onCheckpointAndRead={props.onCheckpointAndReadChapter}
+            onField={props.onField}
+            onWrite={() => props.onMode('write')}
+            onEdit={props.onWorkWithAttentionItem}
+            scorecard={props.chapterScorecard}
+            previousScorecard={props.previousChapterScorecard}
+            previousScoreRevision={props.previousChapterScoreRevision}
+            scoreBusy={props.chapterScoreBusy}
+            scoreError={props.chapterScoreError}
+            minimalPath={props.chapterMinimalPath}
+            minimalPathBusy={props.chapterMinimalPathBusy}
+            minimalPathError={props.chapterMinimalPathError}
+            bookFit={props.chapterBookFit}
+            bookFitBusy={props.chapterBookFitBusy}
+            bookFitError={props.chapterBookFitError}
+            movement={props.chapterMovement}
+            movementBusy={props.chapterMovementBusy}
+            movementError={props.chapterMovementError}
+            onBookFit={props.onReadChapterInBook}
+            onMovement={props.onReadChapterMovement}
+            onScore={props.onScoreChapter}
+            onMinimalPath={props.onMinimalPathChapter}
+          />
+
+          <details className="p4r1-develop-more">
+            <summary>More ways to explore</summary>
+            <div className="p4r1-develop-more-body">
+          <AttentionMapPanel
+            map={props.attentionMap}
+            busy={props.attentionBusy}
+            progress={props.attentionProgress}
+            error={props.attentionError}
+            selectedItemId={props.selectedAttentionItemId}
+            onCommission={props.onCommissionAttentionMap}
+            onShow={props.onShowAttentionItem}
+            onWork={(itemId, sectionId) => props.onWorkWithAttentionItem(itemId, sectionId, 'attention-map')}
+            onDiscuss={discussAttentionItem}
+          />
+
           <section className="fr-card p4r1-developmental-orientation" data-developmental-orientation>
             <div className="p4r1-developmental-head">
               <span className="p4r1-eyebrow">The Work in process</span>
@@ -1925,18 +2580,6 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             onDiscussCandidate={discussLineageCandidate}
           />
 
-          <AttentionMapPanel
-            map={props.attentionMap}
-            busy={props.attentionBusy}
-            progress={props.attentionProgress}
-            error={props.attentionError}
-            selectedItemId={props.selectedAttentionItemId}
-            onCommission={props.onCommissionAttentionMap}
-            onShow={props.onShowAttentionItem}
-            onWork={props.onWorkWithAttentionItem}
-            onDiscuss={discussAttentionItem}
-          />
-
           <section className="p4r1-existing-evidence">
             <div>
               <span className="p4r1-eyebrow">What is already here</span>
@@ -1958,6 +2601,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               onReading={props.onReading}
             />
           </section>
+            </div>
+          </details>
         </div>
         )
       ) : (
@@ -1984,6 +2629,40 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                   I don’t have a saved reading for this question yet. You can choose exactly what I may read below.
                 </p>
               ) : null}
+            </section>
+          ) : null}
+
+          {activeField === 'structure' && props.scope.kind === 'chapter' ? (
+            <ChapterShape manuscriptId={props.manuscriptId} sections={props.sections} scope={props.scope} />
+          ) : null}
+
+          {railSelectionId && selectedRailSection && activeField ? (
+            <section className="fr-card p4r1-selected-place">
+              <span className="p4r1-eyebrow">You’re here</span>
+              <h3>{selectedRailLabel}</h3>
+              <p>
+                We can stay with this {props.scope.kind === 'chapter' ? 'chapter' : 'section'} as a whole.
+                Choosing it did not trigger a new reading. If you want MAIA to read it for {LABEL[activeField].toLowerCase()}, ask directly here.
+              </p>
+              <div className="p4r1-selected-place-actions">
+                <button type="button" onClick={() => beginWholeConversation([
+                  `I’m in “${selectedRailLabel}”.`,
+                  `I’m looking at it through ${LABEL[activeField].toLowerCase()}, but I want to begin conversationally.`,
+                  'Help me understand what I am seeing before you turn it into an analysis. Ask me one useful question first.',
+                ].join('\n\n'))}>Talk with MAIA first</button>
+                <button
+                  type="button"
+                  className="p4r1-commission"
+                  disabled={props.commissioning || props.prep?.kind !== 'ready'}
+                  onClick={props.onCommission}
+                >
+                  {props.commissioning
+                    ? 'MAIA is reading…'
+                    : `Read this ${props.scope.kind === 'chapter' ? 'chapter' : 'section'} for ${LABEL[activeField]}`}
+                </button>
+                <button type="button" onClick={() => props.onMode('write')}>Open the text</button>
+              </div>
+              <p className="fr-also">You can change the lens at any time. Nothing is edited by reading.</p>
             </section>
           ) : null}
 
@@ -2101,8 +2780,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <div className="fr-maia-name">
           <h2>MAIA</h2>
           <span>
-            {selectedObservation && talking
-              ? 'In relation to this observation'
+            {selectedObservation
+              ? 'With this observation'
               : railSelectionId && selectedRailSection
                 ? `In relation to ${selectedRailLabel}`
                 : 'In relation to your Work'}
@@ -2143,6 +2822,30 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               }}
             />
           </>
+        ) : selectedObservation && props.reading ? (
+          <div className="p4r1-observation-maia-ready">
+            <span className="p4r1-eyebrow">I’m here with this</span>
+            <h3>{friendlyObservation(selectedObservation.phenomenonLabel).title}</h3>
+            <p>{friendlyObservation(selectedObservation.phenomenonLabel).lead}</p>
+            <div className="p4r1-observation-ready-actions">
+              <button type="button" onClick={() => {
+                setDialoguePrompt('Put this observation into ordinary language for me. Start with what you actually noticed in my writing, why it may matter here, and one question that would help me decide what I think. No technical editorial vocabulary unless I ask for it.');
+                setTalking(true);
+              }}>Explain it plainly</button>
+              <button type="button" onClick={() => {
+                setDialoguePrompt('Stay with this observation with me. Do not turn it into a verdict or a repair task. Help me understand what you saw and ask me what I make of it.');
+                setTalking(true);
+              }}>Talk with me about it</button>
+              <button type="button" onClick={() => {
+                setDialoguePrompt('Teach me the one craft idea most relevant to this observation. Begin in plain language, show it in my own writing, and keep the technical term optional.');
+                setTalking(true);
+              }}>Teach me what is happening</button>
+            </div>
+            <details>
+              <summary>See the saved reading and evidence</summary>
+              <p>{selectedObservation.observation}</p>
+            </details>
+          </div>
         ) : props.work && workTalking ? (
           <div className="p4r1-work-conversation">
             <p className="p4r1-work-conversation-intro">
@@ -2168,26 +2871,29 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             </span>
             <h3>{selectedRailLabel}</h3>
             <p>
-              I’m oriented here now. You can talk about this place, move into a lens,
-              or open it in Write without going through the whole-Work material first.
+              I’m with you in this {props.scope.kind === 'chapter' ? 'chapter' : 'section'} now.
+              We can talk before analyzing anything, or you can choose the kind of attention you want from me.
             </p>
-            <div className="p4r1-locus-actions">
+            <div className="p4r1-locus-actions p4r1-locus-actions--relational">
               <button
                 type="button"
                 className="p4r1-talk"
                 onClick={() => beginWholeConversation([
                   `I selected “${selectedRailLabel}” in Develop.`,
-                  'Stay with this exact place and help me understand it before we move anywhere else.',
-                  'Ask me one useful question first.',
+                  'Stay with this exact place. Help me understand what it is doing before we analyze or change anything.',
+                  'Begin by asking me what I am noticing or wondering here.',
                 ].join('\n\n'))}
               >
-                Talk about this
+                Talk with MAIA
               </button>
-              <button type="button" onClick={() => props.onField('structure')}>Structure</button>
-              <button type="button" onClick={() => props.onField('arc')}>Arc</button>
-              <button type="button" onClick={() => props.onMode('write')}>Open in Write</button>
+              <button type="button" onClick={() => props.onField('structure')}>See how it is shaped</button>
+              <button type="button" onClick={() => props.onField('arc')}>Follow its movement</button>
+              <button type="button" onClick={() => props.onField('themes')}>Notice what returns</button>
+              <button type="button" onClick={() => props.onField('continuity')}>See what carries through</button>
+              <button type="button" onClick={() => props.onField('reader')}>Meet it as a reader</button>
+              <button type="button" onClick={() => props.onMode('write')}>Open the text</button>
             </div>
-            <p className="fr-also">Nothing new is read until you explicitly ask MAIA to read.</p>
+            <p className="fr-also">I do not read anything new until you ask me to.</p>
           </div>
         ) : (
           <>

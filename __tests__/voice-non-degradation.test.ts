@@ -101,9 +101,16 @@ const MAIA_PAGE = read('app/maia/page.tsx');
  *
  * ⚠️ CLASS C AND EGRESS-ADJACENT ENTRIES, pinned so they cannot grow, NOT
  * blessed: `maiaSpeak` (locally-authored command acknowledgement, no model in
- * the path), `detectCrisis`, `apiFetch`, `saveConversationMemory`,
- * `recordVoiceTranscript`, `stopStreamingVoice`. Each belongs to a separately
- * recorded finding, unrepaired by this unit.
+ * the path), `apiFetch`, `saveConversationMemory`, `recordVoiceTranscript`,
+ * `stopStreamingVoice`. Each belongs to a separately recorded finding,
+ * unrepaired by this unit.
+ *
+ * ⭐ SAFETY-CRISIS-01 (2026-10-01) REMOVED four calls from this set:
+ * `detectCrisis`, `crisisCheck.responseScript.join`, its `.trim`, and the
+ * `setTimeout` that paced the scripted lines. The client-side, voice-only crisis
+ * phrase list and its spoken script are retired, and crisis assessment now runs
+ * on the server for every turn. The corridor got smaller, which is the only
+ * direction this pin may move without a ruling.
  *
  * ⚠️ WHY THIS IS THE WHOLE HANDLER AND NOT JUST THE COGNITION TAIL. The tail
  * pin below is narrow and cheap, and it closes the mutation that motivated it —
@@ -134,13 +141,8 @@ const RATIFIED_CALLS = [
   'console.error',
   'console.log',
   'console.warn',
-  // Baseline reconciliation: these crisis-script calls are already present in
-  // deployed canonical 47dc7f7e; the old closed-set pin had drifted behind source.
-  'crisisCheck.responseScript.join',
-  'crisisCheck.responseScript.join(…).trim',
   'data.actionItems.map',
   'data.actionItems.map(…).join',
-  'detectCrisis',
   'detectMaiaCommands',
   'getMaiaCommandConfirmation',
   'ghostPhrases.some',
@@ -178,7 +180,6 @@ const RATIFIED_CALLS = [
   'setMessages',
   'setScribeSession',
   'setShowCapturePanel',
-  'setTimeout',
   'setTranscriptEnabled',
   'setVoiceSettings',
   'startScribeSession',

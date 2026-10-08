@@ -11,6 +11,8 @@ import { resolveSituatedWorkContext, studioHomeReturnSearch } from '@/app/writer
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 import {
+  canvasWithEditorialThread,
+  canvasWithoutEditorialThread,
   canvasWithRelationship,
   canvasWithoutRelationship,
   editorialThreadIdFrom,
@@ -24,6 +26,7 @@ import {
   adoptBoundEditorialVersion,
   discoverEditorialRelationships,
   exactVersion,
+  returnLocusText,
   locateUniquePassage,
   openBoundEditorialPassage,
   openBoundEditorialThread,
@@ -203,6 +206,7 @@ export default function FlagshipWriteEditController() {
   } = useEditingLatitude(context?.manuscriptId ?? '');
 
   const focusInsightConsumed = useRef<string | null>(null);
+  const autoProposalKey = useRef<string | null>(null);
   const workspaceReturn = useRef<{
     focusId: string | null;
     selectedPassage: Pc3HeldPassage | null;
@@ -533,6 +537,13 @@ export default function FlagshipWriteEditController() {
 
   const clearEditorial = useCallback(() => {
     setEditorialThread(null);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(
+        null,
+        '',
+        canvasWithoutEditorialThread(window.location.pathname, window.location.search),
+      );
+    }
     setRelationshipChoices([]);
     setSuggestedVersionId(null);
     setAppliedVersionId(null);
@@ -588,8 +599,9 @@ export default function FlagshipWriteEditController() {
     }
 
     const live = writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '';
-    if (thread.locusText !== live) {
-      const located = locateUniquePassage(live, thread.locusText);
+    const returnLocus = returnLocusText(thread);
+    if (returnLocus !== live) {
+      const located = locateUniquePassage(live, returnLocus);
       if (!located) {
         setEditorialFailure('This conversation’s passage is no longer uniquely present here. Nothing was changed.');
         return false;
@@ -598,12 +610,23 @@ export default function FlagshipWriteEditController() {
         draftSectionId: focusId,
         start: located.start,
         end: located.end,
-        text: thread.locusText,
+        text: returnLocus,
         revisionNumber: writingRef.current?.currentRevisionId() ?? context?.version ?? 0,
       });
     }
 
     setEditorialThread(thread);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(
+        null,
+        '',
+        canvasWithEditorialThread(
+          window.location.pathname,
+          window.location.search,
+          thread.threadId,
+        ),
+      );
+    }
     setSuggestedVersionId(thread.headVersionId);
     setAppliedVersionId(thread.application && !thread.application.undone ? thread.application.versionId : null);
     setRelationshipChoices([]);
@@ -736,7 +759,7 @@ export default function FlagshipWriteEditController() {
 
   const sendEditorial = useCallback(async (
     requestText?: string,
-    options?: { proposalPolicy?: ProposalPolicy },
+    options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean },
   ) => {
     const text = (requestText ?? editorialDraft).trim();
     if (!focusId || !text || editorialBusy) return;
@@ -750,7 +773,15 @@ export default function FlagshipWriteEditController() {
       const thread = await resolveEditorialForAct();
       if (!thread) return;
       const posture = await readCurrentSanctuaryPosture();
-      const exactWords = text + '\n\n' + editorialDirective(editorialDepth);
+      const proposalRequested = options?.proposalRequested === true;
+      const actionDirective = proposalRequested
+        ? [
+            'The writer explicitly requested proposed wording in this turn.',
+            'Do not delay that requested proposal by asking what you need before suggesting a change; the writer has already authorized this bounded wording act.',
+            'Keep the requested proposal within the declared revision latitude. If no lawful proposal can satisfy the request, explain that instead of repeating the current proposal.',
+          ].join(' ')
+        : '';
+      const exactWords = [text, editorialDirective(editorialDepth), actionDirective].filter(Boolean).join('\n\n');
       const carry = selectedCarrySource
         && a2Relationship
         && selectedCarrySource.relationshipId === a2Relationship.id
@@ -771,7 +802,7 @@ export default function FlagshipWriteEditController() {
         {
           latitude: editLatitude,
           mayRemoveParagraphs,
-          mayProposeImmediately,
+          mayProposeImmediately: mayProposeImmediately || proposalRequested,
         },
         {
           ...(options ?? {}),
@@ -1042,14 +1073,36 @@ export default function FlagshipWriteEditController() {
 
     /* Orientation may legitimately name a whole section, but automatic editorial
        Focus may not. Only an exact passage range may become the held locus. */
-    if (incomingAction === 'focus' && !passage.range) return;
+    if ((incomingAction === 'focus' || incomingAction === 'try-revision') && !passage.range) return;
 
     const section = context.sections.find((candidate) => candidate.draftSectionId === passage.sectionId);
     if (!section) return;
     const range = passage.range ?? { start: 0, end: Array.from(passage.body).length };
     const exact = Array.from(passage.body).slice(range.start, range.end).join('');
+
+    /* A Develop → Write focus handoff is one arrival act. Once the carried
+       evidence has been re-verified against the current draft, hold the exact
+       passage and open Focus in the same turn. Waiting for a later effect to
+       observe the held state created a race where the writer arrived in Write
+       with valid evidence but no editorial room. */
+    if ((incomingAction === 'focus' || incomingAction === 'try-revision') && passage.range) {
+      const key = [
+        incomingAction,
+        arrivalInsight.readingId,
+        arrivalInsight.observation.key,
+        section.draftSectionId,
+        passage.range.start,
+        passage.range.end,
+      ].join(':');
+      if (focusInsightConsumed.current === key) return;
+      focusInsightConsumed.current = key;
+      holdPassage(section, range.start, range.end, exact);
+      openWorkspace({ readingId: arrivalInsight.readingId, key: arrivalInsight.observation.key });
+      return;
+    }
+
     holdPassage(section, range.start, range.end, exact);
-  }, [arrivalInsight, context, requestedSection, incomingAction, holdPassage]);
+  }, [arrivalInsight, context, requestedSection, incomingAction, holdPassage, openWorkspace]);
 
   useEffect(() => {
     if (incomingAction !== 'focus' || !arrivalInsight || !selectedPassage || workspaceOpen) return;
@@ -1080,6 +1133,65 @@ export default function FlagshipWriteEditController() {
     selectedPassage,
     workspaceOpen,
     openWorkspace,
+  ]);
+
+  useEffect(() => {
+    if (
+      incomingAction !== 'try-revision'
+      || !arrivalInsight
+      || !workspaceOpen
+      || !selectedPassage
+      || !focusId
+      || editorialBusy
+      || suggestedVersionId
+    ) return;
+    if (
+      workspaceInsight?.readingId !== arrivalInsight.readingId
+      || workspaceInsight.key !== arrivalInsight.observation.key
+      || selectedPassage.draftSectionId !== focusId
+    ) return;
+
+    const passage = arrivalInsight.passages.find((candidate) =>
+      candidate.sectionId === focusId
+      && candidate.verified
+      && candidate.editable
+      && candidate.range,
+    );
+    if (!passage?.range) return;
+    const exact = Array.from(passage.body).slice(passage.range.start, passage.range.end).join('');
+    if (exact !== selectedPassage.text) return;
+
+    const key = [
+      arrivalInsight.readingId,
+      arrivalInsight.observation.key,
+      focusId,
+      passage.range.start,
+      passage.range.end,
+      exact,
+    ].join(':');
+    if (autoProposalKey.current === key) return;
+    autoProposalKey.current = key;
+
+    void sendEditorial([
+      'Offer one possible revision of this selected passage in response to the developmental observation.',
+      'Preserve my voice, style, subject, imagery, cadence, vocabulary, medicine, and intentional ambiguity.',
+      'Use the smallest sufficient intervention. Do not rewrite merely because smoother wording is possible.',
+      'Do not assume the noticed pattern is a defect or that revision is improvement.',
+      'Consider the strongest case for keeping the original unchanged.',
+      'Treat possible reader effects as hypotheses.',
+      'Make clear what changed, why, and what may be lost.',
+      'Nothing is to be applied automatically.',
+    ].join('\n'), { proposalRequested: true });
+  }, [
+    incomingAction,
+    arrivalInsight,
+    workspaceOpen,
+    workspaceInsight,
+    selectedPassage,
+    focusId,
+    editorialBusy,
+    suggestedVersionId,
+    sendEditorial,
   ]);
 
 
@@ -1222,7 +1334,7 @@ export default function FlagshipWriteEditController() {
             )}
             onDepth={setEditorialDepth}
             onInstruction={setEditorialDraft}
-            onSendEditorial={(text) => void sendEditorial(text)}
+            onSendEditorial={(text, options) => void sendEditorial(text, options)}
             onSelectVersion={(id) => {
               setSuggestedVersionId(id);
               setAdoptionOutcome(null);

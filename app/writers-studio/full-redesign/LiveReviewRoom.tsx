@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { ReviewDiscussionState } from '@/lib/writersStudio/rebuild/reviewDiscuss';
 
 export type Pc3LiveReviewRailItem = {
@@ -102,7 +102,7 @@ export function LiveReviewRail({ data }: { data: Pc3LiveReviewData }) {
             </span>
             {finding.canWorkWith ? (
               <button type="button" className="fr-open fr-open-primary" onClick={() => onWorkWith(finding)}>
-                Work with this <Arrow />
+                Show edit options <Arrow />
               </button>
             ) : null}
             <button type="button" className="fr-open" onClick={() => onOpenFinding(finding)}>
@@ -150,7 +150,7 @@ function LensPanel({
     </div>
   );
 }export function LiveReviewChapter({
-  data, filter, onFilter, tab, onTab, onBack, onOpenFinding, onWorkWith, onDiscuss,
+  data, filter, onFilter, tab, onTab, onBack, onOpenFinding, onWorkWith, onDiscuss, proof,
 }: {
   data: Pc3LiveReviewData;
   filter: string;
@@ -161,8 +161,10 @@ function LensPanel({
   onOpenFinding: (finding: Pc3LiveReviewFinding) => void;
   onWorkWith: (finding: Pc3LiveReviewFinding) => void;
   onDiscuss: (finding: Pc3LiveReviewFinding) => void;
+  /** Page-form witness of this same Work. Not a developmental lens and not an edit surface. */
+  proof?: ReactNode;
 }) {
-  const tabs = ['Overview', ...data.lenses.map((lens) => lens.label)];
+  const tabs = ['Overview', ...data.lenses.map((lens) => lens.label), ...(proof ? ['Proof'] : [])];
   const shown = filter === 'All' ? data.findings
     : data.findings.filter((finding) => finding.lensLabel === filter);
   const completed = data.lenses.filter((lens) =>
@@ -187,7 +189,7 @@ function LensPanel({
             {t}
           </button>
         ))}
-      </div>      {tab !== 'Overview' ? (
+      </div>      {tab === 'Proof' && proof ? proof : tab !== 'Overview' ? (
         <LensPanel data={data} tab={tab} onOpenFinding={onOpenFinding} onWorkWith={onWorkWith} onDiscuss={onDiscuss} />
       ) : (
         <>
