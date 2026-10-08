@@ -1,0 +1,18 @@
+import { NextRequest } from 'next/server';
+const getMember=jest.fn(),access=jest.fn(),resolve=jest.fn();
+jest.mock('@/lib/auth/getMemberFromRequest',()=>({getMemberIdFromRequest:(...args:unknown[])=>getMember(...args)}));
+jest.mock('@/lib/writersStudio/betaAccessServer',()=>({writersStudioBetaAccess:(...args:unknown[])=>access(...args)}));
+jest.mock('../resolveQuestion',()=>({resolveHelpQuestion:(...args:unknown[])=>resolve(...args),acquireHelpRequest:()=>()=>{}}));
+import { GET, POST } from '@/app/api/writers-studio/help/route';
+import { HELP_RELEASE, UNKNOWN_HELP_CONTEXT } from '../catalogue';
+const body=()=>({release:HELP_RELEASE,question:'How do I save?',context:UNKNOWN_HELP_CONTEXT,sanctuary:false});
+const req=(b:unknown=body(),origin?:string)=>new NextRequest('http://localhost:3753/api/writers-studio/help',{method:'POST',headers:{'content-type':'application/json','x-session-token':'synthetic-session',...(origin?{origin}:{})},body:JSON.stringify(b)});
+beforeEach(()=>{jest.clearAllMocks();process.env.WRITERS_STUDIO_EDITORIAL_ENABLED='1';getMember.mockResolvedValue('member-a');access.mockResolvedValue({eligible:true});resolve.mockResolvedValue({ok:true,ids:['save']});});
+it('GET verifies session but commissions no model call',async()=>{const r=await GET(new NextRequest('http://localhost:3753/api/writers-studio/help'));expect(r.status).toBe(200);expect((await r.json()).sessionScope).toMatch(/^[a-f0-9]{64}$/);expect(resolve).not.toHaveBeenCalled();expect(r.headers.get('cache-control')).toContain('no-store');});
+it('POST returns topic identifiers, never executable actions or generated instructions',async()=>{const r=await POST(req());expect(r.status).toBe(200);const b=await r.json();expect(b.topicIds).toEqual(['save']);expect(b.answer).toBeUndefined();expect(resolve).toHaveBeenCalledTimes(1);});
+it('signed-out and non-pilot requests never call MAIA',async()=>{getMember.mockResolvedValue(null);expect((await POST(req())).status).toBe(401);getMember.mockResolvedValue('other');access.mockResolvedValue({eligible:false});expect((await POST(req())).status).toBe(403);expect(resolve).not.toHaveBeenCalled();});
+it('closed or unresolved privacy cannot dispatch',async()=>{expect((await POST(req({...body(),sanctuary:true}))).status).toBe(409);const b:any=body();delete b.sanctuary;expect((await POST(req(b))).status).toBe(400);expect(resolve).not.toHaveBeenCalled();});
+it('version mismatch cannot dispatch',async()=>{expect((await POST(req({...body(),release:'previous-guide'}))).status).toBe(409);expect(resolve).not.toHaveBeenCalled();});
+it.each([{manuscriptId:'foreign'},{history:['private']},{apply:true},{question:'a'.repeat(9000)}])('refuses payload expansion %j',async patch=>{expect((await POST(req({...body(),...patch}))).status).toBe(400);expect(resolve).not.toHaveBeenCalled();});
+it('rejects cross-origin request before reading identity',async()=>{expect((await POST(req(body(),'https://untrusted.example'))).status).toBe(403);expect(getMember).not.toHaveBeenCalled();});
+it('reports provider failure without exposing provider prose',async()=>{resolve.mockResolvedValue({ok:false});const r=await POST(req());expect(r.status).toBe(503);expect((await r.json()).refusal).toBe('guide_match_unavailable');});

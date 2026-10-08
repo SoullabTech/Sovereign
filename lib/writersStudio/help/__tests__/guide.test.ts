@@ -1,0 +1,11 @@
+import { NextRequest } from 'next/server';
+const getMember=jest.fn(),access=jest.fn(),read=jest.fn();
+jest.mock('@/lib/auth/getMemberFromRequest',()=>({getMemberIdFromRequest:()=>getMember()}));
+jest.mock('@/lib/writersStudio/betaAccessServer',()=>({writersStudioBetaAccess:()=>access()}));
+jest.mock('node:fs/promises',()=>({readFile:(...args:unknown[])=>read(...args)}));
+import { GET } from '@/app/api/writers-studio/help/guide/route';
+const req=(id='handbook')=>new NextRequest('http://localhost:3753/api/writers-studio/help/guide?document='+id);
+beforeEach(()=>{jest.clearAllMocks();getMember.mockResolvedValue('m');access.mockResolvedValue({eligible:true});read.mockResolvedValue(Buffer.from('%PDF-test'));});
+it('serves only named, authenticated cohort guides, never a supplied path',async()=>{expect((await GET(req())).headers.get('content-type')).toBe('application/pdf');expect(read).toHaveBeenCalledWith(expect.stringContaining('/data/writers-studio/help/handbook-review-0.9.pdf'));read.mockClear();expect((await GET(req('../../.env.local'))).status).toBe(404);expect(read).not.toHaveBeenCalled();});
+it('signed out and non-cohort requests cannot read the PDFs',async()=>{getMember.mockResolvedValue(null);expect((await GET(req())).status).toBe(401);getMember.mockResolvedValue('m');access.mockResolvedValue({eligible:false});expect((await GET(req())).status).toBe(403);expect(read).not.toHaveBeenCalled();});
+it('reports missing asset as unavailable, not as an empty PDF',async()=>{read.mockRejectedValue(Error('no file'));expect((await GET(req())).status).toBe(503);});

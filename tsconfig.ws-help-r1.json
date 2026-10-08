@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.core.json",
+  "compilerOptions": { "noEmit": true, "incremental": false, "jsx": "preserve" },
+  "include": ["next-env.d.ts", "app/writers-studio/layout.tsx", "app/writers-studio/help/**/*.tsx", "app/api/writers-studio/help/**/route.ts"],
+  "exclude": ["node_modules", "**/__tests__/**"]
+}

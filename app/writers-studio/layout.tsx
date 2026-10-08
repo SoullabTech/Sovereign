@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import StudioHelp from './help/StudioHelp';
 import { StudioAtmosphere } from './atmosphere/StudioAtmosphere';
 import { StudioHouseReturn } from './StudioHouseReturn';
 
@@ -18,6 +19,7 @@ export default function WritersStudioLayout({ children }: { children: React.Reac
       {/* HOUSE-STUDIO-CIRCULATION-01R1 · H1-2: present only on from=house. */}
       <Suspense fallback={null}><StudioHouseReturn /></Suspense>
       {children}
+      <Suspense fallback={null}><StudioHelp /></Suspense>
     </StudioAtmosphere>
   );
 }
