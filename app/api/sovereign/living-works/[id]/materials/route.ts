@@ -24,6 +24,7 @@ import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { normalizeSentence, refuseBelonging } from '@/lib/livingWork/domain';
 import { memberRef } from '@/lib/privacy/memberRef';
+import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
 import {
   isMaterialRelationshipConflict,
   MATERIAL_RELATIONSHIP_CONFLICT_MESSAGE,
@@ -100,6 +101,11 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     };
     const materialType = typeof body.materialType === 'string' ? body.materialType.trim() : '';
     const materialId = typeof body.materialId === 'string' ? body.materialId : '';
+    // New source-upload belonging is beta-only; existing types are unaffected.
+    if (materialType === 'source_upload') {
+      const access = await writersStudioBetaAccess(memberId);
+      if (!access.eligible) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
     if (materialType.length > MAX_TYPE_CHARS) {
       return NextResponse.json({ error: 'materialType too long' }, { status: 400 });
     }

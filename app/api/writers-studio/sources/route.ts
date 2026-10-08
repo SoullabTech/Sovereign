@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { ingestWorkbenchUpload, IntakeError } from '@/lib/workbench/intake';
+import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // SMALL-BETA-01: authenticate is not authorization to persist a Studio source.
+  // Refuse before reading the upload or entering ingestion.
+  const access = await writersStudioBetaAccess(memberId);
+  if (!access.eligible) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   try {
     const form = await request.formData();
     const file = form.get('file');
