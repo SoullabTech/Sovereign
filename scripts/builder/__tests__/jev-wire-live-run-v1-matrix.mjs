@@ -43,6 +43,20 @@ const CANDIDATES = [
   ['DC-LR-READS-ENVIRONMENT', 'L11', [["export const GRANT_INSTRUMENT", "const _k = process.env.JEV_KEY;\nexport const GRANT_INSTRUMENT"]]],
   ['DC-LR-LOGS-PROGRESS', 'L11', [["    attempts.push(Object.freeze(", "    console.log('attempt', id);\n    attempts.push(Object.freeze("]]],
   ['DC-LR-SUMMARY-CARRIES-GRANT', 'L12', [["ran: true, refusal: null, checks: report.checks,", "ran: true, refusal: null, grant, checks: report.checks,"]]],
+  // ── Mac review 8e04f8006 (LW1–LW4) ──
+  ['DC-LR-INJECTION-UNDER-REMOTE-GRANT', 'L13', [["    if (deps.createTransport !== undefined) throw new Error('TRANSPORT_INJECTION_REFUSED');\n", ""]]],
+  ['DC-LR-HISTORY-LOSS-THROWS', 'L14', [["    historyLost = true; stopped = 'HISTORY_UNAVAILABLE';\n  }", "    throw new Error('LEDGER_NOT_INITIALIZED');\n  }"]]],
+  ['DC-LR-STORAGE-ONLY-AT-PREFLIGHT', 'L15', [["  const storageSame = () => verifyStorageIdentity(identity, { ledgerPath, checkpointPath, minFreeBytes: minFree });", "  const storageSame = () => true;"]]],
+  ['DC-LR-NO-DISPATCH-RECHECK', 'L15', [["    if (!storageSame()) { dispatchRefused = true; return Promise.reject(new Error('STORAGE_CHANGED')); }\n", ""]]],
+  ['DC-LR-NO-PREATTEMPT-RECHECK', 'L15', [["      if (!storageSame()) { stopped = 'STORAGE_CHANGED'; break; }\n", ""]]],
+  ['DC-LR-IDENTITY-DEVICE-ONLY', 'L15', [["return realpathSync(d) === c.real && st.dev === c.dev && st.ino === c.ino;", "return st.dev === c.dev;"]]],
+  ['DC-LR-RECHECK-DEVICE-NOT-VERIFIED', 'L15', [
+    ["    if (!dirOk(ledgerDir) || !dirOk(cpDir)) return false;\n", ""],
+    ["return realpathSync(d) === c.real && st.dev === c.dev && st.ino === c.ino;", "return true;"],
+    ["      if (snap.ledger.dev === statSync(cpDir).dev) return false;\n", ""],
+    ["      if (statSync(mp).dev === statSync(dirname(mp)).dev || statSync(mp).dev !== statSync(cpDir).dev) return false;\n", ""]]],
+  ['DC-LR-FREE-FLOOR-LOWERABLE', 'L16', [["Number.isSafeInteger(minFreeBytes) && minFreeBytes >= MIN_FREE_BYTES\n", "Number.isFinite(minFreeBytes) && minFreeBytes >= 0\n"]]],
+  ['DC-LR-FREE-FLOOR-NOT-ENFORCED', 'L16', [["Number.isSafeInteger(minFreeBytes) && minFreeBytes >= MIN_FREE_BYTES\n", "true\n"]]],
 ];
 
 function run(edits) {

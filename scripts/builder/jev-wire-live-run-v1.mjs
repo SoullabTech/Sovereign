@@ -21,7 +21,7 @@
  *   CREDENTIAL   Supplied by the caller as a function; called only at send time by the adapter; never logged or returned.
  */
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, statSync, statfsSync, accessSync, constants as fsConstants } from 'node:fs';
+import { existsSync, lstatSync, realpathSync, statSync, statfsSync, accessSync, constants as fsConstants } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import {
   BUDGET, QUESTION_TABLE, RESPONSE_SHAPE, canonicalJson, createLedger, fixtureAttemptIds, fixtureListHash, questionTableHash,
@@ -89,6 +89,9 @@ const dirOk = (path) => {
 export function checkStorage({ ledgerPath, checkpointPath, volumePolicy, checkpointMountPoint, minFreeBytes = MIN_FREE_BYTES }) {
   const checks = [];
   const push = (c) => { checks.push(c); return c.ok; };
+  // the stated floor cannot be lowered or disabled by a caller (0, NaN, negatives, fractions, strings all refuse)
+  if (!push(Number.isSafeInteger(minFreeBytes) && minFreeBytes >= MIN_FREE_BYTES
+    ? ok('MIN_FREE_FLOOR') : no('MIN_FREE_FLOOR', `minimum free space must be a safe integer of at least ${MIN_FREE_BYTES} bytes`))) return checks;
   const ledgerDir = dirname(resolve(ledgerPath)); const cpDir = dirname(resolve(checkpointPath));
   if (!push(dirOk(ledgerDir) ? ok('LEDGER_DIR') : no('LEDGER_DIR', 'must be an existing directory, not a link'))) return checks;
   if (!push(dirOk(cpDir) ? ok('CHECKPOINT_DIR') : no('CHECKPOINT_DIR', 'must be an existing directory, not a link'))) return checks;
@@ -118,6 +121,51 @@ export function checkStorage({ ledgerPath, checkpointPath, volumePolicy, checkpo
   push(!existsSync(ledgerPath + '.lock') && !existsSync(ledgerPath + '.pair.lock')
     ? ok('NO_LOCKS') : no('NO_LOCKS', 'a lock file is present: inspect per the runbook; it is never removed automatically'));
   return checks;
+}
+
+/** The physical identity of the two store directories (and mount point) as first verified. Content-free. */
+export function captureStorageIdentity({ ledgerPath, checkpointPath, checkpointMountPoint, volumePolicy }) {
+  const ledgerDir = dirname(resolve(ledgerPath)); const cpDir = dirname(resolve(checkpointPath));
+  const id = (d) => { const st = statSync(d); return { real: realpathSync(d), dev: st.dev, ino: st.ino }; };
+  const snap = { volumePolicy, ledger: id(ledgerDir), checkpoint: id(cpDir), mount: null };
+  if (volumePolicy === 'DISTINCT_DEVICES') snap.mount = { path: resolve(String(checkpointMountPoint)), ...id(resolve(String(checkpointMountPoint))) };
+  return Object.freeze(snap);
+}
+
+/**
+ * Re-proves, against the captured identity, that the stores are still where and what they were: same real path, device and inode,
+ * still real non-link directories, still on distinct devices with the checkpoint under a genuine mount point. Any change,
+ * replacement, symlink, remount or unavailability refuses (conservatively); it never repairs.
+ */
+export function verifyStorageIdentity(snap, { ledgerPath, checkpointPath, minFreeBytes = MIN_FREE_BYTES }) {
+  try {
+    const ledgerDir = dirname(resolve(ledgerPath)); const cpDir = dirname(resolve(checkpointPath));
+    if (!dirOk(ledgerDir) || !dirOk(cpDir)) return false;
+    const same = (d, c) => { const st = statSync(d); return realpathSync(d) === c.real && st.dev === c.dev && st.ino === c.ino; };
+    if (!same(ledgerDir, snap.ledger) || !same(cpDir, snap.checkpoint)) return false;
+    if (snap.volumePolicy === 'DISTINCT_DEVICES') {
+      if (snap.ledger.dev === statSync(cpDir).dev) return false;
+      const mp = snap.mount.path;
+      if (!dirOk(mp) || !same(mp, snap.mount)) return false;
+      if (statSync(mp).dev === statSync(dirname(mp)).dev || statSync(mp).dev !== statSync(cpDir).dev) return false;
+      const rel = relative(mp, cpDir); if (!(rel === '' || (!rel.startsWith('..') && !isAbsolute(rel)))) return false;
+    }
+    for (const d of [ledgerDir, cpDir]) { const f = statfsSync(d); if (Number(f.bavail) * Number(f.bsize) < minFreeBytes) return false; }
+    return true;
+  } catch { return false; }
+}
+
+/**
+ * Which transport factory a grant may use. A real-provider grant ALWAYS gets the reviewed hardened adapter: an injected factory
+ * could return fabricated replies and record them as provider observations, so it is refused outright. Injection is only for
+ * explicit loopback-mock runs.
+ */
+export function resolveTransportFactory(grant, deps = {}) {
+  if (grant.network === 'EXTERNAL_PINNED') {
+    if (deps.createTransport !== undefined) throw new Error('TRANSPORT_INJECTION_REFUSED');
+    return createJevHttpTransport;
+  }
+  return deps.createTransport ?? createJevHttpTransport;
 }
 
 /**
@@ -168,7 +216,16 @@ export async function executeLiveRun(config, deps = {}) {
   const report = preflight(config, { now });
   if (!report.ok) return Object.freeze({ ran: false, refusal: report.refusal, checks: report.checks, attempts: [] });
   const { grant, ledgerPath, checkpointPath, mode } = config;
-  const makeTransport = deps.createTransport ?? createJevHttpTransport;
+  let makeTransport;
+  try { makeTransport = resolveTransportFactory(grant, deps); } catch (e) {
+    return Object.freeze({ ran: false, refusal: e.message, checks: report.checks, attempts: [] });
+  }
+  let identity;
+  try { identity = captureStorageIdentity({ ledgerPath, checkpointPath, checkpointMountPoint: config.checkpointMountPoint, volumePolicy: grant.volume_policy }); } catch {
+    return Object.freeze({ ran: false, refusal: 'STORAGE_IDENTITY_UNAVAILABLE', checks: report.checks, attempts: [] });
+  }
+  const minFree = config.minFreeBytes ?? MIN_FREE_BYTES;
+  const storageSame = () => verifyStorageIdentity(identity, { ledgerPath, checkpointPath, minFreeBytes: minFree });
   let transport;
   try {                                           // built BEFORE any store exists, so a configuration fault leaves nothing behind
     transport = makeTransport({ endpoint: grant.endpoint, credential: deps.credential, allowRemote: grant.network === 'EXTERNAL_PINNED' });
@@ -183,21 +240,39 @@ export async function executeLiveRun(config, deps = {}) {
     }
   }
 
-  const attempts = []; let stopped = null;
+  const attempts = []; let stopped = null; let historyLost = false; let dispatchRefused = false;
   const toRun = fixtureAttemptIds();
-  for (const id of toRun) {
-    const before = pair.state();
-    if (before.used.has(id)) continue;
-    if (before.attempts >= grant.max_attempts) { stopped = 'GRANT_ATTEMPT_CAP'; break; }
-    if (before.usd + BUDGET.reserve_usd > grant.ceiling_usd) { stopped = 'GRANT_SPEND_CAP'; break; }
-    if (now() >= Date.parse(grant.expires_at)) { stopped = 'GRANT_EXPIRED'; break; }
-    const r = await runAttempt({ attemptId: id, ledger: pair, transport, now });
-    attempts.push(Object.freeze({ id, sent: r.sent, outcome: r.outcome ?? null, reason: r.reason ?? null }));
-    if (r.outcome !== 'ok') { stopped = r.reason ?? r.outcome ?? 'NOT_SENT'; break; }
-    let consistent = false; try { consistent = pair.verify().consistent; } catch { consistent = false; }
-    if (!consistent) { stopped = 'STORES_DISAGREE'; break; }
+  // the same check runs again immediately before dispatch; a refusal there is recorded by the runner as crossing-unknown (conservative: nothing was sent)
+  const guarded = { send: (bodyJson, opts) => {
+    if (!storageSame()) { dispatchRefused = true; return Promise.reject(new Error('STORAGE_CHANGED')); }
+    return transport.send(bodyJson, opts);
+  } };
+  try {
+    for (const id of toRun) {
+      if (!storageSame()) { stopped = 'STORAGE_CHANGED'; break; }
+      const before = pair.state();
+      if (before.used.has(id)) continue;
+      if (before.attempts >= grant.max_attempts) { stopped = 'GRANT_ATTEMPT_CAP'; break; }
+      if (before.usd + BUDGET.reserve_usd > grant.ceiling_usd) { stopped = 'GRANT_SPEND_CAP'; break; }
+      if (now() >= Date.parse(grant.expires_at)) { stopped = 'GRANT_EXPIRED'; break; }
+      const r = await runAttempt({ attemptId: id, ledger: pair, transport: guarded, now });
+      attempts.push(Object.freeze({ id, sent: r.sent, outcome: r.outcome ?? null, reason: r.reason ?? null }));
+      if (r.outcome !== 'ok') { stopped = dispatchRefused ? 'STORAGE_CHANGED' : (r.reason ?? r.outcome ?? 'NOT_SENT'); break; }
+      let consistent = false; try { consistent = pair.verify().consistent; } catch { consistent = false; }
+      if (!consistent) { stopped = 'STORES_DISAGREE'; break; }
+    }
+  } catch {
+    // history became unavailable mid-run: stop with a sanitized, structured result. Nothing is created, repaired or resent, and no
+    // claim is made that the in-flight observation was persisted.
+    historyLost = true; stopped = 'HISTORY_UNAVAILABLE';
   }
-  const final = pair.state();
+  let final = null; try { final = pair.state(); } catch { historyLost = true; stopped = stopped ?? 'HISTORY_UNAVAILABLE'; }
+  if (historyLost || !final) {
+    return Object.freeze({
+      ran: true, refusal: null, checks: report.checks, grant_sha256: report.grant_sha256, attempts,
+      stopped_reason: 'HISTORY_UNAVAILABLE', completed: false, ledger_head: null, usd: null, halted: true,
+    });
+  }
   return Object.freeze({
     ran: true, refusal: null, checks: report.checks, grant_sha256: report.grant_sha256, attempts,
     stopped_reason: stopped, completed: final.used.size === toRun.length && !final.halted && final.unresolved.length === 0,
