@@ -1,4 +1,5 @@
 import { transaction, query } from '@/lib/db/postgres';
+import { parseCraftKeptSpans, verifiedCraftKeptSpans } from '@/lib/writersStudio/craftSettledChoicesR1';
 import { appendAuthoredVersionWithExecutor } from '../proposalChain/store';
 import { openEditorialSelectionWithExecutor } from './thread';
 import { splitStoredSection } from '../sections/sectionProjection';
@@ -18,6 +19,8 @@ export async function saveCraftVersion(identity: VerifiedIdentity, input: CraftS
 > {
   if (input.sanctuary !== false) return { ok: false, reason: 'sanctuary_unavailable' };
   if (input.threadId === null && input.supersedes !== null) return { ok: false, reason: 'invalid_predecessor' };
+  const kept = parseCraftKeptSpans(input.kept ?? []);
+  if (!kept) return { ok: false, reason: 'invalid_settled_choices' };
   try {
     return await transaction(async tx => {
       let threadId = input.threadId;
@@ -51,12 +54,21 @@ export async function saveCraftVersion(identity: VerifiedIdentity, input: CraftS
         if (!selection.ok || selection.text !== row.expected_text) throw new SaveRefused('selection_stale');
         chainId = row.chain_id;
       }
+      if (kept.length) {
+        const owned = await tx.query<{ expected_text: string }>(
+          'SELECT expected_text FROM proposal_chains WHERE id = $1 AND member_id = $2', [chainId, identity.memberId]);
+        if (!owned.rows[0] || !verifiedCraftKeptSpans(owned.rows[0].expected_text, input.replacementText, kept)) {
+          throw new SaveRefused('settled_choices_conflict');
+        }
+      }
       const appended = await appendAuthoredVersionWithExecutor(tx, identity.memberId, chainId, {
         author: 'member', supersedes: input.supersedes, replacementText: input.replacementText,
         rationale: 'Writer-shaped Craft version',
       });
       // Throw to roll back BOTH new objects when the root append fails.
       if (appended.outcome !== 'appended') throw new SaveRefused(appended.reason);
+      await tx.query('INSERT INTO writer_craft_version_choices (version_id, kept) VALUES ($1, $2::jsonb)',
+        [appended.version.id, JSON.stringify(kept)]);
       return { ok: true as const, threadId, versionId: appended.version.id };
     });
   } catch (error) {

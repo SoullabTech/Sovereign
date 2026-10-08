@@ -42,7 +42,7 @@ describe('Writer-first Save on the actual table', () => {
   }
   it.each([own, ''])('saves exact writer-created wording without a thread, proposal or model (%j)', async text => {
     await write(text); await click('Save my version');
-    expect(props.onSaveWorking).toHaveBeenCalledWith({ held, threadId: null, supersedes: null, text });
+    expect(props.onSaveWorking).toHaveBeenCalledWith({ held, threadId: null, supersedes: null, text, kept: [] });
     expect(props.onSend).not.toHaveBeenCalled(); expect(props.onSaveMember).not.toHaveBeenCalled(); expect(props.onApply).not.toHaveBeenCalled();
     expect(working).toBe(text);
   });
@@ -55,7 +55,7 @@ describe('Writer-first Save on the actual table', () => {
     await click('Close');
     await write(proposal.wording + ' My own ending.');
     await click('Save my version');
-    expect(props.onSaveWorking).toHaveBeenCalledWith({ held, threadId: 'thread', supersedes: 'maia-version', text: proposal.wording + ' My own ending.' });
+    expect(props.onSaveWorking).toHaveBeenCalledWith({ held, threadId: 'thread', supersedes: 'maia-version', text: proposal.wording + ' My own ending.', kept: [] });
     expect(props.onApply).not.toHaveBeenCalled();
   });
 
@@ -90,4 +90,45 @@ describe('Writer-first Save on the actual table', () => {
     expect(host.querySelector('.p4r1-craft-r1-preview')?.textContent).toBe(own);
     expect(props.onApply).not.toHaveBeenCalled();
   });
+  it('saves an explicitly kept decision even when the wording is unchanged, and restores it from server metadata', async () => {
+    await act(async () => { port!.keepOriginal('first'); });
+    const kept = [{ start: 2, end: 7, text: 'first' }];
+    expect(working).toBe(original);
+    expect(hasUnsavedCraftWork(port!.snapshot()!)).toBe(true);
+    await click('Save my version');
+    expect(props.onSaveWorking).toHaveBeenCalledWith({ held, threadId: null, supersedes: null, text: original, kept });
+    const saved = { ...member, wording: original, craftKept: kept };
+    await act(async () => root.unmount()); root = createRoot(host);
+    await render({ thread: { ...thread, versions: [saved] }, version: saved, restoreSnapshot: savedCraftSnapshot(held, saved) });
+    expect(port!.snapshot()!.kept).toEqual(kept);
+    expect(host.querySelector('[data-craft-settled-choices]')?.textContent).toContain('first');
+    expect(working).toBe(original); expect(hasUnsavedCraftWork(port!.snapshot()!)).toBe(false);
+    await click('Reopen');
+    expect(port!.snapshot()!.kept).toEqual([]);
+    expect(hasUnsavedCraftWork(port!.snapshot()!)).toBe(true);
+    await click('Save my version');
+    expect(props.onSaveWorking).toHaveBeenLastCalledWith({ held, threadId: 'thread', supersedes: saved.id, text: original, kept: [] });
+    expect(props.onSend).not.toHaveBeenCalled(); expect(props.onApply).not.toHaveBeenCalled();
+  });
+
+  it('keeps Undo visible and renders actual applied text after retargeting without pending edit marks', async () => {
+    const undo = jest.fn();
+    await render({ held: { ...held, end: Array.from(own).length, text: own, revisionNumber: 3 },
+      bodyOf: () => own, thread: { ...thread, application: { authorizationId: 'auth', versionId: member.id, resultingVersion: 3, undone: false, canUndo: true } },
+      version: member, appliedVersionId: member.id, onUndo: undo });
+    expect(host.querySelector('.p4r1-craft-r1-locus')?.textContent).toBe(own);
+    expect(host.querySelector('.p4r1-craft-r1-footer')?.textContent).toContain('Applied to the manuscript.');
+    expect(host.querySelector('del[data-edit-id],ins[data-edit-id]')).toBeNull();
+    await click('Undo'); expect(undo).toHaveBeenCalledTimes(1);
+    expect(props.onApply).not.toHaveBeenCalled();
+  });
+  it('keeps Undo reachable when an applied deletion has no remaining focus text', async () => {
+    const empty = { ...member, wording: '' }, undo = jest.fn();
+    await render({ held: null, bodyOf: () => '', thread: { ...thread, versions: [empty] },
+      version: empty, appliedVersionId: empty.id, onUndo: undo });
+    await click('Undo'); expect(undo).toHaveBeenCalledTimes(1);
+  });
+
+
+
 });

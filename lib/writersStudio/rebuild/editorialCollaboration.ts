@@ -22,6 +22,7 @@ export interface RebuildEditorialVersion {
   wording: string;
   supersedes: string | null;
   rationale: string | null;
+  craftKept?: readonly import('../craftFocusR1').CraftKeptSpan[];
 }
 
 export interface RebuildEditorialThread {

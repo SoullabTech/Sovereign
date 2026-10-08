@@ -1,3 +1,6 @@
+import type { CraftKeptSpan } from './craftFocusR1';
+import { parseCraftKeptSpans } from './craftSettledChoicesR1';
+
 /** Exact writer gesture. Saving never accepts or applies a manuscript change. */
 export interface CraftSaveRequest {
   sectionId: string;
@@ -7,12 +10,14 @@ export interface CraftSaveRequest {
   supersedes: string | null;
   replacementText: string;
   sanctuary: boolean;
+  kept?: readonly CraftKeptSpan[];
 }
 export interface CraftWorkingSaveDraft {
   held: { draftSectionId: string; start: number; end: number; text: string; revisionNumber: number };
   threadId: string | null;
   supersedes: string | null;
   text: string;
+  kept?: readonly CraftKeptSpan[];
 }
 export interface SavedCraftVersionReference {
   threadId: string;
@@ -27,7 +32,7 @@ export function parseCraftSaveRequest(raw: unknown):
   const fail = (reason: string) => ({ ok: false as const, reason });
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return fail('invalid_body');
   const b = raw as Record<string, unknown>;
-  const allowed = ['sectionId', 'range', 'revisionNumber', 'threadId', 'supersedes', 'replacementText', 'sanctuary'];
+  const allowed = ['sectionId', 'range', 'revisionNumber', 'threadId', 'supersedes', 'replacementText', 'sanctuary', 'kept'];
   if (Object.keys(b).some(k => !allowed.includes(k))) return fail('unknown_field');
   if (typeof b.sanctuary !== 'boolean') return fail('posture_required');
   if (b.sanctuary) return fail('sanctuary_unavailable');
@@ -41,5 +46,6 @@ export function parseCraftSaveRequest(raw: unknown):
   if (!Number.isSafeInteger(b.revisionNumber) || Number(b.revisionNumber) < 0) return fail('selection_invalid');
   // Empty wording is a legitimate saved draft. Do not trim or normalize it.
   if (typeof b.replacementText !== 'string' || b.replacementText.length > 200_000) return fail('invalid_wording');
+  if (b.kept !== undefined && !parseCraftKeptSpans(b.kept)) return fail('invalid_settled_choices');
   return { ok: true, value: b as unknown as CraftSaveRequest };
 }

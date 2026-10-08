@@ -56,6 +56,7 @@ import {
   type CanvasInsight,
   type InsightPassage,
 } from '@/lib/writersStudio/insightCanvas';
+import { sameCraftKeptSpans } from '@/lib/writersStudio/craftSettledChoicesR1';
 import { saveCraftWorkingCopy, listSavedCraftVersions, savedCraftSnapshot, hasUnsavedCraftWork } from '@/lib/writersStudio/craftSaveR1';
 import type { CraftWorkingSaveDraft, SavedCraftVersionReference } from '@/lib/writersStudio/craftSaveContractR1';
 import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
@@ -1205,7 +1206,8 @@ export default function FlagshipWriteEditController({
           'A broader-scope mention, quotation, negative request or uncertain instruction is not a reading commission. Clarify the requested scope if it is necessary to answer.',
         ].join('\n'),
         'Writer-owned choices explicitly settled on this page (keep these; do not reopen unless the writer asks):',
-        JSON.stringify([...craftSettledChoices.current.values()]),
+        JSON.stringify([...new Set([...craftSettledChoices.current.values(),
+          ...(craftTablePort.current?.snapshot()?.kept ?? []).map(span => span.text)])]),
         'CURRENT EDITING FOCUS (earlier passages in the conversation are historical):',
         `${focusSection?.heading ?? 'Current section'} — ${craftFocusLabel ?? craftParagraphLabel(selectedPassage?.text ?? '')}`,
         'Writer-owned current working passage:', currentWorking,
@@ -1281,7 +1283,7 @@ export default function FlagshipWriteEditController({
         suggestedVersion.id,
       );
       if (!result.ok) {
-        setEditorialFailure('The Studio could not confirm that revision. Nothing was changed.');
+        setEditorialFailure('The Studio could not confirm that application. Check the saved state before trying again.');
         return;
       }
 
@@ -1292,17 +1294,28 @@ export default function FlagshipWriteEditController({
         if (fresh) {
           const section = fresh.sections.find((candidate) => candidate.draftSectionId === focusId);
           if (section) {
-            setSelectedPassage(null);
+            const located = locateUniquePassage(section.body, suggestedVersion.wording);
+            setCraftRestoreSnapshot(null);
+            setSelectedPassage(located ? { draftSectionId: focusId, ...located,
+              text: suggestedVersion.wording, revisionNumber: fresh.version } : null);
+            setCraftWorkingText(suggestedVersion.wording);
+            if (located && typeof window !== 'undefined') {
+              const url = new URL(window.location.href);
+              url.searchParams.set('craftStart', String(located.start)); url.searchParams.set('craftEnd', String(located.end));
+              window.history.replaceState(null, '', url.pathname + url.search);
+            }
           }
         }
       }
 
       const reread = await readBoundEditorialThread(editorialThread.threadId, focusId);
       if (reread.ok) setEditorialThread(reread.thread);
+      if (result.outcome.kind === 'applied') receiveCraftReceipt({ ok: true, message: 'Your saved version is applied to this passage. Undo is available.' });
     } finally {
       setAdoptionBusy(false);
     }
   }, [
+    receiveCraftReceipt,
     focusId,
     editorialThread,
     suggestedVersion,
@@ -1328,7 +1341,20 @@ export default function FlagshipWriteEditController({
       if (response.ok && body?.kind === 'undone') {
         setUndoMessage('That application was undone. The original passage is restored.');
         setAppliedVersionId(null);
-        await refreshContext();
+        const fresh = await refreshContext();
+        const section = fresh?.sections.find(s => s.draftSectionId === focusId);
+        const located = section ? locateUniquePassage(section.body, editorialThread!.locusText) : null;
+        const version = editorialThread!.versions.find(v => v.id === application.versionId);
+        if (fresh && located && focusId && version?.author === 'member') {
+          const held = { draftSectionId: focusId, ...located, text: editorialThread!.locusText, revisionNumber: fresh.version };
+          setSelectedPassage(held);
+          setCraftRestoreSnapshot({ ...savedCraftSnapshot(held, version), manualText: held.text, workingText: held.text });
+          setCraftWorkingText(held.text);
+          const url = new URL(window.location.href);
+          url.searchParams.set('craftStart', String(located.start)); url.searchParams.set('craftEnd', String(located.end));
+          window.history.replaceState(null, '', url.pathname + url.search);
+        }
+        receiveCraftReceipt({ ok: true, message: 'Application undone. The original passage is restored; your saved draft is retained.' });
       } else {
         setUndoMessage('That application could not be undone just now. Nothing else was changed.');
       }
@@ -1340,7 +1366,7 @@ export default function FlagshipWriteEditController({
     } finally {
       setAdoptionBusy(false);
     }
-  }, [editorialThread, adoptionBusy, refreshContext, focusId]);
+  }, [editorialThread, adoptionBusy, refreshContext, focusId, receiveCraftReceipt]);
 
   const saveMemberRevision = useCallback(async (draft: MemberRevisionDraft): Promise<boolean> => {
     if (memberVersionBusy || !editorialThread || !focusId) return false;
@@ -1463,7 +1489,8 @@ export default function FlagshipWriteEditController({
     const body = writingRef.current?.bodyOf(draft.held.draftSectionId)
       ?? context.sections.find(s => s.draftSectionId === draft.held.draftSectionId)?.body ?? '';
     const revision = writingRef.current?.currentRevisionId() ?? context.version;
-    if (!snapshot || snapshot.key !== key || snapshot.workingText !== draft.text || snapshot.directEditing
+    if (!snapshot || snapshot.key !== key || snapshot.workingText !== draft.text
+      || !sameCraftKeptSpans(snapshot.kept, draft.kept) || snapshot.directEditing
       || snapshot.customEditId !== null || revision !== draft.held.revisionNumber
       || Array.from(body).slice(draft.held.start, draft.held.end).join('') !== draft.held.text
       || draft.threadId !== (editorialThread?.threadId ?? null)) {
@@ -1474,7 +1501,7 @@ export default function FlagshipWriteEditController({
     setMemberVersionBusy(true); setEditorialFailure(null);
     const stillCurrent = () => {
       const live = craftTablePort.current?.snapshot();
-      return craftMounted.current && live?.key === key && live.workingText === draft.text;
+      return craftMounted.current && live?.key === key && live.workingText === draft.text && sameCraftKeptSpans(live.kept, draft.kept);
     };
     try {
       const outcome = await saveCraftWorkingCopy(draft, stillCurrent);

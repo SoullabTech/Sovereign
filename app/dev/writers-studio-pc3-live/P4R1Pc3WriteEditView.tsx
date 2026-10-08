@@ -428,15 +428,14 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     && !canvas,
   );
 
-  const craftBoundVersion = props.editorialThread
-    && props.suggestedVersion
-    && props.held
-    && props.focusId
-    && props.held.draftSectionId === props.focusId
+  const craftBoundVersion = props.editorialThread && props.suggestedVersion && props.focusId
     && props.editorialThread.targetSectionId === props.focusId
-    && props.editorialThread.locusText === props.held.text
-    ? props.suggestedVersion
-    : null;
+    && ((props.held?.draftSectionId === props.focusId && props.editorialThread.locusText === props.held.text)
+      || (props.appliedVersionId === props.suggestedVersion.id
+        && props.editorialThread.application?.versionId === props.suggestedVersion.id
+        && !props.editorialThread.application.undone
+        && (!props.held || (props.held.draftSectionId === props.focusId && props.held.text === props.suggestedVersion.wording))))
+    ? props.suggestedVersion : null;
   const proposalMarkable = Boolean(
     craftBoundVersion
     && props.held

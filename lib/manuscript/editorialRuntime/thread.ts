@@ -21,6 +21,8 @@ import { readApplicationRecovery, type ApplicationRecovery } from './recovery';
  */
 
 import { query, transaction } from '@/lib/db/postgres';
+import { verifiedCraftKeptSpans } from '@/lib/writersStudio/craftSettledChoicesR1';
+import type { CraftKeptSpan } from '@/lib/writersStudio/craftFocusR1';
 import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 import { projectEditorialSelection, type EditorialSelectionRange } from './selection';
 import { locusIsAdoptable } from '../proposalChain/legacyLocus';
@@ -222,6 +224,7 @@ export interface EditorialThreadVersion {
   readonly wording: string;
   readonly supersedes: string | null;
   readonly rationale: string | null;
+  readonly craftKept?: readonly CraftKeptSpan[];
 }
 
 export interface EditorialThreadView {
@@ -350,12 +353,25 @@ export async function readEditorialThread(
      around broken succession would show the writer a history nobody authored. */
   const work = await readProposalWork(memberId, chainId);
   if (!work.ok) return { ok: false, reason: 'chain_unreadable' };
+  const savedChoices = await query<{ version_id: string; kept: unknown }>(
+    `SELECT meta.version_id, meta.kept FROM writer_craft_version_choices meta
+       JOIN proposal_versions v ON v.id = meta.version_id
+       JOIN proposal_chains c ON c.id = v.chain_id
+      WHERE c.id = $1 AND c.member_id = $2 AND v.author = 'member'`, [chainId, memberId]);
+  const choices = new Map<string, readonly CraftKeptSpan[]>();
+  for (const row of savedChoices.rows) {
+    const version = work.work.versions.find(v => v.id === row.version_id && v.author === 'member');
+    const spans = version ? verifiedCraftKeptSpans(t.rows[0]!.expected_text ?? '', version.replacementText, row.kept) : null;
+    if (!spans) return { ok: false, reason: 'chain_unreadable' };
+    choices.set(row.version_id, spans);
+  }
   const versions: EditorialThreadVersion[] = work.work.versions.map((v) => ({
     id: v.id,
     author: v.author,
     wording: v.replacementText,
     supersedes: v.supersedes,
     rationale: v.rationale ?? null,
+    ...(choices.has(v.id) ? { craftKept: choices.get(v.id)! } : {}),
   }));
 
   return {

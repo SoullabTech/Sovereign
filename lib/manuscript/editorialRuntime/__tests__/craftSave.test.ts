@@ -63,3 +63,21 @@ it('saved-draft discovery is owner scoped and offers every version rather than c
   const [sql, params] = (query as jest.Mock).mock.calls[0];
   expect(params).toEqual(['owner', 'work']); expect(sql).toContain("v.author = 'member'"); expect(sql).not.toContain('LIMIT');
 });
+
+it('saves choices and wording in the same transaction against verified original text', async () => {
+  const kept = [{ start: 0, end: 8, text: 'Original' }];
+  const result = await saveCraftVersion(identity, { ...input, replacementText: 'Original.', kept });
+  expect(result.ok).toBe(true);
+  expect(txQuery).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO writer_craft_version_choices'), ['v', JSON.stringify(kept)]);
+  expect(events).toEqual(['begin', 'commit']);
+});
+it('rolls back a saved version when metadata storage fails', async () => {
+  txQuery.mockRejectedValue(new Error('storage unavailable'));
+  await expect(saveCraftVersion(identity, input)).rejects.toThrow('storage unavailable');
+  expect(events).toEqual(['begin', 'rollback']);
+});
+it('refuses to call replaced words settled', async () => {
+  const result = await saveCraftVersion(identity, { ...input, replacementText: 'Different.', kept: [{ start: 0, end: 8, text: 'Original' }] });
+  expect(result).toEqual({ ok: false, reason: 'settled_choices_conflict' });
+  expect(append).not.toHaveBeenCalled(); expect(events).toEqual(['begin', 'rollback']);
+});

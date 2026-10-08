@@ -1,3 +1,4 @@
+import { sameCraftKeptSpans, verifiedCraftKeptSpans } from './craftSettledChoicesR1';
 import { apiFetch } from '@/lib/http/apiBase';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { readBoundEditorialThread, type RebuildEditorialThread, type RebuildEditorialVersion } from './rebuild/editorialCollaboration';
@@ -22,7 +23,7 @@ export async function saveCraftWorkingCopy(draft: CraftWorkingSaveDraft,
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ sectionId: draft.held.draftSectionId,
         range: { start: draft.held.start, end: draft.held.end }, revisionNumber: draft.held.revisionNumber,
-        threadId: draft.threadId, supersedes: draft.supersedes, replacementText: draft.text, sanctuary: false }),
+        threadId: draft.threadId, supersedes: draft.supersedes, replacementText: draft.text, sanctuary: false, kept: draft.kept ?? [] }),
     });
     const body = await response.json().catch(() => null);
     if (!response.ok) return { ok: false, message: response.status === 409
@@ -33,7 +34,8 @@ export async function saveCraftWorkingCopy(draft: CraftWorkingSaveDraft,
     const reread = await readBoundEditorialThread(threadId, draft.held.draftSectionId);
     if (!reread.ok || reread.thread.threadId !== threadId || reread.thread.locusText !== draft.held.text) throw new Error('unverified');
     const version = reread.thread.versions.find(v => v.id === body.versionId);
-    if (!version || version.author !== 'member' || version.wording !== draft.text || version.supersedes !== draft.supersedes) throw new Error('unverified');
+    if (!version || version.author !== 'member' || version.wording !== draft.text || version.supersedes !== draft.supersedes
+      || !sameCraftKeptSpans(version.craftKept, draft.kept)) throw new Error('unverified');
     if (!stillCurrent()) return { ok: false, threadId,
       message: 'Your version was saved for the earlier passage. The current working copy was not replaced.' };
     return { ok: true, thread: reread.thread, version };
@@ -58,15 +60,18 @@ export async function listSavedCraftVersions(manuscriptId: string): Promise<
 /** Only a freshly read member version can seed an explicit saved-draft return. */
 export function savedCraftSnapshot(held: CraftWorkingSaveDraft['held'], version: RebuildEditorialVersion): CraftTableSnapshot {
   if (version.author !== 'member') throw new Error('Not a writer-saved version');
+  const kept = verifiedCraftKeptSpans(held.text, version.wording, version.craftKept ?? []);
+  if (!kept) throw new Error('Saved choices do not match this version');
   return { key: craftTargetKey({ sectionId: held.draftSectionId, ...held }), candidateVersion: version,
     decisions: [], manualText: version.wording, manualFromVersionId: version.id,
     directDraft: '', directEditing: false, customDraft: '', customEditId: null,
-    writerHasActed: true, activeEditId: null, view: 'preview', notation: 'guided', kept: [],
+    writerHasActed: true, activeEditId: null, view: 'preview', notation: 'guided', kept,
     workingText: version.wording, original: held.text };
 }
 
 export function hasUnsavedCraftWork(s: CraftTableSnapshot): boolean {
   if (s.directEditing || s.customEditId !== null) return true;
-  if (s.candidateVersion?.author === 'member' && s.candidateVersion.wording === s.workingText) return false;
-  return s.workingText !== s.original;
+  if (s.candidateVersion?.author === 'member' && s.candidateVersion.wording === s.workingText
+    && sameCraftKeptSpans(s.candidateVersion.craftKept, s.kept)) return false;
+  return s.workingText !== s.original || !sameCraftKeptSpans(s.candidateVersion?.craftKept, s.kept);
 }
