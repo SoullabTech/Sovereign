@@ -13,7 +13,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 export const WIRE_PATH = join(HERE, '..', 'jev-wire-v1.mjs');
 const BUILDER_URL = pathToFileURL(join(HERE, '..') + '/').href;
 
-export function makeVariant(edits = [], { witnessed = false, source = null, from = WIRE_PATH } = {}) {
+export function makeVariant(edits = [], { witnessed = false, source = null, from = WIRE_PATH, importMap = {} } = {}) {
   let text = source ?? readFileSync(from, 'utf8');
   const all = witnessed ? [['  witnessed: false,', '  witnessed: true,'], ...edits] : edits;
   for (const [from, to] of all) {
@@ -21,6 +21,7 @@ export function makeVariant(edits = [], { witnessed = false, source = null, from
     if (count !== 1) throw new Error(`EDIT_NOT_UNIQUE (${count}): ${from.slice(0, 60)}`);
     text = text.replace(from, () => to);
   }
+  for (const [spec, url] of Object.entries(importMap)) text = text.replaceAll(`from '${spec}'`, `from '${url}'`);   // e.g. point a module at a wire variant
   text = text.replaceAll("from './", `from '${BUILDER_URL}`);
   const dir = mkdtempSync(join(tmpdir(), 'jev-wire-variant-'));
   const file = join(dir, 'variant.mjs');

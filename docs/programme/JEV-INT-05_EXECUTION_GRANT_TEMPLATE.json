@@ -1,0 +1,20 @@
+{
+  "instrument": "jev-int05-execution-grant/v1",
+  "state": "DRAFT",
+  "experiment_id": "JEV-INT-05-<LABEL>",
+  "provider_id": "typesafe-jev",
+  "model": "jev-1.13.0",
+  "endpoint": "https://api.typesafe.ai/v1/systemone",
+  "network": "EXTERNAL_PINNED",
+  "table_hash": "6bb269d84c674d14730ecd0519ef48caef430e764fde9e32eb2f1f267610064e",
+  "fixture_list_hash": "a0f4a26cea085527783a62c8875fdf60f2fed93d1f4ff48d2285ab5288c24f60",
+  "schema_sha256": "a191f8a7df6bd6fedced8120dd0fd106f88575d1d1c8360d08900a6c7c0360d5",
+  "max_attempts": 31,
+  "ceiling_usd": 1,
+  "not_before": "<ISO-8601 UTC, e.g. 2026-10-20T09:00:00.000Z>",
+  "expires_at": "<ISO-8601 UTC, at most 7 days after not_before>",
+  "volume_policy": "DISTINCT_DEVICES",
+  "operator": "<NAME — not assigned>",
+  "authorized_by": "<NAME — not assigned>",
+  "authorization_ref": "<record id — not assigned>"
+}
