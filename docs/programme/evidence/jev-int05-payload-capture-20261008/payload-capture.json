@@ -1,0 +1,1299 @@
+{
+  "committed_switch_witnessed": false,
+  "table_hash": "4b953ff148e209d4c2518647a39868d793d96faaaf8477732ab4043095d2f6dc",
+  "fixture_list_hash": "a0f4a26cea085527783a62c8875fdf60f2fed93d1f4ff48d2285ab5288c24f60",
+  "attempts_count": 31,
+  "distinct_bodies": 19,
+  "all_bodies_match_plan": true,
+  "attempts": [
+    {
+      "id": "F01",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "359"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 359,
+      "body_sha256": "1f97669a0301af2fe349f1121c68e61c42a87d9dd969d6956c544057b525b97a",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F01.r1",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "359"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 359,
+      "body_sha256": "1f97669a0301af2fe349f1121c68e61c42a87d9dd969d6956c544057b525b97a",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F01.r2",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "359"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 359,
+      "body_sha256": "1f97669a0301af2fe349f1121c68e61c42a87d9dd969d6956c544057b525b97a",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F01.r3",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "359"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 359,
+      "body_sha256": "1f97669a0301af2fe349f1121c68e61c42a87d9dd969d6956c544057b525b97a",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F01.r4",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "359"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 359,
+      "body_sha256": "1f97669a0301af2fe349f1121c68e61c42a87d9dd969d6956c544057b525b97a",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F02",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "368"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 368,
+      "body_sha256": "0584088c47943704eea43746a4dcf2b0b366332ff30adb486b99210978857dbf",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"ARCHITECTURE_REASONING\"}}"
+    },
+    {
+      "id": "F03",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "371"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 371,
+      "body_sha256": "f3d44dbffd4cdf0e16a3cd6f5c6b82a75c4c70a007c728d40821f6ecf9253947",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"ADVERSARIAL_FALSIFICATION\"}}"
+    },
+    {
+      "id": "F04",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "372"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 372,
+      "body_sha256": "87547252e4f7f1cd401e05136ba6abea16f11fb73c4b7807e923b1e3dd950566",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"LONG_HORIZON_DECOMPOSITION\"}}"
+    },
+    {
+      "id": "F05",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "364"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 364,
+      "body_sha256": "5d0dfca30b84cf61bfc2c3359dea87cd0805a81478f4da4c8abcd858b940f5b4",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"EVIDENCE_SYNTHESIS\"}}"
+    },
+    {
+      "id": "F06",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "362"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 362,
+      "body_sha256": "e2d8d2e2de9ab021d5f3a3be17811c7ac35b2c456c54f553c0168ef0d38ecc83",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"FRONTIER_UNKNOWN\"}}"
+    },
+    {
+      "id": "F07",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "358"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 358,
+      "body_sha256": "6a5a50b329be194a98c93516e9ce955f0261e853be8c1c520d98c6d9835607e1",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":true,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F08",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "358"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 358,
+      "body_sha256": "a47a352b0fe2f6f122238d8032675ed409ef3df1344b9166243a2cfe9b9210c3",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":true,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F09",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "358"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 358,
+      "body_sha256": "d2500ca8a975852ee58b411114954f76e6fcf2cf15e2780ca53088e839c646df",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":true},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F10",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "358"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 358,
+      "body_sha256": "f2cc5793b358e01b63cdfc3da9de2233a1214b06d33286996f3aa18d32c60188",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":true,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F10.r1",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "358"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 358,
+      "body_sha256": "f2cc5793b358e01b63cdfc3da9de2233a1214b06d33286996f3aa18d32c60188",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":true,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F10.r2",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "358"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 358,
+      "body_sha256": "f2cc5793b358e01b63cdfc3da9de2233a1214b06d33286996f3aa18d32c60188",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":true,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F10.r3",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "358"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 358,
+      "body_sha256": "f2cc5793b358e01b63cdfc3da9de2233a1214b06d33286996f3aa18d32c60188",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":true,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F10.r4",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "358"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 358,
+      "body_sha256": "f2cc5793b358e01b63cdfc3da9de2233a1214b06d33286996f3aa18d32c60188",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":1,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":true,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F11",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "359"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 359,
+      "body_sha256": "0eda17dca00fe0b6cb00fc5edf406731a5588ed5781a86992b571d20d175462e",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":0,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F12",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "360"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 360,
+      "body_sha256": "b1b71dfed3712779ab484c98fd56502f50ea71e7b641fd767c8d57026c8b2b8d",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":10,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F13",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "363"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 363,
+      "body_sha256": "b89500f1b60a866fdfaae429ad83d9b3c252f6e8e56be63bcdcd4e38fce1662f",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":false,\"file_count\":10000,\"migration\":false,\"production\":false},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F14",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "356"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 356,
+      "body_sha256": "b719a1d1c8f3454aba43555fc3edfc1b7c1f93a6b277527530ca23d8b55dcfb9",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":true,\"file_count\":1,\"migration\":true,\"production\":true},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F14.r1",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "356"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 356,
+      "body_sha256": "b719a1d1c8f3454aba43555fc3edfc1b7c1f93a6b277527530ca23d8b55dcfb9",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":true,\"file_count\":1,\"migration\":true,\"production\":true},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F14.r2",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "356"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 356,
+      "body_sha256": "b719a1d1c8f3454aba43555fc3edfc1b7c1f93a6b277527530ca23d8b55dcfb9",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":true,\"file_count\":1,\"migration\":true,\"production\":true},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F14.r3",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "356"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 356,
+      "body_sha256": "b719a1d1c8f3454aba43555fc3edfc1b7c1f93a6b277527530ca23d8b55dcfb9",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":true,\"file_count\":1,\"migration\":true,\"production\":true},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F14.r4",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "356"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 356,
+      "body_sha256": "b719a1d1c8f3454aba43555fc3edfc1b7c1f93a6b277527530ca23d8b55dcfb9",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":true,\"file_count\":1,\"migration\":true,\"production\":true},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"CODE_GROUNDED\"}}"
+    },
+    {
+      "id": "F15",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "365"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 365,
+      "body_sha256": "e9e28e81466873f7c90edc01c3d7f440ef957085c45a8a87d8da1b6064b009a9",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":true,\"file_count\":1,\"migration\":true,\"production\":true},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"ARCHITECTURE_REASONING\"}}"
+    },
+    {
+      "id": "F16",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "368"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 368,
+      "body_sha256": "bedd18b01262edc4b08def295737b5a0c4246e7ace251d71477034cab626a3ec",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":true,\"file_count\":1,\"migration\":true,\"production\":true},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"ADVERSARIAL_FALSIFICATION\"}}"
+    },
+    {
+      "id": "F17",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "369"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 369,
+      "body_sha256": "ebfeca6d9b508dce86334d67ebcb9f3b37c23c7a35238baf4e6cbd361a323948",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":true,\"file_count\":1,\"migration\":true,\"production\":true},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"LONG_HORIZON_DECOMPOSITION\"}}"
+    },
+    {
+      "id": "F18",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "361"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 361,
+      "body_sha256": "63e41aec02b9bd32f869c96a6071280cc9bf41afd9d2417c30f83051123ba4e6",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":true,\"file_count\":1,\"migration\":true,\"production\":true},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"EVIDENCE_SYNTHESIS\"}}"
+    },
+    {
+      "id": "F19",
+      "method": "POST",
+      "path": "/v1/systemone",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "content-length",
+          "359"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer <API-KEY-PLACEHOLDER>"
+        ],
+        [
+          "connection",
+          "close"
+        ],
+        [
+          "user-agent",
+          "jev-wire-adapter/1"
+        ],
+        [
+          "Host",
+          "<HOST>"
+        ]
+      ],
+      "body_bytes": 359,
+      "body_sha256": "0a0864a698dccf4e5f38e2dbec20b51da1e48bdcd9435c38514f26eed5fab15b",
+      "body_equals_plan_bytes": true,
+      "body": "{\"model\":\"jev-1.13.0\",\"questions\":{\"Q_RISK\":{\"instructions\":\"Does this appear to cross a structural-risk boundary?\",\"type\":\"noul\"}},\"state\":{\"change_scope\":{\"auth\":true,\"file_count\":1,\"migration\":true,\"production\":true},\"contains_sensitive\":false,\"packet_version\":\"jev-3\",\"question_id\":\"Q_RISK\",\"requires_external_info\":false,\"task_shape\":\"FRONTIER_UNKNOWN\"}}"
+    }
+  ],
+  "runner_outcome_for_F01": "ok",
+  "ledger_record_kinds": [
+    {
+      "kind": "init",
+      "members": [
+        "kind",
+        "experiment_id",
+        "table_hash",
+        "fixture_list_hash",
+        "schema_sha256",
+        "at",
+        "seq",
+        "prev",
+        "hash"
+      ]
+    },
+    {
+      "kind": "reserved",
+      "members": [
+        "kind",
+        "attempt_id",
+        "wire_body_hash",
+        "table_version",
+        "reserve_usd",
+        "at",
+        "seq",
+        "prev",
+        "hash"
+      ]
+    },
+    {
+      "kind": "observed",
+      "members": [
+        "kind",
+        "attempt_id",
+        "observation",
+        "response_sha256",
+        "response_canonical",
+        "at",
+        "seq",
+        "prev",
+        "hash"
+      ]
+    },
+    {
+      "kind": "settled",
+      "members": [
+        "kind",
+        "attempt_id",
+        "cost_known",
+        "cost_usd",
+        "outcome",
+        "at",
+        "seq",
+        "prev",
+        "hash"
+      ]
+    }
+  ],
+  "observed_record_example": {
+    "kind": "observed",
+    "attempt_id": "F01",
+    "observation": {
+      "wire_body_hash": "1f97669a0301af2fe349f1121c68e61c42a87d9dd969d6956c544057b525b97a",
+      "table_version": "jev-wire-q2",
+      "model_requested": "jev-1.13.0",
+      "model_returned": "jev-1.13.0",
+      "p_yes": 0.25,
+      "billable_input_tokens": 300,
+      "output_tokens": 5,
+      "latency_ms": 2,
+      "provider_confidence_supplied": false
+    },
+    "response_sha256": "97328a973d4d2e497780efbb2e8eaa7bbfeba72cfc0cbceb9cf5be7adda2d9de",
+    "response_canonical": "{\"answers\":{\"Q_RISK\":{\"noul\":0.25,\"type\":\"noul\"}},\"model\":\"jev-1.13.0\",\"usage\":{\"input_tokens\":300,\"output_tokens\":5}}",
+    "at": 1791468791645,
+    "seq": 2,
+    "prev": "556c7bcff666cd53fbcee9fe4d929f26b62ae642c62c27040c9e031425e41de5",
+    "hash": "49043edeab5366d3f99a0d5ce71f9a9e00626951127fb127d9e6fe6f59db9c94"
+  }
+}

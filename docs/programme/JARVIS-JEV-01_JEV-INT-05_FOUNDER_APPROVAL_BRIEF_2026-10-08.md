@@ -8,6 +8,8 @@ One short, controlled test: send **31 tiny synthetic requests** to TypeSafe's Je
 ## What is ready
 A tested wrapper that refuses unless every condition below is met. It has run only against a local mock with a dummy key. It stops at the first failure, never retries, never resends, and keeps two independent records so a crash is detectable. Still to do before activation: a final independent Mac verification of the exact commit.
 
+**Exact bytes:** see `JARVIS-JEV-01_JEV-INT-05_WORKED_PAYLOAD_AND_BOUNDARIES_2026-10-08.md` — the first request, all 31 bodies, headers, accepted response, what leaves, what stays, what stops the run, all derived from the real code (loopback capture, placeholder key).
+
 ## Decisions only you can make
 1. **Governance.** (a) Ratify the J1R5-WIRE amendment (a reopening of the frozen J1 contract; it adds only the fixed question carrier). (b) Admit the Route A records. Caveat: the provider assignment is a *standing* assignment; the *scope of this experiment* lives only in the execution grant. (c) Issue the execution grant (template provided) naming the operator, the authorizer, a window of at most 7 days.
 2. **Data disclosure.** Each request contains exactly: six synthetic packet fields, the model id, the fixed question wording, and ordinary connection metadata plus your API-key identity. **No repository text, no member data, nothing from MAIA.** Approve this exact list or narrow it.
