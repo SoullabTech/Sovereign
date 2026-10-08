@@ -53,3 +53,14 @@ controlling PostgreSQL client to a future writer callback; a mock assertion
 shows that the callback receives that exact client. Actual source intake still
 uses independent pooled queries and has no crash-safe storage reconciliation,
 so the upload endpoints remain blocked.
+
+## Later durable-custody candidate update
+
+`docs/programme/WS_SOURCE_CUSTODY_RESERVATION_VERIFICATION_2026-10-08.md`
+documents the new staged-file journal, the unapplied
+`20261008000002_source_custody_reservations.sql` migration candidate, the
+session-bound durable reservation helper, and the 18-check local PostgreSQL +
+filesystem witness. The set of migrations for the branch is therefore now
+**three**, not two. This supplies a tested building block but does not retire
+the previously identified old-version writer fence or incomplete live-intake
+and positive-browser evidence. HTTP 423 remains in force.

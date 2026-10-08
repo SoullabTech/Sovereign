@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.core.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": [
+    "lib/workbench/sourceCustodyFiles.ts",
+    "lib/workbench/sourceCustodyReservations.ts"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "**/__tests__/**",
+    "**/*.test.*"
+  ]
+}
