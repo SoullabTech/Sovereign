@@ -345,7 +345,8 @@ await check('L15-LW3-storage-identity-is-rechecked-before-every-attempt', async 
   }
   // dispatch-time recheck: the change lands AFTER the pre-reservation check and BEFORE the send (the grant-expiry clock read sits between them)
   { const m = await startMock(); const l = layout({ distinct: true }); const g = grantFor(W, m, { volume_policy: 'DISTINCT_DEVICES', max_attempts: 3 }); let armed = false;
-    const now = () => { if (m.requests.length === 1 && !armed) { armed = true; const cpDir = dirname(l.checkpointPath);
+    const settled = () => { try { return W.createLedger(l.ledgerPath, { experiment_id: g.experiment_id }).read().some((r) => r.kind === 'settled'); } catch { return false; } };
+    const now = () => { if (m.requests.length === 1 && !armed && settled()) { armed = true; const cpDir = dirname(l.checkpointPath);
       renameSync(cpDir, cpDir + '.preserved'); mkdirSync(cpDir); copyFileSync(join(cpDir + '.preserved', 'anchor.json'), join(cpDir, 'anchor.json')); }   // a swap the checkpoint module itself cannot see
       return Date.now(); };
     const out = await R.executeLiveRun(config(l, g), { credential: spyCredential().fn, now });
