@@ -9,6 +9,7 @@ import { IMAGES } from '@/app/writers-studio/full-redesign/fixtures';
 import ObservationDialogue from '@/app/writers-studio/develop/ObservationDialogue';
 import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
+import P4R1WorkMaterialsDoor from './P4R1WorkMaterialsDoor';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import type { ReadingView } from '@/lib/writersStudio/developPresentation';
 import type { ReadingSummary } from '@/lib/writersStudio/developClient';
@@ -150,6 +151,8 @@ export type DevelopScopeChoice =
 export interface P4R1DevelopViewProps {
   manuscriptId: string;
   work: LivingWork | null;
+  /** Reload declared Works after material is kept, so the tray reflects it. */
+  onWorkChanged?: () => void;
   workTitle: string;
   appearance: Appearance;
   field: DevelopField;
@@ -2790,6 +2793,12 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody p4r1-develop-maia">
+        <P4R1WorkMaterialsDoor
+          work={props.work}
+          outline={props.sections.map((section) => section.heading ?? '')}
+          onChanged={props.onWorkChanged}
+          onExplore={(context) => beginWholeConversation(context)}
+        />
         {selectedObservation && props.reading && talking ? (
           <>
             <div className="p4r1-observation-conversation-anchor">

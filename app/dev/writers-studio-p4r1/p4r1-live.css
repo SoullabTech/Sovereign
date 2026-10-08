@@ -3942,3 +3942,27 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
   .p4r1-root .p4r1-proof-empty{flex-direction:column;min-height:0;}
   .p4r1-root .p4r1-proof-frame{min-height:500px;height:68vh;}
 }
+
+/* ── Materials door · bring new material beside the open manuscript ───── */
+.p4r1-root .p4r1-materials-door{margin:0 0 12px}
+.p4r1-root .p4r1-door-form{display:grid;gap:10px}
+.p4r1-root .p4r1-door-form label{display:grid;gap:4px;font:11.5px/1.4 var(--fr-sans-stack);color:var(--fr-muted)}
+.p4r1-root .p4r1-door-form label i{font-style:normal;opacity:.7}
+.p4r1-root .p4r1-door-form textarea,
+.p4r1-root .p4r1-door-form input[type="text"],
+.p4r1-root .p4r1-door-form input:not([type]){
+  width:100%;padding:8px 10px;border:1px solid var(--fr-line-soft);border-radius:8px;
+  background:var(--fr-panel-soft);color:var(--fr-ink2);font:13px/1.5 var(--fr-sans-stack);resize:vertical;
+}
+.p4r1-root .p4r1-door-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.p4r1-root .p4r1-door-actions button,
+.p4r1-root .p4r1-door-file{
+  padding:8px 12px;border:1px solid var(--fr-line-soft);border-radius:8px;cursor:pointer;
+  background:var(--fr-panel-soft);color:var(--fr-title);font:600 12px var(--fr-sans-stack);
+}
+.p4r1-root .p4r1-door-file input{display:none}
+.p4r1-root .p4r1-door-existing,.p4r1-root .p4r1-door-kept{margin-top:12px}
+.p4r1-root .p4r1-door-existing ul,.p4r1-root .p4r1-door-kept ul{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+.p4r1-root .p4r1-door-existing li,.p4r1-root .p4r1-door-kept li{
+  display:grid;gap:6px;padding:9px 10px;border:1px solid var(--fr-line-soft);border-radius:8px;
+}

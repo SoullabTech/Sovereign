@@ -119,7 +119,7 @@ export default function P4R1DevelopController() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const { phase: worksPhase, works } = useLivingWorks();
+  const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
 
   const [summaries, setSummaries] = useState<ReadingSummary[]>([]);
   const [summariesLoading, setSummariesLoading] = useState(true);
@@ -1578,6 +1578,7 @@ export default function P4R1DevelopController() {
     <P4R1DevelopView
       manuscriptId={context.manuscriptId}
       work={work}
+      onWorkChanged={() => void reloadWorks()}
       workTitle={workTitle}
       appearance={appearance}
       field={field}

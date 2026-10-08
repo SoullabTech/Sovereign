@@ -28,6 +28,7 @@ import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscript
 import EditorialDancePanel from './EditorialDancePanel';
 import IsolatedEditorialRoom from './IsolatedEditorialRoom';
 import P4R1FocusMaterials from './P4R1FocusMaterials';
+import P4R1WorkMaterialsDoor from './P4R1WorkMaterialsDoor';
 import P4R1BlankWritingArrival from './P4R1BlankWritingArrival';
 import { composeSelected, editorialSegments } from '@/lib/writersStudio/editorialDiff';
 import type { CanvasInsight } from '@/lib/writersStudio/insightCanvas';
@@ -54,6 +55,7 @@ export type P4R1Pc3WriteEditViewProps = {
   };
   writing: SectionWriting;
   work: LivingWork | null;
+  onWorkChanged?: () => void;
   appearance: Appearance;
   pathname: string;
   initialSearch: string;
@@ -964,6 +966,13 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       <P4R1FocusMaterials
         work={props.work}
         onUseWithMaia={(context) => props.onSendEditorial(context)}
+      />
+
+      <P4R1WorkMaterialsDoor
+        work={props.work}
+        outline={props.context.sections.map((section) => section.heading ?? '')}
+        onChanged={props.onWorkChanged}
+        onExplore={(context) => props.onSendEditorial(context)}
       />
 
       <EditorialDancePanel

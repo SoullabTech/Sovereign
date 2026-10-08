@@ -1274,6 +1274,7 @@ export default function FlagshipWriteEditController() {
             context={context}
             writing={writing}
             work={work}
+            onWorkChanged={() => void reloadWorks()}
             appearance={appearance}
             pathname={pathname}
             initialSearch={initialSearch}
