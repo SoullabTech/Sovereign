@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query, transaction } from '@/lib/db/postgres';
 import { deleteUpload, writeReviewed } from '@/lib/workbench/storage';
+import { sourceUploadPostureAuthorized } from '@/lib/workbench/uploadPostureAuthority';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +40,8 @@ export async function GET(request: NextRequest, { params }: Ctx) {
 export async function PATCH(request: NextRequest, { params }: Ctx) {
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Prevent transcription content persistence under unresolved Sanctuary posture.
+  if (!sourceUploadPostureAuthorized()) return NextResponse.json({ error: 'Source editing is temporarily unavailable until Sanctuary protection is verified.' }, { status: 423 });
   const { id } = await params;
   const body = (await request.json().catch(() => ({}))) as { transcription?: unknown };
   if (typeof body.transcription !== 'string') {
