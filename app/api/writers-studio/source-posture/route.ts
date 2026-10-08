@@ -28,6 +28,10 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   if (!body || Object.keys(body).length !== 1 || !['ordinary', 'sanctuary'].includes(body.posture))
     return NextResponse.json({ error: 'Explicit posture required' }, { status: 400 });
+  // Until every MAIA Sanctuary control observes server acknowledgments,
+  // a direct API call must never unlock source persistence.
+  if (body.posture === 'ordinary') return NextResponse.json(
+    { error: 'Leaving Sanctuary for source persistence is not yet enabled.' }, { status: 423 });
   try {
     const result = await transitionSourcePersistencePosture(request, memberId, body.posture);
     return NextResponse.json(result, { headers: { 'Cache-Control': 'private, no-store' } });

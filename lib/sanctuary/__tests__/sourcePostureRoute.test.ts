@@ -40,3 +40,9 @@ test('explicit authenticated posture invokes server transition only', async () =
   expect(response.status).toBe(200);
   expect(transition).toHaveBeenCalledWith(expect.any(NextRequest), 'm1', 'sanctuary');
 });
+
+test('direct API request cannot unlock ordinary persistence before UI integration', async () => {
+  const response = await POST(request({ posture: 'ordinary' }, 'http://localhost'));
+  expect(response.status).toBe(423);
+  expect(transition).not.toHaveBeenCalled();
+});
