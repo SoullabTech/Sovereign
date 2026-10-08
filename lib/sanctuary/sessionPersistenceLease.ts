@@ -74,3 +74,20 @@ export async function transitionSourcePersistencePosture(
     throw error;
   } finally { client.release(); }
 }
+
+/** Read-only, session-bound display state. Never grants write authority. */
+export async function readSourcePersistencePosture(
+  request: NextRequest, memberId: string,
+): Promise<{ posture: ServerPosture; revision: string }> {
+  const token = sessionToken(request);
+  if (!token || !pool) throw new PersistenceRefused();
+  const found = await pool.query<{ source_persistence_posture: ServerPosture; source_persistence_revision: string }>(
+    `SELECT source_persistence_posture, source_persistence_revision
+       FROM auth_sessions
+      WHERE session_token = $1 AND member_id = $2 AND revoked = FALSE
+        AND expires_at > NOW()`, [token, memberId],
+  );
+  const row = found.rows[0];
+  if (!row) throw new PersistenceRefused();
+  return { posture: row.source_persistence_posture, revision: String(row.source_persistence_revision) };
+}
