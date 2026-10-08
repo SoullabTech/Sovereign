@@ -41,6 +41,14 @@ test('unauthenticated source upload is refused without eligibility or ingestion'
   expect(ingestion).not.toHaveBeenCalled();
 });
 
+test('even an eligible beta member cannot persist uploads without server Sanctuary authority', async () => {
+  eligible.mockResolvedValue({ eligible: true, basis: 'active_beta_tester' });
+  const response = await upload(new NextRequest('http://localhost/api/writers-studio/sources', { method: 'POST' }));
+  expect(response.status).toBe(423);
+  expect(ingestion).not.toHaveBeenCalled();
+  expect(db).not.toHaveBeenCalled();
+});
+
 test('source-upload belonging refuses non-beta before any database access', async () => {
   const req = new NextRequest('http://localhost/api/sovereign/living-works/work-1/materials', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
