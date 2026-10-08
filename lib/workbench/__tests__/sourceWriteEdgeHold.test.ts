@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs';
 const content=readFileSync('Caddyfile','utf8');
 test('shared deny includes source collection and item routes with all write verbs',()=>{
-  expect(content).toMatch(/@source_write_pre_migration_hold\s*\{\s*path \/api\/writers-studio\/sources \/api\/writers-studio\/sources\/\*\s*method POST PUT PATCH\s*\}/);
+  expect(content).toMatch(/@source_write_pre_migration_hold\s*\{\s*path \/api\/writers-studio\/sources \/api\/writers-studio\/sources\/\* \/api\/book-studio\/workbench\/uploads \/api\/book-studio\/workbench\/uploads\/\*\s*method POST PUT PATCH\s*\}/);
   expect(content).toMatch(/handle @source_write_pre_migration_hold\s*\{\s*respond "Source writing temporarily unavailable" 423/);
 });
 test('source delete and read remain outside the added deny',()=>{
@@ -24,4 +24,11 @@ test('the source-write hold is part of the common edge snippet, not an app-only 
   expect(snippetStart).toBeGreaterThanOrEqual(0);
   expect(fence).toBeGreaterThan(snippetStart);
   expect(fence).toBeLessThan(sites);
+});
+
+test('old Book Studio founder Workbench upload and review writers are both fenced',()=>{
+  const snippet=content.match(/@source_write_pre_migration_hold\s*\{([^}]+)\}/)?.[1]||'';
+  expect(snippet).toContain('/api/book-studio/workbench/uploads');
+  expect(snippet).toContain('/api/book-studio/workbench/uploads/*');
+  expect(snippet).toContain('method POST PUT PATCH');
 });

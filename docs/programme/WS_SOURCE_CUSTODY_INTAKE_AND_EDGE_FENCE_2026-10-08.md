@@ -33,3 +33,7 @@ The candidate has five coordinated components:
 6. **Release approval.** Browser evidence, typecheck/preflight, approved rollout ordering, possible rollback, and independent production cutover authorization must all pass. No tool or test here authorizes those later acts.
 
 **Safe default now:** preserve HTTP 423 for source `POST` and `PATCH`; keep candidate Caddy fence unactivated until a separately authorized edge-only release; do not run pending migrations.
+
+## Expanded old-version edge review
+
+Old reader `c9e4f7f7e` has **both** Writer's Studio and founder-only Book Studio Workbench source-writing routes. The initial Writer's Studio-only matcher was insufficient and has been expanded to both families. See `docs/ops/SOURCE_CUSTODY_EDGE_PRODUCTION_PREFLIGHT_2026-10-08.md`. The proposed insertion-only overlay was validated against a read-only copy of the actual modified production Caddyfile; 11/11 local matcher requests passed. Production Caddy remains **unmodified and unfenced**.

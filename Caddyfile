@@ -29,6 +29,10 @@
     # The old application persists uploaded originals and reviewed edits without
     # Sanctuary posture authority. A DB-only guard would be TOO LATE for PATCH:
     # the legacy handler writes reviewed.txt before its database update.
+    # The old founder-only Book Studio Workbench routes independently write
+    # originals/reviewed text and must be fenced as a second API family.
+    # Its PATCH also edits a sanctuary DB flag; that gesture will be unavailable
+    # while the unconditional source-write safety fence is active.
     # Deny these HTTP mutations at Caddy BEFORE changing source-custody schema,
     # while the old reader can still receive traffic. Reads and source DELETE
     # remain available. This is a compensating control, NOT a substitute for
@@ -36,7 +40,7 @@
     # RETIRE ONLY after: edge proof on actual live host(s), old writers drained,
     # new source reservation/crash cleanup proofs and authorized cutover.
     @source_write_pre_migration_hold {
-        path /api/writers-studio/sources /api/writers-studio/sources/*
+        path /api/writers-studio/sources /api/writers-studio/sources/* /api/book-studio/workbench/uploads /api/book-studio/workbench/uploads/*
         method POST PUT PATCH
     }
     handle @source_write_pre_migration_hold {
