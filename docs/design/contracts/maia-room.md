@@ -60,3 +60,23 @@ The room should feel like entering a relationship, not opening another dashboard
 **Same house?** Yes. MAIA remains unmistakably within Soullab through field atmosphere, typography, restraint, and the canonical Home return.
 
 **Distinct room?** Yes. The center is the relationship with MAIA; Home and the other facets remain elsewhere.
+
+## Sanctuary source-persistence notification — October 8, 2026 local candidate
+
+Scope: `app/maia/page.tsx` is the encounter component re-exported by
+`app/maia/encounter/page.tsx`. This change mounts a non-rendering listener for the
+existing MAIA settings event; it adds no visible control, language, position, or
+layout. Voice HUD, Quick Settings, and direct conversation-command changes are
+**not** certified by this amendment.
+
+- **Human activity:** a member who has entered Sanctuary should not have that
+  entry lost because the encounter mounted after the original event.
+- **Reference:** the existing MAIA room visuals above are pre-change baseline
+  references, not new evidence of the changed runtime behavior.
+- **House versus room:** the House retains its orientation, while this MAIA
+  encounter coordinates a narrowly scoped privacy signal without taking over
+  Writer's Studio's authorization.
+- **Verification:** coordinator tests include initial ON, OFF, malformed state,
+  event entry, and listener teardown. No authenticated desktop/mobile visual
+  witness has been performed on this candidate. That remains an explicit release
+  blocker, as do server acknowledgement display and all source-write tests.

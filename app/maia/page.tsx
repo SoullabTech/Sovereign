@@ -62,6 +62,8 @@ import {
   REFLECTION_LENSES,
 } from '@/lib/consciousness/therapeuticFrameworks';
 import { apiUrl, apiFetch, clearAuthState } from '@/lib/http/apiBase';
+import { coordinateSourcePosture } from '@/lib/sanctuary/sourcePostureCoordinator';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { reportServerIdentityParity } from '@/lib/auth/verifyServerIdentity';
 
 // Migration version - increment to force re-auth for all users
@@ -807,7 +809,14 @@ function MAIAPageContent() {
       if (detail?.sanctuary !== undefined) setIsSanctuary(detail.sanctuary);
     };
     window.addEventListener('maia-settings-changed', handler);
-    return () => window.removeEventListener('maia-settings-changed', handler);
+    const stopSourcePosture = coordinateSourcePosture(window, undefined, () => {
+      const current = readCurrentSanctuaryPosture();
+      return current.resolved ? current.sanctuary : null;
+    });
+    return () => {
+      window.removeEventListener('maia-settings-changed', handler);
+      stopSourcePosture();
+    };
   }, []);
 
   if (featureFlags.spatialMaiaShell) {
