@@ -5,6 +5,7 @@
  * while a previously authorized write is still running.
  */
 import type { NextRequest } from 'next/server';
+import type { PoolClient } from 'pg';
 import { pool } from '@/lib/db/postgres';
 import { decideSourcePersistence, type ServerPosture } from './persistenceProtocol';
 
@@ -17,7 +18,7 @@ function sessionToken(request: NextRequest): string | null {
 }
 
 export async function withSourcePersistenceLease<T>(
-  request: NextRequest, memberId: string, work: () => Promise<T>,
+  request: NextRequest, memberId: string, work: (lockedClient: Pick<PoolClient, 'query'>) => Promise<T>,
 ): Promise<T> {
   const token = sessionToken(request);
   if (!token || !pool) throw new PersistenceRefused();
@@ -38,9 +39,12 @@ export async function withSourcePersistenceLease<T>(
       exclusivePersistenceLease: Boolean(row),
       leaseRevision: revision, postureRevision: revision,
     }) !== 'allow') throw new PersistenceRefused();
-    // The row lock remains held while asynchronous storage and DB writes finish.
-    // A transition can only commit after this callback has completed.
-    const result = await work();
+    // Pass the *same* leased transaction client into the protected callback.
+    // A separate pool.query() inside the callback could exhaust the pool when
+    // many concurrent sessions hold one connection each. The intake caller
+    // must be refactored to use this client before this adapter can be wired.
+    // Filesystem writes still require an independently admitted crash journal.
+    const result = await work(client);
     await client.query('COMMIT');
     return result;
   } catch (error) {

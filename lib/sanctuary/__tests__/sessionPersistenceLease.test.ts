@@ -66,3 +66,16 @@ test('contended session lock refuses without attempting the content writer', asy
   expect(client.query.mock.calls.some(([sql]: [string]) => sql === 'ROLLBACK')).toBe(true);
   expect(release).toHaveBeenCalledTimes(1);
 });
+
+test('passes the lock-owning database transaction client to the writer', async () => {
+  const client = setup('ordinary');
+  const writer = jest.fn(async (lockedClient: any) => {
+    expect(lockedClient).toBe(client);
+    await lockedClient.query('SELECT 1');
+    return 'ok';
+  });
+  await expect(withSourcePersistenceLease(req(), 'm1', writer)).resolves.toBe('ok');
+  expect(writer).toHaveBeenCalledTimes(1);
+  expect(client.query.mock.calls.map(([sql]: [string]) => sql).slice(-2)).toEqual(['SELECT 1', 'COMMIT']);
+  expect(release).toHaveBeenCalledTimes(1);
+});
