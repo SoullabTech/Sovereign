@@ -1,0 +1,62 @@
+COMMAND=/Users/soullab/.nvm/versions/node/v22.22.3/bin/node scripts/builder/__tests__/jev-wire-v1-matrix.mjs
+CWD=/Users/soullab/jev-int05-prelive-wrapper-20261007
+SOURCE_HEAD=3eefdeb81fc39e24e328182d845ad3e024a3ef32
+STARTED_AT=2026-10-08T00:26:26.311493+00:00
+
+REFERENCE  clean (0 failed)
+
+KILLED  DC-ARRAY-QUESTIONS  on W1   collateral: W4-wording-is-frozen-and-not-a-per-request-channel, W9-L2-sensitive-true-valid-to-host-but-excluded-by-experiment-allowlist, W10-hash-and-reservation-durable-before-send, W11-crossing-unknown-retains-reservation-and-halts, W12-no-automatic-retry-and-halt-blocks-everything-after, W13-unknown-usage-reservation-is-never-released, W14-attempt-cap-is-31-not-120, W15-budget-ceiling-enforced, W16-attempt-id-used-once, W17-model-drift-halts, W18-observation-only-never-advice, W22-malformed-response-refused-and-halts, W23-unexpected-usage-halts, W24-corrupt-or-ambiguous-ledger-refuses-to-send, W25-table-and-fixture-hashes-pinned, W27-response-shape-enforced-exactly, W28-observation-durable-before-success-is-reported, W29-owned-deadline-for-a-transport-that-never-resolves, W30-process-exit-after-reservation-blocks-restart, W31-ledger-validates-events-transitions-and-integrity, W32-ledger-is-bound-and-loss-is-not-a-fresh-start, W33-reserve-once-across-processes, W35-stop-survives-process-loss-between-settled-and-halted
+KILLED  DC-PER-REQUEST-WORDING  on W4
+KILLED  DC-WORDING-NOT-VERIFIED  on W4
+KILLED  DC-KEY-MISMATCH-TOLERATED  on W3
+KILLED  DC-STATE-NOT-J1-CHECKED  on W2
+KILLED  DC-MODEL-UNPINNED  on W5
+KILLED  DC-NONCANONICAL-HASH  on W6   collateral: W10-hash-and-reservation-durable-before-send, W11-crossing-unknown-retains-reservation-and-halts, W12-no-automatic-retry-and-halt-blocks-everything-after, W13-unknown-usage-reservation-is-never-released, W14-attempt-cap-is-31-not-120, W15-budget-ceiling-enforced, W16-attempt-id-used-once, W17-model-drift-halts, W18-observation-only-never-advice, W22-malformed-response-refused-and-halts, W23-unexpected-usage-halts, W24-corrupt-or-ambiguous-ledger-refuses-to-send, W25-table-and-fixture-hashes-pinned, W27-response-shape-enforced-exactly, W28-observation-durable-before-success-is-reported, W29-owned-deadline-for-a-transport-that-never-resolves, W30-process-exit-after-reservation-blocks-restart, W31-ledger-validates-events-transitions-and-integrity, W32-ledger-is-bound-and-loss-is-not-a-fresh-start, W33-reserve-once-across-processes, W35-stop-survives-process-loss-between-settled-and-halted
+KILLED  DC-ALLOWLIST-BYPASS  on W9
+KILLED  DC-FIXTURE-DRIFT  on W7   collateral: W25-table-and-fixture-hashes-pinned
+KILLED  DC-TABLE-DRIFT  on W25
+KILLED  DC-NO-RESERVATION-BEFORE-SEND  on W10   collateral: W11-crossing-unknown-retains-reservation-and-halts, W12-no-automatic-retry-and-halt-blocks-everything-after, W13-unknown-usage-reservation-is-never-released, W14-attempt-cap-is-31-not-120, W16-attempt-id-used-once, W17-model-drift-halts, W18-observation-only-never-advice, W22-malformed-response-refused-and-halts, W27-response-shape-enforced-exactly, W28-observation-durable-before-success-is-reported, W29-owned-deadline-for-a-transport-that-never-resolves, W30-process-exit-after-reservation-blocks-restart, W31-ledger-validates-events-transitions-and-integrity, W33-reserve-once-across-processes, W35-stop-survives-process-loss-between-settled-and-halted, W36-persistence-failure-at-the-settlement-boundary-also-stops
+KILLED  DC-RESERVE-AFTER-SEND  on W11   collateral: W10-hash-and-reservation-durable-before-send, W12-no-automatic-retry-and-halt-blocks-everything-after, W13-unknown-usage-reservation-is-never-released, W29-owned-deadline-for-a-transport-that-never-resolves, W30-process-exit-after-reservation-blocks-restart, W35-stop-survives-process-loss-between-settled-and-halted, W36-persistence-failure-at-the-settlement-boundary-also-stops
+KILLED  DC-HALT-LOG-RECORD-NOT-WRITTEN  on W11
+KILLED  DC-CROSSING-UNKNOWN-NOT-STOPPING  on W12   collateral: W11-crossing-unknown-retains-reservation-and-halts, W29-owned-deadline-for-a-transport-that-never-resolves, W35-stop-survives-process-loss-between-settled-and-halted
+KILLED  DC-AUTO-RETRY  on W12
+KILLED  DC-UNKNOWN-USAGE-RELEASED  on W13   collateral: W29-owned-deadline-for-a-transport-that-never-resolves
+KILLED  DC-CAP-120  on W14
+KILLED  DC-CEILING-OFF  on W15
+KILLED  DC-DUPLICATE-ATTEMPT-ALLOWED  on W16
+KILLED  DC-MODEL-DRIFT-TOLERATED  on W17   collateral: W35-stop-survives-process-loss-between-settled-and-halted
+KILLED  DC-OBSERVATION-BECOMES-ADVICE  on W18
+KILLED  DC-ADMISSION-PATH-IMPORTED  on W19
+KILLED  DC-NETWORK-CLIENT-EMBEDDED  on W19
+KILLED  DC-UNWITNESSED-SHAPE-SENDS  on W20
+KILLED  DC-RESPONSE-NOT-VALIDATED  on W22
+KILLED  DC-USAGE-ANOMALY-IGNORED  on W23   collateral: W35-stop-survives-process-loss-between-settled-and-halted
+KILLED  DC-AMBIGUOUS-LEDGER-TAIL-TOLERATED  on W24
+KILLED  DC-OLD-RESPONSE-ENVELOPE  on W27   collateral: W10-hash-and-reservation-durable-before-send, W14-attempt-cap-is-31-not-120, W16-attempt-id-used-once, W17-model-drift-halts, W18-observation-only-never-advice, W25-table-and-fixture-hashes-pinned, W28-observation-durable-before-success-is-reported, W31-ledger-validates-events-transitions-and-integrity, W35-stop-survives-process-loss-between-settled-and-halted, W37-token-counts-are-nonnegative-safe-integers
+KILLED  DC-EXTRA-ROOT-ACCEPTED  on W27
+KILLED  DC-EXTRA-USAGE-ACCEPTED  on W27
+KILLED  DC-EXTRA-ANSWER-ACCEPTED  on W27
+KILLED  DC-CONFIDENCE-FIELD-ACCEPTED  on W27
+KILLED  DC-OBSERVATION-NOT-PERSISTED  on W28   collateral: W31-ledger-validates-events-transitions-and-integrity, W35-stop-survives-process-loss-between-settled-and-halted
+KILLED  DC-OK-ON-PERSIST-FAILURE  on W28
+KILLED  DC-NO-DEADLINE  on W29
+KILLED  DC-UNRESOLVED-ATTEMPT-IGNORED  on W30   collateral: W36-persistence-failure-at-the-settlement-boundary-also-stops
+KILLED  DC-UNKNOWN-EVENT-IGNORED  on W31
+KILLED  DC-TRANSITIONS-UNCHECKED  on W31
+KILLED  DC-CHAIN-UNCHECKED  on W31
+KILLED  DC-MISSING-LEDGER-AUTO-INITIALIZED  on W32
+KILLED  DC-BINDING-UNCHECKED  on W32
+KILLED  DC-NO-CROSS-PROCESS-LOCK  on W33
+KILLED  DC-HALT-ONLY-IF-RECORD-WRITTEN  on W35
+KILLED  DC-OUTCOME-STOP-NOT-DERIVED  on W35
+KILLED  DC-DRIFT-STOP-NOT-DERIVED  on W35
+KILLED  DC-USAGE-STOP-NOT-DERIVED  on W35
+KILLED  DC-SETTLEMENT-FAILURE-REPORTED-OK  on W36
+KILLED  DC-UNSAFE-TOKEN-ACCEPTED  on W37
+KILLED  DC-UNSAFE-LEDGER-TOKEN-ACCEPTED  on W37
+
+49/49 candidates killed on their named check · 0 problems
+
+EXIT_CODE=0
+ERROR=None
+FINISHED_AT=2026-10-08T00:29:25.011581+00:00

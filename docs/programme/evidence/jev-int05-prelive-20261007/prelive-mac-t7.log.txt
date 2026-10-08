@@ -1,0 +1,10 @@
+COMMAND=/Users/soullab/.nvm/versions/node/v22.22.3/bin/node scripts/builder/__tests__/jev-wire-prelive-two-volume-witness.mjs '/Volumes/T7 Shield'
+CWD=/Users/soullab/jev-int05-prelive-wrapper-20261007
+SOURCE_HEAD=3eefdeb81fc39e24e328182d845ad3e024a3ef32
+STARTED_AT=2026-10-08T00:26:14.718872+00:00
+
+{"source":"JEV-INT-05-PRELIVE-LOCAL-MOCK","tests":"PASS","actual_provider_requests":0,"actual_spend_usd":0,"synthetic_mock_requests":31,"reserved_before_mock":31,"persisted_observations":31,"replay_refused":true,"initial_attempt_counted_in_31":true,"committed_gate_send_count":0,"remote_allowed":false,"simulated_usd":0.0003906,"ledger_device":16777230,"checkpoint_device":16777244,"independent_devices":true}
+
+EXIT_CODE=0
+ERROR=None
+FINISHED_AT=2026-10-08T00:26:17.052377+00:00

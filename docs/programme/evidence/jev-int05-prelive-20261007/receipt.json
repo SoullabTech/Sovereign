@@ -1,0 +1,255 @@
+{
+  "head": "3eefdeb81fc39e24e328182d845ad3e024a3ef32",
+  "generated_at": "2026-10-08T00:29:25.042589+00:00",
+  "commands": [
+    {
+      "name": "prelive-proof-1",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-prelive-wrapper-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "7a2cb1459adde683d0b13b86bc3374be51c944fddc7618be28e3ba6fa48bbfe7",
+      "duration_sec": 4.419,
+      "started_at": "2026-10-08T00:26:10.299241+00:00",
+      "finished_at": "2026-10-08T00:26:14.718734+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/prelive-proof-1.log.txt"
+    },
+    {
+      "name": "prelive-proof-2",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-prelive-wrapper-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "905d6f05cf06b86e023998651e81a70d60f1cf044a85fb83c7ca82b48db403e6",
+      "duration_sec": 4.431,
+      "started_at": "2026-10-08T00:26:10.299416+00:00",
+      "finished_at": "2026-10-08T00:26:14.730216+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/prelive-proof-2.log.txt"
+    },
+    {
+      "name": "prelive-proof-3",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-prelive-wrapper-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "ffe2ef56a9d3daffad617b12a2858f2319846f6f1f96936409e04ac4bd371fe5",
+      "duration_sec": 4.373,
+      "started_at": "2026-10-08T00:26:10.299463+00:00",
+      "finished_at": "2026-10-08T00:26:14.672707+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/prelive-proof-3.log.txt"
+    },
+    {
+      "name": "prelive-matrix",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-prelive-wrapper-v1-matrix.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "9ce9ce4f985fcd71314b0a849fa2f23f32754f425930e12caabee3c42ac6c943",
+      "duration_sec": 3.295,
+      "started_at": "2026-10-08T00:26:14.673170+00:00",
+      "finished_at": "2026-10-08T00:26:17.967981+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/prelive-matrix.log.txt"
+    },
+    {
+      "name": "prelive-mac-t7",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-prelive-two-volume-witness.mjs",
+        "/Volumes/T7 Shield"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "6684ca285c0b5e3a66de5e423c924c42ed00139fb0660fe009efe70737566d95",
+      "duration_sec": 2.335,
+      "started_at": "2026-10-08T00:26:14.718872+00:00",
+      "finished_at": "2026-10-08T00:26:17.054181+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/prelive-mac-t7.log.txt"
+    },
+    {
+      "name": "adapter-proof",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-http-adapter-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "bb2ed424a0877a0c287adb39f029bc8afd1ce27d84991fcafc5f879ec71e9130",
+      "duration_sec": 7.45,
+      "started_at": "2026-10-08T00:26:14.730320+00:00",
+      "finished_at": "2026-10-08T00:26:22.180202+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/adapter-proof.log.txt"
+    },
+    {
+      "name": "adapter-matrix",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-http-adapter-v1-matrix.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "641a6666ff19cedf974a0163322f3148dfb5778a2c98017516e60af951fc96f9",
+      "duration_sec": 187.859,
+      "started_at": "2026-10-08T00:26:17.054433+00:00",
+      "finished_at": "2026-10-08T00:29:24.912252+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/adapter-matrix.log.txt"
+    },
+    {
+      "name": "checkpoint-proof",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "c32135e9766ec4d79941ffd302a81da3635249295cc7db1ddeae5f45d876815a",
+      "duration_sec": 3.307,
+      "started_at": "2026-10-08T00:26:17.968101+00:00",
+      "finished_at": "2026-10-08T00:26:21.275542+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/checkpoint-proof.log.txt"
+    },
+    {
+      "name": "checkpoint-matrix",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-matrix.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "db0aba2284686d52f2a016a16491cbb90412d65f1e2c41a8d38eac61648d583f",
+      "duration_sec": 67.419,
+      "started_at": "2026-10-08T00:26:21.276215+00:00",
+      "finished_at": "2026-10-08T00:27:28.694461+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/checkpoint-matrix.log.txt"
+    },
+    {
+      "name": "wire-proof",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "a49f4e463b9f8d6a0b7087994102011e2dfe8cb12315c5d75b7c8c72201903d6",
+      "duration_sec": 4.131,
+      "started_at": "2026-10-08T00:26:22.180334+00:00",
+      "finished_at": "2026-10-08T00:26:26.311384+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/wire-proof.log.txt"
+    },
+    {
+      "name": "wire-matrix",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-matrix.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "26b9aa0edc02cfa796a67e6f43679a79e2739eaa1c411483b61b9f3758ce6807",
+      "duration_sec": 178.701,
+      "started_at": "2026-10-08T00:26:26.311493+00:00",
+      "finished_at": "2026-10-08T00:29:25.011746+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/wire-matrix.log.txt"
+    },
+    {
+      "name": "findings-old",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "old"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "b997028ba54ca35bcbf1d30579b3be7cb4af773d80235f04960427ce52d021c3",
+      "duration_sec": 1.573,
+      "started_at": "2026-10-08T00:27:28.694602+00:00",
+      "finished_at": "2026-10-08T00:27:30.267790+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/findings-old.log.txt"
+    },
+    {
+      "name": "findings-new",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "new"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "1c557b530e855eb428948c3cf259b827412ce20963e7d3cfb22a205f82433a89",
+      "duration_sec": 1.005,
+      "started_at": "2026-10-08T00:27:30.268144+00:00",
+      "finished_at": "2026-10-08T00:27:31.272751+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/findings-new.log.txt"
+    },
+    {
+      "name": "J1-host",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-judgment-host-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "f8946f85d6c6e116f1ac3180925b1fc8c9d99a443b4ac34ff233d17a993479df",
+      "duration_sec": 0.039,
+      "started_at": "2026-10-08T00:27:31.272885+00:00",
+      "finished_at": "2026-10-08T00:27:31.312276+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/J1-host.log.txt"
+    },
+    {
+      "name": "J1-freeze",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/verify-jarvis-jev-j1-freeze.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "766013ae76f845405977c275218c24bb1894f274e9087a8aacf89e34f6f42747",
+      "duration_sec": 0.183,
+      "started_at": "2026-10-08T00:27:31.312406+00:00",
+      "finished_at": "2026-10-08T00:27:31.495111+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/J1-freeze.log.txt"
+    },
+    {
+      "name": "J1-matrix",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "node_modules/tsx/dist/cli.mjs",
+        "tests/constitutional/jarvis-jev-j1/matrix.ts"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "53d97b1c60c3603f27fa9ef786cac59f3d01af327a32fa9c45aa7c5b8b06c86a",
+      "duration_sec": 0.291,
+      "started_at": "2026-10-08T00:27:31.495220+00:00",
+      "finished_at": "2026-10-08T00:27:31.785738+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/J1-matrix.log.txt"
+    },
+    {
+      "name": "J1-typecheck",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "-p",
+        "tsconfig.jarvis-jev-j1.json"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "sha256": "811b6ae1fcae7ac83d4495bc883d43dddf8a84ca4bb20627bb4d495a08b7c7f7",
+      "duration_sec": 0.447,
+      "started_at": "2026-10-08T00:27:31.785856+00:00",
+      "finished_at": "2026-10-08T00:27:32.232552+00:00",
+      "log": "docs/programme/evidence/jev-int05-prelive-20261007/J1-typecheck.log.txt"
+    }
+  ],
+  "source_changed": false,
+  "all_pass": true,
+  "typecheck_scope": "J1 only",
+  "fake_transports_only": true,
+  "credentials_supplied": "dummy only"
+}

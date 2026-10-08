@@ -1,0 +1,22 @@
+COMMAND=/Users/soullab/.nvm/versions/node/v22.22.3/bin/node scripts/builder/__tests__/jev-wire-prelive-wrapper-v1-matrix.mjs
+CWD=/Users/soullab/jev-int05-prelive-wrapper-20261007
+SOURCE_HEAD=3eefdeb81fc39e24e328182d845ad3e024a3ef32
+STARTED_AT=2026-10-08T00:26:14.673170+00:00
+
+REFERENCE 12/12 pass
+KILLED MC-OFF-GATE-BYPASS on P01-inactive-by-default-does-not-initialize-or-send
+KILLED MC-REMOTE-ENDPOINT-ACCEPTED on P02-no-remote-endpoint-under-any-mode
+KILLED MC-UNPINNED-WIRE-TABLE on P03-table-fixtures-model-and-caps-are-pinned
+KILLED MC-SAME-DEVICE-TOLERATED on P04-physical-device-pins-are-required-and-verified
+KILLED MC-IMPLICIT-INITIALIZATION on P05-first-initialization-is-explicit-and-never-resets
+KILLED MC-WIRE-BYTES-ALTERED on P06-all-31-local-requests-are-anchored-and-replay-is-blocked
+KILLED MC-HTTP-RETRIES on P08-429-stops-experiment-no-retry-no-next-send
+KILLED MC-STORAGE-PREFLIGHT-SKIPPED on P09-storage-drift-refused-before-reservation
+KILLED MC-PREFLIGHT-MUTATES-HISTORY on P11-preflight-only-does-not-create-ledger-checkpoint-or-locks
+KILLED MC-READS-ENVIRONMENT on P12-no-real-endpoint-credentials-external-permissions-or-recovery
+KILLED MC-ACTIVATES-REMOTE-ADAPTER on P12-no-real-endpoint-credentials-external-permissions-or-recovery
+11/11 named kills · 0 problems
+
+EXIT_CODE=0
+ERROR=None
+FINISHED_AT=2026-10-08T00:26:17.966821+00:00
