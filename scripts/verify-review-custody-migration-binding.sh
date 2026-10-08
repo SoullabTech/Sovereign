@@ -94,16 +94,30 @@ issues=[]
 def body(name):
     m=re.search(rf'^{name}\(\) \{{(.*?)^\}}', s, re.S|re.M)
     return m.group(1) if m else ""
-for fn, later in (
-    ("cmd_deploy", "tag_images_for_rollback"),
-    ("cmd_update", "tag_images_for_rollback"),
-    ("cmd_migrate", 'docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate'),
-):
+# All three production entrypoints must consult the composed custody gate
+# *before* dispatching the migration helper. Deploy/update may only advance
+# rollback roles after that helper succeeds. This follows the actual call
+# graph instead of searching cmd_migrate for a retired inline docker command.
+for fn in ("cmd_deploy", "cmd_update", "cmd_migrate"):
     b=body(fn)
-    g=b.find("review_migration_custody_or_abort")
-    a=b.find(later)
-    if g < 0 or a < 0 or g >= a:
-        issues.append(f"{fn}: custody gate is not strictly before governed mutation")
+    g=b.find('review_migration_custody_or_abort "')
+    m=b.find('run_migrations_or_abort "')
+    if g < 0 or m < 0 or g >= m:
+        issues.append(f"{fn}: custody review must precede migration helper")
+    if fn in ("cmd_deploy", "cmd_update"):
+        tag=b.find('tag_images_for_rollback "')
+        if tag < 0 or m < 0 or m >= tag:
+            issues.append(f"{fn}: candidate/rollback tagging must follow migration helper")
+    if 'deploy_ctx_compose --profile migrate run' in b or 'docker compose -f "$COMPOSE_FILE" --profile migrate' in b:
+        issues.append(f"{fn}: direct migration runner bypasses governed helper")
+
+helper=body('run_migrations_or_abort')
+witness=helper.find('rewitness_migration_relation_or_abort "$phase"')
+runner=helper.find('deploy_ctx_compose --profile migrate run --rm migrate')
+if witness < 0 or runner < 0 or witness >= runner:
+    issues.append('run_migrations_or_abort: exact-state re-witness must precede schema mutation')
+if not re.search(r'if\s*!\s*rewitness_migration_relation_or_abort\s+"\$phase";\s*then\s*exit\s+1\s*fi',helper):
+    issues.append('run_migrations_or_abort: re-witness failure is not a hard refusal')
 for x in issues: print("STRUCT_FAIL", x)
 sys.exit(len(issues))
 PY
