@@ -63,6 +63,7 @@ const EDIT_STRENGTH_LABEL: Record<EditorialLatitude, string> = {
 };
 
 type FocusLayout = 'balanced' | 'passage' | 'maia' | 'stacked' | 'custom';
+type ControlPanel = 'layout' | 'tools' | 'preferences';
 type ReadingSize = 'large' | 'larger' | 'largest';
 type LineSpacing = 'open' | 'more-open';
 
@@ -155,8 +156,36 @@ export default function IsolatedEditorialRoom({
   const [workingPace, setWorkingPace] = useState<WorkingPace>(DEFAULT_WORKING_STYLE.pace);
   const [explanationDepth, setExplanationDepth] = useState<ExplanationDepth>(DEFAULT_WORKING_STYLE.explanation);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
+  const [openPanel, setOpenPanel] = useState<ControlPanel | null>(null);
+  const controlsRef = useRef<HTMLDivElement | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
   const drag = useRef<{ startX: number; startLeft: number; width: number } | null>(null);
+
+  // Only disclosure state changes. Panels remain mounted, preserving their
+  // values, the writer's local draft, and the ongoing editorial conversation.
+  const togglePanel = (panel: ControlPanel) => {
+    setOpenPanel(current => current === panel ? null : panel);
+  };
+
+  useEffect(() => {
+    if (!openPanel) return;
+    const outside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !controlsRef.current?.contains(event.target)) setOpenPanel(null);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      const heading = controlsRef.current?.querySelector<HTMLElement>(`[data-writing-panel="${openPanel}"] > summary`);
+      setOpenPanel(null);
+      heading?.focus({ preventScroll: true });
+    };
+    document.addEventListener('pointerdown', outside, true);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('pointerdown', outside, true);
+      document.removeEventListener('keydown', escape);
+    };
+  }, [openPanel]);
 
   const context = useMemo(
     () => passageContext(sectionBody, currentText),
@@ -239,11 +268,11 @@ export default function IsolatedEditorialRoom({
     if (event.key === 'ArrowLeft') {
       event.preventDefault();
       setLeftPercent((value) => clamp(value - 3));
-      setLayout('balanced');
+      setLayout('custom');
     } else if (event.key === 'ArrowRight') {
       event.preventDefault();
       setLeftPercent((value) => clamp(value + 3));
-      setLayout('balanced');
+      setLayout('custom');
     } else if (event.key === 'Home') {
       event.preventDefault();
       setLeftPercent(MIN_LEFT);
@@ -294,7 +323,7 @@ export default function IsolatedEditorialRoom({
           <span className="p4r1-eyebrow">{craftMode ? 'Craft Canvas · See · Talk · Make' : 'Passage focus'}</span>
           <strong>{title}</strong>
         </div>
-        <div className="p4r1-isolated-controls">
+        <div ref={controlsRef} className="p4r1-isolated-controls">
           <span className="p4r1-isolated-balance">
             {layout === 'custom' ? 'Custom · ' : ''}{Math.round(leftPercent)} / {100 - Math.round(leftPercent)}
           </span>
@@ -302,8 +331,8 @@ export default function IsolatedEditorialRoom({
             Edit · {EDIT_STRENGTH_LABEL[editingLatitude]}
           </span>
 
-          <details className="p4r1-isolated-menu">
-            <summary>Layout</summary>
+          <details className="p4r1-isolated-menu" data-writing-panel="layout" open={openPanel === 'layout'}>
+            <summary aria-expanded={openPanel === 'layout'} onClick={event => { event.preventDefault(); togglePanel('layout'); }}>Layout</summary>
             <div className="p4r1-isolated-menu-card">
               {([
                 ['balanced', 'Balanced', 'Equal room for passage and MAIA'],
@@ -324,8 +353,8 @@ export default function IsolatedEditorialRoom({
             </div>
           </details>
 
-          <details className="p4r1-isolated-menu">
-            <summary>Tools</summary>
+          <details className="p4r1-isolated-menu" data-writing-panel="tools" open={openPanel === 'tools'}>
+            <summary aria-expanded={openPanel === 'tools'} onClick={event => { event.preventDefault(); togglePanel('tools'); }}>Tools</summary>
             <div className="p4r1-isolated-menu-card p4r1-isolated-tool-list">
               <label>
                 <input type="checkbox" checked={showDirections} onChange={(e) => setShowDirections(e.target.checked)} />
@@ -342,8 +371,8 @@ export default function IsolatedEditorialRoom({
             </div>
           </details>
 
-          <details className="p4r1-isolated-menu">
-            <summary>Preferences</summary>
+          <details className="p4r1-isolated-menu" data-writing-panel="preferences" open={openPanel === 'preferences'}>
+            <summary aria-expanded={openPanel === 'preferences'} onClick={event => { event.preventDefault(); togglePanel('preferences'); }}>Preferences</summary>
             <div className="p4r1-isolated-menu-card p4r1-isolated-preferences">
               <section className="p4r1-working-style" aria-label="Working style">
                 <div className="p4r1-working-style-head">

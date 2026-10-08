@@ -60,8 +60,9 @@ test('layout presets, tools, preferences and reset all change only isolated pres
   expect(room.dataset.showDirections).toBe('true');
   expect(room.dataset.showWorking).toBe('true');
   expect(room.dataset.showDepth).toBe('true');
-  expect(container.textContent).toContain('Revision · Touch');
-  expect(container.textContent).toContain('Revision latitude');
+  // The plain UI says Light; the governed numeric limit remains 1.
+  expect(container.textContent).toContain('Edit · Light');
+  expect(container.textContent).toContain('Edit strength');
 
   const button = (text: string) =>
     Array.from(container.querySelectorAll('button')).find((b) => b.textContent?.trim().startsWith(text))!;
@@ -155,7 +156,7 @@ test('Preferences exposes the author-set revision latitude and paragraph permiss
   const slider = container.querySelector('#p4r1-editing-latitude') as HTMLInputElement;
   expect(slider).toBeTruthy();
   expect(slider.value).toBe('1');
-  expect(slider.getAttribute('aria-valuetext')).toBe('Touch');
+  expect(slider.getAttribute('aria-valuetext')).toBe('Light');
 
   expect(slider.min).toBe('1');
   expect(slider.max).toBe('5');
