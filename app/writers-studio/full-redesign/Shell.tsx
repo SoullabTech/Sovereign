@@ -128,10 +128,14 @@ export function Shell(props: ShellProps) {
 
 export function SoullabMark() {
   return (
-    <svg className="fr-mark" viewBox="0 0 26 26" fill="none" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" aria-hidden="true">
-      <circle cx="13" cy="13" r="2.6" />
-      <path d="M13 3.2c1.6 2 1.6 4.2 0 6.2-1.6-2-1.6-4.2 0-6.2zM13 16.6c1.6 2 1.6 4.2 0 6.2-1.6-2-1.6-4.2 0-6.2zM3.2 13c2-1.6 4.2-1.6 6.2 0-2 1.6-4.2 1.6-6.2 0zM16.6 13c2-1.6 4.2-1.6 6.2 0-2 1.6-4.2 1.6-6.2 0zM6.1 6.1c2.5.3 4 1.8 4.3 4.3-2.5-.3-4-1.8-4.3-4.3zM15.6 15.6c2.5.3 4 1.8 4.3 4.3-2.5-.3-4-1.8-4.3-4.3zM19.9 6.1c-.3 2.5-1.8 4-4.3 4.3.3-2.5 1.8-4 4.3-4.3zM10.4 15.6c-.3 2.5-1.8 4-4.3 4.3.3-2.5 1.8-4 4.3-4.3z" />
-    </svg>
+    <img
+      className="fr-mark"
+      src="/logo_flower%202.png"
+      width={28}
+      height={28}
+      alt=""
+      aria-hidden="true"
+    />
   );
 }
 

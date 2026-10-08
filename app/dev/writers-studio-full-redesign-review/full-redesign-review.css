@@ -19,7 +19,7 @@
   border-bottom: 1px solid var(--fr-line); box-shadow: 0 2px 6px rgba(8, 20, 59, .035); position: relative; z-index: 2; }
 .fr-brand { display: flex; align-items: center; gap: 11px; margin-right: 52px; font-family: var(--fr-serif-stack);
   font-size: 25px; font-weight: 500; color: var(--fr-title); letter-spacing: -.005em; }
-.fr-mark { width: 25px; height: 25px; color: var(--fr-title); }
+.fr-mark { width: 28px; height: 28px; object-fit: contain; flex: none; }
 .fr-nav { display: flex; height: 100%; min-width: 0; flex: 1 1 auto; overflow-x: auto; scrollbar-width: none; }
 .fr-nav::-webkit-scrollbar { display: none; }
 .fr-nav-item { position: relative; height: 100%; padding: 0 26px; font-size: 15.5px; color: var(--fr-ink2); }
