@@ -151,11 +151,15 @@ test('Explore and Place send only on the writer’s explicit choice, and Place a
   await act(async () => button('Keep with this Work').click());
   expect(onExplore).not.toHaveBeenCalled();
 
-  await act(async () => button('Help me find where it fits').click());
+  await act(async () => button('Where would it fit best, and how?').click());
   expect(onExplore).toHaveBeenCalledTimes(1);
   const sent: string = onExplore.mock.calls[0][0];
   expect(sent).toContain('A note about the imaginal.');
-  expect(sent).toContain('Do not draft insertion wording, do not choose for the member, and do not change the manuscript.');
+  expect(sent).toContain('where would this fit best in the Work, and how?');
+  expect(sent).toContain('Say which place seems strongest and why');
+  expect(sent).toContain('name the kind of move it would be');
+  expect(sent).toContain('Say plainly if no addition is the best answer.');
+  expect(sent).toContain('Do not draft insertion wording and do not change the manuscript. The member decides, and the member writes their own words.');
   expect(sent).toContain('- Rediscovering Ancient Wisdom');
   expect(sent).toContain('not confirmed authored structure');
 
@@ -236,7 +240,7 @@ test('the door says only what is true about delivery: prefill mode never claims 
     .mockResolvedValueOnce(json(201, {}));
   await act(async () => { setValue(container.querySelector('textarea')!, 'A note.'); });
   await act(async () => button('Keep with this Work').click());
-  await act(async () => button('Help me find where it fits').click());
+  await act(async () => button('Where would it fit best, and how?').click());
   expect(container.textContent).toContain('Nothing has been asked yet');
   expect(container.textContent).not.toContain('Asked MAIA');
 });
@@ -263,7 +267,7 @@ test('a context over the host’s question limit is refused whole — never pref
     .mockResolvedValueOnce(json(201, {}));
   await act(async () => { setValue(container.querySelector('textarea')!, 'x'.repeat(3600)); });
   await act(async () => button('Keep with this Work').click());
-  await act(async () => button('Help me find where it fits').click());
+  await act(async () => button('Where would it fit best, and how?').click());
   expect(onExplore).not.toHaveBeenCalled();
   expect(container.textContent).toContain('too long to send as one question here');
   expect(container.textContent).toContain('Nothing was sent');
@@ -279,7 +283,7 @@ test('material kept in an earlier session can still be explored or placed', asyn
   expect(container.textContent).toContain('Already kept with this Work');
   expect(container.textContent).toContain('Corbin note.txt');
   apiFetch.mockResolvedValueOnce(json(200, { source: { transcriptionStatus: 'reviewed', transcriptionReviewed: 'Earlier note text.' } }));
-  await act(async () => button('Help me find where it fits').click());
+  await act(async () => button('Where would it fit best, and how?').click());
   expect(onExplore).toHaveBeenCalledTimes(1);
   const sent: string = onExplore.mock.calls[0][0];
   expect(sent).toContain('Earlier note text.');

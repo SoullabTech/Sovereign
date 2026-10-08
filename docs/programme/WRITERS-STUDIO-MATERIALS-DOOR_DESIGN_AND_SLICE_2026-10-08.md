@@ -28,7 +28,7 @@ Law: adding material never touches the draft, focus or conversation; Keep ≠ Ex
 - **Paste a note** (+ optional title, source reference, and the writer's own "what might it feed" sentence) → stored as a `.txt` source through the existing intake route, then declared to the Work through the existing materials route. The reference is written as a visible first line (`Reference: …`), not hidden metadata.
 - **Add a file** (`.txt .md .docx` keep immediately; `.pdf`/image arrive as drafts and are *not* declared until the writer reviews them — the existing reviewed-only gate is preserved).
 - **Already brought in** — reviewed sources not yet on this Work, one click to keep.
-- **Explore with MAIA** / **Help me find where it fits** — only on the writer's click. *Place* instructs MAIA to anchor to the writer's own headings or exact wording she can actually see, to say so if she cannot, to offer ≤3 places, to say plainly if nothing fits, and **not** to draft insertion wording or choose. Headings are sent only for *Place*, bounded (≤150 × 120 chars) and labelled "as stored — may include import artifacts, not confirmed authored structure".
+- **Explore with MAIA** / **Where would it fit best, and how?** — only on the writer's click. *Place* asks MAIA for the strongest place and why, at most two alternatives, and for each the *kind of move* (new passage after a paragraph · new subsection · revision of existing text · light echo · no addition — which she must say plainly if it is the best answer), anchored to headings or exact wording she can actually see, with what she could not see and what would make her reading wrong. Her answer is a reading for the writer to weigh, not a decision; she must not draft insertion wording or change the manuscript. Because the writer explicitly asked, naming a strongest fit is a commissioned judgment, not an implicit ranking. Headings are sent only in Write and are bounded and labelled "as stored — may include import artifacts".
 - Over-long material (>12,000 chars) is **refused, never trimmed** — same rule as the existing tray.
 
 No new store, route, migration or schema. The door's only network writes are `POST /api/writers-studio/sources` and `POST /api/sovereign/living-works/{id}/materials` (guarded by test).
@@ -36,7 +36,7 @@ No new store, route, migration or schema. The door's only network writes are `PO
 ## 4. Corbin walk-through (acceptance)
 
 1. While editing any passage, open **Bring in material**; paste the Chapter 2 passage and the Chapter 5 passage as two notes (title + `Reference: Corbin, Mundus Imaginalis, trans. Fox`). Keep both. Manuscript, focus and conversation unchanged.
-2. Later: **Help me find where it fits** on the Chapter 5 note. MAIA proposes candidate places by heading/wording, or says what she cannot see.
+2. Later: **Where would it fit best, and how?** on the Chapter 5 note. MAIA proposes candidate places by heading/wording, or says what she cannot see.
 3. The writer chooses a place by going there (Write/Develop selection). *(slice 2 would bring that passage to the workbench automatically.)*
 4. Proposed wording flows through the existing marked-suggestion chain — nothing applies without the writer's act.
 

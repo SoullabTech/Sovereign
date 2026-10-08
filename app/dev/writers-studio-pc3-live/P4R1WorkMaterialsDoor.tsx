@@ -95,10 +95,12 @@ export function buildMaterialContext(input: {
       place
         ? [
             '',
-            'The member asked: help me find where this might fit in the Work.',
-            'Anchor each possibility to the member’s own headings or exact manuscript wording you can actually see. If you cannot see the relevant text, say so instead of guessing.',
-            'Offer at most two or three possible places, each with one plain sentence on why it might fit. Say plainly if nothing fits.',
-            'Do not draft insertion wording, do not choose for the member, and do not change the manuscript.',
+            'The member asked: where would this fit best in the Work, and how?',
+            'Say which place seems strongest and why, then at most two alternatives. This is your reading for the member to weigh, not a decision.',
+            'For each place, name the kind of move it would be: a new passage after a particular paragraph, a new subsection, a revision of existing text, a light echo of something already there, or no addition at all. Say plainly if no addition is the best answer.',
+            'Anchor each place to the member\u2019s own headings or exact manuscript wording you can actually see. If you cannot see the relevant text, say so instead of guessing, and say what you would need to see.',
+            'Say what would make your reading wrong.',
+            'Do not draft insertion wording and do not change the manuscript. The member decides, and the member writes their own words.',
             headings.length > 0
               ? `Headings as stored (they may include import artifacts and are not confirmed authored structure):\n${headings.map((h) => `- ${h}`).join('\n')}`
               : null,
@@ -333,7 +335,7 @@ export default function P4R1WorkMaterialsDoor({ work, outline, onExplore, explor
                   <div><span>{item.title}</span></div>
                   <div className="p4r1-focus-material-actions">
                     <button type="button" disabled={busy} onClick={() => void send(item, 'explore')}>Explore with MAIA</button>
-                    <button type="button" disabled={busy} onClick={() => void send(item, 'place')}>Help me find where it fits</button>
+                    <button type="button" disabled={busy} onClick={() => void send(item, 'place')}>Where would it fit best, and how?</button>
                   </div>
                 </li>
               ))}
@@ -351,7 +353,7 @@ export default function P4R1WorkMaterialsDoor({ work, outline, onExplore, explor
                   {onExplore ? (
                     <div className="p4r1-focus-material-actions">
                       <button type="button" disabled={busy} onClick={() => void send(item, 'explore')}>Explore with MAIA</button>
-                      <button type="button" disabled={busy} onClick={() => void send(item, 'place')}>Help me find where it fits</button>
+                      <button type="button" disabled={busy} onClick={() => void send(item, 'place')}>Where would it fit best, and how?</button>
                     </div>
                   ) : null}
                 </li>
