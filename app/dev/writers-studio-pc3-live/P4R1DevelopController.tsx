@@ -9,7 +9,8 @@ import { currentWork } from '@/app/writers-studio/workContext';
 import { resolveSituatedWorkContext, studioHomeReturnSearch } from '@/app/writers-studio/situatedWork';
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
-import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
+import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
+import { developChapterSpanFor } from '@/lib/writersStudio/rebuild/developNavigation';
 import { SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
 import {
   fetchReading,
@@ -299,7 +300,7 @@ export default function P4R1DevelopController() {
   );
 
   const currentChapter = useMemo(
-    () => context && currentSectionId ? chapterSpanFor(context.sections, currentSectionId) : null,
+    () => context && currentSectionId ? developChapterSpanFor(context.sections, currentSectionId) : null,
     [context, currentSectionId],
   );
   const currentChapterRootId = currentChapter?.root.draftSectionId ?? null;
@@ -720,7 +721,7 @@ export default function P4R1DevelopController() {
     /* Choosing a place in the manuscript is also choosing the developmental
        scope. Do not leave the center/right field pretending the whole Work is
        still selected after the writer has explicitly chosen a chapter/section. */
-    const chapter = chapterSpanFor(context.sections, sectionId);
+    const chapter = developChapterSpanFor(context.sections, sectionId);
     if (chapter?.root.draftSectionId === sectionId && chapter.sections.length) {
       setScope({
         kind: 'chapter',
@@ -1055,7 +1056,17 @@ export default function P4R1DevelopController() {
             setChapterReviewProgress(null);
             return;
           }
-          setChapterReviewError('MAIA could not finish the chapter reading. Nothing in your writing changed.');
+          const readingProblem =
+            commissioned.stage === 'read' && commissioned.refusal === 'provider_unavailable'
+              ? 'MAIA’s reading service did not answer. No reading was saved and your manuscript is unchanged.'
+              : commissioned.stage === 'read' && commissioned.refusal === 'structured_inference_unavailable'
+                ? 'This Studio is set to a mode that cannot perform this chapter reading. Nothing was changed.'
+                : commissioned.stage === 'store'
+                  ? 'MAIA could not safely save this reading. Nothing in your manuscript changed.'
+                  : commissioned.stage === 'recover'
+                    ? 'MAIA could not recover the saved chapter snapshot. Please save the current draft before reading.'
+                    : 'MAIA could not finish the chapter reading. Nothing in your writing changed.';
+          setChapterReviewError(readingProblem);
           setChapterReviewProgress(null);
           return;
         }
@@ -1097,7 +1108,11 @@ export default function P4R1DevelopController() {
   }, [context, currentChapter, chapterReviewBusy, loadSummaries, summaries]);
 
   const readCurrentChapter = useCallback(async () => {
-    if (!context || !currentChapter?.sections.length || chapterReviewBusy) return;
+    if (!context || chapterReviewBusy) return;
+    if (!currentChapter?.sections.length) {
+      setChapterReviewError('Choose a confirmed Chapter heading in the manuscript rail first. Nothing has changed.');
+      return;
+    }
     if (prep?.kind !== 'ready') {
       const copy = prep ? preparationCopy(prep) : null;
       if (!copy?.act) {

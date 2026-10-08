@@ -15,6 +15,7 @@ import type { ReadingView } from '@/lib/writersStudio/developPresentation';
 import type { ReadingSummary } from '@/lib/writersStudio/developClient';
 import type { LiveThemesPayload, LiveGovernedTheme, LiveThemeCandidate } from '@/lib/writersStudio/themes/liveTypes';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
+import { developNavigation, type DevelopNavigationNode } from '@/lib/writersStudio/rebuild/developNavigation';
 import type { DevelopPreparation } from '@/lib/writersStudio/developPreparationClient';
 import type { WholeManuscriptAttentionMap, AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import type { WriterUnderstanding, WriterUnderstandingDraft } from '@/lib/writersStudio/writerUnderstanding';
@@ -269,43 +270,99 @@ function ManuscriptRail({ sections, currentSectionId, onSection }: {
   currentSectionId: string | null;
   onSection: (id: string) => void;
 }) {
-  const current = sections.find((section) => section.draftSectionId === currentSectionId) ?? null;
-  const structural = sections
-    .filter((section) => section.heading?.trim() && (section.headingDepth === 1 || section.headingDepth === 2))
-    .filter((section, index, all) => {
-      if (index === 0) return true;
-      return all[index - 1]?.heading?.trim().toLowerCase() !== section.heading?.trim().toLowerCase();
-    });
-  const railSections = structural.length > 0
-    ? structural
-    : sections.filter((section) => section.heading?.trim());
+  // Navigate through the explicit Part/Chapter headings. Imported subsection
+  // headings can have flattened depth; grouping is presentation only.
+  const tree = useMemo(() => developNavigation(sections), [sections]);
+  const parts = useMemo(() => tree.filter((n) => n.role === 'part').map((n) => n.section.draftSectionId), [tree]);
+  const [openParts, setOpenParts] = useState<ReadonlySet<string>>(() => new Set(parts));
+  const [openChapters, setOpenChapters] = useState<ReadonlySet<string>>(() => new Set());
+  const activePath = useMemo(() => {
+    if (!currentSectionId) return [];
+    const find = (nodes: readonly DevelopNavigationNode[], prefix: DevelopNavigationNode[] = []): DevelopNavigationNode[] => {
+      for (const node of nodes) {
+        const path = [...prefix, node];
+        if (node.section.draftSectionId === currentSectionId) return path;
+        const nested = find(node.children, path);
+        if (nested.length) return nested;
+      }
+      return [];
+    };
+    return find(tree);
+  }, [tree, currentSectionId]);
+  const activeRailId = activePath.at(-1)?.section.draftSectionId ?? currentSectionId;
 
-  let activeRailId: string | null = currentSectionId;
-  if (current && !railSections.some((section) => section.draftSectionId === currentSectionId)) {
-    activeRailId = [...railSections]
-      .filter((section) => section.position <= current.position)
-      .sort((a, b) => b.position - a.position)[0]?.draftSectionId ?? null;
-  }
+  useEffect(() => {
+    // A newly imported Work brings a new set of part identities.
+    setOpenParts((before) => {
+      const next = new Set(before);
+      for (const part of parts) next.add(part);
+      return next;
+    });
+  }, [parts]);
+
+  const activePart = activePath.find((n) => n.role === 'part')?.section.draftSectionId;
+  const activeChapter = activePath.find((n) => n.role === 'chapter')?.section.draftSectionId;
+  useEffect(() => {
+    if (activePart) setOpenParts((old) => old.has(activePart) ? old : new Set([...old, activePart]));
+    if (activeChapter) setOpenChapters((old) => old.has(activeChapter) ? old : new Set([...old, activeChapter]));
+  }, [activePart, activeChapter]);
+
+  const toggle = (kind: 'part' | 'chapter', id: string) => {
+    const set = kind === 'part' ? setOpenParts : setOpenChapters;
+    set((old) => {
+      const next = new Set(old);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const item = (node: DevelopNavigationNode): JSX.Element[] => {
+    const heading = node.section.heading?.trim();
+    if (!heading) return node.children.flatMap(item);
+    const group = node.role === 'part' || node.role === 'chapter';
+    const open = node.role === 'part' ? openParts.has(node.section.draftSectionId)
+      : node.role === 'chapter' ? openChapters.has(node.section.draftSectionId) : true;
+    const children = group && open ? node.children.flatMap(item) : [];
+    const selected = activeRailId === node.section.draftSectionId;
+    return [(
+      <li key={node.section.draftSectionId}
+        className={[selected ? 'fr-current' : '', group ? 'p4r1-outline-group' : ''].filter(Boolean).join(' ') || undefined}
+        data-depth={node.section.headingDepth ?? undefined}
+        data-outline-role={node.role}
+        data-open={group ? String(open) : undefined}
+      >
+        <div className="p4r1-outline-row">
+          {group ? (
+            <button type="button" className="p4r1-outline-toggle"
+              aria-label={`${open ? 'Collapse' : 'Expand'} ${heading}`}
+              aria-expanded={open}
+              onClick={() => toggle(node.role as 'part' | 'chapter', node.section.draftSectionId)}
+            >
+              <span aria-hidden="true">{open ? '⌄' : '›'}</span>
+            </button>
+          ) : null}
+          <button type="button" className="p4r1-outline-label"
+            onClick={() => onSection(node.section.draftSectionId)}
+            aria-current={selected ? 'true' : undefined}>
+            <b>{heading}</b>
+          </button>
+        </div>
+        {children.length > 0 ? <ol className="p4r1-outline-children">{children}</ol> : null}
+      </li>
+    )];
+  };
 
   return (
     <div className="fr-ms">
-      <div className="fr-ms-head"><h2>Manuscript <ChevronDown /></h2></div>
-      <ol className="fr-chapters p4r1-structural-rail">
-        {railSections.map((section) => (
-          <li
-            key={section.draftSectionId}
-            className={section.draftSectionId === activeRailId ? 'fr-current' : undefined}
-            data-depth={section.headingDepth ?? undefined}
-          >
-            <button
-              type="button"
-              onClick={() => onSection(section.draftSectionId)}
-              aria-current={section.draftSectionId === activeRailId ? 'true' : undefined}
-            >
-              <b>{section.heading?.trim()}</b>
-            </button>
-          </li>
-        ))}
+      <div className="fr-ms-head"><h2>Manuscript <ChevronDown /></h2>
+        <button type="button" className="p4r1-outline-collapse-all"
+          onClick={() => { setOpenParts(new Set()); setOpenChapters(new Set()); }}>
+          Fold all
+        </button>
+      </div>
+      <ol className="fr-chapters p4r1-structural-rail" data-outline-collapsible="true">
+        {tree.flatMap(item)}
       </ol>
     </div>
   );
@@ -1541,6 +1598,7 @@ function ChapterLineagePanel({
 
 function ChapterReviewPanel({
   map,
+  chapterSelected,
   busy,
   needsCheckpoint,
   progress,
@@ -1570,6 +1628,7 @@ function ChapterReviewPanel({
   onMinimalPath,
 }: {
   map: WholeManuscriptAttentionMap | null;
+  chapterSelected: boolean;
   busy: boolean;
   needsCheckpoint: boolean;
   progress: string | null;
@@ -1602,12 +1661,13 @@ function ChapterReviewPanel({
     return (
       <section className="fr-card p4r1-chapter-review" data-chapter-review="empty">
         <span className="p4r1-eyebrow">Start here</span>
-        <h3>Let MAIA read this chapter.</h3>
-        <p>
-          She’ll tell you what she thinks the chapter is doing, what is already working,
-          and where she would focus next. No jargon. Nothing changes.
-        </p>
-        {needsCheckpoint ? (
+        <h3>{chapterSelected ? 'Let MAIA read this chapter.' : 'Choose a chapter to read.'}</h3>
+        <p>{chapterSelected
+          ? 'MAIA can look at what this chapter is doing, what is already working, and where to focus next. Nothing changes.'
+          : 'Select a Chapter heading in the manuscript rail. Folded chapters are easier to browse; MAIA will read the chapter you choose, not guess one.'}</p>
+        {!chapterSelected ? (
+          <p className="p4r1-chapter-read-select" role="status">No chapter selected yet. Your manuscript is unchanged.</p>
+        ) : needsCheckpoint ? (
           <div className="p4r1-chapter-read-snapshot">
             <p>
               This chapter has changed since the last reading snapshot. Save the current draft so
@@ -2315,6 +2375,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <div className="p4r1-intent-arrival">
           <ChapterReviewPanel
             map={props.chapterReview}
+            chapterSelected={Boolean(props.chapterScope)}
             busy={props.chapterReviewBusy}
             needsCheckpoint={props.chapterNeedsCheckpoint}
             progress={props.chapterReviewProgress}

@@ -77,6 +77,26 @@
   font-family: var(--fr-serif-stack); font-style: italic; font-size: 15px; color: var(--fr-gold); pointer-events: none; }
 .fr-footline::before, .fr-footline::after { content: ''; width: 110px; height: 1px; background: color-mix(in srgb, var(--fr-gold) 45%, transparent); }
 
+/* Develop book navigation: fold confirmed Parts and Chapters; never reclassify prose. */
+.p4r1-structural-rail { padding: 6px 9px 20px !important; }
+.p4r1-structural-rail li { display: block; padding: 0 !important; margin: 0 !important; }
+.p4r1-structural-rail li::after { display: none; }
+.p4r1-outline-row { display: flex; align-items: flex-start; min-width: 0; gap: 3px; }
+.p4r1-structural-rail .p4r1-outline-toggle { flex: none; width: 29px; height: 37px; display: grid;
+  place-items: center; border: 0; background: transparent; color: var(--fr-ink2); border-radius: 6px; font-size: 19px; cursor: pointer; }
+.p4r1-structural-rail .p4r1-outline-toggle:hover { background: var(--fr-action-soft); }
+.p4r1-structural-rail .p4r1-outline-label { flex: 1; text-align: left; min-width: 0; padding: 9px 7px;
+  color: var(--fr-title); border: 0; background: transparent; cursor: pointer; overflow-wrap: anywhere; }
+.p4r1-structural-rail .p4r1-outline-label b { font-size: 15px; font-weight: 500; line-height: 1.33; }
+.p4r1-structural-rail [data-outline-role='chapter'] > .p4r1-outline-row > .p4r1-outline-label b { font-weight: 650; }
+.p4r1-structural-rail [data-outline-role='part'] > .p4r1-outline-row { border-top: 1px solid var(--fr-line-soft); margin-top: 12px; padding-top: 9px; }
+.p4r1-structural-rail .p4r1-outline-children { list-style: none; margin: 0; padding: 0 0 5px 16px; }
+.p4r1-structural-rail .p4r1-outline-children .p4r1-outline-children { padding-left: 13px; }
+.p4r1-structural-rail [data-outline-role='section'] > .p4r1-outline-row > .p4r1-outline-label b { color: var(--fr-ink2); font-weight: 400; font-size: 14px; }
+.p4r1-structural-rail .fr-current > .p4r1-outline-row > .p4r1-outline-label { background: var(--fr-action-soft); border-radius: 6px; }
+.p4r1-outline-collapse-all { padding: 5px 8px !important; font-size: 12px !important; color: var(--fr-action-deep) !important; border: 1px solid var(--fr-line) !important; border-radius: 6px; white-space: nowrap; }
+.p4r1-chapter-read-select { color: var(--fr-muted); font-size: 14px; line-height: 1.5; }
+
 /* manuscript region */
 .fr-ms { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden; }
 .fr-ms-head { flex: none; display: flex; align-items: center; gap: 4px; height: 64px; padding: 0 16px 0 21px; }
