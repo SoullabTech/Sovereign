@@ -14,7 +14,7 @@ The proof no longer assumes `/dev/shm`. `JEV_LR_SECOND_DEVICE_ROOT` names a moun
 
 ## Evidence (this host, Linux, `/dev/shm`)
 - Proof: **16/16**. Against `41caa8f79` source: **11 pass / 5 fail** (L10, L13, L14, L15, L16).
-- Matrix: 9 new defeat candidates for LW1–LW4 (injection under remote grant; history-loss rethrow; storage-only-at-preflight; no dispatch recheck; no pre-attempt recheck; device-only identity; no device/mount verification; lowerable floor; unenforced floor) — see final matrix result in the return message/commit.
+- Matrix: **42/42 candidates killed on their named check, 0 problems** (33 prior + 9 new for LW1–LW4: injection under remote grant; history-loss unguarded; storage-only-at-preflight; no dispatch recheck; no pre-attempt recheck; device-only identity; no device/mount verification; lowerable floor; unenforced floor).
 - Adapter 18/18 · checkpoint 16/16 · wire 37/37 re-run.
 - The suite's first revision had a survivor/wrong-death set; all were suite defects (candidate edit strings stale after the repair; a dispatch-time case that the checkpoint module's own symlink refusal pre-empted, now uses a swap only the wrapper can see; a hook that armed on the runner's own clock read). Repaired in the suite, not by weakening the wrapper.
 
