@@ -4,11 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare, Shield, Link, Hand } from 'lucide-react';
 import { GoogleConnectSection } from './settings/GoogleConnectSection';
 import { InfoBubble } from '@/components/help/FeatureTooltip';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/conversation-style';
 import { getInitialSessionSettings } from '@/lib/settings/accountSettings';
 import { InsightTrigger } from '@/components/guidance/InsightTrigger';
+import { readSourcePostureDisplay, type SourcePostureDisplay } from '@/lib/sanctuary/sourcePostureDisplay';
+import { sourcePostureNotice } from '@/lib/sanctuary/sourcePostureNotice';
+import { SOURCE_POSTURE_RECHECK_EVENT } from '@/lib/sanctuary/sourcePostureCoordinator';
 // import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 
 interface QuickSettingsSheetProps {
@@ -75,6 +78,8 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
   const [settings, setSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
   const [userId, setUserId] = useState<string | null>(null);
   const [streamingVoiceEnabled, setStreamingVoiceEnabled] = useState(false);
+  const [sourcePosture, setSourcePosture] = useState<SourcePostureDisplay>('unavailable');
+  const sourceReadSequence = useRef(0);
   // Removed: Supabase client (now using localStorage only for sovereign mode)
 
   // Track streaming voice state reactively
@@ -101,6 +106,28 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
       window.removeEventListener('storage', onStorage);
     };
   }, []);
+
+  // Separate from MAIA's local conversation setting: this read is the
+  // authenticated server's view of the source-save privacy posture. It never
+  // grants a write, and an unavailable server must look unavailable.
+  useEffect(() => {
+    if (!isOpen) return;
+    let live = true;
+    const refresh = () => {
+      const sequence = ++sourceReadSequence.current;
+      setSourcePosture('unavailable');
+      void readSourcePostureDisplay().then((next) => {
+        if (live && sequence === sourceReadSequence.current) setSourcePosture(next);
+      });
+    };
+    refresh();
+    window.addEventListener(SOURCE_POSTURE_RECHECK_EVENT, refresh);
+    return () => {
+      live = false;
+      sourceReadSequence.current++;
+      window.removeEventListener(SOURCE_POSTURE_RECHECK_EVENT, refresh);
+    };
+  }, [isOpen]);
 
   // Get userId from localStorage
   useEffect(() => {
@@ -164,6 +191,10 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
   }, [isOpen]); // Removed supabase dependency (no longer used)
 
   const updateSetting = async (path: string, value: any) => {
+    if (path === 'sanctuary') {
+      sourceReadSequence.current++;
+      setSourcePosture('unavailable');
+    }
     if ('vibrate' in navigator) {
       navigator.vibrate(5);
     }
@@ -318,6 +349,8 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                 >
                   <motion.button
                     onClick={() => updateSetting('sanctuary', !settings.sanctuary)}
+                    aria-label={settings.sanctuary ? 'Turn Sanctuary off' : 'Turn Sanctuary on'}
+                    aria-pressed={settings.sanctuary}
                     className={`w-full p-4 rounded-xl border transition-all ${
                       settings.sanctuary
                         ? 'border-emerald-500/50 bg-emerald-500/15'
@@ -350,12 +383,12 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                           </div>
                           <div className="text-xs text-white/50 mt-0.5">
                             {settings.sanctuary
-                              ? "This session won't be saved to memory. Speak freely."
-                              : "MAIA may remember what's helpful for continuity."}
+                              ? 'Sanctuary is selected for this conversation. Source protection is checked below.'
+                              : 'Continuity is selected. Saving material requires separate authorization.'}
                           </div>
                           {settings.sanctuary && (
                             <div className="text-[10px] text-emerald-400/60 mt-1">
-                              No patterns formed. This session leaves no memory behind.
+                              Your conversation setting is distinct from permission to save material.
                             </div>
                           )}
                         </div>
@@ -372,6 +405,15 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                       </div>
                     </div>
                   </motion.button>
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    data-source-posture-status={sourcePosture}
+                    className="mt-3 rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-left"
+                  >
+                    <p className="text-xs font-medium text-amber-100/80">{sourcePostureNotice(sourcePosture).heading}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-white/55">{sourcePostureNotice(sourcePosture).detail}</p>
+                  </div>
                 </motion.div>
 
                 <motion.div

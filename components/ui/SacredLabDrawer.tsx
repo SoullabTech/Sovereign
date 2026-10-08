@@ -29,6 +29,7 @@ import {
   Globe,
   Mic,
   MicOff,
+  Shield,
   MessageSquare,
   Cpu,
   Flame,
@@ -86,6 +87,12 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       title: 'SOUL PROMPTS & SESSION',
       icon: '✨',
       items: [
+        {
+          icon: Shield,
+          label: 'Quick Settings',
+          action: () => onAction?.('open-audio-settings'),
+          description: 'Sanctuary and the current conversation controls'
+        },
         {
           icon: Sparkles,
           label: 'Soul Prompts',

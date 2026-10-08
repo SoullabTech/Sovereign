@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-import { coordinateSourcePosture, sanctuaryFromSettingsEvent } from '../sourcePostureCoordinator';
+import { coordinateSourcePosture, SOURCE_POSTURE_RECHECK_EVENT, sanctuaryFromSettingsEvent } from '../sourcePostureCoordinator';
 test('only literal booleans are recognized', () => {
   expect(sanctuaryFromSettingsEvent({ detail: { sanctuary: true } })).toBe(true);
   expect(sanctuaryFromSettingsEvent({ detail: { sanctuary: 'false' } })).toBeNull();
@@ -39,4 +39,14 @@ test('initial OFF or unreadable posture never unlocks source persistence', () =>
   const stop2 = coordinateSourcePosture(window, notify, () => false);
   expect(notify).not.toHaveBeenCalled();
   stop2();
+});
+
+test('asks the interface to re-check server after a Sanctuary notification resolves', async () => {
+  const notify=jest.fn(async()=> 'unavailable');const onRecheck=jest.fn();
+  window.addEventListener(SOURCE_POSTURE_RECHECK_EVENT,onRecheck);
+  const stop=coordinateSourcePosture(window,notify);
+  window.dispatchEvent(new CustomEvent('maia-settings-changed',{detail:{sanctuary:true}}));
+  await Promise.resolve();await Promise.resolve();
+  expect(onRecheck).toHaveBeenCalledTimes(1);
+  stop();window.removeEventListener(SOURCE_POSTURE_RECHECK_EVENT,onRecheck);
 });

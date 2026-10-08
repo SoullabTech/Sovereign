@@ -58,3 +58,24 @@ witnesses before the correction**. Neither version proves the Sanctuary toggle
 itself is server-acknowledged or that source saving is permitted. The active
 conversation code presently comments out the VoiceHUD rendering and uses
 QuickSettingsSheet for actual member settings.
+
+## Quick Settings — server-state display witness (later local correction)
+
+- `quick-settings-desktop-unverified.png` and
+  `quick-settings-mobile-unverified.png`: local authenticated Quick Settings
+  panel at 1440×900 and 390×844, server status unavailable.
+- `quick-settings-desktop-selected.png` and
+  `quick-settings-mobile-selected.png`: the **actual Sanctuary toggle selected**
+  with an independently visible `Materials saving paused` notice. The Next.js
+  development warning badge and Soullab footer remain in the visual record.
+
+The existing `openLabDrawer` browser event was used to expose the Lab Tools
+shelf, then the new Quick Settings menu item was selected normally. This is a
+truthful actual-component visual test, **not proof of a physical user gesture
+reaching that shelf**. The source-posture API returned GET 503, POST Sanctuary
+503, GET 503 (migration not yet applied). The status remained `unavailable`
+and stated that new material would not be saved. Local exit back to ordinary
+made no POST authorizing storage. The active VoiceHUD remains unmounted.
+
+These images do not certify successful source saving, cognition privacy, or a
+mobile native-app walkthrough. Production release is still held.

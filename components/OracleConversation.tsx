@@ -11,6 +11,7 @@ import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, VolumeX, Mes
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
 import { getContinuityBuffer } from '@/lib/voice/conversationContinuityBuffer';
 import { VoiceHUD } from './voice/VoiceHUD';
+import { publishConversationSanctuaryChoice } from '@/lib/sanctuary/conversationSanctuaryChoice';
 import { VoiceInteractionBar } from './voice/VoiceInteractionBar';
 import { useStreamingVoice, type StreamingVoicePlaybackSignal } from '@/hooks/useStreamingVoice';
 // TEMPORARILY DISABLED - causing ReferenceError crash
@@ -5076,8 +5077,8 @@ I'm not sure what I'm feeling yet.`;
             setListeningMode(newListeningMode);
 
             // Sanctuary flag
-            if (cmd.mode === 'sanctuary') setIsSanctuary(true);
-            else setIsSanctuary(false);
+            setIsSanctuary(cmd.mode === 'sanctuary');
+            publishConversationSanctuaryChoice(cmd.mode === 'sanctuary');
 
             console.log(`🔄 [Command] Mode → ${cmd.mode} (listeningMode: ${newListeningMode})`);
           }
@@ -7347,8 +7348,8 @@ I'm not sure what I'm feeling yet.`;
             cmd.mode === 'sanctuary' ? 'normal' as const :
             'normal' as const;
           setListeningMode(newListeningMode);
-          if (cmd.mode === 'sanctuary') setIsSanctuary(true);
-          else setIsSanctuary(false);
+          setIsSanctuary(cmd.mode === 'sanctuary');
+          publishConversationSanctuaryChoice(cmd.mode === 'sanctuary');
           console.log(`🔄 [Voice Command] Mode → ${cmd.mode}`);
         }
         if (cmd.type === 'lens') {
