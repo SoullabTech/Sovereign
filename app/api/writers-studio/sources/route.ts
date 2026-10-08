@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
-import { ingestWorkbenchUpload, IntakeError } from '@/lib/workbench/intake';
+import { IntakeError } from '@/lib/workbench/intake';
+import { ingestSourceWithCustodyCandidate } from '@/lib/workbench/sourceCustodyIngestCandidate';
+import { sourceCustodyCandidatePorts, sourceCustodyCandidateRoot } from '@/lib/workbench/sourceCustodyRuntimeCandidate';
 import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
 import { sourceUploadPostureAuthorized } from '@/lib/workbench/uploadPostureAuthority';
 
@@ -47,7 +49,12 @@ export async function POST(request: NextRequest) {
     const form = await request.formData();
     const file = form.get('file');
     if (!(file instanceof File)) return NextResponse.json({ error: 'Missing file' }, { status: 400 });
-    const source = await ingestWorkbenchUpload(memberId, file);
+    // SOURCE-CUSTODY-INTAKE-01: candidate is reachable only after the separate
+    // server-authoritative gate is ratified. The gate above is deliberately
+    // hard-false until the old Caddy edge fence and migrations are admitted.
+    const source = await ingestSourceWithCustodyCandidate(
+      request, memberId, file, sourceCustodyCandidateRoot(), sourceCustodyCandidatePorts,
+    );
     return NextResponse.json({ source }, { status: 201 });
   } catch (error) {
     if (error instanceof IntakeError) return NextResponse.json({ error: error.message }, { status: error.status });

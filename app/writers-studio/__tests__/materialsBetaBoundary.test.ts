@@ -5,18 +5,20 @@ import { PATCH as reviseSource } from '@/app/api/writers-studio/sources/[id]/rou
 import { POST as attach } from '@/app/api/sovereign/living-works/[id]/materials/route';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
-import { ingestWorkbenchUpload } from '@/lib/workbench/intake';
+import { ingestSourceWithCustodyCandidate } from '@/lib/workbench/sourceCustodyIngestCandidate';
 import { query, transaction } from '@/lib/db/postgres';
 import { writeReviewed } from '@/lib/workbench/storage';
 
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: jest.fn() }));
 jest.mock('@/lib/writersStudio/betaAccessServer', () => ({ writersStudioBetaAccess: jest.fn() }));
-jest.mock('@/lib/workbench/intake', () => ({ ingestWorkbenchUpload: jest.fn(), IntakeError: class IntakeError extends Error {} }));
+jest.mock('@/lib/workbench/intake', () => ({ MAX_SOURCE_BYTES: 50*1024*1024, IntakeError: class IntakeError extends Error {} }));
+jest.mock('@/lib/workbench/sourceCustodyIngestCandidate', () => ({ ingestSourceWithCustodyCandidate: jest.fn() }));
+jest.mock('@/lib/workbench/sourceCustodyRuntimeCandidate', () => ({ sourceCustodyCandidatePorts: {}, sourceCustodyCandidateRoot: jest.fn(() => '/local-custody') }));
 jest.mock('@/lib/db/postgres', () => ({ query: jest.fn(), transaction: jest.fn() }));
 jest.mock('@/lib/workbench/storage', () => ({ writeReviewed: jest.fn(), deleteUpload: jest.fn() }));
 const auth = getMemberIdFromRequest as jest.Mock;
 const eligible = writersStudioBetaAccess as jest.Mock;
-const ingestion = ingestWorkbenchUpload as jest.Mock;
+const ingestion = ingestSourceWithCustodyCandidate as jest.Mock;
 const db = query as jest.Mock;
 const tx = transaction as jest.Mock;
 const ctx = { params: Promise.resolve({ id: 'work-1' }) };

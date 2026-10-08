@@ -64,3 +64,14 @@ filesystem witness. The set of migrations for the branch is therefore now
 **three**, not two. This supplies a tested building block but does not retire
 the previously identified old-version writer fence or incomplete live-intake
 and positive-browser evidence. HTTP 423 remains in force.
+
+## Later old-writer edge fence and candidate route integration
+
+The report `WS_SOURCE_CUSTODY_INTAKE_AND_EDGE_FENCE_2026-10-08.md` records a
+candidate, independently validated Caddy source-write deny and a source POST
+route that is wired to the governed intake adapter only *behind* the current
+hard-false HTTP 423 guard. The proposed edge fence MUST be activated and
+verified on the old live application as its own authorized production change
+before migration can be considered. The existing reviewed-text PATCH keeps its
+own independent HTTP 423 refusal. Production edge/migrations/cutover remain
+untouched and the release remains **NO-GO**.

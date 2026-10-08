@@ -6,7 +6,9 @@
   },
   "include": [
     "lib/workbench/sourceCustodyFiles.ts",
-    "lib/workbench/sourceCustodyReservations.ts"
+    "lib/workbench/sourceCustodyReservations.ts",
+    "lib/workbench/sourceCustodyIngestCandidate.ts",
+    "lib/workbench/sourceCustodyRuntimeCandidate.ts"
   ],
   "exclude": [
     "**/node_modules/**",

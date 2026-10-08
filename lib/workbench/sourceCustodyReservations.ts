@@ -4,8 +4,8 @@
  * the source operation with Sanctuary transitions across independent workers.
  */
 import type { NextRequest } from 'next/server';
-import type { PoolClient } from 'pg';
 import { pool } from '@/lib/db/postgres';
+import type { TransactionClient } from '@/lib/db/postgres';
 import type { SourceCustodyIntent } from './sourceCustodyFiles';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -54,7 +54,7 @@ export async function reserveSourceCustody(
  * authorized by this function. Keep the reservation nonterminal on failures.
  */
 export async function markSourceCustodyWriting(
-  client: Pick<PoolClient, 'query'>, intent: SourceCustodyIntent,
+  client: TransactionClient, intent: SourceCustodyIntent,
 ): Promise<void> {
   const row = await client.query(
     `UPDATE workbench_source_custody_ops SET state='writing'
@@ -70,7 +70,7 @@ export async function markSourceCustodyWriting(
  * corresponding member-owned source row reached an admissible status.
  */
 export async function markSourceCustodyCommitted(
-  client: Pick<PoolClient, 'query'>, intent: SourceCustodyIntent,
+  client: TransactionClient, intent: SourceCustodyIntent,
 ): Promise<void> {
   const row = await client.query(
     `UPDATE workbench_source_custody_ops AS op SET state='committed'

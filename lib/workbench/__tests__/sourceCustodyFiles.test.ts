@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {
   beginSourceCustody, stageSourceCustodyFile, publishStagedSource,
-  listSourceCustodyIntents, reconcileSourceCustody, type SourceCustodyIntent,
+  listSourceCustodyIntents, reconcileSourceCustody, stagedSourceFilePath, sourceCustodyRelativeOriginal, type SourceCustodyIntent,
 } from '../sourceCustodyFiles';
 const intent: SourceCustodyIntent = {
   version: 1,
@@ -111,4 +111,32 @@ test('corrupted journal never authorizes deletion or commitment of source conten
   await expect(listSourceCustodyIntents(root)).rejects.toThrow();
   await expect(reconcileSourceCustody(root,intent,'aborted')).rejects.toThrow();
   expect(await fs.readFile(path.join(final(),'original.txt'),'utf8')).toBe('preserve pending');
+});
+
+test('validated paths cannot escape the staged operation or canonical source root', async () => {
+  expect(stagedSourceFilePath(root,intent,'original.md')).toContain(intent.operationId);
+  expect(sourceCustodyRelativeOriginal(intent,'md')).toBe(path.join(intent.memberId,intent.uploadId,'original.md'));
+  expect(()=>stagedSourceFilePath(root,intent,'../../other')).toThrow(/Invalid custody filename/);
+  expect(()=>sourceCustodyRelativeOriginal(intent,'../bad')).toThrow(/Invalid custody extension/);
+});
+
+test('recovery is idempotent after an aborted journal was removed',async()=>{
+  await beginSourceCustody(root,intent);
+  await stageSourceCustodyFile(root,intent,'original.txt',Buffer.from('only test'));
+  await reconcileSourceCustody(root,intent,'aborted');
+  expect(await reconcileSourceCustody(root,intent,'aborted')).toBe('resolved');
+});
+test('absent journal does not excuse existing canonical source bytes',async()=>{
+  await fs.mkdir(final(),{recursive:true});
+  await fs.writeFile(path.join(final(),'original.txt'),'PRESERVE');
+  await expect(reconcileSourceCustody(root,intent,'aborted')).rejects.toThrow(/exists without a journal/);
+  expect(await fs.readFile(path.join(final(),'original.txt'),'utf8')).toBe('PRESERVE');
+});
+test('committed journal cleanup may be retried without losing original bytes',async()=>{
+  await beginSourceCustody(root,intent);
+  await stageSourceCustodyFile(root,intent,'original.md',Buffer.from('intended'));
+  await publishStagedSource(root,intent);
+  await reconcileSourceCustody(root,intent,'committed');
+  expect(await reconcileSourceCustody(root,intent,'committed')).toBe('resolved');
+  expect(await fs.readFile(path.join(final(),'original.md'),'utf8')).toBe('intended');
 });

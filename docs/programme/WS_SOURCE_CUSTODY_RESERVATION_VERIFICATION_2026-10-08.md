@@ -31,3 +31,16 @@
 ## TypeScript scope
 
 The repository's broad `tsconfig.ship.json` includes `lib/workbench` only when reached through a covered entrypoint. These new isolated helpers are not yet imported into source POST/PATCH. `tsconfig.source-custody.json` therefore explicitly compiles both candidate modules under the canonical `tsconfig.core.json` options. Its local check passed. This **does not supersede** the broad shipping gate, which has an unrelated existing Stripe API-version diagnostic.
+
+## Later integration candidate — same isolated lane
+
+The filesystem/db reservation components now feed a candidate production adapter,
+`sourceCustodyIngestCandidate.ts` + `sourceCustodyRuntimeCandidate.ts`, behind
+the unchanged HTTP 423 guard. The source POST route is wired to this candidate
+**only after** the hard-false guard. Reviewed edits have a separate hard-false
+hold. The local PostgreSQL+filesystem verification has expanded to **31/31** checks,
+including a complete positive text ingestion through real candidate adapters,
+DB rollback and crash recovery. `docs/programme/WS_SOURCE_CUSTODY_INTAKE_AND_EDGE_FENCE_2026-10-08.md`
+records these results and the standalone Caddy write-fence candidate. None of
+this is evidence that the actual production proxy or source POST is accepting
+new material. The existing source upload protection remains operative.

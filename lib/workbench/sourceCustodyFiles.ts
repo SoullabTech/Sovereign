@@ -81,6 +81,26 @@ export async function beginSourceCustody(root: string, intent: SourceCustodyInte
   await syncDirectory(p.stagingRoot);
 }
 
+/** Resolve a validated path for extraction while the source is staged.
+ * No request-provided path segment is accepted. Does not authorize writes.
+ */
+export function stagedSourceFilePath(
+  root: string, intent: SourceCustodyIntent, name: string,
+): string {
+  if (!FILE_RE.test(name)) throw new Error('Invalid custody filename');
+  return path.join(paths(root, intent).stagingDir, name);
+}
+
+/** Resolve the canonical relative storage locator for the eventual DB row. */
+export function sourceCustodyRelativeOriginal(
+  intent: SourceCustodyIntent, ext: string,
+): string {
+  const name = `original.${ext}`;
+  if (!FILE_RE.test(name)) throw new Error('Invalid custody extension');
+  assertIntent(intent);
+  return path.join(intent.memberId, intent.uploadId, name);
+}
+
 /** Create-only; never truncate an earlier staged part or overwrite a final file. */
 export async function stageSourceCustodyFile(
   root: string, intent: SourceCustodyIntent, name: string, data: Buffer,
@@ -146,6 +166,25 @@ export async function reconcileSourceCustody(
 ): Promise<'resolved' | 'held'> {
   const p = paths(root, intent);
   if (outcome === 'unresolved') return 'held';
+  // A crash may occur after deleting the journal but before the database
+  // records completion, or before the journal is initially created. In those
+  // cases, accept a retry only if the filesystem independently proves the
+  // intended outcome; do not infer it from absent journal bytes alone.
+  try { await fs.access(p.intentFile); }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    if (outcome === 'committed') {
+      await requireSingleOriginal(p.finalDir);
+      return 'resolved';
+    }
+    const exists = async (file: string) => {
+      try { await fs.lstat(file); return true; }
+      catch (e) { if ((e as NodeJS.ErrnoException).code === 'ENOENT') return false; throw e; }
+    };
+    if (await exists(p.finalDir) || await exists(p.stagingDir))
+      throw new Error('Custody content exists without a journal');
+    return 'resolved';
+  }
   const raw = await fs.readFile(p.intentFile, 'utf8');
   const onDisk: unknown = JSON.parse(raw);
   assertIntent(onDisk);

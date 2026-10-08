@@ -19,6 +19,9 @@ import path from 'path';
 
 const BASE = process.env.WORKBENCH_UPLOADS_DIR?.trim() || path.join(process.cwd(), 'uploads', 'workbench');
 
+/** Configured local source root, also used by the governed intake candidate. */
+export function workbenchUploadRoot(): string { return BASE; }
+
 export function uploadDir(arrangerId: string, uploadId: string): string {
   return path.join(BASE, arrangerId, uploadId);
 }

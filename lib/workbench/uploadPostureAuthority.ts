@@ -5,3 +5,11 @@
 export function sourceUploadPostureAuthorized(): false {
   return false;
 }
+
+/** Reviewed transcription edits require their OWN crash-safe custody protocol.
+ * This independent hold must not be lifted as a side effect of authorizing
+ * new source ingestion. It remains false until separately governed.
+ */
+export function sourceReviewedEditAuthorized(): false {
+  return false;
+}
