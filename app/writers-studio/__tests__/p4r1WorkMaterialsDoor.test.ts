@@ -159,6 +159,7 @@ test('Explore and Place send only on the writer’s explicit choice, and Place a
   expect(sent).toContain('Say which place seems strongest and why');
   expect(sent).toContain('name the kind of move it would be');
   expect(sent).toContain('Say plainly if no addition is the best answer.');
+  expect(sent).toContain('cannot yet create a new subsection by itself');
   expect(sent).toContain('Do not draft insertion wording and do not change the manuscript. The member decides, and the member writes their own words.');
   expect(sent).toContain('- Rediscovering Ancient Wisdom');
   expect(sent).toContain('not confirmed authored structure');
@@ -255,7 +256,7 @@ test('send mode does not claim certainty it cannot have', async () => {
   await act(async () => { setValue(container.querySelector('textarea')!, 'A note.'); });
   await act(async () => button('Keep with this Work').click());
   await act(async () => button('Explore with MAIA').click());
-  expect(container.textContent).toContain('If no reply appears, nothing was asked');
+  expect(container.textContent).toContain('where it will stay. If no reply appears, nothing was asked');
 });
 
 test('a context over the host’s question limit is refused whole — never prefilled, never trimmed', async () => {

@@ -97,7 +97,7 @@ export function buildMaterialContext(input: {
             '',
             'The member asked: where would this fit best in the Work, and how?',
             'Say which place seems strongest and why, then at most two alternatives. This is your reading for the member to weigh, not a decision.',
-            'For each place, name the kind of move it would be: a new passage after a particular paragraph, a new subsection, a revision of existing text, a light echo of something already there, or no addition at all. Say plainly if no addition is the best answer.',
+            'For each place, name the kind of move it would be: a new passage after a particular paragraph, a new subsection, a revision of existing text, a light echo of something already there, or no addition at all. Say plainly if no addition is the best answer. This Studio cannot yet create a new subsection by itself, so if that is the move, say so and say the member would add it by hand for now.',
             'Anchor each place to the member\u2019s own headings or exact manuscript wording you can actually see. If you cannot see the relevant text, say so instead of guessing, and say what you would need to see.',
             'Say what would make your reading wrong.',
             'Do not draft insertion wording and do not change the manuscript. The member decides, and the member writes their own words.',
@@ -232,7 +232,7 @@ export default function P4R1WorkMaterialsDoor({ work, outline, onExplore, explor
       onExplore(prepared.context, intent);
       setMessage(exploreMode === 'prefill'
         ? 'Put in the conversation box for you to read and send. Nothing has been asked yet, and nothing has been inserted anywhere.'
-        : 'Sent to MAIA in this passage’s conversation. If no reply appears, nothing was asked. Nothing has been inserted anywhere.');
+        : 'Sent to MAIA in this passage’s conversation, where it will stay. If no reply appears, nothing was asked. Nothing has been inserted anywhere.');
     } catch {
       setMessage('That could not be prepared just now. Nothing was sent to MAIA.');
     } finally {
