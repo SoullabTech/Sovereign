@@ -100,9 +100,17 @@ await check('L2-grant-must-match-the-code-and-can-only-narrow-it', async () => {
     'remote with same-device layout': { network: 'EXTERNAL_PINNED', endpoint: 'https://api.typesafe.ai/v1/systemone' },
     'unnamed operator': { operator: ' ' }, 'unnamed authorizer': { authorized_by: '' },
   };
+  const expectId = {
+    'state not authorized': 'GRANT_STATE', 'wrong provider': 'PROVIDER', 'wrong model': 'MODEL', 'table hash': 'TABLE_HASH', 'fixture hash': 'FIXTURE_HASH',
+    'schema hash': 'SCHEMA_HASH', 'attempts above cap': 'ATTEMPT_CAP', 'attempts zero': 'ATTEMPT_CAP', 'spend above cap': 'SPEND_CAP', 'spend nan': 'SPEND_CAP',
+    'expired': 'WINDOW_OPEN', 'not yet valid': 'WINDOW_OPEN', 'window over 7 days': 'WINDOW_SHAPE', 'bad experiment id': 'EXPERIMENT_ID',
+    'remote with loopback endpoint': 'ENDPOINT_COHERENT', 'pinned network, wrong endpoint': 'ENDPOINT_COHERENT', 'remote with same-device layout': 'ENDPOINT_COHERENT',
+    'unnamed operator': 'NAMES_RECORDED', 'unnamed authorizer': 'NAMES_RECORDED',
+  };
   for (const [label, over] of Object.entries(variants)) {
     const g = grantFor(W, m, over); const p = R.preflight(config(l, g));
     assert.equal(p.ok, false, label);
+    assert.equal(p.refusal, expectId[label], `${label}: refused for ${p.refusal}`);
   }
   const extra = { ...good, extra: 1 }; assert.equal(R.preflight(config(l, extra)).refusal, 'GRANT_SHAPE');
   const { operator: _o, ...missing } = good; assert.equal(R.preflight(config(l, missing)).refusal, 'GRANT_SHAPE');
