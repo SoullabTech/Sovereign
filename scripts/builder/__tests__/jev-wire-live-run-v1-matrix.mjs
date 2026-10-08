@@ -109,6 +109,30 @@ function run(edits, onlyCheck = null) {
     tail: (((r.stderr || '') + '') + ((r.stdout || '').slice(-200))).split('\n').slice(0, 3).join(' | ') };
 }
 
+function validNamedKill(out, expected) {
+  const onName = out.fails.some((f) => f.startsWith(expected + '-'));
+  return onName && out.status === 1 && !out.signal && !out.timeout && !!out.summary
+    && out.summary.pass === 0 && out.summary.fail === 1 && out.fails.length === 1;
+}
+
+// Harness-classifier regressions. These are synthetic process-result records, not wrapper mutants.
+// A printed named failure is never enough: timeout, signal, spawn error, or incomplete proof output
+// must be classified as an invalid kill so a broken harness cannot make the matrix look stronger.
+const HARNESS_CLASSIFIER_CASES = [
+  ['normal named assertion failure', { status: 1, signal: null, timeout: null, fails: ['L2-example'], summary: { pass: 0, fail: 1 } }, true],
+  ['timeout after named failure', { status: null, signal: 'SIGTERM', timeout: 'ETIMEDOUT', fails: ['L2-example'], summary: { pass: 0, fail: 1 } }, false],
+  ['signal after named failure', { status: null, signal: 'SIGTERM', timeout: null, fails: ['L2-example'], summary: { pass: 0, fail: 1 } }, false],
+  ['spawn error after named failure text', { status: null, signal: null, timeout: 'ENOENT', fails: ['L2-example'], summary: { pass: 0, fail: 1 } }, false],
+  ['incomplete proof output', { status: 1, signal: null, timeout: null, fails: ['L2-example'], summary: null }, false],
+];
+let harnessGuardPass = 0;
+for (const [name, sample, expected] of HARNESS_CLASSIFIER_CASES) {
+  const actual = validNamedKill(sample, 'L2');
+  if (actual !== expected) { console.log(`HARNESS-GUARD-FAIL  ${name}`); process.exit(3); }
+  harnessGuardPass += 1;
+}
+console.log(`HARNESS-GUARD  ${harnessGuardPass}/${HARNESS_CLASSIFIER_CASES.length} classifier regressions pass\n`);
+
 const ref = run([]);
 if (ref.status !== 0 || ref.fails.length || ref.summary?.pass !== 16 || ref.summary?.fail !== 0) { console.log('REFERENCE NOT CLEAN', ref); process.exit(2); }
 console.log('REFERENCE  clean (0 failed)\n');
@@ -118,8 +142,7 @@ for (const [name, expected, edits] of CANDIDATES) {
   const onName = out.fails.some((f) => f.startsWith(expected + '-'));
   const collateral = out.fails.filter((f) => !f.startsWith(expected + '-'));
   if (out.status === 0) { problems += 1; console.log(`SURVIVED  ${name}  (expected ${expected})`); continue; }
-  if (!onName || out.status !== 1 || out.signal || out.timeout || !out.summary ||
-      out.summary.pass !== 0 || out.summary.fail !== 1 || out.fails.length !== 1) {
+  if (!validNamedKill(out, expected)) {
     problems += 1;
     console.log(`WRONG-DEATH  ${name}  expected ${expected}, got [${out.fails.join(', ') || out.tail}]`);
     continue;
