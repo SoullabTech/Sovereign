@@ -1,0 +1,20 @@
+PASS  A1-endpoint-and-credential-policy-fail-closed
+PASS  A1b-function-credential-is-validated-at-send-and-opens-no-connection-when-bad
+PASS  A2-sends-the-exact-bytes-with-a-bearer-and-verifies-the-recorded-hash
+PASS  A3-malformed-and-non-json-replies-are-refused
+PASS  A4-http-errors-are-single-shot-and-carry-only-a-status
+PASS  A5-redirects-are-refused-not-followed
+PASS  A6-deadline-covers-connection-headers-AND-the-whole-response-body
+PASS  A7-runner-abort-signal-destroys-the-request
+PASS  A8-late-responses-cannot-arrive-after-settlement
+PASS  A9-credential-never-appears-in-errors-or-output
+PASS  A10-composes-with-runner-and-checkpoint-for-all-31-approved-attempts
+PASS  A11-every-failure-mode-stops-the-experiment-without-a-duplicate-request
+PASS  A12-runner-deadline-aborts-a-slow-adapter-and-leaves-no-late-arrival
+PASS  A13-adapter-stays-inactive-behind-the-committed-gate
+PASS  A14-static-no-environment-no-files-no-logging-no-retry-no-live-activation
+PASS  A15-credential-callback-failures-are-sanitized-and-open-no-connection
+PASS  A16-cancellation-during-the-credential-callback-is-honoured-at-dispatch
+PASS  A17-response-limit-must-be-a-finite-positive-safe-integer
+
+18 passed · 0 failed

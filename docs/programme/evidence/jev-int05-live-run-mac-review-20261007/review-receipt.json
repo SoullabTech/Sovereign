@@ -1,0 +1,78 @@
+{
+  "reviewed_head": "41caa8f79af488fd8ea82442fe3586f03b13d15e",
+  "generated_at_utc": "2026-10-08T01:02:59.875309+00:00",
+  "Mac_node": "22.22.3",
+  "Mac_project_TypeScript": "5.9.3",
+  "external_provider_calls": 0,
+  "real_credentials_accessed": false,
+  "PILOT_01_unchanged": true,
+  "matrix_named_kills": 33,
+  "matrix_named_problems": 0,
+  "unmodified_mac_proof": {
+    "passed": 9,
+    "environment_failures": 3,
+    "status": "Linux fixture /dev/shm unavailable"
+  },
+  "adapted_mac_t7_proof": {
+    "passed": 12,
+    "failed": 0,
+    "source_changed": false
+  },
+  "independent_synthetic_findings": [
+    {
+      "test": "E1-fake-transport-under-remote-grant",
+      "result_ran": true,
+      "recorded_observations": 1,
+      "simulated_transport_sends": 1,
+      "real_provider_sends": 0,
+      "grant_network": "EXTERNAL_PINNED",
+      "can_claim_completed_attempt": true
+    },
+    {
+      "test": "E2-ledger-disappears-mid-response",
+      "ledger_preserved": true,
+      "threw": true,
+      "thrown_code": "LEDGER_NOT_INITIALIZED",
+      "structured_outcome": false,
+      "local_mock_requests": 1
+    },
+    {
+      "test": "E3-checkpoint-remapped-to-same-device-after-preflight",
+      "switched": true,
+      "transport_sends": 2,
+      "granted_device_policy": "DISTINCT_DEVICES",
+      "checkpoint_dev_at_end": 16777230,
+      "ledger_dev": 16777230,
+      "invariant_distinct": false,
+      "stopped_reason": "GRANT_ATTEMPT_CAP",
+      "reported_ran": true
+    },
+    {
+      "test": "E4-zero-free-space-minimum-configuration",
+      "advertised_minimum": 67108864,
+      "override_zero_passes": true,
+      "default_preq_passes": true,
+      "source": "local test config only"
+    }
+  ],
+  "source_sha256": {
+    "module": "cddbcc30f364f6681c17b87eab03c4af214b609d8682196a7296ceed5fa0afdb"
+  },
+  "evidence": {
+    "J1-matrix.log.txt": "9ba90f54d0ff932c02690612f80fc2928fb30b168a75b521fa4c69b8b9dffa80",
+    "J1-typecheck.log.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "adapter-proof.log.txt": "c70c8da1d05758309f4ab46cb7c959a331126a1cbd8a063a4d860dc469472ead",
+    "checkpoint-proof.log.txt": "ff53951f50af81072cd118b98209f55b9e57dd1d5ccdee70f9a8efb0cbd3069c",
+    "freeze.log.txt": "c779424438501c5b8da1e531270354b59634d38504981f987ad173b33fdf5f17",
+    "host.log.txt": "2272eddabf1bfbe3be50241cbe26731d3b09ad7f0bc8928b337f8e2624de6ac1",
+    "independent-live-wrapper-probes.mjs": "2eac586a82c9a78a850459241ee5407cbc883dccccec965fdb265a299834412a",
+    "independent-probes.json": "8fbd95da27b4603f2c2cc372861186d95741645521371a77472c79155a3c4d4b",
+    "mac-t7-matrix-adapted.mjs": "75c13898a87ee3cb7290ff625d203bf8ffe15090fc5fd1e15cb65372f4873178",
+    "mac-t7-matrix.log.txt": "a9cabbab9bef55ec81608be8b610ade43ce7e6f991fcd7a62c48899b696bf972",
+    "mac-t7-proof-adapted.mjs": "1997d33dbd61c8c146b061ffcf72be44942681eb8d7ab9dbfb12e358bdae87dc",
+    "mac-t7-proof-final.log.txt": "ad4afcfe1573dab1cee6fe3a755b4f893432b47e3cf440b4d6075df4022b332c",
+    "mac-t7-test-adapter.py": "23e7e484034a76ef898d718e0e6be5d822491f8913bd7c6117402526042fecdb",
+    "original-proof.log.txt": "d621d627abef892c83024138e8a24e56f14cd5e4a52a3ac3b5f7186e89470061",
+    "wire-proof.log.txt": "0e51e32148032aa81c44208395e70a258ac72de8ffb002dbedb2dd432d332951"
+  }
+}

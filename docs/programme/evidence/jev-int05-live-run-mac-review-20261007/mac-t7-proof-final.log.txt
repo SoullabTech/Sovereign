@@ -1,0 +1,19 @@
+COMMAND=node /Users/soullab/jev-int05-live-run-review-evidence-20261007/mac-t7-proof-adapted.mjs
+HEAD=41caa8f79af488fd8ea82442fe3586f03b13d15e
+STARTED_UTC=2026-10-08T01:02:23Z
+PASS  L1-committed-off-switch-refuses-before-any-store-credential-or-transport
+PASS  L2-grant-must-match-the-code-and-can-only-narrow-it
+PASS  L3-storage-preflight-refuses-unsafe-layouts-without-creating-anything
+PASS  L4-modes-never-resume-repair-or-initialize-by-themselves
+PASS  L5-full-31-attempt-mock-run-on-distinct-devices-then-resume-sends-nothing
+PASS  L6-grant-can-narrow-attempts-and-spend
+PASS  L7-stops-at-the-first-failure-and-refuses-to-resume-after-it
+PASS  L8-grant-expiry-is-rechecked-during-the-run
+PASS  L9-credential-is-only-requested-at-send-and-never-surfaces
+PASS  L10-remote-option-follows-the-grant-and-the-pinned-endpoint-only
+PASS  L11-static-no-env-no-cli-no-logging-never-writes-the-off-switch
+PASS  L12-summary-is-content-free
+
+12 passed · 0 failed
+EXIT_CODE=0
+FINISHED_UTC=2026-10-08T01:02:32Z

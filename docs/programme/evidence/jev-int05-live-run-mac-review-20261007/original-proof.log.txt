@@ -1,0 +1,17 @@
+PASS  L1-committed-off-switch-refuses-before-any-store-credential-or-transport
+PASS  L2-grant-must-match-the-code-and-can-only-narrow-it
+FAIL  L3-storage-preflight-refuses-unsafe-layouts-without-creating-anything
+      NOT RUN: this host has no second device (/dev/shm) for the distinct-device cases
+PASS  L4-modes-never-resume-repair-or-initialize-by-themselves
+FAIL  L5-full-31-attempt-mock-run-on-distinct-devices-then-resume-sends-nothing
+      NOT RUN: no second device for the distinct-device run
+PASS  L6-grant-can-narrow-attempts-and-spend
+PASS  L7-stops-at-the-first-failure-and-refuses-to-resume-after-it
+PASS  L8-grant-expiry-is-rechecked-during-the-run
+PASS  L9-credential-is-only-requested-at-send-and-never-surfaces
+FAIL  L10-remote-option-follows-the-grant-and-the-pinned-endpoint-only
+      NOT RUN: no second device for the distinct-device run
+PASS  L11-static-no-env-no-cli-no-logging-never-writes-the-off-switch
+PASS  L12-summary-is-content-free
+
+9 passed · 3 failed

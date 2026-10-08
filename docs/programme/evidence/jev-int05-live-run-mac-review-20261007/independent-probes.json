@@ -1,0 +1,44 @@
+{
+  "head": "41caa8f79af488fd8ea82442fe3586f03b13d15e",
+  "tested_with_temporary_witnessed_gate": true,
+  "only_synthetic_local_interactions": true,
+  "no_TypeSafe_requests": true,
+  "no_real_credentials": true,
+  "rows": [
+    {
+      "test": "E1-fake-transport-under-remote-grant",
+      "result_ran": true,
+      "recorded_observations": 1,
+      "simulated_transport_sends": 1,
+      "real_provider_sends": 0,
+      "grant_network": "EXTERNAL_PINNED",
+      "can_claim_completed_attempt": true
+    },
+    {
+      "test": "E2-ledger-disappears-mid-response",
+      "ledger_preserved": true,
+      "threw": true,
+      "thrown_code": "LEDGER_NOT_INITIALIZED",
+      "structured_outcome": false,
+      "local_mock_requests": 1
+    },
+    {
+      "test": "E3-checkpoint-remapped-to-same-device-after-preflight",
+      "switched": true,
+      "transport_sends": 2,
+      "granted_device_policy": "DISTINCT_DEVICES",
+      "checkpoint_dev_at_end": 16777230,
+      "ledger_dev": 16777230,
+      "invariant_distinct": false,
+      "stopped_reason": "GRANT_ATTEMPT_CAP",
+      "reported_ran": true
+    },
+    {
+      "test": "E4-zero-free-space-minimum-configuration",
+      "advertised_minimum": 67108864,
+      "override_zero_passes": true,
+      "default_preq_passes": true,
+      "source": "local test config only"
+    }
+  ]
+}
