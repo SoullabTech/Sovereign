@@ -24,3 +24,19 @@ test('unusable event is not an affirmative server permission', () => {
   expect(notify).not.toHaveBeenCalled();
   stop();
 });
+
+test('initial known Sanctuary ON is reaffirmed when coordinator mounts', () => {
+  const notify = jest.fn(async () => 'acknowledged');
+  const stop = coordinateSourcePosture(window, notify, () => true);
+  expect(notify).toHaveBeenCalledTimes(1);
+  stop();
+});
+test('initial OFF or unreadable posture never unlocks source persistence', () => {
+  const notify = jest.fn(async () => 'acknowledged');
+  const stop = coordinateSourcePosture(window, notify, () => { throw new Error('unreadable'); });
+  expect(notify).not.toHaveBeenCalled();
+  stop();
+  const stop2 = coordinateSourcePosture(window, notify, () => false);
+  expect(notify).not.toHaveBeenCalled();
+  stop2();
+});

@@ -16,6 +16,7 @@ export function sanctuaryFromSettingsEvent(event: SettingsEvent): boolean | null
 export function coordinateSourcePosture(
   target: Pick<Window, 'addEventListener' | 'removeEventListener'>,
   notify: (active: boolean) => Promise<unknown> = notifySourcePersistenceSanctuary,
+  currentSetting?: () => boolean | null,
 ): () => void {
   const listener = (event: Event) => {
     const sanctuary = sanctuaryFromSettingsEvent(event as Event & SettingsEvent);
@@ -23,6 +24,9 @@ export function coordinateSourcePosture(
     // `false` has no effect: leaving Sanctuary must be acknowledged through
     // the future governed UI, not minted by a local settings event.
   };
+  // A member might have entered Sanctuary before this room was mounted.
+  // Reaffirm only a known ON state; never infer permission from absent/OFF.
+  try { if (currentSetting?.() === true) void notify(true).catch(() => undefined); } catch { /* fail closed */ }
   target.addEventListener('maia-settings-changed', listener);
   return () => target.removeEventListener('maia-settings-changed', listener);
 }
