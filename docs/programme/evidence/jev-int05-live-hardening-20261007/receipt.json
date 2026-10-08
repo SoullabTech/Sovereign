@@ -1,0 +1,293 @@
+{
+  "head": "29b38b0d41f411a7ab44028a6dd17bcb8522f4dc",
+  "baseline": "41caa8f79af488fd8ea82442fe3586f03b13d15e",
+  "generated_at": "2026-10-08T01:39:52.869882+00:00",
+  "checks": [
+    {
+      "name": "live-proof-1",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "e236482ba7a625502382ecee515ca2cf5aeca25476a0fa91f934c46c164704ae",
+      "elapsed_sec": 14.581,
+      "started_at": "2026-10-08T01:35:56.477650+00:00",
+      "finished_at": "2026-10-08T01:36:11.055928+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/live-proof-1.log.txt"
+    },
+    {
+      "name": "live-proof-2",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "b15e8d0498ee131720537bd7d9b47d5fbd78f4e57c49adc7ccd2b60019fe73d9",
+      "elapsed_sec": 14.62,
+      "started_at": "2026-10-08T01:35:56.477814+00:00",
+      "finished_at": "2026-10-08T01:36:11.097529+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/live-proof-2.log.txt"
+    },
+    {
+      "name": "live-proof-3",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "4c2723327e6b2a0f42bdf2962bacdd676d81d5ee75a0cbcb4548d9349c4f6318",
+      "elapsed_sec": 14.684,
+      "started_at": "2026-10-08T01:35:56.477860+00:00",
+      "finished_at": "2026-10-08T01:36:11.160523+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/live-proof-3.log.txt"
+    },
+    {
+      "name": "live-matrix",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-live-run-v1-matrix.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "943badd9609e5dbeb73c1f9b4e2ddcadd839eba336f900f1115fa9f8b8ba962f",
+      "elapsed_sec": 44.496,
+      "started_at": "2026-10-08T01:36:11.058589+00:00",
+      "finished_at": "2026-10-08T01:36:55.553229+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/live-matrix.log.txt"
+    },
+    {
+      "name": "live-old",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs"
+      ],
+      "exit_code": 1,
+      "error": null,
+      "expected_status": "OLD_BUGS_REPRODUCED",
+      "validated": true,
+      "log_sha256": "347d876034176d73e31b6ec5eedcc074c5cdb2985514b1ee76b271cd2e3f2dfe",
+      "elapsed_sec": 11.875,
+      "started_at": "2026-10-08T01:36:11.097865+00:00",
+      "finished_at": "2026-10-08T01:36:22.971210+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/live-old.log.txt"
+    },
+    {
+      "name": "adapter-proof",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-http-adapter-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "3139e06a15cfa85b8fd9e61176188730f973deec556262ef459673a0f460ccc3",
+      "elapsed_sec": 9.075,
+      "started_at": "2026-10-08T01:36:11.161747+00:00",
+      "finished_at": "2026-10-08T01:36:20.236466+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/adapter-proof.log.txt"
+    },
+    {
+      "name": "adapter-matrix",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-http-adapter-v1-matrix.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "52714cdcea2ece8b4195087a432a8b4dabfacbdafd1c7212de5cc55abb1dbde5",
+      "elapsed_sec": 191.582,
+      "started_at": "2026-10-08T01:36:20.237018+00:00",
+      "finished_at": "2026-10-08T01:39:31.815640+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/adapter-matrix.log.txt"
+    },
+    {
+      "name": "checkpoint-proof",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "04f08a42454874e7c1a786bef9def7967796f093b8ce5fe13324aa83d237977f",
+      "elapsed_sec": 3.238,
+      "started_at": "2026-10-08T01:36:22.973040+00:00",
+      "finished_at": "2026-10-08T01:36:26.204979+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/checkpoint-proof.log.txt"
+    },
+    {
+      "name": "checkpoint-matrix",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-matrix.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "29b00455e6fd901c326d28c3835b670a5cbca8819aea1cb08097d2e957d59c7f",
+      "elapsed_sec": 70.852,
+      "started_at": "2026-10-08T01:36:26.211232+00:00",
+      "finished_at": "2026-10-08T01:37:37.061243+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/checkpoint-matrix.log.txt"
+    },
+    {
+      "name": "wire-proof",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "67ed088cbb1d2c3cc1c2bc2d4648836fc04e15532215848e6f6249a8855a2972",
+      "elapsed_sec": 4.535,
+      "started_at": "2026-10-08T01:36:55.554127+00:00",
+      "finished_at": "2026-10-08T01:37:00.088510+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/wire-proof.log.txt"
+    },
+    {
+      "name": "wire-matrix",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-matrix.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "ca5727ccf4f4adf27b22633b015d66227afe8664175e7e08cef2fe03359e1019",
+      "elapsed_sec": 172.781,
+      "started_at": "2026-10-08T01:37:00.089332+00:00",
+      "finished_at": "2026-10-08T01:39:52.869334+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/wire-matrix.log.txt"
+    },
+    {
+      "name": "findings-old",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "old"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "1eb6455162466dbb97803b2a23071f259254563e12b19adce6b07e6e6e21f016",
+      "elapsed_sec": 1.615,
+      "started_at": "2026-10-08T01:37:37.063417+00:00",
+      "finished_at": "2026-10-08T01:37:38.677063+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/findings-old.log.txt"
+    },
+    {
+      "name": "findings-new",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "new"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "8ab060df1806bd11987a966f4a6420e063c9af30c9a35e91ce885506f49286ae",
+      "elapsed_sec": 0.983,
+      "started_at": "2026-10-08T01:37:38.679507+00:00",
+      "finished_at": "2026-10-08T01:37:39.661712+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/findings-new.log.txt"
+    },
+    {
+      "name": "J1-freeze",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/verify-jarvis-jev-j1-freeze.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "1a8088e9c21d24e7c91858196e4c61e137aeccf8496d31b45d50a71e687c8b25",
+      "elapsed_sec": 0.257,
+      "started_at": "2026-10-08T01:37:39.663285+00:00",
+      "finished_at": "2026-10-08T01:37:39.919130+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/J1-freeze.log.txt"
+    },
+    {
+      "name": "J1-host",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-judgment-host-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "6740c8d18075c219bdf867b14873099d7501d1d9788d9e5a279156da0323de3a",
+      "elapsed_sec": 0.044,
+      "started_at": "2026-10-08T01:37:39.920161+00:00",
+      "finished_at": "2026-10-08T01:37:39.964420+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/J1-host.log.txt"
+    },
+    {
+      "name": "J1-matrix",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "node_modules/tsx/dist/cli.mjs",
+        "tests/constitutional/jarvis-jev-j1/matrix.ts"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "c24b5b07ee9f10b4ef8280900e1c8fd3e599193a0572616ee901538babb558b1",
+      "elapsed_sec": 0.244,
+      "started_at": "2026-10-08T01:37:39.964728+00:00",
+      "finished_at": "2026-10-08T01:37:40.208363+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/J1-matrix.log.txt"
+    },
+    {
+      "name": "J1-typecheck",
+      "args": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "-p",
+        "tsconfig.jarvis-jev-j1.json"
+      ],
+      "exit_code": 0,
+      "error": null,
+      "expected_status": "PASS",
+      "validated": true,
+      "log_sha256": "6c6c5b8d63cf69e21931bd9e7353d74a88ef7bcdd2870440be834b54bd0aa347",
+      "elapsed_sec": 0.473,
+      "started_at": "2026-10-08T01:37:40.208701+00:00",
+      "finished_at": "2026-10-08T01:37:40.681552+00:00",
+      "log": "docs/programme/evidence/jev-int05-live-hardening-20261007/J1-typecheck.log.txt"
+    }
+  ],
+  "all_valid": true,
+  "fake_only": true,
+  "project_typescript": "5.9.3",
+  "node": "22.22.3",
+  "T7_device_verified": true,
+  "unmodified_adapter_checkpoint_wire_and_frozen_J1": true,
+  "pilot_untouched": true,
+  "real_provider_calls": 0,
+  "real_spend_usd": 0
+}

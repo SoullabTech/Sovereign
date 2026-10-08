@@ -1,0 +1,42 @@
+COMMAND=/Users/soullab/.nvm/versions/node/v22.22.3/bin/node scripts/builder/__tests__/jev-wire-checkpoint-v1-matrix.mjs
+SOURCE_HEAD=29b38b0d41f411a7ab44028a6dd17bcb8522f4dc
+CWD=/Users/soullab/jev-int05-live-wrapper-hardening-20261007
+STARTED_AT=2026-10-08T01:36:26.211232+00:00
+TEST_SECOND_DEVICE=/Volumes/T7 Shield
+
+REFERENCE  clean (0 failed)
+
+KILLED  DC-CK-NOT-ANCHORED-BEFORE-DISPATCH  on K1   collateral: K3-missing-checkpoint-never-resets-history-or-permissions, K4-truncated-ledger-is-refused, K5-replaced-reinitialized-and-repeat-initialization-are-refused, K6-ledger-diverging-at-the-anchor-is-refused, K7-corrupt-or-mismatched-checkpoint-is-refused, K9-process-loss-between-the-two-stores-is-never-reconciled-silently, K11-stale-locks-are-refusals-never-deleted-never-bypassed, K12-checkpoint-failure-after-the-outcome-write-is-not-completion, K14-persistence-is-established-by-the-ledger-not-by-the-error-name
+KILLED  DC-CK-OUTCOMES-NOT-ANCHORED  on K1   collateral: K4-truncated-ledger-is-refused, K7-corrupt-or-mismatched-checkpoint-is-refused, K9-process-loss-between-the-two-stores-is-never-reconciled-silently, K11-stale-locks-are-refusals-never-deleted-never-bypassed, K12-checkpoint-failure-after-the-outcome-write-is-not-completion, K14-persistence-is-established-by-the-ledger-not-by-the-error-name
+KILLED  DC-CK-INSTANCE-NOT-RECORDED  on K2   collateral: K1-lifecycle-reservation-and-outcomes-are-anchored-before-they-matter, K3-missing-checkpoint-never-resets-history-or-permissions, K4-truncated-ledger-is-refused, K5-replaced-reinitialized-and-repeat-initialization-are-refused, K6-ledger-diverging-at-the-anchor-is-refused, K7-corrupt-or-mismatched-checkpoint-is-refused, K8-unavailable-checkpoint-storage-means-zero-sends, K9-process-loss-between-the-two-stores-is-never-reconciled-silently, K10-resume-is-explicit-idempotent-and-refuses-over-inconsistency, K11-stale-locks-are-refusals-never-deleted-never-bypassed, K12-checkpoint-failure-after-the-outcome-write-is-not-completion, K14-persistence-is-established-by-the-ledger-not-by-the-error-name, K15-colliding-storage-paths-are-rejected-before-any-mutation, K16-dangling-symlinks-are-refused-before-any-lock-or-store-mutation
+KILLED  DC-MISSING-CHECKPOINT-RECREATED  on K3   collateral: K9-process-loss-between-the-two-stores-is-never-reconciled-silently, K14-persistence-is-established-by-the-ledger-not-by-the-error-name
+KILLED  DC-ESTABLISH-OVER-HISTORY  on K3
+KILLED  DC-TRUNCATION-UNDETECTED  on K4
+KILLED  DC-REPLACED-LEDGER-ACCEPTED  on K5   collateral: K6-ledger-diverging-at-the-anchor-is-refused
+KILLED  DC-REPEAT-INITIALIZATION-ALLOWED  on K5   collateral: K9-process-loss-between-the-two-stores-is-never-reconciled-silently
+KILLED  DC-DIVERGENCE-UNCHECKED  on K6
+KILLED  DC-CHECKPOINT-CORRUPTION-TOLERATED  on K7
+KILLED  DC-BINDING-UNCHECKED  on K7
+KILLED  DC-UNAVAILABLE-TREATED-AS-MISSING  on K8
+KILLED  DC-SEND-DESPITE-ANCHOR-WRITE-FAILURE  on K8   collateral: K12-checkpoint-failure-after-the-outcome-write-is-not-completion, K14-persistence-is-established-by-the-ledger-not-by-the-error-name, K16-dangling-symlinks-are-refused-before-any-lock-or-store-mutation
+KILLED  DC-AHEAD-SILENTLY-RECONCILED  on K9   collateral: K8-unavailable-checkpoint-storage-means-zero-sends, K12-checkpoint-failure-after-the-outcome-write-is-not-completion
+KILLED  DC-RESUME-WITHOUT-ADVANCING  on K10   collateral: K8-unavailable-checkpoint-storage-means-zero-sends, K9-process-loss-between-the-two-stores-is-never-reconciled-silently
+KILLED  DC-STALE-LOCK-DELETED  on K11   collateral: K9-process-loss-between-the-two-stores-is-never-reconciled-silently, K10-resume-is-explicit-idempotent-and-refuses-over-inconsistency, K13-static-no-network-no-credential-no-lock-deletion-but-its-own, K14-persistence-is-established-by-the-ledger-not-by-the-error-name
+KILLED  DC-CHECKPOINT-FAILURE-REPORTED-OK  on K12   collateral: K14-persistence-is-established-by-the-ledger-not-by-the-error-name
+KILLED  DC-PERSISTED-ASSUMED-FROM-ERROR-NAME  on K14
+KILLED  DC-UNVERIFIABLE-REPORTED-AS-NOT-PERSISTED  on K14
+KILLED  DC-PATH-COLLISION-UNCHECKED  on K15   collateral: K16-dangling-symlinks-are-refused-before-any-lock-or-store-mutation
+KILLED  DC-ONLY-EXACT-EQUALITY-CHECKED  on K15
+KILLED  DC-ALIASES-NOT-RESOLVED  on K15
+KILLED  DC-NETWORK-IN-CHECKPOINT-MODULE  on K13
+KILLED  DC-LINK-INSPECTION-REMOVED  on K16
+KILLED  DC-LEDGER-SIDE-LINKS-NOT-INSPECTED  on K16
+KILLED  DC-TEMP-AND-LOCK-LINKS-ALLOWED  on K16
+KILLED  DC-DANGLING-LINK-ALLOWED  on K16
+KILLED  DC-WRITE-FOLLOWS-LINKS  on K16
+
+28/28 candidates killed on their named check · 0 problems
+
+EXIT_CODE=0
+EXECUTION_ERROR=None
+FINISHED_AT=2026-10-08T01:37:37.061243+00:00
