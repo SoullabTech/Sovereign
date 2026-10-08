@@ -58,8 +58,7 @@ existing `openLabDrawer` event in the local browser witness. A fully physical
 member navigation to that shelf has not yet been recorded. The VoiceHUD component
 is disabled in the active renderer and is not claimed as witnessed.
 
-The status currently says “Materials saving paused” because this branch's server
-write guards are deliberately hard-disabled; before any future reopening the
+The status currently says “Source uploads paused” because this branch's source POST and transcription PATCH guards are deliberately hard-disabled; before any future reopening the
 status must be governed alongside the new server authorization contract.
 
 No new memories, manuscript wording, source attachments, production data, or

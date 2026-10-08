@@ -5,10 +5,10 @@
 import type { SourcePostureDisplay } from './sourcePostureDisplay';
 export type SourcePostureNotice = Readonly<{ heading: string; detail: string }>;
 export function sourcePostureNotice(state: SourcePostureDisplay): SourcePostureNotice {
-  const heading = 'Materials saving paused';
+  const heading = 'Source uploads paused';
   switch (state) {
-    case 'sanctuary': return { heading, detail: 'The server confirms Sanctuary for this session’s source protection.' };
-    case 'ordinary-unverified': return { heading, detail: 'Ordinary mode is recorded, but that does not authorize saving material.' };
-    default: return { heading, detail: 'Server confirmation is unavailable. New material will not be saved.' };
+    case 'sanctuary': return { heading, detail: 'The server confirms Sanctuary for this session. New source uploads and transcription edits remain blocked.' };
+    case 'ordinary-unverified': return { heading, detail: 'Ordinary mode is recorded, but that does not authorize uploading or editing sources.' };
+    default: return { heading, detail: 'Server confirmation is unavailable. New source uploads and transcription edits remain blocked.' };
   }
 }

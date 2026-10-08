@@ -66,7 +66,7 @@ QuickSettingsSheet for actual member settings.
   panel at 1440×900 and 390×844, server status unavailable.
 - `quick-settings-desktop-selected.png` and
   `quick-settings-mobile-selected.png`: the **actual Sanctuary toggle selected**
-  with an independently visible `Materials saving paused` notice. The Next.js
+  with an independently visible `Source uploads paused` notice. The Next.js
   development warning badge and Soullab footer remain in the visual record.
 
 The existing `openLabDrawer` browser event was used to expose the Lab Tools
@@ -74,7 +74,7 @@ shelf, then the new Quick Settings menu item was selected normally. This is a
 truthful actual-component visual test, **not proof of a physical user gesture
 reaching that shelf**. The source-posture API returned GET 503, POST Sanctuary
 503, GET 503 (migration not yet applied). The status remained `unavailable`
-and stated that new material would not be saved. Local exit back to ordinary
+and stated that new source uploads and reviewed-source edits remained blocked. Local exit back to ordinary
 made no POST authorizing storage. The active VoiceHUD remains unmounted.
 
 These images do not certify successful source saving, cognition privacy, or a
