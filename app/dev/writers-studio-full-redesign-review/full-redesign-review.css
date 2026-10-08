@@ -34,6 +34,33 @@
   font-size: 14px; font-weight: 600; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .35); }
 .fr-more { margin-left: 22px; color: var(--fr-muted); font-size: 16px; letter-spacing: 1px; }
 
+/* Member-owned column geometry. The splitters change width without remounting the
+   manuscript or MAIA; the header controls collapse/reopen either available panel. */
+.fr-panel-controls { display: flex; flex: none; align-items: center; gap: 6px; margin: 0 8px; }
+.fr-panel-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  min-height: 30px; padding: 3px 9px !important; border: 1px solid var(--fr-line) !important;
+  border-radius: 7px; font-size: 12px !important; white-space: nowrap; color: var(--fr-ink2) !important; }
+.fr-panel-toggle:hover { background: var(--fr-action-soft); color: var(--fr-title) !important; }
+.fr-panel-toggle[aria-pressed='false'] { opacity: .78; }
+.fr-panel-toggle span { font-size: 18px; line-height: 12px; }
+.fr-room { position: relative; }
+.fr-panel-splitter { position: absolute; top: var(--fr-top); bottom: var(--fr-bottom); width: 14px;
+  z-index: 5; cursor: col-resize; touch-action: none; user-select: none; background: transparent; }
+.fr-panel-splitter::after { content: ''; position: absolute; width: 3px; top: 17px; bottom: 17px;
+  left: 5px; border-radius: 4px; background: transparent; transition: background 120ms ease; }
+.fr-panel-splitter:hover::after, .fr-panel-splitter:focus-visible::after,
+.fr-panel-splitter:active::after { background: var(--fr-action); }
+.fr-panel-splitter-left { left: calc(var(--fr-pad-l) + var(--fr-ms-w) + var(--fr-gap-l) / 2 - 7px); }
+.fr-panel-splitter-right { right: calc(var(--fr-pad-r) + var(--fr-maia-w) + var(--fr-gap-r) / 2 - 7px); }
+.fr-shell[data-left-open='false'] .fr-manuscript,
+.fr-shell[data-right-open='false'] .fr-maia { visibility: hidden; pointer-events: none; }
+.fr-shell[data-left-open='false'] .fr-work { margin-left: 0; }
+.fr-shell[data-right-open='false'] .fr-work { margin-right: 0; }
+@media (max-width: 1023px) {
+  .fr-panel-controls, .fr-panel-splitter { display: none; }
+}
+
+
 /* ── room ──────────────────────────────────── */
 .fr-room { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--fr-ms-w) minmax(0, 1fr) var(--fr-maia-w); grid-template-rows: minmax(0, 1fr);
   padding: var(--fr-top) var(--fr-pad-r) var(--fr-bottom) var(--fr-pad-l); }

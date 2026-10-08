@@ -1022,6 +1022,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           manuscript={<WriteManuscriptRail fixture={projection.data} onOpenChapter={go} />}
           work={workSurface}
           maia={railSelectionId || workConversationOpen ? writeMaia : undefined}
+          onOpenMaia={() => openWorkConversation('')}
         />
 
       {isolatedRoom}
