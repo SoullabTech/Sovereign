@@ -25,6 +25,26 @@
 # with this deny inactive for that route, is rejected by the APPLICATION.
 # Removing one on the strength of a source-side change alone is not permitted.
 (deny_disabled_routes) {
+    # SOURCE-CUSTODY-EDGE-01 · independent pre-migration containment.
+    # The old application persists uploaded originals and reviewed edits without
+    # Sanctuary posture authority. A DB-only guard would be TOO LATE for PATCH:
+    # the legacy handler writes reviewed.txt before its database update.
+    # Deny these HTTP mutations at Caddy BEFORE changing source-custody schema,
+    # while the old reader can still receive traffic. Reads and source DELETE
+    # remain available. This is a compensating control, NOT a substitute for
+    # governing any direct/internal ingress that bypasses Caddy.
+    # RETIRE ONLY after: edge proof on actual live host(s), old writers drained,
+    # new source reservation/crash cleanup proofs and authorized cutover.
+    @source_write_pre_migration_hold {
+        path /api/writers-studio/sources /api/writers-studio/sources/*
+        method POST PUT PATCH
+    }
+    handle @source_write_pre_migration_hold {
+        respond "Source writing temporarily unavailable" 423 {
+            close
+        }
+    }
+
     # 04A · /api/members/migrate-data — accepts caller-chosen SOURCE and
     # DESTINATION member ids with no session resolution, and has no ACCESS_RULES
     # entry, so the Mode A unmapped-route default lets it through middleware.
