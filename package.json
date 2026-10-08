@@ -99,6 +99,8 @@
     "matrix:jarvis-jev-wire-checkpoint": "node scripts/builder/__tests__/jev-wire-checkpoint-v1-matrix.mjs",
     "proof:jarvis-jev-wire-adapter": "node scripts/builder/__tests__/jev-wire-http-adapter-v1-proof.mjs",
     "matrix:jarvis-jev-wire-adapter": "node scripts/builder/__tests__/jev-wire-http-adapter-v1-matrix.mjs",
+    "proof:jarvis-jev-wire-prelive": "node scripts/builder/__tests__/jev-wire-prelive-wrapper-v1-proof.mjs",
+    "matrix:jarvis-jev-wire-prelive": "node scripts/builder/__tests__/jev-wire-prelive-wrapper-v1-matrix.mjs",
     "typecheck:jarvis-jev-label-01": "tsc -p tsconfig.jarvis-jev-label-01.json",
     "matrix:jarvis-jev-label-01": "npx tsx tests/constitutional/jarvis-jev-label-01/matrix.ts",
     "verify:jarvis-jev-label-01-pilot": "npx tsx tests/constitutional/jarvis-jev-label-01/pilot/verify.ts",
