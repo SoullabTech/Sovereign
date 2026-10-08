@@ -25,8 +25,9 @@ test('ordinary authenticated lease holds lock through async work and releases af
   const work = jest.fn(async () => { await during; return 'saved'; });
   const result = withSourcePersistenceLease(req(), 'm1', work);
   await new Promise(resolve => setImmediate(resolve));
-  expect(queries.some(q => q.includes('FOR UPDATE'))).toBe(false); // compact query recorder, checked below in mock SQL
   expect(queries).toEqual(['BEGIN', 'SELECT source_persistence_posture, source_persistence_revision']);
+  const lockedClient = await connect.mock.results[0].value;
+  expect(lockedClient.query.mock.calls[1][0]).toContain('FOR UPDATE NOWAIT');
   expect(release).not.toHaveBeenCalled();
   end();
   await expect(result).resolves.toBe('saved');
@@ -51,4 +52,17 @@ test('transition uses session-bound update with acknowledged revision', async ()
   expect(client.query.mock.calls[1][0]).toContain('source_persistence_revision = source_persistence_revision + 1');
   expect(client.query.mock.calls[1][0]).toContain('session_token = $1 AND member_id = $2');
   expect(queries.at(-1)).toBe('COMMIT');
+});
+
+test('contended session lock refuses without attempting the content writer', async () => {
+  const client = setup('ordinary');
+  client.query.mockImplementation(async (sql: string) => {
+    if (sql.includes('FOR UPDATE NOWAIT')) throw Object.assign(new Error('lock unavailable'), { code: '55P03' });
+    return { rows: [] };
+  });
+  const writer = jest.fn();
+  await expect(withSourcePersistenceLease(req(), 'm1', writer)).rejects.toMatchObject({ code: '55P03' });
+  expect(writer).not.toHaveBeenCalled();
+  expect(client.query.mock.calls.some(([sql]: [string]) => sql === 'ROLLBACK')).toBe(true);
+  expect(release).toHaveBeenCalledTimes(1);
 });
