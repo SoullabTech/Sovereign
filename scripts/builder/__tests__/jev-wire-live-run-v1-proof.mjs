@@ -261,6 +261,8 @@ await check('L10-remote-option-follows-the-grant-and-the-pinned-endpoint-only', 
   const pinned = grantFor(W, { url: 'https://api.typesafe.ai/v1/systemone' }, { network: 'EXTERNAL_PINNED', volume_policy: 'DISTINCT_DEVICES', max_attempts: 1 });
   assert.equal(R.resolveTransportFactory(pinned, {}), A.createJevHttpTransport, 'remote grant selects the hardened adapter');
   assert.throws(() => R.resolveTransportFactory(pinned, { createTransport: spy }), /TRANSPORT_INJECTION_REFUSED/);
+  assert.deepEqual(R.transportOptions(pinned, { credential: 'x' }), { endpoint: 'https://api.typesafe.ai/v1/systemone', credential: 'x', allowRemote: true });
+  assert.equal(R.transportOptions(grantFor(W, { url: 'http://127.0.0.1:1/v1/systemone' }), {}).allowRemote, false);
   // loopback grants may inject; they never enable the remote option
   const m = await startMock(); const l2 = layout(); calls.length = 0;
   await R.executeLiveRun(config(l2, grantFor(W, m, { max_attempts: 1 })), { credential: spyCredential().fn, createTransport: spy });
@@ -343,8 +345,8 @@ await check('L15-LW3-storage-identity-is-rechecked-before-every-attempt', async 
   }
   // dispatch-time recheck: the change lands AFTER the pre-reservation check and BEFORE the send (the grant-expiry clock read sits between them)
   { const m = await startMock(); const l = layout({ distinct: true }); const g = grantFor(W, m, { volume_policy: 'DISTINCT_DEVICES', max_attempts: 3 }); let armed = false;
-    const now = () => { if (m.requests.length === 1 && !armed) { armed = true; const cpDir = dirname(l.checkpointPath); const shadow = join(l.root, 'shadow'); mkdirSync(shadow);
-      copyFileSync(l.checkpointPath, join(shadow, 'anchor.json')); renameSync(cpDir, cpDir + '.preserved'); symlinkSync(shadow, cpDir, 'dir'); }
+    const now = () => { if (m.requests.length === 1 && !armed) { armed = true; const cpDir = dirname(l.checkpointPath);
+      renameSync(cpDir, cpDir + '.preserved'); mkdirSync(cpDir); copyFileSync(join(cpDir + '.preserved', 'anchor.json'), join(cpDir, 'anchor.json')); }   // a swap the checkpoint module itself cannot see
       return Date.now(); };
     const out = await R.executeLiveRun(config(l, g), { credential: spyCredential().fn, now });
     assert.equal(armed, true); assert.equal(m.requests.length, 1, 'the second dispatch never reached the wire'); assert.equal(out.stopped_reason, 'STORAGE_CHANGED');

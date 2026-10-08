@@ -168,6 +168,11 @@ export function resolveTransportFactory(grant, deps = {}) {
   return deps.createTransport ?? createJevHttpTransport;
 }
 
+/** The options handed to the transport factory. Remote is enabled by the grant's network class alone, never by the caller. */
+export function transportOptions(grant, deps = {}) {
+  return { endpoint: grant.endpoint, credential: deps.credential, allowRemote: grant.network === 'EXTERNAL_PINNED' };
+}
+
 /**
  * Every precondition, in order, fail-fast. Reads only (the optional consistency check for `resume` takes and releases the pair lock).
  * Order matters: the off-switch is evaluated BEFORE anything touches a credential, a transport or a store.
@@ -228,7 +233,7 @@ export async function executeLiveRun(config, deps = {}) {
   const storageSame = () => verifyStorageIdentity(identity, { ledgerPath, checkpointPath, minFreeBytes: minFree });
   let transport;
   try {                                           // built BEFORE any store exists, so a configuration fault leaves nothing behind
-    transport = makeTransport({ endpoint: grant.endpoint, credential: deps.credential, allowRemote: grant.network === 'EXTERNAL_PINNED' });
+    transport = makeTransport(transportOptions(grant, deps));
   } catch (e) {
     return Object.freeze({ ran: false, refusal: /^ADAPTER_/.test(String(e && e.message)) ? e.message : 'TRANSPORT_CONSTRUCTION', checks: report.checks, attempts: [] });
   }
