@@ -207,3 +207,92 @@ test('the door is mounted beside, not instead of, the existing Focus tray and th
   expect((write.match(/<P4R1FocusMaterials/g) ?? []).length).toBe(1);
   expect((develop.match(/<P4R1WorkMaterialsDoor/g) ?? []).length).toBe(1);
 });
+
+test('the writer’s own "what might it feed" sentence is kept at Keep time and still reaches MAIA after the form clears', async () => {
+  const onExplore = jest.fn();
+  act(() => root.render(React.createElement(P4R1WorkMaterialsDoor, { work: WORK, onExplore })));
+  await openDoor();
+  apiFetch
+    .mockResolvedValueOnce(json(201, { source: { id: 'src-s', transcriptionStatus: 'reviewed' } }))
+    .mockResolvedValueOnce(json(201, {}));
+  const inputs = Array.from(container.querySelectorAll('input[type="text"], input:not([type])')) as HTMLInputElement[];
+  await act(async () => {
+    setValue(container.querySelector('textarea')!, 'A note.');
+    setValue(inputs[2], 'feeds the Fire chapter');
+  });
+  await act(async () => button('Keep with this Work').click());
+  expect((inputs[2] as HTMLInputElement).value).toBe('');
+  await act(async () => button('Explore with MAIA').click());
+  expect(onExplore.mock.calls[0][0]).toContain('Why the member says this feeds the Work: feeds the Fire chapter');
+  expect(onExplore.mock.calls[0][1]).toBe('explore');
+});
+
+test('the door says only what is true about delivery: prefill mode never claims MAIA was asked', async () => {
+  const onExplore = jest.fn();
+  act(() => root.render(React.createElement(P4R1WorkMaterialsDoor, { work: WORK, onExplore, exploreMode: 'prefill' })));
+  await openDoor();
+  apiFetch
+    .mockResolvedValueOnce(json(201, { source: { id: 'src-p', transcriptionStatus: 'reviewed' } }))
+    .mockResolvedValueOnce(json(201, {}));
+  await act(async () => { setValue(container.querySelector('textarea')!, 'A note.'); });
+  await act(async () => button('Keep with this Work').click());
+  await act(async () => button('Help me find where it fits').click());
+  expect(container.textContent).toContain('Nothing has been asked yet');
+  expect(container.textContent).not.toContain('Asked MAIA');
+});
+
+test('send mode does not claim certainty it cannot have', async () => {
+  const onExplore = jest.fn();
+  act(() => root.render(React.createElement(P4R1WorkMaterialsDoor, { work: WORK, onExplore })));
+  await openDoor();
+  apiFetch
+    .mockResolvedValueOnce(json(201, { source: { id: 'src-q', transcriptionStatus: 'reviewed' } }))
+    .mockResolvedValueOnce(json(201, {}));
+  await act(async () => { setValue(container.querySelector('textarea')!, 'A note.'); });
+  await act(async () => button('Keep with this Work').click());
+  await act(async () => button('Explore with MAIA').click());
+  expect(container.textContent).toContain('If no reply appears, nothing was asked');
+});
+
+test('a context over the host’s question limit is refused whole — never prefilled, never trimmed', async () => {
+  const onExplore = jest.fn();
+  act(() => root.render(React.createElement(P4R1WorkMaterialsDoor, { work: WORK, onExplore, exploreMode: 'prefill', maxContextChars: 4000 })));
+  await openDoor();
+  apiFetch
+    .mockResolvedValueOnce(json(201, { source: { id: 'src-big', transcriptionStatus: 'reviewed' } }))
+    .mockResolvedValueOnce(json(201, {}));
+  await act(async () => { setValue(container.querySelector('textarea')!, 'x'.repeat(3600)); });
+  await act(async () => button('Keep with this Work').click());
+  await act(async () => button('Help me find where it fits').click());
+  expect(onExplore).not.toHaveBeenCalled();
+  expect(container.textContent).toContain('too long to send as one question here');
+  expect(container.textContent).toContain('Nothing was sent');
+});
+
+test('material kept in an earlier session can still be explored or placed', async () => {
+  const onExplore = jest.fn();
+  const work = { ...WORK, materials: [{ materialType: 'source_upload', materialId: 'old-1', sentence: 'for Chapter 5', declaredAt: '2026-10-01T00:00:00Z' }] };
+  act(() => root.render(React.createElement(P4R1WorkMaterialsDoor, { work, onExplore })));
+  apiFetch.mockResolvedValueOnce(json(200, { sources: [{ id: 'old-1', originalName: 'Corbin note.txt', transcriptionStatus: 'reviewed' }] }));
+  const details = container.querySelector('details')!;
+  await act(async () => { details.open = true; details.dispatchEvent(new Event('toggle', { bubbles: true })); });
+  expect(container.textContent).toContain('Already kept with this Work');
+  expect(container.textContent).toContain('Corbin note.txt');
+  apiFetch.mockResolvedValueOnce(json(200, { source: { transcriptionStatus: 'reviewed', transcriptionReviewed: 'Earlier note text.' } }));
+  await act(async () => button('Help me find where it fits').click());
+  expect(onExplore).toHaveBeenCalledTimes(1);
+  const sent: string = onExplore.mock.calls[0][0];
+  expect(sent).toContain('Earlier note text.');
+  expect(sent).toContain('Why the member says this feeds the Work: for Chapter 5');
+  expect(onExplore.mock.calls[0][1]).toBe('place');
+});
+
+test('in Write, Explore and Place can never return a MAIA-authored proposal; in Develop the server already supplies headings', () => {
+  const write = fs.readFileSync(path.join(process.cwd(), 'app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx'), 'utf8');
+  const develop = fs.readFileSync(path.join(process.cwd(), 'app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx'), 'utf8');
+  expect(write).toContain("onExplore={(context) => props.onSendEditorial(context, { proposalPolicy: 'reply_only' })}");
+  const doorInDevelop = develop.slice(develop.indexOf('<P4R1WorkMaterialsDoor'), develop.indexOf('/>', develop.indexOf('<P4R1WorkMaterialsDoor')));
+  expect(doorInDevelop).toContain('exploreMode="prefill"');
+  expect(doorInDevelop).toContain('maxContextChars={4000}');
+  expect(doorInDevelop).not.toContain('outline=');
+});

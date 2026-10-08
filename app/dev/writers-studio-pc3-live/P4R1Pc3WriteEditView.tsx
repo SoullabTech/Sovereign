@@ -972,7 +972,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         work={props.work}
         outline={props.context.sections.map((section) => section.heading ?? '')}
         onChanged={props.onWorkChanged}
-        onExplore={(context) => props.onSendEditorial(context)}
+        onExplore={(context) => props.onSendEditorial(context, { proposalPolicy: 'reply_only' })}
       />
 
       <EditorialDancePanel

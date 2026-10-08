@@ -24,7 +24,7 @@ Law: adding material never touches the draft, focus or conversation; Keep ≠ Ex
 
 ## 3. What slice 1 does
 
-`P4R1WorkMaterialsDoor.tsx` — one quiet **Bring in material** control, present even when the Work has none and no passage is selected. Mounted in **Write** (beside, not replacing, the Focus tray) and in the **Develop MAIA rail**.
+`P4R1WorkMaterialsDoor.tsx` — one quiet **Bring in material** control, present even when the Work has no materials. Mounted in the **Develop MAIA rail** (always reachable there, no passage needed) and in **Write** — ⚠️ **corrected 2026-10-08:** in Write it sits inside the isolated Focus room beside the Focus tray, so it appears only after a passage is isolated for editorial work; the earlier claim that it shows with no passage selected is true for Develop only.
 - **Paste a note** (+ optional title, source reference, and the writer's own "what might it feed" sentence) → stored as a `.txt` source through the existing intake route, then declared to the Work through the existing materials route. The reference is written as a visible first line (`Reference: …`), not hidden metadata.
 - **Add a file** (`.txt .md .docx` keep immediately; `.pdf`/image arrive as drafts and are *not* declared until the writer reviews them — the existing reviewed-only gate is preserved).
 - **Already brought in** — reviewed sources not yet on this Work, one click to keep.
@@ -57,3 +57,25 @@ Grounded placement: a read-only, coverage-reporting pass over the Work for one m
 - `npm run typecheck` gate **PASS** — 222 vs baseline 239, 0 new.
 - ⚠️ `p4r1IsolatedEditorialRoom.test.ts` has 2 failures that **also fail on canonical without these changes** (latitude label `Light` vs `Touch`) — not touched here.
 - ⛔ Not yet walked in a browser against a real Work.
+
+## 8. Studio-run audit of the Corbin four-entry process (2026-10-08)
+
+A read-only, code-level audit (two agents, file evidence; nothing was run in a browser) traced the author's four proposed entries through the door. Repaired in the same change (tests 21/21):
+
+| Finding | Repair |
+|---|---|
+| The author's own "what might it feed" sentence was dropped when material was explored, because the form had cleared | The sentence is stored with the kept item and sent with it |
+| The door said "Asked MAIA" whatever happened (in Develop it only pre-fills the composer) | `exploreMode`: prefill says "Nothing has been asked yet"; send says "If no reply appears, nothing was asked" |
+| In Write, Explore/Place could return a MAIA-authored proposal built from the material (verbatim use the author does not want) | Write passes `proposalPolicy: 'reply_only'` |
+| In Develop, Place pre-filled 7–18k characters into a 4,000-character ask and the failed send destroyed the draft; headings were redundant (server supplies them) | Door refuses over-limit context whole (`maxContextChars={4000}`), Develop sends no outline |
+| Material kept in an earlier session could no longer be Explored/Placed | "Already kept with this Work" list carries both actions |
+
+**Not repaired — capability gaps the process exposed (each needs its own governed act):**
+- **No way to create a new subsection** between two existing ones (entry 2): WS2-08 08C is unbuilt and unauthorized; text typed into a neighbouring section is plain prose, not an addressable section.
+- **No place-keyed record of "decided to add nothing"** (entry 4): `living_work_material_considerations` is material-keyed, has no UI, and its API refuses pasted-note material; it records no reason, place or revision.
+- **No revision binding**: a placement decision carries no pointer to the revision it was read against, so a v2-vs-v13 mismatch can recur unnoticed.
+- **MAIA's sight is local**: in Write, the focused passage ± 4,000 characters inside one section; in Develop, every heading plus one open section. The whole-Work read takes no material and its prompt forbids recommendations, so a grounded Place needs a new governed unit.
+- **No paragraph-level anchor**: the Studio cannot take the author to "the paragraph that begins …"; entry 1 works only as a Write revision of the anchoring paragraph.
+- **Door reachable in Write only inside the Focus room.**
+- ❔ Unknown: whether `WRITERS_STUDIO_EDITORIAL_ENABLED` is on in production (every Write-side MAIA act depends on it).
+- Entry 3 (reconcile existing text) is the one path whose data flow is complete and governed today.

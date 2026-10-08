@@ -2795,7 +2795,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       <div className="fr-mbody p4r1-develop-maia">
         <P4R1WorkMaterialsDoor
           work={props.work}
-          outline={props.sections.map((section) => section.heading ?? '')}
+          exploreMode="prefill"
+          maxContextChars={4000}
           onChanged={props.onWorkChanged}
           onExplore={(context) => beginWholeConversation(context)}
         />

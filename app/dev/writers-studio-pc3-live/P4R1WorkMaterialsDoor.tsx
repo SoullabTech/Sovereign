@@ -28,12 +28,16 @@ type Props = {
   /** Headings as stored. Offered to MAIA only on an explicit "where does it fit". */
   outline?: readonly string[];
   /** Routes prepared context into the surface's existing MAIA conversation. */
-  onExplore?: (context: string) => void;
+  onExplore?: (context: string, intent: MaterialIntent) => void;
+  /** 'send' = the host sends it; 'prefill' = it only fills the composer for the writer to send. Drives what the door honestly says happened. */
+  exploreMode?: 'send' | 'prefill';
+  /** The host's hard limit on one question. Over-long context is refused here, never silently trimmed or destroyed by a failed send. */
+  maxContextChars?: number;
   /** Called after a belonging is recorded so the host may reload its Work. */
   onChanged?: () => void;
 };
 
-type Kept = { id: string; title: string; text: string | null };
+type Kept = { id: string; title: string; text: string | null; sentence: string | null };
 type ExistingSource = { id: string; originalName: string; transcriptionStatus: string };
 
 export const MAX_MATERIAL_CONTEXT = 12_000;
@@ -105,7 +109,7 @@ export function buildMaterialContext(input: {
   };
 }
 
-export default function P4R1WorkMaterialsDoor({ work, outline, onExplore, onChanged }: Props) {
+export default function P4R1WorkMaterialsDoor({ work, outline, onExplore, exploreMode = 'send', maxContextChars, onChanged }: Props) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [reference, setReference] = useState('');
@@ -162,8 +166,9 @@ export default function P4R1WorkMaterialsDoor({ work, outline, onExplore, onChan
         setMessage('Saved as a source, but it needs your review before it can join this Work. Open Sources to review it. Your manuscript is unchanged.');
         return;
       }
+      const savedSentence = sentence.trim() || null;
       await keep(payload.source.id);
-      setKept((prev) => [...prev, { id: payload.source.id, title: label, text: plainText }]);
+      setKept((prev) => [...prev, { id: payload.source.id, title: label, text: plainText, sentence: savedSentence }]);
       setTitle(''); setReference(''); setText(''); setSentence('');
       setMessage('Kept with this Work. Your manuscript, your place and this conversation are unchanged.');
       onChanged?.();
@@ -185,8 +190,9 @@ export default function P4R1WorkMaterialsDoor({ work, outline, onExplore, onChan
     setBusy(true);
     setMessage(null);
     try {
+      const savedSentence = sentence.trim() || null;
       await keep(source.id);
-      setKept((prev) => [...prev, { id: source.id, title: source.originalName, text: null }]);
+      setKept((prev) => [...prev, { id: source.id, title: source.originalName, text: null, sentence: savedSentence }]);
       setMessage('Kept with this Work. Your manuscript, your place and this conversation are unchanged.');
       onChanged?.();
     } catch {
@@ -214,13 +220,17 @@ export default function P4R1WorkMaterialsDoor({ work, outline, onExplore, onChan
         }
       }
       const prepared = buildMaterialContext({
-        title: item.title, text: body, workTitle: work.title ?? 'this Work', sentence: sentence.trim() || null, intent, outline,
+        title: item.title, text: body, workTitle: work.title ?? 'this Work', sentence: item.sentence, intent, outline,
       });
       if (!prepared.context) { setMessage(prepared.reason); return; }
-      onExplore(prepared.context);
-      setMessage(intent === 'place'
-        ? 'Asked MAIA where it might fit. Nothing has been inserted anywhere.'
-        : 'Brought into the conversation. Nothing has been inserted anywhere.');
+      if (maxContextChars && prepared.context.length > maxContextChars) {
+        setMessage(`This is too long to send as one question here (the limit is ${maxContextChars.toLocaleString()} characters; this is ${prepared.context.length.toLocaleString()}). Use a shorter piece, or open it in Write. Nothing was sent and your conversation box is unchanged.`);
+        return;
+      }
+      onExplore(prepared.context, intent);
+      setMessage(exploreMode === 'prefill'
+        ? 'Put in the conversation box for you to read and send. Nothing has been asked yet, and nothing has been inserted anywhere.'
+        : 'Sent to MAIA in this passage’s conversation. If no reply appears, nothing was asked. Nothing has been inserted anywhere.');
     } catch {
       setMessage('That could not be prepared just now. Nothing was sent to MAIA.');
     } finally {
@@ -228,6 +238,10 @@ export default function P4R1WorkMaterialsDoor({ work, outline, onExplore, onChan
     }
   };
 
+  const nameById = new Map((existing ?? []).map((source) => [source.id, source.originalName]));
+  const earlier: Kept[] = work.materials
+    .filter((m) => m.materialType === 'source_upload' && !kept.some((k) => k.id === m.materialId))
+    .map((m) => ({ id: m.materialId, title: nameById.get(m.materialId) ?? 'Kept note', text: null, sentence: m.sentence }));
   const available = (existing ?? []).filter((s) => s.transcriptionStatus === 'reviewed' && !attachedIds.has(s.id));
 
   return (
@@ -308,6 +322,23 @@ export default function P4R1WorkMaterialsDoor({ work, outline, onExplore, onChan
         ) : null}
         {existingError ? (
           <p className="p4r1-focus-material-status" role="status">Your earlier material couldn’t be listed just now.</p>
+        ) : null}
+
+        {onExplore && earlier.length > 0 ? (
+          <div className="p4r1-door-kept">
+            <span className="p4r1-eyebrow">Already kept with this Work</span>
+            <ul>
+              {earlier.map((item) => (
+                <li key={item.id}>
+                  <div><span>{item.title}</span></div>
+                  <div className="p4r1-focus-material-actions">
+                    <button type="button" disabled={busy} onClick={() => void send(item, 'explore')}>Explore with MAIA</button>
+                    <button type="button" disabled={busy} onClick={() => void send(item, 'place')}>Help me find where it fits</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : null}
 
         {kept.length > 0 ? (
