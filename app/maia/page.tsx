@@ -65,6 +65,7 @@ import { apiUrl, apiFetch, clearAuthState } from '@/lib/http/apiBase';
 import { coordinateSourcePosture } from '@/lib/sanctuary/sourcePostureCoordinator';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { reportServerIdentityParity } from '@/lib/auth/verifyServerIdentity';
+import { restoreMaiaBrowserIdentity } from '@/lib/auth/maiaVerifiedBrowserSession';
 
 // Migration version - increment to force re-auth for all users
 const SESSION_VERSION = 2; // Bumped to fix UUID-as-name bug (Jan 5, 2026)
@@ -508,6 +509,12 @@ function MAIAPageContent() {
   useEffect(() => {
     const initializeUser = async () => {
       setIsMounted(true);
+
+      // A valid HttpOnly server session can outlive MAIA's legacy localStorage
+      // identity mirror (e.g. fresh browser profile). Recover only from the
+      // authenticated /api/members/me response; never from a caller-supplied ID.
+      // Explicit sign-out and conflicting member identity remain authoritative.
+      try { await restoreMaiaBrowserIdentity(localStorage); } catch { /* existing fail-closed path */ }
 
       // Check for session migration (forces re-auth if needed)
       const sessionCheck = checkAndMigrateSession();

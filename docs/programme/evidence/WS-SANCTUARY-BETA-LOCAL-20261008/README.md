@@ -36,3 +36,25 @@ A disposable empty Work, `Local QA Sanctuary Materials Work`, was created throug
 5. The temporary local fixture and disposable Work need a deliberate cleanup after the final browser tests.
 
 **Release disposition: HOLD.**
+
+## Subsequent MAIA arrival correction (same local engineering lane)
+
+The MAIA-specific browser-authentication gap was corrected by
+`lib/auth/maiaVerifiedBrowserSession.ts` and its MAIA-page integration. The
+restoration reads the canonical `/api/members/me` server response and refuses
+unverified IDs, prior sign-outs and conflicting identities. Five isolated tests
+pass for those cases.
+
+The corrected isolated branch was then loaded in headless Chrome. Both desktop
+(1440×900) and mobile (390×844) remained at `/maia/encounter`; both restored
+`maia_session_version=2`, showing the fixture member's greeting and conversation
+entry. Actual screenshot evidence:
+
+- `maia-desktop-recovered.png` — **positive witness for authenticated arrival**.
+- `maia-mobile-recovered.png` — **positive witness for authenticated arrival**.
+
+The earlier `maia-*-arrival.png` images remain accurately labeled **negative
+witnesses before the correction**. Neither version proves the Sanctuary toggle
+itself is server-acknowledged or that source saving is permitted. The active
+conversation code presently comments out the VoiceHUD rendering and uses
+QuickSettingsSheet for actual member settings.

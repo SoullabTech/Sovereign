@@ -80,3 +80,32 @@ layout. Voice HUD, Quick Settings, and direct conversation-command changes are
   event entry, and listener teardown. No authenticated desktop/mobile visual
   witness has been performed on this candidate. That remains an explicit release
   blocker, as do server acknowledgement display and all source-write tests.
+
+## Verified-session recovery of the MAIA encounter — October 8, 2026 local candidate
+
+A valid authenticated `maia_session` may survive while the browser's older
+`beta_user` / `explorerId` mirror is missing. In the isolated local fixture this
+previously redirected the authenticated member to Sign in or Home even though
+Writer's Studio could load from the same verified cookie. The MAIA encounter now
+asks `/api/members/me` for the canonical member **before** applying its legacy
+browser-session migration check. Only a server-confirmed UUID may restore the
+local display mirror. Explicit sign-out, mismatched existing identity, a failed
+server check, or an invalid response cannot create a local identity.
+
+- **Human activity:** arriving in a continuous relationship with MAIA after
+  authentication, without repeating a sign-in that the server has already
+  established.
+- **Experience change:** identity restoration only, no additional buttons,
+  controls, voice behaviors, layouts or palette changes.
+- **Visual evidence (local test fixture, not production):**
+  `docs/programme/evidence/WS-SANCTUARY-BETA-LOCAL-20261008/maia-desktop-recovered.png`
+  (1440×900) and `maia-mobile-recovered.png` (390×844), both reviewed after
+  `maia_session_version=2` was restored from server truth. The page remained at
+  `/maia/encounter`, with MAIA's greeting and conversation entry present.
+- **Strict limit:** these screenshots prove authenticated encounter arrival, not
+  server-authoritative Sanctuary toggle synchronization. The source-persistence
+  schema remains pending, and source POST/PATCH remain intentionally held.
+- **Actual active controls:** `OracleConversation.tsx` renders
+  `QuickSettingsSheet` conditionally. Its `VoiceHUD` invocation is currently
+  commented out, so no witness should claim a visible working VoiceHUD from
+  these screenshots.
