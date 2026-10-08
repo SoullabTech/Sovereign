@@ -29,7 +29,7 @@ export async function withSourcePersistenceLease<T>(
     }>(`SELECT source_persistence_posture, source_persistence_revision
          FROM auth_sessions
         WHERE session_token = $1 AND member_id = $2 AND revoked = FALSE
-          AND expires_at > NOW() FOR UPDATE`, [token, memberId]);
+          AND expires_at > NOW() FOR UPDATE NOWAIT`, [token, memberId]);
     const row = found.rows[0];
     const revision = row ? BigInt(row.source_persistence_revision) : null;
     if (decideSourcePersistence({
