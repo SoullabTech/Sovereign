@@ -10,6 +10,7 @@ import { STATE_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import { IMAGES } from '@/app/writers-studio/full-redesign/fixtures';
 import ObservationDialogue from '@/app/writers-studio/develop/ObservationDialogue';
 import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
+import P4R1WorkMaterialsDoor from './P4R1WorkMaterialsDoor';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import type { ReadingView } from '@/lib/writersStudio/developPresentation';
@@ -220,6 +221,7 @@ export interface P4R1DevelopViewProps {
   onField: (field: DevelopField) => void;
   onIntent: (intent: DevelopIntentKey, field: Exclude<DevelopField, 'overview'>) => void;
   onMode: (mode: 'home' | 'write' | 'develop' | 'review') => void;
+  onOpenCraft: () => void;
   onSection: (sectionId: string) => void;
   onReading: (readingId: string) => void;
   onScope: (scope: DevelopScopeChoice) => void;
@@ -2205,6 +2207,9 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <DevelopMark />
         <h1>{title}</h1>
         <p>{subtitle}</p>
+        <button type="button" className="p4r1-open-craft" onClick={props.onOpenCraft}>
+          Open Craftsman’s Table — work directly with the writing
+        </button>
       </div>
 
       <div className="fr-tabs p4r1-develop-fields-nav" role="tablist" aria-label="Ways to explore the Work">
@@ -2771,6 +2776,12 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody p4r1-develop-maia">
+        <P4R1WorkMaterialsDoor
+          work={props.work}
+          exploreMode="prefill"
+          maxContextChars={4000}
+          onExplore={(context) => beginWholeConversation(context)}
+        />
         {chapterDialogue && props.work ? (
           <div className="p4r1-chapter-conversation" data-chapter-conversation data-chapter-context="whole-work-aware">
             <div className="p4r1-observation-conversation-anchor">

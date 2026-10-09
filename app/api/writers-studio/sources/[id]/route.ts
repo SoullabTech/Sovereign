@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query, transaction } from '@/lib/db/postgres';
 import { deleteUpload, writeReviewed } from '@/lib/workbench/storage';
+import { sourceUploadPostureAuthorized, sourceReviewedEditAuthorized } from '@/lib/workbench/uploadPostureAuthority';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +40,10 @@ export async function GET(request: NextRequest, { params }: Ctx) {
 export async function PATCH(request: NextRequest, { params }: Ctx) {
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Reviewed transcription bytes need an independent crash-safe protocol.
+  if (!sourceReviewedEditAuthorized()) return NextResponse.json({
+    error: 'Source transcription changes are on hold until durable custody is verified.',
+  }, { status: 423 });
   const { id } = await params;
   const body = (await request.json().catch(() => ({}))) as { transcription?: unknown };
   if (typeof body.transcription !== 'string') {
@@ -74,6 +79,10 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
 export async function DELETE(request: NextRequest, { params }: Ctx) {
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Existing delete removes filesystem bytes before the DB transaction.
+  if (!sourceUploadPostureAuthorized()) return NextResponse.json({
+    error: 'Source deletion is paused until its filesystem and database custody are safe.',
+  }, { status: 423 });
   const { id } = await params;
 
   const owned = await query<{ id: string }>(

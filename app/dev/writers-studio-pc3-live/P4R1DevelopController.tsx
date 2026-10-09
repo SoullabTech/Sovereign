@@ -728,6 +728,17 @@ export default function P4R1DevelopController() {
     });
   }, [updateQuery]);
 
+  // The Craftsman's Table already exists. Make its distinct, non-writing
+  // entry visible from Develop instead of relying on deep links or a
+  // previously completed observation. No model call, save or edit here.
+  const onOpenCraft = useCallback(() => {
+    updateQuery((query) => {
+      query.set('mode', 'develop');
+      query.set('developCraft', '1');
+      if (currentSectionId) query.set(SECTION_PARAM, currentSectionId);
+    });
+  }, [updateQuery, currentSectionId]);
+
   const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
     if (mode === 'home') {
       const query = studioHomeReturnSearch(params?.toString() ?? '');
@@ -1867,6 +1878,7 @@ export default function P4R1DevelopController() {
       onField={onField}
       onIntent={onIntent}
       onMode={onMode}
+      onOpenCraft={onOpenCraft}
       onSection={onSection}
       onReading={onReading}
       onScope={setScope}

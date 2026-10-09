@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { ingestWorkbenchUpload, IntakeError } from '@/lib/workbench/intake';
+import { sourceUploadPostureAuthorized } from '@/lib/workbench/uploadPostureAuthority';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // The isolated local Studio must not reopen the deprecated source writer.
+  // This server-owned false gate is before request.formData and file custody.
+  if (!sourceUploadPostureAuthorized()) return NextResponse.json({
+    error: 'Bringing new material is on hold until Sanctuary and crash-safe custody protections are verified.',
+  }, { status: 423 });
   try {
     const form = await request.formData();
     const file = form.get('file');

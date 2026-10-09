@@ -6232,3 +6232,52 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
   .p4r1-root .fr-room[data-maia-collapsed='true'] > .fr-work,
   .p4r1-root .fr-room[data-maia-collapsed='true'] > .fr-manuscript { grid-column:1; }
 }
+
+
+/* ── Materials door · bring new material beside the open manuscript ───── */
+.p4r1-root .p4r1-materials-door{margin:0 0 12px}
+.p4r1-root .p4r1-door-form{display:grid;gap:10px}
+.p4r1-root .p4r1-door-form label{display:grid;gap:4px;font:11.5px/1.4 var(--fr-sans-stack);color:var(--fr-muted)}
+.p4r1-root .p4r1-door-form label i{font-style:normal;opacity:.7}
+.p4r1-root .p4r1-door-form textarea,
+.p4r1-root .p4r1-door-form input[type="text"],
+.p4r1-root .p4r1-door-form input:not([type]){
+  width:100%;padding:8px 10px;border:1px solid var(--fr-line-soft);border-radius:8px;
+  background:var(--fr-panel-soft);color:var(--fr-ink2);font:13px/1.5 var(--fr-sans-stack);resize:vertical;
+}
+.p4r1-root .p4r1-door-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.p4r1-root .p4r1-door-actions button,
+.p4r1-root .p4r1-door-file{
+  padding:8px 12px;border:1px solid var(--fr-line-soft);border-radius:8px;cursor:pointer;
+  background:var(--fr-panel-soft);color:var(--fr-title);font:600 12px var(--fr-sans-stack);
+}
+.p4r1-root .p4r1-door-file input{display:none}
+.p4r1-root .p4r1-door-existing,.p4r1-root .p4r1-door-kept{margin-top:12px}
+.p4r1-root .p4r1-door-existing ul,.p4r1-root .p4r1-door-kept ul{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+.p4r1-root .p4r1-door-existing li,.p4r1-root .p4r1-door-kept li{
+  display:grid;gap:6px;padding:9px 10px;border:1px solid var(--fr-line-soft);border-radius:8px;
+}
+
+/* Upload is intentionally held behind the server-owned Sanctuary/custody gate. */
+.p4r1-root .p4r1-door-paused {
+  display:grid;gap:8px;padding:12px;margin:10px 0 12px;
+  border:1px solid var(--fr-line-soft);border-radius:8px;
+  background:var(--fr-field);color:var(--fr-ink2);
+  font:12px/1.45 var(--fr-sans-stack);
+}
+.p4r1-root .p4r1-door-paused strong{color:var(--fr-title);font-size:12.5px}
+.p4r1-root .p4r1-door-paused p{margin:0}
+.p4r1-root .p4r1-door-paused button[disabled]{
+  justify-self:start;padding:7px 10px;border:1px solid var(--fr-line);
+  border-radius:7px;color:var(--fr-muted);cursor:not-allowed;opacity:.78;
+}
+
+.p4r1-root .p4r1-open-craft {
+  align-self:start; margin:8px 0 0 48px; padding:7px 11px;
+  border:1px solid var(--fr-line);border-radius:7px;
+  background:var(--fr-panel); color:var(--fr-action);
+  font:600 12px/1.4 var(--fr-sans-stack);cursor:pointer;
+}
+.p4r1-root .p4r1-open-craft:hover {
+  border-color:var(--fr-action-line);background:var(--fr-action-soft);
+}
