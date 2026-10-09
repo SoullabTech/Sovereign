@@ -1,0 +1,49 @@
+COMMAND=/opt/node22/bin/node scripts/builder/__tests__/jev-wire-v1-proof.mjs
+SOURCE_HEAD=106f577fc007a09b480c2d5bfe7d5dc325ae289d
+CWD=/tmp/claude-0/-home-user-Sovereign/d8658701-6ba4-507c-a49c-9d57fdbe3d06/scratchpad/wt-B
+STARTED_AT=2026-10-09T13:02:54.136758+00:00
+TEST_SECOND_DEVICE=/dev/shm
+
+PASS  W1-wire-shape-keyed-single-question
+PASS  W2-state-is-exactly-a-j1-packet
+PASS  W3-question-key-must-equal-state-question-id-and-be-exactly-one
+PASS  W4-wording-is-frozen-and-not-a-per-request-channel
+PASS  W5-model-is-pinned-no-alias
+PASS  W6-canonical-serialization-and-hash
+PASS  W7-fixture-list-is-the-frozen-31
+PASS  W8-L1-overflow-refused-no-repair
+PASS  W9-L2-sensitive-true-valid-to-host-but-excluded-by-experiment-allowlist
+PASS  W10-hash-and-reservation-durable-before-send
+PASS  W11-crossing-unknown-retains-reservation-and-halts
+PASS  W12-no-automatic-retry-and-halt-blocks-everything-after
+PASS  W13-unknown-usage-reservation-is-never-released
+PASS  W14-attempt-cap-is-31-not-120
+PASS  W15-budget-ceiling-enforced
+PASS  W16-attempt-id-used-once
+PASS  W17-model-drift-halts
+PASS  W18-observation-only-never-advice
+PASS  W19-static-no-network-no-credential-no-admission-path
+PASS  W20-unwitnessed-response-shape-blocks-all-sends
+PASS  W21-no-transport-means-no-send
+PASS  W22-malformed-response-refused-and-halts
+PASS  W23-unexpected-usage-halts
+PASS  W24-corrupt-or-ambiguous-ledger-refuses-to-send
+PASS  W25-table-and-fixture-hashes-pinned
+PASS  W26-frozen-j1-untouched
+PASS  W27-response-shape-enforced-exactly
+PASS  W28-observation-durable-before-success-is-reported
+PASS  W29-owned-deadline-for-a-transport-that-never-resolves
+PASS  W30-process-exit-after-reservation-blocks-restart
+PASS  W31-ledger-validates-events-transitions-and-integrity
+PASS  W32-ledger-is-bound-and-loss-is-not-a-fresh-start
+PASS  W33-reserve-once-across-processes
+PASS  W34-schema-provenance-recorded
+PASS  W35-stop-survives-process-loss-between-settled-and-halted
+PASS  W36-persistence-failure-at-the-settlement-boundary-also-stops
+PASS  W37-token-counts-are-nonnegative-safe-integers
+
+37 passed · 0 failed
+
+EXIT_CODE=0
+EXECUTION_ERROR=None
+FINISHED_AT=2026-10-09T13:02:56.611608+00:00

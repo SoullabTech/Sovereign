@@ -1,0 +1,48 @@
+{
+  "wrapper_proof_matrix_equal_M": {
+    "scripts/builder/jev-wire-live-run-v1.mjs": true,
+    "scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs": true,
+    "scripts/builder/__tests__/jev-wire-live-run-v1-matrix.mjs": true
+  },
+  "frozen_sha256_equal": {
+    "scripts/builder/jev-wire-v1.mjs": true,
+    "scripts/builder/jev-wire-checkpoint-v1.mjs": true,
+    "scripts/builder/jev-wire-http-adapter-v1.mjs": true,
+    "scripts/builder/jev-judgment-host-v1.mjs": true
+  },
+  "frozen_unchanged_vs_base": {
+    "scripts/builder/jev-wire-v1.mjs": true,
+    "scripts/builder/jev-wire-checkpoint-v1.mjs": true,
+    "scripts/builder/jev-wire-http-adapter-v1.mjs": true,
+    "scripts/builder/jev-judgment-host-v1.mjs": true,
+    "scripts/builder/__tests__/jev-wire-variant-lib.mjs": true
+  },
+  "changed_paths_vs_base_outside_docs": [
+    "package.json",
+    "scripts/builder/__tests__/jev-wire-live-run-v1-differential-matrix.mjs",
+    "scripts/builder/__tests__/jev-wire-live-run-v1-differential.mjs",
+    "scripts/builder/__tests__/jev-wire-live-run-v1-matrix.mjs",
+    "scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs",
+    "scripts/builder/__tests__/jev-wire-payload-capture.mjs",
+    "scripts/builder/jev-wire-live-run-v1.mjs"
+  ],
+  "unexpected_code_paths_changed": [],
+  "untouched_trees_vs_base": {
+    "lib": true,
+    "app": true,
+    "database": true,
+    "tests": true,
+    "tsconfig.jarvis-jev-j1.json": true,
+    "scripts/verify-jarvis-jev-j1-freeze.mjs": true
+  },
+  "pilot_paths_changed": [],
+  "response_shape_witnessed": "false",
+  "grant_template_state": "DRAFT",
+  "grant_template_table_hash_is_closed_candidate": true,
+  "code_tree_ids": {
+    "scripts/builder": "dafc0d31f322830a0ce2fcceeb68026d8e8220f7",
+    "tests/constitutional": "6202fade3207cd69505111fa59c7e9cf9b5bc007",
+    "package.json": "eb3c4ee406d24f24175c3146a64b45e6bfd6ebf2"
+  },
+  "all_ok": true
+}

@@ -1,0 +1,6 @@
+# PROBE, NOT THE RECORD (scratch, uncommitted code): the Mac wrapper b48e0c623 with the admitted-device pin removed
+# edit: delete the three-line block in storageRefusal() that returns 'STORAGE_DEVICE_CHANGED' when a store's device id differs from the admitted one
+# host: Linux, second device /dev/shm (only two devices exist, so no scenario can change a store to a *third* device)
+Mac proof (JEV_LR_EDITS applied to the wrapper):  16 passed · 0 failed   (exit 0)
+Differential (--wrapper <edited copy>):           14 pass · 0 SAFETY/REPORT failures [-] · 4 advisory notes [D6b, D6d, D7b, D8b]   (exit 0)
+# conclusion: this safeguard is exercised by no check in the Mac proof/matrix and no scenario in the differential; witnessing it needs a third device.

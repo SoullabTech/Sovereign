@@ -1,0 +1,28 @@
+COMMAND=/opt/node22/bin/node scripts/builder/__tests__/jev-wire-checkpoint-v1-proof.mjs
+SOURCE_HEAD=106f577fc007a09b480c2d5bfe7d5dc325ae289d
+CWD=/tmp/claude-0/-home-user-Sovereign/d8658701-6ba4-507c-a49c-9d57fdbe3d06/scratchpad/wt-B
+STARTED_AT=2026-10-09T13:02:52.043403+00:00
+TEST_SECOND_DEVICE=/dev/shm
+
+PASS  K1-lifecycle-reservation-and-outcomes-are-anchored-before-they-matter
+PASS  K2-checkpoint-is-bound-to-this-initialization-and-experiment
+PASS  K3-missing-checkpoint-never-resets-history-or-permissions
+PASS  K4-truncated-ledger-is-refused
+PASS  K5-replaced-reinitialized-and-repeat-initialization-are-refused
+PASS  K6-ledger-diverging-at-the-anchor-is-refused
+PASS  K7-corrupt-or-mismatched-checkpoint-is-refused
+PASS  K8-unavailable-checkpoint-storage-means-zero-sends
+PASS  K9-process-loss-between-the-two-stores-is-never-reconciled-silently
+PASS  K10-resume-is-explicit-idempotent-and-refuses-over-inconsistency
+PASS  K11-stale-locks-are-refusals-never-deleted-never-bypassed
+PASS  K12-checkpoint-failure-after-the-outcome-write-is-not-completion
+PASS  K13-static-no-network-no-credential-no-lock-deletion-but-its-own
+PASS  K14-persistence-is-established-by-the-ledger-not-by-the-error-name
+PASS  K15-colliding-storage-paths-are-rejected-before-any-mutation
+PASS  K16-dangling-symlinks-are-refused-before-any-lock-or-store-mutation
+
+16 passed · 0 failed
+
+EXIT_CODE=0
+EXECUTION_ERROR=None
+FINISHED_AT=2026-10-09T13:02:52.767951+00:00

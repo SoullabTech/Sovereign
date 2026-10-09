@@ -1,0 +1,10 @@
+COMMAND=/opt/node22/bin/node node_modules/typescript/bin/tsc -p tsconfig.jarvis-jev-j1.json
+SOURCE_HEAD=106f577fc007a09b480c2d5bfe7d5dc325ae289d
+CWD=/tmp/claude-0/-home-user-Sovereign/d8658701-6ba4-507c-a49c-9d57fdbe3d06/scratchpad/wt-B
+STARTED_AT=2026-10-09T13:03:17.449790+00:00
+TEST_SECOND_DEVICE=/dev/shm
+
+
+EXIT_CODE=0
+EXECUTION_ERROR=None
+FINISHED_AT=2026-10-09T13:03:19.575523+00:00

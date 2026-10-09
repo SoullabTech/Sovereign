@@ -1,0 +1,21 @@
+COMMAND=/opt/node22/bin/node scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs new
+SOURCE_HEAD=106f577fc007a09b480c2d5bfe7d5dc325ae289d
+CWD=/tmp/claude-0/-home-user-Sovereign/d8658701-6ba4-507c-a49c-9d57fdbe3d06/scratchpad/wt-B
+STARTED_AT=2026-10-09T13:03:15.132278+00:00
+TEST_SECOND_DEVICE=/dev/shm
+
+not reproduced  S1-documented-answer-envelope  documented `answers` response refused
+not reproduced  S2-nonclosed-response-parser  extra root / extra answer / confidence accepted
+not reproduced  D1-observation-not-persisted  returned ok; probability absent from disk
+not reproduced  D2-resume-after-ambiguous-crash  next attempt sent=false reason=UNRESOLVED_ATTEMPT
+not reproduced  D3-valid-json-invalid-ledger  invalid event ignored; send proceeded
+not reproduced  D4-missing-ledger-allows-replay  same attempt sent 1×
+not reproduced  D5-two-process-same-attempt-race  1 send(s) from 2 processes
+not reproduced  T1-never-settling-transport  returned crossing_unknown
+
+new: 0/8 findings reproduce
+EXPECTATION MET (repair fails none)
+
+EXIT_CODE=0
+EXECUTION_ERROR=None
+FINISHED_AT=2026-10-09T13:03:15.999653+00:00

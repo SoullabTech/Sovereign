@@ -1,0 +1,392 @@
+{
+  "head": "106f577fc007a09b480c2d5bfe7d5dc325ae289d",
+  "baseline": "41caa8f79af488fd8ea82442fe3586f03b13d15e",
+  "generated_at": "2026-10-09T13:04:43.628281+00:00",
+  "node": "v22.22.0",
+  "second_device_root": "/dev/shm",
+  "custody": {
+    "wrapper_proof_matrix_equal_M": {
+      "scripts/builder/jev-wire-live-run-v1.mjs": true,
+      "scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs": true,
+      "scripts/builder/__tests__/jev-wire-live-run-v1-matrix.mjs": true
+    },
+    "frozen_sha256_equal": {
+      "scripts/builder/jev-wire-v1.mjs": true,
+      "scripts/builder/jev-wire-checkpoint-v1.mjs": true,
+      "scripts/builder/jev-wire-http-adapter-v1.mjs": true,
+      "scripts/builder/jev-judgment-host-v1.mjs": true
+    },
+    "frozen_unchanged_vs_base": {
+      "scripts/builder/jev-wire-v1.mjs": true,
+      "scripts/builder/jev-wire-checkpoint-v1.mjs": true,
+      "scripts/builder/jev-wire-http-adapter-v1.mjs": true,
+      "scripts/builder/jev-judgment-host-v1.mjs": true,
+      "scripts/builder/__tests__/jev-wire-variant-lib.mjs": true
+    },
+    "changed_paths_vs_base_outside_docs": [
+      "package.json",
+      "scripts/builder/__tests__/jev-wire-live-run-v1-differential-matrix.mjs",
+      "scripts/builder/__tests__/jev-wire-live-run-v1-differential.mjs",
+      "scripts/builder/__tests__/jev-wire-live-run-v1-matrix.mjs",
+      "scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs",
+      "scripts/builder/__tests__/jev-wire-payload-capture.mjs",
+      "scripts/builder/jev-wire-live-run-v1.mjs"
+    ],
+    "unexpected_code_paths_changed": [],
+    "untouched_trees_vs_base": {
+      "lib": true,
+      "app": true,
+      "database": true,
+      "tests": true,
+      "tsconfig.jarvis-jev-j1.json": true,
+      "scripts/verify-jarvis-jev-j1-freeze.mjs": true
+    },
+    "pilot_paths_changed": [],
+    "response_shape_witnessed": "false",
+    "grant_template_state": "DRAFT",
+    "grant_template_table_hash_is_closed_candidate": true,
+    "code_tree_ids": {
+      "scripts/builder": "dafc0d31f322830a0ce2fcceeb68026d8e8220f7",
+      "tests/constitutional": "6202fade3207cd69505111fa59c7e9cf9b5bc007",
+      "package.json": "eb3c4ee406d24f24175c3146a64b45e6bfd6ebf2"
+    },
+    "all_ok": true
+  },
+  "checks": [
+    {
+      "name": "live-proof-1",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "live-proof-1.log.txt",
+      "log_sha256": "21e4a81e4e04361897c705a3bcb1cf5cd8a96042b17ecaa4bfe7f3a8783ce652",
+      "elapsed_sec": 2.548,
+      "started_at": "2026-10-09T13:02:37.390322+00:00",
+      "finished_at": "2026-10-09T13:02:39.938303+00:00"
+    },
+    {
+      "name": "live-proof-2",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "live-proof-2.log.txt",
+      "log_sha256": "9cb3aaadae7f239040247e5f7a3f8490d443ebad47ffc3d90b7033c2bb2d20d2",
+      "elapsed_sec": 2.591,
+      "started_at": "2026-10-09T13:02:37.390740+00:00",
+      "finished_at": "2026-10-09T13:02:39.981374+00:00"
+    },
+    {
+      "name": "live-proof-3",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "live-proof-3.log.txt",
+      "log_sha256": "94d7f51520bcaefed8a90a94bd8fc55a5605901b11614ebc2ae431a51099ef70",
+      "elapsed_sec": 2.475,
+      "started_at": "2026-10-09T13:02:37.391523+00:00",
+      "finished_at": "2026-10-09T13:02:39.866652+00:00"
+    },
+    {
+      "name": "live-matrix",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-live-run-v1-matrix.mjs"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "live-matrix.log.txt",
+      "log_sha256": "62df0854eca7e934f4166d81c5ccc9c42b3d3a03eeb59f90cc3241f5dd41d88d",
+      "elapsed_sec": 12.176,
+      "started_at": "2026-10-09T13:02:39.867111+00:00",
+      "finished_at": "2026-10-09T13:02:52.043052+00:00"
+    },
+    {
+      "name": "live-old-negative-control",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs"
+      ],
+      "exit_code": 1,
+      "expected_exit": 1,
+      "error": null,
+      "validated": true,
+      "log": "live-old-negative-control.log.txt",
+      "log_sha256": "c4f1a7ab9af22bc0c9d24e931b51535096e3d91ca795f0572943b4cbfc1c3457",
+      "elapsed_sec": 2.179,
+      "started_at": "2026-10-09T13:02:39.938699+00:00",
+      "finished_at": "2026-10-09T13:02:42.116869+00:00"
+    },
+    {
+      "name": "differential",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-live-run-v1-differential.mjs",
+        "--label",
+        "integrated"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "differential.log.txt",
+      "log_sha256": "3893d78c90cb9f247948b5e82e5c08b3b021e9d957f8cc32902886873d16eed8",
+      "elapsed_sec": 0.974,
+      "started_at": "2026-10-09T13:02:39.981746+00:00",
+      "finished_at": "2026-10-09T13:02:40.955638+00:00"
+    },
+    {
+      "name": "differential-matrix",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-live-run-v1-differential-matrix.mjs"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "differential-matrix.log.txt",
+      "log_sha256": "6d1d93d3b92fb2ca303ea7dccbb15e660e92157323e635feb274c4e6019f8b28",
+      "elapsed_sec": 13.181,
+      "started_at": "2026-10-09T13:02:40.955996+00:00",
+      "finished_at": "2026-10-09T13:02:54.136346+00:00"
+    },
+    {
+      "name": "adapter-proof",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-http-adapter-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "adapter-proof.log.txt",
+      "log_sha256": "9c8f5299933668d90ef20a3143db7d20aff8e6fb5fb4c192ee3f01286b11f205",
+      "elapsed_sec": 4.335,
+      "started_at": "2026-10-09T13:02:42.117361+00:00",
+      "finished_at": "2026-10-09T13:02:46.452297+00:00"
+    },
+    {
+      "name": "adapter-matrix",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-http-adapter-v1-matrix.mjs"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "adapter-matrix.log.txt",
+      "log_sha256": "98b01e86c503611934a99c0d9e3977c5d1a65b25ecc2445f5a33ce51c9e7a86f",
+      "elapsed_sec": 117.175,
+      "started_at": "2026-10-09T13:02:46.452612+00:00",
+      "finished_at": "2026-10-09T13:04:43.627108+00:00"
+    },
+    {
+      "name": "checkpoint-proof",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "checkpoint-proof.log.txt",
+      "log_sha256": "a87c3252c1f404d93b77571305b1f1941e15abc78e7a13b3010ba96b8077c37e",
+      "elapsed_sec": 0.725,
+      "started_at": "2026-10-09T13:02:52.043403+00:00",
+      "finished_at": "2026-10-09T13:02:52.767951+00:00"
+    },
+    {
+      "name": "checkpoint-matrix",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-matrix.mjs"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "checkpoint-matrix.log.txt",
+      "log_sha256": "61b83117485967918d7cb450879f2ed10c2fd3a9b8d48972daa760757cbf5cfa",
+      "elapsed_sec": 20.789,
+      "started_at": "2026-10-09T13:02:52.768287+00:00",
+      "finished_at": "2026-10-09T13:03:13.556868+00:00"
+    },
+    {
+      "name": "wire-proof",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "wire-proof.log.txt",
+      "log_sha256": "f24d3b5e70a03c04821e782e204321f3033d48b879bc6a3e9ed8b3ce1937c808",
+      "elapsed_sec": 2.475,
+      "started_at": "2026-10-09T13:02:54.136758+00:00",
+      "finished_at": "2026-10-09T13:02:56.611608+00:00"
+    },
+    {
+      "name": "wire-matrix",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-matrix.mjs"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "wire-matrix.log.txt",
+      "log_sha256": "c3b56ec5e3c90722dc1cfb970ec0f65aeea057d75245d7df0d433f5203b4a2ca",
+      "elapsed_sec": 95.355,
+      "started_at": "2026-10-09T13:02:56.611925+00:00",
+      "finished_at": "2026-10-09T13:04:31.966685+00:00"
+    },
+    {
+      "name": "findings-old",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "old"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "findings-old.log.txt",
+      "log_sha256": "488ec2629d96d88d3c666d04cc9e25ce679959b118b5649e26859ab06cd055e6",
+      "elapsed_sec": 1.575,
+      "started_at": "2026-10-09T13:03:13.557355+00:00",
+      "finished_at": "2026-10-09T13:03:15.131905+00:00"
+    },
+    {
+      "name": "findings-new",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "new"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "findings-new.log.txt",
+      "log_sha256": "976622ddf3b938df85ab6f67f274fb30d647e14f68a11bebbd08ce712f0a5020",
+      "elapsed_sec": 0.868,
+      "started_at": "2026-10-09T13:03:15.132278+00:00",
+      "finished_at": "2026-10-09T13:03:15.999653+00:00"
+    },
+    {
+      "name": "J1-freeze",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/verify-jarvis-jev-j1-freeze.mjs"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "J1-freeze.log.txt",
+      "log_sha256": "2dbf82397f098de9d5c4c09a67b9d2cf69ba217d9324a926100b9a5f0a86e9fd",
+      "elapsed_sec": 0.115,
+      "started_at": "2026-10-09T13:03:16.000021+00:00",
+      "finished_at": "2026-10-09T13:03:16.114886+00:00"
+    },
+    {
+      "name": "J1-host",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-judgment-host-v1-proof.mjs"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "J1-host.log.txt",
+      "log_sha256": "23a83385d88e4ebedb12555a088c2e3d6a6caad2ca2f98a428f42d6c5fdaff9c",
+      "elapsed_sec": 0.065,
+      "started_at": "2026-10-09T13:03:16.115200+00:00",
+      "finished_at": "2026-10-09T13:03:16.179840+00:00"
+    },
+    {
+      "name": "J1-matrix",
+      "command": [
+        "/opt/node22/bin/node",
+        "node_modules/tsx/dist/cli.mjs",
+        "tests/constitutional/jarvis-jev-j1/matrix.ts"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "J1-matrix.log.txt",
+      "log_sha256": "7cfb8f4ff6b10199ca26432a193e4653ee14f5a105554fb8cf9a759db3a8ca52",
+      "elapsed_sec": 1.269,
+      "started_at": "2026-10-09T13:03:16.180204+00:00",
+      "finished_at": "2026-10-09T13:03:17.449436+00:00"
+    },
+    {
+      "name": "J1-typecheck",
+      "command": [
+        "/opt/node22/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "-p",
+        "tsconfig.jarvis-jev-j1.json"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "error": null,
+      "validated": true,
+      "log": "J1-typecheck.log.txt",
+      "log_sha256": "26fd60aa6c690f25c4d5ab3aa9c55adee667365ca6b5e297ae8511ea1ed9cc9b",
+      "elapsed_sec": 2.126,
+      "started_at": "2026-10-09T13:03:17.449790+00:00",
+      "finished_at": "2026-10-09T13:03:19.575523+00:00"
+    },
+    {
+      "name": "differential-base-negative-control",
+      "command": [
+        "/opt/node22/bin/node",
+        "scripts/builder/__tests__/jev-wire-live-run-v1-differential.mjs",
+        "--label",
+        "BASE",
+        "--wrapper",
+        "/tmp/claude-0/-home-user-Sovereign/d8658701-6ba4-507c-a49c-9d57fdbe3d06/scratchpad/review-B/base-wrapper-41caa8f79.mjs"
+      ],
+      "exit_code": 1,
+      "expected_exit": 1,
+      "error": null,
+      "validated": true,
+      "log": "differential-base-negative-control.log.txt",
+      "log_sha256": "996f7ef3ca96ae817bd49f5e86331155a12cf0fef3f6978c29f569a4b7826131",
+      "elapsed_sec": 0.829,
+      "started_at": "2026-10-09T13:03:19.575855+00:00",
+      "finished_at": "2026-10-09T13:03:20.401168+00:00"
+    }
+  ],
+  "all_valid": true,
+  "fake_only": true,
+  "real_provider_calls": 0,
+  "real_spend_usd": 0
+}

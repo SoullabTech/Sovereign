@@ -1,0 +1,31 @@
+COMMAND=/opt/node22/bin/node scripts/builder/__tests__/jev-wire-live-run-v1-differential.mjs --label BASE --wrapper /tmp/claude-0/-home-user-Sovereign/d8658701-6ba4-507c-a49c-9d57fdbe3d06/scratchpad/review-B/base-wrapper-41caa8f79.mjs
+SOURCE_HEAD=106f577fc007a09b480c2d5bfe7d5dc325ae289d
+CWD=/tmp/claude-0/-home-user-Sovereign/d8658701-6ba4-507c-a49c-9d57fdbe3d06/scratchpad/wt-B
+STARTED_AT=2026-10-09T13:03:19.575855+00:00
+TEST_SECOND_DEVICE=/dev/shm
+
+DIFFERENTIAL  label=BASE  wrapper=/tmp/claude-0/-home-user-Sovereign/d8658701-6ba4-507c-a49c-9d57fdbe3d06/scratchpad/review-B/base-wrapper-41caa8f79.mjs
+FAIL  D1   SAFETY     remote grant + injected transport factory is refused before anything is built or stored
+FAIL  D2   SAFETY     remote grant + factory inherited through the prototype is refused too
+FAIL  D3   SAFETY     remote grant + injected clock is refused BEFORE the real adapter is even constructed (a test clock defeats window and expiry)
+PASS  D4   SAFETY     control: with no override the REAL adapter is selected (it refuses for want of a credential, nothing created)
+FAIL  D5   SAFETY     ledger lost mid-request: structured stop, no throw, no second request, nothing recreated, no claim of persistence
+FAIL  D6a  SAFETY     checkpoint directory replaced by a same-device symlink after the 1st settlement → no second request, storage stop
+note  D6b  STRICTNESS checkpoint directory replaced by a fresh directory at the same path (new inode, same device) → no second request, storage stop
+FAIL  D6c  SAFETY     checkpoint directory remapped onto the ledger device after the 1st settlement → no second request, storage stop
+note  D6d  STRICTNESS ledger directory replaced by a fresh directory (new inode, same device) → no second request, storage stop
+FAIL  D7   SAFETY     change between the durable reservation and the send → the request is never written
+note  D7b  DIAGNOSTIC the same stop names a storage cause rather than a generic transport error
+FAIL  D8   SAFETY     storage changes inside the credential callback of the 2nd send → the 2nd request is never written
+note  D8b  DIAGNOSTIC the same stop names a storage cause
+FAIL  D9   REPORT     resume of a completed run with storage swapped: the summary does not claim completion while reporting a stop
+FAIL  D10a SAFETY     anchor file deleted between reservation and send → the request is never written (a sent request must be recordable)
+FAIL  D10b SAFETY     anchor rolled back to its pre-reservation copy between reservation and send → the request is never written (a sent request must be recordable)
+FAIL  D10c SAFETY     ledger rolled back to its pre-reservation copy between reservation and send → the request is never written (a sent request must be recordable)
+FAIL  D11  SAFETY     no value below the 64 MiB floor (0, negative, NaN, Infinity, fraction, string, null, floor−1) is accepted; the floor itself is
+
+1 pass · 13 SAFETY/REPORT failures [D1, D2, D3, D5, D6a, D6c, D7, D8, D9, D10a, D10b, D10c, D11] · 4 advisory notes [D6b, D6d, D7b, D8b]
+
+EXIT_CODE=1
+EXECUTION_ERROR=None
+FINISHED_AT=2026-10-09T13:03:20.401168+00:00
