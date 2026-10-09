@@ -1,8 +1,10 @@
 /**
  * WS-DIRECT-MAIA-CRAFT · Browser + database safety witness.
- * Requires a database named ws_craft_witness_20261009 on loopback port 55619,
- * an isolated Studio on loopback port 3757, and CONTROLLED loopback inference.
- * The model responses here are fixed stand-ins, NOT live MAIA cognition.
+ * Requires a database named ws_craft_witness_20261009 on loopback port 55619.
+ * Default: isolated Studio on :3757 with controlled loopback inference.
+ * Optional WITNESS_LIVE_MODEL=1: isolated Studio on :3758 with a live provider.
+ * The default responses are fixed stand-ins, NOT live MAIA cognition.
+ * Live mode must only be explicitly authorized and backed by synthetic data.
  * Never use a member account or production manuscript for this test.
  */
 'use strict';
@@ -11,8 +13,9 @@ const {randomUUID} = require('node:crypto');
 const {mkdirSync,writeFileSync,readFileSync} = require('node:fs');
 const {Client}=require('pg');
 const {chromium}=require('playwright');
-const BASE='http://127.0.0.1:3757';
-const OUT='/tmp/ws-maia-direct-craft-e2e-20261009';
+const LIVE=process.env.WITNESS_LIVE_MODEL==='1';
+const BASE=LIVE?'http://127.0.0.1:3758':'http://127.0.0.1:3757';
+const OUT=LIVE?'/tmp/ws-maia-direct-craft-live-20261009':'/tmp/ws-maia-direct-craft-e2e-20261009';
 const DSN=process.env.DATABASE_URL||'';
 const ORIGINAL='The lantern glowed softly.';
 const REVISED='The lantern glowed quietly.';
@@ -104,16 +107,35 @@ async function main(){
   await composer.waitFor({timeout:20000});
   await composer.fill('What does this lantern sentence already do? Please discuss only, without changing words.');
   await composer.press('Enter');
-  await page.getByText('The lantern gives the paragraph a gentle point of attention.',{exact:false}).first().waitFor({timeout:50000});
-  note('realConversationTransportWithControlledInference',true);
+  if(LIVE){
+    const maia=page.locator('.p4r1-maia-craft-r1-turn[data-speaker="maia"]');
+    await maia.first().waitFor({timeout:100000});
+    const response=(await maia.first().innerText()).trim();
+    assert.ok(response.length>30,'Live MAIA returned no substantive response');
+    note('liveMaiaResponseSnippet',response.slice(0,150));
+    note('canonicalUnchangedAfterLiveConversation',await stored()===baseline);
+    assert.equal(await stored(),baseline);
+    note('pageErrors',trace.filter(t=>t.type==='pageerror'));
+    note('apiErrors',trace.filter(t=>t.type==='apierror'));
+    assert.deepEqual(trace.filter(t=>t.type==='pageerror'),[]);
+    await page.screenshot({path:OUT+'/live-discussion.png'});
+    note('liveMaiaDiscussionPassed',true);
+  } else {
+    await page.getByText('The lantern gives the paragraph a gentle point of attention.',{exact:false}).first().waitFor({timeout:50000});
+    note('realConversationTransportWithControlledInference',true);
+  }
   assert.equal(await stored(),baseline,'discussion must never apply');
   await page.screenshot({path:OUT+'/02-reply-only.png'});
 
   const suggest=page.getByRole('group',{name:'Work with the focused passage'}).getByRole('button',{name:'Suggest an edit'});
   await suggest.click();
-  await page.getByText('I would keep the image and make the cadence a little quieter.',{exact:false}).first().waitFor({timeout:50000});
+  if(LIVE){
+    await page.waitForFunction(()=>document.querySelectorAll('.p4r1-maia-craft-r1-turn[data-speaker="maia"]').length>=2,{},{timeout:100000});
+  } else {
+    await page.getByText('I would keep the image and make the cadence a little quieter.',{exact:false}).first().waitFor({timeout:50000});
+  }
   const edits=page.locator('.p4r1-craft-r1-locus ins, .p4r1-craft-r1-locus del');
-  await edits.first().waitFor({timeout:25000});
+  await edits.first().waitFor({timeout:LIVE?90000:25000});
   note('maiaProposalVisible',await edits.count()>0);
   assert.equal(await stored(),baseline,'proposal alone must not apply');
   await page.screenshot({path:OUT+'/03-marked-proposal.png'});

@@ -913,7 +913,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               >
                 Talk about this
               </button>
-              {props.held ? <button type="button" className="p4r1-talk" onClick={props.onEnterCraft}>Make changes with MAIA</button> : null}
+              <button type="button" className="p4r1-talk" onClick={props.onEnterCraft}>Make changes with MAIA</button>
               <button type="button" onClick={() => props.onMode('develop')}>Develop this place</button>
               <button type="button" onClick={() => props.onMode('review')}>Review this place</button>
             </div>
