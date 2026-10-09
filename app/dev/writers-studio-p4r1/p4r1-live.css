@@ -43,6 +43,31 @@
   padding:9px 22px 9px 24px;color:inherit;cursor:pointer
 }
 .p4r1-root .fr-shell[data-mode='develop'] .fr-chapters li.fr-current button{background:var(--fr-action-soft)}
+
+/* STUDIO-FOLD-GAP-01: A folded Part used to occupy ~400px of blank height.
+   The older .fr-chapters li button rule above was authored for a single
+   full-width button per flat row. The new nested outline has TWO buttons
+   (chevron + label); never apply the legacy full-width flex rule to them.
+   This higher-specificity override is scoped to the collapsible Develop rail.
+   It leaves the prior flat outline, Write, and Review styling unchanged. */
+.p4r1-root .fr-shell[data-mode='develop'] .fr-chapters.p4r1-structural-rail li {
+  display: block; padding: 0; margin: 0;
+}
+.p4r1-root .fr-shell[data-mode='develop'] .fr-chapters.p4r1-structural-rail li > .p4r1-outline-row {
+  display: flex; flex-direction: row; align-items: flex-start; gap: 3px;
+}
+.p4r1-root .fr-shell[data-mode='develop'] .fr-chapters.p4r1-structural-rail li .p4r1-outline-toggle {
+  display: grid; flex: 0 0 29px; width: 29px; height: 37px; padding: 0;
+  place-items: center; text-align: center;
+}
+.p4r1-root .fr-shell[data-mode='develop'] .fr-chapters.p4r1-structural-rail li .p4r1-outline-label {
+  display: block; flex: 1 1 auto; width: auto; min-width: 0;
+  padding: 9px 7px; text-align: left;
+}
+.p4r1-root .fr-shell[data-mode='develop'] .fr-chapters.p4r1-structural-rail li.fr-current > .p4r1-outline-row > .p4r1-outline-label {
+  background: var(--fr-action-soft);
+}
+
 .p4r1-root .p4r1-develop-overview{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(250px,.75fr);gap:14px;margin-top:18px}
 .p4r1-root .p4r1-overview-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
 .p4r1-root .p4r1-overview-fields button{
