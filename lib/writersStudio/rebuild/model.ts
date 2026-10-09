@@ -47,7 +47,14 @@ export function chapterSpanFor(
 
   let start = -1;
   for (let i = at; i >= 0; i -= 1) {
-    if (isConfirmedChapterRoot(ordered[i]!)) { start = i; break; }
+    const candidate = ordered[i]!;
+    // A chapter NEVER owns the following depth-one region. The old search
+    // skipped Conclusion, Afterword, Appendix and Bibliography and kept
+    // returning Chapter 10, so the rail/MAIA moved while the canvas did not.
+    if (candidate.headingDepth === 1) {
+      if (isConfirmedChapterRoot(candidate)) start = i;
+      break;
+    }
   }
   if (start < 0) return null;
 

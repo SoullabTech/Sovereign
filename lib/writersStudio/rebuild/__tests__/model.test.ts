@@ -34,6 +34,28 @@ describe('rebuild book model', () => {
   });
 
 
+  it('refuses to carry Chapter 10 past Conclusion, Afterword, Appendix or Bibliography', () => {
+    const backMatter = [
+      row(222, 'Conclusion — Embracing Your Elemental Soul', 1),
+      row(223, 'Conclusion body', 3),
+      row(224, 'Afterword — The Field', 1),
+      row(225, 'Afterword body', 3),
+      row(226, 'Acknowledgments', 1),
+      row(227, 'Appendix', 1),
+      row(228, 'The Four Grades of Water', 3),
+      row(247, 'Bibliography', 1),
+      row(248, 'Preface', 3),
+      row(251, 'Chapter 2: The Torus of Change', 3),
+    ];
+    const all = [...rows, ...backMatter.filter(s => s.position > 222)];
+    for (const section of backMatter) {
+      expect(chapterSpanFor(all, section.draftSectionId)).toBeNull();
+    }
+    expect(chapterSpanFor(all, 'd221')?.root.draftSectionId).toBe('d198');
+    expect(chapterSpanFor(all, 'd221')?.sections.some(s => s.position >= 222)).toBe(false);
+    expect(chapterSpanFor(all, 'd198')?.root.draftSectionId).toBe('d198');
+  });
+
   it('does not promote a flat back-matter Chapter label into a chapter', () => {
     const flat: RebuildSection[] = [
       { ...row(171, 'CHAPTER 9: AETHER', 1), headingDepth: null, headingSignal: null, body: 'Young. Nested Time.' },
