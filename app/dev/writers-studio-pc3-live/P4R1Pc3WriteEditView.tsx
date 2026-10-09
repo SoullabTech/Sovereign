@@ -71,6 +71,8 @@ export type P4R1Pc3WriteEditViewProps = {
   onFocusSection: (id: string) => void;
   onHoldPassage: (section: RebuildSection, start: number, end: number, text: string) => void;
   onMode: (mode: 'home' | 'write' | 'develop' | 'review') => void;
+  /** Enter the bound Craft field with the writer's exact current selection. */
+  onEnterCraft: () => void;
 
   workspaceOpen: boolean;
   /** Write is clean authorship; Develop Craft is the marked editorial field. */
@@ -530,6 +532,13 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       {selectionMenuOpen ? (
         <div className="p4r1-selection-menu" role="menu">
           <button type="button" role="menuitem" className="p4r1-selection-menu-primary" onClick={() => {
+            setSelectionMenuOpen(false);
+            props.onEnterCraft();
+          }}>
+            <b>Make changes with MAIA</b>
+            <span>Talk, try wording on the Craftsman’s Table, preview, then decide whether to apply.</span>
+          </button>
+          <button type="button" role="menuitem" onClick={() => {
             openPassageWorkspace(true);
           }}>
             <b>Focus</b>
@@ -904,6 +913,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               >
                 Talk about this
               </button>
+              {props.held ? <button type="button" className="p4r1-talk" onClick={props.onEnterCraft}>Make changes with MAIA</button> : null}
               <button type="button" onClick={() => props.onMode('develop')}>Develop this place</button>
               <button type="button" onClick={() => props.onMode('review')}>Review this place</button>
             </div>
