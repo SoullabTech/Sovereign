@@ -1,5 +1,7 @@
 # JEV-INT-05 — wrapper integration A: the Mac hardening adopted unchanged (2026-10-09)
 
+> **Update, later 2026-10-09:** independent Mac/T7 verification of `baa5dc363` has been **reported complete** (20/20, custody intact) — see §11. That section records a result reported to the engineer; the Mac's artifacts are not in this repository and were not seen here.
+
 **OFF · reconciled engineering candidate · unratified · nothing authorized.** This record closes the *integration* lane opened by founder decision A. It is not a verification by anyone but its author: the Linux receipt below is the engineer's own run, and **independent Mac/T7 verification of the exact resulting commit is the next, still-open step.**
 
 ## 1. Authority and boundary (as given)
@@ -73,7 +75,7 @@ Run of `docs/programme/evidence/jev-int05-integration-20261009/run-integration-r
 
 Negative controls behave as designed: the reviewed base fails the differential on the thirteen original gaps; the old wrapper fails exactly L10, L13–L16 of the proof. The runner itself rejected a wrongly typed pin on its first attempt (a mismatch between the pinned and actual HEAD aborts before any test).
 
-## 9. Next step — independent Mac/T7 verification (not done; this is the stop point)
+## 9. Next step — independent Mac/T7 verification (was the stop point; reported complete, see §11)
 On the Mac, from a clean checkout of the **exact pushed HEAD** (pass its full sha; the code tree ids in §3 must match):
 ```
 git fetch origin claude/pensive-ride-hw6qra
@@ -86,3 +88,14 @@ Pass = `ALL_VALID True` and exit 0, with the same key results as the table above
 
 ## 10. What stays closed
 Switch `false` · grant `DRAFT` · no governance record ratified or admitted · no provider registered · no credential · no TypeSafe contact · no spend · no canonical merge · no deploy · PILOT-01 deferred. Approving this integration approves nothing else; the activation candidate, its verification, the hashes and the grant remain separate, later, and in that order.
+
+## 11. Independent Mac/T7 verification — reported 2026-10-09 (artifacts on the Mac; not in this repository; not seen by the engineer)
+Recorded exactly as reported to me by the founder, for the record chain; it is a report of a result, not the result's evidence, until the receipt is published.
+- **Commit:** `baa5dc36372d5876f6b70b1fadb8b6ad5f97265f`, in a separate clean detached checkout on the Mac Studio; the T7 Shield mounted and confirmed a distinct physical device. Node 22.22.3, TypeScript 5.9.3.
+- **Custody (`CUSTODY_ALL_OK True`):** wrapper, proof and matrix byte-identical to the adopted Mac implementation; frozen J1/wire/adapter/checkpoint and associated protected files unchanged; committed switch closed; grant `DRAFT`; no unexpected executable files introduced.
+- **Result:** **20/20 checks valid · `ALL_VALID True` · runner exit 0.** Wrapper proof 16/16 on three consecutive runs; wrapper matrix 41/41; differential matrix 15/15; the behavioural differential with no safety or report failures (its four advisory observations non-gating); adapter matrix 23/23; wire matrix 49/49; checkpoint matrix 28/28; frozen J1 checks passed; both negative controls failed as designed. No code repair and no rerun against a different commit.
+- **Evidence kept on the Mac:** `~/.maia-evidence/jev-int05-integration-mact7-baa5dc363-20261009/` (23 files, manifest independently verified); receipt SHA-256 `e8c9b98c68cc80a69cf0df2bc9d67eb6c1da93abab6d084b698ff694382fa946`; handoff report `~/.maia-evidence/JEV_INT05_INDEPENDENT_MAC_T7_INTEGRATION_REVIEW_20261009.md`.
+- **Reported as not done:** a dedicated physical device-swap witness for `STORAGE_DEVICE_CHANGED` (a third volume, LaCie, was available and deliberately untouched because the authorization covered Mac/T7 only). The same-device directory replacement risk and storage-error naming remain documented and deferred. Nothing was pushed, merged to canonical, ratified, activated or deployed; the execution gate remains closed.
+- **What the repository still lacks:** the receipt itself. It should be published as a docs-only commit on a `chore/` branch (as the earlier Mac reviews were) so the chain is checkable from the repository.
+- **Independence, precisely:** the adopted wrapper was itself authored on the Mac (git author "Kelly"), so this verification is independent of the integrator and of the Linux run in §8, not of the wrapper's author. The cross-authored check on the wrapper's behaviour is the differential written on this branch.
+- **Applies to later commits:** code trees are identical at `106f577fc`, `baa5dc363` and every later docs-only commit (§3), so the verified result stands for them.
