@@ -18,6 +18,9 @@ A tested wrapper that refuses unless every condition below is met. It has run on
 5. **Opening the switch.** A reviewed code change flips the off-switch. That change is separate from approving this brief and should be made only after items 1–4 and the Mac verification.
 6. **Operational.** Name the operator; provide an external drive for the second record; decide who holds the key and rotates it afterward.
 
+## Grant identity must follow the final reviewed activation candidate
+The checked-in grant template is intentionally still `DRAFT`. Its current `table_hash` belongs to the committed **closed** response-shape candidate. Because `QUESTION_TABLE` includes `RESPONSE_SHAPE`, changing `witnessed` (or changing the schema witness/table version) changes the table identity. **Do not promote the current template unchanged.** If you ever choose to proceed, first create and independently verify the exact activation candidate; then derive the table/fixture/schema hashes from those bytes; then populate and authorize a fresh grant for that exact candidate. Any later identity-affecting code change invalidates that grant. Opening a source gate by itself never grants execution authority.
+
 ## What "approve" would and would not mean
 Would: one named operator may run this 31-request synthetic test inside the window and ceiling. Would not: any use of real data, any additional requests or retries, any lowering of computational effort based on Jev, any change to J1 beyond the carrier, or a later live use. Each of those needs its own decision.
 

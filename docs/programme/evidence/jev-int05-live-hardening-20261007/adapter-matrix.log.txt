@@ -1,0 +1,37 @@
+COMMAND=/Users/soullab/.nvm/versions/node/v22.22.3/bin/node scripts/builder/__tests__/jev-wire-http-adapter-v1-matrix.mjs
+SOURCE_HEAD=29b38b0d41f411a7ab44028a6dd17bcb8522f4dc
+CWD=/Users/soullab/jev-int05-live-wrapper-hardening-20261007
+STARTED_AT=2026-10-08T01:36:20.237018+00:00
+TEST_SECOND_DEVICE=/Volumes/T7 Shield
+
+REFERENCE  clean (0 failed)
+
+KILLED  DC-AD-REMOTE-BY-DEFAULT  on A1
+KILLED  DC-AD-HOST-NOT-PINNED  on A1
+KILLED  DC-AD-CONSTRUCTION-CREDENTIAL-UNCHECKED  on A1
+KILLED  DC-AD-SEND-CREDENTIAL-UNCHECKED  on A1b   collateral: A15-credential-callback-failures-are-sanitized-and-open-no-connection
+KILLED  DC-AD-REBUILDS-BODY  on A2   collateral: A10-composes-with-runner-and-checkpoint-for-all-31-approved-attempts
+KILLED  DC-AD-HASH-NOT-CHECKED  on A2
+KILLED  DC-AD-NO-CONTENT-TYPE-CHECK  on A3   collateral: A9-credential-never-appears-in-errors-or-output, A11-every-failure-mode-stops-the-experiment-without-a-duplicate-request
+KILLED  DC-AD-NO-SIZE-CAP  on A3   collateral: A17-response-limit-must-be-a-finite-positive-safe-integer
+KILLED  DC-AD-INCOMPLETE-BODY-ACCEPTED  on A3
+KILLED  DC-AD-HTTP-ERROR-ACCEPTED  on A4   collateral: A9-credential-never-appears-in-errors-or-output
+KILLED  DC-AD-RETRIES  on A4   collateral: A5-redirects-are-refused-not-followed, A8-late-responses-cannot-arrive-after-settlement, A11-every-failure-mode-stops-the-experiment-without-a-duplicate-request
+KILLED  DC-AD-FOLLOWS-REDIRECTS  on A5
+KILLED  DC-AD-DEADLINE-ENDS-AT-HEADERS  on A6
+KILLED  DC-AD-IDLE-ONLY-DEADLINE  on A6
+KILLED  DC-AD-SOCKET-LEFT-OPEN  on A6   collateral: A7-runner-abort-signal-destroys-the-request, A8-late-responses-cannot-arrive-after-settlement, A12-runner-deadline-aborts-a-slow-adapter-and-leaves-no-late-arrival
+KILLED  DC-AD-IGNORES-ABORT-SIGNAL  on A7   collateral: A12-runner-deadline-aborts-a-slow-adapter-and-leaves-no-late-arrival
+KILLED  DC-AD-LOGS-CREDENTIAL  on A9   collateral: A14-static-no-environment-no-files-no-logging-no-retry-no-live-activation
+KILLED  DC-AD-READS-ENVIRONMENT  on A14
+KILLED  DC-AD-CALLBACK-ERROR-ESCAPES  on A15
+KILLED  DC-AD-CALLBACK-ERROR-CAUSE-KEPT  on A15
+KILLED  DC-AD-CANCEL-NOT-RECHECKED  on A16
+KILLED  DC-AD-LIMIT-UNVALIDATED  on A17
+KILLED  DC-AD-LIMIT-ONLY-SIGN-CHECKED  on A17
+
+23/23 candidates killed on their named check · 0 problems
+
+EXIT_CODE=0
+EXECUTION_ERROR=None
+FINISHED_AT=2026-10-08T01:39:31.815640+00:00

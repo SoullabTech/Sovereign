@@ -1,0 +1,28 @@
+COMMAND=/Users/soullab/.nvm/versions/node/v22.22.3/bin/node scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs
+SOURCE_HEAD=29b38b0d41f411a7ab44028a6dd17bcb8522f4dc
+CWD=/Users/soullab/jev-int05-live-wrapper-hardening-20261007
+STARTED_AT=2026-10-08T01:35:56.477650+00:00
+TEST_SECOND_DEVICE=/Volumes/T7 Shield
+
+PASS  L1-committed-off-switch-refuses-before-any-store-credential-or-transport
+PASS  L2-grant-must-match-the-code-and-can-only-narrow-it
+PASS  L3-storage-preflight-refuses-unsafe-layouts-without-creating-anything
+PASS  L4-modes-never-resume-repair-or-initialize-by-themselves
+PASS  L5-full-31-attempt-mock-run-on-distinct-devices-then-resume-sends-nothing
+PASS  L6-grant-can-narrow-attempts-and-spend
+PASS  L7-stops-at-the-first-failure-and-refuses-to-resume-after-it
+PASS  L8-grant-expiry-is-rechecked-during-the-run
+PASS  L9-credential-is-only-requested-at-send-and-never-surfaces
+PASS  L10-remote-option-follows-the-grant-and-the-pinned-endpoint-only
+PASS  L11-static-no-env-no-cli-no-logging-never-writes-the-off-switch
+PASS  L12-summary-is-content-free
+PASS  L13-external-grants-never-accept-injected-transport-or-test-clock
+PASS  L14-vanished-ledger-after-request-gives-structured-unknown-stop
+PASS  L15-physical-mount-drift-stops-before-second-attempt-and-before-first-dispatch
+PASS  L16-free-space-floor-is-not-lowerable-by-config
+
+16 passed · 0 failed
+
+EXIT_CODE=0
+EXECUTION_ERROR=None
+FINISHED_AT=2026-10-08T01:36:11.055928+00:00
