@@ -1861,6 +1861,40 @@ export default function FlagshipWriteEditController({
       setEditorialFailure('The Work could not be created just now. The manuscript has not changed.');
     }
   }, [context, workContext.kind, reloadWorks]);
+  const enterCraftFromWrite = useCallback(async () => {
+    if (!context || !focusId || editorialBusy || adoptionBusy) return;
+    // Do not carry a stale selection into an editorial act. Fresh words are
+    // authoritative; the writer can simply reselect if the passage moved.
+    const held = selectedPassage?.draftSectionId === focusId ? selectedPassage : null;
+    const liveBody = writingRef.current?.bodyOf(focusId)
+      ?? context.sections.find(section => section.draftSectionId === focusId)?.body ?? '';
+    if (held && Array.from(liveBody).slice(held.start, held.end).join('') !== held.text) {
+      setEditorialFailure('The selected words changed. Select the passage again before working with MAIA. Nothing was changed.');
+      return;
+    }
+    if (!(await settleWriting())) return;
+    const fresh = new URLSearchParams(window.location.search);
+    fresh.set('mode', 'write');
+    fresh.set('developCraft', '1');
+    fresh.set(SECTION_PARAM, focusId);
+    // A direct Write crossing is not a carried Develop reading or an old
+    // editorial thread. Do not import their authority by accident.
+    fresh.delete('insightAction');
+    fresh.delete(INSIGHT_READING);
+    fresh.delete(INSIGHT_OBSERVATION);
+    fresh.delete(CRAFT_SOURCE_THREAD);
+    fresh.delete(CRAFT_SOURCE_MAIA_TURN);
+    if (held) {
+      fresh.set(CRAFT_HINT_START, String(held.start));
+      fresh.set(CRAFT_HINT_END, String(held.end));
+    } else {
+      fresh.delete(CRAFT_HINT_START);
+      fresh.delete(CRAFT_HINT_END);
+    }
+    const clean = canvasWithoutEditorialThread(pathname, `?${fresh.toString()}`);
+    router.push(clean);
+  }, [context, focusId, editorialBusy, adoptionBusy, selectedPassage, settleWriting, pathname, router]);
+
   const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
     if (mode === 'home') {
       const query = studioHomeReturnSearch(params?.toString() ?? '');
@@ -1925,6 +1959,7 @@ export default function FlagshipWriteEditController({
             onFocusSection={focusWritingSection}
             onHoldPassage={holdPassage}
             onMode={onMode}
+            onEnterCraft={() => void enterCraftFromWrite()}
             workspaceOpen={workspaceOpen}
             surfaceMode={developCraft ? 'develop-craft' : 'write'}
             craftMode={craftMode}
