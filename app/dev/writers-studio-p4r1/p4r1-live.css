@@ -6317,3 +6317,19 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
 .p4r1-root .p4r1-open-craft:hover {
   border-color:var(--fr-action-line);background:var(--fr-action-soft);
 }
+
+/* Direct Craft invitation stays visible outside the retired ribbon. */
+.p4r1-root .p4r1-write-maia .p4r1-direct-craft-entry {
+  display:block;width:100%;margin:14px 0 12px;padding:12px 14px;
+  border:1px solid var(--fr-action-line);border-radius:9px;
+  background:var(--fr-held);color:var(--fr-title);
+  font:600 13px/1.35 var(--fr-sans-stack);text-align:left;cursor:pointer;
+}
+.p4r1-root .p4r1-write-maia .p4r1-direct-craft-entry:hover,
+.p4r1-root .p4r1-write-maia .p4r1-direct-craft-entry:focus-visible {
+  background:var(--fr-action-soft);border-color:var(--fr-action);
+}
+.p4r1-root .p4r1-write-maia [data-write-selected-passage] {
+  padding:12px 0 0;color:var(--fr-ink2);overflow-wrap:anywhere;
+  font:italic 14px/1.55 var(--fr-serif-stack);
+}

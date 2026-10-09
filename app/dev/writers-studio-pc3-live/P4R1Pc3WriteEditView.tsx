@@ -173,8 +173,13 @@ function selectionInPc3Editor(): { sectionId: string; text: string; rect: DOMRec
   const start = range.startContainer instanceof Element ? range.startContainer : range.startContainer.parentElement;
   const end = range.endContainer instanceof Element ? range.endContainer : range.endContainer.parentElement;
   const editor = start?.closest<HTMLElement>('[data-write-editor]');
-  if (!editor || !end || !editor.contains(end)) return null;
-  const sectionId = editor.dataset.sectionId;
+  const proseSection = start?.closest<HTMLElement>('[data-prose-section-id]');
+  // Prose is an authored, readable manuscript surface—not an inert preview.
+  // Its paragraphs do not carry data-write-editor. The selection must remain
+  // inside ONE known authored section, and canonical alignment must be unique.
+  const locus = editor ?? proseSection;
+  if (!locus || !end || !locus.contains(end)) return null;
+  const sectionId = editor?.dataset.sectionId ?? proseSection?.dataset.proseSectionId;
   const text = range.toString();
   if (!sectionId || !text.trim()) return null;
   return { sectionId, text, rect: range.getBoundingClientRect() };
@@ -202,7 +207,7 @@ function ChapterProseSurface({ sections, activeId, bodyOf, onEdit }: {
           const blocks = typesetProseBlocks(bodyOf(section.draftSectionId));
           const Heading = section.headingDepth === 2 ? 'h2' : 'h3';
           return (
-            <section key={section.draftSectionId} className="p4r1-prose-section" data-current={section.draftSectionId === activeId ? 'true' : undefined}>
+            <section key={section.draftSectionId} className="p4r1-prose-section" data-prose-section-id={section.draftSectionId} data-current={section.draftSectionId === activeId ? 'true' : undefined}>
               {index > 0 && section.heading?.trim() ? <Heading>{section.heading.trim()}</Heading> : null}
               {blocks.map((block, blockIndex) => {
                 if (block.kind === 'folio') return null;
@@ -240,8 +245,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    if (props.held || props.carriedInsight || props.workspaceOpen || isolatedEditorial) setProseView(false);
-  }, [props.held, props.carriedInsight, props.workspaceOpen, isolatedEditorial]);
+    // Merely selecting words in Prose does not commission an editor switch.
+    // Only an explicit workspace/insight crossing leaves the reading view.
+    if (props.carriedInsight || props.workspaceOpen || isolatedEditorial) setProseView(false);
+  }, [props.carriedInsight, props.workspaceOpen, isolatedEditorial]);
 
   useEffect(() => {
     setBlankArrivalDismissed(false);
@@ -879,6 +886,11 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     (section) => section.draftSectionId === (railSelectionId ?? props.focusId),
   ) ?? null;
   const railLabel = railSection?.heading?.trim() || 'this section';
+  const selectedPlace = props.held
+    ? props.context.sections.find((section) => section.draftSectionId === props.held?.draftSectionId) ?? null
+    : railSection;
+  const selectionExcerpt = props.held?.text.trim() ?? '';
+  const selectedPlaceLabel = selectedPlace?.heading?.trim() || railLabel;
 
   const writeMaia = props.work ? (
     <div className="fr-maia-inner p4r1-write-maia">
@@ -886,21 +898,23 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         <div className="fr-orb" aria-hidden="true" />
         <div className="fr-maia-name">
           <h2>MAIA</h2>
-          <span>{railSelectionId ? `In relation to ${railLabel}` : 'In relation to this writing place'}</span>
+          <span>{props.held ? `In relation to ${selectedPlaceLabel}` : railSelectionId ? `In relation to ${railLabel}` : 'In relation to this writing place'}</span>
         </div>
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody">
         {workConversationOpen ? (
           workConversation
-        ) : railSelectionId && railSection ? (
-          <div className="p4r1-locus-support" data-write-locus-support={railSection.draftSectionId}>
-            <span className="p4r1-eyebrow">You selected</span>
-            <h3>{railLabel}</h3>
-            <p>
-              I’m with this exact place now. You do not need to hunt through another panel
-              before we can work with it.
-            </p>
+        ) : props.held || (railSelectionId && railSection) ? (
+          <div className="p4r1-locus-support" data-write-locus-support={selectedPlace?.draftSectionId}>
+            <span className="p4r1-eyebrow">{props.held ? 'Passage selected' : 'You selected'}</span>
+            <h3>{selectedPlaceLabel}</h3>
+            {props.held ? (
+              <p data-write-selected-passage>“{selectionExcerpt.length > 220 ? `${selectionExcerpt.slice(0, 219)}…` : selectionExcerpt}”</p>
+            ) : (
+              <p>I’m with this exact place now. You can open it in the Craftsman’s Table without hunting through another panel.</p>
+            )}
+            <button type="button" className="p4r1-talk p4r1-direct-craft-entry" onClick={props.onEnterCraft}>Make changes with MAIA</button>
             <div className="p4r1-locus-actions">
               <button
                 type="button"
@@ -917,7 +931,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               <button type="button" onClick={() => props.onMode('develop')}>Develop this place</button>
               <button type="button" onClick={() => props.onMode('review')}>Review this place</button>
             </div>
-            <p className="fr-also">Select exact words in the manuscript for passage-level revision.</p>
+            <p className="fr-also">{props.held
+              ? 'Your selected words will accompany you to the Craftsman’s Table. Nothing is applied automatically.'
+              : 'Select exact words in the manuscript for passage-level revision.'}</p>
           </div>
         ) : (
           <>
@@ -1148,7 +1164,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   const shellMaia = props.surfaceMode === 'develop-craft'
     ? craftR1Maia
-    : (railSelectionId || workConversationOpen ? writeMaia : undefined);
+    : (props.held || railSelectionId || workConversationOpen ? writeMaia : undefined);
   const shellHasCraftEditorial = props.surfaceMode === 'develop-craft' && craftR1Maia !== null;
 
   const isolatedRoom = props.surfaceMode !== 'develop-craft'

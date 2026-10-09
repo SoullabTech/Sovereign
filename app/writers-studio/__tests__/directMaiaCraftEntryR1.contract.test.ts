@@ -35,6 +35,17 @@ describe('Write to MAIA Craftsman’s Table crossing', () => {
     expect(controller).toContain('fresh.delete(CRAFT_HINT_END)');
   });
 
+  it('recognizes prose selections inside exactly one authored section', () => {
+    expect(view).toContain('data-prose-section-id={section.draftSectionId}');
+    expect(view).toContain("start?.closest<HTMLElement>('[data-prose-section-id]')");
+    expect(view).toContain('!locus.contains(end)');
+    expect(view).toContain('locateUniquePresentationPassage(live, picked.text)');
+    expect(view).toContain('data-write-selected-passage');
+    expect(view).toContain('p4r1-direct-craft-entry');
+    expect(view).toContain('props.held || railSelectionId || workConversationOpen');
+    expect(view).not.toContain('if (props.held || props.carriedInsight || props.workspaceOpen || isolatedEditorial)');
+  });
+
   it('reuses the governed conversational and Apply/Undo surfaces', () => {
     expect(view).toContain('<MaiaCraftCompanionR1');
     expect(view).toContain('<CraftsmansTableR1');

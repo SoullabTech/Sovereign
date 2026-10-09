@@ -14,8 +14,9 @@ const {mkdirSync,writeFileSync,readFileSync} = require('node:fs');
 const {Client}=require('pg');
 const {chromium}=require('playwright');
 const LIVE=process.env.WITNESS_LIVE_MODEL==='1';
+const PROSE=process.env.WITNESS_PROSE==='1';
 const BASE=LIVE?'http://127.0.0.1:3758':'http://127.0.0.1:3757';
-const OUT=LIVE?'/tmp/ws-maia-direct-craft-live-20261009':'/tmp/ws-maia-direct-craft-e2e-20261009';
+const OUT=LIVE?'/tmp/ws-maia-direct-craft-live-20261009':PROSE?'/tmp/ws-maia-direct-craft-prose-20261009':'/tmp/ws-maia-direct-craft-e2e-20261009';
 const DSN=process.env.DATABASE_URL||'';
 const ORIGINAL='The lantern glowed softly.';
 const REVISED='The lantern glowed quietly.';
@@ -72,25 +73,59 @@ async function main(){
   });
   await page.goto(BASE+'/writers-studio?mode=write&m='+WK+'&s='+D2,{waitUntil:'domcontentloaded',timeout:90000});
   note('opened',page.url());
-  await page.getByRole('button',{name:'Edit',exact:true}).first().click({timeout:45000}).catch(()=>{});
-  const editor=page.locator('textarea[data-write-editor][data-section-id="'+D2+'"]');
-  await editor.waitFor({timeout:75000});
-  note('writeEditorVisible',await editor.isVisible());
-  const sel=await editor.evaluate((e,text)=>{
-    const from=e.value.indexOf(text);
-    if(from<0) return {found:false,preview:e.value.slice(0,150)};
-    e.focus();
-    e.setSelectionRange(from,from+text.length);
-    document.dispatchEvent(new Event('selectionchange'));
-    return {found:true,start:from,end:from+text.length};
-  },ORIGINAL);
+  let sel;
+  if (PROSE) {
+    const prose=page.locator('[data-prose-section-id="'+D2+'"] p').filter({hasText:ORIGINAL}).first();
+    await prose.waitFor({timeout:75000});
+    sel=await prose.evaluate((e,text)=>{
+      const node=e.firstChild;
+      if(!node||node.nodeType!==Node.TEXT_NODE)return {found:false,reason:'not plain text'};
+      const from=node.textContent.indexOf(text);
+      if(from<0)return {found:false,reason:'words not found'};
+      const range=document.createRange();
+      range.setStart(node,from);
+      range.setEnd(node,from+text.length);
+      const s=window.getSelection();
+      s.removeAllRanges();
+      s.addRange(range);
+      document.dispatchEvent(new Event('selectionchange'));
+      return {found:true,start:from,end:from+text.length};
+    },ORIGINAL);
+    note('proseSelectionMade',sel);
+    await page.locator('[data-write-selected-passage]').waitFor({timeout:15000});
+    assert.ok((await page.locator('[data-write-selected-passage]').innerText()).includes(ORIGINAL));
+    note('maiaRecognizedExactProsePassage',true);
+    const direct=page.locator('.p4r1-direct-craft-entry');
+    assert.equal(await direct.isVisible(),true,'direct MAIA entry must be visible even though the old action ribbon is hidden');
+    note('directMaiaActionVisibleInProse',true);
+    await page.screenshot({path:OUT+'/00-prose-selected.png'});
+  } else {
+    await page.getByRole('button',{name:'Edit',exact:true}).first().click({timeout:45000}).catch(()=>{});
+    const editor=page.locator('textarea[data-write-editor][data-section-id="'+D2+'"]');
+    await editor.waitFor({timeout:75000});
+    note('writeEditorVisible',await editor.isVisible());
+    sel=await editor.evaluate((e,text)=>{
+      const from=e.value.indexOf(text);
+      if(from<0) return {found:false,preview:e.value.slice(0,150)};
+      e.focus();
+      e.setSelectionRange(from,from+text.length);
+      document.dispatchEvent(new Event('selectionchange'));
+      return {found:true,start:from,end:from+text.length};
+    },ORIGINAL);
+  }
   assert.equal(sel.found,true,JSON.stringify(sel));
-  const trigger=page.getByRole('button',{name:/Work with passage/}).first();
-  await trigger.waitFor({timeout:15000});
-  await trigger.click();
-  const enter=page.getByRole('menuitem',{name:/Make changes with MAIA/});
-  await enter.waitFor({timeout:10000});
-  await enter.click();
+  if (PROSE) {
+    // The MAIA panel must provide a direct crossing while keeping Prose active.
+    assert.equal(await page.getByRole('button',{name:'Prose',exact:true}).getAttribute('aria-pressed'),'true');
+    await page.locator('.p4r1-direct-craft-entry').click();
+  } else {
+    const trigger=page.getByRole('button',{name:/Work with passage/}).first();
+    await trigger.waitFor({timeout:15000});
+    await trigger.click();
+    const enter=page.getByRole('menuitem',{name:/Make changes with MAIA/});
+    await enter.waitFor({timeout:10000});
+    await enter.click();
+  }
   await page.locator('[data-craftsmans-table-r1]').waitFor({timeout:70000});
   await page.locator('[data-maia-craft-companion-r1]').waitFor({timeout:70000});
   await page.locator('[data-craft-focus-bracket]').waitFor({timeout:15000});
