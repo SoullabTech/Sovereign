@@ -6273,7 +6273,19 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
 }
 
 .p4r1-root .p4r1-open-craft {
-  align-self:start; margin:8px 0 0 48px; padding:7px 11px;
+  /* Develop's heading is a two-column CSS grid (42px + content).
+     Claim the whole row; otherwise this button falls into the 42px icon
+     track and wraps vertically. Do not modify the other header children. */
+  grid-column:1 / -1;
+  justify-self:start;
+  align-self:start;
+  width:auto;
+  max-width:calc(100% - 23px);
+  min-width:0;
+  margin:8px 0 0 23px;
+  padding:8px 12px;
+  white-space:normal;
+  text-align:left;
   border:1px solid var(--fr-line);border-radius:7px;
   background:var(--fr-panel); color:var(--fr-action);
   font:600 12px/1.4 var(--fr-sans-stack);cursor:pointer;

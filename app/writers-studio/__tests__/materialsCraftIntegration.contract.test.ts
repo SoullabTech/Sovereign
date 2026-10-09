@@ -33,6 +33,16 @@ describe('local integration: Material availability + Craftsman continuity', () =
     expect(door).toContain('disabled aria-label="Add a file temporarily paused"');
     expect(door).toContain('Saving new Work material is paused');
   });
+  it('keeps the Craftsman entry out of the narrow 42px Develop icon track', () => {
+    const css=read('app/dev/writers-studio-p4r1/p4r1-live.css');
+    const selector='.p4r1-root .p4r1-open-craft {';
+    expect(css.split(selector).length - 1).toBe(1);
+    const rule=css.split(selector)[1]!.split('}')[0]!;
+    expect(rule).toMatch(/grid-column:\s*1\s*\/\s*-1/);
+    expect(rule).toMatch(/justify-self:\s*start/);
+    expect(rule).toMatch(/min-width:\s*0/);
+    expect(rule).toMatch(/white-space:\s*normal/);
+  });
   it('preserves the genuine Craftsman, its focus actions and writer-controlled edits', () => {
     const host=read('app/dev/writers-studio-p4r1/P4R1StudioHost.tsx');
     const write=read('app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx');
