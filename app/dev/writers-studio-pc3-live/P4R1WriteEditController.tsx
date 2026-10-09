@@ -683,11 +683,13 @@ export default function FlagshipWriteEditController({
   const clearEditorial = useCallback(() => {
     setEditorialThread(null);
     if (typeof window !== 'undefined') {
-      window.history.replaceState(
-        null,
-        '',
-        canvasWithoutEditorialThread(window.location.pathname, window.location.search),
-      );
+      // A same-address replaceState triggers Next's App Router history
+      // reconciliation even when nothing changed. That stale reconciliation
+      // can overwrite the new section URL from the same click after the canvas
+      // has already moved. Use the shared no-op-aware place publisher.
+      replacePlaceAddress(canvasWithoutEditorialThread(
+        window.location.pathname, window.location.search,
+      ));
     }
     setRelationshipChoices([]);
     setSuggestedVersionId(null);
