@@ -2962,6 +2962,30 @@
 .p4r1-root .fr-write-region-row>.fr-write-chapters button,
 .p4r1-root .fr-write-region-row>button{font-weight:600}
 
+/* C12R · Source-faithful front matter / bibliography navigation.
+   Disclosures are presentations only. Every stored section retains its ID
+   and remains reachable on expansion or through the full-outline search. */
+.p4r1-root .fr-write-context-group{display:block;min-height:0;margin:4px 10px 12px 0;padding:0;}
+.p4r1-root .fr-write-chapters .fr-write-disclosure{
+  width:100%;display:flex;flex-direction:row;align-items:center;gap:9px;
+  padding:10px 11px;border:1px solid var(--fr-line-soft);border-radius:7px;
+  background:var(--fr-panel-soft);color:var(--fr-ink2);
+  font:600 12px/1.35 var(--fr-sans-stack);text-align:left;cursor:pointer;
+}
+.p4r1-root .fr-write-chapters .fr-write-disclosure>span{
+  flex:0 0 11px;font-size:17px;line-height:1;
+}
+.p4r1-root .fr-write-chapters .fr-write-disclosure small{
+  margin-left:auto;font:400 10.5px/1.4 var(--fr-sans-stack);
+  color:var(--fr-muted);white-space:nowrap;
+}
+.p4r1-root .fr-write-context-children{
+  list-style:none;padding:4px 0 2px 14px;margin:0;
+  display:grid;gap:1px;border-left:1px solid var(--fr-line-soft);
+}
+.p4r1-root .fr-write-context-children>li{margin:0;padding:0;min-height:0;}
+.p4r1-root .fr-write-context-children>li>button{padding:7px 10px;}
+
 /* C14 · MAIA’s understanding of the writer — author-declared, inspectable context. */
 .p4r1-root .p4r1-writer-understanding{display:grid;gap:16px;padding:20px}
 .p4r1-root .p4r1-wu-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}

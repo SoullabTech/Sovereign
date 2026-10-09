@@ -348,6 +348,14 @@ export function WriteManuscriptRail({
     return null;
   };
   const [query, setQuery] = useState('');
+  // Import sometimes starts with an untitled fragment, repeated title pages
+  // and table-of-contents headings. They remain real, selectable sections, but
+  // are kept behind an "Opening pages" disclosure rather than masquerading as
+  // Chapters. This is a display-only grouping, never manuscript structure.
+  const firstBookBoundary = fixture.chapters.findIndex(c => c.role === 'part' || c.role === 'chapter');
+  const openingPages = firstBookBoundary > 0 ? fixture.chapters.slice(0, firstBookBoundary) : [];
+  const [openOpening, setOpenOpening] = useState(false);
+  const [openBibliography, setOpenBibliography] = useState(false);
   const currentOwner = chapterOwnerOf(fixture.currentChapterId);
   const [openChapters, setOpenChapters] = useState<ReadonlySet<string>>(
     () => new Set(currentOwner ? [currentOwner] : []),
@@ -443,8 +451,49 @@ export function WriteManuscriptRail({
   }
 
   const rows: JSX.Element[] = [];
-  for (let i = 0; i < fixture.chapters.length;) {
+  if (openingPages.length > 0) {
+    rows.push(
+      <li key="opening-pages" className="fr-write-context-group"
+        data-outline-disclosure="opening" data-open={openOpening ? 'true' : 'false'}>
+        <button type="button" className="fr-write-disclosure"
+          aria-label={`${openOpening ? 'Collapse' : 'Expand'} opening pages`}
+          aria-expanded={openOpening} onClick={() => setOpenOpening(v => !v)}>
+          <span aria-hidden="true">{openOpening ? '⌄' : '›'}</span>
+          Opening pages
+          <small>{openingPages.length} stored sections</small>
+        </button>
+        {openOpening ? <ol className="fr-write-context-children">
+          {openingPages.map(c => <li key={c.id}>{navButton(c)}</li>)}
+        </ol> : null}
+      </li>,
+    );
+  }
+  for (let i = Math.max(0, firstBookBoundary); i < fixture.chapters.length;) {
     const item = fixture.chapters[i]!;
+    // Bibliographic chapter citations can read "Chapter 5" but they are
+    // not body chapters. Keep the full reference section reachable, folded.
+    if (item.role === 'other' && item.depth === 1 && /^bibliography$/i.test(item.label.trim())) {
+      let end = i + 1;
+      while (end < fixture.chapters.length && fixture.chapters[end]?.depth !== 1) end++;
+      const bibliography = fixture.chapters.slice(i, end);
+      rows.push(
+        <li key={item.id} className="fr-write-context-group"
+          data-outline-disclosure="bibliography" data-open={openBibliography ? 'true' : 'false'}>
+          <button type="button" className="fr-write-disclosure"
+            aria-label={`${openBibliography ? 'Collapse' : 'Expand'} bibliography`}
+            aria-expanded={openBibliography} onClick={() => setOpenBibliography(v => !v)}>
+            <span aria-hidden="true">{openBibliography ? '⌄' : '›'}</span>
+            Bibliography
+            <small>{bibliography.length} stored sections</small>
+          </button>
+          {openBibliography ? <ol className="fr-write-context-children">
+            {bibliography.map(c => <li key={c.id}>{navButton(c)}</li>)}
+          </ol> : null}
+        </li>,
+      );
+      i = end;
+      continue;
+    }
     if (item.role === 'part') {
       rows.push(<li key={item.id} className="fr-write-part-row">{navButton(item, 'fr-write-part-nav')}</li>);
       i += 1;
