@@ -99,8 +99,8 @@ Credential (held by the operator, requested by callback only at send time, never
 Per attempt, in the hash-chained ledger and the independent checkpoint: `reserved` (attempt id, body hash, reserve amount) → `observed` (p_yes, model returned, token counts, latency, **the full canonical response text** and its SHA-256) → `settled` (cost). Observed records are *observations only*: they never pass through the J1 admission path and drive no JARVIS decision. The caller's summary is content-free.
 
 ### Conditions that immediately stop execution (each is permanent until a human inspects)
-- Off-switch closed, no valid grant, grant hash not confirmed by the operator, or grant outside its window/caps (before anything is created).
-- Storage unsafe at start, or **changed at any later point** (checked before every attempt and again just before each send) → a `STORAGE_*` stop. (The exact identifier depends on which wrapper implementation is integrated; see the reconciliation record.)
+- Off-switch closed, no valid grant, grant hash not confirmed by the operator, grant outside its window/caps, or — for a real-provider grant — an injected stand-in transport or test clock (before anything is created).
+- Storage unsafe at start, or **changed at any later point** (checked before every attempt and again just before each send) → a `STORAGE_<check>` stop (e.g. `STORAGE_CHECKPOINT_DIR`); the two records are also required to agree immediately before each send.
 - Attempt cap (grant, ≤31), spend cap (grant, ≤ $1.00 incl. a $0.005 reservation per attempt), grant expiry mid-run.
 - Any non-ok outcome: transport error, **30 s deadline**, HTTP error, redirect, wrong content type, oversized/incomplete body, a response the parser refuses, model drift, usage above the reservation → recorded as halted; **no retry and no resend**.
 - A crossing of unknown outcome (request may have left, no valid answer) halts permanently and is never resent.

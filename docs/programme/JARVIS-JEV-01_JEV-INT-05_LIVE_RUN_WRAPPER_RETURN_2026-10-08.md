@@ -1,5 +1,8 @@
 # JEV-INT-05 — default-disabled live-run wrapper: return record (2026-10-08)
 
+> **History note — 2026-10-09.** This record describes the wrapper at `41caa8f79` (blob `54ac9dd22438`) and its 12-check proof / 33-candidate matrix. The current wrapper is the Mac-authored hardening of that code (`b48e0c623`, blob `32a5b51dde5c`), adopted unchanged; counts, identifiers and limits below are not those of the current candidate. See `JARVIS-JEV-01_JEV-INT-05_WRAPPER_INTEGRATION_A_2026-10-09.md`.
+
+
 **OFF · candidate · unratified · nothing authorized.** No credential accessed, no provider registered, no inference call, no spend, no ratification, no deploy. Loopback mock and dummy credential only. PILOT-01 deferred; no labels. J1 frozen files, adapter, checkpoint and wire modules unedited (`git diff` empty on them); E1–E3, C1/C2 and checkpoint design not reopened.
 
 ## Delivered

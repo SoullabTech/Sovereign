@@ -1,5 +1,8 @@
 # JEV-INT-05 — live-run wrapper: reconciliation of two independent repairs (2026-10-09)
 
+> **Decision taken 2026-10-09: A — adopt the Mac implementation (M, `b48e0c623`) unchanged.** The two optional refinements of §8 stay outside the integration (same-device directory replacement is recorded as a residual risk to evaluate before any activation; storage-error naming remains an observability improvement). Integration record: `JARVIS-JEV-01_JEV-INT-05_WRAPPER_INTEGRATION_A_2026-10-09.md`. The text below is the decision basis, unedited.
+
+
 **OFF · candidate · unratified · nothing authorized.** Read-only comparison. No merge, no push to any other branch, no change to either wrapper, no provider contact, no credential, no spend, the committed switch is still `witnessed: false`, PILOT-01 untouched. The only repository changes in this commit are documentation, one new test instrument, its evidence, and a labelling correction to my own payload document (§9).
 
 ## 1. What is being reconciled
