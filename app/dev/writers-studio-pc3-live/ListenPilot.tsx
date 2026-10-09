@@ -10,6 +10,11 @@ import type { StudioMode } from '@/app/writers-studio/full-redesign/types';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { fullPrefaceReading } from '@/lib/writersStudio/listen/fullPrefaceReading';
 import {
+  createMonoCaptureRoute,
+  type InputChannel,
+  type MonoCaptureRoute,
+} from '@/lib/writersStudio/listen/monoCaptureRoute';
+import {
   browserCaptureInfo,
   outputFormatLabel,
   preferredRecorderMime,
@@ -28,7 +33,13 @@ type Take = {
   sourceSectionIds: readonly string[];
   sourceVersion: number | null;
   capture: BrowserCaptureInfo;
+  inputChannel: InputChannel;
+  outputChannels: number;
+  durationSeconds: number;
 };
+function formatDuration(seconds: number): string {
+  return Math.floor(seconds / 60) + ':' + String(Math.floor(seconds % 60)).padStart(2, '0');
+}
 
 export default function ListenPilot() {
   const params = useSearchParams();
@@ -43,10 +54,13 @@ export default function ListenPilot() {
   const [notes, setNotes] = useState('');
   const [mic, setMic] = useState('');
   const [mics, setMics] = useState<MediaDeviceInfo[]>([]);
+  const [inputChannel, setInputChannel] = useState<InputChannel>(1);
+  const [routedOutput, setRoutedOutput] = useState<{ channel: InputChannel; outputChannels: number; rateHz: number } | null>(null);
   const [captureInfo, setCaptureInfo] = useState<BrowserCaptureInfo | null>(null);
   const [inspecting, setInspecting] = useState(false);
   const media = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
+  const monoRouteRef = useRef<MonoCaptureRoute | null>(null);
   const chunks = useRef<Blob[]>([]);
   const takesRef = useRef<Take[]>([]);
 
@@ -54,6 +68,7 @@ export default function ListenPilot() {
   useEffect(() => () => {
     if (media.current?.state === 'recording') media.current.stop();
     stream.current?.getTracks().forEach((t) => t.stop());
+    if (monoRouteRef.current) void monoRouteRef.current.close().catch(() => {});
     takesRef.current.forEach((t) => URL.revokeObjectURL(t.url));
   }, []);
   useEffect(() => {
@@ -139,17 +154,24 @@ export default function ListenPilot() {
       const audio = await navigator.mediaDevices.getUserMedia({ audio: recordingConstraints(mic) });
       stream.current = audio;
       chunks.current = [];
+      const routed = await createMonoCaptureRoute(audio, inputChannel);
+      monoRouteRef.current = routed;
+      setRoutedOutput({ channel: routed.inputChannel, outputChannels: routed.outputChannels, rateHz: routed.outputRateHz });
       const mime = preferredRecorderMime();
-      const rec = new MediaRecorder(audio, mime ? { mimeType: mime } : undefined);
+      const rec = new MediaRecorder(routed.stream, mime ? { mimeType: mime } : undefined);
       media.current = rec;
       const capture = browserCaptureInfo(audio.getAudioTracks()[0]?.getSettings() ?? {}, rec.mimeType);
       setCaptureInfo(capture);
       const title = selectedTitle.replace(/[^a-z0-9_-]+/gi, '-').slice(0, 60);
       const sourceSectionIds = readingSections.map((s) => s.draftSectionId);
       const sourceVersion = source?.version ?? null;
+      let recordingStartMs = 0;
       rec.ondataavailable = (e) => { if (e.data.size) chunks.current.push(e.data); };
       rec.onstop = () => {
+        const durationSeconds = Math.max(0, Math.round((Date.now() - recordingStartMs) / 1000));
         audio.getTracks().forEach((t) => t.stop());
+        if (monoRouteRef.current === routed) monoRouteRef.current = null;
+        void routed.close().catch(() => {});
         stream.current = null;
         media.current = null;
         const blob = new Blob(chunks.current, { type: rec.mimeType || 'audio/webm' });
@@ -160,16 +182,27 @@ export default function ListenPilot() {
             sourceSectionIds,
             sourceVersion,
             capture,
+            inputChannel: routed.inputChannel,
+            outputChannels: routed.outputChannels,
+            durationSeconds,
           }]);
         } else setError('No audio captured.');
         setRecording(false);
       };
       rec.onerror = () => setError('Recording error. Stop and try again.');
       rec.start(1000);
+      recordingStartMs = Date.now();
       setRecording(true);
       setError('');
       // Do not probe the microphone again while the recording is active.
-    } catch { setError('Microphone unavailable or permission denied.'); }
+    } catch (cause) {
+      stream.current?.getTracks().forEach((t) => t.stop());
+      stream.current = null;
+      if (monoRouteRef.current) void monoRouteRef.current.close().catch(() => {});
+      monoRouteRef.current = null;
+      setRecording(false);
+      setError(cause instanceof Error ? cause.message : 'Microphone or mono routing unavailable.');
+    }
   };
   const download = (url: string, name: string) => {
     const a = document.createElement('a');
@@ -279,12 +312,27 @@ export default function ListenPilot() {
                         </select>
                       </>
                     )}
+                    <div className={styles.channelPicker}>
+                      <label htmlFor="listen-input-channel" className={styles.fieldLabel}>Which Scarlett input has your microphone?</label>
+                      <select
+                        id="listen-input-channel"
+                        value={inputChannel}
+                        className={styles.select}
+                        disabled={recording || inspecting}
+                        onChange={(e) => { setInputChannel(Number(e.target.value) as InputChannel); setRoutedOutput(null); }}
+                      >
+                        <option value={1}>Input 1 (left) — microphone in first jack</option>
+                        <option value={2} disabled={captureInfo?.microphoneChannels === 1}>Input 2 (right) — microphone in second jack</option>
+                      </select>
+                      <p className={styles.channelHelp}>Listen captures the selected physical input as one centered mono channel. Use Input 1 for the microphone used in your first Preface take.</p>
+                    </div>
                     <div className={styles.formatPanel} data-capture-format-panel>
                       <h4 className={styles.formatHeading}>Recording specifications</h4>
                       <dl className={styles.formatFacts}>
                         <div><dt>Reported microphone rate</dt><dd>{captureInfo?.microphoneSampleRateHz ? (captureInfo.microphoneSampleRateHz / 1000).toLocaleString() + ' kHz' : 'Not reported yet'}</dd></div>
                         <div><dt>Microphone channels</dt><dd>{captureInfo?.microphoneChannels ?? 'Not reported yet'}</dd></div>
                         <div><dt>Output file</dt><dd>{outputFormatLabel(captureInfo?.outputMimeType ?? preferredRecorderMime())}</dd></div>
+                        <div><dt>Output routing</dt><dd>{routedOutput ? 'Input ' + routedOutput.channel + ' → ' + routedOutput.outputChannels + ' channel mono' : 'Input ' + inputChannel + ' → mono when recording'}</dd></div>
                         <div><dt>24-bit PCM WAV</dt><dd>Not available in this pilot</dd></div>
                       </dl>
                       {captureInfo?.microphoneSampleRateHz && captureInfo.microphoneSampleRateHz !== 48000 && (
@@ -293,8 +341,8 @@ export default function ListenPilot() {
                         </p>
                       )}
                       {captureInfo?.microphoneChannels && captureInfo.microphoneChannels !== 1 && (
-                        <p className={styles.formatWarning} role="status">
-                          The browser reports {captureInfo.microphoneChannels} input channels (mono was requested). Check the microphone channel assignment before an audiobook take.
+                        <p className={styles.formatInfo}>
+                          Your interface exposes {captureInfo.microphoneChannels} physical input channels. The new mono route selects input {inputChannel} and records it centered instead of leaving the opposite speaker silent.
                         </p>
                       )}
                       <p className={styles.formatExplanation}>We request a 48 kHz mono microphone feed with processing off, but your browser and hardware decide the actual input settings. A reported input rate does not make the compressed recording a 24-bit WAV master.</p>
@@ -316,7 +364,7 @@ export default function ListenPilot() {
                     {takes.map((t) => (
                       <div key={t.id} className={styles.take}>
                         <strong>{t.filename}</strong>
-                        <p className={styles.takeDetail}>Manuscript v{t.sourceVersion ?? 'unknown'} · {t.sourceSectionIds.length} source {t.sourceSectionIds.length === 1 ? 'section' : 'sections'} · {outputFormatLabel(t.capture.outputMimeType)}</p>
+                        <p className={styles.takeDetail}>Manuscript v{t.sourceVersion ?? 'unknown'} · {t.sourceSectionIds.length} source {t.sourceSectionIds.length === 1 ? 'section' : 'sections'} · {formatDuration(t.durationSeconds)} recorded · Input {t.inputChannel} → {t.outputChannels}-channel mono · {outputFormatLabel(t.capture.outputMimeType)}</p>
                         <audio controls src={t.url} className={styles.audio} aria-label={'Listen to ' + t.filename} />
                         <div className={styles.takeActions}>
                           <button type="button" className={styles.secondaryButton} onClick={() => download(t.url, t.filename)}>Download original</button>

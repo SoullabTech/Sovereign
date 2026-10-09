@@ -206,3 +206,23 @@
   .readingCard, .recordingCard { height: auto; max-height: none; }
   .recordingCard { overflow: visible; }
 }
+
+/* A Scarlett/USB interface exposes physical channels, not stereo programme.
+   Make source selection explicit, but keep the audio itself mono. */
+.channelPicker {
+  margin-top: 17px;
+}
+.channelHelp {
+  margin: 10px 0 0;
+  color: #5c7372;
+  font: 400 12.5px/1.6 var(--fr-sans-stack, system-ui);
+}
+.formatInfo {
+  border-left: 3px solid #89ad9d;
+  background: #e8f0e9;
+  color: #3d635a;
+  padding: 9px 11px;
+  border-radius: 4px 7px 7px 4px;
+  margin: 10px 0 0;
+  font: 500 12.5px/1.6 var(--fr-sans-stack, system-ui);
+}
