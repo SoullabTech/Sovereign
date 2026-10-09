@@ -322,9 +322,14 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
        the writer clicks the place already open. Keep it visible to the right
        hand support field instead of treating same-place selection as a no-op. */
     setRailSelectionId(sectionId);
-    if (sectionId === props.writing.activeId) return;
-    props.writing.goToSection(sectionId);
+    /* A rail choice always establishes Studio place, including a click on the
+       section the editor already happens to have active. Otherwise the visible
+       selection can succeed while the URL/focus still names somewhere else. */
     props.onFocusSection(sectionId);
+    if (sectionId === props.writing.activeId) return;
+    /* Both calls are synchronous; goToSection still captures the outgoing
+       visible text before changing its own active section. */
+    props.writing.goToSection(sectionId);
   }, [props]);
 
   useEffect(() => {
@@ -1250,9 +1255,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           manuscript={<WriteManuscriptRail fixture={projection.data} onOpenChapter={go} />}
           work={workSurface}
           maia={shellMaia}
-          manuscriptResizable={props.surfaceMode === 'develop-craft'}
+          manuscriptResizable
           manuscriptDefaultWidth={280}
-          maiaResizable={shellHasCraftEditorial}
+          maiaResizable={shellMaia != null}
           maiaDefaultShare={42}
         />
 

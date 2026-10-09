@@ -334,7 +334,7 @@ export function WriteManuscriptRail({
   onAct,
   onOpenChapter,
 }: {
-  fixture: WriteRoomData;
+  fixture: Pick<WriteRoomData, 'heading' | 'chapters' | 'currentChapterId'>;
   onAct?: (act: string) => void;
   onOpenChapter?: (chapterId: string) => void;
 }) {
@@ -347,6 +347,7 @@ export function WriteManuscriptRail({
     }
     return null;
   };
+  const [query, setQuery] = useState('');
   const currentOwner = chapterOwnerOf(fixture.currentChapterId);
   const [openChapters, setOpenChapters] = useState<ReadonlySet<string>>(
     () => new Set(currentOwner ? [currentOwner] : []),
@@ -368,6 +369,7 @@ export function WriteManuscriptRail({
        mode keeps the old no-op behavior when there is no live navigation port. */
     if (onOpenChapter) {
       onOpenChapter(c.id);
+      setQuery('');
       return;
     }
     if (c.id === fixture.currentChapterId) return;
@@ -396,11 +398,43 @@ export function WriteManuscriptRail({
     );
   };
 
+  // Search the entire outline, including folded children. No reading, request,
+  // source rewriting or inferred chapter is created by searching or folding.
+  const normalized = (value: string) => value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
+  const terms = normalized(query).split(/\s+/).filter(Boolean);
+  const found = fixture.chapters.filter(c => {
+    const owner = fixture.chapters.find(item => item.id === chapterOwnerOf(c.id));
+    const label = normalized([c.label, c.title, owner?.label, owner?.title].filter(Boolean).join(' '));
+    return terms.every(term => label.includes(term));
+  });
+  const controls = (
+    <div className="fr-outline-controls">
+      <p className="fr-write-rail-head">{fixture.heading}</p>
+      <label className="fr-outline-search">
+        <span>Find a chapter or section</span>
+        <input type="search" value={query} maxLength={200} onChange={event => setQuery(event.target.value)}
+          placeholder="Heading or chapter name" autoComplete="off" />
+      </label>
+      <div className="fr-outline-actions">
+        <button type="button" onClick={() => setOpenChapters(new Set())}>Fold chapters</button>
+        <button type="button" onClick={() => setOpenChapters(new Set(fixture.chapters.filter(c => c.role === 'chapter').map(c => c.id)))}>Show sections</button>
+      </div>
+      {query.trim() ? <p role="status" className="fr-outline-count">{found.length} {found.length === 1 ? 'place' : 'places'} found · <button type="button" onClick={() => setQuery('')}>Clear search</button></p> : null}
+    </div>
+  );
+  if (query.trim()) return (
+    <div className="fr-write-rail" data-outline-search-results>
+      {controls}
+      <ol className="fr-write-chapters">{found.map(c => <li key={c.id}>{navButton(c)}</li>)}</ol>
+      {!found.length ? <p className="fr-outline-empty">No heading matches. Try another word or clear the search.</p> : null}
+    </div>
+  );
+
   const structured = fixture.chapters.some((c) => c.role === 'part' || c.role === 'chapter');
   if (!structured) {
     return (
       <div className="fr-write-rail">
-        <p className="fr-write-rail-head">{fixture.heading}</p>
+        {controls}
         <ol className="fr-write-chapters">
           {fixture.chapters.map((c) => <li key={c.id}>{navButton(c)}</li>)}
         </ol>
@@ -461,7 +495,7 @@ export function WriteManuscriptRail({
 
   return (
     <div className="fr-write-rail" data-manuscript-hierarchy="parts-chapters-sections">
-      <p className="fr-write-rail-head">{fixture.heading}</p>
+      {controls}
       <ol className="fr-write-chapters">{rows}</ol>
     </div>
   );

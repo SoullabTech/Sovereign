@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Shell, ChevronDown } from '@/app/writers-studio/full-redesign/Shell';
+import { WriteManuscriptRail } from '@/app/writers-studio/full-redesign/WriteRoom';
+import { outlineTree } from '@/lib/writersStudio/focus/outlineTree';
 import { STATE_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import { IMAGES } from '@/app/writers-studio/full-redesign/fixtures';
 import ObservationDialogue from '@/app/writers-studio/develop/ObservationDialogue';
@@ -287,46 +289,18 @@ function ManuscriptRail({ sections, currentSectionId, onSection }: {
   currentSectionId: string | null;
   onSection: (id: string) => void;
 }) {
-  const current = sections.find((section) => section.draftSectionId === currentSectionId) ?? null;
-  const structural = sections
-    .filter((section) => section.heading?.trim() && (section.headingDepth === 1 || section.headingDepth === 2))
-    .filter((section, index, all) => {
-      if (index === 0) return true;
-      return all[index - 1]?.heading?.trim().toLowerCase() !== section.heading?.trim().toLowerCase();
-    });
-  const railSections = structural.length > 0
-    ? structural
-    : sections.filter((section) => section.heading?.trim());
-
-  let activeRailId: string | null = currentSectionId;
-  if (current && !railSections.some((section) => section.draftSectionId === currentSectionId)) {
-    activeRailId = [...railSections]
-      .filter((section) => section.position <= current.position)
-      .sort((a, b) => b.position - a.position)[0]?.draftSectionId ?? null;
-  }
-
-  return (
-    <div className="fr-ms">
-      <div className="fr-ms-head"><h2>Manuscript <ChevronDown /></h2></div>
-      <ol className="fr-chapters p4r1-structural-rail">
-        {railSections.map((section) => (
-          <li
-            key={section.draftSectionId}
-            className={section.draftSectionId === activeRailId ? 'fr-current' : undefined}
-            data-depth={section.headingDepth ?? undefined}
-          >
-            <button
-              type="button"
-              onClick={() => onSection(section.draftSectionId)}
-              aria-current={section.draftSectionId === activeRailId ? 'true' : undefined}
-            >
-              <b>{section.heading?.trim()}</b>
-            </button>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
+  // The same navigable outline as Write, projected from stored heading evidence.
+  // Include deeper and unnamed sections; duplicate headings retain distinct IDs.
+  const tree = outlineTree(sections.map(section => ({
+    draftSectionId: section.draftSectionId, position: section.position,
+    heading: section.heading, depth: section.headingDepth,
+  })));
+  const flatten = (nodes: typeof tree): typeof tree => nodes.flatMap(node => [node, ...flatten(node.children)]);
+  return <WriteManuscriptRail fixture={{
+    heading: 'Manuscript', currentChapterId: currentSectionId ?? '',
+    chapters: flatten(tree).map(node => ({id: node.draftSectionId,
+      label: node.heading?.trim() || 'Untitled section', role: node.role, depth: node.depth})),
+  }} onOpenChapter={onSection} />;
 }
 
 function SavedReadings({ field, summaries, loading, onReading }: {
@@ -1969,6 +1943,17 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const [attentionConversationDraft, setAttentionConversationDraft] = useState('');
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
 
+  /* The URL/current manuscript locus survives navigation; component-local state does not.
+     Reconstitute the relational locus after a section jump so selecting a section
+     cannot look like a no-op merely because the route remounted Develop. Chapter
+     roots remain owned by the chapter-level review surface. */
+  useEffect(() => {
+    const sectionId = props.currentSectionId;
+    if (!sectionId) { setRailSelectionId(null); return; }
+    const chapter = chapterSpanFor(props.sections, sectionId);
+    setRailSelectionId(chapter?.root.draftSectionId === sectionId ? null : sectionId);
+  }, [props.currentSectionId, props.sections]);
+
   useEffect(() => {
     setSelectedObservationKey(props.reading?.observations[0]?.key ?? null);
     setTalking(false);
@@ -1984,6 +1969,12 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     (section) => section.draftSectionId === railSelectionId,
   ) ?? null;
   const selectedRailLabel = selectedRailSection?.heading?.trim() || 'Selected place';
+  const selectedRailChapter = selectedRailSection
+    ? chapterSpanFor(props.sections, selectedRailSection.draftSectionId)
+    : null;
+  const selectedRailIsChapterRoot = Boolean(selectedRailSection
+    && selectedRailChapter?.root.draftSectionId === selectedRailSection.draftSectionId);
+  const selectedRailKind = selectedRailIsChapterRoot ? 'chapter' : 'section';
 
   const selectManuscriptLocus = (sectionId: string) => {
     const chapter = chapterSpanFor(props.sections, sectionId);
@@ -2235,20 +2226,20 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
           <div className="p4r1-locus-arrival" data-develop-locus={selectedRailSection.draftSectionId}>
             <section className="fr-card p4r1-locus-primary">
               <span className="p4r1-eyebrow">
-                {props.scope.kind === 'chapter' ? 'Chapter selected' : 'Section selected'}
+                {selectedRailIsChapterRoot ? 'Chapter selected' : 'Section selected'}
               </span>
               <h3>{selectedRailLabel}</h3>
               <p>
-                I’m with you here. We can begin by talking about what this chapter or section is trying to become,
+                I’m with you here. We can begin by talking about what this {selectedRailKind} is trying to become,
                 or you can ask me to look through one particular lens. You do not need to translate your question into editorial language first.
               </p>
-              <div className="p4r1-locus-actions">
+              <div className="p4r1-develop-locus-actions">
                 <button
                   type="button"
                   className="p4r1-talk"
                   onClick={() => beginWholeConversation([
                     `I selected “${selectedRailLabel}” in Develop.`,
-                    'Stay with this exact chapter or section.',
+                    `Stay with this exact ${selectedRailKind}.`,
                     'Help me understand what it is doing, what may be alive or unresolved here, and ask me one useful question before suggesting changes.',
                   ].join('\n\n'))}
                 >
@@ -2627,8 +2618,10 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               <span className="p4r1-eyebrow">You’re here</span>
               <h3>{selectedRailLabel}</h3>
               <p>
-                We can stay with this {props.scope.kind === 'chapter' ? 'chapter' : 'section'} as a whole.
-                Choosing it did not trigger a new reading. If you want MAIA to read it for {LABEL[activeField].toLowerCase()}, ask directly here.
+                We can stay with this {selectedRailKind} as a whole.
+                Choosing it did not trigger a new reading. {props.scope.kind === 'chapter' && !selectedRailIsChapterRoot
+                  ? 'A formal lens reading from here currently covers its containing chapter.'
+                  : `If you want MAIA to read this ${selectedRailKind} for ${LABEL[activeField].toLowerCase()}, ask directly here.`}
               </p>
               <div className="p4r1-selected-place-actions">
                 <button type="button" onClick={() => beginWholeConversation([
@@ -2644,7 +2637,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 >
                   {props.commissioning
                     ? 'MAIA is reading…'
-                    : `Read this ${props.scope.kind === 'chapter' ? 'chapter' : 'section'} for ${LABEL[activeField]}`}
+                    : `${props.scope.kind === 'chapter' && !selectedRailIsChapterRoot ? 'Read containing chapter' : `Read this ${selectedRailKind}`} for ${LABEL[activeField]}`}
                 </button>
                 <button type="button" onClick={() => props.onMode('write')}>Open the text</button>
               </div>
@@ -2927,14 +2920,14 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         ) : railSelectionId && selectedRailSection ? (
           <div className="p4r1-locus-support" data-develop-locus-support={selectedRailSection.draftSectionId}>
             <span className="p4r1-eyebrow">
-              {props.scope.kind === 'chapter' ? 'Chapter selected' : 'Section selected'}
+              {selectedRailIsChapterRoot ? 'Chapter selected' : 'Section selected'}
             </span>
             <h3>{selectedRailLabel}</h3>
             <p>
-              I’m with you in this {props.scope.kind === 'chapter' ? 'chapter' : 'section'} now.
+              I’m with you in this {selectedRailKind} now.
               We can talk before analyzing anything, or you can choose the kind of attention you want from me.
             </p>
-            <div className="p4r1-locus-actions p4r1-locus-actions--relational">
+            <div className="p4r1-develop-locus-actions p4r1-develop-locus-actions--relational">
               <button
                 type="button"
                 className="p4r1-talk"
@@ -2977,8 +2970,11 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     </div>
   );
 
-  const maiaConversationActive = chapterDialogue !== null || talking || workTalking;
-
+  /* Selecting a locus or saved observation is already a relational act.
+     MAIA must visibly orient there before the writer starts a conversation. */
+  // Keep MAIA in the same room at rest. Previously the conditional gate
+  // removed the region whenever no conversation was active, leaving a large
+  // blank third column precisely when the writer needed orientation.
   return (
     <Shell
       mode="develop"
@@ -2989,8 +2985,10 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       onSelectMode={props.onMode}
       manuscript={<ManuscriptRail sections={props.sections} currentSectionId={props.currentSectionId} onSection={selectManuscriptLocus} />}
       work={center}
-      maia={maiaConversationActive ? maia : undefined}
-      maiaResizable={maiaConversationActive}
+      maia={maia}
+      manuscriptResizable
+      manuscriptDefaultWidth={280}
+      maiaResizable
       maiaDefaultShare={46}
     />
   );

@@ -1099,7 +1099,16 @@ export default function P4R1DevelopController() {
             setChapterReviewProgress(null);
             return;
           }
-          setChapterReviewError('MAIA could not finish the chapter reading. Nothing in your writing changed.');
+          const failureMessage = commissioned.stage === 'read' && commissioned.refusal === 'provider_unavailable'
+            ? 'MAIA’s reading provider was unavailable. No new chapter reading was saved and your manuscript is unchanged.'
+            : commissioned.stage === 'read' && commissioned.refusal === 'structured_inference_unavailable'
+              ? 'This environment does not currently permit a structured chapter reading. Nothing in your manuscript changed.'
+              : commissioned.stage === 'recover'
+                ? 'MAIA could not recover the saved draft for this chapter. No new reading was saved.'
+                : commissioned.stage === 'store'
+                  ? 'MAIA could not safely save the reading. Your manuscript remains unchanged.'
+                  : 'MAIA could not finish the chapter reading. Nothing in your writing changed.';
+          setChapterReviewError(failureMessage);
           setChapterReviewProgress(null);
           return;
         }

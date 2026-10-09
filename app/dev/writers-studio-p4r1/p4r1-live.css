@@ -3625,6 +3625,15 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:auto}
   border:1px solid var(--fr-line);border-radius:8px;background:var(--fr-field);color:var(--fr-title)
 }
 
+/* Develop locus actions are not the retired passage-selection ribbon above. */
+.p4r1-root .p4r1-develop-locus-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.p4r1-root .p4r1-develop-locus-actions button{
+  min-height:36px;border:1px solid var(--fr-line);border-radius:9px;background:var(--fr-panel);
+  color:var(--fr-title);padding:8px 11px;font:600 11.5px/1.25 var(--fr-sans-stack);cursor:pointer
+}
+.p4r1-root .p4r1-develop-locus-actions .p4r1-talk{background:var(--fr-held);border-color:var(--fr-action-line)}
+.p4r1-root .p4r1-develop-locus-actions--relational{position:static;padding:0;background:transparent}
+
 /* Theme-safe text: no native/button black may leak into the night surfaces. */
 .p4r1-root .p4r1-developmental-options button,
 .p4r1-root .p4r1-lineage-panel,
@@ -5893,7 +5902,7 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
       10px
       minmax(0, var(--fr-live-work-fr, 58fr))
       10px
-      minmax(340px, var(--fr-live-maia-fr, 42fr)) !important;
+      minmax(var(--fr-live-maia-min, 340px), var(--fr-live-maia-fr, 42fr)) !important;
     column-gap: 0;
   }
 
@@ -5911,7 +5920,7 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
       var(--fr-ms-w)
       minmax(0, var(--fr-live-work-fr, 56fr))
       10px
-      minmax(340px, var(--fr-live-maia-fr, 44fr)) !important;
+      minmax(var(--fr-live-maia-min, 340px), var(--fr-live-maia-fr, 44fr)) !important;
     column-gap: 0;
   }
 
@@ -5920,6 +5929,15 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
     margin-left: 0;
     margin-right: 0;
   }
+
+  /* Write's accepted resting layout pins Work to column 2. A resizable
+     manuscript inserts a real divider as column 2, so the Work must move to
+     column 3 or it overlaps the rail and steals its pointer events. */
+  .p4r1-root .fr-shell[data-mode='write'] .fr-room[data-resizable-manuscript='true'] > .fr-manuscript { grid-column: 1; }
+  .p4r1-root .fr-shell[data-mode='write'] .fr-room[data-resizable-manuscript='true'] > .fr-manuscript-divider { grid-column: 2; }
+  .p4r1-root .fr-shell[data-mode='write'] .fr-room[data-resizable-manuscript='true'] > .fr-work { grid-column: 3; }
+  .p4r1-root .fr-shell[data-mode='write'] .fr-room[data-resizable-manuscript='true'][data-resizable-maia='true'] > .fr-maia-divider { grid-column: 4; }
+  .p4r1-root .fr-shell[data-mode='write'] .fr-room[data-resizable-manuscript='true'][data-resizable-maia='true'] > .fr-maia { grid-column: 5; }
 }
 
 .p4r1-root .fr-manuscript-divider,
@@ -6189,3 +6207,28 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
 .p4r1-root .p4r1-craft-selected small { display: block; margin-top: 4px; color: var(--fr-muted); }
 .p4r1-root [data-maia-current-focus] { color: var(--fr-action); }
 .p4r1-root .p4r1-craft-focus-references button + button { margin-left: 6px; margin-top: 5px; }
+
+/* STUDIO-NAVIGATION-R1: one outline and reversible, presentation-only panels. */
+.p4r1-root .fr-column-controls { display:flex; flex:0 0 auto; justify-content:flex-end; gap:8px; padding:5px 12px; border-bottom:1px solid var(--fr-line-soft); background:var(--fr-field); }
+.p4r1-root .fr-column-controls button { border:1px solid var(--fr-line); border-radius:6px; padding:4px 10px; background:transparent; color:var(--fr-ink2); font:600 12px/1.4 var(--fr-sans-stack); cursor:pointer; }
+.p4r1-root .fr-column-controls button:focus-visible, .p4r1-root .fr-outline-controls input:focus-visible, .p4r1-root .fr-outline-controls button:focus-visible { outline:2px solid var(--fr-action); outline-offset:2px; }
+.p4r1-root .fr-room[data-maia-collapsed='true'] > .fr-maia { visibility:hidden; pointer-events:none; }
+.p4r1-root .fr-room[data-maia-collapsed='true'] > .fr-maia-divider { cursor:w-resize; }
+.p4r1-root .fr-outline-controls { padding:14px 12px 12px; border-bottom:1px solid var(--fr-line-soft); }
+.p4r1-root .fr-outline-controls .fr-write-rail-head { padding:0; margin:0 0 12px; }
+.p4r1-root .fr-outline-search { display:block; color:var(--fr-ink2); font:12px/1.5 var(--fr-sans-stack); }
+.p4r1-root .fr-outline-search span { display:block; margin-bottom:5px; }
+.p4r1-root .fr-outline-search input { display:block; box-sizing:border-box; min-width:0; width:100%; border:1px solid var(--fr-line); border-radius:6px; padding:8px; color:var(--fr-title); background:var(--fr-panel); font:14px/1.4 var(--fr-sans-stack); }
+.p4r1-root .fr-outline-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:9px; }
+.p4r1-root .fr-outline-actions button, .p4r1-root .fr-outline-count button { border:0; padding:3px 0; color:var(--fr-action); background:transparent; font:12px/1.5 var(--fr-sans-stack); cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+.p4r1-root .fr-outline-count, .p4r1-root .fr-outline-empty { margin:8px 0 0; color:var(--fr-muted); font:12px/1.5 var(--fr-sans-stack); }
+.p4r1-root .fr-outline-empty { padding:12px; }
+.p4r1-root .fr-write-chapters button { min-width:0; }
+.p4r1-root .fr-write-ch-no, .p4r1-root .fr-write-ch-title { white-space:normal; overflow-wrap:anywhere; word-break:normal; }
+@media (max-width:1179px) {
+  .p4r1-root .fr-room[data-maia-collapsed='true'] > .fr-maia,
+  .p4r1-root .fr-room[data-manuscript-collapsed='true'] > .fr-manuscript { display:none !important; }
+  .p4r1-root .fr-room[data-maia-collapsed='true'] { grid-template-columns:minmax(0,1fr) !important; }
+  .p4r1-root .fr-room[data-maia-collapsed='true'] > .fr-work,
+  .p4r1-root .fr-room[data-maia-collapsed='true'] > .fr-manuscript { grid-column:1; }
+}
