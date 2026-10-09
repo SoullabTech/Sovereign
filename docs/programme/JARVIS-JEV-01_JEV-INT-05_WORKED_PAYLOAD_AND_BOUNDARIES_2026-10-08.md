@@ -5,7 +5,11 @@
 ## 0. How this was derived (not reconstructed)
 `scripts/builder/__tests__/jev-wire-payload-capture.mjs` runs the **real** frozen modules — `planAttempt` (wire body), the reviewed HTTP adapter (headers, framing), the real runner and ledger — against a **loopback capture server** with the placeholder key `<API-KEY-PLACEHOLDER>`. The switch is opened only in a temporary copy of the wire module (as the test suites do). Raw output: `docs/programme/evidence/jev-int05-payload-capture-20261008/payload-capture.json` (SHA-256 in `SHA256SUMS.txt`). Checks recorded: 31 attempts captured; every captured body is byte-identical to the planned body (`all_bodies_match_plan: true`); 19 distinct bodies (the other 12 are deliberate repeats of F01, F10, F14 to observe consistency).
 
-Table hash `4b953ff148e209d4c2518647a39868d793d96faaaf8477732ab4043095d2f6dc` · fixture-list hash `a0f4a26cea085527783a62c8875fdf60f2fed93d1f4ff48d2285ab5288c24f60`.
+**Identities, stated precisely (corrected 2026-10-09).**
+- Fixture-list hash `a0f4a26cea085527783a62c8875fdf60f2fed93d1f4ff48d2285ab5288c24f60` — unaffected by the switch.
+- Question-table hash of the **committed, closed** candidate: `6bb269d84c674d14730ecd0519ef48caef430e764fde9e32eb2f1f267610064e` (this is what the DRAFT grant template carries).
+- This capture ran in a temporary copy that differs from the committed module **only** by `witnessed: true`. The table hash includes the response-shape gate, so that copy's table hash is different: `4b953ff148e209d4c2518647a39868d793d96faaaf8477732ab4043095d2f6dc`. The first version of this document printed that value as if it were the table hash; it is the hash of an illustrative open-switch copy, not of any committed artifact.
+- **Neither value is a grant identity.** A grant must bind the table, fixture and schema hashes of the *final reviewed activation candidate's own bytes* (sequencing law: `…FINAL_MAC_HARNESS_REVERIFICATION_AND_GRANT_SEQUENCE_2026-10-08.md` on branch `fix/jev-int05-live-wrapper-hardening-20261007`). The request bytes in §1–§2 do not contain the response-shape gate and are identical in both copies (same fixture-list hash).
 
 ## 1. The first request, exactly (attempt F01 — 1 of 31)
 ```
@@ -96,7 +100,7 @@ Per attempt, in the hash-chained ledger and the independent checkpoint: `reserve
 
 ### Conditions that immediately stop execution (each is permanent until a human inspects)
 - Off-switch closed, no valid grant, grant hash not confirmed by the operator, or grant outside its window/caps (before anything is created).
-- Storage unsafe at start, or **changed at any later point** (checked before every attempt and again just before each send) → `STORAGE_CHANGED`.
+- Storage unsafe at start, or **changed at any later point** (checked before every attempt and again just before each send) → a `STORAGE_*` stop. (The exact identifier depends on which wrapper implementation is integrated; see the reconciliation record.)
 - Attempt cap (grant, ≤31), spend cap (grant, ≤ $1.00 incl. a $0.005 reservation per attempt), grant expiry mid-run.
 - Any non-ok outcome: transport error, **30 s deadline**, HTTP error, redirect, wrong content type, oversized/incomplete body, a response the parser refuses, model drift, usage above the reservation → recorded as halted; **no retry and no resend**.
 - A crossing of unknown outcome (request may have left, no valid answer) halts permanently and is never resent.

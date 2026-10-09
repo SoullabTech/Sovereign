@@ -51,9 +51,14 @@ const records = base.read().map((r) => ({ kind: r.kind, members: Object.keys(r) 
 const observed = base.read().find((r) => r.kind === 'observed');
 await new Promise((r) => server.close(r));
 
+const COMMITTED = await import(new URL('../jev-wire-v1.mjs', import.meta.url).href);
 const result = {
-  committed_switch_witnessed: (await import(new URL('../jev-wire-v1.mjs', import.meta.url).href)).RESPONSE_SHAPE.witnessed,
-  table_hash: W.questionTableHash(), fixture_list_hash: W.fixtureListHash(), attempts_count: attempts.length,
+  committed_switch_witnessed: COMMITTED.RESPONSE_SHAPE.witnessed,
+  // The table hash includes the response-shape gate, so the open-switch copy used for this capture and the committed (closed) module differ.
+  // Neither is a grant identity: a grant binds the final reviewed activation candidate's own bytes.
+  committed_closed_table_hash: COMMITTED.questionTableHash(),
+  open_switch_copy_table_hash: W.questionTableHash(),
+  fixture_list_hash: W.fixtureListHash(), committed_fixture_list_hash: COMMITTED.fixtureListHash(), attempts_count: attempts.length,
   distinct_bodies: new Set(attempts.map((a) => a.body_sha256)).size,
   all_bodies_match_plan: attempts.every((a) => a.body_equals_plan_bytes),
   attempts, runner_outcome_for_F01: out.outcome, ledger_record_kinds: records, observed_record_example: observed,

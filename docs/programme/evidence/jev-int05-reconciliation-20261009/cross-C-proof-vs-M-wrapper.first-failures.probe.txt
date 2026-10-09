@@ -1,0 +1,31 @@
+# PROBE, NOT THE RECORD: produced by a scratch copy of the committed proof that differs only in printing up to 14 lines of each assertion error instead of 1 (to show the first mismatching values).
+# The committed, unmodified cross-run results are in cross-C-proof-vs-M-wrapper.log.
+FAIL  L10-remote-option-follows-the-grant-and-the-pinned-endpoint-only
+      R.resolveTransportFactory is not a function
+0 passed · 1 failed
+FAIL  L13-LW1-an-injected-transport-cannot-stand-in-for-the-provider
+      Expected values to be strictly equal:
+      + actual - expected
+      
+      + 'REMOTE_TRANSPORT_OVERRIDE_FORBIDDEN'
+      - 'TRANSPORT_INJECTION_REFUSED'
+      
+0 passed · 1 failed
+FAIL  L15-LW3-storage-identity-is-rechecked-before-every-attempt
+      checkpoint dir replaced by a same-device symlink
+      + actual - expected
+      
+      + 'STORAGE_CHECKPOINT_DIR'
+      - 'STORAGE_CHANGED'
+                   ^
+      
+0 passed · 1 failed
+FAIL  L16-LW4-the-free-space-floor-cannot-be-lowered-or-disabled
+      0
+      + actual - expected
+      
+      + 'MIN_FREE_SPACE_CONFIG'
+      - 'MIN_FREE_FLOOR'
+                  ^
+      
+0 passed · 1 failed

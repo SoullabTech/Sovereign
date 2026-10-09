@@ -1,0 +1,20 @@
+# PROBE, NOT THE RECORD (scratch, uncommitted): mutated copies of the Mac wrapper b48e0c623 run through the committed differential instrument.
+# Purpose: show each scenario has teeth against the wrapper it is meant to protect (removing one safeguard fails the named scenario).
+# Edits (each removes one safeguard from M's wrapper source):
+#  no-clock-ban               remove the REMOTE_TEST_CLOCK_FORBIDDEN refusal                           -> expected D3
+#  no-transport-ban           remove the REMOTE_TRANSPORT_OVERRIDE_FORBIDDEN refusal + remote selection -> expected D1, D2
+#  no-post-credential-recheck remove the storage recheck after the credential callback                  -> expected D8
+#  no-predispatch-pair-verify remove pair.verify() inside the guarded send                              -> expected D10a-c
+#  completed-ignores-stop     completed: no longer requires stopped === null                            -> expected D9
+#  no-loop-storage-checks     remove the loop-top and just-before-reservation storage checks            -> D9 only (other layers still cover D6/D7: overlapping defences)
+#  no-floor                   remove the MIN_FREE_SPACE_CONFIG check                                    -> expected D11
+#  ledger-loss-throws         final pair.state() failure rethrown instead of structured stop            -> expected D5
+
+completed-ignores-stop => 13 pass · 1 SAFETY/REPORT failures [D9] · 4 advisory notes [D6b, D6d, D7b, D8b]
+ledger-loss-throws => 13 pass · 1 SAFETY/REPORT failures [D5] · 4 advisory notes [D6b, D6d, D7b, D8b]
+no-clock-ban => 13 pass · 1 SAFETY/REPORT failures [D3] · 4 advisory notes [D6b, D6d, D7b, D8b]
+no-floor => 13 pass · 1 SAFETY/REPORT failures [D11] · 4 advisory notes [D6b, D6d, D7b, D8b]
+no-loop-storage-checks => 13 pass · 1 SAFETY/REPORT failures [D9] · 4 advisory notes [D6b, D6d, D7b, D8b]
+no-post-credential-recheck => 14 pass · 1 SAFETY/REPORT failures [D8] · 3 advisory notes [D6b, D6d, D7b]
+no-predispatch-pair-verify => 11 pass · 3 SAFETY/REPORT failures [D10a, D10b, D10c] · 4 advisory notes [D6b, D6d, D7b, D8b]
+no-transport-ban => 12 pass · 2 SAFETY/REPORT failures [D1, D2] · 4 advisory notes [D6b, D6d, D7b, D8b]

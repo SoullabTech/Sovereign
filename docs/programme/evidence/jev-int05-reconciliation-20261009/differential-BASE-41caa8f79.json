@@ -1,0 +1,308 @@
+{
+  "label": "BASE-41caa8f79",
+  "wrapper": "/tmp/claude-0/-home-user-Sovereign/d8658701-6ba4-507c-a49c-9d57fdbe3d06/scratchpad/diff/base.mjs",
+  "second_device_root": "/dev/shm",
+  "rows": [
+    {
+      "id": "D1",
+      "class": "SAFETY",
+      "title": "remote grant + injected transport factory is refused before anything is built or stored",
+      "pass": false,
+      "observed": {
+        "refusal": null,
+        "ran": true,
+        "factory_built": 1,
+        "ledger_created": true
+      }
+    },
+    {
+      "id": "D2",
+      "class": "SAFETY",
+      "title": "remote grant + factory inherited through the prototype is refused too",
+      "pass": false,
+      "observed": {
+        "refusal": null,
+        "ran": true,
+        "factory_built": 2,
+        "ledger_created": true
+      }
+    },
+    {
+      "id": "D3",
+      "class": "SAFETY",
+      "title": "remote grant + injected clock is refused BEFORE the real adapter is even constructed (a test clock defeats window and expiry)",
+      "pass": false,
+      "observed": {
+        "refusal": "ADAPTER_CREDENTIAL_INVALID",
+        "ran": false,
+        "ledger_created": false
+      }
+    },
+    {
+      "id": "D4",
+      "class": "SAFETY",
+      "title": "control: with no override the REAL adapter is selected (it refuses for want of a credential, nothing created)",
+      "pass": true,
+      "observed": {
+        "refusal": "ADAPTER_CREDENTIAL_INVALID",
+        "ran": false,
+        "ledger_created": false
+      }
+    },
+    {
+      "id": "D5",
+      "class": "SAFETY",
+      "title": "ledger lost mid-request: structured stop, no throw, no second request, nothing recreated, no claim of persistence",
+      "pass": false,
+      "observed": {
+        "threw": "LEDGER_NOT_INITIALIZED",
+        "recreated": false
+      }
+    },
+    {
+      "id": "D6a",
+      "class": "SAFETY",
+      "title": "checkpoint directory replaced by a same-device symlink after the 1st settlement → no second request, storage stop",
+      "pass": false,
+      "observed": {
+        "swapped": true,
+        "ran": true,
+        "refusal": null,
+        "stopped": "GRANT_ATTEMPT_CAP",
+        "completed": false,
+        "attempts": "F01:ok|F01.r1:ok|F01.r2:ok",
+        "http_requests": 3,
+        "ledger_head": "e07a63fbf218b492eeee18ed8be385983de99651458f652d340981d2d53883bf",
+        "usd": 0.000037800000000000004,
+        "halted": false,
+        "ledger": "init,reserved,observed,settled,reserved,observed,settled,reserved,observed,settled"
+      }
+    },
+    {
+      "id": "D6b",
+      "class": "STRICTNESS",
+      "title": "checkpoint directory replaced by a fresh directory at the same path (new inode, same device) → no second request, storage stop",
+      "pass": false,
+      "observed": {
+        "swapped": true,
+        "ran": true,
+        "refusal": null,
+        "stopped": "GRANT_ATTEMPT_CAP",
+        "completed": false,
+        "attempts": "F01:ok|F01.r1:ok|F01.r2:ok",
+        "http_requests": 3,
+        "ledger_head": "2ae14f4a3d7b042ea9bef20fcc9120c3826b45545288bd07a68abfc8bc97bedb",
+        "usd": 0.000037800000000000004,
+        "halted": false,
+        "ledger": "init,reserved,observed,settled,reserved,observed,settled,reserved,observed,settled"
+      }
+    },
+    {
+      "id": "D6c",
+      "class": "SAFETY",
+      "title": "checkpoint directory remapped onto the ledger device after the 1st settlement → no second request, storage stop",
+      "pass": false,
+      "observed": {
+        "swapped": true,
+        "ran": true,
+        "refusal": null,
+        "stopped": "GRANT_ATTEMPT_CAP",
+        "completed": false,
+        "attempts": "F01:ok|F01.r1:ok|F01.r2:ok",
+        "http_requests": 3,
+        "ledger_head": "1af3184f695c0e5c08356eb09e400b1f2dda28fc2c8f55c073dc13dd73f35241",
+        "usd": 0.000037800000000000004,
+        "halted": false,
+        "ledger": "init,reserved,observed,settled,reserved,observed,settled,reserved,observed,settled"
+      }
+    },
+    {
+      "id": "D6d",
+      "class": "STRICTNESS",
+      "title": "ledger directory replaced by a fresh directory (new inode, same device) → no second request, storage stop",
+      "pass": false,
+      "observed": {
+        "swapped": true,
+        "ran": true,
+        "refusal": null,
+        "stopped": "GRANT_ATTEMPT_CAP",
+        "completed": false,
+        "attempts": "F01:ok|F01.r1:ok|F01.r2:ok",
+        "http_requests": 3,
+        "ledger_head": "55c59df622b8c08f2db1fe8b950ee410aefa20e193c00469e0adad0f575a0c7b",
+        "usd": 0.000037800000000000004,
+        "halted": false,
+        "ledger": "init,reserved,observed,settled,reserved,observed,settled,reserved,observed,settled"
+      }
+    },
+    {
+      "id": "D7",
+      "class": "SAFETY",
+      "title": "change between the durable reservation and the send → the request is never written",
+      "pass": false,
+      "observed": {
+        "swapped": true,
+        "ran": true,
+        "refusal": null,
+        "stopped": "GRANT_ATTEMPT_CAP",
+        "completed": false,
+        "attempts": "F01:ok|F01.r1:ok|F01.r2:ok",
+        "http_requests": 3,
+        "ledger_head": "a4a8a8d3ce34111bec541da784524e641ad17225b66ed90b1ab2c6291a00ca46",
+        "usd": 0.000037800000000000004,
+        "halted": false,
+        "ledger": "init,reserved,observed,settled,reserved,observed,settled,reserved,observed,settled"
+      }
+    },
+    {
+      "id": "D7b",
+      "class": "DIAGNOSTIC",
+      "title": "the same stop names a storage cause rather than a generic transport error",
+      "pass": false,
+      "observed": {
+        "stopped": "GRANT_ATTEMPT_CAP"
+      }
+    },
+    {
+      "id": "D8",
+      "class": "SAFETY",
+      "title": "storage changes inside the credential callback of the 2nd send → the 2nd request is never written",
+      "pass": false,
+      "observed": {
+        "swapped": true,
+        "ran": true,
+        "refusal": null,
+        "stopped": "GRANT_ATTEMPT_CAP",
+        "completed": false,
+        "attempts": "F01:ok|F01.r1:ok|F01.r2:ok",
+        "http_requests": 3,
+        "ledger_head": "fe99c551f392df30d6cb033c7be9af9e50571efc9becf929afb819f1ba0684aa",
+        "usd": 0.000037800000000000004,
+        "halted": false,
+        "ledger": "init,reserved,observed,settled,reserved,observed,settled,reserved,observed,settled"
+      }
+    },
+    {
+      "id": "D8b",
+      "class": "DIAGNOSTIC",
+      "title": "the same stop names a storage cause",
+      "pass": false,
+      "observed": {
+        "stopped": "GRANT_ATTEMPT_CAP"
+      }
+    },
+    {
+      "id": "D9",
+      "class": "REPORT",
+      "title": "resume of a completed run with storage swapped: the summary does not claim completion while reporting a stop",
+      "pass": false,
+      "observed": {
+        "first_completed": true,
+        "ran": true,
+        "refusal": null,
+        "stopped": null,
+        "completed": true,
+        "attempts": "-",
+        "http_requests": 0,
+        "ledger_head": "e019f6e840d7e6e34b5abdaa67b43b7db3d4f86f69bfa78785b0133ab560272e",
+        "usd": 0.0003905999999999999,
+        "halted": false,
+        "extra_requests": 0
+      }
+    },
+    {
+      "id": "D10a",
+      "class": "SAFETY",
+      "title": "anchor file deleted between reservation and send → the request is never written (a sent request must be recordable)",
+      "pass": false,
+      "observed": {
+        "tampered": true,
+        "ran": true,
+        "refusal": null,
+        "stopped": "observation_not_persisted",
+        "completed": false,
+        "attempts": "F01:observation_not_persisted",
+        "http_requests": 1,
+        "ledger_head": "d665d618e2398ff005d4b763469e8b7920c04f58a07b214951c29ec9744a84a7",
+        "usd": 0.005,
+        "halted": false,
+        "key": "anchor-deleted"
+      }
+    },
+    {
+      "id": "D10b",
+      "class": "SAFETY",
+      "title": "anchor rolled back to its pre-reservation copy between reservation and send → the request is never written (a sent request must be recordable)",
+      "pass": false,
+      "observed": {
+        "tampered": true,
+        "ran": true,
+        "refusal": null,
+        "stopped": "observation_not_persisted",
+        "completed": false,
+        "attempts": "F01:observation_not_persisted",
+        "http_requests": 1,
+        "ledger_head": "054254fb088fcf7add77d644faeccb50a1a9af2c4b584cb1bd3cd7586a4ab044",
+        "usd": 0.005,
+        "halted": false,
+        "key": "anchor-rolled-back"
+      }
+    },
+    {
+      "id": "D10c",
+      "class": "SAFETY",
+      "title": "ledger rolled back to its pre-reservation copy between reservation and send → the request is never written (a sent request must be recordable)",
+      "pass": false,
+      "observed": {
+        "tampered": true,
+        "ran": true,
+        "refusal": null,
+        "stopped": "observation_not_persisted",
+        "completed": false,
+        "attempts": "F01:observation_not_persisted",
+        "http_requests": 1,
+        "ledger_head": "f3aaab0f8c9612fd8c064dd119cbb800f834f6e49dcbd595a51be60129dc7880",
+        "usd": 0,
+        "halted": false,
+        "key": "ledger-rolled-back"
+      }
+    },
+    {
+      "id": "D11",
+      "class": "SAFETY",
+      "title": "no value below the 64 MiB floor (0, negative, NaN, Infinity, fraction, string, null, floor−1) is accepted; the floor itself is",
+      "pass": false,
+      "observed": {
+        "number:0": "ACCEPTED",
+        "number:-1": "ACCEPTED",
+        "number:NaN": "LEDGER_SPACE",
+        "number:Infinity": "LEDGER_SPACE",
+        "number:1.5": "ACCEPTED",
+        "number:1024": "ACCEPTED",
+        "number:67108863": "ACCEPTED",
+        "string:67108864": "ACCEPTED",
+        "object:null": "ACCEPTED",
+        "control(MIN_FREE_BYTES)": "accepted"
+      }
+    },
+    {
+      "id": "D12",
+      "class": "INFO",
+      "title": "exported surface",
+      "pass": true,
+      "observed": {
+        "exports": [
+          "GRANT_INSTRUMENT",
+          "GRANT_MEMBERS",
+          "MAX_WINDOW_MS",
+          "MIN_FREE_BYTES",
+          "checkGrant",
+          "checkStorage",
+          "executeLiveRun",
+          "grantHash",
+          "preflight"
+        ]
+      }
+    }
+  ]
+}

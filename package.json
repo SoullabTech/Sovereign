@@ -101,6 +101,7 @@
     "matrix:jarvis-jev-wire-adapter": "node scripts/builder/__tests__/jev-wire-http-adapter-v1-matrix.mjs",
     "proof:jarvis-jev-wire-live-run": "node scripts/builder/__tests__/jev-wire-live-run-v1-proof.mjs",
     "matrix:jarvis-jev-wire-live-run": "node scripts/builder/__tests__/jev-wire-live-run-v1-matrix.mjs",
+    "differential:jarvis-jev-wire-live-run": "node scripts/builder/__tests__/jev-wire-live-run-v1-differential.mjs",
     "typecheck:jarvis-jev-label-01": "tsc -p tsconfig.jarvis-jev-label-01.json",
     "matrix:jarvis-jev-label-01": "npx tsx tests/constitutional/jarvis-jev-label-01/matrix.ts",
     "verify:jarvis-jev-label-01-pilot": "npx tsx tests/constitutional/jarvis-jev-label-01/pilot/verify.ts",

@@ -1,0 +1,36 @@
+# PROBE, NOT THE RECORD: produced by a scratch copy of the committed proof that differs only in printing up to 14 lines of each assertion error instead of 1 (to show the first mismatching values).
+# The committed, unmodified cross-run results are in cross-M-proof-vs-C-wrapper.log.
+FAIL  L10-remote-option-follows-the-grant-and-the-pinned-endpoint-only
+      Expected values to be strictly equal:
+      + actual - expected
+      
+      + 'TRANSPORT_INJECTION_REFUSED'
+      - 'REMOTE_TRANSPORT_OVERRIDE_FORBIDDEN'
+      
+0 passed · 1 failed
+FAIL  L13-external-grants-never-accept-injected-transport-or-test-clock
+      Expected values to be strictly equal:
+      + actual - expected
+      
+      + 'TRANSPORT_INJECTION_REFUSED'
+      - 'REMOTE_TRANSPORT_OVERRIDE_FORBIDDEN'
+      
+0 passed · 1 failed
+FAIL  L15-physical-mount-drift-stops-before-second-attempt-and-before-first-dispatch
+      Expected values to be strictly equal:
+      + actual - expected
+      
+      + 'STORAGE_CHANGED'
+      - 'STORAGE_CHECKPOINT_DIR'
+                   ^
+      
+0 passed · 1 failed
+FAIL  L16-free-space-floor-is-not-lowerable-by-config
+      0
+      + actual - expected
+      
+      + 'MIN_FREE_FLOOR'
+      - 'MIN_FREE_SPACE_CONFIG'
+                  ^
+      
+0 passed · 1 failed

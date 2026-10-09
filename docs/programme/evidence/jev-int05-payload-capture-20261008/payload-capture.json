@@ -1,7 +1,9 @@
 {
   "committed_switch_witnessed": false,
-  "table_hash": "4b953ff148e209d4c2518647a39868d793d96faaaf8477732ab4043095d2f6dc",
+  "committed_closed_table_hash": "6bb269d84c674d14730ecd0519ef48caef430e764fde9e32eb2f1f267610064e",
+  "open_switch_copy_table_hash": "4b953ff148e209d4c2518647a39868d793d96faaaf8477732ab4043095d2f6dc",
   "fixture_list_hash": "a0f4a26cea085527783a62c8875fdf60f2fed93d1f4ff48d2285ab5288c24f60",
+  "committed_fixture_list_hash": "a0f4a26cea085527783a62c8875fdf60f2fed93d1f4ff48d2285ab5288c24f60",
   "attempts_count": 31,
   "distinct_bodies": 19,
   "all_bodies_match_plan": true,
@@ -1291,9 +1293,9 @@
     },
     "response_sha256": "97328a973d4d2e497780efbb2e8eaa7bbfeba72cfc0cbceb9cf5be7adda2d9de",
     "response_canonical": "{\"answers\":{\"Q_RISK\":{\"noul\":0.25,\"type\":\"noul\"}},\"model\":\"jev-1.13.0\",\"usage\":{\"input_tokens\":300,\"output_tokens\":5}}",
-    "at": 1791468791645,
+    "at": 1791549086924,
     "seq": 2,
-    "prev": "556c7bcff666cd53fbcee9fe4d929f26b62ae642c62c27040c9e031425e41de5",
-    "hash": "49043edeab5366d3f99a0d5ce71f9a9e00626951127fb127d9e6fe6f59db9c94"
+    "prev": "a6e32c92bfcf55b7ee7129570bb50d473e9d785ea94ddd23adc89980fee87069",
+    "hash": "23eef342d8caff719bb70e064b055258457ef4bf2bc0b1359e169edd449dfb29"
   }
 }

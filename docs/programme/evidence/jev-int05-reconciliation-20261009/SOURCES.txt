@@ -1,0 +1,6 @@
+Wrapper sources compared (git blob = id of scripts/builder/jev-wire-live-run-v1.mjs at that commit):
+  BASE  41caa8f79  blob 54ac9dd22438  sha256 cddbcc30f364f668...   (reviewed by Mac 8e04f8006; findings LW1-LW4)
+  M     b48e0c623  blob 32a5b51dde5c  sha256 be715199048ec945...   branch fix/jev-int05-live-wrapper-hardening-20261007 (wrapper commit 29b38b0d4; harness bd5b60f0f)
+  C     e1830a0d8  blob 7631e7a85bb3  sha256 54d7d87d230c42a4...   branch fix/jev-int05-harness-convergence-20261008 (wrapper identical to claude/pensive-ride-hw6qra fae2cd8ea; test-only commit on top)
+Frozen modules jev-wire-v1 / jev-wire-checkpoint-v1 / jev-wire-http-adapter-v1 / jev-wire-variant-lib are byte-identical across BASE, M and C.
+Host: Linux, second device = /dev/shm. Mac/T7 run of the differential is OWED (JEV_TEST_SECOND_DEVICE_ROOT="/Volumes/T7 Shield").
