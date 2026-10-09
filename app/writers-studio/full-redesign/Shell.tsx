@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { isCabinOrigin, cabinReturnPath } from '@/lib/cabin/doorway';
 import { appearanceVars, geometryVars } from './tokens';
 import { PRIMARY_MODES, type Appearance, type ShellGeometry, type StudioMode } from './types';
@@ -63,6 +63,11 @@ export type ShellProps = {
 export function Shell(props: ShellProps) {
   const { mode, appearance, geometry } = props;
   const searchParams = useSearchParams();
+  const currentPathname = usePathname();
+  const listeningRoute = currentPathname === '/writers-studio' && searchParams?.get('mode') === 'listen';
+  const listenHref = currentPathname === '/writers-studio' && searchParams?.get('m')
+    ? '/writers-studio?' + (() => { const next = new URLSearchParams(searchParams.toString()); next.set('mode', 'listen'); return next.toString(); })()
+    : null;
   const fromCabin = isCabinOrigin(searchParams);
   const oneRoom = props.manuscript === undefined && props.maia === undefined;
   const canvas = props.canvas === true;
@@ -309,13 +314,14 @@ export function Shell(props: ShellProps) {
                 key={m.id}
                 type="button"
                 className="fr-nav-item"
-                aria-current={m.id === mode ? 'page' : undefined}
+                aria-current={m.id === mode && !listeningRoute ? 'page' : undefined}
                 data-mode={m.id}
                 onClick={() => props.onSelectMode?.(m.id)}
               >
                 {m.label}
               </button>
             ))}
+            {listenHref ? listeningRoute ? <span className="fr-nav-item" data-writers-listen-entry aria-current="page" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>Listen</span> : <a className="fr-nav-item" href={listenHref} data-writers-listen-entry style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', whiteSpace: 'nowrap' }}>Listen</a> : null}
           </nav>
           {props.workTitle !== undefined ? (
             <div className="fr-workpick" aria-label="Current Work">
