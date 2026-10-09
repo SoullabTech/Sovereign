@@ -50,6 +50,13 @@ export type CraftsmansTableR1Props = {
   /** The exact writer-owned working state, before Save or Apply. */
   onWorkingTextChange?: (text: string) => void;
   focusTools?: ReactNode;
+  /** The next editorial gesture stays separate from Save and Apply. */
+  nextFocus?: {
+    nextLabel: string | null;
+    onContinue: () => boolean;
+    onChoose: () => void;
+    onAskMaia: () => void;
+  };
   restoreSnapshot?: CraftTableSnapshot | null;
   onConnect?: (port: CraftTablePort | null) => void;
   onReceipt?: (receipt: CraftCanvasReceipt) => void;
@@ -131,6 +138,8 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
   const [customEditId, setCustomEditId] = useState<number | null>(null);
   const [customDraft, setCustomDraft] = useState('');
   const [saving, setSaving] = useState(false);
+  const [nextFocusOpen, setNextFocusOpen] = useState(false);
+  const nextFocusId = useId();
   const [localMessage, setLocalMessage] = useState<string | null>(null);
   const [kept, setKept] = useState<readonly CraftKeptSpan[]>([]);
   const locusRef = useRef<HTMLSpanElement | null>(null);
@@ -212,6 +221,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     setCustomEditId(null);
     setCustomDraft('');
     setLocalMessage(null);
+    setNextFocusOpen(false);
     setKept(props.version?.author === 'member' ? props.version.craftKept ?? [] : []);
     setStateFocusKey(focusKey);
     let restored = props.restoreSnapshot;
@@ -943,6 +953,53 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
             ) : null}
             {applied && props.onUndo ? (
               <button type="button" disabled={props.busy} onClick={props.onUndo}>Undo</button>
+            ) : null}
+            {props.nextFocus ? (
+              <div className="p4r1-craft-r1-next" data-craft-next-focus>
+                <button type="button" className="p4r1-craft-r1-next-trigger"
+                  aria-expanded={nextFocusOpen} aria-controls={nextFocusId}
+                  disabled={props.busy || saving}
+                  onClick={() => setNextFocusOpen(value => !value)}>
+                  Next focus →
+                </button>
+                {nextFocusOpen ? (
+                  <div id={nextFocusId} className="p4r1-craft-r1-next-menu"
+                    role="group" aria-label="Choose next focus"
+                    onKeyDown={event => {
+                      if (event.key === 'Escape') {
+                        event.stopPropagation();
+                        setNextFocusOpen(false);
+                      }
+                    }}>
+                    <strong>Where shall we work next?</strong>
+                    {!applied && !savedWorking && (hasWriterChange || choicesChanged || pendingComposition) ? (
+                      <p role="status" data-next-focus-draft-notice>
+                        Your changes are not saved. Moving holds them only in this open Studio session.
+                        Choose Save my version first for lasting recovery.
+                      </p>
+                    ) : null}
+                    {pendingComposition ? (
+                      <p role="status">Finish or cancel the wording you are composing before moving.</p>
+                    ) : null}
+                    <button type="button" disabled={props.busy || saving || pendingComposition || !props.nextFocus.nextLabel}
+                      onClick={() => { if (props.nextFocus?.onContinue()) setNextFocusOpen(false); }}>
+                      <b>Continue in order</b>
+                      <span>{props.nextFocus.nextLabel ? `Next: ${props.nextFocus.nextLabel}` : 'No later passage in this chapter'}</span>
+                    </button>
+                    <button type="button" disabled={props.busy || saving || pendingComposition}
+                      onClick={() => { setNextFocusOpen(false); props.nextFocus?.onChoose(); }}>
+                      <b>I'll choose</b>
+                      <span>Select words or choose a section and passage yourself</span>
+                    </button>
+                    <button type="button" disabled={props.busy || saving || pendingComposition}
+                      onClick={() => { setNextFocusOpen(false); props.nextFocus?.onAskMaia(); }}>
+                      <b>Ask MAIA</b>
+                      <span>Ask for one or two exact passages worth considering</span>
+                    </button>
+                    <small>MAIA suggests. You decide where to work. Nothing is applied by moving.</small>
+                  </div>
+                ) : null}
+              </div>
             ) : null}
           </div>
           {localMessage ? <small role="status">{localMessage}</small> : null}

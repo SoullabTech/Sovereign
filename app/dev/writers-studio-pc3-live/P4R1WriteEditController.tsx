@@ -2021,7 +2021,7 @@ export default function FlagshipWriteEditController({
               onMoveAndSuggest: moveCraftFocusAndSuggest,
               onStay: () => receiveCraftReceipt({ ok: true, message: 'Staying with this passage. No wording changed.' }),
               onAsk: () => void sendCraftEditorial(
-                'Read this chapter for reader experience. Identify one or two useful passages outside the current focus, quoting exact words from the verified reading. Respect settled choices. Do not propose replacement wording yet. A next passage will be selected separately.',
+                'Read this chapter for reader experience. Identify at most two useful passages outside the current focus. For each, quote at least 18 consecutive exact characters from the verified text, without adding words, so the writer can choose a grounded Work here link. If no exact passage can be verified, say so. Respect settled choices. Do not propose new wording or move focus. The writer selects the next passage separately.',
                 { proposalPolicy: 'reply_only', displayText: 'Read this chapter for reader experience and show me where we could work next. Do not change anything yet.' },
               ),
               onConnect: connectCraftTable,

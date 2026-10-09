@@ -13,6 +13,8 @@ export interface CraftFocusToolsR1Props {
   bodyOf: (id: string) => string;
   revisionNumber: number;
   current: CraftFocusTarget | null;
+  /** Opens the existing writer-owned picker on an explicit Next focus gesture. */
+  pickerRequest?: number;
   earlier?: readonly CraftFocusTarget[];
   busy: boolean;
   receipt: string | null;
@@ -40,6 +42,13 @@ export default function CraftFocusToolsR1(props: CraftFocusToolsR1Props) {
     setSelectionNotice(null);
     if (props.current) setSectionId(props.current.sectionId);
   }, [props.current?.sectionId, props.current?.start, props.current?.end]);
+
+  useEffect(() => {
+    if (!props.pickerRequest) return;
+    setOpen(true);
+    setSelected(null);
+    setSelectionNotice(null);
+  }, [props.pickerRequest]);
 
   useEffect(() => {
     const inspect = () => {

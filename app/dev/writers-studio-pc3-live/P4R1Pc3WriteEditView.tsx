@@ -30,7 +30,7 @@ import EditorialDancePanel from './EditorialDancePanel';
 import HermesCraftPanel from './HermesCraftPanel';
 import CraftsmansTableR1 from './CraftsmansTableR1';
 import CraftFocusToolsR1 from './CraftFocusToolsR1';
-import { makeCraftTarget, type CraftFocusBinding } from '@/lib/writersStudio/craftFocusR1';
+import { makeCraftTarget, paragraphTargets, adjacentCraftTarget, type CraftFocusBinding } from '@/lib/writersStudio/craftFocusR1';
 import MaiaCraftCompanionR1 from './MaiaCraftCompanionR1';
 import IsolatedEditorialRoom from './IsolatedEditorialRoom';
 import P4R1FocusMaterials from './P4R1FocusMaterials';
@@ -238,6 +238,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [isolatedEditorial, setIsolatedEditorial] = useState(false);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
   const [craftView, setCraftView] = useState<'markup' | 'preview'>('markup');
+  const [nextFocusPickerRequest, setNextFocusPickerRequest] = useState(0);
   const [proseView, setProseView] = useState(() => !props.held && !props.carriedInsight);
   const wholeEditRef = useRef<WholeManuscriptSurfaceHandle | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -1061,6 +1062,13 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     </div>
   ) : exactRoom;
 
+  /* Next focus is a writer gesture, independent of the active editing proposal.
+     Use the same canonical paragraph order and guarded move as the top rail. */
+  const nextFocusTarget = props.surfaceMode === 'develop-craft' && props.craftFocus?.current
+    ? adjacentCraftTarget(paragraphTargets(proseSections, props.writing.bodyOf,
+      props.writing.currentRevisionId() ?? props.context.version), props.craftFocus.current, 'next')
+    : null;
+
   /* Craftsman's Table R1 — Develop Craft no longer reuses the Write room or
      fixed revision overlays. The current chapter remains visible, the exact
      held locus is stable, and all edit choices are rendered in manuscript flow. */
@@ -1082,12 +1090,19 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       restoreSnapshot={props.craftFocus?.restoreSnapshot}
       onConnect={props.craftFocus?.onConnect}
       onReceipt={props.craftFocus?.onReceipt}
+      nextFocus={props.craftFocus ? {
+        nextLabel: nextFocusTarget?.label ?? null,
+        onContinue: () => nextFocusTarget ? props.craftFocus!.onMove(nextFocusTarget) : false,
+        onChoose: () => setNextFocusPickerRequest(n => n + 1),
+        onAskMaia: props.craftFocus.onAsk,
+      } : undefined}
       focusTools={props.craftFocus ? <CraftFocusToolsR1
         sections={proseSections} bodyOf={props.writing.bodyOf}
         revisionNumber={props.writing.currentRevisionId() ?? props.context.version}
         savedVersions={props.craftFocus.savedVersions} savedVersionsUnavailable={props.craftFocus.savedVersionsUnavailable}
         onResumeSaved={props.craftFocus.onResumeSaved}
         current={props.craftFocus.current} earlier={props.craftFocus.earlier} busy={busy} receipt={props.craftFocus.receipt}
+        pickerRequest={nextFocusPickerRequest}
         onMove={props.craftFocus.onMove} onMoveAndSuggest={props.craftFocus.onMoveAndSuggest} onStay={props.craftFocus.onStay} onAsk={props.craftFocus.onAsk}
       /> : null}
     />

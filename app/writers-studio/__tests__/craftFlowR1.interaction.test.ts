@@ -57,6 +57,17 @@ describe('A passage choice exposes the destination and the next action', () => {
     expect(props.onMove).toHaveBeenCalledWith(expect.objectContaining({sectionId:'water',text:'Water begins with Being.'}));
     expect(props.onAsk).not.toHaveBeenCalled();expect(props.onMoveAndSuggest).not.toHaveBeenCalled();
   });
+  it('opens the writer-owned focus picker from Next focus without moving or asking MAIA',async()=>{
+    props={...props,pickerRequest:1};await render();
+    expect(host.querySelector('[aria-label="Choose a passage to focus on"]')).not.toBeNull();
+    expect(props.onMove).not.toHaveBeenCalled();
+    expect(props.onAsk).not.toHaveBeenCalled();
+    await click('Choose passage');
+    expect(host.querySelector('[aria-label="Choose a passage to focus on"]')).toBeNull();
+    props={...props,pickerRequest:2};await render();
+    expect(host.querySelector('[aria-label="Choose a passage to focus on"]')).not.toBeNull();
+    expect(props.onMove).not.toHaveBeenCalled();
+  });
   it('disables movement while a request is in progress',async()=>{
     props={...props,busy:true};await render();await click('Next passage');expect(props.onMove).not.toHaveBeenCalled();
   });
