@@ -15,6 +15,8 @@ export type MonoCaptureRoute = {
   inputChannel: InputChannel;
   outputChannels: number;
   outputRateHz: number;
+  /** Live, unrecorded views of the two physical interface inputs. */
+  analysers: Readonly<Record<InputChannel, AnalyserNode>>;
   close: () => Promise<void>;
 };
 
@@ -44,7 +46,18 @@ export async function createMonoCaptureRoute(
   try {
     const input = context.createMediaStreamSource(sourceStream);
     const splitter = context.createChannelSplitter(2);
+    const analyser1 = context.createAnalyser();
+    const analyser2 = context.createAnalyser();
     const output = context.createMediaStreamDestination();
+
+    // Observe both physical inputs while routing only the chosen one to MediaRecorder.
+    // Nothing connects to speakers, so the live voice field cannot create feedback.
+    for (const analyser of [analyser1, analyser2]) {
+      analyser.channelCountMode = 'explicit';
+      analyser.channelCount = 1;
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0.25;
+    }
 
     // MediaStreamDestination defaults to 2 channels. Explicit mono matters:
     // otherwise input 1 would remain audible in the left speaker only.
@@ -52,7 +65,9 @@ export async function createMonoCaptureRoute(
     output.channelCount = 1;
 
     input.connect(splitter);
-    splitter.connect(output, inputChannel - 1, 0);
+    splitter.connect(analyser1, 0, 0);
+    splitter.connect(analyser2, 1, 0);
+    (inputChannel === 1 ? analyser1 : analyser2).connect(output);
     await context.resume();
 
     const monoTrack = output.stream.getAudioTracks()[0];
@@ -72,10 +87,13 @@ export async function createMonoCaptureRoute(
       inputChannel,
       outputChannels: 1,
       outputRateHz: context.sampleRate,
+      analysers: { 1: analyser1, 2: analyser2 },
       close: async () => {
         try {
           input.disconnect();
           splitter.disconnect();
+          analyser1.disconnect();
+          analyser2.disconnect();
         } finally {
           output.stream.getTracks().forEach((track) => track.stop());
           if (context.state !== 'closed') await context.close();
