@@ -210,12 +210,25 @@ test('Soullab Press is offered as an explicit optional human publishing pathway'
   expect(container.textContent).toContain('Only a separate agreement turns the possibility into a Soullab Press edition.');
 });
 
-test('returning Work Home exposes Publish contextually rather than as a fourth mode', () => {
+test('Publish is visible in the beta top navigation and opens the existing Home publishing panel', () => {
   const home = fs.readFileSync(
     path.join(process.cwd(), 'app/dev/writers-studio-pc3-live/P4R1HomeView.tsx'),
     'utf8',
   );
+  const controller = fs.readFileSync(
+    path.join(process.cwd(), 'app/dev/writers-studio-pc3-live/P4R1HomeController.tsx'),
+    'utf8',
+  );
+  const shell = fs.readFileSync(
+    path.join(process.cwd(), 'app/writers-studio/full-redesign/Shell.tsx'),
+    'utf8',
+  );
+
   expect(home).toContain('Publish');
   expect(home).toContain('<P4R1ProducePanel');
+  expect(home).toContain('produceInitially={props.publishRequested}');
+  expect(controller).toContain("const publishRequested = params?.get('publish') === '1'");
+  expect(shell).toContain('data-writers-publish-entry');
+  expect(shell).toContain("next.set('publish', '1')");
   expect(home).not.toContain("onMode('produce')");
 });
