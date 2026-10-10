@@ -126,6 +126,11 @@ export default function ListenPilot() {
   );
   const words = readingSections.reduce((total, s) => total + (s.body.match(/\S+/g)?.length ?? 0), 0);
   const selectedTitle = isWholePreface ? 'Preface — complete reading' : (section?.heading || 'passage');
+  const pageVoiceEnergy = monitoring
+    ? Math.max(0, Math.min(1, meterPercentage(meterLevels[inputChannel].rmsDbfs) / 100))
+    : 0;
+  const pageVoiceGlow = monitoring ? Math.min(0.42, 0.035 + pageVoiceEnergy * 0.38) : 0;
+  const pageVoiceScale = 0.82 + pageVoiceEnergy * 0.18;
   const changeMode = (mode: StudioMode) => {
     if (recording) return;
     if (takes.length && !window.confirm('Your recordings have not been saved to the server. Download them before leaving Listen. Leave anyway?')) return;
@@ -332,7 +337,16 @@ export default function ListenPilot() {
 
             {source?.sections && (
               <div className={styles.grid}>
-                <section className={[styles.card, styles.readingCard].join(' ')} aria-label="Manuscript reading">
+                <section
+                  className={[styles.card, styles.readingCard].join(' ')}
+                  aria-label="Manuscript reading"
+                  data-voice-live={monitoring ? 'true' : 'false'}
+                  style={{
+                    '--page-voice-energy': pageVoiceEnergy,
+                    '--page-voice-glow': pageVoiceGlow,
+                    '--page-voice-scale': pageVoiceScale,
+                  } as CSSProperties}
+                >
                   <div className={styles.readingHead}>
                     <div className={styles.readingTop}>
                       <div className={styles.eyebrow}>Your manuscript · Version {source.version ?? 'current'} · Read only</div>
@@ -473,7 +487,15 @@ export default function ListenPilot() {
                           const heldPct = meterPercentage(levels.heldPeakDbfs);
                           const bloom = Math.max(0.08, meterPercentage(levels.rmsDbfs) / 100);
                           return (
-                            <div key={channel} className={styles.voiceChannel} data-selected={selected ? 'true' : 'false'}>
+                            <div
+                              key={channel}
+                              className={styles.voiceChannel}
+                              data-selected={selected ? 'true' : 'false'}
+                              data-monitoring={monitoring ? 'true' : 'false'}
+                              style={selected ? {
+                                boxShadow: `0 0 ${(10 + bloom * 24).toFixed(1)}px rgba(86, 135, 112, ${(0.08 + bloom * 0.18).toFixed(3)})`,
+                              } : undefined}
+                            >
                               <div className={styles.voiceChannelTop}>
                                 <div>
                                   <strong>Input {channel}</strong>
@@ -492,6 +514,7 @@ export default function ListenPilot() {
                               </div>
                               <div className={styles.voiceMeter} aria-hidden="true">
                                 <div className={styles.voiceMeterColor} />
+                                <div className={styles.voiceSweetSpot} title="Narration sweet spot: −12 to −6 dBFS" />
                                 <div className={styles.voiceMeterShade} style={{ left: `${activePct}%` }} />
                                 <span className={styles.voicePeakMarker} style={{ left: `${heldPct}%` }} />
                               </div>
@@ -510,6 +533,7 @@ export default function ListenPilot() {
                       </div>
                       <div className={styles.voiceLegend} aria-hidden="true">
                         <span><i data-zone="green" /> healthy</span>
+                        <span><i data-zone="sweet" /> narration sweet spot</span>
                         <span><i data-zone="amber" /> expressive peak</span>
                         <span><i data-zone="red" /> clipping risk</span>
                       </div>
