@@ -130,6 +130,7 @@ export function Shell(props: ShellProps) {
           ) : (
             <span className="fr-bar-spacer" aria-hidden="true" />
           )}
+          <div className="fr-topbar-accessories" data-studio-topbar-accessories aria-label="Studio controls" />
           <div className="fr-avatar" aria-hidden="true">
             {props.memberInitial}
           </div>
