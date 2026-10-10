@@ -1,6 +1,7 @@
 import { query } from '@/lib/db/postgres';
 import { UNTITLED_EXPRESSION } from '@/lib/manuscript/untitledExpression';
 import type { MemberBookSection } from './renderMemberBook';
+import { workingDraftBody } from './workingDraftBody';
 
 export type RenderSourceAuthority = 'working_draft' | 'source';
 
@@ -90,7 +91,7 @@ export async function loadMemberRenderSource(
       sections = draftRows.rows.map((row) => ({
         sourceId: row.source_id,
         heading: row.heading,
-        body: row.body,
+        body: workingDraftBody(row.body, row.heading),
         headingDepth:
           row.heading_depth === 1 || row.heading_depth === 2 || row.heading_depth === 3
             ? row.heading_depth
