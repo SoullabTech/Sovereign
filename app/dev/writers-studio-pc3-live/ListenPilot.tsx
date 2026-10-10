@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
@@ -9,6 +9,10 @@ import { HOME_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import type { StudioMode } from '@/app/writers-studio/full-redesign/types';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { fullPrefaceReading } from '@/lib/writersStudio/listen/fullPrefaceReading';
+import {
+  measureMicLevels, meterPercentage, QUIET_MIC_LEVELS,
+  type MicLevels,
+} from '@/lib/writersStudio/listen/micLevel';
 import {
   createMonoCaptureRoute,
   type InputChannel,
@@ -58,14 +62,21 @@ export default function ListenPilot() {
   const [routedOutput, setRoutedOutput] = useState<{ channel: InputChannel; outputChannels: number; rateHz: number } | null>(null);
   const [captureInfo, setCaptureInfo] = useState<BrowserCaptureInfo | null>(null);
   const [inspecting, setInspecting] = useState(false);
+  const [monitoring, setMonitoring] = useState(false);
+  const [meterLevels, setMeterLevels] = useState<Record<InputChannel, MicLevels>>({
+    1: QUIET_MIC_LEVELS, 2: QUIET_MIC_LEVELS,
+  });
   const media = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
   const monoRouteRef = useRef<MonoCaptureRoute | null>(null);
+  const meterFrame = useRef<number | null>(null);
+  const meterPeakHold = useRef<Record<InputChannel, number>>({ 1: -60, 2: -60 });
   const chunks = useRef<Blob[]>([]);
   const takesRef = useRef<Take[]>([]);
 
   useEffect(() => { takesRef.current = takes; }, [takes]);
   useEffect(() => () => {
+    if (meterFrame.current !== null) cancelAnimationFrame(meterFrame.current);
     if (media.current?.state === 'recording') media.current.stop();
     stream.current?.getTracks().forEach((t) => t.stop());
     if (monoRouteRef.current) void monoRouteRef.current.close().catch(() => {});
@@ -122,8 +133,92 @@ export default function ListenPilot() {
     next.set('mode', mode);
     router.push('/writers-studio?' + next.toString());
   };
+  const startLevelPolling = (route: MonoCaptureRoute) => {
+    if (meterFrame.current !== null) cancelAnimationFrame(meterFrame.current);
+    meterPeakHold.current = { 1: -60, 2: -60 };
+    setMeterLevels({ 1: QUIET_MIC_LEVELS, 2: QUIET_MIC_LEVELS });
+    const waves: Record<InputChannel, Float32Array> = {
+      1: new Float32Array(route.analysers[1].fftSize),
+      2: new Float32Array(route.analysers[2].fftSize),
+    };
+    let lastPaint = 0;
+    const tick = (timestamp: number) => {
+      if (monoRouteRef.current !== route) return;
+      if (timestamp - lastPaint >= 70) {
+        const next = {} as Record<InputChannel, MicLevels>;
+        for (const channel of [1, 2] as const) {
+          route.analysers[channel].getFloatTimeDomainData(waves[channel]);
+          const readings = measureMicLevels(waves[channel], meterPeakHold.current[channel]);
+          meterPeakHold.current[channel] = readings.heldPeakDbfs;
+          next[channel] = readings;
+        }
+        setMeterLevels(next);
+        lastPaint = timestamp;
+      }
+      meterFrame.current = requestAnimationFrame(tick);
+    };
+    meterFrame.current = requestAnimationFrame(tick);
+  };
+  const endLevelPolling = () => {
+    if (meterFrame.current !== null) cancelAnimationFrame(meterFrame.current);
+    meterFrame.current = null;
+    setMeterLevels((before) => ({
+      1: { ...before[1], peakDbfs: -60, rmsDbfs: -60 },
+      2: { ...before[2], peakDbfs: -60, rmsDbfs: -60 },
+    }));
+  };
+  const releaseMicrophone = () => {
+    endLevelPolling();
+    stream.current?.getTracks().forEach((track) => track.stop());
+    stream.current = null;
+    const route = monoRouteRef.current;
+    monoRouteRef.current = null;
+    if (route) void route.close().catch(() => {});
+    setMonitoring(false);
+  };
+  const resetMeterPeak = () => {
+    meterPeakHold.current = { 1: -60, 2: -60 };
+    setMeterLevels((before) => ({
+      1: { ...before[1], heldPeakDbfs: -60, clipped: false },
+      2: { ...before[2], heldPeakDbfs: -60, clipped: false },
+    }));
+  };
+  const startMicCheck = async () => {
+    if (recording || inspecting || monitoring) return;
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      setError('A secure browser connection (HTTPS or localhost) is required for a mic check.');
+      return;
+    }
+    setInspecting(true);
+    let newStream: MediaStream | null = null;
+    let newRoute: MonoCaptureRoute | null = null;
+    try {
+      newStream = await navigator.mediaDevices.getUserMedia({ audio: recordingConstraints(mic) });
+      newRoute = await createMonoCaptureRoute(newStream, inputChannel);
+      stream.current = newStream;
+      monoRouteRef.current = newRoute;
+      setCaptureInfo(browserCaptureInfo(
+        newStream.getAudioTracks()[0]?.getSettings() ?? {}, preferredRecorderMime(),
+      ));
+      setRoutedOutput({
+        channel: newRoute.inputChannel, outputChannels: newRoute.outputChannels, rateHz: newRoute.outputRateHz,
+      });
+      setMonitoring(true);
+      startLevelPolling(newRoute);
+      setError('');
+    } catch (cause) {
+      newStream?.getTracks().forEach((track) => track.stop());
+      if (newRoute) void newRoute.close().catch(() => {});
+      stream.current = null;
+      monoRouteRef.current = null;
+      setMonitoring(false);
+      setError(cause instanceof Error ? cause.message : 'Microphone level monitoring is unavailable.');
+    } finally {
+      setInspecting(false);
+    }
+  };
   const refreshMics = async () => {
-    if (recording || inspecting) return;
+    if (recording || inspecting || monitoring) return;
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
       setError('A secure browser connection (localhost or HTTPS) is required for microphone inspection.');
       return;
@@ -151,11 +246,12 @@ export default function ListenPilot() {
       return;
     }
     try {
-      const audio = await navigator.mediaDevices.getUserMedia({ audio: recordingConstraints(mic) });
+      const audio = stream.current ?? await navigator.mediaDevices.getUserMedia({ audio: recordingConstraints(mic) });
       stream.current = audio;
       chunks.current = [];
-      const routed = await createMonoCaptureRoute(audio, inputChannel);
+      const routed = monoRouteRef.current ?? await createMonoCaptureRoute(audio, inputChannel);
       monoRouteRef.current = routed;
+      if (!monitoring) { setMonitoring(true); startLevelPolling(routed); }
       setRoutedOutput({ channel: routed.inputChannel, outputChannels: routed.outputChannels, rateHz: routed.outputRateHz });
       const mime = preferredRecorderMime();
       const rec = new MediaRecorder(routed.stream, mime ? { mimeType: mime } : undefined);
@@ -169,10 +265,6 @@ export default function ListenPilot() {
       rec.ondataavailable = (e) => { if (e.data.size) chunks.current.push(e.data); };
       rec.onstop = () => {
         const durationSeconds = Math.max(0, Math.round((Date.now() - recordingStartMs) / 1000));
-        audio.getTracks().forEach((t) => t.stop());
-        if (monoRouteRef.current === routed) monoRouteRef.current = null;
-        void routed.close().catch(() => {});
-        stream.current = null;
         media.current = null;
         const blob = new Blob(chunks.current, { type: rec.mimeType || 'audio/webm' });
         if (blob.size) {
@@ -188,6 +280,7 @@ export default function ListenPilot() {
           }]);
         } else setError('No audio captured.');
         setRecording(false);
+        releaseMicrophone();
       };
       rec.onerror = () => setError('Recording error. Stop and try again.');
       rec.start(1000);
@@ -299,14 +392,14 @@ export default function ListenPilot() {
                   </div>
                   <div className={styles.recordBlock}>
                     <h3 className={styles.blockTitle}>1. Prepare</h3>
-                    <button type="button" className={styles.secondaryButton} disabled={recording || inspecting} onClick={() => void refreshMics()}>
+                    <button type="button" className={styles.secondaryButton} disabled={recording || inspecting || monitoring} onClick={() => void refreshMics()}>
                       {inspecting ? 'Inspecting microphone…' : 'Check microphone & format'}
                     </button>
                     {!!mics.length && (
                       <>
                         <label htmlFor="listen-mic" className={styles.fieldLabel} style={{ marginTop: 16 }}>Microphone input</label>
                         <select id="listen-mic" className={styles.select} value={mic}
-                          disabled={recording || inspecting} onChange={(e) => { setMic(e.target.value); setCaptureInfo(null); }}>
+                          disabled={recording || inspecting || monitoring} onChange={(e) => { setMic(e.target.value); setCaptureInfo(null); }}>
                           <option value="">System default</option>
                           {mics.map((m, i) => <option key={m.deviceId || i} value={m.deviceId}>{m.label || 'Microphone ' + (i + 1)}</option>)}
                         </select>
@@ -318,7 +411,7 @@ export default function ListenPilot() {
                         id="listen-input-channel"
                         value={inputChannel}
                         className={styles.select}
-                        disabled={recording || inspecting}
+                        disabled={recording || inspecting || monitoring}
                         onChange={(e) => { setInputChannel(Number(e.target.value) as InputChannel); setRoutedOutput(null); }}
                       >
                         <option value={1}>Input 1 (left) — microphone in first jack</option>
@@ -347,6 +440,81 @@ export default function ListenPilot() {
                       )}
                       <p className={styles.formatExplanation}>We request a 48 kHz mono microphone feed with processing off, but your browser and hardware decide the actual input settings. A reported input rate does not make the compressed recording a 24-bit WAV master.</p>
                     </div>
+
+                    <section className={styles.voiceField} aria-label="Live voice field">
+                      <div className={styles.voiceFieldHead}>
+                        <div>
+                          <span className={styles.voiceFieldKicker}>Your voice entering the page</span>
+                          <h4 className={styles.voiceFieldTitle}>Voice field</h4>
+                        </div>
+                        <div className={styles.voiceFieldActions}>
+                          {!monitoring ? (
+                            <button type="button" className={styles.secondaryButton}
+                              disabled={recording || inspecting} onClick={() => void startMicCheck()}>
+                              {inspecting ? 'Listening…' : 'Open live levels'}
+                            </button>
+                          ) : (
+                            <>
+                              <button type="button" className={styles.quietButton} onClick={resetMeterPeak}>Reset peak</button>
+                              {!recording && <button type="button" className={styles.quietButton} onClick={releaseMicrophone}>Close levels</button>}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <p className={styles.voiceFieldIntro}>
+                        Read a few lines naturally. The field moves with the real energy of your voice. Aim for generous green,
+                        let expressive peaks touch amber, and keep red rare.
+                      </p>
+                      <div className={styles.voiceChannels}>
+                        {([1, 2] as const).map((channel) => {
+                          const levels = meterLevels[channel];
+                          const selected = inputChannel === channel;
+                          const activePct = meterPercentage(levels.peakDbfs);
+                          const heldPct = meterPercentage(levels.heldPeakDbfs);
+                          const bloom = Math.max(0.08, meterPercentage(levels.rmsDbfs) / 100);
+                          return (
+                            <div key={channel} className={styles.voiceChannel} data-selected={selected ? 'true' : 'false'}>
+                              <div className={styles.voiceChannelTop}>
+                                <div>
+                                  <strong>Input {channel}</strong>
+                                  <span>{selected ? ' · reading channel' : ' · available channel'}</span>
+                                </div>
+                                <span className={styles.voiceDb}>
+                                  {monitoring ? `${levels.peakDbfs.toFixed(1)} dBFS` : 'waiting'}
+                                </span>
+                              </div>
+                              <div className={styles.voiceBloom} aria-hidden="true">
+                                {Array.from({ length: 13 }).map((_, i) => {
+                                  const shape = [0.56, 0.7, 0.82, 0.64, 0.92, 0.76, 1, 0.78, 0.9, 0.66, 0.84, 0.7, 0.54][i];
+                                  const height = 4 + (30 * bloom * shape);
+                                  return <span key={i} style={{ height: `${height.toFixed(1)}px` } as CSSProperties} />;
+                                })}
+                              </div>
+                              <div className={styles.voiceMeter} aria-hidden="true">
+                                <div className={styles.voiceMeterColor} />
+                                <div className={styles.voiceMeterShade} style={{ left: `${activePct}%` }} />
+                                <span className={styles.voicePeakMarker} style={{ left: `${heldPct}%` }} />
+                              </div>
+                              <div className={styles.voiceScale}>
+                                <span>−60</span><span>−24</span><span>−12</span><span>−6</span><span>0</span>
+                              </div>
+                              <div className={styles.voiceChannelFoot}>
+                                <span>{selected ? 'Centered mono capture' : 'Not recorded unless selected'}</span>
+                                <span className={levels.clipped ? styles.voiceClip : styles.voicePeak}>
+                                  Peak {levels.heldPeakDbfs.toFixed(1)} dBFS{levels.clipped ? ' · CLIP' : ''}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className={styles.voiceLegend} aria-hidden="true">
+                        <span><i data-zone="green" /> healthy</span>
+                        <span><i data-zone="amber" /> expressive peak</span>
+                        <span><i data-zone="red" /> clipping risk</span>
+                      </div>
+                    </section>
+
                     <div className={styles.recordControls}>
                       <button type="button" className={styles.primaryButton}
                         disabled={recording || inspecting || !readingSections.some((s) => s.body.trim())} onClick={() => void start()}>●&nbsp; Start recording</button>
