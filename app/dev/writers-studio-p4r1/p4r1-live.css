@@ -6317,3 +6317,235 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
 .p4r1-root .p4r1-open-craft:hover {
   border-color:var(--fr-action-line);background:var(--fr-action-soft);
 }
+
+/* ── Publish room · target-aware edition preparation ─────────────────── */
+.p4r1-root .p4r1-publish-lede{
+  margin:6px 0 0;
+  max-width:680px;
+  font:12.5px/1.5 var(--fr-sans-stack);
+  color:var(--fr-muted);
+}
+.p4r1-root .p4r1-publish-targets{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+  margin-top:12px;
+}
+.p4r1-root .p4r1-publish-targets>button{
+  min-height:88px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:5px;
+  text-align:left;
+  border:1px solid var(--fr-line);
+  border-radius:10px;
+  background:var(--fr-field);
+  color:var(--fr-title);
+  padding:12px 13px;
+  cursor:pointer;
+  transition:border-color .14s, background .14s, box-shadow .14s;
+}
+.p4r1-root .p4r1-publish-targets>button:hover{
+  border-color:var(--fr-action-line);
+  background:color-mix(in srgb,var(--fr-action-soft) 42%,var(--fr-field));
+}
+.p4r1-root .p4r1-publish-targets>button[data-selected='true']{
+  border-color:var(--fr-action-line);
+  background:var(--fr-action-soft);
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--fr-action) 10%,transparent);
+}
+.p4r1-root .p4r1-publish-targets b{
+  font:650 12.5px/1.35 var(--fr-sans-stack);
+}
+.p4r1-root .p4r1-publish-targets span{
+  font:11.5px/1.45 var(--fr-sans-stack);
+  color:var(--fr-muted);
+}
+.p4r1-root .p4r1-publish-edition-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:8px;
+}
+.p4r1-root .p4r1-publish-edition-head h4{margin:0}
+.p4r1-root .p4r1-publish-edition-head p{
+  margin:4px 0 0;
+  font:12px/1.45 var(--fr-sans-stack);
+  color:var(--fr-muted);
+  max-width:620px;
+}
+.p4r1-root .p4r1-publish-edition-badge{
+  flex:0 0 auto;
+  border:1px solid var(--fr-action-line);
+  border-radius:999px;
+  background:var(--fr-action-soft);
+  color:var(--fr-action);
+  padding:5px 8px;
+  font:650 9.5px var(--fr-sans-stack);
+  letter-spacing:.02em;
+}
+.p4r1-root .p4r1-publish-facts{
+  margin:13px 0 0;
+  display:grid;
+  gap:0;
+  border:1px solid var(--fr-line-soft);
+  border-radius:9px;
+  overflow:hidden;
+}
+.p4r1-root .p4r1-publish-facts>div{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  padding:8px 10px;
+  border-top:1px solid var(--fr-line-soft);
+  background:var(--fr-field);
+}
+.p4r1-root .p4r1-publish-facts>div:first-child{border-top:0}
+.p4r1-root .p4r1-publish-facts dt{
+  font:600 10.5px var(--fr-sans-stack);
+  color:var(--fr-muted);
+}
+.p4r1-root .p4r1-publish-facts dd{
+  margin:0;
+  text-align:right;
+  font:600 11px var(--fr-sans-stack);
+  color:var(--fr-title);
+}
+.p4r1-root .p4r1-publish-preflight{
+  margin-top:12px;
+  padding:11px 12px;
+  border:1px solid var(--fr-line-soft);
+  border-radius:9px;
+  background:var(--fr-panel-soft);
+}
+.p4r1-root .p4r1-publish-preflight>b{
+  font:650 11px var(--fr-sans-stack);
+  color:var(--fr-title);
+}
+.p4r1-root .p4r1-publish-preflight ul{
+  margin:8px 0 0;
+  padding:0;
+  list-style:none;
+  display:grid;
+  gap:5px;
+}
+.p4r1-root .p4r1-publish-preflight li{
+  position:relative;
+  padding-left:18px;
+  font:11.5px/1.4 var(--fr-sans-stack);
+  color:var(--fr-ink2);
+}
+.p4r1-root .p4r1-publish-preflight li::before{
+  position:absolute;
+  left:0;
+  top:0;
+}
+.p4r1-root .p4r1-publish-preflight li[data-state='ready']::before{
+  content:'✓';
+  color:var(--fr-action);
+  font-weight:800;
+}
+.p4r1-root .p4r1-publish-preflight li[data-state='open']::before{
+  content:'○';
+  color:var(--fr-muted);
+}
+.p4r1-root .p4r1-press-path{
+  margin-top:13px;
+  padding:13px;
+  border:1px solid color-mix(in srgb,var(--fr-action-line) 78%,var(--fr-line));
+  border-radius:11px;
+  background:linear-gradient(135deg,var(--fr-action-soft),var(--fr-panel));
+}
+.p4r1-root .p4r1-press-path>div:first-child{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+}
+.p4r1-root .p4r1-press-mark{
+  width:32px;
+  height:32px;
+  flex:0 0 auto;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:var(--fr-action);
+  color:var(--fr-panel);
+  font:600 15px var(--fr-serif-stack);
+}
+.p4r1-root .p4r1-press-path b{
+  font:650 11.5px/1.4 var(--fr-sans-stack);
+  color:var(--fr-title);
+}
+.p4r1-root .p4r1-press-path p{
+  margin:4px 0 0;
+  font:11.5px/1.48 var(--fr-sans-stack);
+  color:var(--fr-ink2);
+}
+.p4r1-root .p4r1-press-path>button{
+  margin-top:11px;
+  border:1px solid var(--fr-action-line);
+  border-radius:8px;
+  background:var(--fr-panel);
+  color:var(--fr-action);
+  padding:7px 10px;
+  font:650 10.5px var(--fr-sans-stack);
+  cursor:pointer;
+}
+.p4r1-root .p4r1-press-path ol{
+  margin:12px 0 0;
+  padding:0;
+  list-style:none;
+  display:grid;
+  gap:7px;
+}
+.p4r1-root .p4r1-press-path li{
+  display:grid;
+  grid-template-columns:170px minmax(0,1fr);
+  gap:10px;
+  padding-top:7px;
+  border-top:1px solid var(--fr-line-soft);
+}
+.p4r1-root .p4r1-press-path li span{
+  font:11.5px/1.45 var(--fr-sans-stack);
+  color:var(--fr-muted);
+}
+.p4r1-root .p4r1-publish-artifact{
+  padding:13px 14px;
+  border:1px solid var(--fr-action-line);
+  border-radius:10px;
+  background:var(--fr-action-soft);
+}
+.p4r1-root .p4r1-publish-artifact dl{
+  margin:10px 0 0;
+  display:grid;
+  gap:5px;
+}
+.p4r1-root .p4r1-publish-artifact dl>div{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+}
+.p4r1-root .p4r1-publish-artifact dt,
+.p4r1-root .p4r1-publish-artifact dd{
+  margin:0;
+  font:10.5px/1.4 var(--fr-sans-stack);
+}
+.p4r1-root .p4r1-publish-artifact dt{color:var(--fr-muted)}
+.p4r1-root .p4r1-publish-artifact dd{
+  color:var(--fr-title);
+  font-weight:650;
+  text-align:right;
+}
+.p4r1-root .p4r1-publish-artifact>p{
+  margin:10px 0 0;
+  font:11.5px/1.45 var(--fr-sans-stack);
+  color:var(--fr-ink2);
+}
+@media(max-width:760px){
+  .p4r1-root .p4r1-publish-targets{grid-template-columns:1fr}
+  .p4r1-root .p4r1-publish-edition-head{display:grid}
+  .p4r1-root .p4r1-publish-edition-badge{justify-self:start}
+  .p4r1-root .p4r1-press-path li{grid-template-columns:1fr;gap:2px}
+}
