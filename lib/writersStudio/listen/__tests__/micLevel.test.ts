@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { amplitudeToDbfs, measureMicLevels, meterPercentage, QUIET_MIC_LEVELS } from '../micLevel';
+import { amplitudeToDbfs, measureMicLevels, meterPercentage, QUIET_MIC_LEVELS, voiceLevelGuidance } from '../micLevel';
 
 describe('Listen · live microphone indicators', () => {
   it('maps silence to the visible quiet floor without inventing audio', () => {
@@ -36,5 +36,16 @@ describe('Listen · live microphone indicators', () => {
   it('clamps the meter display at 0 to 100 percent', () => {
     expect(meterPercentage(-100)).toBe(0);
     expect(meterPercentage(10)).toBe(100);
+  });
+
+  it('teaches the spoken-word peak zones without moving the thresholds', () => {
+    expect(voiceLevelGuidance(-20).state).toBe('quiet');
+    expect(voiceLevelGuidance(-15).state).toBe('good');
+    expect(voiceLevelGuidance(-12).state).toBe('ideal');
+    expect(voiceLevelGuidance(-7.7).state).toBe('ideal');
+    expect(voiceLevelGuidance(-6).state).toBe('ideal');
+    expect(voiceLevelGuidance(-5).state).toBe('hot');
+    expect(voiceLevelGuidance(-2).state).toBe('risk');
+    expect(voiceLevelGuidance(-0.5).state).toBe('clip');
   });
 });

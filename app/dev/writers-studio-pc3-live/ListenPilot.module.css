@@ -333,10 +333,12 @@
   width: 10%;
   top: 0;
   bottom: 0;
-  border-left: 1px solid rgba(255,255,255,.92);
-  border-right: 1px solid rgba(255,255,255,.92);
-  box-shadow: inset 0 0 0 1px rgba(54, 78, 69, .13), 0 0 6px rgba(232, 205, 135, .24);
-  background: rgba(255,255,255,.10);
+  border-left: 1px solid rgba(255,248,222,.98);
+  border-right: 1px solid rgba(255,248,222,.98);
+  box-shadow:
+    inset 0 0 0 1px rgba(116, 102, 61, .18),
+    0 0 8px rgba(225, 194, 116, .30);
+  background: rgba(250, 230, 166, .30);
 }
 .voiceMeterShade {
   position: absolute; z-index: 2; top: 0; right: 0; bottom: 0;
@@ -351,6 +353,65 @@
   display: flex; justify-content: space-between; margin-top: 4px;
   color: #929b96; font: 500 9px/1.2 var(--fr-sans-stack, system-ui);
   font-variant-numeric: tabular-nums;
+}
+.voiceIdealGuide {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 5px;
+  margin: 5px 0 0;
+  padding-right: 1px;
+  color: #89703f;
+  font: 650 9.5px/1.2 var(--fr-sans-stack, system-ui);
+  letter-spacing: .015em;
+}
+.voiceIdealGuide span { white-space: nowrap; }
+.voiceIdealGuide strong {
+  color: #6b5a35;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.voiceChannelFoot { margin-top: 7px; }
+.voiceGuidance {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 9px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d9e0da;
+  background: #f4f7f2;
+  color: #536963;
+  font: 500 11.5px/1.45 var(--fr-sans-stack, system-ui);
+}
+.voiceGuidance strong { font-weight: 800; }
+.voiceGuidance[data-state='ideal'] {
+  border-color: #aec8b4;
+  background: #edf5ed;
+  color: #3f6752;
+  box-shadow: 0 0 14px rgba(104,151,129,.10);
+}
+.voiceGuidance[data-state='good'] {
+  border-color: #c8d5c8;
+  background: #f1f5ef;
+  color: #566d5d;
+}
+.voiceGuidance[data-state='quiet'] {
+  border-color: #d7dbd2;
+  background: #f5f5f0;
+  color: #6c746e;
+}
+.voiceGuidance[data-state='hot'] {
+  border-color: #e1c28d;
+  background: #fff7e8;
+  color: #815e2d;
+}
+.voiceGuidance[data-state='risk'],
+.voiceGuidance[data-state='clip'] {
+  border-color: #deb1a8;
+  background: #fff0ec;
+  color: #8b443a;
 }
 .voiceChannelFoot { margin-top: 7px; }
 .voicePeak { color: #5b716a; font-variant-numeric: tabular-nums; }
