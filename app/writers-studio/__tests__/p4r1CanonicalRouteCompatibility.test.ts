@@ -4,7 +4,7 @@ import {
   CANONICAL_STUDIO_PATH,
   canonicalStudioRoute,
 } from '@/lib/writersStudio/canonicalStudioRoute';
-import { unifiedModeFrom } from '@/app/dev/writers-studio-p4r1/P4R1StudioHost';
+import { unifiedModeFrom } from '@/app/dev/writers-studio-p4r1/studioMode';
 
 const ROOT = process.cwd();
 const read = (p: string) => fs.readFileSync(path.join(ROOT, p), 'utf8');
@@ -103,7 +103,7 @@ describe('C3 canonical route compatibility', () => {
     expect(write).toContain('bindEditorialThread(out.thread)');
     expect(write).toContain('canvasWithEditorialThread(');
     expect(write).toContain('canvasWithoutEditorialThread(');
-    expect(write).toContain('window.history.replaceState(');
+    expect(write).toContain('replacePlaceAddress(canvasWithoutEditorialThread(');
     expect(write).toContain('setWorkspaceOpen(true)');
     expect(write).toContain('The revision conversation named by this link could not be resumed at this place.');
   });

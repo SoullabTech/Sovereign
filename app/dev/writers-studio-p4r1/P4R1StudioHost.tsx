@@ -9,19 +9,7 @@ import ListenPilot from '../writers-studio-pc3-live/ListenPilot';
 import P4R1ThemeMenu from './P4R1ThemeMenu';
 import P4R1BetaFeedback from './P4R1BetaFeedback';
 import { ConstellationArrival } from '../../writers-studio/ConstellationArrival';
-
-export type UnifiedStudioMode = 'home' | 'write' | 'develop' | 'review' | 'listen';
-
-const MODES: readonly UnifiedStudioMode[] = ['home', 'write', 'develop', 'review', 'listen'];
-
-export function unifiedModeFrom(
-  value: string | null | undefined,
-  fallback: UnifiedStudioMode,
-): UnifiedStudioMode {
-  return MODES.includes(value as UnifiedStudioMode)
-    ? value as UnifiedStudioMode
-    : fallback;
-}
+import { unifiedModeFrom, type UnifiedStudioMode } from './studioMode';
 
 export default function P4R1StudioHost({
   defaultMode = 'write',

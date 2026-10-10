@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { BETA_FEEDBACK_LABEL, BETA_FEEDBACK_SIGNALS, type BetaFeedbackSignal } from '@/lib/writersStudio/betaFeedback';
 import { sendBetaFeedback } from '@/lib/writersStudio/betaFeedbackClient';
-import type { UnifiedStudioMode } from './P4R1StudioHost';
+import type { UnifiedStudioMode } from './studioMode';
 import { apiFetch } from '@/lib/http/apiBase';
 
 export default function P4R1BetaFeedback({ mode }: { mode: UnifiedStudioMode }) {

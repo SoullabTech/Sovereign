@@ -538,11 +538,14 @@ export default function FlagshipWriteEditController() {
   const clearEditorial = useCallback(() => {
     setEditorialThread(null);
     if (typeof window !== 'undefined') {
-      window.history.replaceState(
-        null,
-        '',
-        canvasWithoutEditorialThread(window.location.pathname, window.location.search),
-      );
+      // A same-address replaceState can trigger App Router reconciliation after
+      // the canvas has already moved to a new section. Use the shared no-op-aware
+      // place publisher so clearing an editorial thread cannot snap the writer
+      // back to a stale section address.
+      replacePlaceAddress(canvasWithoutEditorialThread(
+        window.location.pathname,
+        window.location.search,
+      ));
     }
     setRelationshipChoices([]);
     setSuggestedVersionId(null);
