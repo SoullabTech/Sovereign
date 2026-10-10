@@ -46,3 +46,18 @@
 ## Next handoff
 
 The separate Listen owner finishes the real hardware/experience acceptance and commits a frozen candidate; the release owner then reconciles it with `0d67de53b3`, reruns evidence at the final SHA, and reviews pending migrations and non-founder access. Stop before any live production changes.
+
+## Subsequent bounded review — 2026-10-10, hardware witness and access
+
+- **Member-attested hardware witness:** the author directly confirmed that the live Scarlett microphone levels work and change as the physical gain is adjusted. This is a real-hardware observation, not synthetic proof. It closes the *live microphone level reaction* item only; no downloaded take or independent audio-file analysis was captured in this review.
+- **Synthetic beta-access server authority:** added `app/writers-studio/__tests__/betaAccessReleaseGate.test.ts`; **6/6 passed**. Covers signed-out 401 without DB lookup, denied ordinary member, active member-linked beta admission, distinct founder witness, missing-row refusal, and exact SQL predicates.
+- Local `maia_consciousness` cohort read-only query found **no nondeleted `ops_contacts` rows with `contact_type='beta_tester'`**, so there is no available local non-founder tester for a complete beta experience witness. This does *not* assert anything about the production cohort.
+- Read-only migration inventory confirmed production reader `c9e4f7f7e`, absent ledger rows for the four pending Studio migrations, and `developmental_readings` present but the four new Studio tables absent in production. The first migration replaces an existing validation function and modifies an existing CHECK constraint; the others add tables and protected history. This is not certification of old-reader compatibility or a replacement for the required exact pending-set review-custody triplet.
+- No beta enrollment, access change, production migration, author-audio upload, manuscript mutation, or deployment occurred.
+
+### Remaining actionable gates
+
+- Download and independently replay an actual captured audio file, including pause/resume and correct centered channel playback; retain file locally under writer custody.
+- A member-linked, active **non-founder** tester must be available in an appropriately isolated beta environment; then prove one-user access and cross-member refusal end-to-end.
+- Final exact commit freeze after active Listen owner accepts the UI and recording. Rerun all final-build browser and unit proof.
+- Formal migration-custody and old-reader compatibility review, rollback rehearsal, and separate deployment authorization. Beta remains OFF.
