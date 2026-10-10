@@ -142,7 +142,7 @@ export default function ListenPilot() {
     if (meterFrame.current !== null) cancelAnimationFrame(meterFrame.current);
     meterPeakHold.current = { 1: -60, 2: -60 };
     setMeterLevels({ 1: QUIET_MIC_LEVELS, 2: QUIET_MIC_LEVELS });
-    const waves: Record<InputChannel, Float32Array> = {
+    const waves: Record<InputChannel, Float32Array<ArrayBuffer>> = {
       1: new Float32Array(route.analysers[1].fftSize),
       2: new Float32Array(route.analysers[2].fftSize),
     };
