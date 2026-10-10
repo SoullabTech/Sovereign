@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import {
+  inches,
+  kdpPaperbackCoverGeometry,
+  type KdpPaperbackPaper,
+} from '@/lib/writersStudio/publish/kdpCoverGeometry';
 
 type ProductionIssue = {
   code: string;
@@ -122,6 +127,7 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
   const [message, setMessage] = useState<string | null>(null);
   const [artifact, setArtifact] = useState<ArtifactMeta | null>(null);
   const [pressOpen, setPressOpen] = useState(false);
+  const [paper, setPaper] = useState<KdpPaperbackPaper>('cream');
 
   const target = useMemo(
     () => TARGETS.find((candidate) => candidate.id === targetId) ?? TARGETS[0],
@@ -199,7 +205,12 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
     }
   }, [making, manuscriptId, preflight, target.short]);
 
-  const primaryFormat = target.format === 'epub' ? 'epub' : 'pdf';
+  const renderedPageCount = artifact?.format === 'pdf' && artifact.pageCount
+    ? Number.parseInt(artifact.pageCount, 10)
+    : null;
+  const paperbackCover = target.id === 'kdp-paperback' && renderedPageCount && Number.isInteger(renderedPageCount)
+    ? kdpPaperbackCoverGeometry(renderedPageCount, paper)
+    : null;
 
   return (
     <section className="p4r1-produce p4r1-publish" data-produce-panel data-publish-panel>
@@ -399,17 +410,107 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
                     {artifact.pageCount ? <div><dt>Rendered pages</dt><dd>{artifact.pageCount}</dd></div> : null}
                     {artifact.sourceHash ? <div><dt>Source witness</dt><dd>{artifact.sourceHash.slice(0, 12)}</dd></div> : null}
                   </dl>
-                  {artifact.format === 'pdf' && (target.id === 'kdp-paperback' || target.id === 'kdp-hardcover' || target.id === 'soullab-press') ? (
+                </section>
+              ) : null}
+
+              {paperbackCover ? (
+                <section className="p4r1-produce-step p4r1-cover-planner" data-cover-planner>
+                  <span className="p4r1-eyebrow">7 · Paperback cover &amp; spine</span>
+                  <div className="p4r1-cover-head">
+                    <div>
+                      <h4>Build the cover around the actual book.</h4>
+                      <p>
+                        These measurements use the rendered {paperbackCover.pageCount}-page interior,
+                        KDP’s 6 × 9 paperback formulas, and the paper stock you choose.
+                      </p>
+                    </div>
+                    <span>{paperbackCover.pageCount} pages</span>
+                  </div>
+
+                  <fieldset className="p4r1-cover-paper">
+                    <legend>Paper stock</legend>
+                    <label>
+                      <input
+                        type="radio"
+                        name="publish-paper"
+                        value="cream"
+                        checked={paper === 'cream'}
+                        onChange={() => setPaper('cream')}
+                      />
+                      <span><b>Cream</b><small>Common for text-heavy books</small></span>
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name="publish-paper"
+                        value="white"
+                        checked={paper === 'white'}
+                        onChange={() => setPaper('white')}
+                      />
+                      <span><b>White</b><small>Slightly thinner spine at the same page count</small></span>
+                    </label>
+                  </fieldset>
+
+                  <div className="p4r1-cover-visual" aria-label="Paperback cover geometry">
+                    <div className="p4r1-cover-back">
+                      <span>Back cover</span>
+                      <small>6 × 9</small>
+                    </div>
+                    <div
+                      className="p4r1-cover-spine"
+                      style={{ width: `${Math.max(30, Math.min(68, paperbackCover.spineWidthIn * 88))}px` }}
+                    >
+                      <span>Spine</span>
+                      <small>{inches(paperbackCover.spineWidthIn, 4)}″</small>
+                    </div>
+                    <div className="p4r1-cover-front">
+                      <span>Front cover</span>
+                      <small>6 × 9</small>
+                    </div>
+                  </div>
+
+                  <dl className="p4r1-cover-facts">
+                    <div><dt>Trim</dt><dd>6 × 9 in</dd></div>
+                    <div><dt>Cover bleed</dt><dd>0.125 in on each outer edge</dd></div>
+                    <div><dt>Spine width</dt><dd>{inches(paperbackCover.spineWidthIn, 4)} in</dd></div>
+                    <div><dt>Full cover width</dt><dd>{inches(paperbackCover.fullWidthIn, 4)} in</dd></div>
+                    <div><dt>Full cover height</dt><dd>{inches(paperbackCover.fullHeightIn, 4)} in</dd></div>
+                    <div>
+                      <dt>Spine text</dt>
+                      <dd>{paperbackCover.spineTextEligible ? 'Eligible at this page count' : 'Not eligible at this page count'}</dd>
+                    </div>
+                  </dl>
+
+                  <div className="p4r1-cover-actions">
+                    <a href="https://kdp.amazon.com/cover-calculator" target="_blank" rel="noreferrer">
+                      Open KDP cover calculator &amp; template
+                    </a>
                     <p>
-                      Page count is now known. That is one of the inputs a cover/spine production workspace will use.
-                      The cover remains separate from this interior file.
+                      Use KDP’s generated PDF/PNG template as the final guide layer before exporting the cover.
+                      Studio is calculating the same paperback geometry here so you can plan the edition before leaving.
                     </p>
-                  ) : null}
+                  </div>
+                </section>
+              ) : null}
+
+              {artifact?.format === 'pdf' && target.id === 'kdp-hardcover' ? (
+                <section className="p4r1-produce-step p4r1-cover-planner p4r1-cover-hardcover" data-cover-planner>
+                  <span className="p4r1-eyebrow">7 · Hardcover case-wrap</span>
+                  <h4>Use KDP’s exact hardcover template for this rendered page count.</h4>
+                  <p>
+                    Hardcover case-wrap geometry is different from paperback geometry. Studio will not approximate it.
+                    Generate the exact template from KDP using {artifact.pageCount || 'the rendered'} pages and the 6 × 9 trim.
+                  </p>
+                  <div className="p4r1-cover-actions">
+                    <a href="https://kdp.amazon.com/cover-calculator" target="_blank" rel="noreferrer">
+                      Open KDP hardcover template generator
+                    </a>
+                  </div>
                 </section>
               ) : null}
 
               <section className="p4r1-produce-step p4r1-produce-next">
-                <span className="p4r1-eyebrow">{artifact ? '7' : '6'} · What happens next</span>
+                <span className="p4r1-eyebrow">{paperbackCover || (artifact?.format === 'pdf' && target.id === 'kdp-hardcover') ? '8' : artifact ? '7' : '6'} · What happens next</span>
                 <ol>
                   <li><b>Proof the edition.</b><span>Read the rendered pages as a reader will encounter them.</span></li>
                   <li><b>Prepare the cover separately.</b><span>Trim, page count, binding, and paper choice inform the final cover/spine geometry.</span></li>

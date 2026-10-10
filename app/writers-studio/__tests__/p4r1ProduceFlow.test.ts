@@ -126,6 +126,9 @@ test('Make PDF uses the existing render route and downloads returned bytes', asy
       headers: new Headers({
         'content-type': 'application/pdf',
         'content-disposition': 'attachment; filename="Elemental Alchemy.pdf"',
+        'x-soullab-page-count': '216',
+        'x-soullab-production-profile': 'hallmark-6x9-v1',
+        'x-soullab-source-hash': '1234567890abcdef',
       }),
       blob: async () => new Blob(['pdf']),
     });
@@ -153,6 +156,20 @@ test('Make PDF uses the existing render route and downloads returned bytes', asy
   expect(URL.createObjectURL).toHaveBeenCalled();
   expect(HTMLAnchorElement.prototype.click).toHaveBeenCalled();
   expect(container.textContent).toContain('PDF prepared for KDP Paperback from your current writing.');
+  expect(container.textContent).toContain('7 · Paperback cover & spine');
+  expect(container.textContent).toContain('216 pages');
+  expect(container.textContent).toContain('0.54 in');
+  expect(container.textContent).toContain('12.79 in');
+  expect(container.textContent).toContain('9.25 in');
+  expect(container.textContent).toContain('Eligible at this page count');
+  expect(container.querySelector('a[href="https://kdp.amazon.com/cover-calculator"]')).not.toBeNull();
+
+  const white = container.querySelector('input[value="white"]') as HTMLInputElement;
+  await act(async () => {
+    white.click();
+  });
+  expect(container.textContent).toContain('0.4864 in');
+  expect(container.textContent).toContain('12.7364 in');
 });
 
 
