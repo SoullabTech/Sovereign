@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
 import { HOME_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import { HOME_COPY, REMOVE_OR_DELETE } from '@/app/writers-studio/full-redesign/fixtures';
@@ -68,17 +68,22 @@ function LiveWorkVisual({ workId, title }: { workId: string; title: string }) {
   return <img className="p4r1-home-work-image" src={visual.src} alt={`${title} — the image this Work carries`} />;
 }
 
-function WorkAnchor({ work, manuscripts, activity, onOpen, onStartWriting, busy }: {
+function WorkAnchor({ work, manuscripts, activity, onOpen, onStartWriting, busy, produceInitially = false }: {
   work: LivingWork;
   manuscripts: readonly CurrentManuscript[];
   activity: SectionActivity | null;
   onOpen: (manuscriptId: string, sectionId?: string) => void;
   onStartWriting: (workId: string) => void;
   busy: boolean;
+  produceInitially?: boolean;
 }) {
   const choices = manuscriptsForWork(work, manuscripts);
   const manuscript = choices.length === 1 ? choices[0] : null;
-  const [producing, setProducing] = useState(false);
+  const [producing, setProducing] = useState(produceInitially);
+
+  useEffect(() => {
+    if (produceInitially) setProducing(true);
+  }, [produceInitially]);
   const facts = workFacts(work, manuscripts);
   const title = work.title?.trim() || 'Untitled Work';
   const sectionId = activity?.kind === 'distinct' ? activity.sectionId : undefined;
@@ -249,6 +254,7 @@ export interface P4R1HomeViewProps {
   historyActs: readonly StudioAct[];
   busy: boolean;
   error: string | null;
+  publishRequested: boolean;
   pendingMode: {
     mode: 'write' | 'develop' | 'review';
     manuscriptIds: readonly string[];
@@ -334,6 +340,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             onOpen={props.onOpen}
             onStartWriting={props.onStartWriting}
             busy={props.busy}
+            produceInitially={props.publishRequested}
           />
           {recentHistory.length > 0 ? (
             <section className="fr-home-region p4r1-home-history">
