@@ -323,3 +323,7 @@
   .voiceChannelTop, .voiceChannelFoot { align-items: flex-start; }
   .voiceChannelFoot { flex-direction: column; gap: 3px; }
 }
+
+/* Explain source quality when exporting a PCM copy of compressed audio. */
+.takeConversionNotice { font-size: 12px; line-height: 1.55; color: #526e69; margin: 5px 0 12px; }
+.takeConversionError { font-size: 12px; line-height: 1.5; color: #a33c35; margin: 5px 0 10px; }
