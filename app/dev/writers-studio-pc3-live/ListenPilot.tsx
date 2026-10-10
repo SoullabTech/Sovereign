@@ -10,7 +10,7 @@ import type { StudioMode } from '@/app/writers-studio/full-redesign/types';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { fullPrefaceReading } from '@/lib/writersStudio/listen/fullPrefaceReading';
 import {
-  measureMicLevels, meterPercentage, QUIET_MIC_LEVELS,
+  measureMicLevels, meterPercentage, QUIET_MIC_LEVELS, voiceLevelGuidance,
   type MicLevels,
 } from '@/lib/writersStudio/listen/micLevel';
 import {
@@ -476,8 +476,8 @@ export default function ListenPilot() {
                         </div>
                       </div>
                       <p className={styles.voiceFieldIntro}>
-                        Read a few lines naturally. The field moves with the real energy of your voice. Aim for generous green,
-                        let expressive peaks touch amber, and keep red rare.
+                        Read a few lines naturally. The highlighted −12 to −6 dBFS band is the ideal voice range for narration.
+                        Let expressive peaks approach amber, and keep red rare.
                       </p>
                       <div className={styles.voiceChannels}>
                         {([1, 2] as const).map((channel) => {
@@ -486,6 +486,7 @@ export default function ListenPilot() {
                           const activePct = meterPercentage(levels.peakDbfs);
                           const heldPct = meterPercentage(levels.heldPeakDbfs);
                           const bloom = Math.max(0.08, meterPercentage(levels.rmsDbfs) / 100);
+                          const guidance = voiceLevelGuidance(levels.heldPeakDbfs);
                           return (
                             <div
                               key={channel}
@@ -521,12 +522,24 @@ export default function ListenPilot() {
                               <div className={styles.voiceScale}>
                                 <span>−60</span><span>−24</span><span>−12</span><span>−6</span><span>0</span>
                               </div>
+                              {selected && (
+                                <div className={styles.voiceIdealGuide} aria-hidden="true">
+                                  <span>Ideal voice range</span>
+                                  <strong>−12 to −6 dBFS</strong>
+                                </div>
+                              )}
                               <div className={styles.voiceChannelFoot}>
                                 <span>{selected ? 'Centered mono capture' : 'Not recorded unless selected'}</span>
                                 <span className={levels.clipped ? styles.voiceClip : styles.voicePeak}>
                                   Peak {levels.heldPeakDbfs.toFixed(1)} dBFS{levels.clipped ? ' · CLIP' : ''}
                                 </span>
                               </div>
+                              {selected && monitoring && (
+                                <div className={styles.voiceGuidance} data-state={guidance.state} role="status">
+                                  <strong>{guidance.label}</strong>
+                                  <span>{guidance.message}</span>
+                                </div>
+                              )}
                             </div>
                           );
                         })}

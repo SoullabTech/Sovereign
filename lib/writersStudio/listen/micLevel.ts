@@ -10,7 +10,32 @@ export type MicLevels = {
   clipped: boolean;
 };
 
+export type VoiceLevelGuidance = {
+  state: 'quiet' | 'good' | 'ideal' | 'hot' | 'risk' | 'clip';
+  label: string;
+  message: string;
+};
+
 const FLOOR_DBFS = -60;
+
+export function voiceLevelGuidance(peakDbfs: number): VoiceLevelGuidance {
+  if (peakDbfs >= -1) {
+    return { state: 'clip', label: 'Clipping', message: 'Lower your input gain before recording.' };
+  }
+  if (peakDbfs > -3) {
+    return { state: 'risk', label: 'Clipping risk', message: 'Very little headroom remains. Ease the level down.' };
+  }
+  if (peakDbfs > -6) {
+    return { state: 'hot', label: 'Getting hot', message: 'Strong level, but leave a little more room for expressive peaks.' };
+  }
+  if (peakDbfs >= -12) {
+    return { state: 'ideal', label: 'Ideal voice range', message: 'Beautiful level for spoken-word narration.' };
+  }
+  if (peakDbfs >= -18) {
+    return { state: 'good', label: 'Good level', message: 'Safe and clear. A touch more level would bring you into the ideal range.' };
+  }
+  return { state: 'quiet', label: 'A little quiet', message: 'Raise the input slightly or move a little closer to the microphone.' };
+}
 
 export function amplitudeToDbfs(amplitude: number): number {
   if (!Number.isFinite(amplitude) || amplitude <= 0) return FLOOR_DBFS;
