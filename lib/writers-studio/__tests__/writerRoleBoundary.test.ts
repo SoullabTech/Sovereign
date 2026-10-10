@@ -15,6 +15,9 @@ describe('Writer Studio guide ethic', () => {
     expect(WRITER_ROLE_BOUNDARY).toMatch(/more fully themselves on the page/i);
     expect(WRITER_ROLE_BOUNDARY).toMatch(/do not silently normalize/i);
     expect(WRITER_ROLE_BOUNDARY).toMatch(/poetry is not failed prose/i);
+    expect(WRITER_ROLE_BOUNDARY).toMatch(/not an instruction to imitate another author/i);
+    expect(WRITER_ROLE_BOUNDARY).toMatch(/never mandatory fields or a scoring rubric/i);
+    expect(WRITER_ROLE_BOUNDARY).toMatch(/do not invent a Compass/i);
     expect(WRITER_ROLE_BOUNDARY).toMatch(/may challenge, disagree/i);
     expect(WRITER_ROLE_BOUNDARY).toMatch(/do not ghostwrite/i);
     expect(WRITER_ROLE_BOUNDARY).toMatch(/do not confuse respect with restraint/i);

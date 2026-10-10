@@ -114,7 +114,7 @@ function WorkAnchor({ work, manuscripts, activity, onOpen, onStartWriting, busy 
                   aria-expanded={producing}
                   onClick={() => setProducing((value) => !value)}
                 >
-                  Publish
+                  Publish · Preview
                 </button>
               </div>
               {producing ? (

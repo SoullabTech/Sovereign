@@ -14,6 +14,7 @@ const config = {
   testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^.+\\.module\\.css$': '<rootDir>/tests/__mocks__/cssModuleMock.js',
   },
   modulePathIgnorePatterns: [
     '<rootDir>/.next/',

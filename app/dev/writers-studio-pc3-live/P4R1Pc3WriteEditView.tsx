@@ -35,6 +35,7 @@ import MaiaCraftCompanionR1 from './MaiaCraftCompanionR1';
 import IsolatedEditorialRoom from './IsolatedEditorialRoom';
 import P4R1FocusMaterials from './P4R1FocusMaterials';
 import P4R1BlankWritingArrival from './P4R1BlankWritingArrival';
+import SaveDeviceCopy from './SaveDeviceCopy';
 import { composeSelected, editIds, editorialSegments } from '@/lib/writersStudio/editorialDiff';
 import type { CanvasInsight } from '@/lib/writersStudio/insightCanvas';
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
@@ -1260,6 +1261,19 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           maiaResizable={shellMaia != null}
           maiaDefaultShare={42}
         />
+
+      {props.surfaceMode === 'write' ? (
+        <SaveDeviceCopy
+          key={props.context.manuscriptId}
+          manuscriptId={props.context.manuscriptId}
+          title={props.context.title}
+          workTitle={props.work?.title ?? null}
+          version={props.writing.currentRevisionId()}
+          sections={props.context.sections}
+          latestBody={props.writing.bodyOf}
+          hasUnsavedWork={props.writing.hasUnsavedWork}
+        />
+      ) : null}
 
       {isolatedRoom}
 
