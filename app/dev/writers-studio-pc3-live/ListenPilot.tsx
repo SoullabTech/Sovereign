@@ -9,6 +9,7 @@ import { HOME_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import type { StudioMode } from '@/app/writers-studio/full-redesign/types';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { fullPrefaceReading } from '@/lib/writersStudio/listen/fullPrefaceReading';
+import { convertedWavBlob } from '@/lib/writersStudio/listen/wavExport';
 import {
   measureMicLevels, meterPercentage, QUIET_MIC_LEVELS, voiceLevelGuidance,
   type MicLevels,
@@ -55,6 +56,8 @@ export default function ListenPilot() {
   const [error, setError] = useState('');
   const [recording, setRecording] = useState(false);
   const [takes, setTakes] = useState<Take[]>([]);
+  const [wavConvertingId, setWavConvertingId] = useState<number | null>(null);
+  const [wavDownloadError, setWavDownloadError] = useState('');
   const [notes, setNotes] = useState('');
   const [mic, setMic] = useState('');
   const [mics, setMics] = useState<MediaDeviceInfo[]>([]);
@@ -307,6 +310,25 @@ export default function ListenPilot() {
     a.href = url;
     a.download = name;
     a.click();
+  };
+  const downloadWav = async (take: Take) => {
+    if (wavConvertingId !== null || recording) return;
+    setWavConvertingId(take.id);
+    setWavDownloadError('');
+    try {
+      const wav = await convertedWavBlob(take.blob);
+      const url = URL.createObjectURL(wav);
+      try {
+        download(url, take.filename.replace(/\.(webm|m4a)$/i, '') + '-converted-48kHz-24bit.wav');
+      } finally {
+        // The browser may still be reading the download URL after click().
+        window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      }
+    } catch (cause) {
+      setWavDownloadError(cause instanceof Error ? cause.message : 'WAV conversion failed. Download the original take.');
+    } finally {
+      setWavConvertingId(null);
+    }
   };
 
   return (
@@ -566,14 +588,23 @@ export default function ListenPilot() {
                   <div className={styles.recordBlock}>
                     <h3 className={styles.blockTitle}>2. Listen to your takes</h3>
                     {takes.length === 0 && <div className={styles.empty}>Your recordings will appear here after you stop a take.</div>}
+                    {takes.length > 0 && <p className={styles.takeConversionNotice}>
+                      Download the original recording or a converted 48 kHz / 24-bit PCM WAV.
+                      The WAV comes from the compressed original; conversion does not restore lost audio quality.
+                    </p>}
+                    {wavDownloadError && <p role="alert" className={styles.takeConversionError}>{wavDownloadError}</p>}
                     {takes.map((t) => (
                       <div key={t.id} className={styles.take}>
                         <strong>{t.filename}</strong>
                         <p className={styles.takeDetail}>Manuscript v{t.sourceVersion ?? 'unknown'} · {t.sourceSectionIds.length} source {t.sourceSectionIds.length === 1 ? 'section' : 'sections'} · {formatDuration(t.durationSeconds)} recorded · Input {t.inputChannel} → {t.outputChannels}-channel mono · {outputFormatLabel(t.capture.outputMimeType)}</p>
                         <audio controls src={t.url} className={styles.audio} aria-label={'Listen to ' + t.filename} />
                         <div className={styles.takeActions}>
-                          <button type="button" className={styles.secondaryButton} onClick={() => download(t.url, t.filename)}>Download original</button>
-                          <button type="button" className={styles.quietButton} onClick={() => {
+                          <button type="button" className={styles.secondaryButton} onClick={() => download(t.url, t.filename)}>Download original ({t.filename.toLowerCase().endsWith('.m4a') ? 'M4A' : 'WebM'})</button>
+                          <button type="button" className={styles.secondaryButton}
+                            disabled={recording || wavConvertingId !== null} onClick={() => void downloadWav(t)}>
+                            {wavConvertingId === t.id ? 'Converting WAV…' : 'Download WAV · 48 kHz / 24-bit (converted)'}
+                          </button>
+                          <button type="button" className={styles.quietButton} disabled={wavConvertingId === t.id} onClick={() => {
                             URL.revokeObjectURL(t.url);
                             setTakes((old) => old.filter((x) => x !== t));
                           }}>Discard</button>
