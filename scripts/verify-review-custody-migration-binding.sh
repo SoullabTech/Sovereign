@@ -90,20 +90,46 @@ case "$ARGS" in *"--old-reader 1111111111111111111111111111111111111111"*)
 python3 - "$DEPLOY" <<'PY'
 import re, sys
 s=open(sys.argv[1]).read()
-issues=[]
-def body(name):
-    m=re.search(rf'^{name}\(\) \{{(.*?)^\}}', s, re.S|re.M)
-    return m.group(1) if m else ""
-for fn, later in (
-    ("cmd_deploy", "tag_images_for_rollback"),
-    ("cmd_update", "tag_images_for_rollback"),
-    ("cmd_migrate", 'docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate'),
-):
-    b=body(fn)
-    g=b.find("review_migration_custody_or_abort")
-    a=b.find(later)
-    if g < 0 or a < 0 or g >= a:
-        issues.append(f"{fn}: custody gate is not strictly before governed mutation")
+def order_issues(source):
+    issues=[]
+    def body(name):
+        m=re.search(rf'^{name}\(\) \{{(.*?)^\}}', source, re.S|re.M)
+        return m.group(1) if m else ""
+    for fn, later in (
+        ("cmd_deploy", "tag_images_for_rollback"),
+        ("cmd_update", "tag_images_for_rollback"),
+        # Migration-only now uses the governed helper, never raw docker compose.
+        ("cmd_migrate", 'run_migrations_or_abort "Migration-only run"'),
+    ):
+        b=body(fn)
+        g=b.find('    review_migration_custody_or_abort "')
+        a=b.find(later)
+        if g < 0 or a < 0 or g >= a:
+            issues.append(f"{fn}: custody gate is not strictly before governed mutation")
+
+    # Verify the actual runner is guarded by a last-moment, fail-closed
+    # relation check. The old assertion only recognized raw docker compose,
+    # falsely failing after the production migration runner was refactored.
+    helper=body("run_migrations_or_abort")
+    witness=helper.find('if ! rewitness_migration_relation_or_abort "$phase"; then')
+    mutation=helper.find('if deploy_ctx_compose --profile migrate run --rm migrate; then')
+    if witness < 0 or mutation < 0 or witness >= mutation:
+        issues.append("run_migrations_or_abort: re-witness must precede migration")
+    return issues
+
+issues=order_issues(s)
+for label, marker in [
+    ("missing_migrate_gate", '    review_migration_custody_or_abort "Migration-only run"'),
+    ("missing_relation_rewitness", 'if ! rewitness_migration_relation_or_abort "$phase"; then'),
+    ("missing_actual_migration_runner", 'if deploy_ctx_compose --profile migrate run --rm migrate; then'),
+]:
+    if s.count(marker) != 1:
+        issues.append(f"defeat marker missing or ambiguous: {label}")
+        continue
+    damaged=s.replace(marker, '  : # deliberately removed for defeat candidate', 1)
+    if not order_issues(damaged):
+        issues.append(f"defeat candidate escaped detection: {label}")
+
 for x in issues: print("STRUCT_FAIL", x)
 sys.exit(len(issues))
 PY
