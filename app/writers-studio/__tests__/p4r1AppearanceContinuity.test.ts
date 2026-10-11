@@ -23,7 +23,11 @@ describe('P4R1 appearance continuity', () => {
 
   it('keeps the theme chooser on the Studio atmosphere membrane, not shell-local colour variables', () => {
     const start = p4css.indexOf('/* P4R1 appearance continuity: member-chosen Studio themes restored.');
-    const block = p4css.slice(start);
+    // Scope this assertion to the atmosphere chooser, not unrelated
+    // legacy shell styles further down the stylesheet.
+    const end = p4css.indexOf('/* SMALL-BETA-01 / B3', start);
+    expect(end).toBeGreaterThan(start);
+    const block = p4css.slice(start, end);
     expect(start).toBeGreaterThanOrEqual(0);
     expect(block).toContain('background:var(--ws-ground-raised');
     expect(block).toContain('color:var(--ws-ink-primary');

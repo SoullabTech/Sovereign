@@ -61,7 +61,16 @@ describe('C2 editorial dance convergence', () => {
     expect(host).toContain('Discuss what is happening in this exact passage with me before proposing any edits.');
     expect(host).toContain('<b>Teach me</b>');
     expect(host).toContain('<b>Go deeper</b>');
-    expect(host).not.toContain('className="p4r1-locus-actions"');
+    // Passage selection and manuscript-rail selection are distinct gestures.
+    // The passage uses a single quiet trigger; the rail retains its own
+    // Talk / Develop / Review actions (covered by p4r1SelectionImmediateSupport).
+    const passageStart = host.indexOf('const contextualActions =');
+    const passageEnd = host.indexOf('const maiaRelationshipCard =');
+    expect(passageStart).toBeGreaterThan(0);
+    expect(passageEnd).toBeGreaterThan(passageStart);
+    const passageAffordance = host.slice(passageStart, passageEnd);
+    expect(passageAffordance.match(/className="p4r1-selection-trigger"/g)).toHaveLength(1);
+    expect(passageAffordance).not.toContain('p4r1-locus-actions');
   });
 
   it('never lets the full editorial dance float over an exact held passage', () => {

@@ -433,7 +433,7 @@ export default function IsolatedEditorialRoom({
                       disabled={busy}
                       onChange={(event) => onMayProposeImmediately(event.target.checked)}
                     />
-                    <span><b>Suggest wording straight away</b><small>Otherwise MAIA discusses the passage first at Touch.</small></span>
+                    <span><b>Suggest wording straight away</b><small>Otherwise MAIA discusses the passage before suggesting wording.</small></span>
                   </label>
                 ) : null}
               </section>
