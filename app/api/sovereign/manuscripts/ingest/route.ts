@@ -45,6 +45,7 @@ import { parseUpload, UnsupportedUploadError } from '@/lib/manuscript/ingest/par
 import { memberRef } from '@/lib/privacy/memberRef';
 import { titleFromFilename } from '@/lib/manuscript/ingest/titleSuggestion';
 import { recordArtifactArrival } from '@/lib/manuscript/source/arrivals';
+import { manuscriptArtifactIngestAuthorized } from '@/lib/workbench/uploadPostureAuthority';
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB — generous for a full book file
 const MAX_TEXT_CHARS = 2_000_000; // mirrors the save path's cap in ../route.ts
@@ -87,9 +88,12 @@ const MAX_TEXT_CHARS = 2_000_000; // mirrors the save path's cap in ../route.ts
  *      they may not survive beyond it as ambient request context. A verified
  *      claim is still a claim: verification is a reason to admit it, never a
  *      reason to leave it standing.
- *   5. INGEST reads `formData()` from that same request. No second Request is
- *      constructed anywhere in this file: a copy is exactly the body-consuming
- *      move that made the exclusion necessary.
+ *   5. ARTIFACT HOLD refuses new file imports after verified identity and
+ *      in-place sanitisation, before the multipart stream can be consumed.
+ *      This remains independent of the Caddy edge hold.
+ *   6. INGEST (only after a separately certified release) reads `formData()`
+ *      from that same request. No second Request is constructed: copying a
+ *      stream is the exact transport failure this exclusion avoids.
  */
 const INGEST_PATHNAME = '/api/sovereign/manuscripts/ingest';
 
@@ -279,7 +283,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── 5. INGEST — the same request, body untouched until now ─────────────
+    // ── 5. ARTIFACT INTAKE — independently held, after trusted identity ─────
+    // This route persists original manuscript bytes in fileVault before the
+    // arrival DB record is committed. Until recovery and Sanctuary exclusion
+    // are certified, no authenticated caller may reach even formData().
+    // The Caddy 423 fence is an additional boundary, never this authority.
+    if (!manuscriptArtifactIngestAuthorized()) {
+      return NextResponse.json(
+        { error: 'File import is temporarily unavailable while manuscript custody is being verified.' },
+        { status: 423 },
+      );
+    }
+
+    // ── 6. INGEST — the same request, body untouched until now ─────────────
     let form: FormData;
     try {
       form = await request.formData();

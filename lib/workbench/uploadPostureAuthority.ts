@@ -13,3 +13,13 @@ export function sourceUploadPostureAuthorized(): false {
 export function sourceReviewedEditAuthorized(): false {
   return false;
 }
+
+
+/** Manuscript-artifact imports have an independent vault + arrival-row
+ * persistence lifecycle. Their Caddy fence does not protect internal peers.
+ * Refuse BEFORE multipart parsing until durable arrival custody, recovery
+ * ownership and the release transition are separately certified.
+ */
+export function manuscriptArtifactIngestAuthorized(): false {
+  return false;
+}

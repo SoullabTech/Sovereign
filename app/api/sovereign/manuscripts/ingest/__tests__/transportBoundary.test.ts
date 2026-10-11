@@ -26,7 +26,7 @@ import { ACCESS_RULES, TIER_RANK, tierSatisfies } from '@/config/accessMatrix';
 
 const REPO = path.resolve(__dirname, '../../../../../..');
 const read = (p: string) => fs.readFileSync(path.join(REPO, p), 'utf8');
-const middleware = () => read('middleware.ts');
+const middleware = () => read('proxy.ts');
 const route = () => read('app/api/sovereign/manuscripts/ingest/route.ts');
 
 const PATH = '/api/sovereign/manuscripts/ingest';
@@ -117,8 +117,8 @@ describe("F2 · a valid member cannot cause custody to be attributed to another 
   });
 });
 
-describe('F3 · a valid member upload succeeds — nothing new gates it', () => {
-  it('the admission block adds no gate beyond authority and sanitisation', () => {
+describe('F3 · verified members are held before artifact bytes can enter custody', () => {
+  it('preserves authentication refusals and adds an independent server-owned 423 before the body', () => {
     const src = route();
     const admission = src.slice(
       src.indexOf('const forged = forgedIdentityHeaders'),
@@ -128,6 +128,11 @@ describe('F3 · a valid member upload succeeds — nothing new gates it', () => 
     // Four refusals only: forged names, no member, resolvers disagreeing, and
     // a survivor of sanitisation. (The matrix denials live in a helper.)
     expect(admission.match(/status: 401/g) ?? []).toHaveLength(4);
+    expect(admission).toContain('!manuscriptArtifactIngestAuthorized()');
+    expect(admission).toContain('status: 423');
+    expect(admission.indexOf('!manuscriptArtifactIngestAuthorized()')).toBeGreaterThan(
+      admission.indexOf('const surviving = CLIENT_ASSERTABLE_IDENTITY_HEADERS.filter'),
+    );
     expect(admission).not.toMatch(/process\.env\./);
   });
 });
@@ -191,7 +196,7 @@ describe('F6 · the exclusion does not widen /api/sovereign', () => {
 });
 
 describe('F7 · client assertions cannot survive the excluded boundary', () => {
-  it('the five steps stand in the only order that makes this a boundary', () => {
+  it('authority and sanitisation remain ordered before the artifact hold and multipart boundary', () => {
     const src = route();
     const refuse = src.indexOf('const forged = forgedIdentityHeaders');
     const authority = src.indexOf('const verified = await deriveVerifiedAccess');
@@ -339,38 +344,42 @@ describe('F7 · behavioural — what the handler can still see when it reads the
       return realFormData();
     });
     const res = await POST(req);
-    return { res, atBody };
+    return { res, atBody, afterHeaders: [...req.headers.keys()], bodyUsed: req.bodyUsed };
   };
 
-  it('a matching x-member-id is accepted through auth — the upload succeeds', async () => {
-    const { res } = await runCapturingHeaders({
+  it('a matching x-member-id clears identity checks but refuses artifact persistence', async () => {
+    const { res, atBody, bodyUsed } = await runCapturingHeaders({
       'x-session-token': 'tok',
       'x-member-id': MEMBER,
     });
-    expect(res.status).toBe(200);
-    expect(recordArtifactArrival).toHaveBeenCalledWith(
-      expect.objectContaining({ memberId: MEMBER }),
-    );
+    expect(res.status).toBe(423);
+    expect(atBody).toBeNull();
+    expect(bodyUsed).toBe(false);
+    expect(parseUpload).not.toHaveBeenCalled();
+    expect(recordArtifactArrival).not.toHaveBeenCalled();
   });
 
-  it('and NO client-assertable header remains when the body is read', async () => {
-    const { res, atBody } = await runCapturingHeaders({
+  it('NO client-assertable header survives sanitisation at the 423 boundary', async () => {
+    const { res, atBody, afterHeaders } = await runCapturingHeaders({
       'x-session-token': 'tok',
       'x-member-id': MEMBER,
     });
-    expect(res.status).toBe(200);
-    expect(atBody).not.toBeNull();
+    expect(res.status).toBe(423);
+    expect(atBody).toBeNull();
     for (const header of CLIENT_ASSERTABLE_IDENTITY_HEADERS) {
-      expect(atBody).not.toContain(header);
+      expect(afterHeaders).not.toContain(header);
     }
   });
 
-  it('while x-session-token IS still there — a credential, not an assertion', async () => {
-    const { atBody } = await runCapturingHeaders({
+  it('the session credential is preserved while the body remains unread', async () => {
+    const { res, atBody, afterHeaders, bodyUsed } = await runCapturingHeaders({
       'x-session-token': 'tok',
       'x-member-id': MEMBER,
     });
-    expect(atBody).toContain('x-session-token');
+    expect(res.status).toBe(423);
+    expect(atBody).toBeNull();
+    expect(bodyUsed).toBe(false);
+    expect(afterHeaders).toContain('x-session-token');
   });
 
   it('a mismatched x-member-id is refused — the body is never reached', async () => {
