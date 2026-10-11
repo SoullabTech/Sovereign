@@ -18,6 +18,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireFounder } from '@/lib/founder/founderAuth';
+import { sourceReviewedEditAuthorized } from '@/lib/workbench/uploadPostureAuthority';
 import { query } from '@/lib/db/postgres';
 import { deleteUpload, writeReviewed } from '@/lib/workbench/storage';
 import type { TableLayout, TableGroup, CardPointer } from '@/lib/workbench/sources/types';
@@ -53,6 +54,10 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   const auth = await requireFounder();
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+  // Independent hard hold. Metadata PATCH shares this route with reviewed-byte writes.
+  if (!sourceReviewedEditAuthorized()) {
+    return NextResponse.json({ error: 'Workbench source edits paused pending Sanctuary safety verification.' }, { status: 423 });
   }
   const { id } = await params;
 

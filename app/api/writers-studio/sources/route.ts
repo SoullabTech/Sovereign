@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { ingestWorkbenchUpload, IntakeError } from '@/lib/workbench/intake';
+import { sourceUploadPostureAuthorized } from '@/lib/workbench/uploadPostureAuthority';
+import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +38,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Authentication alone never authorizes beta sources. Refuse before parsing bytes.
+  const admission = await writersStudioBetaAccess(memberId);
+  if (!admission.eligible) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  // SOURCE-CUSTODY HOLD: guard the application even when a peer bypasses Caddy.
+  // Never remove this gate until source custody and Sanctuary are independently certified.
+  if (!sourceUploadPostureAuthorized()) {
+    return NextResponse.json({ error: 'Source upload temporarily unavailable pending Sanctuary safety verification.' }, { status: 423 });
+  }
   try {
     const form = await request.formData();
     const file = form.get('file');

@@ -22,6 +22,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireFounder } from '@/lib/founder/founderAuth';
+import { sourceUploadPostureAuthorized } from '@/lib/workbench/uploadPostureAuthority';
 import { query } from '@/lib/db/postgres';
 import { writeOriginal, writeReviewed, writeDraft, extFromName, deleteUpload } from '@/lib/workbench/storage';
 import { extractText } from '@/lib/workbench/extract/text';
@@ -68,6 +69,10 @@ export async function POST(req: NextRequest) {
   const auth = await requireFounder();
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+  // Keep the founder Workbench old writer fenced at the application boundary.
+  if (!sourceUploadPostureAuthorized()) {
+    return NextResponse.json({ error: 'Workbench source uploads paused pending Sanctuary safety verification.' }, { status: 423 });
   }
   const arrangerId = auth.memberId;
 
