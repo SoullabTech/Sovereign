@@ -1,0 +1,102 @@
+{
+  "instrument": "writer-studio-overview-review-preflight/v1",
+  "standing": "DRAFT_EVIDENCE_NOT_ADMITTED_NO_DEPLOYMENT_AUTHORITY",
+  "observation_date": "2026-10-11",
+  "old_live_reader_commit": "c9e4f7f7eccb4049bf036d189cac7feb007ef3cc",
+  "pre_plan_code_commit": "d810d6f2594931bd7f65cb8288996080c93f6419",
+  "target_reader_commit": "RESOLVE_EXTERNALLY_FROM_EXACT_FINAL_REVIEW_TARGET",
+  "production_ledger_count_at_observation": 570,
+  "production_postgresql_version": "16.13 (Debian)",
+  "production_readings_count_at_observation": 33,
+  "production_readings_relation_total_bytes_at_observation": 2228224,
+  "production_readings_lens_counts_at_observation": {
+    "arc": 3,
+    "coherence": 3,
+    "continuity": 4,
+    "development": 8,
+    "reader": 3,
+    "structure": 7,
+    "themes": 2,
+    "voice": 3
+  },
+  "production_observation_trigger_count": 1,
+  "production_overview_migration_applied_at_observation": false,
+  "production_caddy_live_hash": "adcc4c6f8c368927c1019396e5824d73b48bf935b8e5635ad3770a30ee3a681d",
+  "pending_candidate_migrations": [
+    {
+      "path": "database/migrations/20261002000002_writer_studio_chapter_overview_lens.sql",
+      "sha256": "d45c56cfc84089f758b477430e8912cd864a549c1129a34ab789d2a1f95afaba"
+    }
+  ],
+  "old_reader_source_candidates": [
+    {
+      "repo_path": "lib/manuscript/developmentalReading/store.ts",
+      "sha256": "547359127ea51522771dfdeb8b6c0c2b5b84f25ace758ad597598b28db3c7269",
+      "trace_path": "old-reader/c9e4f7f7eccb4049bf036d189cac7feb007ef3cc/lib/manuscript/developmentalReading/store.ts"
+    },
+    {
+      "repo_path": "lib/manuscript/developmentalReading/contract.ts",
+      "sha256": "c9f65e8fbd92530726186b795fa61eaea68fedb2f57ec3cf9dff338b6e90f09f",
+      "trace_path": "old-reader/c9e4f7f7eccb4049bf036d189cac7feb007ef3cc/lib/manuscript/developmentalReading/contract.ts"
+    },
+    {
+      "repo_path": "lib/manuscript/developmentalReader/read.ts",
+      "sha256": "3975222eff6f7e28ba1d968a3445fe66519fbdf1369aa9e9c931c32e66498122",
+      "trace_path": "old-reader/c9e4f7f7eccb4049bf036d189cac7feb007ef3cc/lib/manuscript/developmentalReader/read.ts"
+    },
+    {
+      "repo_path": "lib/manuscript/developmentalReader/contract.ts",
+      "sha256": "62bb8b98ed4152e6057c7e68a8d246f203f72a4496d5ec8e77c2f6c12b255dee",
+      "trace_path": "old-reader/c9e4f7f7eccb4049bf036d189cac7feb007ef3cc/lib/manuscript/developmentalReader/contract.ts"
+    },
+    {
+      "repo_path": "app/api/sovereign/manuscripts/[id]/readings/route.ts",
+      "sha256": "4bab19aff6bd09b230e12bb49c09e30e8f5639c4c6b309069d127d32e8044680",
+      "trace_path": "old-reader/c9e4f7f7eccb4049bf036d189cac7feb007ef3cc/app/api/sovereign/manuscripts/[id]/readings/route.ts"
+    },
+    {
+      "repo_path": "scripts/deploy-production.sh",
+      "sha256": "1afdb2e2c56e5878c7baceb84f71b7164cac74ec7d776d0daa17286a24f5e70f",
+      "trace_path": "old-reader/c9e4f7f7eccb4049bf036d189cac7feb007ef3cc/scripts/deploy-production.sh"
+    },
+    {
+      "repo_path": "scripts/run-sql-migrations.sh",
+      "sha256": "3b181470537878b15f13c1e86b15676c05072f403fc097069943c385ab9e8a3a",
+      "trace_path": "old-reader/c9e4f7f7eccb4049bf036d189cac7feb007ef3cc/scripts/run-sql-migrations.sh"
+    },
+    {
+      "repo_path": "database/migrations/20260904000001_developmental_readings.sql",
+      "sha256": "694e471d1b977f244c18cfb196a3975534a804f3e9fa0465d4ddfc7687bd93a0",
+      "trace_path": "old-reader/c9e4f7f7eccb4049bf036d189cac7feb007ef3cc/database/migrations/20260904000001_developmental_readings.sql"
+    },
+    {
+      "repo_path": "database/migrations/20260921000001_developmental_reading_observation_identity_compatibility.sql",
+      "sha256": "bab0ac6a8c5d50072008a30b7785d3da127b65df90ca70290293c5dea0a9e11b",
+      "trace_path": "old-reader/c9e4f7f7eccb4049bf036d189cac7feb007ef3cc/database/migrations/20260921000001_developmental_reading_observation_identity_compatibility.sql"
+    }
+  ],
+  "test_receipts_as_builder_preflight_only": [
+    {
+      "engine": "PostgreSQL 17.7 local",
+      "assertions": "23/23",
+      "persistence": "rolled_back"
+    },
+    {
+      "engine": "PostgreSQL 16.12 disposable Docker",
+      "assertions": "23/23",
+      "persistence": "rolled_back_then_container_removed"
+    },
+    {
+      "engine": "PostgreSQL 16.12 disposable concurrency",
+      "assertions": "lock SQLSTATE 55P03 around 5002ms; old table unchanged; retry after reader finished succeeded",
+      "persistence": "scratch_schema_removed_then_container_removed"
+    }
+  ],
+  "boundaries": [
+    "Synthetic tests, static source analysis and running ingress probes are not an independent migration_compatibility verdict.",
+    "The actual review must bind an externally resolved exact target commit and freshly measured old reader and pending set.",
+    "A dedicated trace-witnessed review and admitted APPROVED record are ABSENT; no migration or release may execute.",
+    "Source uploads remain held by production Caddy and application candidate; the hold is not a crash-safe-custody certificate.",
+    "Existing source row and lock observations are time-bounded; 5s lock_timeout bounds waiting, not how long an acquired lock can be held."
+  ]
+}
