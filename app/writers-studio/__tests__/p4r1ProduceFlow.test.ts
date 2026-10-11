@@ -227,6 +227,8 @@ test('Publish is visible in the beta top navigation and opens the existing Home 
   expect(home).toContain('Publish');
   expect(home).toContain('<P4R1ProducePanel');
   expect(home).toContain('produceInitially={props.publishRequested}');
+  expect(home).toContain('setProducing(produceInitially)');
+  expect(home).not.toContain('if (produceInitially) setProducing(true)');
   expect(controller).toContain("const publishRequested = params?.get('publish') === '1'");
   expect(shell).toContain('data-writers-publish-entry');
   expect(shell).toContain("next.set('publish', '1')");
