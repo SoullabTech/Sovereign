@@ -12,7 +12,7 @@ SET LOCAL lock_timeout = '5s';
 CREATE TABLE IF NOT EXISTS writer_studio_work_directives (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   member_id UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-  living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE CASCADE,
+  living_work_id UUID NOT NULL,
   kind TEXT NOT NULL CHECK (kind IN ('protect', 'decision', 'open_question')),
   initial_text TEXT NOT NULL CHECK (char_length(trim(initial_text)) BETWEEN 1 AND 4000),
   provenance_kind TEXT NOT NULL DEFAULT 'member-declared'
@@ -20,6 +20,12 @@ CREATE TABLE IF NOT EXISTS writer_studio_work_directives (
   scope_kind TEXT NOT NULL DEFAULT 'work'
     CHECK (scope_kind = 'work'),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- The Work must belong to this SAME member; independent parent FKs are not
+  -- an ownership guarantee for any writer outside the current application.
+  CONSTRAINT ws_work_directive_work_owner_fkey
+    FOREIGN KEY (living_work_id, member_id)
+    REFERENCES living_works(id, member_id)
+    ON UPDATE RESTRICT ON DELETE CASCADE,
   UNIQUE (id, member_id)
 );
 
@@ -58,28 +64,31 @@ BEGIN
       'writer studio work directive history is append-only: append a successor event';
   END IF;
 
-  IF TG_TABLE_NAME = 'writer_studio_work_directive_events'
-     AND TG_OP = 'DELETE'
-     AND EXISTS (
-       SELECT 1 FROM writer_studio_work_directives
-        WHERE id = OLD.directive_id AND member_id = OLD.member_id
-     )
-     AND EXISTS (SELECT 1 FROM members WHERE id = OLD.member_id) THEN
-    RAISE EXCEPTION
-      'writer studio work directive event % may leave only by lawful parent custody cascade',
-      OLD.id;
-  END IF;
-
-  IF TG_TABLE_NAME = 'writer_studio_work_directives'
-     AND TG_OP = 'DELETE'
-     AND EXISTS (
-       SELECT 1 FROM living_works
-        WHERE id = OLD.living_work_id AND member_id = OLD.member_id
-     )
-     AND EXISTS (SELECT 1 FROM members WHERE id = OLD.member_id) THEN
-    RAISE EXCEPTION
-      'writer studio work directive % may leave only by lawful Work custody cascade',
-      OLD.id;
+  -- The two tables have different row types. A compound boolean expression
+  -- can still resolve an absent OLD field, so branch by table BEFORE reading
+  -- either directive_id or living_work_id.
+  IF TG_OP = 'DELETE' THEN
+    IF TG_TABLE_NAME = 'writer_studio_work_directive_events' THEN
+      IF EXISTS (
+           SELECT 1 FROM writer_studio_work_directives
+            WHERE id = OLD.directive_id AND member_id = OLD.member_id
+         )
+         AND EXISTS (SELECT 1 FROM members WHERE id = OLD.member_id) THEN
+        RAISE EXCEPTION
+          'writer studio work directive event % may leave only by lawful parent custody cascade',
+          OLD.id;
+      END IF;
+    ELSIF TG_TABLE_NAME = 'writer_studio_work_directives' THEN
+      IF EXISTS (
+           SELECT 1 FROM living_works
+            WHERE id = OLD.living_work_id AND member_id = OLD.member_id
+         )
+         AND EXISTS (SELECT 1 FROM members WHERE id = OLD.member_id) THEN
+        RAISE EXCEPTION
+          'writer studio work directive % may leave only by lawful Work custody cascade',
+          OLD.id;
+      END IF;
+    END IF;
   END IF;
 
   RETURN OLD;

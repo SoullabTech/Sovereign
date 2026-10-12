@@ -30,16 +30,44 @@ CREATE INDEX IF NOT EXISTS wscc_current_idx
 CREATE OR REPLACE FUNCTION writer_studio_completion_checks_append_only()
 RETURNS TRIGGER AS $$
 BEGIN
-  RAISE EXCEPTION
-    'writer studio completion check % is append-only: a new adjudication must be inserted', OLD.id;
+  IF TG_OP = 'UPDATE' THEN
+    RAISE EXCEPTION
+      'writer studio completion check % is append-only: a new adjudication must be inserted', OLD.id;
+  END IF;
+
+  -- A writer may not erase an adjudication directly. A lawful manuscript
+  -- parent deletion can still cascade after its parent is gone.
+  IF TG_OP = 'DELETE'
+     AND EXISTS (
+       SELECT 1 FROM member_manuscripts
+        WHERE id = OLD.manuscript_id AND member_id = OLD.member_id
+     )
+     AND EXISTS (SELECT 1 FROM members WHERE id = OLD.member_id) THEN
+    RAISE EXCEPTION
+      'writer studio completion check % may leave only by lawful manuscript custody cascade', OLD.id;
+  END IF;
+  RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS writer_studio_completion_checks_no_update
   ON writer_studio_completion_checks;
 CREATE TRIGGER writer_studio_completion_checks_no_update
-  BEFORE UPDATE ON writer_studio_completion_checks
+  BEFORE UPDATE OR DELETE ON writer_studio_completion_checks
   FOR EACH ROW EXECUTE FUNCTION writer_studio_completion_checks_append_only();
+
+CREATE OR REPLACE FUNCTION writer_studio_completion_checks_refuse_truncate()
+RETURNS TRIGGER AS $$
+BEGIN
+  RAISE EXCEPTION 'TRUNCATE refused on writer studio completion-check history';
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS writer_studio_completion_checks_no_truncate
+  ON writer_studio_completion_checks;
+CREATE TRIGGER writer_studio_completion_checks_no_truncate
+  BEFORE TRUNCATE ON writer_studio_completion_checks
+  FOR EACH STATEMENT EXECUTE FUNCTION writer_studio_completion_checks_refuse_truncate();
 
 COMMENT ON TABLE writer_studio_completion_checks IS
   'Append-only writer adjudication for Ready the Work. Absence remains NOT RUN; clear/open/blocked are explicit writer acts and never inferred from tool availability.';
