@@ -169,6 +169,28 @@ export function buildEvidenceGraph(input) {
       evidence:{kind:'release-evidence-index',ref}});
   }
 
+  // RGR-CF01 joins by exact Work Unit ID and a verified source fingerprint,
+  // never by title similarity or hypotheses that have not been tested.
+  for (const u of units) {
+    const snap=u?.research_snapshot;
+    if (snap?.work_unit_id!==text(u?.id)
+      || snap?.authority!=='orientation_only'
+      || snap?.experiment_authority!=='NOT_AUTHORIZED'
+      || snap?.maia_authority!=='NOT_AUTHORIZED'
+      || snap?.evidence_state!=='OBSERVED'
+      || snap?.source_verified!==true
+      || !text(snap?.source_ref)
+      || !nodes.has(workNodeId(text(u?.id)))) continue;
+    const ref=text(snap.source_ref);
+    addNode({id:recordNodeId(ref),kind:'record',
+      label:'RGR-CF01 candidate research intake',
+      sub:'Verified source · documentary only · no execution authority',
+      evidence_state:'OBSERVED'});
+    addEdge({from:workNodeId(text(u.id)),to:recordNodeId(ref),
+      rel:'has candidate research intake',
+      evidence:{kind:'rgr-intake-source',ref}});
+  }
+
   for (const u of units) {
     const id=text(u?.id); if (!id) continue;
     const evidenceRef=text(u?.file); if (!evidenceRef) continue;

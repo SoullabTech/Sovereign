@@ -65,7 +65,36 @@ function isWriterBetaUnit(u) {
 function writerBetaUnit() {
   return arr(state.vm?.work?.units).find(isWriterBetaUnit)||null;
 }
+
+const RGR_CF_WORK_ID='v2-rgr-cf01-research-intake-20261012';
+const RGR_CF_TITLE='Relational Geometry — Counterfactual Research Intake';
+function isRgrCfUnit(u) { return u?.id===RGR_CF_WORK_ID && u?.title===RGR_CF_TITLE; }
+function rgrCfUnit() { return arr(state.vm?.work?.units).find(isRgrCfUnit)||null; }
+
+function rgrCfMarkup(u) {
+  if (!isRgrCfUnit(u)) return '';
+  const snap=u?.research_snapshot;
+  if (!snap || snap.work_unit_id!==u.id || snap.authority!=='orientation_only'
+      || snap.experiment_authority!=='NOT_AUTHORIZED'
+      || snap.maia_authority!=='NOT_AUTHORIZED'
+      || snap.evidence_state!=='OBSERVED' || snap.source_verified!==true) {
+    return '<div class="callout slate" data-rgr-cf-unverified><b>Research intake source unverified.</b> JARVIS will not infer source custody, review, execution or MAIA authority.</div>';
+  }
+  const labels={
+    documented:'Documented source · not a research finding',
+    candidate:'Candidate · not yet independently reviewed',
+    'not-reviewed':'Independent review has not run',
+    hold:'Held · separately authorized gate required',
+  };
+  const stages=arr(snap.stages).map(s=>`<div class="row" data-rgr-cf-stage="${attr(s.id)}" data-rgr-cf-standing="${attr(s.standing)}"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(s.label)}</div><div class="rowPlain">${esc(s.plain)}</div><div class="rowMeta">${esc(labels[s.standing]||'Unverified')}</div></div>${pill(s.standing==='documented'?'Documented':'Not authorized',s.standing==='documented'?'neutral':'warn')}</div></div>`).join('');
+  return `<div data-rgr-cf-workstream><p class="rowPlain"><b>Research intake only.</b> The source record is fingerprint-verified; hypotheses remain candidate. No tests have run, no independent review has passed, and MAIA has not changed.</p><details class="secondaryDetails"><summary>Research gates · ${arr(snap.stages).length} recorded</summary><div class="detailsBody"><div class="list">${stages}</div><div class="rowMeta">${esc(snap.reason)}</div></div></details><div class="actions">${snap.source_ref?evidenceButton(snap.source_ref,'Open research intake'):''}</div></div>`;
+}
+function rgrCfSection(origin='Work') {
+  const u=rgrCfUnit(); if (!u) return '';
+  return `<section class="section" data-rgr-cf-section><h2>Relational Geometry — Counterfactual Research <span class="muted">JARVIS research intake</span></h2><div class="card"><p>${esc(humanWorkStatus(u))}</p>${rgrCfMarkup(u)}<div class="actions">${contextButton('work',u.id,RGR_CF_TITLE,origin,u.file,'Enter research work')}</div></div></section>`;
+}
 function humanWorkSubject(u) {
+  if (isRgrCfUnit(u)) return RGR_CF_TITLE;
   if (isWriterBetaUnit(u)) return 'Writer’s Studio — Small Beta Launch';
   const t=String(u?.title||'').toLowerCase();
   if (t.includes("writer's studio") || t.includes('writers studio') || t.includes('writer studio')) return "Writer's Studio";
@@ -79,6 +108,9 @@ function humanWorkSubject(u) {
 }
 
 function humanWorkStatus(u) {
+  if (isRgrCfUnit(u)) return u?.research_snapshot?.source_verified===true
+    ? 'A source-verified research intake is recorded. Independent review and experiments have not been authorized.'
+    : 'Research draft exists, but its source record is not yet verified. No experiment is authorized.';
   if (isWriterBetaUnit(u)) return 'The launch is being prepared. No beta deployment or invitation is authorized.';
   const state=String(u?.state||'').toUpperCase();
   if (state==='EVIDENCE_READY') return 'A completed JARVIS check is ready for your review.';
@@ -94,7 +126,8 @@ function humanWorkStatus(u) {
 function humanFounderAsk(u) {
   // Scoping an E0 Draft is engineering orientation, not a founder release
   // decision. Do not inflate the Needs Kelly lane for this coordination record.
-  const needs=arr(u?.needs_founder).filter(n=>!(isWriterBetaUnit(u) && u?.state==='DRAFT' && n?.action==='canonical-bound'));
+  const orientationDraft=u?.state==='DRAFT' && (isWriterBetaUnit(u)||isRgrCfUnit(u));
+  const needs=arr(u?.needs_founder).filter(n=>!(orientationDraft && n?.action==='canonical-bound'));
   const need=needs[0];
   if (!need) return null;
   if (need.action==='canonical-adjudicate') return 'Review the evidence and decide whether this work passes.';
@@ -102,7 +135,8 @@ function humanFounderAsk(u) {
 }
 
 function founderAttentionGate(u) {
-  const need=isWriterBetaUnit(u) && u?.state==='DRAFT'
+  const orientationDraft=u?.state==='DRAFT' && (isWriterBetaUnit(u)||isRgrCfUnit(u));
+  const need=orientationDraft
     ? arr(u?.needs_founder).find(n=>n?.action!=='canonical-bound')
     : arr(u?.needs_founder)[0];
   if (!need) return null;
@@ -354,12 +388,19 @@ function deriveActiveFields() {
   for (const u of arr(vm.work?.units)) {
     if (['CLOSED','ADJUDICATED'].includes(u.state)) continue;
     const ask=humanFounderAsk(u);
-    fields.push({
+    const rgrDraftWatching=isRgrCfUnit(u) && u?.state==='DRAFT';
+    const workField={
       bucket: ask?'needs':'motion', kind:'work', id:u.id, label:humanWorkSubject(u), source:u.file,
       what:humanWorkStatus(u), moving:u.state_plain||u.state, needs:ask, gate:founderAttentionGate(u), changed:u.last_event||null,
       level:ask?'warn':'neutral', type:ask?'Needs Kelly':'In motion',
       technical:[`Work Unit: ${u.title}`, `State: ${u.state}`, u.route?`Route: ${u.route}`:null, `Evidence: ${u.evidence_state}`, u.file?`Source: ${u.file}`:null],
-    });
+    };
+    // An unreviewed documentary intake is discoverable, not work in execution.
+    if (rgrDraftWatching && !ask) {
+      workField.bucket='watching';
+      workField.type='Watching';
+    }
+    fields.push(workField);
   }
   for (const pr of arr(vm.programme_state?.programmes)) {
     if (pr.evidence_state!=='UNVERIFIED / CONFLICT') continue;
@@ -384,7 +425,8 @@ function deriveActiveFields() {
 }
 
 function activeFieldRow(f, origin='Today') {
-  const release=releaseGatesMarkup(arr(state.vm?.work?.units).find(u=>u.id===f.id));
+  const unit=arr(state.vm?.work?.units).find(u=>u.id===f.id);
+  const release=releaseGatesMarkup(unit)+rgrCfMarkup(unit);
   return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(f.label)}</div><div class="rowPlain">${esc(f.what||'Observed field')}</div>${release}${f.needs?`<div class="rowPlain"><b>Needs Kelly:</b> ${esc(f.needs)}</div>`:''}${attentionGateDetails(f.gate)}${f.changed?`<div class="rowMeta">Changed: ${esc(f.changed)}</div>`:''}${technicalDetails(f.technical)}<div class="actions">${contextButton(f.kind,f.id,f.label,origin,f.source,'Enter field')}${f.source?evidenceButton(f.source):''}</div></div>${pill(f.type,f.level)}</div></div>`;
 }
 
@@ -624,6 +666,7 @@ function renderWork() {
   }
   return `<div class="eyebrow">Work · Kelly + partners</div><h1>This is where we work.</h1><p class="lede">Tell JARVIS what you want to investigate, prepare, change, or prepare for release. Your words become governed intent and a bounded plan before anything runs. Local reasoning requires a separate explicit gesture.</p>
     ${releaseWorkstreamSection('Work')}
+    ${rgrCfSection('Work')}
     ${renderB6Room()}
     <section class="section"><h2>Current field context</h2>${conversation}</section>
     <section class="section"><h2>Your AI partners</h2><div class="grid2"><div class="card"><h3>JARVIS · local</h3><p>Live here now: governed intent, bounded planning, local reasoning, evidence and programme context.</p></div><div class="card"><h3>MAIA · ChatGPT · Claude Code</h3><p>B6R1 can now accept bounded local handoff receipts from these partners when one exists for the current field. A handoff is orientation only: it does not become repository evidence and grants no authority.</p></div></div></section>
@@ -638,7 +681,7 @@ function workConversation(ctx) {
   }
   if (c.kind==='work') {
     const label=humanWorkSubject(ctx), ask=humanFounderAsk(ctx);
-    return `<div class="contextCard"><b>${esc(label)}</b><div class="why">${esc(humanWorkStatus(ctx))}</div>${releaseGatesMarkup(ctx)}${ask?`<div class="rowPlain" style="margin-top:9px"><b>Needs Kelly:</b> ${esc(ask)}</div>`:''}${technicalDetails([`Work Unit: ${ctx.title}`,`State: ${ctx.state}`,ctx.route?`Route: ${ctx.route}`:null,`Evidence: ${ctx.evidence_state}`,ctx.file?`Source: ${ctx.file}`:null])}<div class="actions">${evidenceButton(ctx.file)}<button class="btn" data-view-jump="graph">Graph</button><button class="btn" data-view-jump="monitor">Monitor</button><button class="btn" data-view-jump="system">System</button></div></div>`;
+    return `<div class="contextCard"><b>${esc(label)}</b><div class="why">${esc(humanWorkStatus(ctx))}</div>${releaseGatesMarkup(ctx)}${rgrCfMarkup(ctx)}${ask?`<div class="rowPlain" style="margin-top:9px"><b>Needs Kelly:</b> ${esc(ask)}</div>`:''}${technicalDetails([`Work Unit: ${ctx.title}`,`State: ${ctx.state}`,ctx.route?`Route: ${ctx.route}`:null,`Evidence: ${ctx.evidence_state}`,ctx.file?`Source: ${ctx.file}`:null])}<div class="actions">${evidenceButton(ctx.file)}<button class="btn" data-view-jump="graph">Graph</button><button class="btn" data-view-jump="monitor">Monitor</button><button class="btn" data-view-jump="system">System</button></div></div>`;
   }
   if (c.kind==='monitor') {
     return `<div class="contextCard"><b>You opened “${esc(ctx.subject)}” from Monitor.</b><div class="why">The observation remains attached as the reason this working context exists. Use the working room above to investigate it.</div><div class="rowPlain" style="margin-top:9px">${esc(ctx.plain)}</div><div class="rowMeta">${esc(ctx.value)} · ${esc(ctx.freshness)} · ${esc(ctx.evidence_state)}</div><div class="actions"><button class="btn" data-view-jump="monitor">Back to observation</button><button class="btn" data-action="refresh-monitor">Refresh observation</button></div></div>`;
@@ -699,8 +742,9 @@ function renderGraph() {
     ? (direct.length?grouped:`<div class="empty"><b>No evidenced one-hop relationships are available for this node.</b><br>Graph does not fill empty space with inferred links.</div>`)
     : '';
   const betaContext=center?.id===`work:${WRITER_BETA_WORK_ID}` ? releaseGatesMarkup(writerBetaUnit()) : '';
+  const researchContext=center?.id===`work:${RGR_CF_WORK_ID}` ? rgrCfMarkup(rgrCfUnit()) : '';
   return `<div class="eyebrow">Graph · how your world connects</div><h1>${center?`What ${esc(center.label)} is connected to.`:'See your work through evidenced relationships.'}</h1><p class="lede">The real Graph is now live. It opens on the current field and shows one evidenced neighborhood at a time. <b>No evidence → no relationship.</b> Similar names, shared prefixes, co-mentions and AI guesses do not create edges.</p>
-    <section class="section">${centreHtml}${betaContext}</section>
+    <section class="section">${centreHtml}${betaContext}${researchContext}</section>
     ${center?`<section class="section"><div class="graphScope"><b>${direct.length} direct relationship${direct.length===1?'':'s'}</b><span> · one hop only · technical identity underneath · evidence opens in place</span></div>${relationHtml}</section>`:''}
     <details class="secondaryDetails" ${center?'':'open'}><summary>Choose a programme focus</summary><div class="detailsBody"><div class="focusList">${arr(state.vm.programme_state?.programmes).slice(0,60).map(p=>{const label=friendlyProgrammeName(p);return `<button class="focusChip ${centerId===`programme:${p.id}`?'active':''}" data-action="context-only" data-kind="programme" data-id="${attr(enc(p.id))}" data-label="${attr(enc(label))}" data-origin="${attr(enc('Graph'))}" data-source="${attr(enc(arr(p.sources)[0]||''))}">${esc(label)}</button>`}).join('')}</div></div></details>`;
 }
@@ -720,6 +764,7 @@ function renderMonitor() {
   return `<div class="eyebrow">Monitor · what needs watching</div><h1>${founderNeeds.length} need${founderNeeds.length===1?'s':''} you · ${watching.length} ${watching.length===1?'thing needs':'things need'} watching.</h1><p class="lede"><b>Needs attention is not the same as broken.</b> Decisions come first. Uncertainty and observed conditions come next. The full technical observation field stays available underneath.</p>
     <section class="section"><h2>Needs Kelly <span class="muted">explicit decisions</span></h2><div class="list">${needsHtml}</div></section>
     ${releaseWorkstreamSection('Monitor')}
+    ${rgrCfSection('Monitor')}
     <section class="section"><h2>Watching <span class="muted">uncertainty and observed conditions</span></h2><div class="list">${watching.length?watching.join(''):'<div class="empty">Nothing currently needs watching.</div>'}</div></section>
     <details class="secondaryDetails"><summary>System observations</summary><div class="detailsBody"><div class="actions"><button class="btn primary" data-action="refresh-monitor">Refresh observations</button></div>${systemHtml}</div></details>`;
 }
@@ -740,6 +785,7 @@ function renderSystem() {
   return `<div class="eyebrow">System · accountability</div><h1>Why JARVIS believes what it is showing you.</h1><p class="lede"><b>Human world first. Technical truth one layer down.</b> System is where you descend when you want artifact/substrate identity, projected standing, population limits, authority, and exact local evidence.</p>
     <section class="section"><h2>Which JARVIS is this?</h2><div class="grid2"><div class="card"><h3>Running artifact</h3><p>${esc(p.artifact?.app_build_sha||'Build stamp not observed')}</p><p class="muted">${esc(p.artifact?.evidence_state||'UNOBSERVED')}</p></div><div class="card"><h3>Bound substrate</h3><p>${esc(p.substrate?.branch||'branch unobserved')} · <span class="mono">${esc(String(p.substrate?.head||'').slice(0,12)||'head unobserved')}</span></p><p class="muted">${esc(p.substrate?.evidence_state||'UNOBSERVED')}</p></div></div><p class="muted" style="margin-top:8px">${esc(p.rule||'')}</p></section>
     ${releaseWorkstreamSection('System')}
+    ${rgrCfSection('System')}
     <section class="section"><h2>Current context provenance</h2>${state.context?`<div class="contextCard"><b>${esc(state.context.label)}</b><div class="why">${esc(state.context.kind)} · from ${esc(state.context.origin)}</div><div class="actions">${sourceRefs.slice(0,8).map(s=>evidenceButton(s)).join('')}<button class="btn" data-view-jump="work">Back to Work</button></div></div>`:'<div class="empty">No subject is selected. Choose one from Today, Work, Graph or Monitor.</div>'}</section>
     <section class="section"><h2>Programme state</h2><div class="tableWrap"><table><thead><tr><th>Programme</th><th>Evidence state</th><th>Standing</th><th>Source</th></tr></thead><tbody>${programmes.slice(0,100).map(pr=>{const src=arr(pr.sources)[0]||pr.last_change?.source||'';return `<tr><td><b>${esc(pr.name||pr.id)}</b><br><span class="mono muted">${esc(pr.id)}</span></td><td>${esc(pr.evidence_state)}</td><td>${esc(pr.standing||'—')}</td><td>${src?evidenceButton(src,'Open'):'<span class="muted">none projected</span>'}</td></tr>`}).join('')}</tbody></table></div></section>
     <section class="section"><h2>Population honesty</h2><div class="card"><p>${esc(state.vm.programme_state?.population?.why_not_complete || 'Population reports complete under its deterministic projector.')}</p><div class="rowMeta">projector ${esc(state.vm.programme_state?.projector||'unknown')} · observed against <span class="mono">${esc(String(state.vm.meta?.observed_against||'').slice(0,12))}</span></div><div class="actions"><button class="btn" data-action="reveal-workspace">Reveal bound workspace</button></div></div></section>

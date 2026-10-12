@@ -19,6 +19,7 @@ import { buildRegistry, observeAll, readObservationHistory } from './instrument-
 import { validateViewModel } from './viewmodel-v1.mjs';
 import { buildEvidenceGraph, parseExplicitProgrammeRelation } from './graph-join.mjs';
 import { readWriterBetaReleaseEvidence, WORK_ID as BETA_WORK_ID } from './release-workstream-reader.mjs';
+import { readRgrCf01ResearchIntake, RGR_CF_WORK_ID } from './rgr-research-intake-reader.mjs';
 
 const SAFE_EXT = new Set(['.md', '.txt', '.json', '.jsonl', '.mjs', '.js', '.cjs', '.ts', '.tsx', '.html', '.sh', '.yml', '.yaml']);
 const MAX_PREVIEW_BYTES = 64 * 1024;
@@ -153,6 +154,8 @@ export async function buildDesktopViewModel(input) {
     // historical orientation, never a second programme standing or grant.
     const unit = vm.work.units.find((u) => u.id === BETA_WORK_ID);
     if (unit) unit.release_snapshot = readWriterBetaReleaseEvidence({ env });
+    const researchUnit = vm.work.units.find((u) => u.id === RGR_CF_WORK_ID);
+    if (researchUnit) researchUnit.research_snapshot = readRgrCf01ResearchIntake({ env, root });
     const explicitRelations = projectCanonicalProgrammeRelations(root, input.observedAgainst, vm.programme_state);
     vm.graph = buildEvidenceGraph({
       programme_state: vm.programme_state,
