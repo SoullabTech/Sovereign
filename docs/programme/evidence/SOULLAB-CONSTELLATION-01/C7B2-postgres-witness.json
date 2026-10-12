@@ -1,0 +1,89 @@
+{
+  "standing": "DISPOSABLE POSTGRESQL WITNESS ONLY; not production, backup erasure, scheduled cleanup, or member use",
+  "checks": [
+    {
+      "name": "fresh disposable database verified; candidate schema applied only there",
+      "result": "PASS"
+    },
+    {
+      "name": "an opportunity does not fabricate a report or consent",
+      "result": "PASS"
+    },
+    {
+      "name": "foreign member cannot spend opportunity",
+      "result": "PASS"
+    },
+    {
+      "name": "two independently blocked claim updates resolve to one report and one recovery",
+      "result": "PASS"
+    },
+    {
+      "name": "database supplies exactly thirty-day retention, not client time",
+      "result": "PASS"
+    },
+    {
+      "name": "retry recovers the same identity and never extends retention",
+      "result": "PASS"
+    },
+    {
+      "name": "changed-payload retry cannot rewrite a report",
+      "result": "PASS"
+    },
+    {
+      "name": "foreign read and withdrawal disclose nothing and leave own report intact",
+      "result": "PASS"
+    },
+    {
+      "name": "a second opportunity cannot duplicate a held report; its failed claim rolls back",
+      "result": "PASS"
+    },
+    {
+      "name": "database rejects report updates, including retention renewal",
+      "result": "PASS"
+    },
+    {
+      "name": "withdrawal removes active-table content and consumed-opportunity replay cannot resurrect it",
+      "result": "PASS"
+    },
+    {
+      "name": "withdrawn report also stays absent once its opportunity is no longer held",
+      "result": "PASS"
+    },
+    {
+      "name": "expired report is excluded even before cleanup runs",
+      "result": "PASS"
+    },
+    {
+      "name": "expired opportunity cannot authorize a report",
+      "result": "PASS"
+    },
+    {
+      "name": "cleanup removes only expired active-table rows",
+      "result": "PASS"
+    },
+    {
+      "name": "failure between claim and insertion rolls both back; later deliberate retry works",
+      "result": "PASS"
+    },
+    {
+      "name": "member deletion cascades to candidate reports and opportunities",
+      "result": "PASS"
+    },
+    {
+      "name": "distinct concurrent opportunities cannot duplicate one active member-policy report",
+      "result": "PASS"
+    },
+    {
+      "name": "receipt is categorical and owner-scoped; it carries no private work",
+      "result": "PASS"
+    }
+  ],
+  "programme": "SOULLAB-CONSTELLATION-01",
+  "act": "C7B2",
+  "sha256": {
+    "lib/constellation/experience/schema.candidate.sql": "d7a340d850d517b60b149e17bac1a450449dfcec7a1f71098a64e4ee35ca206e",
+    "lib/constellation/experience/contract.ts": "679f4811cefe0aa6e220769663724cce09a15ccd615bd7308875869c218dbf38",
+    "lib/constellation/experience/store.ts": "4027a917ef2e4bb587818633f12466fb69dbc3e3e1c8c0910a4c8b24afad2cbc",
+    "scripts/witness/constellation/experience-lifecycle.ts": "21cfc0f724ee4ea5284f6125acbecdb851b38d4c5479f7731cccf1383a161392"
+  }
+}

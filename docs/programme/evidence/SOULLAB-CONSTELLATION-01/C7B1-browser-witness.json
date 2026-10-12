@@ -1,0 +1,55 @@
+{
+  "scope": "actual component in temporary development wrapper with example choices; no real consent, feedback, or authenticated production walk",
+  "results": [
+    {
+      "check": "desktop full local rehearsal",
+      "status": "PASS",
+      "width": 1440,
+      "initialChoices": 0,
+      "optionalAttribution": true,
+      "activityChangeClearsAnswer": true,
+      "reviewRequired": true,
+      "clearAndRestart": true,
+      "dataRequests": 0,
+      "storageWrites": 0
+    },
+    {
+      "check": "desktop reload resets without persistence",
+      "status": "PASS"
+    },
+    {
+      "check": "mobile full local rehearsal",
+      "status": "PASS",
+      "width": 390,
+      "initialChoices": 0,
+      "optionalAttribution": true,
+      "activityChangeClearsAnswer": true,
+      "reviewRequired": true,
+      "clearAndRestart": true,
+      "dataRequests": 0,
+      "storageWrites": 0
+    },
+    {
+      "check": "mobile reload resets without persistence",
+      "status": "PASS"
+    },
+    {
+      "check": "real signed-out local founder route does not mount preview",
+      "status": "PASS"
+    }
+  ],
+  "programme": "SOULLAB-CONSTELLATION-01",
+  "act": "C7B1",
+  "base": "cde5299a6b4c45339b707a2b504133a9c515f39e",
+  "sourceStanding": "C7B1 working-tree candidate on named base; hashes identify tested code and inspected final screenshots, not a production deployment.",
+  "sha256": {
+    "lib/constellation/participationPreview.ts": "08ab0519917154dd551a7e821022a69b320be7f8c8649ebe32fcb2c04386663f",
+    "app/founder/constellation/participation/ParticipationPreview.tsx": "e512e84b9fc737d706c7e83b33ab8d1ffae6b3f52ec9323162ba2e52760a5bc9",
+    "app/founder/constellation/participation/page.tsx": "2dee28cdfc464c2a5c44282b9f12f27726ab0247ea4a24d1c8195fd71a35316e",
+    "app/founder/constellation/participation/participation.module.css": "0b575fe8befe5cecb3ef2bb79a3f9724085312669804f88493446588bcddff89",
+    "docs/design/contracts/screenshots/constellation-participation-desktop.png": "ff445c81aba1b2102b9405fc9806af7379c83d07572fb511e87eaeae8b1c132f",
+    "docs/design/contracts/screenshots/constellation-participation-mobile.png": "b533efacd777d92fbbb1a9eab7829f7293f0ae1d7720923d478188f831593570",
+    "docs/design/contracts/screenshots/constellation-participation-review-desktop.png": "86fae0532f5de9901dd33c72edc7aef2fff5662727c5814b077c6e8c863386e8",
+    "docs/design/contracts/screenshots/constellation-participation-review-mobile.png": "bbdc58815540e1de679bd8952fdacc108258170a37ce20756ea0eb0da3f93f00"
+  }
+}
