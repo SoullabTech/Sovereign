@@ -95,7 +95,7 @@ for scenario in nominal pg_down wrong_source low_space missing_folder; do
     --mount "type=bind,source=$SCRATCH/mock-bin,target=/usr/local/bin,readonly" \
     --tmpfs /mnt/ds225:rw,nosuid,nodev,size=64m,mode=0777 \
     --tmpfs /tmp:rw,nosuid,nodev,size=32m,mode=01777 \
-    "$IMAGE" /bin/bash -c '
+    --entrypoint /bin/bash "$IMAGE" -c '
       set -Eeuo pipefail
       [[ ! -S /var/run/docker.sock ]] || { echo "DANGER: real Docker socket visible"; exit 31; }
       [[ ! -e /app/data/vault ]] || { echo "DANGER: real vault path visible"; exit 31; }
