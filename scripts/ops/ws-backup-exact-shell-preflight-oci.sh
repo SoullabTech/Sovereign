@@ -89,11 +89,11 @@ for scenario in nominal pg_down wrong_source low_space missing_folder; do
   set +e
   output="$(docker run --rm --pull never --network none --read-only \
     --cap-drop ALL --security-opt no-new-privileges \
-    --pids-limit 64 --memory 512m --cpus 1 \
+    --pids-limit 64 --memory 512m --cpus 1 --user "$(id -u):$(id -g)" \
     --env WS_FIXTURE_CASE="$scenario" \
     --mount "type=bind,source=$SCRATCH,target=/fixture,readonly" \
     --mount "type=bind,source=$SCRATCH/mock-bin,target=/usr/local/bin,readonly" \
-    --tmpfs /mnt/ds225:rw,nosuid,nodev,size=64m,mode=0700 \
+    --tmpfs /mnt/ds225:rw,nosuid,nodev,size=64m,mode=0777 \
     --tmpfs /tmp:rw,nosuid,nodev,size=32m,mode=01777 \
     "$IMAGE" /bin/bash -c '
       set -Eeuo pipefail
