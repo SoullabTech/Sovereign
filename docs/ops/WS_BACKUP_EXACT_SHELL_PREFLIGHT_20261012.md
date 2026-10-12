@@ -48,3 +48,105 @@ A first exploratory container launch failed rc 127 because a test bind-mount sha
 5. Do not install the held candidate, alter root/user 2 AM cron, change NAS ACLs/snapshots/recycle contents, delete archived SQL or member bytes, modify Writer's Studio beta image or deploy public Soullab under this report.
 
 **Disposition:** 5/5 preparatory exact-shell preflight PASS. **Independent human PR #1797 review PENDING. Full shell --run fixture NOT YET EXECUTED. Production remains unchanged.**
+
+
+## E. Exact-hash phase-order defect and future full-shell fixture
+
+The **additional repeatable, read-only source witness**
+\`scripts/ops/verify-ws-held-backup-source-order.mjs\` was fetched back from
+GitHub blob \`1cad140edfd26f44d10dee5df5331875548ec1a8\` and executed as a
+read-only Node process on the Minisforum. It did not execute any shell backup
+script. It verified SHA-256 on **all three** installed/held/installer sources
+and produced this exact-order map of the held candidate:
+
+| Phase | Source line | Consequence |
+|---|---:|---|
+| Gzip temp file reserved | 81 | Artifact still incomplete / temporary |
+| Real PostgreSQL export via Docker / gzip | 83 | Fixture will need synthetic stream of realistic size |
+| Gzip integrity verification | 86 | Necessary, not sufficient for full restore |
+| **Final SQL archive publication** | **94** | A discoverable archive now exists |
+| **Media synchronization** | **103** | Can fail AFTER SQL archive is published |
+| Retention copies | 107 onward | Can fail or leave partial recovery set |
+| Manifest temp path reserved | 125 | Manifest not yet published |
+| **Final manifest publication** | **142** | Full program's completion point, much later |
+
+The script's \`EXIT\` cleanup loop (line **33**) lists only
+\`TEMP_PG\`, \`TEMP_MANIFEST\` and \`TEMP_COPY\`. It **does not**
+roll back \`PG_FINAL\` when a later media or manifest stage fails. The
+read-only source verifier returned:
+- \`SOURCE_READ_ONLY_HASH_CHECK: 3/3 PASS\`
+- \`CONFIRMED_RISK: SQL archive publicly published before media and final manifest\`
+- \`CONFIRMED_RISK: failed media/manifest phase may leave finalized unpaired SQL archive\`
+- \`R20_INSTALLER_HOLD: PRESENT\`
+- \`CLASS_A_VERDICT: NOT GRANTED\`
+
+**Class A interpretation:** Such an archive may have correct gzip bytes but
+lack the media and final manifest for a complete restore. A future backup
+reader must distinguish **discovered bytes** from an **accepted complete
+recovery point** and quarantine orphaned generations rather than trusting
+their filename or SQL footer. **No actual shell \`--run\` witness has
+confirmed the effect of an injected media failure yet.** This remains
+source-order evidence requiring independent source review.
+
+### Full-shell synthetic run: design only, NOT executed
+
+After a *separate human* Class A source-read verdict accepts the sandbox,
+an isolated rehearsal should run only the held shell's exact
+\`--run\` bytes against an **entirely disposable** fake Postgres dump, a
+fake media filesystem and a non-networked fake CIFS destination.
+
+The candidate currently checks that the **compressed** PG archive is at
+least 100,000,000 bytes, checks gzip integrity and a trailing pg_dump
+completion footer. Do **not** silently lower the threshold just to make a
+fixture pass. Produce a synthetic stream with sufficiently high entropy to
+exceed the compressed threshold, with the correct harmless completion
+footer, and never include real Source, member text, production SQL or
+database credentials. An all-zero or repetitively generated stream will
+compress too well and fail this real threshold.
+
+Every full-shell fixture must require **no network**, no real Docker
+socket, no NAS/host filesystem bind, a read-only root filesystem, a
+non-root UID, bounded CPU/memory/size/time, private tmpfs data and an
+unchanged SHA-pinned copy of the held shell. The alternate fake
+\`docker\` command shall return **synthetic** \`pg_dump\` bytes and
+\`pg_isready\`, and a synthetic media path. Any unexpected
+Docker/rsync/SSH command must refuse.
+
+The independent reviewer must choose and witness at least:
+
+1. Synthetic successful gzip + footer + Source/media hash check, with a
+   clearly marked *fixture* manifest, no implication of actual data restore.
+2. Too-small compressed archive, corrupt/truncated gzip, missing footer,
+   failed Docker export and NAS out-of-space; each must refuse.
+3. Inject media sync failure *after* SQL publication; document whether
+   \`PG_FINAL\` survives and whether no complete manifest exists. This is
+   expected to expose an actual program defect, not to “pass” safety.
+4. Inject weekly/monthly copy and final manifest failures, timestamp
+   collisions, and two simultaneous invocations; inspect lock and
+   no-clobber behavior.
+5. Restore **the synthetic archived data only** and compare bytes/hashes.
+   This is not proof that a real PostgreSQL SQL script can be replayed
+   into an approved consistent DB+Source restoration.
+6. Prove all temporary paths and any incomplete final artifacts remain
+   inside disposable sandbox storage and do not touch other user data.
+7. Record **FAIL/REFUSE** for completed-Delete Work architecture: the held
+   script still archives globally reconstructive SQL and omits Source
+   and per-Work key erasure. It cannot receive Class A deletion-safe
+   certification even if its synthetic gzip run happens to pass.
+
+### Proposed next architecture, not yet implemented
+
+A redesigned backup should stage all **encrypted**, independently
+erasable components with an explicit database/Source consistency manifest,
+verify integrity and authorized recipient custody, and publish an atomic,
+no-clobber **complete/ready marker** only after **all** components and
+replica checks succeed. Publication must be fenced against current
+non-rollback deletion authority and must not resurrect already-deleted
+Works. Any partially published bytes stay quarantined and are disposed of
+only under a separately authorized custody rule. Historical plaintext SQL,
+Recycle Bin copies, other keys and remote replicas remain independently
+governed; a ready marker cannot retroactively make them erasure-safe.
+
+**Stop:** Do not bypass R20, execute the real backup writer, change cron,
+prune archives, install a new backup service or resume the Writer's Studio
+beta rollout under this source-order receipt.
