@@ -121,6 +121,9 @@ export function Shell(props: ShellProps) {
                 : <span className="fr-nav-item" data-writers-publish-entry aria-disabled="true" title="Open a Work to prepare it for publishing." style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap', opacity: 0.52, cursor: 'default' }}>Publish</span>
               : null}
           </nav>
+          {/* One explicit, replaceable accessory slot for the active Studio Shell.
+              The writer-owned download is never mounted from a hidden canvas. */}
+          <div className="fr-bar-accessories" data-studio-topbar-accessories />
           {props.workTitle !== undefined ? (
             <div className="fr-workpick" aria-label="Current Work">
               <DocIcon />
