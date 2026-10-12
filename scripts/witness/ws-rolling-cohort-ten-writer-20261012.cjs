@@ -88,9 +88,9 @@ async function request(token, method, route, body) {
   try {
     // Exit before writes unless both DB identity and API behavior match test setup.
     await db.connect(); connected=true;
-    const witness=(await db.query(\`SELECT current_database() AS name,
+    const witness=(await db.query(`SELECT current_database() AS name,
               inet_server_addr()::text AS address,
-              inet_server_port() AS port\`)).rows[0];
+              inet_server_port() AS port`)).rows[0];
     assert.equal(witness.name, DB_NAME, 'REFUSE: not dedicated witness DB');
     assert(['127.0.0.1','::1'].includes(witness.address), 'REFUSE: DB is not loopback');
     assert.equal(witness.port, 5432, 'REFUSE: unexpected DB port');
@@ -102,16 +102,16 @@ async function request(token, method, route, body) {
 
     await db.query('BEGIN'); txOpen=true;
     for (const w of writers) {
-      await db.query(\`INSERT INTO members
+      await db.query(`INSERT INTO members
           (id,passkey,username,password_hash,name,admin_role)
-          VALUES ($1,$2,$3,$4,$5,$6)\`,
+          VALUES ($1,$2,$3,$4,$5,$6)`,
         [w.member,'synthetic-'+w.member,'synthetic-'+w.member,
          'not-a-real-password',label+' #'+w.i,null]);
-      await db.query(\`INSERT INTO auth_sessions
+      await db.query(`INSERT INTO auth_sessions
           (member_id,session_token,expires_at)
-          VALUES ($1,$2,now()+interval '30 minutes')\`, [w.member,w.token]);
-      await db.query(\`INSERT INTO member_manuscripts
-          (id,member_id,title) VALUES($1,$2,$3)\`,
+          VALUES ($1,$2,now()+interval '30 minutes')`, [w.member,w.token]);
+      await db.query(`INSERT INTO member_manuscripts
+          (id,member_id,title) VALUES($1,$2,$3)`,
         [w.manuscript,w.member,label+' Manuscript #'+w.i]);
       for (let j=0;j<w.sections.length;j++) {
         const questionForm = (w.i%3)===0;
@@ -119,15 +119,15 @@ async function request(token, method, route, body) {
         const words=questionForm
           ? 'What is a question?\nWhy preserve this question as written?\n'
           : 'Only synthetic author content.\nA distinct synthetic paragraph.\n';
-        await db.query(\`INSERT INTO manuscript_sections
+        await db.query(`INSERT INTO manuscript_sections
             (id,manuscript_id,position,heading,heading_depth,heading_signal,body)
-            VALUES ($1,$2,$3,$4,$5,$6,$7)\`,
+            VALUES ($1,$2,$3,$4,$5,$6,$7)`,
           [w.sections[j],w.manuscript,j,heading,
            heading === null ? null : 1,heading === null ? null : 'markdown',words]);
       }
-      if(w.admitted) await db.query(\`INSERT INTO ops_contacts
+      if(w.admitted) await db.query(`INSERT INTO ops_contacts
           (name,member_id,contact_type,pipeline_stage)
-          VALUES ($1,$2,'beta_tester','active')\`,
+          VALUES ($1,$2,'beta_tester','active')`,
         [label+' admitted #'+w.i,w.member]);
     }
     await db.query('COMMIT'); txOpen=false;seedCommitted=true;
@@ -213,10 +213,10 @@ async function request(token, method, route, body) {
         const mids=writers.map(x=>x.manuscript),uids=writers.map(x=>x.member);
         try {
           await db.query('BEGIN');
-          await db.query(\`DELETE FROM working_draft_revisions WHERE draft_id IN
-            (SELECT id FROM manuscript_working_drafts WHERE manuscript_id=ANY($1::uuid[]))\`,[mids]);
-          await db.query(\`DELETE FROM manuscript_draft_sections WHERE draft_id IN
-            (SELECT id FROM manuscript_working_drafts WHERE manuscript_id=ANY($1::uuid[]))\`,[mids]);
+          await db.query(`DELETE FROM working_draft_revisions WHERE draft_id IN
+            (SELECT id FROM manuscript_working_drafts WHERE manuscript_id=ANY($1::uuid[]))`,[mids]);
+          await db.query(`DELETE FROM manuscript_draft_sections WHERE draft_id IN
+            (SELECT id FROM manuscript_working_drafts WHERE manuscript_id=ANY($1::uuid[]))`,[mids]);
           await db.query('DELETE FROM manuscript_working_drafts WHERE manuscript_id=ANY($1::uuid[])',[mids]);
           await db.query('DELETE FROM manuscript_sections WHERE manuscript_id=ANY($1::uuid[])',[mids]);
           await db.query('DELETE FROM member_manuscripts WHERE id=ANY($1::uuid[])',[mids]);
