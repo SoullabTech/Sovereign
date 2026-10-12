@@ -61,6 +61,7 @@
 
 import { transaction, query, type TransactionClient } from '@/lib/db/postgres';
 import { destroyVaultBytes } from '@/lib/storage/fileVault';
+import { recordWorkDeletionAuthority } from '@/lib/recovery/r20-r2/recordWorkDeletionAuthority';
 
 export type EraseOutcome =
   /** Rows are gone. `sweptAll` is false when bytes are still owed destruction. */
@@ -112,7 +113,7 @@ export async function eraseManuscript(
       return { ok: false as const, refusal: 'not_found' as const };
     }
 
-    await removeDeclaration(tx, claims.rows[0]?.living_work_id, manuscriptId, memberId);
+    const deletedWorkId = await removeDeclaration(tx, claims.rows[0]?.living_work_id, manuscriptId, memberId);
 
     /* Written inside the transaction: if the commit fails, nothing was destroyed
        and nothing is owed. If it succeeds, every path is recoverable until it is
@@ -125,6 +126,10 @@ export async function eraseManuscript(
         [refs],
       );
     }
+
+    /* R20-R2: the deletion and its content-free restoration refusal must
+       commit together. Missing authority fails the transaction closed. */
+    await recordWorkDeletionAuthority(tx, manuscriptId, deletedWorkId);
     return { ok: true as const, refs };
   });
 
@@ -150,8 +155,8 @@ async function removeDeclaration(
   workId: string | undefined,
   manuscriptId: string,
   memberId: string,
-): Promise<void> {
-  if (!workId) return;
+): Promise<string | undefined> {
+  if (!workId) return undefined;
 
   await tx.query(
     `DELETE FROM living_work_expressions
@@ -190,6 +195,7 @@ async function removeDeclaration(
   if (workGone.rows.length > 0 && path) {
     await tx.query(`INSERT INTO vault_erasure_queue (artifact_ref) VALUES ($1)`, [path]);
   }
+  return workGone.rows[0]?.id;
 }
 
 /**
