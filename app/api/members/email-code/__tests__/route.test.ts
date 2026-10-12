@@ -40,21 +40,21 @@ jest.mock('@/lib/db/postgres', () => ({
   query: (sql: string, params?: unknown[]) => mockQuery(sql, params),
 }));
 
-// Resend is mocked so no real email is ever sent; mockSend records delivery.
-//
-// The fixture returns Resend's REAL result shape — `{ data, error }` — not a
-// bare `{ id }`. That detail is load-bearing: `emails.send()` resolves on a
-// provider refusal rather than throwing, and a fixture that always resolved to
-// a truthy object made a route which ignored `error` look correct under test
-// for as long as the defect existed. A mock that cannot express failure cannot
-// prove the handling of failure.
-type ResendResult = { data: { id: string } | null; error: { name: string; message: string } | null };
-const mockSend = jest.fn<(...args: unknown[]) => Promise<ResendResult>>();
-jest.mock('resend', () => ({
-  Resend: jest.fn().mockImplementation(() => ({
-    emails: { send: (...args: unknown[]) => mockSend(...args) },
-  })),
-}));
+// Mock the provider contract, not a vendor SDK. This keeps the route tests
+// transport-agnostic while the shared sendEmail layer remains real.
+type ProviderResult = { accepted: boolean; providerMessageId?: string; rawError?: unknown };
+const mockSend = jest.fn<(...args: unknown[]) => Promise<ProviderResult>>();
+jest.mock('@/lib/email/providers', () => {
+  const actual = jest.requireActual('@/lib/email/providers') as Record<string, unknown>;
+  return {
+    ...actual,
+    getEmailProvider: () => ({
+      name: 'smtp',
+      isConfigured: () => true,
+      send: (...args: unknown[]) => mockSend(...args),
+    }),
+  };
+});
 
 // Rate limiting always allows here — proven separately; keep it out of this proof.
 jest.mock('@/lib/auth/rateLimiter', () => ({
@@ -104,11 +104,10 @@ describe('POST /api/members/email-code — open signup, no waitlist pathway', ()
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSend.mockResolvedValue({ data: { id: 'email-mock' }, error: null });
+    mockSend.mockResolvedValue({ accepted: true, providerMessageId: 'email-mock' });
     installDb();
     delete process.env.BETA_ALLOWLIST_ENABLED;
     delete process.env.CAPACITOR_BUILD;
-    process.env.RESEND_API_KEY = 'test-key';
   });
 
   afterEach(() => {
@@ -123,7 +122,7 @@ describe('POST /api/members/email-code — open signup, no waitlist pathway', ()
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body).toEqual({ success: true });
+    expect(body.success).toBe(true);
     expect(mockSend).toHaveBeenCalledTimes(1);   // code delivered
     expect(waitlistTouched()).toBe(false);
     expect(allowlistTouched()).toBe(false);
@@ -140,7 +139,7 @@ describe('POST /api/members/email-code — open signup, no waitlist pathway', ()
       const body = await res.json();
 
       expect(res.status).toBe(200);
-      expect(body).toEqual({ success: true });
+      expect(body.success).toBe(true);
       expect(body).not.toHaveProperty('status');   // never { status: 'waitlist' }
       expect(mockSend).toHaveBeenCalledTimes(1);
       expect(waitlistTouched()).toBe(false);
@@ -162,7 +161,7 @@ describe('POST /api/members/email-code — open signup, no waitlist pathway', ()
     const res = await POST(req('would-have-been-stranded@example.com'));
     const body = await res.json();
 
-    expect(body).toEqual({ success: true });
+    expect(body.success).toBe(true);
     expect(mockSend).toHaveBeenCalledTimes(1);
   });
 
@@ -184,7 +183,7 @@ describe('POST /api/members/email-code — open signup, no waitlist pathway', ()
   // never a waitlist.
   it('returns an explicit error when code delivery fails — not a waitlist', async () => {
     installDb({ member: null });
-    mockSend.mockRejectedValue(new Error('resend down'));
+    mockSend.mockRejectedValue(new Error('smtp down'));
 
     const res = await POST(req('delivery-fails@example.com'));
     const body = await res.json();
@@ -204,7 +203,7 @@ describe('POST /api/members/email-code — open signup, no waitlist pathway', ()
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body).toEqual({ success: true });
+    expect(body.success).toBe(true);
     expect(mockSend).toHaveBeenCalledTimes(1);
     expect(waitlistTouched()).toBe(false);
   });
@@ -231,15 +230,14 @@ describe('POST /api/members/email-code — provider refusal is never reported as
   const ORIGINAL_FLAG = process.env.BETA_ALLOWLIST_ENABLED;
 
   const refuse = (name: string, message: string) =>
-    mockSend.mockResolvedValue({ data: null, error: { name, message } });
+    mockSend.mockResolvedValue({ accepted: false, rawError: { name, message } });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSend.mockResolvedValue({ data: { id: 'email-mock' }, error: null });
+    mockSend.mockResolvedValue({ accepted: true, providerMessageId: 'email-mock' });
     installDb();
     delete process.env.BETA_ALLOWLIST_ENABLED;
     delete process.env.CAPACITOR_BUILD;
-    process.env.RESEND_API_KEY = 'test-key';
   });
 
   afterEach(() => {
@@ -331,7 +329,7 @@ describe('POST /api/members/email-code — provider refusal is never reported as
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body).toEqual({ success: true });
+    expect(body.success).toBe(true);
     expect(trackedEvents()).toContain('magic_link_sent');
     expect(trackedEvents()).not.toContain('magic_link_send_failed');
   });

@@ -710,6 +710,25 @@ cmd_deploy() {
         exit 1
     fi
 
+    # MAIL-10: refuse production deploys that would send through Resend,
+    # or declare SMTP without the required authenticated transport settings.
+    mail_provider=$(awk -F= '/^EMAIL_PROVIDER=/{gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2}' .env.production | tail -n 1)
+    if [ "$mail_provider" != "smtp" ]; then
+        log_error "EMAIL_PROVIDER must be smtp in production (found: ${mail_provider:-unset})"
+        exit 1
+    fi
+    for mail_key in SMTP_HOST SMTP_USER SMTP_PASSWORD; do
+        mail_value=$(awk -F= -v key="$mail_key" '$1==key{sub(/^[^=]*=/,""); print}' .env.production | tail -n 1)
+        if [ -z "$mail_value" ]; then
+            log_error "$mail_key is required for production identity mail"
+            exit 1
+        fi
+    done
+    if grep -Eq '^RESEND_API_KEY=.+$' .env.production; then
+        log_error "RESEND_API_KEY is retired; remove the value and revoke the credential"
+        exit 1
+    fi
+
     # Dependency security audit — target-declared manager, fail closed at moderate+.
     run_dependency_security_audit || exit 1
 

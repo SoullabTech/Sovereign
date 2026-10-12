@@ -1,6 +1,5 @@
 import { sendEmail } from '@/lib/email/sendEmail';
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY ?? '';
 
 const PARTNER_MAP: Record<string, { name: string; email: string; fieldUrl: string }> = {
   'ce284751-e457-42f6-89b6-bc07d0876682': {
@@ -33,7 +32,6 @@ export async function sendPartnerNotification(opts: {
   columnId?: string;
   messagePreview?: string;
 }) {
-  if (!RESEND_API_KEY) return;
   const recipient = getRecipient(opts.actorId);
   const actor = getActor(opts.actorId);
   if (!recipient?.email) return;

@@ -6,7 +6,7 @@
  * - explicit consent confirmation
  * - content validation against session data
  *
- * Delivers via email (Resend) and optionally links to comms thread.
+ * Delivers via Soullab managed SMTP and optionally links to comms thread.
  */
 
 import { NextRequest, NextResponse } from 'next/server';

@@ -21,15 +21,21 @@ jest.mock('@/lib/db/postgres', () => ({
   query: (sql: string, params?: unknown[]) => mockQuery(sql, params),
 }));
 
-// Mocked at the provider boundary, so the real `{ data, error }` handling in
-// lib/email/sendEmail stays under test rather than being stubbed out.
-type ResendResult = { data: { id: string } | null; error: { name: string; message: string } | null };
-const mockSend = jest.fn<(...args: unknown[]) => Promise<ResendResult>>();
-jest.mock('resend', () => ({
-  Resend: jest.fn().mockImplementation(() => ({
-    emails: { send: (...args: unknown[]) => mockSend(...args) },
-  })),
-}));
+// Mocked at the provider contract so the real sendEmail classification remains
+// under test without coupling this suite to any transport vendor.
+type ProviderResult = { accepted: boolean; providerMessageId?: string; rawError?: unknown };
+const mockSend = jest.fn<(...args: unknown[]) => Promise<ProviderResult>>();
+jest.mock('@/lib/email/providers', () => {
+  const actual = jest.requireActual('@/lib/email/providers') as Record<string, unknown>;
+  return {
+    ...actual,
+    getEmailProvider: () => ({
+      name: 'smtp',
+      isConfigured: () => true,
+      send: (...args: unknown[]) => mockSend(...args),
+    }),
+  };
+});
 
 jest.mock('@/lib/auth/rateLimiter', () => ({
   checkRateLimit: jest.fn(async () => ({ allowed: true })),
@@ -37,8 +43,6 @@ jest.mock('@/lib/auth/rateLimiter', () => ({
   buildRateLimitHeaders: jest.fn(() => ({})),
 }));
 jest.mock('@/lib/onboarding/telemetry', () => ({ trackOnboarding: jest.fn() }));
-
-process.env.RESEND_API_KEY = 'test-key';
 
 import { POST } from '../route';
 import { NextRequest } from 'next/server';
@@ -62,7 +66,7 @@ const req = (email: string) =>
   });
 
 const refuse = (name: string, message: string) =>
-  mockSend.mockResolvedValue({ data: null, error: { name, message } });
+  mockSend.mockResolvedValue({ accepted: false, rawError: { name, message } });
 
 /** Was the just-issued code invalidated because nobody received it? */
 const codeInvalidated = () =>
@@ -79,7 +83,7 @@ const codeDeleted = () =>
 beforeEach(() => {
   mockQuery.mockReset();
   mockSend.mockReset();
-  mockSend.mockResolvedValue({ data: { id: 'msg_abc123' }, error: null });
+  mockSend.mockResolvedValue({ accepted: true, providerMessageId: 'msg_abc123' });
   installDb();
   jest.spyOn(console, 'error').mockImplementation(() => {});
   jest.spyOn(console, 'log').mockImplementation(() => {});

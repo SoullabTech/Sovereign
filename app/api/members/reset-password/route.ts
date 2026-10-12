@@ -196,7 +196,7 @@ The Soullab Team
       );
     }
 
-    console.log('[MEMBERS] Password reset email sent to:', email, 'resendId:', delivery.id ?? 'none');
+    console.log(`[MEMBERS] Password reset email accepted for member=${memberRef(member.id)} (providerId: ${delivery.id ?? 'none'})`);
 
     return NextResponse.json({
       success: true,

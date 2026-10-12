@@ -18,25 +18,27 @@
  */
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
-const mockSend = jest.fn<(...args: unknown[]) => Promise<unknown>>();
-jest.mock('resend', () => ({
-  Resend: jest.fn().mockImplementation(() => ({
-    emails: { send: (...args: unknown[]) => mockSend(...args) },
-  })),
-}));
-
-process.env.RESEND_API_KEY = 'test-key';
-
 import { sendEmail, classifyProviderError } from '../sendEmail';
+import { __setEmailProviderForTests } from '../providers';
+import type { EmailProvider, ProviderSendResult } from '../providers/types';
+
+const mockSend = jest.fn<(...args: unknown[]) => Promise<ProviderSendResult>>();
+
+const testProvider: EmailProvider = {
+  name: 'test-smtp',
+  isConfigured: () => true,
+  send: (...args: unknown[]) => mockSend(...args),
+};
 
 const send = () =>
-  sendEmail({ purpose: 'test:unit', to: 'someone@example.com', subject: 's', text: 't' });
+  sendEmail({ purpose: 'test:unit', to: 'someone@example.com', subject: 's', text: 't', provider: testProvider });
 
 const refuse = (name: string, message: string) =>
-  mockSend.mockResolvedValue({ data: null, error: { name, message } });
+  mockSend.mockResolvedValue({ accepted: false, rawError: { name, message } });
 
 beforeEach(() => {
   mockSend.mockReset();
+  __setEmailProviderForTests(testProvider);
   jest.spyOn(console, 'error').mockImplementation(() => {});
   jest.spyOn(console, 'log').mockImplementation(() => {});
 });
@@ -76,7 +78,7 @@ describe('sendEmail — a resolved refusal is a failure, never a success', () =>
   });
 
   it('a resolved send with no message id is not a send', async () => {
-    mockSend.mockResolvedValue({ data: null, error: null });
+    mockSend.mockResolvedValue({ accepted: false, rawError: { name: 'smtp_no_message_id', message: 'server returned no message id' } });
     const r = await send();
     expect(r.success).toBe(false);
     expect(r.failureKind).toBe('provider_error');
@@ -92,7 +94,7 @@ describe('sendEmail — a resolved refusal is a failure, never a success', () =>
   });
 
   it('CONTROL: success requires a provider-issued message id', async () => {
-    mockSend.mockResolvedValue({ data: { id: 'msg_abc123' }, error: null });
+    mockSend.mockResolvedValue({ accepted: true, providerMessageId: 'msg_abc123' });
     const r = await send();
     expect(r.success).toBe(true);
     expect(r.id).toBe('msg_abc123');

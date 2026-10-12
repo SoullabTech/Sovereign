@@ -360,6 +360,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
         return;
       }
       setCode('');
+      clearRecentEmailSendFailure();
       setPhase('code');
     } catch {
       setError('Could not send the code. Please try again.');
@@ -705,14 +706,19 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
           ) : phase === 'code' ? (
             <motion.div key="code" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
               <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em]">Enter code</h1>
-              <p className="text-sm text-slate-300/80 font-light mb-6 leading-relaxed">We sent a 6-digit code to <span className="text-slate-200">{email}</span>.</p>
+              <p className="text-sm text-slate-300/80 font-light mb-6 leading-relaxed">Check <span className="text-slate-200">{email}</span> for your 6-digit code. If it doesn’t arrive, choose another way in below.</p>
               {errorBlock}
               <input value={code} onChange={(e) => onCodeChange(e.target.value)} inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} autoFocus placeholder="••••••" className={codeInputCls} />
               <button type="button" disabled={isLoading || code.length < 6} onClick={() => verifyCode(code)} className={`${primaryBtn} mt-4`}>{isLoading ? 'Verifying…' : 'Verify'}</button>
-              <div className="mt-5 flex items-center justify-center gap-4 text-xs text-slate-500">
-                <button type="button" onClick={() => sendCode()} disabled={isLoading} className="hover:text-slate-300 transition-colors">Resend code</button>
-                <span className="text-slate-700">·</span>
-                <button type="button" onClick={() => { setPhase('email'); setError(''); setCode(''); }} className="hover:text-slate-300 transition-colors">Change email</button>
+              <div className="mt-5 space-y-3">
+                <button type="button" onClick={() => { setPhase('email'); setError(''); setCode(''); setSendBlocked(true); }} className={outlineBtn}>
+                  Use another way in
+                </button>
+                <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
+                  <button type="button" onClick={() => sendCode()} disabled={isLoading} className="hover:text-slate-300 transition-colors">Send a new code</button>
+                  <span className="text-slate-700">·</span>
+                  <button type="button" onClick={() => { setPhase('email'); setError(''); setCode(''); }} className="hover:text-slate-300 transition-colors">Use a different email</button>
+                </div>
               </div>
             </motion.div>
           ) : (

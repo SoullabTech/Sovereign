@@ -18,7 +18,7 @@ export type CommsDomain = 'clinical' | 'ops' | 'community';
 export type CommsChannelType = 'in_app' | 'email' | 'sms' | 'push' | 'video' | 'voice';
 
 /** Provider implementations */
-export type CommsProvider = 'internal' | 'resend' | 'twilio' | 'livekit' | 'jitsi';
+export type CommsProvider = 'internal' | 'smtp' | 'twilio' | 'livekit' | 'jitsi';
 
 /** Channel operational status */
 export type CommsChannelStatus = 'active' | 'paused' | 'degraded' | 'disabled';

@@ -38,13 +38,19 @@ jest.mock('@/lib/db/postgres', () => ({
   query: (sql: string, params?: unknown[]) => mockQuery(sql, params),
 }));
 
-type ResendResult = { data: { id: string } | null; error: { name: string; message: string } | null };
-const mockSend = jest.fn<(...args: unknown[]) => Promise<ResendResult>>();
-jest.mock('resend', () => ({
-  Resend: jest.fn().mockImplementation(() => ({
-    emails: { send: (...args: unknown[]) => mockSend(...args) },
-  })),
-}));
+type ProviderResult = { accepted: boolean; providerMessageId?: string; rawError?: unknown };
+const mockSend = jest.fn<(...args: unknown[]) => Promise<ProviderResult>>();
+jest.mock('@/lib/email/providers', () => {
+  const actual = jest.requireActual('@/lib/email/providers') as Record<string, unknown>;
+  return {
+    ...actual,
+    getEmailProvider: () => ({
+      name: 'smtp',
+      isConfigured: () => true,
+      send: (...args: unknown[]) => mockSend(...args),
+    }),
+  };
+});
 
 jest.mock('@/lib/auth/rateLimiter', () => ({
   checkRateLimit: jest.fn(async () => ({ allowed: true })),
@@ -55,8 +61,6 @@ jest.mock('@/lib/auth/rateLimiter', () => ({
 // identified record in a table is a different disclosure surface from an
 // identified line in `docker logs`, and is deliberately out of scope here.
 jest.mock('@/lib/onboarding/telemetry', () => ({ trackOnboarding: jest.fn() }));
-
-process.env.RESEND_API_KEY = 'test-key';
 
 import { POST } from '../route';
 import { NextRequest } from 'next/server';
@@ -92,7 +96,7 @@ beforeEach(() => {
   logs.length = 0;
   mockQuery.mockReset();
   mockSend.mockReset();
-  mockSend.mockResolvedValue({ data: { id: MESSAGE_ID }, error: null });
+  mockSend.mockResolvedValue({ accepted: true, providerMessageId: MESSAGE_ID });
   installDb();
   // Objects are SERIALISED, not `String()`-ed. A `console.log('...', obj)`
   // stringifies to `[object Object]` under String(), which would hide a raw
@@ -119,8 +123,8 @@ describe('no full recipient address or local-part reaches container stdout', () 
   it('does not log the address on the REFUSAL path', async () => {
     installDb({ member: { id: MEMBER_ID, name: 'Nathan' } });
     mockSend.mockResolvedValue({
-      data: null,
-      error: { name: 'monthly_quota_exceeded', message: 'You have reached your monthly email sending quota.' },
+      accepted: false,
+      rawError: { name: 'provider_refused', message: 'SMTP relay refused the message.' },
     });
 
     await POST(req());
@@ -143,7 +147,8 @@ describe('no full recipient address or local-part reaches container stdout', () 
       const res = await POST(req());
 
       // The gate is gone: the formerly-live flag is inert and the send proceeds.
-      expect(await res.json()).toEqual({ success: true });
+      const body = await res.json();
+      expect(body.success).toBe(true);
       expect(emitted()).not.toContain('waitlist');
       expect(emitted()).not.toContain(EMAIL);
       expect(emitted()).not.toContain(LOCAL_PART);
@@ -170,7 +175,7 @@ describe('what the success log keeps', () => {
   // it is the fact the positive witness depends on.
   it('never reports success for an acceptance that returned no message id', async () => {
     installDb({ member: { id: MEMBER_ID, name: 'Nathan' } });
-    mockSend.mockResolvedValue({ data: null as unknown as { id: string }, error: null });
+    mockSend.mockResolvedValue({ accepted: false, rawError: { name: 'smtp_no_message_id', message: 'server returned no message id' } });
 
     const res = await POST(req());
 

@@ -250,7 +250,9 @@ export async function GET(request: NextRequest) {
       ANTHROPIC_API_KEY:       !!process.env.ANTHROPIC_API_KEY,
       LABTOOLS_ADMIN_PASSWORD: !!process.env.LABTOOLS_ADMIN_PASSWORD,
       DATABASE_URL:            !!process.env.DATABASE_URL,
-      RESEND_API_KEY:          !!process.env.RESEND_API_KEY,
+      SMTP_HOST:               !!process.env.SMTP_HOST,
+      SMTP_USER:               !!process.env.SMTP_USER,
+      SMTP_PASSWORD:           !!process.env.SMTP_PASSWORD,
       NEXT_PUBLIC_APP_URL:     !!process.env.NEXT_PUBLIC_APP_URL,
     },
   };

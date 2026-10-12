@@ -2,7 +2,7 @@
 /**
  * MAIA Email Service - Ganesha ADD Support Integration
  * Autonomous email management for consciousness pioneers
- * Built on existing Soullab Resend infrastructure
+ * Built on Soullab's managed sovereign SMTP infrastructure
  */
 
 import { sendEmail } from '@/lib/email/sendEmail';
@@ -34,22 +34,13 @@ interface EmailCampaign {
 }
 
 export class GaneshaEmailService {
-  private resend: Resend;
   private templates: Map<string, EmailTemplate> = new Map();
   private contacts: Map<string, EmailContact> = new Map();
 
   constructor() {
-    // Use existing Soullab Resend setup
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      console.warn('⚠️ [Ganesha Email] RESEND_API_KEY not found in environment variables');
-      return;
-    }
-
-    this.resend = new Resend(apiKey);
     this.loadTemplates();
     this.initializeContacts();
-    console.log('🧠 [Ganesha Email] Consciousness email service initialized');
+    console.log('🧠 [Ganesha Email] Consciousness email service initialized on managed SMTP');
   }
 
   private async initializeContacts() {

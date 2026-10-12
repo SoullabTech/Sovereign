@@ -25,7 +25,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { randomBytes, randomInt } from 'crypto';
+import { randomBytes, randomInt, randomUUID } from 'crypto';
 import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { redactEmails } from '@/lib/privacy/redactEmails';
@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
+    const deliveryRequestId = randomUUID();
 
     await ensureSchema();
 
@@ -166,6 +167,8 @@ export async function POST(request: NextRequest) {
       purpose: 'auth:email-code',
       triggerType: 'route',
       triggerRef: '/api/members/email-code',
+      correlationId: deliveryRequestId,
+      memberId: memberId ?? undefined,
       from: SENDERS.noreply,
       to: normalizedEmail,
       subject: `Your Soullab code: ${code}`,

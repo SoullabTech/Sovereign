@@ -23,13 +23,11 @@ jest.mock('@/lib/db/postgres', () => ({
   query: (sql: string, params?: unknown[]) => mockQuery(sql, params),
 }));
 
-type ResendResult = { data: { id: string } | null; error: { name: string; message: string } | null };
-const mockSend = jest.fn<(...args: unknown[]) => Promise<ResendResult>>();
-jest.mock('resend', () => ({
-  Resend: jest.fn().mockImplementation(() => ({
-    emails: { send: (...args: unknown[]) => mockSend(...args) },
-  })),
-}));
+const mockSend = jest.fn<(...args: unknown[]) => Promise<any>>();
+jest.mock('@/lib/email/sendEmail', () => {
+  const actual = jest.requireActual('@/lib/email/sendEmail') as Record<string, unknown>;
+  return { ...actual, sendEmail: (...args: unknown[]) => mockSend(...args) };
+});
 
 const mockCheckRateLimit = jest.fn<(...args: unknown[]) => Promise<{ allowed: boolean }>>();
 jest.mock('@/lib/auth/rateLimiter', () => ({
@@ -75,9 +73,8 @@ const sentTo = () =>
 
 beforeEach(() => {
   jest.clearAllMocks();
-  process.env.RESEND_API_KEY = 'test-key';
   delete process.env.CAPACITOR_BUILD;
-  mockSend.mockResolvedValue({ data: { id: 'provider-id' }, error: null });
+  mockSend.mockResolvedValue({ success: true, status: 'sent', id: 'provider-id', provider: 'smtp', priority: 'P0' });
   mockCheckRateLimit.mockResolvedValue({ allowed: true });
   mockQuery.mockImplementation(async (sql: string) => {
     if (/from\s+members\s+where\s+id\s*=/i.test(sql)) return { rows: [MEMBER] };
