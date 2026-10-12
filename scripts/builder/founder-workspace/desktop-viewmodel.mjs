@@ -8,7 +8,7 @@
  * composed view-model and to safe text-like files beneath the bound repo or
  * local AIN home.
  */
-import { mkdtempSync, readFileSync, statSync, lstatSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, readFileSync, statSync, lstatSync, realpathSync, openSync, fstatSync, closeSync, constants, rmSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import os from 'node:os';
@@ -266,9 +266,31 @@ export function readEvidencePreview(vm, ref, opts) {
     } catch (e) { return { ok: false, reason: `canonical evidence read failed: ${String(e)}` }; }
   } else {
     if (!existsSync(full)) return { ok: false, reason: 'evidence file is absent on this substrate' };
-    let st; try { st = statSync(full); } catch (e) { return { ok: false, reason: `evidence stat failed: ${String(e)}` }; }
-    if (!st.isFile()) return { ok: false, reason: 'evidence ref is not a file' };
-    try { raw = readFileSync(full, 'utf8'); } catch (e) { return { ok: false, reason: `evidence read failed: ${String(e)}` }; }
+    // The view-model may be cached when a founder opens its evidence. A source
+    // admitted earlier must not be able to redirect its subsequent preview to
+    // an outside file using a symlink. Resolve containment at the time of read,
+    // then open the canonical file with O_NOFOLLOW and read that same descriptor.
+    // Neither a lexical path check nor statSync (which follows links) suffices.
+    let fd;
+    try {
+      const canonical = realpathSync(full);
+      const actualRoot = realpathSync(opts.root);
+      let actualHome = null;
+      try { actualHome = realpathSync(home); } catch { /* AIN home may not exist */ }
+      if (lstatSync(full).isSymbolicLink()
+        || (!inside(canonical, actualRoot) && !(actualHome && inside(canonical, actualHome)))) {
+        return { ok: false, reason: 'evidence path redirects through a symlink or outside its admitted roots' };
+      }
+      // Fail closed rather than silently dropping symlink protection on a host
+      // without the flag (Mac Studio/Darwin exposes O_NOFOLLOW).
+      if (!Number.isInteger(constants.O_NOFOLLOW)) {
+        return { ok: false, reason: 'safe no-follow evidence opening unavailable' };
+      }
+      fd = openSync(canonical, constants.O_RDONLY | constants.O_NOFOLLOW);
+      if (!fstatSync(fd).isFile()) return { ok: false, reason: 'evidence ref is not a file' };
+      raw = readFileSync(fd, 'utf8');
+    } catch (e) { return { ok: false, reason: `evidence read failed: ${String(e)}` }; }
+    finally { if (fd !== undefined) try { closeSync(fd); } catch { /* closing preview only */ } }
   }
   const truncated = Buffer.byteLength(raw, 'utf8') > MAX_PREVIEW_BYTES;
   if (truncated) raw = Buffer.from(raw, 'utf8').subarray(0, MAX_PREVIEW_BYTES).toString('utf8');
