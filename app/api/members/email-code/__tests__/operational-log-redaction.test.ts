@@ -38,6 +38,13 @@ jest.mock('@/lib/db/postgres', () => ({
   query: (sql: string, params?: unknown[]) => mockQuery(sql, params),
 }));
 
+// MAIL-05's durable capacity is proven separately; keep auth route tests isolated.
+const mockMailCapacity = jest.fn<(...args: unknown[]) => Promise<any>>();
+jest.mock('@/lib/email/capacity', () => ({
+  ...jest.requireActual<typeof import('@/lib/email/capacity')>('@/lib/email/capacity'),
+  reserveEmailCapacity: (...args: unknown[]) => mockMailCapacity(...args),
+}));
+
 type ProviderResult = { accepted: boolean; providerMessageId?: string; rawError?: unknown };
 const mockSend = jest.fn<(...args: unknown[]) => Promise<ProviderResult>>();
 jest.mock('@/lib/email/providers', () => {
@@ -97,6 +104,7 @@ beforeEach(() => {
   mockQuery.mockReset();
   mockSend.mockReset();
   mockSend.mockResolvedValue({ accepted: true, providerMessageId: MESSAGE_ID });
+  mockMailCapacity.mockResolvedValue({ allowed: true, degraded: false });
   installDb();
   // Objects are SERIALISED, not `String()`-ed. A `console.log('...', obj)`
   // stringifies to `[object Object]` under String(), which would hide a raw

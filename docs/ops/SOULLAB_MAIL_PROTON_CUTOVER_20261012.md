@@ -33,6 +33,38 @@ A separate worktree `fix/soullab-mail-proton-convergence-20261012` was based on 
 - TypeScript entrypoint typecheck, shell and monitor JavaScript syntax checks: PASS.
 - No live emails, recipient changes, member vault reads, production database writes, provider rotation or deployment performed by these tests.
 
+## MAIL-05 release candidate — additive hardening, 12 October 2026
+
+**Prepared in the same isolated worktree; not deployed.** The previously absent global guard is now implemented in `lib/email/capacity.ts` and the additive, isolated-reviewed migration candidate
+`database/migrations/20261012000001_mail05_capacity.sql`. It is NOT a ledger query or a conditional cap on the previous mail vendor.
+
+- Atomic PostgreSQL advisory-locked reservations and a separate table of **keyed HMAC** recipient counters. No plaintext email recipients in the counter table.
+- Per-hour/per-day caps per lane: **P0 30/120, P1 25/80, P2 35/100, P3 5/20**, with additional recipient-hour/day caps (P0 5/12; P1 6/12; P2 6/15; P3 2/3). Non-identity lanes also share a 50/hour and 150/day ceiling. This is a conservative founder-beta candidate, NOT a final scale policy.
+- One attempt is charged before SMTP even if the provider later refuses (avoids refusal-based loops). Invalid recipients, duplicate destinations and a fan-out exceeding 20 are refused without any capacity write.
+- If durable reservation fails: P1–P3 fail closed. P0 only has a small **per-process emergency ceiling** of six per hour, two per HMAC recipient per hour, with bounded memory. This is outage containment, not a shared substitute. Deployment still requires the durable schema.
+- The central `sendEmail()` checks sender authority and capacity before calling the provider. This now covers managed Soul Portrait deliveries, authentication, invitations, notifications and scheduled sends through `EmailRouter`. It does not claim MAIL-04's endpoint-by-endpoint admission audit complete.
+- SMTP transport rejects every `From` that does not equal its authenticated username, before opening any connection. The interim managed-mail policy converges known historic `soullab.life` software sender aliases onto **`Soullab <noreply@soullab.life>`**, preserving explicit Reply-To and Kelly's known human reply address. An unknown sender is refused rather than impersonated. This branding/reply decision needs founder confirmation before release.
+- The Proton token is kept in owner-only host storage. Candidate production Compose bind-mounts it read-only into the application at `/run/secrets/soullab_smtp_token`; `SMTP_PASSWORD_FILE` reads it without placing a credential in environment variables or Git. The deploy preflight rejects missing/unsafe file modes, plaintext SMTP passwords in env, non-SMTP provider selection and any populated Resend API key.
+- Recipient log references are now keyed, versioned HMACs instead of short unkeyed hashes of email addresses.
+- The existing 03:17 daily prune job has been verified on the Minisforum; the candidate extends that script to prune expired MAIL-05 counters.
+
+### Synthetic evidence
+
+- Independent disposable PostgreSQL container `soullab-mail05-synthetic-20261012` with `--network none`, outside production, accepted the additive migration without errors.
+- The SQL proof in `scripts/witness/mail05-synthetic-proof.sql` passed: repeated P0 sends cap at five to one recipient, P3 exhaustion leaves P0 available, invalid/duplicate/plaintext-HMAC requests do not spend capacity, and no raw address is stored.
+- 30 parallel simulated P0 calls to the *same* HMAC address: **5 admitted, 25 refused**, authoritative counter **5**. Witness: `scripts/witness/mail05-synthetic-concurrent.sh`.
+- Full mocked application regressions: **22 suites, 259 tests passed**; includes route-level refusal invalidating unreceived sign-in codes, ownership/consent in Soul Portrait, SMTP sender mismatches, file-backed secret permissions, and delivery ledger guarantees.
+- TypeScript entrypoint check and shell/Node syntax checks passed. Docker host mount tested as UID 1000, mode 0600, read-only, with no token value printed. Gmail SPF/DKIM/DMARC externally confirmed PASSED on the test message in the connected inbox.
+- No member emails or database writes were made during the engineering tests. The only externally sent test email was the previously authorized, one-message Gmail qualification.
+
+### Known remaining release blockers
+
+- **Human migration custody:** The additive schema requires exact-target independent file-read review, compatibility with the still-running old reader, and a migration-only authorized gate before application image swap.
+- **MAIL-04/MAIL-05 authority completeness:** Caps mitigate loss, but do not prove every externally callable mail endpoint has proper actor and recipient-origin authorization. Complete that inventory and test it before public release.
+- **Identity and replies:** Only `noreply` is authenticated and externally tested; the alias-to-noreply presentation needs founder adjudication. Account recovery and other protected P0/P1 paths still need user-owned end-to-end acceptance after the actual candidate deployment.
+- **Physical lane separation:** Counters protect P0's budget but the single Proton account remains shared underneath. A separate high-reputation P0 credential/transport is longer-term resilience, not yet implemented.
+- **Operations:** Confirm provider quotas, suppression/bounce webhook handling, alerting, log minimization, independent review verdict, and no accidental Writer's Studio image replacement. DNS SPF still authorizes Resend and DMARC is in monitoring mode; those are post-cutover cleanup items, not completed changes.
+
 ## Holds before public cutover
 
 1. **SMTP credential:** From Proton `Settings → All settings → IMAP/SMTP → SMTP tokens`, mint an application-specific token for an active `@soullab.life` sender. The Proton account password is NOT an SMTP credential. Never paste a token into chat, code, logs, or Git. Earlier `noreply@` attempts returned SMTP 535. A fresh token must pass STARTTLS authentication from Minisforum without a send before acceptance.

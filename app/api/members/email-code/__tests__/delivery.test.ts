@@ -23,6 +23,13 @@ jest.mock('@/lib/db/postgres', () => ({
 
 // Mocked at the provider contract so the real sendEmail classification remains
 // under test without coupling this suite to any transport vendor.
+// MAIL-05's durable capacity is proven separately; keep auth route tests isolated.
+const mockMailCapacity = jest.fn<(...args: unknown[]) => Promise<any>>();
+jest.mock('@/lib/email/capacity', () => ({
+  ...jest.requireActual<typeof import('@/lib/email/capacity')>('@/lib/email/capacity'),
+  reserveEmailCapacity: (...args: unknown[]) => mockMailCapacity(...args),
+}));
+
 type ProviderResult = { accepted: boolean; providerMessageId?: string; rawError?: unknown };
 const mockSend = jest.fn<(...args: unknown[]) => Promise<ProviderResult>>();
 jest.mock('@/lib/email/providers', () => {
@@ -84,9 +91,22 @@ beforeEach(() => {
   mockQuery.mockReset();
   mockSend.mockReset();
   mockSend.mockResolvedValue({ accepted: true, providerMessageId: 'msg_abc123' });
+  mockMailCapacity.mockResolvedValue({ allowed: true, degraded: false });
   installDb();
   jest.spyOn(console, 'error').mockImplementation(() => {});
   jest.spyOn(console, 'log').mockImplementation(() => {});
+});
+
+describe('MAIL-05 refusal cannot leave a usable sign-in code', () => {
+  it('invalidates the code and does not contact provider after budget refusal', async () => {
+    mockMailCapacity.mockResolvedValue({
+      allowed: false, reason: 'budget_exhausted', degraded: false,
+    });
+    const response = await POST(req('someone@example.com'));
+    expect(response.status).toBe(502);
+    expect(codeInvalidated()).toBe(true);
+    expect(mockSend).not.toHaveBeenCalled();
+  });
 });
 
 describe('a code nobody received is not left as a usable credential', () => {

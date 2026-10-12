@@ -69,6 +69,14 @@ describe('sendEmail — a resolved refusal is a failure, never a success', () =>
     expect(quota.retryable).toBe(false);
   });
 
+  it('a Proton sender mismatch is a bounded refusal', async () => {
+    refuse('smtp_sender_not_authorized', 'SMTP From does not match authentication identity');
+    const r = await send();
+    expect(r.failureKind).toBe('sender_not_authorized');
+    expect(r.retryable).toBe(false);
+    expect(r.ourFault).toBe(true);
+  });
+
   it('a bad API key is ours', async () => {
     refuse('missing_api_key', 'Invalid `api_key` provided.');
     const r = await send();

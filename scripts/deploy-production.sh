@@ -717,13 +717,33 @@ cmd_deploy() {
         log_error "EMAIL_PROVIDER must be smtp in production (found: ${mail_provider:-unset})"
         exit 1
     fi
-    for mail_key in SMTP_HOST SMTP_USER SMTP_PASSWORD; do
+    for mail_key in SMTP_HOST SMTP_USER; do
         mail_value=$(awk -F= -v key="$mail_key" '$1==key{sub(/^[^=]*=/,""); print}' .env.production | tail -n 1)
         if [ -z "$mail_value" ]; then
             log_error "$mail_key is required for production identity mail"
             exit 1
         fi
     done
+    mail_file=$(awk -F= '/^SMTP_PASSWORD_FILE=/{sub(/^[^=]*=/,""); print}' .env.production | tail -n 1)
+    if [ "$mail_file" != "/run/secrets/soullab_smtp_token" ]; then
+        log_error "SMTP_PASSWORD_FILE must point to the read-only credential mount"
+        exit 1
+    fi
+    if grep -Eq '^(SMTP_PASSWORD|SMTP_PASS)=[^[:space:]]+' .env.production; then
+        log_error "SMTP password must not appear in .env.production; use SMTP_PASSWORD_FILE"
+        exit 1
+    fi
+    mail_host_file="/home/soullab/.config/soullab-mail/noreply.smtp-token"
+    if [ ! -f "$mail_host_file" ] || [ -L "$mail_host_file" ]; then
+        log_error "Owner-only Proton credential file missing or not regular"
+        exit 1
+    fi
+    file_owner=$(stat -c '%u' "$mail_host_file")
+    file_mode=$(stat -c '%a' "$mail_host_file")
+    if [ "$file_owner" != "1000" ] || [ "$file_mode" != "600" ]; then
+        log_error "Proton credential must belong to UID 1000 and have mode 600"
+        exit 1
+    fi
     if grep -Eq '^RESEND_API_KEY=.+$' .env.production; then
         log_error "RESEND_API_KEY is retired; remove the value and revoke the credential"
         exit 1

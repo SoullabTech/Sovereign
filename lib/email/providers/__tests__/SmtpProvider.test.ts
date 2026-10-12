@@ -10,7 +10,10 @@
  * 2026-08-24 defect one layer down: a member told their sign-in code is on its
  * way when the server refused their address.
  */
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { mkdtempSync, rmSync, writeFileSync, chmodSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const mockSendMail = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockCreateTransport = jest.fn(() => ({ sendMail: (o: unknown) => mockSendMail(o) }));
@@ -28,10 +31,11 @@ const msg = {
 beforeEach(() => {
   jest.clearAllMocks();
   process.env.SMTP_HOST = 'smtp.example.com';
-  process.env.SMTP_USER = 'user';
+  process.env.SMTP_USER = 'noreply@soullab.life';
   process.env.SMTP_PASSWORD = 'pass';
   delete process.env.SMTP_PORT;
   delete process.env.SMTP_SECURE;
+  delete process.env.SMTP_PASSWORD_FILE;
 });
 
 describe('SmtpProvider.isConfigured', () => {
@@ -106,6 +110,77 @@ describe('SmtpProvider.send — what counts as accepted', () => {
   });
 });
 
+describe('SmtpProvider — authenticated sender authority', () => {
+
+  it('refuses a mismatched From before constructing a transport', async () => {
+    const r = await new SmtpProvider().send({
+      ...msg, from: 'Kelly <kelly@soullab.life>',
+    });
+    expect(r).toMatchObject({
+      accepted: false,
+      rawError: { name: 'smtp_sender_not_authorized' },
+    });
+    expect(mockCreateTransport).not.toHaveBeenCalled();
+    expect(mockSendMail).not.toHaveBeenCalled();
+  });
+
+  it('refuses injected From headers', async () => {
+    const r = await new SmtpProvider().send({
+      ...msg, from: 'noreply@soullab.life\r\nBcc: attacker@example.com',
+    });
+    expect(r.accepted).toBe(false);
+    expect(mockSendMail).not.toHaveBeenCalled();
+  });
+});
+
+describe('SmtpProvider — owner-only file-backed Proton token', () => {
+  let workdir = '';
+  afterEach(() => {
+    if (workdir) rmSync(workdir, { recursive: true, force: true });
+    workdir = '';
+    delete process.env.SMTP_PASSWORD_FILE;
+  });
+
+  it('reads the token only from a private file, never from docker env', async () => {
+    workdir = mkdtempSync(join(tmpdir(), 'mail-smtp-secret-'));
+    const tokenPath = join(workdir, 'smtp.token');
+    writeFileSync(tokenPath, 'private-test-token\n', { mode: 0o600 });
+    delete process.env.SMTP_PASSWORD;
+    process.env.SMTP_PASSWORD_FILE = tokenPath;
+    const provider = new SmtpProvider();
+    expect(provider.isConfigured()).toBe(true);
+    mockSendMail.mockResolvedValue({
+      messageId: '<proof@soullab.life>',
+      accepted: ['member@example.com'], rejected: [],
+    });
+    const result = await provider.send(msg);
+    expect(result.accepted).toBe(true);
+    expect(mockCreateTransport).toHaveBeenCalledWith(
+      expect.objectContaining({ auth: { user: 'noreply@soullab.life', pass: 'private-test-token' } })
+    );
+  });
+
+  it('refuses world-readable token files and does not touch the network', async () => {
+    workdir = mkdtempSync(join(tmpdir(), 'mail-smtp-secret-'));
+    const tokenPath = join(workdir, 'smtp.token');
+    writeFileSync(tokenPath, 'unsafe-token\n', { mode: 0o600 });
+    chmodSync(tokenPath, 0o644);
+    delete process.env.SMTP_PASSWORD;
+    process.env.SMTP_PASSWORD_FILE = tokenPath;
+    expect(new SmtpProvider().isConfigured()).toBe(false);
+    expect(mockCreateTransport).not.toHaveBeenCalled();
+  });
+
+  it('refuses ambiguous file-and-environment credentials', () => {
+    workdir = mkdtempSync(join(tmpdir(), 'mail-smtp-secret-'));
+    const tokenPath = join(workdir, 'smtp.token');
+    writeFileSync(tokenPath, 'private-token\n', { mode: 0o600 });
+    process.env.SMTP_PASSWORD = 'env-other-token';
+    process.env.SMTP_PASSWORD_FILE = tokenPath;
+    expect(new SmtpProvider().isConfigured()).toBe(false);
+  });
+});
+
 describe('SmtpProvider — TLS is not optional', () => {
   it('requires STARTTLS rather than silently sending credentials in the clear', async () => {
     mockSendMail.mockResolvedValue({ messageId: '<a@b>', accepted: ['member@example.com'], rejected: [] });
@@ -137,7 +212,7 @@ describe('SmtpProvider — explicit isolated configuration', () => {
       secure: false,
     });
 
-    await provider.send(msg);
+    await provider.send({ ...msg, from: 'Mail Service <messages@soullab.life>' });
 
     expect(mockCreateTransport).toHaveBeenCalledWith(
       expect.objectContaining({

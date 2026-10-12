@@ -39,6 +39,10 @@ import { resolvePriority, type EmailPriority } from './purpose';
 import { openAttempt, settleAttempt, stateForFailure } from './ledger';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { redactEmails } from '@/lib/privacy/redactEmails';
+import { reserveEmailCapacity } from './capacity';
+import { managedSender } from './senderAuthority';
+import { fingerprintRecipient } from './ledger/fingerprint';
+import { extractRecipientMailbox } from './capacity';
 
 // ============================================================================
 // VERIFIED SENDERS
@@ -187,6 +191,8 @@ export interface SendEmailResult {
 export type SendFailureKind =
   | 'quota_exceeded'     // provider account limit hit (Resend: 429 monthly_quota_exceeded)
   | 'rate_limited'       // provider throttle — retrying shortly can work
+  | 'capacity_refused'   // shared MAIL-05 budget; avoid retry loops
+  | 'sender_not_authorized' // SMTP From has no qualified credential
   | 'provider_auth'      // missing / invalid / restricted API key
   | 'provider_config'    // our sender identity is wrong: unverified from-address or domain
   | 'invalid_recipient'  // the RECIPIENT address is bad — the only class that is not ours
@@ -248,6 +254,9 @@ export function classifyProviderError(err: unknown): {
   const haystack = `${name ?? ''} ${message}`.toLowerCase();
   const has = (needle: string) => haystack.includes(needle);
 
+  if (name === 'smtp_sender_not_authorized') {
+    return { kind: 'sender_not_authorized', name, message };
+  }
   // Quota before throttle: a monthly quota is also served as 429, but the
   // remedy is "top up / wait for the reset", not "retry in a moment".
   if (has('quota') || has('limit_reached') || has('exceeded_limit')) {
@@ -286,6 +295,8 @@ export function classifyProviderError(err: unknown): {
 const FAILURE_POLICY: Record<SendFailureKind, { ourFault: boolean; retryable: boolean }> = {
   quota_exceeded:    { ourFault: true,  retryable: false },
   rate_limited:      { ourFault: true,  retryable: true  },
+  capacity_refused:  { ourFault: true,  retryable: false },
+  sender_not_authorized: { ourFault: true, retryable: false },
   provider_auth:     { ourFault: true,  retryable: false },
   provider_config:   { ourFault: true,  retryable: false },
   invalid_recipient: { ourFault: false, retryable: false },
@@ -341,11 +352,15 @@ function logSend(
   // email-code route's logs were redacted while this line kept emitting the
   // address for every send.
   //
-  // `toRef` is `memberRef()` over the address: pseudonymous and correlatable,
-  // NOT anonymous (lib/privacy/memberRef.ts). Operators keep the ability to
-  // follow one recipient through a log window. `domain` is retained separately
-  // and unredacted — it is coarse, it is what deliverability triage actually
-  // needs, and it was already being logged as its own field.
+  // Recipient addresses have low entropy. Never use an unkeyed memberRef()
+  // hash for them — the ledger's keyed HMAC is the correct pseudonymous
+  // representation. Without that key, record 'unavailable', not a weak digest.
+  const firstRecipient = extractRecipientMailbox(to.split(', ')[0] ?? '');
+  const pseudonym = firstRecipient ? fingerprintRecipient(firstRecipient) : null;
+  const toRef = pseudonym
+    ? `hmac-v${pseudonym.keyVersion}:${pseudonym.fingerprint.slice(0, 16)}`
+    : 'unavailable';
+
   const line = {
     purpose,
     ...(result.priority ? { priority: result.priority } : {}),
@@ -353,7 +368,7 @@ function logSend(
     ...(trace?.correlationId ? { correlationId: trace.correlationId } : {}),
     ...(trace?.idempotencyKey ? { idempotencyKey: trace.idempotencyKey } : {}),
     from,
-    toRef: memberRef(to),
+    toRef,
     domain,
     status: result.status,
     ...(result.id ? { id: result.id } : {}),
@@ -386,11 +401,12 @@ function logSend(
 // ============================================================================
 
 /**
- * Send one transactional email through the managed Resend client.
- * Always checks `result.error`, always logs, never throws.
+ * Send one email through Soullab Mail's governed provider boundary.
+ * Sender identity and MAIL-05 capacity are checked before touching the provider.
  */
 export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult> {
-  const from = opts.from ?? SENDERS.default;
+  let from = opts.from ?? SENDERS.default;
+  let replyTo = opts.replyTo;
   const toLog = Array.isArray(opts.to) ? opts.to.join(', ') : opts.to;
   const domain = domainOf(opts.to);
   const priority = opts.priority ?? resolvePriority(opts.purpose);
@@ -411,10 +427,56 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
 
   const ctx = { provider: provider.name, priority };
 
+  // The production transport cannot be overridden back to a retired vendor.
+  if (process.env.NODE_ENV === 'production' && provider.name !== 'smtp') {
+    const result = failure('not_configured', 'Only governed SMTP transport is permitted', 'mail_transport_refused', ctx);
+    logSend(opts.purpose, from, toLog, domain, result, trace);
+    return result;
+  }
+
   if (!provider.isConfigured()) {
     const result = failure('not_configured', `${provider.name} provider is not configured`, undefined, ctx);
     logSend(opts.purpose, from, toLog, domain, result, trace);
     return result;
+  }
+
+  // The qualified Proton credential belongs only to noreply@soullab.life.
+  // Other historical managed senders are made visibly Soullab-sent; human
+  // reply targets survive where explicitly known. Custom/unknown senders refuse.
+  if (provider.name === 'smtp' && !opts.provider) {
+    const sender = managedSender(from, replyTo);
+    if (!sender.allowed) {
+      const result = failure('sender_not_authorized', 'Soullab Mail sender identity is not qualified', 'mail_sender_refused', ctx);
+      logSend(opts.purpose, from, toLog, domain, result, trace);
+      return result;
+    }
+    from = sender.from;
+    replyTo = sender.replyTo;
+  }
+
+  // MAIL-05 is a separate authorization boundary, never a ledger lookup.
+  // An exhausted budget does not reach SMTP, even if the caller is a worker.
+  // Test providers intentionally do not use real capacity; production refuses
+  // all transports except smtp, for which this check is mandatory.
+  if (provider.name === 'smtp') {
+    const capacity = await reserveEmailCapacity(priority, opts.to);
+    if (!capacity.allowed) {
+      const isBadRecipient = capacity.reason === 'invalid_recipient';
+      const isExhausted = capacity.reason === 'budget_exhausted' || capacity.reason === 'emergency_ceiling';
+      const kind: SendFailureKind = isBadRecipient ? 'invalid_recipient' : isExhausted ? 'capacity_refused' : 'not_configured';
+      const result = failure(
+        kind,
+        isBadRecipient ? 'Invalid recipient address' : isExhausted
+          ? 'Soullab Mail sending limit reached; please try later'
+          : 'Soullab Mail capacity controls are unavailable',
+        'mail_capacity_' + capacity.reason, ctx
+      );
+      logSend(opts.purpose, from, toLog, domain, result, trace);
+      return result;
+    }
+    if (capacity.degraded) {
+      console.warn('[Soullab Mail] P0 identity send admitted under emergency ceiling');
+    }
   }
 
   try {
@@ -422,7 +484,10 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
     // so the vendor's own dashboard segments the same way our logs do and an
     // operator does not have to correlate two vocabularies during an incident.
     const tags = [
-      ...(opts.tags ?? []),
+      ...(opts.tags ?? []).map((t) => ({
+        name: tagSafe(t.name),
+        value: tagSafe(t.value),
+      })),
       { name: 'purpose', value: tagSafe(opts.purpose) },
       { name: 'priority', value: priority },
       ...(opts.correlationId ? [{ name: 'correlation_id', value: tagSafe(opts.correlationId) }] : []),
@@ -457,7 +522,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
       subject: opts.subject,
       html: opts.html,
       text: opts.text,
-      replyTo: opts.replyTo,
+      replyTo,
       headers: opts.headers,
       tags,
     });

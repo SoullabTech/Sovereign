@@ -42,6 +42,13 @@ jest.mock('@/lib/db/postgres', () => ({
 
 // Mock the provider contract, not a vendor SDK. This keeps the route tests
 // transport-agnostic while the shared sendEmail layer remains real.
+// MAIL-05's durable capacity is proven separately; keep auth route tests isolated.
+const mockMailCapacity = jest.fn<(...args: unknown[]) => Promise<any>>();
+jest.mock('@/lib/email/capacity', () => ({
+  ...jest.requireActual<typeof import('@/lib/email/capacity')>('@/lib/email/capacity'),
+  reserveEmailCapacity: (...args: unknown[]) => mockMailCapacity(...args),
+}));
+
 type ProviderResult = { accepted: boolean; providerMessageId?: string; rawError?: unknown };
 const mockSend = jest.fn<(...args: unknown[]) => Promise<ProviderResult>>();
 jest.mock('@/lib/email/providers', () => {
@@ -105,6 +112,7 @@ describe('POST /api/members/email-code — open signup, no waitlist pathway', ()
   beforeEach(() => {
     jest.clearAllMocks();
     mockSend.mockResolvedValue({ accepted: true, providerMessageId: 'email-mock' });
+    mockMailCapacity.mockResolvedValue({ allowed: true, degraded: false });
     installDb();
     delete process.env.BETA_ALLOWLIST_ENABLED;
     delete process.env.CAPACITOR_BUILD;
@@ -235,6 +243,7 @@ describe('POST /api/members/email-code — provider refusal is never reported as
   beforeEach(() => {
     jest.clearAllMocks();
     mockSend.mockResolvedValue({ accepted: true, providerMessageId: 'email-mock' });
+    mockMailCapacity.mockResolvedValue({ allowed: true, degraded: false });
     installDb();
     delete process.env.BETA_ALLOWLIST_ENABLED;
     delete process.env.CAPACITOR_BUILD;
