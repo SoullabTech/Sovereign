@@ -16,8 +16,14 @@ describe('P4R1 imported manuscript arrival', () => {
     expect(controller).toContain("throw new Error('context after draft seed')");
   });
 
-  it('still refuses to guess continuous structure', () => {
+  it('opens member-owned continuous drafts in the original Worktable without guessing boundaries', () => {
+    expect(controller).toContain("if (body.state === 'continuous')");
+    expect(controller).toContain("body.manuscriptId !== manuscriptId");
+    expect(controller).toContain("setPhase('continuous')");
+    expect(controller).toContain('<ContinuousDraftRecovery manuscriptId={continuousDraftId}');
     expect(controller).toContain("if (body.state !== 'section_aware')");
-    expect(controller).toContain("The Studio will not guess at its structure.");
+    const recover = controller.split("if (body.state === 'continuous')")[1]
+      .split("if (body.state !== 'section_aware')")[0];
+    expect(recover).not.toMatch(/apiFetch\(|convert: true|content:/);
   });
 });

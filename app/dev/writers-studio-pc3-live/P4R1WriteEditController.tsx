@@ -69,6 +69,7 @@ import {
   writeRelationshipReturnClient,
 } from '@/lib/writersStudio/rebuild/returnStateClient';
 import { P4R1Pc3WriteEditView, type Pc3HeldPassage } from './P4R1Pc3WriteEditView';
+import { ContinuousDraftRecovery } from './ContinuousDraftRecovery';
 
 interface ContextReady {
   state: 'section_aware';
@@ -79,7 +80,7 @@ interface ContextReady {
   sections: RebuildSection[];
 }
 type ContextPayload = ContextReady | { state: 'no_draft' | 'continuous'; manuscriptId: string; title: string | null };
-type Phase = 'loading' | 'ready' | 'unauthorized' | 'error';
+type Phase = 'loading' | 'ready' | 'unauthorized' | 'error' | 'continuous';
 
 type CarryChooserState =
   | { readonly kind: 'closed' }
@@ -119,6 +120,7 @@ export default function FlagshipWriteEditController() {
   const initialSearch = params && params.toString() ? `?${params.toString()}` : '';
 
   const [phase, setPhase] = useState<Phase>('loading');
+  const [continuousDraftId, setContinuousDraftId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [context, setContext] = useState<ContextReady | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
@@ -217,6 +219,7 @@ export default function FlagshipWriteEditController() {
   const load = useCallback(async () => {
     setPhase('loading');
     setMessage(null);
+    setContinuousDraftId(null);
     try {
       let manuscriptId = requested;
       if (!manuscriptId) {
@@ -262,9 +265,20 @@ export default function FlagshipWriteEditController() {
         body = await response.json() as ContextPayload;
       }
 
+      // WS-JONDI-CONTINUOUS-RETURN-01. Earlier continuous drafts may contain
+      // writer edits not present in Source. DO NOT recreate, repartition or
+      // convert them here. The Canvas Worktable is still the authorized engine
+      // for that persisted shape. Expose only an explicit, writer-chosen link,
+      // and only for the manuscript just resolved by the member-scoped server.
+      if (body.state === 'continuous') {
+        if (body.manuscriptId !== manuscriptId) throw new Error('context identity mismatch');
+        setContinuousDraftId(manuscriptId);
+        setPhase('continuous');
+        return;
+      }
       if (body.state !== 'section_aware') {
         setPhase('error');
-        setMessage('This manuscript is not section-addressable yet. The Studio will not guess at its structure.');
+        setMessage('The Studio cannot prepare this manuscript yet. Nothing has been changed.');
         return;
       }
       setContext(body);
@@ -1256,9 +1270,17 @@ export default function FlagshipWriteEditController() {
     router.push(`${pathname}${query ? `?${query}` : ''}`);
   }, [params, pathname, router]);
 
+  if (phase === 'continuous' && continuousDraftId) {
+    return <ContinuousDraftRecovery manuscriptId={continuousDraftId} onBack={() => onMode('home')} />;
+  }
+
   if (phase !== 'ready' || !context) {
     return (
-      <main className="fs-p4-opening">
+      <main className="fs-p4-opening" style={{
+        color: '#f1e9dc', background: '#1e1a16',
+        minHeight: '60vh', padding: 'clamp(24px, 5vw, 64px)',
+        font: '16px/1.6 system-ui, sans-serif',
+      }}>
         {phase === 'loading' ? 'Opening Writer’s Studio…' : null}
         {phase === 'unauthorized' ? 'Sign in to open your Writer’s Studio.' : null}
         {phase === 'error' ? (message ?? 'The Studio could not be opened.') : null}
