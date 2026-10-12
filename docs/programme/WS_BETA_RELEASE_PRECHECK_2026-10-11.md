@@ -40,3 +40,21 @@ Environment: Mac Studio, local witness/test only. No beta invitations, live data
 
 ## Stop rule
 No actual beta launch, member entitlement, migrations, Caddy changes, source-upload reopening, model provider spend or production changes were undertaken or authorized. Publish remains a beta preview with unverified PDF/EPUB buttons disabled by default.
+
+## Production API database-root-cause addendum (October 11, read-only)
+
+A new read-only Docker inspection explains the degraded API health more precisely:
+
+- The `maia-api` health JSON reports `checks.database.status = disconnected`; its error class is `ENOTFOUND` (Docker hostname resolution), not evidence of invalid credentials or an absent PostgreSQL data volume.
+- Its configured PostgreSQL destination is hostname `maia-postgres`, port `5432`, database `maia_consciousness`. No password, token or connection string was printed.
+- `maia-api` is attached to `maia-sovereign_maia-internal` and `maia-sovereign_maia-public`.
+- `maia-summary-worker` is attached to `maia-sovereign_maia-internal` and was observed restarting more than 1,800 times. Do not claim its cause is proven solely from the API health.
+- The healthy `maia-postgres` container is attached only to `maia-sovereign_maia-network`. It was created from `docker-compose.yml` plus `docker-compose.override.yml`, whereas the API and worker were created from `docker-compose.production.yml`.
+- The source-controlled `docker-compose.production.yml` explicitly declares the `postgres` service on `maia-internal`; the development Compose declares `postgres` on `maia-network`. Running container topology therefore does not match production intent.
+- The local `maia-internal` bridge currently also contains model/voice and relay services; Docker's `Internal` flag is `false`. Extending PostgreSQL onto that network has a trust-surface consequence and must not be described as automatically safe.
+
+**Reproducible gate:** `node scripts/witness/ws-runtime-network-gate-20261011.cjs` read only. It returned exit **2 / HOLD**, flagging missing shared internal network, unhealthy API, and restarting worker.
+
+**Proposed repair, NOT EXECUTED:** Under independent operational authorization, plan an additive, reversible attachment of the existing PostgreSQL container to the intended production network with its expected service DNS alias, without removing its current network or recreating the database. Preflight existing networks, participants, dependency ownership and rollback. Then separately witness API DNS resolution, health endpoint, worker stability and any old app dependents. Reconcile Compose ownership so a future container recreation cannot silently reverse the repair.
+
+Do not use `docker compose up` indiscriminately: two Compose configurations currently claim different responsibilities for PostgreSQL. Neither this addendum nor the audit authorizes a network change, Caddy fence, schema migration, beta access grant or deployment.
