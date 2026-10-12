@@ -240,7 +240,7 @@ export function adaptTeamAttention(partnerHandoffs, units) {
     id:String(h.handoff_id||h.file||'handoff'),
     source:String(h.source||'ai-partner'),
     field:String(h.field||'Current field'),
-    summary:String(h.summary||''),
+    plain:String(h.summary||''), // VM-7: 'summary' is reserved for aggregates; keep human prose as 'plain'.
     created_at:h.created_at||null,
     authority:'orientation_only',
     evidence_state:'ORIENTATION_ONLY',

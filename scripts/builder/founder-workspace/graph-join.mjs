@@ -151,6 +151,24 @@ export function buildEvidenceGraph(input) {
       sub:id, evidence_state:text(u?.evidence_state)||'UNVERIFIED',
     });
   }
+  // Release evidence has one direct, file-backed edge. Never infer a
+  // programme relationship from the Writer's Studio name or release status.
+  for (const u of units) {
+    const snap=u?.release_snapshot;
+    if (snap?.work_unit_id !== text(u?.id)
+      || snap?.authority !== 'orientation_only'
+      || snap?.release_approval !== 'NOT_AUTHORIZED'
+      || !text(snap.file) || !nodes.has(workNodeId(text(u?.id)))) continue;
+    const ref=text(snap.file);
+    addNode({ id:recordNodeId(ref), kind:'record',
+      label:'Writer’s Studio release evidence index',
+      sub:'Historical evidence · no release authority',
+      evidence_state:text(snap.evidence_state)||'UNVERIFIED' });
+    addEdge({from:workNodeId(text(u.id)),to:recordNodeId(ref),
+      rel:'has historical release evidence',
+      evidence:{kind:'release-evidence-index',ref}});
+  }
+
   for (const u of units) {
     const id=text(u?.id); if (!id) continue;
     const evidenceRef=text(u?.file); if (!evidenceRef) continue;
