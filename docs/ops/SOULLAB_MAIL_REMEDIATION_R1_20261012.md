@@ -9,6 +9,25 @@ Candidate exact SHA: bind after commit using git rev-parse HEAD.
 
 Founder approved noreply@soullab.life as the single managed automated From, with trusted purpose-specific display names and separately authenticated Reply-To. Proton SMTP controlled Gmail test passed SPF, DKIM, DMARC and Inbox. This proves transport, not app release.
 
+## Founder adjudication — approved temporary beta boundary (2026-10-12)
+
+**ACCEPTED as a temporary beta product restriction:** automatically generated
+client-facing public portal emails (booking confirmations, client cancellations,
+reschedules, and portal claim links) must remain disabled while those
+addresses come solely from unverified public booking/contact input.
+
+This decision is not permission to remove booking functionality or disable
+independently authorized operational notifications to practitioners. Users
+must not be falsely told that email was sent when it was refused or held.
+A verified-recipient delivery flow can replace this restriction only after
+separate design, privacy and abuse-limit review and explicit acceptance.
+
+**Decision scope:** resolves the founder product decision previously listed as
+mandatory hold #2. It does not approve this candidate for merge,
+migration, deployment, billing, DNS or credentials changes, and does not waive
+independent human security review, old-reader compatibility, or production
+restore evidence.
+
 ## Isolated implementation
 
 - F1 MAIL-04: enforce fail-closed admission in central SMTP sending path. Annotate 39 managed send call sites with actor and recipient provenance. No implicit system authority; the caller must provide evidence. EmailRouter and PracticeField caller require explicit session-derived authority. Unknown and unregistered protected P0/P1 purposes do not get priority reserves.
@@ -30,9 +49,9 @@ Founder approved noreply@soullab.life as the single managed automated From, with
 ## Mandatory holds
 
 1. Independent human review of the exact final commit, source access traces, MAIL-04 route authority and all three migrations. An implementer/model review does not qualify.
-2. Founder adjudication of the deliberate temporary hold on client-facing public portal emails versus a verified-recipient design. No automatic release of emails to unverified form addresses.
+2. **FOUNDER DECISION ACCEPTED**: temporary non-delivery of client-facing portal email to unverified addresses is approved for beta. Remaining release checks: confirm the user-visible booking experience does not claim email delivery and that practitioner notifications remain functional. Future verified-recipient design requires separate acceptance.
 3. Protected backup-restore compatibility, prefix migration failure testing, and review-custody approval before a production migration.
-4. Reconciliation with Writer's Studio release image. Candidate is based on an older public release and cannot simply overwrite the newer application.
+4. Reconciliation with Writer's Studio and current trunk. Witnessed 2026-10-12: local origin/clean-main-no-secrets is 112 commits ahead of this candidate's ancestry, and candidate has four source commits not in trunk. No direct image swap, blind merge or implicit forward-porting: compatibility must be reviewed on an isolated current-trunk candidate.
 5. Controlled production test of identity delivery, practitioner replies, Soul Portrait sharing, alerts, throttles and correct rejection semantics after explicit authorization.
 6. Source annotation for recipient provenance is not self-proving. Human reviewer must verify each route and each system worker's true trust boundary and authority.
 
