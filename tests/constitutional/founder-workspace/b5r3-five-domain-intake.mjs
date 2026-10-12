@@ -18,7 +18,7 @@ const today=renderer.slice(renderer.indexOf('function renderToday()'),renderer.i
 for (const name of ['Members','Team','Platform','World','Your Work']) {
   check(domains.includes(`label:'${name}'`),`B5R3-${name.replace(/\s/g,'').toUpperCase()}`,`${name} is a first-class attention domain.`);
 }
-check(/visibility:'not-connected'/.test(domains) && /visibility:teamObserved\?'partial':'not-connected'/.test(domains) && /visibility:platformObserved\?'observed':'not-connected'/.test(domains),'B5R3-L1','Every domain carries explicit visibility standing; absent evidence never becomes false calm.');
+check(/visibility:'not-connected'/.test(domains) && /visibility:teamAttention\.visibility\s*\|\|\s*\(teamObserved\?'partial':'not-connected'\)/.test(domains) && /visibility:platformObserved\?'observed':'not-connected'/.test(domains),'B5R3-L1','Team honors explicitly observed visibility before falling back to partial or not-connected; the platform never infers a false all-clear.');
 check(/will not interpret silence as nobody needing you/.test(domains),'B5R3-L2','Members absence is stated as lack of visibility, not lack of need.');
 check(/not yet joined/.test(domains),'B5R3-L3','Team partial visibility discloses omitted human and partner channels.');
 check(/will not guess what your deepest work should be/.test(domains),'B5R3-L4','Protected creative work is never inferred from noise.');
