@@ -263,6 +263,7 @@ export class FocusReminderService {
     try {
       const result = await sendEmail({
         purpose: 'reminder:focus',
+        admission: { authority: { kind: 'system', trigger: 'focus-reminder' }, destination: 'member-record' },
         triggerType: 'cron',
         triggerRef: 'FocusReminderService.processDue',
         from: FROM_EMAIL,

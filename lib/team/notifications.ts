@@ -90,6 +90,7 @@ export async function notifyDMRecipient(
 
     await reportIfRefused('notify:dm', await sendEmail({
       purpose: 'notify:dm',
+      admission: { authority: { kind: 'system', trigger: 'team-notification' }, destination: 'member-record' },
       from: FROM,
       to: recipient.email,
       subject: `New message from ${senderName} on SoulComms`,
@@ -160,6 +161,7 @@ export async function notifyThreadReply(
     const recipientName = recipient.name || recipient.username;
     await reportIfRefused('notify:channel', await sendEmail({
       purpose: 'notify:channel',
+      admission: { authority: { kind: 'system', trigger: 'team-notification' }, destination: 'member-record' },
       from: FROM,
       to: recipient.email,
       subject: `${senderName} replied to your message in #${channelName}`,
@@ -250,6 +252,7 @@ export async function notifyChannelMentions(
 
         const sent = await sendEmail({
           purpose: 'notify:mention',
+          admission: { authority: { kind: 'system', trigger: 'team-notification' }, destination: 'member-record' },
           triggerType: 'route',
           triggerRef: 'team/notifyMentions',
           from: FROM,

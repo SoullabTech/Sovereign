@@ -284,6 +284,7 @@ export async function sendSafetyConcernNotification(
     // Send email
     const result = await sendEmail({
       purpose: 'notify:safety',
+      admission: { authority: { kind: 'system', trigger: 'safety-notification' }, destination: 'member-record' },
       from: 'Soullab <noreply@soullab.life>',
       to: practitionerEmail,
       subject: `Safety Concern: ${clientName} needs attention`,

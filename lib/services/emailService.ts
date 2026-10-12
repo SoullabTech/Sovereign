@@ -78,6 +78,7 @@ export class GaneshaEmailService {
 
       const result = await sendEmail({
         purpose: 'broadcast:announcement',
+        admission: { authority: { kind: 'system', trigger: 'approved-broadcast' }, destination: 'stored-record' },
         from: 'Kelly Nezat <kelly@soullab.life>',
         to: recipients.map(r => r.email),
         subject: template.subject,

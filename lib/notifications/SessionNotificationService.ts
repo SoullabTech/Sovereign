@@ -198,6 +198,7 @@ async function sendBookingConfirmationEmail(session: SessionDetails): Promise<No
 
   const result = await sendEmail({
     purpose: 'booking:confirmation',
+    admission: { authority: { kind: 'system', trigger: 'session-booking' }, destination: 'stored-record' },
     from: SENDERS.noreply,
     to: session.clientEmail,
     subject: `Session Confirmed — ${session.serviceName}`,

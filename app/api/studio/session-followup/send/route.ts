@@ -112,6 +112,7 @@ export async function POST(req: NextRequest) {
 
       const emailResult = await sendEmail({
         purpose: 'practitioner:session-followup',
+        admission: { authority: { kind: 'member', memberId }, destination: 'actor-supplied' },
         from: `${input.practitionerName} via SoulLab <updates@soullab.life>`,
         replyTo,
         to: input.recipientEmail,

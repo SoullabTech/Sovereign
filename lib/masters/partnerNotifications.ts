@@ -101,6 +101,7 @@ export async function sendPartnerNotification(opts: {
 
   const result = await sendEmail({
     purpose: 'notify:partner',
+    admission: { authority: { kind: 'system', trigger: 'partner-notifications' }, destination: 'stored-record' },
     from: 'Soullab <noreply@soullab.life>',
     to: [recipient.email],
     replyTo: actor.email || undefined,

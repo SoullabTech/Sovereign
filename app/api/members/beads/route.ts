@@ -337,6 +337,7 @@ export async function POST(request: NextRequest) {
       if (!mailRef) throw new Error('Gift mail reference not configured');
       const result = await sendEmail({
         purpose: 'invite:bead',
+        admission: { authority: { kind: 'member', memberId }, destination: 'actor-supplied' },
         from: 'Soullab Gifts <gifts@soullab.life>',
         replyTo: 'kelly@soullab.life',
         to: recipientEmail,

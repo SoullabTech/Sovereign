@@ -102,6 +102,7 @@ Kelly & the Soullab team
 
     const result = await sendEmail({
       purpose: 'invite:beta-passcode',
+      admission: { authority: { kind: 'admin', actorId: 'beta-ops' }, destination: 'actor-supplied' },
       // WAS `onboarding@resend.dev`. That is the provider's SANDBOX sender: it
       // delivers ONLY to the provider account owner, so every invitation sent
       // from it reached nobody it was addressed to. lib/email/sendEmail.ts has

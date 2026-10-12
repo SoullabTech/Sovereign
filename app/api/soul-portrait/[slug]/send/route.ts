@@ -22,6 +22,8 @@ import { getOwnedPortraitBySlug, publishOwnedPortrait } from '@/lib/soulPortrait
 import { recordPortraitConsent } from '@/lib/soulPortrait/consentRecord';
 import { isPortraitConsentLive } from '@/lib/soulPortrait/consentAccess';
 import { EmailRouter } from '@/lib/comms/emailRouter';
+import { query } from '@/lib/db/postgres';
+import { fingerprintRecipient } from '@/lib/email/ledger/fingerprint';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://soullab.life';
 
@@ -49,7 +51,46 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     );
   }
 
+  // F4: an established portrait's consent to be read is not blanket consent
+  // to forward its private link to arbitrary new addresses. The recipient
+  // must be explicitly named and freshly attested on EVERY email crossing.
+  // Do this before publication or any new consent ledger writes.
+  const recipientEmail = typeof body.recipientEmail === 'string'
+    ? body.recipientEmail.trim().toLowerCase() : '';
+  let deliveryFingerprint: ReturnType<typeof fingerprintRecipient> | null = null;
+  if (recipientEmail) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
+      return NextResponse.json({ error: 'invalid_recipient_email' }, { status: 400 });
+    }
+    if (body.recipientConsentAttested !== true) {
+      return NextResponse.json(
+        { error: 'recipient_consent_attestation_required',
+          message: 'Confirm that this exact recipient agreed to receive the private link.' },
+        { status: 400 }
+      );
+    }
+    if (body.subjectShareAttested !== true) {
+      return NextResponse.json(
+        { error: 'subject_sharing_attestation_required',
+          message: 'Confirm the portrait subject authorized sharing with this exact recipient.' },
+        { status: 400 }
+      );
+    }
+    deliveryFingerprint = fingerprintRecipient(recipientEmail);
+    if (!deliveryFingerprint) {
+      return NextResponse.json({ error: 'recipient_consent_audit_unavailable' }, { status: 503 });
+    }
+  }
+
   const alreadyLive = await isPortraitConsentLive(portrait.id);
+  // Published portrait consent cannot be resurrected by a new send gesture.
+  // Fresh consent after revocation requires its own governed subject flow.
+  if (!alreadyLive && portrait.publishedAt) {
+    return NextResponse.json({
+      error: 'subject_consent_not_live',
+      message: "The portrait subject’s governing consent is not live.",
+    }, { status: 409 });
+  }
 
   if (!alreadyLive) {
     // First send requires the attestation; a re-send of a live portrait does not.
@@ -73,6 +114,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
   }
 
+  // This is a delivery attestation, NOT a new subject consent event. It cannot
+  // resurrect a revoked portrait's governing consent. Only an explicit, known
+  // recipient enters this append-only audit, and only as a keyed fingerprint.
+  if (recipientEmail && deliveryFingerprint) {
+    await query(
+      `INSERT INTO soul_portrait_delivery_attestations
+        (portrait_id, actor_member_id, recipient_fingerprint, recipient_key_version, consent_source, subject_share_attested)
+       VALUES ($1, $2, $3, $4, $5, TRUE)`,
+      [portrait.id, memberId, deliveryFingerprint.fingerprint,
+       deliveryFingerprint.keyVersion,
+       body.recipientConsentSource === 'written' ? 'written' : 'verbal']
+    );
+  }
+
   const published = await publishOwnedPortrait(portrait.id, memberId);
   if (!published) return NextResponse.json({ error: 'publish_failed' }, { status: 500 });
 
@@ -82,16 +137,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   let emailed = false;
   let emailError: string | undefined;
-  const recipientEmail = typeof body.recipientEmail === 'string' ? body.recipientEmail.trim() : '';
   if (recipientEmail) {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
-      return NextResponse.json({ error: 'invalid_recipient_email' }, { status: 400 });
-    }
     const personalNote = typeof body.message === 'string' ? body.message.trim().slice(0, 2000) : '';
     const router = new EmailRouter(memberId);
     const result = await router.send(
       {
         purpose: 'soul-portrait:delivery',
+          admission: { authority: { kind: 'member', memberId }, destination: 'actor-supplied' },
         to: recipientEmail,
         toName: typeof body.recipientName === 'string' ? body.recipientName.trim() || undefined : undefined,
         subject: `A Soul Portrait for ${subjectName}`,

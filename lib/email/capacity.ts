@@ -7,8 +7,9 @@
  *
  * Recipients are never stored or logged in plaintext. The table receives only
  * HMAC-SHA256 keys from the ledger fingerprint boundary. No unhashed fallback.
- * P0 has a tiny, bounded process-local emergency allowance when (and only when)
- * PostgreSQL is unavailable, so an outage cannot become an unlimited mailer.
+ * No process-local emergency allowance is permitted. Restarts, workers and
+ * parallel instances cannot share such a cap, so every lane (including P0)
+ * fails closed if its durable capacity reservation is unavailable.
  */
 import { query } from '@/lib/db/postgres';
 import { fingerprintRecipient } from './ledger/fingerprint';
@@ -17,17 +18,9 @@ import type { EmailPriority } from './purpose';
 export type CapacityVerdict =
   | { allowed: true; degraded: boolean }
   | { allowed: false; reason: 'invalid_recipient' | 'fingerprint_unavailable' |
-      'budget_exhausted' | 'capacity_unavailable' | 'emergency_ceiling'; degraded: boolean };
+      'budget_exhausted' | 'capacity_unavailable'; degraded: boolean };
 
 const MAX_RECIPIENTS = 20;
-const EMERGENCY_HOUR_MAX = 6;
-const EMERGENCY_PER_RECIPIENT_MAX = 2;
-const EMERGENCY_MAP_CAP = 64;
-
-let emergencyHour = '';
-let emergencyGlobal = 0;
-const emergencyByRecipient = new Map<string, number>();
-
 /** Parses one mailbox or display-name <mailbox> without permitting newline/header smuggling. */
 export function extractRecipientMailbox(value: string): string | null {
   if (!value || /[\r\n]/.test(value)) return null;
@@ -38,38 +31,9 @@ export function extractRecipientMailbox(value: string): string | null {
   return bare.toLowerCase();
 }
 
-function emergencyReserve(recipients: string[]): CapacityVerdict {
-  const hour = new Date().toISOString().slice(0, 13);
-  if (hour !== emergencyHour) {
-    emergencyHour = hour;
-    emergencyGlobal = 0;
-    emergencyByRecipient.clear();
-  }
-  // Only one-recipient identity mail is eligible for the degraded allowance.
-  if (recipients.length !== 1 || emergencyGlobal + 1 > EMERGENCY_HOUR_MAX) {
-    return { allowed: false, reason: 'emergency_ceiling', degraded: true };
-  }
-  const key = recipients[0];
-  const current = emergencyByRecipient.get(key) ?? 0;
-  if (current + 1 > EMERGENCY_PER_RECIPIENT_MAX ||
-      (current === 0 && emergencyByRecipient.size >= EMERGENCY_MAP_CAP)) {
-    return { allowed: false, reason: 'emergency_ceiling', degraded: true };
-  }
-  emergencyByRecipient.set(key, current + 1);
-  emergencyGlobal += 1;
-  return { allowed: true, degraded: true };
-}
-
-/** Unit-test seam only; never an operational mechanism for restoring capacity. */
-export function __resetEmergencyCapacityForTests(): void {
-  emergencyHour = '';
-  emergencyGlobal = 0;
-  emergencyByRecipient.clear();
-}
-
 /**
  * Fail-closed if the recipient cannot be fingerprinted, if a budget is spent,
- * or for any P1/P2/P3 database failure. Only P0 uses a tiny emergency ceiling.
+ * or for ANY database failure, including P0. No restart-based allowances.
  */
 export async function reserveEmailCapacity(
   lane: EmailPriority, recipient: string | string[]
@@ -100,7 +64,6 @@ export async function reserveEmailCapacity(
     return { allowed: false, reason: 'budget_exhausted', degraded: false };
   } catch {
     console.error('[Soullab Mail] CAPACITY_DEGRADED — durable reservation unavailable');
-    if (lane === 'P0') return emergencyReserve(hashes as string[]);
     return { allowed: false, reason: 'capacity_unavailable', degraded: true };
   }
 }

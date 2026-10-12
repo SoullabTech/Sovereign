@@ -27,6 +27,7 @@ export function SendPortraitPanel({
   existingPath: string | null;
 }) {
   const [attested, setAttested] = useState(false);
+  const [recipientConsentAttested, setRecipientConsentAttested] = useState(false);
   const [email, setEmail] = useState('');
   const [recipientName, setRecipientName] = useState('');
   const [message, setMessage] = useState('');
@@ -52,6 +53,8 @@ export function SendPortraitPanel({
         credentials: 'include',
         body: JSON.stringify({
           consentAttested: attested || alreadyPublished || !!sentUrl,
+          recipientConsentAttested: Boolean(email.trim() && recipientConsentAttested),
+          subjectShareAttested: Boolean(email.trim() && recipientConsentAttested),
           recipientEmail: email.trim() || undefined,
           recipientName: recipientName.trim() || undefined,
           message: message.trim() || undefined,
@@ -74,6 +77,9 @@ export function SendPortraitPanel({
     } catch {
       setError('Send failed — check your connection and try again.');
     } finally {
+      // The next email gesture, even a retry, requires fresh acknowledgement
+      // of the exact destination. Editing the destination also clears it.
+      setRecipientConsentAttested(false);
       setSending(false);
     }
   }
@@ -157,12 +163,12 @@ export function SendPortraitPanel({
                   type="email"
                   placeholder="recipient@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setRecipientConsentAttested(false); }}
                   style={{ ...inputStyle, flex: '1 1 220px' }}
                 />
                 <button
                   onClick={send}
-                  disabled={sending || !email.trim()}
+                  disabled={sending || !email.trim() || !recipientConsentAttested}
                   style={{
                     background: ACCENT,
                     color: GREEN,
@@ -171,13 +177,19 @@ export function SendPortraitPanel({
                     padding: '10px 20px',
                     fontSize: 14,
                     fontWeight: 600,
-                    cursor: sending || !email.trim() ? 'default' : 'pointer',
-                    opacity: sending || !email.trim() ? 0.5 : 1,
+                    cursor: sending || !email.trim() || !recipientConsentAttested ? 'default' : 'pointer',
+                    opacity: sending || !email.trim() || !recipientConsentAttested ? 0.5 : 1,
                   }}
                 >
                   {sending ? 'Sending…' : 'Send email'}
                 </button>
               </div>
+              {email.trim() && (
+                <label style={{ display: 'flex', gap: 8, fontSize: 13, alignItems: 'flex-start', marginTop: 10 }}>
+                  <input type="checkbox" checked={recipientConsentAttested} onChange={e => setRecipientConsentAttested(e.target.checked)} />
+                  <span>I confirm {subjectName} authorized sharing this portrait with {email.trim()}, and this recipient agreed to receive it.</span>
+                </label>
+              )}
               {resendNote && <div style={{ color: '#9FD8A8', fontSize: 13, marginTop: 10 }}>{resendNote}</div>}
               {error && <div style={{ color: '#E8A0A0', fontSize: 13, marginTop: 10 }}>{error}</div>}
             </div>
@@ -195,7 +207,7 @@ export function SendPortraitPanel({
               type="email"
               placeholder="Recipient email (optional — leave blank to just create the link)"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setRecipientConsentAttested(false); }}
               style={inputStyle}
             />
             <textarea
@@ -205,6 +217,13 @@ export function SendPortraitPanel({
               rows={3}
               style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
             />
+            {email.trim() && (
+              <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, lineHeight: 1.5, color: 'rgba(234,242,236,0.85)' }}>
+                <input type="checkbox" checked={recipientConsentAttested}
+                  onChange={e => setRecipientConsentAttested(e.target.checked)} style={{ marginTop: 3 }} />
+                <span>I confirm {subjectName} authorized sharing this portrait with {email.trim()}, and this recipient agreed to receive it.</span>
+              </label>
+            )}
             {needsAttestation && (
               <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, lineHeight: 1.5, color: 'rgba(234,242,236,0.85)', cursor: 'pointer' }}>
                 <input
@@ -223,7 +242,7 @@ export function SendPortraitPanel({
             <div>
               <button
                 onClick={send}
-                disabled={sending || (needsAttestation && !attested)}
+                disabled={sending || (needsAttestation && !attested) || Boolean(email.trim() && !recipientConsentAttested)}
                 style={{
                   background: ACCENT,
                   color: GREEN,
@@ -232,8 +251,8 @@ export function SendPortraitPanel({
                   padding: '12px 28px',
                   fontSize: 15,
                   fontWeight: 600,
-                  cursor: sending || (needsAttestation && !attested) ? 'default' : 'pointer',
-                  opacity: sending || (needsAttestation && !attested) ? 0.5 : 1,
+                  cursor: sending || (needsAttestation && !attested) || (Boolean(email.trim() && !recipientConsentAttested)) ? 'default' : 'pointer',
+                  opacity: sending || (needsAttestation && !attested) || (Boolean(email.trim() && !recipientConsentAttested)) ? 0.5 : 1,
                 }}
               >
                 {sending ? 'Sending…' : email.trim() ? 'Send portrait' : 'Create private link'}

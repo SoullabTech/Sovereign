@@ -165,6 +165,7 @@ export async function POST(request: NextRequest) {
     // using it.
     const sendResult = await sendEmail({
       purpose: 'auth:email-code',
+      admission: { authority: { kind: 'anonymous' }, destination: 'identity-claim' },
       triggerType: 'route',
       triggerRef: '/api/members/email-code',
       correlationId: deliveryRequestId,

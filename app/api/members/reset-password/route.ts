@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
     // Send reset email
     const delivery = await sendEmail({
       purpose: 'auth:password-reset',
+      admission: { authority: { kind: 'anonymous' }, destination: 'member-record' },
       from: SENDERS.noreply,
         to: email,
         subject: 'Reset Your Soullab Password',

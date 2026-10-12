@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
     const signinUrl = `${appUrl}/signin`;
     const existingSend = await sendEmail({
       purpose: 'invite:team',
+      admission: { authority: { kind: 'member', memberId }, destination: 'actor-supplied' },
       from: FROM,
       to: normalizedEmail,
       subject: `${inviterName} added you to the Soullab Co-lab`,
@@ -179,6 +180,7 @@ export async function POST(request: NextRequest) {
 
   const inviteSend = await sendEmail({
     purpose: 'invite:team',
+    admission: { authority: { kind: 'member', memberId }, destination: 'actor-supplied' },
     from: FROM,
     to: normalizedEmail,
     subject: `${inviterName} invited you to Soullab`,

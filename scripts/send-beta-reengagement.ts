@@ -76,6 +76,7 @@ async function send() {
     try {
       const result = await sendEmail({
         purpose: 'campaign:beta-reengagement',
+        admission: { authority: { kind: 'system', trigger: 'beta-reengagement' }, destination: 'member-record' },
         triggerType: 'script',
         triggerRef: 'scripts/send-beta-reengagement.ts',
         from: SENDERS.kelly,

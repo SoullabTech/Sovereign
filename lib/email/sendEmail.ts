@@ -41,6 +41,8 @@ import { memberRef } from '@/lib/privacy/memberRef';
 import { redactEmails } from '@/lib/privacy/redactEmails';
 import { reserveEmailCapacity } from './capacity';
 import { managedSender } from './senderAuthority';
+import { admit, type AdmissionRequest } from './admission';
+import { isRegisteredPurpose } from './purpose';
 import { fingerprintRecipient, fingerprintMailReference } from './ledger/fingerprint';
 import { extractRecipientMailbox } from './capacity';
 
@@ -94,6 +96,12 @@ export interface SendEmailOptions {
    * under one purpose can still classify correctly.
    */
   priority?: EmailPriority;
+  /**
+   * Mandatory for managed SMTP: independently derived actor authority and
+   * recipient provenance. Never populate from unverified request claims.
+   * The central boundary derives purpose itself, preventing purpose mismatch.
+   */
+  admission?: Omit<AdmissionRequest, 'purpose'>;
   /**
    * Ties this send to the request/operation that caused it, so a delivery
    * failure can be traced back to the member action that triggered it.
@@ -409,7 +417,17 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
   let replyTo = opts.replyTo;
   const toLog = Array.isArray(opts.to) ? opts.to.join(', ') : opts.to;
   const domain = domainOf(opts.to);
-  const priority = opts.priority ?? resolvePriority(opts.purpose);
+  // The purpose registry owns priority. A caller cannot promote bulk mail to
+  // P0 or downgrade identity mail without an explicit reviewed policy change.
+  const priority = resolvePriority(opts.purpose);
+  if (opts.priority !== undefined && opts.priority !== priority) {
+    return failure('sender_not_authorized', 'Mail priority override is not authorized', 'mail_priority_refused', { priority });
+  }
+  // New unregistered families must never consume protected identity/access
+  // quotas, even when they syntactically resemble an auth: or invite: purpose.
+  if ((priority === 'P0' || priority === 'P1') && !isRegisteredPurpose(opts.purpose)) {
+    return failure('sender_not_authorized', 'Protected mail purpose is not registered', 'mail_purpose_unregistered', { priority });
+  }
   // A caller's key may accidentally contain a passkey, name or email address.
   // Always replace it with a domain-separated keyed HMAC before it can enter
   // either the delivery ledger, SMTP headers or operational logs.
@@ -451,6 +469,24 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
     return result;
   }
 
+  // MAIL-04: an SMTP provider never receives mail with unknown authority or
+  // unproved recipient provenance. No 'system' default and no inference from
+  // the purpose string; callers must explicitly establish the real actor and
+  // destination origin in the trusted server path.
+  if (provider.name === 'smtp') {
+    if (!opts.admission) {
+      const result = failure('sender_not_authorized', 'Soullab Mail requires verified send authority', 'mail_admission_missing', ctx);
+      logSend(opts.purpose, from, toLog, domain, result, trace);
+      return result;
+    }
+    const admission = admit({ purpose: opts.purpose, ...opts.admission });
+    if (!admission.admitted) {
+      const result = failure('sender_not_authorized', 'Soullab Mail refused recipient provenance', 'mail_admission_' + admission.reason, ctx);
+      logSend(opts.purpose, from, toLog, domain, result, trace);
+      return result;
+    }
+  }
+
   // The qualified Proton credential belongs only to noreply@soullab.life.
   // Other historical managed senders are made visibly Soullab-sent; human
   // reply targets survive where explicitly known. Custom/unknown senders refuse.
@@ -473,7 +509,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
     const capacity = await reserveEmailCapacity(priority, opts.to);
     if (!capacity.allowed) {
       const isBadRecipient = capacity.reason === 'invalid_recipient';
-      const isExhausted = capacity.reason === 'budget_exhausted' || capacity.reason === 'emergency_ceiling';
+      const isExhausted = capacity.reason === 'budget_exhausted';
       const kind: SendFailureKind = isBadRecipient ? 'invalid_recipient' : isExhausted ? 'capacity_refused' : 'not_configured';
       const result = failure(
         kind,
@@ -484,9 +520,6 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
       );
       logSend(opts.purpose, from, toLog, domain, result, trace);
       return result;
-    }
-    if (capacity.degraded) {
-      console.warn('[Soullab Mail] P0 identity send admitted under emergency ceiling');
     }
   }
 

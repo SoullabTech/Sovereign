@@ -113,6 +113,7 @@ export async function POST(req: NextRequest) {
     try {
       const sent = await sendEmail({
         purpose: "build:alert",
+        admission: { authority: { kind: 'system', trigger: 'authenticated-build-alert' }, destination: 'configured' },
         from: alertSmtp.from,
         to: DEV_EMAIL,
         subject: `[${payload.severity.toUpperCase()}] MAIA Build Alert`,

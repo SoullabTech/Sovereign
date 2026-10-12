@@ -309,6 +309,7 @@ export class DeliveryService {
       const fromName = settings?.email_from_name || 'Soullab';
       const result = await sendEmail({
         purpose: 'comms:queued-email',
+        admission: { authority: { kind: 'system', trigger: 'comms-queue' }, destination: 'stored-record' },
         triggerType: 'worker',
         triggerRef: 'lib/comms/DeliveryService.ts',
         from: `${fromName} <${fromEmail}>`,

@@ -7,7 +7,6 @@ jest.mock('@/lib/db/postgres', () => ({
 
 import {
   reserveEmailCapacity,
-  __resetEmergencyCapacityForTests,
   extractRecipientMailbox,
 } from '../capacity';
 
@@ -15,7 +14,6 @@ const ENV = { ...process.env };
 beforeEach(() => {
   process.env = { ...ENV, EMAIL_LEDGER_FINGERPRINT_KEY: 'z'.repeat(64) };
   mockQuery.mockReset();
-  __resetEmergencyCapacityForTests();
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
 afterEach(() => {
@@ -72,37 +70,27 @@ describe('MAIL-05 — privacy and globally shared budget', () => {
   });
 });
 
-describe('MAIL-05 — bounded emergency mode', () => {
+describe('MAIL-05 — durable authorization is mandatory for ALL lanes', () => {
   beforeEach(() => mockQuery.mockRejectedValue(new Error('database unavailable')));
 
-  it('refuses P1/P2/P3 when durable limiter is down', async () => {
-    for (const lane of ['P1', 'P2', 'P3'] as const) {
+  it('refuses P0, P1, P2, P3 during a database outage', async () => {
+    for (const lane of ['P0', 'P1', 'P2', 'P3'] as const) {
       expect(await reserveEmailCapacity(lane, 'a@example.com')).toMatchObject({
         allowed: false, reason: 'capacity_unavailable', degraded: true,
       });
     }
   });
 
-  it('lets one P0 recipient through only twice before refusing', async () => {
-    const a = await reserveEmailCapacity('P0', 'x@example.com');
-    const b = await reserveEmailCapacity('P0', 'x@example.com');
-    const c = await reserveEmailCapacity('P0', 'x@example.com');
-    expect(a.allowed).toBe(true);
-    expect(b.allowed).toBe(true);
-    expect(c).toMatchObject({ allowed: false, reason: 'emergency_ceiling' });
+  it('never permits sends through a restart or multi-process fallback', async () => {
+    const results = await Promise.all(
+      Array.from({ length: 32 }, (_, i) =>
+        reserveEmailCapacity('P0', 'member' + i + '@example.com'))
+    );
+    expect(results.every((r) => !r.allowed)).toBe(true);
   });
 
-  it('caps rotating P0 recipients globally at six/hour', async () => {
-    const results = [];
-    for (let i = 0; i < 8; i++) {
-      results.push(await reserveEmailCapacity('P0', 'person'+i+'@example.com'));
-    }
-    expect(results.filter((r) => r.allowed)).toHaveLength(6);
-    expect(results[6]).toMatchObject({ allowed: false, reason: 'emergency_ceiling' });
-  });
-
-  it('never allows a multi-recipient emergency P0 blast', async () => {
-    const r = await reserveEmailCapacity('P0', ['a@example.com', 'b@example.com']);
-    expect(r.allowed).toBe(false);
+  it('does not permit even a one-recipient P0 send without durable evidence', async () => {
+    const r = await reserveEmailCapacity('P0', 'single@example.com');
+    expect(r).toMatchObject({ allowed: false, reason: 'capacity_unavailable' });
   });
 });

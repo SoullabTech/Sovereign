@@ -152,6 +152,7 @@ export async function POST(request: NextRequest) {
     // Send magic link email
     const delivery = await sendEmail({
       purpose: 'auth:magic-link',
+      admission: { authority: { kind: 'anonymous' }, destination: 'identity-claim' },
       from: SENDERS.noreply,
         to: normalizedEmail,
         subject,

@@ -6,6 +6,7 @@
  */
 
 import { sendEmail } from '@/lib/email/sendEmail';
+import type { AdmissionRequest } from '@/lib/email/admission';
 
 export interface EmailPayload {
   to: string;
@@ -17,6 +18,7 @@ export interface EmailPayload {
   tags?: Array<{ name: string; value: string }>;
   /** Fixed, server-selected delivery purpose — never accepted from member input. */
   purpose?: 'soul-portrait:delivery' | 'practitioner:scheduled-send' | 'practitioner:scheduled-send-test';
+  admission: Omit<AdmissionRequest, 'purpose'>;
 }
 
 export interface EmailResult {
@@ -39,6 +41,7 @@ export class EmailRouter {
     const from = `${defaults.fromName} <${defaults.fromEmail}>`;
     const result = await sendEmail({
       purpose: payload.purpose ?? 'practitioner:email',
+      admission: payload.admission,
       triggerType: 'route',
       triggerRef: 'lib/comms/emailRouter.ts',
       from,

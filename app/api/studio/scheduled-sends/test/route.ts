@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     const router = new EmailRouter(identity.practitionerId);
     const result = await router.send(
-      { purpose: 'practitioner:scheduled-send-test', to: selfEmail, subject, bodyText: body, replyTo: selfEmail },
+      { admission: { authority: { kind: 'member', memberId: identity.memberId }, destination: 'actor-supplied' }, purpose: 'practitioner:scheduled-send-test', to: selfEmail, subject, bodyText: body, replyTo: selfEmail },
       { fromEmail: FROM_EMAIL, fromName: `${identity.practitionerName} via SoulLab` },
     );
 
