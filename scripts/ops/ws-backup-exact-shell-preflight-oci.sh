@@ -107,7 +107,7 @@ for scenario in nominal pg_down wrong_source low_space missing_folder; do
   set -e
   if [ "$scenario" = nominal ]; then
     [[ "$rc" -eq 0 && "$output" == *"PREFLIGHT ONLY: no backups or existing data modified"* ]] ||
-      { echo "FAIL: nominal mock preflight unexpectedly refused (rc=$rc)"; exit 4; }
+      { echo "FAIL: nominal mock preflight unexpectedly refused (rc=$rc)"; printf "%s\n" "$output" | tail -n 15; exit 4; }
     echo "PASS fixture nominal: exact candidate preflight completes on mocks"
   else
     [[ "$rc" -ne 0 ]] || { echo "FAIL: case $scenario did not refuse"; exit 4; }
