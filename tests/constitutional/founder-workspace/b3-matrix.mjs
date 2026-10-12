@@ -106,9 +106,13 @@ check(reg.refused_by_name.every((r) => r.present && (r.scan_findings ?? 0) > 0),
   const wt = JSON.parse(readFileSync(jsonPath, 'utf8'));
   check(wt.read_only === true && Array.isArray(wt.rows) && wt.rows.length === 1 && 'class' in wt.rows[0], 'FD-4', `worktree-census CENSUS_JSON → ${wt.rows.length} bounded row(s), same columns as the TSV`);
   const jl = path.join(sd, 'st.jsonl');
-  execFileSync('bash', [path.join(REPO_ROOT, 'scripts/ops/workstation-storage-census.sh')], { env: { ...process.env, HOME: boundedHome, CENSUS_ROOTS: boundedRepo, CENSUS_SKIP_DOCKER: '1', CENSUS_PROBE_SECS: '5', CENSUS_JSON: jl, CENSUS_OUT: '' }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 30000 });
+  execFileSync('bash', [path.join(REPO_ROOT, 'scripts/ops/workstation-storage-census.sh')], { env: { ...process.env, HOME: boundedHome, CENSUS_ROOTS: boundedRepo, CENSUS_SKIP_DOCKER: '1', CENSUS_SKIP_EXTERNAL_MODELS: '1', CENSUS_PROBE_SECS: '5', CENSUS_JSON: jl, CENSUS_OUT: '' }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 30000 });
   const lines = readFileSync(jl, 'utf8').split('\n').filter(Boolean); let bad = 0; const kinds = new Set(); for (const l of lines) { try { kinds.add(JSON.parse(l).kind); } catch { bad++; } }
   check(bad === 0 && kinds.has('meta') && kinds.has('section') && kinds.has('row'), 'FD-4', `workstation-storage-census CENSUS_JSON → ${lines.length} JSON lines (meta · section · row), 0 unreadable`);
+  const modelSkip = lines.map((line) => { try { return JSON.parse(line); } catch { return null; } })
+    .find((x) => x?.kind === 'row' && x.label === 'external model volumes');
+  check(modelSkip?.value === 'not observed', 'FD-4', 'bounded census never infers an all-clear or zero for uninspected external model volumes');
+
   check(same(before, snapshot(boundedRepo)), 'RL-4', 'both real census runs left the bounded repository snapshot byte-identical (size + mtime)');
   // registry-driven observation uses the same real script against the bounded repository.
   const oWt = /** @type {any} */ (await observe(byId('ops.worktree-census'), { scratchDir: sd, env: { ...process.env, HOME: boundedHome, REPO: boundedRepo } }));
