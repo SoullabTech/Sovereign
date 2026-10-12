@@ -34,6 +34,7 @@ if (process.env.WS_COHORT_SYNTHETIC_ONLY !== ALLOW) {
   process.exit(2);
 }
 const { Client } = require('pg');
+const {assertWitnessDatabaseIdentity} = require('./ws-cohort-witness-db-guard-20261012.cjs');
 
 const label = 'WS-BETA-COHORT-10-' + randomUUID();
 const sha256 = text => createHash('sha256').update(text, 'utf8').digest('hex');
@@ -88,12 +89,13 @@ async function request(token, method, route, body) {
   try {
     // Exit before writes unless both DB identity and API behavior match test setup.
     await db.connect(); connected=true;
+    // host(inet) removes the CIDR suffix PostgreSQL's ::text displays:
+    // 127.0.0.1/32 becomes 127.0.0.1. The strict pure guard still rejects
+    // any nonloopback address or different database/port before fixture INSERTs.
     const witness=(await db.query(`SELECT current_database() AS name,
-              inet_server_addr()::text AS address,
+              host(inet_server_addr()) AS address,
               inet_server_port() AS port`)).rows[0];
-    assert.equal(witness.name, DB_NAME, 'REFUSE: not dedicated witness DB');
-    assert(['127.0.0.1','::1'].includes(witness.address), 'REFUSE: DB is not loopback');
-    assert.equal(witness.port, 5432, 'REFUSE: unexpected DB port');
+    assertWitnessDatabaseIdentity(witness);
     mark('exact staging PostgreSQL connection', true);
     mark('unauthenticated beta access denied',
       (await request(null,'GET','/api/sovereign/writers-studio/beta-access')).status === 401);
