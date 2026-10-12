@@ -83,3 +83,55 @@ Exact branch test: **scripts/ops/test-ws-backup-erasure-model.mjs**, run using *
 **JARVIS / Kelly's World target (not installed):** Today: governing rule accepted and release held; Work: audit and 14/14 model; Graph: WS-DELETE-01 → #1791 → #1793 → #1788 → #1784; Monitor: NAS SQL/ACL, orphan files, real restore; System: old vs new recovery recipient, key custody, authority boundaries.
 
 **No live member backup, restore, key installation, schema migration, ingress change, delete, scheduler, or public beta promotion is authorized by this report.**
+
+
+## Adversarial recheck — 5 unsafe counterexamples, 12 Oct 2026
+
+The additional test file **scripts/ops/test-ws-backup-erasure-counterexamples.mjs**
+is a **deliberately unsafe** set of fictional scenarios. The exact committed
+file was fetched back from GitHub blob **4c42f5dc4243803ec188c84cfb592c90f6db586b**
+and executed with Node on the Mac Studio: **5 tests PASS, 0 fail**.
+A PASS here means the **failure mechanism was reproduced in a synthetic
+counterexample**, not that the system is safe.
+
+| Counterexample | Witness | Disposition |
+|---|---|---|
+| C1 Existing plaintext SQL snapshot | Plaintext remains readable after destroying the new Work key | BLOCK real backup/deletion certification |
+| C2 Individually escrowed Work key | Old ciphertext decrypts despite live key revocation | Audit every historical key copy, NAS snapshot and replica |
+| C3 Deletion after initial restore check | In-memory staged plaintext survives when erasure occurs before publication | Require authority-fenced **atomic restore publication**, not a check followed by unchecked publication |
+| C4 Whole-database + vault encrypted with one common master key | Old global key decrypts a Work even after its per-Work key is deleted | A monolithic global archive cannot satisfy single-Work erasure |
+| C5 Old authority snapshot | Restoring a historical key register/tombstone set can reintroduce erased content | Key+erasure authority must not be rolled back with PostgreSQL, vault or NAS backup |
+
+**Necessary admission criterion:** an adversary with *all* retained historical
+Soullab-controlled ciphertext, SQL dumps, snapshots and master recovery credentials
+must fail to reconstruct a deleted Work. This criterion requires evidence about actual
+existing backups, not only new encrypted backup design.
+
+### Synology second-pass read-only access witness
+
+- Live SMB mount is **//192.168.4.42/soullab-backups** via **SMB 3.0**,
+  with client-projected **file_mode=0755, dir_mode=0755, uid=1000, gid=1000**.
+- An SSH **BatchMode** authentication check to Synology returned unavailable;
+  it did not provide privileged DSM/snapshot or effective SMB ACL evidence.
+- Five candidate snapshot-directory locators on the SMB mount were not present.
+  **This does not prove the NAS lacks snapshots or replica jobs.**
+- Server-side DSM snapshot retention, immutable snapshot status, effective
+  user/guest rights, backup reader identity and Hyper Backup/replication jobs
+  remain **NOT VERIFIED**. These require a custodian-led DSM read-only witness.
+
+### Review stop conditions strengthened
+
+1. Distinct reviewer must read **both** the 14-case model and the five deliberate
+   vulnerability counterexamples; neither set is a real implementation.
+2. Do **not** claim cryptographic erasure or successful deletion for production
+   while any historical unencrypted/escrowed reconstructive backup remains.
+3. Real disaster-recovery design must prevent publication of content deleted
+   **during** restore, requiring a fencing/authority binding that stays valid
+   through the commit itself.
+4. No routine global GPG key switch or whole-vault tar scheduling is authorized.
+   The new key's separate-Mac recovery proof is a different issue.
+5. Synology's own DSM snapshot/permissions/replication evidence and explicit
+   WS-DELETE-02 disposition remain release blockers.
+
+This supplement is an engineering self-audit, **not an independent human
+review approval**.
