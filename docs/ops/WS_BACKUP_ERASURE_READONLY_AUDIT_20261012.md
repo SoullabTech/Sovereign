@@ -135,3 +135,58 @@ existing backups, not only new encrypted backup design.
 
 This supplement is an engineering self-audit, **not an independent human
 review approval**.
+
+
+## Production PostgreSQL catalog and custody aggregate witness — Oct 12
+
+After the initial code audit, a bounded, **read-only production PostgreSQL
+transaction** on the Minisforum inspected **information_schema.columns** for
+table and column names, plus three independent aggregate \`COUNT(*)\` results.
+The access used credentials *within* the already running PostgreSQL container;
+no credentials, member IDs, source text, field values or file contents were
+printed or transferred.
+
+**Schema result:** A broad name-filtered query
+\`(manuscript|draft|source|developmental_reading|living_work|editorial|render)\`
+returned **30 tables** with text/JSON/bytea candidate columns. This is a
+*screening inventory*, not proof that all matching tables hold manuscript data
+or that other differently named reconstructive stores have been ruled out.
+
+Concrete existing examples from the inspected live catalog:
+
+| Actual table | Candidate reconstructive columns |
+|---|---|
+| manuscript_source_arrivals | \`source_text\`, \`original_filename\`, \`artifact_ref\` |
+| manuscript_sections | \`body\`, \`heading\` |
+| manuscript_working_drafts | \`content\`, \`last_idempotency_response\` (JSONB) |
+| developmental_readings | \`observations\`, \`coverage\`, \`read_state\`, \`reader_provenance\` (JSONB) |
+| member_manuscripts | \`title\`, \`provenance\` |
+| Additional named tables | manuscript_renders, manuscript_revision_offers, manuscript_structure_proposals, manuscript_application_recovery, manuscript_draft_sections, working_draft_revisions, living_work_writer_understanding, writer_editorial_relationship_episodes and others |
+
+**Current read-only aggregate results** from \`BEGIN READ ONLY\`:
+
+| Aggregate | Count |
+|---|---:|
+| File-backed Source references (\`manuscript_source_arrivals.artifact_ref IS NOT NULL\`) | **13** |
+| Unclaimed arrival rows (\`manuscript_source_arrivals.manuscript_id IS NULL\`) | **2** |
+| Pending live-vault erasure queue rows (\`vault_erasure_queue\`) | **0** |
+
+**Important distinction:** The **two unclaimed database arrivals** and the
+**two historical unreferenced Source files** (#1786) are distinct counts from
+different registries. Their overlap, ownership and legitimate custody have
+**not** been verified; do not assume a one-to-one match or delete either.
+
+A zero-row live erasure queue does **not** prove older SQL dumps, snapshots,
+staging disks or archived keys contain no deleted Work. No restored SQL backup
+was inspected for member content.
+
+**Impact on design review:** The actual production schema requires a
+field-by-field census of reconstructive text, JSONB, revision offers and
+derived editorial material, rather than assuming Source artifacts plus a
+single working draft table are the complete recoverable Work. The existing
+global \`pg_dump\` may include these columns. Prospective encryption must
+be assessed alongside remediation of all historical reconstructive copies,
+WAL, transactional consistency and a non-rollbackable deletion authority.
+
+**No live application files, schema, backup archives, NAS settings, keys or
+member rows were changed in this witness.**
