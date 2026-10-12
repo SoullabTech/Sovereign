@@ -179,6 +179,9 @@ export function buildEvidenceGraph(input) {
       || snap?.maia_authority!=='NOT_AUTHORIZED'
       || snap?.evidence_state!=='OBSERVED'
       || snap?.source_verified!==true
+      || snap?.source_custody!=='LOCAL_BYTES_MATCH_PINNED_COMMIT_DOCUMENT'
+      || !/^[0-9a-f]{40}$/.test(text(snap?.source_commit))
+      || !/^[0-9a-f]{64}$/.test(text(snap?.source_sha256))
       || !text(snap?.source_ref)
       || !nodes.has(workNodeId(text(u?.id)))) continue;
     const ref=text(snap.source_ref);

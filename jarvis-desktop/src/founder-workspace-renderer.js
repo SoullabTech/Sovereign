@@ -77,7 +77,10 @@ function rgrCfMarkup(u) {
   if (!snap || snap.work_unit_id!==u.id || snap.authority!=='orientation_only'
       || snap.experiment_authority!=='NOT_AUTHORIZED'
       || snap.maia_authority!=='NOT_AUTHORIZED'
-      || snap.evidence_state!=='OBSERVED' || snap.source_verified!==true) {
+      || snap.evidence_state!=='OBSERVED' || snap.source_verified!==true
+      || snap.source_custody!=='LOCAL_BYTES_MATCH_PINNED_COMMIT_DOCUMENT'
+      || !/^[0-9a-f]{40}$/.test(String(snap.source_commit||''))
+      || !/^[0-9a-f]{64}$/.test(String(snap.source_sha256||''))) {
     return '<div class="callout slate" data-rgr-cf-unverified><b>Research intake source unverified.</b> JARVIS will not infer source custody, review, execution or MAIA authority.</div>';
   }
   const labels={
@@ -87,7 +90,7 @@ function rgrCfMarkup(u) {
     hold:'Held · separately authorized gate required',
   };
   const stages=arr(snap.stages).map(s=>`<div class="row" data-rgr-cf-stage="${attr(s.id)}" data-rgr-cf-standing="${attr(s.standing)}"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(s.label)}</div><div class="rowPlain">${esc(s.plain)}</div><div class="rowMeta">${esc(labels[s.standing]||'Unverified')}</div></div>${pill(s.standing==='documented'?'Documented':'Not authorized',s.standing==='documented'?'neutral':'warn')}</div></div>`).join('');
-  return `<div data-rgr-cf-workstream><p class="rowPlain"><b>Research intake only.</b> The source record is fingerprint-verified; hypotheses remain candidate. No tests have run, no independent review has passed, and MAIA has not changed.</p><details class="secondaryDetails"><summary>Research gates · ${arr(snap.stages).length} recorded</summary><div class="detailsBody"><div class="list">${stages}</div><div class="rowMeta">${esc(snap.reason)}</div></div></details><div class="actions">${snap.source_ref?evidenceButton(snap.source_ref,'Open research intake'):''}</div></div>`;
+  return `<div data-rgr-cf-workstream><p class="rowPlain"><b>Research intake only.</b> The source bytes match the pinned committed intake; hypotheses remain candidate. No experiments have run, no independent review has passed, and MAIA has not changed.</p><div class="rowMeta" data-rgr-cf-provenance>Committed intake ${esc(snap.source_commit.slice(0,12))} · SHA-256 ${esc(snap.source_sha256.slice(0,16))}… · documentary evidence only</div><details class="secondaryDetails"><summary>Research gates · ${arr(snap.stages).length} recorded</summary><div class="detailsBody"><div class="list">${stages}</div><div class="rowMeta">${esc(snap.reason)}</div></div></details><div class="actions">${snap.source_ref?evidenceButton(snap.source_ref,'Open research intake'):''}</div></div>`;
 }
 function rgrCfSection(origin='Work') {
   const u=rgrCfUnit(); if (!u) return '';

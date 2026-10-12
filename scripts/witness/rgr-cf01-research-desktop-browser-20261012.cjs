@@ -46,6 +46,7 @@ const assert=require('node:assert/strict');
   const first=await page.locator('#main').innerText();
   assert(first.includes('Relational Geometry — Counterfactual Research Intake'));
   assert(first.includes('Watching'));
+  assert((await page.locator('#main [data-rgr-cf-provenance]').first().innerText()).includes('0b6578fc8585'));
   const attention=await page.evaluate(()=>{
    const ss=[...document.querySelectorAll('#main section')];
    const section=name=>ss.find(s=>[...s.querySelectorAll('h2')].some(h=>h.textContent.trim().startsWith(name)));
