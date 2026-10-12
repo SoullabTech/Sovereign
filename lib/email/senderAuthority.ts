@@ -1,17 +1,37 @@
 /**
- * MAIL-IDENTITY: one qualified interim Proton submission identity.
+ * MAIL-IDENTITY: one canonical, qualified automated sending identity.
  *
  * The only live-proven SMTP token is bound to noreply@soullab.life.
  * Former managed Resend From identities may not be submitted through that
  * token verbatim, regardless of an SMTP server that happens to permit aliases.
  * Preserve a human reply address only when known or explicitly supplied.
  *
- * This is an explicit temporary convergence, not silent sender spoofing:
- * outbound managed mail visibly originates from Soullab's software sender.
+ * Founder-approved 2026-10-12: retain one permanent-default From identity
+ * regardless of whether the underlying approved SMTP service changes later.
+ * Display names may convey purpose, but must be trusted static labels; never
+ * inherit a dynamic member or practitioner string as the sending identity.
+ * This does not merge Reply-To, P0 protections or software/human authority.
  */
 import { extractRecipientMailbox } from './capacity';
 
-const VERIFIED_SENDER = 'Soullab <noreply@soullab.life>';
+const PURPOSE_DISPLAY_NAMES: Readonly<Record<string, string>> = {
+  'notify:safety': 'Soullab Safety',
+  auth: 'Soullab Account',
+  security: 'Soullab Security',
+  invite: 'Soullab Invitations',
+  'soul-portrait': 'Soullab Soul Portraits',
+  practitioner: 'Soullab Studio',
+  portal: 'Soullab Bookings',
+  reminder: 'Soullab Reminders',
+  broadcast: 'Soullab Updates',
+};
+
+function approvedDisplayName(purpose: string): string {
+  const exact = PURPOSE_DISPLAY_NAMES[purpose];
+  if (exact) return exact;
+  const family = purpose.includes(':') ? purpose.split(':', 1)[0] : purpose;
+  return PURPOSE_DISPLAY_NAMES[family] ?? 'Soullab';
+}
 export const QUALIFIED_SENDER_ADDRESS = 'noreply@soullab.life';
 
 /** Only historically audited software-role senders are eligible for convergence. */
@@ -25,8 +45,6 @@ const PREVIOUS_SOFTWARE_SENDERS: ReadonlySet<string> = new Set([
   'team@soullab.life',
   'gifts@soullab.life',
   'maia@soullab.life',
-  'support@soullab.life',
-  'problem@soullab.life',
 ]);
 
 export type SenderResolution =
@@ -34,7 +52,7 @@ export type SenderResolution =
   | { allowed: false; reason: 'unqualified_sender' | 'invalid_reply_to' };
 
 export function managedSender(
-  requestedFrom: string, replyTo?: string
+  requestedFrom: string, replyTo?: string, purpose = ''
 ): SenderResolution {
   const originalMailbox = extractRecipientMailbox(requestedFrom);
   if (!originalMailbox || !PREVIOUS_SOFTWARE_SENDERS.has(originalMailbox)) {
@@ -52,7 +70,7 @@ export function managedSender(
   }
   return {
     allowed: true,
-    from: VERIFIED_SENDER,
+    from: `${approvedDisplayName(purpose)} <${QUALIFIED_SENDER_ADDRESS}>`,
     ...(qualifiedReply ? { replyTo: qualifiedReply } : {}),
     recast: originalMailbox !== QUALIFIED_SENDER_ADDRESS,
   };

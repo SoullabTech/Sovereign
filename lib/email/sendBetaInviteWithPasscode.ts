@@ -1,4 +1,5 @@
 import { sendEmail, SENDERS } from './sendEmail';
+import { fingerprintMailReference } from './ledger/fingerprint';
 import fs from 'fs';
 import path from 'path';
 
@@ -96,14 +97,18 @@ Kelly & the Soullab team
       .replace(/\{\{Name\}\}/g, invite.name)
       .replace(/\{\{Passcode\}\}/g, invite.passcode);
 
+    const key = fingerprintMailReference('beta-passcode', invite.email.toLowerCase().trim());
+    if (!key) return { success: false, error: 'Mail reference key unavailable' };
+
     const result = await sendEmail({
       purpose: 'invite:beta-passcode',
       // WAS `onboarding@resend.dev`. That is the provider's SANDBOX sender: it
       // delivers ONLY to the provider account owner, so every invitation sent
       // from it reached nobody it was addressed to. lib/email/sendEmail.ts has
       // named this as never-use since it was written; this caller predated it.
-      from: SENDERS.kelly,
-      idempotencyKey: `invite:beta-passcode:${invite.email}`,
+      from: SENDERS.noreply,
+      replyTo: 'kelly@soullab.life',
+      idempotencyKey: key,
       to: invite.email,
       subject: config.subject,
       html: personalizedHtml,
@@ -116,18 +121,18 @@ Kelly & the Soullab team
 
     if (!result.success) {
       console.error(
-        `❌ Passcode invite to ${invite.name} REFUSED: failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
+        `[BetaPasscode] REFUSED: failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
       );
       return { success: false, error: result.error };
     }
 
     // The passcode is a credential — never logged. It was being printed here on
     // every successful send.
-    console.log(`✅ Sent to ${invite.name}:`, result.id);
+    console.log('[BetaPasscode] accepted id=', result.id);
     return { success: true, id: result.id };
 
   } catch (error: any) {
-    console.error(`❌ Failed to send to ${invite.email}:`, error.message);
+    console.error('[BetaPasscode] failed:', error instanceof Error ? error.name : 'unknown_error');
     return { success: false, error: error.message };
   }
 }

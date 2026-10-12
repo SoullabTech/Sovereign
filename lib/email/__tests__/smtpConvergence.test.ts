@@ -14,6 +14,7 @@ jest.mock('../ledger', () => ({
 
 import { sendEmail } from '../sendEmail';
 import { __setEmailProviderForTests } from '../providers';
+import { openAttempt } from '../ledger';
 
 const mockSend = jest.fn<(...args: unknown[]) => Promise<any>>();
 const fakeSMTP = {
@@ -33,6 +34,36 @@ beforeEach(() => {
 });
 
 describe('Proton SMTP convergence at the actual send boundary', () => {
+  it('never places a clear gift passkey or email in SMTP tags or durable attempts', async () => {
+    const original = process.env.EMAIL_LEDGER_FINGERPRINT_KEY;
+    process.env.EMAIL_LEDGER_FINGERPRINT_KEY = 'q'.repeat(64);
+    try {
+      const unsafe = 'invite:bead:private-gift-passkey-user@example.com';
+      const logs = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const r = await sendEmail({
+        from: 'Soullab <noreply@soullab.life>',
+        to: 'member@example.com',
+        purpose: 'invite:bead',
+        idempotencyKey: unsafe,
+        subject: 'Gift',
+        text: 'A private gift',
+      });
+      expect(r.success).toBe(true);
+      const payload = mockSend.mock.calls[0][0] as {
+        tags: Array<{ name: string; value: string }>,
+      };
+      expect(JSON.stringify(payload.tags)).not.toContain('private-gift-passkey');
+      expect(JSON.stringify(payload.tags)).not.toContain('user@example.com');
+      const attempt = (openAttempt as jest.Mock).mock.calls.at(-1)?.[0] as { idempotencyKey?: string };
+      expect(attempt.idempotencyKey).toMatch(/^hmac-v1:[a-f0-9]{64}$/);
+      expect(JSON.stringify(attempt)).not.toContain('private-gift-passkey');
+      expect(JSON.stringify(logs.mock.calls)).not.toContain('private-gift-passkey');
+    } finally {
+      if (original === undefined) delete process.env.EMAIL_LEDGER_FINGERPRINT_KEY;
+      else process.env.EMAIL_LEDGER_FINGERPRINT_KEY = original;
+    }
+  });
+
   it('delivers a former practitioner From only as qualified noreply with correct Reply-To', async () => {
     const r = await sendEmail({
       from: 'Kelly <kelly@soullab.life>',
@@ -44,7 +75,7 @@ describe('Proton SMTP convergence at the actual send boundary', () => {
     expect(mockReserve).toHaveBeenCalledWith('P2', 'one@example.com');
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: 'Soullab <noreply@soullab.life>',
+        from: 'Soullab Studio <noreply@soullab.life>',
         replyTo: 'kelly@soullab.life',
         to: 'one@example.com',
       })

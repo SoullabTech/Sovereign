@@ -9,6 +9,31 @@ describe('Proton submission identity — confirmed no silent From impersonation'
       recast: false,
     });
   });
+  it('all trusted purpose names retain the same authorized SMTP mailbox', () => {
+    const scenarios: Array<[string, string]> = [
+      ['auth:email-code', 'Soullab Account'],
+      ['invite:beta', 'Soullab Invitations'],
+      ['soul-portrait:delivery', 'Soullab Soul Portraits'],
+      ['practitioner:scheduled-send', 'Soullab Studio'],
+      ['portal:booking-confirmation', 'Soullab Bookings'],
+      ['reminder:session', 'Soullab Reminders'],
+      ['broadcast:update', 'Soullab Updates'],
+    ];
+    for (const [purpose, label] of scenarios) {
+      expect(managedSender('Soullab <noreply@soullab.life>', undefined, purpose))
+        .toHaveProperty('from', `${label} <noreply@soullab.life>`);
+    }
+  });
+
+  it('ignores untrusted display text and never makes organization mailboxes app-sendable', () => {
+    expect(managedSender('CEO Kelly <kelly@soullab.life>', undefined, 'practitioner:email'))
+      .toHaveProperty('from', 'Soullab Studio <noreply@soullab.life>');
+    for (const forbidden of ['support@soullab.life','problem@soullab.life']) {
+      expect(managedSender(forbidden, undefined, 'portal:booking-confirmation'))
+        .toMatchObject({ allowed: false, reason: 'unqualified_sender' });
+    }
+  });
+
   it('converges audited role identities onto the one qualified address', () => {
     expect(managedSender('Soullab Reminders <reminders@soullab.life>')).toMatchObject({
       allowed: true,

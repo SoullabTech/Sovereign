@@ -20,6 +20,7 @@ beforeEach(() => {
     SMTP_HOST: 'smtp.example.com',
     SMTP_USER: 'user',
     SMTP_PASSWORD: 'pass',
+    EMAIL_LEDGER_FINGERPRINT_KEY: 'b'.repeat(64),
   };
   __setEmailProviderForTests(null);
   jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -102,7 +103,9 @@ describe('sendEmail carries policy through provider changes', () => {
     expect(byName.purpose).toBe('auth_magic-link');
     expect(byName.priority).toBe('P0');
     expect(byName.correlation_id).toBe('req-42');
-    expect(byName.idempotency_key).toBe('AUTH_CODE_tok-9');
+    // Clear correlation keys are no longer sent to providers or logged.
+    expect(byName.idempotency_key).toMatch(/^hmac-v1_[a-f0-9]{64}$/);
+    expect(JSON.stringify(tags)).not.toContain('tok-9');
     expect(byName.surface).toBe('signin');
   });
 });

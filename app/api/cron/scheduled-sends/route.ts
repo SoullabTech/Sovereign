@@ -56,6 +56,7 @@ async function processDue() {
       const router = new EmailRouter(row.practitioner_id);
       const result = await router.send(
         {
+          purpose: 'practitioner:scheduled-send',
           to: row.recipient_email,
           toName: row.recipient_name || undefined,
           subject: row.subject,

@@ -48,6 +48,10 @@ describe('SmtpProvider.isConfigured', () => {
   it('is true with host, user and password', () => {
     expect(new SmtpProvider().isConfigured()).toBe(true);
   });
+  it('refuses another managed identity even if the credentials are populated', () => {
+    process.env.SMTP_USER = 'kelly@soullab.life';
+    expect(new SmtpProvider().isConfigured()).toBe(false);
+  });
 });
 
 describe('SmtpProvider.send — what counts as accepted', () => {

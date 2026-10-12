@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { sendEmail } from '@/lib/email/sendEmail';
+import { fingerprintMailReference } from '@/lib/email/ledger/fingerprint';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // Default beads for beta testers
@@ -332,6 +333,8 @@ export async function POST(request: NextRequest) {
     try {
       const subject = `${member.name} sent you a gift — MAIA awaits`;
 
+      const mailRef = fingerprintMailReference('gift-bead', passkey);
+      if (!mailRef) throw new Error('Gift mail reference not configured');
       const result = await sendEmail({
         purpose: 'invite:bead',
         from: 'Soullab Gifts <gifts@soullab.life>',
@@ -340,11 +343,11 @@ export async function POST(request: NextRequest) {
         subject,
         html: generateGiftEmailHtml(recipientName, passkey, member.name, personalMessage),
         text: generateGiftEmailText(recipientName, passkey, member.name, personalMessage),
-        idempotencyKey: `invite:bead:${passkey}`,
+        idempotencyKey: mailRef,
         tags: [
           { name: 'campaign', value: 'member-bead' },
           { name: 'type', value: 'invitation' },
-          { name: 'gifter', value: memberId },
+          // No raw member IDs in provider headers.
         ],
       });
 
@@ -361,7 +364,7 @@ export async function POST(request: NextRequest) {
           'UPDATE gift_passkeys SET email_sent_at = NOW() WHERE passkey = $1',
           [passkey]
         );
-        console.log(`✨ Bead sent from ${member.name} to ${recipientName} (${recipientEmail})`);
+        console.log('[GiftMail] accepted', result.id ?? 'no-id');
       }
     } catch (e: any) {
       console.error('Email send error:', e);

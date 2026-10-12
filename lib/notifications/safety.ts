@@ -284,7 +284,7 @@ export async function sendSafetyConcernNotification(
     // Send email
     const result = await sendEmail({
       purpose: 'notify:safety',
-      from: 'Stellium <notifications@soullab.ai>',
+      from: 'Soullab <noreply@soullab.life>',
       to: practitionerEmail,
       subject: `Safety Concern: ${clientName} needs attention`,
       html,

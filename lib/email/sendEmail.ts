@@ -41,7 +41,7 @@ import { memberRef } from '@/lib/privacy/memberRef';
 import { redactEmails } from '@/lib/privacy/redactEmails';
 import { reserveEmailCapacity } from './capacity';
 import { managedSender } from './senderAuthority';
-import { fingerprintRecipient } from './ledger/fingerprint';
+import { fingerprintRecipient, fingerprintMailReference } from './ledger/fingerprint';
 import { extractRecipientMailbox } from './capacity';
 
 // ============================================================================
@@ -410,7 +410,18 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
   const toLog = Array.isArray(opts.to) ? opts.to.join(', ') : opts.to;
   const domain = domainOf(opts.to);
   const priority = opts.priority ?? resolvePriority(opts.purpose);
-  const trace = { correlationId: opts.correlationId, idempotencyKey: opts.idempotencyKey };
+  // A caller's key may accidentally contain a passkey, name or email address.
+  // Always replace it with a domain-separated keyed HMAC before it can enter
+  // either the delivery ledger, SMTP headers or operational logs.
+  const opaqueAttemptKey = opts.idempotencyKey
+    ? fingerprintMailReference('attempt', opts.idempotencyKey)
+    : undefined;
+  const trace = { correlationId: opts.correlationId, idempotencyKey: opaqueAttemptKey ?? undefined };
+  if (opts.idempotencyKey && !opaqueAttemptKey) {
+    const result = failure('not_configured', 'Mail correlation key unavailable', 'mail_reference_unavailable', { priority });
+    logSend(opts.purpose, from, toLog, domain, result, trace);
+    return result;
+  }
 
   // Provider resolution can itself refuse (unknown EMAIL_PROVIDER, capture
   // transport in production). That refusal is a configuration failure, not an
@@ -444,7 +455,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
   // Other historical managed senders are made visibly Soullab-sent; human
   // reply targets survive where explicitly known. Custom/unknown senders refuse.
   if (provider.name === 'smtp' && !opts.provider) {
-    const sender = managedSender(from, replyTo);
+    const sender = managedSender(from, replyTo, opts.purpose);
     if (!sender.allowed) {
       const result = failure('sender_not_authorized', 'Soullab Mail sender identity is not qualified', 'mail_sender_refused', ctx);
       logSend(opts.purpose, from, toLog, domain, result, trace);
@@ -491,7 +502,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
       { name: 'purpose', value: tagSafe(opts.purpose) },
       { name: 'priority', value: priority },
       ...(opts.correlationId ? [{ name: 'correlation_id', value: tagSafe(opts.correlationId) }] : []),
-      ...(opts.idempotencyKey ? [{ name: 'idempotency_key', value: tagSafe(opts.idempotencyKey) }] : []),
+      ...(opaqueAttemptKey ? [{ name: 'idempotency_key', value: tagSafe(opaqueAttemptKey) }] : []),
       ...Object.entries(opts.metadata ?? {}).map(([name, value]) => ({
         name: tagSafe(name),
         value: tagSafe(value),
@@ -508,7 +519,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
       provider: provider.name,
       recipient: Array.isArray(opts.to) ? opts.to[0] : opts.to,
       memberRef: opts.memberId ? memberRef(opts.memberId) : undefined,
-      idempotencyKey: opts.idempotencyKey,
+      idempotencyKey: opaqueAttemptKey,
       correlationId: opts.correlationId,
       triggerType: opts.triggerType,
       triggerRef: opts.triggerRef,

@@ -91,6 +91,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const router = new EmailRouter(memberId);
     const result = await router.send(
       {
+        purpose: 'soul-portrait:delivery',
         to: recipientEmail,
         toName: typeof body.recipientName === 'string' ? body.recipientName.trim() || undefined : undefined,
         subject: `A Soul Portrait for ${subjectName}`,
@@ -116,8 +117,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     );
     emailed = result.success;
     if (!result.success) emailError = result.error;
-    // Provider evidence trail: "accepted" = Resend returned a message id; delivery
-    // status lives in Resend's event log, retrievable by this id.
+    // Provider evidence trail: "accepted" means the governed SMTP service
+    // issued an identifiable acceptance. Inbox arrival is a separate event.
     console.log('[soul-portrait/send] email', {
       accepted: result.success,
       id: result.id ?? null,

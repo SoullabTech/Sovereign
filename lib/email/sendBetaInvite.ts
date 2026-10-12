@@ -1,15 +1,11 @@
 import { sendEmail } from './sendEmail';
+import { fingerprintMailReference } from './ledger/fingerprint';
 
 /**
- * Sender for beta invitations.
- *
- * NOTE — deliberately left on `soullab.org`, the address this sender has always
- * used, rather than silently moved to the `soullab.life` identity in SENDERS.
- * If `soullab.org` is not a verified domain on the provider account these sends
- * fail as `provider_config` — which is now VISIBLE rather than swallowed. That
- * is a deliverability decision for an operator, not a drive-by edit.
+ * Founder-approved canonical software sender: purpose labels and human
+ * Reply-To are separate from the authenticated Proton From identity.
  */
-const BETA_INVITE_SENDER = 'Kelly @ Soullab <kelly@soullab.org>';
+const BETA_INVITE_SENDER = 'Soullab <noreply@soullab.life>';
 
 /** Ceiling on one batch. Exceeding it truncates loudly — never silently. */
 const MAX_INVITES_PER_BATCH = 100;
@@ -61,17 +57,21 @@ export async function sendBetaInvite(invite: BetaInvite, template: string = 'bet
           .replace(/\{\{BetaCode\}\}/g, invite.betaCode || '')
       : '';
 
+    const key = fingerprintMailReference('beta-invite', config.tag + ':' + invite.email.toLowerCase().trim());
+    if (!key) return { success: false, error: 'Mail reference key unavailable', failureKind: 'not_configured' };
+
     const result = await sendEmail({
       purpose: 'invite:beta',
       triggerType: 'script',
       triggerRef: 'sendBetaInvite',
       campaignRef: `beta-invite:${template}`,
       from: BETA_INVITE_SENDER,
+      replyTo: 'kelly@soullab.life',
       to: invite.email,
       subject: config.subject,
       html: personalizedHtml,
       text: personalizedText,
-      idempotencyKey: `invite:beta:${template}:${invite.email}`,
+      idempotencyKey: key,
       tags: [
         { name: 'campaign', value: 'beta-launch' },
         { name: 'type', value: config.tag }
@@ -84,16 +84,16 @@ export async function sendBetaInvite(invite: BetaInvite, template: string = 'bet
     // success as well.
     if (!result.success) {
       console.error(
-        `❌ Invite to ${invite.name} REFUSED: failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
+        `[BetaInvite] REFUSED: failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
       );
       return { success: false, error: result.error, failureKind: result.failureKind };
     }
 
-    console.log(`✅ Sent to ${invite.name}:`, result.id);
+    console.log('[BetaInvite] accepted id=', result.id);
     return { success: true, id: result.id };
 
   } catch (error: any) {
-    console.error(`❌ Failed to send to ${invite.email}:`, error.message);
+    console.error('[BetaInvite] failed:', error instanceof Error ? error.name : 'unknown_error');
     return { success: false, error: error.message, failureKind: 'exception' };
   }
 }

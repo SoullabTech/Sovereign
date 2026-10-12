@@ -724,6 +724,11 @@ cmd_deploy() {
             exit 1
         fi
     done
+    approved_sender=$(awk -F= '/^SMTP_USER=/{sub(/^[^=]*=/,""); print}' .env.production | tail -n 1)
+    if [ "$approved_sender" != "noreply@soullab.life" ]; then
+        log_error "The sole managed SMTP sender must be noreply@soullab.life"
+        exit 1
+    fi
     mail_file=$(awk -F= '/^SMTP_PASSWORD_FILE=/{sub(/^[^=]*=/,""); print}' .env.production | tail -n 1)
     if [ "$mail_file" != "/run/secrets/soullab_smtp_token" ]; then
         log_error "SMTP_PASSWORD_FILE must point to the read-only credential mount"

@@ -15,6 +15,8 @@ export interface EmailPayload {
   bodyText: string;
   replyTo?: string;
   tags?: Array<{ name: string; value: string }>;
+  /** Fixed, server-selected delivery purpose — never accepted from member input. */
+  purpose?: 'soul-portrait:delivery' | 'practitioner:scheduled-send' | 'practitioner:scheduled-send-test';
 }
 
 export interface EmailResult {
@@ -36,7 +38,7 @@ export class EmailRouter {
   ): Promise<EmailResult> {
     const from = `${defaults.fromName} <${defaults.fromEmail}>`;
     const result = await sendEmail({
-      purpose: 'practitioner:email',
+      purpose: payload.purpose ?? 'practitioner:email',
       triggerType: 'route',
       triggerRef: 'lib/comms/emailRouter.ts',
       from,

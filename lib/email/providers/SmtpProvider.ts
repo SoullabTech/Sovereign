@@ -113,6 +113,9 @@ export class SmtpProvider implements EmailProvider {
 
   isConfigured(): boolean {
     const { host, user, pass } = readConfig(this.config);
+    // Founder-approved managed mail identity. A separate explicit configuration
+    // is used by the independent alert pager and is not impersonated here.
+    if (this.config === undefined && user?.toLowerCase() !== 'noreply@soullab.life') return false;
     // A host alone is not enough: an unauthenticated relay that happens to
     // accept mail is not a transport we should be reporting as configured.
     return Boolean(host && user && pass);
