@@ -28,14 +28,14 @@ A future optional Google Drive connector must be consent-driven, least-privilege
 - Canonical wiring guards: 3/3 passed; verifies Write host, live `bodyOf` source, and no cloud/server action.
 - Additional focused Studio suites, including Publish, section return and canonical route, 29/29 passed.
 - Chrome actual-UI witness, with an isolated synthetic manuscript: **PASS**. Verified download filename and bytes, inclusion of newest in-tab text, zero network requests, and pending-save warning. Fixture and reproducible script live under `scripts/witness`.
-- Safari/WebKit is **not certified**: Playwright WebKit browser is absent from the remote Mac environment.
+- **Native desktop Safari 26.5 PASS, October 11:** WebDriver opened the actual React Save a copy control in Safari, downloaded TXT, Markdown and JSON, verified all three byte/structure expectations including unsaved in-tab text, and removed only the exact synthetic test downloads. Localhost test page only (GET /); no production or member API. Witness: `scripts/witness/ws-device-copy-safari-native-20261011.cjs`. This closes desktop Safari download acceptance, **not iPhone Safari**.
 - Full Write/Develop/Review browser rehearsal, accessibility and visual acceptance, source-data recovery, complete type-check/build and production release remain separate gates.
 
 ## No false claims
 A download request is not proof that the writer retained a file: the writer must verify the browser download. Downloading does not revoke Soullab's existing draft custody or change the current save server. JSON storage is not a restore feature. Google Drive being connected on the founder's Mac is not a member Drive integration.
 
 ## Next release steps
-1. Verify the new control on the exact frozen candidate with a non-founder synthetic account; test desktop and mobile Safari, including actual download inspection.
+1. Keep the native Safari/Chrome synthetic browser witnesses pinned to the exact code. Next run a separate real authenticated non-founder test-account rehearsal in an isolated environment, and test **iPhone Safari** directly before any mobile claim.
 2. Reconcile broader inherited Studio test failures and obtain a full compatible build/cutover receipt.
 3. Preserve the source-upload Sanctuary hold, Caddy fence and schema-migration governance, old-reader compatibility, crash recovery and rollback.
 4. Only after an independently approved release, offer the first lead tester a limited, truthful beta.
