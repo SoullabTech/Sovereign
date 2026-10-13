@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { SessionBriefingCard } from '@/components/studio/SessionBriefingCard';
+import { PracticeHomeLoadNotice } from '@/components/studio/PracticeHomeLoadNotice';
+import { practiceHomeStanding, readStudioResource, type PracticeHomeStanding } from '@/lib/studio/practiceHomeLoad';
 
 // ─── Shapes (subset of the endpoints we read) ───
 interface Identity { name?: string | null; portalType?: string | null }
@@ -107,23 +109,38 @@ export default function StudioHome() {
   const [clients, setClients] = useState<ClientRow[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
+  const [practiceStanding, setPracticeStanding] = useState<PracticeHomeStanding>('unavailable');
+  const [channelsUnavailable, setChannelsUnavailable] = useState(false);
 
   useEffect(() => {
-    const safeJson = async (path: string) => {
-      try { const r = await apiFetch(path); if (!r.ok) return null; return await r.json(); }
-      catch { return null; }
-    };
+    // A transport error or malformed payload is never evidence of an empty
+    // practice. Do not evaluate FirstEntrance until both lists are verified.
     (async () => {
       const [w, c, b, ch] = await Promise.all([
-        safeJson('/api/studio/whoami'),
-        safeJson('/api/studio/clients'),
-        safeJson('/api/studio/bookings?limit=20'),
-        safeJson('/api/team/channels'),
+        readStudioResource<Identity>(apiFetch, '/api/studio/whoami', (payload) => {
+          const identity = (payload as { identity?: unknown } | null)?.identity;
+          return identity && typeof identity === 'object' && !Array.isArray(identity)
+            ? identity as Identity : null;
+        }),
+        readStudioResource<ClientRow[]>(apiFetch, '/api/studio/clients', (payload) => {
+          const clients = (payload as { clients?: unknown } | null)?.clients;
+          return Array.isArray(clients) ? clients as ClientRow[] : null;
+        }),
+        readStudioResource<Booking[]>(apiFetch, '/api/studio/bookings?limit=20', (payload) => {
+          const bookings = (payload as { bookings?: unknown } | null)?.bookings;
+          return Array.isArray(bookings) ? bookings as Booking[] : null;
+        }),
+        readStudioResource<Channel[]>(apiFetch, '/api/team/channels', (payload) => {
+          const channels = (payload as { channels?: unknown } | null)?.channels;
+          return Array.isArray(channels) ? channels as Channel[] : null;
+        }),
       ]);
-      if (w?.identity) setIdentity(w.identity);
-      setClients(Array.isArray(c?.clients) ? c.clients : []);
-      setBookings(Array.isArray(b?.bookings) ? b.bookings : []);
-      setChannels(Array.isArray(ch?.channels) ? ch.channels : []);
+      if (w.standing === 'ready') setIdentity(w.value);
+      if (c.standing === 'ready') setClients(c.value);
+      if (b.standing === 'ready') setBookings(b.value);
+      if (ch.standing === 'ready') setChannels(ch.value);
+      setChannelsUnavailable(ch.standing !== 'ready');
+      setPracticeStanding(practiceHomeStanding(w, c, b));
       setLoading(false);
     })();
   }, []);
@@ -134,6 +151,10 @@ export default function StudioHome() {
         <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
       </div>
     );
+  }
+
+  if (practiceStanding !== 'ready') {
+    return <PracticeHomeLoadNotice standing={practiceStanding} onRetry={() => window.location.reload()} />;
   }
 
   const firstName = (identity?.name || '').trim().split(/\s+/)[0] || 'there';
@@ -166,6 +187,11 @@ export default function StudioHome() {
   return (
     <div className="min-h-screen bg-[#1a1a2e] p-6">
       <div className="max-w-6xl mx-auto space-y-6">
+        {channelsUnavailable && (
+          <p role="status" className="rounded-lg border border-slate-700/70 px-4 py-3 text-sm text-slate-300">
+            Community information is unavailable right now. Your practice records are shown separately.
+          </p>
+        )}
 
         {/* ── MAIA greeting — a presence, not a chat icon ── */}
         <div className="flex items-start gap-4">
