@@ -18,6 +18,7 @@ import { fetchStructure, refusalCopy as structureRefusalCopy, type StructureNode
 import RebuildWritingBoundary from './RebuildWritingBoundary';
 import RebuildAuthoredBody from './RebuildAuthoredBody';
 import GoldLine from '../insight/GoldLine';
+import WorkInspiration from '../insight/WorkInspiration';
 import MaiaListen from '../insight/MaiaListen';
 import InlineWorkspace from '../insight/InlineWorkspace';
 import ManuscriptPassage, { type EditAction, type MarkedEdit } from '../insight/ManuscriptPassage';
@@ -421,6 +422,11 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
   const writingRef = useRef<SectionWriting | null>(null);
   const sectionRefs = useRef(new Map<string, HTMLElement>());
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
+  useEffect(() => {
+    const refresh = () => { void reloadWorks(); };
+    window.addEventListener('ws-work-purpose-changed', refresh);
+    return () => window.removeEventListener('ws-work-purpose-changed', refresh);
+  }, [reloadWorks]);
   const { sources } = useStudioSources();
 
   const load = useCallback(async () => {
@@ -1690,6 +1696,18 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
             <div style={{ fontSize: 11, color: C.quiet, padding: '4px 6px' }}>Reading the book structure…</div>
           )}
 
+          {work && (
+            <div data-living-compass style={{ marginTop: 18, padding: '8px 6px', borderTop: `1px solid ${C.soft}`, fontSize: 12 }}>
+              <WorkInspiration manuscriptId={context.manuscriptId} onBringToQuestion={statement => {
+                const reminder = 'Work inspiration and intention:\n' + statement;
+                if (passageTab === 'suggest') {
+                  setEditorialDraft(previous => [previous, reminder].filter(Boolean).join('\n\n'));
+                } else {
+                  setMaiaAsk(previous => [previous, reminder].filter(Boolean).join('\n\n'));
+                }
+              }} />
+            </div>
+          )}
           {work && (
             <div data-work-materials style={{ marginTop: 22, paddingTop: 16, borderTop: `1px solid ${C.soft}` }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, padding: '0 6px 8px' }}>

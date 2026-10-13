@@ -116,9 +116,17 @@ function profileLabel(profile: string | null): string {
   return profile || '6 × 9 in · no bleed';
 }
 
-export default function P4R1ProducePanel({ manuscriptId, onClose }: {
+/**
+ * A book-publishing preview for the small beta. File exports are OFF unless
+ * explicitly enabled by a separately certified caller. This is a presentation
+ * boundary, not server entitlement: the existing member-owned render API keeps
+ * its independent authorization and production consumers.
+ */
+export default function P4R1ProducePanel({ manuscriptId, onClose, exportsCertified = false }: {
   manuscriptId: string;
   onClose: () => void;
+  /** Only after PDF/EPUB end-to-end acceptance at the exact release build. */
+  exportsCertified?: boolean;
 }) {
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const [preflight, setPreflight] = useState<Preflight | null>(null);
@@ -162,7 +170,7 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
   }, [load]);
 
   const make = useCallback(async (format: 'pdf' | 'epub') => {
-    if (!preflight?.ready || making) return;
+    if (!exportsCertified || !preflight?.ready || making) return;
     setMaking(format);
     setMessage(null);
     try {
@@ -203,7 +211,7 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
     } finally {
       setMaking(null);
     }
-  }, [making, manuscriptId, preflight, target.short]);
+  }, [exportsCertified, making, manuscriptId, preflight, target.short]);
 
   const renderedPageCount = artifact?.format === 'pdf' && artifact.pageCount
     ? Number.parseInt(artifact.pageCount, 10)
@@ -216,10 +224,16 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
     <section className="p4r1-produce p4r1-publish" data-produce-panel data-publish-panel>
       <header>
         <div>
-          <span className="p4r1-eyebrow">Publish</span>
-          <h3>Prepare an edition of your book.</h3>
+          <span className="p4r1-eyebrow">Publish · {exportsCertified ? 'Book preparation' : 'Beta preview'}</span>
+          <h3>Explore where this Work could go.</h3>
           <p className="p4r1-publish-lede">
-            Choose where this Work may go. Studio prepares the edition; you decide when, where, and with whom it is published.
+            Choose a possible publishing path, inspect preliminary book requirements, and see what your Work may still need.
+            Book editions are our first publishing form; other kinds of writing will receive their own pathways.
+          </p>
+          <p className="p4r1-publish-beta-state" data-publish-availability={exportsCertified ? 'exports-enabled' : 'preview-only'}>
+            {exportsCertified
+              ? 'File preparation is available in this certified environment. You still decide whether and where to submit your Work.'
+              : 'This is a preview. PDF and EPUB downloads are still being verified, and no publishing or submission occurs here.'}
           </p>
         </div>
         <button type="button" className="p4r1-produce-close" onClick={onClose}>Close</button>
@@ -245,8 +259,8 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
               </div>
               <p>
                 {preflight.sourceAuthority === 'working_draft'
-                  ? 'This edition will use the writing currently held in Writer’s Studio.'
-                  : 'There is no section-addressable working draft, so this edition will use the current manuscript source.'}
+                  ? 'Your current working draft is the source identified for a possible edition.'
+                  : 'No section-addressable working draft was found. This preview reads the current manuscript source.'}
               </p>
               <details className="p4r1-produce-details">
                 <summary>Source and production details</summary>
@@ -316,14 +330,14 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
 
             {(target.id === 'kdp-paperback' || target.id === 'kdp-hardcover') ? (
               <div className="p4r1-publish-preflight">
-                <b>Current KDP interior profile</b>
+                <b>Planned KDP interior profile · not a KDP approval</b>
                 <ul>
-                  <li data-state="ready">6 × 9 interior geometry</li>
-                  <li data-state="ready">Mirrored print margins</li>
-                  <li data-state="ready">Embedded production typography</li>
-                  <li data-state="ready">Page proof and page numbering</li>
-                  <li data-state="open">Paper/color choice is made in KDP</li>
-                  <li data-state="open">{target.id === 'kdp-paperback' ? 'Paperback cover' : 'Hardcover case-wrap cover'} still needs its own production file</li>
+                  <li data-state="planned">Target: 6 × 9 interior geometry</li>
+                  <li data-state="planned">Target: mirrored print margins</li>
+                  <li data-state="planned">Target: embedded production typography</li>
+                  <li data-state="open">Generated pages, fonts and numbering still require proofing</li>
+                  <li data-state="open">Paper and color choices are made separately in KDP</li>
+                  <li data-state="open">{target.id === 'kdp-paperback' ? 'Paperback cover' : 'Hardcover case-wrap cover'} requires a separate production file</li>
                 </ul>
               </div>
             ) : null}
@@ -377,23 +391,33 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
             <>
               <section className="p4r1-produce-step p4r1-produce-ready">
                 <span className="p4r1-eyebrow">4 · Interior readiness</span>
-                <h4>The current writing can be made into this edition’s book file.</h4>
-                <p>Current preflight found no production blocker in the manuscript structure it checks.</p>
+                <h4>No structural blockers found in these preliminary checks.</h4>
+                <p>This checks the manuscript structure available today. It does not certify the final PDF or EPUB, proof the pages, or establish retailer acceptance.</p>
               </section>
 
               <section className="p4r1-produce-step p4r1-produce-make">
-                <span className="p4r1-eyebrow">5 · Create the edition file</span>
+                <span className="p4r1-eyebrow">5 · Edition files</span>
+                {!exportsCertified ? (
+                  <>
+                    <h4>File downloads are awaiting final verification.</h4>
+                    <p>Here is what will become possible. These controls are intentionally unavailable during the preview; exploring Publish does not change your writing.</p>
+                  </>
+                ) : null}
                 <div className="p4r1-produce-actions">
                   {(target.format === 'pdf' || target.format === 'both') ? (
-                    <button type="button" disabled={Boolean(making)} onClick={() => void make('pdf')}>
-                      <b>{making === 'pdf' ? 'Preparing interior PDF…' : target.id.startsWith('kdp-') ? 'Create KDP interior PDF' : 'Create print interior PDF'}</b>
-                      <span>6 × 9 fixed-layout interior · no bleed · ready for page proof and compatible print workflows.</span>
+                    <button type="button" disabled={!exportsCertified || Boolean(making)}
+                      data-publish-export={exportsCertified ? 'enabled' : 'held'}
+                      onClick={() => void make('pdf')}>
+                      <b>{!exportsCertified ? 'Interior PDF · in verification' : making === 'pdf' ? 'Preparing interior PDF…' : target.id.startsWith('kdp-') ? 'Create KDP interior PDF' : 'Create print interior PDF'}</b>
+                      <span>6 × 9 fixed-layout interior · no bleed · page proof required before submission.</span>
                     </button>
                   ) : null}
                   {(target.format === 'epub' || target.format === 'both') ? (
-                    <button type="button" disabled={Boolean(making)} onClick={() => void make('epub')}>
-                      <b>{making === 'epub' ? 'Preparing EPUB…' : 'Create EPUB'}</b>
-                      <span>Reflowable EPUB3 for Kindle-compatible and other ebook workflows.</span>
+                    <button type="button" disabled={!exportsCertified || Boolean(making)}
+                      data-publish-export={exportsCertified ? 'enabled' : 'held'}
+                      onClick={() => void make('epub')}>
+                      <b>{!exportsCertified ? 'EPUB3 · in verification' : making === 'epub' ? 'Preparing EPUB…' : 'Create EPUB'}</b>
+                      <span>Reflowable EPUB3 · reading-device proof required before submission.</span>
                     </button>
                   ) : null}
                 </div>
@@ -512,21 +536,33 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
               <section className="p4r1-produce-step p4r1-produce-next">
                 <span className="p4r1-eyebrow">{paperbackCover || (artifact?.format === 'pdf' && target.id === 'kdp-hardcover') ? '8' : artifact ? '7' : '6'} · What happens next</span>
                 <ol>
-                  <li><b>Proof the edition.</b><span>Read the rendered pages as a reader will encounter them.</span></li>
-                  <li><b>Prepare the cover separately.</b><span>Trim, page count, binding, and paper choice inform the final cover/spine geometry.</span></li>
+                  {!exportsCertified ? (
+                    <>
+                      <li><b>Keep developing the Work.</b><span>Use Write, Develop and Review to refine what the reader will receive.</span></li>
+                      <li><b>Consider the publication path.</b><span>Use these preliminary requirements to plan the edition, cover and intended readers.</span></li>
+                      <li><b>Return for export when verified.</b><span>Once file preparation is certified, generate and proof an edition before submitting it anywhere.</span></li>
+                    </>
+                  ) : (
+                    <>
+                      <li><b>Proof the edition.</b><span>Read the rendered pages as a reader will encounter them.</span></li>
+                      <li><b>Prepare the cover separately.</b><span>Trim, page count, binding, and paper choice inform the final cover/spine geometry.</span></li>
+                    </>
+                  )}
                   {target.id === 'soullab-press' ? (
                     <li><b>Choose whether to approach Soullab Press.</b><span>The Press pathway begins only if you explicitly choose it.</span></li>
-                  ) : (
-                    <li><b>Upload when you decide it is ready.</b><span>Studio prepares the file. Submission to the publisher or retailer remains your act.</span></li>
-                  )}
+                  ) : exportsCertified ? (
+                    <li><b>Submit only when ready.</b><span>Studio prepares the file; submission to the publisher or retailer remains your act.</span></li>
+                  ) : null}
                 </ol>
               </section>
             </>
           )}
 
           <p className="p4r1-produce-boundary">
-            {preflight.publicationBoundary} Choosing Soullab Press here expresses interest only; it is not acceptance,
-            a publishing agreement, or transfer of rights.
+            {exportsCertified
+              ? preflight.publicationBoundary
+              : 'This preview makes no publication file and submits nothing.'}
+            {' '}Exploring Soullab Press here is not an application, acceptance, publishing agreement, or transfer of rights.
           </p>
         </>
       ) : null}

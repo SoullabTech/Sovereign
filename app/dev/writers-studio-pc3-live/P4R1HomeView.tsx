@@ -81,7 +81,10 @@ function WorkAnchor({ work, manuscripts, activity, onOpen, onStartWriting, busy,
   const [producing, setProducing] = useState(produceInitially);
 
   useEffect(() => {
-    if (produceInitially) setProducing(true);
+    // The URL owns whether Publish is the active top-level place. Keep the
+    // existing contextual button free to open/close locally, but when the
+    // route moves into or out of ?publish=1 the panel must follow both ways.
+    setProducing(produceInitially);
   }, [produceInitially]);
   const facts = workFacts(work, manuscripts);
   const title = work.title?.trim() || 'Untitled Work';
@@ -118,7 +121,7 @@ function WorkAnchor({ work, manuscripts, activity, onOpen, onStartWriting, busy,
                   aria-expanded={producing}
                   onClick={() => setProducing((value) => !value)}
                 >
-                  Publish
+                  Publish · Preview
                 </button>
               </div>
               {producing ? (

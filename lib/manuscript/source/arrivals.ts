@@ -1,5 +1,5 @@
 import { query } from '@/lib/db/postgres';
-import { readVaultBytes, writeVaultBytes } from '@/lib/storage/fileVault';
+import { readVaultBytes, writeDurableVaultBytes } from '@/lib/storage/fileVault';
 import {
   ARTIFACT_EXTRACTION,
   artifactExt,
@@ -48,7 +48,7 @@ export async function recordArtifactArrival(params: {
 }): Promise<StoredArrival> {
   const artifactHash = hashBytes(params.bytes);
   const fileId = `${Date.now().toString(36)}-${artifactHash.slice(0, 16)}`;
-  const artifactRef = await writeVaultBytes(
+  const artifactRef = await writeDurableVaultBytes(
     VAULT_NAMESPACE,
     fileId,
     artifactExt(params.originalFilename),

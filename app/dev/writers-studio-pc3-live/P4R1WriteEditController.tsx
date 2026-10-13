@@ -20,6 +20,7 @@ import {
 } from '@/app/writers-studio/canvasIdentity';
 import RebuildWritingBoundary from '@/app/writers-studio/rebuild/RebuildWritingBoundary';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
+import { firstChapterPastBareCover } from '@/lib/writersStudio/firstOpenCoverR1';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { locationForSection, replacePlaceAddress, resolveInitialSection, SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
 import {
@@ -267,9 +268,13 @@ export default function FlagshipWriteEditController() {
         return;
       }
       setContext(body);
-      const place = resolveInitialSection(requestedSection, body.sections.map((s) => s.draftSectionId));
+      // When an imported Work starts with a bare cover line immediately before
+      // an explicit Chapter 1, open the first real passage. Preserve any exact
+      // writer-selected place, and keep the cover accessible from the rail.
+      const coverCrossing = firstChapterPastBareCover(body.sections, requestedSection);
+      const place = resolveInitialSection(requestedSection ?? coverCrossing, body.sections.map((s) => s.draftSectionId));
       setFocusId(place.sectionId);
-      if (place.rewriteLocation && typeof window !== 'undefined') {
+      if ((place.rewriteLocation || coverCrossing) && typeof window !== 'undefined') {
         replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, place.sectionId));
       }
       setPhase('ready');
