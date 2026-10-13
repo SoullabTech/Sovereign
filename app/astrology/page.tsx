@@ -39,6 +39,7 @@ import { BirthDataForm } from '@/components/astrology/BirthDataForm';
 import { useBirthChart } from '@/lib/hooks/useBirthChart';
 import type { AlienPattern } from '@/lib/astrology/alienPatterns';
 import { OracleConversation } from '@/components/OracleConversation';
+import { CurrentTransitsField } from '@/components/astrology/CurrentTransitsField';
 import styles from './astrology-room.module.css';
 
 // Elemental colors for planet insights
@@ -975,6 +976,8 @@ export default function AstrologyPage() {
             ) : null}
           </div>
         </section>
+
+        <CurrentTransitsField birthChart={chartData} variant="astrology" />
 
         {maiaOpen && memberId ? (
           <section className={styles.maiaEncounter} aria-label="Explore this chart with MAIA">

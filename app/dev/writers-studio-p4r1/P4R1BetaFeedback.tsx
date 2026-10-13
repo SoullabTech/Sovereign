@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { BETA_FEEDBACK_LABEL, BETA_FEEDBACK_SIGNALS, type BetaFeedbackSignal } from '@/lib/writersStudio/betaFeedback';
 import { sendBetaFeedback } from '@/lib/writersStudio/betaFeedbackClient';
-import type { UnifiedStudioMode } from './P4R1StudioHost';
+import type { UnifiedStudioMode } from './studioMode';
 import { apiFetch } from '@/lib/http/apiBase';
 
 export default function P4R1BetaFeedback({ mode }: { mode: UnifiedStudioMode }) {
@@ -55,7 +55,11 @@ export default function P4R1BetaFeedback({ mode }: { mode: UnifiedStudioMode }) 
     const result = await sendBetaFeedback({
       ...(params?.get('m') ? { manuscriptId: params.get('m')! } : {}),
       signal,
-      studioMode: mode,
+      // The existing beta-evidence schema predates Listen and constrains
+      // studio_mode to Home/Write/Develop/Review. Do not mislabel a Listen
+      // observation; keep the legacy mode null until that schema is deliberately
+      // widened in its own migration.
+      studioMode: mode === 'listen' ? undefined : mode,
       orientationContext: context,
       ...(note.trim() ? { note: note.trim() } : {}),
     });

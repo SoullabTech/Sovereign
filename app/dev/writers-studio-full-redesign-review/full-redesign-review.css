@@ -641,7 +641,8 @@
 .fr-write-editor p[data-write-block='epigraph'] { margin: 2px 0 42px; padding-left: 26px; border-left: 1px solid var(--fr-line); font-style: italic; font-size: .94em; line-height: 1.72; color: var(--fr-ink2); }
 .fr-write-editor p[data-write-block='subhead'] { margin: 48px 0 20px; font-size: 1.18em; line-height: 1.28; font-weight: 600; color: var(--fr-title); }
 .fr-write-editor p[data-write-block='list'] { white-space: pre-line; margin: 8px 0 30px; padding-left: 18px; }
-.fr-write-editor p[data-write-block='folio'] { margin: 14px 0 28px; text-align: center; font-family: var(--fr-sans-stack); font-size: 11px; letter-spacing: .12em; color: var(--fr-ink2); opacity: .45; }
+/* Prose View suppresses print/PDF folios. They remain in the canonical source and typesetting block model; they are simply not manuscript prose. */
+.fr-write-editor p[data-write-block='folio'] { display: none; }
 .fr-write-editor p[data-held] { padding: 7px 14px; border-radius: 4px; background: var(--fr-held-passage); color: var(--fr-action-deep); }
 .fr-write-editor ::selection { background: color-mix(in srgb, var(--fr-action) 20%, transparent); }
 .fr-write-editor p[data-held]::selection { background: color-mix(in srgb, var(--fr-action) 11%, transparent); }

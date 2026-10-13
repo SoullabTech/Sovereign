@@ -43,8 +43,10 @@ describe('Writer Studio immediate manuscript-selection support', () => {
     expect(developController).toContain("kind: 'section'");
   });
 
-  it('replaces the generic overview with immediate selected-place support', () => {
-    expect(developView).toContain('setRailSelectionId(sectionId);');
+  it('uses the relational locus overlay for subsections but lets chapter roots reveal chapter review', () => {
+    expect(developView).toContain('const selectsChapterRoot = chapter?.root.draftSectionId === sectionId');
+    expect(developView).toContain('setRailSelectionId(selectsChapterRoot ? null : sectionId)');
+    expect(developView).toContain('ChapterReviewPanel own it');
     expect(developView).toContain('data-develop-locus=');
     expect(developView).toContain('Chapter selected');
     expect(developView).toContain('Section selected');

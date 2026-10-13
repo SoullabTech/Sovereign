@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { isCabinOrigin, cabinReturnPath } from '@/lib/cabin/doorway';
 import { appearanceVars, geometryVars } from './tokens';
 import { PRIMARY_MODES, type Appearance, type ShellGeometry, type StudioMode } from './types';
@@ -48,6 +48,29 @@ export type ShellProps = {
 export function Shell(props: ShellProps) {
   const { mode, appearance, geometry } = props;
   const searchParams = useSearchParams();
+  const currentPathname = usePathname();
+  const listeningRoute = currentPathname === '/writers-studio' && searchParams?.get('mode') === 'listen';
+  const publishingRoute = currentPathname === '/writers-studio' && searchParams?.get('publish') === '1';
+  const listenHref = currentPathname === '/writers-studio' && searchParams?.get('m')
+    ? '/writers-studio?' + (() => {
+        const next = new URLSearchParams(searchParams.toString());
+        next.set('mode', 'listen');
+        next.delete('publish');
+        return next.toString();
+      })()
+    : null;
+  const publishHref = currentPathname === '/writers-studio' && searchParams?.get('m')
+    ? '/writers-studio?' + (() => {
+        const next = new URLSearchParams(searchParams.toString());
+        next.set('mode', 'home');
+        next.set('publish', '1');
+        next.delete('developField');
+        next.delete('r');
+        next.delete('reviewRun');
+        next.delete('reviewFinding');
+        return next.toString();
+      })()
+    : null;
   const fromCabin = isCabinOrigin(searchParams);
   const oneRoom = props.manuscript === undefined && props.maia === undefined;
   const canvas = props.canvas === true;
@@ -79,13 +102,24 @@ export function Shell(props: ShellProps) {
                 key={m.id}
                 type="button"
                 className="fr-nav-item"
-                aria-current={m.id === mode ? 'page' : undefined}
+                aria-current={m.id === mode && !listeningRoute && !publishingRoute ? 'page' : undefined}
                 data-mode={m.id}
                 onClick={() => props.onSelectMode?.(m.id)}
               >
                 {m.label}
               </button>
             ))}
+            {listenHref ? listeningRoute
+              ? <span className="fr-nav-item" data-writers-listen-entry aria-current="page" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>Listen</span>
+              : <a className="fr-nav-item" href={listenHref} data-writers-listen-entry style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', whiteSpace: 'nowrap' }}>Listen</a>
+              : null}
+            {currentPathname === '/writers-studio'
+              ? publishHref
+                ? publishingRoute
+                  ? <span className="fr-nav-item" data-writers-publish-entry aria-current="page" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>Publish</span>
+                  : <a className="fr-nav-item" href={publishHref} data-writers-publish-entry style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', whiteSpace: 'nowrap' }}>Publish</a>
+                : <span className="fr-nav-item" data-writers-publish-entry aria-disabled="true" title="Open a Work to prepare it for publishing." style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap', opacity: 0.52, cursor: 'default' }}>Publish</span>
+              : null}
           </nav>
           {props.workTitle !== undefined ? (
             <div className="fr-workpick" aria-label="Current Work">

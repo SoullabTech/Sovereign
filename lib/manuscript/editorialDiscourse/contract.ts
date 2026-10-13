@@ -789,6 +789,24 @@ export function editorialToolSchemaForKinds(
   return schema;
 }
 
+/**
+ * ⭐⭐ `refersTo` NAMES A DURABLE ROW, SO IT MUST BE SHAPED LIKE ONE.
+ *
+ * ⛔ `'V1'` and `'The passage under discussion'` are not identifiers — they are a
+ * label and a sentence. A Direction admitted carrying either asserts a reference
+ * to a formulation that no row can be found by, and *a reference nothing can
+ * resolve is not a reference the author made.*
+ *
+ * ⭐ ANCHORED AND CASE-INSENSITIVE BY ENUMERATION rather than by a flag, so
+ * `.source` below is the schema's `pattern` VERBATIM — the declared shape and
+ * the enforced shape are one string and cannot drift.
+ *
+ * ⭐ `null` STAYS LAWFUL AND UNTOUCHED. `pattern` constrains strings only; the
+ * absence of a reference is still the absence of a reference.
+ */
+const REFERS_TO_UUID =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 export const editorialToolSchema: Record<string, unknown> = {
   type: 'object',
   additionalProperties: false,
@@ -815,7 +833,9 @@ export const editorialToolSchema: Record<string, unknown> = {
         instruction: { type: 'string', description: 'The instruction, in your words.' },
         refersTo: {
           type: ['string', 'null'],
-          description: 'An earlier formulation this instruction is about, by id. '
+          pattern: REFERS_TO_UUID.source,
+          description: 'An earlier formulation this instruction is about, by id — '
+            + 'the exact identifier that formulation arrived with. '
             + 'null when you are not referring to one.',
         },
       },
@@ -1051,10 +1071,17 @@ export function admitEditorialToolInput(input: unknown): OutcomeAdmission {
       return { ok: false, reason: 'malformed' };
     }
     /* ⛔ ABSENT AND `null` ARE THE SAME THING HERE, and both mean *no reference*
-       — never "choose one". A non-string, non-null value is malformed. */
+       — never "choose one". A non-string, non-null value is malformed.
+
+       ⛔⛔ AND A PRESENT REFERENCE MUST BE AN IDENTIFIER. Any non-null value that
+       is not canonical UUID text is MALFORMED — refused, never narrowed to `null`.
+       Narrowing would silently convert *"this instruction is about V1"* into
+       *"this instruction is about nothing"*, which is the system quietly editing
+       an authored relationship rather than refusing a sentence it cannot resolve.
+       ⭐ `null` is unchanged: a reference nobody made is still no reference. */
     const refersTo = d.refersTo === undefined || d.refersTo === null
       ? null
-      : typeof d.refersTo === 'string' && d.refersTo.length > 0
+      : typeof d.refersTo === 'string' && REFERS_TO_UUID.test(d.refersTo)
         ? d.refersTo
         : undefined;
     if (refersTo === undefined) return { ok: false, reason: 'malformed' };

@@ -39,7 +39,7 @@ import type { ReaderIdentity } from '../structure/readerProvenance';
 
 /** A2 — the editorial question a reading is commissioned under. Exactly one. */
 export const DEVELOPMENTAL_LENSES = [
-  'structure', 'development', 'continuity', 'arc', 'themes', 'voice', 'coherence', 'reader',
+  'overview', 'structure', 'development', 'continuity', 'arc', 'themes', 'voice', 'coherence', 'reader',
 ] as const;
 export type DevelopmentalLens = (typeof DEVELOPMENTAL_LENSES)[number];
 
@@ -58,6 +58,7 @@ export function isDevelopmentalLens(v: unknown): v is DevelopmentalLens {
  * is required.
  */
 export const LENS_MEANING: Readonly<Record<DevelopmentalLens, string>> = {
+  overview: 'Read this chapter as a whole. What is it trying to do? What is already working and worth protecting? Where is the most useful friction or uncertainty? What deserves the writer’s attention first? Stay descriptive and evidence-bound; do not grade, rewrite, or turn an impression into a verdict.',
   structure: 'Does this belong here? Does the sequence work? What is missing? What repeats?',
   development: 'Which ideas are underdeveloped · sufficiently developed · overexplained · introduced too late · abandoned · repeated without advancing?',
   continuity: 'Prospective language where later has already happened. Requires chronology across the Work, not phrase search.',

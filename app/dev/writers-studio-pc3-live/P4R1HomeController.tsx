@@ -46,6 +46,7 @@ export default function P4R1HomeController() {
   const resumeManuscriptId = arrival.resume ? manuscriptIdOf(arrival.resume) : null;
   const resumeActivity = useSectionActivity(resumeManuscriptId);
   const returnManuscriptId = params?.get('m') ?? null;
+  const publishRequested = params?.get('publish') === '1';
   const returnActivity = useSectionActivity(returnManuscriptId);
 
   const [busy, setBusy] = useState(false);
@@ -76,6 +77,7 @@ export default function P4R1HomeController() {
     const next = new URLSearchParams(params?.toString() ?? '');
     next.set('mode', 'write');
     next.set('m', manuscriptId);
+    next.delete('publish');
     next.delete('developField');
     next.delete('r');
     next.delete('reviewRun');
@@ -98,6 +100,7 @@ export default function P4R1HomeController() {
     const next = new URLSearchParams(params?.toString() ?? '');
     next.set('mode', mode);
     next.set('m', manuscriptId);
+    next.delete('publish');
     if (mode !== 'develop') {
       next.delete('developField');
       next.delete('r');
@@ -112,6 +115,11 @@ export default function P4R1HomeController() {
   const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
     if (mode === 'home') {
       setPendingMode(null);
+      if (publishRequested) {
+        const next = new URLSearchParams(params?.toString() ?? '');
+        next.delete('publish');
+        router.push(pathname + (next.size ? '?' + next.toString() : ''));
+      }
       return;
     }
     const target = modeEntryTarget(arrival.resume ?? null, manuscripts);
@@ -121,7 +129,7 @@ export default function P4R1HomeController() {
       return;
     }
     setPendingMode(target.kind === 'choose' ? { mode, manuscriptIds: target.manuscriptIds } : null);
-  }, [arrival.resume, manuscripts, navigateMode]);
+  }, [arrival.resume, manuscripts, navigateMode, params, pathname, publishRequested, router]);
 
   const onChooseManuscript = useCallback((mode: 'write' | 'develop' | 'review', manuscriptId: string) => {
     setPendingMode(null);
@@ -269,6 +277,7 @@ export default function P4R1HomeController() {
       historyActs={historyActs}
       busy={busy}
       error={error}
+      publishRequested={publishRequested}
       pendingMode={pendingMode}
       onMode={onMode}
       onChooseManuscript={onChooseManuscript}

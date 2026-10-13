@@ -7,6 +7,7 @@ surfaces:
   - app/house/DecisionAccessNotice.tsx
   - app/house/MaiaThresholdLink.tsx
   - app/house/PassingThrough.tsx
+  - components/astrology/CurrentTransitsField.tsx
 change_class: experiential
 principles:
   - INHABITABLE_ARCHITECTURE_STANDARD — the House is a place of arrival and orientation, not a capability inventory
@@ -50,3 +51,7 @@ A room may be discoverable before a member has access to its underlying product 
 ## Reconciliation standing
 
 CANONICAL-RECONCILIATION-01 changes only the Experience Contract registry and evidence. The accepted House source remains byte-for-byte the frozen candidate.
+
+## Current sky orientation
+
+The House may show a compact current-transits field as one expression of "what is alive now." It remains orientation, not interpretation: the field names calculated sky positions, uses weather-not-fate language, and returns the member to Astrology for any deeper chart-specific inquiry. The House does not infer natal effects or tell the member what the moment means.

@@ -5,6 +5,7 @@ surfaces:
   - app/astrology/page.tsx
   - app/astrology/layout.tsx
   - components/astrology/BirthChartCalculator.tsx
+  - components/astrology/CurrentTransitsField.tsx
 change_class: experiential
 principles:
   - INHABITABLE_ARCHITECTURE_STANDARD — Astrology is a room for inquiry through a chart, not a dashboard of placements
@@ -231,3 +232,6 @@ The first implementation act should be:
 > **ASTROLOGY-UX-02 — HOUSE-ALIGNED ROOM SHELL + WHOLE-CHART ORIENTATION ONLY**
 
 That act should replace the starfield/dashboard arrival with an inhabited Astrology room, make the chart itself primary, render the Big Three as calculated facts rather than identity claims, preserve all existing lower-detail capabilities, and stop before MAIA chart conversation or new interpretive generation.
+## Present-moment field
+
+Current transits belong near the Astrology threshold because they describe the moving sky now, not a fixed identity. The room keeps three layers distinct: current planetary positions are calculated sky facts; natal activations appear only when a transit-to-natal aspect has actually been calculated; symbolic or human meaning remains provisional and belongs to inquiry. The same compact field may appear in the House as orientation to the moment, but the House does not interpret those transits for the member.

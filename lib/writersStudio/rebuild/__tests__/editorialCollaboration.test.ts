@@ -9,6 +9,7 @@ import {
   changedSpan,
   exactVersion,
   readBoundEditorialThread,
+  returnLocusText,
   sendBoundEditorialTurn,
   threadMatchesVisibleSection,
   type RebuildEditorialThread,
@@ -62,6 +63,23 @@ describe('revision collaboration binding', () => {
     const t = thread();
     expect(exactVersion(t, 'v1')?.wording).toBe('suggested wording');
     expect(exactVersion(t, 'missing')).toBeNull();
+  });
+
+  it('uses the exact applied wording only while that durable application remains undoable', () => {
+    const applied: RebuildEditorialThread = {
+      ...thread(),
+      application: {
+        authorizationId: 'auth-1', versionId: 'v1', resultingVersion: 2,
+        undone: false, canUndo: true,
+      },
+    };
+    expect(returnLocusText(applied)).toBe('suggested wording');
+    expect(returnLocusText({ ...applied, application: { ...applied.application!, canUndo: false } }))
+      .toBe('original wording');
+    expect(returnLocusText({ ...applied, application: { ...applied.application!, undone: true } }))
+      .toBe('original wording');
+    expect(returnLocusText({ ...applied, application: { ...applied.application!, versionId: 'missing' } }))
+      .toBe('original wording');
   });
 
   it('marks only the changed middle when prefix and suffix are shared', () => {

@@ -42,6 +42,12 @@ export const FOUNDER_NAV: FounderNavItem[] = [
     description: 'Beta testers and activation',
   },
   {
+    label: 'Doorway learning',
+    href: '/founder/constellation',
+    icon: Activity,
+    description: 'What people choose to tell us',
+  },
+  {
     label: 'Signals',
     href: '/founder/signals',
     icon: Activity,

@@ -11,6 +11,7 @@ import {
   fetchReadingSummaries,
   requestDevelopmentalReading,
 } from '@/lib/writersStudio/developClient';
+import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { LENS_ORDER } from '@/lib/writersStudio/developPresentation';
 import { findingsFromPayloads, type ReviewFailure, type ReviewFinding } from '@/lib/writersStudio/rebuild/chapterReview';
 
@@ -57,6 +58,7 @@ export async function runWholeManuscriptReview(
   manuscriptId: string,
   onProgress?: (done: number, total: number, lens: DevelopmentalLens) => void,
   resume?: WholeManuscriptResume,
+  scope: ReadingScope = { kind: 'whole' },
 ): Promise<WholeManuscriptReviewBundle> {
   const payloads: ReadingPayload[] = [];
   const readingIds: string[] = [];
@@ -81,7 +83,7 @@ export async function runWholeManuscriptReview(
     const commissioned = await requestDevelopmentalReading(
       manuscriptId,
       lens,
-      { kind: 'whole' },
+      scope,
     );
     if (!commissioned.ok) {
       const failure: ReviewFailure = {

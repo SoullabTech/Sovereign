@@ -86,8 +86,9 @@ export async function POST(
     return NextResponse.json({ error: 'readingIds_and_request_required' }, { status: 400 });
   }
   const readingIds = [...new Set(body.readingIds)];
-  if (readingIds.length !== DEVELOPMENTAL_LENSES.length) {
-    return NextResponse.json({ error: 'complete_eight_lens_set_required' }, { status: 409 });
+  const deepLenses = DEVELOPMENTAL_LENSES.filter((lens) => lens !== 'overview');
+  if (readingIds.length !== 1 && readingIds.length !== deepLenses.length) {
+    return NextResponse.json({ error: 'overview_or_complete_eight_lens_set_required' }, { status: 409 });
   }
 
   const current = await query<{ revision_number: number }>(
@@ -114,8 +115,11 @@ export async function POST(
   }
 
   const lenses = new Set(readings.map((r) => r.scope.commissionedLens));
-  if (DEVELOPMENTAL_LENSES.some((lens) => !lenses.has(lens))) {
-    return NextResponse.json({ error: 'complete_eight_lens_set_required' }, { status: 409 });
+  const overviewMode = readings.length === 1 && readings[0]!.scope.commissionedLens === 'overview';
+  const deepMode = readings.length === deepLenses.length
+    && deepLenses.every((lens) => lenses.has(lens));
+  if (!overviewMode && !deepMode) {
+    return NextResponse.json({ error: 'overview_or_complete_eight_lens_set_required' }, { status: 409 });
   }
   if (readings.some((r) => r.readState.revisionNumber !== revisionNumber)) {
     return NextResponse.json({ error: 'current_revision_moved' }, { status: 409 });
@@ -134,7 +138,7 @@ export async function POST(
     [manuscriptId, memberId],
   );
   const wholeScope = sectionRows.rows.map((row) => row.id);
-  if (JSON.stringify(readings[0]!.scope.bodyScope) !== JSON.stringify(wholeScope)) {
+  if (deepMode && JSON.stringify(readings[0]!.scope.bodyScope) !== JSON.stringify(wholeScope)) {
     return NextResponse.json({ error: 'whole_manuscript_scope_required' }, { status: 409 });
   }
 
@@ -178,7 +182,7 @@ export async function POST(
   const structured = await runStructured({
     model: MODEL,
     system: [
-      attentionSynthesisSystem(),
+      attentionSynthesisSystem(overviewMode ? 'overview' : 'deep'),
       authorContext
         ? [
             authorContext,

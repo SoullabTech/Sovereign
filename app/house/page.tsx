@@ -16,6 +16,7 @@ import { studioArrivalFromHouse } from '@/app/writers-studio/situatedWork';
 import { canUseHouseStudioH1 } from '@/lib/access/houseStudioH1Access';
 import { houseWritingHref } from '@/app/writers-studio/h1Arrival';
 import { houseWriterStudioHref } from '@/lib/house/houseCabinContext';
+import { CurrentTransitsField } from '@/components/astrology/CurrentTransitsField';
 
 async function memberForHouse() {
   if (process.env.MAIA_CABIN_MODE === 'offline') {
@@ -141,6 +142,8 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
           <h1>Welcome home,<br />{firstName}.</h1>
           <h2>Many paths. A deeper you.</h2>
         </div>
+
+        <CurrentTransitsField variant="house" />
 
         <aside className={styles.presence} aria-label="House presence">
           <blockquote>Not a place<br />to escape life,<br />but a way to meet it<br />more fully.</blockquote>

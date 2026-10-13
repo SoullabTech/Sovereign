@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import {
-  DEVELOPMENTAL_LENSES,
   isDevelopmentalLens,
   type DevelopmentalLens,
 } from '@/lib/manuscript/developmentalReader/contract';
+import { REVIEW_DEVELOPMENTAL_LENSES } from '@/lib/writersStudio/studio/wholeReview';
 
 export const dynamic = 'force-dynamic';
 
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (completed.has(f.lens)) return NextResponse.json({ refusal: 'lens_both_completed_and_failed' }, { status: 409 });
     completed.add(f.lens);
   }
-  if (completed.size !== DEVELOPMENTAL_LENSES.length || DEVELOPMENTAL_LENSES.some((lens) => !completed.has(lens))) {
+  if (completed.size !== REVIEW_DEVELOPMENTAL_LENSES.length || REVIEW_DEVELOPMENTAL_LENSES.some((lens) => !completed.has(lens))) {
     return NextResponse.json({ refusal: 'incomplete_lens_accounting' }, { status: 409 });
   }
 

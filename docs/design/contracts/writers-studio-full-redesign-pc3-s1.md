@@ -3,13 +3,20 @@
 room: Writer’s Studio — canonical Light Shell (PC3-S1)
 human_activity: a writer inhabiting one Work at different altitudes — the manuscript present at the left, the Work at the centre, MAIA in relation to both at the right — so that moving between Develop and Review never feels like changing products
 
-# Surfaces this contract governs. The founder-review route itself lives under
-# app/dev/** (outside this gate's scope); the reusable shell is what a member
-# will eventually inhabit, so it is contracted here.
+# Surfaces this contract governs. The reusable shell remains the composition
+# authority; PROOF-VIEW-01 additionally names the current P4R1 Review projection
+# because the page witness is now a real member-facing act inside that shell.
 surfaces:
   - app/writers-studio/full-redesign/*.tsx
   - app/writers-studio/full-redesign/**
   - app/writers-studio/atmosphere/StudioAtmosphere.tsx
+  # PROOF-VIEW-01 — current P4R1 Review may witness the same authoritative
+  # manuscript as physical pages without turning page presentation into a new
+  # reading, interpretation, or edit authority.
+  - app/dev/writers-studio-pc3-live/P4R1ReviewController.tsx
+  - app/dev/writers-studio-pc3-live/P4R1ProofView.tsx
+  - app/dev/writers-studio-p4r1/p4r1-live.css
+  - app/api/sovereign/manuscripts/[id]/render/route.ts
 
 change_class: experiential
 
@@ -23,6 +30,7 @@ principles:
   - PC1 VS-16 — no hidden grading; readiness, "Balanced" and relevance ranking are withheld even where a founder image shows them
   - PC1 VS-17 — no fake global destinations; the primary spine is Home · Write · Develop · Review only
   - PC1 VS-19 — the founder original is the visual comparator; the candidate never cites its own previous render
+  - PROOF-VIEW-01 — canonical text remains the semantic source; a rendered page is a physical-reading witness of that same source, never a second manuscript, developmental lens, edit authority, or permission for MAIA to infer from pixels
   - PC2 §II / §IX / §X — shared shell contract, PC3 reference-state matrix, visual fidelity law (control-room/writers-studio/PC2_MASTER_SCREEN_FUNCTION_CONTRACT_FINAL_2026-09-24.md)
   - NEGATIVE_VISUAL_EVIDENCE NV-01…NV-07 — old workbench, thin host, Office DIY, dark-rail authority, self-referential screenshots, green-but-wrong, beautiful-but-false are release-stopping
 
@@ -42,7 +50,7 @@ distinct_to_room: four regions in a fixed order — product bar, manuscript cont
 # ── Evidence ────────────────────────────────────────────────────────────────
 screenshot_desktop: docs/design/contracts/screenshots/full-redesign-pc3-s1/develop-themes-1536x1024.png
 screenshot_mobile: docs/design/contracts/screenshots/full-redesign-pc3-s1/develop-themes-390x844.png
-experience_verification: rendered in Chromium at the founder originals’ own viewport (1536×1024) and state for all three S1 states and compared side by side against each original (side-by-side-develop-themes.jpg · side-by-side-develop-manuscript.jpg · side-by-side-review-chapter.jpg); walked 1440 · 1280 · 1100 · 1024 to confirm MAIA stays beside the Work, and 390 to confirm the phone recomposition keeps the whole hero, the manuscript context and MAIA without loss; switched Light ↔ Night and confirmed only colour moved. Mechanical witness: scripts/writers-studio/pc3-s1-fidelity.mjs 55/55 GREEN from a clean server start and 55/55 at simulated platform text-shaping drift of ±0.3 px and ±0.6 px (PC3-S1R2), and 49/55 RED on the maia-drop mutant (the rejected preview’s defect). Atmosphere, elegance and whether it feels like Soullab are founder judgments and are NOT claimed here.
+experience_verification: rendered in Chromium at the founder originals’ own viewport (1536×1024) and state for all three S1 states and compared side by side against each original (side-by-side-develop-themes.jpg · side-by-side-develop-manuscript.jpg · side-by-side-review-chapter.jpg); walked 1440 · 1280 · 1100 · 1024 to confirm MAIA stays beside the Work, and 390 to confirm the phone recomposition keeps the whole hero, the manuscript context and MAIA without loss; switched Light ↔ Night and confirmed only colour moved. Mechanical witness: scripts/writers-studio/pc3-s1-fidelity.mjs 55/55 GREEN from a clean server start and 55/55 at simulated platform text-shaping drift of ±0.3 px and ±0.6 px (PC3-S1R2), and 49/55 RED on the maia-drop mutant (the rejected preview’s defect). PROOF-VIEW-01 live authenticated local witness, 2026-10-04, isolated port 3734 against the real Elemental Alchemy Work: Review exposed Review | Proof without requiring a current saved MAIA Review; preflight identified authoritative working-draft revision 25 with 262 sections and preserved one production question; the explicit Make proof act returned HTTP 200 as a 242-page hallmark-6x9-v1 PDF from source hash fa08e794b0d30cebd0e976263ac31437dc21452bf40e27c1c92d00061a084ed4; the PDF mounted inline and exposed source authority, revision, page count, section count and production profile; rendered bytes remained transient server-side. WS PROOF VIEW · PASS. This witness does NOT establish page-aware MAIA analysis or publication/KDP readiness. Atmosphere, elegance and whether it feels like Soullab are founder judgments and are NOT claimed here.
 
 # ── Departing from the founder image, under ratified law ───────────────────
 deviation: the Review state (#23) is rendered with the canonical product bar (Home · Write · Develop · Review, no Explore / Library / global Search), without the Readiness tab, with a lawful "4 Observations" tile in place of "Balanced · Pacing", and findings "In manuscript order" in place of "Most relevant"; hero lettering is part of the cropped founder imagery

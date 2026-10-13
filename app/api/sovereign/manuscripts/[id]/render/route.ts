@@ -160,6 +160,12 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         `attachment; filename="${name}.${format}"; ` +
         `filename*=UTF-8''${encodeURIComponent(`${title}.${format}`)}`,
       'Cache-Control': 'no-store',
+      'X-Soullab-Source-Hash': result.sourceHash,
+      'X-Soullab-Source-Authority': sourceAuthority,
+      'X-Soullab-Source-Revision': sourceRevision ?? '',
+      'X-Soullab-Section-Count': String(result.sectionCount),
+      'X-Soullab-Page-Count': String(result.pageCount ?? ''),
+      'X-Soullab-Production-Profile': result.productionProfile,
     },
   });
 }
