@@ -2,6 +2,7 @@
 room: Soullab public landing — Service First editorial R1
 human_activity: a visitor discovering whom Soullab is for and deciding whether to enter without being judged for usefulness
 surfaces:
+  - app/layout.tsx
   - components/landing/HeroSection.tsx
   - components/landing/PlatformSection.tsx
   - components/landing/MaiaSection.tsx
@@ -59,3 +60,10 @@ No navigation, API request, member authority, model instructions, memory, data-r
 ### Contrast correction — October 13 R1b
 
 Founder belief and explanatory copy in the dark landing Hero are now more legible: central descriptor text-white/75, service invitation text-white/75, and quiet trust line text-white/60. The original copy and CTA are unchanged. New synthetic browser assertions verify computed RGB channels for desktop and mobile; actual React screenshots were recaptured and reviewed. This does not substitute for real Next.js staging, full WCAG contrast calculation, or founder human visual acceptance.
+
+
+### Site metadata expression — October 13 R1c
+
+`app/layout.tsx` owns the shared Soullab site description, Open Graph description and Twitter description, all previously carrying a pre-Service First message. The narrow copy-only change gives all three the same founder-ratified self-and-world invitation, including the explicit prohibition on usefulness as a belonging test. `Soullab — We build for the soul`, OG imagery, routing, layout providers, MAIA behavior and underlying member entitlements are unchanged.
+
+**Shared layout risk:** metadata inherited by other routes is global. Human editorial review must confirm the message remains suitable across member and public routes that do not set their own descriptions. The public Home/body is still client-rendered in the initial static Next.js HTML; this metadata change improves server-readable previews but cannot be represented as a no-JavaScript landing-body repair. Actual Next.js 16 staging must verify all three generated meta descriptions, hydrated desktop/mobile hero content and contrast, and invited Reflect continuity. The old Experience Contract screenshots remain evidence for visual surfaces; the metadata is verified in rendered HTML head and source tests, not by a screenshot alone.

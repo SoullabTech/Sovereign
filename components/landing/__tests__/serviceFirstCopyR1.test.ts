@@ -6,6 +6,7 @@ const source = (relative: string) =>
 
 describe('Service First R1 — public and professional copy boundaries', () => {
   const canon = source('docs/canon/SOULLAB_LIVING_ORIENTATION_SYSTEM.md');
+  const layout = source('app/layout.tsx');
   const hero = source('components/landing/HeroSection.tsx');
   const platform = source('components/landing/PlatformSection.tsx');
   const maia = source('components/landing/MaiaSection.tsx');
@@ -17,6 +18,14 @@ describe('Service First R1 — public and professional copy boundaries', () => {
     expect(canon).toContain('Soullab supports those in service to self and world.');
     expect(canon).toContain('No one has to identify as “of service” to belong in Soullab.');
     expect(canon).toContain('MAIA may never assign a calling');
+  });
+
+  test('server-generated site, social and search descriptions carry the noncoercive purpose', () => {
+    expect(layout).toContain('const serviceFirstDescription = "Soullab supports those in service to self and world');
+    expect(layout).toContain('Service First. Not Self Last.');
+    expect(layout).toContain('No one must prove usefulness to belong.');
+    expect(layout.match(/description: serviceFirstDescription,/g)).toHaveLength(3);
+    expect(layout).toContain('title: "Soullab — We build for the soul"');
   });
 
   test('public arrival speaks to self and world while retaining one House entry', () => {

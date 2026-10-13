@@ -69,3 +69,9 @@ Reject copy that:
 ## Release standing
 
 This document, source copy changes and synthetic visual tests form **R1 editorial/implementation evidence**, not a public campaign or permission to merge. Founder editorial review and governed release checks must precede any website change. MAIA runtime, Ganesha substrate, professional data and subscriptions remain unchanged.
+
+## Site metadata and no-JavaScript boundary — R1c
+
+The root Next.js layout previously exposed the older platform description even while the updated landing message rendered after browser hydration. R1c aligns server-readable search and social-share descriptions to the ratified Service First purpose, including the assurance that nobody must prove usefulness to belong. Existing title, site identity, social imagery, entry gesture and routing remain unchanged. Because the metadata is attached to the shared root layout, human review should confirm it also fits routes that inherit the site-level description.
+
+The Next.js static homepage currently sends a client-rendered shell rather than the landing's full body text in raw HTML. Updating metadata does **not** cure that pre-existing no-JavaScript body-content limitation. Do not claim full no-JavaScript accessibility or indexable body copy without a separately scoped server-rendering repair. Rendered browser output and private Reflect gating must be tested against the final exact Next.js build.
