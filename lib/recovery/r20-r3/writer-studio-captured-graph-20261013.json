@@ -1,0 +1,438 @@
+{
+  "schema": "SOULLAB-R20-R3-CAPTURE-COVERAGE-V1",
+  "source": "synthetic_staging_schema_only",
+  "captureRoots": [
+    "member_manuscripts",
+    "living_works"
+  ],
+  "tables": [
+    {
+      "table": "ask_authorization_acts",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "ask_authorization_consumptions",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "ask_threads",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "ask_turns",
+      "primaryKey": [
+        {
+          "column": "thread_id",
+          "pgType": "uuid"
+        },
+        {
+          "column": "turn_index",
+          "pgType": "int4"
+        }
+      ]
+    },
+    {
+      "table": "developmental_finding_evidence",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "developmental_findings",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "developmental_observation_standing_events",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "developmental_readings",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "developmental_review_passes",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "developmental_reviews",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "editorial_turn_bindings",
+      "primaryKey": [
+        {
+          "column": "thread_id",
+          "pgType": "uuid"
+        },
+        {
+          "column": "turn_index",
+          "pgType": "int4"
+        }
+      ]
+    },
+    {
+      "table": "living_work_expressions",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "living_work_material_considerations",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "living_work_materials",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "living_work_visuals",
+      "primaryKey": [
+        {
+          "column": "living_work_id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "living_work_writer_understanding",
+      "primaryKey": [
+        {
+          "column": "living_work_id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "living_works",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "manuscript_collection_items",
+      "primaryKey": [
+        {
+          "column": "collection_id",
+          "pgType": "uuid"
+        },
+        {
+          "column": "keep_id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "manuscript_collections",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "manuscript_draft_sections",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "manuscript_keeps",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "manuscript_renders",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "manuscript_revision_offers",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "manuscript_sections",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "manuscript_source_arrivals",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "manuscript_structure_members",
+      "primaryKey": [
+        {
+          "column": "unit_id",
+          "pgType": "uuid"
+        },
+        {
+          "column": "draft_section_id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "manuscript_structure_proposals",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "manuscript_structure_units",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "manuscript_working_drafts",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "member_manuscripts",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "studio_companion_turns",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "working_draft_revisions",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "writer_editorial_relationship_episodes",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "writer_editorial_relationships",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "writer_studio_chapter_review_runs",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "writer_studio_completion_checks",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "writer_studio_corrections",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "writer_studio_place_returns",
+      "primaryKey": [
+        {
+          "column": "member_id",
+          "pgType": "uuid"
+        },
+        {
+          "column": "living_work_id",
+          "pgType": "uuid"
+        },
+        {
+          "column": "manuscript_id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "writer_studio_relationship_returns",
+      "primaryKey": [
+        {
+          "column": "member_id",
+          "pgType": "uuid"
+        },
+        {
+          "column": "living_work_id",
+          "pgType": "uuid"
+        },
+        {
+          "column": "manuscript_id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "writer_studio_work_directive_events",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "int8"
+        }
+      ]
+    },
+    {
+      "table": "writer_studio_work_directives",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "writer_studio_work_theme_events",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "int8"
+        }
+      ]
+    },
+    {
+      "table": "writer_studio_work_theme_occurrences",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    },
+    {
+      "table": "writer_studio_work_themes",
+      "primaryKey": [
+        {
+          "column": "id",
+          "pgType": "uuid"
+        }
+      ]
+    }
+  ]
+}
