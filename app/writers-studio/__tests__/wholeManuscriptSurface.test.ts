@@ -67,7 +67,24 @@ describe('the rail mounts before it scrolls', () => {
   it('never scrolls to a node that does not exist yet', () => {
     const layout = block(SRC, 'useLayoutEffect(', 'setPendingScroll(null);');
     expect(layout).toMatch(/if \(!node\) return;/);
-    expect(layout.indexOf('if (!node) return;')).toBeLessThan(layout.indexOf('scrollIntoView'));
+    expect(layout.indexOf('if (!node) return;')).toBeLessThan(layout.indexOf('viewport.scrollTop = node.offsetTop;'));
+    expect(layout).toContain('const viewport = scroller.current;');
+    expect(layout).toContain('if (!viewport) return;');
+  });
+});
+
+describe('return-to-Work never pushes the outer page and Studio header away', () => {
+  it('scrolls only its own positioned manuscript scroller, never browser ancestors', () => {
+    const layout = block(SRC, 'useLayoutEffect(', 'setPendingScroll(null);');
+    expect(layout).toContain('viewport.scrollTop = node.offsetTop;');
+    expect(layout).not.toMatch(/\.scrollIntoView\(/);
+    expect(layout).not.toMatch(/window\.scrollTo\(/);
+    expect(layout).not.toMatch(/document\.(documentElement|body)\.scroll/);
+  });
+
+  it('keeps the inner manuscript scroller positioned for section offset coordinates', () => {
+    expect(SRC).toContain("style={{ position: 'relative', height: '100%', overflowY: 'auto' }}");
+    expect(SRC).toContain('data-whole-manuscript');
   });
 });
 
@@ -191,6 +208,15 @@ describe('the structural guarantees the view may not quietly drop', () => {
 
   it('edits through the per-section path, so section identity is kept', () => {
     expect(SRC).toMatch(/writing\.editSection\(section\.id, e\.target\.value\)/);
+  });
+
+  it('shows the entire editable section instead of clipping trailing saved paragraphs', () => {
+    expect(SRC).toContain('sizeTextareaToContent(n)');
+    expect(SRC).toContain('sizeTextareaToContent(e.currentTarget)');
+    expect(SRC).toContain('new ResizeObserver(refit)');
+    expect(SRC).toContain('rows={Math.max(3, body.split(');
+    expect(SRC).toContain('.length, Math.ceil(body.length / 70))}');
+    expect(SRC).toContain('writing.captureForUnmount(section.id, field.value)');
   });
 });
 
