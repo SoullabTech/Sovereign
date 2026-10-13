@@ -28,10 +28,13 @@ export function HomeAccountGate({destination='home'}:{destination?:'home'|'house
   const sequence=useRef(0);
   const requestRef=useRef<AbortController|null>(null);
   const channelRef=useRef<BroadcastChannel|null>(null);
+  const hasOpenedRef=useRef(false);
+  const revalidatingRef=useRef(false);
 
   const close=useCallback((conflict:boolean)=>{
     sequence.current += 1;
     requestRef.current?.abort();
+    hasOpenedRef.current=false;revalidatingRef.current=false;
     setView(null); setPending(null); verifiedRef.current=null;
     setStatus('unavailable');
     if(conflict) window.location.replace('/account/conflict');
@@ -57,7 +60,10 @@ export function HomeAccountGate({destination='home'}:{destination?:'home'|'house
       if(!response.ok) throw Error('SESSION_UNAVAILABLE');
       const payload=await response.json() as {authenticated?:boolean;member?:{id?:string;onboarded?:boolean}};
       if(payload.authenticated!==true || payload.member?.onboarded!==true ||
-          payload.member.id!==id) throw Error('SESSION_CHANGED');
+          payload.member.id!==id){
+        if(aliveRef.current) close(true);
+        return;
+      }
       const state=assessBrowserAccount(localStorage,id);
       if(state==='conflict' || state==='unverifiable' || (state==='empty' && !allowEmpty)) {
         if(aliveRef.current) close(true);
@@ -69,11 +75,6 @@ export function HomeAccountGate({destination='home'}:{destination?:'home'|'house
         storage:localStorage,version:2,
       });
       if(!hydrated || !activateAccountScope(localStorage,id)) throw Error('CACHE_RECONCILE_FAILED');
-      if (typeof BroadcastChannel !== 'undefined') {
-        const announcement=new BroadcastChannel(ACCOUNT_CHANNEL);
-        announcement.postMessage({kind:'account-verified'});
-        announcement.close();
-      }
       if(!aliveRef.current || ticket!==sequence.current || controller.signal.aborted) return;
       const result=await fetch('/api/auth/home-view',{
         method:'POST',credentials:'same-origin',cache:'no-store',signal:controller.signal,
@@ -83,6 +84,17 @@ export function HomeAccountGate({destination='home'}:{destination?:'home'|'house
       if(!result.ok) throw Error('PRIVATE_VIEW_UNAVAILABLE');
       const data:unknown=await result.json();
       if(!isHomeViewPayload(data,id)) throw Error('PRIVATE_VIEW_INVALID');
+      // A valid response might have begun under A and completed after the
+      // HttpOnly cookie changed to B. Re-query server identity before mounting.
+      const lastSession=await fetch('/api/members/session',{
+        credentials:'same-origin',cache:'no-store',signal:controller.signal,
+      });
+      if(!lastSession.ok) throw Error('SESSION_REVALIDATION_FAILED');
+      const latest=await lastSession.json() as {authenticated?:boolean;member?:{id?:string}};
+      if(latest.authenticated!==true || latest.member?.id!==id){
+        if(aliveRef.current) close(true);
+        return;
+      }
       // Re-check AFTER the private fetch. An A->B switch in any tab must win.
       if(assessBrowserAccount(localStorage,id)!=='aligned' ||
           !accountScopeAgrees(localStorage,id)){
@@ -91,11 +103,14 @@ export function HomeAccountGate({destination='home'}:{destination?:'home'|'house
       }
       if(!aliveRef.current || ticket!==sequence.current || controller.signal.aborted) return;
       verifiedRef.current=id;
+      hasOpenedRef.current=true;
       setPending(null);setView(data);setStatus('open');
     }catch{
       if(aliveRef.current && ticket===sequence.current && !controller.signal.aborted){
         setView(null);setStatus('unavailable');
       }
+    }finally{
+      revalidatingRef.current=false;
     }
   },[close,destination]);
 
@@ -136,14 +151,34 @@ export function HomeAccountGate({destination='home'}:{destination?:'home'|'house
         checkCurrent();
       }
     };
-    const onFocus=()=>checkCurrent();
+    // Losing visibility immediately conceals private content. Re-entering a
+    // tab, even when localStorage has not changed, must verify the SERVER
+    // cookie again. A cookie change does not produce a storage event.
+    const onResume=()=>{
+      // A blank browser is still awaiting the member's Continue gesture;
+      // focus and pageshow must not silently convert that into a denial.
+      const id=verifiedRef.current;
+      if(!id || !hasOpenedRef.current || revalidatingRef.current) return;
+      if(assessBrowserAccount(localStorage,id)!=='aligned' || !accountScopeAgrees(localStorage,id)){
+        close(true);return;
+      }
+      revalidatingRef.current=true;
+      setView(null);setStatus('checking');
+      void open(id,false);
+    };
+    const onFocus=()=>onResume();
     const onPageHide=()=>{setView(null);requestRef.current?.abort();};
-    const onMessage=()=>checkCurrent();
+    const onMessage=()=>onResume();
+    const onVisibility=()=>{
+      if(document.visibilityState!=='visible'){
+        setView(null);setStatus('checking');requestRef.current?.abort();
+      }else onResume();
+    };
     window.addEventListener('storage',changed);
     window.addEventListener('focus',onFocus);
     window.addEventListener('pageshow',onFocus);
     window.addEventListener('pagehide',onPageHide);
-    document.addEventListener('visibilitychange',onFocus);
+    document.addEventListener('visibilitychange',onVisibility);
     if(typeof BroadcastChannel!=='undefined'){
       channelRef.current=new BroadcastChannel(ACCOUNT_CHANNEL);
       channelRef.current.addEventListener('message',onMessage);
@@ -156,7 +191,7 @@ export function HomeAccountGate({destination='home'}:{destination?:'home'|'house
       window.removeEventListener('focus',onFocus);
       window.removeEventListener('pageshow',onFocus);
       window.removeEventListener('pagehide',onPageHide);
-      document.removeEventListener('visibilitychange',onFocus);
+      document.removeEventListener('visibilitychange',onVisibility);
       channelRef.current?.removeEventListener('message',onMessage);
       channelRef.current?.close();channelRef.current=null;
     };

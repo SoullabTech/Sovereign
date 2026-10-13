@@ -34,9 +34,10 @@ describe('R5 House/MAIA shared-browser source invariants',()=>{
   });
   it('Sign-in protects silent resume and explicit credential flows',()=>{
     expect(SIGNIN).toContain('assessBrowserAccount(localStorage, d.memberId)');
-    expect(SIGNIN).toContain('const boundary = assessBrowserAccount(localStorage, user.id)');
+    expect(SIGNIN).toContain('await assessFreshSignInAdmission({store:localStorage,memberId:user.id');
     expect(SIGNIN).toContain("window.location.replace('/account/conflict')");
     expect(SIGNIN).toContain('activateAccountScope(localStorage,user.id)');
+    expect(SIGNIN).toContain('data.member && await storeSession(data.member)');
   });
   it('House hides private content on tab-account switch and uses scoped storage',()=>{
     expect(GATE).toContain("window.addEventListener('storage',changed)");

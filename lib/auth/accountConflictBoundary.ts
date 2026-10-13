@@ -16,13 +16,14 @@ export function isVerifiedUuid(value: unknown): value is string {
   return typeof value === 'string' && UUID.test(value);
 }
 
-export function assessBrowserAccount(
+function assessWithSignoutPolicy(
   store: LocalAccountStore,
   verifiedServerId: unknown,
+  honorSignoutLatch: boolean,
 ): AccountBoundaryState {
   if (!isVerifiedUuid(verifiedServerId)) return 'unverifiable';
   try {
-    if (store.getItem('maia_signed_out') === '1') return 'conflict';
+    if (honorSignoutLatch && store.getItem('maia_signed_out') === '1') return 'conflict';
     const recordedIds: unknown[] = [];
     for (const key of ['memberId', 'explorerId', ACCOUNT_ACTIVE_KEY]) {
       const value = store.getItem(key);
@@ -66,4 +67,24 @@ export function assessBrowserAccount(
   } catch {
     return 'unverifiable';
   }
+}
+
+/**
+ * Automatic entry, background resume and API reads ALWAYS honor sign-out.
+ */
+export function assessBrowserAccount(store:LocalAccountStore, verifiedServerId:unknown):AccountBoundaryState {
+  return assessWithSignoutPolicy(store,verifiedServerId,true);
+}
+
+/**
+ * Only after an explicit credential ceremony AND an independent live-session
+ * check for the exact same member can sign-in examine the preserved cache
+ * without treating the earlier voluntary sign-out latch as a foreign owner.
+ * A DIFFERENT member or unscopeable old data is still refused, unchanged.
+ * Never use this function from passive auto-resume, MAIA, Home or House.
+ */
+export function assessFreshVerifiedSignInBrowserAccount(
+  store:LocalAccountStore, verifiedServerId:unknown,
+):AccountBoundaryState {
+  return assessWithSignoutPolicy(store,verifiedServerId,false);
 }
