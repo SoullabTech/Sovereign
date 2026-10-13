@@ -71,8 +71,7 @@ describe('C4 Review finding → Focus continuity', () => {
     expect(reviewHost).toContain('REVIEW_DEVELOPMENTAL_LENSES,');
     expect(flagshipReview).toContain('REVIEW_DEVELOPMENTAL_LENSES,');
     expect(chapterReviewRoute).toContain("import { REVIEW_DEVELOPMENTAL_LENSES }");
-    expect(chapterReviewRoute).toContain('completed.size !== REVIEW_DEVELOPMENTAL_LENSES.length');
-    expect(chapterReviewRoute).toContain('REVIEW_DEVELOPMENTAL_LENSES.some((lens) => !completed.has(lens))');
+    expect(chapterReviewRoute).toContain('isCompleteChapterReviewAccounting(completed, REVIEW_DEVELOPMENTAL_LENSES)');
     expect(reviewHost).toContain("next.set('reviewRun', kept.run.id)");
     expect(reviewHost).toContain('What is working now');
     expect(reviewHost).toContain('What still catches');
