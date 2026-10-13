@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDescriptClient } from '@/lib/descript/client';
 import { query } from '@/lib/db/postgres';
+import { requireFounder } from '@/lib/founder/founderAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,13 @@ export const dynamic = 'force-dynamic';
  * Create a Descript import URL for a recording
  */
 export async function POST(request: NextRequest) {
+  // Legacy global integration: founder-only until independent per-practitioner
+  // credentials and permissions are designed. Generic /api/studio auth is insufficient.
+  const auth = await requireFounder();
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
   try {
     const body = await request.json();
     const { projectName, fileUrl, fileName, mimeType } = body;
