@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 export async function generateStaticParams() { return []; }
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireProfessionalContext } from '@/lib/auth/requireProfessionalContext';
 import { getClient } from '@/lib/stellium/clients';
 import { calculateBirthChart, BirthData } from '@/lib/astrology/ephemerisCalculator';
 import { calculateCurrentTransits, findTransitAspects } from '@/lib/astrology/transitCalculator';
@@ -53,15 +54,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { clientId } = await params;
     const searchParams = request.nextUrl.searchParams;
-    const practitionerId = searchParams.get('practitionerId');
+    const claimedPractitionerId = searchParams.get('practitionerId');
     const includeTransits = searchParams.get('includeTransits') === 'true';
-
-    if (!practitionerId) {
-      return NextResponse.json(
-        { error: 'Practitioner ID required' },
-        { status: 400 }
-      );
-    }
+    const auth = await requireProfessionalContext(request, claimedPractitionerId || undefined);
+    if (!auth.ok) return auth.response;
+    const practitionerId = auth.context.practitionerId;
 
     // Get client
     const client = await getClient(practitionerId, clientId);

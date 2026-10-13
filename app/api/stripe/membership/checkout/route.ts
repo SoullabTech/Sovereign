@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripe, isStripeConfigured } from '@/lib/stripe/config';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import type Stripe from 'stripe';
 
 export const dynamic = 'force-dynamic';
@@ -60,15 +61,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // G1: Stripe subscription metadata MUST carry the authenticated actor.
+    // A request-body memberId is an untrusted assertion, not grant authority.
+    // Fail before any paid Stripe operation if it disagrees with session.
+    const verifiedMemberId = await getMemberIdFromRequest(request);
+    if (!verifiedMemberId) {
+      return NextResponse.json(
+        { success: false, error: 'Sign in required' }, { status: 401 });
+    }
+
     const body: MembershipCheckoutRequest = await request.json();
     const {
       tier,
       interval = 'month',
-      memberId,
+      memberId: claimedMemberId,
       memberEmail,
       successUrl,
       cancelUrl,
     } = body;
+    if (claimedMemberId != null && claimedMemberId !== verifiedMemberId) {
+      return NextResponse.json(
+        { success: false, error: 'Account mismatch' }, { status: 403 });
+    }
+    if (memberEmail !== undefined || successUrl !== undefined || cancelUrl !== undefined) {
+      // A paid checkout should never send the member to arbitrary caller URLs
+      // or give the customer identity to a supplied unrelated email address.
+      return NextResponse.json(
+        { success: false, error: 'Checkout destination overrides are not accepted' },
+        { status: 400 });
+    }
+    const memberId = verifiedMemberId;
 
     // Validate tier
     if (!tier || !(tier in MEMBERSHIP_PRICING)) {
@@ -78,16 +100,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Require member ID for database linking
-    if (!memberId) {
+    if (interval !== 'month' && interval !== 'year') {
       return NextResponse.json(
-        { success: false, error: 'Member ID is required' },
-        { status: 400 }
-      );
+        { success: false, error: 'Invalid billing interval' }, { status: 400 });
     }
 
     const stripe = getStripe();
-    const origin = request.headers.get('origin') || 'http://localhost:3000';
+    // Use only operator-controlled return destinations in production. Incoming
+    // Origin and callback parameters are not redirect authority.
+    const origin = process.env.NODE_ENV === 'production'
+      ? 'https://soullab.life'
+      : new URL(process.env.NEXT_PUBLIC_BASE_URL || request.url).origin;
     const pricing = MEMBERSHIP_PRICING[tier];
     const isAnnual = interval === 'year';
     const amountInCents = isAnnual ? pricing.annual : pricing.monthly;
@@ -121,8 +144,8 @@ export async function POST(request: NextRequest) {
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
       line_items: [lineItem],
-      success_url: successUrl || `${origin}/maia/membership?success=true&tier=${tier}`,
-      cancel_url: cancelUrl || `${origin}/maia/membership?canceled=true`,
+      success_url: `${origin}/maia/membership?success=true&tier=${tier}`,
+      cancel_url: `${origin}/maia/membership?canceled=true`,
       metadata: {
         type: 'membership',
         tier,
@@ -137,12 +160,12 @@ export async function POST(request: NextRequest) {
         },
       },
       allow_promotion_codes: true,
-      ...(memberEmail && { customer_email: memberEmail }),
+      // No client-supplied customer_email. Stripe collects a billing address.
     };
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
-    console.log(`[Stripe Membership] Created checkout: ${session.id} for ${tier} (${interval}) member: ${memberId}`);
+    console.log('[Stripe Membership] Created authenticated checkout', { tier, interval });
 
     return NextResponse.json({
       success: true,

@@ -18,6 +18,7 @@ export async function generateStaticParams() { return []; }
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
+import { hasTeamRole } from '@/lib/auth/teamPermissions';
 
 const FIELDS = new Set(['important', 'attention', 'emerging']);
 const KINDS = new Set(['change', 'decision', 'note']);
@@ -44,6 +45,10 @@ export async function GET(request: NextRequest) {
     const { practitionerId } = identity;
 
     const teamId = request.nextUrl.searchParams.get('teamId') || null;
+    if (teamId && (!UUID_RE.test(teamId) ||
+        !(await hasTeamRole(identity.memberId, teamId, 'viewer')))) {
+      return NextResponse.json({ error: 'Team not found' }, { status: 403 });
+    }
     const includePersonal = request.nextUrl.searchParams.get('includePersonal') !== 'false';
     const scope = scopeFor(teamId, includePersonal);
 
@@ -96,7 +101,14 @@ export async function POST(request: NextRequest) {
     const kind = typeof payload?.kind === 'string' ? payload.kind : '';
     const refId = typeof payload?.refId === 'string' && payload.refId ? payload.refId : null;
     const label = typeof payload?.label === 'string' ? payload.label.trim() : '';
+    if (payload?.teamId != null &&
+        (typeof payload.teamId !== 'string' || !UUID_RE.test(payload.teamId))) {
+      return NextResponse.json({ error: 'Invalid team' }, { status: 400 });
+    }
     const teamId = typeof payload?.teamId === 'string' && payload.teamId ? payload.teamId : null;
+    if (teamId && !(await hasTeamRole(identity.memberId, teamId, 'member'))) {
+      return NextResponse.json({ error: 'Team not found' }, { status: 403 });
+    }
 
     if (!FIELDS.has(field)) return NextResponse.json({ error: 'Invalid field' }, { status: 400 });
     if (!KINDS.has(kind)) return NextResponse.json({ error: 'Invalid kind' }, { status: 400 });

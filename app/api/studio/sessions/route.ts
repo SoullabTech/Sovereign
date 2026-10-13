@@ -188,6 +188,14 @@ export async function POST(request: NextRequest) {
       notes += prep_notes;
     }
 
+    // G1 / B4: schema-valid IDs must not select another practitioner's client
+    // or service, and a forged ID must not cause a side-effect or notification.
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (typeof client_id !== 'string' || !uuidRe.test(client_id) ||
+        (service_id != null && (typeof service_id !== 'string' || !uuidRe.test(service_id)))) {
+      return NextResponse.json({ success: false, error: 'Invalid client or service' }, { status: 400 });
+    }
+
     // Resolve calendar disclosure: per-session → practitioner default → 'generic'
     let effectiveDisclosure = calendar_disclosure;
     if (!effectiveDisclosure) {
@@ -205,7 +213,15 @@ export async function POST(request: NextRequest) {
     const result = await db.query(
       `INSERT INTO sessions
         (practitioner_id, client_id, service_id, scheduled_start, scheduled_end, status, location_type, location_details, notes, calendar_disclosure, team_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::calendar_disclosure, $11)
+       SELECT $1, owned_client.id, $3, $4, $5, $6, $7, $8, $9, $10::calendar_disclosure, $11
+         FROM practitioner_clients owned_client
+        WHERE owned_client.id = $2
+          AND owned_client.practitioner_id = $1
+          AND ($3::uuid IS NULL OR EXISTS (
+              SELECT 1 FROM services owned_service
+               WHERE owned_service.id = $3::uuid
+                 AND owned_service.practitioner_id = $1
+          ))
        RETURNING *`,
       [
         practitionerId,
@@ -222,6 +238,14 @@ export async function POST(request: NextRequest) {
       ]
     );
 
+    // A foreign client/service results in zero inserted rows. No email/SMS or
+    // calendar side effects may occur without an owned, committed session.
+    if (!result.rows[0]) {
+      return NextResponse.json(
+        { success: false, error: 'Client or service not found' },
+        { status: 404 },
+      );
+    }
     const session = result.rows[0];
 
     // Get client details (used for both notification and calendar sync)
@@ -230,8 +254,8 @@ export async function POST(request: NextRequest) {
     let clientEmail: string | undefined;
     try {
       const clientResult = await db.query(
-        'SELECT name, email, phone FROM practitioner_clients WHERE id = $1',
-        [client_id]
+        'SELECT name, email, phone FROM practitioner_clients WHERE id = $1 AND practitioner_id = $2',
+        [client_id, practitionerId]
       );
       const client = clientResult.rows[0];
       clientName = client?.name;

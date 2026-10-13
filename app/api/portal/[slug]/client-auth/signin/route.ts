@@ -14,10 +14,10 @@ import { createClientSession } from '@/lib/auth/clientSession';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
     const body = await request.json().catch(() => ({}));
 
     const email = (body?.email || '').trim().toLowerCase();
@@ -36,11 +36,12 @@ export async function POST(
       `SELECT c.id, c.practitioner_id, c.portal_password_hash, c.name,
               p.slug as practitioner_slug
        FROM practitioner_clients c
-       LEFT JOIN practitioners p ON c.practitioner_id = p.id OR c.practitioner_id = p.member_id
+       JOIN practitioners p ON p.id = c.practitioner_id
        WHERE c.portal_email = $1
+         AND p.slug = $2 AND p.status = 'active'
          AND c.portal_claimed_at IS NOT NULL
        LIMIT 1`,
-      [email]
+      [email, slug]
     );
 
     const client = clientResult.rows[0];

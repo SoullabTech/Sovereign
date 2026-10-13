@@ -14,10 +14,10 @@ import { createClientSession } from '@/lib/auth/clientSession';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
     const body = await request.json().catch(() => ({}));
 
     const code = (body?.code || '').trim().toUpperCase();
@@ -65,12 +65,15 @@ export async function POST(
     // Find the invite
     const inviteResult = await query(
       `SELECT i.id, i.client_id, i.practitioner_id, i.status, i.expires_at,
-              p.slug as practitioner_slug
-       FROM client_invites i
-       LEFT JOIN practitioners p ON i.practitioner_id = p.id OR i.practitioner_id = p.member_id
-       WHERE i.code_hash = $1
-       LIMIT 1`,
-      [codeHash]
+              p.id AS canonical_practitioner_id, p.slug AS practitioner_slug
+         FROM client_invites i
+         JOIN practitioner_clients c ON c.id = i.client_id
+         JOIN practitioners p ON p.id = c.practitioner_id
+        WHERE i.code_hash = $1
+          AND p.slug = $2 AND p.status = 'active'
+          AND i.practitioner_id = p.member_id
+        LIMIT 1`,
+      [codeHash, slug]
     );
 
     const invite = inviteResult.rows[0];
@@ -118,7 +121,7 @@ export async function POST(
     const existingResult = await query(
       `SELECT id FROM practitioner_clients
        WHERE practitioner_id = $1 AND portal_email = $2 AND id != $3`,
-      [invite.practitioner_id, email, invite.client_id]
+      [invite.canonical_practitioner_id, email, invite.client_id]
     );
 
     if (existingResult.rows.length > 0) {
@@ -133,26 +136,33 @@ export async function POST(
 
     try {
       await transaction(async (client) => {
-        // Set portal credentials on client record
-        await client.query(
-          `UPDATE practitioner_clients
-           SET portal_email = $1,
-               portal_password_hash = $2,
-               portal_claimed_at = NOW()
-           WHERE id = $3`,
-          [email, pwHash, invite.client_id]
-        );
-
-        // Mark invite as claimed
-        await client.query(
+        // Only one concurrent claimant can consume a code; caller must own
+        // this exact portal/client. A failed conditional UPDATE rolls back
+        // both operations; no client credentials can be silently replaced.
+        const claimed = await client.query(
           `UPDATE client_invites
-           SET status = 'claimed',
-               claimed_at = NOW()
-           WHERE id = $1`,
-          [invite.id]
+              SET status = 'claimed', claimed_at = NOW()
+            WHERE id = $1 AND status = 'unused'
+              AND (expires_at IS NULL OR expires_at > NOW())
+            RETURNING id`,
+          [invite.id],
         );
+        if (claimed.rowCount !== 1) throw new Error('CLAIM_NOT_AVAILABLE');
+        const updated = await client.query(
+          `UPDATE practitioner_clients
+              SET portal_email = $1, portal_password_hash = $2,
+                  portal_claimed_at = NOW()
+            WHERE id = $3 AND practitioner_id = $4
+              AND portal_claimed_at IS NULL
+            RETURNING id`,
+          [email, pwHash, invite.client_id, invite.canonical_practitioner_id],
+        );
+        if (updated.rowCount !== 1) throw new Error('CLAIM_NOT_AVAILABLE');
       });
     } catch (txError: any) {
+      if (txError instanceof Error && txError.message === 'CLAIM_NOT_AVAILABLE') {
+        return NextResponse.json({ error: 'This invitation is no longer available' }, { status: 409 });
+      }
       // Handle unique constraint violation (race condition)
       if (txError?.code === '23505') {
         return NextResponse.json(
@@ -172,7 +182,7 @@ export async function POST(
     await createClientSession(res, {
       portalSlug: slug,
       clientId: invite.client_id,
-      practitionerId: invite.practitioner_id,
+      practitionerId: invite.canonical_practitioner_id,
     });
 
     return res;

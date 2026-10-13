@@ -11,6 +11,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireProfessionalContext } from '@/lib/auth/requireProfessionalContext';
 import { getSessionContext, storeMaiaPrep } from '@/lib/stellium/sessions';
 import { getPersonaContext, generatePersonaPrompt } from '@/lib/stellium/personas';
 import { MaiaSessionPrep } from '@/lib/stellium/types';
@@ -29,13 +30,13 @@ import { resolveClientDisplayName } from '@/lib/stellium/clients';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { practitionerId, sessionId, prepType = 'full' } = body;
+    const { practitionerId: claimedPractitionerId, sessionId, prepType = 'full' } = body;
+    const auth = await requireProfessionalContext(request, claimedPractitionerId);
+    if (!auth.ok) return auth.response;
+    const practitionerId = auth.context.practitionerId;
 
-    if (!practitionerId || !sessionId) {
-      return NextResponse.json(
-        { error: 'Practitioner ID and Session ID required' },
-        { status: 400 }
-      );
+    if (!sessionId) {
+      return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
     }
 
     // Get session context (includes client history, themes, previous notes)

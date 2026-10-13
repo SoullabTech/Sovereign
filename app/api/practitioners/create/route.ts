@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
 import { query, transaction } from '@/lib/db/postgres';
 import { v4 as uuid } from 'uuid';
 import { validateModuleSlugs } from '@/lib/studio/moduleDefinitions';
@@ -43,9 +44,18 @@ function isValidPortalType(t: string): t is PortalType {
  */
 export async function POST(request: NextRequest) {
   try {
+    // G1: the practitioner is always created for the verified actor, not for
+    // an arbitrary member UUID submitted by a different browser.
+    const actor = await deriveVerifiedAccess(request);
+    if (!actor.authenticated || !actor.memberId) {
+      return NextResponse.json({ error: 'Sign in required' }, { status: 401 });
+    }
+    if (actor.tier !== 'pro') {
+      return NextResponse.json({ error: 'Professional setup is not authorized' }, { status: 403 });
+    }
     const body: CreatePractitionerInput = await request.json();
     const {
-      memberId,
+      memberId: claimedMemberId,
       practiceName,
       slug,
       email,
@@ -53,6 +63,10 @@ export async function POST(request: NextRequest) {
       enabledModules,
       consultantProfile,
     } = body;
+    if (claimedMemberId != null && claimedMemberId !== actor.memberId) {
+      return NextResponse.json({ error: 'Account mismatch' }, { status: 403 });
+    }
+    const memberId = actor.memberId;
 
     // Validate required fields
     if (!memberId || !practiceName || !slug || !email) {
@@ -109,14 +123,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if member already has a practitioner record
-    const existingPractitioner = await query<{ id: string }>(
-      'SELECT id FROM practitioners WHERE member_id = $1',
+    const existingPractitioner = await query<{ id: string; portal_type: string; status: string }>(
+      'SELECT id, portal_type, status FROM practitioners WHERE member_id = $1',
       [memberId]
     );
 
     if (existingPractitioner.rows.length > 0) {
+      // Personal Studio's compatibility record is NOT professional standing.
+      // Preserve its stable ID and associated personal material; an authorized
+      // Personal→Pro transition needs a separately reviewed explicit workflow.
+      if (existingPractitioner.rows[0].portal_type === 'personal') {
+        return NextResponse.json({
+          error: 'Your Personal Studio is preserved. Professional setup requires a reviewed transition.',
+          state: 'personal_to_professional_transition_pending',
+        }, { status: 409 });
+      }
       return NextResponse.json(
-        { error: 'Member already has a practitioner account', practitionerId: existingPractitioner.rows[0].id },
+        { error: 'Professional identity already exists' },
         { status: 409 }
       );
     }

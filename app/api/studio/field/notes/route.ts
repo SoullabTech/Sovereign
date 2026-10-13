@@ -18,9 +18,11 @@ export async function generateStaticParams() { return []; }
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
+import { hasTeamRole } from '@/lib/auth/teamPermissions';
 
 const SECTIONS = new Set(['alive', 'asking', 'emerging', 'tending']);
 const MAX_BODY = 2000;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,8 +35,15 @@ export async function POST(request: NextRequest) {
     const payload = await request.json().catch(() => null);
     const section = typeof payload?.section === 'string' ? payload.section : '';
     const body = typeof payload?.body === 'string' ? payload.body.trim() : '';
+    if (payload?.teamId != null &&
+        (typeof payload.teamId !== 'string' || !UUID_RE.test(payload.teamId))) {
+      return NextResponse.json({ error: 'Invalid team' }, { status: 400 });
+    }
     const teamId =
       typeof payload?.teamId === 'string' && payload.teamId ? payload.teamId : null;
+    if (teamId && !(await hasTeamRole(identity.memberId, teamId, 'member'))) {
+      return NextResponse.json({ error: 'Team not found' }, { status: 403 });
+    }
 
     if (!SECTIONS.has(section)) {
       return NextResponse.json({ error: 'Invalid section' }, { status: 400 });

@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 
 interface CheckPractitionerInput {
@@ -28,14 +29,13 @@ interface PractitionerResult {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body: CheckPractitionerInput = await request.json();
-    const { memberId } = body;
-
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
-      return NextResponse.json(
-        { error: 'memberId is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Sign in required' }, { status: 401 });
+    }
+    const body: Partial<CheckPractitionerInput> = await request.json().catch(() => ({}));
+    if (body.memberId != null && body.memberId !== memberId) {
+      return NextResponse.json({ error: 'Account mismatch' }, { status: 403 });
     }
 
     // Check for existing practitioner

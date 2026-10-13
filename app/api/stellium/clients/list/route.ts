@@ -8,6 +8,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireProfessionalContext } from '@/lib/auth/requireProfessionalContext';
 import {
   getClients,
   createClient,
@@ -35,7 +36,13 @@ export async function GET(request: NextRequest) {
   }
   try {
     const searchParams = request.nextUrl.searchParams;
-    const practitionerId = searchParams.get('practitionerId');
+    const claimedPractitionerId = searchParams.get('practitionerId');
+    if (!claimedPractitionerId) {
+      return NextResponse.json({ error: 'Practitioner ID required' }, { status: 400 });
+    }
+    const auth = await requireProfessionalContext(request, claimedPractitionerId);
+    if (!auth.ok) return auth.response;
+    const practitionerId = auth.context.practitionerId;
 
     if (!practitionerId) {
       return NextResponse.json(
@@ -77,7 +84,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { practitionerId, ...clientData } = body;
+    const { practitionerId: claimedPractitionerId, ...clientData } = body;
+    if (!claimedPractitionerId) {
+      return NextResponse.json({ error: 'Practitioner ID required' }, { status: 400 });
+    }
+    const auth = await requireProfessionalContext(request, claimedPractitionerId);
+    if (!auth.ok) return auth.response;
+    const practitionerId = auth.context.practitionerId;
 
     if (!practitionerId) {
       return NextResponse.json(

@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function generateStaticParams() { return []; }
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireProfessionalContext } from '@/lib/auth/requireProfessionalContext';
 import {
   getSession,
   updateSession,
@@ -39,7 +40,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id: sessionId } = await params;
     const searchParams = request.nextUrl.searchParams;
-    const practitionerId = searchParams.get('practitionerId');
+    const claimedPractitionerId = searchParams.get('practitionerId');
+    const auth = await requireProfessionalContext(request, claimedPractitionerId || undefined);
+    if (!auth.ok) return auth.response;
+    const practitionerId = auth.context.practitionerId;
 
     if (!practitionerId) {
       return NextResponse.json(
@@ -93,7 +97,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { id: sessionId } = await params;
     const body = await request.json();
-    const { practitionerId, maiaPrep, markFollowUpSent: sendFollowUp, ...updateData } = body;
+    const { practitionerId: claimedPractitionerId, maiaPrep, markFollowUpSent: sendFollowUp, ...updateData } = body;
+    const auth = await requireProfessionalContext(request, claimedPractitionerId);
+    if (!auth.ok) return auth.response;
+    const practitionerId = auth.context.practitionerId;
 
     if (!practitionerId) {
       return NextResponse.json(
@@ -145,7 +152,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id: sessionId } = await params;
     const searchParams = request.nextUrl.searchParams;
-    const practitionerId = searchParams.get('practitionerId');
+    const claimedPractitionerId = searchParams.get('practitionerId');
+    const auth = await requireProfessionalContext(request, claimedPractitionerId || undefined);
+    if (!auth.ok) return auth.response;
+    const practitionerId = auth.context.practitionerId;
     const reason = searchParams.get('reason') || undefined;
 
     if (!practitionerId) {
