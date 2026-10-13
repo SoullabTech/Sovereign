@@ -49,3 +49,38 @@ in Edit with correct width, can edit then save/reopen, and that
 MAIA relationship unavailability does not silently modify text.
 Keep real member Source/production restore and Class A beta release
 held under existing privacy governance.
+
+## October 13 R3 follow-up — Studio header displaced after return-to-Work
+
+After entering a new fictional R3 SAVE CHECK sentence, the founder
+observed the upper Studio bar clipped above the Chrome viewport, leaving
+Home and other top-level navigation inaccessible. The synthetic database
+had already confirmed the sentence in both saved draft and working draft.
+
+Source investigation identified a separate scroll-ownership defect in the
+continuous whole-manuscript surface: on every initial/rail section jump, its
+useLayoutEffect called node.scrollIntoView with block=start. That
+browser API may scroll every scrollable ancestor, including the outside
+document. The observed displacement is consistent with that behavior,
+though the exact physical cause awaits corrected-image browser witness.
+
+This addition substitutes viewport.scrollTop = node.offsetTop after the
+target shell is mounted and the owned scroller.current exists. The shell
+is a direct child of the position:relative, overflowY:auto manuscript
+scroller, so its offset is in the intended scroll coordinate system.
+There are no window/document scrolling instructions. The virtualized
+mount-first/scroll-second sequencing, focus/history and source writes
+remain unchanged.
+
+Two new source-contract regression checks assert:
+- the rail or arrival target scroll uses the internal viewport only;
+- the browser's outer window and ancestors are not scrolled directly;
+- the inner scroller retains its own position:relative reference frame.
+
+Updated five focused Jest suites: 60/60 PASS. This is source-level
+evidence; an independent Chrome viewport test must verify the header
+stays visible through Home -> Return to Work -> Edit and optional
+chapter-rail navigation at the founder's normal window size.
+
+The prior test image on localhost:3795 is left intact pending that
+comparison. No public Soullab, live Work or real member Source changed.

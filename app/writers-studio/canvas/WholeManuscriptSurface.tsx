@@ -304,7 +304,14 @@ export const WholeManuscriptSurface = forwardRef<
     if (!pendingScroll) return;
     const node = shells.current.get(pendingScroll);
     if (!node) return; /* not mounted yet — the next commit will bring it */
-    node.scrollIntoView({ block: 'start' });
+    const viewport = scroller.current;
+    if (!viewport) return;
+    /* Scroll only the manuscript viewport. scrollIntoView() also scrolls the
+       outer document in Chrome on return-to-Work, pushing the Studio header
+       above the visible window and hiding Home/Write/Develop/Review. The
+       section shell is a direct child of this position:relative viewport, so
+       offsetTop is its own document coordinate, not a browser-page command. */
+    viewport.scrollTop = node.offsetTop;
     setPendingScroll(null);
   }, [pendingScroll, mounted]);
 
