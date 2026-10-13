@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -96,6 +96,8 @@ function SettingsContent() {
   const justConnectedGoogle = connected === 'google';
 
   const [activeSection, setActiveSection] = useState(isCalendarOnboarding || justConnectedGoogle ? 'integrations' : 'profile');
+  const [mobileSectionsOpen, setMobileSectionsOpen] = useState(false);
+  const mobileSectionsButtonRef = useRef<HTMLButtonElement>(null);
 
   // Owner gate for the Admin section. Best-effort UI check via /api/admin/auth;
   // the authoritative gate is server-side on the admin endpoints (founder/cto only).
@@ -138,6 +140,8 @@ function SettingsContent() {
   const [videoRoomUrl, setVideoRoomUrl] = useState('');
   const [videoRoomUrlSaving, setVideoRoomUrlSaving] = useState(false);
   const [videoRoomUrlSaved, setVideoRoomUrlSaved] = useState(false);
+  const [videoRoomUrlError, setVideoRoomUrlError] = useState<string | null>(null);
+  const [videoRoomUrlLoadError, setVideoRoomUrlLoadError] = useState(false);
 
   // Fetch Calendar statuses on mount
   useEffect(() => {
@@ -252,10 +256,13 @@ function SettingsContent() {
     const fetchVideoRoomUrl = async () => {
       try {
         const res = await apiFetch('/api/studio/settings?key=video_room_url');
+        if (!res.ok) throw new Error('Unable to verify saved video room');
         const data = await res.json();
         if (data?.value) setVideoRoomUrl(data.value);
+        setVideoRoomUrlLoadError(false);
       } catch {
-        // non-critical
+        // A missing read is not proof that the practitioner has no saved value.
+        setVideoRoomUrlLoadError(true);
       }
     };
     fetchVideoRoomUrl();
@@ -263,16 +270,24 @@ function SettingsContent() {
 
   const handleSaveVideoRoomUrl = async () => {
     setVideoRoomUrlSaving(true);
+    setVideoRoomUrlSaved(false);
+    setVideoRoomUrlError(null);
     try {
-      await apiFetch('/api/studio/settings', {
+      const response = await apiFetch('/api/studio/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: 'video_room_url', value: videoRoomUrl.trim() || null }),
       });
+      // apiFetch does not throw for non-2xx HTTP responses.
+      // A rejected authorization or missing migration must never display "Saved".
+      if (!response.ok) {
+        throw new Error(response.status === 400 ? 'Enter a valid HTTPS video room URL.' : 'Could not save. Please try again.');
+      }
       setVideoRoomUrlSaved(true);
       setTimeout(() => setVideoRoomUrlSaved(false), 2500);
     } catch (error) {
-      console.error('[Settings] Failed to save video room URL:', error);
+      setVideoRoomUrlError(error instanceof Error ? error.message : 'Could not save. Please try again.');
+      console.error('[Settings] Video room save was not confirmed');
     } finally {
       setVideoRoomUrlSaving(false);
     }
@@ -613,21 +628,48 @@ function SettingsContent() {
   ) as Record<ModuleCategory, typeof MODULE_DEFINITIONS>;
 
   return (
-    <div className="min-h-screen bg-slate-950 flex">
-      {/* Settings Sidebar */}
-      <div className="w-64 border-r border-slate-800 p-4">
-        <h1 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
+    <div className="min-h-screen bg-slate-950 flex flex-col md:flex-row min-w-0">
+      {/* Settings Sidebar: an accessible, compact navigation door on phones. */}
+      <aside className="w-full md:w-64 md:shrink-0 border-b md:border-b-0 md:border-r border-slate-800 p-4">
+        <h1 className="text-xl font-bold text-white flex items-center gap-2 mb-4 md:mb-6">
           <Settings className="w-5 h-5 text-slate-400" />
           Settings
         </h1>
 
-        <nav className="space-y-1">
+        <button
+          type="button"
+          ref={mobileSectionsButtonRef}
+          className="md:hidden w-full flex items-center justify-between rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-400"
+          aria-controls="studio-settings-sections"
+          aria-expanded={mobileSectionsOpen}
+          onClick={() => setMobileSectionsOpen(open => !open)}
+        >
+          <span>Section: {visibleSections.find(section => section.id === activeSection)?.label ?? 'Choose a section'}</span>
+          <span aria-hidden="true">{mobileSectionsOpen ? '−' : '+'}</span>
+        </button>
+        <nav
+          id="studio-settings-sections"
+          aria-label="Studio settings sections"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape' && mobileSectionsOpen) {
+              setMobileSectionsOpen(false);
+              mobileSectionsButtonRef.current?.focus();
+            }
+          }}
+          className={`${mobileSectionsOpen ? 'grid' : 'hidden'} grid-cols-2 gap-1 mt-3 md:mt-0 md:block md:space-y-1`}
+        >
           {visibleSections.map((section) => (
             <button
               key={section.id}
-              onClick={() => setActiveSection(section.id)}
+              type="button"
+              aria-current={activeSection === section.id ? 'page' : undefined}
+              onClick={() => {
+                setActiveSection(section.id);
+                if (mobileSectionsOpen) mobileSectionsButtonRef.current?.focus();
+                setMobileSectionsOpen(false);
+              }}
               className={`
-                w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
+                w-full min-w-0 text-left flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
                 ${activeSection === section.id
                   ? 'bg-teal-500/20 text-teal-400'
                   : 'text-slate-400 hover:bg-slate-800 hover:text-white'}
@@ -638,10 +680,20 @@ function SettingsContent() {
             </button>
           ))}
         </nav>
-      </div>
+      </aside>
 
-      {/* Settings Content */}
-      <div className="flex-1 p-8 max-w-3xl">
+      {/* Settings Content: content can shrink without clipping the member's controls. */}
+      <main className="w-full min-w-0 flex-1 p-4 sm:p-6 md:p-8 max-w-3xl">
+        {(['notifications', 'time-tracking', 'agents', 'appearance'] as string[]).includes(activeSection) && (
+          <div role="status" className="mb-5 rounded-lg border border-amber-600/40 bg-amber-950/20 px-4 py-3 text-sm text-amber-100">
+            <strong>Preview only.</strong> Controls in this section change the on-screen example, not your saved account settings. They reset when this page is reloaded.
+          </div>
+        )}
+        {activeSection === 'security' && (
+          <div id="studio-security-unavailable" role="status" className="mb-5 rounded-lg border border-amber-600/40 bg-amber-950/20 px-4 py-3 text-sm text-amber-100">
+            <strong>Security settings unavailable here.</strong> These examples are not connected to account protection. Use a verified account-security workflow for real changes.
+          </div>
+        )}
         {/* Onboarding Card */}
         {((isCalendarOnboarding && !googleStatus?.connected) || justConnectedGoogle) && (
           <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
@@ -1259,8 +1311,9 @@ function SettingsContent() {
                   type="number"
                   min="5"
                   max="120"
+                  disabled
+                  aria-describedby="studio-security-unavailable"
                   value={settings.sessionTimeout}
-                  onChange={(e) => updateSetting('sessionTimeout', parseInt(e.target.value))}
                   className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50"
                 />
               </div>
@@ -1271,7 +1324,9 @@ function SettingsContent() {
                   <div className="text-sm text-slate-400">Require confirmation for deletes and rejects</div>
                 </div>
                 <button
-                  onClick={() => updateSetting('requireConfirmation', !settings.requireConfirmation)}
+                  type="button"
+                  disabled
+                  aria-label="Confirm destructive actions — unavailable in this screen"
                   className={`
                     w-12 h-6 rounded-full transition-colors relative
                     ${settings.requireConfirmation ? 'bg-teal-500' : 'bg-slate-700'}
@@ -1289,12 +1344,9 @@ function SettingsContent() {
                   <Key className="w-4 h-4" />
                   <span className="font-medium">Change Password</span>
                 </div>
-                <p className="text-sm text-slate-400 mb-3">
-                  Update your password for enhanced security
+                <p className="text-sm text-slate-300">
+                  Password changes are not available from this Studio page. A verified account-security flow must be used before this control can be offered.
                 </p>
-                <button className="px-4 py-2 bg-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-500/30 transition-colors text-sm">
-                  Update Password
-                </button>
               </div>
             </div>
           </div>
@@ -1384,16 +1436,17 @@ function SettingsContent() {
                 </div>
               </div>
               <select
+                disabled
+                aria-describedby="studio-calendar-privacy-unavailable"
                 value={settings.calendar_disclosure_default || 'generic'}
-                onChange={(e) => updateSetting('calendar_disclosure_default', e.target.value)}
-                className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 opacity-80 cursor-not-allowed"
               >
                 <option value="busy_only">Busy only — no details visible</option>
                 <option value="generic">Generic — session type, no client name (recommended)</option>
                 <option value="full">Full details — client name and notes</option>
               </select>
-              <p className="text-xs text-slate-500 mt-2">
-                This default applies to all new sessions. You can override it per session.
+              <p id="studio-calendar-privacy-unavailable" className="text-xs text-amber-200 mt-2">
+                Example only — this page does not read or save your actual calendar disclosure preference. The control is disabled until practitioner-scoped privacy settings are verified.
               </p>
             </div>
 
@@ -1464,7 +1517,7 @@ function SettingsContent() {
 
             {/* Video Room URL */}
             <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
-              <div className="flex items-start gap-3 mb-3">
+              <div className="flex items-start min-w-0 gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-sky-500/20 flex items-center justify-center flex-shrink-0">
                   <Video className="w-5 h-5 text-sky-400" />
                 </div>
@@ -1476,13 +1529,13 @@ function SettingsContent() {
               <p className="text-xs text-slate-500 mb-3">
                 Use your preferred video room. Session Room will stay alongside it for notes, transcript, and preparation.
               </p>
-              <div className="flex gap-2">
+              <div className="flex min-w-0 flex-col sm:flex-row gap-2">
                 <input
                   type="url"
                   value={videoRoomUrl}
                   onChange={(e) => setVideoRoomUrl(e.target.value)}
                   placeholder="https://meet.google.com/xxx  or  https://zoom.us/j/..."
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-sky-500/50"
+                  className="min-w-0 w-full flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-sky-500/50"
                 />
                 <button
                   onClick={handleSaveVideoRoomUrl}
@@ -1499,6 +1552,12 @@ function SettingsContent() {
                   {videoRoomUrlSaved ? 'Saved' : 'Save'}
                 </button>
               </div>
+              {videoRoomUrlLoadError && (
+                <p role="status" className="mt-2 text-sm text-amber-200">Could not verify your saved video room. A blank field may not mean it is unset.</p>
+              )}
+              {videoRoomUrlError && (
+                <p role="alert" className="mt-2 text-sm text-amber-300">{videoRoomUrlError}</p>
+              )}
             </div>
 
             {/* Descript Integration */}
@@ -1536,19 +1595,11 @@ function SettingsContent() {
                   </div>
                   <div>
                     <div className="text-white font-medium">Camo Studio</div>
-                    <div className="flex items-center gap-2 text-sm text-teal-400">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Ready (uses system camera)
-                    </div>
+                    <div className="text-sm text-slate-400">Camera availability not checked</div>
                   </div>
                 </div>
 
-                <a
-                  href="/studio/camera"
-                  className="px-4 py-2 bg-teal-500/20 text-teal-400 rounded-lg hover:bg-teal-500/30 transition-colors text-sm"
-                >
-                  Open Camera
-                </a>
+                <span className="text-xs text-slate-400 rounded bg-slate-800 px-2 py-1">Not verified</span>
               </div>
 
               <p className="text-xs text-slate-500 mt-3">
@@ -1570,16 +1621,13 @@ function SettingsContent() {
                   </div>
                   <div>
                     <div className="text-white font-medium">Email (Resend)</div>
-                    <div className="flex items-center gap-2 text-sm text-teal-400">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Configured
-                    </div>
+                    <div className="text-sm text-slate-400">Delivery status not verified in Studio</div>
                   </div>
                 </div>
-                <span className="text-xs text-slate-500 px-2 py-1 bg-slate-800 rounded">Active</span>
+                <span className="text-xs text-slate-400 px-2 py-1 bg-slate-800 rounded">Unverified</span>
               </div>
               <p className="text-xs text-slate-500 mt-3">
-                Send session reminders and notifications via email.
+                Email notifications depend on a separately verified delivery configuration.
               </p>
             </div>
 
@@ -1650,6 +1698,10 @@ function SettingsContent() {
                         <Loader2 className="w-3 h-3 animate-spin" />
                         Checking...
                       </div>
+                    ) : whatsappStatus?.unauthorized ? (
+                      <div className="flex items-center gap-2 text-sm text-slate-400"><AlertCircle className="w-3 h-3" /> Not available to this account</div>
+                    ) : whatsappStatus?.unknown ? (
+                      <div className="flex items-center gap-2 text-sm text-slate-400"><AlertCircle className="w-3 h-3" /> Status unavailable</div>
                     ) : whatsappStatus?.configured ? (
                       <div className="flex items-center gap-2 text-sm text-teal-400">
                         <CheckCircle2 className="w-3 h-3" />
@@ -1663,7 +1715,7 @@ function SettingsContent() {
                     )}
                   </div>
                 </div>
-                {!whatsappLoading && !whatsappStatus?.configured && (
+                {!whatsappLoading && !whatsappStatus?.configured && !whatsappStatus?.unauthorized && !whatsappStatus?.unknown && (
                   <span className="text-xs text-slate-500">Enable in Twilio</span>
                 )}
               </div>
@@ -1688,6 +1740,10 @@ function SettingsContent() {
                         <Loader2 className="w-3 h-3 animate-spin" />
                         Checking...
                       </div>
+                    ) : telegramStatus?.unauthorized ? (
+                      <div className="flex items-center gap-2 text-sm text-slate-400"><AlertCircle className="w-3 h-3" /> Not available to this account</div>
+                    ) : telegramStatus?.unknown ? (
+                      <div className="flex items-center gap-2 text-sm text-slate-400"><AlertCircle className="w-3 h-3" /> Status unavailable</div>
                     ) : telegramStatus?.connected ? (
                       <div className="flex items-center gap-2 text-sm text-teal-400">
                         <CheckCircle2 className="w-3 h-3" />
@@ -1706,7 +1762,7 @@ function SettingsContent() {
                     )}
                   </div>
                 </div>
-                {!telegramLoading && !telegramStatus?.configured && (
+                {!telegramLoading && !telegramStatus?.configured && !telegramStatus?.unauthorized && !telegramStatus?.unknown && (
                   <span className="text-xs text-slate-500">Set TELEGRAM_BOT_TOKEN</span>
                 )}
               </div>
@@ -1728,42 +1784,25 @@ function SettingsContent() {
 
             <div className="space-y-4">
               <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-white font-medium">Export Data</div>
-                  <button className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors text-sm">
-                    Export All
-                  </button>
-                </div>
-                <p className="text-sm text-slate-400">
-                  Download all your data including tasks, sessions, and settings
+                <div className="text-white font-medium">Export professional data</div>
+                <p className="mt-2 text-sm text-slate-300">
+                  Export is not available from this screen yet. A practitioner-scoped, verified export is required before this action can be offered.
                 </p>
               </div>
 
-              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-red-400 font-medium">Clear Data</div>
-                  <button className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors text-sm">
-                    Clear
-                  </button>
-                </div>
-                <p className="text-sm text-slate-400">
-                  Permanently delete all data. This cannot be undone.
+              <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
+                <div className="text-white font-medium">Data deletion</div>
+                <p className="mt-2 text-sm text-slate-300">
+                  This page cannot delete professional records. Deletion requires verified identity, explicit scope, and a truthful completion and recovery process.
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Save Button — Profile and Modules have their own working save buttons */}
-        {activeSection !== 'profile' && activeSection !== 'modules' && (
-          <div className="mt-8 pt-6 border-t border-slate-800">
-            <button className="flex items-center gap-2 px-6 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-400 transition-colors">
-              <Save className="w-4 h-4" />
-              Save Changes
-            </button>
-          </div>
-        )}
-      </div>
+        {/* No generic save: each persisted setting must show its own verified result.
+            Experimental controls elsewhere in this page are explicitly marked. */}
+      </main>
     </div>
   );
 }

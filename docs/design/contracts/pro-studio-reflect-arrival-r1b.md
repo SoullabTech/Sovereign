@@ -49,3 +49,18 @@ Distinct room: neither a marketing paywall nor a clinician dashboard. A professi
 ## What this evidence does not license
 
 Do not infer that the link can carry an entire Reflect conversation into MAIA, or that a subsequent MAIA utterance is stored as a practitioner-authored teaching. No paid entitlement source, clinical document scope, data migration, billing or recording consent was added or reviewed. This is a candidate pending independent source review and founder visual adjudication.
+
+## PRO-STUDIO-BETA-01 — Cohort admission amendment (October 12, 2026)
+
+This amendment affects **who may see this room**, not its visual design. The source version remains an invitation to the existing free MAIA encounter and is **not** a paid Reflect workspace.
+
+The server route now requires a verified signed-in session **and** two independent, fail-closed conditions:
+
+- `PRO_STUDIO_REFLECT_BETA_ENABLED=true`
+- Exact equality between the verified session member ID and a comma-separated entry in `PRO_STUDIO_REFLECT_BETA_MEMBER_IDS`
+
+Neither practitioner role, Field Lab `members.tester`, a free MAIA membership, nor arbitrary identity headers supplies Pro Studio beta admission. No user IDs, client records, payments, or practitioner information are read by the gate. Missing configuration returns 404 for signed-in non-admitted accounts. Signed-out accounts continue to the existing signin route.
+
+The beta admission list is operational authority to view a **client-free preview only**. It does not authorize sensitive client-data collection, MAIA interpretation privileges, professional records, Practice/Collective actions or paid product entitlements.
+
+No new onboarding copy or member-facing visualization is asserted by this amendment; the original synthetic visual witness remains the precise scope of its design evidence. Release staging must separately test this exact server authorization, route behavior, and privacy boundary using fictional sessions.
