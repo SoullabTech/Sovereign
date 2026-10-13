@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { hasTeamRole } from '@/lib/auth/teamPermissions';
+import { attentionReadSql, ATTENTION_CREATE_SQL } from '@/lib/studio/field/attentionOwnerPredicates';
 
 const FIELDS = new Set(['important', 'attention', 'emerging']);
 const KINDS = new Set(['change', 'decision', 'note']);
@@ -52,18 +53,12 @@ export async function GET(request: NextRequest) {
     const includePersonal = request.nextUrl.searchParams.get('includePersonal') !== 'false';
     const scope = scopeFor(teamId, includePersonal);
 
-    // Resolve the live title for referenced sources; fall back to cached label.
+    // Resource-owning context is rechecked when displaying references.
+    // Never use a cached label as a fallback for a missing or unauthorized
+    // source: it may have originally come from another practitioner's record.
     const result = await db.query(
-      `SELECT fa.id, fa.field, fa.kind, fa.ref_id, fa.label, fa.position, fa.created_at,
-              COALESCE(c.title, d.title, fa.label) AS resolved,
-              (fa.ref_id IS NOT NULL AND c.id IS NULL AND d.id IS NULL) AS gone
-         FROM field_attention fa
-         LEFT JOIN studio_changes   c ON fa.kind = 'change'   AND fa.ref_id = c.id
-         LEFT JOIN studio_decisions d ON fa.kind = 'decision' AND fa.ref_id = d.id
-        WHERE fa.practitioner_id = $1 ${scope.clause}
-        ORDER BY fa.position ASC, fa.created_at DESC
-        LIMIT 300`,
-      [practitionerId, ...scope.params],
+      attentionReadSql(scope.clause),
+      [practitionerId, teamId, identity.memberId],
     );
 
     const fields: { important: unknown[]; attention: unknown[]; emerging: unknown[] } = {
@@ -73,8 +68,10 @@ export async function GET(request: NextRequest) {
       const item = {
         id: r.id,
         kind: r.kind as 'change' | 'decision' | 'note',
-        refId: r.ref_id as string | null,
-        label: r.resolved as string,
+        refId: r.gone ? null : (r.ref_id as string | null),
+        // A withdrawn/foreign reference remains held in storage but is never
+        // displayed with its old cached source title.
+        label: r.gone ? 'Reference unavailable' : (r.resolved as string),
         href: r.kind === 'note' ? undefined : (r.gone ? undefined : hrefFor(r.kind)),
         position: r.position as number,
         gone: Boolean(r.gone),
@@ -82,11 +79,15 @@ export async function GET(request: NextRequest) {
       };
       (fields as Record<string, unknown[]>)[r.field as string].push(item);
     }
-    return NextResponse.json(fields);
-  } catch (error) {
-    // Resilient: code can land before the migration runs — degrade to empty fields.
-    console.warn('[Field Attention] GET failed (migration pending?):', error instanceof Error ? error.message : error);
-    return NextResponse.json({ important: [], attention: [], emerging: [] });
+    return NextResponse.json(fields, { headers: { 'Cache-Control': 'private, no-store' } });
+  } catch {
+    // A database failure is NOT an empty field. Exposing raw SQL/driver errors
+    // in logs would also undermine personal custody.
+    console.error('[Field Attention] Read unavailable', { failureKind: 'query_failed' });
+    return NextResponse.json(
+      { error: 'Field Attention temporarily unavailable' },
+      { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+    );
   }
 }
 
@@ -122,18 +123,24 @@ export async function POST(request: NextRequest) {
     // New placements land at the top of the field (position one below the current min).
     const posResult = await db.query(
       `SELECT COALESCE(MIN(position), 0) - 1 AS pos FROM field_attention
-        WHERE practitioner_id = $1 AND field = $2`,
-      [practitionerId, field],
+        WHERE practitioner_id = $1 AND field = $2
+          AND team_id IS NOT DISTINCT FROM $3::uuid`,
+      [practitionerId, field, teamId],
     );
     const position = posResult.rows[0]?.pos ?? 0;
 
     try {
+      // Prevent race between a standalone ownership SELECT and INSERT: the
+      // member/practitioner/team/client predicates live inside the INSERT
+      // statement itself. For referenced objects, use the owned source's
+      // CURRENT title, never a client-supplied cached title.
       const result = await db.query(
-        `INSERT INTO field_attention (practitioner_id, team_id, field, kind, ref_id, label, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         RETURNING id, field, kind, ref_id, label, position, created_at`,
-        [practitionerId, teamId, field, kind, refId, label, position],
+        ATTENTION_CREATE_SQL,
+        [practitionerId, teamId, field, kind, refId, label, position, identity.memberId],
       );
+      if (!result.rows[0]) {
+        return NextResponse.json({ error: 'Reference not available in this field' }, { status: 404 });
+      }
       const row = result.rows[0];
       return NextResponse.json({
         id: row.id, field: row.field, kind: row.kind, refId: row.ref_id,
