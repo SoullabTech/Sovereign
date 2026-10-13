@@ -1,0 +1,163 @@
+{
+  "schema": "rgr.eval-causal-method-candidates.v1",
+  "date": "2026-10-12",
+  "programme": "RELATIONAL-GEOMETRY-REASONING",
+  "workstream": "RGR-EVAL-CAUSAL-01",
+  "work_class": "RESEARCH_DESIGN_ONLY",
+  "status": "DRAFT_FOR_INDEPENDENT_REVIEW",
+  "foundry_source_commit": "45ac2a182a7687062704e28f0dc0e3d5e0c5ce4d",
+  "foundry_review": "TWO_INDEPENDENT_MODEL_SOURCE_PASSES_NOT_FOUNDER_ACCEPTANCE",
+  "frozen_benchmark": "RGR-RT1-D2C-01",
+  "frozen_benchmark_document": "docs/programme/RGR-04_PREREGISTRATION_LOCK_2026-09-18.md",
+  "falsification_contract": "docs/programme/RGR-03_FALSIFICATION_CONTRACT_2026-09-18.md",
+  "feasibility_note": "RGR-05 Directed Two-Step Composition pre-materialization FEASIBILITY_PASS; separate RGR-05B Flow investigation remains design infeasible under its frozen sampler budget.",
+  "rgr06": "RGR-06 confirmatory implementation verified independently, but no materialized benchmark/model training/test/replication executed",
+  "allowed_this_gate": [
+    "READ_ONLY_PUBLIC_METHOD_COMPARISON",
+    "DETERMINISTIC_SOURCE_INVENTORY",
+    "DOCUMENTARY_INTERFACE_DESIGN",
+    "NON_EXECUTABLE_NEGATIVE_CONTROL_DESIGN"
+  ],
+  "forbidden": [
+    "THIRD_PARTY_INSTALL",
+    "DEPENDENCY_BUILD",
+    "NEW_MODEL_DOWNLOAD",
+    "MODEL_INFERENCE",
+    "BENCHMARK_MATERIALIZATION",
+    "RGR_04_MODIFICATION",
+    "RGR_06_MODIFICATION",
+    "TRAINING",
+    "TEST_EXECUTION",
+    "REPLICATION",
+    "REAL_MEMBER_DATA",
+    "CLINICAL_DATA",
+    "PRODUCTION_READ_WRITE",
+    "MAIA_PROMPT_MEMORY_CHANGE",
+    "GIT_MERGE",
+    "DEPLOYMENT",
+    "PROVIDER_SPEND",
+    "NEW_CANONICAL_WORK_UNIT_GRANT"
+  ],
+  "underlying_causal_contrast": "Intervene on surface s versus relation r in x=G(s,r,eta); preserve relation while changing surface, and break relation with surface matched.",
+  "scientific_outcomes": "No observed results; all proposed comparisons are methodological.",
+  "candidate_methods": [
+    {
+      "id": "FND-EVL-01",
+      "title": "Inspect AI",
+      "url": "https://github.com/UKGovernmentBEIS/inspect_ai",
+      "role": "Declarative dataset/solver/scorer trace custody and evaluator provenance",
+      "priority": "P0",
+      "adoption_decision": "COMPARE_ONLY",
+      "source_revision": null,
+      "license_exact": null,
+      "security_review": "PENDING",
+      "dependency_review": "PENDING",
+      "execution": "NOT_AUTHORIZED",
+      "design_checks": [
+        "Paired positive/negative atomicity",
+        "Frozen evaluator metric equivalence",
+        "No external provider or member data",
+        "Deterministic sample lineage"
+      ],
+      "known_gap": "Framework task abstractions do not validate RGR hypotheses by themselves."
+    },
+    {
+      "id": "FND-EVL-02",
+      "title": "LM Evaluation Harness",
+      "url": "https://github.com/EleutherAI/lm-evaluation-harness/",
+      "role": "Compare declarative task configs, adapter plugins, frozen metrics and baseline logging",
+      "priority": "P0",
+      "adoption_decision": "COMPARE_ONLY",
+      "source_revision": null,
+      "license_exact": null,
+      "security_review": "PENDING",
+      "dependency_review": "PENDING",
+      "execution": "NOT_AUTHORIZED",
+      "design_checks": [
+        "No score/method drift from RGR-04",
+        "Split isolation and reproducibility",
+        "September 2026 plugin architecture independently pinned",
+        "No hidden task auto-discovery from unknown modules"
+      ],
+      "known_gap": "General benchmark metrics may not preserve the RGR confirmatory counterfactual contract."
+    },
+    {
+      "id": "FND-RGR-05",
+      "title": "DoWhy",
+      "url": "https://github.com/py-why/dowhy",
+      "role": "Compare causal estimands, explicit assumptions and refutation methods with RGR paired interventions",
+      "priority": "P0",
+      "adoption_decision": "COMPARE_ONLY",
+      "source_revision": null,
+      "license_exact": null,
+      "security_review": "PENDING",
+      "dependency_review": "PENDING",
+      "execution": "NOT_AUTHORIZED",
+      "design_checks": [
+        "Declared treatment/outcome causal graph",
+        "Identifiability assumptions stated",
+        "Relation-breaking vs surface-preserving interventions separated",
+        "No unsupported conclusion from observational correlation"
+      ],
+      "known_gap": "DoWhy causal identification/refuters cannot prove subjective relational meaning or transfer by themselves."
+    },
+    {
+      "id": "FND-RGR-03",
+      "title": "pyvene",
+      "url": "https://github.com/stanfordnlp/pyvene",
+      "role": "Later open-weight internal-state intervention comparators distinct from frozen H-RT1 baseline tests",
+      "priority": "P1",
+      "adoption_decision": "FUTURE_SEPARATE_GATE",
+      "source_revision": null,
+      "license_exact": null,
+      "security_review": "PENDING",
+      "dependency_review": "PENDING",
+      "execution": "NOT_AUTHORIZED",
+      "design_checks": [
+        "Model family and layer pin",
+        "Activation intervention treatment/control",
+        "No model-training or TEST leakage",
+        "No interpretation as awareness or clinical inference"
+      ],
+      "known_gap": "Interventions on neural representations are not proof of a unique geometry, human psychology or MAIA consciousness."
+    }
+  ],
+  "baselines_preserved": [
+    "FROZEN_SURFACE_ONLY",
+    "FROZEN_RELATION_AWARE",
+    "SYMBOLIC_GRAPH_STRUCTURE_MAPPER_AS_ALTERNATIVE_EXPLORATORY_COMPARATOR_ONLY"
+  ],
+  "minimum_negative_controls": [
+    {
+      "name": "RELATION_PRESERVED_SURFACE_CHANGED",
+      "requirement": "Hold relational rule fixed; vary balanced 16-bit surface assignments under frozen RGR-04 constraints."
+    },
+    {
+      "name": "RELATION_BROKEN_SURFACE_MATCHED",
+      "requirement": "Preserve surface realization and other frozen pair invariants; break the directed two-step relational rule with admitted switch."
+    },
+    {
+      "name": "SYMBOLIC_NON_GEOMETRIC_BASELINE",
+      "requirement": "Compare to declarative structure-mapping or graph reasoning; geometric explanation cannot be presumed."
+    },
+    {
+      "name": "SPLIT_AND_CODEBOOK_LEAKAGE",
+      "requirement": "Prohibit cross-split codebook/exact-tuple reuse under frozen seeds and streams."
+    },
+    {
+      "name": "FALSE_SUPPORT_RESCUE",
+      "requirement": "When a preregistered threshold or negative control fails, preserve the failure; never reinterpret success."
+    }
+  ],
+  "governed_next_step": "Independent read-only design review and founder approval to pin exact source releases/licenses only. Actual evaluation needs a different research Work Unit and explicit data/model/sandbox authorization.",
+  "member_data": "NOT_AUTHORIZED",
+  "maia_runtime": "NOT_AUTHORIZED",
+  "clinical_inference": "NOT_AUTHORIZED",
+  "downloads": "NOT_AUTHORIZED",
+  "tool_execution": "NOT_AUTHORIZED",
+  "experiments": "NOT_AUTHORIZED",
+  "training": "NOT_AUTHORIZED",
+  "production": "NOT_AUTHORIZED",
+  "merge": "NOT_AUTHORIZED",
+  "deployment": "NOT_AUTHORIZED"
+}
