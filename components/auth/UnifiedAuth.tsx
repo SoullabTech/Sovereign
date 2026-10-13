@@ -61,7 +61,7 @@ import {
 import { unifiedBiometry } from '@/lib/auth/unifiedBiometry';
 import { deviceTrust } from '@/lib/auth/deviceTrust';
 import { apiUrl, apiFetch } from '@/lib/http/apiBase';
-import { assessBrowserAccount } from '@/lib/auth/accountConflictBoundary';
+import { assessBrowserAccount,assessFreshVerifiedSignInBrowserAccount } from '@/lib/auth/accountConflictBoundary';
 import {assessFreshSignInAdmission} from '@/lib/auth/freshSigninReconciliation';
 import {activateAccountScope,ACCOUNT_CHANNEL} from '@/lib/auth/accountScopedStorage';
 import { Capacitor } from '@capacitor/core';
@@ -334,6 +334,12 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
       return false;
     }
     if (boundary === 'verification-unavailable') {setError('Session verification unavailable. Please sign in again.');setIsLoading(false);return false;}
+    // Last synchronous owner check before any legacy identity/cache write.
+    // This complements the post-network check inside the helper.
+    const finalBoundary=assessFreshVerifiedSignInBrowserAccount(localStorage,user.id);
+    if (finalBoundary==='conflict' || finalBoundary==='unverifiable') {
+      window.location.assign('/account/conflict');return false;
+    }
     const existingRaw = localStorage.getItem('beta_user');
     let sameMemberMetadata: Record<string, unknown> = {};
     if (existingRaw) {

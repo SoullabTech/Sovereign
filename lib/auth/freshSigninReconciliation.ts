@@ -40,6 +40,13 @@ export async function assessFreshSignInAdmission({
     if(payload?.authenticated!==true || payload.member?.id!==memberId){
       return 'verification-unavailable';
     }
+    // Local ownership may change while the cookie was being checked.
+    // A stale pre-await assessment must never transfer another tab's cache.
+    if(store.getItem('maia_signed_out')!=='1') return 'verification-unavailable';
+    const after=assessFreshVerifiedSignInBrowserAccount(store,memberId);
+    if(after!==scope || after==='conflict' || after==='unverifiable') {
+      return 'conflict';
+    }
     // This confirms ONLY that the current server session belongs to the
     // freshly authenticated member; it does not grant roles or data transfer.
     return 'admit';

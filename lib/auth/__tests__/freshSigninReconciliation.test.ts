@@ -60,4 +60,26 @@ describe('R5a deliberate same-member credential return after explicit sign-out',
     const {storage}=fixture({maia_signed_out:'1'});
     expect(await decide(storage,A,verified(A))).toBe('admit');
   });
+  it('refuses a different browser owner introduced while the verified cookie was pending',async()=>{
+    const {data,storage}=fixture({explorerId:B,memberId:B,
+      'soullab:active-account:v1':B,beta_user:JSON.stringify({id:B}),maia_signed_out:'1'});
+    let resolveSession!:(response:Response)=>void;
+    const response=new Promise<Response>(resolve=>{resolveSession=resolve;});
+    const pending=decide(storage,B,()=>response);
+    // A different tab claims the cached identity before the server replies.
+    data.set('beta_user',JSON.stringify({id:A,name:'A previous note'}));
+    resolveSession!({ok:true,json:async()=>({authenticated:true,member:{id:B}})} as Response);
+    expect(await pending).toBe('conflict');
+    expect(JSON.parse(data.get('beta_user')||'null').id).toBe(A);
+    expect(data.get('maia_signed_out')).toBe('1');
+  });
+  it('refuses a signout-latch change while verification is outstanding',async()=>{
+    const {data,storage}=fixture({explorerId:B,maia_signed_out:'1'});
+    let resolveSession!:(response:Response)=>void;
+    const response=new Promise<Response>(resolve=>{resolveSession=resolve;});
+    const pending=decide(storage,B,()=>response);
+    data.delete('maia_signed_out');
+    resolveSession!({ok:true,json:async()=>({authenticated:true,member:{id:B}})} as Response);
+    expect(await pending).toBe('verification-unavailable');
+  });
 });
