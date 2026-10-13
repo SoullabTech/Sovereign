@@ -63,6 +63,7 @@ import {
 } from '@/lib/consciousness/therapeuticFrameworks';
 import { apiUrl, apiFetch, clearAuthState } from '@/lib/http/apiBase';
 import { reportServerIdentityParity } from '@/lib/auth/verifyServerIdentity';
+import { restoreMaiaBrowserSessionFromServer } from '@/lib/auth/restoreMaiaBrowserSession';
 
 // Migration version - increment to force re-auth for all users
 const SESSION_VERSION = 2; // Bumped to fix UUID-as-name bug (Jan 5, 2026)
@@ -507,17 +508,25 @@ function MAIAPageContent() {
     const initializeUser = async () => {
       setIsMounted(true);
 
-      // Check for session migration (forces re-auth if needed)
+      // Local browser continuity is NOT identity authority. A verified,
+      // onboarded server session may survive cleared browser storage (for
+      // example, when an invited Reflect member opens MAIA in a new browser).
+      // Explicit sign-out, failed verification and onboarding gaps still refuse.
       const sessionCheck = checkAndMigrateSession();
-      if (sessionCheck === 'fresh') {
-        console.log('[NAV] /maia -> /begin (reason: fresh install)');
-        router.replace('/signin');
-        return;
-      }
-      if (sessionCheck === 'migrate') {
-        console.log('[NAV] /maia -> /signin (reason: session migration)');
-        router.replace('/signin');
-        return;
+      if (sessionCheck) {
+        const restored = await restoreMaiaBrowserSessionFromServer({
+          fetchSession: () => fetch('/api/members/session', {
+            credentials: 'same-origin',
+            cache: 'no-store',
+          }),
+          storage: window.localStorage,
+          version: SESSION_VERSION,
+        });
+        if (!restored) {
+          console.log('[NAV] /maia -> /signin (no verified browser recovery)');
+          router.replace('/signin');
+          return;
+        }
       }
 
       // Load user data first (needed for session registration)
