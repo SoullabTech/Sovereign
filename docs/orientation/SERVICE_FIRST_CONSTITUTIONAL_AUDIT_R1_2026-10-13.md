@@ -36,7 +36,7 @@ No verifiable tracked-repository source named **CANON-001 / CANON-002 / CANON-00
 | Ganesha reflects self/world care | Purpose inheritance, not verified product capability | **DESIGNED/PROPOSED**, not a claim of live member functionality. |
 | Blackfoot/Siksika directly prescribed Frankl's doctrine | Not supported; Lawrence (2025) concerns Maslow's 1938 Siksika visit | **REFUSE CONFLATION**. Keep distinct cultural and scholarly provenance. |
 | Soullab reduces self-absorption, heals helpers, guarantees meaning | No product/outcome evaluation supplied | **DO NOT CLAIM**. Marketing statement may describe aim only; no invented metrics. |
-| Service First is already a ratified separate canon | Current file and status do not confer constitutional admission | **HOLD** pending formal founder acceptance of exact amendment text and independent review. |
+| Service First is a founder-ratified purpose amendment, not a separate canon | Exact founder approval received 2026-10-13; source insertion in isolated Living Orientation System | **FOUNDER-APPROVED INTENT**. Independent constitutional review and canonical merge remain held. |
 
 ## Five constitutional drift checks
 
@@ -56,7 +56,7 @@ No verifiable tracked-repository source named **CANON-001 / CANON-002 / CANON-00
 
 The precise host is the founder-ratified `SOULLAB_LIVING_ORIENTATION_SYSTEM.md`; the supporting doctrine remains in `docs/orientation/` as interpretation and the brand brief in `docs/marketing/` as an unpublished candidate.
 
-**Still required:** independent human constitutional review, exact-text founder ratification/placement, preservation of previous canon, and then separately authorized merge. A candidate in a Git branch does **not** become canon by naming alone. No deployment, advertisements, mail, model instruction or member evaluation is authorized here.
+**Founder ratification of exact wording and placement has been received. Still required:** independent human constitutional review of the inserted source, preservation of previous canon, and then separately authorized merge. A candidate in a Git branch does **not** become canon by naming alone. No deployment, advertisements, mail, model instruction or member evaluation is authorized here.
 
 ## Scholarly provenance verification
 

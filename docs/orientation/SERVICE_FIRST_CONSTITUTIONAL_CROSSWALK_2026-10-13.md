@@ -2,7 +2,7 @@
 
 - **Date:** 2026-10-13
 - **Source:** Founder clarification — “it isnt ought to serve but for those who are in service to self and world”
-- **Status:** Proposed adoption record; independent review and formal canon registry admission not yet completed
+- **Status:** Founder approved exact purpose amendment; preparatory constitutional crosswalk; independent human review and canonical merge pending
 - **Altitude:** Cat 1 / founding purpose and product stewardship. This text does not authorize MAIA runtime changes or marketing publication.
 
 ## Governing interpretation
@@ -37,9 +37,9 @@ This commitment describes **what Soullab should be available for**, not what any
 
 **Preliminary: ALIGNED WITH SAFEGUARDS.** The proposed doctrine adds an explicit **founding purpose** to already ratified prohibitions; it does **not** amend existing prohibitions or confer any new product permission.
 
-**Proposed placement:** a founder-authored **purpose/telos statement** referenced from brand and product stewardship, linked to—not a replacement for—existing canonical authority documents. A subsequent formal registry and human review must decide whether to promote this candidate into an independently numbered canon or attach it as an amendment to the existing founding declaration.
+**Founder-approved placement:** a founding **purpose/telos amendment** in `docs/canon/SOULLAB_LIVING_ORIENTATION_SYSTEM.md`, linked to—not replacing—existing canonical authority. The founder approved this precise placement on 2026-10-13; qualified independent review and canonical merge remain required. Do not create an unrelated numbered canon.
 
-**Not yet admitted:** the founder-ratified `SOULLAB_LIVING_ORIENTATION_SYSTEM.md` and `SOULLAB_PLATFORM_IDENTITY_CANON_2026-09-28.md` supply the documented Soullab-level authorities. No separate `CANON-001/002/003` registry could be verified in the tracked repository or targeted Drive searches; do not cite such a registry as authority. Preferred next act: independent review of the proposed **purpose amendment** under `docs/orientation/SERVICE_FIRST_FOUNDING_PURPOSE_AMENDMENT_CANDIDATE_2026-10-13.md`, then explicit human founder adoption of the exact wording and placement. This file is not a release, paid campaign, runtime feature, member experiment, or constitutional override.
+**Not yet admitted:** the founder-ratified `SOULLAB_LIVING_ORIENTATION_SYSTEM.md` and `SOULLAB_PLATFORM_IDENTITY_CANON_2026-09-28.md` supply the documented Soullab-level authorities. No separate `CANON-001/002/003` registry could be verified in the tracked repository or targeted Drive searches; do not cite such a registry as authority. Founder adoption of the exact wording and placement has occurred. The next act is independent constitutional review of the founder-approved **purpose amendment** inserted in `docs/canon/SOULLAB_LIVING_ORIENTATION_SYSTEM.md`, followed by an explicitly authorized canonical merge if accepted. This file is not a release, paid campaign, runtime feature, member experiment, or constitutional override.
 
 ## Founding words
 

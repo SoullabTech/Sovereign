@@ -2,7 +2,7 @@
 
 - **Founder direction:** Kelly Nezat, 2026-10-13
 - **Founder clarification:** *Not that anyone ought to serve, but for those in service to self and world.*
-- **Status:** FOUNDER-ADOPTED PURPOSE / PROPOSED CANON — formal constitutional reconciliation and admission pending
+- **Status:** FOUNDER-RATIFIED PURPOSE AMENDMENT (exact 298-word section in Living Orientation System); this longer interpretive companion remains proposed, with constitutional review and canonical merge pending
 - **Altitude:** Purpose / telos (Cat 1); no runtime, personal prescription, or implementation claim
 - **Scope:** Soullab, MAIA, Ganesha Life Flow / Personal Portal, Pro Studio, Writer’s Studio, Co-Labs, and future expressions
 - **Governing phrase:** **Service First. Not Self Last.**
@@ -86,9 +86,9 @@ Read-only source review on 2026-10-13 found substantial prior alignment with:
 - `docs/canon/CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md` — owned recognition, no machine-authored significance, and the developmental ecology as a relational medium.
 - `docs/canon/CONSTITUTIONAL_AUDIT_PROCESS.md` — canon/telos category must not be confused with verified runtime, and reconciliation is required before elevation.
 
-Review on 2026-10-13 identified `docs/canon/SOULLAB_LIVING_ORIENTATION_SYSTEM.md` (already founder-ratified) as the preferred constitutional host, alongside `SOULLAB_PLATFORM_IDENTITY_CANON_2026-09-28.md` (governing platform identity). The exact proposed insertion is recorded in `docs/orientation/SERVICE_FIRST_FOUNDING_PURPOSE_AMENDMENT_CANDIDATE_2026-10-13.md`. A tracked-repository text/path search did **not** substantiate a separately numbered `CANON-001/002/003` founding registry, and Drive keyword searches for those identifiers found no matching document. Do not invent a numbered hierarchy. Formal human review must still reconcile exact founder wording and the ban on MAIA optimizing for user outcomes. This doctrine **cannot** authorize coercive steering, engagement metrics, or reinterpretation of member meaning.
+Review on 2026-10-13 identified `docs/canon/SOULLAB_LIVING_ORIENTATION_SYSTEM.md` (already founder-ratified) as the preferred constitutional host, alongside `SOULLAB_PLATFORM_IDENTITY_CANON_2026-09-28.md` (governing platform identity). The exact proposed insertion is recorded in `docs/orientation/SERVICE_FIRST_FOUNDING_PURPOSE_AMENDMENT_CANDIDATE_2026-10-13.md`. A tracked-repository text/path search did **not** substantiate a separately numbered `CANON-001/002/003` founding registry, and Drive keyword searches for those identifiers found no matching document. Do not invent a numbered hierarchy. The founder approved exact wording and placement on 2026-10-13; independent human constitutional review must still uphold the ban on MAIA optimizing for user outcomes. This doctrine **cannot** authorize coercive steering, engagement metrics, or reinterpretation of member meaning.
 
-**Admission rule:** This file remains in `docs/orientation/` as a proposal. Filename, folder, branch, or founder enthusiasm do not themselves make it ratified canon. Promotion requires explicit review, reconciliation, and founder authorization under existing governance. No implementation, product launch, financial action, or live user experiment is authorized here.
+**Admission rule:** The separate 298-word purpose amendment has been expressly ratified by the founder and inserted verbatim into the isolated Soullab Living Orientation System source. This longer companion remains in `docs/orientation/`, not an independently ratified behavioral canon. Canonical branch admission still requires qualified constitutional review and authorized merge. No implementation, product launch, financial action, or live user experiment is authorized here.
 
 ---
 

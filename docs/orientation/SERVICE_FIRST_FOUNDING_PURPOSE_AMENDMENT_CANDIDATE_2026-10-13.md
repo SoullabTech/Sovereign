@@ -4,9 +4,9 @@
 
 **Source of authority:** founder statement and clarification, October 13, 2026.
 
-**Status:** exact adoption text proposed for human constitutional review and founder acceptance. This document is **not itself an amendment to the ratified canon** and has no runtime effect.
+**Status:** FOUNDER-APPROVED EXACT TEXT AND PLACEMENT — copied verbatim into the isolated Soullab Living Orientation System source; independent constitutional review and canonical merge remain pending. This companion file has no runtime effect.
 
-## Text proposed for adoption
+## Exact text adopted by founder on 2026-10-13
 
 ### Service First. Not Self Last.
 
@@ -43,8 +43,8 @@ MAIA may accompany self-understanding; MAIA may never assign a calling, prescrib
 
 ## Admission record and stop rule
 
-Founder's **substantive intent** is explicit and preserved: *not that people ought to serve, but for those who are in service to self and world*. The **exact amendment wording** and its placement still require review; this file neither silently ratifies itself nor merges any existing canon.
+Founder's **substantive intent** is explicit and preserved: *not that people ought to serve, but for those who are in service to self and world*. The founder expressly approved this **exact amendment wording and placement** on 2026-10-13. The act is recorded in `SERVICE_FIRST_FOUNDER_RATIFICATION_RECORD_2026-10-13.md`; independent constitutional review and canonical merge remain open. The approved wording was inserted verbatim into the isolated Soullab Living Orientation System source.
 
-Constitutional auditor: check existing `MAIA_CANON_v1.1.md`, `MAIA_SOVEREIGNTY_INVARIANTS.md`, `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md`, `RIGHT_TO_REMAIN_UNPOSSESSED.md`, `MAIA_SANCTUARY_ECONOMY.md`, `SOULLAB_LIVING_ORIENTATION_SYSTEM.md` and `SOULLAB_PLATFORM_IDENTITY_CANON_2026-09-28.md`. If compatible, submit the exact proposed amendment for human founder ratification. Stop if it would require new member obligations, hidden tracking, therapist-like pressure, or unauthorized product implementation.
+Constitutional auditor: check the now founder-ratified amendment against `MAIA_CANON_v1.1.md`, `MAIA_SOVEREIGNTY_INVARIANTS.md`, `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md`, `RIGHT_TO_REMAIN_UNPOSSESSED.md`, `MAIA_SANCTUARY_ECONOMY.md`, `SOULLAB_LIVING_ORIENTATION_SYSTEM.md` and `SOULLAB_PLATFORM_IDENTITY_CANON_2026-09-28.md`. Do not waive independent review or merge governance because the founder approved the wording. Stop if interpretation would require new member obligations, hidden tracking, therapist-like pressure, or unauthorized product implementation.
 
-**Candidate standing:** founder-directed purpose accepted; text and canon placement proposed; ratification/merge held; no marketing publication, app change, billing, or member-data operation.
+**Admission standing:** founder ratification of exact wording and placement recorded; isolated source amendment prepared; independent human review and canonical merge held. No marketing publication, app change, billing, or member-data operation.
