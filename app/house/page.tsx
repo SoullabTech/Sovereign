@@ -1,10 +1,7 @@
 import Link from 'next/link';
 import { requireMemberId } from '@/lib/auth/session';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
-import { HOME_ENTRY_COOKIE } from '@/lib/auth/homeEntryProof';
-import {consumeHomeEntry} from '@/lib/auth/homeEntryAdmission';
 import { HomeAccountGate } from '@/app/home/HomeAccountGate';
-import { cookies } from 'next/headers';
 import { readHousePreferences } from '@/lib/house/preferencesStore';
 import { redirect } from 'next/navigation';
 import { query } from '@/lib/db/postgres';
