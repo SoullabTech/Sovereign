@@ -1,5 +1,7 @@
 'use client';
 
+import { sizeTextareaToContent } from '@/lib/writersStudio/textareaAutoHeight';
+
 /**
  * WS-WHOLE-MANUSCRIPT-01 — the book, flowing down the page.
  *
@@ -218,6 +220,27 @@ export const WholeManuscriptSurface = forwardRef<
      heights: sections differ in length, and guessing their geometry is how a
      virtual list ends up scrolling to the wrong place. */
   const scroller = useRef<HTMLDivElement | null>(null);
+
+  /* Width changes rewrap prose without changing the text. Refit already
+     mounted controls to their actual rendered lines, including Safari/Chrome.
+     No writing state or manuscript provenance is modified by resizing. */
+  useEffect(() => {
+    const host = scroller.current;
+    if (!host) return;
+    const refit = () => {
+      for (const field of fields.current.values()) sizeTextareaToContent(field);
+    };
+    refit();
+    const observer = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(refit)
+      : null;
+    observer?.observe(host);
+    window.addEventListener('resize', refit);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', refit);
+    };
+  }, [sections, mounted]);
   const onScroll = useCallback(() => {
     const el = scroller.current;
     if (!el) return;
@@ -384,9 +407,19 @@ export const WholeManuscriptSurface = forwardRef<
             ) : null}
             {!isMounted ? null : section.editable ? (
               <textarea
-                ref={(n) => { if (n) fields.current.set(section.id, n); }}
+                ref={(n) => {
+                  if (n) {
+                    fields.current.set(section.id, n);
+                    sizeTextareaToContent(n);
+                  } else {
+                    fields.current.delete(section.id);
+                  }
+                }}
                 value={body}
-                onChange={(e) => writing.editSection(section.id, e.target.value)}
+                onChange={(e) => {
+                  sizeTextareaToContent(e.currentTarget);
+                  writing.editSection(section.id, e.target.value);
+                }}
                 onKeyDown={onKeyDown}
                 onFocus={() => setFocusedIndex(i)}
                 onBlur={() => {
@@ -399,7 +432,7 @@ export const WholeManuscriptSurface = forwardRef<
                 }}
                 spellCheck
                 aria-label={section.heading ?? `Section ${section.position + 1}`}
-                rows={Math.max(3, Math.ceil(body.length / 70))}
+                rows={Math.max(3, body.split(/\r?\n/).length, Math.ceil(body.length / 70))}
                 style={{
                   width: '100%', resize: 'none', border: 'none', outline: 'none',
                   background: 'transparent', font: 'inherit', lineHeight: 1.7,

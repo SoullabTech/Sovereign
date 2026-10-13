@@ -192,6 +192,15 @@ describe('the structural guarantees the view may not quietly drop', () => {
   it('edits through the per-section path, so section identity is kept', () => {
     expect(SRC).toMatch(/writing\.editSection\(section\.id, e\.target\.value\)/);
   });
+
+  it('shows the entire editable section instead of clipping trailing saved paragraphs', () => {
+    expect(SRC).toContain('sizeTextareaToContent(n)');
+    expect(SRC).toContain('sizeTextareaToContent(e.currentTarget)');
+    expect(SRC).toContain('new ResizeObserver(refit)');
+    expect(SRC).toContain('rows={Math.max(3, body.split(');
+    expect(SRC).toContain('.length, Math.ceil(body.length / 70))}');
+    expect(SRC).toContain('writing.captureForUnmount(section.id, field.value)');
+  });
 });
 
 describe('the page passes the two as separate props', () => {
