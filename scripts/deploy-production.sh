@@ -1012,6 +1012,20 @@ cmd_rollback() {
         exit 1
     fi
 
+    # WS-BETA-R2 / #1804: fail closed BEFORE role tags change.
+    # A seven-lens Review reader cannot safely roll back to the unchanged
+    # eight-lens reader without a separately reviewed, edge-enforced Review
+    # write suspension. No environment-variable override is admitted here.
+    local current_review_contract previous_review_contract
+    current_review_contract="$(docker image inspect maia-sovereign:current --format '{{range .Config.Env}}{{println .}}{{end}}' | sed -n 's/^WS_REVIEW_WRITES_CONTRACT=//p' | head -1)"
+    previous_review_contract="$(docker image inspect maia-sovereign:previous --format '{{range .Config.Env}}{{println .}}{{end}}' | sed -n 's/^WS_REVIEW_WRITES_CONTRACT=//p' | head -1)"
+    if ! scripts/ops/ws-review-rollback-contract.sh "$current_review_contract" "$previous_review_contract"; then
+        log_error "Review write compatibility cannot be established for rollback."
+        log_error "Do not move image roles; independently approve and verify an edge"
+        log_error "write fence for chapter-review POST before a separate governed recovery."
+        exit 1
+    fi
+
     # Compose launches maia-sovereign:prod, not :current. Therefore rollback must
     # move the previous image onto BOTH role tags before recreating the reader.
     log_info "Swapping image tags..."
