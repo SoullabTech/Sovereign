@@ -13,6 +13,7 @@
  */
 
 import * as Astronomy from 'astronomy-engine';
+import { calculateAsteroidPositionsNBody, type AsteroidPositions } from './asteroidNBody';
 
 export type HouseSystem = 'whole-sign' | 'equal' | 'porphyry' | 'placidus' | 'koch';
 
@@ -353,17 +354,19 @@ function calculateAscendant(lst: number, lat: number, obliquity: number): number
 }
 
 // ============================================================================
-// KEPLERIAN PROPAGATION
+// KEPLERIAN PROPAGATION (FALLBACK ONLY)
 //
-// astronomy-engine handles Sun/Moon/planets at JPL-grade accuracy but does
-// not include Chiron or the four main-belt asteroids. We propagate them from
-// J2000.0 osculating orbital elements (source: JPL Small-Body Database) using
-// Keplerian mechanics: solve Kepler's equation iteratively, rotate the orbital
-// plane to ecliptic J2000, subtract Earth's heliocentric position to get the
-// geocentric vector, and take the ecliptic longitude.
+// The primary path for Chiron and the four main-belt asteroids is the
+// perturbed N-body integration in ./asteroidNBody (validated to ≤0.008°
+// against JPL Horizons for all five bodies across 1950–2026). The two-body
+// propagation below runs only if that path throws.
 //
-// Accuracy: ~0.5° over ±100 years from J2000 (well within natal-chart needs).
-// Replaces linear mean-motion stubs that drifted 10-30° depending on body.
+// Two-body accuracy warning (measured 2026-07-16): fixed-epoch Keplerian
+// elements ignore planetary perturbations, which are real and cumulative.
+// Natal Chiron for a 1970-07-23 birth comes out 12.49° vs JPL Horizons
+// 10.32° — a 2.17° error, dominated by Saturn's perturbation of Chiron's
+// orbit. An earlier "~0.5° over ±100 years" claim in this header was false.
+// Pallas/Juno/Vesta M0 values are additionally unverified (see note below).
 // ============================================================================
 
 interface OrbitalElements {
@@ -828,31 +831,36 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
     const southNodeLon = (northNodeLon + 180) % 360;
     planetLongitudes.SouthNode = southNodeLon;
 
-    // Chiron - Approximate calculation
-    // Chiron has a ~51 year orbital period and was discovered at 3° Taurus in 1977
-    // This is a simplified formula - production would use Swiss Ephemeris
-    const chironLon = calculateChironApprox(birthDate);
+    // Chiron + main-belt asteroids: perturbed N-body integration (primary),
+    // two-body Keplerian propagation as fallback. See lib/astrology/asteroidNBody.ts.
+    let asteroidNBody: AsteroidPositions | null = null;
+    try {
+      asteroidNBody = calculateAsteroidPositionsNBody(birthDate);
+    } catch (nbodyError) {
+      console.error('[ephemeris] N-body asteroid path failed; falling back to two-body Keplerian:', nbodyError);
+    }
+
+    const chironLon = asteroidNBody?.chiron.longitude ?? calculateChironApprox(birthDate);
     planetLongitudes.Chiron = chironLon;
 
-    // Asteroids - Feminine Archetypes
-    // Black Moon Lilith (Mean Lunar Apogee)
+    // Black Moon Lilith (Mean Lunar Apogee) - not an asteroid, own calculation
     const lilithLon = calculateMeanLilith(birthDate);
     planetLongitudes.Lilith = lilithLon;
 
     // Ceres - Nurturing, Grief, Motherhood
-    const ceresLon = calculateCeresApprox(birthDate);
+    const ceresLon = asteroidNBody?.ceres.longitude ?? calculateCeresApprox(birthDate);
     planetLongitudes.Ceres = ceresLon;
 
     // Pallas - Wisdom, Strategy, Creative Intelligence
-    const pallasLon = calculatePallasApprox(birthDate);
+    const pallasLon = asteroidNBody?.pallas.longitude ?? calculatePallasApprox(birthDate);
     planetLongitudes.Pallas = pallasLon;
 
     // Juno - Partnership, Commitment, Sacred Union
-    const junoLon = calculateJunoApprox(birthDate);
+    const junoLon = asteroidNBody?.juno.longitude ?? calculateJunoApprox(birthDate);
     planetLongitudes.Juno = junoLon;
 
     // Vesta - Devotion, Sacred Work, Inner Flame
-    const vestaLon = calculateVestaApprox(birthDate);
+    const vestaLon = asteroidNBody?.vesta.longitude ?? calculateVestaApprox(birthDate);
     planetLongitudes.Vesta = vestaLon;
 
     // DEBUG: Log all calculated longitudes for comparison
@@ -940,7 +948,8 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
     const chiron = {
       ...longitudeToZodiac(planetLongitudes.Chiron),
       house: calculateHouse(planetLongitudes.Chiron, houseCusps),
-      retrograde: false // Simplified - would need velocity calculation
+      // From N-body apparent motion; false only on the Keplerian fallback path
+      retrograde: asteroidNBody?.chiron.retrograde ?? false
     };
 
     // Asteroids - Feminine Archetypes
@@ -953,25 +962,25 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
     const ceres = {
       ...longitudeToZodiac(planetLongitudes.Ceres),
       house: calculateHouse(planetLongitudes.Ceres, houseCusps),
-      retrograde: false // Simplified
+      retrograde: asteroidNBody?.ceres.retrograde ?? false
     };
 
     const pallas = {
       ...longitudeToZodiac(planetLongitudes.Pallas),
       house: calculateHouse(planetLongitudes.Pallas, houseCusps),
-      retrograde: false // Simplified
+      retrograde: asteroidNBody?.pallas.retrograde ?? false
     };
 
     const juno = {
       ...longitudeToZodiac(planetLongitudes.Juno),
       house: calculateHouse(planetLongitudes.Juno, houseCusps),
-      retrograde: false // Simplified
+      retrograde: asteroidNBody?.juno.retrograde ?? false
     };
 
     const vesta = {
       ...longitudeToZodiac(planetLongitudes.Vesta),
       house: calculateHouse(planetLongitudes.Vesta, houseCusps),
-      retrograde: false // Simplified
+      retrograde: asteroidNBody?.vesta.retrograde ?? false
     };
 
     // Calculate Ascendant and Midheaven
