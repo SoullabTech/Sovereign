@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; font-src 'none'; form-action 'none'; object-src 'none'; base-uri 'none';">
+<title>The Foundry — Soullab Research Preview</title>
+<style>
+:root { color-scheme:light; --bg:#f7f7f2; --paper:#fffefa; --ink:#22332f; --muted:#596c66; --line:#dce3dc; --forest:#315b50; --mist:#e8f0eb; --hold:#6f614b; --cream:#f5f0e2; --shadow:0 12px 38px rgba(32,50,42,.045);}
+*{box-sizing:border-box}
+html{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:var(--forest);text-underline-offset:3px}
+button,input,select{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #789f8e;outline-offset:3px}
+.app{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:100vh}
+.sidebar{padding:28px 18px;background:#eef1eb;border-right:1px solid var(--line);position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.brand{margin:5px 10px 26px}
+.brand b{display:block;letter-spacing:.12em;font-size:.82rem;color:var(--forest)}
+.brand span{display:block;margin-top:8px;font-family:Georgia,serif;font-size:2.1rem;line-height:1.1}
+.nav{display:grid;gap:5px}
+.nav button{width:100%;background:transparent;border:1px solid transparent;border-radius:12px;padding:11px 13px;text-align:left;color:var(--ink);font-weight:600}
+.nav button.active{background:var(--paper);border-color:var(--line);box-shadow:var(--shadow);color:var(--forest)}
+.nav button:hover{background:rgba(255,255,255,.65)}
+.side-note{margin-top:auto;padding:18px 12px 4px;font-size:.81rem;color:var(--muted);border-top:1px solid var(--line)}
+.side-note strong{display:block;color:var(--ink);margin-bottom:7px}
+main{min-width:0;max-width:1500px;width:100%;margin:0 auto;padding:38px clamp(22px,5vw,68px) 88px}
+.eyebrow{font-size:.76rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--forest)}
+h1,h2,h3{line-height:1.15;letter-spacing:-.025em}
+h1{font-family:Georgia,serif;font-weight:500;font-size:clamp(2.45rem,4.5vw,4.45rem);margin:12px 0 15px}
+h2{font-family:Georgia,serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:500;margin:0 0 13px}
+h3{font-size:1.1rem;margin:0 0 9px}
+p{margin:0 0 16px}
+.lede{font-size:1.18rem;color:var(--muted);max-width:780px}
+.top-status{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:22px 0 34px}
+.pill{display:inline-block;padding:6px 11px;border:1px solid var(--line);border-radius:40px;font-size:.8rem;font-weight:650;background:var(--paper)}
+.pill.research{background:var(--mist);color:var(--forest);border-color:#c4d6ca}
+.pill.hold{background:var(--cream);color:var(--hold);border-color:#e6dac4}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:19px;box-shadow:var(--shadow)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:34px}
+.stat{padding:20px 22px}
+.stat strong{font-family:Georgia,serif;font-size:2.3rem;font-weight:500;display:block;line-height:1.1}
+.stat span{color:var(--muted);font-size:.87rem}
+.room{display:none}
+.room.active{display:block}
+.section-intro{max-width:810px;color:var(--muted);font-size:1.05rem;margin-bottom:24px}
+.explainer{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:32px}
+.explainer article{padding:22px}
+.explainer p{font-size:.93rem;color:var(--muted);margin:0}
+.filterbar{display:grid;grid-template-columns:minmax(220px,1fr) 205px 115px;gap:10px;margin-bottom:15px}
+input,select{width:100%;background:#fff;border:1px solid #cbd6ce;border-radius:11px;padding:13px;color:var(--ink);min-height:50px}
+.results-label{font-size:.9rem;color:var(--muted);margin-bottom:16px}
+.candidates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.candidate{padding:21px;min-width:0}
+.card-head{display:flex;justify-content:space-between;gap:13px;align-items:flex-start}
+.card-head h3{margin-bottom:5px}
+.meta{color:var(--muted);font-size:.84rem}
+.priority{color:var(--forest);font-size:.75rem;border:1px solid var(--line);padding:4px 9px;border-radius:9px;white-space:nowrap;font-weight:700}
+.candidate p{color:#405851;font-size:.94rem;margin:13px 0}
+.lanes{display:flex;gap:6px;flex-wrap:wrap}
+.lanes span{font-size:.76rem;background:var(--mist);color:var(--forest);padding:3px 9px;border-radius:40px}
+.candidate details{border-top:1px solid var(--line);margin-top:17px;padding-top:12px}
+.candidate summary{color:var(--forest);font-weight:700;cursor:pointer}
+.candidate details p{color:var(--muted);font-size:.9rem}
+.candidate a{overflow-wrap:anywhere;font-size:.89rem}
+.detail-label{font-weight:700;color:var(--ink)}
+.empty{display:none;padding:32px;color:var(--muted);text-align:center}
+.panel{padding:25px;margin-bottom:16px}
+.panel p{color:var(--muted)}
+.hierarchy{display:grid;gap:12px}
+.hierarchy strong{font-size:1rem}
+.hierarchy article{border-left:3px solid var(--forest);padding:8px 0 8px 15px}
+.tablewrap{overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:16px}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:top;font-size:.92rem}
+th{font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);background:#f3f6f1}
+tr:last-child td{border-bottom:0}
+.standing{font-weight:700;color:var(--hold);white-space:nowrap}
+.standing.observed{color:var(--forest)}
+.graph-root{padding:24px;text-align:center;border:1px solid #c9d8cd;background:var(--mist);border-radius:20px;max-width:420px;margin:0 auto 15px}
+.graph-root b{display:block;font-family:Georgia,serif;font-size:1.5rem}
+.graph-root span{font-size:.86rem}
+.connector{height:33px;border-left:2px solid #b5c8ba;margin:0 auto;width:0}
+.lane-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.lane-item{border:1px solid var(--line);background:var(--paper);border-radius:14px;padding:18px;text-align:left;color:var(--ink)}
+.lane-item:hover{border-color:#85a999;background:var(--mist)}
+.lane-item strong{display:block;font-size:1rem}
+.lane-item span{color:var(--muted);font-size:.85rem}
+.foot{margin-top:40px;border-top:1px solid var(--line);padding-top:20px;color:var(--muted);font-size:.83rem}
+.screenreader{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+@media (max-width:1050px){.app{grid-template-columns:195px 1fr}.sidebar{padding:22px 10px}.stats{grid-template-columns:repeat(2,1fr)}.candidates{grid-template-columns:1fr}.explainer{grid-template-columns:1fr}}
+@media (max-width:750px){.app{display:block}.sidebar{position:static;height:auto;padding:14px 16px;border-right:0;border-bottom:1px solid var(--line)}.brand{display:flex;gap:10px;align-items:baseline;margin:0 0 12px}.brand span{font-size:1.5rem;margin:0}.nav{display:flex;overflow:auto;gap:4px}.nav button{white-space:nowrap;padding:8px 12px}.side-note{display:none}main{padding:30px 18px 60px}.filterbar{grid-template-columns:1fr}.lane-grid{grid-template-columns:repeat(2,1fr)}}
+@media (prefers-reduced-motion:no-preference){button,.candidate,.lane-item{transition:background .16s,border .16s}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><b>SOULLAB</b><span>The Foundry</span></div>
+  <nav class="nav" aria-label="Foundry research rooms">
+    <button type="button" class="active" data-view="discover" aria-current="page">Discover</button>
+    <button type="button" data-view="today">Today</button>
+    <button type="button" data-view="work">Work</button>
+    <button type="button" data-view="graph">Graph</button>
+    <button type="button" data-view="monitor">Monitor</button>
+    <button type="button" data-view="system">System</button>
+  </nav>
+  <div class="side-note"><strong>Source before capability.</strong>No external skill, model, or algorithm executes from this workspace.</div>
+</aside>
+<main>
+<header>
+ <div class="eyebrow">AIN OS · Sovereign Capability Foundry</div>
+ <h1>Intelligence, with discernment.</h1>
+ <p class="lede">A place to discover the best available methods and bring them into Soullab carefully—without surrendering evidence, consent, or human authority.</p>
+ <div class="top-status"><span class="pill research" id="founder-standing">Checking acceptance…</span><span class="pill hold">Research only · No execution</span><span class="pill">Offline, independent preview</span></div>
+</header>
+<div class="stats" id="stats" aria-label="Foundry overview"></div>
+<section class="room active" id="room-discover">
+ <h2>Discover the possibilities</h2>
+ <p class="section-intro">Every entry is a research candidate, not an installed skill. Open its details to see what it might offer, where it could help, and what must be protected.</p>
+ <div class="explainer">
+   <article class="card"><h3>What is this?</h3><p>A living catalogue of scientific methods, open-source skills, models, and research ideas.</p></article>
+   <article class="card"><h3>Why come here?</h3><p>To understand what is possible without losing your way in technical options or vendor platforms.</p></article>
+   <article class="card"><h3>Why return?</h3><p>New source findings, independent reviews, and genuine evidence—not automatic installations.</p></article>
+ </div>
+ <div class="filterbar">
+  <label><span class="screenreader">Search research capabilities</span><input type="search" id="search" placeholder="Search capabilities, methods, or benefits"></label>
+  <label><span class="screenreader">Category</span><select id="category"><option value="">All research areas</option></select></label>
+  <label><span class="screenreader">Priority</span><select id="priority"><option value="">All priorities</option><option value="P0">P0</option><option value="P1">P1</option><option value="P2">P2</option></select></label>
+ </div>
+ <p class="results-label" id="results-count" role="status" aria-live="polite"></p>
+ <div class="candidates" id="candidates"></div>
+ <div class="card empty" id="empty">No matching research candidates. Clear a filter to see more.</div>
+</section>
+<section class="room" id="room-today">
+ <h2>Today · Watching</h2>
+ <p class="section-intro">The Foundry is present for research. Discovery does not create work that needs you, and no model or tool is secretly running.</p>
+ <article class="card panel"><h3>What’s happening</h3><p id="today-summary"></p><div class="pill hold">No automatic next act</div></article>
+ <div class="hierarchy"><article><strong>Needs you</strong><p>Nothing. No founder permission request has been generated by this preview.</p></article><article><strong>In motion</strong><p>Nothing. No external repositories, agents, training runs, or provider calls are active.</p></article><article><strong>Watching</strong><p>Candidate sources, evidence gaps, and permissions that still require separate approval.</p></article></div>
+</section>
+<section class="room" id="room-work">
+ <h2>Work · Understand before doing</h2>
+ <p class="section-intro">Each possibility has a next research question. None has an execution grant or a member-facing integration.</p>
+ <article class="card panel"><h3>One sensible next act</h3><p id="work-next"></p></article>
+ <div class="tablewrap"><table><thead><tr><th>Candidate</th><th>Priority</th><th>Standing</th><th>Next research step</th></tr></thead><tbody id="work-rows"></tbody></table></div>
+</section>
+<section class="room" id="room-graph">
+ <h2>Graph · Connections, not conclusions</h2>
+ <p class="section-intro">These are source-backed possibilities: where each method might be useful, not evidence that it works or claims about any member’s mind.</p>
+ <div class="graph-root"><b>Capability Foundry</b><span>One research-only programme · One source of custody</span></div>
+ <div class="connector" aria-hidden="true"></div>
+ <div class="lane-grid" id="lane-grid"></div>
+ <article class="card panel" style="margin-top:18px"><h3>Evidence boundary</h3><p id="graph-summary"></p></article>
+</section>
+<section class="room" id="room-monitor">
+ <h2>Monitor · What do we actually know?</h2>
+ <p class="section-intro">A catalogue may be verified without its external code, safety, or license being approved. Pending stays pending.</p>
+ <div class="tablewrap"><table><thead><tr><th>Evidence question</th><th>Standing</th><th>What it means</th></tr></thead><tbody id="monitor-rows"></tbody></table></div>
+</section>
+<section class="room" id="room-system">
+ <h2>System · Sovereign boundaries</h2>
+ <p class="section-intro">Founder acceptance of research is not permission to run a third-party system. These boundaries remain in force.</p>
+ <article class="card panel"><h3>No operational permissions granted</h3><p id="system-summary"></p></article>
+ <div class="tablewrap"><table><thead><tr><th>Capability</th><th>Authority</th></tr></thead><tbody id="system-rows"></tbody></table></div>
+</section>
+<footer class="foot">Offline, research-only preview. Generated from a SHA-pinned Foundry catalogue and separately verified documentary founder decision. Not installed in JARVIS or MAIA. No automatic network requests, execution permissions, experiments, or product integration.</footer>
+</main>
+</div>
+<script type="application/json" id="foundry-model">__FOUNDRY_MODEL_JSON__</script>
+<script>
+(function(){
+'use strict';
+var model;
+try{model=JSON.parse(document.getElementById('foundry-model').textContent);}catch(e){document.body.textContent='Foundry preview source could not be verified.';return;}
+if(!model || model.source_evidence!=='OBSERVED' || model.presentation_only!==true || model.execution_grants!=='NONE' || model.candidates.length!==26){
+  document.body.textContent='Foundry catalogue verification failed; this preview refuses to display unverified research.';return;
+}
+var all=model.candidates;
+function esc(s){return String(s===undefined||s===null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function $id(s){return document.getElementById(s);}
+function text(id,value){$id(id).textContent=value;}
+function show(view){
+  document.querySelectorAll('.room').forEach(function(el){el.classList.toggle('active',el.id==='room-'+view);});
+  document.querySelectorAll('[data-view]').forEach(function(el){var active=el.getAttribute('data-view')===view;el.classList.toggle('active',active);if(active)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
+}
+document.querySelectorAll('[data-view]').forEach(function(b){b.addEventListener('click',function(){show(b.getAttribute('data-view'));});});
+text('founder-standing',model.founder_acceptance.valid?'Founder accepted · Research only':'Research acceptance not verified');
+var stats=[['26','Research candidates'],[String(model.counts.categories),'Research areas'],[String(model.counts.lanes),'Potential product lanes'],['0','Installed capabilities']];
+$id('stats').innerHTML=stats.map(function(s){return '<div class="card stat"><strong>'+esc(s[0])+'</strong><span>'+esc(s[1])+'</span></div>';}).join('');
+var categories=Array.from(new Set(all.map(function(x){return x.area;}))).sort();
+$id('category').innerHTML+='<option value=""></option>'.replace('<option value=""></option>','')+categories.map(function(x){return '<option value="'+esc(x)+'">'+esc(x.replace(/_/g,' '))+'</option>';}).join('');
+var laneFilter='';
+function renderCards(){
+ var q=$id('search').value.toLowerCase().trim(),area=$id('category').value,priority=$id('priority').value;
+ var list=all.filter(function(x){
+  var hay=[x.title,x.purpose,x.area,x.boundary].join(' ').toLowerCase();
+  return (!q||hay.includes(q))&&(!area||area===x.area)&&(!priority||priority===x.priority)&&(!laneFilter||x.product_lanes.some(function(l){return l.id===laneFilter;}));
+ });
+ text('results-count',list.length+' of '+all.length+' candidates'+(laneFilter?' · Product lane filter active':''));
+ $id('empty').style.display=list.length?'none':'block';
+ $id('candidates').innerHTML=list.map(function(x){
+  var label=x.source_check==='PUBLIC_DOC_REVIEWED'?'Documentation surveyed':'Source nominated';
+  var lanes=x.product_lanes.map(function(l){return '<span>'+esc(l.label)+'</span>';}).join('');
+  return '<article class="card candidate" data-candidate-id="'+esc(x.id)+'">'+
+  '<div class="card-head"><div><h3>'+esc(x.title)+'</h3><div class="meta">'+esc(x.area.replace(/_/g,' '))+' · '+esc(x.id)+'</div></div><span class="priority">'+esc(x.priority)+'</span></div>'+
+  '<p>'+esc(x.purpose)+'</p><div class="lanes">'+lanes+'</div>'+
+  '<details><summary>Why it matters · What must be protected</summary>'+
+  '<p><span class="detail-label">Important boundary: </span>'+esc(x.boundary)+'</p>'+
+  '<p><span class="detail-label">Standing: </span>Discovered only. Exact license, revision and dependency security still require independent review.</p>'+
+  '<p><span class="detail-label">Source evidence: </span>'+esc(label)+'</p>'+
+  '<a href="'+esc(x.source_url)+'" target="_blank" rel="noopener noreferrer">Open public source (only if you choose)</a>'+
+  '</details></article>';
+ }).join('');
+}
+['search','category','priority'].forEach(function(id){$id(id).addEventListener(id==='search'?'input':'change',function(){laneFilter='';renderCards();});});
+renderCards();
+text('today-summary',model.today.description);
+text('work-next',model.work.next_act);
+$id('work-rows').innerHTML=model.work.rows.map(function(x){return '<tr><td>'+esc(x.title)+'</td><td>'+esc(x.priority)+'</td><td>Research only</td><td>'+esc(x.next_act)+'</td></tr>';}).join('');
+var lanes=Array.from(new Map(all.flatMap(function(x){return x.product_lanes;}).map(function(l){return [l.id,l.label];})).entries()).sort(function(a,b){return a[1].localeCompare(b[1]);});
+$id('lane-grid').innerHTML=lanes.map(function(x){var n=all.filter(function(a){return a.product_lanes.some(function(l){return l.id===x[0];});}).length;return '<button class="lane-item" type="button" data-lane="'+esc(x[0])+'"><strong>'+esc(x[1])+'</strong><span>'+n+' related source candidates · research only</span></button>';}).join('');
+document.querySelectorAll('[data-lane]').forEach(function(b){b.addEventListener('click',function(){laneFilter=b.getAttribute('data-lane');$id('search').value='';$id('category').value='';$id('priority').value='';renderCards();show('discover');});});
+text('graph-summary',model.graph.nodes.length+' source-backed nodes and '+model.graph.edges.length+' proposed relationships. '+model.graph.meaning);
+$id('monitor-rows').innerHTML=model.monitor.rows.map(function(x){return '<tr><td>'+esc(x.name)+'</td><td class="standing '+(x.standing==='OBSERVED'?'observed':'')+'">'+esc(x.standing.replace(/_/g,' '))+'</td><td>'+esc(x.detail)+'</td></tr>';}).join('');
+text('system-summary',model.system.prose);
+$id('system-rows').innerHTML=model.system.blocked.map(function(x){return '<tr><td>'+esc(x.title)+'</td><td class="standing">'+esc(x.standing.replace(/_/g,' '))+'</td></tr>';}).join('');
+})();
+</script>
+</body>
+</html>
