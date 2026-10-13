@@ -21,6 +21,7 @@ const WUC = require('./work-unit-control.js');
 const RECOVERY_B = require('./o5-path-b-recovery.js');
 const OPWU = require('./operator-work-unit.js');
 const CWUV2 = require('./canonical-work-unit-v2.js');
+const IPCGUARD = require('./privileged-ipc-guard.js');
 // C1 evidence containment: correctness is decided from canonical evidence, never
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
@@ -268,6 +269,7 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
+  IPCGUARD.installLocalPagePolicy(mainWindow, pathToFileURL(path.join(__dirname, 'index.html')).href);
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
   // Re-assert after load: a page-supplied document.title would otherwise
   // replace the artifact identity, which is the one thing this title is for.
@@ -371,6 +373,7 @@ function openPreferences() {
       nodeIntegration: false,
     },
   });
+  IPCGUARD.installLocalPagePolicy(prefsWindow, pathToFileURL(path.join(__dirname, 'preferences.html')).href);
   prefsWindow.loadFile(path.join(__dirname, 'preferences.html'));
   prefsWindow.on('closed', () => { prefsWindow = null; });
 }
@@ -812,14 +815,96 @@ function desktopHumanActorId() {
   return 'human:jarvis-desktop:' + username;
 }
 
+// R3E-R1 candidate only: the main process derives these facts from the
+// persisted Work Unit and canonical source, never from a model or renderer.
+// Return only simple, stable data; the consent gate hashes the complete
+// context and requires it to match after human approval.
+async function mainOwnedConsentContext(root, req, action) {
+  const id = String(req?.work_unit_id || '');
+  if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(id)) return { ok: false };
+  const canonical = CWUV2.existsCanonicalV2(id, process.env);
+  const snap = canonical
+    ? await WUC.canonicalExecutionStatus(root, id, {
+        env: process.env, actorId: desktopHumanActorId(),
+      })
+    : await WUC.status(root, id, { env: process.env });
+  if (!snap?.ok) return { ok: false };
+
+  const wu = snap.work_unit || {};
+  const route = snap.routing || snap.routing_intelligence || wu.routing || null;
+  const permissions = canonical ? (wu.authority || {}) : (wu.permission_envelope || {});
+  const grants = snap.execution_bridge?.grants || snap.execution_grants || [];
+  const selected = grants.find((entry) =>
+    (entry.grant?.grant_id || entry.grant_id) === req?.grant_id) || null;
+  const grant = selected?.grant || selected;
+  const participant = (route?.participants || []).find((entry) =>
+    entry.participant_id === req?.route_participant_id) || null;
+  const bindings = participant?.transport_bindings || [];
+  const binding = bindings.length ? bindings[bindings.length - 1] : null;
+  let providerId = grant?.transport_binding?.provider_id || grant?.provider_id || binding?.provider_id || req?.provider_id || null;
+  let modelId = grant?.transport_binding?.model_id || grant?.model_ref || grant?.model_id || binding?.model_id || null;
+
+  if (action === 'authorize-execution-once') {
+    const preview = await WUC.executionAuthorizationPreview(root, id, req.provider_id, { env: process.env });
+    if (!preview?.ok || !preview.provider?.model_ref) return { ok: false };
+    providerId = preview.provider.id;
+    modelId = preview.provider.model_ref;
+  }
+  if (action === 'canonical-authorize-execution-once') {
+    const preview = await WUC.canonicalExecutionPreview(root, id, req.route_participant_id, {
+      env: process.env, actorId: desktopHumanActorId(),
+    });
+    if (!preview?.ok) return { ok: false };
+    providerId = preview?.transport_binding?.provider_id || providerId;
+    modelId = preview?.transport_binding?.model_id || modelId;
+  }
+  if (action === 'run-provider' && !modelId) {
+    const catalog = await WUC.providers(root, { env: process.env, home: os.homedir() });
+    modelId = req?.model || catalog.find((entry) => entry.id === providerId)?.model_ref || null;
+  }
+  const providerAction = /(?:execute|execution|run-provider)/.test(action);
+  if (providerAction && (!providerId || !modelId)) return { ok: false };
+  const confirmAction = /confirm-execute/.test(action);
+  if (confirmAction && (!selected || selected.standing !== 'ACTIVE')) return { ok: false };
+
+  return { ok: true, context: {
+    work_unit_id: id,
+    action,
+    source_revision: currentCanonicalSha(root),
+    bound_revision: wu.scope?.base_ref || wu.workspace?.canonical_sha || snap.canonical_sha || null,
+    lifecycle_state: wu.state?.lifecycle_state || snap.lifecycle?.state || wu.lifecycle_state || null,
+    evidence_class: wu.custody?.evidence_class || route?.evidence_class || snap.disclosure?.evidence_class || null,
+    route_digest: route?.route_digest || null,
+    provider_id: providerId,
+    model_id: modelId,
+    grant_id: req?.grant_id || null,
+    grant_standing: selected?.standing || null,
+    network_external: permissions.network_external === true || permissions.external_network === true,
+    provider_spend: permissions.provider_spend === true,
+    disclosure: permissions.external_disclosure || snap.disclosure?.repository_external_disclosure || 'none',
+    // Snapshot facts are hashed in main memory only; not displayed/logged.
+    subject: {
+      work_unit: wu, routing: route, grants, attempts: snap.attempts || snap.provenance?.attempts || [],
+      evaluator: snap.lifecycle || null,
+      request: {
+        provider_id: req?.provider_id || null,
+        route_participant_id: req?.route_participant_id || null,
+        grant_id: req?.grant_id || null,
+        decision: req?.decision || null,
+        basis_refs: Array.isArray(req?.basis_refs) ? req.basis_refs : null,
+      },
+    },
+  } };
+}
+
+const r3eConsent = IPCGUARD.createConsentBoundary();
+
 // Governed provider-review Work Unit control. ONE narrow channel with bounded
 // actions. R3 preview remains pre-create and non-executing; J6 route-plan remains
 // post-create and derives authority from the stored Work Unit. MAIN owns repository
 // binding, canonical SHA, Work Unit identity, and canonical scripts; the renderer
 // cannot supply a path, shell command, route record, or authority envelope directly.
-ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
-  const root = currentRoot();
-  if (!root) return { ok: false, status: 'NO_SUBSTRATE', reason: 'No execution substrate is bound.' };
+async function dispatchTrustedWorkUnitAction(root, req) {
   const action = String(req?.action || '');
   const safeId = (value) => /^[a-z0-9][a-z0-9-]{2,63}$/.test(String(value || ''));
   try {
@@ -1152,6 +1237,30 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
   } catch (e) {
     return { ok: false, status: 'DESKTOP_FAULT', reason: String(e.message || e).slice(0, 500) };
   }
+}
+
+// The renderer has no claim to be human: all Work Unit IPC senders are checked
+// against this exact local top-level frame before dispatch. Consequential
+// actions require separate main-controlled consent bound to current source,
+// Work Unit, route, provider and grant state. Consent cannot be reused.
+ipcMain.handle('jarvis:work-unit-action', async (event, req) => {
+  const expectedURL = pathToFileURL(path.join(__dirname, 'index.html')).href;
+  if (!IPCGUARD.sameMainFrame(event, mainWindow, expectedURL)) {
+    return { ok: false, status: 'REFUSED', reason: 'UNTRUSTED_WORK_UNIT_IPC_SENDER' };
+  }
+  const root = currentRoot();
+  if (!root) return { ok: false, status: 'NO_SUBSTRATE', reason: 'No execution substrate is bound.' };
+  const action = String(req?.action || '');
+  if (IPCGUARD.CONSENT_ACTIONS.includes(action)) {
+    return r3eConsent.guard({
+      event, window: mainWindow, expectedURL, action,
+      workUnitId: req?.work_unit_id,
+      readContext: () => mainOwnedConsentContext(root, req, action),
+      present: (options) => dialog.showMessageBox(mainWindow, options),
+      perform: () => dispatchTrustedWorkUnitAction(root, req),
+    });
+  }
+  return dispatchTrustedWorkUnitAction(root, req);
 });
 
 // ---------------------------------------------------------------------------
