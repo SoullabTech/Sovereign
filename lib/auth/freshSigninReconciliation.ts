@@ -44,7 +44,7 @@ export async function assessFreshSignInAdmission({
     // A stale pre-await assessment must never transfer another tab's cache.
     if(store.getItem('maia_signed_out')!=='1') return 'verification-unavailable';
     const after=assessFreshVerifiedSignInBrowserAccount(store,memberId);
-    if(after!==scope || after==='conflict' || after==='unverifiable') {
+    if(after!==scope) {
       return 'conflict';
     }
     // This confirms ONLY that the current server session belongs to the
