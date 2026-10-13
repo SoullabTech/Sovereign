@@ -1,4 +1,5 @@
  'use client';
+import { REVIEW_DEVELOPMENTAL_LENSES } from '@/lib/writersStudio/studio/wholeReview';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -666,7 +667,8 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
     reviewDiscussGen.current += 1;
     setReviewDiscussion(null);
     setReviewContinuityMessage(null);
-    const asked = lenses ?? DEVELOPMENTAL_LENSES;
+    // Review commissions only Review lenses; Overview and Themes retain Develop authority.
+    const asked = lenses ?? REVIEW_DEVELOPMENTAL_LENSES;
     const carried = lenses && review
       ? { readingIds: [...review.readingIds], payloads: [...review.payloads],
           findings: [...review.findings], failures: [...review.failures], remaining: [] }

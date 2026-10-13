@@ -6,6 +6,7 @@ import {
   type DevelopmentalLens,
 } from '@/lib/manuscript/developmentalReader/contract';
 import { REVIEW_DEVELOPMENTAL_LENSES } from '@/lib/writersStudio/studio/wholeReview';
+import { isCompleteChapterReviewAccounting } from '@/lib/writersStudio/rebuild/chapterReviewCompatibility';
 
 export const dynamic = 'force-dynamic';
 
@@ -146,7 +147,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (completed.has(f.lens)) return NextResponse.json({ refusal: 'lens_both_completed_and_failed' }, { status: 409 });
     completed.add(f.lens);
   }
-  if (completed.size !== REVIEW_DEVELOPMENTAL_LENSES.length || REVIEW_DEVELOPMENTAL_LENSES.some((lens) => !completed.has(lens))) {
+  if (!isCompleteChapterReviewAccounting(completed, REVIEW_DEVELOPMENTAL_LENSES)) {
     return NextResponse.json({ refusal: 'incomplete_lens_accounting' }, { status: 409 });
   }
 
