@@ -50,11 +50,13 @@ export function PlatformSection() {
             One field. Many places to work with your life.
           </h2>
           <p
-            className="text-white/45 text-center text-base sm:text-lg leading-relaxed max-w-2xl mx-auto mb-16"
+            className="text-white/60 text-center text-base sm:text-lg leading-relaxed max-w-2xl mx-auto mb-16"
             style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
           >
             Soullab brings reflection, creativity, relationships, symbolic inquiry, and meaningful work
-            into one living environment. MAIA can accompany you across it; AIN OS quietly holds the architecture underneath.
+            into one living environment. Care for yourself and for the world both belong here;
+            no one must prove their usefulness to belong. MAIA can accompany you across it,
+            while AIN OS quietly holds the architecture underneath.
           </p>
         </SectionReveal>
 
@@ -74,7 +76,7 @@ export function PlatformSection() {
                   </span>
                 </div>
                 <p
-                  className="mt-3 max-w-xl text-white/42 text-sm sm:text-[15px] leading-relaxed"
+                  className="mt-3 max-w-xl text-white/60 text-sm sm:text-[15px] leading-relaxed"
                   style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
                 >
                   {facet.body}

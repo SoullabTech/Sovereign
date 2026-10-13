@@ -52,7 +52,7 @@ export function HeroSection() {
           className="mt-3 text-base sm:text-lg md:text-xl font-extralight italic text-white/50"
           style={{ fontFamily: "'Crimson Pro', serif" }}
         >
-          A living platform for inner life, relationship, creativity, and becoming.
+          For those in service to self and world.
         </motion.p>
 
         {/* Luminous holoflower — focal centerpiece */}
@@ -105,8 +105,8 @@ export function HeroSection() {
           className="text-sm sm:text-base text-white/35 max-w-lg mx-auto mb-10"
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
-          Technology should help you become more yourself,
-          not more dependent on technology.
+          A life is not a project to perfect. Technology should leave room
+          for the life you are living, not make you more dependent on it.
         </motion.p>
 
         {/* CTAs */}
