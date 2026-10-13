@@ -25,6 +25,10 @@ export function ReflectArrivalView() {
             your own unfolding understanding. Reflect begins there: with what you
             are learning, questioning, and becoming in the work you do.
           </p>
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-stone-700 md:text-lg">
+            If your work involves helping others, your own life belongs in that care, too —
+            including rest, boundaries, and the questions you carry. Your well-being is not last.
+          </p>
           <div className="mt-12 rounded-2xl border border-stone-300 bg-[#fffdf8] p-7 shadow-sm md:p-10">
             <p className="text-sm font-semibold uppercase tracking-[0.15em] text-stone-500">Begin with a conversation</p>
             <h2 className="mt-4 text-2xl font-normal tracking-tight">What is your work asking of you now?</h2>

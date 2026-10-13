@@ -1,0 +1,185 @@
+{
+  "candidate": "SERVICE-FIRST-CROSS-SURFACE-R1",
+  "base_commit": "2e836abc32853bf01bf8256062b561c2b7406378",
+  "test_kind": "synthetic_actual_source_react_component_browser_not_full_next",
+  "check_count": 26,
+  "passed": 26,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "desktop landing source loaded",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "desktop public belief and no moral prerequisite",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "desktop public signature is visible",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "desktop MAIA copy respects member-authored choice",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "desktop one public entry gesture unchanged",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "desktop no spontaneous public MAIA question",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "desktop public page no horizontal overflow",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "desktop Hero central message is sufficiently legible",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "desktop Platform description is readable",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "desktop Reflect preview exact member-owned copy",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "desktop Reflect free MAIA doorway and release truth",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "desktop page viewport readable",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "mobile landing source loaded",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "mobile public belief and no moral prerequisite",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "mobile public signature is visible",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "mobile MAIA copy respects member-authored choice",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "mobile one public entry gesture unchanged",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "mobile no spontaneous public MAIA question",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "mobile public page no horizontal overflow",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "mobile Hero central message is sufficiently legible",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "mobile Platform description is readable",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "mobile Reflect preview exact member-owned copy",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "mobile Reflect free MAIA doorway and release truth",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "mobile page viewport readable",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "no network requests outside isolated fixture",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "no browser page errors",
+      "passed": true,
+      "details": null
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/public-desktop.png",
+      "bytes": 417710
+    },
+    {
+      "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/platform-desktop.png",
+      "bytes": 137266
+    },
+    {
+      "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/maia-desktop.png",
+      "bytes": 452462
+    },
+    {
+      "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/reflect-desktop.png",
+      "bytes": 119790
+    },
+    {
+      "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/public-mobile.png",
+      "bytes": 195441
+    },
+    {
+      "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/platform-mobile.png",
+      "bytes": 119633
+    },
+    {
+      "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/maia-mobile.png",
+      "bytes": 395512
+    },
+    {
+      "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/reflect-mobile.png",
+      "bytes": 104104
+    }
+  ],
+  "external": [],
+  "errors": [],
+  "limitations": [
+    "Next.js Link/Image mocked to local semantic HTML/image; public landing screenshot contains the three amended components rather than entire production page",
+    "Styles use actual Tailwind project config and source component class names, but omit larger global stylesheet and production font loading",
+    "Reduced-motion Chrome 1280x850 and 390x844; neither member login nor MAIA conversation invoked",
+    "Ganesha Life Flow is editorial only and was not rendered",
+    "No real member data, paid plan, beta invite or production mutation"
+  ],
+  "visual_correction": "Hero main promise text-white/35\u2192/75, service descriptor /50\u2192/75, trust line /20\u2192/60. New browser checks assert legible computed text color on desktop and phone.",
+  "hero_source_sha256": "dab154a5f9315577b1d1d60f4278383f3e2c88a41bf9b7c0e1e4f3f36fe9d518"
+}

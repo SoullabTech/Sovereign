@@ -1,0 +1,74 @@
+---
+room: Soullab public landing — Service First editorial R1
+human_activity: a visitor discovering whom Soullab is for and deciding whether to enter without being judged for usefulness
+surfaces:
+  - app/layout.tsx
+  - components/landing/HeroSection.tsx
+  - components/landing/PlatformSection.tsx
+  - components/landing/MaiaSection.tsx
+change_class: experiential
+principles:
+  - docs/canon/SOULLAB_LIVING_ORIENTATION_SYSTEM.md — founder-ratified Service First purpose, self and world without duty
+  - docs/canon/SOULLAB_PLATFORM_IDENTITY_CANON_2026-09-28.md — Soullab is the platform, MAIA the single relational intelligence
+  - docs/canon/MAIA_CANON_v1.1.md — no persuasion, manufactured lack or service prescription
+  - docs/canon/MARKETING_CLAIM_DISCIPLINE.md — never promote Designed or Vision capabilities as Live
+reference_surfaces:
+  - docs/design/contracts/screenshots/soullab-landing-reconciled-desktop.png
+  - docs/design/contracts/screenshots/soullab-landing-reconciled-mobile.png
+  - docs/design/contracts/maia-room.md
+  - docs/marketing/SERVICE_FIRST_BRAND_POSITIONING_CANDIDATE_2026-10-13.md
+shared_with_house: warm purposeful entry, one Soullab Home CTA, human-authority boundary, membership without obligation, meaning remains member-owned
+distinct_to_room: public brand invitation tells Soullab's purpose without simulating a member MAIA encounter or promising not-yet-live Ganesha and professional capabilities
+screenshot_desktop:
+  - docs/design/contracts/screenshots/service-first-expression-r1/public-desktop.png
+  - docs/design/contracts/screenshots/service-first-expression-r1/platform-desktop.png
+  - docs/design/contracts/screenshots/service-first-expression-r1/maia-desktop.png
+screenshot_mobile:
+  - docs/design/contracts/screenshots/service-first-expression-r1/public-mobile.png
+  - docs/design/contracts/screenshots/service-first-expression-r1/platform-mobile.png
+  - docs/design/contracts/screenshots/service-first-expression-r1/maia-mobile.png
+experience_verification: 2026-10-13 SYNTHETIC ACTUAL-REACT-COMPONENT WITNESS at 1280x850 and 390x844 in local Chromium. HeroSection PlatformSection MaiaSection were bundled unchanged except the R1 source diff with React and framer-motion; Next Link and Image were replaced by semantic local stand-ins and actual project Tailwind config was compiled for amended sources. Browser checked exact visible copy one Soullab Home entry no spontaneous MAIA action public/MAIA member authorship readable Platform text and zero horizontal overflow at both widths. Browser suite total 24/24 including separate Reflect surface. No external HTTP requests or page errors. This is NOT full Next deployed landing layout and does not establish production readiness or member outcome efficacy. Screenshots use reduced motion and omit global app stylesheet and font downloads; founder visual acceptance and full-app staging remain required.
+---
+
+# Public Service First — Experience Contract R1
+
+## Why a visitor arrives
+
+The visitor wants to understand Soullab without being told their life is incomplete. The hero preserves the platform name, “We build for the soul,” and the primary route to `/home`. The second line addresses people who are in service to self and world. The supporting thought rejects treating life as a project to perfect, without criticizing legitimate healing, therapy, journaling, rest or reflection.
+
+## Room flow
+
+The landing offers one continuous story: purpose in the hero, plural places within Soullab in Platform, and MAIA as a relational intelligence under the platform rather than a second front door. The Platform section expressly states that self and world both belong and no one must earn belonging through usefulness. It also carries the founder's recurring signature, **People come alive helping others come alive**, as an invitation, not an outcome claim. Existing facet statuses (**Live / Living field / In active build / Research + design**) are preserved, without new Ganesha capability claims.
+
+## Intervention kept small
+
+The source change adjusts only informational text plus two narrowly evidenced public layout corrections:
+
+- Platform body classes use a supported readable text opacity instead of an unsupported `text-white/42` utility, which the tested CSS compiled as black text on a dark background.
+- MAIA section uses `overflow-x-clip` to contain the pre-existing 520px aura and prevent 44px horizontal overflow at 390px without adding a scroll container.
+
+No navigation, API request, member authority, model instructions, memory, data-retention state, pricing, event wiring or automated MAIA initiation was modified.
+
+## What the evidence proves and does not prove
+
+- **Observed:** React source sections render new lines at 1280 and 390, with no horizontal overflow after the narrow corrections; Platform facet text is visibly legible; the one `/home` entry remains; no MAIA question dispatched automatically.
+- **Not observed:** full production landing shell, installed fonts, a real logged-in Home transition, MAIA dialogue, Ganesha Life Flow, production CDN cache, accessibility with every assistive technology, advertising or conversion outcomes.
+
+**Disposition:** R1 candidate for founder editorial/design review. The text has not been published, no public site deployment has occurred, and canon ratification alone does not authorize its release.
+
+
+### Contrast correction — October 13 R1b
+
+Founder belief and explanatory copy in the dark landing Hero are now more legible: central descriptor text-white/75, service invitation text-white/75, and quiet trust line text-white/60. The original copy and CTA are unchanged. New synthetic browser assertions verify computed RGB channels for desktop and mobile; actual React screenshots were recaptured and reviewed. This does not substitute for real Next.js staging, full WCAG contrast calculation, or founder human visual acceptance.
+
+
+### Site metadata expression — October 13 R1c
+
+`app/layout.tsx` owns the shared Soullab site description, Open Graph description and Twitter description, all previously carrying a pre-Service First message. The narrow copy-only change gives all three the same founder-ratified self-and-world invitation, including the explicit prohibition on usefulness as a belonging test. `Soullab — We build for the soul`, OG imagery, routing, layout providers, MAIA behavior and underlying member entitlements are unchanged.
+
+**Shared layout risk:** metadata inherited by other routes is global. Human editorial review must confirm the message remains suitable across member and public routes that do not set their own descriptions. The public Home/body is still client-rendered in the initial static Next.js HTML; this metadata change improves server-readable previews but cannot be represented as a no-JavaScript landing-body repair. Actual Next.js 16 staging must verify all three generated meta descriptions, hydrated desktop/mobile hero content and contrast, and invited Reflect continuity. The old Experience Contract screenshots remain evidence for visual surfaces; the metadata is verified in rendered HTML head and source tests, not by a screenshot alone.
+
+
+### Actual production-mode Next 16 screenshots — R1c
+
+In addition to the original synthetic React fixture images, the complete Next.js 16.3.8 source build at `70d73b09bc4e7da3ef71117cf35ce60375a0f0cd` produced `screenshots/service-first-expression-r1/next16-hero-desktop.png` and `next16-hero-mobile.png`. Source-real Chrome measured targeted contrast ratios 10.29:1 for the service invitation and central message, 6.99:1 for the trust line against both radial background endpoints; these exceed the 4.5:1 small-text AA threshold but are not a global accessibility audit. The desktop Hero is 1014px tall and its CTA ends at 953px: it is below the initial 850px viewport but **inside the section**, not cut off. The route has an additional persistent public Home CTA in its navigation. The real built-app public body is client-hydrated, while site/OG/Twitter description metadata is server-rendered. R1c has 20/20 real Chrome and 14/14 fictional authenticated built-app tests; evidence at `docs/programme/SERVICE_FIRST_R1C_NEXT16_STAGING_ACCEPTANCE_2026-10-13.md`.
