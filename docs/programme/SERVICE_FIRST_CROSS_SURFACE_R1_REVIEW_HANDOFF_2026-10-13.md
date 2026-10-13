@@ -15,7 +15,7 @@ Founder requested editorial and implementation consistency for the Soullab brand
 | Surface | Source | Proposal | What remains unchanged |
 |---|---|---|---|
 | Soullab landing hero | `components/landing/HeroSection.tsx` | “For those in service to self and world”; “A life is not a project to perfect” | Soullab identity; existing Home CTA, secondary understanding CTA and site entry |
-| Soullab Platform | `components/landing/PlatformSection.tsx` | Explicit equal legitimacy of caring for self/world, no usefulness test; readable facet copy | Existing member facets, their status labels, route gesture |
+| Soullab Platform | `components/landing/PlatformSection.tsx` | Explicit equal legitimacy of caring for self/world, no usefulness test, founding signature; readable facet copy | Existing member facets, their status labels, route gesture |
 | Public MAIA section | `components/landing/MaiaSection.tsx` | “Never ... an assignment to serve”; member chooses what matters | MAIA model/prompt, live encounter route, provider and conversation behavior |
 | Pro Studio Reflect preview | `components/pro-studio/ReflectArrivalView.tsx` | Care for helpers includes rest/boundaries: “Your well-being is not last” | Beta invite gate, free MAIA encounter link, no paid Reflect, no client record |
 | Ganesha Life Flow | `docs/marketing/SERVICE_FIRST_CROSS_SURFACE_EDITORIAL_R1_2026-10-13.md` | An editorial direction, “A life lived in relationship” | No new route, product grant, Ganesha Focus Garden or AI agent voice |
@@ -25,7 +25,7 @@ Founder requested editorial and implementation consistency for the Soullab brand
 
 - Local static fixture bundled the **actual amended React components** with real React 19, framer-motion, and project Tailwind utility classes. Next Link/Image replaced only with semantic local stand-ins, not claimed as full production Next.js or installed marketing fonts.
 - Screenshots at 1280×850 and 390×844 for Hero, Platform, MAIA, and Reflect (8 files in `docs/design/contracts/screenshots/service-first-expression-r1/`).
-- 22 of 22 browser checks PASS. They cover exact copy, Home CTA, absence of auto-MAIA calls, retained free MAIA link, explicit paid Reflect nonavailability, visible Platform text and no document overflow at both sizes. Zero external network requests or JS page errors.
+- 24 of 24 browser checks PASS. They cover exact copy, Home CTA, absence of auto-MAIA calls, retained free MAIA link, explicit paid Reflect nonavailability, visible Platform text and no document overflow at both sizes. Zero external network requests or JS page errors.
 - An initial 390px fixture had 44px horizontal overflow from the pre-existing MAIA aura (`w-[520px]`) and black-on-dark facet text from `text-white/42`. The candidate confines that aura horizontally and uses a supported `text-white/60` opacity; retest: 0px overflow and readable facet text.
 - 22 of 22 focused Jest regression/contract tests PASS across public landing, new Service First textual boundary, Pro Studio Reflect session and beta gate. The installed Jest dependencies came from the older development checkout; the actual JSX was compiled and inspected in the separate fixture, not a revision-matched full Next.js build.
 

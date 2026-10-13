@@ -2,8 +2,8 @@
   "candidate": "SERVICE-FIRST-CROSS-SURFACE-R1",
   "base_commit": "2e836abc32853bf01bf8256062b561c2b7406378",
   "test_kind": "synthetic_actual_source_react_component_browser_not_full_next",
-  "check_count": 22,
-  "passed": 22,
+  "check_count": 24,
+  "passed": 24,
   "failed": 0,
   "checks": [
     {
@@ -13,6 +13,11 @@
     },
     {
       "name": "desktop public belief and no moral prerequisite",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "desktop public signature is visible",
       "passed": true,
       "details": null
     },
@@ -63,6 +68,11 @@
     },
     {
       "name": "mobile public belief and no moral prerequisite",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "mobile public signature is visible",
       "passed": true,
       "details": null
     },
@@ -120,15 +130,15 @@
   "screenshots": [
     {
       "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/public-desktop.png",
-      "bytes": 414533
+      "bytes": 414447
     },
     {
       "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/platform-desktop.png",
-      "bytes": 130793
+      "bytes": 137266
     },
     {
       "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/maia-desktop.png",
-      "bytes": 453525
+      "bytes": 451911
     },
     {
       "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/reflect-desktop.png",
@@ -140,11 +150,11 @@
     },
     {
       "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/platform-mobile.png",
-      "bytes": 115133
+      "bytes": 119633
     },
     {
       "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/maia-mobile.png",
-      "bytes": 395911
+      "bytes": 395512
     },
     {
       "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/reflect-mobile.png",

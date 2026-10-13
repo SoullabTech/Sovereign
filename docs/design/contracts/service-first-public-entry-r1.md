@@ -26,7 +26,7 @@ screenshot_mobile:
   - docs/design/contracts/screenshots/service-first-expression-r1/public-mobile.png
   - docs/design/contracts/screenshots/service-first-expression-r1/platform-mobile.png
   - docs/design/contracts/screenshots/service-first-expression-r1/maia-mobile.png
-experience_verification: 2026-10-13 SYNTHETIC ACTUAL-REACT-COMPONENT WITNESS at 1280x850 and 390x844 in local Chromium. HeroSection PlatformSection MaiaSection were bundled unchanged except the R1 source diff with React and framer-motion; Next Link and Image were replaced by semantic local stand-ins and actual project Tailwind config was compiled for amended sources. Browser checked exact visible copy one Soullab Home entry no spontaneous MAIA action public/MAIA member authorship readable Platform text and zero horizontal overflow at both widths. Browser suite total 22/22 including separate Reflect surface. No external HTTP requests or page errors. This is NOT full Next deployed landing layout and does not establish production readiness or member outcome efficacy. Screenshots use reduced motion and omit global app stylesheet and font downloads; founder visual acceptance and full-app staging remain required.
+experience_verification: 2026-10-13 SYNTHETIC ACTUAL-REACT-COMPONENT WITNESS at 1280x850 and 390x844 in local Chromium. HeroSection PlatformSection MaiaSection were bundled unchanged except the R1 source diff with React and framer-motion; Next Link and Image were replaced by semantic local stand-ins and actual project Tailwind config was compiled for amended sources. Browser checked exact visible copy one Soullab Home entry no spontaneous MAIA action public/MAIA member authorship readable Platform text and zero horizontal overflow at both widths. Browser suite total 24/24 including separate Reflect surface. No external HTTP requests or page errors. This is NOT full Next deployed landing layout and does not establish production readiness or member outcome efficacy. Screenshots use reduced motion and omit global app stylesheet and font downloads; founder visual acceptance and full-app staging remain required.
 ---
 
 # Public Service First — Experience Contract R1
@@ -37,7 +37,7 @@ The visitor wants to understand Soullab without being told their life is incompl
 
 ## Room flow
 
-The landing offers one continuous story: purpose in the hero, plural places within Soullab in Platform, and MAIA as a relational intelligence under the platform rather than a second front door. The Platform section expressly states that self and world both belong and no one must earn belonging through usefulness. Existing facet statuses (**Live / Living field / In active build / Research + design**) are preserved, without new Ganesha capability claims.
+The landing offers one continuous story: purpose in the hero, plural places within Soullab in Platform, and MAIA as a relational intelligence under the platform rather than a second front door. The Platform section expressly states that self and world both belong and no one must earn belonging through usefulness. It also carries the founder's recurring signature, **People come alive helping others come alive**, as an invitation, not an outcome claim. Existing facet statuses (**Live / Living field / In active build / Research + design**) are preserved, without new Ganesha capability claims.
 
 ## Intervention kept small
 

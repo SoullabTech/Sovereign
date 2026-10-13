@@ -30,6 +30,7 @@ describe('Service First R1 — public and professional copy boundaries', () => {
   test('public product explanation protects rest and belonging, preserves facet standing', () => {
     expect(platform).toContain('Care for yourself and for the world both belong here;');
     expect(platform).toContain('no one must prove their usefulness to belong.');
+    expect(platform).toContain('People come alive helping others come alive.');
     expect(platform).toContain("status: 'In active build'");
     expect(platform).toContain("status: 'Research + design'");
   });
