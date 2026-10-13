@@ -1,0 +1,128 @@
+{
+  "sha": "70d73b09bc4e7da3ef71117cf35ce60375a0f0cd",
+  "kind": "full Next16 production build with fictional local Postgres and real Chrome",
+  "utc": "2026-10-13T17:28:38.714470+00:00",
+  "pass_count": 14,
+  "failure_count": 0,
+  "errors": [],
+  "checks": [
+    {
+      "name": "public Next root responds with built HTML",
+      "passed": true,
+      "detail": {
+        "http": 200,
+        "cache": "s-maxage=31536000"
+      }
+    },
+    {
+      "name": "server-readable Service First SEO description",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "server-readable social share metadata carries Service First",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "anonymous Reflect session refused",
+      "passed": true,
+      "detail": {
+        "http": 307
+      }
+    },
+    {
+      "name": "fictional invited A HTML Reflect access",
+      "passed": true,
+      "detail": {
+        "http": 200,
+        "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "name": "fictional uninvited B HTML protected content refused",
+      "passed": true,
+      "detail": {
+        "http": 200,
+        "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "name": "fictional invited A RSC access",
+      "passed": true,
+      "detail": {
+        "http": 200,
+        "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "name": "fictional uninvited B RSC protected content refused",
+      "passed": true,
+      "detail": {
+        "http": 200,
+        "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "name": "revoked session refused",
+      "passed": true,
+      "detail": {
+        "http": 307
+      }
+    },
+    {
+      "name": "expired session refused",
+      "passed": true,
+      "detail": {
+        "http": 307
+      }
+    },
+    {
+      "name": "unverified bare ID session refused",
+      "passed": true,
+      "detail": {
+        "http": 307
+      }
+    },
+    {
+      "name": "mismatched identity session refused",
+      "passed": true,
+      "detail": {
+        "http": 307
+      }
+    },
+    {
+      "name": "real Next Chrome 1280 and 390 synthetic visual browser",
+      "passed": true,
+      "detail": {
+        "pass": 20,
+        "failed": 0,
+        "shots": [
+          "hero-desktop.png",
+          "hero-mobile.png",
+          "reflect-desktop.png",
+          "reflect-mobile.png"
+        ]
+      }
+    },
+    {
+      "name": "off-switch denies former invited A after restart",
+      "passed": true,
+      "detail": {
+        "http": 200,
+        "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    }
+  ],
+  "temporary_database_removed": true,
+  "next_server_stopped": true,
+  "used_only_fictional_users": true,
+  "production_or_member_data_touched": false,
+  "limitations": [
+    "no real production image attestation",
+    "no actual MAIA conversation initiated",
+    "no actual mobile Safari or iOS device",
+    "no real beta cohort invitation or sign-in signup flow",
+    "homepage body copy is client-hydrated, not present in no-JavaScript initial HTML; search/social metadata are server-readable"
+  ]
+}

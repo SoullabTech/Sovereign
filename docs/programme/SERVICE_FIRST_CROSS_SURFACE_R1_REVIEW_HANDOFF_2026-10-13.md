@@ -51,3 +51,8 @@ Founder requested editorial and implementation consistency for the Soullab brand
 ### Contrast correction — October 13 R1b
 
 Founder belief and explanatory copy in the dark landing Hero are now more legible: central descriptor text-white/75, service invitation text-white/75, and quiet trust line text-white/60. The original copy and CTA are unchanged. New synthetic browser assertions verify computed RGB channels for desktop and mobile; actual React screenshots were recaptured and reviewed. This does not substitute for real Next.js staging, full WCAG contrast calculation, or founder human visual acceptance.
+
+
+## R1c — post-R1 production-mode technical acceptance (supersedes the earlier build HOLD)
+
+The source revision `70d73b09bc4e7da3ef71117cf35ce60375a0f0cd` has since passed its full Next.js 16.3.8 build (exit 0, BUILD_ID `yyaS2j2h-UqgHh_gHAskr`), **14/14 fictional authenticated built-app checks** and **20/20 real Chrome desktop/mobile checks**. It includes the founder-ratified Service First description in static HTML/Open Graph/Twitter metadata; the homepage body remains client-hydrated. See `docs/programme/SERVICE_FIRST_R1C_NEXT16_STAGING_ACCEPTANCE_2026-10-13.md` for the test matrix, no-JavaScript caveat and actual Next 16 screenshots. The previous R1 statement that the full build had not run applied **only to the earlier R1 head**, and is not current at this exercised R1c source. Publication remains held for human review and separate release authorization.

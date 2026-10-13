@@ -39,3 +39,8 @@ The one primary gesture still navigates to `/maia/encounter`, the existing free 
 The existing `docs/design/contracts/pro-studio-reflect-arrival-r1b.md` remains controlling for entry and authorization; this R1 document records only additional language and its visual witness. All member and MAIA authority restrictions remain unchanged.
 
 **Disposition:** Editorial and visual candidate only. The pre-existing feature flag and allowlist remain closed absent separate release permission. An approved brand message is not a new MAIA behavior instruction.
+
+
+### Production-mode member invitation imagery — R1c
+
+The source-exact Next.js 16.3.8 client-free Reflect doorway was captured with a **fictional invited member session** in `screenshots/service-first-expression-r1/next16-reflect-desktop.png` and `next16-reflect-mobile.png`. The invite gate was also checked against denied and revoked fictional sessions, React Server Component payloads, explicit feature flag shutdown, and private no-store caching. These images are from the full compiled app rather than the earlier mocked Next Link/Image fixture; neither uses real practitioners, case notes or client information. See `docs/programme/SERVICE_FIRST_R1C_NEXT16_STAGING_ACCEPTANCE_2026-10-13.md` for the exact checks and limitations. No paid Reflect workspace or email invitation has been enabled.
