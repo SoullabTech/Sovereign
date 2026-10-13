@@ -14,6 +14,8 @@
 
 Service First is not a command that anyone ought to serve. It is the orientation of the place we are building: a place that sustains people as they care for their own lives and participate in the lives around them.
 
+Here, **service** means freely chosen care, attention, or participation toward oneself and the wider world. It is not a job description, measure of altruism, demand for labor, or condition of membership. **No one has to identify as “of service” to belong in Soullab.**
+
 Care for oneself and care for the world are not rival duties. One may tend to health, healing, rest, boundaries, livelihood, and imagination while also caring for people, community, creative work, the natural world, and meaningful responsibilities. The proportions may change across a life. No member must justify the right to receive care through usefulness to others.
 
 Soullab honors reflection because it can make space for fuller life, not because constant self-observation is an end in itself. Sometimes that means participating outwardly. Sometimes it means grieving, resting, recovering, learning, or being held by others. None is failure.
