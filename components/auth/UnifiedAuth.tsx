@@ -61,6 +61,8 @@ import {
 import { unifiedBiometry } from '@/lib/auth/unifiedBiometry';
 import { deviceTrust } from '@/lib/auth/deviceTrust';
 import { apiUrl, apiFetch } from '@/lib/http/apiBase';
+import { assessBrowserAccount } from '@/lib/auth/accountConflictBoundary';
+import {activateAccountScope,ACCOUNT_CHANNEL} from '@/lib/auth/accountScopedStorage';
 import { Capacitor } from '@capacitor/core';
 import { getFeatureFlag } from '@/lib/features/flags';
 import { isFeatureEnabled } from '@/lib/utils/feature-flags';
@@ -307,17 +309,40 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
     const t = setTimeout(() => controller.abort(), 3000);
     fetch('/api/auth/whoami', { credentials: 'include', signal: controller.signal })
       .then((r) => r.json())
-      .then((d) => { clearTimeout(t); if (d?.authed) window.location.replace(afterAuth); })
+      .then((d) => {
+        clearTimeout(t);
+        if (d?.authed) {
+          const boundary = assessBrowserAccount(localStorage, d.memberId);
+          if (boundary === 'conflict' || boundary === 'unverifiable') {
+            window.location.replace('/account/conflict');
+          } else {
+            window.location.replace(afterAuth);
+          }
+        }
+      })
       .catch(() => clearTimeout(t));
   }, [afterAuth, preVerified]);
 
   function storeSession(
     user: { id: string; username: string; name: string; preferredName?: string; onboarded: boolean },
     sessionToken?: string
-  ) {
+  ): boolean {
+    const boundary = assessBrowserAccount(localStorage, user.id);
+    if (boundary === 'conflict' || boundary === 'unverifiable') {
+      window.location.assign('/account/conflict');
+      return false;
+    }
+    const existingRaw = localStorage.getItem('beta_user');
+    let sameMemberMetadata: Record<string, unknown> = {};
+    if (existingRaw) {
+      try {
+        const parsed = JSON.parse(existingRaw) as Record<string, unknown>;
+        if (parsed && (parsed.id === user.id || parsed.memberId === user.id)) sameMemberMetadata = parsed;
+      } catch { /* conflict assessor already refuses unparseable cache */ }
+    }
     const displayName = user.preferredName || user.name || 'Friend';
     localStorage.setItem('memberId', user.id);
-    localStorage.setItem('beta_user', JSON.stringify(user));
+    localStorage.setItem('beta_user', JSON.stringify({...sameMemberMetadata, ...user}));
     localStorage.setItem('explorerId', user.id);
     localStorage.setItem('explorerName', displayName);
     localStorage.setItem('explorerPreferredName', displayName);
@@ -327,6 +352,13 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
     if (sessionToken) localStorage.setItem('maia_session_token', sessionToken);
     localStorage.removeItem('maia_signed_out');
     localStorage.removeItem('maia_signed_out_at');
+    if (!activateAccountScope(localStorage,user.id)) return false;
+    if (typeof BroadcastChannel !== 'undefined') {
+      const channel=new BroadcastChannel(ACCOUNT_CHANNEL);
+      channel.postMessage({kind:'account-selected'});
+      channel.close();
+    }
+    return true;
   }
 
   async function trustThisDevice() {
@@ -382,10 +414,10 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { setError(data?.error || 'Incorrect code.'); setIsLoading(false); return; }
       if (data.member) {
-        storeSession({
+        if (!storeSession({
           id: data.member.id, username: data.member.username, name: data.member.name,
           preferredName: data.member.name, onboarded: !!data.member.onboarded,
-        });
+        })) return;
         await trustThisDevice();
         enterSoullab();
         return;
@@ -425,10 +457,10 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
         break;
       }
       if (!res || !res.ok) { setError(data?.error || 'Could not complete signup. Please try again.'); setIsLoading(false); return; }
-      storeSession({
+      if (!storeSession({
         id: data.member.id, username: data.member.username, name: data.member.name || name,
         preferredName: name || data.member.name, onboarded: !!data.member.onboarded,
-      });
+      })) return;
       await trustThisDevice();
       if (bioAvailable && bioPlatformAvailable) { try { await biometricAuth.register(); markLocalPasskeyEvidence(); } catch { /* optional */ } }
       window.location.assign(data.member.onboarded ? afterAuth : `/onboarding?next=${encodeURIComponent(afterAuth)}`);
@@ -477,10 +509,10 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
       }
       if (res.member) {
         if (!useNative) markLocalPasskeyEvidence();
-        storeSession({
+        if (!storeSession({
           id: res.member.id, username: res.member.username, name: res.member.name,
           preferredName: res.member.preferredName, onboarded: res.member.onboarded,
-        }, res.session?.token);
+        }, res.session?.token)) return;
         await trustThisDevice();
         enterSoullab();
         return;
@@ -513,13 +545,13 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
       }
       const memberId = data?.memberId || data?.member?.id || data?.id;
       if (!memberId) { setError('Sign in succeeded but memberId missing.'); setIsLoading(false); return; }
-      storeSession({
+      if (!storeSession({
         id: String(memberId),
         username: data.member?.username || username,
         name: data.member?.name || username,
         preferredName: data.member?.preferredName || data.member?.name,
         onboarded: !!data.member?.onboarded,
-      }, data.session?.token);
+      }, data.session?.token)) return;
       await trustThisDevice();
       enterSoullab();
     } catch (err: any) {
@@ -547,7 +579,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Google sign-in failed');
-        if (data.member) { storeSession(data.member); await trustThisDevice(); enterSoullab(); }
+        if (data.member && storeSession(data.member)) { await trustThisDevice(); enterSoullab(); }
         return;
       }
       window.location.href = '/api/auth/google/list';
@@ -573,7 +605,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Apple sign-in failed');
-        if (data.member) { storeSession(data.member); await trustThisDevice(); enterSoullab(); }
+        if (data.member && storeSession(data.member)) { await trustThisDevice(); enterSoullab(); }
         return;
       }
       window.location.href = '/api/auth/apple/list';

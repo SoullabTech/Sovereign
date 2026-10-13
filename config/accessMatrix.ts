@@ -145,6 +145,7 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Auth flows
   { exact: '/signin', public: true, notes: 'Sign in' },
+  { exact: '/account/conflict', public: true, notes: 'Neutral account-conflict resolution without member data' },
   { exact: '/signup', public: true, notes: 'Sign up' },
   { exact: '/reset-password', public: true, notes: 'Password reset' },
   { exact: '/magic-link', public: true, notes: 'Magic link landing page — button-click redeems token (scanner-safe)' },
