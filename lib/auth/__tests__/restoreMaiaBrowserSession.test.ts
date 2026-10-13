@@ -18,6 +18,7 @@ function store(initial: Record<string, string> = {}) {
   const storage = {
     getItem: (key: string) => map.get(key) ?? null,
     setItem: (key: string, value: string) => { map.set(key, value); },
+    removeItem: (key: string) => { map.delete(key); },
   };
   return { map, storage };
 }
@@ -93,7 +94,102 @@ describe('Server-verified MAIA client cache recovery — Class A candidate', () 
     expect(map.has('consent')).toBe(false);
   });
   it('fails closed if local storage is unavailable',async()=>{
-    const storage={getItem:()=>null,setItem:()=>{throw Error('QuotaExceededError')}};
+    const storage={getItem:()=>null,setItem:()=>{throw Error('QuotaExceededError')},removeItem:()=>{}};
     expect(await check(storage,payload(good))).toBe(false);
+  });
+});
+
+describe('Security amendment — adversarial identity and storage integrity', () => {
+  const fresh = () => ({
+    authenticated: true,
+    member: {id:'fiction-member-A',name:'Member A',onboarded:true},
+  });
+
+  it('denies valid cookie A against current-version browser identity B without changing B', async()=>{
+    const previous={explorerId:'fiction-member-B',explorerName:'Member B',
+      beta_user:JSON.stringify({id:'fiction-member-B',name:'Member B'}),
+      maia_session_version:'2'};
+    const {map,storage}=store(previous);
+    expect(await check(storage,payload(fresh()))).toBe(false);
+    expect(Object.fromEntries(map)).toEqual(previous);
+  });
+
+  it('rejects a beta_user from B even if explorerId matches A',async()=>{
+    const previous={explorerId:'fiction-member-A',
+      beta_user:JSON.stringify({id:'fiction-member-B',name:'Member B'})};
+    const {map,storage}=store(previous);
+    expect(await check(storage,payload(fresh()))).toBe(false);
+    expect(Object.fromEntries(map)).toEqual(previous);
+  });
+
+  it('rejects conflicting beta_user memberId even when id matches A',async()=>{
+    const previous={explorerId:'fiction-member-A',
+      beta_user:JSON.stringify({id:'fiction-member-A',memberId:'fiction-member-B'})};
+    const {map,storage}=store(previous);
+    expect(await check(storage,payload(fresh()))).toBe(false);
+    expect(Object.fromEntries(map)).toEqual(previous);
+  });
+
+  it('preserves same-member settled beta_user metadata byte for byte',async()=>{
+    const beta=JSON.stringify({
+      id:'fiction-member-A',name:'Old A',
+      memberStyleProfile:{focus:'gentle'},
+      birthData:{date:'example-only'},
+    });
+    const {map,storage}=store({explorerId:'fiction-member-A',beta_user:beta,maia_session_version:'2'});
+    expect(await check(storage,payload(fresh()))).toBe(true);
+    expect(map.get('beta_user')).toBe(beta);
+    expect(map.get('explorerId')).toBe('fiction-member-A');
+    expect(map.get('explorerName')).toBe('Member A');
+  });
+
+  it('rewinds interrupted multi-key updates to the entire previous snapshot',async()=>{
+    const initial={explorerName:'Old Name',maia_session_version:'1'};
+    const {map}=store(initial);
+    let threw=false;
+    const storage={
+      getItem:(key:string)=>map.get(key)??null,
+      setItem:(key:string,value:string)=>{
+        if(key==='beta_user' && !threw){threw=true;throw Error('Simulated storage quota')}
+        map.set(key,value);
+      },
+      removeItem:(key:string)=>{map.delete(key)},
+    };
+    expect(await check(storage,payload(fresh()))).toBe(false);
+    expect(Object.fromEntries(map)).toEqual(initial);
+  });
+
+  it('restores previous same-member display on an interrupted version write',async()=>{
+    const initial={explorerId:'fiction-member-A',
+      explorerName:'Old A',
+      beta_user:JSON.stringify({id:'fiction-member-A',style:'settled'}),
+      maia_session_version:'1'};
+    const {map}=store(initial);
+    let threw=false;
+    const storage={
+      getItem:(key:string)=>map.get(key)??null,
+      setItem:(key:string,value:string)=>{
+        if(key==='maia_session_version' && !threw){threw=true;throw Error('Simulated interrupted write')}
+        map.set(key,value);
+      },
+      removeItem:(key:string)=>{map.delete(key)},
+    };
+    expect(await check(storage,payload(fresh()))).toBe(false);
+    expect(Object.fromEntries(map)).toEqual(initial);
+  });
+
+  it('denies a member B assertion even when a valid A cookie exists',async()=>{
+    const {map,storage}=store({explorerId:'fiction-member-B',maia_session_version:'2'});
+    const fetchSession=jest.fn(payload(fresh()));
+    expect(await check(storage,fetchSession)).toBe(false);
+    expect(fetchSession).toHaveBeenCalledTimes(1);
+    expect(map.get('explorerId')).toBe('fiction-member-B');
+  });
+
+  it('the direct MAIA encounter verifies even when browser version is current',()=>{
+    const fs=require('node:fs');
+    const page=fs.readFileSync(require('node:path').resolve(process.cwd(),'app/maia/page.tsx'),'utf8');
+    expect(page).toContain("window.location.pathname === '/maia/encounter'");
+    expect(page).toContain('if (sessionCheck || verifyAtEncounter)');
   });
 });

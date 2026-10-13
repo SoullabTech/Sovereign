@@ -513,7 +513,12 @@ function MAIAPageContent() {
       // example, when an invited Reflect member opens MAIA in a new browser).
       // Explicit sign-out, failed verification and onboarding gaps still refuse.
       const sessionCheck = checkAndMigrateSession();
-      if (sessionCheck) {
+      // This MAIA encounter already crossed a server session boundary. A
+      // current-version browser cache is NOT proof that it belongs to that
+      // cookie: reconcile both on every direct encounter entry, including
+      // the Reflect handoff. The public legacy MAIA threshold is untouched.
+      const verifyAtEncounter = window.location.pathname === '/maia/encounter';
+      if (sessionCheck || verifyAtEncounter) {
         const restored = await restoreMaiaBrowserSessionFromServer({
           fetchSession: () => fetch('/api/members/session', {
             credentials: 'same-origin',

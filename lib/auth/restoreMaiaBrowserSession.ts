@@ -1,13 +1,11 @@
 /**
- * Isolated candidate — MAIA client session restoration after verified server auth.
+ * Candidate R3 security amendment: server-verified MAIA display continuity.
  *
- * The browser's localStorage is a display/continuity cache, NEVER identity
- * authority. A lost browser cache must not override a server-valid, onboarded
- * member cookie. Neither client assertions nor MAIA plan entitlements are read.
- *
- * Class A / Pro Studio Reflect candidate only: not merged or deployed.
+ * A valid, onboarded HttpOnly session is necessary but never a grant to
+ * reuse another account's browser cache. Local storage is not identity
+ * authority. No paid/practitioner entitlement or conversation is created.
  */
-type LocalSessionStore = Pick<Storage, 'getItem' | 'setItem'>;
+type LocalSessionStore = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
 interface SessionMember {
   id?: unknown;
@@ -16,7 +14,6 @@ interface SessionMember {
   preferredName?: unknown;
   onboarded?: unknown;
 }
-
 interface SessionEnvelope {
   authenticated?: unknown;
   member?: SessionMember;
@@ -39,10 +36,16 @@ function usableDisplayName(value: unknown): string | null {
   return name;
 }
 
+function isWrongAccount(browserId: unknown, serverId: string): boolean {
+  // 'guest' and 'local_*' are placeholders, never authentic identities.
+  const id = verifiedMemberId(browserId);
+  return id !== null && id !== serverId;
+}
+
 /**
- * A successful restoration proves only cookie identity and onboarding.
- * It does NOT grant professional status, paid features, beta invitations,
- * client access, prior MAIA content, or new member onboarding completion.
+ * Recover a client DISPLAY cache only if the server verifies the same member.
+ * Preserve same-member beta_user metadata; never copy metadata across members.
+ * Return false for an identity mismatch, revoked session, sign-out or failure.
  */
 export async function restoreMaiaBrowserSessionFromServer({
   fetchSession,
@@ -54,9 +57,7 @@ export async function restoreMaiaBrowserSessionFromServer({
   version: number;
 }): Promise<boolean> {
   try {
-    // Explicit sign-out is a member decision, even if a server cookie survived.
     if (storage.getItem('maia_signed_out') === '1') return false;
-
     const response = await fetchSession();
     if (!response.ok) return false;
     const payload = (await response.json()) as SessionEnvelope | null;
@@ -65,20 +66,60 @@ export async function restoreMaiaBrowserSessionFromServer({
 
     const id = verifiedMemberId(payload.member.id);
     if (!id) return false;
+    const rawBeta = storage.getItem('beta_user');
+    let beta: Record<string, unknown> | null = null;
+    if (rawBeta) {
+      try {
+        const parsed: unknown = JSON.parse(rawBeta);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          beta = parsed as Record<string, unknown>;
+        }
+      } catch { /* malformed cache is not identity authority */ }
+    }
+
+    // A still-current browser version does not establish identity; a valid
+    // cookie may belong to a different person using the same browser.
+    if (isWrongAccount(storage.getItem('explorerId'), id) ||
+        isWrongAccount(beta?.id, id) ||
+        isWrongAccount(beta?.memberId, id)) return false;
+
     const name = usableDisplayName(payload.member.preferredName) ??
       usableDisplayName(payload.member.name) ??
       usableDisplayName(payload.member.username) ?? 'Friend';
 
-    // Cache only the server-confirmed display identity. No token, tier,
-    // practitioner role, billing state, or consent is copied to localStorage.
-    storage.setItem('explorerId', id);
-    storage.setItem('explorerName', name);
-    storage.setItem('explorerPreferredName', name);
-    storage.setItem('beta_user', JSON.stringify({id, name}));
-    storage.setItem('maia_session_version', String(version));
+    const changes: [string, string][] = [
+      ['explorerId', id],
+      ['explorerName', name],
+      ['explorerPreferredName', name],
+    ];
+    // A same-member beta_user may carry settled personal preferences and
+    // birth data. Keep it byte-for-byte. Replace only absent/invalid cache.
+    if (!beta || !verifiedMemberId(beta.id ?? beta.memberId)) {
+      changes.push(['beta_user', JSON.stringify({id, name})]);
+    }
+    changes.push(['maia_session_version', String(version)]);
+
+    // Browser Storage has no multi-key transaction. Snapshot every target
+    // first, then restore the entire snapshot on any interrupted write.
+    const before = changes.map(([key]) => [key, storage.getItem(key)] as const);
+    try {
+      for (const [key, value] of changes) storage.setItem(key, value);
+    } catch {
+      for (const [key, oldValue] of before) {
+        try {
+          if (storage.getItem(key) === oldValue) continue;
+          if (oldValue === null) storage.removeItem(key);
+          else storage.setItem(key, oldValue);
+        } catch {
+          // Never reinterpret failed cleanup as an authenticated success.
+          // Caller refuses the page; another attempt rechecks server identity.
+        }
+      }
+      return false;
+    }
     return true;
   } catch {
-    // Network/database/storage errors must never turn into an access grant.
+    // Network/database/JSON/storage failures cannot grant identity.
     return false;
   }
 }
