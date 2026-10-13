@@ -4,6 +4,7 @@
 -- Deliberately NO backfill from global video_room_url: its owner is unknown.
 -- Migration requires an independently verified vault backup/restore before use.
 BEGIN;
+SET LOCAL lock_timeout = '5s';
 
 ALTER TABLE practitioner_settings
   ADD COLUMN IF NOT EXISTS video_room_url TEXT;
