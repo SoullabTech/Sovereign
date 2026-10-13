@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { isReflectBetaAllowed } from '@/lib/proStudio/reflectBetaAccess';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { ReflectArrivalView } from '@/components/pro-studio/ReflectArrivalView';
 
@@ -24,6 +25,13 @@ export const metadata: Metadata = {
 export default async function ReflectArrival() {
   const session = await getCurrentSession();
   if (!session) redirect('/signin?next=%2Fpro-studio%2Freflect');
+
+  // Beta invitations are separate from practitioner role, Field Lab tester status,
+  // free MAIA access, and any future paid Reflect entitlement. Default is closed.
+  if (!isReflectBetaAllowed(session.memberId, {
+    enabled: process.env.PRO_STUDIO_REFLECT_BETA_ENABLED,
+    memberIds: process.env.PRO_STUDIO_REFLECT_BETA_MEMBER_IDS,
+  })) notFound();
 
   return <ReflectArrivalView />;
 }

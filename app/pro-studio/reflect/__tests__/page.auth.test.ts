@@ -1,19 +1,30 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import ReflectArrival from '../page';
 
 jest.mock('@/lib/auth/serverSessions', () => ({ getCurrentSession: jest.fn() }));
-jest.mock('next/navigation', () => ({ redirect: jest.fn() }));
+jest.mock('next/navigation', () => ({ redirect: jest.fn(), notFound: jest.fn() }));
 jest.mock('next/link', () => ({
   __esModule: true,
   default: ({ href, children, ...props }: { href: string; children: React.ReactNode }) =>
     require('react').createElement('a', { href, ...props }, children),
 }));
 
-describe('R1b Reflect arrival (fictional session only)', () => {
+const previousEnabled = process.env.PRO_STUDIO_REFLECT_BETA_ENABLED;
+const previousMemberIds = process.env.PRO_STUDIO_REFLECT_BETA_MEMBER_IDS;
+
+describe('Beta-gated Reflect arrival (fictional sessions only)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    process.env.PRO_STUDIO_REFLECT_BETA_ENABLED = 'true';
+    process.env.PRO_STUDIO_REFLECT_BETA_MEMBER_IDS = 'fiction-only-member';
+  });
+  afterAll(() => {
+    if (previousEnabled === undefined) delete process.env.PRO_STUDIO_REFLECT_BETA_ENABLED;
+    else process.env.PRO_STUDIO_REFLECT_BETA_ENABLED = previousEnabled;
+    if (previousMemberIds === undefined) delete process.env.PRO_STUDIO_REFLECT_BETA_MEMBER_IDS;
+    else process.env.PRO_STUDIO_REFLECT_BETA_MEMBER_IDS = previousMemberIds;
   });
 
   test('signed-out request is redirected on the server', async () => {
@@ -38,5 +49,27 @@ describe('R1b Reflect arrival (fictional session only)', () => {
     (getCurrentSession as jest.Mock).mockResolvedValue({ memberId: 'fiction-only-member' });
     const html = renderToStaticMarkup(await ReflectArrival());
     expect(html).toContain('Reflect workspace and its membership permissions are not yet activated');
+  });
+
+  test('the preview remains closed when the feature flag is missing', async () => {
+    (getCurrentSession as jest.Mock).mockResolvedValue({ memberId: 'fiction-only-member' });
+    delete process.env.PRO_STUDIO_REFLECT_BETA_ENABLED;
+    (notFound as jest.Mock).mockImplementation(() => { throw new Error('NEXT_NOT_FOUND'); });
+    await expect(ReflectArrival()).rejects.toThrow('NEXT_NOT_FOUND');
+    expect(notFound).toHaveBeenCalledTimes(1);
+  });
+
+  test('enabled preview remains closed without an explicit member allowlist', async () => {
+    (getCurrentSession as jest.Mock).mockResolvedValue({ memberId: 'fiction-only-member' });
+    delete process.env.PRO_STUDIO_REFLECT_BETA_MEMBER_IDS;
+    (notFound as jest.Mock).mockImplementation(() => { throw new Error('NEXT_NOT_FOUND'); });
+    await expect(ReflectArrival()).rejects.toThrow('NEXT_NOT_FOUND');
+  });
+
+  test('a different authenticated member is refused despite the feature flag', async () => {
+    (getCurrentSession as jest.Mock).mockResolvedValue({ memberId: 'other-fictional-member' });
+    (notFound as jest.Mock).mockImplementation(() => { throw new Error('NEXT_NOT_FOUND'); });
+    await expect(ReflectArrival()).rejects.toThrow('NEXT_NOT_FOUND');
+    expect(notFound).toHaveBeenCalledTimes(1);
   });
 });
