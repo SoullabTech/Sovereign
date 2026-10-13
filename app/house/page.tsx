@@ -165,6 +165,25 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
 
         <HouseCenter />
 
+        {current === 'home' && (
+          <section className={styles.memberFoundry} aria-labelledby="home-foundry-title">
+            <div>
+              <p className={styles.foundryEyebrow}>OPEN RESEARCH · THE FOUNDRY</p>
+              <h3 id="home-foundry-title">See what we&apos;re exploring.</h3>
+              <p>
+                A look inside Soullab&apos;s research workshop: open-source ideas,
+                careful experiments in reasoning, and possible directions for
+                Writing, Pro Studio, Astrology and MAIA. Nothing here is a
+                promised or automatically enabled feature.
+              </p>
+              <span>26 public research leads · Your work stays private</span>
+            </div>
+            <Link href="/home/foundry" className={styles.memberFoundryLink}>
+              Explore the Foundry <span aria-hidden="true">→</span>
+            </Link>
+          </section>
+        )}
+
         <section className={styles.alive} aria-label="What's alive">
           <p>WHAT'S ALIVE</p>
           {livingWorks.length > 0 ? livingWorks.map((work) => (

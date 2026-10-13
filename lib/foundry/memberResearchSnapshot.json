@@ -1,0 +1,398 @@
+{
+  "schema": "soullab.member-foundry.research-sources.v1",
+  "origin": "AIN-CAPABILITY-FOUNDRY-01",
+  "accepted_research_catalogue_commit": "45ac2a182a7687062704e28f0dc0e3d5e0c5ce4d",
+  "origin_catalogue_sha256": "9037d3f9695a72cfa70b01a9eb8eba58027f8f2134e3458e6e6dd32a02e6f54b",
+  "presentation": "MEMBER_INFORMATION_ONLY",
+  "source_disclaimer": "Source descriptions are research leads, not independently licensed or approved products.",
+  "license_clearance": "PENDING_FOR_ALL_CANDIDATES",
+  "installed_capabilities": 0,
+  "model_skill_execution": "NOT_AUTHORIZED",
+  "member_information_included": false,
+  "source_count": 26,
+  "entries": [
+    {
+      "id": "FND-SKL-01",
+      "name": "Agent Skills format",
+      "area": "Reusable skills",
+      "purpose": "Reusable, on-demand SKILL.md and referenced guidance, with explicit tool boundary",
+      "research_caution": "Skill is untrusted instructions plus optional scripts; never auto-activate external skills",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools",
+        "Writer’s Studio",
+        "Pro Studio",
+        "Astrology Pro"
+      ],
+      "public_source_url": "https://github.com/agentskills/agentskills",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-SKL-02",
+      "name": "Hugging Face Skills",
+      "area": "Reusable skills",
+      "purpose": "Discovery grammar for model/dataset tooling skills",
+      "research_caution": "Do not run CLI, cloud, or model downloads without source and authority review",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools"
+      ],
+      "public_source_url": "https://github.com/huggingface/skills",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-SKL-03",
+      "name": "MCP specification",
+      "area": "Reusable skills",
+      "purpose": "Read-only capability declaration and external-tool boundary design",
+      "research_caution": "Server tool descriptions cannot grant repository, network, member or shell authority",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools"
+      ],
+      "public_source_url": "https://github.com/modelcontextprotocol/specification",
+      "source_standing": "LINK_NOMINATED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-AGT-01",
+      "name": "Hugging Face smolagents",
+      "area": "Research workflows",
+      "purpose": "Composable tool-using agents and model-agnostic adapters",
+      "research_caution": "Local Python executor is not sandbox: agent-generated code requires independently governed isolation",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools"
+      ],
+      "public_source_url": "https://github.com/huggingface/smolagents",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-AGT-02",
+      "name": "DSPy",
+      "area": "Research workflows",
+      "purpose": "Declarative reusable LM modules and optimization concepts",
+      "research_caution": "Optimization must not update frozen benchmark or MAIA prompts without new approval",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools",
+        "Writer’s Studio",
+        "Pro Studio"
+      ],
+      "public_source_url": "https://github.com/stanfordnlp/dspy",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-AGT-03",
+      "name": "LangGraph",
+      "area": "Research workflows",
+      "purpose": "Compare durable execution, checkpointing and human review with JARVIS W0/v2",
+      "research_caution": "Do not replace JARVIS constitutional governor; imported runtime grants nothing",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools"
+      ],
+      "public_source_url": "https://github.com/langchain-ai/langgraph",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-MOD-01",
+      "name": "Hugging Face Transformers",
+      "area": "Local AI models",
+      "purpose": "Model architecture and local inference adapters for experimental evaluation",
+      "research_caution": "Model code, weights and licenses require exact revision review",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools",
+        "Relational research"
+      ],
+      "public_source_url": "https://github.com/huggingface/transformers",
+      "source_standing": "LINK_NOMINATED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-MOD-02",
+      "name": "Apple MLX-LM",
+      "area": "Local AI models",
+      "purpose": "Apple-silicon-efficient inference/probing candidate on Mac Studio",
+      "research_caution": "Benchmark memory pressure offline; no automatic download or MAIA model swap",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools",
+        "Relational research"
+      ],
+      "public_source_url": "https://github.com/ml-explore/mlx-lm",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-MOD-03",
+      "name": "Hugging Face PEFT",
+      "area": "Local AI models",
+      "purpose": "LoRA-style parameter-efficient adaptation for separately authorized experimental studies",
+      "research_caution": "Weights training or modification is a new experimental gate; not to infer development from behavior",
+      "could_inform": [
+        "Sovereign AI",
+        "Relational research"
+      ],
+      "public_source_url": "https://huggingface.co/docs/peft/quicktour",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-DAT-01",
+      "name": "Hugging Face Datasets",
+      "area": "Research data",
+      "purpose": "Versioned synthetic/public datasets and streaming ingestion patterns",
+      "research_caution": "Dataset licenses, deidentification, consent, PHI and leakage audit required before use",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools",
+        "Relational research",
+        "Writer’s Studio"
+      ],
+      "public_source_url": "https://huggingface.co/docs/datasets/loading",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-DAT-02",
+      "name": "Hugging Face Hub model discovery",
+      "area": "Research data",
+      "purpose": "Discovery of candidate model cards and licenses without weights ingestion",
+      "research_caution": "Open weights do not imply open license, safe code, or Mac compatibility",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools"
+      ],
+      "public_source_url": "https://huggingface.co/docs/hub/models",
+      "source_standing": "LINK_NOMINATED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-SEC-01",
+      "name": "Safetensors",
+      "area": "Safety & security",
+      "purpose": "Safe weight serialization and revision-pinned artifact verification",
+      "research_caution": "Prefer safetensors over pickle; never trust remote code by default",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools",
+        "Relational research"
+      ],
+      "public_source_url": "https://github.com/safetensors/safetensors",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-SEC-02",
+      "name": "Hugging Face pickle scanning guidance",
+      "area": "Safety & security",
+      "purpose": "Source artifact security threat library",
+      "research_caution": "Repository scan does not independently establish a safe model",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools"
+      ],
+      "public_source_url": "https://huggingface.co/docs/hub/security-pickle",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-SEC-03",
+      "name": "PyPI LiteLLM supply chain incident",
+      "area": "Safety & security",
+      "purpose": "Supply-chain failure cases for dependency admission",
+      "research_caution": "Pinned clean hashes, external advisories, SBOM and isolated build mandatory",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools"
+      ],
+      "public_source_url": "https://blog.pypi.org/posts/2026-04-02-incident-report-litellm-telnyx-supply-chain-attack/",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-EVL-01",
+      "name": "Inspect AI",
+      "area": "Testing & evidence",
+      "purpose": "Evaluation suite framework, repeatable traces and human-readable results",
+      "research_caution": "No clinical/member-data testing without separate authorization",
+      "could_inform": [
+        "Relational research",
+        "Sovereign AI",
+        "Research tools",
+        "Writer’s Studio",
+        "Pro Studio",
+        "Astrology Pro"
+      ],
+      "public_source_url": "https://github.com/UKGovernmentBEIS/inspect_ai",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-EVL-02",
+      "name": "LM Evaluation Harness",
+      "area": "Testing & evidence",
+      "purpose": "Fixed benchmark/adapter evaluations with plugins",
+      "research_caution": "Never redefine frozen RGR-04/RGR-06 metrics or rescue RGR-05 infeasibility",
+      "could_inform": [
+        "Relational research",
+        "Sovereign AI",
+        "Research tools"
+      ],
+      "public_source_url": "https://github.com/EleutherAI/lm-evaluation-harness/",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-EVL-03",
+      "name": "Promptfoo",
+      "area": "Testing & evidence",
+      "purpose": "RAG retrieval/generation evaluation and prompt red-team scenarios",
+      "research_caution": "Run with synthetic corpus and strictly local providers only",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools",
+        "Writer’s Studio",
+        "Pro Studio",
+        "Astrology Pro"
+      ],
+      "public_source_url": "https://www.promptfoo.dev/docs/guides/evaluate-rag/",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-RGR-01",
+      "name": "TransformerLens",
+      "area": "Model interpretability",
+      "purpose": "Inspect neural activations and controlled activation patching",
+      "research_caution": "Interpretability findings not equivalent to human meaning, consciousness or relationship",
+      "could_inform": [
+        "Relational research",
+        "Sovereign AI"
+      ],
+      "public_source_url": "https://github.com/TransformerLensOrg/TransformerLens",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-RGR-02",
+      "name": "SAELens",
+      "area": "Model interpretability",
+      "purpose": "Sparse autoencoders and feature interpretability on open-weight models",
+      "research_caution": "Feature naming provisional; no ontology promotion from SAE features",
+      "could_inform": [
+        "Relational research",
+        "Sovereign AI"
+      ],
+      "public_source_url": "https://github.com/decoderesearch/SAELens",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-RGR-03",
+      "name": "pyvene",
+      "area": "Model interpretability",
+      "purpose": "Counterfactual internal-state interventions for relational sensitivity tests",
+      "research_caution": "Only open weights, synthetic datasets, separately authorized research",
+      "could_inform": [
+        "Relational research",
+        "Sovereign AI"
+      ],
+      "public_source_url": "https://github.com/stanfordnlp/pyvene",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-RGR-04",
+      "name": "NNsight",
+      "area": "Model interpretability",
+      "purpose": "Trace and intervene on model forward passes",
+      "research_caution": "Remote tracing prohibited without data/privacy approval; start offline only",
+      "could_inform": [
+        "Relational research",
+        "Sovereign AI"
+      ],
+      "public_source_url": "https://github.com/ndif-team/nnsight",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-RGR-05",
+      "name": "DoWhy",
+      "area": "Causal reasoning",
+      "purpose": "Causal assumptions, counterfactual reasoning and falsification tools",
+      "research_caution": "Causal claims need identification assumptions; no clinical causal diagnosis",
+      "could_inform": [
+        "Relational research",
+        "Sovereign AI",
+        "Pro Studio"
+      ],
+      "public_source_url": "https://github.com/py-why/dowhy",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-MEM-01",
+      "name": "Microsoft GraphRAG",
+      "area": "Memory & retrieval",
+      "purpose": "Graph-shaped retrieval and provenance design patterns",
+      "research_caution": "Repository in maintenance mode; design reference rather than production dependency; cost/privacy review",
+      "could_inform": [
+        "Sovereign AI",
+        "Research tools",
+        "Writer’s Studio",
+        "Pro Studio"
+      ],
+      "public_source_url": "https://github.com/microsoft/graphrag",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-LIT-01",
+      "name": "Zur et al. counterfactual trace paper",
+      "area": "Scientific literature",
+      "purpose": "Research reference for competing trajectories and internal uncertainty",
+      "research_caution": "Bounded model/task claims; must not infer MAIA introspection or sentience",
+      "could_inform": [
+        "Relational research"
+      ],
+      "public_source_url": "https://arxiv.org/abs/2511.04527",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-LIT-02",
+      "name": "Zhou et al. trajectory geometry paper",
+      "area": "Scientific literature",
+      "purpose": "Research reference for representation trajectories, curvature and geometry",
+      "research_caution": "External scholarly claim; not a validated RGR formalism",
+      "could_inform": [
+        "Relational research"
+      ],
+      "public_source_url": "https://arxiv.org/abs/2510.09782",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    },
+    {
+      "id": "FND-LIT-03",
+      "name": "Sophontic paired perturbation evals",
+      "area": "Research methods",
+      "purpose": "Minimal relation-breaking vs surface-preserving contrast fixtures",
+      "research_caution": "Source design inspiration only; preregister own controls before tests",
+      "could_inform": [
+        "Relational research",
+        "Sovereign AI"
+      ],
+      "public_source_url": "https://sophontic.ai/evals/",
+      "source_standing": "DOCUMENTATION_SURVEYED",
+      "availability": "RESEARCH_ONLY_NOT_ENABLED"
+    }
+  ]
+}
