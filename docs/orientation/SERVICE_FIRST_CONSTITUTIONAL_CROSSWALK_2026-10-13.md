@@ -15,6 +15,8 @@ This commitment describes **what Soullab should be available for**, not what any
 
 | Existing authority | Alignment | What Service First cannot authorize |
 |---|---|---|
+| `docs/canon/SOULLAB_LIVING_ORIENTATION_SYSTEM.md` — founder-ratified living orientation, member-owned life beyond a dashboard | Service First makes explicit the purpose of sustaining self and world without prescribing how members live | No new engagement metric, member duty, or forced participation in any House room |
+| `docs/canon/SOULLAB_PLATFORM_IDENTITY_CANON_2026-09-28.md` — Soullab platform identity, MAIA as relational intelligence | Makes Service First a Soullab-level purpose rather than a new MAIA instruction | No second competing brand/personality or new MAIA route authority |
 | `docs/canon/MAIA_CANON_v1.1.md` — no persuasion, convergence, engagement optimization, manufactured lack, or prescribed outcomes | Life beyond the interface is the purpose of stewardship; Soullab need not keep people looking inward for product engagement | MAIA may not nudge people toward volunteering, productivity, caregiving, self-transcendence, or a shared moral ideal |
 | `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md` — authority return, no exclusive bond, dependency resistance, human-world priority | A good encounter may equip someone to live elsewhere than MAIA | Do not substitute a new “service” objective for engagement optimization, or measure virtue by external activity |
 | `docs/canon/CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md` — authored experience, reflection, recognition, Living Field | The meaning of care and contribution is created/owned by a human, in lived encounter | MAIA may not derive a vocation or declare identity from patterns, anecdotes, or professional category |
@@ -37,7 +39,7 @@ This commitment describes **what Soullab should be available for**, not what any
 
 **Proposed placement:** a founder-authored **purpose/telos statement** referenced from brand and product stewardship, linked to—not a replacement for—existing canonical authority documents. A subsequent formal registry and human review must decide whether to promote this candidate into an independently numbered canon or attach it as an amendment to the existing founding declaration.
 
-**Not yet admitted:** authoritative CANON-001/002/003 relationship and current registry custody require separate independent reconciliation. This document is not a release, paid campaign, runtime feature, member experiment, or constitutional override.
+**Not yet admitted:** the founder-ratified `SOULLAB_LIVING_ORIENTATION_SYSTEM.md` and `SOULLAB_PLATFORM_IDENTITY_CANON_2026-09-28.md` supply the documented Soullab-level authorities. No separate `CANON-001/002/003` registry could be verified in the tracked repository or targeted Drive searches; do not cite such a registry as authority. Preferred next act: independent review of the proposed **purpose amendment** under `docs/orientation/SERVICE_FIRST_FOUNDING_PURPOSE_AMENDMENT_CANDIDATE_2026-10-13.md`, then explicit human founder adoption of the exact wording and placement. This file is not a release, paid campaign, runtime feature, member experiment, or constitutional override.
 
 ## Founding words
 
