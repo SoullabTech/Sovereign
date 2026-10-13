@@ -1,12 +1,12 @@
 /** G2-3C shared Ganesha admission, not practitioner standing. */
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveIndividualContext } from '@/lib/auth/individualContext';
+import { resolveIndividualContext, type IndividualContext } from '@/lib/auth/individualContext';
 import { memberNativeSchemaReady } from '@/lib/ganesha/memberFieldAuthoring';
 import { isG2MemberAuthoringReleaseAdmitted } from '@/lib/ganesha/g2MemberAuthoringRelease';
 
 export const PRIVATE_CACHE = { 'Cache-Control': 'private, no-store' };
 export type MemberFieldAdmission =
-  | { ok: true; memberId: string }
+  | { ok: true; memberId: string; context: IndividualContext }
   | { ok: false; response: NextResponse };
 
 export async function admitMemberField(request: NextRequest): Promise<MemberFieldAdmission> {
@@ -33,7 +33,7 @@ export async function admitMemberField(request: NextRequest): Promise<MemberFiel
       {status:503,headers:PRIVATE_CACHE},
     )};
   }
-  return {ok:true,memberId:context.memberId};
+  return {ok:true,memberId:context.memberId,context};
 }
 
 export function fieldFailure(area: string): NextResponse {
