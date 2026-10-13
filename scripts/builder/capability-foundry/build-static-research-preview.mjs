@@ -31,8 +31,8 @@ if(!template.includes("connect-src 'none'")||!template.includes("default-src 'no
   throw new Error('Refusing preview without local-only content policy.');
 const encoded=JSON.stringify(projection).replace(/</g,'\\u003c').replace(/>/g,'\\u003e');
 const html=template.replace(marker,encoded);
-const destination=path.join(home,'JARVIS-handoffs/AIN_FOUNDRY_RESEARCH_ONLY_PREVIEW_2026-10-12.html');
-const evidence=path.join(home,'JARVIS-handoffs/AIN_FOUNDRY_RESEARCH_ONLY_PREVIEW_BUILD_2026-10-12.json');
+const destination=path.join(home,'JARVIS-handoffs/AIN_FOUNDRY_RESEARCH_ONLY_PREVIEW_R2_2026-10-12.html');
+const evidence=path.join(home,'JARVIS-handoffs/AIN_FOUNDRY_RESEARCH_ONLY_PREVIEW_R2_BUILD_2026-10-12.json');
 const hashed=s=>createHash('sha256').update(s,'utf8').digest('hex');
 writeFileSync(destination,html,{flag:'wx',mode:0o600});
 writeFileSync(evidence,JSON.stringify({

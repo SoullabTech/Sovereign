@@ -78,3 +78,33 @@ Evidence files under ~/JARVIS-handoffs:
 Next gate is a separate **independent exact-source read-only review**: verify source hashes, founder-receipt check, fail-closed unauthorized inputs, plain language, Graph evidence boundaries, offline behavior and explicit treatment of the two baseline tests. The model review may not create acceptance or a work unit. The Founder would then separately approve any proposed live read-only Kelly's World integration.
 
 This research preview does not authorize the inclusion, execution or installation of any named GitHub or Hugging Face project. No RGR scientific result, MAIA behavior or member meaning is promoted by this interface.
+
+
+## Visual successor R2 — small readability-only refinement
+
+The first isolated preview source was committed as 82bf06079b78fe933a038dc95509265005bd9792 with all sovereignty pre-commit checks passed. A separate independent read-only review of that exact commit returned:
+- GPT-OSS 20B: REVISE with all seven domain checks marked PASS and zero findings. That combination is internally inconsistent and does not identify an actionable repair; the inconsistency must be preserved rather than misrepresented as a valid substantive defect.
+- Qwen3 Coder: evidence-valid PASS, seven domains marked PASS and no findings, for the isolated prototype only.
+- Neither model acceptance nor static UI test is a founder grant for a live Kelly's World installation.
+
+Direct visual inspection of the 1440px screenshot identified a truncated "All priorities" dropdown label and a missing "What can I do?" orientation panel. The R2 successor changes only the static HTML template width/layout, the write-once preview output names and the browser witness assertions; it does not change the 26-source registry, SHA-pinned founder decision, 59-node/123-edge pure projection, source reader, Graph authority, Work Units or production.
+
+New R2 preview:
+~/JARVIS-handoffs/AIN_FOUNDRY_RESEARCH_ONLY_PREVIEW_R2_2026-10-12.html
+
+New R2 build receipt:
+~/JARVIS-handoffs/AIN_FOUNDRY_RESEARCH_ONLY_PREVIEW_R2_BUILD_2026-10-12.json
+
+R2 desktop screenshot:
+~/JARVIS-handoffs/AIN_FOUNDRY_RESEARCH_ONLY_PREVIEW_R2_BROWSER_2026-10-12.png
+
+R2 mobile screenshot:
+~/JARVIS-handoffs/AIN_FOUNDRY_RESEARCH_ONLY_PREVIEW_R2_MOBILE_2026-10-12.png
+
+R2 source snapshot SHA-256: b3662230a767cb3f9af788bc7bae44e8a9113bbf994dd310efa4f8164be6f82a.
+
+R2 Chrome desktop witness: 26 candidates, four orientation articles, unclipped priority filter width, source searches, Graph lane filters, all five rooms and nine denied locks PASS. No page errors or automatic external requests.
+
+R2 mobile viewport (390px): 26 candidates, four orientation questions, DoWhy filter and System locks PASS; zero page errors or automatic external requests.
+
+The dedicated projection tests still PASS 10/10. The separate legacy B3 census and B5R3 visibility failures remain OPEN on the earlier accepted source baseline and have not been modified. R2 is an isolated review candidate only; it requires its own exact-source independent review before any proposal for live integration.

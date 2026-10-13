@@ -18,11 +18,13 @@ const {chromium}=require('playwright');
   if(/^https?:/i.test(r.url())){external.push(r.url());r.abort();}
  });
  try {
-  const file='/Users/soullab/JARVIS-handoffs/AIN_FOUNDRY_RESEARCH_ONLY_PREVIEW_2026-10-12.html';
+  const file='/Users/soullab/JARVIS-handoffs/AIN_FOUNDRY_RESEARCH_ONLY_PREVIEW_R2_2026-10-12.html';
   await page.goto('file://'+file,{waitUntil:'load'});
   assert.equal(await page.locator('[data-candidate-id]').count(),26);
   assert.match(await page.locator('#founder-standing').innerText(),/Founder accepted/);
   assert.equal(await page.locator('#stats .stat').count(),4);
+  assert.equal(await page.locator('.explainer article').count(),4);
+  assert.ok(await page.locator('#priority').evaluate(el=>el.getBoundingClientRect().width>=150),'Priority control must not clip its label');
   assert.equal(await page.locator('#lane-grid .lane-item').count(),6);
   console.log('DISCOVER_PASS 26 candidates founder acceptance verified');
   await page.locator('#search').fill('Inspect AI');
@@ -51,7 +53,7 @@ const {chromium}=require('playwright');
   }
   console.log('FIVE_ROOMS_PASS');
   await page.locator('[data-view=discover]').click();
-  await page.screenshot({path:'/Users/soullab/JARVIS-handoffs/AIN_FOUNDRY_RESEARCH_ONLY_PREVIEW_BROWSER_2026-10-12.png',fullPage:false});
+  await page.screenshot({path:'/Users/soullab/JARVIS-handoffs/AIN_FOUNDRY_RESEARCH_ONLY_PREVIEW_R2_BROWSER_2026-10-12.png',fullPage:false});
   assert.equal(errors.length,0,errors.join(';'));
   assert.equal(external.length,0,external.join(';'));
   console.log('BROWSER_WITNESS_PASS ERRORS',errors.length,'AUTOMATIC_EXTERNAL_REQUESTS',external.length);
