@@ -43,8 +43,16 @@ function optionalString(value: unknown): boolean {
   return value == null || typeof value === 'string';
 }
 
+// TIMESTAMPTZ JSON must carry an ISO date, clock and explicit timezone.
+// Date.parse alone accepts aliases such as '0' and normalizes February 30.
+const ISO_TIMESTAMP = /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,6})?(?:Z|[+-](?:0\d|1[0-4]):[0-5]\d)$/;
+
 function dateString(value: unknown): value is string {
-  return nonemptyString(value) && Number.isFinite(Date.parse(value));
+  if (!nonemptyString(value)) return false;
+  const match = ISO_TIMESTAMP.exec(value);
+  if (!match || !Number.isFinite(Date.parse(value))) return false;
+  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  return day <= new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
 function optionalDateString(value: unknown): boolean {
