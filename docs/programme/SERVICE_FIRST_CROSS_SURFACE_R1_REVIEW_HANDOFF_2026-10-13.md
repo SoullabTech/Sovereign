@@ -25,7 +25,7 @@ Founder requested editorial and implementation consistency for the Soullab brand
 
 - Local static fixture bundled the **actual amended React components** with real React 19, framer-motion, and project Tailwind utility classes. Next Link/Image replaced only with semantic local stand-ins, not claimed as full production Next.js or installed marketing fonts.
 - Screenshots at 1280×850 and 390×844 for Hero, Platform, MAIA, and Reflect (8 files in `docs/design/contracts/screenshots/service-first-expression-r1/`).
-- 24 of 24 browser checks PASS. They cover exact copy, Home CTA, absence of auto-MAIA calls, retained free MAIA link, explicit paid Reflect nonavailability, visible Platform text and no document overflow at both sizes. Zero external network requests or JS page errors.
+- 26 of 26 browser checks PASS. They cover exact copy, Home CTA, absence of auto-MAIA calls, retained free MAIA link, explicit paid Reflect nonavailability, visible Platform text and no document overflow at both sizes. Zero external network requests or JS page errors.
 - An initial 390px fixture had 44px horizontal overflow from the pre-existing MAIA aura (`w-[520px]`) and black-on-dark facet text from `text-white/42`. The candidate confines that aura horizontally and uses a supported `text-white/60` opacity; retest: 0px overflow and readable facet text.
 - 22 of 22 focused Jest regression/contract tests PASS across public landing, new Service First textual boundary, Pro Studio Reflect session and beta gate. The installed Jest dependencies came from the older development checkout; the actual JSX was compiled and inspected in the separate fixture, not a revision-matched full Next.js build.
 
@@ -46,3 +46,8 @@ Founder requested editorial and implementation consistency for the Soullab brand
 - No ads, campaign creation, outbound invitations, production website update, billing, model prompts, provider calls, MAIA client encounter or real member records touched.
 
 **R1 disposition:** coherent human-facing wording prepared for evaluation; claim and constitutional safeguards remain controlling; public publication stays **HOLD**.
+
+
+### Contrast correction — October 13 R1b
+
+Founder belief and explanatory copy in the dark landing Hero are now more legible: central descriptor text-white/75, service invitation text-white/75, and quiet trust line text-white/60. The original copy and CTA are unchanged. New synthetic browser assertions verify computed RGB channels for desktop and mobile; actual React screenshots were recaptured and reviewed. This does not substitute for real Next.js staging, full WCAG contrast calculation, or founder human visual acceptance.

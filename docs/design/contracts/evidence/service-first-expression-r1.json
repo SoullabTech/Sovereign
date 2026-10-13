@@ -2,8 +2,8 @@
   "candidate": "SERVICE-FIRST-CROSS-SURFACE-R1",
   "base_commit": "2e836abc32853bf01bf8256062b561c2b7406378",
   "test_kind": "synthetic_actual_source_react_component_browser_not_full_next",
-  "check_count": 24,
-  "passed": 24,
+  "check_count": 26,
+  "passed": 26,
   "failed": 0,
   "checks": [
     {
@@ -38,6 +38,11 @@
     },
     {
       "name": "desktop public page no horizontal overflow",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "desktop Hero central message is sufficiently legible",
       "passed": true,
       "details": null
     },
@@ -97,6 +102,11 @@
       "details": null
     },
     {
+      "name": "mobile Hero central message is sufficiently legible",
+      "passed": true,
+      "details": null
+    },
+    {
       "name": "mobile Platform description is readable",
       "passed": true,
       "details": null
@@ -130,7 +140,7 @@
   "screenshots": [
     {
       "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/public-desktop.png",
-      "bytes": 414447
+      "bytes": 417710
     },
     {
       "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/platform-desktop.png",
@@ -138,7 +148,7 @@
     },
     {
       "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/maia-desktop.png",
-      "bytes": 451911
+      "bytes": 452462
     },
     {
       "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/reflect-desktop.png",
@@ -146,7 +156,7 @@
     },
     {
       "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/public-mobile.png",
-      "bytes": 192678
+      "bytes": 195441
     },
     {
       "file": "/Users/soullab/soullab-service-first-expression-20261013/docs/design/contracts/screenshots/service-first-expression-r1/platform-mobile.png",
@@ -169,5 +179,7 @@
     "Reduced-motion Chrome 1280x850 and 390x844; neither member login nor MAIA conversation invoked",
     "Ganesha Life Flow is editorial only and was not rendered",
     "No real member data, paid plan, beta invite or production mutation"
-  ]
+  ],
+  "visual_correction": "Hero main promise text-white/35\u2192/75, service descriptor /50\u2192/75, trust line /20\u2192/60. New browser checks assert legible computed text color on desktop and phone.",
+  "hero_source_sha256": "dab154a5f9315577b1d1d60f4278383f3e2c88a41bf9b7c0e1e4f3f36fe9d518"
 }

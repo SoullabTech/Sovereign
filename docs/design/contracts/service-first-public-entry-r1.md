@@ -54,3 +54,8 @@ No navigation, API request, member authority, model instructions, memory, data-r
 - **Not observed:** full production landing shell, installed fonts, a real logged-in Home transition, MAIA dialogue, Ganesha Life Flow, production CDN cache, accessibility with every assistive technology, advertising or conversion outcomes.
 
 **Disposition:** R1 candidate for founder editorial/design review. The text has not been published, no public site deployment has occurred, and canon ratification alone does not authorize its release.
+
+
+### Contrast correction — October 13 R1b
+
+Founder belief and explanatory copy in the dark landing Hero are now more legible: central descriptor text-white/75, service invitation text-white/75, and quiet trust line text-white/60. The original copy and CTA are unchanged. New synthetic browser assertions verify computed RGB channels for desktop and mobile; actual React screenshots were recaptured and reviewed. This does not substitute for real Next.js staging, full WCAG contrast calculation, or founder human visual acceptance.

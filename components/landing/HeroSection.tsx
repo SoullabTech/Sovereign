@@ -49,7 +49,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.75, ease: 'easeOut' }}
-          className="mt-3 text-base sm:text-lg md:text-xl font-extralight italic text-white/50"
+          className="mt-3 text-base sm:text-lg md:text-xl font-extralight italic text-white/75"
           style={{ fontFamily: "'Crimson Pro', serif" }}
         >
           For those in service to self and world.
@@ -102,7 +102,7 @@ export function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.2, ease: 'easeOut' }}
-          className="text-sm sm:text-base text-white/35 max-w-lg mx-auto mb-10"
+          className="text-sm sm:text-base text-white/75 max-w-lg mx-auto mb-10"
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
           A life is not a project to perfect. Technology should leave room
@@ -135,7 +135,7 @@ export function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.8 }}
-          className="mt-14 text-white/20 text-xs tracking-widest uppercase"
+          className="mt-14 text-white/60 text-xs tracking-widest uppercase"
         >
           Private by design &middot; Self-hosted &middot; You control what's remembered
         </motion.p>
