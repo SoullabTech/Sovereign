@@ -26,6 +26,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { SessionBriefingCard } from '@/components/studio/SessionBriefingCard';
 import { PracticeHomeLoadNotice } from '@/components/studio/PracticeHomeLoadNotice';
 import { practiceHomeStanding, readStudioResource, type PracticeHomeStanding } from '@/lib/studio/practiceHomeLoad';
+import { selectPracticeIdentity, selectPracticeClients, selectPracticeBookings } from '@/lib/studio/practiceHomeResponses';
 
 // ─── Shapes (subset of the endpoints we read) ───
 interface Identity { name?: string | null; portalType?: string | null }
@@ -117,19 +118,9 @@ export default function StudioHome() {
     // practice. Do not evaluate FirstEntrance until both lists are verified.
     (async () => {
       const [w, c, b, ch] = await Promise.all([
-        readStudioResource<Identity>(apiFetch, '/api/studio/whoami', (payload) => {
-          const identity = (payload as { identity?: unknown } | null)?.identity;
-          return identity && typeof identity === 'object' && !Array.isArray(identity)
-            ? identity as Identity : null;
-        }),
-        readStudioResource<ClientRow[]>(apiFetch, '/api/studio/clients', (payload) => {
-          const clients = (payload as { clients?: unknown } | null)?.clients;
-          return Array.isArray(clients) ? clients as ClientRow[] : null;
-        }),
-        readStudioResource<Booking[]>(apiFetch, '/api/studio/bookings?limit=20', (payload) => {
-          const bookings = (payload as { bookings?: unknown } | null)?.bookings;
-          return Array.isArray(bookings) ? bookings as Booking[] : null;
-        }),
+        readStudioResource<Identity>(apiFetch, '/api/studio/whoami', selectPracticeIdentity),
+        readStudioResource<ClientRow[]>(apiFetch, '/api/studio/clients', selectPracticeClients),
+        readStudioResource<Booking[]>(apiFetch, '/api/studio/bookings?limit=20', selectPracticeBookings),
         readStudioResource<Channel[]>(apiFetch, '/api/team/channels', (payload) => {
           const channels = (payload as { channels?: unknown } | null)?.channels;
           return Array.isArray(channels) ? channels as Channel[] : null;
