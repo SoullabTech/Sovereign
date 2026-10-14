@@ -18,14 +18,16 @@
 'use strict';
 const assert = require('node:assert/strict');
 const { randomUUID, createHash } = require('node:crypto');
+const { readFileSync } = require('node:fs');
 const { performance } = require('node:perf_hooks');
-const { chromium } = require('playwright');
+const { chromium, webkit } = require('playwright');
 
 const DB_NAME = 'maia_ws_beta_witness_20261007';
 const DATABASE_URL = 'postgresql://soullab@127.0.0.1:5432/' + DB_NAME;
 const BASE_URL = 'http://127.0.0.1:3776';
 const TOTAL_WRITERS = 2;
 const EXCLUDED_WRITERS = 1;
+const BROWSER_ENGINE = process.env.WS_TWO_WRITER_BROWSER || 'chromium';
 const TEST_MEMBER_IDS = Object.freeze([
   'a1000000-0000-4000-8000-000000000001',
   'a1000000-0000-4000-8000-000000000002',
@@ -35,7 +37,8 @@ const MAX_REQUEST_MS = 35000;
 const ALLOW = 'YES_I_ACCEPT_SYNTHETIC_DB_WRITES';
 
 // Do not make any connection or filesystem change before this operator guard.
-if (process.env.WS_COHORT_SYNTHETIC_ONLY !== ALLOW) {
+if (process.env.WS_COHORT_SYNTHETIC_ONLY !== ALLOW ||
+    !['chromium', 'webkit'].includes(BROWSER_ENGINE)) {
   console.error('REFUSED: explicit synthetic witness opt-in is required.');
   process.exit(2);
 }
@@ -225,14 +228,16 @@ async function request(token, method, route, body) {
     // Browser acceptance runs against the EXACT localhost compiled app with
     // three separate verified-cookie contexts. The outer test runner owns only
     // fictional rows and never submits any MAIA/provider/voice message.
-    const browser = await chromium.launch({
-      headless:true,
-      executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-    });
+    const browser = await (BROWSER_ENGINE === 'webkit' ? webkit : chromium).launch(
+      BROWSER_ENGINE === 'webkit' ? { headless: true } : {
+        headless: true,
+        executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+      },
+    );
     try {
       for(const w of admitted){
         const ctx=await browser.newContext({
-          viewport:{width:w.i===1?390:1280,height:850},serviceWorkers:'block'
+          viewport:{width:w.i===1?390:1280,height:850},serviceWorkers:'block',acceptDownloads:true
         });
         try {
           await ctx.addCookies([{name:'maia_session',value:w.token,url:BASE_URL}]);
@@ -250,21 +255,86 @@ async function request(token, method, route, body) {
           });
           assert.equal(opened.status(),200,'member enters actual Studio Home');
           await page.waitForTimeout(900);
+          // The optimized standalone can hydrate after DOMContentLoaded;
+          // wait for a real visible writing room rather than a fallback shell.
+          await page.waitForFunction(() => document.body?.innerText?.length > 140,
+            null,{timeout:18000}).catch(()=>{});
           const home=(await page.locator('body').innerText());
+          if(home.length<=140){
+            const path=new URL(page.url()).pathname;
+            console.error('PRODUCTION_HOME_RENDER_DIAGNOSTIC',JSON.stringify({
+              path,visibleChars:home.length,clientErrorTypes:pageErrors,
+              hasFallback:home.includes('Opening your Writer'),
+              hasSignin:home.includes('Sign in'),
+            }));
+          }
           assert(home.length>140,'Studio Home is not a blank canvas');
           assert(!/Internal Server Error|Application error: a client-side exception/i.test(home),
             'Studio Home error');
-          mark('actual Chrome fictional writer '+w.i+' Home',true);
+          mark('actual '+BROWSER_ENGINE+' fictional writer '+w.i+' Home',true);
           for(const mode of ['develop','write','review']){
             const loaded=await page.goto(BASE_URL+'/writers-studio?mode='+mode+
               '&m='+w.manuscript,{waitUntil:'domcontentloaded',timeout:105000});
             assert.equal(loaded.status(),200,'Studio '+mode+' must load as admitted writer');
             await page.waitForTimeout(500);
+            await page.waitForFunction(() => document.body?.innerText?.length>140,
+              null,{timeout:20000}).catch(()=>{});
             const content=await page.locator('body').innerText();
+            if(content.length<=140){
+              console.error('STUDIO_MODE_RENDER_HOLD',JSON.stringify({
+                mode,writerIndex:w.i,path:new URL(page.url()).pathname,
+                renderedCharacters:content.length,clientErrorTypes:pageErrors
+              }));
+            }
             assert(content.length>140,'Studio '+mode+' blank');
             assert(!/Internal Server Error|Application error: a client-side exception/i.test(content),
               'Studio '+mode+' error');
-            mark('actual Chrome fictional writer '+w.i+' '+mode,true);
+            if(mode==='write'){
+              // Exercise the REAL authenticated Writing UI, rather than
+              // relying only on API PUT and route-level visual acceptance.
+              const copyButton=page.getByRole('button',{name:'Save a copy',exact:true});
+              assert.equal(await copyButton.count(),1,'visible Save a copy action missing');
+              // The canonical Writer's Studio editor is a plaintext-only
+              // contenteditable textbox, NOT a textarea or an Edit button.
+              const editor=page.locator('[data-write-editor][contenteditable="plaintext-only"]').first();
+              await editor.waitFor({state:'visible',timeout:12000});
+              const before=await editor.innerText();
+              assert(before.includes('SYNTHETIC_WRITER_'+w.i+'_SAVED_'),
+                'actual editor did not render the writer own saved passage');
+              const uiMarker='SYNTHETIC_UI_EDIT_'+BROWSER_ENGINE+'_'+w.i;
+              await editor.fill(before+'\n'+uiMarker+'\n');
+              await editor.blur();
+              mark('actual '+BROWSER_ENGINE+' writer '+w.i+' editor accepts input',true);
+
+              // Browser-owned copy MUST include unsaved on-screen text and
+              // MUST NOT contain the other writer synthetic marker.
+              await copyButton.click();
+              const downloadEvent=page.waitForEvent('download',{timeout:16000});
+              await page.getByRole('button',{name:/Plain text/}).click();
+              const download=await downloadEvent;
+              const exported=readFileSync(await download.path(),'utf8');
+              assert(exported.includes(uiMarker),'device copy missed current editor changes');
+              assert(!exported.includes('SYNTHETIC_WRITER_'+(1-w.i)+'_SAVED_'),
+                'foreign writer words present in owner download');
+              mark('actual '+BROWSER_ENGINE+' writer '+w.i+' downloads latest own text',true);
+
+              // A member may navigate away only after the data is really
+              // persisted. Observe POST/PUT via authenticated owner API and
+              // wait for its exact synthetic marker, never a guessed timer.
+              let persisted=false;
+              for(let n=0;n<25;n++){
+                const actual=await request(w.token,'GET',
+                  '/api/sovereign/manuscripts/'+w.manuscript+'/draft');
+                if(actual.status===200 && actual.body?.content?.includes(uiMarker)){
+                  persisted=true;
+                  break;
+                }
+                await new Promise(resolve=>setTimeout(resolve,550));
+              }
+              assert(persisted,'browser edit did not durably save to the owner draft');
+              mark('actual '+BROWSER_ENGINE+' writer '+w.i+' UI edit durably saved',true);
+            }
+            mark('actual '+BROWSER_ENGINE+' fictional writer '+w.i+' '+mode,true);
           }
           await page.reload({waitUntil:'domcontentloaded',timeout:105000});
           // domcontentloaded precedes React hydration. Do not mistake an
@@ -305,7 +375,7 @@ async function request(token, method, route, body) {
       checks,writer_count:TOTAL_WRITERS,excluded_count:EXCLUDED_WRITERS,
       requests:samples.length,p95_ms:percentile(samples,.95),
       p99_ms:percentile(samples,.99),max_ms:Math.round(Math.max(...samples)),
-      browser_tested:true,voice_tested:false,restore_tested:false,
+      browser_tested:true,browser_engine:BROWSER_ENGINE,voice_tested:false,restore_tested:false,
       production_tested:false,
     };
   } finally {
