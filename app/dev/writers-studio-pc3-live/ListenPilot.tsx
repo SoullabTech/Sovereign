@@ -9,6 +9,7 @@ import { HOME_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import type { StudioMode } from '@/app/writers-studio/full-redesign/types';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { fullPrefaceReading } from '@/lib/writersStudio/listen/fullPrefaceReading';
+import { COMPLETE_PREFACE_ID, resolveListenReading, hasListenSessionWork, LISTEN_LEAVE_WARNING } from '@/lib/writersStudio/listen/listenState';
 import {
   measureMicLevels, meterPercentage, QUIET_MIC_LEVELS, voiceLevelGuidance,
   type MicLevels,
@@ -28,7 +29,6 @@ import {
 import styles from './ListenPilot.module.css';
 
 type Source = { state: string; title?: string | null; version?: number; sections?: RebuildSection[] };
-const COMPLETE_PREFACE_ID = 'listen:entire-preface';
 type Take = {
   id: number;
   blob: Blob;
@@ -73,8 +73,10 @@ export default function ListenPilot() {
   const meterPeakHold = useRef<Record<InputChannel, number>>({ 1: -60, 2: -60 });
   const chunks = useRef<Blob[]>([]);
   const takesRef = useRef<Take[]>([]);
+  const notesRef = useRef('');
 
   useEffect(() => { takesRef.current = takes; }, [takes]);
+  useEffect(() => { notesRef.current = notes; }, [notes]);
   useEffect(() => () => {
     if (meterFrame.current !== null) cancelAnimationFrame(meterFrame.current);
     if (media.current?.state === 'recording') media.current.stop();
@@ -84,7 +86,7 @@ export default function ListenPilot() {
   }, []);
   useEffect(() => {
     const protectUnsaved = (event: BeforeUnloadEvent) => {
-      if (takesRef.current.length > 0 || media.current?.state === 'recording') {
+      if (hasListenSessionWork(takesRef.current.length, notesRef.current, media.current?.state === 'recording')) {
         event.preventDefault();
         event.returnValue = '';
       }
@@ -95,6 +97,8 @@ export default function ListenPilot() {
 
   useEffect(() => {
     let live = true;
+    setSource(null);
+    setError('');
     if (!manuscriptId) { setError('Open Listen with an identified manuscript.'); return; }
     void (async () => {
       try {
@@ -103,12 +107,11 @@ export default function ListenPilot() {
         const s = await r.json() as Source;
         if (s.state !== 'section_aware' || !s.sections?.length) throw new Error('This manuscript is not section-addressable. No sections were guessed.');
         if (!live) return;
-        const requested = params?.get('section') || params?.get('s');
-        const first = s.sections.find((x) => x.draftSectionId === requested)
-          || s.sections.find((x) => /^preface$/i.test(x.heading?.trim() || ''))
-          || s.sections[0]!;
+        const requested = params?.get('section') ?? params?.get('s') ?? null;
+        const selection = resolveListenReading(s.sections, requested);
+        if (selection === null) throw new Error('The requested reading is unavailable. Return to your writing and choose a section.');
         setSource(s);
-        setSectionId(fullPrefaceReading(s.sections) ? COMPLETE_PREFACE_ID : first.draftSectionId);
+        setSectionId(selection);
       } catch (e) { if (live) setError(e instanceof Error ? e.message : 'Unable to read manuscript.'); }
     })();
     return () => { live = false; };
@@ -133,7 +136,7 @@ export default function ListenPilot() {
   const pageVoiceScale = 0.82 + pageVoiceEnergy * 0.18;
   const changeMode = (mode: StudioMode) => {
     if (recording) return;
-    if (takes.length && !window.confirm('Your recordings have not been saved to the server. Download them before leaving Listen. Leave anyway?')) return;
+    if (hasListenSessionWork(takes.length, notes, recording) && !window.confirm(LISTEN_LEAVE_WARNING)) return;
     const next = new URLSearchParams(params?.toString() ?? '');
     next.set('mode', mode);
     router.push('/writers-studio?' + next.toString());
