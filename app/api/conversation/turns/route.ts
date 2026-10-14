@@ -16,6 +16,16 @@ import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { recordConsentState } from '@/lib/provenance/consentState';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
+const PRIVATE_HISTORY_CACHE = 'private, no-store, max-age=0, must-revalidate';
+/** Member-owned conversation responses are always noncacheable, including errors. */
+function privateJson(payload: unknown, init?: ResponseInit) {
+  const headers = new Headers(init?.headers);
+  headers.set('Cache-Control', PRIVATE_HISTORY_CACHE);
+  headers.set('Vary', 'Cookie, Origin');
+  return NextResponse.json(payload, {...init, headers});
+}
+
+
 /**
  * SECURITY (2026-07-24): the subject of every read and write on this route is the
  * AUTHENTICATED member, never a client-supplied `userId`.
@@ -43,7 +53,7 @@ export async function GET(request: NextRequest) {
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
-      return NextResponse.json(
+      return privateJson(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
@@ -53,7 +63,7 @@ export async function GET(request: NextRequest) {
     const sessionId = searchParams.get('sessionId');
 
     if (!claimMatchesOrNull(searchParams.get('userId'), memberId)) {
-      return NextResponse.json(
+      return privateJson(
         { success: false, error: 'Forbidden' },
         { status: 403 }
       );
@@ -88,7 +98,7 @@ export async function GET(request: NextRequest) {
 
     const result = await query(sql, params);
 
-    return NextResponse.json({
+    return privateJson({
       success: true,
       messages: result.rows
     });
@@ -96,17 +106,17 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
 
-    // Handle missing table gracefully
+    // A missing store is not a member with no history. Report the outage.
     if (message.includes('does not exist')) {
-      console.warn('[CONVERSATION] conversation_turns table not found - returning empty');
-      return NextResponse.json({
-        success: true,
-        messages: []
-      });
+      console.warn('[CONVERSATION] conversation history storage unavailable');
+      return privateJson(
+        { success: false, error: 'Conversation history unavailable' },
+        { status: 503 }
+      );
     }
 
     console.error(`[CONVERSATION] GET error: ${message}`);
-    return NextResponse.json(
+    return privateJson(
       { success: false, error: 'Failed to retrieve conversation' },
       { status: 500 }
     );
@@ -119,7 +129,7 @@ export async function POST(request: NextRequest) {
     // Authenticate BEFORE parsing or writing content.
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
-      return NextResponse.json(
+      return privateJson(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
@@ -129,7 +139,7 @@ export async function POST(request: NextRequest) {
     const { userMessage, assistantMessage, sessionId, isSanctuary, exchangeId: clientExchangeId } = body;
 
     if (!claimMatchesOrNull(body?.userId, memberId)) {
-      return NextResponse.json(
+      return privateJson(
         { success: false, error: 'Forbidden' },
         { status: 403 }
       );
@@ -144,11 +154,11 @@ export async function POST(request: NextRequest) {
 
     if (posture.sanctuary) {
       console.log('[CONVERSATION] Sanctuary posture - not storing turn');
-      return NextResponse.json({ success: true, sanctuary: true });
+      return privateJson({ success: true, sanctuary: true });
     }
 
     if (!userMessage || !assistantMessage) {
-      return NextResponse.json(
+      return privateJson(
         { success: false, error: 'userMessage and assistantMessage required' },
         { status: 400 }
       );
@@ -171,20 +181,22 @@ export async function POST(request: NextRequest) {
 
     console.log(`[CONVERSATION] Stored turn pair for user ${userId.slice(0, 8)}...`);
 
-    return NextResponse.json({ success: true });
+    return privateJson({ success: true });
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
 
-    // Handle missing table gracefully - just log and return success
-    // This prevents the 404 errors from causing UI issues
+    // A failed write must never be presented as a successfully saved turn.
     if (message.includes('does not exist')) {
-      console.warn('[CONVERSATION] conversation_turns table not found - skipping save');
-      return NextResponse.json({ success: true, tableNotReady: true });
+      console.warn('[CONVERSATION] durable turn storage unavailable');
+      return privateJson(
+        { success: false, error: 'Conversation was not saved' },
+        { status: 503 }
+      );
     }
 
     console.error(`[CONVERSATION] POST error: ${message}`);
-    return NextResponse.json(
+    return privateJson(
       { success: false, error: 'Failed to save conversation' },
       { status: 500 }
     );
