@@ -1,0 +1,8 @@
+{
+  "workUnitId": "v2-cabin-sovereign-soullab-home-c1-ho-mv8g0yml",
+  "state": "AUTHORIZED",
+  "executionConnected": false,
+  "baseSha": "9689d2a3cd11d2d1ace31263486451001c0dc011",
+  "founderDirection": "2026-10-14: continue the full offline Soullab Cabin in a JARVIS flow.",
+  "scope": "Repository-read C1 architecture inventory; no background execution, spending or production changes."
+}
