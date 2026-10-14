@@ -3,7 +3,9 @@
  * STUDIO-PANELS-01: resizing and disclosure are presentation only.
  * Collapsing a panel never unmounts its manuscript/MAIA contents.
  */
-import { act, createElement } from 'react';
+import { act, createElement, type ReactNode } from 'react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -13,6 +15,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
+import { WriteMaiaUnlinked } from '@/app/dev/writers-studio-pc3-live/WriteMaiaUnlinked';
 import { WRITE_GEOMETRY, STATE_GEOMETRY, HOME_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 
 const originalWidth = window.innerWidth;
@@ -47,15 +50,18 @@ afterEach(async () => {
 async function mount(mode: 'write' | 'develop' | 'review' | 'home' = 'develop', opts?: {
   withMaia?: boolean;
   openMaia?: () => void;
+  initiallyExpanded?: boolean;
+  maiaNode?: ReactNode;
 }) {
-  const geometry = mode === 'write' ? WRITE_GEOMETRY : mode === 'home' ? HOME_GEOMETRY : STATE_GEOMETRY['develop-manuscript'];
+  const geometry = mode === 'write' ? { ...WRITE_GEOMETRY, maiaWidth: 360, maiaFloor: 300, padRight: 9, gapRight: 13 } : mode === 'home' ? HOME_GEOMETRY : STATE_GEOMETRY['develop-manuscript'];
   await act(async () => root.render(createElement(Shell, {
     mode,
     appearance: 'evening',
     geometry,
     manuscript: mode === 'home' ? undefined : manuscript,
     work,
-    maia: opts?.withMaia === false || mode === 'home' ? undefined : maia,
+    maia: opts?.withMaia === false || mode === 'home' ? undefined : (opts?.maiaNode ?? maia),
+    maiaInitiallyExpanded: opts?.initiallyExpanded,
     onOpenMaia: opts?.openMaia,
     memberInitial: 'T',
   })));
@@ -131,5 +137,88 @@ describe('Writer Studio panel layout and content custody', () => {
     await mount('home');
     expect(host.querySelector('.fr-panel-controls')).toBeNull();
     expect(host.querySelectorAll('[role="separator"]').length).toBe(0);
+  });
+});
+
+
+describe('Write panel regression: presentation is not conversation authority', () => {
+  const key = (mode: string) => 'soullab.studio.panel-layout.v1.' + mode;
+  const geometry = { leftExpanded: true, rightExpanded: true, leftWidth: 325, rightWidth: 410 };
+
+  it('restores an explicitly opened Write panel and both widths after a full remount', async () => {
+    await mount('write', { initiallyExpanded: false });
+    expect(host.querySelector('.fr-maia')?.getAttribute('aria-hidden')).toBe('true');
+    const content = host.querySelector('[data-testid="original-maia"]');
+    click('Show MAIA panel');
+    const right = host.querySelector<HTMLElement>('[aria-label="Resize MAIA panel"]')!;
+    await act(async () => right.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'ArrowLeft' })));
+    const remembered = right.getAttribute('aria-valuenow');
+    expect(host.querySelector('[data-testid="original-maia"]')).toBe(content);
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    await mount('write', { initiallyExpanded: false });
+    expect(host.querySelector('.fr-maia')?.getAttribute('aria-hidden')).toBe('false');
+    expect(host.querySelector('[aria-label="Resize MAIA panel"]')?.getAttribute('aria-valuenow')).toBe(remembered);
+  });
+
+  it('restores a deliberately collapsed Write panel rather than reopening it', async () => {
+    localStorage.setItem(key('write'), JSON.stringify(geometry));
+    await mount('write', { initiallyExpanded: false });
+    click('Hide MAIA panel');
+    await act(async () => root.unmount()); root = createRoot(host);
+    await mount('write', { initiallyExpanded: false });
+    expect(host.querySelector('.fr-shell')?.getAttribute('data-right-open')).toBe('false');
+    expect(JSON.parse(localStorage.getItem(key('write'))!).rightWidth).toBe(410);
+  });
+
+  it('keeps each mode preference intact during a Write-Develop-Review-Write switch', async () => {
+    const variants = {
+      write: { ...geometry, rightExpanded: false, rightWidth: 415 },
+      develop: { ...geometry, leftWidth: 285, rightWidth: 385 },
+      review: { ...geometry, leftExpanded: false, rightWidth: 350 },
+    };
+    for (const [mode,value] of Object.entries(variants))localStorage.setItem(key(mode),JSON.stringify(value));
+    for (const mode of ['write','develop','review','write'] as const) {
+      await mount(mode, { initiallyExpanded: mode !== 'write' });
+      expect(JSON.parse(localStorage.getItem(key(mode))!)).toEqual(variants[mode]);
+    }
+  });
+
+  it('handles malformed preferences without treating them as authority or losing controls', async () => {
+    localStorage.setItem(key('write'), '{not-valid-json');
+    await mount('write', { initiallyExpanded: false });
+    click('Show MAIA panel');
+    expect(host.querySelector('[aria-label="Resize MAIA panel"]')).not.toBeNull();
+    expect(host.querySelector('[data-testid="original-manuscript"]')?.textContent).toBe('Unchanged manuscript text');
+  });
+
+  it('remains usable when browser preference storage is unavailable', async () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('storage blocked'); });
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('storage blocked'); });
+    await mount('write', { initiallyExpanded: false });
+    click('Show MAIA panel');click('Hide MAIA panel');click('Show MAIA panel');
+    expect(host.querySelector('.fr-maia')?.getAttribute('aria-hidden')).toBe('false');
+  });
+
+  it('gives an unresolved manuscript a real panel and explicit Home action without writes', async () => {
+    const choose = vi.fn(); const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    await mount('write', { initiallyExpanded: false, maiaNode: createElement(WriteMaiaUnlinked, { onChooseWork: choose }) });
+    click('Show MAIA panel');
+    expect(host.querySelector('[data-write-maia-unlinked]')).not.toBeNull();
+    expect(host.querySelector('[aria-label="Resize MAIA panel"]')).not.toBeNull();
+    expect(choose).not.toHaveBeenCalled();expect(fetchSpy).not.toHaveBeenCalled();
+    const button=[...host.querySelectorAll('button')].find(b=>b.textContent==='Choose a Work in Home');
+    expect(button).toBeTruthy();
+    act(()=>button!.click());
+    expect(choose).toHaveBeenCalledTimes(1);expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps the production Write MAIA slot mounted independently of selections and conversation state', () => {
+    const code=readFileSync(resolve(process.cwd(),'app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx'),'utf8');
+    expect(code).toContain('maia={writeMaia}');
+    expect(code).toContain('geometry={WRITE_RELATIONAL_GEOMETRY}');
+    expect(code).toContain('maiaInitiallyExpanded={false}');
+    expect(code).toContain("<WriteMaiaUnlinked onChooseWork={() => props.onMode('home')} />");
+    expect(code).not.toContain('maia={railSelectionId || workConversationOpen ?');
   });
 });

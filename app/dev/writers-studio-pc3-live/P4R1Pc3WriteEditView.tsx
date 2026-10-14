@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
+import { WriteMaiaUnlinked } from './WriteMaiaUnlinked';
 import { WriteManuscriptRail, WriteRoom, type WriteBlock } from '@/app/writers-studio/full-redesign/WriteRoom';
 import { WRITE_COPY } from '@/app/writers-studio/full-redesign/fixtures';
 import { WRITE_GEOMETRY, appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
@@ -810,7 +811,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       </div>
       <div className="fr-foot">The manuscript stays primary; support follows your attention.</div>
     </div>
-  ) : undefined;
+  ) : <WriteMaiaUnlinked onChooseWork={() => props.onMode('home')} />;
 
   const blankArrival = blankArrivalVisible && props.work ? (
     <P4R1BlankWritingArrival
@@ -1003,18 +1004,20 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   return (
     <>
+      {/* Panel presence belongs to the layout, not conversation state.
+          Restoring it never starts or resumes a conversation. */}
       <Shell
           mode="write"
           appearance={props.appearance}
-          geometry={railSelectionId || workConversationOpen ? WRITE_RELATIONAL_GEOMETRY : WRITE_GEOMETRY}
+          geometry={WRITE_RELATIONAL_GEOMETRY}
           workTitle={props.work?.title ?? undefined}
           memberInitial=""
           onSelectMode={props.onMode}
           canvas={canvas}
           manuscript={<WriteManuscriptRail fixture={projection.data} onOpenChapter={go} />}
           work={workSurface}
-          maia={railSelectionId || workConversationOpen ? writeMaia : undefined}
-          onOpenMaia={() => openWorkConversation('')}
+          maia={writeMaia}
+          maiaInitiallyExpanded={false}
         />
 
       <SaveDeviceCopy

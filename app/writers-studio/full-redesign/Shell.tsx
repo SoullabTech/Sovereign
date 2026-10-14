@@ -34,6 +34,8 @@ export type ShellProps = {
   maia?: ReactNode;
   /** In Write, MAIA can be summoned before a passage has been selected. */
   onOpenMaia?: () => void;
+  /** Presentation default only; a saved layout takes precedence. */
+  maiaInitiallyExpanded?: boolean;
   /** Optional line beneath the regions (#23 carries one). */
   footer?: ReactNode;
   /** Optional words set above the MAIA region (#23). */
@@ -91,42 +93,46 @@ export function Shell(props: ShellProps) {
   const shellRef = useRef<HTMLDivElement>(null);
   const drag = useRef<DragState | null>(null);
   const [leftExpanded, setLeftExpanded] = useState(true);
-  const [rightExpanded, setRightExpanded] = useState(true);
+  const rightInitiallyExpanded = props.maiaInitiallyExpanded ?? true;
+  const [rightExpanded, setRightExpanded] = useState(rightInitiallyExpanded);
   const [leftWidth, setLeftWidth] = useState(geometry.manuscriptWidth);
   const [rightWidth, setRightWidth] = useState(geometry.maiaWidth);
-  const [restored, setRestored] = useState(false);
+  // Do not let a render with the old mode/defaults overwrite the new mode's
+  // saved widths before its hydration effect has completed.
+  const hydrationKey = `${mode}:${geometry.manuscriptWidth}:${geometry.maiaWidth}:${rightInitiallyExpanded}`;
+  const [restoredKey, setRestoredKey] = useState<string | null>(null);
   const hasLeft = !oneRoom && !canvas && props.manuscript !== undefined;
   const hasRight = !oneRoom && !canvas && props.maia !== undefined;
   const leftVisible = hasLeft && leftExpanded;
   const rightVisible = hasRight && rightExpanded;
 
   useEffect(() => {
-    setRestored(false);
     let parsed: Record<string, unknown> | null = null;
     try {
       const raw = window.localStorage.getItem(PANEL_STORAGE_KEY(mode));
       if (raw) parsed = JSON.parse(raw) as Record<string, unknown>;
     } catch { /* Private browsing may disable storage; controls still function. */ }
     setLeftExpanded(typeof parsed?.leftExpanded === 'boolean' ? parsed.leftExpanded : true);
-    setRightExpanded(typeof parsed?.rightExpanded === 'boolean' ? parsed.rightExpanded : true);
+    setRightExpanded(typeof parsed?.rightExpanded === 'boolean' ? parsed.rightExpanded : rightInitiallyExpanded);
     const valid = (v: unknown, side: Side): v is number =>
       typeof v === 'number' && Number.isFinite(v) && v >= PANEL_MIN[side] && v <= PANEL_MAX[side];
     setLeftWidth(valid(parsed?.leftWidth, 'left') ? parsed.leftWidth : geometry.manuscriptWidth);
     setRightWidth(valid(parsed?.rightWidth, 'right') ? parsed.rightWidth : geometry.maiaWidth);
-    setRestored(true);
-  }, [mode, geometry.manuscriptWidth, geometry.maiaWidth]);
+    setRestoredKey(hydrationKey);
+  }, [mode, geometry.manuscriptWidth, geometry.maiaWidth, rightInitiallyExpanded, hydrationKey]);
 
   useEffect(() => {
-    if (!restored) return;
+    if (restoredKey !== hydrationKey || oneRoom) return;
     try {
       window.localStorage.setItem(PANEL_STORAGE_KEY(mode), JSON.stringify({
         leftExpanded, rightExpanded, leftWidth, rightWidth,
       }));
     } catch { /* State remains fully usable without persistence. */ }
-  }, [mode, leftExpanded, rightExpanded, leftWidth, rightWidth, restored]);
+  }, [mode, leftExpanded, rightExpanded, leftWidth, rightWidth, restoredKey, hydrationKey, oneRoom]);
 
   const constrain = (side: Side, requested: number): number => {
-    const bounds = shellRef.current?.getBoundingClientRect().width ?? window.innerWidth;
+    const bounds = shellRef.current?.getBoundingClientRect().width
+      ?? (typeof window === 'undefined' ? 1536 : window.innerWidth);
     const other = side === 'left'
       ? (rightVisible ? rightWidth : 0)
       : (leftVisible ? leftWidth : 0);
