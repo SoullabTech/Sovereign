@@ -189,6 +189,16 @@ export class SectionSaveQueue {
     this.emit();
   }
 
+  /** Advance only a settled queue after its exact bodyless checkpoint receipt.
+   * No prose is replaced, and an unseen/stale/parallel write can never be adopted. */
+  acknowledgeCheckpoint(baseVersion: number, nextVersion: number): boolean {
+    if (this.hasUnsavedWork() || this.version !== baseVersion
+      || !Number.isSafeInteger(baseVersion) || nextVersion !== baseVersion + 1) return false;
+    this.version = nextVersion;
+    this.emit();
+    return true;
+  }
+
   state(): QueueState {
     return {
       version: this.version,

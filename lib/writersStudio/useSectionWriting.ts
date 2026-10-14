@@ -70,6 +70,8 @@ export interface SectionWriting {
   hasUnsavedWork: () => boolean;
   /** The draft version last acknowledged by the serialized server save lane. */
   currentRevisionId: () => number;
+  /** Metadata-only receipt for this queue's exact settled checkpoint; never a restore. */
+  acknowledgeCheckpoint?: (baseVersion: number, nextVersion: number) => boolean;
   /**
    * Send the active section's staged text NOW, without waiting out the
    * autosave delay.
@@ -438,6 +440,10 @@ export function useSectionWriting(
      this number only from successful server responses, so it is the latest
      server-acknowledged base this writing session is entitled to assert. */
   const currentRevisionId = useCallback(() => queue.state().version, [queue]);
+  const acknowledgeCheckpoint = useCallback((base: number, next: number) => {
+    if (staged.current.size > 0) return false;
+    return queue.acknowledgeCheckpoint(base, next);
+  }, [queue]);
 
   /**
    * THE PUBLISHED SESSION MUST BE REFERENTIALLY STABLE.
@@ -469,9 +475,10 @@ export function useSectionWriting(
       goToSection,
       hasUnsavedWork,
       currentRevisionId,
+      acknowledgeCheckpoint,
       flushPending,
     }),
     [initialSections, activeId, active, activeBody, statusOf, edit, editSection, captureForUnmount,
-     bodyOf, goToSection, hasUnsavedWork, currentRevisionId, flushPending],
+     bodyOf, goToSection, hasUnsavedWork, currentRevisionId, acknowledgeCheckpoint, flushPending],
   );
 }

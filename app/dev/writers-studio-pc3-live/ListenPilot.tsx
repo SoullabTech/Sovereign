@@ -59,7 +59,7 @@ export default function ListenPilot() {
   const [mic, setMic] = useState('');
   const [mics, setMics] = useState<MediaDeviceInfo[]>([]);
   const [inputChannel, setInputChannel] = useState<InputChannel>(1);
-  const [routedOutput, setRoutedOutput] = useState<{ channel: InputChannel; outputChannels: number; rateHz: number } | null>(null);
+  const [routedOutput, setRoutedOutput] = useState<{ channel: InputChannel; outputChannels: number; rateHz: number; verification: 'track-settings' | 'explicit-audio-graph' } | null>(null);
   const [captureInfo, setCaptureInfo] = useState<BrowserCaptureInfo | null>(null);
   const [inspecting, setInspecting] = useState(false);
   const [monitoring, setMonitoring] = useState(false);
@@ -209,7 +209,7 @@ export default function ListenPilot() {
         newStream.getAudioTracks()[0]?.getSettings() ?? {}, preferredRecorderMime(),
       ));
       setRoutedOutput({
-        channel: newRoute.inputChannel, outputChannels: newRoute.outputChannels, rateHz: newRoute.outputRateHz,
+        channel: newRoute.inputChannel, outputChannels: newRoute.outputChannels, rateHz: newRoute.outputRateHz, verification: newRoute.verification,
       });
       setMonitoring(true);
       startLevelPolling(newRoute);
@@ -260,7 +260,7 @@ export default function ListenPilot() {
       const routed = monoRouteRef.current ?? await createMonoCaptureRoute(audio, inputChannel);
       monoRouteRef.current = routed;
       if (!monitoring) { setMonitoring(true); startLevelPolling(routed); }
-      setRoutedOutput({ channel: routed.inputChannel, outputChannels: routed.outputChannels, rateHz: routed.outputRateHz });
+      setRoutedOutput({ channel: routed.inputChannel, outputChannels: routed.outputChannels, rateHz: routed.outputRateHz, verification: routed.verification });
       const mime = preferredRecorderMime();
       const rec = new MediaRecorder(routed.stream, mime ? { mimeType: mime } : undefined);
       media.current = rec;
@@ -443,6 +443,8 @@ export default function ListenPilot() {
                         <div><dt>Microphone channels</dt><dd>{captureInfo?.microphoneChannels ?? 'Not reported yet'}</dd></div>
                         <div><dt>Output file</dt><dd>{outputFormatLabel(captureInfo?.outputMimeType ?? preferredRecorderMime())}</dd></div>
                         <div><dt>Output routing</dt><dd>{routedOutput ? 'Input ' + routedOutput.channel + ' → ' + routedOutput.outputChannels + ' channel mono' : 'Input ' + inputChannel + ' → mono when recording'}</dd></div>
+                        {routedOutput && <div><dt>Mono routing check</dt><dd>{routedOutput.verification === 'track-settings'
+                          ? 'Confirmed by track settings' : 'Confirmed by explicit audio graph; track metadata unavailable'}</dd></div>}
                         <div><dt>24-bit PCM WAV</dt><dd>Not available in this pilot</dd></div>
                       </dl>
                       {captureInfo?.microphoneSampleRateHz && captureInfo.microphoneSampleRateHz !== 48000 && (

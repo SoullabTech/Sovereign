@@ -32,6 +32,7 @@ import IsolatedEditorialRoom from './IsolatedEditorialRoom';
 import P4R1FocusMaterials from './P4R1FocusMaterials';
 import P4R1BlankWritingArrival from './P4R1BlankWritingArrival';
 import SaveDeviceCopy from './SaveDeviceCopy';
+import ManuscriptHistory from './ManuscriptHistory';
 import { composeSelected, editorialSegments } from '@/lib/writersStudio/editorialDiff';
 import type { CanvasInsight } from '@/lib/writersStudio/insightCanvas';
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
@@ -1028,6 +1029,16 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           maiaRevealRequest={props.workspaceOpen && !isolatedEditorial
             ? props.editorialThread?.threadId ?? 'editorial-workspace' : null}
         />
+
+      <ManuscriptHistory
+        key={'history:' + props.context.manuscriptId}
+        manuscriptId={props.context.manuscriptId}
+        writing={props.writing}
+        actionBlocked={busy || props.maiaRelationshipBusy}
+        restoreBlockedReason={props.workspaceOpen || isolatedEditorial || workConversationOpen || props.editorialDraft.trim() || workConversationStarter.trim()
+          ? 'Before restoring the whole manuscript, save any editorial wording or message draft and finish the open conversation. It will not be closed for you.' : null}
+        onRestored={() => window.location.reload()}
+      />
 
       <SaveDeviceCopy
         key={props.context.manuscriptId}
