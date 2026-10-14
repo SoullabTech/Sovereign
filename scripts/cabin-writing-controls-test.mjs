@@ -10,6 +10,7 @@ try {
  env:{...process.env,CABIN_CANARY:'1',CABIN_TEST_DATA:dir}});
  const home=await app.firstWindow();await home.waitForFunction(()=>!document.querySelector('#open').disabled);
  const opening=app.waitForEvent('window');await home.locator('#open').click();const page=await opening;
+ await page.locator('#enter-writing').click();
  await page.waitForFunction(()=>document.querySelector('#status')?.textContent==='Your local workspace is ready.');
  const text='A fictional chapter.\n\nThe forest was quiet.';
  await page.locator('#file').setInputFiles({name:'Fictional.txt',mimeType:'text/plain',buffer:Buffer.from(text)});

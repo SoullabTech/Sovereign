@@ -58,7 +58,7 @@ if (!app.requestSingleInstanceLock()) { app.quit(); } else {
  ipcMain.handle('cabin:open',async event=>{
   authorize(event);await startRuntime();
   return flow.openCabin({fetchImpl:fetchLocal,openView:async url=>{
-   url=url.replace('http://127.0.0.1:43121',origin);
+   url=origin+'/house';
    if(workspace&&!workspace.isDestroyed()){workspace.focus();return;}
    workspace=new BrowserWindow({title:'Cabin — local workspace',width:1320,height:950,backgroundColor:'#e7eee3',
     webPreferences:{preload:path.join(__dirname,'workspace-preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,partition:'persist:soullab-cabin-local'}});

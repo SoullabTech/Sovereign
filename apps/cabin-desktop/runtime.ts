@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { CabinLocalStore } from '../../lib/cabin/localStore';
 import { TurnPosture } from '../../lib/sanctuary/turnPosture';
 import { CONSTITUTIONAL_PRINCIPLES } from '../../lib/knowledge/ConstitutionalAIKnowledge';
+import { HOUSE_PLACES } from '../../lib/house/catalog';
+import { defaultHousePreferences, parseHousePreferences } from '../../lib/house/preferences';
 import { AIN_INTEGRATIVE_ALCHEMY_PROMPT } from '../../lib/ai/prompts/ainIntegrativeAlchemy';
 
 const port = Number(process.env.CABIN_PORT || 43121);
@@ -38,6 +40,12 @@ function chapter(id: string) {
  const section = store.listManuscriptSections(owner,id)[0];
  const version = store.db.prepare('SELECT revision FROM cabin_chapter_versions WHERE manuscript_id=? ORDER BY revision DESC LIMIT 1').get(id);
  return { ...manuscript, body: section?.body || '', revision: Number(version?.revision || 0), canUndo: !!store.db.prepare('SELECT id FROM cabin_undo_stack WHERE manuscript_id=? AND consumed=0 LIMIT 1').get(id) };
+}
+function houseSnapshot() {
+ const member=store.getMember(owner)!;
+ const preferences=store.readHousePreferences(owner)||{...defaultHousePreferences(HOUSE_PLACES.map(p=>p.id)),revision:0};
+ return {name:member.preferredName||member.name||'',preferences,writingCount:store.listManuscripts(owner).length,
+  places:HOUSE_PLACES.filter(p=>['writing','journal','dream','astrology','community'].includes(p.id)).map(p=>({id:p.id,label:p.label,purpose:p.purpose,available:p.id==='writing'}))};
 }
 function snapshot() {
  return { manuscripts: store.listManuscripts(owner),
@@ -109,15 +117,16 @@ const server = createServer(async(req,res)=>{
   if (req.method === 'GET' && url.pathname === '/api/cabin/health') {
    reply({status:'ready',mode:'offline',build:'cabin-local-v1',context:'empty'}); return;
   }
-  if (req.method === 'GET' && url.pathname === '/cabin') {
+  if (req.method === 'GET' && ['/cabin','/house'].includes(url.pathname)) {
    res.setHeader('Set-Cookie','cabin='+token+'; HttpOnly; SameSite=Strict; Path=/');
    res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'");
-   res.writeHead(200,{'Content-Type':'text/html'});res.end(readFileSync(join(__dirname,'workspace.html')));return;
+   res.writeHead(200,{'Content-Type':'text/html'});res.end(readFileSync(join(__dirname,url.pathname==='/house'?'house.html':'workspace.html')));return;
   }
-  const asset:any = {'/workspace.js':'text/javascript','/workspace.css':'text/css','/Cabin.png':'image/png'};
+  const asset:any = {'/house.js':'text/javascript','/house.css':'text/css','/workspace.js':'text/javascript','/workspace.css':'text/css','/Cabin.png':'image/png'};
   if (req.method === 'GET' && asset[url.pathname]) {
    res.writeHead(200,{'Content-Type':asset[url.pathname]});res.end(readFileSync(join(__dirname,url.pathname.slice(1))));return;
   }
+  if (req.method === 'GET' && url.pathname === '/api/house') {reply(houseSnapshot());return;}
   if (req.method === 'GET' && url.pathname === '/api/chapter') {reply(chapter(url.searchParams.get('id') || ''));return;}
   if (req.method === 'GET' && url.pathname === '/api/export') {reply(chapter(url.searchParams.get('id') || ''));return;}
   if (req.method === 'GET' && url.pathname === '/api/state') {reply(snapshot());return;}
@@ -141,6 +150,20 @@ const server = createServer(async(req,res)=>{
   if(!req.headers['content-type']?.startsWith('application/json')) {reply({error:'Request denied'},403);return;}
   const limit=['/api/save','/api/new'].includes(url.pathname)?128*1024*1024:1024*1024;
   let data:any;try{data=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(await readBody(req,limit)));}catch(e:any){if(e.status)throw e;fail('The local request contains invalid text',400);}
+  if (url.pathname === '/api/house/profile') {
+   const name=exact(data.name,80).trim();
+   store.db.prepare('UPDATE members SET preferred_name=?, updated_at=? WHERE id=?').run(name||null,new Date().toISOString(),owner);
+   reply(houseSnapshot());return;
+  }
+  if (url.pathname === '/api/house/preferences') {
+   const current=store.readHousePreferences(owner);
+   if(!Number.isInteger(data.revision)||data.revision!==(current?.revision||0))fail('House preferences changed. Reopen House before saving.',409);
+   let preferences:any;
+   try{preferences=parseHousePreferences({version:1,center:data.preferences?.center,shortcuts:data.preferences?.shortcuts,passingThrough:data.preferences?.passingThrough});}
+   catch{fail('House preferences are invalid',400);}
+   store.saveHousePreferences(owner,{center:preferences.center,shortcuts:preferences.shortcuts,passingThrough:preferences.passingThrough},current?.revision??null);
+   reply(houseSnapshot());return;
+  }
   if (url.pathname === '/api/new') {
    const title=exact(data.title,200).trim();if(!title)fail('Give your writing a title');
    reply(createWriting(title,exact(data.body||''),data.imported===true));return;

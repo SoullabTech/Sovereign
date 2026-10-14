@@ -17,6 +17,7 @@ async function launch(){
  args:[],env:{...process.env,CABIN_CANARY:'1',CABIN_TEST_PORT:'43221',CABIN_TEST_DATA:dir}});
  const home=await app.firstWindow();await home.waitForFunction(()=>!document.querySelector('#open').disabled);
  const opened=app.waitForEvent('window');await home.locator('#open').click();page=await opened;
+ await page.locator('#enter-writing').click();
  await page.waitForFunction(()=>document.querySelector('#status')?.textContent==='Your local workspace is ready.');
 }
 async function ready(message){await page.waitForFunction(m=>document.querySelector('#status').textContent.includes(m)&&!document.querySelector('#import').disabled,message,{timeout:90000});}

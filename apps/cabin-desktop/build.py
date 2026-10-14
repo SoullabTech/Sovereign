@@ -19,7 +19,7 @@ for name in ("main.cjs","preload.cjs","workspace-preload.cjs","index.html","rend
  shutil.copy2(Path(__file__).parent/name,application/name)
 shutil.copy2(root/"jarvis-desktop/src/cabin-flow.js",application/"cabin-flow.js")
 shutil.copy2(Path(__file__).parent/"assets/cabin-icon.png",application/"Cabin.png")
-(application/"package.json").write_text(json.dumps({"name":"soullab-cabin","version":"0.2.2","main":"main.cjs"}))
+(application/"package.json").write_text(json.dumps({"name":"soullab-cabin","version":"0.3.0","main":"main.cjs"}))
 runtime=application/"runtime"
 runtime.mkdir()
 shutil.copy2(args.node.resolve(),runtime/"node")
@@ -27,7 +27,7 @@ shutil.copy2(args.node.resolve(),runtime/"node")
 subprocess.run([str(args.node),"-e",
  "require('esbuild').buildSync({entryPoints:['apps/cabin-desktop/runtime.ts'],bundle:true,platform:'node',format:'cjs',target:'node22',outfile:process.argv[1]})",
  str(runtime/"server.cjs")],cwd=root,check=True)
-for name in ("workspace.html","workspace.js","workspace.css"):
+for name in ("workspace.html","workspace.js","workspace.css","house.html","house.js","house.css"):
  shutil.copy2(Path(__file__).parent/name,runtime/name)
 shutil.copy2(Path(__file__).parent/"assets/cabin-icon.png",runtime/"Cabin.png")
 info_path=target/"Contents/Info.plist"
@@ -35,7 +35,7 @@ with info_path.open("rb") as stream: info=plistlib.load(stream)
 shutil.copy2(Path(__file__).parent/"assets/Cabin.icns",target/"Contents/Resources/Cabin.icns")
 shutil.copy2(Path(__file__).parent/"assets/cabin-icon.png",target/"Contents/Resources/Cabin.png")
 info.update(CFBundleIconFile="Cabin.icns",CFBundleName="Cabin",CFBundleDisplayName="Cabin",
- CFBundleIdentifier="life.soullab.cabin.launcher",CFBundleShortVersionString="0.2.2",CFBundleVersion="4")
+ CFBundleIdentifier="life.soullab.cabin.launcher",CFBundleShortVersionString="0.3.0",CFBundleVersion="5")
 with info_path.open("wb") as stream: plistlib.dump(info,stream)
 subprocess.run(["codesign","--force","--sign","-",str(runtime/"node")],check=True)
 subprocess.run(["codesign","--force","--deep","--sign","-",str(target)],check=True)

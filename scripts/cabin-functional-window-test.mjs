@@ -16,6 +16,7 @@ async function launch(){
  const opening=app.waitForEvent('window');
  await home.locator('#open').click();
  page=await opening;
+  await page.locator('#enter-writing').click();
  await page.waitForFunction(()=>document.querySelector('#status')?.textContent==='Your local workspace is ready.');
  assert.equal(await page.evaluate(()=>typeof window.require),'undefined');
  return home;
