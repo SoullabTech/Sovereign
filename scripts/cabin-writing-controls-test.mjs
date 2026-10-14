@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 const dir=mkdtempSync(join(tmpdir(),'cabin-writing-controls-'));
 let app;
 try {
- app=await electron.launch({executablePath:'/Users/soullab/Applications/Cabin.app/Contents/MacOS/Electron',args:[],
+ app=await electron.launch({executablePath:(process.env.CABIN_TEST_APP||'/Users/soullab/Applications/Cabin.app')+'/Contents/MacOS/Electron',args:[],
  env:{...process.env,CABIN_CANARY:'1',CABIN_TEST_DATA:dir}});
  const home=await app.firstWindow();await home.waitForFunction(()=>!document.querySelector('#open').disabled);
  const opening=app.waitForEvent('window');await home.locator('#open').click();const page=await opening;

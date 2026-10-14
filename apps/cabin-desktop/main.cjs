@@ -9,13 +9,16 @@ const canary = process.env.CABIN_CANARY === '1';
 app.setName(canary ? 'Cabin Test' : 'Cabin');
 app.setPath('userData', process.env.CABIN_TEST_DATA && canary
  ? process.env.CABIN_TEST_DATA : path.join(app.getPath('appData'), 'Soullab Cabin'));
+const port=canary?Number(process.env.CABIN_TEST_PORT||43121):43121;
+if(!Number.isInteger(port)||port<1024||port>65535)throw Error('Invalid Cabin test port');
+const origin='http://127.0.0.1:'+port;
 const token = randomBytes(32).toString('hex');
-const fetchLocal = (url, options={}) => fetch(url, url.startsWith('http://127.0.0.1:43121/')
- ? {...options,headers:{...options.headers,Authorization:'Bearer '+token}} : options);
+const fetchLocal = (url, options={}) => {url=url.replace('http://127.0.0.1:43121',origin);return fetch(url, url.startsWith(origin+'/')
+ ? {...options,headers:{...options.headers,Authorization:'Bearer '+token}} : options);};
 if (!app.requestSingleInstanceLock()) { app.quit(); } else {
  let home, workspace, child, starting;
  const homeUrl = pathToFileURL(path.join(__dirname,'index.html')).href;
- const allowed = url => url.startsWith('http://127.0.0.1:43121/');
+ const allowed = url => url.startsWith(origin+'/');
  function authorize(event) {
   if (!home || event.sender !== home.webContents || event.senderFrame !== home.webContents.mainFrame ||
     event.senderFrame.url !== homeUrl) throw new Error('CABIN_CALLER_DENIED');
@@ -29,7 +32,7 @@ if (!app.requestSingleInstanceLock()) { app.quit(); } else {
    child=spawn(process.platform==='darwin'?'/usr/bin/sandbox-exec':binary,
     process.platform==='darwin'?['-p',sandbox,binary,entry]:[entry],{
     cwd:path.join(__dirname,'runtime'),env:{PATH:process.env.PATH||'/usr/bin:/bin',
-     CABIN_TOKEN:token,CABIN_PORT:'43121',CABIN_DATA_PATH:path.join(app.getPath('userData'),'workspace.sqlite')},
+     CABIN_TOKEN:token,CABIN_PORT:String(port),CABIN_DATA_PATH:path.join(app.getPath('userData'),'workspace.sqlite')},
     stdio:['ignore','ignore','pipe']});
    let exited=false;child.once('exit',()=>{exited=true;});child.once('error',()=>{exited=true;});
    // Error output is bounded and contains no prompts or manuscript content.
@@ -55,19 +58,20 @@ if (!app.requestSingleInstanceLock()) { app.quit(); } else {
  ipcMain.handle('cabin:open',async event=>{
   authorize(event);await startRuntime();
   return flow.openCabin({fetchImpl:fetchLocal,openView:async url=>{
+   url=url.replace('http://127.0.0.1:43121',origin);
    if(workspace&&!workspace.isDestroyed()){workspace.focus();return;}
    workspace=new BrowserWindow({title:'Cabin — local workspace',width:1320,height:950,backgroundColor:'#e7eee3',
     webPreferences:{preload:path.join(__dirname,'workspace-preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,partition:'persist:soullab-cabin-local'}});
    workspace.webContents.setWindowOpenHandler(()=>({action:'deny'}));
    workspace.webContents.on('will-navigate',(event,destination)=>{if(!allowed(destination))event.preventDefault();});
-   workspace.webContents.session.webRequest.onBeforeRequest((request,callback)=>callback({cancel:!allowed(request.url)&&!request.url.startsWith('blob:http://127.0.0.1:43121/')}));
+   workspace.webContents.session.webRequest.onBeforeRequest((request,callback)=>callback({cancel:!allowed(request.url)&&!request.url.startsWith('blob:'+origin+'/')}));
    try{await workspace.loadURL(url,{extraHeaders:'Authorization: Bearer '+token+'\n'});}
    catch(error){workspace.destroy();throw error;}
   }});
  });
  ipcMain.handle('cabin:save-copy',async(event,id)=>{
   if(!workspace || event.sender!==workspace.webContents || event.senderFrame!==workspace.webContents.mainFrame ||
-    event.senderFrame.url!=='http://127.0.0.1:43121/cabin' || typeof id!=='string' || id.length>100) throw Error('CABIN_CALLER_DENIED');
+    event.senderFrame.url!==origin+'/cabin' || typeof id!=='string' || id.length>100) throw Error('CABIN_CALLER_DENIED');
   const response=await fetchLocal('http://127.0.0.1:43121/api/export?id='+encodeURIComponent(id));
   if(!response.ok) throw Error('Saved writing could not be read');
   const writing=await response.json();

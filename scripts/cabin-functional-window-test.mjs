@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 const dir=mkdtempSync(join(tmpdir(),'cabin-functional-fictional-'));
-const executable='/Users/soullab/Applications/Cabin.app/Contents/MacOS/Electron';
+const executable=(process.env.CABIN_TEST_APP||'/Users/soullab/Applications/Cabin.app')+'/Contents/MacOS/Electron';
 const env={...process.env,CABIN_CANARY:'1',CABIN_TEST_DATA:dir};
 let app, page, chapterId, applied, proposalId;
 const original='The quiet room held the morning light. Mara paused beside the window and listened to the trees.';
@@ -79,7 +79,7 @@ try{
  // Explicitly qualify kernel-level outbound denial without disabling the Mac's network.
  const probe=spawnSync('/usr/bin/sandbox-exec',['-p',
  '(version 1)(allow default)(deny network-outbound)(allow network-outbound (remote ip "localhost:*"))',
- '/Users/soullab/Applications/Cabin.app/Contents/Resources/app/runtime/node','-e',
+ executable.replace('/Contents/MacOS/Electron','/Contents/Resources/app/runtime/node'),'-e',
  "require('node:net').connect({host:'1.1.1.1',port:443}).on('error',e=>{console.log(e.code);process.exit(e.code==='EPERM'?0:1)});setTimeout(()=>process.exit(2),2000)"],{encoding:'utf8',timeout:5000});
  assert.equal(probe.status,0,probe.stdout+probe.stderr);
  console.log(JSON.stringify({packagedWindow:'PASS',automaticRuntime:'PASS',localConversation:'PASS',

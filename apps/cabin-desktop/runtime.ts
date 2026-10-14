@@ -28,7 +28,8 @@ if (!session) { session = randomUUID(); store.db.prepare("INSERT INTO cabin_meta
 let busy = false;
 const stopping = new AbortController();
 function fail(message: string, status = 400): never { throw Object.assign(new Error(message), { status }); }
-function exact(value: unknown, max = 200000) {
+const MAX_IMPORT_BYTES = 20 * 1024 * 1024;
+function exact(value: unknown, max = MAX_IMPORT_BYTES) {
  if (typeof value !== 'string' || value.length > max) fail('Invalid text or text too long'); return value as string;
 }
 function chapter(id: string) {
@@ -39,10 +40,25 @@ function chapter(id: string) {
  return { ...manuscript, body: section?.body || '', revision: Number(version?.revision || 0), canUndo: !!store.db.prepare('SELECT id FROM cabin_undo_stack WHERE manuscript_id=? AND consumed=0 LIMIT 1').get(id) };
 }
 function snapshot() {
- return { manuscripts: store.listManuscripts(owner).map(m => chapter(m.id)),
+ return { manuscripts: store.listManuscripts(owner),
   turns: store.getSessionTurns(owner,session,500), session,
   sessions: store.db.prepare('SELECT session_id AS id, MIN(created_at) AS created FROM conversation_turns WHERE user_id=? GROUP BY session_id ORDER BY created DESC').all(owner),
   selected: store.db.prepare("SELECT value FROM cabin_meta WHERE key='desktop_selected'").get()?.value, model:'qwen2.5:7b' };
+}
+async function readBody(req: any, limit: number) {
+ if (Number(req.headers['content-length'] || 0) > limit) fail('File exceeds the 20 MB import limit',413);
+ const chunks: Buffer[] = []; let bytes=0;
+ for await (const chunk of req) {bytes+=chunk.length;if(bytes>limit)fail('Request exceeds its local size limit',413);chunks.push(chunk);}
+ return Buffer.concat(chunks,bytes);
+}
+function createWriting(title: string, body: string, imported = false) {
+ store.db.exec('BEGIN IMMEDIATE');
+ try {
+  const m=store.createManuscript(owner,{title,provenance:imported?'member_uploaded':'member_written'});
+  store.db.prepare('INSERT INTO manuscript_sections VALUES(?,?,?,?,?)').run(randomUUID(),m.id,0,null,body);
+  store.db.prepare('INSERT INTO cabin_chapter_versions VALUES(?,?,?,?,?,?)').run(randomUUID(),m.id,1,body,imported?'Imported':'Created',new Date().toISOString());
+  store.db.exec('COMMIT');return chapter(m.id);
+ } catch(e) {store.db.exec('ROLLBACK');throw e;}
 }
 function save(id: string, body: string, expected: number, action: string, undoId?: number) {
  store.db.exec('BEGIN IMMEDIATE');
@@ -102,30 +118,32 @@ const server = createServer(async(req,res)=>{
   if (req.method === 'GET' && asset[url.pathname]) {
    res.writeHead(200,{'Content-Type':asset[url.pathname]});res.end(readFileSync(join(__dirname,url.pathname.slice(1))));return;
   }
+  if (req.method === 'GET' && url.pathname === '/api/chapter') {reply(chapter(url.searchParams.get('id') || ''));return;}
   if (req.method === 'GET' && url.pathname === '/api/export') {reply(chapter(url.searchParams.get('id') || ''));return;}
   if (req.method === 'GET' && url.pathname === '/api/state') {reply(snapshot());return;}
   if (req.method === 'GET' && url.pathname === '/api/versions') {
    const id = url.searchParams.get('id') || ''; chapter(id);
-   reply(store.db.prepare('SELECT revision,action,created_at,body FROM cabin_chapter_versions WHERE manuscript_id=? ORDER BY revision DESC').all(id));return;
+   const revision=url.searchParams.get('revision');
+   if(revision!==null){const version=store.db.prepare('SELECT revision,action,created_at,body FROM cabin_chapter_versions WHERE manuscript_id=? AND revision=?').get(id,Number(revision));if(!version)fail('Saved version not found',404);reply(version);}
+   else reply(store.db.prepare('SELECT revision,action,created_at FROM cabin_chapter_versions WHERE manuscript_id=? ORDER BY revision DESC').all(id));return;
   }
-  if (req.method !== 'POST' || req.headers.origin !== origin ||
-    !req.headers['content-type']?.startsWith('application/json')) {reply({error:'Request denied'},403);return;}
-  let raw = '';
-  for await (const chunk of req) { raw += chunk; if (Buffer.byteLength(raw)>1000000) fail('Request too large',413); }
-  const data = JSON.parse(raw);
+  if (req.method !== 'POST' || req.headers.origin !== origin) {reply({error:'Request denied'},403);return;}
+  if(url.pathname==='/api/import') {
+   if(req.headers['content-type']!=='application/octet-stream') fail('Request denied',403);
+   const name=exact(url.searchParams.get('name'),300);
+   if(!/\.(txt|md)$/i.test(name)) fail('Choose a UTF-8 TXT or Markdown file');
+   const bytes=await readBody(req,MAX_IMPORT_BYTES);
+   let body:string;try{body=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(bytes);}catch{fail('The file is not UTF-8 text. Export it as UTF-8 TXT or Markdown and try again.');}
+   if(body!.includes('\0'))fail('This file contains binary data. Choose a text manuscript.');
+   const title=name.replace(/\.(txt|md)$/i,'').slice(0,200).trim();if(!title)fail('Give the file a title');
+   reply(createWriting(title,body!,true));return;
+  }
+  if(!req.headers['content-type']?.startsWith('application/json')) {reply({error:'Request denied'},403);return;}
+  const limit=['/api/save','/api/new'].includes(url.pathname)?128*1024*1024:1024*1024;
+  let data:any;try{data=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(await readBody(req,limit)));}catch(e:any){if(e.status)throw e;fail('The local request contains invalid text',400);}
   if (url.pathname === '/api/new') {
-   const title = exact(data.title,200).trim(); if (!title) fail('Give your writing a title');
-   const body = exact(data.body || '');
-   store.db.exec('BEGIN IMMEDIATE');
-   let m:any;
-   try {
-    m = store.createManuscript(owner,{title,provenance:data.imported?'member_uploaded':'member_written'});
-    // Already inside the transaction: insert the initial section directly.
-    store.db.prepare('INSERT INTO manuscript_sections VALUES(?,?,?,?,?)').run(randomUUID(),m.id,0,null,body);
-    store.db.prepare('INSERT INTO cabin_chapter_versions VALUES(?,?,?,?,?,?)').run(randomUUID(),m.id,1,body,'Created',new Date().toISOString());
-    store.db.exec('COMMIT');
-   } catch(e) {store.db.exec('ROLLBACK');throw e;}
-   reply(chapter(m.id));return;
+   const title=exact(data.title,200).trim();if(!title)fail('Give your writing a title');
+   reply(createWriting(title,exact(data.body||''),data.imported===true));return;
   }
   if (url.pathname === '/api/save') {reply(save(exact(data.id,100),exact(data.body),data.revision,'Saved'));return;}
   if (url.pathname === '/api/undo' || url.pathname === '/api/restore') {
