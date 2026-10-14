@@ -20,6 +20,7 @@ export default defineConfig({
     include: [
       'app/writers-studio/__tests__/studioPanelControls.test.tsx',
       'app/writers-studio/__tests__/p4r1ProseView.test.ts',
+      'app/writers-studio/__tests__/savedMemberEditorialVersion.test.tsx',
     ],
   },
 });

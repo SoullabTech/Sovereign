@@ -236,12 +236,13 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
 
   const versions = props.thread?.versions ?? [];
   const maiaVersions = useMemo(() => latestMaiaVersions(props.thread), [props.thread]);
+  const memberVersions = versions.filter((version) => version.author === 'member');
   const selectedIndex = props.version
     ? versions.findIndex((candidate) => candidate.id === props.version!.id)
     : -1;
   const selectedLabel = props.version
     ? purposeOf(props.version, Math.max(selectedIndex, 0))
-    : 'MAIA’s recommendation';
+    : 'Select a saved version';
 
   const context = passageContext(props.sectionBody, props.currentText);
   const recommendation = props.version?.author === 'maia'
@@ -278,9 +279,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     setLocalMessage(null);
   }, [props.version?.id]);
 
-  const memberVersionMatchingDraft = props.thread?.versions.find((candidate) =>
-    candidate.author === 'member' && candidate.wording === workingText,
-  ) ?? null;
+  // Exact selected identity governs Apply, even when older versions share its bytes.
+  const memberVersionMatchingDraft = props.version?.author === 'member'
+    && props.version.wording === workingText ? props.version : null;
 
   const reviewedCurrentDraft = reviewedText === workingText;
   const applyReady = Boolean(
@@ -314,7 +315,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   };
 
   const adjustProposal = (instruction: string) => {
-    const selected = props.version?.wording ?? recommendation.wording;
+    const candidate = props.version ?? recommendation;
+    if (!candidate) return;
+    const selected = candidate.wording;
     props.onSend([
       instruction,
       'Original passage:',
@@ -529,22 +532,22 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     );
   }
 
-  if (!recommendation) {
+  if (!recommendation && memberVersions.length === 0) {
     return (
       <section className="p4r1-dance p4r1-dance-explore" data-editorial-dance>
         <div className="p4r1-dance-response">
-          <span className="p4r1-eyebrow">MAIA</span>
+          <span className="p4r1-eyebrow">{props.lastMaiaTurn ? 'MAIA' : 'Editorial conversation'}</span>
           <h3>{props.busy
-            ? 'MAIA is with the passage…'
+            ? 'Waiting for MAIA’s response…'
             : props.message
               ? 'That turn could not be completed.'
-              : 'Here’s what I’m seeing.'}</h3>
+              : props.lastMaiaTurn ? 'MAIA’s response' : 'Your conversation is available.'}</h3>
           {props.message ? (
             <p className="p4r1-dance-status" role="status">{props.message}</p>
           ) : props.lastMaiaTurn?.body ? (
             <p>{props.lastMaiaTurn.body}</p>
           ) : (
-            <p>I’m staying with the passage and your question. Nothing has been revised or applied.</p>
+            <p>No MAIA response is recorded in this conversation. Your current writing remains available.</p>
           )}
         </div>
 
@@ -552,7 +555,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <span className="p4r1-eyebrow">Continue from here</span>
           <div className="p4r1-dance-followup-actions">
             <button type="button" disabled={props.busy} onClick={() => begin([
-              'Based on what we just discussed, help me revise this exact passage.',
+              props.lastMaiaTurn ? 'Based on what we just discussed, help me revise this exact passage.' : 'Help me revise this exact passage.',
               revisePassagePrompt(),
             ].join('\n\n'), undefined, { proposalPolicy: 'allow', proposalRequested: true })}>
               Show revision options
@@ -589,6 +592,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
         </div>
       ) : null}
 
+      {recommendation || props.lastMaiaTurn ? (
       <div className="p4r1-dance-maia">
         <span className="p4r1-eyebrow">MAIA</span>
         {hasStructuredSummary ? (
@@ -603,15 +607,22 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             <p>{props.lastMaiaTurn.body}</p>
           </div>
         ) : (
-          <h3>{firstUsefulSentence(summarySource || 'Here is one direction I would try.')}</h3>
+          <h3>{firstUsefulSentence(summarySource || 'Saved MAIA proposal')}</h3>
         )}
-        {recommendation.rationale ? <p className="p4r1-dance-rationale">{recommendation.rationale}</p> : null}
+        {recommendation?.rationale ? <p className="p4r1-dance-rationale">{recommendation.rationale}</p> : null}
       </div>
+      ) : (
+        <div className="p4r1-dance-response" data-editorial-member-only>
+          <span className="p4r1-eyebrow">Your saved wording</span>
+          <h3>Your versions are available.</h3>
+          <p>These versions were saved by you. Review one in context before applying it. No MAIA response is recorded in this conversation.</p>
+        </div>
+      )}
 
       {postureGate}
 
       <div className="p4r1-dance-options" aria-label="Revision directions">
-        <button
+        {recommendation ? <button
           type="button"
           className={props.version?.id === recommendation.id ? 'is-selected' : ''}
           onClick={() => chooseVersion(recommendation)}
@@ -619,10 +630,21 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <span>MAIA’s recommendation</span>
           <b>{purposeOf(recommendation, versions.findIndex((v) => v.id === recommendation.id))}</b>
           <p>{recommendation.wording}</p>
-        </button>
+        </button> : null}
+
+        {memberVersions.map((candidate) => (
+          <button type="button" key={candidate.id} data-member-version={candidate.id}
+            aria-pressed={props.version?.id === candidate.id}
+            className={props.version?.id === candidate.id ? 'is-selected' : ''}
+            onClick={() => chooseVersion(candidate)}>
+            <span>Your saved version</span>
+            <b>{purposeOf(candidate, versions.findIndex((v) => v.id === candidate.id))}</b>
+            <p>{candidate.wording}</p>
+          </button>
+        ))}
 
         {maiaVersions
-          .filter((candidate) => candidate.id !== recommendation.id)
+          .filter((candidate) => candidate.id !== recommendation?.id)
           .slice(-3)
           .reverse()
           .map((candidate) => (
@@ -646,7 +668,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           </div>
           <div>
             <span className="p4r1-eyebrow">Edited</span>
-            <p>{props.version?.wording ?? recommendation.wording}</p>
+            <p>{props.version?.wording ?? recommendation?.wording ?? props.currentText}</p>
           </div>
         </div>
         <div className="p4r1-dance-changed-words" aria-label="Changed words">
@@ -660,9 +682,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           </p>
         </div>
         <div className="p4r1-dance-change-reasoning">
-          <div><b>What changed</b><p>{changeSummary.changed ?? 'MAIA can explain the exact editorial move behind this version.'}</p></div>
-          <div><b>Why</b><p>{changeSummary.why ?? props.version?.rationale ?? recommendation.rationale ?? 'Open the explanation to see the reasoning behind this change.'}</p></div>
-          <div><b>Reader effect</b><p>{changeSummary.readerEffect ?? 'Ask MAIA what this change may make easier, clearer, faster, or more vivid for a reader.'}</p></div>
+          <div><b>What changed</b><p>{changeSummary.changed ?? 'Compare the saved wording with your original above.'}</p></div>
+          <div><b>Why</b><p>{changeSummary.why ?? props.version?.rationale ?? recommendation?.rationale ?? 'Open the explanation to see the reasoning behind this change.'}</p></div>
+          <div><b>Reader effect</b><p>{changeSummary.readerEffect ?? 'No reader effect has been established for this version.'}</p></div>
           <div><b>What I protected</b><p>{changeSummary.protected ?? summary.preserve ?? 'Your meaning, voice, and intentional ambiguity remain the reference.'}</p></div>
         </div>
         {!hasChangeSummary ? (
@@ -721,7 +743,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           aria-label="Edit your working version"
         />
         <p className="p4r1-dance-ownership">
-          MAIA offered a direction. You shape the language. The version you apply is yours.
+          {recommendation
+            ? 'MAIA offered a direction. You shape the language. The version you apply is yours.'
+            : 'This is your saved wording. Applying it requires your explicit choice.'}
         </p>
 
         <div className="p4r1-dance-talk">
@@ -835,7 +859,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       {showDepth === 'why' ? (
         <div className="p4r1-dance-depth-card">
           <b>Why this direction?</b>
-          <p>{props.version?.rationale ?? recommendation.rationale ?? 'Ask MAIA to explain the craft move behind this direction.'}</p>
+          <p>{props.version?.rationale ?? recommendation?.rationale ?? 'Ask MAIA to explain the craft move behind this direction.'}</p>
         </div>
       ) : null}
       {showDepth === 'teach' ? (

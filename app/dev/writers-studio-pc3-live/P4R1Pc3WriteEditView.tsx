@@ -756,7 +756,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   ) ?? null;
   const railLabel = railSection?.heading?.trim() || 'this section';
 
-  const writeMaia = props.work ? (
+  const writeMaia = props.work || editorial ? (
     <div className="fr-maia-inner p4r1-write-maia">
       <div className="fr-maia-head">
         <div className="fr-orb" aria-hidden="true" />
@@ -767,6 +767,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody">
+        {editorial ?? (<>
         {workConversationOpen ? (
           workConversation
         ) : railSelectionId && railSection ? (
@@ -808,6 +809,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           </>
         )}
         {maiaRelationshipCard}
+        </>)}
       </div>
       <div className="fr-foot">The manuscript stays primary; support follows your attention.</div>
     </div>
@@ -1018,6 +1020,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           work={workSurface}
           maia={writeMaia}
           maiaInitiallyExpanded={false}
+          maiaRevealRequest={props.workspaceOpen && !isolatedEditorial
+            ? props.editorialThread?.threadId ?? 'editorial-workspace' : null}
         />
 
       <SaveDeviceCopy
@@ -1062,7 +1066,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           ) : null}
 
           {contextualActions}
-          {editorial}
         </>
       ) : null}
     </>

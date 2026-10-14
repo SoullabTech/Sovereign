@@ -51,6 +51,7 @@ async function mount(mode: 'write' | 'develop' | 'review' | 'home' = 'develop', 
   withMaia?: boolean;
   openMaia?: () => void;
   initiallyExpanded?: boolean;
+  reveal?: string | null;
   maiaNode?: ReactNode;
 }) {
   const geometry = mode === 'write' ? { ...WRITE_GEOMETRY, maiaWidth: 360, maiaFloor: 300, padRight: 9, gapRight: 13 } : mode === 'home' ? HOME_GEOMETRY : STATE_GEOMETRY['develop-manuscript'];
@@ -62,6 +63,7 @@ async function mount(mode: 'write' | 'develop' | 'review' | 'home' = 'develop', 
     work,
     maia: opts?.withMaia === false || mode === 'home' ? undefined : (opts?.maiaNode ?? maia),
     maiaInitiallyExpanded: opts?.initiallyExpanded,
+    maiaRevealRequest: opts?.reveal,
     onOpenMaia: opts?.openMaia,
     memberInitial: 'T',
   })));
@@ -220,5 +222,38 @@ describe('Write panel regression: presentation is not conversation authority', (
     expect(code).toContain('maiaInitiallyExpanded={false}');
     expect(code).toContain("<WriteMaiaUnlinked onChooseWork={() => props.onMode('home')} />");
     expect(code).not.toContain('maia={railSelectionId || workConversationOpen ?');
+  });
+});
+
+
+describe('Addressed editorial work reveals the same resizable MAIA region', () => {
+  it('reveals a requested editorial workspace once and respects subsequent collapse', async () => {
+    await mount('write', { initiallyExpanded: false });
+    const source = host.querySelector('[data-testid="original-manuscript"]');
+    await mount('write', { initiallyExpanded: false, reveal: 'thread-one' });
+    expect(host.querySelector('.fr-shell')?.getAttribute('data-right-open')).toBe('true');
+    expect(host.querySelector('[data-testid="original-manuscript"]')).toBe(source);
+    click('Hide MAIA panel');
+    await mount('write', { initiallyExpanded: false, reveal: 'thread-one' });
+    expect(host.querySelector('.fr-shell')?.getAttribute('data-right-open')).toBe('false');
+    await mount('write', { initiallyExpanded: false, reveal: 'thread-two' });
+    expect(host.querySelector('.fr-shell')?.getAttribute('data-right-open')).toBe('true');
+  });
+
+  it('allows a closed editorial workspace to be explicitly opened again', async () => {
+    await mount('write', { initiallyExpanded: false, reveal: 'thread-one' });
+    click('Hide MAIA panel');
+    await mount('write', { initiallyExpanded: false, reveal: null });
+    await mount('write', { initiallyExpanded: false, reveal: 'thread-one' });
+    expect(host.querySelector('.fr-shell')?.getAttribute('data-right-open')).toBe('true');
+  });
+
+  it('mounts resumed editorial content only inside the Shell-themed right region', () => {
+    const code = readFileSync(resolve(process.cwd(), 'app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx'), 'utf8');
+    const rail = code.slice(code.indexOf('  const writeMaia ='), code.indexOf('  const blankArrival ='));
+    expect(rail).toContain('props.work || editorial');
+    expect(rail).toContain('{editorial ??');
+    expect(code).not.toContain('{contextualActions}\n          {editorial}');
+    expect(code).toContain('maiaRevealRequest=');
   });
 });

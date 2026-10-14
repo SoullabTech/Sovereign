@@ -36,6 +36,8 @@ export type ShellProps = {
   onOpenMaia?: () => void;
   /** Presentation default only; a saved layout takes precedence. */
   maiaInitiallyExpanded?: boolean;
+  /** A newly addressed editing workspace asks to reveal its existing rail once. */
+  maiaRevealRequest?: string | null;
   /** Optional line beneath the regions (#23 carries one). */
   footer?: ReactNode;
   /** Optional words set above the MAIA region (#23). */
@@ -92,6 +94,7 @@ export function Shell(props: ShellProps) {
   const canvas = props.canvas === true;
   const shellRef = useRef<HTMLDivElement>(null);
   const drag = useRef<DragState | null>(null);
+  const revealedRequest = useRef<string | null>(null);
   const [leftExpanded, setLeftExpanded] = useState(true);
   const rightInitiallyExpanded = props.maiaInitiallyExpanded ?? true;
   const [rightExpanded, setRightExpanded] = useState(rightInitiallyExpanded);
@@ -129,6 +132,14 @@ export function Shell(props: ShellProps) {
       }));
     } catch { /* State remains fully usable without persistence. */ }
   }, [mode, leftExpanded, rightExpanded, leftWidth, rightWidth, restoredKey, hydrationKey, oneRoom]);
+
+  useEffect(() => {
+    if (!props.maiaRevealRequest) { revealedRequest.current = null; return; }
+    if (restoredKey !== hydrationKey || !hasRight) return;
+    if (revealedRequest.current === props.maiaRevealRequest) return;
+    revealedRequest.current = props.maiaRevealRequest;
+    setRightExpanded(true);
+  }, [props.maiaRevealRequest, restoredKey, hydrationKey, hasRight]);
 
   const constrain = (side: Side, requested: number): number => {
     const bounds = shellRef.current?.getBoundingClientRect().width

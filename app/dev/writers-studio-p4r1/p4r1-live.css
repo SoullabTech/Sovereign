@@ -4387,3 +4387,18 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
 
 /* Export accessory follows the currently mounted Shell product bar. */
 .p4r1-root .fr-bar-accessories{display:flex;align-items:center;gap:8px;min-width:0;flex:0 0 auto}
+
+/* Resumed editorial collaboration belongs to the sized MAIA region, never over
+   the manuscript. Colours inherit from the same live Shell as the writing. */
+.p4r1-root .p4r1-write-maia .p4r1-editorial{position:static;inset:auto;width:auto;min-width:0;max-height:none;box-shadow:none}
+.p4r1-root .p4r1-write-maia .p4r1-editorial .p4r1-context-head{flex-wrap:wrap;min-width:0}
+.p4r1-root .p4r1-write-maia .p4r1-editorial .p4r1-context-head>div{min-width:0;max-width:100%}
+.p4r1-root .p4r1-write-maia .p4r1-editorial .p4r1-dance-options,
+.p4r1-root .p4r1-write-maia .p4r1-editorial .p4r1-dance-change-compare,
+.p4r1-root .p4r1-write-maia .p4r1-editorial .p4r1-dance-change-reasoning,
+.p4r1-root .p4r1-write-maia .p4r1-editorial .p4r1-dance-start-actions{grid-template-columns:minmax(0,1fr)}
+.p4r1-root .p4r1-write-maia .p4r1-editorial textarea,
+.p4r1-root .p4r1-write-maia .p4r1-editorial input{min-width:0;max-width:100%;box-sizing:border-box}
+.p4r1-root .p4r1-write-maia .p4r1-editorial .p4r1-dance-response{padding:15px}
+.p4r1-root .p4r1-write-maia .p4r1-editorial .p4r1-dance-response h3{font-size:22px}
+.p4r1-root .p4r1-write-maia .p4r1-editorial .p4r1-dance-actions{display:flex;flex-wrap:wrap}

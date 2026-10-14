@@ -35,7 +35,9 @@ describe('C2 editorial dance convergence', () => {
 
   it('keeps Apply unreachable until exact current working text was reviewed and saved as member wording', () => {
     expect(dance).toContain('const reviewedCurrentDraft = reviewedText === workingText;');
-    expect(dance).toContain("candidate.author === 'member' && candidate.wording === workingText");
+    expect(dance).toContain("props.version?.author === 'member'");
+    expect(dance).toContain("props.version.wording === workingText ? props.version : null");
+    expect(dance).toContain("props.version?.id === memberVersionMatchingDraft.id");
     expect(dance).toContain('disabled={props.busy || !applyReady}');
   });
 
