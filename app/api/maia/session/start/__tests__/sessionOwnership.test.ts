@@ -1,11 +1,11 @@
 import {NextRequest} from 'next/server';
-import {getCurrentSession} from '@/lib/auth/serverSessions';
+import {getMemberIdFromRequest} from '@/lib/auth/getMemberFromRequest';
 import {query} from '@/lib/db/postgres';
 import {POST} from '../route';
 
-jest.mock('@/lib/auth/serverSessions',()=>({getCurrentSession:jest.fn()}));
+jest.mock('@/lib/auth/getMemberFromRequest',()=>({getMemberIdFromRequest:jest.fn()}));
 jest.mock('@/lib/db/postgres',()=>({query:jest.fn()}));
-const current=getCurrentSession as jest.Mock;
+const current=getMemberIdFromRequest as jest.Mock;
 const db=query as jest.Mock;
 const A='11111111-1111-4111-8111-111111111111';
 const B='22222222-2222-4222-8222-222222222222';
@@ -30,13 +30,13 @@ describe('MAIA session-start — R5c server-owned member and collision authority
     expect(db).not.toHaveBeenCalled();
   });
   it('refuses an authenticated A cookie with a B member claim',async()=>{
-    current.mockResolvedValue({memberId:A});
+    current.mockResolvedValue(A);
     const response=await POST(request({sessionId:'fiction-session-1',memberId:B}));
     expect(response.status).toBe(403);
     expect(db).not.toHaveBeenCalled();
   });
   it('uses only verified A as durable owner when A is claimed',async()=>{
-    current.mockResolvedValue({memberId:A});
+    current.mockResolvedValue(A);
     const response=await POST(request({sessionId:'fiction-session-1',memberId:A,anonId:'untrusted-guest'}));
     expect(response.status).toBe(200);
     const [sql,params]=db.mock.calls[0] as [string,unknown[]];
@@ -46,7 +46,7 @@ describe('MAIA session-start — R5c server-owned member and collision authority
     expect(sql).not.toContain('member_id = COALESCE');
   });
   it('uses verified A even when caller omitted body memberId',async()=>{
-    current.mockResolvedValue({memberId:A});
+    current.mockResolvedValue(A);
     const response=await POST(request({sessionId:'fiction-session-1'}));
     expect(response.status).toBe(200);
     expect(db.mock.calls[0][1][1]).toBe(A);
@@ -58,7 +58,7 @@ describe('MAIA session-start — R5c server-owned member and collision authority
     expect(db.mock.calls[0][1][2]).toBe('guest-fiction-1');
   });
   it('refuses an existing session ID whose member/guest owner did not match',async()=>{
-    current.mockResolvedValue({memberId:A});
+    current.mockResolvedValue(A);
     db.mockResolvedValue({rows:[]});
     const response=await POST(request({sessionId:'shared-fiction',memberId:A}));
     expect(response.status).toBe(409);

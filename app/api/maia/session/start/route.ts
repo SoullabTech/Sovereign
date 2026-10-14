@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
-import { getCurrentSession } from '@/lib/auth/serverSessions'
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest'
 
 const VALID_PRIVACY_MODES = ['sanctuary', 'standard', 'full'] as const
 const VALID_MAIA_MODES = ['normal', 'patient', 'scribe'] as const
@@ -55,23 +55,25 @@ export async function POST(request: NextRequest) {
     // MAIA session ownership is authoritative only when backed by a valid,
     // revocable HttpOnly auth session. A raw body.memberId is a CLAIM, never
     // a credential. Ordinary guest sessions remain guest-owned (NULL member).
-    const currentSession = await getCurrentSession()
+    // The shared resolver verifies either the HttpOnly web cookie or an
+    // x-session-token against non-revoked auth_sessions (Safari/iOS fallback).
+    // Neither body.memberId nor a bare x-member-id is an authority.
+    const verifiedMemberId = await getMemberIdFromRequest(request)
     const claimedMember = memberId === undefined || memberId === null || memberId === ''
       ? null : memberId
     if (claimedMember !== null && typeof claimedMember !== 'string') {
       return NextResponse.json({ ok: false, error: 'Invalid member claim' }, { status: 400 })
     }
-    if (claimedMember && !currentSession) {
+    if (claimedMember && !verifiedMemberId) {
       return NextResponse.json({ ok: false, error: 'Authenticated member session required' }, { status: 401 })
     }
-    if (claimedMember && currentSession?.memberId !== claimedMember) {
+    if (claimedMember && verifiedMemberId !== claimedMember) {
       return NextResponse.json({ ok: false, error: 'Member claim mismatch' }, { status: 403 })
     }
     if (anonId !== undefined && anonId !== null &&
         (typeof anonId !== 'string' || anonId.length > 128)) {
       return NextResponse.json({ ok: false, error: 'Invalid guest identifier' }, { status: 400 })
     }
-    const verifiedMemberId = currentSession?.memberId ?? null
     const guestAnonId = verifiedMemberId ? null : typeof anonId === 'string' ? anonId || null : null
 
     // Normalize privacy mode

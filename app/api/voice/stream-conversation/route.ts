@@ -83,6 +83,7 @@ import { fireAndForgetFieldMonitor } from '@/lib/consciousness/fieldMonitorTelem
 import { storeTrustObservation, inferEngagementProxy, classifyResponseType, isTrustObservationEnabled } from '@/lib/trust/trustObservationService';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { resolveVoiceMemberIdentity } from '@/lib/auth/voiceMemberIdentity';
 import { classifyConversationDepth, tierToBrevity } from '@/lib/consciousness/conversationDepthClassifier';
 import { resolveCouncil, buildCouncilPromptSection, normalizeGuideId } from '@/lib/consciousness/interpretiveCouncil';
 import { buildMaiaContext } from '@/lib/maia/context/buildMaiaContext';
@@ -633,8 +634,20 @@ export async function POST(req: NextRequest) {
   const isIosPwa = /iPhone|iPad/i.test(ua);
   if (isIosPwa) console.log('[StreamConversation] iOS client detected — PersonaPlex skipped');
 
-  // Resolve member ID: body first, then header fallback (iOS/Safari x-member-id)
-  const userId = bodyUserId || await getMemberIdFromRequest(req);
+  // Never let a client body member ID select voice preferences or memory.
+  // Server-verified cookies and x-session-token are the only member authority;
+  // a guest remains guest-scoped, without member memory or private settings.
+  let verifiedMemberId: string | null;
+  try {
+    verifiedMemberId = await getMemberIdFromRequest(req);
+  } catch {
+    return new Response('Member verification unavailable', {status:503});
+  }
+  const voiceIdentity = resolveVoiceMemberIdentity(verifiedMemberId, bodyUserId);
+  if(!voiceIdentity.ok) {
+    return new Response(voiceIdentity.reason, {status:voiceIdentity.status});
+  }
+  const userId = voiceIdentity.memberId;
 
   // Initialize timing instrumentation
   const timer = createVoiceTimer({ turnId, host });
