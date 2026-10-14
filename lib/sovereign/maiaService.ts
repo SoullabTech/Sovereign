@@ -65,6 +65,7 @@ import {
 } from '../consciousness/bloomCognition';
 import { buildKnowledgeFieldBlock, hasKnowledgeDomainSignal } from '../maia/prompts/knowledgeFieldBlock';
 import { buildMaiaContext } from '../maia/context/buildMaiaContext';
+import { withoutImplicitAstrologyAddenda } from '../maia/context/maiaAstrologyTransferPolicy';
 import { logCognitiveTurn } from '../consciousness/cognitiveEventsService';
 import type { BloomCognitionMeta } from '../types/maia';
 import { routePanconsciousField } from '../field/panconsciousFieldRouter';
@@ -139,6 +140,7 @@ import {
   type ResolvedOrientation,
 } from '../maia/orientation/contract';
 import { TurnPosture } from '../sanctuary/turnPosture';
+import { assertR4gOrdinarySession } from '@/lib/maia/astrologyConsent/r4gOrdinarySessionGate';
 import { recordConsentState } from '../provenance/consentState';
 import { VoiceDistinctionScorer } from '../spiralogic/VoiceDistinctionScorer';
 import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
@@ -3070,7 +3072,14 @@ class WriterCanonicalOnly extends Error {
 }
 
 export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
-  const { sessionId, input, meta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride } = req;
+  const { sessionId, input, meta: incomingMeta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride } = req;
+  // Direct internal service calls cannot bypass the HTTP-facing R4G hold.
+  await assertR4gOrdinarySession(sessionId);
+  // ASTRO-R4e: meta is partly client supplied and can carry stale chart text.
+  // A saved preference or forged addendum is never a member-approved Send.
+  // The reviewed Astrology draft, when deliberately sent, is part of input,
+  // not this hidden system context. Other metadata retains its usual meaning.
+  const meta = withoutImplicitAstrologyAddenda(incomingMeta);
   // FOCUS-PRODUCER-01: present only for writers_studio, and only when the route
   // built and adjudicated the turn. Absent → every existing caller is unchanged.
   const writerStudio = req.writerStudio ?? null;
@@ -3139,7 +3148,10 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // AIN-CONTEXT-01 · A6: the same single read now also yields how many completed
     // exchanges the session actually holds. ⛔ The window is UNCHANGED at 10 — this
     // reads no extra rows and widens nothing (R5); the SQL never had a LIMIT.
-    const continuityWindow = await getSessionContinuityWindow(sessionId, 10);
+    const continuityWindow = await getSessionContinuityWindow(
+      sessionId, 10,
+      typeof (meta as any)?.userId === 'string' ? (meta as any).userId : undefined,
+    );
     const conversationHistory = continuityWindow.exchanges;
     const durableCompletedExchanges = continuityWindow.durableCompletedExchanges;
     // L1 · every identified exchange of this session; tiers subtract their own
@@ -3169,38 +3181,20 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       (meta as any)?.user?.id ??
       null;
 
-    // 🌟 IDENTITY-LAYER CONTEXT (always-on continuity)
-    // Natal chart and display name are identity-layer continuity — not
-    // feature-layer invocations. If the caller did not already supply them,
-    // fill them in so every generation path (FAST/CORE/DEEP) has baseline
-    // identity context regardless of which route we came in on.
-    // This prevents the context-fragmentation bug where newer routes silently
-    // lose natal chart data that older routes used to load inline.
-    // (Member web / memory continuity is loaded by callers that need it —
-    // folding it here is blocked on MemberLiveContext type-drift cleanup.)
+    // R4e — MAIA identity continuity includes names and pronouns, NOT
+    // automatically disclosed astrology. Astro Pro's member-reviewed Send
+    // supplies its chosen content in the member-authored input instead.
     if (effectiveUserId) {
       try {
-        const needsAstrology = !(meta as any).astrologyAddendum;
         const needsUserName = !(meta as any).userName;
         const needsPronouns = !(meta as any).pronouns;
-        if (needsAstrology || needsUserName || needsPronouns) {
+        if (needsUserName || needsPronouns) {
           const identity = await buildMaiaContext(effectiveUserId);
-          if (needsAstrology && identity.astrologyAddendum) {
-            (meta as any).astrologyAddendum = identity.astrologyAddendum;
-          }
           if (needsUserName && identity.userName) {
             (meta as any).userName = identity.userName;
           }
           if (needsPronouns && identity.pronouns) {
             (meta as any).pronouns = identity.pronouns;
-          }
-          if (identity.hasBirthData || identity.userName || identity.pronouns) {
-            console.log(
-              `🌟 [MaiaService] Identity layer filled for ${memberRef(effectiveUserId)} ` +
-                `(natal=${needsAstrology && !!identity.astrologyAddendum}, ` +
-                `name=${needsUserName && !!identity.userName}, ` +
-                `pronouns=${needsPronouns && !!identity.pronouns})`,
-            );
           }
         }
       } catch (err) {
@@ -4170,17 +4164,24 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
               mode: activeMode
             };
 
+            // R4G: durable source lineage for derived semantic embeddings.
+            const semanticSourceExchangeId =
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(exchangeId)
+                ? exchangeId : null;
             // Store in semantic_memory_vectors (dedicated retrieval table)
             await dbQuery(
               `INSERT INTO semantic_memory_vectors (
-                user_id, chunk_text, chunk_type, metadata, vector_embedding, created_at
-              ) VALUES ($1, $2, $3, $4, $5::vector, NOW())`,
+                user_id, chunk_text, chunk_type, metadata, vector_embedding, created_at,
+                source_exchange_id, source_session_id, origin_scope
+              ) VALUES ($1, $2, $3, $4, $5::vector, NOW(), $6::uuid, $7, 'ordinary')`,
               [
                 memoryKey,
                 semanticText,
                 'conversation',
                 JSON.stringify(metadata),
-                `[${embedding.join(',')}]` // pgvector format with explicit cast
+                `[${embedding.join(',')}]`, // pgvector format with explicit cast
+                semanticSourceExchangeId,
+                sessionId,
               ]
             );
 

@@ -21,6 +21,8 @@ import { MemoryBundleService } from '@/lib/memory/MemoryBundle';
 
 const row = (id: string, score: number) => ({
   id,
+  origin_scope: 'ordinary',
+  source_session_id: 'fiction-ordinary-' + id,
   memory_type: 'pattern',
   facet_code: null,
   entity_tags: [],
@@ -49,7 +51,11 @@ const binding = {
 describe('Cut-1 observer is fail-soft and non-authoritative', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
+    // R4H adds a second protected-origin query after the original Cut-1
+    // ranking. Synthetic candidate rows below are known ordinary lineage;
+    // the protected-origin authority returns no exclusions for those rows.
     mockQuery.mockReset();
+    mockQuery.mockResolvedValue({rows:[]});
     mockObservedRead.mockReset();
     mockExtractPayload.mockReset();
     mockRecordTrace.mockReset();

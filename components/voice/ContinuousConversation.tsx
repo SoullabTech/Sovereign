@@ -3957,7 +3957,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // lifecycle session hard-discards the recognition instance and the handler
     // returns the UI to a recoverable idle state (reacquire via mic tap only).
     // attachDeviceChange is idempotent, so calling it on every start is safe.
-    if (navigator.mediaDevices?.addEventListener) {
+    if (typeof navigator.mediaDevices?.addEventListener === 'function') {
       getWebSession().attachDeviceChange(navigator.mediaDevices, () => handleWebDeviceChangeFnRef.current?.());
     }
 

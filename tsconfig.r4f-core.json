@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": [
+    "lib/maia/astrologyConsent/**/*.ts",
+    "app/api/astrology/pro/maia-transfer/route.ts",
+    "app/api/conversation/turns/route.ts",
+    "lib/maia/memoryLoaders.ts",
+    "lib/memory/MemoryBundle.ts",
+    "lib/memory/stores/TurnsStore.ts",
+    "lib/maia/relational-field-shadow/fieldAssembler.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}

@@ -53,6 +53,7 @@ import { validateSocraticResponse, serializeValidationResult, type SocraticValid
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
 import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
+import { mayAttachImplicitAstrologyContext } from '@/lib/maia/context/maiaAstrologyTransferPolicy';
 import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
@@ -945,22 +946,27 @@ export async function POST(request: NextRequest) {
       console.log('💫 [Anamnesis] First encounter - essence will be captured');
     }
 
-    // 🌟 ASTROLOGY CONTEXT: Load birth chart and current transits
+    // ASTRO-R4L: the direct Oracle endpoint must obey the SAME founder
+    // private-chart rule as sovereign MAIA. Generic recognition or historical
+    // birth data is not member-reviewed current-turn permission. Until the
+    // separately authorized one-use Send exists, this loader is never called.
     let astrologyContext: AstrologyContext | null = null;
-    try {
-      astrologyContext = await getAstrologyContextForUser(userId);
-      if (astrologyContext?.hasBirthData) {
-        console.log('🌟 [Astrology] Birth chart loaded:', {
-          sun: astrologyContext.birthChart?.sun?.sign,
-          moon: astrologyContext.birthChart?.moon?.sign,
-          rising: astrologyContext.birthChart?.ascendant?.sign,
-          retrogrades: astrologyContext.currentTransits.filter(t => t.retrograde).map(t => t.planet).join(', ') || 'none',
-        });
-      } else {
-        console.log('🌟 [Astrology] No birth data - using cosmic weather only');
+    if (mayAttachImplicitAstrologyContext()) {
+      try {
+        astrologyContext = await getAstrologyContextForUser(userId);
+        if (astrologyContext?.hasBirthData) {
+          console.log('🌟 [Astrology] Birth chart loaded:', {
+            sun: astrologyContext.birthChart?.sun?.sign,
+            moon: astrologyContext.birthChart?.moon?.sign,
+            rising: astrologyContext.birthChart?.ascendant?.sign,
+            retrogrades: astrologyContext.currentTransits.filter(t => t.retrograde).map(t => t.planet).join(', ') || 'none',
+          });
+        } else {
+          console.log('🌟 [Astrology] No birth data - using cosmic weather only');
+        }
+      } catch (astrologyError) {
+        console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
       }
-    } catch (astrologyError) {
-      console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
     }
 
     // Attach astrology to live context (fetched separately, joined here)

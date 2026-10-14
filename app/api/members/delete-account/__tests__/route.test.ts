@@ -37,19 +37,17 @@ const VICTIM = 'member-victim';
 
 const req = (body: unknown) => ({ json: async () => body }) as never;
 
-/** Records every statement the transaction body issues. */
-function captureTx() {
-  const statements: string[] = [];
-  mockTx.mockImplementation(async (cb: never) => {
-    const tx = { query: async (sql: string) => { statements.push(sql); return { rows: [] }; } };
-    return (cb as unknown as (c: unknown) => Promise<unknown>)(tx);
-  });
-  return statements;
-}
-
 beforeEach(() => {
   jest.clearAllMocks();
-  mockQuery.mockResolvedValue({ rows: [{ username: 'my-name' }] } as never);
+  mockQuery.mockImplementation(async (sql: string) => {
+    if (sql.includes('SELECT username FROM members')) {
+      return { rows: [{ username: 'my-name' }] } as never;
+    }
+    if (sql.includes('SELECT count(')) {
+      return { rows: [{ n: '0' }] } as never;
+    }
+    throw new Error('unexpected synthetic SQL statement');
+  });
 });
 
 describe('no verified session → refusal', () => {
@@ -92,12 +90,12 @@ describe('a caller cannot select whose account is deleted', () => {
     expect(mockTx).not.toHaveBeenCalled();
   });
 
-  it('the deletion always targets the session member, never the body', async () => {
+  it('the account status check uses the session member, never the body', async () => {
     mockResolve.mockResolvedValue(ME);
-    captureTx();
-    await POST(req({ confirmUsername: 'my-name' }));
-    // the authoritative username lookup used the session id
+    const response = await POST(req({ confirmUsername: 'my-name' }));
+    expect(response.status).toBe(409);
     expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('FROM members'), [ME]);
+    expect(mockTx).not.toHaveBeenCalled();
   });
 });
 
@@ -117,43 +115,55 @@ describe('confirmation is a confirmation, not an authorization', () => {
   });
 });
 
-describe('the authorized path', () => {
-  it('3. a member deletes their own account with the correct confirmation', async () => {
+describe('R4J requires independently verified R20 erasure authority', () => {
+  it('3. refuses confirmed member deletion even if known counts are zero', async () => {
     mockResolve.mockResolvedValue(ME);
-    captureTx();
     const res = await POST(req({ memberId: ME, confirmUsername: 'my-name' }));
-    expect(res.status).toBe(200);
-    expect(await res.json()).toMatchObject({ success: true });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({
+      error: 'deletion_incomplete_unavailable',
+      accountChanged: false,
+      nextStep: 'contact_support',
+    });
+    expect(mockTx).not.toHaveBeenCalled();
   });
 
-  it('9. the session is revoked inside the same transaction as the deletion', async () => {
+  it('9. no sessions or member row are changed when R20 is not qualified', async () => {
     mockResolve.mockResolvedValue(ME);
-    const statements = captureTx();
-    await POST(req({ confirmUsername: 'my-name' }));
-
-    const revokeAt = statements.findIndex((s) => /auth_sessions[\s\S]*revoked = TRUE/.test(s));
-    const deleteAt = statements.findIndex((s) => /DELETE FROM members/.test(s));
-    expect(revokeAt).toBeGreaterThanOrEqual(0);
-    expect(deleteAt).toBeGreaterThanOrEqual(0);
-    // revoked first: a rollback then leaves the account intact AND usable
-    expect(revokeAt).toBeLessThan(deleteAt);
-  });
-
-  it('8. a failure propagates so the transaction rolls back — no partial deletion', async () => {
-    mockResolve.mockResolvedValue(ME);
-    mockTx.mockRejectedValue(new Error('db exploded'));
     const res = await POST(req({ confirmUsername: 'my-name' }));
-    expect(res.status).toBe(500);
-    expect(await res.json()).not.toMatchObject({ success: true });
+    expect(res.status).toBe(409);
+    expect(mockTx).not.toHaveBeenCalled();
+    expect(mockQuery.mock.calls.every(([sql]) =>
+      !/\bDELETE\b|\bUPDATE\b/i.test(String(sql)))).toBe(true);
   });
 
-  it('all destructive work happens inside the transaction, none outside it', async () => {
+  it('8. a missing governed table refuses the request without a transaction', async () => {
     mockResolve.mockResolvedValue(ME);
-    captureTx();
-    await POST(req({ confirmUsername: 'my-name' }));
-    for (const call of mockQuery.mock.calls) {
-      expect(String(call[0])).not.toMatch(/\bDELETE\b|\bUPDATE\b/i);
-    }
+    mockQuery.mockImplementation(async (sql: string) => {
+      if (sql.includes('SELECT username FROM members')) {
+        return { rows: [{username: 'my-name'}] } as never;
+      }
+      throw new Error('synthetic required table missing');
+    });
+    const res = await POST(req({ confirmUsername: 'my-name' }));
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({
+      error: 'privacy_preflight_unavailable', accountChanged: false,
+    });
+    expect(mockTx).not.toHaveBeenCalled();
+  });
+
+  it('malformed preflight counts are not treated as zero', async () => {
+    mockResolve.mockResolvedValue(ME);
+    mockQuery.mockImplementation(async (sql: string) => {
+      if (sql.includes('SELECT username FROM members')) {
+        return { rows: [{username: 'my-name'}] } as never;
+      }
+      return { rows: [{ n: 'not-a-valid-count' }] } as never;
+    });
+    const res = await POST(req({ confirmUsername: 'my-name' }));
+    expect(res.status).toBe(503);
+    expect(mockTx).not.toHaveBeenCalled();
   });
 });
 
@@ -170,8 +180,10 @@ describe('10. structural — the resolver cannot be removed', () => {
     expect(src).toMatch(/memberId: claimedMemberId/);
   });
 
-  it('deletes transactionally', () => {
-    expect(src).toMatch(/await transaction\(/);
+  it('has no legacy member DELETE or deletion transaction entrypoint', () => {
+    expect(src).not.toMatch(/await transaction\(/);
+    expect(src).not.toMatch(/DELETE FROM members/);
+    expect(src).toContain('R20_ACCOUNT_ERASURE_NOT_QUALIFIED');
   });
 });
 
@@ -184,11 +196,15 @@ describe('the caller no longer sends an account identifier', () => {
   it('the delete request body carries no memberId', () => {
     // userId here is `user.id || user.passkey` from localStorage — a passkey
     // would never match the session and would 403 a legitimate closure.
-    const call = caller.slice(
-      caller.indexOf("apiFetch('/api/members/delete-account'"),
-      caller.indexOf("apiFetch('/api/members/delete-account'") + 400,
-    );
-    expect(call).toMatch(/confirmUsername/);
-    expect(call).not.toMatch(/memberId/);
+    const start = caller.indexOf("apiFetch('/api/members/delete-account'");
+    expect(start).toBeGreaterThanOrEqual(0);
+    const request = caller.slice(start, start + 1100);
+    // Check the actual submitted JSON object, not nearby comments describing
+    // why the old memberId claim was removed. A 400-character excerpt cut off
+    // the payload entirely and incorrectly failed on the frozen R4H source.
+    const body = request.match(/body:\s*JSON\.stringify\(\{([\s\S]*?)\}\)/);
+    expect(body).not.toBeNull();
+    expect(body![1]).toMatch(/confirmUsername\s*:/);
+    expect(body![1]).not.toMatch(/memberId\s*:/);
   });
 });

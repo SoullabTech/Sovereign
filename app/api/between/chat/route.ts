@@ -62,6 +62,8 @@ import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetec
 import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@/lib/sovereign/decisionGovernor';
 import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { assertR4gOrdinarySession, R4gSessionHeld } from '@/lib/maia/astrologyConsent/r4gOrdinarySessionGate';
+import { mayAttachImplicitAstrologyContext } from '@/lib/maia/context/maiaAstrologyTransferPolicy';
 import { hasContinuityAccess, toMemberTier } from '@/lib/auth/tierAccess';
 import { normalizeConversationMode, isRelationshipMode, type ConversationMode } from '@/lib/api/conversationMode';
 import { query } from '@/lib/db/postgres';
@@ -866,6 +868,18 @@ export async function POST(req: NextRequest) {
         ? requestedSessionId
         : generatedSessionId;
 
+    // R4G: refuse legacy chart handoff and all protected grant sessions
+    // BEFORE history, cognition, model transport, or derivative memory.
+    try {
+      await assertR4gOrdinarySession(safeSessionId, requestedSessionId);
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'astrology_conversation_not_authorized' },
+        { status: error instanceof R4gSessionHeld ? 403 : 503,
+          headers: { 'Cache-Control': 'private, no-store' } },
+      );
+    }
+
     // If we override, ALSO set cookie to match safeSessionId
     // so subsequent requests without sessionId stay in the same session.
     const sessionCookie =
@@ -971,6 +985,16 @@ export async function POST(req: NextRequest) {
     } else {
       // 🔒 Dev mode without trust: Session-scoped (safe default)
       effectiveUserId = `anon:${safeSessionId}`;
+    }
+
+    // R4G account-swap boundary: never silently reinterpret a previous
+    // member's queued utterance as the newly authenticated person's turn.
+    if (authUserId && typeof bodyUserId === 'string' &&
+        bodyUserId.trim() && bodyUserId.trim() !== authUserId) {
+      return NextResponse.json(
+        { error: 'member_session_conflict' },
+        { status: 403, headers: { 'Cache-Control': 'private, no-store' } },
+      );
     }
 
     // 🌀 SELFLET eligibility (allow override for local testing)
@@ -1111,7 +1135,7 @@ This user is in guest mode (no authenticated identity).
 
     // 📚 LOAD CONVERSATION HISTORY: Get recent exchanges for continuity
     // First try session-level, then fall back to cross-session user history
-    let conversationHistory = await getConversationHistory(safeSessionId, 20);
+    let conversationHistory = await getConversationHistory(safeSessionId, 20, effectiveUserId);
     let historySource = 'session';
 
     // If this is a new session with no history, load cross-session memory
@@ -1668,34 +1692,39 @@ This user is in guest mode (no authenticated identity).
       }
     }
 
-    // 🌿 WU XING SNAPSHOT: Compute Five Element state from BaZi + temporal Qi
-    // Fetch BaZi profile if exists (non-blocking - gracefully handle missing)
+    // ASTRO-R4L: between-room private BaZi constitution is still a member's
+    // chart. Ordinary recognition and standing consent are NOT current-turn
+    // Send authority. The moment-only reference will be restored separately
+    // only after a verified birth-free implementation exists.
+    const mayLoadPrivateBirthContext = mayAttachImplicitAstrologyContext();
     let baziProfile: BaZiProfile | null = null;
-    try {
-      const baziResult = await query(
-        `SELECT * FROM member_bazi_profile WHERE user_id = $1 LIMIT 1`,
-        [effectiveUserId]
-      );
-      if (baziResult.rows.length > 0) {
-        const row = baziResult.rows[0];
-        baziProfile = {
-          userId: row.user_id,
-          birthDatetimeUtc: new Date(row.birth_datetime_utc),
-          birthTimezone: row.birth_timezone,
-          locationText: row.location_text,
-          pillars: row.pillars_json,
-          dayMaster: row.day_master,
-          dayMasterElement: row.day_master_element,
-          dayMasterYinYang: row.day_master_yinyang,
-          elementTally: row.wuxing_balance_json,
-          wuxingBalancePercentages: row.wuxing_percentages_json,
-          dominantElements: row.dominant_elements || [],
-          deficientElements: row.deficient_elements || [],
-          balanceScore: row.balance_score
-        };
+    if (mayLoadPrivateBirthContext) {
+      try {
+        const baziResult = await query(
+          `SELECT * FROM member_bazi_profile WHERE user_id = $1 LIMIT 1`,
+          [effectiveUserId]
+        );
+        if (baziResult.rows.length > 0) {
+          const row = baziResult.rows[0];
+          baziProfile = {
+            userId: row.user_id,
+            birthDatetimeUtc: new Date(row.birth_datetime_utc),
+            birthTimezone: row.birth_timezone,
+            locationText: row.location_text,
+            pillars: row.pillars_json,
+            dayMaster: row.day_master,
+            dayMasterElement: row.day_master_element,
+            dayMasterYinYang: row.day_master_yinyang,
+            elementTally: row.wuxing_balance_json,
+            wuxingBalancePercentages: row.wuxing_percentages_json,
+            dominantElements: row.dominant_elements || [],
+            deficientElements: row.deficient_elements || [],
+            balanceScore: row.balance_score
+          };
+        }
+      } catch (err) {
+        console.log(`🌿 [WU XING] BaZi profile fetch skipped (table may not exist yet):`, err instanceof Error ? err.message : 'unknown');
       }
-    } catch (err) {
-      console.log(`🌿 [WU XING] BaZi profile fetch skipped (table may not exist yet):`, err instanceof Error ? err.message : 'unknown');
     }
 
     // 🌿 WU XING + BRIDGE COMPUTATION (resilient - failures don't block chat)
@@ -1705,56 +1734,58 @@ This user is in guest mode (no authenticated identity).
     let bridgedSnapshot: BridgedSnapshot | null = null;
     let bridgeSnapshotAddendum: string | null = null;
 
-    try {
-      // Compute Wu Xing moment (always available - based on current time)
-      const wuxingMoment = computeWuXingMoment(new Date());
+    if (mayLoadPrivateBirthContext) {
+      try {
+        // Compute Wu Xing moment (always available - based on current time)
+        const wuxingMoment = computeWuXingMoment(new Date());
 
-      // Compute constitution if BaZi profile exists
-      const wuxingConstitution = baziProfile ? computeWuXingConstitution(baziProfile) : null;
+        // Compute constitution if BaZi profile exists
+        const wuxingConstitution = baziProfile ? computeWuXingConstitution(baziProfile) : null;
 
-      // Build Wu Xing snapshot
-      wuxingSnapshot = buildWuXingSnapshot({
-        constitution: wuxingConstitution,
-        moment: wuxingMoment,
-        recentIching: undefined // TODO: Fetch recent I Ching reading if any
-      });
+        // Build Wu Xing snapshot
+        wuxingSnapshot = buildWuXingSnapshot({
+          constitution: wuxingConstitution,
+          moment: wuxingMoment,
+          recentIching: undefined // TODO: Fetch recent I Ching reading if any
+        });
 
-      // Generate Wu Xing prompt addendum
-      wuxingSnapshotAddendum = generateWuXingPromptAddendum(wuxingSnapshot);
+        // Generate Wu Xing prompt addendum
+        wuxingSnapshotAddendum = generateWuXingPromptAddendum(wuxingSnapshot);
 
-      // 🌉 BRIDGED SNAPSHOT: Combine Spiral + Wu Xing for unified awareness
-      // Transform spiralSnapshot to the SpiralSnapshotInput format expected by bridgedSnapshot
-      const bridgeCompatibleSpiralSnapshot: SpiralSnapshotInput = {
-        primaryPhase: {
-          phase: {
-            element: spiralSnapshot.primaryPhase.phase.element,
-            name: spiralSnapshot.primaryPhase.phase.name,
-            refinement: spiralSnapshot.primaryPhase.phase.refinement
+        // 🌉 BRIDGED SNAPSHOT: Combine Spiral + Wu Xing for unified awareness
+        // Transform spiralSnapshot to the SpiralSnapshotInput format expected by bridgedSnapshot
+        const bridgeCompatibleSpiralSnapshot: SpiralSnapshotInput = {
+          primaryPhase: {
+            phase: {
+              element: spiralSnapshot.primaryPhase.phase.element,
+              name: spiralSnapshot.primaryPhase.phase.name,
+              refinement: spiralSnapshot.primaryPhase.phase.refinement
+            },
+            confidence: spiralSnapshot.primaryPhase.confidence
           },
-          confidence: spiralSnapshot.primaryPhase.confidence
-        },
-        state: {
-          nervous_system: spiralSnapshot.state.nervous_system,
-          resource_level: spiralSnapshot.state.resource_level,
-          integration_need: spiralSnapshot.state.integration_need
+          state: {
+            nervous_system: spiralSnapshot.state.nervous_system,
+            resource_level: spiralSnapshot.state.resource_level,
+            integration_need: spiralSnapshot.state.integration_need
+          }
+        };
+
+        bridgedSnapshot = buildBridgedSnapshot(
+          bridgeCompatibleSpiralSnapshot,
+          wuxingSnapshot
+        );
+        bridgeSnapshotAddendum = generateBridgePromptAddendum(bridgedSnapshot);
+
+        // 🌿 LOG: Wu Xing Snapshot for observability
+        console.log(`🌿 [WU XING SNAPSHOT] Day: ${wuxingMoment.dayStem} | Hour: ${wuxingMoment.hourBranch} | Season: ${wuxingMoment.seasonalQi}`);
+        if (wuxingConstitution) {
+          console.log(`🌿 [WU XING SNAPSHOT] Day Master: ${wuxingConstitution.dayMaster} (${wuxingConstitution.dayMasterYinYang}) | Balance: ${wuxingSnapshot.analysis.score.toFixed(0)}/100`);
         }
-      };
-
-      bridgedSnapshot = buildBridgedSnapshot(
-        bridgeCompatibleSpiralSnapshot,
-        wuxingSnapshot
-      );
-      bridgeSnapshotAddendum = generateBridgePromptAddendum(bridgedSnapshot);
-
-      // 🌿 LOG: Wu Xing Snapshot for observability
-      console.log(`🌿 [WU XING SNAPSHOT] Day: ${wuxingMoment.dayStem} | Hour: ${wuxingMoment.hourBranch} | Season: ${wuxingMoment.seasonalQi}`);
-      if (wuxingConstitution) {
-        console.log(`🌿 [WU XING SNAPSHOT] Day Master: ${wuxingConstitution.dayMaster} (${wuxingConstitution.dayMasterYinYang}) | Balance: ${wuxingSnapshot.analysis.score.toFixed(0)}/100`);
+        console.log(`🌉 [BRIDGE] Alignment: ${bridgedSnapshot.combinedState.alignment} | Suggest TCM: ${bridgedSnapshot.suggestTcm} | Offer I Ching: ${bridgedSnapshot.offerIching}`);
+      } catch (wuxingErr) {
+        // Wu Xing computation failed - proceed without it (chat should not fail)
+        console.warn(`🌿 [WU XING] Computation failed, proceeding without:`, wuxingErr instanceof Error ? wuxingErr.message : 'unknown');
       }
-      console.log(`🌉 [BRIDGE] Alignment: ${bridgedSnapshot.combinedState.alignment} | Suggest TCM: ${bridgedSnapshot.suggestTcm} | Offer I Ching: ${bridgedSnapshot.offerIching}`);
-    } catch (wuxingErr) {
-      // Wu Xing computation failed - proceed without it (chat should not fail)
-      console.warn(`🌿 [WU XING] Computation failed, proceeding without:`, wuxingErr instanceof Error ? wuxingErr.message : 'unknown');
     }
 
     // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lens addendums
@@ -1770,8 +1801,11 @@ This user is in guest mode (no authenticated identity).
       console.log(`🔮 [SCRIBE MODE] Lens: ${effectiveLens}, Addendum applied: ${reflectionLensAddendum ? 'YES' : 'NO'}`);
     }
 
-    // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
-    const astrologicalContextAddendum = await buildAstrologicalContextAddendum(birthData);
+    // ASTRO-R4e: receiving birthData (even in an authenticated conversation)
+    // is not consent to turn it into a hidden MAIA system prompt. The only
+    // accepted transfer here is the member's actual message text. An explicit
+    // reviewed chart Send is handled in Astrology Pro, not by this route.
+    const astrologicalContextAddendum: string | null = null;
 
     // 🌀 DECISION GOVERNOR: Build addendum for system prompt injection
     const governorAddendum = buildGovernorAddendum(decision);

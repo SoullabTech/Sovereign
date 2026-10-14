@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": [
+    "components/OracleConversation.tsx",
+    "app/astrology/pro-preview/ProAstrologyExperience.tsx",
+    "lib/maia/browserConversationCustody.ts",
+    "app/api/conversation/turns/route.ts",
+    "lib/maia/astrologyConsent/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}

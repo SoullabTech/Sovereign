@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { requireMemberId } from '@/lib/auth/session';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { HomeAccountGate } from '@/app/home/HomeAccountGate';
 import { readHousePreferences } from '@/lib/house/preferencesStore';
 import { redirect } from 'next/navigation';
 import { query } from '@/lib/db/postgres';
@@ -224,5 +226,9 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
   );
 }
 export default async function HousePage() {
-  return <HouseExperience current="house" />;
+  // As with Home, the server response is always a neutral threshold; an
+  // old navigation nonce, signed cookie or URL can NEVER pre-serialize Works.
+  const session=await getCurrentSession();
+  if (!session) redirect('/signin?next=%2Fhouse');
+  return <HomeAccountGate destination="house" />;
 }

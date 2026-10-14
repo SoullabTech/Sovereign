@@ -13,8 +13,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
-import { recordConsentState } from '@/lib/provenance/consentState';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import {isR4fProtectedSessionById} from '@/lib/maia/astrologyConsent/r4fGrantStore';
+import {isLegacyAstroSession} from '@/lib/maia/browserConversationCustody';
+
+const PRIVATE_HISTORY_CACHE = 'private, no-store, max-age=0, must-revalidate';
+/** Member-owned conversation responses are always noncacheable, including errors. */
+function privateJson(payload: unknown, init?: ResponseInit) {
+  const headers = new Headers(init?.headers);
+  headers.set('Cache-Control', PRIVATE_HISTORY_CACHE);
+  headers.set('Vary', 'Cookie, Origin');
+  return NextResponse.json(payload, {...init, headers});
+}
+
 
 /**
  * SECURITY (2026-07-24): the subject of every read and write on this route is the
@@ -43,7 +54,7 @@ export async function GET(request: NextRequest) {
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
-      return NextResponse.json(
+      return privateJson(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
@@ -53,12 +64,21 @@ export async function GET(request: NextRequest) {
     const sessionId = searchParams.get('sessionId');
 
     if (!claimMatchesOrNull(searchParams.get('userId'), memberId)) {
-      return NextResponse.json(
+      return privateJson(
         { success: false, error: 'Forbidden' },
         { status: 403 }
       );
     }
     const userId = memberId;
+
+    // A chart passage shared for one encounter has no cross-session or
+    // ordinary history grant. Unknown legacy astrology IDs are also withheld.
+    if (sessionId && (isLegacyAstroSession(sessionId) ||
+        await isR4fProtectedSessionById(sessionId))) {
+      return privateJson({
+        success:false,error:'protected_session_requires_explicit_authorization',
+      },{status:403});
+    }
 
     // Build query based on provided params
     let sql: string;
@@ -70,6 +90,12 @@ export async function GET(request: NextRequest) {
         SELECT id, role, content, created_at as "createdAt"
         FROM conversation_turns
         WHERE user_id = $1 AND session_id = $2
+          AND NOT EXISTS (
+            SELECT 1 FROM (
+              SELECT session_id FROM astro_maia_protected_origins
+              UNION ALL SELECT session_id FROM astro_maia_transfer_grants
+            ) AS r4f WHERE r4f.session_id = conversation_turns.session_id
+          )
         ORDER BY created_at ASC
         LIMIT 100
       `;
@@ -80,6 +106,12 @@ export async function GET(request: NextRequest) {
         SELECT id, role, content, session_id as "sessionId", created_at as "createdAt"
         FROM conversation_turns
         WHERE user_id = $1
+          AND NOT EXISTS (
+            SELECT 1 FROM (
+              SELECT session_id FROM astro_maia_protected_origins
+              UNION ALL SELECT session_id FROM astro_maia_transfer_grants
+            ) AS r4f WHERE r4f.session_id = conversation_turns.session_id
+          )
         ORDER BY created_at DESC
         LIMIT 50
       `;
@@ -88,25 +120,34 @@ export async function GET(request: NextRequest) {
 
     const result = await query(sql, params);
 
-    return NextResponse.json({
+    return privateJson({
       success: true,
-      messages: result.rows
+      verifiedMemberId: userId,
+      scope: 'ordinary',
+      messages: result.rows,
     });
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
 
-    // Handle missing table gracefully
+    // If the privacy origin tables cannot be verified, deny content reads.
+    if (message.includes('astro_maia_transfer_grants') ||
+        message.includes('astro_maia_protected_origins')) {
+      return privateJson({success:false,error:'privacy_guard_unavailable'},
+        {status:503});
+    }
+
+    // A missing store is not a member with no history. Report the outage.
     if (message.includes('does not exist')) {
-      console.warn('[CONVERSATION] conversation_turns table not found - returning empty');
-      return NextResponse.json({
-        success: true,
-        messages: []
-      });
+      console.warn('[CONVERSATION] conversation history storage unavailable');
+      return privateJson(
+        { success: false, error: 'Conversation history unavailable' },
+        { status: 503 }
+      );
     }
 
     console.error(`[CONVERSATION] GET error: ${message}`);
-    return NextResponse.json(
+    return privateJson(
       { success: false, error: 'Failed to retrieve conversation' },
       { status: 500 }
     );
@@ -119,7 +160,7 @@ export async function POST(request: NextRequest) {
     // Authenticate BEFORE parsing or writing content.
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
-      return NextResponse.json(
+      return privateJson(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
@@ -129,7 +170,7 @@ export async function POST(request: NextRequest) {
     const { userMessage, assistantMessage, sessionId, isSanctuary, exchangeId: clientExchangeId } = body;
 
     if (!claimMatchesOrNull(body?.userId, memberId)) {
-      return NextResponse.json(
+      return privateJson(
         { success: false, error: 'Forbidden' },
         { status: 403 }
       );
@@ -144,11 +185,20 @@ export async function POST(request: NextRequest) {
 
     if (posture.sanctuary) {
       console.log('[CONVERSATION] Sanctuary posture - not storing turn');
-      return NextResponse.json({ success: true, sanctuary: true });
+      return privateJson({ success: true, sanctuary: true });
+    }
+
+    // A one-time reviewed chart share cannot use the ordinary turn writer.
+    // The R4F transfer capability remains hard-OFF pending Class A review.
+    if (typeof sessionId === 'string' && sessionId.length>0 &&
+        (isLegacyAstroSession(sessionId) ||
+         await isR4fProtectedSessionById(sessionId))) {
+      return privateJson({success:false,error:'protected_conversation_requires_authorized_route'},
+        {status:403});
     }
 
     if (!userMessage || !assistantMessage) {
-      return NextResponse.json(
+      return privateJson(
         { success: false, error: 'userMessage and assistantMessage required' },
         { status: 400 }
       );
@@ -166,25 +216,33 @@ export async function POST(request: NextRequest) {
       typeof clientExchangeId === 'string' && clientExchangeId.length > 0
         ? clientExchangeId
         : globalThis.crypto.randomUUID();
-    recordConsentState({ requestId: exchangeId, posture, memberId: userId, sessionId });
-    await TurnsStore.addExchange(posture, userId, sessionId || undefined, userMessage, assistantMessage, exchangeId);
+    // S5 audit and both turns must commit or roll back together.
+    await TurnsStore.addAuditedExchange(posture, userId, sessionId || undefined, userMessage, assistantMessage, exchangeId);
 
     console.log(`[CONVERSATION] Stored turn pair for user ${userId.slice(0, 8)}...`);
 
-    return NextResponse.json({ success: true });
+    return privateJson({ success: true });
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
 
-    // Handle missing table gracefully - just log and return success
-    // This prevents the 404 errors from causing UI issues
+    if (message.includes('astro_maia_transfer_grants') ||
+        message.includes('astro_maia_protected_origins')) {
+      return privateJson({success:false,error:'privacy_guard_unavailable'},
+        {status:503});
+    }
+
+    // A failed write must never be presented as a successfully saved turn.
     if (message.includes('does not exist')) {
-      console.warn('[CONVERSATION] conversation_turns table not found - skipping save');
-      return NextResponse.json({ success: true, tableNotReady: true });
+      console.warn('[CONVERSATION] durable turn storage unavailable');
+      return privateJson(
+        { success: false, error: 'Conversation was not saved' },
+        { status: 503 }
+      );
     }
 
     console.error(`[CONVERSATION] POST error: ${message}`);
-    return NextResponse.json(
+    return privateJson(
       { success: false, error: 'Failed to save conversation' },
       { status: 500 }
     );

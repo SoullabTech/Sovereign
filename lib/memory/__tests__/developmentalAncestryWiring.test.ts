@@ -14,7 +14,12 @@ const ROOT = process.cwd();
 
 beforeEach(() => {
   mockQuery.mockReset();
-  mockQuery.mockResolvedValue({ rows: [{ id: 'memory-1' }] });
+  // R4G's independent server check must find no protected registry origin
+  // for the synthetic ordinary session before the actual write query.
+  mockQuery.mockImplementation(async (sql:string)=>{
+    if(sql.includes('AS protected WHERE protected.session_id')) return {rows:[]};
+    return {rows:[{id:'memory-1'}]};
+  });
 });
 
 describe('developmental ancestry · exact exchange provenance', () => {
@@ -36,7 +41,8 @@ describe('developmental ancestry · exact exchange provenance', () => {
       },
     });
 
-    const [sql, params] = mockQuery.mock.calls[0] as [string, unknown[]];
+    const [sql, params] = mockQuery.mock.calls.find(
+      ([statement]:[string])=>statement.includes('INSERT INTO developmental_memories')) as [string, unknown[]];
     expect(sql).toContain('source_exchange_id');
     expect(params[7]).toBe('11111111-1111-4111-8111-111111111111');
   });
@@ -58,7 +64,8 @@ describe('developmental ancestry · exact exchange provenance', () => {
       },
     });
 
-    const [, params] = mockQuery.mock.calls[0] as [string, unknown[]];
+    const [, params] = mockQuery.mock.calls.find(
+      ([statement]:[string])=>statement.includes('INSERT INTO developmental_memories')) as [string,unknown[]];
     expect(params[7]).toBeNull();
   });
 

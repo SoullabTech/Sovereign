@@ -94,6 +94,8 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
+import { mayAttachImplicitAstrologyContext } from '@/lib/maia/context/maiaAstrologyTransferPolicy';
+import { assertR4gOrdinarySession, R4gSessionHeld } from '@/lib/maia/astrologyConsent/r4gOrdinarySessionGate';
 import { assessCrisisWithCheckIn, classifyCheckInAnswer, crisisLogLine, maiaAskedAboutSafety, CRISIS_REFERRAL } from '@/lib/safety/crisisAssessment';
 import { takeSafetyCheckIn, clearSafetyCheckIn, markSafetyCheckIn } from '@/lib/safety/crisisCheckIn';
 import { withoutClientPromptAuthority } from '@/lib/sovereign/clientPromptAuthority';
@@ -359,6 +361,21 @@ export async function POST(req: NextRequest) {
     // `|| bodyUserId` fallback was removed once apiFetch shipped x-session-token
     // on every native path. See ./resolveIdentity.ts.
     const userId = await resolveMemberIdentity(req);
+    // R4G: refuse protected and legacy chart sessions before F1 durable turn
+    // acceptance, memory loaders, audio, and any model dispatch.
+    try {
+      await assertR4gOrdinarySession(sessionId);
+    } catch (error) {
+      return jsonWithCors(req, { error: 'astrology_conversation_not_authorized' },
+        error instanceof R4gSessionHeld ? 403 : 503);
+    }
+
+    // R4G: reject explicit stale/mismatched member claims before any turn
+    // persistence, generation, or memory retrieval.
+    if (userId && typeof bodyUserId === 'string' &&
+        bodyUserId.trim() && bodyUserId.trim() !== userId) {
+      return jsonWithCors(req, { error: 'member_session_conflict' }, 403);
+    }
 
     // 🔍 IDENTITY DEBUG: observe resolution + flag a body id that was ignored
     // (stale client or spoof attempt) so it's visible without being trusted.
@@ -742,7 +759,12 @@ export async function POST(req: NextRequest) {
     // ⚡ LATENCY FIX: Run MemoryBundle and BaZi/WuXing in parallel.
     // These are independent and previously ran sequentially (~500ms-2s each).
     const shouldBuildMemory = !isSanctuary && allowCrossSessionMemory && memoryMode !== 'ephemeral';
-    const shouldComputeWuXing = isRecognizedUser && !isSanctuary;
+    // ASTRO-R4K: a private member BaZi/Da Yun constitution and western birth
+    // record are chart data, not standing ambient MAIA knowledge. This entire
+    // loader remains OFF until member-reviewed, server-witnessed current-turn
+    // transfer exists; do not silently retain the birth loader just to provide
+    // a moment-only symbolic lens. That safe lens can be split separately.
+    const shouldComputeWuXing = mayAttachImplicitAstrologyContext();
 
     if (!shouldBuildMemory) {
       if (isSanctuary) console.log('🛡️ [Route/MemoryBundle] Skipped - Sanctuary mode');
@@ -750,7 +772,12 @@ export async function POST(req: NextRequest) {
       else console.log(`🛡️ [Route/MemoryBundle] Skipped - memoryMode is "${memoryMode}"`);
     }
 
-    const shouldLoadAstrology = isRecognizedUser && !isSanctuary;
+    // ASTRO-R4e: saved permission to VIEW a chart is not permission to put it
+    // in an ordinary MAIA conversation. The only current transfer is the
+    // member-reviewed, user-authored message from Astrology Pro's Send gesture.
+    // No runtime flag, browser preference or standing consent can enable an
+    // ambient chart addendum while a per-turn server witness is unavailable.
+    const shouldLoadAstrology = mayAttachImplicitAstrologyContext();
 
     const [memoryBundleResult, wuxingResult, astrologyContextResult] = await Promise.all([
       // Memory bundle (parallel leg 1)

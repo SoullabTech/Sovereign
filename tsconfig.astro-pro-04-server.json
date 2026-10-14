@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.core.json",
+  "compilerOptions": {
+    "incremental": false,
+    "noEmit": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "app/api/astrology/pro/my-chart/route.ts",
+    "lib/astroJarvis/stewardPlanner.ts",
+    "lib/astrology/proCalculationPolicy.ts",
+    "scripts/astro-jarvis-observer.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

@@ -145,6 +145,7 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Auth flows
   { exact: '/signin', public: true, notes: 'Sign in' },
+  { exact: '/account/conflict', public: true, notes: 'Neutral account-conflict resolution without member data' },
   { exact: '/signup', public: true, notes: 'Sign up' },
   { exact: '/reset-password', public: true, notes: 'Password reset' },
   { exact: '/magic-link', public: true, notes: 'Magic link landing page — button-click redeems token (scanner-safe)' },
@@ -379,6 +380,9 @@ export const ACCESS_RULES: AccessRule[] = [
   // HOUSE-PREFERENCES-01: member presentation only; ownership is resolved again in the reader.
   { exact: '/house', minTier: 'free', notes: 'Member House orientation' },
   { exact: '/api/house/preferences', minTier: 'free', notes: 'Verified member-owned House presentation preferences' },
+  // ASTRO-R4 privacy: the outer proxy requires an authenticated member.
+  // Source-owned chart endpoint enforces preview cohort, ownership and consent.
+  { exact: '/api/astrology/pro/my-chart', minTier: 'free', notes: 'Astro Pro owned chart requires verified member and independent consent/preview gate' },
   { exact: '/api/early-field/admission', minTier: 'free', notes: 'EARLY-FIELD-01 — server-side admission to the early Living Field instrument; authenticated members only; answers a boolean from the session, never a client claim' },
   { exact: '/api/house-studio/admission', minTier: 'free', notes: 'H1 — server-side admission to explicit House → Writer’s Studio Work-context arrival; authenticated members only; session-derived boolean only' },
   { exact: '/decisions', minTier: 'free', notes: 'Personal Decision Council — member-owned reflection' },
@@ -493,6 +497,10 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Supervision
   { exact: '/supervision', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Supervision' },
+
+  // Pro Studio Reflect arrival: authenticated orientation into EXISTING free MAIA.
+  // This path grants no premium Reflect/Practice/Collective capability.
+  { exact: '/pro-studio/reflect', minTier: 'free', notes: 'Reflect arrival for signed-in members; premium features remain ungranted' },
 
   // Studio (session room + supporting pages)
   { prefix: '/studio', minTier: 'free', notes: 'Studio - open to all authenticated users' },

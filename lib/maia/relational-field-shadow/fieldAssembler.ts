@@ -82,6 +82,10 @@ export async function loadH8CrossSessionMemberTurns(
          FROM conversation_turns
         WHERE user_id = $1
           AND role = 'user'
+          AND NOT EXISTS (
+          SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) AS r4f
+          WHERE r4f.session_id = conversation_turns.session_id
+        )
           AND session_id IS NOT NULL
           AND session_id <> $2
         ORDER BY created_at DESC, seq DESC

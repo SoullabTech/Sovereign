@@ -6,7 +6,9 @@ import { runInNewContext } from 'node:vm';
 import * as ts from 'typescript';
 
 const FILE = 'app/api/sovereign/app/maia/list/route.ts';
-const BASE = '23ac0bdcebd74a8f1f0f60ed66eeda2ffef6440e';
+// Combined-candidate parity is measured against the exact R5i privacy route.
+// Comparing to the older pre-privacy route would demand removal of intentional safeguards.
+const BASE = 'aa888fbedcf428a1f1659b3011650431aeaa10ca';
 const source = readFileSync(FILE, 'utf8');
 const parent = execFileSync('git', ['show', BASE + ':' + FILE], { encoding: 'utf8' });
 const parsed = ts.createSourceFile(FILE, source, ts.ScriptTarget.Latest, true);
@@ -57,7 +59,7 @@ test('timeout code uses a precise Error intersection without a suppression or an
   expect(body).toContain("Error & { code: 'SOVEREIGN_TIMEOUT' }");
 });
 test.each([ts.ModuleKind.CommonJS, ts.ModuleKind.ESNext])(
-  'entire route emits identical JavaScript for module kind %s', (kind) => {
+  'type corrections preserve the entire frozen privacy route at module kind %s', (kind) => {
     expect(emit(source, kind)).toBe(emit(parent, kind));
   },
 );

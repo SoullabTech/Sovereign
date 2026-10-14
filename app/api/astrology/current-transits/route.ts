@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import * as Astronomy from 'astronomy-engine';
+import { classifyApparentMotion, type PlanetMotionStatus } from '@/lib/astrology/ephemerisCalculator';
 
 // Zodiac signs in order
 const ZODIAC_SIGNS = [
@@ -38,6 +39,9 @@ interface Transit {
   degree: number;
   longitude: number;
   retrograde: boolean;
+  // R4c: distinguish a verified direction from near-station uncertainty or
+  // approximate bodies whose motion has not been independently evaluated.
+  motionStatus?: PlanetMotionStatus;
 }
 
 // ============================================================================
@@ -48,7 +52,7 @@ interface Transit {
  * Calculate True Node (North Node) position
  * The lunar node is the point where Moon's orbit crosses the ecliptic
  */
-function calculateTrueNode(time: Astronomy.AstroTime): number {
+function calculateTrueNode(time: ReturnType<typeof Astronomy.MakeTime>): number {
   // Get Moon's position
   const moonGeo = Astronomy.GeoMoon(time);
 
@@ -179,7 +183,7 @@ function calculateVestaApprox(date: Date): number {
 // ============================================================================
 
 // Calculate all current planetary positions including nodes and asteroids
-function calculateTransitPositions(date: Date): Transit[] {
+export function calculateTransitPositions(date: Date): Transit[] {
   const transits: Transit[] = [];
   const time = Astronomy.MakeTime(date);
 
@@ -195,6 +199,7 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree,
       longitude: Number(sunLon.toFixed(4)),
       retrograde: false,
+      motionStatus: 'direct',
     });
   } catch (error) {
     console.error('[Transits] Error calculating Sun:', error);
@@ -211,13 +216,16 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree,
       longitude: Number(moonLon.toFixed(4)),
       retrograde: false,
+      motionStatus: 'direct',
     });
   } catch (error) {
     console.error('[Transits] Error calculating Moon:', error);
   }
 
   // Other planets - use GeoVector for geocentric positions
-  const planets: Array<{ name: string; body: Astronomy.Body }> = [
+  // Infer enum member types from the runtime values; this is compatible with
+  // both the bundled Astronomy typings and the broader Soullab typecheck.
+  const planets = [
     { name: 'Mercury', body: Astronomy.Body.Mercury },
     { name: 'Venus', body: Astronomy.Body.Venus },
     { name: 'Mars', body: Astronomy.Body.Mars },
@@ -234,29 +242,18 @@ function calculateTransitPositions(date: Date): Transit[] {
       const ecl = Astronomy.Ecliptic(vec);
       const longitude = ecl.elon;
 
-      // Check for retrograde by comparing with yesterday
-      let retrograde = false;
-      try {
-        const yesterday = new Date(date.getTime() - 24 * 60 * 60 * 1000);
-        const timeYesterday = Astronomy.MakeTime(yesterday);
-        const vecYesterday = Astronomy.GeoVector(body, timeYesterday, true);
-        const eclYesterday = Astronomy.Ecliptic(vecYesterday);
-
-        let diff = longitude - eclYesterday.elon;
-        if (diff > 180) diff -= 360;
-        if (diff < -180) diff += 360;
-        retrograde = diff < 0;
-      } catch {
-        // Skip retrograde check if it fails
-      }
-
+      // R4c: exactly the same geocentric, station-aware classifier used
+      // for private natal charts. A small or disputed speed is explicitly
+      // uncertain, never silently direct/retrograde based on yesterday.
+      const motion = classifyApparentMotion(body, date);
       const { sign, degree } = longitudeToZodiac(longitude);
       transits.push({
         planet: name,
         sign,
         degree,
         longitude: Number(longitude.toFixed(4)),
-        retrograde,
+        retrograde: motion.retrograde,
+        motionStatus: motion.motionStatus,
       });
     } catch (error) {
       console.error(`[Transits] Error calculating ${name}:`, error);
@@ -274,7 +271,8 @@ function calculateTransitPositions(date: Date): Transit[] {
       sign: nnSign,
       degree: nnDegree,
       longitude: Number(northNodeLon.toFixed(4)),
-      retrograde: true, // North Node always moves retrograde
+      retrograde: true, // Legacy mean-node assumption; motion not independently evaluated.
+      motionStatus: 'not-evaluated',
     });
 
     // South Node is exactly opposite
@@ -286,6 +284,7 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree: snDegree,
       longitude: Number(southNodeLon.toFixed(4)),
       retrograde: true,
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
     console.error('[Transits] Error calculating Nodes:', error);
@@ -302,7 +301,8 @@ function calculateTransitPositions(date: Date): Transit[] {
       sign,
       degree,
       longitude: Number(chironLon.toFixed(4)),
-      retrograde: false, // Simplified - would need velocity check
+      retrograde: false, // Legacy compatibility only; not a verified motion result.
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
     console.error('[Transits] Error calculating Chiron:', error);
@@ -321,7 +321,8 @@ function calculateTransitPositions(date: Date): Transit[] {
       sign,
       degree,
       longitude: Number(lilithLon.toFixed(4)),
-      retrograde: false, // Lilith always moves direct
+      retrograde: false, // Legacy approximation; direction not verified.
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
     console.error('[Transits] Error calculating Lilith:', error);
@@ -337,6 +338,7 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree,
       longitude: Number(ceresLon.toFixed(4)),
       retrograde: false,
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
     console.error('[Transits] Error calculating Ceres:', error);
@@ -352,6 +354,7 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree,
       longitude: Number(pallasLon.toFixed(4)),
       retrograde: false,
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
     console.error('[Transits] Error calculating Pallas:', error);
@@ -367,6 +370,7 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree,
       longitude: Number(junoLon.toFixed(4)),
       retrograde: false,
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
     console.error('[Transits] Error calculating Juno:', error);
@@ -382,6 +386,7 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree,
       longitude: Number(vestaLon.toFixed(4)),
       retrograde: false,
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
     console.error('[Transits] Error calculating Vesta:', error);

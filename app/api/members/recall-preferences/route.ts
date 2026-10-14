@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 /**
  * /api/members/recall-preferences
@@ -33,8 +33,8 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
  *     naming + cultural defense — this endpoint is the member-facing
  *     surface that completes "culturally defended")
  *
- * Authentication: session cookie primary, ?memberId fallback (legacy parity
- * with /api/members/settings).
+ * Authentication: verified revocable server member only (cookie or verified
+ * Safari session-token). A query memberId never authorizes another account.
  */
 
 // Known consent-gate columns. Adding a new layer's gate requires one line here
@@ -53,21 +53,32 @@ function isKnownKey(key: string): key is RecallPreferenceKey {
   return (RECALL_PREFERENCE_COLUMNS as readonly string[]).includes(key);
 }
 
+// Account-specific recall settings require the same verified, non-revoked
+// server member credential as the memory that the setting can reveal.
+// A URL ?memberId or body.memberId can never grant access or widen scope.
 async function resolveMemberId(request: NextRequest): Promise<string | null> {
-  const session = await getCurrentSession();
-  if (session?.memberId) return session.memberId;
-  return request.nextUrl.searchParams.get('memberId');
+  return getMemberIdFromRequest(request);
+}
+
+const PRIVATE_RECALL_HEADERS = {
+  'Cache-Control': 'private, no-store, max-age=0, must-revalidate',
+  'Vary': 'Cookie, Origin',
+} as const;
+function privateJson(data:unknown,init?:ResponseInit) {
+  return NextResponse.json(data,{
+    ...init, headers: {...PRIVATE_RECALL_HEADERS,...init?.headers},
+  });
 }
 
 export async function GET(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
-    return NextResponse.json({ stub: true });
+    return privateJson({ stub: true });
   }
 
   try {
     const memberId = await resolveMemberId(request);
     if (!memberId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return privateJson({ error: 'Authentication required' }, { status: 401 });
     }
 
     const columns = RECALL_PREFERENCE_COLUMNS.join(', ');
@@ -77,43 +88,44 @@ export async function GET(request: NextRequest) {
     );
 
     if (result.rows.length === 0) {
-      return NextResponse.json({ error: 'Member not found' }, { status: 404 });
+      return privateJson({ error: 'Member not found' }, { status: 404 });
     }
 
-    // Default missing/null values to TRUE per default-on opt-out doctrine
-    // (matches the loader's `!== false` gate in lib/maia/memoryLoaders.ts).
+    // A missing/unknown consent value is NOT an independently authorized
+    // recall act. Only an explicit persisted true value is represented as ON.
+    // A separate per-passage grant is still required for chart recall.
     const row = result.rows[0];
     const preferences: Required<RecallPreferences> = Object.fromEntries(
-      RECALL_PREFERENCE_COLUMNS.map((k) => [k, row[k] !== false]),
+      RECALL_PREFERENCE_COLUMNS.map((k) => [k, row[k] === true]),
     ) as Required<RecallPreferences>;
 
-    return NextResponse.json(preferences);
+    return privateJson(preferences);
   } catch (err) {
     console.error('[members/recall-preferences] GET error:', err);
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+    return privateJson({ error: 'Internal error' }, { status: 500 });
   }
 }
 
 export async function PATCH(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
-    return NextResponse.json({ stub: true });
+    return privateJson({ stub: true });
   }
 
   try {
     const memberId = await resolveMemberId(request);
     if (!memberId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return privateJson({ error: 'Authentication required' }, { status: 401 });
     }
 
     let body: unknown;
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      return privateJson({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
-      return NextResponse.json({ error: 'Body must be an object' }, { status: 400 });
+      return privateJson({ error: 'Body must be an object' }, { status: 400 });
     }
 
     // Filter to known keys with boolean values. Unknown keys are silently
@@ -123,7 +135,7 @@ export async function PATCH(request: NextRequest) {
     for (const [key, value] of Object.entries(body)) {
       if (!isKnownKey(key)) continue;
       if (typeof value !== 'boolean') {
-        return NextResponse.json(
+        return privateJson(
           { error: `Field '${key}' must be a boolean` },
           { status: 400 },
         );
@@ -133,7 +145,7 @@ export async function PATCH(request: NextRequest) {
 
     const knownKeys = Object.keys(updates) as RecallPreferenceKey[];
     if (knownKeys.length === 0) {
-      return NextResponse.json(
+      return privateJson(
         { error: 'No known preference keys in body' },
         { status: 400 },
       );
@@ -150,17 +162,17 @@ export async function PATCH(request: NextRequest) {
     );
 
     if (result.rows.length === 0) {
-      return NextResponse.json({ error: 'Member not found' }, { status: 404 });
+      return privateJson({ error: 'Member not found' }, { status: 404 });
     }
 
     const row = result.rows[0];
     const preferences: Required<RecallPreferences> = Object.fromEntries(
-      RECALL_PREFERENCE_COLUMNS.map((k) => [k, row[k] !== false]),
+      RECALL_PREFERENCE_COLUMNS.map((k) => [k, row[k] === true]),
     ) as Required<RecallPreferences>;
 
-    return NextResponse.json(preferences);
+    return privateJson(preferences);
   } catch (err) {
     console.error('[members/recall-preferences] PATCH error:', err);
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+    return privateJson({ error: 'Internal error' }, { status: 500 });
   }
 }

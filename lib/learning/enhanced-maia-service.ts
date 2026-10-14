@@ -17,6 +17,8 @@
  */
 
 import { incrementTurnCount, addConversationExchange, getConversationHistory } from '../sovereign/sessionManager';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { assertR4hSecondarySession } from '@/lib/maia/astrologyConsent/r4hSecondarySessionAuthority';
 import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, type MaiaContext } from '../sovereign/maiaVoice';
 import { generateText } from '../ai/modelService';
 import { consciousnessOrchestrator } from '../orchestration/consciousness-orchestrator';
@@ -66,7 +68,7 @@ export async function getEnhancedMaiaResponse(req: EnhancedMaiaRequest): Promise
   const {
     sessionId,
     input,
-    meta = {},
+    meta: suppliedMeta = {},
     includeAudio = false,
     voiceProfile,
     enableLearning = false,
@@ -74,6 +76,20 @@ export async function getEnhancedMaiaResponse(req: EnhancedMaiaRequest): Promise
     collectTraining = false
   } = req;
 
+  // R4H is fail-closed BEFORE turn-count, history, model calls or training.
+  // The authenticated cookie-backed session is the authority; metadata
+  // supplied by a UI, downstream model or caller is only a claim.
+  const verifiedMemberId = await assertR4hSecondarySession({
+    sessionId,
+    claimedMemberId: suppliedMeta.userId,
+    resolveSession: getCurrentSession,
+  });
+  // A caller's collectTraining/forceTeacher flags do not grant permission to
+  // send the member to a data-collection or teacher-example route.
+  if (collectTraining || forceTeacher) {
+    throw new Error('R4H_TRAINING_OR_TEACHER_MODE_NOT_AUTHORIZED');
+  }
+  const meta = { ...suppliedMeta, userId: verifiedMemberId };
   const startTime = Date.now();
 
   // Increment turn count for this session
@@ -81,7 +97,7 @@ export async function getEnhancedMaiaResponse(req: EnhancedMaiaRequest): Promise
 
   try {
     // Get conversation history for context
-    const conversationHistory = await getConversationHistory(sessionId, 10);
+    const conversationHistory = await getConversationHistory(sessionId, 10, verifiedMemberId);
     const turnCount = conversationHistory.length + 1;
 
     let rawResponse: string;

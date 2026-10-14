@@ -1,20 +1,16 @@
-import { HouseExperience } from '@/app/house/page';
-import { HomeThreshold } from './HomeThreshold';
-import { requireMemberId } from '@/lib/auth/session';
+import {HomeThreshold} from './HomeThreshold';
+import {HomeAccountGate} from './HomeAccountGate';
+import {getCurrentSession} from '@/lib/auth/serverSessions';
 
 export const dynamic = 'force-dynamic';
 
-async function hasAuthenticatedMember(): Promise<boolean> {
-  try {
-    await requireMemberId();
-    return true;
-  } catch (error) {
-    if (error instanceof Error && error.message === 'AUTH_REQUIRED') return false;
-    throw error;
-  }
-}
-
+/**
+ * Home is always a neutral server document. A verified cookie identifies the
+ * member to the server, but it cannot attest to browser-local account state.
+ * Even /home?entry=... never server-renders a name, Work or other private data.
+ */
 export default async function HomePage() {
-  if (!(await hasAuthenticatedMember())) return <HomeThreshold />;
-  return <HouseExperience current="home" />;
+  const session=await getCurrentSession();
+  if (!session) return <HomeThreshold />;
+  return <HomeAccountGate destination="home" />;
 }

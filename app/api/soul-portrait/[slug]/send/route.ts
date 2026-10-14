@@ -9,8 +9,8 @@ export const dynamic = 'force-dynamic';
  *      consented (verbal/written) — consent is RECORDED, never inferred.
  *   2. Appends the consent event to the soul_portrait_consents ledger and
  *      publishes the row (write-once from then on).
- *   3. Returns the recipient link; optionally emails it via the
- *      practitioner's EmailRouter (Soullab-as-courier).
+ *   3. Returns an unlisted private link ONLY. Outbound email transport is
+ *      held pending separately authorized, Resend-free delivery.
  *
  * Refusals: minors (guardian flow is a separate crossing — fails closed);
  * missing attestation; non-owner (store scoping → 404).
@@ -21,7 +21,6 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getOwnedPortraitBySlug, publishOwnedPortrait } from '@/lib/soulPortrait/portraitStore';
 import { recordPortraitConsent } from '@/lib/soulPortrait/consentRecord';
 import { isPortraitConsentLive } from '@/lib/soulPortrait/consentAccess';
-import { EmailRouter } from '@/lib/comms/emailRouter';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://soullab.life';
 
@@ -36,6 +35,21 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'invalid_delivery_request' }, { status: 400 });
+  }
+  // MAIL-05 HOLD: email and other delivery details cannot enter the legacy
+  // Resend provider route. Reject before recording consent or publication.
+  const unsupportedDelivery = ['recipientEmail', 'recipientName', 'message'].some(key =>
+    body[key] != null && String(body[key]).trim() !== ''
+  );
+  if (unsupportedDelivery) {
+    return NextResponse.json({
+      error: 'email_delivery_held',
+      message: 'Only private-link sharing is available. Create a link without contact details.',
+    }, { status: 409, headers: { 'Cache-Control': 'private, no-store' } });
   }
 
   const portrait = await getOwnedPortraitBySlug(slug, memberId);
@@ -78,53 +92,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const path = `/soul-portrait/view/${published.slug}`;
   const url = `${BASE_URL}${path}`;
-  const subjectName: string = (published.immutableText as any)?.person?.name || 'Soul Portrait';
-
-  let emailed = false;
-  let emailError: string | undefined;
-  const recipientEmail = typeof body.recipientEmail === 'string' ? body.recipientEmail.trim() : '';
-  if (recipientEmail) {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
-      return NextResponse.json({ error: 'invalid_recipient_email' }, { status: 400 });
-    }
-    const personalNote = typeof body.message === 'string' ? body.message.trim().slice(0, 2000) : '';
-    const router = new EmailRouter(memberId);
-    const result = await router.send(
-      {
-        to: recipientEmail,
-        toName: typeof body.recipientName === 'string' ? body.recipientName.trim() || undefined : undefined,
-        subject: `A Soul Portrait for ${subjectName}`,
-        bodyText: [
-          `A Soul Portrait has been prepared for ${subjectName}.`,
-          `This portrait was created as a reflection and offering for you. There is no right way to engage it.`,
-          personalNote ? `\n${personalNote}\n` : '',
-          `Read it here, in your own time:\n${url}`,
-          `\nThis link is private and unlisted — it was made for you.`,
-        ].join('\n'),
-        bodyHtml: `
-          <div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; color: #2a2a2a; line-height: 1.6;">
-            <p>A Soul Portrait has been prepared for <strong>${escapeHtml(subjectName)}</strong>.</p>
-            <p>This portrait was created as a reflection and offering for you. There is no right way to engage it.</p>
-            ${personalNote ? `<blockquote style="border-left: 3px solid #C9A227; margin: 16px 0; padding: 4px 16px; color: #444;">${escapeHtml(personalNote)}</blockquote>` : ''}
-            <p style="margin: 28px 0;">
-              <a href="${url}" style="background: #1A2F24; color: #EAF2EC; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Read your Soul Portrait</a>
-            </p>
-            <p style="font-size: 13px; color: #777;">This link is private and unlisted — it was made for you.</p>
-          </div>`,
-      },
-      { fromEmail: 'noreply@soullab.life', fromName: 'Soullab' },
-    );
-    emailed = result.success;
-    if (!result.success) emailError = result.error;
-    // Provider evidence trail: "accepted" = Resend returned a message id; delivery
-    // status lives in Resend's event log, retrievable by this id.
-    console.log('[soul-portrait/send] email', {
-      accepted: result.success,
-      id: result.id ?? null,
-      provider: result.provider,
-      ...(result.error ? { error: result.error } : {}),
-    });
-  }
+  // No outbound email, provider import, hidden retry or recipient contact
+  // collection exists in the beta's private-link delivery path.
 
   return NextResponse.json({
     ok: true,
@@ -132,11 +101,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     path,
     slug: published.slug,
     publishedAt: published.publishedAt,
-    emailed,
-    ...(emailError ? { emailError } : {}),
-  });
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    emailed: false,
+    delivery: 'private_link_only',
+  }, { headers: { 'Cache-Control': 'private, no-store' } });
 }

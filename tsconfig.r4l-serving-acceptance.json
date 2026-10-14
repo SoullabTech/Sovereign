@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": [
+    "next-env.d.ts",
+    "lib/types/speechRecognition.d.ts",
+    "lib/**/*.d.ts",
+    "app/**/*.d.ts",
+    "app/api/sovereign/app/maia/list/route.ts",
+    "app/api/oracle/conversation/route.ts",
+    "app/api/between/chat/route.ts",
+    "lib/sovereign/maiaService.ts",
+    "lib/sovereign/maiaVoice.ts",
+    "lib/maia/canonical-turn/producerRegistry.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

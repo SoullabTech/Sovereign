@@ -59,6 +59,7 @@ export type AstroFactKind =
   | 'planet_position'
   | 'moon_phase'
   | 'retrograde'
+  | 'motion_uncertainty'
   | 'lunation'
   | 'eclipse';
 
@@ -114,6 +115,8 @@ export const ASTRO_GUARDRAILS: string[] = [
   'unknown_events: If asked about an event not in payload.events[], state you lack verified data',
   'confidence_transparency: Never present derived or uncertain claims with known-level confidence',
   'separation: Do not blend facts[] with impacts[] — state which layer you are drawing from',
+  'member_meaning_is_authoritative: No chart or transit establishes a member identity, diagnosis, life stage, destiny, or lived experience; ask what the member recognizes',
+  'stationary_motion_is_uncertain: Near a planetary station report the uncertain status without declaring direct/retrograde; do not recover a decisive claim from legacy booleans',
   // Phase 7 authority guardrails
   'facts_only_for_astronomical_occurrence: facts[] describes what IS — not meaning, not advice',
   'impacts_may_interpret_but_not_invent_events: impacts[] may describe meaning but may not assert new astronomical occurrences',
@@ -128,7 +131,7 @@ export const ASTRO_GUARDRAILS: string[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface BuildPayloadInput {
-  currentTransits: Array<{ planet: string; sign: string; degree: number; retrograde: boolean }>;
+  currentTransits: Array<{ planet: string; sign: string; degree: number; retrograde: boolean; motionStatus?: 'direct' | 'retrograde' | 'stationary-uncertain' | 'not-evaluated' }>;
   moonPhase: { phase: string; percentage: number };
   events: AstroEvent[];
   impacts: TransitImpact[];
@@ -157,13 +160,24 @@ export function buildAstrologyPayload(input: BuildPayloadInput): AstrologyContex
       confidence: 'known',
     });
 
-    if (t.retrograde) {
+    // Retrograde is a bounded current-sky fact only with explicit verified
+    // motion metadata. A legacy boolean cannot override station uncertainty.
+    if (t.motionStatus === 'retrograde') {
       facts.push({
         kind: 'retrograde',
         label: `${name} retrograde`,
         value: 'active',
         source: 'ephemeris',
         confidence: 'known',
+      });
+    }
+    if (t.motionStatus === 'stationary-uncertain') {
+      facts.push({
+        kind: 'motion_uncertainty',
+        label: name + ' apparent motion',
+        value: 'near a station; direction cannot be classified confidently',
+        source: 'ephemeris',
+        confidence: 'uncertain',
       });
     }
   }
@@ -231,6 +245,12 @@ export function renderFactsForPrompt(facts: AstroFact[]): string {
 
   if (byKind.retrograde?.length) {
     out += `**Currently Retrograde:** ${byKind.retrograde.map(f => f.label.replace(' retrograde','')).join(', ')} [source: ephemeris]\n\n`;
+  }
+
+  if (byKind.motion_uncertainty?.length) {
+    out += '**Apparent-motion uncertainty [source: ephemeris; confidence: uncertain]:**\n';
+    for (const f of byKind.motion_uncertainty) out += `- ${f.label}: ${f.value}\n`;
+    out += '\n';
   }
 
   if (byKind.moon_phase?.length) {

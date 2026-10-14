@@ -7,11 +7,19 @@ import {
   consultWithSpiralogicContext,
   CONSULTATION_CONFIG,
   type ClaudeConsultationResult,
+  type ClaudeConsultationInput,
   type ConsultationType
 } from './claude-consultation-service';
 
 import { LearningOrchestrator } from '../learning/learning-orchestrator';
-import type { SpiralogicAnalysis } from '../learning/learning-orchestrator';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { assertR4hSecondarySession } from '@/lib/maia/astrologyConsent/r4hSecondarySessionAuthority';
+import { getConversationHistory } from '@/lib/sovereign/sessionManager';
+import { toVerifiedR4hContext } from '@/lib/maia/astrologyConsent/r4hVerifiedConsultationContext';
+// The learning-orchestrator does not export this type. Keep the dormant,
+// untrusted symbolic field typed to the consultation contract rather than
+// introducing an unchecked caller-supplied identity/symbolic context.
+type SpiralogicAnalysis = NonNullable<ClaudeConsultationInput['spiralogicContext']>;
 
 export interface DeepPathArgs {
   sessionId: string;
@@ -53,10 +61,28 @@ export class DeepPathOrchestrator {
   }
 
   async processDeepPath(args: DeepPathArgs): Promise<DeepPathResult> {
+    // This back-channel can route to Claude before the enhanced service itself.
+    // Guard the full entry, not just the eventual learning/history branch.
+    const verifiedMemberId = await assertR4hSecondarySession({
+      sessionId: args.sessionId,
+      claimedMemberId: args.userId,
+      resolveSession: getCurrentSession,
+    });
+    // Never trust the supplied conversationContext: retrieve only this member's
+    // verified ordinary turns from the authenticated session's database scope.
+    const verifiedPrior = await getConversationHistory(args.sessionId, 10, verifiedMemberId);
+    const trustedArgs: DeepPathArgs = {
+      ...args,
+      userId: verifiedMemberId,
+      conversationContext: toVerifiedR4hContext(verifiedPrior),
+      // The original producer of this symbolic analysis is not independently
+      // attested; do not send it to a remote model from this prototype branch.
+      spiralogicAnalysis: undefined,
+    };
     const startTime = Date.now();
 
     // 1) Generate MAIA's sovereign draft response using local intelligence
-    const maiaDraft = await this.generateSovereignDraft(args);
+    const maiaDraft = await this.generateSovereignDraft(trustedArgs);
 
     let finalResponse = maiaDraft;
     let consultation: ClaudeConsultationResult | null = null;
@@ -64,14 +90,14 @@ export class DeepPathOrchestrator {
 
     // 2) Optional Claude consultation - only if enabled and conditions are met
     if (CONSULTATION_CONFIG.enabled && CONSULTATION_CONFIG.forDeepPath) {
-      consultation = await this.requestConsultation(args, maiaDraft);
+      consultation = await this.requestConsultation(trustedArgs, maiaDraft);
 
       if (consultation && this.shouldApplyConsultation(consultation, maiaDraft)) {
         finalResponse = consultation.improvedResponse;
         consultationUsed = true;
 
-        // Store as learning example for future training
-        await this.storeConsultationAsLearning(args, maiaDraft, consultation);
+        // R4H: no unattended JSONL/training capture of member conversations.
+        // Separate, independently reviewed training consent is not implemented.
       }
     }
 
@@ -93,7 +119,7 @@ export class DeepPathOrchestrator {
         originalDraft: maiaDraft,
         consultationGuidance: consultation || undefined,
         finalDecision: finalResponse,
-        spiralogicContext: args.spiralogicAnalysis
+        spiralogicContext: undefined
       }
     };
   }
@@ -128,7 +154,7 @@ export class DeepPathOrchestrator {
       sessionId: args.sessionId,
       input: args.userInput,
       enableLearning: true,
-      conversationContext: args.conversationContext
+      meta: { userId: args.userId }
     });
 
     return response.text;
@@ -287,46 +313,7 @@ export class DeepPathOrchestrator {
     return true;
   }
 
-  /**
-   * Store consultation as learning data for future training.
-   */
-  private async storeConsultationAsLearning(
-    args: DeepPathArgs,
-    originalDraft: string,
-    consultation: ClaudeConsultationResult
-  ): Promise<void> {
-    try {
-      // Create training data directory if it doesn't exist
-      const fs = await import('fs');
-      const path = await import('path');
 
-      const trainingDir = path.join(process.cwd(), 'training-data');
-      if (!fs.existsSync(trainingDir)) {
-        fs.mkdirSync(trainingDir, { recursive: true });
-      }
-
-      // Store as JSONL for easy training data ingestion
-      const learningExample = {
-        timestamp: new Date().toISOString(),
-        sessionId: args.sessionId,
-        userInput: args.userInput,
-        originalResponse: originalDraft,
-        improvedResponse: consultation.improvedResponse,
-        issues: consultation.issues,
-        consultationType: consultation.repairNeeded ? 'rupture-repair' : 'enhancement',
-        confidenceScore: consultation.confidenceScore,
-        spiralogicContext: args.spiralogicAnalysis,
-        conversationContext: args.conversationContext.slice(-3) // Last 3 exchanges
-      };
-
-      const trainingFile = path.join(trainingDir, 'consultation-examples.jsonl');
-      fs.appendFileSync(trainingFile, JSON.stringify(learningExample) + '\n');
-
-    } catch (error) {
-      console.error('[DeepPath] Failed to store learning example:', error);
-      // Non-critical error - don't break the conversation
-    }
-  }
 }
 
 /**

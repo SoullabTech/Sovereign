@@ -429,7 +429,9 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       if (!audio) {
         // Try to use the globally unlocked audio element first (from layout.tsx)
         if (typeof window !== 'undefined' && (window as any).__maiaGlobalAudio) {
-          audio = (window as any).__maiaGlobalAudio;
+          // The truthy global is an HTMLAudioElement established by the playback unlock path.
+          // Preserve its type so the reused element is not treated as nullable.
+          audio = (window as any).__maiaGlobalAudio as HTMLAudioElement;
           console.log('[StreamingVoice] 🎧 Using globally unlocked Audio element');
         } else {
           audio = new Audio();
@@ -984,6 +986,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       isSilence: false,
       relational: prev.relational, // Preserve relational state
       lastSilence: null,
+      lastMoveOutcome: prev.lastMoveOutcome, // Preserve the last observed outcome for telemetry
     }));
   }, []);
 

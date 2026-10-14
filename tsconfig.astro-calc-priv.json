@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.core.json",
+  "compilerOptions": {
+    "incremental": false,
+    "noEmit": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "app/api/astrology/birth-chart/route.ts",
+    "lib/astrology/proCalculationPolicy.ts",
+    "lib/astrology/ephemerisCalculator.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

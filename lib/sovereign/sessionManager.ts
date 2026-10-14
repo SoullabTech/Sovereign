@@ -4,6 +4,7 @@ import type { DisplacedExchange } from '@/lib/maia/continuity/sessionRecovery';
 import { randomUUID } from 'crypto';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { TurnPosture, contentWritable } from '@/lib/sanctuary/turnPosture';
+import { assertR4gOrdinarySession } from '@/lib/maia/astrologyConsent/r4gOrdinarySessionGate';
 
 export type ConversationExchange = {
   timestamp: string;
@@ -59,6 +60,8 @@ export async function addConversationExchange(
   maiaResponse: string,
   meta?: Record<string, unknown>
 ): Promise<void> {
+  // Shared legacy session history must never reconstruct R4F chart material.
+  await assertR4gOrdinarySession(sessionId);
   // SANCTUARY (S1): resolve the per-turn posture from the request-derived meta
   // and guard BOTH content lanes this function writes — the session-level
   // conversation_history jsonb (the lane that escaped in SANC-20260614-01) and
@@ -125,8 +128,12 @@ export async function getSessionWithHistory(sessionId: string): Promise<MaiaSess
  *
  * Transforms individual turns back into paired ConversationExchange format.
  */
-export async function getConversationHistory(sessionId: string, limit = 10): Promise<ConversationExchange[]> {
-  return (await getSessionContinuityWindow(sessionId, limit)).exchanges;
+export async function getConversationHistory(
+  sessionId: string,
+  limit = 10,
+  authenticatedMemberId?: string,
+): Promise<ConversationExchange[]> {
+  return (await getSessionContinuityWindow(sessionId, limit, authenticatedMemberId)).exchanges;
 }
 
 /**
@@ -162,8 +169,10 @@ export interface SessionContinuityWindow {
 
 export async function getSessionContinuityWindow(
   sessionId: string,
-  limit = 10
+  limit = 10,
+  authenticatedMemberId?: string,
 ): Promise<SessionContinuityWindow> {
+  await assertR4gOrdinarySession(sessionId);
   // Query conversation_turns for this session's messages
   // `exchange_id` is an EXISTING column (20260301000001) — selecting it is a read,
   // not a migration. It is nullable on rows written before that migration, so the
@@ -177,8 +186,13 @@ export async function getSessionContinuityWindow(
     `SELECT role, content, created_at, exchange_id
      FROM conversation_turns
      WHERE session_id = $1
+       AND ($2::text IS NULL OR user_id::text = $2::text)
+       AND NOT EXISTS (
+         SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) AS grant
+         WHERE grant.session_id = conversation_turns.session_id
+       )
      ORDER BY created_at ASC`,
-    [sessionId]
+    [sessionId, authenticatedMemberId || null]
   );
 
   const turns = result.rows ?? [];

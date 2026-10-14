@@ -3,15 +3,12 @@
  *
  * PRINCIPLE
  * ─────────
- * Natal chart and display name are IDENTITY-LAYER continuity, not
- * feature-layer invocations. They must be present in every MAIA
- * generation path by default — not gated behind explicit invocation,
- * not left to individual routes to remember to load.
- *
- * This solves the context-fragmentation class of bugs where a conversation
- * flowing through a newer/alternative route (voice, sovereign, etc.)
- * silently loses the natal chart that the original oracle route loaded,
- * causing MAIA to ask for birth data that is already on file.
+ * Display name and pronouns may provide MAIA identity continuity.
+ * A birth chart is different: even when the member has opted in to private
+ * calculation/display, it is NOT automatically carried into conversation.
+ * The Astrology room has a separate member-reviewed Send gesture that
+ * supplies the approved words as a user-authored message; this shared loader
+ * cannot infer or grant that gesture from a stored preference or birth row.
  *
  * USAGE
  * ─────
@@ -29,19 +26,18 @@
  * a follow-up once MemberLiveContext's types are settled.
  */
 
-import { getAstrologyContextForUser } from '@/lib/services/maiaAstrologyContextService';
 import { query } from '@/lib/db/postgres';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 export interface MaiaIdentityContext {
   userId: string;
-  /** Natal chart + current transits + celestial events, pre-formatted for prompt injection */
+  /** R4e compatibility only: NEVER populated by ambient identity continuity. */
   astrologyAddendum?: string;
   /** Display name resolved from member row (prevents "Friend" fallback when member exists) */
   userName?: string;
   /** Preferred pronouns (freeform, e.g. 'he/him', 'she/her', 'they/them') — surfaced so MAIA does not infer from name */
   pronouns?: string;
-  /** Whether birth data is on file — callers may log this for observability */
+  /** No passive birth-row lookup: deliberately false on generic MAIA turns. */
   hasBirthData: boolean;
 }
 
@@ -81,21 +77,16 @@ export async function buildMaiaContext(
     return { userId: '', hasBirthData: false };
   }
 
-  const [astrologyContext, identity] = await Promise.all([
-    getAstrologyContextForUser(userId).catch((err) => {
-      console.warn('[buildMaiaContext] astrology load failed:', err);
-      return null;
-    }),
-    lookupMemberIdentity(userId),
-  ]);
-
-  const astrologyAddendum = astrologyContext?.formattedContext || undefined;
+  // R4e: identity continuity is not permission to disclose a chart to MAIA.
+  // Do not fetch a birth row or inject natal/transit context here. Member-
+  // reviewed Send in the Astrology room supplies the approved text directly.
+  const identity = await lookupMemberIdentity(userId);
 
   return {
     userId,
-    astrologyAddendum,
+    astrologyAddendum: undefined,
     userName: identity.displayName || undefined,
     pronouns: identity.pronouns || undefined,
-    hasBirthData: astrologyContext?.hasBirthData ?? false,
+    hasBirthData: false,
   };
 }
