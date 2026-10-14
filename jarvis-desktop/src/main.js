@@ -21,6 +21,7 @@ const WUC = require('./work-unit-control.js');
 const RECOVERY_B = require('./o5-path-b-recovery.js');
 const OPWU = require('./operator-work-unit.js');
 const CWUV2 = require('./canonical-work-unit-v2.js');
+const CABIN = require('./cabin-flow.js');
 // C1 evidence containment: correctness is decided from canonical evidence, never
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
@@ -515,6 +516,35 @@ app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) creat
 // observation or explicitly UNKNOWN. Nothing is inferred from intended
 // architecture.
 // ---------------------------------------------------------------------------
+function assertCabinCaller(evt) {
+  if (!mainWindow || evt.sender !== mainWindow.webContents ||
+      evt.senderFrame !== mainWindow.webContents.mainFrame) {
+    throw new Error('CABIN_CALLER_DENIED');
+  }
+}
+ipcMain.handle('jarvis:cabin-status', async (evt) => {
+  assertCabinCaller(evt);
+  return CABIN.inspectCabin();
+});
+ipcMain.handle('jarvis:cabin-open', async (evt) => {
+  assertCabinCaller(evt);
+  return CABIN.openCabin({ openView: async url => {
+    const view = new BrowserWindow({
+      width: 1100, height: 820, title: 'Cabin — local candidate',
+      webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true,
+        partition: 'persist:jarvis-cabin-candidate' },
+    });
+    view.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+    view.webContents.on('will-navigate', (event, destination) => {
+      if (!destination.startsWith('http://127.0.0.1:43121/')) event.preventDefault();
+    });
+    view.webContents.session.webRequest.onBeforeRequest((request, callback) => {
+      callback({ cancel: !request.url.startsWith('http://127.0.0.1:43121/') });
+    });
+    try { await view.loadURL(url); } catch (error) { view.destroy(); throw error; }
+  } });
+});
+
 ipcMain.handle('jarvis:status', async () => {
   const result = {
     observed_at: new Date().toISOString(),

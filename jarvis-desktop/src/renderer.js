@@ -183,6 +183,12 @@ function renderHome() {
       <p class="sentence">${v.sentence}</p>
     </div>
 
+    <div class="card">
+      <h3>Cabin</h3>
+      <p id="cabin-readiness" class="hint">Check your local workspace before opening it.</p>
+      <button id="cabin-check">Check readiness</button>
+      <button id="cabin-open" disabled>Open Cabin</button>
+    </div>
     ${renderActiveWorkspace(s.workspace, b)}
 
     <div class="card">
@@ -212,6 +218,26 @@ function renderHome() {
     ${provenanceRows(s.provenance)}
     <div class="hint">Observed ${v.observed_at || 'unknown'}</div>
   `;
+  const cabinCheck = document.getElementById('cabin-check');
+  const cabinOpen = document.getElementById('cabin-open');
+  const cabinState = document.getElementById('cabin-readiness');
+  cabinCheck.addEventListener('click', async () => {
+    cabinCheck.disabled = true; cabinOpen.disabled = true;
+    try {
+      const state = await window.jarvis.getCabinStatus();
+      cabinState.textContent = state.message + ' Models: ' + state.models + '.';
+      cabinOpen.disabled = !state.canOpen;
+    } catch { cabinState.textContent = 'Cabin readiness could not be checked.'; }
+    finally { cabinCheck.disabled = false; }
+  });
+  cabinOpen.addEventListener('click', async () => {
+    cabinOpen.disabled = true;
+    try {
+      const result = await window.jarvis.openCabin();
+      cabinState.textContent = result.opened ? 'Cabin opened. Choose your work there.' : result.readiness.message;
+      cabinOpen.disabled = !result.readiness.canOpen;
+    } catch { cabinState.textContent = 'Cabin could not open just now.'; }
+  });
   document.getElementById('convo').addEventListener('keydown', onConvoKey);
   wireWorkspaceActions();
   if (v.active_work.sessions.length) wireSessionActions();

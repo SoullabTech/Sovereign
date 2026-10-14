@@ -71,3 +71,23 @@ observed total duration was 2955 ms. A scoped TypeScript check of localStore.ts 
 This does not change the conversation UI, offline cognition route guard, or production.
 Before connecting Send, resolve canonical MAIA prompt/context participation and local
 conversation ownership rather than bypassing them with a generic model endpoint.
+
+## JARVIS Cabin entry flow continuation
+Founder authorized JARVIS flow on 2026-10-14. Candidate Home now offers Check readiness
+and Open Cabin. Two narrow, zero-payload preload channels are documented in the existing
+authority allowlist. MAIN accepts only its own top-level window/frame.
+Readiness probes fixed loopback URLs with timeouts and redirects denied. It requires
+a stamped offline Cabin health response before opening; this is not cryptographic
+runtime identity attestation. Opening rechecks readiness rather than trusting the UI.
+The candidate Cabin view has no preload or Node integration, is sandboxed, uses an
+isolated session partition, denies popups/external navigation, and denies requests
+outside the fixed Cabin origin. This window restriction does not attest server egress.
+Conversation, writing, voice, recovery, and resume stay UNVERIFIED. No manuscripts
+or conversations are read by JARVIS readiness. No runtime is spawned or installed.
+Five flow tests passed. Existing JARVIS alpha-floor proof: 97 passed, zero failed.
+Live observation: local completion models AVAILABLE; runtime NEEDS_SETUP; canOpen false.
+The initial external-browser opening implementation failed the reveal-only main guard;
+it was replaced with the bounded sandboxed view, and the unchanged guard passed.
+Actual Electron visual acceptance and integration with the current installed JARVIS
+revision remain outstanding. This older Cabin baseline is an isolated candidate, not
+a replacement for newer JARVIS work. Resume-work selection is not implemented.

@@ -35,6 +35,16 @@
  */
 export const RATIFIED_INVOKE_CHANNELS = [
   {
+    channel: 'jarvis:cabin-status',
+    ratified_in: 'Founder Cabin/JARVIS flow direction 2026-10-14',
+    purpose: 'Read bounded fixed-loopback runtime and model readiness; no content, path, or command from the renderer. MAIN verifies the originating window/frame. No acceptance inferred.',
+  },
+  {
+    channel: 'jarvis:cabin-open',
+    ratified_in: 'Founder Cabin/JARVIS flow direction 2026-10-14',
+    purpose: 'Open only the fixed loopback Cabin URL in a sandboxed isolated window with external requests denied after a fresh readiness check. No renderer arguments or shell commands; MAIN verifies its window/frame. No installed app replacement or production authority.',
+  },
+  {
     channel: 'jarvis:capabilities',
     ratified_in: 'Alpha Floor 2026-08-11',
     purpose:
