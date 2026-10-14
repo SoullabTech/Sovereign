@@ -104,6 +104,21 @@ export async function loadRecentDevelopmentalMemories(
          AND origin_scope = 'ordinary'
          AND source_session_id IS NOT NULL
          AND (valid_to IS NULL)
+         -- A claimed ordinary label does not override a registered protected
+         -- chart origin. Also block a mismatched source_exchange_id whose
+         -- actual source turn belongs to a protected chart session.
+         AND NOT EXISTS (
+           SELECT 1 FROM (
+             SELECT session_id FROM astro_maia_protected_origins
+             UNION ALL SELECT session_id FROM astro_maia_transfer_grants
+           ) AS denied
+           WHERE denied.session_id = developmental_memories.source_session_id
+              OR EXISTS (
+                SELECT 1 FROM conversation_turns AS ancestry
+                WHERE ancestry.exchange_id = developmental_memories.source_exchange_id
+                  AND ancestry.session_id = denied.session_id
+              )
+         )
        ORDER BY significance DESC, formed_at DESC
        LIMIT $2`,
       [userId, limit],
@@ -309,6 +324,21 @@ export async function loadRecentMarkedEpisodes(
        FROM episodic_memories
        WHERE user_id = $1
          AND marked_by_member = TRUE
+         -- Marking an episode did not confer a separate right to recall
+         -- source chart passages in later conversations. Preserve unrelated
+         -- member-marked episodes, withhold known protected origins.
+         AND NOT EXISTS (
+           SELECT 1 FROM (
+             SELECT session_id FROM astro_maia_protected_origins
+             UNION ALL SELECT session_id FROM astro_maia_transfer_grants
+           ) AS denied
+           WHERE denied.session_id = episodic_memories.source_session_id
+              OR EXISTS (
+                SELECT 1 FROM conversation_turns AS ancestry
+                WHERE ancestry.id::text = episodic_memories.source_turn_id
+                  AND ancestry.session_id = denied.session_id
+              )
+         )
        ORDER BY created_at DESC
        LIMIT $2`,
       [userId, limit],
