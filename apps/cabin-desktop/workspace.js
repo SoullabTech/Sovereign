@@ -1,0 +1,51 @@
+'use strict';
+const el = id => document.getElementById(id);
+let state, current, proposal, versions, working=false;
+function status(text){el('status').textContent=text;}
+async function api(path,data){
+ const r=await fetch(path,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+ const value=await r.json();if(!r.ok) throw Error(value.error || 'Local request failed');return value;
+}
+function dirty(){return current && el('manuscript').value!==current.body;}
+function controls(){
+ for(const id of ['save','undo','history','export','suggest']) el(id).disabled=working||!current;
+ el('undo').disabled=working||!current||!current.canUndo||dirty();
+ el('suggest').disabled=working||!current||!el('manuscript').value.trim()||dirty();
+ for(const id of ['send','new-chat','resume-chat','new','import','apply','restore']) el(id).disabled=working;
+ el('works').disabled=working;el('manuscript').disabled=working||!current;
+ el('saved').textContent=current ? (dirty()?'Unsaved changes':'Saved locally · version '+current.revision) : '';
+}
+async function act(task){if(working)return;working=true;controls();try{await task();}catch(e){status(e.message);}finally{working=false;controls();}}
+function showChapter(c){current=c;el('title').textContent=c.title;el('manuscript').value=c.body;el('works').value=c.id;proposal=null;el('proposal').hidden=true;el('versions').hidden=true;controls();}
+function renderTurns(){el('conversations').replaceChildren(new Option('Choose a saved conversation',''));for(const s of state.sessions||[])el('conversations').append(new Option(new Date(s.created).toLocaleString(),s.id));el('conversations').value=state.session;el('turns').replaceChildren();for(const t of state.turns){const div=document.createElement('div');div.className='turn '+t.role;const name=document.createElement('strong');name.textContent=t.role==='user'?'You':'MAIA';div.append(name,document.createTextNode(t.content));el('turns').append(div);}el('turns').scrollTop=el('turns').scrollHeight;}
+function updateList(){el('works').replaceChildren(new Option('Choose your writing',''));for(const c of state.manuscripts)el('works').append(new Option(c.title,c.id));if(current)el('works').value=current.id;}
+async function refresh(id){state=await api('/api/state');updateList();renderTurns();const c=state.manuscripts.find(c=>c.id===(id||current?.id));if(c)showChapter(c);}
+async function saved(c){await api('/api/select',{id:c.id});await refresh(c.id);status('Saved locally.');}
+el('works').onchange=()=>{if(dirty()){el('works').value=current.id;status('Save your changes before switching writing.');return;}const c=state.manuscripts.find(c=>c.id===el('works').value);if(c)act(async()=>{await api('/api/select',{id:c.id});showChapter(c);});};
+el('manuscript').oninput=()=>{proposal=null;el('proposal').hidden=true;controls();};
+el('new').onclick=()=>{if(dirty()){status('Save your changes before beginning another piece.');return;}el('new-dialog').showModal();el('new-title').focus();};
+el('cancel-new').onclick=()=>el('new-dialog').close();
+el('new-form').onsubmit=e=>{e.preventDefault();act(async()=>{const c=await api('/api/new',{title:el('new-title').value,body:''});el('new-dialog').close();el('new-title').value='';await saved(c);});};
+el('save').onclick=()=>act(async()=>saved(await api('/api/save',{id:current.id,body:el('manuscript').value,revision:current.revision})));
+el('undo').onclick=()=>act(async()=>{await saved(await api('/api/undo',{id:current.id,revision:current.revision}));status('Previous saved text restored. The history is preserved.');});
+el('suggest').onclick=()=>act(async()=>{
+ const area=el('manuscript');const start=area.selectionStart;const end=area.selectionEnd;
+ status('MAIA is considering your selected passage locally…');
+ proposal=await api('/api/suggest',{id:current.id,revision:current.revision,start:start===end?0:start,end:start===end?current.body.length:end,instruction:el('intention').value});
+ el('original').textContent=proposal.original;el('replacement').textContent=proposal.replacement;el('reason').textContent=proposal.reason;el('proposal').hidden=false;status('A suggestion is ready. Your manuscript has not changed.');
+});
+el('apply').onclick=()=>act(async()=>{if(!proposal)throw Error('Ask for a current suggestion first');await saved(await api('/api/apply',{proposal:proposal.id}));status('Applied and saved. Undo is available.');});
+el('ignore').onclick=()=>{proposal=null;el('proposal').hidden=true;status('Your original passage is protected.');};
+el('history').onclick=()=>act(async()=>{versions=await api('/api/versions?id='+encodeURIComponent(current.id));el('version').replaceChildren();for(const v of versions)el('version').append(new Option('Version '+v.revision+' · '+v.action+' · '+new Date(v.created_at).toLocaleString(),v.revision));el('version-body').textContent=versions[0].body;el('versions').hidden=false;status('Saved versions opened.');});
+el('version').onchange=()=>{el('version-body').textContent=versions.find(v=>v.revision===Number(el('version').value)).body;};
+el('close-history').onclick=()=>el('versions').hidden=true;
+el('restore').onclick=()=>act(async()=>{if(dirty())throw Error('Save your changes before restoring a version');await saved(await api('/api/restore',{id:current.id,revision:current.revision,targetRevision:Number(el('version').value)}));status('Selected version restored and saved as a new version.');});
+el('export').onclick=()=>act(async()=>{if(dirty())throw Error('Save before making a copy.');const result=await window.cabinWriting.saveCopy(current.id);status(result.saved?'Copy saved.':'Save a copy canceled.');});
+el('import').onclick=()=>{if(dirty()){status('Save your changes before importing.');return;}el('file').click();};
+el('file').onchange=()=>act(async()=>{const file=el('file').files[0];if(!file)return;if(!/\.(txt|md)$/i.test(file.name)||file.size>800000)throw Error('Choose a TXT or Markdown file under 800 KB');const body=await file.text();await saved(await api('/api/new',{title:file.name.replace(/\.(txt|md)$/i,''),body,imported:true}));el('file').value='';status('Imported and saved locally.');});
+el('send').onclick=()=>act(async()=>{const message=el('message').value;if(!message.trim())throw Error('Write a message first');status('MAIA is responding locally…');state=await api('/api/chat',{message});renderTurns();el('message').value='';status('MAIA replied. This conversation is saved locally.');});
+el('new-chat').onclick=()=>act(async()=>{state=await api('/api/session',{});renderTurns();status('A new conversation is open. Earlier conversations remain saved and are not used here.');});
+el('resume-chat').onclick=()=>act(async()=>{const id=el('conversations').value;if(!id)throw Error('Choose a saved conversation');state=await api('/api/resume-session',{id});renderTurns();status('Saved conversation resumed. MAIA can use this conversation when you continue.');});
+el('message').onkeydown=e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();el('send').click();}};
+window.addEventListener('beforeunload',e=>{if(dirty()){e.preventDefault();e.returnValue='';}});
+act(async()=>{await refresh();const selected=state.manuscripts.find(c=>c.id===state.selected)||state.manuscripts[0];if(selected)showChapter(selected);status('Your local workspace is ready.');});

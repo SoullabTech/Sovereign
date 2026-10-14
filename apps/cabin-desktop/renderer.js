@@ -7,11 +7,11 @@ async function refresh() {
     const result = await window.cabin.readiness();
     status.textContent = result.canOpen
       ? 'Your local workspace is running. You can open it here.'
-      : 'The local workspace is not running yet. Its connection is still being prepared.';
+      : 'The local workspace is not running yet. Check that another Cabin instance is not already running.';
     document.getElementById('models').textContent = result.models === 'AVAILABLE'
       ? 'Local models are available on this Mac.' : 'Local model availability could not be verified.';
     open.disabled = !result.canOpen;
-  } catch { status.textContent = 'Readiness could not be checked. Try again.'; }
+  } catch { status.textContent = 'The local runtime could not start. Close other Cabin test windows and try again.'; }
   finally { check.disabled = false; }
 }
 check.addEventListener('click', refresh);
