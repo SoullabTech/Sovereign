@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": [
+    "app/api/members/delete-account/route.ts",
+    "components/account/AccountSettings.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}

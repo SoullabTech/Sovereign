@@ -14,6 +14,8 @@ import { query } from '@/lib/db/postgres';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import {isR4fProtectedSessionById} from '@/lib/maia/astrologyConsent/r4fGrantStore';
+import {isLegacyAstroSession} from '@/lib/maia/browserConversationCustody';
 
 const PRIVATE_HISTORY_CACHE = 'private, no-store, max-age=0, must-revalidate';
 /** Member-owned conversation responses are always noncacheable, including errors. */
@@ -69,6 +71,15 @@ export async function GET(request: NextRequest) {
     }
     const userId = memberId;
 
+    // A chart passage shared for one encounter has no cross-session or
+    // ordinary history grant. Unknown legacy astrology IDs are also withheld.
+    if (sessionId && (isLegacyAstroSession(sessionId) ||
+        await isR4fProtectedSessionById(sessionId))) {
+      return privateJson({
+        success:false,error:'protected_session_requires_explicit_authorization',
+      },{status:403});
+    }
+
     // Build query based on provided params
     let sql: string;
     let params: string[];
@@ -79,6 +90,12 @@ export async function GET(request: NextRequest) {
         SELECT id, role, content, created_at as "createdAt"
         FROM conversation_turns
         WHERE user_id = $1 AND session_id = $2
+          AND NOT EXISTS (
+            SELECT 1 FROM (
+              SELECT session_id FROM astro_maia_protected_origins
+              UNION ALL SELECT session_id FROM astro_maia_transfer_grants
+            ) AS r4f WHERE r4f.session_id = conversation_turns.session_id
+          )
         ORDER BY created_at ASC
         LIMIT 100
       `;
@@ -89,6 +106,12 @@ export async function GET(request: NextRequest) {
         SELECT id, role, content, session_id as "sessionId", created_at as "createdAt"
         FROM conversation_turns
         WHERE user_id = $1
+          AND NOT EXISTS (
+            SELECT 1 FROM (
+              SELECT session_id FROM astro_maia_protected_origins
+              UNION ALL SELECT session_id FROM astro_maia_transfer_grants
+            ) AS r4f WHERE r4f.session_id = conversation_turns.session_id
+          )
         ORDER BY created_at DESC
         LIMIT 50
       `;
@@ -99,11 +122,20 @@ export async function GET(request: NextRequest) {
 
     return privateJson({
       success: true,
-      messages: result.rows
+      verifiedMemberId: userId,
+      scope: 'ordinary',
+      messages: result.rows,
     });
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+
+    // If the privacy origin tables cannot be verified, deny content reads.
+    if (message.includes('astro_maia_transfer_grants') ||
+        message.includes('astro_maia_protected_origins')) {
+      return privateJson({success:false,error:'privacy_guard_unavailable'},
+        {status:503});
+    }
 
     // A missing store is not a member with no history. Report the outage.
     if (message.includes('does not exist')) {
@@ -156,6 +188,15 @@ export async function POST(request: NextRequest) {
       return privateJson({ success: true, sanctuary: true });
     }
 
+    // A one-time reviewed chart share cannot use the ordinary turn writer.
+    // The R4F transfer capability remains hard-OFF pending Class A review.
+    if (typeof sessionId === 'string' && sessionId.length>0 &&
+        (isLegacyAstroSession(sessionId) ||
+         await isR4fProtectedSessionById(sessionId))) {
+      return privateJson({success:false,error:'protected_conversation_requires_authorized_route'},
+        {status:403});
+    }
+
     if (!userMessage || !assistantMessage) {
       return privateJson(
         { success: false, error: 'userMessage and assistantMessage required' },
@@ -184,6 +225,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+
+    if (message.includes('astro_maia_transfer_grants') ||
+        message.includes('astro_maia_protected_origins')) {
+      return privateJson({success:false,error:'privacy_guard_unavailable'},
+        {status:503});
+    }
 
     // A failed write must never be presented as a successfully saved turn.
     if (message.includes('does not exist')) {

@@ -13,6 +13,7 @@ import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { recordConsentState } from '@/lib/provenance/consentState';
 import { ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { assertR4gOrdinarySession, R4gSessionHeld } from '@/lib/maia/astrologyConsent/r4gOrdinarySessionGate';
 import { cookies } from 'next/headers';
 
 /**
@@ -88,6 +89,18 @@ export async function POST(request: NextRequest) {
     // synthesised `anon:` identity (see the security note above).
     const effectiveUserId = memberId;
     const effectiveSessionId = sessionId || `voice-${Date.now()}`;
+
+    // R4H: refuse the actual voice session AND stale client-claimed Astrology
+    // sessions before any durable persistence, including one-sided voice turns.
+    try {
+      await assertR4gOrdinarySession(effectiveSessionId, clientSessionId);
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'astrology_conversation_not_authorized' },
+        { status: error instanceof R4gSessionHeld ? 403 : 503,
+          headers: { 'Cache-Control': 'private, no-store' } },
+      );
+    }
 
     // One exchange identity per member action, shared by both writers below —
     // the direct TurnsStore.addExchange and addConversationExchange, which

@@ -17,6 +17,7 @@ import {
   type BirthData,
   type BirthChart,
   type PlanetPosition,
+  type PlanetMotionStatus,
 } from '@/lib/astrology/ephemerisCalculator';
 import {
   type AstroEvent,
@@ -63,7 +64,8 @@ export interface CurrentTransit {
   planet: string;
   sign: string;
   degree: number;
-  retrograde: boolean;
+  retrograde: boolean; // Legacy only: must not assert known direction without motionStatus.
+  motionStatus?: PlanetMotionStatus;
   significantAspects?: string[];
 }
 
@@ -138,8 +140,17 @@ const CHIRON_HOUSE_WOUNDS: Record<number, string> = {
  * Get complete astrology context for a user
  */
 export async function getAstrologyContextForUser(memberId: string): Promise<AstrologyContext | null> {
-  console.log(`[AstrologyContext] Loading for member: ${memberId?.substring(0, 8)}...`);
+  // Do not log identifying fragments before an Astrology consent check.
   try {
+    // Privacy invariant: implicit MAIA context is NOT consent to expose a natal
+    // chart. Check the separate standing Astrology opt-in before fetching any
+    // stored birth coordinates or calculating an astronomical context. Failure
+    // to verify consent is a refusal, not permission via a cached birth date.
+    const consentResult = await query(
+      'SELECT astrology_consent FROM members WHERE id = $1 LIMIT 1', [memberId],
+    );
+    if (consentResult.rows[0]?.astrology_consent !== 'opted_in') return null;
+
     // Fetch birth data from members table
     const result = await query(
       `SELECT birth_date, birth_time, birth_location_lat, birth_location_lng,
@@ -239,12 +250,20 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
       currentTransits,
       transitHighlights,
       relevantPatterns,
+      calculatedMoonPhase: moonPhase,
       birthTimeUnknown: !member.birth_time,
       celestialEvents,
     });
 
-    // Append stored Spiralogic Report summary if available
+    // Append stored Spiralogic Report summary only while the owner retains
+    // standing Astrology consent. Recheck just before any MAIA-bound return
+    // so an opt-out during slower chart computation cannot disclose the
+    // stale context to a conversation.
     const reportSummary = await loadSpiralogicReportSummary(memberId);
+    const latestConsent = await query(
+      'SELECT astrology_consent FROM members WHERE id = $1 LIMIT 1', [memberId],
+    );
+    if (latestConsent.rows[0]?.astrology_consent !== 'opted_in') return null;
 
     return {
       hasBirthData,
@@ -268,47 +287,29 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
 }
 
 /**
- * Get current planetary positions
+ * Read current geocentric planetary facts for MAIA, without an invented
+ * calendar-derived Sun position if the ephemeris is unavailable.
+ * Exported with a controllable instant for deterministic synthetic testing.
  */
-async function getCurrentTransitPositions(): Promise<CurrentTransit[]> {
+export async function getCurrentTransitPositions(
+  date: Date = new Date(),
+): Promise<CurrentTransit[]> {
   try {
-    const transitsMap = await calculateTransits(new Date());
-    // Convert from Record<string, PlanetPosition> to CurrentTransit[]
+    const transitsMap = await calculateTransits(date);
     return Object.entries(transitsMap).map(([planet, pos]) => ({
-      planet: planet.charAt(0).toUpperCase() + planet.slice(1), // Capitalize planet name
+      planet: planet.charAt(0).toUpperCase() + planet.slice(1),
       sign: pos.sign,
       degree: pos.degree,
       retrograde: pos.retrograde,
+      motionStatus: pos.motionStatus ?? 'not-evaluated',
     }));
-  } catch (error) {
-    console.warn('[AstrologyContext] Transit calculation failed, using fallback:', error);
-    // Fallback: return basic current sky info
-    return getSimplifiedCurrentTransits();
+  } catch {
+    // The absence of verified astronomy must remain absence. The old fallback
+    // fabricated a Sun sign and degree from the calendar day and made it
+    // available to MAIA as a known source fact.
+    console.warn('[AstrologyContext] Current astronomical positions unavailable');
+    return [];
   }
-}
-
-/**
- * Simplified transit calculation fallback
- */
-function getSimplifiedCurrentTransits(): CurrentTransit[] {
-  const now = new Date();
-  const month = now.getMonth();
-  const day = now.getDate();
-
-  // Approximate Sun position based on date
-  const sunSigns = [
-    'Capricorn', 'Aquarius', 'Pisces', 'Aries', 'Taurus', 'Gemini',
-    'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn'
-  ];
-
-  // Simplified sun sign calculation
-  let sunSignIndex = month;
-  if (day >= 20) sunSignIndex = (month + 1) % 12;
-
-  return [
-    { planet: 'Sun', sign: sunSigns[sunSignIndex], degree: day, retrograde: false },
-    // Note: For accurate transits, the full ephemeris calculation should be used
-  ];
 }
 
 /**
@@ -358,9 +359,9 @@ function generateTransitHighlights(
 
   // Check for Mercury retrograde
   const mercury = transits.find(t => t.planet === 'Mercury');
-  if (mercury?.retrograde) {
+  if (mercury?.motionStatus === 'retrograde') {
     highlights.push({
-      description: 'Mercury is currently retrograde - a natural time for miscommunications, technology issues, and revisiting past conversations',
+      description: 'Symbolic tradition: Mercury retrograde can invite reflection on communication; it does not predict misunderstandings or technology failures.',
       relevance: 'high',
       theme: 'communication',
     });
@@ -368,9 +369,9 @@ function generateTransitHighlights(
 
   // Check for Venus retrograde
   const venus = transits.find(t => t.planet === 'Venus');
-  if (venus?.retrograde) {
+  if (venus?.motionStatus === 'retrograde') {
     highlights.push({
-      description: 'Venus retrograde period - relationships and values are being reconsidered, past connections may resurface',
+      description: 'Symbolic tradition: Venus retrograde is sometimes explored through themes of relationships and values, without predicting personal events.',
       relevance: 'high',
       theme: 'relationships',
     });
@@ -378,9 +379,9 @@ function generateTransitHighlights(
 
   // Check for Mars retrograde
   const mars = transits.find(t => t.planet === 'Mars');
-  if (mars?.retrograde) {
+  if (mars?.motionStatus === 'retrograde') {
     highlights.push({
-      description: 'Mars retrograde - energy may feel blocked or redirected, patience with action is favored',
+      description: 'Symbolic tradition: Mars retrograde is sometimes explored through themes of action and reflection; it does not establish a personal blockage.',
       relevance: 'medium',
       theme: 'action',
     });
@@ -432,6 +433,7 @@ function formatAstrologyContextForMAIA({
   currentTransits,
   transitHighlights,
   relevantPatterns,
+  calculatedMoonPhase,
   birthTimeUnknown,
   celestialEvents,
 }: {
@@ -442,6 +444,7 @@ function formatAstrologyContextForMAIA({
   currentTransits: CurrentTransit[];
   transitHighlights: TransitHighlight[];
   relevantPatterns: string[];
+  calculatedMoonPhase: { phase: string; percentage: number; meaning: string };
   birthTimeUnknown: boolean;
   celestialEvents?: CelestialEventsSnapshot | null;
 }): FormattedAstrologyContext {
@@ -452,7 +455,8 @@ function formatAstrologyContextForMAIA({
     if (birthChart) {
       statusDirective =
         '**BIRTH DATA: ON FILE** — Do not ask for birth date, time, or location. ' +
-        'You already have their natal chart — reference it directly. ' +
+        'The natal chart is available only for member-invited inquiry; ' +
+        'do not assume that chart symbolism defines the person. ' +
         'If uncertain about a specific detail, proceed with what is available and ' +
         'suggest /astrology (Cosmic Blueprint) or /journey (Spiralogic map) for ' +
         'verification. Never re-ask.';
@@ -471,36 +475,37 @@ function formatAstrologyContextForMAIA({
       'details or visit /astrology to enter them, but only if cosmically relevant.';
   }
 
-  const header = `\n# Astrological Context (IMPLICIT)\n\n${statusDirective}\n`;
+  const header = `\n# Astrology Context (standing consent confirmed)\n\n${statusDirective}\n` +
+    '**Boundary:** Planet positions and sky events are calculated facts; traditional meanings are optional symbolic perspectives, not causal evidence or statements about the member. Their own words govern personal meaning. Do not assign a diagnosis, stage, destiny or experience. Do not introduce astrology without invitation.\n';
 
   // ── BLOCK B: Detail — natal identity first ────────────────────────────────
   let detail = '';
 
   // 1. Natal identity — most important, goes first so truncation can't touch it
   if (birthChart) {
-    detail += '\n## Natal Identity\n';
+    detail += '\n## Calculated Natal Positions (astronomy, not identity claims)\n';
     if (birthTimeUnknown) {
-      detail += '*Birth time unknown — house placements are approximate*\n';
+      detail += '*Birth time unknown — house/Ascendant positions are provisional; do not assert them as exact.*\n';
     }
-    detail += `- **Sun:** ${birthChart.sun.sign} H${birthChart.sun.house} — core identity, vitality\n`;
-    detail += `- **Moon:** ${birthChart.moon.sign} H${birthChart.moon.house} — emotional nature, inner needs\n`;
-    detail += `- **Rising:** ${birthChart.ascendant.sign} — how they meet the world\n`;
+    detail += `- **Sun:** ${birthChart.sun.sign} H${birthChart.sun.house}\n`;
+    detail += `- **Moon:** ${birthChart.moon.sign} H${birthChart.moon.house}\n`;
+    detail += `- **Ascendant:** ${birthChart.ascendant.sign}\n`;
 
     detail += '\n## Personal Planets\n';
-    detail += `- Mercury: ${birthChart.mercury.sign} H${birthChart.mercury.house} — mind, communication\n`;
-    detail += `- Venus: ${birthChart.venus.sign} H${birthChart.venus.house} — love, values, pleasure\n`;
-    detail += `- Mars: ${birthChart.mars.sign} H${birthChart.mars.house} — drive, action, desire\n`;
+    detail += `- Mercury: ${birthChart.mercury.sign} H${birthChart.mercury.house}\n`;
+    detail += `- Venus: ${birthChart.venus.sign} H${birthChart.venus.house}\n`;
+    detail += `- Mars: ${birthChart.mars.sign} H${birthChart.mars.house}\n`;
 
     detail += '\n## Outer Planets\n';
     detail += `- Jupiter ${birthChart.jupiter.sign} H${birthChart.jupiter.house} · Saturn ${birthChart.saturn.sign} H${birthChart.saturn.house}\n`;
     detail += `- Uranus ${birthChart.uranus.sign} H${birthChart.uranus.house} · Neptune ${birthChart.neptune.sign} H${birthChart.neptune.house} · Pluto ${birthChart.pluto.sign} H${birthChart.pluto.house}\n`;
 
-    detail += '\n## Soul Axis & Wounds\n';
-    detail += `- North Node: ${birthChart.northNode.sign} H${birthChart.northNode.house} — growth direction\n`;
-    detail += `- South Node: ${birthChart.southNode.sign} H${birthChart.southNode.house} — past patterns\n`;
-    detail += `- Chiron: ${birthChart.chiron.sign} H${birthChart.chiron.house} — ${CHIRON_HOUSE_WOUNDS[birthChart.chiron.house] || 'core wound & healing gift'}\n`;
+    detail += '\n## Lunar Nodes and Approximate Minor Bodies\n';
+    detail += `- North Node (approximate): ${birthChart.northNode.sign} H${birthChart.northNode.house}\n`;
+    detail += `- South Node (approximate): ${birthChart.southNode.sign} H${birthChart.southNode.house}\n`;
+    detail += `- Chiron (approximate): ${birthChart.chiron.sign} H${birthChart.chiron.house}\n`;
     if (birthChart.lilith) {
-      detail += `- Lilith: ${birthChart.lilith.sign} H${birthChart.lilith.house} — primal feminine, shadow\n`;
+      detail += `- Lilith (approximate): ${birthChart.lilith.sign} H${birthChart.lilith.house}\n`;
     }
 
     // Key aspects (top 5 only — compact)
@@ -510,9 +515,9 @@ function formatAstrologyContextForMAIA({
         .filter(a => keyPlanets.includes(a.planet1.toLowerCase()) || keyPlanets.includes(a.planet2.toLowerCase()))
         .slice(0, 5);
       if (significantAspects.length > 0) {
-        detail += '\n## Key Aspects\n';
+        detail += '\n## Calculated Aspects — Optional Symbolic Tradition\n';
         significantAspects.forEach(a => {
-          detail += `- ${a.planet1} ${a.type} ${a.planet2} (${a.orb.toFixed(1)}°) — ${getAspectMeaning(a.type)}\n`;
+          detail += `- Calculated: ${a.planet1} ${a.type} ${a.planet2} (${a.orb.toFixed(1)}°). Traditional possibility: ${getAspectMeaning(a.type)} (not a statement of lived experience).\n`;
         });
       }
     }
@@ -521,35 +526,44 @@ function formatAstrologyContextForMAIA({
     const el = calculateElementalBalance(birthChart);
     const dom = Object.entries(el).sort((a, b) => b[1] - a[1])[0];
     const weak = Object.entries(el).sort((a, b) => a[1] - b[1])[0];
-    detail += `\n**Elemental Temperament:** Fire ${el.fire} · Earth ${el.earth} · Air ${el.air} · Water ${el.water} | Dominant: ${dom[0]} · Growth edge: ${weak[0]}\n`;
+    detail += `\n**Symbolic elemental synthesis (not a personality measurement):** Fire ${el.fire} · Earth ${el.earth} · Air ${el.air} · Water ${el.water}; modelled emphasis ${dom[0]}, least represented ${weak[0]}. Let the member test any meaning.\n`;
 
     if (relevantPatterns.length > 0) {
-      detail += '\n**Patterns:**\n';
+      detail += '\n**Optional symbolic hypotheses — never prescribe a member identity:**\n';
       relevantPatterns.forEach(p => { detail += `- ${p}\n`; });
     }
   }
 
   // 2. Mayan profile (condensed — 3 key lines)
   if (mayanProfile) {
-    detail += '\n## Mayan Profile\n';
+    detail += '\n## Mayan Symbolic Tradition (not scientific astronomy)\n';
     detail += `- Birth sign: ${mayanProfile.tzolkin.tone} ${mayanProfile.tzolkin.daySign.name} — ${mayanProfile.tzolkin.daySign.meaning}\n`;
     detail += `- Adulthood pillar: ${mayanProfile.pathOfLife.adulthood.tone} ${mayanProfile.pathOfLife.adulthood.daySign.name}\n`;
-    detail += `- Life phase: ${mayanProfile.lifeCycleInsight}\n`;
+    detail += `- Traditional life-phase symbolism: ${mayanProfile.lifeCycleInsight} (not a prediction)\n`;
   }
 
   // 3. Current sky — after personal data so natal identity is prioritised
   detail += '\n## Current Sky\n';
   if (celestialEvents?.currentMoonPhase) {
     const mp = celestialEvents.currentMoonPhase;
-    detail += `**Moon:** ${mp.phase} (${mp.illumination}% illuminated) — ${mp.meaning}\n`;
+    detail += `**Calculated Moon:** ${mp.phase} (${mp.illumination}% illuminated) [source: astronomy].\n`;
+    detail += `**Symbolic tradition:** ${mp.meaning}; the member decides if this resonates.\n`;
   } else {
-    const mp = getMoonPhase();
-    detail += `**Moon:** ${mp.phase} (${mp.percentage}% illuminated) — ${mp.meaning}\n`;
+    detail += `**Calculated Moon:** ${calculatedMoonPhase.phase} (${calculatedMoonPhase.percentage}% illuminated) [source: astronomy].\n`;
+    detail += `**Symbolic tradition:** ${calculatedMoonPhase.meaning}; the member decides if this resonates.\n`;
   }
 
-  const retrogrades = currentTransits.filter(t => t.retrograde);
+  const retrogrades = currentTransits.filter(t => t.motionStatus === 'retrograde');
+  const stations = currentTransits.filter(t => t.motionStatus === 'stationary-uncertain');
   if (retrogrades.length > 0) {
-    detail += `**Retrograde:** ${retrogrades.map(p => p.planet).join(', ')}\n`;
+    detail += `**Calculated Apparent Retrograde (provisional):** ${retrogrades.map(p => p.planet).join(', ')}\n`;
+  }
+
+  if (stations.length) {
+    detail += `**Near-station uncertainty:** ${stations.map(p => p.planet).join(', ')}. Direction is unresolved; do not assert retrograde/direct or infer human experience.\n`;
+  }
+  if (!currentTransits.length) {
+    detail += '**Current planetary positions unavailable:** Do not infer or substitute sky facts from dates, remembered patterns or model knowledge.\n';
   }
 
   transitHighlights.filter(h => h.relevance === 'high').forEach(h => {
@@ -579,7 +593,7 @@ function formatAstrologyContextForMAIA({
   detail += `- Regular conversation: don't proactively mention astrology unless asked\n`;
   detail += `- Full assessments: weave astrological insights implicitly\n`;
   detail += `- Explicit requests: share openly and specifically\n`;
-  detail += `- Always prioritise their lived experience — astrology is one lens\n`;
+  detail += `- Always prioritize the member's lived experience and corrections; astrology is one optional lens, never a diagnosis, destiny, or obligation\n`;
 
   return { header, detail };
 }
@@ -1043,9 +1057,9 @@ export function detectAstrologicalRelevance(
       lowerMessage.includes('technology') ||
       lowerMessage.includes('phone') ||
       lowerMessage.includes('computer')) &&
-    context.currentTransits.some(t => t.planet === 'Mercury' && t.retrograde)
+    context.currentTransits.some(t => t.planet === 'Mercury' && t.motionStatus === 'retrograde')
   ) {
-    relevantInsights.push('Mercury is retrograde, which may be amplifying communication challenges');
+    relevantInsights.push('Symbolic tradition: Mercury retrograde can invite questions about communication; this is not evidence of any actual difficulties.');
   }
 
   // Relationship themes + Venus patterns

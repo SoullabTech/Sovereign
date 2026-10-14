@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": [
+    "next-env.d.ts",
+    "lib/types/speechRecognition.d.ts",
+    "lib/**/*.d.ts",
+    "app/**/*.d.ts",
+    "components/OracleConversation.tsx",
+    "app/astrology/pro-preview/ProAstrologyExperience.tsx",
+    "app/astrology/pro-preview/CelestialChartWheel.tsx",
+    "app/astrology/pro-preview/SoulPortraitGifting.tsx",
+    "lib/maia/browserConversationCustody.ts",
+    "app/api/conversation/turns/route.ts",
+    "lib/maia/astrologyConsent/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

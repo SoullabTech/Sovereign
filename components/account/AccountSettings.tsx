@@ -201,6 +201,7 @@ export function AccountSettings() {
   // Delete account state
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Settings applied confirmation
   const [settingsApplied, setSettingsApplied] = useState(false);
@@ -822,6 +823,7 @@ export function AccountSettings() {
   const deleteAccount = useCallback(async () => {
     if (!userId || !profile || deleteConfirm !== profile.username) return;
     setDeleting(true);
+    setDeleteError(null);
 
     try {
       const res = await apiFetch('/api/members/delete-account', {
@@ -841,9 +843,19 @@ export function AccountSettings() {
         localStorage.removeItem('maia_settings');
         localStorage.removeItem('maia_account_settings');
         window.location.href = '/';
+      } else {
+        // A refused deletion is not a completed request. Never imply that
+        // account erasure or backup suppression happened.
+        const result = await res.json().catch(() => null);
+        setDeleteError(
+          typeof result?.message === 'string'
+            ? result.message
+            : 'Account deletion is currently unavailable. Your account was not changed. Please contact support.',
+        );
       }
     } catch (err) {
-      console.error('[AccountSettings] Delete error:', err);
+      console.error('[AccountSettings] Delete status check failed', err);
+      setDeleteError('Unable to verify account deletion. Please contact support. No deletion was confirmed.');
     } finally {
       setDeleting(false);
     }
@@ -2725,7 +2737,7 @@ export function AccountSettings() {
           <div className="flex-1">
             <h4 className="text-sm font-medium text-red-300">Delete Account</h4>
             <p className="text-xs text-stone-400 mt-1 mb-3">
-              Permanently delete your account and all associated data. This cannot be undone.
+              Automatic account deletion is temporarily unavailable while protected-data and recovery safeguards are being verified. You can check the current status here; no data will be deleted by this check.
             </p>
             <input
               type="text"
@@ -2740,8 +2752,13 @@ export function AccountSettings() {
               className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               whileTap={{ scale: 0.98 }}
             >
-              {deleting ? 'Deleting...' : 'Delete My Account'}
+              {deleting ? 'Checking...' : 'Check Deletion Status'}
             </motion.button>
+            {deleteError && (
+              <p role="alert" className="mt-3 text-sm text-amber-200">
+                {deleteError}
+              </p>
+            )}
           </div>
         </div>
       </div>

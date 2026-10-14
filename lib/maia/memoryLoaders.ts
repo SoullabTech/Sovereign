@@ -101,6 +101,8 @@ export async function loadRecentDevelopmentalMemories(
       `SELECT id, memory_type, facet_code, significance, formed_at, content_text
        FROM developmental_memories
        WHERE user_id = $1
+         AND origin_scope = 'ordinary'
+         AND source_session_id IS NOT NULL
          AND (valid_to IS NULL)
        ORDER BY significance DESC, formed_at DESC
        LIMIT $2`,
@@ -149,6 +151,12 @@ export async function loadRecentThemeSignals(
       `SELECT theme, signal_type, resonance_strength, element, detected_at
        FROM member_theme_signals
        WHERE member_id = $1
+         AND origin_scope = 'ordinary'
+         AND session_id IS NOT NULL
+         AND NOT EXISTS (
+           SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) g
+           WHERE g.session_id = member_theme_signals.session_id
+         )
        ORDER BY detected_at DESC
        LIMIT $2`,
       [userId, limit],
@@ -208,6 +216,10 @@ export async function loadPriorCrossSessionExchanges(
       `SELECT session_id, role, created_at, LEFT(content, 600) AS content
        FROM conversation_turns
        WHERE user_id = $1
+         AND NOT EXISTS (
+          SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) AS r4f
+          WHERE r4f.session_id = conversation_turns.session_id
+        )
          AND session_id IS NOT NULL
          AND ($2::text IS NULL OR session_id <> $2)
        ORDER BY created_at DESC

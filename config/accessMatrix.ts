@@ -380,6 +380,9 @@ export const ACCESS_RULES: AccessRule[] = [
   // HOUSE-PREFERENCES-01: member presentation only; ownership is resolved again in the reader.
   { exact: '/house', minTier: 'free', notes: 'Member House orientation' },
   { exact: '/api/house/preferences', minTier: 'free', notes: 'Verified member-owned House presentation preferences' },
+  // ASTRO-R4 privacy: the outer proxy requires an authenticated member.
+  // Source-owned chart endpoint enforces preview cohort, ownership and consent.
+  { exact: '/api/astrology/pro/my-chart', minTier: 'free', notes: 'Astro Pro owned chart requires verified member and independent consent/preview gate' },
   { exact: '/api/early-field/admission', minTier: 'free', notes: 'EARLY-FIELD-01 — server-side admission to the early Living Field instrument; authenticated members only; answers a boolean from the session, never a client claim' },
   { exact: '/api/house-studio/admission', minTier: 'free', notes: 'H1 — server-side admission to explicit House → Writer’s Studio Work-context arrival; authenticated members only; session-derived boolean only' },
   { exact: '/decisions', minTier: 'free', notes: 'Personal Decision Council — member-owned reflection' },

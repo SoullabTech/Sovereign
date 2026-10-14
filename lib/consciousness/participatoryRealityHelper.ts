@@ -109,8 +109,15 @@ export function storeThemeSignal(
   const sql = `
     INSERT INTO member_theme_signals (
       member_id, session_id, journal_entry_id,
-      theme, signal_type, resonance_strength, element, context
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      theme, signal_type, resonance_strength, element, context, origin_scope
+    )
+    SELECT $1, $2, $3, $4, $5, $6, $7, $8, 'ordinary'
+    WHERE $2::text IS NOT NULL
+      AND $2::text NOT LIKE 'astrology-pro-preview-%'
+      AND NOT EXISTS (
+        SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) AS g
+        WHERE g.session_id = $2::text
+      )
   `;
 
   query(sql, [
@@ -157,6 +164,12 @@ export async function getRecentThemes(
         context, detected_at
       FROM member_theme_signals
       WHERE member_id = $1
+        AND origin_scope = 'ordinary'
+        AND session_id IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) g
+           WHERE g.session_id = member_theme_signals.session_id
+        )
         AND detected_at > NOW() - INTERVAL '${days} days'
       ORDER BY detected_at DESC
       LIMIT $2`,

@@ -11,6 +11,8 @@
  */
 
 import { randomUUID } from 'crypto';
+import { assertR4gOrdinarySession } from '@/lib/maia/astrologyConsent/r4gOrdinarySessionGate';
+import { excludeProtectedDevelopmentalMemories } from '@/lib/maia/astrologyConsent/r4gDerivedProvenance';
 import { query } from '@/lib/db/postgres';
 import { TurnsStore } from './stores/TurnsStore';
 import { generateLocalEmbedding } from './embeddings';
@@ -119,6 +121,8 @@ export const MemoryBundleService = {
       userId, currentInput, sessionId, traceId, facet, scope = 'cross_session', maxBullets = 5,
       recordRetrievedCandidates = true,
     } = input;
+    // A protected source conversation cannot fall into ordinary memory retrieval.
+    await assertR4gOrdinarySession(sessionId);
     const retrievalId = randomUUID();
 
     console.log(`📦 [MemoryBundle] Building for user: ${memberRef(userId)}`);
@@ -237,6 +241,10 @@ export const MemoryBundleService = {
         SELECT id, role, content, created_at as "createdAt", session_id as "sessionId"
         FROM conversation_turns
         WHERE user_id = $1
+          AND NOT EXISTS (
+          SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) AS r4f
+          WHERE r4f.session_id = conversation_turns.session_id
+        )
           AND session_id <> $2
         ORDER BY created_at DESC
         LIMIT 12
@@ -278,7 +286,10 @@ export const MemoryBundleService = {
       }
 
       if (nonVectorResult.rows && nonVectorResult.rows.length > 0) {
-        const candidates = nonVectorResult.rows.map((row: any) => ({
+        // Score oracle unchanged. Exclude protected lineage before prompts.
+        const eligibleRows = await excludeProtectedDevelopmentalMemories(
+          userId, nonVectorResult.rows as Array<{ id: string }>);
+        const candidates = eligibleRows.map((row: any) => ({
           id: row.id,
           content: row.content_text,
           source: 'developmental' as const,
@@ -338,6 +349,8 @@ export const MemoryBundleService = {
           ) AS composite_score
         FROM developmental_memories
         WHERE user_id = $2
+          AND origin_scope = 'ordinary'
+          AND source_session_id IS NOT NULL
           AND vector_embedding IS NOT NULL
         ORDER BY composite_score DESC
         LIMIT 8
@@ -345,7 +358,10 @@ export const MemoryBundleService = {
 
       const vectorResult = await query(vectorSql, [`[${embedding.join(',')}]`, userId]);
 
-      return (vectorResult.rows || []).map(row => ({
+      const eligibleVectorRows = await excludeProtectedDevelopmentalMemories(
+        userId, vectorResult.rows || [],
+      );
+      return eligibleVectorRows.map(row => ({
         id: row.id,
         content: row.content_text || '',
         source: 'developmental' as const,
@@ -379,6 +395,17 @@ export const MemoryBundleService = {
         SELECT id, timestamp, insight, element, integrated, related_themes
         FROM breakthrough_moments
         WHERE user_id = $1
+          AND breakthrough_moments.origin_scope = 'ordinary'
+          AND breakthrough_moments.source_session_id IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) AS grant
+            WHERE grant.session_id = breakthrough_moments.source_session_id
+               OR EXISTS (
+                 SELECT 1 FROM conversation_turns AS source
+                 WHERE source.exchange_id = breakthrough_moments.source_exchange_id
+                   AND source.session_id = grant.session_id
+               )
+          )
         ORDER BY integrated ASC, timestamp DESC
         LIMIT 5
       `, [userId]);

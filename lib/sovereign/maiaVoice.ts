@@ -446,10 +446,13 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'guestContextAddendum',            log: () => `👤 [Guest] Context limitation note injected` },
   { field: 'journalContextAddendum',          log: () => `📓 [Journal] Context injected` },
   { field: 'captureContextAddendum',          log: () => `📸 [Capture] Context injected` },
-  { field: 'astrologicalContextAddendum',     log: () => `🌟 [Astrology] Birth data available for personalized cosmic context` },
+  // ASTRO-R4e: no hidden natal/sky addendum is admitted by ambient prompt
+  // assembly, including stale or client-authored MaiaContext fields. The only
+  // current approved crossing is exact member-reviewed user message text.
   { field: 'spiralSnapshotAddendum',          log: () => `🌀 [Spiral Snapshot] Applied: computed state anchor injected` },
-  { field: 'wuxingSnapshotAddendum',          log: () => `🌿 [Wu Xing Snapshot] Applied: Five Element state injected` },
-  { field: 'bridgeSnapshotAddendum',          log: () => `🌉 [Bridge Snapshot] Applied: Spiral × Wu Xing integrated` },
+  // ASTRO-R4K: Wu Xing/BaZi birth-derived and combined Bridge context require
+  // an independently verified current-turn disclosure grant. An unsolicited
+  // MaiaContext field must not bypass the same server-side privacy boundary.
   { field: 'therapeuticFrameworkAddendum',    log: v => `🧘 [Therapeutic Framework] Applied: ${v.split('\n')[0]}` },
   { field: 'reflectionLensAddendum',          log: v => `🔮 [Reflection Lens] Applied: ${v.split('\n')[0]}` },
   { field: 'epistemicPathAddendum',           log: v => `🧭 [Epistemic Path] Applied: ${v.split('\n')[0]}` },

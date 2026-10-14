@@ -10,6 +10,7 @@ interface TransitPosition {
   sign: string;
   degree: number;
   retrograde?: boolean;
+  motionStatus?: 'direct' | 'retrograde' | 'stationary-uncertain' | 'not-evaluated';
 }
 
 interface TransitAspect {
@@ -121,11 +122,18 @@ export function CurrentTransitsField({
                 <small>{transit.planet}</small>
                 <strong>
                   {transit.sign} · {transit.degree.toFixed(1)}°
-                  {transit.retrograde ? ' ℞' : ''}
+                  {transit.motionStatus === 'retrograde' ? ' ℞' : ''}
+                  {transit.motionStatus === 'stationary-uncertain' ? ' · station: direction uncertain' : ''}
+                  {transit.motionStatus === 'not-evaluated' ? ' · motion unverified' : ''}
+                  {transit.motionStatus === undefined && transit.retrograde ? ' · legacy motion unverified' : ''}
                 </strong>
               </div>
             ))}
           </div>
+
+          {sky.some((transit) => transit.motionStatus === 'stationary-uncertain') && (
+            <p className={styles.status} role="status">Close to a planetary station, movement direction cannot be stated with confidence. The symbol remains available for exploration; motion is not a prediction.</p>
+          )}
 
           {variant === 'astrology' && activeAspects.length > 0 ? (
             <div className={styles.activations}>

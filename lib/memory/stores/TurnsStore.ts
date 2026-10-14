@@ -71,6 +71,10 @@ export const TurnsStore = {
         created_at as "createdAt"
       FROM conversation_turns
       WHERE user_id = $1
+        AND NOT EXISTS (
+          SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) AS r4f
+          WHERE r4f.session_id = conversation_turns.session_id
+        )
       ORDER BY created_at DESC, seq DESC
       LIMIT $2
       `,
@@ -96,6 +100,12 @@ export const TurnsStore = {
         created_at as "createdAt"
       FROM conversation_turns
       WHERE session_id = $1 AND user_id = $2
+        AND NOT EXISTS (
+          SELECT 1 FROM (
+            SELECT session_id FROM astro_maia_protected_origins
+            UNION ALL SELECT session_id FROM astro_maia_transfer_grants
+          ) AS r4f WHERE r4f.session_id=conversation_turns.session_id
+        )
       ORDER BY created_at ASC, seq ASC
       `,
       [sessionId, memberId]
@@ -124,7 +134,10 @@ export const TurnsStore = {
     const result = await query<{ id: string }>(
       `
       INSERT INTO conversation_turns (user_id, session_id, role, content, posture_at_creation, provenance)
-      VALUES ($1, $2, $3, $4, 'normal', $5::jsonb)
+      SELECT $1, $2, $3, $4, 'normal', $5::jsonb
+      WHERE NOT EXISTS (
+        SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) r4f WHERE r4f.session_id = $2
+      )
       RETURNING id
       `,
       [
@@ -212,9 +225,12 @@ export const TurnsStore = {
       return false; // mint refused — no durable object without provenance (S5)
     }
     const seq = opts.role === 'user' ? 0 : 1;
-    await query(
+    const inserted = await query(
       `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance)
-       VALUES ($1, $2, $3, $4, $5, $6, clock_timestamp(), 'normal', $7::jsonb)
+       SELECT $1, $2, $3, $4, $5, $6, clock_timestamp(), 'normal', $7::jsonb
+       WHERE NOT EXISTS (
+         SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) r4f WHERE r4f.session_id = $2
+       )
        ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
       [
         opts.userId,
@@ -226,7 +242,69 @@ export const TurnsStore = {
         JSON.stringify(provenance.toJson()),
       ]
     );
-    return true;
+    if (inserted.rowCount === 1) return true;
+    // An idempotent retry of an ALREADY-ACCEPTED ordinary exchange is durable.
+    // A protected-session refusal must NEVER be reported as 'durable'.
+    const existing = await query(
+      `SELECT 1 FROM conversation_turns AS ct
+       WHERE ct.exchange_id = $1 AND ct.seq = $2
+         AND ct.user_id = $3 AND ct.session_id = $4
+         AND NOT EXISTS (
+           SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) r4f
+            WHERE r4f.session_id = ct.session_id
+         )
+       LIMIT 1`,
+      [opts.exchangeId, seq, opts.userId, opts.sessionId ?? null],
+    );
+    return existing.rows.length === 1;
+  },
+
+  /**
+   * R4F protected writer: THE ONLY explicit writer allowed for a consumed
+   * chart-conversation scope. A single SQL statement checks the member,
+   * live chart consent, private session origin and non-revoked grant before
+   * inserting provenance-bound content; no client flag can create authority.
+   * This method is not called by a model route in the source candidate.
+   */
+  async addR4fProtectedTurn(
+    posture: TurnPosture,
+    opts: {
+      userId: string;
+      sessionId: string;
+      role: 'user' | 'assistant';
+      content: string;
+      exchangeId: string;
+    }
+  ): Promise<boolean> {
+    if (!contentWritable(posture, 'TurnsStore.addR4fProtectedTurn', opts.sessionId)) {
+      return false;
+    }
+    const minted = mintTurnProvenance(posture, opts.role, opts.exchangeId, opts.sessionId);
+    if (!minted) return false;
+    const provenance = {
+      ...minted.toJson(),
+      r4f: { scope: 'conversation_only', origin: 'astrology-pro', sessionId: opts.sessionId },
+    };
+    const seq = opts.role === 'user' ? 0 : 1;
+    const result = await query(
+      `INSERT INTO conversation_turns
+        (user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance)
+       SELECT $1, $2, $3, $4, $5, $6, clock_timestamp(), 'normal', $7::jsonb
+         FROM astro_maia_transfer_grants AS grant
+         JOIN members AS member ON member.id = grant.member_id
+        WHERE grant.member_id = $1::uuid
+          AND grant.session_id = $2
+          AND grant.scope = 'conversation_only'
+          AND grant.status = 'consumed'
+          AND member.astrology_consent = 'opted_in'
+       ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING
+       RETURNING id`,
+      [
+        opts.userId, opts.sessionId, opts.role, opts.content,
+        opts.exchangeId, seq, JSON.stringify(provenance),
+      ]
+    );
+    return result.rowCount === 1;
   },
 
   /**
@@ -273,14 +351,20 @@ export const TurnsStore = {
     // own wall-clock value even inside the same transaction.
     await query(
       `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance)
-       VALUES ($1, $2, 'user', $3, $4, 0, clock_timestamp(), 'normal', $5::jsonb)
+       SELECT $1, $2, 'user', $3, $4, 0, clock_timestamp(), 'normal', $5::jsonb
+       WHERE NOT EXISTS (
+         SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) r4f WHERE r4f.session_id = $2
+       )
        ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
       [userId, sessionId ?? null, userMessage, eid, JSON.stringify(userProvenance.toJson())]
     );
     // Assistant turn second (seq=1) — clock_timestamp() will be strictly later
     await query(
       `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance)
-       VALUES ($1, $2, 'assistant', $3, $4, 1, clock_timestamp(), 'normal', $5::jsonb)
+       SELECT $1, $2, 'assistant', $3, $4, 1, clock_timestamp(), 'normal', $5::jsonb
+       WHERE NOT EXISTS (
+         SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) r4f WHERE r4f.session_id = $2
+       )
        ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
       [userId, sessionId ?? null, assistantResponse, eid, JSON.stringify(assistantProvenance.toJson())]
     );
@@ -323,13 +407,25 @@ export const TurnsStore = {
       }
       await client.query(
         `INSERT INTO conversation_turns(user_id,session_id,role,content,exchange_id,seq,created_at,posture_at_creation,provenance)
-         VALUES($1,$2,'user',$3,$4,0,clock_timestamp(),'normal',$5::jsonb)
+         SELECT $1,$2,'user',$3,$4,0,clock_timestamp(),'normal',$5::jsonb
+         WHERE NOT EXISTS (
+           SELECT 1 FROM (
+             SELECT session_id FROM astro_maia_protected_origins
+             UNION ALL SELECT session_id FROM astro_maia_transfer_grants
+           ) AS r4f WHERE r4f.session_id = $2
+         )
          ON CONFLICT(exchange_id,seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
         [userId,sessionId ?? null,userMessage,exchangeId,JSON.stringify(userProv.toJson())]
       );
       await client.query(
         `INSERT INTO conversation_turns(user_id,session_id,role,content,exchange_id,seq,created_at,posture_at_creation,provenance)
-         VALUES($1,$2,'assistant',$3,$4,1,clock_timestamp(),'normal',$5::jsonb)
+         SELECT $1,$2,'assistant',$3,$4,1,clock_timestamp(),'normal',$5::jsonb
+         WHERE NOT EXISTS (
+           SELECT 1 FROM (
+             SELECT session_id FROM astro_maia_protected_origins
+             UNION ALL SELECT session_id FROM astro_maia_transfer_grants
+           ) AS r4f WHERE r4f.session_id = $2
+         )
          ON CONFLICT(exchange_id,seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
         [userId,sessionId ?? null,assistantResponse,exchangeId,JSON.stringify(maiaProv.toJson())]
       );

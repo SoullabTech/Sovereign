@@ -3,16 +3,16 @@ export const dynamic = 'force-dynamic';
 
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query, transaction } from '@/lib/db/postgres';
+import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { clearSessionCookie } from '@/lib/auth/serverSessions';
 
 /**
  * POST /api/members/delete-account
- * Permanently delete the AUTHENTICATED member's account and associated data.
+ * R4J review-only containment: authenticate and validate the member's request,
+ * then REFUSE automatic deletion until signed R20 recovery is qualified.
  *
- * The caller may confirm deletion; the caller may not select whose account is
- * deleted.
+ * The caller may confirm intent; the caller may not select whose account is
+ * deleted. No destructive transaction exists in this isolated route.
  *
  * BEFORE (2026-07-28): the target was taken from a body-supplied `memberId`,
  * with no session resolution at all. The only barrier was `confirmUsername`
@@ -26,17 +26,10 @@ import { clearSessionCookie } from '@/lib/auth/serverSessions';
  * remains, but purely as a destructive-action confirmation — it is compared
  * against the authoritative username of the SESSION-derived member.
  *
- * Deletion is transactional, and the member's sessions are revoked inside the
- * same transaction, so a failure part-way cannot leave a half-deleted account
- * with live credentials.
+ * R4J deliberately removes the inherited partial-delete transaction. A
+ * completely new independently approved deletion flow is required before
+ * member content, sessions and backups can be erased safely.
  */
-
-/** Tables cleaned opportunistically — may not exist in every environment. */
-const OPTIONAL_CLEANUP: ReadonlyArray<{ table: string; column: string }> = [
-  { table: 'developmental_memories', column: 'user_id' },
-  { table: 'google_calendar_credentials', column: 'user_id' },
-  { table: 'memory_links', column: 'user_id' },
-];
 
 /**
  * CONTAINMENT (privacy incident, 2026-07-28) — see
@@ -55,9 +48,10 @@ const OPTIONAL_CLEANUP: ReadonlyArray<{ table: string; column: string }> = [
  * `auth_sessions` FK is ON DELETE CASCADE, so the revocation records that
  * would identify an affected member are removed along with the account.
  *
- * Until truthful deletion semantics exist, this route REFUSES to complete
- * when governed content is present, rather than creating another
- * owner-orphaned record set. Refusing is reversible; orphaning is not.
+ * R4J refuses deletion even if all known counts return zero: the table list
+ * is not exhaustive and a restorable old SQL/Source backup can resurrect
+ * member data without independently signed R20 deletion custody.
+ * A query failure or missing table is an explicit fail-closed 503, never zero.
  */
 /**
  * Member-owned content this route does NOT remove.
@@ -76,6 +70,12 @@ const OPTIONAL_CLEANUP: ReadonlyArray<{ table: string; column: string }> = [
  * is refuse-by-default rather than delete-what-we-know.
  */
 const GOVERNED_CONTENT: ReadonlyArray<{ table: string; column: string; label: string }> = [
+  // R4I/R20: a member-issued chart transfer is governed privacy material.
+  // The authenticated route MUST continue to refuse destructive operations
+  // until independently signed R20 erasure/recovery is accepted. The separated
+  // no-member origin marker alone is NOT a certificate of complete erasure.
+  { table: 'astro_maia_transfer_grants', column: 'member_id',
+    label: 'records of private chart sharing' },
   // Conversations with MAIA
   { table: 'conversation_turns', column: 'user_id', label: 'conversations' },
   { table: 'conversation_insights', column: 'user_id', label: 'conversations' },
@@ -133,17 +133,19 @@ const GOVERNED_CONTENT: ReadonlyArray<{ table: string; column: string; label: st
 ];
 
 /**
- * Posture while the retention lane is open.
- *
- * 'refuse'  — do not delete when governed content exists; direct the member to
- *             a supported path. Currently in force.
- * 'proceed' — delete what this route can and report ONLY that, never implying
- *             completeness.
- *
- * The choice between these is a founder/legal decision, not an engineering one.
- * It is a single constant so it can be changed without touching logic.
+ * R4J: this route has NO authority to complete an automatic account deletion
+ * until independent R20 signer/outbox and sealed recovery are qualified.
+ * A passing known-table count is not a global SQL/Source/backup inventory.
+ * No runtime flag or supplied client field is allowed to bypass this hold.
  */
-const CONTAINMENT_POSTURE: 'refuse' | 'proceed' = 'refuse';
+const R20_ACCOUNT_ERASURE_NOT_QUALIFIED = true as const;
+
+class R4jPrivacyPreflightUnavailable extends Error {
+  constructor() {
+    super('governed_content_preflight_unavailable');
+    this.name = 'R4jPrivacyPreflightUnavailable';
+  }
+}
 
 /**
  * Count governed content for a member, aggregated into member-legible
@@ -153,18 +155,36 @@ const CONTAINMENT_POSTURE: 'refuse' | 'proceed' = 'refuse';
 async function governedContentFor(memberId: string): Promise<Array<{ label: string; rows: number }>> {
   const byLabel = new Map<string, number>();
   for (const { table, column, label } of GOVERNED_CONTENT) {
+    let result: { rows: Array<{ n: string }> };
     try {
-      const r = await query<{ n: string }>(
+      // Identifiers originate only from the source-owned static allowlist;
+      // $1 is always the credential-verified member, never a body claim.
+      result = await query<{ n: string }>(
         `SELECT count(*)::text AS n FROM ${table} WHERE ${column} = $1`,
         [memberId],
       );
-      const rows = Number(r.rows[0]?.n ?? 0);
-      if (rows > 0) byLabel.set(label, (byLabel.get(label) ?? 0) + rows);
-    } catch {
-      // Table absent in this environment. Absence of a table is not evidence of
-      // absence of content, so it is not counted — and because the posture is
-      // refuse-by-default, an uncounted table cannot cause a wrongful deletion.
+    } catch (error) {
+      // Missing relation, wrong column, lost permission, timeout and outage
+      // all mean we CANNOT establish what member material may exist.
+      // No user content, SQL error payload or member ID is logged.
+      console.error('[R4J] governed content preflight unavailable', {
+        category: 'account_erasure',
+        sourceTable: table,
+        errorType: error instanceof Error ? error.name : 'unknown',
+      });
+      throw new R4jPrivacyPreflightUnavailable();
     }
+
+    // A malformed count must never be interpreted as zero.
+    const raw = result.rows?.length === 1 ? result.rows[0]?.n : undefined;
+    if (typeof raw !== 'string' || !/^(0|[1-9][0-9]*)$/.test(raw)) {
+      throw new R4jPrivacyPreflightUnavailable();
+    }
+    const rows = Number(raw);
+    if (!Number.isSafeInteger(rows) || rows < 0) {
+      throw new R4jPrivacyPreflightUnavailable();
+    }
+    if (rows > 0) byLabel.set(label, (byLabel.get(label) ?? 0) + rows);
   }
   return [...byLabel.entries()].map(([label, rows]) => ({ label, rows }));
 }
@@ -214,79 +234,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3b. CONTAINMENT preflight — refuse rather than orphan.
+    // 3b. Fail closed if a single governed-content table cannot be read.
+    // This is still only a partial inventory, not an erasure certificate.
     const governed = await governedContentFor(memberId);
-    if (CONTAINMENT_POSTURE === 'refuse' && governed.length > 0) {
+
+    // 4. Even when known inventory looks empty, there is no independently
+    // secured deletion outbox, R20 signer or non-resurrecting SQL/Source restore.
+    // The old member-deleting transaction is intentionally removed rather
+    // than hidden behind a mutable environment flag.
+    if (R20_ACCOUNT_ERASURE_NOT_QUALIFIED) {
       return NextResponse.json(
         {
           error: 'deletion_incomplete_unavailable',
-          // Plain language, and unambiguous about the one fact that matters
-          // most to someone who just asked to be deleted: nothing happened.
           message:
-            "We can't complete full account deletion automatically yet. Your account " +
-            'and content have not been changed. Please contact support so we can ' +
-            'handle your request safely.',
+            "We can't complete full account deletion automatically yet. " +
+            'Your account and content have not been changed. ' +
+            'Please contact support for a safely governed deletion request.',
           accountChanged: false,
           nextStep: 'contact_support',
           retained: governed,
         },
-        { status: 409 },
+        { status: 409, headers: { 'Cache-Control': 'private, no-store' } },
       );
     }
 
-    // 4. All-or-nothing. A partial failure must not leave an account that is
-    //    half-deleted but still signed in.
-    await transaction(async (tx) => {
-      // Revoke credentials first: if anything below fails and rolls back, the
-      // account is intact AND still usable. If it succeeds, no live session
-      // outlives the member row.
-      await tx.query(
-        `UPDATE auth_sessions
-            SET revoked = TRUE, revoked_at = NOW(), revoked_reason = 'account_deleted'
-          WHERE member_id = $1 AND revoked = FALSE`,
-        [memberId],
-      );
-
-      await tx.query(`DELETE FROM member_settings WHERE member_id = $1`, [memberId]);
-      await tx.query(`DELETE FROM member_sessions WHERE member_id = $1`, [memberId]);
-
-      // Best-effort tables, each in its own savepoint: a table missing in this
-      // environment must not abort the whole transaction (the previous code
-      // tolerated this with .catch(); inside a transaction a raw failure would
-      // poison it).
-      for (const { table, column } of OPTIONAL_CLEANUP) {
-        await tx.query('SAVEPOINT optional_cleanup');
-        try {
-          await tx.query(`DELETE FROM ${table} WHERE ${column} = $1`, [memberId]);
-          await tx.query('RELEASE SAVEPOINT optional_cleanup');
-        } catch {
-          await tx.query('ROLLBACK TO SAVEPOINT optional_cleanup');
-        }
-      }
-
-      await tx.query(`DELETE FROM members WHERE id = $1`, [memberId]);
-    });
-
-    // Cookie removal is presentation cleanup; the credential was already
-    // revoked inside the transaction above.
-    await clearSessionCookie().catch(() => {});
-
-    // The response states ONLY what this route actually removed. It previously
-    // claimed "Account and all associated data permanently deleted" while
-    // journal, conversation, episodic and capsule content survived. A promise
-    // about the disposition of someone's personal material must be one the
-    // system can keep.
-    return NextResponse.json({
-      success: true,
-      removed: ['account', 'settings', 'sessions', 'credentials'],
-      message:
-        'Your account has been closed and your sign-in credentials revoked.',
-    });
-  } catch (error) {
-    console.error('[Delete Account API] Error:', error);
+    // Defensive unreachable fallback. Source reviewers must never interpret
+    // the count results as authorization to delete a member.
     return NextResponse.json(
-      { error: 'Failed to delete account' },
-      { status: 500 }
+      { error: 'deletion_not_authorized', accountChanged: false },
+      { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+    );
+  } catch (error) {
+    if (error instanceof R4jPrivacyPreflightUnavailable) {
+      return NextResponse.json(
+        {
+          error: 'privacy_preflight_unavailable',
+          message:
+            'Account deletion is unavailable while required privacy records cannot be verified. ' +
+            'Your account and content have not been changed. Please contact support.',
+          accountChanged: false,
+          nextStep: 'contact_support',
+        },
+        { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+      );
+    }
+    console.error('[Delete Account API] Request failed', {
+      errorType: error instanceof Error ? error.name : 'unknown',
+    });
+    return NextResponse.json(
+      { error: 'account_deletion_unavailable', accountChanged: false },
+      { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
     );
   }
 }

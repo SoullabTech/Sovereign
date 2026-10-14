@@ -151,15 +151,15 @@ export const PRODUCER_REGISTRY = {
   },
   'computed.astrology': {
     authoredBy: 'system', participationClass: 'computed', authority: 'compute',
-    provenance: 'lib/services/maiaAstrologyContextService (member-supplied birth data)', consentBasis: 'birth data on file',
+    provenance: 'member-reviewed Astrology room Send only (R4K; ambient producer disabled)', consentBasis: 'current-turn explicit member-selected chart passage, NOT standing birth data',
     requires: { identity: 'verified', notSanctuary: false }, rooms: ['sovereign_chat', 'between'], mandatory: false, scope: 'route',
-    ...CMT, reason: 'natal chart + transits computed from member-supplied birth data',
+    ...CMT, reason: 'held natal producer: no member chart inferred from identity; signed per-turn consent and lineage required for any future disclosure',
   },
   'computed.wuxing_snapshot': {
     authoredBy: 'system', participationClass: 'computed', authority: 'compute',
-    provenance: 'lib/consciousness/wuxingSnapshot', consentBasis: null,
+    provenance: 'lib/consciousness/wuxingSnapshot (birth-derived constitution held)', consentBasis: 'member-approved per-turn provenance required for personal BaZi/Wu Xing',
     requires: { identity: 'any', notSanctuary: false }, rooms: ['sovereign_chat', 'between'], mandatory: false, scope: 'route',
-    ...CMT, reason: 'Five Element state anchor',
+    ...CMT, reason: 'held member-specific natal/Da Yun producer; independently validated birth-free temporal moment requires separate review',
   },
   'computed.forward_readiness': {
     authoredBy: 'system', participationClass: 'computed', authority: 'infer',

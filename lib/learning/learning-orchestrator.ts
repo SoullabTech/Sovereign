@@ -29,11 +29,15 @@ export interface LearningConfig {
 export const DEFAULT_LEARNING_CONFIG: LearningConfig = {
   claudeThreshold: 0.95, // Claude as primary conversational intelligence (95% usage)
   localConfidenceThreshold: 0.9, // Very high confidence required for local models
-  collectTrainingData: true, // Still collect data for future local model training
+  collectTrainingData: false, // R4H: member conversations are not automatically training material
   maxTrainingExamplesPerType: 500, // More training data for specialized use cases
   enableTeacherFeedback: false, // Claude is primary, not teacher - no feedback loop needed
   feedbackSampleRate: 0.0 // No feedback sampling when Claude is primary brain
 };
+
+// R4H security hold: neither an environment setting nor a caller-supplied
+// 'collectTraining' flag may silently capture or retain a member conversation.
+export const R4H_UNATTENDED_TRAINING_APPROVED = false as const;
 
 export interface LearningDecision {
   useModel: 'claude' | 'deepseek' | 'local';
@@ -123,7 +127,7 @@ export class LearningOrchestrator {
 
     if (decision.useModel === 'claude') {
       // Use Claude as teacher
-      if (decision.collectAsTraining) {
+      if (decision.collectAsTraining && this.config.collectTrainingData && R4H_UNATTENDED_TRAINING_APPROVED) {
         // Generate with detailed reasoning trace for training
         const teacherExample = await generateTeacherExample(userMessage, conversationHistory, sessionId);
         response = teacherExample.claudeResponse;
@@ -147,7 +151,7 @@ export class LearningOrchestrator {
       response = await this.generateLocalResponse(userMessage, conversationHistory, context);
 
       // Maybe get teacher feedback on local response
-      if (this.config.enableTeacherFeedback && Math.random() < this.config.feedbackSampleRate) {
+      if (R4H_UNATTENDED_TRAINING_APPROVED && this.config.enableTeacherFeedback && Math.random() < this.config.feedbackSampleRate) {
         try {
           const feedback = await getTeacherFeedback(userMessage, response, conversationHistory);
 
@@ -265,7 +269,7 @@ As Claude Sonnet 4+ serving as MAIA's primary conversational intelligence, integ
 
     // Load relevant training examples for this type of interaction
     const situationType = this.classifyInteraction(userMessage);
-    const trainingExamples = await loadTrainingExamples(situationType);
+    const trainingExamples = R4H_UNATTENDED_TRAINING_APPROVED ? await loadTrainingExamples(situationType) : [];
 
     // Build enhanced prompt with training examples
     const { MAIA_RUNTIME_PROMPT } = await import('../consciousness/MAIA_RUNTIME_PROMPT');
@@ -443,6 +447,9 @@ As Claude Sonnet 4+ serving as MAIA's primary conversational intelligence, integ
   }
 
   private async loadTrainingStats(): Promise<void> {
+    // The historical teacher corpus has no independently certified
+    // chart-passage origin or per-conversation recall permission.
+    if (!R4H_UNATTENDED_TRAINING_APPROVED) return;
     try {
       const examples = await loadTrainingExamples();
 

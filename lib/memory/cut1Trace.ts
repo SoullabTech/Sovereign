@@ -55,6 +55,8 @@ export const CUT1_BASELINE_NONVECTOR_SQL = `
     ) AS score
   FROM developmental_memories
   WHERE user_id = $1
+    AND origin_scope = 'ordinary'
+    AND source_session_id IS NOT NULL
     AND content_text IS NOT NULL
     AND (valid_to IS NULL OR valid_to > NOW())
   ORDER BY score DESC
@@ -91,6 +93,8 @@ export const CUT1_OBSERVED_NONVECTOR_SQL = `
       ) AS neutral_score
     FROM developmental_memories
     WHERE user_id = $1
+      AND origin_scope = 'ordinary'
+      AND source_session_id IS NOT NULL
       AND content_text IS NOT NULL
       AND (valid_to IS NULL OR valid_to > NOW())
   ),

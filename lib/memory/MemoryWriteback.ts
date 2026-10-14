@@ -17,6 +17,7 @@
 
 import { query } from '@/lib/db/postgres';
 import { containsSensitiveData } from '@/lib/memory/sensitivePatterns';
+import { assertR4gOrdinarySession } from '@/lib/maia/astrologyConsent/r4gOrdinarySessionGate';
 import { memberRef } from '../privacy/memberRef';
 
 // ═══════════════════════════════════════════════════════════════
@@ -330,6 +331,9 @@ export const MemoryWritebackService = {
   }> {
     const { userId, sessionId, exchangeId, userMessage, assistantResponse, memoryMode } = input;
 
+    // No secondary developmental, breakthrough or insight memory may derive
+    // from an R4F-protected or legacy chart conversation.
+    await assertR4gOrdinarySession(sessionId);
     // Permission gate: check memoryMode
     if (memoryMode === 'ephemeral') {
       console.log('[MemoryWriteback] Skipping - ephemeral mode');
@@ -388,6 +392,7 @@ export const MemoryWritebackService = {
         await this.writeBreakthroughMoment({
           userId,
           sessionId,
+          exchangeId,
           insight: this.extractInsight(userMessage, assistantResponse),
           element: input.element,
         });
@@ -571,6 +576,7 @@ export const MemoryWritebackService = {
     timestamp?: Date;
   }): Promise<string> {
     const { userId, sessionId, exchangeId, userMessage, assistantResponse, significance, capsule, facetCode, route } = input;
+    await assertR4gOrdinarySession(sessionId);
 
     // Storage X4 (2026-04-09):
     // Raw exchange is preserved under `trigger_event.raw` so the original substrate
@@ -616,6 +622,8 @@ export const MemoryWritebackService = {
         source_beads_task_id,
         source_ain_session_id,
         source_exchange_id,
+        source_session_id,
+        origin_scope,
         source_consciousness_entry_id,
         content_text,
         recall_count,
@@ -634,8 +642,10 @@ export const MemoryWritebackService = {
         NULL,
         $7,
         $8,
-        NULL,
         $9,
+        'ordinary',
+        NULL,
+        $10,
         0,
         NULL,
         NOW()
@@ -659,6 +669,7 @@ export const MemoryWritebackService = {
       capsule.entities,
       sessionId,
       exchangeId || null,
+      sessionId,
       contentText,
     ]);
 
@@ -686,10 +697,12 @@ export const MemoryWritebackService = {
   async writeBreakthroughMoment(input: {
     userId: string;
     sessionId: string;
+    exchangeId?: string;
     insight: string;
     element?: string;
   }): Promise<string> {
-    const { userId, sessionId, insight, element } = input;
+    const { userId, sessionId, exchangeId, insight, element } = input;
+    await assertR4gOrdinarySession(sessionId);
 
     const result = await query(`
       INSERT INTO breakthrough_moments (
@@ -700,6 +713,9 @@ export const MemoryWritebackService = {
         integrated,
         related_themes,
         conversation_id,
+        source_exchange_id,
+        source_session_id,
+        origin_scope,
         created_at,
         updated_at
       ) VALUES (
@@ -710,11 +726,16 @@ export const MemoryWritebackService = {
         FALSE,
         ARRAY[]::text[],
         $4,
+        $5::uuid,
+        $6,
+        'ordinary',
         NOW(),
         NOW()
       )
       RETURNING id
-    `, [userId, insight, element || null, sessionId]);
+    `, [userId, insight, element || null, sessionId,
+      exchangeId && /^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(exchangeId) ? exchangeId : null,
+      sessionId]);
 
     return result.rows[0]?.id;
   },
@@ -731,6 +752,7 @@ export const MemoryWritebackService = {
     significance: number;
   }): Promise<string> {
     const { userId, sessionId, insightText, insightType, precedingMessages, significance } = input;
+    await assertR4gOrdinarySession(sessionId);
 
     // Note: session_id is uuid but our sessionIds are strings
     // Per user guidance: use NULL for session_id, put string in conversation_context

@@ -45,7 +45,11 @@ describe('R5e MAIA turn storage truth, account scope and no-cache contract',()=>
     expect(r.headers.get('cache-control')).toContain('no-store');
   });
   it('normal member history response is private no-store',async()=>{
-    db.mockResolvedValue({rows:[{id:'fiction-turn',content:'FICTION'}]});
+    // R4F's protected-origin lookup runs before the member-scoped turn query.
+    db.mockImplementation(async (sql:string)=>{
+      if (sql.includes('AS protected WHERE protected.session_id')) return {rows:[]};
+      return {rows:[{id:'fiction-turn',content:'FICTION'}]};
+    });
     const r=await GET(get());
     expect(r.status).toBe(200);
     expect((await r.json()).messages).toHaveLength(1);

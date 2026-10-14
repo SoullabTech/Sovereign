@@ -72,6 +72,11 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
+import {
+  isServerAdmittedConversationHistory,
+  memberConversationStorageKey,
+  requiresMemberHistoryVerification,
+} from '@/lib/maia/browserConversationCustody';
 import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
 import {
   DEFAULT_TURN_TAKING_PREFERENCES,
@@ -785,6 +790,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // Core conversation state
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  // R4G: client caches and claimed member IDs are never history authority.
+  const historyAdmittedRef = useRef(false);
+  const [historyAdmissionRevision, setHistoryAdmissionRevision] = useState(0);
   const [userTranscript, setUserTranscript] = useState('');
   const [maiaResponseText, setMaiaResponseText] = useState('');
   const [streamingText, setStreamingText] = useState<string>('');
@@ -1489,8 +1497,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       sessionStorage.removeItem('maia_nav_teardown');
       // Clear localStorage for current session
       if (typeof window !== 'undefined' && sessionId) {
-        const storageKey = `maia_conversation_${sessionId}`;
-        localStorage.removeItem(storageKey);
+        const storageKey = memberConversationStorageKey(userId, sessionId);
+        if (storageKey) localStorage.removeItem(storageKey);
         console.log(`🆕 [New Conversation] Cleared localStorage: ${storageKey}`);
       }
     };
@@ -1764,6 +1772,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const didConsumeSeedRef = useRef(false); // One-shot guard for seed prompt consumption
   const handleTextMessageRef = useRef<((text: string) => void) | null>(null); // Ref for seed prompt injection
   const pendingSeedRef = useRef<ConsumedSeed | null>(null); // Store full seed until handler is ready
+  const pendingSeedMemberRef = useRef<string | null>(null);
   // 🌉 RELATIONAL CONTEXT BRIDGE: Session-persistent (NOT one-shot).
   // Set on /relationships/[id] handoff. Rides every oracle POST in this session
   // until the user leaves /maia or a new explicit handoff arrives.
@@ -1834,6 +1843,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       // Store full seed in ref - will be processed by the effect below when handleTextMessage is ready
       pendingSeedRef.current = seed;
+      pendingSeedMemberRef.current = String(userId ?? '');
     }
   }, []);
 
@@ -3182,105 +3192,92 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // 💾 SOVEREIGN CONVERSATION PERSISTENCE: Load history and restore the thread.
-  //
-  // CONTINUITY INVARIANT (load-bearing — do not "optimize" back into flag-gated restore):
-  //   The thread cannot disappear in order to preserve the thread.
-  //
-  // If real messages exist for this session+user, the UI restores them — regardless of how
-  // the user arrived (SPA navigation, browser back, deeplink, refresh, new tab). Restoration
-  // is NOT gated by the `maia_nav_teardown` sessionStorage flag any more — that gate made
-  // return-path dependent, so a capture surface or world doorway could silently destroy the
-  // thread it was invited to honor.
-  //
-  // Welcome overlay reaches its correct condition through `loadedMessages.length === 0`,
-  // which is produced by explicit new-session actions (handleStartSession,
-  // handleStartNewSession) that clear localStorage. Fresh starts are deliberate, not accidental.
-  //
-  // The seam on restore must be invisible: no "restored your session" notice, no welcome
-  // header, no scroll reset.
+  // R4G: Restore ONLY server-verified ordinary history. Old localStorage
+  // transcripts are preserved but NEVER used as prompt or UI input.
   useEffect(() => {
     if (typeof window === 'undefined' || !sessionId || !userId) return;
+    let active = true;
+    let requestEpoch = 0;
+    const identityMustBeVerified = requiresMemberHistoryVerification(userId);
 
-    const loadConversationHistory = async () => {
-      const storageKey = `maia_conversation_${sessionId}`;
-      let loadedMessages: ConversationMessage[] = [];
+    const verifyAndRestore = async () => {
+      const ticket = ++requestEpoch;
+      historyAdmittedRef.current = !identityMustBeVerified;
+      historicalMessagesRef.current = [];
+      lastSyncedCountRef.current = 0;
+      setMessages([]);
+      sessionRestoredRef.current = false;
 
-      // Step 1: Try localStorage first (instant load for same device)
-      const localStored = localStorage.getItem(storageKey);
-      if (localStored) {
-        try {
-          const parsedMessages = JSON.parse(localStored);
-          if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
-            loadedMessages = parsedMessages;
-            console.log(`💾 [localStorage] Loaded ${loadedMessages.length} messages for MAIA context (UI starts fresh)`);
-          }
-        } catch (error) {
-          console.error('💾 [localStorage] Failed to parse stored messages:', error);
-          localStorage.removeItem(storageKey);
-        }
-      }
+      // Guests may speak, but never inherit a past member's local history.
+      if (!identityMustBeVerified) return;
 
-      // Step 2: Check PostgreSQL for more recent/complete history
       try {
-        const response = await apiFetch(`/api/conversation/turns?sessionId=${encodeURIComponent(sessionId)}&userId=${encodeURIComponent(userId)}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.messages && data.messages.length > 0) {
-            // Convert PostgreSQL format
-            const pgMessages: ConversationMessage[] = data.messages.map((m: any) => ({
-              id: m.id || `pg-${Date.now()}-${Math.random()}`,
-              role: m.role === 'assistant' ? 'oracle' : m.role,
-              text: m.content,
-              timestamp: new Date(m.createdAt),
-              source: 'restored'
-            }));
-
-            // Use PostgreSQL if it has more messages
-            if (pgMessages.length > loadedMessages.length) {
-              loadedMessages = pgMessages;
-              console.log(`💾 [PostgreSQL] Loaded ${pgMessages.length} messages for MAIA context`);
-              // Sync to localStorage for faster next load
-              localStorage.setItem(storageKey, JSON.stringify(pgMessages.slice(-50)));
-            }
-          }
+        const response = await apiFetch(
+          '/api/conversation/turns?sessionId=' + encodeURIComponent(sessionId) +
+            '&userId=' + encodeURIComponent(userId),
+          { cache: 'no-store' },
+        );
+        if (!active || ticket !== requestEpoch) return;
+        if (!response.ok) {
+          setInputSubmitError('Your conversation is private. Please verify your sign-in to continue.');
+          return;
         }
-      } catch (error) {
-        console.error('💾 [PostgreSQL] Failed to load messages:', error);
-      }
-
-      // Consume the legacy teardown flag if present so it doesn't accumulate in sessionStorage.
-      // The flag is no longer used to gate restoration — see CONTINUITY INVARIANT header above.
-      // Setter sites elsewhere in this file are now no-ops; cleanup of those is a follow-up.
-      sessionStorage.removeItem('maia_nav_teardown');
-
-      // Always populate historicalRef so MAIA has full context regardless of display mode
-      historicalMessagesRef.current = loadedMessages;
-
-      if (loadedMessages.length > 0) {
-        const hasRealMessages = loadedMessages.some(m => !m.id?.startsWith('greeting-'));
-
-        if (hasRealMessages) {
-          // Restore the thread. Invisible seam — no welcome overlay, no "restored" notice.
+        const body = await response.json();
+        if (!active || ticket !== requestEpoch) return;
+        if (!isServerAdmittedConversationHistory(body, userId, sessionId)) {
+          setInputSubmitError('Your conversation needs a verified member session.');
+          return;
+        }
+        const restored = body.messages
+          .filter((m: any) =>
+            m && (m.role === 'user' || m.role === 'assistant') &&
+            typeof m.content === 'string'
+          )
+          .map((m: any): ConversationMessage => ({
+            id: String(m.id || ''),
+            role: m.role === 'assistant' ? 'oracle' : 'user',
+            text: m.content,
+            timestamp: new Date(m.createdAt),
+            source: 'restored',
+          }));
+        if (!active || ticket !== requestEpoch) return;
+        historicalMessagesRef.current = restored;
+        lastSyncedCountRef.current = restored.length;
+        historyAdmittedRef.current = true;
+        // Revisit guarded inbound seeds only after this specific subject
+        // passed server-side identity and conversation-scope verification.
+        setHistoryAdmissionRevision(v => v + 1);
+        if (restored.length > 0) {
           sessionRestoredRef.current = true;
           setHasActivated(true);
-          setMessages(loadedMessages);
-          // Mark the restored thread as ALREADY synced. Without this the sync
-          // effect starts from 0, treats the whole restored transcript as new,
-          // and re-POSTs it to /api/conversation/turns on every mount — the
-          // insert has no idempotency key, so the stored thread grew on every
-          // refresh and came back multiplied on the next restore.
-          lastSyncedCountRef.current = loadedMessages.length;
-          console.log(`💾 [Context] Restored ${loadedMessages.length} messages to UI`);
-        } else {
-          console.log(`💾 [Context] Only greeting messages found — UI starts fresh`);
+          setMessages(restored);
         }
-      } else {
-        console.log(`💾 [Context] No previous messages for this session`);
+        setInputSubmitError(null);
+      } catch {
+        if (!active || ticket !== requestEpoch) return;
+        setInputSubmitError('Your conversation could not be verified. Please sign in again.');
       }
     };
 
-    loadConversationHistory();
+    const onFocus = () => {
+      if (document.visibilityState === 'visible') void verifyAndRestore();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void verifyAndRestore();
+    };
+    const onPageReturn = () => { void verifyAndRestore(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('pageshow', onPageReturn);
+    void verifyAndRestore();
+    return () => {
+      active = false;
+      requestEpoch += 1;
+      historyAdmittedRef.current = false;
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('pageshow', onPageReturn);
+    };
   }, [sessionId, userId]);
 
   // 💾 SOVEREIGN PERSISTENCE: Save to localStorage (instant) + PostgreSQL (async sync)
@@ -3290,7 +3287,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   useEffect(() => {
     if (typeof window === 'undefined' || !sessionId || !userId || messages.length === 0) return;
 
-    const storageKey = `maia_conversation_${sessionId}`;
+    const storageKey = memberConversationStorageKey(userId, sessionId);
+    if (!storageKey || (requiresMemberHistoryVerification(userId) &&
+        !historyAdmittedRef.current)) return;
 
     // Keep only the most recent 50 messages to avoid localStorage bloat.
     // 🔁 Recovery seam: strip delivery markers — they are live UI state only
@@ -3304,21 +3303,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       console.log(`💾 [localStorage] Saved ${messagesToStore.length} messages`);
     } catch (error) {
       console.error('💾 [localStorage] Failed to save messages:', error);
-      // If localStorage is full, try clearing old sessions
+      // Never delete older or other-member local data on quota errors.
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        console.log('💾 [localStorage] Full, clearing old sessions...');
-        try {
-          // Clear all old conversation storage except current session
-          Object.keys(localStorage)
-            .filter(key => key.startsWith('maia_conversation_') && key !== storageKey)
-            .forEach(key => localStorage.removeItem(key));
-
-          // Try saving again
-          localStorage.setItem(storageKey, JSON.stringify(messagesToStore));
-          console.log('💾 [localStorage] Retry successful after cleanup');
-        } catch (retryError) {
-          console.error('💾 [localStorage] Retry failed:', retryError);
-        }
+        console.warn('[MAIA] Local cache full; preserving existing conversations');
       }
     }
 
@@ -5033,6 +5020,10 @@ I'm not sure what I'm feeling yet.`;
       confirmationHandled?: boolean;
     },
   ) => {
+    if (requiresMemberHistoryVerification(userId) && !historyAdmittedRef.current) {
+      setInputSubmitError('Verify your member session before continuing this conversation.');
+      return;
+    }
     const authoredText = text;
     console.log('📝 Text message received:', { text: authoredText, isProcessing, isAudioPlaying, isResponding });
 
@@ -6928,9 +6919,19 @@ I'm not sure what I'm feeling yet.`;
     // Store ref for potential future use
     handleTextMessageRef.current = handleTextMessage;
 
+    // Never consume an inbound seed before authenticated admission. A queued
+    // seed belongs ONLY to the member who brought it into this page.
+    if (requiresMemberHistoryVerification(userId) &&
+        !historyAdmittedRef.current) return;
     // Process any pending seed (from Guide/Academy "Take to MAIA" buttons)
     if (pendingSeedRef.current) {
+      if (pendingSeedMemberRef.current !== String(userId ?? '')) {
+        pendingSeedRef.current = null;
+        pendingSeedMemberRef.current = null;
+        return;
+      }
       const seed = pendingSeedRef.current;
+      pendingSeedMemberRef.current = null;
       pendingSeedRef.current = null; // Clear to prevent re-processing
       console.log('🌱 [SEED] Sending seed to handleTextMessage:', seed.prompt.slice(0, 50) + '...');
 
@@ -6939,8 +6940,8 @@ I'm not sure what I'm feeling yet.`;
       lastSyncedCountRef.current = 0; // fresh thread — resync from the start
       historicalMessagesRef.current = []; // Clear API context too
       if (typeof window !== 'undefined' && sessionId) {
-        const storageKey = `maia_conversation_${sessionId}`;
-        localStorage.removeItem(storageKey);
+        const storageKey = memberConversationStorageKey(userId, sessionId);
+        if (storageKey) localStorage.removeItem(storageKey);
         console.log('🌱 [SEED] Cleared conversation for fresh start');
       }
       setHasActivated(true); // Skip welcome screen
@@ -6950,7 +6951,7 @@ I'm not sure what I'm feeling yet.`;
         handleTextMessage(seed.prompt);
       }, 100);
     }
-  }, [handleTextMessage, sessionId]);
+  }, [handleTextMessage, sessionId, userId, historyAdmissionRevision]);
 
   // ==================== IN-PLACE MESSAGE INJECTION ====================
   // A room handed this conversation a message the member composed and sent
@@ -6959,6 +6960,10 @@ I'm not sure what I'm feeling yet.`;
   // relationship from inside a room, not starting a second one.
   const lastInjectedNonceRef = useRef<number | null>(null);
   useEffect(() => {
+    // Deferring without advancing the nonce preserves an explicitly selected
+    // ordinary-room handoff while session identity is being verified.
+    if (requiresMemberHistoryVerification(userId) &&
+        !historyAdmittedRef.current) return;
     const decision = decideInjection(lastInjectedNonceRef.current, injectedMessage);
     if (decision.nonce !== null) lastInjectedNonceRef.current = decision.nonce;
     if (!decision.send || !decision.text) return;
@@ -6967,7 +6972,7 @@ I'm not sure what I'm feeling yet.`;
     // storage removal — unlike the seed processor above. The prior turns are
     // the relationship this message is being brought INTO.
     handleTextMessage(decision.text);
-  }, [injectedMessage, handleTextMessage]);
+  }, [injectedMessage, handleTextMessage, userId, historyAdmissionRevision]);
 
   // Handle voice transcript from mic button
   const handleVoiceTranscript = useCallback(async (transcript: string) => {
@@ -7773,8 +7778,8 @@ I'm not sure what I'm feeling yet.`;
     setHasActivated(false); // Reset to show welcome/greeting
     // Clear localStorage for previous conversation
     if (typeof window !== 'undefined' && sessionId) {
-      const storageKey = `maia_conversation_${sessionId}`;
-      localStorage.removeItem(storageKey);
+      const storageKey = memberConversationStorageKey(userId, sessionId);
+      if (storageKey) localStorage.removeItem(storageKey);
       console.log(`🧹 Cleared localStorage: ${storageKey}`);
     }
 
@@ -7898,8 +7903,8 @@ I'm not sure what I'm feeling yet.`;
     sessionStorage.removeItem('maia_nav_teardown'); // Don't restore on next navigation
     setHasActivated(false);
     if (typeof window !== 'undefined' && sessionId) {
-      const storageKey = `maia_conversation_${sessionId}`;
-      localStorage.removeItem(storageKey);
+      const storageKey = memberConversationStorageKey(userId, sessionId);
+      if (storageKey) localStorage.removeItem(storageKey);
     }
     // Note: User will click header button to open session selector
   }, [sessionId]);
@@ -11047,8 +11052,8 @@ I'm not sure what I'm feeling yet.`;
           lastSyncedCountRef.current = 0; // fresh thread — resync from the start
           historicalMessagesRef.current = []; // Clear API context too
           if (typeof window !== 'undefined' && sessionId) {
-            const storageKey = `maia_conversation_${sessionId}`;
-            localStorage.removeItem(storageKey);
+            const storageKey = memberConversationStorageKey(userId, sessionId);
+            if (storageKey) localStorage.removeItem(storageKey);
             console.log('🌟 [SoulPrompt] Cleared conversation for fresh start');
           }
 
