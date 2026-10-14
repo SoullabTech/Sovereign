@@ -181,3 +181,11 @@ default logo after the bundle metadata update. Cabin now explicitly sets the Doc
 from its bundled Cabin.png after app readiness. Builder includes that PNG. The installed
 launcher was updated, signature verified, and only Cabin was restarted. Founder visual
 confirmation of the Dock appearance remains pending.
+
+## Forest retreat palette
+Founder requested a light-green forest-retreat appearance. Installed launcher now
+uses pale sage background, soft green panels, woodland text, and a darker green
+primary action. The generated Soullab Cabin artwork appears beside the welcome title
+as well as in the Dock. Packaged-window test checks the rendered sage color and that
+the artwork actually decodes; existing readiness and isolated-storage checks pass.
+Only Cabin was restarted. The live runtime and cognition status are unchanged.

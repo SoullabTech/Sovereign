@@ -23,6 +23,7 @@ application.mkdir()
 for name in ("main.cjs", "preload.cjs", "index.html", "renderer.js"):
     shutil.copy2(Path(__file__).parent / name, application / name)
 shutil.copy2(root / "jarvis-desktop/src/cabin-flow.js", application / "cabin-flow.js")
+shutil.copy2(Path(__file__).parent / "assets/cabin-icon.png", application / "Cabin.png")
 (application / "package.json").write_text(json.dumps({
     "name": "soullab-cabin-launcher", "version": "0.1.0", "main": "main.cjs"
 }))

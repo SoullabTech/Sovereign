@@ -15,7 +15,7 @@ if (!app.requestSingleInstanceLock()) { app.quit(); } else {
   }
   function createHome() {
     home = new BrowserWindow({ title: 'Cabin', width: 860, height: 680,
-      backgroundColor: '#f5f0e7',
+      backgroundColor: '#e7eee3',
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'),
         nodeIntegration: false, contextIsolation: true, sandbox: true } });
     home.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));

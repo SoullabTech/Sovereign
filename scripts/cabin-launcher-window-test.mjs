@@ -9,6 +9,9 @@ try {
   await page.locator('#check').waitFor();
   await page.waitForFunction(() => !document.querySelector('#check').disabled);
   assert.equal(await page.title(), 'Cabin');
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(231, 238, 227)');
+  await page.locator('.cabin-art').evaluate(image => image.decode());
+  assert.ok(await page.locator('.cabin-art').evaluate(image => image.naturalWidth > 0));
   assert.match(await page.locator('body').innerText(), /Setup in progress/);
   const status = await page.locator('#status').innerText();
   assert.ok(status.includes('not running yet') || status.includes('is running'));
