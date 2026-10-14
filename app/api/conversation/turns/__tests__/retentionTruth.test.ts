@@ -2,20 +2,17 @@ import {NextRequest} from 'next/server';
 import {getMemberIdFromRequest} from '@/lib/auth/getMemberFromRequest';
 import {query} from '@/lib/db/postgres';
 import {TurnsStore} from '@/lib/memory/stores/TurnsStore';
-import {recordConsentState} from '@/lib/provenance/consentState';
 import {GET,POST} from '../route';
 
 jest.mock('@/lib/auth/getMemberFromRequest',()=>({getMemberIdFromRequest:jest.fn()}));
 jest.mock('@/lib/db/postgres',()=>({query:jest.fn()}));
-jest.mock('@/lib/memory/stores/TurnsStore',()=>({TurnsStore:{addExchange:jest.fn()}}));
-jest.mock('@/lib/provenance/consentState',()=>({recordConsentState:jest.fn()}));
+jest.mock('@/lib/memory/stores/TurnsStore',()=>({TurnsStore:{addAuditedExchange:jest.fn()}}));
 
 const A='11111111-1111-4111-8111-111111111111';
 const B='22222222-2222-4222-8222-222222222222';
 const who=getMemberIdFromRequest as jest.Mock;
 const db=query as jest.Mock;
-const add=TurnsStore.addExchange as jest.Mock;
-const audit=recordConsentState as jest.Mock;
+const add=TurnsStore.addAuditedExchange as jest.Mock;
 const get=(user=A)=>new NextRequest(
   'http://127.0.0.1:38030/api/conversation/turns?sessionId=fiction-A&userId='+user);
 const post=(body:Record<string,unknown>)=>new NextRequest(
@@ -46,7 +43,6 @@ describe('R5e MAIA turn storage truth, account scope and no-cache contract',()=>
     expect(r.status).toBe(503);
     expect(await r.json()).toEqual({success:false,error:'Conversation was not saved'});
     expect(r.headers.get('cache-control')).toContain('no-store');
-    expect(audit).toHaveBeenCalledTimes(1);
   });
   it('normal member history response is private no-store',async()=>{
     db.mockResolvedValue({rows:[{id:'fiction-turn',content:'FICTION'}]});
@@ -75,7 +71,6 @@ describe('R5e MAIA turn storage truth, account scope and no-cache contract',()=>
     expect((await r.json()).sanctuary).toBe(true);
     expect(r.headers.get('cache-control')).toContain('no-store');
     expect(add).not.toHaveBeenCalled();
-    expect(audit).not.toHaveBeenCalled();
   });
   it('successful normal write is returned with private no-store headers',async()=>{
     const r=await POST(post(normal));

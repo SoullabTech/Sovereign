@@ -113,8 +113,12 @@ export async function generateSessionRemembrance(
     return null;
   }
 
-  // 2. Pull recent turns (NOT the full transcript)
-  const turns = await TurnsStore.getSessionTurns(sessionId);
+  // 2. Session-only turns require the stored, server-owned member identity.
+  // Guest/null and historical unknown owner sessions cannot enter the member
+  // remembrance pathway. No session-ID-only recall is permitted.
+  const verifiedOwner = session.rows[0].member_id;
+  if (!verifiedOwner) return null;
+  const turns = await TurnsStore.getSessionTurns(sessionId, verifiedOwner);
 
   if (turns.length < 2) {
     console.log(`[Summarizer] Session ${sessionId} has <2 turns — skipping`);

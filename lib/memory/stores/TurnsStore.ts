@@ -5,7 +5,7 @@
  * This provides the "what did we just talk about" continuity.
  */
 
-import { query } from '../../db/postgres';
+import { query,transaction } from '../../db/postgres';
 import { TurnPosture, contentWritable } from '../../sanctuary/turnPosture';
 import { Provenance } from '../../provenance/provenance';
 
@@ -85,7 +85,8 @@ export const TurnsStore = {
    * Get turns for a specific session
    */
   async getSessionTurns(
-    sessionId: string
+    sessionId: string,
+    memberId: string
   ): Promise<Array<{ role: 'user' | 'assistant'; content: string; createdAt: string }>> {
     const result = await query<{ role: 'user' | 'assistant'; content: string; createdAt: string }>(
       `
@@ -94,10 +95,10 @@ export const TurnsStore = {
         content,
         created_at as "createdAt"
       FROM conversation_turns
-      WHERE session_id = $1
+      WHERE session_id = $1 AND user_id = $2
       ORDER BY created_at ASC, seq ASC
       `,
-      [sessionId]
+      [sessionId, memberId]
     );
 
     return result.rows ?? [];
@@ -283,6 +284,64 @@ export const TurnsStore = {
        ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
       [userId, sessionId ?? null, assistantResponse, eid, JSON.stringify(assistantProvenance.toJson())]
     );
+  },
+
+  /**
+   * R5f: atomic consent-audit + member-owned turn pair.
+   * A failed audit or either turn write rolls back the complete transaction.
+   * Never acknowledge durable storage without a committed content-free audit.
+   */
+  async addAuditedExchange(
+    posture: TurnPosture,
+    userId: string,
+    sessionId: string | undefined,
+    userMessage: string,
+    assistantResponse: string,
+    exchangeId: string
+  ): Promise<void> {
+    if (!contentWritable(posture, 'TurnsStore.addAuditedExchange', sessionId)) {
+      throw new Error('Turn persistence refused by posture');
+    }
+    const userProv = mintTurnProvenance(posture, 'user', exchangeId, sessionId);
+    const maiaProv = mintTurnProvenance(posture, 'assistant', exchangeId, sessionId);
+    if (!userProv || !maiaProv) throw new Error('Turn provenance mint refused');
+    await transaction(async client => {
+      await client.query(
+        `INSERT INTO runtime_consent_state(request_id, member_id, session_id, posture, resolved_from)
+         VALUES ($1,$2,$3,'normal',$4)
+         ON CONFLICT(request_id) DO NOTHING`,
+        [exchangeId,userId,sessionId ?? null,posture.source]
+      );
+      const recorded = await client.query<{member_id:string|null;session_id:string|null;posture:string}>(
+        `SELECT member_id,session_id,posture FROM runtime_consent_state WHERE request_id=$1`,
+        [exchangeId]
+      );
+      const audit=recorded.rows[0];
+      if (!audit || audit.member_id!==userId ||
+          audit.session_id!==(sessionId ?? null) || audit.posture!=='normal') {
+        throw new Error('Durable consent record disagrees with exchange');
+      }
+      await client.query(
+        `INSERT INTO conversation_turns(user_id,session_id,role,content,exchange_id,seq,created_at,posture_at_creation,provenance)
+         VALUES($1,$2,'user',$3,$4,0,clock_timestamp(),'normal',$5::jsonb)
+         ON CONFLICT(exchange_id,seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
+        [userId,sessionId ?? null,userMessage,exchangeId,JSON.stringify(userProv.toJson())]
+      );
+      await client.query(
+        `INSERT INTO conversation_turns(user_id,session_id,role,content,exchange_id,seq,created_at,posture_at_creation,provenance)
+         VALUES($1,$2,'assistant',$3,$4,1,clock_timestamp(),'normal',$5::jsonb)
+         ON CONFLICT(exchange_id,seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
+        [userId,sessionId ?? null,assistantResponse,exchangeId,JSON.stringify(maiaProv.toJson())]
+      );
+      // A reused exchange ID cannot silently adopt another member's turns.
+      const check=await client.query<{user_id:string;seq:number}>(
+        'SELECT user_id,seq FROM conversation_turns WHERE exchange_id=$1',[exchangeId]
+      );
+      if (check.rows.length!==2 || check.rows.some(r=>r.user_id!==userId) ||
+          !check.rows.some(r=>r.seq===0) || !check.rows.some(r=>r.seq===1)) {
+        throw new Error('Durable exchange ownership/completeness mismatch');
+      }
+    });
   },
 
   /**

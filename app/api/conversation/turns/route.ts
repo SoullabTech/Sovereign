@@ -13,7 +13,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
-import { recordConsentState } from '@/lib/provenance/consentState';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 const PRIVATE_HISTORY_CACHE = 'private, no-store, max-age=0, must-revalidate';
@@ -176,8 +175,8 @@ export async function POST(request: NextRequest) {
       typeof clientExchangeId === 'string' && clientExchangeId.length > 0
         ? clientExchangeId
         : globalThis.crypto.randomUUID();
-    recordConsentState({ requestId: exchangeId, posture, memberId: userId, sessionId });
-    await TurnsStore.addExchange(posture, userId, sessionId || undefined, userMessage, assistantMessage, exchangeId);
+    // S5 audit and both turns must commit or roll back together.
+    await TurnsStore.addAuditedExchange(posture, userId, sessionId || undefined, userMessage, assistantMessage, exchangeId);
 
     console.log(`[CONVERSATION] Stored turn pair for user ${userId.slice(0, 8)}...`);
 

@@ -228,7 +228,7 @@ export const MemoryBundleService = {
 
     if (scope === 'session' && sessionId) {
       // Session-only: only return turns from current session
-      return TurnsStore.getSessionTurns(sessionId);
+      return TurnsStore.getSessionTurns(sessionId, userId);
     }
 
     // Cross-session: exclude current session
