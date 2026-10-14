@@ -54,12 +54,12 @@ if (process.argv[2] === '--verify') {
     const sessionId = randomUUID();
     const exchangeId = randomUUID();
     const posture = TurnPosture.resolve({ sanctuary: false });
-    for (const turn of [
-      { role: 'user', content: 'Consider this fictional sentence: The quiet room held the morning light.' },
-      { role: 'assistant', content: answer.message.content },
-    ]) {
-      assert.ok(store.addExchangeTurn(posture, { ...turn, memberId: member.id, sessionId, exchangeId }));
-    }
+    const exchange = store.addExchange(posture, {
+      memberId: member.id, sessionId, exchangeId,
+      userContent: 'Consider this fictional sentence: The quiet room held the morning light.',
+      assistantContent: answer.message.content,
+    });
+    assert.ok(exchange && !exchange.replayed);
     const manuscript = store.createManuscript(member.id, { title: 'Fictional Cabin pilot' });
     store.addManuscriptSections(member.id, manuscript.id, [{
       position: 0, heading: 'Pilot', body: 'The quiet room held the morning light.',

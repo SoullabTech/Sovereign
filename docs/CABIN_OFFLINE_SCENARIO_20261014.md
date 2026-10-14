@@ -45,7 +45,7 @@ The pilot does not implement MAIA canons, context admission, local Send, transac
 exchange persistence, application recovery, streaming, voice, or manuscript Apply/Undo.
 It does not prove network isolation: the Mac remained connected during the run.
 It does not evaluate model relational quality or certify recovery custody.
-The two pilot turn writes are separate; they must not be presented as an atomic Send.
+The continued pilot now uses CabinLocalStore.addExchange: both completed turns commit in one SQLite transaction. This storage primitive is not yet an authenticated application Send handler.
 
 ## Next bounded implementation
 1. Integrate a local authenticated Send handler using server-owned local sessions.
@@ -58,3 +58,16 @@ The two pilot turn writes are separate; they must not be presented as an atomic 
 
 No production deployment, installed app replacement, network shutdown, real manuscript
 import, paid service, or recovery certification was performed.
+
+## Atomic exchange continuation
+CabinLocalStore.addExchange now commits a completed user/assistant pair atomically.
+Exact retries reuse both turn identities. Changed content, session, owner, and incomplete
+legacy exchanges are refused. Missing/forged posture and Sanctuary persist neither half.
+A forced assistant insert failure rolls back the user half; retry succeeds after removal
+of the fictional failure trigger. No schema change was required.
+All 56 Cabin tests passed (49 existing plus seven atomic-exchange tests).
+The local model pilot passed again using this primitive and fresh-process recovery;
+observed total duration was 2955 ms. A scoped TypeScript check of localStore.ts passed.
+This does not change the conversation UI, offline cognition route guard, or production.
+Before connecting Send, resolve canonical MAIA prompt/context participation and local
+conversation ownership rather than bypassing them with a generic model endpoint.

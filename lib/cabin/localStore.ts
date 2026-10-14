@@ -538,6 +538,50 @@ export class CabinLocalStore {
     return row ? rowTurn(row) : null;
   }
 
+  /** Persist a completed exchange atomically; retries must match its exact owner and content. */
+  addExchange(
+    posture: TurnPosture,
+    input: {
+      memberId: string;
+      sessionId: string;
+      exchangeId: string;
+      userContent: string;
+      assistantContent: string;
+    },
+  ): { user: CabinTurn; assistant: CabinTurn; replayed: boolean } | null {
+    if (!(posture instanceof TurnPosture) || posture.sanctuary) return null;
+    if (!input.sessionId || !input.exchangeId ||
+        !input.userContent.trim() || !input.assistantContent.trim()) {
+      throw new Error('CABIN_EXCHANGE_INVALID');
+    }
+    if (!this.getMember(input.memberId)) throw new Error('CABIN_MEMBER_NOT_FOUND');
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const existing = this.db.prepare(
+        'SELECT * FROM conversation_turns WHERE exchange_id = ? ORDER BY seq',
+      ).all(input.exchangeId) as Record<string, unknown>[];
+      if (existing.length > 0) {
+        if (existing.length !== 2 || existing.some((row, seq) =>
+          row.user_id !== input.memberId || row.session_id !== input.sessionId ||
+          Number(row.seq) !== seq || row.role !== (seq === 0 ? 'user' : 'assistant') ||
+          row.content !== (seq === 0 ? input.userContent : input.assistantContent))) {
+          throw new Error('CABIN_EXCHANGE_CONFLICT');
+        }
+        this.db.exec('COMMIT');
+        return { user: rowTurn(existing[0]), assistant: rowTurn(existing[1]), replayed: true };
+      }
+      const common = { memberId: input.memberId, sessionId: input.sessionId, exchangeId: input.exchangeId };
+      const user = this.addExchangeTurn(posture, { ...common, role: 'user', content: input.userContent });
+      const assistant = this.addExchangeTurn(posture, { ...common, role: 'assistant', content: input.assistantContent });
+      if (!user || !assistant) throw new Error('CABIN_EXCHANGE_NOT_DURABLE');
+      this.db.exec('COMMIT');
+      return { user, assistant, replayed: false };
+    } catch (error) {
+      this.db.exec('ROLLBACK');
+      throw error;
+    }
+  }
+
   getSessionTurns(
     memberId: string,
     sessionId: string,
