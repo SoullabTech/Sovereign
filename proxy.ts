@@ -17,6 +17,8 @@ import {
 import { stripClientIdentityAssertions } from './lib/auth/identityAssertions';
 import { deriveVerifiedAccess, type VerifiedAccess } from './lib/auth/verifiedAccess';
 import { canonicalStudioRoute } from './lib/writersStudio/canonicalStudioRoute';
+import { writersStudioBetaAccess } from './lib/writersStudio/betaAccessServer';
+import { restrictedBetaEnabled, isRestrictedWriterStudioPath, mayEnterRestrictedWriterStudioPath } from './lib/writersStudio/restrictedBetaAdmission';
 // NOTE: entitlements are still checked in route handlers, not here — they are a
 // commercial concern with their own surface, not part of the trust boundary.
 
@@ -206,7 +208,10 @@ export async function proxy(req: NextRequest) {
     pathname.startsWith('/assets') ||
     pathname.startsWith('/images') ||
     pathname.startsWith('/fonts') ||
-    pathname.includes('.') // Skip files with extensions (.css, .js, .png, etc.)
+    // Do not let extension-shaped names bypass a restricted Studio API route.
+    (pathname.includes('.') &&
+      !(restrictedBetaEnabled(process.env.WRITERS_STUDIO_RESTRICTED_BETA)
+        && isRestrictedWriterStudioPath(pathname)))
   ) {
     // `pathname.includes('.')` is broad enough to match a real route, so this
     // fast path strips assertions too rather than assuming it only ever serves
@@ -265,6 +270,46 @@ export async function proxy(req: NextRequest) {
     console.warn(
       `[Middleware] credential refused (${verified.reason}) for ${pathname} claim=${getMemberIdClaim(req) ?? 'none'} rid=${rid}`,
     );
+  }
+
+  // ---------------------------------------------------------------------
+  // Restricted Writer's Studio beta: a separate server-side cohort admission
+  // gate, with the existing authenticated/session-backed ops-contact rule.
+  //
+  // This can only DENY. It cannot replace the access matrix, commercial rules,
+  // or per-member ownership. The flag defaults OFF to preserve existing
+  // released member access until an exact restricted-beta release is approved.
+  // Do not gate shared manuscript APIs or public discovery/case-study material.
+  // ---------------------------------------------------------------------
+  const requiresWriterBeta = restrictedBetaEnabled(process.env.WRITERS_STUDIO_RESTRICTED_BETA)
+    && isRestrictedWriterStudioPath(pathname);
+  if (requiresWriterBeta) {
+    if (!verified.authenticated || !verified.memberId) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'authentication_required' }, { status: 401 });
+      }
+      const login = new URL('/signin', req.url);
+      login.searchParams.set('next', pathname);
+      return NextResponse.redirect(login);
+    }
+
+    let eligible = false;
+    try {
+      const admission = await writersStudioBetaAccess(verified.memberId);
+      eligible = mayEnterRestrictedWriterStudioPath(pathname, admission);
+    } catch {
+      // Losing cohort authority is NOT permission to treat everyone as admitted.
+      console.error('[WriterStudio/Beta] membership lookup unavailable');
+      return NextResponse.json(
+        { error: 'writer_beta_admission_unavailable' }, { status: 503 },
+      );
+    }
+    if (!eligible) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'writer_beta_not_admitted' }, { status: 403 });
+      }
+      return NextResponse.redirect(new URL('/writers-studio/beta-limited', req.url));
+    }
   }
 
   // ---------------------------------------------------------------------
