@@ -404,6 +404,9 @@ const nextConfig = {
 
   // Experimental features to ensure critical components load first
   experimental: {
+    // Bound compiler memory without skipping checks or changing runtime authority.
+    webpackBuildWorker: true,
+    webpackMemoryOptimizations: true,
     optimizeCss: true,
     // A packaged Cabin runtime lives inside a signed macOS app bundle. Next's
     // default ISR disk cache writes route-cache files under .next/server at
