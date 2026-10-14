@@ -1,0 +1,9 @@
+{
+  "workUnitId": "v2-cabin-c2-voice-local-20261014",
+  "state": "AUTHORIZED",
+  "executionConnected": false,
+  "sourceSha": "3db36a322f336b1cdad9fe7d93c605f49487cc49",
+  "foregroundDeliveryEvidence": "docs/testing/cabin-c2-local-voice-20261014.md",
+  "installedVersion": "0.4.0",
+  "next": "Physical audio acceptance, Sanctuary posture and full local MAIA qualification"
+}
