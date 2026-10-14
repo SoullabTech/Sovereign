@@ -2,8 +2,9 @@
 
 Date: 2026-10-13
 State: ISOLATED ENGINEERING CANDIDATE; NOT MERGED OR DEPLOYED
-Base: `c220476355` (isolated restricted-beta UI candidate)
-Branch: `fix/ws-beta-precise-member-admission-20261013`
+Base: `9f0648d060` (guarded ten-writer and continuous-draft beta candidate)
+Integration branch: `fix/ws-beta-integrated-small-group-20261013`
+Admission correction originally committed as isolated `22f8a3ada8` and cherry-picked here as `6e7d34af27`; only the restricted-entry UI/proxy gate is ported from the separate `c220476355` candidate.
 Parent release work unit: `v2-writer-s-studio-small-beta-launch-mv5adx5f`
 Tracker: https://github.com/SoullabTech/Sovereign/issues/1800
 
@@ -45,10 +46,11 @@ These use fictional IDs and mocked database rows. No real member bytes.
 
 ## Open integration/security decisions (HOLD)
 
-- The frozen candidate branch here diverges from the guarded Writer’s Studio
-  continuous-draft / ten-writer work at `9f0648d060`. Port/reconcile the
-  exact authorization logic into **one** frozen build; do not promote either
-  independent candidate merely because this test passed.
+- This integration branch is based directly on guarded Writer’s Studio
+  candidate `9f0648d060` and ports only the restricted-beta entry pieces from
+  `c220476355`. It has **not** been merged, rebuilt as a release image, or
+  reconciled with the separate Review rollback and R20 custody corrections.
+  Do not promote it merely because focused tests passed.
 - Independently inspect session and member-ID derivation, grant changes, revoked
   sessions, role replacement, cross-tab account switching and all Studio
   entry points on the exact image. Shared manuscript APIs intentionally remain
