@@ -168,3 +168,10 @@ Source and no-overwrite builder are in apps/cabin-desktop. Builder uses an alrea
 available Electron.app and copies the existing JARVIS cabin-flow module.
 The conversation integration remains active unfinished work; this launcher is an
 entry point, not a declaration that the complete Cabin scenario is delivered.
+
+## Soullab Cabin icon
+Founder requested a Soullab Cabin image. Built-in image generation created a warm
+timber cabin, evergreen trees, and golden halo on a cream tile. Original PNG and
+compiled macOS ICNS are in apps/cabin-desktop/assets. The no-overwrite builder
+now includes Cabin.icns. Installed app metadata names the new icon; ad-hoc signing
+and strict verification passed. Only the Cabin launcher was restarted to refresh it.

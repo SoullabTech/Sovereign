@@ -29,7 +29,8 @@ shutil.copy2(root / "jarvis-desktop/src/cabin-flow.js", application / "cabin-flo
 info_path = target / "Contents/Info.plist"
 with info_path.open("rb") as stream:
     info = plistlib.load(stream)
-info.update(CFBundleName="Cabin", CFBundleDisplayName="Cabin",
+shutil.copy2(Path(__file__).parent / "assets/Cabin.icns", target / "Contents/Resources/Cabin.icns")
+info.update(CFBundleIconFile="Cabin.icns", CFBundleName="Cabin", CFBundleDisplayName="Cabin",
             CFBundleIdentifier="life.soullab.cabin.launcher",
             CFBundleShortVersionString="0.1.0", CFBundleVersion="1")
 with info_path.open("wb") as stream:
