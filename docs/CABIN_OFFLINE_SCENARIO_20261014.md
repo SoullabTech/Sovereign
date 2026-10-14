@@ -149,3 +149,22 @@ Only loopback is bound and requested. No real member material, radio transmissio
 paid resource, or installed application is used.
 Next milestone: join this selected-sharing seam to a reviewable Cabin invitation and
 send/receive interface, then test two physical devices before expanding to a circle.
+
+## Direct Cabin desktop launcher
+Founder requested direct desktop access on 2026-10-14. Created a distinct local app
+at /Users/soullab/Applications/Cabin.app and opened it after packaged-window testing.
+macOS refused Desktop-folder access, so no Desktop shortcut was created.
+The launcher is explicitly labelled Setup in progress; it checks readiness and opens
+only the fixed loopback Cabin workspace after a fresh check. It does not supply the
+missing runtime, local Send, Apply/Undo, or resume integration. It has its own userData
+directory (Soullab Cabin), bundle identity, single-instance lock, two narrow bridge
+methods, and sandboxed renderer. The workspace view blocks external requests.
+The app is ad-hoc signed for this Mac; codesign verification passed. It is not
+notarized or qualified for distribution to members. Existing apps were not replaced.
+Playwright tested the actual packaged executable: window PASS, readiness button PASS,
+isolated app storage PASS, narrow bridge PASS, Node integration DISABLED; exit 0.
+Observed UI: local workspace not running yet. A normal launch was left open afterward.
+Source and no-overwrite builder are in apps/cabin-desktop. Builder uses an already
+available Electron.app and copies the existing JARVIS cabin-flow module.
+The conversation integration remains active unfinished work; this launcher is an
+entry point, not a declaration that the complete Cabin scenario is delivered.

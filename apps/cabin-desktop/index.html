@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'none'">
+<title>Cabin</title><style>
+*{box-sizing:border-box}body{margin:0;background:#f5f0e7;color:#302c26;font:19px/1.6 -apple-system,BlinkMacSystemFont,sans-serif}
+main{max-width:720px;margin:64px auto;padding:0 36px}h1{font:54px Georgia,serif;margin:6px 0 12px}p{margin:12px 0}
+.eyebrow{letter-spacing:.16em;text-transform:uppercase;font-size:13px;color:#746c5e}
+.panel{background:#fffaf1;border:1px solid #d8cfbe;border-radius:18px;padding:24px;margin:28px 0}
+button{font:inherit;border-radius:10px;padding:10px 17px;border:1px solid #b8ad97;cursor:pointer;background:#eee6d6;color:#302c26;margin:12px 8px 0 0}
+button.primary{background:#435646;color:white;border-color:#435646}button:disabled{opacity:.45;cursor:default}
+.small{font-size:15px;color:#70685b}.state{font-size:17px}#status{min-height:60px}
+</style></head><body><main>
+<div class="eyebrow">Soullab · local workspace</div><h1>Cabin</h1>
+<p>A place to return to your writing and conversation.</p>
+<div class="panel"><strong>Welcome home.</strong>
+<p id="status" role="status" aria-live="polite">Checking your local workspace…</p>
+<button id="check">Check readiness</button><button id="open" class="primary" disabled>Open local workspace</button>
+<p id="models" class="small"></p></div>
+<p class="state">Setup in progress</p>
+<p class="small">This launcher is ready. Local MAIA conversation, manuscript Apply/Undo, and returning to saved work are still being connected and verified.</p>
+<p class="small">Your writing stays private unless you choose to share it. This launcher does not send your writing or conversations anywhere.</p>
+</main><script src="renderer.js"></script></body></html>
