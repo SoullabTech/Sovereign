@@ -88,6 +88,26 @@ Five flow tests passed. Existing JARVIS alpha-floor proof: 97 passed, zero faile
 Live observation: local completion models AVAILABLE; runtime NEEDS_SETUP; canOpen false.
 The initial external-browser opening implementation failed the reveal-only main guard;
 it was replaced with the bounded sandboxed view, and the unchanged guard passed.
-Actual Electron visual acceptance and integration with the current installed JARVIS
-revision remain outstanding. This older Cabin baseline is an isolated candidate, not
+An actual Electron-window automated test now passes as recorded below. Founder visual acceptance and integration with the current installed JARVIS revision remain outstanding. This older Cabin baseline is an isolated candidate, not
 a replacement for newer JARVIS work. Resume-work selection is not implemented.
+
+## Actual JARVIS window canary
+The source candidate was launched using Playwright Electron and the observed available
+Electron binary. appData and userData were set under a disposable directory before
+JARVIS initialized. The candidate used its own single-instance lock and repository
+binding; installed JARVIS was not restarted or replaced.
+The positive opening test used an explicitly fictional loopback Cabin fixture because
+the real standalone Cabin runtime was not running. It verifies the actual renderer,
+preload, MAIN handlers, and sandboxed child window; it is not real Cabin acceptance.
+Results: actualJarvisWindow PASS; isolatedStorage PASS; fictionalFixtureOpen PASS;
+externalNavigationBlocked PASS; externalFetchBlocked PASS;
+stoppedRuntimeDisablesOpen PASS. Captured process exit: 0.
+The first captured attempt timed out waiting for a navigation deliberately denied by
+the guard. The harness was corrected to avoid waiting for that denied navigation,
+and the complete rerun passed. An earlier launch failed because the Electron executable
+was initially absent; the available package then supplied its binary.
+The canary closes its own app, fixture server, and temporary storage. No listener
+remained on the fixture port after the successful run.
+Next integration: qualify the real isolated Cabin runtime, local authenticated Send,
+and saved-work resumption. Voice, manuscript Apply/Undo, and full network-disconnected
+acceptance remain unverified.
