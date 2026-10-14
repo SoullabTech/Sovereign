@@ -34,7 +34,7 @@ if (!app.requestSingleInstanceLock()) { app.quit(); } else {
     cwd:path.join(__dirname,'runtime'),env:{PATH:process.env.PATH||'/usr/bin:/bin',
      CABIN_TOKEN:token,CABIN_PORT:String(port),CABIN_DATA_PATH:path.join(app.getPath('userData'),'workspace.sqlite')},
     stdio:['ignore','ignore','pipe']});
-   let exited=false;child.once('exit',()=>{exited=true;});child.once('error',()=>{exited=true;});
+   let exited=false;child.once('exit',()=>{exited=true;starting=null;});child.once('error',()=>{exited=true;starting=null;});
    // Error output is bounded and contains no prompts or manuscript content.
    child.stderr.on('data',()=>{});
    for(let i=0;i<100;i++){

@@ -3,16 +3,19 @@ const check = document.getElementById('check');
 const open = document.getElementById('open');
 async function refresh() {
   check.disabled = true; open.disabled = true;
+  check.textContent = 'Checking…';
+  status.textContent = 'Checking your local workspace and models…';
   try {
     const result = await window.cabin.readiness();
+    const time = new Date(result.observedAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'});
     status.textContent = result.canOpen
-      ? 'Your local workspace is running. You can open it here.'
-      : 'The local workspace is not running yet. Check that another Cabin instance is not already running.';
+      ? 'Workspace ready. Check completed at ' + time + '. You can open it below.'
+      : 'Check completed at ' + time + '. The workspace needs attention. Close other Cabin test windows and check again.';
     document.getElementById('models').textContent = result.models === 'AVAILABLE'
       ? 'Local models are available on this Mac.' : 'Local model availability could not be verified.';
     open.disabled = !result.canOpen;
-  } catch { status.textContent = 'The local runtime could not start. Close other Cabin test windows and try again.'; }
-  finally { check.disabled = false; }
+  } catch { status.textContent = 'Check failed: the local workspace could not start. Close other Cabin test windows and try again.'; }
+  finally { check.disabled = false; check.textContent = 'Check readiness'; }
 }
 check.addEventListener('click', refresh);
 open.addEventListener('click', async () => {
