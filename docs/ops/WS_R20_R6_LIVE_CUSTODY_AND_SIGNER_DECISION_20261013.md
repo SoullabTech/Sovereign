@@ -96,6 +96,41 @@ authority. The offline VPS is not a qualified signer.
 
 No production service, key, device, ACL or signer adapter was installed.
 
+## R6R1 source-history review — possible orphan mechanism, not attribution
+
+The September 6 source-history snapshot `346e982bf3` and the old
+deployed-reader source `c9e4f7f7e` both show
+`lib/manuscript/source/arrivals.ts::recordArtifactArrival` writing
+Source bytes with `writeVaultBytes` **before** calling
+`insertArrival` to insert the PostgreSQL custody row.
+`lib/storage/fileVault.ts::writeVaultBytes` uses a filesystem
+write that does not share a database transaction. In that source
+path an interrupted/failed relational insertion **can** leave bytes
+unreferenced, because no compensating erasure step is present there.
+The historical comment refers to such orphans as harmless/sweepable;
+the later founder-approved total-erasure rule does not admit automatic
+orphan cleanup or a completed deletion claim without custody proof.
+
+**Interpretation:** This is a specific, repeatable source-level
+*possible mechanism*, **not proof** that either September 6 file
+came from this code path. There is no witnessed log event or member
+identity attribution. No production contents, filenames or member
+data were read. Preserve both unknown files until WS-DELETE-02 and
+separately controlled provenance/retention review.
+
+## Synology management trust boundary
+
+The Synology CIFS share is present as a mounted client path, but neither
+the Mac Studio nor the Minisforum has a separately verified/pinned
+SSH host-key record for the DSM administrator at this time. The
+Synology is also not identified as a separate connected device in
+the already configured private-device inventory. **No SSH or DSM
+administrative login was attempted.** The client-visible Recycle
+count of zero cannot close the discrepancy with the prior DSM
+server-side approximately 30.37 GB record. A separately authenticated
+and approved **DSM-side read-only** snapshot/Recycle Bin/ACL inventory
+remains necessary.
+
 ## The next *bounded* gates (no reset of completed work)
 
 **A — Historical file disposition:** preserve the two unknown objects,
