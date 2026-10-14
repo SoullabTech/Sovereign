@@ -21,7 +21,7 @@ The installed doorway code is stored in the Cabin application-support directory,
 - Runtime external-egress denial remains enabled; voice engine network is internal.
 - Package bundling, JavaScript/Python syntax, source whitespace and deep ad-hoc signing: PASS.
 - Physical microphone: NOT TESTED.
-- Physical speaker output: NOT TESTED; browser playback was muted during automation.
+- Physical speaker output: NOT TESTED; browser playback was muted during automation and the synthetic-stream test allowed autoplay. Ordinary user gesture/permission behavior remains part of physical acceptance.
 
 Electron's built-in fake microphone/file fixture returned an unrelated transcript. That attempt is not accepted as recognition evidence. The successful window test injects a controlled synthetic stream into getUserMedia; it exercises recording, upload, real recognition and playback, but does not prove physical capture or operating-system permission behavior.
 

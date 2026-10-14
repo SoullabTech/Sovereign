@@ -1,12 +1,14 @@
 import {_electron as electron} from 'playwright';
 import assert from 'node:assert/strict';
-import {mkdtempSync,rmSync,readFileSync} from 'node:fs';
+import {mkdtempSync,rmSync,readFileSync,writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
-const dir=mkdtempSync(join(tmpdir(),'cabin-voice-fictional-'));let app;
+const dir=mkdtempSync(join(tmpdir(),'cabin-voice-fictional-'));const fixture=join(dir,'fictional.wav');let app;
 try{
+ const speech=await fetch('http://127.0.0.1:18880/v1/audio/speech',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:'Fictional test. The forest is quiet today.',voice:'af_kore',model:'kokoro',response_format:'wav',speed:1}),signal:AbortSignal.timeout(90000)});
+ assert.equal(speech.ok,true);writeFileSync(fixture,Buffer.from(await speech.arrayBuffer()));
  app=await electron.launch({executablePath:(process.env.CABIN_TEST_APP||'/Users/soullab/Applications/Cabin.app')+'/Contents/MacOS/Electron',
- args:['--autoplay-policy=no-user-gesture-required','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream','--use-file-for-fake-audio-capture=/tmp/cabin-fictional-capture.wav'],
+ args:['--autoplay-policy=no-user-gesture-required','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream'],
  env:{...process.env,CABIN_CANARY:'1',CABIN_TEST_PORT:'43226',CABIN_TEST_DATA:dir}});
  const home=await app.firstWindow();await home.waitForFunction(()=>!document.querySelector('#open').disabled);
  const opening=app.waitForEvent('window');await home.locator('#open').click();const page=await opening;
@@ -20,7 +22,7 @@ try{
    await context.resume();const source=context.createBufferSource();source.buffer=buffer;source.loop=true;
    const destination=context.createMediaStreamDestination();source.connect(destination);source.start();return destination.stream;
   };
- },readFileSync('/tmp/cabin-fictional-voice.wav').toString('base64'));
+ },readFileSync(fixture).toString('base64'));
  console.log('Recording synthetic speech');
  await page.locator('#record').click();
  await page.waitForFunction(()=>!document.querySelector('#stop-record').hidden);
