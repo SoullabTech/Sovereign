@@ -19,6 +19,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
+import { getCurrentSession } from '@/lib/auth/serverSessions'
 
 const VALID_PRIVACY_MODES = ['sanctuary', 'standard', 'full'] as const
 const VALID_MAIA_MODES = ['normal', 'patient', 'scribe'] as const
@@ -51,6 +52,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // MAIA session ownership is authoritative only when backed by a valid,
+    // revocable HttpOnly auth session. A raw body.memberId is a CLAIM, never
+    // a credential. Ordinary guest sessions remain guest-owned (NULL member).
+    const currentSession = await getCurrentSession()
+    const claimedMember = memberId === undefined || memberId === null || memberId === ''
+      ? null : memberId
+    if (claimedMember !== null && typeof claimedMember !== 'string') {
+      return NextResponse.json({ ok: false, error: 'Invalid member claim' }, { status: 400 })
+    }
+    if (claimedMember && !currentSession) {
+      return NextResponse.json({ ok: false, error: 'Authenticated member session required' }, { status: 401 })
+    }
+    if (claimedMember && currentSession?.memberId !== claimedMember) {
+      return NextResponse.json({ ok: false, error: 'Member claim mismatch' }, { status: 403 })
+    }
+    if (anonId !== undefined && anonId !== null &&
+        (typeof anonId !== 'string' || anonId.length > 128)) {
+      return NextResponse.json({ ok: false, error: 'Invalid guest identifier' }, { status: 400 })
+    }
+    const verifiedMemberId = currentSession?.memberId ?? null
+    const guestAnonId = verifiedMemberId ? null : typeof anonId === 'string' ? anonId || null : null
+
     // Normalize privacy mode
     const normalizedPrivacyMode = VALID_PRIVACY_MODES.includes(privacyMode)
       ? privacyMode
@@ -74,16 +97,16 @@ export async function POST(request: NextRequest) {
       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), 'active')
       ON CONFLICT (id) DO UPDATE SET
         last_activity_at = NOW(),
-        member_id = COALESCE(EXCLUDED.member_id, maia_sessions.member_id),
-        anon_id = COALESCE(EXCLUDED.anon_id, maia_sessions.anon_id),
         maia_mode = EXCLUDED.maia_mode,
         voice_enabled = EXCLUDED.voice_enabled
+      WHERE maia_sessions.member_id IS NOT DISTINCT FROM EXCLUDED.member_id
+        AND maia_sessions.anon_id IS NOT DISTINCT FROM EXCLUDED.anon_id
       RETURNING id, started_at, status
       `,
       [
         sessionId,
-        memberId || null,
-        anonId || null,
+        verifiedMemberId,
+        guestAnonId,
         normalizedPrivacyMode,
         mode,
         normalizedMaiaMode,
@@ -92,8 +115,13 @@ export async function POST(request: NextRequest) {
     )
 
     const session = result.rows[0]
+    if (!session) {
+      // A client-chosen ID can collide with a different member or guest.
+      // Never reassign an existing session's attribution on that collision.
+      return NextResponse.json({ ok: false, error: 'Session ownership conflict' }, { status: 409 })
+    }
 
-    console.log(`[session/start] Session ${sessionId} registered (member: ${memberId || 'guest'})`)
+    console.log(`[session/start] Session ${sessionId} registered (member: ${verifiedMemberId ? 'verified' : 'guest'})`)
 
     return NextResponse.json({
       ok: true,
