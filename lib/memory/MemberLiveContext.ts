@@ -57,7 +57,11 @@ export interface JournalEntry {
   /** 'quick' | 'elemental' */
   entryType?: string;
   tags?: string[];
-  createdAt: string;
+  /** Existing loader metadata; never synthesized here from prose. */
+  themes?: string[];
+  mood?: string;
+  /** Database loaders return Date; existing serialized callers use strings. */
+  createdAt: string | Date;
 }
 
 export interface CaptureNote {
@@ -383,17 +387,22 @@ export async function buildMemberLiveContext(
     spiralState,
     recentSessions,
     activePatterns,
-    recentJournal,
+    loadedJournal,
     relationshipEssence,
     rawThemeSignals,
   ] = await Promise.all([
     loadSpiralState(userId).catch(() => null),
     getRecentSummaries(userId, maxSessions).catch(() => []),
     getActivePatternContext(userId, maxPatterns).catch(() => [] as ActivePattern[]),
-    loadJournals(userId, maxJournal).catch(() => [] as JournalEntry[]),
+    loadJournals(userId, maxJournal).catch(() => []),
     loadRelationshipEssence(userId).catch(() => null),
     getRecentThemes(userId, 20, 30).catch(() => []),
   ]);
+
+  // Keep the existing member-scoped loader as the authority for these rows.
+  // Carry the lookup identity required by this context contract without
+  // mutating rows, rewriting author text or treating metadata as credentials.
+  const recentJournal: JournalEntry[] = loadedJournal.map(entry => ({ ...entry, userId }));
 
   const recurringThemes = findRecurringThemes(rawThemeSignals);
 
@@ -427,6 +436,14 @@ export async function buildMemberLiveContext(
   };
 }
 
+// Both timestamp representations already occur at the source boundaries.
+// Preserve the formatter's existing date semantics, including string offsets.
+function contextDateLabel(value: string | Date): string {
+  return value instanceof Date
+    ? value.toISOString().slice(0, 10)
+    : String(value).slice(0, 10);
+}
+
 /**
  * Format a MemberLiveContext into a compact "Member Web" prompt block.
  *
@@ -453,9 +470,7 @@ export function formatMemberWebForPrompt(ctx: MemberLiveContext): string {
 
   const summariesBlock = ctx.recentSessions.length > 0
     ? ctx.recentSessions.slice(0, 3).map(s => {
-        const date = s.completedAt instanceof Date
-          ? s.completedAt.toISOString().slice(0, 10)
-          : String(s.completedAt).slice(0, 10);
+        const date = contextDateLabel(s.completedAt);
         const rem = s.summary;
         const essence = rem.essence ? rem.essence.slice(0, 140) : 'Session completed';
         const topThemes = rem.themes?.slice(0, 3).join(', ') || '';
@@ -466,9 +481,7 @@ export function formatMemberWebForPrompt(ctx: MemberLiveContext): string {
 
   const journalsBlock = ctx.recentJournal.length > 0
     ? ctx.recentJournal.slice(0, 5).map(j => {
-        const date = j.createdAt instanceof Date
-          ? j.createdAt.toISOString().slice(0, 10)
-          : String(j.createdAt).slice(0, 10);
+        const date = contextDateLabel(j.createdAt);
         const preview = j.content.replace(/\s+/g, ' ').trim().slice(0, 200);
         const themes = j.themes?.slice(0, 3).join(', ') || '';
         return `  [${date}]${themes ? ` (${themes})` : ''} — ${preview}`;
