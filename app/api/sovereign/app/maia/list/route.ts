@@ -107,7 +107,7 @@ import { scrubMemoryAmnesia } from '@/lib/maia/prompts/memoryCanonGuard';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
-import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
+import { enforceFieldSafety, type FieldSafetyDecision } from '@/lib/field/enforceFieldSafety';
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
 import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
@@ -115,7 +115,7 @@ import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 import { resolveMemberIdentity } from './resolveIdentity';
 import { getRelationshipAnamnesis, saveRelationshipEssence, loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
-import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext } from '@/lib/memory/MemberLiveContext';
+import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext, type MemberLiveContext } from '@/lib/memory/MemberLiveContext';
 import { MemoryWritebackService } from '@/lib/memory/MemoryWriteback';
 import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
 // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — wired here because THIS is the live
@@ -253,9 +253,8 @@ async function withTimeoutLabeled<T>(
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
-      const err = new Error('SOVEREIGN_TIMEOUT');
-      // @ts-expect-error - attach custom code for logging
-      (err as any).code = 'SOVEREIGN_TIMEOUT';
+      const err = new Error('SOVEREIGN_TIMEOUT') as Error & { code: 'SOVEREIGN_TIMEOUT' };
+      err.code = 'SOVEREIGN_TIMEOUT';
       reject(err);
     }, ms);
 
@@ -667,7 +666,7 @@ export async function POST(req: NextRequest) {
 
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for field/symbolic work
     let cognitiveProfile = cognitiveProfileResult;
-    let fieldSafety = null;
+    let fieldSafety: FieldSafetyDecision | null = null;
 
     if (cognitiveProfile) {
       fieldSafety = enforceFieldSafety({
@@ -950,7 +949,7 @@ export async function POST(req: NextRequest) {
     // Single source of truth for patterns + summaries + journals — used by both
     // sovereign and oracle routes. Format via formatMemberWebForPrompt().
     let memberWebAddendum = '';
-    let memberLiveCtx = null;
+    let memberLiveCtx: MemberLiveContext | null = null;
     if (isRecognizedUser && !isSanctuary) {
       const t_web_start = Date.now();
       const userName = (meta as any)?.userName as string | undefined;
