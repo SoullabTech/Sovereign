@@ -1,0 +1,63 @@
+{
+  "schema": "soullab.writer-studio.bounded-phone-evidence.v1",
+  "observed_at": "2026-10-14T13:33:35.648522-04:00",
+  "application_revision": "350399df59d1c820f3ff304bf0f43269c77b8966",
+  "build_id": "SpeenJyrE-j6Keda9pGAk",
+  "normal_startup_accepted": true,
+  "component_sha256": "7b699521a1a5b5b71050462e189afb323544f27c1cd6deeef52b8f77ac3bcea7",
+  "standalone_server_file_sha256": "b377f252ac2e3c4865db58d1da540c94c5af7856ae05d9fcc6a7b1110d9afb8a",
+  "result": {
+    "checks": 32,
+    "physicalIphone": true,
+    "fictionalOnly": true,
+    "generatedTxtContentVerified": true,
+    "actualCopyTapVerified": false,
+    "tapMethod": "scripted-dom-click",
+    "studioHostedOnPrivateLan": true,
+    "inputMethod": "scripted-input-event",
+    "nativeKeystrokesVerified": false,
+    "deviceFilePresenceVerified": false,
+    "realMember": false,
+    "productionDeployed": false,
+    "encryptedLan": true,
+    "temporaryTestCertificateException": true,
+    "cleanupVerified": true
+  },
+  "generated_export": {
+    "filename": "R8 Fictional Writer 0-writer-copy.txt",
+    "bytes": 131,
+    "sha256": "8103b79d483a9c2a354d1bdded4058a599367d5280d82bf6a86ebab6e0a81617",
+    "onDeviceFileRead": false
+  },
+  "native_control": {
+    "element_click_event_count": 0,
+    "touch_action_event_count": 0,
+    "foreground_control_click_event_count": 0,
+    "root_cause_established": false
+  },
+  "release_authorized": false,
+  "production_changed": false,
+  "real_manuscripts_used": false,
+  "logs": [
+    {
+      "path": "/tmp/ws-r8-physical-iphone-toolbar-20261014.log",
+      "sha256": "310d1cd35d7f3f0c6ae236db32169ebe4d932d8b4201671d24fb6738872b5fb5"
+    },
+    {
+      "path": "/tmp/ws-r8-physical-iphone-scripted-diagnostic-20261014.log",
+      "sha256": "77f6a24633d15fdbf1d57e85f2568f40571b1ee17ae248fbcd6590d728734c3a"
+    },
+    {
+      "path": "/tmp/ws-r8-native-tap-control-20261014.log",
+      "sha256": "3557e6d0baeb5b794dd5983608d6e650ca7a30c3fc4a1e4a8d8b55b9874514c1"
+    },
+    {
+      "path": "/tmp/ws-r8-foreground-tap-control-20261014.log",
+      "sha256": "65c5075161082df802fd6d364639a5aa1aa0d8213669412b970bcf18e88a725a"
+    },
+    {
+      "path": "/tmp/ws-r8-gateway-refusals-20261014.log",
+      "sha256": "91e7a785bae7528fa0e03de6444626f5a384f5843a43333ddca1bc09a4b7f146"
+    }
+  ]
+}
