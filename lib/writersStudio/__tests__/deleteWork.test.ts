@@ -8,7 +8,7 @@
  */
 import { deleteWork, deletionRefusalCopy, removeWork, DELETE_WORK_COPY, REMOVE_WORK_COPY } from '../deleteWork';
 
-const gone = () => new Response(JSON.stringify({ removed: true }), { status: 200 });
+const gone = () => new Response(JSON.stringify({ removed: true, erasureStatus: 'pending', permanentErasureCertified: false }), { status: 202 });
 const notFound = () => new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
 
 type Call = [string, RequestInit];
@@ -31,7 +31,8 @@ describe('the act reaches the existing route, by id', () => {
 
     const out = await deleteWork({ workId: 'w-1', manuscriptId: 'm-1' }, fetcher);
 
-    expect(out).toEqual({ ok: true });
+    expect(out.ok).toBe(false);
+    expect(out.ok === false && out.message).toContain('still pending verification');
     expect(calls).toHaveLength(1);
     expect(calls[0][0]).toBe('/api/sovereign/manuscripts/m-1');
     expect(calls[0][1].method).toBe('DELETE');
@@ -43,7 +44,8 @@ describe('the act reaches the existing route, by id', () => {
 
     const out = await deleteWork({ workId: null, manuscriptId: 'm-9' }, fetcher);
 
-    expect(out).toEqual({ ok: true });
+    expect(out.ok).toBe(false);
+    expect(out.ok === false && out.message).toContain('still pending verification');
     expect(calls).toHaveLength(1);
     expect(calls[0][0]).toBe('/api/sovereign/manuscripts/m-9');
   });
@@ -106,7 +108,7 @@ describe('a refusal destroys nothing', () => {
 
     expect(out.ok).toBe(false);
     if (out.ok) return;
-    expect(out.message).toContain('not going to tell you it is gone');
+    expect(out.message).toContain('not been verified erased');
   });
 
   it('reports a transport failure without claiming anything was removed', async () => {
@@ -115,7 +117,7 @@ describe('a refusal destroys nothing', () => {
     });
     expect(out.ok).toBe(false);
     if (out.ok) return;
-    expect(out.message).toContain('Nothing was removed');
+    expect(out.message).toContain('could not confirm the deletion result');
   });
 });
 
@@ -123,14 +125,15 @@ describe('a member cannot delete what is not theirs', () => {
   /* The route answers 404 rather than 403 for another member's id, so it never
      confirms that the id exists. Nothing of another member's is touched, and the
      act sends exactly one request regardless. */
-  it('sends one member-scoped request and treats the 404 as already gone', async () => {
+  it('sends one member-scoped request but cannot infer irrevocable erasure from 404', async () => {
     const { calls, fetcher } = recorder(notFound);
 
     const out = await deleteWork({ workId: 'someone-elses', manuscriptId: 'not-mine' }, fetcher);
 
     expect(calls).toHaveLength(1);
     expect(calls[0][0]).toBe('/api/sovereign/manuscripts/not-mine');
-    expect(out).toEqual({ ok: true });
+    expect(out.ok).toBe(false);
+    expect(out.ok === false && out.message).toContain('cannot confirm permanent deletion');
   });
 });
 
@@ -139,9 +142,11 @@ describe('the confirmation tells the truth about reach', () => {
     expect(DELETE_WORK_COPY.question('The Long Field')).toContain('The Long Field');
   });
 
-  it('says the original file goes too, and that nothing is kept', () => {
+  it('names original-file removal and accurately discloses historical backups', () => {
     expect(DELETE_WORK_COPY.body).toContain('original file');
-    expect(DELETE_WORK_COPY.body).toContain('nothing is kept');
+    expect(DELETE_WORK_COPY.body).toContain('Historical');
+    expect(DELETE_WORK_COPY.body).toContain('pending');
+    expect(DELETE_WORK_COPY.body).not.toContain('nothing is kept');
   });
 
   it('promises no recovery it cannot honour', () => {
@@ -149,17 +154,17 @@ describe('the confirmation tells the truth about reach', () => {
       .map((v) => (typeof v === 'function' ? v('x') : String(v)))
       .join(' ')
       .toLowerCase();
-    /* Denying an archive is the point; OFFERING one would be the lie. */
-    expect(copy).toContain('no archive');
-    expect(copy).toContain('cannot be undone');
+    /* Historical copies are acknowledged without offering a restore action. */
+    expect(copy).toContain('backups may still hold recoverable writing');
+    expect(copy).toContain('pending');
+    expect(copy).not.toContain('nothing is kept');
     expect(copy).not.toMatch(/\brestore\b/);
     expect(copy).not.toMatch(/\btrash\b/);
-    expect(copy).not.toMatch(/\brecover\b/);
   });
 
   it('falls back rather than letting an unknown code reach the member', () => {
     expect(deletionRefusalCopy('some_new_code_from_a_later_lane')).toContain(
-      'Nothing was removed',
+      'could not confirm the deletion result',
     );
   });
 });
@@ -219,7 +224,8 @@ describe('the destructive act is unchanged — WS-DELETE-01 stands', () => {
       { workId: 'w-1', manuscriptId: 'm-1' },
       (url) => { seen.push(url); return Promise.resolve(new Response(null, { status: 200 })); },
     );
-    expect(out).toEqual({ ok: true });
+    expect(out.ok).toBe(false);
+    expect(out.ok === false && out.message).toContain('cannot confirm permanent deletion');
     expect(seen).toEqual(['/api/sovereign/manuscripts/m-1']);
   });
 });
@@ -227,7 +233,7 @@ describe('the destructive act is unchanged — WS-DELETE-01 stands', () => {
 describe('the two acts cannot be mistaken for one another', () => {
   it('each says what happens to the writing, and they say opposite things', () => {
     expect(REMOVE_WORK_COPY.hint).toBe('Keeps your writing in Your Writings.');
-    expect(DELETE_WORK_COPY.hint).toBe('Permanently deletes this Work and its writing.');
+    expect(DELETE_WORK_COPY.hint).toContain('historical-backup erasure may remain pending');
     /* Neither label may drift into the other's word. "Remove" that says Delete,
        or "Delete" that says Remove, is the confusion this ruling resolved. */
     expect(REMOVE_WORK_COPY.action).toBe('Remove Work');

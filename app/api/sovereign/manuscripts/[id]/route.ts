@@ -8,9 +8,10 @@ export const dynamic = 'force-dynamic';
  * GET    — the manuscript with its sections (headings + positions; body sizes,
  *          not bodies), keeps, and collections. Everything member-scoped by
  *          credential. Evidence only: counts, positions, the member's own words.
- * DELETE — removal is the member's, total, and hard (CASCADE takes sections,
- *          keeps, collections, placements). Mirrors the Moments-room posture:
- *          "the words are gone, not archived."
+ * DELETE — removes the requested member-owned writing from the live Studio
+ *          and records its R20 erasure obligations transactionally. Historical
+ *          SQL/vault backups may remain recoverable; the response must never
+ *          claim independent all-replica erasure before that is certified.
  *
  * ── WS-DELETE-01 — total erasure (founder ruling 2026-09-07) ──────────────
  * That posture was written in July, before the Source layer existed. From
@@ -56,8 +57,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { memberRef } from '@/lib/privacy/memberRef';
 import { eraseManuscript } from '@/lib/manuscript/source/eraseManuscript';
+import { acknowledgeLocalManuscriptRemoval } from '@/lib/recovery/r20-r8/pendingErasureAcknowledgement';
 import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -224,22 +225,23 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
       );
     }
 
+    // Content-minimal operational status: no manuscript/member IDs or
+    // Source locations in routine deletion logs.
     console.log(
-      `[MAIA/press] manuscript erased { memberRef: ${memberRef(memberId)}, manuscriptId: ${id}, `
-        + `artifactsQueued: ${outcome.artifactsQueued}, sweptAll: ${outcome.sweptAll} }`,
+      `[MAIA/press] local manuscript removal committed { artifactsQueued: ${outcome.artifactsQueued}, `
+        + `vaultSweepCompleted: ${outcome.sweptAll}, backupErasureStatus: pending }`,
     );
 
-    /* The Work is gone either way — the rows committed. But bytes still owed
-       destruction are not "gone", and the member is told so rather than handed
-       a success that would make the promise false. The queue guarantees we can
-       finish; it does not entitle us to say we already did. */
-    if (!outcome.sweptAll) {
-      return NextResponse.json(
-        { removed: true, refusal: 'custody_incomplete' },
-        { status: 500 },
-      );
-    }
-    return NextResponse.json({ removed: true });
+    /* R20-R8: a local delete is not certified *permanent* erasure. Even when
+       the Source sweep is done, old SQL snapshots and recycled NAS archives
+       remain reconstructive until independently governed key retirement,
+       historical-copy disposition and a signed restore barrier are proven.
+       HTTP 202 is truthful: member data was removed from this live room but
+       all-replica erasure remains OWED. Never invent a completion token. */
+    return NextResponse.json(
+      acknowledgeLocalManuscriptRemoval(outcome.sweptAll),
+      { status: 202 },
+    );
   } catch (err) {
     console.error('[press/manuscripts/:id] DELETE error:', err);
     return NextResponse.json({ error: 'Failed to remove manuscript' }, { status: 500 });

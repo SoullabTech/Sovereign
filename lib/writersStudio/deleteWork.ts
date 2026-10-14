@@ -40,8 +40,13 @@
 
 export type DeleteOutcome =
   | { readonly ok: true }
-  /** Nothing was removed, or not all of it was. The message is member-facing. */
-  | { readonly ok: false; readonly message: string };
+  /** Pending erasure is NOT a completed Delete Work assertion. */
+  | {
+      readonly ok: false;
+      readonly message: string;
+      readonly erasureStatus?: 'pending';
+      readonly removed?: boolean;
+    };
 
 export interface DeleteTarget {
   /** The member's declaration, when this card is a declared Work. */
@@ -51,7 +56,11 @@ export interface DeleteTarget {
 }
 
 const GENERIC =
-  'That work could not be deleted just now. Nothing was removed — please try again.';
+  'We could not confirm the deletion result. Your writing may have been removed from the Studio, but permanent erasure has not been verified.';
+const PENDING =
+  'This work was removed from your Studio, but permanent erasure of historical backups is still pending verification. We will not describe deletion as complete.';
+const UNVERIFIED =
+  'The Studio cannot confirm permanent deletion of this writing. It may no longer appear here, but older backups must still be verified.';
 
 type Fetcher = (url: string, init: RequestInit) => Promise<Response>;
 
@@ -77,9 +86,30 @@ export async function deleteWork(
     return { ok: false, message: GENERIC };
   }
 
-  /* 404 means it is already gone — another device, or a request that succeeded
-     while the response was lost. Absence is the outcome we were seeking. */
-  if (res.ok || res.status === 404) return { ok: true };
+  /* R20-R8: a successful local DELETE, including a bare 200 or 404, cannot
+     certify erasure from SQL backups, Recycle, replicas or remaining keys.
+     A 202 is the acknowledged, truthful intermediate state. */
+  if (manuscriptId) {
+    if (res.status === 202) {
+      try {
+        const body = (await res.json()) as Record<string, unknown>;
+        if (body.removed === true && body.erasureStatus === 'pending' &&
+            body.permanentErasureCertified === false) {
+          return { ok: false, removed: true, erasureStatus: 'pending', message: PENDING };
+        }
+      } catch {
+        // A malformed server answer cannot become a successful deletion.
+      }
+      return { ok: false, message: UNVERIFIED };
+    }
+    if (res.ok || res.status === 404) {
+      return { ok: false, message: UNVERIFIED };
+    }
+  } else if (res.ok || res.status === 404) {
+    // A declaration without any writing is only a container, not a
+    // manuscript backup-erasure promise.
+    return { ok: true };
+  }
 
   return { ok: false, message: await deletionRefusalMessage(res) };
 }
@@ -115,9 +145,9 @@ export function deletionRefusalCopy(refusal: string): string {
 
     /* We could not finish ending custody. Never reported as done. */
     case 'custody_incomplete':
-      return 'This work was removed from your studio, but we could not confirm the '
-        + 'original file was destroyed, so we are not going to tell you it is gone. '
-        + 'This one is ours to finish — nothing of yours is being kept on purpose.';
+      return 'This work was removed from your Studio, but its original file or '
+        + 'historical backups have not been verified erased. Permanent erasure '
+        + 'is still owed; we will not mark it complete.';
 
     default:
       return GENERIC;
@@ -191,13 +221,13 @@ export const DELETE_WORK_COPY = {
   action: 'Delete Work and writing',
   working: 'Deleting…',
   cancel: 'Keep it',
-  confirm: 'Delete permanently',
-  /** Shown beneath the action. The two hints are the whole distinction. */
-  hint: 'Permanently deletes this Work and its writing.',
-  /* Names the work, and names what deletion actually reaches. A member agreeing
-     to this should not later discover the original import outlived it. */
-  question: (title: string) => `Delete “${title}”?`,
+  confirm: 'Request deletion',
+  /** Removing the live Work is not proof of irrevocable backup erasure. */
+  hint: 'Requests deletion of this Work and its writing; historical-backup erasure may remain pending.',
+  question: (title: string) => `Request deletion of “${title}”?`,
   body:
-    'This deletes the writing, its sections and drafts, and the original file it came '
-    + 'from. It cannot be undone and there is no archive — nothing is kept.',
+    'This removes the writing, sections and drafts from the live Studio, and '
+    + 'queues destruction of the original file and other retained copies. Historical '
+    + 'backups may still hold recoverable writing; deletion remains pending until '
+    + 'all copies and keys are independently verified. Do not assume it can be undone.',
 } as const;
