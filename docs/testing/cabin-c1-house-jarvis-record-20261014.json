@@ -1,0 +1,9 @@
+{
+  "workUnitId": "v2-cabin-c1-house-local-20261014",
+  "state": "AUTHORIZED",
+  "executionConnected": false,
+  "sourceSha": "6047ca5d0b033c042277e0380443a01a3196e91b",
+  "foregroundDeliveryEvidence": "docs/testing/cabin-c1-house-delivery-20261014.md",
+  "installedVersion": "0.3.0",
+  "next": "C2 local MAIA and voice qualification"
+}
