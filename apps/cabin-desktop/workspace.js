@@ -15,11 +15,12 @@ function controls(){
  el('suggest').disabled=working||!current||!el('manuscript').value.trim()||dirty();
  for(const id of ['send','new-chat','resume-chat','new','import','apply','restore']) el(id).disabled=working;
  el('works').disabled=working;el('manuscript').disabled=working||!current;
+ if(typeof refreshVoiceControls==='function')refreshVoiceControls();
  el('saved').textContent=current ? (dirty()?'Unsaved changes':'Saved locally · version '+current.revision) : '';
 }
 async function act(task){if(working)return;working=true;controls();try{await task();}catch(e){status(e.message);}finally{working=false;controls();}}
 function showChapter(c){current=c;el('title').textContent=c.title;el('manuscript').value=c.body;el('works').value=c.id;proposal=null;el('proposal').hidden=true;el('versions').hidden=true;controls();}
-function renderTurns(){el('conversations').replaceChildren(new Option('Choose a saved conversation',''));for(const s of state.sessions||[])el('conversations').append(new Option(new Date(s.created).toLocaleString(),s.id));el('conversations').value=state.session;el('turns').replaceChildren();for(const t of state.turns){const div=document.createElement('div');div.className='turn '+t.role;const name=document.createElement('strong');name.textContent=t.role==='user'?'You':'MAIA';div.append(name,document.createTextNode(t.content));el('turns').append(div);}el('turns').scrollTop=el('turns').scrollHeight;}
+function renderTurns(){if(typeof stopCabinAudio==='function')stopCabinAudio();el('conversations').replaceChildren(new Option('Choose a saved conversation',''));for(const s of state.sessions||[])el('conversations').append(new Option(new Date(s.created).toLocaleString(),s.id));el('conversations').value=state.session;el('turns').replaceChildren();for(const t of state.turns){const div=document.createElement('div');div.className='turn '+t.role;const name=document.createElement('strong');name.textContent=t.role==='user'?'You':'MAIA';div.append(name,document.createTextNode(t.content));el('turns').append(div);}el('turns').scrollTop=el('turns').scrollHeight;}
 function updateList(){el('works').replaceChildren(new Option('Choose your writing',''));for(const c of state.manuscripts)el('works').append(new Option(c.title,c.id));if(current)el('works').value=current.id;}
 async function refresh(id){state=await api('/api/state');updateList();renderTurns();const c=state.manuscripts.find(c=>c.id===(id||current?.id));if(c)showChapter(await api('/api/chapter?id='+encodeURIComponent(c.id)));}
 async function saved(c){await api('/api/select',{id:c.id});state=await api('/api/state');updateList();renderTurns();showChapter(c);status('Saved locally.');}

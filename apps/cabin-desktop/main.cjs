@@ -62,6 +62,9 @@ if (!app.requestSingleInstanceLock()) { app.quit(); } else {
    if(workspace&&!workspace.isDestroyed()){workspace.focus();return;}
    workspace=new BrowserWindow({title:'Cabin — local workspace',width:1320,height:950,backgroundColor:'#e7eee3',
     webPreferences:{preload:path.join(__dirname,'workspace-preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,partition:'persist:soullab-cabin-local'}});
+   workspace.webContents.session.setPermissionRequestHandler((contents,permission,callback,details)=>{
+    callback(permission==='media'&&contents===workspace.webContents&&details.requestingUrl?.startsWith(origin+'/cabin')&&details.mediaTypes?.every(type=>type==='audio'));
+   });
    workspace.webContents.setWindowOpenHandler(()=>({action:'deny'}));
    workspace.webContents.on('will-navigate',(event,destination)=>{if(!allowed(destination))event.preventDefault();});
    workspace.webContents.session.webRequest.onBeforeRequest((request,callback)=>callback({cancel:!allowed(request.url)&&!request.url.startsWith('blob:'+origin+'/')}));

@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { CabinLocalStore } from '../../lib/cabin/localStore';
 import { TurnPosture } from '../../lib/sanctuary/turnPosture';
 import { CONSTITUTIONAL_PRINCIPLES } from '../../lib/knowledge/ConstitutionalAIKnowledge';
+import { sanitizeSpeechInputPlain } from '../../lib/tts/sanitizeForSpeech';
 import { HOUSE_PLACES } from '../../lib/house/catalog';
 import { defaultHousePreferences, parseHousePreferences } from '../../lib/house/preferences';
 import { AIN_INTEGRATIVE_ALCHEMY_PROMPT } from '../../lib/ai/prompts/ainIntegrativeAlchemy';
@@ -119,12 +120,16 @@ const server = createServer(async(req,res)=>{
   }
   if (req.method === 'GET' && ['/cabin','/house'].includes(url.pathname)) {
    res.setHeader('Set-Cookie','cabin='+token+'; HttpOnly; SameSite=Strict; Path=/');
-   res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'");
+   res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; media-src 'self' blob:; base-uri 'none'; frame-ancestors 'none'");
    res.writeHead(200,{'Content-Type':'text/html'});res.end(readFileSync(join(__dirname,url.pathname==='/house'?'house.html':'workspace.html')));return;
   }
-  const asset:any = {'/house.js':'text/javascript','/house.css':'text/css','/workspace.js':'text/javascript','/workspace.css':'text/css','/Cabin.png':'image/png'};
+  const asset:any = {'/voice.js':'text/javascript','/house.js':'text/javascript','/house.css':'text/css','/workspace.js':'text/javascript','/workspace.css':'text/css','/Cabin.png':'image/png'};
   if (req.method === 'GET' && asset[url.pathname]) {
    res.writeHead(200,{'Content-Type':asset[url.pathname]});res.end(readFileSync(join(__dirname,url.pathname.slice(1))));return;
+  }
+  if(req.method==='GET'&&url.pathname==='/api/voice/status') {
+   const check=async(url:string)=>{try{return (await fetch(url,{redirect:'error',signal:AbortSignal.timeout(2000)})).ok;}catch{return false;}};
+   const [transcription,speech]=await Promise.all([check('http://127.0.0.1:18080/health'),check('http://127.0.0.1:18880/health')]);reply({transcription,speech});return;
   }
   if (req.method === 'GET' && url.pathname === '/api/house') {reply(houseSnapshot());return;}
   if (req.method === 'GET' && url.pathname === '/api/chapter') {reply(chapter(url.searchParams.get('id') || ''));return;}
@@ -137,6 +142,17 @@ const server = createServer(async(req,res)=>{
    else reply(store.db.prepare('SELECT revision,action,created_at FROM cabin_chapter_versions WHERE manuscript_id=? ORDER BY revision DESC').all(id));return;
   }
   if (req.method !== 'POST' || req.headers.origin !== origin) {reply({error:'Request denied'},403);return;}
+  if(url.pathname==='/api/voice/transcribe') {
+   if(!['audio/webm','audio/wav','audio/ogg'].some(type=>req.headers['content-type']?.startsWith(type)))fail('Unsupported audio format',415);
+   const requestedSession=req.headers['x-cabin-session'];if(requestedSession!==session)fail('Conversation changed. Record again in the current conversation.',409);
+   const bytes=await readBody(req,10*1024*1024);if(bytes.length<100)fail('No recorded audio received');
+   const form=new FormData();form.append('file',new Blob([bytes],{type:req.headers['content-type']}),'recording.webm');form.append('model','Systran/faster-whisper-base');form.append('language','en');form.append('response_format','json');
+   let response:Response;try{response=await fetch('http://127.0.0.1:18080/v1/audio/transcriptions',{method:'POST',redirect:'error',body:form,signal:AbortSignal.any([stopping.signal,AbortSignal.timeout(90000)])});}catch{fail('Local speech recognition is unavailable. You can still type your message.',503);}
+   if(!response!.ok)fail('Local speech recognition could not complete. You can still type your message.',503);
+   const result:any=await response!.json();if(session!==requestedSession)fail('Conversation changed. The transcript was not added.',409);
+   if(typeof result.text!=='string'||!result.text.trim())fail('No clear speech was recognized. Try again.',422);
+   reply({text:exact(result.text,6000),saved:false});return;
+  }
   if(url.pathname==='/api/import') {
    if(req.headers['content-type']!=='application/octet-stream') fail('Request denied',403);
    const name=exact(url.searchParams.get('name'),300);
@@ -150,6 +166,16 @@ const server = createServer(async(req,res)=>{
   if(!req.headers['content-type']?.startsWith('application/json')) {reply({error:'Request denied'},403);return;}
   const limit=['/api/save','/api/new'].includes(url.pathname)?128*1024*1024:1024*1024;
   let data:any;try{data=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(await readBody(req,limit)));}catch(e:any){if(e.status)throw e;fail('The local request contains invalid text',400);}
+  if(url.pathname==='/api/voice/speak') {
+   const requestedSession=exact(data.session,100);if(requestedSession!==session)fail('Conversation changed',409);
+   const turn=store.getSessionTurns(owner,session,500).find(t=>t.id===data.turn&&t.role==='assistant');if(!turn)fail('Reply not found in this conversation',404);
+   const text=sanitizeSpeechInputPlain(turn.content);if(text.length>8000)fail('This reply is too long for one local reading',422);
+   let response:Response;try{response=await fetch('http://127.0.0.1:18880/v1/audio/speech',{method:'POST',redirect:'error',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:text,voice:'af_kore',model:'kokoro',response_format:'wav',speed:1}),signal:AbortSignal.any([stopping.signal,AbortSignal.timeout(90000)])});}catch{fail('Local speech is unavailable. The written reply is still saved.',503);}
+   if(!response!.ok)fail('Local speech could not complete. The written reply is still saved.',503);
+   const bytes=Buffer.from(await response!.arrayBuffer());if(bytes.length>20*1024*1024||bytes.subarray(0,4).toString()!=='RIFF')fail('Local speech returned invalid audio',502);
+   if(session!==requestedSession)fail('Conversation changed. The old reply was not played.',409);
+   res.writeHead(200,{'Content-Type':'audio/wav'});res.end(bytes);return;
+  }
   if (url.pathname === '/api/house/profile') {
    const name=exact(data.name,80).trim();
    store.db.prepare('UPDATE members SET preferred_name=?, updated_at=? WHERE id=?').run(name||null,new Date().toISOString(),owner);
