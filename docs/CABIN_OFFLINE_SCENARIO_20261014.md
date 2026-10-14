@@ -175,3 +175,9 @@ timber cabin, evergreen trees, and golden halo on a cream tile. Original PNG and
 compiled macOS ICNS are in apps/cabin-desktop/assets. The no-overwrite builder
 now includes Cabin.icns. Installed app metadata names the new icon; ad-hoc signing
 and strict verification passed. Only the Cabin launcher was restarted to refresh it.
+
+Icon visibility correction: founder reported the running app still displayed Electron's
+default logo after the bundle metadata update. Cabin now explicitly sets the Dock icon
+from its bundled Cabin.png after app readiness. Builder includes that PNG. The installed
+launcher was updated, signature verified, and only Cabin was restarted. Founder visual
+confirmation of the Dock appearance remains pending.

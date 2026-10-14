@@ -30,6 +30,7 @@ info_path = target / "Contents/Info.plist"
 with info_path.open("rb") as stream:
     info = plistlib.load(stream)
 shutil.copy2(Path(__file__).parent / "assets/Cabin.icns", target / "Contents/Resources/Cabin.icns")
+shutil.copy2(Path(__file__).parent / "assets/cabin-icon.png", target / "Contents/Resources/Cabin.png")
 info.update(CFBundleIconFile="Cabin.icns", CFBundleName="Cabin", CFBundleDisplayName="Cabin",
             CFBundleIdentifier="life.soullab.cabin.launcher",
             CFBundleShortVersionString="0.1.0", CFBundleVersion="1")

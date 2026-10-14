@@ -41,7 +41,10 @@ if (!app.requestSingleInstanceLock()) { app.quit(); } else {
   app.on('second-instance', () => {
     if (home && !home.isDestroyed()) { home.restore(); home.focus(); }
   });
-  app.whenReady().then(createHome);
+  app.whenReady().then(() => {
+    if (process.platform === 'darwin') app.dock.setIcon(path.join(process.resourcesPath, 'Cabin.png'));
+    createHome();
+  });
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createHome(); });
   app.on('window-all-closed', () => app.quit());
 }
