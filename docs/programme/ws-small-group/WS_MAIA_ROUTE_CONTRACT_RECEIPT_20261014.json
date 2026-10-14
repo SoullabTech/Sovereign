@@ -1,0 +1,184 @@
+{
+  "parent": "23ac0bdcebd74a8f1f0f60ed66eeda2ffef6440e",
+  "applicationFile": "app/api/sovereign/app/maia/list/route.ts",
+  "applicationSha256": "06bbd411055bced5b37b1095240644ece669668caa38c825bd1562127e790f5f",
+  "typeDelta": {
+    "baseline": 510,
+    "candidate": 498,
+    "removed": [
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS2578",
+        "Unused '@ts-expect-error' directive."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS2322",
+        "Type 'FieldSafetyDecision' is not assignable to type 'null'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS18047",
+        "'fieldSafety' is possibly 'null'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS18047",
+        "'fieldSafety' is possibly 'null'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS18047",
+        "'fieldSafety' is possibly 'null'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS18047",
+        "'fieldSafety' is possibly 'null'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS18047",
+        "'fieldSafety' is possibly 'null'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS2322",
+        "Type 'MemberLiveContext' is not assignable to type 'null'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS2345",
+        "Argument of type 'null' is not assignable to parameter of type 'MemberLiveContext'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS2345",
+        "Argument of type 'null' is not assignable to parameter of type 'MemberLiveContext'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS2339",
+        "Property 'fieldRouting' does not exist on type 'never'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS2339",
+        "Property 'allowed' does not exist on type 'never'."
+      ]
+    ],
+    "added": [],
+    "remainingRoute": [
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS2339",
+        "Property 'turns' does not exist on type 'MaiaSession'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS18047",
+        "'pool' is possibly 'null'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS18047",
+        "'pool' is possibly 'null'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS18047",
+        "'pool' is possibly 'null'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS2353",
+        "Object literal may only specify known properties, and 'turnIndex' does not exist in type 'AINShapeTelemetryRow'."
+      ],
+      [
+        "app/api/sovereign/app/maia/list/route.ts",
+        "TS2554",
+        "Expected 2 arguments, but got 1."
+      ]
+    ]
+  },
+  "officialGate": {
+    "ok": true,
+    "project": "tsconfig.ship.json",
+    "currentErrors": 204,
+    "baselineErrors": 239,
+    "introduced": 0,
+    "increased": 0,
+    "fixed": 26,
+    "decreased": 0,
+    "coverageLost": 0,
+    "coverageDeleted": 8,
+    "coverageGained": 762
+  },
+  "compilerParity": {
+    "parent": "23ac0bdcebd74a8f1f0f60ed66eeda2ffef6440e",
+    "typescript": "5.9.3",
+    "swc": "1.16.12",
+    "sourceVariants": 3,
+    "compilerComparisons": 12,
+    "mutationChecks": 12,
+    "results": [
+      {
+        "label": "candidate",
+        "sourceBefore": "26e07de40f0e164457333bbdc96d5deb94e6be122e3c90d802ae6b64d63f2ecc",
+        "sourceAfter": "06bbd411055bced5b37b1095240644ece669668caa38c825bd1562127e790f5f",
+        "compiled": {
+          "typescript-cjs": "0d0c85b5b18a56734700bca420c3859ee948144b4fe54b7737d88bfe6dd0e2a2",
+          "typescript-esm": "147e6e0fc6ce0f6d02c3f6eba75077cb8faa97a2d5450d365afe804ea7d7d034",
+          "swc-cjs": "a469a5ec805fb1db134d052e741f481d1da5522d5cf6bef1e01bf2aa05a4a8c9",
+          "swc-esm": "c03eb1c4f7faba4911f189cdec5c26af8b4cff49a04d75888a03472e445e9c9f"
+        },
+        "adjacentModified": false
+      },
+      {
+        "label": "adjacent-1",
+        "sourceBefore": "b0db635592f7bc844fdcf4f2d7e421da9a03fb517259f2c8f9d30932a54c7c70",
+        "sourceAfter": "05ff642904c6ab330b66a907b6c32e54e70e77f97b779ff6048c2e38c2a11a7c",
+        "compiled": {
+          "typescript-cjs": "52c4c33997dce6bbdfbe2a0e87a20617e22d493aa5db88f00e360a8ce177c8da",
+          "typescript-esm": "3715da90aabf549e555280c6e44cd4a56cdfea0145e7c868a8b7f7636ea13307",
+          "swc-cjs": "7594b653b81684e66d79f9aa5d8cd731e2f6cb12247edff722e42589f759f8f3",
+          "swc-esm": "90fba00a2f47f28d9864c533c0b6b59ab51850acafd0669b54578e2f6fe885ab"
+        },
+        "adjacentModified": false
+      },
+      {
+        "label": "adjacent-2",
+        "sourceBefore": "26e07de40f0e164457333bbdc96d5deb94e6be122e3c90d802ae6b64d63f2ecc",
+        "sourceAfter": "06bbd411055bced5b37b1095240644ece669668caa38c825bd1562127e790f5f",
+        "compiled": {
+          "typescript-cjs": "0d0c85b5b18a56734700bca420c3859ee948144b4fe54b7737d88bfe6dd0e2a2",
+          "typescript-esm": "147e6e0fc6ce0f6d02c3f6eba75077cb8faa97a2d5450d365afe804ea7d7d034",
+          "swc-cjs": "a469a5ec805fb1db134d052e741f481d1da5522d5cf6bef1e01bf2aa05a4a8c9",
+          "swc-esm": "c03eb1c4f7faba4911f189cdec5c26af8b4cff49a04d75888a03472e445e9c9f"
+        },
+        "adjacentModified": false
+      }
+    ],
+    "routeExecuted": false,
+    "databaseAccessed": false,
+    "providersCalled": false,
+    "releaseApproved": false
+  },
+  "targetedBefore": {
+    "passed": 9,
+    "failed": 3
+  },
+  "targetedAfter": {
+    "passed": 12,
+    "failed": 0
+  },
+  "regression": {
+    "passed": 53,
+    "failed": 0,
+    "suites": 7
+  },
+  "productionModified": false,
+  "phoneTestingResumed": false,
+  "memberDataAccessed": false,
+  "releaseApproved": false
+}
