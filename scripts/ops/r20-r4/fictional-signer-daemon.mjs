@@ -112,5 +112,12 @@ async function stop(){
     process.exit(0);
   });
 }
+// Fixture-only parent-death protection: a crashed test runner must not
+// leave a detached daemon holding ephemeral signing keys in process memory.
+const startingParentPid=process.ppid;
+const orphanWatch=setInterval(()=>{
+  if(process.ppid!==startingParentPid || process.ppid===1)void stop();
+},1000);
+orphanWatch.unref();
 process.on('SIGTERM',stop);
 process.on('SIGINT',stop);

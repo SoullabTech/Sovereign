@@ -48,12 +48,15 @@ const fixtureKeyring={
 };
 const deny=/R20-R4|R20-R3J|refused/i;
 let root,child,stderr='';
+const fixtureChildren=new Set();
 const daemon='scripts/ops/r20-r4/fictional-signer-daemon.mjs';
 async function launch(){
   const proc=spawn(process.execPath,[daemon,root,'--fictional-only'],{
     cwd:process.cwd(),stdio:['ignore','pipe','pipe'],
   });
   child=proc;
+  fixtureChildren.add(proc);
+  proc.once('exit',()=>fixtureChildren.delete(proc));
   stderr='';
   proc.stderr.on('data',bytes=>{stderr+=bytes.toString('utf8').slice(0,2000);});
   await new Promise((resolve,reject)=>{
@@ -73,15 +76,18 @@ async function launch(){
     });
   });
 }
-async function stop(){
-  const proc=child;
-  if(!proc || proc.exitCode!==null)return;
+async function stopProcess(proc){
+  if(!proc || proc.exitCode!==null || proc.signalCode!==null)return;
   await new Promise(resolve=>{
-    const deadline=setTimeout(()=>{proc.kill('SIGKILL');resolve();},1600);
+    const deadline=setTimeout(()=>{proc.kill('SIGKILL');},1200);
     proc.once('exit',()=>{clearTimeout(deadline);resolve();});
     proc.kill('SIGTERM');
   });
+}
+async function stop(){
+  const proc=child;
   child=null;
+  await stopProcess(proc);
 }
 const send=request=>callFixtureSigner({root,request});
 const status=()=>send({action:'PUBLIC_FIXTURE_STATUS',fixtureOnly:true});
@@ -114,6 +120,10 @@ before(async()=>{
 });
 after(async()=>{
   await stop();
+  // Also reap any earlier failed-start subprocess. Never destroy its keyring
+  // while a spawned test signer remains alive with keys in process memory.
+  for(const proc of [...fixtureChildren])await stopProcess(proc);
+  assert.equal(fixtureChildren.size,0,'all fictional signers reaped');
   if(root)await fs.rm(root,{recursive:true,force:true});
 });
 
