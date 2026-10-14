@@ -52,6 +52,7 @@ async function mount(mode: 'write' | 'develop' | 'review' | 'home' = 'develop', 
   openMaia?: () => void;
   initiallyExpanded?: boolean;
   reveal?: string | null;
+  initialReveal?: string | null;
   maiaNode?: ReactNode;
 }) {
   const geometry = mode === 'write' ? { ...WRITE_GEOMETRY, maiaWidth: 360, maiaFloor: 300, padRight: 9, gapRight: 13 } : mode === 'home' ? HOME_GEOMETRY : STATE_GEOMETRY['develop-manuscript'];
@@ -64,6 +65,7 @@ async function mount(mode: 'write' | 'develop' | 'review' | 'home' = 'develop', 
     maia: opts?.withMaia === false || mode === 'home' ? undefined : (opts?.maiaNode ?? maia),
     maiaInitiallyExpanded: opts?.initiallyExpanded,
     maiaRevealRequest: opts?.reveal,
+    maiaInitialRevealRequest: opts?.initialReveal,
     onOpenMaia: opts?.openMaia,
     memberInitial: 'T',
   })));
@@ -227,6 +229,19 @@ describe('Write panel regression: presentation is not conversation authority', (
 
 
 describe('Addressed editorial work reveals the same resizable MAIA region', () => {
+  it('retains deliberate collapse when an addressed thread arrives asynchronously after reload', async () => {
+    localStorage.setItem('soullab.studio.panel-layout.v1.write', JSON.stringify({leftExpanded:true,rightExpanded:false,leftWidth:360,rightWidth:400}));
+    await mount('write', { initiallyExpanded:false, initialReveal:'owned-thread', reveal:null });
+    await mount('write', { initiallyExpanded:false, initialReveal:'owned-thread', reveal:'owned-thread' });
+    expect(host.querySelector('.fr-shell')?.getAttribute('data-right-open')).toBe('false');
+    click('Show MAIA panel');
+    expect(host.querySelector('[aria-label="Resize MAIA panel"]')?.getAttribute('aria-valuenow')).toBe('400');
+    click('Hide MAIA panel');
+    await mount('write', { initiallyExpanded:false, initialReveal:'owned-thread', reveal:null });
+    await mount('write', { initiallyExpanded:false, initialReveal:'owned-thread', reveal:'owned-thread' });
+    expect(host.querySelector('.fr-shell')?.getAttribute('data-right-open')).toBe('true');
+  });
+
   it('shows a newly addressed editor by default without overwriting a deliberately collapsed reload', async () => {
     await mount('write', { initiallyExpanded: false, reveal: 'thread-one' });
     expect(host.querySelector('.fr-shell')?.getAttribute('data-right-open')).toBe('true');

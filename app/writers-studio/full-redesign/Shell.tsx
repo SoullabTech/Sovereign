@@ -38,6 +38,8 @@ export type ShellProps = {
   maiaInitiallyExpanded?: boolean;
   /** A newly addressed editing workspace asks to reveal its existing rail once. */
   maiaRevealRequest?: string | null;
+  /** Initial URL address is a display hint only; the server still resolves content. */
+  maiaInitialRevealRequest?: string | null;
   /** Optional line beneath the regions (#23 carries one). */
   footer?: ReactNode;
   /** Optional words set above the MAIA region (#23). */
@@ -95,9 +97,11 @@ export function Shell(props: ShellProps) {
   const shellRef = useRef<HTMLDivElement>(null);
   const drag = useRef<DragState | null>(null);
   // Initial address supplies a default only; an explicitly saved collapse wins.
-  const revealedRequest = useRef<string | null>(props.maiaRevealRequest ?? null);
+  const revealedRequest = useRef<string | null>(props.maiaInitialRevealRequest ?? props.maiaRevealRequest ?? null);
+  const observedEditorialRequest = useRef(false);
   const [leftExpanded, setLeftExpanded] = useState(true);
-  const rightInitiallyExpanded = props.maiaRevealRequest ? true : props.maiaInitiallyExpanded ?? true;
+  const rightInitiallyExpanded = props.maiaInitialRevealRequest || props.maiaRevealRequest
+    ? true : props.maiaInitiallyExpanded ?? true;
   const [rightExpanded, setRightExpanded] = useState(rightInitiallyExpanded);
   const [leftWidth, setLeftWidth] = useState(geometry.manuscriptWidth);
   const [rightWidth, setRightWidth] = useState(geometry.maiaWidth);
@@ -135,7 +139,13 @@ export function Shell(props: ShellProps) {
   }, [mode, leftExpanded, rightExpanded, leftWidth, rightWidth, restoredKey, hydrationKey, oneRoom]);
 
   useEffect(() => {
-    if (!props.maiaRevealRequest) { revealedRequest.current = null; return; }
+    if (!props.maiaRevealRequest) {
+      // A server-owned thread may still be loading. Initial URL presentation
+      // must not be mistaken for a second user gesture when that read finishes.
+      if (observedEditorialRequest.current) revealedRequest.current = null;
+      return;
+    }
+    observedEditorialRequest.current = true;
     if (restoredKey !== hydrationKey || !hasRight) return;
     if (revealedRequest.current === props.maiaRevealRequest) return;
     revealedRequest.current = props.maiaRevealRequest;

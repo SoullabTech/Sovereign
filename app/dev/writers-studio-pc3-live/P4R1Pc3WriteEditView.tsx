@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
+import { editorialThreadIdFrom } from '@/app/writers-studio/canvasIdentity';
 import { WriteMaiaUnlinked } from './WriteMaiaUnlinked';
 import { WriteManuscriptRail, WriteRoom, type WriteBlock } from '@/app/writers-studio/full-redesign/WriteRoom';
 import { WRITE_COPY } from '@/app/writers-studio/full-redesign/fixtures';
@@ -203,6 +204,9 @@ function ChapterProseSurface({ sections, activeId, bodyOf, onEdit }: {
 }
 
 export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
+  // This remembered entry address affects disclosure of the panel only. The
+  // controller still validates thread ownership and supplies all content.
+  const initialEditorialPanelAddress = useRef(editorialThreadIdFrom(new URLSearchParams(props.initialSearch)));
   const [canvas, setCanvas] = useState(false);
   const [workConversationOpen, setWorkConversationOpen] = useState(false);
   const [workConversationStarter, setWorkConversationStarter] = useState('');
@@ -1020,6 +1024,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           work={workSurface}
           maia={writeMaia}
           maiaInitiallyExpanded={false}
+          maiaInitialRevealRequest={initialEditorialPanelAddress.current}
           maiaRevealRequest={props.workspaceOpen && !isolatedEditorial
             ? props.editorialThread?.threadId ?? 'editorial-workspace' : null}
         />
