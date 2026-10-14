@@ -94,9 +94,10 @@ export function Shell(props: ShellProps) {
   const canvas = props.canvas === true;
   const shellRef = useRef<HTMLDivElement>(null);
   const drag = useRef<DragState | null>(null);
-  const revealedRequest = useRef<string | null>(null);
+  // Initial address supplies a default only; an explicitly saved collapse wins.
+  const revealedRequest = useRef<string | null>(props.maiaRevealRequest ?? null);
   const [leftExpanded, setLeftExpanded] = useState(true);
-  const rightInitiallyExpanded = props.maiaInitiallyExpanded ?? true;
+  const rightInitiallyExpanded = props.maiaRevealRequest ? true : props.maiaInitiallyExpanded ?? true;
   const [rightExpanded, setRightExpanded] = useState(rightInitiallyExpanded);
   const [leftWidth, setLeftWidth] = useState(geometry.manuscriptWidth);
   const [rightWidth, setRightWidth] = useState(geometry.maiaWidth);

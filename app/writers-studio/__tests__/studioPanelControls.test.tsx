@@ -227,6 +227,17 @@ describe('Write panel regression: presentation is not conversation authority', (
 
 
 describe('Addressed editorial work reveals the same resizable MAIA region', () => {
+  it('shows a newly addressed editor by default without overwriting a deliberately collapsed reload', async () => {
+    await mount('write', { initiallyExpanded: false, reveal: 'thread-one' });
+    expect(host.querySelector('.fr-shell')?.getAttribute('data-right-open')).toBe('true');
+    click('Hide MAIA panel');
+    await act(async () => root.unmount()); root = createRoot(host);
+    await mount('write', { initiallyExpanded: false, reveal: 'thread-one' });
+    expect(host.querySelector('.fr-shell')?.getAttribute('data-right-open')).toBe('false');
+    click('Show MAIA panel');
+    expect(host.querySelector('.fr-shell')?.getAttribute('data-right-open')).toBe('true');
+  });
+
   it('reveals a requested editorial workspace once and respects subsequent collapse', async () => {
     await mount('write', { initiallyExpanded: false });
     const source = host.querySelector('[data-testid="original-manuscript"]');
