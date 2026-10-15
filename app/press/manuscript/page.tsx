@@ -987,7 +987,7 @@ function PressManuscriptRoom() {
                   onClick={() => void discardAndReturnToStudio()}>
                   {discardingImport ? 'Discarding upload…' : 'Discard uploaded file and return'}
                 </button>
-              )
+              )}
               <div className="flex gap-4">
                 <button
                   onClick={() => setPreview(null)}
