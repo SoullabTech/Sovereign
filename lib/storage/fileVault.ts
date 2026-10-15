@@ -172,8 +172,39 @@ export async function destroyVaultBytes(storagePath: string): Promise<void> {
   try {
     await stat(full);
   } catch (err) {
-    if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') return;
-    throw err;
+    if ((err as NodeJS.ErrnoException)?.code !== 'ENOENT') throw err;
+
+    /* A missing file is not yet durable erasure. Sync the directory entry
+       BEFORE the caller can clear the persisted vault_erasure_queue debt.
+       Otherwise a crash could restore a supposedly deleted original.
+
+       An artifact that was never written can have missing parent directories.
+       In that case, sync the nearest existing ancestor inside the vault. No
+       sync error is ignored: failures preserve the caller's erasure debt. */
+    let parent = path.dirname(full);
+    while (true) {
+      let directory: Awaited<ReturnType<typeof open>>;
+      try {
+        directory = await open(parent, 'r');
+      } catch (openError) {
+        if ((openError as NodeJS.ErrnoException)?.code === 'ENOENT' && parent !== root) {
+          parent = path.dirname(parent);
+          continue;
+        }
+        throw openError;
+      }
+      try { await directory.sync(); } finally { await directory.close(); }
+      break;
+    }
+
+    // A second readback excludes a concurrently recreated original.
+    try {
+      await stat(full);
+    } catch (verifyError) {
+      if ((verifyError as NodeJS.ErrnoException)?.code === 'ENOENT') return;
+      throw verifyError;
+    }
+    throw new Error('Vault bytes reappeared after durable delete');
   }
   throw new Error('Vault bytes still present after delete');
 }

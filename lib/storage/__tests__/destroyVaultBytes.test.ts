@@ -52,6 +52,41 @@ describe('bytes actually leave the vault', () => {
   });
 });
 
+describe('directory-entry durability before acknowledging source erasure', () => {
+  it('fsyncs the original parent directory before reporting confirmed deletion', async () => {
+    const full = await seed('synced/original.docx');
+    const { open } = await import('fs/promises');
+    const handle = await open(path.dirname(full), 'r');
+    const sync = jest.spyOn(Object.getPrototypeOf(handle), 'sync');
+    await handle.close();
+    try {
+      await destroyVaultBytes('synced/original.docx');
+      expect(sync).toHaveBeenCalled();
+      expect(await exists(full)).toBe(false);
+    } finally {
+      sync.mockRestore();
+    }
+  });
+
+  it('does not acknowledge erasure if syncing the deleted file directory fails', async () => {
+    const full = await seed('failed-sync/original.docx');
+    const { open } = await import('fs/promises');
+    const handle = await open(path.dirname(full), 'r');
+    const sync = jest.spyOn(Object.getPrototypeOf(handle), 'sync')
+      .mockRejectedValueOnce(Object.assign(new Error('storage sync failed'), { code: 'EIO' }));
+    await handle.close();
+    try {
+      await expect(destroyVaultBytes('failed-sync/original.docx'))
+        .rejects.toMatchObject({ code: 'EIO' });
+      // The byte may have disappeared; the caller must retain the erasure
+      // obligation until the directory deletion is durably established.
+      expect(await exists(full)).toBe(false);
+    } finally {
+      sync.mockRestore();
+    }
+  });
+});
+
 describe('absence means ENOENT, never "could not look"', () => {
   /* Founder condition, 2026-09-07: a permissions error must remain a failure. The
      danger is the inverse of the obvious one — not that we fail to delete, but
