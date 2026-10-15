@@ -188,7 +188,11 @@ function UnifiedAuthInner({ mode = 'signup', betaInvitationOnly = false }: { mod
   const emailParam = searchParams?.get('email') || '';
   const usernameParam = searchParams?.get('u') || '';
   const requestedNext = searchParams?.get('next') || '';
-  const afterAuth = requestedNext.startsWith('/') && !requestedNext.startsWith('//') ? requestedNext : '/home';
+  // The closed beta must arrive in Studio, not arbitrary platform rooms.
+  // A supplied ?next cannot turn this one-product pilot into general access.
+  const afterAuth = betaInvitationOnly
+    ? '/writers-studio?mode=home'
+    : requestedNext.startsWith('/') && !requestedNext.startsWith('//') ? requestedNext : '/home';
 
   // `?verified=` and `?u=` still win — they name a specific person mid-flow.
   // Otherwise the arrival intent decides. A returning member opens on password;

@@ -15,6 +15,8 @@ import { verifyPassword } from '@/lib/auth/passwordUtils';
 import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
 import { logAuthEvent } from '@/lib/security/authAudit';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
+import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { restrictedBetaEnabled } from '@/lib/writersStudio/restrictedBetaAdmission';
 import {
   checkRateLimit,
   resetRateLimit,
@@ -92,6 +94,27 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid username or password' },
         { status: 401 }
       );
+    }
+
+    // Restrict accounts BEFORE session creation, not merely when the writer
+    // subsequently navigates. An authenticated but uninvited member must
+    // never receive a beta session through this public sign-in endpoint.
+    if (restrictedBetaEnabled(process.env.WRITERS_STUDIO_RESTRICTED_BETA)) {
+      let admitted = false;
+      try {
+        admitted = (await writersStudioBetaAccess(member.id)).eligible;
+      } catch {
+        return NextResponse.json(
+          { error: 'Beta admission is temporarily unavailable' },
+          { status: 503, headers: { 'Cache-Control': 'no-store' } },
+        );
+      }
+      if (!admitted) {
+        return NextResponse.json(
+          { error: 'This account is not admitted to the private beta' },
+          { status: 403, headers: { 'Cache-Control': 'no-store' } },
+        );
+      }
     }
 
     // Transparent SHA256 → bcrypt upgrade on successful login
