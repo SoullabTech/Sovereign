@@ -20,7 +20,7 @@ jobs:
       IMAGE: maia-sovereign:reflect-873-review-only
       EXPECTED_IMAGE_ID: sha256:43ff2e1c5a8229b954b9eaf1ee513a4df00221cfdfaddef4b627154160889215
       ARCHIVE_SHA256: 8f0e82daa65b8d0699830d55704e53f61fd54909411093e6feede3aa6f6c706b
-      ARTIFACT_DIR: ${{ runner.temp }}/reflect-873-image
+      ARTIFACT_DIR: /tmp/reflect-873-image
     steps:
       - name: Download pinned private review artifact (no application checkout)
         uses: actions/download-artifact@v4
@@ -29,7 +29,7 @@ jobs:
           run-id: 38817290236
           repository: SoullabTech/Sovereign
           github-token: ${{ github.token }}
-          path: ${{ runner.temp }}/reflect-873-image
+          path: /tmp/reflect-873-image
 
       - name: Verify archive, exact stamp, Linux architecture and isolated lane
         shell: bash
