@@ -410,9 +410,12 @@ function PressManuscriptRoom() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ sourceArrivalId }),
       });
-      // A 404 means this upload is already absent. A 409 means it has been
-      // claimed, so never treat it as successfully discarded.
-      if (!response.ok && response.status !== 404) {
+      // Even 404 is NOT proof that original bytes were destroyed: a previous
+      // storage failure may have removed the row while leaving an erasure debt.
+      // Require both the successful status AND server's explicit destruction
+      // acknowledgement. An empty or malformed 200 never counts as erasure.
+      const outcome = await response.json().catch(() => null);
+      if (!response.ok || outcome?.discarded !== true || outcome?.originalBytesDestroyed !== true) {
         setDiscardImportError(true);
         return false;
       }
@@ -833,8 +836,8 @@ function PressManuscriptRoom() {
               )}
               {discardImportError && (
                 <p role="alert" className="text-[13px] opacity-85">
-                  The upload could not be fully discarded. Nothing else was changed.
-                  Please retry before leaving this import.
+                  The Studio could not confirm complete deletion of this upload.
+                  It may still need cleanup; do not treat the original as discarded.
                 </p>
               )}
               {warnings.length > 0 && (
@@ -978,7 +981,7 @@ function PressManuscriptRoom() {
               )}
               {discardImportError && (
                 <p role="alert" className="text-[13px] opacity-85 mb-4">
-                  Could not discard this upload. It remains held; please retry before leaving.
+                  Could not confirm complete deletion. The original may still be held for cleanup.
                 </p>
               )}
               {sourceArrivalId && (
