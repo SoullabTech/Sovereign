@@ -1,4 +1,5 @@
 import { query } from '@/lib/db/postgres';
+import { approvedBetaConsentPolicy, hasActiveWriterBetaConsent } from './betaConsentGate';
 
 /**
  * SMALL-BETA-01 / B4 — server-side cohort membership.
@@ -61,7 +62,34 @@ export async function writersStudioBetaAccess(memberId: string): Promise<Writers
   if (row?.beta && explicitlyApprovedWriterMember(
     memberId, process.env.WRITERS_STUDIO_BETA_MEMBER_IDS,
   )) {
-    return { eligible: true, basis: 'active_beta_tester' };
+    const policy = approvedBetaConsentPolicy(
+      process.env.WRITERS_STUDIO_BETA_CONSENT_VERSION,
+      process.env.WRITERS_STUDIO_BETA_CONSENT_SHA256,
+    );
+    if (await hasActiveWriterBetaConsent(memberId, policy)) {
+      return { eligible: true, basis: 'active_beta_tester' };
+    }
   }
   return { eligible: false, basis: 'not_in_pilot' };
+}
+
+/**
+ * Only a pre-consent enrollment candidate, NOT a Studio permission.
+ * The future consent page may call this after independently verified login;
+ * the ordinary Caddy forward authorizer must continue to call
+ * writersStudioBetaAccess() and demand actual accepted consent.
+ */
+export async function writerStudioBetaPreConsentCandidate(memberId: string): Promise<boolean> {
+  if (!explicitlyApprovedWriterMember(memberId, process.env.WRITERS_STUDIO_BETA_MEMBER_IDS)) {
+    return false;
+  }
+  const contact = await query<{ active_tester: boolean }>(
+    `SELECT EXISTS (
+       SELECT 1 FROM ops_contacts c
+        WHERE c.member_id = $1 AND c.deleted_at IS NULL
+          AND c.contact_type = 'beta_tester' AND c.pipeline_stage = 'active'
+     ) AS active_tester`,
+    [memberId],
+  );
+  return contact.rows[0]?.active_tester === true;
 }
