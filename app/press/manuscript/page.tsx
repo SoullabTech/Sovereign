@@ -227,6 +227,14 @@ function PressManuscriptRoom() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [fidelity, setFidelity] = useState<{
+    tables: number;
+    tableRows: number;
+    footnotes: number;
+    standaloneQuotationsChecked: number;
+    requiresReview: boolean;
+  } | null>(null);
+  const [fidelityReviewed, setFidelityReviewed] = useState(false);
   const [ingesting, setIngesting] = useState(false);
   /* WS-01 — the identity of the arrival taken into custody at ingest. Held so
      the save act can bind the manuscript to what actually arrived. Null for a
@@ -328,7 +336,7 @@ function PressManuscriptRoom() {
 
   // ---- Upload flow -------------------------------------------------------
   const requestPreview = async () => {
-    if (!draftTitle.trim() || !draftText.trim()) return;
+    if (!draftTitle.trim() || !draftText.trim() || (fidelity?.requiresReview && !fidelityReviewed)) return;
     setSaveError(false);
     setSaving(true);
     try {
@@ -348,7 +356,7 @@ function PressManuscriptRoom() {
   };
 
   const saveManuscript = async () => {
-    if (!preview || preview.length === 0) return;
+    if (!preview || preview.length === 0 || (fidelity?.requiresReview && !fidelityReviewed)) return;
     setSaving(true);
     try {
       const res = await apiFetch('/api/sovereign/manuscripts', {
@@ -370,6 +378,9 @@ function PressManuscriptRoom() {
       setPreview(null);
       setDraftText('');
       setSourceArrivalId(null);
+      setFidelity(null);
+      setFidelityReviewed(false);
+      setWarnings([]);
       setDraftTitle('');
       setImporting(false); // intent spent — do not pin the member on the form
       // Import is a threshold, not a destination — and since the Writer
@@ -388,6 +399,9 @@ function PressManuscriptRoom() {
 
   const onFile = async (f: File) => {
     setWarnings([]);
+    setFidelity(null);
+    setFidelityReviewed(false);
+    setSourceArrivalId(null);
     // Named before sending. An oversized file cannot succeed by any path, and
     // the member is told the actual size rather than being left to guess.
     if (f.size > MAX_UPLOAD_BYTES) {
@@ -426,6 +440,7 @@ function PressManuscriptRoom() {
       setDraftText(data.text || '');
       setSourceArrivalId(typeof data.sourceArrivalId === 'string' ? data.sourceArrivalId : null);
       setWarnings(Array.isArray(data.warnings) ? data.warnings : []);
+      setFidelity(data.fidelity && data.fidelity.requiresReview === true ? data.fidelity : null);
       if (!draftTitle.trim() && data.title) setDraftTitle(data.title);
     } catch {
       setWarnings(['We could not read that file. Please try again.']);
@@ -746,7 +761,7 @@ function PressManuscriptRoom() {
                 </label>
                 <button
                   onClick={requestPreview}
-                  disabled={saving || ingesting || !draftTitle.trim() || !draftText.trim()}
+                  disabled={saving || ingesting || !draftTitle.trim() || !draftText.trim() || (fidelity?.requiresReview === true && !fidelityReviewed)}
                   className="ml-auto px-6 py-2.5 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide disabled:opacity-30"
                 >
                   {/* Names the threshold being crossed, not the file transfer. */}
@@ -754,12 +769,21 @@ function PressManuscriptRoom() {
                 </button>
               </div>
               {warnings.length > 0 && (
-                <div className="space-y-2">
+                <div role="status" aria-live="polite" className="space-y-2 border-l-2 border-[#C9A227] pl-4">
+                  <p className="text-[14px] font-semibold">Document fidelity review</p>
                   {warnings.map((w, i) => (
-                    <p key={i} className="text-[13px] leading-relaxed opacity-70">
+                    <p key={i} className="text-[13px] leading-relaxed opacity-80">
                       {w}
                     </p>
                   ))}
+                  {fidelity?.requiresReview && (
+                    <label className="flex items-start gap-3 pt-2 text-[13px] leading-relaxed">
+                      <input type="checkbox" checked={fidelityReviewed}
+                        onChange={(e) => setFidelityReviewed(e.target.checked)}
+                        className="mt-1" />
+                      <span>I have reviewed these conversion limits and will compare the editable draft with my original Word file. Continue with this Markdown working copy.</span>
+                    </label>
+                  )}
                 </div>
               )}
             </div>
@@ -770,7 +794,19 @@ function PressManuscriptRoom() {
                 document&rsquo;s own headings. Confirm the cuts before saving: edit any heading,
                 merge a section into the one above it, or cut a section where a heading was missed.
               </p>
-              <p className="text-[12px] opacity-50 mb-8">Saved as your words, as you wrote them.</p>
+              <p className="text-[12px] opacity-50 mb-8">The original file remains unchanged. Confirm the editable copy before saving.</p>
+              {fidelity?.requiresReview && (
+                <div role="status" className="border-l-2 border-[#C9A227] pl-4 mb-7 space-y-2">
+                  <p className="text-[14px] font-semibold">Word structure: {fidelity.tables} table(s), {fidelity.footnotes} footnote(s), {fidelity.standaloneQuotationsChecked} checked standalone quotation(s)</p>
+                  {warnings.map((w, i) => <p key={i} className="text-[13px] leading-relaxed opacity-80">{w}</p>)}
+                  <label className="flex items-start gap-3 text-[13px] leading-relaxed pt-2">
+                    <input type="checkbox" checked={fidelityReviewed}
+                      onChange={(e) => setFidelityReviewed(e.target.checked)}
+                      className="mt-1" />
+                    <span>I reviewed these limits and want to save this Markdown working copy. I understand that DOCX layout and export are not certified.</span>
+                  </label>
+                </div>
+              )}
               <div className="space-y-3 mb-10">
                 {preview.map((s, i) => (
                   <div key={i} className="border-b border-[#3a322b] pb-2">
@@ -880,7 +916,7 @@ function PressManuscriptRoom() {
                 </button>
                 <button
                   onClick={saveManuscript}
-                  disabled={saving}
+                  disabled={saving || (fidelity?.requiresReview === true && !fidelityReviewed)}
                   className="ml-auto px-6 py-2.5 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide disabled:opacity-30"
                 >
                   {saving ? '…' : 'Save manuscript'}

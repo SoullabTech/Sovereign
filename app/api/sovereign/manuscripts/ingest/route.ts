@@ -41,7 +41,7 @@ import {
   CLIENT_ASSERTABLE_IDENTITY_HEADERS,
   forgedIdentityHeaders,
 } from '@/lib/auth/identityAssertions';
-import { parseUpload, UnsupportedUploadError } from '@/lib/manuscript/ingest/parseUpload';
+import { parseUpload, UnsupportedUploadError, UnsupportedDocxStructureError } from '@/lib/manuscript/ingest/parseUpload';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { titleFromFilename } from '@/lib/manuscript/ingest/titleSuggestion';
 import { recordArtifactArrival } from '@/lib/manuscript/source/arrivals';
@@ -315,6 +315,9 @@ export async function POST(request: NextRequest) {
       if (err instanceof UnsupportedUploadError) {
         return NextResponse.json({ error: err.message }, { status: 415 });
       }
+      if (err instanceof UnsupportedDocxStructureError) {
+        return NextResponse.json({ error: err.message }, { status: 422 });
+      }
       console.error('[press/manuscripts/ingest] parse error:', err);
       return NextResponse.json(
         { error: 'We could not read that file. Try a .docx, .pdf, .txt, or .md.' },
@@ -363,6 +366,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       text: result.text,
       warnings: result.warnings,
+      fidelity: result.fidelity ?? null,
       title: titleFromFilename(file.name),
       format: result.format,
       sourceArrivalId,

@@ -17,6 +17,8 @@
  */
 
 import mammoth from 'mammoth';
+import { preserveDocxStructure, type DocxFidelity } from './docxFidelity';
+export { UnsupportedDocxStructureError } from './docxFidelity';
 
 export type UploadFormat = 'docx' | 'pdf' | 'text';
 
@@ -26,6 +28,8 @@ export interface ParseUploadResult {
   /** Non-fatal notices for the member (e.g. a scanned PDF with no text). */
   warnings: string[];
   format: UploadFormat;
+  /** Human-reviewable fidelity report, for Word uploads only. */
+  fidelity?: DocxFidelity;
 }
 
 /** Thrown when the file type cannot be read here (caller → 415/400). */
@@ -74,11 +78,28 @@ function normalizeMammothMarkdown(md: string): string {
     .replace(/\\([.\-+*_`#()[\]!>~])/g, '$1');
 }
 
-async function extractDocxMarkdown(buffer: Buffer): Promise<string> {
-  // convertToMarkdown maps Word heading styles to `#`/`##`, preserving the
-  // structure the author gave the document. extractRawText would flatten it.
-  const result = await mammoth.convertToMarkdown({ buffer });
-  return normalizeMammothMarkdown(result.value ?? '');
+async function extractDocxMarkdown(buffer: Buffer) {
+  // Convert twice, independently: Markdown carries author-visible text and
+  // headings; HTML is the structural witness for tables, footnote links, and
+  // exact standalone quotations. Never use the HTML as executable markup.
+  // Runtime supports this legacy converter even though the published Mammoth
+  // TypeScript interface omits it. Keep the actual return shape explicit.
+  const markdownApi = mammoth as typeof mammoth & {
+    convertToMarkdown(input: { buffer: Buffer }): Promise<{
+      value: string;
+      messages: Array<{ type: string; message: string }>;
+    }>;
+  };
+  const markdown = await markdownApi.convertToMarkdown({ buffer });
+  const html = await mammoth.convertToHtml({ buffer });
+  const messages = [...markdown.messages, ...html.messages]
+    .filter((m) => m.type === 'warning')
+    .map((m) => m.message);
+  return preserveDocxStructure(
+    normalizeMammothMarkdown(markdown.value ?? ''),
+    html.value ?? '',
+    messages,
+  );
 }
 
 async function extractPdfText(
@@ -171,11 +192,11 @@ export async function parseUpload(
   }
 
   if (format === 'docx') {
-    const text = await extractDocxMarkdown(buffer);
-    const warnings = text.trim().length === 0
-      ? ['We could not find any text in this document.']
-      : [];
-    return { text, warnings, format };
+    const result = await extractDocxMarkdown(buffer);
+    const warnings = result.text.trim().length === 0
+      ? [...result.warnings, 'We could not find any text in this document.']
+      : result.warnings;
+    return { ...result, warnings, format };
   }
 
   if (format === 'pdf') {

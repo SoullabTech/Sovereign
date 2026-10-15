@@ -26,7 +26,8 @@ import { ACCESS_RULES, TIER_RANK, tierSatisfies } from '@/config/accessMatrix';
 
 const REPO = path.resolve(__dirname, '../../../../../..');
 const read = (p: string) => fs.readFileSync(path.join(REPO, p), 'utf8');
-const middleware = () => read('middleware.ts');
+// Next.js 16 routes the equivalent request boundary through proxy.ts.
+const middleware = () => read('proxy.ts');
 const route = () => read('app/api/sovereign/manuscripts/ingest/route.ts');
 
 const PATH = '/api/sovereign/manuscripts/ingest';
