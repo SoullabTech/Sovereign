@@ -28,7 +28,7 @@ for (const token of [
 
 if (!proxy.includes("url.pathname = pathname === '/' ? `/fields/${masterSlug}`"))
   throw new Error('governed canonical master-field routing drifted');
-if (!proxy.includes("const RESERVED_SUBDOMAINS = ['www', 'api', 'oldhead', 'app'];"))
+if (!proxy.includes("const RESERVED_SUBDOMAINS = ['www', 'api', 'oldhead', 'app', 'beta'];"))
   throw new Error('governed canonical reserved-subdomain contract drifted');
 if (!proxy.includes("req.headers.get('x-capacitor-app') === 'true'"))
   throw new Error('Capacitor bypass contract missing');
