@@ -125,19 +125,21 @@ describe('the existing plain-text seam is untouched', () => {
 const ORIGINAL_SEAM_MERGE = '8b31d931c2ca4349b08fa49428b2e93508f47613';
 
 /**
- * The ACTIVE pin. Founder-authorized 2026-10-02 (editorial disclosure repair).
- * The governed amendment extends the shared structured-inference result with a
- * dispatch observation and preserves the adapter wrapper that classifies whether
- * a provider response was observed. The router carries that fact without vendor
- * imports; policy.ts is unchanged. Prior governed baseline:
- * c4f96c853ba9246546383a93875b4ae5519e8c1b (2026-09-18).
+ * The ACTIVE pin. Founder-authorized 2026-10-15 for the bounded Writer's Studio
+ * beta-provider test: no more than two actual provider dispatches, including
+ * retries. The governed amendment keeps the existing provider/model/tool seam
+ * intact and adds only an explicit transport retry budget on the Anthropic
+ * adapter. Default behaviour remains two retries; the isolated beta may set
+ * MAIA_PROVIDER_MAX_RETRIES=0. Policy, router and structured request/result
+ * contracts are unchanged. Prior governed baseline:
+ * 8ea119d52cbf0d79ab641943930cf0b294bbfbb1 (2026-10-02).
  *
  * The authorization is narrow and worth stating exactly: **those four seam-file
  * states at this commit** constitute the new governed baseline. The commit also
- * carries witness-side work, and no unrelated file gains constitutional status
+ * carries a retry-budget witness; no unrelated file gains constitutional status
  * by having travelled in the same commit — this guard resolves four paths.
  */
-const GOVERNED_SEAM_BASELINE = '8ea119d52cbf0d79ab641943930cf0b294bbfbb1';
+const GOVERNED_SEAM_BASELINE = '6d0322aa842132f7e91310bd4b4646a09b1bc824';
 
 describe('callers bend to the seam, never the seam to a caller', () => {
   it.each([
