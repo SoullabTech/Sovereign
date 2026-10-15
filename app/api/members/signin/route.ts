@@ -15,7 +15,7 @@ import { verifyPassword } from '@/lib/auth/passwordUtils';
 import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
 import { logAuthEvent } from '@/lib/security/authAudit';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
-import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { writerStudioBetaPreConsentCandidate, writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
 import { restrictedBetaEnabled } from '@/lib/writersStudio/restrictedBetaAdmission';
 import {
   checkRateLimit,
@@ -96,30 +96,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For ANY restricted beta, verify invitation standing BEFORE minting a
-    // session. The optional second flag only changes the public proxy route,
-    // never whether an uninvited account may authenticate.
-    const singleDoorBeta = restrictedBetaEnabled(process.env.WRITERS_STUDIO_RESTRICTED_BETA);
-    if (singleDoorBeta) {
-      let eligible = false;
+    // Restrict accounts BEFORE session creation, not merely when the writer
+    // subsequently navigates. An authenticated but uninvited member must
+    // never receive a beta session through this public sign-in endpoint.
+    let betaConsentRequired = false;
+    if (restrictedBetaEnabled(process.env.WRITERS_STUDIO_RESTRICTED_BETA)) {
+      let admitted = false;
+      let invitationCandidate = false;
       try {
-        eligible = (await writersStudioBetaAccess(member.id)).eligible;
+        admitted = (await writersStudioBetaAccess(member.id)).eligible;
+        if (!admitted) invitationCandidate = await writerStudioBetaPreConsentCandidate(member.id);
       } catch {
-        console.error('[PasswordSignin] beta cohort authority unavailable');
         return NextResponse.json(
-          { error: 'Sign in temporarily unavailable' },
+          { error: 'Beta admission is temporarily unavailable' },
           { status: 503, headers: { 'Cache-Control': 'no-store' } },
         );
       }
-      if (!eligible) {
-        // Identical error for unknown identity, wrong password, and excluded
-        // cohort: do not disclose who is on the invitation list.
+      if (!admitted && !invitationCandidate) {
         return NextResponse.json(
-          { error: 'Invalid username or password' },
-          { status: 401, headers: { 'Cache-Control': 'no-store' } },
+          { error: 'This account is not admitted to the private beta' },
+          { status: 403, headers: { 'Cache-Control': 'no-store' } },
         );
-
       }
+      betaConsentRequired = !admitted;
     }
 
     // Transparent SHA256 → bcrypt upgrade on successful login
@@ -159,16 +158,15 @@ export async function POST(request: NextRequest) {
       );
     } catch (sessionError) {
       console.error('[PasswordSignin] Failed to create session:', sessionError);
-      // An isolated beta must not signal success if it failed to establish
-      // the authenticated, revocable server-side session.
-      if (singleDoorBeta) {
-        return NextResponse.json({ error: 'Sign in temporarily unavailable' }, { status: 503 });
+      // Closed beta must never claim a successful member sign-in unless the
+      // durable, verified session was issued. Ordinary platform behavior is
+      // left unchanged by this isolated candidate.
+      if (restrictedBetaEnabled(process.env.WRITERS_STUDIO_RESTRICTED_BETA)) {
+        return NextResponse.json(
+          { error: 'Session could not be established. Please try again.' },
+          { status: 503, headers: { 'Cache-Control': 'no-store' } },
+        );
       }
-      // Preserve existing normal Soullab behavior outside the restricted beta.
-    }
-
-    if (singleDoorBeta && !session) {
-      return NextResponse.json({ error: 'Sign in temporarily unavailable' }, { status: 503 });
     }
 
     // Update last sign in
@@ -185,6 +183,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      betaConsentRequired,
       memberId: member.id,
       member: {
         id: member.id,

@@ -567,7 +567,13 @@ function UnifiedAuthInner({ mode = 'signup', betaInvitationOnly = false }: { mod
         onboarded: !!data.member?.onboarded,
       }, data.session?.token))) return;
       await trustThisDevice();
-      enterSoullab();
+      // Only the server's verified sign-in response can direct the writer
+      // to a consent-only door. Query-string or localStorage claims cannot.
+      if (betaInvitationOnly && data.betaConsentRequired === true) {
+        window.location.assign('/beta/consent');
+      } else {
+        enterSoullab();
+      }
     } catch (err: any) {
       setError(err?.message || 'Sign in failed.');
       setIsLoading(false);

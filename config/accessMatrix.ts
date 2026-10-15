@@ -97,6 +97,11 @@ export const ACCESS_RULES: AccessRule[] = [
   // in production minutes after the route deployed unmapped: the permissive
   // unmapped default served the landing shell at 200 instead of the Studio —
   // the precise failure the explicit-mapping doctrine above exists to prevent.
+  { exact: '/beta/custody', minTier: 'free', notes: 'Verified member-only data custody after beta consent withdrawal; no Studio or model access' },
+  { exact: '/api/beta/custody', minTier: 'free', notes: 'Verified member-only list of own writing; historical consent gate, no general access' },
+  { prefix: '/api/beta/custody/', minTier: 'free', notes: 'Post-withdrawal owner-only export and deletion of exact manuscript ID' },
+  { exact: '/beta/consent', minTier: 'free', notes: 'Authenticated consent-only beta entrance; route API still demands exact tester invitation and approved notice' },
+  { exact: '/api/beta/consent', minTier: 'free', notes: 'Authenticated versioned consent decision; exact signed-in member and CSRF Origin enforced by endpoint' },
   { exact: '/writers-studio', minTier: 'free', notes: "Writer's Studio Home (Layer 2) — same member-facing policy as /press/studio, whose address it inherited; unauthenticated visitors are redirected to sign-in before the door" },
   { prefix: '/writers-studio/', minTier: 'free', notes: "Writer's Studio member corridor — authenticated members of any tier before every Studio subroute; individual proving/lab surfaces may impose a stricter server-side gate after this outer boundary" },
   { exact: '/now-what/welcome', public: true, notes: 'What Now? public landing — additive; /now-what room-as-entry redirect unchanged' },
