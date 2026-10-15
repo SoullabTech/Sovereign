@@ -2,10 +2,16 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
 
 const mockSession = jest.fn<(...args: unknown[]) => Promise<string | null>>();
+const mockAlternateSession = jest.fn<(...args: unknown[]) => Promise<string | null>>();
+const mockCookieJar:Record<string,string> = {};
 const mockQuery = jest.fn<(...args: unknown[]) => Promise<any>>();
 
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({
   getMemberIdFromRequest: (...args: unknown[]) => mockSession(...args),
+  getMemberIdFromSessionToken: (...args: unknown[]) => mockAlternateSession(...args),
+}));
+jest.mock('next/headers',()=>({
+  cookies:async()=>({get:(name:string)=>mockCookieJar[name]?{value:mockCookieJar[name]}:undefined}),
 }));
 jest.mock('@/lib/db/postgres', () => ({
   query: (...args: unknown[]) => mockQuery(...args),
@@ -24,8 +30,10 @@ const PRACTICE = '55555555-5555-4555-8555-555555555555';
 const req = new NextRequest('https://soullab.life/api/ganesha/individual-context');
 
 beforeEach(() => {
-  mockSession.mockReset(); mockQuery.mockReset();
+  mockSession.mockReset(); mockAlternateSession.mockReset(); mockQuery.mockReset();
+  for(const key of Object.keys(mockCookieJar))delete mockCookieJar[key];
   mockSession.mockResolvedValue(MEMBER);
+  mockAlternateSession.mockResolvedValue(MEMBER);
   mockQuery.mockResolvedValue({ rows: [] });
 });
 
@@ -34,6 +42,24 @@ describe('G2-1 personal context belongs to the member, not professional identity
     mockSession.mockResolvedValue(null);
     expect(await resolveIndividualContext(req)).toBeNull();
     expect(mockQuery).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when two valid transport credentials name different members',async()=>{
+    mockCookieJar.maia_session='cookie-for-A';
+    mockAlternateSession.mockResolvedValue(OTHER);
+    const conflicted=new NextRequest('https://soullab.life/api/ganesha/individual-context',
+      {headers:{'x-session-token':'header-for-B'}});
+    expect(await resolveIndividualContext(conflicted)).toBeNull();
+    expect(mockAlternateSession).toHaveBeenCalledWith('header-for-B');
+    expect(mockQuery).not.toHaveBeenCalled();
+  });
+
+  it('allows two different signed tokens for the same member',async()=>{
+    mockCookieJar.maia_session='cookie-for-A';
+    const same=new NextRequest('https://soullab.life/api/ganesha/individual-context',
+      {headers:{'x-session-token':'second-session-for-A'}});
+    expect((await resolveIndividualContext(same))?.memberId).toBe(MEMBER);
+    expect(mockAlternateSession).toHaveBeenCalledTimes(1);
   });
 
   it('lets a new member enter with NO practitioner row or professional grant', async () => {

@@ -1,0 +1,20 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "noEmit": true
+  },
+  "files": [
+    "../../../next-env.d.ts",
+    "../../../lib/auth/individualContext.ts",
+    "../../../lib/auth/__tests__/individualContext.test.ts",
+    "../../../lib/ganesha/__tests__/g2EAuthenticatedPg.test.ts",
+    "../../../lib/ganesha/personalFieldIntegration.ts",
+    "../../../lib/ganesha/memberFieldApi.ts",
+    "../../../app/api/ganesha/personal-field/overview/route.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "**/*"
+  ]
+}
