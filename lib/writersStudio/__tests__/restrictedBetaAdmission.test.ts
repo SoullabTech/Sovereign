@@ -2,9 +2,43 @@ import {
   isRestrictedWriterStudioPath,
   restrictedBetaEnabled,
   mayEnterRestrictedWriterStudioPath,
+  isClosedBetaEnrollmentPath,
 } from '../restrictedBetaAdmission';
 
 describe('restricted Writer’s Studio cohort-only release classification', () => {
+  it.each([
+    '/signup',
+    '/signup/',
+    '/api/members/register',
+    '/api/members/register-local',
+    '/api/members/register-email',
+    '/api/members/register-extra',
+    '/api/members/email-code',
+    '/api/members/magic-link',
+    '/api/auth/google',
+    '/api/auth/apple/callback',
+    '/api/auth/signin/google',
+    '/api/invites',
+    '/api/invites/issue',
+    '/api/team/invite',
+  ])('fails closed for beta enrollment and invitation routes: %s', (path) => {
+    expect(isClosedBetaEnrollmentPath(path)).toBe(true);
+  });
+
+  it.each([
+    '/signin',
+    '/signin?next=/writers-studio',
+    '/api/members/signin',
+    '/api/members/session',
+    '/api/members/signout',
+    '/api/members/registerish',
+    '/api/invites-public',
+    '/writers-studio',
+    '/_next/static/foo.js',
+  ])('does not conflate existing member sign-in with enrollment: %s', (path) => {
+    expect(isClosedBetaEnrollmentPath(path)).toBe(false);
+  });
+
   it('defaults closed to the feature when the exact enable signal is absent', () => {
     expect(restrictedBetaEnabled(undefined)).toBe(false);
     expect(restrictedBetaEnabled('')).toBe(false);

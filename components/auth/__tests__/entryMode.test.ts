@@ -19,7 +19,7 @@ const COMPONENT = read('components/auth/UnifiedAuth.tsx');
 
 describe('each route declares why the person arrived', () => {
   it('/signin is the returning door', () => {
-    expect(read('app/signin/page.tsx')).toContain('<UnifiedAuth mode="signin" />');
+    expect(read('app/signin/page.tsx')).toContain('<UnifiedAuth mode="signin" betaInvitationOnly={host === \'beta.soullab.life\'} />');
   });
 
   it('/signup is the joining door', () => {
@@ -39,7 +39,7 @@ describe('the intent decides the opening phase', () => {
   });
 
   it('the component accepts and forwards the mode', () => {
-    expect(COMPONENT).toContain('<UnifiedAuthInner mode={mode} />');
+    expect(COMPONENT).toContain('<UnifiedAuthInner mode={mode} betaInvitationOnly={betaInvitationOnly} />');
     expect(COMPONENT).toMatch(/mode\?: AuthMode/);
   });
 

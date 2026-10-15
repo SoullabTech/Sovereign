@@ -18,7 +18,7 @@ import { stripClientIdentityAssertions } from './lib/auth/identityAssertions';
 import { deriveVerifiedAccess, type VerifiedAccess } from './lib/auth/verifiedAccess';
 import { canonicalStudioRoute } from './lib/writersStudio/canonicalStudioRoute';
 import { writersStudioBetaAccess } from './lib/writersStudio/betaAccessServer';
-import { restrictedBetaEnabled, isRestrictedWriterStudioPath, mayEnterRestrictedWriterStudioPath } from './lib/writersStudio/restrictedBetaAdmission';
+import { restrictedBetaEnabled, isRestrictedWriterStudioPath, mayEnterRestrictedWriterStudioPath, isClosedBetaEnrollmentPath } from './lib/writersStudio/restrictedBetaAdmission';
 // NOTE: entitlements are still checked in route handlers, not here — they are a
 // commercial concern with their own surface, not part of the trust boundary.
 
@@ -137,6 +137,22 @@ export async function proxy(req: NextRequest) {
     }
     return NextResponse.rewrite(url, {
       request: { headers: stripClientIdentityAssertions(req.headers) },
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // CLOSED WRITER BETA: refuse new-account and invitation issuance routes
+  // before public-route exemptions, extension-based shortcuts, or OPTIONS.
+  // The external Caddy gate is defense-in-depth, not enrollment authority.
+  // This flag is disabled in the normal production Soullab runtime.
+  // ---------------------------------------------------------------------
+  if (
+    restrictedBetaEnabled(process.env.WRITERS_STUDIO_RESTRICTED_BETA) &&
+    isClosedBetaEnrollmentPath(pathname)
+  ) {
+    return new NextResponse(null, {
+      status: 404,
+      headers: { 'Cache-Control': 'no-store' },
     });
   }
 

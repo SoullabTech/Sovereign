@@ -1,12 +1,10 @@
-'use client';
-
-// Unified with /signup as of 2026-06-04: there is one front door, not a
-// password-first signin plus a separate signup. Email + one-time code is the
-// default action; biometric is the return path; Google/Apple secondary;
-// password is recovery. All of it lives in the shared component so the two
-// routes can never drift apart again. See components/auth/UnifiedAuth.tsx.
+// The returning member door. The invitation-only beta hostname presents
+// only the sign-in methods that its restricted enrollment policy can honor.
+// The ordinary Soullab route retains all existing joining/recovery pathways.
+import { headers } from 'next/headers';
 import UnifiedAuth from '@/components/auth/UnifiedAuth';
 
-export default function SigninPage() {
-  return <UnifiedAuth mode="signin" />;
+export default async function SigninPage() {
+  const host = (await headers()).get('host')?.split(':', 1)[0]?.toLowerCase();
+  return <UnifiedAuth mode="signin" betaInvitationOnly={host === 'beta.soullab.life'} />;
 }

@@ -6,6 +6,7 @@ surfaces:
   - app/home/**
   - components/landing/**
   - components/auth/UnifiedAuth.tsx
+  - app/signin/page.tsx
   - components/auth/SignInCard.tsx
   - app/onboarding/page.tsx
   - app/faq/page.tsx
@@ -67,3 +68,13 @@ The visitor meets Soullab first, then the field, then the choice to join or sign
 **Same house?** Yes. The threshold carries the current House's navy field, restrained typography, spatial quiet, and Soullab identity.
 
 **Distinct room?** Yes. It is intentionally sparse and invitational; authenticated Home becomes personal, populated, and actionable.
+
+## Restricted Writer’s Studio beta threshold — October 15, 2026
+
+The invitation-only beta is a **deliberately narrower use of the same returning-member threshold**, not a separate identity authority. The `app/signin/page.tsx` route supplies the exact host-scoped presentation signal. The shared `UnifiedAuth` component retains normal Soullab joining, email-code, recovery, biometric and OAuth pathways on non-beta hosts.
+
+For `beta.soullab.life`, the writer sees only the password sign-in and a support contact, plus truthful *Writer’s Studio beta · Invitation only* context. The closed beta does not pretend that self-registration, email-code issuance, or a new OAuth account will work. The server separately refuses those enrollment paths before any public-route or static-file fast path. Neither hostname nor presentation grants admission; session validation and the separately approved member allowlist remain authoritative.
+
+**House / Room:** The shared Soullab mark, quiet navy visual hierarchy, and existing-account gesture remain. The beta threshold has one narrower purpose: an invited writer enters the dedicated Studio without being sent through a second public gateway popup. It does not create an account or expose another writer’s Work.
+
+**Evidence limit:** The desktop/mobile screenshots in this contract establish the existing House visual vocabulary, *not* acceptance of the new beta-specific rendering. That exact-source desktop/mobile visual witness, plus verified public HTTPS, sign-in, revocation, and admission denials, remains required before real-member release. Until then this change is a closed release candidate and must not be described as accepted for testers.

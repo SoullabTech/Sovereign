@@ -181,7 +181,7 @@ function hasRecentEmailSendFailure(): boolean {
  */
 export type AuthMode = 'signin' | 'signup';
 
-function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
+function UnifiedAuthInner({ mode = 'signup', betaInvitationOnly = false }: { mode?: AuthMode; betaInvitationOnly?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preVerified = searchParams?.get('verified') === 'true';
@@ -677,9 +677,11 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                   the email-code flow were given a generated password they have never
                   seen, so this cannot be a dead end for them — it is how they get out
                   of a phase they should not have landed in. */}
-              <button type="button" onClick={() => { setPhase('email'); setError(''); }} disabled={isLoading} className={`${outlineBtn} mt-3`}>
-                Email me a sign-in code instead
-              </button>
+              {!betaInvitationOnly && (
+                <button type="button" onClick={() => { setPhase('email'); setError(''); }} disabled={isLoading} className={`${outlineBtn} mt-3`}>
+                  Email me a sign-in code instead
+                </button>
+              )}
 
               {/* MEMBER-ACCESS-RECOVERY-01
                   One plain recovery door. A member should not need to remember
@@ -693,20 +695,24 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                   Can’t get in?
                 </summary>
                 <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => { setPhase('email'); setError(''); }}
-                    disabled={isLoading}
-                    className="block w-full text-left text-amber-300/90 hover:text-amber-200 transition-colors disabled:opacity-50"
-                  >
-                    Email me a sign-in code
-                  </button>
-                  <a
-                    href="/reset-password"
-                    className="block text-amber-300/90 hover:text-amber-200 transition-colors"
-                  >
-                    Reset my password
-                  </a>
+                  {!betaInvitationOnly && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => { setPhase('email'); setError(''); }}
+                        disabled={isLoading}
+                        className="block w-full text-left text-amber-300/90 hover:text-amber-200 transition-colors disabled:opacity-50"
+                      >
+                        Email me a sign-in code
+                      </button>
+                      <a
+                        href="/reset-password"
+                        className="block text-amber-300/90 hover:text-amber-200 transition-colors"
+                      >
+                        Reset my password
+                      </a>
+                    </>
+                  )}
                   <a
                     href="mailto:support@soullab.life?subject=I%20can%E2%80%99t%20get%20into%20Soullab"
                     className="block text-amber-300/90 hover:text-amber-200 transition-colors"
@@ -719,10 +725,19 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
               {/* A first-time visitor leaves the returning-member door for
                   the joining door. Both preserve the intended post-auth destination,
                   whose ordinary default is canonical Soullab Home. */}
-              {mode === 'signin' && (
+              {!betaInvitationOnly && (
+                <>
+                  {mode === 'signin' && (
+                    <p className="mt-6 text-xs text-slate-400/80 text-center">
+                      New to Soullab?{' '}
+                      <a href={`/signup?next=${encodeURIComponent(afterAuth)}`} className="text-amber-300/90 hover:text-amber-200 transition-colors">Join Soullab</a>
+                    </p>
+                  )}
+                </>
+              )}
+              {betaInvitationOnly && (
                 <p className="mt-6 text-xs text-slate-400/80 text-center">
-                  New to Soullab?{' '}
-                  <a href={`/signup?next=${encodeURIComponent(afterAuth)}`} className="text-amber-300/90 hover:text-amber-200 transition-colors">Join Soullab</a>
+                  Writer’s Studio beta · Invitation only
                 </p>
               )}
             </motion.div>
@@ -845,10 +860,10 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   );
 }
 
-export default function UnifiedAuth({ mode }: { mode?: AuthMode } = {}) {
+export default function UnifiedAuth({ mode, betaInvitationOnly = false }: { mode?: AuthMode; betaInvitationOnly?: boolean } = {}) {
   return (
     <Suspense fallback={<div className="min-h-[100dvh] bg-soullab-core flex items-center justify-center text-slate-400/70">Loading…</div>}>
-      <UnifiedAuthInner mode={mode} />
+      <UnifiedAuthInner mode={mode} betaInvitationOnly={betaInvitationOnly} />
     </Suspense>
   );
 }

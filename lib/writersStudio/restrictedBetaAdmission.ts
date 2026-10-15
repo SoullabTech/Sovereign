@@ -10,6 +10,38 @@ export function restrictedBetaEnabled(value: string | undefined): boolean {
 }
 
 /**
+ * A closed member beta must refuse account enrollment at the application
+ * boundary, even if its dedicated Caddy hostname is misconfigured or accessed
+ * through a private tunnel. Sign-in for existing explicitly admitted accounts
+ * remains separate. This does not apply to the ordinary Soullab application.
+ */
+export function isClosedBetaEnrollmentPath(pathname: string): boolean {
+  const exact = [
+    '/signup',
+    '/api/members/register',
+    '/api/members/register-email',
+    '/api/members/register-local',
+    '/api/members/email-code',
+    '/api/members/magic-link',
+    '/api/invites',
+    '/api/team/invite',
+  ];
+  if (exact.some((p) => pathname === p || pathname.startsWith(p + '/'))) return true;
+  const prefixed = [
+    '/api/members/register-',
+    '/api/members/email-code-',
+    '/api/members/magic-link-',
+    '/api/auth/google',
+    '/api/auth/apple',
+    '/api/auth/signin/google',
+    '/api/auth/signin/apple',
+    '/api/invites/',
+    '/api/team/invite/',
+  ];
+  return prefixed.some((p) => pathname.startsWith(p));
+}
+
+/**
  * Cover the member-facing Studio and its dedicated APIs, including deep links.
  * Discovery and case-study material are not an interactive writing room.
  * Do not gate shared /api/sovereign/manuscripts: other platform rooms use it.
