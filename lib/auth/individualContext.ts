@@ -10,7 +10,8 @@
  * the member's independent ability to use MAIA and member-owned Personal Field.
  */
 import type { NextRequest } from 'next/server';
-import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getMemberIdFromRequest, getMemberIdFromSessionToken } from '@/lib/auth/getMemberFromRequest';
+import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
 
 export type LegacyPersonalStatus =
@@ -58,6 +59,20 @@ export async function resolveIndividualContext(
 ): Promise<IndividualContext | null> {
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return null;
+
+  // The shared resolver prefers a valid web cookie over a fallback token.
+  // For this private Personal Field, two different valid identities must not
+  // silently select the cookie's account during a browser account switch.
+  // Only inspect the alternate credential when both sources are present and
+  // distinct. The test harness uses fictional, auth_sessions-backed tokens.
+  const headerToken = request.headers.get('x-session-token');
+  if (headerToken) {
+    const webToken = (await cookies()).get('maia_session')?.value;
+    if (webToken && webToken !== headerToken) {
+      const alternateMemberId = await getMemberIdFromSessionToken(headerToken);
+      if (!alternateMemberId || alternateMemberId !== memberId) return null;
+    }
+  }
 
   // Inspect ONLY rows already owned by the authenticated member. Never select
   // personal legacy history by email, slug, body ID or ambiguous LIMIT 1.
