@@ -61,7 +61,24 @@ el('file').onchange=()=>act(async()=>{
   await saved(result);status('Imported and saved locally.');
  } finally {el('file').value='';}
 });
-el('send').onclick=()=>act(async()=>{const message=el('message').value;if(!message.trim())throw Error('Write a message first');status('MAIA is responding locally…');state=await api('/api/chat',{message,session:state.session});renderTurns();el('message').value='';status(state.sanctuary?'MAIA replied in Sanctuary. This conversation is not saved.':'MAIA replied. This conversation is saved locally.');});
+let pendingChat;
+el('send').onclick=()=>act(async()=>{
+ const message=el('message').value;if(!message.trim())throw Error('Write a message first');
+ const request={request:crypto.randomUUID(),session:state.session};pendingChat=request;
+ el('stop-response').hidden=false;el('stop-response').disabled=false;
+ status('MAIA is responding locally…');
+ try{
+  state=await api('/api/chat',{message,...request});renderTurns();
+  if(el('message').value===message)el('message').value='';
+  status(state.sanctuary?'MAIA replied in Sanctuary. This conversation is not saved.':'MAIA replied. This conversation is saved locally.');
+ }finally{pendingChat=null;el('stop-response').hidden=true;}
+});
+el('stop-response').onclick=async()=>{
+ if(!pendingChat)return;
+ el('stop-response').disabled=true;
+ try{await api('/api/cancel',pendingChat);}
+ catch(e){status(e.message);if(pendingChat)el('stop-response').disabled=false;}
+};
 function conversationChange(task){if(el('message').value.trim()){status('Send or clear your draft before changing conversations.');return;}return act(task);}
 el('sanctuary').onclick=()=>{
  if(dirty()||el('message').value.trim()){status('Save your writing and send or clear your message before changing privacy mode.');return;}
