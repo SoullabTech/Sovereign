@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 const dir=mkdtempSync(join(tmpdir(),'cabin-functional-fictional-'));
 const executable=(process.env.CABIN_TEST_APP||'/Users/soullab/Applications/Cabin.app')+'/Contents/MacOS/Electron';
-const env={...process.env,CABIN_CANARY:'1',CABIN_TEST_DATA:dir};
+const env={...process.env,CABIN_CANARY:'1',CABIN_TEST_PORT:process.env.CABIN_TEST_PORT||'43229',CABIN_TEST_DATA:dir};
 let app, page, chapterId, applied, proposalId;
 const original='The quiet room held the morning light. Mara paused beside the window and listened to the trees.';
 async function launch(){

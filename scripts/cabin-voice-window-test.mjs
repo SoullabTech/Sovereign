@@ -14,6 +14,7 @@ try{
  const opening=app.waitForEvent('window');await home.locator('#open').click();const page=await opening;
  await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows().forEach(w=>w.webContents.setAudioMuted(true)));
  await page.locator('#enter-maia').click();
+ if(process.env.CABIN_TEST_SANCTUARY==='1'){await page.locator('#sanctuary').click();await page.waitForFunction(()=>document.querySelector('#privacy-status').textContent.includes('Sanctuary ·'));}
  await page.waitForFunction(()=>!document.querySelector('#record').disabled);
  await page.evaluate(async encoded=>{
   const context=new AudioContext();const bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));

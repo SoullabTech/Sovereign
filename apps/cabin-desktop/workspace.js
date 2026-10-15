@@ -13,14 +13,20 @@ function controls(){
  for(const id of ['save','undo','history','export','suggest']) el(id).disabled=working||!current;
  el('undo').disabled=working||!current||!current.canUndo||dirty();
  el('suggest').disabled=working||!current||!el('manuscript').value.trim()||dirty();
- for(const id of ['send','new-chat','resume-chat','new','import','apply','restore']) el(id).disabled=working;
+ for(const id of ['send','new-chat','resume-chat','sanctuary','new','import','apply','restore']) el(id).disabled=working;
  el('works').disabled=working;el('manuscript').disabled=working||!current;
+ if(state?.sanctuary){
+  for(const id of ['save','undo','history','export','suggest','new','import','apply','restore','works','manuscript'])el(id).disabled=true;
+ }
  if(typeof refreshVoiceControls==='function')refreshVoiceControls();
  el('saved').textContent=current ? (dirty()?'Unsaved changes':'Saved locally · version '+current.revision) : '';
 }
 async function act(task){if(working)return;working=true;controls();try{await task();}catch(e){status(e.message);}finally{working=false;controls();}}
 function showChapter(c){current=c;el('title').textContent=c.title;el('manuscript').value=c.body;el('works').value=c.id;proposal=null;el('proposal').hidden=true;el('versions').hidden=true;controls();}
-function renderTurns(){if(typeof stopCabinAudio==='function')stopCabinAudio();el('conversations').replaceChildren(new Option('Choose a saved conversation',''));for(const s of state.sessions||[])el('conversations').append(new Option(new Date(s.created).toLocaleString(),s.id));el('conversations').value=state.session;el('turns').replaceChildren();for(const t of state.turns){const div=document.createElement('div');div.className='turn '+t.role;const name=document.createElement('strong');name.textContent=t.role==='user'?'You':'MAIA';div.append(name,document.createTextNode(t.content));el('turns').append(div);}el('turns').scrollTop=el('turns').scrollHeight;}
+function renderTurns(){
+ el('sanctuary').textContent=state.sanctuary?'End Sanctuary':'Enter Sanctuary';
+ el('privacy-status').textContent=state.sanctuary?'Sanctuary · This conversation stays in temporary memory, outside saved history. End Sanctuary or quit Cabin to clear it. Writing controls are paused.':'Ordinary conversation · Saved on this Mac.';
+ if(typeof stopCabinAudio==='function')stopCabinAudio();el('conversations').replaceChildren(new Option('Choose a saved conversation',''));for(const s of state.sessions||[])el('conversations').append(new Option(new Date(s.created).toLocaleString(),s.id));el('conversations').value=state.session;el('turns').replaceChildren();for(const t of state.turns){const div=document.createElement('div');div.className='turn '+t.role;const name=document.createElement('strong');name.textContent=t.role==='user'?'You':'MAIA';div.append(name,document.createTextNode(t.content));el('turns').append(div);}el('turns').scrollTop=el('turns').scrollHeight;}
 function updateList(){el('works').replaceChildren(new Option('Choose your writing',''));for(const c of state.manuscripts)el('works').append(new Option(c.title,c.id));if(current)el('works').value=current.id;}
 async function refresh(id){state=await api('/api/state');updateList();renderTurns();const c=state.manuscripts.find(c=>c.id===(id||current?.id));if(c)showChapter(await api('/api/chapter?id='+encodeURIComponent(c.id)));}
 async function saved(c){await api('/api/select',{id:c.id});state=await api('/api/state');updateList();renderTurns();showChapter(c);status('Saved locally.');}
@@ -55,9 +61,14 @@ el('file').onchange=()=>act(async()=>{
   await saved(result);status('Imported and saved locally.');
  } finally {el('file').value='';}
 });
-el('send').onclick=()=>act(async()=>{const message=el('message').value;if(!message.trim())throw Error('Write a message first');status('MAIA is responding locally…');state=await api('/api/chat',{message});renderTurns();el('message').value='';status('MAIA replied. This conversation is saved locally.');});
-el('new-chat').onclick=()=>act(async()=>{state=await api('/api/session',{});renderTurns();status('A new conversation is open. Earlier conversations remain saved and are not used here.');});
-el('resume-chat').onclick=()=>act(async()=>{const id=el('conversations').value;if(!id)throw Error('Choose a saved conversation');state=await api('/api/resume-session',{id});renderTurns();status('Saved conversation resumed. MAIA can use this conversation when you continue.');});
+el('send').onclick=()=>act(async()=>{const message=el('message').value;if(!message.trim())throw Error('Write a message first');status('MAIA is responding locally…');state=await api('/api/chat',{message,session:state.session});renderTurns();el('message').value='';status(state.sanctuary?'MAIA replied in Sanctuary. This conversation is not saved.':'MAIA replied. This conversation is saved locally.');});
+function conversationChange(task){if(el('message').value.trim()){status('Send or clear your draft before changing conversations.');return;}return act(task);}
+el('sanctuary').onclick=()=>{
+ if(dirty()||el('message').value.trim()){status('Save your writing and send or clear your message before changing privacy mode.');return;}
+ act(async()=>{state=await api('/api/sanctuary',{enabled:!state.sanctuary});renderTurns();proposal=null;el('proposal').hidden=true;el('versions').hidden=true;status(state.sanctuary?'Sanctuary is open. This conversation is not saved.':'Sanctuary ended and its temporary conversation was cleared.');});
+};
+el('new-chat').onclick=()=>conversationChange(async()=>{state=await api('/api/session',{});renderTurns();status('A new conversation is open. Earlier conversations remain saved and are not used here.');});
+el('resume-chat').onclick=()=>conversationChange(async()=>{const id=el('conversations').value;if(!id)throw Error('Choose a saved conversation');state=await api('/api/resume-session',{id});renderTurns();status('Saved conversation resumed. MAIA can use this conversation when you continue.');});
 el('message').onkeydown=e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();el('send').click();}};
 el('return-house').onclick=e=>{if(dirty()||working){e.preventDefault();status(dirty()?'Save your writing before returning to House.':'Wait for the current request before returning to House.');}};
 window.addEventListener('beforeunload',e=>{if(dirty()){e.preventDefault();e.returnValue='';}});

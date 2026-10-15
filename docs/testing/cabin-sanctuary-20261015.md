@@ -1,0 +1,11 @@
+# Cabin 0.5.0 local Sanctuary
+
+Sanctuary is a separate, explicitly selected conversation. The server resolves canonical TurnPosture once for each chat request from its active mode, rather than trusting a renderer flag. CabinLocalStore.addExchange refuses the Sanctuary posture. Private turns live only in a bounded runtime array (latest 24 turns), are excluded from saved conversation inventory, and are discarded on exit, new conversation, successful saved-conversation resume, or runtime shutdown. Entering Sanctuary never imports ordinary conversation context; ordinary saved history remains intact.
+
+The authenticated speech route reads the current authoritative conversation, including temporary Sanctuary replies. Transcription remains a reviewed draft, requiring explicit Send. Session identity is checked around asynchronous voice work. A reply from an ended Sanctuary cannot be played through the old session ID.
+
+Writing controls pause in Sanctuary. Content-writing POST routes are refused on the server, including a second guard after asynchronous body receipt. Unsaved manuscript or message drafts block privacy changes instead of silently moving them across modes. Ordinary writing, identity and preferences remain durable.
+
+Qualification uses only isolated fictional data. The packaged Sanctuary test covers ordinary durability, empty private context, private response and real local speech generation, writing refusal, private marker absence across the isolated profile files (including SQLite files), exit, rejection of expired speech, resuming ordinary history, quitting with a populated private conversation, and reopening without private history. The synthetic-stream voice suite also runs with Sanctuary selected: real offline transcription, review-before-send, local MAIA, real local speech playback muted for the test, cancellation and authentication/session boundaries.
+
+This is application-level non-persistence, not forensic secure erasure or a claim about OS swap, engine internals or hardware. Physical microphone/speaker and normal autoplay acceptance remain open. Full MAIA orchestration, consent-based long-term recall and unattended JARVIS execution remain separate work.

@@ -28,6 +28,13 @@ store.db.exec(`CREATE TABLE IF NOT EXISTS cabin_chapter_versions (
  CREATE TABLE IF NOT EXISTS cabin_undo_stack (id INTEGER PRIMARY KEY AUTOINCREMENT, manuscript_id TEXT NOT NULL, body TEXT NOT NULL, consumed INTEGER NOT NULL DEFAULT 0);`);
 let session = String(store.db.prepare("SELECT value FROM cabin_meta WHERE key='desktop_session'").get()?.value || '');
 if (!session) { session = randomUUID(); store.db.prepare("INSERT INTO cabin_meta(key,value) VALUES('desktop_session',?)").run(session); }
+let sanctuary = false;
+let sanctuaryTurns: {id:string;role:'user'|'assistant';content:string}[] = [];
+function currentTurns() { return sanctuary ? sanctuaryTurns : store.getSessionTurns(owner,session,500); }
+function changeConversation(privateMode: boolean, id = randomUUID()) {
+ sanctuaryTurns = []; sanctuary = privateMode; session = id;
+ if (!sanctuary) store.db.prepare("UPDATE cabin_meta SET value=? WHERE key='desktop_session'").run(session);
+}
 let busy = false;
 const stopping = new AbortController();
 function fail(message: string, status = 400): never { throw Object.assign(new Error(message), { status }); }
@@ -50,7 +57,7 @@ function houseSnapshot() {
 }
 function snapshot() {
  return { manuscripts: store.listManuscripts(owner),
-  turns: store.getSessionTurns(owner,session,500), session,
+  turns: currentTurns(), session, sanctuary,
   sessions: store.db.prepare('SELECT session_id AS id, MIN(created_at) AS created FROM conversation_turns WHERE user_id=? GROUP BY session_id ORDER BY created DESC').all(owner),
   selected: store.db.prepare("SELECT value FROM cabin_meta WHERE key='desktop_selected'").get()?.value, model:'qwen2.5:7b' };
 }
@@ -142,6 +149,8 @@ const server = createServer(async(req,res)=>{
    else reply(store.db.prepare('SELECT revision,action,created_at FROM cabin_chapter_versions WHERE manuscript_id=? ORDER BY revision DESC').all(id));return;
   }
   if (req.method !== 'POST' || req.headers.origin !== origin) {reply({error:'Request denied'},403);return;}
+  if(sanctuary && !['/api/chat','/api/voice/transcribe','/api/voice/speak','/api/session','/api/resume-session','/api/sanctuary'].includes(url.pathname))
+   fail('End Sanctuary before saving writing or changing House settings.',409);
   if(url.pathname==='/api/voice/transcribe') {
    if(!['audio/webm','audio/wav','audio/ogg'].some(type=>req.headers['content-type']?.startsWith(type)))fail('Unsupported audio format',415);
    const requestedSession=req.headers['x-cabin-session'];if(requestedSession!==session)fail('Conversation changed. Record again in the current conversation.',409);
@@ -158,6 +167,7 @@ const server = createServer(async(req,res)=>{
    const name=exact(url.searchParams.get('name'),300);
    if(!/\.(txt|md)$/i.test(name)) fail('Choose a UTF-8 TXT or Markdown file');
    const bytes=await readBody(req,MAX_IMPORT_BYTES);
+   if(sanctuary)fail('End Sanctuary before importing writing.',409);
    let body:string;try{body=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(bytes);}catch{fail('The file is not UTF-8 text. Export it as UTF-8 TXT or Markdown and try again.');}
    if(body!.includes('\0'))fail('This file contains binary data. Choose a text manuscript.');
    const title=name.replace(/\.(txt|md)$/i,'').slice(0,200).trim();if(!title)fail('Give the file a title');
@@ -166,12 +176,13 @@ const server = createServer(async(req,res)=>{
   if(!req.headers['content-type']?.startsWith('application/json')) {reply({error:'Request denied'},403);return;}
   const limit=['/api/save','/api/new'].includes(url.pathname)?128*1024*1024:1024*1024;
   let data:any;try{data=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(await readBody(req,limit)));}catch(e:any){if(e.status)throw e;fail('The local request contains invalid text',400);}
+  if(sanctuary && !['/api/chat','/api/voice/speak','/api/session','/api/resume-session','/api/sanctuary'].includes(url.pathname))fail('End Sanctuary before saving content.',409);
   if(url.pathname==='/api/voice/speak') {
    const requestedSession=exact(data.session,100);if(requestedSession!==session)fail('Conversation changed',409);
-   const turn=store.getSessionTurns(owner,session,500).find(t=>t.id===data.turn&&t.role==='assistant');if(!turn)fail('Reply not found in this conversation',404);
+   const turn=currentTurns().find(t=>t.id===data.turn&&t.role==='assistant');if(!turn)fail('Reply not found in this conversation',404);
    const text=sanitizeSpeechInputPlain(turn.content);if(text.length>8000)fail('This reply is too long for one local reading',422);
-   let response:Response;try{response=await fetch('http://127.0.0.1:18880/v1/audio/speech',{method:'POST',redirect:'error',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:text,voice:'af_kore',model:'kokoro',response_format:'wav',speed:1}),signal:AbortSignal.any([stopping.signal,AbortSignal.timeout(90000)])});}catch{fail('Local speech is unavailable. The written reply is still saved.',503);}
-   if(!response!.ok)fail('Local speech could not complete. The written reply is still saved.',503);
+   let response:Response;try{response=await fetch('http://127.0.0.1:18880/v1/audio/speech',{method:'POST',redirect:'error',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:text,voice:'af_kore',model:'kokoro',response_format:'wav',speed:1}),signal:AbortSignal.any([stopping.signal,AbortSignal.timeout(90000)])});}catch{fail('Local speech is unavailable. Your conversation is still available here.',503);}
+   if(!response!.ok)fail('Local speech could not complete. Your conversation is still available here.',503);
    const bytes=Buffer.from(await response!.arrayBuffer());if(bytes.length>20*1024*1024||bytes.subarray(0,4).toString()!=='RIFF')fail('Local speech returned invalid audio',502);
    if(session!==requestedSession)fail('Conversation changed. The old reply was not played.',409);
    res.writeHead(200,{'Content-Type':'audio/wav'});res.end(bytes);return;
@@ -209,16 +220,22 @@ const server = createServer(async(req,res)=>{
    store.db.prepare("INSERT INTO cabin_meta(key,value) VALUES('desktop_selected',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(data.id);
    reply({selected:data.id});return;
   }
+  if (url.pathname === '/api/sanctuary') {
+   if(busy) fail('Wait for MAIA before changing conversation privacy.',409);
+   if(typeof data.enabled!=='boolean') fail('Choose a conversation privacy mode');
+   changeConversation(data.enabled);
+   reply(snapshot());return;
+  }
   if (url.pathname === '/api/resume-session') {
    if(busy) fail('Wait for MAIA to finish before resuming another conversation',409);
    const id=exact(data.id,100);
    if(!store.getSessionTurns(owner,id,1).length) fail('Saved conversation not found',404);
-   session=id;store.db.prepare("UPDATE cabin_meta SET value=? WHERE key='desktop_session'").run(session);
+   changeConversation(false,id);
    reply(snapshot());return;
   }
   if (url.pathname === '/api/session') {
    if(busy) fail('Wait for the current answer before starting a new conversation',409);
-   session = randomUUID();store.db.prepare("UPDATE cabin_meta SET value=? WHERE key='desktop_session'").run(session);
+   changeConversation(false);
    reply(snapshot());return;
   }
   if (url.pathname === '/api/apply') {
@@ -234,10 +251,18 @@ const server = createServer(async(req,res)=>{
    busy=true;
    try {
     if(url.pathname === '/api/chat') {
+     const posture=TurnPosture.resolve({sanctuary});
+     const turnSession=session;
+     if(data.session!==undefined && data.session!==session)fail('Conversation changed. Review your message before sending.',409);
      const message=exact(data.message,6000).trim();if(!message) fail('Write a message first');
-     const prior=store.getSessionTurns(owner,session,500).slice(-12).map(t=>({role:t.role,content:t.content.slice(0,4000)}));
+     const prior=currentTurns().slice(-12).map(t=>({role:t.role,content:t.content.slice(0,4000)}));
      const answer=await infer([{role:'system',content:basePrompt},...prior,{role:'user',content:message}]);
-     store.addExchange(TurnPosture.resolve({sanctuary:false}),{memberId:owner,sessionId:session,exchangeId:randomUUID(),userContent:message,assistantContent:answer});
+     if(session!==turnSession)fail('Conversation changed. The answer was not added.',409);
+     store.addExchange(posture,{memberId:owner,sessionId:turnSession,exchangeId:randomUUID(),userContent:message,assistantContent:answer});
+     if(posture.sanctuary) {
+      sanctuaryTurns.push({id:randomUUID(),role:'user',content:message},{id:randomUUID(),role:'assistant',content:answer});
+      sanctuaryTurns=sanctuaryTurns.slice(-24);
+     }
      reply(snapshot());return;
     }
     const old=chapter(exact(data.id,100));
