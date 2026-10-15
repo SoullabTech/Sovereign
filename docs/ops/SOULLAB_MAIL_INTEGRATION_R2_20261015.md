@@ -58,3 +58,11 @@ Resend was retired. The SMTP credential is already provisioned. No new API key, 
 - First post-repair TypeScript diagnostics fell from 223 to 221 with no new reported type diagnostics. The audit then incorrectly reported zero covered files and 3,956 lost coverage paths because its `--listFilesOnly` invocation reused TypeScript's incremental cache. `scripts/check-typehealth-baseline.js` now requests a non-incremental file enumeration and refuses to interpret an empty enumeration as a valid verdict. Its full runtime verification remains **PENDING** after repeated machine I/O stalls, so the no-regression gate is **not passed** yet.
 - The remote canonical branch (`origin/clean-main-no-secrets`, 2e836abc3) was rechecked against GitHub and matched exactly. No new source drift at this time.
 - Next: commit/push the isolated review branch (never main or production), obtain full independent CI/compiler verdict and human security/recovery review. No release/cutover until those gates pass.
+
+## GitHub PR #1830 — migration-lock-timeout CI correction
+
+- Draft review-only PR: https://github.com/SoullabTech/Sovereign/pull/1830; no merge or production deployment.
+- The initial cloud **empty-database reconstruction PASSED**; the Sovereignty Gate refused the three mail SQL migrations because each lacked its own `BEGIN; SET LOCAL lock_timeout` boundary.
+- Added file-local `BEGIN; SET LOCAL lock_timeout = '5s'; ... COMMIT;` to each of `20261012000001_mail05_capacity.sql`, `20261012000002_scheduled_send_claim.sql`, and `20261012000003_portrait_delivery_attestations.sql`. No table schema, column shape, or functional SQL body was altered by this fix.
+- Local migration-law check passed 6/6 migrations at/after the policy cutoff and 10/10 guard unit tests. The independent cloud run must be repeated against the NEW exact commit; inherited previous cloud green does not prove the updated migration bytes.
+- Still HOLD for independently administered review, non-synthetic backup-restore, old-reader compatibility, owner/recipient consent and controlled delivery on qualified Proton SMTP.

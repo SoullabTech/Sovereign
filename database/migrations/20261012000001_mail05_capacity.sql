@@ -3,6 +3,9 @@
 -- Only pseudonymous HMAC recipient keys enter these counters, never email addresses.
 -- A failure or provider refusal still uses capacity (abuse is attempts, not deliveries).
 -- This migration MUST be independently reviewed before production application.
+BEGIN;
+SET LOCAL lock_timeout = '5s';
+
 CREATE TABLE IF NOT EXISTS public.soullab_mail_capacity (
     bucket_key text PRIMARY KEY,
     attempts integer NOT NULL DEFAULT 0 CHECK (attempts >= 0),
@@ -139,3 +142,5 @@ COMMENT ON TABLE public.soullab_mail_capacity IS
   'MAIL-05 abuse budget, separate from the MAIL-02 observational ledger. HMAC keys only; prune daily.';
 COMMENT ON FUNCTION public.reserve_soullab_mail_capacity(text,text[]) IS
   'Atomic MAIL-05 shared sending budget. P0 has independent reserved capacity; no plaintext recipients.';
+
+COMMIT;
