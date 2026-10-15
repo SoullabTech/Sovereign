@@ -21,14 +21,10 @@ jest.mock('@/lib/db/postgres', () => ({
   query: (...args: any[]) => mockQuery(...args),
 }));
 
-// Mock Resend
+// Mock the central SoulLab mail contract.
 const mockSendEmail = jest.fn();
-jest.mock('resend', () => ({
-  Resend: jest.fn().mockImplementation(() => ({
-    emails: {
-      send: mockSendEmail,
-    },
-  })),
+jest.mock('@/lib/email/sendEmail', () => ({
+  sendEmail: (...args: any[]) => mockSendEmail(...args),
 }));
 
 describe('Safety Notifications', () => {
@@ -116,8 +112,6 @@ describe('Safety Notifications', () => {
     };
 
     beforeEach(() => {
-      // Set required env var for Resend
-      process.env.RESEND_API_KEY = 'test-key';
       process.env.NEXT_PUBLIC_APP_URL = 'https://test.soullab.ai';
     });
 
@@ -132,7 +126,7 @@ describe('Safety Notifications', () => {
       });
 
       // Mock email send success
-      mockSendEmail.mockResolvedValueOnce({ error: null });
+      mockSendEmail.mockResolvedValueOnce({ success: true, status: 'sent', id: 'smtp-id', provider: 'smtp', priority: 'P1' });
 
       const result = await sendSafetyConcernNotification(validParams);
 
@@ -178,7 +172,7 @@ describe('Safety Notifications', () => {
           name: 'Dr. Smith',
         }],
       });
-      mockSendEmail.mockResolvedValueOnce({ error: null });
+      mockSendEmail.mockResolvedValueOnce({ success: true, status: 'sent', id: 'smtp-id', provider: 'smtp', priority: 'P1' });
 
       const result = await sendSafetyConcernNotification({
         ...validParams,
@@ -199,7 +193,7 @@ describe('Safety Notifications', () => {
       });
       // Mock the status update query
       mockQuery.mockResolvedValueOnce({ rowCount: 1 });
-      mockSendEmail.mockResolvedValueOnce({ error: null });
+      mockSendEmail.mockResolvedValueOnce({ success: true, status: 'sent', id: 'smtp-id', provider: 'smtp', priority: 'P1' });
 
       const result = await sendSafetyConcernNotification(validParams, logId);
 
@@ -220,7 +214,12 @@ describe('Safety Notifications', () => {
       // Mock the status update query
       mockQuery.mockResolvedValueOnce({ rowCount: 1 });
       mockSendEmail.mockResolvedValueOnce({
-        error: { message: 'Email delivery failed' },
+        success: false,
+        status: 'error',
+        error: 'Email delivery failed',
+        failureKind: 'provider_error',
+        retryable: false,
+        ourFault: true,
       });
 
       const result = await sendSafetyConcernNotification(validParams, logId);

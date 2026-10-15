@@ -3,7 +3,7 @@
  * =======================================================================
  *
  * Configuration:
- *   EMAIL_PROVIDER=resend | memory      (default: resend)
+ *   EMAIL_PROVIDER=smtp | memory      (default: smtp)
  *
  * Two rules govern this file:
  *
@@ -28,16 +28,14 @@
  */
 
 import type { EmailProvider } from './types';
-import { ResendProvider } from './ResendProvider';
 import { MemoryProvider } from './MemoryProvider';
 import { SmtpProvider } from './SmtpProvider';
 
 export type { EmailProvider, ProviderEmailMessage, ProviderSendResult } from './types';
-export { ResendProvider } from './ResendProvider';
 export { MemoryProvider } from './MemoryProvider';
 export { SmtpProvider } from './SmtpProvider';
 
-export const SUPPORTED_PROVIDERS = ['resend', 'smtp', 'memory'] as const;
+export const SUPPORTED_PROVIDERS = ['smtp', 'memory'] as const;
 export type SupportedProvider = (typeof SUPPORTED_PROVIDERS)[number];
 
 function isProduction(): boolean {
@@ -46,7 +44,7 @@ function isProduction(): boolean {
 
 /** Read and validate EMAIL_PROVIDER. Throws on anything we cannot honour. */
 export function resolveProviderName(): SupportedProvider {
-  const raw = (process.env.EMAIL_PROVIDER ?? 'resend').trim().toLowerCase();
+  const raw = (process.env.EMAIL_PROVIDER ?? 'smtp').trim().toLowerCase();
 
   if (!(SUPPORTED_PROVIDERS as readonly string[]).includes(raw)) {
     throw new Error(
@@ -71,8 +69,6 @@ let cachedFor: string | null = null;
 
 function construct(name: SupportedProvider): EmailProvider {
   switch (name) {
-    case 'resend':
-      return new ResendProvider();
     case 'smtp':
       return new SmtpProvider();
     case 'memory':

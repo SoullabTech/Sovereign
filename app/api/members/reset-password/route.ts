@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
     // Send reset email
     const delivery = await sendEmail({
       purpose: 'auth:password-reset',
+      admission: { authority: { kind: 'anonymous' }, destination: 'member-record' },
       from: SENDERS.noreply,
         to: email,
         subject: 'Reset Your Soullab Password',
@@ -196,7 +197,7 @@ The Soullab Team
       );
     }
 
-    console.log('[MEMBERS] Password reset email sent to:', email, 'resendId:', delivery.id ?? 'none');
+    console.log(`[MEMBERS] Password reset email accepted for member=${memberRef(member.id)} (providerId: ${delivery.id ?? 'none'})`);
 
     return NextResponse.json({
       success: true,

@@ -12,6 +12,7 @@
     "hooks/**/*.tsx",
     "lib/auth/**/*.ts",
     "lib/db/**/*.ts",
+    "lib/security/integrationSecrets.ts",
     "lib/types/**/*.ts",
     "lib/services/**/*.ts",
     "lib/voice/**/*.ts",

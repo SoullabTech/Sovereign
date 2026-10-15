@@ -28,17 +28,12 @@ jest.mock('@/lib/db/postgres', () => ({
   query: (sql: string, params?: unknown[]) => mockQuery(sql, params),
 }));
 
-// The fixture must be able to express a REFUSAL. The email-code suite passed
-// throughout this defect's life because its mock resolved to a bare `{ id }`
-// and could not represent `{ data: null, error }`. A mock that cannot fail
-// cannot prove the handling of failure.
-type ResendResult = { data: { id: string } | null; error: { name: string; message: string } | null };
-const mockSend = jest.fn<(...args: unknown[]) => Promise<ResendResult>>();
-jest.mock('resend', () => ({
-  Resend: jest.fn().mockImplementation(() => ({
-    emails: { send: (...args: unknown[]) => mockSend(...args) },
-  })),
-}));
+// Mock the central SoulLab mail contract, not a transport vendor.
+const mockSend = jest.fn<(...args: unknown[]) => Promise<any>>();
+jest.mock('@/lib/email/sendEmail', () => {
+  const actual = jest.requireActual('@/lib/email/sendEmail') as Record<string, unknown>;
+  return { ...actual, sendEmail: (...args: unknown[]) => mockSend(...args) };
+});
 
 jest.mock('@/lib/auth/rateLimiter', () => ({
   checkRateLimit: jest.fn(async () => ({ allowed: true })),
@@ -78,15 +73,37 @@ const ROUTES = [
   { name: 'reset-password', post: resetPasswordPOST, url: '/api/members/reset-password', body: { email: MEMBER.email } },
 ] as const;
 
-const refuse = (name: string, message: string) =>
-  mockSend.mockResolvedValue({ data: null, error: { name, message } });
+const refuse = (name: string, message: string) => {
+  const lower = `${name} ${message}`.toLowerCase();
+  const invalidRecipient = lower.includes('invalid `to` field') || lower.includes('invalid recipient');
+  const rateLimited = lower.includes('rate_limit') || lower.includes('too many requests');
+  const quota = lower.includes('quota');
+  const senderConfig = lower.includes('from address') || lower.includes('domain not found');
+  const failureKind = invalidRecipient
+    ? 'invalid_recipient'
+    : quota
+      ? 'quota_exceeded'
+      : rateLimited
+        ? 'rate_limited'
+        : senderConfig
+          ? 'provider_config'
+          : 'provider_error';
+  mockSend.mockResolvedValue({
+    success: false,
+    status: 'error',
+    failureKind,
+    providerCode: name,
+    error: message,
+    retryable: rateLimited,
+    ourFault: !invalidRecipient,
+  });
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockSend.mockResolvedValue({ data: { id: 'resend-mock-id' }, error: null });
+  mockSend.mockResolvedValue({ success: true, status: 'sent', id: 'smtp-mock-id', provider: 'smtp', priority: 'P0' });
   mockQuery.mockImplementation(async () => ({ rows: [MEMBER] }));
   delete process.env.CAPACITOR_BUILD;
-  process.env.RESEND_API_KEY = 'test-key';
 });
 
 describe.each(ROUTES.map((r) => [r.name, r] as const))(

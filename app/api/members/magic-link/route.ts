@@ -152,6 +152,7 @@ export async function POST(request: NextRequest) {
     // Send magic link email
     const delivery = await sendEmail({
       purpose: 'auth:magic-link',
+      admission: { authority: { kind: 'anonymous' }, destination: 'identity-claim' },
       from: SENDERS.noreply,
         to: normalizedEmail,
         subject,
@@ -256,7 +257,7 @@ The Soullab Team
       );
     }
 
-    console.log(`[MAGIC-LINK] Email sent to: ${normalizedEmail} (existing: ${isExistingMember}, resendId: ${delivery.id ?? 'none'})`);
+    console.log(`[MAGIC-LINK] Email accepted for member=${memberRef(memberId)} (existing: ${isExistingMember}, providerId: ${delivery.id ?? 'none'})`);
 
     trackOnboarding({ event: 'magic_link_sent', email: normalizedEmail, path: 'POST /api/members/magic-link', metadata: { isExistingMember } });
 
@@ -353,7 +354,7 @@ export async function GET(request: NextRequest) {
     if (memberId) {
       // Existing member — use canonical step resolver
       const onboardingTarget = getNextOnboardingStep({
-        onboarded: record.onboarded,
+        onboarded: Boolean(record.onboarded),
         onboarding_step: record.onboarding_step as string,
       });
 

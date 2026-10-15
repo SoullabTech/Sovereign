@@ -4,8 +4,8 @@
 /**
  * MAIA Independent Monitor
  *
- * Self-contained health monitor — no npm install required.
- * Run on any machine with Node.js to create an independent
+ * Independent health monitor using the same SMTP standard as Soullab mail.
+ * Run from a checkout with project dependencies installed to create an independent
  * observer from that network's vantage point.
  *
  * Usage:
@@ -20,6 +20,7 @@
 const fs   = require('fs');
 const path = require('path');
 const https = require('https');
+const nodemailer = require('nodemailer');
 
 // --- Minimal .env.monitor loader (no external deps) ---
 
@@ -65,9 +66,13 @@ const CFG = {
     webhook: process.env.SAFETY_ALERT_SLACK_WEBHOOK_URL || process.env.SLACK_WEBHOOK_URL || '',
   },
 
-  resend: {
-    key:    process.env.RESEND_API_KEY  || '',
-    from:   process.env.EMAIL_FROM      || 'monitor@soullab.life',
+  smtp: {
+    host:   process.env.SMTP_HOST || '',
+    port:   parseInt(process.env.SMTP_PORT || '587'),
+    user:   process.env.SMTP_USER || '',
+    pass:   process.env.SMTP_PASSWORD || process.env.SMTP_PASS || '',
+    secure: process.env.SMTP_SECURE === 'true',
+    from:   process.env.EMAIL_FROM || 'monitor@soullab.life',
     emails: csv(process.env.ALERT_EMAILS),
   },
 };
@@ -178,16 +183,23 @@ async function sendSMS(to, body) {
   }
 }
 
+let smtpTransport = null;
 async function sendEmail(to, subject, text) {
-  if (!CFG.resend.key) return;
+  const { host, port, user, pass, secure, from } = CFG.smtp;
+  if (!host || !user || !pass) return;
   try {
-    const r = await httpsPost(
-      'api.resend.com',
-      '/emails',
-      { Authorization: `Bearer ${CFG.resend.key}`, 'Content-Type': 'application/json' },
-      { from: CFG.resend.from, to, subject, text }
-    );
-    console.log(`  [Email → ${to}] ${r.status}`);
+    if (!smtpTransport) {
+      smtpTransport = nodemailer.createTransport({
+        host,
+        port,
+        secure,
+        auth: { user, pass },
+        requireTLS: !secure,
+        tls: { minVersion: 'TLSv1.2' },
+      });
+    }
+    const info = await smtpTransport.sendMail({ from, to, subject, text });
+    console.log(`  [Email → ${to}] accepted id=${info.messageId || 'none'}`);
   } catch (err) {
     console.error(`  [Email → ${to}] error: ${err.message}`);
   }
@@ -221,7 +233,7 @@ async function sendAlerts(type, result) {
 
   const smsResults = await Promise.all(CFG.twilio.phones.map(p => sendSMS(p, text)));
   const slackResult = await sendSlack(text);
-  await Promise.all(CFG.resend.emails.map(e => sendEmail(e, subject, text)));
+  await Promise.all(CFG.smtp.emails.map(e => sendEmail(e, subject, text)));
 
   const independentDelivered = smsResults.some(Boolean) || slackResult;
   if (!independentDelivered) {
@@ -294,7 +306,7 @@ console.log(`URL:      ${CFG.checkUrl}`);
 console.log(`Interval: ${CFG.intervalMs / 1000}s  Timeout: ${CFG.timeoutMs / 1000}s  Alert after: ${ALERT_THRESHOLD} failure(s)`);
 console.log(`SMS to:   ${CFG.twilio.phones.join(', ') || '(none configured)'}`);
 console.log(`Slack:    ${CFG.slack.webhook ? 'configured' : '(none configured)'}`);
-console.log(`Email to: ${CFG.resend.emails.join(', ') || '(none configured)'}`);
+console.log(`Email to: ${CFG.smtp.emails.join(', ') || '(none configured)'}`);
 console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
 console.log(isTest ? '\nRunning test alerts...' : '\nStarting monitor loop...\n');
 

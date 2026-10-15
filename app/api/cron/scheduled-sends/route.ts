@@ -5,6 +5,8 @@ export const dynamic = 'force-dynamic';
  *
  * Poll consent-confirmed, due, pending rows and send each via EmailRouter, then
  * record the delivery audit. Security: CRON_SECRET bearer (mirrors session-reminders).
+ * F3: claim rows atomically before SMTP and never auto-resend an ambiguous
+ * acceptance, even if a worker crashes after the provider call.
  *
  * Constitutional guardrails (also enforced in the SQL):
  *   - sends ONLY what a human authored and explicitly permitted (consent_confirmed = true)
@@ -21,7 +23,6 @@ import db from '@/lib/db/postgres';
 import { EmailRouter } from '@/lib/comms/emailRouter';
 
 const BATCH = 25;
-const MAX_ATTEMPTS = 3;
 const FROM_EMAIL = 'updates@soullab.life';
 
 function verifyCronSecret(request: NextRequest): boolean {
@@ -36,64 +37,84 @@ function verifyCronSecret(request: NextRequest): boolean {
 }
 
 async function processDue() {
-  // The consent gate + due gate live in the query: only consent_confirmed, pending, due rows.
-  const due = await db.query(
-    `SELECT s.id, s.practitioner_id, s.recipient_email, s.recipient_name, s.subject, s.body, s.attempts,
-            p.name AS practitioner_name, p.email AS practitioner_email
-       FROM scheduled_sends s
-       JOIN practitioners p ON p.id = s.practitioner_id
-      WHERE s.status = 'pending' AND s.consent_confirmed = true AND s.scheduled_for <= now()
-      ORDER BY s.scheduled_for ASC
-      LIMIT $1`,
-    [BATCH],
-  );
+  // One atomic reservation statement. Two workers may run concurrently but
+  // SKIP LOCKED excludes an already-selected row; status flips to 'sending'
+  // BEFORE we contact SMTP. No row is retried after crash or unknown outcome.
+  const due = await db.query(`
+    WITH claimed AS (
+      SELECT s.id
+      FROM scheduled_sends s
+      WHERE s.status = 'pending'
+        AND s.consent_confirmed = true
+        AND s.scheduled_for <= now()
+      ORDER BY s.scheduled_for ASC, s.id ASC
+      FOR UPDATE SKIP LOCKED
+      LIMIT $1
+    ), updated AS (
+      UPDATE scheduled_sends s
+      SET status = 'sending', claim_token = gen_random_uuid(),
+          claimed_at = now(), attempts = s.attempts + 1, updated_at = now()
+      WHERE s.id IN (SELECT id FROM claimed) AND s.status = 'pending'
+      RETURNING s.id, s.claim_token, s.practitioner_id, s.recipient_email,
+                s.recipient_name, s.subject, s.body
+    )
+    SELECT s.*, p.name AS practitioner_name, p.email AS practitioner_email
+    FROM updated s JOIN practitioners p ON p.id = s.practitioner_id
+    ORDER BY s.id
+  `, [BATCH]);
 
   let sent = 0;
   let failed = 0;
-
   for (const row of due.rows) {
     try {
       const router = new EmailRouter(row.practitioner_id);
-      const result = await router.send(
-        {
-          to: row.recipient_email,
-          toName: row.recipient_name || undefined,
-          subject: row.subject,
-          bodyText: row.body, // plain text, human-authored — no HTML injection surface
-          replyTo: row.practitioner_email || 'support@soullab.life',
-        },
-        { fromEmail: FROM_EMAIL, fromName: `${row.practitioner_name} via SoulLab` },
-      );
+      const result = await router.send({
+        purpose: 'practitioner:scheduled-send',
+          admission: { authority: { kind: 'system', trigger: 'scheduled-send-cron' }, destination: 'stored-record' },
+        to: row.recipient_email,
+        toName: row.recipient_name || undefined,
+        subject: row.subject,
+        bodyText: row.body,
+        replyTo: row.practitioner_email || 'support@soullab.life',
+      }, {
+        fromEmail: FROM_EMAIL, fromName: 'Soullab',
+      });
 
       if (result.success) {
-        await db.query(
+        // The row may only be settled by the worker holding this exact claim.
+        const saved = await db.query(
           `UPDATE scheduled_sends
-              SET status = 'sent', sent_at = now(), attempts = attempts + 1,
-                  provider = $2, provider_message_id = $3, last_error = NULL, updated_at = now()
-            WHERE id = $1`,
-          [row.id, result.provider, result.id ?? null],
+              SET status = 'sent', sent_at = now(), provider = $3,
+                  provider_message_id = $4, last_error = NULL, updated_at = now()
+            WHERE id = $1 AND claim_token = $2 AND status = 'sending'
+            RETURNING id`,
+          [row.id, row.claim_token, result.provider, result.id ?? null]
         );
+        if (saved.rowCount !== 1) {
+          console.error('[ScheduledMail] provider accepted; claim settlement uncertain');
+          failed++;
+          continue;
+        }
         sent++;
-        console.log(`[MAIA/scheduled-send] sent { id: ${row.id}, practitionerPrefix: ${row.practitioner_id.slice(0, 8)}, provider: ${result.provider}, messageId: ${result.id ?? 'n/a'} }`);
       } else {
-        const attempts = row.attempts + 1;
-        const status = attempts >= MAX_ATTEMPTS ? 'failed' : 'pending';
+        // A refusal may have followed remote acceptance. Never resubmit
+        // automatically; the operator must reconcile the provider evidence.
         await db.query(
-          `UPDATE scheduled_sends SET status = $2, attempts = $3, last_error = $4, updated_at = now() WHERE id = $1`,
-          [row.id, status, attempts, result.error ?? 'send failed'],
+          `UPDATE scheduled_sends SET status = 'indeterminate',
+             last_error = $3, updated_at = now()
+            WHERE id = $1 AND claim_token = $2 AND status = 'sending'`,
+          [row.id, row.claim_token, result.failureKind || 'provider_refused']
         );
         failed++;
-        console.warn(`[MAIA/scheduled-send] failed { id: ${row.id}, attempts: ${attempts}, status: ${status}, error: ${result.error ?? 'unknown'} }`);
+        console.warn('[ScheduledMail] quarantined provider nonacceptance');
       }
-    } catch (err) {
-      const attempts = row.attempts + 1;
-      const status = attempts >= MAX_ATTEMPTS ? 'failed' : 'pending';
-      const message = err instanceof Error ? err.message : 'unknown error';
-      await db
-        .query(`UPDATE scheduled_sends SET status = $2, attempts = $3, last_error = $4, updated_at = now() WHERE id = $1`, [row.id, status, attempts, message])
-        .catch(() => {});
+    } catch (error) {
+      // A network timeout or database fault may occur AFTER SMTP accepted.
+      // Leave the immutable claim in 'sending' to avoid a duplicate email.
       failed++;
-      console.error(`[MAIA/scheduled-send] exception { id: ${row.id}, error: ${message} }`);
+      console.error('[ScheduledMail] dispatch uncertainty', {
+        errorClass: error instanceof Error ? error.name : 'unknown',
+      });
     }
   }
 

@@ -321,6 +321,7 @@ async function sendGiftEmail(
 
     const result = await sendEmail({
       purpose: 'invite:gift',
+      admission: { authority: { kind: 'admin', actorId: 'labtools' }, destination: 'actor-supplied' },
       from: 'Soullab Gifts <gifts@soullab.life>',
       replyTo: 'kelly@soullab.life',
       to: recipientEmail,
