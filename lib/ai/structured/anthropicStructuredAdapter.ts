@@ -141,10 +141,20 @@ export function anthropicStructuredProvider(
   };
 }
 
+export function resolveProviderMaxRetries(
+  raw: string | undefined = process.env.MAIA_PROVIDER_MAX_RETRIES,
+): number {
+  const retries = raw === undefined ? 2 : (/^\d+$/.test(raw) ? Number(raw) : NaN);
+  if (!Number.isInteger(retries) || retries < 0 || retries > 10) {
+    throw new Error('invalid MAIA_PROVIDER_MAX_RETRIES');
+  }
+  return retries;
+}
+
 async function executeOnce(
   opts: AnthropicStructuredOptions, req: StructuredRequest,
 ): Promise<StructuredResult> {
-  const client = opts.client ?? new Anthropic();
+  const client = opts.client ?? new Anthropic({ maxRetries: resolveProviderMaxRetries() });
   const params = toAnthropicParams(req);
   const t0 = Date.now();
 
