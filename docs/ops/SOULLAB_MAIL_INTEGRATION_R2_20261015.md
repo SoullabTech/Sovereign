@@ -66,3 +66,10 @@ Resend was retired. The SMTP credential is already provisioned. No new API key, 
 - Added file-local `BEGIN; SET LOCAL lock_timeout = '5s'; ... COMMIT;` to each of `20261012000001_mail05_capacity.sql`, `20261012000002_scheduled_send_claim.sql`, and `20261012000003_portrait_delivery_attestations.sql`. No table schema, column shape, or functional SQL body was altered by this fix.
 - Local migration-law check passed 6/6 migrations at/after the policy cutoff and 10/10 guard unit tests. The independent cloud run must be repeated against the NEW exact commit; inherited previous cloud green does not prove the updated migration bytes.
 - Still HOLD for independently administered review, non-synthetic backup-restore, old-reader compatibility, owner/recipient consent and controlled delivery on qualified Proton SMTP.
+
+## Second cloud Sovereignty finding — raw email log removal
+
+- After the SQL fix, GitHub's migration-law and 10 guard tests passed, but Sovereignty Gate identified two raw-recipient email interpolations in `scripts/send-beta-reengagement.ts` and two stale resolved baseline identities in the earlier beta invitation helpers.
+- Re-engagement logging now records cohort state and error *class*, not recipient address or provider exception body; the script was **not executed** and no campaign emails were sent.
+- The logging baseline was deliberately shrunk by the governed tool after a dry run showed **0 new/increased identities and exactly 2 resolved identities**. Baseline counts 530 → 528. Strict member-id log guard: PASS.
+- Entire `npm run ci:sovereignty` on the isolated internal source returned **exit 0**, including migration timeout, member identifier, provider, voice, crisis matrix and 41/41 scoped Jest assertions. Cloud re-witness against the next exact commit remains required.

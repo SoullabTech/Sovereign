@@ -85,13 +85,17 @@ async function send() {
         html: template.html,
         text: template.text,
       });
-      if (!result.success) throw new Error(result.error || 'mail refused');
-      console.log(`✓ ${member.email} (${member.onboarded ? 'onboarded' : 'partial'})`);
+      // Provider error details are logged by Soullab Mail after redaction.
+      // This campaign log records only aggregate acceptance and cohort state.
+      if (!result.success) throw new Error('mail_refused');
+      console.log(`✓ Re-engagement accepted (${member.onboarded ? 'onboarded' : 'partial'})`);
       sent++;
       // Small delay to avoid rate limits
       await new Promise(r => setTimeout(r, 200));
     } catch (err) {
-      console.error(`✗ ${member.email}: ${err.message}`);
+      console.error('✗ Re-engagement attempt unsuccessful', {
+        errorClass: err instanceof Error ? err.name : 'unknown',
+      });
       skipped++;
     }
   }
@@ -100,4 +104,9 @@ async function send() {
   await db.end();
 }
 
-send().catch(err => { console.error(err); process.exit(1); });
+send().catch(err => {
+  console.error('[beta-reengagement] script failed', {
+    errorClass: err instanceof Error ? err.name : 'unknown',
+  });
+  process.exit(1);
+});
