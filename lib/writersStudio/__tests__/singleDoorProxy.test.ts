@@ -61,7 +61,7 @@ describe('beta single-door middleware, with a genuine NextRequest', () => {
     expect(verify).not.toHaveBeenCalled();
   });
 
-  it.each(['/api/open/room', '/api/secret.json', '/api/members/session', '/api/writers-studio/draft'])(
+  it.each(['/api/open/room', '/api/secret.json', '/api/members/session', '/api/writers-studio/draft', '/api/sovereign/manuscripts/ingest/discard'])(
     'returns 401 for anonymous API %s even if the ordinary access matrix is public', async path => {
       expect((await proxy(req(path))).status).toBe(401);
       expect(cohort).not.toHaveBeenCalled();

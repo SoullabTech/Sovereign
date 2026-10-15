@@ -83,6 +83,10 @@ if((fs.statSync(outDir).mode & 0o077)!==0) throw Error('PRIVATE_OUTPUT_DIRECTORY
     fs.writeFileSync(fd,JSON.stringify(payload,null,2)+'\n');
     fs.fsyncSync(fd);
   } finally {fs.closeSync(fd);}
+  // The directory entry is part of custody too: durable file contents alone
+  // cannot guarantee the .pending name survives a power loss after COMMIT.
+  const pendingDirFd=fs.openSync(outDir,'r');
+  try {fs.fsyncSync(pendingDirFd);} finally {fs.closeSync(pendingDirFd);}
   await db.query('COMMIT');open=false;
   fs.renameSync(pendingFile,outputFile);
   const directoryFd=fs.openSync(outDir,'r');

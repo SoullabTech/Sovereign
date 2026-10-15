@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { query } from '@/lib/db/postgres';
 import { readVaultBytes, writeDurableVaultBytes } from '@/lib/storage/fileVault';
 import {
@@ -47,7 +48,9 @@ export async function recordArtifactArrival(params: {
   extractor: ExtractorKey;
 }): Promise<StoredArrival> {
   const artifactHash = hashBytes(params.bytes);
-  const fileId = `${Date.now().toString(36)}-${artifactHash.slice(0, 16)}`;
+  // A fresh random identity prevents two simultaneous copies of the same
+  // file from ever sharing a vault path and therefore a deletion fate.
+  const fileId = `${randomUUID()}-${artifactHash.slice(0, 16)}`;
   const artifactRef = await writeDurableVaultBytes(
     VAULT_NAMESPACE,
     fileId,

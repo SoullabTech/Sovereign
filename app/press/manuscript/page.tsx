@@ -240,6 +240,8 @@ function PressManuscriptRoom() {
      the save act can bind the manuscript to what actually arrived. Null for a
      paste, which has no artifact and must never be given one. */
   const [sourceArrivalId, setSourceArrivalId] = useState<string | null>(null);
+  const [discardingImport, setDiscardingImport] = useState(false);
+  const [discardImportError, setDiscardImportError] = useState(false);
 
   const [sectionCursor, setSectionCursor] = useState(0);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -397,11 +399,54 @@ function PressManuscriptRoom() {
     }
   };
 
-  const onFile = async (f: File) => {
+  const discardUnclaimedUpload = async (): Promise<boolean> => {
+    if (!sourceArrivalId) return true;
+    if (discardingImport || ingesting || saving) return false;
+    setDiscardingImport(true);
+    setDiscardImportError(false);
+    try {
+      const response = await apiFetch('/api/sovereign/manuscripts/ingest/discard', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ sourceArrivalId }),
+      });
+      // Even 404 is NOT proof that original bytes were destroyed: a previous
+      // storage failure may have removed the row while leaving an erasure debt.
+      // Require both the successful status AND server's explicit destruction
+      // acknowledgement. An empty or malformed 200 never counts as erasure.
+      const outcome = await response.json().catch(() => null);
+      if (!response.ok || outcome?.discarded !== true || outcome?.originalBytesDestroyed !== true) {
+        setDiscardImportError(true);
+        return false;
+      }
+      setSourceArrivalId(null);
+      return true;
+    } catch {
+      setDiscardImportError(true);
+      return false;
+    } finally {
+      setDiscardingImport(false);
+    }
+  };
+
+  const discardAndReturnToStudio = async () => {
+    if (!(await discardUnclaimedUpload())) return;
+    setPreview(null);
+    setDraftText('');
     setWarnings([]);
     setFidelity(null);
     setFidelityReviewed(false);
-    setSourceArrivalId(null);
+    window.location.assign('/writers-studio?mode=home');
+  };
+
+  const onFile = async (f: File) => {
+    // A new file selection must never destroy an earlier arrival implicitly.
+    // The writer explicitly discards and returns before selecting again.
+    if (sourceArrivalId) return;
+    setWarnings([]);
+    setFidelity(null);
+    setFidelityReviewed(false);
+    setDiscardImportError(false);
     // Named before sending. An oversized file cannot succeed by any path, and
     // the member is told the actual size rather than being left to guess.
     if (f.size > MAX_UPLOAD_BYTES) {
@@ -714,12 +759,19 @@ function PressManuscriptRoom() {
               The way back up must always be visible — before this link existed,
               arriving here from the House was a one-way trip into an upload
               form with no Studio around it. */}
-          <a
-            href="/press/studio"
-            className="inline-block text-[12px] tracking-[0.15em] uppercase opacity-45 hover:opacity-80 mb-10"
-          >
-            ← Author Studio
-          </a>
+          {sourceArrivalId ? (
+            <button type="button"
+              onClick={() => void discardAndReturnToStudio()}
+              disabled={discardingImport || ingesting || saving}
+              className="inline-block text-[12px] tracking-[0.15em] uppercase opacity-65 hover:opacity-90 mb-10 disabled:opacity-30">
+              {discardingImport ? 'Discarding upload…' : '← Discard upload and return to Studio'}
+            </button>
+          ) : (
+            <a href="/writers-studio?mode=home"
+              className="inline-block text-[12px] tracking-[0.15em] uppercase opacity-45 hover:opacity-80 mb-10">
+              ← Writer’s Studio
+            </a>
+          )}
           <h1 className="text-3xl leading-snug mb-4">Import a manuscript</h1>
           <p className="text-[15px] leading-relaxed opacity-70 mb-3">
             Bring in a book you have already written. Paste it, or choose a file.
@@ -750,12 +802,12 @@ function PressManuscriptRoom() {
               />
               <div className="flex items-center gap-6">
                 <label className="text-[13px] underline underline-offset-4 opacity-60 cursor-pointer">
-                  {ingesting ? 'reading your file…' : 'or choose a .docx / .pdf / .txt / .md file'}
+                  {ingesting ? 'reading your file…' : sourceArrivalId ? 'Original uploaded — discard before choosing a different file' : 'or choose a .docx / .pdf / .txt / .md file'}
                   <input
                     type="file"
                     accept=".txt,.md,.markdown,.docx,.pdf"
                     className="hidden"
-                    disabled={ingesting}
+                    disabled={ingesting || discardingImport || Boolean(sourceArrivalId)}
                     onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
                   />
                 </label>
@@ -768,6 +820,26 @@ function PressManuscriptRoom() {
                   {saving ? '…' : 'Import into Author Studio'}
                 </button>
               </div>
+              {sourceArrivalId && (
+                <div className="space-y-2 border-l-2 border-[#4A4238] pl-4">
+                  <p className="text-[13px] opacity-75">
+                    Your original upload is held while you review it. If you leave without
+                    saving or discarding, it remains pending a separate retention decision.
+                  </p>
+                  <button type="button"
+                    disabled={discardingImport || ingesting || saving}
+                    onClick={() => void discardAndReturnToStudio()}
+                    className="text-[13px] underline underline-offset-4 opacity-80 disabled:opacity-30">
+                    {discardingImport ? 'Discarding upload…' : 'Discard uploaded file'}
+                  </button>
+                </div>
+              )}
+              {discardImportError && (
+                <p role="alert" className="text-[13px] opacity-85">
+                  The Studio could not confirm complete deletion of this upload.
+                  It may still need cleanup; do not treat the original as discarded.
+                </p>
+              )}
               {warnings.length > 0 && (
                 <div role="status" aria-live="polite" className="space-y-2 border-l-2 border-[#C9A227] pl-4">
                   <p className="text-[14px] font-semibold">Document fidelity review</p>
@@ -906,6 +978,18 @@ function PressManuscriptRoom() {
               </div>
               {saveError && (
                 <p className="text-[13px] opacity-70 mb-4">Could not save. Please try again.</p>
+              )}
+              {discardImportError && (
+                <p role="alert" className="text-[13px] opacity-85 mb-4">
+                  Could not confirm complete deletion. The original may still be held for cleanup.
+                </p>
+              )}
+              {sourceArrivalId && (
+                <button type="button" disabled={saving || discardingImport || ingesting}
+                  className="text-[13px] underline underline-offset-4 opacity-75 mb-4"
+                  onClick={() => void discardAndReturnToStudio()}>
+                  {discardingImport ? 'Discarding upload…' : 'Discard uploaded file and return'}
+                </button>
               )}
               <div className="flex gap-4">
                 <button
