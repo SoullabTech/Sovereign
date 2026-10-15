@@ -24,7 +24,7 @@ import {
   getClientIP,
   buildRateLimitHeaders
 } from '@/lib/auth/rateLimiter';
-import { createSession } from '@/lib/auth/serverSessions';
+import { createSession, revokeSession } from '@/lib/auth/serverSessions';
 import { getNextOnboardingStep } from '@/lib/onboarding/state';
 import { trackOnboarding } from '@/lib/onboarding/telemetry';
 
@@ -370,11 +370,13 @@ export async function GET(request: NextRequest) {
 
       const response = NextResponse.redirect(successUrl);
 
-      // Set HttpOnly session cookies so middleware recognises the member
+      // Set HttpOnly session cookies so middleware recognises the member.
+      // The success redirect must never be emitted without a verified session.
+      let session: Awaited<ReturnType<typeof createSession>> | undefined;
       try {
         const clientIP = getClientIP(request);
         const userAgent = request.headers.get('user-agent') || '';
-        const session = await createSession({ memberId: memberId as string, ipAddress: clientIP, userAgent });
+        session = await createSession({ memberId: memberId as string, ipAddress: clientIP, userAgent });
         const cookieOpts = {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
@@ -388,9 +390,23 @@ export async function GET(request: NextRequest) {
         response.cookies.set('maia_roles', JSON.stringify(record.roles || ['member']), cookieOpts);
         trackOnboarding({ event: 'session_created', memberId: memberId as string, path: 'magic-link' });
         console.log(`[MAGIC-LINK] Session created for: ${record.username}`);
-      } catch (sessionErr) {
-        console.error('[MAGIC-LINK] Session creation failed (non-fatal):', sessionErr);
+      } catch {
+        // The link has been consumed. Do not imply entry succeeded, and do not
+        // return the prepared success redirect with an unauthenticated browser.
+        if (session) await revokeSession(session.id, 'session_issuance_failed');
+        console.error('[MAGIC-LINK] Session issuance unavailable');
         trackOnboarding({ event: 'session_missing_after_verify', memberId: memberId as string, path: 'magic-link' });
+        return new NextResponse(
+          '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Sign-in unavailable</title></head>' +
+          '<body><main><h1>Sign-in could not be completed</h1>' +
+          '<p>Your sign-in link was used, but we could not start a secure session. ' +
+          'Please request a new sign-in link.</p><p><a href="/signin">Return to sign in</a></p>' +
+          '</main></body></html>',
+          { status: 503, headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'private, no-store',
+          } }
+        );
       }
 
       return response;

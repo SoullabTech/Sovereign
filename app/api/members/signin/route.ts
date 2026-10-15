@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { verifyPassword } from '@/lib/auth/passwordUtils';
-import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
+import { createSession, setSessionCookie, setAccessCookies, revokeSession } from '@/lib/auth/serverSessions';
 import { logAuthEvent } from '@/lib/security/authAudit';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import {
@@ -114,24 +114,30 @@ export async function POST(request: NextRequest) {
     await resetRateLimit(clientIP, 'ip', ENDPOINT);
 
     // Create session
-    let session;
+    let session: Awaited<ReturnType<typeof createSession>> | undefined;
     try {
       session = await createSession({
         memberId: member.id,
         ipAddress: clientIP,
         userAgent
       });
-      await setSessionCookie(session.sessionToken, session.expiresAt);
-      // Set access cookies for middleware (tier, roles, member_id)
+      // Access metadata is not authentication; the verified bearer is issued last.
       await setAccessCookies(
         member.id,
         member.tier || 'free',
         member.roles || ['member'],
         session.expiresAt
       );
-    } catch (sessionError) {
-      console.error('[PasswordSignin] Failed to create session:', sessionError);
-      // Continue without session - still return member data
+      await setSessionCookie(session.sessionToken, session.expiresAt);
+    } catch {
+      // Never report sign-in success or expose member data if the verified
+      // session or cookie cannot be issued. Revoke any minted unusable session.
+      if (session) await revokeSession(session.id, 'session_issuance_failed');
+      console.error('[PasswordSignin] Session issuance unavailable');
+      return NextResponse.json(
+        { error: 'Sign-in could not be completed. Please try again.' },
+        { status: 503, headers: { 'Cache-Control': 'private, no-store' } }
+      );
     }
 
     // Update last sign in
