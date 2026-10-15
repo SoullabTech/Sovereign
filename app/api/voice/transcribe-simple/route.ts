@@ -1,6 +1,8 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { isSingleDoorBetaEnabled } from '@/lib/writersStudio/singleDoorBetaGate';
+import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
 
 export const revalidate = false;
 
@@ -31,6 +33,23 @@ export async function POST(req: NextRequest) {
     const memberId = await getMemberIdFromRequest(req);
     if (!memberId) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // This multipart route is also excluded from Proxy to keep the audio
+    // stream intact. Its beta-only member gate must therefore run in-route.
+    if (isSingleDoorBetaEnabled(
+      process.env.WRITERS_STUDIO_RESTRICTED_BETA,
+      process.env.WRITERS_STUDIO_BETA_SINGLE_DOOR,
+    )) {
+      let eligible: boolean;
+      try {
+        eligible = (await writersStudioBetaAccess(memberId)).eligible;
+      } catch {
+        return NextResponse.json({ success: false, error: 'beta_admission_unavailable' }, { status: 503 });
+      }
+      if (!eligible) {
+        return NextResponse.json({ success: false, error: 'beta_not_admitted' }, { status: 403 });
+      }
     }
 
     // Feature gates (canon distinction):

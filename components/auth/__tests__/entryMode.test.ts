@@ -19,7 +19,9 @@ const COMPONENT = read('components/auth/UnifiedAuth.tsx');
 
 describe('each route declares why the person arrived', () => {
   it('/signin is the returning door', () => {
-    expect(read('app/signin/page.tsx')).toContain('<UnifiedAuth mode="signin" betaInvitationOnly={host === \'beta.soullab.life\'} />');
+    const src = read('app/signin/page.tsx');
+    expect(src).toContain('isSingleDoorBetaEnabled(');
+    expect(src).toContain('<UnifiedAuth mode="signin" betaInvitationOnly={dedicatedBeta || host === \'beta.soullab.life\'} />');
   });
 
   it('/signup is the joining door', () => {

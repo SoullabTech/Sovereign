@@ -36,6 +36,8 @@ import {
   type Role,
 } from '@/config/accessMatrix';
 import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
+import { isSingleDoorBetaEnabled } from '@/lib/writersStudio/singleDoorBetaGate';
+import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   CLIENT_ASSERTABLE_IDENTITY_HEADERS,
@@ -243,6 +245,26 @@ export async function POST(request: NextRequest) {
         { error: 'Unauthorized', message: 'Authentication required.', rid },
         { status: 401 },
       );
+    }
+
+    // Proxy deliberately excludes this multipart endpoint. Replicate the
+    // beta admission boundary IN-ROUTE before reading any upload bytes.
+    if (isSingleDoorBetaEnabled(
+      process.env.WRITERS_STUDIO_RESTRICTED_BETA,
+      process.env.WRITERS_STUDIO_BETA_SINGLE_DOOR,
+    )) {
+      if (!verified.authenticated || verified.memberId !== memberId) {
+        return NextResponse.json({ error: 'authentication_required' }, { status: 401 });
+      }
+      let eligible: boolean;
+      try {
+        eligible = (await writersStudioBetaAccess(memberId)).eligible;
+      } catch {
+        return NextResponse.json({ error: 'beta_admission_unavailable' }, { status: 503 });
+      }
+      if (!eligible) {
+        return NextResponse.json({ error: 'beta_not_admitted' }, { status: 403 });
+      }
     }
 
     // ── 4. SANITISE — the SAME request, in place ───────────────────────────

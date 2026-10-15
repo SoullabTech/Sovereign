@@ -19,6 +19,7 @@ import { deriveVerifiedAccess, type VerifiedAccess } from './lib/auth/verifiedAc
 import { canonicalStudioRoute } from './lib/writersStudio/canonicalStudioRoute';
 import { writersStudioBetaAccess } from './lib/writersStudio/betaAccessServer';
 import { restrictedBetaEnabled, isRestrictedWriterStudioPath, mayEnterRestrictedWriterStudioPath, isClosedBetaEnrollmentPath } from './lib/writersStudio/restrictedBetaAdmission';
+import { isSingleDoorBetaEnabled, isSingleDoorPublicAsset, isSingleDoorBootstrap } from './lib/writersStudio/singleDoorBetaGate';
 // NOTE: entitlements are still checked in route handlers, not here — they are a
 // commercial concern with their own surface, not part of the trust boundary.
 
@@ -157,6 +158,54 @@ export async function proxy(req: NextRequest) {
   }
 
   // ---------------------------------------------------------------------
+  // ONE MEMBER DOOR: keep the beta hostname usable without browser-native
+  // HTTP Basic Auth, but refuse EVERY non-bootstrap path until a validated
+  // session is tied to an explicitly admitted writer. This runs BEFORE
+  // public-route exemptions, generic extension skips and /api/open.
+  // Enabled only in the isolated beta app, never in production.
+  // ---------------------------------------------------------------------
+  const betaSingleDoor = isSingleDoorBetaEnabled(
+    process.env.WRITERS_STUDIO_RESTRICTED_BETA,
+    process.env.WRITERS_STUDIO_BETA_SINGLE_DOOR,
+  );
+  let singleDoorVerified: VerifiedAccess | undefined;
+  if (betaSingleDoor && !isSingleDoorPublicAsset(pathname)) {
+    if (isSingleDoorBootstrap(pathname, req.method)) {
+      // /api/members/signin independently rejects identities outside the
+      // admitted cohort before it can create an authenticated session.
+      return forwardSanitized(req);
+    }
+
+    singleDoorVerified = await deriveVerifiedAccess(req);
+    if (!singleDoorVerified.authenticated || !singleDoorVerified.memberId) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'authentication_required' },
+          { status: 401, headers: { 'Cache-Control': 'no-store' } });
+      }
+      const login = new URL('/signin', req.url);
+      login.searchParams.set('next', pathname);
+      return NextResponse.redirect(login);
+    }
+
+    let eligible: boolean;
+    try {
+      eligible = (await writersStudioBetaAccess(singleDoorVerified.memberId)).eligible;
+    } catch {
+      // Cohort-authority unavailability must never convert to an admission.
+      console.error('[WriterStudio/Beta] single-door cohort unavailable');
+      return NextResponse.json({ error: 'beta_admission_unavailable' },
+        { status: 503, headers: { 'Cache-Control': 'no-store' } });
+    }
+    if (!eligible) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'beta_not_admitted' },
+          { status: 403, headers: { 'Cache-Control': 'no-store' } });
+      }
+      return NextResponse.redirect(new URL('/writers-studio/beta-limited', req.url));
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // FIELD / STUDIO BOUNDARY: Reject /api/studio/* from Field shell context
   //
   // When a client sets X-App-Shell: field (done by apiFetch via sessionStorage
@@ -277,7 +326,7 @@ export async function proxy(req: NextRequest) {
   // Cost: one indexed query per non-public request that actually carries a
   // credential. A request with no credential short-circuits before the query.
   // ---------------------------------------------------------------------
-  const verified = await deriveVerifiedAccess(req);
+  const verified = singleDoorVerified ?? await deriveVerifiedAccess(req);
   const { authenticated: authed, tier, roles } = verified;
 
   if (!authed && verified.reason && verified.reason !== 'no_credential') {

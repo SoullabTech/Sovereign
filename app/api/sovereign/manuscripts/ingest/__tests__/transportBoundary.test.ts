@@ -26,7 +26,7 @@ import { ACCESS_RULES, TIER_RANK, tierSatisfies } from '@/config/accessMatrix';
 
 const REPO = path.resolve(__dirname, '../../../../../..');
 const read = (p: string) => fs.readFileSync(path.join(REPO, p), 'utf8');
-const middleware = () => read('middleware.ts');
+const middleware = () => read('proxy.ts'); // Next 16 proxy replaced middleware.ts
 const route = () => read('app/api/sovereign/manuscripts/ingest/route.ts');
 
 const PATH = '/api/sovereign/manuscripts/ingest';
@@ -117,18 +117,23 @@ describe("F2 · a valid member cannot cause custody to be attributed to another 
   });
 });
 
-describe('F3 · a valid member upload succeeds — nothing new gates it', () => {
-  it('the admission block adds no gate beyond authority and sanitisation', () => {
+describe('F3 · original member ingest and isolated beta admission are distinct', () => {
+  it('keeps ordinary credential and transport gates and adds the beta-only check before the body', () => {
     const src = route();
     const admission = src.slice(
       src.indexOf('const forged = forgedIdentityHeaders'),
       src.indexOf('await request.formData()'),
     );
     expect(admission.length).toBeGreaterThan(0);
-    // Four refusals only: forged names, no member, resolvers disagreeing, and
-    // a survivor of sanitisation. (The matrix denials live in a helper.)
-    expect(admission.match(/status: 401/g) ?? []).toHaveLength(4);
-    expect(admission).not.toMatch(/process\.env\./);
+    // Four existing 401s plus the one explicit beta-session mismatch refusal.
+    expect(admission.match(/status: 401/g) ?? []).toHaveLength(5);
+    expect(admission).toContain('isSingleDoorBetaEnabled(');
+    expect(admission).toContain('process.env.WRITERS_STUDIO_RESTRICTED_BETA');
+    expect(admission).toContain('process.env.WRITERS_STUDIO_BETA_SINGLE_DOOR');
+    expect(admission).toContain('await writersStudioBetaAccess(memberId)');
+    expect(admission).toContain("error: 'beta_not_admitted'");
+    expect(admission).toContain('status: 503');
+    expect(admission).toContain('status: 403');
   });
 });
 

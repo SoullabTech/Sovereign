@@ -96,24 +96,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Restrict accounts BEFORE session creation, not merely when the writer
-    // subsequently navigates. An authenticated but uninvited member must
-    // never receive a beta session through this public sign-in endpoint.
-    if (restrictedBetaEnabled(process.env.WRITERS_STUDIO_RESTRICTED_BETA)) {
-      let admitted = false;
+    // For ANY restricted beta, verify invitation standing BEFORE minting a
+    // session. The optional second flag only changes the public proxy route,
+    // never whether an uninvited account may authenticate.
+    const singleDoorBeta = restrictedBetaEnabled(process.env.WRITERS_STUDIO_RESTRICTED_BETA);
+    if (singleDoorBeta) {
+      let eligible = false;
       try {
-        admitted = (await writersStudioBetaAccess(member.id)).eligible;
+        eligible = (await writersStudioBetaAccess(member.id)).eligible;
       } catch {
+        console.error('[PasswordSignin] beta cohort authority unavailable');
         return NextResponse.json(
-          { error: 'Beta admission is temporarily unavailable' },
+          { error: 'Sign in temporarily unavailable' },
           { status: 503, headers: { 'Cache-Control': 'no-store' } },
         );
       }
-      if (!admitted) {
+      if (!eligible) {
+        // Identical error for unknown identity, wrong password, and excluded
+        // cohort: do not disclose who is on the invitation list.
         return NextResponse.json(
-          { error: 'This account is not admitted to the private beta' },
-          { status: 403, headers: { 'Cache-Control': 'no-store' } },
+          { error: 'Invalid username or password' },
+          { status: 401, headers: { 'Cache-Control': 'no-store' } },
         );
+
       }
     }
 
@@ -154,7 +159,16 @@ export async function POST(request: NextRequest) {
       );
     } catch (sessionError) {
       console.error('[PasswordSignin] Failed to create session:', sessionError);
-      // Continue without session - still return member data
+      // An isolated beta must not signal success if it failed to establish
+      // the authenticated, revocable server-side session.
+      if (singleDoorBeta) {
+        return NextResponse.json({ error: 'Sign in temporarily unavailable' }, { status: 503 });
+      }
+      // Preserve existing normal Soullab behavior outside the restricted beta.
+    }
+
+    if (singleDoorBeta && !session) {
+      return NextResponse.json({ error: 'Sign in temporarily unavailable' }, { status: 503 });
     }
 
     // Update last sign in

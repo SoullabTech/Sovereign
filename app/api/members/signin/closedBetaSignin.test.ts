@@ -56,7 +56,8 @@ describe('WS-BETA-ENTRY-R1 denied sign-ins never create sessions',()=>{
  it('refuses good credentials if the member is outside the beta cohort',async()=>{
    mockAdmission.mockResolvedValue({eligible:false,basis:'not_in_pilot'});
    const res=await POST(req());
-   expect(res.status).toBe(403);
+   expect(res.status).toBe(401);
+   expect(await res.json()).toMatchObject({error:'Invalid username or password'});
    expect(mockSession).not.toHaveBeenCalled();
  });
  it('fails closed if beta membership database authority is unavailable',async()=>{
