@@ -369,6 +369,9 @@ export async function GET(request: NextRequest) {
       successUrl.searchParams.set('redirect', onboardingTarget.path);
 
       const response = NextResponse.redirect(successUrl);
+      // This GET response carries member identity in its redirect and issues
+      // a session cookie: never let ingress or browsers cache it.
+      response.headers.set('Cache-Control', 'private, no-store');
 
       // Set HttpOnly session cookies so middleware recognises the member.
       // The success redirect must never be emitted without a verified session.

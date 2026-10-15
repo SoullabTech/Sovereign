@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
         // Client should store this in localStorage and send via x-session-token header
         token: session.sessionToken
       } : undefined
-    });
+    }, { headers: { 'Cache-Control': 'private, no-store' } });
 
   } catch (error) {
     console.error('[PasswordSignin] Error:', error);

@@ -135,6 +135,7 @@ test('password sign-in with verified session retains existing success contract',
   expect(result.status).toBe(200);
   const body = await result.json();
   expect(body.success).toBe(true);
+  expect(result.headers.get('Cache-Control')).toContain('no-store');
   expect(body.session.token).toBe(SESSION.sessionToken);
   expect(setAccessCookiesMock).toHaveBeenCalled();
   expect(setSessionCookieMock).toHaveBeenCalledWith(SESSION.sessionToken,SESSION.expiresAt);
@@ -160,6 +161,7 @@ test('magic-link successful return still issues a real cookie and redirect', asy
   const result = await magicSignin(linkRequest());
   expect(result.status).toBe(307);
   expect(result.headers.get('Location')).toContain('/magic-link-success');
+  expect(result.headers.get('Cache-Control')).toContain('no-store');
   expect(result.headers.get('Set-Cookie')).toContain('maia_session=fiction-only-token');
   expect(revokeSessionMock).not.toHaveBeenCalled();
 });
