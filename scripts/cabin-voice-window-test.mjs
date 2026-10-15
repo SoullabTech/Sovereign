@@ -35,9 +35,23 @@ try{
  await page.locator('#send').click();
  await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('MAIA replied'),null,{timeout:120000});
  assert.equal(await page.locator('.turn.assistant').count(),1);
+ console.log('Cancelling pending speech preparation');
+ await page.evaluate(()=>{
+  window.cabinOriginalFetch=window.fetch;
+  window.fetch=(url,options)=>url==='/api/voice/speak'?new Promise((resolve,reject)=>{
+   options.signal.addEventListener('abort',()=>reject(new DOMException('Cancelled','AbortError')),{once:true});
+  }):window.cabinOriginalFetch(url,options);
+ });
+ await page.locator('#listen').click();
+ await page.waitForFunction(()=>!document.querySelector('#stop-audio').hidden);
+ await page.locator('#stop-audio').click();
+ await page.waitForFunction(()=>!document.querySelector('#listen').disabled);
+ assert.match(await page.locator('#voice-status').innerText(),/Listening stopped/);
+ assert.equal(await page.locator('#stop-audio').isVisible(),false);
+ await page.evaluate(()=>{window.fetch=window.cabinOriginalFetch;delete window.cabinOriginalFetch;});
  console.log('Preparing and playing speech');
  await page.locator('#listen').click();
- await page.waitForFunction(()=>!document.querySelector('#stop-audio').hidden,null,{timeout:120000});
+ await page.waitForFunction(()=>document.querySelector('#voice-status').textContent.includes('playing locally'),null,{timeout:120000});
  assert.match(await page.locator('#voice-status').innerText(),/playing locally/);
  await page.locator('#stop-audio').click();assert.match(await page.locator('#voice-status').innerText(),/Listening stopped/);
  const old=await page.evaluate(async()=>{const r=await fetch('/api/state');const s=await r.json();return {session:s.session,turn:s.turns.find(t=>t.role==='assistant').id};});
@@ -46,6 +60,6 @@ try{
  assert.equal(refused,409);
  const auth=await page.evaluate(async()=>{const r=await fetch('/api/voice/status',{credentials:'omit'});return r.status;});assert.equal(auth,401);
  console.log(JSON.stringify({packagedVoiceWindow:'PASS',syntheticAudioStream:'PASS',realOfflineWhisper:'PASS',
- reviewBeforeSend:'PASS',localMaiaReply:'PASS',realOfflineKokoroPlayback:'PASS',stopPlayback:'PASS',
+ reviewBeforeSend:'PASS',localMaiaReply:'PASS',realOfflineKokoroPlayback:'PASS',stopPlayback:'PASS',cancelPreparation:'PASS',
  oldConversationAudio:'DENIED',unauthenticated:'DENIED',physicalMicrophone:'NOT_TESTED',speakerAudio:'MUTED_FOR_TEST'}));
 }finally{if(app)await app.close();rmSync(dir,{recursive:true,force:true});}
