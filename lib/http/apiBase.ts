@@ -100,10 +100,13 @@ export function apiBaseUrl(): string {
       return "https://soullab.life";
     }
 
-    // Only use relative paths for actual localhost dev server (http:// or https://)
+    // Use relative paths for actual localhost dev and the invitation-only
+    // Writer's Studio beta host. The beta is a full web origin with its own
+    // isolated database and auth/session boundary; sending its browser API calls
+    // to soullab.life would cross into production and fail browser origin policy.
     if ((protocol === 'http:' || protocol === 'https:') &&
-        (hostname === 'localhost' || hostname === '127.0.0.1')) {
-      return ''; // Same-origin API calls for local dev
+        (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === 'beta.soullab.life')) {
+      return ''; // Same-origin API calls for local dev and the isolated beta host
     }
   }
 
