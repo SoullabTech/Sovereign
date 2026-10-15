@@ -165,3 +165,25 @@ test('magic-link successful return still issues a real cookie and redirect', asy
   expect(result.headers.get('Set-Cookie')).toContain('maia_session=fiction-only-token');
   expect(revokeSessionMock).not.toHaveBeenCalled();
 });
+
+
+test('an optional last-sign-in timestamp failure cannot reverse an already issued verified session', async () => {
+  queryMock.mockImplementation(async (sql: string) => {
+    if (sql.includes('FROM members')) return { rows: [{ ...member, found_member_id: A }] };
+    if (sql.includes('UPDATE members SET last_sign_in')) {
+      throw new Error('fictional metadata write unavailable');
+    }
+    return { rows: [], rowCount: 1 };
+  });
+  const result = await passwordSignin(passwordRequest());
+  expect(result.status).toBe(200);
+  expect(result.headers.get('Cache-Control')).toContain('no-store');
+  const body = await result.json();
+  expect(body.success).toBe(true);
+  expect(body.session.token).toBe(SESSION.sessionToken);
+  expect(setSessionCookieMock).toHaveBeenCalledWith(SESSION.sessionToken, SESSION.expiresAt);
+  expect(revokeSessionMock).not.toHaveBeenCalled();
+  expect(logAuthEventMock).toHaveBeenCalledWith(
+    expect.objectContaining({ result: 'success' }), expect.anything()
+  );
+});

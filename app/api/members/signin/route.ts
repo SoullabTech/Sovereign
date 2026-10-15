@@ -140,11 +140,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update last sign in
-    await query(
-      `UPDATE members SET last_sign_in = NOW() WHERE id = $1`,
-      [member.id]
-    );
+    // This is optional metadata, not authentication authority. A committed
+    // session and HttpOnly bearer cookie must not be reported as a failed
+    // sign-in because this timestamp update became unavailable afterward.
+    try {
+      await query(
+        `UPDATE members SET last_sign_in = NOW() WHERE id = $1`,
+        [member.id]
+      );
+    } catch {
+      console.warn('[PasswordSignin] Last-sign-in timestamp unavailable after session issuance');
+    }
 
     await logAuthEvent({
       action: 'password_signin',
