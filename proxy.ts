@@ -17,9 +17,10 @@ import {
 import { stripClientIdentityAssertions } from './lib/auth/identityAssertions';
 import { deriveVerifiedAccess, type VerifiedAccess } from './lib/auth/verifiedAccess';
 import { canonicalStudioRoute } from './lib/writersStudio/canonicalStudioRoute';
-import { writersStudioBetaAccess } from './lib/writersStudio/betaAccessServer';
+import { writersStudioBetaAccess, writerStudioBetaPreConsentCandidate } from './lib/writersStudio/betaAccessServer';
+import { authenticatedPostWithdrawalMember } from './lib/writersStudio/betaPostWithdrawalCustody';
 import { restrictedBetaEnabled, isRestrictedWriterStudioPath, mayEnterRestrictedWriterStudioPath, isClosedBetaEnrollmentPath } from './lib/writersStudio/restrictedBetaAdmission';
-import { isSingleDoorBetaEnabled, isSingleDoorPublicAsset, isSingleDoorBootstrap, isSingleDoorInvitationBootstrap } from './lib/writersStudio/singleDoorBetaGate';
+import { isSingleDoorBetaEnabled, isSingleDoorPublicAsset, isSingleDoorBootstrap, isSingleDoorInvitationBootstrap, isSingleDoorConsentCorridor, isSingleDoorCustodyCorridor } from './lib/writersStudio/singleDoorBetaGate';
 // NOTE: entitlements are still checked in route handlers, not here — they are a
 // commercial concern with their own surface, not part of the trust boundary.
 
@@ -191,7 +192,24 @@ export async function proxy(req: NextRequest) {
 
     let eligible: boolean;
     try {
-      eligible = (await writersStudioBetaAccess(singleDoorVerified.memberId)).eligible;
+      /*
+       * A withdrawal revokes access to the WRITING ROOM, not the member's
+       * right to reconsider consent or retrieve/delete their own material.
+       * These are two exact, independently authenticated corridors, not a
+       * general exception for /beta or manuscript/MAIA endpoints.
+       *
+       * This selection MUST precede full Studio eligibility. Calling
+       * writersStudioBetaAccess() first would deny a withdrawn member and
+       * trap their own manuscript behind a consent requirement they revoked.
+       */
+      if (isSingleDoorConsentCorridor(pathname)) {
+        eligible = await writerStudioBetaPreConsentCandidate(singleDoorVerified.memberId);
+      } else if (isSingleDoorCustodyCorridor(pathname, req.method)) {
+        const custody = await authenticatedPostWithdrawalMember(req);
+        eligible = custody.kind === 'allowed';
+      } else {
+        eligible = (await writersStudioBetaAccess(singleDoorVerified.memberId)).eligible;
+      }
     } catch {
       // Cohort-authority unavailability must never convert to an admission.
       console.error('[WriterStudio/Beta] single-door cohort unavailable');
