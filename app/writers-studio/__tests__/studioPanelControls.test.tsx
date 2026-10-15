@@ -78,6 +78,15 @@ function click(name: string) {
 }
 
 describe('Writer Studio panel layout and content custody', () => {
+  it('does not display an inert avatar or three-dot menu in the Studio header', async () => {
+    await mount('write');
+    expect(host.querySelector('.fr-avatar')).toBeNull();
+    expect(host.querySelector('.fr-more')).toBeNull();
+    expect(host.querySelector('.fr-brand')).toBeTruthy();
+    expect(host.querySelector('.fr-work')).toBeTruthy();
+    expect(host.querySelector('[data-studio-topbar-accessories]')).toBeTruthy();
+  });
+
   it('collapses both sides without remounting the manuscript or MAIA, then reopens them', async () => {
     await mount();
     const source = host.querySelector('[data-testid="original-manuscript"]');

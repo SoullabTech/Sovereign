@@ -278,12 +278,6 @@ export function Shell(props: ShellProps) {
           ) : (
             <span className="fr-bar-spacer" aria-hidden="true" />
           )}
-          <div className="fr-avatar" aria-hidden="true">
-            {props.memberInitial}
-          </div>
-          <div className="fr-more" aria-hidden="true">
-            •••
-          </div>
         </header>
       )}
 

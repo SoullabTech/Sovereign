@@ -30,9 +30,6 @@
 .fr-nav-item:first-child[aria-current='page']::after { left: -6px; }
 .fr-workpick { margin-left: auto; display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 14px 0 12px;
   border: 1px solid var(--fr-line); border-radius: 8px; background: var(--fr-panel-soft); font-size: 14px; color: var(--fr-ink2); white-space: nowrap; }
-.fr-avatar { margin-left: 50px; width: 32px; height: 32px; border-radius: 50%; background: #8299B1; color: #fff; display: grid; place-items: center;
-  font-size: 14px; font-weight: 600; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .35); }
-.fr-more { margin-left: 22px; color: var(--fr-muted); font-size: 16px; letter-spacing: 1px; }
 
 /* Member-owned column geometry. The splitters change width without remounting the
    manuscript or MAIA; the header controls collapse/reopen either available panel. */
@@ -331,7 +328,6 @@
   .fr-theme { column-gap: 16px; }
   .fr-nav-item { padding: 0 18px; }
   .fr-brand { margin-right: 28px; }
-  .fr-avatar { margin-left: 22px; }
   .fr-tiles { grid-template-columns: repeat(3, 1fr); height: auto; }
   .fr-tile { min-height: 64px; }
   .fr-rev-grid { grid-template-columns: 1fr; }
@@ -356,7 +352,7 @@
   .fr-brand { margin-right: 12px; font-size: 21px; }
   .fr-nav-item { padding: 0 9px; font-size: 14px; }
   .fr-nav-item:first-child { padding-left: 4px; }
-  .fr-workpick, .fr-more, .fr-avatar { display: none; }
+  .fr-workpick { display: none; }
   .fr-room { display: flex; flex-direction: column; gap: 14px; padding: 12px 16px 20px; }
   .fr-manuscript { max-height: 260px; }
   .fr-work { margin: 0; overflow: visible; }
