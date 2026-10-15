@@ -19,7 +19,7 @@ import { deriveVerifiedAccess, type VerifiedAccess } from './lib/auth/verifiedAc
 import { canonicalStudioRoute } from './lib/writersStudio/canonicalStudioRoute';
 import { writersStudioBetaAccess } from './lib/writersStudio/betaAccessServer';
 import { restrictedBetaEnabled, isRestrictedWriterStudioPath, mayEnterRestrictedWriterStudioPath, isClosedBetaEnrollmentPath } from './lib/writersStudio/restrictedBetaAdmission';
-import { isSingleDoorBetaEnabled, isSingleDoorPublicAsset, isSingleDoorBootstrap } from './lib/writersStudio/singleDoorBetaGate';
+import { isSingleDoorBetaEnabled, isSingleDoorPublicAsset, isSingleDoorBootstrap, isSingleDoorInvitationBootstrap } from './lib/writersStudio/singleDoorBetaGate';
 // NOTE: entitlements are still checked in route handlers, not here — they are a
 // commercial concern with their own surface, not part of the trust boundary.
 
@@ -170,7 +170,9 @@ export async function proxy(req: NextRequest) {
   );
   let singleDoorVerified: VerifiedAccess | undefined;
   if (betaSingleDoor && !isSingleDoorPublicAsset(pathname)) {
-    if (isSingleDoorBootstrap(pathname, req.method)) {
+    if (isSingleDoorBootstrap(pathname, req.method)
+      || (process.env.WRITERS_STUDIO_BETA_INVITE_SETUP === 'true'
+        && isSingleDoorInvitationBootstrap(pathname, req.method))) {
       // /api/members/signin independently rejects identities outside the
       // admitted cohort before it can create an authenticated session.
       return forwardSanitized(req);

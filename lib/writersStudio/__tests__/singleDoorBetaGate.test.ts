@@ -2,6 +2,7 @@ import {
   isSingleDoorBetaEnabled,
   isSingleDoorPublicAsset,
   isSingleDoorBootstrap,
+  isSingleDoorInvitationBootstrap,
 } from '../singleDoorBetaGate';
 
 describe('WS single-door closed beta — fail-closed public bootstrap', () => {
@@ -37,6 +38,21 @@ describe('WS single-door closed beta — fail-closed public bootstrap', () => {
   ])('rejects anonymous access to %s %s', (path, method) => {
     expect(isSingleDoorBootstrap(path, method)).toBe(false);
     expect(isSingleDoorPublicAsset(path)).toBe(false);
+  });
+
+  it.each([
+    ['/writers-studio/invite', 'GET'], ['/writers-studio/invite', 'HEAD'],
+    ['/api/writers-studio/invite/setup', 'GET'], ['/api/writers-studio/invite/setup', 'PUT'],
+  ])('one-use invitation bootstrap %s %s', (path, method) => {
+    expect(isSingleDoorInvitationBootstrap(path, method)).toBe(true);
+    expect(isSingleDoorBootstrap(path, method)).toBe(false);
+  });
+
+  it.each([
+    ['/writers-studio/invite', 'POST'], ['/api/writers-studio/invite/setup', 'POST'],
+    ['/api/writers-studio/invite/setup', 'DELETE'], ['/api/writers-studio/invite/anything', 'GET'],
+  ])('refuses unapproved invitation operation %s %s', (path, method) => {
+    expect(isSingleDoorInvitationBootstrap(path, method)).toBe(false);
   });
 
   it.each([

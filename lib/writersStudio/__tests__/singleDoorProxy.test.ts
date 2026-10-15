@@ -18,19 +18,33 @@ const req = (path: string, method = 'GET') =>
 describe('beta single-door middleware, with a genuine NextRequest', () => {
   const prevRestricted = process.env.WRITERS_STUDIO_RESTRICTED_BETA;
   const prevDoor = process.env.WRITERS_STUDIO_BETA_SINGLE_DOOR;
+  const prevInvite = process.env.WRITERS_STUDIO_BETA_INVITE_SETUP;
   beforeEach(() => {
     process.env.WRITERS_STUDIO_RESTRICTED_BETA = 'true';
     process.env.WRITERS_STUDIO_BETA_SINGLE_DOOR = 'true';
+    process.env.WRITERS_STUDIO_BETA_INVITE_SETUP = 'true';
     verify.mockReset();
     cohort.mockReset();
     verify.mockResolvedValue(access(false));
     cohort.mockResolvedValue({ eligible: false, basis: 'not_in_pilot' });
   });
   afterAll(() => {
+    if (prevInvite === undefined) delete process.env.WRITERS_STUDIO_BETA_INVITE_SETUP;
+    else process.env.WRITERS_STUDIO_BETA_INVITE_SETUP = prevInvite;
     if (prevRestricted === undefined) delete process.env.WRITERS_STUDIO_RESTRICTED_BETA;
     else process.env.WRITERS_STUDIO_RESTRICTED_BETA = prevRestricted;
     if (prevDoor === undefined) delete process.env.WRITERS_STUDIO_BETA_SINGLE_DOOR;
     else process.env.WRITERS_STUDIO_BETA_SINGLE_DOOR = prevDoor;
+  });
+
+  it('allows invite setup only with the explicit beta feature flag', async () => {
+    expect((await proxy(req('/writers-studio/invite'))).status).toBe(200);
+    expect((await proxy(req('/api/writers-studio/invite/setup'))).status).toBe(200);
+    expect((await proxy(req('/api/writers-studio/invite/setup','PUT'))).status).toBe(200);
+    expect((await proxy(req('/api/writers-studio/invite/setup','POST'))).status).toBe(401);
+    process.env.WRITERS_STUDIO_BETA_INVITE_SETUP = 'false';
+    expect((await proxy(req('/api/writers-studio/invite/setup'))).status).toBe(401);
+    expect((await proxy(req('/writers-studio/invite'))).status).toBe(307);
   });
 
   it('renders only the public sign-in/bootstrap and no database lookup', async () => {

@@ -19,7 +19,13 @@ export function isSingleDoorPublicAsset(pathname: string): boolean {
     || pathname.startsWith('/icons/');
 }
 
-/** Only three anonymous operations: render the door, try a password, sign out. */
+/** One-use password creation is opt-in; this never authorizes registration. */
+export function isSingleDoorInvitationBootstrap(pathname: string, method: string): boolean {
+  if (pathname === '/writers-studio/invite') return method === 'GET' || method === 'HEAD';
+  return pathname === '/api/writers-studio/invite/setup' && (method === 'GET' || method === 'PUT');
+}
+
+/** Only the named bootstrap operations can be accessed anonymously. */
 export function isSingleDoorBootstrap(pathname: string, method: string): boolean {
   if ((method === 'GET' || method === 'HEAD') &&
       (pathname === '/signin' || pathname === '/writers-studio/beta-limited')) return true;
