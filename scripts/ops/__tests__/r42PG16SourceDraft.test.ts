@@ -27,6 +27,7 @@ import {
 } from '@/lib/writersStudio/recovery/heldProtectedDraftR35';
 import {composeHeldOriginalR36}
  from '@/lib/writersStudio/recovery/heldSourceComposerR36';
+import {exactTextareaPassageR41,R41_REAL_PROTECTED_APPLY_ENABLED} from '@/lib/writersStudio/exactLiveSelectionR41';
 import {applySelectedSectionR37,undoSelectedSectionR37,
  type R37SectionSelection,type R37FixtureGesture,type R37UndoGesture}
  from '@/lib/writersStudio/recovery/heldSectionApplyR37';
@@ -45,7 +46,7 @@ const enabled=[
 const run=enabled?describe:describe.skip;
 const A='5b40ec03-3e87-4f9d-8aa1-aa18ee5bd204';
 const B='5b40ec03-3e87-4f9d-8aa1-aa18ee5bd205';
-const W=Array.from({length:7},(_,i)=>
+const W=Array.from({length:8},(_,i)=>
  '4c0782ca-9074-43ee-9f3c-5f85000267'+(90+i));
 const pendingKey={keyId:randomUUID(),keyBytes:randomBytes(32)};
 const sourceKey={keyId:randomUUID(),keyBytes:randomBytes(32)};
@@ -53,7 +54,7 @@ const draftKey={keyId:randomUUID(),keyBytes:randomBytes(32)};
 const witness=generateKeyPairSync('ed25519');
 const claimSigner=generateKeyPairSync('ed25519');
 const subject={memberId:A,assertedBy:'server_verified_member_session' as const};
-const P1='R42_FICTIONAL_LANTERN_ The imaginary lantern glows.\n\n';
+const P1='R42_FICTIONAL_LANTERN_ 🍂 The lantern glows beside the river. Another lantern glows beneath the hill.\n\n';
 const P2='R42_FICTIONAL_GARDEN_ A second fictional section remains.';
 const TXT=P1+P2;
 const SOURCE:R32Source={kind:'artifact',
@@ -166,7 +167,13 @@ run('R42 actual PostgreSQL16 Source→encrypted section draft integration',()=>{
   const baseline=await draft(c);
   const selected='lantern glows';
   const first=baseline.sections[0];
-  const start=Array.from(first.text.split(selected)[0]).length;
+  const startUtf16=first.text.lastIndexOf(selected);
+  const locus=exactTextareaPassageR41(first.text,first.text,
+    startUtf16,startUtf16+selected.length);
+  expect(locus).toBeTruthy();
+  expect(locus!.start).toBeGreaterThan(
+    Array.from(first.text.slice(0,first.text.indexOf(selected))).length);
+  expect(R41_REAL_PROTECTED_APPLY_ENABLED).toBe(false);
   const choice='88888888-8888-4888-8888-888888888881';
   const alternative='88888888-8888-4888-8888-888888888882';
   const h=(s:string)=>sha(Buffer.from(s,'utf8'));
@@ -175,9 +182,9 @@ run('R42 actual PostgreSQL16 Source→encrypted section draft integration',()=>{
    section:{
     sectionId:S1,currentText:first.text,expectedGeneration:1,
     expectedDraftSHA256:h(first.text),
-    anchor:{sectionId:S1,start,
-      end:start+Array.from(selected).length,
-      selectedText:selected,sectionSHA256:h(first.text)},
+    anchor:{sectionId:S1,start:locus!.start,
+      end:locus!.end,
+      selectedText:locus!.text,sectionSHA256:h(first.text)},
     alternatives:[
      {id:choice,origin:'maia',wording:'lantern shimmers'},
      {id:alternative,origin:'member',wording:'lantern shines'},
@@ -202,7 +209,11 @@ run('R42 actual PostgreSQL16 Source→encrypted section draft integration',()=>{
   const applied=await reopenHeldDraftR35({
    subject,workId:c.workId,custody:c.draftCustody,generation:2,
   });
-  expect(applied.sections[0].text).toBe(P1.replace('lantern glows','lantern shimmers'));
+  const expected=P1.slice(0,P1.lastIndexOf(selected))+
+     'lantern shimmers'+P1.slice(P1.lastIndexOf(selected)+selected.length);
+  expect(applied.sections[0].text).toBe(expected);
+  expect(applied.sections[0].text).toContain('🍂 The lantern glows beside the river.');
+  expect(applied.sections[0].text).toContain('Another lantern shimmers beneath the hill.');
   expect(applied.sections[1]).toEqual({id:S2,text:P2});
   const replay=await applySelectedSectionR37({
    subject,custody:c.draftCustody,workId:c.workId,
@@ -308,6 +319,21 @@ run('R42 actual PostgreSQL16 Source→encrypted section draft integration',()=>{
   await expect(beginHeldDraftFromOriginalR42({...c,
    draftCustody:auth(sourceKey),
   })).rejects.toHaveProperty('code','r42_distinct_original_and_draft_keys_required');
+ });
+ it('R44 refuses PENDING import key material in a Draft even under a fresh key UUID',async()=>{
+  const c=await makeClaim(7);
+  for(const unsafe of [
+    pendingKey,
+    {keyId:randomUUID(),keyBytes:Buffer.from(pendingKey.keyBytes)},
+    {keyId:pendingKey.keyId,keyBytes:randomBytes(32)},
+  ]){
+    await expect(beginHeldDraftFromOriginalR42({
+      ...c,draftCustody:auth(unsafe),
+    })).rejects.toHaveProperty('code','r42_distinct_original_and_draft_keys_required');
+  }
+  expect(await count('writers_studio_r42_held_start_intents',c.workId)).toBe(0);
+  expect(await count('writers_studio_r35_draft_versions',c.workId)).toBe(0);
+  expect(await count('writers_studio_r32_held_originals',c.workId)).toBe(0);
  });
  it('Link SQL is immutable and no plaintext Source or sections appear in its rows',async()=>{
   const c=known[0];

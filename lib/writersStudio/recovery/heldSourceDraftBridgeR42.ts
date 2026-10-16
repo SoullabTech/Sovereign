@@ -107,13 +107,20 @@ function scope(input:R34Input):Scope{
  };
 }
 function distinctKeys(input:R42Input):void{
- const source=input.sourceClaim.workAuthority.key?.keyBytes,
+ // Pending import, immutable original and mutable Draft have separate key
+ // domains. Different UUIDs alone cannot disguise the same raw key bytes.
+ const pending=input.sourceClaim.pendingAuthority?.key?.keyBytes,
+  source=input.sourceClaim.workAuthority?.key?.keyBytes,
   draft=input.draftCustody?.key?.keyBytes;
- const sourceId=input.sourceClaim.workAuthority.key?.keyId,
+ const pendingId=input.sourceClaim.pendingAuthority?.key?.keyId,
+  sourceId=input.sourceClaim.workAuthority?.key?.keyId,
   draftId=input.draftCustody?.key?.keyId;
- if(!Buffer.isBuffer(source)||source.length!==32||
+ if(!Buffer.isBuffer(pending)||pending.length!==32||
+    !Buffer.isBuffer(source)||source.length!==32||
     !Buffer.isBuffer(draft)||draft.length!==32||
-    uuid(sourceId)===uuid(draftId)||timingSafeEqual(source,draft))
+    uuid(pendingId)===uuid(draftId)||
+    uuid(sourceId)===uuid(draftId)||
+    timingSafeEqual(pending,draft)||timingSafeEqual(source,draft))
   fail('distinct_original_and_draft_keys_required');
 }
 function plan(
