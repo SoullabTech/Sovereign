@@ -1,0 +1,15 @@
+{
+  "extends":"./tsconfig.r34-claim-reconcile.json",
+  "compilerOptions":{"strict":true,"noEmit":true,"incremental":false,"plugins":[]},
+  "files":[
+    "lib/writersStudio/recovery/heldOrphanIntentR35.ts",
+    "lib/writersStudio/recovery/heldClaimReconcilerR34.ts",
+    "lib/writersStudio/recovery/heldPendingClaimR33.ts",
+    "lib/writersStudio/recovery/heldOriginalSourceR32.ts",
+    "scripts/ops/__tests__/r35PG16OrphanIntent.test.ts",
+    "scripts/ops/__tests__/r35ColdPG16OrphanIntent.test.ts",
+    "lib/writersStudio/recovery/__tests__/heldOrphanIntentR35.test.ts"
+  ],
+  "include":[],
+  "exclude":["node_modules"]
+}
