@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.r23-physical.json",
+  "files": [
+    "lib/writersStudio/recovery/heldVaultHistoryR23.ts",
+    "lib/writersStudio/recovery/reviewVaultHistoryServiceR23.ts",
+    "scripts/ops/wsBetaR23PG16VaultHistory.ts",
+    "lib/writersStudio/recovery/__tests__/reviewVaultHistoryServiceR23.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

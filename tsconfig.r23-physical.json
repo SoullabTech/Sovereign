@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.r23-vault.json","files":["lib/writersStudio/recovery/heldVaultHistoryR23.ts","scripts/ops/wsBetaR23PG16VaultHistory.ts"],"include":[],"exclude":["node_modules"]}

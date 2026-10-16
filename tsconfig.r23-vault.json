@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.r22-session-history.json","files":["lib/writersStudio/recovery/heldVaultHistoryR23.ts"],"include":[],"exclude":["node_modules"]}
