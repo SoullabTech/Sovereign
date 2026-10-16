@@ -436,3 +436,171 @@
   .voiceChannelTop, .voiceChannelFoot { align-items: flex-start; }
   .voiceChannelFoot { flex-direction: column; gap: 3px; }
 }
+
+
+/* Listen R4 — author-chosen Reading Atmospheres. Scoped to the page of writing.
+   Never changes the manuscript, live audio, Studio shell, or MAIA controls. */
+.readingCard {
+  background: var(--reading-paper, #fffefa);
+  color: var(--reading-ink, #293941);
+  border-color: var(--reading-rule, #e1ded5);
+  transition: background-color 200ms ease, border-color 200ms ease;
+}
+.readingCard::after {
+  background: radial-gradient(ellipse at center,
+    rgb(var(--reading-glow-rgb, 104 151 129) / .27) 0%,
+    rgb(var(--reading-glow-rgb, 104 151 129) / .14) 35%,
+    transparent 76%);
+}
+.readingCard .readingHead,
+.readingCard .readingFoot { border-color: var(--reading-rule, #e1ded5); }
+.readingCard .eyebrow,
+.readingCard .readingFoot,
+.readingCard .fieldLabel { color: var(--reading-muted, #58666b); }
+.readingCard .manuscriptHeading,
+.readingCard .readingSectionHeading { color: var(--reading-heading, #293f47); }
+.readingCard .manuscriptText { color: var(--reading-ink, #293941); }
+.readingCard .select {
+  background: var(--reading-control, #f1f4ef);
+  color: var(--reading-ink, #293941);
+  border-color: var(--reading-rule, #dedcd1);
+}
+.readingCard .select option {
+  background: var(--reading-paper, #fffefa);
+  color: var(--reading-ink, #293941);
+}
+.readingCard .inlineButton {
+  background: var(--reading-control, #f1f4ef);
+  color: var(--reading-accent, #37675d);
+  border-color: var(--reading-rule, #dedcd1);
+}
+.readingCard .inlineButton:hover:not(:disabled) { filter: brightness(.96); }
+.atmospherePicker {
+  margin: 0 0 19px;
+  padding: 12px 0 15px;
+  border-top: 1px solid var(--reading-rule, #dedcd1);
+  border-bottom: 1px solid var(--reading-rule, #dedcd1);
+}
+.atmosphereCaption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.atmosphereCaption > span {
+  font: 700 12.5px/1.3 var(--fr-sans-stack, system-ui);
+  color: var(--reading-heading, #293f47);
+}
+.atmosphereCaption small {
+  font: 400 11.5px/1.35 var(--fr-sans-stack, system-ui);
+  color: var(--reading-muted, #58666b);
+  text-align: right;
+}
+.atmosphereChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.atmosphereChoice {
+  display: inline-flex;
+  min-width: 0;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--reading-rule, #dedcd1);
+  background: var(--reading-control, #f1f4ef);
+  color: var(--reading-ink, #293941);
+  font: 600 11.5px/1.2 var(--fr-sans-stack, system-ui);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: outline-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+.atmosphereChoice[data-selected='true'] {
+  outline: 2px solid var(--reading-accent, #37675d);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 1px var(--reading-paper, #fffefa);
+}
+.atmosphereChoice:hover:not(:disabled) { transform: translateY(-1px); }
+.atmosphereChoice:focus-visible {
+  outline: 3px solid var(--reading-accent, #37675d);
+  outline-offset: 2px;
+}
+.atmosphereSwatch {
+  display: block;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  border: 1px solid;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .18);
+}
+.atmosphereHint {
+  margin: 9px 0 0;
+  color: var(--reading-muted, #58666b);
+  font: 400 11px/1.45 var(--fr-sans-stack, system-ui);
+}
+.readerMicStrip {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 35px;
+  padding: 5px 9px;
+  margin: -4px 0 16px;
+  border-radius: 8px;
+  border: 1px solid var(--reading-rule, #dedcd1);
+  background: var(--reading-control, #f1f4ef);
+  color: var(--reading-ink, #293941);
+  font: 600 11.5px/1.35 var(--fr-sans-stack, system-ui);
+}
+.readerMicLive {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #45a57d;
+  box-shadow: 0 0 0 3px rgb(69 165 125 / .16);
+}
+.readerMicLabel { white-space: nowrap; }
+.readerMicTrack {
+  flex: 1 1 80px;
+  min-width: 54px;
+  height: 7px;
+  background: rgb(127 143 138 / .25);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.readerMicTrack > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(to right, #6c9d7c 0%, #c79d52 82%, #b65347 100%);
+  border-radius: inherit;
+  transition: width 90ms linear;
+}
+.readerMicNumber {
+  font: 700 11.5px/1.4 var(--fr-sans-stack, system-ui);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.readerMicWarning {
+  color: #8b3426;
+  background: #ffe7df;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+@media (max-width: 560px) {
+  .atmosphereCaption { align-items: flex-start; flex-direction: column; gap: 2px; }
+  .atmosphereCaption small { text-align: left; }
+  .atmosphereChoice { flex: 0 1 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .atmosphereChoice, .readerMicTrack > span, .readingCard { transition: none; }
+}
+.readingTopActions { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+.readingMicActive { font: 600 11.5px/1.4 var(--fr-sans-stack, system-ui); color: var(--reading-accent, #37675d); }

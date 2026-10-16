@@ -10,6 +10,11 @@ import type { StudioMode } from '@/app/writers-studio/full-redesign/types';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { fullPrefaceReading } from '@/lib/writersStudio/listen/fullPrefaceReading';
 import {
+  READING_ATMOSPHERES, isReadingAtmosphere,
+  readingAtmosphereById, readingAtmosphereStorageKey,
+  type ReadingAtmosphere,
+} from '@/lib/writersStudio/listen/readingAtmosphere';
+import {
   measureMicLevels, meterPercentage, QUIET_MIC_LEVELS, voiceLevelGuidance,
   type MicLevels,
 } from '@/lib/writersStudio/listen/micLevel';
@@ -56,6 +61,7 @@ export default function ListenPilot() {
   const [recording, setRecording] = useState(false);
   const [takes, setTakes] = useState<Take[]>([]);
   const [notes, setNotes] = useState('');
+  const [readingAtmosphere, setReadingAtmosphere] = useState<ReadingAtmosphere>('parchment');
   const [mic, setMic] = useState('');
   const [mics, setMics] = useState<MediaDeviceInfo[]>([]);
   const [inputChannel, setInputChannel] = useState<InputChannel>(1);
@@ -75,6 +81,16 @@ export default function ListenPilot() {
   const takesRef = useRef<Take[]>([]);
 
   useEffect(() => { takesRef.current = takes; }, [takes]);
+  useEffect(() => {
+    if (!manuscriptId) return;
+    try {
+      const stored = window.localStorage.getItem(readingAtmosphereStorageKey(manuscriptId));
+      setReadingAtmosphere(isReadingAtmosphere(stored) ? stored : 'parchment');
+    } catch {
+      // The reader works without browser storage; just use the quiet default.
+      setReadingAtmosphere('parchment');
+    }
+  }, [manuscriptId]);
   useEffect(() => () => {
     if (meterFrame.current !== null) cancelAnimationFrame(meterFrame.current);
     if (media.current?.state === 'recording') media.current.stop();
@@ -126,6 +142,16 @@ export default function ListenPilot() {
   );
   const words = readingSections.reduce((total, s) => total + (s.body.match(/\S+/g)?.length ?? 0), 0);
   const selectedTitle = isWholePreface ? 'Preface — complete reading' : (section?.heading || 'passage');
+  const paper = readingAtmosphereById(readingAtmosphere);
+  const chooseReadingAtmosphere = (next: ReadingAtmosphere) => {
+    setReadingAtmosphere(next);
+    if (!manuscriptId) return;
+    try {
+      window.localStorage.setItem(readingAtmosphereStorageKey(manuscriptId), next);
+    } catch {
+      // A private browser may block preference storage; in-session choice still works.
+    }
+  };
   const pageVoiceEnergy = monitoring
     ? Math.max(0, Math.min(1, meterPercentage(meterLevels[inputChannel].rmsDbfs) / 100))
     : 0;
@@ -142,7 +168,7 @@ export default function ListenPilot() {
     if (meterFrame.current !== null) cancelAnimationFrame(meterFrame.current);
     meterPeakHold.current = { 1: -60, 2: -60 };
     setMeterLevels({ 1: QUIET_MIC_LEVELS, 2: QUIET_MIC_LEVELS });
-    const waves: Record<InputChannel, Float32Array> = {
+    const waves: Record<InputChannel, Float32Array<ArrayBuffer>> = {
       1: new Float32Array(route.analysers[1].fftSize),
       2: new Float32Array(route.analysers[2].fftSize),
     };
@@ -345,18 +371,68 @@ export default function ListenPilot() {
                     '--page-voice-energy': pageVoiceEnergy,
                     '--page-voice-glow': pageVoiceGlow,
                     '--page-voice-scale': pageVoiceScale,
+                    '--reading-paper': paper.paper,
+                    '--reading-ink': paper.text,
+                    '--reading-heading': paper.heading,
+                    '--reading-muted': paper.muted,
+                    '--reading-rule': paper.rule,
+                    '--reading-accent': paper.accent,
+                    '--reading-control': paper.control,
+                    '--reading-glow-rgb': paper.glow,
                   } as CSSProperties}
                 >
                   <div className={styles.readingHead}>
                     <div className={styles.readingTop}>
                       <div className={styles.eyebrow}>Your manuscript · Version {source.version ?? 'current'} · Read only</div>
-                      {wholePreface && (
-                        <button type="button" className={styles.inlineButton}
-                          disabled={recording || isWholePreface}
-                          onClick={() => setSectionId(COMPLETE_PREFACE_ID)}>
-                          {isWholePreface ? 'Full Preface selected' : 'Read full Preface'} <span aria-hidden="true">↗</span>
-                        </button>
-                      )}
+                      <div className={styles.readingTopActions}>
+                        {wholePreface && (
+                          <button type="button" className={styles.inlineButton}
+                            disabled={recording || isWholePreface}
+                            onClick={() => setSectionId(COMPLETE_PREFACE_ID)}>
+                            {isWholePreface ? 'Full Preface selected' : 'Read full Preface'} <span aria-hidden="true">↗</span>
+                          </button>
+                        )}
+                        {monitoring && !recording ? (
+                          <button type="button" className={styles.inlineButton} onClick={releaseMicrophone}>
+                            Close mic levels
+                          </button>
+                        ) : !monitoring ? (
+                          <button type="button" className={styles.inlineButton}
+                            disabled={recording || inspecting}
+                            onClick={() => void startMicCheck()}
+                            title="Check your microphone before reading or starting an independent WAV capture">
+                            {inspecting ? 'Opening mic…' : 'Show mic levels'}
+                          </button>
+                        ) : <span className={styles.readingMicActive}>Mic live</span>}
+                      </div>
+                    </div>
+                    <div className={styles.atmospherePicker} role="group" aria-label="Reading atmosphere">
+                      <div className={styles.atmosphereCaption}>
+                        <span>Reading atmosphere</span>
+                        <small>Choose what fits the spirit of your work</small>
+                      </div>
+                      <div className={styles.atmosphereChoices}>
+                        {READING_ATMOSPHERES.map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            className={styles.atmosphereChoice}
+                            data-selected={readingAtmosphere === option.id ? 'true' : 'false'}
+                            aria-pressed={readingAtmosphere === option.id}
+                            title={option.meaning}
+                            aria-label={'Reading atmosphere: ' + option.label + '. ' + option.meaning}
+                            onClick={() => chooseReadingAtmosphere(option.id)}
+                          >
+                            <span
+                              className={styles.atmosphereSwatch}
+                              aria-hidden="true"
+                              style={{ background: option.paper, borderColor: option.rule }}
+                            />
+                            <span>{option.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <p className={styles.atmosphereHint}><strong>{paper.label}</strong> — {paper.meaning}. Saved for this manuscript on this device; your writing is unchanged.</p>
                     </div>
                     <label className={styles.fieldLabel} htmlFor="listen-section">Choose a reading</label>
                     <select id="listen-section" className={styles.select}
@@ -373,6 +449,27 @@ export default function ListenPilot() {
                   </div>
                   <div className={styles.manuscriptBody}>
                     <h2 className={styles.manuscriptHeading}>{selectedTitle}</h2>
+                    {monitoring && (
+                      <div className={styles.readerMicStrip} role="group" aria-label="Live microphone peak level during reading">
+                        <span className={styles.readerMicLive} aria-hidden="true" />
+                        <span className={styles.readerMicLabel}>LIVE · Input {inputChannel}</span>
+                        <div
+                          className={styles.readerMicTrack}
+                          role="meter"
+                          aria-label={'Input ' + inputChannel + ' digital peak'}
+                          aria-valuemin={-60}
+                          aria-valuemax={0}
+                          aria-valuenow={meterLevels[inputChannel].peakDbfs}
+                          aria-valuetext={meterLevels[inputChannel].peakDbfs.toFixed(1) + ' decibels full scale'}
+                        >
+                          <span style={{ width: meterPercentage(meterLevels[inputChannel].peakDbfs) + '%' }} />
+                        </div>
+                        <strong className={styles.readerMicNumber}>
+                          {meterLevels[inputChannel].peakDbfs.toFixed(1)} dBFS
+                        </strong>
+                        {meterLevels[inputChannel].clipped && <span className={styles.readerMicWarning} role="alert">Peak warning</span>}
+                      </div>
+                    )}
                     <article className={styles.manuscriptText} data-reading-scope={isWholePreface ? 'whole-preface' : 'single-section'}>
                       {readingSections.length > 0 ? readingSections.map((part, i) => (
                         <section className={styles.readingSection} key={part.draftSectionId} data-source-section-id={part.draftSectionId}>
