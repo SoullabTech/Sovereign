@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "incremental": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node", "jest"],
+    "plugins": []
+  },
+  "files": [
+    "lib/storage/fileVault.ts",
+    "lib/db/postgres.ts",
+    "lib/writersStudio/recovery/workEnvelopeV1.ts",
+    "lib/writersStudio/recovery/deletionBarrierV1.ts",
+    "lib/writersStudio/recovery/originalProvenanceV2.ts",
+    "lib/writersStudio/recovery/pairedOriginalCustodyV2.ts",
+    "lib/writersStudio/recovery/pairedTransferJournalV2.ts",
+    "lib/writersStudio/recovery/heldPairedStoreR16.ts",
+    "lib/writersStudio/recovery/__tests__/heldPairedStoreR16.test.ts",
+    "scripts/ops/wsBetaR16NativeActualStore.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
