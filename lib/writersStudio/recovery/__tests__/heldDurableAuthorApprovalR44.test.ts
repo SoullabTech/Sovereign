@@ -30,6 +30,36 @@ describe('R44 durable one-use author choice stays offline',()=>{
    .rejects.toHaveProperty('code','r44_real_author_approval_disabled');
   expect(query).not.toHaveBeenCalled();
  });
+ it('the additional Draft database fixture requires BOTH R46 and R45 marks',async()=>{
+  const vars=[
+   'R44_DURABLE_APPROVAL_FIXTURE','R37_SECTION_PASSAGE_FIXTURE',
+   'R36_PASSAGE_REVIEW_FIXTURE','R45_DURABLE_SIGNED_AUTHOR_FIXTURE',
+   'R46_DURABLE_SIGNED_APPLY_FIXTURE','DATABASE_URL',
+   'FILE_STORAGE_PATH',
+  ] as const;
+  const saved=vars.map(k=>process.env[k]);
+  try{
+   vars.slice(0,5).forEach(k=>process.env[k]='fictional-only');
+   process.env.DATABASE_URL='postgresql://fict@127.0.0.1:59544/r35_draft';
+   process.env.FILE_STORAGE_PATH='/private/tmp/ws-r35-physical-r46-guard/vault';
+   for(const k of [
+    'R45_DURABLE_SIGNED_AUTHOR_FIXTURE',
+    'R46_DURABLE_SIGNED_APPLY_FIXTURE',
+   ]){
+    delete process.env[k];
+    await expect(prepareHeldAuthorApprovalR44(null as never))
+      .rejects.toHaveProperty('code','r44_real_author_approval_disabled');
+    process.env[k]='fictional-only';
+   }
+   process.env.FILE_STORAGE_PATH='/production/vault';
+   await expect(prepareHeldAuthorApprovalR44(null as never))
+    .rejects.toHaveProperty('code','r44_real_author_approval_disabled');
+   expect(query).not.toHaveBeenCalled();
+  }finally{
+   vars.forEach((k,i)=>saved[i]===undefined?
+    delete process.env[k]:process.env[k]=saved[i]);
+  }
+ });
  it('no active writer HTTP route can invoke the prototype',()=>{
   const linked=routes(path.join(process.cwd(),'app/api')).filter(f=>
    /(?:heldDurableAuthorApprovalR44|prepareHeldAuthorApprovalR44|claimHeldAuthorApprovalR44)/

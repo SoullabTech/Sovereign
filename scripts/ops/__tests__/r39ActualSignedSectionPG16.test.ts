@@ -6,6 +6,7 @@
 import {NextRequest} from 'next/server';
 import {handleSignedSectionRequestR39,R39_REAL_SIGNED_SECTION_REQUEST_ENABLED} from '../../../lib/writersStudio/recovery/heldSignedSectionRequestR39';
 import {HeldAuthorChoiceWitnessR43,R43_REAL_AUTHOR_CHOICE_ENABLED} from '../../../lib/writersStudio/recovery/heldAuthorChoiceR43';
+import {prepareHeldSignedApplyR46,submitHeldSignedApplyR46,R46_REAL_DURABLE_SIGNED_APPLY_ENABLED} from '../../../lib/writersStudio/recovery/heldDurableSignedApplyR46';
 import type {R37SectionSelection,R37FixtureGesture,R37UndoGesture} from '../../../lib/writersStudio/recovery/heldSectionApplyR37';
 import {Pool} from 'pg';
 import {createHash,createHmac,generateKeyPairSync,randomBytes,randomUUID,sign} from 'node:crypto';
@@ -42,6 +43,8 @@ const active=process.env.R39_PHYSICAL_PG16_FIXTURE==='fictional-only'&&
  (process.env.FILE_STORAGE_PATH||'').includes('ws-r35-physical-');
 const group=active?describe:describe.skip;
 const r43Only=active&&process.env.R43_AUTHOR_CHOICE_FIXTURE==='fictional-only';
+const r46Only=active&&process.env.R46_DURABLE_SIGNED_APPLY_FIXTURE==='fictional-only';
+const durableTest=r46Only?it:it.skip;
 const choiceTest=r43Only?it:it.skip;
 const A='11111111-1111-4111-8111-111111111111';
 const B='22222222-2222-4222-8222-222222222222';
@@ -57,6 +60,8 @@ const W8='33333333-3333-4333-8333-333333333338';
 const W9='33333333-3333-4333-8333-333333333339';
 const W10='33333333-3333-4333-8333-333333333330';
 const W11='33333333-3333-4333-8333-33333333333a';
+const W12='33333333-3333-4333-8333-33333333333b';
+const W13='33333333-3333-4333-8333-33333333333c';
 const BWORK='44444444-4444-4444-8444-444444444444';
 const S1='66666666-6666-4666-8666-666666666661';
 const S2='66666666-6666-4666-8666-666666666662';
@@ -351,10 +356,11 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
   // R38-named ephemeral PG16 driver. Never alter shared production tables.
   expect(R38_REAL_ENCRYPTED_DRAFT_ROUTE_ENABLED).toBe(false);
   expect(R35_REAL_MEMBER_PROTECTED_DRAFT_ENABLED).toBe(false);
-  const works=r43Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11]:
+  const works=r46Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13]:
+    r43Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11]:
     [W1,W2,W3,W4,W5,W6,W7,W8,W9];
   for(const work of works)
-    await seed(work,[W4,W7,W8,W9,W10,W11].includes(work));
+    await seed(work,[W4,W7,W8,W9,W10,W11,W12,W13].includes(work));
  });
  afterAll(async()=>{
   await closePool();
@@ -620,4 +626,92 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
    .toMatchObject({kind:'refused',status:403});
   await consent('accept');
  });
+
+ durableTest('R46 SQL durable claim gates exactly one signed encrypted Apply',async()=>{
+  expect(R46_REAL_DURABLE_SIGNED_APPLY_ENABLED).toBe(false);
+  const original=await reopenHeldDraftR35({
+   subject:subject(),workId:W12,custody:custody(W12),generation:1,
+  });
+  const selection=(await anchored(W12)).selection;
+  const secret=Buffer.alloc(32,0x46);
+  const input=()=>({
+   context:heldChoiceContext(W12,authorChoiceRequest()),
+   custody:custody(W12),selection,approvalIssuerSecret:secret,
+  });
+  const reviewed=await prepareHeldSignedApplyR46(input());
+  expect(reviewed).toMatchObject({kind:'fictional_durable_approval_prepared'});
+  if(reviewed.kind!=='fictional_durable_approval_prepared')
+   throw Error('r46_prepare_failed');
+  expect(reviewed.originalPassage).toBe('first fictional');
+  expect(await generations(W12)).toBe(1);
+  const body={kind:'apply_reviewed_change',opaqueToken:reviewed.opaqueToken};
+  // Competing approvals use the SAME prepared token; at most one PG CAS wins.
+  const [a,b]=await Promise.all([
+   submitHeldSignedApplyR46({...input(),context:heldChoiceContext(W12,authorChoiceRequest(body))}),
+   submitHeldSignedApplyR46({...input(),context:heldChoiceContext(W12,authorChoiceRequest(body))}),
+  ]);
+  expect([a,b].filter(x=>x.kind==='fictional_durably_claimed_encrypted_apply'))
+   .toHaveLength(1);
+  expect([a,b].filter(x=>x.kind==='refused')).toHaveLength(1);
+  const receipt=[a,b].find(x=>x.kind==='fictional_durably_claimed_encrypted_apply');
+  expect(receipt).toMatchObject({generation:2,action:'apply',
+   durableClaimSpent:true,releaseApproved:false});
+  expect(await generations(W12)).toBe(2);
+  const edited=await reopenHeldDraftR35({
+   subject:subject(),workId:W12,custody:custody(W12),generation:2,
+  });
+  expect(edited.sections[0].text).toContain('first enchanted');
+  expect(edited.sections[1]).toEqual(original.sections[1]);
+  expect(JSON.stringify(receipt)).not.toContain('first enchanted');
+  expect((await pool().query(
+   "SELECT count(*)::int n FROM writers_studio_r44_held_approval WHERE work_id=$1 AND state='spent'",
+   [W12])).rows[0].n).toBe(1);
+  const privateApproval=await pool().query<{row:string}>(
+   'SELECT row_to_json(x)::text AS row FROM writers_studio_r44_held_approval x WHERE work_id=$1',
+   [W12]);
+  expect(privateApproval.rows).toHaveLength(1);
+  for(const privateMarker of [
+    reviewed.opaqueToken,'first fictional','first enchanted',
+    'R38 first fictional section',
+  ])expect(privateApproval.rows[0].row).not.toContain(privateMarker);
+  expect(await submitHeldSignedApplyR46({...input(),
+   context:heldChoiceContext(W12,authorChoiceRequest(body))}))
+   .toMatchObject({kind:'refused',status:409});
+  expect(await generations(W12)).toBe(2);
+ });
+ durableTest('R46 revoked consent during key issue leaves durable claim spent and Draft unchanged',async()=>{
+  const secret=Buffer.alloc(32,0x46);
+  const selection=(await anchored(W13)).selection;
+  const trusted=()=>({
+   context:heldChoiceContext(W13,authorChoiceRequest()),
+   custody:custody(W13),selection,approvalIssuerSecret:secret,
+  });
+  const reviewed=await prepareHeldSignedApplyR46(trusted());
+  expect(reviewed).toMatchObject({kind:'fictional_durable_approval_prepared'});
+  if(reviewed.kind!=='fictional_durable_approval_prepared')
+   throw Error('r46_withdraw_review_missing');
+  const valid={kind:'apply_reviewed_change',opaqueToken:reviewed.opaqueToken};
+  expect(await submitHeldSignedApplyR46({...trusted(),
+   context:heldChoiceContext(W13,authorChoiceRequest({
+    ...valid,sectionId:S2,
+   }))})).toMatchObject({kind:'refused',status:400});
+  expect((await pool().query(
+   "SELECT state FROM writers_studio_r44_held_approval WHERE work_id=$1",
+   [W13])).rows[0].state).toBe('prepared');
+  const denied=await submitHeldSignedApplyR46({...trusted(),
+   context:heldChoiceContext(W13,authorChoiceRequest(valid),
+     ()=>consent('revoke')),
+  });
+  expect(denied.kind).toBe('refused');
+  expect(await generations(W13)).toBe(1);
+  expect((await pool().query(
+   "SELECT state FROM writers_studio_r44_held_approval WHERE work_id=$1",
+   [W13])).rows[0].state).toBe('spent');
+  await consent('accept');
+  expect((await submitHeldSignedApplyR46({...trusted(),
+   context:heldChoiceContext(W13,authorChoiceRequest(valid))})).kind)
+   .toBe('refused');
+  expect(await generations(W13)).toBe(1);
+ });
+
 });
