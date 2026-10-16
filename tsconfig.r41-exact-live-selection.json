@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.r40-webkit-review.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/writersStudio/exactLiveSelectionR41.ts",
+    "lib/writersStudio/__tests__/exactLiveSelectionR41.test.ts",
+    "app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx",
+    "app/writers-studio/full-redesign/Shell.tsx",
+    "app/writers-studio/full-redesign/__tests__/r41ActualStudioShellReset.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

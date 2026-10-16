@@ -25,6 +25,7 @@ import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { typesetManuscriptBody } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
 import { locateUniquePassage, type AdoptionWireOutcome, type RebuildEditorialRelationship, type RebuildEditorialThread } from '@/lib/writersStudio/rebuild/editorialCollaboration';
+import { exactTextareaPassageR41, exactDomPassageR41 } from '@/lib/writersStudio/exactLiveSelectionR41';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
 import EditorialDancePanel from './EditorialDancePanel';
@@ -131,23 +132,27 @@ export type P4R1Pc3WriteEditViewProps = {
   onRemoveCarrySource: () => void;
 };
 
-function selectionInPc3Editor(): { sectionId: string; text: string; rect: DOMRect } | null {
+/**
+ * An actual user selection is an exact place in authored writing, not merely
+ * a phrase to be found again. R41's codepoint span is anchored to the live A1
+ * body. For richly formatted contenteditable DOM only, retain the older
+ * UNIQUE-passage fallback when block markup prevents exact serialization.
+ * Never relocate a repeated phrase, or a stale textarea selection.
+ */
+function selectionInPc3Editor(
+  bodyOf: (sectionId: string) => string,
+): { sectionId: string; start: number; end: number; text: string; rect: DOMRect } | null {
   if (typeof window === 'undefined') return null;
 
-  /* Whole-chapter Edit uses virtualized textareas rather than the legacy
-     data-write-editor surface. Text-control selections do not appear in
-     window.getSelection(), so read the active textarea directly and preserve
-     its owning section id from the always-mounted manuscript shell. */
   const active = document.activeElement;
   if (active instanceof HTMLTextAreaElement) {
     const shell = active.closest<HTMLElement>('[data-whole-manuscript-section]');
     const sectionId = shell?.dataset.wholeManuscriptSection;
-    const start = active.selectionStart;
-    const end = active.selectionEnd;
-    const text = start !== end ? active.value.slice(Math.min(start, end), Math.max(start, end)) : '';
-    if (sectionId && text.trim()) {
-      return { sectionId, text, rect: active.getBoundingClientRect() };
-    }
+    if (!sectionId) return null;
+    const locus = exactTextareaPassageR41(
+      bodyOf(sectionId), active.value, active.selectionStart, active.selectionEnd,
+    );
+    return locus ? { sectionId, ...locus, rect: active.getBoundingClientRect() } : null;
   }
 
   const selection = window.getSelection();
@@ -158,9 +163,15 @@ function selectionInPc3Editor(): { sectionId: string; text: string; rect: DOMRec
   const editor = start?.closest<HTMLElement>('[data-write-editor]');
   if (!editor || !end || !editor.contains(end)) return null;
   const sectionId = editor.dataset.sectionId;
-  const text = range.toString();
-  if (!sectionId || !text.trim()) return null;
-  return { sectionId, text, rect: range.getBoundingClientRect() };
+  if (!sectionId) return null;
+  const liveBody = bodyOf(sectionId);
+  const exact = exactDomPassageR41(liveBody, editor, range);
+  // The initial PC3 rich paragraph renderer inserts DOM boundaries that may
+  // not correspond literally to A1 source separators. Its prior conservative
+  // uniqueness rule remains; repeat occurrences are never guessed.
+  const locus = exact ?? locateUniquePassage(liveBody, range.toString());
+  return locus ? { sectionId, ...locus, text: range.toString(),
+    rect: range.getBoundingClientRect() } : null;
 }
 
 function cleanProseBlockText(block: WriteBlock): string {
@@ -294,21 +305,19 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   useEffect(() => {
     const inspect = () => {
-      const picked = selectionInPc3Editor();
+      const picked = selectionInPc3Editor(props.writing.bodyOf);
       if (!picked) {
         setSelectionRect(null);
         setSelectionMenuOpen(false);
         return;
       }
       const section = props.context.sections.find((candidate) => candidate.draftSectionId === picked.sectionId);
-      const live = section ? props.writing.bodyOf(section.draftSectionId) : '';
-      const located = locateUniquePassage(live, picked.text);
-      if (!section || !located) {
+      if (!section) {
         setSelectionRect(null);
         setSelectionMenuOpen(false);
         return;
       }
-      props.onHoldPassage(section, located.start, located.end, picked.text);
+      props.onHoldPassage(section, picked.start, picked.end, picked.text);
       setSelectionRect(picked.rect);
     };
 
