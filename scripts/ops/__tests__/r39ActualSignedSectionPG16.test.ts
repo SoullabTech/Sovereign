@@ -4,11 +4,14 @@
  * accounts or independently managed keys; all signers are test process only.
  */
 import {NextRequest} from 'next/server';
+import {writeFileSync,statSync} from 'node:fs';
+import path from 'node:path';
 import {handleSignedSectionRequestR39,R39_REAL_SIGNED_SECTION_REQUEST_ENABLED} from '../../../lib/writersStudio/recovery/heldSignedSectionRequestR39';
 import {HeldAuthorChoiceWitnessR43,R43_REAL_AUTHOR_CHOICE_ENABLED} from '../../../lib/writersStudio/recovery/heldAuthorChoiceR43';
 import {prepareHeldSignedApplyR46,submitHeldSignedApplyR46,R46_REAL_DURABLE_SIGNED_APPLY_ENABLED} from '../../../lib/writersStudio/recovery/heldDurableSignedApplyR46';
 import {prepareHeldUndoR47,submitHeldUndoR47,
  R47_REAL_DURABLE_UNDO_ENABLED} from '../../../lib/writersStudio/recovery/heldDurableUndoR47';
+import {inspectSpentApplyR48,R48_REAL_SPENT_APPLY_RECOVERY_ENABLED} from '../../../lib/writersStudio/recovery/heldSpentApplyEvidenceR48';
 import type {R37SectionSelection,R37FixtureGesture,R37UndoGesture} from '../../../lib/writersStudio/recovery/heldSectionApplyR37';
 import {Pool} from 'pg';
 import {createHash,createHmac,generateKeyPairSync,randomBytes,randomUUID,sign} from 'node:crypto';
@@ -49,6 +52,10 @@ const r46Only=active&&process.env.R46_DURABLE_SIGNED_APPLY_FIXTURE==='fictional-
 const durableTest=r46Only?it:it.skip;
 const r47Only=r46Only&&process.env.R47_DURABLE_UNDO_FIXTURE==='fictional-only';
 const undoTest=r47Only?it:it.skip;
+const r48Only=r46Only&&process.env.R48_SPENT_APPLY_RECOVERY_FIXTURE==='fictional-only';
+const evidenceTest=r48Only?it:it.skip;
+let savedR48CompletedToken:string|null=null;
+let savedR48UnresolvedToken:string|null=null;
 const choiceTest=r43Only?it:it.skip;
 const A='11111111-1111-4111-8111-111111111111';
 const B='22222222-2222-4222-8222-222222222222';
@@ -650,6 +657,7 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
   if(reviewed.kind!=='fictional_durable_approval_prepared')
    throw Error('r46_prepare_failed');
   expect(reviewed.originalPassage).toBe('first fictional');
+  if(r48Only)savedR48CompletedToken=reviewed.opaqueToken;
   expect(await generations(W12)).toBe(1);
   const body={kind:'apply_reviewed_change',opaqueToken:reviewed.opaqueToken};
   // Competing approvals use the SAME prepared token; at most one PG CAS wins.
@@ -697,6 +705,7 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
   expect(reviewed).toMatchObject({kind:'fictional_durable_approval_prepared'});
   if(reviewed.kind!=='fictional_durable_approval_prepared')
    throw Error('r46_withdraw_review_missing');
+  if(r48Only)savedR48UnresolvedToken=reviewed.opaqueToken;
   const valid={kind:'apply_reviewed_change',opaqueToken:reviewed.opaqueToken};
   expect(await submitHeldSignedApplyR46({...trusted(),
    context:heldChoiceContext(W13,authorChoiceRequest({
@@ -719,6 +728,64 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
    context:heldChoiceContext(W13,authorChoiceRequest(valid))})).kind)
    .toBe('refused');
   expect(await generations(W13)).toBe(1);
+ });
+
+ evidenceTest('R48 re-observes token-specific immutable encrypted Apply and holds an uncommitted spent token',async()=>{
+  expect(R48_REAL_SPENT_APPLY_RECOVERY_ENABLED).toBe(false);
+  if(!savedR48CompletedToken||!savedR48UnresolvedToken)
+   throw Error('R48_REQUIRED_SPENT_TOKEN_FIXTURE_MISSING');
+  const authority='fictional_independent_recovery_custodian_only' as const;
+  const root=Buffer.alloc(32,0x46);
+  const input=(workId:string,token:string)=>({
+   authority,memberId:A,workId,approvalToken:token,
+   approvalIssuerSecret:root,custody:custody(workId),
+  });
+  const applied=await inspectSpentApplyR48(input(W12,savedR48CompletedToken));
+  expect(applied).toMatchObject({
+   kind:'FICTIONAL_CIPHERTEXT_APPLY_CONFIRMED',
+   generation:2,priorDraftVersionVerified:true,
+   unchangedSectionIds:[S2],retryAuthorized:false,releaseApproved:false,
+  });
+  const noSave=await inspectSpentApplyR48(input(W13,savedR48UnresolvedToken));
+  expect(noSave).toMatchObject({
+   kind:'held_only',reason:'HELD_SPENT_WITHOUT_MATCHING_RECEIPT',
+   retryAuthorized:false,releaseApproved:false,
+  });
+  expect(await generations(W12)).toBe(2);
+  expect(await generations(W13)).toBe(1);
+  const wrong=await inspectSpentApplyR48({
+   ...input(W12,savedR48CompletedToken),approvalIssuerSecret:Buffer.alloc(32,9),
+  });
+  expect(wrong).toMatchObject({kind:'held_only',retryAuthorized:false});
+  expect(JSON.stringify(applied)).not.toContain('first fictional');
+  expect(JSON.stringify(applied)).not.toContain(savedR48CompletedToken);
+  // Temporary 0600 fixture only; deliberately no private prose or signer keys.
+  const file=process.env.R48_COLD_FIXTURE_PATH||'';
+  const vaultDir=process.env.FILE_STORAGE_PATH||'';
+  if(path.basename(file)!=='r48-spent-apply-cold.json'||
+     path.dirname(file)!==path.dirname(vaultDir)||
+     !path.basename(path.dirname(file)).startsWith('ws-r35-physical-r48-'))
+   throw Error('R48_ESCROW_PATH_MUST_MATCH_DISPOSABLE_FIXTURE');
+  const publicDER=highwaterSigner.publicKey.export({
+   format:'der',type:'spki',
+  }).toString('base64');
+  const encode=(workId:string,token:string,expected:string)=>{
+   const c=custody(workId);
+   if(!c.signedDeletion)throw Error('R48_SYNTHETIC_DELETE_PROOF_MISSING');
+   return {memberId:A,workId,approvalToken:token,
+    issuerSecret:root.toString('base64'),
+    keyId:c.key.keyId,keyBytes:c.key.keyBytes.toString('base64'),
+    signedDeletion:c.signedDeletion,publicSignerDER:publicDER,
+    independentMinGeneration:100,expected};
+  };
+  writeFileSync(file,JSON.stringify({
+   protocol:'soullab.ws.r48.fictional-cold-reconciliation-fixture',
+   entries:[
+    encode(W12,savedR48CompletedToken,'FICTIONAL_CIPHERTEXT_APPLY_CONFIRMED'),
+    encode(W13,savedR48UnresolvedToken,'HELD_SPENT_WITHOUT_MATCHING_RECEIPT'),
+   ],
+  }),{mode:0o600,flag:'wx'});
+  expect(statSync(file).mode&0o077).toBe(0);
  });
 
  undoTest('R47 separately approved durable Undo restores EXACT prior ciphertext partition',async()=>{

@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.r46-durable-signed-apply.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "lib/writersStudio/recovery/heldSpentApplyEvidenceR48.ts",
+    "lib/writersStudio/recovery/__tests__/heldSpentApplyEvidenceR48.test.ts",
+    "scripts/ops/wsBetaR48ColdSpentApply.ts",
+    "scripts/ops/wsBetaR48SpentApplyPG16.ts",
+    "scripts/ops/__tests__/r39ActualSignedSectionPG16.test.ts",
+    "lib/writersStudio/recovery/heldDurableSignedApplyR46.ts",
+    "lib/writersStudio/recovery/heldDurableAuthorApprovalR44.ts",
+    "lib/writersStudio/recovery/heldProtectedDraftR35.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
