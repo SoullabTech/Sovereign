@@ -107,6 +107,19 @@ describe('Writer Studio consent-only doorway (never general manuscript access)',
   expect(res.status).toBe(200);
   expect(db.mock.calls[1][1]).toEqual([member,'fictional-v0','b'.repeat(64)]);
  });
+ it('permits withdrawal after tester contact was deactivated, but never new acceptance',async()=>{
+  candidate.mockResolvedValue(false);
+  db.mockResolvedValueOnce({rows:[{prior_accept:true}]})
+    .mockResolvedValueOnce({rows:[{decision:'accept',policy_version:'fictional-v0',policy_sha256:'b'.repeat(64)}]})
+    .mockResolvedValueOnce({rowCount:1});
+  const r=await POST(post('revoke'));
+  expect(r.status).toBe(200);
+  expect((await r.json()).status).toBe('revoked');
+  expect(db.mock.calls[0][0]).toContain("decision='accept'");
+  expect(db.mock.calls[2][1]).toEqual([member,'fictional-v0','b'.repeat(64)]);
+  db.mockClear();
+  expect((await POST(post('accept'))).status).toBe(403);
+ });
  it('withdrawal records another member-owned event; it cannot set an unrelated actor',async()=>{
   db.mockResolvedValueOnce({rows:[{decision:'accept',policy_version:agreedNotice.version,policy_sha256:agreedNotice.sha256}]});
   const res=await POST(post('revoke'));expect(res.status).toBe(200);

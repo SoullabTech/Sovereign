@@ -203,7 +203,16 @@ export async function proxy(req: NextRequest) {
        * trap their own manuscript behind a consent requirement they revoked.
        */
       if (isSingleDoorConsentCorridor(pathname)) {
-        eligible = await writerStudioBetaPreConsentCandidate(singleDoorVerified.memberId);
+        // An expired invite may not create new consent, but its former
+        // participant may reach POST solely to revoke a prior agreement.
+        // The consent route independently permits ONLY a 'revoke' action
+        // for historical-only members after verifying session + Origin.
+        const invited = await writerStudioBetaPreConsentCandidate(singleDoorVerified.memberId);
+        eligible = invited || (
+          pathname === '/api/beta/consent' &&
+          req.method === 'POST' &&
+          await memberHasHistoricalBetaConsent(singleDoorVerified.memberId)
+        );
       } else if (isSingleDoorCustodyCorridor(pathname, req.method)) {
         /*
          * The canonical session was VERIFIED above. Check the member's

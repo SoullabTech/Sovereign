@@ -198,7 +198,7 @@ function UnifiedAuthInner({ mode = 'signup', betaInvitationOnly = false }: { mod
   // Otherwise the arrival intent decides. A returning member opens on password;
   // someone joining opens on email.
   const [phase, setPhase] = useState<Phase>(
-    preVerified ? 'name' : usernameParam ? 'password' : mode === 'signin' ? 'password' : 'email'
+    betaInvitationOnly ? 'password' : preVerified ? 'name' : usernameParam ? 'password' : mode === 'signin' ? 'password' : 'email'
   );
   const [email, setEmail] = useState(emailParam);
   const [code, setCode] = useState('');
@@ -307,6 +307,7 @@ function UnifiedAuthInner({ mode = 'signup', betaInvitationOnly = false }: { mod
   // Silent, server-confirmed authed redirect (web only). Uses whoami, NOT
   // localStorage — so a stale beta_user never bounces a real visitor away.
   useEffect(() => {
+    if (betaInvitationOnly) return; // Only the verified sign-in response chooses consent, custody or Studio.
     if (preVerified) return;
     if (Capacitor.isNativePlatform()) return;
     if (typeof window !== 'undefined' && localStorage.getItem('maia_signed_out') === '1') return;
@@ -326,7 +327,7 @@ function UnifiedAuthInner({ mode = 'signup', betaInvitationOnly = false }: { mod
         }
       })
       .catch(() => clearTimeout(t));
-  }, [afterAuth, preVerified]);
+  }, [afterAuth, betaInvitationOnly, preVerified]);
 
   async function storeSession(
     user: { id: string; username: string; name: string; preferredName?: string; onboarded: boolean },
@@ -493,7 +494,7 @@ function UnifiedAuthInner({ mode = 'signup', betaInvitationOnly = false }: { mod
     enrollment: webEnrollment,
     localPasskeyEvidence: localPasskey,
   };
-  const offerBiometric = nativeBioPath ? bioAvailable : shouldOfferWebBiometric(offerInput);
+  const offerBiometric = !betaInvitationOnly && (nativeBioPath ? bioAvailable : shouldOfferWebBiometric(offerInput));
   const biometricNotice = nativeBioPath ? null : webBiometricNotice(offerInput);
 
   // ── Biometric return ─────────────────────────────────────────────────────
@@ -569,7 +570,9 @@ function UnifiedAuthInner({ mode = 'signup', betaInvitationOnly = false }: { mod
       await trustThisDevice();
       // Only the server's verified sign-in response can direct the writer
       // to a consent-only door. Query-string or localStorage claims cannot.
-      if (betaInvitationOnly && data.betaConsentRequired === true) {
+      if (betaInvitationOnly && data.betaCustodyOnly === true) {
+        window.location.assign('/beta/custody');
+      } else if (betaInvitationOnly && data.betaConsentRequired === true) {
         window.location.assign('/beta/consent');
       } else {
         enterSoullab();
