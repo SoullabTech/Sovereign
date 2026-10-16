@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.r35-protected-draft.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "files": [
+    "lib/writersStudio/recovery/heldDraftRequestR38.ts",
+    "lib/writersStudio/recovery/__tests__/heldDraftRequestR38.test.ts",
+    "scripts/ops/__tests__/r38ActualSignedDraftPG16.test.ts",
+    "scripts/ops/wsBetaR38SignedDraftPG16.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
