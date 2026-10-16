@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.r28-converged-custody.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "lib/writersStudio/recovery/sessionBoundCustodyR29.ts",
+    "lib/writersStudio/recovery/__tests__/sessionBoundCustodyR29.test.ts",
+    "lib/writersStudio/recovery/externalCustodyContractR26.ts",
+    "lib/writersStudio/recovery/deletionBarrierV1.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
