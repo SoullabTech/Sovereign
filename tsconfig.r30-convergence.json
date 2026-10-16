@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.r29-session-consent.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "files": [
+    "lib/writersStudio/recovery/__tests__/r30CombinedReleaseStop.test.ts",
+    "lib/writersStudio/recovery/oldBackupReleaseGateR27.ts",
+    "lib/writersStudio/recovery/externalCustodyBoundaryR24.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

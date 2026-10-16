@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.r24-external-custody.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "files": [
+    "lib/writersStudio/recovery/oldBackupReleaseGateR27.ts",
+    "lib/writersStudio/recovery/__tests__/oldBackupReleaseGateR27.test.ts",
+    "scripts/ops/wsBetaR27OldBackupReleaseDefeat.ts",
+    "scripts/ops/wsBetaR27AssessBackupReceipt.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
