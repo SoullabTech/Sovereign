@@ -71,8 +71,15 @@ function fixtureOnly():string{
   return stop('r49_fictional_only_scope_required');
  const root=process.env.FILE_STORAGE_PATH||'';
  // Must be a throwaway, owned fixture rather than /app/data/vault or T7.
- if(path.basename(root)!=='vault'||
-    !/^ws-r35-physical-r49-[A-Za-z0-9-]+$/.test(path.basename(path.dirname(root)))||
+ const fixtureFolder=path.basename(path.dirname(root));
+ const isOriginalR49=/^ws-r35-physical-r49-[A-Za-z0-9-]+$/.test(fixtureFolder);
+ // R51 additionally exercises this read-only inventory in the SAME disposable
+ // local vault as independently accepted R48 cold-process Apply evidence.
+ // No broad R49 directory-prefix waiver and no real-member activation.
+ const isExactR51=process.env.R51_RECOVERY_JOIN_FIXTURE==='fictional-only'&&
+   process.env.R48_SPENT_APPLY_RECOVERY_FIXTURE==='fictional-only'&&
+   /^ws-r35-physical-r48-r51-[A-Za-z0-9-]+$/.test(fixtureFolder);
+ if(path.basename(root)!=='vault'||!(isOriginalR49||isExactR51)||
     !path.isAbsolute(root))
   return stop('r49_unsafe_vault_root');
  return root;
