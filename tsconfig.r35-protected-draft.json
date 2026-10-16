@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.r34-route-parity.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "files": [
+    "lib/writersStudio/recovery/heldProtectedDraftR35.ts",
+    "scripts/ops/wsBetaR35PG16ProtectedDraft.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
