@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node", "jest"],
+    "plugins": []
+  },
+  "files": [
+    "lib/manuscript/source/arrivals.ts",
+    "lib/manuscript/source/__tests__/claimArrivalOwnershipR12.test.ts",
+    "lib/writersStudio/recovery/workEnvelopeV1.ts",
+    "lib/writersStudio/recovery/pendingArrivalEnvelopeV1.ts",
+    "lib/writersStudio/recovery/pendingClaimTransferV1.ts",
+    "lib/writersStudio/recovery/__tests__/pendingArrivalEnvelopeV1.test.ts",
+    "lib/writersStudio/recovery/__tests__/pendingClaimTransferV1.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
