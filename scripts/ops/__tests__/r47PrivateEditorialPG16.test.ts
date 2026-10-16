@@ -245,11 +245,12 @@ tests('R47 sealed private editorial proposal/choice and source continuity',()=>{
   await expect(reopenHeldPrivateReviewR47({
    ...read,privateCustody:auth(keys[0].draft),
   })).rejects.toHaveProperty('code','r47_private_review_and_draft_keys_must_differ');
-  // The same UUID with fabricated *different bytes* cannot decrypt the
-  // immutable AES-GCM private proposal, even with a fictional signed checkpoint.
+  // A forged review key with the same UUID but different bytes fails the
+  // private keyed consent/manifest HMAC BEFORE any AES-GCM decryption.
+  // Keep this earlier fail-closed refusal distinct from a GCM-tag failure.
   await expect(reopenHeldPrivateReviewR47({...read,
    privateCustody:auth({keyId:keys[0].review.keyId,keyBytes:randomBytes(32)}),
-  })).rejects.toHaveProperty('code','work_envelope_authentication_failed');
+  })).rejects.toHaveProperty('code','r47_review_manifest_or_consent_mismatch');
  });
  it('SQL metadata-only custody cannot be changed or erased',async()=>{
   const rows=await query('SELECT * FROM writers_studio_r47_private_review');
