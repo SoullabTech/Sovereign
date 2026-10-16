@@ -706,6 +706,11 @@
   .fr-shell[data-mode='write'] .fr-room { display: flex; flex-direction: column; gap: 0; padding: 0; }
   .fr-shell[data-mode='write'] .fr-work { order: 1; overflow: visible; }
   .fr-shell[data-mode='write'] .fr-manuscript { order: 2; max-height: none; border-right: 0; border-top: 1px solid var(--fr-field-line); }
+  /* R44: in the actual mobile Write room, assistance follows manuscript;
+     otherwise MAIA's default flex order moves ahead of the writing. */
+  .fr-shell[data-mode='write'] .fr-maia { order: 3; min-height: 0; }
+  .fr-shell[data-canvas='full'] .fr-manuscript,
+  .fr-shell[data-canvas='full'] .fr-maia { display: none; }
   .fr-write { height: auto; }
   .fr-write-scroll { overflow: visible; }
   .fr-write-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; height: auto; padding: 14px 16px 6px; }
