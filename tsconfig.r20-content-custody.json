@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.r19-schema-gate.json",
+  "files": [
+    "lib/writersStudio/recovery/schemaCustodyR19.ts",
+    "lib/writersStudio/recovery/historicalContentCoverageR20.ts",
+    "lib/writersStudio/recovery/__tests__/historicalContentCoverageR20.test.ts",
+    "scripts/ops/wsBetaR20HistoricalHoldGate.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
