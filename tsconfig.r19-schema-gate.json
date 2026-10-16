@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.r18-pg16-physical.json",
+  "files": [
+    "lib/writersStudio/recovery/schemaCustodyR19.ts",
+    "lib/writersStudio/recovery/__tests__/schemaCustodyR19.test.ts",
+    "scripts/ops/wsBetaR19SchemaHoldGate.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
