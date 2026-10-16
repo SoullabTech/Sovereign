@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.r37-section-apply.json","files":["lib/writersStudio/recovery/heldSectionApplyR37.ts","scripts/ops/wsBetaR37PG16SectionPassage.ts"],"include":[],"exclude":["node_modules"]}
