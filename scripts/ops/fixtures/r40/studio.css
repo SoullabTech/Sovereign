@@ -1,0 +1,21 @@
+:root{color-scheme:light;--paper:#f7f4ed;--ink:#252b27;--muted:#646e66;--line:#d6d5c8;--accent:#305d4b;--outline:235px;--maia:355px}
+*{box-sizing:border-box}body{font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--paper);color:var(--ink);margin:0}
+button{font:inherit;cursor:pointer}button:focus-visible,[tabindex]:focus-visible{outline:3px solid #3c7361;outline-offset:3px}button:disabled{opacity:.45;cursor:not-allowed}
+.banner{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#e9eee6;border-bottom:1px solid var(--line);padding:12px 24px}.banner strong{font:21px Georgia,serif}.muted,.help{color:var(--muted)}.badge{font-size:11px;letter-spacing:.07em;text-transform:uppercase;background:#fffef9;border:1px solid #bbcebd;padding:6px 10px;border-radius:18px}.toolbar{display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px solid var(--line);min-height:53px}.toolbar button,.mobile-nav button{background:transparent;border:1px solid var(--line);border-radius:8px;padding:8px 12px}.toolbar [aria-pressed=true],.mobile-nav [aria-pressed=true]{background:#dae7d9;color:#1e4837;border-color:#8db29b}
+main{display:grid;grid-template-columns:minmax(160px,var(--outline)) 9px minmax(300px,1fr) 9px minmax(240px,var(--maia));height:calc(100dvh - 108px);min-height:480px}.panel{min-width:0;overflow:auto;padding:23px}.outline{background:#f0efe8}.writing{background:#fffcf8}.maia{background:#f4f3eb}
+.divider{cursor:col-resize;background:#e4e5dc;position:relative;touch-action:none}.divider:after{content:"";position:absolute;top:44%;left:2px;width:5px;height:36px;background:#8aa295;border-radius:4px}.divider:hover,.divider:focus-visible{background:#b7cbbd}
+.eyebrow{text-transform:uppercase;color:#597563;letter-spacing:.11em;font-size:11px;margin:0 0 16px}h1,h2{font-family:Georgia,serif;font-weight:400}h1{font-size:31px;margin:0 0 18px}h2{font-size:24px;margin:0 0 14px}
+.chapter{width:100%;display:block;border:0;background:transparent;text-align:left;border-radius:8px;padding:13px 10px;color:var(--ink)}.chapter[aria-current=true]{background:#dce7da}.chapter small{display:block;color:var(--muted);margin-top:4px}
+.help{font-size:14px;line-height:1.5}.above{display:flex;align-items:center;justify-content:space-between;gap:8px}.manuscript{font:22px/1.75 Georgia,"Times New Roman",serif;max-width:650px}.manuscript p{margin:21px 0}.selected-words{background:#e7eddb;border-radius:3px;box-decoration-break:clone}
+.secondary{background:transparent;color:#295440;border:1px solid #a3baac;border-radius:9px;padding:9px 12px}.primary{background:var(--accent);color:white;border:1px solid var(--accent);border-radius:9px;padding:10px 14px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.status{border-top:1px solid var(--line);margin-top:17px;padding-top:15px;line-height:1.6;color:var(--muted)}
+.selected{padding:12px;border-left:3px solid #87a58c;background:#e8efe6;font:17px/1.5 Georgia,serif;margin:12px 0}
+.option{display:block;width:100%;text-align:left;background:#fffdfa;border:1px solid var(--line);border-radius:11px;padding:14px;margin:10px 0}.option strong{display:block;margin-bottom:7px}.option span{display:block;color:var(--muted);line-height:1.45;font-size:14px}.option[aria-pressed=true]{border:2px solid var(--accent);background:#e9f2e7;padding:13px}
+.diff{background:#edf2e9;border-left:3px solid #819d86;padding:12px;line-height:1.6;margin:16px 0;min-height:54px;font:16px/1.6 Georgia,serif}
+.diff del{background:#f2ddd3;color:#7e4235;padding:2px 3px}.diff ins{background:#d3e8d8;color:#18593f;text-decoration:none;padding:2px 3px}.mobile-nav{display:none}
+@media(max-width:770px){
+ .banner{padding:12px;align-items:flex-start}.banner strong{font-size:17px}.badge{font-size:9px}.toolbar{padding:8px 12px;flex-wrap:wrap}
+ #reset{display:none}
+ .mobile-nav{display:flex;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line)}.mobile-nav button{flex:1}
+ main{display:block;height:calc(100dvh - 164px);min-height:330px}.panel{display:none;height:100%;padding:18px 15px}.panel[data-active=true]{display:block}.divider{display:none}
+ h1{font-size:27px}.manuscript{font-size:18px}
+}

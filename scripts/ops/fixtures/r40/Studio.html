@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soullab Writer's Studio · R40 fictional WebKit review</title>
+<link rel="stylesheet" href="/r40.css"></head>
+<body>
+<header class="banner"><strong>Soullab <span class="muted">/ Writer’s Studio</span></strong><span class="badge">R40 fictional UI rehearsal · No server writing</span></header>
+<div class="toolbar">
+ <button id="zoom" type="button" aria-pressed="false">Semantic zoom: Passage</button>
+ <button id="reset" type="button">Reset columns</button>
+ <span id="revision">Version 1</span>
+</div>
+<nav class="mobile-nav" aria-label="Workspace pane">
+ <button data-pane="outline" type="button" aria-pressed="false">Outline</button>
+ <button data-pane="writing" type="button" aria-pressed="true">Writing</button>
+ <button data-pane="maia" type="button" aria-pressed="false">MAIA</button>
+</nav>
+<main>
+ <aside class="panel outline" data-panel="outline">
+   <p class="eyebrow">Your work</p><h2>Chapters</h2>
+   <button class="chapter" aria-current="true">1 · The lantern by the river <small>Selected writing</small></button>
+   <button class="chapter" aria-current="false">2 · Another voice <small>Continuity view</small></button>
+   <p class="help">The outline can be widened while the manuscript remains first.</p>
+ </aside>
+ <div id="left-divider" class="divider" role="separator" tabindex="0" aria-label="Resize outline and manuscript" aria-orientation="vertical" aria-valuemin="160" aria-valuemax="360" aria-valuenow="235"></div>
+ <article class="panel writing" data-panel="writing">
+   <p class="eyebrow">Fictional manuscript · Two sections</p>
+   <h1>The lantern by the river</h1>
+   <div class="above"><span class="help">Highlight the exact words or focus this passage.</span><button id="work-selection" class="secondary" type="button">Work with selection</button></div>
+   <p class="help" id="zoom-description">Passage view: precise wording and rhythm.</p>
+   <div class="manuscript" id="manuscript" aria-label="Fictional manuscript">
+    <p id="section-one" data-section-id="55555555-5555-4555-8555-555555555551">🍂 A <span id="target" class="selected-words" data-anchor-section="55555555-5555-4555-8555-555555555551">lantern glows</span> beside the river. The light moves through an ordinary afternoon.</p>
+    <p id="section-two" data-section-id="55555555-5555-4555-8555-555555555552">The second section keeps its own story. Nothing in this paragraph should change when the first passage is refined.</p>
+   </div>
+   <div class="actions">
+     <button id="save" class="secondary" type="button">Save draft</button>
+     <button id="reopen" class="secondary" type="button">Reopen saved version</button>
+     <button id="undo" class="secondary" type="button" disabled>Undo last Apply</button>
+   </div>
+   <p id="editor-status" class="status" role="status" aria-live="polite">Ready. Nothing is applied automatically.</p>
+ </article>
+ <div id="right-divider" class="divider" role="separator" tabindex="0" aria-label="Resize manuscript and MAIA" aria-orientation="vertical" aria-valuemin="250" aria-valuemax="500" aria-valuenow="355"></div>
+ <aside class="panel maia" data-panel="maia">
+  <p class="eyebrow">MAIA · Relating to this passage</p><h2>Three passage alternatives</h2>
+  <p class="help">Lightest change first. These options are fictional examples, not MAIA output. Only the writer decides.</p>
+  <div class="selected" id="selection">lantern glows</div>
+  <div id="options" aria-label="Three editorial alternatives"></div>
+  <div id="diff" class="diff" aria-live="polite">Choose an alternative to inspect the exact changed words.</div>
+  <div class="actions"><button id="apply" class="primary" type="button" disabled>Apply selected alternative</button><button id="ignore" class="secondary" type="button">Ignore suggestion</button></div>
+  <p id="maia-status" class="status" role="status">No auto-Apply. Review the highlighted passage before choosing.</p>
+ </aside>
+</main>
+<script src="/r40.js"></script></body></html>

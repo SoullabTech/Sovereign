@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.r39-signed-section.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "files": [
+    "lib/writersStudio/recovery/__tests__/r40WriterUXReview.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
