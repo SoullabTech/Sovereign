@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.r38-draft-request.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "files": [
+    "lib/writersStudio/recovery/heldSignedSectionRequestR39.ts",
+    "lib/writersStudio/recovery/__tests__/heldSignedSectionRequestR39.test.ts",
+    "scripts/ops/__tests__/r39ActualSignedSectionPG16.test.ts",
+    "scripts/ops/wsBetaR39SignedSectionPG16.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

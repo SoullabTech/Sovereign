@@ -63,7 +63,7 @@ const fixture=()=>{
   throw new WorkRecoveryRefusal('r38_nonfictional_draft_service_refused');
 };
 type Consent={seq:string|number;decision:string;policy_version:string;policy_sha256:string};
-async function admission(request:NextRequest,secret:Buffer):Promise<R29CurrentAdmission|null>{
+export async function reviewHeldDraftAdmissionR38(request:NextRequest,secret:Buffer):Promise<R29CurrentAdmission|null>{
  const review=await reviewHeldWriterRequestR17(request);
  if(review.kind!=='held_only')return null;
  const token=request.headers.get('x-session-token');
@@ -146,7 +146,7 @@ export async function handleHeldDraftRequestR38(
     typeof input.nowMs!=='function')
   return refused(503,'fictional_authority_unavailable');
  // Run R17 BEFORE parsing any potentially private manuscript body.
- const initial=await admission(input.request,input.sessionBindingSecret).catch(()=>null);
+ const initial=await reviewHeldDraftAdmissionR38(input.request,input.sessionBindingSecret).catch(()=>null);
  if(!initial)return refused(403,'writer_session_or_consent_refused');
  const operation=await parseOperation(input.request);
  if('protocol' in operation)return operation;
@@ -161,7 +161,7 @@ export async function handleHeldDraftRequestR38(
     issued=await input.issuer.issue({admission:initial,workId:input.workId,generation:next});
     return issued;
   },
-  loadCurrentAdmission:()=>admission(input.request,input.sessionBindingSecret),
+  loadCurrentAdmission:()=>reviewHeldDraftAdmissionR38(input.request,input.sessionBindingSecret),
   fence:input.workFence,nowMs:input.nowMs,
   commit:async()=>{
    // The real Work-key grant was fully verified in the R29 admission
