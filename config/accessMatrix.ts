@@ -494,6 +494,10 @@ export const ACCESS_RULES: AccessRule[] = [
   // Supervision
   { exact: '/supervision', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Supervision' },
 
+  // Pro Studio Reflect arrival: authenticated orientation into EXISTING free MAIA.
+  // This path grants no premium Reflect/Practice/Collective capability.
+  { exact: '/pro-studio/reflect', minTier: 'free', notes: 'Reflect arrival for signed-in members; premium features remain ungranted' },
+
   // Studio (session room + supporting pages)
   { prefix: '/studio', minTier: 'free', notes: 'Studio - open to all authenticated users' },
 

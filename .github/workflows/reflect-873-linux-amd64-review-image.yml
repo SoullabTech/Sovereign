@@ -1,0 +1,89 @@
+name: Reflect 873 immutable review image (NO DEPLOY)
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/reflect-873-linux-amd64-review-image.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reflect-873-review-image
+  cancel-in-progress: true
+
+jobs:
+  archive-exact-source:
+    name: Build and archive exact Linux amd64 candidate — review only
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    env:
+      SOURCE_SHA: 873ce151e4ee90fc1e43c89feae2e1bf510f49c5
+      IMAGE: maia-sovereign:reflect-873-review-only
+    steps:
+      - name: Checkout the exact frozen application SHA, never the PR merge ref
+        uses: actions/checkout@v4
+        with:
+          ref: 873ce151e4ee90fc1e43c89feae2e1bf510f49c5
+          persist-credentials: false
+
+      - name: Verify source identity and adequate ephemeral runner space
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          available_kb="$(df -Pk / | awk 'NR==2 {print $4}')"
+          df -h /
+          if [ "${available_kb}" -lt 15000000 ]; then
+            echo 'Not enough free space for safe review artifact export on this ephemeral runner.' >&2
+            exit 1
+          fi
+          echo 'Exact source identity and build disk budget confirmed.'
+
+      - name: Set up isolated Linux BuildKit
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build exact image without pushing to a registry or deploying
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker buildx build --platform linux/amd64 --progress=plain --pull \
+            --cache-from type=gha \
+            --build-arg DEPLOY_LANE_TOKEN=ci-review-image-only \
+            --build-arg GIT_COMMIT="$SOURCE_SHA" \
+            --build-arg APP_VERSION=1.2.0 \
+            --load --tag "$IMAGE" .
+
+      - name: Prove image runtime stamp, architecture and portable archive integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          image_id="$(docker image inspect "$IMAGE" --format '{{.Id}}')"
+          architecture="$(docker image inspect "$IMAGE" --format '{{.Architecture}}')"
+          stamp="$(docker image inspect "$IMAGE" --format '{{range .Config.Env}}{{println .}}{{end}}' | sed -n 's/^GIT_COMMIT=//p' | head -n 1)"
+          test "$architecture" = amd64
+          test "$stamp" = "$SOURCE_SHA"
+          test "${image_id#sha256:}" != "$image_id"
+          out="$RUNNER_TEMP/reflect-873-linux-amd64.docker.tar.gz"
+          docker save "$IMAGE" | gzip -1 > "$out"
+          gzip -t "$out"
+          (cd "$RUNNER_TEMP" && sha256sum reflect-873-linux-amd64.docker.tar.gz > reflect-873-linux-amd64.docker.tar.gz.sha256)
+          (cd "$RUNNER_TEMP" && sha256sum -c reflect-873-linux-amd64.docker.tar.gz.sha256)
+          printf 'SOURCE_SHA=%s\nIMAGE_ID=%s\nARCHITECTURE=%s\nBUILD_LANE=%s\nPRODUCTION_DEPLOYED=%s\n' \
+            "$SOURCE_SHA" "$image_id" "$architecture" ci-review-image-only false \
+            > "$RUNNER_TEMP/reflect-873-image-identity.txt"
+          echo 'Portable image archived with checked SHA-256. This is not a production release.'
+
+      - name: Retain access-controlled review artifact briefly (never publish or deploy)
+        uses: actions/upload-artifact@v4
+        with:
+          name: reflect-873-linux-amd64-review-only
+          path: |
+            ${{ runner.temp }}/reflect-873-linux-amd64.docker.tar.gz
+            ${{ runner.temp }}/reflect-873-linux-amd64.docker.tar.gz.sha256
+            ${{ runner.temp }}/reflect-873-image-identity.txt
+          retention-days: 2
+          compression-level: 0
+          if-no-files-found: error
