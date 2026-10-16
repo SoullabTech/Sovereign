@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node", "jest"],
+    "plugins": []
+  },
+  "files": [
+    "lib/writersStudio/recovery/workEnvelopeV1.ts",
+    "lib/writersStudio/recovery/pendingArrivalEnvelopeV1.ts",
+    "lib/writersStudio/recovery/pendingClaimTransferV1.ts",
+    "lib/writersStudio/recovery/transferJournalV1.ts",
+    "lib/writersStudio/recovery/__tests__/transferJournalV1.test.ts",
+    "scripts/ops/wsBetaR13PhysicalJournal.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
