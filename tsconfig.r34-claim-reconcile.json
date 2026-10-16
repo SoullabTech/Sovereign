@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.r33-pending-claim.json",
+  "compilerOptions": {"strict": true, "noEmit": true, "incremental": false},
+  "files": [
+    "lib/writersStudio/recovery/heldClaimReconcilerR34.ts",
+    "lib/writersStudio/recovery/heldPendingClaimR33.ts",
+    "lib/writersStudio/recovery/heldOriginalSourceR32.ts",
+    "scripts/ops/__tests__/r34PG16ClaimReconcile.test.ts",
+    "lib/writersStudio/recovery/__tests__/heldClaimReconcilerR34.test.ts",
+    "scripts/ops/__tests__/r34ColdReconcilePG16.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}

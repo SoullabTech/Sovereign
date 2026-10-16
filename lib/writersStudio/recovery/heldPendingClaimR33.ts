@@ -345,8 +345,10 @@ export async function commitHeldPendingClaimR33(input:{
     return manifest(updated.rows[0]);
   });
 }
-function checkedSignedClaim(receipt:SignedClaimedArrivalV1,signer:KeyObject|null,
-  minimumEpoch:number|null,claimed:R33Manifest,source:R32Source):void{
+/** R34: reuse the exact post-COMMIT claim signature and Source digests on recovery. */
+export function verifyHeldSignedCommittedClaimR33(receipt:SignedClaimedArrivalV1,
+  signer:KeyObject|null,minimumEpoch:number|null,
+  claimed:R33Manifest,source:R32Source):void{
   if(!receipt||!signer||signer.asymmetricKeyType!=='ed25519'||
      !Number.isSafeInteger(minimumEpoch)||!minimumEpoch||
      !receipt.claim||!receipt.signature)refuse('untrusted_claim_witness');
@@ -385,7 +387,7 @@ export async function promoteHeldClaimToWorkR33(input:{
   if(pending.state!=='claim_committed_awaiting_rewrap' ||
      !pending.claimedWorkId||!pending.workGeneration)
     refuse('claim_not_committed_for_rewrap');
-  checkedSignedClaim(input.signedClaim,input.trustedClaimSigner,
+  verifyHeldSignedCommittedClaimR33(input.signedClaim,input.trustedClaimSigner,
     input.minimumClaimEpoch,pending,opened.source);
   const ownedWorkId=pending.claimedWorkId;
   const claimedWorkGeneration=pending.workGeneration;
