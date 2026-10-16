@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.r17-session-review.json",
+  "files": [
+    "scripts/ops/wsBetaR18DockerPG16ActualStore.ts",
+    "lib/writersStudio/recovery/heldWriterSessionReviewR17.ts",
+    "lib/writersStudio/recovery/__tests__/heldWriterSessionReviewR17.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
