@@ -40,3 +40,14 @@
 6. Exact-image Next.js build, real invitation/password/consent, Mac/physical iPhone Safari Studio+Personal Portal+MAIA Develop/Write/Review, Apply/Undo/export, approved provider terms and Proton-only invitation transport, host capacity and founder Class A source/image GO remain separate gates.
 
 **Disposition:** R35 review-only ciphertext draft ledger and version/idempotency contract QUALIFIED with fictional PostgreSQL 16. Production writing, independent operational custody and five-person real-member beta remain **HOLD**.
+
+
+## Exact committed candidate acceptance (October 16 follow-up)
+
+- First source commit: `66f45961c96c34d86661f1cd5e040988544c62f5`. This is the **exact source run in the final isolated physical test**, after adding the dual fixture guard and older idempotency-key replay case.
+- R35 committed source physical PG16 status: `R35_FICTIONAL_PG16_ENCRYPTED_DRAFT_LEDGER_PASS_REAL_BETA_HOLD`, **35/35 checks PASS, 15 explicit refusal categories**. The receipt reports `sourceHead=66f45961c96c34d86661f1cd5e040988544c62f5`, `cleanContainer=true`, `cleanTemp=true`, `realMembersTouched=0`, `providerCalls=0`, `mailCalls=0`, `productionChanged=false`, and no error.
+- Exact committed physical receipt location: `/Volumes/T7 Shield/ws-beta-release-r11-build-20261016/R35_PG16_ENCRYPTED_DRAFT_LEDGER_20261016.json`; **SHA256 `558463625478a586bebe01f69363346944e59476588afe88bd84aa484cceabe0`**. The disposable PostgreSQL 16 container and marker-owned fixture directory were removed; nothing was written to the real-beta database.
+- Selected regression after stronger release-stop guard: **57 suites / 613 tests PASS**. Focused no-route/fictional-only test: **8/8 PASS**. Scoped strict TypeScript: **zero diagnostics**.
+- The source-to-live boundary is still deliberately **blocked**, including no Source/Draft API replacement, no production SQL migration and no real member Work-key release. No product-facing changes or deploy authorizations are inferred from the tests.
+
+- Exact committed R35 code's full `tsconfig.ship.json` rerun: **193 inherited diagnostics, exit 2**. Normalized source/file/TS-code/message sequence is **identical in full ordering** to R30's baseline, SHA256 `695ea8f398339d681a7882328449e6af9c8f168fa483839911780d6951566908`. No new diagnostic record; this is a source **no-regression pass**, not a successful full production compilation.
