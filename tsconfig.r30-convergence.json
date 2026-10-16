@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.r29-session-consent.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "files": [
+    "lib/writersStudio/recovery/__tests__/r30CombinedReleaseStop.test.ts",
+    "lib/writersStudio/recovery/oldBackupReleaseGateR27.ts",
+    "lib/writersStudio/recovery/externalCustodyBoundaryR24.ts",
+    "scripts/ops/wsBetaR30OldBackupRefusal.ts",
+    "scripts/ops/wsBetaR30AssessBackupReceipt.ts",
+    "scripts/ops/__tests__/r24ActualSessionVaultPG16.test.ts",
+    "scripts/ops/__tests__/r24ColdRestoreAfterRestart.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
