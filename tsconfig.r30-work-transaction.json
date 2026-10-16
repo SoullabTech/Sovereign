@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.r29-session-consent.json",
+  "compilerOptions": {
+    "strict": true,
+    "incremental": false,
+    "noEmit": true,
+    "plugins": []
+  },
+  "files": [
+    "scripts/ops/__tests__/r30Pg16WorkFenceRace.test.ts",
+    "lib/writersStudio/recovery/sessionBoundCustodyR29.ts",
+    "lib/writersStudio/recovery/heldCommitFenceR27.ts",
+    "lib/writersStudio/recovery/deletionBarrierV1.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}

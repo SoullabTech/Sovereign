@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.r24-external-custody.json",
+  "files": [
+    "scripts/ops/wsBetaR26OldBackupRefusal.ts",
+    "lib/writersStudio/recovery/__tests__/r26RetiredBackupBoundary.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
