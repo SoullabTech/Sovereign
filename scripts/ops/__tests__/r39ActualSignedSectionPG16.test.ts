@@ -5,6 +5,7 @@
  */
 import {NextRequest} from 'next/server';
 import {handleSignedSectionRequestR39,R39_REAL_SIGNED_SECTION_REQUEST_ENABLED} from '../../../lib/writersStudio/recovery/heldSignedSectionRequestR39';
+import {HeldAuthorChoiceWitnessR43,R43_REAL_AUTHOR_CHOICE_ENABLED} from '../../../lib/writersStudio/recovery/heldAuthorChoiceR43';
 import type {R37SectionSelection,R37FixtureGesture,R37UndoGesture} from '../../../lib/writersStudio/recovery/heldSectionApplyR37';
 import {Pool} from 'pg';
 import {createHash,createHmac,generateKeyPairSync,randomBytes,randomUUID,sign} from 'node:crypto';
@@ -40,6 +41,8 @@ const active=process.env.R39_PHYSICAL_PG16_FIXTURE==='fictional-only'&&
  (process.env.DATABASE_URL||'').startsWith('postgresql://fict@127.0.0.1:')&&
  (process.env.FILE_STORAGE_PATH||'').includes('ws-r35-physical-');
 const group=active?describe:describe.skip;
+const r43Only=active&&process.env.R43_AUTHOR_CHOICE_FIXTURE==='fictional-only';
+const choiceTest=r43Only?it:it.skip;
 const A='11111111-1111-4111-8111-111111111111';
 const B='22222222-2222-4222-8222-222222222222';
 const FOUNDER='55555555-5555-4555-8555-555555555555';
@@ -52,6 +55,8 @@ const W6='33333333-3333-4333-8333-333333333336';
 const W7='33333333-3333-4333-8333-333333333337';
 const W8='33333333-3333-4333-8333-333333333338';
 const W9='33333333-3333-4333-8333-333333333339';
+const W10='33333333-3333-4333-8333-333333333330';
+const W11='33333333-3333-4333-8333-33333333333a';
 const BWORK='44444444-4444-4444-8444-444444444444';
 const S1='66666666-6666-4666-8666-666666666661';
 const S2='66666666-6666-4666-8666-666666666662';
@@ -299,14 +304,57 @@ async function signedSection(
   workFence:fence,nowMs:()=>NOW,
  });
 }
+/** R43: browser sends only the one-use approval; choice and Work stay in Node. */
+function authorChoiceRequest(body?:unknown,options?:{token?:string;origin?:string}){
+ const headers:Record<string,string>={
+  host:'soullab.life',
+  origin:options?.origin??'https://soullab.life',
+  'x-session-token':options?.token??TOKENS.A,
+ };
+ if(body!==undefined)headers['content-type']='application/json';
+ return new NextRequest(
+  'https://soullab.life/api/sovereign/writers-studio/held-pair',{
+   method:body===undefined?'GET':'POST',headers,
+   ...(body===undefined?{}:{body:JSON.stringify(body)}),
+  });
+}
+function heldChoiceContext(workId:string,request:NextRequest,
+ hook?:()=>Promise<void>){
+ const issuer:R38FictionalIssuer={
+  authority:'fabricated_r38_signers_no_external_kms',
+  async issue({admission:checked,workId:owned,generation}){
+   return preparedScope(checked,owned,generation,hook).issue({
+    admission:checked,workId:owned,generation,
+   });
+  },
+ };
+ const workFence:R29FictionalWorkFence={
+  authority:'fictional_work_revocation_lock_only',
+  runHeld:async(scope,action)=>transaction(async tx=>{
+   const row=await tx.query<{member_id:string;active:boolean}>(
+    'SELECT member_id,active FROM r38_fixture_work_fence WHERE work_id=$1 FOR UPDATE',
+    [scope.workId]);
+   if(row.rows.length!==1||
+      row.rows[0].member_id!==scope.memberId||
+      row.rows[0].active!==true)
+    throw new WorkRecoveryRefusal('r43_changed_work_fence');
+   return action();
+  }),
+ };
+ return {request,workId,issuer,sessionBindingSecret:internalSecret,
+   workFence,nowMs:()=>NOW};
+}
+
 group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG16',()=>{
  beforeAll(async()=>{
   // Exact fixture flags, PG setup and policy are prepared by the separate,
   // R38-named ephemeral PG16 driver. Never alter shared production tables.
   expect(R38_REAL_ENCRYPTED_DRAFT_ROUTE_ENABLED).toBe(false);
   expect(R35_REAL_MEMBER_PROTECTED_DRAFT_ENABLED).toBe(false);
-  for(const work of [W1,W2,W3,W4,W5,W6,W7,W8,W9])
-    await seed(work,[W4,W7,W8,W9].includes(work));
+  const works=r43Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11]:
+    [W1,W2,W3,W4,W5,W6,W7,W8,W9];
+  for(const work of works)
+    await seed(work,[W4,W7,W8,W9,W10,W11].includes(work));
  });
  afterAll(async()=>{
   await closePool();
@@ -502,5 +550,74 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
   const out=await signedSection(W7,{operation:'undo-section',gesture});
   expect(out.kind).toBe('refused');
   expect(await generations(W7)).toBe(3);
+ });
+ choiceTest('R43 reviewed one-use author token physically crosses signed R39 → R35 Apply/Undo',async()=>{
+  expect(R43_REAL_AUTHOR_CHOICE_ENABLED).toBe(false);
+  const gate=new HeldAuthorChoiceWitnessR43();
+  const original=await reopenHeldDraftR35({
+   subject:subject(),workId:W10,custody:custody(W10),generation:1,
+  });
+  const trusted=(await anchored(W10)).selection;
+  const preview=await gate.prepare({
+   context:heldChoiceContext(W10,authorChoiceRequest()),
+   custody:custody(W10),selection:trusted,
+  });
+  expect(preview.kind).toBe('fictional_reviewed_choice_only');
+  if(preview.kind!=='fictional_reviewed_choice_only')
+   throw Error('r43_physical_preview_failed');
+  expect(preview.originalPassage).toBe('first fictional');
+  expect(await generations(W10)).toBe(1);
+  const chosen={kind:'apply_reviewed_choice',approvalToken:preview.approvalToken};
+  const applied=await gate.submit(heldChoiceContext(W10,authorChoiceRequest(chosen)));
+  expect(applied).toMatchObject({
+   kind:'fictional_one_use_choice_receipt_only',
+   action:'apply',generation:2,replayed:false,releaseApproved:false,
+  });
+  expect(await generations(W10)).toBe(2);
+  const replay=await gate.submit(heldChoiceContext(W10,authorChoiceRequest(chosen)));
+  expect(replay).toMatchObject({kind:'refused',status:409});
+  expect(await generations(W10)).toBe(2);
+  const after=await reopenHeldDraftR35({
+   subject:subject(),workId:W10,custody:custody(W10),generation:2,
+  });
+  expect(after.sections.map(s=>s.id)).toEqual(original.sections.map(s=>s.id));
+  expect(after.sections[0].text).toContain('first enchanted');
+  expect(after.sections[1]).toEqual(original.sections[1]);
+  expect(JSON.stringify(applied)).not.toContain('first enchanted');
+  if(applied.kind!=='fictional_one_use_choice_receipt_only'||!applied.undoToken)
+   throw Error('r43_undo_ticket_not_issued');
+  const undoRequest={kind:'undo_reviewed_choice',approvalToken:applied.undoToken};
+  const undone=await gate.submit(heldChoiceContext(W10,authorChoiceRequest(undoRequest)));
+  expect(undone).toMatchObject({
+   kind:'fictional_one_use_choice_receipt_only',
+   action:'undo',generation:3,checkpointCount:1,releaseApproved:false,
+  });
+  const restored=await reopenHeldDraftR35({
+   subject:subject(),workId:W10,custody:custody(W10),generation:3,
+  });
+  expect(restored.sections).toEqual(original.sections);
+  expect(restored.content).toBe(original.content);
+  expect(await gate.submit(heldChoiceContext(W10,authorChoiceRequest(undoRequest))))
+    .toMatchObject({kind:'refused',status:409});
+  expect(await generations(W10)).toBe(3);
+ });
+ choiceTest('R43 consent withdrawal DURING signed key grant refuses physical Apply',async()=>{
+  const gate=new HeldAuthorChoiceWitnessR43();
+  const preview=await gate.prepare({
+   context:heldChoiceContext(W11,authorChoiceRequest()),
+   custody:custody(W11),selection:(await anchored(W11)).selection,
+  });
+  expect(preview.kind).toBe('fictional_reviewed_choice_only');
+  if(preview.kind!=='fictional_reviewed_choice_only')
+   throw Error('r43_consent_fixture_could_not_prepare');
+  const chosen={kind:'apply_reviewed_choice',approvalToken:preview.approvalToken};
+  const refused=await gate.submit(heldChoiceContext(
+   W11,authorChoiceRequest(chosen),()=>consent('revoke')));
+  expect(refused.kind).toBe('refused');
+  expect(await generations(W11)).toBe(1);
+  // The latest consent is now revoked: R43 refuses BEFORE ticket lookup.
+  expect(await gate.submit(heldChoiceContext(W11,authorChoiceRequest(chosen))))
+   .toMatchObject({kind:'refused',status:403});
+  await consent('accept');
  });
 });
