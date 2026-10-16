@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.r33-physical.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "files": [
+    "lib/writersStudio/recovery/draftRouteParityR34.ts",
+    "lib/writersStudio/recovery/__tests__/draftRouteParityR34.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
