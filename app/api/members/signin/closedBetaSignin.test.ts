@@ -16,12 +16,14 @@ jest.mock('@/lib/auth/rateLimiter', () => ({
   buildRateLimitHeaders: jest.fn(() => ({})),
 }));
 jest.mock('@/lib/writersStudio/betaAccessServer', () => ({ writersStudioBetaAccess: jest.fn(), writerStudioBetaPreConsentCandidate: jest.fn() }));
+jest.mock('@/lib/writersStudio/betaPostWithdrawalCustody', () => ({ memberHasHistoricalBetaConsent: jest.fn() }));
 
 import { query } from '@/lib/db/postgres';
 import { verifyPassword } from '@/lib/auth/passwordUtils';
 import { createSession } from '@/lib/auth/serverSessions';
 import { checkRateLimit } from '@/lib/auth/rateLimiter';
 import { writersStudioBetaAccess, writerStudioBetaPreConsentCandidate } from '@/lib/writersStudio/betaAccessServer';
+import { memberHasHistoricalBetaConsent } from '@/lib/writersStudio/betaPostWithdrawalCustody';
 import { POST } from './route';
 
 const mockQuery=query as jest.MockedFunction<typeof query>;
@@ -30,6 +32,7 @@ const mockSession=createSession as jest.MockedFunction<typeof createSession>;
 const mockRate=checkRateLimit as jest.MockedFunction<typeof checkRateLimit>;
 const mockAdmission=writersStudioBetaAccess as jest.MockedFunction<typeof writersStudioBetaAccess>;
 const mockCandidate=writerStudioBetaPreConsentCandidate as jest.MockedFunction<typeof writerStudioBetaPreConsentCandidate>;
+const mockPast=memberHasHistoricalBetaConsent as jest.MockedFunction<typeof memberHasHistoricalBetaConsent>;
 const memberId='44444444-4444-4444-8444-444444444444';
 const member={ id:memberId, username:'fictional-test-member',password_hash:'mock-hash',
   name:'Fictional',preferred_name:'Fictional',tier:'free',roles:['member'],
@@ -46,6 +49,7 @@ describe('WS-BETA-ENTRY-R1 denied sign-ins never create sessions',()=>{
    jest.resetAllMocks();
    process.env.WRITERS_STUDIO_RESTRICTED_BETA='true';
    mockRate.mockResolvedValue({allowed:true,remainingAttempts:4,blockedUntil:null,retryAfterSeconds:null});
+   mockPast.mockResolvedValue(false);
    mockQuery.mockResolvedValue({rows:[member],rowCount:1} as any);
    mockPassword.mockResolvedValue({ok:true,needsUpgrade:false});
    mockSession.mockResolvedValue({sessionToken:'fictional-session',expiresAt:new Date('2026-12-01T00:00:00Z')} as any);
@@ -96,6 +100,26 @@ describe('WS-BETA-ENTRY-R1 denied sign-ins never create sessions',()=>{
    expect(res.status).toBe(403);
    expect(mockSession).not.toHaveBeenCalled();
  });
+it('allows previously consented, deactivated fictional tester to sign in for custody ONLY',async()=>{
+  mockAdmission.mockResolvedValue({eligible:false,basis:'not_in_pilot'});
+  mockCandidate.mockResolvedValue(false);
+  mockPast.mockResolvedValue(true);
+  const res=await POST(req());
+  expect(res.status).toBe(200);
+  const json=await res.json();
+  expect(json.betaCustodyOnly).toBe(true);
+  expect(json.betaConsentRequired).toBe(false);
+  expect(mockSession).toHaveBeenCalledTimes(1);
+  expect(mockPast).toHaveBeenCalledWith(memberId);
+});
+it('never mints a beta session for an ex-tester without historical consent',async()=>{
+  mockAdmission.mockResolvedValue({eligible:false,basis:'not_in_pilot'});
+  mockCandidate.mockResolvedValue(false);
+  mockPast.mockResolvedValue(false);
+  const res=await POST(req());
+  expect(res.status).toBe(403);
+  expect(mockSession).not.toHaveBeenCalled();
+});
  it('does not alter ordinary non-beta sign-in behavior',async()=>{
    delete process.env.WRITERS_STUDIO_RESTRICTED_BETA;
    const res=await POST(req());

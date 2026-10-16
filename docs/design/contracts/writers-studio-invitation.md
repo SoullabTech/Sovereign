@@ -19,7 +19,7 @@ experience_verification: The referenced screenshots establish the existing Studi
 
 # Writer's Studio invitation — experience contract
 
-The invitation is a single narrow arrival gesture. A writer receives a personal, expiring link and chooses their own password. The next action is ordinary Writer's Studio sign-in, with no extra browser authentication popup.
+The invitation is a single narrow arrival gesture. A writer receives a personal, expiring link and chooses their own password. The next action is ordinary Writer's Studio sign-in, with no extra browser authentication popup. Signing in as an invited writer then leads to an explicit, individual beta participation decision. Password setup is **not** consent and does **not** unlock Studio or MAIA.
 
 The setup page shows only the invitation's status, two password fields, and one action. It does not display the person's email, ask for a roster code, expose other writers, or offer public signup.
 

@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.r23-converged.json",
+  "files": [
+    "lib/writersStudio/recovery/__tests__/r25ConvergedHold.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

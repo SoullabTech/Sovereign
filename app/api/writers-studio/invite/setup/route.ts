@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'node:crypto';
 import { query } from '@/lib/db/postgres';
 import { hashPassword } from '@/lib/auth/passwordUtils';
-import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { writerStudioBetaPreConsentCandidate } from '@/lib/writersStudio/betaAccessServer';
 import { checkRateLimit, getClientIP, buildRateLimitHeaders } from '@/lib/auth/rateLimiter';
 import { isSingleDoorBetaEnabled } from '@/lib/writersStudio/singleDoorBetaGate';
 
@@ -34,15 +34,19 @@ async function limited(req: NextRequest) {
   });
 }
 
-async function eligibleToken(tokenHash: string): Promise<boolean> {
+async function eligibleToken(tokenHash: string): Promise<string | null> {
   const r = await query<{ member_id: string }>(
     `SELECT member_id FROM password_reset_tokens
       WHERE token=$1 AND used=FALSE AND expires_at>NOW() LIMIT 1`,
     [tokenHash],
   );
   const memberId = r.rows[0]?.member_id;
-  if (!memberId) return false;
-  return (await writersStudioBetaAccess(memberId)).eligible;
+  if (!memberId) return null;
+  // Invitation precedes sign-in and individual participation consent.
+  // Full Studio admission MUST NOT be required to choose a password,
+  // otherwise a newly invited writer cannot reach their consent screen.
+  // This verifies the exact member allowlist plus active beta contact only.
+  return (await writerStudioBetaPreConsentCandidate(memberId)) ? memberId : null;
 }
 
 export async function GET(req: NextRequest) {
@@ -66,7 +70,8 @@ export async function PUT(req: NextRequest) {
     const b = body as Record<string, unknown>;
     if (Object.keys(b).some(k => k !== 'token' && k !== 'password')) return refusal(400, 'invalid_input');
     const token = digest(b.token);
-    if (!token || !(await eligibleToken(token))) return refusal(404, 'invalid_or_expired_invitation');
+    const candidateMemberId = token ? await eligibleToken(token) : null;
+    if (!token || !candidateMemberId) return refusal(404, 'invalid_or_expired_invitation');
     if (typeof b.password !== 'string' || b.password.length < 12 || b.password.length > 128) {
       return refusal(400, 'password_requires_12_to_128_characters');
     }
@@ -77,7 +82,8 @@ export async function PUT(req: NextRequest) {
       `WITH claimed AS (
          UPDATE password_reset_tokens t
             SET used=TRUE
-          WHERE t.token=$1 AND t.used=FALSE AND t.expires_at>NOW()
+          WHERE t.token=$1 AND t.member_id=$3
+            AND t.used=FALSE AND t.expires_at>NOW()
             -- Repeat cohort standing in the atomic consumption statement.
             -- A revoked beta contact cannot exchange an otherwise valid
             -- token for a new password after the earlier eligibility read.
@@ -93,7 +99,7 @@ export async function PUT(req: NextRequest) {
        UPDATE members m SET password_hash=$2, updated_at=NOW()
          FROM claimed WHERE m.id=claimed.member_id
        RETURNING m.id`,
-      [token, passwordHash],
+      [token, passwordHash, candidateMemberId],
     );
     if (claimed.rows.length !== 1) return refusal(404, 'invalid_or_expired_invitation');
     return NextResponse.json({ success: true }, { headers: HEADERS });
