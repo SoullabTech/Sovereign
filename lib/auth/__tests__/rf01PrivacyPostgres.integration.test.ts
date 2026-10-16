@@ -6,8 +6,18 @@ import { describe, it, expect, jest, beforeAll, beforeEach, afterAll } from '@je
 import { NextRequest } from 'next/server';
 
 const DB_URL = process.env.DATABASE_URL || '';
-if (!DB_URL.includes('rf01_fixture') ||
-    !DB_URL.includes('/private/tmp/rf01-s0a1-pg-20261016/socket')) {
+const localSocketFixture = DB_URL.includes('rf01_fixture') &&
+  DB_URL.includes('/private/tmp/rf01-s0a1-pg-20261016/socket');
+const localDocker16Fixture = (() => {
+  if (process.env.RF01_LOCAL_PG16 !== '1') return false;
+  try {
+    const u = new URL(DB_URL);
+    return u.protocol === 'postgresql:' && u.hostname === '127.0.0.1' &&
+      u.port === '55468' && u.pathname === '/rf01_fixture' &&
+      u.username === 'soullab';
+  } catch { return false; }
+})();
+if (!localSocketFixture && !localDocker16Fixture) {
   throw new Error('Refusing RF01 physical tests outside the disposable fictional database');
 }
 
