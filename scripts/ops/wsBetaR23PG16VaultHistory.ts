@@ -40,8 +40,14 @@ function waitReady(){
     const r=spawnSync('docker',['exec',name,'psql','-XAtq','-v','ON_ERROR_STOP=1',
       '-U','soullab','-d','postgres','-c','SELECT 1'],
       {encoding:'utf8',timeout:5000});
-    if(r.status===0 && r.stdout.trim()==='1')return;
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,150);
+    // The official PostgreSQL image starts and then stops a temporary
+    // bootstrap server before PID 1 execs the final postgres process.
+    // A successful query to the bootstrap server is NOT stable readiness.
+    const pid1=spawnSync('docker',['exec',name,'cat','/proc/1/comm'],
+      {encoding:'utf8',timeout:5000});
+    if(r.status===0 && r.stdout.trim()==='1' &&
+       pid1.status===0 && pid1.stdout.trim()==='postgres')return;
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,250);
   }
   throw Error('R23_PG16_NOT_READY');
 }

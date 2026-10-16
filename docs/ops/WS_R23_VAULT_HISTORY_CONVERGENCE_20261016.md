@@ -42,3 +42,11 @@ R23 combines the vault approach with the SQL R21 version-chain and R22 verified-
 - **Linux production build-space gate remains below 60 GiB**; no blanket prune of images, containers, named volumes, backups or pinned rollback artifacts. No member invitations, DNS changes or main-host cutover permitted until exact source + exact image qualified and founder approved.
 
 **Next candidate R24:** independently governed scoped key/deletion authority; PG16/revision/Source migration and durable orphan handling; immutable original Source and old-backup restore/rollback; then actual browser/member canary on `soullab.life`. Scope remains **five individually verified invited testers**, not a wider public launch.
+
+## Post-commit physical reproducibility follow-up
+
+The first post-commit rerun exposed an intermittent **official PostgreSQL 16 Docker image bootstrap-server race**: `psql SELECT 1` briefly succeeded against the temporary initialization server, which then shut down before the fixture schema was installed. The failed rehearsal stopped and removed its disposable container/vault and **did not exercise or modify real writing**.
+
+The R23 physical driver now requires successful SQL **and** confirmation that container PID 1 is the final `postgres` process (not the temporary Docker-entrypoint initialization process) before continuing. With that correction, **three consecutive fresh disposable PG16+vault runs** each passed all 21 physical checks, 10 negative controls and complete Docker/temp-vault cleanup. Strict scoped TypeScript also passed again. No release scope, encryption protocol, application route, member data or production setting changed.
+
+This is a test-fixture reliability repair, not a new production acceptance or an external independent key-custody witness. Five-member launch remains HOLD.
