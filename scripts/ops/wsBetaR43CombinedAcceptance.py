@@ -15,8 +15,9 @@ import uuid
 from datetime import datetime, timezone
 
 ROOT=Path(__file__).resolve().parents[2]
-EVIDENCE=Path('/Volumes/T7 Shield/ws-beta-r43-author-choice-evidence-20261016')
-EVIDENCE.mkdir(parents=True,exist_ok=True)
+BASE_EVIDENCE=Path('/Volumes/T7 Shield/ws-beta-r43-author-choice-evidence-20261016')
+BASE_EVIDENCE.mkdir(parents=True,exist_ok=True)
+EVIDENCE=BASE_EVIDENCE
 COMBINED=EVIDENCE/'R43_COMBINED_ACCEPTANCE_20261016.json'
 
 def run(command,environment,timeout=240):
@@ -39,6 +40,7 @@ def all_true(checks):
     return isinstance(checks,dict) and all(v is True for v in checks.values())
 
 def main():
+    global EVIDENCE,COMBINED
     if os.environ.get('R43_COMBINED_ACCEPTANCE')!='fictional-only':
         raise RuntimeError('R43_COMBINED_EXPLICIT_FIXTURE_FLAG_REQUIRED')
     revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
@@ -47,6 +49,18 @@ def main():
         raise RuntimeError('R43_WRONG_BRANCH_REFUSED')
     if subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True).strip():
         raise RuntimeError('R43_UNCOMMITTED_SOURCE_CANNOT_CLAIM_EXACT_HEAD')
+    # Append-only exact-source evidence. Never overwrite earlier acceptance.
+    for attempt in range(1,100):
+        candidate=BASE_EVIDENCE/('exact-'+revision[:12]+'-'+str(attempt).zfill(2))
+        try:
+            candidate.mkdir(mode=0o700)
+        except FileExistsError:
+            continue
+        EVIDENCE=candidate
+        COMBINED=EVIDENCE/'R43_COMBINED_ACCEPTANCE_20261016.json'
+        break
+    else:
+        raise RuntimeError('R43_APPEND_ONLY_EVIDENCE_CAPACITY_EXHAUSTED')
     outcome={'sourceCommit':revision,'branch':branch,'status':'HOLD',
       'releaseApproved':False,'originalProductionChanged':False,
       'stages':{},'checkedAt':datetime.now(timezone.utc).isoformat()}
@@ -54,7 +68,7 @@ def main():
     env['R42_PHYSICAL_PG16']='fictional-only'
     src=ROOT/'scripts/ops/wsBetaR42SourceDraftPG16.py'
     old="EVIDENCE=Path('/Volumes/T7 Shield/ws-beta-release-r11-build-20261016')"
-    new="EVIDENCE=Path('/Volumes/T7 Shield/ws-beta-r43-author-choice-evidence-20261016')"
+    new="EVIDENCE=Path('"+str(EVIDENCE)+"')"
     code,output=rebind_and_run(src.relative_to(ROOT),old,new,
       [sys.executable],env)
     report=json.loads((EVIDENCE/'R42_SOURCE_DRAFT_APPLY_UNDO_PG16_20261016.json').read_text())
@@ -68,7 +82,7 @@ def main():
     env2['R41_EXACT_SELECTION_WEBKIT']='fictional-only'
     src=ROOT/'scripts/ops/wsBetaR41ExactAnchorWebkit.cjs'
     old="const receiptPath='/Volumes/T7 Shield/ws-beta-release-r11-build-20261016/R41_REAL_EDITOR_SELECTION_WEBKIT_20261016.json';"
-    new="const receiptPath='/Volumes/T7 Shield/ws-beta-r43-author-choice-evidence-20261016/R43_REAL_EDITOR_SELECTION_WEBKIT_20261016.json';"
+    new="const receiptPath='"+str(EVIDENCE/'R43_REAL_EDITOR_SELECTION_WEBKIT_20261016.json')+"';"
     code,output=rebind_and_run(src.relative_to(ROOT),old,new,['node'],env2,110)
     report=json.loads((EVIDENCE/'R43_REAL_EDITOR_SELECTION_WEBKIT_20261016.json').read_text())
     passed=code==0 and report.get('status')=='R41_ACTUAL_EDITOR_SELECTION_WEBKIT_FICTITIOUS_PASS' and report.get('sourceHead')==revision and report.get('browserClosed') and report.get('noExternalCalls') and len(report.get('checks',[]))==11
@@ -81,8 +95,11 @@ def main():
     env3=os.environ.copy()
     env3['R39_PHYSICAL_PG16_FIXTURE']='fictional-only'
     env3['R43_AUTHOR_CHOICE_FIXTURE']='fictional-only'
-    code,output=run([str(ROOT/'node_modules/.bin/tsx'),
-      'scripts/ops/wsBetaR43AuthorChoicePG16.ts'],env3,150)
+    src=ROOT/'scripts/ops/wsBetaR43AuthorChoicePG16.ts'
+    old="const evidence='/Volumes/T7 Shield/ws-beta-r43-author-choice-evidence-20261016';"
+    new="const evidence='"+str(EVIDENCE)+"';"
+    code,output=rebind_and_run(src.relative_to(ROOT),old,new,
+      [str(ROOT/'node_modules/.bin/tsx')],env3,150)
     report=json.loads((EVIDENCE/'R43_ONE_USE_CHOICE_ACTUAL_PG16_20261016.json').read_text())
     jest_log=(EVIDENCE/'R43_PG16_JEST_20261016.log').read_text()
     application_tests_ok='Tests:       23 passed, 23 total' in jest_log
@@ -102,7 +119,11 @@ if __name__=='__main__':
         result=main()
     except Exception as exc:
         result['error']=str(exc)[:330]
-    COMBINED.write_text(json.dumps(result,indent=2)+'\n')
+    # With no accepted source/branch, place a unique refusal record instead.
+    if EVIDENCE==BASE_EVIDENCE:
+        COMBINED=BASE_EVIDENCE/('R43_REFUSAL_'+uuid.uuid4().hex[:12]+'.json')
+    with COMBINED.open('x') as stream:
+        stream.write(json.dumps(result,indent=2)+'\n')
     os.chmod(COMBINED,0o600)
     print(json.dumps({'status':result['status'],
       'sourceCommit':result.get('sourceCommit'),
