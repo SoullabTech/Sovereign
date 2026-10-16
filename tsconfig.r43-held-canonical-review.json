@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.r41-exact-live-selection.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/writersStudio/exactLiveSelectionR41.ts",
+    "lib/writersStudio/recovery/heldCanonicalReviewR43.ts",
+    "lib/writersStudio/recovery/__tests__/heldCanonicalReviewR43.test.ts",
+    "app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx",
+    "app/writers-studio/full-redesign/Shell.tsx",
+    "app/writers-studio/full-redesign/__tests__/r41ActualStudioShellReset.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

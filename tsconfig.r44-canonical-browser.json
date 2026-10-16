@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.r43-held-canonical-review.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "app/writers-studio/full-redesign/Shell.tsx",
+    "lib/writersStudio/exactLiveSelectionR41.ts",
+    "lib/writersStudio/recovery/heldCanonicalReviewR43.ts",
+    "scripts/ops/fixtures/wsR44CanonicalShellBrowser.tsx"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

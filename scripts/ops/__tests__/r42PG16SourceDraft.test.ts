@@ -46,7 +46,7 @@ const enabled=[
 const run=enabled?describe:describe.skip;
 const A='5b40ec03-3e87-4f9d-8aa1-aa18ee5bd204';
 const B='5b40ec03-3e87-4f9d-8aa1-aa18ee5bd205';
-const W=Array.from({length:8},(_,i)=>
+const W=Array.from({length:9},(_,i)=>
  '4c0782ca-9074-43ee-9f3c-5f85000267'+(90+i));
 const pendingKey={keyId:randomUUID(),keyBytes:randomBytes(32)};
 const sourceKey={keyId:randomUUID(),keyBytes:randomBytes(32)};
@@ -308,6 +308,17 @@ run('R42 actual PostgreSQL16 Source→encrypted section draft integration',()=>{
    .rejects.toHaveProperty('code','r42_draft_preexisted_source_intent');
   expect(await count('writers_studio_r42_held_start_intents',c.workId)).toBe(0);
  });
+ it('pending-import key cannot become the Draft key, even under a new UUID',async()=>{
+  const c=await makeClaim(7);
+  const same=auth(pendingKey);
+  await expect(beginHeldDraftFromOriginalR42({...c,draftCustody:same}))
+   .rejects.toHaveProperty('code','r42_distinct_original_and_draft_keys_required');
+  const changedId=auth({keyId:randomUUID(),keyBytes:pendingKey.keyBytes});
+  await expect(beginHeldDraftFromOriginalR42({...c,draftCustody:changedId}))
+   .rejects.toHaveProperty('code','r42_distinct_original_and_draft_keys_required');
+  expect(await count('writers_studio_r42_held_start_intents',c.workId)).toBe(0);
+  expect(await count('writers_studio_r35_draft_versions',c.workId)).toBe(0);
+ });
  it('foreign member, revoked Work and reused key domain refuse',async()=>{
   const c=known[0];
   const foreign={...c,sourceClaim:{...c.sourceClaim,
@@ -321,7 +332,9 @@ run('R42 actual PostgreSQL16 Source→encrypted section draft integration',()=>{
   })).rejects.toHaveProperty('code','r42_distinct_original_and_draft_keys_required');
  });
  it('R44 refuses PENDING import key material in a Draft even under a fresh key UUID',async()=>{
-  const c=await makeClaim(7);
+  // R45 merged two independently accepted negative cases. Keep their Work
+  // identities distinct so the physical database observes BOTH attempts.
+  const c=await makeClaim(8);
   for(const unsafe of [
     pendingKey,
     {keyId:randomUUID(),keyBytes:Buffer.from(pendingKey.keyBytes)},
