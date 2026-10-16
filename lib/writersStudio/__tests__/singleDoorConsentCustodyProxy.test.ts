@@ -74,6 +74,16 @@ describe('R8: a former writer retains only authenticated consent and custody cor
     expect(custody).not.toHaveBeenCalled();
   });
 
+  it('allows exact historical revocation POST but no GET/new admission without an active invitation', async () => {
+    preConsent.mockResolvedValue(false);
+    expect((await proxy(request('/api/beta/consent', 'POST'))).status).toBe(200);
+    expect((await proxy(request('/api/beta/consent', 'GET'))).status).toBe(403);
+    expect((await proxy(request('/api/writers-studio/editorial/turn', 'POST'))).status).toBe(403);
+    expect(custody).toHaveBeenCalledWith(MEMBER);
+    custody.mockResolvedValue(false);
+    expect((await proxy(request('/api/beta/consent', 'POST'))).status).toBe(403);
+  });
+
   it('allows historical-consent custody but not reopening the writing room', async () => {
     for (const [path, method] of [
       ['/beta/custody', 'GET'],

@@ -65,13 +65,13 @@ function InvitationForm() {
         )}
         {state === 'complete' && (
           <div className="mt-5">
-            <p className="text-[#dae4d9]">Your password is set. Your writing room is ready.</p>
+            <p className="text-[#dae4d9]">Your password is set. Sign in to review the beta participation terms before entering your writing room.</p>
             <Link className="mt-6 inline-block rounded-xl bg-[#b4cfb8] px-5 py-3 font-medium text-[#143128] hover:bg-[#d1e3d2]" href="/signin">Go to sign in</Link>
           </div>
         )}
         {(state === 'ready' || state === 'submitting') && (
           <>
-            <p className="mt-4 text-[#dae4d9]">Choose a password to enter your private writing room. You only need to do this once.</p>
+            <p className="mt-4 text-[#dae4d9]">Create a password for your private beta account. After signing in, you can review the participation terms and decide whether to enter Writer’s Studio.</p>
             <form onSubmit={submit} className="mt-6 space-y-4">
               <div>
                 <label htmlFor="beta-pass" className="mb-2 block text-sm">Create password</label>
@@ -89,7 +89,7 @@ function InvitationForm() {
               {error && <p role="alert" className="text-sm text-[#ffe2c2]">{error}</p>}
               <button type="submit" disabled={state === 'submitting'}
                 className="w-full rounded-xl bg-[#b4cfb8] px-5 py-3 font-medium text-[#143128] hover:bg-[#d1e3d2] disabled:opacity-50">
-                {state === 'submitting' ? 'Setting up…' : 'Enter Writer’s Studio'}
+                {state === 'submitting' ? 'Setting up…' : 'Set password and continue'}
               </button>
             </form>
           </>

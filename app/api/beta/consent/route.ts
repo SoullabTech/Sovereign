@@ -25,7 +25,7 @@ function respond(body: Record<string, unknown>, status: number) {
   return NextResponse.json(body, { status, headers: NO_STORE });
 }
 
-async function verifiedCandidate(request: NextRequest) {
+async function verifiedCandidate(request: NextRequest, permitHistoricalWithdrawal = false) {
   if (!restrictedBetaEnabled(process.env.WRITERS_STUDIO_RESTRICTED_BETA)) {
     return { error: 404 };
   }
@@ -34,8 +34,18 @@ async function verifiedCandidate(request: NextRequest) {
   }
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return { error: 401 };
-  if (!await writerStudioBetaPreConsentCandidate(memberId)) return { error: 403 };
-  return { memberId };
+  if (await writerStudioBetaPreConsentCandidate(memberId)) return { memberId };
+  if (permitHistoricalWithdrawal) {
+    const past = await query<{ prior_accept: boolean }>(
+      `SELECT EXISTS(
+          SELECT 1 FROM writers_studio_beta_consent_events
+           WHERE member_id=$1 AND actor_member_id=$1 AND decision='accept'
+        ) AS prior_accept`,
+      [memberId],
+    );
+    if (past.rows[0]?.prior_accept === true) return { memberId };
+  }
+  return { error: 403 };
 }
 
 export async function GET(request: NextRequest) {
@@ -69,9 +79,6 @@ export async function POST(request: NextRequest) {
     return respond({ error: 'origin_refused' }, 403);
   }
   try {
-    const candidate = await verifiedCandidate(request);
-    if ('error' in candidate) return respond({ error: 'consent_unavailable' }, candidate.error!);
-
     let body: unknown;
     try { body = await request.json(); }
     catch { return respond({ error: 'invalid_json' }, 400); }
@@ -84,6 +91,8 @@ export async function POST(request: NextRequest) {
       return respond({ error: 'invalid_decision' }, 400);
     }
     const actualKeys = Object.keys(fields).sort();
+    const candidate = await verifiedCandidate(request, decision === 'revoke');
+    if ('error' in candidate) return respond({ error: 'consent_unavailable' }, candidate.error!);
     if (decision === 'accept') {
       if (actualKeys.join(',') !== 'decision,policySHA256,policyVersion') {
         return respond({ error: 'exact_notice_confirmation_required' }, 400);

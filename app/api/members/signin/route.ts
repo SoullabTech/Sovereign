@@ -17,6 +17,7 @@ import { logAuthEvent } from '@/lib/security/authAudit';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import { writerStudioBetaPreConsentCandidate, writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
 import { restrictedBetaEnabled } from '@/lib/writersStudio/restrictedBetaAdmission';
+import { memberHasHistoricalBetaConsent } from '@/lib/writersStudio/betaPostWithdrawalCustody';
 import {
   checkRateLimit,
   resetRateLimit,
@@ -100,25 +101,29 @@ export async function POST(request: NextRequest) {
     // subsequently navigates. An authenticated but uninvited member must
     // never receive a beta session through this public sign-in endpoint.
     let betaConsentRequired = false;
+    let betaCustodyOnly = false;
     if (restrictedBetaEnabled(process.env.WRITERS_STUDIO_RESTRICTED_BETA)) {
       let admitted = false;
       let invitationCandidate = false;
+      let priorParticipant = false;
       try {
         admitted = (await writersStudioBetaAccess(member.id)).eligible;
         if (!admitted) invitationCandidate = await writerStudioBetaPreConsentCandidate(member.id);
+        if (!admitted && !invitationCandidate) priorParticipant = await memberHasHistoricalBetaConsent(member.id);
       } catch {
         return NextResponse.json(
           { error: 'Beta admission is temporarily unavailable' },
           { status: 503, headers: { 'Cache-Control': 'no-store' } },
         );
       }
-      if (!admitted && !invitationCandidate) {
+      if (!admitted && !invitationCandidate && !priorParticipant) {
         return NextResponse.json(
           { error: 'This account is not admitted to the private beta' },
           { status: 403, headers: { 'Cache-Control': 'no-store' } },
         );
       }
-      betaConsentRequired = !admitted;
+      betaConsentRequired = !admitted && invitationCandidate;
+      betaCustodyOnly = !admitted && !invitationCandidate && priorParticipant;
     }
 
     // Transparent SHA256 → bcrypt upgrade on successful login
@@ -184,6 +189,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       betaConsentRequired,
+      betaCustodyOnly,
       memberId: member.id,
       member: {
         id: member.id,
