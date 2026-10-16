@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.r30-convergence.json",
+  "files": [
+    "lib/writersStudio/recovery/heldEncryptedSourceR32.ts",
+    "scripts/ops/wsBetaR32PG16EncryptedSource.ts",
+    "lib/writersStudio/recovery/__tests__/heldEncryptedSourceR32.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
