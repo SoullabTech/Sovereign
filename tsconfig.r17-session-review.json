@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.r16-held-store.json",
+  "files": [
+    "lib/writersStudio/recovery/heldWriterSessionReviewR17.ts",
+    "lib/writersStudio/recovery/__tests__/heldWriterSessionReviewR17.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
