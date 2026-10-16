@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.r23-converged.json",
+  "files": [
+    "lib/writersStudio/recovery/heldVaultHistoryR23.ts",
+    "lib/writersStudio/recovery/reviewVaultHistoryServiceR23.ts",
+    "lib/auth/getMemberFromRequest.ts",
+    "lib/writersStudio/betaAccessServer.ts",
+    "lib/writersStudio/recovery/heldWriterSessionReviewR17.ts",
+    "scripts/ops/__tests__/r24ActualSessionVaultPG16.test.ts",
+    "scripts/ops/__tests__/r24ColdRestoreAfterRestart.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
