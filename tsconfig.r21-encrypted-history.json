@@ -1,0 +1,8 @@
+{
+  "extends":"./tsconfig.r20-role-fence.json",
+  "files":[
+    "lib/writersStudio/recovery/heldEncryptedHistoryR21.ts",
+    "scripts/ops/wsBetaR21PG16EncryptedHistory.ts"
+  ],
+  "include":[],"exclude":["node_modules"]
+}
