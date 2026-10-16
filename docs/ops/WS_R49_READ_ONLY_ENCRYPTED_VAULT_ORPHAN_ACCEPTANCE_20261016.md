@@ -40,3 +40,12 @@ R47 separately develops **durable Undo** and R48 independently reserves **spent 
 5. **Founder-approved real beta gate unwaived.** Real Mac and physical iPhone Safari, exact chosen-word review and genuine MAIA/Develop/Write/Review/Undo, approved member participation notice, Proton-only invitation, production image build with no new failures, rollback and offsite recovery, independent custody operator and explicit Class A launch approval remain required.
 
 **Disposition: R49 read-only orphan evidence and reference integrity detection PASS in isolated fictional PG16. Real writing, automated erasure/repair and production deployment remain HOLD.**
+
+
+## Exact committed source acceptance and handoff
+
+- Actual implementation source commit `bf6f28955745a63a8f28bd10cc3524c946f11726` (precommit sovereignty, provider, PHI-pattern and design-contract checks PASS).
+- Full isolated PostgreSQL 16 and encrypted vault test **rerun against this exact commit**, exit 0: **43/43 physical checks PASS, 15 negative-control categories exercised**. Temporary PG16 container, encrypted vault, marker, suspicious fixture symlink and disposable metadata all removed; 0 real member/model/mail/production touches.
+- Final exact-source private receipt `/Volumes/T7 Shield/ws-beta-release-r11-build-20261016/R49_READ_ONLY_ORPHAN_INVENTORY_PG16_20261016.json`, mode 0600, SHA256 `71328b64284f4378e8401120a282dc5f181897596e2de762c74dd6d1efd37f9b`. The original precommit receipt was preserved as `R49_READ_ONLY_ORPHAN_INVENTORY_PRECOMMIT_20261016.json`.
+- Portable one-commit review patch `/Volumes/T7 Shield/ws-beta-release-r11-build-20261016/R49_READ_ONLY_VAULT_INVENTORY_REVIEW_20261016.patch`: **47,380 bytes**, SHA256 `41fa32efdcc2851e55f0ddacbc9bb042456ae54e6734e5b00a040dde5d720768`. `git apply --cached --check` against the pristine pinned R45/R46 `5d0bafd5...` parent: **PASS**. No merge, push or deployment.
+- The source remains **read-only and fixture-only**. Do not interpret a consistent bounded ciphertext/digest observation as globally completed deletion, complete source migration, owner-identity proof, or a go-live authorization.
