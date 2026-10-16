@@ -12,7 +12,14 @@ import { load, dump } from 'js-yaml';
 
 const engines = {
   yaml: {
-    parse: (text: string) => load(text),
+    parse: (text: string): object => {
+      const parsed = load(text);
+      if (parsed == null) return {};
+      if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new TypeError('YAML front matter must be a mapping');
+      }
+      return parsed;
+    },
     stringify: (value: unknown) => dump(value),
   },
 };

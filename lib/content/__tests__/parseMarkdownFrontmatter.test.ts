@@ -36,6 +36,16 @@ describe('patched YAML 4 front matter behavior', () => {
     expect(parsed.content).toContain('Body');
   });
 
+  it('refuses scalar YAML front matter instead of returning unstructured data', () => {
+    expect(() => parseMarkdownFrontmatter('---\nplain scalar\n---\nBody\n')).toThrow('must be a mapping');
+  });
+
+  it('supports empty YAML metadata as an empty mapping', () => {
+    const parsed = parseMarkdownFrontmatter('---\n\n---\nBody\n');
+    expect(parsed.data).toEqual({});
+    expect(parsed.content).toContain('Body');
+  });
+
   it('refuses invalid YAML instead of silently dropping metadata', () => {
     expect(() => parseMarkdownFrontmatter('---\na: [unclosed\n---\nBody\n')).toThrow();
   });

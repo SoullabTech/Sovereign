@@ -25,8 +25,9 @@ The final lockfile preserves pre-existing package versions except the source-map
 - Exact deployment-rule audit `npm audit --omit=dev --audit-level=moderate`: **PASS; 0 advisories** after correction.
 - Clean `npm ci --dry-run --ignore-scripts --legacy-peer-deps` on a separate copied manifest/lock/workspace structure: PASS, without changing other worktrees' dependency installations.
 - A real standalone, minimal installation using the new YAML and argparse override versions: gray-matter YAML parsing PASS; Mammoth DOCX library API PASS; Mammoth CLI `--help` PASS.
-- New YAML 4 front-matter tests on a real AIN framing, BOM/CRLF, ordinary Markdown, anchors and invalid YAML: **5/5 PASS**.
-- Integrated email, Soul Portrait and content-focused tests: **17/17 suites, 147/147 PASS** in the isolated source tree. Jest still uses `--forceExit` due a pre-existing test-harness open-handle warning.
+- New YAML 4 front-matter tests on a real AIN framing, BOM/CRLF, ordinary Markdown, anchors, empty mappings, scalar refusal and invalid YAML: **7/7 PASS**.
+- After a GitHub TypeScript refusal (parse engine returned an untyped YAML value), the compatibility layer was strengthened to return an object mapping or reject non-object YAML. A dedicated TypeScript semantic check of the helper passed with exit code 0; the full canonical gate must rerun on the revised exact SHA.
+- Integrated email, Soul Portrait and content-focused tests on the corrected YAML mapping implementation: **17/17 suites, 149/149 PASS**. Jest uses `--forceExit` due a pre-existing test-harness open-handle warning.
 
 ## Residual development-tool risk, honestly separated
 
