@@ -46,7 +46,7 @@ const enabled=[
 const run=enabled?describe:describe.skip;
 const A='5b40ec03-3e87-4f9d-8aa1-aa18ee5bd204';
 const B='5b40ec03-3e87-4f9d-8aa1-aa18ee5bd205';
-const W=Array.from({length:8},(_,i)=>
+const W=Array.from({length:9},(_,i)=>
  '4c0782ca-9074-43ee-9f3c-5f85000267'+(90+i));
 const pendingKey={keyId:randomUUID(),keyBytes:randomBytes(32)};
 const sourceKey={keyId:randomUUID(),keyBytes:randomBytes(32)};
@@ -332,7 +332,9 @@ run('R42 actual PostgreSQL16 Source→encrypted section draft integration',()=>{
   })).rejects.toHaveProperty('code','r42_distinct_original_and_draft_keys_required');
  });
  it('R44 refuses PENDING import key material in a Draft even under a fresh key UUID',async()=>{
-  const c=await makeClaim(7);
+  // R45 merged two independently accepted negative cases. Keep their Work
+  // identities distinct so the physical database observes BOTH attempts.
+  const c=await makeClaim(8);
   for(const unsafe of [
     pendingKey,
     {keyId:randomUUID(),keyBytes:Buffer.from(pendingKey.keyBytes)},
