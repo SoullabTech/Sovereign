@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.r21-encrypted-history.json",
+  "files": [
+    "lib/writersStudio/recovery/reviewHeldHistoryServiceR22.ts",
+    "lib/writersStudio/recovery/__tests__/reviewHeldHistoryServiceR22.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
