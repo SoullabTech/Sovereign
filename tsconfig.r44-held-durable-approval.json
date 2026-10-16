@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.r42-held-source-draft.json",
+  "compilerOptions": {"strict": true, "noEmit": true, "incremental": false, "plugins": []},
+  "files": [
+    "lib/writersStudio/recovery/heldDurableAuthorApprovalR44.ts",
+    "lib/writersStudio/recovery/__tests__/heldDurableAuthorApprovalR44.test.ts",
+    "scripts/ops/fixtures/wsR44ChoiceFixture.ts",
+    "scripts/ops/__tests__/r44PhysicalAuthorApproval.test.ts",
+    "scripts/ops/__tests__/r44ColdApprovalRecovery.test.ts",
+    "scripts/ops/wsBetaR44ProcessClaim.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
