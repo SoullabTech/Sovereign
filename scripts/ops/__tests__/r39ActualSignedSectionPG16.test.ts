@@ -7,6 +7,8 @@ import {NextRequest} from 'next/server';
 import {handleSignedSectionRequestR39,R39_REAL_SIGNED_SECTION_REQUEST_ENABLED} from '../../../lib/writersStudio/recovery/heldSignedSectionRequestR39';
 import {HeldAuthorChoiceWitnessR43,R43_REAL_AUTHOR_CHOICE_ENABLED} from '../../../lib/writersStudio/recovery/heldAuthorChoiceR43';
 import {prepareHeldSignedApplyR46,submitHeldSignedApplyR46,R46_REAL_DURABLE_SIGNED_APPLY_ENABLED} from '../../../lib/writersStudio/recovery/heldDurableSignedApplyR46';
+import {prepareHeldUndoR47,submitHeldUndoR47,
+ R47_REAL_DURABLE_UNDO_ENABLED} from '../../../lib/writersStudio/recovery/heldDurableUndoR47';
 import type {R37SectionSelection,R37FixtureGesture,R37UndoGesture} from '../../../lib/writersStudio/recovery/heldSectionApplyR37';
 import {Pool} from 'pg';
 import {createHash,createHmac,generateKeyPairSync,randomBytes,randomUUID,sign} from 'node:crypto';
@@ -45,6 +47,8 @@ const group=active?describe:describe.skip;
 const r43Only=active&&process.env.R43_AUTHOR_CHOICE_FIXTURE==='fictional-only';
 const r46Only=active&&process.env.R46_DURABLE_SIGNED_APPLY_FIXTURE==='fictional-only';
 const durableTest=r46Only?it:it.skip;
+const r47Only=r46Only&&process.env.R47_DURABLE_UNDO_FIXTURE==='fictional-only';
+const undoTest=r47Only?it:it.skip;
 const choiceTest=r43Only?it:it.skip;
 const A='11111111-1111-4111-8111-111111111111';
 const B='22222222-2222-4222-8222-222222222222';
@@ -62,6 +66,8 @@ const W10='33333333-3333-4333-8333-333333333330';
 const W11='33333333-3333-4333-8333-33333333333a';
 const W12='33333333-3333-4333-8333-33333333333b';
 const W13='33333333-3333-4333-8333-33333333333c';
+const W14='33333333-3333-4333-8333-33333333333d';
+const W15='33333333-3333-4333-8333-33333333333e';
 const BWORK='44444444-4444-4444-8444-444444444444';
 const S1='66666666-6666-4666-8666-666666666661';
 const S2='66666666-6666-4666-8666-666666666662';
@@ -356,11 +362,12 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
   // R38-named ephemeral PG16 driver. Never alter shared production tables.
   expect(R38_REAL_ENCRYPTED_DRAFT_ROUTE_ENABLED).toBe(false);
   expect(R35_REAL_MEMBER_PROTECTED_DRAFT_ENABLED).toBe(false);
-  const works=r46Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13]:
+  const works=r47Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13,W14,W15]:
+   r46Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13]:
     r43Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11]:
     [W1,W2,W3,W4,W5,W6,W7,W8,W9];
   for(const work of works)
-    await seed(work,[W4,W7,W8,W9,W10,W11,W12,W13].includes(work));
+    await seed(work,[W4,W7,W8,W9,W10,W11,W12,W13,W14,W15].includes(work));
  });
  afterAll(async()=>{
   await closePool();
@@ -712,6 +719,134 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
    context:heldChoiceContext(W13,authorChoiceRequest(valid))})).kind)
    .toBe('refused');
   expect(await generations(W13)).toBe(1);
+ });
+
+ undoTest('R47 separately approved durable Undo restores EXACT prior ciphertext partition',async()=>{
+  expect(R47_REAL_DURABLE_UNDO_ENABLED).toBe(false);
+  // R46 above already saved W12 as encrypted version 2 from R37 Apply.
+  const original=await reopenHeldDraftR35({
+   subject:subject(),workId:W12,custody:custody(W12),generation:1,
+  });
+  expect(await generations(W12)).toBe(2);
+  const issuer=Buffer.alloc(32,0x47);
+  const initial=()=>({
+   context:heldChoiceContext(W12,authorChoiceRequest()),
+   custody:custody(W12),approvalIssuerSecret:issuer,
+  });
+  const prepared=await prepareHeldUndoR47(initial());
+  expect(prepared).toMatchObject({
+   kind:'fictional_durable_undo_prepared',
+   appliedGeneration:2,restoresGeneration:1,sectionId:S1,
+   releaseApproved:false,
+  });
+  if(prepared.kind!=='fictional_durable_undo_prepared')
+   throw Error('r47_undo_initial_preview_refused');
+  const token={kind:'undo_reviewed_change',opaqueToken:prepared.approvalToken};
+  // Closed browser intent cannot smuggle any Work/section/prose override.
+  expect(await submitHeldUndoR47({
+   ...initial(),context:heldChoiceContext(
+    W12,authorChoiceRequest({...token,sectionId:S1})),
+  })).toMatchObject({kind:'refused',status:400});
+  expect((await query<{state:string}>(
+   'SELECT state FROM writers_studio_r47_held_undo WHERE work_id=$1',
+   [W12])).rows[0].state).toBe('prepared');
+  const [a,b]=await Promise.all([
+   submitHeldUndoR47({...initial(),context:heldChoiceContext(W12,authorChoiceRequest(token))}),
+   submitHeldUndoR47({...initial(),context:heldChoiceContext(W12,authorChoiceRequest(token))}),
+  ]);
+  expect([a,b].filter(x=>x.kind==='fictional_durable_undo_confirmed'))
+   .toHaveLength(1);
+  expect([a,b].filter(x=>x.kind==='refused')).toHaveLength(1);
+  expect(await generations(W12)).toBe(3);
+  const verified=await reopenHeldDraftR35({
+   subject:subject(),workId:W12,custody:custody(W12),generation:3,
+  });
+  expect(verified.action).toBe('restore');
+  expect(verified.restoredFrom).toBe(1);
+  expect(verified.sections).toEqual(original.sections);
+  expect(verified.content).toBe(original.content);
+  expect(verified.checkpointCount).toBe(1);
+  expect(await submitHeldUndoR47({
+   ...initial(),context:heldChoiceContext(W12,authorChoiceRequest(token)),
+  })).toMatchObject({kind:'refused',status:409});
+  expect(await generations(W12)).toBe(3);
+  const rows=await query('SELECT * FROM writers_studio_r47_held_undo WHERE work_id=$1',
+   [W12]);
+  expect(rows.rows).toHaveLength(1);
+  expect(rows.rows[0].state).toBe('spent');
+  const metadata=JSON.stringify(rows.rows);
+  for(const forbidden of [
+   prepared.approvalToken,'first fictional','first enchanted',
+  ])expect(metadata).not.toContain(forbidden);
+ });
+ undoTest('R47 refuses Undo before an applied encrypted section exists',async()=>{
+  expect(await prepareHeldUndoR47({
+   context:heldChoiceContext(W13,authorChoiceRequest()),
+   custody:custody(W13),approvalIssuerSecret:Buffer.alloc(32,0x47),
+  })).toMatchObject({kind:'refused',status:409});
+  expect(await generations(W13)).toBe(1);
+ });
+ undoTest('R47 revoked consent during signer latency leaves Undo spent but no restore',async()=>{
+  const apply=await signedSection(W14,{
+   operation:'apply-section',...(await anchored(W14)),
+  });
+  expect(apply).toMatchObject({
+   kind:'fictional_section_receipt_only',generation:2,
+  });
+  const issuer=Buffer.alloc(32,0x47);
+  const input=()=>({
+   context:heldChoiceContext(W14,authorChoiceRequest()),
+   custody:custody(W14),approvalIssuerSecret:issuer,
+  });
+  const ready=await prepareHeldUndoR47(input());
+  if(ready.kind!=='fictional_durable_undo_prepared')
+   throw Error('r47_revocation_undo_not_prepared');
+  const payload={kind:'undo_reviewed_change',opaqueToken:ready.approvalToken};
+  const held=await submitHeldUndoR47({
+   ...input(),context:heldChoiceContext(
+    W14,authorChoiceRequest(payload),()=>consent('revoke')),
+  });
+  expect(held).toMatchObject({kind:'refused',status:503});
+  expect(await generations(W14)).toBe(2);
+  const state=await query<{state:string}>(
+   'SELECT state FROM writers_studio_r47_held_undo WHERE work_id=$1',[W14]);
+  expect(state.rows).toEqual([{state:'spent'}]);
+  await consent('accept');
+  expect(await submitHeldUndoR47({
+   ...input(),context:heldChoiceContext(W14,authorChoiceRequest(payload)),
+  })).toMatchObject({kind:'refused',status:409});
+  expect(await generations(W14)).toBe(2);
+ });
+ undoTest('R47 interrupted after durable claim never restores or replays Undo',async()=>{
+  const apply=await signedSection(W15,{
+   operation:'apply-section',...(await anchored(W15)),
+  });
+  expect(apply).toMatchObject({
+   kind:'fictional_section_receipt_only',generation:2,
+  });
+  const issuer=Buffer.alloc(32,0x47);
+  const input=()=>({
+   context:heldChoiceContext(W15,authorChoiceRequest()),
+   custody:custody(W15),approvalIssuerSecret:issuer,
+  });
+  const ready=await prepareHeldUndoR47(input());
+  if(ready.kind!=='fictional_durable_undo_prepared')
+   throw Error('r47_interrupted_undo_not_prepared');
+  const payload={kind:'undo_reviewed_change',opaqueToken:ready.approvalToken};
+  const lost=await submitHeldUndoR47({
+   ...input(),context:heldChoiceContext(W15,authorChoiceRequest(payload)),
+   afterDurableClaim:()=>{throw Error('r47_fictional_lost_connection');},
+  });
+  expect(lost).toMatchObject({kind:'refused',status:503,
+   reason:'spent_undo_commit_unknown_hold'});
+  expect(await generations(W15)).toBe(2);
+  expect((await query<{state:string}>(
+   'SELECT state FROM writers_studio_r47_held_undo WHERE work_id=$1',
+   [W15])).rows[0].state).toBe('spent');
+  expect(await submitHeldUndoR47({
+   ...input(),context:heldChoiceContext(W15,authorChoiceRequest(payload)),
+  })).toMatchObject({kind:'refused',status:409});
+  expect(await generations(W15)).toBe(2);
  });
 
 });
