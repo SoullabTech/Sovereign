@@ -16,6 +16,27 @@ import { restrictedBetaEnabled } from '@/lib/writersStudio/restrictedBetaAdmissi
 export const VALID_WORK_ID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+/**
+ * Middleware must use the member ID it ALREADY derived from a validated
+ * auth_sessions credential. Resolving identity again with next/headers cookies
+ * inside the proxy can disagree with the verified session carrier (notably
+ * Safari's x-session-token) and incorrectly deny a withdrawn member.
+ *
+ * This is an authorization FACT for a previously verified ID, not a callable
+ * HTTP identity check. The route still authenticates the request independently.
+ */
+export async function memberHasHistoricalBetaConsent(memberId: string): Promise<boolean> {
+  if (!VALID_WORK_ID.test(memberId)) return false;
+  const witnessed = await query<{ witnessed: boolean }>(
+    `SELECT EXISTS(
+       SELECT 1 FROM writers_studio_beta_consent_events
+        WHERE member_id=$1 AND actor_member_id=$1 AND decision='accept'
+     ) AS witnessed`,
+    [memberId],
+  );
+  return witnessed.rows[0]?.witnessed === true;
+}
+
 export async function authenticatedPostWithdrawalMember(request: NextRequest): Promise<
   { kind: 'allowed'; memberId: string } |
   { kind: 'refused'; status: number }

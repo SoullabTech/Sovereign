@@ -18,7 +18,7 @@ import { stripClientIdentityAssertions } from './lib/auth/identityAssertions';
 import { deriveVerifiedAccess, type VerifiedAccess } from './lib/auth/verifiedAccess';
 import { canonicalStudioRoute } from './lib/writersStudio/canonicalStudioRoute';
 import { writersStudioBetaAccess, writerStudioBetaPreConsentCandidate } from './lib/writersStudio/betaAccessServer';
-import { authenticatedPostWithdrawalMember } from './lib/writersStudio/betaPostWithdrawalCustody';
+import { memberHasHistoricalBetaConsent } from './lib/writersStudio/betaPostWithdrawalCustody';
 import { restrictedBetaEnabled, isRestrictedWriterStudioPath, mayEnterRestrictedWriterStudioPath, isClosedBetaEnrollmentPath } from './lib/writersStudio/restrictedBetaAdmission';
 import { isSingleDoorBetaEnabled, isSingleDoorPublicAsset, isSingleDoorBootstrap, isSingleDoorInvitationBootstrap, isSingleDoorConsentCorridor, isSingleDoorCustodyCorridor } from './lib/writersStudio/singleDoorBetaGate';
 // NOTE: entitlements are still checked in route handlers, not here — they are a
@@ -205,8 +205,15 @@ export async function proxy(req: NextRequest) {
       if (isSingleDoorConsentCorridor(pathname)) {
         eligible = await writerStudioBetaPreConsentCandidate(singleDoorVerified.memberId);
       } else if (isSingleDoorCustodyCorridor(pathname, req.method)) {
-        const custody = await authenticatedPostWithdrawalMember(req);
-        eligible = custody.kind === 'allowed';
+        /*
+         * The canonical session was VERIFIED above. Check the member's
+         * historical self-consent directly against that identity; do not
+         * rerun a cookie/context-dependent identity resolver in middleware.
+         * The downstream custody route repeats auth and Work ownership.
+         */
+        eligible = req.headers.get('host')?.split(':', 1)[0]?.toLowerCase() === 'beta.soullab.life'
+          && process.env.WRITERS_STUDIO_BETA_CUSTODY_SELF_SERVICE_ENABLED === 'true'
+          && await memberHasHistoricalBetaConsent(singleDoorVerified.memberId);
       } else {
         eligible = (await writersStudioBetaAccess(singleDoorVerified.memberId)).eligible;
       }

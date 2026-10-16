@@ -3,7 +3,7 @@ jest.mock('@/lib/auth/getMemberFromRequest',()=>({getMemberIdFromRequest:jest.fn
 jest.mock('@/lib/db/postgres',()=>({query:jest.fn()}));
 import {getMemberIdFromRequest} from '@/lib/auth/getMemberFromRequest';
 import {query} from '@/lib/db/postgres';
-import {authenticatedPostWithdrawalMember} from '../betaPostWithdrawalCustody';
+import {authenticatedPostWithdrawalMember,memberHasHistoricalBetaConsent} from '../betaPostWithdrawalCustody';
 const verified = getMemberIdFromRequest as jest.Mock;
 const q=query as jest.Mock;
 const m='11111111-1111-4111-8111-111111111111';
@@ -49,4 +49,24 @@ it('refuses someone never consented, without exposing manuscript content',async(
 it('never treats database failure as permission to read data',async()=>{
  q.mockRejectedValue(new Error('fictional disconnected database'));
  await expect(authenticatedPostWithdrawalMember(request())).rejects.toThrow('fictional disconnected database');
+});
+
+it('resolves historical consent using only a previously verified server-side member ID',async()=>{
+ expect(await memberHasHistoricalBetaConsent(m)).toBe(true);
+ expect(q).toHaveBeenCalledTimes(1);
+ expect(q.mock.calls[0][0]).toContain('actor_member_id=$1');
+ expect(q.mock.calls[0][0]).toContain("decision='accept'");
+ expect(q.mock.calls[0][1]).toEqual([m]);
+ expect(verified).not.toHaveBeenCalled();
+});
+it('rejects non-UUID caller identities without querying any member table',async()=>{
+ expect(await memberHasHistoricalBetaConsent('not-a-member')).toBe(false);
+ expect(q).not.toHaveBeenCalled();
+ expect(verified).not.toHaveBeenCalled();
+});
+it('never promotes absent historical consent or unavailable database authority',async()=>{
+ q.mockResolvedValueOnce({rows:[{witnessed:false}]});
+ expect(await memberHasHistoricalBetaConsent(m)).toBe(false);
+ q.mockRejectedValueOnce(new Error('fixture DB unavailable'));
+ await expect(memberHasHistoricalBetaConsent(m)).rejects.toThrow('fixture DB unavailable');
 });

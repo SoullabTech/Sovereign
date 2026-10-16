@@ -4,7 +4,7 @@ import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
 import {
   writersStudioBetaAccess, writerStudioBetaPreConsentCandidate,
 } from '@/lib/writersStudio/betaAccessServer';
-import { authenticatedPostWithdrawalMember } from '@/lib/writersStudio/betaPostWithdrawalCustody';
+import { memberHasHistoricalBetaConsent } from '@/lib/writersStudio/betaPostWithdrawalCustody';
 
 jest.mock('@/lib/auth/verifiedAccess', () => ({ deriveVerifiedAccess: jest.fn() }));
 jest.mock('@/lib/writersStudio/betaAccessServer', () => ({
@@ -12,18 +12,20 @@ jest.mock('@/lib/writersStudio/betaAccessServer', () => ({
   writerStudioBetaPreConsentCandidate: jest.fn(),
 }));
 jest.mock('@/lib/writersStudio/betaPostWithdrawalCustody', () => ({
-  authenticatedPostWithdrawalMember: jest.fn(),
+  memberHasHistoricalBetaConsent: jest.fn(),
 }));
 
 const verify = deriveVerifiedAccess as jest.Mock;
 const studio = writersStudioBetaAccess as jest.Mock;
 const preConsent = writerStudioBetaPreConsentCandidate as jest.Mock;
-const custody = authenticatedPostWithdrawalMember as jest.Mock;
+const custody = memberHasHistoricalBetaConsent as jest.Mock;
 
 const MEMBER = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa';
 const WORK = 'bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb';
 const request = (path: string, method = 'GET') =>
-  new NextRequest('https://beta.soullab.life' + path, { method });
+  new NextRequest('https://beta.soullab.life' + path, {
+    method, headers: { host: 'beta.soullab.life' },
+  });
 const signed = (memberId: string | null = MEMBER) => ({
   authenticated: memberId !== null, memberId,
   roles: ['member'], tier: 'free',
@@ -44,7 +46,7 @@ beforeEach(() => {
   verify.mockResolvedValue(signed());
   studio.mockResolvedValue({ eligible: false, basis: 'not_in_pilot' });
   preConsent.mockResolvedValue(true);
-  custody.mockResolvedValue({ kind: 'allowed', memberId: MEMBER });
+  custody.mockResolvedValue(true);
 });
 
 afterAll(() => {
@@ -104,7 +106,7 @@ describe('R8: a former writer retains only authenticated consent and custody cor
   });
 
   it('rejects custody where historic authenticated ownership/consent is absent', async () => {
-    custody.mockResolvedValue({ kind: 'refused', status: 403 });
+    custody.mockResolvedValue(false);
     expect((await proxy(request('/api/beta/custody'))).status).toBe(403);
     expect((await proxy(request('/api/beta/custody/' + WORK, 'DELETE'))).status).toBe(403);
   });
