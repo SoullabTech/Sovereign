@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "incremental": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node", "jest"],
+    "plugins": []
+  },
+  "files": [
+    "lib/writersStudio/recovery/workEnvelopeV1.ts",
+    "lib/writersStudio/recovery/pendingArrivalEnvelopeV1.ts",
+    "lib/writersStudio/recovery/pendingClaimTransferV1.ts",
+    "lib/writersStudio/recovery/originalProvenanceV2.ts",
+    "lib/writersStudio/recovery/pairedOriginalCustodyV2.ts",
+    "lib/writersStudio/recovery/deletionBarrierV1.ts",
+    "lib/writersStudio/recovery/pairedTransferJournalV2.ts",
+    "lib/writersStudio/recovery/__tests__/pairedTransferJournalV2.test.ts",
+    "scripts/ops/wsBetaR15NativePostgres.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
