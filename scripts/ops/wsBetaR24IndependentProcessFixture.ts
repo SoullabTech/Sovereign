@@ -2,7 +2,7 @@
  * Test keys and epoch live only inside synthetic child-process state outside
  * the Writer DB/vault. NO production KMS, external network or real data.
  */
-import {fork,type ChildProcess} from 'node:child_process';
+import {fork,spawnSync,type ChildProcess} from 'node:child_process';
 import {createPublicKey,randomUUID} from 'node:crypto';
 import {mkdtempSync,rmSync,writeFileSync} from 'node:fs';
 import {join} from 'node:path';
@@ -147,6 +147,8 @@ async function refused(run:()=>Promise<unknown>,code:string,tag:string){
   receipt.sidecarStopped=true;
   rmSync(root,{recursive:true,force:true});
   receipt.privateFixtureRemoved=true;
+  const revision=spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'});
+  (receipt as typeof receipt & {testedGitHead?:string}).testedGitHead=revision.status===0?revision.stdout.trim():undefined;
   writeFileSync(EVIDENCE,JSON.stringify(receipt,null,2)+'\n',{mode:0o600});
   console.log(JSON.stringify({
    status:receipt.status,checks:receipt.checks.length,negative:receipt.negatives,

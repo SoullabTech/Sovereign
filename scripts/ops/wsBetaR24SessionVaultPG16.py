@@ -185,6 +185,7 @@ def execute():
         receipt={
            'status':status,'scope':'FICTIONAL_MAC_ONLY_ACTUAL_AUTH_AND_PG16',
            'sourceRevisionParent':'a32bb68da353533a5b30e120992cc93e85c0acb5',
+           'testedGitHead':run('git','rev-parse','HEAD',timeout=10).stdout.strip(),
            'postgresVersion':16,'checks':checks,'modelCalls':0,
            'mailCalls':0,'realMemberTouches':0,'prodChanged':False,
            'independentKeyCustodianInstalled':False,'liveNextCookieTransportTested':False,
