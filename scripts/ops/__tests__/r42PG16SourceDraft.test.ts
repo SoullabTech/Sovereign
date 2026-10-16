@@ -308,6 +308,17 @@ run('R42 actual PostgreSQL16 Source→encrypted section draft integration',()=>{
    .rejects.toHaveProperty('code','r42_draft_preexisted_source_intent');
   expect(await count('writers_studio_r42_held_start_intents',c.workId)).toBe(0);
  });
+ it('pending-import key cannot become the Draft key, even under a new UUID',async()=>{
+  const c=await makeClaim(7);
+  const same=auth(pendingKey);
+  await expect(beginHeldDraftFromOriginalR42({...c,draftCustody:same}))
+   .rejects.toHaveProperty('code','r42_distinct_original_and_draft_keys_required');
+  const changedId=auth({keyId:randomUUID(),keyBytes:pendingKey.keyBytes});
+  await expect(beginHeldDraftFromOriginalR42({...c,draftCustody:changedId}))
+   .rejects.toHaveProperty('code','r42_distinct_original_and_draft_keys_required');
+  expect(await count('writers_studio_r42_held_start_intents',c.workId)).toBe(0);
+  expect(await count('writers_studio_r35_draft_versions',c.workId)).toBe(0);
+ });
  it('foreign member, revoked Work and reused key domain refuse',async()=>{
   const c=known[0];
   const foreign={...c,sourceClaim:{...c.sourceClaim,
