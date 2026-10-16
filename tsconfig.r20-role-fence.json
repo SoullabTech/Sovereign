@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.r19-schema-gate.json",
+  "files": [
+    "lib/writersStudio/recovery/__tests__/r20RestrictedRoleFence.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
