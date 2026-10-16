@@ -30,6 +30,7 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 
 set -euo pipefail
+umask 077
 
 CONTAINER_NAME="${POSTGRES_CONTAINER:-maia-postgres}"
 DB_NAME="${DB_NAME:-maia_consciousness}"
@@ -52,25 +53,70 @@ else
   PSQL=(docker exec -i "$CONTAINER_NAME" psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DB_NAME")
 fi
 
+# Verify client/server compatibility BEFORE touching a restore target.
+# Older pg_dump versions cannot reliably preserve newer PostgreSQL databases.
+if [ -n "$RESTORE_DB_URL" ]; then
+  PG_DUMP=(pg_dump "$RESTORE_DB_URL")
+  PG_DUMP_VERSION=(pg_dump --version)
+else
+  PG_DUMP=(docker exec "$CONTAINER_NAME" pg_dump -U "$DB_USER" -d "$DB_NAME")
+  PG_DUMP_VERSION=(docker exec "$CONTAINER_NAME" pg_dump --version)
+fi
+db_version_num="$("${PSQL[@]}" -X -A -t -c 'SHOW server_version_num' 2>/dev/null)" ||
+  fail "R20: cannot inspect target PostgreSQL server version"
+[[ "$db_version_num" =~ ^[0-9]{5,6}$ ]] ||
+  fail "R20: invalid target PostgreSQL server version"
+pgdump_version="$("${PG_DUMP_VERSION[@]}" 2>/dev/null)" ||
+  fail "R20: cannot identify governance export client version"
+version_regex='PostgreSQL\) ([0-9]+)'
+if [[ "$pgdump_version" =~ $version_regex ]]; then
+  pgdump_major="${BASH_REMATCH[1]}"
+else
+  fail "R20: unsupported governance export client version"
+fi
+server_major=$(( db_version_num / 10000 ))
+[ "$pgdump_major" -ge "$server_major" ] ||
+  fail "R20: governance export client is older than target database; refusing restore"
+
 echo "🔐 Governed restore starting (R20)"
 echo "   dump: $DUMP_FILE"
 echo "   authorized by: $RESTORE_AUTHORIZED_BY"
 
 # ── 1. Preserve the deletion-governance tables ────────────────────────────────
+# R20 fail-closed preflight. An incompatible pg_dump or database connection
+# must NOT masquerade as an older database with no deletion-governance tables.
+GOVERNANCE_SQL="SELECT count(*)
+  FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+  WHERE n.nspname='public' AND c.relkind IN ('r','p')
+    AND c.relname IN (
+      'deletion_manifests','deletion_manifest_scopes','provenance_tombstones'
+    );"
+governance_count="$("${PSQL[@]}" -X -A -t -c "$GOVERNANCE_SQL" 2>/dev/null)" ||
+  fail "R20: cannot verify deletion-governance schema; refusing restore"
+case "$governance_count" in
+  0)
+    # Permit a *truly fresh* target, never a partially migrated existing DB.
+    table_count="$("${PSQL[@]}" -X -A -t -c "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p');" 2>/dev/null)" ||
+      fail "R20: cannot verify fresh restore target; refusing restore"
+    [ "$table_count" = 0 ] ||
+      fail "R20: existing public tables without deletion governance; refusing restore"
+    echo "   R20: empty fresh target; governance must be present after restore"
+    ;;
+  3) echo "   R20: three governance tables present; export required" ;;
+  *) fail "R20: incomplete governance schema; refusing restore" ;;
+esac
+
 PRESERVE_FILE="$(mktemp /tmp/s5-governance-preserve.XXXXXX)"
-echo "📥 Preserving deletion manifests/scopes/tombstones → $PRESERVE_FILE"
-if [ -n "$RESTORE_DB_URL" ]; then
-  PG_DUMP=(pg_dump "$RESTORE_DB_URL")
-else
-  PG_DUMP=(docker exec "$CONTAINER_NAME" pg_dump -U "$DB_USER" -d "$DB_NAME")
+cleanup_preserve() { rm -f -- "$PRESERVE_FILE"; }
+trap cleanup_preserve EXIT
+if [ "$governance_count" = 3 ]; then
+  echo "📥 Preserving deletion manifests/scopes/tombstones → $PRESERVE_FILE"
+  if ! "${PG_DUMP[@]}" --data-only --column-inserts --on-conflict-do-nothing -t deletion_manifests -t deletion_manifest_scopes -t provenance_tombstones > "$PRESERVE_FILE" 2>/dev/null; then
+    fail "R20: governance export failed (client/version/permissions); refusing restore"
+  fi
+  [ -s "$PRESERVE_FILE" ] ||
+    fail "R20: governance export was empty; refusing restore"
 fi
-"${PG_DUMP[@]}" \
-  --data-only --column-inserts --on-conflict-do-nothing \
-  -t deletion_manifests -t deletion_manifest_scopes -t provenance_tombstones \
-  > "$PRESERVE_FILE" 2>/dev/null || {
-    echo "⚠️  Governance tables absent in live DB (pre-S5 database) — nothing to preserve"
-    : > "$PRESERVE_FILE"
-  }
 
 # ── 2. Restore the dump ───────────────────────────────────────────────────────
 # The session declares the governed restore lane FIRST: the S5 mint gates admit
@@ -82,6 +128,13 @@ case "$DUMP_FILE" in
   *.gz) { echo "$LANE_SQL"; gunzip -c "$DUMP_FILE"; } | "${PSQL[@]}" >/dev/null ;;
   *)    { echo "$LANE_SQL"; cat "$DUMP_FILE"; } | "${PSQL[@]}" >/dev/null ;;
 esac
+
+# The restored dump must supply the R20 governance schema. Without it,
+# sweeping deletion markers is impossible; never claim a successful restore.
+restored_governance_count="$("${PSQL[@]}" -X -A -t -c "$GOVERNANCE_SQL" 2>/dev/null)" ||
+  fail "R20: cannot verify restored deletion-governance schema"
+[ "$restored_governance_count" = 3 ] ||
+  fail "R20: restored snapshot lacks required deletion-governance tables"
 
 # ── 3. Re-apply preserved governance rows ─────────────────────────────────────
 if [ -s "$PRESERVE_FILE" ]; then
@@ -141,8 +194,6 @@ BEGIN
   RAISE NOTICE '[PROVENANCE] restore sweep complete — % row(s) refused resurrection', total;
 END $$;
 SQL
-
-rm -f "$PRESERVE_FILE"
 
 echo "✅ Governed restore complete. Counts above are metadata-only (ids/rows, never content)."
 echo "   Record this restore (date, dump file, authorizer: $RESTORE_AUTHORIZED_BY) in the ops log."
