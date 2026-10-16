@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.r25-converged.json",
+  "compilerOptions": {
+    "strict": true,
+    "incremental": false,
+    "noEmit": true,
+    "plugins": []
+  },
+  "files": [
+    "lib/writersStudio/recovery/managedKmsTopologyR27.ts",
+    "lib/writersStudio/recovery/__tests__/managedKmsTopologyR27.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}

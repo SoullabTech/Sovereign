@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.r26-external-custody.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "lib/writersStudio/recovery/externalCustodyContractR26.ts",
+    "lib/writersStudio/recovery/heldExternalCustodyAdapterR26.ts",
+    "lib/writersStudio/recovery/__tests__/externalCustodyContractR26.test.ts",
+    "lib/writersStudio/recovery/__tests__/heldExternalCustodyAdapterR26.test.ts",
+    "lib/writersStudio/recovery/__tests__/r26ReleaseIsolation.test.ts",
+    "lib/writersStudio/recovery/__tests__/r26VerifiedWriterToVault.test.ts",
+    "lib/writersStudio/recovery/managedKmsTopologyR27.ts",
+    "lib/writersStudio/recovery/__tests__/managedKmsTopologyR27.test.ts",
+    "lib/writersStudio/recovery/__tests__/r28ProtocolAlignment.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
