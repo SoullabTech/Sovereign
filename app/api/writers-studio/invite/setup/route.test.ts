@@ -1,7 +1,10 @@
 import { NextRequest } from 'next/server';
 jest.mock('@/lib/db/postgres', () => ({ query: jest.fn() }));
 jest.mock('@/lib/auth/passwordUtils', () => ({ hashPassword: jest.fn() }));
-jest.mock('@/lib/writersStudio/betaAccessServer', () => ({ writersStudioBetaAccess: jest.fn() }));
+jest.mock('@/lib/writersStudio/betaAccessServer', () => ({
+  writersStudioBetaAccess: jest.fn(),
+  writerStudioBetaPreConsentCandidate: jest.fn(),
+}));
 jest.mock('@/lib/auth/rateLimiter', () => ({
   getClientIP: jest.fn(() => '127.0.0.1'),
   checkRateLimit: jest.fn(),
@@ -9,13 +12,14 @@ jest.mock('@/lib/auth/rateLimiter', () => ({
 }));
 import { query } from '@/lib/db/postgres';
 import { hashPassword } from '@/lib/auth/passwordUtils';
-import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { writersStudioBetaAccess, writerStudioBetaPreConsentCandidate } from '@/lib/writersStudio/betaAccessServer';
 import { checkRateLimit } from '@/lib/auth/rateLimiter';
 import { GET, PUT } from './route';
 
 const q = query as jest.Mock;
 const hash = hashPassword as jest.Mock;
-const admit = writersStudioBetaAccess as jest.Mock;
+const admit = writerStudioBetaPreConsentCandidate as jest.Mock;
+const fullStudio = writersStudioBetaAccess as jest.Mock;
 const rate = checkRateLimit as jest.Mock;
 const id = '44444444-4444-4444-8444-444444444444';
 const token = 'e'.repeat(64);
@@ -35,7 +39,8 @@ beforeEach(() => {
   process.env.WRITERS_STUDIO_BETA_INVITE_SETUP = 'true';
   rate.mockResolvedValue({ allowed: true });
   q.mockResolvedValueOnce({ rows: [{ member_id: id }] }).mockResolvedValue({ rows: [{ id }] });
-  admit.mockResolvedValue({ eligible: true, basis: 'active_beta_tester' });
+  admit.mockResolvedValue(true);
+  fullStudio.mockResolvedValue({ eligible: false, basis: 'not_in_pilot' });
   hash.mockResolvedValue('fictional-bcrypt-hash');
 });
 afterAll(() => {
@@ -66,11 +71,31 @@ describe('private member invitation setup', () => {
     expect(res.headers.get('cache-control')).toBe('no-store');
     expect(q.mock.calls[0][1][0]).not.toEqual(token);
     expect(admit).toHaveBeenCalledWith(id);
+    expect(fullStudio).not.toHaveBeenCalled();
   });
   it('refuses a revoked or unapproved member', async () => {
-    admit.mockResolvedValue({eligible:false,basis:'not_in_pilot'});
+    admit.mockResolvedValue(false);
     expect((await GET(valid)).status).toBe(404);
   });
+  it('permits an approved pre-consent candidate without an earlier consent event', async () => {
+    // Real first-time invitees MUST be allowed to set their password before
+    // sign-in and personal consent. An active Studio grant is deliberately false.
+    fullStudio.mockResolvedValue({eligible:false,basis:'not_in_pilot'});
+    const read = await GET(valid);
+    expect(read.status).toBe(200);
+    expect(admit).toHaveBeenCalledWith(id);
+    expect(fullStudio).not.toHaveBeenCalled();
+    expect(q).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses an unapproved recipient even if an unrelated full-Studio grant would pass', async () => {
+    admit.mockResolvedValue(false);
+    fullStudio.mockResolvedValue({eligible:true,basis:'founder_witness'});
+    expect((await GET(valid)).status).toBe(404);
+    expect(hash).not.toHaveBeenCalled();
+    expect(fullStudio).not.toHaveBeenCalled();
+  });
+
   it('requires a strong confirmable password, never consuming a token', async () => {
     const res = await PUT(put({token,password:'short'}));
     expect(res.status).toBe(400);
@@ -95,6 +120,9 @@ describe('private member invitation setup', () => {
     expect(sql).toContain('c.deleted_at IS NULL');
     expect(sql).toContain('UPDATE members m SET password_hash');
     expect(q.mock.calls[1][1][0]).not.toBe(token);
+    expect(q.mock.calls[1][1][2]).toBe(id);
+    expect(sql).toContain('t.member_id=$3');
+    expect(fullStudio).not.toHaveBeenCalled();
   });
   it('replay after claim sees no row and is refused', async () => {
     q.mockReset();
