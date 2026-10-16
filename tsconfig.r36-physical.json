@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.r36-passage-bridge.json","files":["lib/writersStudio/recovery/heldPassageApplyR36.ts","scripts/ops/wsBetaR36PG16PassageApply.ts"],"include":[],"exclude":["node_modules"]}

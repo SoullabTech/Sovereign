@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.r34-route-parity.json","files":["lib/writersStudio/recovery/heldPassageApplyR36.ts","lib/writersStudio/recovery/__tests__/heldPassageApplyR36.test.ts"],"include":[],"exclude":["node_modules"]}
