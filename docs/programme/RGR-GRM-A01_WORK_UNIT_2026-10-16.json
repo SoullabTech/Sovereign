@@ -1,0 +1,131 @@
+{
+  "schema": "rgr-grm-a01-candidate/v1",
+  "id": "RGR-GRM-A01",
+  "programme": "RELATIONAL-GEOMETRY-REASONING",
+  "status": "DESIGN_CANDIDATE_RETURN_FOR_SPECIFICATION",
+  "recorded_on": "2026-10-16",
+  "source_parent_commit": "b8e1b34df46784667b54bb68ebda491a66f86ec8",
+  "branch": "feature/rgr-grma01-relational-invariance-design-20261016",
+  "relation_to_parent": "noncanonical exploratory child of RGR-GRM-01 draft PR #1832; does not reopen RGR-06/RGR-07",
+  "source_root_lineage": "2e836abc32853bf01bf8256062b561c2b7406378",
+  "authority": {
+    "document_preparation": true,
+    "pure_hand_authored_mathematical_fixture_tests": true,
+    "research_literature_read": true,
+    "independent_human_review": false,
+    "founder_adjudication": false,
+    "frozen_preregistration": false,
+    "benchmark_generator_implementation": false,
+    "benchmark_dataset_generation": false,
+    "benchmark_materialization": false,
+    "training_or_scoring_models": false,
+    "external_model_or_provider_calls": false,
+    "private_member_or_clinical_data": false,
+    "production_read_write": false,
+    "schema_migration": false,
+    "maia_runtime_changes": false,
+    "merge": false,
+    "deployment": false
+  },
+  "hypothesis": {
+    "id": "H-GRM-A-CANDIDATE",
+    "domain": "synthetic directed-role structures rendered as prose",
+    "primary_relation_family": "four-node directed permutation network, one directed four-cycle versus two directed two-cycles",
+    "causal_intervention": "two-edge head swap (b->c,d->a) to (b->a,d->c)",
+    "invariants_under_edit": [
+      "node_count",
+      "edge_count",
+      "individual_node_indegree",
+      "individual_node_outdegree",
+      "actor_occurrence_multiset",
+      "edge_clause_lexical_bag_when_rendered_canonically"
+    ],
+    "properties_changed": [
+      "directed_cycle_partition",
+      "mutuality",
+      "weak_component_count",
+      "strong_component_sizes"
+    ],
+    "outcomes": [
+      "positive_one_4_cycle",
+      "negative_two_2_cycles"
+    ],
+    "evidence_source": "hand_authored_reference_only",
+    "language_renderer_implemented": false,
+    "heldout_domains_fixed": false,
+    "samples_generated": 0,
+    "metrics_observed": false
+  },
+  "information_access": {
+    "proposed_views_per_world": 4,
+    "semantic_input": "four complete independent renderings of same world and one identical fixed question",
+    "candidate_methods": [
+      "lexical_all_views",
+      "point_pooled_all_views",
+      "multi_view_set_all_views",
+      "text_to_graph_from_same_text",
+      "grassmann_all_views",
+      "same_input_generic"
+    ],
+    "privileged_oracle_excluded_from_fair_contrast": true,
+    "encoder_selected": false,
+    "model_weights_downloaded": false,
+    "principal_angle_distance_selected": "chordal candidate only; rank 1 or 2 validation grid proposed",
+    "test_time_gold_edges_forbidden": true,
+    "source_text_parity_required": true
+  },
+  "prospective_planning_counts_only": {
+    "train_pairs": 800,
+    "validation_pairs": 200,
+    "test_pairs": 300,
+    "replication_pairs": 300
+  },
+  "pending_lock": [
+    "renderer/source/domain/template feasibility and non-leakage",
+    "exact encoder/version/tokenizer weights and license/dependency audit",
+    "final model and comparator training budgets / parsers / rank degeneracy",
+    "cluster uncertainty calibration and multiple-comparison method",
+    "primary clinically-irrelevant relational proxy validity decision",
+    "minimum meaningful effect delta and competence floor",
+    "stopping and negative-control adjudication",
+    "train validation test replication group/domain splits and RNG",
+    "separately adjudicated source/ethics governance and independent human review"
+  ],
+  "outcome_standing": {
+    "rgr_h_rt1_established": false,
+    "rgr_meaning_ontology_established": false,
+    "subspace_retrieval_advantage_established": false,
+    "model_experiment_executed": false,
+    "independent_human_review_completed": false
+  },
+  "source_protections": [
+    "docs/programme/RGR-GRM-01_GEOMETRY_OF_RELATIONAL_MEANING_2026-10-16.md",
+    "docs/programme/RGR-GRM-01_HYPOTHESIS_AND_FALSIFICATION_CANDIDATES_2026-10-16.md",
+    "docs/programme/RGR-GRM-01_LINEAGE_AND_SOURCE_BOUNDARY_2026-10-16.md",
+    "docs/programme/RGR-GRM-01_WORK_UNIT_2026-10-16.json",
+    "docs/programme/RGR-GRM-01_VERIFICATION_RETURN_2026-10-16.md",
+    "scripts/research/rgr-grm01/local-global-toy.mjs",
+    "tests/constitutional/rgr-grm01/local-global-toy.test.mjs",
+    "docs/programme/RGR-00_RELATIONAL_GEOMETRY_RESEARCH_CONSTITUTION_2026-09-18.md",
+    "docs/programme/RGR-01_SOURCE_CORPUS_2026-09-18.md",
+    "docs/programme/RGR-02_FORMAL_VOCABULARY_CANDIDATE_STRUCTURES_2026-09-18.md",
+    "docs/programme/RGR-03_FALSIFICATION_CONTRACT_2026-09-18.md",
+    "docs/programme/RGR-04_PREREGISTRATION_LOCK_2026-09-18.md",
+    "docs/programme/RGR-05_PRE_MATERIALIZATION_FEASIBILITY_REPORT_2026-09-18.md",
+    "docs/programme/RGR-06_CONFIRMATORY_IMPLEMENTATION_LOCK_2026-09-19.md",
+    "docs/programme/RGR-06_WORK_UNIT_2026-09-19.json",
+    "docs/programme/RGR-01_LITERATURE_MATHEMATICAL_LANDSCAPE_2026-09-18.md",
+    "docs/programme/RGR-01_CLAIM_LEDGER_2026-09-18.md"
+  ],
+  "allowed_changed_paths": [
+    "docs/programme/RGR-GRM-A01_RELATIONAL_INVARIANCE_DESIGN_CANDIDATE_2026-10-16.md",
+    "docs/programme/RGR-GRM-A01_CRITICAL_SOURCE_REVIEW_2026-10-16.md",
+    "docs/programme/RGR-GRM-A01_WORK_UNIT_2026-10-16.json",
+    "docs/programme/RGR-GRM-A01_VERIFICATION_RETURN_2026-10-16.md",
+    "tests/constitutional/rgr-grm-a01/design-guard.test.mjs"
+  ],
+  "document_sha256": {
+    "docs/programme/RGR-GRM-A01_RELATIONAL_INVARIANCE_DESIGN_CANDIDATE_2026-10-16.md": "f6895c6cf2e3bf77a358d00b091e072839852053a052133843841a41ca3494f2",
+    "docs/programme/RGR-GRM-A01_CRITICAL_SOURCE_REVIEW_2026-10-16.md": "0a31114edf8b04349a28ad8003e2347de499d0813d6d32796be8f3274ad8aaa3"
+  }
+}
