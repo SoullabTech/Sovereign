@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.r42-physical.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/writersStudio/recovery/heldSourceDraftBridgeR42.ts",
+    "scripts/ops/__tests__/r42PG16SourceDraft.test.ts",
+    "lib/writersStudio/exactLiveSelectionR41.ts",
+    "app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx",
+    "app/writers-studio/full-redesign/Shell.tsx",
+    "lib/writersStudio/__tests__/exactLiveSelectionR41.test.ts",
+    "app/writers-studio/full-redesign/__tests__/r41ActualStudioShellReset.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
