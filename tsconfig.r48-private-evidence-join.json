@@ -1,0 +1,14 @@
+{
+  "extends":"./tsconfig.r48-spent-apply.json",
+  "compilerOptions":{"strict":true,"noEmit":true,"incremental":false,"plugins":[]},
+  "files":[
+    "lib/writersStudio/recovery/heldEditorialRecoveryJoinR48.ts",
+    "lib/writersStudio/recovery/__tests__/heldEditorialRecoveryJoinR48.test.ts",
+    "lib/writersStudio/recovery/__tests__/r48ExactReviewBinding.test.ts",
+    "lib/writersStudio/recovery/heldPrivateEditorialReviewR47.ts",
+    "lib/writersStudio/recovery/heldSpentApplyEvidenceR48.ts",
+    "scripts/ops/wsBetaR48ColdJoinedReview.ts"
+  ],
+  "include":[],
+  "exclude":["node_modules"]
+}

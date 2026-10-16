@@ -19,7 +19,7 @@ if(process.env.R39_PHYSICAL_PG16_FIXTURE!=='fictional-only'||
 const name='ws-r48-spent-apply-'+randomUUID().slice(0,11);
 const root=mkdtempSync(join(tmpdir(),'ws-r35-physical-r48-'));
 const vault=join(root,'vault');mkdirSync(vault);
-const evidence='/Volumes/T7 Shield/ws-beta-r48-spent-apply-evidence-20261016';
+const evidence='/Volumes/T7 Shield/ws-beta-r48-converged-spent-evidence-v3-chatgpt-20261016';
 mkdirSync(evidence,{recursive:true});
 const receipt=join(evidence,'R48_SPENT_APPLY_RECOVERY_ACTUAL_PG16_20261016.json');
 const testLog=join(evidence,'R48_PG16_JEST_20261016.log');
@@ -109,6 +109,9 @@ async function main(){
  ('33333333-3333-4333-8333-33333333333a','${A}'),
  ('33333333-3333-4333-8333-33333333333b','${A}'),
  ('33333333-3333-4333-8333-33333333333c','${A}'),
+ ('33333333-3333-4333-8333-33333333333d','${A}'),
+ ('33333333-3333-4333-8333-33333333333e','${A}'),
+ ('33333333-3333-4333-8333-33333333333f','${A}'),
  ('44444444-4444-4444-8444-444444444444','${B}');
  INSERT INTO r38_fixture_work_fence(work_id,member_id)
  SELECT id,member_id FROM member_manuscripts;`);
@@ -124,6 +127,18 @@ async function main(){
   '-U','fict','-d','r35_draft','-f','/tmp/r46_approval.sql']);
  observe(sql('SELECT count(*) FROM writers_studio_r44_held_approval')==='0',
   'R44 durable PostgreSQL approval ledger starts empty');
+ const undoSchema=join(WORK,'docs/ops/WS_R47_DURABLE_UNDO_REVIEW_ONLY.sql');
+ docker(['cp',undoSchema,name+':/tmp/r48_undo_review.sql']);
+ docker(['exec',name,'psql','-XAtq','-v','ON_ERROR_STOP=1',
+   '-U','fict','-d','r35_draft','-f','/tmp/r48_undo_review.sql']);
+ observe(sql('SELECT count(*) FROM writers_studio_r47_held_undo')==='0',
+  'R47 one-use Undo attempt ledger starts empty');
+ const reviewDDL=join(WORK,'docs/ops/WS_R47_PRIVATE_REVIEW_CUSTODY_REVIEW_ONLY.sql');
+ docker(['cp',reviewDDL,name+':/tmp/r48_private_review.sql']);
+ docker(['exec',name,'psql','-XAtq','-v','ON_ERROR_STOP=1',
+   '-U','fict','-d','r35_draft','-f','/tmp/r48_private_review.sql']);
+ observe(sql('SELECT count(*) FROM writers_studio_r47_private_review')==='0',
+  'R47 distinct-key encrypted private reviewer starts empty');
  observe(sql('SELECT count(*) FROM writers_studio_r35_draft_versions')==='0',
    'review-only ciphertext and receipt SQL initially empty');
  const args=['./node_modules/.bin/jest','--config','jest.config.js',
@@ -134,6 +149,10 @@ async function main(){
    R44_DURABLE_APPROVAL_FIXTURE:'fictional-only',
    R45_DURABLE_SIGNED_AUTHOR_FIXTURE:'fictional-only',
    R46_DURABLE_SIGNED_APPLY_FIXTURE:'fictional-only',
+   R47_DURABLE_UNDO_FIXTURE:'fictional-only',
+   R47_PRIVATE_EDITORIAL_FIXTURE:'fictional-only',
+   R48_EDITORIAL_JOIN_FIXTURE:'fictional-only',
+   R48_JOINED_COLD_FIXTURE_PATH:join(root,'r48-joined-cold.json'),
    R48_SPENT_APPLY_RECOVERY_FIXTURE:'fictional-only',
    R48_PHYSICAL_PG16_FIXTURE:'fictional-only',
    R48_COLD_FIXTURE_PATH:join(root,'r48-spent-apply-cold.json'),
@@ -157,8 +176,8 @@ async function main(){
  writeFileSync(testLog,(runner.stdout||'')+(runner.stderr||''),{mode:0o600});
  observe(runner.status===0&&
    /Test Suites:\s+1 passed, 1 total/.test((runner.stdout||'')+(runner.stderr||''))&&
-   /Tests:\s+4 skipped, 26 passed, 30 total/.test((runner.stdout||'')+(runner.stderr||'')),
-   '26 fictional R39/R43/R46/R48 physical tests passed');
+   /Tests:\s+31 passed, 31 total/.test((runner.stdout||'')+(runner.stderr||'')),
+   '31 fictional R39/R43/R46/R47/R48 physical tests passed');
  const cold=join(root,'r48-spent-apply-cold.json');
  observe(existsSync(cold)&&(statSync(cold).mode&0o077)===0,
    'R48 no-prose fictional read authority held in a mode-0600 temp file');
@@ -168,7 +187,15 @@ async function main(){
  observe(Array.isArray(readAuth.entries)&&readAuth.entries.length===2&&
    !readFileSync(cold,'utf8').includes(secret),
    'invented cold-process escrow has two scopes but no fictional prose');
- observe(sql("SELECT count(*) FROM writers_studio_r44_held_approval WHERE state='spent'")==='2',
+ const joinedCold=join(root,'r48-joined-cold.json');
+ observe(existsSync(joinedCold)&&(statSync(joinedCold).mode&0o077)===0,
+   'separate fake private-review/Apply recovery escrow is mode-0600');
+ const joinedAuthority=readFileSync(joinedCold,'utf8');
+ observe(!joinedAuthority.includes('R38 first fictional section')&&
+   !joinedAuthority.includes('first enchanted')&&
+   !joinedAuthority.includes(secret),
+   'joined cold fake custody records contain no author prose');
+ observe(sql("SELECT count(*) FROM writers_studio_r44_held_approval WHERE state='spent'")==='3',
   'successful Apply and failed signed attempt both permanently spent');
  observe(sql("SELECT count(*) FROM writers_studio_r44_held_approval WHERE state='prepared'")==='0',
   'no review remains replayable after signed edit and revocation refusal');
@@ -205,13 +232,21 @@ async function main(){
   const b=readFileSync(join(vault,'ws-beta-r35-held-drafts',name));
   return sectionSecrets.every(value=>!b.includes(Buffer.from(value)));
  }), 'encrypted vault objects contain no plaintext selection, alternative or undo receipt tokens');
+ const privateVault=join(vault,'ws-beta-r47-private-review');
+ const proposalObjects=readdirSync(privateVault).filter(x=>x.endsWith('.enc'));
+ observe(proposalObjects.length===1&&proposalObjects.every(file=>{
+  const cipher=readFileSync(join(privateVault,file));
+  return sectionSecrets.every(x=>!cipher.includes(Buffer.from(x)))&&
+    !cipher.includes(Buffer.from('first fictional'));
+ }), 'separate private reviewed alternative exists only as encrypted ciphertext');
  const authored=sql('SELECT count(*) FROM writers_studio_r35_draft_versions');
  observe(Number(authored)>=9,'R38 saved multiple actual fictional encrypted draft generations');
- observe(sql("SELECT count(*) FROM writers_studio_r44_held_approval WHERE state='spent'")==='2',
-   'R46 one successful and one refused Apply remain durably spent');
- observe(sql("SELECT count(*) FROM writers_studio_r35_draft_versions WHERE work_id='33333333-3333-4333-8333-33333333333b'")==='2'&&
-   sql("SELECT count(*) FROM writers_studio_r35_draft_versions WHERE work_id='33333333-3333-4333-8333-33333333333c'")==='1',
-   'pre-restart one completed and one unresolved fictional Work history');
+ observe(sql("SELECT count(*) FROM writers_studio_r44_held_approval WHERE state='spent'")==='3',
+   'two successful Apply claims and one refused Apply stay durably spent');
+ observe(sql("SELECT count(*) FROM writers_studio_r35_draft_versions WHERE work_id='33333333-3333-4333-8333-33333333333b'")==='3'&&
+   sql("SELECT count(*) FROM writers_studio_r35_draft_versions WHERE work_id='33333333-3333-4333-8333-33333333333c'")==='1'&&
+   sql("SELECT count(*) FROM writers_studio_r35_draft_versions WHERE work_id='33333333-3333-4333-8333-33333333333f'")==='2',
+   'two completed Apply histories and one unresolved Work before restart');
  // Deliberately cold DB and Node process while retaining exact committed PG
  // metadata in anonymous Docker storage (no host mount or real account).
  docker(['restart',name]);await ready();
@@ -232,8 +267,8 @@ async function main(){
   await new Promise(resolve=>setTimeout(resolve,150));
  }
  if(!hostReady)throw Error('R48_COLD_HOST_PORT_NOT_READY');
- observe(sql('SELECT count(*) FROM writers_studio_r44_held_approval')==='2',
-   'controlled PostgreSQL restart retains both immutable spent approvals');
+ observe(sql('SELECT count(*) FROM writers_studio_r44_held_approval')==='3',
+   'controlled PostgreSQL restart retains three immutable spent approvals');
  const fresh=spawnSync('./node_modules/.bin/tsx',
   ['scripts/ops/wsBetaR48ColdSpentApply.ts'],{
    cwd:WORK,env:{...env,R48_COLD_PROCESS_FIXTURE:'fictional-only'},
@@ -249,9 +284,28 @@ async function main(){
  observe(proof.confirmed===1&&proof.unresolved===1&&
    proof.retryAuthorized===false&&proof.releaseApproved===false,
    'fresh Node process confirms one ciphertext Apply and holds one spent unresolved');
- observe(sql("SELECT count(*) FROM writers_studio_r35_draft_versions WHERE work_id='33333333-3333-4333-8333-33333333333b'")==='2'&&
-   sql("SELECT count(*) FROM writers_studio_r35_draft_versions WHERE work_id='33333333-3333-4333-8333-33333333333c'")==='1',
-   'read-only cold reconciliation creates no new encrypted revisions');
+ const joined=spawnSync('./node_modules/.bin/tsx',
+  ['scripts/ops/wsBetaR48ColdJoinedReview.ts'],{
+   cwd:WORK,env:{...env,R48_COLD_PROCESS_FIXTURE:'fictional-only'},
+   encoding:'utf8',timeout:70000,maxBuffer:8*1024*1024,
+  });
+ const joinedLine=(joined.stdout||'').split('\n').find(line=>
+   line.includes('R48_FRESH_PROCESS_JOINED_PRIVATE_AND_APPLY_PASS'));
+ if(joined.status!==0||!joinedLine)
+  throw Error('R48_JOINED_PRIVATE_COLD_UNQUALIFIED_'+
+    String(joined.stderr||joined.error).slice(-160));
+ const joinedResult=JSON.parse(joinedLine) as {
+   verified:number;wrongKeyHeld:boolean;changedConsentHeld:boolean;
+   retryAuthorized:boolean;releaseApproved:boolean;
+ };
+ observe(joinedResult.verified===1&&joinedResult.wrongKeyHeld&&
+   joinedResult.changedConsentHeld&&joinedResult.retryAuthorized===false&&
+   joinedResult.releaseApproved===false,
+   'fresh-process exact private proposal/R44 full review HMAC and Apply receipt match');
+ observe(sql("SELECT count(*) FROM writers_studio_r35_draft_versions WHERE work_id='33333333-3333-4333-8333-33333333333b'")==='3'&&
+   sql("SELECT count(*) FROM writers_studio_r35_draft_versions WHERE work_id='33333333-3333-4333-8333-33333333333c'")==='1'&&
+   sql("SELECT count(*) FROM writers_studio_r35_draft_versions WHERE work_id='33333333-3333-4333-8333-33333333333f'")==='2',
+   'read-only fresh-process reconciliation creates no encrypted revisions');
 
  // All exact fixture cells are disposable, and no real member/payment/mail/provider
  // authorization can be inferred from this SQL and file-vault test.

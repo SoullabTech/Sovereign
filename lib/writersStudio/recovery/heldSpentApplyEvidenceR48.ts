@@ -39,6 +39,10 @@ export type R48Evidence=
      releaseApproved:false;retryAuthorized:false}
  | {protocol:typeof R48_PROTOCOL;kind:'FICTIONAL_CIPHERTEXT_APPLY_CONFIRMED';
      action:'apply';generation:number;cipherSHA256:string;
+     /** Internal scope only: never expose this in a browser response. */
+     sectionId:string;alternativeId:string;resultingSectionSHA256:string;
+     sessionBindingSHA256:string;consentNoticeSHA256:string;
+     consentEventSequence:number;reviewBindingHmac:string;
      priorDraftVersionVerified:true;unchangedSectionIds:readonly string[];
      releaseApproved:false;retryAuthorized:false};
 export type R48CustodianRead={
@@ -242,6 +246,12 @@ export async function inspectSpentApplyR48(
   return {
    protocol:R48_PROTOCOL,kind:'FICTIONAL_CIPHERTEXT_APPLY_CONFIRMED',
    action:'apply',generation:next,cipherSHA256:v.cipher_sha256,
+   sectionId:n.sectionId,alternativeId:n.alternativeId,
+   resultingSectionSHA256:n.resultingSectionSHA256,
+   sessionBindingSHA256:a.session_binding_sha256,
+   consentNoticeSHA256:a.notice_sha256,
+   consentEventSequence:integer(a.consent_sequence)!,
+   reviewBindingHmac:a.review_binding_hmac,
    priorDraftVersionVerified:true,unchangedSectionIds:untouched,
    releaseApproved:false,retryAuthorized:false,
   };

@@ -9,6 +9,9 @@ import path from 'node:path';
 import {handleSignedSectionRequestR39,R39_REAL_SIGNED_SECTION_REQUEST_ENABLED} from '../../../lib/writersStudio/recovery/heldSignedSectionRequestR39';
 import {HeldAuthorChoiceWitnessR43,R43_REAL_AUTHOR_CHOICE_ENABLED} from '../../../lib/writersStudio/recovery/heldAuthorChoiceR43';
 import {prepareHeldSignedApplyR46,submitHeldSignedApplyR46,R46_REAL_DURABLE_SIGNED_APPLY_ENABLED} from '../../../lib/writersStudio/recovery/heldDurableSignedApplyR46';
+import {inspectSpentApplyR48,R48_REAL_SPENT_APPLY_RECOVERY_ENABLED} from '../../../lib/writersStudio/recovery/heldSpentApplyEvidenceR48';
+import {recordHeldPrivateReviewR47} from '../../../lib/writersStudio/recovery/heldPrivateEditorialReviewR47';
+import {inspectPrivateChoiceApplyR48} from '../../../lib/writersStudio/recovery/heldEditorialRecoveryJoinR48';
 import {prepareHeldUndoR47,submitHeldUndoR47,
  R47_REAL_DURABLE_UNDO_ENABLED} from '../../../lib/writersStudio/recovery/heldDurableUndoR47';
 import {inspectSpentApplyR48,R48_REAL_SPENT_APPLY_RECOVERY_ENABLED} from '../../../lib/writersStudio/recovery/heldSpentApplyEvidenceR48';
@@ -50,6 +53,14 @@ const group=active?describe:describe.skip;
 const r43Only=active&&process.env.R43_AUTHOR_CHOICE_FIXTURE==='fictional-only';
 const r46Only=active&&process.env.R46_DURABLE_SIGNED_APPLY_FIXTURE==='fictional-only';
 const durableTest=r46Only?it:it.skip;
+const r48Only=r46Only&&process.env.R48_SPENT_APPLY_RECOVERY_FIXTURE==='fictional-only';
+const evidenceTest=r48Only?it:it.skip;
+const r48JoinedOnly=r48Only&&
+ process.env.R48_EDITORIAL_JOIN_FIXTURE==='fictional-only'&&
+ process.env.R47_PRIVATE_EDITORIAL_FIXTURE==='fictional-only';
+const joinedTest=r48JoinedOnly?it:it.skip;
+let savedR48CompletedToken:string|null=null;
+let savedR48UnresolvedToken:string|null=null;
 const r47Only=r46Only&&process.env.R47_DURABLE_UNDO_FIXTURE==='fictional-only';
 const undoTest=r47Only?it:it.skip;
 const r48Only=r46Only&&process.env.R48_SPENT_APPLY_RECOVERY_FIXTURE==='fictional-only';
@@ -75,6 +86,7 @@ const W12='33333333-3333-4333-8333-33333333333b';
 const W13='33333333-3333-4333-8333-33333333333c';
 const W14='33333333-3333-4333-8333-33333333333d';
 const W15='33333333-3333-4333-8333-33333333333e';
+const W16='33333333-3333-4333-8333-33333333333f';
 const BWORK='44444444-4444-4444-8444-444444444444';
 const S1='66666666-6666-4666-8666-666666666661';
 const S2='66666666-6666-4666-8666-666666666662';
@@ -369,12 +381,13 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
   // R38-named ephemeral PG16 driver. Never alter shared production tables.
   expect(R38_REAL_ENCRYPTED_DRAFT_ROUTE_ENABLED).toBe(false);
   expect(R35_REAL_MEMBER_PROTECTED_DRAFT_ENABLED).toBe(false);
-  const works=r47Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13,W14,W15]:
+  const works=r48JoinedOnly?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13,W14,W15,W16]:
+   r47Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13,W14,W15]:
    r46Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13]:
     r43Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11]:
     [W1,W2,W3,W4,W5,W6,W7,W8,W9];
   for(const work of works)
-    await seed(work,[W4,W7,W8,W9,W10,W11,W12,W13,W14,W15].includes(work));
+    await seed(work,[W4,W7,W8,W9,W10,W11,W12,W13,W14,W15,W16].includes(work));
  });
  afterAll(async()=>{
   await closePool();
@@ -656,6 +669,7 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
   expect(reviewed).toMatchObject({kind:'fictional_durable_approval_prepared'});
   if(reviewed.kind!=='fictional_durable_approval_prepared')
    throw Error('r46_prepare_failed');
+  if(r48Only)savedR48CompletedToken=reviewed.opaqueToken;
   expect(reviewed.originalPassage).toBe('first fictional');
   if(r48Only)savedR48CompletedToken=reviewed.opaqueToken;
   expect(await generations(W12)).toBe(1);
@@ -914,6 +928,88 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
    ...input(),context:heldChoiceContext(W15,authorChoiceRequest(payload)),
   })).toMatchObject({kind:'refused',status:409});
   expect(await generations(W15)).toBe(2);
+ });
+
+ joinedTest('R48 one PostgreSQL Work holds encrypted reviewed choice through signed Apply and read-only recovery',async()=>{
+  const chosen=(await anchored(W16)).selection;
+  const fakePrivateKey={keyId:randomUUID(),keyBytes:randomBytes(32)};
+  const separatelySealed:R35Custody={
+   key:fakePrivateKey,signedDeletion:checkpoint(W16),
+   trustedSigner:highwaterSigner.publicKey,
+   independent:{minimumGeneration:100},
+  };
+  const accepted=admission(A,await latestConsent());
+  const privateInput={
+   subject:subject(),admission:accepted,workId:W16,
+   draftCustody:custody(W16),privateCustody:separatelySealed,
+  };
+  const privateReview=await recordHeldPrivateReviewR47({
+   ...privateInput,selection:chosen,
+   idempotencyKey:'r48-single-physical-work-rehearsal-001',
+  });
+  expect(privateReview).toMatchObject({
+   kind:'HELD_ENCRYPTED_PRIVATE_REVIEW',status:'created',
+   sectionId:S1,releaseApproved:false,canApply:false,
+  });
+  const root=Buffer.alloc(32,0x46);
+  const scope=()=>({
+   context:heldChoiceContext(W16,authorChoiceRequest()),
+   custody:custody(W16),selection:chosen,approvalIssuerSecret:root,
+  });
+  const prepared=await prepareHeldSignedApplyR46(scope());
+  expect(prepared).toMatchObject({kind:'fictional_durable_approval_prepared'});
+  if(prepared.kind!=='fictional_durable_approval_prepared')
+   throw Error('R48_joint_signed_approval_unprepared');
+  const action={
+   kind:'apply_reviewed_change',opaqueToken:prepared.opaqueToken,
+  };
+  const signed=await submitHeldSignedApplyR46({
+   ...scope(),context:heldChoiceContext(W16,authorChoiceRequest(action)),
+  });
+  expect(signed).toMatchObject({
+   kind:'fictional_durably_claimed_encrypted_apply',action:'apply',
+   generation:2,releaseApproved:false,
+  });
+  const exact=await inspectPrivateChoiceApplyR48({
+   originalReview:{...privateInput,reviewId:privateReview.reviewId,generation:1},
+   spentApply:{
+    authority:'fictional_independent_recovery_custodian_only',
+    memberId:A,workId:W16,approvalToken:prepared.opaqueToken,
+    approvalIssuerSecret:root,custody:custody(W16),
+   },
+  });
+  expect(exact).toMatchObject({
+   kind:'FICTIONAL_PRIVATE_CHOICE_APPLY_VERIFIED',
+   generation:2,selectedSectionId:S1,
+   originalReviewRecovered:true,ciphertextReceiptVerified:true,
+   releaseApproved:false,retryAuthorized:false,
+  });
+  // Synthetic escrow has no writing, all key material is fabricated, mode 0600.
+  const cold=process.env.R48_JOINED_COLD_FIXTURE_PATH||'';
+  const marker=process.env.FILE_STORAGE_PATH||'';
+  if(path.basename(cold)!=='r48-joined-cold.json'||
+     path.dirname(cold)!==path.dirname(marker)||
+     !path.basename(path.dirname(cold)).startsWith('ws-r35-physical-r48-'))
+   throw Error('R48_joined_cold_escrow_must_match_disposable_vault');
+  const fakeDraft=custody(W16);
+  if(!fakeDraft.signedDeletion)throw Error('R48_missing_fake_delete_proof');
+  writeFileSync(cold,JSON.stringify({
+   protocol:'soullab.ws.r48.fictional-joined-private-recovery.v1',
+   memberId:A,workId:W16,reviewId:privateReview.reviewId,generation:1,
+   approvalToken:prepared.opaqueToken,
+   admission:accepted,issuerSecret:root.toString('base64'),
+   draftKeyId:fakeDraft.key.keyId,
+   draftKey:fakeDraft.key.keyBytes.toString('base64'),
+   privateKeyId:fakePrivateKey.keyId,
+   privateKey:fakePrivateKey.keyBytes.toString('base64'),
+   signedDeletion:fakeDraft.signedDeletion,
+   publicSignerDER:highwaterSigner.publicKey.export({
+    format:'der',type:'spki',
+   }).toString('base64'),independentMinimum:100,
+  }),{flag:'wx',mode:0o600});
+  expect(statSync(cold).mode&0o077).toBe(0);
+  expect(JSON.stringify(exact)).not.toContain('first enchanted');
+  expect(JSON.stringify(exact)).not.toContain(prepared.opaqueToken);
  });
 
 });
