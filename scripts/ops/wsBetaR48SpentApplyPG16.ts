@@ -157,7 +157,7 @@ async function main(){
  writeFileSync(testLog,(runner.stdout||'')+(runner.stderr||''),{mode:0o600});
  observe(runner.status===0&&
    /Test Suites:\s+1 passed, 1 total/.test((runner.stdout||'')+(runner.stderr||''))&&
-   /Tests:\s+26 passed, 26 total/.test((runner.stdout||'')+(runner.stderr||'')),
+   /Tests:\s+4 skipped, 26 passed, 30 total/.test((runner.stdout||'')+(runner.stderr||'')),
    '26 fictional R39/R43/R46/R48 physical tests passed');
  const cold=join(root,'r48-spent-apply-cold.json');
  observe(existsSync(cold)&&(statSync(cold).mode&0o077)===0,

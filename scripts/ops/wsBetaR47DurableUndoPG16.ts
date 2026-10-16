@@ -160,8 +160,9 @@ async function main(){
   {cwd:WORK,env,encoding:'utf8',timeout:100000,maxBuffer:20*1024*1024});
  writeFileSync(testLog,(runner.stdout||'')+(runner.stderr||''),{mode:0o600});
  observe(runner.status===0&&
-   /Test Suites:\s+1 passed, 1 total/.test((runner.stdout||'')+(runner.stderr||'')),
-   'actual repository session and signed lease with vault Jest passes');
+   /Test Suites:\s+1 passed, 1 total/.test((runner.stdout||'')+(runner.stderr||''))&&
+   /Tests:\s+1 skipped, 29 passed, 30 total/.test((runner.stdout||'')+(runner.stderr||'')),
+   '29 durable-Undo applications passed; only R48 spent classifier intentionally skipped');
  observe(sql("SELECT count(*) FROM writers_studio_r44_held_approval WHERE state='spent'")==='2',
   'successful Apply and failed signed attempt both permanently spent');
  observe(sql("SELECT count(*) FROM writers_studio_r44_held_approval WHERE state='prepared'")==='0',
