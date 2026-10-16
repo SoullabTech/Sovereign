@@ -267,6 +267,24 @@ export function Shell(props: ShellProps) {
                   Open MAIA <span aria-hidden="true">›</span>
                 </button>
               ) : null}
+              {props.manuscript !== undefined && props.maia !== undefined ? (
+                <button
+                  type="button"
+                  className="fr-panel-toggle fr-panel-reset"
+                  data-r41-reset-column-widths
+                  aria-label="Reset manuscript and MAIA column widths"
+                  title="Return both panels to their original widths"
+                  onClick={() => {
+                    // Restore geometry only. The manuscript and MAIA remain
+                    // mounted; the existing persistence effect stores widths.
+                    drag.current = null;
+                    setLeftWidth(geometry.manuscriptWidth);
+                    setRightWidth(geometry.maiaWidth);
+                  }}
+                >
+                  Reset widths
+                </button>
+              ) : null}
             </div>
           ) : null}
           {props.workTitle !== undefined ? (
