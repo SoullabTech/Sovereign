@@ -277,6 +277,7 @@ async function sendStewardInvitation() {
     try {
       const result = await sendEmail({
         purpose: 'invite:steward',
+        admission: { authority: { kind: 'admin', actorId: 'steward-ops' }, destination: 'actor-supplied' },
         from: 'Kelly @ Soullab <kelly@soullab.life>',
         to: target.recipient,
         subject: 'Thank you for being here',

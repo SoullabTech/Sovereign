@@ -1,13 +1,11 @@
 /**
  * Beta re-engagement email send
  * Two versions: fully onboarded (44) and partially onboarded (10)
- * Run: node scripts/send-beta-reengagement.mjs
+ * Run: npx tsx scripts/send-beta-reengagement.ts
  */
 
-import { Resend } from 'resend';
 import pg from 'pg';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmail, SENDERS } from '../lib/email/sendEmail';
 const db = new pg.Pool({ connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness' });
 
 const onboardedEmail = (name) => ({
@@ -76,19 +74,28 @@ async function send() {
     const template = member.onboarded ? onboardedEmail(displayName) : partialEmail(displayName);
 
     try {
-      await resend.emails.send({
-        from: 'Kelly at Soullab <kelly@soullab.life>',
+      const result = await sendEmail({
+        purpose: 'campaign:beta-reengagement',
+        admission: { authority: { kind: 'system', trigger: 'beta-reengagement' }, destination: 'member-record' },
+        triggerType: 'script',
+        triggerRef: 'scripts/send-beta-reengagement.ts',
+        from: SENDERS.kelly,
         to: member.email,
         subject: template.subject,
         html: template.html,
         text: template.text,
       });
-      console.log(`✓ ${member.email} (${member.onboarded ? 'onboarded' : 'partial'})`);
+      // Provider error details are logged by Soullab Mail after redaction.
+      // This campaign log records only aggregate acceptance and cohort state.
+      if (!result.success) throw new Error('mail_refused');
+      console.log(`✓ Re-engagement accepted (${member.onboarded ? 'onboarded' : 'partial'})`);
       sent++;
       // Small delay to avoid rate limits
       await new Promise(r => setTimeout(r, 200));
     } catch (err) {
-      console.error(`✗ ${member.email}: ${err.message}`);
+      console.error('✗ Re-engagement attempt unsuccessful', {
+        errorClass: err instanceof Error ? err.name : 'unknown',
+      });
       skipped++;
     }
   }
@@ -97,4 +104,9 @@ async function send() {
   await db.end();
 }
 
-send().catch(err => { console.error(err); process.exit(1); });
+send().catch(err => {
+  console.error('[beta-reengagement] script failed', {
+    errorClass: err instanceof Error ? err.name : 'unknown',
+  });
+  process.exit(1);
+});

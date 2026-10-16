@@ -112,6 +112,11 @@ export async function POST(req: NextRequest) {
   // Send invitation email
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://soullab.life';
   const emailResult = await sendRelationshipInviteEmail({
+    // Session-verified steward is the actual inviter, not a body claim.
+    admission: {
+      authority: { kind: 'member', memberId },
+      destination: 'actor-supplied',
+    },
     clientEmail: client_email,
     clientName: client_name,
     practitionerName,

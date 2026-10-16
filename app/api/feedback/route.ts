@@ -8,14 +8,13 @@ import { query, queryOne } from '@/lib/database/postgres';
 import { z } from 'zod';
 import { sendEmail } from '@/lib/email/sendEmail';
 import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
+import { checkRateLimit, getClientIP, buildRateLimitHeaders } from '@/lib/auth/rateLimiter';
 
 const KELLY_EMAIL = 'kelly@soullab.life';
-const KELLY_PHONE = '+15044539009';
 const PROBLEM_EMAIL = 'problem@soullab.life';
 
 async function notifyKelly(category: string, categoryLabel: string, message: string, userName: string) {
   const from = userName || 'Anonymous';
-  const preview = message.length > 160 ? message.substring(0, 157) + '...' : message;
   const recipient = category === 'problem' ? PROBLEM_EMAIL : KELLY_EMAIL;
 
   // Email. Deliberately fire-and-forget: feedback submission must not fail
@@ -24,10 +23,11 @@ async function notifyKelly(category: string, categoryLabel: string, message: str
   // nothing at all for a provider refusal.
   void sendEmail({
     purpose: 'feedback:submission',
+    admission: { authority: { kind: 'anonymous' }, destination: 'configured' },
     from: 'MAIA Feedback <noreply@soullab.life>',
     to: recipient,
     subject: `[${categoryLabel}] from ${from}`,
-    html: `<p><strong>${categoryLabel}</strong> from <strong>${from}</strong></p><p>${message.replace(/\n/g, '<br>')}</p>`,
+    html: `<p><strong>${escapeFeedbackHtml(categoryLabel)}</strong> from <strong>${escapeFeedbackHtml(from)}</strong></p><p>${escapeFeedbackHtml(message).replace(/\n/g, '<br>')}</p>`,
     metadata: { category },
   }).then((r) => {
     if (!r.success) {
@@ -37,16 +37,16 @@ async function notifyKelly(category: string, categoryLabel: string, message: str
     }
   });
 
-  // SMS via Twilio (fire-and-forget)
-  if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER) {
-    const body = `MAIA ${categoryLabel} from ${from}: ${preview}`;
-    const auth = Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64');
-    fetch(`https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`, {
-      method: 'POST',
-      headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ From: process.env.TWILIO_FROM_NUMBER, To: KELLY_PHONE, Body: body }).toString(),
-    }).catch((e: unknown) => console.error('[Feedback] SMS notify failed:', e));
-  }
+  // COST-SAFETY-F2: public feedback has NO SMS fanout, regardless of whether
+  // Twilio credentials are present in the environment. Re-enable only as a
+  // separately governed, globally budgeted operator notification lane.
+  // Member feedback remains persistently stored; email is MAIL-05 metered.
+
+}
+
+function escapeFeedbackHtml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 const PlatformFeedbackSchema = z.object({
@@ -59,6 +59,15 @@ const PlatformFeedbackSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  // MAIL-04/F2: public submissions may create durable rows and MAIL-05 email.
+  // Use an independent per-origin limiter, with its own bounded outage behavior.
+  const limit = await checkRateLimit(getClientIP(request), 'ip', '/api/feedback:post');
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many feedback submissions. Please try again later.' },
+      { status: 429, headers: buildRateLimitHeaders(limit) }
+    );
+  }
   try {
     const body = await request.json();
 
@@ -98,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     const categoryLabel = categoryLabels[validatedData.category];
     const userName = validatedData.userName || 'Anonymous';
-    console.log(`[Feedback] ${categoryLabel} from ${userName}: ${validatedData.message.substring(0, 100)}...`);
+    console.log('[Feedback] submission accepted', { category: validatedData.category, id: feedbackData.id });
 
     notifyKelly(validatedData.category, categoryLabel, validatedData.message, userName);
 
@@ -110,14 +119,14 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('Invalid feedback data:', error.errors);
+      console.warn('[Feedback] invalid submission');
       return NextResponse.json(
-        { error: 'Invalid feedback data', details: error.errors },
+        { error: 'Invalid feedback data' },
         { status: 400 }
       );
     }
 
-    console.error('Feedback recording failed:', error);
+    console.error('[Feedback] recording failed', { type: error instanceof Error ? error.name : 'unknown' });
     return NextResponse.json(
       { error: 'Failed to record feedback' },
       { status: 500 }

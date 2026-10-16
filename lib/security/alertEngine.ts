@@ -118,6 +118,7 @@ async function sendAlertEmail(alert: SecurityAlert): Promise<boolean> {
 
     const result = await sendEmail({
       purpose: 'security:alert',
+      admission: { authority: { kind: 'system', trigger: 'security-alert' }, destination: 'configured' },
       from:    'Soullab Security <noreply@soullab.life>',
       to:      recipientEmail,
       subject: `[${alert.severity}] MAIA Security: ${alert.title}`,

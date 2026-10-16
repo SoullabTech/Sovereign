@@ -77,3 +77,21 @@ export function fingerprintRecipient(email: string): RecipientFingerprint | null
 
   return { fingerprint, keyVersion: keyVersion() };
 }
+
+
+/**
+ * HMAC an opaque application secret or low-entropy recipient reference for
+ * mail attempt correlation. The raw source MUST NOT become an SMTP header,
+ * console log or durable idempotency key. Domain separation prevents reuse of
+ * a recipient fingerprint as a gift-passkey reference.
+ *
+ * Null is a refusal-worthy result: never fall back to an unkeyed hash.
+ */
+export function fingerprintMailReference(namespace: string, raw: string): string | null {
+  const key = keyMaterial();
+  if (!key || !/^[a-z][a-z0-9_-]{0,31}$/.test(namespace) || !raw) return null;
+  const digest = createHmac('sha256', key)
+    .update('mail-reference:' + namespace + '\0' + raw)
+    .digest('hex');
+  return 'hmac-v' + keyVersion() + ':' + digest;
+}

@@ -38,13 +38,6 @@ jest.mock('@/lib/db/postgres', () => ({
   query: (s: string, p?: unknown[]) => mockQuery(s, p),
 }));
 
-jest.mock('resend', () => ({
-  __esModule: true,
-  Resend: class {
-    emails = { send: async () => ({ data: null, error: null }) };
-  },
-}));
-
 function fieldReq(memberId?: string): any {
   const url = new URL('http://localhost/api/maia/field' + (memberId ? `?memberId=${memberId}` : ''));
   return { nextUrl: url, headers: new Headers() };

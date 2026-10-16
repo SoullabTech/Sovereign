@@ -133,6 +133,7 @@ async function sendToAllBetaTesters() {
     try {
       const result = await sendEmail({
         purpose: 'broadcast:update',
+        admission: { authority: { kind: 'admin', actorId: 'beta-ops' }, destination: 'actor-supplied' },
         triggerType: 'script',
         triggerRef: 'send-beta-update-email',
         campaignRef: 'beta-signin-fixed',
