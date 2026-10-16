@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.r39-signed-section.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "lib/writersStudio/recovery/heldSourceDraftBridgeR42.ts",
+    "lib/writersStudio/recovery/heldSourceComposerR36.ts",
+    "lib/writersStudio/recovery/heldProtectedDraftR35.ts",
+    "lib/writersStudio/recovery/heldSignedSectionRequestR39.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}

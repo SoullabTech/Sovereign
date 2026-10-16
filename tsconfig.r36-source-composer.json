@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.r35-orphan-intent.json",
+  "compilerOptions": {"strict":true,"noEmit":true,"incremental":false,"plugins":[]},
+  "files": [
+    "lib/writersStudio/recovery/heldSourceComposerR36.ts",
+    "lib/writersStudio/recovery/heldOrphanIntentR35.ts",
+    "lib/writersStudio/recovery/heldClaimReconcilerR34.ts",
+    "lib/writersStudio/recovery/heldPendingClaimR33.ts",
+    "lib/writersStudio/recovery/heldOriginalSourceR32.ts",
+    "scripts/ops/__tests__/r36PG16SourceComposer.test.ts",
+    "scripts/ops/__tests__/r36ColdPG16Composer.test.ts",
+    "lib/writersStudio/recovery/__tests__/heldSourceComposerR36.test.ts"
+  ],
+  "include":[],
+  "exclude":["node_modules"]
+}

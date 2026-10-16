@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.r30-work-transaction.json",
+  "compilerOptions": {
+    "strict": true,
+    "incremental": false,
+    "noEmit": true,
+    "plugins": []
+  },
+  "files": [
+    "lib/writersStudio/recovery/heldOriginalSourceR32.ts",
+    "lib/writersStudio/recovery/deletionBarrierV1.ts",
+    "lib/storage/fileVault.ts",
+    "lib/db/postgres.ts",
+    "scripts/ops/__tests__/r32OriginalPG16.test.ts",
+    "scripts/ops/__tests__/r32ColdOriginalPG16.test.ts",
+    "lib/writersStudio/recovery/__tests__/heldOriginalSourceR32.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}

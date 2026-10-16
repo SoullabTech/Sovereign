@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.r42-held-source-draft.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "lib/writersStudio/recovery/heldSourceDraftBridgeR42.ts",
+    "scripts/ops/__tests__/r42PG16SourceDraft.test.ts",
+    "scripts/ops/__tests__/r42ColdPG16SourceDraft.test.ts",
+    "lib/writersStudio/recovery/__tests__/heldSourceDraftBridgeR42.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}

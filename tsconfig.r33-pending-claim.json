@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.r32-encrypted-original.json",
+  "compilerOptions": {"strict": true, "noEmit": true, "incremental": false, "plugins": []},
+  "files": [
+    "lib/writersStudio/recovery/heldPendingClaimR33.ts",
+    "lib/writersStudio/recovery/heldOriginalSourceR32.ts",
+    "lib/writersStudio/recovery/pendingClaimTransferV1.ts",
+    "lib/writersStudio/recovery/pendingArrivalEnvelopeV1.ts",
+    "scripts/ops/__tests__/r33PendingClaimPG16.test.ts",
+    "lib/writersStudio/recovery/__tests__/heldPendingClaimR33.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
