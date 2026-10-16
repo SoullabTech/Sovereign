@@ -55,8 +55,18 @@ function fixture():void{
    process.env.R44_DURABLE_APPROVAL_FIXTURE!=='fictional-only'||
    process.env.R37_SECTION_PASSAGE_FIXTURE!=='fictional-only'||
    process.env.R36_PASSAGE_REVIEW_FIXTURE!=='fictional-only'||
-   !/^postgresql:\/\/fict@127\.0\.0\.1:\d+\/r44_choice$/.test(
-     process.env.DATABASE_URL||''))
+   !(
+     /^postgresql:\/\/fict@127\.0\.0\.1:\d+\/r44_choice$/.test(
+       process.env.DATABASE_URL||'') ||
+     (
+       process.env.R46_DURABLE_SIGNED_APPLY_FIXTURE==='fictional-only' &&
+       process.env.R45_DURABLE_SIGNED_AUTHOR_FIXTURE==='fictional-only' &&
+       /^postgresql:\/\/fict@127\.0\.0\.1:\d+\/r35_draft$/.test(
+         process.env.DATABASE_URL||'') &&
+       /^\/.*\/ws-r35-physical-[^/]+\/vault$/.test(
+         process.env.FILE_STORAGE_PATH||'')
+     )
+   ))
   refuse('real_author_approval_disabled');
 }
 function admission(raw:R29CurrentAdmission):boolean{
