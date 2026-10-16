@@ -9,7 +9,7 @@
  * R39 write, prove a real click, provide KMS, or perform remote revocation.
  * A failed downstream save stays spent/HELD, never automatically retried.
  */
-import {createHmac,randomBytes} from 'node:crypto';
+import {createHmac,randomBytes,timingSafeEqual} from 'node:crypto';
 import {query} from '@/lib/db/postgres';
 import {reviewSectionPassageR37,type R37SectionSelection}
  from './heldSectionApplyR37';
@@ -120,6 +120,21 @@ function scoped(input:R44ReviewedInput):RecordScope{
 }
 function tokenHash(secret:Buffer,token:string):string{
  return hmac(secret,'opaque-token',[token]);
+}
+/**
+ * Read-only verifier for an independently recovered private editorial choice.
+ * Reuses EXACTLY R44's original full-review HMAC, including all alternative
+ * texts, selected offsets, authored sections, consent and session scope.
+ * It cannot grant, spend or reissue an approval. HELD fixtures only.
+ */
+export function verifyHeldReviewBindingR44(
+ input:R44ReviewedInput,expectedHmac:string,
+):boolean{
+ fixture();
+ if(typeof expectedHmac!=='string'||!SHA.test(expectedHmac))return false;
+ const actual=scoped(input).reviewedChoiceHmac;
+ return timingSafeEqual(
+  Buffer.from(actual,'hex'),Buffer.from(expectedHmac,'hex'));
 }
 /** Caller passes private server-evidenced review, never browser-pasted prose. */
 export async function prepareHeldAuthorApprovalR44(
