@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.r25-converged.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "files": [
+    "lib/writersStudio/recovery/externalCustodyContractR26.ts",
+    "lib/writersStudio/recovery/__tests__/externalCustodyContractR26.test.ts",
+    "lib/writersStudio/recovery/__tests__/r26ReleaseIsolation.test.ts",
+    "lib/writersStudio/recovery/heldExternalCustodyAdapterR26.ts",
+    "lib/writersStudio/recovery/__tests__/heldExternalCustodyAdapterR26.test.ts",
+    "lib/writersStudio/recovery/__tests__/r26VerifiedWriterToVault.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
