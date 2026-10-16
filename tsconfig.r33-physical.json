@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.r33-editorial.json",
+  "files": [
+    "lib/writersStudio/recovery/heldAuthorEditsR33.ts",
+    "scripts/ops/wsBetaR33PG16AuthorEdits.ts",
+    "scripts/ops/wsBetaR33ColdReopen.ts",
+    "lib/writersStudio/recovery/__tests__/heldAuthorEditsR33.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
