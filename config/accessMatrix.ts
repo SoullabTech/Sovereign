@@ -569,6 +569,13 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/commons/contributions', public: true, notes: 'GET public contributions' },
   { exact: '/api/commons/contributions/orientation', public: true, notes: 'Orientation content' },
 
+  // RF01 S0-A1.1 — member-owned privacy controls. Coarse authenticated
+  // containment only; handlers independently authenticate and bind identity.
+  // Exact rules preserve public signup/signin and all other member endpoints.
+  { exact: '/api/members/settings', minTier: 'free', notes: 'Member-owned settings; handler independently verifies credential and owner' },
+  { exact: '/api/members/recall-preferences', minTier: 'free', notes: 'Member-owned recall gates; handler independently verifies credential and owner' },
+  { exact: '/api/account/storage-consent', minTier: 'free', notes: 'Member-owned storage consent; handler independently verifies credential and owner' },
+
   // Member API — contribution is participation, open to all
   { regex: /^\/api\/commons\/contributions\/[^/]+$/, minTier: 'free', notes: 'Contribution detail — depth' },
   { exact: '/api/commons/contributions/my-offerings', minTier: 'free', notes: 'User offerings — depth' },

@@ -450,125 +450,136 @@ export function AccountSettings() {
     setTimeout(() => setSaved(false), 2000);
   }, []);
 
-  const updateMaiaSetting = useCallback(<K extends keyof AccountSettingsType>(
+  const updateMaiaSetting = useCallback(async <K extends keyof AccountSettingsType>(
     key: K,
     value: AccountSettingsType[K]
   ) => {
     if ('vibrate' in navigator) navigator.vibrate(5);
-
+    setSaved(false);
+    setError(null);
+    if (!userId) {
+      setError('Please sign in before changing account settings.');
+      return;
+    }
     const updated = { ...maiaSettings, [key]: value };
-    setMaiaSettings(updated);
-    saveAccountSettings(updated);
-    showSaveIndicator();
-
-    // Also sync to server if we have userId
-    if (userId) {
-      apiFetch('/api/members/settings', {
+    try {
+      const res = await apiFetch('/api/members/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          memberId: userId,
-          [key === 'defaultMemoryMode' ? 'defaultMemoryMode' : key]: value,
-        }),
-      }).catch(console.error);
+        body: JSON.stringify({ memberId: userId, [key]: value }),
+      });
+      if (!res.ok) throw new Error('Account settings were not saved (' + res.status + ')');
+      const receipt = await res.json();
+      if (!receipt?.success || !receipt?.settings) throw new Error('Save not confirmed');
+      setMaiaSettings(updated);
+      saveAccountSettings(updated);
+      showSaveIndicator();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Account settings were not saved');
     }
   }, [maiaSettings, userId, showSaveIndicator]);
 
-  const updateNestedMaiaSetting = useCallback((path: string, value: unknown) => {
+  const updateNestedMaiaSetting = useCallback(async (path: string, value: unknown) => {
     if ('vibrate' in navigator) navigator.vibrate(5);
-
     const keys = path.split('.');
     const updated = { ...maiaSettings };
     let current: Record<string, unknown> = updated;
-
     for (let i = 0; i < keys.length - 1; i++) {
       current[keys[i]] = { ...(current[keys[i]] as Record<string, unknown>) };
       current = current[keys[i]] as Record<string, unknown>;
     }
     current[keys[keys.length - 1]] = value;
 
-    setMaiaSettings(updated);
-    saveAccountSettings(updated);
-    showSaveIndicator();
-
-    // Sync voice name to legacy localStorage key (still read by agentConfig)
-    if (path === 'voice.openaiVoice') {
-      localStorage.setItem('selected_voice', value as string);
-    }
-    // NOTE: No separate conversationStyleChanged dispatch here.
-    // saveAccountSettings() already emits 'maia-account-settings-changed',
-    // which OracleConversation listens to. Double-dispatching caused a
-    // feedback loop with log spam (dozens of updates per second).
-
-    // Also sync nested settings to server if we have userId
-    if (userId) {
-      // Map nested paths to server API keys
-      const serverKeyMap: Record<string, string> = {
-        'voice.openaiVoice': 'voiceModel',
-        'voice.speed': 'voiceSpeed',
-        'memory.depth': 'memoryDepth',
-      };
-
-      const serverKey = serverKeyMap[path];
-      if (serverKey) {
-        apiFetch('/api/members/settings', {
+    const serverKeyMap: Record<string, string> = {
+      'voice.openaiVoice': 'voiceModel',
+      'voice.speed': 'voiceSpeed',
+      'memory.depth': 'memoryDepth',
+    };
+    const serverKey = serverKeyMap[path];
+    setSaved(false);
+    setError(null);
+    if (serverKey) {
+      if (!userId) {
+        setError('Please sign in before changing account settings.');
+        return;
+      }
+      try {
+        const res = await apiFetch('/api/members/settings', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            memberId: userId,
-            [serverKey]: value,
-          }),
-        }).catch(console.error);
+          body: JSON.stringify({ memberId: userId, [serverKey]: value }),
+        });
+        if (!res.ok) throw new Error('Account settings were not saved (' + res.status + ')');
+        const receipt = await res.json();
+        if (!receipt?.success || !receipt?.settings) throw new Error('Save not confirmed');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Account settings were not saved');
+        return;
       }
     }
+    setMaiaSettings(updated);
+    saveAccountSettings(updated);
+    if (path === 'voice.openaiVoice') localStorage.setItem('selected_voice', value as string);
+    // Other nested settings have only local preference custody.
+    if (serverKey) showSaveIndicator();
   }, [maiaSettings, userId, showSaveIndicator]);
 
   const updateNotification = useCallback(async (key: string, value: boolean) => {
     if (!userId || !memberSettings) return;
     if ('vibrate' in navigator) navigator.vibrate(5);
-
     const keyMap: Record<string, string> = {
       weeklyDigest: 'emailWeeklyDigest',
       breakthroughMoments: 'emailBreakthroughMoments',
       communityUpdates: 'emailCommunityUpdates',
       productUpdates: 'emailProductUpdates',
     };
-
-    setMemberSettings({
-      ...memberSettings,
-      notifications: { ...memberSettings.notifications, [key]: value },
-    });
-
-    await apiFetch('/api/members/settings', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ memberId: userId, [keyMap[key]]: value }),
-    });
-
-    showSaveIndicator();
+    setSaved(false);
+    setError(null);
+    try {
+      const res = await apiFetch('/api/members/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId: userId, [keyMap[key]]: value }),
+      });
+      if (!res.ok) throw new Error('Notification preference not saved (' + res.status + ')');
+      const receipt = await res.json();
+      if (!receipt?.success || !receipt?.settings) throw new Error('Save not confirmed');
+      setMemberSettings({
+        ...memberSettings,
+        notifications: { ...memberSettings.notifications, [key]: value },
+      });
+      showSaveIndicator();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Notification preference not saved');
+    }
   }, [userId, memberSettings, showSaveIndicator]);
 
   const updatePrivacy = useCallback(async (key: string, value: boolean) => {
     if (!userId || !memberSettings) return;
     if ('vibrate' in navigator) navigator.vibrate(5);
-
     const keyMap: Record<string, string> = {
       shareAnonymousInsights: 'shareAnonymousInsights',
       allowResearchParticipation: 'allowResearchParticipation',
     };
-
-    setMemberSettings({
-      ...memberSettings,
-      privacy: { ...memberSettings.privacy, [key]: value },
-    });
-
-    await apiFetch('/api/members/settings', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ memberId: userId, [keyMap[key]]: value }),
-    });
-
-    showSaveIndicator();
+    setSaved(false);
+    setError(null);
+    try {
+      const res = await apiFetch('/api/members/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId: userId, [keyMap[key]]: value }),
+      });
+      if (!res.ok) throw new Error('Privacy preference not saved (' + res.status + ')');
+      const receipt = await res.json();
+      if (!receipt?.success || !receipt?.settings) throw new Error('Save not confirmed');
+      setMemberSettings({
+        ...memberSettings,
+        privacy: { ...memberSettings.privacy, [key]: value },
+      });
+      showSaveIndicator();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Privacy preference not saved');
+    }
   }, [userId, memberSettings, showSaveIndicator]);
 
   const saveProfile = useCallback(async () => {
@@ -2003,34 +2014,38 @@ export function AccountSettings() {
     </div>
   );
 
-  // Handler for updating individual data type consent
+  // Account storage consent must be confirmed server-side before the UI says saved.
   const updateDataTypeConsent = useCallback(async (
     dataType: DataType,
     local: boolean,
     server: boolean
   ) => {
     if ('vibrate' in navigator) navigator.vibrate(5);
-    // Update local IndexedDB consent
-    await setDataTypeConsent(dataType, local, server);
-    const summary = await getConsentSummary();
-    setConsentSummary(summary);
-    showSaveIndicator();
-
-    // Sync to server (server-authoritative consent)
-    if (profile?.id) {
-      try {
-        await apiFetch('/api/account/storage-consent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            memberId: profile.id,
-            [`${dataType}Server`]: server,
-            [`${dataType}Local`]: local
-          })
-        });
-      } catch (e) {
-        console.warn('Failed to sync consent to server:', e);
-      }
+    setSaved(false);
+    setError(null);
+    if (!profile?.id) {
+      setError('Please sign in before changing storage consent.');
+      return;
+    }
+    try {
+      const res = await apiFetch('/api/account/storage-consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId: profile.id,
+          [dataType + 'Server']: server,
+          [dataType + 'Local']: local,
+        }),
+      });
+      if (!res.ok) throw new Error('Storage consent not saved (' + res.status + ')');
+      const receipt = await res.json();
+      if (!receipt?.success) throw new Error('Storage consent save not confirmed');
+      await setDataTypeConsent(dataType, local, server);
+      const summary = await getConsentSummary();
+      setConsentSummary(summary);
+      showSaveIndicator();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Storage consent not saved');
     }
   }, [showSaveIndicator, profile?.id]);
 
@@ -2039,8 +2054,11 @@ export function AccountSettings() {
     await setSanctuaryDefault(enabled);
     const summary = await getConsentSummary();
     setConsentSummary(summary);
-    showSaveIndicator();
-  }, [showSaveIndicator]);
+    setSaved(false);
+    // This legacy control only changes localStorage. It does not establish
+    // an account-wide privacy choice or server-side remembrance permission.
+    setError('Sanctuary preference changed on this device only; not saved to your account.');
+  }, []);
 
   const renderDataPrivacy = () => {
     const details = consentSummary?.details;

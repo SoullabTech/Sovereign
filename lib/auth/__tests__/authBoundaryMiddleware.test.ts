@@ -43,7 +43,7 @@ jest.mock('@/lib/db/postgres', () => ({
 }));
 
 import { NextRequest, NextResponse } from 'next/server';
-import { middleware } from '../../../middleware';
+import { proxy as middleware } from '../../../proxy';
 
 /**
  * Build a real NextRequest so cookie parsing, URL parsing and header casing are
@@ -380,4 +380,37 @@ describe('tier enforcement deliberately disabled', () => {
     const res = await middleware(request(ADMIN_PAGE, { headers: { 'x-session-token': ADMIN_TOKEN } }));
     expectForwarded(res);
   });
+});
+
+// RF01 S0-A1.1: reach the actual Next.js 16 proxy, not a stale middleware import.
+describe('RF01 member-owned privacy routes through live proxy function', () => {
+  const privacyPaths = [
+    '/api/members/settings',
+    '/api/members/recall-preferences',
+    '/api/account/storage-consent',
+  ];
+  for (const mode of ['permissive', 'strict'] as const) {
+    it(mode + ': denies unauthenticated privacy routes', async () => {
+      const prior = process.env.ACCESS_CONTROL_MODE;
+      process.env.ACCESS_CONTROL_MODE = mode;
+      try {
+        for (const path of privacyPaths) {
+          const res = await middleware(request(path));
+          expect(res.status).toBe(401);
+          expect(res.headers.get('x-middleware-next')).toBeNull();
+        }
+      } finally { if (prior === undefined) delete process.env.ACCESS_CONTROL_MODE; else process.env.ACCESS_CONTROL_MODE = prior; }
+    });
+    it(mode + ': admits authenticated free member to own privacy handler', async () => {
+      const prior = process.env.ACCESS_CONTROL_MODE;
+      process.env.ACCESS_CONTROL_MODE = mode;
+      try {
+        for (const path of privacyPaths) {
+          const res = await middleware(request(path, { headers: { 'x-session-token': VALID_TOKEN } }));
+          expect(res.status).toBe(200);
+          expect(res.headers.get('x-middleware-next')).toBe('1');
+        }
+      } finally { if (prior === undefined) delete process.env.ACCESS_CONTROL_MODE; else process.env.ACCESS_CONTROL_MODE = prior; }
+    });
+  }
 });
