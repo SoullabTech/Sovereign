@@ -1,0 +1,140 @@
+{
+  "schema": "rgr-grm-a02-candidate/v1",
+  "id": "RGR-GRM-A02",
+  "programme": "RELATIONAL-GEOMETRY-REASONING",
+  "recorded_on": "2026-10-16",
+  "standing": "RESEARCH_DESIGN_CANDIDATE_NOT_ADJUDICATED",
+  "immediate_parent_sha": "1cc463da4d660a6bbf351df5847c4108d8166d4e",
+  "immediate_parent_pr": 1833,
+  "grandparent_pr": 1832,
+  "branch": "feature/rgr-grma02-typed-composition-design-20261016",
+  "canonical_rgr06_identity": "RGR-06_CONFIRMATORY_IMPLEMENTATION_LOCK_2026-09-19",
+  "canonical_rgr07_opened": false,
+  "independent_human_review": false,
+  "founder_adjudication": false,
+  "relation_family": {
+    "title": "typed anchored three-hop path existence in a fixed six-vertex directed network",
+    "designated_source": "s",
+    "designated_target": "t",
+    "path_labels": [
+      "OPEN",
+      "P",
+      "ACK"
+    ],
+    "vertices": [
+      "s",
+      "a",
+      "b",
+      "c",
+      "d",
+      "t"
+    ],
+    "edge_count": 9,
+    "source_world_count": 2,
+    "positive_count": 1,
+    "negative_count": 0,
+    "role_label_switch": "checkerboard P/Q flip on a->c, a->d, b->c, b->d",
+    "invariants_verified_by_pure_fixed_fixture_tests": [
+      "identical_untyped_directed_adjacent_edge_set",
+      "per_vertex_untyped_indegree_outdegree",
+      "per_vertex_typed_indegree_outdegree",
+      "global_edge_type_histogram",
+      "unigram_edge_clause_bag",
+      "global_unanchored_twohop_type_label_bigrams",
+      "all_vertices_strongly_connected",
+      "zero_reciprocal_pairs",
+      "coherent_actor_relabelings"
+    ],
+    "deliberate_non_invariants": [
+      "source_anchored_end_point_twohop_paths",
+      "typed_threehop_OPEN_P_ACK_source_to_target",
+      "typed_threehop_label_sequences_with_endpoint_identity"
+    ],
+    "limitations": [
+      "exact_gold_graph_symbolic_solver_classifies_perfectly",
+      "all_twohop_endpoint_aware_graph_structures_not_preserved",
+      "single_checkerboard_graph_family_only",
+      "not_lived_or_mental_meaning"
+    ]
+  },
+  "authority": {
+    "prepare_documentation": true,
+    "run_pure_hand_authored_mathematical_fixture_checks": true,
+    "read_versioned_public_and_project_sources": true,
+    "create_or_sample_synthetic_experimental_corpus": false,
+    "implement_text_renderer": false,
+    "train_or_score_model": false,
+    "use_or_download_weights": false,
+    "external_provider_call": false,
+    "test_or_replication": false,
+    "member_private_clinical_or_manuscript_data": false,
+    "maia_memory_or_runtime_change": false,
+    "schema_migration": false,
+    "alter_canonical_rgr_locks": false,
+    "merge": false,
+    "deployment": false
+  },
+  "sample_counts": {
+    "hand_authored_fixed_worlds": 2,
+    "synthetic_benchmark_examples_generated": 0,
+    "training_examples_generated": 0,
+    "model_inferences": 0,
+    "learned_model_results": 0
+  },
+  "open_scientific_gates": [
+    "two or more independently proven eligible graph families with balanced counterfactuals",
+    "independent prose renderer source verification and ambiguity tests",
+    "source/target and typed relation encoding available equally to all comparators",
+    "strong text-to-typed-graph and generic same-text alternatives",
+    "separate holdout for domains and genuinely novel graph templates",
+    "encoder rank preprocessing hyperparameter selection and degeneracy rules",
+    "root-level confidence procedure, competence floors, delta_min and multiplicity lock",
+    "independent human scientific review",
+    "distinct Founder approved work unit and execution grants before benchmark",
+    "separate TEST REPLICATION and MAIA relevance review"
+  ],
+  "conclusion": {
+    "fixed_combinatorial_witness_verified": true,
+    "strong_geometric_advantage_established": false,
+    "model_benchmark_executed": false,
+    "consciousness_hypothesis_validated": false,
+    "economic_utility_established": false
+  },
+  "sources_protected": [
+    "docs/programme/RGR-GRM-A01_RELATIONAL_INVARIANCE_DESIGN_CANDIDATE_2026-10-16.md",
+    "docs/programme/RGR-GRM-A01_CRITICAL_SOURCE_REVIEW_2026-10-16.md",
+    "docs/programme/RGR-GRM-A01_WORK_UNIT_2026-10-16.json",
+    "docs/programme/RGR-GRM-A01_VERIFICATION_RETURN_2026-10-16.md",
+    "tests/constitutional/rgr-grm-a01/design-guard.test.mjs",
+    "docs/programme/RGR-GRM-01_GEOMETRY_OF_RELATIONAL_MEANING_2026-10-16.md",
+    "docs/programme/RGR-GRM-01_HYPOTHESIS_AND_FALSIFICATION_CANDIDATES_2026-10-16.md",
+    "docs/programme/RGR-GRM-01_LINEAGE_AND_SOURCE_BOUNDARY_2026-10-16.md",
+    "docs/programme/RGR-GRM-01_VERIFICATION_RETURN_2026-10-16.md",
+    "docs/programme/RGR-GRM-01_WORK_UNIT_2026-10-16.json",
+    "scripts/research/rgr-grm01/local-global-toy.mjs",
+    "tests/constitutional/rgr-grm01/local-global-toy.test.mjs",
+    "docs/programme/RGR-00_RELATIONAL_GEOMETRY_RESEARCH_CONSTITUTION_2026-09-18.md",
+    "docs/programme/RGR-01_SOURCE_CORPUS_2026-09-18.md",
+    "docs/programme/RGR-01_LITERATURE_MATHEMATICAL_LANDSCAPE_2026-09-18.md",
+    "docs/programme/RGR-01_CLAIM_LEDGER_2026-09-18.md",
+    "docs/programme/RGR-02_FORMAL_VOCABULARY_CANDIDATE_STRUCTURES_2026-09-18.md",
+    "docs/programme/RGR-03_FALSIFICATION_CONTRACT_2026-09-18.md",
+    "docs/programme/RGR-04_PREREGISTRATION_LOCK_2026-09-18.md",
+    "docs/programme/RGR-04_SYNTHETIC_RELATIONAL_BENCHMARK_CONSTITUTION_2026-09-18.md",
+    "docs/programme/RGR-05_PRE_MATERIALIZATION_FEASIBILITY_REPORT_2026-09-18.md",
+    "docs/programme/RGR-06_CONFIRMATORY_IMPLEMENTATION_LOCK_2026-09-19.md",
+    "docs/programme/RGR-06_WORK_UNIT_2026-09-19.json"
+  ],
+  "allowed_changed_paths": [
+    "docs/programme/RGR-GRM-A02_TYPED_COMPOSITION_DESIGN_2026-10-16.md",
+    "docs/programme/RGR-GRM-A02_ADVERSARIAL_REVIEW_2026-10-16.md",
+    "docs/programme/RGR-GRM-A02_WORK_UNIT_2026-10-16.json",
+    "docs/programme/RGR-GRM-A02_VERIFICATION_RETURN_2026-10-16.md",
+    "scripts/research/rgr-grma02/typed-composition-toy.mjs",
+    "tests/constitutional/rgr-grm-a02/typed-composition-toy.test.mjs"
+  ],
+  "document_sha256": {
+    "docs/programme/RGR-GRM-A02_TYPED_COMPOSITION_DESIGN_2026-10-16.md": "8a39930e811aae77e444d7286cb7615a09495c7637d446248526c42a91e76862",
+    "docs/programme/RGR-GRM-A02_ADVERSARIAL_REVIEW_2026-10-16.md": "08cdd854d15d7622c4506c9510d752cfdb83bd895754ad01fe889ea8056faf35"
+  }
+}
