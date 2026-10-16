@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.r26-backup-revocation.json","files":["lib/writersStudio/recovery/externalCustodyContractR26.ts","lib/writersStudio/recovery/heldExternalCustodyAdapterR26.ts","lib/writersStudio/recovery/heldCommitFenceR27.ts","lib/writersStudio/recovery/__tests__/heldCommitFenceR27.test.ts"],"include":[],"exclude":["node_modules"]}
