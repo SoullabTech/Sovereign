@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.r23-converged.json",
+  "files": [
+    "lib/writersStudio/recovery/externalCustodyBoundaryR24.ts",
+    "lib/writersStudio/recovery/__tests__/externalCustodyBoundaryR24.test.ts",
+    "scripts/ops/wsBetaR24IndependentProcessFixture.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
