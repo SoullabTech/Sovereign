@@ -33,6 +33,44 @@ function mintTurnProvenance(
   );
 }
 
+/** Distinguish an exact retry from an exchange-ID belonging to another act. */
+export class ExchangeIdentityConflict extends Error {
+  constructor() {
+    super('EXCHANGE_ID_REUSE_MISMATCH');
+    this.name = 'ExchangeIdentityConflict';
+  }
+}
+
+async function requireExactPriorExchangeTurn(input: {
+  userId: string;
+  sessionId?: string;
+  role: 'user' | 'assistant';
+  content: string;
+  exchangeId: string;
+  seq: number;
+}): Promise<void> {
+  const prior = await query<{
+    user_id: string;
+    session_id: string | null;
+    role: string;
+    content: string;
+    posture_at_creation: string | null;
+  }>(
+    'SELECT user_id, session_id, role, content, posture_at_creation ' +
+    'FROM conversation_turns WHERE exchange_id = $1 AND seq = $2',
+    [input.exchangeId, input.seq],
+  );
+  const row = prior.rows[0];
+  if (!row ||
+      row.user_id !== input.userId ||
+      row.session_id !== (input.sessionId ?? null) ||
+      row.role !== input.role ||
+      row.content !== input.content ||
+      row.posture_at_creation !== 'normal') {
+    throw new ExchangeIdentityConflict();
+  }
+}
+
 export interface TurnMeta {
   kind?: 'normal' | 'translation';
   parentTurnId?: string;       // Matches DB column; used for threading in meta if needed
@@ -186,9 +224,9 @@ export const TurnsStore = {
    *   seq 0 = member utterance, durable at acceptance (before generation)
    *   seq 1 = MAIA response, durable only once it actually exists
    *
-   * Idempotent on (exchange_id, seq): a retry, a re-render, or a later
-   * client-side pair write carrying the SAME exchangeId is dropped by
-   * ON CONFLICT DO NOTHING rather than duplicated.
+   * Idempotent on (exchange_id, seq), but not blindly: a conflicting row
+   * is accepted as an exact retry only when actor/session/role/content/posture
+   * match. A reused exchange identity with different authorship is refused.
    *
    * SANCTUARY (S1) and provenance (S5) are enforced exactly as in addExchange —
    * this is a narrower write, not a weaker one.
@@ -211,10 +249,12 @@ export const TurnsStore = {
       return false; // mint refused — no durable object without provenance (S5)
     }
     const seq = opts.role === 'user' ? 0 : 1;
-    await query(
-      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance)
-       VALUES ($1, $2, $3, $4, $5, $6, clock_timestamp(), 'normal', $7::jsonb)
-       ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
+    const inserted = await query<{ id: string }>(
+      "INSERT INTO conversation_turns " +
+      "(user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance) " +
+      "VALUES ($1, $2, $3, $4, $5, $6, clock_timestamp(), 'normal', $7::jsonb) " +
+      "ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING " +
+      "RETURNING id",
       [
         opts.userId,
         opts.sessionId ?? null,
@@ -223,8 +263,12 @@ export const TurnsStore = {
         opts.exchangeId,
         seq,
         JSON.stringify(provenance.toJson()),
-      ]
+      ],
     );
+    if (inserted.rows.length > 0) return true;
+    // A suppressed INSERT is NOT necessarily an exact retry. It might be an
+    // actor/session/content/posture collision. Never report success on that.
+    await requireExactPriorExchangeTurn({ ...opts, seq });
     return true;
   },
 
@@ -241,8 +285,9 @@ export const TurnsStore = {
    * one clock tick — guarantees user < assistant ordering when sorted by
    * (created_at ASC, seq ASC).
    *
-   * exchangeId: supply the same UUID to make the write idempotent on retry.
-   * ON CONFLICT DO NOTHING drops a duplicate silently when exchange_id is set.
+   * exchangeId: supply the same UUID to make an identical retry idempotent.
+   * Existing row must match actor/session/role/content/posture exactly;
+   * mismatching reuse raises ExchangeIdentityConflict.
    * Omitting exchangeId falls back to the original non-idempotent behaviour.
    */
   async addExchange(
@@ -256,9 +301,18 @@ export const TurnsStore = {
     if (!contentWritable(posture, 'TurnsStore.addExchange', sessionId)) {
       return;
     }
-    if (!exchangeId) {
-      console.warn('[TurnsStore] addExchange called without exchangeId — turns will not be idempotent');
+    if (exchangeId) {
+      // The F1 two-half pathway and later client pair now share one exact
+      // identity test; mismatching duplicate IDs fail instead of disappearing.
+      await TurnsStore.addExchangeTurn(posture, {
+        userId, sessionId, role: 'user', content: userMessage, exchangeId,
+      });
+      await TurnsStore.addExchangeTurn(posture, {
+        userId, sessionId, role: 'assistant', content: assistantResponse, exchangeId,
+      });
+      return;
     }
+    console.warn('[TurnsStore] addExchange called without exchangeId — turns will not be idempotent');
     const eid = exchangeId ?? null;
     // S5: provenance minted here, per turn, from the boundary-resolved posture.
     // The exchange id (or a per-call reference) is the typed source's turnId.

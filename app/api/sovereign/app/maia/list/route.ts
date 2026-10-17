@@ -101,10 +101,11 @@ import { launchRelationalFieldShadow } from '@/lib/maia/relational-field-shadow/
 // F1 durable turn acceptance (audit 2026-08-10): this route is the serving
 // boundary that ACCEPTS a member utterance, so it is where the utterance must
 // become durable — not the browser, later, once a pair exists.
-import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
+import { TurnsStore, ExchangeIdentityConflict } from '@/lib/memory/stores/TurnsStore';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { scrubMemoryAmnesia } from '@/lib/maia/prompts/memoryCanonGuard';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
+import { normalizedSessionId, ensureOwnedMemberSession, ensureGuestSession, SessionOwnershipRefusal } from '@/lib/sovereign/memberSessionOwnership';
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
 import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
@@ -438,12 +439,37 @@ export async function POST(req: NextRequest) {
     // Reuse the client's exchange id when supplied so the later client-side pair
     // write collapses onto this same exchange instead of duplicating it. Falling
     // back to requestId keeps older clients working exactly as before.
+    // Reject malformed turn identity before acceptance or model processing.
+    if (typeof clientExchangeId === 'string' && clientExchangeId.length > 0 &&
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clientExchangeId)) {
+      return jsonWithCors(req, { error: 'INVALID_EXCHANGE_ID' }, 400);
+    }
     const exchangeId =
       typeof clientExchangeId === 'string' && clientExchangeId.length > 0
         ? clientExchangeId
         : requestId;
-    const acceptedSessionId =
-      typeof sessionId === 'string' && sessionId.trim() ? sessionId.trim() : undefined;
+    // RF01 S0-A2: prove this conversation belongs to the authenticated
+    // member BEFORE F1, early-return routes, profile retrieval or cognition.
+    // First Send binds new IDs atomically. Foreign and legacy ownerless IDs
+    // refuse without a content read, write, or account mutation.
+    let acceptedSessionId: string;
+    try {
+      acceptedSessionId = normalizedSessionId(sessionId);
+      if (isRecognizedUser) {
+        await ensureOwnedMemberSession(acceptedSessionId, userId!);
+      } else {
+        await ensureGuestSession(acceptedSessionId);
+      }
+    } catch (err) {
+      if (err instanceof SessionOwnershipRefusal) {
+        return jsonWithCors(req, {
+          error: err.code,
+          action: 'NEW_SESSION_REQUIRED',
+          status: 'This conversation could not be resumed safely. Start a new conversation.',
+        }, err.code === 'SESSION_ID_INVALID' ? 400 : 409);
+      }
+      throw err;
+    }
     let memberTurnDurable = false;
 
     if (isRecognizedUser && !isSanctuary) {
@@ -455,16 +481,16 @@ export async function POST(req: NextRequest) {
           content: message,
           exchangeId,
         });
-        console.log(
-          `🧱 [MAIA/durability] member turn accepted+durable exchange=${exchangeId.slice(0, 8)} durable=${memberTurnDurable} dt=${msSince(start)}ms`
-        );
-      } catch (durabilityErr: any) {
-        // Never fail the member's turn because bookkeeping failed — but say so
-        // loudly, because this is exactly the silent-loss condition F1 is about.
-        console.error(
-          `❌ [MAIA/durability] member turn NOT durable exchange=${exchangeId.slice(0, 8)}:`,
-          durabilityErr?.message ?? durabilityErr
-        );
+        if (!memberTurnDurable) {
+          return jsonWithCors(req, { error: 'TURN_ACCEPTANCE_UNAVAILABLE' }, 503);
+        }
+        console.log('[MAIA/durability] member turn accepted; owner verified');
+      } catch (err) {
+        if (err instanceof ExchangeIdentityConflict) {
+          return jsonWithCors(req, { error: 'EXCHANGE_ID_REUSE_MISMATCH' }, 409);
+        }
+        console.warn('[MAIA/durability] member turn not accepted');
+        return jsonWithCors(req, { error: 'TURN_ACCEPTANCE_UNAVAILABLE' }, 503);
       }
     }
 
@@ -567,7 +593,7 @@ export async function POST(req: NextRequest) {
         );
         const capabilityDescriptionSession = await withTimeoutLabeled(
           'ensureSession:capabilityDescription',
-          ensureSession(sessionId),
+          ensureSession(acceptedSessionId),
           5000,
           start,
         );
@@ -651,7 +677,7 @@ export async function POST(req: NextRequest) {
     // Run session creation, cognitive profile, and name change in parallel
     const isRecognizedForProfile = typeof userId === 'string' && userId.length > 0 && !userId.startsWith('anon:');
     const [session, cognitiveProfileResult, nameChangeResult] = await Promise.all([
-      withTimeoutLabeled('ensureSession', ensureSession(sessionId), 5000, start),
+      withTimeoutLabeled('ensureSession', ensureSession(acceptedSessionId), 5000, start),
       (userId || sessionId)
         ? withTimeoutLabeled('getCognitiveProfile', getCognitiveProfile(userId || sessionId!), 5000, start)
             .catch(err => { console.warn('⚠️ [Field Safety] Could not fetch cognitive profile:', err); return null; })

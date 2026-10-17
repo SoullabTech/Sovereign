@@ -61,7 +61,8 @@ import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@/lib/sovereign/decisionGovernor';
 import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
-import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { ensureOwnedMemberSession, ensureGuestSession, SessionOwnershipRefusal } from '@/lib/sovereign/memberSessionOwnership';
 import { hasContinuityAccess, toMemberTier } from '@/lib/auth/tierAccess';
 import { normalizeConversationMode, isRelationshipMode, type ConversationMode } from '@/lib/api/conversationMode';
 import { query } from '@/lib/db/postgres';
@@ -936,13 +937,13 @@ export async function POST(req: NextRequest) {
     let authUserId: string | null = null;
     let serverUserName = 'Friend'; // Safe fallback
     try {
-      const serverSession = await getCurrentSession();
-      if (serverSession) {
-        authUserId = serverSession.memberId;
+      authUserId = await getMemberIdFromRequest(req);
+      if (authUserId) {
+        // Authenticated session (cookie or native verified token).
         // Derive userName from database - never trust client-sent name
         const memberResult = await query(
           `SELECT name, preferred_name FROM members WHERE id = $1`,
-          [serverSession.memberId]
+          [authUserId]
         );
         if (memberResult.rows.length > 0) {
           const member = memberResult.rows[0];
@@ -985,6 +986,24 @@ export async function POST(req: NextRequest) {
     }
     const stableAnonId = isAnon ? (headerAnonId || effectiveUserId) : undefined;
     const selfletEligible = SELFLET_ALLOW_ANON || !isAnon;
+
+    // RF01 S0-A2: bind / verify session ownership before reading conversation
+    // content, updating active state, deriving context, or writing a reply.
+    try {
+      if (authUserId) await ensureOwnedMemberSession(safeSessionId, authUserId);
+      else await ensureGuestSession(safeSessionId);
+    } catch (err) {
+      if (err instanceof SessionOwnershipRefusal) {
+        return withSessionCookie(
+          NextResponse.json({
+            error: err.code,
+            action: 'NEW_SESSION_REQUIRED',
+          }, { status: err.code === 'SESSION_ID_INVALID' ? 400 : 409 }),
+          sessionCookie,
+        );
+      }
+      throw err;
+    }
 
     // 🔒 ACTIVE SESSION: Mark this session as active (for maintenance mode tracking)
     await touchActiveSession({

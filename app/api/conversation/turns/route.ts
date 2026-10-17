@@ -12,9 +12,10 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
-import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
+import { TurnsStore, ExchangeIdentityConflict } from '@/lib/memory/stores/TurnsStore';
 import { recordConsentState } from '@/lib/provenance/consentState';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { requireExistingOwnedSession, SessionOwnershipRefusal } from '@/lib/sovereign/memberSessionOwnership';
 
 /**
  * SECURITY (2026-07-24): the subject of every read and write on this route is the
@@ -60,6 +61,19 @@ export async function GET(request: NextRequest) {
     }
     const userId = memberId;
 
+    // The session ID is not an access token. Prove this member owns it even
+    // though the SELECT also filters by user_id.
+    if (sessionId) {
+      try {
+        await requireExistingOwnedSession(sessionId, memberId);
+      } catch (err) {
+        if (err instanceof SessionOwnershipRefusal) {
+          return NextResponse.json({ success: false, error: 'SESSION_NOT_OWNED' }, { status: 409 });
+        }
+        throw err;
+      }
+    }
+
     // Build query based on provided params
     let sql: string;
     let params: string[];
@@ -80,6 +94,10 @@ export async function GET(request: NextRequest) {
         SELECT id, role, content, session_id as "sessionId", created_at as "createdAt"
         FROM conversation_turns
         WHERE user_id = $1
+          AND (session_id IS NULL OR EXISTS (
+            SELECT 1 FROM maia_sessions
+            WHERE maia_sessions.id = conversation_turns.session_id
+              AND maia_sessions.member_id = $1))
         ORDER BY created_at DESC
         LIMIT 50
       `;
@@ -137,6 +155,20 @@ export async function POST(request: NextRequest) {
     // The durable-write subject is the authenticated member. Never the body.
     const userId = memberId;
 
+    // Direct client persistence is another owner-sensitive ingress. Do not
+    // store a turn merely because the caller authenticated and knows a UUID.
+    if (typeof sessionId !== 'string' || !sessionId.trim()) {
+      return NextResponse.json({ success: false, error: 'SESSION_REQUIRED' }, { status: 400 });
+    }
+    try {
+      await requireExistingOwnedSession(sessionId, memberId);
+    } catch (err) {
+      if (err instanceof SessionOwnershipRefusal) {
+        return NextResponse.json({ success: false, error: 'SESSION_NOT_OWNED' }, { status: 409 });
+      }
+      throw err;
+    }
+
     // S5: posture resolved server-side at this boundary and recorded
     // (content-free). The store — not this route — enforces refusal; the
     // pre-S5 raw INSERT here bypassed the S1 gate entirely.
@@ -174,13 +206,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true });
 
   } catch (error) {
+    if (error instanceof ExchangeIdentityConflict) {
+      return NextResponse.json({
+        success: false, error: 'EXCHANGE_ID_REUSE_MISMATCH',
+      }, { status: 409 });
+    }
     const message = error instanceof Error ? error.message : 'Unknown error';
 
-    // Handle missing table gracefully - just log and return success
-    // This prevents the 404 errors from causing UI issues
+    // A missing persistence table is an infrastructure refusal, not success.
+    // Never tell a member their authored turn was saved when no write occurred.
     if (message.includes('does not exist')) {
-      console.warn('[CONVERSATION] conversation_turns table not found - skipping save');
-      return NextResponse.json({ success: true, tableNotReady: true });
+      console.warn('[CONVERSATION] persistence unavailable');
+      return NextResponse.json({
+        success: false, error: 'PERSISTENCE_UNAVAILABLE',
+      }, { status: 503 });
     }
 
     console.error(`[CONVERSATION] POST error: ${message}`);

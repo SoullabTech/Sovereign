@@ -4,6 +4,7 @@ import type { DisplacedExchange } from '@/lib/maia/continuity/sessionRecovery';
 import { randomUUID } from 'crypto';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { TurnPosture, contentWritable } from '@/lib/sanctuary/turnPosture';
+import { SessionOwnershipRefusal } from './memberSessionOwnership';
 
 export type ConversationExchange = {
   timestamp: string;
@@ -76,18 +77,21 @@ export async function addConversationExchange(
     meta
   };
 
-  // Update session-level history (legacy, for within-session continuity)
-  await query(
-    `UPDATE maia_sessions
-     SET conversation_history = COALESCE(conversation_history, '[]'::jsonb) || $2::jsonb,
-         updated_at = NOW()
-     WHERE id = $1`,
-    [sessionId, JSON.stringify(exchange)]
-  );
-
-  // CRITICAL: Also persist to conversation_turns for cross-session memory
-  // This is what getConversationHistory() reads from
+  // Session JSONB is another content-bearing store. A forged sessionId must
+  // not update someone else's history even when called outside the main route.
   const userId = (meta?.userId as string) || (meta?.memberId as string);
+  if (!userId) throw new SessionOwnershipRefusal('SESSION_NOT_OWNED');
+  const row = await query(
+    "UPDATE maia_sessions SET conversation_history = " +
+    "COALESCE(conversation_history, '[]'::jsonb) || $2::jsonb, updated_at = NOW() " +
+    "WHERE id = $1 AND (member_id = $3 OR " +
+    "(member_id IS NULL AND ($3 LIKE 'anon:%' OR $3 LIKE 'guest:%'))) " +
+    "RETURNING id",
+    [sessionId, JSON.stringify(exchange), userId],
+  );
+  if (!row.rows[0]) throw new SessionOwnershipRefusal('SESSION_NOT_OWNED');
+
+  // Persist to conversation_turns only after verified session-scoped JSONB write.
   if (userId) {
     try {
       // One exchange identity per member action. Callers that also write the
@@ -174,10 +178,16 @@ export async function getSessionContinuityWindow(
     created_at: string;
     exchange_id: string | null;
   }>(
-    `SELECT role, content, created_at, exchange_id
-     FROM conversation_turns
-     WHERE session_id = $1
-     ORDER BY created_at ASC`,
+    `SELECT t.role, t.content, t.created_at, t.exchange_id
+     FROM conversation_turns t
+     JOIN maia_sessions s ON s.id = t.session_id
+     WHERE t.session_id = $1
+       AND (
+         (s.member_id IS NOT NULL AND t.user_id = s.member_id)
+         OR (s.member_id IS NULL AND
+             (t.user_id LIKE 'anon:%' OR t.user_id LIKE 'guest:%'))
+       )
+     ORDER BY t.created_at ASC`,
     [sessionId]
   );
 
