@@ -34,6 +34,7 @@
  * chances to disagree tomorrow, and the disagreement would land as a
  * mis-assigned durable section identity.
  */
+import {holdLegacyWriterForVerifiedMemberR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -106,6 +107,9 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   const { id } = await ctx.params;
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // R52 held-only: authenticated beta author cannot fall through to legacy writing.
+  const r52Hold = await holdLegacyWriterForVerifiedMemberR52(memberId);
+  if (r52Hold) return r52Hold;
 
   /* A body is optional: creation sends none. `convert: true` is the EXPLICIT
      command that partitions an existing draft. It is a separate command on
@@ -367,6 +371,9 @@ export async function PUT(request: NextRequest, ctx: { params: Promise<{ id: str
   const { id } = await ctx.params;
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // R52 held-only: authenticated beta author cannot fall through to legacy writing.
+  const r52Hold = await holdLegacyWriterForVerifiedMemberR52(memberId);
+  if (r52Hold) return r52Hold;
 
   let body: unknown;
   try {

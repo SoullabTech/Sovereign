@@ -12,6 +12,7 @@
  * dropped.
  */
 
+import {holdLegacyWriterForVerifiedMemberR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { saveSection } from '@/lib/manuscript/sections/saveSection';
@@ -35,6 +36,9 @@ export async function PUT(
   const { id, sectionId } = await params;
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  // R52 held-only: authenticated beta author cannot fall through to legacy writing.
+  const r52Hold = await holdLegacyWriterForVerifiedMemberR52(memberId);
+  if (r52Hold) return r52Hold;
 
   let payload: { body?: unknown; baseVersion?: unknown; observedBodySha256?: unknown };
   try {

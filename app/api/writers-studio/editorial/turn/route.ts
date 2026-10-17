@@ -21,6 +21,7 @@
  * discover that Sanctuary meant they should never have been written.
  */
 
+import {holdLegacyWriterForVerifiedMemberR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextResponse, type NextRequest } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
@@ -204,6 +205,10 @@ export async function POST(request: NextRequest) {
   if (identity.status !== 'verified') {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
+
+  // R52 pilot safety: never adopt the older plaintext editorial ledger.
+  const r52Hold = await holdLegacyWriterForVerifiedMemberR52(identity.memberId);
+  if (r52Hold) return r52Hold;
 
   let raw: unknown;
   try { raw = await request.json(); }

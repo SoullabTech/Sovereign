@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.r51-recovery-verdict.json",
+  "compilerOptions": {
+    "strict": true,
+    "incremental": false,
+    "noEmit": true,
+    "plugins": []
+  },
+  "files": [
+    "lib/writersStudio/release/heldLegacyWriterFenceR52.ts",
+    "lib/writersStudio/release/__tests__/heldLegacyWriterFenceR52.test.ts",
+    "app/api/sovereign/manuscripts/route.ts",
+    "app/api/sovereign/manuscripts/ingest/route.ts",
+    "app/api/sovereign/manuscripts/blank/route.ts",
+    "app/api/sovereign/manuscripts/[id]/draft/route.ts",
+    "app/api/sovereign/manuscripts/[id]/draft/checkpoint/route.ts",
+    "app/api/sovereign/manuscripts/[id]/draft/revisions/route.ts",
+    "app/api/sovereign/manuscripts/[id]/sections/[sectionId]/route.ts",
+    "app/api/sovereign/manuscripts/[id]/keeps/route.ts",
+    "app/api/sovereign/manuscripts/[id]/structure/proposals/[proposalId]/adopt/route.ts",
+    "app/api/writers-studio/editorial/adoption/route.ts",
+    "app/api/writers-studio/editorial/undo/route.ts",
+    "app/api/writers-studio/editorial/turn/route.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

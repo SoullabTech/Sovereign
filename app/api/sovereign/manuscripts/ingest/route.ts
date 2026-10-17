@@ -28,6 +28,7 @@ export const maxDuration = 120; // large .docx/.pdf extraction can take a moment
  * can name another member; nothing is written.
  */
 
+import {holdLegacyWriterForVerifiedMemberR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   checkAccess,
@@ -246,6 +247,10 @@ export async function POST(request: NextRequest) {
         { status: 401 },
       );
     }
+
+    // R52 held-only: stop pilot fallback before multipart bytes are read.
+    const r52Hold = await holdLegacyWriterForVerifiedMemberR52(memberId);
+    if (r52Hold) return r52Hold;
 
     // Proxy deliberately excludes this multipart endpoint. Replicate the
     // beta admission boundary IN-ROUTE before reading any upload bytes.

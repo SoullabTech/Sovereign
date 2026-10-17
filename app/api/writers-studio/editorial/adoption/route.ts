@@ -33,6 +33,7 @@
  * skip the truth.
  */
 
+import {holdLegacyWriterForVerifiedMemberR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextResponse, type NextRequest } from 'next/server';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import { adoptVersion, type AdoptionOutcome } from '@/lib/manuscript/editorialRuntime/adoption';
@@ -80,6 +81,10 @@ export async function POST(request: NextRequest) {
   if (identity.status !== 'verified') {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
+
+  // R52 pilot safety: never adopt the older plaintext editorial ledger.
+  const r52Hold = await holdLegacyWriterForVerifiedMemberR52(identity.memberId);
+  if (r52Hold) return r52Hold;
 
   let raw: unknown;
   try { raw = await request.json(); }
