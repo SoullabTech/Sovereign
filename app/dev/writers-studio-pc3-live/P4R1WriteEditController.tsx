@@ -1290,7 +1290,7 @@ export default function FlagshipWriteEditController() {
 
   return (
     <RebuildWritingBoundary
-      key={`${context.manuscriptId}:p4r1-pc3`}
+      key={`${context.manuscriptId}:p4r1-pc3${process.env.NEXT_PUBLIC_R71_AUTHOR_EDITORIAL_FIXTURE==='fictional-only'?':'+context.version:''}`}
       manuscriptId={context.manuscriptId}
       version={context.version}
       sections={context.sections}
@@ -1312,6 +1312,7 @@ export default function FlagshipWriteEditController() {
             held={selectedPassage}
             onFocusSection={focusWritingSection}
             onHoldPassage={holdPassage}
+            onR71VerifiedRevision={()=>{setSelectedPassage(null);void refreshContext();}}
             onMode={onMode}
             workspaceOpen={workspaceOpen}
             carriedInsight={arrivalInsight}

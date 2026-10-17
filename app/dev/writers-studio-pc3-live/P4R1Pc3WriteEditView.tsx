@@ -29,6 +29,8 @@ import { exactTextareaPassageR41, exactDomPassageR41 } from '@/lib/writersStudio
 import { exactRenderedPassageR52 } from '@/lib/writersStudio/exactRenderedPassageR52';
 import {P4R1ProtectedAuthorJourneyR54,R54_REAL_PC3_AUTHOR_JOURNEY_ENABLED,
   type R54PanelProps} from './P4R1ProtectedAuthorJourneyR54';
+import R71FixtureEditorialBridge from './R71FixtureEditorialBridge';
+const R71_FICTIONAL_LOCAL_EDITORIAL=process.env.NEXT_PUBLIC_R71_AUTHOR_EDITORIAL_FIXTURE==='fictional-only';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
 import EditorialDancePanel from './EditorialDancePanel';
@@ -73,6 +75,8 @@ export type P4R1Pc3WriteEditViewProps = {
   onHoldPassage: (section: RebuildSection, start: number, end: number, text: string) => void;
   /** HELD ONLY: never supplied by the real controller or public routes. */
   r54ProtectedJourney?: Pick<R54PanelProps,'alternatives'|'transport'|'onVerifiedRevision'>;
+  /** R71 fictional local editing returns to canonical PG context in place. */
+  onR71VerifiedRevision?:()=>void;
   onMode: (mode: 'home' | 'write' | 'develop' | 'review') => void;
 
   workspaceOpen: boolean;
@@ -776,7 +780,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   ) ?? null;
   const railLabel = railSection?.heading?.trim() || 'this section';
 
-  const writeMaia = props.work || editorial ? (
+  const writeMaia = props.work || editorial || R71_FICTIONAL_LOCAL_EDITORIAL ? (
     <div className="fr-maia-inner p4r1-write-maia">
       <div className="fr-maia-head">
         <div className="fr-orb" aria-hidden="true" />
@@ -787,6 +791,17 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody">
+        {/* LOCAL FICTIONAL ONLY: never activates R54/R53 production transport. */}
+        {R71_FICTIONAL_LOCAL_EDITORIAL ? <R71FixtureEditorialBridge
+          manuscriptId={props.context.manuscriptId}
+          selected={props.held&&props.held.draftSectionId===props.focusId ? {
+            sectionId:props.held.draftSectionId,
+            start:props.held.start,end:props.held.end,text:props.held.text,
+            generation:props.held.revisionNumber,
+          }:null}
+          liveSectionText={props.focusId?props.writing.bodyOf(props.focusId):''}
+          hasUnsavedWork={props.writing.hasUnsavedWork()}
+          onVerifiedRevision={()=>props.onR71VerifiedRevision?.()}/> : null}
         {/* R54 requires a separate reviewed source+session+KMS service before
             activating; the production controller supplies no transport. */}
         {R54_REAL_PC3_AUTHOR_JOURNEY_ENABLED &&

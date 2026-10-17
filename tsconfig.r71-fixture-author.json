@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/writersStudio/recovery/r71FictionalCanonicalEditorial.ts",
+    "app/api/writers-studio/r71-fixture-author/route.ts",
+    "app/dev/writers-studio-pc3-live/R71FixtureEditorialBridge.tsx",
+    "app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
