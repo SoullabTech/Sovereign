@@ -458,6 +458,22 @@ function getSessionToken(): string | null {
  */
 const VISITOR_ID_KEY = 'maia_visitor_id';
 
+/**
+ * Browser-safe anonymous visitor entropy. randomUUID() is unavailable for
+ * insecure HTTP LAN origins; getRandomValues() remains cryptographically
+ * secure. This is NEVER a session bearer, member identity or consent grant.
+ * Without secure entropy, refuse instead of falling back to Math.random().
+ */
+function anonymousVisitorHex(): string {
+  const source = globalThis.crypto;
+  if (!source || typeof source.getRandomValues !== 'function') {
+    throw new Error('SECURE_VISITOR_ENTROPY_UNAVAILABLE');
+  }
+  const bytes = new Uint8Array(8);
+  source.getRandomValues(bytes);
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
 export function getOrCreateVisitorId(): string {
   if (typeof window === 'undefined') {
     // Server-side: return a placeholder that backend will ignore
@@ -471,14 +487,14 @@ export function getOrCreateVisitorId(): string {
     }
 
     // Generate new stable visitor ID (16 hex chars for collision safety at scale)
-    const newId = `anon_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+    const newId = `anon_${anonymousVisitorHex()}`;
     localStorage.setItem(VISITOR_ID_KEY, newId);
     console.log('[visitor] Created stable visitor ID:', newId);
     return newId;
   } catch {
     // localStorage blocked (private mode, etc) - generate per-session ID
     // This is better than nothing, at least accumulates within a single session
-    return `anon_session_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+    return `anon_session_${anonymousVisitorHex()}`;
   }
 }
 
