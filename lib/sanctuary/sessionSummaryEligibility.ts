@@ -28,6 +28,7 @@ type EligibilityRow = {
   disallowed_turns: number | string;
   disallowed_receipts: boolean;
   deletion_scope_present: boolean;
+  erasure_hold_present: boolean;
 };
 
 export const SUMMARY_RECOVERY_POLICY = 'rf01-r1a-all-turns-explicit-normal-v1';
@@ -58,7 +59,9 @@ const ELIGIBILITY_SQL = [
   " 'member_sessions','episodic_memories')",
   ' AND (d.session_id = s.id OR',
   '  (d.session_id IS NULL AND d.member_id = $2))',
-  ') AS deletion_scope_present',
+  ') AS deletion_scope_present,',
+  'EXISTS(SELECT 1 FROM rf01_member_erasure_holds h',
+  ' WHERE h.member_id=$2) AS erasure_hold_present',
   'FROM maia_sessions s',
   'WHERE s.id=$1 AND s.member_id=$2',
   'LIMIT 1',
@@ -85,7 +88,9 @@ export async function evaluateSummaryEligibility(input: {
         (input.requireClosed && !['closing','completed'].includes(row.status ?? ''))) {
       return { ok: false, code: 'SUMMARY_SESSION_STATE_INELIGIBLE' };
     }
-    if (row.deletion_scope_present) {
+    if (row.deletion_scope_present || row.erasure_hold_present) {
+      // R1-B exact turn deletion holds all derivation until the member's
+      // prior influence sources have been reconciled under R1-C.
       return { ok: false, code: 'SUMMARY_DELETION_CUSTODY_HOLD' };
     }
     if (row.disallowed_receipts || Number(row.disallowed_turns) > 0) {

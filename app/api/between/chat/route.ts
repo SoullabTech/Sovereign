@@ -61,6 +61,7 @@ import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@/lib/sovereign/decisionGovernor';
 import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { assertMemberInfluenceAllowed, influenceHoldResponse } from '@/lib/sanctuary/memberInfluenceHold';
 import { verifyExplicitTurnConsent, validExchangeId } from '@/lib/sanctuary/explicitTurnConsent';
 import { requireQualifiedConversationProcessing, protectedProcessingRefusal, SanctuaryProcessingUnqualified } from '@/lib/sanctuary/processingQualification';
 import { ensureOwnedMemberSession, ensureGuestSession, SessionOwnershipRefusal } from '@/lib/sovereign/memberSessionOwnership';
@@ -1002,6 +1003,17 @@ export async function POST(req: NextRequest) {
     }
     const stableAnonId = isAnon ? (headerAnonId || effectiveUserId) : undefined;
     const selfletEligible = SELFLET_ALLOW_ANON || !isAnon;
+
+    // R1-B: member-derived memory remains unavailable after an exact-source
+    // erasure until all influences and restores are reconciled. Refuse BEFORE
+    // touching current session content, model context, or a new turn.
+    if (authUserId) {
+      try {
+        await assertMemberInfluenceAllowed(authUserId);
+      } catch (err) {
+        return NextResponse.json(influenceHoldResponse(err), { status: 503 });
+      }
+    }
 
     // RF01 S0-A2: bind / verify session ownership before reading conversation
     // content, updating active state, deriving context, or writing a reply.

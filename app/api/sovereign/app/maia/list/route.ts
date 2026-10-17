@@ -104,6 +104,7 @@ import { launchRelationalFieldShadow } from '@/lib/maia/relational-field-shadow/
 import { TurnsStore, ExchangeIdentityConflict } from '@/lib/memory/stores/TurnsStore';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { verifyExplicitTurnConsent } from '@/lib/sanctuary/explicitTurnConsent';
+import { assertMemberInfluenceAllowed, influenceHoldResponse } from '@/lib/sanctuary/memberInfluenceHold';
 import { requireQualifiedConversationProcessing, protectedProcessingRefusal, SanctuaryProcessingUnqualified } from '@/lib/sanctuary/processingQualification';
 import { scrubMemoryAmnesia } from '@/lib/maia/prompts/memoryCanonGuard';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
@@ -448,6 +449,16 @@ export async function POST(req: NextRequest) {
       userId !== 'anonymous' &&
       !userId.startsWith('anon:');
 
+    // R1-B: a member with erased source turns may still have derived memories
+    // or cached influence. Refuse BEFORE F1, consent, history or cognition;
+    // do not silently fall back to a model answer using stale context.
+    if (isRecognizedUser) {
+      try {
+        await assertMemberInfluenceAllowed(userId!);
+      } catch (err) {
+        return jsonWithCors(req, influenceHoldResponse(err), 503);
+      }
+    }
     const turnPosture = TurnPosture.resolve({ sanctuary: isSanctuary });
     // Reuse the client's exchange id when supplied so the later client-side pair
     // write collapses onto this same exchange instead of duplicating it. Falling

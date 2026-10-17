@@ -8,13 +8,12 @@ set -euo pipefail
 #  sovereignty required the system to forget."
 # This script does not consume deletion manifests/tombstones, so it can
 # resurrect sovereignty-deleted content. Use scripts/restore-governed.sh.
-if [ "${I_UNDERSTAND_THIS_RESTORE_IS_UNGOVERNED:-}" != "yes" ]; then
-    echo "❌ R20: raw restore refused — this path does not honor deletion manifests/tombstones."
-    echo "   Use: RESTORE_AUTHORIZED_BY=<ruling ref> scripts/restore-governed.sh <dump.sql.gz>"
-    echo "   (Founder override for non-sovereign data only:"
-    echo "    I_UNDERSTAND_THIS_RESTORE_IS_UNGOVERNED=yes $0 <dump>)"
-    exit 1
-fi
+# RF01 R1-B: the old override is retired. A raw restore cannot preserve
+# member influence holds and the full erasure/deletion manifest contract.
+# Only governed restoration with verified preflight is eligible for review.
+echo 'R1-B: ungoverned database restore disabled, including the former override.'
+echo 'Use scripts/restore-governed.sh after its read-only custody preflight.'
+exit 1
 
 # Colors for output
 GREEN='\033[0;32m'

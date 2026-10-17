@@ -6,6 +6,7 @@
  */
 
 import { query } from '../../db/postgres';
+import { assertMemberInfluenceAllowed } from '../../sanctuary/memberInfluenceHold';
 import { TurnPosture, contentWritable } from '../../sanctuary/turnPosture';
 import { Provenance } from '../../provenance/provenance';
 
@@ -101,6 +102,8 @@ export const TurnsStore = {
     userId: string,
     limit: number = 12
   ): Promise<Array<{ role: 'user' | 'assistant'; content: string; createdAt: string }>> {
+    // This is a shared cross-session memory reader, independent of HTTP.
+    await assertMemberInfluenceAllowed(userId);
     const result = await query<{ role: 'user' | 'assistant'; content: string; createdAt: string }>(
       `
       SELECT

@@ -140,6 +140,7 @@ import {
 } from '../maia/orientation/contract';
 import { TurnPosture } from '../sanctuary/turnPosture';
 import { requireQualifiedConversationProcessing } from '../sanctuary/processingQualification';
+import { assertMemberInfluenceAllowed } from '../sanctuary/memberInfluenceHold';
 import { recordConsentState } from '../provenance/consentState';
 import { VoiceDistinctionScorer } from '../spiralogic/VoiceDistinctionScorer';
 import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
@@ -3088,6 +3089,14 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   // route's protected-processing refusal. Writer Studio has its own governance.
   if (!writerStudio) {
     requireQualifiedConversationProcessing({ sanctuary: turnPosture.sanctuary });
+  }
+  // An internal caller bypassing HTTP routes still cannot use member-derived
+  // context while a source-erasure influence quarantine is unresolved.
+  if (!writerStudio) {
+    const actor = typeof meta?.userId === 'string' ? meta.userId : null;
+    if (actor && !actor.startsWith('anon:') && actor !== 'guest') {
+      await assertMemberInfluenceAllowed(actor);
+    }
   }
   // 🆘 SAFETY-CRISIS-01: assess the member's own words on the server. The result
   // ALWAYS overwrites `meta.crisisSafetyAddendum`, so a client cannot supply,
