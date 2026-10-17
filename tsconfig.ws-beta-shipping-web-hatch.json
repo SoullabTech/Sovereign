@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.ws-beta-shipping-mobile-null.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "app/open-in-web/page.tsx",
+    "app/open-web/page.tsx",
+    "lib/mobile/resolvedWebHandoffR61.ts",
+    "lib/mobile/__tests__/resolvedWebHandoffR61.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

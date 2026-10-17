@@ -17,15 +17,18 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
-import { WEB_STUDIO_BASE_URL } from '@/lib/mobile/mobileAllowlist';
+import { resolveWebHandoffR61, verifiedWebHandoffLabelR61 } from '@/lib/mobile/resolvedWebHandoffR61';
 
 function OpenInWebContent() {
   const params = useSearchParams();
   const router = useRouter();
 
-  const path = params.get('path') ?? '';
-  const label = params.get('label') ?? 'this tool';
-  const webUrl = path ? `${WEB_STUDIO_BASE_URL}${path}` : `${WEB_STUDIO_BASE_URL}`;
+  // Next may not have resolved the query during hydration. Never retain an
+  // earlier requested path or guess a protected Studio destination.
+  const destination = resolveWebHandoffR61(params?.get('path'));
+  const label = destination.kind === 'verified_destination'
+    ? verifiedWebHandoffLabelR61(params?.get('label'))
+    : 'this tool';
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-950 px-8 text-center gap-8">
@@ -38,7 +41,9 @@ function OpenInWebContent() {
       {/* Message */}
       <div className="flex flex-col gap-3 max-w-xs">
         <h1 className="text-xl font-semibold text-amber-100">
-          Available in Web Studio
+          {destination.kind === 'verified_destination'
+            ? 'Available in Web Studio'
+            : 'Continue on Soullab'}
         </h1>
         <p className="text-sm text-zinc-400 leading-relaxed">
           {label !== 'this tool'
@@ -46,21 +51,25 @@ function OpenInWebContent() {
             : "This tool is part of the full Studio experience and isn't available in the mobile app."}
         </p>
         <p className="text-xs text-zinc-500">
-          Open it in your browser to continue.
+          {destination.kind === 'verified_destination'
+            ? 'Open this verified destination in your browser to continue.'
+            : 'The requested destination could not be verified. You can open the Soullab homepage instead.'}
         </p>
       </div>
 
       {/* Actions */}
       <div className="flex flex-col gap-3 w-full max-w-xs">
         <a
-          href={webUrl}
+          href={destination.href}
           target="_blank"
           rel="noopener noreferrer"
           className="w-full py-3 px-6 rounded-xl bg-amber-500/15 border border-amber-500/30
                      text-amber-200 text-sm font-medium text-center
                      hover:bg-amber-500/25 transition-colors active:scale-95"
         >
-          Open in Web Studio
+          {destination.kind === 'verified_destination'
+            ? 'Open in Web Studio'
+            : 'Open Soullab homepage'}
         </a>
 
         <button
