@@ -81,7 +81,7 @@ function formatDate(dateStr: string): string {
 export default function OpportunityDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const opportunityId = params.opportunityId as string;
+  const opportunityId = (params?.opportunityId as string | undefined) ?? '';
 
   const [data, setData] = useState<OpportunityData | null>(null);
   const [practiceId, setPracticeId] = useState<string | null>(null);

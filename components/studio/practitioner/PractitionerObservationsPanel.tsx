@@ -24,6 +24,8 @@ const OBS_TYPE_LABELS: Record<ObservationType, string> = {
   pattern_notice:   'Pattern',
   interruption:     'Interruption',
   repair:           'Repair',
+  moment_of_contact: 'Moment of contact',
+  occupancy:        'Occupancy',
   other:            'Other',
 };
 

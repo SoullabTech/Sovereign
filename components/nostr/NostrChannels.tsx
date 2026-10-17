@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { Hash, Users, Loader2, ShieldCheck, Lock, ChevronRight, TreePine, GraduationCap } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { SoullabChannel } from '@/lib/nostr/channels';
 
@@ -18,7 +19,7 @@ interface Props {
   onOpenChannel: (channel: SoullabChannel) => void;
 }
 
-const CHANNEL_ICONS: Record<string, React.ElementType> = {
+const CHANNEL_ICONS: Record<string, LucideIcon> = {
   cohort: Hash,
   practitioners: ShieldCheck,
   retreat: TreePine,

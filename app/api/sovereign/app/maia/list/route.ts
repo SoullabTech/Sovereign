@@ -713,7 +713,7 @@ export async function POST(req: NextRequest) {
           },
           session: {
             id: session.id,
-            turns: session.turns,
+            turns: session.turn_count,
           },
           metadata: {
             fieldWorkSafe: false,
@@ -815,7 +815,7 @@ export async function POST(req: NextRequest) {
                 // Schema-correct loader (the legacy SELECT queried member_id / year_pillar /
                 // element_counts — none of which exist; it threw every turn and the row was
                 // never read). Real schema: user_id + *_json + dominant/deficient_elements.
-                const baziResult = await pool.query(
+                const baziResult = await query(
                   `SELECT birth_datetime_utc, birth_timezone, location_text, pillars_json,
                           day_master, day_master_element, day_master_yinyang,
                           wuxing_balance_json, wuxing_percentages_json,
@@ -848,7 +848,7 @@ export async function POST(req: NextRequest) {
 
               // 🌟 WESTERN BIRTH DATA + IDENTITY CONTEXT: Fetch birth data + pronouns for astrological and identity context
               try {
-                const birthResult = await pool.query(
+                const birthResult = await query(
                   `SELECT birth_date, birth_time, birth_location_name, birth_timezone, pronouns
                    FROM members WHERE id = $1`,
                   [effectiveUserId]
@@ -1030,7 +1030,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     let practiceFieldAddendum: string | null = null;
     if (isRecognizedUser && !isSanctuary) {
       try {
-        const spaceResult = await pool.query(
+        const spaceResult = await query(
           `SELECT rs.id, rs.practitioner_display_name
            FROM relationship_spaces rs
            WHERE rs.participant_member_id = $1 AND rs.status = 'active' AND rs.consent_status = 'accepted'
@@ -1942,17 +1942,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         model: rawModel ?? undefined,
         explorerId: effectiveUserId ?? undefined,
         sessionId: session.id,
-        turnIndex: _turnIndex,
-        mode: _voiceMode,
-        activeThreadPresent: null,
-        activeThreadConfidence: null,
-        correctionDetected: _ainShape.flags.mirror === false &&
-          /\b(i'?m sorry|let me clarify|that came out wrong|let me try that again|let'?s reset|i misspoke)\b/i.test(_text),
-        optionResolutionMatched: null,
-        optionResolutionNearMiss: null,
-        ruptureFlag: false,
-        ruptureType: null,
-        assistantTurnType: classifyAssistantTurn(_text),
+        // The telemetry service stores shape metrics only. Unsupported extra
+        // fields were silently discarded by its runtime destructuring.
       }).catch((err) => {
         console.warn('[sovereign/maia/list] AIN shape telemetry write failed:', err?.message);
       });
@@ -1990,7 +1981,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
             latencyMs: duration,
             meta: { ..._ledger, turnIndex: _historyLen },
             originRoute: '/api/sovereign/app/maia/list',
-          }).catch(() => { /* fire-and-forget; never blocks the turn */ });
+          }, turnPosture).catch(() => { /* fire-and-forget; never blocks the turn */ });
         }
       } catch (ledgerErr: any) {
         console.warn('[MAIA] interruption-ledger failed (non-blocking):', ledgerErr?.message);

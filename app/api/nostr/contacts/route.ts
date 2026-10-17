@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       [pubkeys]
     );
 
-    const { npubEncode } = await import('nostr-tools/nip19');
+    const { nip19: { npubEncode } } = await import('nostr-tools');
 
     const contacts = result.rows.map(m => ({
       pubkey: m.nostr_pubkey as string,

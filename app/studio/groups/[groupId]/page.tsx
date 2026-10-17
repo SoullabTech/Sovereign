@@ -76,7 +76,7 @@ const groupTypeLabels = {
 export default function GroupDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const groupId = params.groupId as string;
+  const groupId = (params?.groupId as string | undefined) ?? '';
 
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);

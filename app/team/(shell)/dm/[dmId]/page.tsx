@@ -1,26 +1,26 @@
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
-import { listDMThreads } from '@/lib/team/DMService';
+import { listDMThreads, type DMThread } from '@/lib/team/DMService';
 import { DMView } from '@/components/team/DMView';
 
-async function getSessionMemberId(): Promise<string | null> {
-  const cookieStore = await cookies();
-  const cookieMemberId = cookieStore.get('maia_member_id')?.value;
-  if (cookieMemberId) {
-    const result = await query('SELECT id FROM members WHERE id = $1', [cookieMemberId]);
-    if (result.rows.length > 0) return cookieMemberId;
-  }
-  const sessionToken = cookieStore.get('maia_session')?.value;
-  if (sessionToken) {
-    const result = await query(
-      `SELECT member_id FROM auth_sessions
-       WHERE session_token = $1 AND expires_at > NOW() AND revoked = FALSE`,
-      [sessionToken]
-    );
-    if (result.rows.length > 0) return result.rows[0].member_id;
-  }
-  return null;
+/** Never accept a claimed member ID. The session helper verifies the real cookie.
+ * A DM is readable only when the member belongs to its exact Co-Lab AND thread.
+ */
+async function getOwnedTeamId(dmId: string, memberId: string): Promise<string | null> {
+  const found = await query<{ team_id: string }>(
+    `SELECT dt.team_id
+       FROM team_dm_threads dt
+       JOIN team_dm_members dm
+         ON dm.dm_thread_id = dt.id
+        AND dm.member_id = $2 AND dm.hidden_at IS NULL
+       JOIN studio_team_members tm
+         ON tm.team_id = dt.team_id AND tm.member_id = $2
+      WHERE dt.id = $1
+      LIMIT 1`,
+    [dmId, memberId],
+  );
+  return found.rows[0]?.team_id ?? null;
 }
 
 export default async function DMPage({
@@ -30,10 +30,16 @@ export default async function DMPage({
 }) {
   const { dmId } = await params;
 
-  const memberId = await getSessionMemberId();
+  const session = await getCurrentSession();
+  const memberId = session?.memberId ?? null;
   if (!memberId) redirect(`/signin?next=/team/dm/${dmId}`);
 
-  const threads = await listDMThreads(memberId).catch((err) => {
+  const teamId = await getOwnedTeamId(dmId, memberId);
+  if (!teamId) {
+    return <div className="text-white/40 text-center p-8">DM thread not found.</div>;
+  }
+
+  const threads: DMThread[] = await listDMThreads(memberId, teamId).catch((err): DMThread[] => {
     console.error('[DM page] listDMThreads failed:', err);
     return [];
   });

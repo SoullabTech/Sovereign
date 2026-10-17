@@ -45,7 +45,7 @@ function BaguaSymbol({ size = 24, className = '' }: { size?: number; className?:
 
   // Generate octagon points
   const getOctagonPoints = (radius: number) => {
-    const points = [];
+    const points: Array<{ x: number; y: number }> = [];
     for (let i = 0; i < 8; i++) {
       const angle = (i * Math.PI) / 4 - Math.PI / 8; // Start rotated for flat top
       points.push({
@@ -128,7 +128,7 @@ function IChingOracleContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   // Return path: if user came from MAIA (or anywhere), back buttons honor it
-  const returnTo = searchParams.get('return') || '/oracle';
+  const returnTo = searchParams?.get('return') || '/oracle';
   const returnLabel = returnTo === '/maia' ? 'Return to MAIA' : 'Back to Oracle';
   const [phase, setPhase] = useState<ReadingPhase>('question');
   const [question, setQuestion] = useState('');

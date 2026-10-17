@@ -63,7 +63,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Items array is required' }, { status: 400 });
     }
 
-    const createdTasks = [];
+    const createdTasks: Array<{
+      id: string; title: string; dueAt: string | null; status: string;
+      meetingId: string; ventureId: string | null; opportunityId: string | null;
+      personId: string | null; createdAt: string;
+    }> = [];
 
     for (const item of items) {
       if (!item.title?.trim()) continue;

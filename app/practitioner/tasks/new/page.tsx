@@ -24,7 +24,7 @@ interface Practice {
 function NewTaskContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const preselectedContainerId = searchParams.get('containerId');
+  const preselectedContainerId = searchParams?.get('containerId');
 
   const [practice, setPractice] = useState<Practice | null>(null);
   const [containers, setContainers] = useState<Container[]>([]);

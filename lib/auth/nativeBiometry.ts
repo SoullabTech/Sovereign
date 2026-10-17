@@ -10,15 +10,31 @@
  * 3. Retrieved credentials used for automatic signin
  */
 
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 
-// Dynamic import to avoid SSR issues
-let NativeBiometric: typeof import('capacitor-native-biometric').NativeBiometric | null = null;
+/**
+ * No native biometric package is declared in this checkout. The optional
+ * bridge is available ONLY when the installed native app itself registers
+ * the plugin. Missing plugin means refuse, never emulate Keychain access.
+ */
+interface NativeBiometricBridge {
+  isAvailable(): Promise<{ isAvailable: boolean; biometryType?: number; errorCode?: string | number }>;
+  getCredentials(input: { server: string }): Promise<{ username?: string; password?: string }>;
+  setCredentials(input: { server: string; username: string; password: string }): Promise<void>;
+  deleteCredentials(input: { server: string }): Promise<void>;
+  verifyIdentity(input: {
+    reason: string; title: string; subtitle: string; description: string;
+    useFallback: boolean; fallbackTitle: string; maxAttempts: number;
+  }): Promise<void>;
+}
+let NativeBiometric: NativeBiometricBridge | null = null;
 
-async function getNativeBiometric() {
+async function getNativeBiometric(): Promise<NativeBiometricBridge> {
+  if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('NativeBiometric')) {
+    throw new Error('NativeBiometric plugin unavailable');
+  }
   if (!NativeBiometric) {
-    const mod = await import('capacitor-native-biometric');
-    NativeBiometric = mod.NativeBiometric;
+    NativeBiometric = registerPlugin<NativeBiometricBridge>('NativeBiometric');
   }
   return NativeBiometric;
 }

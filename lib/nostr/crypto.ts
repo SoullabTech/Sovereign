@@ -8,10 +8,9 @@
 
 'use client';
 
-import { generateSecretKey, getPublicKey, finalizeEvent } from 'nostr-tools';
-import { npubEncode, nsecEncode, decode as decodeNip19 } from 'nostr-tools/nip19';
-import * as nip44 from 'nostr-tools/nip44';
-import type { UnsignedEvent } from 'nostr-tools';
+import { generateSecretKey, getPublicKey, finalizeEvent, nip19, nip44 } from 'nostr-tools';
+import type { EventTemplate } from 'nostr-tools';
+const { npubEncode, nsecEncode, decode: decodeNip19 } = nip19;
 
 // ─── Hex helpers ─────────────────────────────────────────────────────────────
 
@@ -87,7 +86,7 @@ export function nsecFromHex(privkeyHex: string): string {
  * Returns the fully signed event ready to publish.
  */
 export function signEvent(
-  template: UnsignedEvent,
+  template: EventTemplate,
   privkeyHex: string
 ) {
   return finalizeEvent(template, hexToBytes(privkeyHex));

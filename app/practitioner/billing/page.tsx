@@ -59,7 +59,7 @@ function formatDate(dateStr: string | null) {
 function BillingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const statusFilter = searchParams.get('status') || 'all';
+  const statusFilter = searchParams?.get('status') || 'all';
 
   const [practice, setPractice] = useState<Practice | null>(null);
   const [records, setRecords] = useState<BillingRecord[]>([]);

@@ -5,7 +5,7 @@
  * Falls back gracefully on web.
  */
 
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 
 export interface DeviceContact {
   id: string;
@@ -44,9 +44,10 @@ async function initPlugin(): Promise<boolean> {
   if (!Capacitor.isNativePlatform()) return false;
 
   try {
-    // @capacitor-community/contacts must be installed separately
-    const module = await import('@capacitor-community/contacts');
-    ContactsPlugin = module.Contacts;
+    // Optional native bridge: no contacts package is installed in this source.
+    // Unregistered plugins must never prompt or read the address book.
+    if (!Capacitor.isPluginAvailable('Contacts')) return false;
+    ContactsPlugin = registerPlugin<NonNullable<typeof ContactsPlugin>>('Contacts');
     return true;
   } catch (error) {
     console.warn('[DeviceContacts] Contacts plugin not available:', error);

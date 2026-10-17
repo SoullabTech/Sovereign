@@ -13,7 +13,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import type { Tier } from '@/lib/entitlements';
+// The popup's legacy display modes are not permission-bearing member tiers.
+// Entitlements must be checked separately by protected routes.
+type MentorDisplayTier = 'personal' | 'pro';
 
 interface MentorContext {
   title: string;
@@ -121,11 +123,11 @@ interface MaiaMentorPopupProps {
    * User's current tier. Mentor shows for 'personal' and 'pro' tiers.
    * When not provided, defaults to 'personal' for MVP compatibility.
    */
-  tier?: Tier;
+  tier?: MentorDisplayTier;
 }
 
-// Tiers that can access the mentor
-const ALLOWED_TIERS: Tier[] = ['personal', 'pro'];
+// UI-only legacy display modes, not an entitlement decision.
+const ALLOWED_TIERS: MentorDisplayTier[] = ['personal', 'pro'];
 
 export default function MaiaMentorPopup({ tier = 'personal' }: MaiaMentorPopupProps) {
   // Pro-gating: only show for allowed tiers

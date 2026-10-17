@@ -21,11 +21,13 @@ class UnifiedBiometry {
     if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.()) {
       // On native, defer to the existing biometricAuth
       const { biometricAuth } = await import('./biometricAuth');
-      const result = await biometricAuth.checkAvailability();
+      const result = await biometricAuth.getAvailability();
+      // The verified WebAuthn adapter cannot infer Face ID vs fingerprint.
+      // Require a platform authenticator rather than claiming native availability.
       return {
-        available: result.available,
-        biometryType: result.biometryType as 'face' | 'fingerprint' | 'none',
-        reason: result.reason
+        available: result.available && result.platformAvailable,
+        biometryType: 'none',
+        reason: result.platformAvailable ? undefined : 'Platform authenticator unavailable'
       };
     }
 
@@ -41,9 +43,9 @@ class UnifiedBiometry {
     if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.()) {
       // On native, use existing biometricAuth
       const { biometricAuth } = await import('./biometricAuth');
-      const result = await biometricAuth.authenticate();
+      const result = await biometricAuth.authenticate(username);
       return {
-        success: result.verified,
+        success: result.success,
         error: result.error
       };
     }

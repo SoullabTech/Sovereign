@@ -69,7 +69,7 @@ function formatDuration(start: string, end: string) {
 export default function SessionDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const sessionId = params.sessionId as string;
+  const sessionId = (params?.sessionId as string | undefined) ?? '';
 
   const [session, setSession] = useState<Session | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);

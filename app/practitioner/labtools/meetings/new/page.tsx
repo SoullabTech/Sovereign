@@ -38,8 +38,8 @@ function formatDateTimeLocal(date: Date): string {
 function NewMeetingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const preselectedVentureId = searchParams.get('ventureId');
-  const preselectedOpportunityId = searchParams.get('opportunityId');
+  const preselectedVentureId = searchParams?.get('ventureId');
+  const preselectedOpportunityId = searchParams?.get('opportunityId');
 
   const [practiceId, setPracticeId] = useState<string | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);

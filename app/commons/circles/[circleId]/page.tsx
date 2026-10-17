@@ -57,7 +57,7 @@ export default function CircleDetailPage() {
   const [inquiryQuestion, setInquiryQuestion] = useState('');
   const [creatingInquiry, setCreatingInquiry] = useState(false);
 
-  const circleId = params.circleId;
+  const circleId = (params?.circleId as string | undefined) ?? '';
 
   useEffect(() => {
     let cancelled = false;

@@ -11,7 +11,7 @@
  */
 
 import { finalizeEvent } from 'nostr-tools';
-import type { UnsignedEvent, Event } from 'nostr-tools';
+import type { EventTemplate, Event } from 'nostr-tools';
 import { loadPrivkey, hexToBytes } from './crypto';
 import { publishEvent } from './client';
 import { SOULLAB_RELAY_URL } from './utils';
@@ -88,7 +88,7 @@ export async function publishAsMember(request: PublishRequest): Promise<PublishR
   }
 
   // Build unsigned event
-  const unsigned: UnsignedEvent = {
+  const unsigned: EventTemplate = {
     kind: 1,
     created_at: now,
     content: content.trim(),

@@ -18,7 +18,8 @@
 
 'use client';
 
-import { wrapManyEvents, unwrapEvent } from 'nostr-tools/nip17';
+import { nip17 } from 'nostr-tools';
+const { wrapManyEvents, unwrapEvent } = nip17;
 import type { NostrEvent, Filter } from 'nostr-tools';
 import { hexToBytes } from './crypto';
 import { publishEvent, subscribeToEvents, fetchEvents } from './client';

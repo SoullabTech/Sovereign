@@ -193,11 +193,11 @@ export async function runAllChecks(): Promise<CheckResult[]> {
       [result.service_id, result.status, result.response_ms, result.http_status, result.error],
     );
 
-    const openIncident = await getOpenIncident(result.service_id);
-    if (result.status === 'down' && !openIncident) {
+    const existingIncident = await getOpenIncident(result.service_id);
+    if (result.status === 'down' && !existingIncident) {
       await openIncident(result.service_id, result.error);
-    } else if (result.status === 'up' && openIncident) {
-      await closeIncident(openIncident.id);
+    } else if (result.status === 'up' && existingIncident) {
+      await closeIncident(existingIncident.id);
     }
   }
 

@@ -47,7 +47,7 @@ function formatDate(dateStr: string | null) {
 export default function TaskDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const taskId = params.taskId as string;
+  const taskId = (params?.taskId as string | undefined) ?? '';
 
   const [task, setTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);

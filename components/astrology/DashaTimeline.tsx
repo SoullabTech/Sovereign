@@ -90,7 +90,7 @@ function normalizeDashaProfile(profile: VimshottariDashaProfile): VimshottariDas
           startDate: ensureDateValue(profile.currentAntardasha.startDate),
           endDate: ensureDateValue(profile.currentAntardasha.endDate),
         }
-      : undefined,
+      : null,
   };
 }
 

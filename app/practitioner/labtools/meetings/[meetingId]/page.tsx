@@ -92,7 +92,7 @@ function formatDuration(startStr: string, endStr: string): string {
 export default function MeetingDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const meetingId = params.meetingId as string;
+  const meetingId = (params?.meetingId as string | undefined) ?? '';
 
   const [data, setData] = useState<MeetingData | null>(null);
   const [practiceId, setPracticeId] = useState<string | null>(null);

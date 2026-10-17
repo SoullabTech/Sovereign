@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     const session = await createSession({
       memberId,
       deviceId,
-      ipAddress: getClientIP(request),
+      ipAddress: getClientIP(request) ?? undefined,
       userAgent: request.headers.get('user-agent') || undefined
     });
 

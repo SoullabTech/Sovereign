@@ -90,8 +90,8 @@ interface MessagingStatus {
 function SettingsContent() {
   // Onboarding params
   const searchParams = useSearchParams();
-  const onboarding = searchParams.get('onboarding');
-  const connected = searchParams.get('connected');
+  const onboarding = searchParams?.get('onboarding');
+  const connected = searchParams?.get('connected');
   const isCalendarOnboarding = onboarding === 'calendar';
   const justConnectedGoogle = connected === 'google';
 
@@ -411,6 +411,9 @@ function SettingsContent() {
     // Security
     sessionTimeout: 30,
     requireConfirmation: true,
+
+    // Initial display default; server-side calendar disclosure remains authoritative.
+    calendar_disclosure_default: 'generic' as 'busy_only' | 'generic' | 'full',
   });
 
   const updateSetting = (key: string, value: any) => {

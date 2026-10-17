@@ -36,6 +36,7 @@ const CAPABILITY_LABELS: Record<ConnectorCapability, string> = {
   read_contacts: 'Read contacts',
   export_markdown: 'Export markdown',
   export_transcript: 'Export transcripts',
+  publish_note: 'Publish notes',
   send_webhook: 'Send webhooks',
 };
 

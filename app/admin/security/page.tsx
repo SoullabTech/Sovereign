@@ -127,7 +127,7 @@ function SectionCard({
   badgeColor = 'text-slate-400',
 }: {
   title: string;
-  icon: React.ElementType;
+  icon: import('lucide-react').LucideIcon;
   children: React.ReactNode;
   badge?: string | number;
   badgeColor?: string;

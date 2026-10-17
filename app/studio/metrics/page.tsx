@@ -29,7 +29,7 @@ function getDayName(dateString: string): string {
 export default function MetricsPage() {
   const [timeRange, setTimeRange] = useState<'week' | 'month'>('week');
   const searchParams = useSearchParams();
-  const showSymbolic = searchParams.get('symbolic') === '1';
+  const showSymbolic = searchParams?.get('symbolic') === '1';
   const { logs, loading: logsLoading, refetch: refetchLogs } = useDailyLog();
   const { current: proofSignals, loading: signalsLoading, refetch: refetchSignals } = useProofSignals();
 

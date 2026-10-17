@@ -48,12 +48,18 @@ export function subscribeToEvents(
   onEvent: (event: Event) => void,
   onEose?: () => void
 ): () => void {
+  // nostr-tools v2.25 subscribes to one Filter per subscription.
+  // Preserve OR-across-filters semantics without dropping additional filters.
+  if (filters.length === 0) return () => {};
   const pool = getPool();
-  const sub = pool.subscribeMany([SOULLAB_RELAY_URL], filters, {
-    onevent: onEvent,
-    oneose: onEose,
-  });
-  return () => sub.close();
+  let pendingEose = filters.length;
+  const closers = filters.map(filter => pool.subscribeMany(
+    [SOULLAB_RELAY_URL], filter, {
+      onevent: onEvent,
+      oneose: () => { if (--pendingEose === 0) onEose?.(); },
+    },
+  ));
+  return () => { for (const closer of closers) closer.close(); };
 }
 
 // ─── Fetch (one-shot) ─────────────────────────────────────────────────────────

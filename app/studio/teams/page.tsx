@@ -24,13 +24,13 @@ function TeamsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { teams, loading, createTeam, refetch } = useTeams();
-  const [showCreateModal, setShowCreateModal] = useState(searchParams.get('create') === 'true');
+  const [showCreateModal, setShowCreateModal] = useState(searchParams?.get('create') === 'true');
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamDescription, setNewTeamDescription] = useState('');
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    if (searchParams.get('create') === 'true') {
+    if (searchParams?.get('create') === 'true') {
       setShowCreateModal(true);
     }
   }, [searchParams]);

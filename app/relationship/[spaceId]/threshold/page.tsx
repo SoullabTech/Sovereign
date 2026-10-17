@@ -35,7 +35,7 @@ interface ThresholdData {
 }
 
 export default function ThresholdPage() {
-  const { spaceId } = useParams<{ spaceId: string }>();
+  const { spaceId } = useParams<{ spaceId: string }>() ?? { spaceId: '' };
   const router = useRouter();
 
   const [data, setData] = useState<ThresholdData | null>(null);

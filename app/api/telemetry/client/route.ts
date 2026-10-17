@@ -143,8 +143,8 @@ export async function POST(req: NextRequest) {
       const { trackOnboarding } = await import('@/lib/onboarding/telemetry');
       trackOnboarding({
         event: 'redirect_loop_detected',
-        memberId,
-        path: typeof payload.path === 'string' ? payload.path.slice(0, 80) : null,
+        memberId: memberId ?? undefined,
+        path: typeof payload.path === 'string' ? payload.path.slice(0, 80) : undefined,
         metadata: safeMetadata,
       });
     } catch {

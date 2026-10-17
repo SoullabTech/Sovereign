@@ -5,7 +5,8 @@
  * Safe to import in both browser and Node.js environments.
  */
 
-import { noteEncode } from 'nostr-tools/nip19';
+import { nip19 } from 'nostr-tools';
+const { noteEncode } = nip19;
 
 // ─── Identity formatting ──────────────────────────────────────────────────────
 

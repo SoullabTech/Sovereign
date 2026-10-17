@@ -324,7 +324,7 @@ export default function StoryCreatorPage() {
 
       const result = await response.json();
       if (result.success) {
-        await fetchStory();
+        await fetchData();
       } else {
         throw new Error(result.error);
       }
@@ -350,7 +350,7 @@ export default function StoryCreatorPage() {
 
       const result = await response.json();
       if (result.success) {
-        await fetchStory();
+        await fetchData();
       } else {
         throw new Error(result.error);
       }

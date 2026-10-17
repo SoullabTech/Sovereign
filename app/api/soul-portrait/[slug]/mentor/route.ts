@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { getPortrait } from '@/lib/soulPortrait/registry';
-import { ELEMENT_META, type SoulPortrait } from '@/lib/soulPortrait/schema';
+import { ELEMENT_META, isLiterarySoulPortrait, type SoulPortrait } from '@/lib/soulPortrait/schema';
 
 /**
  * Soul Portrait — MAIA Mentor.
@@ -125,7 +125,9 @@ export async function POST(
   // portrait with the Mentor disabled returns an identical 404 — no information
   // leak about which. A live Mentor is an explicit, visible grant (mentorEnabled
   // === true). See docs/architecture/SOUL_PORTRAIT_PATH_B_SPEC.md.
-  if (!portrait || portrait.mentorEnabled !== true) {
+  // The compact prompt is only qualified for the structured portrait schema.
+  // A literary portrait requires a separate grounded provider contract.
+  if (!portrait || portrait.mentorEnabled !== true || isLiterarySoulPortrait(portrait)) {
     return json({ answer: '' }, { status: 404 });
   }
 

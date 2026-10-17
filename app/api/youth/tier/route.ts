@@ -14,7 +14,7 @@ import { computeTierFromBirthDate, getTierConfig, type DevelopmentalTier } from 
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getCurrentSession(request);
+    const session = await getCurrentSession();
     if (!session?.memberId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }

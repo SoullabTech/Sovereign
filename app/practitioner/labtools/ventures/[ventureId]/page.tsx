@@ -99,7 +99,7 @@ function formatShortDate(dateStr: string): string {
 export default function VentureDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const ventureId = params.ventureId as string;
+  const ventureId = (params?.ventureId as string | undefined) ?? '';
 
   const [data, setData] = useState<VentureData | null>(null);
   const [practiceId, setPracticeId] = useState<string | null>(null);

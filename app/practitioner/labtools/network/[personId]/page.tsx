@@ -90,7 +90,7 @@ function formatRelativeDate(dateStr: string): string {
 export default function PersonTimelinePage() {
   const router = useRouter();
   const params = useParams();
-  const personId = params.personId as string;
+  const personId = (params?.personId as string | undefined) ?? '';
 
   const [data, setData] = useState<PersonData | null>(null);
   const [practiceId, setPracticeId] = useState<string | null>(null);

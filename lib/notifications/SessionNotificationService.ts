@@ -469,9 +469,9 @@ export async function sendDualChannelNotification(
 ): Promise<{ whatsapp: NotificationResult; sms: NotificationResult }> {
   const credentials = await getTwilioCredentials(practitionerId);
 
-  const results = {
-    whatsapp: { success: false, channel: 'whatsapp' as const, error: 'Not sent' },
-    sms: { success: false, channel: 'sms' as const, error: 'Not sent' },
+  const results: { whatsapp: NotificationResult; sms: NotificationResult } = {
+    whatsapp: { success: false, channel: 'whatsapp', error: 'Not sent' },
+    sms: { success: false, channel: 'sms', error: 'Not sent' },
   };
 
   if (!credentials) {

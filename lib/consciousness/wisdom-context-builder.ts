@@ -19,6 +19,7 @@ interface WisdomPreferences {
  */
 export async function buildWisdomContext(memberId: string): Promise<string | null> {
   try {
+    if (!pool) return null;
     // Check if wisdom_preferences table exists and has data
     const result = await pool.query(
       `SELECT preferred_systems, cultural_lens, linguistic_style

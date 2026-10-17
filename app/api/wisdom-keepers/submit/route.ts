@@ -86,14 +86,14 @@ export async function POST(request: NextRequest) {
     );
 
     console.info('[wisdom-submission]', {
-      id: result.rows[0]?.id,
+      id: result[0]?.id,
       category: data.category,
       memberId: memberId ?? 'anonymous',
     });
 
     return NextResponse.json({
       ok: true,
-      id: result.rows[0]?.id,
+      id: result[0]?.id,
     });
   } catch (error) {
     console.error('[wisdom-submission] Error:', error);

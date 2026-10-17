@@ -92,7 +92,7 @@ const inputCls = 'w-full bg-black/[0.04] border border-black/10 rounded-xl px-4 
 // ---------------------------------------------------------------------------
 
 export default function WithMePage() {
-  const { field: slug } = useParams<{ field: string }>();
+  const { field: slug } = useParams<{ field: string }>() ?? { field: '' };
   const master = getFieldBySlug(slug);
   if (!master) notFound();
 

@@ -117,7 +117,7 @@ function SessionStatusIcon({ status }: { status: string }) {
 export default function ClientDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const clientId = params.id as string;
+  const clientId = (params?.id as string | undefined) ?? '';
 
   const [client, setClient] = useState<Client | null>(null);
   // Bumped when a session note is carried forward, so Continuity refetches.

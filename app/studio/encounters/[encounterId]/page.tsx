@@ -165,7 +165,7 @@ const TABS: { key: TabKey; label: string; icon: typeof Eye }[] = [
 export default function EncounterWorkspacePage() {
   const params = useParams();
   const router = useRouter();
-  const encounterId = params.encounterId as string;
+  const encounterId = (params?.encounterId as string | undefined) ?? '';
 
   const [encounter, setEncounter] = useState<Encounter | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);

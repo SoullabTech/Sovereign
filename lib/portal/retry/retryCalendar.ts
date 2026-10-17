@@ -175,14 +175,9 @@ export async function retryCalendar(input: RetryCalendarInput): Promise<Calendar
       if (!session.google_event_id) {
         throw new Error('Cannot update event without google_event_id');
       }
-      eventId = await GoogleCalendarService.updateEvent(
-        memberId,
-        session.google_event_id,
-        { summary, description, start: startTime, end: endTime },
-        'primary'
-      );
-      syncStatus = eventId ? 'synced' : 'failed';
-      if (!eventId) syncError = 'Failed to update Google Calendar event';
+      // No updateEvent method exists on the active calendar service. Fail closed
+      // rather than pretending a remote calendar was updated successfully.
+      throw new Error('Google Calendar event update is unavailable');
     } else if (syncMode === 'delete') {
       if (!session.google_event_id) {
         throw new Error('Cannot delete event without google_event_id');

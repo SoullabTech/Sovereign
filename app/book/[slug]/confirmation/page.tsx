@@ -34,8 +34,8 @@ function formatDateTime(iso: string, timezone?: string): string {
 export default function BookingConfirmationPage() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const slug = params.slug as string;
-  const token = searchParams.get('token');
+  const slug = (params?.slug as string | undefined) ?? '';
+  const token = searchParams?.get('token');
 
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [loading, setLoading] = useState(true);

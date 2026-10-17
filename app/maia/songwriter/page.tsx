@@ -25,7 +25,7 @@ export default function SongwriterPage() {
   // ─── Auto-resume from ?resume=id (used by /songs page) ─────────────────────
 
   useEffect(() => {
-    const resumeId = searchParams.get('resume');
+    const resumeId = searchParams?.get('resume');
     if (resumeId) handleResume(resumeId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

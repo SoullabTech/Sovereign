@@ -353,7 +353,8 @@ export async function GET(request: NextRequest) {
     if (memberId) {
       // Existing member — use canonical step resolver
       const onboardingTarget = getNextOnboardingStep({
-        onboarded: record.onboarded,
+        // Unknown historical values cannot assert completed onboarding.
+        onboarded: record.onboarded === true,
         onboarding_step: record.onboarding_step as string,
       });
 

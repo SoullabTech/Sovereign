@@ -252,7 +252,7 @@ export async function POST(request: NextRequest) {
         completion = await anthropic.messages.create({
           model: MODEL,
           max_tokens: MAX_TOKENS,
-          temperature: TEMPERATURE,
+          // Retry the same default temperature as the initial request.
           system: systemPrompt,
           messages: [{ role: 'user', content: userMessage }],
         });

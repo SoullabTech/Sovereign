@@ -37,7 +37,7 @@ interface LoadedReport {
 export default function PractitionerClientReportPage() {
   const params = useParams();
   const router = useRouter();
-  const clientId = params.clientId as string;
+  const clientId = (params?.clientId as string | undefined) ?? '';
 
   const [clientName, setClientName] = useState('');
   const [birthDate, setBirthDate] = useState('');

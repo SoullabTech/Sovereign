@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       [pubkey, memberId]
     );
 
-    const { npubEncode } = await import('nostr-tools/nip19');
+    const { nip19: { npubEncode } } = await import('nostr-tools');
     const npub = npubEncode(pubkey);
 
     // Register in service_connectors for unified connector list

@@ -39,8 +39,8 @@ const ENCOUNTER_TYPES: { value: string; label: string }[] = [
 export default function NewEncounterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get('session_id') ?? undefined;
-  const defaultType = searchParams.get('encounter_type') ?? 'therapy_session';
+  const sessionId = searchParams?.get('session_id') ?? undefined;
+  const defaultType = searchParams?.get('encounter_type') ?? 'therapy_session';
 
   const [title, setTitle] = useState('');
   const [encounterType, setEncounterType] = useState(defaultType);

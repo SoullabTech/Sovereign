@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       }, { headers });
     }
 
-    const { npubEncode } = await import('nostr-tools/nip19');
+    const { nip19: { npubEncode } } = await import('nostr-tools');
     const npub = npubEncode(nostr_pubkey);
 
     return NextResponse.json({

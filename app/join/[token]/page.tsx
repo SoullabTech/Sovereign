@@ -32,7 +32,7 @@ interface InviteInfo {
 }
 
 export default function JoinPage() {
-  const { token } = useParams<{ token: string }>();
+  const { token } = useParams<{ token: string }>() ?? { token: '' };
   const router = useRouter();
 
   const [stage, setStage] = useState<Stage>('loading');

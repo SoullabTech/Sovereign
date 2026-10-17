@@ -47,7 +47,7 @@ type ViewState = 'loading' | 'details' | 'cancelling' | 'cancelled' | 'reschedul
 
 function ManageBookingContent() {
   const params = useParams();
-  const token = params.token as string;
+  const token = (params?.token as string | undefined) ?? '';
 
   const [viewState, setViewState] = useState<ViewState>('loading');
   const [session, setSession] = useState<Session | null>(null);

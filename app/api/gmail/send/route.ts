@@ -80,12 +80,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check threshold before allowing high-cost action (weight 5)
+    // Evaluate the actual email_send action against the weekly threshold.
     if (memberId) {
       try {
-        const threshold = await checkThreshold(memberId);
-        if (threshold.level === 'hard') {
-          // At hard threshold, suggest pause before sending
+        const threshold = await checkThreshold(memberId, 'email_send');
+        if (threshold.level === 'pause') {
+          // A true pause threshold blocks sending until the writer returns.
           return NextResponse.json({
             success: false,
             error: 'threshold_reached',

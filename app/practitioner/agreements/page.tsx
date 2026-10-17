@@ -51,7 +51,7 @@ function formatDate(dateStr: string | null) {
 function AgreementsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const statusFilter = searchParams.get('status') || 'all';
+  const statusFilter = searchParams?.get('status') || 'all';
 
   const [practice, setPractice] = useState<Practice | null>(null);
   const [agreements, setAgreements] = useState<Agreement[]>([]);

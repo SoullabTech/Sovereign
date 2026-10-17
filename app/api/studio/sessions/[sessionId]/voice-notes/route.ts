@@ -38,7 +38,7 @@ export async function GET(
 
     const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ success: false, error: 'Practitioner not found for member' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
     }
 
     const { sessionId } = await params;
@@ -90,7 +90,7 @@ export async function POST(
 
     const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ success: false, error: 'Practitioner not found for member' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
     }
 
     const { sessionId } = await params;
@@ -272,10 +272,10 @@ export async function POST(
         );
       } else {
         const result = await whisperResponse.json();
-        transcript = (result.text || '').trim();
-
+        const rawTranscript = typeof result?.text === 'string' ? result.text : '';
         // Post-process: fix common Whisper mis-transcriptions
-        transcript = transcript.replace(/\bMaya\b/gi, 'MAIA');
+        const normalizedTranscript = rawTranscript.trim().replace(/\bMaya\b/gi, 'MAIA');
+        transcript = normalizedTranscript;
 
         transcriptionStatus = 'completed';
 
@@ -285,7 +285,7 @@ export async function POST(
           [transcript, noteId]
         );
 
-        console.log('[VOICE-NOTES] Transcribed:', transcript.length, 'chars');
+        console.log('[VOICE-NOTES] Transcribed:', normalizedTranscript.length, 'chars');
       }
     } catch (whisperErr: any) {
       console.error('[VOICE-NOTES] Whisper call failed:', whisperErr.message);

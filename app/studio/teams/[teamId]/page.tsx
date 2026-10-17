@@ -54,7 +54,7 @@ const roleColors = {
 export default function TeamDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const teamId = params.teamId as string;
+  const teamId = (params?.teamId as string | undefined) ?? '';
 
   const [team, setTeam] = useState<Team | null>(null);
   const [members, setMembers] = useState<TeamMember[]>([]);

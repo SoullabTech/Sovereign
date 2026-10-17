@@ -251,7 +251,7 @@ export default function AspectDetailClient() {
     },
   };
 
-  const synthesis = aspectData.synthesis || (() => {
+  const synthesis: AspectInterpretation = aspectData.synthesis || (() => {
     const dynamic = ASPECT_DYNAMICS[aspectType] || ASPECT_DYNAMICS.conjunction;
     return {
       essence: dynamic.essence,

@@ -28,6 +28,7 @@ const INSIGHT_ICONS: Record<ConversationInsight['type'], LucideIcon> = {
   'sacred-resonance': BookOpen,
   'theme-emergence': Sparkles,
   'capability-offer': ArrowRight,
+  'idea-candidate': Sparkles,
 };
 
 const INSIGHT_COLORS: Record<ConversationInsight['type'], string> = {
@@ -36,6 +37,7 @@ const INSIGHT_COLORS: Record<ConversationInsight['type'], string> = {
   'sacred-resonance': 'border-purple-500/20 bg-purple-500/5',
   'theme-emergence': 'border-teal-500/20 bg-teal-500/5',
   'capability-offer': 'border-blue-500/20 bg-blue-500/5',
+  'idea-candidate': 'border-blue-500/20 bg-blue-500/5',
 };
 
 const INSIGHT_ICON_COLORS: Record<ConversationInsight['type'], string> = {
@@ -44,6 +46,7 @@ const INSIGHT_ICON_COLORS: Record<ConversationInsight['type'], string> = {
   'sacred-resonance': 'text-purple-400/60',
   'theme-emergence': 'text-teal-400/60',
   'capability-offer': 'text-blue-400/60',
+  'idea-candidate': 'text-blue-400/60',
 };
 
 const MAX_VISIBLE = 4;

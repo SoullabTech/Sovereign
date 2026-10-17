@@ -446,7 +446,7 @@ export function useBookings() {
   }, []);
 
   const updateBooking = useCallback(async (id: string, updates: {
-    status?: string;
+    status?: Booking['status'];
     practitionerNotes?: string;
   }) => {
     const response = await apiFetch('/api/studio/bookings', {

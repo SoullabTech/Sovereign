@@ -144,7 +144,7 @@ function PipelineContent() {
   const [memberId, setMemberId] = useState<string | null>(null);
   const [view, setView] = useState<'kanban' | 'list'>('list');
   const [filter, setFilter] = useState<'active' | 'all' | 'won' | 'lost' | 'stalled'>(
-    (searchParams.get('filter') as 'stalled') || 'active'
+    (searchParams?.get('filter') as 'stalled') || 'active'
   );
 
   useEffect(() => {

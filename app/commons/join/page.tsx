@@ -11,7 +11,7 @@ import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
 function JoinCircleForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [token, setToken] = useState(searchParams.get('token') ?? '');
+  const [token, setToken] = useState(searchParams?.get('token') ?? '');
   const [consentMode, setConsentMode] = useState<'manual' | 'not_now'>('manual');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

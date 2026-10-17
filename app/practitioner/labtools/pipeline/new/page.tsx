@@ -30,7 +30,7 @@ const STAGES = [
 function NewOpportunityContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const preselectedVentureId = searchParams.get('ventureId');
+  const preselectedVentureId = searchParams?.get('ventureId');
 
   const [practiceId, setPracticeId] = useState<string | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);

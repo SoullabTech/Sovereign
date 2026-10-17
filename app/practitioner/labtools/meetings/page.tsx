@@ -128,7 +128,7 @@ function MeetingsContent() {
   const [error, setError] = useState<string | null>(null);
   const [practiceId, setPracticeId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'upcoming' | 'all' | 'completed' | 'missing_notes'>(
-    (searchParams.get('filter') as 'missing_notes') || 'upcoming'
+    (searchParams?.get('filter') as 'missing_notes') || 'upcoming'
   );
 
   useEffect(() => {
