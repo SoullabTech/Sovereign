@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.ws-beta-shipping-web-hatch.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/types/speechRecognition.d.ts",
+    "app/maia/vision-studio/page.tsx",
+    "lib/maia/visionStudioRouteR62V.ts",
+    "lib/maia/__tests__/visionStudioRouteR62V.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
