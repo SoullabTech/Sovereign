@@ -47,12 +47,12 @@ The temporary test folders were configured to be removed on command exit; no mem
 
 1. Kelly to verify the two physical editions (title/copyright pages or ISBN plus tables of contents) so book-level attribution is accurate.
 2. Founder scholarly review of conceptual synthesis; separately decide whether to adopt it as a Soullab teaching.
-3. Explicit rights-holder permission for the *actual intended uses* of complete Perry text, excerpts, derivatives and/or embeddings; owning books is not a general RAG license. A permission **draft** exists in Gmail but was **not sent** during this work.
-4. Corpus-authority evidence, metadata and distinct human authorization under the existing admission declaration. No blanket folder authorizations or default flags.
-5. Only after gates 1–4: branch integration under the current MAIA-WISDOM architecture and data/privacy controls, followed by real isolated inference tests and separate launch authorization.
+3. **Two independent permissions paths must not be conflated:** (A) Soullab's **own original commentary, bibliographic metadata and links** can be proposed for curated knowledge admission without reproducing Perry's copyrighted source text, subject to founder editorial sign-off and the project's normal source/rights classification. (B) **Perry's protected book/essay text, licensed excerpts or full-text embeddings** require a separately verified legal basis that actually covers the intended AI-assisted retrieval use. Ownership of paper copies is not itself permission for full-text RAG. A **licensing inquiry draft** exists in Gmail but was **not sent** during this work.
+4. Both paths need their own corpus-authority evidence, metadata, member-facing constraints, and distinct founder admission authorization under the existing declaration. Never auto-admit material because it sits in a folder. A permissions approval for path B does not confer authority to override clinical/privacy restrictions.
+5. After founder review, path A can proceed **independently** through the source-linked, original-curation admission gate and isolated MAIA response testing. Path B stays separately blocked until rights-holder authorization. Neither path is deployed or admitted by this branch.
 
 ## Interpretation discipline
 
 Perry's symbolic model is valuable as one named interpretive perspective. It is **not** a validated way to infer a clinical diagnosis, a trauma history, actual natal placements, future events, or a member's own meaning. Astrological conclusions remain explicitly conditional, editable by the person, and subordinate to computed facts and lived experience.
 
-**Next bounded action:** approve and send the drafted permission inquiry, *if the founder wishes*. The separate branch remains available for source-level editorial review even if permission is refused; the copyrighted texts themselves remain outside retrieval.
+**Next bounded actions:** obtain founder review/approval for path A (original attributed curation), verify owned book editions, and separately request a license for path B if desired. The copyrighted books themselves remain outside retrieval until a compatible license is proven.
