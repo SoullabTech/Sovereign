@@ -323,6 +323,7 @@ test('actual serving handler denies omitted, string, and contradictory Sanctuary
     assert.equal(state.lensCalls.length, 1);
     assert.equal(state.lensResult, null);
     assert.equal(state.dispatchedToModel, false);
-    assert.equal(state.modelRequestIntercepted.meta.governedKnowledgeAddendum, undefined);
+    assert.ok(state.modelRequestIntercepted.meta.governedKnowledgeAddendum == null);
+    assert.ok(!state.modelRequestIntercepted.meta.governedKnowledgeAddendum?.includes('Glenn Perry'));
   }
 });
