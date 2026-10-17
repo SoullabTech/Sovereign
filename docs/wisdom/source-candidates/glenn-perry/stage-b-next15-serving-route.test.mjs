@@ -114,7 +114,7 @@ function stubMap(state) {
       throw new Error('UNAUTHORIZED_MODEL_DISPATCH_IN_FIXTURE');
     },
   });
-  add('@/lib/memory/MemoryGate', { resolveMemoryMode: () => 'ephemeral' });
+  add('@/lib/memory/MemoryGate', { resolveMemoryMode: () => ({ effective:'ephemeral' }) });
   add('@/lib/memory/MemoryBundle', { MemoryBundleService: class MemoryBundleService {
     static async build() { return null; }
     static async create() { return null; }
@@ -123,6 +123,9 @@ function stubMap(state) {
     enforceFieldSafety: () => ({allowed:true,fieldRouting:null}),
   });
   add('@/lib/consciousness/cognitiveProfileService', { getCognitiveProfile:async()=>null });
+  add('@/lib/consciousness/nameChangeDetection', {
+    processNameChangeIfDetected:async()=>({detected:false,updated:false}),
+  });
   add('@/lib/maia/knowledge/perrySourceLens', {
     buildPerrySourceLensAddendum(turn) {
       state.lensCalls.push(turn);
