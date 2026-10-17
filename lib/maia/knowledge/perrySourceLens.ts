@@ -14,6 +14,7 @@ import { createHash } from 'node:crypto';
 import { getGlobalLibraryAuthorityKeys } from '@/lib/library/globalRetrievalAuthority';
 
 export const PERRY_SOURCE_LENS_ID = 'glenn-perry-astropsychology' as const;
+export const PERRY_EDITORIAL_APPROVAL_MARKER = 'CORPUS USE AUTHORIZED — SOULLAB ORIGINAL PERRY-INFORMED COMMENTARY';
 
 export type ApprovedPerryEditorialSource = Readonly<{
   sourcePath: string;
@@ -42,11 +43,23 @@ export interface PerryLensServerDependencies {
   readonly approvedSource: ApprovedPerryEditorialSource | null;
   readonly authorityKeys: () => readonly PerrySourceAuthorityKey[];
   readonly readSource: (relativePath: string) => string;
+  /** Separate founder review record for this exact original editorial revision. */
+  readonly readApprovalRecord: (relativePath: string) => string;
 }
 
 function approvedPath(pathname: string): boolean {
   return pathname.startsWith('data/ain/source/')
     && pathname.length > 'data/ain/source/'.length
+    && !pathname.includes('\\')
+    && !pathname.includes('\0')
+    && !pathname.split('/').includes('..')
+    && path.posix.normalize(pathname) === pathname
+    && pathname.endsWith('.md');
+}
+
+function governedApprovalPath(pathname: string): boolean {
+  return pathname.startsWith('docs/corpus-authority/')
+    && pathname.length > 'docs/corpus-authority/'.length
     && !pathname.includes('\\')
     && !pathname.includes('\0')
     && !pathname.split('/').includes('..')
@@ -97,6 +110,7 @@ const LIVE_SERVER_DEPS: PerryLensServerDependencies = {
   approvedSource: APPROVED_PERRY_EDITORIAL_SOURCE,
   authorityKeys: () => getGlobalLibraryAuthorityKeys(process.cwd()),
   readSource: (rel) => fs.readFileSync(path.join(process.cwd(), rel), 'utf8'),
+  readApprovalRecord: (rel) => fs.readFileSync(path.join(process.cwd(), rel), 'utf8'),
 };
 
 /**
@@ -117,7 +131,7 @@ export function buildPerrySourceLensAddendum(
   if (!source || source.creditedTo !== 'Soullab editorial synthesis'
       || !approvedPath(source.sourcePath)
       || !/^[a-f0-9]{64}$/i.test(source.sourceSha256)
-      || !source.approvalRecord.startsWith('docs/corpus-authority/')) {
+      || !governedApprovalPath(source.approvalRecord)) {
     return null;
   }
 
@@ -132,6 +146,15 @@ export function buildPerrySourceLensAddendum(
   if (!hasReviewedRetrievalFrontmatter(content)) return null;
   const actualSha = createHash('sha256').update(content, 'utf8').digest('hex');
   if (actualSha !== source.sourceSha256.toLowerCase()) return null;
+
+  // Independent founder editorial act must name the exact source + digest.
+  // Corpus membership alone does not appoint Perry's writing as Soullab canon.
+  const approvalText = deps.readApprovalRecord(source.approvalRecord);
+  if (!approvalText.includes(PERRY_EDITORIAL_APPROVAL_MARKER)
+      || !approvalText.includes(source.sourcePath)
+      || !approvalText.toLowerCase().includes(source.sourceSha256.toLowerCase())) {
+    return null;
+  }
 
   return authorizedPerryCommentaryBlock(source);
 }
