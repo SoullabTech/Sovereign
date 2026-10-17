@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.r53-canonical-author.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "app/dev/writers-studio-pc3-live/P4R1ProtectedAuthorJourneyR54.tsx",
+    "app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx",
+    "lib/writersStudio/recovery/heldCanonicalAuthorJourneyR53.ts",
+    "scripts/ops/fixtures/wsR54Pc3AuthorBrowser.tsx",
+    "scripts/ops/wsBetaR54Pc3Browser.ts",
+    "scripts/ops/wsBetaR54Pc3BrowserPG16.ts",
+    "scripts/ops/__tests__/r39ActualSignedSectionPG16.test.ts",
+    "scripts/ops/__tests__/r54ColdPG16UndoState.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

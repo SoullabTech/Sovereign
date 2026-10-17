@@ -26,6 +26,8 @@ import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild
 import { typesetManuscriptBody } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
 import { locateUniquePassage, type AdoptionWireOutcome, type RebuildEditorialRelationship, type RebuildEditorialThread } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import { exactTextareaPassageR41, exactDomPassageR41 } from '@/lib/writersStudio/exactLiveSelectionR41';
+import {P4R1ProtectedAuthorJourneyR54,R54_REAL_PC3_AUTHOR_JOURNEY_ENABLED,
+  type R54PanelProps} from './P4R1ProtectedAuthorJourneyR54';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
 import EditorialDancePanel from './EditorialDancePanel';
@@ -68,6 +70,8 @@ export type P4R1Pc3WriteEditViewProps = {
   held: Pc3HeldPassage | null;
   onFocusSection: (id: string) => void;
   onHoldPassage: (section: RebuildSection, start: number, end: number, text: string) => void;
+  /** HELD ONLY: never supplied by the real controller or public routes. */
+  r54ProtectedJourney?: Pick<R54PanelProps,'alternatives'|'transport'|'onVerifiedRevision'>;
   onMode: (mode: 'home' | 'write' | 'develop' | 'review') => void;
 
   workspaceOpen: boolean;
@@ -781,6 +785,19 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody">
+        {/* R54 requires a separate reviewed source+session+KMS service before
+            activating; the production controller supplies no transport. */}
+        {R54_REAL_PC3_AUTHOR_JOURNEY_ENABLED &&
+          props.r54ProtectedJourney && props.held &&
+          props.held.draftSectionId === props.focusId ? (
+            <P4R1ProtectedAuthorJourneyR54
+              key={props.held.draftSectionId + ':' + props.held.revisionNumber}
+              selected={{sectionId:props.held.draftSectionId,
+                start:props.held.start,end:props.held.end,text:props.held.text,
+                generation:props.held.revisionNumber}}
+              liveSectionText={props.writing.bodyOf(props.held.draftSectionId)}
+              {...props.r54ProtectedJourney}/>
+          ) : null}
         {editorial ?? (<>
         {workConversationOpen ? (
           workConversation
