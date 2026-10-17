@@ -19,6 +19,7 @@ export const maxDuration = 300; // full-book render (pandoc + Paged.js) can take
  * manuscript is never written to a public/served path.
  */
 
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'node:fs';
 import { query } from '@/lib/db/postgres';
@@ -41,6 +42,10 @@ function safeFilename(title: string): string {
 
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  return privateWriterNoStore(await privateMemberRenderedManuscriptRead(request, ctx));
+}
+
+async function privateMemberRenderedManuscriptRead(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }

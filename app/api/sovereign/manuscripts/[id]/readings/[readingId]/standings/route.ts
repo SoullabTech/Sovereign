@@ -21,6 +21,7 @@
  * `lib/manuscript/standing/__tests__/standingOutsideCognition.test.ts`.
  */
 
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { parseStandingRequest } from '@/lib/manuscript/standing/contract';
@@ -97,6 +98,13 @@ async function addressed(
  * in its 07F form).
  */
 export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string; readingId: string }> },
+) {
+  return privateWriterNoStore(await privateMemberReadingsStandingsRead(req, { params }));
+}
+
+async function privateMemberReadingsStandingsRead(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; readingId: string }> },
 ) {

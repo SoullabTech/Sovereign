@@ -13,6 +13,7 @@
  * would be a bug (see lib/writersStudio/outlineRows.ts).
  */
 
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { resolveDraftWriteState } from '@/lib/manuscript/sections/saveSection';
@@ -38,6 +39,13 @@ import {
 export const dynamic = 'force-dynamic';
 
 export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  return privateWriterNoStore(await privateMemberWriteStateRead(req, { params }));
+}
+
+async function privateMemberWriteStateRead(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {

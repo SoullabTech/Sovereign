@@ -11,6 +11,7 @@
  * rule; this route is a door to it. A second place deciding what counts as a
  * place is exactly how the rule would drift into ranking.
  */
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextResponse, type NextRequest } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { readSectionActivity } from '@/lib/writersStudio/sectionActivity';
@@ -18,6 +19,13 @@ import { readSectionActivity } from '@/lib/writersStudio/sectionActivity';
 export const dynamic = 'force-dynamic';
 
 export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  return privateWriterNoStore(await privateMemberLocusRead(request, { params }));
+}
+
+async function privateMemberLocusRead(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {

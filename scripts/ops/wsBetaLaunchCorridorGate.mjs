@@ -204,6 +204,36 @@ export function inspectCandidate(root=ROOT,options={}){
    file:item.file,missingMarkers:missing.length,
   });
  }
+ // Source-time negative coverage for ALL routes reading owned Writer material.
+ // Unlike a fixed checklist, a newly introduced GET must opt into private
+ // no-store (or the corridor becomes SOURCE_DRIFT_HOLD). No member calls here.
+ const privateGetCandidateFiles=[
+  ...walkRoutes(join(base,'app/api/sovereign/manuscripts')),
+  ...walkRoutes(join(base,'app/api/writers-studio/editorial')),
+  join(base,'app/api/sovereign/living-works/route.ts'),
+ ];
+ const privateMemberGetRoutes=[];
+ const privateMemberGetUnprotected=[];
+ for(const file of privateGetCandidateFiles){
+  let source='';
+  try{source=read(file);}catch{source='';}
+  if(!/export\s+async\s+function\s+GET\s*\(/.test(source))continue;
+  const rel=relative(base,file).split('\\').join('/');
+  privateMemberGetRoutes.push(rel);
+  const getIndex=source.indexOf('export async function GET(');
+  // This wrapper is the first and only export-level response construction:
+  // success, denied and error responses carry no-store. Do not accept a
+  // standalone success-only Cache-Control header as complete coverage.
+  if(getIndex<0 || !/return\s+privateWriterNoStore\s*\(\s*await\s+/.test(
+    source.slice(getIndex,getIndex+410))){
+   privateMemberGetUnprotected.push(rel);
+  }
+ }
+ privateMemberGetRoutes.sort();
+ privateMemberGetUnprotected.sort();
+ const allWriterGetRoutesPrivate=privateMemberGetRoutes.length===20 &&
+   privateMemberGetUnprotected.length===0;
+
  const routeBindings=[];
  for(const file of walkRoutes(join(base,'app/api'))){
   let code='';
@@ -220,7 +250,8 @@ export function inspectCandidate(root=ROOT,options={}){
   listed<12||adjacent<2||Array.isArray(legacy.missing)&&legacy.missing.length>0||
   Array.isArray(legacy.unlisted)&&legacy.unlisted.length>0||
   Array.isArray(legacy.drift)&&legacy.drift.length>0||
-  !ingressValid;
+  !ingressValid||
+  !allWriterGetRoutesPrivate;
  const unmet=[
   ...(listed>0?['unfenced_legacy_manuscript_writes']:[]),
   ...(routeBindings.length<PROTECTED_IMPORT_NAMES.length?
@@ -264,6 +295,10 @@ export function inspectCandidate(root=ROOT,options={}){
    seen.some(x=>x.label==='verified_actual_session_consent_specific_declared_work_held'&&x.found),
   actualNextAndHeldAuthorSamePGFixturePresent:
    seen.some(x=>x.label==='one_database_real_next_and_held_post_admission_rehearsal'&&x.found),
+  privateMemberGetRoutesCount:privateMemberGetRoutes.length,
+  privateMemberGetRoutesProtectedCount:
+   privateMemberGetRoutes.length-privateMemberGetUnprotected.length,
+  privateMemberGetUnprotected,
   // Standard-author beta and sovereign upgrade are different product release
   // profiles. Neither can become GO on source claims, caller flags or mocks.
   standardPrivateBeta:{

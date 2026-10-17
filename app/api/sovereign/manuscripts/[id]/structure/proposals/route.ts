@@ -11,6 +11,7 @@
  * surface, drawn from a payload the review room never validated.
  */
 
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { listProposals, type ProposalRefusal } from '@/lib/manuscript/structure/proposalStore';
@@ -25,6 +26,13 @@ const STATUS: Record<ProposalRefusal, number> = {
 };
 
 export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  return privateWriterNoStore(await privateMemberStructureProposalsRead(req, { params }));
+}
+
+async function privateMemberStructureProposalsRead(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {

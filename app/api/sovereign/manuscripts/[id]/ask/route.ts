@@ -42,6 +42,7 @@
  * crossed, and the claim it accounts for was won long before it.
  */
 
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { checkAnchor, type AskAnchor, type AnchorRefusal } from '@/lib/manuscript/ask/anchor';
@@ -201,6 +202,12 @@ export const __parseDevelopmentalAnchorForTest = parseDevelopmentalAnchor;
  * multiplying is presentation policy, not an identity restriction.
  */
 export async function GET(
+  req: NextRequest, { params }: { params: Promise<{ id: string }> },
+) {
+  return privateWriterNoStore(await privateMemberAskRead(req, { params }));
+}
+
+async function privateMemberAskRead(
   req: NextRequest, { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;

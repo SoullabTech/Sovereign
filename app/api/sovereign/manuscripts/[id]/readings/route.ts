@@ -20,6 +20,7 @@
  * into its own table, and only through the commission.
  */
 
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
@@ -105,6 +106,10 @@ async function ownsManuscript(manuscriptId: string, memberId: string): Promise<b
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  return privateWriterNoStore(await privateMemberReadingsRead(req, { params }));
+}
+
+async function privateMemberReadingsRead(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   const { id: manuscriptId } = await params;
   const memberId = await getMemberIdFromRequest(req);

@@ -20,6 +20,7 @@
  * layer had started carrying the writing.
  */
 
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
@@ -47,6 +48,13 @@ const STATUS: Record<StructureRefusal, number> = {
 };
 
 export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  return privateWriterNoStore(await privateMemberStructureRead(req, { params }));
+}
+
+async function privateMemberStructureRead(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {

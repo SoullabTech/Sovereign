@@ -30,6 +30,9 @@ test('the exact canonical UI + held encrypted journey are present in one source,
  assert.equal(r.standardPrivateBeta.independentSelfHostedKmsPrerequisite,false);
  assert.equal(r.standardPrivateBeta.currentQualification,'OPERATIONAL_EVIDENCE_HOLD');
  assert.equal(r.standardPrivateBeta.safetySourcePresent,true);
+ assert.equal(r.privateMemberGetRoutesCount,20);
+ assert.equal(r.privateMemberGetRoutesProtectedCount,20);
+ assert.deepEqual(r.privateMemberGetUnprotected,[]);
  assert.equal(r.standardPrivateBeta.productionStorageVerified,false);
  assert.equal(r.standardPrivateBeta.encryptedBackupsAndRestoreVerified,false);
  assert.equal(r.standardPrivateBeta.realAuthorWritingCertified,false);
@@ -177,6 +180,20 @@ test('standard privacy no-cache promises and founder phased scope are not remova
   assert.equal(modified.releaseApproved,false);
   assert.equal(modified.standardPrivateBeta.safetySourcePresent,false);
  }
+});
+
+test('an unprotected manuscript history GET turns the standard beta release audit to DRIFT',()=>{
+ const file=resolve(ROOT,'app/api/sovereign/manuscripts/[id]/draft/revisions/route.ts');
+ const result=inspectCandidate(ROOT,{readText:target=>
+  target===file?'export async function GET(request) { return new Response(null); }':
+   readFileSync(target,'utf8')});
+ assert.equal(result.codeContract,'SOURCE_DRIFT_HOLD');
+ assert.equal(result.candidateRelease,'HOLD');
+ assert.equal(result.privateMemberGetRoutesCount,20);
+ assert.equal(result.privateMemberGetRoutesProtectedCount,19);
+ assert.ok(result.privateMemberGetUnprotected.includes(
+  'app/api/sovereign/manuscripts/[id]/draft/revisions/route.ts'));
+ assert.equal(result.releaseApproved,false);
 });
 
 test('missing one default-off old-write guard is source DRIFT, never beta GO',()=>{
