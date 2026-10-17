@@ -5,7 +5,7 @@
 // API Reference: https://platform.moonshot.ai/docs/api/chat
 // Kimi K2.5: https://platform.moonshot.ai/docs/guide/kimi-k2-5-quickstart
 
-import { rejectUnqualifiedProtectedProcessor } from '@/lib/sanctuary/externalProcessingGrant';
+import { rejectUnqualifiedProtectedProcessor } from '@/lib/sanctuary/protectedProcessorBoundary';
 import type { TextResult, ProviderMeta } from './types';
 
 // Configuration

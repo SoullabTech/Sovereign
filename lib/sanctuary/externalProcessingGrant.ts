@@ -36,17 +36,12 @@ export type ProcessingGrantOutcome =
   | { ok: true; processor: typeof S1B_PROVIDER; expiresAt: string }
   | { ok: false; code: string };
 
-/** An Anthropic grant does not approve local, Moonshot, or multi-engine. */
-export class UnqualifiedProtectedProcessor extends Error {
-  readonly code = 'PROTECTED_PROCESSOR_UNQUALIFIED';
-  constructor() {
-    super('PROTECTED_PROCESSOR_UNQUALIFIED');
-    this.name = 'UnqualifiedProtectedProcessor';
-  }
-}
-export function rejectUnqualifiedProtectedProcessor(meta?: Record<string, unknown>): void {
-  if (meta?.sanctuary === true) throw new UnqualifiedProtectedProcessor();
-}
+// Re-export for existing server-side consumers; browser code imports the
+// pure boundary directly rather than pulling PostgreSQL into its bundle.
+export {
+  UnqualifiedProtectedProcessor,
+  rejectUnqualifiedProtectedProcessor,
+} from './protectedProcessorBoundary';
 
 export class UnapprovedExternalProcessing extends Error {
   readonly code = 'EXTERNAL_PROCESSING_NOT_AUTHORIZED';

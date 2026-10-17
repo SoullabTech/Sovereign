@@ -15,7 +15,7 @@
  * - Multi-perspective: Nous-Hermes2-Mixtral
  */
 
-import { rejectUnqualifiedProtectedProcessor } from '@/lib/sanctuary/externalProcessingGrant';
+import { rejectUnqualifiedProtectedProcessor } from '@/lib/sanctuary/protectedProcessorBoundary';
 import { generateWithLocalModel, LocalChatParams } from './localModelClient';
 import { MAIA_RUNTIME_PROMPT } from '../consciousness/MAIA_RUNTIME_PROMPT';
 

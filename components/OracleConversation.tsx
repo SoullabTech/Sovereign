@@ -173,6 +173,7 @@ import { trackEvent } from '@/lib/analytics/track';
 import { saveConversationMemory, getOracleAgentId } from '@/lib/services/memoryService';
 import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 import { useRouter } from 'next/navigation';
+import { startVerifiedNewMaiaConversation } from '@/lib/maia/presence/conversationIdentity';
 import type { MaiaPlaceContext } from '@/lib/maia/presence/place';
 // REMOVED: Supabase persistence - now using sovereign PostgreSQL via /api/conversation/turns
 // import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/lib/services/conversationStorageService';
@@ -1476,34 +1477,28 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     };
   }, []);
 
-  // 🆕 Listen for "New Conversation" action from QuickSettingsSheet
+  // RF01 R1-D: clearing a screen is NOT a new conversation.
+  // Await the separate authenticated server-minted identity first. Parent
+  // hosts subscribe to the verified event and remount with a fresh privacy
+  // choice; old writing and local history are intentionally preserved.
   useEffect(() => {
-    const handleNewConversation = () => {
-      console.log('🆕 [New Conversation] Clearing history and resetting to welcome');
-      // Clear messages (UI display)
-      setMessages([]);
-      lastSyncedCountRef.current = 0; // fresh thread — resync from the start
-      // Clear historical messages (API context) - truly fresh start
-      historicalMessagesRef.current = [];
-      // Reset activation state to show welcome screen
-      setHasActivated(false);
-      // Reset session-restored flag so the welcome greeting can show for the new conversation
-      sessionRestoredRef.current = false;
-      // Clear navigation flag so next mount doesn't restore the cleared conversation
-      sessionStorage.removeItem('maia_nav_teardown');
-      // Clear localStorage for current session
-      if (typeof window !== 'undefined' && sessionId) {
-        const storageKey = `maia_conversation_${sessionId}`;
-        localStorage.removeItem(storageKey);
-        console.log(`🆕 [New Conversation] Cleared localStorage: ${storageKey}`);
+    const handleNewConversation = async () => {
+      if (isProcessingRef.current || isRespondingRef.current) {
+        setInputSubmitError('Finish the current MAIA response before beginning a new conversation.');
+        return;
+      }
+      try {
+        await startVerifiedNewMaiaConversation();
+        // A successful authenticated receipt causes each host to change the
+        // React session key and reset the conversation. No manual history
+        // deletion, stale session replay, or implied Continuity here.
+      } catch {
+        setInputSubmitError('New conversation could not be verified. Your current conversation was preserved.');
       }
     };
-
     window.addEventListener('maia-new-conversation', handleNewConversation);
-    return () => {
-      window.removeEventListener('maia-new-conversation', handleNewConversation);
-    };
-  }, [sessionId]);
+    return () => window.removeEventListener('maia-new-conversation', handleNewConversation);
+  }, []);
 
   // 🧭 THERAPEUTIC FRAMEWORK: Selected in Counsel mode (Jungian, Somatic, CBT, IFS, etc.)
   // Now handled by lib/consciousness/therapeuticFrameworks.ts
@@ -8347,7 +8342,20 @@ I'm not sure what I'm feeling yet.`;
                 greeting={welcomeGreeting.greeting}
                 subtext={welcomeGreeting.subtext}
                 userInitial={(userName || 'K').trim().charAt(0).toUpperCase()}
-                onSend={(text) => handleTextMessage(text)}
+                onSend={(text) => {
+                  // Arrival owns the first composer. If privacy is not yet
+                  // chosen, carry the exact authored draft into Write, cross
+                  // the threshold, and ask for deliberate privacy BEFORE Send.
+                  // Never quietly consume those words or invoke a model.
+                  if (!privacyChoiceRef.current) {
+                    setDraftMessage(text);
+                    setHasActivated(true);
+                    onArrivalCrossed?.();
+                    setInputSubmitError('Choose Sanctuary or Continuity before sending your message.');
+                    return;
+                  }
+                  void handleTextMessage(text);
+                }}
                 onActivate={() => {
                   // #736: hasActivated alone cannot exit — the gate above is a
                   // disjunction and ignores it while shouldRenderArrival is
@@ -8515,9 +8523,10 @@ I'm not sure what I'm feeling yet.`;
 
       {/* RF01 S0-B: one deliberate new-session choice; no default is inferred.
           Full Sanctuary/cloud-processing claims remain subject to S1/R1 gates. */}
-      {explicitSessionPrivacyChoice === null && (
+      {explicitSessionPrivacyChoice === null && !shouldRenderArrival && (
         <div role="group" aria-label="Choose conversation privacy"
-          className="fixed top-24 right-4 z-50 max-w-xs rounded-2xl border border-white/20 bg-stone-950/95 p-4 text-stone-100 shadow-2xl">
+          className="fixed inset-0 z-[95] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-white/20 bg-stone-950 p-5 text-stone-100 shadow-2xl sm:max-w-md">
           <p className="text-base font-medium">How should MAIA remember this conversation?</p>
           <div className="mt-3 flex flex-col gap-2">
             <button type="button" onClick={() => chooseSessionPrivacy('sanctuary')}
@@ -8532,6 +8541,7 @@ I'm not sure what I'm feeling yet.`;
           <p className="mt-3 text-xs text-stone-400">
             Remembrance is separate from outside model and voice processing.
           </p>
+          </div>
         </div>
       )}
 
@@ -10452,8 +10462,18 @@ I'm not sure what I'm feeling yet.`;
                     enableVoiceInChat={voiceEnabled && enableVoiceInChat}
                     showVoiceInputButton={voiceEnabled}
                     onSubmit={(msg, files) => {
-                      handleTextMessage(msg, files);
-                      setDraftMessage(''); // Clear draft after sending
+                      // A held Sanctuary Send is NOT a successful submit.
+                      // Preserve authored words as an editable draft; do not
+                      // let ModernTextInput's local clearing discard them.
+                      if (privacyChoiceRef.current !== 'continuity') {
+                        setDraftMessage(msg);
+                        setInputSubmitError(
+                          'Sanctuary messaging is on hold pending private-processing safeguards. Your draft was kept; nothing was sent.',
+                        );
+                        return;
+                      }
+                      void handleTextMessage(msg, files);
+                      setDraftMessage('');
                     }}
                     onVoiceResponseToggle={voiceEnabled ? () => {
                       const newValue = !enableVoiceInChat;

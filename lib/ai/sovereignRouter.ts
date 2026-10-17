@@ -5,7 +5,7 @@
 // DO NOT call generateText() from here — that would be infinite recursion.
 // DO NOT import anything that executes code on module load.
 
-import { rejectUnqualifiedProtectedProcessor } from '@/lib/sanctuary/externalProcessingGrant';
+import { rejectUnqualifiedProtectedProcessor } from '@/lib/sanctuary/protectedProcessorBoundary';
 import { generateWithClaude } from './claudeClient';
 import { callLocalInference, isLocalHealthy } from './localInferenceClient';
 import { emitDriftEvent } from '@/lib/sovereignty/driftAlarm';

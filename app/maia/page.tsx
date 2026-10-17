@@ -15,7 +15,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { OracleConversation } from '@/components/OracleConversation';
-import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
+import { getOrCreateMaiaSessionId, subscribeMaiaSessionIdentityChanged } from '@/lib/maia/presence/conversationIdentity';
 import { placeFromPathname } from '@/lib/maia/presence/place';
 import { processUltimateMAIAConsciousnessSession } from '@/lib/consciousness-computing/ultimate-consciousness-system';
 import { ClaudeCodePresence } from '@/components/ui/ClaudeCodePresence';
@@ -367,6 +367,13 @@ function MAIAPageContent() {
   const [userBirthDate, setUserBirthDate] = useState<string | undefined>();
   const [sessionId, setSessionId] = useState('');
   const [isMounted, setIsMounted] = useState(false);
+
+  // RF01 R1-D: only a verified server-minted New Conversation may change
+  // today's canonical identity. All MAIA hosts observe one same-tab event.
+  useEffect(() => subscribeMaiaSessionIdentityChanged((identity) => {
+    setSessionId(identity.sessionId);
+  }), []);
+
   const [maiaMode, setMaiaMode] = useState<'normal' | 'patient' | 'session'>('normal');
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
@@ -839,6 +846,7 @@ function MAIAPageContent() {
             <SwipeNavigation currentPage="maia">
               <MaiaCenterField>
                 <OracleConversation
+                  key={sessionId}
                   userId={explorerId}
                   userName={explorerName}
                   userBirthDate={userBirthDate}
@@ -1537,6 +1545,7 @@ function MAIAPageContent() {
           {/* Conversation Area */}
           <div className="flex-1 overflow-hidden relative">
             <OracleConversation
+                  key={sessionId}
               userId={explorerId}
               userName={explorerName}
               userBirthDate={userBirthDate}

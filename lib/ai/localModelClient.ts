@@ -1,6 +1,6 @@
 // @ts-nocheck - AI prototype, not type-checked
 // backend: lib/ai/localModelClient.ts
-import { rejectUnqualifiedProtectedProcessor } from '@/lib/sanctuary/externalProcessingGrant';
+import { rejectUnqualifiedProtectedProcessor } from '@/lib/sanctuary/protectedProcessorBoundary';
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
 import type { TextResult, ProviderMeta } from './types';
 

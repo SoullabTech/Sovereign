@@ -3,7 +3,7 @@
 // Extracted from sovereignRouter so it can be tested independently.
 // DO NOT import anything that executes code on module load.
 
-import { rejectUnqualifiedProtectedProcessor } from '@/lib/sanctuary/externalProcessingGrant';
+import { rejectUnqualifiedProtectedProcessor } from '@/lib/sanctuary/protectedProcessorBoundary';
 import type { TextRequest } from './modelService';
 import type { TextResult } from './types';
 

@@ -743,7 +743,8 @@ export function QuickSettingsSheet({ isOpen, onClose, privacyChoice = null }: Qu
                   <motion.button
                     onClick={() => {
                       if ('vibrate' in navigator) navigator.vibrate(15);
-                      // Dispatch event to clear conversation in OracleConversation
+                      // Request a server-minted new session; do not clear old
+                      // writing until an authenticated new identity is proven.
                       window.dispatchEvent(new CustomEvent('maia-new-conversation'));
                       onClose();
                     }}
@@ -758,7 +759,7 @@ export function QuickSettingsSheet({ isOpen, onClose, privacyChoice = null }: Qu
                     <span>New Conversation</span>
                   </motion.button>
                   <p className="text-xs text-white/40 text-center mt-2">
-                    Clear history and start fresh with the welcome screen
+                    Start a separate conversation. Earlier writing is preserved.
                   </p>
                 </motion.div>
 
