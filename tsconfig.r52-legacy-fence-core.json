@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.r51-recovery-verdict.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "lib/writersStudio/release/heldLegacyWriterFenceR52.ts",
+    "lib/writersStudio/release/__tests__/heldLegacyWriterFenceR52.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

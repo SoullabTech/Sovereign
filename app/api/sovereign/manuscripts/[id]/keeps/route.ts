@@ -29,6 +29,7 @@ export const dynamic = 'force-dynamic';
  * NOT gated — removing durable material is a sovereign act, in Sanctuary too.
  */
 
+import {holdLegacyWriterForVerifiedMemberR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -53,6 +54,9 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // R52 held-only: authenticated beta author cannot fall through to legacy writing.
+    const r52Hold = await holdLegacyWriterForVerifiedMemberR52(memberId);
+    if (r52Hold) return r52Hold;
     const { id } = await ctx.params;
 
     let body: unknown;

@@ -23,6 +23,7 @@ export const dynamic = 'force-dynamic';
  * Authority: docs/specs/MANUSCRIPT_INGEST_SPEC_2026-07-21.md
  */
 
+import {holdLegacyWriterForVerifiedMemberR52, holdLegacyOfflineCabinWriteR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -219,6 +220,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
 
+  // Cabin identity is not a web session. Future fence must hold offline writes.
+  const r52CabinHold = holdLegacyOfflineCabinWriteR52();
+  if (r52CabinHold) return r52CabinHold;
+
   if (process.env.MAIA_CABIN_MODE === 'offline') {
     const store = cabinStore();
     try {
@@ -301,6 +306,9 @@ export async function POST(request: NextRequest) {
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // R52 held-only: authenticated beta author cannot fall through to legacy writing.
+    const r52Hold = await holdLegacyWriterForVerifiedMemberR52(memberId);
+    if (r52Hold) return r52Hold;
 
     let body: unknown;
     try {

@@ -24,6 +24,7 @@
  * plainly that a pre-conversion revision cannot be restored section-wise keeps
  * their history; a member silently given reassigned identities does not.
  */
+import {holdLegacyWriterForVerifiedMemberR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -108,6 +109,9 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   const { id } = await ctx.params;
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // R52 held-only: authenticated beta author cannot fall through to legacy writing.
+  const r52Hold = await holdLegacyWriterForVerifiedMemberR52(memberId);
+  if (r52Hold) return r52Hold;
 
   let body: unknown;
   try {

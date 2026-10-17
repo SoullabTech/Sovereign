@@ -27,6 +27,7 @@
  * here: every refusal is decided before the first write.
  */
 
+import {holdLegacyWriterForVerifiedMemberR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
@@ -65,6 +66,9 @@ export async function POST(
 
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  // R52 held-only: authenticated beta author cannot fall through to legacy writing.
+  const r52Hold = await holdLegacyWriterForVerifiedMemberR52(memberId);
+  if (r52Hold) return r52Hold;
 
   const body = await req.json().catch(() => null) as { expectedReviewRevision?: unknown } | null;
   const revision = body?.expectedReviewRevision;

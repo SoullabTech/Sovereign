@@ -15,6 +15,7 @@
  * bytes from that transport while KEEPING the route under `/api/sovereign`, so
  * the central access rule remains in force.
  */
+import {holdLegacyWriterForVerifiedMemberR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextRequest, NextResponse } from 'next/server';
 import { transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -63,6 +64,9 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   const { id } = await ctx.params;
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // R52 held-only: authenticated beta author cannot fall through to legacy writing.
+  const r52Hold = await holdLegacyWriterForVerifiedMemberR52(memberId);
+  if (r52Hold) return r52Hold;
 
   const guard = guardFromHeaders(request);
   if ('error' in guard) {
