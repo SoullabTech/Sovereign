@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.r51-private-complete-journey.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/writersStudio/exactRenderedPassageR52.ts",
+    "lib/writersStudio/__tests__/exactRenderedPassageR52.test.ts",
+    "lib/writersStudio/__tests__/r52CanonicalNextBrowserBoundary.test.ts",
+    "app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx",
+    "app/writers-studio/full-redesign/Shell.tsx",
+    "app/writers-studio/page.tsx"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

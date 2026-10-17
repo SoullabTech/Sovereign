@@ -28,6 +28,7 @@ import { locateUniquePassage, type AdoptionWireOutcome, type RebuildEditorialRel
 import { exactTextareaPassageR41, exactDomPassageR41 } from '@/lib/writersStudio/exactLiveSelectionR41';
 import {P4R1ProtectedAuthorJourneyR54,R54_REAL_PC3_AUTHOR_JOURNEY_ENABLED,
   type R54PanelProps} from './P4R1ProtectedAuthorJourneyR54';
+import { exactRenderedPassageR52 } from '@/lib/writersStudio/exactRenderedPassageR52';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
 import EditorialDancePanel from './EditorialDancePanel';
@@ -169,10 +170,11 @@ function selectionInPc3Editor(
   const sectionId = editor.dataset.sectionId;
   if (!sectionId) return null;
   const liveBody = bodyOf(sectionId);
-  const exact = exactDomPassageR41(liveBody, editor, range);
-  // The initial PC3 rich paragraph renderer inserts DOM boundaries that may
-  // not correspond literally to A1 source separators. Its prior conservative
-  // uniqueness rule remains; repeat occurrences are never guessed.
+  const exact = exactDomPassageR41(liveBody, editor, range)
+    ?? exactRenderedPassageR52(liveBody, editor, range);
+  // R52 maps verified rendered paragraph offsets to the exact original A1
+  // Unicode source. If formatting/hidden prefixes prevent total alignment,
+  // retain the older UNIQUE-passage-only refusal rule. Never guess duplicates.
   const locus = exact ?? locateUniquePassage(liveBody, range.toString());
   return locus ? { sectionId, ...locus, text: range.toString(),
     rect: range.getBoundingClientRect() } : null;
