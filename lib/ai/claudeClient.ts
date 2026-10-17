@@ -3,6 +3,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { requireAnthropicTurnGrant } from '@/lib/sanctuary/externalProcessingGrant';
+import { requireProtectedTextDispatch } from '@/lib/sanctuary/protectedDispatchReservation';
 import { logStancePre, logStancePost } from '../sovereign/stanceReanchor';
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
 import { logVoiceTierTelemetry } from '../db/voiceTierTelemetry';
@@ -121,7 +122,12 @@ export async function generateWithClaude(
   const protectedTurn = meta?.sanctuary === true;
   // Direct SDK callers also require independent, verified Anthropic scope
   // before any content debug logs, telemetry or external provider calls.
-  if (protectedTurn) await requireAnthropicTurnGrant(meta);
+  if (protectedTurn) {
+    await requireAnthropicTurnGrant(meta);
+    // Atomically reserve one irreversible provider attempt before SDK access.
+    // Do not replay a failed or unknown response automatically.
+    await requireProtectedTextDispatch(meta);
+  }
 
   const client = getAnthropicClient();
   if (!client) {
@@ -160,7 +166,7 @@ export async function generateWithClaude(
       messages: [
         { role: 'user', content: userInput }
       ],
-    });
+    }, protectedTurn ? { maxRetries: 0 } : undefined);
 
     const content = message.content[0];
     if (content.type !== 'text') {

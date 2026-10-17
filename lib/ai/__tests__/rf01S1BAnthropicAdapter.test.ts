@@ -4,6 +4,7 @@
  */
 import { describe,it,expect,beforeEach,afterEach,jest } from '@jest/globals';
 const mockGuard=jest.fn<(meta:unknown)=>Promise<void>>();
+const mockReserve=jest.fn<(meta:unknown)=>Promise<void>>();
 const mockCreate=jest.fn<(...args:any[])=>Promise<any>>();
 const mockPre=jest.fn<(...args:any[])=>any>();
 const mockPost=jest.fn<(...args:any[])=>any>();
@@ -16,6 +17,9 @@ jest.mock('@anthropic-ai/sdk',()=>({
 }));
 jest.mock('@/lib/sanctuary/externalProcessingGrant',()=>({
  requireAnthropicTurnGrant:(meta:unknown)=>mockGuard(meta),
+}));
+jest.mock('@/lib/sanctuary/protectedDispatchReservation',()=>({
+ requireProtectedTextDispatch:(meta:unknown)=>mockReserve(meta),
 }));
 jest.mock('@/lib/sovereign/stanceReanchor',()=>({
  logStancePre:(...a:any[])=>mockPre(...a),
@@ -37,9 +41,10 @@ const request=()=>({
 });
 beforeEach(()=>{
  process.env.ANTHROPIC_API_KEY='RF01_SYNTHETIC_KEY_NOT_A_REAL_SECRET';
- mockGuard.mockReset();mockCreate.mockReset();mockPre.mockReset();
+ mockGuard.mockReset();mockReserve.mockReset();mockCreate.mockReset();mockPre.mockReset();
  mockPost.mockReset();mockTelemetry.mockReset();
  mockGuard.mockImplementation(async()=>undefined);
+ mockReserve.mockImplementation(async()=>undefined);
  mockCreate.mockImplementation(async()=>({
   content:[{type:'text',text:'RF01_FAKE_RESPONSE'}],
  }));
@@ -50,17 +55,36 @@ describe('RF01 protected Anthropic SDK handoff',()=>{
   mockGuard.mockImplementation(async()=>{throw new Error('NO_PROVIDER_GRANT')});
   await expect(generateWithClaude(request())).rejects.toThrow('NO_PROVIDER_GRANT');
   expect(mockCreate).not.toHaveBeenCalled();
+  expect(mockReserve).not.toHaveBeenCalled();
   expect(mockTelemetry).not.toHaveBeenCalled();
  });
  it('valid grant permits only the mocked Anthropic text call',async()=>{
   const res=await generateWithClaude(request());
   expect(res.text).toBe('RF01_FAKE_RESPONSE');
   expect(mockGuard).toHaveBeenCalledWith(meta);
+  expect(mockReserve).toHaveBeenCalledWith(meta);
   expect(mockCreate).toHaveBeenCalledTimes(1);
+  expect(mockCreate.mock.calls[0][1]).toEqual({ maxRetries: 0 });
   expect(mockCreate.mock.calls[0][0]).toMatchObject({
     messages:[{role:'user',content:'RF01_CANARY_PRIVATE_MEMBER_TEXT'}],
     system:'RF01_CANARY_PRIVATE_SYSTEM_PROMPT',
   });
+ });
+ it('a consumed dispatch never re-enters the paid SDK adapter',async()=>{
+  let count=0;
+  mockReserve.mockImplementation(async()=>{
+    count+=1;
+    if(count>1)throw new Error('DISPATCH_RESERVED_ALREADY');
+  });
+  expect((await generateWithClaude(request())).text).toBe('RF01_FAKE_RESPONSE');
+  await expect(generateWithClaude(request())).rejects.toThrow('DISPATCH_RESERVED_ALREADY');
+  expect(mockCreate).toHaveBeenCalledTimes(1);
+ });
+ it('missing irreversible reservation blocks SDK use despite valid S1-B grant',async()=>{
+  mockReserve.mockImplementation(async()=>{throw new Error('S1C_DISPATCH_DISABLED')});
+  await expect(generateWithClaude(request())).rejects.toThrow('S1C_DISPATCH_DISABLED');
+  expect(mockGuard).toHaveBeenCalledTimes(1);
+  expect(mockCreate).not.toHaveBeenCalled();
  });
  it('protected content does not enter stance, tier, or debug logging',async()=>{
   const logged:string[]=[];
