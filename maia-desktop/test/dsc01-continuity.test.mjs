@@ -22,13 +22,16 @@ function stubConv(o = {}) {
   const calls = { adopt: 0, history: 0, canonical: 0 };
   return {
     calls,
+    // Explicitly chosen Continuity is this fixture's prerequisite; a separate
+    // RF01 test proves that unresolved/Sanctuary makes all these reads inert.
+    privacyState: () => ({ privacyChoice: 'continuity', ready: true }),
     adoptMemberThread: async () => {
       calls.adopt += 1;
       return o.adopt ? o.adopt(calls.adopt) : { ok: true, resumed: true, sessionId: 'conv-A' };
     },
     history: async () => {
       calls.history += 1;
-      return o.history ? o.history() : { turns: [{ role: 'member', text: 'hi' }] };
+      return o.history ? o.history() : { ok: true, turns: [{ role: 'member', text: 'hi' }] };
     },
     canonicalThreadId: async () => {
       calls.canonical += 1;

@@ -15,6 +15,7 @@
  * - Multi-perspective: Nous-Hermes2-Mixtral
  */
 
+import { rejectUnqualifiedProtectedProcessor } from '@/lib/sanctuary/protectedProcessorBoundary';
 import { generateWithLocalModel, LocalChatParams } from './localModelClient';
 import { MAIA_RUNTIME_PROMPT } from '../consciousness/MAIA_RUNTIME_PROMPT';
 
@@ -120,6 +121,7 @@ export class MultiEngineOrchestrator {
     orchestrationType: OrchestrationType = 'primary',
     elementalLayer?: string
   ): Promise<MultiEngineResponse> {
+    rejectUnqualifiedProtectedProcessor(params.meta);
     const startTime = Date.now();
 
     try {
@@ -337,6 +339,7 @@ export async function generateWithMultipleEngines(
   orchestrationType: OrchestrationType = 'primary',
   elementalLayer?: string
 ): Promise<MultiEngineResponse> {
+  rejectUnqualifiedProtectedProcessor(params.meta);
   const orchestrator = MultiEngineOrchestrator.getInstance();
   return orchestrator.generateWithOrchestra(params, orchestrationType, elementalLayer);
 }

@@ -5,7 +5,8 @@
  * This provides the "what did we just talk about" continuity.
  */
 
-import { query,transaction } from '../../db/postgres';
+import { query, transaction } from '../../db/postgres';
+import { assertMemberInfluenceAllowed } from '../../sanctuary/memberInfluenceHold';
 import { TurnPosture, contentWritable } from '../../sanctuary/turnPosture';
 import { Provenance } from '../../provenance/provenance';
 
@@ -31,6 +32,48 @@ function mintTurnProvenance(
     },
     'TurnsStore'
   );
+}
+
+/** Distinguish an exact retry from an exchange-ID belonging to another act. */
+export class ExchangeIdentityConflict extends Error {
+  constructor() {
+    super('EXCHANGE_ID_REUSE_MISMATCH');
+    this.name = 'ExchangeIdentityConflict';
+  }
+}
+
+async function requireExactPriorExchangeTurn(input: {
+  userId: string;
+  sessionId?: string;
+  role: 'user' | 'assistant';
+  content: string;
+  exchangeId: string;
+  seq: number;
+}): Promise<void> {
+  const prior = await query<{
+    user_id: string;
+    session_id: string | null;
+    role: string;
+    content: string;
+    posture_at_creation: string | null;
+  }>(
+    'SELECT user_id, session_id, role, content, posture_at_creation ' +
+    'FROM conversation_turns WHERE exchange_id = $1 AND seq = $2 ' +
+    'AND NOT EXISTS (SELECT 1 FROM (' +
+    'SELECT session_id FROM astro_maia_protected_origins UNION ALL ' +
+    'SELECT session_id FROM astro_maia_transfer_grants) AS r4f ' +
+    'WHERE r4f.session_id = conversation_turns.session_id)',
+    [input.exchangeId, input.seq],
+  );
+  const row = prior.rows[0];
+  if (!row ||
+      row.user_id !== input.userId ||
+      row.session_id !== (input.sessionId ?? null) ||
+      row.role !== input.role ||
+      row.content !== input.content ||
+      row.posture_at_creation !== 'normal') {
+    throw new ExchangeIdentityConflict();
+  }
 }
 
 export interface TurnMeta {
@@ -63,6 +106,8 @@ export const TurnsStore = {
     userId: string,
     limit: number = 12
   ): Promise<Array<{ role: 'user' | 'assistant'; content: string; createdAt: string }>> {
+    // This is a shared cross-session memory reader, independent of HTTP.
+    await assertMemberInfluenceAllowed(userId);
     const result = await query<{ role: 'user' | 'assistant'; content: string; createdAt: string }>(
       `
       SELECT
@@ -200,9 +245,9 @@ export const TurnsStore = {
    *   seq 0 = member utterance, durable at acceptance (before generation)
    *   seq 1 = MAIA response, durable only once it actually exists
    *
-   * Idempotent on (exchange_id, seq): a retry, a re-render, or a later
-   * client-side pair write carrying the SAME exchangeId is dropped by
-   * ON CONFLICT DO NOTHING rather than duplicated.
+   * Idempotent on (exchange_id, seq), but not blindly: a conflicting row
+   * is accepted as an exact retry only when actor/session/role/content/posture
+   * match. A reused exchange identity with different authorship is refused.
    *
    * SANCTUARY (S1) and provenance (S5) are enforced exactly as in addExchange —
    * this is a narrower write, not a weaker one.
@@ -225,13 +270,18 @@ export const TurnsStore = {
       return false; // mint refused — no durable object without provenance (S5)
     }
     const seq = opts.role === 'user' ? 0 : 1;
-    const inserted = await query(
-      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance)
+    const inserted = await query<{ id: string }>(
+      `INSERT INTO conversation_turns
+        (user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance)
        SELECT $1, $2, $3, $4, $5, $6, clock_timestamp(), 'normal', $7::jsonb
        WHERE NOT EXISTS (
-         SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) r4f WHERE r4f.session_id = $2
+         SELECT 1 FROM (
+           SELECT session_id FROM astro_maia_protected_origins
+           UNION ALL SELECT session_id FROM astro_maia_transfer_grants
+         ) r4f WHERE r4f.session_id = $2
        )
-       ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
+       ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING
+       RETURNING id`,
       [
         opts.userId,
         opts.sessionId ?? null,
@@ -240,23 +290,13 @@ export const TurnsStore = {
         opts.exchangeId,
         seq,
         JSON.stringify(provenance.toJson()),
-      ]
+      ],
     );
-    if (inserted.rowCount === 1) return true;
-    // An idempotent retry of an ALREADY-ACCEPTED ordinary exchange is durable.
-    // A protected-session refusal must NEVER be reported as 'durable'.
-    const existing = await query(
-      `SELECT 1 FROM conversation_turns AS ct
-       WHERE ct.exchange_id = $1 AND ct.seq = $2
-         AND ct.user_id = $3 AND ct.session_id = $4
-         AND NOT EXISTS (
-           SELECT 1 FROM (SELECT session_id FROM astro_maia_protected_origins UNION ALL SELECT session_id FROM astro_maia_transfer_grants) r4f
-            WHERE r4f.session_id = ct.session_id
-         )
-       LIMIT 1`,
-      [opts.exchangeId, seq, opts.userId, opts.sessionId ?? null],
-    );
-    return existing.rows.length === 1;
+    if (inserted.rows.length > 0) return true;
+    // A suppressed INSERT is NOT necessarily an exact retry. It might be an
+    // actor/session/content/posture collision. Never report success on that.
+    await requireExactPriorExchangeTurn({ ...opts, seq });
+    return true;
   },
 
   /**
@@ -279,6 +319,7 @@ export const TurnsStore = {
     if (!contentWritable(posture, 'TurnsStore.addR4fProtectedTurn', opts.sessionId)) {
       return false;
     }
+    await assertMemberInfluenceAllowed(opts.userId);
     const minted = mintTurnProvenance(posture, opts.role, opts.exchangeId, opts.sessionId);
     if (!minted) return false;
     const provenance = {
@@ -320,8 +361,9 @@ export const TurnsStore = {
    * one clock tick — guarantees user < assistant ordering when sorted by
    * (created_at ASC, seq ASC).
    *
-   * exchangeId: supply the same UUID to make the write idempotent on retry.
-   * ON CONFLICT DO NOTHING drops a duplicate silently when exchange_id is set.
+   * exchangeId: supply the same UUID to make an identical retry idempotent.
+   * Existing row must match actor/session/role/content/posture exactly;
+   * mismatching reuse raises ExchangeIdentityConflict.
    * Omitting exchangeId falls back to the original non-idempotent behaviour.
    */
   async addExchange(
@@ -335,9 +377,18 @@ export const TurnsStore = {
     if (!contentWritable(posture, 'TurnsStore.addExchange', sessionId)) {
       return;
     }
-    if (!exchangeId) {
-      console.warn('[TurnsStore] addExchange called without exchangeId — turns will not be idempotent');
+    if (exchangeId) {
+      // The F1 two-half pathway and later client pair now share one exact
+      // identity test; mismatching duplicate IDs fail instead of disappearing.
+      await TurnsStore.addExchangeTurn(posture, {
+        userId, sessionId, role: 'user', content: userMessage, exchangeId,
+      });
+      await TurnsStore.addExchangeTurn(posture, {
+        userId, sessionId, role: 'assistant', content: assistantResponse, exchangeId,
+      });
+      return;
     }
+    console.warn('[TurnsStore] addExchange called without exchangeId — turns will not be idempotent');
     const eid = exchangeId ?? null;
     // S5: provenance minted here, per turn, from the boundary-resolved posture.
     // The exchange id (or a per-call reference) is the typed source's turnId.

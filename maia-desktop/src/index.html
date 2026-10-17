@@ -99,6 +99,15 @@
   #composer input::placeholder { color:var(--sl-text-muted); }
   #composer input:focus { border-color:var(--sl-accent-primary); }
   #composer button { padding:12px 20px; }
+  #privacy { display:none; padding:12px 28px; border-top:1px solid var(--sl-border-subtle);
+             background:var(--sl-bg-surface); }
+  #privacy .privacy-title { font-size:14px; font-weight:600; }
+  #privacy .privacy-choices { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+  #privacy p { margin:6px 0 0; color:var(--sl-text-secondary); font-size:12px; }
+  #privacy button[aria-pressed=true] { border-color:var(--sl-accent-primary);
+                                      background:var(--sl-bg-elevated);
+                                      color:var(--sl-accent-soft); }
+  #privacy .privacy-error { color:var(--sl-state-error); }
   .link:hover { color:var(--sl-accent-soft); }
 </style>
 
@@ -115,6 +124,17 @@
     <div class="hint" id="autherr"></div>
   </form>
 </main>
+
+<section id="privacy" role="group" aria-label="Conversation privacy">
+  <div class="privacy-title">How should MAIA remember this conversation?</div>
+  <div class="privacy-choices">
+    <button id="privacy-sanctuary" type="button" aria-pressed="false">Sanctuary — no ordinary memory</button>
+    <button id="privacy-continuity" type="button" aria-pressed="false">Continuity — allow remembrance</button>
+  </div>
+  <p id="privacy-status" aria-live="polite">Choose before sending or opening the microphone.</p>
+  <p>Remembrance choice is separate from outside model and speech processing.
+     Sanctuary voice remains unavailable pending that privacy qualification.</p>
+</section>
 
 <form id="composer">
   <input id="msg" placeholder="Message MAIA…" autocomplete="off" spellcheck="true">

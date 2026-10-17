@@ -34,9 +34,13 @@ function stubSession({ recent, thread }) {
   };
 }
 
-const mk = (session) => createConversation({
-  session, diagnostics: { emit: () => {} }, sessionId: 'desktop-1787000000000',
-});
+const mk = (session) => {
+  const conv = createConversation({
+    session, diagnostics: { emit: () => {} }, sessionId: 'desktop-1787000000000',
+  });
+  assert.equal(conv.choosePrivacy('continuity').ok, true);
+  return conv;
+};
 
 test('Desktop adopts the member’s most recent thread instead of its own id', async () => {
   const conv = mk(stubSession({

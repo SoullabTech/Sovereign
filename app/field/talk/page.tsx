@@ -19,6 +19,7 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { OracleConversation } from '@/components/OracleConversation';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { subscribeMaiaSessionIdentityChanged } from '@/lib/maia/presence/conversationIdentity';
 import { apiFetch, clearAuthState } from '@/lib/http/apiBase';
 import { advanceEnergyState, loadEnergyContext, type FieldEnergyState } from '@/lib/field/energyState';
 
@@ -144,6 +145,13 @@ function FieldTalkContent() {
   const [explorerName, setExplorerName] = useState('');
   const [userBirthDate, setUserBirthDate] = useState<string | undefined>();
   const [sessionId, setSessionId] = useState('');
+
+  // RF01 R1-D: only a verified server-minted New Conversation may change
+  // today's canonical identity. All MAIA hosts observe one same-tab event.
+  useEffect(() => subscribeMaiaSessionIdentityChanged((identity) => {
+    setSessionId(identity.sessionId);
+  }), []);
+
   const [isMounted, setIsMounted] = useState(false);
   const [voiceEnabled] = useState(true);
 
@@ -403,6 +411,7 @@ function FieldTalkContent() {
         </div>
       )}
       <OracleConversation
+                  key={sessionId}
         userId={explorerId}
         userName={explorerName}
         userBirthDate={userBirthDate}

@@ -1,48 +1,56 @@
 /**
- * POST /api/sovereign/session/finalize
+ * RF01 S0-A2 — the client may request an end, not authorize someone else's
+ * deletion or remembrance. Owner is derived from verified session credentials.
  *
- * Called by the client when a session's closing ritual completes.
- * Triggers either Sanctuary purge or Continuity summary pipeline.
- *
- * Request body:
- *   memberId: string    — member UUID
- *   sessionId: string   — maia_sessions.id
- *   isSanctuary: boolean
- *   endedAt?: string    — ISO timestamp (optional, defaults to now)
+ * Per-turn Sanctuary deletion and mixed-session summary policy remain held
+ * until S1/R1 qualification; a mutable isSanctuary flag cannot confer them.
  */
-
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { finalizeSession } from '@/lib/sovereign/sessionFinalizer';
+import { resolvePrivacyActor, matchingClaim } from '@/lib/auth/privacyMemberGuard';
+import { SessionOwnershipRefusal } from '@/lib/sovereign/memberSessionOwnership';
 
-export async function POST(req: Request) {
+const refusal = (error: string, status: number) =>
+  NextResponse.json({ ok: false, error }, { status });
+
+export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const actor = await resolvePrivacyActor(req);
+    if (!actor.ok) return refusal(actor.code, actor.status);
 
-    const memberId = body?.memberId;
-    const sessionId = body?.sessionId;
-    const isSanctuary = Boolean(body?.isSanctuary);
-    const endedAt = body?.endedAt ?? null;
-
-    if (!memberId || !sessionId) {
-      return NextResponse.json(
-        { ok: false, error: 'memberId and sessionId required' },
-        { status: 400 }
-      );
+    let body: unknown;
+    try { body = await req.json(); }
+    catch { return refusal('INVALID_JSON', 400); }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return refusal('INVALID_FINALIZE_BODY', 400);
     }
+    const input = body as Record<string, unknown>;
+    if (!matchingClaim(input.memberId, actor.memberId)) {
+      return refusal('MEMBER_CLAIM_MISMATCH', 403);
+    }
+    if (typeof input.sessionId !== 'string' ||
+        !input.sessionId.trim() || input.sessionId.length > 200) {
+      return refusal('INVALID_SESSION_ID', 400);
+    }
+    if (typeof input.isSanctuary !== 'boolean') {
+      return refusal('EXPLICIT_PRIVACY_POSTURE_REQUIRED', 400);
+    }
+    if (input.endedAt != null && (
+        typeof input.endedAt !== 'string' ||
+        !Number.isFinite(Date.parse(input.endedAt))
+    )) return refusal('INVALID_END_TIME', 400);
 
     const result = await finalizeSession({
-      memberId,
-      sessionId,
-      isSanctuary,
-      endedAt,
+      memberId: actor.memberId,
+      sessionId: input.sessionId,
+      isSanctuary: input.isSanctuary,
+      endedAt: (input.endedAt as string | undefined) ?? null,
     });
-
-    return NextResponse.json(result);
-  } catch (err: any) {
-    console.error('[session/finalize] Error:', err);
-    return NextResponse.json(
-      { ok: false, error: err?.message ?? 'Unknown error' },
-      { status: 500 }
-    );
+    return NextResponse.json(result, { status: result.ok ? 200 : 409 });
+  } catch (err) {
+    if (err instanceof SessionOwnershipRefusal) {
+      return refusal('SESSION_NOT_OWNED', 409);
+    }
+    return refusal('FINALIZATION_UNAVAILABLE', 500);
   }
 }

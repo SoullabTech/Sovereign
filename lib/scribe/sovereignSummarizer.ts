@@ -19,6 +19,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { query } from '@/lib/db/postgres';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
+import { evaluateSummaryEligibility, summaryProviderFixtureEnabled, summaryReadFixtureEnabled } from '@/lib/sanctuary/sessionSummaryEligibility';
 
 // ============================================================================
 // Types
@@ -97,21 +98,18 @@ export async function generateSessionRemembrance(
   sessionId: string,
   maxTurns: number = 60
 ): Promise<SessionRemembrance | null> {
-  // 1. Check session mode — refuse sanctuary
-  const session = await query<{ mode: string; member_id: string | null }>(
-    `SELECT mode, member_id FROM maia_sessions WHERE id = $1`,
-    [sessionId]
+  // Continuity is not a grant to use an external summarization provider.
+  // No production/background approval has been ratified; direct callers hold.
+  if (!summaryProviderFixtureEnabled()) return null;
+  const session = await query<{ member_id: string | null }>(
+    'SELECT member_id FROM maia_sessions WHERE id=$1',[sessionId],
   );
-
-  if (!session.rows[0]) {
-    console.warn(`[Summarizer] Session ${sessionId} not found`);
-    return null;
-  }
-
-  if (session.rows[0].mode === 'sanctuary') {
-    console.log(`[Summarizer] 🔒 Session ${sessionId} is sanctuary — skipping`);
-    return null;
-  }
+  const memberId = session.rows[0]?.member_id;
+  if (!memberId) return null;
+  const eligibility = await evaluateSummaryEligibility({
+    sessionId, memberId, minimumTurns: 2, requireClosed: true,
+  });
+  if (!eligibility.ok) return null;
 
   // 2. Session-only turns require the stored, server-owned member identity.
   // Guest/null and historical unknown owner sessions cannot enter the member
@@ -124,6 +122,12 @@ export async function generateSessionRemembrance(
     console.log(`[Summarizer] Session ${sessionId} has <2 turns — skipping`);
     return null;
   }
+
+  // Recheck after the content read and BEFORE building a cloud prompt.
+  const beforeProvider = await evaluateSummaryEligibility({
+    sessionId, memberId, minimumTurns: 2, requireClosed: true,
+  });
+  if (!beforeProvider.ok) return null;
 
   // Take last N turns only
   const recentTurns = turns.slice(-maxTurns);
@@ -174,7 +178,7 @@ Rules:
     // Handles: bare JSON, ```json fences, extra commentary before/after.
     const text = extractFirstJsonObject(raw);
     if (!text) {
-      throw new Error(`[Summarizer] No JSON object found in model response. Raw: ${raw.slice(0, 200)}`);
+      throw new Error('SUMMARY_MODEL_RESULT_UNPARSEABLE');
     }
     const parsed = JSON.parse(text) as Omit<SessionRemembrance, 'generatedAt'>;
 
@@ -182,9 +186,9 @@ Rules:
       ...parsed,
       generatedAt: new Date().toISOString(),
     };
-  } catch (error: any) {
-    console.error(`[Summarizer] Failed for session ${sessionId}:`, error.message);
-    throw error; // Let the worker handle retry logic
+  } catch {
+    // Vendor errors may echo member content. Do not log or propagate them.
+    throw new Error('SUMMARY_PROVIDER_UNAVAILABLE');
   }
 }
 
@@ -199,20 +203,38 @@ export async function storeRemembrance(
   sessionId: string,
   remembrance: SessionRemembrance
 ): Promise<void> {
-  await query(
+  if (!summaryProviderFixtureEnabled()) throw new Error('SUMMARY_STORAGE_HELD');
+  const owner = await query<{member_id:string|null}>(
+    'SELECT member_id FROM maia_sessions WHERE id=$1',[sessionId],
+  );
+  const memberId=owner.rows[0]?.member_id;
+  if (!memberId) throw new Error('SUMMARY_STORAGE_INELIGIBLE');
+  const eligible=await evaluateSummaryEligibility({
+    sessionId,memberId,minimumTurns:2,requireClosed:true,
+  });
+  if (!eligible.ok) throw new Error('SUMMARY_STORAGE_INELIGIBLE');
+  const stored = await query<{id:string}>(
     `UPDATE maia_sessions
      SET summary = $1::jsonb,
          themes = $2::text[],
          status = 'completed',
          completed_at = NOW(),
          updated_at = NOW()
-     WHERE id = $3`,
+     WHERE id = $3 AND member_id=$4 AND mode='continuity'
+       AND status IN ('closing','completed')
+       AND NOT EXISTS (
+         SELECT 1 FROM runtime_consent_state c
+         WHERE c.session_id=$3 AND c.posture='sanctuary'
+       )
+     RETURNING id`,
     [
       JSON.stringify(remembrance),
       remembrance.themes,
       sessionId,
+      memberId,
     ]
   );
+  if (!stored.rows[0]) throw new Error('SUMMARY_STORAGE_GUARD_REFUSED');
 }
 
 /**
@@ -225,6 +247,7 @@ export async function getRecentSummaries(
   memberId: string,
   limit: number = 3
 ): Promise<Array<{ sessionId: string; summary: SessionRemembrance; completedAt: string }>> {
+  if (!summaryReadFixtureEnabled()) return [];
   const result = await query<{
     id: string;
     summary: SessionRemembrance;

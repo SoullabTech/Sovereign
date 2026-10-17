@@ -44,6 +44,12 @@ contextBridge.exposeInMainWorld('maia', {
   // moment the words exist.
   sendText: (text) => ipcRenderer.invoke('maia:send-text', { text }),
 
+  // ── RF01 S0-B: explicit privacy choice, validated by MAIN ────────────────
+  // Only the named choice travels inward. No token, member ID, session ID,
+  // transcript, or arbitrary settings object ever crosses this channel.
+  choosePrivacy: (choice) => ipcRenderer.invoke('maia:choose-privacy', { choice }),
+  getPrivacyState: () => ipcRenderer.invoke('maia:privacy-state'),
+
   // ── RESET-01 §6: the half-duplex handoff ──────────────────────────────────
   // ⭐ THE ELEVENTH CHANNEL, and it had to argue for itself.
   //
@@ -73,6 +79,12 @@ contextBridge.exposeInMainWorld('maia', {
 
   // ── main → renderer ───────────────────────────────────────────────────────
   // Outward only; nothing crosses inward on these.
+  onPrivacyState: (fn) => {
+    if (typeof fn !== 'function') return () => {};
+    const handler = (_evt, payload) => fn(payload);
+    ipcRenderer.on('maia:privacy-state', handler);
+    return () => ipcRenderer.removeListener('maia:privacy-state', handler);
+  },
   onVoiceEvent: (fn) => {
     if (typeof fn !== 'function') return () => {};
     const handler = (_evt, payload) => fn(payload);

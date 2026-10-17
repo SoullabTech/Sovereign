@@ -1,5 +1,6 @@
 // @ts-nocheck - AI prototype, not type-checked
 // backend: lib/ai/localModelClient.ts
+import { rejectUnqualifiedProtectedProcessor } from '@/lib/sanctuary/protectedProcessorBoundary';
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
 import type { TextResult, ProviderMeta } from './types';
 
@@ -44,6 +45,7 @@ export async function generateWithLocalModel(
   params: LocalChatParams,
 ): Promise<TextResult> {
   const t0 = Date.now();
+  rejectUnqualifiedProtectedProcessor(params.meta);
 
   switch (LOCAL_PROVIDER) {
     case 'ollama':

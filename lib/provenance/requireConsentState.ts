@@ -56,6 +56,11 @@ export async function requireConsentState(opts: {
   posture: TurnPosture;
   memberId?: string | null;
   sessionId?: string | null;
+  /**
+   * Exactly named authenticated preflight source. Absence retains the existing
+   * posture.source behavior for Writer/Focus and other current callers.
+   */
+  resolvedFrom?: 'member-explicit-preflight-v1';
 }): Promise<ConsentPreconditionOutcome> {
   if (!opts.requestId) {
     return { kind: 'unavailable', reason: 'no request id' };
@@ -73,7 +78,7 @@ export async function requireConsentState(opts: {
     member_id: opts.memberId ?? null,
     session_id: opts.sessionId ?? null,
     posture: opts.posture.sanctuary ? 'sanctuary' : 'normal',
-    resolved_from: opts.posture.source,
+    resolved_from: opts.resolvedFrom ?? opts.posture.source,
   };
 
   try {

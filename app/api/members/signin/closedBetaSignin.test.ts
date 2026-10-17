@@ -48,7 +48,7 @@ describe('WS-BETA-ENTRY-R1 denied sign-ins never create sessions',()=>{
    mockRate.mockResolvedValue({allowed:true,remainingAttempts:4,blockedUntil:null,retryAfterSeconds:null});
    mockQuery.mockResolvedValue({rows:[member],rowCount:1} as any);
    mockPassword.mockResolvedValue({ok:true,needsUpgrade:false});
-   mockSession.mockResolvedValue({sessionToken:'fictional-session',expiresAt:new Date('2026-12-01T00:00:00Z')} as any);
+   mockSession.mockResolvedValue({id:'33333333-3333-4333-8333-333333333333',sessionToken:'a'.repeat(64),expiresAt:new Date('2026-12-01T00:00:00Z')} as any);
  });
  afterAll(()=>{
    if(prev===undefined)delete process.env.WRITERS_STUDIO_RESTRICTED_BETA;
@@ -78,6 +78,8 @@ describe('WS-BETA-ENTRY-R1 denied sign-ins never create sessions',()=>{
    const res=await POST(req());
    expect(res.status).toBe(200);
    expect(mockSession).toHaveBeenCalledTimes(1);
+   expect((await res.json()).session.token).toMatch(/^[0-9a-f]{64}$/);
+   expect(res.headers.get('set-cookie')).toContain('maia_session');
  });
  it('permits exact invited candidate to authenticate only into consent-only entrance',async()=>{
    mockAdmission.mockResolvedValue({eligible:false,basis:'not_in_pilot'});

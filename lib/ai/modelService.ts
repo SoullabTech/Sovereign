@@ -4,6 +4,7 @@ import { generateWithClaude, checkClaudeHealth } from './claudeClient';
 import { generateWithKimi, checkKimiHealth, isKimiAvailable } from './kimiClient';
 import { generateWithMultipleEngines, OrchestrationType } from './multiEngineOrchestrator';
 import { generateTextWithSovereignty } from './sovereignRouter';
+import { requireAnthropicTurnGrant } from '@/lib/sanctuary/externalProcessingGrant';
 import type { TextResult, ProviderMeta, InferenceMode } from './types';
 import {
   intendedDomain,
@@ -100,6 +101,19 @@ function stampServingTruth(
  */
 export async function generateText(req: TextRequest): Promise<TextResult> {
   const t0 = Date.now();
+
+  // RF01 S1-B: exact grant decides the ONLY provider for a protected turn,
+  // never the configured multi-engine/Moonshot/local fallback. This does not
+  // lift the separately held S1-A Sanctuary conversation entry prohibition.
+  if (req.meta?.sanctuary === true) {
+    await requireAnthropicTurnGrant(req.meta);
+    const result = await generateWithClaude({
+      systemPrompt: req.systemPrompt,
+      userInput: req.userInput,
+      meta: req.meta,
+    });
+    return stampServingTruth(result, 'rf01_explicit_anthropic', intendedProvider('anthropic'));
+  }
 
   // R2 serving truth observes the routing contract; it does not alter routing.
   const moonshotRequested =

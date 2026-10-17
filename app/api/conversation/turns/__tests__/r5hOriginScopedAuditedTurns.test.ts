@@ -3,10 +3,17 @@ import {getMemberIdFromRequest} from '@/lib/auth/getMemberFromRequest';
 import {query} from '@/lib/db/postgres';
 import {TurnsStore} from '@/lib/memory/stores/TurnsStore';
 import {GET,POST} from '../route';
+import {isR4fProtectedSessionById} from '@/lib/maia/astrologyConsent/r4fGrantStore';
+const protectedCheck=isR4fProtectedSessionById as jest.Mock;
 
 jest.mock('@/lib/auth/getMemberFromRequest',()=>({getMemberIdFromRequest:jest.fn()}));
 jest.mock('@/lib/db/postgres',()=>({query:jest.fn()}));
-jest.mock('@/lib/memory/stores/TurnsStore',()=>({TurnsStore:{addAuditedExchange:jest.fn()}}));
+jest.mock('@/lib/memory/stores/TurnsStore',()=>({TurnsStore:{addAuditedExchange:jest.fn()},ExchangeIdentityConflict:class ExchangeIdentityConflict extends Error {}}));
+jest.mock('@/lib/sovereign/memberSessionOwnership',()=>{
+ const actual=jest.requireActual<any>('@/lib/sovereign/memberSessionOwnership');
+ return {...actual,requireExistingOwnedSession:jest.fn(async()=>undefined)};
+});
+jest.mock('@/lib/maia/astrologyConsent/r4fGrantStore',()=>({isR4fProtectedSessionById:jest.fn()}));
 
 const who=getMemberIdFromRequest as jest.Mock;
 const db=query as jest.Mock;
@@ -40,6 +47,7 @@ describe('R5h integration: authenticated consent audited turns and R4F chart-sou
   who.mockResolvedValue(A);
   save.mockResolvedValue(undefined);
   db.mockImplementation((sql:string)=>dbTruth(sql));
+  protectedCheck.mockResolvedValue(false);
  });
  it('ordinary A can retrieve A ordinary history, with no-store and owner admission',async()=>{
   const res=await GET(get(ordinary));
@@ -56,19 +64,20 @@ describe('R5h integration: authenticated consent audited turns and R4F chart-sou
  });
  it('registered chart session cannot use generic history GET',async()=>{
   db.mockImplementation(async(sql:string)=>{
-   if(sql.includes('AS protected WHERE protected.session_id'))return {rows:[{present:1}]};
    throw Error('PRIVATE_CONVERSATION_MUST_NOT_BE_READ');
   });
+  protectedCheck.mockResolvedValue(true);
   const res=await GET(get(protectedId));
   expect(res.status).toBe(403);
   expect((await res.json()).messages).toBeUndefined();
-  expect(db).toHaveBeenCalledTimes(1);
+  expect(protectedCheck).toHaveBeenCalledWith(protectedId);
+  expect(db).not.toHaveBeenCalled();
  });
  it('a chart-shared-once session cannot be saved through the normal audited writer',async()=>{
   db.mockImplementation(async(sql:string)=>{
-   if(sql.includes('AS protected WHERE protected.session_id'))return {rows:[{present:1}]};
    throw Error('NO_FURTHER_DATABASE_WRITES_EXPECTED');
   });
+  protectedCheck.mockResolvedValue(true);
   const res=await POST(post(protectedId));
   expect(res.status).toBe(403);
   expect(save).not.toHaveBeenCalled();
@@ -88,7 +97,7 @@ describe('R5h integration: authenticated consent audited turns and R4F chart-sou
   expect(db.mock.calls[0][1]).toEqual([A]);
  });
  it('missing protected-origin table refuses history as unavailable, never empty or success',async()=>{
-  db.mockRejectedValue(Error('relation "astro_maia_protected_origins" does not exist'));
+  protectedCheck.mockRejectedValue(Error('relation "astro_maia_protected_origins" does not exist'));
   const res=await GET(get(ordinary));
   expect(res.status).toBe(503);
   expect((await res.json()).error).toBe('privacy_guard_unavailable');

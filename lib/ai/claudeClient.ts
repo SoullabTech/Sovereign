@@ -2,6 +2,8 @@
 // Primary AI provider for MAIA - Claude (Anthropic)
 
 import Anthropic from '@anthropic-ai/sdk';
+import { requireAnthropicTurnGrant } from '@/lib/sanctuary/externalProcessingGrant';
+import { requireProtectedTextDispatch } from '@/lib/sanctuary/protectedDispatchReservation';
 import { logStancePre, logStancePost } from '../sovereign/stanceReanchor';
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
 import { logVoiceTierTelemetry } from '../db/voiceTierTelemetry';
@@ -57,6 +59,7 @@ function selectClaudeModel(meta?: Record<string, unknown>, _userInput?: string):
 
   // 🔍 ROUTING LOG HELPER
   const logAndReturn = (selection: ModelSelection): ModelSelection => {
+    if (meta?.sanctuary === true) return selection;
     console.log(JSON.stringify({
       _tag: 'MODEL_ROUTING',
       model: selection.tier,
@@ -116,6 +119,15 @@ export async function generateWithClaude(
 ): Promise<TextResult> {
   const t0 = Date.now();
   const { systemPrompt, userInput, meta } = params;
+  const protectedTurn = meta?.sanctuary === true;
+  // Direct SDK callers also require independent, verified Anthropic scope
+  // before any content debug logs, telemetry or external provider calls.
+  if (protectedTurn) {
+    await requireAnthropicTurnGrant(meta);
+    // Atomically reserve one irreversible provider attempt before SDK access.
+    // Do not replay a failed or unknown response automatically.
+    await requireProtectedTextDispatch(meta);
+  }
 
   const client = getAnthropicClient();
   if (!client) {
@@ -123,7 +135,7 @@ export async function generateWithClaude(
   }
 
   // AIN DEBUG: Verify prompt path
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production' && !protectedTurn) {
     const hasAIN = systemPrompt.includes(AIN_INTEGRATIVE_ALCHEMY_SENTINEL);
     console.log('[AIN DEBUG] claudeClient systemPrompt has AIN?', hasAIN);
     if (hasAIN) {
@@ -137,14 +149,14 @@ export async function generateWithClaude(
   const awarenessLog = consciousnessPolicy?.awarenessLevel
     ? ` [L${consciousnessPolicy.awarenessLevel}:${consciousnessPolicy.awarenessName || ''}]`
     : '';
-  console.log(`🎭 Voice selection: ${selection.tier} (${selection.reason})${awarenessLog}`);
+  if (!protectedTurn) console.log(`🎭 Voice selection: ${selection.tier} (${selection.reason})${awarenessLog}`);
 
   // 🪟 STANCE PRE (Phase 1 denominator — logging only, no prompt mutation, no injection).
   // Wired here because generateWithClaude is the live fingerprinted chokepoint.
-  logStancePre({ tier: selection.tier, reason: selection.reason });
+  if (!protectedTurn) logStancePre({ tier: selection.tier, reason: selection.reason });
 
   try {
-    console.log(`🧠 Calling Claude (${selection.model})...`);
+    if (!protectedTurn) console.log(`🧠 Calling Claude (${selection.model})...`);
 
     const message = await client.messages.create({
       model: selection.model,
@@ -154,7 +166,7 @@ export async function generateWithClaude(
       messages: [
         { role: 'user', content: userInput }
       ],
-    });
+    }, protectedTurn ? { maxRetries: 0 } : undefined);
 
     const content = message.content[0];
     if (content.type !== 'text') {
@@ -167,13 +179,13 @@ export async function generateWithClaude(
     }
 
     const latencyMs = Date.now() - t0;
-    console.log(`✅ Claude (${selection.tier}): ${text.length} chars, ${latencyMs}ms`);
+    if (!protectedTurn) console.log(`✅ Claude (${selection.tier}): ${text.length} chars, ${latencyMs}ms`);
 
     // 🪟 STANCE POST (Phase 1 denominator — classify the generated response, never throws).
-    logStancePost(text, { tier: selection.tier, reason: selection.reason });
+    if (!protectedTurn) logStancePost(text, { tier: selection.tier, reason: selection.reason });
 
     // Log telemetry (async, non-blocking)
-    logVoiceTierTelemetry({
+    if (!protectedTurn) logVoiceTierTelemetry({
       tier: selection.tier,
       reason: selection.reason,
       model: selection.model,
@@ -197,11 +209,15 @@ export async function generateWithClaude(
       } as ProviderMeta,
     };
   } catch (error) {
+    if (protectedTurn) {
+      // Network exceptions may echo private prompts. Log a fixed status only;
+      // a protected attempt is never eligible for implicit fallback.
+      console.error('Protected Anthropic processing failed (details suppressed)');
+      throw new Error('PROTECTED_PROVIDER_PROCESSING_UNAVAILABLE');
+    }
     const errMsg = error instanceof Error ? error.message : String(error);
     console.error('Claude API error:', errMsg);
-
-    // Re-throw to let modelService handle fallback
-    throw new Error(`Claude generation failed: ${errMsg}`);
+    throw new Error('Claude generation failed: ' + errMsg);
   }
 }
 

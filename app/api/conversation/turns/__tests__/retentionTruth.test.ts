@@ -6,7 +6,14 @@ import {GET,POST} from '../route';
 
 jest.mock('@/lib/auth/getMemberFromRequest',()=>({getMemberIdFromRequest:jest.fn()}));
 jest.mock('@/lib/db/postgres',()=>({query:jest.fn()}));
-jest.mock('@/lib/memory/stores/TurnsStore',()=>({TurnsStore:{addAuditedExchange:jest.fn()}}));
+jest.mock('@/lib/memory/stores/TurnsStore',()=>({TurnsStore:{addAuditedExchange:jest.fn()},ExchangeIdentityConflict:class ExchangeIdentityConflict extends Error {}}));
+// Older R5e test assumed a session ID was enough. The resolved RF01 route
+// additionally demands server-verified member/session ownership and chart hold.
+jest.mock('@/lib/sovereign/memberSessionOwnership',()=>{
+ const real=jest.requireActual<any>('@/lib/sovereign/memberSessionOwnership');
+ return {...real,requireExistingOwnedSession:jest.fn(async()=>undefined)};
+});
+jest.mock('@/lib/maia/astrologyConsent/r4fGrantStore',()=>({isR4fProtectedSessionById:jest.fn(async()=>false)}));
 
 const A='11111111-1111-4111-8111-111111111111';
 const B='22222222-2222-4222-8222-222222222222';

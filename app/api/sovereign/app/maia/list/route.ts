@@ -103,10 +103,14 @@ import { launchRelationalFieldShadow } from '@/lib/maia/relational-field-shadow/
 // F1 durable turn acceptance (audit 2026-08-10): this route is the serving
 // boundary that ACCEPTS a member utterance, so it is where the utterance must
 // become durable — not the browser, later, once a pair exists.
-import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
+import { TurnsStore, ExchangeIdentityConflict } from '@/lib/memory/stores/TurnsStore';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { verifyExplicitTurnConsent } from '@/lib/sanctuary/explicitTurnConsent';
+import { assertMemberInfluenceAllowed, influenceHoldResponse } from '@/lib/sanctuary/memberInfluenceHold';
+import { requireQualifiedConversationProcessing, protectedProcessingRefusal, SanctuaryProcessingUnqualified } from '@/lib/sanctuary/processingQualification';
 import { scrubMemoryAmnesia } from '@/lib/maia/prompts/memoryCanonGuard';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
+import { normalizedSessionId, ensureOwnedMemberSession, ensureGuestSession, SessionOwnershipRefusal } from '@/lib/sovereign/memberSessionOwnership';
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
 import { enforceFieldSafety, type FieldSafetyDecision } from '@/lib/field/enforceFieldSafety';
@@ -114,7 +118,6 @@ import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
 import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
 import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
-import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 import { resolveMemberIdentity } from './resolveIdentity';
 import { getRelationshipAnamnesis, saveRelationshipEssence, loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext, type MemberLiveContext } from '@/lib/memory/MemberLiveContext';
@@ -185,11 +188,10 @@ import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMem
 import { buildWuXingSnapshot, computeWuXingConstitution, computeWuXingMoment, generateWuXingPromptAddendum, type BaZiProfile, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
 import { type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
 import { calculateDaYun } from '@/lib/astrology/daYunCalculator';
-import { pool, query } from '@/lib/db/postgres';
+import { query } from '@/lib/db/postgres';
 import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
 import { buildPracticeFieldContext, formatPracticeFieldContextForPrompt } from '@/lib/practiceField/practiceFieldService';
 import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
-import { classifyAssistantTurn } from '@/lib/ai/quality/assistantTurnType';
 
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
@@ -439,7 +441,19 @@ export async function POST(req: NextRequest) {
     // store), and only recognized members are recorded — exactly the population
     // the authenticated client-side write already covered.
     // ─────────────────────────────────────────────────────────────────────────
-    const isSanctuary = (meta as any)?.sanctuary === true;
+    // RF01 S0-B: no absence-is-Continuity fallback. Privacy must be an exact
+    // Boolean chosen before Send, not synthesized from a local default.
+    const rawSanctuary = (meta as any)?.sanctuary;
+    const nestedSanctuary = (meta as any)?.meta?.sanctuary;
+    if (typeof rawSanctuary !== 'boolean') {
+      return jsonWithCors(req, { error: 'PRIVACY_CHOICE_REQUIRED' }, 428);
+    }
+    if (nestedSanctuary !== undefined &&
+        (typeof nestedSanctuary !== 'boolean' ||
+          nestedSanctuary !== rawSanctuary)) {
+      return jsonWithCors(req, { error: 'CONFLICTING_PRIVACY_SIGNALS' }, 409);
+    }
+    const isSanctuary = rawSanctuary;
 
     // 🛡️ IDENTITY GUARD: Only attempt cross-session memory for recognized users
     // Anonymous sessions (no userId) can still have in-session context but won't
@@ -450,16 +464,81 @@ export async function POST(req: NextRequest) {
       userId !== 'anonymous' &&
       !userId.startsWith('anon:');
 
+    // R1-B: a member with erased source turns may still have derived memories
+    // or cached influence. Refuse BEFORE F1, consent, history or cognition;
+    // do not silently fall back to a model answer using stale context.
+    if (isRecognizedUser) {
+      try {
+        await assertMemberInfluenceAllowed(userId!);
+      } catch (err) {
+        return jsonWithCors(req, influenceHoldResponse(err), 503);
+      }
+    }
     const turnPosture = TurnPosture.resolve({ sanctuary: isSanctuary });
     // Reuse the client's exchange id when supplied so the later client-side pair
     // write collapses onto this same exchange instead of duplicating it. Falling
     // back to requestId keeps older clients working exactly as before.
+    // Reject malformed turn identity before acceptance or model processing.
+    if (typeof clientExchangeId === 'string' && clientExchangeId.length > 0 &&
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clientExchangeId)) {
+      return jsonWithCors(req, { error: 'INVALID_EXCHANGE_ID' }, 400);
+    }
     const exchangeId =
       typeof clientExchangeId === 'string' && clientExchangeId.length > 0
         ? clientExchangeId
         : requestId;
-    const acceptedSessionId =
-      typeof sessionId === 'string' && sessionId.trim() ? sessionId.trim() : undefined;
+    // RF01 S0-A2: prove this conversation belongs to the authenticated
+    // member BEFORE F1, early-return routes, profile retrieval or cognition.
+    // First Send binds new IDs atomically. Foreign and legacy ownerless IDs
+    // refuse without a content read, write, or account mutation.
+    let acceptedSessionId: string;
+    try {
+      acceptedSessionId = normalizedSessionId(sessionId);
+      if (isRecognizedUser) {
+        await ensureOwnedMemberSession(acceptedSessionId, userId!);
+      } else {
+        await ensureGuestSession(acceptedSessionId);
+      }
+    } catch (err) {
+      if (err instanceof SessionOwnershipRefusal) {
+        return jsonWithCors(req, {
+          error: err.code,
+          action: 'NEW_SESSION_REQUIRED',
+          status: 'This conversation could not be resumed safely. Start a new conversation.',
+        }, err.code === 'SESSION_ID_INVALID' ? 400 : 409);
+      }
+      throw err;
+    }
+    // The member-authored, content-free consent preflight has already minted
+    // a verified immutable record. A bare request flag is NOT that record.
+    // Refuse before F1, crisis/field inference, history, or external providers.
+    if (!isRecognizedUser) {
+      return jsonWithCors(req, { error: 'AUTHENTICATED_PRIVACY_CHOICE_REQUIRED' }, 401);
+    }
+    const privacyAuthority = await verifyExplicitTurnConsent({
+      memberId: userId!,
+      sessionId: acceptedSessionId,
+      exchangeId,
+      sanctuary: isSanctuary,
+    });
+    if (!privacyAuthority.ok) {
+      const status = privacyAuthority.code === 'CONSENT_IDENTITY_CONFLICT' ? 409
+        : privacyAuthority.code === 'CONSENT_UNAVAILABLE' ? 503 : 428;
+      return jsonWithCors(req, {
+        error: privacyAuthority.code, action: 'RECONFIRM_PRIVACY_BEFORE_SEND',
+      }, status);
+    }
+    // RF01 S1-A: a non-retention receipt does not authorize model/voice
+    // processing. Until provider and aftermath custody are verified, refuse
+    // protected turns before F1, field inference, external egress or telemetry.
+    try {
+      requireQualifiedConversationProcessing({ sanctuary: isSanctuary });
+    } catch (err) {
+      if (err instanceof SanctuaryProcessingUnqualified) {
+        return jsonWithCors(req, protectedProcessingRefusal(), 503);
+      }
+      throw err;
+    }
     let memberTurnDurable = false;
 
     if (isRecognizedUser && !isSanctuary) {
@@ -471,16 +550,16 @@ export async function POST(req: NextRequest) {
           content: message,
           exchangeId,
         });
-        console.log(
-          `🧱 [MAIA/durability] member turn accepted+durable exchange=${exchangeId.slice(0, 8)} durable=${memberTurnDurable} dt=${msSince(start)}ms`
-        );
-      } catch (durabilityErr: any) {
-        // Never fail the member's turn because bookkeeping failed — but say so
-        // loudly, because this is exactly the silent-loss condition F1 is about.
-        console.error(
-          `❌ [MAIA/durability] member turn NOT durable exchange=${exchangeId.slice(0, 8)}:`,
-          durabilityErr?.message ?? durabilityErr
-        );
+        if (!memberTurnDurable) {
+          return jsonWithCors(req, { error: 'TURN_ACCEPTANCE_UNAVAILABLE' }, 503);
+        }
+        console.log('[MAIA/durability] member turn accepted; owner verified');
+      } catch (err) {
+        if (err instanceof ExchangeIdentityConflict) {
+          return jsonWithCors(req, { error: 'EXCHANGE_ID_REUSE_MISMATCH' }, 409);
+        }
+        console.warn('[MAIA/durability] member turn not accepted');
+        return jsonWithCors(req, { error: 'TURN_ACCEPTANCE_UNAVAILABLE' }, 503);
       }
     }
 
@@ -583,7 +662,7 @@ export async function POST(req: NextRequest) {
         );
         const capabilityDescriptionSession = await withTimeoutLabeled(
           'ensureSession:capabilityDescription',
-          ensureSession(sessionId),
+          ensureSession(acceptedSessionId),
           5000,
           start,
         );
@@ -658,24 +737,16 @@ export async function POST(req: NextRequest) {
     const explicitIdentityInquiryClassification = classifyExplicitIdentityInquiry(message);
     void explicitIdentityInquiryClassification;
 
-    // ⚡ LATENCY FIX: Parallelize session init with cognitive profile + name change detection.
-    // Previously these ran sequentially (~200-500ms each).
-    // Session init must complete before ensureSession, but cognitive profile and
-    // name change detection are independent and can overlap.
+    // Parallelize session creation and profile retrieval without any
+    // conversation-derived account-setting mutation.
     await withTimeoutLabeled('initializeSessionTable', initializeSessionTable(), 5000, start);
 
-    // Run session creation, cognitive profile, and name change in parallel
-    const isRecognizedForProfile = typeof userId === 'string' && userId.length > 0 && !userId.startsWith('anon:');
-    const [session, cognitiveProfileResult, nameChangeResult] = await Promise.all([
-      withTimeoutLabeled('ensureSession', ensureSession(sessionId), 5000, start),
+    // Run session creation and cognitive profile retrieval in parallel.
+    const [session, cognitiveProfileResult] = await Promise.all([
+      withTimeoutLabeled('ensureSession', ensureSession(acceptedSessionId), 5000, start),
       (userId || sessionId)
         ? withTimeoutLabeled('getCognitiveProfile', getCognitiveProfile(userId || sessionId!), 5000, start)
             .catch(err => { console.warn('⚠️ [Field Safety] Could not fetch cognitive profile:', err); return null; })
-        : Promise.resolve(null),
-      (isRecognizedForProfile && message)
-        ? processNameChangeIfDetected(message, userId!)
-            .then(r => { if (r.detected && r.updated) console.log(`✨ [NAME_CHANGE] User asked to be called "${r.newName}" - updated`); return r; })
-            .catch(err => { console.warn('⚠️ [NAME_CHANGE] Detection failed (non-blocking):', err); return null; })
         : Promise.resolve(null),
     ]);
 
@@ -713,7 +784,7 @@ export async function POST(req: NextRequest) {
           },
           session: {
             id: session.id,
-            turns: session.turns,
+            turns: session.turn_count,
           },
           metadata: {
             fieldWorkSafe: false,
@@ -815,7 +886,7 @@ export async function POST(req: NextRequest) {
                 // Schema-correct loader (the legacy SELECT queried member_id / year_pillar /
                 // element_counts — none of which exist; it threw every turn and the row was
                 // never read). Real schema: user_id + *_json + dominant/deficient_elements.
-                const baziResult = await pool.query(
+                const baziResult = await query(
                   `SELECT birth_datetime_utc, birth_timezone, location_text, pillars_json,
                           day_master, day_master_element, day_master_yinyang,
                           wuxing_balance_json, wuxing_percentages_json,
@@ -848,7 +919,7 @@ export async function POST(req: NextRequest) {
 
               // 🌟 WESTERN BIRTH DATA + IDENTITY CONTEXT: Fetch birth data + pronouns for astrological and identity context
               try {
-                const birthResult = await pool.query(
+                const birthResult = await query(
                   `SELECT birth_date, birth_time, birth_location_name, birth_timezone, pronouns
                    FROM members WHERE id = $1`,
                   [effectiveUserId]
@@ -941,7 +1012,7 @@ export async function POST(req: NextRequest) {
       console.log(`📦 [Route/MemoryBundle] Turns: ${memoryBundle.retrievalStats.turnsRetrieved} (same-session: ${memoryBundle.retrievalStats.turnsSameSession}, cross: ${memoryBundle.retrievalStats.turnsCrossSession})`);
       console.log(`📦 [Route/MemoryBundle] Relationship: encounters=${memoryBundle.relationshipSnapshot.encounterCount}, breakthroughs=${memoryBundle.relationshipSnapshot.breakthroughCount}`);
       if (memoryContext.length > 0) {
-        console.log(`📦 [Route/MemoryBundle] Context preview (first 300 chars): ${memoryContext.slice(0, 300)}...`);
+        console.log('[Route/MemoryBundle] Context present (content not logged)');
       } else {
         console.warn(`⚠️ [Route/MemoryBundle] memoryContext is EMPTY despite retrieval!`);
       }
@@ -1030,7 +1101,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     let practiceFieldAddendum: string | null = null;
     if (isRecognizedUser && !isSanctuary) {
       try {
-        const spaceResult = await pool.query(
+        const spaceResult = await query(
           `SELECT rs.id, rs.practitioner_display_name
            FROM relationship_spaces rs
            WHERE rs.participant_member_id = $1 AND rs.status = 'active' AND rs.consent_status = 'accepted'
@@ -1475,7 +1546,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         if (readiness.ready) {
           console.log('[MAIA/sovereign] forward-readiness', {
             signals: readiness.signals,
-            preview: message.slice(0, 120),
+            memberContentLogged: false,
           });
           forwardReadinessAddendum = buildForwardReadinessBlock();
         }
@@ -1791,6 +1862,16 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       start,
     );
 
+    // RF01 R1-C: deletion can commit while model generation awaits.
+    // Recheck before persisting or releasing generated content.
+    if (isRecognizedUser) {
+      try {
+        await assertMemberInfluenceAllowed(userId!);
+      } catch (err) {
+        return jsonWithCors(req, influenceHoldResponse(err), 503);
+      }
+    }
+
     const duration = Date.now() - start;
     if (duration > 500) {
       console.warn(
@@ -1835,8 +1916,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         console.warn('[MAIA] §V scrub fired', {
           rid: requestId,
           userId: memberRef(effectiveUserId),
-          original_preview: orchestratorResult.text.slice(0, 200),
-          replacement_preview: _memoryScrub.slice(0, 200),
+          contentLogged: false,
         });
         orchestratorResult.text = _memoryScrub;
       }
@@ -1917,7 +1997,6 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       }
     }
 
-    const _conversationMode = (meta as any)?.mode ?? (meta as any)?.maiaMode?.mode ?? null;
     const _convHistory = (meta as any)?.conversationHistory;
     const _historyLen = Array.isArray(_convHistory) ? _convHistory.length : 0;
     // NOTE (2026-04-10): Hardcoded "sit with that tonight" closing-anchor REMOVED.
@@ -1929,8 +2008,6 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     if (!isSanctuary && sovereignText &&
         (process.env.AIN_SHAPE_TELEMETRY === '1' || process.env.NODE_ENV !== 'production')) {
       // _conversationMode and _convHistory already defined above (anchor block)
-      const _voiceMode = _conversationMode;
-      const _turnIndex = _historyLen;
       const _text = sovereignText;
       const _ainShape = assessAINResponseShape(message as string, _text);
       logAINShapeTelemetry({
@@ -1942,17 +2019,6 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         model: rawModel ?? undefined,
         explorerId: effectiveUserId ?? undefined,
         sessionId: session.id,
-        turnIndex: _turnIndex,
-        mode: _voiceMode,
-        activeThreadPresent: null,
-        activeThreadConfidence: null,
-        correctionDetected: _ainShape.flags.mirror === false &&
-          /\b(i'?m sorry|let me clarify|that came out wrong|let me try that again|let'?s reset|i misspoke)\b/i.test(_text),
-        optionResolutionMatched: null,
-        optionResolutionNearMiss: null,
-        ruptureFlag: false,
-        ruptureType: null,
-        assistantTurnType: classifyAssistantTurn(_text),
       }).catch((err) => {
         console.warn('[sovereign/maia/list] AIN shape telemetry write failed:', err?.message);
       });
@@ -1990,7 +2056,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
             latencyMs: duration,
             meta: { ..._ledger, turnIndex: _historyLen },
             originRoute: '/api/sovereign/app/maia/list',
-          }).catch(() => { /* fire-and-forget; never blocks the turn */ });
+          }, turnPosture).catch(() => { /* fire-and-forget; never blocks the turn */ });
         }
       } catch (ledgerErr: any) {
         console.warn('[MAIA] interruption-ledger failed (non-blocking):', ledgerErr?.message);
@@ -2122,11 +2188,6 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         providerUsed,
         model: modelUsed,
         modeUsed,
-        // ✨ Name change detection result (if user said "call me X")
-        nameChange: nameChangeResult?.detected ? {
-          newName: nameChangeResult.newName,
-          updated: nameChangeResult.updated,
-        } : undefined,
       },
     };
 
@@ -2168,6 +2229,16 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       validation: orchestratorResult.validation || null,
       repaired: orchestratorResult.regenerated || false,
     });
+
+    // RF01 R1-C: final response fence before post-turn relational background
+    // tasks, telemetry and the actual delivery of model-derived text.
+    if (isRecognizedUser) {
+      try {
+        await assertMemberInfluenceAllowed(userId!);
+      } catch (err) {
+        return jsonWithCors(req, influenceHoldResponse(err), 503);
+      }
+    }
 
     // 🔗 RELATIONAL OBSERVER: Silent background attunement (fire-and-forget)
     // 🔒 SANCTUARY MODE: a sanctuary turn must never feed relational observation or signal

@@ -558,7 +558,15 @@ function UnifiedAuthInner({ mode = 'signup', betaInvitationOnly = false }: { mod
         return;
       }
       const memberId = data?.memberId || data?.member?.id || data?.id;
-      if (!memberId) { setError('Sign in succeeded but memberId missing.'); setIsLoading(false); return; }
+      // Password UI never interprets HTTP 200 alone as authentication.
+      // A successful response must include the issued session receipt.
+      if (data?.success !== true || !memberId ||
+          typeof data?.session?.token !== 'string' ||
+          !/^[0-9a-f]{64}$/i.test(data.session.token)) {
+        setError('Sign-in could not be verified. Please try again.');
+        setIsLoading(false);
+        return;
+      }
       if (!(await storeSession({
         id: String(memberId),
         username: data.member?.username || username,

@@ -12,10 +12,12 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
-import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
+import { TurnsStore, ExchangeIdentityConflict } from '@/lib/memory/stores/TurnsStore';
+import { recordConsentState } from '@/lib/provenance/consentState';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import {isR4fProtectedSessionById} from '@/lib/maia/astrologyConsent/r4fGrantStore';
-import {isLegacyAstroSession} from '@/lib/maia/browserConversationCustody';
+import { requireExistingOwnedSession, SessionOwnershipRefusal } from '@/lib/sovereign/memberSessionOwnership';
+import { isR4fProtectedSessionById } from '@/lib/maia/astrologyConsent/r4fGrantStore';
+import { isLegacyAstroSession } from '@/lib/maia/browserConversationCustody';
 
 const PRIVATE_HISTORY_CACHE = 'private, no-store, max-age=0, must-revalidate';
 /** Member-owned conversation responses are always noncacheable, including errors. */
@@ -71,13 +73,22 @@ export async function GET(request: NextRequest) {
     }
     const userId = memberId;
 
-    // A chart passage shared for one encounter has no cross-session or
-    // ordinary history grant. Unknown legacy astrology IDs are also withheld.
-    if (sessionId && (isLegacyAstroSession(sessionId) ||
-        await isR4fProtectedSessionById(sessionId))) {
-      return privateJson({
-        success:false,error:'protected_session_requires_explicit_authorization',
-      },{status:403});
+    // Enforce server-proven ownership before testing an astrology session ID.
+    // A guessed session ID never becomes a history read capability.
+    if (sessionId) {
+      try {
+        await requireExistingOwnedSession(sessionId, memberId);
+      } catch (err) {
+        if (err instanceof SessionOwnershipRefusal) {
+          return privateJson({ success: false, error: 'SESSION_NOT_OWNED' }, { status: 409 });
+        }
+        throw err;
+      }
+      // Ordinary history cannot expose member-authorized Astrology passages.
+      if (isLegacyAstroSession(sessionId) || await isR4fProtectedSessionById(sessionId)) {
+        return privateJson({ success: false, error: 'protected_session_requires_explicit_authorization' }, { status: 403 });
+      }
+    // if(sessionId) closure is after the conflict, retained below.
     }
 
     // Build query based on provided params
@@ -112,6 +123,10 @@ export async function GET(request: NextRequest) {
               UNION ALL SELECT session_id FROM astro_maia_transfer_grants
             ) AS r4f WHERE r4f.session_id = conversation_turns.session_id
           )
+          AND (session_id IS NULL OR EXISTS (
+            SELECT 1 FROM maia_sessions
+            WHERE maia_sessions.id = conversation_turns.session_id
+              AND maia_sessions.member_id = $1))
         ORDER BY created_at DESC
         LIMIT 50
       `;
@@ -178,6 +193,20 @@ export async function POST(request: NextRequest) {
     // The durable-write subject is the authenticated member. Never the body.
     const userId = memberId;
 
+    // Direct client persistence is another owner-sensitive ingress. Do not
+    // store a turn merely because the caller authenticated and knows a UUID.
+    if (typeof sessionId !== 'string' || !sessionId.trim()) {
+      return NextResponse.json({ success: false, error: 'SESSION_REQUIRED' }, { status: 400 });
+    }
+    try {
+      await requireExistingOwnedSession(sessionId, memberId);
+    } catch (err) {
+      if (err instanceof SessionOwnershipRefusal) {
+        return NextResponse.json({ success: false, error: 'SESSION_NOT_OWNED' }, { status: 409 });
+      }
+      throw err;
+    }
+
     // S5: posture resolved server-side at this boundary and recorded
     // (content-free). The store — not this route — enforces refusal; the
     // pre-S5 raw INSERT here bypassed the S1 gate entirely.
@@ -224,21 +253,22 @@ export async function POST(request: NextRequest) {
     return privateJson({ success: true });
 
   } catch (error) {
+    if (error instanceof ExchangeIdentityConflict) {
+      return NextResponse.json({
+        success: false, error: 'EXCHANGE_ID_REUSE_MISMATCH',
+      }, { status: 409 });
+    }
     const message = error instanceof Error ? error.message : 'Unknown error';
 
     if (message.includes('astro_maia_transfer_grants') ||
         message.includes('astro_maia_protected_origins')) {
-      return privateJson({success:false,error:'privacy_guard_unavailable'},
-        {status:503});
+      return privateJson({ success: false, error: 'privacy_guard_unavailable' }, { status: 503 });
     }
 
-    // A failed write must never be presented as a successfully saved turn.
+    // A failed durable write may never be presented as a saved turn.
     if (message.includes('does not exist')) {
       console.warn('[CONVERSATION] durable turn storage unavailable');
-      return privateJson(
-        { success: false, error: 'Conversation was not saved' },
-        { status: 503 }
-      );
+      return privateJson({ success: false, error: 'Conversation was not saved' }, { status: 503 });
     }
 
     console.error(`[CONVERSATION] POST error: ${message}`);

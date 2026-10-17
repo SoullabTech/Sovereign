@@ -44,6 +44,7 @@ import {
   Users,
   GraduationCap,
   LayoutGrid,
+  Settings2,
   Gift,
   Hexagon,
 } from 'lucide-react';
@@ -359,6 +360,12 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           label: 'Download Conversation',
           action: () => onAction?.('download-transcript'),
           description: 'Save this conversation as markdown'
+        },
+        {
+          icon: Settings2,
+          label: 'Conversation Settings',
+          action: () => onAction?.('open-audio-settings'),
+          description: 'View privacy choice and start a separate conversation'
         },
         {
           icon: showVoiceText ? Eye : EyeOff,
