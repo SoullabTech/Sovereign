@@ -1,0 +1,15 @@
+{
+ "extends":"./tsconfig.r75-producer-witness.json",
+ "compilerOptions":{"strict":true,"noEmit":true,"incremental":false,"plugins":[]},
+ "files":[
+  "next-env.d.ts",
+  "lib/writersStudio/provenance/heldConfidentialCandidateR76.ts",
+  "lib/writersStudio/provenance/__tests__/heldConfidentialCandidateR76.test.ts",
+  "lib/writersStudio/provenance/editorialModelProducerR75.ts",
+  "lib/writersStudio/recovery/workEnvelopeV1.ts",
+  "lib/writersStudio/recovery/r72MemberProposalConsent.ts",
+  "lib/writersStudio/provenance/__tests__/editorialModelProducerR75.test.ts"
+ ],
+ "include":[],
+ "exclude":["node_modules"]
+}

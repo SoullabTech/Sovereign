@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/writersStudio/recovery/r71FictionalCanonicalEditorial.ts",
+    "lib/writersStudio/recovery/r72MemberProposalConsent.ts",
+    "app/api/writers-studio/r71-fixture-author/route.ts",
+    "app/api/writers-studio/r72-fixture-proposals/route.ts",
+    "app/dev/writers-studio-pc3-live/R71FixtureEditorialBridge.tsx",
+    "app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx",
+    "app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx",
+    "lib/writersStudio/recovery/r74MaiaProvenanceBoundary.ts",
+    "lib/writersStudio/recovery/__tests__/r74MaiaProvenanceBoundary.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
