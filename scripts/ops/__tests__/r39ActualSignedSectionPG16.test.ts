@@ -10,6 +10,8 @@ import {handleSignedSectionRequestR39,R39_REAL_SIGNED_SECTION_REQUEST_ENABLED} f
 import {HeldAuthorChoiceWitnessR43,R43_REAL_AUTHOR_CHOICE_ENABLED} from '../../../lib/writersStudio/recovery/heldAuthorChoiceR43';
 import {prepareHeldSignedApplyR46,submitHeldSignedApplyR46,R46_REAL_DURABLE_SIGNED_APPLY_ENABLED} from '../../../lib/writersStudio/recovery/heldDurableSignedApplyR46';
 import {recordHeldPrivateReviewR47} from '../../../lib/writersStudio/recovery/heldPrivateEditorialReviewR47';
+import {reopenHeldRealPrivateEditorialR57}
+ from '../../../lib/writersStudio/recovery/heldRealPrivateEditorialR57';
 import {inspectPrivateChoiceApplyR48} from '../../../lib/writersStudio/recovery/heldEditorialRecoveryJoinR48';
 import {prepareHeldUndoR47,submitHeldUndoR47,
  R47_REAL_DURABLE_UNDO_ENABLED} from '../../../lib/writersStudio/recovery/heldDurableUndoR47';
@@ -75,6 +77,10 @@ const r54Only=r53Only&&process.env.R54_PC3_BROWSER_FIXTURE==='fictional-only';
 const r64Only=r54Only&&process.env.R64_REAL_SESSION_AUTHOR_FIXTURE==='fictional-only'&&
  process.env.R56_REAL_SESSION_WORK_FIXTURE==='fictional-only'&&
  process.env.NODE_ENV==='test';
+const r65Only=r64Only&&
+ process.env.R65_PRIVATE_APPROVED_AUTHOR_FIXTURE==='fictional-only'&&
+ process.env.R57_PRIVATE_READ_FIXTURE==='fictional-only'&&
+ process.env.R47_PRIVATE_EDITORIAL_FIXTURE==='fictional-only';
 const R64_LIVING='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const r54BrowserTest=r54Only?it:it.skip;
 
@@ -420,11 +426,90 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
   {id:PICK,origin:'maia' as const,wording:'first enchanted'},
   {id:OTHER,origin:'member' as const,wording:'first sparkling'},
  ];
+ // R65 is a separate explicit fictional mode. The exact R47 sealed
+ // alternative, not browser replacement prose, becomes the server-held R53
+ // selected alternative. Its R57 read is fresh before review AND before Apply.
+ let r65Open:(()=>ReturnType<typeof reopenHeldRealPrivateEditorialR57>)|null=null;
+ let r65Proposed:string|null=null;
+ let r65PrivateKeyBytes:Buffer|null=null;
+ const r65Actions:string[]=[];
+ if(r65Only){
+  const start=await reopenHeldDraftR35({
+   subject:subject(),workId,custody:custody(workId),generation:1,
+  });
+  const section=start.sections.find(x=>x.id===S1);
+  if(!section)throw Error('R65_ORIGINAL_SECTION_NOT_PRESENT');
+  const word='first fictional',at=section.text.indexOf(word);
+  const picked=exactTextareaPassageR41(section.text,section.text,
+   at,at+word.length);
+  if(!picked||at<0)throw Error('R65_EXACT_SECOND_SOURCE_PASSAGE_MISSING');
+  const sectionSHA=digest(Buffer.from(section.text,'utf8'));
+  const selection:R37SectionSelection={
+   expectedWorkSHA256:digest(Buffer.from(start.content,'utf8')),
+   section:{
+    sectionId:S1,currentText:section.text,expectedGeneration:1,
+    expectedDraftSHA256:sectionSHA,
+    anchor:{sectionId:S1,start:picked.start,end:picked.end,
+     selectedText:picked.text,sectionSHA256:sectionSHA},
+    alternatives:options.map(x=>({...x})),chosenAlternativeId:PICK,
+   },
+  };
+  const privateKey:WorkEncryptionKey={
+   keyId:randomUUID(),keyBytes:randomBytes(32),
+  };
+  r65PrivateKeyBytes=privateKey.keyBytes;
+  const privateCustody:R35Custody={
+   key:privateKey,signedDeletion:checkpoint(workId),
+   trustedSigner:highwaterSigner.publicKey,
+   independent:{minimumGeneration:100},
+  };
+  const frozenAdmission=admission(A,await latestConsent(A));
+  const privateScope={
+   subject:subject(),workId,admission:frozenAdmission,
+   draftCustody:custody(workId),privateCustody,
+  };
+  const published=await recordHeldPrivateReviewR47({
+   ...privateScope,selection,
+   idempotencyKey:'r65-private-frozen-'+workId,
+  });
+  expect(published).toMatchObject({
+   kind:'HELD_ENCRYPTED_PRIVATE_REVIEW',
+   status:'created',sectionId:S1,alternativeId:PICK,
+   generation:1,canApply:false,releaseApproved:false,
+  });
+  const privateRequest=()=>new NextRequest(
+   'https://soullab.life'+R56_HELD_ROUTE,{
+    method:'POST',headers:{
+     host:'soullab.life',origin:'https://soullab.life',
+     'sec-fetch-site':'same-origin','content-type':'application/json',
+     'x-ws-author-intent':'review','x-session-token':TOKENS.A,
+    },
+   });
+  r65Open=()=>reopenHeldRealPrivateEditorialR57({
+   request:privateRequest(),manuscriptId:workId,
+   livingWorkId:R64_LIVING,
+   privateRead:{...privateScope,reviewId:published.reviewId,generation:1},
+   sessionBindingSecret:internalSecret,
+  });
+  const first=await r65Open();
+  expect(first).toMatchObject({
+   kind:'held_private_current_author_preview',
+   sectionId:S1,alternativeId:PICK,
+   originalPassage:word,proposedPassage:'first enchanted',
+   draftGeneration:1,canApply:false,canRestore:false,
+   releaseApproved:false,
+  });
+  expect(JSON.stringify(published)).not.toContain('first enchanted');
+  // The synthetic private key remains server-held for fresh R57 checks
+  // until Apply; no browser code ever receives it.
+ }
  const agent=new HeldCanonicalAuthorJourneyR53();
  const authority=(body:unknown)=>({
   context:heldChoiceContext(workId,authorChoiceRequest(body)),
   custody:custody(workId),
-  approvalIssuerSecret:Buffer.alloc(32,0x54),alternatives:options,
+  approvalIssuerSecret:Buffer.alloc(32,0x54),
+  alternatives:r65Only?options.map(x=>x.id===PICK?
+   {...x,wording:r65Proposed??''}:x):options,
  });
  const current=async()=>{
   const result=await query<{generation:number|string}>(
@@ -449,7 +534,10 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
    '/Volumes/T7 Shield/ws-beta-release-r11-build-20261016/R55_CONVERGED_PC3_ENCRYPTED_BROWSER_20261016/');
  const inR64=r64Only&&evidence.startsWith(
   '/Volumes/T7 Shield/ws-beta-r64-author-session-pg16-evidence-20261017/');
- if(!(inOriginal||inConvergence||inR64)||!/\/run-[a-f0-9-]+$/.test(evidence))
+ const inR65=r65Only&&evidence.startsWith(
+  '/Volumes/T7 Shield/ws-beta-r65-sealed-author-pg16-evidence-20261017/');
+ if(!(inOriginal||inConvergence||inR64||inR65)||
+   !/\/run-[a-f0-9-]+$/.test(evidence))
   throw Error('R54_NOT_AN_ISOLATED_BROWSER_EVIDENCE_FOLDER');
  const response=await runR54Pc3FictionalBrowser({
   engine,evidenceDir:path.join(evidence,engine),
@@ -465,6 +553,34 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
      if(!admitted)return {kind:'refused',reason:'r64_current_session_work_refused',
       releaseApproved:false};
      admittedActions.push(action);
+    }
+    if(r65Only&&(action==='review'||action==='apply')){
+     const currentPrivate=r65Open?await r65Open():null;
+     if(!currentPrivate||currentPrivate.kind!=='held_private_current_author_preview'||
+       currentPrivate.sectionId!==S1||
+       currentPrivate.alternativeId!==PICK||
+       currentPrivate.originalPassage!=='first fictional'||
+       currentPrivate.proposedPassage!=='first enchanted'||
+       currentPrivate.canApply!==false||
+       currentPrivate.releaseApproved!==false){
+      return {kind:'refused',reason:'r65_private_review_not_current',
+       releaseApproved:false};
+     }
+     if(action==='review'){
+      const x=payload as {sectionId?:unknown;expectedGeneration?:unknown;
+       chosenAlternativeId?:unknown;selected?:{text?:unknown}}|null;
+      if(!x||x.sectionId!==currentPrivate.sectionId||
+        x.expectedGeneration!==currentPrivate.draftGeneration||
+        x.chosenAlternativeId!==currentPrivate.alternativeId||
+        x.selected?.text!==currentPrivate.originalPassage)
+       return {kind:'refused',reason:'r65_browser_selection_not_sealed_choice',
+        releaseApproved:false};
+      r65Proposed=currentPrivate.proposedPassage;
+     }else if(r65Proposed!==currentPrivate.proposedPassage){
+      return {kind:'refused',reason:'r65_choice_changed_before_apply',
+       releaseApproved:false};
+     }
+     r65Actions.push(action);
     }
     if(action==='review')return agent.review(authority(payload));
     if(action==='apply')return agent.apply(authority(payload));
@@ -485,6 +601,28 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
    kind:'R56_validated_before_each_R53_author_action',
    operationalKms:false,releaseApproved:false,
   }));
+ }
+ if(r65Only){
+  expect(r65Actions).toEqual(['review','apply']);
+  const proof=await query<{state:string}>(
+   'SELECT state FROM writers_studio_r47_private_review WHERE work_id=$1',
+   [workId]);
+  expect(proof.rows).toEqual([{state:'verified'}]);
+  // Once the protected Draft is at generation three, an old first-generation
+  // private review MUST NOT become a fresh author choice for another Apply.
+  const stale=r65Open?await r65Open():null;
+  expect(stale).toMatchObject({
+   kind:'held_only_refused',canApply:false,canRestore:false,
+   releaseApproved:false,
+  });
+  console.log('R65_SEALED_CHOICE_META',JSON.stringify({
+   engine,verifiedPrivateActions:r65Actions.length,
+   sealedProposalUnchanged:true,
+   oldGenerationCannotReopen:true,
+   durableApplySpent:true,separateUndoSpent:true,
+   operationalKms:false,releaseApproved:false,
+  }));
+  r65PrivateKeyBytes?.fill(0);
  }
  expect(response.checksPassed).toBeGreaterThanOrEqual(30);
  console.log('R54_BROWSER_META',JSON.stringify({

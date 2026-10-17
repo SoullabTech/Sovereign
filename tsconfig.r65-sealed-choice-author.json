@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.r64-session-author.json",
+  "compilerOptions": {
+    "strict": true, "noEmit": true, "incremental": false, "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "scripts/ops/wsBetaR65SealedAuthorPG16.ts",
+    "scripts/ops/wsBetaR55ConvergedPc3PG16.ts",
+    "scripts/ops/__tests__/r39ActualSignedSectionPG16.test.ts",
+    "lib/writersStudio/recovery/heldRealPrivateEditorialR57.ts",
+    "lib/writersStudio/recovery/heldRealSessionWorkAdmissionR56.ts",
+    "lib/writersStudio/recovery/__tests__/r65SealedChoiceAuthorLaw.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}

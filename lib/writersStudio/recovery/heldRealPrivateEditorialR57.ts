@@ -49,8 +49,15 @@ function fixture():boolean{
   process.env.R35_PHYSICAL_PG16_FIXTURE==='fictional-only'&&
   /^postgresql:\/\/fict@127\.0\.0\.1:\d+\/r35_draft$/.test(
    process.env.DATABASE_URL||'')&&
-  /^\/.*\/ws-r35-physical-r5[67]-[^/]+\/vault$/.test(
-   process.env.FILE_STORAGE_PATH||'');
+  (
+   /^\/.*\/ws-r35-physical-r5[67]-[^/]+\/vault$/.test(
+    process.env.FILE_STORAGE_PATH||'')||
+   (process.env.R65_PRIVATE_APPROVED_AUTHOR_FIXTURE==='fictional-only'&&
+    process.env.R64_REAL_SESSION_AUTHOR_FIXTURE==='fictional-only'&&
+    process.env.R55_REAL_PC3_CONVERGENCE_FIXTURE==='fictional-only'&&
+    /^\/.*\/ws-r35-physical-r48-r55-[^/]+\/vault$/.test(
+     process.env.FILE_STORAGE_PATH||''))
+  );
 }
 export async function reopenHeldRealPrivateEditorialR57(
  input:R57ServerInput,
