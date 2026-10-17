@@ -26,16 +26,21 @@ export const maxDuration = 90;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
-import { getCompletedSessionData } from '@/lib/scribe/sessionReviewMode';
+import { loadOwnedScribeReportR77 } from '@/lib/scribe/ownedReportDataR77';
+import type { TranscriptSegment } from '@/lib/scribe/sessionReviewMode';
 import { cleanForSynthesis, buildQualityHeader } from '@/lib/scribe/transcriptCleaner';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
-function formatTranscriptForPrompt(segments: { speaker: string; text: string; startMs: number }[]): string {
+const NO_STORE = {'Cache-Control':'private, no-store, max-age=0'};
+const ALLOWED_LENSES = new Set(['full','core','spiralogic','mentor']);
+const ALLOWED_FORMATS = new Set(['json','markdown']);
+
+function formatTranscriptForPrompt(segments: TranscriptSegment[]): string {
   return segments.map(s => {
     const min = Math.floor(s.startMs / 60000);
     const sec = Math.floor((s.startMs % 60000) / 1000);
     const t = `${min}:${sec.toString().padStart(2, '0')}`;
-    return `[${t}] ${s.speaker}: ${s.text}`;
+    return `[${t}] ${s.speaker || 'unknown'}: ${s.text}`;
   }).join('\n');
 }
 
@@ -102,17 +107,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    const { sessionId, lens = 'full', format = 'markdown' } = await req.json();
-
-    if (!sessionId) {
-      return NextResponse.json({ error: 'sessionId required' }, { status: 400 });
+    const body:unknown = await req.json();
+    if (!body || Array.isArray(body) || typeof body !== 'object') {
+      return NextResponse.json({error:'Invalid report request'}, {status:400,headers:NO_STORE});
     }
-
-    console.log(`📄 [ExportReport] Generating ${lens}/${format} report for session ${sessionId}`);
+    const { sessionId, lens = 'full', format = 'markdown' } =
+      body as Record<string, unknown>;
+    if (typeof sessionId !== 'string' ||
+        !ALLOWED_LENSES.has(String(lens)) ||
+        !ALLOWED_FORMATS.has(String(format))) {
+      return NextResponse.json({error:'Invalid report request'}, {status:400,headers:NO_STORE});
+    }
     const t0 = Date.now();
 
-    // Load session data
-    const sessionData = await getCompletedSessionData(sessionId);
+    // Load only the confirmed, current owner-session content. The legacy
+    // getCompletedSessionData() returns metadata only, NOT a transcript.
+    const owned = await loadOwnedScribeReportR77(sessionId, memberId);
+    if (!owned.ok) {
+      return NextResponse.json({error:
+        owned.status===404?'Not found':
+        owned.status===422?'No transcript available':'Report unavailable for this session',
+      }, {status:owned.status,headers:NO_STORE});
+    }
+    const sessionData = owned.data;
 
     // Clean transcript for synthesis
     const { segments: cleanSegments, removedCount, qualityMetrics } = cleanForSynthesis(sessionData.transcript);
@@ -139,7 +156,7 @@ export async function POST(req: NextRequest) {
       markersText,
       qualityHeader,
       formatTranscriptForPrompt(cleanSegments),
-      lens
+      String(lens)
     );
 
     const llmResponse = await getLLMProvider().generateSimple({
@@ -153,7 +170,7 @@ export async function POST(req: NextRequest) {
     const reportText = llmResponse.text;
     const elapsedMs = Date.now() - t0;
 
-    console.log(`✅ [ExportReport] Done | ${elapsedMs}ms | tokens=${llmResponse.metadata.tokenCount ?? 'n/a'}`);
+    console.log(`[ExportReport] Report generated | ${elapsedMs}ms`);
 
     if (format === 'json') {
       return NextResponse.json({
@@ -173,7 +190,7 @@ export async function POST(req: NextRequest) {
           cleanliness: qualityMetrics.estimatedCleanliness,
           elapsedMs,
         },
-      });
+      },{headers:NO_STORE});
     }
 
     // Markdown response: return as plain text with a filename hint
@@ -196,15 +213,17 @@ ${reportText}
     return new Response(fullMarkdown, {
       headers: {
         'Content-Type': 'text/markdown; charset=utf-8',
+        ...NO_STORE,
         'Content-Disposition': `attachment; filename="${filename}"`,
       },
     });
 
-  } catch (error: any) {
-    console.error('❌ [ExportReport] Error:', error);
+  } catch {
+    // Do not reveal transcription, session IDs, model prompts or SQL details.
+    console.error('[ExportReport] Failed to generate report');
     return NextResponse.json(
-      { error: error.message || 'Failed to generate report' },
-      { status: 500 }
+      {error:'Report unavailable'},
+      {status:500,headers:NO_STORE}
     );
   }
 }
