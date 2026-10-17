@@ -15,6 +15,14 @@ const confirmed:R48Evidence={
  protocol:'soullab.ws.r48.fictional-spent-apply-proof.v1',
  kind:'FICTIONAL_CIPHERTEXT_APPLY_CONFIRMED',action:'apply',
  generation:2,cipherSHA256:'a'.repeat(64),
+ // R48's stronger exact private-review proof adds source-bound evidence
+ // fields; a later R51 inventory verdict must preserve their structure.
+ sectionId:'66666666-6666-4666-8666-666666666661',
+ alternativeId:'77777777-7777-4777-8777-777777777777',
+ resultingSectionSHA256:'b'.repeat(64),
+ sessionBindingSHA256:'c'.repeat(64),
+ consentNoticeSHA256:'d'.repeat(64),
+ consentEventSequence:7,reviewBindingHmac:'e'.repeat(64),
  priorDraftVersionVerified:true,unchangedSectionIds:[],
  retryAuthorized:false,releaseApproved:false};
 const unresolved:R48Evidence={
