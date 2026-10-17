@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.r50-apply-undo-convergence.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "lib/writersStudio/recovery/heldVaultInventoryR49.ts",
+    "scripts/ops/wsBetaR51RecoveryJoinPG16.ts",
+    "scripts/ops/wsR51ColdEvidence.ts",
+    "lib/writersStudio/recovery/heldRecoveryVerdictR51.ts",
+    "lib/writersStudio/recovery/__tests__/heldRecoveryVerdictR51.test.ts",
+    "lib/writersStudio/recovery/heldSpentApplyEvidenceR48.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

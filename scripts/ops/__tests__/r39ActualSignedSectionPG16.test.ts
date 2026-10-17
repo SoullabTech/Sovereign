@@ -9,7 +9,6 @@ import path from 'node:path';
 import {handleSignedSectionRequestR39,R39_REAL_SIGNED_SECTION_REQUEST_ENABLED} from '../../../lib/writersStudio/recovery/heldSignedSectionRequestR39';
 import {HeldAuthorChoiceWitnessR43,R43_REAL_AUTHOR_CHOICE_ENABLED} from '../../../lib/writersStudio/recovery/heldAuthorChoiceR43';
 import {prepareHeldSignedApplyR46,submitHeldSignedApplyR46,R46_REAL_DURABLE_SIGNED_APPLY_ENABLED} from '../../../lib/writersStudio/recovery/heldDurableSignedApplyR46';
-import {inspectSpentApplyR48,R48_REAL_SPENT_APPLY_RECOVERY_ENABLED} from '../../../lib/writersStudio/recovery/heldSpentApplyEvidenceR48';
 import {recordHeldPrivateReviewR47} from '../../../lib/writersStudio/recovery/heldPrivateEditorialReviewR47';
 import {inspectPrivateChoiceApplyR48} from '../../../lib/writersStudio/recovery/heldEditorialRecoveryJoinR48';
 import {prepareHeldUndoR47,submitHeldUndoR47,
@@ -63,10 +62,6 @@ let savedR48CompletedToken:string|null=null;
 let savedR48UnresolvedToken:string|null=null;
 const r47Only=r46Only&&process.env.R47_DURABLE_UNDO_FIXTURE==='fictional-only';
 const undoTest=r47Only?it:it.skip;
-const r48Only=r46Only&&process.env.R48_SPENT_APPLY_RECOVERY_FIXTURE==='fictional-only';
-const evidenceTest=r48Only?it:it.skip;
-let savedR48CompletedToken:string|null=null;
-let savedR48UnresolvedToken:string|null=null;
 const choiceTest=r43Only?it:it.skip;
 const A='11111111-1111-4111-8111-111111111111';
 const B='22222222-2222-4222-8222-222222222222';
@@ -671,7 +666,6 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
    throw Error('r46_prepare_failed');
   if(r48Only)savedR48CompletedToken=reviewed.opaqueToken;
   expect(reviewed.originalPassage).toBe('first fictional');
-  if(r48Only)savedR48CompletedToken=reviewed.opaqueToken;
   expect(await generations(W12)).toBe(1);
   const body={kind:'apply_reviewed_change',opaqueToken:reviewed.opaqueToken};
   // Competing approvals use the SAME prepared token; at most one PG CAS wins.

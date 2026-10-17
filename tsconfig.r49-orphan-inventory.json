@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.r46-durable-signed-apply.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/writersStudio/recovery/heldVaultInventoryR49.ts",
+    "lib/writersStudio/recovery/__tests__/heldVaultInventoryR49.test.ts",
+    "scripts/ops/wsBetaR49PG16OrphanInventory.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

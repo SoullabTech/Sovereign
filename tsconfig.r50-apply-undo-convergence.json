@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.r48-spent-apply.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "scripts/ops/wsBetaR50ApplyUndoConvergedPG16.ts",
+    "scripts/ops/wsBetaR48ColdSpentApply.ts",
+    "scripts/ops/__tests__/r39ActualSignedSectionPG16.test.ts",
+    "scripts/ops/__tests__/r47ColdPG16UndoState.test.ts",
+    "lib/writersStudio/recovery/heldDurableUndoR47.ts",
+    "lib/writersStudio/recovery/heldSpentApplyEvidenceR48.ts",
+    "lib/writersStudio/recovery/heldDurableSignedApplyR46.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
