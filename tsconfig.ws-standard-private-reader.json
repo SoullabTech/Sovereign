@@ -1,0 +1,16 @@
+{
+ "extends":"./tsconfig.ws-real-readiness.json",
+ "compilerOptions":{"strict":true,"noEmit":true,"incremental":false,"plugins":[]},
+ "files":[
+  "next-env.d.ts",
+  "lib/writersStudio/release/privateWriterNoStore.ts",
+  "lib/writersStudio/release/__tests__/privateWriterNoStore.test.ts",
+  "app/api/sovereign/manuscripts/route.ts",
+  "app/api/sovereign/manuscripts/[id]/route.ts",
+  "app/api/sovereign/manuscripts/[id]/draft/route.ts",
+  "app/api/sovereign/living-works/route.ts",
+  "app/api/sovereign/manuscripts/[id]/draft/__tests__/route.test.ts"
+ ],
+ "include":[],
+ "exclude":["node_modules"]
+}

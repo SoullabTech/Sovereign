@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import {resolve} from 'node:path';
-import {inspectCandidate,CHECKS} from '../wsBetaLaunchCorridorGate.mjs';
+import {inspectCandidate,CHECKS,STANDARD_PRIVATE_BETA_REQUIRED,SOVEREIGN_FUTURE_UPGRADE}
+ from '../wsBetaLaunchCorridorGate.mjs';
 
 const ROOT=resolve(process.cwd());
 const GATE=resolve(ROOT,'scripts/ops/wsBetaLaunchCorridorGate.mjs');
@@ -25,6 +26,23 @@ test('the exact canonical UI + held encrypted journey are present in one source,
  assert.equal(r.specificRealSessionWorkReviewHeldPresent,true);
  assert.equal(r.actualNextAndHeldAuthorSamePGFixturePresent,true);
  assert.equal(r.defaultOffLegacyIngressGuardsPresent,true);
+ assert.equal(r.standardPrivateBeta.kind,'conventional_managed_security_beta');
+ assert.equal(r.standardPrivateBeta.independentSelfHostedKmsPrerequisite,false);
+ assert.equal(r.standardPrivateBeta.currentQualification,'OPERATIONAL_EVIDENCE_HOLD');
+ assert.equal(r.standardPrivateBeta.safetySourcePresent,true);
+ assert.equal(r.atomicConventionalManuscriptImportSourcePresent,true);
+ assert.equal(r.pastedSourceOnceOnlyOriginalAndReceiptPresent,true);
+ assert.equal(r.privateMemberGetRoutesCount,20);
+ assert.equal(r.privateMemberGetRoutesProtectedCount,20);
+ assert.deepEqual(r.privateMemberGetUnprotected,[]);
+ assert.equal(r.standardPrivateBeta.productionStorageVerified,false);
+ assert.equal(r.standardPrivateBeta.encryptedBackupsAndRestoreVerified,false);
+ assert.equal(r.standardPrivateBeta.realAuthorWritingCertified,false);
+ assert.equal(r.standardPrivateBeta.releaseApproved,false);
+ assert.deepEqual(r.standardPrivateBeta.required,STANDARD_PRIVATE_BETA_REQUIRED);
+ assert.equal(r.sovereignUpgrade.status,'PRESERVED_FOR_LATER');
+ assert.equal(r.sovereignUpgrade.productionEnabled,false);
+ assert.deepEqual(r.sovereignUpgrade.requirements,SOVEREIGN_FUTURE_UPGRADE);
  assert.equal(r.guardedLegacyWriteMethods,13);
  assert.equal(r.knownLegacyWriterRoutes,12);
  assert.equal(r.additionalCustodySurfaces,2);
@@ -140,6 +158,77 @@ test('missing R56 same-database protected consent/Work witness or Next read-only
   assert.equal(r[field],false);
   assert.equal(r.releaseApproved,false);
   assert.equal(r.candidateRelease,'HOLD');
+ }
+});
+
+test('standard privacy no-cache promises and founder phased scope are not removable or GO by source alone',()=>{
+ const actual=[
+  'docs/programme/WS_STANDARD_FIRST_BETA_AND_SOVEREIGN_UPGRADE_DECISION_20261017.md',
+  'lib/writersStudio/release/privateWriterNoStore.ts',
+  'app/api/sovereign/manuscripts/route.ts',
+  'app/api/sovereign/manuscripts/[id]/route.ts',
+  'app/api/sovereign/manuscripts/[id]/draft/route.ts',
+  'app/api/sovereign/living-works/route.ts',
+  'app/api/writers-studio/editorial/thread/route.ts',
+  'app/api/writers-studio/editorial/relationships/route.ts',
+ ];
+ for(const relativeName of actual){
+  const file=resolve(ROOT,relativeName);
+  const modified=inspectCandidate(ROOT,{readText:target=>
+   target===file?'// erased private response security or phased security law':
+    readFileSync(target,'utf8')});
+  assert.equal(modified.codeContract,'SOURCE_DRIFT_HOLD');
+  assert.equal(modified.candidateRelease,'HOLD');
+  assert.equal(modified.releaseApproved,false);
+  assert.equal(modified.standardPrivateBeta.safetySourcePresent,false);
+ }
+});
+
+test('an unprotected manuscript history GET turns the standard beta release audit to DRIFT',()=>{
+ const file=resolve(ROOT,'app/api/sovereign/manuscripts/[id]/draft/revisions/route.ts');
+ const result=inspectCandidate(ROOT,{readText:target=>
+  target===file?'export async function GET(request) { return new Response(null); }':
+   readFileSync(target,'utf8')});
+ assert.equal(result.codeContract,'SOURCE_DRIFT_HOLD');
+ assert.equal(result.candidateRelease,'HOLD');
+ assert.equal(result.privateMemberGetRoutesCount,20);
+ assert.equal(result.privateMemberGetRoutesProtectedCount,19);
+ assert.ok(result.privateMemberGetUnprotected.includes(
+  'app/api/sovereign/manuscripts/[id]/draft/revisions/route.ts'));
+ assert.equal(result.releaseApproved,false);
+});
+
+test('removing confirmed manuscript transaction or redacted real POST logging forces release DRIFT',()=>{
+ for(const relativeName of [
+  'lib/manuscript/source/persistConfirmedSectionsR63.ts',
+  'app/api/sovereign/manuscripts/route.ts',
+ ]){
+  const path=resolve(ROOT,relativeName);
+  const r=inspectCandidate(ROOT,{readText:target=>
+   target===path?'// removed atomic import and redacted error handler':
+    readFileSync(target,'utf8')});
+  assert.equal(r.codeContract,'SOURCE_DRIFT_HOLD');
+  assert.equal(r.atomicConventionalManuscriptImportSourcePresent,false);
+  assert.equal(r.candidateRelease,'HOLD');
+  assert.equal(r.releaseApproved,false);
+ }
+});
+
+test('pasted Source one-use confirmation, receipt tombstone and real Press Save cannot be replaced',()=>{
+ for(const relativeName of [
+  'lib/manuscript/source/persistConfirmedPasteR65.ts',
+  'database/migrations/20261017000001_manuscript_import_confirmation_receipts.sql',
+  'app/press/manuscript/page.tsx',
+  'app/api/sovereign/manuscripts/route.ts',
+ ]){
+  const file=resolve(ROOT,relativeName);
+  const modified=inspectCandidate(ROOT,{readText:target=>
+   target===file?'// removed exact Source/confirmation identifier':
+    readFileSync(target,'utf8')});
+  assert.equal(modified.codeContract,'SOURCE_DRIFT_HOLD');
+  assert.equal(modified.pastedSourceOnceOnlyOriginalAndReceiptPresent,false);
+  assert.equal(modified.candidateRelease,'HOLD');
+  assert.equal(modified.releaseApproved,false);
  }
 });
 

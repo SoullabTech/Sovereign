@@ -14,7 +14,8 @@ import {fileURLToPath} from 'node:url';
 
 export const KNOWN_WRITERS=Object.freeze([
  {path:'app/api/sovereign/manuscripts/route.ts',
-  label:'first manuscript section publication',marker:'INSERT INTO manuscript_sections',class:'direct_sql'},
+  label:'first manuscript section publication',
+  marker:'persistConfirmedSectionsR63({',class:'delegated_transaction'},
  {path:'app/api/sovereign/manuscripts/ingest/route.ts',
   label:'uploaded Source arrival',marker:'recordArtifactArrival({',class:'delegated_source'},
  {path:'app/api/sovereign/manuscripts/blank/route.ts',
@@ -88,6 +89,21 @@ export function inspect(root,contracts=KNOWN_WRITERS,options={}){
   const s=readFileSync(p,'utf8');
   const line=lineOf(s,entry.marker);
   if(line===null){drift.push(entry.path);continue;}
+  // Manuscript Source and sections moved from direct route SQL to a real
+  // transaction. This is still a legacy writer, NOT a removed write sink:
+  // the census must verify BOTH actual route import and delegated SQL body.
+  if(entry.class==='delegated_transaction'){
+   const helperPath=join(full,'lib/manuscript/source/persistConfirmedSectionsR63.ts');
+   let helper='';
+   try{helper=readFileSync(helperPath,'utf8');}catch{helper='';}
+   const qualified=(
+    s.includes("from '@/lib/manuscript/source/persistConfirmedSectionsR63'")&&
+    helper.includes('transaction(async(tx)=>')&&
+    helper.includes('INSERT INTO member_manuscripts')&&
+    helper.includes('INSERT INTO manuscript_sections')&&
+    helper.includes('confirmed_import_section_unverified'));
+   if(!qualified){drift.push(entry.path);continue;}
+  }
   if(!/export\s+(?:async\s+)?function\s+(?:POST|PUT|PATCH|DELETE)\s*\(/.test(s)){
    drift.push(entry.path);continue;
   }

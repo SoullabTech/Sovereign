@@ -26,6 +26,7 @@
  * member's characters do not move.
  */
 
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { resolveDevelopPreparation } from '@/lib/manuscript/development/preparation';
@@ -34,6 +35,10 @@ import { convertDraftToSections, type ConversionAuthority } from '@/lib/manuscri
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  return privateWriterNoStore(await privateMemberDevelopPreparationRead(req, { params }));
+}
+
+async function privateMemberDevelopPreparationRead(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }

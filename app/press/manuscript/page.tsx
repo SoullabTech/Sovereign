@@ -225,6 +225,11 @@ function PressManuscriptRoom() {
     setSplitOpen(null);
   };
   const [saving, setSaving] = useState(false);
+  // The same explicit paste confirmation keeps its UUID if the HTTP response
+  // gets lost. Changes to title, Source or section cuts mint a NEW gesture.
+  // Only a random UUID and the already-present draft are kept in memory; no
+  // manuscript text or confirmation token is written to browser storage.
+  const pasteConfirmationRef = useRef<{ body: string; id: string } | null>(null);
   const [saveError, setSaveError] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [fidelity, setFidelity] = useState<{
@@ -359,6 +364,17 @@ function PressManuscriptRoom() {
 
   const saveManuscript = async () => {
     if (!preview || preview.length === 0 || (fidelity?.requiresReview && !fidelityReviewed)) return;
+    // File-backed imports use their independently verified Source arrival ID.
+    // For a pasted manuscript, preserve the exact Save identity across a
+    // transient network failure. New member edits earn a new identity.
+    const confirmationBody = JSON.stringify([draftTitle, preview, draftText]);
+    if (!sourceArrivalId && (
+        !pasteConfirmationRef.current ||
+        pasteConfirmationRef.current.body !== confirmationBody)) {
+      pasteConfirmationRef.current = {
+        body: confirmationBody, id: crypto.randomUUID(),
+      };
+    }
     setSaving(true);
     try {
       const res = await apiFetch('/api/sovereign/manuscripts', {
@@ -367,6 +383,9 @@ function PressManuscriptRoom() {
         body: JSON.stringify({
           title: draftTitle,
           sections: preview,
+          ...(!sourceArrivalId
+            ? { confirmationId: pasteConfirmationRef.current!.id }
+            : {}),
           /* One of these binds the manuscript to its source. A file-backed
              import claims the arrival already in custody; a paste records the
              exact text the member is confirming, right now, at this act. */
@@ -380,6 +399,7 @@ function PressManuscriptRoom() {
       setPreview(null);
       setDraftText('');
       setSourceArrivalId(null);
+      pasteConfirmationRef.current = null;
       setFidelity(null);
       setFidelityReviewed(false);
       setWarnings([]);

@@ -1,3 +1,4 @@
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
@@ -53,6 +54,10 @@ const present = (row: RunRow) => ({
   createdAt: row.created_at.toISOString(),
 });
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  return privateWriterNoStore(await privateMemberChapterReviewsRead(req, { params }));
+}
+
+async function privateMemberChapterReviewsRead(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   const { id: manuscriptId } = await params;
   const memberId = await getMemberIdFromRequest(req);

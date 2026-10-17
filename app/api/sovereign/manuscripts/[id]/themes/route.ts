@@ -4,6 +4,7 @@
  * GET projects only already-frozen evidence and member-governed Theme state.
  * POST performs explicit governance acts. Neither method commissions cognition.
  */
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
@@ -92,6 +93,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  return privateWriterNoStore(await privateMemberThemesRead(req, { params }));
+}
+
+async function privateMemberThemesRead(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {

@@ -19,7 +19,68 @@ import {fileURLToPath} from 'node:url';
 import {inspect as inspectLegacy} from './wsBetaR47LegacyWriteInventory.mjs';
 import {inspectR52} from './wsBetaR52LegacyIngressReleaseGate.mjs';
 
+// Founder-approved product phasing is not a release bypass. This profile is
+// read-only evidence inventory; only a separately witnessed exact deployment
+// and founder approval could ever promote a real cohort.
+export const STANDARD_PRIVATE_BETA_REQUIRED=Object.freeze([
+ 'production_tls_and_authenticated_member_isolation_verified',
+ 'actual_database_file_store_backup_and_offsite_encryption_at_rest_verified',
+ 'independent_original_draft_revision_restore_verified',
+ 'legacy_protected_work_non_downgrade_and_reader_separation_verified',
+ 'exact_member_notice_consent_model_provider_retention_verified',
+ 'real_author_import_develop_write_review_save_apply_undo_export_verified',
+ 'no_sensitive_clinical_member_content_initial_cohort',
+ 'full_unsuppressed_shipped_build_signed_image_and_rollback_verified',
+ 'authentic_mac_safari_and_physical_iphone_accessibility_verified',
+ 'independent_security_reviewer_founder_and_individual_two_writer_go',
+]);
+export const SOVEREIGN_FUTURE_UPGRADE=Object.freeze([
+ 'independently_governed_per_work_wrapping_keys_and_deletion_authority',
+ 'monotonic_revoke_write_commit_fence_and_signed_freshness',
+ 'client_consent_for_work_migration_without_silent_downgrade',
+ 'independent_backup_key_vault_restore_and_retained_key_limit_disclosed',
+]);
+
 export const CHECKS=Object.freeze([
+ {file:'lib/manuscript/source/persistConfirmedPasteR65.ts',
+  must:['transaction(async(tx)=>',
+   'INSERT INTO manuscript_import_confirmations',
+   'ON CONFLICT (member_id,confirmation_id) DO NOTHING',
+   'LEFT JOIN manuscript_import_active_payloads p',
+   'INSERT INTO manuscript_source_arrivals',
+   'INSERT INTO manuscript_import_active_payloads',
+   'UPDATE manuscript_import_confirmations SET manuscript_id=$3',
+   'deleted_or_unverifiable_receipt',
+   'changed_confirmation'],
+  label:'standard_pasted_source_once_only_atomic_receipt'},
+ {file:'database/migrations/20261017000001_manuscript_import_confirmation_receipts.sql',
+  must:['PRIMARY KEY (member_id, confirmation_id)',
+   'ON DELETE SET NULL','ON DELETE CASCADE',
+   'CREATE TABLE IF NOT EXISTS manuscript_import_active_payloads',
+   'request_sha256'],
+  label:'durable_member_confirmation_receipt_and_deleted_work_tombstone'},
+ {file:'app/press/manuscript/page.tsx',
+  must:['pasteConfirmationRef = useRef',
+   'id: crypto.randomUUID()',
+   'confirmationId: pasteConfirmationRef.current!.id'],
+  label:'real_press_member_save_stable_once_only_identifier'},
+ {file:'app/api/sovereign/manuscripts/route.ts',
+  must:['persistConfirmedPasteR65({',
+   'PasteConfirmationRefusalR65',
+   'sourceArrivalId !== undefined',
+   'result.replayed ? 200 : 201',
+   'persistConfirmedSectionsR63({'],
+  label:'actual_manuscript_import_paste_once_file_legacy_split'},
+ {file:'lib/manuscript/source/persistConfirmedSectionsR63.ts',
+  must:['transaction(async(tx)=>',
+   'INSERT INTO member_manuscripts',
+   'INSERT INTO manuscript_sections',
+   'confirmed_import_section_unverified'],
+  label:'conventional_writer_confirmed_sections_one_transaction'},
+ {file:'app/api/sovereign/manuscripts/route.ts',
+  must:['persistConfirmedSectionsR63({',
+   "describeDbError(err)",'sourceCustody: custody'],
+  label:'actual_member_manuscript_confirmation_atomic_and_redacted'},
  {file:'app/writers-studio/page.tsx',must:['P4R1StudioHost','defaultMode="home"'],label:'canonical_studio_page'},
  {file:'app/dev/writers-studio-p4r1/P4R1StudioHost.tsx',
   must:['P4R1WriteEditController','P4R1DevelopController','P4R1ReviewController','ListenPilot'],
@@ -77,6 +138,31 @@ export const CHECKS=Object.freeze([
    'realNextReadiness','recheckHeldRealSessionWorkR56',
    'actual Next GET','realGET()'],
   label:'one_database_real_next_and_held_post_admission_rehearsal'},
+ {file:'docs/programme/WS_STANDARD_FIRST_BETA_AND_SOVEREIGN_UPGRADE_DECISION_20261017.md',
+  must:['Founder product direction: October 17, 2026',
+    'not universal prerequisites', 'No unsafe downgrade:'],
+  label:'founder_standard_beta_first_sovereign_upgrade_decision'},
+ {file:'lib/writersStudio/release/privateWriterNoStore.ts',
+  must:["'private, no-store, max-age=0'",'privateWriterNoStore'],
+  label:'ordinary_private_writer_no_cache_contract'},
+ {file:'app/api/sovereign/manuscripts/route.ts',
+  must:['return privateWriterNoStore(await getOwnedManuscriptCatalogResponse('],
+  label:'private_owned_manuscript_catalog_no_store'},
+ {file:'app/api/sovereign/manuscripts/[id]/route.ts',
+  must:['return privateWriterNoStore(await getOwnedManuscriptResponse('],
+  label:'private_owned_manuscript_get_no_store'},
+ {file:'app/api/sovereign/manuscripts/[id]/draft/route.ts',
+  must:['return privateWriterNoStore(await getOwnedWorkingDraftResponse('],
+  label:'private_owned_draft_get_no_store'},
+ {file:'app/api/sovereign/living-works/route.ts',
+  must:['return privateWriterNoStore(await getOwnedLivingWorkCatalogResponse('],
+  label:'private_owned_living_work_catalog_no_store'},
+ {file:'app/api/writers-studio/editorial/thread/route.ts',
+  must:['return privateWriterNoStore(await getPrivateEditorialThreadResponse('],
+  label:'private_editorial_thread_get_no_store'},
+ {file:'app/api/writers-studio/editorial/relationships/route.ts',
+  must:['return privateWriterNoStore(await getPrivateEditorialRelationshipsResponse('],
+  label:'private_editorial_relationships_get_no_store'},
  {file:'app/api/sovereign/writers-studio/manuscripts/[manuscriptId]/protected-readiness/route.ts',
   must:['verifyWriterReadinessScope(request,manuscriptId)',
    'protected_writer_not_yet_qualified','canSave:false,canApply:false,canUndo:false',
@@ -157,6 +243,36 @@ export function inspectCandidate(root=ROOT,options={}){
    file:item.file,missingMarkers:missing.length,
   });
  }
+ // Source-time negative coverage for ALL routes reading owned Writer material.
+ // Unlike a fixed checklist, a newly introduced GET must opt into private
+ // no-store (or the corridor becomes SOURCE_DRIFT_HOLD). No member calls here.
+ const privateGetCandidateFiles=[
+  ...walkRoutes(join(base,'app/api/sovereign/manuscripts')),
+  ...walkRoutes(join(base,'app/api/writers-studio/editorial')),
+  join(base,'app/api/sovereign/living-works/route.ts'),
+ ];
+ const privateMemberGetRoutes=[];
+ const privateMemberGetUnprotected=[];
+ for(const file of privateGetCandidateFiles){
+  let source='';
+  try{source=read(file);}catch{source='';}
+  if(!/export\s+async\s+function\s+GET\s*\(/.test(source))continue;
+  const rel=relative(base,file).split('\\').join('/');
+  privateMemberGetRoutes.push(rel);
+  const getIndex=source.indexOf('export async function GET(');
+  // This wrapper is the first and only export-level response construction:
+  // success, denied and error responses carry no-store. Do not accept a
+  // standalone success-only Cache-Control header as complete coverage.
+  if(getIndex<0 || !/return\s+privateWriterNoStore\s*\(\s*await\s+/.test(
+    source.slice(getIndex,getIndex+410))){
+   privateMemberGetUnprotected.push(rel);
+  }
+ }
+ privateMemberGetRoutes.sort();
+ privateMemberGetUnprotected.sort();
+ const allWriterGetRoutesPrivate=privateMemberGetRoutes.length===20 &&
+   privateMemberGetUnprotected.length===0;
+
  const routeBindings=[];
  for(const file of walkRoutes(join(base,'app/api'))){
   let code='';
@@ -173,7 +289,8 @@ export function inspectCandidate(root=ROOT,options={}){
   listed<12||adjacent<2||Array.isArray(legacy.missing)&&legacy.missing.length>0||
   Array.isArray(legacy.unlisted)&&legacy.unlisted.length>0||
   Array.isArray(legacy.drift)&&legacy.drift.length>0||
-  !ingressValid;
+  !ingressValid||
+  !allWriterGetRoutesPrivate;
  const unmet=[
   ...(listed>0?['unfenced_legacy_manuscript_writes']:[]),
   ...(routeBindings.length<PROTECTED_IMPORT_NAMES.length?
@@ -217,6 +334,49 @@ export function inspectCandidate(root=ROOT,options={}){
    seen.some(x=>x.label==='verified_actual_session_consent_specific_declared_work_held'&&x.found),
   actualNextAndHeldAuthorSamePGFixturePresent:
    seen.some(x=>x.label==='one_database_real_next_and_held_post_admission_rehearsal'&&x.found),
+  atomicConventionalManuscriptImportSourcePresent:[
+    'conventional_writer_confirmed_sections_one_transaction',
+    'actual_member_manuscript_confirmation_atomic_and_redacted',
+   ].every(label=>seen.some(x=>x.label===label&&x.found)),
+  pastedSourceOnceOnlyOriginalAndReceiptPresent:[
+    'standard_pasted_source_once_only_atomic_receipt',
+    'durable_member_confirmation_receipt_and_deleted_work_tombstone',
+    'real_press_member_save_stable_once_only_identifier',
+    'actual_manuscript_import_paste_once_file_legacy_split',
+  ].every(label=>seen.some(x=>x.label===label&&x.found)),
+  privateMemberGetRoutesCount:privateMemberGetRoutes.length,
+  privateMemberGetRoutesProtectedCount:
+   privateMemberGetRoutes.length-privateMemberGetUnprotected.length,
+  privateMemberGetUnprotected,
+  // Standard-author beta and sovereign upgrade are different product release
+  // profiles. Neither can become GO on source claims, caller flags or mocks.
+  standardPrivateBeta:{
+   kind:'conventional_managed_security_beta',
+   founderDirectionAccepted:true,
+   independentSelfHostedKmsPrerequisite:false,
+   currentQualification:'OPERATIONAL_EVIDENCE_HOLD',
+   required:STANDARD_PRIVATE_BETA_REQUIRED,
+   safetySourcePresent:[
+    'founder_standard_beta_first_sovereign_upgrade_decision',
+    'ordinary_private_writer_no_cache_contract',
+    'private_owned_manuscript_catalog_no_store',
+    'private_owned_manuscript_get_no_store',
+    'private_owned_draft_get_no_store',
+    'private_owned_living_work_catalog_no_store',
+    'private_editorial_thread_get_no_store',
+    'private_editorial_relationships_get_no_store',
+   ].every(label=>seen.some(x=>x.label===label&&x.found)),
+   productionStorageVerified:false,
+   encryptedBackupsAndRestoreVerified:false,
+   realAuthorWritingCertified:false,
+   releaseApproved:false,
+  },
+  sovereignUpgrade:{
+   kind:'optional_future_independent_work_custody',
+   status:'PRESERVED_FOR_LATER',
+   requirements:SOVEREIGN_FUTURE_UPGRADE,
+   productionEnabled:false,
+  },
   defaultOffLegacyIngressGuardsPresent:ingressValid,
   guardedLegacyWriteMethods:ingress.guardedWriteMethods??0,
   changedContracts:changed,

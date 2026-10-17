@@ -33,7 +33,7 @@ const MODULE='lib/writersStudio/release/heldLegacyWriterFenceR52.ts';
 const IMPORT="from '@/lib/writersStudio/release/heldLegacyWriterFenceR52'";
 const UUID='R52_REAL_LEGACY_PILOT_FENCE_ENABLED=false as const';
 const marker={
- 'app/api/sovereign/manuscripts/route.ts':{POST:'INSERT INTO manuscript_sections'},
+ 'app/api/sovereign/manuscripts/route.ts':{POST:'persistConfirmedSectionsR63({'},
  'app/api/sovereign/manuscripts/ingest/route.ts':{POST:'recordArtifactArrival({'},
  'app/api/sovereign/manuscripts/blank/route.ts':{POST:'INSERT INTO manuscript_working_drafts'},
  'app/api/sovereign/manuscripts/[id]/draft/route.ts':{
@@ -78,6 +78,20 @@ export function inspectR52(root,{read=load,scanR47=inspectR47}={}){
     inspectLegacy.missing.length)
   failures.push('legacy_source_baseline_drift');
  const source=read(base,MODULE);
+ // This route still publishes plaintext Source sections, now via one atomic
+ // service. Its R52 beta fence must appear BEFORE the delegated transaction.
+ // The helper itself must still be real SQL, not a renamed no-op.
+ let atomicRoute='',atomicHelper='';
+ try{atomicRoute=read(base,'app/api/sovereign/manuscripts/route.ts');}catch{}
+ try{atomicHelper=read(base,'lib/manuscript/source/persistConfirmedSectionsR63.ts');}catch{}
+ if(!atomicRoute.includes("from '@/lib/manuscript/source/persistConfirmedSectionsR63'")||
+    !atomicRoute.includes('persistConfirmedSectionsR63({')||
+    !atomicHelper.includes('transaction(async(tx)=>')||
+    !atomicHelper.includes('INSERT INTO member_manuscripts')||
+    !atomicHelper.includes('INSERT INTO manuscript_sections')||
+    !atomicHelper.includes('confirmed_import_section_unverified')){
+   failures.push('verified_atomic_manuscript_delegate_missing');
+ }
  if(!source.includes(UUID)||source.includes(
    'R52_REAL_LEGACY_PILOT_FENCE_ENABLED=true'))
   failures.push('pilot_fence_was_activated_or_modified');

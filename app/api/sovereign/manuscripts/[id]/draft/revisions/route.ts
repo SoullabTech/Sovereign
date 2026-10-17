@@ -24,6 +24,7 @@
  * plainly that a pre-conversion revision cannot be restored section-wise keeps
  * their history; a member silently given reassigned identities does not.
  */
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import {holdLegacyWriterForVerifiedMemberR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db/postgres';
@@ -46,6 +47,10 @@ import {
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  return privateWriterNoStore(await privateMemberDraftRevisionsRead(request, ctx));
+}
+
+async function privateMemberDraftRevisionsRead(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }

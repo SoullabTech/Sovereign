@@ -13,6 +13,7 @@
  * is derived server-side.
  */
 
+import { privateWriterNoStore } from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextResponse, type NextRequest } from 'next/server';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
@@ -73,6 +74,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  return privateWriterNoStore(await getPrivateEditorialThreadResponse(request));
+}
+
+async function getPrivateEditorialThreadResponse(request: NextRequest) {
   if (!enabled()) return new NextResponse(null, { status: 404 });
   const identity = await verified(request);
   if (!identity) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });

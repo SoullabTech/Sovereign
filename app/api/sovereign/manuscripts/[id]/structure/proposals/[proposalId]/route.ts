@@ -29,6 +29,7 @@
  * the draft as it stands, and is `null` where the comparison cannot be made.
  */
 
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { loadProposal, updateReviewed, type ProposalRefusal } from '@/lib/manuscript/structure/proposalStore';
@@ -135,6 +136,13 @@ async function staleAsRead(
 }
 
 export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string; proposalId: string }> },
+) {
+  return privateWriterNoStore(await privateMemberStructureProposalsProposalidRead(req, { params }));
+}
+
+async function privateMemberStructureProposalsProposalidRead(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; proposalId: string }> },
 ) {

@@ -11,6 +11,7 @@
  * GET only. There is no PUT, PATCH or DELETE on a reading, here or anywhere.
  */
 
+import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
@@ -37,6 +38,13 @@ async function currentSections(manuscriptId: string, memberId: string) {
 }
 
 export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string; readingId: string }> },
+) {
+  return privateWriterNoStore(await privateMemberReadingsRead(req, { params }));
+}
+
+async function privateMemberReadingsRead(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; readingId: string }> },
 ) {

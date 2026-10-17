@@ -53,6 +53,7 @@ export const dynamic = 'force-dynamic';
  * is the door: credential, member scope, and the member's own words back.
  */
 
+import { privateWriterNoStore } from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -61,6 +62,10 @@ import { eraseManuscript } from '@/lib/manuscript/source/eraseManuscript';
 import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  return privateWriterNoStore(await getOwnedManuscriptResponse(request, ctx));
+}
+
+async function getOwnedManuscriptResponse(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
