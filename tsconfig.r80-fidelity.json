@@ -1,0 +1,13 @@
+{
+ "extends":"./tsconfig.json",
+ "compilerOptions":{"strict":true,"noEmit":true,"incremental":false,"plugins":[]},
+ "files":[
+  "next-env.d.ts",
+  "lib/manuscript/ingest/__tests__/r80ActualFourFormatRoundTrip.test.ts",
+  "lib/manuscript/ingest/parseUpload.ts",
+  "lib/manuscript/ingest/segment.ts",
+  "lib/writersStudio/deviceManuscriptCopy.ts"
+ ],
+ "include":[],
+ "exclude":["node_modules"]
+}
