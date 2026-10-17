@@ -5,6 +5,7 @@
 // DO NOT call generateText() from here — that would be infinite recursion.
 // DO NOT import anything that executes code on module load.
 
+import { rejectUnqualifiedProtectedProcessor } from '@/lib/sanctuary/externalProcessingGrant';
 import { generateWithClaude } from './claudeClient';
 import { callLocalInference, isLocalHealthy } from './localInferenceClient';
 import { emitDriftEvent } from '@/lib/sovereignty/driftAlarm';
@@ -171,5 +172,6 @@ export async function generateTextWithSovereignty(
   mode: InferenceMode,
   t0: number
 ): Promise<TextResult> {
+  rejectUnqualifiedProtectedProcessor(req.meta);
   return routeSovereignInference(req, mode, t0);
 }

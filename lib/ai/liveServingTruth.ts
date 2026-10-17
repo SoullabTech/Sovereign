@@ -16,6 +16,7 @@ export type LiveRoutingContract =
   | 'local_only'
   | 'multi_engine'
   | 'explicit_moonshot'
+  | 'rf01_explicit_anthropic'
   | 'deep_wrapper'
   | 'unknown';
 

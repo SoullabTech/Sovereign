@@ -575,6 +575,9 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/members/settings', minTier: 'free', notes: 'Member-owned settings; handler independently verifies credential and owner' },
   { exact: '/api/members/recall-preferences', minTier: 'free', notes: 'Member-owned recall gates; handler independently verifies credential and owner' },
   { exact: '/api/account/storage-consent', minTier: 'free', notes: 'Member-owned storage consent; handler independently verifies credential and owner' },
+  // RF01 S1-B (default-off): even experimental grant issuance requires a
+  // verified member at the proxy AND independently inside the handler.
+  { exact: '/api/sovereign/privacy/processing-grant', minTier: 'free', notes: 'Authenticated one-turn processor consent; independently disabled until release-qualified' },
 
   // Member API — contribution is participation, open to all
   { regex: /^\/api\/commons\/contributions\/[^/]+$/, minTier: 'free', notes: 'Contribution detail — depth' },
