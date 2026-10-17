@@ -1,0 +1,14 @@
+{
+ "extends":"./tsconfig.r65-sealed-choice-author.json",
+ "compilerOptions":{"strict":true,"noEmit":true,"incremental":false,"plugins":[]},
+ "files":[
+  "next-env.d.ts",
+  "lib/writersStudio/recovery/heldSealedApprovalBindingR66.ts",
+  "lib/writersStudio/recovery/__tests__/r66SealedApprovalLinkLaw.test.ts",
+  "scripts/ops/wsBetaR66SealedApprovalPG16.ts",
+  "scripts/ops/wsBetaR55ConvergedPc3PG16.ts",
+  "scripts/ops/__tests__/r39ActualSignedSectionPG16.test.ts"
+ ],
+ "include":[],
+ "exclude":["node_modules"]
+}
