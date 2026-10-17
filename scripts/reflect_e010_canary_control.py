@@ -227,7 +227,6 @@ class FounderCanaryControl:
         r = self.runtime
         r.acquire()
         original: Optional[bytes] = None
-        modified = False
         new_config: Optional[bytes] = None
         baseline_env: Dict[str, str] = {}
         backup_token: Optional[str] = None
@@ -246,7 +245,6 @@ class FounderCanaryControl:
             new_config = (original + prefix + (FLAG + "=true\n").encode()
                           + (ALLOW + "=" + witness.member_id.lower() + "\n").encode())
             r.write_config_atomically(new_config)
-            modified = True
             r.recreate_reader(IMAGE_ID, no_build=True, no_pull=True, no_dependencies=True)
             self._preflight()
             if (r.runtime_env.get(FLAG) != "true"
@@ -262,23 +260,35 @@ class FounderCanaryControl:
                             rollback_custody_verified=True))
         except Exception as error:
             label = error.args[0] if isinstance(error, CanaryHold) else "UNEXPECTED_FAILURE"
-            if modified:
-                # A separate writer touching config must NEVER be overwritten.
-                # Flagged runtime may remain ON: escalate immediately to a human
-                # incident path rather than silently clobber concurrent changes.
-                if new_config is None or r.read_config() != new_config:
-                    raise CanaryIncident("CONFIG_DRIFT_MANUAL_RECOVERY_REQUIRED")
+            # An atomic rename may have committed even if its caller reported
+            # an error before returning. Inspect disk BEFORE deciding to recover.
+            # Never overwrite an unknown concurrent configuration change.
+            if original is not None and backup_token is not None and new_config is not None:
                 try:
-                    if original is None:
-                        raise CanaryIncident("RECOVERY_ORIGINAL_MISSING")
-                    r.write_config_atomically(original)
-                    r.recreate_reader(IMAGE_ID, no_build=True, no_pull=True, no_dependencies=True)
-                    if (r.read_config() != original or FLAG in r.runtime_env
-                            or ALLOW in r.runtime_env):
-                        raise CanaryIncident("RECOVERY_FLAG_OFF_UNVERIFIED")
-                    self._ensure_unchanged_env(baseline_env, r.runtime_env)
+                    observed = r.read_config()
                 except Exception:
-                    raise CanaryIncident("RECOVERY_FAILED_STOP_AND_ESCALATE")
+                    raise CanaryIncident("CONFIG_STATE_UNKNOWN_MANUAL_RECOVERY_REQUIRED")
+                if observed not in (original, new_config):
+                    raise CanaryIncident("CONFIG_DRIFT_MANUAL_RECOVERY_REQUIRED")
+                need_recovery = (observed == new_config or
+                                 FLAG in r.runtime_env or ALLOW in r.runtime_env)
+                if need_recovery:
+                    try:
+                        if observed != original:
+                            try:
+                                r.write_config_atomically(original)
+                            except Exception:
+                                # A successful rename followed by an error is
+                                # safe to continue ONLY when original is visible.
+                                if r.read_config() != original:
+                                    raise CanaryIncident("RECOVERY_WRITE_UNCERTAIN")
+                        r.recreate_reader(IMAGE_ID, no_build=True, no_pull=True, no_dependencies=True)
+                        if (r.read_config() != original or FLAG in r.runtime_env
+                                or ALLOW in r.runtime_env):
+                            raise CanaryIncident("RECOVERY_FLAG_OFF_UNVERIFIED")
+                        self._ensure_unchanged_env(baseline_env, r.runtime_env)
+                    except Exception:
+                        raise CanaryIncident("RECOVERY_FAILED_STOP_AND_ESCALATE")
             raise CanaryHold(str(label))
         finally:
             r.release()
@@ -296,7 +306,16 @@ class FounderCanaryControl:
             original = r.restore_backup(active.backup_token)
             if _is_flag_present(original):
                 raise CanaryHold("BACKUP_NOT_REFLECT_OFF")
-            r.write_config_atomically(original)
+            try:
+                r.write_config_atomically(original)
+            except Exception:
+                # If rename completed before the reported error, continue with
+                # reader-only OFF recreation; otherwise stop as an incident.
+                try:
+                    if r.read_config() != original:
+                        raise CanaryIncident("REVOKE_CONFIG_NOT_RESTORED")
+                except Exception:
+                    raise CanaryIncident("REVOKE_CONFIG_WRITE_UNCERTAIN")
             try:
                 r.recreate_reader(IMAGE_ID, no_build=True, no_pull=True, no_dependencies=True)
                 if (r.read_config() != original or FLAG in r.runtime_env

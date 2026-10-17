@@ -58,3 +58,20 @@ No production writes, no other member records, no model calls, no migrations, no
 - Fictional one-founder ON → OFF witness: PASS; original configuration restored.
 - Backend boundary: Python standard library only; in-memory fictional backend; no production adapter, network, external process, Docker or real member calls.
 - GitHub push, PR, merge, production flag change, restart and deployment: **NONE**.
+
+## Local physical filesystem integration — October 17, 2026
+
+- Additional isolated files: scripts/reflect_e010_disk_fixture.py and scripts/test_reflect_e010_disk_fixture.py.
+- **57/57 total local tests PASS**: 36 original fictional policy/identity/rollback tests plus 21 disk-backed fixture tests.
+- Actual local filesystem acceptance exercises permission-restricted original configuration backup, checksum comparison, same-directory atomic rename, fsync, a real nonblocking exclusive flock, and simulated E010 MAIA-reader-only recreation **without any Docker command**.
+- Both sides of interrupted atomic rename are exercised: refusal before rename leaves original bytes intact; refusal after rename triggers observed-state recovery rather than believing the reported write status.
+- Reject missing fixture marker, symlink, hardlinked config, owner/mode drift, stale or wrong fictional identity, changed image, competing file lock, changed config, tampered backup, and failed recovery. A noncooperating concurrent fixture writer causes HOLD rather than silent overwrite.
+- Reversible ON -> OFF physically restores original bytes; fixture-only runtime flag disappearance and unchanged source/rollback status are asserted. All simulated accounts are fictional and no actual credentials or IDs are used.
+- Execution guard: fixture root must be an owner-controlled 0700 *new* temporary directory named reflect-e010-fictional-* with a matching marker; no arbitrary production directory accepted. The fixture imports only Python standard-library modules and the fictional state-machine module. It contains **no SSH, Docker, HTTP, network, or external command execution**.
+- Module default invocation continues to refuse production actions. An isolated Python test result is not a reviewed live release adapter and must not be used to circumvent the previous blocked production activation.
+
+### Stop before live integration
+
+A production-capable and independently reviewed operator adapter still requires durable crash/restart custody (private state and backup retrieval across processes), authentic consent/identity witness without credentials in chat, exact protected source/rollback verification, controlled reader recreation, cross-process concurrent-writer coordination, RSC/SSR/Safari acceptance and a real reversible OFF rehearsal. The current ActiveCanary token is in-memory only and **does not yet survive process restart**. Do not enable the member beta from this test module.
+
+No source push, PR, merge, deployment or production change was authorized or performed by this test.
