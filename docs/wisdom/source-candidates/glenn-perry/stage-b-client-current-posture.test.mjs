@@ -39,6 +39,7 @@ test.after(() => {
 });
 
 const selected = 'glenn-perry-astropsychology';
+const ordinaryTurn = { sanctuaryEnteredByCurrentTurn:false };
 function storage(value) {
   let calls = 0;
   return {
@@ -63,7 +64,7 @@ test('no opt-in refuses without reading even a live Sanctuary setting', () => {
   const s = storage(JSON.stringify({sanctuary:false}));
   for (const x of [undefined, null, false, '', 'Glenn Perry',
     {perrySourceLens:selected}, [selected], selected+' ']) {
-    assert.deepEqual(gate.preparePerryClientSelection(x, s),
+    assert.deepEqual(gate.preparePerryClientSelection(x, ordinaryTurn, s),
       { status:'refused', reason:'not_selected' });
   }
   assert.equal(s.calls, 0);
@@ -71,7 +72,7 @@ test('no opt-in refuses without reading even a live Sanctuary setting', () => {
 
 test('known current-turn ordinary posture yields a minimal source-request fragment', () => {
   const s = storage(JSON.stringify({sanctuary:false, voiceSpeed:1}));
-  assert.deepEqual(gate.preparePerryClientSelection(selected, s), {
+  assert.deepEqual(gate.preparePerryClientSelection(selected, ordinaryTurn, s), {
     status:'prepared',
     request:{perrySourceLens:selected, sanctuary:false},
   });
@@ -83,24 +84,33 @@ test('a current Sanctuary turn refuses rather than substituting a stale UI false
   const staleReactValue = false;
   const s = storage(JSON.stringify({sanctuary:true}));
   assert.equal(staleReactValue, false);
-  assert.deepEqual(gate.preparePerryClientSelection(selected, s),
+  assert.deepEqual(gate.preparePerryClientSelection(selected, ordinaryTurn, s),
     {status:'refused', reason:'sanctuary_active'});
   assert.equal(s.calls, 1);
 });
 
 test('enter-Sanctuary command in this very turn vetoes stale local false', () => {
   const s = storage(JSON.stringify({sanctuary:false}));
-  assert.deepEqual(gate.preparePerryClientSelection(selected, s,
-    {sanctuaryEnteredByCurrentTurn:true}),
+  assert.deepEqual(gate.preparePerryClientSelection(selected,
+    {sanctuaryEnteredByCurrentTurn:true}, s),
     {status:'refused',reason:'sanctuary_active'});
   assert.equal(s.calls, 0, 'the veto must precede a misleading local state read');
 });
 
 test('a command override can never authorize when current storage is Sanctuary', () => {
   const s = storage(JSON.stringify({sanctuary:true}));
-  assert.deepEqual(gate.preparePerryClientSelection(selected,s,
-    {sanctuaryEnteredByCurrentTurn:false}),
+  assert.deepEqual(gate.preparePerryClientSelection(selected,
+    {sanctuaryEnteredByCurrentTurn:false},s),
     {status:'refused',reason:'sanctuary_active'});
+});
+
+test('missing or unrecognized current-turn command disposition cannot authorize', () => {
+  const s = storage(JSON.stringify({sanctuary:false}));
+  for (const invalid of [undefined, null, {}, {sanctuaryEnteredByCurrentTurn:'false'}]) {
+    assert.deepEqual(gate.preparePerryClientSelection(selected,invalid,s),
+      {status:'refused',reason:'posture_unresolved'});
+  }
+  assert.equal(s.calls, 0);
 });
 
 test('source gesture always rereads the current setting (false -> true -> false)', () => {
@@ -111,11 +121,11 @@ test('source gesture always rereads the current setting (false -> true -> false)
     reads++;
     return settings;
   }};
-  assert.equal(gate.preparePerryClientSelection(selected, s).status,'prepared');
+  assert.equal(gate.preparePerryClientSelection(selected, ordinaryTurn, s).status,'prepared');
   settings = JSON.stringify({sanctuary:true});
-  assert.equal(gate.preparePerryClientSelection(selected, s).reason,'sanctuary_active');
+  assert.equal(gate.preparePerryClientSelection(selected, ordinaryTurn, s).reason,'sanctuary_active');
   settings = JSON.stringify({sanctuary:false});
-  assert.equal(gate.preparePerryClientSelection(selected, s).status,'prepared');
+  assert.equal(gate.preparePerryClientSelection(selected, ordinaryTurn, s).status,'prepared');
   assert.equal(reads, 3);
 });
 
@@ -131,7 +141,7 @@ test('missing, invalid and unavailable posture never become ordinary', () => {
     storage(JSON.stringify({sanctuary:null})),
     {getItem() {throw new Error('fictional-storage-denied')}},
   ]) {
-    assert.deepEqual(gate.preparePerryClientSelection(selected,s),
+    assert.deepEqual(gate.preparePerryClientSelection(selected,ordinaryTurn,s),
       {status:'refused',reason:'posture_unresolved'});
   }
 });
@@ -141,12 +151,12 @@ test('account default cannot substitute for a current-turn choice', () => {
     if (key==='maia_account_settings') return JSON.stringify({defaultMemoryMode:'continuity'});
     return null;
   }};
-  assert.deepEqual(gate.preparePerryClientSelection(selected,s),
+  assert.deepEqual(gate.preparePerryClientSelection(selected,ordinaryTurn,s),
     {status:'refused',reason:'posture_unresolved'});
 });
 
 test('server rendering without live client storage refuses', () => {
-  assert.deepEqual(gate.preparePerryClientSelection(selected),
+  assert.deepEqual(gate.preparePerryClientSelection(selected,ordinaryTurn),
     {status:'refused',reason:'posture_unresolved'});
 });
 
