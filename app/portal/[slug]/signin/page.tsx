@@ -10,8 +10,10 @@ function SigninContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const slug = params.slug;
-  const justClaimed = searchParams.get('claimed') === '1';
+  // Next may temporarily return null during route hydration; never build a
+  // member endpoint from an unresolved portal slug.
+  const slug = typeof params?.slug === 'string' ? params.slug : '';
+  const justClaimed = searchParams?.get('claimed') === '1';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,6 +26,7 @@ function SigninContent() {
     setError(null);
     setErrorAction(null);
 
+    if (!slug) { setError('This portal link is incomplete.'); return; }
     if (!email.trim() || !password) {
       setError('Please enter your email and password.');
       return;

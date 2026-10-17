@@ -11,9 +11,11 @@ function ClaimContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const slug = params.slug;
-  const code = useMemo(() => searchParams.get('code') || '', [searchParams]);
-  const prefillEmail = useMemo(() => searchParams.get('email') || '', [searchParams]);
+  // Next may temporarily return null during route hydration; never build a
+  // member endpoint from an unresolved portal slug.
+  const slug = typeof params?.slug === 'string' ? params.slug : '';
+  const code = useMemo(() => searchParams?.get('code') || '', [searchParams]);
+  const prefillEmail = useMemo(() => searchParams?.get('email') || '', [searchParams]);
 
   const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState('');
@@ -32,7 +34,7 @@ function ClaimContent() {
     setError(null);
     setErrorAction(null);
 
-    if (!code) { setError('This invite link is incomplete.'); return; }
+    if (!slug || !code) { setError('This invite link is incomplete.'); return; }
     if (!email.trim()) { setError('Please enter your email.'); return; }
     if (password.length < 8) { setError('Please choose a password with at least 8 characters.'); return; }
     if (password !== confirmPassword) { setError('Your passwords do not match.'); return; }

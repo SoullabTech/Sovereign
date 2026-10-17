@@ -28,7 +28,9 @@ interface AboutData {
 
 export default function PortalAboutPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  // Next may temporarily return null during route hydration; never build a
+  // member endpoint from an unresolved portal slug.
+  const slug = typeof params?.slug === 'string' ? params.slug : '';
   const [data, setData] = useState<AboutData | null>(null);
   const [loading, setLoading] = useState(true);
 

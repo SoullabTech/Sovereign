@@ -40,7 +40,9 @@ interface OrientingPrompt {
   hint?: string;
 }
 
-const PROMPT_LIBRARY: Record<PromptCategory, OrientingPrompt[]> = {
+// Category is supplied by the enclosing key at selection time; stored entries
+// contain only copy and optional hints, not a duplicated category field.
+const PROMPT_LIBRARY: Record<PromptCategory, Omit<OrientingPrompt, 'category'>[]> = {
   look: [
     { text: 'Find 3 edges.', hint: 'Let your eyes move.' },
     { text: 'Find one straight line.' },

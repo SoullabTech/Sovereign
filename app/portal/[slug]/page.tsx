@@ -233,7 +233,9 @@ function AvailabilityCalendar({ slug, services }: { slug: string; services: Serv
 
 export default function PortalHomePage() {
   const params = useParams();
-  const slug = params.slug as string;
+  // Next may temporarily return null during route hydration; never build a
+  // member endpoint from an unresolved portal slug.
+  const slug = typeof params?.slug === 'string' ? params.slug : '';
   const [data, setData] = useState<PortalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

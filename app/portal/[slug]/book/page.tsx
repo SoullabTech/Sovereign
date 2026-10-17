@@ -23,8 +23,10 @@ interface TimeSlot {
 function BookingContent() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const slug = params.slug as string;
-  const serviceId = searchParams.get('service');
+  // Next may temporarily return null during route hydration; never build a
+  // member endpoint from an unresolved portal slug.
+  const slug = typeof params?.slug === 'string' ? params.slug : '';
+  const serviceId = searchParams?.get('service') ?? null;
 
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);

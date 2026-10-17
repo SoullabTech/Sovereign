@@ -18,7 +18,9 @@ interface Service {
 
 export default function PortalServicesPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  // Next may temporarily return null during route hydration; never build a
+  // member endpoint from an unresolved portal slug.
+  const slug = typeof params?.slug === 'string' ? params.slug : '';
   const [services, setServices] = useState<Service[]>([]);
   const [practitionerName, setPractitionerName] = useState('');
   const [loading, setLoading] = useState(true);
