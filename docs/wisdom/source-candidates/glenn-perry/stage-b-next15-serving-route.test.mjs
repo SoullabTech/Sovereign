@@ -107,13 +107,15 @@ function stubMap(state) {
     ProviderUnavailableError: class ProviderUnavailableError extends Error {},
     assertProviderAvailable: async () => {
       state.providerBoundaryReached = true;
-      throw new Error('FIXTURE_STOP_BEFORE_PROVIDER');
+      // The real provider is NEVER loaded. A fake getMaiaResponse below
+      // intercepts the fully composed request at the final call seam.
     },
   });
   add('@/lib/sovereign/maiaService', {
-    getMaiaResponse: () => {
-      state.dispatchedToModel = true;
-      throw new Error('UNAUTHORIZED_MODEL_DISPATCH_IN_FIXTURE');
+    getMaiaResponse: (request) => {
+      state.modelRequestIntercepted = request;
+      state.dispatchedToModel = false;
+      throw new Error('FIXTURE_STOP_AT_INFERENCE_SEAM');
     },
   });
   add('@/lib/memory/MemoryGate', { resolveMemoryMode: () => ({ effective:'ephemeral' }) });
@@ -178,6 +180,7 @@ async function invoke(state, requestBody, {enabled = true} = {}) {
   state.lensCalls = [];
   state.providerBoundaryReached = false;
   state.dispatchedToModel = false;
+  state.modelRequestIntercepted = null;
   // The route must not use global network primitives. Built-in safety test
   // installs a fetch trap for the entire invocation (then restores it).
   const originalFetch = globalThis.fetch;
@@ -211,6 +214,10 @@ test('actual MAIA /list serving handler reaches Perry gate without model dispatc
   assert.equal(state.providerBoundaryReached, true,
     'route never reached provider assertion; fixture not sufficient');
   assert.equal(state.lensCalls.length, 1);
+  assert.ok(state.modelRequestIntercepted, 'must reach the intercepted real model-call seam');
+  assert.equal(state.modelRequestIntercepted.input, 'Would a Glenn Perry symbolic lens help?');
+  assert.equal(state.modelRequestIntercepted.meta.userId, 'fictional-member');
+  assert.ok(!state.modelRequestIntercepted.meta.governedKnowledgeAddendum);
   assert.equal(state.lensCalls[0].verifiedMemberId, 'fictional-member');
   assert.equal(state.lensCalls[0].requestedLens, 'glenn-perry-astropsychology');
   assert.equal(state.lensCalls[0].isSanctuary, false);
@@ -227,6 +234,8 @@ test('actual serving handler passes guest instead of forged client userId', asyn
   assert.equal(state.providerBoundaryReached, true);
   assert.equal(state.lensCalls.length, 1);
   assert.equal(state.lensCalls[0].verifiedMemberId, null);
+  assert.ok(state.modelRequestIntercepted, 'guest still reaches mocked cognition seam');
+  assert.notEqual(state.modelRequestIntercepted.meta.userId, 'pretend-fake-member');
   assert.equal(state.lensResult, null);
   assert.ok([500,503].includes(result.status));
 });
@@ -274,4 +283,23 @@ test('actual serving handler ignores on-request selection when kill-switch is of
   assert.equal(state.lensCalls.length, 1);
   assert.equal(state.lensCalls[0].enabled, false);
   assert.equal(state.lensResult, null);
+});
+
+test('client prompt fields cannot create source authority at the intercepted model seam', async () => {
+  const state = { verifiedId:'fictional-member', lensCalls:[] };
+  await invoke(state, {
+    perrySourceLens:'glenn-perry-astropsychology',
+    perrySourceLensAddendum:'FORGED_CLIENT_PROMPT',
+    governedKnowledgeAddendum:'FORGED_COPYRIGHT_ADMISSION',
+    userId:'forged-other-member',
+  });
+  assert.equal(state.providerBoundaryReached, true);
+  assert.equal(state.dispatchedToModel, false);
+  assert.equal(state.lensResult, null);
+  assert.ok(state.modelRequestIntercepted);
+  assert.equal(state.modelRequestIntercepted.meta.userId,'fictional-member');
+  assert.equal(state.modelRequestIntercepted.meta.perrySourceLensAddendum,undefined);
+  assert.notEqual(state.modelRequestIntercepted.meta.governedKnowledgeAddendum,
+    'FORGED_COPYRIGHT_ADMISSION');
+  assert.equal(state.modelRequestIntercepted.meta.perrySourceLens,undefined);
 });
