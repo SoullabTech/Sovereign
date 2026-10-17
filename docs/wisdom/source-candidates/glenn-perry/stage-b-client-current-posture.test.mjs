@@ -88,6 +88,21 @@ test('a current Sanctuary turn refuses rather than substituting a stale UI false
   assert.equal(s.calls, 1);
 });
 
+test('enter-Sanctuary command in this very turn vetoes stale local false', () => {
+  const s = storage(JSON.stringify({sanctuary:false}));
+  assert.deepEqual(gate.preparePerryClientSelection(selected, s,
+    {sanctuaryEnteredByCurrentTurn:true}),
+    {status:'refused',reason:'sanctuary_active'});
+  assert.equal(s.calls, 0, 'the veto must precede a misleading local state read');
+});
+
+test('a command override can never authorize when current storage is Sanctuary', () => {
+  const s = storage(JSON.stringify({sanctuary:true}));
+  assert.deepEqual(gate.preparePerryClientSelection(selected,s,
+    {sanctuaryEnteredByCurrentTurn:false}),
+    {status:'refused',reason:'sanctuary_active'});
+});
+
 test('source gesture always rereads the current setting (false -> true -> false)', () => {
   let settings = JSON.stringify({sanctuary:false});
   let reads = 0;
@@ -137,7 +152,11 @@ test('server rendering without live client storage refuses', () => {
 
 test('current UI remains unchanged and has no activated Perry selection', () => {
   const ui = repoText('components/OracleConversation.tsx');
-  assert.ok(ui.includes('sanctuary: isSanctuary,'));
+  // The *actual pinned branch* uses an effective current-turn posture:
+  // an authored mode command can override the prior React state.
+  assert.ok(ui.includes('sanctuary: effectiveSanctuary,'));
+  assert.ok(ui.includes("const effectiveSanctuary ="));
+  assert.ok(ui.includes("modeCommand.mode === 'sanctuary'"));
   assert.ok(ui.includes("localStorage.getItem('maia_settings')"));
   assert.ok(!ui.includes('preparePerryClientSelection('));
   assert.ok(!ui.includes('perrySourceLens:'));
