@@ -8,6 +8,9 @@ import {query} from '@/lib/db/postgres';
 import {getMemberIdFromSessionToken} from '@/lib/auth/getMemberFromRequest';
 import {writersStudioBetaAccess} from '@/lib/writersStudio/betaAccessServer';
 import {
+ inspectProtectedManifestLineage,type CustodyMetadataResult,
+} from './inspectProtectedManifestLineage';
+import {
  approvedBetaConsentPolicy,hasActiveWriterBetaConsent,
 } from '@/lib/writersStudio/betaConsentGate';
 
@@ -22,6 +25,8 @@ export type VerifiedWriterReadinessScope={
  /** Explicit, member-declared Living Work relationships; NOT a choice of
   * one exclusive Work, nor an encrypted key/custody grant. Server only. */
  readonly declaredLivingWorkIds:readonly string[];
+ /** Internal structural Source→Draft evidence only. Not a verified KMS key. */
+ readonly protectedManifestEvidence:CustodyMetadataResult;
  /** Explicitly NOT a protected Work/key/consent-to-write authority. */
  readonly mayWrite:false;readonly releaseApproved:false;
 };
@@ -125,8 +130,15 @@ export async function verifyWriterReadinessScope(
     declaredLivingWorkIds.length)
    return refuse(503,'read_authority_unavailable');
 
+  // The exact manuscript UUID — NOT any related Living Work id — is the
+  // R35 encrypted Draft work_id. This is a metadata-only, read-only check.
+  // A false/missing lineage or absent review-only schema still cannot grant
+  // Save/Apply/Undo. Real independently governed key custody remains absent.
+  const protectedManifestEvidence=await inspectProtectedManifestLineage({
+   verifiedMemberId:memberId,manuscriptId,
+  });
   return {kind:'verified_member_owns_legacy_manuscript',
-   memberId,manuscriptId,declaredLivingWorkIds,
+   memberId,manuscriptId,declaredLivingWorkIds,protectedManifestEvidence,
    mayWrite:false,releaseApproved:false};
  }catch{
   // Unavailable consent or DB can never mean permitted plaintext fallback.

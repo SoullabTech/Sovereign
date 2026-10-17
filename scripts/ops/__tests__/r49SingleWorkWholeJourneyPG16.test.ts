@@ -26,6 +26,8 @@ import {beginHeldDraftFromOriginalR42,R42_REAL_SOURCE_DRAFT_ENABLED}
  from '@/lib/writersStudio/recovery/heldSourceDraftBridgeR42';
 import {reopenHeldDraftR35,type R35Custody}
  from '@/lib/writersStudio/recovery/heldProtectedDraftR35';
+import {inspectProtectedManifestLineage,WS_REAL_ENCRYPTED_WRITES_ENABLED}
+ from '@/lib/writersStudio/release/inspectProtectedManifestLineage';
 import {exactTextareaPassageR41} from '@/lib/writersStudio/exactLiveSelectionR41';
 import {recordHeldPrivateReviewR47,reopenHeldPrivateReviewR47,
  R47_REAL_PRIVATE_EDITORIAL_ENABLED}
@@ -323,6 +325,31 @@ tests('R49 ONE fictional Work Source→Review→Apply→Confirm→Undo',()=>{
   });
   expect(first.sections).toEqual(PLAN);
   expect(first.content).toBe(WHOLE);
+  expect(await count('writers_studio_r35_draft_versions')).toBe(1);
+ });
+ it('actual read-only metadata observer sees exact owned Source→Draft link but NEVER issues a key grant',async()=>{
+  expect(WS_REAL_ENCRYPTED_WRITES_ENABLED).toBe(false);
+  const observation=await inspectProtectedManifestLineage({
+   verifiedMemberId:MEMBER,manuscriptId:WORK,
+  });
+  expect(observation).toEqual({
+   kind:'encrypted_lineage_metadata_observed_only',
+   initialGeneration:1,headGeneration:1,
+   ciphertextPhysicallyOpened:false,
+   independentKeyGrantVerified:false,
+   keyGrantVerified:false,mayWrite:false,releaseApproved:false,
+  });
+  for(const input of [
+   {verifiedMemberId:FOREIGN,manuscriptId:WORK},
+   {verifiedMemberId:MEMBER,manuscriptId:FOREIGN},
+  ]){
+   expect(await inspectProtectedManifestLineage(input)).toMatchObject({
+    kind:'held_only',reason:'missing_or_inconsistent_link',
+    mayWrite:false,releaseApproved:false,
+   });
+  }
+  // The inspection is read-only. It cannot issue a duplicate manifest,
+  // increase the generation, unwrap keys or restore an old Draft.
   expect(await count('writers_studio_r35_draft_versions')).toBe(1);
  });
  it('editorially seals EXACT selected second occurrence and reopens it as read-only',async()=>{

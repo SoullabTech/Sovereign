@@ -45,6 +45,12 @@ active('R53 real handler uses real SQL with only fictional accounts',()=>{
    kind:'verified_member_owns_legacy_manuscript',
    memberId:A,manuscriptId:M,
    declaredLivingWorkIds:[L1,L2],
+   // Current shipping migrations do not include the review-only R32/R42/R35
+   // tables. Their absence can only be a read-only HOLD, not assumed custody.
+   protectedManifestEvidence:{
+    kind:'held_only',reason:'metadata_store_unavailable',
+    keyGrantVerified:false,mayWrite:false,releaseApproved:false,
+   },
    mayWrite:false,releaseApproved:false,
   });
   const res=await route(M,'fictional-session-A');

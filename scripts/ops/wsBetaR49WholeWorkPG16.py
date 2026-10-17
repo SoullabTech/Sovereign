@@ -197,7 +197,7 @@ def main():
   code,output=run_jest('scripts/ops/__tests__/r49SingleWorkWholeJourneyPG16.test.ts',
     env,INITIAL)
   checks['oneWorkFullJourneyTests']=code==0 and \
-     '6 passed, 6 total' in output
+     '7 passed, 7 total' in output
   checks['pendingSourceAndDraftImmutable']=all([
    sql('SELECT count(*) FROM writers_studio_r32_held_originals')=='1',
    sql('SELECT count(*) FROM writers_studio_r42_held_start_links')=='1',

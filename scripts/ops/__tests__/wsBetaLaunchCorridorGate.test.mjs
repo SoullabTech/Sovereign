@@ -18,6 +18,7 @@ test('the exact canonical UI + held encrypted journey are present in one source,
  assert.equal(r.canonicalSourceChecksPassed,CHECKS.length);
  assert.equal(r.realReadOnlyWorkReadinessPresent,true);
  assert.equal(r.explicitMemberWorkRelationshipVerifierPresent,true);
+ assert.equal(r.readOnlyEncryptedMetadataObserverPresent,true);
  assert.equal(r.defaultOffLegacyIngressGuardsPresent,true);
  assert.equal(r.guardedLegacyWriteMethods,13);
  assert.equal(r.knownLegacyWriterRoutes,12);
@@ -62,6 +63,17 @@ test('loss of request-token verification or explicit Work declarations is releas
   assert.equal(r.explicitMemberWorkRelationshipVerifierPresent,false);
   assert.equal(r.releaseApproved,false);
  }
+});
+
+test('removing exact Source→Draft metadata observer becomes release DRIFT',()=>{
+ const file=resolve(ROOT,
+  'lib/writersStudio/release/inspectProtectedManifestLineage.ts');
+ const r=inspectCandidate(ROOT,{readText:target=>
+   target===file?'// fake custody reader':readFileSync(target,'utf8')});
+ assert.equal(r.codeContract,'SOURCE_DRIFT_HOLD');
+ assert.equal(r.readOnlyEncryptedMetadataObserverPresent,false);
+ assert.equal(r.candidateRelease,'HOLD');
+ assert.equal(r.releaseApproved,false);
 });
 
 test('missing one default-off old-write guard is source DRIFT, never beta GO',()=>{

@@ -67,6 +67,8 @@ beforeEach(()=>{
  beta.mockResolvedValue({eligible:true,basis:'active_beta_tester'});
  consent.mockResolvedValue(true);
  pg.mockImplementation(async(statement:string)=>{
+  if(statement.includes('count(*)::int AS chain_count'))
+   return {rows:[{chain_count:1,head_generation:1}]};
   return statement.includes('FROM member_manuscripts')?
    {rows:[{owns:true}]}:{rows:[]};
  });
@@ -95,7 +97,7 @@ describe('real authenticated Writer readiness route never grants writing',()=>{
   expect(beta).toHaveBeenCalledWith(MEMBER);
   expect(consent).toHaveBeenCalledWith(
    MEMBER,{policyVersion:'pilot-v1',policySHA256:'b'.repeat(64)});
-  expect(pg).toHaveBeenCalledTimes(2);
+  expect(pg).toHaveBeenCalledTimes(3);
   expect(pg.mock.calls[0][0]).toContain('SELECT EXISTS(');
   expect(pg.mock.calls[0][0]).toContain('FROM member_manuscripts');
   expect(pg.mock.calls[0][1]).toEqual([MANUSCRIPT,MEMBER]);
@@ -105,6 +107,8 @@ describe('real authenticated Writer readiness route never grants writing',()=>{
   expect(pg.mock.calls[1][0]).toContain('e.declared_by=$2');
   expect(pg.mock.calls[1][0]).toContain('w.member_id=$2');
   expect(pg.mock.calls[1][1]).toEqual([MANUSCRIPT,MEMBER]);
+  expect(pg.mock.calls[2][0]).toContain('writers_studio_r42_held_start_links');
+  expect(pg.mock.calls[2][1]).toEqual([MANUSCRIPT,MEMBER]);
   const wire=JSON.stringify(await route().then(r=>r.json()));
   for(const sensitive of [MEMBER,MANUSCRIPT,'member_manuscripts',
    'sourceText','ciphertext','keyBytes'])expect(wire).not.toContain(sensitive);
@@ -219,7 +223,15 @@ describe('real authenticated Writer readiness route never grants writing',()=>{
   expect(result).toEqual({
    kind:'verified_member_owns_legacy_manuscript',
    memberId:MEMBER,manuscriptId:MANUSCRIPT,
-   declaredLivingWorkIds:[],mayWrite:false,releaseApproved:false,
+   declaredLivingWorkIds:[],
+   protectedManifestEvidence:{
+    kind:'encrypted_lineage_metadata_observed_only',
+    initialGeneration:1,headGeneration:1,
+    independentKeyGrantVerified:false,
+    ciphertextPhysicallyOpened:false,
+    keyGrantVerified:false,mayWrite:false,releaseApproved:false,
+   },
+   mayWrite:false,releaseApproved:false,
   });
  });
  it('a manuscript can belong to TWO explicitly declared Living Works without selecting one',async()=>{
@@ -249,7 +261,7 @@ describe('real authenticated Writer readiness route never grants writing',()=>{
    declaredLivingWorkIds:[],
    mayWrite:false,releaseApproved:false,
   });
-  expect(pg).toHaveBeenCalledTimes(2);
+  expect(pg).toHaveBeenCalledTimes(3);
   for(const [sql] of pg.mock.calls){
    expect(String(sql)).not.toMatch(/\\b(?:INSERT|UPDATE|DELETE)\\b/i);
   }
@@ -262,7 +274,7 @@ describe('real authenticated Writer readiness route never grants writing',()=>{
   expect((await route(valid)).status).toBe(423);
   expect(auth).toHaveBeenCalledWith('fictional-safari-verified-token');
   expect(auth).toHaveBeenCalledTimes(1);
-  expect(pg).toHaveBeenCalledTimes(2);
+  expect(pg).toHaveBeenCalledTimes(3);
  });
  it('conflicting or malformed x-member-id and maia_member_id claims refuse BEFORE ownership lookup',async()=>{
   const cases:Record<string,string>[]=[
