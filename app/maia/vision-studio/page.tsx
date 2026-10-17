@@ -17,23 +17,30 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 import { VisionStudioRoom } from '@/components/maia/vision-studio/VisionStudioRoom';
 import { PracticeFieldEditor } from '@/components/maia/practice-field/PracticeFieldEditor';
+import {readVisionStudioQueryR62V,nextVisionStudioTabR62V,
+ type VisionStudioTabR62V} from '@/lib/maia/visionStudioRouteR62V';
 
 function VisionStudioInner() {
   const params = useSearchParams();
   const router = useRouter();
-  const tab = params.get('tab') ?? 'vision';
-  const phase = params.get('phase') ?? 'fire_1';
-  const fieldContext = params.get('fieldContext') ?? undefined;
+  const query = readVisionStudioQueryR62V(params);
 
-  function switchTab(t: string) {
-    if (t === 'living-field') {
-      router.push('/maia/living-field');
-      return;
-    }
-    const p = new URLSearchParams(params.toString());
-    p.set('tab', t);
-    router.replace(`/maia/vision-studio?${p.toString()}`);
+  function switchTab(t: VisionStudioTabR62V) {
+    const destination = nextVisionStudioTabR62V(params,t);
+    // No router state yet: a transition must not throw away an unobserved
+    // phase or the member's opaque fieldContext.
+    if (!destination) return;
+    if (t === 'living-field') router.push(destination);
+    else router.replace(destination);
   }
+
+  if (query.kind === 'unresolved') {
+    return <div className="min-h-screen bg-stone-950 flex items-center justify-center"
+      role="status" aria-live="polite">
+      <p className="text-stone-600 text-sm font-light">Opening the field…</p>
+    </div>;
+  }
+  const {tab,phase,fieldContext} = query;
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-200 flex flex-col">

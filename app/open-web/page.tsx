@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { resolveWebHandoffR61 } from '@/lib/mobile/resolvedWebHandoffR61';
 
 /**
  * open-web — mobile gate page
@@ -20,8 +20,6 @@ import { useState, useEffect } from 'react';
  * for Next.js static export compatibility.
  */
 
-const BASE_URL = 'https://soullab.life';
-
 const containerStyle: React.CSSProperties = {
   minHeight: '100vh',
   display: 'flex',
@@ -38,18 +36,13 @@ const containerStyle: React.CSSProperties = {
 
 function OpenWebContent() {
   const searchParams = useSearchParams();
-  const [destination, setDestination] = useState(BASE_URL);
-
-  useEffect(() => {
-    const to = searchParams.get('to');
-    if (to && to.startsWith('/')) {
-      setDestination(`${BASE_URL}${to}`);
-    }
-  }, [searchParams]);
+  // A changed, unavailable or untrusted query must NOT retain the previous
+  // member destination. Derive each navigation from the current verified path.
+  const destination = resolveWebHandoffR61(searchParams?.get('to'));
 
   function openInBrowser() {
     // On iOS Capacitor, window.open with _blank opens Safari
-    window.open(destination, '_blank', 'noopener,noreferrer');
+    window.open(destination.href, '_blank', 'noopener,noreferrer');
   }
 
   return (
@@ -77,7 +70,9 @@ function OpenWebContent() {
           lineHeight: 1.6,
         }}
       >
-        The full Soullab platform is available at{' '}
+        {destination.kind === 'verified_destination'
+          ? 'This destination is available in the Soullab web experience at '
+          : 'The requested route is unavailable or could not be verified. Open Soullab at '}{' '}
         <span style={{ color: '#C4A882' }}>soullab.life</span>
       </p>
 
@@ -96,7 +91,9 @@ function OpenWebContent() {
           letterSpacing: '0.01em',
         }}
       >
-        Open in Browser
+        {destination.kind === 'verified_destination'
+          ? 'Open in Browser'
+          : 'Open Soullab homepage'}
       </button>
 
       <button
