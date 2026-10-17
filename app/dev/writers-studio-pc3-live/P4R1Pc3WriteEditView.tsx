@@ -996,6 +996,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         } : null}
         currentText={currentText}
         sectionBody={currentBody}
+        passageLocus={props.held?.draftSectionId === props.focusId
+          ? { start: props.held.start, end: props.held.end, text: props.held.text }
+          : null}
         thread={props.editorialThread}
         version={props.suggestedVersion}
         lastMaiaTurn={props.lastMaiaEditorialTurn}
