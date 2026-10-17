@@ -48,6 +48,8 @@ function loadCjs(relativePath, imports) {
   instance.require = (id) => {
     if (id === 'next/server') return { NextRequest, NextResponse };
     if (id === 'node:crypto' || id === 'crypto') return require('node:crypto');
+    if (id === 'node:fs') return require('node:fs');
+    if (id === 'node:path') return require('node:path');
     if (imports.has(id)) return imports.get(id);
     if (id.startsWith('@/') || id.startsWith('./') || id.startsWith('../')) {
       return new Proxy(Object.create(null), {
@@ -141,12 +143,19 @@ function stubMap(state) {
   add('@/lib/consciousness/nameChangeDetection', {
     processNameChangeIfDetected:async()=>({detected:false,updated:false}),
   });
+  const actualPerry = loadCjs('lib/maia/knowledge/perrySourceLens.ts',
+    new Map([['@/lib/library/globalRetrievalAuthority', {
+      getGlobalLibraryAuthorityKeys: () => {
+        throw new Error('UNAUTHORIZED_CORPUS_AUTHORITY_READ_IN_FIXTURE');
+      },
+    }]]));
+  assert.equal(actualPerry.APPROVED_PERRY_EDITORIAL_SOURCE, null);
   add('@/lib/maia/knowledge/perrySourceLens', {
     buildPerrySourceLensAddendum(turn) {
       state.lensCalls.push(turn);
-      // Stage B production approval is NULL. No source, permission or
-      // prompt block is supplied by this fixture.
-      return null;
+      const answer = actualPerry.buildPerrySourceLensAddendum(turn);
+      state.lensResult = answer;
+      return answer;
     },
   });
   add('@/lib/ain/knowledge/GovernedRetrievalService', {
@@ -165,7 +174,7 @@ function stubMap(state) {
   return map;
 }
 
-async function invoke(state, requestBody) {
+async function invoke(state, requestBody, {enabled = true} = {}) {
   state.lensCalls = [];
   state.providerBoundaryReached = false;
   state.dispatchedToModel = false;
@@ -174,7 +183,7 @@ async function invoke(state, requestBody) {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => { throw new Error('NETWORK_FORBIDDEN_IN_FIXTURE'); };
   const originalEnv = process.env.MAIA_PERRY_SOURCE_LENS_ENABLED;
-  process.env.MAIA_PERRY_SOURCE_LENS_ENABLED = '1';
+  process.env.MAIA_PERRY_SOURCE_LENS_ENABLED = enabled ? '1' : '0';
   try {
     const route = loadCjs('app/api/sovereign/app/maia/list/route.ts', stubMap(state));
     const req = new NextRequest('http://127.0.0.1:49152/api/sovereign/app/maia/list', {
@@ -206,4 +215,63 @@ test('actual MAIA /list serving handler reaches Perry gate without model dispatc
   assert.equal(state.lensCalls[0].requestedLens, 'glenn-perry-astropsychology');
   assert.equal(state.lensCalls[0].isSanctuary, false);
   assert.ok([500,503].includes(result.status));
+});
+
+test('actual serving handler passes guest instead of forged client userId', async () => {
+  const state = { verifiedId:null, lensCalls:[] };
+  const result = await invoke(state, {
+    userId:'pretend-fake-member',
+    perrySourceLens:'glenn-perry-astropsychology',
+  });
+  assert.equal(state.dispatchedToModel, false);
+  assert.equal(state.providerBoundaryReached, true);
+  assert.equal(state.lensCalls.length, 1);
+  assert.equal(state.lensCalls[0].verifiedMemberId, null);
+  assert.equal(state.lensResult, null);
+  assert.ok([500,503].includes(result.status));
+});
+
+test('actual serving handler passes Sanctuary state to source gate', async () => {
+  const state = { verifiedId:'fictional-member', lensCalls:[] };
+  await invoke(state, {
+    perrySourceLens:'glenn-perry-astropsychology',
+    sanctuary:true,
+  });
+  assert.equal(state.providerBoundaryReached, true);
+  assert.equal(state.dispatchedToModel, false);
+  assert.equal(state.lensCalls.length, 1);
+  assert.equal(state.lensCalls[0].isSanctuary, true);
+  assert.equal(state.lensResult, null);
+});
+
+test('actual serving handler lets a member revoke selected astrology source', async () => {
+  const state = { verifiedId:'fictional-member', lensCalls:[] };
+  await invoke(state, {
+    perrySourceLens:'glenn-perry-astropsychology',
+    message:"I don't want astrology. Let's talk about feelings instead.",
+  });
+  assert.equal(state.providerBoundaryReached, true);
+  assert.equal(state.dispatchedToModel, false);
+  assert.equal(state.lensCalls[0].memberMessage,
+    "I don't want astrology. Let's talk about feelings instead.");
+  assert.equal(state.lensResult, null);
+});
+
+test('actual serving handler leaves lens disabled without explicit selection', async () => {
+  const state = { verifiedId:'fictional-member', lensCalls:[] };
+  await invoke(state, { message:'I feel pulled between safety and freedom.' });
+  assert.equal(state.providerBoundaryReached, true);
+  assert.equal(state.lensCalls.length, 1);
+  assert.equal(state.lensCalls[0].requestedLens, undefined);
+  assert.equal(state.lensResult, null);
+});
+
+test('actual serving handler ignores on-request selection when kill-switch is off', async () => {
+  const state = { verifiedId:'fictional-member', lensCalls:[] };
+  await invoke(state, { perrySourceLens:'glenn-perry-astropsychology' },
+    { enabled:false });
+  assert.equal(state.providerBoundaryReached, true);
+  assert.equal(state.lensCalls.length, 1);
+  assert.equal(state.lensCalls[0].enabled, false);
+  assert.equal(state.lensResult, null);
 });
