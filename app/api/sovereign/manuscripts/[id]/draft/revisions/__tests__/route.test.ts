@@ -43,6 +43,7 @@ function guardRow(over: Record<string, unknown> = {}) {
       {
         id: DRAFT,
         version: 7,
+        section_addressable_at: null,
         last_idempotency_key: null,
         last_idempotency_op: null,
         last_idempotency_payload_hash: null,
@@ -65,7 +66,11 @@ function jsonRequest(method: string, body?: unknown): NextRequest {
   );
 }
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockQuery.mockReset();
+  mockAuth.mockReset();
+});
 
 describe('revisions — auth & isolation', () => {
   it('GET returns 401 when unauthenticated', async () => {
@@ -93,7 +98,7 @@ describe('GET — list', () => {
   it('lists revisions newest-first without content bodies', async () => {
     mockAuth.mockResolvedValue(MEMBER);
     mockQuery
-      .mockResolvedValueOnce({ rows: [{ id: DRAFT }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: DRAFT, section_addressable_at: null }], rowCount: 1 })
       .mockResolvedValueOnce({
         rows: [
           { revision_number: 2, note: null, content_chars: 120, created_at: 't2' },
@@ -105,13 +110,15 @@ describe('GET — list', () => {
     expect(res.status).toBe(200);
     const payload = await res.json();
     expect(payload.draftId).toBe(DRAFT);
+    expect(payload.sectionAddressable).toBe(false);
     expect(payload.revisions).toEqual([
-      { revisionNumber: 2, note: null, contentChars: 120, createdAt: 't2' },
+      { revisionNumber: 2, note: null, contentChars: 120, createdAt: 't2', restorable: true },
       {
         revisionNumber: 1,
         note: 'Initialized verbatim from source',
         contentChars: 100,
         createdAt: 't1',
+        restorable: true,
       },
     ]);
   });

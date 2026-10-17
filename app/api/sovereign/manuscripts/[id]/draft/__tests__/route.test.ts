@@ -64,6 +64,9 @@ function guardRow(over: Record<string, unknown> = {}) {
       {
         id: DRAFT,
         version: 7,
+        // PostgreSQL returns SQL NULL, never an absent property. The real route
+        // intentionally treats undefined as an unverified section-native state.
+        section_addressable_at: null,
         last_idempotency_key: null,
         last_idempotency_op: null,
         last_idempotency_payload_hash: null,
@@ -126,19 +129,29 @@ describe('POST — create from source', () => {
       .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // no existing draft
       .mockResolvedValueOnce({
         rows: [
-          { heading: 'One', body: 'First words.' },
-          { heading: null, body: 'Second words.' },
+          { id: '44444444-4444-4444-8444-444444444441', heading: 'One', body: 'First words.' },
+          { id: '44444444-4444-4444-8444-444444444442', heading: null, body: 'Second words.' },
         ],
         rowCount: 2,
       }) // sections
-      .mockResolvedValueOnce({ rows: [{ id: DRAFT }], rowCount: 1 }) // insert draft
-      .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // insert revision 1
+      .mockResolvedValueOnce({ rows: [{ id: DRAFT }], rowCount: 1 }) // insert Draft
+      .mockResolvedValueOnce({ rows: [], rowCount: 2 }) // insert section partition
+      .mockResolvedValueOnce({ rows: [
+        { id: '55555555-5555-4555-8555-555555555551', text: 'One\n\nFirst words.\n\n' },
+        { id: '55555555-5555-4555-8555-555555555552', text: 'Second words.\n' },
+      ], rowCount: 2 }) // read back minted section IDs before revision
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // append immutable revision 1
 
     const res = await POST(jsonRequest('POST'), ctx);
     expect(res.status).toBe(201);
     const payload = await res.json();
     expect(payload.id).toBe(DRAFT);
     expect(payload.revisionCount).toBe(1);
+    expect(payload.sectionAddressable).toBe(true);
+    expect(payload.sections).toEqual([
+      { id: '55555555-5555-4555-8555-555555555551', text: 'One\n\nFirst words.\n\n' },
+      { id: '55555555-5555-4555-8555-555555555552', text: 'Second words.\n' },
+    ]);
     expect(payload.baseSourceHash).toBe('hash-abc123');
     // Real composition (no mock): headings as plain lines, never `# ` markup —
     // the draft is a writing surface; markdown scaffolding stays in the render
@@ -158,6 +171,21 @@ describe('POST — create from source', () => {
     expect(revisionInsert).toBeDefined();
     expect(revisionInsert![1][0]).toBe(DRAFT);
     expect(revisionInsert![1][1]).toBe('One\n\nFirst words.\n\nSecond words.\n');
+    const savedPartition = JSON.parse(revisionInsert![1][3] as string);
+    expect(savedPartition).toHaveLength(2);
+    expect(savedPartition.map((part: { sectionId: string }) => part.sectionId)).toEqual([
+      '55555555-5555-4555-8555-555555555551',
+      '55555555-5555-4555-8555-555555555552',
+    ]);
+    // Frozen revision boundaries cover exactly the content produced by the
+    // server-minted sections. Never infer or reorder section identities.
+    const firstSlice = 'One\n\nFirst words.\n\n';
+    const total = Array.from(payload.content).length;
+    const firstEnd = Array.from(firstSlice).length;
+    expect(savedPartition).toEqual([
+      { sectionId: '55555555-5555-4555-8555-555555555551', start: 0, end: firstEnd },
+      { sectionId: '55555555-5555-4555-8555-555555555552', start: firstEnd, end: total },
+    ]);
   });
 
   it('returns 409 when a draft already exists', async () => {
@@ -181,11 +209,20 @@ describe('POST — create from source', () => {
 });
 
 describe('PUT — autosave and checkpoint', () => {
-  it('rejects a non-string content with 400', async () => {
+  it('rejects a non-string content with 400 without any writing', async () => {
     mockAuth.mockResolvedValue(MEMBER);
+    // The draft representation must be fetched before deciding whether this
+    // is an older content-based Draft or a section-native Draft. The returned
+    // column is SQL NULL, not JS undefined. A SELECT is allowed; a write is not.
+    mockQuery.mockResolvedValueOnce(guardRow());
     const res = await PUT(jsonRequest('PUT', { content: 42, ...GUARD }), ctx);
     expect(res.status).toBe(400);
-    expect(mockQuery).not.toHaveBeenCalled();
+    expect(await res.json()).toEqual({ error: 'content must be a string' });
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+    expect(String(mockQuery.mock.calls[0][0]).trim()).toMatch(/^SELECT/);
+    expect(mockQuery.mock.calls.filter(
+      (c) => /^\s*(?:INSERT|UPDATE|DELETE)/.test(String(c[0]))
+    )).toHaveLength(0);
   });
 
   it('refuses a save that carries no guard — an unguarded write cannot be safe', async () => {
@@ -258,6 +295,7 @@ describe('GET — load draft', () => {
       rows: [
         {
           id: DRAFT,
+          section_addressable_at: null,
           content: 'the words',
           base_source_hash: 'hash-abc123',
           revision_count: 2,
@@ -273,6 +311,7 @@ describe('GET — load draft', () => {
     expect(await res.json()).toEqual({
       id: DRAFT,
       manuscriptId: MANUSCRIPT,
+      sectionAddressable: false,
       content: 'the words',
       baseSourceHash: 'hash-abc123',
       revisionCount: 2,
