@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.ws-beta-shipping-auth-actions.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "components/mobile/MobileRouteGuard.tsx",
+    "lib/mobile/resolvedMobileRoutePath.ts",
+    "components/mobile/__tests__/MobileRouteGuard.pathname.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}

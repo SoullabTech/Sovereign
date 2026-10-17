@@ -35,6 +35,7 @@ import {
 } from '@/lib/mobile/mobileEntitlements';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
 import { apiFetch } from '@/lib/http/apiBase';
+import { isResolvedMobileRoutePath } from '@/lib/mobile/resolvedMobileRoutePath';
 
 // ─── Lazy Capacitor import ────────────────────────────────────────────────────
 // Capacitor is a native-only dependency. Import lazily so SSR / web builds
@@ -174,6 +175,14 @@ export function MobileRouteGuard({ children }: MobileRouteGuardProps) {
       return;
     }
 
+    // An unresolved Next.js pathname is NOT an authorized native route.
+    // Do not classify null as a web-only destination or carry over a prior
+    // route's allowed state while navigation has no verified destination.
+    if (!isResolvedMobileRoutePath(pathname)) {
+      setState('checking');
+      return;
+    }
+
     // Native launch can land on '/' if the index.html → /enter redirect
     // doesn't navigate on Android (Capacitor's asset resolver doesn't
     // always auto-fallback to enter.html for the bare /enter path).
@@ -221,6 +230,13 @@ export function MobileRouteGuard({ children }: MobileRouteGuardProps) {
       }
     });
   }, [pathname]);
+
+  // The render-time check closes the gap before the navigation effect runs.
+  // On the web this component is a pass-through, even during route hydration.
+  // On native, no route is displayed until Next gives a usable pathname.
+  if (!isResolvedMobileRoutePath(pathname)) {
+    return isNativePlatform() ? null : <>{children}</>;
+  }
 
   if (state === 'checking') {
     // Show nothing while checking (avoids flash of wrong screen)
