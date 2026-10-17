@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.r57-private-real-session.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/writersStudio/recovery/heldNextAuthorAdmissionR61.ts",
+    "lib/writersStudio/recovery/__tests__/heldNextAuthorAdmissionR61.test.ts",
+    "lib/writersStudio/recovery/heldRealSessionWorkAdmissionR56.ts",
+    "lib/writersStudio/recovery/heldRealPrivateEditorialR57.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
