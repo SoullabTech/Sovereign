@@ -32,6 +32,51 @@ const { createUtteranceBuffer } = require('../src/voice/utterance.js');
 const { createConversation, explain, readErrorBody, multipartWav, BOUNDARY } = require('../src/conversation.js');
 const { createSession } = require('../src/session.js');
 
+// RF01 fixture: the member deliberately selects Continuity, the canonical
+// thread is verified by a fictional GET, and the content-free receipt matches
+// the exchange. These are test-side responses only, never a production bypass.
+function fictionalConsentedConversation(opts) {
+  const upstream = opts.session.authedFetch;
+  const session = {
+    ...opts.session,
+    authedFetch: async (path, init) => {
+      if (path === '/api/conversation/turns') {
+        return { ok: true, status: 200, res: {
+          json: async () => ({ success: true, messages: [] }),
+        } };
+      }
+      if (path === '/api/sovereign/privacy/turn-consent') {
+        const body = JSON.parse(init.body);
+        return { ok: true, status: 200, res: {
+          json: async () => ({
+            ok: true, exchangeId: body.exchangeId,
+            sessionId: body.sessionId, privacyChoice: body.privacyChoice,
+          }),
+        } };
+      }
+      return upstream(path, init);
+    },
+  };
+  const conv = createConversation({ ...opts, session });
+  const chosen = conv.choosePrivacy('continuity');
+  assert.equal(chosen.ok, true);
+  const joined = conv.adoptMemberThread();
+  const originalTranscribe = conv.transcribe;
+  const originalAsk = conv.ask;
+  conv.transcribe = async (...args) => {
+    const out = await joined;
+    assert.equal(out.ok, true);
+    return originalTranscribe(...args);
+  };
+  conv.ask = async (...args) => {
+    const out = await joined;
+    assert.equal(out.ok, true);
+    return originalAsk(...args);
+  };
+  return conv;
+}
+
+
 // ── ⭐ the class E regression ───────────────────────────────────────────────
 
 test('CLASS E REGRESSION — the frame handler buffers audio and dispatches a turn', () => {
@@ -220,7 +265,7 @@ test('the transcription gate is reported, never bypassed', () => {
 
 test('conversation reports failures instead of going quiet', async () => {
   const events = [];
-  const conv = createConversation({
+  const conv = fictionalConsentedConversation({
     session: { authedFetch: async () => ({ ok: false, status: 410, res: { json: async () => ({}) } }) },
     diagnostics: { emit: (e) => events.push(e) },
     sessionId: 's1',
@@ -233,7 +278,7 @@ test('conversation reports failures instead of going quiet', async () => {
 
 test('MAIA text reaches the surface but never telemetry', async () => {
   const events = [];
-  const conv = createConversation({
+  const conv = fictionalConsentedConversation({
     session: { authedFetch: async () => ({ ok: true, status: 200, res: { json: async () => ({ message: 'what is asking to be said', audio: { audioBase64: 'AAA', format: 'mp3' } }) } }) },
     diagnostics: { emit: (e, m) => events.push({ e, m }) },
     sessionId: 's1',
@@ -365,7 +410,7 @@ test('there is no client-side size ceiling — the server log disproved it', asy
   const src = strip('conversation.js');
   assert.ok(!/TRANSPORT_CEILING_BYTES/.test(src), 'the retracted size ceiling is still in the code');
   const sent = [];
-  const conv = createConversation({
+  const conv = fictionalConsentedConversation({
     session: { authedFetch: async () => { sent.push(1); return { ok: true, status: 200, res: { json: async () => ({ transcription: 'ok' }) } }; } },
     diagnostics: { emit: () => {} },
     sessionId: 'x',
@@ -378,7 +423,7 @@ test('there is no client-side size ceiling — the server log disproved it', asy
 
 test('a 5xx that never reached the route is retried', async () => {
   const attempts = [];
-  const conv = createConversation({
+  const conv = fictionalConsentedConversation({
     session: {
       authedFetch: async () => {
         attempts.push(1);
@@ -398,7 +443,7 @@ test('a 5xx that never reached the route is retried', async () => {
 
 test('the retry is narrow — never on 4xx, and bounded on 5xx', async () => {
   const attempts = [];
-  const mk = (status, bodyText) => createConversation({
+  const mk = (status, bodyText) => fictionalConsentedConversation({
     session: { authedFetch: async () => { attempts.push(status); return { ok: false, status, res: { text: async () => bodyText } }; } },
     diagnostics: { emit: () => {} },
     sessionId: 'x',
@@ -418,7 +463,7 @@ test('the retry is narrow — never on 4xx, and bounded on 5xx', async () => {
 });
 test('the level of a sent utterance is measured, so an empty transcript is diagnosable', async () => {
   const events = [];
-  const conv = createConversation({
+  const conv = fictionalConsentedConversation({
     session: { authedFetch: async () => ({ ok: true, status: 200, res: { json: async () => ({ transcription: 'x' }) } }) },
     diagnostics: { emit: (n, m) => events.push([n, m]) },
     sessionId: 'x',
@@ -463,7 +508,7 @@ test('the WAV survives the envelope byte for byte', () => {
 
 test('the request declares multipart with the same boundary it wrote', async () => {
   const seen = [];
-  const conv = createConversation({
+  const conv = fictionalConsentedConversation({
     session: { authedFetch: async (p, init) => { seen.push(init); return { ok: true, status: 200, res: { json: async () => ({ transcription: 'x' }) } }; } },
     diagnostics: { emit: () => {} },
     sessionId: 'x',

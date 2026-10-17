@@ -366,12 +366,55 @@ const lifecycle = createVoiceLifecycle({
   projectState: () => voiceStateSnapshot(),
 });
 
+// RF01 S0-B native privacy authority is held ONLY in main's current,
+// authenticated conversation. The renderer can offer a deliberate choice,
+// but cannot set a member ID, session ID, or pretend a receipt exists.
+function currentPrivacy() {
+  return conversation && memberSession && memberSession.state().signedIn
+    ? conversation.privacyState()
+    : { privacyChoice: null, ready: false };
+}
+
 // ── IPC — every handler validates in MAIN; nothing is taken on trust ────────
+
+ipcMain.handle('maia:privacy-state', async () => currentPrivacy());
+
+ipcMain.handle('maia:choose-privacy', async (_evt, payload) => {
+  if (!memberSession || !memberSession.state().signedIn || !conversation) {
+    return { ok: false, error: 'Sign in to choose your conversation privacy.' };
+  }
+  if (voice || authority.snapshot().turn.state !== 'idle') {
+    return { ok: false, error: 'Finish or stop the current turn before choosing privacy.' };
+  }
+  const selected = conversation.choosePrivacy(payload && payload.choice);
+  if (!selected.ok) return selected;
+
+  if (selected.privacyChoice === 'continuity') {
+    // Read old member history only AFTER the deliberate choice, never at
+    // startup. A failed join cannot authorize sending on a guessed thread.
+    const joined = await continuity.join();
+    if (!joined || !joined.ok) {
+      const state = currentPrivacy();
+      broadcast('maia:privacy-state', state);
+      return { ok: false, error: (joined && joined.error) ||
+        'Could not verify your existing conversation. Try again.' };
+    }
+  } else {
+    // Sanctuary must not join earlier member history merely by sign-in.
+    continuity.stop();
+  }
+  const state = currentPrivacy();
+  broadcast('maia:privacy-state', state);
+  return { ok: true, ...state };
+});
 
 ipcMain.handle('maia:voice-start', async (_evt, payload) => {
   if (voice) return { ok: false, reason: 'already capturing' };
   if (!memberSession || !memberSession.state().signedIn) {
     return { ok: false, reason: 'sign in before speaking' };
+  }
+  if (currentPrivacy().privacyChoice !== 'continuity' || !currentPrivacy().ready) {
+    return { ok: false, reason: 'Choose Continuity and confirm your thread before voice. Sanctuary voice awaits separate processing permission.' };
   }
   voice = newVoiceSession();
   // Clamped in MAIN. A wrong sample rate produces a WAV header that lies, and
@@ -424,6 +467,9 @@ ipcMain.handle('maia:send-text', async (_evt, payload) => {
 
   if (!memberSession || !memberSession.state().signedIn || !conversation) {
     return { ok: false, error: 'sign in before writing' };
+  }
+  if (!currentPrivacy().ready) {
+    return { ok: false, error: 'Choose and confirm conversation privacy before sending.' };
   }
   // ⛔ ONE TURN AT A TIME IS THE AUTHORITY'S ANSWER, not a second check here.
   // `turn.say` dispatches SEND_TEXT and is refused if a turn is already open,
@@ -658,6 +704,7 @@ function teardownMemberState(reason) {
   });
   conversation = null;
   continuity.stop();
+  broadcast('maia:privacy-state', { privacyChoice: null, ready: false });
   // ⛔ Destroy, not hide. The cookie goes with the view.
   if (platformShell) void platformShell.destroy();
   desktopPlace = MAIA;

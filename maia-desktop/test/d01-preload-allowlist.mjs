@@ -40,6 +40,15 @@ export const RATIFIED_INVOKE_CHANNELS = [
   //   doctrine-compat   it forwards WORDS, the same thing `voice-frame`
   //                     forwards as audio. It grants the renderer no authority
   //                     it did not already have by speaking aloud.
+  // RF01 S0-B locally implemented, still awaiting independent release
+  // ratification. Two narrow verbs are essential: member-intent choice and
+  // read-only state. No arbitrary object, member ID, token, or route travels.
+  { channel: 'maia:choose-privacy',
+    ratified_in: 'RF01 S0-B local candidate (release ratification pending)',
+    purpose: 'Carry one deliberately chosen Sanctuary or Continuity enum to MAIN. MAIN verifies sign-in, idle turn, immutable per-encounter choice, and canonical thread adoption before allowing a Send. The renderer cannot pass a member, session, token, URL, or consent receipt.' },
+  { channel: 'maia:privacy-state',
+    ratified_in: 'RF01 S0-B local candidate (release ratification pending)',
+    purpose: 'Read the current encounter privacy projection from MAIN, not a browser default. Returns only the selected enum and whether the canonical thread is confirmed; it contains no writing, credential, or cross-member identifier.' },
   { channel: 'maia:send-text', ratified_in: 'DESKTOP-TEXT-01',
     purpose: 'Send a typed message to the SAME MAIA the member speaks to. Main trims and caps the text, ends any live capture with normal member-Stop semantics first (text and voice are mutually exclusive), and delivers it through the one shared turn path — same route, same thread, same context assembly, same rendering. The renderer names nothing but the words.' },
   { channel: 'maia:playback-ended', ratified_in: 'DESKTOP-CONVERSATION-WIRING-01',
@@ -59,6 +68,9 @@ export const RATIFIED_PUSH_CHANNELS = [
     purpose: 'Diagnostic events, outward only. Privacy-safe by construction — the emitter refuses non-allowlisted string metadata.' },
   { channel: 'maia:voice-state-changed', ratified_in: 'MAIA-D01',
     purpose: 'Voice state snapshot, outward only.' },
+  { channel: 'maia:privacy-state',
+    ratified_in: 'RF01 S0-B local candidate (release ratification pending)',
+    purpose: 'Tell the native renderer which deliberate encounter choice MAIN holds and whether that choice authorizes Send. This is a projection after sign-in, refusal, and sign-out; no token, member ID, transcript, or provider permission is exposed.' },
   { channel: 'maia:thread', ratified_in: 'MAIA-D04',
     purpose: 'Which conversation Desktop joined, outward only: whether a thread was resumed, its id, and the tail of its turns so the member opens on what was actually said. The turns are the member\'s own words and MAIA\'s, already theirs on every other surface — they go to the surface, never to telemetry. An adoption failure is reported here too, because a silent failure would fork the conversation.' },
 ];

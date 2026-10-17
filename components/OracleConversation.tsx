@@ -10639,6 +10639,7 @@ I'm not sure what I'm feeling yet.`;
       <QuickSettingsSheet
         isOpen={showAudioSettings}
         onClose={() => setShowAudioSettings(false)}
+        privacyChoice={explicitSessionPrivacyChoice}
       />
 
       {/* Voice HUD - DISABLED - Removed per user request

@@ -14,6 +14,8 @@ import { InsightTrigger } from '@/components/guidance/InsightTrigger';
 interface QuickSettingsSheetProps {
   isOpen: boolean;
   onClose: () => void;
+  /** The live encounter's explicit choice, never an inferred browser default. */
+  privacyChoice?: 'sanctuary' | 'continuity' | null;
 }
 
 interface MaiaSettings {
@@ -71,7 +73,7 @@ const DEFAULT_SETTINGS: MaiaSettings = {
   },
 };
 
-export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps) {
+export function QuickSettingsSheet({ isOpen, onClose, privacyChoice = null }: QuickSettingsSheetProps) {
   const [settings, setSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
   const [userId, setUserId] = useState<string | null>(null);
   const [streamingVoiceEnabled, setStreamingVoiceEnabled] = useState(false);
@@ -164,6 +166,8 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
   }, [isOpen]); // Removed supabase dependency (no longer used)
 
   const updateSetting = async (path: string, value: any) => {
+    // No local or cached settings value is consent authority.
+    if (path === 'sanctuary') return;
     if ('vibrate' in navigator) {
       navigator.vibrate(5);
     }
@@ -309,69 +313,39 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, staggerChildren: 0.1 }}
               >
-                {/* Sanctuary Session Toggle - The Trust Lever */}
+                {/* RF01 S0-B: read-only projection of the encounter's real
+                    privacy choice. A second localStorage toggle may NEVER
+                    grant remembrance or withdraw Sanctuary. */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                   className="pb-4 border-b border-white/10"
                 >
-                  <motion.button
-                    onClick={() => updateSetting('sanctuary', !settings.sanctuary)}
-                    className={`w-full p-4 rounded-xl border transition-all ${
-                      settings.sanctuary
-                        ? 'border-emerald-500/50 bg-emerald-500/15'
-                        : 'border-white/10 bg-black/20'
-                    }`}
-                    whileTap={{ scale: 0.98 }}
-                    whileHover={{ scale: 1.01 }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <motion.div
-                          className={`p-2 rounded-lg ${
-                            settings.sanctuary
-                              ? 'bg-emerald-500/20 text-emerald-400'
-                              : 'bg-white/5 text-white/40'
-                          }`}
-                          animate={settings.sanctuary ? {
-                            scale: [1, 1.1, 1],
-                          } : {}}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Shield size={20} />
-                        </motion.div>
-                        <div className="text-left">
-                          <div className={`text-sm font-medium flex items-center gap-1.5 ${
-                            settings.sanctuary ? 'text-emerald-300' : 'text-white/80'
-                          }`}>
-                            Sanctuary Session
-                            <InsightTrigger featureKey="maia.sanctuary" />
-                          </div>
-                          <div className="text-xs text-white/50 mt-0.5">
-                            {settings.sanctuary
-                              ? "This session won't be saved to memory. Speak freely."
-                              : "MAIA may remember what's helpful for continuity."}
-                          </div>
-                          {settings.sanctuary && (
-                            <div className="text-[10px] text-emerald-400/60 mt-1">
-                              No patterns formed. This session leaves no memory behind.
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {/* Toggle Switch */}
-                      <div className={`w-12 h-7 rounded-full p-1 transition-colors ${
-                        settings.sanctuary ? 'bg-emerald-500' : 'bg-white/20'
-                      }`}>
-                        <motion.div
-                          className="w-5 h-5 rounded-full bg-white shadow-md"
-                          animate={{ x: settings.sanctuary ? 20 : 0 }}
-                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                        />
+                  <div role="status" aria-live="polite"
+                    className="w-full rounded-xl border border-white/20 bg-black/20 p-4">
+                    <div className="flex items-center gap-3">
+                      <Shield size={20} className="shrink-0 text-emerald-300" />
+                      <div className="text-left">
+                        <p className="text-sm font-medium text-white/90">
+                          {privacyChoice === 'sanctuary' ? 'Sanctuary chosen' :
+                            privacyChoice === 'continuity' ? 'Continuity chosen' :
+                            'Privacy choice required'}
+                        </p>
+                        <p className="text-xs text-white/60 mt-1">
+                          {privacyChoice === 'sanctuary'
+                            ? 'This encounter is protected from ordinary memory storage.'
+                            : privacyChoice === 'continuity'
+                              ? 'You have explicitly allowed remembrance for this encounter.'
+                              : 'Choose how MAIA may remember in the conversation before sending.'}
+                        </p>
+                        <p className="text-xs text-white/40 mt-2">
+                          Privacy cannot be changed by Quick Settings. A new encounter
+                          requires a new choice. Provider and voice processing are separate permissions.
+                        </p>
                       </div>
                     </div>
-                  </motion.button>
+                  </div>
                 </motion.div>
 
                 <motion.div
