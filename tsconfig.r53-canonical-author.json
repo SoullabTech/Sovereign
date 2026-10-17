@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.r52-legacy-fence-core.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "lib/writersStudio/recovery/heldCanonicalAuthorJourneyR53.ts",
+    "lib/writersStudio/recovery/__tests__/heldCanonicalAuthorJourneyR53.test.ts",
+    "scripts/ops/__tests__/r39ActualSignedSectionPG16.test.ts",
+    "scripts/ops/__tests__/r53ColdPG16UndoState.test.ts",
+    "scripts/ops/wsBetaR53CanonicalAuthorPG16.ts",
+    "lib/writersStudio/recovery/heldCanonicalReviewR43.ts",
+    "lib/writersStudio/recovery/heldDurableSignedApplyR46.ts",
+    "lib/writersStudio/recovery/heldDurableUndoR47.ts",
+    "lib/writersStudio/exactLiveSelectionR41.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
