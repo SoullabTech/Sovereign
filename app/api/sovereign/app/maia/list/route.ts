@@ -1102,6 +1102,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     try {
       const perryLensAddendum = buildPerrySourceLensAddendum({
         requestedLens: requestedPerrySourceLens,
+        memberMessage: message,
         verifiedMemberId: isRecognizedUser ? userId : null,
         isSanctuary,
         enabled: process.env.MAIA_PERRY_SOURCE_LENS_ENABLED === '1',
