@@ -255,6 +255,20 @@ test('fictional HTTP requests exercise actual helper with verified-session simul
     const explicit = await post({ perrySourceLens: validSelection }, 'fictional-valid-token');
     assert.equal(explicit.sourceLensApplied, true);
     assert.ok(explicit.prompt.includes('Glenn Perry'));
+    const inventedChart = {
+      fictionalOnly: true, birthDate: '1998-06-20', birthTime: null,
+      clientClaimedAscendant: 'Capricorn', claimedHouse: '12',
+    };
+    const chartWithoutOptIn = await post({ chartData: inventedChart },
+      'fictional-valid-token');
+    assert.equal(chartWithoutOptIn.sourceLensApplied, false);
+    const selectedWithUnverifiedChart = await post({
+      perrySourceLens: validSelection, chartData: inventedChart,
+    }, 'fictional-valid-token');
+    assert.equal(selectedWithUnverifiedChart.sourceLensApplied, true);
+    assert.ok(!selectedWithUnverifiedChart.prompt.includes('Capricorn'));
+    assert.ok(!selectedWithUnverifiedChart.prompt.includes('1998-06-20'));
+    assert.ok(selectedWithUnverifiedChart.prompt.includes('Never invent natal placements'));
     const absent = await post({ message: 'A normal talk about feelings' }, 'fictional-valid-token');
     assert.equal(absent.sourceLensApplied, false);
     const privateSession = await post({ perrySourceLens: validSelection, sanctuary: true },
