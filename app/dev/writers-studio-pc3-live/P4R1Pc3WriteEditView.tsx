@@ -801,7 +801,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             end:props.held.end,text:props.held.text,
             generation:props.held.revisionNumber,
           }:null}
-          hasUnsavedWork={props.writing.hasUnsavedWork()}/> : null}
+          hasUnsavedWork={props.writing.hasUnsavedWork()}
+          onVerifiedRevision={()=>props.onR71VerifiedRevision?.()}/> : null}
         {/* LOCAL FICTIONAL ONLY: never activates R54/R53 production transport. */}
         {R71_FICTIONAL_LOCAL_EDITORIAL ? <R71FixtureEditorialBridge
           manuscriptId={props.context.manuscriptId}

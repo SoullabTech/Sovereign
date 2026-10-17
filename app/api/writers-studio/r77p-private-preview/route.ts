@@ -13,6 +13,10 @@ import {requireR72CurrentConsent,R72Refused} from '@/lib/writersStudio/recovery/
 import {sealPendingR76,openPendingR76,R76Refused} from '@/lib/writersStudio/provenance/heldConfidentialCandidateR76';
 import {servingIdentityFor} from '@/lib/consciousness/servingIdentity';
 import type {R75Scope} from '@/lib/writersStudio/provenance/editorialModelProducerR75';
+import {enabledR79,bindR79ExactPassage,R79Refused}
+ from '@/lib/writersStudio/recovery/r79PrivateChoice';
+import {splitStoredSection}
+ from '@/lib/manuscript/sections/sectionProjection';
 
 export const dynamic='force-dynamic';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -32,7 +36,8 @@ const enabled=(req:NextRequest)=>
 const instructionSHA=createHash('sha256')
  .update('R77P synthetic confidential preview: no model invoked').digest('hex');
 const sampleResponse={
- text:'A fictional candle glows beside the remembered river.',
+ text:process.env.R79_PRIVATE_AUTHOR_FIXTURE==='fictional-only'?
+  'fictional candle':'A fictional candle glows beside the remembered river.',
  provider:'ollama' as const,model:'qwen2.5:7b',
  serving:servingIdentityFor({
   intendedProvider:'anthropic',intendedModel:'claude-sonnet-4-6',
@@ -59,15 +64,17 @@ function syntheticKeys(){
   privateKey:createPrivateKey(Buffer.from(priv,'base64').toString('utf8')),
   publicKey:createPublicKey(Buffer.from(pub,'base64').toString('utf8'))};
 }
-type ScopeHead={id:string;version:string};
+type ScopeHead={id:string;version:string;stored_text:string;heading:string|null};
 async function currentScope(memberId:string,manuscriptId:string,sectionId:string){
  return transaction(async tx=>{
   const consent=await requireR72CurrentConsent(tx,memberId);
   const result=await tx.query<ScopeHead>(
-   `SELECT d.id,d.version FROM manuscript_working_drafts d
+   `SELECT d.id,d.version,ds.text AS stored_text,ms.heading
+      FROM manuscript_working_drafts d
      JOIN member_manuscripts m ON m.id=d.manuscript_id
       AND m.member_id=d.member_id
      JOIN manuscript_draft_sections ds ON ds.draft_id=d.id
+     LEFT JOIN manuscript_sections ms ON ms.id=ds.source_section_id
     WHERE m.id=$1 AND m.member_id=$2 AND ds.id=$3
       AND d.section_addressable_at IS NOT NULL
     LIMIT 1`,[manuscriptId,memberId,sectionId]);
@@ -76,7 +83,7 @@ async function currentScope(memberId:string,manuscriptId:string,sectionId:string
  });
 }
 function fail(e:unknown){
- if(e instanceof R76Refused||e instanceof R72Refused){
+ if(e instanceof R76Refused||e instanceof R72Refused||e instanceof R79Refused){
   const reason=e.reason;
   const code=/not_author_owned|not_owned|missing/.test(reason)?404:
    /consent|unapproved|writer_beta/.test(reason)?403:409;
@@ -101,12 +108,41 @@ export async function POST(req:NextRequest){
   const o:unknown=JSON.parse(raw);
   if(!o||typeof o!=='object'||Array.isArray(o))return refusal('invalid_action',400);
   const data=o as Record<string,unknown>;
-  if(Object.keys(data).sort().join(',')!=='kind,manuscriptId,sectionId'||
+  const r79=enabledR79();
+  const keys=Object.keys(data).sort().join(',');
+  if(keys!==(r79?'expectedGeneration,kind,manuscriptId,sectionId,selected':
+       'kind,manuscriptId,sectionId')||
     data.kind!=='stage_fictional_private_candidate'||
     typeof data.manuscriptId!=='string'||!UUID.test(data.manuscriptId)||
     typeof data.sectionId!=='string'||!UUID.test(data.sectionId))
    return refusal('invalid_action',400);
+  let exact:null|{start:number;end:number;text:string}=null;
+  if(r79){
+   const s=data.selected;
+   if(!s||typeof s!=='object'||Array.isArray(s)||
+     Object.keys(s).sort().join(',')!=='end,start,text')
+    return refusal('invalid_exact_selection',400);
+   const picked=s as Record<string,unknown>;
+   if(!Number.isSafeInteger(picked.start)||!Number.isSafeInteger(picked.end)||
+      (picked.start as number)<0||
+      (picked.end as number)<=(picked.start as number)||
+      (picked.end as number)-(picked.start as number)>1200||
+      typeof picked.text!=='string'||!picked.text.trim()||
+      !Number.isSafeInteger(data.expectedGeneration)||
+      (data.expectedGeneration as number)<1)
+    return refusal('invalid_exact_selection',400);
+   exact={start:picked.start as number,end:picked.end as number,
+     text:picked.text as string};
+  }
   const active=await currentScope(memberId,data.manuscriptId,data.sectionId);
+  if(r79&&Number(active.head.version)!==data.expectedGeneration)
+   return refusal('stale_base',409);
+  if(r79&&exact){
+   const body=splitStoredSection(
+    active.head.stored_text,active.head.heading)?.body;
+   if(!body||Array.from(body).slice(exact.start,exact.end).join('')!==
+     exact.text)return refusal('exact_selection_moved',409);
+  }
   const {workKey,contentSecret,privateKey,publicKey}=syntheticKeys();
   const versionId=randomUUID();
   const scope:R75Scope={
@@ -123,6 +159,14 @@ export async function POST(req:NextRequest){
    issuer:{contentSecret,signingKey:privateKey,nowMs:Date.now()},
    publicKey,
   });
+  if(r79&&exact){
+   await bindR79ExactPassage({
+    memberId,manuscriptId:data.manuscriptId,
+    draftId:active.head.id,sectionId:data.sectionId,
+    baseVersion:Number(active.head.version),pendingId:versionId,
+    passage:exact,
+   });
+  }
   return privateWriterNoStore(NextResponse.json({
    kind:'r77p_fictional_candidate_sealed',
    pendingId:receipt.reservedVersionId,mayApply:false,mayUndo:false,

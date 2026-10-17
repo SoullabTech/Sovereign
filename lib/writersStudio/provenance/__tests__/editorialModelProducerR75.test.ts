@@ -122,10 +122,24 @@ describe('R75 server-witnessed actual served model, not browser claim',()=>{
   const made=issue()!;
   expect(verify(mutated(made,x=>{x.assertion.producer.servedModel='fake';})).kind)
    .toBe('r75_producer_unverified');
-  expect(verify(mutated(made,x=>{x.signature=x.signature.slice(0,-2)+'AA';})).kind)
+  expect(verify(mutated(made,x=>{x.signature=(x.signature[0]==='A'?'B':'A')+x.signature.slice(1);})).kind)
    .toBe('r75_producer_unverified');
   expect(verify(made,{},fake.text,secret,other.publicKey).kind)
    .toBe('r75_producer_unverified');
+ });
+ it('refuses noncanonical alternate encodings of the EXACT same Ed25519 bytes',()=>{
+  const made=issue()!;
+  const abc='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  const last=made.signature.at(-1)!;
+  const alias=made.signature.slice(0,-1)+abc[abc.indexOf(last)^1];
+  expect(alias).not.toBe(made.signature);
+  // Ed25519 signatures are 64 bytes: the final base64url character contains
+  // four unused low bits. Without strict canonicalization these two TEXT
+  // receipts decode to the SAME signed bytes.
+  expect(Buffer.from(alias,'base64url').equals(
+   Buffer.from(made.signature,'base64url'))).toBe(true);
+  expect(verify({...made,signature:alias}).kind)
+    .toBe('r75_producer_unverified');
  });
  it('rejects a future receipt but preserves accurate historical authorship',()=>{
   const made=issue()!;

@@ -12,6 +12,8 @@ import {splitStoredSection} from '@/lib/manuscript/sections/sectionProjection';
 import {partitionFromSections,sectionsFromPartition,type DraftSectionState,type RevisionSectionRange} from '@/lib/manuscript/draftSections';
 import {enabledR72,requireR72CurrentConsent,resolveR72MemberVersion,
  getR72ProposalsForAppliedVersion} from './r72MemberProposalConsent';
+import {enabledR79,ownsR79SealedChoice,
+ resolveR79CurrentPrivateChoice} from './r79PrivateChoice';
 
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const TOKEN=/^[A-Za-z0-9_-]{43}$/;
@@ -118,11 +120,19 @@ export async function prepareR71(input:{
   const section=await oneSection(tx,draft.id,input.sectionId);
   if(Array.from(section.body).slice(start,end).join('')!==text)
    return refuse('selection_moved');
-  const source=r72?await resolveR72MemberVersion(tx,{
+  const sealed=enabledR79()&&await ownsR79SealedChoice(
+   tx,input.memberId,input.alternativeId);
+  const pending=sealed?await resolveR79CurrentPrivateChoice(tx,{
+   memberId:input.memberId,manuscriptId:input.manuscriptId,
+   draftId:draft.id,sectionId:input.sectionId,
+   baseVersion:input.generation,pendingId:input.alternativeId,
+   passage:{start,end,text},
+  }):null;
+  const source=!sealed&&r72?await resolveR72MemberVersion(tx,{
    memberId:input.memberId,manuscriptId:input.manuscriptId,
    draftId:draft.id,sectionId:input.sectionId,baseVersion:input.generation,
    expectedText:text,versionId:input.alternativeId}):null;
-  const replacement=source?.formulation??initialReplacement;
+  const replacement=pending?.replacement??source?.formulation??initialReplacement;
   if(!replacement)return refuse('proposal_missing');
   const token=issueToken();
   await tx.query(`INSERT INTO ws_r71_fixture_author_approvals
@@ -154,12 +164,20 @@ export async function applyR71(memberId:string,manuscriptId:string,token:string)
      (!enabledR72()&&selected!==target)||
      sha(selected)!==approval.selection_hash)
    return refuse('exact_passage_moved');
-  const proposal=enabledR72()?await resolveR72MemberVersion(tx,{
+  const sealed=enabledR79()&&await ownsR79SealedChoice(
+   tx,memberId,approval.alternative_id??'');
+  const pending=sealed?await resolveR79CurrentPrivateChoice(tx,{
+   memberId,manuscriptId,draftId:draft.id,sectionId:approval.section_id,
+   baseVersion:Number(draft.version),pendingId:approval.alternative_id??'',
+   passage:{start:approval.passage_start!,end:approval.passage_end!,text:selected},
+  }):null;
+  const proposal=!sealed&&enabledR72()?await resolveR72MemberVersion(tx,{
    memberId,manuscriptId,draftId:draft.id,sectionId:approval.section_id,
    baseVersion:Number(draft.version),expectedText:selected,
    versionId:approval.alternative_id??''
   }):null;
-  const replacement=proposal?.formulation??replacementFor(approval.alternative_id??'');
+  const replacement=pending?.replacement??proposal?.formulation??
+    replacementFor(approval.alternative_id??'');
   if(!replacement)return refuse('proposal_missing');
   const chars=Array.from(current.body);
   const updatedBody=chars.slice(0,approval.passage_start!).join('')+

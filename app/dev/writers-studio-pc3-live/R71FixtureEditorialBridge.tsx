@@ -113,7 +113,7 @@ export default function R71FixtureEditorialBridge(props:{
    </div>:null}
   {props.hasUnsavedWork?<p role="status">Finish saving the current writing before reviewing another version.</p>
    :unavailable?<p role="status">The fictional protected editor is unavailable. No change is possible.</p>
-   :ready&&(!R72||ready.alternatives.length>=2)?<P4R1ProtectedAuthorJourneyR54
+   :ready&&(!R72||ready.alternatives.length>=2||ready.lastAppliedGeneration!==null)?<P4R1ProtectedAuthorJourneyR54
       key={manuscriptId+':'+(props.selected?.sectionId??'undo')+':'+(props.selected?.generation??0)}
       selected={props.selected} liveSectionText={props.liveSectionText}
       alternatives={ready.alternatives} transport={transport}

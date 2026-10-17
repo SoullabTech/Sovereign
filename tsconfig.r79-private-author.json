@@ -1,0 +1,19 @@
+{
+ "extends":"./tsconfig.json",
+ "compilerOptions":{"strict":true,"noEmit":true,"incremental":false,"plugins":[]},
+ "files":[
+  "next-env.d.ts",
+  "lib/writersStudio/recovery/r79PrivateChoice.ts",
+  "lib/writersStudio/recovery/__tests__/r79PrivateChoiceLaw.test.ts",
+  "lib/writersStudio/recovery/r71FictionalCanonicalEditorial.ts",
+  "lib/writersStudio/provenance/heldConfidentialCandidateR76.ts",
+  "app/api/writers-studio/r71-fixture-author/route.ts",
+  "app/api/writers-studio/r77p-private-preview/route.ts",
+  "app/dev/writers-studio-pc3-live/R77pConfidentialPreview.tsx",
+  "app/dev/writers-studio-pc3-live/R71FixtureEditorialBridge.tsx",
+  "app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx",
+  "lib/writersStudio/recovery/r72MemberProposalConsent.ts"
+ ],
+ "include":[],
+ "exclude":["node_modules"]
+}

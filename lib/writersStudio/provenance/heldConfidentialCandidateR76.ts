@@ -145,12 +145,27 @@ export async function sealPendingR76(input:{
   source:'synthetic_server_witness_fixture',
   canApply:false,canUndo:false,releaseApproved:false};
 }
-export async function openPendingR76(input:{
+export type R76PrivateOpenInput={
  scope:R75Scope;workKey:WorkEncryptionKey;
  publicKey:KeyLike;contentSecret:Buffer;nowMs:number;
-}):Promise<R76PrivatePreview>{
+};
+/** Shared writer-owned transaction: do not acquire a second connection or
+ * create a separate consent/approval commit seam after the section row lock. */
+export async function openPendingR76InTransaction(
+ tx:TransactionClient,input:R76PrivateOpenInput,
+):Promise<R76PrivatePreview>{
  fixture();validateScope(input.scope);
- return transaction(async tx=>{
+ return openPendingR76OnClient(tx,input);
+}
+export async function openPendingR76(
+ input:R76PrivateOpenInput,
+):Promise<R76PrivatePreview>{
+ fixture();validateScope(input.scope);
+ return transaction(tx=>openPendingR76OnClient(tx,input));
+}
+async function openPendingR76OnClient(
+ tx:TransactionClient,input:R76PrivateOpenInput,
+):Promise<R76PrivatePreview>{
   // Verify active, matching consent and exact owned section/draft BEFORE
   // reading the SQL envelope, so revoked/foreign queries do not fetch it.
   await checkCurrent(tx,input.scope);
@@ -212,5 +227,4 @@ export async function openPendingR76(input:{
    servedModel:verified.attribution.servedModel,
    canApply:false,canUndo:false,releaseApproved:false,
    publishedVersion:false};
- });
 }

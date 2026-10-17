@@ -141,8 +141,15 @@ export function verifyCompletedProducerR75(
  if(a.proposalCommitment!==commit(ctx.expectedProposal,ctx.contentSecret))
   return deny('proposal_content_mismatch');
  try{
-  if(!verify(null,Buffer.from(serializedR75(a)),ctx.publicKey,
-    Buffer.from(record.signature,'base64url')))
+  // Base64url has unused low bits in its final sextet for a 64-byte
+  // Ed25519 signature. Accept only one canonical encoding of the signed
+  // bytes; alternate textual encodings must not impersonate another
+  // signed approval or evade exact-receipt audit comparisons.
+  const signedBytes=Buffer.from(record.signature,'base64url');
+  if(signedBytes.length!==64||
+     signedBytes.toString('base64url')!==record.signature)
+   return deny('producer_signature_invalid');
+  if(!verify(null,Buffer.from(serializedR75(a)),ctx.publicKey,signedBytes))
    return deny('producer_signature_invalid');
  }catch{return deny('producer_signature_unverifiable');}
  return {kind:'r75_verified_server_producer_witness',
