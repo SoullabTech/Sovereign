@@ -1,0 +1,237 @@
+{
+  "schema": "soullab.wisdom-claim-custody.v0",
+  "title": "Glenn Perry / Soullab — claim-level attribution and epistemic separation",
+  "status": "review_only_not_admitted",
+  "source_registry": "sources.json",
+  "teaching_candidate": "soullab-original-teaching-candidate.md",
+  "rights": "No Perry book or essay body, extracts, or embeddings included. Source links, original summaries, and Soullab choices only.",
+  "release_gate": "Founder editorial ratification, exact-source authority evidence and corpus-admission review required for Soullab-authored commentary. Separate explicit rights for any Glenn Perry source text.",
+  "claims": [
+    {
+      "id": "need_symbolism",
+      "claim_origin": "perry_proposition",
+      "summary": "Perry assigns zodiac signs a symbolic role in describing motives and psychological needs.",
+      "reference_ids": [
+        "perry-motivation"
+      ],
+      "epistemic_kind": "symbolic_theory",
+      "safe_example": "Perry's model proposes...",
+      "unsafe_example": "This sign proves the member's need.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "function_symbolism",
+      "claim_origin": "perry_proposition",
+      "summary": "Perry uses planets, signs, houses and aspects as different characters, motives, settings and relations in a symbolic narrative.",
+      "reference_ids": [
+        "perry-evolving-story"
+      ],
+      "epistemic_kind": "symbolic_theory",
+      "safe_example": "Perry describes a chart-as-story grammar...",
+      "unsafe_example": "A planetary aspect caused the event.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "life_story",
+      "claim_origin": "perry_proposition",
+      "summary": "Perry proposes that a horoscope can be contemplated as an evolving personal narrative while also claiming purposive chart structure.",
+      "reference_ids": [
+        "perry-evolving-story"
+      ],
+      "epistemic_kind": "symbolic_theory_with_teleological_claims",
+      "safe_example": "Perry proposes an evolving story; Soullab does not presume the chart objectively dictates it.",
+      "unsafe_example": "Perry rejects every notion of fate or destiny.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "integration",
+      "claim_origin": "perry_proposition",
+      "summary": "Perry distinguishes integration of specific functions from broader individuation and psychological development.",
+      "reference_ids": [
+        "perry-integration"
+      ],
+      "epistemic_kind": "symbolic_psychological_theory",
+      "safe_example": "Perry differentiates local integration and whole-person individuation...",
+      "unsafe_example": "Astrological integration is clinically measured.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "defenses",
+      "claim_origin": "perry_proposition",
+      "summary": "Perry discusses defenses through a psychodynamic account in which some habitual strategies served a protective function.",
+      "reference_ids": [
+        "perry-defenses"
+      ],
+      "epistemic_kind": "interpretive_clinical_theory",
+      "safe_example": "Perry explores protective functions of defenses...",
+      "unsafe_example": "Saturn proves childhood abuse.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "archetypes",
+      "claim_origin": "perry_proposition",
+      "summary": "Perry describes archetypes as capable of many possible manifestations rather than one rigid type.",
+      "reference_ids": [
+        "perry-archetypes"
+      ],
+      "epistemic_kind": "symbolic_theory",
+      "safe_example": "Perry emphasizes multivalent symbolic expressions...",
+      "unsafe_example": "Because anything fits, astrology is scientifically proven.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "zodiac_stages",
+      "claim_origin": "perry_proposition",
+      "summary": "Perry proposes an analogy between zodiacal sequence and lifespan developmental stages, without independent validation of astrological stage correspondence.",
+      "reference_ids": [
+        "perry-developmental"
+      ],
+      "epistemic_kind": "unvalidated_developmental_correspondence",
+      "safe_example": "Perry proposes a developmental reading...",
+      "unsafe_example": "Zodiac positions diagnose developmental arrest.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "motivation_overrule",
+      "claim_origin": "soullab_editorial_choice",
+      "summary": "The member's reported motives take precedence over any zodiacal hypothesis.",
+      "reference_ids": [
+        "perry-motivation"
+      ],
+      "epistemic_kind": "normative_relational_guard",
+      "safe_example": "Let's begin with what matters to you.",
+      "unsafe_example": "The chart tells me your real motive.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "emotional_sovereignty",
+      "claim_origin": "soullab_editorial_choice",
+      "summary": "Symbolic frameworks are optional invitations and must not become the origin of a person's emotions.",
+      "reference_ids": [
+        "perry-emotions"
+      ],
+      "epistemic_kind": "normative_relational_guard",
+      "safe_example": "Would you like a symbolic lens?",
+      "unsafe_example": "Your planet caused this feeling.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "no_pathology",
+      "claim_origin": "soullab_editorial_choice",
+      "summary": "No chart may be used to diagnose, predict clinical pathology or assign abuse history.",
+      "reference_ids": [
+        "perry-astropsychology-model",
+        "perry-defenses"
+      ],
+      "epistemic_kind": "clinical_safety_constraint",
+      "safe_example": "A chart cannot establish that history or diagnosis.",
+      "unsafe_example": "Your placement proves a disorder.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "multiple_meanings",
+      "claim_origin": "soullab_editorial_choice",
+      "summary": "Offer alternatives, including that no astrological interpretation applies.",
+      "reference_ids": [
+        "perry-archetypes"
+      ],
+      "epistemic_kind": "normative_relational_guard",
+      "safe_example": "Does either interpretation fit, or neither?",
+      "unsafe_example": "One of these must be your truth.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "no_fate_claim",
+      "claim_origin": "soullab_editorial_choice",
+      "summary": "Reject claims of objectively fated personal life scripts even where Perry's own writing uses teleological language.",
+      "reference_ids": [
+        "perry-evolving-story"
+      ],
+      "epistemic_kind": "epistemic_boundary",
+      "safe_example": "Your story can change and the symbol need not apply.",
+      "unsafe_example": "The chart reveals your assigned destiny.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "no_collapse",
+      "claim_origin": "soullab_editorial_choice",
+      "summary": "Compare Perry with Jung and Elemental Alchemy while retaining distinct origins and limiting one-to-one mappings.",
+      "reference_ids": [
+        "perry-integration",
+        "perry-archetypes"
+      ],
+      "epistemic_kind": "cross_lineage_boundary",
+      "safe_example": "We can explore a comparison between these two traditions.",
+      "unsafe_example": "Perry is the scientific foundation of Elemental Alchemy.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "no_sanctuary",
+      "claim_origin": "soullab_editorial_choice",
+      "summary": "Never move members' private stories or Sanctuary records into the wisdom corpus.",
+      "reference_ids": [],
+      "epistemic_kind": "consent_privacy_boundary",
+      "safe_example": "I won't turn private conversation into shared source material.",
+      "unsafe_example": "Your private story has been added to MAIA's library.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    },
+    {
+      "id": "rights_separation",
+      "claim_origin": "soullab_editorial_choice",
+      "summary": "Original editorial discussion may be proposed separately; protected Perry book and article bodies remain blocked pending suitable rights.",
+      "reference_ids": [
+        "perry-intro-book",
+        "perry-depth-book"
+      ],
+      "epistemic_kind": "source_rights_boundary",
+      "safe_example": "We can discuss concepts without storing his books.",
+      "unsafe_example": "Buying the paperback grants full AI embedding rights.",
+      "source_text_stored": false,
+      "member_data_stored": false,
+      "ready_for_member_retrieval": false,
+      "requires_founder_review": true
+    }
+  ]
+}
