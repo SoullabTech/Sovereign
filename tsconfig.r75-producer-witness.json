@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.r72-member-proposals.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/writersStudio/provenance/editorialModelProducerR75.ts",
+    "lib/writersStudio/provenance/__tests__/editorialModelProducerR75.test.ts",
+    "lib/writersStudio/provenance/heldProducerReadR75.ts",
+    "lib/writersStudio/provenance/__tests__/heldProducerReadR75.test.ts",
+    "scripts/ops/wsBetaR75ProducerPG16.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
