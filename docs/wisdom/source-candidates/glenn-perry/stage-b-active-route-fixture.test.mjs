@@ -46,17 +46,23 @@ const fakeApproval = {
   approvalRecord: 'docs/corpus-authority/fictional-founder-approval.md',
 };
 const validSelection = 'glenn-perry-astropsychology';
+const approvalText = [
+  'CORPUS USE AUTHORIZED — SOULLAB ORIGINAL PERRY-INFORMED COMMENTARY',
+  fakePath,
+  approvedSha,
+].join('\n');
 let imported, temp;
 
 function deps({
   body = APPROVED_BODY, approved = fakeApproval,
   authorityKeys = [{ filePath: fakePath, checksum: approvedSha }],
-  onRead = () => {},
+  onRead = () => {}, approvalBody = approvalText,
 } = {}) {
   return {
     approvedSource: approved,
     authorityKeys: () => authorityKeys,
     readSource: () => { onRead(); return body; },
+    readApprovalRecord: () => approvalBody,
   };
 }
 
@@ -143,6 +149,19 @@ test('missing source approval, forged rights record and untrusted path fail clos
     assert.equal(imported.buildPerrySourceLensAddendum(
       input(), deps({ approved: fake })
     ), null, String(fake.sourcePath));
+  }
+});
+
+test('missing or mismatched founder editorial record refuses even admitted source bytes', () => {
+  for (const approvalBody of [
+    '', 'partial record',
+    approvalText.replace('CORPUS USE AUTHORIZED — SOULLAB ORIGINAL PERRY-INFORMED COMMENTARY', 'NOT APPROVED'),
+    approvalText.replace(fakePath, 'data/ain/source/a-different-file.md'),
+    approvalText.replace(approvedSha, 'f'.repeat(64)),
+  ]) {
+    assert.equal(imported.buildPerrySourceLensAddendum(
+      input(), deps({ approvalBody })
+    ), null);
   }
 });
 
