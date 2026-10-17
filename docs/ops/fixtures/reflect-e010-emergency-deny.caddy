@@ -1,0 +1,10 @@
+    # REFLECT-E010-EMERGENCY: REVIEW FIXTURE ONLY; NOT LOADED IN PRODUCTION.
+    # Candidate for the existing (deny_disabled_routes) snippet, shared by all
+    # Soullab Caddy sites. Must not be enabled absent independent authorization.
+    @reflect_e010_emergency path /pro-studio/reflect /pro-studio/reflect/*
+    handle @reflect_e010_emergency {
+        header Cache-Control "no-store, max-age=0, must-revalidate"
+        header Pragma "no-cache"
+        header X-Robots-Tag "noindex, nofollow"
+        respond "Reflect temporarily unavailable" 403
+    }
