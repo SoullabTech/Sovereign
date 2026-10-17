@@ -97,6 +97,10 @@ class ReadOnlyOperatorAcceptance(unittest.TestCase):
         with self.assertRaisesRegex(ProbeHold, "TARGET_NOT_APPROVED"):
             inspect("root@100.119.226.84", runner=FakeRunner(self.safe))
 
+    def test_refuses_another_tailscale_ip_even_with_same_username(self):
+        with self.assertRaisesRegex(ProbeHold, "TARGET_NOT_APPROVED"):
+            inspect("soullab@100.120.100.90", runner=FakeRunner(self.safe))
+
     def test_refuses_non_tailscale_hostname(self):
         with self.assertRaisesRegex(ProbeHold, "TARGET_NOT_APPROVED"):
             inspect("soullab@example.com", runner=FakeRunner(self.safe))

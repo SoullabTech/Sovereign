@@ -151,7 +151,7 @@ except Exception:
     sys.exit(2)
 """
 
-SSH_DESTINATION = re.compile(r"^soullab@100(?:\.[0-9]{1,3}){3}$")
+SSH_DESTINATION = re.compile(r"^soullab@100\.119\.226\.84$")
 KEYS = ("PRO_STUDIO_REFLECT_BETA_ENABLED", "PRO_STUDIO_REFLECT_BETA_MEMBER_IDS")
 MANIFEST = {
     "target_full_sha": SOURCE_SHA,
