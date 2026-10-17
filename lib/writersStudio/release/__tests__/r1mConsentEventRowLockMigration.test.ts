@@ -17,6 +17,7 @@ describe('R1M actual beta consent insert/withdrawal DB lock law',()=>{
  });
  it('uses same durable member row FOR UPDATE lock as R1K protected edit',()=>{
   expect(ddl).toContain('PERFORM 1 FROM members WHERE id = NEW.member_id FOR UPDATE;');
+  expect(ddl).toContain("NEW.seq := nextval(pg_get_serial_sequence(");
   expect(r1k).toContain('SELECT id FROM members WHERE id=$1 FOR UPDATE');
   expect(typeof lockWriterBetaMemberR1K).toBe('function');
  });
@@ -26,7 +27,10 @@ describe('R1M actual beta consent insert/withdrawal DB lock law',()=>{
   expect(ddl).toContain("USING ERRCODE = '23514'");
   expect(ddl).toContain("USING ERRCODE = '23503'");
  });
- it('does not create second source of latest consent nor bypass immutable notice chronology',()=>{
+ it('binds consent sequence to lock order rather than pre-trigger identity allocation',()=>{
+  expect(ddl.indexOf('PERFORM 1 FROM members WHERE id = NEW.member_id FOR UPDATE;')).toBeLessThan(ddl.indexOf('NEW.seq := nextval(pg_get_serial_sequence('));
+ });
+  it('does not create second source of latest consent nor bypass immutable notice chronology',()=>{
   expect(ddl).not.toContain('INSERT INTO writers_studio_beta_consent_events');
   expect(ddl).not.toContain('UPDATE writers_studio_beta_consent_events SET');
   expect(r1k).toContain('ORDER BY seq DESC LIMIT 1');

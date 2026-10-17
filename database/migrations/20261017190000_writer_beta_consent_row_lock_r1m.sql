@@ -43,6 +43,18 @@ BEGIN
     RAISE EXCEPTION 'writer_beta_consent_member_unavailable'
       USING ERRCODE = '23503';
   END IF;
+
+  -- PostgreSQL evaluates GENERATED ALWAYS IDENTITY defaults BEFORE a
+  -- BEFORE INSERT trigger. A direct/older INSERT can therefore reserve a
+  -- sequence number while WAITING for this member lock. If a transaction
+  -- that already holds the lock inserts an accept before it releases, the
+  -- waiting later revoke would otherwise commit with a *lower* sequence.
+  -- All readers use ORDER BY seq DESC, so that would incorrectly present
+  -- the prior accept as current consent. Reassign seq only AFTER the member
+  -- lock is acquired; gaps from abandoned pre-trigger identity values are
+  -- deliberate and harmless. The member's sequence becomes lock-ordered.
+  NEW.seq := nextval(pg_get_serial_sequence(
+    'writers_studio_beta_consent_events', 'seq'));
   RETURN NEW;
 END;
 $$;

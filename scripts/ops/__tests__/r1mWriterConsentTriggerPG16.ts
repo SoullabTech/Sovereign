@@ -141,6 +141,50 @@ async function main(){
    (error:any)=>error.code==='23503');
   pass('absent_member_cannot_create_consent');
 
+  // C: a direct INSERT can allocate its identity sequence number BEFORE its
+  // BEFORE INSERT trigger reaches the member lock. A slow R1K transaction
+  // might still insert another accept WHILE holding that lock. The direct
+  // withdrawal commits LATER and MUST have a LARGER seq, otherwise the
+  // current-consent query could falsely keep the earlier accept active.
+  let locked!:()=>void,allowCommit!:()=>void;
+  const authorLocked=new Promise<void>(resolve=>locked=resolve);
+  const mayCommit=new Promise<void>(resolve=>allowCommit=resolve);
+  const authorAccept=withLockedCurrentWriterConsentR1K(M,POLICY,async tx=>{
+    locked();await mayCommit;
+    await tx.query(`INSERT INTO writers_studio_beta_consent_events
+      (member_id,actor_member_id,decision,policy_version,policy_sha256)
+      VALUES($1,$1,'accept',$2,$3)`,[M,POLICY.policyVersion,POLICY.policySHA256]);
+    return 'member_accepted_again_before_waiting_revoke';
+  });
+  await authorLocked;
+  const identityWriter=await inspector.connect();
+  try{
+    const pid=(await identityWriter.query('SELECT pg_backend_pid() pid')).rows[0].pid as number;
+    const directRevoke=identityWriter.query(`INSERT INTO writers_studio_beta_consent_events
+      (member_id,actor_member_id,decision,policy_version,policy_sha256)
+      VALUES($1,$1,'revoke',$2,$3)`,[M,POLICY.policyVersion,POLICY.policySHA256]);
+    let waited=false;
+    for(let i=0;i<30;i++){
+      const activity=await q<{wait_event_type:string|null}>(
+        'SELECT wait_event_type FROM pg_stat_activity WHERE pid=$1',[pid]);
+      if(activity[0]?.wait_event_type==='Lock'){waited=true;break;}
+      await nap(20);
+    }
+    assert.ok(waited,'direct revoke INSERT did not reach a blocked member lock');
+    allowCommit();
+    const completed=await authorAccept;
+    assert.equal(completed.kind,'executed_inside_consent_lock');
+    await directRevoke;
+    const chronology=await q<{seq:string;decision:string}>(
+      'SELECT seq,decision FROM writers_studio_beta_consent_events WHERE member_id=$1 ORDER BY seq DESC LIMIT 2',[M]);
+    assert.equal(chronology.length,2);
+    assert.equal(chronology[0].decision,'revoke',
+      'CRITICAL: later committed withdrawal must own the highest consent sequence');
+    assert.equal(chronology[1].decision,'accept');
+  }finally{allowCommit();identityWriter.release();}
+  assert.equal(await last(),'revoke');
+  pass('identity_sequence_order_matches_lock_commit_order');
+
   // No hard DELETE trigger; genuine member erasure can still cascade events
   // through the existing FK instead of creating undeletable shadow identity.
   await inspector.query('DELETE FROM members WHERE id=$1',[M]);
