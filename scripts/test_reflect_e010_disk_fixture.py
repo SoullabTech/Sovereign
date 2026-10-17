@@ -231,7 +231,7 @@ class FictionalDiskAcceptance(unittest.TestCase):
             if isinstance(n, ast.ImportFrom) and n.module:
                 imports.add(n.module.split(".")[0])
         self.assertEqual(imports - {
-            "__future__", "contextlib", "fcntl", "hashlib", "hmac", "os",
+            "__future__", "contextlib", "fcntl", "hashlib", "hmac", "json", "os",
             "pathlib", "re", "stat", "tempfile", "typing",
             "reflect_e010_canary_control"
         }, set())

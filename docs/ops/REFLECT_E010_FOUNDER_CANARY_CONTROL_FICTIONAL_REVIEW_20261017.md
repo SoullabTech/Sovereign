@@ -75,3 +75,36 @@ No production writes, no other member records, no model calls, no migrations, no
 A production-capable and independently reviewed operator adapter still requires durable crash/restart custody (private state and backup retrieval across processes), authentic consent/identity witness without credentials in chat, exact protected source/rollback verification, controlled reader recreation, cross-process concurrent-writer coordination, RSC/SSR/Safari acceptance and a real reversible OFF rehearsal. The current ActiveCanary token is in-memory only and **does not yet survive process restart**. Do not enable the member beta from this test module.
 
 No source push, PR, merge, deployment or production change was authorized or performed by this test.
+
+## Durable restart-custody extension — October 17, 2026
+
+**Status:** LOCAL FICTIONAL ACCEPTANCE ONLY. This extension is not a production adapter, production change, or authorization to bypass the previously blocked activation.
+
+### New and modified local files
+
+- New scripts/reflect_e010_durable_fixture.py — persistent, versioned, owner-only fictional canary journal.
+- New scripts/test_reflect_e010_durable_fixture.py — process-death and recovery acceptance.
+- Updated scripts/reflect_e010_disk_fixture.py — persisted fictional reader environment, separately from the operator process's memory, with pre-write reader-state comparison and the existing 0700 marker-root restriction.
+- Updated scripts/test_reflect_e010_disk_fixture.py — Python standard-library import allowlist extended for JSON.
+- The existing frozen application/Reflect code and the original E010 source checkout are unchanged.
+
+### Recovery semantics
+
+A single fictional founder canary has one durable journal record and backup; it is written before any simulated access change. It records only source/image custody, exact file checksums, an account-ID fingerprint, the private backup token, and a monotonic phase: INTENT, ON_VERIFIED, OFF_INTENT, or OFF_VERIFIED. The full member ID does not appear in the journal, receipts, shell arguments or stdout. The separate persisted mock reader-state file and configuration file contain **fictional-only** values, are restricted to owner-only test storage and are not release evidence.
+
+After an operator restart, the only supported continuation is recover_off(). It refuses a new or repeated activation. Recovery checks the original 0600 backup, journal integrity and schema, one-member fingerprint, frozen release and previous image, unrelated environment identity, available disk and healthy service/Studio invariants. It restores the exact original configuration and simulates an E010 reader-only NO-BUILD/NO-PULL/NO-DEPS recreation. OFF is recorded only after the observed reader flags have disappeared. A repeated recovery of already verified OFF is idempotent. The durable module also refuses ordinary command-line invocation (exit 2); it exposes no live-action entrypoint.
+
+A corrupted, missing, foreign or permission-drifted journal/backup, unknown running member ID, uncoordinated config or runtime state change, image drift, or below-floor disk returns HOLD/INCIDENT. The state machine never silently overwrites unrelated changes and does not claim OFF while the fictional reader remains ON. Crucially, recovery under a below-60-GiB storage condition remains an explicit operator incident, not an implicit authorization to spend emergency reserves.
+
+### Executed tests
+
+- 87/87 local fictional tests PASS (57 prior + 30 durable/restart/negative checks).
+- Actual separate Python interpreters were terminated with os._exit(77) at four activation and four OFF checkpoints; a fresh interpreter then reopened the fictional, access-restricted backup and journal and verified OFF. Nothing was connected to a network, Docker or any production host.
+- Extra tests cover ordinary pre/post-rename errors, interrupted reader creation, failed recovery followed by fresh-process retry, unauthorized journal fields, backup tampering/loss, symlink and mode refusal, changed runtime state, persisted reader compare-and-swap, identity mismatch, and privacy-safe receipts.
+- Python compilation and standard repository pre-commit governance must independently pass before local freeze (record their observed outcomes separately).
+
+### Limitations that still prevent production admission
+
+This mock journal's SHA-256 checksum detects accidental corruption but is **not an adversarial authenticated signature**. The private on-disk reader-state is an invented mock of a live Docker reader; tests do not prove actual container restart, edge caching, authenticated SSR/RSC refusal, real Safari desktop/iPhone, MAIA handoff or operational rollback timing. A production implementation needs reviewed privileged operator authority, protected persistent custody, crash-atomicity under its real storage model, secure cross-process identity attestation, no-secret logging, reader-only recreate with exact image and no build/pull, actual revocation witness, incident containment below disk floor, and independent approved execution routing.
+
+No GitHub push, PR, merge, live feature change, production-host login, real member query, real credential, MAIA provider turn, deployment, container recreation or cleanup was performed by this extension. The one-founder Reflect beta remains OFF.
