@@ -30,6 +30,8 @@ import { exactRenderedPassageR52 } from '@/lib/writersStudio/exactRenderedPassag
 import {P4R1ProtectedAuthorJourneyR54,R54_REAL_PC3_AUTHOR_JOURNEY_ENABLED,
   type R54PanelProps} from './P4R1ProtectedAuthorJourneyR54';
 import R71FixtureEditorialBridge from './R71FixtureEditorialBridge';
+import R77pConfidentialPreview from './R77pConfidentialPreview';
+const R77P_FICTIONAL_PRIVATE_REVIEW=process.env.NEXT_PUBLIC_R77P_LOCAL_REVIEW_FIXTURE==='fictional-only';
 const R71_FICTIONAL_LOCAL_EDITORIAL=process.env.NEXT_PUBLIC_R71_AUTHOR_EDITORIAL_FIXTURE==='fictional-only';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
@@ -791,6 +793,15 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody">
+        {/* R77P fictional confidential prepublication read does NOT grant Apply. */}
+        {R77P_FICTIONAL_PRIVATE_REVIEW ? <R77pConfidentialPreview
+          manuscriptId={props.context.manuscriptId}
+          selected={props.held&&props.held.draftSectionId===props.focusId?{
+            sectionId:props.held.draftSectionId,start:props.held.start,
+            end:props.held.end,text:props.held.text,
+            generation:props.held.revisionNumber,
+          }:null}
+          hasUnsavedWork={props.writing.hasUnsavedWork()}/> : null}
         {/* LOCAL FICTIONAL ONLY: never activates R54/R53 production transport. */}
         {R71_FICTIONAL_LOCAL_EDITORIAL ? <R71FixtureEditorialBridge
           manuscriptId={props.context.manuscriptId}

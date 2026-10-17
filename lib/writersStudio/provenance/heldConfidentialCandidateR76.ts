@@ -34,9 +34,15 @@ const cipherHash=(box:SealedWorkV1)=>
  sha(JSON.stringify([box.protocol,box.keyId,box.iv,box.tag,box.ciphertext]));
 const uuid=(s:string)=>typeof s==='string'&&UUID.test(s);
 function fixture(){
+ const isolatedTest=process.env.NODE_ENV==='test';
+ const isolatedReviewDev=process.env.NODE_ENV==='development'&&
+  process.env.R77P_LOCAL_REVIEW_FIXTURE==='fictional-only'&&
+  process.env.NEXT_PUBLIC_R77P_LOCAL_REVIEW_FIXTURE==='fictional-only'&&
+  process.env.R77P_KEYS_ORIGIN==='synthetic-generated-test-only';
  if(R76_REAL_CONFIDENTIAL_PROPOSALS_ENABLED!==false||
     process.env.R76_PENDING_CANDIDATE_FIXTURE!=='fictional-only'||
-    process.env.NODE_ENV!=='test'||!DB.test(process.env.DATABASE_URL||''))
+    !(isolatedTest||isolatedReviewDev)||
+    !DB.test(process.env.DATABASE_URL||''))
   refuse('disabled_outside_disposable_local_fixture');
 }
 type DraftRow={id:string;version:string;section_addressable_at:Date|null};
