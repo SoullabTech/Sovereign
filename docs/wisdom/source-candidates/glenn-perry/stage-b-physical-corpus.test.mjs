@@ -109,6 +109,7 @@ async function withCorpus(fn, {
       readApprovalRecord: (rel) => fs.readFileSync(path.join(root, rel), 'utf8'),
     };
     const turn = { requestedLens: perry.PERRY_SOURCE_LENS_ID,
+      memberMessage: 'Could we discuss the Perry-informed symbolic lens?',
       verifiedMemberId: 'fictional-verified-member', isSanctuary: false, enabled: true };
     await fn({ root, file, manifest, recordPath, server, turn });
   } finally {
@@ -179,6 +180,14 @@ test('revoked fictional founder editorial record blocks independently admitted t
   await withCorpus(({ recordPath, server, turn }) => {
     fs.writeFileSync(recordPath, 'This authorisation has not been granted.');
     assert.equal(perry.buildPerrySourceLensAddendum(turn, server), null);
+  });
+});
+
+test('member refusal overrides a fully admitted fictional source', async () => {
+  await withCorpus(({ server, turn }) => {
+    assert.equal(perry.buildPerrySourceLensAddendum({
+      ...turn, memberMessage: 'Stop using astrology. I want no symbolic reading.',
+    }, server), null);
   });
 });
 
