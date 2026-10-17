@@ -57,8 +57,13 @@ function fixture():boolean{
   process.env.R56_REAL_SESSION_WORK_FIXTURE==='fictional-only'&&
   process.env.WRITERS_STUDIO_RESTRICTED_BETA==='true'&&
   /^postgresql:\/\/fict@127\.0\.0\.1:\d+\/r35_draft$/.test(db)&&
-  /^\/.*\/ws-r35-physical-r56-[^/]+\/vault$/.test(
-    process.env.FILE_STORAGE_PATH||'');
+  (
+   /^\/.*\/ws-r35-physical-r56-[^/]+\/vault$/.test(
+    process.env.FILE_STORAGE_PATH||'')||
+   (process.env.R57_PRIVATE_READ_FIXTURE==='fictional-only'&&
+    /^\/.*\/ws-r35-physical-r57-[^/]+\/vault$/.test(
+     process.env.FILE_STORAGE_PATH||''))
+  );
 }
 function allowedList():boolean{
  const raw=process.env.WRITERS_STUDIO_BETA_MEMBER_IDS;

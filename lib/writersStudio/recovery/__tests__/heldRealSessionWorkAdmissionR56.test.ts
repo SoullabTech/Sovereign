@@ -40,7 +40,8 @@ const queryMock=query as jest.Mock;
 const identityMock=deriveVerifiedAccess as jest.Mock;
 const accessMock=writersStudioBetaAccess as jest.Mock;
 const noticeMock=verifiedBetaConsentNotice as jest.Mock;
-const vars=['R56_REAL_SESSION_WORK_FIXTURE','WRITERS_STUDIO_RESTRICTED_BETA',
+const vars=['R56_REAL_SESSION_WORK_FIXTURE','R57_PRIVATE_READ_FIXTURE',
+ 'WRITERS_STUDIO_RESTRICTED_BETA',
  'WRITERS_STUDIO_BETA_MEMBER_IDS','DATABASE_URL','FILE_STORAGE_PATH'] as const;
 const originals=Object.fromEntries(vars.map(k=>[k,process.env[k]]));
 const req=(overrides:{
@@ -113,6 +114,12 @@ describe('R56 actual verified-session and protected Work structural preflight',(
    expect((await call()).kind).toBe('held_refused');
    process.env[k]=before;
   }
+  expect(identityMock).not.toHaveBeenCalled();
+ });
+ it('R57 fixture vault is never admitted without its additional private-review marker',async()=>{
+  process.env.FILE_STORAGE_PATH='/private/tmp/ws-r35-physical-r57-unit/vault';
+  delete process.env.R57_PRIVATE_READ_FIXTURE;
+  expect(await call()).toMatchObject({kind:'held_refused',reason:'unavailable'});
   expect(identityMock).not.toHaveBeenCalled();
  });
  it('requires same-origin POST and refuses URL query credentials',async()=>{

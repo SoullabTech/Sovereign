@@ -3,7 +3,8 @@
  * Exclusive disposable localhost PG, dedicated fsync vault and fake keys.
  * No authenticated real member, Next route, model, KMS, mail or deployment.
  */
-import {createHash,generateKeyPairSync,randomBytes,randomUUID,sign} from 'node:crypto';
+import {createHash,createHmac,generateKeyPairSync,randomBytes,randomUUID,sign} from 'node:crypto';
+import {NextRequest} from 'next/server';
 import {writeFileSync} from 'node:fs';
 import {query,closePool} from '@/lib/db/postgres';
 import {canonicalDeletionPayload,type DeletionHighwaterV1}
@@ -21,6 +22,7 @@ import type {R37SectionSelection}
  from '@/lib/writersStudio/recovery/heldSectionApplyR37';
 import {R44_REAL_AUTHOR_APPROVAL_ENABLED}
  from '@/lib/writersStudio/recovery/heldDurableAuthorApprovalR44';
+import {reopenHeldRealPrivateEditorialR57,R57_REAL_PRIVATE_EDITORIAL_REVIEW_ENABLED} from '@/lib/writersStudio/recovery/heldRealPrivateEditorialR57';
 import {R46_REAL_DURABLE_SIGNED_APPLY_ENABLED}
  from '@/lib/writersStudio/recovery/heldDurableSignedApplyR46';
 
@@ -32,6 +34,7 @@ const enabled=process.env.R47_PRIVATE_EDITORIAL_FIXTURE==='fictional-only'&&
  /^postgresql:\/\/fict@127\.0\.0\.1:\d+\/r35_draft$/.test(
   process.env.DATABASE_URL||'');
 const tests=enabled?describe:describe.skip;
+const joint=enabled&&process.env.R57_PRIVATE_READ_FIXTURE==='fictional-only'?it:it.skip;
 const A='11111111-1111-4111-8111-111111111111';
 const B='22222222-2222-4222-8222-222222222222';
 const W=[
@@ -157,6 +160,105 @@ tests('R47 sealed private editorial proposal/choice and source continuity',()=>{
   expect((await reopenHeldDraftR35({subject:subject(),workId:W[0],
    generation:1,custody:auth(keys[0].draft)})).content).toBe(WHOLE);
   expect(await count('SELECT count(*)::int n FROM writers_studio_r35_draft_versions WHERE work_id=$1',[W[0]])).toBe(1);
+ });
+ joint('R57 authentic local session + latest beta consent + R47 AES-GCM private review in the SAME PG16 database',async()=>{
+  expect(R57_REAL_PRIVATE_EDITORIAL_REVIEW_ENABLED).toBe(false);
+  const reviewId=reviewIds.get(0);
+  if(!reviewId)throw Error('R57_MUST_START_WITH_ENCRYPTED_R47_PROPOSAL');
+  const root=Buffer.alloc(32,0x57);
+  const token='r57-fictional-cookie-session';
+  const admissionNow={
+   ...admission,
+   sessionBindingSHA256:createHmac('sha256',root)
+    .update('r38-fictional-session-binding:').update(token).digest('hex'),
+  };
+  const request=()=>new NextRequest(
+   'https://soullab.life/api/writers-studio/held-author-admission',{
+   method:'POST',headers:{
+    host:'soullab.life',origin:'https://soullab.life',
+    'sec-fetch-site':'same-origin','content-type':'application/json',
+    'x-ws-author-intent':'review',
+    cookie:'maia_session='+token,
+   },
+  });
+  const makeInput=(livingWorkId:string)=>({
+   request:request(),manuscriptId:W[0],livingWorkId,
+   privateRead:{...fixture(0),admission:admissionNow,
+    reviewId,generation:1},
+   sessionBindingSecret:root,
+  });
+  const WORK='88888888-8888-4888-8888-888888888888';
+  const WORK2='99999999-9999-4999-8999-999999999999';
+  for(const work of [WORK,WORK2]){
+   const result=await reopenHeldRealPrivateEditorialR57(makeInput(work));
+   expect(result).toMatchObject({
+    kind:'held_private_current_author_preview',
+    sectionId:S1,alternativeId:CHOICE,
+    originalPassage:'lantern glows',proposedPassage:'lantern shimmers',
+    draftGeneration:1,canApply:false,canRestore:false,
+    releaseApproved:false,
+   });
+   expect(JSON.stringify(result)).not.toContain(W[0]);
+   expect(JSON.stringify(result)).not.toContain(token);
+  }
+  expect((await reopenHeldRealPrivateEditorialR57(
+   makeInput('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'))).kind)
+   .toBe('held_only_refused');
+  // Additional R59-only witness: the REAL Next protected-readiness route
+  // and R57 AES-GCM private review must agree about the same invented writer
+  // and manuscript in this ONE disposable PG16, while both deny writing.
+  let readinessGET:((r:NextRequest,
+   ctx:{params:Promise<{manuscriptId:string}>})=>Promise<Response>)|null=null;
+  let readinessUrl='';
+  if(process.env.R59_JOINT_NEXT_PRIVATE_FIXTURE==='fictional-only'){
+   const handler=await import(
+    '@/app/api/sovereign/writers-studio/manuscripts/[manuscriptId]/protected-readiness/route');
+   readinessGET=handler.GET;
+   readinessUrl='https://soullab.life/api/sovereign/writers-studio/manuscripts/'+
+    W[0]+'/protected-readiness';
+   const readinessRequest=()=>new NextRequest(readinessUrl,{
+    method:'GET',headers:{cookie:'maia_session='+token},
+   });
+   const actual=await readinessGET(readinessRequest(),{
+    params:Promise.resolve({manuscriptId:W[0]}),
+   });
+   const body=await actual.json();
+   expect(actual.status).toBe(423);
+   expect(body).toMatchObject({
+    kind:'protected_writer_not_yet_qualified',
+    canImport:false,canSave:false,canApply:false,canUndo:false,
+    encryptedWorkVerified:false,releaseApproved:false,
+   });
+   for(const privateMarker of [A,W[0],WORK,WORK2,token,
+    'lantern shimmers','R47_PRIVATE_LANTERN_'])
+    expect(JSON.stringify(body)).not.toContain(privateMarker);
+   expect((await handler.POST()).status).toBe(405);
+  }
+  const consent=process.env.WRITERS_STUDIO_BETA_CONSENT_SHA256;
+  await query('INSERT INTO writers_studio_beta_consent_events '+
+   '(member_id,actor_member_id,decision,policy_version,policy_sha256) '+
+   'VALUES($1,$1,$2,$3,$4)',
+   [A,'revoke','r57-fictional-v1',consent]);
+  const withdrawn=await reopenHeldRealPrivateEditorialR57(makeInput(WORK));
+  expect(withdrawn).toMatchObject({kind:'held_only_refused',
+   canApply:false,releaseApproved:false});
+  expect(JSON.stringify(withdrawn)).not.toContain('lantern shimmers');
+  if(readinessGET){
+   const after=await readinessGET(new NextRequest(readinessUrl,{
+    method:'GET',headers:{cookie:'maia_session='+token},
+   }),{params:Promise.resolve({manuscriptId:W[0]})});
+   expect(after.status).toBe(404);
+   const body=await after.json();
+   expect(body.releaseApproved).toBe(false);
+   expect(JSON.stringify(body)).not.toContain('lantern shimmers');
+  }
+  // A valid private proposal remains encrypted and in custody, but NO
+  // revoked writer receives a usable current-author preview.
+  const draft=await reopenHeldDraftR35({
+   subject:subject(),workId:W[0],generation:1,
+   custody:auth(keys[0].draft),
+  });
+  expect(draft.content).toBe(WHOLE);
  });
  it('reusing intent for a different selected alternative fails closed',async()=>{
   const alternative=selection(0);
