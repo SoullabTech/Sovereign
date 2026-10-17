@@ -305,5 +305,48 @@
       "source_body_accessed_for_original_curatorial_review": true,
       "rights_basis_for_metadata": "bibliographic reference and original commentary only"
     }
-  ]
+  ],
+  "edition_custody": {
+    "status": "unresolved_exact_edition_not_claimed",
+    "instruction": "Obtain title/ISBN and table of contents from Kelly's two owned copies before assigning page-specific or chapter-specific attributions.",
+    "observation": "Author's official catalog and individual product details disagree on page counts or trim sizes; a separate 2021 hardcover edition exists for Depth Analysis.",
+    "book_variants": [
+      {
+        "id": "perry-intro-book",
+        "source": "https://aaperry.com/astrology-books/",
+        "page_count": 376,
+        "edition": "unspecified official overview"
+      },
+      {
+        "id": "perry-intro-book",
+        "source": "https://aaperry.com/product/an-introduction-to-astropsychology/",
+        "page_count": 386,
+        "publication_date": "2012-05-12",
+        "isbn13": "9780615616025",
+        "edition": "2012 product listing"
+      },
+      {
+        "id": "perry-depth-book",
+        "source": "https://aaperry.com/astrology-books/",
+        "page_count": 229,
+        "trim_size": "6 x 9",
+        "edition": "unspecified official overview"
+      },
+      {
+        "id": "perry-depth-book",
+        "source": "https://aaperry.com/product/depth-analysis-of-the-natal-chart-advanced-therapeutic-astrology/",
+        "page_count": 229,
+        "trim_size": "8.5 x 11",
+        "edition": "unspecified official product listing"
+      },
+      {
+        "id": "perry-depth-book",
+        "source": "https://openlibrary.org/books/OL34773740M/Depth_Analysis_of_the_Natal_Chart",
+        "page_count": 424,
+        "isbn13": "9781737096627",
+        "publication_date": "2021-05-29",
+        "edition": "2021 hardcover catalog record, needs physical verification"
+      }
+    ]
+  }
 }
