@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import path from 'node:path';
 
 jest.mock('@/lib/auth/getMemberFromRequest',()=>({
- getMemberIdFromRequest:jest.fn(),
+ getMemberIdFromSessionToken:jest.fn(),
 }));
 jest.mock('@/lib/writersStudio/betaAccessServer',()=>({
  writersStudioBetaAccess:jest.fn(),
@@ -18,7 +18,7 @@ jest.mock('@/lib/db/postgres',()=>({
  query:jest.fn(),
 }));
 
-import {getMemberIdFromRequest} from '@/lib/auth/getMemberFromRequest';
+import {getMemberIdFromSessionToken} from '@/lib/auth/getMemberFromRequest';
 import {writersStudioBetaAccess} from '@/lib/writersStudio/betaAccessServer';
 import {hasActiveWriterBetaConsent}
  from '@/lib/writersStudio/betaConsentGate';
@@ -33,9 +33,11 @@ import {
 const MEMBER='11111111-1111-4111-8111-111111111111';
 const MANUSCRIPT='33333333-3333-4333-8333-333333333333';
 const FOREIGN='44444444-4444-4444-8444-444444444444';
+const LIVING_ONE='55555555-5555-4555-8555-555555555555';
+const LIVING_TWO='66666666-6666-4666-8666-666666666666';
 const BASE='/api/sovereign/writers-studio/manuscripts/';
 const END='/protected-readiness';
-const auth=getMemberIdFromRequest as jest.Mock;
+const auth=getMemberIdFromSessionToken as jest.Mock;
 const beta=writersStudioBetaAccess as jest.Mock;
 const consent=hasActiveWriterBetaConsent as jest.Mock;
 const pg=query as jest.Mock;
@@ -64,7 +66,10 @@ beforeEach(()=>{
  auth.mockResolvedValue(MEMBER);
  beta.mockResolvedValue({eligible:true,basis:'active_beta_tester'});
  consent.mockResolvedValue(true);
- pg.mockResolvedValue({rows:[{owns:true}]});
+ pg.mockImplementation(async(statement:string)=>{
+  return statement.includes('FROM member_manuscripts')?
+   {rows:[{owns:true}]}:{rows:[]};
+ });
 });
 afterAll(()=>{
  for(const k of keys){
@@ -86,13 +91,20 @@ describe('real authenticated Writer readiness route never grants writing',()=>{
   expect(r.headers.get('cache-control')).toContain('no-store');
   expect(r.headers.get('vary')).toContain('x-session-token');
   expect(auth).toHaveBeenCalledTimes(1);
+  expect(auth).toHaveBeenCalledWith('signed-in-fictional-only');
   expect(beta).toHaveBeenCalledWith(MEMBER);
   expect(consent).toHaveBeenCalledWith(
    MEMBER,{policyVersion:'pilot-v1',policySHA256:'b'.repeat(64)});
-  expect(pg).toHaveBeenCalledTimes(1);
+  expect(pg).toHaveBeenCalledTimes(2);
   expect(pg.mock.calls[0][0]).toContain('SELECT EXISTS(');
   expect(pg.mock.calls[0][0]).toContain('FROM member_manuscripts');
   expect(pg.mock.calls[0][1]).toEqual([MANUSCRIPT,MEMBER]);
+  expect(pg.mock.calls[1][0]).toContain('FROM living_work_expressions');
+  expect(pg.mock.calls[1][0]).toContain('JOIN living_works');
+  expect(pg.mock.calls[1][0]).toContain("e.expression_type='manuscript'");
+  expect(pg.mock.calls[1][0]).toContain('e.declared_by=$2');
+  expect(pg.mock.calls[1][0]).toContain('w.member_id=$2');
+  expect(pg.mock.calls[1][1]).toEqual([MANUSCRIPT,MEMBER]);
   const wire=JSON.stringify(await route().then(r=>r.json()));
   for(const sensitive of [MEMBER,MANUSCRIPT,'member_manuscripts',
    'sourceText','ciphertext','keyBytes'])expect(wire).not.toContain(sensitive);
@@ -207,7 +219,95 @@ describe('real authenticated Writer readiness route never grants writing',()=>{
   expect(result).toEqual({
    kind:'verified_member_owns_legacy_manuscript',
    memberId:MEMBER,manuscriptId:MANUSCRIPT,
+   declaredLivingWorkIds:[],mayWrite:false,releaseApproved:false,
+  });
+ });
+ it('a manuscript can belong to TWO explicitly declared Living Works without selecting one',async()=>{
+  pg.mockImplementation(async(statement:string)=>(
+   statement.includes('FROM member_manuscripts')?
+    {rows:[{owns:true}]}:
+    {rows:[{id:LIVING_ONE},{id:LIVING_TWO}]}
+  ));
+  const scope=await verifyWriterReadinessScope(req(),MANUSCRIPT);
+  expect(scope).toMatchObject({
+   kind:'verified_member_owns_legacy_manuscript',
+   declaredLivingWorkIds:[LIVING_ONE,LIVING_TWO],
    mayWrite:false,releaseApproved:false,
   });
+  expect((await route()).status).toBe(423);
+  const json=JSON.stringify(await route().then(x=>x.json()));
+  for(const privateId of [LIVING_ONE,LIVING_TWO,MEMBER,MANUSCRIPT])
+   expect(json).not.toContain(privateId);
+  expect(pg.mock.calls[1][0]).toContain('e.expression_id=$1');
+  expect(pg.mock.calls[1][0]).toContain('w.member_id=$2');
+  expect(pg.mock.calls[1][0]).toContain('e.declared_by=$2');
+ });
+ it('zero Living Work declarations does not silently create or select one',async()=>{
+  const scope=await verifyWriterReadinessScope(req(),MANUSCRIPT);
+  expect(scope).toMatchObject({
+   kind:'verified_member_owns_legacy_manuscript',
+   declaredLivingWorkIds:[],
+   mayWrite:false,releaseApproved:false,
+  });
+  expect(pg).toHaveBeenCalledTimes(2);
+  for(const [sql] of pg.mock.calls){
+   expect(String(sql)).not.toMatch(/\\b(?:INSERT|UPDATE|DELETE)\\b/i);
+  }
+ });
+ it('verified x-session-token is exact request credential, not an ambient cookie or member claim',async()=>{
+  const valid=req(MANUSCRIPT,{headers:{
+   'x-session-token':'fictional-safari-verified-token',
+   'x-member-id':MEMBER,
+  }});
+  expect((await route(valid)).status).toBe(423);
+  expect(auth).toHaveBeenCalledWith('fictional-safari-verified-token');
+  expect(auth).toHaveBeenCalledTimes(1);
+  expect(pg).toHaveBeenCalledTimes(2);
+ });
+ it('conflicting or malformed x-member-id and maia_member_id claims refuse BEFORE ownership lookup',async()=>{
+  const cases:Record<string,string>[]=[
+   {'x-session-token':'fictional-safari-verified-token',
+    'x-member-id':FOREIGN},
+   {'cookie':'maia_session=real-synthetic; maia_member_id='+FOREIGN},
+   {'cookie':'maia_session=real-synthetic; maia_member_id='+MEMBER,
+    'x-member-id':FOREIGN},
+  ];
+  for(const headers of cases){
+   expect((await route(req(MANUSCRIPT,{headers}))).status).toBe(403);
+  }
+  expect(auth).toHaveBeenCalledTimes(3);
+  expect(beta).not.toHaveBeenCalled();
+  expect(pg).not.toHaveBeenCalled();
+ });
+ it('invalid or duplicate declaration metadata and SQL outages fail closed',async()=>{
+  const cases=[
+   [{id:'forged-living-work-not-a-uuid'}],
+   [{id:LIVING_ONE},{id:LIVING_ONE}],
+  ];
+  for(const rows of cases){
+   pg.mockImplementation(async(statement:string)=>(
+    statement.includes('FROM member_manuscripts')?
+     {rows:[{owns:true}]}:{rows}));
+   const response=await route();
+   expect(response.status).toBe(503);
+   expect((await response.json()).releaseApproved).toBe(false);
+  }
+  pg.mockImplementation(async(statement:string)=>{
+   if(statement.includes('FROM member_manuscripts'))
+    return {rows:[{owns:true}]};
+   throw Error('fictional expression storage unavailable');
+  });
+  expect((await route()).status).toBe(503);
+ });
+ it('a missing, oversized or revoked request-bound credential cannot turn into an owner check',async()=>{
+  expect((await route(req(MANUSCRIPT,{headers:{}}))).status).toBe(401);
+  expect((await route(req(MANUSCRIPT,{headers:{
+   'x-session-token':'x'.repeat(257)}}))).status).toBe(401);
+  expect(auth).not.toHaveBeenCalled();
+  expect(pg).not.toHaveBeenCalled();
+  auth.mockResolvedValueOnce(null);
+  expect((await route(req(MANUSCRIPT,{headers:{
+   'x-session-token':'fictional-revoked-session'}}))).status).toBe(401);
+  expect(pg).not.toHaveBeenCalled();
  });
 });

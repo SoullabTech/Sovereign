@@ -17,6 +17,7 @@ test('the exact canonical UI + held encrypted journey are present in one source,
  assert.equal(r.canonicalSourceCheckCount,CHECKS.length);
  assert.equal(r.canonicalSourceChecksPassed,CHECKS.length);
  assert.equal(r.realReadOnlyWorkReadinessPresent,true);
+ assert.equal(r.explicitMemberWorkRelationshipVerifierPresent,true);
  assert.equal(r.defaultOffLegacyIngressGuardsPresent,true);
  assert.equal(r.guardedLegacyWriteMethods,13);
  assert.equal(r.knownLegacyWriterRoutes,12);
@@ -46,6 +47,21 @@ test('removing real read-only readiness is source drift, never permission to edi
  assert.equal(r.realReadOnlyWorkReadinessPresent,false);
  assert.equal(r.releaseApproved,false);
  assert.ok(r.changedContracts.some(x=>x.file.includes('protected-readiness')));
+});
+
+test('loss of request-token verification or explicit Work declarations is release DRIFT',()=>{
+ const file=resolve(ROOT,
+  'lib/writersStudio/release/verifyWriterReadinessScope.ts');
+ for(const damaged of [
+   '// fake helper with ambient next/headers cookies',
+   'getMemberIdFromSessionToken but not the declared link lookup',
+ ]){
+  const r=inspectCandidate(ROOT,{readText:target=>
+   target===file?damaged:readFileSync(target,'utf8')});
+  assert.equal(r.codeContract,'SOURCE_DRIFT_HOLD');
+  assert.equal(r.explicitMemberWorkRelationshipVerifierPresent,false);
+  assert.equal(r.releaseApproved,false);
+ }
 });
 
 test('missing one default-off old-write guard is source DRIFT, never beta GO',()=>{

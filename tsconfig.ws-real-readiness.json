@@ -4,6 +4,7 @@
  "files":[
    "lib/writersStudio/release/verifyWriterReadinessScope.ts",
    "lib/writersStudio/release/__tests__/verifyWriterReadinessScope.test.ts",
+   "scripts/ops/__tests__/wsBetaRealDeclaredWorkPG16.test.ts",
    "app/api/sovereign/writers-studio/manuscripts/[manuscriptId]/protected-readiness/route.ts"
  ],
  "include":[],

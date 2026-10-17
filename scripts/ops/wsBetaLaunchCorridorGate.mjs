@@ -35,6 +35,11 @@ export const CHECKS=Object.freeze([
    'protected_writer_not_yet_qualified','canSave:false,canApply:false,canUndo:false',
    'releaseApproved:false'],
   label:'real_authenticated_read_only_work_readiness'},
+ {file:'lib/writersStudio/release/verifyWriterReadinessScope.ts',
+  must:['getMemberIdFromSessionToken','living_work_expressions',
+   "e.expression_type='manuscript'",'e.declared_by=$2','w.member_id=$2',
+   'declaredLivingWorkIds','mayWrite:false'],
+  label:'request_session_and_explicit_living_work_relationships'},
  {file:'lib/writersStudio/release/heldLegacyWriterFenceR52.ts',
   must:['R52_REAL_LEGACY_PILOT_FENCE_ENABLED=false as const'],
   label:'legacy_writer_ingress_guards_default_off'},
@@ -134,6 +139,8 @@ export function inspectCandidate(root=ROOT,options={}){
   canonicalSourceChecksPassed:seen.filter(x=>x.found).length,
   realReadOnlyWorkReadinessPresent:
    seen.some(x=>x.label==='real_authenticated_read_only_work_readiness'&&x.found),
+  explicitMemberWorkRelationshipVerifierPresent:
+   seen.some(x=>x.label==='request_session_and_explicit_living_work_relationships'&&x.found),
   defaultOffLegacyIngressGuardsPresent:ingressValid,
   guardedLegacyWriteMethods:ingress.guardedWriteMethods??0,
   changedContracts:changed,

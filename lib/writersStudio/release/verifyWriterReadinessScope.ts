@@ -5,7 +5,7 @@
  */
 import type {NextRequest} from 'next/server';
 import {query} from '@/lib/db/postgres';
-import {getMemberIdFromRequest} from '@/lib/auth/getMemberFromRequest';
+import {getMemberIdFromSessionToken} from '@/lib/auth/getMemberFromRequest';
 import {writersStudioBetaAccess} from '@/lib/writersStudio/betaAccessServer';
 import {
  approvedBetaConsentPolicy,hasActiveWriterBetaConsent,
@@ -19,6 +19,9 @@ const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]
 export type VerifiedWriterReadinessScope={
  readonly kind:'verified_member_owns_legacy_manuscript';
  readonly memberId:string;readonly manuscriptId:string;
+ /** Explicit, member-declared Living Work relationships; NOT a choice of
+  * one exclusive Work, nor an encrypted key/custody grant. Server only. */
+ readonly declaredLivingWorkIds:readonly string[];
  /** Explicitly NOT a protected Work/key/consent-to-write authority. */
  readonly mayWrite:false;readonly releaseApproved:false;
 };
@@ -56,8 +59,9 @@ export async function verifyWriterReadinessScope(
       '/protected-readiness')
   return refuse(400,'malformed_request');
 
- // Historical cookie precedence can conceal a DIFFERENT simultaneously
- // submitted Safari token. Refuse such conflicts before a database read.
+ // Bind identity to exactly the credential on THIS NextRequest, rather than
+ // ambient next/headers cookies that could differ in a rewrapped request.
+ // Never prefer an unverified x-member-id or maia_member_id assertion.
  const cookie=request.cookies.get('maia_session')?.value||null;
  const header=request.headers.get('x-session-token');
  if(cookie&&header&&cookie!==header)
@@ -65,11 +69,19 @@ export async function verifyWriterReadinessScope(
  if(['x-work-id','x-section-id','x-alternative-id',
      'x-author-confirmed'].some(k=>request.headers.has(k)))
   return refuse(403,'conflicting_credentials');
+ const presented=header||cookie;
+ if(!presented||presented.length>256)return refuse(401,'missing_session');
 
  let memberId:string|null=null;
- try{memberId=await getMemberIdFromRequest(request);}
+ try{memberId=await getMemberIdFromSessionToken(presented);}
  catch{return refuse(503,'read_authority_unavailable');}
  if(!memberId)return refuse(401,'missing_session');
+ const claimed=[
+  request.headers.get('x-member-id'),
+  request.cookies.get('maia_member_id')?.value||null,
+ ].filter((v):v is string=>!!v);
+ if(claimed.some(v=>v!==memberId))
+  return refuse(403,'conflicting_credentials');
 
  try{
   const access=await writersStudioBetaAccess(memberId);
@@ -92,8 +104,30 @@ export async function verifyWriterReadinessScope(
   if(owned.rows.length!==1||owned.rows[0].owns!==true)
    return refuse(404,'not_an_owned_manuscript');
 
+  // A protected R35 draft is addressed by the manuscript UUID. A Soullab
+  // Living Work is a distinct member-authored concept, and one manuscript
+  // can be declared in several Living Works. Do NOT infer a default or
+  // automatically create a declaration; query only explicit owner records.
+  const declarations=await query<{id:string}>(`
+   SELECT w.id AS id
+    FROM living_work_expressions e
+    JOIN living_works w ON w.id=e.living_work_id
+   WHERE e.expression_type='manuscript'
+     AND e.expression_id=$1
+     AND e.declared_by=$2
+     AND w.member_id=$2
+   ORDER BY w.id ASC`,[manuscriptId,memberId]);
+  if(!Array.isArray(declarations.rows)||
+     declarations.rows.some(r=>!UUID.test(r?.id??'')))
+   return refuse(503,'read_authority_unavailable');
+  const declaredLivingWorkIds=declarations.rows.map(r=>r.id);
+  if(new Set(declaredLivingWorkIds.map(id=>id.toLowerCase())).size!==
+    declaredLivingWorkIds.length)
+   return refuse(503,'read_authority_unavailable');
+
   return {kind:'verified_member_owns_legacy_manuscript',
-   memberId,manuscriptId,mayWrite:false,releaseApproved:false};
+   memberId,manuscriptId,declaredLivingWorkIds,
+   mayWrite:false,releaseApproved:false};
  }catch{
   // Unavailable consent or DB can never mean permitted plaintext fallback.
   return refuse(503,'read_authority_unavailable');
