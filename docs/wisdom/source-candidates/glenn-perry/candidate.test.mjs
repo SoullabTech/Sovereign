@@ -20,7 +20,7 @@ const read = (name) => readFileSync(join(current, name), 'utf8');
 const parsed = (name) => JSON.parse(read(name));
 
 test('file-level frontmatter refuses retrieval and declares human review', () => {
-  for (const file of ['README.md', 'editorial-reading-guide.md']) {
+  for (const file of ['README.md', 'editorial-reading-guide.md', 'soullab-original-teaching-candidate.md']) {
     const text = read(file);
     const frontmatter = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
     assert.ok(frontmatter, file + ' missing YAML frontmatter');
@@ -76,6 +76,47 @@ test('edition metadata holds conflicting book listings open for physical confirm
   assert.ok(countFor('perry-depth-book') >= 2);
   assert.ok(editions.book_variants.some((r) => r.id === 'perry-intro-book' && r.page_count === 376));
   assert.ok(editions.book_variants.some((r) => r.id === 'perry-intro-book' && r.page_count === 386));
+});
+
+test('claim-level custody distinguishes the author's proposals from Soullab choices', () => {
+  const ledger = parsed('claims.json');
+  const allowed = new Set(['perry_proposition', 'soullab_editorial_choice']);
+  const sources = new Set(parsed('sources.json').references.map((r) => r.id));
+  assert.equal(ledger.status, 'review_only_not_admitted');
+  assert.ok(ledger.claims.length >= 12);
+  const ids = new Set();
+  for (const claim of ledger.claims) {
+    assert.ok(allowed.has(claim.claim_origin), claim.id);
+    assert.ok(claim.epistemic_kind && claim.safe_example && claim.unsafe_example);
+    assert.ok(claim.summary && !ids.has(claim.id));
+    ids.add(claim.id);
+    for (const id of claim.reference_ids) assert.ok(sources.has(id), 'unknown reference ' + id);
+    assert.equal(claim.source_text_stored, false);
+    assert.equal(claim.member_data_stored, false);
+    assert.equal(claim.ready_for_member_retrieval, false);
+    assert.equal(claim.requires_founder_review, true);
+  }
+  assert.ok(ledger.claims.some((c) => c.id === 'life_story'
+    && c.claim_origin === 'perry_proposition'
+    && c.epistemic_kind.includes('teleological')));
+  assert.ok(ledger.claims.some((c) => c.id === 'no_fate_claim'
+    && c.claim_origin === 'soullab_editorial_choice'));
+});
+
+test('original Soullab teaching remains optional, attributed, and unpublished', () => {
+  const teaching = read('soullab-original-teaching-candidate.md');
+  assert.match(teaching, /^safe_for_retrieval: false$/m);
+  assert.match(teaching, /^status: review$/m);
+  assert.ok(teaching.includes("pending Kelly's approval"));
+  for (let n=1; n<=7; n++) assert.ok(teaching.includes('### ' + n + '.'));
+  assert.equal((teaching.match(/## Fictional demonstration:/g) || []).length, 3);
+  assert.ok(teaching.includes('not established causal scientific facts'));
+  assert.ok(teaching.includes("Soullab's member-centered adaptation"));
+  assert.ok(teaching.includes('No chart may be used') || teaching.includes('cannot diagnose psychiatric disorders'));
+  const knownUrls = new Set(parsed('sources.json').references.map((r) => r.url));
+  const urls = new Set(teaching.match(/https:\/\/aaperry\.com\/[^)\s]+/g) || []);
+  assert.ok(urls.size >= 5);
+  for (const url of urls) assert.ok(knownUrls.has(url), 'undeclared linked source: ' + url);
 });
 
 test('fictional acceptance prompts cover positive and fail-closed behavior', () => {
