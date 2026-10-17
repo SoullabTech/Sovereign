@@ -14,6 +14,9 @@ import {inspectPrivateChoiceApplyR48} from '../../../lib/writersStudio/recovery/
 import {prepareHeldUndoR47,submitHeldUndoR47,
  R47_REAL_DURABLE_UNDO_ENABLED} from '../../../lib/writersStudio/recovery/heldDurableUndoR47';
 import {inspectSpentApplyR48,R48_REAL_SPENT_APPLY_RECOVERY_ENABLED} from '../../../lib/writersStudio/recovery/heldSpentApplyEvidenceR48';
+import {HeldCanonicalAuthorJourneyR53,R53_REAL_CANONICAL_AUTHOR_JOURNEY_ENABLED} from '../../../lib/writersStudio/recovery/heldCanonicalAuthorJourneyR53';
+import {exactTextareaPassageR41} from '../../../lib/writersStudio/exactLiveSelectionR41';
+import {runR54Pc3FictionalBrowser} from '../wsBetaR54Pc3Browser';
 import type {R37SectionSelection,R37FixtureGesture,R37UndoGesture} from '../../../lib/writersStudio/recovery/heldSectionApplyR37';
 import {Pool} from 'pg';
 import {createHash,createHmac,generateKeyPairSync,randomBytes,randomUUID,sign} from 'node:crypto';
@@ -62,6 +65,11 @@ let savedR48CompletedToken:string|null=null;
 let savedR48UnresolvedToken:string|null=null;
 const r47Only=r46Only&&process.env.R47_DURABLE_UNDO_FIXTURE==='fictional-only';
 const undoTest=r47Only?it:it.skip;
+const r53Only=r47Only&&process.env.R53_CANONICAL_AUTHOR_FIXTURE==='fictional-only';
+const canonicalAuthorTest=r53Only?it:it.skip;
+const r54Only=r53Only&&process.env.R54_PC3_BROWSER_FIXTURE==='fictional-only';
+const r54BrowserTest=r54Only?it:it.skip;
+
 const choiceTest=r43Only?it:it.skip;
 const A='11111111-1111-4111-8111-111111111111';
 const B='22222222-2222-4222-8222-222222222222';
@@ -82,6 +90,9 @@ const W13='33333333-3333-4333-8333-33333333333c';
 const W14='33333333-3333-4333-8333-33333333333d';
 const W15='33333333-3333-4333-8333-33333333333e';
 const W16='33333333-3333-4333-8333-33333333333f';
+const W17='33333333-3333-4333-8333-333333333340';
+const W18='33333333-3333-4333-8333-333333333341';
+const W19='33333333-3333-4333-8333-333333333342';
 const BWORK='44444444-4444-4444-8444-444444444444';
 const S1='66666666-6666-4666-8666-666666666661';
 const S2='66666666-6666-4666-8666-666666666662';
@@ -370,19 +381,96 @@ function heldChoiceContext(workId:string,request:NextRequest,
    workFence,nowMs:()=>NOW};
 }
 
+async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string){
+ if(!r54Only)throw Error('R54_REQUIRES_EXACT_FICTIONAL_PG16_OPT_IN');
+ const options=[
+  {id:PICK,origin:'maia' as const,wording:'first enchanted'},
+  {id:OTHER,origin:'member' as const,wording:'first sparkling'},
+ ];
+ const agent=new HeldCanonicalAuthorJourneyR53();
+ const authority=(body:unknown)=>({
+  context:heldChoiceContext(workId,authorChoiceRequest(body)),
+  custody:custody(workId),
+  approvalIssuerSecret:Buffer.alloc(32,0x54),alternatives:options,
+ });
+ const current=async()=>{
+  const result=await query<{generation:number|string}>(
+   'SELECT generation FROM writers_studio_r35_draft_heads '+
+   'WHERE work_id=$1 AND member_id=$2',[workId,A]);
+  if(result.rows.length!==1)throw Error('R54_NO_MEMBER_OWNED_DRAFT');
+  const generation=Number(result.rows[0].generation);
+  const view=await reopenHeldDraftR35({
+   subject:subject(),workId,custody:custody(workId),generation,
+  });
+  if(view.sections.length!==2||view.sections[0].id!==S1)
+   throw Error('R54_SECTION_TOPOLOGY_NOT_RECONCILED');
+  return {generation,sectionId:S1,body:view.sections[0].text,
+   action:view.action,restoredFrom:view.restoredFrom};
+ };
+ const evidence=process.env.R54_BROWSER_EVIDENCE_DIR||'';
+ if(!evidence.startsWith('/Volumes/T7 Shield/ws-beta-r54-native-pc3-evidence-20261016/')||
+   !/\/run-[a-f0-9-]+$/.test(evidence))
+  throw Error('R54_NOT_AN_ISOLATED_BROWSER_EVIDENCE_FOLDER');
+ const response=await runR54Pc3FictionalBrowser({
+  engine,evidenceDir:path.join(evidence,engine),
+  check:(ok,label)=>{
+   expect(ok).toBe(true);
+   expect(label).not.toContain('R38 first fictional section');
+  },
+  operations:{
+   current,
+   dispatch:async(action,payload)=>{
+    if(action==='review')return agent.review(authority(payload));
+    if(action==='apply')return agent.apply(authority(payload));
+    if(action==='undo-review')return agent.reviewUndo(authority(payload));
+    return agent.undo(authority(payload));
+   },
+  },
+ });
+ expect(response).toMatchObject({
+  engine,browserClosed:true,serverClosed:true,externalRequests:0,
+ });
+ expect(response.screenshots).toHaveLength(4);
+ expect(response.checksPassed).toBeGreaterThanOrEqual(30);
+ console.log('R54_BROWSER_META',JSON.stringify({
+  engine,checksPassed:response.checksPassed,
+  screenshots:response.screenshots.length,externalRequests:response.externalRequests,
+ }));
+ const end=await current();
+ expect(end).toMatchObject({
+  generation:3,action:'restore',restoredFrom:1,
+  body:'R38 first fictional section\n\n',
+ });
+ const versions=await query<{action:string}>(
+  'SELECT action FROM writers_studio_r35_draft_versions '+
+   'WHERE work_id=$1 ORDER BY generation',[workId]);
+ expect(versions.rows.map(x=>x.action)).toEqual(['start','save','restore']);
+ for(const table of [
+  'writers_studio_r44_held_approval',
+  'writers_studio_r47_held_undo',
+ ]){
+  const q=await query<{n:number}>(
+   'SELECT count(*)::int AS n FROM '+table+
+   " WHERE work_id=$1 AND state='spent'",[workId]);
+  expect(q.rows[0].n).toBe(1);
+ }
+}
+
 group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG16',()=>{
  beforeAll(async()=>{
   // Exact fixture flags, PG setup and policy are prepared by the separate,
   // R38-named ephemeral PG16 driver. Never alter shared production tables.
   expect(R38_REAL_ENCRYPTED_DRAFT_ROUTE_ENABLED).toBe(false);
   expect(R35_REAL_MEMBER_PROTECTED_DRAFT_ENABLED).toBe(false);
-  const works=r48JoinedOnly?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13,W14,W15,W16]:
+  const works=r54Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13,W14,W15,W16,W17,W18,W19]:
+   r53Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13,W14,W15,W16,W19]:
+   r48JoinedOnly?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13,W14,W15,W16]:
    r47Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13,W14,W15]:
    r46Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13]:
-    r43Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11]:
-    [W1,W2,W3,W4,W5,W6,W7,W8,W9];
+   r43Only?[W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11]:
+   [W1,W2,W3,W4,W5,W6,W7,W8,W9];
   for(const work of works)
-    await seed(work,[W4,W7,W8,W9,W10,W11,W12,W13,W14,W15,W16].includes(work));
+    await seed(work,[W4,W7,W8,W9,W10,W11,W12,W13,W14,W15,W16,W17,W18,W19].includes(work));
  });
  afterAll(async()=>{
   await closePool();
@@ -1005,5 +1093,118 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
   expect(JSON.stringify(exact)).not.toContain('first enchanted');
   expect(JSON.stringify(exact)).not.toContain(prepared.opaqueToken);
  });
+
+
+ canonicalAuthorTest('R53 canonical R41 exact passage -> R44 consumed signed Apply -> separately approved R47 Undo',async()=>{
+  expect(R53_REAL_CANONICAL_AUTHOR_JOURNEY_ENABLED).toBe(false);
+  const initial=await reopenHeldDraftR35({
+   subject:subject(),workId:W19,custody:custody(W19),generation:1,
+  });
+  const first=initial.sections[0].text;
+  const word='first fictional';
+  const at=first.indexOf(word);
+  const picked=exactTextareaPassageR41(first,first,at,at+word.length);
+  expect(picked).not.toBeNull();
+  const alternatives=[
+   {id:PICK,origin:'maia' as const,wording:'first enchanted'},
+   {id:OTHER,origin:'member' as const,wording:'first sparkling'},
+  ];
+  const session=new HeldCanonicalAuthorJourneyR53();
+  const authority=(request:NextRequest)=>({
+   context:heldChoiceContext(W19,request),
+   approvalIssuerSecret:Buffer.alloc(32,0x53),
+   custody:custody(W19),alternatives,
+  });
+  const request=(data:unknown,origin='https://soullab.life')=>
+   new NextRequest('https://soullab.life/api/sovereign/writers-studio/held-pair',{
+    method:'POST',
+    headers:{host:'soullab.life',origin,
+     'content-type':'application/json','x-session-token':TOKENS.A},
+    body:JSON.stringify(data),
+   });
+  const reviewBody={
+   kind:'review_exact_passage',expectedGeneration:1,
+   sectionId:S1,selected:picked,chosenAlternativeId:PICK,
+  };
+  // An editor must not accept client-authored replacement text or
+  // another member's Work/section as a review.
+  expect((await session.review(authority(request({
+   ...reviewBody,replacement:'arbitrary browser prose',
+  })))).kind).toBe('refused');
+  expect(await generations(W19)).toBe(1);
+  const reviewed=await session.review(authority(request(reviewBody)));
+  expect(reviewed).toMatchObject({
+   kind:'fictional_author_review',generation:1,sectionId:S1,
+   alternativeId:PICK,originalPassage:word,
+   proposedPassage:'first enchanted',canAutoApply:false,
+   releaseApproved:false,
+  });
+  if(reviewed.kind!=='fictional_author_review')
+   throw Error('r53_fictional_author_preview_failed');
+  expect(await generations(W19)).toBe(1);
+  const applyBody={kind:'apply_reviewed_change',opaqueToken:reviewed.reviewToken};
+  const applied=await session.apply(authority(request(applyBody)));
+  expect(applied).toMatchObject({
+   kind:'fictional_author_apply_saved',generation:2,
+   durableClaimSpent:true,canAutoRetry:false,releaseApproved:false,
+  });
+  expect((await session.apply(authority(request(applyBody)))).kind)
+   .toBe('refused');
+  expect(await generations(W19)).toBe(2);
+  const changed=await reopenHeldDraftR35({
+   subject:subject(),workId:W19,custody:custody(W19),generation:2,
+  });
+  expect(changed.sections[0].text).toContain('first enchanted');
+  expect(changed.sections[1]).toEqual(initial.sections[1]);
+  // The spent Apply token cannot be repurposed to Undo this revision.
+  expect((await session.undo(authority(request({
+   kind:'undo_reviewed_change',opaqueToken:reviewed.reviewToken,
+  })))).kind).toBe('refused');
+  expect(await generations(W19)).toBe(2);
+  // The second action must be initiated separately after the first Save.
+  const undoReview=await session.reviewUndo(authority(request({
+   kind:'review_last_apply_for_undo',
+  })));
+  expect(undoReview).toMatchObject({
+   kind:'fictional_author_undo_review',
+   appliedGeneration:2,restoresGeneration:1,
+   canAutoUndo:false,releaseApproved:false,
+  });
+  if(undoReview.kind!=='fictional_author_undo_review')
+   throw Error('r53_fictional_undo_review_failed');
+  const undone=await session.undo(authority(request({
+   kind:'undo_reviewed_change',opaqueToken:undoReview.undoToken,
+  })));
+  expect(undone).toMatchObject({
+   kind:'fictional_author_undo_saved',generation:3,
+   durableClaimSpent:true,canAutoRetry:false,releaseApproved:false,
+  });
+  expect((await session.undo(authority(request({
+   kind:'undo_reviewed_change',opaqueToken:undoReview.undoToken,
+  })))).kind).toBe('refused');
+  const restored=await reopenHeldDraftR35({
+   subject:subject(),workId:W19,custody:custody(W19),generation:3,
+  });
+  expect(restored.sections).toEqual(initial.sections);
+  expect(restored.action).toBe('restore');
+  expect(await generations(W19)).toBe(3);
+  expect((await query<{n:number}>(
+   "SELECT count(*)::int AS n FROM writers_studio_r44_held_approval WHERE work_id=$1 AND state='spent'",
+   [W19])).rows[0].n).toBe(1);
+  expect((await query<{n:number}>(
+   "SELECT count(*)::int AS n FROM writers_studio_r47_held_undo WHERE work_id=$1 AND state='spent'",
+   [W19])).rows[0].n).toBe(1);
+  for(const value of [reviewed.reviewToken,undoReview.undoToken,
+   'first fictional','first enchanted'])
+   expect(JSON.stringify(applied)+JSON.stringify(undone)).not.toContain(value);
+ });
+
+
+ r54BrowserTest('R54 actual canonical Shell + PC3 author panel in Chrome saves and restores encrypted Work',async()=>{
+  await runActualR54BrowserTest('chromium',W17);
+ },90000);
+ r54BrowserTest('R54 actual canonical Shell + PC3 author panel in WebKit saves and restores encrypted Work',async()=>{
+  await runActualR54BrowserTest('webkit',W18);
+ },90000);
 
 });

@@ -21,6 +21,7 @@ test('the exact canonical UI + held encrypted journey are present in one source,
  assert.equal(r.readOnlyEncryptedMetadataObserverPresent,true);
  assert.equal(r.actualEditorUXGuardsPresent,true);
  assert.equal(r.actualNextBrowserFixturePresent,true);
+ assert.equal(r.nativeAuthorJourneyDefaultOffPresent,true);
  assert.equal(r.defaultOffLegacyIngressGuardsPresent,true);
  assert.equal(r.guardedLegacyWriteMethods,13);
  assert.equal(r.knownLegacyWriterRoutes,12);
@@ -102,6 +103,23 @@ test('missing the real Next browser test is source DRIFT',()=>{
  assert.equal(r.codeContract,'SOURCE_DRIFT_HOLD');
  assert.equal(r.actualNextBrowserFixturePresent,false);
  assert.equal(r.releaseApproved,false);
+});
+
+test('native PC3 author controls require the exact default-OFF R54 and held R53 backend',()=>{
+ for(const relativeName of [
+   'app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx',
+   'app/dev/writers-studio-pc3-live/P4R1ProtectedAuthorJourneyR54.tsx',
+   'lib/writersStudio/recovery/heldCanonicalAuthorJourneyR53.ts',
+ ]){
+  const file=resolve(ROOT,relativeName);
+  const r=inspectCandidate(ROOT,{readText:target=>
+   target===file?'// deleted author action, no verified server boundary':
+     readFileSync(target,'utf8')});
+  assert.equal(r.codeContract,'SOURCE_DRIFT_HOLD');
+  assert.equal(r.nativeAuthorJourneyDefaultOffPresent,false);
+  assert.equal(r.releaseApproved,false);
+  assert.equal(r.candidateRelease,'HOLD');
+ }
 });
 
 test('missing one default-off old-write guard is source DRIFT, never beta GO',()=>{
