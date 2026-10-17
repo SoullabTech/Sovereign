@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.r75-producer-witness.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/scribe/ownedReportDataR77.ts",
+    "lib/scribe/__tests__/ownedReportDataR77.test.ts",
+    "app/api/scribe/export-report/route.ts",
+    "app/api/scribe/export-report/__tests__/r77OwnershipAndReport.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
