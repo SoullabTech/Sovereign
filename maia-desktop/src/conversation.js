@@ -192,8 +192,10 @@ function createConversation({ session, diagnostics, sessionId }) {
   function privacyState() {
     return {
       privacyChoice: choice,
-      ready: choice === 'sanctuary' ||
-        (choice === 'continuity' && canonicalThreadVerified),
+      // Protected processing is held until third-party/local provider custody
+      // and related non-use constraints are verified. A protected choice must
+      // never be interpreted as ready-to-transmit member text.
+      ready: choice === 'continuity' && canonicalThreadVerified,
     };
   }
 
@@ -394,6 +396,9 @@ function createConversation({ session, diagnostics, sessionId }) {
   }
 
   async function ask(message) {
+    if (choice === 'sanctuary') {
+      return { ok: false, error: 'Sanctuary messaging is on hold until private model processing is verified. Nothing was sent.' };
+    }
     if (!privacyState().ready) {
       return { ok: false, error: 'Choose privacy and confirm the thread before sending.' };
     }

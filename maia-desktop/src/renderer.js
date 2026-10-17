@@ -62,7 +62,7 @@ function showPrivacy() {
   $('privacy-sanctuary').setAttribute('aria-pressed', choice === 'sanctuary' ? 'true' : 'false');
   $('privacy-continuity').setAttribute('aria-pressed', choice === 'continuity' ? 'true' : 'false');
   $('privacy-status').textContent =
-    choice === 'sanctuary' ? 'Sanctuary selected. Typed turns require server verification; voice is held.' :
+    choice === 'sanctuary' ? 'Sanctuary selected. Messaging and voice are on hold pending private-processing qualification.' :
     choice === 'continuity' && privacyReady() ? 'Continuity selected and your thread verified.' :
     choice === 'continuity' ? 'Continuity selected. Checking your existing conversation before Send.' :
     'Choose before sending or opening the microphone.';

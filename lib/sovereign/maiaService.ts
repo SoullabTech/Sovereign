@@ -139,6 +139,7 @@ import {
   type ResolvedOrientation,
 } from '../maia/orientation/contract';
 import { TurnPosture } from '../sanctuary/turnPosture';
+import { requireQualifiedConversationProcessing } from '../sanctuary/processingQualification';
 import { recordConsentState } from '../provenance/consentState';
 import { VoiceDistinctionScorer } from '../spiralogic/VoiceDistinctionScorer';
 import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
@@ -3083,6 +3084,11 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   // H3: the Writer lane carries its already-resolved posture; every other caller
   // resolves its own exactly as before.
   const turnPosture = writerStudio?.posture ?? TurnPosture.resolve(meta);
+  // RF01 S1-A: direct non-Writer MAIA callers may not bypass the serving
+  // route's protected-processing refusal. Writer Studio has its own governance.
+  if (!writerStudio) {
+    requireQualifiedConversationProcessing({ sanctuary: turnPosture.sanctuary });
+  }
   // 🆘 SAFETY-CRISIS-01: assess the member's own words on the server. The result
   // ALWAYS overwrites `meta.crisisSafetyAddendum`, so a client cannot supply,
   // suppress or replace safety context through the request body (PBR-001). Pure,
@@ -3968,7 +3974,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       userId: memberRef(userId),
       explorerId: (meta as any)?.explorerId,
       sessionId,
-      db: process.env.DATABASE_URL ?? '(no DATABASE_URL env)',
+      databaseConfigured: !!process.env.DATABASE_URL,
     });
 
     // 🔒 SANCTUARY MODE: Skip all persistence when sanctuary=true
@@ -4454,7 +4460,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     const isRewritePass =
       meta?.rewritePass === true || meta?.ainRewritePass === true;
 
-    if (telemetryEnabled && !isRewritePass) {
+    if (telemetryEnabled && !isRewritePass && !isSanctuary) {
       const shapeContext: AINShapeContext = { counselMode: normalizeMode((meta as any)?.mode) === 'counsel' };
       let shape = assessAINResponseShape(input, text, shapeContext);
 

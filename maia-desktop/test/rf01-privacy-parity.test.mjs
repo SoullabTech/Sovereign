@@ -127,22 +127,17 @@ test('fabricated success with a mismatching receipt refuses MAIA processing', as
   assert.deepEqual(calls.map(c => c.pathname), [TURNS_PATH, CONSENT_PATH]);
 });
 
-test('Sanctuary starts a fresh unadopted conversation and refuses external transcription', async () => {
+test('Sanctuary selected while private processing is unqualified refuses all egress', async () => {
   const { conv, calls } = fixture();
   assert.equal(conv.choosePrivacy('sanctuary').ok, true);
-  assert.equal(conv.privacyState().ready, true);
+  assert.equal(conv.privacyState().privacyChoice, 'sanctuary');
+  assert.equal(conv.privacyState().ready, false);
   const transcribed = await conv.transcribe(new Float32Array(1600), 16000);
   assert.equal(transcribed.ok, false);
-  assert.match(transcribed.error, /Sanctuary voice/i);
-  assert.equal(calls.length, 0);
   const answered = await conv.ask('FICTIONAL_PROTECTED_WORDS');
-  assert.equal(answered.ok, true);
-  assert.equal(answered.audio, null);
-  assert.deepEqual(calls.map(c => c.pathname), [CONSENT_PATH, MAIA_PATH]);
-  assert.equal(calls[0].body.privacyChoice, 'sanctuary');
-  assert.equal(calls[0].body.explicitRemembrance, false);
-  assert.equal(calls[1].body.sanctuary, true);
-  assert.equal(calls[1].body.includeAudio, false);
+  assert.equal(answered.ok, false);
+  assert.match(answered.error, /Sanctuary messaging is on hold/);
+  assert.deepEqual(calls, [], 'protected words/voice never crossed a network boundary');
 });
 
 test('a second renderer request cannot change privacy mid-encounter', async () => {

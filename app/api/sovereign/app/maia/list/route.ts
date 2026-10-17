@@ -104,6 +104,7 @@ import { launchRelationalFieldShadow } from '@/lib/maia/relational-field-shadow/
 import { TurnsStore, ExchangeIdentityConflict } from '@/lib/memory/stores/TurnsStore';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { verifyExplicitTurnConsent } from '@/lib/sanctuary/explicitTurnConsent';
+import { requireQualifiedConversationProcessing, protectedProcessingRefusal, SanctuaryProcessingUnqualified } from '@/lib/sanctuary/processingQualification';
 import { scrubMemoryAmnesia } from '@/lib/maia/prompts/memoryCanonGuard';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { normalizedSessionId, ensureOwnedMemberSession, ensureGuestSession, SessionOwnershipRefusal } from '@/lib/sovereign/memberSessionOwnership';
@@ -114,7 +115,6 @@ import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
 import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
 import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
-import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 import { resolveMemberIdentity } from './resolveIdentity';
 import { getRelationshipAnamnesis, saveRelationshipEssence, loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext } from '@/lib/memory/MemberLiveContext';
@@ -502,6 +502,17 @@ export async function POST(req: NextRequest) {
         error: privacyAuthority.code, action: 'RECONFIRM_PRIVACY_BEFORE_SEND',
       }, status);
     }
+    // RF01 S1-A: a non-retention receipt does not authorize model/voice
+    // processing. Until provider and aftermath custody are verified, refuse
+    // protected turns before F1, field inference, external egress or telemetry.
+    try {
+      requireQualifiedConversationProcessing({ sanctuary: isSanctuary });
+    } catch (err) {
+      if (err instanceof SanctuaryProcessingUnqualified) {
+        return jsonWithCors(req, protectedProcessingRefusal(), 503);
+      }
+      throw err;
+    }
     let memberTurnDurable = false;
 
     if (isRecognizedUser && !isSanctuary) {
@@ -700,24 +711,16 @@ export async function POST(req: NextRequest) {
     const explicitIdentityInquiryClassification = classifyExplicitIdentityInquiry(message);
     void explicitIdentityInquiryClassification;
 
-    // ⚡ LATENCY FIX: Parallelize session init with cognitive profile + name change detection.
-    // Previously these ran sequentially (~200-500ms each).
-    // Session init must complete before ensureSession, but cognitive profile and
-    // name change detection are independent and can overlap.
+    // Parallelize session creation and profile retrieval without any
+    // conversation-derived account-setting mutation.
     await withTimeoutLabeled('initializeSessionTable', initializeSessionTable(), 5000, start);
 
-    // Run session creation, cognitive profile, and name change in parallel
-    const isRecognizedForProfile = typeof userId === 'string' && userId.length > 0 && !userId.startsWith('anon:');
-    const [session, cognitiveProfileResult, nameChangeResult] = await Promise.all([
+    // Run session creation and cognitive profile retrieval in parallel.
+    const [session, cognitiveProfileResult] = await Promise.all([
       withTimeoutLabeled('ensureSession', ensureSession(acceptedSessionId), 5000, start),
       (userId || sessionId)
         ? withTimeoutLabeled('getCognitiveProfile', getCognitiveProfile(userId || sessionId!), 5000, start)
             .catch(err => { console.warn('⚠️ [Field Safety] Could not fetch cognitive profile:', err); return null; })
-        : Promise.resolve(null),
-      (isRecognizedForProfile && message)
-        ? processNameChangeIfDetected(message, userId!)
-            .then(r => { if (r.detected && r.updated) console.log(`✨ [NAME_CHANGE] User asked to be called "${r.newName}" - updated`); return r; })
-            .catch(err => { console.warn('⚠️ [NAME_CHANGE] Detection failed (non-blocking):', err); return null; })
         : Promise.resolve(null),
     ]);
 
@@ -973,7 +976,7 @@ export async function POST(req: NextRequest) {
       console.log(`📦 [Route/MemoryBundle] Turns: ${memoryBundle.retrievalStats.turnsRetrieved} (same-session: ${memoryBundle.retrievalStats.turnsSameSession}, cross: ${memoryBundle.retrievalStats.turnsCrossSession})`);
       console.log(`📦 [Route/MemoryBundle] Relationship: encounters=${memoryBundle.relationshipSnapshot.encounterCount}, breakthroughs=${memoryBundle.relationshipSnapshot.breakthroughCount}`);
       if (memoryContext.length > 0) {
-        console.log(`📦 [Route/MemoryBundle] Context preview (first 300 chars): ${memoryContext.slice(0, 300)}...`);
+        console.log('[Route/MemoryBundle] Context present (content not logged)');
       } else {
         console.warn(`⚠️ [Route/MemoryBundle] memoryContext is EMPTY despite retrieval!`);
       }
@@ -2154,11 +2157,6 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         providerUsed,
         model: modelUsed,
         modeUsed,
-        // ✨ Name change detection result (if user said "call me X")
-        nameChange: nameChangeResult?.detected ? {
-          newName: nameChangeResult.newName,
-          updated: nameChangeResult.updated,
-        } : undefined,
       },
     };
 

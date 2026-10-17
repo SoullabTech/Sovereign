@@ -58,11 +58,11 @@ import { calculateCurrentTransits, findTransitAspects, type TransitPositions, ty
 import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult, type Element } from '@/lib/memory/selflet';
 import { validateSocraticResponse, type SocraticValidationResult } from '@/lib/validation/socraticValidator';
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
-import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@/lib/sovereign/decisionGovernor';
 import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { verifyExplicitTurnConsent, validExchangeId } from '@/lib/sanctuary/explicitTurnConsent';
+import { requireQualifiedConversationProcessing, protectedProcessingRefusal, SanctuaryProcessingUnqualified } from '@/lib/sanctuary/processingQualification';
 import { ensureOwnedMemberSession, ensureGuestSession, SessionOwnershipRefusal } from '@/lib/sovereign/memberSessionOwnership';
 import { hasContinuityAccess, toMemberTier } from '@/lib/auth/tierAccess';
 import { normalizeConversationMode, isRelationshipMode, type ConversationMode } from '@/lib/api/conversationMode';
@@ -1036,6 +1036,20 @@ export async function POST(req: NextRequest) {
           consent.code === 'CONSENT_UNAVAILABLE' ? 503 : 428 });
     }
 
+    // RF01 S1-A: refuse protected content before model generation, metadata
+    // writes, account settings, telemetry or any remote speech processing.
+    try {
+      requireQualifiedConversationProcessing({ sanctuary: isSanctuary });
+    } catch (err) {
+      if (err instanceof SanctuaryProcessingUnqualified) {
+        return withSessionCookie(
+          NextResponse.json(protectedProcessingRefusal(), { status: 503 }),
+          sessionCookie,
+        );
+      }
+      throw err;
+    }
+
     // 🔒 ACTIVE SESSION: Mark this session as active (for maintenance mode tracking)
     await touchActiveSession({
       sessionId: safeSessionId,
@@ -1135,7 +1149,7 @@ This user is in guest mode (no authenticated identity).
     // Log mode for debugging
     console.log('[Chat API] Mode parameter:', mode || 'not provided (will default to dialogue)');
     console.log('[Chat API] Effective userId:', effectiveUserId);
-    console.log('[Chat API] 📦 Normalized meta:', normalizedMeta);
+    console.log('[Chat API] normalized metadata ready (content excluded)');
 
     // 🌀 DECISION GOVERNOR: Spiralogic posture selection (preflight)
     const decision = decisionPreflight(message);
@@ -1151,13 +1165,9 @@ This user is in guest mode (no authenticated identity).
     await ensureSession(safeSessionId);
     console.log(`[Chat API] Session ensured: ${safeSessionId}`);
 
-    // 🏷️ NAME CHANGE DETECTION: Check if user wants to change what MAIA calls them
-    if (!effectiveUserId.startsWith('anon:')) {
-      const nameChangeResult = await processNameChangeIfDetected(message, effectiveUserId);
-      if (nameChangeResult.detected && nameChangeResult.updated) {
-        console.log(`[Chat API] 🏷️ Name change detected and updated: "${nameChangeResult.newName}"`);
-      }
-    }
+    // RF01 S1-A: speaking within MAIA is never implicit authorization to
+    // update durable preferred-name account settings. A separate confirmed
+    // account action must own that change.
 
     // 📚 LOAD CONVERSATION HISTORY: Get recent exchanges for continuity
     // First try session-level, then fall back to cross-session user history

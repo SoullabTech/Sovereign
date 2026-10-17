@@ -1101,7 +1101,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     privacyChoiceRef.current = choice;
     setExplicitSessionPrivacyChoice(choice);
     setIsSanctuary(choice === 'sanctuary');
-    setInputSubmitError(null);
+    setInputSubmitError(choice === 'sanctuary'
+      ? 'Sanctuary messaging is temporarily unavailable while private processing safeguards are verified. Nothing will be sent.'
+      : null);
   }, []);
 
   // ==========================================================================
@@ -5050,6 +5052,12 @@ I'm not sure what I'm feeling yet.`;
     const authoredText = text;
     if (!privacyChoiceRef.current) {
       setInputSubmitError('Choose Sanctuary or Continuity before sending a message.');
+      return;
+    }
+    if (privacyChoiceRef.current === 'sanctuary') {
+      // The server independently enforces this refusal. Do not transmit
+      // protected content or invent an offline fallback response meanwhile.
+      setInputSubmitError('Sanctuary messaging is on hold pending verified private processing. Nothing was sent.');
       return;
     }
     // Logs carry counts, not member-authored words.
