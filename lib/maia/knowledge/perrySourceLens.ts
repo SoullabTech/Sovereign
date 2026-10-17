@@ -12,6 +12,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createHash } from 'node:crypto';
 import { getGlobalLibraryAuthorityKeys } from '@/lib/library/globalRetrievalAuthority';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 
 export const PERRY_SOURCE_LENS_ID = 'glenn-perry-astropsychology' as const;
 export const PERRY_EDITORIAL_APPROVAL_MARKER = 'CORPUS USE AUTHORIZED — SOULLAB ORIGINAL PERRY-INFORMED COMMENTARY';
@@ -32,6 +33,10 @@ export interface PerryLensTurn {
   readonly memberMessage?: string;
   readonly verifiedMemberId: string | null;
   readonly isSanctuary: boolean;
+  /** Existing boundary-resolved posture, not a user-provided imitation. */
+  readonly turnPosture?: TurnPosture;
+  /** Unmodified per-turn request metadata; no account-default substitution. */
+  readonly rawRequestMeta?: unknown;
   /** An operational kill-switch, not an authorization. */
   readonly enabled: boolean;
 }
@@ -92,6 +97,43 @@ function explicitlyDeclinesAstrology(message: string | undefined): boolean {
     || /\b(?:astrology|astropsychology|glenn\s+perry)\b.{0,60}\b(?:stop|off|not\s+now|no\s+thanks)\b/i.test(normalized);
 }
 
+/**
+ * Perry-only additional privacy guard. TurnPosture is resolved by the serving
+ * route, but its resolver treats an omitted signal as ordinary. Do not copy
+ * that fallback into an OPTIONAL source-retrieval feature. Here an explicit
+ * boolean false from the current turn is mandatory; all conflicting or
+ * unrecognized nested signals are refusals. The route's TurnPosture must
+ * also be a genuine instance and agree with the explicit false.
+ *
+ * Note: the member's setting still originates with the current client
+ * gesture. This check validates what reached the server; it does NOT
+ * establish independent server-owned current-posture truth.
+ */
+function hasExplicitOrdinaryTurnPosture(turn: PerryLensTurn): boolean {
+  if (!(turn.turnPosture instanceof TurnPosture)
+      || turn.turnPosture.sanctuary !== false
+      || turn.isSanctuary !== false) {
+    return false;
+  }
+  const raw = turn.rawRequestMeta;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return false;
+  const meta = raw as Record<string, unknown>;
+  if (!Object.prototype.hasOwnProperty.call(meta, 'sanctuary')
+      || meta.sanctuary !== false) {
+    return false;
+  }
+  if (Object.prototype.hasOwnProperty.call(meta, 'meta')) {
+    const nested = meta.meta;
+    if (!nested || typeof nested !== 'object' || Array.isArray(nested)) return false;
+    const candidate = nested as Record<string, unknown>;
+    if (Object.prototype.hasOwnProperty.call(candidate, 'sanctuary')
+        && candidate.sanctuary !== false) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function isExplicitSourceSelection(value: unknown): boolean {
   return value === PERRY_SOURCE_LENS_ID;
 }
@@ -131,7 +173,7 @@ export function buildPerrySourceLensAddendum(
   turn: PerryLensTurn,
   deps: PerryLensServerDependencies = LIVE_SERVER_DEPS,
 ): string | null {
-  if (!turn.enabled || turn.isSanctuary || !permittedMember(turn.verifiedMemberId)
+  if (!turn.enabled || !hasExplicitOrdinaryTurnPosture(turn) || !permittedMember(turn.verifiedMemberId)
       || !isExplicitSourceSelection(turn.requestedLens)
       || explicitlyDeclinesAstrology(turn.memberMessage)) {
     return null;
