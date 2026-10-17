@@ -33,6 +33,10 @@ import {recordHeldPrivateReviewR47,reopenHeldPrivateReviewR47,
 import {prepareHeldSignedApplyR46,submitHeldSignedApplyR46,
  R46_REAL_DURABLE_SIGNED_APPLY_ENABLED}
  from '@/lib/writersStudio/recovery/heldDurableSignedApplyR46';
+import {
+ prepareHeldServerChoiceR50,submitHeldServerChoiceR50,
+ R50_REAL_SERVER_BOUND_AUTHOR_ENABLED,
+} from '@/lib/writersStudio/recovery/heldServerOwnedChoiceR50';
 import {inspectSpentApplyR48,R48_REAL_SPENT_APPLY_RECOVERY_ENABLED}
  from '@/lib/writersStudio/recovery/heldSpentApplyEvidenceR48';
 import {prepareHeldUndoR47,submitHeldUndoR47,R47_REAL_DURABLE_UNDO_ENABLED}
@@ -64,7 +68,7 @@ const enabled=[
  'R47_DURABLE_UNDO_FIXTURE','R46_DURABLE_SIGNED_APPLY_FIXTURE',
  'R45_DURABLE_SIGNED_AUTHOR_FIXTURE','R44_DURABLE_APPROVAL_FIXTURE',
  'R39_SIGNED_SECTION_REQUEST_FIXTURE','R38_SIGNED_DRAFT_REQUEST_FIXTURE',
- 'R29_SESSION_FENCE_FIXTURE',
+ 'R29_SESSION_FENCE_FIXTURE','R50_SERVER_OWNED_CHOICE_FIXTURE',
 ].every(k=>process.env[k]==='fictional-only') &&
  /^postgresql:\/\/fict@127\.0\.0\.1:\d+\/r35_draft$/.test(
   process.env.DATABASE_URL||'')&&
@@ -157,6 +161,18 @@ function chosenRequest(body?:unknown){
  const headers:Record<string,string>={
   host:'soullab.life',origin:'https://soullab.life',
   'x-session-token':SESSION,
+ };
+ if(body!==undefined)headers['content-type']='application/json';
+ return new NextRequest('https://soullab.life/api/sovereign/writers-studio/held-pair',{
+  method:body===undefined?'GET':'POST',headers,
+  ...(body===undefined?{}:{body:JSON.stringify(body)}),
+ });
+}
+/** Native NextRequest cookie transport. No unverified member ID in body. */
+function cookieChoiceRequest(body?:unknown){
+ const headers:Record<string,string>={
+  host:'soullab.life',origin:'https://soullab.life',
+  cookie:'maia_session='+SESSION,
  };
  if(body!==undefined)headers['content-type']='application/json';
  return new NextRequest('https://soullab.life/api/sovereign/writers-studio/held-pair',{
@@ -270,6 +286,7 @@ tests('R49 ONE fictional Work Source→Review→Apply→Confirm→Undo',()=>{
   expect(R46_REAL_DURABLE_SIGNED_APPLY_ENABLED).toBe(false);
   expect(R47_REAL_DURABLE_UNDO_ENABLED).toBe(false);
   expect(R48_REAL_SPENT_APPLY_RECOVERY_ENABLED).toBe(false);
+  expect(R50_REAL_SERVER_BOUND_AUTHOR_ENABLED).toBe(false);
   arrivalId=randomUUID();
   await persistHeldPendingR33({subject,arrivalId,generation:1,
    source:ORIGINAL,authority:custody(fakeKeys.pending)});
@@ -353,29 +370,67 @@ tests('R49 ONE fictional Work Source→Review→Apply→Confirm→Undo',()=>{
   });
   expect(await count('writers_studio_r35_draft_versions')).toBe(1);
  });
- it('same encrypted review becomes one R44 token → R46 signed Apply → R48 ciphertext-confirmed',async()=>{
-  const adm=boundAdmission(epoch);
-  const reopened=await reopenHeldPrivateReviewR47({
-   subject,admission:adm,workId:WORK,
+ it('R50 refuses spoofed author or conflicting cookie/header without granting an edit',async()=>{
+  const input=(request:NextRequest)=>({
+   context:context(request),workId:WORK,reviewId,generation:1,
    draftCustody:custody(fakeKeys.draft),
-   privateCustody:custody(fakeKeys.review),reviewId,generation:1,
+   privateCustody:custody(fakeKeys.review),
+   approvalIssuerSecret:issuerRoot,
   });
-  // R46 trusted server input is derived from the separately reopened private
-  // ciphertext, not copied from a browser POST body or unverified options.
-  const trusted=(request:NextRequest)=>({
-   context:context(request),custody:custody(fakeKeys.draft),
-   selection:reopened.selection,approvalIssuerSecret:issuerRoot,
+  const falseMember=new NextRequest(
+   'https://soullab.life/api/sovereign/writers-studio/held-pair',{
+   method:'GET',headers:{host:'soullab.life',origin:'https://soullab.life',
+    'x-session-token':SESSION,'x-member-id':FOREIGN},
   });
-  const prep=await prepareHeldSignedApplyR46(trusted(chosenRequest()));
+  expect(await prepareHeldServerChoiceR50(input(falseMember)))
+   .toMatchObject({kind:'refused',status:403,releaseApproved:false});
+  const inconsistent=new NextRequest(
+   'https://soullab.life/api/sovereign/writers-studio/held-pair',{
+   method:'GET',headers:{host:'soullab.life',origin:'https://soullab.life',
+    'x-session-token':SESSION,cookie:'maia_session=r49-fictitious-session-B'},
+  });
+  expect(await prepareHeldServerChoiceR50(input(inconsistent)))
+   .toMatchObject({kind:'refused',status:403,releaseApproved:false});
+  const unknown=new NextRequest(
+   'https://soullab.life/api/sovereign/writers-studio/held-pair',{
+   method:'GET',headers:{host:'soullab.life',origin:'https://soullab.life',
+    'x-session-token':'no-such-fake-session'},
+  });
+  expect(await prepareHeldServerChoiceR50(input(unknown)))
+   .toMatchObject({kind:'refused',status:401,releaseApproved:false});
+  expect(await count('writers_studio_r44_held_approval')).toBe(0);
+  expect(await count('writers_studio_r35_draft_versions')).toBe(1);
+ });
+ it('R50 server reopens encrypted private choice, binds real verified fake session, then one R44 token → R46 signed Apply → R48 ciphertext-confirmed',async()=>{
+  const input=(request:NextRequest)=>({
+   context:context(request),workId:WORK,reviewId,generation:1,
+   draftCustody:custody(fakeKeys.draft),
+   privateCustody:custody(fakeKeys.review),
+   approvalIssuerSecret:issuerRoot,
+  });
+  // The browser provides no section, Work, alternative, proposed words, or
+  // policy. R50 itself re-opens the encrypted private proposal, rechecks the
+  // real auth_sessions-backed R17 review and current fictional R38 consent.
+  const prep=await prepareHeldServerChoiceR50(input(
+   cookieChoiceRequest()));
   expect(prep).toMatchObject({kind:'fictional_durable_approval_prepared',
    sectionId:SECTION,alternativeId:PICK,generation:1,releaseApproved:false});
   if(prep.kind!=='fictional_durable_approval_prepared')
-   throw Error('r49_R46_private_review_not_accepted');
+   throw Error('r50_real_session_to_private_review_not_accepted');
   applyToken=prep.opaqueToken;
   const changed={kind:'apply_reviewed_change',opaqueToken:applyToken};
+  // Attempting to smuggle a Work ID/alternate choice cannot consume approval.
+  const denied=await submitHeldServerChoiceR50(input(chosenRequest({
+   ...changed,workId:FOREIGN,chosenAlternativeId:OTHER_PICK,
+  })));
+  expect(denied).toMatchObject({kind:'refused',status:400,
+   releaseApproved:false});
+  expect((await query<{state:string}>(
+   'SELECT state FROM writers_studio_r44_held_approval WHERE work_id=$1',
+   [WORK])).rows).toEqual([{state:'prepared'}]);
   const [one,two]=await Promise.all([
-   submitHeldSignedApplyR46(trusted(chosenRequest(changed))),
-   submitHeldSignedApplyR46(trusted(chosenRequest(changed))),
+   submitHeldServerChoiceR50(input(chosenRequest(changed))),
+   submitHeldServerChoiceR50(input(cookieChoiceRequest(changed))),
   ]);
   expect([one,two].filter(x=>x.kind==='fictional_durably_claimed_encrypted_apply'))
    .toHaveLength(1);

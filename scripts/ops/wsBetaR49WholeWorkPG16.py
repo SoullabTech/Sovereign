@@ -164,6 +164,7 @@ def main():
    "SELECT count(*) FROM writers_studio_r47_private_review")=='0'
   env={**os.environ,
     'R49_SINGLE_WORK_PHYSICAL_PG16':'fictional-only',
+    'R50_SERVER_OWNED_CHOICE_FIXTURE':'fictional-only',
     'R49_WHOLE_WORK_FIXTURE':'fictional-only',
     'R42_SOURCE_DRAFT_FIXTURE':'fictional-only',
     'R36_SOURCE_COMPOSER_FIXTURE':'fictional-only',
@@ -196,7 +197,7 @@ def main():
   code,output=run_jest('scripts/ops/__tests__/r49SingleWorkWholeJourneyPG16.test.ts',
     env,INITIAL)
   checks['oneWorkFullJourneyTests']=code==0 and \
-     '5 passed, 5 total' in output
+     '6 passed, 6 total' in output
   checks['pendingSourceAndDraftImmutable']=all([
    sql('SELECT count(*) FROM writers_studio_r32_held_originals')=='1',
    sql('SELECT count(*) FROM writers_studio_r42_held_start_links')=='1',

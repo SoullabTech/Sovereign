@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.r49-single-work-whole-journey.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/writersStudio/recovery/heldServerOwnedChoiceR50.ts",
+    "lib/writersStudio/recovery/heldPrivateEditorialReviewR47.ts",
+    "lib/writersStudio/recovery/heldDurableSignedApplyR46.ts",
+    "scripts/ops/__tests__/r49SingleWorkWholeJourneyPG16.test.ts",
+    "lib/writersStudio/recovery/__tests__/heldServerOwnedChoiceR50.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
