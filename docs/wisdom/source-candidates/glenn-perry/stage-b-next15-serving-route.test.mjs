@@ -115,6 +115,14 @@ function stubMap(state) {
     },
   });
   add('@/lib/memory/MemoryGate', { resolveMemoryMode: () => ({ effective:'ephemeral' }) });
+  add('@/lib/memory/MemberLiveContext', {
+    buildMemberLiveContext: async()=>({patterns:[],sessions:[],journal:[]}),
+    formatMemberWebForPrompt: ()=>'',
+    describeLiveContext:()=>({patterns:0,sessions:0,journal:0,hasEssence:false}),
+  });
+  add('@/lib/maia/presence/place', {
+    validatePlaceContext:()=>null, buildPlaceAddendum:()=>undefined,
+  });
   add('@/lib/memory/MemoryBundle', { MemoryBundleService: class MemoryBundleService {
     static async build() { return null; }
     static async create() { return null; }
