@@ -51,3 +51,21 @@ This candidate therefore makes a separately approved emergency `403` ingress rul
 | Wider beta admission | OUT OF SCOPE |
 
 **Release conclusion:** The independent-of-reader ingress containment design is technically plausible and has an executable offline verification artifact. The remaining hurdle is **permitted live execution and incident authority**, not another fictional test count. Until that mechanism and the full OFF pathway are independently reviewed and qualified, production Reflect remains OFF.
+
+## Live production Caddy provenance — read-only addendum (October 17)
+
+A separate **metadata-only** Tailscale SSH inspection was conducted after the local commit. It did **not** modify or reload Caddy.
+
+- Running production proxy: Caddy **v2.11.2**, container `maia-caddy` healthy/running with **zero** restarts. The host's `/home/soullab/MAIA-SOVEREIGN/Caddyfile` is mounted at `/etc/caddy/Caddyfile` **read-only**.
+- Frozen E010 canonical file SHA-256: `cb006b713e1b47483926deeeedbb69e61108507acb82bdd7a5fbcb5c6f756b2d`.
+- Current production host Caddyfile SHA-256: `3018deb217e3f48d6ab48ddb54f0f9f27ac2a6f31c00800688bb63e351debcfd`. The host configuration is **dirty relative to E010**, with 57 added lines and no deletions: 24 lines inside the shared security-denial snippet near canonical line 28, and 33 lines appended as an additional site block. The original 19 denial-rule imports remain present.
+- The production Caddy **effective configuration**, fetched with a read-only GET from its administrative API and compared on the host with Caddy's adaptation of the currently mounted file, was **JSON-structurally identical** (SHA-256 `4cdc910d64143669cd6e99b701534cb8643c444ff3a3958bf5e5278a0a611740`). Thus the production-only additions are actually loaded. No config contents or secret values were exported to the conversation.
+- The 24-line shared security addition has no Reflect or broader Pro Studio matcher. The appended 33-line site does not import the shared denial snippet, does have a reverse proxy, but does **not** directly proxy to `maia-sovereign` and has no explicit Reflect/Pro Studio paths. **Indirect forwarding and any alternate ingress remain unproven**; do not assume the proposed emergency deny reaches that added site.
+- Root available during inspection was approximately **63.04 GiB**, still above the 60 GiB mandatory precondition but below the advisory 90 GiB.
+- The Caddy container had started before the host Caddyfile's last modification; equal effective/configured JSON nonetheless proves a subsequent successful config load, though its exact reload timestamp was not established.
+
+### Consequence
+
+The **frozen E010 Caddyfile must not replace the live Caddyfile wholesale**. That could remove the 24-line production-only security protection and the additional 33-line site. A future separately permitted emergency edge operation must first freeze **the exact effective live configuration** with confidential governance, reconcile these additions and re-run real proxy denial/unauthorized-access acceptance against that reconciled source.
+
+This does **not** alter the release decision: the local candidate's 19-handler parser and 11/11 real HTTP fixture PASS are valid for the frozen canonical rule, but **production-specific source convergence and independently permitted execution are still HOLD**. The read-only metadata inspection did not issue any Caddy admin write, reload, image pull, credential/member read, or production file change.
