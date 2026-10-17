@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.r56-author-preflight.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/security/authAudit.ts",
+    "lib/security/__tests__/authAudit.test.ts",
+    "app/api/members/signin/route.ts",
+    "app/api/now-what/signin/route.ts",
+    "app/api/now-what/register/route.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
