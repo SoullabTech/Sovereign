@@ -10,6 +10,8 @@ import {query,transaction,type TransactionClient} from '@/lib/db/postgres';
 import {saveSectionInTransaction} from '@/lib/manuscript/sections/saveSection';
 import {splitStoredSection} from '@/lib/manuscript/sections/sectionProjection';
 import {partitionFromSections,sectionsFromPartition,type DraftSectionState,type RevisionSectionRange} from '@/lib/manuscript/draftSections';
+import {enabledR72,requireR72CurrentConsent,resolveR72MemberVersion,
+ getR72ProposalsForAppliedVersion} from './r72MemberProposalConsent';
 
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const TOKEN=/^[A-Za-z0-9_-]{43}$/;
@@ -101,28 +103,37 @@ export async function prepareR71(input:{
 }){
  if(!UUID.test(input.manuscriptId)||!UUID.test(input.sectionId)||
   !UUID.test(input.alternativeId))return refuse('invalid_identity',400);
- const replacement=replacementFor(input.alternativeId);
- if(!replacement)return refuse('unknown_alternative',400);
+ const r72=enabledR72();
+ const initialReplacement=r72?null:replacementFor(input.alternativeId);
+ if(!r72&&!initialReplacement)return refuse('unknown_alternative',400);
  const {start,end,text}=input.selection;
  if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||start<0||
-  end<=start||end-start>1200||text!==target||input.generation<1)
+  end<=start||end-start>1200||(!r72&&text!==target)||
+  typeof text!=='string'||!text.trim()||input.generation<1)
   return refuse('invalid_exact_selection',400);
  return transaction(async tx=>{
   const draft=await owned(tx,input.manuscriptId,input.memberId,true);
+  if(r72)await requireR72CurrentConsent(tx,input.memberId);
   if(Number(draft.version)!==input.generation)return refuse('stale_base');
   const section=await oneSection(tx,draft.id,input.sectionId);
-  if(Array.from(section.body).slice(start,end).join('')!==target)
+  if(Array.from(section.body).slice(start,end).join('')!==text)
    return refuse('selection_moved');
+  const source=r72?await resolveR72MemberVersion(tx,{
+   memberId:input.memberId,manuscriptId:input.manuscriptId,
+   draftId:draft.id,sectionId:input.sectionId,baseVersion:input.generation,
+   expectedText:text,versionId:input.alternativeId}):null;
+  const replacement=source?.formulation??initialReplacement;
+  if(!replacement)return refuse('proposal_missing');
   const token=issueToken();
   await tx.query(`INSERT INTO ws_r71_fixture_author_approvals
    (token_hash,member_id,manuscript_id,draft_id,section_id,kind,base_version,
     section_hash,passage_start,passage_end,selection_hash,alternative_id)
     VALUES ($1,$2,$3,$4,$5,'apply',$6,$7,$8,$9,$10,$11)`,
    [sha(token),input.memberId,input.manuscriptId,draft.id,input.sectionId,
-    input.generation,sha(section.body),start,end,sha(target),input.alternativeId]);
+    input.generation,sha(section.body),start,end,sha(text),input.alternativeId]);
   return {kind:'fictional_author_review' as const,reviewToken:token,
    generation:input.generation,sectionId:input.sectionId,
-   alternativeId:input.alternativeId,originalPassage:target,
+   alternativeId:input.alternativeId,originalPassage:text,
    proposedPassage:replacement,canAutoApply:false as const,
    releaseApproved:false as const};
  });
@@ -132,6 +143,7 @@ export async function applyR71(memberId:string,manuscriptId:string,token:string)
   const approval=await exactApproval(tx,token,memberId,'apply');
   if(approval.manuscript_id!==manuscriptId)return refuse('scope_mismatch');
   const draft=await owned(tx,approval.manuscript_id,memberId,true);
+  if(enabledR72())await requireR72CurrentConsent(tx,memberId);
   if(draft.id!==approval.draft_id||
      Number(draft.version)!==Number(approval.base_version))
    return refuse('stale_base');
@@ -139,9 +151,15 @@ export async function applyR71(memberId:string,manuscriptId:string,token:string)
   const selected=Array.from(current.body).slice(
    approval.passage_start!,approval.passage_end!).join('');
   if(sha(current.body)!==approval.section_hash||
-     selected!==target||sha(selected)!==approval.selection_hash)
+     (!enabledR72()&&selected!==target)||
+     sha(selected)!==approval.selection_hash)
    return refuse('exact_passage_moved');
-  const replacement=replacementFor(approval.alternative_id??'');
+  const proposal=enabledR72()?await resolveR72MemberVersion(tx,{
+   memberId,manuscriptId,draftId:draft.id,sectionId:approval.section_id,
+   baseVersion:Number(draft.version),expectedText:selected,
+   versionId:approval.alternative_id??''
+  }):null;
+  const replacement=proposal?.formulation??replacementFor(approval.alternative_id??'');
   if(!replacement)return refuse('proposal_missing');
   const chars=Array.from(current.body);
   const updatedBody=chars.slice(0,approval.passage_start!).join('')+
@@ -175,6 +193,7 @@ export async function prepareUndoR71(memberId:string,manuscriptId:string){
  if(!UUID.test(manuscriptId))return refuse('invalid_identity',400);
  return transaction(async tx=>{
   const draft=await owned(tx,manuscriptId,memberId,true);
+  if(enabledR72())await requireR72CurrentConsent(tx,memberId);
   const r=await tx.query<Approval>(
    `SELECT * FROM ws_r71_fixture_author_approvals
      WHERE member_id=$1 AND manuscript_id=$2 AND kind='apply'
@@ -210,6 +229,7 @@ export async function undoR71(memberId:string,manuscriptId:string,token:string){
   if(!applied||applied.undone_at||!applied.consumed_at||
      !applied.pre_apply_revision)return refuse('apply_no_longer_undoable');
   const draft=await owned(tx,undo.manuscript_id,memberId,true);
+  if(enabledR72())await requireR72CurrentConsent(tx,memberId);
   if(draft.id!==undo.draft_id||
    Number(draft.version)!==Number(undo.base_version)||
    Number(draft.version)!==Number(applied.resulting_version))
@@ -266,6 +286,7 @@ export async function readR71(memberId:string,manuscriptId:string,mode:'state'|'
  if(!UUID.test(manuscriptId))return refuse('invalid_identity',400);
  return transaction(async tx=>{
   const draft=await owned(tx,manuscriptId,memberId,false);
+  if(enabledR72())await requireR72CurrentConsent(tx,memberId);
   const lastApply=await tx.query<Approval>(
    `SELECT * FROM ws_r71_fixture_author_approvals
     WHERE member_id=$1 AND manuscript_id=$2 AND kind='apply'
@@ -275,9 +296,15 @@ export async function readR71(memberId:string,manuscriptId:string,mode:'state'|'
   const lastAppliedGeneration=apply&&
    Number(apply.resulting_version)===Number(draft.version)
      ?Number(draft.version):null;
-  if(mode==='state')return {
-   lastAppliedGeneration,alternatives:R71_TEST_ALTERNATIVES.map(x=>({
-    id:x.id,label:x.label})),fixtureOnly:true,releaseApproved:false};
+  if(mode==='state'){
+   const alternatives=enabledR72()
+    ?(lastAppliedGeneration&&apply?.alternative_id
+       ?await getR72ProposalsForAppliedVersion(tx,memberId,apply.alternative_id)
+       :[])
+    :R71_TEST_ALTERNATIVES.map(x=>({id:x.id,label:x.label}));
+   return {lastAppliedGeneration,alternatives,
+    fixtureOnly:true,releaseApproved:false};
+  }
   const latest=await tx.query<Approval>(
    `SELECT * FROM ws_r71_fixture_author_approvals
     WHERE member_id=$1 AND manuscript_id=$2 AND consumed_at IS NOT NULL
