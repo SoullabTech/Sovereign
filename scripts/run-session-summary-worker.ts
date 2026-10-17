@@ -10,23 +10,20 @@
  * Flow:
  *   queued → processing → done (or failed)
  *
- * Sovereignty invariant:
- *   Sanctuary sessions are NEVER processed. If one slips through,
- *   the summarizer itself also refuses. Belt AND suspenders.
- *
- * Modeled on run-comms-analysis-worker.ts for consistency.
+ * RF01 R1-A: worker is held outside an explicitly fictional test process.
+ * Existing mixed/unknown sessions must never be summarized based only on
+ * maia_sessions.mode. The old automatic mode-based purge and embedding bridge
+ * are removed; R1-B will govern deletion and restoration separately.
  */
 
 import os from 'node:os';
-import crypto from 'node:crypto';
 import { query, queryOne, closePool } from '../lib/db/postgres';
 import { assertCorrectDb } from '../lib/scripts/dbSafetyGuard';
+import { evaluateSummaryEligibility, summaryProviderFixtureEnabled } from '../lib/sanctuary/sessionSummaryEligibility';
 import {
   generateSessionRemembrance,
   storeRemembrance,
-  SessionRemembrance,
 } from '../lib/scribe/sovereignSummarizer';
-import { VectorEmbeddingService } from '../lib/vector-embeddings';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIGURATION
@@ -85,156 +82,70 @@ async function markJobDone(jobId: string): Promise<void> {
   console.log(`[Summary] ✅ ${jobId} queued → processing → done`);
 }
 
-async function markJobFailed(jobId: string, error: unknown): Promise<void> {
-  const errorMsg = error instanceof Error ? error.message : String(error);
+async function markJobFailed(jobId: string, _error: unknown): Promise<void> {
+  // Model and SQL errors can echo member words. Queue metadata never
+  // persists arbitrary exception text, even in a fictional worker rehearsal.
   await query(
-    `UPDATE session_summary_queue
-     SET status = 'failed', last_error = $2, finished_at = NOW()
-     WHERE id = $1`,
-    [jobId, errorMsg.slice(0, 4000)]
+    "UPDATE session_summary_queue SET status='failed', "+
+    "last_error='SUMMARY_ELIGIBILITY_OR_PROVIDER_HELD', finished_at=NOW() WHERE id=$1",
+    [jobId],
   );
-  console.log(`[Summary] ❌ ${jobId} queued → processing → failed: ${errorMsg.slice(0, 200)}`);
+  console.warn('[Summary] job refused (fixed reason; no member content logged)');
 }
 
 /**
- * Bridge session remembrance into episodic_memories for resonance search.
- * Non-fatal: if this fails, the summary is still stored normally.
+ * Episodic bridging and embeddings are intentionally NOT performed here.
+ * A summary's existence never authorizes another external provider, another
+ * durable memory object, or new influence over the member.
  */
-async function bridgeRemembranceToEpisodicMemory(
-  sessionId: string,
-  memberId: string,
-  remembrance: SessionRemembrance
-): Promise<void> {
-  try {
-    const episodeId = `session-${crypto.randomUUID()}`;
-    const title = `Session note: ${remembrance.essence.slice(0, 80)}`;
-
-    // Combine essence + open loops into a searchable description
-    const parts = [remembrance.essence];
-    if (remembrance.openLoops.length > 0) {
-      parts.push(`Open threads: ${remembrance.openLoops.join('. ')}`);
-    }
-    if (remembrance.nextStep) {
-      parts.push(`Next: ${remembrance.nextStep}`);
-    }
-    const description = parts.join('\n\n');
-
-    // Significance: sessions with open loops or next steps score higher
-    const sig = Math.min(
-      5 + (remembrance.openLoops.length > 0 ? 2 : 0) + (remembrance.nextStep ? 1 : 0),
-      10
-    );
-
-    // Generate embedding for semantic resonance search
-    let semanticVector: number[] | null = null;
-    try {
-      const embedder = new VectorEmbeddingService({
-        dimension: 768,
-      });
-      semanticVector = await embedder.getEmbedding(`${title} ${description}`);
-    } catch {
-      // Non-fatal: text fallback still works
-    }
-
-    await query(
-      `INSERT INTO episodic_memories
-        (user_id, episode_id, experience_title, experience_description,
-         experience_context, significance, emotional_intensity,
-         semantic_vector, archetypal_resonances, timestamp)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, NOW())`,
-      [
-        memberId,
-        episodeId,
-        title,
-        description,
-        `session_summary:${sessionId}`,
-        sig,
-        0.5,
-        semanticVector ? JSON.stringify(semanticVector) : '[]',
-        JSON.stringify(remembrance.themes.slice(0, 5)),
-      ]
-    );
-
-    console.log(`[Summary→Memory] Bridged session ${sessionId} → ${episodeId}`);
-  } catch (err) {
-    console.error('[Summary→Memory] Bridge failed (summary still stored):', err);
-  }
-}
 
 /**
  * Process a single summary job.
  */
 async function processJob(job: SummaryJob): Promise<void> {
-  console.log(`[Summary] 🔄 Processing session ${job.session_id} (attempt ${job.attempts})`);
-
-  // Mark session as closing
-  await query(
-    `UPDATE maia_sessions SET status = 'closing', updated_at = NOW() WHERE id = $1`,
-    [job.session_id]
-  );
+  // R1-A metadata-only proof BEFORE session state changes, content reads,
+  // model inference, embeddings or writes. Mode='continuity' is insufficient.
+  if (!job.member_id) {
+    await markJobFailed(job.id, 'SUMMARY_MEMBER_UNRESOLVED');
+    return;
+  }
+  const eligible = await evaluateSummaryEligibility({
+    sessionId: job.session_id, memberId: job.member_id, requireClosed: true,
+  });
+  if (!eligible.ok) {
+    await markJobFailed(job.id, eligible.code);
+    return;
+  }
 
   const remembrance = await generateSessionRemembrance(job.session_id, MAX_TURNS_TO_READ);
 
   if (!remembrance) {
-    // Null means sanctuary or empty — mark done without storing
-    console.log(`[Summary] ⏭️  Session ${job.session_id} skipped (sanctuary or empty)`);
-    await markJobDone(job.id);
-    // Mark session completed even without summary
-    await query(
-      `UPDATE maia_sessions SET status = 'completed', completed_at = NOW(), updated_at = NOW() WHERE id = $1`,
-      [job.session_id]
-    );
+    // A refused or stale summary is never a successful derived-content job.
+    await markJobFailed(job.id, 'SUMMARY_NOT_ELIGIBLE_AT_PROVIDER_TIME');
     return;
   }
 
-  // Write remembrance to maia_sessions
+
+  // The member may have changed posture or received a deletion manifest while
+  // an asynchronous response was generated. The worker must recheck before
+  // any derived-content write. storeRemembrance checks again.
+  const beforeWrite = await evaluateSummaryEligibility({
+    sessionId: job.session_id, memberId: job.member_id, requireClosed: true,
+  });
+  if (!beforeWrite.ok) {
+    await markJobFailed(job.id, beforeWrite.code);
+    return;
+  }
   await storeRemembrance(job.session_id, remembrance);
-
-  // Bridge to episodic memory for resonance search (non-fatal)
-  if (job.member_id) {
-    await bridgeRemembranceToEpisodicMemory(job.session_id, job.member_id, remembrance);
-  }
-
   await markJobDone(job.id);
+  // No essence/theme excerpts in worker logs.
+  console.log('[Summary] eligible fictional session summary stored');
 
-  console.log(`[Summary] 📝 Session ${job.session_id}: "${remembrance.essence.slice(0, 80)}..."`);
-  console.log(`[Summary]    Themes: [${remembrance.themes.join(', ')}]`);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SANCTUARY PURGE
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Delete conversation turns for sanctuary sessions that have been closed.
- * Runs periodically to ensure sanctuary content doesn't linger.
- */
-async function purgeSanctuaryTurns(): Promise<void> {
-  const result = await query<{ session_id: string }>(
-    `DELETE FROM conversation_turns
-     WHERE session_id IN (
-       SELECT id FROM maia_sessions
-       WHERE mode = 'sanctuary'
-         AND status IN ('completed', 'closing')
-     )
-     RETURNING session_id`
-  );
-
-  const purged = result.rows?.length ?? 0;
-  if (purged > 0) {
-    const sessionIds = [...new Set(result.rows.map(r => r.session_id))];
-    console.log(`[Summary] 🔒 Purged turns from ${sessionIds.length} sanctuary session(s)`);
-
-    // Mark sanctuary sessions as completed
-    await query(
-      `UPDATE maia_sessions
-       SET status = 'completed', completed_at = NOW(), updated_at = NOW()
-       WHERE mode = 'sanctuary' AND status IN ('closing')
-         AND id = ANY($1::text[])`,
-      [sessionIds]
-    );
-  }
-}
+// R1-A: the old mode-only DELETE sweep is retired.
+ // Per-turn retention/deletion requires authorized R1-B manifest, tombstone
+ // and recovery qualification. No automatic session-mode purge exists.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN LOOP
@@ -245,6 +156,11 @@ let consecutiveErrors = 0;
 let loopCount = 0;
 
 async function runWorkerLoop(): Promise<void> {
+  // This is NOT a production summary grant. A Continuity choice authorizes
+  // remembrance, not sending transcripts to an external summary provider.
+  if (!summaryProviderFixtureEnabled()) {
+    throw new Error('BACKGROUND_SUMMARIZATION_NOT_AUTHORIZED');
+  }
   await assertCorrectDb();
 
   console.log('[Summary] MAIA Session Summary Worker starting...');
@@ -257,7 +173,7 @@ async function runWorkerLoop(): Promise<void> {
     try {
       loopCount++;
 
-      // Periodically reap stale jobs + purge sanctuary turns
+      // Fictional rehearsal only: periodically reap stale jobs; no purge
       if (loopCount % REAPER_EVERY_N_LOOPS === 0) {
         try {
           const row = await queryOne<{ requeued: number }>(
@@ -271,12 +187,8 @@ async function runWorkerLoop(): Promise<void> {
           console.warn('[Summary] Reaper failed (non-fatal):', e);
         }
 
-        // Sanctuary purge
-        try {
-          await purgeSanctuaryTurns();
-        } catch (e) {
-          console.warn('[Summary] Sanctuary purge failed (non-fatal):', e);
-        }
+        // R1-A: No mode-only deletion from this worker. Deletion requires
+        // explicit R1-B manifest and restoration custody, not a timer.
       }
 
       const job = await claimNextJob();
@@ -291,7 +203,7 @@ async function runWorkerLoop(): Promise<void> {
 
     } catch (error) {
       consecutiveErrors++;
-      console.error(`[Summary] Error (${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}):`, error);
+      console.error('[Summary] provider or eligibility failure (details withheld)');
 
       if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
         console.error('[Summary] Too many consecutive errors, shutting down');
@@ -331,6 +243,6 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 // ─────────────────────────────────────────────────────────────────────────────
 
 runWorkerLoop().catch((error) => {
-  console.error('[Summary] Fatal error:', error);
+  console.error('[Summary] worker unavailable or not authorized');
   process.exit(1);
 });

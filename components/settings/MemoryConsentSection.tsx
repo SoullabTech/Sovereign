@@ -30,7 +30,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { History } from 'lucide-react';
-import { apiUrl } from '@/lib/http/apiBase';
+import { apiFetch } from '@/lib/http/apiBase';
 
 type RecallPreferences = {
   conversational_recall_enabled: boolean;
@@ -47,7 +47,7 @@ export function MemoryConsentSection() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(apiUrl('/api/members/recall-preferences'), {
+        const res = await apiFetch('/api/members/recall-preferences', {
           credentials: 'include',
         });
         if (!res.ok) throw new Error(`Failed to load preferences (${res.status})`);
@@ -74,7 +74,7 @@ export function MemoryConsentSection() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(apiUrl('/api/members/recall-preferences'), {
+      const res = await apiFetch('/api/members/recall-preferences', {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

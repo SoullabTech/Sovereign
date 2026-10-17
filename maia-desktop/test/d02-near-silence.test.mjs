@@ -14,13 +14,58 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { createConversation, SILENCE_RMS_X1000, SILENCE_PEAK_X1000, visibleText } = require('../src/conversation.js');
 
+// RF01 fixture: the member deliberately selects Continuity, the canonical
+// thread is verified by a fictional GET, and the content-free receipt matches
+// the exchange. These are test-side responses only, never a production bypass.
+function fictionalConsentedConversation(opts) {
+  const upstream = opts.session.authedFetch;
+  const session = {
+    ...opts.session,
+    authedFetch: async (path, init) => {
+      if (path === '/api/conversation/turns') {
+        return { ok: true, status: 200, res: {
+          json: async () => ({ success: true, messages: [] }),
+        } };
+      }
+      if (path === '/api/sovereign/privacy/turn-consent') {
+        const body = JSON.parse(init.body);
+        return { ok: true, status: 200, res: {
+          json: async () => ({
+            ok: true, exchangeId: body.exchangeId,
+            sessionId: body.sessionId, privacyChoice: body.privacyChoice,
+          }),
+        } };
+      }
+      return upstream(path, init);
+    },
+  };
+  const conv = createConversation({ ...opts, session });
+  const chosen = conv.choosePrivacy('continuity');
+  assert.equal(chosen.ok, true);
+  const joined = conv.adoptMemberThread();
+  const originalTranscribe = conv.transcribe;
+  const originalAsk = conv.ask;
+  conv.transcribe = async (...args) => {
+    const out = await joined;
+    assert.equal(out.ok, true);
+    return originalTranscribe(...args);
+  };
+  conv.ask = async (...args) => {
+    const out = await joined;
+    assert.equal(out.ok, true);
+    return originalAsk(...args);
+  };
+  return conv;
+}
+
+
 /** Mono audio at a chosen amplitude, so a fixture can state its own level. */
 const at = (n, amp) => Float32Array.from({ length: n }, (_, i) => Math.sin(i / 3) * amp);
 
 function mk() {
   const sent = [];
   const events = [];
-  const conv = createConversation({
+  const conv = fictionalConsentedConversation({
     session: { authedFetch: async (p) => { sent.push(p); return { ok: true, status: 200, res: { json: async () => ({ transcription: 'x' }) } }; } },
     diagnostics: { emit: (n, m) => events.push([n, m]) },
     sessionId: 'x',
@@ -101,7 +146,7 @@ test('the transcribe path actually USES the invisible-character filter', async (
   // NC-23 caught this: asserting visibleText() directly passes even when
   // transcribe() stops calling it. The guard has to bite on the real path.
   const events = [];
-  const conv = createConversation({
+  const conv = fictionalConsentedConversation({
     session: { authedFetch: async () => ({ ok: true, status: 200, res: { json: async () => ({ transcription: '‎‎‏﻿  ​' }) } }) },
     diagnostics: { emit: (n, m) => events.push([n, m]) },
     sessionId: 'x',

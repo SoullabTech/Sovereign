@@ -6,24 +6,23 @@
  * Called when a session ends (closing ritual complete, timer expiry, or inactivity).
  * Determines whether to purge (Sanctuary) or enqueue summary (Continuity).
  *
- * Sanctuary path:
- *   1. Delete all conversation_turns for this session (proof of deletion)
- *   2. Write member_sessions row with mode='sanctuary', summary=NULL
- *
- * Continuity path:
- *   1. Ensure maia_sessions row exists (self-healing if client didn't register)
- *   2. Create member_sessions row with mode='continuity', summary=NULL (pending)
- *   3. Enqueue a job in session_summary_queue for the worker to generate the summary
- *
- * The worker will later:
- *   - Load turns from conversation_turns (they still exist for continuity)
- *   - Generate a structured summary via the sovereign model
- *   - Write the summary to member_sessions.summary
+ * RF01 S0-A2:
+ *   - Require an existing authenticated member-owned maia_sessions row first.
+ *   - Never adopt a legacy NULL-owner row.
+ *   - Hold Sanctuary finalization before any destructive blanket deletion;
+ *     per-turn eligibility and deletion policy belong to S1/R1.
+ * RF01 R1-A:
+ *   - Ordinary non-destructive closure is preserved.
+ *   - External summarization/enqueuing and summary-derived recall are held
+ *     until separate background-processing and recovery authorities exist.
+ *   - The test fixture checks each normal turn's explicit consent and the
+ *     absence of protected gestures and deletion scopes before enqueuing.
  */
 
 import { query } from '@/lib/db/postgres';
-import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { SessionSummaryStore } from '@/lib/memory/stores/SessionSummaryStore';
+import { requireExistingOwnedSession } from './memberSessionOwnership';
+import { evaluateSummaryEligibility, summaryProviderFixtureEnabled } from '@/lib/sanctuary/sessionSummaryEligibility';
 
 export interface FinalizeSessionInput {
   memberId: string;
@@ -38,64 +37,28 @@ export interface FinalizeSessionResult {
   turnsDeleted?: number;
   queued?: boolean;
   sessionCreated?: boolean;
+  error?: string;
+  summaryHeld?: boolean;
 }
 
 /**
- * Ensure maia_sessions row exists (self-healing).
- * Called before any operation that has FK dependency on maia_sessions.
- * Idempotent: ON CONFLICT DO UPDATE just touches last_activity_at.
- */
-async function ensureMaiaSessionExists(
-  sessionId: string,
-  memberId: string,
-  mode: 'continuity' | 'sanctuary'
-): Promise<boolean> {
-  try {
-    const result = await query(
-      `
-      INSERT INTO maia_sessions (id, member_id, mode, privacy_mode, status, started_at, last_activity_at)
-      VALUES ($1, $2, $3, $4, 'closing', NOW(), NOW())
-      ON CONFLICT (id) DO UPDATE SET
-        last_activity_at = NOW(),
-        status = 'closing',
-        member_id = COALESCE(maia_sessions.member_id, EXCLUDED.member_id)
-      RETURNING (xmax = 0) AS was_inserted
-      `,
-      [sessionId, memberId || null, mode, mode === 'sanctuary' ? 'sanctuary' : 'standard']
-    );
-
-    const wasInserted = result.rows[0]?.was_inserted === true;
-    if (wasInserted) {
-      console.log(`🔧 [SessionFinalizer] Self-healed: created maia_sessions row for ${sessionId}`);
-    }
-    return wasInserted;
-  } catch (err) {
-    // Table might not exist yet - let caller handle
-    console.error('[SessionFinalizer] Failed to ensure session exists:', err);
-    throw err;
-  }
-}
-
-/**
- * Mark session as completed in maia_sessions.
+ * Mark session as completed in maia_sessions for its already-verified owner.
  * This closes the session lifecycle: active → closing → completed
  */
-async function markSessionCompleted(sessionId: string, endedAt: string | null): Promise<void> {
-  try {
-    await query(
-      `
-      UPDATE maia_sessions
-      SET status = 'completed',
-          ended_at = $2,
-          completed_at = $2
-      WHERE id = $1
-      `,
-      [sessionId, endedAt ? new Date(endedAt) : new Date()]
-    );
-    console.log(`✅ [SessionFinalizer] Session ${sessionId} marked as completed`);
-  } catch (err) {
-    // Non-fatal - session is still finalized even if we can't update status
-    console.warn(`⚠️ [SessionFinalizer] Could not mark session ${sessionId} as completed:`, err);
+async function markSessionCompleted(
+  sessionId: string,
+  memberId: string,
+  endedAt: string | null,
+): Promise<void> {
+  // A refusal/error must not be reported to the member as a completed close.
+  const result = await query<{id:string}>(
+    "UPDATE maia_sessions SET status='completed', ended_at=$2, "+
+    "completed_at=$2, updated_at=NOW() WHERE id=$1 AND member_id=$3 "+
+    "AND mode='continuity' RETURNING id",
+    [sessionId, endedAt ? new Date(endedAt) : new Date(), memberId],
+  );
+  if (!result.rows[0]) {
+    throw new Error('SESSION_FINALIZATION_NOT_CONFIRMED');
   }
 }
 
@@ -104,48 +67,42 @@ export async function finalizeSession(
 ): Promise<FinalizeSessionResult> {
   const { memberId, sessionId, isSanctuary, endedAt = null } = input;
 
-  // Self-healing: ensure maia_sessions row exists before FK operations
-  const mode = isSanctuary ? 'sanctuary' : 'continuity';
-  let sessionCreated = false;
+  // Mandatory service-level authorization, independent of the HTTP handler.
+  // Legacy ownerless sessions are refused rather than silently adopted.
+  await requireExistingOwnedSession(sessionId, memberId);
+  const sessionCreated = false;
 
-  try {
-    sessionCreated = await ensureMaiaSessionExists(sessionId, memberId, mode);
-  } catch {
-    // If maia_sessions table doesn't exist, continue anyway
-    // The member_sessions write will still work
-    console.warn('[SessionFinalizer] Could not ensure maia_session (table may not exist)');
-  }
+  // A mutable client end-of-session flag cannot authorize deletion of earlier
+  // ordinary turns. S1/R1 must qualify per-turn aftermath first.
 
   if (isSanctuary) {
-    // ═══════════════════════════════════════════════
-    // SANCTUARY PATH: Purge turns, store metadata only
-    // ═══════════════════════════════════════════════
-
-    // 1. Delete all conversation_turns for this session
-    const turnsDeleted = await TurnsStore.deleteBySessionId(sessionId);
-
-    console.log(
-      `🛡️ [SessionFinalizer] Sanctuary purge: ${turnsDeleted} turns deleted for session ${sessionId}`
-    );
-
-    // 2. Store metadata row (summary forced to null by SessionSummaryStore)
-    await SessionSummaryStore.writeSessionRecord({
-      memberId,
-      sessionId,
-      isSanctuary: true,
-      endedAt,
-      summaryText: null,
-    });
-
-    // 3. Close the session lifecycle: closing → completed
-    await markSessionCompleted(sessionId, endedAt);
-
-    return { ok: true, sanctuary: true, turnsDeleted, sessionCreated };
+    return {
+      ok: false,
+      sanctuary: true,
+      sessionCreated,
+      error: 'SANCTUARY_FINALIZATION_AWAITS_TURN_LEVEL_POLICY',
+    };
   }
 
   // ═══════════════════════════════════════════════
   // CONTINUITY PATH: Create record + enqueue summary job
   // ═══════════════════════════════════════════════
+
+  // Preserve non-destructive ordinary closure; do NOT enqueue a transcript
+  // for Anthropic without independent background provider permission.
+  if (!summaryProviderFixtureEnabled()) {
+    await markSessionCompleted(sessionId, memberId, endedAt);
+    return { ok: true, sanctuary: false, queued: false, sessionCreated, summaryHeld: true };
+  }
+  // Fixture-only: proof must cover EVERY turn and all previous privacy
+  // gestures, including Sanctuary choices that never wrote a transcript.
+  const summaryEligible = await evaluateSummaryEligibility({
+    sessionId, memberId, requireClosed: false,
+  });
+  if (!summaryEligible.ok) {
+    await markSessionCompleted(sessionId, memberId, endedAt);
+    return { ok: true, sanctuary: false, queued: false, sessionCreated, summaryHeld: true };
+  }
 
   // 1. Create member_sessions row (summary null, pending worker)
   await SessionSummaryStore.writeSessionRecord({
@@ -195,7 +152,7 @@ export async function finalizeSession(
   }
 
   // 3. Close the session lifecycle: closing → completed
-  await markSessionCompleted(sessionId, endedAt);
+  await markSessionCompleted(sessionId, memberId, endedAt);
 
   return { ok: true, sanctuary: false, queued, sessionCreated };
 }

@@ -58,12 +58,16 @@ import { calculateCurrentTransits, findTransitAspects, type TransitPositions, ty
 import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult, type Element } from '@/lib/memory/selflet';
 import { validateSocraticResponse, type SocraticValidationResult } from '@/lib/validation/socraticValidator';
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
-import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@/lib/sovereign/decisionGovernor';
 import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { assertR4gOrdinarySession, R4gSessionHeld } from '@/lib/maia/astrologyConsent/r4gOrdinarySessionGate';
 import { mayAttachImplicitAstrologyContext } from '@/lib/maia/context/maiaAstrologyTransferPolicy';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { assertMemberInfluenceAllowed, influenceHoldResponse } from '@/lib/sanctuary/memberInfluenceHold';
+import { verifyExplicitTurnConsent, validExchangeId } from '@/lib/sanctuary/explicitTurnConsent';
+import { requireQualifiedConversationProcessing, protectedProcessingRefusal, SanctuaryProcessingUnqualified } from '@/lib/sanctuary/processingQualification';
+import { ensureOwnedMemberSession, ensureGuestSession, SessionOwnershipRefusal } from '@/lib/sovereign/memberSessionOwnership';
 import { hasContinuityAccess, toMemberTier } from '@/lib/auth/tierAccess';
 import { normalizeConversationMode, isRelationshipMode, type ConversationMode } from '@/lib/api/conversationMode';
 import { query } from '@/lib/db/postgres';
@@ -839,9 +843,12 @@ export async function POST(req: NextRequest) {
     // Client uses: normal/patient/session, API expects: dialogue/counsel/scribe
     const mode = normalizeConversationMode(rawMode);
 
-    // 🔒 SANCTUARY MODE: Session-level memory exclusion (consent boundary)
-    // When true: no content retention, no patterns formed, no training data
-    const isSanctuary = sanctuary === true;
+    // RF01: unresolved posture never silently means Continuity.
+    if (typeof sanctuary !== 'boolean' ||
+        ((meta as any)?.sanctuary !== undefined && (meta as any).sanctuary !== sanctuary)) {
+      return NextResponse.json({ error: 'PRIVACY_CHOICE_REQUIRED' }, { status: 428 });
+    }
+    const isSanctuary = sanctuary;
 
     // Voice Renderer request flags
     const voiceEngine = (body?.voiceEngine as 'local' | 'claude' | undefined) ?? 'local';
@@ -862,11 +869,19 @@ export async function POST(req: NextRequest) {
 
     const requestedSessionId =
       typeof sessionId === 'string' ? sessionId.trim() : '';
-
+    const verifiedMemberForSession = await getMemberIdFromRequest(req);
+    if (!verifiedMemberForSession || !requestedSessionId) {
+      return NextResponse.json({
+        error: 'AUTHENTICATED_PRIVACY_CHOICE_REQUIRED',
+      }, { status: verifiedMemberForSession ? 428 : 401 });
+    }
+    // An authenticated supplied session ID is a locator, never an access
+    // credential: S0-A2 independently binds it to verified member ownership.
     const safeSessionId =
-      allowBodySessionId && requestedSessionId
+      verifiedMemberForSession && requestedSessionId
         ? requestedSessionId
-        : generatedSessionId;
+        : (allowBodySessionId && requestedSessionId
+            ? requestedSessionId : generatedSessionId);
 
     // R4G: refuse legacy chart handoff and all protected grant sessions
     // BEFORE history, cognition, model transport, or derivative memory.
@@ -883,7 +898,8 @@ export async function POST(req: NextRequest) {
     // If we override, ALSO set cookie to match safeSessionId
     // so subsequent requests without sessionId stay in the same session.
     const sessionCookie =
-      allowBodySessionId && requestedSessionId
+      (verifiedMemberForSession && requestedSessionId) ||
+      (allowBodySessionId && requestedSessionId)
         ? buildSessionCookie(safeSessionId)
         : generatedCookie;
 
@@ -913,7 +929,10 @@ export async function POST(req: NextRequest) {
 
     // One UUID identifies this accepted member↔MAIA exchange across derivation and persistence.
     // This is distinct from reqId, which is audit correlation only.
-    const exchangeId = crypto.randomUUID();
+    if (!validExchangeId(body.exchangeId)) {
+      return NextResponse.json({ error: 'CONSENT_RECEIPT_REQUIRED' }, { status: 428 });
+    }
+    const exchangeId = body.exchangeId;
 
     // 📝 TEXT BANDWIDTH: keep the serving boundary aligned with the composer.
     // Scribe mode retains its existing transcript-friendly unlimited intake.
@@ -950,13 +969,13 @@ export async function POST(req: NextRequest) {
     let authUserId: string | null = null;
     let serverUserName = 'Friend'; // Safe fallback
     try {
-      const serverSession = await getCurrentSession();
-      if (serverSession) {
-        authUserId = serverSession.memberId;
+      authUserId = verifiedMemberForSession;
+      if (authUserId) {
+        // Authenticated session (cookie or native verified token).
         // Derive userName from database - never trust client-sent name
         const memberResult = await query(
           `SELECT name, preferred_name FROM members WHERE id = $1`,
-          [serverSession.memberId]
+          [authUserId]
         );
         if (memberResult.rows.length > 0) {
           const member = memberResult.rows[0];
@@ -1009,6 +1028,64 @@ export async function POST(req: NextRequest) {
     }
     const stableAnonId = isAnon ? (headerAnonId || effectiveUserId) : undefined;
     const selfletEligible = SELFLET_ALLOW_ANON || !isAnon;
+
+    // R1-B: member-derived memory remains unavailable after an exact-source
+    // erasure until all influences and restores are reconciled. Refuse BEFORE
+    // touching current session content, model context, or a new turn.
+    if (authUserId) {
+      try {
+        await assertMemberInfluenceAllowed(authUserId);
+      } catch (err) {
+        return NextResponse.json(influenceHoldResponse(err), { status: 503 });
+      }
+    }
+
+    // RF01 S0-A2: bind / verify session ownership before reading conversation
+    // content, updating active state, deriving context, or writing a reply.
+    try {
+      if (authUserId) await ensureOwnedMemberSession(safeSessionId, authUserId);
+      else await ensureGuestSession(safeSessionId);
+    } catch (err) {
+      if (err instanceof SessionOwnershipRefusal) {
+        return withSessionCookie(
+          NextResponse.json({
+            error: err.code,
+            action: 'NEW_SESSION_REQUIRED',
+          }, { status: err.code === 'SESSION_ID_INVALID' ? 400 : 409 }),
+          sessionCookie,
+        );
+      }
+      throw err;
+    }
+
+    // RF01 S0-B: authenticated pre-Send receipt, validated BEFORE recall,
+    // canon-bypass writes, model providers, or profile updates.
+    const consent = await verifyExplicitTurnConsent({
+      memberId: authUserId!,
+      sessionId: safeSessionId,
+      exchangeId,
+      sanctuary: isSanctuary,
+    });
+    if (!consent.ok) {
+      return NextResponse.json({
+        error: consent.code, action: 'RECONFIRM_PRIVACY_BEFORE_SEND',
+      }, { status: consent.code === 'CONSENT_IDENTITY_CONFLICT' ? 409 :
+          consent.code === 'CONSENT_UNAVAILABLE' ? 503 : 428 });
+    }
+
+    // RF01 S1-A: refuse protected content before model generation, metadata
+    // writes, account settings, telemetry or any remote speech processing.
+    try {
+      requireQualifiedConversationProcessing({ sanctuary: isSanctuary });
+    } catch (err) {
+      if (err instanceof SanctuaryProcessingUnqualified) {
+        return withSessionCookie(
+          NextResponse.json(protectedProcessingRefusal(), { status: 503 }),
+          sessionCookie,
+        );
+      }
+      throw err;
+    }
 
     // 🔒 ACTIVE SESSION: Mark this session as active (for maintenance mode tracking)
     await touchActiveSession({
@@ -1109,7 +1186,7 @@ This user is in guest mode (no authenticated identity).
     // Log mode for debugging
     console.log('[Chat API] Mode parameter:', mode || 'not provided (will default to dialogue)');
     console.log('[Chat API] Effective userId:', effectiveUserId);
-    console.log('[Chat API] 📦 Normalized meta:', normalizedMeta);
+    console.log('[Chat API] normalized metadata ready (content excluded)');
 
     // 🌀 DECISION GOVERNOR: Spiralogic posture selection (preflight)
     const decision = decisionPreflight(message);
@@ -1125,13 +1202,9 @@ This user is in guest mode (no authenticated identity).
     await ensureSession(safeSessionId);
     console.log(`[Chat API] Session ensured: ${safeSessionId}`);
 
-    // 🏷️ NAME CHANGE DETECTION: Check if user wants to change what MAIA calls them
-    if (!effectiveUserId.startsWith('anon:')) {
-      const nameChangeResult = await processNameChangeIfDetected(message, effectiveUserId);
-      if (nameChangeResult.detected && nameChangeResult.updated) {
-        console.log(`[Chat API] 🏷️ Name change detected and updated: "${nameChangeResult.newName}"`);
-      }
-    }
+    // RF01 S1-A: speaking within MAIA is never implicit authorization to
+    // update durable preferred-name account settings. A separate confirmed
+    // account action must own that change.
 
     // 📚 LOAD CONVERSATION HISTORY: Get recent exchanges for continuity
     // First try session-level, then fall back to cross-session user history
@@ -1332,6 +1405,8 @@ This user is in guest mode (no authenticated identity).
               type: 'canon-wrap',
               voiceMode: normalizedMode,
               userId: effectiveUserId,
+              sanctuary: isSanctuary,
+              exchangeId,
             });
 
             logRequestComplete(reqId, {
@@ -1372,6 +1447,8 @@ This user is in guest mode (no authenticated identity).
           await addConversationExchange(safeSessionId, message, canonResponse, {
             type: 'canon-direct',
             userId: effectiveUserId,
+            sanctuary: isSanctuary,
+            exchangeId,
           });
 
           logRequestComplete(reqId, {
@@ -1428,6 +1505,15 @@ This user is in guest mode (no authenticated identity).
         mode: mode || 'dialogue', // Pass mode for Talk/Care/Note awareness
         meta: normalizedMeta, // ✅ Normalized identity for downstream persistence
       });
+
+      // RF01 R1-C: deletion may commit while simplified generation awaits.
+      if (authUserId) {
+        try {
+          await assertMemberInfluenceAllowed(authUserId);
+        } catch (err) {
+          return NextResponse.json(influenceHoldResponse(err), { status: 503 });
+        }
+      }
 
       // ✨ RUPTURE ENHANCEMENT: Check if we need to enhance response due to detected rupture
       let finalMessage = simpleResult.message;
@@ -1648,6 +1734,13 @@ This user is in guest mode (no authenticated identity).
         response.headers.set(key, value);
       });
 
+      if (authUserId) {
+        try {
+          await assertMemberInfluenceAllowed(authUserId);
+        } catch (err) {
+          return NextResponse.json(influenceHoldResponse(err), { status: 503 });
+        }
+      }
       return withSessionCookie(response, sessionCookie);
     }
 
@@ -1977,7 +2070,7 @@ This user is in guest mode (no authenticated identity).
         if (readiness.ready) {
           console.log('[MAIA/between] forward-readiness', {
             signals: readiness.signals,
-            preview: message.slice(0, 120),
+            memberContentLogged: false,
           });
           forwardReadinessAddendum = buildForwardReadinessBlock();
         }
@@ -2032,6 +2125,16 @@ This user is in guest mode (no authenticated identity).
       }),
       consultationPromise,
     ]);
+
+    // RF01 R1-C: another request can erase source material while model
+    // generation and council tasks run in parallel.
+    if (authUserId) {
+      try {
+        await assertMemberInfluenceAllowed(authUserId);
+      } catch (err) {
+        return NextResponse.json(influenceHoldResponse(err), { status: 503 });
+      }
+    }
 
     if (consultationResult) {
       console.log(`[AIN Council] 🏛️ Consultation complete: ${consultationResult.insights.length} insights, ${consultationResult.tensions.length} tensions, emergence: ${consultationResult.emergenceRating || 'recombination'}`);
@@ -2551,9 +2654,8 @@ This user is in guest mode (no authenticated identity).
     const ideaCandidate = !isSanctuary ? detectIdeaCandidate(message, cleanedText) : null;
     if (ideaCandidate) {
       console.info('[idea-field]', {
-        title: ideaCandidate.title,
         confidence: ideaCandidate.confidence,
-        fingerprint: ideaCandidate.fingerprint,
+        contentLogged: false,
       });
     }
 
@@ -2677,6 +2779,13 @@ This user is in guest mode (no authenticated identity).
       console.error('[LimitsEnforcer] Failed to record usage:', err);
     });
 
+    if (authUserId) {
+      try {
+        await assertMemberInfluenceAllowed(authUserId);
+      } catch (err) {
+        return NextResponse.json(influenceHoldResponse(err), { status: 503 });
+      }
+    }
     return withSessionCookie(response2, sessionCookie);
   } catch (err: any) {
     // Audit: request failed

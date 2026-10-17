@@ -21,7 +21,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { withoutClientPromptAuthority } from '@/lib/sovereign/clientPromptAuthority';
-import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
+import { normalizedSessionId, ensureOwnedMemberSession, ensureGuestSession, SessionOwnershipRefusal } from '@/lib/sovereign/memberSessionOwnership';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
 import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
 import { isMaintenanceEnabled } from '@/lib/system/systemSettings';
@@ -93,6 +93,14 @@ function defaultSovereignResponse() {
 }
 
 export async function POST(req: NextRequest) {
+  // RF01 S0-B: superseded sibling has no validated explicit-consent envelope.
+  // Refuse before reading member content rather than relying on no known UI
+  // callers. The canonical, owner-bound endpoint is /list.
+  return NextResponse.json({
+    error: 'LEGACY_CONVERSATION_ROUTE_RETIRED',
+    action: 'USE_CANONICAL_MAIA',
+  }, { status: 410 });
+
   if (process.env.MAIA_CABIN_MODE === 'offline') {
     return NextResponse.json(
       {
@@ -150,11 +158,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Initialize database tables if needed
-    await initializeSessionTable();
-
-    const session = await ensureSession(sessionId);
-
     // ─── AUTH-01-D · IDENTITY BOUNDARY ────────────────────────────────────────
     // Before this unit, `userId` came straight out of the request BODY and became
     // member identity with no credential anywhere in the handler. Any unauthenticated
@@ -183,6 +186,23 @@ export async function POST(req: NextRequest) {
 
     // `memberId` is null for guests. Every member-scoped read/write below keys off it.
     const memberId: string | null = verifiedMemberId;
+
+    // RF01 S0-A2: this legacy sibling remains reachable by direct HTTP, so
+    // it must prove conversation ownership before any session or model work.
+    let session;
+    try {
+      const guardedId = normalizedSessionId(sessionId);
+      session = memberId
+        ? await ensureOwnedMemberSession(guardedId, memberId)
+        : await ensureGuestSession(guardedId);
+    } catch (err) {
+      if (err instanceof SessionOwnershipRefusal) {
+        return NextResponse.json({
+          error: err.code, action: 'NEW_SESSION_REQUIRED',
+        }, { status: err.code === 'SESSION_ID_INVALID' ? 400 : 409 });
+      }
+      throw err;
+    }
 
     // ⚠️ EXPLICIT GUEST NAMESPACE — required, not cosmetic.
     //

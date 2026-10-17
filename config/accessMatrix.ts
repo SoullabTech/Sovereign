@@ -578,6 +578,20 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/commons/contributions', public: true, notes: 'GET public contributions' },
   { exact: '/api/commons/contributions/orientation', public: true, notes: 'Orientation content' },
 
+  // RF01 S0-A1.1 — member-owned privacy controls. Coarse authenticated
+  // containment only; handlers independently authenticate and bind identity.
+  // Exact rules preserve public signup/signin and all other member endpoints.
+  { exact: '/api/members/settings', minTier: 'free', notes: 'Member-owned settings; handler independently verifies credential and owner' },
+  { exact: '/api/members/recall-preferences', minTier: 'free', notes: 'Member-owned recall gates; handler independently verifies credential and owner' },
+  { exact: '/api/account/storage-consent', minTier: 'free', notes: 'Member-owned storage consent; handler independently verifies credential and owner' },
+  // RF01 S1-B (default-off): even experimental grant issuance requires a
+  // verified member at the proxy AND independently inside the handler.
+  { exact: '/api/sovereign/privacy/processing-grant', minTier: 'free', notes: 'Authenticated one-turn processor consent; independently disabled until release-qualified' },
+  // R1-D: the new encounter and legacy bootstrap paths MUST be authenticated
+  // at the proxy and their direct handlers, including permissive mode.
+  { exact: '/api/sovereign/privacy/new-conversation', minTier: 'free', notes: 'Verified member only, server-minted never-reused session identity; no remembrance consent' },
+  { exact: '/api/maia/session/start', minTier: 'free', notes: 'Idempotent authenticated session registration; body memberId cannot establish ownership or consent' },
+
   // Member API — contribution is participation, open to all
   { regex: /^\/api\/commons\/contributions\/[^/]+$/, minTier: 'free', notes: 'Contribution detail — depth' },
   { exact: '/api/commons/contributions/my-offerings', minTier: 'free', notes: 'User offerings — depth' },

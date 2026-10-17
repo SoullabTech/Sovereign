@@ -1,273 +1,184 @@
-// Production requires force-dynamic for per-user database access
-export const dynamic = 'force-dynamic'
+/**
+ * RF01 S0-A1.1 — authenticated, atomic member settings.
+ * A returned default is a display value, not evidence of express memory consent.
+ */
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
-import { getCurrentSession } from '@/lib/auth/serverSessions';
-import { isValidReviewLensId, type ReviewLensId } from '@/lib/studio/reviewLens';
+import { query, transaction } from '@/lib/db/postgres';
+import { resolvePrivacyActor, matchingClaim } from '@/lib/auth/privacyMemberGuard';
+import { isValidReviewLensId } from '@/lib/studio/reviewLens';
 
-/**
- * GET /api/members/settings
- * Get member settings
- *
- * Authentication:
- *   - Primary: Session cookie (HttpOnly, secure)
- *   - Fallback: Query param memberId (legacy, will be deprecated)
- */
+type RecordObject = Record<string, unknown>;
+const isRecord = (x: unknown): x is RecordObject =>
+  !!x && typeof x === 'object' && !Array.isArray(x);
+
+const BOOLEAN_FIELDS: Record<string, string> = {
+  emailWeeklyDigest: 'email_weekly_digest',
+  emailBreakthroughMoments: 'email_breakthrough_moments',
+  emailCommunityUpdates: 'email_community_updates',
+  emailProductUpdates: 'email_product_updates',
+  shareAnonymousInsights: 'share_anonymous_insights',
+  allowResearchParticipation: 'allow_research_participation',
+};
+const STRING_FIELDS: Record<string, string> = {
+  voiceModel: 'voice_model',
+  memoryDepth: 'memory_depth',
+  archetype: 'archetype',
+  conversationMode: 'conversation_mode',
+  preferredAssistantName: 'preferred_assistant_name',
+};
+const CONSENT_KEYS = new Set([
+  'audioServer', 'audioLocal',
+  'conversationsServer', 'conversationsLocal',
+  'journalsServer', 'journalsLocal',
+  'journalServer', 'journalLocal',
+  'preferencesServer', 'preferencesLocal',
+  'memoriesServer', 'memoriesLocal',
+  'insightsServer', 'insightsLocal',
+]);
+
+function failure(code: string, status: number) {
+  return NextResponse.json({ error: code }, { status });
+}
+
 export async function GET(request: NextRequest) {
-  // Static export: return stub response during pre-rendering
-  if (process.env.CAPACITOR_BUILD) {
-    return NextResponse.json({ stub: true });
-  }
+  if (process.env.CAPACITOR_BUILD) return NextResponse.json({ stub: true });
   try {
-    // Primary: Get identity from session cookie
-    const session = await getCurrentSession();
-    let memberId = session?.memberId ?? null;
-
-    // Fallback: Query param for backward compatibility
-    if (!memberId) {
-      const searchParams = request.nextUrl.searchParams;
-      memberId = searchParams.get('memberId');
-    }
-
-    if (!memberId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Get or create settings
-    let result = await query(
-      `SELECT * FROM member_settings WHERE member_id = $1`,
-      [memberId]
-    );
-
-    // Create settings if they don't exist
-    if (result.rows.length === 0) {
-      result = await query(
-        `INSERT INTO member_settings (member_id)
-         VALUES ($1)
-         RETURNING *`,
-        [memberId]
-      );
-    }
-
-    const settings = result.rows[0];
-
+    const actor = await resolvePrivacyActor(request, request.nextUrl.searchParams.get('memberId'));
+    if (!actor.ok) return failure(actor.code, actor.status);
+    const result = await query('SELECT * FROM member_settings WHERE member_id = $1', [actor.memberId]);
+    const r = result.rows[0] ?? null;
+    // A first GET is observational; never INSERT a row with an automatic
+    // Continuity default and then mistake that row for the member's choice.
     return NextResponse.json({
-      // MAIA Interaction
       maia: {
-        defaultMemoryMode: settings.default_memory_mode,
-        voiceModel: settings.voice_model,
-        voiceSpeed: parseFloat(settings.voice_speed),
-        memoryDepth: settings.memory_depth,
-        archetype: settings.archetype,
-        conversationMode: settings.conversation_mode,
-        preferredAssistantName: settings.preferred_assistant_name || 'MAIA',
+        defaultMemoryMode: r?.default_memory_mode ?? null,
+        memoryModeChoiceProvenance: r ? 'unverified_legacy' : 'unresolved',
+        voiceModel: r?.voice_model ?? 'shimmer',
+        voiceSpeed: r?.voice_speed == null ? 0.95 : Number(r.voice_speed),
+        memoryDepth: r?.memory_depth ?? 'moderate',
+        archetype: r?.archetype ?? 'AUTO',
+        conversationMode: r?.conversation_mode ?? 'her',
+        preferredAssistantName: r?.preferred_assistant_name ?? 'MAIA',
       },
-      // Notifications
       notifications: {
-        weeklyDigest: settings.email_weekly_digest,
-        breakthroughMoments: settings.email_breakthrough_moments,
-        communityUpdates: settings.email_community_updates,
-        productUpdates: settings.email_product_updates,
+        weeklyDigest: r?.email_weekly_digest ?? true,
+        breakthroughMoments: r?.email_breakthrough_moments ?? true,
+        communityUpdates: r?.email_community_updates ?? false,
+        productUpdates: r?.email_product_updates ?? true,
       },
-      // Privacy
       privacy: {
-        shareAnonymousInsights: settings.share_anonymous_insights,
-        allowResearchParticipation: settings.allow_research_participation,
+        shareAnonymousInsights: r?.share_anonymous_insights ?? false,
+        allowResearchParticipation: r?.allow_research_participation ?? false,
       },
-      // Membership
       membership: {
-        tier: settings.circle_tier,
-        amount: settings.circle_amount,
-        joinedAt: settings.circle_joined_at,
+        tier: r?.circle_tier ?? 'explorer',
+        amount: r?.circle_amount ?? 0,
+        joinedAt: r?.circle_joined_at ?? null,
       },
-      // Storage consent (server-authoritative)
-      storageConsent: settings.storage_consent || {},
-      // Practitioner review lens preferences
-      preferredReviewLenses: (settings.preferred_review_lenses ?? []) as ReviewLensId[],
+      storageConsent: r?.storage_consent ?? {},
+      preferredReviewLenses: r?.preferred_review_lenses ?? [],
     });
-  } catch (error) {
-    console.error('[Settings API] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch settings' },
-      { status: 500 }
-    );
+  } catch {
+    return failure('SETTINGS_UNAVAILABLE', 500);
   }
 }
 
-/**
- * PUT /api/members/settings
- * Update member settings
- *
- * Authentication:
- *   - Primary: Session cookie (HttpOnly, secure)
- *   - Fallback: Body memberId (legacy, will be deprecated)
- */
 export async function PUT(request: NextRequest) {
   try {
-    // Primary: Get identity from session cookie
-    const session = await getCurrentSession();
-    let memberId = session?.memberId ?? null;
-
-    const body = await request.json();
-    const { memberId: bodyMemberId, ...updates } = body;
-
-    // Fallback: Body memberId for backward compatibility
-    if (!memberId && bodyMemberId) {
-      memberId = bodyMemberId;
+    const actor = await resolvePrivacyActor(request, request.nextUrl.searchParams.get('memberId'));
+    if (!actor.ok) return failure(actor.code, actor.status);
+    let body: unknown;
+    try { body = await request.json(); } catch { return failure('INVALID_JSON', 400); }
+    if (!isRecord(body)) return failure('INVALID_SETTINGS_BODY', 400);
+    if (!matchingClaim(body.memberId, actor.memberId)) {
+      return failure('MEMBER_CLAIM_MISMATCH', 403);
+    }
+    // Payment/membership authority is not conferred by a generic settings PUT.
+    if ('circleTier' in body || 'circleAmount' in body) {
+      return failure('MEMBERSHIP_FIELD_NOT_WRITABLE', 403);
     }
 
-    if (!memberId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+    const setters: string[] = [];
+    const params: unknown[] = [actor.memberId];
+    let storageConsent: RecordObject | null = null;
+    const append = (column: string, value: unknown) => {
+      params.push(value);
+      setters.push(column + ' = $' + params.length);
+    };
 
-    // Build dynamic update query
-    const setClauses: string[] = [];
-    const values: unknown[] = [memberId];
-    let paramIndex = 2;
-
-    // MAIA settings
-    if (updates.defaultMemoryMode !== undefined) {
-      setClauses.push(`default_memory_mode = $${paramIndex++}`);
-      values.push(updates.defaultMemoryMode);
-    }
-    if (updates.voiceModel !== undefined) {
-      setClauses.push(`voice_model = $${paramIndex++}`);
-      values.push(updates.voiceModel);
-    }
-    if (updates.voiceSpeed !== undefined) {
-      setClauses.push(`voice_speed = $${paramIndex++}`);
-      values.push(updates.voiceSpeed);
-    }
-    if (updates.memoryDepth !== undefined) {
-      setClauses.push(`memory_depth = $${paramIndex++}`);
-      values.push(updates.memoryDepth);
-    }
-    if (updates.archetype !== undefined) {
-      setClauses.push(`archetype = $${paramIndex++}`);
-      values.push(updates.archetype);
-    }
-    if (updates.conversationMode !== undefined) {
-      setClauses.push(`conversation_mode = $${paramIndex++}`);
-      values.push(updates.conversationMode);
-    }
-    if (updates.preferredAssistantName !== undefined) {
-      setClauses.push(`preferred_assistant_name = $${paramIndex++}`);
-      values.push(updates.preferredAssistantName);
-    }
-
-    // Notification settings
-    if (updates.emailWeeklyDigest !== undefined) {
-      setClauses.push(`email_weekly_digest = $${paramIndex++}`);
-      values.push(updates.emailWeeklyDigest);
-    }
-    if (updates.emailBreakthroughMoments !== undefined) {
-      setClauses.push(`email_breakthrough_moments = $${paramIndex++}`);
-      values.push(updates.emailBreakthroughMoments);
-    }
-    if (updates.emailCommunityUpdates !== undefined) {
-      setClauses.push(`email_community_updates = $${paramIndex++}`);
-      values.push(updates.emailCommunityUpdates);
-    }
-    if (updates.emailProductUpdates !== undefined) {
-      setClauses.push(`email_product_updates = $${paramIndex++}`);
-      values.push(updates.emailProductUpdates);
-    }
-
-    // Privacy settings
-    if (updates.shareAnonymousInsights !== undefined) {
-      setClauses.push(`share_anonymous_insights = $${paramIndex++}`);
-      values.push(updates.shareAnonymousInsights);
-    }
-    if (updates.allowResearchParticipation !== undefined) {
-      setClauses.push(`allow_research_participation = $${paramIndex++}`);
-      values.push(updates.allowResearchParticipation);
-    }
-
-    // Membership
-    if (updates.circleTier !== undefined) {
-      setClauses.push(`circle_tier = $${paramIndex++}`);
-      values.push(updates.circleTier);
-    }
-    if (updates.circleAmount !== undefined) {
-      setClauses.push(`circle_amount = $${paramIndex++}`);
-      values.push(updates.circleAmount);
-    }
-
-    // Practitioner review lens preferences
-    if (updates.preferredReviewLenses !== undefined) {
-      if (
-        !Array.isArray(updates.preferredReviewLenses) ||
-        updates.preferredReviewLenses.some((l: unknown) => typeof l !== 'string' || !isValidReviewLensId(l))
-      ) {
-        return NextResponse.json(
-          { error: 'preferredReviewLenses must be an array of valid ReviewLensId values', code: 'INVALID_LENS_IDS' },
-          { status: 400 },
-        );
+    // Validate the whole request before even the first settings INSERT.
+    for (const [key, value] of Object.entries(body)) {
+      if (key === 'memberId') continue;
+      if (key in BOOLEAN_FIELDS) {
+        if (typeof value !== 'boolean') return failure('INVALID_' + key, 400);
+        append(BOOLEAN_FIELDS[key], value);
+        continue;
       }
-      setClauses.push(`preferred_review_lenses = $${paramIndex++}`);
-      values.push(updates.preferredReviewLenses);
+      if (key in STRING_FIELDS) {
+        if (typeof value !== 'string' || !value.trim() || value.length > 160) {
+          return failure('INVALID_' + key, 400);
+        }
+        append(STRING_FIELDS[key], value);
+        continue;
+      }
+      if (key === 'defaultMemoryMode') {
+        if (value !== 'continuity' && value !== 'sanctuary') {
+          return failure('INVALID_DEFAULT_MEMORY_MODE', 400);
+        }
+        append('default_memory_mode', value);
+        continue;
+      }
+      if (key === 'voiceSpeed') {
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 0.25 || value > 3) {
+          return failure('INVALID_VOICE_SPEED', 400);
+        }
+        append('voice_speed', value);
+        continue;
+      }
+      if (key === 'preferredReviewLenses') {
+        if (!Array.isArray(value) || value.some(v => typeof v !== 'string' || !isValidReviewLensId(v))) {
+          return failure('INVALID_REVIEW_LENSES', 400);
+        }
+        append('preferred_review_lenses', value);
+        continue;
+      }
+      if (key === 'storageConsent') {
+        if (!isRecord(value) || Object.keys(value).length === 0 ||
+            Object.entries(value).some(([name, permitted]) =>
+              !CONSENT_KEYS.has(name) || typeof permitted !== 'boolean')) {
+          return failure('INVALID_STORAGE_CONSENT', 400);
+        }
+        storageConsent = value;
+        continue;
+      }
+      return failure('UNSUPPORTED_SETTINGS_FIELD', 400);
     }
-
-    // Storage consent (server-authoritative)
-    // Uses dedicated UPSERT to ensure atomicity
-    if (updates.storageConsent !== undefined) {
-      // Handle consent separately with atomic UPSERT
-      await query(
-        `INSERT INTO member_settings (member_id, storage_consent)
-         VALUES ($1, $2::jsonb)
-         ON CONFLICT (member_id)
-         DO UPDATE SET storage_consent = COALESCE(member_settings.storage_consent, '{}'::jsonb) || EXCLUDED.storage_consent,
-                       updated_at = NOW()`,
-        [memberId, JSON.stringify(updates.storageConsent)]
-      );
+    if (storageConsent) {
+      params.push(JSON.stringify(storageConsent));
+      setters.push("storage_consent = COALESCE(storage_consent, '{}'::jsonb) || $" +
+        params.length + '::jsonb');
     }
+    if (setters.length === 0) return failure('NO_SETTINGS_UPDATES', 400);
 
-    if (setClauses.length === 0 && updates.storageConsent === undefined) {
-      return NextResponse.json(
-        { error: 'No settings to update' },
-        { status: 400 }
+    // One pinned connection for both writes. A later SQL failure rolls back
+    // the first write; a committed response is returned only after COMMIT.
+    const settings = await transaction(async (client) => {
+      await client.query(
+        'INSERT INTO member_settings (member_id) VALUES ($1) ON CONFLICT (member_id) DO NOTHING',
+        [actor.memberId],
       );
-    }
-
-    // For non-consent settings, use two-step upsert
-    if (setClauses.length > 0) {
-      await query(
-        `INSERT INTO member_settings (member_id)
-         VALUES ($1)
-         ON CONFLICT (member_id) DO NOTHING`,
-        [memberId]
+      const updated = await client.query(
+        'UPDATE member_settings SET ' + setters.join(', ') +
+        ', updated_at = NOW() WHERE member_id = $1 RETURNING *',
+        params,
       );
-
-      await query(
-        `UPDATE member_settings
-         SET ${setClauses.join(', ')}
-         WHERE member_id = $1`,
-        values
-      );
-    }
-
-    // Fetch and return the updated settings
-    const result = await query(
-      `SELECT * FROM member_settings WHERE member_id = $1`,
-      [memberId]
-    );
-
-    return NextResponse.json({
-      success: true,
-      settings: result.rows[0],
+      if (!updated.rows[0]) throw new Error('SETTINGS_UPDATE_EMPTY');
+      return updated.rows[0];
     });
-  } catch (error) {
-    console.error('[Settings API] Update error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update settings' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true, settings });
+  } catch {
+    return failure('SETTINGS_UPDATE_FAILED', 500);
   }
 }

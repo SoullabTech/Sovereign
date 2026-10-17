@@ -600,6 +600,15 @@ async function synthesizeSentence(
 }
 
 export async function POST(req: NextRequest) {
+  // RF01 S0-B: this legacy independent voice cognition path accepts a bare
+  // client privacy flag, and is not yet covered by authenticated pre-Send
+  // authority. Refuse it structurally, before reading or logging speech.
+  // Canonical web and native MAIA use /api/sovereign/app/maia/list.
+  return new Response(JSON.stringify({
+    error: 'LEGACY_VOICE_ROUTE_NOT_PRIVACY_QUALIFIED',
+    action: 'USE_CANONICAL_MAIA',
+  }), { status: 410, headers: { 'Content-Type': 'application/json' } });
+
   const body: StreamRequest = await req.json();
 
   // ─── TURN INSTRUMENTATION ───

@@ -22,7 +22,7 @@ describe('episodic recall consent surface', () => {
   it('has a durable member preference in schema and loader', () => {
     expect(schema).toContain('episodic_recall_enabled BOOLEAN NOT NULL DEFAULT TRUE');
     expect(loader).toContain('SELECT episodic_recall_enabled FROM members');
-    expect(loader).toContain('episodic_recall_enabled !== false');
+    expect(loader).toContain('episodic_recall_enabled === true');
   });
 
   it('admits episodic recall through the same governed preference endpoint', () => {

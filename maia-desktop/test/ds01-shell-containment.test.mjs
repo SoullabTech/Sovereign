@@ -476,10 +476,16 @@ test('F5 — DS01 opens no IPC channel; navigation stays main\'s authority', () 
   // an observation, not authority — the renderer names no turn, generation or
   // conversation, and the authority refuses the report if it is late, doubled,
   // or from a replaced conversation.
-  assert.equal(INVOKE_CHANNEL_NAMES.length, 12, 'the ratified invoke allow-list changed size');
+  // RF01 S0-B local candidate opens two tightly scoped, main-validated
+  // privacy verbs and one read-only push. They remain explicitly proposed
+  // until the founder's release authorization; not a shell/navigation grant.
+  assert.equal(INVOKE_CHANNEL_NAMES.length, 14, 'the reviewed invoke allow-list changed size');
   assert.ok(INVOKE_CHANNEL_NAMES.includes('maia:send-text'));
   assert.ok(INVOKE_CHANNEL_NAMES.includes('maia:playback-ended'));
-  assert.equal(PUSH_CHANNEL_NAMES.length, 6, 'the ratified push allow-list changed size');
+  assert.ok(INVOKE_CHANNEL_NAMES.includes('maia:choose-privacy'));
+  assert.ok(INVOKE_CHANNEL_NAMES.includes('maia:privacy-state'));
+  assert.equal(PUSH_CHANNEL_NAMES.length, 7, 'the reviewed push allow-list changed size');
+  assert.ok(PUSH_CHANNEL_NAMES.includes('maia:privacy-state'));
 
   for (const source of [shellJs, strip('shell-policy.js')]) {
     assert.ok(!/ipcMain|ipcRenderer|exposeInMainWorld/.test(source),
