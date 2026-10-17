@@ -110,7 +110,8 @@ export async function GET(
       `SELECT leadership_profile FROM practitioner_clients WHERE id = $1 AND leadership_profile IS NOT NULL`,
       [session.client_id]
     );
-    let leadershipContext = null;
+    // Leadership information is optional even when a profile exists.
+    let leadershipContext: Awaited<ReturnType<typeof getLeadershipBriefingContext>> = null;
     if (clientCheck.rows.length > 0) {
       leadershipContext = await getLeadershipBriefingContext(practitionerId, session.client_id);
     }

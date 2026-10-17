@@ -86,7 +86,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Include the next circle session if a cohort group is linked
-    let nextCircle = null;
+    // A linked cohort may have no future scheduled session.
+    let nextCircle: GroupSessionRow | null = null;
     if (passage.cohort_group_id) {
       nextCircle = await db.queryOne<GroupSessionRow>(`
         SELECT
