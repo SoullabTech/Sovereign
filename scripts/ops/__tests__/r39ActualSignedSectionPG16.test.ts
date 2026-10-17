@@ -399,8 +399,12 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
    action:view.action,restoredFrom:view.restoredFrom};
  };
  const evidence=process.env.R54_BROWSER_EVIDENCE_DIR||'';
- if(!evidence.startsWith('/Volumes/T7 Shield/ws-beta-r54-native-pc3-evidence-20261016/')||
-   !/\/run-[a-f0-9-]+$/.test(evidence))
+ const inOriginal=evidence.startsWith(
+  '/Volumes/T7 Shield/ws-beta-r54-native-pc3-evidence-20261016/');
+ const inConvergence=process.env.R55_REAL_PC3_CONVERGENCE_FIXTURE==='fictional-only'&&
+  evidence.startsWith(
+   '/Volumes/T7 Shield/ws-beta-release-r11-build-20261016/R55_CONVERGED_PC3_ENCRYPTED_BROWSER_20261016/');
+ if(!(inOriginal||inConvergence)||!/\/run-[a-f0-9-]+$/.test(evidence))
   throw Error('R54_NOT_AN_ISOLATED_BROWSER_EVIDENCE_FOLDER');
  const response=await runR54Pc3FictionalBrowser({
   engine,evidenceDir:path.join(evidence,engine),

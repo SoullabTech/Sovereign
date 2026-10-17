@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.r46-durable-signed-apply.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/writersStudio/recovery/heldPrivateEditorialReviewR47.ts",
+    "lib/writersStudio/recovery/__tests__/heldPrivateEditorialReviewR47.test.ts",
+    "scripts/ops/__tests__/r47PrivateEditorialPG16.test.ts",
+    "scripts/ops/__tests__/r47PrivateEditorialColdPG16.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

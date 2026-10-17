@@ -1,0 +1,31 @@
+{
+  "extends": "./tsconfig.r54-pc3-author.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "app/dev/writers-studio-pc3-live/P4R1ProtectedAuthorJourneyR54.tsx",
+    "app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx",
+    "lib/writersStudio/recovery/heldCanonicalAuthorJourneyR53.ts",
+    "scripts/ops/fixtures/wsR54Pc3AuthorBrowser.tsx",
+    "scripts/ops/wsBetaR54Pc3Browser.ts",
+    "scripts/ops/wsBetaR54Pc3BrowserPG16.ts",
+    "scripts/ops/__tests__/r39ActualSignedSectionPG16.test.ts",
+    "scripts/ops/__tests__/r54ColdPG16UndoState.test.ts",
+    "lib/writersStudio/exactRenderedPassageR52.ts",
+    "lib/writersStudio/__tests__/exactRenderedPassageR52.test.ts",
+    "lib/writersStudio/__tests__/r52CanonicalNextBrowserBoundary.test.ts",
+    "app/writers-studio/full-redesign/Shell.tsx",
+    "app/writers-studio/page.tsx",
+    "lib/writersStudio/recovery/__tests__/r55CombinedLiveStudioProtectedAuthor.test.ts",
+    "scripts/ops/wsBetaR55ConvergedPc3PG16.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
