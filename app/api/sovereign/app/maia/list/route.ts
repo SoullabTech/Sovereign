@@ -174,6 +174,7 @@ import {
 // 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
 import { retrieveGovernedKnowledge, formatGovernedKnowledgeAddendum } from '@/lib/ain/knowledge/GovernedRetrievalService';
+import { buildPerrySourceLensAddendum } from '@/lib/maia/knowledge/perrySourceLens';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
 import type { TeachingSourceRef } from '@/lib/maia/teaching/TeachingContextSourceContract';
 import { requestedTeachingSurface, resolveTeachingRuntimeSurfaceAuthority } from '@/lib/maia/teaching/TeachingRuntimeSurfaceAuthority';
@@ -333,7 +334,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await withTimeoutLabeled('req.json', req.json().catch(() => ({})), 2000, start);
-    const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, exchangeId: clientExchangeId, commandOnly, ...meta } = body as {
+    const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, exchangeId: clientExchangeId, commandOnly, perrySourceLens: requestedPerrySourceLens, ...meta } = body as {
       sessionId?: string;
       message?: string;
       includeAudio?: boolean;
@@ -349,6 +350,8 @@ export async function POST(req: NextRequest) {
       // TII-03: client-classified pure interface command. F1 still accepts the
       // exact authored turn; the route then exits before O8/F2/cognition.
       commandOnly?: boolean;
+      /** Per-turn SOURCE REQUEST, not authorization; removed from client meta. */
+      perrySourceLens?: unknown;
       [key: string]: unknown;
     };
 
@@ -1089,6 +1092,32 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       } catch (err) {
         console.warn('[AIN Governed] retrieval failed closed (non-blocking):', err);
       }
+    }
+
+    // GLENN PERRY STAGE B: an optional, exact-source, founder-admission-gated
+    // teaching lens, never an ambient astrology prompt. The client's field
+    // only expresses per-turn intent; identity was server-resolved above.
+    // APPROVED_PERRY_EDITORIAL_SOURCE remains null pending separate authority.
+    // Never read Perry's books/articles or turn this on via an env flag alone.
+    try {
+      const perryLensAddendum = buildPerrySourceLensAddendum({
+        requestedLens: requestedPerrySourceLens,
+        verifiedMemberId: isRecognizedUser ? userId : null,
+        isSanctuary,
+        enabled: process.env.MAIA_PERRY_SOURCE_LENS_ENABLED === '1',
+      });
+      if (perryLensAddendum) {
+        // Reuse the EXISTING knowledge seam for FAST / DEEP while preserving
+        // all previously authorized governed knowledge.
+        governedKnowledgeAddendum = [governedKnowledgeAddendum, perryLensAddendum]
+          .filter(Boolean).join('\n\n');
+      }
+    } catch (err) {
+      // Source authority failure cannot turn a current user request into a
+      // new prompt, or fail an otherwise valid MAIA turn.
+      console.warn('[MAIA/Perry] source-lens authorization refused', {
+        errorType: err instanceof Error ? err.name : 'unknown',
+      });
     }
 
     // 🎓 T8A TEACHING INTELLIGENCE: current-turn-only and server-adjudicated.
