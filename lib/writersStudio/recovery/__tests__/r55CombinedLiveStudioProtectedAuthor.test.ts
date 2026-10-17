@@ -48,6 +48,12 @@ describe('R55 — R52 actual Writer + R53 signed author + R54 native PC3 and leg
   const controller=source('app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx');
   expect(controller).not.toContain('r54ProtectedJourney=');
  });
+ it('merged native PC3 imports the R52 rendered passage helper exactly once',()=>{
+  const src=source('app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx');
+  const line="import { exactRenderedPassageR52 } from '@/lib/writersStudio/exactRenderedPassageR52';";
+  expect(src.split(line)).toHaveLength(2);
+  expect(src).toContain('P4R1ProtectedAuthorJourneyR54');
+ });
  it('same true PC3 contenteditable uses R52 source-aligned exact duplicate passage',()=>{
   const view=source('app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx');
   expect(view).toContain('exactRenderedPassageR52(liveBody, editor, range)');

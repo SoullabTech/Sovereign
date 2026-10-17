@@ -29,7 +29,6 @@ import { exactTextareaPassageR41, exactDomPassageR41 } from '@/lib/writersStudio
 import { exactRenderedPassageR52 } from '@/lib/writersStudio/exactRenderedPassageR52';
 import {P4R1ProtectedAuthorJourneyR54,R54_REAL_PC3_AUTHOR_JOURNEY_ENABLED,
   type R54PanelProps} from './P4R1ProtectedAuthorJourneyR54';
-import { exactRenderedPassageR52 } from '@/lib/writersStudio/exactRenderedPassageR52';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
 import EditorialDancePanel from './EditorialDancePanel';
