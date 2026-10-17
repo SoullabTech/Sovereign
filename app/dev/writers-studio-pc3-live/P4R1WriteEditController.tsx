@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
+import { preflightRealAuthorActionR1J } from '@/lib/writersStudio/release/realAuthorActionPreflightR1J';
 import { readCurrentSanctuaryPosture, type CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork } from '@/app/writers-studio/workContext';
@@ -898,6 +899,8 @@ export default function FlagshipWriteEditController() {
     setUndoMessage(null);
 
     try {
+      const preflight = await preflightRealAuthorActionR1J(context?.manuscriptId, 'apply');
+      if (!preflight.authorized) { setEditorialFailure(preflight.message); return; }
       if (!(await settleWriting())) return;
       const result = await adoptBoundEditorialVersion(
         editorialThread.threadId,
@@ -933,6 +936,7 @@ export default function FlagshipWriteEditController() {
     adoptionBusy,
     settleWriting,
     refreshContext,
+    context?.manuscriptId,
   ]);
 
   const undoSuggested = useCallback(async () => {
@@ -943,6 +947,8 @@ export default function FlagshipWriteEditController() {
     setUndoMessage(null);
     setEditorialFailure(null);
     try {
+      const preflight = await preflightRealAuthorActionR1J(context?.manuscriptId, 'undo');
+      if (!preflight.authorized) { setUndoMessage(preflight.message); return; }
       const response = await apiFetch('/api/writers-studio/editorial/undo', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -964,7 +970,7 @@ export default function FlagshipWriteEditController() {
     } finally {
       setAdoptionBusy(false);
     }
-  }, [editorialThread, adoptionBusy, refreshContext, focusId]);
+  }, [editorialThread, adoptionBusy, refreshContext, focusId, context?.manuscriptId]);
 
   const saveMemberRevision = useCallback(async (draft: MemberRevisionDraft): Promise<boolean> => {
     if (memberVersionBusy || !editorialThread || !focusId) return false;
