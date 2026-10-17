@@ -1,0 +1,13 @@
+{
+ "extends":"./tsconfig.ws-beta-r63-atomic-import.json",
+ "compilerOptions":{"strict":true,"noEmit":true,"incremental":false,"plugins":[]},
+ "files":[
+  "next-env.d.ts",
+  "lib/manuscript/source/persistConfirmedPasteR65.ts",
+  "app/api/sovereign/manuscripts/route.ts",
+  "app/press/manuscript/page.tsx",
+  "scripts/ops/__tests__/r65ConfirmedPastePG16.test.ts"
+ ],
+ "include":[],
+ "exclude":["node_modules"]
+}

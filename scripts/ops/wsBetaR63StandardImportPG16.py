@@ -14,6 +14,8 @@ NAME="ws-r63-standard-"+secrets.token_hex(6)
 RECEIPT=E/"R63_REAL_CONVENTIONAL_IMPORT_PG16.json"
 INITIAL=E/"R63_ACTUAL_NEXT_IMPORT_JEST.log"
 COLD=E/"R63_FRESH_PROCESS_READBACK_JEST.log"
+R65_INITIAL=E/"R65_ACTUAL_NEXT_CONFIRM_PASTE_JEST.log"
+R65_COLD=E/"R65_FRESH_PROCESS_CONFIRM_RECEIPT_JEST.log"
 A="11111111-1111-4111-8111-111111111111"
 B="22222222-2222-4222-8222-222222222222"
 
@@ -70,7 +72,11 @@ def main():
   "inventedMembersAndSessions","realActualNextImportTest",
   "failingSecondSectionRolledBack","sourceArrivalsIntact",
   "freshProcessManuscriptReopened","noRealMemberCredentialsOrProviderEnv",
-  "noFictionalProseInErrorLogs","disposableContainerRemoved",
+  "noFictionalProseInErrorLogs",
+  "r65AdditiveConfirmationMigration","r65ActualNextOnceOnly",
+  "r65DeletedConfirmationTombstone","r65DeletedPayloadFingerprintGone",
+  "r65ColdProcessReceipt","r65NoFictionalProseInErrorLogs",
+  "disposableContainerRemoved",
  )}
  started=False;error=None
  try:
@@ -127,6 +133,11 @@ def main():
    "SELECT count(*) FROM information_schema.columns "
    "WHERE table_name='manuscript_sections' "
    "AND column_name IN ('heading_depth','heading_signal')")=="2"
+  migrate("20261017000001_manuscript_import_confirmation_receipts.sql")
+  checks["r65AdditiveConfirmationMigration"]=sql(
+   "SELECT count(*) FROM information_schema.tables "
+   "WHERE table_name IN ('manuscript_import_confirmations',"
+   "'manuscript_import_active_payloads')")=="2"
   if not all(checks[k] for k in (
    "actualManuscriptMigration","actualSourceMigration",
    "actualHeadingMigration","inventedMembersAndSessions")):
@@ -136,6 +147,7 @@ def main():
        ("PATH","HOME","TMPDIR","LANG") if k in os.environ}
   env.update({
    "R63_STANDARD_IMPORT_PG16":"fictional-only",
+   "R65_CONFIRMED_PASTE_PG16":"fictional-only",
    "DATABASE_URL":"postgresql://fict@127.0.0.1:"+match.group(1)+"/ws_atomic",
    "CAPACITOR_BUILD":"",
    "MAIA_CABIN_MODE":"",
@@ -171,6 +183,38 @@ def main():
   checks["freshProcessManuscriptReopened"]=(
    cold.returncode==0 and "2 passed, 2 total" in
    cold.stdout+cold.stderr)
+
+  # AFTER the original R63 cold reader, exercise a new canonical
+  # confirmation UUID against genuine PG16 uniqueness, concurrent requests,
+  # Source-in-one-transaction, rollback, distinct members and deletion.
+  r65=run(["./node_modules/.bin/jest","--runInBand","--no-coverage",
+   "--runTestsByPath","scripts/ops/__tests__/r65ConfirmedPastePG16.test.ts"],
+   timeout=150,check=False,env=env)
+  R65_INITIAL.write_text(r65.stdout+"\n"+r65.stderr)
+  if r65.returncode!=0:raise RuntimeError("R65_REAL_PG16_CONFIRMATION_REFUSED")
+  checks["r65ActualNextOnceOnly"]="9 passed, 9 total" in (
+   r65.stdout+r65.stderr)
+  checks["r65DeletedConfirmationTombstone"]=sql(
+   "SELECT count(*) FROM manuscript_import_confirmations "
+   "WHERE manuscript_id IS NULL")=="1"
+  checks["r65DeletedPayloadFingerprintGone"]=sql(
+   "SELECT count(*) FROM manuscript_import_active_payloads p "
+   "JOIN manuscript_import_confirmations c "
+   "ON c.member_id=p.member_id AND c.confirmation_id=p.confirmation_id "
+   "WHERE c.manuscript_id IS NULL")=="0"
+  r65logs=R65_INITIAL.read_text(errors="replace")
+  checks["r65NoFictionalProseInErrorLogs"]=not any(s in r65logs for s in (
+   "Exact fictional Source 🌱","Exact fictional authored passage.",
+   "R65_SOURCE_INSERT_FAILURE_FICTIONAL",
+  ))
+  rcold=run(["./node_modules/.bin/jest","--runInBand","--no-coverage",
+   "--runTestsByPath","scripts/ops/__tests__/r65ConfirmedPasteColdPG16.test.ts"],
+   timeout=90,check=False,env=env)
+  R65_COLD.write_text(rcold.stdout+"\n"+rcold.stderr)
+  checks["r65ColdProcessReceipt"]=(
+   rcold.returncode==0 and "2 passed, 2 total" in
+   rcold.stdout+rcold.stderr)
+
   if not all(v for k,v in checks.items() if k!="disposableContainerRemoved"):
    raise RuntimeError("R63_FICTIONAL_IMPORT_CHECK_FAILED")
  except Exception as exc:

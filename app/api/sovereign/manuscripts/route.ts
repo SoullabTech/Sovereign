@@ -38,6 +38,8 @@ import {
 import { memberRef } from '@/lib/privacy/memberRef';
 import { claimArrival, recordSuppliedArrival } from '@/lib/manuscript/source/arrivals';
 import { persistConfirmedSectionsR63 } from '@/lib/manuscript/source/persistConfirmedSectionsR63';
+import {persistConfirmedPasteR65,PasteConfirmationRefusalR65}
+ from '@/lib/manuscript/source/persistConfirmedPasteR65';
 import { detectOmission, omissionMarker } from '@/lib/manuscript/source/omission';
 import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
@@ -322,13 +324,15 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
-    const { title, text, sections, sourceArrivalId, confirmedText } = (body ?? {}) as {
+    const { title, text, sections, sourceArrivalId, confirmedText, confirmationId } = (body ?? {}) as {
       title?: unknown;
       text?: unknown;
       sections?: unknown;
       sourceArrivalId?: unknown;
       /** Save step only: the exact text the member supplied, for a paste. */
       confirmedText?: unknown;
+      /** Stable UUID of one explicit author confirmation, not a work ID. */
+      confirmationId?: unknown;
     };
 
     if (typeof title !== 'string' || title.trim().length === 0) {
@@ -398,6 +402,48 @@ export async function POST(request: NextRequest) {
     }
     if (clean.length === 0) {
       return NextResponse.json({ error: 'no non-empty sections' }, { status: 400 });
+    }
+
+    // The standard-security *pasted-text* beta Save sends a stable,
+    // member-generated UUID for one explicit confirmation. Its receipt, the
+    // section set and the immutable member-supplied Source must commit or
+    // roll back TOGETHER. A retry must return the same manuscript, not clone it.
+    // File-backed arrivals retain their separately verified vault claim path.
+    if (confirmationId !== undefined) {
+      if (sourceArrivalId !== undefined || typeof confirmedText !== 'string') {
+        return NextResponse.json(
+          { error: 'Paste confirmation requires confirmed text and no uploaded Source' },
+          { status: 400 },
+        );
+      }
+      try {
+        const result = await persistConfirmedPasteR65({
+          verifiedMemberId: memberId,
+          confirmationId: confirmationId as string,
+          title: title.trim(),
+          sections: clean.map(s => ({
+            position:s.position,heading:s.heading,body:s.body,
+            headingDepth:s.headingDepth ?? null,
+            headingSignal:s.headingSignal ?? null,
+          })),
+          sourceText: confirmedText,
+        });
+        return NextResponse.json({
+          id: result.manuscriptId,
+          sectionCount: clean.length,
+          sourceCustody: result.sourceCustody,
+        }, { status: result.replayed ? 200 : 201 });
+      } catch (error) {
+        if (error instanceof PasteConfirmationRefusalR65) {
+          return NextResponse.json({
+            error: error.reason === 'invalid_confirmation'
+              ? 'Invalid confirmation'
+              : 'Import confirmation no longer matches the saved Work',
+          }, { status: error.reason === 'invalid_confirmation' ? 400 : 409 });
+        }
+        // Preserve generic error without serializing a private SQL message.
+        throw error;
+      }
     }
 
     // One confirmed author import must not produce a partial manuscript if a

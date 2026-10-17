@@ -31,6 +31,7 @@ test('the exact canonical UI + held encrypted journey are present in one source,
  assert.equal(r.standardPrivateBeta.currentQualification,'OPERATIONAL_EVIDENCE_HOLD');
  assert.equal(r.standardPrivateBeta.safetySourcePresent,true);
  assert.equal(r.atomicConventionalManuscriptImportSourcePresent,true);
+ assert.equal(r.pastedSourceOnceOnlyOriginalAndReceiptPresent,true);
  assert.equal(r.privateMemberGetRoutesCount,20);
  assert.equal(r.privateMemberGetRoutesProtectedCount,20);
  assert.deepEqual(r.privateMemberGetUnprotected,[]);
@@ -210,6 +211,24 @@ test('removing confirmed manuscript transaction or redacted real POST logging fo
   assert.equal(r.atomicConventionalManuscriptImportSourcePresent,false);
   assert.equal(r.candidateRelease,'HOLD');
   assert.equal(r.releaseApproved,false);
+ }
+});
+
+test('pasted Source one-use confirmation, receipt tombstone and real Press Save cannot be replaced',()=>{
+ for(const relativeName of [
+  'lib/manuscript/source/persistConfirmedPasteR65.ts',
+  'database/migrations/20261017000001_manuscript_import_confirmation_receipts.sql',
+  'app/press/manuscript/page.tsx',
+  'app/api/sovereign/manuscripts/route.ts',
+ ]){
+  const file=resolve(ROOT,relativeName);
+  const modified=inspectCandidate(ROOT,{readText:target=>
+   target===file?'// removed exact Source/confirmation identifier':
+    readFileSync(target,'utf8')});
+  assert.equal(modified.codeContract,'SOURCE_DRIFT_HOLD');
+  assert.equal(modified.pastedSourceOnceOnlyOriginalAndReceiptPresent,false);
+  assert.equal(modified.candidateRelease,'HOLD');
+  assert.equal(modified.releaseApproved,false);
  }
 });
 
