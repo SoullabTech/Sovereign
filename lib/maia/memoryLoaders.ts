@@ -235,21 +235,21 @@ export async function loadPriorCrossSessionExchanges(
  * block is suppressed entirely (count still feeds memoryHealth for observability
  * but no content reaches MAIA's prompt).
  *
- * Graceful: returns true (default) on missing input or DB error so the
- * conversation never blocks on preference lookup.
+ * Fail-closed: suppress recall when identity or preference cannot be verified.
+ * Existing members retain the database default-on preference when explicitly true.
  */
 export async function loadConversationalRecallPref(userId: string): Promise<boolean> {
-  if (!userId) return true;
+  if (!userId) return false;
   try {
     const result = await query<{ conversational_recall_enabled: boolean | null }>(
       `SELECT conversational_recall_enabled FROM members WHERE id = $1 LIMIT 1`,
       [userId],
     );
-    if (result.rows.length === 0) return true; // member not found → default-on
-    return result.rows[0].conversational_recall_enabled !== false;
+    if (result.rows.length === 0) return false; // missing member: do not surface
+    return result.rows[0].conversational_recall_enabled === true;
   } catch (err) {
     console.warn('[memoryLoaders] loadConversationalRecallPref failed (non-fatal):', err);
-    return true; // graceful: default-on
+    return false; // failed lookup: suppress rather than bypass opt-out
   }
 }
 
@@ -322,20 +322,20 @@ export async function loadRecentMarkedEpisodes(
  * (added by database/migrations/20260531000001_episodic_member_marked_provenance.sql,
  * §5) — this loader is the first reader of it.
  *
- * Graceful: returns true (default) on missing input or DB error so the
- * conversation never blocks on preference lookup.
+ * Fail-closed: suppress recall when identity or preference cannot be verified.
+ * Existing members retain the database default-on preference when explicitly true.
  */
 export async function loadEpisodicRecallPref(userId: string): Promise<boolean> {
-  if (!userId) return true;
+  if (!userId) return false;
   try {
     const result = await query<{ episodic_recall_enabled: boolean | null }>(
       `SELECT episodic_recall_enabled FROM members WHERE id = $1 LIMIT 1`,
       [userId],
     );
-    if (result.rows.length === 0) return true; // member not found → default-on
-    return result.rows[0].episodic_recall_enabled !== false;
+    if (result.rows.length === 0) return false; // missing member: do not surface
+    return result.rows[0].episodic_recall_enabled === true;
   } catch (err) {
     console.warn('[memoryLoaders] loadEpisodicRecallPref failed (non-fatal):', err);
-    return true; // graceful: default-on
+    return false; // failed lookup: suppress rather than bypass opt-out
   }
 }
