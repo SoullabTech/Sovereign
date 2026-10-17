@@ -10,6 +10,7 @@ import {verifiedBetaConsentNotice} from '@/lib/writersStudio/betaConsentNotice';
 import {explicitlyApprovedWriterMember,writersStudioBetaAccess}
  from '@/lib/writersStudio/betaAccessServer';
 import {splitStoredSection} from '@/lib/manuscript/sections/sectionProjection';
+import {lookupR74MaiaProvenance} from './r74MaiaProvenanceBoundary';
 export class R72Refused extends Error{
  constructor(public readonly reason:string,public readonly http=409){super('R72_'+reason);}
 }
@@ -45,7 +46,7 @@ export async function requireR72CurrentConsent(tx:TransactionClient,memberId:str
  return {consentSequence:Number(last.seq),noticeSHA256:notice.sha256};
 }
 type ProposalRow={
- id:string;chain_id:string;author:string;formulation:string;
+ id:string;chain_id:string;author:string;
  member_id:string;work_id:string;draft_id:string;base_version:number;
  target_section_id:string;expected_text:string;
 };
@@ -55,7 +56,7 @@ export async function resolveR72MemberVersion(tx:TransactionClient,scope:{
 }){
  if(!UUID.test(scope.versionId))return fail('invalid_proposal_id',400);
  const r=await tx.query<ProposalRow>(
- `SELECT v.id,v.chain_id,v.author,v.formulation,
+ `SELECT v.id,v.chain_id,v.author,
          c.member_id,c.work_id,c.draft_id,c.base_version,
          c.target_section_id,c.expected_text
     FROM proposal_versions v
@@ -68,11 +69,28 @@ export async function resolveR72MemberVersion(tx:TransactionClient,scope:{
     Number(row.base_version)!==scope.baseVersion||
     row.expected_text!==scope.expectedText)
   return fail('proposal_scope_moved');
- if(row.author!=='member')
-  return fail('maia_producer_unverified');
- if(!row.formulation.trim()||Array.from(row.formulation).length>500)
+ if(row.author!=='member'){
+  const trace=await lookupR74MaiaProvenance(tx,{
+   memberId:scope.memberId,manuscriptId:scope.manuscriptId,
+   versionId:scope.versionId});
+  // Even a structurally attributable MAIA turn does NOT authorize reading
+  // plaintext proposal_versions.formulation into the author-Apply channel.
+  // Independently protected private proposal custody is still required.
+  return fail(trace.kind==='structurally_attributed'
+   ?'maia_confidential_proposal_unavailable'
+   :'maia_producer_unverified');
+ }
+ // Read wording ONLY after the member provenance and exact locus are proven.
+ // Never SELECT an unqualified MAIA formulation into a plaintext DTO or memory.
+ const memberText=await tx.query<{formulation:string}>(
+  `SELECT formulation FROM proposal_versions
+    WHERE id=$1 AND chain_id=$2 AND author='member'`,
+    [row.id,row.chain_id]);
+ const formulation=memberText.rows[0]?.formulation;
+ if(typeof formulation!=='string'||!formulation.trim()||
+    Array.from(formulation).length>500)
   return fail('proposal_invalid');
- return {formulation:row.formulation,chainId:row.chain_id};
+ return {formulation,chainId:row.chain_id};
 }
 export async function getR72ProposalsForAppliedVersion(
  tx:TransactionClient,memberId:string,versionId:string){
