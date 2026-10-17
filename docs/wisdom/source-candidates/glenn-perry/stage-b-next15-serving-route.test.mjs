@@ -122,6 +122,13 @@ function stubMap(state) {
   add('@/lib/field/enforceFieldSafety', {
     enforceFieldSafety: () => ({allowed:true,fieldRouting:null}),
   });
+  add('@/lib/services/maiaAstrologyContextService', { getAstrologyContextForUser:async()=>null });
+  add('@/lib/consciousness/wuxingSnapshot', {
+    computeWuXingMoment:()=>({ momentDominant:['earth'] }),
+    computeWuXingConstitution:()=>null,
+    buildWuXingSnapshot:({moment})=>({ moment }),
+    generateWuXingPromptAddendum:()=>'Fictional Wu Xing values',
+  });
   add('@/lib/consciousness/cognitiveProfileService', { getCognitiveProfile:async()=>null });
   add('@/lib/consciousness/nameChangeDetection', {
     processNameChangeIfDetected:async()=>({detected:false,updated:false}),
