@@ -108,3 +108,21 @@ A corrupted, missing, foreign or permission-drifted journal/backup, unknown runn
 This mock journal's SHA-256 checksum detects accidental corruption but is **not an adversarial authenticated signature**. The private on-disk reader-state is an invented mock of a live Docker reader; tests do not prove actual container restart, edge caching, authenticated SSR/RSC refusal, real Safari desktop/iPhone, MAIA handoff or operational rollback timing. A production implementation needs reviewed privileged operator authority, protected persistent custody, crash-atomicity under its real storage model, secure cross-process identity attestation, no-secret logging, reader-only recreate with exact image and no build/pull, actual revocation witness, incident containment below disk floor, and independent approved execution routing.
 
 No GitHub push, PR, merge, live feature change, production-host login, real member query, real credential, MAIA provider turn, deployment, container recreation or cleanup was performed by this extension. The one-founder Reflect beta remains OFF.
+
+## Read-only production operator seam — October 17, 2026
+
+**Local source only; NO ACTIVATE, NO DEPLOY:** New scripts/reflect_e010_readonly_operator.py and scripts/test_reflect_e010_readonly_operator.py provide the first real-target operator integration, restricted to collecting and validating read-only metadata. They do not contain a runtime-flag writer, backup writer, Docker recreate call, or real member-account/session lookup.
+
+- One explicitly named Tailscale SSH target, with BatchMode=yes and StrictHostKeyChecking=yes; no credential or known-host bypass, and no default target.
+- One fixed remote Python inspection payload, which reads Docker image identifiers and service health, root disk availability, existing deployment manifest, exact runtime/config *presence booleans* for Reflect settings, Studio count, release lock state and schema-migration **filename metadata only** in an explicit read-only SQL transaction.
+- The returned receipt is a strict schema limited to nonsecret facts; neither member IDs nor private environment values, tokens or session cookies are returned. Errors are generic HOLD codes rather than exception dumps.
+- Refuses any wrong source/release SHA/image/rollback tag/architecture; wrong production hostname or root filesystem; expired metadata (older than 2 minutes); disk below 60 GiB; pending migration; unhealthy/restarting service; Studio-count drift; active builder or deploy lock; Reflect flags already configured or an incomplete receipt.
+- Default command without both --inspect-only and --target is a refusal, not an inspection or activation.
+- Actual read-only operator invocation on the verified Mac Studio T7 against the known SSH host returned **PASS_READ_ONLY** twice. The final sample was 2026-10-17 15:25:22 UTC and reported: E010 source and Linux/amd64 image match, rollback image preserved, 35 Writer's Studio containers, zero pending migration files, Reflect flag and allowlist both absent, and 66,105,760 KiB ordinary root disk available (~63.04 GiB). No production write or member access occurred.
+- Entire local canary/control suite now **122/122 PASS**, including 35 new operator read-only refusal and acceptance tests. Previous 87 fictional durable/physical tests retain their distinct meaning; passing read-only SSH inspection does NOT upgrade those tests to production activation evidence.
+
+### Live activation still NOT supported
+
+The new operator module has **no apply/enable/disable/reader recreation API**. An independently reviewed production-action adapter remains outstanding, including private live founder-session attestation, secret-safe durable backup, governed lock and exact configuration change, no-build E010 reader recreation, real Safari admission/outsider refusal and verified OFF. The prior execution safeguard that rejected direct activation is not bypassed by this work.
+
+Do not run generic GitHub Deploy MAIA workflow or repurpose the read-only inspector as a configuration editor. No GitHub push/PR/merge, no Reflect activation and no production state mutation occurred here.
