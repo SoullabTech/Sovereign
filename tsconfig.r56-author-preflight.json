@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.r54-pc3-author.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/writersStudio/recovery/heldRealSessionWorkAdmissionR56.ts",
+    "lib/writersStudio/recovery/__tests__/heldRealSessionWorkAdmissionR56.test.ts",
+    "scripts/ops/wsBetaR56SessionWorkPG16.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}
