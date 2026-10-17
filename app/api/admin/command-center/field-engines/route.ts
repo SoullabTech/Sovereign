@@ -5,6 +5,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { isAdminRequest } from '@/lib/admin/requireAdmin';
 
+// Optional aggregate telemetry: no data is a valid, null observation.
+type OrchestratorData = {
+  avgMs: number;
+  hitRate: { pfi: number; resonance: number; unified: number };
+  truncationRate: number;
+};
+
 export async function GET(request: NextRequest) {
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
@@ -56,7 +63,7 @@ export async function GET(request: NextRequest) {
     } catch { /* table may not exist */ }
 
     // Try to get field_orchestrator_telemetry (graceful fallback if table doesn't exist)
-    let orchestratorData = null;
+    let orchestratorData: OrchestratorData | null = null;
     try {
       const orchestratorResult = await query(`
         SELECT
@@ -168,7 +175,7 @@ export async function POST(req: NextRequest) {
     } catch { /* table may not exist */ }
 
     // Try to get field_orchestrator_telemetry (graceful fallback if table doesn't exist)
-    let orchestratorData = null;
+    let orchestratorData: OrchestratorData | null = null;
     try {
       const orchestratorResult = await query(`
         SELECT

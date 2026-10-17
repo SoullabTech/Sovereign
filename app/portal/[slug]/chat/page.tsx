@@ -13,7 +13,9 @@ interface ChatMessage {
 
 export default function PortalChatPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  // Next may temporarily return null during route hydration; never build a
+  // member endpoint from an unresolved portal slug.
+  const slug = typeof params?.slug === 'string' ? params.slug : '';
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -34,7 +36,7 @@ export default function PortalChatPage() {
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault();
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || loading || !slug) return;
 
     setInput('');
     setError(null);

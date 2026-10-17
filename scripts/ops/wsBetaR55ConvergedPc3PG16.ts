@@ -23,20 +23,36 @@ if(process.env.R39_PHYSICAL_PG16_FIXTURE!=='fictional-only'||
    process.env.R54_PC3_BROWSER_FIXTURE!=='fictional-only'||
    process.env.R55_REAL_PC3_CONVERGENCE_FIXTURE!=='fictional-only')
  throw Error('R39_EXACT_PHYSICAL_FICTIONAL_ONLY_OPT_IN_REQUIRED');
+const R64=process.env.R64_REAL_SESSION_AUTHOR_FIXTURE==='fictional-only';
+const R65=R64&&process.env.R65_PRIVATE_APPROVED_AUTHOR_FIXTURE==='fictional-only';
+const R66=R65&&process.env.R66_SEALED_APPROVAL_LINK_FIXTURE==='fictional-only';
+if(R65&&process.env.NODE_ENV!=='test')
+ throw Error('R65_PRIVATE_AUTHOR_UNTRUSTED_RUNTIME_REFUSED');
+if(R64&&process.env.NODE_ENV!=='test')
+ throw Error('R64_TEST_ONLY_AUTHOR_ACTION_REQUIRED');
 const name='ws-r55-converged-pc3-'+randomUUID().slice(0,11);
 const root=mkdtempSync(join(tmpdir(),'ws-r35-physical-r48-r55-'));
 const vault=join(root,'vault');mkdirSync(vault);
-const evidence=join('/Volumes/T7 Shield/ws-beta-release-r11-build-20261016/R55_CONVERGED_PC3_ENCRYPTED_BROWSER_20261016',
+const evidence=join(R66?
+ '/Volumes/T7 Shield/ws-beta-r66-sealed-approval-pg16-evidence-20261017':R65?
+ '/Volumes/T7 Shield/ws-beta-r65-sealed-author-pg16-evidence-20261017':R64?
+ '/Volumes/T7 Shield/ws-beta-r64-author-session-pg16-evidence-20261017':
+ '/Volumes/T7 Shield/ws-beta-release-r11-build-20261016/R55_CONVERGED_PC3_ENCRYPTED_BROWSER_20261016',
  'run-'+randomUUID().slice(0,11));
 mkdirSync(evidence,{recursive:true});
-const receipt=join(evidence,'R55_CONVERGED_PC3_ENCRYPTED_AUTHOR_20261016.json');
+const receipt=join(evidence,R66?
+ 'R66_EXACT_PRIVATE_APPROVAL_LINK_20261017.json':R65?
+ 'R65_SEALED_PRIVATE_AUTHOR_APPLY_UNDO_20261017.json':R64?
+ 'R64_REAL_SQL_PC3_APPLY_UNDO_20261017.json':
+ 'R55_CONVERGED_PC3_ENCRYPTED_AUTHOR_20261016.json');
 const testLog=join(evidence,'R55_PC3_ENCRYPTED_PHASE1_JEST_20261016.log');
 const coldLog=join(evidence,'R55_PC3_ENCRYPTED_COLD_JEST_20261016.log');
 const A='11111111-1111-4111-8111-111111111111';
 const B='22222222-2222-4222-8222-222222222222';
 const F='55555555-5555-4555-8555-555555555555';
 const policy='r38-fictional-notice';
-const hash='b'.repeat(64);
+const notice='Fictional R64 review-only writer notice; deliberately invented accounts and no production writing authority.';
+const hash=R64?createHash('sha256').update(notice,'utf8').digest('hex'):'b'.repeat(64);
 const secret='R38 Fictional Writer Encrypted Request Secret Words';
 const checks:string[]=[];
 let failure:string|null=null,started=false,port='';
@@ -146,6 +162,58 @@ async function main(){
   'R47 Undo PostgreSQL attempt ledger initially empty');
  observe(sql('SELECT count(*) FROM writers_studio_r35_draft_versions')==='0',
    'review-only ciphertext and receipt SQL initially empty');
+ if(R65){
+  const privateDDL=join(WORK,'docs/ops/WS_R47_PRIVATE_REVIEW_CUSTODY_REVIEW_ONLY.sql');
+  docker(['cp',privateDDL,name+':/tmp/r65_private_review.sql']);
+  docker(['exec',name,'psql','-XAtq','-v','ON_ERROR_STOP=1',
+   '-U','fict','-d','r35_draft','-f','/tmp/r65_private_review.sql']);
+  observe(sql('SELECT count(*) FROM writers_studio_r47_private_review')==='0',
+   'R65 privately encrypted editorial custody starts empty');
+  if(R66){
+   const bound=join(WORK,'docs/ops/WS_R66_PRIVATE_APPROVAL_LINK_REVIEW_ONLY.sql');
+   docker(['cp',bound,name+':/tmp/r66_link.sql']);
+   docker(['exec',name,'psql','-XAtq','-v','ON_ERROR_STOP=1',
+    '-U','fict','-d','r35_draft','-f','/tmp/r66_link.sql']);
+   observe(sql('SELECT count(*) FROM writers_studio_r66_held_private_approval_link')==='0',
+    'R66 immutable private approval links start empty');
+  }
+ }
+ if(R64){
+  sql("ALTER TABLE members ADD COLUMN tier text, ADD COLUMN roles jsonb;"+
+    "UPDATE members SET tier='pro',roles=jsonb_build_array('member')");
+  for(const schemaPath of [
+   'database/migrations/20260801000001_living_works.sql',
+   'docs/ops/WS_R32_ENCRYPTED_ORIGINAL_REVIEW_ONLY.sql',
+  ]){
+   const schemaFile=join(WORK,schemaPath);
+   const target='/tmp/'+schemaPath.split('/').pop();
+   docker(['cp',schemaFile,name+':'+target]);
+   docker(['exec',name,'psql','-XAtq','-v','ON_ERROR_STOP=1',
+    '-U','fict','-d','r35_draft','-f',target]);
+  }
+  const living='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+  sql("INSERT INTO living_works(id,member_id,title) VALUES"+
+    "('"+living+"','"+A+"','R64 Invented Living Work');");
+  for(const suffix of ['40','41','42']){
+   const manuscript='33333333-3333-4333-8333-3333333333'+suffix;
+   // W17–W19 are the fixed final three fictional manuscript IDs (340–342).
+   const id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa'+suffix;
+   const arrival='eeeeeeee-eeee-4eee-8eee-eeeeeeeeee'+suffix;
+   sql("INSERT INTO living_work_expressions"+
+    "(living_work_id,expression_type,expression_id,declared_by) VALUES"+
+    "('"+living+"','manuscript','"+manuscript+"','"+A+"');"+
+    "INSERT INTO writers_studio_r32_held_originals"+
+    "(id,member_id,manuscript_id,arrival_id,work_generation,key_id,"+
+    "work_ref,metadata_ref,work_sha256,metadata_sha256,pair_sha256) VALUES"+
+    "('"+id+"','"+A+"','"+manuscript+"','"+arrival+"',1,"+
+    "'cccccccc-cccc-4ccc-8ccc-cccccccccccc',"+
+    "'ws-beta-r32-held-source/"+id+".enc',"+
+    "'ws-beta-r32-held-source/"+arrival+".enc',"+
+    "'"+hash+"','"+hash+"','"+hash+"');");
+  }
+  observe(sql('SELECT count(*) FROM writers_studio_r32_held_originals')==='3',
+   'R64 exact fictional Source metadata for W17 W18 W19');
+ }
  const args=['./node_modules/.bin/jest','--config','jest.config.js',
    '--runInBand','--runTestsByPath','scripts/ops/__tests__/r39ActualSignedSectionPG16.test.ts'];
  const env={...process.env,
@@ -178,6 +246,17 @@ async function main(){
    WRITERS_STUDIO_BETA_MEMBER_IDS:`${A},${B}`,
    WRITERS_STUDIO_BETA_CONSENT_VERSION:policy,
    WRITERS_STUDIO_BETA_CONSENT_SHA256:hash,
+   ...(R64?{
+    R64_REAL_SESSION_AUTHOR_FIXTURE:'fictional-only',
+    R56_REAL_SESSION_WORK_FIXTURE:'fictional-only',
+    WRITERS_STUDIO_BETA_CONSENT_NOTICE:notice,
+    ...(R65?{
+      R65_PRIVATE_APPROVED_AUTHOR_FIXTURE:'fictional-only',
+      R57_PRIVATE_READ_FIXTURE:'fictional-only',
+      R47_PRIVATE_EDITORIAL_FIXTURE:'fictional-only',
+      ...(R66?{R66_SEALED_APPROVAL_LINK_FIXTURE:'fictional-only'}:{}),
+    }:{}),
+   }:{}),
    DATABASE_URL:'postgresql://fict@127.0.0.1:'+port+'/r35_draft',
    FILE_STORAGE_PATH:vault,
  };
@@ -199,6 +278,76 @@ async function main(){
    browserReports.every(v=>v.checksPassed>=30&&
     v.screenshots===4&&v.externalRequests===0),
    'both real engines recorded 30+ author controls with zero external calls');
+ if(R64){
+  const admitted=[...log.matchAll(/R64_SESSION_AUTHOR_META\s+(\{[^\r\n]+\})/g)]
+   .map(match=>JSON.parse(match[1]) as {engine:string;verifiedActions:number;
+     operationalKms:boolean;releaseApproved:boolean});
+  observe(admitted.length===2&&
+   new Set(admitted.map(v=>v.engine)).size===2&&
+   admitted.every(v=>v.verifiedActions>=4&&
+    v.operationalKms===false&&v.releaseApproved===false),
+   'R64 both real browser engines passed actual R56 SQL admission before Apply and Undo');
+  const withdrawn=/R64_REVOCATION_META\s+(\{[^\r\n]+\})/.exec(log);
+  const denied=withdrawn?JSON.parse(withdrawn[1]) as {
+   withheldAfterRevoke:boolean;freshReviewAfterReaccept:boolean;
+   manuscriptUnmodified:boolean;operationalKms:boolean;releaseApproved:boolean;
+  }:null;
+  observe(!!denied&&denied.withheldAfterRevoke&&
+   denied.freshReviewAfterReaccept&&denied.manuscriptUnmodified&&
+   denied.operationalKms===false&&denied.releaseApproved===false,
+   'R64 consent withdrawal refuses author Apply and new epoch cannot autoedit');
+ }
+ if(R65){
+  const sealed=[...log.matchAll(/R65_SEALED_CHOICE_META\s+(\{[^\r\n]+\})/g)]
+   .map(match=>JSON.parse(match[1]) as {
+     engine:string;verifiedPrivateActions:number;
+     sealedProposalUnchanged:boolean;oldGenerationCannotReopen:boolean;
+     durableApplySpent:boolean;separateUndoSpent:boolean;
+     operationalKms:boolean;releaseApproved:boolean;
+   });
+  observe(sealed.length===2&&
+   new Set(sealed.map(item=>item.engine)).size===2&&
+   sealed.every(item=>item.verifiedPrivateActions===2&&
+    item.sealedProposalUnchanged&&item.oldGenerationCannotReopen&&
+    item.durableApplySpent&&item.separateUndoSpent&&
+    item.operationalKms===false&&item.releaseApproved===false),
+   'R65 Chrome and WebKit read sealed private choice before durable author Apply');
+  observe(sql("SELECT count(*) FROM writers_studio_r47_private_review WHERE state='verified'")==='2',
+   'R65 exact two immutable verified private editorial records remain sealed');
+  const privateVault=join(vault,'ws-beta-r47-private-review');
+  const encrypted=readdirSync(privateVault).filter(file=>file.endsWith('.enc'));
+  observe(encrypted.length===2&&encrypted.every(file=>{
+   const bytes=readFileSync(join(privateVault,file));
+   return !bytes.includes(Buffer.from('first fictional'))&&
+     !bytes.includes(Buffer.from('first enchanted'))&&
+     !bytes.includes(Buffer.from('R38 first fictional section'));
+  }), 'R65 independent private proposal vault contains ciphertext not author words');
+ }
+ if(R66){
+  const linked=[...log.matchAll(/R66_APPROVAL_LINK_META\s+(\{[^\r\n]+\})/g)]
+   .map(part=>JSON.parse(part[1]) as {
+    engine:string;links:number;exactPrivateReviewLinkedBeforeApply:boolean;
+    immutableApprovalSpent:boolean;linkNotReassignable:boolean;
+    currentPrivateGenerationRefusesReplay:boolean;
+    independentOperationalKms:boolean;releaseApproved:boolean;
+   });
+  observe(linked.length===2&&
+   new Set(linked.map(x=>x.engine)).size===2&&
+   linked.every(x=>x.links===1&&x.exactPrivateReviewLinkedBeforeApply&&
+    x.immutableApprovalSpent&&x.linkNotReassignable&&
+    x.currentPrivateGenerationRefusesReplay&&
+    x.independentOperationalKms===false&&x.releaseApproved===false),
+   'R66 two browsers verified immutable proposal-specific approvals before Apply');
+  observe(sql('SELECT count(*) FROM writers_studio_r66_held_private_approval_link')==='2',
+   'R66 exactly two private-to-approval immutable link rows');
+  observe(sql(`SELECT count(*) FROM writers_studio_r66_held_private_approval_link l
+   JOIN writers_studio_r44_held_approval a ON a.token_hmac=l.token_hmac
+   JOIN writers_studio_r47_private_review p ON p.review_id=l.review_id
+   WHERE a.state='spent' AND p.state='verified'
+    AND l.approval_review_hmac=a.review_binding_hmac
+    AND l.private_cipher_sha256=p.cipher_sha256`)==='2',
+   'R66 one-use spent approvals exactly match verified encrypted proposal digests');
+ }
  const screenTypes=['REVIEW','APPLIED','DESKTOP','MOBILE'];
  observe(['chromium','webkit'].every(engine=>screenTypes.every(which=>{
   const file=join(evidence,engine,

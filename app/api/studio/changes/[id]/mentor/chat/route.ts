@@ -162,8 +162,8 @@ export async function POST(
     );
 
     // Fetch hexagram details
-    let hexagram = null;
-    let relatingHexagram = null;
+    let hexagram: ReturnType<typeof getHexagram> = null;
+    let relatingHexagram: ReturnType<typeof getHexagram> = null;
     if (row.hexagram_number) {
       hexagram = getHexagram(row.hexagram_number);
       if (row.relating_hexagram_number) {

@@ -43,6 +43,11 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to load report' }, { status: 500 });
   }
 
+  // Fail closed even if the lookup did not produce a usable member-owned row.
+  if (!row) {
+    return NextResponse.json({ error: 'Report not found' }, { status: 404 });
+  }
+
   // Generate PDF via existing service
   try {
     const { SpiralogicReportPdfService } =
