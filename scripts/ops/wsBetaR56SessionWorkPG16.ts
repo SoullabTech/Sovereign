@@ -17,9 +17,17 @@ import {Pool} from 'pg';
 const ROOT=process.cwd();
 if(process.env.R56_PHYSICAL_PG16_FIXTURE!=='fictional-only')
  throw Error('R56_REAL_MEMBER_DATABASE_REFUSED');
-const output='/Volumes/T7 Shield/ws-beta-r56-author-boundary-evidence-20261016';
+// R62 adds an optional, never-live NextRequest-shaped POST check against the
+// very same fictional auth/consent/Work SQL used by the accepted R56 driver.
+const R62=process.env.R62_HELD_AUTHOR_PG16_FIXTURE==='fictional-only';
+if(R62&&(process.env.R61_HELD_AUTHOR_POST_FIXTURE!=='fictional-only'||
+  process.env.NODE_ENV!=='test'))
+ throw Error('R62_EXACT_FICTIONAL_POST_OPT_IN_REQUIRED');
+const output=R62?'/Volumes/T7 Shield/ws-beta-r62-held-author-pg16-evidence-20261017':
+ '/Volumes/T7 Shield/ws-beta-r56-author-boundary-evidence-20261016';
 mkdirSync(output,{recursive:true});
-const evidence=path.join(output,'R56_VERIFIED_MEMBER_WORK_PG16_'+randomUUID().slice(0,9)+'.json');
+const evidence=path.join(output,(R62?'R62_HELD_AUTHOR_POST_PG16_':
+ 'R56_VERIFIED_MEMBER_WORK_PG16_')+randomUUID().slice(0,9)+'.json');
 const name='ws-r56-author-'+randomUUID().slice(0,11);
 const temp=mkdtempSync(path.join(tmpdir(),'ws-r35-physical-r56-'));
 const vault=path.join(temp,'vault');mkdirSync(vault,{mode:0o700});
@@ -210,6 +218,76 @@ async function main(){
    selectedLivingWorkId:living,intent,
   });
  const ok=await action();
+ // Every invocation below uses the real R56 application SQL verifier, not
+ // mocked member/consent/Work authority. It never mounts an API or permits
+ // manuscript mutation; a valid read-only witness still returns HTTP 423.
+ let heldR62:((manuscript?:string,living?:string,options?:{
+  token?:string;intent?:string;origin?:string;extra?:Record<string,unknown>;
+  header?:Record<string,string>;url?:string;
+ })=>Promise<{kind:string}>)|null=null;
+ if(R62){
+  const {inspectHeldFictionalAuthorPostR61,
+   R61_REAL_AUTHOR_POST_ENABLED}=await import(
+    '../../lib/writersStudio/recovery/heldNextAuthorAdmissionR61');
+  verify(R61_REAL_AUTHOR_POST_ENABLED===false,
+   'R62 real-member author action remains compiled OFF');
+  heldR62=async(manuscript=MANUSCRIPT,living=WORK,options={})=>{
+   const value={kind:'held_author_preflight',manuscriptId:manuscript,
+    selectedLivingWorkId:living,...(options.extra||{})};
+   const body=JSON.stringify(value);
+   const r=new NextRequest(options.url??'https://soullab.life'+R56_HELD_ROUTE,{
+    method:'POST',headers:{host:'soullab.life',
+     origin:options.origin??'https://soullab.life',
+     'sec-fetch-site':'same-origin',
+     'content-type':'application/json',
+     'x-ws-author-intent':options.intent??'review',
+     cookie:'maia_session='+(options.token??TOKEN),
+     'content-length':String(Buffer.byteLength(body,'utf8')),
+     ...(options.header||{}),
+    },body,
+   });
+   const response=await inspectHeldFictionalAuthorPostR61(r);
+   const responseBody=await response.json() as Record<string,unknown>;
+   verify(response.status===423&&
+    response.headers.get('cache-control')?.includes('no-store')&&
+    responseBody.canSave===false&&responseBody.canApply===false&&
+    responseBody.canUndo===false&&responseBody.writerAuthorized===false&&
+    responseBody.releaseApproved===false&&
+    ![M,B,C,MANUSCRIPT,FOREIGN_MANUSCRIPT,WORK,WORK2,
+      TOKEN,OTHER_TOKEN,NOTICE].some(x=>JSON.stringify(responseBody).includes(x)),
+    'R62 actual held POST never grants or discloses private identity/content');
+   return {kind:String(responseBody.kind)};
+  };
+  verify((await heldR62()).kind==='fictional_scope_rechecked_no_author_action',
+   'R62 held POST double-checks actual session/consent/Source/Draft/Work SQL');
+  verify((await heldR62(MANUSCRIPT,WORK2)).kind===
+   'fictional_scope_rechecked_no_author_action',
+   'R62 exact alternative declared Living Work is allowed for review only');
+  verify((await heldR62(MANUSCRIPT,UNDECLARED)).kind==='unavailable'&&
+   (await heldR62(FOREIGN_MANUSCRIPT,FOREIGN_WORK)).kind==='unavailable',
+   'R62 held POST refuses undeclared and foreign Work relationships');
+  verify((await heldR62(NO_SOURCE,WORK)).kind==='unavailable'&&
+   (await heldR62(NO_DRAFT,WORK)).kind==='unavailable',
+   'R62 held POST refuses missing immutable Source or encrypted Draft head');
+  verify((await heldR62(MANUSCRIPT,WORK,{token:'revoked-fictional'})).kind===
+   'unavailable'&&
+   (await heldR62(MANUSCRIPT,WORK,{token:'expired-fictional'})).kind===
+   'unavailable',
+   'R62 held POST refuses revoked and expired session tokens');
+  verify((await heldR62(MANUSCRIPT,WORK,{intent:'apply'})).kind==='unavailable'&&
+   (await heldR62(MANUSCRIPT,WORK,{intent:'undo'})).kind==='unavailable',
+   'R62 held POST cannot be promoted into Apply or Undo intent');
+  verify((await heldR62(MANUSCRIPT,WORK,{extra:{proposedPassage:'fictional attack'}})).kind===
+   'unavailable'&&
+   (await heldR62(MANUSCRIPT,WORK,{header:{'x-member-id':B}})).kind===
+   'unavailable',
+   'R62 held POST refuses supplied prose and spoofed member identity');
+  verify((await heldR62(MANUSCRIPT,WORK,{origin:'https://external.invalid'})).kind===
+   'unavailable'&&
+   (await heldR62(MANUSCRIPT,WORK,{url:'https://soullab.life'+
+    R56_HELD_ROUTE+'?token=untrusted'})).kind==='unavailable',
+   'R62 held POST refuses cross-origin and URL-embedded token requests');
+ }
  verify(ok.kind==='held_private_session_and_work_witness'&&
   ok.memberId===M&&ok.protectedDraftManuscriptId===MANUSCRIPT&&
   ok.declaredLivingWorkId===WORK&&ok.currentDraftGeneration===1&&
@@ -297,6 +375,8 @@ async function main(){
  verify((await recheckHeldRealSessionWorkR56(ok,request())).kind===
   'held_refused',
   'consent withdrawal between preview and commit revalidation refuses');
+ if(heldR62)verify((await heldR62()).kind==='unavailable',
+  'R62 held POST refuses after immutable consent withdrawal');
  verify((await realGET()).status===404,
   'the actual Next GET also withdraws readiness after an immutable consent revocation');
  sql("INSERT INTO writers_studio_beta_consent_events"+
@@ -306,6 +386,9 @@ async function main(){
  verify(changed.kind==='held_refused',
   'even renewed consent is a different immutable epoch from prior review');
  const current=await action();
+ if(heldR62)verify((await heldR62()).kind===
+  'fictional_scope_rechecked_no_author_action',
+  'R62 held POST recognizes only a fresh accepted consent epoch');
  verify(current.kind==='held_private_session_and_work_witness',
   'new accepted consent epoch requires fresh author review');
  if(current.kind!=='held_private_session_and_work_witness')
@@ -326,10 +409,14 @@ async function main(){
   'session revocation between earlier review and signed-edit preflight refuses');
  verify((await realGET()).status===401,
   'the actual Next GET refuses a revoked member session alongside the held author preflight');
+ if(heldR62)verify((await heldR62()).kind==='unavailable',
+  'R62 held POST refuses immediately after verified session revocation');
  // Missing additive protected table is NOT an excuse to write to legacy SQL.
  sql('DROP TABLE writers_studio_r32_held_originals');
  verify((await action()).kind==='held_refused',
   'missing protected Source schema never provides plaintext fallback');
+ if(heldR62)verify((await heldR62()).kind==='unavailable',
+  'R62 held POST never falls back to plaintext on missing Source schema');
  const dump=docker(['exec',name,'pg_dump','-Fp','-U','fict','-d','r35_draft']).stdout;
  verify(!dump.includes(NOTICE)&&!dump.includes(TOKEN.slice(0,16)+'-'+MANUSCRIPT),
   'fictional session/notice metadata does not include user writing');
@@ -337,7 +424,9 @@ async function main(){
   'R56 performs no encrypted draft Save, Apply or Undo');
 }
 (async()=>{
- try{await main();state.status='R56_REAL_AUTH_SESSION_WORK_RELATION_PG16_PASS_RELEASE_HOLD';}
+ try{await main();state.status=R62?
+  'R62_REAL_SQL_HELD_AUTHOR_POST_PASS_RELEASE_HOLD':
+  'R56_REAL_AUTH_SESSION_WORK_RELATION_PG16_PASS_RELEASE_HOLD';}
  catch(e){state.error=(e instanceof Error?e.message:String(e)).slice(0,250);
   process.exitCode=2;}
  finally{
@@ -368,7 +457,8 @@ async function main(){
    error:state.error,sourceCommit:state.sourceCommit,
    releaseApproved:false,receipt:evidence,
   }));
-  if(state.status!=='R56_REAL_AUTH_SESSION_WORK_RELATION_PG16_PASS_RELEASE_HOLD'||
+  if(state.status!==(R62?'R62_REAL_SQL_HELD_AUTHOR_POST_PASS_RELEASE_HOLD':
+   'R56_REAL_AUTH_SESSION_WORK_RELATION_PG16_PASS_RELEASE_HOLD')||
    !state.disposableContainerRemoved||!state.temporaryVaultRemoved)
    process.exitCode=2;
  }

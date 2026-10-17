@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.r61-held-next-author-post.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "scripts/ops/wsBetaR62HeldAuthorPG16.ts",
+    "scripts/ops/wsBetaR56SessionWorkPG16.ts",
+    "lib/writersStudio/recovery/heldNextAuthorAdmissionR61.ts",
+    "lib/writersStudio/recovery/__tests__/r62HeldAuthorPG16Law.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
