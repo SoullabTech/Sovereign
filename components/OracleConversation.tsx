@@ -1086,20 +1086,23 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // 🛡️ SANCTUARY MODE: Session-level memory exclusion (consent boundary)
   // When true: no content retention, no patterns formed, just presence
-  const [isSanctuary, setIsSanctuary] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('maia_settings');
-        if (saved) {
-          const settings = JSON.parse(saved);
-          return settings.sanctuary === true;
-        }
-      } catch (e) {
-        console.warn('[Sanctuary] Failed to load initial state:', e);
-      }
-    }
-    return false;
-  });
+  // RF01 S0-B: cached settings and defaults cannot establish new consent.
+  const [isSanctuary, setIsSanctuary] = useState(true);
+  const [explicitSessionPrivacyChoice, setExplicitSessionPrivacyChoice] =
+    useState<'sanctuary' | 'continuity' | null>(null);
+  const privacyChoiceRef = useRef<'sanctuary' | 'continuity' | null>(null);
+  useEffect(() => {
+    privacyChoiceRef.current = null;
+    setExplicitSessionPrivacyChoice(null);
+    setIsSanctuary(true);
+  }, [sessionId]);
+
+  const chooseSessionPrivacy = useCallback((choice: 'sanctuary' | 'continuity') => {
+    privacyChoiceRef.current = choice;
+    setExplicitSessionPrivacyChoice(choice);
+    setIsSanctuary(choice === 'sanctuary');
+    setInputSubmitError(null);
+  }, []);
 
   // ==========================================================================
   // 🧵 VOICE CONTINUITY BUFFER — Sanctuary gate + restore-after-interruption
@@ -1409,8 +1412,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }>) => {
       // Handle sanctuary mode
       if (typeof event.detail?.sanctuary === 'boolean') {
-        setIsSanctuary(event.detail.sanctuary);
-        console.log(`🛡️ [Sanctuary] Mode ${event.detail.sanctuary ? 'ENABLED' : 'disabled'}`);
+        // Privacy cannot be changed by replay of unverified local settings.
       }
 
       // Handle interrupt settings
@@ -3200,7 +3202,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // The seam on restore must be invisible: no "restored your session" notice, no welcome
   // header, no scroll reset.
   useEffect(() => {
-    if (typeof window === 'undefined' || !sessionId || !userId) return;
+    if (typeof window === 'undefined' || !sessionId || !userId ||
+        privacyChoiceRef.current !== 'continuity') return;
+    let cancelled = false;
 
     const loadConversationHistory = async () => {
       const storageKey = `maia_conversation_${sessionId}`;
@@ -3240,8 +3244,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             if (pgMessages.length > loadedMessages.length) {
               loadedMessages = pgMessages;
               console.log(`💾 [PostgreSQL] Loaded ${pgMessages.length} messages for MAIA context`);
-              // Sync to localStorage for faster next load
-              localStorage.setItem(storageKey, JSON.stringify(pgMessages.slice(-50)));
+              // Never write restored history when the privacy decision
+              // changed or the component/session was replaced during fetch.
+              if (!cancelled && privacyChoiceRef.current === 'continuity') {
+                localStorage.setItem(storageKey, JSON.stringify(pgMessages.slice(-50)));
+              }
             }
           }
         }
@@ -3254,7 +3261,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // Setter sites elsewhere in this file are now no-ops; cleanup of those is a follow-up.
       sessionStorage.removeItem('maia_nav_teardown');
 
-      // Always populate historicalRef so MAIA has full context regardless of display mode
+      // A failed/stale asynchronous restore cannot import ordinary history
+      // into a newly selected protected or unresolved conversation.
+      if (cancelled || privacyChoiceRef.current !== 'continuity') return;
       historicalMessagesRef.current = loadedMessages;
 
       if (loadedMessages.length > 0) {
@@ -3280,8 +3289,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }
     };
 
-    loadConversationHistory();
-  }, [sessionId, userId]);
+    void loadConversationHistory();
+    return () => { cancelled = true; };
+  }, [sessionId, userId, explicitSessionPrivacyChoice]);
 
   // 💾 SOVEREIGN PERSISTENCE: Save to localStorage (instant) + PostgreSQL (async sync)
   // Track last synced message count to avoid duplicate saves
@@ -3289,6 +3299,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   useEffect(() => {
     if (typeof window === 'undefined' || !sessionId || !userId || messages.length === 0) return;
+    // The ref resets synchronously on session change; React state from a
+    // previous session must not authorize even one stale persistence effect.
+    if (explicitSessionPrivacyChoice !== 'continuity' ||
+        privacyChoiceRef.current !== 'continuity') return;
 
     const storageKey = `maia_conversation_${sessionId}`;
 
@@ -3368,7 +3382,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       lastSyncedCountRef.current = messageCount;
     }
-  }, [messages, sessionId, userId]);
+  }, [messages, sessionId, userId, explicitSessionPrivacyChoice]);
 
   // All state declarations moved earlier (lines 138-189) to avoid hook ordering issues
 
@@ -5034,7 +5048,14 @@ I'm not sure what I'm feeling yet.`;
     },
   ) => {
     const authoredText = text;
-    console.log('📝 Text message received:', { text: authoredText, isProcessing, isAudioPlaying, isResponding });
+    if (!privacyChoiceRef.current) {
+      setInputSubmitError('Choose Sanctuary or Continuity before sending a message.');
+      return;
+    }
+    // Logs carry counts, not member-authored words.
+    console.log('📝 Text message received:', {
+      chars: authoredText.length, isProcessing, isAudioPlaying, isResponding,
+    });
 
     // 🎯 Mark as activated when user sends a message - hides welcome screen
     setHasActivated(true);
@@ -5057,10 +5078,8 @@ I'm not sure what I'm feeling yet.`;
     const modeCommand = maiaCommands.find(
       (cmd): cmd is Extract<MaiaCommand, { type: 'mode' }> => cmd.type === 'mode',
     );
-    const effectiveSanctuary =
-      commandResult.disposition === 'EXECUTE' && modeCommand
-        ? modeCommand.mode === 'sanctuary'
-        : isSanctuary;
+    // Talk/Care/Scribe commands do not alter the privacy of their own turn.
+    const effectiveSanctuary = privacyChoiceRef.current !== 'continuity';
 
     if (commandResult.disposition === 'EXECUTE' && maiaCommands.length > 0) {
       if (!retryOf && !commandContext?.commandsAlreadyApplied) {
@@ -5075,9 +5094,7 @@ I'm not sure what I'm feeling yet.`;
               'normal' as const;
             setListeningMode(newListeningMode);
 
-            // Sanctuary flag
-            if (cmd.mode === 'sanctuary') setIsSanctuary(true);
-            else setIsSanctuary(false);
+            // Privacy is chosen separately from conversational style.
 
             console.log(`🔄 [Command] Mode → ${cmd.mode} (listeningMode: ${newListeningMode})`);
           }
@@ -5195,6 +5212,42 @@ I'm not sure what I'm feeling yet.`;
       (typeof globalThis.crypto?.randomUUID === 'function'
         ? globalThis.crypto.randomUUID()
         : `ex-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+
+    // RF01 S0-B: authenticated, content-free consent BEFORE appending the
+    // member's words or dispatching them for model processing. Exact retries
+    // reuse the original exchange identity; conflicting posture is refused.
+    const privacyChoiceAtSend = privacyChoiceRef.current;
+    if (!privacyChoiceAtSend) {
+      setInputSubmitError('Choose privacy before sending.');
+      return;
+    }
+    try {
+      const receiptResponse = await apiFetch('/api/sovereign/privacy/turn-consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId: userId || undefined,
+          sessionId,
+          exchangeId: turnExchangeId,
+          privacyChoice: privacyChoiceAtSend,
+          explicitChoice: true,
+          explicitRemembrance: privacyChoiceAtSend === 'continuity',
+        }),
+      });
+      if (!receiptResponse.ok) {
+        setInputSubmitError('Privacy could not be verified. Nothing was sent.');
+        return;
+      }
+      const receipt = await receiptResponse.json();
+      if (!receipt?.ok || receipt.exchangeId !== turnExchangeId ||
+          receipt.privacyChoice !== privacyChoiceAtSend) {
+        setInputSubmitError('Privacy confirmation was incomplete. Nothing was sent.');
+        return;
+      }
+    } catch {
+      setInputSubmitError('Privacy verification is unavailable. Nothing was sent.');
+      return;
+    }
 
     if (retryOf) {
       // Resend of an already-authored turn: mark it in-flight, append nothing.
@@ -7063,7 +7116,7 @@ I'm not sure what I'm feeling yet.`;
 
           // Handle sanctuary toggle
           if (voiceCmd.settingsDelta.sanctuary !== undefined) {
-            setIsSanctuary(voiceCmd.settingsDelta.sanctuary);
+            setInputSubmitError('Use the separate privacy control to change remembrance.');
           }
 
           // Handle interrupt settings
@@ -7347,8 +7400,7 @@ I'm not sure what I'm feeling yet.`;
             cmd.mode === 'sanctuary' ? 'normal' as const :
             'normal' as const;
           setListeningMode(newListeningMode);
-          if (cmd.mode === 'sanctuary') setIsSanctuary(true);
-          else setIsSanctuary(false);
+          // Privacy is independent of spoken Talk/Care/Scribe mode commands.
           console.log(`🔄 [Voice Command] Mode → ${cmd.mode}`);
         }
         if (cmd.type === 'lens') {
@@ -8452,6 +8504,28 @@ I'm not sure what I'm feeling yet.`;
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* RF01 S0-B: one deliberate new-session choice; no default is inferred.
+          Full Sanctuary/cloud-processing claims remain subject to S1/R1 gates. */}
+      {explicitSessionPrivacyChoice === null && (
+        <div role="group" aria-label="Choose conversation privacy"
+          className="fixed top-24 right-4 z-50 max-w-xs rounded-2xl border border-white/20 bg-stone-950/95 p-4 text-stone-100 shadow-2xl">
+          <p className="text-base font-medium">How should MAIA remember this conversation?</p>
+          <div className="mt-3 flex flex-col gap-2">
+            <button type="button" onClick={() => chooseSessionPrivacy('sanctuary')}
+              className="rounded-xl border border-emerald-500/50 px-3 py-3 text-left text-sm hover:bg-emerald-900/30">
+              Sanctuary — do not retain this conversation as memory
+            </button>
+            <button type="button" onClick={() => chooseSessionPrivacy('continuity')}
+              className="rounded-xl border border-amber-500/50 px-3 py-3 text-left text-sm hover:bg-amber-900/30">
+              Continuity — allow MAIA to remember this conversation
+            </button>
+          </div>
+          <p className="mt-3 text-xs text-stone-400">
+            Remembrance is separate from outside model and voice processing.
+          </p>
+        </div>
+      )}
 
       {/* 🛡️ SANCTUARY MODE INDICATOR - Visual proof of memory exclusion */}
       <AnimatePresence>

@@ -93,6 +93,14 @@ function defaultSovereignResponse() {
 }
 
 export async function POST(req: NextRequest) {
+  // RF01 S0-B: superseded sibling has no validated explicit-consent envelope.
+  // Refuse before reading member content rather than relying on no known UI
+  // callers. The canonical, owner-bound endpoint is /list.
+  return NextResponse.json({
+    error: 'LEGACY_CONVERSATION_ROUTE_RETIRED',
+    action: 'USE_CANONICAL_MAIA',
+  }, { status: 410 });
+
   if (process.env.MAIA_CABIN_MODE === 'offline') {
     return NextResponse.json(
       {

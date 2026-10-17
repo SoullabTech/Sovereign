@@ -103,6 +103,7 @@ import { launchRelationalFieldShadow } from '@/lib/maia/relational-field-shadow/
 // become durable — not the browser, later, once a pair exists.
 import { TurnsStore, ExchangeIdentityConflict } from '@/lib/memory/stores/TurnsStore';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { verifyExplicitTurnConsent } from '@/lib/sanctuary/explicitTurnConsent';
 import { scrubMemoryAmnesia } from '@/lib/maia/prompts/memoryCanonGuard';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { normalizedSessionId, ensureOwnedMemberSession, ensureGuestSession, SessionOwnershipRefusal } from '@/lib/sovereign/memberSessionOwnership';
@@ -424,7 +425,19 @@ export async function POST(req: NextRequest) {
     // store), and only recognized members are recorded — exactly the population
     // the authenticated client-side write already covered.
     // ─────────────────────────────────────────────────────────────────────────
-    const isSanctuary = (meta as any)?.sanctuary === true;
+    // RF01 S0-B: no absence-is-Continuity fallback. Privacy must be an exact
+    // Boolean chosen before Send, not synthesized from a local default.
+    const rawSanctuary = (meta as any)?.sanctuary;
+    const nestedSanctuary = (meta as any)?.meta?.sanctuary;
+    if (typeof rawSanctuary !== 'boolean') {
+      return jsonWithCors(req, { error: 'PRIVACY_CHOICE_REQUIRED' }, 428);
+    }
+    if (nestedSanctuary !== undefined &&
+        (typeof nestedSanctuary !== 'boolean' ||
+          nestedSanctuary !== rawSanctuary)) {
+      return jsonWithCors(req, { error: 'CONFLICTING_PRIVACY_SIGNALS' }, 409);
+    }
+    const isSanctuary = rawSanctuary;
 
     // 🛡️ IDENTITY GUARD: Only attempt cross-session memory for recognized users
     // Anonymous sessions (no userId) can still have in-session context but won't
@@ -469,6 +482,25 @@ export async function POST(req: NextRequest) {
         }, err.code === 'SESSION_ID_INVALID' ? 400 : 409);
       }
       throw err;
+    }
+    // The member-authored, content-free consent preflight has already minted
+    // a verified immutable record. A bare request flag is NOT that record.
+    // Refuse before F1, crisis/field inference, history, or external providers.
+    if (!isRecognizedUser) {
+      return jsonWithCors(req, { error: 'AUTHENTICATED_PRIVACY_CHOICE_REQUIRED' }, 401);
+    }
+    const privacyAuthority = await verifyExplicitTurnConsent({
+      memberId: userId!,
+      sessionId: acceptedSessionId,
+      exchangeId,
+      sanctuary: isSanctuary,
+    });
+    if (!privacyAuthority.ok) {
+      const status = privacyAuthority.code === 'CONSENT_IDENTITY_CONFLICT' ? 409
+        : privacyAuthority.code === 'CONSENT_UNAVAILABLE' ? 503 : 428;
+      return jsonWithCors(req, {
+        error: privacyAuthority.code, action: 'RECONFIRM_PRIVACY_BEFORE_SEND',
+      }, status);
     }
     let memberTurnDurable = false;
 

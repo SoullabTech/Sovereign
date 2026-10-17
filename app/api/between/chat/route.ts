@@ -62,6 +62,7 @@ import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetec
 import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@/lib/sovereign/decisionGovernor';
 import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { verifyExplicitTurnConsent, validExchangeId } from '@/lib/sanctuary/explicitTurnConsent';
 import { ensureOwnedMemberSession, ensureGuestSession, SessionOwnershipRefusal } from '@/lib/sovereign/memberSessionOwnership';
 import { hasContinuityAccess, toMemberTier } from '@/lib/auth/tierAccess';
 import { normalizeConversationMode, isRelationshipMode, type ConversationMode } from '@/lib/api/conversationMode';
@@ -838,9 +839,12 @@ export async function POST(req: NextRequest) {
     // Client uses: normal/patient/session, API expects: dialogue/counsel/scribe
     const mode = normalizeConversationMode(rawMode);
 
-    // 🔒 SANCTUARY MODE: Session-level memory exclusion (consent boundary)
-    // When true: no content retention, no patterns formed, no training data
-    const isSanctuary = sanctuary === true;
+    // RF01: unresolved posture never silently means Continuity.
+    if (typeof sanctuary !== 'boolean' ||
+        ((meta as any)?.sanctuary !== undefined && (meta as any).sanctuary !== sanctuary)) {
+      return NextResponse.json({ error: 'PRIVACY_CHOICE_REQUIRED' }, { status: 428 });
+    }
+    const isSanctuary = sanctuary;
 
     // Voice Renderer request flags
     const voiceEngine = (body?.voiceEngine as 'local' | 'claude' | undefined) ?? 'local';
@@ -861,16 +865,25 @@ export async function POST(req: NextRequest) {
 
     const requestedSessionId =
       typeof sessionId === 'string' ? sessionId.trim() : '';
-
+    const verifiedMemberForSession = await getMemberIdFromRequest(req);
+    if (!verifiedMemberForSession || !requestedSessionId) {
+      return NextResponse.json({
+        error: 'AUTHENTICATED_PRIVACY_CHOICE_REQUIRED',
+      }, { status: verifiedMemberForSession ? 428 : 401 });
+    }
+    // An authenticated supplied session ID is a locator, never an access
+    // credential: S0-A2 independently binds it to verified member ownership.
     const safeSessionId =
-      allowBodySessionId && requestedSessionId
+      verifiedMemberForSession && requestedSessionId
         ? requestedSessionId
-        : generatedSessionId;
+        : (allowBodySessionId && requestedSessionId
+            ? requestedSessionId : generatedSessionId);
 
     // If we override, ALSO set cookie to match safeSessionId
     // so subsequent requests without sessionId stay in the same session.
     const sessionCookie =
-      allowBodySessionId && requestedSessionId
+      (verifiedMemberForSession && requestedSessionId) ||
+      (allowBodySessionId && requestedSessionId)
         ? buildSessionCookie(safeSessionId)
         : generatedCookie;
 
@@ -900,7 +913,10 @@ export async function POST(req: NextRequest) {
 
     // One UUID identifies this accepted member↔MAIA exchange across derivation and persistence.
     // This is distinct from reqId, which is audit correlation only.
-    const exchangeId = crypto.randomUUID();
+    if (!validExchangeId(body.exchangeId)) {
+      return NextResponse.json({ error: 'CONSENT_RECEIPT_REQUIRED' }, { status: 428 });
+    }
+    const exchangeId = body.exchangeId;
 
     // 📝 TEXT BANDWIDTH: keep the serving boundary aligned with the composer.
     // Scribe mode retains its existing transcript-friendly unlimited intake.
@@ -937,7 +953,7 @@ export async function POST(req: NextRequest) {
     let authUserId: string | null = null;
     let serverUserName = 'Friend'; // Safe fallback
     try {
-      authUserId = await getMemberIdFromRequest(req);
+      authUserId = verifiedMemberForSession;
       if (authUserId) {
         // Authenticated session (cookie or native verified token).
         // Derive userName from database - never trust client-sent name
@@ -1003,6 +1019,21 @@ export async function POST(req: NextRequest) {
         );
       }
       throw err;
+    }
+
+    // RF01 S0-B: authenticated pre-Send receipt, validated BEFORE recall,
+    // canon-bypass writes, model providers, or profile updates.
+    const consent = await verifyExplicitTurnConsent({
+      memberId: authUserId!,
+      sessionId: safeSessionId,
+      exchangeId,
+      sanctuary: isSanctuary,
+    });
+    if (!consent.ok) {
+      return NextResponse.json({
+        error: consent.code, action: 'RECONFIRM_PRIVACY_BEFORE_SEND',
+      }, { status: consent.code === 'CONSENT_IDENTITY_CONFLICT' ? 409 :
+          consent.code === 'CONSENT_UNAVAILABLE' ? 503 : 428 });
     }
 
     // 🔒 ACTIVE SESSION: Mark this session as active (for maintenance mode tracking)
@@ -1327,6 +1358,8 @@ This user is in guest mode (no authenticated identity).
               type: 'canon-wrap',
               voiceMode: normalizedMode,
               userId: effectiveUserId,
+              sanctuary: isSanctuary,
+              exchangeId,
             });
 
             logRequestComplete(reqId, {
@@ -1367,6 +1400,8 @@ This user is in guest mode (no authenticated identity).
           await addConversationExchange(safeSessionId, message, canonResponse, {
             type: 'canon-direct',
             userId: effectiveUserId,
+            sanctuary: isSanctuary,
+            exchangeId,
           });
 
           logRequestComplete(reqId, {
