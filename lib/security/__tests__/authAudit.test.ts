@@ -13,6 +13,7 @@
  * The cases below prove we repaired the silence, not the resilience.
  */
 import { NextRequest } from 'next/server';
+import type { AuthAction } from '../authAudit';
 
 const queryMock = jest.fn();
 jest.mock('@/lib/db/postgres', () => ({ query: (...a: unknown[]) => queryMock(...(a as [string, unknown[]])) }));
@@ -56,6 +57,21 @@ describe('durability', () => {
     expect(queryMock).toHaveBeenCalledTimes(1);
     expect(params()[P.action]).toBe('signin_success');
     expect(params()[P.resourceId]).toBe(SUBJECT);
+  });
+});
+
+describe('existing beta login and registration action identities remain exact', () => {
+  const actionNames = [
+    'password_signin', 'now_what_signin', 'now_what_register',
+  ] as const satisfies readonly AuthAction[];
+  it.each(actionNames)('persists %s as a typed, unmodified event without a fabricated actor or consent', async (action) => {
+    const r = await logAuthEvent({ action, memberId: SUBJECT, result: 'success' }, request());
+    expect(r).toEqual({ persisted: true });
+    expect(queryMock).toHaveBeenCalledTimes(1);
+    expect(params()[P.action]).toBe(action);
+    expect(params()[P.resourceId]).toBe(SUBJECT);
+    expect(params()[P.actor]).toBeNull();
+    expect(params()[P.consent]).toBeNull();
   });
 });
 
