@@ -17,6 +17,7 @@ import {readFileSync,existsSync,readdirSync} from 'node:fs';
 import {join,resolve,dirname,relative} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {inspect as inspectLegacy} from './wsBetaR47LegacyWriteInventory.mjs';
+import {inspectR52} from './wsBetaR52LegacyIngressReleaseGate.mjs';
 
 export const CHECKS=Object.freeze([
  {file:'app/writers-studio/page.tsx',must:['P4R1StudioHost','defaultMode="home"'],label:'canonical_studio_page'},
@@ -34,6 +35,9 @@ export const CHECKS=Object.freeze([
    'protected_writer_not_yet_qualified','canSave:false,canApply:false,canUndo:false',
    'releaseApproved:false'],
   label:'real_authenticated_read_only_work_readiness'},
+ {file:'lib/writersStudio/release/heldLegacyWriterFenceR52.ts',
+  must:['R52_REAL_LEGACY_PILOT_FENCE_ENABLED=false as const'],
+  label:'legacy_writer_ingress_guards_default_off'},
  {file:'lib/writersStudio/recovery/heldSourceDraftBridgeR42.ts',
   must:['R42_REAL_SOURCE_DRAFT_ENABLED=false'],label:'source_to_draft_held'},
  {file:'lib/writersStudio/recovery/heldDurableSignedApplyR46.ts',
@@ -76,6 +80,10 @@ export function inspectCandidate(root=ROOT,options={}){
  const base=resolve(root);
  const read=options.readText??(file=>readFileSync(file,'utf8'));
  const legacy=options.legacyReport??inspectLegacy(base);
+ const ingress=options.legacyIngressReport??inspectR52(base);
+ const ingressValid=ingress.status==='R52_DEFAULT_OFF_LEGACY_RELEASE_HOLD'&&
+   ingress.legacyWriterRoutes===12&&ingress.guardedWriteMethods===13&&
+   ingress.releaseApproved===false&&!ingress.failures?.length;
  const seen=[],changed=[];
  for(const item of CHECKS){
   const file=join(base,item.file);
@@ -102,7 +110,8 @@ export function inspectCandidate(root=ROOT,options={}){
   !Array.isArray(legacy.knownRoutes)||
   listed<12||adjacent<2||Array.isArray(legacy.missing)&&legacy.missing.length>0||
   Array.isArray(legacy.unlisted)&&legacy.unlisted.length>0||
-  Array.isArray(legacy.drift)&&legacy.drift.length>0;
+  Array.isArray(legacy.drift)&&legacy.drift.length>0||
+  !ingressValid;
  const unmet=[
   ...(listed>0?['unfenced_legacy_manuscript_writes']:[]),
   ...(routeBindings.length<PROTECTED_IMPORT_NAMES.length?
@@ -125,6 +134,8 @@ export function inspectCandidate(root=ROOT,options={}){
   canonicalSourceChecksPassed:seen.filter(x=>x.found).length,
   realReadOnlyWorkReadinessPresent:
    seen.some(x=>x.label==='real_authenticated_read_only_work_readiness'&&x.found),
+  defaultOffLegacyIngressGuardsPresent:ingressValid,
+  guardedLegacyWriteMethods:ingress.guardedWriteMethods??0,
   changedContracts:changed,
   knownLegacyWriterRoutes:listed,
   additionalCustodySurfaces:adjacent,

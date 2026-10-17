@@ -17,6 +17,8 @@ test('the exact canonical UI + held encrypted journey are present in one source,
  assert.equal(r.canonicalSourceCheckCount,CHECKS.length);
  assert.equal(r.canonicalSourceChecksPassed,CHECKS.length);
  assert.equal(r.realReadOnlyWorkReadinessPresent,true);
+ assert.equal(r.defaultOffLegacyIngressGuardsPresent,true);
+ assert.equal(r.guardedLegacyWriteMethods,13);
  assert.equal(r.knownLegacyWriterRoutes,12);
  assert.equal(r.additionalCustodySurfaces,2);
  assert.deepEqual(r.activeProtectedRouteBindings,[]);
@@ -44,6 +46,18 @@ test('removing real read-only readiness is source drift, never permission to edi
  assert.equal(r.realReadOnlyWorkReadinessPresent,false);
  assert.equal(r.releaseApproved,false);
  assert.ok(r.changedContracts.some(x=>x.file.includes('protected-readiness')));
+});
+
+test('missing one default-off old-write guard is source DRIFT, never beta GO',()=>{
+ const bad=inspectCandidate(ROOT,{legacyIngressReport:{
+  status:'R52_FENCE_DRIFT_HOLD',
+  legacyWriterRoutes:12,guardedWriteMethods:12,
+  failures:['boundary_position_or_count_drift:synthetic'],releaseApproved:false,
+ }});
+ assert.equal(bad.codeContract,'SOURCE_DRIFT_HOLD');
+ assert.equal(bad.defaultOffLegacyIngressGuardsPresent,false);
+ assert.equal(bad.candidateRelease,'HOLD');
+ assert.equal(bad.releaseApproved,false);
 });
 
 test('old writing-route inventory drift refuses candidate acceptance',()=>{
