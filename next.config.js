@@ -48,11 +48,12 @@ const nextConfig = {
     NEXT_PUBLIC_VERSION: APP_VERSION,
   },
   typescript: {
-    // Use core tsconfig for build - real ship entrypoints (app/**, components, hooks)
-    // Excludes _backend, labtools, and tests
-    tsconfigPath: 'tsconfig.core.json',
-    // TODO: Enable strict checking after fixing pre-existing type errors
-    ignoreBuildErrors: true,
+    // R83: verify the exact declared shipping-entrypoint scope, including
+    // directly imported runtime dependencies. The separate legacy core scope
+    // still has 291 existing diagnostics and is NOT certified as clean.
+    tsconfigPath: 'tsconfig.ship.json',
+    // No build-time error suppression: a source/type error must fail release.
+    ignoreBuildErrors: false,
   },
   // ESLint configuration moved to .eslintrc.json - no longer supported in Next.js 16
   // eslint config removed per Next.js 16 requirements
