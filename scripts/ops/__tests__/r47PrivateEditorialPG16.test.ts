@@ -234,6 +234,79 @@ tests('R47 sealed private editorial proposal/choice and source continuity',()=>{
     expect(JSON.stringify(body)).not.toContain(privateMarker);
    expect((await handler.POST()).status).toBe(405);
   }
+  // R63: same one disposable PG16 and R47 AES-GCM vault, but the author's
+  // exact location envelope is first checked through R61 -> REAL R56 SQL
+  // admission, not a mocked resolver or an invented Apply entitlement.
+  // The authenticated private R57 read is independently revalidated and is
+  // never exposed through the R61 HTTP 423 body.
+  let r63Held:((living:string,options?:{
+   token?:string;intent?:string;origin?:string;
+   header?:Record<string,string>;extra?:Record<string,unknown>;url?:string;
+  })=>Promise<string>)|null=null;
+  if(process.env.R63_JOINT_HELD_PRIVATE_FIXTURE==='fictional-only'){
+   const {inspectHeldFictionalAuthorPostR61,R61_REAL_AUTHOR_POST_ENABLED}=
+    await import('@/lib/writersStudio/recovery/heldNextAuthorAdmissionR61');
+   expect(R61_REAL_AUTHOR_POST_ENABLED).toBe(false);
+   r63Held=async(living,options={})=>{
+    const body=JSON.stringify({
+     kind:'held_author_preflight',manuscriptId:W[0],
+     selectedLivingWorkId:living,...(options.extra||{}),
+    });
+    const request=new NextRequest(options.url??
+     'https://soullab.life/api/writers-studio/held-author-admission',{
+     method:'POST',headers:{
+      host:'soullab.life',origin:options.origin??'https://soullab.life',
+      'sec-fetch-site':'same-origin','content-type':'application/json',
+      'x-ws-author-intent':options.intent??'review',
+      cookie:'maia_session='+(options.token??token),
+      'content-length':String(Buffer.byteLength(body,'utf8')),
+      ...(options.header||{}),
+     },body,
+    });
+    const response=await inspectHeldFictionalAuthorPostR61(request);
+    const value=await response.json() as Record<string,unknown>;
+    expect(response.status).toBe(423);
+    expect(response.headers.get('Cache-Control')).toContain('no-store');
+    expect(value).toMatchObject({
+     canSave:false,canApply:false,canUndo:false,
+     writerAuthorized:false,releaseApproved:false,
+    });
+    for(const forbidden of [A,B,W[0],WORK,WORK2,token,
+     P1,P2,'lantern glows','lantern shimmers']){
+     expect(JSON.stringify(value)).not.toContain(forbidden);
+    }
+    return String(value.kind);
+   };
+   for(const declared of [WORK,WORK2]){
+    expect(await r63Held(declared)).toBe(
+     'fictional_scope_rechecked_no_author_action');
+    const privateR57=await reopenHeldRealPrivateEditorialR57(makeInput(declared));
+    expect(privateR57).toMatchObject({
+     kind:'held_private_current_author_preview',
+     originalPassage:'lantern glows',proposedPassage:'lantern shimmers',
+     canApply:false,canRestore:false,releaseApproved:false,
+    });
+   }
+   expect(await r63Held('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'))
+    .toBe('unavailable');
+   expect(await r63Held(WORK,{token:'expired-fictional-token'}))
+    .toBe('unavailable');
+   expect(await r63Held(WORK,{intent:'apply'})).toBe('unavailable');
+   expect(await r63Held(WORK,{intent:'undo'})).toBe('unavailable');
+   expect(await r63Held(WORK,{extra:{replacementText:'browser-smuggled'}}))
+    .toBe('unavailable');
+   expect(await r63Held(WORK,{header:{'x-member-id':B}}))
+    .toBe('unavailable');
+   expect(await r63Held(WORK,{origin:'https://external.invalid'}))
+    .toBe('unavailable');
+   expect(await r63Held(WORK,{url:'https://soullab.life'+
+    '/api/writers-studio/held-author-admission?token=fictional'}))
+    .toBe('unavailable');
+   expect(await count('SELECT count(*)::int n FROM '+
+    'writers_studio_r35_draft_versions WHERE work_id=$1',[W[0]])).toBe(1);
+   expect(await count('SELECT count(*)::int n FROM '+
+    'writers_studio_r47_private_review WHERE work_id=$1',[W[0]])).toBe(1);
+  }
   const consent=process.env.WRITERS_STUDIO_BETA_CONSENT_SHA256;
   await query('INSERT INTO writers_studio_beta_consent_events '+
    '(member_id,actor_member_id,decision,policy_version,policy_sha256) '+
@@ -243,6 +316,13 @@ tests('R47 sealed private editorial proposal/choice and source continuity',()=>{
   expect(withdrawn).toMatchObject({kind:'held_only_refused',
    canApply:false,releaseApproved:false});
   expect(JSON.stringify(withdrawn)).not.toContain('lantern shimmers');
+  if(r63Held){
+   expect(await r63Held(WORK)).toBe('unavailable');
+   expect(await count('SELECT count(*)::int n FROM '+
+    'writers_studio_r35_draft_versions WHERE work_id=$1',[W[0]])).toBe(1);
+   expect(await count('SELECT count(*)::int n FROM '+
+    'writers_studio_r47_private_review WHERE work_id=$1',[W[0]])).toBe(1);
+  }
   if(readinessGET){
    const after=await readinessGET(new NextRequest(readinessUrl,{
     method:'GET',headers:{cookie:'maia_session='+token},
@@ -252,6 +332,22 @@ tests('R47 sealed private editorial proposal/choice and source continuity',()=>{
    expect(body.releaseApproved).toBe(false);
    expect(JSON.stringify(body)).not.toContain('lantern shimmers');
   }
+  // A later consent reacceptance can authorize a NEW admission review,
+  // but may not revive an R47 proposal bound to an older immutable epoch.
+  if(r63Held){
+   await query('INSERT INTO writers_studio_beta_consent_events '+
+    '(member_id,actor_member_id,decision,policy_version,policy_sha256) '+
+    'VALUES($1,$1,$2,$3,$4)',
+    [A,'accept','r57-fictional-v1',consent]);
+   expect(await r63Held(WORK)).toBe(
+    'fictional_scope_rechecked_no_author_action');
+   const stale=await reopenHeldRealPrivateEditorialR57(makeInput(WORK));
+   expect(stale).toMatchObject({
+    kind:'held_only_refused',canApply:false,canRestore:false,
+    releaseApproved:false,
+   });
+   expect(JSON.stringify(stale)).not.toContain('lantern shimmers');
+  }
   // A valid private proposal remains encrypted and in custody, but NO
   // revoked writer receives a usable current-author preview.
   const draft=await reopenHeldDraftR35({
@@ -259,6 +355,7 @@ tests('R47 sealed private editorial proposal/choice and source continuity',()=>{
    custody:auth(keys[0].draft),
   });
   expect(draft.content).toBe(WHOLE);
+  if(r63Held)console.info('R63_JOINED_SQL_POST_PRIVATE_PREVIEW_WITHDRAWAL_PASS');
  });
  it('reusing intent for a different selected alternative fails closed',async()=>{
   const alternative=selection(0);
