@@ -12,6 +12,13 @@ import {prepareHeldSignedApplyR46,submitHeldSignedApplyR46,R46_REAL_DURABLE_SIGN
 import {recordHeldPrivateReviewR47} from '../../../lib/writersStudio/recovery/heldPrivateEditorialReviewR47';
 import {reopenHeldRealPrivateEditorialR57}
  from '../../../lib/writersStudio/recovery/heldRealPrivateEditorialR57';
+import {
+ prepareHeldPrivateApprovalLinkR66,verifyHeldPrivateApprovalLinkR66,
+ R66_REAL_SEALED_AUTHOR_LINK_ENABLED,
+ type R66ServerInput,
+} from '../../../lib/writersStudio/recovery/heldSealedApprovalBindingR66';
+import type {R47ReadInput}
+ from '../../../lib/writersStudio/recovery/heldPrivateEditorialReviewR47';
 import {inspectPrivateChoiceApplyR48} from '../../../lib/writersStudio/recovery/heldEditorialRecoveryJoinR48';
 import {prepareHeldUndoR47,submitHeldUndoR47,
  R47_REAL_DURABLE_UNDO_ENABLED} from '../../../lib/writersStudio/recovery/heldDurableUndoR47';
@@ -81,6 +88,8 @@ const r65Only=r64Only&&
  process.env.R65_PRIVATE_APPROVED_AUTHOR_FIXTURE==='fictional-only'&&
  process.env.R57_PRIVATE_READ_FIXTURE==='fictional-only'&&
  process.env.R47_PRIVATE_EDITORIAL_FIXTURE==='fictional-only';
+const r66Only=r65Only&&
+ process.env.R66_SEALED_APPROVAL_LINK_FIXTURE==='fictional-only';
 const R64_LIVING='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const r54BrowserTest=r54Only?it:it.skip;
 
@@ -432,6 +441,10 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
  let r65Open:(()=>ReturnType<typeof reopenHeldRealPrivateEditorialR57>)|null=null;
  let r65Proposed:string|null=null;
  let r65PrivateKeyBytes:Buffer|null=null;
+ let r66PrivateRead:R47ReadInput|null=null;
+ let r66PrivateRequest:(()=>NextRequest)|null=null;
+ let r66ReviewedToken:string|null=null;
+ const r66Actions:string[]=[];
  const r65Actions:string[]=[];
  if(r65Only){
   const start=await reopenHeldDraftR35({
@@ -485,6 +498,8 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
      'x-ws-author-intent':'review','x-session-token':TOKENS.A,
     },
    });
+  r66PrivateRead={...privateScope,reviewId:published.reviewId,generation:1};
+  r66PrivateRequest=privateRequest;
   r65Open=()=>reopenHeldRealPrivateEditorialR57({
    request:privateRequest(),manuscriptId:workId,
    livingWorkId:R64_LIVING,
@@ -504,6 +519,16 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
   // until Apply; no browser code ever receives it.
  }
  const agent=new HeldCanonicalAuthorJourneyR53();
+ const r66Input=(token:string):R66ServerInput=>{
+  if(!r66PrivateRead||!r66PrivateRequest)
+   throw Error('R66_EXACT_PRIVATE_REVIEW_REQUIRED');
+  return {
+   request:r66PrivateRequest(),manuscriptId:workId,livingWorkId:R64_LIVING,
+   privateRead:r66PrivateRead,sessionBindingSecret:internalSecret,
+   approvalToken:token,approvalIssuerSecret:Buffer.alloc(32,0x54),
+   linkSignerSecret:Buffer.alloc(32,0x66),nowMs:NOW,
+  };
+ };
  const authority=(body:unknown)=>({
   context:heldChoiceContext(workId,authorChoiceRequest(body)),
   custody:custody(workId),
@@ -536,7 +561,9 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
   '/Volumes/T7 Shield/ws-beta-r64-author-session-pg16-evidence-20261017/');
  const inR65=r65Only&&evidence.startsWith(
   '/Volumes/T7 Shield/ws-beta-r65-sealed-author-pg16-evidence-20261017/');
- if(!(inOriginal||inConvergence||inR64||inR65)||
+ const inR66=r66Only&&evidence.startsWith(
+  '/Volumes/T7 Shield/ws-beta-r66-sealed-approval-pg16-evidence-20261017/');
+ if(!(inOriginal||inConvergence||inR64||inR65||inR66)||
    !/\/run-[a-f0-9-]+$/.test(evidence))
   throw Error('R54_NOT_AN_ISOLATED_BROWSER_EVIDENCE_FOLDER');
  const response=await runR54Pc3FictionalBrowser({
@@ -582,8 +609,51 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
      }
      r65Actions.push(action);
     }
-    if(action==='review')return agent.review(authority(payload));
-    if(action==='apply')return agent.apply(authority(payload));
+    if(action==='review'){
+     const reviewed=await agent.review(authority(payload));
+     if(r66Only&&reviewed.kind==='fictional_author_review'){
+      expect(R66_REAL_SEALED_AUTHOR_LINK_ENABLED).toBe(false);
+      r66ReviewedToken=reviewed.reviewToken;
+      const linked=await prepareHeldPrivateApprovalLinkR66(
+       r66Input(reviewed.reviewToken));
+      expect(linked).toMatchObject({
+       kind:'held_private_approval_linked',
+       canApply:false,canUndo:false,releaseApproved:false,
+      });
+      // Neither an identical second link nor an arbitrary private review
+      // can create another durable, apparently valid author permission.
+      const duplicate=await prepareHeldPrivateApprovalLinkR66(
+       r66Input(reviewed.reviewToken));
+      expect(duplicate.kind).toBe('held_refused');
+      const foreign=await verifyHeldPrivateApprovalLinkR66({
+       ...r66Input(reviewed.reviewToken),
+       privateRead:{...r66Input(reviewed.reviewToken).privateRead,
+        reviewId:randomUUID()},
+      });
+      expect(foreign.kind).toBe('held_refused');
+      const forged=await verifyHeldPrivateApprovalLinkR66({
+       ...r66Input(reviewed.reviewToken),
+       linkSignerSecret:Buffer.alloc(32,0x67),
+      });
+      expect(forged.kind).toBe('held_refused');
+      r66Actions.push('linked');
+     }
+     return reviewed;
+    }
+    if(action==='apply'){
+     if(r66Only){
+      const token=(payload as {opaqueToken?:unknown})?.opaqueToken;
+      if(typeof token!=='string'||token!==r66ReviewedToken)
+       return {kind:'refused',reason:'r66_reviewed_token_mismatch',
+        releaseApproved:false};
+      const bound=await verifyHeldPrivateApprovalLinkR66(r66Input(token));
+      if(bound.kind!=='held_private_approval_linked')
+       return {kind:'refused',reason:'r66_immutable_private_link_missing',
+        releaseApproved:false};
+      r66Actions.push('verified');
+     }
+     return agent.apply(authority(payload));
+    }
     if(action==='undo-review')return agent.reviewUndo(authority(payload));
     return agent.undo(authority(payload));
    },
@@ -622,6 +692,41 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
    durableApplySpent:true,separateUndoSpent:true,
    operationalKms:false,releaseApproved:false,
   }));
+  if(r66Only){
+   expect(r66Actions).toEqual(['linked','verified']);
+   if(!r66ReviewedToken)throw Error('R66_NO_REVIEWED_AUTHOR_TOKEN');
+   const stored=await query<{link_hmac:string;approval_state:string;
+    private_state:string}>(`
+    SELECT l.link_hmac,a.state AS approval_state,
+     p.state AS private_state
+    FROM writers_studio_r66_held_private_approval_link l
+    JOIN writers_studio_r44_held_approval a ON a.token_hmac=l.token_hmac
+    JOIN writers_studio_r47_private_review p ON p.review_id=l.review_id
+    WHERE l.work_id=$1`,[workId]);
+   expect(stored.rows).toHaveLength(1);
+   expect(stored.rows[0]).toMatchObject({
+    approval_state:'spent',private_state:'verified',
+   });
+   expect(stored.rows[0].link_hmac).toMatch(/^[a-f0-9]{64}$/);
+   // An immutable link may be inserted once only; it cannot be revised or
+   // retired to silently transfer its approval to a different proposal.
+   await expect(query(
+    'UPDATE writers_studio_r66_held_private_approval_link '+
+    'SET link_hmac=$2 WHERE work_id=$1',
+    [workId,'f'.repeat(64)])).rejects.toBeTruthy();
+   await expect(query(
+    'DELETE FROM writers_studio_r66_held_private_approval_link '+
+    'WHERE work_id=$1',[workId])).rejects.toBeTruthy();
+   expect((await verifyHeldPrivateApprovalLinkR66(
+    r66Input(r66ReviewedToken))).kind).toBe('held_refused');
+   console.log('R66_APPROVAL_LINK_META',JSON.stringify({
+    engine,links:stored.rows.length,
+    exactPrivateReviewLinkedBeforeApply:true,
+    immutableApprovalSpent:true,linkNotReassignable:true,
+    currentPrivateGenerationRefusesReplay:true,
+    independentOperationalKms:false,releaseApproved:false,
+   }));
+  }
   r65PrivateKeyBytes?.fill(0);
  }
  expect(response.checksPassed).toBeGreaterThanOrEqual(30);
