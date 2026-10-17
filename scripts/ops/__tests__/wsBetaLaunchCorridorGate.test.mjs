@@ -19,6 +19,8 @@ test('the exact canonical UI + held encrypted journey are present in one source,
  assert.equal(r.realReadOnlyWorkReadinessPresent,true);
  assert.equal(r.explicitMemberWorkRelationshipVerifierPresent,true);
  assert.equal(r.readOnlyEncryptedMetadataObserverPresent,true);
+ assert.equal(r.actualEditorUXGuardsPresent,true);
+ assert.equal(r.actualNextBrowserFixturePresent,true);
  assert.equal(r.defaultOffLegacyIngressGuardsPresent,true);
  assert.equal(r.guardedLegacyWriteMethods,13);
  assert.equal(r.knownLegacyWriterRoutes,12);
@@ -73,6 +75,32 @@ test('removing exact Source→Draft metadata observer becomes release DRIFT',()=
  assert.equal(r.codeContract,'SOURCE_DRIFT_HOLD');
  assert.equal(r.readOnlyEncryptedMetadataObserverPresent,false);
  assert.equal(r.candidateRelease,'HOLD');
+ assert.equal(r.releaseApproved,false);
+});
+
+test('breaking actual PC3 editor selection/posture controls never produces release GO',()=>{
+ for(const relativeName of [
+  'app/dev/writers-studio-pc3-live/EditorialDancePanel.tsx',
+  'lib/writersStudio/exactRenderedPassageR52.ts',
+  'app/dev/writers-studio-p4r1/p4r1-live.css',
+ ]){
+  const file=resolve(ROOT,relativeName);
+  const r=inspectCandidate(ROOT,{readText:target=>
+   target===file?'// removed author-control contract':
+    readFileSync(target,'utf8')});
+  assert.equal(r.codeContract,'SOURCE_DRIFT_HOLD');
+  assert.equal(r.actualEditorUXGuardsPresent,false);
+  assert.equal(r.candidateRelease,'HOLD');
+  assert.equal(r.releaseApproved,false);
+ }
+});
+
+test('missing the real Next browser test is source DRIFT',()=>{
+ const file=resolve(ROOT,'scripts/ops/wsBetaR52ActualStudioNextPG16.py');
+ const r=inspectCandidate(ROOT,{readText:target=>
+  target===file?'// no actual Next test':readFileSync(target,'utf8')});
+ assert.equal(r.codeContract,'SOURCE_DRIFT_HOLD');
+ assert.equal(r.actualNextBrowserFixturePresent,false);
  assert.equal(r.releaseApproved,false);
 });
 

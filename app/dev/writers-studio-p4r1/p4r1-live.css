@@ -4402,3 +4402,28 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
 .p4r1-root .p4r1-write-maia .p4r1-editorial .p4r1-dance-response{padding:15px}
 .p4r1-root .p4r1-write-maia .p4r1-editorial .p4r1-dance-response h3{font-size:22px}
 .p4r1-root .p4r1-write-maia .p4r1-editorial .p4r1-dance-actions{display:flex;flex-wrap:wrap}
+
+/* R52 · Canonical mobile Writer product-bar containment.
+   Keep the Soullab identity in the first row and the actual History, Theme,
+   Save a copy actions in a second, scrollable group when the viewport is too
+   narrow. Never enlarge the whole document to fit a toolbar. This does not
+   change editor layout, manuscript text, MAIA, keyboard controls or any API. */
+@media (max-width: 720px) {
+  .p4r1-root .fr-bar {
+    width: 100%; max-width: 100%; min-width: 0;
+    height: auto; min-height: 92px;
+    flex-wrap: wrap; align-content: center;
+    row-gap: 7px; overflow: hidden;
+    padding: 8px 12px;
+  }
+  .p4r1-root .fr-brand { margin-right: 0; flex: 0 0 auto; }
+  .p4r1-root .fr-bar-accessories {
+    order: 2; flex: 1 1 100%; min-width: 0; max-width: 100%;
+    display: flex; align-items: center; gap: 8px;
+    overflow-x: auto; overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .p4r1-root .fr-bar-accessories > * { flex-shrink: 0; }
+  .p4r1-root .fr-bar-accessories::-webkit-scrollbar { display: none; }
+}
