@@ -65,6 +65,18 @@ export const CHECKS=Object.freeze([
  {file:'lib/writersStudio/recovery/heldCanonicalAuthorJourneyR53.ts',
   must:['R53_REAL_CANONICAL_AUTHOR_JOURNEY_ENABLED=false'],
   label:'protected_author_request_backend_unmounted'},
+ {file:'lib/writersStudio/recovery/heldRealSessionWorkAdmissionR56.ts',
+  must:['R56_REAL_PROTECTED_WRITER_ENABLED=false as const',
+   'readHeldRealSessionWorkR56','recheckHeldRealSessionWorkR56',
+   'deriveVerifiedAccess(req)','writers_studio_beta_consent_events',
+   'living_work_expressions','writers_studio_r35_draft_heads',
+   'writerAuthorized:false','releaseApproved:false'],
+  label:'verified_actual_session_consent_specific_declared_work_held'},
+ {file:'scripts/ops/wsBetaR56SessionWorkPG16.ts',
+  must:['R56_PHYSICAL_PG16_FIXTURE',
+   'realNextReadiness','recheckHeldRealSessionWorkR56',
+   'actual Next GET','realGET()'],
+  label:'one_database_real_next_and_held_post_admission_rehearsal'},
  {file:'app/api/sovereign/writers-studio/manuscripts/[manuscriptId]/protected-readiness/route.ts',
   must:['verifyWriterReadinessScope(request,manuscriptId)',
    'protected_writer_not_yet_qualified','canSave:false,canApply:false,canUndo:false',
@@ -111,7 +123,8 @@ const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 const PROTECTED_IMPORT_NAMES=Object.freeze([
  'heldSourceDraftBridgeR42','heldDurableSignedApplyR46',
  'heldDurableUndoR47','heldPrivateEditorialReviewR47',
- 'heldEditorialRecoveryJoinR48',
+ 'heldEditorialRecoveryJoinR48','heldRealSessionWorkAdmissionR56',
+ 'heldCanonicalAuthorJourneyR53',
 ]);
 function walkRoutes(directory){
  if(!existsSync(directory))return [];
@@ -200,6 +213,10 @@ export function inspectCandidate(root=ROOT,options={}){
    'native_author_review_apply_undo_no_transport',
    'protected_author_request_backend_unmounted',
   ].every(name=>seen.some(x=>x.label===name&&x.found)),
+  specificRealSessionWorkReviewHeldPresent:
+   seen.some(x=>x.label==='verified_actual_session_consent_specific_declared_work_held'&&x.found),
+  actualNextAndHeldAuthorSamePGFixturePresent:
+   seen.some(x=>x.label==='one_database_real_next_and_held_post_admission_rehearsal'&&x.found),
   defaultOffLegacyIngressGuardsPresent:ingressValid,
   guardedLegacyWriteMethods:ingress.guardedWriteMethods??0,
   changedContracts:changed,

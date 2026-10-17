@@ -22,6 +22,8 @@ test('the exact canonical UI + held encrypted journey are present in one source,
  assert.equal(r.actualEditorUXGuardsPresent,true);
  assert.equal(r.actualNextBrowserFixturePresent,true);
  assert.equal(r.nativeAuthorJourneyDefaultOffPresent,true);
+ assert.equal(r.specificRealSessionWorkReviewHeldPresent,true);
+ assert.equal(r.actualNextAndHeldAuthorSamePGFixturePresent,true);
  assert.equal(r.defaultOffLegacyIngressGuardsPresent,true);
  assert.equal(r.guardedLegacyWriteMethods,13);
  assert.equal(r.knownLegacyWriterRoutes,12);
@@ -117,6 +119,25 @@ test('native PC3 author controls require the exact default-OFF R54 and held R53 
      readFileSync(target,'utf8')});
   assert.equal(r.codeContract,'SOURCE_DRIFT_HOLD');
   assert.equal(r.nativeAuthorJourneyDefaultOffPresent,false);
+  assert.equal(r.releaseApproved,false);
+  assert.equal(r.candidateRelease,'HOLD');
+ }
+});
+
+test('missing R56 same-database protected consent/Work witness or Next read-only join is source DRIFT',()=>{
+ const items=[
+  ['lib/writersStudio/recovery/heldRealSessionWorkAdmissionR56.ts',
+   'specificRealSessionWorkReviewHeldPresent'],
+  ['scripts/ops/wsBetaR56SessionWorkPG16.ts',
+   'actualNextAndHeldAuthorSamePGFixturePresent'],
+ ];
+ for(const [relativeName,field] of items){
+  const file=resolve(ROOT,relativeName);
+  const r=inspectCandidate(ROOT,{readText:target=>
+    target===file?'// deleted real-session Work preflight':
+      readFileSync(target,'utf8')});
+  assert.equal(r.codeContract,'SOURCE_DRIFT_HOLD');
+  assert.equal(r[field],false);
   assert.equal(r.releaseApproved,false);
   assert.equal(r.candidateRelease,'HOLD');
  }
