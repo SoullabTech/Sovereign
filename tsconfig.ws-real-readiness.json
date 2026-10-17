@@ -1,0 +1,11 @@
+{
+ "extends":"./tsconfig.r50-server-owned-choice.json",
+ "compilerOptions":{"strict":true,"noEmit":true,"incremental":false,"plugins":[]},
+ "files":[
+   "lib/writersStudio/release/verifyWriterReadinessScope.ts",
+   "lib/writersStudio/release/__tests__/verifyWriterReadinessScope.test.ts",
+   "app/api/sovereign/writers-studio/manuscripts/[manuscriptId]/protected-readiness/route.ts"
+ ],
+ "include":[],
+ "exclude":["node_modules"]
+}

@@ -16,6 +16,7 @@ test('the exact canonical UI + held encrypted journey are present in one source,
  assert.equal(r.releaseApproved,false);
  assert.equal(r.canonicalSourceCheckCount,CHECKS.length);
  assert.equal(r.canonicalSourceChecksPassed,CHECKS.length);
+ assert.equal(r.realReadOnlyWorkReadinessPresent,true);
  assert.equal(r.knownLegacyWriterRoutes,12);
  assert.equal(r.additionalCustodySurfaces,2);
  assert.deepEqual(r.activeProtectedRouteBindings,[]);
@@ -32,6 +33,17 @@ test('tampered or unmounted canonical author controller is source DRIFT, never a
  assert.equal(r.releaseApproved,false);
  assert.deepEqual(r.changedContracts.map(x=>x.file),[
   'app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx']);
+});
+
+test('removing real read-only readiness is source drift, never permission to edit',()=>{
+ const file=resolve(ROOT,
+ 'app/api/sovereign/writers-studio/manuscripts/[manuscriptId]/protected-readiness/route.ts');
+ const r=inspectCandidate(ROOT,{readText:target=>
+  target===file?'// deliberately missing real server preflight':readFileSync(target,'utf8')});
+ assert.equal(r.codeContract,'SOURCE_DRIFT_HOLD');
+ assert.equal(r.realReadOnlyWorkReadinessPresent,false);
+ assert.equal(r.releaseApproved,false);
+ assert.ok(r.changedContracts.some(x=>x.file.includes('protected-readiness')));
 });
 
 test('old writing-route inventory drift refuses candidate acceptance',()=>{
