@@ -86,6 +86,14 @@ async function withCorpus(fn, {
   try {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, doc);
+    const recordPath = path.join(root, 'docs/corpus-authority/fictional-founder-record.md');
+    fs.mkdirSync(path.dirname(recordPath), { recursive: true });
+    fs.writeFileSync(recordPath, [
+      'CORPUS USE AUTHORIZED — SOULLAB ORIGINAL PERRY-INFORMED COMMENTARY',
+      relativeSource,
+      sha(originalText),
+      'Fictional founder approval used solely by this disposable test.',
+    ].join('\n'));
     const rule = {
       prefix: relativeSource,
       classification,
@@ -98,10 +106,11 @@ async function withCorpus(fn, {
       approvedSource: approved,
       authorityKeys: () => globalAuthority.getGlobalLibraryAuthorityKeys(root),
       readSource: (rel) => fs.readFileSync(path.join(root, rel), 'utf8'),
+      readApprovalRecord: (rel) => fs.readFileSync(path.join(root, rel), 'utf8'),
     };
     const turn = { requestedLens: perry.PERRY_SOURCE_LENS_ID,
       verifiedMemberId: 'fictional-verified-member', isSanctuary: false, enabled: true };
-    await fn({ root, file, manifest, server, turn });
+    await fn({ root, file, manifest, recordPath, server, turn });
   } finally {
     globalAuthority.resetGlobalLibraryAuthorityCacheForTests();
     fs.rmSync(root, { recursive: true, force: true });
@@ -164,6 +173,13 @@ test('frontmatter without stable/retrieval-safe status cannot reach the lens', a
     assert.equal(globalAuthority.getGlobalLibraryAuthorityKeys(root).length, 1);
     assert.equal(perry.buildPerrySourceLensAddendum(turn, server), null);
   }, { doc: originalText.replace('status: stable', 'status: review') });
+});
+
+test('revoked fictional founder editorial record blocks independently admitted text', async () => {
+  await withCorpus(({ recordPath, server, turn }) => {
+    fs.writeFileSync(recordPath, 'This authorisation has not been granted.');
+    assert.equal(perry.buildPerrySourceLensAddendum(turn, server), null);
+  });
 });
 
 test('Sanctuary never reads the real fictional admitted source', async () => {
