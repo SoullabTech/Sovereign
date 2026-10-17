@@ -30,6 +30,7 @@ test('the exact canonical UI + held encrypted journey are present in one source,
  assert.equal(r.standardPrivateBeta.independentSelfHostedKmsPrerequisite,false);
  assert.equal(r.standardPrivateBeta.currentQualification,'OPERATIONAL_EVIDENCE_HOLD');
  assert.equal(r.standardPrivateBeta.safetySourcePresent,true);
+ assert.equal(r.atomicConventionalManuscriptImportSourcePresent,true);
  assert.equal(r.privateMemberGetRoutesCount,20);
  assert.equal(r.privateMemberGetRoutesProtectedCount,20);
  assert.deepEqual(r.privateMemberGetUnprotected,[]);
@@ -194,6 +195,22 @@ test('an unprotected manuscript history GET turns the standard beta release audi
  assert.ok(result.privateMemberGetUnprotected.includes(
   'app/api/sovereign/manuscripts/[id]/draft/revisions/route.ts'));
  assert.equal(result.releaseApproved,false);
+});
+
+test('removing confirmed manuscript transaction or redacted real POST logging forces release DRIFT',()=>{
+ for(const relativeName of [
+  'lib/manuscript/source/persistConfirmedSectionsR63.ts',
+  'app/api/sovereign/manuscripts/route.ts',
+ ]){
+  const path=resolve(ROOT,relativeName);
+  const r=inspectCandidate(ROOT,{readText:target=>
+   target===path?'// removed atomic import and redacted error handler':
+    readFileSync(target,'utf8')});
+  assert.equal(r.codeContract,'SOURCE_DRIFT_HOLD');
+  assert.equal(r.atomicConventionalManuscriptImportSourcePresent,false);
+  assert.equal(r.candidateRelease,'HOLD');
+  assert.equal(r.releaseApproved,false);
+ }
 });
 
 test('missing one default-off old-write guard is source DRIFT, never beta GO',()=>{

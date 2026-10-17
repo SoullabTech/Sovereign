@@ -26,7 +26,7 @@ export const dynamic = 'force-dynamic';
 import { privateWriterNoStore } from '@/lib/writersStudio/release/privateWriterNoStore';
 import {holdLegacyWriterForVerifiedMemberR52, holdLegacyOfflineCabinWriteR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
+import { query, describeDbError } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   segment,
@@ -37,6 +37,7 @@ import {
 } from '@/lib/manuscript/ingest/segment';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { claimArrival, recordSuppliedArrival } from '@/lib/manuscript/source/arrivals';
+import { persistConfirmedSectionsR63 } from '@/lib/manuscript/source/persistConfirmedSectionsR63';
 import { detectOmission, omissionMarker } from '@/lib/manuscript/source/omission';
 import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
@@ -399,18 +400,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'no non-empty sections' }, { status: 400 });
     }
 
-    const ms = await query<{ id: string }>(
-      `INSERT INTO member_manuscripts (member_id, title) VALUES ($1, $2) RETURNING id`,
-      [memberId, title.trim()],
-    );
-    const manuscriptId = ms.rows[0].id;
-    for (const s of clean) {
-      await query(
-        `INSERT INTO manuscript_sections (manuscript_id, position, heading, body, heading_depth, heading_signal)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [manuscriptId, s.position, s.heading, s.body, s.headingDepth ?? null, s.headingSignal ?? null],
-      );
-    }
+    // One confirmed author import must not produce a partial manuscript if a
+    // later section fails. Source-arrival binding is a distinct custody act:
+    // it stays after this atomic text/section publication as before.
+    const manuscriptId = await persistConfirmedSectionsR63({
+      verifiedMemberId: memberId,
+      title: title.trim(),
+      sections: clean.map(s => ({
+        position: s.position,
+        heading: s.heading,
+        body: s.body,
+        headingDepth: s.headingDepth ?? null,
+        headingSignal: s.headingSignal ?? null,
+      })),
+    });
 
     /* WS-01 — bind the manuscript to its arrival.
      *
@@ -443,7 +446,7 @@ export async function POST(request: NextRequest) {
     } catch (err) {
       // Custody is additive: failing to record it must not lose the member's
       // manuscript, which is already saved. The label stays honest instead.
-      console.error('[press/manuscripts] source custody binding failed', err);
+      console.error('[press/manuscripts] source custody binding failed', describeDbError(err));
     }
 
     // Log marker: counts and provenance only, never content.
@@ -456,7 +459,7 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (err) {
-    console.error('[press/manuscripts] POST error:', err);
+    console.error('[press/manuscripts] POST error:', describeDbError(err));
     return NextResponse.json({ error: 'Failed to save manuscript' }, { status: 500 });
   }
 }

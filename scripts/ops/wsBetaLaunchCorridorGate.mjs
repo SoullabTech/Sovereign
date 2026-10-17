@@ -42,6 +42,16 @@ export const SOVEREIGN_FUTURE_UPGRADE=Object.freeze([
 ]);
 
 export const CHECKS=Object.freeze([
+ {file:'lib/manuscript/source/persistConfirmedSectionsR63.ts',
+  must:['transaction(async(tx)=>',
+   'INSERT INTO member_manuscripts',
+   'INSERT INTO manuscript_sections',
+   'confirmed_import_section_unverified'],
+  label:'conventional_writer_confirmed_sections_one_transaction'},
+ {file:'app/api/sovereign/manuscripts/route.ts',
+  must:['persistConfirmedSectionsR63({',
+   "describeDbError(err)",'sourceCustody: custody'],
+  label:'actual_member_manuscript_confirmation_atomic_and_redacted'},
  {file:'app/writers-studio/page.tsx',must:['P4R1StudioHost','defaultMode="home"'],label:'canonical_studio_page'},
  {file:'app/dev/writers-studio-p4r1/P4R1StudioHost.tsx',
   must:['P4R1WriteEditController','P4R1DevelopController','P4R1ReviewController','ListenPilot'],
@@ -295,6 +305,10 @@ export function inspectCandidate(root=ROOT,options={}){
    seen.some(x=>x.label==='verified_actual_session_consent_specific_declared_work_held'&&x.found),
   actualNextAndHeldAuthorSamePGFixturePresent:
    seen.some(x=>x.label==='one_database_real_next_and_held_post_admission_rehearsal'&&x.found),
+  atomicConventionalManuscriptImportSourcePresent:[
+    'conventional_writer_confirmed_sections_one_transaction',
+    'actual_member_manuscript_confirmation_atomic_and_redacted',
+   ].every(label=>seen.some(x=>x.label===label&&x.found)),
   privateMemberGetRoutesCount:privateMemberGetRoutes.length,
   privateMemberGetRoutesProtectedCount:
    privateMemberGetRoutes.length-privateMemberGetUnprotected.length,

@@ -1,0 +1,16 @@
+{
+ "extends":"./tsconfig.ws-standard-private-reader.json",
+ "compilerOptions":{
+  "strict":true,"noEmit":true,"incremental":false,"plugins":[]
+ },
+ "files":[
+  "next-env.d.ts",
+  "lib/manuscript/source/persistConfirmedSectionsR63.ts",
+  "lib/manuscript/source/__tests__/persistConfirmedSectionsR63.test.ts",
+  "app/api/sovereign/manuscripts/route.ts",
+  "scripts/ops/__tests__/r63StandardImportPG16.test.ts",
+  "scripts/ops/__tests__/r63StandardImportColdPG16.test.ts"
+ ],
+ "include":[],
+ "exclude":["node_modules"]
+}

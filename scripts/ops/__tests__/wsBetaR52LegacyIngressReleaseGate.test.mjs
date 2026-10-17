@@ -27,6 +27,21 @@ test('actual R52 route snapshot is complete but refuses beta release',()=>{
  assert.equal(r.memberDataTouched,false);
  assert.equal(r.releaseApproved,false);
 });
+test('delegated first manuscript SQL must be a genuine transaction after the R52 hold',()=>{
+ const helper='lib/manuscript/source/persistConfirmedSectionsR63.ts';
+ const noTransaction=override(helper,s=>s.replace(
+  'transaction(async(tx)=>','Promise.resolve().then(async()=>'));
+ assert.equal(noTransaction.status,'R52_FENCE_DRIFT_HOLD');
+ assert.ok(noTransaction.failures.includes(
+  'verified_atomic_manuscript_delegate_missing'));
+ const noDelegatedCall=override(manuscript,s=>s.replace(
+  'persistConfirmedSectionsR63({','dangerousUncheckedWrite({'));
+ assert.equal(noDelegatedCall.status,'R52_FENCE_DRIFT_HOLD');
+ assert.ok(noDelegatedCall.failures.some(x=>
+  x.includes('boundary_position_or_count_drift')||
+  x.includes('verified_atomic_manuscript_delegate_missing')));
+});
+
 test('removed guarded draft autosave must cause drift',()=>{
  const r=override(draft,s=>s.replace(
   'const r52Hold = await holdLegacyWriterForVerifiedMemberR52(memberId);',
