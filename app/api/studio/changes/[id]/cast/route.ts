@@ -115,7 +115,7 @@ export async function POST(
 
     // Fetch the full hexagram details to return
     const hexagram = getHexagram(hexagramNumber);
-    let relatingHexagram = null;
+    let relatingHexagram: ReturnType<typeof getHexagram> = null;
     if (relatingHexagramNumber) {
       relatingHexagram = getHexagram(relatingHexagramNumber);
     }

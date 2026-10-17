@@ -74,7 +74,7 @@ export async function POST(
       return NextResponse.json({ error: 'Hexagram not found' }, { status: 500 });
     }
 
-    let relatingHexagram = null;
+    let relatingHexagram: ReturnType<typeof getHexagram> = null;
     if (row.relating_hexagram_number) {
       relatingHexagram = getHexagram(row.relating_hexagram_number);
     }
