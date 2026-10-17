@@ -27,7 +27,8 @@ export const PERRY_CLIENT_SOURCE_CHOICE = 'glenn-perry-astropsychology' as const
 
 /** Current authored turn may itself contain an enter-Sanctuary command. */
 export interface PerryCurrentTurnVeto {
-  readonly sanctuaryEnteredByCurrentTurn?: boolean;
+  /** Required conscious decision from this turn's actual mode-command parser. */
+  readonly sanctuaryEnteredByCurrentTurn: boolean;
 }
 
 export type PerryClientSelectionDecision =
@@ -52,16 +53,21 @@ export type PerryClientSelectionDecision =
  */
 export function preparePerryClientSelection(
   selectedSource: unknown,
+  turnVeto: PerryCurrentTurnVeto,
   storage?: StorageLike | null,
-  turnVeto: PerryCurrentTurnVeto = {},
 ): PerryClientSelectionDecision {
   if (selectedSource !== PERRY_CLIENT_SOURCE_CHOICE) {
     return { status: 'refused', reason: 'not_selected' };
   }
 
-  // Refusal-only override: a mode command can enter Sanctuary *during* this
-  // very authored turn, before the live setting/React state catches up.
-  // It can never authorize a turn when storage says Sanctuary or is unresolved.
+  // Explicit per-turn command disposition is REQUIRED, not an optional
+  // fallback. This makes a forgotten caller argument fail closed at runtime
+  // and fail TypeScript checking in a future UI integration.
+  if (!turnVeto || typeof turnVeto.sanctuaryEnteredByCurrentTurn !== 'boolean') {
+    return { status: 'refused', reason: 'posture_unresolved' };
+  }
+  // Refusal-only override: entering Sanctuary mid-turn overrides live storage
+  // until the UI catches up. A false veto NEVER permits a stale true setting.
   if (turnVeto.sanctuaryEnteredByCurrentTurn === true) {
     return { status: 'refused', reason: 'sanctuary_active' };
   }
