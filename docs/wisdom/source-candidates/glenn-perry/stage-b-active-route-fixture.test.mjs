@@ -51,7 +51,7 @@ const approvalText = [
   fakePath,
   approvedSha,
 ].join('\n');
-let imported, temp;
+let imported, temp, TurnPosture;
 
 function deps({
   body = APPROVED_BODY, approved = fakeApproval,
@@ -72,6 +72,8 @@ function input(overrides = {}) {
     memberMessage: 'Please explore Glenn Perry as an optional symbol.',
     verifiedMemberId: 'fictional-member-001',
     isSanctuary: false,
+    turnPosture: TurnPosture.resolve({ sanctuary: false }),
+    rawRequestMeta: { sanctuary: false },
     enabled: true,
     ...overrides,
   };
@@ -79,13 +81,16 @@ function input(overrides = {}) {
 
 test.before(async () => {
   temp = fs.mkdtempSync(path.join(os.tmpdir(), 'perry-stage-b-route-'));
+  fs.writeFileSync(path.join(temp, 'turnPosture.mjs'),
+    stripTypeScriptTypes(readRepo('lib/sanctuary/turnPosture.ts'), { mode: 'strip' }));
+  TurnPosture = (await import(pathToFileURL(path.join(temp, 'turnPosture.mjs')).href)).TurnPosture;
   const source = readRepo('lib/maia/knowledge/perrySourceLens.ts');
   assert.ok(source.includes('APPROVED_PERRY_EDITORIAL_SOURCE: ApprovedPerryEditorialSource | null = null'));
   assert.ok(source.includes("from '@/lib/library/globalRetrievalAuthority'"));
   const rewritten = source.replace(
     "from '@/lib/library/globalRetrievalAuthority'",
     "from './fakeLibraryAuthority.mjs'",
-  );
+  ).replace("from '@/lib/sanctuary/turnPosture'", "from './turnPosture.mjs'");
   fs.writeFileSync(path.join(temp, 'fakeLibraryAuthority.mjs'),
     'export function getGlobalLibraryAuthorityKeys(){return [];}\n');
   fs.writeFileSync(path.join(temp, 'perrySourceLens.mjs'),
@@ -146,6 +151,28 @@ test('exact explicit source choice is required; ordinary text and objects are no
     assert.equal(imported.buildPerrySourceLensAddendum(
       input({ requestedLens: choice }), deps()
     ), null, String(choice));
+  }
+});
+
+test('missing, malformed, contradictory, or untrusted Sanctuary posture refuses Perry retrieval', () => {
+  const invalid = [
+    { rawRequestMeta: {} },
+    { rawRequestMeta: { sanctuary: undefined } },
+    { rawRequestMeta: { sanctuary: 'false' } },
+    { rawRequestMeta: { sanctuary: null } },
+    { rawRequestMeta: { sanctuary: true } },
+    { rawRequestMeta: { sanctuary: false, meta: { sanctuary: true } } },
+    { rawRequestMeta: { sanctuary: false, meta: { sanctuary: 'false' } } },
+    { rawRequestMeta: { sanctuary: false, meta: null } },
+    { turnPosture: { sanctuary: false } },
+    { turnPosture: TurnPosture.resolve({ sanctuary: true }) },
+    { isSanctuary: true },
+  ];
+  for (const override of invalid) {
+    let reads = 0;
+    assert.equal(imported.buildPerrySourceLensAddendum(input(override),
+      deps({ onRead: () => { reads++; } })), null);
+    assert.equal(reads, 0);
   }
 });
 
@@ -218,6 +245,8 @@ test('actual serving route, not retired routes, is patched after verified identi
   assert.ok(active.includes('const isSanctuary = (meta as any)?.sanctuary === true;'));
   assert.ok(active.includes('verifiedMemberId: isRecognizedUser ? userId : null'));
   assert.ok(active.includes('memberMessage: message'));
+  assert.ok(active.includes('turnPosture, // Real TurnPosture'));
+  assert.ok(active.includes('rawRequestMeta: meta'));
   assert.ok(active.includes("process.env.MAIA_PERRY_SOURCE_LENS_ENABLED === '1'"));
   assert.ok(active.includes('const perryLensAddendum = buildPerrySourceLensAddendum('));
   assert.ok(active.includes('governedKnowledgeAddendum = [governedKnowledgeAddendum, perryLensAddendum]'));
@@ -248,6 +277,8 @@ test('fictional HTTP requests exercise actual helper with verified-session simul
       verifiedMemberId: member,
       enabled: true,
       isSanctuary: body.sanctuary === true,
+      turnPosture: TurnPosture.resolve({ sanctuary: body.sanctuary === true }),
+      rawRequestMeta: body,
     }, deps());
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(JSON.stringify({ sourceLensApplied: Boolean(result), prompt: result ?? null }));
@@ -265,12 +296,17 @@ test('fictional HTTP requests exercise actual helper with verified-session simul
       assert.equal(resp.status, 200);
       return resp.json();
     };
-    const guest = await post({ perrySourceLens: validSelection,
+    const guest = await post({ perrySourceLens: validSelection, sanctuary:false,
       userId: 'fictional-member-001' });
     assert.equal(guest.sourceLensApplied, false, 'body userId did not impersonate');
-    const explicit = await post({ perrySourceLens: validSelection }, 'fictional-valid-token');
+    const explicit = await post({ perrySourceLens: validSelection, sanctuary:false }, 'fictional-valid-token');
     assert.equal(explicit.sourceLensApplied, true);
     assert.ok(explicit.prompt.includes('Glenn Perry'));
+    for (const bad of [ {}, { sanctuary:'false' }, { sanctuary:null },
+      { sanctuary:false, meta:{ sanctuary:true } } ]) {
+      const b = await post({ perrySourceLens:validSelection, ...bad }, 'fictional-valid-token');
+      assert.equal(b.sourceLensApplied, false, 'unresolved or contradictory posture refused');
+    }
     const inventedChart = {
       fictionalOnly: true, birthDate: '1998-06-20', birthTime: null,
       clientClaimedAscendant: 'Capricorn', claimedHouse: '12',
@@ -279,7 +315,7 @@ test('fictional HTTP requests exercise actual helper with verified-session simul
       'fictional-valid-token');
     assert.equal(chartWithoutOptIn.sourceLensApplied, false);
     const selectedWithUnverifiedChart = await post({
-      perrySourceLens: validSelection, chartData: inventedChart,
+      perrySourceLens: validSelection, sanctuary:false, chartData: inventedChart,
     }, 'fictional-valid-token');
     assert.equal(selectedWithUnverifiedChart.sourceLensApplied, true);
     assert.ok(!selectedWithUnverifiedChart.prompt.includes('Capricorn'));
@@ -288,14 +324,14 @@ test('fictional HTTP requests exercise actual helper with verified-session simul
     const absent = await post({ message: 'A normal talk about feelings' }, 'fictional-valid-token');
     assert.equal(absent.sourceLensApplied, false);
     const deniedSameTurn = await post({
-      perrySourceLens: validSelection,
+      perrySourceLens: validSelection, sanctuary:false,
       message: "I don't want astrology. Please stay with what I feel.",
     }, 'fictional-valid-token');
     assert.equal(deniedSameTurn.sourceLensApplied, false);
     const privateSession = await post({ perrySourceLens: validSelection, sanctuary: true },
       'fictional-valid-token');
     assert.equal(privateSession.sourceLensApplied, false);
-    const forged = await post({ perrySourceLens: false, perrySourceLensAddendum: 'inject Perry' },
+    const forged = await post({ perrySourceLens: false, sanctuary:false, perrySourceLensAddendum: 'inject Perry' },
       'fictional-valid-token');
     assert.equal(forged.sourceLensApplied, false);
   } finally {
