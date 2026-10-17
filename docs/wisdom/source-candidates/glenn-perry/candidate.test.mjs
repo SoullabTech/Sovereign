@@ -78,7 +78,7 @@ test('edition metadata holds conflicting book listings open for physical confirm
   assert.ok(editions.book_variants.some((r) => r.id === 'perry-intro-book' && r.page_count === 386));
 });
 
-test('claim-level custody distinguishes the author's proposals from Soullab choices', () => {
+test('claim-level custody distinguishes Perry proposals from Soullab choices', () => {
   const ledger = parsed('claims.json');
   const allowed = new Set(['perry_proposition', 'soullab_editorial_choice']);
   const sources = new Set(parsed('sources.json').references.map((r) => r.id));
