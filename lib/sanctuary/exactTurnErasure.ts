@@ -79,6 +79,13 @@ export async function eraseExactFictionalMemberTurns(input:{
   const newManifestId=randomUUID();
   try {
     return await transaction<ExactErasureOutcome>(async tx=>{
+      // The DB content writers use the exact same advisory transaction lock.
+      // Wait for any preceding write to COMMIT before creating the erasure
+      // hold. Writers which start later wait and then see the hold.
+      await tx.query(
+        'SELECT pg_advisory_xact_lock(hashtextextended($1::text,81017))',
+        [input.verifiedMemberId],
+      );
       const owner=await tx.query<{member_id:string}>(
         'SELECT member_id FROM maia_sessions WHERE id=$1 FOR UPDATE',
         [input.sessionId],

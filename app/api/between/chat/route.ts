@@ -1481,6 +1481,15 @@ This user is in guest mode (no authenticated identity).
         meta: normalizedMeta, // ✅ Normalized identity for downstream persistence
       });
 
+      // RF01 R1-C: deletion may commit while simplified generation awaits.
+      if (authUserId) {
+        try {
+          await assertMemberInfluenceAllowed(authUserId);
+        } catch (err) {
+          return NextResponse.json(influenceHoldResponse(err), { status: 503 });
+        }
+      }
+
       // ✨ RUPTURE ENHANCEMENT: Check if we need to enhance response due to detected rupture
       let finalMessage = simpleResult.message;
       let ruptureProcessingResult: RuptureDetectionResult | undefined;
@@ -1700,6 +1709,13 @@ This user is in guest mode (no authenticated identity).
         response.headers.set(key, value);
       });
 
+      if (authUserId) {
+        try {
+          await assertMemberInfluenceAllowed(authUserId);
+        } catch (err) {
+          return NextResponse.json(influenceHoldResponse(err), { status: 503 });
+        }
+      }
       return withSessionCookie(response, sessionCookie);
     }
 
@@ -2019,7 +2035,7 @@ This user is in guest mode (no authenticated identity).
         if (readiness.ready) {
           console.log('[MAIA/between] forward-readiness', {
             signals: readiness.signals,
-            preview: message.slice(0, 120),
+            memberContentLogged: false,
           });
           forwardReadinessAddendum = buildForwardReadinessBlock();
         }
@@ -2074,6 +2090,16 @@ This user is in guest mode (no authenticated identity).
       }),
       consultationPromise,
     ]);
+
+    // RF01 R1-C: another request can erase source material while model
+    // generation and council tasks run in parallel.
+    if (authUserId) {
+      try {
+        await assertMemberInfluenceAllowed(authUserId);
+      } catch (err) {
+        return NextResponse.json(influenceHoldResponse(err), { status: 503 });
+      }
+    }
 
     if (consultationResult) {
       console.log(`[AIN Council] 🏛️ Consultation complete: ${consultationResult.insights.length} insights, ${consultationResult.tensions.length} tensions, emergence: ${consultationResult.emergenceRating || 'recombination'}`);
@@ -2593,9 +2619,8 @@ This user is in guest mode (no authenticated identity).
     const ideaCandidate = !isSanctuary ? detectIdeaCandidate(message, cleanedText) : null;
     if (ideaCandidate) {
       console.info('[idea-field]', {
-        title: ideaCandidate.title,
         confidence: ideaCandidate.confidence,
-        fingerprint: ideaCandidate.fingerprint,
+        contentLogged: false,
       });
     }
 
@@ -2719,6 +2744,13 @@ This user is in guest mode (no authenticated identity).
       console.error('[LimitsEnforcer] Failed to record usage:', err);
     });
 
+    if (authUserId) {
+      try {
+        await assertMemberInfluenceAllowed(authUserId);
+      } catch (err) {
+        return NextResponse.json(influenceHoldResponse(err), { status: 503 });
+      }
+    }
     return withSessionCookie(response2, sessionCookie);
   } catch (err: any) {
     // Audit: request failed

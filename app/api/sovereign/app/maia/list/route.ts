@@ -1521,7 +1521,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         if (readiness.ready) {
           console.log('[MAIA/sovereign] forward-readiness', {
             signals: readiness.signals,
-            preview: message.slice(0, 120),
+            memberContentLogged: false,
           });
           forwardReadinessAddendum = buildForwardReadinessBlock();
         }
@@ -1837,6 +1837,16 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       start,
     );
 
+    // RF01 R1-C: deletion can commit while model generation awaits.
+    // Recheck before persisting or releasing generated content.
+    if (isRecognizedUser) {
+      try {
+        await assertMemberInfluenceAllowed(userId!);
+      } catch (err) {
+        return jsonWithCors(req, influenceHoldResponse(err), 503);
+      }
+    }
+
     const duration = Date.now() - start;
     if (duration > 500) {
       console.warn(
@@ -1881,8 +1891,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         console.warn('[MAIA] §V scrub fired', {
           rid: requestId,
           userId: memberRef(effectiveUserId),
-          original_preview: orchestratorResult.text.slice(0, 200),
-          replacement_preview: _memoryScrub.slice(0, 200),
+          contentLogged: false,
         });
         orchestratorResult.text = _memoryScrub;
       }
@@ -2209,6 +2218,16 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       validation: orchestratorResult.validation || null,
       repaired: orchestratorResult.regenerated || false,
     });
+
+    // RF01 R1-C: final response fence before post-turn relational background
+    // tasks, telemetry and the actual delivery of model-derived text.
+    if (isRecognizedUser) {
+      try {
+        await assertMemberInfluenceAllowed(userId!);
+      } catch (err) {
+        return jsonWithCors(req, influenceHoldResponse(err), 503);
+      }
+    }
 
     // 🔗 RELATIONAL OBSERVER: Silent background attunement (fire-and-forget)
     // 🔒 SANCTUARY MODE: a sanctuary turn must never feed relational observation or signal
