@@ -10,6 +10,7 @@ import {
  prepareR71,applyR71,prepareUndoR71,undoR71,readR71,
  R71Refused,R71_PRODUCTION_ENABLED,
 } from '@/lib/writersStudio/recovery/r71FictionalCanonicalEditorial';
+import {R72Refused} from '@/lib/writersStudio/recovery/r72MemberProposalConsent';
 export const dynamic='force-dynamic';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const db=/^postgresql:\/\/fict@127\.0\.0\.1:\d+\/ws_atomic$/;
@@ -27,7 +28,8 @@ const enabled=(r:NextRequest)=>
 const closed=(b:Record<string,unknown>,keys:string[]) =>
  Object.keys(b).sort().join('|')===keys.sort().join('|');
 function failure(err:unknown){
- if(err instanceof R71Refused)return refusal(err.reason,err.http);
+ if(err instanceof R71Refused||err instanceof R72Refused)
+  return refusal(err.reason,err.http);
  // No prose/credentials in the error response.
  return refusal('fixture_backend_unavailable',503);
 }
