@@ -25,6 +25,11 @@ import {
  */
 export const PERRY_CLIENT_SOURCE_CHOICE = 'glenn-perry-astropsychology' as const;
 
+/** Current authored turn may itself contain an enter-Sanctuary command. */
+export interface PerryCurrentTurnVeto {
+  readonly sanctuaryEnteredByCurrentTurn?: boolean;
+}
+
 export type PerryClientSelectionDecision =
   | Readonly<{
       status: 'prepared';
@@ -48,9 +53,17 @@ export type PerryClientSelectionDecision =
 export function preparePerryClientSelection(
   selectedSource: unknown,
   storage?: StorageLike | null,
+  turnVeto: PerryCurrentTurnVeto = {},
 ): PerryClientSelectionDecision {
   if (selectedSource !== PERRY_CLIENT_SOURCE_CHOICE) {
     return { status: 'refused', reason: 'not_selected' };
+  }
+
+  // Refusal-only override: a mode command can enter Sanctuary *during* this
+  // very authored turn, before the live setting/React state catches up.
+  // It can never authorize a turn when storage says Sanctuary or is unresolved.
+  if (turnVeto.sanctuaryEnteredByCurrentTurn === true) {
+    return { status: 'refused', reason: 'sanctuary_active' };
   }
 
   const current = readCurrentSanctuaryPosture(storage);
