@@ -19,6 +19,8 @@ safe_for_retrieval: false
 - [Original Soullab teaching candidate](./soullab-original-teaching-candidate.md): seven movements of inquiry, three fictional encounters; **pending founder approval, not active knowledge**.
 - [Claim-level provenance](./claims.json): separates seven Glenn Perry assertions from eight Soullab editorial choices. Explicitly distinguishes Perry's life-script/fate language from the member-centered Soullab adaptation.
 - [Stage A readiness and test witness](./STAGE-A-READINESS-20261017.md): 9/9 static integrity tests and 5/5 tests against actual admission/global Library code, all in disposable local fixtures. These do not authorize admission or live runtime use.
+- [Stage B source-path and trust-boundary design](./STAGE-B-ISOLATED-INTEGRATION-DESIGN-20261017.md): identified current MAIA route and existing knowledge-field limits; preparation only, no runtime change.
+- [Stage B fictional MAIA knowledge-field rehearsal](./knowledge-field-integration-rehearsal.test.mjs): imports the current knowledge registry and prompt builder in isolation; 12/12 passed, including explicit member choice, refusal, Sanctuary exclusion, and unpublished-source gates.
 - [Actual admission preflight tests](./governed-admission-preflight.test.mjs): fail-closed when authority, rights, source hash, or per-file admission are absent.
 
 **Founder direction (2026-10-17):** founder will contact Glenn Perry personally. Do not send the previously prepared permission draft. No third-party book or essay text is licensed for AI retrieval under this record.
