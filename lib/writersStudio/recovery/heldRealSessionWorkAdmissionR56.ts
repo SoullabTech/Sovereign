@@ -62,6 +62,10 @@ function fixture():boolean{
     process.env.FILE_STORAGE_PATH||'')||
    (process.env.R57_PRIVATE_READ_FIXTURE==='fictional-only'&&
     /^\/.*\/ws-r35-physical-r57-[^/]+\/vault$/.test(
+     process.env.FILE_STORAGE_PATH||''))||
+   (process.env.R64_REAL_SESSION_AUTHOR_FIXTURE==='fictional-only'&&
+    process.env.R55_REAL_PC3_CONVERGENCE_FIXTURE==='fictional-only'&&
+    /^\/.*\/ws-r35-physical-r48-r55-[^/]+\/vault$/.test(
      process.env.FILE_STORAGE_PATH||''))
   );
 }

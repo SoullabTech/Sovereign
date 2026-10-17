@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.r63-held-private-join.json",
+  "compilerOptions": {
+    "strict": true, "noEmit": true, "incremental": false, "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "scripts/ops/wsBetaR64VerifiedAuthorPG16.ts",
+    "scripts/ops/wsBetaR55ConvergedPc3PG16.ts",
+    "scripts/ops/__tests__/r39ActualSignedSectionPG16.test.ts",
+    "lib/writersStudio/recovery/heldRealSessionWorkAdmissionR56.ts",
+    "lib/writersStudio/recovery/__tests__/r64VerifiedAuthorLaw.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}

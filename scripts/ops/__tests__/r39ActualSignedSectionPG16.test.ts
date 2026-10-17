@@ -15,6 +15,10 @@ import {prepareHeldUndoR47,submitHeldUndoR47,
  R47_REAL_DURABLE_UNDO_ENABLED} from '../../../lib/writersStudio/recovery/heldDurableUndoR47';
 import {inspectSpentApplyR48,R48_REAL_SPENT_APPLY_RECOVERY_ENABLED} from '../../../lib/writersStudio/recovery/heldSpentApplyEvidenceR48';
 import {HeldCanonicalAuthorJourneyR53,R53_REAL_CANONICAL_AUTHOR_JOURNEY_ENABLED} from '../../../lib/writersStudio/recovery/heldCanonicalAuthorJourneyR53';
+import {
+ readHeldRealSessionWorkR56,recheckHeldRealSessionWorkR56,
+ R56_REAL_PROTECTED_WRITER_ENABLED,R56_HELD_ROUTE,
+} from '../../../lib/writersStudio/recovery/heldRealSessionWorkAdmissionR56';
 import {exactTextareaPassageR41} from '../../../lib/writersStudio/exactLiveSelectionR41';
 import {runR54Pc3FictionalBrowser} from '../wsBetaR54Pc3Browser';
 import type {R37SectionSelection,R37FixtureGesture,R37UndoGesture} from '../../../lib/writersStudio/recovery/heldSectionApplyR37';
@@ -68,6 +72,10 @@ const undoTest=r47Only?it:it.skip;
 const r53Only=r47Only&&process.env.R53_CANONICAL_AUTHOR_FIXTURE==='fictional-only';
 const canonicalAuthorTest=r53Only?it:it.skip;
 const r54Only=r53Only&&process.env.R54_PC3_BROWSER_FIXTURE==='fictional-only';
+const r64Only=r54Only&&process.env.R64_REAL_SESSION_AUTHOR_FIXTURE==='fictional-only'&&
+ process.env.R56_REAL_SESSION_WORK_FIXTURE==='fictional-only'&&
+ process.env.NODE_ENV==='test';
+const R64_LIVING='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const r54BrowserTest=r54Only?it:it.skip;
 
 const choiceTest=r43Only?it:it.skip;
@@ -97,7 +105,9 @@ const BWORK='44444444-4444-4444-8444-444444444444';
 const S1='66666666-6666-4666-8666-666666666661';
 const S2='66666666-6666-4666-8666-666666666662';
 const POLICY='r38-fictional-notice';
-const HASH='b'.repeat(64);
+const R64_NOTICE='Fictional R64 review-only writer notice; deliberately invented accounts and no production writing authority.';
+const HASH=r64Only?createHash('sha256').update(R64_NOTICE,'utf8').digest('hex'):
+ 'b'.repeat(64);
 const NOW=1792164000000;
 const SECRET='R38 Fictional Writer Encrypted Request Secret Words';
 const TOKENS={A:'r38-fictitious-session-A',B:'r38-fictitious-session-B',
@@ -340,6 +350,29 @@ async function signedSection(
   workFence:fence,nowMs:()=>NOW,
  });
 }
+/** R64: real R56 SQL session/consent/Source/Draft/Living Work gate, held-only.
+ * The browser does not send or authorize the member, Work, key or proposal.
+ * This is a same-DB fictional preflight, NOT atomic operational KMS fencing.
+ */
+async function checkedR64Action(workId:string,intent:'review'|'apply'|'review-undo'|'undo'){
+ if(!r64Only)return true;
+ expect(R56_REAL_PROTECTED_WRITER_ENABLED).toBe(false);
+ const request=new NextRequest('https://soullab.life'+R56_HELD_ROUTE,{
+  method:'POST',headers:{
+   host:'soullab.life',origin:'https://soullab.life',
+   'sec-fetch-site':'same-origin','content-type':'application/json',
+   'x-ws-author-intent':intent,'x-session-token':TOKENS.A,
+  },
+ });
+ const checked=await readHeldRealSessionWorkR56({
+  request,manuscriptId:workId,selectedLivingWorkId:R64_LIVING,intent,
+ });
+ if(checked.kind!=='held_private_session_and_work_witness')return false;
+ const current=await recheckHeldRealSessionWorkR56(checked,request);
+ if(current.kind!=='held_private_session_and_work_witness')return false;
+ if(current.currentDraftGeneration!==await generations(workId))return false;
+ return true;
+}
 /** R43: browser sends only the one-use approval; choice and Work stay in Node. */
 function authorChoiceRequest(body?:unknown,options?:{token?:string;origin?:string}){
  const headers:Record<string,string>={
@@ -407,13 +440,16 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
   return {generation,sectionId:S1,body:view.sections[0].text,
    action:view.action,restoredFrom:view.restoredFrom};
  };
+ const admittedActions:string[]=[];
  const evidence=process.env.R54_BROWSER_EVIDENCE_DIR||'';
  const inOriginal=evidence.startsWith(
   '/Volumes/T7 Shield/ws-beta-r54-native-pc3-evidence-20261016/');
  const inConvergence=process.env.R55_REAL_PC3_CONVERGENCE_FIXTURE==='fictional-only'&&
   evidence.startsWith(
    '/Volumes/T7 Shield/ws-beta-release-r11-build-20261016/R55_CONVERGED_PC3_ENCRYPTED_BROWSER_20261016/');
- if(!(inOriginal||inConvergence)||!/\/run-[a-f0-9-]+$/.test(evidence))
+ const inR64=r64Only&&evidence.startsWith(
+  '/Volumes/T7 Shield/ws-beta-r64-author-session-pg16-evidence-20261017/');
+ if(!(inOriginal||inConvergence||inR64)||!/\/run-[a-f0-9-]+$/.test(evidence))
   throw Error('R54_NOT_AN_ISOLATED_BROWSER_EVIDENCE_FOLDER');
  const response=await runR54Pc3FictionalBrowser({
   engine,evidenceDir:path.join(evidence,engine),
@@ -424,6 +460,12 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
   operations:{
    current,
    dispatch:async(action,payload)=>{
+    if(r64Only){
+     const admitted=await checkedR64Action(workId,action==='undo-review'?'review-undo':action);
+     if(!admitted)return {kind:'refused',reason:'r64_current_session_work_refused',
+      releaseApproved:false};
+     admittedActions.push(action);
+    }
     if(action==='review')return agent.review(authority(payload));
     if(action==='apply')return agent.apply(authority(payload));
     if(action==='undo-review')return agent.reviewUndo(authority(payload));
@@ -435,6 +477,15 @@ async function runActualR54BrowserTest(engine:'chromium'|'webkit',workId:string)
   engine,browserClosed:true,serverClosed:true,externalRequests:0,
  });
  expect(response.screenshots).toHaveLength(4);
+ if(r64Only){
+  for(const action of ['review','apply','undo-review','undo'])
+   expect(admittedActions).toContain(action);
+  console.log('R64_SESSION_AUTHOR_META',JSON.stringify({
+   engine,verifiedActions:admittedActions.length,
+   kind:'R56_validated_before_each_R53_author_action',
+   operationalKms:false,releaseApproved:false,
+  }));
+ }
  expect(response.checksPassed).toBeGreaterThanOrEqual(30);
  console.log('R54_BROWSER_META',JSON.stringify({
   engine,checksPassed:response.checksPassed,
@@ -1209,6 +1260,19 @@ group('R39 actual signed section choice → R37 Apply/Undo → R35 encrypted PG1
  },90000);
  r54BrowserTest('R54 actual canonical Shell + PC3 author panel in WebKit saves and restores encrypted Work',async()=>{
   await runActualR54BrowserTest('webkit',W18);
+  if(r64Only){
+   const before=await generations(W18);
+   await consent('revoke');
+   expect(await checkedR64Action(W18,'apply')).toBe(false);
+   expect(await generations(W18)).toBe(before);
+   await consent('accept');
+   expect(await checkedR64Action(W18,'review')).toBe(true);
+   expect(await generations(W18)).toBe(before);
+   console.log('R64_REVOCATION_META',JSON.stringify({
+    withheldAfterRevoke:true,freshReviewAfterReaccept:true,
+    manuscriptUnmodified:true,operationalKms:false,releaseApproved:false,
+   }));
+  }
  },90000);
 
 });
