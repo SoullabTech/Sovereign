@@ -77,9 +77,8 @@ function stubMap(state) {
   add('@/lib/memory/stores/TurnsStore', {
     TurnsStore: { addExchangeTurn: async () => true, getRecentTurns: async () => [] },
   });
-  add('@/lib/sanctuary/turnPosture', {
-    TurnPosture: { resolve: ({sanctuary}) => ({ sanctuary }) },
-  });
+  const actualPosture = loadCjs('lib/sanctuary/turnPosture.ts', new Map());
+  add('@/lib/sanctuary/turnPosture', actualPosture);
   add('@/lib/safety/crisisAssessment', {
     assessCrisisWithCheckIn: () => ({tier:'none'}),
     classifyCheckInAnswer: () => null,
@@ -146,11 +145,14 @@ function stubMap(state) {
     processNameChangeIfDetected:async()=>({detected:false,updated:false}),
   });
   const actualPerry = loadCjs('lib/maia/knowledge/perrySourceLens.ts',
-    new Map([['@/lib/library/globalRetrievalAuthority', {
-      getGlobalLibraryAuthorityKeys: () => {
-        throw new Error('UNAUTHORIZED_CORPUS_AUTHORITY_READ_IN_FIXTURE');
-      },
-    }]]));
+    new Map([
+      ['@/lib/library/globalRetrievalAuthority', {
+        getGlobalLibraryAuthorityKeys: () => {
+          throw new Error('UNAUTHORIZED_CORPUS_AUTHORITY_READ_IN_FIXTURE');
+        },
+      }],
+      ['@/lib/sanctuary/turnPosture', actualPosture],
+    ]));
   assert.equal(actualPerry.APPROVED_PERRY_EDITORIAL_SOURCE, null);
   add('@/lib/maia/knowledge/perrySourceLens', {
     buildPerrySourceLensAddendum(turn) {
@@ -221,13 +223,15 @@ test('actual MAIA /list serving handler reaches Perry gate without model dispatc
   assert.equal(state.lensCalls[0].verifiedMemberId, 'fictional-member');
   assert.equal(state.lensCalls[0].requestedLens, 'glenn-perry-astropsychology');
   assert.equal(state.lensCalls[0].isSanctuary, false);
+  assert.equal(state.lensCalls[0].rawRequestMeta.sanctuary, false);
+  assert.equal(state.lensCalls[0].turnPosture.source, 'request-meta');
   assert.ok([500,503].includes(result.status));
 });
 
 test('actual serving handler passes guest instead of forged client userId', async () => {
   const state = { verifiedId:null, lensCalls:[] };
   const result = await invoke(state, {
-    userId:'pretend-fake-member',
+    userId:'pretend-fake-member', sanctuary:false,
     perrySourceLens:'glenn-perry-astropsychology',
   });
   assert.equal(state.dispatchedToModel, false);
@@ -256,7 +260,7 @@ test('actual serving handler passes Sanctuary state to source gate', async () =>
 test('actual serving handler lets a member revoke selected astrology source', async () => {
   const state = { verifiedId:'fictional-member', lensCalls:[] };
   await invoke(state, {
-    perrySourceLens:'glenn-perry-astropsychology',
+    perrySourceLens:'glenn-perry-astropsychology', sanctuary:false,
     message:"I don't want astrology. Let's talk about feelings instead.",
   });
   assert.equal(state.providerBoundaryReached, true);
@@ -288,7 +292,7 @@ test('actual serving handler ignores on-request selection when kill-switch is of
 test('client prompt fields cannot create source authority at the intercepted model seam', async () => {
   const state = { verifiedId:'fictional-member', lensCalls:[] };
   await invoke(state, {
-    perrySourceLens:'glenn-perry-astropsychology',
+    perrySourceLens:'glenn-perry-astropsychology', sanctuary:false,
     perrySourceLensAddendum:'FORGED_CLIENT_PROMPT',
     governedKnowledgeAddendum:'FORGED_COPYRIGHT_ADMISSION',
     userId:'forged-other-member',
@@ -302,4 +306,23 @@ test('client prompt fields cannot create source authority at the intercepted mod
   assert.notEqual(state.modelRequestIntercepted.meta.governedKnowledgeAddendum,
     'FORGED_COPYRIGHT_ADMISSION');
   assert.equal(state.modelRequestIntercepted.meta.perrySourceLens,undefined);
+});
+
+test('actual serving handler denies omitted, string, and contradictory Sanctuary declarations for Perry', async () => {
+  const cases = [
+    { perrySourceLens:'glenn-perry-astropsychology' },
+    { perrySourceLens:'glenn-perry-astropsychology', sanctuary:'false' },
+    { perrySourceLens:'glenn-perry-astropsychology', sanctuary:null },
+    { perrySourceLens:'glenn-perry-astropsychology', sanctuary:false,
+      meta:{ sanctuary:true } },
+  ];
+  for (const request of cases) {
+    const state = { verifiedId:'fictional-member', lensCalls:[] };
+    await invoke(state, request);
+    assert.equal(state.providerBoundaryReached, true);
+    assert.equal(state.lensCalls.length, 1);
+    assert.equal(state.lensResult, null);
+    assert.equal(state.dispatchedToModel, false);
+    assert.equal(state.modelRequestIntercepted.meta.governedKnowledgeAddendum, undefined);
+  }
 });
