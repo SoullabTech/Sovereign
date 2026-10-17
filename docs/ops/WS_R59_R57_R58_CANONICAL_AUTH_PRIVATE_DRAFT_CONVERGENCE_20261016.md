@@ -36,7 +36,11 @@ The test-only wrapper scripts/ops/wsBetaR59JoinedNextPrivatePG16.py refuses abse
 
 ## Engineering qualification
 
-Precommit source union of R57 and R58 passed **94/94 suites, 987/987 tests**; both old populations are included rather than choosing one. Strict R57 private-scope TypeScript and R58 actual Next/WebKit scope remain to be exact-commit rerun, along with R58 real readiness PostgreSQL, R55 Chrome/WebKit encrypted editor and genuine Next.js WebKit browser on the converged SHA.
+Precommit source union of R57 and R58 passed **94/94 suites, 987/987 tests**; both old populations are included rather than choosing one. Strict R57 private-scope TypeScript passed. The R59 single-database R47/R56/Next protected-readiness test passed its **9/9 initial + 5/5 cold + 15/15 physical checks**, and R58's actual Next readiness plus R56 member/Work test passed **32/32 physical checks**.
+
+The inherited R55 fictional Chrome/WebKit encrypted author runner initially held on the merged source because R58's stronger R39 fixture introduced a **nineteenth synthetic manuscript** missing from R55's older seed. After the synthetic row was added, the actual **33/33 application tests passed**, with 32 Chrome and 32 WebKit assertions each, but Jest now reports 1 intentionally skipped R48 fixture-only case (34 total). The old runner incorrectly expected 33 total. R59's *test-only* runner now requires exactly **1 skipped, 33 passed, 34 total** and explicitly checks the name of that one omitted R48 fixture, rather than hiding it. After this strict fixture correction, **27/27 physical privacy/cleanup checks** and the existing forced PostgreSQL restart also pass. All pre-correction refusals remain recorded; no production code or member manuscript was edited.
+
+R58 real Next/WebKit, merged source union, R59 joined private acceptance and the full shipping TypeScript check must be requalified against the exact final patch commit before final acceptance.
 
 Release remains HOLD because this merged source still does not connect an authenticated real Next.js author HTTP POST to a separately administered independent Work key and R46/R39 transaction. The actual Next readiness route is deliberately read-only and returns HTTP 423. R53/R54 protected author action uses fixture-held fake signing/key authority; R52's older plaintext-capable writing routes are source-fenced but not live migrated. No actual current member or key/ciphertext publisher was activated.
 

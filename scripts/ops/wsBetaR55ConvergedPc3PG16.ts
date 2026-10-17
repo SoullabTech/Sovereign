@@ -122,6 +122,7 @@ async function main(){
  ('33333333-3333-4333-8333-33333333333f','${A}'),
  ('33333333-3333-4333-8333-333333333340','${A}'),
  ('33333333-3333-4333-8333-333333333341','${A}'),
+ ('33333333-3333-4333-8333-333333333342','${A}'),
  ('44444444-4444-4444-8444-444444444444','${B}');
  INSERT INTO r38_fixture_work_fence(work_id,member_id)
  SELECT id,member_id FROM member_manuscripts;`);
@@ -185,7 +186,9 @@ async function main(){
  writeFileSync(testLog,(runner.stdout||'')+(runner.stderr||''),{mode:0o600});
  observe(runner.status===0&&
    /Test Suites:\s+1 passed, 1 total/.test((runner.stdout||'')+(runner.stderr||''))&&
-   /Tests:\s+33 passed, 33 total/.test((runner.stdout||'')+(runner.stderr||'')),
+   /Tests:\s+1 skipped, 33 passed, 34 total/.test((runner.stdout||'')+(runner.stderr||''))&&
+   /skipped R48 one PostgreSQL Work holds encrypted reviewed choice/.test(
+     (runner.stdout||'')+(runner.stderr||'')),
    '33 fictional signed Apply/Undo and Chrome/WebKit PC3 author tests pass');
  const log=(runner.stdout||'')+(runner.stderr||'');
  const browserReports=[...log.matchAll(/R54_BROWSER_META\s+(\{[^\r\n]+\})/g)]
