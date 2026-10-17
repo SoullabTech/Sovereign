@@ -11,18 +11,18 @@
  *   - Never adopt a legacy NULL-owner row.
  *   - Hold Sanctuary finalization before any destructive blanket deletion;
  *     per-turn eligibility and deletion policy belong to S1/R1.
- *   - Ordinary finalization retains the existing summary pipeline, which
- *     still needs separate S1 per-turn eligibility qualification.
- *
- * The worker will later:
- *   - Load turns from conversation_turns (they still exist for continuity)
- *   - Generate a structured summary via the sovereign model
- *   - Write the summary to member_sessions.summary
+ * RF01 R1-A:
+ *   - Ordinary non-destructive closure is preserved.
+ *   - External summarization/enqueuing and summary-derived recall are held
+ *     until separate background-processing and recovery authorities exist.
+ *   - The test fixture checks each normal turn's explicit consent and the
+ *     absence of protected gestures and deletion scopes before enqueuing.
  */
 
 import { query } from '@/lib/db/postgres';
 import { SessionSummaryStore } from '@/lib/memory/stores/SessionSummaryStore';
 import { requireExistingOwnedSession } from './memberSessionOwnership';
+import { evaluateSummaryEligibility, summaryProviderFixtureEnabled } from '@/lib/sanctuary/sessionSummaryEligibility';
 
 export interface FinalizeSessionInput {
   memberId: string;
@@ -38,28 +38,27 @@ export interface FinalizeSessionResult {
   queued?: boolean;
   sessionCreated?: boolean;
   error?: string;
+  summaryHeld?: boolean;
 }
 
 /**
  * Mark session as completed in maia_sessions for its already-verified owner.
  * This closes the session lifecycle: active → closing → completed
  */
-async function markSessionCompleted(sessionId: string, memberId: string, endedAt: string | null): Promise<void> {
-  try {
-    await query(
-      `
-      UPDATE maia_sessions
-      SET status = 'completed',
-          ended_at = $2,
-          completed_at = $2
-      WHERE id = $1 AND member_id = $3
-      `,
-      [sessionId, endedAt ? new Date(endedAt) : new Date(), memberId]
-    );
-    console.log(`✅ [SessionFinalizer] Session ${sessionId} marked as completed`);
-  } catch (err) {
-    // Non-fatal - session is still finalized even if we can't update status
-    console.warn(`⚠️ [SessionFinalizer] Could not mark session ${sessionId} as completed:`, err);
+async function markSessionCompleted(
+  sessionId: string,
+  memberId: string,
+  endedAt: string | null,
+): Promise<void> {
+  // A refusal/error must not be reported to the member as a completed close.
+  const result = await query<{id:string}>(
+    "UPDATE maia_sessions SET status='completed', ended_at=$2, "+
+    "completed_at=$2, updated_at=NOW() WHERE id=$1 AND member_id=$3 "+
+    "AND mode='continuity' RETURNING id",
+    [sessionId, endedAt ? new Date(endedAt) : new Date(), memberId],
+  );
+  if (!result.rows[0]) {
+    throw new Error('SESSION_FINALIZATION_NOT_CONFIRMED');
   }
 }
 
@@ -88,6 +87,22 @@ export async function finalizeSession(
   // ═══════════════════════════════════════════════
   // CONTINUITY PATH: Create record + enqueue summary job
   // ═══════════════════════════════════════════════
+
+  // Preserve non-destructive ordinary closure; do NOT enqueue a transcript
+  // for Anthropic without independent background provider permission.
+  if (!summaryProviderFixtureEnabled()) {
+    await markSessionCompleted(sessionId, memberId, endedAt);
+    return { ok: true, sanctuary: false, queued: false, sessionCreated, summaryHeld: true };
+  }
+  // Fixture-only: proof must cover EVERY turn and all previous privacy
+  // gestures, including Sanctuary choices that never wrote a transcript.
+  const summaryEligible = await evaluateSummaryEligibility({
+    sessionId, memberId, requireClosed: false,
+  });
+  if (!summaryEligible.ok) {
+    await markSessionCompleted(sessionId, memberId, endedAt);
+    return { ok: true, sanctuary: false, queued: false, sessionCreated, summaryHeld: true };
+  }
 
   // 1. Create member_sessions row (summary null, pending worker)
   await SessionSummaryStore.writeSessionRecord({

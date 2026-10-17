@@ -33,6 +33,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { query } from '../lib/db/postgres';
 import { storeRemembrance, type SessionRemembrance } from '../lib/scribe/sovereignSummarizer';
 import { assertCorrectDb } from '../lib/scripts/dbSafetyGuard';
+import { summaryProviderFixtureEnabled } from '../lib/sanctuary/sessionSummaryEligibility';
 
 // ============================================================================
 // Config
@@ -215,6 +216,12 @@ async function ensureMaiaSessionRow(
 // ============================================================================
 
 async function main() {
+  // Historical maia_turns have no verified per-turn R1 provenance.
+  // They must never be sent to an external provider just because an
+  // old session or an operator labels them Continuity.
+  if (!summaryProviderFixtureEnabled()) {
+    throw new Error('LEGACY_SUMMARY_BACKFILL_PRIVACY_HOLD');
+  }
   await assertCorrectDb();
 
   console.log(`\n[Backfill] ${DRY_RUN ? '🔍 DRY RUN — ' : ''}Starting maia_turns backfill`);

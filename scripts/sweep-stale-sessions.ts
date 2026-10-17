@@ -8,7 +8,11 @@
  *
  * Without this, sessions accumulate as 'active' forever and never get summaries.
  *
- * What it does:
+ * RF01 R1-A: the summary-related close/enqueue operation is now test-fixture
+ * only. Unverified old sessions are not enqueued into external summarization.
+ * The unrelated CogOS decay lane is not granted additional authority here.
+ *
+ * Historical flow (held):
  *   1. Find sessions where ALL of the following are true:
  *      - status = 'active'
  *      - member_id IS NOT NULL       (anonymous sessions excluded — nothing to attribute)
@@ -34,6 +38,7 @@
 
 import { query } from '../lib/db/postgres';
 import { assertCorrectDb } from '../lib/scripts/dbSafetyGuard';
+import { evaluateSummaryEligibility, summaryProviderFixtureEnabled } from '../lib/sanctuary/sessionSummaryEligibility';
 import { applyDecay } from '../lib/consciousness/interpretiveLedger';
 import { loadActiveHypotheses } from '../lib/consciousness/hypothesisBuffer';
 import { shouldExpire } from '../lib/consciousness/gateEvaluator';
@@ -131,9 +136,20 @@ function assertAllHaveMemberId(sessions: StaleSession[]): void {
 // ============================================================================
 
 async function closeSessions(sessions: StaleSession[]): Promise<{ closed: number; enqueued: number }> {
-  if (sessions.length === 0) return { closed: 0, enqueued: 0 };
-
-  const ids = sessions.map(s => s.id);
+  if (sessions.length === 0 || !summaryProviderFixtureEnabled()) {
+    return { closed: 0, enqueued: 0 };
+  }
+  // A legacy mode is insufficient: any protected gesture or ambiguous
+  // provenance prevents summary enqueuing or a summarization-driven close.
+  const eligible: StaleSession[] = [];
+  for (const session of sessions) {
+    const proof = await evaluateSummaryEligibility({
+      sessionId: session.id, memberId: session.member_id, minimumTurns: 2,
+    });
+    if (proof.ok) eligible.push(session);
+  }
+  if (!eligible.length) return { closed: 0, enqueued: 0 };
+  const ids = eligible.map(s => s.id);
 
   // Mark all as completed in one shot.
   // Double-guard in WHERE: status='active' AND mode not sanctuary.
@@ -154,7 +170,7 @@ async function closeSessions(sessions: StaleSession[]): Promise<{ closed: number
   // Enqueue each for summarization.
   // ON CONFLICT DO NOTHING = idempotent (unique constraint on session_id).
   let enqueued = 0;
-  for (const s of sessions) {
+  for (const s of eligible) {
     const r = await query(
       `INSERT INTO session_summary_queue (session_id, member_id)
        VALUES ($1, $2)
