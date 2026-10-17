@@ -1105,6 +1105,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         memberMessage: message,
         verifiedMemberId: isRecognizedUser ? userId : null,
         isSanctuary,
+        turnPosture, // Real TurnPosture resolved at this route's acceptance boundary
+        rawRequestMeta: meta, // Require explicit current-turn boolean; do not infer 'ordinary'
         enabled: process.env.MAIA_PERRY_SOURCE_LENS_ENABLED === '1',
       });
       if (perryLensAddendum) {
