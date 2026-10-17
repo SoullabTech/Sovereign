@@ -69,6 +69,7 @@ function deps({
 function input(overrides = {}) {
   return {
     requestedLens: validSelection,
+    memberMessage: 'Please explore Glenn Perry as an optional symbol.',
     verifiedMemberId: 'fictional-member-001',
     isSanctuary: false,
     enabled: true,
@@ -114,6 +115,19 @@ test('unverified identity, guest markers and client body impersonation never gra
     assert.equal(imported.buildPerrySourceLensAddendum(
       input({ verifiedMemberId: id }), deps()
     ), null, String(id));
+  }
+});
+
+test('current-turn refusal overrides even a fresh per-turn source selection', () => {
+  for (const message of [
+    "I don't want astrology. Talk to me about my feelings.",
+    'Stop using Glenn Perry in this conversation.',
+    'Please continue without AstroPsychology.',
+    'No more astrology.',
+  ]) {
+    assert.equal(imported.buildPerrySourceLensAddendum(
+      input({ memberMessage: message }), deps()
+    ), null, message);
   }
 });
 
@@ -203,6 +217,7 @@ test('actual serving route, not retired routes, is patched after verified identi
   assert.ok(active.includes('const userId = await resolveMemberIdentity(req);'));
   assert.ok(active.includes('const isSanctuary = (meta as any)?.sanctuary === true;'));
   assert.ok(active.includes('verifiedMemberId: isRecognizedUser ? userId : null'));
+  assert.ok(active.includes('memberMessage: message'));
   assert.ok(active.includes("process.env.MAIA_PERRY_SOURCE_LENS_ENABLED === '1'"));
   assert.ok(active.includes('const perryLensAddendum = buildPerrySourceLensAddendum('));
   assert.ok(active.includes('governedKnowledgeAddendum = [governedKnowledgeAddendum, perryLensAddendum]'));
@@ -229,6 +244,7 @@ test('fictional HTTP requests exercise actual helper with verified-session simul
       ? 'fictional-member-001' : null;
     const result = imported.buildPerrySourceLensAddendum({
       requestedLens: body.perrySourceLens,
+      memberMessage: body.message,
       verifiedMemberId: member,
       enabled: true,
       isSanctuary: body.sanctuary === true,
@@ -271,6 +287,11 @@ test('fictional HTTP requests exercise actual helper with verified-session simul
     assert.ok(selectedWithUnverifiedChart.prompt.includes('Never invent natal placements'));
     const absent = await post({ message: 'A normal talk about feelings' }, 'fictional-valid-token');
     assert.equal(absent.sourceLensApplied, false);
+    const deniedSameTurn = await post({
+      perrySourceLens: validSelection,
+      message: "I don't want astrology. Please stay with what I feel.",
+    }, 'fictional-valid-token');
+    assert.equal(deniedSameTurn.sourceLensApplied, false);
     const privateSession = await post({ perrySourceLens: validSelection, sanctuary: true },
       'fictional-valid-token');
     assert.equal(privateSession.sourceLensApplied, false);
