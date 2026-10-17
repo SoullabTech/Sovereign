@@ -12,6 +12,13 @@ import crypto from 'crypto';
 export type AuthAction =
   | 'signin_success'
   | 'signin_failed'
+  // These are already-emitted, named audit events from real Member and
+  // Now What sign-in/registration routes. Admit their exact persisted action
+  // identity at the TYPE boundary only; do not remap audit payloads or change
+  // sign-in/rate-limit/cookie/session behavior to satisfy the ship compiler.
+  | 'password_signin'
+  | 'now_what_signin'
+  | 'now_what_register'
   | 'passcode_valid'
   | 'passcode_invalid'
   | 'register_success'
