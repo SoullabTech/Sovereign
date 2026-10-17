@@ -28,6 +28,8 @@ export const APPROVED_PERRY_EDITORIAL_SOURCE: ApprovedPerryEditorialSource | nul
 
 export interface PerryLensTurn {
   readonly requestedLens: unknown;
+  /** The current authored turn can revoke any stale source-selection gesture. */
+  readonly memberMessage?: string;
   readonly verifiedMemberId: string | null;
   readonly isSanctuary: boolean;
   /** An operational kill-switch, not an authorization. */
@@ -83,6 +85,13 @@ function permittedMember(id: string | null): boolean {
     && !id.startsWith('guest:');
 }
 
+function explicitlyDeclinesAstrology(message: string | undefined): boolean {
+  if (typeof message !== 'string' || !message.trim()) return false;
+  const normalized = message.toLowerCase();
+  return /\b(?:do\s+not|don't|dont|no|stop|avoid|skip|never|without)\b.{0,80}\b(?:astrology|astropsychology|glenn\s+perry|astrological\s+(?:lens|reading))\b/i.test(normalized)
+    || /\b(?:astrology|astropsychology|glenn\s+perry)\b.{0,60}\b(?:stop|off|not\s+now|no\s+thanks)\b/i.test(normalized);
+}
+
 function isExplicitSourceSelection(value: unknown): boolean {
   return value === PERRY_SOURCE_LENS_ID;
 }
@@ -123,7 +132,8 @@ export function buildPerrySourceLensAddendum(
   deps: PerryLensServerDependencies = LIVE_SERVER_DEPS,
 ): string | null {
   if (!turn.enabled || turn.isSanctuary || !permittedMember(turn.verifiedMemberId)
-      || !isExplicitSourceSelection(turn.requestedLens)) {
+      || !isExplicitSourceSelection(turn.requestedLens)
+      || explicitlyDeclinesAstrology(turn.memberMessage)) {
     return null;
   }
 
