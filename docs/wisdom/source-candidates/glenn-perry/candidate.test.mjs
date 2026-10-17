@@ -66,6 +66,18 @@ test('exactly two book metadata records and nine author essay links', () => {
   }
 });
 
+test('edition metadata holds conflicting book listings open for physical confirmation', () => {
+  const manifest = parsed('sources.json');
+  const editions = manifest.edition_custody;
+  assert.equal(editions.status, 'unresolved_exact_edition_not_claimed');
+  assert.ok(editions.instruction.includes('owned copies'));
+  const countFor = (id) => editions.book_variants.filter((r) => r.id === id).length;
+  assert.ok(countFor('perry-intro-book') >= 2);
+  assert.ok(countFor('perry-depth-book') >= 2);
+  assert.ok(editions.book_variants.some((r) => r.id === 'perry-intro-book' && r.page_count === 376));
+  assert.ok(editions.book_variants.some((r) => r.id === 'perry-intro-book' && r.page_count === 386));
+});
+
 test('fictional acceptance prompts cover positive and fail-closed behavior', () => {
   const scenarios = parsed('acceptance-cases.json');
   assert.equal(scenarios.status, 'fictional_only_review_never_automatically_forward_to_model');
