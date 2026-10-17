@@ -42,7 +42,7 @@ const approved = {
 };
 
 let loadingDir;
-let admission, globalAuthority, perry;
+let admission, globalAuthority, perry, TurnPosture;
 
 test.before(async () => {
   loadingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'perry-stage-b-modules-'));
@@ -50,6 +50,7 @@ test.before(async () => {
     ['lib/corpus/admission.ts', 'lib/corpus/admission.mjs'],
     ['lib/library/globalRetrievalAuthority.ts', 'lib/library/globalRetrievalAuthority.mjs'],
     ['lib/maia/knowledge/perrySourceLens.ts', 'lib/maia/knowledge/perrySourceLens.mjs'],
+    ['lib/sanctuary/turnPosture.ts', 'lib/sanctuary/turnPosture.mjs'],
   ];
   for (const [source, target] of modules) {
     const destination = path.join(loadingDir, target);
@@ -60,12 +61,14 @@ test.before(async () => {
     }
     if (source.includes('perrySourceLens')) {
       text = text.replace("from '@/lib/library/globalRetrievalAuthority'",
-        "from '../../library/globalRetrievalAuthority.mjs'");
+        "from '../../library/globalRetrievalAuthority.mjs'")
+        .replace("from '@/lib/sanctuary/turnPosture'", "from '../../sanctuary/turnPosture.mjs'");
     }
     fs.writeFileSync(destination, stripTypeScriptTypes(text, { mode: 'strip' }));
   }
   admission = await import(pathToFileURL(path.join(loadingDir, 'lib/corpus/admission.mjs')).href);
   globalAuthority = await import(pathToFileURL(path.join(loadingDir, 'lib/library/globalRetrievalAuthority.mjs')).href);
+  TurnPosture = (await import(pathToFileURL(path.join(loadingDir, 'lib/sanctuary/turnPosture.mjs')).href)).TurnPosture;
   perry = await import(pathToFileURL(path.join(loadingDir, 'lib/maia/knowledge/perrySourceLens.mjs')).href);
 });
 
@@ -110,7 +113,9 @@ async function withCorpus(fn, {
     };
     const turn = { requestedLens: perry.PERRY_SOURCE_LENS_ID,
       memberMessage: 'Could we discuss the Perry-informed symbolic lens?',
-      verifiedMemberId: 'fictional-verified-member', isSanctuary: false, enabled: true };
+      verifiedMemberId: 'fictional-verified-member', isSanctuary: false, enabled: true,
+      rawRequestMeta: { sanctuary: false },
+      turnPosture: TurnPosture.resolve({ sanctuary: false }) };
     await fn({ root, file, manifest, recordPath, server, turn });
   } finally {
     globalAuthority.resetGlobalLibraryAuthorityCacheForTests();
@@ -191,6 +196,29 @@ test('member refusal overrides a fully admitted fictional source', async () => {
   });
 });
 
+test('missing or contradictory posture refuses before any physical source authority lookups', async () => {
+  await withCorpus(({ server, turn }) => {
+    for (const m of [
+      {},
+      { sanctuary:'false' },
+      { sanctuary:false, meta:{sanctuary:true} },
+    ]) {
+      let scanned = 0;
+      let read = 0;
+      const watched = {
+        ...server,
+        authorityKeys: () => { scanned++; return server.authorityKeys(); },
+        readSource: (p) => { read++; return server.readSource(p); },
+      };
+      assert.equal(perry.buildPerrySourceLensAddendum({
+        ...turn, rawRequestMeta: m,
+      }, watched), null);
+      assert.equal(scanned, 0);
+      assert.equal(read, 0);
+    }
+  });
+});
+
 test('Sanctuary never reads the real fictional admitted source', async () => {
   await withCorpus(({ server, turn }) => {
     let reads = 0, authorityQueries = 0;
@@ -200,7 +228,8 @@ test('Sanctuary never reads the real fictional admitted source', async () => {
       authorityKeys: () => { authorityQueries++; return server.authorityKeys(); },
     };
     assert.equal(perry.buildPerrySourceLensAddendum(
-      { ...turn, isSanctuary: true }, monitored), null);
+      { ...turn, isSanctuary: true, rawRequestMeta:{sanctuary:true},
+        turnPosture: TurnPosture.resolve({sanctuary:true}) }, monitored), null);
     assert.equal(reads, 0);
     assert.equal(authorityQueries, 0);
   });
