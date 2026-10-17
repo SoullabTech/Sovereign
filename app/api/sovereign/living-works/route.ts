@@ -28,6 +28,7 @@ export const dynamic = 'force-dynamic';
  *     typed apart from the blank check the schema enforces.
  */
 
+import { privateWriterNoStore } from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -73,6 +74,10 @@ const shape = (r: WorkRow) => ({
 });
 
 export async function GET(request: NextRequest) {
+  return privateWriterNoStore(await getOwnedLivingWorkCatalogResponse(request));
+}
+
+async function getOwnedLivingWorkCatalogResponse(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }

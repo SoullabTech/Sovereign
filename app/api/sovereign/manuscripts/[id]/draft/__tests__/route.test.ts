@@ -90,6 +90,7 @@ describe('draft routes — auth & isolation', () => {
     mockAuth.mockResolvedValue(null);
     const res = await GET(jsonRequest('GET'), ctx);
     expect(res.status).toBe(401);
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store, max-age=0');
   });
 
   it('PUT returns 401 when unauthenticated', async () => {
@@ -111,6 +112,7 @@ describe('draft routes — auth & isolation', () => {
     mockQuery.mockResolvedValueOnce({ rows: [], rowCount: 0 });
     const res = await GET(jsonRequest('GET'), ctx);
     expect(res.status).toBe(404);
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store, max-age=0');
   });
 
   it('PUT returns 404 for a cross-member draft', async () => {
@@ -308,6 +310,9 @@ describe('GET — load draft', () => {
     });
     const res = await GET(jsonRequest('GET'), ctx);
     expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store, max-age=0');
+    expect(res.headers.get('Pragma')).toBe('no-cache');
+    expect(res.headers.get('Expires')).toBe('0');
     expect(await res.json()).toEqual({
       id: DRAFT,
       manuscriptId: MANUSCRIPT,

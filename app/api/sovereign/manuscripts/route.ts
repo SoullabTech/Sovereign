@@ -23,6 +23,7 @@ export const dynamic = 'force-dynamic';
  * Authority: docs/specs/MANUSCRIPT_INGEST_SPEC_2026-07-21.md
  */
 
+import { privateWriterNoStore } from '@/lib/writersStudio/release/privateWriterNoStore';
 import {holdLegacyWriterForVerifiedMemberR52, holdLegacyOfflineCabinWriteR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
@@ -42,6 +43,10 @@ import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib
 const MAX_TEXT_CHARS = 2_000_000; // ~a very long book; hard cap for sanity
 
 export async function GET(request: NextRequest) {
+  return privateWriterNoStore(await getOwnedManuscriptCatalogResponse(request));
+}
+
+async function getOwnedManuscriptCatalogResponse(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }

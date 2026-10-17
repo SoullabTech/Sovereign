@@ -34,6 +34,7 @@
  * chances to disagree tomorrow, and the disagreement would land as a
  * mis-assigned durable section identity.
  */
+import { privateWriterNoStore } from '@/lib/writersStudio/release/privateWriterNoStore';
 import {holdLegacyWriterForVerifiedMemberR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db/postgres';
@@ -306,6 +307,10 @@ async function convertExistingDraft(
 /* ── GET — the D9 load contract ───────────────────────────────────────────── */
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  return privateWriterNoStore(await getOwnedWorkingDraftResponse(request, ctx));
+}
+
+async function getOwnedWorkingDraftResponse(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }

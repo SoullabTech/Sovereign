@@ -19,6 +19,7 @@
  * the one it was about to resume.
  */
 
+import { privateWriterNoStore } from '@/lib/writersStudio/release/privateWriterNoStore';
 import { NextResponse, type NextRequest } from 'next/server';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import { editorialRelationshipsForSection } from '@/lib/manuscript/editorialRuntime/relationships';
@@ -28,6 +29,10 @@ export const dynamic = 'force-dynamic';
 const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
 
 export async function GET(request: NextRequest) {
+  return privateWriterNoStore(await getPrivateEditorialRelationshipsResponse(request));
+}
+
+async function getPrivateEditorialRelationshipsResponse(request: NextRequest) {
   if (!enabled()) return new NextResponse(null, { status: 404 });
 
   const identity = await resolveCanonicalIdentity(request);

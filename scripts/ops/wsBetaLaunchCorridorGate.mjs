@@ -19,6 +19,28 @@ import {fileURLToPath} from 'node:url';
 import {inspect as inspectLegacy} from './wsBetaR47LegacyWriteInventory.mjs';
 import {inspectR52} from './wsBetaR52LegacyIngressReleaseGate.mjs';
 
+// Founder-approved product phasing is not a release bypass. This profile is
+// read-only evidence inventory; only a separately witnessed exact deployment
+// and founder approval could ever promote a real cohort.
+export const STANDARD_PRIVATE_BETA_REQUIRED=Object.freeze([
+ 'production_tls_and_authenticated_member_isolation_verified',
+ 'actual_database_file_store_backup_and_offsite_encryption_at_rest_verified',
+ 'independent_original_draft_revision_restore_verified',
+ 'legacy_protected_work_non_downgrade_and_reader_separation_verified',
+ 'exact_member_notice_consent_model_provider_retention_verified',
+ 'real_author_import_develop_write_review_save_apply_undo_export_verified',
+ 'no_sensitive_clinical_member_content_initial_cohort',
+ 'full_unsuppressed_shipped_build_signed_image_and_rollback_verified',
+ 'authentic_mac_safari_and_physical_iphone_accessibility_verified',
+ 'independent_security_reviewer_founder_and_individual_two_writer_go',
+]);
+export const SOVEREIGN_FUTURE_UPGRADE=Object.freeze([
+ 'independently_governed_per_work_wrapping_keys_and_deletion_authority',
+ 'monotonic_revoke_write_commit_fence_and_signed_freshness',
+ 'client_consent_for_work_migration_without_silent_downgrade',
+ 'independent_backup_key_vault_restore_and_retained_key_limit_disclosed',
+]);
+
 export const CHECKS=Object.freeze([
  {file:'app/writers-studio/page.tsx',must:['P4R1StudioHost','defaultMode="home"'],label:'canonical_studio_page'},
  {file:'app/dev/writers-studio-p4r1/P4R1StudioHost.tsx',
@@ -77,6 +99,31 @@ export const CHECKS=Object.freeze([
    'realNextReadiness','recheckHeldRealSessionWorkR56',
    'actual Next GET','realGET()'],
   label:'one_database_real_next_and_held_post_admission_rehearsal'},
+ {file:'docs/programme/WS_STANDARD_FIRST_BETA_AND_SOVEREIGN_UPGRADE_DECISION_20261017.md',
+  must:['Founder product direction: October 17, 2026',
+    'not universal prerequisites', 'No unsafe downgrade:'],
+  label:'founder_standard_beta_first_sovereign_upgrade_decision'},
+ {file:'lib/writersStudio/release/privateWriterNoStore.ts',
+  must:["'private, no-store, max-age=0'",'privateWriterNoStore'],
+  label:'ordinary_private_writer_no_cache_contract'},
+ {file:'app/api/sovereign/manuscripts/route.ts',
+  must:['return privateWriterNoStore(await getOwnedManuscriptCatalogResponse('],
+  label:'private_owned_manuscript_catalog_no_store'},
+ {file:'app/api/sovereign/manuscripts/[id]/route.ts',
+  must:['return privateWriterNoStore(await getOwnedManuscriptResponse('],
+  label:'private_owned_manuscript_get_no_store'},
+ {file:'app/api/sovereign/manuscripts/[id]/draft/route.ts',
+  must:['return privateWriterNoStore(await getOwnedWorkingDraftResponse('],
+  label:'private_owned_draft_get_no_store'},
+ {file:'app/api/sovereign/living-works/route.ts',
+  must:['return privateWriterNoStore(await getOwnedLivingWorkCatalogResponse('],
+  label:'private_owned_living_work_catalog_no_store'},
+ {file:'app/api/writers-studio/editorial/thread/route.ts',
+  must:['return privateWriterNoStore(await getPrivateEditorialThreadResponse('],
+  label:'private_editorial_thread_get_no_store'},
+ {file:'app/api/writers-studio/editorial/relationships/route.ts',
+  must:['return privateWriterNoStore(await getPrivateEditorialRelationshipsResponse('],
+  label:'private_editorial_relationships_get_no_store'},
  {file:'app/api/sovereign/writers-studio/manuscripts/[manuscriptId]/protected-readiness/route.ts',
   must:['verifyWriterReadinessScope(request,manuscriptId)',
    'protected_writer_not_yet_qualified','canSave:false,canApply:false,canUndo:false',
@@ -217,6 +264,35 @@ export function inspectCandidate(root=ROOT,options={}){
    seen.some(x=>x.label==='verified_actual_session_consent_specific_declared_work_held'&&x.found),
   actualNextAndHeldAuthorSamePGFixturePresent:
    seen.some(x=>x.label==='one_database_real_next_and_held_post_admission_rehearsal'&&x.found),
+  // Standard-author beta and sovereign upgrade are different product release
+  // profiles. Neither can become GO on source claims, caller flags or mocks.
+  standardPrivateBeta:{
+   kind:'conventional_managed_security_beta',
+   founderDirectionAccepted:true,
+   independentSelfHostedKmsPrerequisite:false,
+   currentQualification:'OPERATIONAL_EVIDENCE_HOLD',
+   required:STANDARD_PRIVATE_BETA_REQUIRED,
+   safetySourcePresent:[
+    'founder_standard_beta_first_sovereign_upgrade_decision',
+    'ordinary_private_writer_no_cache_contract',
+    'private_owned_manuscript_catalog_no_store',
+    'private_owned_manuscript_get_no_store',
+    'private_owned_draft_get_no_store',
+    'private_owned_living_work_catalog_no_store',
+    'private_editorial_thread_get_no_store',
+    'private_editorial_relationships_get_no_store',
+   ].every(label=>seen.some(x=>x.label===label&&x.found)),
+   productionStorageVerified:false,
+   encryptedBackupsAndRestoreVerified:false,
+   realAuthorWritingCertified:false,
+   releaseApproved:false,
+  },
+  sovereignUpgrade:{
+   kind:'optional_future_independent_work_custody',
+   status:'PRESERVED_FOR_LATER',
+   requirements:SOVEREIGN_FUTURE_UPGRADE,
+   productionEnabled:false,
+  },
   defaultOffLegacyIngressGuardsPresent:ingressValid,
   guardedLegacyWriteMethods:ingress.guardedWriteMethods??0,
   changedContracts:changed,
