@@ -14,6 +14,15 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## Current workstream — original Soullab editorial teaching
+
+- [Original Soullab teaching candidate](./soullab-original-teaching-candidate.md): seven movements of inquiry, three fictional encounters; **pending founder approval, not active knowledge**.
+- [Claim-level provenance](./claims.json): separates seven Glenn Perry assertions from eight Soullab editorial choices. Explicitly distinguishes Perry's life-script/fate language from the member-centered Soullab adaptation.
+- [Stage A readiness and test witness](./STAGE-A-READINESS-20261017.md): 9/9 static integrity tests and 5/5 tests against actual admission/global Library code, all in disposable local fixtures. These do not authorize admission or live runtime use.
+- [Actual admission preflight tests](./governed-admission-preflight.test.mjs): fail-closed when authority, rights, source hash, or per-file admission are absent.
+
+**Founder direction (2026-10-17):** founder will contact Glenn Perry personally. Do not send the previously prepared permission draft. No third-party book or essay text is licensed for AI retrieval under this record.
+
 ## Purpose and intellectual standing
 
 Kelly has identified Glenn Perry's two books as important to Soullab's inquiry into consciousness, symbolic interpretation, and depth psychology. This document gives them a *named, accountable place in research review* without claiming MAIA has read or ingested the books. Book-level descriptions are based on the author's public catalog; the book text was not supplied or processed.
