@@ -6,6 +6,8 @@ import {
   approachNote,
   alternativeLabel,
   passageContext,
+  passageContextAt,
+  type ExactEditorialPassageLocus,
 } from '@/lib/writersStudio/editorialApproaches';
 import type {
   RebuildEditorialThread,
@@ -29,6 +31,8 @@ export interface EditorialDancePanelProps {
   } | null;
   currentText: string;
   sectionBody: string;
+  /** R41 Unicode-codepoint author locus. Absent only for legacy unique text. */
+  passageLocus?: ExactEditorialPassageLocus | null;
   thread: RebuildEditorialThread | null;
   version: RebuildEditorialVersion | null;
   lastMaiaTurn: RebuildEditorialThread['turns'][number] | null;
@@ -244,7 +248,13 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     ? purposeOf(props.version, Math.max(selectedIndex, 0))
     : 'Select a saved version';
 
-  const context = passageContext(props.sectionBody, props.currentText);
+  // When the real editor supplies a selection locus, never re-find duplicate
+  // words by a uniqueness-only search or silently relocate stale prose.
+  const context = props.passageLocus
+    ? props.passageLocus.text === props.currentText
+      ? passageContextAt(props.sectionBody, props.passageLocus)
+      : null
+    : passageContext(props.sectionBody, props.currentText);
   const recommendation = props.version?.author === 'maia'
     ? props.version
     : [...maiaVersions].reverse()[0] ?? null;
@@ -789,7 +799,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           </button>
           <button
             type="button"
-            disabled={props.busy || saving || !workingText.trim() || workingText === props.currentText}
+            disabled={props.busy || saving || postureBlocksEditorial || !workingText.trim() || workingText === props.currentText}
             onClick={() => void saveMemberVersion()}
           >
             {saving ? 'Saving…' : memberVersionMatchingDraft ? 'Saved as my version' : 'Save my version'}
@@ -797,7 +807,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <button
             type="button"
             className="p4r1-dance-primary"
-            disabled={props.busy || !applyReady}
+            disabled={props.busy || postureBlocksEditorial || !applyReady}
             onClick={props.onApply}
           >
             Apply my version
@@ -820,7 +830,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
         {props.appliedVersionId && props.onUndo ? (
           <div className="p4r1-dance-applied">
             <span>Applied to the manuscript.</span>
-            <button type="button" disabled={props.busy} onClick={props.onUndo}>Undo this change</button>
+            <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={props.onUndo}>Undo this change</button>
           </div>
         ) : null}
       </div>

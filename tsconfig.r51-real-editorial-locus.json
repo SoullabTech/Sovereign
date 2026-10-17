@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.r50-server-owned-choice.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "app/dev/writers-studio-pc3-live/EditorialDancePanel.tsx",
+    "app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx",
+    "app/writers-studio/insight/RevisionDesk.tsx",
+    "lib/writersStudio/editorialApproaches.ts",
+    "lib/writersStudio/__tests__/r51ExactEditorialPassageContext.test.ts",
+    "scripts/ops/fixtures/wsR51ActualEditorialGestureBrowser.tsx"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -50,3 +50,36 @@ export function passageContext(body: string, expected: string): { before: string
   if (at < 0 || body.indexOf(expected, at + 1) >= 0) return null;
   return { before: body.slice(0, at), after: body.slice(at + expected.length) };
 }
+
+/**
+ * R51 · An explicit author selection carries a Unicode-codepoint span, not
+ * merely phrase bytes to search again. Duplicate phrases MUST resolve to the
+ * chosen occurrence; stale or out-of-range loci must fail closed.
+ *
+ * Legacy passageContext(body,text) remains unique-only for flows that do not
+ * yet carry a witnessed editor locus. No "nearest match" fallback.
+ */
+export type ExactEditorialPassageLocus = {
+  start: number;
+  end: number;
+  text: string;
+};
+export function passageContextAt(
+  body: string,
+  locus: ExactEditorialPassageLocus,
+): { before: string; after: string } | null {
+  if (!locus || typeof locus.text !== 'string' || !locus.text.trim() ||
+      !Number.isSafeInteger(locus.start) || !Number.isSafeInteger(locus.end))
+    return null;
+  const characters = Array.from(body);
+  const chosen = Array.from(locus.text);
+  if (locus.start < 0 || locus.end <= locus.start ||
+      locus.end > characters.length ||
+      locus.end - locus.start !== chosen.length ||
+      characters.slice(locus.start, locus.end).join('') !== locus.text)
+    return null;
+  return {
+    before: characters.slice(0, locus.start).join(''),
+    after: characters.slice(locus.end).join(''),
+  };
+}
