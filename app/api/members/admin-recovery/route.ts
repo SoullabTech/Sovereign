@@ -16,6 +16,9 @@ function reply(data: Record<string, unknown>, status = 200) {
 }
 
 export async function POST(req: NextRequest) {
+  if (process.env.MEMBER_ACCESS_RECOVERY_ENABLED !== '1') {
+    return reply({ error: 'Member Access recovery has not been enabled' }, 503);
+  }
   if (!secureRecoveryOrigin(req.headers.get('origin'))) return reply({ error: 'Request origin not authorized' }, 403);
 
   // Read rate limit BEFORE bcrypt and token lookup. Durable backend is used by
