@@ -24,7 +24,7 @@ Nobody has to disclose a personal story, accept an interpretation, or agree with
 
 ### First proposed format
 
-**75 minutes · 6–8 consenting adults · Soullab founder as host**
+**Online first · 75 minutes · 6–8 consenting adults · Soullab founder as host**
 
 | Minutes | Movement | What happens |
 | --- | --- | --- |
@@ -36,6 +36,14 @@ Nobody has to disclose a personal story, accept an interpretation, or agree with
 | 65–75 | Return | Each person keeps what is theirs; no automatic public summary |
 
 Glenn Perry's AstroPsychology is an accurately credited **public reference**, not a guest or partner. Participants can find his works through [his own website](https://aaperry.com/) and [Academy](https://astropsychology.org/); his books do not need to be copied or purchased.
+
+### Our chosen direction
+
+Begin with a **private, host-controlled online meeting** where the human encounter, consent, and technology are genuinely tested. Soullab has meeting-link and individual Session Room substrates but **no accepted proof of ready-to-use private multiperson Wisdom Circles** from this lane. Choose the conferencing provider only after reviewing the real host controls, recordings/transcription setting and external provider data handling; do not invent a Zoom/Meet/LiveKit URL or claim self-hosting is already operational.
+
+After one successful online gathering, continue with opt-in online study Circles and keeper-hosted salons if individual keepers consent. **Hybrid comes later:** local participants and remote participants must be able to hear one another, contribute or remain quiet, and receive equal care. It needs a separate venue, audio/privacy test and distinct event entry consent.
+
+See the [online-first to hybrid roadmap](./STAGE-G_ONLINE-FIRST_TO-HYBRID_GATHERINGS-CANDIDATE_20261017.md). Neither phase has been scheduled or activated.
 
 ### The host protects five things
 
@@ -55,7 +63,7 @@ No event date, room, real participants, outreach, Circle membership, cost or sou
 
 ### Your next human decision
 
-Choose **when and where** this first, small gathering might take place. Then verify the actual privacy/access behavior, agree the host and safety procedures, and review the final invitation. A further explicit decision is required before contacting anybody.
+Choose **which private online meeting provider/account** to test with fictional participants first. Then verify its admission, recording/transcription, privacy and accessibility controls; only afterward choose a date and finalize the invitation. Hybrid venue planning waits for a separate phase. A further explicit decision is required before contacting anybody.
 
 **No need to select all the details at once.** First confirm that *Where Symbols Meet Life* feels like the right opening experience.
 
