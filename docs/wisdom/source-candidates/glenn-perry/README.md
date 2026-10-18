@@ -14,6 +14,17 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## Stage H — Gather Together now staged under the real Wisdom route
+
+**Founder-only, default-OFF, unlinked and undeployed.** A new preview route at `/wisdom-keepers/wisdom/gather-preview` illustrates the future member path: find an original keeper → intentionally choose to gather → enter a private, consent-governed Circle → meet in an approved online/hybrid room. The actual `/wisdom-keepers/wisdom` page, Circle access and video providers **are unchanged**. All joining and registration are fictional and unavailable.
+
+- [Stage H placement, security and browser witness](./STAGE-H_GATHER-TOGETHER_WISDOM-PLACEMENT-WITNESS_20261018.md) — **170/170 combined isolated tests PASS**, including 16 Stage H gate/WebKit checks, targeted strict TypeScript, native exclusion and defeated flag/auth bypasses. **Not a complete Next.js build or live meeting test.**
+- [Server-gated preview route](../../../../app/wisdom-keepers/wisdom/gather-preview/page.tsx): requires `MAIA_WISDOM_GATHER_PREVIEW_ENABLED=1` on the server **and** verified `requireFounder()`; otherwise 404; excludes native export.
+- [Interactive fictional Wisdom Gather component](../../../../components/wisdom/WisdomGatherFounderPreview.tsx) and [static four-stage source](../../../../lib/wisdom/wisdomGatherPreview.ts): no member data, external video, model, recording, licensed text or live join.
+- [Actual page gate tests](./stage-h-gather-placement-gates.test.mjs) and [actual component WebKit tests](./stage-h-gather-placement-webkit.test.mjs): repeatable fictional cases.
+
+**Next step:** a separately authorized isolated Mac Studio web preview for founder review. Do not expose the route to members, widen Circle access, enable it in production, or schedule a gathering.
+
 ## Platform placement decision — Wisdom is the doorway
 
 [Source-grounded placement audit (2026-10-18)](./PLATFORM-PLACEMENT_WISDOM-KEEPERS-GATHERING_DECISION-CANDIDATE_20261018.md): Put future **Gather Together** discovery inside existing `/wisdom-keepers/wisdom`, let approved invited members gather in consent-scoped `/commons/circles/[circleId]`, keep Studio's Groups/meeting control as human host operations, and reuse the already-built on-platform hybrid service only after **actual multiperson/video and access acceptance**. Master/keeper `/fields/[field]/with-others` is a future specifically approved human home, currently a placeholder. Circle API/UI are founder-only today; there is no authorized beta cohort gate or real event. Historical `/commons/fields` routes are absent from current canonical tree. **Design only; no app, rights, groups, roles or production changes.**
