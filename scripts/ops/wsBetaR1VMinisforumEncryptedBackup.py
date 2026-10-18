@@ -188,6 +188,15 @@ def perform_fixture(a):
     verify_public_recipient(home,fpr)
     exact_fixture_container(a.postgres_container)
     if a.fail_stage not in STAGE_NAMES:refuse('UNKNOWN_FAILURE_STAGE')
+    # R70.19I synthetic-only: pg_dump is forced to the very same exported
+    # read-only REPEATABLE READ snapshot as the capture-time Work/key census.
+    # This opt-in cannot enter the permanently hard-disabled LIVE path.
+    exported_snapshot=a.fixture_snapshot
+    if exported_snapshot:
+        if (os.environ.get('R7019I_CAPTURE_FIXTURE')!='fictional-only' or
+            not re.fullmatch(r'[0-9A-F]+-[0-9A-F]+-[0-9A-F]+',exported_snapshot) or
+            not re.fullmatch(r'[a-f0-9]{40}',a.fixture_source_head)):
+            refuse('UNQUALIFIED_EXPORTED_SNAPSHOT')
     stable_before,volume_counts=safe_sources(src)
     # Exclusive flock is necessary even for a fixture. Future live backup
     # requires a separate lock for the two existing scheduled writer jobs.
@@ -204,9 +213,11 @@ def perform_fixture(a):
         ident=time.strftime('%Y%m%dT%H%M%SZ',time.gmtime())+'-'+uuid.uuid4().hex[:8]
         target=completed/ident
         if target.exists():refuse('GENERATION_ALREADY_EXISTS')
-        db=encrypted_stream([
-          'docker','exec',a.postgres_container,'pg_dump','-U','fict','-Fc','ws_fixture'],
-          pending/'postgres.pgdump.gpg',home,fpr)
+        pgdump=[
+          'docker','exec',a.postgres_container,
+          'pg_dump','-U','fict','-Fc','ws_fixture']
+        if exported_snapshot:pgdump.append('--snapshot='+exported_snapshot)
+        db=encrypted_stream(pgdump,pending/'postgres.pgdump.gpg',home,fpr)
         if a.fail_stage=='after_sql':refuse('INJECTED_AFTER_SQL')
         if a.fail_stage=='mutate_after_sql':
             # Test-only alteration of a source file after DB snapshot.
@@ -235,6 +246,11 @@ def perform_fixture(a):
           'productionLiveBackupExecuted':False,
           'realMemberWriterBetaApproved':False,
         }
+        if exported_snapshot:
+            # Fixture-only evidence binding. This is NOT proof of production
+            # writer quiescence, current erasure or an off-host signer.
+            manifest['R7019ISourceHead']=a.fixture_source_head
+            manifest['R7019ISnapshotIdFormatVerified']=True
         m=pending/'manifest.json'
         with m.open('x') as f:json.dump(manifest,f,indent=2);f.write('\n');f.flush();os.fsync(f.fileno())
         m.chmod(0o600)
@@ -266,6 +282,8 @@ def main():
     parser.add_argument('--public-gpg-home',default='')
     parser.add_argument('--recipient-fingerprint',default='')
     parser.add_argument('--fail-stage',default='')
+    parser.add_argument('--fixture-snapshot',default='')
+    parser.add_argument('--fixture-source-head',default='')
     args=parser.parse_args()
     if args.describe_server_plan:
         print(json.dumps({'productionCutoverReleased':False,'plan':LIVE_TOPOLOGY},indent=2))
