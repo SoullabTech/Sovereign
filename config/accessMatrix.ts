@@ -147,6 +147,14 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/signin', public: true, notes: 'Sign in' },
   { exact: '/signup', public: true, notes: 'Sign up' },
   { exact: '/reset-password', public: true, notes: 'Password reset' },
+  // Class A email verification is a pre-signin member threshold. New links
+  // land at /verify-email#token=... and require a real click to POST. The
+  // existing sender independently rate-limits by IP/member and ONLY sends to
+  // the database member address, never a request-supplied destination.
+  // Exact rules only — adjacent URLs retain strict-mode denial.
+  { exact: '/verify-email', public: true, notes: 'Explicit click-to-confirm email verification landing; no automatic token consumption' },
+  { exact: '/api/members/verify-email', public: true, notes: 'One-time verification token only; atomic server-side POST consumption' },
+  { exact: '/api/members/send-verification', public: true, notes: 'On-file email verification issuer; bounded IP/member rate limits in route' },
   // Class A: recovery bearer, NOT an authenticated member session. Only the
   // dedicated recipient page and POST redemption endpoint are public. The
   // redemption handler independently requires a single-use valid capability,
