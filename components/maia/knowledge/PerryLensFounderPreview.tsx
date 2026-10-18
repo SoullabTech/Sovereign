@@ -18,6 +18,7 @@ import { GLENN_PERRY_WISDOM_KEEPER_LINKS } from '@/lib/maia/knowledge/perryWisdo
 type Choice = 'usual' | 'perry';
 type SimulatedPosture = 'ordinary' | 'sanctuary' | 'unresolved';
 type PreviewResult = 'idle' | 'usual' | 'perry' | 'blocked_sanctuary' | 'blocked_unresolved';
+type HostedFieldPerspective = 'member' | 'keeper';
 
 const SAMPLE_MESSAGE = 'I want closeness, but sometimes it feels like I lose myself.';
 
@@ -31,6 +32,7 @@ export default function PerryLensFounderPreview() {
   const [choice, setChoice] = useState<Choice>('usual');
   const [posture, setPosture] = useState<SimulatedPosture>('ordinary');
   const [result, setResult] = useState<PreviewResult>('idle');
+  const [hostedFieldPerspective, setHostedFieldPerspective] = useState<HostedFieldPerspective>('member');
 
   const selectChoice = (next: Choice) => {
     setChoice(next);
@@ -117,6 +119,16 @@ export default function PerryLensFounderPreview() {
         .perryDemo .commonsStep strong{display:block;font-size:17px;margin:8px 0;color:#294d42;}
         .perryDemo .commonsStep p{margin:0;color:#576a5c;font-size:14px;line-height:1.55;}
         .perryDemo .commonsGuard{margin-top:18px;padding:14px 18px;border-radius:12px;background:#edf1e9;border:1px solid #d3ded2;font-size:14px;line-height:1.6;color:#4a6053;}
+        .perryDemo .hostedViewSwitch{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0 23px;}
+        .perryDemo .hostedViewOption{border:1px solid #c9d6cc;border-radius:11px;background:#fafcf8;padding:11px 15px;color:#2c5447;font-size:14px;font-weight:650;cursor:pointer;}
+        .perryDemo .hostedViewOption[data-selected="true"]{border-color:#3d7665;background:#eaf3ec;color:#204b3d;}
+        .perryDemo .hostedViewOption:focus-visible{outline:3px solid #559f89;outline-offset:3px;}
+        .perryDemo .hostedFieldGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;}
+        .perryDemo .hostedFieldCell{border:1px solid #dae2d7;border-radius:13px;background:#fcfdf9;padding:18px;min-width:0;}
+        .perryDemo .hostedFieldCell strong{font-size:16px;display:block;color:#28483f;margin-bottom:8px;}
+        .perryDemo .hostedFieldCell p{font-size:14px;line-height:1.6;color:#5a695f;margin:0;}
+        .perryDemo .hostedFieldBoundary{margin-top:19px;padding:15px 18px;border-left:3px solid #6f9681;border-radius:8px;background:#eff3ec;font-size:14px;line-height:1.6;color:#435f4e;}
+        @media(max-width:560px){.perryDemo .hostedFieldGrid{grid-template-columns:1fr}}
         @media(max-width:560px){.perryDemo .commonsSteps{grid-template-columns:1fr}}
         @media(max-width:560px){.perryDemo .keeperList{grid-template-columns:1fr}}
         @media(max-width:560px){.perryDemo .perryChoices{grid-template-columns:1fr}.perryDemo .perryPanel{padding:18px}.perryDemo .perryChoice{min-height:0}}
@@ -254,6 +266,78 @@ export default function PerryLensFounderPreview() {
             <strong> not a participating Soullab partner.</strong> There is no active interest sign-up,
             gathering, invitation, recording, fund or member-to-keeper introduction on this page.
             Private and Sanctuary conversations are never used to recruit or profile participants.
+          </div>
+        </section>
+
+        <section className="perryPanel" aria-labelledby="hosted-field-heading" data-testid="keeper-hosted-field-concept">
+          <div className="perryEyebrow">Future invitation · Fictional field prototype</div>
+          <h2 id="hosted-field-heading" style={{marginTop:10}}>Inside a keeper-hosted field</h2>
+          <p className="keeperIntro">
+            Imagine a real teacher who has accepted a scoped Soullab invitation, and members
+            who freely choose to gather with them. This is a possible human studio—not an
+            automated mentor, clinical service, marketplace, or new category of field.
+          </p>
+          <div className="hostedViewSwitch" role="group" aria-label="View hypothetical field as">
+            <button type="button" className="hostedViewOption" data-testid="field-member-view"
+              data-selected={hostedFieldPerspective === 'member'}
+              aria-pressed={hostedFieldPerspective === 'member'}
+              onClick={() => setHostedFieldPerspective('member')}>
+              Visiting as a member
+            </button>
+            <button type="button" className="hostedViewOption" data-testid="field-keeper-view"
+              data-selected={hostedFieldPerspective === 'keeper'}
+              aria-pressed={hostedFieldPerspective === 'keeper'}
+              onClick={() => setHostedFieldPerspective('keeper')}>
+              Viewing as an invited keeper
+            </button>
+          </div>
+
+          <div className="hostedFieldGrid" data-testid="hosted-field-content">
+            {hostedFieldPerspective === 'member' ? (
+              <>
+                <div className="hostedFieldCell">
+                  <strong>Enter by choice</strong>
+                  <p>Know who the real human host is, what the gathering offers, what is shared, and how to leave without explanation.</p>
+                </div>
+                <div className="hostedFieldCell">
+                  <strong>Read and listen</strong>
+                  <p>Encounter author-selected public or specifically licensed resources with intact source names and boundaries.</p>
+                </div>
+                <div className="hostedFieldCell">
+                  <strong>Gather and ask</strong>
+                  <p>Join an agreed study Circle or salon, ask questions if the host invites them, or participate through quiet presence.</p>
+                </div>
+                <div className="hostedFieldCell">
+                  <strong>Keep your own meaning</strong>
+                  <p>Reflect privately first. Nothing from MAIA, Sanctuary, or a Circle is promoted to the Commons without valid authorship and consent.</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="hostedFieldCell">
+                  <strong>Speak in your own voice</strong>
+                  <p>Review your introduction and decide what your name, lineage, and teachings mean to this specific gathering.</p>
+                </div>
+                <div className="hostedFieldCell">
+                  <strong>Choose what to share</strong>
+                  <p>Offer resources you have the rights to share, or direct people to your original books, essays, recordings, and school.</p>
+                </div>
+                <div className="hostedFieldCell">
+                  <strong>Set the invitation</strong>
+                  <p>Agree on your topics, time, facilitation, accessibility, boundaries, fair compensation, and whether questions are welcome.</p>
+                </div>
+                <div className="hostedFieldCell">
+                  <strong>Pause or withdraw</strong>
+                  <p>Do not take on members' private lives or therapy. End new participation without surrendering your name, original work, or authorship.</p>
+                </div>
+              </>
+            )}
+          </div>
+          <div className="hostedFieldBoundary" role="note" data-testid="hosted-field-not-active">
+            <strong>Not an active room.</strong> No keeper has been approved through this design.
+            Glenn Perry remains an unaffiliated referenced author. No invitations, signups,
+            member information, recordings, calendar events, payments, or messages are handled here.
+            A real Keeper Field would require separate founder, keeper, member, and technical approvals.
           </div>
         </section>
       </div>
