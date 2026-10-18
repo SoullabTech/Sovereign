@@ -55,7 +55,8 @@ export async function POST(req: NextRequest) {
         `SELECT id, member_id FROM admin_member_recovery_tokens
           WHERE token_hash = $1 AND redeemed_at IS NULL AND revoked_at IS NULL
             AND expires_at > clock_timestamp()
-            AND delivery_status IN ('provider_accepted', 'handoff_issued')
+            AND delivery_method = 'email'
+            AND delivery_status = 'provider_accepted'
           FOR UPDATE`,
         [tokenHash],
       );
