@@ -90,6 +90,15 @@ Evidence:
 `/Volumes/T7 Shield/ws-beta-r85-safari-unit-precommit.log`,
 and `/Volumes/T7 Shield/ws-beta-r85-safari-ship-type-precommit.log`.
 
+The first source-commit browser repeat found a **test-only asynchronous
+teardown race**: a GET route.fetch callback rejected after its WebKit
+context had closed, although the original Writer browser tests had
+already passed. The isolated R85 browser harness now explicitly awaits
+`context.unrouteAll({behavior:'wait'})` before closing its two routed
+contexts. A fresh rerun then passed **26/26 actual Listen**, **116/116
+Writer**, and **78/78 PostgreSQL** checks with no errors and full cleanup.
+This changes **test teardown only**, never application request handling.
+
 ## Real hardware and release remain on HOLD
 
 The Mac Studio detects **Scarlett 2i2 USB** as the two-channel default

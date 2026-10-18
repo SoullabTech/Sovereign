@@ -235,6 +235,10 @@ const cookie=(value)=>({name:'maia_session',value,url:origin,httpOnly:true,sameS
   report.mobile390Fits=dims.body<=dims.viewport+1&&dims.html<=dims.viewport+1;
   verify(report.mobile390Fits,
    '390px real WebKit Listen has no horizontal page overflow');
+  // Drain actual in-flight intercepted GETs before closing WebKit context.
+  // A route.fetch promise may otherwise reject after browser shutdown and
+  // crash the test even though Listen itself stayed correct.
+  await mobile.unrouteAll({behavior:'wait'});
   await mobile.close();
   const refreshed=await getJSON(owner,work);
   report.sourceManuscriptUnchanged=refreshed.status===200&&
@@ -247,6 +251,7 @@ const cookie=(value)=>({name:'maia_session',value,url:origin,httpOnly:true,sameS
    'Listen interactions issue no unexpected manuscript or provider writes');
   verify(report.networkOffHost===0,'Listen and file download made no off-host requests');
   verify(events.length===0,'real WebKit Listen experience raised no runtime exceptions');
+  await owner.unrouteAll({behavior:'wait'});
   await owner.close();
   report.status='R84_REAL_NEXT_LISTEN_WEBKIT_SAFE_NO_MIC_PASS_HELD';
  }catch(err){report.error=String(err?.message||err).slice(0,400);}
