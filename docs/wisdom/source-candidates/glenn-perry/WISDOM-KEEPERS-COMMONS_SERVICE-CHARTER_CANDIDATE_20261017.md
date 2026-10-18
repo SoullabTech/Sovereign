@@ -54,6 +54,12 @@ None of these changes automatically grants MAIA permission to process or embed c
 
 Participation in one mode never commits someone to the others.
 
+## Future Keeper-Hosted Fields — only through a specific invitation
+
+The community service can eventually provide **a field hosted by a living wisdom keeper**, if that keeper wishes to join. This is not a new seventh kind of field; the hosting configuration must honor the existing Dyadic, Circle, Constellation, Interest Commons and Co-Lab distinctions. The proposed [Keeper-Hosted Field approval and engagement charter](./KEEPER-HOSTED-FIELD_APPROVAL-AND-ENGAGEMENT-CANDIDATE_20261017.md) defines the separate stewardship, keeper, member and operational consent gates.
+
+The key distinction is **participation approval, not doctrine certification**. Approval would establish that a real keeper has accepted specific hosting responsibilities and safeguards, not that Soullab validates every scientific, clinical or metaphysical claim. A public book link cannot grant teaching/recording permissions, and a teaching invitation cannot grant permanent copyright embeddings. The keeper's own written voice remains distinct from MAIA's. Until those gates are deliberately authorized and tested, the proposed field is **not a working room, a Directory badge, a new admin role or a route to private member data**.
+
 ## The keeper is a person, not a source file
 
 The community may publicly *reference* an unaffiliated writer via verified links, but must not represent them as a Soullab partner, suggest they are available for introductions, or publish contact routes that have not been offered. For a living keeper who chooses to participate:
