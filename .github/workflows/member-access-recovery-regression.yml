@@ -11,6 +11,9 @@ on:
       - 'app/api/members/admin-recovery/**'
       - 'app/labtools/admin/command-center/member-access/**'
       - 'app/member-recovery/**'
+      - 'app/admin/member-access/**'
+      - 'components/studio/AdminManagementSection.tsx'
+      - 'e2e/fixtures/member-access-browser-seed.mjs'
       - 'e2e/tests/member-access-fictional.spec.ts'
       - 'e2e/member-access.playwright.config.ts'
       - 'database/migrations/20261018000001_admin_member_recovery_tokens.sql'
@@ -80,11 +83,25 @@ jobs:
     name: Admin and member recovery — Chromium and mobile WebKit
     runs-on: ubuntu-latest
     timeout-minutes: 24
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       CI: 'true'
       NEXT_TELEMETRY_DISABLED: '1'
       MEMBER_ACCESS_RECOVERY_ENABLED: '0'
-      DATABASE_URL: 'postgresql://invalid:invalid@127.0.0.1:1/fixture_denied'
+      DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:5432/postgres'
       LABTOOLS_ADMIN_PASSWORD: ''
       ADMIN_RESET_SECRET: ''
       RESEND_API_KEY: ''
@@ -96,6 +113,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
       - run: npm ci
+      - name: Seed only the fictional founder and verified session in temporary Postgres
+        run: node e2e/fixtures/member-access-browser-seed.mjs
       - name: Install isolated Chromium and mobile WebKit
         run: npx --no-install playwright install --with-deps chromium webkit
       - name: Exercise actual Member Access UI with fictional API responses
