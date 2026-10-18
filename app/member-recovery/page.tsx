@@ -5,18 +5,24 @@
  * The raw token is in the URL FRAGMENT (not HTTP GET query), held in
  * component state only, and removed from the address bar on first load.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { KeyRound, Lock, ShieldCheck } from 'lucide-react';
 
 export default function MemberRecoveryPage() {
   const [token, setToken] = useState<string | null>(null);
+  const fragmentCaptured = useRef(false);
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [status, setStatus] = useState<'loading' | 'ready' | 'submitting' | 'complete' | 'invalid'>('loading');
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // In React StrictMode development, mount effects are deliberately replayed.
+    // Capture/remove the bearer ONCE: the replay must not see the cleared URL
+    // and replace the valid form with an invalid-link error.
+    if (fragmentCaptured.current) return;
+    fragmentCaptured.current = true;
     const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     const supplied = fragment.get('token');
     // Never keep a bearer token in browser history or the URL after arrival.
