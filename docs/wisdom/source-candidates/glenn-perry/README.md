@@ -14,6 +14,17 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## Next proposal — Keeper-Hosted Fields (Stage E)
+
+**Not yet approved or operational.** A willing wisdom keeper may eventually have an explicitly bounded human teaching/engagement space hosted within Soullab's already-ratified relational ontology. Approval concerns **the actual keeper's identity, consent, precise activities, member choice, privacy and safety**—not a blanket clinical/spiritual endorsement or access to members' personal histories. Glenn Perry remains an unaffiliated author reference; contact is founder-held.
+
+- [Keeper-Hosted Field service and approval charter](./KEEPER-HOSTED-FIELD_APPROVAL-AND-ENGAGEMENT-CANDIDATE_20261017.md): an invited keeper's home/studio, small circles and inquiry, resource shelf, consented human Q&A, optional collaboration and fairly supported teaching.
+- [Machine-readable field permissions and first gathering](./KEEPER-HOSTED-FIELD_APPROVAL-CONTRACT_CANDIDATE_20261017.json): all hosting, roles, member enrolment, recordings, payments and source rights **OFF**; fictional 75-minute adult nonclinical study pilot, no real participants.
+- [Stage E approval and WebKit test witness](./STAGE-E-KEEPER-HOSTED-FIELD_WITNESS_20261017.md): **126/126** combined checks in a disposable fixture, including reversible **member/keeper** prototype views and two defeated false-authority mutations.
+- [Stage E contract tests](./stage-e-keeper-hosted-field.test.mjs) plus [founder-preview WebKit suite](./stage-c-founder-preview-webkit.test.mjs): no automatic Circle facilitator promotion, MAIA imitation, private field reads, outreach or invented keeper consent.
+
+**Six existing fields stay authoritative:** this is a hosting mode, **not a seventh field type**; Keeper ≠ facilitator authority; member/keeper/organization approval are separate. Full clinical, copyright, Sanctuary and release boundaries remain closed.
+
 ## Current founder service direction — Wisdom Keepers Commons
 
 **Proposed, not adopted or deployed.** Soullab could become a place where people encounter not only the *ideas* of wisdom keepers, but the people and communities that steward them. The relationship is communal and reciprocal rather than a marketplace, content-extraction economy, or unauthorized contact directory. Any personal encounter needs mutual consent and ethical compensation, not a built-in pay-to-access hierarchy.
