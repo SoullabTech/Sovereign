@@ -14,6 +14,14 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## Stage I — Local founder walkthrough available on the Mac Studio
+
+**Verified running demo, localhost only, not a production deploy.** The exact Stage H component and server founder gate were copied into an isolated Next.js 16.3.8 app with a **fictional signed-cookie session provider** and test-only sign-in buttons. The full standalone build, actual real-HTTP denied/allowed sign-ins, actual WebKit desktop/mobile interaction, server-side feature-flag shutdown case, and loopback-only listening boundary passed.
+
+On the **Mac Studio itself**, open **`http://127.0.0.1:3817/fixture`**, then choose **Enter as fictional founder**. No real member login, Circle, media room, or production data are attached. It will not open over LAN/iPhone; restart/cleanup may remove this temporary process.
+
+[Read Stage I local Next/WebKit witness](./STAGE-I_LOCAL-WISDOM-GATHER_FOUNDER-PREVIEW-WITNESS_20261018.md). **Next gate:** founder hands-on UI feedback, then separate exact integrated Next 15.5.11 build and fictional-account acceptance before any beta access.
+
 ## Stage H — Gather Together now staged under the real Wisdom route
 
 **Founder-only, default-OFF, unlinked and undeployed.** A new preview route at `/wisdom-keepers/wisdom/gather-preview` illustrates the future member path: find an original keeper → intentionally choose to gather → enter a private, consent-governed Circle → meet in an approved online/hybrid room. The actual `/wisdom-keepers/wisdom` page, Circle access and video providers **are unchanged**. All joining and registration are fictional and unavailable.
