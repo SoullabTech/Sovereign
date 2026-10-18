@@ -40,6 +40,11 @@ export async function POST(req: NextRequest) {
   if (founder.via !== 'member' || !founder.memberId) {
     return reply({ error: 'A verified founder member session is required' }, 403);
   }
+  const verifiedSessionToken =
+    req.headers.get('x-session-token') ?? req.cookies.get('maia_session')?.value ?? null;
+  if (!verifiedSessionToken) {
+    return reply({ error: 'A verified founder member session is required' }, 403);
+  }
 
   let fields: Record<string, unknown>;
   try {
@@ -79,10 +84,18 @@ export async function POST(req: NextRequest) {
   let outcome: Decision;
   try {
     outcome = await transaction<Decision>(async tx => {
-      // Serialize this founder's issues for the per-hour durable quota.
+      // Bind the sensitive issuance to a STILL-LIVE founder session under
+      // the same transaction lock as the quota and target access. A revoked or
+      // expired session between the first auth check and this transaction must
+      // not continue into token issuance. FOR UPDATE serializes with revocation.
       const actor = await tx.query<{ id: string }>(
-        `SELECT id FROM members WHERE id = $1 AND admin_role = 'founder' FOR UPDATE`,
-        [founder.memberId],
+        `SELECT m.id FROM members m
+         JOIN auth_sessions s ON s.member_id = m.id
+         WHERE m.id = $1 AND m.admin_role = 'founder'
+           AND s.session_token = $2
+           AND s.expires_at > clock_timestamp() AND s.revoked = FALSE
+         FOR UPDATE OF m, s`,
+        [founder.memberId, verifiedSessionToken],
       );
       if (!actor.rows.length) return { kind: 'actor_not_found' };
 
