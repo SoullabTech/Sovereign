@@ -23,7 +23,13 @@ Can the exact founder-adopted wording be incorporated as a constraint protecting
 | `RECIPROCAL_SOVEREIGNTY_INTENTION_2026-08-04.md` | Foundational intention only; do not pretend previously ratified. |
 | `CONSTITUTIONAL_AUDIT_PROCESS.md` | Prevent altitude error and silent convergence. |
 | `RELATIONSHIP_ROOM_CONSTITUTION_RATIFICATION_ACT_2026-08-14.md` | Exact canonical commit/blob + **separate** founder ratifying act; no runtime approval from doc. |
-| `PR_1736_CLASS_A_ADMISSION_EXCEPTION_2026-10-02.md` | A separate account/AI reviewer is not evidence of independent **human** Class A custody. Hold if unavailable. |
+| `docs/GOVERNANCE_MENTOR_COVENANT.md` §5 (beta-phase founder-sole authority) | During a qualifying beta period, founder-only Class A approval is explicitly described, but requires an **actual separately recorded act**, exact SHA, green CI and an honest account of weaker review protection; it is not automatic authorization. |
+| `docs/governance/PR_1736_CLASS_A_ADMISSION_EXCEPTION_2026-10-02.md` | Later admission record treats absence of a genuinely distinct human custodian as an approval-provenance defect. AI and a second bot account cannot supply independent human review. |
+| [GOVERNANCE-BOOTSTRAP-02 #1147](https://github.com/SoullabTech/Sovereign/issues/1147) | Open issue documents incompatible accounts of who approves Class A and how enforcement works. The present review **does not reconcile them by choosing a convenient clause**. |
+
+### Governance reconciliation required before canonical admission
+
+The beta-only Founder-Steward sole-authority provision and later distinct-human custody requirements are **both present in current governance records**. They must not be flattened into a blanket statement that every Class A change requires two humans or, conversely, that founder-only authority silently approves this PR. Before an incorporation merge, the Founder must separately adjudicate the applicable approval rule and actual beta standing, with exact SHA, review/custody trace, explicit scope and non-authorizations. An AI documentary audit, bot label or green CI cannot substitute for that act. **HOLD canonical admission if the ambiguity remains unresolved.**
 
 ## 3. Full-coverage major-claim audit
 
@@ -64,7 +70,7 @@ Can the exact founder-adopted wording be incorporated as a constraint protecting
 
 **Gate 1 — Docs-only incorporation PR:** verify all changes are the three named Markdown files, exact wording, attribution safety, independent review status and base ancestry. Keep PR draft pending review.
 
-**Gate 2 — Class A distinct-human custody:** follow currently effective rule. AI assistance and an alternate GitHub account do not fulfill genuine independent human approval. If the required reviewer is unavailable, fail closed; **no admin bypass inferred or authorized**.
+**Gate 2 — Class A custody/authority adjudication:** reconcile the temporary beta Founder-Steward sole-authority provision with the later distinct-human approval records and open governance issue #1147. If founder-sole authority is applicable, it requires a **separate explicit founder approval naming this exact candidate SHA**, limitations, CI, and the absence of an independent review—not an inference from prior conversation, an AI reviewer, or an account label. If independent human custody is controlling, require its actual evidence. **HOLD while the applicable rule or evidence remains unresolved.** No admin bypass is inferred or authorized.
 
 **Gate 3 — Separate founder ratification:** after governed canonical admission, record `RATIFY EFFECTIVE` bound to the exact trunk commit + constitutional blob; not before.
 
