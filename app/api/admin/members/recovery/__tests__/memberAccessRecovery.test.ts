@@ -11,9 +11,11 @@ const MEMBER_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const EMAIL = 'fictional@example.invalid';
 const SHARED_PASSWORD = 'fictional-shared-admin-password';
 const STRONG_PASSWORD = 'correct horse battery staple 2026';
+const VERIFIED_PROOF = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 type Issued = {
   id: string; member_id: string; issued_by: string; token_hash: string;
-  status: string; method: string; expires: Date; redeemed: boolean; revoked: boolean;
+  email_verification_id: string; status: string; method: string;
+  expires: Date; redeemed: boolean; revoked: boolean;
 };
 
 let tokens: Issued[] = [];
@@ -21,13 +23,23 @@ let role: 'founder' | 'cto' | null = 'founder';
 let issuerExists = true;
 let liveIssuerSession = true;
 let targetEmail: string | null = EMAIL;
+let targetEmailVerified = true;
+let targetRecoveryProof: string | null = VERIFIED_PROOF;
+let transportConfigured = true;
+let transportName = 'smtp';
 let quotaCount = 0;
 let passwordWrites = 0;
 let sessionRevocations = 0;
 let failSessionRevocation = false;
 let rateAllowed = true;
 const auditQueries: Array<{ sql: string; args: unknown[] }> = [];
-const mockEmail = jest.fn(async (_opts: unknown) => ({ success: true }));
+type FakeMailResult = { success: boolean; provider?: string; id?: string };
+const mockEmail = jest.fn<(_opts: unknown) => Promise<FakeMailResult>>(async () =>
+  ({ success: true, provider: 'smtp', id: 'FICTIONAL-SMTP-MESSAGE-ID' }));
+const approvedFakeProvider = {
+  name: 'smtp', isConfigured: () => transportConfigured,
+  send: jest.fn(async () => ({ accepted: false as const, rawError: 'mock never sends' })),
+};
 
 function cloneTokens(): Issued[] {
   return tokens.map(t => ({ ...t, expires: new Date(t.expires) }));
@@ -39,8 +51,10 @@ async function txQuery(sql: string, args: unknown[] = []): Promise<{ rows: any[]
   if (sql.includes('COUNT(*)::int AS n FROM admin_member_recovery_tokens')) {
     return { rows: [{ n: quotaCount }] };
   }
-  if (sql.includes('SELECT id, email FROM members WHERE id = $1 FOR UPDATE')) {
-    return { rows: args[0] === MEMBER_ID ? [{ id: MEMBER_ID, email: targetEmail }] : [] };
+  if (sql.includes('SELECT id, email, email_verified, recovery_email_verification_id FROM members WHERE id = $1 FOR UPDATE')) {
+    return { rows: args[0] === MEMBER_ID
+      ? [{ id: MEMBER_ID, email: targetEmail, email_verified: targetEmailVerified,
+           recovery_email_verification_id: targetRecoveryProof }] : [] };
   }
   if (sql.includes('UPDATE admin_member_recovery_tokens SET revoked_at = now()')) {
     for (const t of tokens) if (t.member_id === args[0] && !t.redeemed) t.revoked = true;
@@ -50,15 +64,18 @@ async function txQuery(sql: string, args: unknown[] = []): Promise<{ rows: any[]
     tokens.push({
       id: 'c'.repeat(8) + '-cccc-4ccc-8ccc-' + String(tokens.length).padStart(12, '0'),
       member_id: args[0] as string, issued_by: args[1] as string,
-      token_hash: args[2] as string, method: args[3] as string,
-      status: args[5] as string, expires: args[6] as Date,
+      email_verification_id: args[2] as string,
+      token_hash: args[3] as string, method: args[4] as string,
+      status: args[6] as string, expires: args[7] as Date,
       redeemed: false, revoked: false,
     });
     return { rows: [] };
   }
-  if (sql.includes('SELECT id, member_id FROM admin_member_recovery_tokens')) {
+  if (sql.includes('SELECT t.id, t.member_id FROM admin_member_recovery_tokens t')) {
     const t = tokens.find(x => x.token_hash === args[0] && !x.redeemed && !x.revoked
-      && x.expires > new Date() && x.method === 'email' && x.status === 'provider_accepted');
+      && x.expires > new Date() && x.method === 'email' && x.status === 'provider_accepted'
+      && targetEmailVerified && targetRecoveryProof !== null
+      && x.email_verification_id === targetRecoveryProof);
     return { rows: t ? [{ id: t.id, member_id: t.member_id }] : [] };
   }
   if (sql.includes('UPDATE members SET password_hash')) {
@@ -110,6 +127,13 @@ jest.mock('@/lib/db/postgres', () => ({
       sessionRevocations = oldRevocations;
       throw e;
     }
+  },
+}));
+jest.mock('@/lib/email/providers', () => ({
+  __esModule: true,
+  getEmailProvider: () => {
+    if (transportName !== 'smtp') return { ...approvedFakeProvider, name: transportName };
+    return approvedFakeProvider;
   },
 }));
 jest.mock('@/lib/email/sendEmail', () => ({
@@ -165,10 +189,13 @@ function redeem(token: string, password = STRONG_PASSWORD) {
 
 beforeEach(() => {
   tokens = []; role = 'founder'; issuerExists = true; liveIssuerSession = true; targetEmail = EMAIL;
+  targetEmailVerified = true; targetRecoveryProof = VERIFIED_PROOF;
+  transportConfigured = true; transportName = 'smtp';
   quotaCount = 0; passwordWrites = 0; sessionRevocations = 0;
   failSessionRevocation = false; rateAllowed = true; auditQueries.length = 0;
   mockEmail.mockReset();
-  mockEmail.mockResolvedValue({ success: true });
+  mockEmail.mockResolvedValue({ success: true, provider: 'smtp', id: 'FICTIONAL-SMTP-MESSAGE-ID' });
+  process.env.EMAIL_PROVIDER = 'smtp';
   process.env.LABTOOLS_ADMIN_PASSWORD = SHARED_PASSWORD;
   process.env.MEMBER_ACCESS_RECOVERY_ENABLED = '1';
 });
@@ -201,6 +228,63 @@ describe('recovery token and origin primitives', () => {
     expect(validRecoveryPassword(STRONG_PASSWORD)).toBe(true);
   });
 });
+describe('verified-current-email and explicitly configured SMTP refusal', () => {
+  it('refuses a legacy verified flag with no current-address proof', async () => {
+    targetEmailVerified = true; targetRecoveryProof = null;
+    const res = await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }));
+    expect(res.status).toBe(409);
+    expect(tokens).toHaveLength(0);
+    expect(mockEmail).not.toHaveBeenCalled();
+  });
+  it('refuses an unverified current address even with a stale non-null proof', async () => {
+    targetEmailVerified = false;
+    const res = await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }));
+    expect(res.status).toBe(409);
+    expect(tokens).toHaveLength(0);
+    expect(mockEmail).not.toHaveBeenCalled();
+  });
+  it('refuses missing, legacy Resend and capture-transport provider selection before writing', async () => {
+    for (const setting of [undefined, 'resend', 'memory', 'nonsense']) {
+      if (setting === undefined) delete process.env.EMAIL_PROVIDER;
+      else process.env.EMAIL_PROVIDER = setting;
+      const res = await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }));
+      expect(res.status).toBe(503);
+    }
+    expect(tokens).toHaveLength(0);
+    expect(mockEmail).not.toHaveBeenCalled();
+  });
+  it('refuses SMTP without configured credentials or with a mismatched effective provider', async () => {
+    transportConfigured = false;
+    expect((await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }))).status).toBe(503);
+    transportConfigured = true; transportName = 'resend';
+    expect((await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }))).status).toBe(503);
+    expect(tokens).toHaveLength(0);
+    expect(mockEmail).not.toHaveBeenCalled();
+  });
+  it('rejects a mail helper reporting success without SMTP vendor identity and message ID', async () => {
+    mockEmail.mockResolvedValueOnce({ success: true, provider: 'resend', id: 'FICTIONAL-ID' });
+    const wrong = await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }));
+    expect(wrong.status).toBe(502);
+    expect(tokens[0].revoked).toBe(true);
+    mockEmail.mockResolvedValueOnce({ success: true, provider: 'smtp' });
+    const missingId = await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }));
+    expect(missingId.status).toBe(502);
+    expect(tokens[1].revoked).toBe(true);
+  });
+  it('binds the token to the original email proof and refuses redemption after any change', async () => {
+    const issued = await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }));
+    expect(issued.status).toBe(200);
+    expect(tokens[0].email_verification_id).toBe(VERIFIED_PROOF);
+    const token = emailToken();
+    targetRecoveryProof = null;
+    expect((await redeem(token)).status).toBe(400);
+    targetRecoveryProof = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+    expect((await redeem(token)).status).toBe(400);
+    expect(passwordWrites).toBe(0);
+    expect(sessionRevocations).toBe(0);
+  });
+});
+
 describe('founder-controlled initiation', () => {
   it('rejects foreign/missing origin before DB access', async () => {
     const result = await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true, origin: null }));
