@@ -45,6 +45,7 @@ import { POST as issuePOST } from '../route';
 import { POST as founderVerifyPOST } from '../verify-email/route';
 import { POST as redeemPOST } from '@/app/api/members/admin-recovery/route';
 import { POST as verifyEmailPOST } from '@/app/api/members/verify-email/route';
+import { POST as publicVerificationPOST } from '@/app/api/members/send-verification/route';
 
 let scratch: Pool;
 function fake(path: string, body: unknown, signedIn = false): NextRequest {
@@ -226,6 +227,55 @@ describe('founder-admin verification issuance — real ephemeral PostgreSQL', ()
     await query('UPDATE members SET email=NULL, email_verified=FALSE, email_verification_sent_at=NULL WHERE id=$1', [TARGET]);
     expect((await founderVerifyPOST(verifyRequest())).status).toBe(409);
     expect(mockSend).not.toHaveBeenCalled();
+  });
+});
+
+describe('public registration verifier — SMTP-only transport compatibility', () => {
+  it('refuses missing or legacy Resend provider without minting a verification token', async () => {
+    for (const setting of [undefined, 'resend', 'memory']) {
+      await query('UPDATE members SET email_verified=FALSE,email_verification_token=NULL,email_verification_sent_at=NULL WHERE id=$1', [TARGET]);
+      if (setting === undefined) delete process.env.EMAIL_PROVIDER;
+      else process.env.EMAIL_PROVIDER = setting;
+      const reply = await publicVerificationPOST(fake('/api/members/send-verification', { memberId: TARGET, email: MEMBER_EMAIL }));
+      expect(reply.status).toBe(503);
+      const member = await query('SELECT email_verification_token FROM members WHERE id=$1', [TARGET]);
+      expect(member.rows[0].email_verification_token).toBeNull();
+    }
+    process.env.EMAIL_PROVIDER = 'smtp';
+    expect(mockSend).not.toHaveBeenCalled();
+  });
+
+  it('sends ONLY to account record from approved noreply via pinned SMTP provider', async () => {
+    await query('UPDATE members SET email_verified=FALSE,email_verification_token=NULL,email_verification_sent_at=NULL WHERE id=$1', [TARGET]);
+    const refused = await publicVerificationPOST(fake('/api/members/send-verification', {
+      memberId: TARGET, email: 'attacker@example.invalid',
+    }));
+    expect(refused.status).toBe(409);
+    expect(mockSend).not.toHaveBeenCalled();
+
+    const accepted = await publicVerificationPOST(fake('/api/members/send-verification', {
+      memberId: TARGET, email: MEMBER_EMAIL,
+    }));
+    expect(accepted.status).toBe(200);
+    const opts = mockSend.mock.calls.at(-1)?.[0] as {
+      to?: string; from?: string; provider?: { name: string }; purpose?: string; html?: string;
+    };
+    expect(opts.to).toBe(MEMBER_EMAIL);
+    expect(opts.from).toBe('Soullab <noreply@soullab.life>');
+    expect(opts.provider?.name).toBe('smtp');
+    expect(opts.purpose).toBe('auth:verification');
+    expect(opts.html).toContain('https://soullab.life/verify-email#token=');
+  });
+
+  it('retires the exact unaccepted token and leaves the on-file email unchanged', async () => {
+    await query('UPDATE members SET email_verified=FALSE,email_verification_token=NULL,email_verification_sent_at=NULL WHERE id=$1', [TARGET]);
+    mockSend.mockResolvedValueOnce({ success: true, provider: 'resend', id: 'FICTIONAL-WRONG-TRANSPORT' });
+    const result = await publicVerificationPOST(fake('/api/members/send-verification', { memberId: TARGET }));
+    expect(result.status).toBe(502);
+    const row = await query('SELECT email,email_verification_token,email_verification_sent_at FROM members WHERE id=$1', [TARGET]);
+    expect(row.rows[0].email).toBe(MEMBER_EMAIL);
+    expect(row.rows[0].email_verification_token).toBeNull();
+    expect(row.rows[0].email_verification_sent_at).toBeNull();
   });
 });
 
