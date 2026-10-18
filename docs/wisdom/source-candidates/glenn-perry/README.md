@@ -14,19 +14,29 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## Stage K — Real Soullab session code, exact Next.js 15, isolated PostgreSQL
+
+**Security acceptance achieved for selected real modules, not real founder login or full-app release.** On the Mac Studio, an independently built **Next.js 15.5.11** test app ran the exact original `serverSessions`, PostgreSQL `query`, founder allowlist, Gather Together page and real canonical middleware source, against **two fictional members** in a separate PostgreSQL instance. Live HTTP and actual WebKit proved founder 200, nonfounder 404 even with admin role, forged credential refusal, server-side revocation 404, old-cookie replay refusal and functional mobile interface. **Eight separate static auth-contract regression checks passed** at a pinned source revision.
+
+- [Stage K Next.js 15 / PostgreSQL session witness](./STAGE-K_NEXT15_VERIFIED-SOULLAB-SESSION_FOUNDER-GATE-WITNESS_20261018.md): the exact test provenance, source and build versions, known SWC warning and withheld full-product/real-member gates.
+- [Committed Stage K authorization guard tests](./stage-k-auth-postgres-contract.test.mjs): real session cookie and SQL validation, founder-only decision, still-public Wisdom prefix + founder-gated preview child.
+- **Temporary session-issuance test service and isolated PostgreSQL were stopped**, and ephemeral database/config passwords were unlinked after verification. The original visual review at **`http://127.0.0.1:3817/fixture`** remains available from the Mac Studio.
+
+**Still HOLD:** the real founder has not logged into a full staging Soullab instance. It requires a separately approved exact-canonical full app build, current middleware/cookie contract and verified member sign-in through Soullab's actual authentication. Do not substitute the fictional issuer, touch real sessions, widen Circle roles or deploy this branch.
+
 ## Stage J — The founder is real; the demo identity is not
 
 The founder clarified the actual human role while reviewing the Mac Studio preview. The [Stage J identity/copy correction witness](./STAGE-J_REAL-FOUNDER-REVIEW-LANGUAGE-AND-AUTH_BOUNDARY_20261018.md) distinguishes **real Soullab founder review** from the isolated, temporary test-session credential. The committed preview now reads **"Founder review · Interactive prototype · Not yet open"**. Its five updated WebKit UI checks passed, and the local Next.js preview was rebuilt, tested again under real Safari WebKit, and kept loopback-only.
 
 On the Mac Studio, open **`http://127.0.0.1:3817/fixture`** and choose **Open founder review**. This local button uses demo credentials only; it is **not** proof of the founder's actual Soullab authenticated identity. The existing actual `requireFounder()` server gate remains unchanged. No production login, code merge or member feature was activated.
 
-**Next:** full-app isolated Next.js 15.5.11 integration and authentication acceptance using fictional principals, then a separate authorized real-founder staging sign-in before any public or beta release.
+**Next:** Reconcile and verify the **complete** canonical Next.js 15.5.11 app, including the real login and middleware/cookie path. Selected actual auth/session modules already passed the **isolated Stage K Next.js 15 and PostgreSQL test**; the separate real-founder staging sign-in still requires authorization.
 
 ## Stage I — Local founder walkthrough available on the Mac Studio
 
 **Verified running demo, localhost only, not a production deploy.** The exact Stage H component and server founder gate were copied into an isolated Next.js 16.3.8 app with a **fictional signed-cookie session provider** and test-only sign-in buttons. The full standalone build, actual real-HTTP denied/allowed sign-ins, actual WebKit desktop/mobile interaction, server-side feature-flag shutdown case, and loopback-only listening boundary passed.
 
-On the **Mac Studio itself**, open **`http://127.0.0.1:3817/fixture`**, then choose **Enter as fictional founder**. No real member login, Circle, media room, or production data are attached. It will not open over LAN/iPhone; restart/cleanup may remove this temporary process.
+On the **Mac Studio itself**, open **`http://127.0.0.1:3817/fixture`**, then choose **Open founder review**. No real member login, Circle, media room, or production data are attached. It will not open over LAN/iPhone; restart/cleanup may remove this temporary process.
 
 [Read Stage I local Next/WebKit witness](./STAGE-I_LOCAL-WISDOM-GATHER_FOUNDER-PREVIEW-WITNESS_20261018.md). **Next gate:** founder hands-on UI feedback, then separate exact integrated Next 15.5.11 build and fictional-account acceptance before any beta access.
 
