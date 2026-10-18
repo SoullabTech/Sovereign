@@ -102,7 +102,9 @@
     "existing_public_event_registration_not_private_circle_access": true,
     "self_hosted_livekit_or_webrtc_not_assumed_deployed": true,
     "provider_specific_claims_must_be_witnessed": true,
-    "provider_comparison_required_before_hosting": true
+    "provider_comparison_required_before_hosting": true,
+    "preferred_candidate": "existing_soullab_hybrid_service_to_identify",
+    "fallback_if_unready": "independently_verified_private_link_out"
   },
   "online_host_consent_checklist": {
     "invited_fictional_member_can_join": false,
@@ -168,5 +170,22 @@
     "keeper_join_not_inferred": true,
     "hybrid_additional_acceptance_required": true
   },
-  "next_decision": "Choose one candidate private online meeting provider/account for a fictional two-device host/guest and denied-guest privacy rehearsal. Do not create an actual gathering or send invites."
+  "next_decision": "Identify the exact existing Soullab hybrid service screen/route, then run a read-only/source and isolated fictional multiperson privacy acceptance. Do not create an actual gathering or send invites.",
+  "on_platform_hybrid_reuse": {
+    "founder_identified_existing_service": true,
+    "preferred_first_candidate": "soullab_existing_hybrid_service",
+    "specific_route_or_screen_identified": false,
+    "deployed_service_verified": false,
+    "multiple_real_participants_verified": false,
+    "consent_scoped_group_authorization_verified": false,
+    "privacy_recording_and_log_controls_verified": false,
+    "audio_video_connectivity_verified": false,
+    "host_controls_verified": false,
+    "circle_member_access_verified": false,
+    "real_session_created": false,
+    "tested_only_fictional_credentials": false,
+    "source_witness": "STAGE-G_PLATFORM-HYBRID-REUSE_AUDIT_20261018.md",
+    "fallback_only_if_unready": "independently_verified_private_link_out",
+    "external_provider_is_default": false
+  }
 }
