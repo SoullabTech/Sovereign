@@ -1,0 +1,35 @@
+{
+  "Version": "2012-10-17",
+  "_REVIEW_ONLY_NOT_AN_IAM_POLICY": "Do not attach or deploy; remove this non-IAM field only after role trust, exact key ARN and runtime AWS principal are independently qualified.",
+  "Statement": [
+    {
+      "Sid": "OnlyGenerateAndUnwrapForExactOpaqueWriterWorkContext",
+      "Effect": "Allow",
+      "Action": [
+        "kms:GenerateDataKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "${APPROVED_NEW_WRITER_SYMMETRIC_KMS_KEY_ARN}",
+      "Condition": {
+        "StringEquals": {
+          "kms:EncryptionContext:service": "soullab-writers-beta"
+        },
+        "Null": {
+          "kms:EncryptionContext:opaqueWorkDigest": "false"
+        },
+        "ForAllValues:StringEquals": {
+          "kms:EncryptionContextKeys": [
+            "service",
+            "opaqueWorkDigest"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "OnlyDescribeApprovedWriterKey",
+      "Effect": "Allow",
+      "Action": "kms:DescribeKey",
+      "Resource": "${APPROVED_NEW_WRITER_SYMMETRIC_KMS_KEY_ARN}"
+    }
+  ]
+}

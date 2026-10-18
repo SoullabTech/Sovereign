@@ -1,0 +1,358 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "R1R REVIEW ONLY. New AINOS symmetric Writer beta KMS key and alias; no resources by default; separate role/CA/budget/audit approvals required.",
+  "Metadata": {
+    "ReviewOnly": "YES",
+    "ParentSource": "4e58c2b233165c3915d13ae9fa26e93f60ff3974",
+    "IntendedRegion": "us-east-1",
+    "ExpectedAccountSuffix": "5343",
+    "DoNotApplyWithout": "Founder provisioning go, account/role/certificate verification, backup/restore, cost and CloudTrail review"
+  },
+  "Parameters": {
+    "ProvisioningApproval": {
+      "Type": "String",
+      "Default": "REVIEW_ONLY_NO_RESOURCES",
+      "AllowedValues": [
+        "REVIEW_ONLY_NO_RESOURCES",
+        "FOUNDER_APPROVED_PROVISIONING"
+      ],
+      "Description": "Safety barrier: default creates NO resources. Do not set FOUNDER_APPROVED_PROVISIONING without distinct explicit approval and security review."
+    },
+    "ProvisionerRoleArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:iam::[0-9]{12}:role/[A-Za-z0-9_+=,.@/\\-]{1,128}$",
+      "ConstraintDescription": "Must be an exact, approved IAM role ARN. Account and separated role custody must be independently verified.",
+      "Description": "Independent CloudFormation execution/provisioner role with key-policy update, NOT a runtime role."
+    },
+    "KeyAdministratorRoleArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:iam::[0-9]{12}:role/[A-Za-z0-9_+=,.@/\\-]{1,128}$",
+      "ConstraintDescription": "Must be an exact, approved IAM role ARN. Account and separated role custody must be independently verified.",
+      "Description": "Key-operations administrator role, NOT permitted to decrypt, generate data keys or rewrite the key policy."
+    },
+    "RecoveryRoleArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:iam::[0-9]{12}:role/[A-Za-z0-9_+=,.@/\\-]{1,128}$",
+      "ConstraintDescription": "Must be an exact, approved IAM role ARN. Account and separated role custody must be independently verified.",
+      "Description": "Independently managed break-glass recovery role; MFA/audit/trust must be verified separately."
+    },
+    "ApplicationRoleArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:iam::[0-9]{12}:role/[A-Za-z0-9_+=,.@/\\-]{1,128}$",
+      "ConstraintDescription": "Must be an exact, approved IAM role ARN. Account and separated role custody must be independently verified.",
+      "Description": "Least-privilege on-prem Writer beta runtime role using temporary IAM Roles Anywhere credentials."
+    }
+  },
+  "Rules": {
+    "DistinctRuntimeAndHumanCustody": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ApplicationRoleArn"
+                  },
+                  {
+                    "Ref": "ProvisionerRoleArn"
+                  }
+                ]
+              }
+            ]
+          },
+          "AssertDescription": "ApplicationRoleArn and ProvisionerRoleArn must belong to distinct IAM roles."
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ApplicationRoleArn"
+                  },
+                  {
+                    "Ref": "KeyAdministratorRoleArn"
+                  }
+                ]
+              }
+            ]
+          },
+          "AssertDescription": "ApplicationRoleArn and KeyAdministratorRoleArn must belong to distinct IAM roles."
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ApplicationRoleArn"
+                  },
+                  {
+                    "Ref": "RecoveryRoleArn"
+                  }
+                ]
+              }
+            ]
+          },
+          "AssertDescription": "ApplicationRoleArn and RecoveryRoleArn must belong to distinct IAM roles."
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ProvisionerRoleArn"
+                  },
+                  {
+                    "Ref": "KeyAdministratorRoleArn"
+                  }
+                ]
+              }
+            ]
+          },
+          "AssertDescription": "ProvisionerRoleArn and KeyAdministratorRoleArn must belong to distinct IAM roles."
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ProvisionerRoleArn"
+                  },
+                  {
+                    "Ref": "RecoveryRoleArn"
+                  }
+                ]
+              }
+            ]
+          },
+          "AssertDescription": "ProvisionerRoleArn and RecoveryRoleArn must belong to distinct IAM roles."
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "KeyAdministratorRoleArn"
+                  },
+                  {
+                    "Ref": "RecoveryRoleArn"
+                  }
+                ]
+              }
+            ]
+          },
+          "AssertDescription": "KeyAdministratorRoleArn and RecoveryRoleArn must belong to distinct IAM roles."
+        }
+      ]
+    }
+  },
+  "Conditions": {
+    "ProvisioningExplicitlyApproved": {
+      "Fn::Equals": [
+        {
+          "Ref": "ProvisioningApproval"
+        },
+        "FOUNDER_APPROVED_PROVISIONING"
+      ]
+    }
+  },
+  "Resources": {
+    "WriterBetaSymmetricKmsKey": {
+      "Type": "AWS::KMS::Key",
+      "Condition": "ProvisioningExplicitlyApproved",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "Description": "Soullab Writer private-beta WORK envelope ONLY; separate from AINOS R20 signing key; verify author approval and backup before release.",
+        "KeySpec": "SYMMETRIC_DEFAULT",
+        "KeyUsage": "ENCRYPT_DECRYPT",
+        "Origin": "AWS_KMS",
+        "Enabled": true,
+        "MultiRegion": false,
+        "EnableKeyRotation": true,
+        "RotationPeriodInDays": 365,
+        "BypassPolicyLockoutSafetyCheck": false,
+        "PendingWindowInDays": 30,
+        "KeyPolicy": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "AllowCloudFormationProvisionerToManagePolicyWithoutDataUse",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Ref": "ProvisionerRoleArn"
+                }
+              },
+              "Action": [
+                "kms:DescribeKey",
+                "kms:GetKeyPolicy",
+                "kms:PutKeyPolicy",
+                "kms:TagResource",
+                "kms:UntagResource",
+                "kms:ListResourceTags",
+                "kms:EnableKeyRotation",
+                "kms:GetKeyRotationStatus",
+                "kms:CreateAlias",
+                "kms:UpdateAlias",
+                "kms:DeleteAlias"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "AllowIndependentKeyAdminOperationsWithoutCryptographicAccess",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Ref": "KeyAdministratorRoleArn"
+                }
+              },
+              "Action": [
+                "kms:DescribeKey",
+                "kms:GetKeyPolicy",
+                "kms:ListResourceTags",
+                "kms:GetKeyRotationStatus",
+                "kms:EnableKeyRotation",
+                "kms:DisableKeyRotation",
+                "kms:EnableKey",
+                "kms:DisableKey",
+                "kms:UpdateKeyDescription",
+                "kms:TagResource",
+                "kms:UntagResource",
+                "kms:ListGrants"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "AllowDistinctBreakGlassPolicyRecoveryWithoutDataUse",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Ref": "RecoveryRoleArn"
+                }
+              },
+              "Action": [
+                "kms:DescribeKey",
+                "kms:GetKeyPolicy",
+                "kms:PutKeyPolicy",
+                "kms:CancelKeyDeletion"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "AllowWriterAppDataKeyGenerationAndDecryptOnlyForOpaqueWorkContext",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Ref": "ApplicationRoleArn"
+                }
+              },
+              "Action": [
+                "kms:GenerateDataKey",
+                "kms:Decrypt"
+              ],
+              "Resource": "*",
+              "Condition": {
+                "StringEquals": {
+                  "kms:EncryptionContext:service": "soullab-writers-beta"
+                },
+                "Null": {
+                  "kms:EncryptionContext:opaqueWorkDigest": "false"
+                },
+                "ForAllValues:StringEquals": {
+                  "kms:EncryptionContextKeys": [
+                    "service",
+                    "opaqueWorkDigest"
+                  ]
+                }
+              }
+            },
+            {
+              "Sid": "AllowWriterAppOnlyDescribeThisKey",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Ref": "ApplicationRoleArn"
+                }
+              },
+              "Action": [
+                "kms:DescribeKey"
+              ],
+              "Resource": "*"
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Product",
+            "Value": "Soullab-WriterStudio"
+          },
+          {
+            "Key": "Scope",
+            "Value": "PrivateBeta"
+          },
+          {
+            "Key": "ChangeReview",
+            "Value": "R1R-ExplicitFounderApprovalRequired"
+          },
+          {
+            "Key": "Privacy",
+            "Value": "NoMemberTextInTags"
+          }
+        ]
+      }
+    },
+    "WriterBetaKeyAlias": {
+      "Type": "AWS::KMS::Alias",
+      "Condition": "ProvisioningExplicitlyApproved",
+      "Properties": {
+        "AliasName": "alias/soullab/writers-beta",
+        "TargetKeyId": {
+          "Ref": "WriterBetaSymmetricKmsKey"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ReviewState": {
+      "Description": "This template does not provision by default.",
+      "Value": {
+        "Fn::If": [
+          "ProvisioningExplicitlyApproved",
+          "PROVISIONING_REQUESTED",
+          "REVIEW_ONLY_NO_RESOURCES"
+        ]
+      }
+    },
+    "WriterKeyArn": {
+      "Description": "Key ARN only when explicitly provisioned after separate approval.",
+      "Value": {
+        "Fn::If": [
+          "ProvisioningExplicitlyApproved",
+          {
+            "Fn::GetAtt": [
+              "WriterBetaSymmetricKmsKey",
+              "Arn"
+            ]
+          },
+          "NOT_PROVISIONED"
+        ]
+      }
+    },
+    "WriterKeyAlias": {
+      "Description": "Alias only when explicitly provisioned after separate approval.",
+      "Value": {
+        "Fn::If": [
+          "ProvisioningExplicitlyApproved",
+          "alias/soullab/writers-beta",
+          "NOT_PROVISIONED"
+        ]
+      }
+    }
+  }
+}

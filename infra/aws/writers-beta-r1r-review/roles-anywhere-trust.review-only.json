@@ -1,0 +1,28 @@
+{
+  "Version": "2012-10-17",
+  "_REVIEW_ONLY_NOT_AN_IAM_TRUST_POLICY": "Do not attach or deploy this file. Remove this non-IAM comment field only after separate CA/role security review and founder approval.",
+  "Statement": [
+    {
+      "Sid": "OnlyApprovedWriterHostCertificateFromPinnedAINOSAnchor",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "rolesanywhere.amazonaws.com"
+      },
+      "Action": [
+        "sts:AssumeRole",
+        "sts:TagSession",
+        "sts:SetSourceIdentity"
+      ],
+      "Condition": {
+        "ArnEquals": {
+          "aws:SourceArn": "${APPROVED_AINOS_ROLES_ANYWHERE_TRUST_ANCHOR_ARN}"
+        },
+        "StringEquals": {
+          "aws:SourceAccount": "${VERIFIED_AINOS_ACCOUNT_ID}",
+          "aws:PrincipalTag/x509Subject/CN": "${APPROVED_MINISFORUM_RUNTIME_CERT_CN}",
+          "aws:PrincipalTag/x509Issuer/CN": "${APPROVED_CA_ISSUER_CN}"
+        }
+      }
+    }
+  ]
+}
