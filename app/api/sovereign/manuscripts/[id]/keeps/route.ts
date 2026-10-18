@@ -34,6 +34,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { memberRef } from '@/lib/privacy/memberRef';
+import { withHeldR7019BWriter } from '@/lib/writersStudio/recovery/heldR7019BWriterFence';
 import { TurnPosture, contentWritable } from '@/lib/sanctuary/turnPosture';
 
 /** Whitespace/curly-quote-normalized containment check (mirror of extractQuotes' tolerance). */
@@ -86,6 +87,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       return NextResponse.json({ error: 'sectionId and non-empty text are required' }, { status: 400 });
     }
 
+    // Fixture lease encloses BOTH the author-owned Source read and Keep DML.
+    return await withHeldR7019BWriter(memberId,'member_keep',async()=>{
     const section = await query<{ id: string; body: string }>(
       `SELECT s.id, s.body
          FROM manuscript_sections s
@@ -118,6 +121,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       { keep: { id: result.rows[0].id, createdAt: result.rows[0].created_at } },
       { status: 201 },
     );
+    });
   } catch (err) {
     console.error('[press/manuscripts/:id/keeps] POST error:', err);
     return NextResponse.json({ error: 'Failed to keep passage' }, { status: 500 });
@@ -135,6 +139,7 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
     const keepId = request.nextUrl.searchParams.get('keepId');
     if (!keepId) return NextResponse.json({ error: 'keepId is required' }, { status: 400 });
 
+    return await withHeldR7019BWriter(memberId,'member_unkeep',async()=>{
     const result = await query(
       `DELETE FROM manuscript_keeps WHERE id = $1 AND manuscript_id = $2 AND member_id = $3`,
       [keepId, id, memberId],
@@ -143,6 +148,7 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
     return NextResponse.json({ removed: true });
+    });
   } catch (err) {
     console.error('[press/manuscripts/:id/keeps] DELETE error:', err);
     return NextResponse.json({ error: 'Failed to remove keep' }, { status: 500 });

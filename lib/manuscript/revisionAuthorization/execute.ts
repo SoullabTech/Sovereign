@@ -43,6 +43,7 @@ import { transaction, type TransactionClient } from '@/lib/db/postgres';
 /* ⭐ The mutation it lawfully performs, and the projection it only reads —
    from two addresses now, because they are two different capabilities. */
 import { saveSectionInTransaction } from '@/lib/manuscript/sections/saveSection';
+import { holdR7019BDirectSectionTransaction } from '@/lib/writersStudio/recovery/heldR7019BWriterFence';
 import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 import { applyExactlyOnce } from '@/lib/manuscript/exactText';
 import { evaluateExecutionFit } from './executionFit';
@@ -105,6 +106,9 @@ export async function executeAuthorization(
 export async function executeAuthorizationOnClient(
   tx: TransactionClient, memberId: string, authorizationId: string,
 ): Promise<ExecutionOutcome> {
+    // Fixture-only checkpoint fence BEFORE even the authorization row lock.
+    // Reentrant on this same client when the nested section saver runs.
+    await holdR7019BDirectSectionTransaction(tx,memberId);
     /* 1 · ⭐ LOCK, BEFORE ANY MANUSCRIPT READ. */
     const a = await tx.query(
       `SELECT ${AUTH_COLUMNS} FROM manuscript_revision_authorizations

@@ -1,0 +1,240 @@
+{
+  "protocol": "soullab.ws.r7019c.coverage-ledger-held.v1",
+  "sourceParent": "bc4d33c72599e81b176e35e2e31cf19103927218",
+  "classification": "fictional_source_audit_only",
+  "entries": [
+    {
+      "id": "r65_confirmed_paste",
+      "path": "lib/manuscript/source/persistConfirmedPasteR65.ts",
+      "sha256": "ac70c6b8edddad7d68360aae82d6d3538d36153a15d6d09810cd2d6df4146d5b",
+      "anchors": [
+        "withHeldR7019BWriter",
+        "confirmed_paste"
+      ],
+      "status": "physical_fixture"
+    },
+    {
+      "id": "source_arrival_claim",
+      "path": "lib/manuscript/source/arrivals.ts",
+      "sha256": "c1ad1854205a9dcba8b8f059ab333b69bdd71b94696f57341bd81055407d802d",
+      "anchors": [
+        "recordArtifactArrival",
+        "source_arrival",
+        "source_claim"
+      ],
+      "status": "physical_fixture"
+    },
+    {
+      "id": "direct_section_save",
+      "path": "lib/manuscript/sections/saveSection.ts",
+      "sha256": "68bb324b6b3ccf71578efc123f7a9b0700084d0f9eaf4729561e7b5232573db1",
+      "anchors": [
+        "holdR7019BDirectSectionTransaction",
+        "saveSectionInTransaction"
+      ],
+      "status": "physical_fixture"
+    },
+    {
+      "id": "studio_file_upload",
+      "path": "app/api/studio/files/route.ts",
+      "sha256": "cf96118f7f5ab3e67743c5ad6afdd4b078230015b776e21f73293a53971cc992",
+      "anchors": [
+        "studio_file_upload",
+        "writeFile"
+      ],
+      "status": "physical_fixture"
+    },
+    {
+      "id": "member_keep_unkeep",
+      "path": "app/api/sovereign/manuscripts/[id]/keeps/route.ts",
+      "sha256": "4a7af61a38b781a8875c92e19fdead379e7a3699d1e6e31f042776e272240a87",
+      "anchors": [
+        "member_keep",
+        "member_unkeep"
+      ],
+      "status": "physical_fixture"
+    },
+    {
+      "id": "held_source_draft_read",
+      "path": "lib/writersStudio/recovery/heldR7019CSourceDraftScope.ts",
+      "sha256": "baac153e80e15e8debe0a3223bad9c9b8e0f7026c7ed14c431fc9eb97d5441f7",
+      "anchors": [
+        "inspectHeldR7019CSourceAndDraft",
+        "allMutationPathsCovered:false"
+      ],
+      "status": "physical_fixture"
+    },
+    {
+      "id": "held_draft_revision_reader",
+      "path": "lib/writersStudio/recovery/heldR7018DraftSlice.ts",
+      "sha256": "5058d8f3b53199e02ce39905d0948ffa8cda5c33f72d655deaced79495aad186",
+      "anchors": [
+        "captureR7018HeldDraftSlice",
+        "R7018_DRAFT_COORDINATOR_ENABLED=false"
+      ],
+      "status": "physical_fixture"
+    },
+    {
+      "id": "source_discard_erasure_debt",
+      "path": "lib/manuscript/source/discardUnclaimedArrival.ts",
+      "sha256": "c5f94c6dcd851a993950d71f9e442fd2775e713b858a9095960a552bada5135c",
+      "anchors": [
+        "source_discard",
+        "discardUnclaimedArrival"
+      ],
+      "status": "code_only_held"
+    },
+    {
+      "id": "manuscript_erasure_inline",
+      "path": "lib/manuscript/source/eraseManuscript.ts",
+      "sha256": "9f25157a102c78d571e218cef051140f3515322d18e16cbfe4eab9af3d151eda",
+      "anchors": [
+        "source_erasure",
+        "vault_erasure_queue"
+      ],
+      "status": "code_only_held"
+    },
+    {
+      "id": "revision_authorization_apply",
+      "path": "lib/manuscript/revisionAuthorization/execute.ts",
+      "sha256": "4f7642a5df1f4a8ad479dc466145943fcdd4ab4cb036ad35d53e1c39322b9a2d",
+      "anchors": [
+        "holdR7019BDirectSectionTransaction",
+        "executeAuthorizationOnClient"
+      ],
+      "status": "code_only_held"
+    },
+    {
+      "id": "editorial_undo",
+      "path": "lib/manuscript/editorialRuntime/recovery.ts",
+      "sha256": "73e3f0fb6337dee89bb701850e7310b0ed4bd9583c313593bcc74ad762466786",
+      "anchors": [
+        "holdR7019BDirectSectionTransaction",
+        "undoApplication"
+      ],
+      "status": "code_only_held"
+    },
+    {
+      "id": "legacy_direct_revision_restore",
+      "path": "app/api/sovereign/manuscripts/[id]/draft/revisions/route.ts",
+      "sha256": "4da119523ae4363a2206704a9002b14bd4129616c2727f53c81a8617eeeeacc8",
+      "anchors": [
+        "restoreSectionAddressable",
+        "UPDATE manuscript_working_drafts"
+      ],
+      "status": "unfenced"
+    },
+    {
+      "id": "studio_file_soft_delete",
+      "path": "app/api/studio/files/route.ts",
+      "sha256": "cf96118f7f5ab3e67743c5ad6afdd4b078230015b776e21f73293a53971cc992",
+      "anchors": [
+        "UPDATE practitioner_files SET status"
+      ],
+      "status": "unfenced"
+    },
+    {
+      "id": "studio_file_metadata",
+      "path": "app/api/studio/files/[fileId]/route.ts",
+      "sha256": "4d45ef69eba24a9c320c789df8f9b981227a1ae06a837d55d86598bbab991101",
+      "anchors": [
+        "UPDATE practitioner_files SET",
+        "fileScope"
+      ],
+      "status": "unfenced"
+    },
+    {
+      "id": "async_vault_erasure",
+      "path": "scripts/ops/sweep-vault-erasure-queue.ts",
+      "sha256": "a55a19214b23e617009bef4fb8c43eda39f97c04679ba213257dd393258aeac5",
+      "anchors": [
+        "vault_erasure_queue"
+      ],
+      "status": "unfenced"
+    },
+    {
+      "id": "revision_grant_store",
+      "path": "lib/manuscript/revisionAuthorization/store.ts",
+      "sha256": "36dd486c67be854873b1022bdc3108dfa63bf3cb189463efa519e81553b33e39",
+      "anchors": [
+        "revision_authorizations"
+      ],
+      "status": "unfenced"
+    },
+    {
+      "id": "proposal_versions",
+      "path": "lib/manuscript/proposalChain/proposalWork.ts",
+      "sha256": "e942007cea85f1a40f8027af7edb79412161ad930b83742b6a89f2b092caf64d",
+      "anchors": [
+        "proposal_versions"
+      ],
+      "status": "unfenced"
+    },
+    {
+      "id": "account_deletion",
+      "path": "app/api/members/delete-account/route.ts",
+      "sha256": "ffe44ff6d8cd29872f42c2deb8054c27742299952210e5d434d9548c3604848c",
+      "anchors": [
+        "export async function"
+      ],
+      "status": "unfenced"
+    },
+    {
+      "id": "r71_private_fixture",
+      "path": "lib/writersStudio/recovery/r71FictionalCanonicalEditorial.ts",
+      "sha256": "68115149f47241a7989431e386913ba8ae98e239f55ae4eb27e4e96e5f07d427",
+      "anchors": [
+        "R71_PRODUCTION_ENABLED=false"
+      ],
+      "status": "fixture_only_not_live"
+    },
+    {
+      "id": "shared_writer_lease",
+      "path": "lib/writersStudio/recovery/heldR7019BWriterFence.ts",
+      "sha256": "7f463f8365e8ce35e6bf9f064ab7c92a8af40ee827290fa38722bf39236aeb6b",
+      "anchors": [
+        "withHeldR7019BCapture",
+        "nested_cross_client_writer_lease",
+        "pg_advisory_xact_lock"
+      ],
+      "status": "physical_fixture"
+    },
+    {
+      "id": "exported_snapshot_encrypted_db_vault",
+      "path": "scripts/ops/wsBetaR7019CEncryptedFixture.ts",
+      "sha256": "54b1636ebf37cc7376d88ba2f04cd0091271553d10471b1b4f5ae9919a97eab0",
+      "anchors": [
+        "pg_export_snapshot",
+        "'--snapshot='+sid",
+        "verifyR7019CFictionalCompletePoint"
+      ],
+      "status": "physical_fixture"
+    },
+    {
+      "id": "source_destroy_fresh_restore_witness",
+      "path": "scripts/ops/wsBetaR7019CPhysicalPG16.ts",
+      "sha256": "270dab5c3ff288338d94f1a3049b1f23a3bb146908ffde0d92e95643515cd027",
+      "anchors": [
+        "source_pg16_destroyed_before_independent_restore",
+        "R7019C_COHERENT_DB_VAULT_COLD_RESTORE_PG16.json"
+      ],
+      "status": "physical_fixture"
+    }
+  ],
+  "unresolvedNonFileAuthority": [
+    "production_multi_member_backup_scope",
+    "nonparticipating_writer_quiescence",
+    "wal_temp_snapshot_and_pitr",
+    "off_machine_recovery_key_and_signed_manifest",
+    "current_external_erasure_highwater",
+    "historic_archives_nas_recycle_and_retention",
+    "live_authenticated_mac_safari_and_provider_consent",
+    "single_approved_production_backup_schedule",
+    "real_member_release_and_rollback"
+  ],
+  "sourceIdentityNotSameAsRuntimeCoverage": true,
+  "deletionResurrectionSafetyProven": false,
+  "independentOffsiteRestoreProven": false,
+  "fullWriterBackupComplete": false,
+  "realMemberAdmissionApproved": false
+}

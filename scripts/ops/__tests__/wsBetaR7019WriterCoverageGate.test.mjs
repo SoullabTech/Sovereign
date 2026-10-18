@@ -15,15 +15,16 @@ import {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const byId = (id) => R7019_MANIFEST.entries.find((e) => e.id === id);
 
-test('R1S frozen source remains pinned, while R70.19B changed writers fail closed', () => {
+test('R1S frozen source remains pinned, while R70.19C reconciled Source and writers remain held', () => {
   const result = assessR7019WholeWriterCoverage(root);
   assert.equal(R7019_MANIFEST.baselineSourceHead,
     '441616dbf5a597f9ef297ad3dafead3be5f2ceb3');
-  assert.equal(result.verifiedKnownEntries, 6);
+  assert.equal(result.verifiedKnownEntries, 2);
   assert.equal(result.knownRequiredEntries, 11);
   assert.deepEqual(result.drift.map(x=>x.id).sort(), [
-    'confirmed-paste','draft-section-save','nested-section-save',
-    'studio-file-delete','studio-file-upload',
+    'confirmed-paste','arrival-original','source-claim','source-discard',
+    'draft-section-save','nested-section-save','studio-file-delete',
+    'studio-file-upload','source-erasure',
   ].sort());
   assert.ok(result.drift.every(x=>x.reason==='source_digest_changed'));
   assert.equal(result.status, 'R7019_WRITER_SOURCE_CUSTODY_DRIFT_HELD');

@@ -10,6 +10,7 @@
  * Any unparticipating writer or missing vault byte defeats backup readiness.
  */
 import { Client } from 'pg';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { lstat, readFile, realpath, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import type { Dirent } from 'node:fs';
@@ -22,7 +23,15 @@ const LOCK = 'soullab.ws.r70.17.writer-and-source-capture.v1';
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const DB = /^postgresql:\/\/fict@127\.0\.0\.1:\d{2,5}\/ws_atomic$/;
 const VAULT = /^\/private\/tmp\/ws-r7019b-fixture-([a-f0-9]{12})\/vault$/;
-type Writer = 'confirmed_paste' | 'studio_file_upload';
+type Writer =
+  | 'confirmed_paste'
+  | 'studio_file_upload'
+  | 'source_arrival'
+  | 'source_claim'
+  | 'source_discard'
+  | 'member_keep'
+  | 'member_unkeep'
+  | 'source_erasure';
 type Ident = { nonce: string; member_id: string; practitioner_id: string };
 
 export class R7019BRefusal extends Error {
@@ -32,6 +41,9 @@ export class R7019BRefusal extends Error {
   }
 }
 const stop = (code: string): never => { throw new R7019BRefusal(code); };
+// Two separate PostgreSQL clients must never recursively wait on our own
+// session lease. Fictitious nesting fails closed rather than hanging.
+const fixtureWriterScope=new AsyncLocalStorage<boolean>();
 
 async function fixtureScope(memberId: string): Promise<{
   url: string; vault: string; nonce: string;
@@ -99,7 +111,10 @@ export async function withHeldR7019BWriter<T>(
   practitionerId?: string,
 ): Promise<T> {
   if (process.env.R7019B_WRITER_FIXTURE === undefined) return action();
-  if (kind !== 'confirmed_paste' && kind !== 'studio_file_upload') {
+  if(fixtureWriterScope.getStore())stop('nested_cross_client_writer_lease');
+  if (!(['confirmed_paste','studio_file_upload','source_arrival',
+          'source_claim','source_discard','member_keep','member_unkeep',
+          'source_erasure'] as Writer[]).includes(kind)) {
     stop('unknown_writer');
   }
   const scope = await fixtureScope(memberId);
@@ -115,7 +130,7 @@ export async function withHeldR7019BWriter<T>(
       'SELECT pg_advisory_lock(hashtextextended($1::text,0))', [LOCK],
     );
     locked = true;
-    return await action();
+    return await fixtureWriterScope.run(true,action);
   } finally {
     try {
       if (locked) {
@@ -138,6 +153,7 @@ export async function holdR7019BDirectSectionTransaction(
   tx: TransactionClient, memberId: string,
 ): Promise<void> {
   if (process.env.R7019B_WRITER_FIXTURE === undefined) return;
+  if(fixtureWriterScope.getStore())stop('nested_cross_client_section_lease');
   const scope = await fixtureScope(memberId);
   await verifiedIdentity(tx, memberId, scope.nonce);
   await tx.query("SET LOCAL statement_timeout='8000ms'");

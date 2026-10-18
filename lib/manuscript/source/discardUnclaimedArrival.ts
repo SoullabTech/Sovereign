@@ -11,6 +11,7 @@
  */
 import { query, transaction } from '@/lib/db/postgres';
 import { destroyVaultBytes } from '@/lib/storage/fileVault';
+import { withHeldR7019BWriter } from '@/lib/writersStudio/recovery/heldR7019BWriterFence';
 
 export type DiscardArrivalOutcome =
   | { kind: 'discarded'; bytesDestroyed: true }
@@ -18,7 +19,7 @@ export type DiscardArrivalOutcome =
   | { kind: 'already_claimed' }
   | { kind: 'erasure_pending' };
 
-export async function discardUnclaimedArrival(
+async function discardUnclaimedArrivalUnfenced(
   arrivalId: string,
   memberId: string,
 ): Promise<DiscardArrivalOutcome> {
@@ -79,4 +80,14 @@ export async function discardUnclaimedArrival(
   // already-absent vault artifact is idempotent.
   await query('DELETE FROM vault_erasure_queue WHERE id = $1', [locked.queueId]);
   return { kind: 'discarded', bytesDestroyed: true };
+}
+
+
+/** Covers the original durable erasure debt AND file deletion in the same
+ * fictitious lease. No production erasure schedule is inferred. */
+export async function discardUnclaimedArrival(
+  arrivalId: string, memberId: string,
+): Promise<DiscardArrivalOutcome> {
+  return withHeldR7019BWriter(memberId, 'source_discard',
+    () => discardUnclaimedArrivalUnfenced(arrivalId, memberId));
 }

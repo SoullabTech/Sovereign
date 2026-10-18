@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { withHeldR7019BWriter } from '@/lib/writersStudio/recovery/heldR7019BWriterFence';
 import { query, transaction } from '@/lib/db/postgres';
 import { readVaultBytes, writeDurableVaultBytes } from '@/lib/storage/fileVault';
 import {
@@ -41,7 +42,7 @@ export interface StoredArrival {
 }
 
 /** Persist a file-backed arrival: bytes to the vault, then the governing row. */
-export async function recordArtifactArrival(params: {
+async function recordArtifactArrivalUnfenced(params: {
   memberId: string;
   bytes: Buffer;
   originalFilename: string;
@@ -73,6 +74,12 @@ export async function recordArtifactArrival(params: {
 
   return insertArrival(params.memberId, record);
 }
+export async function recordArtifactArrival(
+  params: Parameters<typeof recordArtifactArrivalUnfenced>[0],
+): Promise<StoredArrival> {
+  return withHeldR7019BWriter(params.memberId, 'source_arrival',
+    () => recordArtifactArrivalUnfenced(params));
+}
 
 /**
  * Persist a member-supplied arrival: the exact text at the confirmation act.
@@ -81,7 +88,7 @@ export async function recordArtifactArrival(params: {
  * not become hidden clipboard capture. The authoritative source is what the
  * member submitted when they confirmed the import.
  */
-export async function recordSuppliedArrival(params: {
+async function recordSuppliedArrivalUnfenced(params: {
   memberId: string;
   sourceText: string;
 }): Promise<StoredArrival> {
@@ -89,6 +96,12 @@ export async function recordSuppliedArrival(params: {
     params.memberId,
     buildArrival({ kind: MEMBER_SUPPLIED_TEXT, sourceText: params.sourceText }),
   );
+}
+export async function recordSuppliedArrival(
+  params: Parameters<typeof recordSuppliedArrivalUnfenced>[0],
+): Promise<StoredArrival> {
+  return withHeldR7019BWriter(params.memberId, 'source_arrival',
+    () => recordSuppliedArrivalUnfenced(params));
 }
 
 async function insertArrival(
@@ -138,7 +151,7 @@ async function insertArrival(
  * historical unreferenced vault bytes are abandoned, or transfer a pending
  * arrival's future encryption key. Those remain separate release gates.
  */
-export async function claimArrival(
+async function claimArrivalUnfenced(
   arrivalId: string,
   manuscriptId: string,
   memberId: string,
@@ -203,6 +216,12 @@ export async function claimArrival(
     }
     return true;
   });
+}
+export async function claimArrival(
+  arrivalId: string, manuscriptId: string, memberId: string,
+): Promise<boolean> {
+  return withHeldR7019BWriter(memberId, 'source_claim',
+    () => claimArrivalUnfenced(arrivalId, manuscriptId, memberId));
 }
 
 /**

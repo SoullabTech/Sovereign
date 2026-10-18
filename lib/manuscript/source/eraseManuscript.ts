@@ -61,6 +61,7 @@
 
 import { transaction, query, type TransactionClient } from '@/lib/db/postgres';
 import { destroyVaultBytes } from '@/lib/storage/fileVault';
+import { withHeldR7019BWriter } from '@/lib/writersStudio/recovery/heldR7019BWriterFence';
 
 export type EraseOutcome =
   /** Rows are gone. `sweptAll` is false when bytes are still owed destruction. */
@@ -75,7 +76,7 @@ export type EraseOutcome =
  * member's id matches zero rows and is answered `not_found` — never confirming
  * that the id exists at all.
  */
-export async function eraseManuscript(
+async function eraseManuscriptUnfenced(
   manuscriptId: string,
   memberId: string,
 ): Promise<EraseOutcome> {
@@ -138,6 +139,15 @@ export async function eraseManuscript(
     artifactsQueued: result.refs.length,
     sweptAll: swept.remaining === 0,
   };
+}
+/** Fixture lease covers the whole existing deletion transaction, the debt
+ * receipt and the inline vault sweep. Separate queue consumers and external
+ * archives remain unqualified and cannot authorize erasure claims. */
+export async function eraseManuscript(
+  manuscriptId: string, memberId: string,
+): Promise<EraseOutcome> {
+  return withHeldR7019BWriter(memberId,'source_erasure',
+    () => eraseManuscriptUnfenced(manuscriptId,memberId));
 }
 
 /**
