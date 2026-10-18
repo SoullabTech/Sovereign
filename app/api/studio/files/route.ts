@@ -412,13 +412,13 @@ export async function DELETE(request: NextRequest) {
 
     if (fileId) {
       if (permanent) {
-        const fileResult = await db.query(
-          `DELETE FROM practitioner_files WHERE id = $1 AND practitioner_id = $2 RETURNING storage_path`,
-          [fileId, practitionerId]
+        // Removing only the SQL row leaves the original vault bytes on disk.
+        // Do not claim permanent erasure until a journaled, independently
+        // verified physical/backup deletion service is qualified.
+        return NextResponse.json(
+          { success: false, error: 'Permanent file erasure is not available' },
+          { status: 503, headers: { 'Cache-Control': 'private, no-store' } }
         );
-        if (fileResult.rows.length === 0) {
-          return NextResponse.json({ success: false, error: 'File not found' }, { status: 404 });
-        }
       } else {
         const result = await db.query(
           `UPDATE practitioner_files SET status = 'deleted', deleted_at = NOW(), updated_at = NOW()
@@ -449,7 +449,9 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'File or folder ID required' }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(fileId
+      ? { success: true, deletionMode: 'soft', originalBytesDestroyed: false }
+      : { success: true });
   } catch (error) {
     console.error('[Studio Files] DELETE error:', error);
     return NextResponse.json({ success: false, error: 'Failed to delete' }, { status: 500 });

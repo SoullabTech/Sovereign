@@ -5,7 +5,7 @@ import db from '@/lib/db/postgres';
 import { cookies } from 'next/headers';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
-import { resolveCurrentTeamId, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
+import { resolveCurrentTeamId, canActInTeam, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
 import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
@@ -123,8 +123,29 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
     }
 
-    const body = await request.json();
-    const { name, description, tags, folderPath, status, fileScope, teamId: bodyTeamId } = body;
+    const body: unknown = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json({ success: false, error: 'Invalid update' }, { status: 400 });
+    }
+    const { name, description, tags, folderPath, status, fileScope, teamId: bodyTeamId } =
+      body as Record<string, unknown>;
+    // A metadata PATCH must not quietly resurrect a soft-deleted file, or
+    // turn a client-supplied Co-Lab ID into authority over shared content.
+    if (status !== undefined && status !== 'active' && status !== 'archived') {
+      return NextResponse.json({ success: false, error: 'Invalid file status' }, { status: 400 });
+    }
+    if (fileScope !== undefined || bodyTeamId !== undefined) {
+      if (fileScope !== 'personal' && fileScope !== 'colab') {
+        return NextResponse.json({ success: false, error: 'Unsupported scope change' }, { status: 400 });
+      }
+      if (fileScope === 'personal' && bodyTeamId != null) {
+        return NextResponse.json({ success: false, error: 'Personal scope cannot use a team ID' }, { status: 400 });
+      }
+      if (fileScope === 'colab' &&
+          (typeof bodyTeamId !== 'string' || !(await canActInTeam(memberId, bodyTeamId)))) {
+        return NextResponse.json({ success: false, error: 'Unauthorized Co-Lab scope' }, { status: 403 });
+      }
+    }
 
     const updateFields: string[] = [];
     const updateParams: unknown[] = [fileId, practitionerId];
@@ -149,13 +170,16 @@ export async function PATCH(
       updateFields.push(`status = $${updateParams.length + 1}`);
       updateParams.push(status);
     }
-    if (fileScope !== undefined && ['personal', 'colab', 'client', 'encounter'].includes(fileScope)) {
+    if (fileScope === 'personal' || fileScope === 'colab') {
       updateFields.push(`file_scope = $${updateParams.length + 1}`);
       updateParams.push(fileScope);
-      // If promoting to colab scope, require teamId
-      if (fileScope !== 'personal' && bodyTeamId) {
+      if (fileScope === 'personal') {
+        updateFields.push('team_id = NULL', 'client_id = NULL', 'encounter_id = NULL');
+      } else {
+        // Exact membership already checked above; never trust raw bodyTeamId.
         updateFields.push(`team_id = $${updateParams.length + 1}`);
         updateParams.push(bodyTeamId);
+        updateFields.push('client_id = NULL', 'encounter_id = NULL');
       }
     }
 
@@ -167,7 +191,7 @@ export async function PATCH(
 
     const result = await db.query(
       `UPDATE practitioner_files SET ${updateFields.join(', ')}
-       WHERE id = $1 AND practitioner_id = $2
+       WHERE id = $1 AND practitioner_id = $2 AND status <> 'deleted'
        RETURNING *`,
       updateParams
     );
