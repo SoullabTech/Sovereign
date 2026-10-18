@@ -228,12 +228,17 @@ test('WebKit presents six official source links with safe outbound navigation',a
       assert.ok(rel.split(/\s+/).includes('noopener'),id);
       assert.ok(rel.split(/\s+/).includes('noreferrer'),id);
       assert.ok((await link.innerText()).length>10,id);
+      assert.equal(await link.evaluate(el=>el.tabIndex),0,
+        'links must remain naturally keyboard-focusable: '+id);
     }
     const first=page.getByTestId('keeper-link-author-website');
     await first.focus();
     assert.equal(await first.evaluate(el=>document.activeElement===el),true);
-    await page.keyboard.press('Tab');
+    // WebKit/Safari link Tab traversal depends on the platform's keyboard
+    // navigation preference. Check DOM tab eligibility and focus semantics
+    // for both anchors instead of assuming that OS preference in CI.
     const second=page.getByTestId('keeper-link-academy');
+    await second.focus();
     assert.equal(await second.evaluate(el=>document.activeElement===el),true);
     assert.deepEqual(external,[], 'no automatic outbound requests');
     assert.deepEqual(errors,[]);
