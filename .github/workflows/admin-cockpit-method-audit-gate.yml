@@ -1,0 +1,58 @@
+# Class A: isolated Admin Cockpit method-aware authorization + audit regressions.
+# No real credentials or PostgreSQL; this does NOT authorize merge or release.
+# A green run proves only these fictional exact-head test cases passed.
+name: Admin Cockpit Method-Aware Audit Gate
+
+on:
+  pull_request:
+    branches: [clean-main-no-secrets]
+    paths:
+      - 'app/api/admin/auth/route.ts'
+      - 'lib/admin/adminAuth.ts'
+      - 'config/accessMatrix.ts'
+      - 'config/__tests__/reflectLegacyMethodAwareAdminRouting.test.ts'
+      - 'config/__tests__/reflectLegacyCockpitFullEntryChain.test.ts'
+      - 'app/api/admin/reflect-release-status/route.ts'
+      - 'app/api/admin/__tests__/reflect-release-status.route.test.ts'
+      - '.github/workflows/admin-cockpit-method-audit-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  hermetic-admin-cockpit:
+    name: Fictional admin authorization, audit, and Lab Tools entry
+    runs-on: ubuntu-latest
+    env:
+      CI: 'true'
+      DATABASE_URL: 'postgresql://invalid:invalid@127.0.0.1:1/fixture_denied'
+      LABTOOLS_ADMIN_PASSWORD: ''
+      ADMIN_RESET_SECRET: ''
+      PRO_STUDIO_REFLECT_BETA_ENABLED: 'false'
+      MEMBER_ACCESS_RECOVERY_ENABLED: '0'
+    steps:
+      - name: Checkout exact PR commit
+        uses: actions/checkout@v4
+
+      - name: Set up pinned Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install pinned dependencies
+        run: npm ci
+
+      - name: Run actual proxy, Lab Tools, owner GET, password POST, and Reflect regressions
+        run: >-
+          npx --no-install jest --config jest.config.js --runInBand --runTestsByPath
+          config/__tests__/reflectLegacyMethodAwareAdminRouting.test.ts
+          config/__tests__/reflectLegacyCockpitFullEntryChain.test.ts
+          config/__tests__/reflectionsRouteAuthority.test.ts
+          config/__tests__/writersStudioAccessCorridor.test.ts
+          app/api/admin/__tests__/admin-routes-hotfix.test.ts
+          app/api/admin/__tests__/admin-routes-tier2.test.ts
+          app/api/admin/__tests__/reflect-release-status.route.test.ts
+          lib/proStudio/__tests__/reflectAdminRuntimeStatus.test.ts
+          lib/access/__tests__/labAccess.test.ts

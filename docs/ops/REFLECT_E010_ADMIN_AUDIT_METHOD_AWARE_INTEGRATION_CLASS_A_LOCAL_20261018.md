@@ -42,3 +42,36 @@
 ## Disposition
 
 **LOCAL SOURCE REVIEW CANDIDATE ONLY.** No push, no PR mutation, no merge, no production or real-member enablement.
+
+## JARVIS O6 follow-up qualification — source-only
+
+- Added a **versioned six-case** fictional end-to-end server entry-chain suite using actual
+  \`proxy.ts\`, \`LabToolsLayout\`, \`requireLabAccess\`, \`getCurrentSession\`,
+  \`GET/POST /api/admin/auth\`, and \`GET /api/admin/reflect-release-status\`.
+  This records the existing multi-gate account/cookie behavior; client display
+  and SQL rows are fictional and the test does not claim real Safari UI or
+  production ingress proof.
+- Local candidate with full server-chain and existing Lab Tools checks:
+  **9/9 Jest suites; 148/148 PASS** before this documentation supplement.
+- Separate disposable overlay of exactly 27 Draft PR #1849 changed files
+  from pinned PR base \`6a144edabc686afc9b99828726c214dc7800158f\`
+  to head \`b383befe12d744ae523acf6e4894ae65561ebaa2\`.
+  \`config/accessMatrix.ts\` conflicted because both PRs add exact routes,
+  so PR #1849's two blocks of rules were merged explicitly without removing
+  E010 owner, settings or Reflect gates. **12/12 Jest suites, 197/197 PASS**
+  with its fictional recovery tests, the new full-chain cases, and Lab Tools.
+  The overlay is a disposable compatibility witness, NOT an integration commit
+  or production migration.
+- Added a read-only, secret-free GitHub Actions workflow scoped to the exact
+  candidate routes and related tests. It will run on review-only PR
+  publication and supplies a targeted exact-SHA CI gate, separate from the
+  canonical PR quality, Covenant and Docker checks.
+- **Outstanding**: independent human Class A review; browser/physical Safari
+  witness of the actual system page and password-entry UI; canonical freshness;
+  unresolved repo-wide scanners already identified; #1847 member reset
+  safeguards and #1848 privileged script; permitted publication authority,
+  CI, merge and deployment decision. The #1849 overlay does not approve
+  account recovery or any change to the production members.
+- No editing of real member roles, allowlists or consent records; no real
+  administrator challenges; no member invitations, billing, credential
+  changes, Reflect activation, production writes or deployments.
