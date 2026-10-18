@@ -173,3 +173,33 @@ test('no UI authority or enacted member source changes are implied by documents'
   assert.match(served,/APPROVED_PERRY_EDITORIAL_SOURCE: ApprovedPerryEditorialSource \| null = null/);
   assert.equal(field.feature_permissions_outstanding.length,8);
 });
+
+test('umbrella Commons pilot cannot silently graduate Keeper Field into member access',()=>{
+  const x=community.keeper_hosted_fields;
+  assert.equal(x.status,'approval_candidate_not_active');
+  assert.equal(x.founder_approval_required,true);
+  assert.equal(x.keeper_specific_acceptance_required,true);
+  assert.equal(x.member_informed_entry_required,true);
+  assert.equal(x.verified_operational_access_required,true);
+  assert.equal(x.recording_requires_separate_consent,true);
+  assert.equal(x.copyright_licensing_independent,true);
+  assert.equal(x.role_scope_limited_and_revocable,true);
+  for(const k of ['glenn_perry_field_exists','keeper_role_assigned','member_enrollment_open',
+    'keeper_can_access_private_member_data','maia_may_speak_as_keeper','open_events',
+    'auto_invitations','live_runtime'])assert.equal(x[k],false,k);
+});
+
+test('existing founder preview is a switchable illustration, not a live keeper room',()=>{
+  const ui=source('components/maia/knowledge/PerryLensFounderPreview.tsx');
+  assert.ok(ui.includes('keeper-hosted-field-concept'));
+  assert.ok(ui.includes('hostedFieldPerspective'));
+  assert.ok(ui.includes('field-member-view'));
+  assert.ok(ui.includes('field-keeper-view'));
+  assert.ok(ui.includes('Not an active room.'));
+  assert.ok(ui.includes('Glenn Perry remains an unaffiliated referenced author.'));
+  assert.ok(ui.includes('No invitations, signups'));
+  assert.ok(!ui.includes('createKeeperField('));
+  assert.ok(!ui.includes('joinKeeperField('));
+  assert.ok(!ui.includes('apiFetch('));
+  assert.ok(!ui.includes('fetch('));
+});
