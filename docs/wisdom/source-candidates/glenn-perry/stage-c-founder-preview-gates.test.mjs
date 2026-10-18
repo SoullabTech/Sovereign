@@ -193,7 +193,7 @@ test('native patcher excludes dynamic server founder preview from iPhone export'
   const page=source('app/maia/perry-lens-preview/page.tsx');
   assert.ok(page.includes("export const dynamic = 'force-dynamic'"));
   assert.ok(patcher.includes('hide_incompatible_pages()'));
-  assert.ok(patcher.includes("export const dynamic.*=.*['\\\"]force-dynamic['\\\"]"));
+  assert.match(patcher,/grep -qE.*export const dynamic.*force-dynamic/);
   assert.ok(patcher.includes('MOBILE_MAIA_KEEP=()'));
 });
 
