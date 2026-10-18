@@ -14,6 +14,18 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## Stage N — Full protected Next.js 16 build PASS, canonical type gate PASS (release HOLD)
+
+**Next milestone verified without any production access.** At pinned protected commit `6a144edabc686afc9b99828726c214dc7800158f`, with the three exact Gather Together preview modules from research revision `b316e70627d03ca79ed3eebbbafcf9073961f41e`, the Mac Studio completed a **full Next.js 16.3.8 offline production-mode Webpack build**: exit **0**, **823/823** static pages, `/wisdom-keepers/wisdom/gather-preview` compiled, and the normal Next **Proxy (Middleware)** emitted.
+
+- [Stage N offline Prisma/full-build/type-health witness](./STAGE-N_OFFLINE-PRISMA_FULL-NEXT16-BUILD-TYPEHEALTH-WITNESS_20261018.md): checksum-verified local Prisma 5.22.0 engines, isolated generated client, exact-source checks, full build and separate canonical type-health evidence.
+- **Prisma blocker resolved offline:** Native artifacts were copied into a disposable dependency farm and the Prisma client was generated using the pinned schema and no network connection. The source schema was not modified; Prisma's generated schema matched a separately formatted copy.
+- **Governed `tsconfig.ship.json` no-regression gate PASS:** 222 diagnostics versus 239 baselined; **no new TypeScript regressions** and 765 more files in the programme. Initial fixture runner failed to find `.bin/tsc`, then its local symlink was restored without changing shared dependencies and the gate passed read-only. Baseline unchanged.
+- **Do not deploy this test bundle:** Font files are an intentionally offline-only mock, and optional Capacitor Contacts import warnings remain. The broader `tsconfig.core.json` standalone check still reports 516 diagnostics elsewhere (none from the three new Gather files). Full **runtime** acceptance is separate.
+- The generated `.next/cache` (~3.8 GB) was removed after the successful build, leaving the compiled route manifest and a private **DO_NOT_DEPLOY** warning in the isolated temporary snapshot. Approximately **40 GiB** free remained; the original `http://127.0.0.1:3817/fixture` Mac Studio preview still works.
+
+**Next decision:** an isolated, disposable **full-product runtime test with fictional PostgreSQL identities** and proper cookie/revocation/host/privacy checks, then a *separate* founder-approved real staging login. No release, outreach, Circle/video admission, licensed source ingestion, or production change has occurred.
+
 ## Stage M — Full protected Next.js 16 offline build preflight (HOLD)
 
 A **complete protected source archive** (`6a144edabc686afc9b99828726c214dc7800158f`) was created in a disposable Mac Studio directory and the three research-source Gather Together files were added **without changing the active worktree**. All three existing pre-build validators passed with outbound network denied.
