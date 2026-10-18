@@ -7,6 +7,8 @@ on:
     branches: [clean-main-no-secrets]
     paths:
       - 'lib/admin/memberRecovery.ts'
+      - 'config/accessMatrix.ts'
+      - 'config/__tests__/memberRecoveryAccessPolicy.test.ts'
       - 'app/api/admin/members/recovery/**'
       - 'app/api/members/admin-recovery/**'
       - 'app/labtools/admin/command-center/member-access/**'
@@ -43,6 +45,7 @@ jobs:
         run: >-
           npx --no-install jest --config jest.config.js --runInBand --runTestsByPath
           app/api/admin/members/recovery/__tests__/memberAccessRecovery.test.ts
+          config/__tests__/memberRecoveryAccessPolicy.test.ts
 
   ephemeral-postgres-witness:
     name: Fictional PostgreSQL atomicity and concurrent replay
