@@ -151,7 +151,7 @@ test('invitation names the real host category and withholds unscheduled details'
 
 test('plain-language entry consent does not promise impossible group confidentiality',()=>{
   assert.ok(invitation.includes('cannot promise perfect confidentiality'));
-  assert.ok(invitation.includes('other participants can hear'));
+  assert.match(invitation,/participants may hear what you choose to say/i);
   assert.ok(invitation.includes('if they wish')||invitation.includes('may speak'));
   assert.ok(invitation.includes('privacy arrangements'));
   assert.match(invitation,/\*\*before\*\* a real event is offered/);
