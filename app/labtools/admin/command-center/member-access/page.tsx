@@ -8,7 +8,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { KeyRound, Search, ShieldCheck, Mail, Copy, AlertTriangle, ArrowLeft, Lock } from 'lucide-react';
 import Link from 'next/link';
-import { adminFetch } from '@/lib/admin/adminFetch';
+/**
+ * Do not forward the shared admin password from the legacy Command Center's
+ * localStorage. Recovery is founder MEMBER SESSION only. Session cookies and
+ * validated member tokens are sufficient; password-only admins must be denied.
+ */
+async function founderSessionFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(init.headers);
+  try {
+    const sessionToken = window.localStorage.getItem('maia_session_token');
+    if (sessionToken && !headers.has('x-session-token')) headers.set('x-session-token', sessionToken);
+  } catch {
+    // Session cookie can still carry the verified member session.
+  }
+  return fetch(path, { ...init, headers, credentials: 'same-origin' });
+}
 
 type MemberRow = { id: string; name: string | null; username: string | null; email: string | null; admin_role: string | null };
 type DeliveryMode = 'email' | 'private_handoff';
@@ -31,7 +45,7 @@ export default function MemberAccessPage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await adminFetch('/api/admin/members', { cache: 'no-store' });
+        const res = await founderSessionFetch('/api/admin/members', { cache: 'no-store' });
         if (!res.ok) throw new Error('Member directory is unavailable or your account lacks admin access');
         const body = await res.json();
         if (!cancelled) setMembers(Array.isArray(body.members) ? body.members : []);
@@ -71,7 +85,7 @@ export default function MemberAccessPage() {
     setMessage('');
     setHandoffLink(null);
     try {
-      const res = await adminFetch('/api/admin/members/recovery', {
+      const res = await founderSessionFetch('/api/admin/members/recovery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
