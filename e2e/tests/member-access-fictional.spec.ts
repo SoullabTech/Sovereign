@@ -33,6 +33,16 @@ async function setMock(route: Route, status: number, data: unknown) {
 
 async function fictional(page: Page, options: { founder?: boolean; issueFailure?: boolean; delayMs?: number } = {}): Promise<Harness> {
   const capture: Harness = { issued: [], redeemed: [] };
+  // Real Next.js proxy/role middleware verifies this against a separate
+  // ephemeral PostgreSQL fixture BEFORE serving the Admin page. This cookie
+  // alone is NOT accepted without the matching database session.
+  await page.context().addCookies([{
+    name: 'maia_session',
+    value: 'fictional-founder-session',
+    url: 'http://localhost:3000',
+    httpOnly: true,
+    sameSite: 'Lax',
+  }]);
   // Any attempts to load external domains are refused rather than contacting
   // the user's live platform or third-party services. Next assets stay local.
   await page.route('**/*', async route => {
