@@ -125,5 +125,21 @@
   },
   "source_status": "research_only_not_corpus_admitted",
   "deployment_authorized": false,
-  "next_human_decision": "Review exact invitation, facilitator scope, and room privacy before any date or real member outreach."
+  "next_human_decision": "Review exact invitation, facilitator scope, and room privacy before any date or real member outreach.",
+  "online_first_delivery": {
+    "selected_as_founder_direction": true,
+    "first_session_mode": "online_private_meeting",
+    "provider_selected": false,
+    "provider_name": null,
+    "provider_credentials_accessed": false,
+    "meeting_url": null,
+    "venue_or_platform_privacy_verified": false,
+    "actual_event_scheduled": false,
+    "online_host_controls_verified": false,
+    "member_invitation_authorized": false,
+    "provider_truth_notice_must_be_updated_before_any_invitation": true,
+    "hybrid_is_later_distinct_release_gate": true,
+    "stage_g_source": "STAGE-G_ONLINE-FIRST_TO-HYBRID_GATHERINGS-CANDIDATE_20261017.md",
+    "stage_g_contract": "STAGE-G_ONLINE-TO-HYBRID_DELIVERY-CONTRACT_CANDIDATE_20261017.json"
+  }
 }
