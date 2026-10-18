@@ -62,3 +62,31 @@ export function observeReflectReader(
     admissionAndRevocation: 'NOT_WITNESSED',
   };
 }
+
+// The cookie session is the first authority to try. A stale localStorage
+// token must never hide an otherwise valid founder cookie. Safari clients
+// that cannot use the cookie can retry with their established session header.
+// Neither request carries the generic Admin Cockpit password.
+export async function fetchReflectAdminStatus(
+  fetcher: (url: string, init: RequestInit) => Promise<Response>,
+  sessionToken: string | null | undefined,
+): Promise<Response> {
+  const url = '/api/admin/reflect-release-status';
+  const cookieFirst: RequestInit = {
+    method: 'GET',
+    credentials: 'same-origin',
+    cache: 'no-store',
+    headers: { 'Cache-Control': 'no-store' },
+  };
+  const first = await fetcher(url, cookieFirst);
+  if ((first.status !== 401 && first.status !== 403) || !sessionToken) {
+    return first;
+  }
+  return fetcher(url, {
+    ...cookieFirst,
+    headers: {
+      'Cache-Control': 'no-store',
+      'x-session-token': sessionToken,
+    },
+  });
+}

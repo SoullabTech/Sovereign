@@ -7,6 +7,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { RefreshCw, ShieldAlert } from 'lucide-react';
+import { fetchReflectAdminStatus } from '@/lib/proStudio/reflectAdminRuntimeStatus';
 
 type ReflectMode = 'OFF' | 'CONFIGURED_UNVERIFIED' | 'HOLD_CONFIG_DRIFT';
 
@@ -42,15 +43,13 @@ export default function ReflectReleaseStatusCard() {
     try {
       // Only a verified founder *member session* qualifies. Do not forward
       // the shared admin password for this extra-sensitive read-only endpoint.
-      const sessionToken = window.localStorage.getItem('maia_session_token');
-      const headers: Record<string, string> = { 'Cache-Control': 'no-store' };
-      if (sessionToken) headers['x-session-token'] = sessionToken;
-      const res = await fetch('/api/admin/reflect-release-status', {
-        method: 'GET',
-        credentials: 'same-origin',
-        cache: 'no-store',
-        headers,
-      });
+      let sessionToken: string | null = null;
+      try {
+        sessionToken = window.localStorage.getItem('maia_session_token');
+      } catch {
+        // Cookie authentication can still work when storage is disabled.
+      }
+      const res = await fetchReflectAdminStatus(fetch, sessionToken);
       if (res.status === 401 || res.status === 403) {
         setState('founder-required');
         setSnapshot(null);

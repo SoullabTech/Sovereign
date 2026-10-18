@@ -1,4 +1,4 @@
-import { observeReflectReader } from '../reflectAdminRuntimeStatus';
+import { fetchReflectAdminStatus, observeReflectReader } from '../reflectAdminRuntimeStatus';
 
 describe('Reflect E010 read-only responding-reader observation', () => {
   const founder = '11111111-1111-4111-8111-111111111111';
@@ -58,5 +58,70 @@ describe('Reflect E010 read-only responding-reader observation', () => {
     expect(status).not.toHaveProperty('approvedForRelease');
     expect(status).not.toHaveProperty('founderMemberId');
     expect(status).not.toHaveProperty('operatorToken');
+  });
+});
+
+describe('Reflect E010 browser status transport — cookie-first session', () => {
+  const status = (code: number) => ({ status: code } as Response);
+
+  it('prefers a valid member cookie and never sends a stale stored header', async () => {
+    const fetcher = jest.fn(async (_url: string, _init: RequestInit) => status(200));
+    const res = await fetchReflectAdminStatus(fetcher, 'fictional-stale-header');
+    expect(res.status).toBe(200);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    const [url, init] = fetcher.mock.calls[0];
+    expect(url).toBe('/api/admin/reflect-release-status');
+    expect(init.method).toBe('GET');
+    expect(init.credentials).toBe('same-origin');
+    expect(init.cache).toBe('no-store');
+    expect(init.headers).toEqual({ 'Cache-Control': 'no-store' });
+  });
+
+  it('falls back to a valid header only after cookie access is refused', async () => {
+    const fetcher = jest.fn()
+      .mockResolvedValueOnce(status(403))
+      .mockResolvedValueOnce(status(200));
+    const res = await fetchReflectAdminStatus(fetcher, 'fictional-safari-session');
+    expect(res.status).toBe(200);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    const first = fetcher.mock.calls[0][1] as RequestInit;
+    const second = fetcher.mock.calls[1][1] as RequestInit;
+    expect(first.headers).toEqual({ 'Cache-Control': 'no-store' });
+    expect(second.headers).toEqual({
+      'Cache-Control': 'no-store',
+      'x-session-token': 'fictional-safari-session',
+    });
+    expect(second.credentials).toBe('same-origin');
+    expect(second.method).toBe('GET');
+  });
+
+  it('does not send a header or retry when no stored token exists', async () => {
+    const fetcher = jest.fn().mockResolvedValue(status(403));
+    const res = await fetchReflectAdminStatus(fetcher, null);
+    expect(res.status).toBe(403);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher.mock.calls[0][1].headers).not.toHaveProperty('x-admin-password');
+  });
+
+  it('never retries a failed server observation as a credential fallback', async () => {
+    const fetcher = jest.fn().mockResolvedValue(status(503));
+    const res = await fetchReflectAdminStatus(fetcher, 'fictional-token');
+    expect(res.status).toBe(503);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it('a failed Safari header retry remains denied, never displays OFF', async () => {
+    const fetcher = jest.fn()
+      .mockResolvedValueOnce(status(401))
+      .mockResolvedValueOnce(status(403));
+    const res = await fetchReflectAdminStatus(fetcher, 'fictional-invalid-token');
+    expect(res.status).toBe(403);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves network failure for the UI to classify as unavailable', async () => {
+    const fetcher = jest.fn().mockRejectedValue(new Error('fictional-network-outage'));
+    await expect(fetchReflectAdminStatus(fetcher, 'fictional-token')).rejects.toThrow('fictional-network-outage');
+    expect(fetcher).toHaveBeenCalledTimes(1);
   });
 });
