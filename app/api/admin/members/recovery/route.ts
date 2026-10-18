@@ -26,6 +26,9 @@ type Decision =
   | { kind: 'not_found' | 'limit' | 'no_email' | 'actor_not_found' };
 
 export async function POST(req: NextRequest) {
+  if (process.env.MEMBER_ACCESS_RECOVERY_ENABLED !== '1') {
+    return reply({ error: 'Member Access recovery has not been enabled' }, 503);
+  }
   // Cookie-based initiation must refuse absent, foreign and Origin:null
   // before any member lookups or writes.
   if (!secureRecoveryOrigin(req.headers.get('origin'))) {
