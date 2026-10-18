@@ -246,13 +246,16 @@ describe('real PostgreSQL one-use admin recovery', () => {
       ['email', 'verified_in_person', 'pending'],
       ['email', 'member_requested', 'handoff_issued'],
     ];
+    const currentProof = await query('SELECT recovery_email_verification_id FROM members WHERE id=$1', [TARGET]);
+    expect(currentProof.rows[0].recovery_email_verification_id).not.toBeNull();
     for (const [method, reason, status] of disallowed) {
       const attempt = scratch.query(
         `INSERT INTO admin_member_recovery_tokens
-         (member_id, issued_by, token_hash, delivery_method, reason_code,
-          delivery_status, expires_at)
-         VALUES ($1, $2, $3, $4, $5, $6, now() + interval '30 minutes')`,
-        [TARGET, FOUNDER, 'f'.repeat(64), method, reason, status],
+         (member_id, issued_by, email_verification_id, token_hash,
+          delivery_method, reason_code, delivery_status, expires_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, now() + interval '30 minutes')`,
+        [TARGET, FOUNDER, currentProof.rows[0].recovery_email_verification_id,
+          'f'.repeat(64), method, reason, status],
       );
       await expect(attempt).rejects.toMatchObject({ code: '23514' });
     }
