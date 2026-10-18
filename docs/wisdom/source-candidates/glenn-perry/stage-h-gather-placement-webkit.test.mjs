@@ -103,7 +103,11 @@ test('founder preview names canonical Wisdom placement but no real member action
       /HOME \/ WISDOM KEEPERS \/ GATHER TOGETHER/i);
     assert.match(await page.locator('h1').innerText(),/Gather Together/);
     assert.match(await page.getByTestId('not-available').innerText(),
-      /does not create a Circle, register an interest, issue an invitation/);
+      /do not create a Circle, register an interest, issue an invitation/);
+    const founderReview=await page.getByTestId('founder-review-status').innerText();
+    assert.match(founderReview,/Founder review/);
+    assert.match(founderReview,/Interactive prototype/);
+    assert.doesNotMatch(founderReview,/Fictional experience|fictional founder/);
     assert.equal(await page.getByTestId('gather-journey').locator('button').count(),4);
     assert.equal(await page.locator('form').count(),0);
     assert.equal(await page.locator('input').count(),0);
