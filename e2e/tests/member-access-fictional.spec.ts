@@ -94,6 +94,35 @@ async function fictional(page: Page, options: { founder?: boolean; issueFailure?
   return capture;
 }
 
+test.describe('real strict access policy — default-OFF recovery', () => {
+  test('signed-out member may load the recovery form, never the admin operations page', async ({ page }) => {
+    // Not mocked: the strict Next proxy admits the recipient's exact route.
+    await page.goto('/member-recovery#token=' + TOKEN);
+    await expect(page.getByRole('heading', { name: 'Recover your Soullab access' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Set my new password' })).toBeVisible();
+    expect(page.url()).not.toContain('#token=');
+  });
+
+  test('anonymous bearer redemption reaches the correct handler but stays disabled by default', async ({ request }) => {
+    const response = await request.post('/api/members/admin-recovery', {
+      data: { token: TOKEN, newPassword: 'fictional-long-password' },
+      headers: { Origin: 'http://localhost:3000' },
+    });
+    // 503 comes from the route's disabled-by-default guard. A 401 would
+    // indicate the strict access matrix wrongly requires a member session.
+    expect(response.status()).toBe(503);
+    expect(await response.json()).toMatchObject({ error: 'Member Access recovery has not been enabled' });
+  });
+
+  test('anonymous recovery issuance is stopped by the strict admin proxy', async ({ request }) => {
+    const response = await request.post('/api/admin/members/recovery', {
+      data: { memberId: MEMBER_ID, method: 'email', reason: 'member_requested' },
+      headers: { Origin: 'http://localhost:3000' },
+    });
+    expect(response.status()).toBe(401);
+  });
+});
+
 test.describe('actual server-side Admin page gate — fictional database', () => {
   test('redirects a browser without a verified server session to sign-in', async ({ page }) => {
     // This request is NOT mocked: the real Next.js proxy decides whether
