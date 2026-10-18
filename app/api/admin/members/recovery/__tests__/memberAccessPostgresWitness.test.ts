@@ -84,7 +84,7 @@ beforeAll(async () => {
   scratch = new Pool({ connectionString: URL });
   await scratch.query(`
     CREATE TABLE members (
-      id uuid PRIMARY KEY, username text, email text, admin_role text, password_hash text,
+      id uuid PRIMARY KEY, username text, name text, email text, admin_role text, password_hash text,
       password_changed_at timestamptz, updated_at timestamptz,
       email_verified boolean NOT NULL DEFAULT false,
       email_verified_at timestamptz,
