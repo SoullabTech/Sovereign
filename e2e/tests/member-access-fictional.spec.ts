@@ -98,6 +98,64 @@ async function fictional(page: Page, options: { founder?: boolean; issueFailure?
   return capture;
 }
 
+test.describe('scanner-safe email verification, signed out (fictional)', () => {
+  test('fragment-only link is removed and NEVER consumed without a human click', async ({ page }) => {
+    const token = '3'.repeat(64);
+    let calls = 0;
+    await page.route('**/api/members/verify-email', async route => {
+      calls++;
+      expect(route.request().method()).toBe('POST');
+      expect(route.request().postDataJSON()).toEqual({ token });
+      await setMock(route, 200, { success: true, message: 'Email verified successfully' });
+    });
+    await page.goto('/verify-email#token=' + token);
+    await expect(page.getByRole('heading', { name: 'Verify your Soullab email' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Verify email' })).toBeVisible();
+    await expect.poll(() => page.url()).not.toContain('#token=');
+    expect(calls).toBe(0); // preview/prefetch/URL arrival does not consume
+    await page.getByRole('button', { name: 'Verify email' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Your email has been verified' })).toBeVisible();
+    expect(calls).toBe(1);
+    await expect(page.getByRole('button', { name: 'Verify email' })).toHaveCount(0);
+  });
+
+  test('legacy query token is accepted but not automatically redeemed', async ({ page }) => {
+    let calls = 0;
+    await page.route('**/api/members/verify-email', async route => {
+      calls++;
+      await setMock(route, 200, { success: true });
+    });
+    await page.goto('/verify-email?token=' + '4'.repeat(64));
+    await expect(page.getByRole('button', { name: 'Verify email' })).toBeVisible();
+    await expect.poll(() => page.url()).not.toContain('?token=');
+    expect(calls).toBe(0);
+    await page.getByRole('button', { name: 'Verify email' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Your email has been verified' })).toBeVisible();
+    expect(calls).toBe(1);
+  });
+
+  test('missing or malformed token cannot call the verification API', async ({ page }) => {
+    let calls = 0;
+    await page.route('**/api/members/verify-email', async route => {
+      calls++;
+      await setMock(route, 500, { error: 'Unexpected verification call' });
+    });
+    await page.goto('/verify-email#token=not-a-real-token');
+    await expect(page.getByRole('alert').filter({ hasText: 'verification link is missing' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Verify email' })).toHaveCount(0);
+    expect(calls).toBe(0);
+  });
+
+  test('old direct GET API link redirects to click-confirm page instead of using token', async ({ request }) => {
+    const token = '5'.repeat(64);
+    const res = await request.get('/api/members/verify-email?token=' + token, { maxRedirects: 0 });
+    expect(res.status()).toBe(307);
+    const location = res.headers()['location'] || '';
+    expect(location).toContain('/verify-email#token=' + token);
+    expect(location).not.toContain('?token=');
+  });
+});
+
 test.describe('real strict access policy — default-OFF recovery', () => {
   test('signed-out member may load the recovery form, never the admin operations page', async ({ page }) => {
     // Not mocked: the strict Next proxy admits the recipient's exact route.
