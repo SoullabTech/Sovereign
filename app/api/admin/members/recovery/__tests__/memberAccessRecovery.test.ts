@@ -19,6 +19,7 @@ type Issued = {
 let tokens: Issued[] = [];
 let role: 'founder' | 'cto' | null = 'founder';
 let issuerExists = true;
+let liveIssuerSession = true;
 let targetEmail: string | null = EMAIL;
 let quotaCount = 0;
 let passwordWrites = 0;
@@ -32,8 +33,8 @@ function cloneTokens(): Issued[] {
   return tokens.map(t => ({ ...t, expires: new Date(t.expires) }));
 }
 async function txQuery(sql: string, args: unknown[] = []): Promise<{ rows: any[] }> {
-  if (sql.includes("SELECT id FROM members WHERE id = $1 AND admin_role = 'founder'")) {
-    return { rows: issuerExists ? [{ id: FOUNDER_ID }] : [] };
+  if (sql.includes('SELECT m.id FROM members m') && sql.includes('FOR UPDATE OF m, s')) {
+    return { rows: issuerExists && liveIssuerSession ? [{ id: FOUNDER_ID }] : [] };
   }
   if (sql.includes('COUNT(*)::int AS n FROM admin_member_recovery_tokens')) {
     return { rows: [{ n: quotaCount }] };
@@ -163,7 +164,7 @@ function redeem(token: string, password = STRONG_PASSWORD) {
 }
 
 beforeEach(() => {
-  tokens = []; role = 'founder'; issuerExists = true; targetEmail = EMAIL;
+  tokens = []; role = 'founder'; issuerExists = true; liveIssuerSession = true; targetEmail = EMAIL;
   quotaCount = 0; passwordWrites = 0; sessionRevocations = 0;
   failSessionRevocation = false; rateAllowed = true; auditQueries.length = 0;
   mockEmail.mockReset();
@@ -226,6 +227,13 @@ describe('founder-controlled initiation', () => {
     expect((await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }))).status).toBe(403);
     expect(tokens).toHaveLength(0);
   });
+  it('refuses a founder session revoked between the auth check and the locked issuance', async () => {
+    liveIssuerSession = false;
+    const result = await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }));
+    expect(result.status).toBe(403);
+    expect(tokens).toHaveLength(0);
+  });
+
   it('enforces durable issuer quota and checks target delivery email', async () => {
     quotaCount = 5;
     expect((await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }))).status).toBe(429);
