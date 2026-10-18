@@ -15,6 +15,14 @@ import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,statSync,
 import path from 'node:path';
 import os from 'node:os';
 import type {Client} from 'pg';
+import {
+ assertHeldR7019EPreDecryptAdmission,
+ type R7019ESignedCensus,type R7019ECurrentExternalAuthority,
+} from '../../lib/writersStudio/recovery/heldR7019EPreDecryptErasureGate';
+import {
+ matchR7019FRestoredFictionalWorkIndex,
+ type R7019FFixtureWorkIdentity,
+} from '../../lib/writersStudio/recovery/heldR7019FActualPgCensus';
 
 const sha=(b:Buffer)=>createHash('sha256').update(b).digest('hex');
 const proto='soullab.ws.r70.19c.fict-coherent-point.v1';
@@ -25,6 +33,10 @@ const run=(cmd:string,args:string[],input?:Buffer,timeout=40000)=>{
     HOME:process.env.HOME||'/private/tmp',GNUPGHOME:process.env.GNUPGHOME||''}});
  if(r.status!==0||r.error)reject(cmd+'_EXIT_'+r.status);
  return r.stdout as Buffer;
+};
+export type R7019FPreDecryptProof={
+ readonly signedCensus:R7019ESignedCensus;
+ readonly external:R7019ECurrentExternalAuthority;
 };
 type Scope={
   sourceCount:number;claimedSourceCount:number;unclaimedSourceCount:number;
@@ -217,13 +229,36 @@ export class R7019CEncryptedFixture {
    throw e;
   }
  }
- restoreAfterOriginalDestroyed():{
+ restoreAfterOriginalDestroyed(authority?:R7019FPreDecryptProof):{
   restoredDBRows:number;restoredVaultFiles:number;
   digestMatch:boolean;privateWriterHasNoRecoveryKey:true;
+  actualPostrestoreCanonicalWorkKeyCensusMatched:boolean;
   releasedForProduction:false;
  }{
   const p=this.point;
   if(!p||this.restored)reject('missing_or_repeated_restore');
+  let expectedWorks:readonly R7019FFixtureWorkIdentity[]|null=null;
+  if(process.env.R7019F_CENSUS_FIXTURE==='fictional-only'){
+   // No private GPG key read, Docker operation or recovered byte can
+   // occur before this exact-current external authorization succeeds.
+   if(process.env.NODE_ENV!=='test'||!authority)
+    reject('r7019f_mandatory_predecrypt_authority_missing');
+   const approved=assertHeldR7019EPreDecryptAdmission({
+    archive:{
+     sourceHead:p.head,generationNonce:this.nonce,
+     manifest:readFileSync(path.join(p.path,'manifest.json')),
+     postgresCiphertext:readFileSync(p.sql),
+     vaultCiphertext:readFileSync(p.vault),
+    },
+    signedCensus:authority.signedCensus,external:authority.external,
+   });
+   if(approved.witnessedWorks<1||approved.productionRestoreApproved!==false)
+    reject('r7019f_unqualified_admission_verdict');
+   expectedWorks=authority.signedCensus.body.works;
+  }else if(authority){
+   // Don't silently bypass the fixture-only trust contract in another mode.
+   reject('r7019f_production_restore_not_enabled');
+  }
   if(existsSync(this.sourceVault))reject('original_vault_still_present');
   const original=run('docker',['ps','-aq','--filter','name=^/'+this.source+'$']);
   if(original.toString().trim())reject('source_postgres_not_destroyed');
@@ -294,10 +329,34 @@ export class R7019CEncryptedFixture {
       counts[1]!==p.scope.draftCount||
       counts[2]!==1||counts[3]!==p.scope.keepCount)
     reject('restored_source_draft_keep_file_counts');
+   let exactFictionalWorkIndexMatched=false;
+   if(expectedWorks){
+    // This checks ACTUAL restored canonical PostgreSQL IDs and R1Q
+    // Work-key ownership records, not archive-supplied row counts.
+    // No member prose/keys enter stdout or evidence receipts.
+    const rosterSQL=`SELECT m.member_id::text||','||m.id::text||','||
+      COALESCE(k.key_id::text,'MISSING')
+      FROM member_manuscripts m
+      LEFT JOIN ws_managed_work_key_wrappings_r1q k
+        ON k.manuscript_id=m.id AND k.member_id=m.member_id
+      ORDER BY m.id,k.key_epoch`;
+    const bytes=run('docker',['exec',this.restoreName,'psql',
+      '-XAtq','-U','fict','-d','ws_atomic','-c',rosterSQL]);
+    const rows=bytes.toString('utf8').trim().split('\n').filter(Boolean)
+      .map(row=>{
+       const [memberId,workId,keyId]=row.trim().split(',');
+       return {memberId,workId,keyId};
+      });
+    if(!matchR7019FRestoredFictionalWorkIndex(expectedWorks,rows))
+     reject('r7019f_actual_restored_work_key_index_mismatch');
+    exactFictionalWorkIndexMatched=true;
+   }
    this.restored=true;
    return {restoredDBRows:counts.reduce((a,b)=>a+b,0),
     restoredVaultFiles:expected.length,digestMatch:true,
-    privateWriterHasNoRecoveryKey:true,releasedForProduction:false};
+    privateWriterHasNoRecoveryKey:true,
+    actualPostrestoreCanonicalWorkKeyCensusMatched:exactFictionalWorkIndexMatched,
+    releasedForProduction:false};
   }finally{
    if(started)spawnSync('docker',['rm','-f','-v',this.restoreName],{timeout:20000});
    if(existsSync(restored))rmSync(restored,{recursive:true,force:true});
