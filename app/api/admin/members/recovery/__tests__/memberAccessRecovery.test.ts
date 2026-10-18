@@ -171,6 +171,17 @@ beforeEach(() => {
   process.env.LABTOOLS_ADMIN_PASSWORD = SHARED_PASSWORD;
   process.env.MEMBER_ACCESS_RECOVERY_ENABLED = '1';
 });
+describe('recovery release flag', () => {
+  it('refuses issuance and redemption while default OFF', async () => {
+    delete process.env.MEMBER_ACCESS_RECOVERY_ENABLED;
+    expect((await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }))).status).toBe(503);
+    expect((await redeem('a'.repeat(64))).status).toBe(503);
+    expect(tokens).toHaveLength(0);
+    expect(passwordWrites).toBe(0);
+    expect(auditQueries).toHaveLength(0);
+  });
+});
+
 describe('recovery token and origin primitives', () => {
   it('generates unpredictable token-shaped, distinct values and stores only SHA-256 digests', () => {
     const a = generateRecoveryToken(), b = generateRecoveryToken();
