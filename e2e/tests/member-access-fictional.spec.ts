@@ -87,7 +87,7 @@ async function fictional(page: Page, options: { founder?: boolean; issueFailure?
 test.describe('Admin Member Access — fictional member workflow', () => {
   test('selects the right member, requires confirmation, and reports email acceptance without a link', async ({ page }) => {
     const h = await fictional(page, { founder: true });
-    await page.goto('/labtools/admin/command-center/member-access');
+    await page.goto('/admin/member-access');
     await expect(page.getByRole('heading', { name: 'Member Access' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Fictional Member One/ })).toBeVisible();
     await page.getByRole('textbox', { name: 'Search member name or email' }).fill('two@example.invalid');
@@ -115,7 +115,7 @@ test.describe('Admin Member Access — fictional member workflow', () => {
         value: { writeText: async (value: string) => { (window as any).__fictionalCopied = value; } },
       });
     });
-    await page.goto('/labtools/admin/command-center/member-access');
+    await page.goto('/admin/member-access');
     await page.getByRole('button', { name: /Fictional Member One/ }).click();
     await page.getByRole('radio', { name: /Verified private handoff/ }).check();
     const button = page.getByRole('button', { name: 'Initiate recovery' });
@@ -137,18 +137,18 @@ test.describe('Admin Member Access — fictional member workflow', () => {
 
   test('server refusal is surfaced; no recovery link appears to password-only administrator', async ({ page }) => {
     const h = await fictional(page, { founder: false });
-    await page.goto('/labtools/admin/command-center/member-access');
+    await page.goto('/admin/member-access');
     await page.getByRole('button', { name: /Fictional Member One/ }).click();
     await page.getByRole('checkbox', { name: /correct member and the request is authorized/ }).check();
     await page.getByRole('button', { name: 'Initiate recovery' }).click();
-    await expect(page.getByRole('alert')).toContainText('founder member account');
+    await expect(page.getByRole('alert').filter({ hasText: 'founder member account' })).toContainText('founder member account');
     await expect(page.getByText('One-time private link')).toHaveCount(0);
     expect(h.issued).toHaveLength(1);
   });
 
   test('holds the chosen target while a private recovery request is in flight', async ({ page }) => {
     const h = await fictional(page, { founder: true, delayMs: 900 });
-    await page.goto('/labtools/admin/command-center/member-access');
+    await page.goto('/admin/member-access');
     await page.getByRole('button', { name: /Fictional Member One/ }).click();
     await page.getByRole('radio', { name: /Verified private handoff/ }).check();
     await page.getByRole('checkbox', { name: /correct member and the request is authorized/ }).check();
@@ -162,7 +162,7 @@ test.describe('Admin Member Access — fictional member workflow', () => {
 
   test('switching target clears earlier confirmation and any private link', async ({ page }) => {
     await fictional(page, { founder: true });
-    await page.goto('/labtools/admin/command-center/member-access');
+    await page.goto('/admin/member-access');
     await page.getByRole('button', { name: /Fictional Member One/ }).click();
     await page.getByRole('radio', { name: /Verified private handoff/ }).check();
     await page.getByRole('checkbox', { name: /correct member and the request is authorized/ }).check();
@@ -194,7 +194,7 @@ test.describe('Member-facing recovery — fictional bearer only', () => {
   test('invalid fragment refuses member password form', async ({ page }) => {
     const h = await fictional(page, { founder: true });
     await page.goto('/member-recovery#token=not-a-real-bearer');
-    await expect(page.getByRole('alert')).toContainText('missing, invalid, used or expired');
+    await expect(page.getByRole('alert').filter({ hasText: 'missing, invalid, used or expired' })).toContainText('missing, invalid, used or expired');
     await expect(page.getByRole('button', { name: 'Set my new password' })).toHaveCount(0);
     expect(h.redeemed).toHaveLength(0);
   });
@@ -205,7 +205,7 @@ test.describe('Member-facing recovery — fictional bearer only', () => {
     await page.getByLabel('New password').fill('fictional-long-password');
     await page.getByLabel('Confirm password').fill('fictional-other-password');
     await page.getByRole('button', { name: 'Set my new password' }).click();
-    await expect(page.getByRole('alert')).toContainText('Passwords do not match');
+    await expect(page.getByRole('alert').filter({ hasText: 'Passwords do not match' })).toContainText('Passwords do not match');
     expect(h.redeemed).toHaveLength(0);
   });
 });
