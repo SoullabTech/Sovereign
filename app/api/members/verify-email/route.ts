@@ -66,12 +66,12 @@ export async function GET(request: NextRequest) {
   if (!token || !EMAIL_PROOF_TOKEN.test(token)) {
     return NextResponse.redirect(new URL('/signin?error=invalid_token', request.url));
   }
-  try {
-    const verified = await consumeEmailVerification(token);
-    if (!verified) return NextResponse.redirect(new URL('/signin?error=invalid_token', request.url));
-    return NextResponse.redirect(new URL('/signin?verified=true', request.url));
-  } catch {
-    console.error('[VerifyEmail] Unable to consume verification link');
-    return NextResponse.redirect(new URL('/signin?error=verification_unavailable', request.url));
-  }
+  // Legacy links that point directly at this GET endpoint must NOT silently
+  // consume a verification token. Redirect to a click-to-confirm client page.
+  // The token is removed from the HTTP query and kept in the fragment.
+  const landing = new URL('/verify-email', request.url);
+  landing.hash = `token=${token}`;
+  return NextResponse.redirect(landing, {
+    headers: { 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'no-store' },
+  });
 }
