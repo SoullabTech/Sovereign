@@ -14,7 +14,7 @@ ALTER TABLE members
   ADD COLUMN IF NOT EXISTS recovery_email_verification_id uuid;
 
 CREATE OR REPLACE FUNCTION guard_member_recovery_email_proof()
-RETURNS trigger LANGUAGE plpgsql AS $
+RETURNS trigger LANGUAGE plpgsql AS $member_recovery_proof$
 BEGIN
   IF NEW.email IS DISTINCT FROM OLD.email THEN
     -- Refuse stale verification as soon as ANY writer changes an email.
@@ -37,13 +37,17 @@ BEGIN
     -- Current address was confirmed with a fresh outstanding verification
     -- token. Never infer this proof from a pre-existing true boolean.
     NEW.recovery_email_verification_id := gen_random_uuid();
+  ELSE
+    -- No ordinary member update may forge/replace a recovery proof.
+    -- A fresh proof requires the verification-token transition above.
+    NEW.recovery_email_verification_id := OLD.recovery_email_verification_id;
   END IF;
   RETURN NEW;
 END;
-$;
+$member_recovery_proof$;
 
 CREATE TRIGGER guard_member_recovery_email_proof_on_change
-BEFORE UPDATE OF email, email_verified, email_verification_token ON members
+BEFORE UPDATE OF email, email_verified, email_verification_token, recovery_email_verification_id ON members
 FOR EACH ROW EXECUTE FUNCTION guard_member_recovery_email_proof();
 
 CREATE TABLE IF NOT EXISTS admin_member_recovery_tokens (
