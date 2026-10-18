@@ -147,6 +147,12 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/signin', public: true, notes: 'Sign in' },
   { exact: '/signup', public: true, notes: 'Sign up' },
   { exact: '/reset-password', public: true, notes: 'Password reset' },
+  // Class A: recovery bearer, NOT an authenticated member session. Only the
+  // dedicated recipient page and POST redemption endpoint are public. The
+  // redemption handler independently requires a single-use valid capability,
+  // rate limit, exact Origin and default-OFF release gate.
+  { exact: '/member-recovery', public: true, notes: 'Member Access recovery bearer landing; password set only by single-use token transaction' },
+  { exact: '/api/members/admin-recovery', public: true, notes: 'Member Access token redemption — single-use capability enforced by handler' },
   { exact: '/magic-link', public: true, notes: 'Magic link landing page — button-click redeems token (scanner-safe)' },
   { exact: '/magic-link-success', public: true, notes: 'Magic link confirmation' },
   // magic-link-error removed — expired/invalid links redirect to /signin?link=reason
@@ -655,6 +661,11 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/steward/opus-pulse', minTier: 'free', rolesAnyOf: ['steward', 'admin'], notes: 'Opus Pulse internal telemetry — steward/admin only; route also verifies authority directly' },
   { exact: '/api/feedback', public: true, notes: 'Feedback POST is public/member-facing; GET is independently admin-gated in the route handler' },
   { exact: '/api/supervision/transcript/list', minTier: 'free', notes: 'Supervision transcript transport — authenticated outer gate; GET is independently Lab Tools-gated in the handler' },
+  // Founder-only recovery initiation: require an authenticated admin at the
+  // outer proxy; the route checks admin_role='founder' and verified member
+  // session AGAIN, inside its DB transaction. Shared password alone cannot
+  // authorize issuance.
+  { exact: '/api/admin/members/recovery', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Member Access issuance — founder member session enforced independently by handler' },
   { prefix: '/api/admin/partners/prelude/', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Partner prelude administration — admin only; route also verifies authority directly' },
   { prefix: '/api/supervision', minTier: 'free', notes: 'Supervision API' },
 
