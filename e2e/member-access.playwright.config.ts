@@ -40,6 +40,7 @@ export default defineConfig({
       NEXT_TELEMETRY_DISABLED: '1',
       DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:5432/postgres',
       MEMBER_ACCESS_RECOVERY_ENABLED: '0',
+      ACCESS_CONTROL_MODE: 'strict',
       LABTOOLS_ADMIN_PASSWORD: '',
       ADMIN_RESET_SECRET: '',
       RESEND_API_KEY: '',
