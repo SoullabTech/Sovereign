@@ -106,6 +106,11 @@ test('costs are not charged, donated or misrepresented while venue unconfirmed',
   assert.ok(invitation.includes('[CONFIRM ANY ACTUAL COSTS'));
   assert.equal(pilot.registration_link,null);
   assert.equal(pilot.rehearsal_only_controls.no_network_registration,true);
+  assert.equal(pilot.online_first_delivery.selected_as_founder_direction,true);
+  assert.equal(pilot.online_first_delivery.first_session_mode,'online_private_meeting');
+  assert.equal(pilot.online_first_delivery.provider_selected,false);
+  assert.equal(pilot.online_first_delivery.meeting_url,null);
+  assert.equal(pilot.online_first_delivery.hybrid_is_later_distinct_release_gate,true);
 });
 
 test('each release gate is closed except the no-endorsement invariant',()=>{
@@ -138,7 +143,7 @@ test('invitation names the real host category and withholds unscheduled details'
   assert.ok(invitation.includes('NOT SENT'));
   assert.ok(invitation.includes('[DATE — to be decided]'));
   assert.ok(invitation.includes('[TIME + TIME ZONE — to be decided]'));
-  assert.ok(invitation.includes('[PRIVATE VENUE OR CONSENT-GOVERNED JOIN METHOD'));
+  assert.ok(invitation.includes('[PRIVATE INVITATION-ONLY VIDEO LINK — NOT YET CREATED]'));
   assert.match(invitation,/not a Glenn Perry-led event/i);
   assert.match(invitation,/not enrollment/i);
   assert.match(invitation,/No recipients are identified/);
@@ -169,4 +174,24 @@ test('the six rehearsal cues remain read-only and are never converted to API con
   const route=read('app/maia/perry-lens-preview/page.tsx');
   assert.match(route,/MAIA_PERRY_FOUNDER_PREVIEW_ENABLED !== '1'/);
   assert.match(route,/await requireFounder\(\)/);
+});
+
+
+test('online-first format is chosen while the vendor, room, date and recipients remain unknown',()=>{
+  assert.match(host,/Online is the preferred first pilot/);
+  assert.match(invitation,/online-first/);
+  assert.match(invitation,/PROVIDER AND PRIVACY SETTINGS TO BE VERIFIED/);
+  assert.match(invitation,/A third-party video provider may handle video/);
+  assert.equal(pilot.venue,null);
+  assert.equal(pilot.meeting_url,null);
+  assert.equal(pilot.online_first_delivery.venue_or_platform_privacy_verified,false);
+  assert.equal(pilot.online_first_delivery.actual_event_scheduled,false);
+  assert.equal(pilot.online_first_delivery.member_invitation_authorized,false);
+});
+
+test('hybrid expansion is not accidentally included in initial online consent',()=>{
+  assert.match(invitation,/Later hybrid gatherings are a separate invitation/);
+  assert.match(invitation,/not.*automatic transfer of your participation consent/i);
+  assert.match(host,/local procedural host plus a remote participant advocate/);
+  assert.equal(pilot.online_first_delivery.hybrid_is_later_distinct_release_gate,true);
 });
