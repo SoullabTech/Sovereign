@@ -244,3 +244,48 @@ test('WebKit presents six official source links with safe outbound navigation',a
     assert.deepEqual(errors,[]);
   }finally{await page.close();}
 });
+
+test('WebKit shows a nontransactional community journey without inviting a real keeper',async()=>{
+  const {page,errors,external}=await newPage();
+  try{
+    const concept=page.getByTestId('wisdom-keepers-commons-concept');
+    await concept.waitFor({state:'visible'});
+    const text=await concept.innerText();
+    for(const expected of [
+      'A living Commons of wisdom and relationship',
+      'Discover and honor',
+      'Gather around a question',
+      'Encounter a wisdom keeper',
+      'Return a gift to the field',
+      'not a participating Soullab partner',
+      'no active interest sign-up',
+      'Private and Sanctuary conversations are never used',
+    ])assert.ok(text.includes(expected),expected);
+    const steps=concept.locator('[role="listitem"]');
+    assert.equal(await steps.count(),4);
+    assert.equal(await concept.locator('button').count(),0);
+    assert.equal(await concept.locator('input').count(),0);
+    assert.deepEqual(errors,[]);
+    assert.deepEqual(external,[]);
+  }finally{await page.close();}
+});
+
+test('mobile WebKit keeps Commons proposal readable without commerce or overflow',async()=>{
+  const {page,errors,external}=await newPage({width:390,height:844});
+  try{
+    const concept=page.getByTestId('wisdom-keepers-commons-concept');
+    await concept.scrollIntoViewIfNeeded();
+    const metrics=await page.evaluate(()=>({
+      scroll:document.documentElement.scrollWidth,
+      viewport:window.innerWidth,
+      steps:[...document.querySelectorAll('[data-testid="wisdom-keepers-commons-concept"] .commonsStep')]
+        .map(x=>Math.round(x.getBoundingClientRect().width)),
+    }));
+    assert.equal(metrics.steps.length,4);
+    assert.ok(metrics.steps.every(x=>x>=280),JSON.stringify(metrics));
+    assert.ok(metrics.scroll<=metrics.viewport+2,JSON.stringify(metrics));
+    assert.match(await concept.innerText(),/Concept only/);
+    assert.deepEqual(external,[]);
+    assert.deepEqual(errors,[]);
+  }finally{await page.close();}
+});
