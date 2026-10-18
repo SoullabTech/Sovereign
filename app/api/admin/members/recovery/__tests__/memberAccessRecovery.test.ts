@@ -169,6 +169,7 @@ beforeEach(() => {
   mockEmail.mockReset();
   mockEmail.mockResolvedValue({ success: true });
   process.env.LABTOOLS_ADMIN_PASSWORD = SHARED_PASSWORD;
+  process.env.MEMBER_ACCESS_RECOVERY_ENABLED = '1';
 });
 describe('recovery token and origin primitives', () => {
   it('generates unpredictable token-shaped, distinct values and stores only SHA-256 digests', () => {
