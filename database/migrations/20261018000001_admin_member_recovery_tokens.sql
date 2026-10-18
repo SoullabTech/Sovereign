@@ -2,6 +2,8 @@
 -- New admin recovery lane is separate from legacy password_reset_tokens.
 -- Only a SHA-256 digest of a 256-bit random token is stored, never the bearer.
 -- The records also provide a durable actor/target/delivery/redeem witness.
+BEGIN;
+SET LOCAL lock_timeout = '5s';
 CREATE TABLE IF NOT EXISTS admin_member_recovery_tokens (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   member_id uuid NOT NULL REFERENCES members(id) ON DELETE RESTRICT,
@@ -27,3 +29,4 @@ CREATE INDEX IF NOT EXISTS idx_admin_member_recovery_member_active
 -- Recovery issue and redemption MUST lock rows and change state transactionally.
 -- Rollback if separately authorized: stop all issuance first, then
 -- DROP TABLE admin_member_recovery_tokens; all unused links become invalid.
+COMMIT;
