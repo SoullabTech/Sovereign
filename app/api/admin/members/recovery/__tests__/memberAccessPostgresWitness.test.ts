@@ -66,6 +66,7 @@ beforeAll(async () => {
   if (process.env.DATABASE_URL !== URL || process.env.CI !== 'true') {
     throw new Error('Refused: recovery SQL witness requires the exact ephemeral CI PostgreSQL URL');
   }
+  process.env.MEMBER_ACCESS_RECOVERY_ENABLED = '1';
   scratch = new Pool({ connectionString: URL });
   await scratch.query(`
     CREATE TABLE members (
