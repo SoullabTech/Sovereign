@@ -14,6 +14,17 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## Stage L — Current protected Next.js 16 proxy and session-chain integration
+
+**Additional current-version verification; not a production release.** The protected reference now declares **Next.js 16.3.8** with `proxy.ts` instead of the old Next.js 15 middleware entry. An independent, **real Next.js 16 optimized Webpack build and WebKit browser acceptance** ran the exact protected `proxy.ts`, access matrix, identity-stripping module, session validator and founder allowlist alongside the actual staged Gather Together page.
+
+- [Stage L protected-proxy/real-auth-source integration witness](./STAGE-L_NEXT16-FOUNDER-PROXY-FICTIONAL-INTEGRATION-WITNESS_20261018.md): real compiled Next proxy, fictional non-network database, source hash custody, browser sign-in, member/founder separation, expired/revoked/forged refusal, flag-off and native refusal.
+- The new Next16 integration app was built in an isolated temporary directory. Its real-account DB was replaced with a **fictional, signed, non-network adapter**. This complements the earlier independently isolated **Next15 + disposable PostgreSQL** acceptance below; neither is a completed full-product Next16 staging build.
+- The standalone Next16 integration test listener and two temporary flag-mode probes were **stopped** after passing. Only the existing **Mac Studio-only** founder review at `http://127.0.0.1:3817/fixture` remains available.
+- In the current access matrix, `/wisdom-keepers` is broadly public at the outer request layer. The preview's actual server-side `requireFounder()` is the decisive narrower gate; tested denial for real execution with fictional records. Any extra exact-route access-matrix rule requires its own review, not an unannounced privilege edit.
+
+**Next gate:** exact latest-current full Next.js 16 app with a disposable backend and properly reviewed real founder staging sign-in. No production credentials, member data, Circle roles, source admission or keeper access were changed.
+
 ## Stage K — Real Soullab session code, exact Next.js 15, isolated PostgreSQL
 
 **Security acceptance achieved for selected real modules, not real founder login or full-app release.** On the Mac Studio, an independently built **Next.js 15.5.11** test app ran the exact original `serverSessions`, PostgreSQL `query`, founder allowlist, Gather Together page and real canonical middleware source, against **two fictional members** in a separate PostgreSQL instance. Live HTTP and actual WebKit proved founder 200, nonfounder 404 even with admin role, forged credential refusal, server-side revocation 404, old-cookie replay refusal and functional mobile interface. **Eight separate static auth-contract regression checks passed** at a pinned source revision.
