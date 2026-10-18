@@ -12,7 +12,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { verifyPassword } from '@/lib/auth/passwordUtils';
-import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
+import { createSession, setSessionCookie, setAccessCookies, revokeSession } from '@/lib/auth/serverSessions';
+import { cookies } from 'next/headers';
 import { logAuthEvent } from '@/lib/security/authAudit';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import {
@@ -110,11 +111,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Reset rate limit on success
-    await resetRateLimit(clientIP, 'ip', ENDPOINT);
-
-    // Create session
-    let session;
+    // A password check is NOT a signed-in session. Commit the durable session
+    // and its cookies first; failure at any step must not return success: true.
+    let session: Awaited<ReturnType<typeof createSession>> | undefined;
     try {
       session = await createSession({
         memberId: member.id,
@@ -122,17 +121,64 @@ export async function POST(request: NextRequest) {
         userAgent
       });
       await setSessionCookie(session.sessionToken, session.expiresAt);
-      // Set access cookies for middleware (tier, roles, member_id)
       await setAccessCookies(
         member.id,
         member.tier || 'free',
         member.roles || ['member'],
         session.expiresAt
       );
-    } catch (sessionError) {
-      console.error('[PasswordSignin] Failed to create session:', sessionError);
-      // Continue without session - still return member data
+    } catch {
+      console.error('[PasswordSignin] Session establishment failed; refusing sign-in');
+
+      // If a session row was created but response-cookie construction failed,
+      // revoke the partial session. Never return that token in the error.
+      if (session) {
+        const revoked = await revokeSession(session.id, 'signin_cookie_establishment_failed');
+        if (!revoked) {
+          console.error('[PasswordSignin] Partial session revocation unconfirmed');
+        }
+      }
+
+      // Local auth cookies must never survive a failed session handshake.
+      try {
+        const store = await cookies();
+        for (const name of ['maia_session', 'maia_member_id', 'maia_tier', 'maia_roles']) {
+          store.delete(name);
+        }
+      } catch {
+        console.error('[PasswordSignin] Cookie cleanup could not be verified');
+      }
+
+      await logAuthEvent({
+        action: 'password_signin',
+        memberId: member.id,
+        result: 'failure',
+        errorMessage: 'Session establishment failed',
+      }, request);
+
+      const failure = NextResponse.json({
+        success: false,
+        error: 'Sign in unavailable. Please try again.',
+        code: 'SESSION_ESTABLISHMENT_FAILED',
+      }, { status: 503, headers: { 'Cache-Control': 'private, no-store' } });
+
+      // Explicit response-side cookie expiry covers partial writes even if
+      // the request-cookie adapter has already been populated.
+      for (const name of ['maia_session', 'maia_member_id', 'maia_tier', 'maia_roles']) {
+        failure.cookies.set(name, '', {
+          expires: new Date(0),
+          maxAge: 0,
+          path: '/',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+        });
+      }
+      return failure;
     }
+
+    // A successful session is now established. Reset the limiter only now.
+    await resetRateLimit(clientIP, 'ip', ENDPOINT);
 
     // Update last sign in
     await query(
@@ -164,12 +210,12 @@ export async function POST(request: NextRequest) {
         preferredAuthMethod: member.preferred_auth_method || 'password',
         mustResetPassword: member.must_reset_password || false
       },
-      session: session ? {
+      session: {
         expiresAt: session.expiresAt.toISOString(),
-        // Include session token for Safari/iOS clients where cookies are blocked by ITP
-        // Client should store this in localStorage and send via x-session-token header
+        // Safari/iOS header fallback must be issued only for a fully
+        // established, durable server session, never after a failed insert.
         token: session.sessionToken
-      } : undefined
+      }
     });
 
   } catch (error) {
