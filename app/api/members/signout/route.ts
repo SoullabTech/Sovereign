@@ -36,12 +36,16 @@ function trustedSameOriginWebRequest(request: NextRequest): boolean {
       return false;
     }
 
-    // Never use untrusted Host, X-Forwarded-* or a client-supplied tier to
-    // enlarge this list. An HTTPS reverse proxy must preserve the public URL.
+    // The deployment-controlled allowlist is the actual trust authority.
+    // Host is compared only as a SECOND check: a browser cannot send a
+    // cross-origin Host header, but Host alone is never an allowlist.
+    // NextURL.origin may normalize loopback to localhost inside Next.js 16.
+    // Ignore all X-Forwarded-* client assertions for this decision.
     const configured = (process.env.AUTH_SIGNOUT_TRUSTED_WEB_ORIGINS ?? '')
       .split(',').map(item => item.trim()).filter(Boolean);
+    const requestHost = request.headers.get('host');
     return configured.includes(claimedOrigin) &&
-      request.nextUrl.origin === claimedOrigin;
+      !!requestHost && requestHost.toLowerCase() === parsed.host;
   } catch {
     return false;
   }
