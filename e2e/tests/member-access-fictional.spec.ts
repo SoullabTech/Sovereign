@@ -20,7 +20,7 @@ const OTHER = {
   username: 'fixture_two', email: 'two@example.invalid', admin_role: null,
 };
 
-type Capture = { pathname: string; request: Record<string, unknown> };
+type Capture = { pathname: string; request: Record<string, unknown>; sharedPasswordHeader: string | null };
 type Harness = { issued: Capture[]; redeemed: Capture[] };
 
 async function setMock(route: Route, status: number, data: unknown) {
@@ -44,16 +44,27 @@ async function fictional(page: Page, options: { founder?: boolean; issueFailure?
   });
   await page.addInitScript(() => {
     window.localStorage.setItem('maia_session_token', 'fictional-founder-session');
+    // The old admin console may retain this credential, but Member Access
+    // must NEVER attach it to its own sensitive requests.
+    window.localStorage.setItem('soullab_admin_secret', 'FICTIONAL_LEGACY_BROWSER_SHARED_PASSWORD');
   });
   // Specific routes registered after general blocker so Playwright prioritizes
   // them over catch-all.
   await page.route('**/api/admin/auth', route =>
     setMock(route, 200, { isAdmin: true, via: 'member', role: 'founder' }));
-  await page.route('**/api/admin/members', route =>
-    setMock(route, 200, { members: [MEMBER, OTHER], viewerRole: 'founder' }));
+  await page.route('**/api/admin/members', route => {
+    if (route.request().headers()['x-admin-password']) {
+      return setMock(route, 403, { error: 'Shared password must not be forwarded by Member Access' });
+    }
+    return setMock(route, 200, { members: [MEMBER, OTHER], viewerRole: 'founder' });
+  });
   await page.route('**/api/admin/members/recovery', async route => {
     const payload = route.request().postDataJSON() as Record<string, unknown>;
-    capture.issued.push({ pathname: new URL(route.request().url()).pathname, request: payload });
+    capture.issued.push({
+      pathname: new URL(route.request().url()).pathname,
+      request: payload,
+      sharedPasswordHeader: route.request().headers()['x-admin-password'] ?? null,
+    });
     if (options.delayMs) await new Promise<void>(resolve => setTimeout(resolve, options.delayMs));
     if (options.issueFailure || !options.founder) {
       await setMock(route, 403, { error: 'A verified founder member session is required' });
@@ -89,6 +100,7 @@ test.describe('Admin Member Access — fictional member workflow', () => {
     await expect(page.getByRole('status')).toContainText('provider accepted');
     await expect(page.getByText('One-time private link')).toHaveCount(0);
     expect(h.issued).toHaveLength(1);
+    expect(h.issued[0].sharedPasswordHeader).toBeNull();
     expect(h.issued[0].request).toMatchObject({
       memberId: OTHER_ID, method: 'email', reason: 'member_requested',
     });
