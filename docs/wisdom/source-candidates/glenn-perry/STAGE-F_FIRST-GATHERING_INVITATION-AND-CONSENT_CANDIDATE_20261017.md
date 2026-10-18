@@ -24,16 +24,17 @@ I'd like to invite you to a small Soullab gathering called **Where Symbols Meet 
 
 Sometimes we find ourselves holding two real needs that appear to conflict: closeness and space, belonging and freedom, responsibility and rest. Rather than trying to solve or diagnose that tension, we'll explore what becomes possible when we listen to it with care.
 
-This will be a 75-minute, founder-facilitated, small-group educational conversation inspired by Elemental Alchemy's Earth, Water, Air, Fire, and Weather perspectives. We may acknowledge related depth-psychology and symbolic traditions, including the publicly described work of Glenn Perry, but this is **not a Glenn Perry-led event** or an endorsement from him.
+This will be an **online-first**, 75-minute, founder-facilitated small-group educational conversation inspired by Elemental Alchemy's Earth, Water, Air, Fire, and Weather perspectives. We may acknowledge related depth-psychology and symbolic traditions, including the publicly described work of Glenn Perry, but this is **not a Glenn Perry-led event** or an endorsement from him.
 
 There will be room to reflect, speak if you wish, or simply listen. No birth-chart data or private MAIA conversations are needed. We do not plan to record or generate a transcript of the gathering.
 
 **Proposed details**  
 Date: [DATE — to be decided]  
 Time and time zone: [TIME + TIME ZONE — to be decided]  
-Place / access method: [PRIVATE VENUE OR CONSENT-GOVERNED JOIN METHOD — not yet chosen]  
+Online meeting provider: [PROVIDER AND PRIVACY SETTINGS TO BE VERIFIED]  
+Access: [PRIVATE INVITATION-ONLY VIDEO LINK — NOT YET CREATED]  
 Duration: 75 minutes  
-Participation: Adults only; optional sharing; proposed small-group target 6–8  
+Participation: Adults only; join only by explicit choice; camera-off and quiet listening welcome; proposed small-group target 6–8  
 Price: [CONFIRM ANY ACTUAL COSTS OR STATE FREE ONLY AFTER FOUNDER DECISION]
 
 The intention is not to teach anyone who they are. It's to make a space in which something meaningful may be discovered, without pressure to disclose or agree.
@@ -44,15 +45,19 @@ If you're interested after the details and privacy arrangements are confirmed, y
 
 **Status of this copy:** ready for tone review, not dissemination. No recipients are identified.
 
+### Later hybrid gatherings are a separate invitation
+
+Soullab may eventually offer in-person gatherings that also welcome remote participation. That is a future possibility, **not** part of this first online Circle or an automatic transfer of your participation consent. Any hybrid invitation would name the physical venue, who can hear/see remote participants, camera/room audio policy, accessibility and event-specific privacy terms.
+
 ## 2. The plain-language entry notice — to be given BEFORE joining
 
 **An educational conversation, not therapy.** This is a nonclinical group exploring meaning, feeling and symbolic reflection. It is not medical/mental-health diagnosis, individual psychotherapy, supervision or crisis support. A founder's professional background does not alter the nature of this offered gathering.
 
 **You choose your participation.** You may speak, write privately, listen without speaking, decline a prompt, leave or pause whenever you wish. Your silence will not be treated as failure or concern. No astrology, elemental vocabulary or psychological interpretation needs to fit you.
 
-**What others can perceive.** In a group conversation, the other participants can hear what you choose to say and may remember it. We ask everyone to exercise care, discretion and respect, but Soullab cannot promise perfect confidentiality from other humans. Please decide for yourself what feels appropriate to share.
+**What others can perceive.** In an online group conversation, participants may hear what you choose to say and, depending on the final platform settings, see your chosen display name and camera. You may participate camera-off or quietly. The other participants may remember what they hear. We ask everyone to exercise care, discretion and respect, but Soullab cannot promise perfect confidentiality from other humans. Please decide for yourself what feels appropriate to share.
 
-**Technology and custody.** The proposed format does not include recording, automatic transcription, AI notetaking, MAIA group analysis, marketing reuse, or contribution to AIN. The specific venue/platform must be checked for these functions and any unavoidable technical logs **before** a real event is offered. Do not claim "nothing is ever stored" without such verification. Practical administrative/incident records, if required, need separately stated handling and retention.
+**Technology and custody.** This first format uses a private online meeting provider that has **not yet been selected or tested**. The proposed format does not include recording, automatic transcription, AI notetaking, MAIA group analysis, marketing reuse, or contribution to AIN. A third-party video provider may handle video/audio connection data and technical/administrative logs under its own terms; these facts must be identified and explained to participants before entry. The specific venue/platform must be checked for these functions and any unavoidable technical logs **before** a real event is offered. Do not claim "nothing is ever stored" without such verification. Practical administrative/incident records, if required, need separately stated handling and retention.
 
 **Authorship.** Your words and experiences do not become Soullab's property or MAIA's shared knowledge by being heard. Private MAIA material is never mined for participation. Sanctuary material does not cross into shared fields. Any future author-controlled sharing would be a new decision with a clearly identified destination.
 
@@ -91,7 +96,7 @@ The original authors and sources remain available through their own works. Soull
 ## 5. Release gate for any actual invitation
 
 - [ ] Founder has personally reviewed the invitation and the session's current purpose.
-- [ ] Real event date, time zone, duration, cost if any, and location are truthful.
+- [ ] Real online event date, time zone, duration, cost if any, selected video provider, and private joining process are truthful.
 - [ ] Host role, Circle membership gate and actual join/leave procedures are verified.
 - [ ] Platform recording/transcription/logging policy matches the entry notice, including applicable administrative records.
 - [ ] Participant information on privacy, voluntary sharing, safety reporting and consent is presented before entry.
