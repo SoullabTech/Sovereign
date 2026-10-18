@@ -140,7 +140,10 @@ export async function POST(request: NextRequest) {
 
     // Build verification URL
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://soullab.life';
-    const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
+    // The token lives in a URL fragment, not an HTTP GET query, and the
+    // receiving page requires an explicit member click before POST redemption.
+    // Do not let link-preview bots or proxy access logs consume the token.
+    const verificationUrl = `${baseUrl}/verify-email#token=${token}`;
 
     // Send verification email
     const delivery = await sendEmail({
