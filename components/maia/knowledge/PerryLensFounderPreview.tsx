@@ -14,6 +14,10 @@ import {
   PERRY_CLIENT_SOURCE_CHOICE,
 } from '@/lib/maia/knowledge/perryClientPostureGate';
 import { GLENN_PERRY_WISDOM_KEEPER_LINKS } from '@/lib/maia/knowledge/perryWisdomKeeperLinks';
+import {
+  FIRST_WISDOM_CIRCLE_MOVEMENTS,
+  FIRST_WISDOM_CIRCLE_DURATION_MINUTES,
+} from '@/lib/maia/knowledge/wisdomFirstCircleRehearsal';
 
 type Choice = 'usual' | 'perry';
 type SimulatedPosture = 'ordinary' | 'sanctuary' | 'unresolved';
@@ -33,6 +37,8 @@ export default function PerryLensFounderPreview() {
   const [posture, setPosture] = useState<SimulatedPosture>('ordinary');
   const [result, setResult] = useState<PreviewResult>('idle');
   const [hostedFieldPerspective, setHostedFieldPerspective] = useState<HostedFieldPerspective>('member');
+  const [firstCircleStep, setFirstCircleStep] = useState(0);
+  const currentMovement = FIRST_WISDOM_CIRCLE_MOVEMENTS[firstCircleStep];
 
   const selectChoice = (next: Choice) => {
     setChoice(next);
@@ -128,6 +134,21 @@ export default function PerryLensFounderPreview() {
         .perryDemo .hostedFieldCell strong{font-size:16px;display:block;color:#28483f;margin-bottom:8px;}
         .perryDemo .hostedFieldCell p{font-size:14px;line-height:1.6;color:#5a695f;margin:0;}
         .perryDemo .hostedFieldBoundary{margin-top:19px;padding:15px 18px;border-left:3px solid #6f9681;border-radius:8px;background:#eff3ec;font-size:14px;line-height:1.6;color:#435f4e;}
+        .perryDemo .rehearsalSteps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:18px 0 21px;}
+        .perryDemo .rehearsalStep{border:1px solid #cbd6cc;border-radius:11px;background:#fafcf8;padding:12px;text-align:left;color:#365349;cursor:pointer;min-height:76px;}
+        .perryDemo .rehearsalStep[aria-current="step"]{border-color:#316b57;background:#e8f2e9;}
+        .perryDemo .rehearsalStep:focus-visible,.perryDemo .rehearsalControl:focus-visible{outline:3px solid #559f89;outline-offset:3px;}
+        .perryDemo .rehearsalStep small{font-size:12px;display:block;color:#657769;margin-bottom:5px;}
+        .perryDemo .rehearsalStep strong{display:block;font-size:14px;line-height:1.35;}
+        .perryDemo .rehearsalContent{padding:21px;border-radius:15px;border:1px solid #d5dfd4;background:#f1f5ef;}
+        .perryDemo .rehearsalContent .cueTime{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#497263;}
+        .perryDemo .rehearsalContent h3{margin:8px 0 10px;font-size:22px;font-weight:650;color:#29453b;}
+        .perryDemo .rehearsalContent p{margin:9px 0;color:#3f5549;line-height:1.65;font-size:15px;}
+        .perryDemo .rehearsalControls{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+        .perryDemo .rehearsalControl{padding:12px 16px;border-radius:10px;background:#315d53;color:white;font-weight:650;border:1px solid #315d53;cursor:pointer;}
+        .perryDemo .rehearsalControl[data-variant="secondary"]{background:transparent;color:#315d53;border-color:#b4c8ba;}
+        .perryDemo .rehearsalControl:disabled{opacity:.45;cursor:not-allowed;}
+        @media(max-width:560px){.perryDemo .rehearsalSteps{grid-template-columns:repeat(2,minmax(0,1fr))}}
         @media(max-width:560px){.perryDemo .hostedFieldGrid{grid-template-columns:1fr}}
         @media(max-width:560px){.perryDemo .commonsSteps{grid-template-columns:1fr}}
         @media(max-width:560px){.perryDemo .keeperList{grid-template-columns:1fr}}
@@ -339,6 +360,53 @@ export default function PerryLensFounderPreview() {
             member information, recordings, calendar events, payments, or messages are handled here.
             A real Keeper Field would require separate founder, keeper, member, and technical approvals.
           </div>
+        </section>
+
+        <section className="perryPanel" aria-labelledby="rehearsal-heading" data-testid="first-circle-rehearsal">
+          <div className="perryEyebrow">Founder-led human pilot · Fictional guided rehearsal</div>
+          <h2 id="rehearsal-heading" style={{marginTop:10}}>Where Symbols Meet Life</h2>
+          <p className="keeperIntro">
+            Rehearse a proposed {FIRST_WISDOM_CIRCLE_DURATION_MINUTES}-minute educational gathering:
+            six movements, one human host, and no compulsory sharing. Glenn Perry is an
+            attributed public reference, not a host, partner or guest.
+          </p>
+          <div className="rehearsalSteps" role="group" aria-label="Choose a rehearsal movement">
+            {FIRST_WISDOM_CIRCLE_MOVEMENTS.map((movement, index) => (
+              <button type="button" className="rehearsalStep" key={movement.id}
+                data-testid={`rehearsal-stage-${movement.id}`}
+                aria-current={index === firstCircleStep ? 'step' : undefined}
+                onClick={() => setFirstCircleStep(index)}>
+                <small>{movement.startMinute}–{movement.endMinute} min</small>
+                <strong>{movement.title}</strong>
+              </button>
+            ))}
+          </div>
+          <div className="rehearsalContent" aria-live="polite" aria-atomic="true"
+            data-testid="rehearsal-active">
+            <span className="cueTime">
+              Movement {firstCircleStep + 1} of {FIRST_WISDOM_CIRCLE_MOVEMENTS.length} ·
+              {' '}{currentMovement.startMinute}–{currentMovement.endMinute} min · {currentMovement.element}
+            </span>
+            <h3>{currentMovement.title}</h3>
+            <p><strong>Host invitation:</strong> “{currentMovement.invitation}”</p>
+            <p><strong>Protect this boundary:</strong> {currentMovement.boundary}</p>
+          </div>
+          <div className="rehearsalControls">
+            <button type="button" className="rehearsalControl"
+              data-testid="rehearsal-next"
+              disabled={firstCircleStep === FIRST_WISDOM_CIRCLE_MOVEMENTS.length - 1}
+              onClick={() => setFirstCircleStep((index) => Math.min(
+                index + 1, FIRST_WISDOM_CIRCLE_MOVEMENTS.length - 1
+              ))}>Next movement</button>
+            <button type="button" className="rehearsalControl"
+              data-testid="rehearsal-restart" data-variant="secondary"
+              onClick={() => setFirstCircleStep(0)}>Start again</button>
+          </div>
+          <p className="keeperNote" data-testid="rehearsal-safety">
+            Rehearsal only: this does not run a clock, schedule or register participants,
+            record a meeting, call MAIA, or send any invitation. Real hosting requires
+            a separately verified Circle/venue, privacy controls and a founder go/no-go.
+          </p>
         </section>
       </div>
     </main>
