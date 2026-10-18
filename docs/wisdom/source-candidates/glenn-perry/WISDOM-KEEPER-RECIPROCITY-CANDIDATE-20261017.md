@@ -38,6 +38,14 @@ Glenn Perry's *AstroPsychology* is the first narrowly documented example. The fo
 - Stage C founder preview uses static, author-directed `<a href>` links. They open only upon a person's explicit action, no automatic crawlers or background network requests. A new tab does not transfer chat content, birth data, tokens, or member IDs in URL parameters. Use `rel="noopener noreferrer"` when `target="_blank"`.
 - Only the existing server-verified founder authorization may expose the founder review page; the flag is OFF by default. These links are ordinary public navigation, not an alternative access gate.
 
+## Toward a living community service (new founder direction)
+
+This early reciprocity note primarily addresses naming, attribution and source links. The subsequent **[Wisdom Keepers Commons service charter](./WISDOM-KEEPERS-COMMONS_SERVICE-CHARTER_CANDIDATE_20261017.md)** develops the founder's larger intention: a community offering that connects members and living teachers through mutually chosen encounters, study, recognition and support, rather than a marketplace or extractive content funnel.
+
+It is **not** a parallel Commons implementation. The new service is proposed within the already-ratified FR-02 Interest Commons relational ontology, with FR-06 declaration-only discovery and FR-07/08 authorship/privacy membranes. The pilot remains unimplemented; Glenn Perry is an unaffiliated referenced author, and the founder alone will decide whether to contact him.
+
+See the [pilot contract](./WISDOM-KEEPERS-COMMONS_PILOT-CONTRACT_CANDIDATE_20261017.json) for current refusal defaults: no member signup, no automatic introductions, no payments pool, no partner claim and no AIN source activation.
+
 ## Future representation standard (not yet adopted)
 
 For additional wisdom keepers, propose the same metadata shape: original name, verified maintained website(s), provenance links to books/essays, source type, brief description, author affiliation status, rights standing, last verification date, and the distinction between original intellectual claims and Soullab's interpretation. Avoid a silent extractive corpus in which readers cannot find the original teachers.
