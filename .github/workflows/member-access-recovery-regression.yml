@@ -11,6 +11,8 @@ on:
       - 'app/api/members/admin-recovery/**'
       - 'app/labtools/admin/command-center/member-access/**'
       - 'app/member-recovery/**'
+      - 'e2e/tests/member-access-fictional.spec.ts'
+      - 'e2e/member-access.playwright.config.ts'
       - 'database/migrations/20261018000001_admin_member_recovery_tokens.sql'
       - '.github/workflows/member-access-recovery-regression.yml'
 
@@ -73,3 +75,28 @@ jobs:
         run: >-
           npx --no-install jest --config jest.config.js --runInBand --runTestsByPath
           app/api/admin/members/recovery/__tests__/memberAccessPostgresWitness.test.ts
+
+  fictional-browser-acceptance:
+    name: Admin and member recovery — Chromium and mobile WebKit
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    env:
+      CI: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+      MEMBER_ACCESS_RECOVERY_ENABLED: '0'
+      DATABASE_URL: 'postgresql://invalid:invalid@127.0.0.1:1/fixture_denied'
+      LABTOOLS_ADMIN_PASSWORD: ''
+      ADMIN_RESET_SECRET: ''
+      RESEND_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: Install isolated Chromium and mobile WebKit
+        run: npx --no-install playwright install --with-deps chromium webkit
+      - name: Exercise actual Member Access UI with fictional API responses
+        run: npx --no-install playwright test --config=e2e/member-access.playwright.config.ts
