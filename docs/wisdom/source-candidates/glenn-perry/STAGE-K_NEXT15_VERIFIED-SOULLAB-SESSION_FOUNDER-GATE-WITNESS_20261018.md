@@ -75,11 +75,17 @@ The exact middleware module was included in this built application. The `/wisdom
 6. Current Commons Circle UI and API remain founder-only. No cohort, member, keeper or meeting admission was enabled. The existing Soullab group/hybrid media still lacks a verified scoped multiperson 6–8-person privacy acceptance.
 7. Glenn Perry remains unaffiliated. No outreach, copyrighted book corpus admission, embedding, recording, clinical service, member invite, database migration or production deployment was done.
 
+## Cleanup confirmed on Mac Studio
+
+After capturing the results, the **exact temporary Next.js server process** serving `127.0.0.1:3821` was terminated. The independent PostgreSQL 14 instance running from the fixture's own `pgdata` directory was cleanly stopped; port `127.0.0.1:54393` is no longer listening. The isolated session-issuance API therefore **does not remain online**. The ephemeral database password file and test app's `.env.local` file were unlinked after shutdown. No production database, original authenticated member session, or protected source file was affected.
+
+The earlier, separately verified **visual founder preview on `127.0.0.1:3817/fixture`** remains running and returned HTTP 200 after the cleanup. The original Mac Studio `/Users/soullab/MAIA-SERVICE-FIRST-20261013` worktree remained clean.
+
 ## Recommended continuation and cleanup
 
 - Perform an independent review of **real middleware + route**, forged-identity handling, cookie attributes, PostgreSQL session ownership and disabled/default-off behavior on the intended path.
 - Reconcile the exact current canonical app and run a **full isolated build**; use fictional users to verify Safari sign-in, founder allowlist, session expiry/revocation, denied visitors and server flag behavior.
 - Only with a **separate, explicit staging access authorization** should the real founder sign into an approved nonproduction Soullab environment using Soullab's actual sign-in. Never ask them to reveal passwords, session cookies, access headers or production secrets in chat.
-- Once evidence is recorded, dispose of the temporary staging API that creates fictional sessions without credentials and the isolated PG service. Keep the earlier Stage J visual localhost preview separate.
+- The temporary staging API and independent PG service **have been stopped** and their local test credentials unlinked. Keep the earlier Stage J visual localhost preview separate.
 
 **Disposition:** Existing Soullab session, database and founder authorization implementation has been verified end-to-end on an exact-version isolated build and in real Safari WebKit with fictional identities. **Real founder verification, full-app acceptance, and member rollout remain HOLD.**
