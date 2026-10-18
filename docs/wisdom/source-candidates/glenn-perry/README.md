@@ -14,6 +14,14 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## Stage J — The founder is real; the demo identity is not
+
+The founder clarified the actual human role while reviewing the Mac Studio preview. The [Stage J identity/copy correction witness](./STAGE-J_REAL-FOUNDER-REVIEW-LANGUAGE-AND-AUTH_BOUNDARY_20261018.md) distinguishes **real Soullab founder review** from the isolated, temporary test-session credential. The committed preview now reads **"Founder review · Interactive prototype · Not yet open"**. Its five updated WebKit UI checks passed, and the local Next.js preview was rebuilt, tested again under real Safari WebKit, and kept loopback-only.
+
+On the Mac Studio, open **`http://127.0.0.1:3817/fixture`** and choose **Open founder review**. This local button uses demo credentials only; it is **not** proof of the founder's actual Soullab authenticated identity. The existing actual `requireFounder()` server gate remains unchanged. No production login, code merge or member feature was activated.
+
+**Next:** full-app isolated Next.js 15.5.11 integration and authentication acceptance using fictional principals, then a separate authorized real-founder staging sign-in before any public or beta release.
+
 ## Stage I — Local founder walkthrough available on the Mac Studio
 
 **Verified running demo, localhost only, not a production deploy.** The exact Stage H component and server founder gate were copied into an isolated Next.js 16.3.8 app with a **fictional signed-cookie session provider** and test-only sign-in buttons. The full standalone build, actual real-HTTP denied/allowed sign-ins, actual WebKit desktop/mobile interaction, server-side feature-flag shutdown case, and loopback-only listening boundary passed.
