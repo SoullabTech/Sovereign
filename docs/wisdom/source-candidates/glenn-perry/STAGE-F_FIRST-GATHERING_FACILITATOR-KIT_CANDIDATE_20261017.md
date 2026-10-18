@@ -27,21 +27,29 @@ The first participant experience should be generous and complete even when nobod
 | Attribute | Proposed condition |
 | --- | --- |
 | Host | Soullab founder or separately authorized **procedural** facilitator, not Glenn Perry |
-| Format | One live small-group educational inquiry; **no paid or clinical service** |
+| Format | **Online first**: a private, host-controlled video gathering for consenting adults; no paid or clinical service |
 | Suggested attendance | 6–8 consenting adults, an operational facilitation target rather than a Circle size rule |
-| Time | 75 minutes; date, time zone, venue, and invitations **not set** |
+| Time | 75 minutes; **online mode chosen as direction**, but provider, date, time zone, access URL and invitations remain **unset** |
 | Subject | Human needs in tension: intimacy and autonomy, service and rest, discernment and compassion |
 | Main lens | Soullab's original Elemental Alchemy prompts; other traditions as accurately attributed optional metaphors |
 | Perry standing | Unaffiliated public source reference, not a guest or approved host |
 | Financial terms | Pilot concept assumes no mandatory charge or gift; actual hosting expenses and compensation require founder decision |
-| Technology | Prefer a reliable, consent-governed human meeting; no new MAIA integration required |
+| Technology | Phase 1: a **specifically verified private external-video link or equivalent**, not an untested native multiparty MAIA room; see [online-to-hybrid roadmap](./STAGE-G_ONLINE-FIRST_TO-HYBRID_GATHERINGS-CANDIDATE_20261017.md) |
 | Recording | OFF. No transcript, AI notetaker, automatic recap or AIN contribution |
 | Member data | No natal charts, diagnoses, journals, personal MAIA memory, inferred interests, psychological targeting, or Sanctuary content |
 | Output | Members take away their own meaning; the Circle makes **no automatic published artifact** |
 
 An actual pilot cannot proceed until a genuinely scoped membership/invite door, participant notice, and reliable privacy settings are verified on the selected platform. The current Circle/Commons implementation and its cohort access may not yet support this; a mock browser pass is **not** permission to recruit.
 
-## Prepare the physical or online container
+## Prepare the online container first
+
+**Founder direction:** Online is the preferred first pilot. Hybrid becomes an additional, separately tested participation configuration later—not a public livestream or automatic recording of local participants. The session remains entirely unscheduled.
+
+For the first online rehearsal, require a genuinely private meeting provider and account with demonstrated host-side access control and recording/transcription settings. Do not claim a third-party provider is sovereign, end-to-end encrypted, free of technical logs or HIPAA-compliant without actual evidence. A video link is not a consent agreement. Use a fictional host, invited participant and denied guest in the test; no real member invitation until the platform passes and the founder separately approves the final send.
+
+**Host procedure:** Have the first host admit consenting members individually, introduce what visible names/cameras/chat mean, check that recording/AI notetaking are off in the selected service, allow camera-off and quiet listening, and know how to pause/close entry or stop the entire room. Explain unavoidable provider/account/technical logs accurately in the final entry notice. If provider capabilities fall short of the promised privacy, stop or select a different venue.
+
+### Original room-and-participant preparation (applies to later hybrid gatherings too)
 
 Before even setting a date:
 
@@ -58,6 +66,12 @@ Before even setting a date:
 Use the separately prepared [participant invitation and agreement](./STAGE-F_FIRST-GATHERING_INVITATION-AND-CONSENT_CANDIDATE_20261017.md), only after completing the release checks. Essential facts must be disclosed ahead of time: the actual host and purpose, group visibility, optional speaking, what is/not recorded, how to leave, handling of urgent concerns, and the absence of Glenn Perry as a participant. Do not invent or promise perfect confidentiality; other humans can remember what they hear, so members should share only what they choose.
 
 A person may decline without explanation. Participation itself never becomes consent for therapy, individual follow-up, recording, publication, research, marketing, or permanent knowledge ingestion.
+
+## Online-to-hybrid transition (not yet part of this pilot)
+
+Once the first private online Circle works as a human encounter, Soullab may explore recurring online study, keeper-hosted salons after specific consent, and only then hybrid meetings with both local and remote members. The hybrid venue will need **a local procedural host plus a remote participant advocate**, accessible two-way audio, consented camera framing, an echo-control rehearsal, remote voice participation parity, a no-recording guarantee consistent with actual provider capabilities, and a demonstrated way to stop or revert to online-only when any of these fail.
+
+A meeting invitation to the first **online** Circle does not authorize broadcasting that person into a later hybrid venue. A Keeper-hosted gathering remains a separate invitation, not a blanket extension of this pilot. Review the [Stage G online-first / hybrid-later design](./STAGE-G_ONLINE-FIRST_TO-HYBRID_GATHERINGS-CANDIDATE_20261017.md) before setting dates or venue permissions.
 
 ## The 75-minute human encounter
 
