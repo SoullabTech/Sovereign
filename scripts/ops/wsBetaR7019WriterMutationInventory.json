@@ -1,0 +1,136 @@
+{
+  "protocol": "soullab.ws.r7019.required-mutator-inventory.v1",
+  "baselineSourceHead": "441616dbf5a597f9ef297ad3dafead3be5f2ceb3",
+  "scope": "fictional-source-review-only",
+  "productionReleaseAuthorized": false,
+  "baseSnapshotDoesNotIncludeR7018": true,
+  "unmappedFamilies": [
+    "pending_encrypted_source",
+    "private_editorial_proposals_and_authorizations",
+    "keeps_and_journal_history",
+    "background_storage_writers",
+    "member_account_erasure",
+    "sql_wal_and_temp",
+    "external_attachments_and_backups"
+  ],
+  "entries": [
+    {
+      "id": "confirmed-paste",
+      "path": "lib/manuscript/source/persistConfirmedPasteR65.ts",
+      "sha256": "bf77263574ebdf04736778cbbc4866213a2ec131fc6fbca4321569b796b6444b",
+      "anchors": [
+        "export async function persistConfirmedPasteR65",
+        "return transaction(async(tx)=>"
+      ],
+      "storageSurface": "sql_source_and_manuscript",
+      "coverage": "not_independently_certified"
+    },
+    {
+      "id": "arrival-original",
+      "path": "lib/manuscript/source/arrivals.ts",
+      "sha256": "6864c81aa0c2ef33b5041f42d04890545f5a36e45e07410055c82d6671df04ac",
+      "anchors": [
+        "export async function recordArtifactArrival",
+        "const artifactRef = await writeDurableVaultBytes("
+      ],
+      "storageSurface": "vault_then_sql",
+      "coverage": "not_independently_certified"
+    },
+    {
+      "id": "source-claim",
+      "path": "lib/manuscript/source/arrivals.ts",
+      "sha256": "6864c81aa0c2ef33b5041f42d04890545f5a36e45e07410055c82d6671df04ac",
+      "anchors": [
+        "export async function claimArrival("
+      ],
+      "storageSurface": "sql_vault_identity",
+      "coverage": "not_independently_certified"
+    },
+    {
+      "id": "source-discard",
+      "path": "lib/manuscript/source/discardUnclaimedArrival.ts",
+      "sha256": "660a769855b630d16903a5a68285f243eb71e8c310ed922ec00d808869cf03d5",
+      "anchors": [
+        "export async function discardUnclaimedArrival("
+      ],
+      "storageSurface": "erasure_and_vault",
+      "coverage": "not_independently_certified"
+    },
+    {
+      "id": "draft-section-save",
+      "path": "lib/manuscript/sections/saveSection.ts",
+      "sha256": "fc8265c4803afcbfd43049fa3c0a5961b17076058b4142b7a4ec7a39baad837f",
+      "anchors": [
+        "export async function saveSection(",
+        "return transaction((tx: TransactionClient) =>"
+      ],
+      "storageSurface": "sql_revision",
+      "coverage": "not_independently_certified"
+    },
+    {
+      "id": "nested-section-save",
+      "path": "lib/manuscript/sections/saveSection.ts",
+      "sha256": "fc8265c4803afcbfd43049fa3c0a5961b17076058b4142b7a4ec7a39baad837f",
+      "anchors": [
+        "export async function saveSectionInTransaction(",
+        "UPDATE manuscript_draft_sections SET text = $2"
+      ],
+      "storageSurface": "sql_revision_internal_bypass",
+      "coverage": "not_independently_certified"
+    },
+    {
+      "id": "draft-revision-restore",
+      "path": "app/api/sovereign/manuscripts/[id]/draft/revisions/route.ts",
+      "sha256": "4da119523ae4363a2206704a9002b14bd4129616c2727f53c81a8617eeeeacc8",
+      "anchors": [
+        "export async function POST(",
+        "restoreSectionAddressable({"
+      ],
+      "storageSurface": "sql_history_restore",
+      "coverage": "not_independently_certified"
+    },
+    {
+      "id": "studio-file-upload",
+      "path": "app/api/studio/files/route.ts",
+      "sha256": "a39363ba0257f958e9d6b01ea6b1fa9e5f63b5cdfb2f80ea6d4b5beaac7077b6",
+      "anchors": [
+        "await writeFile(path.join(STORAGE_BASE, storagePath), buffer);",
+        "INSERT INTO practitioner_files"
+      ],
+      "storageSurface": "file_then_sql",
+      "coverage": "not_independently_certified"
+    },
+    {
+      "id": "studio-file-delete",
+      "path": "app/api/studio/files/route.ts",
+      "sha256": "a39363ba0257f958e9d6b01ea6b1fa9e5f63b5cdfb2f80ea6d4b5beaac7077b6",
+      "anchors": [
+        "export async function DELETE(request: NextRequest)",
+        "UPDATE practitioner_files SET status ="
+      ],
+      "storageSurface": "sql_soft_delete_vault_retention",
+      "coverage": "not_independently_certified"
+    },
+    {
+      "id": "studio-file-metadata",
+      "path": "app/api/studio/files/[fileId]/route.ts",
+      "sha256": "4d45ef69eba24a9c320c789df8f9b981227a1ae06a837d55d86598bbab991101",
+      "anchors": [
+        "export async function PATCH(",
+        "UPDATE practitioner_files SET"
+      ],
+      "storageSurface": "sql_owner_and_colab_scope",
+      "coverage": "not_independently_certified"
+    },
+    {
+      "id": "source-erasure",
+      "path": "lib/manuscript/source/eraseManuscript.ts",
+      "sha256": "008cdd80c9b73573b830115fdd2f23595d5f2b98ca802e202d63c2d5ab04ef19",
+      "anchors": [
+        "export async function eraseManuscript"
+      ],
+      "storageSurface": "file_sql_backup_antiresurrection",
+      "coverage": "not_independently_certified"
+    }
+  ]
+}
