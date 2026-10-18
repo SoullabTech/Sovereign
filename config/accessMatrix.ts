@@ -655,6 +655,17 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/steward/opus-pulse', minTier: 'free', rolesAnyOf: ['steward', 'admin'], notes: 'Opus Pulse internal telemetry — steward/admin only; route also verifies authority directly' },
   { exact: '/api/feedback', public: true, notes: 'Feedback POST is public/member-facing; GET is independently admin-gated in the route handler' },
   { exact: '/api/supervision/transcript/list', minTier: 'free', notes: 'Supervision transcript transport — authenticated outer gate; GET is independently Lab Tools-gated in the handler' },
+  // Existing /api/admin/auth is both an owner-status GET and a shared
+  // password POST. The path-only proxy requires a verified member session for
+  // both; GET requires a real database admin_role in the handler, while POST
+  // additionally checks the session's application admin role AND password.
+  // A blanket rolesAnyOf:['admin'] here would deny legitimate founders/CTOs
+  // whose separately governed members.roles does not include app-admin.
+  { exact: '/api/admin/auth', minTier: 'free', notes: 'Legacy auth — authenticated member outer gate; GET verifies member admin_role, POST requires app-admin role plus shared password' },
+  // System settings have no member-facing caller; the legacy Cockpit already
+  // requires app-admin at its page entrance and shared password in settings.
+  { exact: '/api/admin/settings', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Legacy System Administration settings — verified application admin session plus existing password guard' },
+
   // Reflect E010 status GET: coarse verified-member session at the proxy;
   // the route itself requires a database-verified founder admin_role and
   // explicitly rejects shared-password-only administrator sessions.

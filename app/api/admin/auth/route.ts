@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { checkAdminAuth } from '@/lib/admin/adminAuth';
+import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,16 +51,55 @@ function clearFailedAttempts(ip: string): void {
   failedAttempts.delete(ip);
 }
 
-export async function GET(req: NextRequest) {
-  const result = await checkAdminAuth(req);
-  if (!result.authed) {
-    // 200 not 401 — client just checks the boolean
-    return NextResponse.json({ isAdmin: false });
+// This legacy endpoint serves two distinct authorities. The proxy's exact
+// route requires an authenticated member session for BOTH methods; the
+// handler must preserve the DIFFERENT semantics of each method.
+//
+// GET is member-owner/admin-status only. A browser's cached shared admin
+// password is NOT proof of any member's admin_role, and a stale Safari header
+// must never override the active HttpOnly member cookie.
+// POST is the historical shared-password challenge, now ALSO gated to a
+// verified application-admin member session (the existing Cockpit's outer
+// role). The returned UI token is not a member session or release authority.
+const PRIVATE_NO_STORE = { 'Cache-Control': 'private, no-store', Vary: 'Cookie, X-Session-Token' };
+
+function memberOnlyAuthRequest(req: NextRequest): NextRequest {
+  const headers = new Headers(req.headers);
+  headers.delete('x-admin-password');
+  headers.delete('authorization');
+  if (req.cookies.get('maia_session')?.value) {
+    headers.delete('x-session-token');
   }
-  return NextResponse.json({ isAdmin: true, via: result.via, role: result.role });
+  return new NextRequest(req.url, { method: 'GET', headers });
+}
+
+export async function GET(req: NextRequest) {
+  const verified = await deriveVerifiedAccess(req);
+  if (!verified.authenticated || !verified.memberId) {
+    // Preserve the existing owner-probe contract: HTTP 200 + false.
+    return NextResponse.json({ isAdmin: false }, { headers: PRIVATE_NO_STORE });
+  }
+  const admin = await checkAdminAuth(memberOnlyAuthRequest(req));
+  if (!admin.authed || admin.via !== 'member' || admin.memberId !== verified.memberId) {
+    return NextResponse.json({ isAdmin: false }, { headers: PRIVATE_NO_STORE });
+  }
+  return NextResponse.json(
+    { isAdmin: true, via: 'member', role: admin.role },
+    { headers: PRIVATE_NO_STORE },
+  );
 }
 
 export async function POST(req: NextRequest) {
+  // A correct shared password alone cannot cross this sensitive legacy gate.
+  // Independently enforce the member app-admin role even if the proxy is
+  // accidentally omitted; do not infer it from admin_role or caller headers.
+  const verified = await deriveVerifiedAccess(req);
+  if (!verified.authenticated) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+  if (!verified.roles.includes('admin')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   const ip = getClientIP(req);
 
   // Check rate limit
