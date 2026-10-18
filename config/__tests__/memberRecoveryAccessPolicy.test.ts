@@ -18,6 +18,25 @@ afterAll(() => {
 });
 
 describe('member recovery strict routing', () => {
+  it('admits only exact scanner-safe email verification routes before sign-in', () => {
+    for (const route of [
+      '/verify-email',
+      '/api/members/verify-email',
+      '/api/members/send-verification',
+    ]) {
+      expect(matchRule(route)?.public).toBe(true);
+      expect(checkAccess(route, 'free', [], false).allowed).toBe(true);
+    }
+    for (const adjacent of [
+      '/verify-email/unrelated',
+      '/api/members/verify-email/other',
+      '/api/members/send-verification/other',
+    ]) {
+      expect(matchRule(adjacent)?.public).not.toBe(true);
+      expect(checkAccess(adjacent, 'free', [], false).allowed).toBe(false);
+    }
+  });
+
   it('allows the exact member recovery landing page with no session', () => {
     expect(matchRule('/member-recovery')?.public).toBe(true);
     expect(checkAccess('/member-recovery', 'free', [], false).allowed).toBe(true);
