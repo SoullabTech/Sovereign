@@ -33,9 +33,11 @@ No ongoing cadence, venue, paid subscription or named keeper participation has b
 
 ### My proposed first implementation
 
-Use a **private video service already available to the founder**, provided it passes a rehearsal with fictional host and participant accounts. The first experiment is about listening and belonging, not building conferencing software.
+**Evaluate Soullab's already-created hybrid meeting service first.** The founder has identified an on-platform capability we should reuse rather than assume an external service is necessary. Our [read-only platform reuse audit](./STAGE-G_PLATFORM-HYBRID-REUSE_AUDIT_20261018.md) confirms meaningful Studio group links, provider-aware meeting metadata, LiveKit SFU configuration, Session Room consent, and video/signaling components.
 
-We have code for external meeting references, Session Room WebRTC and LiveKit tokens, but that does *not* prove that a private multiperson Wisdom Circle works on Soullab.life today. If the best initial bridge is an external link, say so honestly, including the provider's own data processing and logs. Do not advertise a more sovereign product than exists.
+The missing verification is whether the *particular existing on-platform hybrid interface* safely supports 6–8 adult participants with scoped join/revocation, reliable bidirectional audio/video, host controls, camera-off access and accurate recording/transcript disclosure. One older WebRTC client handles a single peer, and the older Socket.IO join handler lacks an evident verified membership gate; it should not be used as a private group room unmodified. The consent-gated Session Room is intended for individual encounters, not verified multiperson Circles.
+
+**Plan:** identify the founder's existing hybrid service screen/route; run a fictional multiperson privacy and media acceptance on the isolated service; reuse it if it passes. Treat a conventional external meeting link as a fallback **only if** the existing Soullab service does not yet meet the intended standard. Never advertise a stronger sovereign capability than has been demonstrated.
 
 Before sending an invitation, the host should demonstrate that an invited person can join, a stranger cannot, recording/AI notes are off, a participant can stay camera-off and leave, and the host can close access. The consent notice must accurately describe names, microphones, cameras, chat and provider retention. The Circle remains educational and nonclinical; no AI transcription, diagnosis or re-use of participant stories.
 
@@ -53,7 +55,7 @@ For a local gathering with remote participants, plan for **two stewards**—one 
 
 ### The next small decision
 
-**Which existing video meeting service/account should be our first fictional privacy rehearsal?**
+**Which screen/route is the on-platform hybrid service you have already built?** We will verify that exact room with fictional participants, instead of selecting an outside service by default.
 
 No purchase or meeting is needed to make that choice. We will then verify the provider's real settings and invite/exit behavior with test identities before choosing a date or communicating with any participant.
 
