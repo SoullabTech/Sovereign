@@ -289,3 +289,60 @@ test('mobile WebKit keeps Commons proposal readable without commerce or overflow
     assert.deepEqual(errors,[]);
   }finally{await page.close();}
 });
+
+test('WebKit member and keeper perspectives are reversible without real field access',async()=>{
+  const {page,errors,external}=await newPage();
+  try{
+    const field=page.getByTestId('keeper-hosted-field-concept');
+    await field.waitFor({state:'visible'});
+    assert.equal(await page.getByTestId('field-member-view').getAttribute('aria-pressed'),'true');
+    assert.equal(await page.getByTestId('field-keeper-view').getAttribute('aria-pressed'),'false');
+    let text=await page.getByTestId('hosted-field-content').innerText();
+    assert.match(text,/Enter by choice/);
+    assert.match(text,/Keep your own meaning/);
+    assert.doesNotMatch(text,/Set the invitation/);
+    await page.getByTestId('field-keeper-view').click();
+    assert.equal(await page.getByTestId('field-keeper-view').getAttribute('aria-pressed'),'true');
+    text=await page.getByTestId('hosted-field-content').innerText();
+    for(const required of ['Speak in your own voice','Choose what to share',
+      'Set the invitation','Pause or withdraw'])assert.ok(text.includes(required),required);
+    assert.doesNotMatch(text,/Enter by choice/);
+    await page.getByTestId('field-member-view').click();
+    text=await page.getByTestId('hosted-field-content').innerText();
+    assert.match(text,/Enter by choice/);
+    const note=await page.getByTestId('hosted-field-not-active').innerText();
+    assert.match(note,/Not an active room/);
+    assert.match(note,/Glenn Perry remains an unaffiliated referenced author/);
+    assert.match(note,/No invitations, signups/);
+    assert.equal(await field.locator('form').count(),0);
+    assert.equal(await field.locator('input').count(),0);
+    assert.equal(await field.locator('a').count(),0);
+    assert.deepEqual(external,[]);
+    assert.deepEqual(errors,[]);
+  }finally{await page.close();}
+});
+
+test('mobile WebKit fictional Keeper Field remains legible, accessible and no-network',async()=>{
+  const {page,errors,external}=await newPage({width:390,height:844});
+  try{
+    const field=page.getByTestId('keeper-hosted-field-concept');
+    await field.scrollIntoViewIfNeeded();
+    await page.getByTestId('field-keeper-view').click();
+    assert.match(await page.getByTestId('hosted-field-content').innerText(),/Set the invitation/);
+    const metrics=await page.evaluate(()=>({
+      scroll:document.documentElement.scrollWidth,
+      viewport:window.innerWidth,
+      widths:[...document.querySelectorAll('[data-testid="keeper-hosted-field-concept"] .hostedFieldCell')]
+        .map(x=>Math.round(x.getBoundingClientRect().width)),
+    }));
+    assert.equal(metrics.widths.length,4);
+    assert.ok(metrics.widths.every(x=>x>=280),JSON.stringify(metrics));
+    assert.ok(metrics.scroll<=metrics.viewport+2,JSON.stringify(metrics));
+    assert.equal(await page.getByTestId('field-keeper-view').getAttribute('aria-pressed'),'true');
+    await page.getByTestId('field-member-view').focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await page.getByTestId('field-member-view').getAttribute('aria-pressed'),'true');
+    assert.deepEqual(external,[]);
+    assert.deepEqual(errors,[]);
+  }finally{await page.close();}
+});
