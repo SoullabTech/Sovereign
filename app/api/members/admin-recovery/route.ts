@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       const claim = await tx.query<{ id: string; member_id: string }>(
         `SELECT id, member_id FROM admin_member_recovery_tokens
           WHERE token_hash = $1 AND redeemed_at IS NULL AND revoked_at IS NULL
-            AND expires_at > now()
+            AND expires_at > clock_timestamp()
             AND delivery_status IN ('provider_accepted', 'handoff_issued')
           FOR UPDATE`,
         [tokenHash],
