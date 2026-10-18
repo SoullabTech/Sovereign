@@ -18,7 +18,9 @@ try {
       name text, username text, email text,
       tier text NOT NULL DEFAULT 'free',
       roles text[] NOT NULL DEFAULT ARRAY['member']::text[],
-      admin_role text NULL
+      admin_role text NULL,
+      email_verified boolean NOT NULL DEFAULT false,
+      recovery_email_verification_id uuid
     );
     CREATE TABLE IF NOT EXISTS auth_sessions (
       member_id uuid NOT NULL REFERENCES members(id) ON DELETE CASCADE,
