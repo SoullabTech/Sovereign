@@ -6,7 +6,7 @@
  * password that opens Command Center does not authorize this sensitive action.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { KeyRound, Search, ShieldCheck, Mail, Copy, AlertTriangle, ArrowLeft, Lock } from 'lucide-react';
+import { KeyRound, Search, ShieldCheck, Mail, ArrowLeft, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 /**
@@ -26,7 +26,6 @@ async function founderSessionFetch(path: string, init: RequestInit = {}): Promis
 }
 
 type MemberRow = { id: string; name: string | null; username: string | null; email: string | null; admin_role: string | null };
-type DeliveryMode = 'email' | 'private_handoff';
 
 export default function MemberAccessPage() {
   const pathname = usePathname();
@@ -36,12 +35,8 @@ export default function MemberAccessPage() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<MemberRow | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mode, setMode] = useState<DeliveryMode>('email');
-  const [reason, setReason] = useState<'email_unavailable' | 'verified_in_person'>('email_unavailable');
-  const [verified, setVerified] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [handoffLink, setHandoffLink] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -75,19 +70,14 @@ export default function MemberAccessPage() {
     setSelected(m);
     setError('');
     setMessage('');
-    setHandoffLink(null);
-    setVerified(false);
     setConfirmed(false);
-    setMode('email');
   }
 
   async function issueRecovery() {
     if (!selected || !confirmed || submitting) return;
-    if (mode === 'private_handoff' && !verified) return;
     setSubmitting(true);
     setError('');
     setMessage('');
-    setHandoffLink(null);
     try {
       const res = await founderSessionFetch('/api/admin/members/recovery', {
         method: 'POST',
@@ -95,9 +85,8 @@ export default function MemberAccessPage() {
         cache: 'no-store',
         body: JSON.stringify({
           memberId: selected.id,
-          method: mode,
-          reason: mode === 'email' ? 'member_requested' : reason,
-          identityVerified: mode === 'private_handoff' ? verified : undefined,
+          method: 'email',
+          reason: 'member_requested',
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -107,14 +96,14 @@ export default function MemberAccessPage() {
         }
         throw new Error(data.error || 'Recovery could not be initiated');
       }
-      if (mode === 'private_handoff' && typeof data.recoveryLink === 'string') {
-        setHandoffLink(data.recoveryLink);
-        setMessage('One-time link issued. Transfer only through the verified private handoff; it expires after 10 minutes.');
-      } else {
-        setMessage('The email provider accepted this recovery request. Delivery has not been confirmed.');
+      // A bearer link must NEVER be disclosed to the administrator. Reject an
+      // unexpected response rather than rendering or persisting it.
+      if (data.method !== 'email' || data.delivery !== 'provider_accepted'
+          || Object.prototype.hasOwnProperty.call(data, 'recoveryLink')) {
+        throw new Error('Unexpected delivery response; recovery confirmation withheld.');
       }
+      setMessage('The email provider accepted this recovery request. Delivery has not been confirmed.');
       setConfirmed(false);
-      setVerified(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Recovery could not be initiated');
     } finally {
@@ -162,52 +151,33 @@ export default function MemberAccessPage() {
       {selected && <div className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-5">
         <h2 className="font-semibold">Recovery for {selected.name || selected.username || 'member'}</h2>
         <p className="text-sm text-slate-400">This action will invalidate any earlier administrator-issued recovery link for this account. It will not immediately change the password.</p>
-        <fieldset className="space-y-3">
-          <legend className="text-sm font-semibold mb-2">Delivery method</legend>
-          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-700 p-3">
-            <input type="radio" name="delivery" value="email" checked={mode === 'email'} onChange={() => { setMode('email'); setHandoffLink(null); }} className="mt-1" />
-            <span><span className="flex items-center gap-2 font-medium"><Mail className="h-4 w-4" /> Send recovery email</span>
-              <span className="block text-sm text-slate-400">Member chooses a new password through a 30-minute single-use link. Email acceptance does not prove delivery.</span></span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-700 p-3">
-            <input type="radio" name="delivery" value="private_handoff" checked={mode === 'private_handoff'} onChange={() => { setMode('private_handoff'); setHandoffLink(null); }} className="mt-1" />
-            <span><span className="font-medium">Verified private handoff</span>
-              <span className="block text-sm text-slate-400">Exceptional use when email cannot be delivered. Show a link once for secure delivery to the member. Expires after 10 minutes.</span></span>
-          </label>
-        </fieldset>
-
-        {mode === 'private_handoff' && <div className="space-y-3 rounded-lg border border-amber-700/40 bg-amber-950/20 p-4">
-          <label className="block text-sm">Reason
-            <select value={reason} onChange={e => setReason(e.target.value as typeof reason)}
-              className="mt-2 w-full rounded-lg border border-slate-600 bg-slate-950 p-2 text-white">
-              <option value="email_unavailable">Email unavailable; identity verified separately</option>
-              <option value="verified_in_person">Identity verified in person</option>
-            </select>
-          </label>
-          <label className="flex items-start gap-2 text-sm text-amber-100">
-            <input type="checkbox" checked={verified} onChange={e => setVerified(e.target.checked)} className="mt-1" />
-            I have verified this member's identity independently. I will not put their recovery link in a public channel.
-          </label>
-        </div>}
+        <div aria-label="Email-only recovery" className="rounded-lg border border-slate-700 bg-slate-950/60 p-4">
+          <p className="flex items-center gap-2 text-sm font-semibold text-amber-200">
+            <Mail className="h-4 w-4" /> Send recovery email
+          </p>
+          <p className="mt-2 text-sm text-slate-300">
+            The member receives a single-use link at their email on file, valid for 30 minutes,
+            and chooses their own password. Provider acceptance does not guarantee delivery.
+          </p>
+          <p className="mt-2 text-xs text-slate-400">
+            Email is the only recovery method during the initial beta.
+            Private handoff is unavailable until separately reviewed and approved.
+          </p>
+          {!selected.email && <p role="alert" className="mt-3 text-sm text-amber-200">
+            This member has no email on file; email-only recovery is unavailable.
+          </p>}
+        </div>
 
         <label className="flex items-start gap-3 text-sm text-slate-200">
           <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} className="mt-1" />
           I confirm this is the correct member and the request is authorized.
         </label>
-        <button type="button" disabled={!confirmed || submitting || (mode === 'private_handoff' && !verified)}
+        <button type="button" disabled={!confirmed || submitting || !selected.email}
           onClick={issueRecovery}
           className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-5 py-3 font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40">
           <Lock className="h-4 w-4" /> {submitting ? 'Issuing…' : 'Initiate recovery'}
         </button>
-        {handoffLink && <div className="rounded-lg border border-amber-600/50 bg-slate-950 p-4 space-y-3">
-          <p className="flex items-center gap-2 text-sm font-semibold text-amber-300"><AlertTriangle className="h-4 w-4" /> One-time private link</p>
-          <p className="break-all text-xs text-slate-300" aria-label="Temporary recovery link">{handoffLink}</p>
-          <button type="button" className="inline-flex gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm hover:bg-slate-600"
-            onClick={async () => { try { await navigator.clipboard.writeText(handoffLink); setHandoffLink(null); setMessage('Link copied and removed from the screen. Deliver it securely to the verified member.'); } catch { setError('Clipboard unavailable. Use a secure handoff method.'); } }}>
-            <Copy className="h-4 w-4" /> Copy once
-          </button>
-          <button type="button" className="ml-3 text-sm text-slate-400 underline" onClick={() => setHandoffLink(null)}>Dismiss link</button>
-        </div>}
+
       </div>}
     </section>
   );
