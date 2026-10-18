@@ -14,6 +14,18 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## Current founder service direction — Wisdom Keepers Commons
+
+**Proposed, not adopted or deployed.** Soullab could become a place where people encounter not only the *ideas* of wisdom keepers, but the people and communities that steward them. The relationship is communal and reciprocal rather than a marketplace, content-extraction economy, or unauthorized contact directory. Any personal encounter needs mutual consent and ethical compensation, not a built-in pay-to-access hierarchy.
+
+- [Wisdom Keepers Commons service charter](./WISDOM-KEEPERS-COMMONS_SERVICE-CHARTER_CANDIDATE_20261017.md) — the proposed communal promise, five ways to participate, existing FR-02 Interest Commons governance, free choice/keeper standing, transparent compensation and a Glenn Perry pilot.
+- [Machine-readable pilot and consent contract](./WISDOM-KEEPERS-COMMONS_PILOT-CONTRACT_CANDIDATE_20261017.json) — all live service, interest, invitation, fund and third-party source rights **OFF**.
+- [Stage D isolated witness](./STAGE-D-WISDOM-KEEPERS-COMMONS_SERVICE-WITNESS_20261017.md) — **109/109** combined review/contract/WebKit checks at pinned candidate revision, plus targeted TypeScript review. There has been no real community service build or keeper outreach.
+- [Communal service contract tests](./stage-d-community-service-contract.test.mjs) — provenance, right-to-decline, FR-06 declared-only interests, FR-07/08 membrane safeguards, no monetized ranking.
+- The founder-only, default-OFF [Perry preview](../../../../app/maia/perry-lens-preview/page.tsx) now contains a **fictional four-movement community journey**, not a signup form, active Circle, live chat or Perry partnership.
+
+**Naming distinction:** “Wisdom Keepers Commons” is *working service language within* the ratified FR-02 Interest Commons, **not** a separate new Commons or reuse of the status-oriented legacy community/contributions tables. Its proposed public-facing name is subject to founder decision.
+
 ## Current workstream — original Soullab editorial teaching
 
 - [Original Soullab teaching candidate](./soullab-original-teaching-candidate.md): seven movements of inquiry, three fictional encounters; **pending founder approval, not active knowledge**.
