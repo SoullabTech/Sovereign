@@ -23,6 +23,7 @@ export default async function PerryLensPreviewPage() {
   // The flag is read exclusively on the server. Never use
   // NEXT_PUBLIC_, browser localStorage, or a caller-supplied preview token.
   if (process.env.MAIA_PERRY_FOUNDER_PREVIEW_ENABLED !== '1'
+      || process.env.CAPACITOR_BUILD === '1'
       || process.env.CAPACITOR_BUILD === 'true') {
     notFound();
   }
