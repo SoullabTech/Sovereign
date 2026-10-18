@@ -1,0 +1,45 @@
+# Admin authentication regression gate — hermetic, no production secrets.
+# Guards the two sensitive admin entry points without running the broad test suite.
+# A green run proves only these Jest mocks/assertions passed on the exact PR SHA.
+name: Admin Authentication Regression Gate
+
+on:
+  pull_request:
+    branches: [clean-main-no-secrets]
+    paths:
+      - 'app/api/admin/auth/route.ts'
+      - 'app/api/admin/reset-member-password/route.ts'
+      - 'app/api/admin/__tests__/admin-routes-hotfix.test.ts'
+      - 'app/api/admin/__tests__/admin-login-audit-reset-owner.test.ts'
+      - 'lib/admin/adminAuth.ts'
+      - '.github/workflows/admin-auth-regression-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  fictional-admin-regressions:
+    name: Mocked password login and member reset
+    runs-on: ubuntu-latest
+    env:
+      CI: 'true'
+      # Prevent inadvertent fallback to any configured production DB.
+      DATABASE_URL: 'postgresql://invalid:invalid@127.0.0.1:1/fixture_denied'
+      LABTOOLS_ADMIN_PASSWORD: ''
+      ADMIN_RESET_SECRET: ''
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Run targeted admin auth and reset Jest regressions
+        run: >-
+          npx --no-install jest --config jest.config.js --runInBand --runTestsByPath
+          app/api/admin/__tests__/admin-routes-hotfix.test.ts
+          app/api/admin/__tests__/admin-login-audit-reset-owner.test.ts
