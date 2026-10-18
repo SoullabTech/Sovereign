@@ -2,6 +2,8 @@
 
 **Standing:** SOURCE CANDIDATE ONLY · no founder release act · do not merge, migrate, deploy or send real mail.
 
+**Runtime membrane:** Both issuance and redemption refuse with HTTP 503 unless `MEMBER_ACCESS_RECOVERY_ENABLED=1`. The flag is unset by default. Fictional CI explicitly opts in. The setting does **not** itself authorize production use or schema deployment.
+
 ## Purpose
 
 An authorized founder uses **Admin Command Center → Member Access** to initiate recovery for a selected existing member. The member sets their own password. The administrator never chooses, sees, emails or stores the replacement password. Separate from the legacy /reset-password and /api/admin/reset-member-password routes.
