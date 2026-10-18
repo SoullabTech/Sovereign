@@ -8,10 +8,11 @@ import { createHash, randomBytes } from 'node:crypto';
 export const ADMIN_RECOVERY_MAX_PASSWORD_BYTES = 72;
 export const ADMIN_RECOVERY_MIN_PASSWORD_CODEPOINTS = 12;
 export const ADMIN_RECOVERY_EMAIL_LIFETIME_MINUTES = 30;
-export const ADMIN_RECOVERY_HANDOFF_LIFETIME_MINUTES = 10;
 
-export type RecoveryMode = 'email' | 'private_handoff';
-export type RecoveryReason = 'member_requested' | 'email_unavailable' | 'verified_in_person';
+// Initial beta supports only email. Private handoff requires a separate
+// Class A review, migration and explicit founder authorization.
+export type RecoveryMode = 'email';
+export type RecoveryReason = 'member_requested';
 
 export function validRecoveryPassword(password: unknown): password is string {
   return typeof password === 'string'
