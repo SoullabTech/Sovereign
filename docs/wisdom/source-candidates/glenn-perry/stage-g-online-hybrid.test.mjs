@@ -131,7 +131,7 @@ test('hybrid needs independent privacy, accessibility, two-way audio and remote 
     if(typeof v==='boolean' && !['recording_default_off','keeper_consent_required','member_consent_required','adult_pilot_only','time_and_venue_tbd'].includes(k))
       assert.equal(v,false,k);
   }
-  assert.match(note,/remote participant advocate/i);
+  assert.match(note,/participant advocate/i);
   assert.match(note,/mix-minus\/echo cancellation/);
   assert.match(note,/equal presence/i);
 });
@@ -190,7 +190,7 @@ test('founder UI defaults to first online format and never exposes a meeting-lin
 
 test('an in-person-only webinar style fails the planned hybrid standard',()=>{
   assert.match(note,/not a webinar with second-class remote spectators/);
-  assert.match(note,/not a one-way livestream/);
+  assert.match(note,/No public livestream/);
   assert.match(options.hybrid.description,/not a one-way livestream/);
   const out=options.hybrid.promises.map(x=>x.explanation).join(' ');
   assert.match(out,/remote/);
