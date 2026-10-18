@@ -10,7 +10,6 @@ import { test, expect, type Page, type Route } from '@playwright/test';
 const MEMBER_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const OTHER_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 const TOKEN = 'a'.repeat(64);
-const LINK = 'https://soullab.life/member-recovery#token=' + TOKEN;
 const MEMBER = {
   id: MEMBER_ID, name: 'Fictional Member One',
   username: 'fixture_one', email: 'one@example.invalid', admin_role: null,
@@ -84,7 +83,7 @@ async function fictional(page: Page, options: { founder?: boolean; issueFailure?
       await setMock(route, 200, { success: true, method: 'email', delivery: 'provider_accepted', expiresInMinutes: 30 });
       return;
     }
-    await setMock(route, 200, { success: true, method: 'private_handoff', recoveryLink: LINK, expiresInMinutes: 10 });
+    await setMock(route, 403, { error: 'Private handoff is unavailable during the initial beta' });
   });
   await page.route('**/api/members/admin-recovery', async route => {
     const payload = route.request().postDataJSON() as Record<string, unknown>;
@@ -193,32 +192,23 @@ test.describe('Admin Member Access — fictional member workflow', () => {
     expect(JSON.stringify(h.issued[0].request)).not.toContain('password');
   });
 
-  test('private handoff requires separate identity check, shows link once and clears it after copy', async ({ page }) => {
+  test('initial beta has no private handoff or copyable recovery link', async ({ page }) => {
     const h = await fictional(page, { founder: true });
-    await page.addInitScript(() => {
-      Object.defineProperty(navigator, 'clipboard', {
-        configurable: true,
-        value: { writeText: async (value: string) => { (window as any).__fictionalCopied = value; } },
-      });
-    });
     await page.goto('/admin/member-access');
     await page.getByRole('button', { name: /Fictional Member One/ }).click();
-    await page.getByRole('radio', { name: /Verified private handoff/ }).check();
+    await expect(page.getByLabel('Email-only recovery')).toBeVisible();
+    await expect(page.getByText(/Private handoff is unavailable until separately reviewed/)).toBeVisible();
+    await expect(page.getByRole('radio', { name: /Verified private handoff/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Copy once' })).toHaveCount(0);
     const button = page.getByRole('button', { name: 'Initiate recovery' });
-    await page.getByRole('checkbox', { name: /correct member and the request is authorized/ }).check();
     await expect(button).toBeDisabled();
-    await page.getByRole('checkbox', { name: /verified this member's identity independently/ }).check();
-    await expect(button).toBeEnabled();
+    await page.getByRole('checkbox', { name: /correct member and the request is authorized/ }).check();
     await button.click();
-    await expect(page.getByText(LINK)).toBeVisible();
-    await page.getByRole('button', { name: 'Copy once' }).click();
-    await expect(page.getByText(LINK)).toHaveCount(0);
-    expect(await page.evaluate(() => (window as any).__fictionalCopied)).toBe(LINK);
+    await expect(page.getByRole('status')).toContainText('email provider accepted');
     expect(h.issued).toHaveLength(1);
-    expect(h.issued[0].request).toMatchObject({
-      memberId: MEMBER_ID, method: 'private_handoff',
-      identityVerified: true, reason: 'email_unavailable',
-    });
+    expect(h.issued[0].request).toMatchObject({ memberId: MEMBER_ID, method: 'email', reason: 'member_requested' });
+    expect(h.issued[0].request).not.toHaveProperty('identityVerified');
+    expect(JSON.stringify(h.issued[0])).not.toContain('#token=');
   });
 
   test('server refusal is surfaced; no recovery link appears to password-only administrator', async ({ page }) => {
@@ -232,32 +222,30 @@ test.describe('Admin Member Access — fictional member workflow', () => {
     expect(h.issued).toHaveLength(1);
   });
 
-  test('holds the chosen target while a private recovery request is in flight', async ({ page }) => {
+  test('locks the selected member while an email issuance is in flight', async ({ page }) => {
     const h = await fictional(page, { founder: true, delayMs: 900 });
     await page.goto('/admin/member-access');
     await page.getByRole('button', { name: /Fictional Member One/ }).click();
-    await page.getByRole('radio', { name: /Verified private handoff/ }).check();
     await page.getByRole('checkbox', { name: /correct member and the request is authorized/ }).check();
-    await page.getByRole('checkbox', { name: /verified this member's identity independently/ }).check();
     await page.getByRole('button', { name: 'Initiate recovery' }).click();
     await expect(page.getByRole('button', { name: /Fictional Member Two/ })).toBeDisabled();
-    await expect(page.getByText(LINK)).toBeVisible();
+    await expect(page.getByRole('status')).toContainText('email provider accepted');
     expect(h.issued[0].request.memberId).toBe(MEMBER_ID);
     await expect(page.getByText('Recovery for Fictional Member One')).toBeVisible();
   });
 
-  test('switching target clears earlier confirmation and any private link', async ({ page }) => {
-    await fictional(page, { founder: true });
+  test('switching member after email issuance clears earlier confirmation and status', async ({ page }) => {
+    const h = await fictional(page, { founder: true });
     await page.goto('/admin/member-access');
     await page.getByRole('button', { name: /Fictional Member One/ }).click();
-    await page.getByRole('radio', { name: /Verified private handoff/ }).check();
     await page.getByRole('checkbox', { name: /correct member and the request is authorized/ }).check();
-    await page.getByRole('checkbox', { name: /verified this member's identity independently/ }).check();
     await page.getByRole('button', { name: 'Initiate recovery' }).click();
-    await expect(page.getByText(LINK)).toBeVisible();
+    await expect(page.getByRole('status')).toContainText('email provider accepted');
     await page.getByRole('button', { name: /Fictional Member Two/ }).click();
-    await expect(page.getByText(LINK)).toHaveCount(0);
+    await expect(page.getByRole('status')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Initiate recovery' })).toBeDisabled();
+    expect(h.issued).toHaveLength(1);
+    expect(h.issued[0].request.memberId).toBe(MEMBER_ID);
   });
 });
 
