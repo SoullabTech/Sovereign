@@ -183,3 +183,18 @@ test('confirmed SQL revocation reports true; stale/missing tokens never claim ne
  assert.equal(result.response.body.serverSessionRevoked,false);
  assert.equal(result.h.calls.queries,0);
 });
+
+test('unset trusted-web-origin configuration never grants sign-out authority',async()=>{
+ const h=signoutHarness();
+ const previous=process.env.AUTH_SIGNOUT_TRUSTED_WEB_ORIGINS;
+ delete process.env.AUTH_SIGNOUT_TRUSTED_WEB_ORIGINS;
+ try {
+  const response=await h.post(h.req);
+  assert.equal(response.status,403);
+  assert.equal(h.calls.queries,0);
+  assert.equal(h.calls.cleared.length,0);
+ }finally{
+  if(previous===undefined)delete process.env.AUTH_SIGNOUT_TRUSTED_WEB_ORIGINS;
+  else process.env.AUTH_SIGNOUT_TRUSTED_WEB_ORIGINS=previous;
+ }
+});
