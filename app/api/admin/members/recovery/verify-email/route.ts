@@ -92,10 +92,10 @@ export async function POST(req: NextRequest) {
     return reply({ error: 'Verification rate limit unavailable' }, 503);
   }
 
-  // Token exists only in this request's server memory and in a hashed
-  // transport channel. Database stores the existing email-verification
-  // bearer until it is consumed exactly once; recovery tokens are separate
-  // digest-only capabilities.
+  // This is an ORDINARY email-verification bearer: the pre-existing
+  // members.email_verification_token column stores it temporarily in plaintext
+  // until one-time confirmation. Admin recovery capabilities are separate,
+  // digest-only records. The bearer is never returned to the founder or logged.
   const token = randomBytes(32).toString('hex');
   let result: Result;
   try {
