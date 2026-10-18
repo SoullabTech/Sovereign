@@ -21,7 +21,21 @@ const PRIVATE_NO_STORE = {
 
 export async function GET(req: NextRequest) {
   try {
-    const admin = await checkAdminAuth(req, ['founder']);
+    // A live member cookie has precedence over a possibly stale token stored
+    // by another signed-in account on the same browser. The shared admin
+    // helper normally prefers the header; narrow that behavior to this
+    // founder-only endpoint without changing the platform-wide helper.
+    // Keeping checkAdminAuth in the path also retains its attempt audit.
+    let authRequest = req;
+    if (req.cookies.get('maia_session')?.value && req.headers.has('x-session-token')) {
+      const cookieFirstHeaders = new Headers(req.headers);
+      cookieFirstHeaders.delete('x-session-token');
+      authRequest = new NextRequest(req.url, {
+        method: 'GET',
+        headers: cookieFirstHeaders,
+      });
+    }
+    const admin = await checkAdminAuth(authRequest, ['founder']);
     // checkAdminAuth also accepts a shared-password fallback. For this sensitive
     // release-status view, insist on an independently verified member session.
     if (!admin.authed || admin.via !== 'member' || admin.role !== 'founder'

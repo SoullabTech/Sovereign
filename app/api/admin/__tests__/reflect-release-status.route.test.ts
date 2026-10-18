@@ -115,6 +115,43 @@ describe('Reflect E010 founder-only read-only admin status GET', () => {
     expect((await response.json()).observation.mode).toBe('OFF');
   });
 
+  it('cookie identity is authoritative when a different header token is also sent', async () => {
+    mockedAuth.mockImplementation(async (req) => {
+      expect(req.headers.get('x-session-token')).toBeNull();
+      expect(req.cookies.get('maia_session')?.value).toBe('fictional-nonfounder-cookie');
+      return { authed: false, via: null };
+    });
+    const res = await GET(new NextRequest(
+      'https://soullab.life/api/admin/reflect-release-status',
+      {
+        method: 'GET',
+        headers: {
+          Cookie: 'maia_session=fictional-nonfounder-cookie',
+          'x-session-token': 'fictional-older-founder-token',
+        },
+      },
+    ));
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: 'Verified founder member session required' });
+    expect(mockedAuth).toHaveBeenCalledTimes(1);
+  });
+
+  it('header-only Safari session still reaches verified helper unchanged', async () => {
+    mockedAuth.mockImplementation(async (req) => {
+      expect(req.headers.get('x-session-token')).toBe('fictional-founder-header');
+      expect(req.cookies.get('maia_session')).toBeUndefined();
+      return {
+        authed: true, via: 'member', role: 'founder', memberId: oneFictionalMember,
+      };
+    });
+    const res = await GET(new NextRequest(
+      'https://soullab.life/api/admin/reflect-release-status',
+      { method: 'GET', headers: { 'x-session-token': 'fictional-founder-header' } },
+    ));
+    expect(res.status).toBe(200);
+    expect(mockedAuth).toHaveBeenCalledTimes(1);
+  });
+
   it('fails closed when founder session validation fails unexpectedly', async () => {
     mockedAuth.mockRejectedValue(new Error('fictional-database-error-with-credentials'));
     const response = await GET(makeRequest());
