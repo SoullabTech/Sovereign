@@ -31,7 +31,7 @@ async function setMock(route: Route, status: number, data: unknown) {
   });
 }
 
-async function fictional(page: Page, options: { founder?: boolean; issueFailure?: boolean } = {}): Promise<Harness> {
+async function fictional(page: Page, options: { founder?: boolean; issueFailure?: boolean; delayMs?: number } = {}): Promise<Harness> {
   const capture: Harness = { issued: [], redeemed: [] };
   // Any attempts to load external domains are refused rather than contacting
   // the user's live platform or third-party services. Next assets stay local.
@@ -54,6 +54,7 @@ async function fictional(page: Page, options: { founder?: boolean; issueFailure?
   await page.route('**/api/admin/members/recovery', async route => {
     const payload = route.request().postDataJSON() as Record<string, unknown>;
     capture.issued.push({ pathname: new URL(route.request().url()).pathname, request: payload });
+    if (options.delayMs) await new Promise<void>(resolve => setTimeout(resolve, options.delayMs));
     if (options.issueFailure || !options.founder) {
       await setMock(route, 403, { error: 'A verified founder member session is required' });
       return;
@@ -131,6 +132,20 @@ test.describe('Admin Member Access — fictional member workflow', () => {
     await expect(page.getByRole('alert')).toContainText('founder member account');
     await expect(page.getByText('One-time private link')).toHaveCount(0);
     expect(h.issued).toHaveLength(1);
+  });
+
+  test('holds the chosen target while a private recovery request is in flight', async ({ page }) => {
+    const h = await fictional(page, { founder: true, delayMs: 900 });
+    await page.goto('/labtools/admin/command-center/member-access');
+    await page.getByRole('button', { name: /Fictional Member One/ }).click();
+    await page.getByRole('radio', { name: /Verified private handoff/ }).check();
+    await page.getByRole('checkbox', { name: /correct member and the request is authorized/ }).check();
+    await page.getByRole('checkbox', { name: /verified this member's identity independently/ }).check();
+    await page.getByRole('button', { name: 'Initiate recovery' }).click();
+    await expect(page.getByRole('button', { name: /Fictional Member Two/ })).toBeDisabled();
+    await expect(page.getByText(LINK)).toBeVisible();
+    expect(h.issued[0].request.memberId).toBe(MEMBER_ID);
+    await expect(page.getByText('Recovery for Fictional Member One')).toBeVisible();
   });
 
   test('switching target clears earlier confirmation and any private link', async ({ page }) => {
