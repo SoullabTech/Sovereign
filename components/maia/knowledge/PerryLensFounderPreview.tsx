@@ -13,6 +13,7 @@ import {
   preparePerryClientSelection,
   PERRY_CLIENT_SOURCE_CHOICE,
 } from '@/lib/maia/knowledge/perryClientPostureGate';
+import { GLENN_PERRY_WISDOM_KEEPER_LINKS } from '@/lib/maia/knowledge/perryWisdomKeeperLinks';
 
 type Choice = 'usual' | 'perry';
 type SimulatedPosture = 'ordinary' | 'sanctuary' | 'unresolved';
@@ -102,6 +103,15 @@ export default function PerryLensFounderPreview() {
         .perryDemo .perryAction:hover{background:#25463f;}
         .perryDemo .perryAnswer{background:#f1f4ee;border-radius:12px;padding:18px 20px;line-height:1.65;font-size:16px;color:#2b443a;margin-top:18px;}
         .perryDemo .perrySmall{font-size:13px;color:#617267;line-height:1.55;margin-top:14px;}
+        .perryDemo .keeperIntro{color:#4b6056;font-size:15px;line-height:1.6;margin:0 0 20px;}
+        .perryDemo .keeperList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+        .perryDemo .keeperLink{display:block;border:1px solid #d4dcd3;border-radius:13px;padding:15px 16px;color:#255d50;text-decoration:none;min-width:0;background:#fafcf8;}
+        .perryDemo .keeperLink:hover{background:#edf5ef;border-color:#85aea0;text-decoration:underline;text-underline-offset:3px;}
+        .perryDemo .keeperLink:focus-visible{outline:3px solid #559f89;outline-offset:3px;}
+        .perryDemo .keeperLink strong{display:block;font-size:15px;font-weight:650;overflow-wrap:anywhere;line-height:1.5;}
+        .perryDemo .keeperLink small{display:block;margin-top:5px;color:#586d60;font-size:13px;line-height:1.45;}
+        .perryDemo .keeperNote{font-size:13px;line-height:1.6;margin-top:18px;color:#62736a;}
+        @media(max-width:560px){.perryDemo .keeperList{grid-template-columns:1fr}}
         @media(max-width:560px){.perryDemo .perryChoices{grid-template-columns:1fr}.perryDemo .perryPanel{padding:18px}.perryDemo .perryChoice{min-height:0}}
       `}</style>
 
@@ -171,6 +181,33 @@ export default function PerryLensFounderPreview() {
           <p className="perrySmall">
             The eventual member experience must be optional, clearly attributed, and immediately reversible.
             This preview does not make the teaching available in live MAIA.
+          </p>
+        </section>
+
+        <section className="perryPanel" aria-labelledby="keeper-heading" data-testid="wisdom-keeper-links">
+          <div className="perryEyebrow">Honoring the source</div>
+          <h2 id="keeper-heading" style={{marginTop:10}}>Explore Glenn Perry’s original work</h2>
+          <p className="keeperIntro">
+            The original writer, teacher, and school remain visible. Visit his websites,
+            explore his books and essays, or study directly with the Academy of AstroPsychology.
+            MAIA’s commentary is separate from his own voice.
+          </p>
+          <div className="keeperList" role="list">
+            {GLENN_PERRY_WISDOM_KEEPER_LINKS.map((resource) => (
+              <div role="listitem" key={resource.id}>
+                <a className="keeperLink" href={resource.url}
+                  data-testid={`keeper-link-${resource.id}`}
+                  target="_blank" rel="noopener noreferrer">
+                  <strong>{resource.label} <span aria-hidden="true">↗</span></strong>
+                  <small>{resource.description}</small>
+                </a>
+              </div>
+            ))}
+          </div>
+          <p className="keeperNote">
+            External links go directly to the author’s and Academy’s websites. This is an
+            independent, attributed research preview—not a licensed edition of his texts or
+            a claim that Glenn Perry endorses MAIA. Following a link is always your choice.
           </p>
         </section>
       </div>
