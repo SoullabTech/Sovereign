@@ -34,6 +34,7 @@
 import { createHash } from 'node:crypto';
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
 import { splitStoredSection } from './sectionProjection';
+import { holdR7019BDirectSectionTransaction } from '@/lib/writersStudio/recovery/heldR7019BWriterFence';
 
 export type SaveRefusal =
   | 'draft_not_found'
@@ -185,6 +186,7 @@ export async function saveSectionInTransaction(
    */
   observedBodySha256?: string | null,
 ): Promise<SaveResult> {
+  await holdR7019BDirectSectionTransaction(tx, memberId);
   {
     const draftRes = await tx.query<{
       id: string; version: string; section_addressable_at: Date | null;

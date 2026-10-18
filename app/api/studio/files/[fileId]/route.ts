@@ -10,6 +10,7 @@ import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { randomBytes } from 'crypto';
+import { withHeldR7019BWriter } from '@/lib/writersStudio/recovery/heldR7019BWriterFence';
 
 const STORAGE_BASE = process.env.FILE_STORAGE_PATH || '/app/data/vault';
 
@@ -123,6 +124,10 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
     }
 
+    // R70.19D fictitious snapshot gate: holds one lease across
+    // scope validation, metadata update and server receipt.
+    return await withHeldR7019BWriter(memberId,'studio_file_metadata',
+      async () => {
     const body: unknown = await request.json().catch(() => null);
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
       return NextResponse.json({ success: false, error: 'Invalid update' }, { status: 400 });
@@ -220,6 +225,7 @@ export async function PATCH(
         updatedAt: row.updated_at,
       },
     });
+      },practitionerId);
   } catch (error) {
     console.error('[Studio Files] PATCH error:', error);
     return NextResponse.json({ success: false, error: 'Failed to update file' }, { status: 500 });
@@ -245,6 +251,8 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
     }
 
+    return await withHeldR7019BWriter(memberId,'studio_file_share',
+      async () => {
     const teamId = await resolveTeam(memberId, request);
 
     // Scope-aware existence check: cannot share a file outside your current context
@@ -290,6 +298,7 @@ export async function POST(
         createdAt: share.created_at,
       },
     });
+      },practitionerId);
   } catch (error) {
     console.error('[Studio Files] Share error:', error);
     return NextResponse.json({ success: false, error: 'Failed to create share link' }, { status: 500 });

@@ -26,6 +26,7 @@
  */
 import {privateWriterNoStore} from '@/lib/writersStudio/release/privateWriterNoStore';
 import {holdLegacyWriterForVerifiedMemberR52} from '@/lib/writersStudio/release/heldLegacyWriterFenceR52';
+import {withHeldR7019BWriter} from '@/lib/writersStudio/recovery/heldR7019BWriterFence';
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -136,6 +137,11 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   const hash = payloadHash('restore', { revisionNumber });
 
   try {
+    // One explicit lock from first owner-Draft read through either restore
+    // representation and final revision receipt. The fixture fence defaults off;
+    // the separate legacy UPDATE+INSERT atomicity repair applies universally.
+    return await withHeldR7019BWriter(memberId,'legacy_revision_restore',
+      async () => {
     const current = await query<DraftGuardRow & { id: string; section_addressable_at: string | null }>(
       `SELECT id, version, section_addressable_at, last_idempotency_key, last_idempotency_op,
               last_idempotency_payload_hash, last_idempotency_response
@@ -179,11 +185,17 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     }
     const restoredContent = revision.rows[0].content;
 
+    // A failed append-only history INSERT must roll back the Draft UPDATE
+    // and the idempotency receipt together. Both writes must share ONE
+    // PostgreSQL client and transaction, even on the legacy unconverted path.
+    // Earlier they were two pooled autocommit calls: an INSERT error could
+    // leave altered prose with no new revision (R70.19D physical witness).
+    return await transaction(async (tx) => {
     // Same compare-and-advance as a save: restoring cannot discard work the
     // writer has not seen. The displaced draft is preserved by construction —
     // it is already an immutable revision, and history is never rewritten.
     // The idempotency record is written in the SAME statement.
-    const updated = await query<{ revision_count: number; last_idempotency_response: unknown }>(
+    const updated = await tx.query<{ revision_count: number; last_idempotency_response: unknown }>(
       `UPDATE manuscript_working_drafts
           SET content = $2,
               revision_count = revision_count + 1,
@@ -203,7 +215,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       [draftId, restoredContent, guard.baseRevisionId, guard.idempotencyKey, hash, revisionNumber]
     );
     if (updated.rows.length === 0) {
-      const now = await query<{ version: number }>(
+      const now = await tx.query<{ version: number }>(
         `SELECT version FROM manuscript_working_drafts WHERE id = $1`,
         [draftId]
       );
@@ -213,13 +225,15 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       return NextResponse.json(conflictBody('stale_base', normalizeVersion(now.rows[0].version)), { status: 409 });
     }
 
-    await query(
+    await tx.query(
       `INSERT INTO working_draft_revisions (draft_id, revision_number, content, saved_by, note)
        VALUES ($1, $2, $3, $4, $5)`,
       [draftId, updated.rows[0].revision_count, restoredContent, memberId, `Restored from revision ${revisionNumber}`]
     );
 
     return NextResponse.json(updated.rows[0].last_idempotency_response as object);
+    }); // Draft UPDATE + immutable history INSERT are all-or-nothing
+      }); // R70.19D fixture's shared SQL/vault checkpoint lease
   } catch (error) {
     if (error instanceof RestoreHttp) {
       return NextResponse.json(error.body as object, { status: error.status });

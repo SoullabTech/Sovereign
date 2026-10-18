@@ -13,6 +13,7 @@ import {createHash} from 'node:crypto';
 import {transaction} from '@/lib/db/postgres';
 import {buildArrival,MEMBER_SUPPLIED_TEXT} from './custody';
 import type {ConfirmedSectionR63} from './persistConfirmedSectionsR63';
+import { withHeldR7019BWriter } from '@/lib/writersStudio/recovery/heldR7019BWriterFence';
 
 const UUID_V4=/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 
@@ -52,7 +53,8 @@ export async function persistConfirmedPasteR65(input:{
   JSON.stringify(['r65-confirmed-paste-v1',input.title,input.sections,
    input.sourceText])).digest('hex');
 
- return transaction(async(tx)=>{
+ return withHeldR7019BWriter(input.verifiedMemberId, 'confirmed_paste',
+  () => transaction(async(tx)=>{
   // Unique (member_id,confirmation_id) is the cross-process mutex. PG
   // holds conflict detection through COMMIT/ROLLBACK, serializing concurrent
   // retries instead of allowing a second manuscript row.
@@ -171,5 +173,5 @@ export async function persistConfirmedPasteR65(input:{
   return {
    manuscriptId,replayed:false,sourceCustody:'source_custodied',
   };
- });
+ }));
 }

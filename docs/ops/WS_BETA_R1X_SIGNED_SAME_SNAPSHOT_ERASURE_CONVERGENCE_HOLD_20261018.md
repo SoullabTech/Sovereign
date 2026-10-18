@@ -1,0 +1,46 @@
+# R1X — same-PostgreSQL snapshot, signed five-volume archive and current-deletion refusal
+
+**18 October 2026 · MAC STUDIO ISOLATED review · PRODUCTION BACKUP CUTOVER HOLD · REAL-MEMBER WRITER BETA HOLD.**
+
+## Exact reviewed source parents
+
+- Accepted, clean signed full-Work recovery source: **R1W** `1e9eee64306197a0f52e7b547ee3bdd279d786fa`, including five-volume R1V archive, independent detached GPGV signature and fictional cold restore.
+- Accepted fictional same-PostgreSQL snapshot + Work census + independently signed current deletion source: **R70.19I** `fcf4bbe0a22e0f865b944c998cf32c26a910115b`, itself descended from R70.19B/C/D/E/F/G/H Writer mutation/source and deletion gates.
+- **R1X** combines these full parent histories in a new isolated checkout. The dry-run reported only **one conflicting file**, `scripts/ops/wsBetaR1VMinisforumEncryptedBackup.py`. The four conflict blocks were reconciled by retaining the original hard-disabled production code and adding only R70.19I's explicit **fictional** exported PostgreSQL snapshot parameters. The accepted R1W signer and signed-only restorer source files and accepted R7019I independent current-deletion verifier remained byte-identical to their parents.
+- Do **not** infer that old R70.19C ledger matches the joined source: its **unchanged** 22-entry checksum inventory now records **seven named drifts** (15 SHA-verified): the six already-held writer/restore entries plus the intentionally changed `exported_snapshot_encrypted_db_vault`. R1X updates its joined test to expect that seventh drift and **keeps source integrity/release HOLD**; it does not rewrite the frozen ledger or mark unsupported writing paths safe.
+
+## What the single-generation fictional proof establishes
+
+1. One disposable, isolated PostgreSQL 16 database stores two fictional owned manuscripts and their R1Q key-wrapper metadata. The genuine PostgreSQL `REPEATABLE READ READ ONLY` session obtains a fixture advisory lease, reads a Work/key census and **exports a real PostgreSQL MVCC snapshot**. The R1V encrypted `pg_dump` is then forced to use that same exported snapshot.
+2. All five fictional live-shaped file volumes (media, Source vault, voice notes, workbench and audit logs) are captured and encrypted. The existing R1W independent signer certifies the resulting PostgreSQL+file ciphertext and manifest with a pinned public signer identity.
+3. A separately signed Work census binds the **actual SQL-derived roster** to the exact R1W signed point and both ciphertext hashes. An independently supplied, newer signed deletion checkpoint and Work roster supply authority beyond the old backup. All signing keys and recovery keys in this test are temporary, fictional and deleted at the end.
+4. **Survivor:** after destroying the original PostgreSQL container and all five fictional Source volumes, a separate restorer verifies the R1W signature, census/deletion checkpoint and exact owned Work roster, then recovers the two fictional Works and all six file bytes into a fresh isolated PostgreSQL + file root. **13/13 physical checks PASS.**
+5. **Postbackup deletion:** the fictional DB has two Works at backup time, but one is subsequently deleted. A newer independently signed checkpoint revokes that Work. The SAME genuinely signed older archive is **refused BEFORE the private decryption key or a PostgreSQL restore container is consulted**. **14/14 physical checks PASS.**
+6. Both disposable tests ran with explicit fictional flags, cleaned the temporary GPG/Ed25519 keys and Docker containers and reported `realBetaApproved:false`, `productionSnapshotOrCronAccessed:false`, and no real KMS, provider or member data. The two scenario runs were performed on the pinned source parents **before the R1X merge commit**; exact-commit requalification is separately required before this source could be considered a frozen review artifact.
+
+## Other local acceptance
+
+- **59/59** merged signing/backup/census/legacy-Writing source and release-law tests, including the intentionally drift-HOLD frozen R70.19C ledger.
+- **94/94** focused real member consent, current private candidate, held signed-delete bridge and key-custody Jest tests; 25 optional fixture-mode Jest checks are skipped because no separately supplied R70.19C accepted-restore fixture was injected. The fixture-specific `wsBetaR7019CCompletePointNegative.test.ts` cannot run without `R7019C_TEST_MODE`, exact accepted evidence directory and source pin; do not fabricate those inputs or count the suite as passed here.
+- **8/8** additional R1X source-custody tests explicitly pin the two parents, preserve byte-identical R1W independent signer and R7019I deletion verifier, and confirm all production release flags remain false.
+- Strict `tsc -p tsconfig.ship.json --noEmit --incremental false`: **zero errors** on joined precommit source. A complete Next.js production build was NOT rerun here. The prior R1S full sandboxed build remains separate accepted evidence on its own commit.
+- Source shipping gate still **HOLD**: 12 original writer routes, **zero** qualified live protected author write bindings and **nine** unresolved release requirements.
+
+## Known gaps — not eligible for real manuscripts
+
+- This is a **single fictional owner** with two Work rows. It does not exhaustively census original Source/attachments, historically deleted content, PHI/clinical domains, all account members, retained source revisions or replica chains. The R70.19C frozen inventory actually shows seven drifted entries; real Writer mutation coverage is **NOT** completely fenced.
+- The current Work/deletion and signing identities were ephemeral on **the same Mac** in fiction. This is not a durable off-machine, nonrollbackable deletion high-water ledger, independent KMS/authority, signed/latest-generation audit registry, signed launch receipt, or legally governed erasure across backups. An older valid signature can still be replayed if the trusted current deletion authority is unavailable or bypassed; the held restorer correctly refuses when missing in its test.
+- A PostgreSQL consistent snapshot is not a complete live cross-store file lock or PostgreSQL WAL/PITR strategy. The test observes files remaining unchanged in one local fixture. Production concurrent file writers, queued work, old completed Source, application worker processes and external volumes still need a complete census, quiescence protocol and independent cold-restore proof.
+- The Minisforum **two installed 02:00 UTC gzip-only root/user backup cron jobs** remain active with legacy raw SQL/NAS copies, and were neither read nor changed during R1X. R1V/R1W production mode is **hard-disabled**. Do not infer a backup cutover happened.
+- R19/R20 external Work key-custody and newer R21 scope-control source is separate; a dry-run between signed R1W and R20 showed **four sensitive conflicts in beta consent/invitation routes**. Those MUST receive independent security/consent review and are **not** silently merged into R1X.
+- Member-owned real protected Review/Apply/Undo, true inference provider attribution, encrypted Source and all historical file/backups, independent live restore, release operator authority and founder-signed cohort approval are unfinished.
+
+## Next bounded engineering/operator work
+
+1. **Full Writer mutation coverage:** independently adjudicate every remaining unfenced Source/keep/direct-revision/delete/async mutation and external stored file/missing orphans; qualify producer locks under one actual service barrier with rollback/prohibition of restore leakage.
+2. **Independent external authority:** establish the *current* deleted-Work/latest signed checkpoint from a separately governed holder that cannot be rolled back by restoring SQL; prove current ledger outlives both NAS snapshots and application images. Validate certificate/key rotation and multi-person custody.
+3. **Production-specific encrypted writer:** after the full source census, snapshot protocol, ordinary encryption and current authority are actually reviewed, prepare offsite signed complete SQL/WAL+five-volume+external-source capture with separately held recovery key and durable tamper-evident storage, tested against a production-equivalent fictitious Linux host. R1V/R1W scripts are NOT production execution tools.
+4. **Separate change-window approval:** use exact-current Minisforum root/user cron hashes, key receipts, disk headroom, backup-continuity/rollback, offsite cold-restore and a named founder change window. Do not disable either gzip cron writer or delete historical archives until explicitly authorized and independently safe.
+5. **Only later** complete genuine signed-in author Apply/Undo, current MAIA provider consent, real-user restore/deletion and an independent shipping/canary GO. Five-member Writer beta stays **HOLD**.
+
+**No production host, member SQL, archived Source, NAS, cron, AWS/KMS, paid model, GitHub push, protected branch merge, invitation or deployment is authorized or performed by this isolated work.**

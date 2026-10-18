@@ -1,0 +1,164 @@
+{
+  "protocol": "soullab.ws.r7019d.actual-mutation-gaps-failclosed.v1",
+  "parentHead": "d3aeaa690dae12125269b613b5f8ca9f27b9bdbd",
+  "releaseHeld": true,
+  "verificationType": "source_custody_and_fictional_jest_only",
+  "membersActuallyAuthorized": false,
+  "realProductionEncryptionProven": false,
+  "independentProductionRecoveryProven": false,
+  "currentIndependentErasureHighwaterProven": false,
+  "unresolvedAuthorities": [
+    "cross-member_all_vault_namespaces_and_pending_source",
+    "unfenced_background_auth_proposal_and_account_writers",
+    "production_signed_point_current_external_deletion_authority",
+    "independently_escrowed_offsite_recovery_identity",
+    "historical_plaintext_NAS_backup_retention",
+    "real_WAL_and_non_copied_temporary_data_protection",
+    "authenticated_exact_release_and_rollback",
+    "independent_security_and_founder_admission"
+  ],
+  "entries": [
+    {
+      "id": "studio_metadata",
+      "path": "app/api/studio/files/[fileId]/route.ts",
+      "sha256": "7ec98ecf6fe0c61571392a0c2fed840ddd874311e969308ce205bc058d0d3dde",
+      "anchors": [
+        "withHeldR7019BWriter(memberId,'studio_file_metadata'",
+        "WHERE id = $1 AND practitioner_id = $2 AND status <> 'deleted'"
+      ],
+      "evidenceClass": "physical_fixture",
+      "liveProductionEligible": false
+    },
+    {
+      "id": "studio_share",
+      "path": "app/api/studio/files/[fileId]/route.ts",
+      "sha256": "7ec98ecf6fe0c61571392a0c2fed840ddd874311e969308ce205bc058d0d3dde",
+      "anchors": [
+        "withHeldR7019BWriter(memberId,'studio_file_share'",
+        "INSERT INTO practitioner_file_shares"
+      ],
+      "evidenceClass": "physical_fixture",
+      "liveProductionEligible": false
+    },
+    {
+      "id": "studio_soft_delete",
+      "path": "app/api/studio/files/route.ts",
+      "sha256": "990e3e9e029bced3e36fdf18bf9041439e1891ab819f820a2b800a5f327ba03b",
+      "anchors": [
+        "withHeldR7019BWriter(memberId,'studio_file_soft_delete'",
+        "originalBytesDestroyed: false"
+      ],
+      "evidenceClass": "physical_fixture",
+      "liveProductionEligible": false
+    },
+    {
+      "id": "studio_upload_prior",
+      "path": "app/api/studio/files/route.ts",
+      "sha256": "990e3e9e029bced3e36fdf18bf9041439e1891ab819f820a2b800a5f327ba03b",
+      "anchors": [
+        "withHeldR7019BWriter(memberId, 'studio_file_upload'",
+        "INSERT INTO practitioner_files"
+      ],
+      "evidenceClass": "physical_fixture",
+      "liveProductionEligible": false
+    },
+    {
+      "id": "legacy_revision_restore",
+      "path": "app/api/sovereign/manuscripts/[id]/draft/revisions/route.ts",
+      "sha256": "32273a172645f4b301a0528b39479732dc2b01b71a27aca885b514f430f1850c",
+      "anchors": [
+        "withHeldR7019BWriter(memberId,'legacy_revision_restore'",
+        "return await transaction(async (tx) => {",
+        "await tx.query(\n      `INSERT INTO working_draft_revisions"
+      ],
+      "evidenceClass": "physical_fixture",
+      "liveProductionEligible": false
+    },
+    {
+      "id": "revision_receipt_count_validator",
+      "path": "lib/writersStudio/recovery/heldR7018DraftSlice.ts",
+      "sha256": "46a8fa1ab6a42b9d64c32440cf5cbc66ea90c5e1b499dca8b955986a19b992a8",
+      "anchors": [
+        "stop('incomplete_revision_receipts')",
+        "storedRevisions.length!==count"
+      ],
+      "evidenceClass": "physical_fixture",
+      "liveProductionEligible": false
+    },
+    {
+      "id": "shared_lease_kinds",
+      "path": "lib/writersStudio/recovery/heldR7019BWriterFence.ts",
+      "sha256": "58e85cf5236e592b4e4d15bdf66a150f8d23ed0196a967eb252225697b138b00",
+      "anchors": [
+        "'studio_file_metadata'",
+        "'studio_file_soft_delete'",
+        "'studio_file_share'",
+        "'legacy_revision_restore'"
+      ],
+      "evidenceClass": "fictional_only",
+      "liveProductionEligible": false
+    },
+    {
+      "id": "unqualified_proposal_authority",
+      "path": "lib/manuscript/proposalChain/proposalWork.ts",
+      "sha256": "e942007cea85f1a40f8027af7edb79412161ad930b83742b6a89f2b092caf64d",
+      "anchors": [
+        "ProposalChain",
+        "ProposalVersion"
+      ],
+      "evidenceClass": "unqualified",
+      "liveProductionEligible": false
+    },
+    {
+      "id": "unqualified_revision_grants",
+      "path": "lib/manuscript/revisionAuthorization/store.ts",
+      "sha256": "36dd486c67be854873b1022bdc3108dfa63bf3cb189463efa519e81553b33e39",
+      "anchors": [
+        "manuscript_revision_authorizations"
+      ],
+      "evidenceClass": "unqualified",
+      "liveProductionEligible": false
+    },
+    {
+      "id": "unqualified_async_erasure",
+      "path": "scripts/ops/sweep-vault-erasure-queue.ts",
+      "sha256": "a55a19214b23e617009bef4fb8c43eda39f97c04679ba213257dd393258aeac5",
+      "anchors": [
+        "sweepVaultErasureQueue",
+        "vault_erasure_queue"
+      ],
+      "evidenceClass": "unqualified",
+      "liveProductionEligible": false
+    },
+    {
+      "id": "unqualified_account_erasure",
+      "path": "app/api/members/delete-account/route.ts",
+      "sha256": "ffe44ff6d8cd29872f42c2deb8054c27742299952210e5d434d9548c3604848c",
+      "anchors": [
+        "export async function"
+      ],
+      "evidenceClass": "unqualified",
+      "liveProductionEligible": false
+    },
+    {
+      "id": "unqualified_file_folder_creation",
+      "path": "app/api/studio/files/route.ts",
+      "sha256": "990e3e9e029bced3e36fdf18bf9041439e1891ab819f820a2b800a5f327ba03b",
+      "anchors": [
+        "INSERT INTO practitioner_file_folders"
+      ],
+      "evidenceClass": "unqualified",
+      "liveProductionEligible": false
+    },
+    {
+      "id": "unqualified_co_lab_share_revocation",
+      "path": "app/api/studio/files/[fileId]/route.ts",
+      "sha256": "7ec98ecf6fe0c61571392a0c2fed840ddd874311e969308ce205bc058d0d3dde",
+      "anchors": [
+        "practitioner_file_shares"
+      ],
+      "evidenceClass": "unqualified",
+      "liveProductionEligible": false
+    }
+  ]
+}

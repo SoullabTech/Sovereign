@@ -1,5 +1,6 @@
 import { transaction, query } from '@/lib/db/postgres';
 import { saveSectionInTransaction } from '@/lib/manuscript/sections/saveSection';
+import { holdR7019BDirectSectionTransaction } from '@/lib/writersStudio/recovery/heldR7019BWriterFence';
 import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 
 export interface ApplicationRecovery {
@@ -66,6 +67,8 @@ export type RecoveryOutcome =
  */
 export async function undoApplication(memberId: string, authorizationId: string): Promise<RecoveryOutcome> {
   return transaction(async tx => {
+    // Do not acquire the coordinator lease after the authorization row lock.
+    await holdR7019BDirectSectionTransaction(tx,memberId);
     const result = await tx.query<{
       id: string; work_id: string; draft_id: string; target_section_id: string; resulting_version: number;
       before_body: string; after_body: string; undone_at: Date | null;

@@ -10,6 +10,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import { withHeldR7019BWriter } from '@/lib/writersStudio/recovery/heldR7019BWriterFence';
 
 const STORAGE_BASE = process.env.FILE_STORAGE_PATH || '/app/data/vault';
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
@@ -335,6 +336,7 @@ export async function POST(request: NextRequest) {
       await mkdir(fullDir, { recursive: true });
     }
 
+    return await withHeldR7019BWriter(memberId, 'studio_file_upload', async () => {
     const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(path.join(STORAGE_BASE, storagePath), buffer);
 
@@ -383,6 +385,7 @@ export async function POST(request: NextRequest) {
         createdAt: row.created_at,
       },
     });
+    }, practitionerId);
   } catch (error) {
     console.error('[Studio Files] POST error:', error);
     return NextResponse.json({ success: false, error: 'Failed to upload file' }, { status: 500 });
@@ -405,6 +408,10 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
     }
 
+    // Covers the existing member/practitioner authorized file soft-delete
+    // and folder deletion in a single fictitious SQL-vault capture lease.
+    return await withHeldR7019BWriter(memberId,'studio_file_soft_delete',
+      async () => {
     const { searchParams } = new URL(request.url);
     const fileId = searchParams.get('id');
     const folderId = searchParams.get('folderId');
@@ -452,6 +459,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json(fileId
       ? { success: true, deletionMode: 'soft', originalBytesDestroyed: false }
       : { success: true });
+      },practitionerId);
   } catch (error) {
     console.error('[Studio Files] DELETE error:', error);
     return NextResponse.json({ success: false, error: 'Failed to delete' }, { status: 500 });
