@@ -564,6 +564,11 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/members/register', public: true, notes: 'Register member' },
   { exact: '/api/members/register-email', public: true, notes: 'Register via magic link (no passkey)' },
   { exact: '/api/members/signin', public: true, notes: 'Sign in' },
+  // SIGNOUT-CSRF-01 review candidate: exact, method-safe handler only.
+  // Public is intentional: an invalid/revoked cookie must still be clearable.
+  // The POST handler applies an explicit origin allowlist and CSRF boundary.
+  // No /api/members prefix entitlement is widened here.
+  { exact: '/api/members/signout', public: true, notes: 'Web sign-out; handler requires trusted same-origin POST and verifies durable revocation status' },
   { exact: '/api/auth/refresh-and-redirect', public: true, notes: 'Refresh session cookies and redirect' },
   { exact: '/api/practitioners/check', public: true, notes: 'Check practitioner status' },
   { exact: '/api/commons/contributions', public: true, notes: 'GET public contributions' },
