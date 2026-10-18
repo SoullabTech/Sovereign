@@ -59,15 +59,27 @@ Only the `GET` session-check audits. **Consequence for anyone reading that
 table: absence of rows is not evidence that no login was attempted.** A
 conclusion was drawn from that absence during this session and was wrong.
 
-**3. The `header_up X-Forwarded-For {remote_host}` lines are load-bearing
-security, and Caddy's own warning argues for deleting them.** `caddy validate`
-reports them "unnecessary" because the default passes headers through — but the
-default *appends* the peer to any client-supplied value, and the app reads
-`x-forwarded-for.split(',')[0]`. With the default, a request carrying a forged
-`X-Forwarded-For` would have its forged value read first. The explicit
-`header_up` *replaces* the header, which is what prevents that.
-**Running `caddy fmt --overwrite` or "fixing" these warnings creates the
-spoofing vulnerability.**
+**3. Forwarded-IP trust needs a configuration-specific witness.** The
+deployed Caddy change retained explicit
+`header_up X-Forwarded-For {remote_host}` rules, which overwrite the upstream
+header; the application reads `x-forwarded-for.split(',')[0]`. The original
+incident account called these rules indispensable because it assumed default
+Caddy would append an untrusted client-supplied header. **That inference is
+not established by this evidence.** Caddy's documented default is to ignore
+incoming untrusted `X-Forwarded-*` values when proxying, with different trust
+behavior possible when `trusted_proxies` is configured.
+See [Caddy reverse_proxy header defaults](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#defaults).
+
+`caddy fmt --overwrite` is a **formatter**, not a command that removes
+`header_up` directives; the prior claim that formatting itself introduces a
+spoofing vulnerability was incorrect.
+See [Caddy's `fmt` command](https://caddyserver.com/docs/command-line#caddy-fmt).
+Do not remove the current explicit override solely to silence a warning,
+either: before changing trusted-proxy/header policy, independently inspect
+the actual deployed Caddy version, adapted configuration, upstream route and
+backend parsing, then test spoofed forwarded headers through the real
+authorized network path. A validation warning alone proves neither safety
+nor exploitability.
 
 **4. The admin session token conveys no authority.** `POST /api/admin/auth`
 returns `base64("admin:<timestamp>:<uuid>")` — unsigned, unstored, verified by
