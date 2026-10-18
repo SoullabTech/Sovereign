@@ -113,10 +113,16 @@ test('original Soullab teaching remains optional, attributed, and unpublished', 
   assert.ok(teaching.includes('not established causal scientific facts'));
   assert.ok(teaching.includes("Soullab's member-centered adaptation"));
   assert.ok(teaching.includes('No chart may be used') || teaching.includes('cannot diagnose psychiatric disorders'));
-  const knownUrls = new Set(parsed('sources.json').references.map((r) => r.url));
-  const urls = new Set(teaching.match(/https:\/\/aaperry\.com\/[^)\s]+/g) || []);
-  assert.ok(urls.size >= 5);
+  const registry = parsed('sources.json');
+  const knownUrls = new Set([
+    ...registry.references.map((r) => r.url),
+    ...registry.wisdom_keeper_discovery.resources.map((r) => r.url),
+  ]);
+  const urls = new Set(teaching.match(/https:\/\/(?:aaperry\.com|astropsychology\.org)\/[^)\s]+/g) || []);
+  assert.ok(urls.size >= 8);
   for (const url of urls) assert.ok(knownUrls.has(url), 'undeclared linked source: ' + url);
+  assert.ok(teaching.includes('Read and study with the original author'));
+  assert.ok(teaching.includes('no affiliation, endorsement, text-embedding permission'));
 });
 
 test('fictional acceptance prompts cover positive and fail-closed behavior', () => {
