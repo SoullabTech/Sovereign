@@ -1,0 +1,184 @@
+{
+  "schema": "soullab.wisdom-keepers-commons.pilot-candidate.v0",
+  "status": "founder_review_not_ratified",
+  "runtime_authorized": false,
+  "member_facing_enabled": false,
+  "public_directory_enabled": false,
+  "member_interest_capture_enabled": false,
+  "human_introductions_enabled": false,
+  "monetary_pool_enabled": false,
+  "source_ingestion_enabled": false,
+  "source_deployed": false,
+  "working_service_name": "Wisdom Keepers Commons",
+  "public_name_undecided": true,
+  "ontology": {
+    "field": "Interest Commons (FR-02)",
+    "not_a_circle_type": true,
+    "not_a_forum": true,
+    "not_legacy_community_tables": true,
+    "not_legacy_commons_contributions": true,
+    "member_field_is_primary": true,
+    "governing_refs": [
+      "docs/programme/JARVIS-CIRCLES-01_FOUNDER_RULINGS_2026-09-06.md",
+      "docs/canon/RIGHT_TO_REMAIN_UNPOSSESSED.md",
+      "docs/programme/MAIA-WISDOM-01_R9_AIN_COLLECTIVE_FIELD_2026-09-15.md"
+    ]
+  },
+  "reference_pilot": {
+    "case_id": "glenn-perry-astropsychology",
+    "source_metadata": "sources.json",
+    "author_name": "Glenn Perry, Ph.D.",
+    "participation_state": "unaffiliated_reference",
+    "keeper_has_consented_to_participate": false,
+    "affiliation_claim_allowed": false,
+    "direct_contact_automated": false,
+    "founder_manages_outreach": true,
+    "author_sites": [
+      "https://aaperry.com/",
+      "https://astropsychology.org/"
+    ],
+    "book_bodies_stored": false,
+    "essay_bodies_stored": false,
+    "copyright_embedding_allowed": false
+  },
+  "offering_stages": [
+    {
+      "id": "discover",
+      "readiness": "public_source_links_staged_review_only",
+      "member_invitation": "Read about the source; follow original author links",
+      "member_data_required": false,
+      "keeper_participation_required": false,
+      "paid_access_required": false,
+      "release_required": false
+    },
+    {
+      "id": "contemplate",
+      "readiness": "original_commentary_unapproved",
+      "member_invitation": "Optionally consider an attributed interpretation with MAIA",
+      "requires_current_turn_opt_in": true,
+      "source_corpus_admission_required": true,
+      "diagnostic_facts_from_chart_forbidden": true,
+      "release_required": false
+    },
+    {
+      "id": "declare_interest",
+      "readiness": "interest_commons_not_implemented",
+      "member_invitation": "Declare personal interest in a Commons about a named tradition",
+      "interest_source": "explicit_member_declaration_only",
+      "reuse_to_another_commons_requires_new_member_act": true,
+      "private_maia_inference_allowed": false,
+      "paid_access_required": false,
+      "release_required": false
+    },
+    {
+      "id": "gather",
+      "readiness": "no_circle_invitation_or_member_agreement",
+      "member_invitation": "Join a small consent-governed study Circle",
+      "requires_explicit_membership": true,
+      "private_circle_to_commons_auto_release": false,
+      "paid_access_required": false
+    },
+    {
+      "id": "keeper_encounter",
+      "readiness": "keeper_not_invited_or_consenting",
+      "member_invitation": "Attend a keeper-led event only if the keeper accepts",
+      "requires_scoped_keeper_consent": true,
+      "requires_host_consent": true,
+      "keeper_time_voluntary": true,
+      "compensation_agreed_in_advance": true,
+      "recording_default": false,
+      "paid_access_required": false
+    },
+    {
+      "id": "individual_reflection",
+      "readiness": "not_implemented",
+      "member_invitation": "Keep a personal insight private, or deliberately author a representation for a specified destination",
+      "individual_release_by_author_only": true,
+      "sanctuary_release_always_forbidden": true,
+      "collective_material_requires_each_contributor": true,
+      "default_private": true,
+      "member_data_required": false
+    }
+  ],
+  "keeper_standing": {
+    "states": [
+      "unaffiliated_reference",
+      "private_invitation_pending",
+      "consented_scoped_participant",
+      "paused",
+      "withdrawn",
+      "correction_requested"
+    ],
+    "default": "unaffiliated_reference",
+    "automatic_promotion": false,
+    "auto_contact": false,
+    "author_edit_and_correction_right": true,
+    "future_participation_revocable": true,
+    "no_implied_therapy_or_personal_availability": true,
+    "public_partner_representation_only_when": "scoped_keeper_consent_recorded"
+  },
+  "consent_and_membranes": {
+    "member_interest_only_from_explicit_declaration": true,
+    "member_history_used_for_matching": false,
+    "astrology_or_psychological_profile_matching": false,
+    "current_sanctuary_content_crosses_never": true,
+    "private_circle_interior_exposed_never": true,
+    "individual_release_requires_author_intent": true,
+    "collective_release_requires_all_represented_authors": true,
+    "dyadic_intro_requires_both_persons_consent": true,
+    "intro_auto_sent": false,
+    "no_unconsented_contact_data_exchange": true,
+    "no_persistent_inferred_relationship_graph": true,
+    "no_silent_AIN_ingestion": true,
+    "recording_default_off": true,
+    "recordings_need_event_specific_consent": true,
+    "member_right_to_leave": true,
+    "keeper_right_to_decline": true
+  },
+  "economic_principles": {
+    "marketplace": false,
+    "advertising": false,
+    "affiliate_tracking": false,
+    "ranking_by_spending": false,
+    "paid_priority_for_mentor_contact": false,
+    "mandatory_gifts": false,
+    "ad_conversion_tracking": false,
+    "keeper_free_labor_assumed": false,
+    "keeper_compensation_terms_before_event": true,
+    "pooled_support_proposed_not_active": true,
+    "optional_support_forms": [
+      "share_citation",
+      "direct_author_public_site",
+      "participate",
+      "volunteer",
+      "appreciation",
+      "direct_purchase",
+      "transparent_gift"
+    ],
+    "fund_accounting_policy_before_accepting_money": true,
+    "scholarship_access_to_be_considered": true,
+    "disclose_platform_costs_and_fees": true
+  },
+  "metrics": {
+    "leaderboards": false,
+    "rank_members": false,
+    "rank_keepers": false,
+    "track_unconsented_retention": false,
+    "infer_interests_from_absence": false,
+    "qualitative_invited_feedback_optional": true,
+    "founder_reviews_consent_failures": true,
+    "score_personal_transformation": false
+  },
+  "no_current_permissions": [
+    "contact Glenn Perry",
+    "represent Perry as participant or partner",
+    "start a Circle",
+    "collect member interest",
+    "collect donations",
+    "record teacher sessions",
+    "ingest copyrighted texts",
+    "activate AIN corpus retrieval",
+    "modify production or canonical Commons"
+  ],
+  "next_founder_decision": "Ratify/modify service promise and first consent-first pilot, not production activation or third-party licensing."
+}
