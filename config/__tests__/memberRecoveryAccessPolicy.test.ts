@@ -57,6 +57,16 @@ describe('member recovery strict routing', () => {
     // checkAdminAuth(req, ['founder','cto']) before returning any member rows.
   });
 
+  it('requires admin identity for the exact verification initiation endpoint', () => {
+    const route = '/api/admin/members/recovery/verify-email';
+    expect(matchRule(route)?.public).not.toBe(true);
+    expect(matchRule(route)?.rolesAnyOf).toContain('admin');
+    expect(checkAccess(route, 'free', [], false).allowed).toBe(false);
+    expect(checkAccess(route, 'free', ['member'], true).allowed).toBe(false);
+    expect(checkAccess(route, 'free', ['admin'], true).allowed).toBe(true);
+    expect(checkAccess(route + '/unrelated', 'free', [], false).allowed).toBe(false);
+  });
+
   it('requires authenticated admin role for issuer at the proxy', () => {
     const route = '/api/admin/members/recovery';
     const rule = matchRule(route);
