@@ -58,7 +58,7 @@ async function txQuery(sql: string, args: unknown[] = []): Promise<{ rows: any[]
   }
   if (sql.includes('SELECT id, member_id FROM admin_member_recovery_tokens')) {
     const t = tokens.find(x => x.token_hash === args[0] && !x.redeemed && !x.revoked
-      && x.expires > new Date() && ['provider_accepted', 'handoff_issued'].includes(x.status));
+      && x.expires > new Date() && x.method === 'email' && x.status === 'provider_accepted');
     return { rows: t ? [{ id: t.id, member_id: t.member_id }] : [] };
   }
   if (sql.includes('UPDATE members SET password_hash')) {
@@ -215,10 +215,13 @@ describe('founder-controlled initiation', () => {
     expect((await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }))).status).toBe(401);
     expect(tokens).toHaveLength(0);
   });
-  it('requires explicit handoff verification before creating any token', async () => {
+  it('refuses private handoff before token creation even without identity verification', async () => {
     const body = { ...issueBody('private_handoff'), identityVerified: false };
-    expect((await issuePOST(req('/api/admin/members/recovery', body, { session: true }))).status).toBe(400);
+    const response = await issuePOST(req('/api/admin/members/recovery', body, { session: true }));
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ error: expect.stringContaining('unavailable') });
     expect(tokens).toHaveLength(0);
+    expect(mockEmail).not.toHaveBeenCalled();
   });
   it('refuses malformed member ID, wrong reason and stale actor role', async () => {
     expect((await issuePOST(req('/api/admin/members/recovery', { ...issueBody(), memberId: 'attacker' }, { session: true }))).status).toBe(400);
@@ -260,21 +263,28 @@ describe('founder-controlled initiation', () => {
     expect(tokens[0].status).toBe('failed');
     expect(tokens[0].revoked).toBe(true);
   });
-  it('private handoff returns link once in response with short expiry, never emailing it', async () => {
-    const res = await issuePOST(req('/api/admin/members/recovery', issueBody('private_handoff'), { session: true }));
-    const json = await res.json();
-    expect(res.status).toBe(200);
-    expect(json.method).toBe('private_handoff');
-    expect(json.expiresInMinutes).toBe(10);
-    expect(json.recoveryLink).toMatch(/^https:\/\/soullab\.life\/member-recovery#token=[a-f0-9]{64}$/);
+  it('refuses private handoff even when a founder asserts identity verification', async () => {
+    const response = await issuePOST(req('/api/admin/members/recovery',
+      issueBody('private_handoff'), { session: true }));
+    const body = await response.json();
+    expect(response.status).toBe(403);
+    expect(body.recoveryLink).toBeUndefined();
+    expect(tokens).toHaveLength(0);
     expect(mockEmail).not.toHaveBeenCalled();
-    expect(tokens[0].status).toBe('handoff_issued');
+  });
+  it('refuses an email request carrying an out-of-band identity-verification override', async () => {
+    const result = await issuePOST(req('/api/admin/members/recovery',
+      { ...issueBody('email'), identityVerified: true }, { session: true }));
+    expect(result.status).toBe(400);
+    expect(tokens).toHaveLength(0);
+    expect(mockEmail).not.toHaveBeenCalled();
   });
   it('reissuing recovery revokes the previous capability for the target', async () => {
     await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }));
     const older = emailToken();
-    await issuePOST(req('/api/admin/members/recovery', issueBody('private_handoff'), { session: true }));
+    await issuePOST(req('/api/admin/members/recovery', issueBody('email'), { session: true }));
     expect(tokens[0].revoked).toBe(true);
+    expect(tokens[1].method).toBe('email');
     expect((await redeem(older)).status).toBe(400);
   });
 });
@@ -290,6 +300,19 @@ describe('transactional redemption', () => {
     expect((await redeem(token)).status).toBe(400);
     expect(passwordWrites).toBe(1);
   });
+  it('refuses redemption of an unexpected legacy private-handoff token state', async () => {
+    await issuePOST(req('/api/admin/members/recovery', issueBody('email'), { session: true }));
+    const bearer = emailToken();
+    // Simulate an erroneous or legacy row even though the new SQL CHECK
+    // prevents inserting this mode. The redemption handler must also refuse it.
+    tokens[0].method = 'private_handoff';
+    tokens[0].status = 'handoff_issued';
+    expect((await redeem(bearer)).status).toBe(400);
+    expect(passwordWrites).toBe(0);
+    expect(sessionRevocations).toBe(0);
+    expect(tokens[0].redeemed).toBe(false);
+  });
+
   it('invalid, revoked, expired and pending tokens cannot change a password', async () => {
     expect((await redeem('f'.repeat(64))).status).toBe(400);
     await issuePOST(req('/api/admin/members/recovery', issueBody(), { session: true }));
