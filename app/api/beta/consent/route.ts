@@ -16,6 +16,7 @@ import {
 import { restrictedBetaEnabled } from '@/lib/writersStudio/restrictedBetaAdmission';
 import { verifiedBetaConsentNotice } from '@/lib/writersStudio/betaConsentNotice';
 import { hasActiveWriterBetaConsent } from '@/lib/writersStudio/betaConsentGate';
+import { recordWriterBetaConsentDecisionR1K } from '@/lib/writersStudio/release/serializedWriterBetaConsentR1K';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -102,33 +103,25 @@ export async function POST(request: NextRequest) {
       if (fields.policyVersion !== notice.version || fields.policySHA256 !== notice.sha256) {
         return respond({ error: 'notice_changed_review_again' }, 409);
       }
-      await query(
-        `INSERT INTO writers_studio_beta_consent_events
-         (member_id, actor_member_id, decision, policy_version, policy_sha256)
-         VALUES($1,$1,'accept',$2,$3)`,
-        [candidate.memberId, notice.version, notice.sha256],
-      );
+      const saved = await recordWriterBetaConsentDecisionR1K({
+        verifiedMemberId:candidate.memberId!,decision:'accept',
+        approvedPolicy:{policyVersion:notice.version,policySHA256:notice.sha256},
+      });
+      if(saved.kind!=='recorded')return respond({error:'consent_authority_unavailable'},503);
       return respond({ status: 'accepted' }, 200);
     }
 
     // Withdrawal is independent of whether the current notice remains
     // configured. A version rotation must never trap a member in consent.
     if (actualKeys.join(',') !== 'decision') return respond({ error: 'invalid_decision' }, 400);
-    const prior = await query<{ decision: string; policy_version: string; policy_sha256: string }>(
-      `SELECT decision, policy_version, policy_sha256
-         FROM writers_studio_beta_consent_events
-        WHERE member_id = $1 ORDER BY seq DESC LIMIT 1`,
-      [candidate.memberId],
-    );
-    if (!prior.rows.length) return respond({ error: 'no_consent_to_withdraw' }, 404);
-    if (prior.rows[0].decision === 'revoke') return respond({ status: 'revoked' }, 200);
-    await query(
-      `INSERT INTO writers_studio_beta_consent_events
-       (member_id, actor_member_id, decision, policy_version, policy_sha256)
-       VALUES($1,$1,'revoke',$2,$3)`,
-      [candidate.memberId, prior.rows[0].policy_version, prior.rows[0].policy_sha256],
-    );
-    return respond({ status: 'revoked' }, 200);
+    // Real serialized writer custody: both a later protected author transaction
+    // and consent withdrawal lock THIS member row before reading the last act.
+    const revoked=await recordWriterBetaConsentDecisionR1K({
+      verifiedMemberId:candidate.memberId!,decision:'revoke',
+    });
+    if(revoked.kind==='no_prior_consent')return respond({error:'no_consent_to_withdraw'},404);
+    if(revoked.kind==='member_unavailable')return respond({error:'consent_authority_unavailable'},503);
+    return respond({status:'revoked'},200);
 
   } catch {
     return respond({ error: 'consent_authority_unavailable' }, 503);

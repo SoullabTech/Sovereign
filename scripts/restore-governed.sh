@@ -52,6 +52,29 @@ else
   PSQL=(docker exec -i "$CONTAINER_NAME" psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DB_NAME")
 fi
 
+# RF01 R1-B: fail closed BEFORE opening or modifying the restore target.
+# A backed-up transcript may carry erased turns or downstream derivatives.
+# Member-only S5 scopes cannot be safely swept by the old SQL below, and a
+# full schema restore may discard the member influence quarantine.
+R1B_SCHEMA_PRESENT="$("${PSQL[@]}" -Atqc   "SELECT to_regclass('public.rf01_member_erasure_holds') IS NOT NULL" 2>/dev/null)" ||
+  fail "R1-B: cannot verify erasure custody schema; restore refused"
+[ "$R1B_SCHEMA_PRESENT" = "t" ] ||
+  fail "R1-B: erasure hold schema is missing; restore refused"
+
+R1B_HELD_MEMBERS="$("${PSQL[@]}" -Atqc   "SELECT COUNT(*) FROM public.rf01_member_erasure_holds" 2>/dev/null)" ||
+  fail "R1-B: erasure quarantine state unavailable; restore refused"
+case "$R1B_HELD_MEMBERS" in
+  0) ;;
+  *) fail "R1-B: member erasure hold exists; full restore refused pending lineage review" ;;
+esac
+
+R1B_UNSWEPT_SCOPES="$("${PSQL[@]}" -Atqc   "SELECT COUNT(*) FROM public.deletion_manifest_scopes WHERE session_id IS NULL AND window_start IS NULL" 2>/dev/null)" ||
+  fail "R1-B: member-only scope custody unavailable; restore refused"
+case "$R1B_UNSWEPT_SCOPES" in
+  0) ;;
+  *) fail "R1-B: member-only deletion scope is not swept by this restore path; restore refused" ;;
+esac
+
 echo "🔐 Governed restore starting (R20)"
 echo "   dump: $DUMP_FILE"
 echo "   authorized by: $RESTORE_AUTHORIZED_BY"

@@ -52,6 +52,25 @@ let player = null;
 // Null until the first push arrives, and every read tolerates that.
 let conv = null;
 
+// MAIN is the authority. This renderer only displays its privacy projection;
+// it cannot decide that a local setting or old account default is consent.
+let privacySnapshot = { privacyChoice: null, ready: false };
+const privacyReady = () => privacySnapshot.ready === true;
+
+function showPrivacy() {
+  const choice = privacySnapshot.privacyChoice;
+  $('privacy-sanctuary').setAttribute('aria-pressed', choice === 'sanctuary' ? 'true' : 'false');
+  $('privacy-continuity').setAttribute('aria-pressed', choice === 'continuity' ? 'true' : 'false');
+  $('privacy-status').textContent =
+    choice === 'sanctuary' ? 'Sanctuary selected. Messaging and voice are on hold pending private-processing qualification.' :
+    choice === 'continuity' && privacyReady() ? 'Continuity selected and your thread verified.' :
+    choice === 'continuity' ? 'Continuity selected. Checking your existing conversation before Send.' :
+    'Choose before sending or opening the microphone.';
+  // One deliberate choice per encounter; changing it requires a new session.
+  $('privacy-sanctuary').disabled = choice !== null;
+  $('privacy-continuity').disabled = choice === 'sanctuary' || (choice === 'continuity' && privacyReady());
+}
+
 const captureState = () => (conv && conv.capture ? conv.capture.state : 'closed');
 const turnState = () => (conv && conv.turn ? conv.turn.state : 'idle');
 
@@ -130,7 +149,11 @@ function showResting() {
   // ⭐ RESET-01 §7. The composer is disabled exactly while the authority has a
   // turn open — the same disarm that stops speech from creating one.
   const armed = conv ? conv.inputArmed !== false : true;
-  $('send').disabled = !armed;
+  $('send').disabled = !armed || !privacyReady();
+  // Stop stays accessible during an existing recording. Starting a new
+  // recording requires verified Continuity; Sanctuary voice is held.
+  $('talk').disabled = captureState() === 'closed' &&
+    (privacySnapshot.privacyChoice !== 'continuity' || !privacyReady());
 }
 
 function addTurn(who, body) {
@@ -150,6 +173,10 @@ function addTurn(who, body) {
 // ── microphone ──────────────────────────────────────────────────────────────
 
 async function startListening() {
+  if (privacySnapshot.privacyChoice !== 'continuity' || !privacyReady()) {
+    setState('Choose Continuity and confirm your thread before voice. Sanctuary voice is held.', true);
+    return;
+  }
   try {
     stream = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
@@ -342,12 +369,21 @@ function play({ base64, format }) {
 function showSignedIn(state) {
   $('signin').style.display = state.signedIn ? 'none' : 'flex';
   $('bar').style.display = state.signedIn ? 'flex' : 'none';
+  $('privacy').style.display = state.signedIn ? 'block' : 'none';
+  if (!state.signedIn) privacySnapshot = { privacyChoice: null, ready: false };
+  // No assumed consent while the authoritative state has not arrived.
+  showPrivacy();
   // ⭐ DESKTOP-TEXT-01. The composer appears with the voice bar, not instead of
   // it: a signed-in member can reach MAIA either way, at any moment.
   $('composer').style.display = state.signedIn ? 'flex' : 'none';
   if (state.signedIn) {
     $('main').classList.remove('center');
     showResting();
+    void window.maia.getPrivacyState().then((state) => {
+      privacySnapshot = state || { privacyChoice: null, ready: false };
+      showPrivacy();
+      showResting();
+    }).catch(() => {});
   } else {
     $('main').classList.add('center');
     if (listening) stopListening();
@@ -355,6 +391,25 @@ function showSignedIn(state) {
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
+  const choosePrivacy = async (choice) => {
+    $('privacy-status').textContent = 'Confirming your choice with MAIA…';
+    const out = await window.maia.choosePrivacy(choice).catch(() => ({
+      ok: false, error: 'Unable to verify conversation privacy.',
+    }));
+    if (!out || !out.ok) {
+      const verified = await window.maia.getPrivacyState().catch(() => null);
+      privacySnapshot = verified || { privacyChoice: null, ready: false };
+      showPrivacy();
+      setState((out && out.error) || 'Privacy not verified. Try again.', true);
+      return;
+    }
+    privacySnapshot = out;
+    showPrivacy();
+    showResting();
+  };
+  $('privacy-sanctuary').onclick = () => { void choosePrivacy('sanctuary'); };
+  $('privacy-continuity').onclick = () => { void choosePrivacy('continuity'); };
+
   $('signin').onsubmit = async (e) => {
     e.preventDefault();
     const submit = $('signin').querySelector('button[type="submit"]');
@@ -397,6 +452,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   $('toggle').onclick = () => $('log').classList.toggle('on');
 
   window.maia.onAuth(showSignedIn);
+  window.maia.onPrivacyState((state) => {
+    privacySnapshot = state || { privacyChoice: null, ready: false };
+    showPrivacy();
+    showResting();
+  });
   window.maia.onAudio(play);
 
   // ⭐ D04. Desktop opens on the member's existing thread, so the first thing

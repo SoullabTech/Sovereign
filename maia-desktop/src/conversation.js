@@ -22,9 +22,11 @@
 'use strict';
 
 const { encodeWav } = require('./voice/wav');
+const { randomUUID } = require('node:crypto');
 
 const TRANSCRIBE_PATH = '/api/voice/transcribe-simple';
 const MAIA_PATH = '/api/sovereign/app/maia/list';
+const CONSENT_PATH = '/api/sovereign/privacy/turn-consent';
 // ⭐ D04. The member's existing thread, from the server rather than from this
 // device. GET with no sessionId returns their last 50 turns across ALL
 // surfaces, newest first, each carrying its session_id — so the thread the
@@ -172,6 +174,31 @@ const MULTIPART_HEADERS = Object.freeze({
 function createConversation({ session, diagnostics, sessionId }) {
   let convId = sessionId;
   let resumed = false;
+  // Per-encounter, deliberately chosen and never restored from a cache.
+  let choice = null;
+  let canonicalThreadVerified = false;
+
+  function choosePrivacy(next) {
+    if (next !== 'sanctuary' && next !== 'continuity') {
+      return { ok: false, error: 'Choose Sanctuary or Continuity.' };
+    }
+    if (choice && choice !== next) {
+      return { ok: false, error: 'Privacy is fixed for this encounter. Start a new conversation to change it.' };
+    }
+    choice = next;
+    return { ok: true, privacyChoice: choice };
+  }
+
+  function privacyState() {
+    return {
+      privacyChoice: choice,
+      // Protected processing is held until third-party/local provider custody
+      // and related non-use constraints are verified. A protected choice must
+      // never be interpreted as ready-to-transmit member text.
+      ready: choice === 'continuity' && canonicalThreadVerified,
+    };
+  }
+
 
   /**
    * ⭐ D04 — ADOPT THE MEMBER'S THREAD, DO NOT MINT ONE.
@@ -195,6 +222,9 @@ function createConversation({ session, diagnostics, sessionId }) {
    * @returns {Promise<{ok: boolean, sessionId?: string, resumed?: boolean, error?: string}>}
    */
   async function adoptMemberThread() {
+    if (choice !== 'continuity') {
+      return { ok: false, error: 'Choose Continuity before restoring earlier conversations.' };
+    }
     const out = await session.authedFetch(TURNS_PATH, { method: 'GET' });
     if (!out.ok) {
       const body = await readErrorBody(out.res);
@@ -208,10 +238,12 @@ function createConversation({ session, diagnostics, sessionId }) {
     if (!latest) {
       // No history: this member has no thread anywhere. Keeping the minted id
       // is correct here — it is the FIRST conversation, not a second one.
+      canonicalThreadVerified = true;
       return { ok: true, sessionId: convId, resumed: false };
     }
     convId = latest.sessionId.trim();
     resumed = true;
+    canonicalThreadVerified = true;
     return { ok: true, sessionId: convId, resumed: true };
   }
 
@@ -227,6 +259,9 @@ function createConversation({ session, diagnostics, sessionId }) {
    * ⛔ Read-only. Nothing here assigns to `convId` or `resumed`.
    */
   async function canonicalThreadId() {
+    if (choice !== 'continuity' || !canonicalThreadVerified) {
+      return { ok: false, error: 'Remembrance choice is not established.' };
+    }
     const out = await session.authedFetch(TURNS_PATH, { method: 'GET' });
     if (!out.ok) {
       const body = await readErrorBody(out.res);
@@ -241,6 +276,9 @@ function createConversation({ session, diagnostics, sessionId }) {
 
   /** The adopted thread in order, so Desktop opens on what was actually said. */
   async function history(limit = 20) {
+    if (choice !== 'continuity' || !canonicalThreadVerified) {
+      return { ok: false, turns: [], error: 'Remembrance choice is not established.' };
+    }
     const out = await session.authedFetch(
       `${TURNS_PATH}?sessionId=${encodeURIComponent(convId)}`, { method: 'GET' });
     if (!out.ok) return { ok: false, turns: [] };
@@ -268,6 +306,13 @@ function createConversation({ session, diagnostics, sessionId }) {
   }
 
   async function transcribe(samples, sampleRate) {
+    if (!privacyState().ready) {
+      return { ok: false, error: 'Choose conversation privacy before speaking.' };
+    }
+    // Sanctuary speech processing is held until S1 cloud/voice egress consent.
+    if (choice === 'sanctuary') {
+      return { ok: false, error: 'Sanctuary voice is not available until speech-processing privacy is verified. You can type instead.' };
+    }
     const wav = encodeWav(samples, sampleRate);
     const { peakX1000, rmsX1000 } = level(samples);
     diagnostics.emit('voice_transcribe_sent', {
@@ -351,13 +396,60 @@ function createConversation({ session, diagnostics, sessionId }) {
   }
 
   async function ask(message) {
+    if (choice === 'sanctuary') {
+      return { ok: false, error: 'Sanctuary messaging is on hold until private model processing is verified. Nothing was sent.' };
+    }
+    if (!privacyState().ready) {
+      return { ok: false, error: 'Choose privacy and confirm the thread before sending.' };
+    }
+    const privacyAtSend = choice;
+    const sessionAtSend = convId;
+    const exchangeId = randomUUID();
+
+    // Content-free, authenticated preflight BEFORE member words leave Desktop.
+    let consent;
+    try {
+      consent = await session.authedFetch(CONSENT_PATH, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sessionAtSend,
+          exchangeId,
+          privacyChoice: privacyAtSend,
+          explicitChoice: true,
+          explicitRemembrance: privacyAtSend === 'continuity',
+        }),
+      });
+    } catch {
+      return { ok: false, error: 'Privacy verification was unavailable. Nothing was sent.' };
+    }
+    if (!consent.ok) {
+      const body = await readErrorBody(consent.res);
+      return { ok: false, error: consent.error ||
+        (body && body.error) || 'Privacy could not be confirmed. Nothing was sent.' };
+    }
+    let receipt;
+    try { receipt = await consent.res.json(); }
+    catch { return { ok: false, error: 'Privacy confirmation was unreadable. Nothing was sent.' }; }
+    if (!receipt || receipt.ok !== true ||
+        receipt.exchangeId !== exchangeId ||
+        receipt.sessionId !== sessionAtSend ||
+        receipt.privacyChoice !== privacyAtSend) {
+      return { ok: false, error: 'Privacy confirmation did not match this turn. Nothing was sent.' };
+    }
+    if (choice !== privacyAtSend || convId !== sessionAtSend) {
+      return { ok: false, error: 'Conversation changed before Send. Nothing was sent.' };
+    }
+
     const out = await session.authedFetch(MAIA_PATH, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sessionId: convId,
+        sessionId: sessionAtSend,
+        exchangeId,
         message,
-        includeAudio: true,
+        sanctuary: privacyAtSend === 'sanctuary',
+        includeAudio: privacyAtSend === 'continuity',
       }),
     });
     if (!out.ok) {
@@ -367,23 +459,26 @@ function createConversation({ session, diagnostics, sessionId }) {
 
     const data = await out.res.json();
     const text = (data && data.message) || '';
-    const audio = data && data.audio && data.audio.audioBase64
+    // A protected text turn must not cause unsolicited speech playback.
+    const audio = privacyAtSend === 'continuity' &&
+      data && data.audio && data.audio.audioBase64
       ? { base64: data.audio.audioBase64, format: data.audio.format || 'mp3' }
       : null;
-    // `chars` only. MAIA's words go to the surface, never to telemetry.
+    // Only character counts enter diagnostics, never member or MAIA text.
     diagnostics.emit('voice_turn_committed', { chars: text.length, finals: 1 });
     return { ok: true, text, audio };
   }
 
   return {
     transcribe, ask, adoptMemberThread, canonicalThreadId, history,
+    choosePrivacy, privacyState,
     conversationId: () => convId, isResumed: () => resumed,
-    TRANSCRIBE_PATH, MAIA_PATH, TURNS_PATH,
+    TRANSCRIBE_PATH, MAIA_PATH, TURNS_PATH, CONSENT_PATH,
   };
 }
 
 module.exports = {
   createConversation, explain, readErrorBody, multipartWav, BOUNDARY,
-  TRANSCRIBE_PATH, MAIA_PATH, TURNS_PATH,
+  TRANSCRIBE_PATH, MAIA_PATH, TURNS_PATH, CONSENT_PATH,
   SILENCE_RMS_X1000, SILENCE_PEAK_X1000, visibleText,
 };

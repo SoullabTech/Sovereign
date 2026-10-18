@@ -14,6 +14,7 @@
 
 import { query } from '../../db/postgres';
 import { memberRef } from '../../privacy/memberRef';
+import { evaluateSummaryEligibility, summaryProviderFixtureEnabled, summaryReadFixtureEnabled } from '@/lib/sanctuary/sessionSummaryEligibility';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -52,8 +53,19 @@ export const SessionSummaryStore = {
       return;
     }
 
+    // An explicitly non-null summary is a derived content write requiring
+    // independent R1 processing and per-turn provenance. A legacy call
+    // cannot cause it through a generic metadata-write entry point.
+    if (summaryText != null) {
+      if (!summaryProviderFixtureEnabled()) {
+        throw new Error('SUMMARY_STORAGE_HELD');
+      }
+      const eligible = await evaluateSummaryEligibility({
+        sessionId, memberId, requireClosed: true,
+      });
+      if (!eligible.ok) throw new Error('SUMMARY_STORAGE_INELIGIBLE');
+    }
     const mode = isSanctuary ? 'sanctuary' : 'continuity';
-    // Defense-in-depth: sanctuary sessions NEVER store summary content
     const safeSummary = isSanctuary ? null : summaryText;
 
     try {
@@ -90,6 +102,11 @@ export const SessionSummaryStore = {
    * Called by the worker after generating a summary from turns.
    */
   async writeSummary(memberId: string, sessionId: string, summaryText: string) {
+    if (!summaryProviderFixtureEnabled()) throw new Error('SUMMARY_STORAGE_HELD');
+    const eligible=await evaluateSummaryEligibility({
+      sessionId,memberId,requireClosed:true,
+    });
+    if (!eligible.ok) throw new Error('SUMMARY_STORAGE_INELIGIBLE');
     await query(
       `
       UPDATE member_sessions
@@ -120,6 +137,9 @@ export const SessionSummaryStore = {
     mode: string;
     summary: string;
   }>> {
+    // Historical summaries may contain forbidden influences from mixed-mode
+    // sessions. With no R1-derived-content audit, do not retrieve them.
+    if (!summaryReadFixtureEnabled()) return [];
     const result = await query(
       `
       SELECT session_id, started_at, ended_at, mode, summary

@@ -88,7 +88,23 @@ const no = (reason: ExecutionRefusal): ExecutionOutcome =>
 export async function executeAuthorization(
   memberId: string, authorizationId: string,
 ): Promise<ExecutionOutcome> {
-  return transaction(async (tx: TransactionClient) => {
+  return transaction(tx => executeAuthorizationOnClient(tx, memberId, authorizationId));
+}
+
+/**
+ * Run the EXISTING one-use canonical section writer ON THE CALLER'S
+ * transaction client. This is the necessary join for the R1K member-consent
+ * row lock: two nested pool transactions cannot share that lock or rollback.
+ *
+ * This function does not grant a protected writer capability by itself.
+ * Caller must independently establish a verified member, enrolled consent,
+ * owned Work, author intent and protected proposal provenance before invoking.
+ * The existing manuscript revision schema is legacy/plaintext, NOT encrypted
+ * R79 custody and NOT a reason to promote an experimental beta route.
+ */
+export async function executeAuthorizationOnClient(
+  tx: TransactionClient, memberId: string, authorizationId: string,
+): Promise<ExecutionOutcome> {
     /* 1 · ⭐ LOCK, BEFORE ANY MANUSCRIPT READ. */
     const a = await tx.query(
       `SELECT ${AUTH_COLUMNS} FROM manuscript_revision_authorizations
@@ -178,9 +194,8 @@ export async function executeAuthorization(
       outcome: 'executed' as const,
       authorization: hydrateAuthorizationRow(done.rows[0] as never),
     };
-  });
-  /* ⛔ NO `catch` HERE. An infrastructure failure propagates to the caller, and
-     the transaction's rollback is what leaves the Work whole and the permission
-     unspent. Converting it into a refusal would tell the member a RULE said no
-     when the DATABASE could not answer. */
+  /* ⛔ NO `catch` HERE. An infrastructure failure propagates to the
+     caller's transaction manager, which must roll back the Work and unspent
+     permission together. A separate pooled query or nested transaction here
+     would invalidate that guarantee. */
 }

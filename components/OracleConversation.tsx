@@ -178,6 +178,7 @@ import { trackEvent } from '@/lib/analytics/track';
 import { saveConversationMemory, getOracleAgentId } from '@/lib/services/memoryService';
 import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 import { useRouter } from 'next/navigation';
+import { startVerifiedNewMaiaConversation } from '@/lib/maia/presence/conversationIdentity';
 import type { MaiaPlaceContext } from '@/lib/maia/presence/place';
 // REMOVED: Supabase persistence - now using sovereign PostgreSQL via /api/conversation/turns
 // import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/lib/services/conversationStorageService';
@@ -1094,20 +1095,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // 🛡️ SANCTUARY MODE: Session-level memory exclusion (consent boundary)
   // When true: no content retention, no patterns formed, just presence
-  const [isSanctuary, setIsSanctuary] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('maia_settings');
-        if (saved) {
-          const settings = JSON.parse(saved);
-          return settings.sanctuary === true;
-        }
-      } catch (e) {
-        console.warn('[Sanctuary] Failed to load initial state:', e);
-      }
-    }
-    return false;
-  });
+  // RF01 S0-B: cached settings and defaults cannot establish new consent.
+  const [isSanctuary, setIsSanctuary] = useState(true);
+  const [explicitSessionPrivacyChoice, setExplicitSessionPrivacyChoice] =
+    useState<'sanctuary' | 'continuity' | null>(null);
+  const privacyChoiceRef = useRef<'sanctuary' | 'continuity' | null>(null);
+  useEffect(() => {
+    privacyChoiceRef.current = null;
+    setExplicitSessionPrivacyChoice(null);
+    setIsSanctuary(true);
+  }, [sessionId]);
+
+  const chooseSessionPrivacy = useCallback((choice: 'sanctuary' | 'continuity') => {
+    privacyChoiceRef.current = choice;
+    setExplicitSessionPrivacyChoice(choice);
+    setIsSanctuary(choice === 'sanctuary');
+    setInputSubmitError(choice === 'sanctuary'
+      ? 'Sanctuary messaging is temporarily unavailable while private processing safeguards are verified. Nothing will be sent.'
+      : null);
+  }, []);
 
   // ==========================================================================
   // 🧵 VOICE CONTINUITY BUFFER — Sanctuary gate + restore-after-interruption
@@ -1417,8 +1423,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }>) => {
       // Handle sanctuary mode
       if (typeof event.detail?.sanctuary === 'boolean') {
-        setIsSanctuary(event.detail.sanctuary);
-        console.log(`🛡️ [Sanctuary] Mode ${event.detail.sanctuary ? 'ENABLED' : 'disabled'}`);
+        // Privacy cannot be changed by replay of unverified local settings.
       }
 
       // Handle interrupt settings
@@ -1480,34 +1485,28 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     };
   }, []);
 
-  // 🆕 Listen for "New Conversation" action from QuickSettingsSheet
+  // RF01 R1-D: clearing a screen is NOT a new conversation.
+  // Await the separate authenticated server-minted identity first. Parent
+  // hosts subscribe to the verified event and remount with a fresh privacy
+  // choice; old writing and local history are intentionally preserved.
   useEffect(() => {
-    const handleNewConversation = () => {
-      console.log('🆕 [New Conversation] Clearing history and resetting to welcome');
-      // Clear messages (UI display)
-      setMessages([]);
-      lastSyncedCountRef.current = 0; // fresh thread — resync from the start
-      // Clear historical messages (API context) - truly fresh start
-      historicalMessagesRef.current = [];
-      // Reset activation state to show welcome screen
-      setHasActivated(false);
-      // Reset session-restored flag so the welcome greeting can show for the new conversation
-      sessionRestoredRef.current = false;
-      // Clear navigation flag so next mount doesn't restore the cleared conversation
-      sessionStorage.removeItem('maia_nav_teardown');
-      // Clear localStorage for current session
-      if (typeof window !== 'undefined' && sessionId) {
-        const storageKey = memberConversationStorageKey(userId, sessionId);
-        if (storageKey) localStorage.removeItem(storageKey);
-        console.log(`🆕 [New Conversation] Cleared localStorage: ${storageKey}`);
+    const handleNewConversation = async () => {
+      if (isProcessingRef.current || isRespondingRef.current) {
+        setInputSubmitError('Finish the current MAIA response before beginning a new conversation.');
+        return;
+      }
+      try {
+        await startVerifiedNewMaiaConversation();
+        // A successful authenticated receipt causes each host to change the
+        // React session key and reset the conversation. No manual history
+        // deletion, stale session replay, or implied Continuity here.
+      } catch {
+        setInputSubmitError('New conversation could not be verified. Your current conversation was preserved.');
       }
     };
-
     window.addEventListener('maia-new-conversation', handleNewConversation);
-    return () => {
-      window.removeEventListener('maia-new-conversation', handleNewConversation);
-    };
-  }, [sessionId]);
+    return () => window.removeEventListener('maia-new-conversation', handleNewConversation);
+  }, []);
 
   // 🧭 THERAPEUTIC FRAMEWORK: Selected in Counsel mode (Jungian, Somatic, CBT, IFS, etc.)
   // Now handled by lib/consciousness/therapeuticFrameworks.ts
@@ -3196,6 +3195,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // transcripts are preserved but NEVER used as prompt or UI input.
   useEffect(() => {
     if (typeof window === 'undefined' || !sessionId || !userId) return;
+    // A private or unresolved choice cannot admit stale ordinary history.
+    if (privacyChoiceRef.current !== 'continuity') {
+      historyAdmittedRef.current = false;
+      historicalMessagesRef.current = [];
+      lastSyncedCountRef.current = 0;
+      return;
+    }
     let active = true;
     let requestEpoch = 0;
     const identityMustBeVerified = requiresMemberHistoryVerification(userId);
@@ -3217,13 +3223,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             '&userId=' + encodeURIComponent(userId),
           { cache: 'no-store' },
         );
-        if (!active || ticket !== requestEpoch) return;
+        if (!active || ticket !== requestEpoch || privacyChoiceRef.current !== 'continuity') return;
         if (!response.ok) {
           setInputSubmitError('Your conversation is private. Please verify your sign-in to continue.');
           return;
         }
         const body = await response.json();
-        if (!active || ticket !== requestEpoch) return;
+        if (!active || ticket !== requestEpoch || privacyChoiceRef.current !== 'continuity') return;
         if (!isServerAdmittedConversationHistory(body, userId, sessionId)) {
           setInputSubmitError('Your conversation needs a verified member session.');
           return;
@@ -3240,7 +3246,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             timestamp: new Date(m.createdAt),
             source: 'restored',
           }));
-        if (!active || ticket !== requestEpoch) return;
+        if (!active || ticket !== requestEpoch || privacyChoiceRef.current !== 'continuity') return;
         historicalMessagesRef.current = restored;
         lastSyncedCountRef.current = restored.length;
         historyAdmittedRef.current = true;
@@ -3278,7 +3284,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('pageshow', onPageReturn);
     };
-  }, [sessionId, userId]);
+  }, [sessionId, userId, explicitSessionPrivacyChoice]);
 
   // 💾 SOVEREIGN PERSISTENCE: Save to localStorage (instant) + PostgreSQL (async sync)
   // Track last synced message count to avoid duplicate saves
@@ -3286,6 +3292,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   useEffect(() => {
     if (typeof window === 'undefined' || !sessionId || !userId || messages.length === 0) return;
+    // The ref resets synchronously on session change; React state from a
+    // previous session must not authorize even one stale persistence effect.
+    if (explicitSessionPrivacyChoice !== 'continuity' ||
+        privacyChoiceRef.current !== 'continuity') return;
 
     const storageKey = memberConversationStorageKey(userId, sessionId);
     if (!storageKey || (requiresMemberHistoryVerification(userId) &&
@@ -3355,7 +3365,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       lastSyncedCountRef.current = messageCount;
     }
-  }, [messages, sessionId, userId]);
+  }, [messages, sessionId, userId, explicitSessionPrivacyChoice]);
 
   // All state declarations moved earlier (lines 138-189) to avoid hook ordering issues
 
@@ -5025,7 +5035,20 @@ I'm not sure what I'm feeling yet.`;
       return;
     }
     const authoredText = text;
-    console.log('📝 Text message received:', { text: authoredText, isProcessing, isAudioPlaying, isResponding });
+    if (!privacyChoiceRef.current) {
+      setInputSubmitError('Choose Sanctuary or Continuity before sending a message.');
+      return;
+    }
+    if (privacyChoiceRef.current === 'sanctuary') {
+      // The server independently enforces this refusal. Do not transmit
+      // protected content or invent an offline fallback response meanwhile.
+      setInputSubmitError('Sanctuary messaging is on hold pending verified private processing. Nothing was sent.');
+      return;
+    }
+    // Logs carry counts, not member-authored words.
+    console.log('📝 Text message received:', {
+      chars: authoredText.length, isProcessing, isAudioPlaying, isResponding,
+    });
 
     // 🎯 Mark as activated when user sends a message - hides welcome screen
     setHasActivated(true);
@@ -5048,10 +5071,8 @@ I'm not sure what I'm feeling yet.`;
     const modeCommand = maiaCommands.find(
       (cmd): cmd is Extract<MaiaCommand, { type: 'mode' }> => cmd.type === 'mode',
     );
-    const effectiveSanctuary =
-      commandResult.disposition === 'EXECUTE' && modeCommand
-        ? modeCommand.mode === 'sanctuary'
-        : isSanctuary;
+    // Talk/Care/Scribe commands do not alter the privacy of their own turn.
+    const effectiveSanctuary = privacyChoiceRef.current !== 'continuity';
 
     if (commandResult.disposition === 'EXECUTE' && maiaCommands.length > 0) {
       if (!retryOf && !commandContext?.commandsAlreadyApplied) {
@@ -5066,9 +5087,7 @@ I'm not sure what I'm feeling yet.`;
               'normal' as const;
             setListeningMode(newListeningMode);
 
-            // Sanctuary flag
-            if (cmd.mode === 'sanctuary') setIsSanctuary(true);
-            else setIsSanctuary(false);
+            // Privacy is chosen separately from conversational style.
 
             console.log(`🔄 [Command] Mode → ${cmd.mode} (listeningMode: ${newListeningMode})`);
           }
@@ -5186,6 +5205,42 @@ I'm not sure what I'm feeling yet.`;
       (typeof globalThis.crypto?.randomUUID === 'function'
         ? globalThis.crypto.randomUUID()
         : `ex-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+
+    // RF01 S0-B: authenticated, content-free consent BEFORE appending the
+    // member's words or dispatching them for model processing. Exact retries
+    // reuse the original exchange identity; conflicting posture is refused.
+    const privacyChoiceAtSend = privacyChoiceRef.current;
+    if (!privacyChoiceAtSend) {
+      setInputSubmitError('Choose privacy before sending.');
+      return;
+    }
+    try {
+      const receiptResponse = await apiFetch('/api/sovereign/privacy/turn-consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId: userId || undefined,
+          sessionId,
+          exchangeId: turnExchangeId,
+          privacyChoice: privacyChoiceAtSend,
+          explicitChoice: true,
+          explicitRemembrance: privacyChoiceAtSend === 'continuity',
+        }),
+      });
+      if (!receiptResponse.ok) {
+        setInputSubmitError('Privacy could not be verified. Nothing was sent.');
+        return;
+      }
+      const receipt = await receiptResponse.json();
+      if (!receipt?.ok || receipt.exchangeId !== turnExchangeId ||
+          receipt.privacyChoice !== privacyChoiceAtSend) {
+        setInputSubmitError('Privacy confirmation was incomplete. Nothing was sent.');
+        return;
+      }
+    } catch {
+      setInputSubmitError('Privacy verification is unavailable. Nothing was sent.');
+      return;
+    }
 
     if (retryOf) {
       // Resend of an already-authored turn: mark it in-flight, append nothing.
@@ -7068,7 +7123,7 @@ I'm not sure what I'm feeling yet.`;
 
           // Handle sanctuary toggle
           if (voiceCmd.settingsDelta.sanctuary !== undefined) {
-            setIsSanctuary(voiceCmd.settingsDelta.sanctuary);
+            setInputSubmitError('Use the separate privacy control to change remembrance.');
           }
 
           // Handle interrupt settings
@@ -7352,8 +7407,7 @@ I'm not sure what I'm feeling yet.`;
             cmd.mode === 'sanctuary' ? 'normal' as const :
             'normal' as const;
           setListeningMode(newListeningMode);
-          if (cmd.mode === 'sanctuary') setIsSanctuary(true);
-          else setIsSanctuary(false);
+          // Privacy is independent of spoken Talk/Care/Scribe mode commands.
           console.log(`🔄 [Voice Command] Mode → ${cmd.mode}`);
         }
         if (cmd.type === 'lens') {
@@ -8292,7 +8346,20 @@ I'm not sure what I'm feeling yet.`;
                 greeting={welcomeGreeting.greeting}
                 subtext={welcomeGreeting.subtext}
                 userInitial={(userName || 'K').trim().charAt(0).toUpperCase()}
-                onSend={(text) => handleTextMessage(text)}
+                onSend={(text) => {
+                  // Arrival owns the first composer. If privacy is not yet
+                  // chosen, carry the exact authored draft into Write, cross
+                  // the threshold, and ask for deliberate privacy BEFORE Send.
+                  // Never quietly consume those words or invoke a model.
+                  if (!privacyChoiceRef.current) {
+                    setDraftMessage(text);
+                    setHasActivated(true);
+                    onArrivalCrossed?.();
+                    setInputSubmitError('Choose Sanctuary or Continuity before sending your message.');
+                    return;
+                  }
+                  void handleTextMessage(text);
+                }}
                 onActivate={() => {
                   // #736: hasActivated alone cannot exit — the gate above is a
                   // disjunction and ignores it while shouldRenderArrival is
@@ -8457,6 +8524,30 @@ I'm not sure what I'm feeling yet.`;
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* RF01 S0-B: one deliberate new-session choice; no default is inferred.
+          Full Sanctuary/cloud-processing claims remain subject to S1/R1 gates. */}
+      {explicitSessionPrivacyChoice === null && !shouldRenderArrival && (
+        <div role="group" aria-label="Choose conversation privacy"
+          className="fixed inset-0 z-[95] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-white/20 bg-stone-950 p-5 text-stone-100 shadow-2xl sm:max-w-md">
+          <p className="text-base font-medium">How should MAIA remember this conversation?</p>
+          <div className="mt-3 flex flex-col gap-2">
+            <button type="button" onClick={() => chooseSessionPrivacy('sanctuary')}
+              className="rounded-xl border border-emerald-500/50 px-3 py-3 text-left text-sm hover:bg-emerald-900/30">
+              Sanctuary — do not retain this conversation as memory
+            </button>
+            <button type="button" onClick={() => chooseSessionPrivacy('continuity')}
+              className="rounded-xl border border-amber-500/50 px-3 py-3 text-left text-sm hover:bg-amber-900/30">
+              Continuity — allow MAIA to remember this conversation
+            </button>
+          </div>
+          <p className="mt-3 text-xs text-stone-400">
+            Remembrance is separate from outside model and voice processing.
+          </p>
+          </div>
+        </div>
+      )}
 
       {/* 🛡️ SANCTUARY MODE INDICATOR - Visual proof of memory exclusion */}
       <AnimatePresence>
@@ -10375,8 +10466,18 @@ I'm not sure what I'm feeling yet.`;
                     enableVoiceInChat={voiceEnabled && enableVoiceInChat}
                     showVoiceInputButton={voiceEnabled}
                     onSubmit={(msg, files) => {
-                      handleTextMessage(msg, files);
-                      setDraftMessage(''); // Clear draft after sending
+                      // A held Sanctuary Send is NOT a successful submit.
+                      // Preserve authored words as an editable draft; do not
+                      // let ModernTextInput's local clearing discard them.
+                      if (privacyChoiceRef.current !== 'continuity') {
+                        setDraftMessage(msg);
+                        setInputSubmitError(
+                          'Sanctuary messaging is on hold pending private-processing safeguards. Your draft was kept; nothing was sent.',
+                        );
+                        return;
+                      }
+                      void handleTextMessage(msg, files);
+                      setDraftMessage('');
                     }}
                     onVoiceResponseToggle={voiceEnabled ? () => {
                       const newValue = !enableVoiceInChat;
@@ -10570,6 +10671,7 @@ I'm not sure what I'm feeling yet.`;
       <QuickSettingsSheet
         isOpen={showAudioSettings}
         onClose={() => setShowAudioSettings(false)}
+        privacyChoice={explicitSessionPrivacyChoice}
       />
 
       {/* Voice HUD - DISABLED - Removed per user request

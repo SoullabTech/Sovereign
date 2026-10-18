@@ -75,14 +75,23 @@ function createContinuity({
   // history anywhere, where it is the FIRST conversation rather than a second.
   async function join() {
     const conv = conversation && conversation();
-    if (!conv) return;
+    if (!conv) return { ok: false, error: 'No authenticated conversation.' };
+    // Do not retrieve earlier member writing on sign-in or startup alone.
+    // Only the member's deliberate Continuity choice permits this read.
+    if (!conv.privacyState || conv.privacyState().privacyChoice !== 'continuity') {
+      return { ok: false, error: 'Choose Continuity before restoring memory.' };
+    }
     const out = await conv.adoptMemberThread();
     if (!out.ok) {
       // ⛔ A failed lookup must never silently fork the conversation. Say so.
       publish({ resumed: false, error: out.error });
-      return;
+      return { ok: false, error: out.error };
     }
-    const h = out.resumed ? await conv.history() : { turns: [] };
+    const h = out.resumed ? await conv.history() : { ok: true, turns: [] };
+    if (!h.ok) {
+      publish({ resumed: false, error: h.error || 'Thread history unavailable.' });
+      return { ok: false, error: h.error || 'Thread history unavailable.' };
+    }
     publish({
       resumed: out.resumed,
       conversationId: out.sessionId,
@@ -94,6 +103,7 @@ function createContinuity({
     // is joined without a relaunch.
     threadWatch.start(currentMemberId(), out.sessionId);
     startPolling();
+    return { ok: true, sessionId: out.sessionId, resumed: out.resumed };
   }
 
   // ── MAIA-D04A — live re-adoption ──────────────────────────────────────────
@@ -103,7 +113,8 @@ function createContinuity({
   // conforms to it.
   async function pollOnce() {
     const conv = conversation && conversation();
-    if (!conv || !threadWatch.isWatching) return;
+    if (!conv || !threadWatch.isWatching ||
+        !conv.privacyState || conv.privacyState().privacyChoice !== 'continuity') return;
 
     const peek = await conv.canonicalThreadId();
     // ⛔ A failed read is NOT an instruction to abandon the thread we hold. The

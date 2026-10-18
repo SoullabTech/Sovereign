@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
+import { preflightRealAuthorActionR1J } from '@/lib/writersStudio/release/realAuthorActionPreflightR1J';
 import { beginDraft } from '../../press/manuscript/workingDraftClient';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
@@ -1179,6 +1180,8 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
     if (!focusId || !editorialThread || !suggestedVersion || adoptionBusy) return;
     setAdoptionBusy(true); setEditorialFailure(null);
     try {
+      const preflight = await preflightRealAuthorActionR1J(context?.manuscriptId, 'apply');
+      if (!preflight.authorized) { setEditorialFailure(preflight.message); return; }
       if (!(await settleWriting())) return;
       const out = await adoptBoundEditorialVersion(
         editorialThread.threadId, focusId, suggestedVersion.id,
@@ -1219,13 +1222,15 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
     } finally {
       setAdoptionBusy(false);
     }
-  }, [focusId, editorialThread, suggestedVersion, adoptionBusy, review, refreshContext, settleWriting, replaceAddress]);
+  }, [focusId, editorialThread, suggestedVersion, adoptionBusy, review, refreshContext, settleWriting, replaceAddress, context?.manuscriptId]);
 
   const undoSuggested = useCallback(async () => {
     const application = editorialThread?.application;
     if (!application || adoptionBusy) return;
     setAdoptionBusy(true); setUndoMessage(null);
     try {
+      const preflight = await preflightRealAuthorActionR1J(context?.manuscriptId, 'undo');
+      if (!preflight.authorized) { setUndoMessage(preflight.message); return; }
       if (!(await settleWriting())) return;
       const res = await apiFetch('/api/writers-studio/editorial/undo', {
         method: 'POST', headers: { 'content-type': 'application/json' },
@@ -1250,7 +1255,7 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
       }
     } catch { setUndoMessage('Undo could not be confirmed. Reload the manuscript before trying again.'); }
     finally { setAdoptionBusy(false); }
-  }, [editorialThread, adoptionBusy, settleWriting, refreshContext, focusId]);
+  }, [editorialThread, adoptionBusy, settleWriting, refreshContext, focusId, context?.manuscriptId]);
 
   const tryAnother = useCallback(() => {
     setPassageTab('suggest');

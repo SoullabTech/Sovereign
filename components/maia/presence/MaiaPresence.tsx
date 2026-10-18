@@ -45,7 +45,7 @@ import React, {
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { getValidMemberId } from '@/lib/http/apiBase';
-import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
+import { getOrCreateMaiaSessionId, subscribeMaiaSessionIdentityChanged } from '@/lib/maia/presence/conversationIdentity';
 import {
   type MaiaPlaceContext,
   isFullConversationRoute,
@@ -122,6 +122,13 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
   // survives close/reopen and route changes without a rehydrate seam.
   const [hasEverOpened, setHasEverOpened] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // RF01 R1-D: only a verified server-minted New Conversation may change
+  // today's canonical identity. All MAIA hosts observe one same-tab event.
+  useEffect(() => subscribeMaiaSessionIdentityChanged((identity) => {
+    setSessionId(identity.sessionId);
+  }), []);
+
   const [memberName, setMemberName] = useState<string | undefined>(undefined);
   const [registeredPlace, setRegisteredPlace] = useState<MaiaPlaceContext | null>(null);
   // Nonce-keyed so the same text can be sent twice and a re-render never resends.
@@ -278,6 +285,7 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
                 </div>
                 <div className="min-h-0 flex-1">
                   <OracleConversation
+                  key={sessionId}
                     userId={getValidMemberId() || undefined}
                     userName={memberName}
                     sessionId={sessionId as string}

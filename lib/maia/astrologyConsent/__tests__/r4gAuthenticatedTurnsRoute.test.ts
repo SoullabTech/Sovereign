@@ -7,7 +7,11 @@ import { isR4fProtectedSessionById } from '../r4fGrantStore';
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: jest.fn() }));
 jest.mock('@/lib/db/postgres', () => ({ query: jest.fn() }));
 jest.mock('../r4fGrantStore', () => ({ isR4fProtectedSessionById: jest.fn() }));
-jest.mock('@/lib/memory/stores/TurnsStore', () => ({ TurnsStore: { addExchange: jest.fn() } }));
+jest.mock('@/lib/memory/stores/TurnsStore', () => ({ TurnsStore: { addExchange: jest.fn() }, ExchangeIdentityConflict: class ExchangeIdentityConflict extends Error {} }));
+jest.mock('@/lib/sovereign/memberSessionOwnership', () => {
+  const actual = jest.requireActual<any>('@/lib/sovereign/memberSessionOwnership');
+  return { ...actual, requireExistingOwnedSession: jest.fn(async () => undefined) };
+});
 
 const memberA = 'aaaaaaaa-0000-4000-8000-000000000001';
 const memberB = 'bbbbbbbb-0000-4000-8000-000000000002';

@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { verifyPassword } from '@/lib/auth/passwordUtils';
-import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
+import { createSession, revokeSession } from '@/lib/auth/serverSessions';
 import { logAuthEvent } from '@/lib/security/authAudit';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import { writerStudioBetaPreConsentCandidate, writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     if (result.rows.length === 0) {
       await logAuthEvent({
-        action: 'password_signin',
+        action: 'signin_failed',
         memberId: null,
         result: 'failure',
         errorMessage: 'User not found'
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     const verifyResult = await verifyPassword(password, member.password_hash);
     if (!verifyResult.ok) {
       await logAuthEvent({
-        action: 'password_signin',
+        action: 'signin_failed',
         memberId: member.id,
         result: 'failure',
         errorMessage: 'Invalid password'
@@ -145,74 +145,125 @@ export async function POST(request: NextRequest) {
     // Reset rate limit on success
     await resetRateLimit(clientIP, 'ip', ENDPOINT);
 
-    // Create session
-    let session;
+    // R1-E: a verified password is not yet an authenticated session.
+    // Mint server authority before preparing the response. The response that
+    // we return is the ONLY object whose cookies are ever mutated.
+    let session: Awaited<ReturnType<typeof createSession>> | undefined;
     try {
       session = await createSession({
         memberId: member.id,
         ipAddress: clientIP,
-        userAgent
+        userAgent,
       });
-      await setSessionCookie(session.sessionToken, session.expiresAt);
-      // Set access cookies for middleware (tier, roles, member_id)
-      await setAccessCookies(
-        member.id,
-        member.tier || 'free',
-        member.roles || ['member'],
-        session.expiresAt
-      );
-    } catch (sessionError) {
-      console.error('[PasswordSignin] Failed to create session:', sessionError);
-      // Closed beta must never claim a successful member sign-in unless the
-      // durable, verified session was issued. Ordinary platform behavior is
-      // left unchanged by this isolated candidate.
-      if (restrictedBetaEnabled(process.env.WRITERS_STUDIO_RESTRICTED_BETA)) {
-        return NextResponse.json(
-          { error: 'Session could not be established. Please try again.' },
-          { status: 503, headers: { 'Cache-Control': 'no-store' } },
-        );
+      if (!session.sessionToken || !session.id ||
+          !(session.expiresAt instanceof Date) ||
+          !Number.isFinite(session.expiresAt.getTime())) {
+        throw new Error('SESSION_ISSUANCE_INCOMPLETE');
       }
+    } catch {
+      // If session creation returned an unusable record, revoke it too.
+      if (session?.id) {
+        try { await revokeSession(session.id, 'session_issuance_failed'); }
+        catch { console.error('[PasswordSignin] Session revocation unavailable'); }
+      }
+      console.error('[PasswordSignin] Session issuance unavailable');
+      return NextResponse.json(
+        { error: 'Sign-in could not be completed. Please try again.' },
+        { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+      );
     }
 
-    // Update last sign in
-    await query(
-      `UPDATE members SET last_sign_in = NOW() WHERE id = $1`,
-      [member.id]
-    );
+    // Session is checked above; preserve its concrete type for cookie
+    // preparation, not an optional/best-effort success path.
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Sign-in could not be completed. Please try again.' },
+        { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+      );
+    }
 
-    await logAuthEvent({
-      action: 'password_signin',
-      memberId: member.id,
-      result: 'success'
-    }, request);
+    // A failed or partially completed cookie write discards this whole
+    // response, never returning a false success or partially issued cookies.
+    // An authenticated bearer is the LAST cookie we prepare.
+    let response: NextResponse;
+    try {
+      const expires = session.expiresAt;
+      response = NextResponse.json({
+        success: true,
+        betaConsentRequired,
+        betaCustodyOnly,
+        memberId: member.id,
+        member: {
+          id: member.id,
+          username: member.username,
+          name: (member.name || '').trim() || null,
+          preferredName: resolveMemberDisplayName(member),
+          onboarded: member.onboarded,
+          onboardingStep: member.onboarding_step,
+          tier: member.tier || 'free',
+          roles: member.roles || ['member'],
+          subscriptionActive: member.subscription_active || false,
+          subscriptionExpiresAt: member.subscription_expires_at || null,
+          hasWebauthn: member.has_webauthn || false,
+          preferredAuthMethod: member.preferred_auth_method || 'password',
+          mustResetPassword: member.must_reset_password || false,
+        },
+        session: {
+          expiresAt: expires.toISOString(),
+          // Existing iOS/Safari session transport. Never persisted in logs.
+          token: session.sessionToken,
+        },
+      }, { headers: { 'Cache-Control': 'private, no-store' } });
 
-    return NextResponse.json({
-      success: true,
-      betaConsentRequired,
-      betaCustodyOnly,
-      memberId: member.id,
-      member: {
-        id: member.id,
-        username: member.username,
-        name: (member.name || '').trim() || null,
-        preferredName: resolveMemberDisplayName(member),
-        onboarded: member.onboarded,
-        onboardingStep: member.onboarding_step,
-        tier: member.tier || 'free',
-        roles: member.roles || ['member'],
-        subscriptionActive: member.subscription_active || false,
-        subscriptionExpiresAt: member.subscription_expires_at || null,
-        hasWebauthn: member.has_webauthn || false,
-        preferredAuthMethod: member.preferred_auth_method || 'password',
-        mustResetPassword: member.must_reset_password || false
-      },
-      session: session ? {
-        expiresAt: session.expiresAt.toISOString(),
-        // Include session token for Safari/iOS clients where cookies are blocked by ITP
-        // Client should store this in localStorage and send via x-session-token header
-        token: session.sessionToken
-      } : undefined
-    });
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax' as const,
+        path: '/',
+        expires,
+      };
+      response.cookies.set('maia_member_id', member.id, cookieOptions);
+      response.cookies.set('maia_tier', member.tier || 'free', cookieOptions);
+      response.cookies.set(
+        'maia_roles', JSON.stringify(member.roles || ['member']), cookieOptions,
+      );
+      response.cookies.set('maia_session', session.sessionToken, cookieOptions);
+    } catch {
+      // A partially prepared response is NOT returned. Revoke the minted
+      // bearer even if cookie preparation succeeded before a later failure.
+      try {
+        await revokeSession(session.id, 'session_issuance_failed');
+      } catch {
+        console.error('[PasswordSignin] Session revocation unavailable');
+      }
+      console.error('[PasswordSignin] Cookie issuance unavailable');
+      return NextResponse.json(
+        { error: 'Sign-in could not be completed. Please try again.' },
+        { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+      );
+    }
+
+    // Housekeeping must not turn a fully issued session into a false 500.
+    // This can be retried independently, never with an extra login session.
+    try {
+      await query(
+        'UPDATE members SET last_sign_in = NOW() WHERE id = $1',
+        [member.id],
+      );
+    } catch {
+      console.warn('[PasswordSignin] Last-sign-in timestamp unavailable');
+    }
+    try {
+      await logAuthEvent({
+        action: 'signin_success',
+        memberId: member.id,
+        result: 'success',
+      }, request);
+    } catch {
+      console.warn('[PasswordSignin] Success audit unavailable');
+    }
+
+    return response;
 
   } catch (error) {
     console.error('[PasswordSignin] Error:', error);
