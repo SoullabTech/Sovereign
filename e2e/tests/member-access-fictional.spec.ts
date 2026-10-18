@@ -25,7 +25,7 @@ const UNVERIFIED = {
 };
 
 type Capture = { pathname: string; request: Record<string, unknown>; sharedPasswordHeader?: string | null };
-type Harness = { issued: Capture[]; redeemed: Capture[] };
+type Harness = { issued: Capture[]; redeemed: Capture[]; verified: Capture[] };
 
 async function setMock(route: Route, status: number, data: unknown) {
   await route.fulfill({
@@ -36,7 +36,7 @@ async function setMock(route: Route, status: number, data: unknown) {
 }
 
 async function fictional(page: Page, options: { founder?: boolean; issueFailure?: boolean; delayMs?: number } = {}): Promise<Harness> {
-  const capture: Harness = { issued: [], redeemed: [] };
+  const capture: Harness = { issued: [], redeemed: [], verified: [] };
   // Real Next.js proxy/role middleware verifies this against a separate
   // ephemeral PostgreSQL fixture BEFORE serving the Admin page. This cookie
   // alone is NOT accepted without the matching database session.
@@ -71,6 +71,20 @@ async function fictional(page: Page, options: { founder?: boolean; issueFailure?
       return setMock(route, 403, { error: 'Shared password must not be forwarded by Member Access' });
     }
     return setMock(route, 200, { members: [MEMBER, OTHER, UNVERIFIED], viewerRole: 'founder' });
+  });
+  await page.route('**/api/admin/members/recovery/verify-email', async route => {
+    const payload = route.request().postDataJSON() as Record<string, unknown>;
+    capture.verified.push({
+      pathname: new URL(route.request().url()).pathname,
+      request: payload,
+      sharedPasswordHeader: route.request().headers()['x-admin-password'] ?? null,
+    });
+    if (options.delayMs) await new Promise<void>(resolve => setTimeout(resolve, options.delayMs));
+    if (options.issueFailure || !options.founder) {
+      await setMock(route, 403, { error: 'A verified founder member session is required' });
+      return;
+    }
+    await setMock(route, 200, { success: true, method: 'email', delivery: 'provider_accepted', verificationRequired: true });
   });
   await page.route('**/api/admin/members/recovery', async route => {
     const payload = route.request().postDataJSON() as Record<string, unknown>;
@@ -202,6 +216,14 @@ test.describe('real strict access policy — default-OFF recovery', () => {
     ]));
   });
 
+  test('anonymous admin verification send is blocked by real strict proxy', async ({ request }) => {
+    const response = await request.post('/api/admin/members/recovery/verify-email', {
+      data: { memberId: UNVERIFIED.id, confirmed: true },
+      headers: { Origin: 'http://localhost:3000' },
+    });
+    expect(response.status()).toBe(401);
+  });
+
   test('anonymous recovery issuance is stopped by the strict admin proxy', async ({ request }) => {
     const response = await request.post('/api/admin/members/recovery', {
       data: { memberId: MEMBER_ID, method: 'email', reason: 'member_requested' },
@@ -264,6 +286,61 @@ test.describe('Admin Member Access — fictional member workflow', () => {
     await page.getByRole('checkbox', { name: /correct member and the request is authorized/ }).check();
     await expect(page.getByRole('button', { name: 'Initiate recovery' })).toBeDisabled();
     expect(h.issued).toHaveLength(0);
+  });
+
+  test('unverified member needs a distinct founder confirmation before an email verification', async ({ page }) => {
+    const h = await fictional(page, { founder: true });
+    await page.goto('/admin/member-access');
+    await page.getByRole('textbox', { name: 'Search member name or email' }).fill('unverified@example.invalid');
+    await page.getByRole('button', { name: /Fictional Unverified Member/ }).click();
+    const action = page.getByRole('button', { name: 'Send verification email' });
+    await expect(action).toBeVisible();
+    await expect(action).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Initiate recovery' })).toBeDisabled();
+    await page.getByRole('checkbox', { name: /member requested verification of their email address on file/ }).check();
+    await action.click();
+    await expect(page.getByRole('status')).toContainText('SMTP provider accepted');
+    await expect(page.getByRole('status')).toContainText('Delivery is not confirmed');
+    expect(h.verified).toHaveLength(1);
+    expect(h.verified[0].request).toEqual({ memberId: UNVERIFIED.id, confirmed: true });
+    expect(h.verified[0].sharedPasswordHeader).toBeNull();
+    expect(h.issued).toHaveLength(0);
+    expect(JSON.stringify(h.verified)).not.toContain('#token=');
+    await expect(page.getByRole('button', { name: 'Initiate recovery' })).toBeDisabled();
+  });
+
+  test('verified member has no re-verification action', async ({ page }) => {
+    const h = await fictional(page, { founder: true });
+    await page.goto('/admin/member-access');
+    await page.getByRole('button', { name: /Fictional Member One/ }).click();
+    await expect(page.getByRole('button', { name: 'Send verification email' })).toHaveCount(0);
+    expect(h.verified).toHaveLength(0);
+  });
+
+  test('legacy shared-password-only administrator cannot send verification email', async ({ page }) => {
+    const h = await fictional(page, { founder: false });
+    await page.goto('/admin/member-access');
+    await page.getByRole('button', { name: /Fictional Unverified Member/ }).click();
+    await page.getByRole('checkbox', { name: /member requested verification of their email address on file/ }).check();
+    await page.getByRole('button', { name: 'Send verification email' }).click();
+    await expect(page.getByRole('alert').filter({ hasText: 'verified founder member session' })).toBeVisible();
+    expect(h.verified).toHaveLength(1);
+    expect(h.verified[0].sharedPasswordHeader).toBeNull();
+    expect(h.issued).toHaveLength(0);
+  });
+
+  test('in-flight re-verification locks member selection and clears confirmation on next member', async ({ page }) => {
+    const h = await fictional(page, { founder: true, delayMs: 800 });
+    await page.goto('/admin/member-access');
+    await page.getByRole('button', { name: /Fictional Unverified Member/ }).click();
+    await page.getByRole('checkbox', { name: /member requested verification of their email address on file/ }).check();
+    await page.getByRole('button', { name: 'Send verification email' }).click();
+    await expect(page.getByRole('button', { name: /Fictional Member Two/ })).toBeDisabled();
+    await expect(page.getByRole('status')).toContainText('SMTP provider accepted');
+    await page.getByRole('button', { name: /Fictional Member Two/ }).click();
+    await expect(page.getByRole('status')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Send verification email' })).toHaveCount(0);
+    expect(h.verified[0].request.memberId).toBe(UNVERIFIED.id);
   });
 
   test('initial beta has no private handoff or copyable recovery link', async ({ page }) => {
