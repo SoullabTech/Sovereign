@@ -411,7 +411,8 @@ test('WebKit founder format comparison begins online and moves to future hybrid 
     assert.equal(await page.getByTestId('format-hybrid').getAttribute('aria-pressed'),'true');
     const hybridText=await page.getByTestId('delivery-selected').innerText();
     for(const word of ['Gather locally and remotely','Two human stewards','Equal contribution',
-      'Visible consent','A tested bridge','Later phase']) assert.ok(hybridText.includes(word),word);
+      'Visible consent','A tested bridge']) assert.ok(hybridText.includes(word),word);
+    assert.match(hybridText,/later phase/i);
     assert.match(await page.getByTestId('delivery-not-live').innerText(),/No venue, meeting/);
     assert.equal(await section.locator('form').count(),0);
     assert.equal(await section.locator('input').count(),0);
