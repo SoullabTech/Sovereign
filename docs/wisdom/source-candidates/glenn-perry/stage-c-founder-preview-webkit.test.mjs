@@ -56,6 +56,7 @@ test.before(async()=>{
     'components/maia/knowledge/PerryLensFounderPreview.tsx',
     'lib/maia/knowledge/perryClientPostureGate.ts',
     'lib/maia/knowledge/perryWisdomKeeperLinks.ts',
+    'lib/maia/knowledge/wisdomFirstCircleRehearsal.ts',
     'lib/sanctuary/currentClientPosture.ts',
   ]) copySource(rel);
 
@@ -342,6 +343,53 @@ test('mobile WebKit fictional Keeper Field remains legible, accessible and no-ne
     await page.getByTestId('field-member-view').focus();
     await page.keyboard.press('Enter');
     assert.equal(await page.getByTestId('field-member-view').getAttribute('aria-pressed'),'true');
+    assert.deepEqual(external,[]);
+    assert.deepEqual(errors,[]);
+  }finally{await page.close();}
+});
+
+test('WebKit guided founder rehearsal moves through all six boundaries without events',async()=>{
+  const {page,errors,external}=await newPage();
+  try{
+    const section=page.getByTestId('first-circle-rehearsal');
+    await section.waitFor({state:'visible'});
+    const stageButtons=section.locator('.rehearsalStep');
+    assert.equal(await stageButtons.count(),6);
+    assert.match(await section.innerText(),/75-minute educational gathering/);
+    assert.equal(await page.getByTestId('rehearsal-stage-arrival').getAttribute('aria-current'),'step');
+    assert.match(await page.getByTestId('rehearsal-active').innerText(),/You may speak, listen, write privately, or pass/);
+    await page.getByTestId('rehearsal-stage-needs').click();
+    assert.match(await page.getByTestId('rehearsal-active').innerText(),/Earth \/ Water \/ Air \/ Fire \/ Weather/);
+    assert.match(await page.getByTestId('rehearsal-active').innerText(),/closeness; another asks for space/);
+    await page.getByTestId('rehearsal-stage-arrival').click();
+    for(let i=0;i<5;i++)await page.getByTestId('rehearsal-next').click();
+    assert.match(await page.getByTestId('rehearsal-active').innerText(),/Keep what is yours/);
+    assert.equal(await page.getByTestId('rehearsal-next').isDisabled(),true);
+    await page.getByTestId('rehearsal-restart').click();
+    assert.match(await page.getByTestId('rehearsal-active').innerText(),/Arrive freely/);
+    assert.equal(await section.locator('form').count(),0);
+    assert.equal(await section.locator('input').count(),0);
+    assert.match(await page.getByTestId('rehearsal-safety').innerText(),/does not run a clock, schedule or register participants/);
+    assert.deepEqual(external,[]);
+    assert.deepEqual(errors,[]);
+  }finally{await page.close();}
+});
+
+test('mobile WebKit rehearsal remains readable and keyboard-accessible',async()=>{
+  const {page,errors,external}=await newPage({width:390,height:844});
+  try{
+    await page.getByTestId('first-circle-rehearsal').scrollIntoViewIfNeeded();
+    await page.getByTestId('rehearsal-stage-needs').focus();
+    await page.keyboard.press('Enter');
+    assert.match(await page.getByTestId('rehearsal-active').innerText(),/Two needs, one life/);
+    const metrics=await page.evaluate(()=>({
+      scroll:document.documentElement.scrollWidth,viewport:window.innerWidth,
+      steps:[...document.querySelectorAll('[data-testid="first-circle-rehearsal"] .rehearsalStep')]
+        .map(x=>Math.round(x.getBoundingClientRect().width)),
+    }));
+    assert.equal(metrics.steps.length,6);
+    assert.ok(metrics.steps.every(x=>x>=100),JSON.stringify(metrics));
+    assert.ok(metrics.scroll<=metrics.viewport+2,JSON.stringify(metrics));
     assert.deepEqual(external,[]);
     assert.deepEqual(errors,[]);
   }finally{await page.close();}
