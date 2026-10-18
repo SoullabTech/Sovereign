@@ -69,7 +69,7 @@ async function main(){
      blocked.some(key=>process.env[key]) ||
      !E.startsWith('/Volumes/T7 Shield/ws-beta-r7019c-') ||
      existsSync(E) ||
-     !ROOT==='/Volumes/T7 Shield/ws-beta-r70-19d-mutation-fence-20261018') {
+     ROOT!=='/Volumes/T7 Shield/ws-beta-r70-19d-exact-fixture-repair-20261018') {
     throw Error('R7019D_REFUSED_NON_FICTIONAL_START');
   }
   note('cached_pg16_image',docker(['image','inspect','postgres:16.13']).status===0);
