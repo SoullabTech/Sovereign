@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
   R7019_MANIFEST,
   R7019_REAL_WHOLE_WRITER_BACKUP_ENABLED,
@@ -14,19 +15,23 @@ import {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const byId = (id) => R7019_MANIFEST.entries.find((e) => e.id === id);
 
-test('current exact R1S source matches all 11 known writer anchors but is NOT backup qualified', () => {
+test('R1S frozen source remains pinned, while R70.19B changed writers fail closed', () => {
   const result = assessR7019WholeWriterCoverage(root);
   assert.equal(R7019_MANIFEST.baselineSourceHead,
     '441616dbf5a597f9ef297ad3dafead3be5f2ceb3');
-  assert.equal(result.verifiedKnownEntries, 11);
+  assert.equal(result.verifiedKnownEntries, 6);
   assert.equal(result.knownRequiredEntries, 11);
-  assert.deepEqual(result.drift, []);
-  assert.equal(result.status, 'R7019_WHOLE_WRITER_CAPTURE_UNQUALIFIED_HELD');
-  assert.equal(result.unqualifiedWriterIds.length, 11);
-  assert.equal(result.unmappedFamilies.length, 7);
-  assert.equal(result.releaseApproved, false);
-  assert.equal(result.wholeWriterBackupComplete, false);
-  assert.equal(result.safeForRealManuscripts, false);
+  assert.deepEqual(result.drift.map(x=>x.id).sort(), [
+    'confirmed-paste','draft-section-save','nested-section-save',
+    'studio-file-delete','studio-file-upload',
+  ].sort());
+  assert.ok(result.drift.every(x=>x.reason==='source_digest_changed'));
+  assert.equal(result.status, 'R7019_WRITER_SOURCE_CUSTODY_DRIFT_HELD');
+  assert.equal(result.unqualifiedWriterIds.length,11);
+  assert.equal(result.unmappedFamilies.length,7);
+  assert.equal(result.releaseApproved,false);
+  assert.equal(result.wholeWriterBackupComplete,false);
+  assert.equal(result.safeForRealManuscripts,false);
 });
 
 test('confirmed paste, direct draft mutation, and file upload remain explicit release blockers', () => {
@@ -39,15 +44,24 @@ test('confirmed paste, direct draft mutation, and file upload remain explicit re
   assert.equal(R7019_COMPLETE_RESTORE_VERIFIED, false);
 });
 
-test('pinned source digests and anchors are reviewed per actual writer entrypoint', () => {
-  const ids = R7019_MANIFEST.entries.map((r) => r.id);
-  assert.equal(new Set(ids).size, ids.length);
+test('immutable R1S source SHA-256 + anchors remain verifiable in Git', () => {
+  const ids=R7019_MANIFEST.entries.map(r=>r.id);
+  assert.equal(new Set(ids).size,ids.length);
   for (const r of R7019_MANIFEST.entries) {
     assert.ok(r.path && r.anchors.length);
-    assert.match(r.sha256, /^[0-9a-f]{64}$/);
-    assert.equal(r.coverage, 'not_independently_certified');
-    assert.ok(r.anchors.every((a) =>
-      readFileSync(path.join(root,r.path),'utf8').includes(a)), r.id);
+    assert.match(r.sha256,/^[0-9a-f]{64}$/);
+    assert.equal(r.coverage,'not_independently_certified');
+    // Verify against the actual frozen R1S commit. Updated R70.19B files
+    // are intentionally DRIFT and are NOT silently re-authorized.
+    const frozen=spawnSync('git',['show',
+      R7019_MANIFEST.baselineSourceHead+':'+r.path],{
+      cwd:root,encoding:'utf8',timeout:12000,maxBuffer:1024*1024,
+    });
+    assert.equal(frozen.status,0,r.id);
+    const bytes=Buffer.from(frozen.stdout,'utf8');
+    const digest=createHash('sha256').update(bytes).digest('hex');
+    assert.equal(digest,r.sha256,r.id);
+    assert.ok(r.anchors.every(a=>frozen.stdout.includes(a)),r.id);
   }
 });
 

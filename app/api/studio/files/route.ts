@@ -10,6 +10,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import { withHeldR7019BWriter } from '@/lib/writersStudio/recovery/heldR7019BWriterFence';
 
 const STORAGE_BASE = process.env.FILE_STORAGE_PATH || '/app/data/vault';
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
@@ -335,6 +336,7 @@ export async function POST(request: NextRequest) {
       await mkdir(fullDir, { recursive: true });
     }
 
+    return await withHeldR7019BWriter(memberId, 'studio_file_upload', async () => {
     const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(path.join(STORAGE_BASE, storagePath), buffer);
 
@@ -383,6 +385,7 @@ export async function POST(request: NextRequest) {
         createdAt: row.created_at,
       },
     });
+    }, practitionerId);
   } catch (error) {
     console.error('[Studio Files] POST error:', error);
     return NextResponse.json({ success: false, error: 'Failed to upload file' }, { status: 500 });
