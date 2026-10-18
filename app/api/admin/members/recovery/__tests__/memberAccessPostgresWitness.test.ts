@@ -178,6 +178,46 @@ describe('real PostgreSQL one-use admin recovery', () => {
     expect(revoked.rows[0].n).toBe(1);
   });
 
+  it('does not block deleting the target account; target deletion cascades recovery receipts', async () => {
+    expect((await issue()).status).toBe(200);
+    const client = await scratch.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('DELETE FROM auth_sessions WHERE member_id=$1', [TARGET]);
+      await client.query('DELETE FROM members WHERE id=$1', [TARGET]);
+      const result = await client.query(
+        'SELECT count(*)::int AS n FROM admin_member_recovery_tokens WHERE member_id=$1',
+        [TARGET],
+      );
+      expect(result.rows[0].n).toBe(0);
+    } finally {
+      await client.query('ROLLBACK');
+      client.release();
+    }
+    const untouched = await query('SELECT id FROM members WHERE id=$1', [TARGET]);
+    expect(untouched.rows).toHaveLength(1);
+  });
+
+  it('deleting the issuing founder also invalidates that issuer\'s recovery records', async () => {
+    expect((await issue()).status).toBe(200);
+    const client = await scratch.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('DELETE FROM auth_sessions WHERE member_id=$1', [FOUNDER]);
+      await client.query('DELETE FROM members WHERE id=$1', [FOUNDER]);
+      const result = await client.query(
+        'SELECT count(*)::int AS n FROM admin_member_recovery_tokens WHERE issued_by=$1',
+        [FOUNDER],
+      );
+      expect(result.rows[0].n).toBe(0);
+    } finally {
+      await client.query('ROLLBACK');
+      client.release();
+    }
+    const untouched = await query('SELECT id FROM members WHERE id=$1', [FOUNDER]);
+    expect(untouched.rows).toHaveLength(1);
+  });
+
   it('failed email provider acceptance leaves no usable token', async () => {
     mockSend.mockResolvedValueOnce({ success: false });
     expect((await issue()).status).toBe(502);
