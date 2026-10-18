@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { adminFetch, storeAdminPassword } from '@/lib/admin/adminFetch';
+import ReflectReleaseStatusCard from '@/components/admin/ReflectReleaseStatusCard';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
@@ -305,6 +306,9 @@ export default function SystemAdminPage() {
             </button>
           </div>
         </motion.div>
+
+        {/* Read-only Reflect E010 release status; never part of generic DB feature switches. */}
+        <ReflectReleaseStatusCard />
 
         {/* Maintenance Mode Card */}
         <motion.div
