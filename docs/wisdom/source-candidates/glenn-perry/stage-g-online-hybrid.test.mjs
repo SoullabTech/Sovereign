@@ -197,3 +197,27 @@ test('an in-person-only webinar style fails the planned hybrid standard',()=>{
   assert.match(out,/consent|agreed boundaries/);
   assert.equal(stageG.hybrid_future.remote_speaking_and_questions_equal,false);
 });
+
+
+test('existing on-platform hybrid service is assessed first, not claimed deployed or ready',()=>{
+  const o=stageG.on_platform_hybrid_reuse;
+  assert.equal(o.founder_identified_existing_service,true);
+  assert.equal(o.preferred_first_candidate,'soullab_existing_hybrid_service');
+  assert.equal(o.external_provider_is_default,false);
+  assert.equal(o.specific_route_or_screen_identified,false);
+  for(const key of ['deployed_service_verified','multiple_real_participants_verified',
+    'consent_scoped_group_authorization_verified','privacy_recording_and_log_controls_verified',
+    'audio_video_connectivity_verified','host_controls_verified',
+    'circle_member_access_verified','real_session_created'])
+    assert.equal(o[key],false,key);
+  assert.equal(o.fallback_only_if_unready,'independently_verified_private_link_out');
+  assert.equal(stageG.meeting_provider_selection.preferred_candidate,
+    'existing_soullab_hybrid_service_to_identify');
+  const evidence=file(base+'STAGE-G_PLATFORM-HYBRID-REUSE_AUDIT_20261018.md');
+  assert.match(evidence,/^status: review$/m);
+  assert.match(evidence,/^safe_for_retrieval: false$/m);
+  assert.match(evidence,/RTCPeerConnection/);
+  assert.match(evidence,/older.*join-session.*handler/i);
+  assert.match(evidence,/Do not use it to host a sensitive private group unmodified/i);
+  assert.match(note,/assess the \*\*existing Soullab hybrid service\*\*/i);
+});
