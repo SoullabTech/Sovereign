@@ -183,5 +183,3 @@ test('confirmed SQL revocation reports true; stale/missing tokens never claim ne
  assert.equal(result.response.body.serverSessionRevoked,false);
  assert.equal(result.h.calls.queries,0);
 });
-
-[executed on device: Kellys-Mac-Studio.local (ab502e5b-916c-4777-acf5-0487f2771bd4)]
