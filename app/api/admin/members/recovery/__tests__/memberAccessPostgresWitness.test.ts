@@ -169,6 +169,16 @@ describe('atomic current-email verification route on real disposable PostgreSQL'
 });
 
 describe('verified CURRENT email proof and bound recovery', () => {
+  it('prevents direct SQL assignment from forging a recovery email proof', async () => {
+    const initial = await query('SELECT recovery_email_verification_id FROM members WHERE id=$1', [TARGET]);
+    expect(initial.rows[0].recovery_email_verification_id).not.toBeNull();
+    const forged = '99999999-9999-4999-8999-999999999999';
+    await query('UPDATE members SET recovery_email_verification_id=$1 WHERE id=$2', [forged, TARGET]);
+    const result = await query('SELECT recovery_email_verification_id FROM members WHERE id=$1', [TARGET]);
+    expect(result.rows[0].recovery_email_verification_id).toEqual(initial.rows[0].recovery_email_verification_id);
+    expect(result.rows[0].recovery_email_verification_id).not.toEqual(forged);
+  });
+
   it('denies legacy email_verified true without a fresh verification nonce', async () => {
     await query('UPDATE members SET email_verified=FALSE WHERE id=$1', [TARGET]);
     await query('UPDATE members SET email_verified=TRUE WHERE id=$1', [TARGET]);
