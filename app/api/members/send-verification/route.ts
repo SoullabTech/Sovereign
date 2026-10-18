@@ -143,13 +143,23 @@ export async function POST(request: NextRequest) {
     // Generate verification token
     const token = crypto.randomBytes(32).toString('hex');
 
-    // Store token
-    await query(
+    // Store the token ONLY if the on-file destination has not changed since
+    // lookup. A concurrent member email update invalidates this issuance
+    // rather than allowing an old address to verify a new one.
+    const stored = await query(
       `UPDATE members
-       SET email_verification_token = $1, email_verification_sent_at = NOW()
-       WHERE id = $2`,
-      [token, memberId]
+         SET email_verification_token = $1,
+             email_verification_sent_at = clock_timestamp()
+       WHERE id = $2 AND email IS NOT DISTINCT FROM $3
+       RETURNING id`,
+      [token, memberId, member.email],
     );
+    if (stored.rows.length !== 1) {
+      return NextResponse.json(
+        { error: 'Email changed during verification; please retry' },
+        { status: 409, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
 
     // Build verification URL
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://soullab.life';
