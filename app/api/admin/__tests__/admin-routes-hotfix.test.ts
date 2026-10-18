@@ -112,19 +112,27 @@ describe('Tier-1 hotfix — alerts cron path preserved', () => {
 });
 
 describe('reset-member-password — no hardcoded fallback path', () => {
-  it('env UNSET + old fallback secret in body → 503 (fallback removed, fail-closed)', async () => {
-    const res = await resetPOST(req('/api/admin/reset-member-password', { method: 'POST', body: { email: 'a@b.c', newPassword: 'xxxxxx', adminSecret: 'maia-admin-reset-2026' } }));
+  it('env UNSET + founder proof + old fallback secret in body → 503 (fallback removed)', async () => {
+    const res = await resetPOST(req('/api/admin/reset-member-password', { method: 'POST', admin: ADMIN_PW, body: { email: 'a@b.c', newPassword: 'strong-12-character-password', adminSecret: 'maia-admin-reset-2026' } }));
     expect(res.status).toBe(503);
-    expect(mockQuery).not.toHaveBeenCalled();
+    expect(mockQuery.mock.calls.some(([sql]) => sql.includes('UPDATE members SET password_hash'))).toBe(false);
   });
-  it('env SET + wrong secret → 401', async () => {
+  it('env SET + founder proof + wrong secret → 401', async () => {
     process.env.ADMIN_RESET_SECRET = 'real-reset-secret';
-    expect((await resetPOST(req('/api/admin/reset-member-password', { method: 'POST', body: { email: 'a@b.c', newPassword: 'xxxxxx', adminSecret: 'wrong' } }))).status).toBe(401);
+    expect((await resetPOST(req('/api/admin/reset-member-password', { method: 'POST', admin: ADMIN_PW, body: { email: 'a@b.c', newPassword: 'strong-12-character-password', adminSecret: 'wrong' } }))).status).toBe(401);
+    expect(mockQuery.mock.calls.some(([sql]) => sql.includes('UPDATE members SET password_hash'))).toBe(false);
   });
-  it('env SET + correct secret → passes guard (not 401/503)', async () => {
+  it('env SET + correct secret alone WITHOUT founder proof → 401 and no password write', async () => {
     process.env.ADMIN_RESET_SECRET = 'real-reset-secret';
-    const res = await resetPOST(req('/api/admin/reset-member-password', { method: 'POST', body: { email: 'a@b.c', newPassword: 'xxxxxx', adminSecret: 'real-reset-secret' } }));
+    const res = await resetPOST(req('/api/admin/reset-member-password', { method: 'POST', body: { email: 'a@b.c', newPassword: 'strong-12-character-password', adminSecret: 'real-reset-secret' } }));
+    expect(res.status).toBe(401);
+    expect(mockQuery.mock.calls.some(([sql]) => sql.includes('UPDATE members SET password_hash'))).toBe(false);
+  });
+  it('env SET + both founder proof AND correct secret → passes guard', async () => {
+    process.env.ADMIN_RESET_SECRET = 'real-reset-secret';
+    const res = await resetPOST(req('/api/admin/reset-member-password', { method: 'POST', admin: ADMIN_PW, body: { email: 'a@b.c', newPassword: 'strong-12-character-password', adminSecret: 'real-reset-secret' } }));
     expect(res.status).not.toBe(401);
     expect(res.status).not.toBe(503);
+    expect(mockQuery.mock.calls.some(([sql]) => sql.includes('UPDATE members SET password_hash'))).toBe(true);
   });
 });
