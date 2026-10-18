@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
       }
 
       await logAuthEvent({
-        action: 'password_signin',
+        action: 'signin_failed',
         memberId: member.id,
         result: 'failure',
         errorMessage: 'Session establishment failed',
