@@ -18,6 +18,10 @@ import {
   FIRST_WISDOM_CIRCLE_MOVEMENTS,
   FIRST_WISDOM_CIRCLE_DURATION_MINUTES,
 } from '@/lib/maia/knowledge/wisdomFirstCircleRehearsal';
+import {
+  WISDOM_GATHERING_DELIVERY_PREVIEW,
+  type WisdomGatheringPreviewMode,
+} from '@/lib/maia/knowledge/wisdomGatheringDeliveryPreview';
 
 type Choice = 'usual' | 'perry';
 type SimulatedPosture = 'ordinary' | 'sanctuary' | 'unresolved';
@@ -38,7 +42,9 @@ export default function PerryLensFounderPreview() {
   const [result, setResult] = useState<PreviewResult>('idle');
   const [hostedFieldPerspective, setHostedFieldPerspective] = useState<HostedFieldPerspective>('member');
   const [firstCircleStep, setFirstCircleStep] = useState(0);
+  const [deliveryMode, setDeliveryMode] = useState<WisdomGatheringPreviewMode>('online');
   const currentMovement = FIRST_WISDOM_CIRCLE_MOVEMENTS[firstCircleStep];
+  const delivery = WISDOM_GATHERING_DELIVERY_PREVIEW[deliveryMode];
 
   const selectChoice = (next: Choice) => {
     setChoice(next);
@@ -148,6 +154,16 @@ export default function PerryLensFounderPreview() {
         .perryDemo .rehearsalControl{padding:12px 16px;border-radius:10px;background:#315d53;color:white;font-weight:650;border:1px solid #315d53;cursor:pointer;}
         .perryDemo .rehearsalControl[data-variant="secondary"]{background:transparent;color:#315d53;border-color:#b4c8ba;}
         .perryDemo .rehearsalControl:disabled{opacity:.45;cursor:not-allowed;}
+        .perryDemo .deliverySwitch{display:flex;flex-wrap:wrap;gap:10px;margin:19px 0 22px;}
+        .perryDemo .deliveryOption{padding:12px 17px;border:1px solid #c4d5c9;border-radius:10px;background:#f8faf6;color:#325e4e;cursor:pointer;font-weight:650;font-size:15px;}
+        .perryDemo .deliveryOption[aria-pressed="true"]{background:#e7f1e9;border-color:#447a67;}
+        .perryDemo .deliveryOption:focus-visible{outline:3px solid #559f89;outline-offset:3px;}
+        .perryDemo .deliveryGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:20px 0;}
+        .perryDemo .deliveryCell{background:#fafcf8;border:1px solid #d5dfd6;border-radius:13px;padding:18px;min-width:0;}
+        .perryDemo .deliveryCell strong{display:block;font-size:15px;color:#244d3d;margin-bottom:7px;}
+        .perryDemo .deliveryCell p{font-size:14px;color:#53645a;line-height:1.6;margin:0;}
+        .perryDemo .deliveryBoundary{margin-top:18px;background:#edf2e9;border-radius:12px;padding:16px 18px;color:#3d594a;line-height:1.6;font-size:14px;}
+        @media(max-width:560px){.perryDemo .deliveryGrid{grid-template-columns:1fr}}
         @media(max-width:560px){.perryDemo .rehearsalSteps{grid-template-columns:repeat(2,minmax(0,1fr))}}
         @media(max-width:560px){.perryDemo .hostedFieldGrid{grid-template-columns:1fr}}
         @media(max-width:560px){.perryDemo .commonsSteps{grid-template-columns:1fr}}
@@ -406,6 +422,47 @@ export default function PerryLensFounderPreview() {
             Rehearsal only: this does not run a clock, schedule or register participants,
             record a meeting, call MAIA, or send any invitation. Real hosting requires
             a separately verified Circle/venue, privacy controls and a founder go/no-go.
+          </p>
+        </section>
+
+        <section className="perryPanel" aria-labelledby="delivery-heading" data-testid="wisdom-gathering-delivery-preview">
+          <div className="perryEyebrow">Proposed sequence · Founder review</div>
+          <h2 id="delivery-heading" style={{marginTop:10}}>Online first, then hybrid</h2>
+          <p className="keeperIntro">
+            Let the human community find its rhythm online before introducing venues,
+            microphones and local gatherings. The same consent and author boundaries apply
+            in either format. This is a future service design, not a meeting link.
+          </p>
+          <div className="deliverySwitch" role="group" aria-label="Compare proposed gathering formats">
+            <button type="button" className="deliveryOption" data-testid="format-online"
+              aria-pressed={deliveryMode === 'online'}
+              onClick={() => setDeliveryMode('online')}>Online first</button>
+            <button type="button" className="deliveryOption" data-testid="format-hybrid"
+              aria-pressed={deliveryMode === 'hybrid'}
+              onClick={() => setDeliveryMode('hybrid')}>Hybrid later</button>
+          </div>
+          <div data-testid="delivery-selected">
+            <div className="perryEyebrow">{delivery.status}</div>
+            <h3 style={{fontSize:22,color:'#29453b',fontWeight:650,margin:'8px 0 12px'}}>
+              {delivery.heading}
+            </h3>
+            <p className="keeperIntro">{delivery.description}</p>
+            <div className="deliveryGrid" role="list">
+              {delivery.promises.map((promise) => (
+                <div className="deliveryCell" role="listitem" key={promise.heading}>
+                  <strong>{promise.heading}</strong>
+                  <p>{promise.explanation}</p>
+                </div>
+              ))}
+            </div>
+            <div className="deliveryBoundary" role="note" data-testid="delivery-not-live">
+              {delivery.boundary}
+            </div>
+          </div>
+          <p className="keeperNote" data-testid="delivery-access-note">
+            No participants are being enrolled; no provider is selected; no room or public stream is running.
+            Any future keeper-led gathering requires the keeper's consent, event-specific
+            participation terms, and separate human and technical approval.
           </p>
         </section>
       </div>
