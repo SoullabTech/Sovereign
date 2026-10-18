@@ -18,7 +18,7 @@ safe_for_retrieval: false
 
 Soullab should not become a platform that *extracts* knowledge from wisdom keepers in order to make MAIA appear wiser. Nor should it become a marketplace where the only meaningful relationship between members and teachers is a paid transaction.
 
-Instead, let Soullab become a place where people can **find the original holders of a teaching, recognize their contribution, encounter their work, and—when all parties choose—enter reciprocal human learning relationships**. Keepers need not join Soullab or yield texts to be honored. Members need not pay, participate, share personal stories, or accept a particular doctrine to belong.
+Instead, let Soullab become a place where people can **find the original holders of a teaching, recognize their contribution, encounter their work, and—when all parties choose—enter reciprocal human learning relationships**. Keepers need not join Soullab or yield texts to be honored. Respect, recognition and access to publicly linked sources must not depend on purchasing a keeper’s product, sharing intimate history or accepting a doctrine. Soullab may separately charge transparent fees for genuine platform or facilitation services; payment never buys relational status, interpretive authority or entitlement to a keeper's attention.
 
 This is an *offering held by a community*, with ethical stewardship and practical costs—not an obligation to produce content or participate for free.
 
