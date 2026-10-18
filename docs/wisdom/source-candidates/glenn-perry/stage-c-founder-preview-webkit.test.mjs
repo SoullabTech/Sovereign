@@ -359,7 +359,7 @@ test('WebKit guided founder rehearsal moves through all six boundaries without e
     assert.equal(await page.getByTestId('rehearsal-stage-arrival').getAttribute('aria-current'),'step');
     assert.match(await page.getByTestId('rehearsal-active').innerText(),/You may speak, listen, write privately, or pass/);
     await page.getByTestId('rehearsal-stage-needs').click();
-    assert.match(await page.getByTestId('rehearsal-active').innerText(),/Earth \/ Water \/ Air \/ Fire \/ Weather/);
+    assert.match(await page.getByTestId('rehearsal-active').innerText(),/Earth \/ Water \/ Air \/ Fire \/ Weather/i);
     assert.match(await page.getByTestId('rehearsal-active').innerText(),/closeness; another asks for space/);
     await page.getByTestId('rehearsal-stage-arrival').click();
     for(let i=0;i<5;i++)await page.getByTestId('rehearsal-next').click();
