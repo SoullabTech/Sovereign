@@ -43,6 +43,7 @@ jest.mock('@/lib/auth/passwordUtils', () => ({
 import { query, closePool } from '@/lib/db/postgres';
 import { POST as issuePOST } from '../route';
 import { POST as redeemPOST } from '@/app/api/members/admin-recovery/route';
+import { POST as verifyEmailPOST } from '@/app/api/members/verify-email/route';
 
 let scratch: Pool;
 function fake(path: string, body: unknown, signedIn = false): NextRequest {
@@ -81,7 +82,7 @@ beforeAll(async () => {
   scratch = new Pool({ connectionString: URL });
   await scratch.query(`
     CREATE TABLE members (
-      id uuid PRIMARY KEY, email text, admin_role text, password_hash text,
+      id uuid PRIMARY KEY, username text, email text, admin_role text, password_hash text,
       password_changed_at timestamptz, updated_at timestamptz,
       email_verified boolean NOT NULL DEFAULT false,
       email_verified_at timestamptz,
@@ -126,6 +127,45 @@ beforeEach(async () => {
   await query("UPDATE members SET email_verification_token='FICTIONAL-VERIFY-TOKEN', email_verification_sent_at=clock_timestamp() WHERE id=$1", [TARGET]);
   await query('UPDATE members SET email_verified=TRUE, email_verification_token=NULL WHERE id=$1', [TARGET]);
   await query(`UPDATE members SET password_hash='EXISTING_MEMBER_HASH', password_changed_at=NULL WHERE id=$1`, [TARGET]);
+});
+
+describe('atomic current-email verification route on real disposable PostgreSQL', () => {
+  it('consumes the actual 64-hex verification token once and mints a recovery proof', async () => {
+    const token = '3'.repeat(64);
+    await query('UPDATE members SET email_verified=FALSE WHERE id=$1', [TARGET]);
+    await query('UPDATE members SET email_verification_token=$1, email_verification_sent_at=clock_timestamp() WHERE id=$2', [token, TARGET]);
+    const done = await verifyEmailPOST(fake('/api/members/verify-email', { token }));
+    expect(done.status).toBe(200);
+    const row = await query('SELECT email_verified,email_verified_at,recovery_email_verification_id,email_verification_token FROM members WHERE id=$1', [TARGET]);
+    expect(row.rows[0].email_verified).toBe(true);
+    expect(row.rows[0].email_verified_at).not.toBeNull();
+    expect(row.rows[0].recovery_email_verification_id).not.toBeNull();
+    expect(row.rows[0].email_verification_token).toBeNull();
+    expect((await verifyEmailPOST(fake('/api/members/verify-email', { token }))).status).toBe(400);
+    expect((await issue()).status).toBe(200);
+  });
+
+  it('refuses an obsolete verification token after a newer token is sent', async () => {
+    const oldToken = '4'.repeat(64), newToken = '5'.repeat(64);
+    await query('UPDATE members SET email_verified=FALSE WHERE id=$1', [TARGET]);
+    await query('UPDATE members SET email_verification_token=$1, email_verification_sent_at=clock_timestamp() WHERE id=$2', [oldToken, TARGET]);
+    await query('UPDATE members SET email_verification_token=$1, email_verification_sent_at=clock_timestamp() WHERE id=$2', [newToken, TARGET]);
+    expect((await verifyEmailPOST(fake('/api/members/verify-email', { token: oldToken }))).status).toBe(400);
+    const prior = await query('SELECT recovery_email_verification_id FROM members WHERE id=$1', [TARGET]);
+    expect(prior.rows[0].recovery_email_verification_id).toBeNull();
+    expect((await verifyEmailPOST(fake('/api/members/verify-email', { token: newToken }))).status).toBe(200);
+    expect((await issue()).status).toBe(200);
+  });
+
+  it('refuses an old verification link after the email address has changed', async () => {
+    const token = '6'.repeat(64);
+    await query('UPDATE members SET email_verified=FALSE WHERE id=$1', [TARGET]);
+    await query('UPDATE members SET email_verification_token=$1, email_verification_sent_at=clock_timestamp() WHERE id=$2', [token, TARGET]);
+    await query('UPDATE members SET email=$1 WHERE id=$2', ['changed@example.invalid', TARGET]);
+    expect((await verifyEmailPOST(fake('/api/members/verify-email', { token }))).status).toBe(400);
+    expect((await issue()).status).toBe(409);
+    expect(mockSend).not.toHaveBeenCalled();
+  });
 });
 
 describe('verified CURRENT email proof and bound recovery', () => {
