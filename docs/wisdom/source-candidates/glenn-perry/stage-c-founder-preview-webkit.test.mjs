@@ -55,6 +55,7 @@ test.before(async()=>{
   for(const rel of [
     'components/maia/knowledge/PerryLensFounderPreview.tsx',
     'lib/maia/knowledge/perryClientPostureGate.ts',
+    'lib/maia/knowledge/perryWisdomKeeperLinks.ts',
     'lib/sanctuary/currentClientPosture.ts',
   ]) copySource(rel);
 
@@ -202,6 +203,39 @@ test('WebKit selection supports keyboard focus and activation',async()=>{
     await page.keyboard.press('Enter');
     assert.match(await page.getByTestId('preview-result').innerText(),/Glenn Perry/);
     assert.deepEqual(external,[]);
+    assert.deepEqual(errors,[]);
+  }finally{await page.close();}
+});
+
+test('WebKit presents six official source links with safe outbound navigation',async()=>{
+  const {page,errors,external}=await newPage();
+  try{
+    const links=page.getByTestId('wisdom-keeper-links').locator('a');
+    assert.equal(await links.count(),6);
+    const expected=[
+      ['author-website','https://aaperry.com/'],
+      ['academy','https://astropsychology.org/'],
+      ['introduction-book','https://aaperry.com/product/an-introduction-to-astropsychology/'],
+      ['depth-analysis-book','https://aaperry.com/product/depth-analysis-of-the-natal-chart-advanced-therapeutic-astrology/'],
+      ['books-collection','https://aaperry.com/astrology-books/'],
+      ['essays-collection','https://aaperry.com/concepts-and-theory/'],
+    ];
+    for(const [id,url] of expected){
+      const link=page.getByTestId('keeper-link-'+id);
+      assert.equal(await link.getAttribute('href'),url,id);
+      assert.equal(await link.getAttribute('target'),'_blank',id);
+      const rel=(await link.getAttribute('rel'))||'';
+      assert.ok(rel.split(/\s+/).includes('noopener'),id);
+      assert.ok(rel.split(/\s+/).includes('noreferrer'),id);
+      assert.ok((await link.innerText()).length>10,id);
+    }
+    const first=page.getByTestId('keeper-link-author-website');
+    await first.focus();
+    assert.equal(await first.evaluate(el=>document.activeElement===el),true);
+    await page.keyboard.press('Tab');
+    const second=page.getByTestId('keeper-link-academy');
+    assert.equal(await second.evaluate(el=>document.activeElement===el),true);
+    assert.deepEqual(external,[], 'no automatic outbound requests');
     assert.deepEqual(errors,[]);
   }finally{await page.close();}
 });
