@@ -11,6 +11,8 @@ on:
       - 'config/__tests__/memberRecoveryAccessPolicy.test.ts'
       - 'app/api/admin/members/recovery/**'
       - 'app/api/members/admin-recovery/**'
+      - 'app/api/members/verify-email/route.ts'
+      - 'app/api/admin/members/route.ts'
       - 'app/labtools/admin/command-center/member-access/**'
       - 'app/member-recovery/**'
       - 'app/admin/member-access/**'
