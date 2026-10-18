@@ -14,6 +14,19 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## First human pilot — Where Symbols Meet Life (Stage F)
+
+**Founder development approved; no invitation, booking or launch authority.** Prepare a small, founder-hosted educational Circle **before** claiming any living keeper partnership. A 75-minute six-movement format begins with an original Soullab elemental inquiry and lets members speak, remain silent, or reject the symbolism. Glenn Perry is only an unaffiliated, correctly linked public source reference.
+
+- [Start here: one-page founder pilot brief](./STAGE-F_FIRST-GATHERING_FOUNDER-BRIEF_20261017.md) — what people experience and what the founder decides next.
+- [Facilitator's full 75-minute guide](./STAGE-F_FIRST-GATHERING_FACILITATOR-KIT_CANDIDATE_20261017.md) — actual host words, Earth/Water/Air/Fire/Weather questions, privacy/safety boundaries and launch checklist.
+- [Unsent invitation and participant notice](./STAGE-F_FIRST-GATHERING_INVITATION-AND-CONSENT_CANDIDATE_20261017.md) — no real recipient list, date, venue, fee, recording or approved access yet.
+- [Fictional stage-by-stage rehearsal contract](./STAGE-F_FIRST-GATHERING_PILOT-REHEARSAL_CANDIDATE_20261017.json) — ten release checks, all live invitations, enrollment, recording, source ingestion and paid access OFF.
+- [Stage F preparation witness](./STAGE-F_FIRST-GATHERING_PREPARATION-WITNESS_20261017.md) — **138/138** source/rights/consent/Next.js handler/WebKit/rehearsal checks passed at pinned source revision; three denial mutants caught. This is an isolated test, **not** a real Circle or website build.
+- [Rehearsal cues](../../../../lib/maia/knowledge/wisdomFirstCircleRehearsal.ts) in the **default-OFF founder preview**: six static steps to practice as a facilitator; no timekeeping, data capture or event.
+
+**Next actual human step:** Founder reviews the invitation and chooses a plausible venue/date so we can verify real membership and recording controls. No one may be contacted or enrolled from this research branch.
+
 ## Next proposal — Keeper-Hosted Fields (Stage E)
 
 **Not yet approved or operational.** A willing wisdom keeper may eventually have an explicitly bounded human teaching/engagement space hosted within Soullab's already-ratified relational ontology. Approval concerns **the actual keeper's identity, consent, precise activities, member choice, privacy and safety**—not a blanket clinical/spiritual endorsement or access to members' personal histories. Glenn Perry remains an unaffiliated author reference; contact is founder-held.
