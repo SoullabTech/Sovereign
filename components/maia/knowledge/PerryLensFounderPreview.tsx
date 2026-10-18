@@ -111,6 +111,13 @@ export default function PerryLensFounderPreview() {
         .perryDemo .keeperLink strong{display:block;font-size:15px;font-weight:650;overflow-wrap:anywhere;line-height:1.5;}
         .perryDemo .keeperLink small{display:block;margin-top:5px;color:#586d60;font-size:13px;line-height:1.45;}
         .perryDemo .keeperNote{font-size:13px;line-height:1.6;margin-top:18px;color:#62736a;}
+        .perryDemo .commonsSteps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-top:20px;}
+        .perryDemo .commonsStep{padding:17px 18px;border:1px solid #d4dcd3;background:#fafcf8;border-radius:13px;min-width:0;}
+        .perryDemo .commonsStep .number{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#677e6d;font-weight:700;}
+        .perryDemo .commonsStep strong{display:block;font-size:17px;margin:8px 0;color:#294d42;}
+        .perryDemo .commonsStep p{margin:0;color:#576a5c;font-size:14px;line-height:1.55;}
+        .perryDemo .commonsGuard{margin-top:18px;padding:14px 18px;border-radius:12px;background:#edf1e9;border:1px solid #d3ded2;font-size:14px;line-height:1.6;color:#4a6053;}
+        @media(max-width:560px){.perryDemo .commonsSteps{grid-template-columns:1fr}}
         @media(max-width:560px){.perryDemo .keeperList{grid-template-columns:1fr}}
         @media(max-width:560px){.perryDemo .perryChoices{grid-template-columns:1fr}.perryDemo .perryPanel{padding:18px}.perryDemo .perryChoice{min-height:0}}
       `}</style>
@@ -209,6 +216,45 @@ export default function PerryLensFounderPreview() {
             independent, attributed research preview—not a licensed edition of his texts or
             a claim that Glenn Perry endorses MAIA. Following a link is always your choice.
           </p>
+        </section>
+
+        <section className="perryPanel" aria-labelledby="commons-heading" data-testid="wisdom-keepers-commons-concept">
+          <div className="perryEyebrow">Possible Soullab community service · Founder concept</div>
+          <h2 id="commons-heading" style={{marginTop:10}}>A living Commons of wisdom and relationship</h2>
+          <p className="keeperIntro">
+            Beyond books and links, Soullab could help interested people discover one another,
+            gather around meaningful questions, and invite original wisdom keepers into genuine
+            encounters when those keepers choose to participate. There are no pay-to-meet
+            rankings or automatic introductions.
+          </p>
+          <div className="commonsSteps" role="list">
+            <div className="commonsStep" role="listitem">
+              <span className="number">01 · Begin with the source</span>
+              <strong>Discover and honor</strong>
+              <p>Read the keeper’s original work at its source and see a transparent, accurate attribution.</p>
+            </div>
+            <div className="commonsStep" role="listitem">
+              <span className="number">02 · Choose an interest</span>
+              <strong>Gather around a question</strong>
+              <p>Intentionally declare an interest and, when available, enter a consensual study Circle—never matched from private MAIA material.</p>
+            </div>
+            <div className="commonsStep" role="listitem">
+              <span className="number">03 · An optional human invitation</span>
+              <strong>Encounter a wisdom keeper</strong>
+              <p>A keeper may accept a carefully scoped conversation or gathering, with mutually agreed time, care and compensation.</p>
+            </div>
+            <div className="commonsStep" role="listitem">
+              <span className="number">04 · A contribution freely offered</span>
+              <strong>Return a gift to the field</strong>
+              <p>Support may mean gratitude, study, service, a direct book purchase or a voluntary contribution—without ranking or obligation.</p>
+            </div>
+          </div>
+          <div className="commonsGuard" role="note" data-testid="commons-proposal-only">
+            <strong>Concept only.</strong> Glenn Perry is currently an independently referenced author,
+            <strong> not a participating Soullab partner.</strong> There is no active interest sign-up,
+            gathering, invitation, recording, fund or member-to-keeper introduction on this page.
+            Private and Sanctuary conversations are never used to recruit or profile participants.
+          </div>
         </section>
       </div>
     </main>
