@@ -40,7 +40,7 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 - **"It forgot me" symptoms**: usually indicate localStorage or cookie loss after rebuilds or WebView resets — check `beta_user`.
 - **force-dynamic routes**: any route using `export const dynamic = 'force-dynamic'` must be listed in `EXCLUDED_DYNAMIC_ROUTES` for iOS builds.
 - **Worktrees + preflight `.env.docker`**: `npm run preflight` ends with a `docker compose config` validation, and `docker-compose.yml` reads `env_file: .env.docker` — a gitignored file that exists only in the main checkout (`/Users/soullab/MAIA-SOVEREIGN/.env.docker`). In any fresh git worktree that step therefore fails with "env file … .env.docker not found" (confirmed 2026-07-27). Fix: `cp /Users/soullab/MAIA-SOVEREIGN/.env.docker <worktree>/.env.docker`. The preflight step itself (`scripts/preflight-compose-config.sh`) detects the worktree case and prints this exact copy command, so the raw compose error should no longer be the first thing you see.
-- **LAN IP drift after power-cycle** (housekeeping check, not always user-impacting): minisforum is expected at `192.168.0.104`. After a power outage or full restart, DHCP can re-lease a different IP (seen: `.102` on 2026-05-29). If the router's port-forward rule for 80/443 is hard-coded to `.104`, external traffic will silently drop. **Verify scope before treating as causal**: if the PWA at soullab.life loads on iOS over cellular, the forward path is intact and IP drift is NOT the user-facing issue (the router may auto-track or have a different forward rule). The hairpin-NAT probe (`curl https://soullab.life from minisforum`) is misleading — most consumer routers disable hairpin by default, so HTTP 000 there does not imply external traffic is broken. Always check `ssh soullab@minisforum 'hostname -I'` after a power event for hygiene, and set a DHCP reservation pinning minisforum to `.104` to make the trap structurally impossible.
+- **Minisforum LAN IP drift (verify, never hard-code):** Earlier instructions assumed `192.168.0.104`, but the 2026-10-17 admin-surface incident recorded `192.168.4.38` after a DHCP/network change (`docs/ops/ADMIN_SURFACE_HARDENING_2026-10-17.md`). **Neither address is a standing production invariant.** Confirm the current IP using `ssh soullab@minisforum 'hostname -I'` only when that alias reaches the authenticated host, or inspect the router's current DHCP lease; preserve SSH host-key checking. Compare that address against the router's :80/:443 forwarding target and Caddy's LAN allowlist before diagnosing reachability. A cellular check of `soullab.life` is stronger evidence of public access than a local hairpin-NAT probe. Reserve the **verified current** address in DHCP; do not pin a historical `.104` or `.38` merely because this file mentions it.
 
 ## Current priority thread (update each session)
 
@@ -179,7 +179,7 @@ This project is governed by the **[MAIA Oath](./docs/canon/MAIA_OATH.md)**. Any 
 - **No CDN/proxy middlemen** (Cloudflare) doing MITM on traffic
 
 ### What we DO use
-- **Production host**: **minisforum** (LAN: `192.168.0.104`), accessed via `ssh soullab@minisforum`. Running Docker + **Caddy** (auto TLS via Let's Encrypt).
+- **Production host**: **minisforum** (LAN IP must be verified live; `192.168.4.38` was observed 2026-10-17, not guaranteed now), accessed via `ssh soullab@minisforum` after verifying host identity. Running Docker + **Caddy** (auto TLS via Let's Encrypt).
 - **Public DNS for `soullab.life`** routes to the LAN's public IP → router forwards :443/:80 to minisforum. Mac Studio is **not** in the public traffic path.
 - **Domain**: `soullab.life` (apex), `api.soullab.life`, `oldhead.soullab.life`, etc.
 - **Reverse proxy**: **Caddy** in Docker container (`maia-caddy`) on minisforum.
@@ -229,7 +229,7 @@ curl -k https://soullab.life/api/health
   # 1. Container freshness
   ssh soullab@minisforum 'docker inspect maia-sovereign --format "{{.Created}}"'
 
-  # 2. LAN IP sanity (must match router port-forward target, expected 192.168.0.104)
+  # 2. LAN IP sanity (verify live DHCP lease, host identity and router forwarding; no fixed expected address)
   ssh soullab@minisforum 'hostname -I'
 
   # 3. Public reachability (external path through DNS + router forward)
@@ -238,7 +238,7 @@ curl -k https://soullab.life/api/health
   # 4. Provenance — what commit is actually live (must be the SHA you deployed, NOT "unknown")
   ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'
   ```
-  `Created` must show a timestamp under a minute old. `hostname -I` must show `192.168.0.104` as the LAN IP; if it shows anything else, the router's port-forward is pointing at a stale IP and external/iOS traffic will silently fail (see the LAN IP drift trap above). `/api/health` must return fresh JSON with `uptime` near zero. `printenv GIT_COMMIT` must return the short SHA you deployed.
+  `Created` should show a recent timestamp only after a fresh container swap. `hostname -I` gives the current LAN address, which must be compared with the router's DHCP lease, :80/:443 forwarding destination and Caddy's LAN allowlist; a different address alone does not prove external reachability failed. Neither `192.168.0.104` nor the `192.168.4.38` observed on 2026-10-17 is a permanent rule. After a fresh swap, `/api/health` should return fresh JSON with `uptime` near zero. `printenv GIT_COMMIT` must return the authorized SHA deployed.
 
   **Diagnostic — `GIT_COMMIT=unknown` does NOT imply missing provenance wiring.** The chain is already complete: Dockerfile (`ENV GIT_COMMIT=${GIT_COMMIT}`) ← compose (`build.args.GIT_COMMIT`) ← deploy (`scripts/deploy-production.sh` exports it; the quick command must prefix it). `unknown` means the deploy route *bypassed* that chain — almost always the quick command run **without** the `GIT_COMMIT=$(git rev-parse --short HEAD)` prefix. So if you see `unknown`, first verify **which deploy path was used** before suspecting the build-arg wiring. **Second cause (2026-09-03): the image can be stamped while the container is not** — compare `docker image inspect maia-sovereign:current` against `docker inspect maia-sovereign` `Config.Env`; a runtime `environment: GIT_COMMIT` override in a stale checkout compose rewrites the image's identity at `up`. The repaired gate refuses that override and verifies both channels.
 - CI deploys are disabled (self-hosted runner not yet configured).
