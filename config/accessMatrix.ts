@@ -564,6 +564,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/members/register', public: true, notes: 'Register member' },
   { exact: '/api/members/register-email', public: true, notes: 'Register via magic link (no passkey)' },
   { exact: '/api/members/signin', public: true, notes: 'Sign in' },
+  // Class A: logout must remain reachable when an auth cookie is expired,
+  // revoked or missing. The handler enforces exact Origin/header CSRF policy
+  // and durable session revocation. NOT a prefix-wide members API grant.
+  { exact: '/api/members/signout', public: true, notes: 'Exact sign-out endpoint — CSRF/Origin and session revocation enforced inside POST handler' },
   { exact: '/api/auth/refresh-and-redirect', public: true, notes: 'Refresh session cookies and redirect' },
   { exact: '/api/practitioners/check', public: true, notes: 'Check practitioner status' },
   { exact: '/api/commons/contributions', public: true, notes: 'GET public contributions' },
