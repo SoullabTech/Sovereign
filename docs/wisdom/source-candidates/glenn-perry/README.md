@@ -14,6 +14,10 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## Platform placement decision — Wisdom is the doorway
+
+[Source-grounded placement audit (2026-10-18)](./PLATFORM-PLACEMENT_WISDOM-KEEPERS-GATHERING_DECISION-CANDIDATE_20261018.md): Put future **Gather Together** discovery inside existing `/wisdom-keepers/wisdom`, let approved invited members gather in consent-scoped `/commons/circles/[circleId]`, keep Studio's Groups/meeting control as human host operations, and reuse the already-built on-platform hybrid service only after **actual multiperson/video and access acceptance**. Master/keeper `/fields/[field]/with-others` is a future specifically approved human home, currently a placeholder. Circle API/UI are founder-only today; there is no authorized beta cohort gate or real event. Historical `/commons/fields` routes are absent from current canonical tree. **Design only; no app, rights, groups, roles or production changes.**
+
 ## Gathering direction — Online first, then hybrid (Stage G)
 
 **Founder direction accepted for preparation, not event creation.** Start with a private online Wisdom Circle; extend to human study gatherings and keeper-hosted online experiences only by explicit keeper/member choice. Later, introduce local and remote hybrid meetings, workshops and retreats after proving genuine remote participation parity, sound and privacy.
