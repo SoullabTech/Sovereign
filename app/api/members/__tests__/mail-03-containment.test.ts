@@ -98,6 +98,9 @@ beforeEach(() => {
   mockSend.mockResolvedValue({ data: { id: 'provider-id' }, error: null });
   mockCheckRateLimit.mockResolvedValue({ allowed: true });
   mockQuery.mockImplementation(async (sql: string) => {
+    if (/UPDATE\s+members[\s\S]*SET\s+email_verification_token/i.test(sql)) {
+      return { rows: [{ id: MEMBER.id }] };
+    }
     if (/from\s+members\s+where\s+id\s*=/i.test(sql)) return { rows: [MEMBER] };
     if (/from\s+members\s+where\s+lower\(email\)/i.test(sql)) return { rows: [MEMBER] };
     return { rows: [] };
@@ -156,6 +159,24 @@ describe('POST /api/members/send-verification — the destination is the record'
 
     expect(res.status).toBe(429);
     expect(mockSend).not.toHaveBeenCalled();
+  });
+
+  it('refuses when the stored email changes between lookup and verification-token write', async () => {
+    mockQuery.mockImplementation(async (sql: string) => {
+      if (/from\s+members\s+where\s+id\s*=/i.test(sql)) return { rows: [MEMBER] };
+      if (/UPDATE\s+members[\s\S]*SET\s+email_verification_token/i.test(sql)) {
+        return { rows: [] }; // concurrent member email change
+      }
+      return { rows: [] };
+    });
+    const res = await sendVerificationPOST(
+      req('/api/members/send-verification', { memberId: MEMBER.id, email: MEMBER.email }),
+    );
+    expect(res.status).toBe(409);
+    expect(mockSend).not.toHaveBeenCalled();
+    const write = mockQuery.mock.calls.find(([sql]) => /SET\s+email_verification_token/i.test(String(sql)));
+    expect(String(write?.[0])).toContain('email IS NOT DISTINCT FROM $3');
+    expect(write?.[1]).toEqual(expect.arrayContaining([MEMBER.email]));
   });
 
   it('refuses missing/Resend/memory selection before minting a verification token', async () => {
@@ -258,6 +279,9 @@ describe('the four pinned regression cases', () => {
   it('CASE 4: register-local\'s call still delivers verification, unchanged', async () => {
     const PERSISTED = 'newmember@example.com';
     mockQuery.mockImplementation(async (sql: string) => {
+      if (/UPDATE\s+members[\s\S]*SET\s+email_verification_token/i.test(sql)) {
+        return { rows: [{ id: MEMBER.id }] };
+      }
       if (/from\s+members\s+where\s+id\s*=/i.test(sql)) {
         return { rows: [{ ...MEMBER, email: PERSISTED }] };
       }
