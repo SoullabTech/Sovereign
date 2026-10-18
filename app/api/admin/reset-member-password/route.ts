@@ -26,9 +26,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Fail closed when the independent reset secret is unconfigured.
+    // Fail closed if the separate secret is absent OR was configured to be
+    // the shared admin password. Two equal static values are not two gates.
     const expectedSecret = process.env.ADMIN_RESET_SECRET;
-    if (!expectedSecret) {
+    if (!expectedSecret || expectedSecret === process.env.LABTOOLS_ADMIN_PASSWORD) {
       return NextResponse.json({ error: 'Admin reset not configured' }, { status: 503 });
     }
     const body = await request.json();
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     // bcrypt accepts at most 72 UTF-8 bytes. Reject longer passwords rather
     // than silently truncating two different proposed passwords to one hash.
-    if (newPassword.length < 12 || Buffer.byteLength(newPassword, 'utf8') > 72) {
+    if (Array.from(newPassword).length < 12 || Buffer.byteLength(newPassword, 'utf8') > 72) {
       return NextResponse.json(
         { error: 'Password must be at least 12 characters and at most 72 UTF-8 bytes' },
         { status: 400 }
