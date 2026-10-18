@@ -10,7 +10,7 @@ import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 import {
   buildRecoveryLink, digestRecoveryToken, generateRecoveryToken,
   secureRecoveryOrigin, type RecoveryMode, type RecoveryReason,
-  ADMIN_RECOVERY_EMAIL_LIFETIME_MINUTES, ADMIN_RECOVERY_HANDOFF_LIFETIME_MINUTES,
+  ADMIN_RECOVERY_EMAIL_LIFETIME_MINUTES,
 } from '@/lib/admin/memberRecovery';
 
 export const dynamic = 'force-dynamic';
@@ -61,25 +61,27 @@ export async function POST(req: NextRequest) {
   if (typeof memberId !== 'string' || !MEMBER_UUID.test(memberId)) {
     return reply({ error: 'Select a valid member' }, 400);
   }
-  if (method !== 'email' && method !== 'private_handoff') {
+  // CLASS A beta decision: no out-of-band capabilities may be created,
+  // even with identityVerified=true or a forged/modified client. This refusal
+  // occurs before any token creation, database mutation, or email send.
+  if (method === 'private_handoff') {
+    return reply({ error: 'Private handoff is unavailable during the initial beta' }, 403);
+  }
+  if (method !== 'email') {
     return reply({ error: 'Unsupported recovery method' }, 400);
   }
-  const deliveryMethod: RecoveryMode = method;
-  if (deliveryMethod === 'email' && reason !== 'member_requested') {
-    return reply({ error: 'Select a valid recovery reason' }, 400);
+  if (reason !== 'member_requested' || fields.identityVerified !== undefined) {
+    return reply({ error: 'Only member-requested email recovery is available' }, 400);
   }
-  if (deliveryMethod === 'private_handoff'
-      && (fields.identityVerified !== true || !['email_unavailable', 'verified_in_person'].includes(String(reason)))) {
-    return reply({ error: 'Private handoff requires independent identity verification' }, 400);
-  }
-  const reasonCode = reason as RecoveryReason;
+  const deliveryMethod: RecoveryMode = 'email';
+  const reasonCode: RecoveryReason = 'member_requested';
 
-  // The raw capability is ephemeral server memory, email body, or an explicitly
-  // requested one-time handoff response. It is NEVER inserted into PostgreSQL.
+  // The raw capability is ephemeral server memory sent only to the member's
+  // verified-on-file email via the transactional email provider. It is NEVER
+  // returned to the admin or inserted into PostgreSQL.
   const rawToken = generateRecoveryToken();
   const tokenHash = digestRecoveryToken(rawToken);
-  const lifespan = deliveryMethod === 'email'
-    ? ADMIN_RECOVERY_EMAIL_LIFETIME_MINUTES : ADMIN_RECOVERY_HANDOFF_LIFETIME_MINUTES;
+  const lifespan = ADMIN_RECOVERY_EMAIL_LIFETIME_MINUTES;
   const expiresAt = new Date(Date.now() + lifespan * 60_000);
   let outcome: Decision;
   try {
@@ -112,7 +114,7 @@ export async function POST(req: NextRequest) {
       );
       if (!member.rows.length) return { kind: 'not_found' };
       const email = member.rows[0].email;
-      if (deliveryMethod === 'email' && (!email || !email.trim())) return { kind: 'no_email' };
+      if (!email || !email.trim()) return { kind: 'no_email' };
 
       // At most one usable administrator-issued token per member.
       await tx.query(
@@ -127,7 +129,7 @@ export async function POST(req: NextRequest) {
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
           memberId, founder.memberId, tokenHash, deliveryMethod,
-          reasonCode, deliveryMethod === 'private_handoff' ? 'handoff_issued' : 'pending',
+          reasonCode, 'pending',
           expiresAt,
         ],
       );
@@ -146,11 +148,6 @@ export async function POST(req: NextRequest) {
   }
 
   const link = buildRecoveryLink(rawToken);
-  if (deliveryMethod === 'private_handoff') {
-    // Visible only once in an explicit founder-verified session response.
-    // Do not persist in browser storage, telemetry, history or audit logs.
-    return reply({ success: true, method: 'private_handoff', recoveryLink: link, expiresInMinutes: lifespan });
-  }
 
   // Email provider success means ACCEPTED FOR DELIVERY, not confirmed receipt.
   // A pending token cannot be redeemed. Do not report success without a
