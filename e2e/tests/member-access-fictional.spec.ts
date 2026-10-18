@@ -20,7 +20,7 @@ const OTHER = {
   username: 'fixture_two', email: 'two@example.invalid', admin_role: null,
 };
 
-type Capture = { pathname: string; request: Record<string, unknown>; sharedPasswordHeader: string | null };
+type Capture = { pathname: string; request: Record<string, unknown>; sharedPasswordHeader?: string | null };
 type Harness = { issued: Capture[]; redeemed: Capture[] };
 
 async function setMock(route: Route, status: number, data: unknown) {
@@ -93,6 +93,27 @@ async function fictional(page: Page, options: { founder?: boolean; issueFailure?
   });
   return capture;
 }
+
+test.describe('actual server-side Admin page gate — fictional database', () => {
+  test('redirects a browser without a verified server session to sign-in', async ({ page }) => {
+    // This request is NOT mocked: the real Next.js proxy decides whether
+    // the Admin page can render, using its ephemeral fixture DB.
+    await page.goto('/admin/member-access');
+    await expect(page).toHaveURL(/\/signin\?/);
+  });
+
+  test('rejects a forged cookie with no matching session row', async ({ page }) => {
+    await page.context().addCookies([{
+      name: 'maia_session',
+      value: 'fictional-forged-session-token',
+      url: 'http://localhost:3000',
+      httpOnly: true,
+      sameSite: 'Lax',
+    }]);
+    await page.goto('/admin/member-access');
+    await expect(page).toHaveURL(/\/signin\?/);
+  });
+});
 
 test.describe('Admin Member Access — fictional member workflow', () => {
   test('selects the right member, requires confirmation, and reports email acceptance without a link', async ({ page }) => {
