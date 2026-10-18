@@ -114,6 +114,32 @@ test.describe('real strict access policy — default-OFF recovery', () => {
     expect(await response.json()).toMatchObject({ error: 'Member Access recovery has not been enabled' });
   });
 
+  test('actual owner-gated member directory requires validated admin session', async ({ page }) => {
+    const endpoint = '/api/admin/members';
+    const denied = await page.request.get(endpoint);
+    expect(denied.status()).toBe(401);
+
+    // A cookie alone is not the grant. Its value resolves to an ephemeral
+    // CI auth_sessions row with a database-backed founder admin_role.
+    await page.context().addCookies([{
+      name: 'maia_session',
+      value: 'fictional-founder-session',
+      url: 'http://localhost:3000',
+      httpOnly: true,
+      sameSite: 'Lax',
+    }]);
+    const allowed = await page.request.get(endpoint);
+    expect(allowed.status()).toBe(200);
+    const body = await allowed.json();
+    expect(body.viewerRole).toBe('founder');
+    expect(body.members).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        username: 'fixture_founder',
+        email: 'founder@example.invalid',
+      }),
+    ]));
+  });
+
   test('anonymous recovery issuance is stopped by the strict admin proxy', async ({ request }) => {
     const response = await request.post('/api/admin/members/recovery', {
       data: { memberId: MEMBER_ID, method: 'email', reason: 'member_requested' },
