@@ -26,6 +26,15 @@ try {
       revoked boolean NOT NULL DEFAULT FALSE,
       expires_at timestamptz NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS admin_access_log (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      via text NOT NULL,
+      member_id uuid REFERENCES members(id) ON DELETE SET NULL,
+      admin_role text,
+      route text NOT NULL,
+      ip text NOT NULL,
+      created_at timestamptz DEFAULT NOW()
+    );
     INSERT INTO members(id,name,username,email,tier,roles,admin_role)
     VALUES (
       'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
