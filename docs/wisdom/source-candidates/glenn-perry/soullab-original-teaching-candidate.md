@@ -122,6 +122,16 @@ One possible comparison involves the difference between **describing** an emotio
 
 *Why this is different:* the member's choice immediately overrides the proposed interpretive frame.
 
+## Read and study with the original author
+
+This Soullab commentary is not a substitute for Glenn Perry's own writing or teaching. Where a person wants to deepen an astrological question, an appropriate form of reciprocity is to **make the original wisdom keeper easy to find and support**, without implying they endorse MAIA or have licensed their texts for AI retrieval.
+
+**Glenn Perry’s official sites:** [his personal website](https://aaperry.com/) includes writing and publications; the [Academy of AstroPsychology](https://astropsychology.org/) offers his school’s training.
+
+**The two works guiding this candidate:** [*An Introduction to AstroPsychology*](https://aaperry.com/product/an-introduction-to-astropsychology/) and [*Depth Analysis of the Natal Chart*](https://aaperry.com/product/depth-analysis-of-the-natal-chart-advanced-therapeutic-astrology/). Readers can also explore [all his books](https://aaperry.com/astrology-books/) and [his concepts-and-theory essay index](https://aaperry.com/concepts-and-theory/).
+
+These are ordinary external links to the author’s and Academy’s sites. Visiting, reading, purchasing or enrolling remains the person's choice. Soullab claims **no affiliation, endorsement, text-embedding permission or license** merely by referencing these works. Attribution cannot turn an interpretive astrological theory into clinical evidence, and an external source never overrules a member’s own meaning.
+
 ## Source and epistemic ledger
 
 - **Perry's explicit proposals:** astrological symbols may represent psychological needs/functions, life-script structure, developmental symbolism, and conflicting psychic tendencies. These propositions come from his writings and must always be attributed.
