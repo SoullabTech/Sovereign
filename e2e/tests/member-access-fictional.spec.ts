@@ -12,11 +12,16 @@ const OTHER_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 const TOKEN = 'a'.repeat(64);
 const MEMBER = {
   id: MEMBER_ID, name: 'Fictional Member One',
-  username: 'fixture_one', email: 'one@example.invalid', admin_role: null,
+  username: 'fixture_one', email: 'one@example.invalid', admin_role: null, recovery_email_verified: true,
 };
 const OTHER = {
   id: OTHER_ID, name: 'Fictional Member Two',
-  username: 'fixture_two', email: 'two@example.invalid', admin_role: null,
+  username: 'fixture_two', email: 'two@example.invalid', admin_role: null, recovery_email_verified: true,
+};
+const UNVERIFIED = {
+  id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', name: 'Fictional Unverified Member',
+  username: 'fixture_unverified', email: 'unverified@example.invalid',
+  admin_role: null, recovery_email_verified: false,
 };
 
 type Capture = { pathname: string; request: Record<string, unknown>; sharedPasswordHeader?: string | null };
@@ -65,7 +70,7 @@ async function fictional(page: Page, options: { founder?: boolean; issueFailure?
     if (route.request().headers()['x-admin-password']) {
       return setMock(route, 403, { error: 'Shared password must not be forwarded by Member Access' });
     }
-    return setMock(route, 200, { members: [MEMBER, OTHER], viewerRole: 'founder' });
+    return setMock(route, 200, { members: [MEMBER, OTHER, UNVERIFIED], viewerRole: 'founder' });
   });
   await page.route('**/api/admin/members/recovery', async route => {
     const payload = route.request().postDataJSON() as Record<string, unknown>;
@@ -190,6 +195,17 @@ test.describe('Admin Member Access — fictional member workflow', () => {
       memberId: OTHER_ID, method: 'email', reason: 'member_requested',
     });
     expect(JSON.stringify(h.issued[0].request)).not.toContain('password');
+  });
+
+  test('blocks unverified current-email accounts before recovery API calls', async ({ page }) => {
+    const h = await fictional(page, { founder: true });
+    await page.goto('/admin/member-access');
+    await page.getByRole('textbox', { name: 'Search member name or email' }).fill('unverified@example.invalid');
+    await page.getByRole('button', { name: /Fictional Unverified Member/ }).click();
+    await expect(page.getByRole('alert').filter({ hasText: 're-verifies their current email' })).toBeVisible();
+    await page.getByRole('checkbox', { name: /correct member and the request is authorized/ }).check();
+    await expect(page.getByRole('button', { name: 'Initiate recovery' })).toBeDisabled();
+    expect(h.issued).toHaveLength(0);
   });
 
   test('initial beta has no private handoff or copyable recovery link', async ({ page }) => {
