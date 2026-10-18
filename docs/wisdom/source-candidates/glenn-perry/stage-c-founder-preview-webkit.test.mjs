@@ -57,6 +57,7 @@ test.before(async()=>{
     'lib/maia/knowledge/perryClientPostureGate.ts',
     'lib/maia/knowledge/perryWisdomKeeperLinks.ts',
     'lib/maia/knowledge/wisdomFirstCircleRehearsal.ts',
+    'lib/maia/knowledge/wisdomGatheringDeliveryPreview.ts',
     'lib/sanctuary/currentClientPosture.ts',
   ]) copySource(rel);
 
@@ -390,6 +391,54 @@ test('mobile WebKit rehearsal remains readable and keyboard-accessible',async()=
     assert.equal(metrics.steps.length,6);
     assert.ok(metrics.steps.every(x=>x>=100),JSON.stringify(metrics));
     assert.ok(metrics.scroll<=metrics.viewport+2,JSON.stringify(metrics));
+    assert.deepEqual(external,[]);
+    assert.deepEqual(errors,[]);
+  }finally{await page.close();}
+});
+
+
+test('WebKit founder format comparison begins online and moves to future hybrid without services',async()=>{
+  const {page,errors,external}=await newPage();
+  try{
+    const section=page.getByTestId('wisdom-gathering-delivery-preview');
+    await section.waitFor({state:'visible'});
+    assert.equal(await page.getByTestId('format-online').getAttribute('aria-pressed'),'true');
+    assert.equal(await page.getByTestId('format-hybrid').getAttribute('aria-pressed'),'false');
+    assert.match(await page.getByTestId('delivery-selected').innerText(),/Begin together online/);
+    assert.match(await page.getByTestId('delivery-selected').innerText(),/Private entry/);
+    assert.match(await page.getByTestId('delivery-not-live').innerText(),/No video provider selected/);
+    await page.getByTestId('format-hybrid').click();
+    assert.equal(await page.getByTestId('format-hybrid').getAttribute('aria-pressed'),'true');
+    const hybridText=await page.getByTestId('delivery-selected').innerText();
+    for(const word of ['Gather locally and remotely','Two human stewards','Equal contribution',
+      'Visible consent','A tested bridge','Later phase']) assert.ok(hybridText.includes(word),word);
+    assert.match(await page.getByTestId('delivery-not-live').innerText(),/No venue, meeting/);
+    assert.equal(await section.locator('form').count(),0);
+    assert.equal(await section.locator('input').count(),0);
+    assert.equal(await section.locator('a').count(),0);
+    await page.getByTestId('format-online').click();
+    assert.match(await page.getByTestId('delivery-selected').innerText(),/Begin together online/);
+    assert.deepEqual(external,[]);
+    assert.deepEqual(errors,[]);
+  }finally{await page.close();}
+});
+
+test('mobile WebKit hybrid concept remains accessible and causes no external requests',async()=>{
+  const {page,errors,external}=await newPage({width:390,height:844});
+  try{
+    const section=page.getByTestId('wisdom-gathering-delivery-preview');
+    await section.scrollIntoViewIfNeeded();
+    await page.getByTestId('format-hybrid').focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await page.getByTestId('format-hybrid').getAttribute('aria-pressed'),'true');
+    const geometry=await page.evaluate(()=>({
+      width:document.documentElement.scrollWidth,viewport:window.innerWidth,
+      boxes:[...document.querySelectorAll('[data-testid="wisdom-gathering-delivery-preview"] .deliveryCell')]
+        .map(x=>Math.round(x.getBoundingClientRect().width))
+    }));
+    assert.equal(geometry.boxes.length,4);
+    assert.ok(geometry.boxes.every(x=>x>=280),JSON.stringify(geometry));
+    assert.ok(geometry.width<=geometry.viewport+2,JSON.stringify(geometry));
     assert.deepEqual(external,[]);
     assert.deepEqual(errors,[]);
   }finally{await page.close();}
