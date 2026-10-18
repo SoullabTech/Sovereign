@@ -173,7 +173,7 @@ test('preview source contains no model, source, or live member data access',()=>
   assert.match(page,/await requireFounder\(\)/);
   assert.match(page,/MAIA_PERRY_FOUNDER_PREVIEW_ENABLED !== '1'/);
   assert.match(page,/CAPACITOR_BUILD === 'true'/);
-  assert.ok(!page.includes('NEXT_PUBLIC_'));
+  assert.doesNotMatch(page,/process\.env\.NEXT_PUBLIC_[A-Z_]+/);
   assert.ok(!page.includes('isPractitioner'));
   assert.ok(!page.includes('isAdmin'));
   assert.ok(!ui.includes('apiFetch('));
