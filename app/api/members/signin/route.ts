@@ -12,7 +12,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { verifyPassword } from '@/lib/auth/passwordUtils';
-import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
+import { createSession, setSessionCookie, setAccessCookies, revokeSession } from '@/lib/auth/serverSessions';
+import { cookies } from 'next/headers';
 import { logAuthEvent } from '@/lib/security/authAudit';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import {
@@ -113,8 +114,9 @@ export async function POST(request: NextRequest) {
     // Reset rate limit on success
     await resetRateLimit(clientIP, 'ip', ENDPOINT);
 
-    // Create session
-    let session;
+    // Password verification is not authentication until a durable session
+    // has been created AND its response cookies have been issued.
+    let session: Awaited<ReturnType<typeof createSession>> | undefined;
     try {
       session = await createSession({
         memberId: member.id,
@@ -122,16 +124,53 @@ export async function POST(request: NextRequest) {
         userAgent
       });
       await setSessionCookie(session.sessionToken, session.expiresAt);
-      // Set access cookies for middleware (tier, roles, member_id)
+      // These are advisory to clients. Server auth still validates maia_session.
       await setAccessCookies(
         member.id,
         member.tier || 'free',
         member.roles || ['member'],
         session.expiresAt
       );
-    } catch (sessionError) {
-      console.error('[PasswordSignin] Failed to create session:', sessionError);
-      // Continue without session - still return member data
+    } catch {
+      // No login success without a session. If issuance partially completed,
+      // compensate by revoking the created session and expiring cookies.
+      // Do not print raw errors or a token to an operational log.
+      if (session) {
+        const revoked = await revokeSession(session.id, 'incomplete_signin');
+        if (!revoked) {
+          console.error('[PasswordSignin] Session compensation unconfirmed');
+        }
+        try {
+          const jar = await cookies();
+          const expired = {
+            path: '/', sameSite: 'lax' as const,
+            secure: process.env.NODE_ENV === 'production',
+            expires: new Date(0), httpOnly: true,
+          };
+          for (const name of ['maia_session', 'maia_member_id',
+                              'maia_tier', 'maia_roles']) {
+            jar.set(name, '', expired);
+          }
+        } catch {
+          console.error('[PasswordSignin] Cookie cleanup unconfirmed');
+        }
+      }
+      await logAuthEvent({
+        action: 'password_signin', memberId: member.id,
+        result: 'failure', errorMessage: 'Session issuance unavailable',
+      }, request);
+      return NextResponse.json(
+        { success: false, error: 'Unable to establish an authenticated session' },
+        { status: 503, headers: { 'Cache-Control': 'no-store' } }
+      );
+    }
+
+    if (!session) {
+      // Defensive assertion: never emit a successful sign-in without a session.
+      return NextResponse.json(
+        { success: false, error: 'Unable to establish an authenticated session' },
+        { status: 503 }
+      );
     }
 
     // Update last sign in
