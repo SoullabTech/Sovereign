@@ -14,6 +14,18 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## Stage M — Full protected Next.js 16 offline build preflight (HOLD)
+
+A **complete protected source archive** (`6a144edabc686afc9b99828726c214dc7800158f`) was created in a disposable Mac Studio directory and the three research-source Gather Together files were added **without changing the active worktree**. All three existing pre-build validators passed with outbound network denied.
+
+The first full Next16 Webpack build was blocked by Google Font downloads, as expected under network isolation. A **test-only offline font fixture** moved compilation past that boundary: **Webpack compiled with warnings**, but the full application **failed at page-data collection** due to a missing generated Prisma client (`.prisma/client/default`) in the reused isolated dependencies. The optional Capacitor contacts import also produced an unrelated module warning. Prisma's generator attempted to download an engine and was blocked, so no live environment or shared dependency was modified. Full-app TypeScript verification was **not** established.
+
+- [Stage M full-app build custody, failure and next gating](./STAGE-M_FULL-NEXT16-CANONICAL-OFFLINE-BUILD-PREFLIGHT_20261018.md): exact source SHA, network sandbox, offline font fixture, compilation evidence, Prisma blocker and cleanup.
+- The disposable `.next` build output (~4.9 GB) was **deleted** to protect the Mac Studio's disk; build logs/source remain only in isolated `/tmp`.
+- The running local founder review at `http://127.0.0.1:3817/fixture` remains unchanged. No staging account, Circle, meeting, production or beta was activated.
+
+**Next technical gate:** a properly isolated *offline* generated Prisma client/dependency set, then a fresh disk-budgeted, network-denied full-app compile; real founder login still requires independent authorization and release review.
+
 ## Stage L — Current protected Next.js 16 proxy and session-chain integration
 
 **Additional current-version verification; not a production release.** The protected reference now declares **Next.js 16.3.8** with `proxy.ts` instead of the old Next.js 15 middleware entry. An independent, **real Next.js 16 optimized Webpack build and WebKit browser acceptance** ran the exact protected `proxy.ts`, access matrix, identity-stripping module, session validator and founder allowlist alongside the actual staged Gather Together page.
