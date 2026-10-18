@@ -9,7 +9,8 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Loader2, ShieldCheck, AlertCircle, Search } from 'lucide-react';
+import { Loader2, ShieldCheck, AlertCircle, Search, KeyRound } from 'lucide-react';
+import Link from 'next/link';
 import { adminFetch } from '@/lib/admin/adminFetch';
 
 type AdminRole = 'founder' | 'cto' | 'practitioner_admin' | 'operations' | 'tester';
@@ -135,6 +136,24 @@ export default function AdminManagementSection() {
         <p className="mt-1 text-sm text-slate-400">
           Grant or revoke platform admin access. Only owners (founder / CTO) can manage admins.
         </p>
+      </div>
+
+      <div className="rounded-lg border border-amber-500/25 bg-slate-900/45 px-4 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-semibold text-white">
+              <KeyRound className="h-4 w-4 text-amber-400" /> Member Access
+            </div>
+            <p className="mt-1 max-w-xl text-xs text-slate-400">
+              Start governed account recovery without seeing or choosing a member password.
+              Requires a verified founder member session; the shared admin password is not enough.
+            </p>
+          </div>
+          <Link href="/admin/member-access"
+            className="inline-flex shrink-0 rounded-md border border-amber-500/60 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-500/10">
+            Open Member Access
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-lg border border-slate-800 bg-slate-900/30 px-4 py-3 text-xs text-slate-400">
