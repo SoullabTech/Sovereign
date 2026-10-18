@@ -11,10 +11,11 @@ CREATE TABLE IF NOT EXISTS admin_member_recovery_tokens (
   member_id uuid NOT NULL REFERENCES members(id) ON DELETE CASCADE,
   issued_by uuid NOT NULL REFERENCES members(id) ON DELETE CASCADE,
   token_hash char(64) NOT NULL UNIQUE,
-  delivery_method text NOT NULL CHECK (delivery_method IN ('email', 'private_handoff')),
-  reason_code text NOT NULL CHECK (reason_code IN ('member_requested', 'email_unavailable', 'verified_in_person')),
+  -- Email-only beta. Other delivery modes require a NEW reviewed migration.
+  delivery_method text NOT NULL CHECK (delivery_method = 'email'),
+  reason_code text NOT NULL CHECK (reason_code = 'member_requested'),
   delivery_status text NOT NULL DEFAULT 'pending'
-    CHECK (delivery_status IN ('pending', 'provider_accepted', 'handoff_issued', 'failed')),
+    CHECK (delivery_status IN ('pending', 'provider_accepted', 'failed')),
   created_at timestamptz NOT NULL DEFAULT now(),
   expires_at timestamptz NOT NULL,
   redeemed_at timestamptz,
