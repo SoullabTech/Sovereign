@@ -28,6 +28,16 @@ describe('member recovery strict routing', () => {
     expect(checkAccess('/api/members/admin-recovery', 'free', [], false).allowed).toBe(true);
   });
 
+  it('allows the existing member directory only to authenticated admins', () => {
+    const route = '/api/admin/members';
+    expect(matchRule(route)?.public).not.toBe(true);
+    expect(checkAccess(route, 'free', [], false).allowed).toBe(false);
+    expect(checkAccess(route, 'free', ['member'], true).allowed).toBe(false);
+    expect(checkAccess(route, 'free', ['admin'], true).allowed).toBe(true);
+    // Independently of this proxy rule, the existing route checks
+    // checkAdminAuth(req, ['founder','cto']) before returning any member rows.
+  });
+
   it('requires authenticated admin role for issuer at the proxy', () => {
     const route = '/api/admin/members/recovery';
     const rule = matchRule(route);
