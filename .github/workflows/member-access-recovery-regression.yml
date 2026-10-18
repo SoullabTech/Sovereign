@@ -38,3 +38,38 @@ jobs:
         run: >-
           npx --no-install jest --config jest.config.js --runInBand --runTestsByPath
           app/api/admin/members/recovery/__tests__/memberAccessRecovery.test.ts
+
+  ephemeral-postgres-witness:
+    name: Fictional PostgreSQL atomicity and concurrent replay
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: 'true'
+      DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:5432/postgres'
+      LABTOOLS_ADMIN_PASSWORD: ''
+      ADMIN_RESET_SECRET: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: Run Class A source against temporary fictional PostgreSQL
+        run: >-
+          npx --no-install jest --config jest.config.js --runInBand --runTestsByPath
+          app/api/admin/members/recovery/__tests__/memberAccessPostgresWitness.test.ts
