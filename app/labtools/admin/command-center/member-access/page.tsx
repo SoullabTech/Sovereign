@@ -182,7 +182,7 @@ export default function MemberAccessPage() {
           <p className="flex items-center gap-2 text-sm font-semibold text-amber-300"><AlertTriangle className="h-4 w-4" /> One-time private link</p>
           <p className="break-all text-xs text-slate-300" aria-label="Temporary recovery link">{handoffLink}</p>
           <button type="button" className="inline-flex gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm hover:bg-slate-600"
-            onClick={async () => { try { await navigator.clipboard.writeText(handoffLink); setMessage('Copied. Deliver securely to the verified member.'); } catch { setError('Clipboard unavailable. Use a secure handoff method.'); } }}>
+            onClick={async () => { try { await navigator.clipboard.writeText(handoffLink); setHandoffLink(null); setMessage('Link copied and removed from the screen. Deliver it securely to the verified member.'); } catch { setError('Clipboard unavailable. Use a secure handoff method.'); } }}>
             <Copy className="h-4 w-4" /> Copy once
           </button>
           <button type="button" className="ml-3 text-sm text-slate-400 underline" onClick={() => setHandoffLink(null)}>Dismiss link</button>
