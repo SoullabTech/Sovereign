@@ -348,5 +348,55 @@
         "edition": "2021 hardcover catalog record, needs physical verification"
       }
     ]
+  },
+  "wisdom_keeper_discovery": {
+    "status": "outbound_author_navigation_only",
+    "author": "Glenn Perry, Ph.D.",
+    "primary_website": "https://aaperry.com/",
+    "teaching_institution": "https://astropsychology.org/",
+    "rationale": "Soullab explicitly attributes source lineage and helps people visit, read, study, and support original wisdom keepers directly.",
+    "endorsement": "No author affiliation, sponsorship, institutional review, or endorsement of Soullab/MAIA is claimed.",
+    "reciprocity": "Link to original, author-maintained websites and publication pages; no paywall bypass, unauthorized redistribution, scraped body text, AI training, or affiliate arrangement.",
+    "member_choice": "References must be optional, source-named, and activated by member interest; ordinary conversation need not impose a symbolic tradition.",
+    "rights_boundary": "Public outbound hyperlinks and original descriptions do not confer text storage, embedding, licensing, or model-training rights.",
+    "verified_on": "2026-10-17",
+    "resources": [
+      {
+        "id": "author-website",
+        "kind": "author",
+        "label": "Glenn Perry’s website",
+        "url": "https://aaperry.com/"
+      },
+      {
+        "id": "academy",
+        "kind": "academy",
+        "label": "Academy of AstroPsychology",
+        "url": "https://astropsychology.org/"
+      },
+      {
+        "id": "introduction-book",
+        "kind": "book",
+        "label": "An Introduction to AstroPsychology",
+        "url": "https://aaperry.com/product/an-introduction-to-astropsychology/"
+      },
+      {
+        "id": "depth-analysis-book",
+        "kind": "book",
+        "label": "Depth Analysis of the Natal Chart",
+        "url": "https://aaperry.com/product/depth-analysis-of-the-natal-chart-advanced-therapeutic-astrology/"
+      },
+      {
+        "id": "books-collection",
+        "kind": "collection",
+        "label": "All books by Glenn Perry",
+        "url": "https://aaperry.com/astrology-books/"
+      },
+      {
+        "id": "essays-collection",
+        "kind": "collection",
+        "label": "Articles, concepts and theory",
+        "url": "https://aaperry.com/concepts-and-theory/"
+      }
+    ]
   }
 }
