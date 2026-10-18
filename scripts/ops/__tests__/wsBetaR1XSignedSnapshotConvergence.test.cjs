@@ -21,13 +21,23 @@ const custody=file('scripts/ops/wsBetaR7019IFictionalCensusAuthority.mjs');
 const checker=file('scripts/ops/wsBetaR7019CWholeWriterGate.mjs');
 const ledger=JSON.parse(file('scripts/ops/wsBetaR7019CWholeWriterCoverageLedger.json'));
 
-test('only pinned R1W + R70.19I source parentage may qualify this review',()=>{
+test('pinned R1W + R70.19I merge plus ONLY reviewed three-file readiness child may qualify',()=>{
  const commit=git('rev-parse','HEAD');
  if(commit===R1W){
   assert.equal(git('rev-parse','MERGE_HEAD'),R7019I);
   assert.equal(git('diff','--name-only','--diff-filter=U'),'');
  }else{
-  assert.deepEqual(git('rev-list','--parents','-n1','HEAD').split(' ').slice(1),[R1W,R7019I]);
+  const reviewMerge='7fb1a50b5c53ac18e5f3ffc55b0aff5b52b204d9';
+  assert.deepEqual(git('rev-list','--parents','-n1',reviewMerge).split(' ').slice(1),[R1W,R7019I]);
+  const ancestor=spawnSync('git',['merge-base','--is-ancestor',reviewMerge,commit],
+   {cwd:ROOT,encoding:'utf8',timeout:10000});
+  assert.equal(ancestor.status,0,'exact two-parent R1X ancestry must remain');
+  const changed=git('diff','--name-only',reviewMerge,commit).split('\n').filter(Boolean).sort();
+  assert.deepEqual(changed,[
+   'docs/ops/WS_BETA_R1X_SIGNED_SAME_SNAPSHOT_ERASURE_CONVERGENCE_HOLD_20261018.md',
+   'scripts/ops/__tests__/wsBetaR1XSignedSnapshotConvergence.test.cjs',
+   'scripts/ops/wsBetaR7019IIndependentSignedRestore.py',
+  ].sort(),'only the approved recovery-readiness correction may differ from the joined parent');
  }
 });
 test('R1W signer and signed-only restore code preserved BYTE FOR BYTE from accepted parent',()=>{
