@@ -122,10 +122,12 @@ test('any server flag other than exact 1 denies without session lookup',async()=
   }
 });
 
-test('native static-export posture refuses even if founder and flag enabled',async()=>{
-  const r=await invokePage({native:'true',session:{memberId:'fictional-founder'}});
-  assert.equal(r.allowed,false);
-  assert.equal(r.authCalls,0);
+test('native static-export posture refuses for the actual 1 and true encodings',async()=>{
+  for (const native of ['1','true']) {
+    const r=await invokePage({native,session:{memberId:'fictional-founder'}});
+    assert.equal(r.allowed,false,native);
+    assert.equal(r.authCalls,0);
+  }
 });
 
 test('unauthenticated requests cannot access despite enabled preview flag',async()=>{
@@ -173,6 +175,7 @@ test('preview source contains no model, source, or live member data access',()=>
   assert.match(page,/await requireFounder\(\)/);
   assert.match(page,/MAIA_PERRY_FOUNDER_PREVIEW_ENABLED !== '1'/);
   assert.match(page,/CAPACITOR_BUILD === 'true'/);
+  assert.match(page,/CAPACITOR_BUILD === '1'/);
   assert.doesNotMatch(page,/process\.env\.NEXT_PUBLIC_[A-Z_]+/);
   assert.ok(!page.includes('isPractitioner'));
   assert.ok(!page.includes('isAdmin'));
@@ -183,6 +186,15 @@ test('preview source contains no model, source, or live member data access',()=>
   assert.ok(ui.includes('preparePerryClientSelection('));
   assert.ok(ui.includes('FICTIONAL'));
   assert.ok(!ui.includes('setItem('));
+});
+
+test('native patcher excludes dynamic server founder preview from iPhone export',()=>{
+  const patcher=source('scripts/capacitor-patch-routes.sh');
+  const page=source('app/maia/perry-lens-preview/page.tsx');
+  assert.ok(page.includes("export const dynamic = 'force-dynamic'"));
+  assert.ok(patcher.includes('hide_incompatible_pages()'));
+  assert.ok(patcher.includes("export const dynamic.*=.*['\\\"]force-dynamic['\\\"]"));
+  assert.ok(patcher.includes('MOBILE_MAIA_KEEP=()'));
 });
 
 test('the regular MAIA page is not linked to the review route',()=>{
