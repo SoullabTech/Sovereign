@@ -36,6 +36,7 @@ export default function MemberAccessPage() {
   const [selected, setSelected] = useState<MemberRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmed, setConfirmed] = useState(false);
+  const [verifyConfirmed, setVerifyConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -71,10 +72,50 @@ export default function MemberAccessPage() {
     setError('');
     setMessage('');
     setConfirmed(false);
+    setVerifyConfirmed(false);
+  }
+
+  async function issueVerification() {
+    if (!selected || !selected.email || selected.recovery_email_verified === true
+        || !verifyConfirmed || submitting) return;
+    setSubmitting(true);
+    setError('');
+    setMessage('');
+    try {
+      const res = await founderSessionFetch('/api/admin/members/recovery/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ memberId: selected.id, confirmed: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (res.status === 403 && typeof data.error === 'string' && data.error.includes('founder')) {
+          throw new Error('A verified founder member session is required. The shared admin password cannot send identity mail.');
+        }
+        throw new Error(typeof data.error === 'string' ? data.error : 'Verification could not be initiated');
+      }
+      // An administrator must never receive a bearer from the verification
+      // operation. Provider ACCEPTANCE is not proof the member received it.
+      if (data.method !== 'email' || data.delivery !== 'provider_accepted'
+          || data.verificationRequired !== true
+          || Object.prototype.hasOwnProperty.call(data, 'recoveryLink')
+          || Object.prototype.hasOwnProperty.call(data, 'verificationLink')
+          || Object.prototype.hasOwnProperty.call(data, 'token')) {
+        throw new Error('Unexpected verification response; confirmation withheld.');
+      }
+      setMessage('The SMTP provider accepted the verification email. Delivery is not confirmed. The member must open it and verify their email before recovery can be initiated; refresh this page afterward.');
+      setVerifyConfirmed(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Verification could not be initiated');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function issueRecovery() {
-    if (!selected || !confirmed || submitting) return;
+    if (!selected || !confirmed || submitting || !selected.email
+        || selected.recovery_email_verified !== true) return;
     setSubmitting(true);
     setError('');
     setMessage('');
@@ -173,6 +214,29 @@ export default function MemberAccessPage() {
             </p>
           )}
         </div>
+
+        {selected.email && selected.recovery_email_verified !== true && (
+          <div className="space-y-3 rounded-lg border border-amber-600/40 bg-amber-950/20 p-4">
+            <h3 className="flex items-center gap-2 font-semibold text-amber-200">
+              <Mail className="h-4 w-4" /> Verify the email on file
+            </h3>
+            <p className="text-sm text-slate-300">
+              Send a one-time email verification link to the existing address.
+              This does not change the account password or disclose a link to administrators.
+              The member must confirm the email themselves before recovery becomes available.
+            </p>
+            <label className="flex items-start gap-2 text-sm text-amber-100">
+              <input type="checkbox" checked={verifyConfirmed}
+                onChange={e => setVerifyConfirmed(e.target.checked)} className="mt-1" />
+              I confirm this member requested verification of their email address on file.
+            </label>
+            <button type="button" onClick={issueVerification}
+              disabled={!verifyConfirmed || submitting}
+              className="inline-flex items-center gap-2 rounded-lg border border-amber-500/60 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 disabled:cursor-not-allowed disabled:opacity-40">
+              <Mail className="h-4 w-4" /> {submitting ? 'Sending…' : 'Send verification email'}
+            </button>
+          </div>
+        )}
 
         <label className="flex items-start gap-3 text-sm text-slate-200">
           <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} className="mt-1" />
