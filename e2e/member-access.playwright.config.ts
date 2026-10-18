@@ -26,7 +26,10 @@ export default defineConfig({
     { name: 'fictional-mobile-webkit', use: { ...devices['iPhone 13'] } },
   ],
   webServer: {
-    command: 'npm run dev',
+    // The repo's "npm run dev" intentionally clears DATABASE_URL. Keep our
+    // exact fictional test DB so the real Next proxy can verify the founder
+    // cookie against a real ephemeral auth_sessions row.
+    command: './node_modules/.bin/next dev -p 3000',
     cwd: process.cwd(),
     port: 3000,
     reuseExistingServer: false,
@@ -35,6 +38,7 @@ export default defineConfig({
       CI: 'true',
       NODE_ENV: 'development',
       NEXT_TELEMETRY_DISABLED: '1',
+      DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:5432/postgres',
       MEMBER_ACCESS_RECOVERY_ENABLED: '0',
       LABTOOLS_ADMIN_PASSWORD: '',
       ADMIN_RESET_SECRET: '',
