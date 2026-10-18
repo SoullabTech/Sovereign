@@ -1,0 +1,279 @@
+{
+  "schema": "soullab.keeper-hosted-field.approval-candidate.v0",
+  "status": "research_review_not_ratified",
+  "runtime_enabled": false,
+  "deploy_authorized": false,
+  "founder_scope_authorized": false,
+  "keeper_field_feature_enabled": false,
+  "creator_role_issued": false,
+  "member_facing_access_enabled": false,
+  "invitations_enabled": false,
+  "keeper_contact_automation_enabled": false,
+  "corpus_admission_enabled": false,
+  "keeper_field_not_new_ontology": true,
+  "underlying_field_types": [
+    "dyadic",
+    "circle",
+    "constellation",
+    "interest_commons",
+    "co_lab"
+  ],
+  "proposed_public_label": "Keeper-Hosted Fields",
+  "source_charter": "KEEPER-HOSTED-FIELD_APPROVAL-AND-ENGAGEMENT-CANDIDATE_20261017.md",
+  "related_service": "WISDOM-KEEPERS-COMMONS_SERVICE-CHARTER_CANDIDATE_20261017.md",
+  "cited_canon": [
+    "docs/programme/JARVIS-CIRCLES-01_FOUNDER_RULINGS_2026-09-06.md",
+    "docs/canon/RIGHT_TO_REMAIN_UNPOSSESSED.md",
+    "docs/programme/MAIA-WISDOM-01_R9_AIN_COLLECTIVE_FIELD_2026-09-15.md"
+  ],
+  "reference_keeper": {
+    "name": "Glenn Perry, Ph.D.",
+    "participation": "unaffiliated_reference",
+    "keeper_agreed_to_host": false,
+    "partner_endorsement": false,
+    "source_text_grant": false,
+    "contact_allowed_to_agent": false,
+    "founder_holds_outreach_authority": true,
+    "reference_site": "https://aaperry.com/",
+    "academy_site": "https://astropsychology.org/",
+    "field_id": null,
+    "field_created": false
+  },
+  "approved_field_required_evidence": [
+    {
+      "gate": "verified_keeper_identity",
+      "kind": "human_stewardship",
+      "state": "not_verified_for_hosting",
+      "required": true
+    },
+    {
+      "gate": "founder_scoped_invitation",
+      "kind": "human_stewardship",
+      "state": "not_issued",
+      "required": true
+    },
+    {
+      "gate": "keeper_event_and_field_acceptance",
+      "kind": "keeper_consent",
+      "state": "not_obtained",
+      "required": true
+    },
+    {
+      "gate": "approved_public_keeper_description",
+      "kind": "authorship",
+      "state": "not_reviewed",
+      "required": true
+    },
+    {
+      "gate": "signed_specific_activity_terms",
+      "kind": "agreement",
+      "state": "not_signed",
+      "required": true
+    },
+    {
+      "gate": "field_access_and_moderation",
+      "kind": "technical",
+      "state": "not_witnessed",
+      "required": true
+    },
+    {
+      "gate": "member_informed_entry",
+      "kind": "member_consent",
+      "state": "no_members",
+      "required": true
+    },
+    {
+      "gate": "privacy_and_session_controls",
+      "kind": "technical",
+      "state": "not_witnessed",
+      "required": true
+    },
+    {
+      "gate": "recording_rights",
+      "kind": "event_scoped",
+      "state": "not_granted",
+      "required": false
+    },
+    {
+      "gate": "source_excerpt_and_embedding_rights",
+      "kind": "separate_licensed_use",
+      "state": "not_granted",
+      "required": false
+    }
+  ],
+  "state_machine": {
+    "known": [
+      "unaffiliated_reference",
+      "founder_intention_only",
+      "private_keeper_invitation",
+      "keeper_scoped_acceptance",
+      "field_preflight_unpublished",
+      "field_approved_active",
+      "field_paused",
+      "field_withdrawn",
+      "field_closed"
+    ],
+    "current": "unaffiliated_reference",
+    "automatic_advance": false,
+    "needs_human_adjudication": true,
+    "keeper_can_refuse": true,
+    "field_role_revocable": true,
+    "paused_implies_no_new_events": true,
+    "withdrawn_implies_no_future_hosting": true,
+    "past_member_authored_material_not_transferred_by_closure": true
+  },
+  "scoped_capabilities": {
+    "publish_keeper_bio": false,
+    "publish_field_welcome": false,
+    "publish_licensed_resources": false,
+    "host_event": false,
+    "cohost_with_keeper": false,
+    "start_bounded_inquiry": false,
+    "invite_member": false,
+    "message_member": false,
+    "view_member_personal_field": false,
+    "view_maia_memory": false,
+    "view_member_astrology_or_health_data": false,
+    "view_unrelated_circle_interiors": false,
+    "export_member_roster": false,
+    "receive_member_contact_info": false,
+    "record_or_transcribe_event": false,
+    "auto_summarize_field_to_ain": false,
+    "generate_ai_imitation_of_keeper": false,
+    "edit_keeper_other_person_content": false,
+    "grant_self_role": false,
+    "process_payments_or_donations": false
+  },
+  "policy": {
+    "verified_session_required": true,
+    "member_joins_by_explicit_act": true,
+    "member_sees_keeper_identity_and_approval_scope": true,
+    "member_sees_host_activity_and_purpose": true,
+    "member_can_leave": true,
+    "member_role_not_inferred": true,
+    "keeper_role_not_equivalent_to_circle_facilitator": true,
+    "facilitator_procedural_not_interpretive": true,
+    "no_member_discovery_from_private_maia_context": true,
+    "no_automatic_private_field_sharing": true,
+    "no_sanctuary_content_crossing": true,
+    "no_unconsented_dyadic_contact": true,
+    "recording_off_by_default": true,
+    "every_recorded_session_needs_specific_consent": true,
+    "no_payment_based_access_to_personal_meaning": true,
+    "no_rank_or_score_for_spiritual_progress": true,
+    "keeper_original_sources_require_separate_rights": true,
+    "no_model_impersonation": true,
+    "no_clinical_services_by_hosting_permission": true,
+    "adult_education_pilot_only": true,
+    "no_minors_without_separate_safeguards": true,
+    "no_autonomous_keeper_speech_by_maia": true,
+    "collective_circle_release_needs_all_represented_authors": true,
+    "member_content_release_by_member": true,
+    "group_maia_facilitation_not_implemented": true,
+    "do_not_infer_field_is_implemented": true
+  },
+  "possible_experiences": [
+    {
+      "id": "welcome",
+      "role": "keeper_author_reviewed",
+      "feature": "public orientation in keeper's own voice",
+      "status": "concept_not_built"
+    },
+    {
+      "id": "source_shelf",
+      "role": "keeper_source_rights_scoped",
+      "feature": "author-directed resources, with provenance and per-file rights",
+      "status": "concept_not_built"
+    },
+    {
+      "id": "salon",
+      "role": "approved_human_host",
+      "feature": "voluntary live small-group inquiry",
+      "status": "concept_not_built"
+    },
+    {
+      "id": "questions",
+      "role": "human_host_optional",
+      "feature": "consented bounded dialogue; silence always acceptable",
+      "status": "concept_not_built"
+    },
+    {
+      "id": "practice",
+      "role": "member_author",
+      "feature": "private reflection first, optional member-authored contribution",
+      "status": "concept_not_built"
+    },
+    {
+      "id": "co_keeper",
+      "role": "multiple_authorized_hosts",
+      "feature": "cross-lineage encounter with independent provenance",
+      "status": "concept_not_built"
+    },
+    {
+      "id": "support",
+      "role": "optional_transparent",
+      "feature": "honoraria, scholarships, volunteer or direct author links",
+      "status": "concept_not_built"
+    }
+  ],
+  "first_fictional_session": {
+    "status": "illustrative_only_not_scheduled",
+    "title": "Where psychological symbols meet lived experience",
+    "host": "Soullab founder/facilitator, hypothetical—not Glenn Perry",
+    "keeper_guest_included": false,
+    "age_scope": "adults_only",
+    "duration_minutes": 75,
+    "facilitation_target": "6–8 voluntary people, not a constitutional size limit",
+    "mode": "nonclinical_educational_circle",
+    "recording_enabled": false,
+    "autogenerated_transcript_enabled": false,
+    "inference_enabled": false,
+    "source_rights_granted": false,
+    "group_to_commons_release_enabled": false,
+    "scheduled_at": null,
+    "meeting_link": null,
+    "participants": [],
+    "segments": [
+      {
+        "range": "0-10",
+        "action": "welcome and consent",
+        "sharing": "optional"
+      },
+      {
+        "range": "10-20",
+        "action": "credit public author sources",
+        "sharing": "no licensed excerpts"
+      },
+      {
+        "range": "20-35",
+        "action": "explore one original Soullab inquiry",
+        "sharing": "no chart diagnoses"
+      },
+      {
+        "range": "35-55",
+        "action": "quiet reflection and voluntary sharing",
+        "sharing": "no compelled personal history"
+      },
+      {
+        "range": "55-65",
+        "action": "compare interpretations without forced consensus",
+        "sharing": "no interpretive facilitator authority"
+      },
+      {
+        "range": "65-75",
+        "action": "member-governed closing",
+        "sharing": "nothing promoted automatically"
+      }
+    ]
+  },
+  "feature_permissions_outstanding": [
+    "founder charter approval",
+    "keeper-specific written acceptance",
+    "founder grant for limited rights and verified individual identity",
+    "legitimate scoped Circle/Commons membership gate",
+    "actual author and event-level copyright and recording rights",
+    "member entry, privacy, and safe exit",
+    "technical test under fictional session and independent review",
+    "separate release decision"
+  ]
+}
