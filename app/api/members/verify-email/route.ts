@@ -1,126 +1,77 @@
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 /**
- * Verify Email API
+ * Email verification — atomic, one-time consumption of the CURRENT token.
  *
- * Validates the email verification token and marks email as verified.
- * During beta, this is available but not required for access.
+ * The previous SELECT(token) → UPDATE(id) could verify the wrong email if
+ * another verification token was issued or the member changed their address
+ * between those independent statements. The update MUST predicate on the
+ * still-live token and its issuance timestamp. The new recovery proof trigger
+ * observes precisely this token-consumption transition in the SAME row lock.
+ *
+ * This is a Class A source-only candidate. It must not ship independently
+ * from its reviewed migration and backward-compatibility checks.
  */
-
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 
+const EMAIL_PROOF_TOKEN = /^[0-9a-f]{64}$/i;
+
+async function consumeEmailVerification(token: string): Promise<{ username: string | null } | null> {
+  if (!EMAIL_PROOF_TOKEN.test(token)) return null;
+  const result = await query<{ username: string | null }>(
+    `UPDATE members
+       SET email_verified = TRUE,
+           email_verified_at = clock_timestamp(),
+           email_verification_token = NULL
+     WHERE email_verification_token = $1
+       AND email IS NOT NULL AND btrim(email) <> ''
+       AND email_verification_sent_at IS NOT NULL
+       AND email_verification_sent_at <= clock_timestamp()
+       AND email_verification_sent_at > clock_timestamp() - interval '24 hours'
+     RETURNING username`,
+    [token],
+  );
+  return result.rows[0] ?? null;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { token } = body;
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Verification token is required' },
-        { status: 400 }
-      );
+    const body: unknown = await request.json();
+    const token = typeof body === 'object' && body !== null && !Array.isArray(body)
+      ? (body as Record<string, unknown>).token : null;
+    if (typeof token !== 'string' || !EMAIL_PROOF_TOKEN.test(token)) {
+      return NextResponse.json({ error: 'Invalid or expired verification link' }, { status: 400 });
     }
-
-    // Find member with this token
-    const memberResult = await query(
-      `SELECT id, username, email, email_verification_sent_at
-       FROM members
-       WHERE email_verification_token = $1`,
-      [token]
-    );
-
-    if (memberResult.rows.length === 0) {
-      return NextResponse.json(
-        { error: 'Invalid or expired verification link' },
-        { status: 400 }
-      );
+    const verified = await consumeEmailVerification(token);
+    if (!verified) {
+      return NextResponse.json({ error: 'Invalid or expired verification link' }, { status: 400 });
     }
-
-    const member = memberResult.rows[0];
-
-    // Check if token is expired (24 hours)
-    const sentAt = new Date(member.email_verification_sent_at);
-    const now = new Date();
-    const hoursDiff = (now.getTime() - sentAt.getTime()) / (1000 * 60 * 60);
-
-    if (hoursDiff > 24) {
-      return NextResponse.json(
-        { error: 'Verification link has expired. Please request a new one.' },
-        { status: 400 }
-      );
-    }
-
-    // Mark email as verified and clear token
-    await query(
-      `UPDATE members
-       SET email_verified = true, email_verification_token = NULL
-       WHERE id = $1`,
-      [member.id]
-    );
-
-    console.log(`[VerifyEmail] Email verified for ${member.username} (${member.email})`);
-
+    // Do not log a recipient address, raw member id or token.
     return NextResponse.json({
-      success: true,
-      message: 'Email verified successfully',
-      username: member.username,
+      success: true, message: 'Email verified successfully',
+      username: verified.username,
     });
-
-  } catch (error) {
-    console.error('[VerifyEmail] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to verify email' },
-      { status: 500 }
-    );
+  } catch {
+    console.error('[VerifyEmail] Unable to consume verification token');
+    return NextResponse.json({ error: 'Failed to verify email' }, { status: 500 });
   }
 }
 
-// Also support GET for direct link clicks
 export async function GET(request: NextRequest) {
-  // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
   }
   const token = request.nextUrl.searchParams.get('token');
-
-  if (!token) {
+  if (!token || !EMAIL_PROOF_TOKEN.test(token)) {
     return NextResponse.redirect(new URL('/signin?error=invalid_token', request.url));
   }
-
-  // Find member with this token
-  const memberResult = await query(
-    `SELECT id, username, email, email_verification_sent_at
-     FROM members
-     WHERE email_verification_token = $1`,
-    [token]
-  );
-
-  if (memberResult.rows.length === 0) {
-    return NextResponse.redirect(new URL('/signin?error=invalid_token', request.url));
+  try {
+    const verified = await consumeEmailVerification(token);
+    if (!verified) return NextResponse.redirect(new URL('/signin?error=invalid_token', request.url));
+    return NextResponse.redirect(new URL('/signin?verified=true', request.url));
+  } catch {
+    console.error('[VerifyEmail] Unable to consume verification link');
+    return NextResponse.redirect(new URL('/signin?error=verification_unavailable', request.url));
   }
-
-  const member = memberResult.rows[0];
-
-  // Check if token is expired (24 hours)
-  const sentAt = new Date(member.email_verification_sent_at);
-  const now = new Date();
-  const hoursDiff = (now.getTime() - sentAt.getTime()) / (1000 * 60 * 60);
-
-  if (hoursDiff > 24) {
-    return NextResponse.redirect(new URL('/signin?error=token_expired', request.url));
-  }
-
-  // Mark email as verified
-  await query(
-    `UPDATE members
-     SET email_verified = true, email_verification_token = NULL
-     WHERE id = $1`,
-    [member.id]
-  );
-
-  console.log(`[VerifyEmail] Email verified via link for ${member.username}`);
-
-  // Redirect to success page
-  return NextResponse.redirect(new URL('/signin?verified=true', request.url));
 }
