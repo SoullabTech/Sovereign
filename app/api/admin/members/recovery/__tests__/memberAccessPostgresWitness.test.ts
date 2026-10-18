@@ -42,6 +42,7 @@ jest.mock('@/lib/auth/passwordUtils', () => ({
 
 import { query, closePool } from '@/lib/db/postgres';
 import { POST as issuePOST } from '../route';
+import { POST as founderVerifyPOST } from '../verify-email/route';
 import { POST as redeemPOST } from '@/app/api/members/admin-recovery/route';
 import { POST as verifyEmailPOST } from '@/app/api/members/verify-email/route';
 
@@ -127,6 +128,105 @@ beforeEach(async () => {
   await query("UPDATE members SET email_verification_token='FICTIONAL-VERIFY-TOKEN', email_verification_sent_at=clock_timestamp() WHERE id=$1", [TARGET]);
   await query('UPDATE members SET email_verified=TRUE, email_verification_token=NULL WHERE id=$1', [TARGET]);
   await query(`UPDATE members SET password_hash='EXISTING_MEMBER_HASH', password_changed_at=NULL WHERE id=$1`, [TARGET]);
+});
+
+describe('founder-admin verification issuance — real ephemeral PostgreSQL', () => {
+  function verifyRequest(data: Record<string, unknown> = { memberId: TARGET, confirmed: true }, signedIn = true) {
+    return fake('/api/admin/members/recovery/verify-email', data, signedIn);
+  }
+  async function resetToUnverified() {
+    await query('UPDATE members SET email_verified=FALSE, email_verification_sent_at=NULL WHERE id=$1', [TARGET]);
+  }
+
+  it('refuses a signed-out, shared-password-only, or unconfirmed caller before sending', async () => {
+    await resetToUnverified();
+    const absent = await founderVerifyPOST(verifyRequest(undefined, false));
+    expect(absent.status).toBe(401);
+    process.env.LABTOOLS_ADMIN_PASSWORD = 'FICTIONAL-SHARED-PASSWORD';
+    const shared = new NextRequest('https://soullab.life/api/admin/members/recovery/verify-email', {
+      method: 'POST',
+      headers: {
+        origin: 'https://soullab.life', 'content-type': 'application/json',
+        'x-admin-password': 'FICTIONAL-SHARED-PASSWORD',
+      },
+      body: JSON.stringify({ memberId: TARGET, confirmed: true }),
+    });
+    try {
+      const withLegacyPassword = await founderVerifyPOST(shared);
+      expect(withLegacyPassword.status).toBe(403);
+    } finally {
+      delete process.env.LABTOOLS_ADMIN_PASSWORD;
+    }
+    expect((await founderVerifyPOST(verifyRequest({ memberId: TARGET, confirmed: false }))).status).toBe(400);
+    expect((await founderVerifyPOST(verifyRequest({ memberId: TARGET, confirmed: true, email: 'outsider@example.invalid' }))).status).toBe(400);
+    const check = await query('SELECT email_verification_token FROM members WHERE id=$1', [TARGET]);
+    expect(check.rows[0].email_verification_token).toBeNull();
+    expect(mockSend).not.toHaveBeenCalled();
+  });
+
+  it('requires the default-OFF feature flag and explicit SMTP configuration', async () => {
+    await resetToUnverified();
+    delete process.env.MEMBER_ACCESS_RECOVERY_ENABLED;
+    expect((await founderVerifyPOST(verifyRequest())).status).toBe(503);
+    process.env.MEMBER_ACCESS_RECOVERY_ENABLED = '1';
+    delete process.env.EMAIL_PROVIDER;
+    expect((await founderVerifyPOST(verifyRequest())).status).toBe(503);
+    process.env.EMAIL_PROVIDER = 'resend';
+    expect((await founderVerifyPOST(verifyRequest())).status).toBe(503);
+    process.env.EMAIL_PROVIDER = 'smtp';
+    expect(mockSend).not.toHaveBeenCalled();
+    expect((await query('SELECT email_verification_token FROM members WHERE id=$1', [TARGET])).rows[0].email_verification_token).toBeNull();
+  });
+
+  it('sends only to on-file email through accepted SMTP and never exposes the bearer', async () => {
+    await resetToUnverified();
+    const answer = await founderVerifyPOST(verifyRequest());
+    expect(answer.status).toBe(200);
+    const body = await answer.json();
+    expect(body).toMatchObject({ success: true, method: 'email', delivery: 'provider_accepted', verificationRequired: true });
+    expect(body.token).toBeUndefined();
+    expect(body.verificationLink).toBeUndefined();
+    const call = mockSend.mock.calls.at(-1)?.[0] as {
+      from?: string; to?: string; purpose?: string; provider?: { name: string }; text?: string;
+    };
+    expect(call.from).toBe('Soullab <noreply@soullab.life>');
+    expect(call.to).toBe(MEMBER_EMAIL);
+    expect(call.purpose).toBe('auth:verification');
+    expect(call.provider?.name).toBe('smtp');
+    expect(call.text).toContain('https://soullab.life/verify-email#token=');
+    expect(JSON.stringify(body)).not.toContain('#token=');
+    const record = await query('SELECT email_verification_token,email_verification_sent_at FROM members WHERE id=$1', [TARGET]);
+    expect(record.rows[0].email_verification_token).toMatch(/^[a-f0-9]{64}$/);
+    expect(record.rows[0].email_verification_sent_at).not.toBeNull();
+    const verify = await verifyEmailPOST(fake('/api/members/verify-email', { token: record.rows[0].email_verification_token }));
+    expect(verify.status).toBe(200);
+    expect((await issue()).status).toBe(200);
+  });
+
+  it('enforces durable cooldown on a second request for the same member', async () => {
+    await resetToUnverified();
+    expect((await founderVerifyPOST(verifyRequest())).status).toBe(200);
+    const first = (await query('SELECT email_verification_token FROM members WHERE id=$1', [TARGET])).rows[0].email_verification_token;
+    expect((await founderVerifyPOST(verifyRequest())).status).toBe(429);
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    expect((await query('SELECT email_verification_token FROM members WHERE id=$1', [TARGET])).rows[0].email_verification_token).toBe(first);
+  });
+
+  it('retires rejected SMTP email token; can retry without exposing the link', async () => {
+    await resetToUnverified();
+    mockSend.mockResolvedValueOnce({ success: false, provider: 'smtp' });
+    expect((await founderVerifyPOST(verifyRequest())).status).toBe(502);
+    const record = await query('SELECT email_verification_token,email_verification_sent_at FROM members WHERE id=$1', [TARGET]);
+    expect(record.rows[0].email_verification_token).toBeNull();
+    expect(record.rows[0].email_verification_sent_at).toBeNull();
+    expect((await founderVerifyPOST(verifyRequest())).status).toBe(200);
+  });
+
+  it('denies missing on-file email and does not permit operator destination override', async () => {
+    await query('UPDATE members SET email=NULL, email_verified=FALSE, email_verification_sent_at=NULL WHERE id=$1', [TARGET]);
+    expect((await founderVerifyPOST(verifyRequest())).status).toBe(409);
+    expect(mockSend).not.toHaveBeenCalled();
+  });
 });
 
 describe('atomic current-email verification route on real disposable PostgreSQL', () => {
