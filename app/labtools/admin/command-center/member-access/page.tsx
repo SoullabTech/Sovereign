@@ -51,6 +51,9 @@ export default function MemberAccessPage() {
   }, [search, members]);
 
   function select(m: MemberRow) {
+    // The submitted action is bound to one target; do not allow another
+    // member to be selected before its sensitive response is settled.
+    if (submitting) return;
     setSelected(m);
     setError('');
     setMessage('');
@@ -126,7 +129,7 @@ export default function MemberAccessPage() {
           {loading ? <p className="text-sm text-slate-400">Loading member directory…</p> : filtered.length === 0
             ? <p className="text-sm text-slate-400">No matching members</p>
             : filtered.map(m => (
-              <button key={m.id} type="button" onClick={() => select(m)} aria-pressed={selected?.id === m.id}
+              <button key={m.id} type="button" onClick={() => select(m)} disabled={submitting} aria-pressed={selected?.id === m.id}
                 className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-800 ${selected?.id === m.id ? 'border border-amber-500/70 bg-slate-800' : 'border border-transparent'}`}>
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{m.name || m.username || 'Member'}</span>
