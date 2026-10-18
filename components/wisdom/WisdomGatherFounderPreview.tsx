@@ -63,17 +63,18 @@ export default function WisdomGatherFounderPreview() {
       <div className="wrap">
         <div className="breadcrumb" data-testid="gather-placement">Home / Wisdom Keepers / Gather Together</div>
         <header className="hero">
-          <span className="status">Founder-only · Fictional experience · Not open</span>
+          <span className="status" data-testid="founder-review-status">Founder review · Interactive prototype · Not yet open</span>
           <h1>Gather Together</h1>
           <p className="lead">
-            Wisdom begins with real people and the traditions they carry.
-            Explore what it might feel like to discover a teacher, choose
-            to gather, enter a consenting Circle and meet in a human room.
+            A place where members can discover original teachers, choose
+            to gather, and encounter one another in consenting Circles.
+            Review how this could become a living part of Soullab.
           </p>
           <div className="guard" role="note" data-testid="not-available">
-            <strong>Not a live gathering.</strong> This preview does not create
-            a Circle, register an interest, issue an invitation, join a video room
-            or give any wisdom keeper access to members. The actual Wisdom room
+            <strong>Not a live gathering.</strong> You're reviewing an interactive
+            concept for Soullab's Wisdom room. These steps do not create a Circle,
+            register an interest, issue an invitation, join a video room, or give
+            any wisdom keeper access to members. The actual Wisdom room
             and its members remain unchanged.
           </div>
         </header>
