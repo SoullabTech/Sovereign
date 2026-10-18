@@ -109,6 +109,37 @@ beforeEach(async () => {
 });
 
 describe('real PostgreSQL one-use admin recovery', () => {
+  it('rejects private handoff before creating a database row or sending email', async () => {
+    const rejected = await issuePOST(fake('/api/admin/members/recovery', {
+      memberId: TARGET, method: 'private_handoff', reason: 'verified_in_person',
+      identityVerified: true,
+    }, true));
+    expect(rejected.status).toBe(403);
+    expect(mockSend).not.toHaveBeenCalled();
+    const rows = await query('SELECT COUNT(*)::int AS n FROM admin_member_recovery_tokens');
+    expect(rows.rows[0].n).toBe(0);
+  });
+
+  it('enforces email-only issuance invariants at the actual PostgreSQL CHECK constraints', async () => {
+    const disallowed: Array<[string, string, string]> = [
+      ['private_handoff', 'member_requested', 'pending'],
+      ['email', 'verified_in_person', 'pending'],
+      ['email', 'member_requested', 'handoff_issued'],
+    ];
+    for (const [method, reason, status] of disallowed) {
+      const attempt = scratch.query(
+        `INSERT INTO admin_member_recovery_tokens
+         (member_id, issued_by, token_hash, delivery_method, reason_code,
+          delivery_status, expires_at)
+         VALUES ($1, $2, $3, $4, $5, $6, now() + interval '30 minutes')`,
+        [TARGET, FOUNDER, 'f'.repeat(64), method, reason, status],
+      );
+      await expect(attempt).rejects.toMatchObject({ code: '23514' });
+    }
+    const rows = await query('SELECT COUNT(*)::int AS n FROM admin_member_recovery_tokens');
+    expect(rows.rows[0].n).toBe(0);
+  });
+
   it('checks founder-member authority in real session tables and denies bare identifiers', async () => {
     const unauth = await issuePOST(fake('/api/admin/members/recovery',
       { memberId: TARGET, method: 'email', reason: 'member_requested' }));
