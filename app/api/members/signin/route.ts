@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
         }
       }
       await logAuthEvent({
-        action: 'password_signin', memberId: member.id,
+        action: 'signin_failed', memberId: member.id,
         result: 'failure', errorMessage: 'Session issuance unavailable',
       }, request);
       return NextResponse.json(
