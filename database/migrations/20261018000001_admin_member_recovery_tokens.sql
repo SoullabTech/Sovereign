@@ -6,8 +6,10 @@ BEGIN;
 SET LOCAL lock_timeout = '5s';
 CREATE TABLE IF NOT EXISTS admin_member_recovery_tokens (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  member_id uuid NOT NULL REFERENCES members(id) ON DELETE RESTRICT,
-  issued_by uuid NOT NULL REFERENCES members(id) ON DELETE RESTRICT,
+  -- Account erasure must not be blocked by short-lived recovery receipts.
+  -- Deleting either target or issuer invalidates their recovery capabilities.
+  member_id uuid NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+  issued_by uuid NOT NULL REFERENCES members(id) ON DELETE CASCADE,
   token_hash char(64) NOT NULL UNIQUE,
   delivery_method text NOT NULL CHECK (delivery_method IN ('email', 'private_handoff')),
   reason_code text NOT NULL CHECK (reason_code IN ('member_requested', 'email_unavailable', 'verified_in_person')),
