@@ -123,10 +123,11 @@ test('facilitator guide preserves an original five-element inquiry without chart
   assert.match(host,/^status: review$/m);
   assert.match(host,/^safe_for_retrieval: false$/m);
   for(const e of ['Earth','Water','Air','Fire','Weather']) assert.ok(host.includes(e),e);
-  for(const b of ['no recording','not psychotherapy','not a Glenn Perry event',
-    'voluntary','silence','private','not a diagnosis']) {
+  for(const b of ['no recording','not psychotherapy','voluntary','silence','private']) {
     assert.ok(host.toLowerCase().includes(b.toLowerCase()),'missing boundary '+b);
   }
+  assert.match(host,/\*not\* a Glenn Perry event/i);
+  assert.match(host,/No chart predicts a future relationship event/i);
   assert.match(host,/FR-07\/08|FR-07\/08|FR-07.*08/);
   assert.match(host,/no automatic published artifact|no automatic published artifact/i);
 });
@@ -148,7 +149,7 @@ test('plain-language entry consent does not promise impossible group confidentia
   assert.ok(invitation.includes('other participants can hear'));
   assert.ok(invitation.includes('if they wish')||invitation.includes('may speak'));
   assert.ok(invitation.includes('privacy arrangements'));
-  assert.ok(invitation.includes('before a real event'));
+  assert.match(invitation,/\*\*before\*\* a real event is offered/);
   assert.ok(invitation.includes('not consent to record'));
   assert.match(invitation,/does not include recording|does not plan to record|not include recording/i);
 });
