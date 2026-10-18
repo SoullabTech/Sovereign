@@ -65,6 +65,10 @@ Combined WebKit result marker: `REAL_NEXT15_VERIFIED_SESSION_FOUNDER_ACCEPTANCE_
 
 The exact middleware module was included in this built application. The `/wisdom-keepers` access-matrix prefix itself is currently declared public; the **nested page's verified `requireFounder()` check is essential** and remains unchanged. No researcher should assume the middleware's route classification itself establishes founder-only access.
 
+## Source-level regression guard
+
+[Stage K session-authorization contract tests](./stage-k-auth-postgres-contract.test.mjs) are committed on the same isolated research branch. On source commit `2576c2c23695609dc577545dbce913a75c3659f4`, **8/8 static source-regression checks passed** for the real `maia_session` read, SQL revocation and expiry predicates, founder allowlist, public Wisdom-prefix/strict child-page distinction, middleware claim mismatches, database-URL fallback risk and unchanged member-facing Wisdom page. These are **static guards**, separate from the Next.js 15 + real PostgreSQL + Safari acceptance described above; do not combine the counts as one run.
+
 ## Tests not performed / open release issues
 
 1. **The real founder has NOT personally authenticated in this staging app.** Its test issuer has no password validation, Google/Apple OAuth, passkey, or real account connection. The user being the real founder does not authorize creating or forging a real Soullab session.
