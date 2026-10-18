@@ -169,8 +169,15 @@ describe('emergency password reset requires founder proof and independent secret
     expect(sqlCalls('UPDATE members SET password_hash')).toHaveLength(0);
   });
 
-  it('six-character and bcrypt-overlong UTF-8 passwords are refused before any write', async () => {
-    for (const candidate of ['123456', 'é'.repeat(40)]) {
+  it('reset secret reused as the shared admin password fails closed', async () => {
+    process.env.ADMIN_RESET_SECRET = PASSWORD;
+    const res = await resetPOST(resetRequest(STRONG_PASSWORD, { admin: PASSWORD, secret: PASSWORD }));
+    expect(res.status).toBe(503);
+    expect(sqlCalls('UPDATE members SET password_hash')).toHaveLength(0);
+  });
+
+  it('six-character, six-emoji and bcrypt-overlong UTF-8 passwords are refused before any write', async () => {
+    for (const candidate of ['123456', '🔐'.repeat(6), 'é'.repeat(40)]) {
       expect((await resetPOST(resetRequest(candidate, { admin: PASSWORD }))).status).toBe(400);
     }
     expect(sqlCalls('UPDATE members SET password_hash')).toHaveLength(0);
