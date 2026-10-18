@@ -7,6 +7,8 @@ on:
     branches: [clean-main-no-secrets]
     paths:
       - 'lib/admin/memberRecovery.ts'
+      - 'lib/email/approvedVerificationSmtp.ts'
+      - 'app/api/members/__tests__/mail-03-containment.test.ts'
       - 'config/accessMatrix.ts'
       - 'config/__tests__/memberRecoveryAccessPolicy.test.ts'
       - 'app/api/admin/members/recovery/**'
@@ -49,6 +51,7 @@ jobs:
         run: >-
           npx --no-install jest --config jest.config.js --runInBand --runTestsByPath
           app/api/admin/members/recovery/__tests__/memberAccessRecovery.test.ts
+          app/api/members/__tests__/mail-03-containment.test.ts
           config/__tests__/memberRecoveryAccessPolicy.test.ts
 
   ephemeral-postgres-witness:
