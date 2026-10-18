@@ -25,7 +25,7 @@ async function founderSessionFetch(path: string, init: RequestInit = {}): Promis
   return fetch(path, { ...init, headers, credentials: 'same-origin' });
 }
 
-type MemberRow = { id: string; name: string | null; username: string | null; email: string | null; admin_role: string | null };
+type MemberRow = { id: string; name: string | null; username: string | null; email: string | null; admin_role: string | null; recovery_email_verified: boolean };
 
 export default function MemberAccessPage() {
   const pathname = usePathname();
@@ -166,13 +166,19 @@ export default function MemberAccessPage() {
           {!selected.email && <p role="alert" className="mt-3 text-sm text-amber-200">
             This member has no email on file; email-only recovery is unavailable.
           </p>}
+          {selected.email && selected.recovery_email_verified !== true && (
+            <p role="alert" className="mt-3 text-sm text-amber-200">
+              Recovery is unavailable until this member re-verifies their current email
+              address. A historical verified flag is not sufficient.
+            </p>
+          )}
         </div>
 
         <label className="flex items-start gap-3 text-sm text-slate-200">
           <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} className="mt-1" />
           I confirm this is the correct member and the request is authorized.
         </label>
-        <button type="button" disabled={!confirmed || submitting || !selected.email}
+        <button type="button" disabled={!confirmed || submitting || !selected.email || selected.recovery_email_verified !== true}
           onClick={issueRecovery}
           className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-5 py-3 font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40">
           <Lock className="h-4 w-4" /> {submitting ? 'Issuing…' : 'Initiate recovery'}
