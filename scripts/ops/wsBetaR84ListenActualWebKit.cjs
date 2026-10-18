@@ -162,10 +162,12 @@ const cookie=(value)=>({name:'maia_session',value,url:origin,httpOnly:true,sameS
   report.microphoneGuards.push(guardStatus);
   verify(guardStatus.present&&guardStatus.calls===0&&guardStatus.secure,
    'active post-hydration microphone guard replaces hardware before any action');
+  const formatPanelText=await page.locator('[data-capture-format-panel]').innerText();
   verify(await page.getByText('24-bit PCM WAV').isVisible()&&
-   (await page.locator('[data-capture-format-panel]').innerText()).includes(
-     'Not available in this pilot'),
+    formatPanelText.includes('Not available in this pilot'),
    'R84 honest compressed format label does not claim native WAV masters');
+  verify(formatPanelText.includes('MP4 / M4A (compressed)'),
+   'R85 actual mounted Safari Listen selects the clean M4A codec path without opening microphone');
 
   const selected=state.value.sections.find(s=>s.heading?.includes('Chapter Two'));
   verify(!!selected,'original Chapter Two address is source-verified');

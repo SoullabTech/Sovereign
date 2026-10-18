@@ -24,10 +24,25 @@ export function recordingConstraints(deviceId?: string): MediaTrackConstraints {
   };
 }
 
-export function preferredRecorderMime(): string {
+/**
+ * Prefer Safari/WebKit's native M4A/AAC recorder when the engine supports it.
+ * Real WebKit synthetic 48 kHz mono captures exposed an Opus packet warning
+ * to an independent decoder even though WebM advertised support; equivalent
+ * M4A captures decoded without that warning. Do not guess codec support from
+ * the UA alone: verify each requested MIME with MediaRecorder first.
+ *
+ * Blink/Gecko keep their original WebM-first sequence. iOS Chrome and Firefox
+ * also use Apple WebKit, so their CriOS/FxiOS labels must not force Blink order.
+ */
+export function preferredRecorderMime(userAgent?: string): string {
   if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') return '';
-  return ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm']
-    .find((mime) => MediaRecorder.isTypeSupported(mime)) ?? '';
+  const ua = userAgent ?? (typeof navigator !== 'undefined' ? navigator.userAgent : '');
+  const appleWebKitEngine = /AppleWebKit\//.test(ua)
+    && !/(?:Chrome|Chromium|Edg|OPR)\//.test(ua);
+  const candidates = appleWebKitEngine
+    ? ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm']
+    : ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'];
+  return candidates.find((mime) => MediaRecorder.isTypeSupported(mime)) ?? '';
 }
 
 export function browserCaptureInfo(settings: MediaTrackSettings, outputMimeType: string): BrowserCaptureInfo {
