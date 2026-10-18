@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { KeyRound, Search, ShieldCheck, Mail, Copy, AlertTriangle, ArrowLeft, Lock } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 /**
  * Do not forward the shared admin password from the legacy Command Center's
  * localStorage. Recovery is founder MEMBER SESSION only. Session cookies and
@@ -28,6 +29,9 @@ type MemberRow = { id: string; name: string | null; username: string | null; ema
 type DeliveryMode = 'email' | 'private_handoff';
 
 export default function MemberAccessPage() {
+  const pathname = usePathname();
+  const backTo = pathname?.startsWith('/labtools/')
+    ? '/labtools/admin/command-center/members' : '/studio/settings';
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<MemberRow | null>(null);
@@ -121,7 +125,7 @@ export default function MemberAccessPage() {
   return (
     <section className="max-w-4xl space-y-6 text-slate-100">
       <header className="space-y-3">
-        <Link href="/labtools/admin/command-center/members" className="inline-flex items-center gap-2 text-sm text-amber-300 hover:text-amber-200">
+        <Link href={backTo} className="inline-flex items-center gap-2 text-sm text-amber-300 hover:text-amber-200">
           <ArrowLeft className="h-4 w-4" /> Members
         </Link>
         <h1 className="flex items-center gap-3 text-2xl font-semibold"><KeyRound className="h-6 w-6 text-amber-400" /> Member Access</h1>
