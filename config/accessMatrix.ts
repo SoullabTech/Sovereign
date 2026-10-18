@@ -677,6 +677,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // handler. Explicitly map it to authenticated admins so strict proxy mode
   // does not block the new Member Access screen before its owner check.
   { exact: '/api/admin/members', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Member directory — founder/CTO access independently verified by route' },
+  { exact: '/api/admin/members/recovery/verify-email', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Founder-only on-file email re-verification; verified member session and SMTP independently checked' },
   { exact: '/api/admin/members/recovery', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Member Access issuance — founder member session enforced independently by handler' },
   { prefix: '/api/admin/partners/prelude/', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Partner prelude administration — admin only; route also verifies authority directly' },
   { prefix: '/api/supervision', minTier: 'free', notes: 'Supervision API' },
