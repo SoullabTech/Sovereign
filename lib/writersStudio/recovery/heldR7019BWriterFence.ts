@@ -31,7 +31,11 @@ type Writer =
   | 'source_discard'
   | 'member_keep'
   | 'member_unkeep'
-  | 'source_erasure';
+  | 'source_erasure'
+  | 'studio_file_metadata'
+  | 'studio_file_soft_delete'
+  | 'studio_file_share'
+  | 'legacy_revision_restore';
 type Ident = { nonce: string; member_id: string; practitioner_id: string };
 
 export class R7019BRefusal extends Error {
@@ -114,7 +118,9 @@ export async function withHeldR7019BWriter<T>(
   if(fixtureWriterScope.getStore())stop('nested_cross_client_writer_lease');
   if (!(['confirmed_paste','studio_file_upload','source_arrival',
           'source_claim','source_discard','member_keep','member_unkeep',
-          'source_erasure'] as Writer[]).includes(kind)) {
+          'source_erasure','studio_file_metadata',
+          'studio_file_soft_delete','studio_file_share',
+          'legacy_revision_restore'] as Writer[]).includes(kind)) {
     stop('unknown_writer');
   }
   const scope = await fixtureScope(memberId);

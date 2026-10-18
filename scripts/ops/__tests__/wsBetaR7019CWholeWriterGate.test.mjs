@@ -8,15 +8,19 @@ import {R7019C_LEDGER,assessR7019CWholeWriterGate} from
  '../wsBetaR7019CWholeWriterGate.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../../..');
 const byId=id=>R7019C_LEDGER.entries.find(e=>e.id===id);
-test('exact source identifies every declared mutator but never certifies production',()=>{
+test('frozen C identity refuses changed D mutators while keeping release HOLD',()=>{
  const a=assessR7019CWholeWriterGate(root);
- assert.equal(a.status,'R7019C_FULL_WRITER_COVERAGE_UNQUALIFIED_HELD');
- assert.equal(a.verifiedSourceEntries,22);
+ assert.equal(a.status,'R7019C_SOURCE_MUTATOR_CUSTODY_DRIFT_HELD');
+ assert.equal(a.verifiedSourceEntries,16);
  assert.equal(a.expectedSourceEntries,22);
- assert.deepEqual(a.drift,[]);
- assert.equal(a.claimedFixtureEntryClasses.physical_fixture,10);
+ assert.deepEqual(a.drift.map(x=>x.id).sort(),[
+  'studio_file_upload','held_draft_revision_reader',
+  'legacy_direct_revision_restore','studio_file_soft_delete',
+  'studio_file_metadata','shared_writer_lease',
+ ].sort());
+ assert.equal(a.claimedFixtureEntryClasses.physical_fixture,7);
  assert.equal(a.claimedFixtureEntryClasses.code_only_held,4);
- assert.equal(a.claimedFixtureEntryClasses.unfenced,7);
+ assert.equal(a.claimedFixtureEntryClasses.unfenced,4);
  assert.equal(a.claimedFixtureEntryClasses.fixture_only_not_live,1);
  assert.equal(a.releaseApproved,false);
  assert.equal(a.realMemberAdmissionApproved,false);

@@ -408,6 +408,10 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
     }
 
+    // Covers the existing member/practitioner authorized file soft-delete
+    // and folder deletion in a single fictitious SQL-vault capture lease.
+    return await withHeldR7019BWriter(memberId,'studio_file_soft_delete',
+      async () => {
     const { searchParams } = new URL(request.url);
     const fileId = searchParams.get('id');
     const folderId = searchParams.get('folderId');
@@ -455,6 +459,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json(fileId
       ? { success: true, deletionMode: 'soft', originalBytesDestroyed: false }
       : { success: true });
+      },practitionerId);
   } catch (error) {
     console.error('[Studio Files] DELETE error:', error);
     return NextResponse.json({ success: false, error: 'Failed to delete' }, { status: 500 });

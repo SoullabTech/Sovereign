@@ -30,7 +30,8 @@ const number=(v:unknown):number=>{
 
 type DbDraft={
  id:string;member_id:string;manuscript_id:string;owner:string|null;
- content:string;version:string|number;section_addressable_at:string|null;
+ content:string;version:string|number;revision_count:string|number;
+ section_addressable_at:string|null;
 };
 type DbSection={id:string;draft_id:string;position:string|number;text:string};
 type DbRevision={
@@ -137,7 +138,7 @@ export async function captureR7018HeldDraftSlice(
     !UUID.test(memberId))stop('fictional_only');
  const rows=await client.query<DbDraft>(
   'SELECT d.id,d.member_id,d.manuscript_id,m.member_id AS owner,'+
-  'd.content,d.version,d.section_addressable_at FROM manuscript_working_drafts d '+
+  'd.content,d.version,d.revision_count,d.section_addressable_at FROM manuscript_working_drafts d '+
   'LEFT JOIN member_manuscripts m ON m.id=d.manuscript_id '+
   'WHERE d.member_id=$1 ORDER BY d.id',[memberId]);
  if(rows.rows.length>MAX_DRAFTS)stop('too_many_drafts');
@@ -157,6 +158,15 @@ export async function captureR7018HeldDraftSlice(
   if(d.member_id!==memberId||d.owner!==memberId||
     !UUID.test(d.id)||!UUID.test(d.manuscript_id)||!validString(d.content))
    stop('foreign_or_invalid_draft');
+  const storedRevisions=revisions.rows.filter(r=>r.draft_id===d.id);
+  // A legacy restore writes Draft UPDATE and history INSERT separately.
+  // A failure between them leaves a mutated Draft without a corresponding
+  // immutable revision. A purported complete backup MUST refuse that state.
+  const count=number(d.revision_count);
+  if(storedRevisions.length!==count ||
+     storedRevisions.some((rev,index)=>
+       number(rev.revision_number)!==index+1))
+   stop('incomplete_revision_receipts');
   result.push({
    id:d.id,workId:d.manuscript_id,version:number(d.version),
    content:d.content,contentSHA256:sha(d.content),
@@ -165,7 +175,7 @@ export async function captureR7018HeldDraftSlice(
     if(!validString(s.text))stop('invalid_section_text');
     return {id:s.id,position:number(s.position),text:s.text,sha256:sha(s.text)};
    }),
-   revisions:revisions.rows.filter(r=>r.draft_id===d.id).map(r=>{
+   revisions:storedRevisions.map(r=>{
     if(!validString(r.content))stop('invalid_revision_text');
     return {id:r.id,revision:number(r.revision_number),savedBy:r.saved_by,
      content:r.content,sha256:sha(r.content)};

@@ -15,15 +15,16 @@ import {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const byId = (id) => R7019_MANIFEST.entries.find((e) => e.id === id);
 
-test('R1S frozen source remains pinned, while R70.19C reconciled Source and writers remain held', () => {
+test('R1S frozen source remains pinned, while R70.19D changed all eleven real mutation families, still HELD', () => {
   const result = assessR7019WholeWriterCoverage(root);
   assert.equal(R7019_MANIFEST.baselineSourceHead,
     '441616dbf5a597f9ef297ad3dafead3be5f2ceb3');
-  assert.equal(result.verifiedKnownEntries, 2);
+  assert.equal(result.verifiedKnownEntries, 0);
   assert.equal(result.knownRequiredEntries, 11);
   assert.deepEqual(result.drift.map(x=>x.id).sort(), [
     'confirmed-paste','arrival-original','source-claim','source-discard',
-    'draft-section-save','nested-section-save','studio-file-delete',
+    'draft-section-save','nested-section-save','draft-revision-restore',
+    'studio-file-delete','studio-file-metadata',
     'studio-file-upload','source-erasure',
   ].sort());
   assert.ok(result.drift.every(x=>x.reason==='source_digest_changed'));
