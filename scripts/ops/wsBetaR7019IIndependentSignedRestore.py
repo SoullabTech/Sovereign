@@ -153,12 +153,16 @@ def main():
    '-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:16.13'],timeout=40)
   if not spawn or spawn.returncode:raise RuntimeError('ISOLATED_PG16_START_FAILED')
   created=True
+  # pg_isready may report the server accepting connections before the
+  # Docker entrypoint has finished CREATE DATABASE ws_fixture. A physical
+  # recovery requires an actual SQL connection to the EXACT target database.
+  # Query only constant 1: no member SQL or private restore data is touched.
   for _ in range(48):
-   ready=run([docker,'exec',a.destination_container,'pg_isready',
-    '-U','fict','-d','ws_fixture'],timeout=5)
-   if ready and ready.returncode==0:break
+   ready=run([docker,'exec',a.destination_container,'psql',
+    '-XAtq','-U','fict','-d','ws_fixture','-c','SELECT 1'],timeout=5)
+   if ready and ready.returncode==0 and ready.stdout.strip()==b'1':break
    time.sleep(.25)
-  else:raise RuntimeError('PG16_RECOVERY_NOT_READY')
+  else:raise RuntimeError('PG16_RECOVERY_DATABASE_NOT_QUERY_READY')
   isolate=run([docker,'inspect','-f',
    '{{.HostConfig.NetworkMode}}|{{len .Mounts}}',
    a.destination_container],timeout=8)

@@ -37,9 +37,8 @@ test('R1W signer and signed-only restore code preserved BYTE FOR BYTE from accep
   assert.equal(p.status,0);assert.deepEqual(readFileSync(path.join(ROOT,f)),p.stdout);
  }
 });
-test('R70.19I current deletion/census implementation preserved BYTE FOR BYTE',()=>{
+test('R70.19I signed deletion authority and physical Work census preserved BYTE FOR BYTE',()=>{
  for(const f of ['scripts/ops/wsBetaR7019IPhysicalPG16.py',
-                   'scripts/ops/wsBetaR7019IIndependentSignedRestore.py',
                    'scripts/ops/wsBetaR7019IFictionalCensusAuthority.mjs']){
   const p=spawnSync('git',['show',R7019I+':'+f],{cwd:ROOT,encoding:null,timeout:12000});
   assert.equal(p.status,0);assert.deepEqual(readFileSync(path.join(ROOT,f)),p.stdout);
@@ -76,6 +75,40 @@ test('independent current deletion authority and Work census are verified BEFORE
  assert.match(custody,/OLD_VALID_ARCHIVE_CONTAINS_NOW_DELETED_WORK_OR_KEY/);
  assert.match(custody,/minimumDeletionGeneration/);
  assert.match(custody,/independentlyExpectedOwnedWorks/);
+});
+test('R70.19I restorer differs from frozen parent by ONE bounded SQL query-ready correction only',()=>{
+ const file='scripts/ops/wsBetaR7019IIndependentSignedRestore.py';
+ const upstream=spawnSync('git',['show',R7019I+':'+file],{cwd:ROOT,encoding:'utf8',timeout:10000});
+ assert.equal(upstream.status,0);
+ const old=[
+  '  for _ in range(48):',
+  "   ready=run([docker,'exec',a.destination_container,'pg_isready',",
+  "    '-U','fict','-d','ws_fixture'],timeout=5)",
+  '   if ready and ready.returncode==0:break',
+  '   time.sleep(.25)',
+  "  else:raise RuntimeError('PG16_RECOVERY_NOT_READY')",
+ ].join('\n');
+ const improvement=[
+  '  # pg_isready may report the server accepting connections before the',
+  '  # Docker entrypoint has finished CREATE DATABASE ws_fixture. A physical',
+  '  # recovery requires an actual SQL connection to the EXACT target database.',
+  '  # Query only constant 1: no member SQL or private restore data is touched.',
+  '  for _ in range(48):',
+  "   ready=run([docker,'exec',a.destination_container,'psql',",
+  "    '-XAtq','-U','fict','-d','ws_fixture','-c','SELECT 1'],timeout=5)",
+  "   if ready and ready.returncode==0 and ready.stdout.strip()==b'1':break",
+  '   time.sleep(.25)',
+  "  else:raise RuntimeError('PG16_RECOVERY_DATABASE_NOT_QUERY_READY')",
+ ].join('\n');
+ assert.equal(upstream.stdout.split(old).length,2,'expected one original readiness check');
+ assert.equal(independent,upstream.stdout.replace(old,improvement));
+});
+test('physical restorer refuses to start until the EXACT fictional PG16 database answers SELECT 1',()=>{
+ const r=independent;
+ assert.match(r,/PG16_RECOVERY_DATABASE_NOT_QUERY_READY/);
+ assert.match(r,/'-XAtq','-U','fict','-d','ws_fixture','-c','SELECT 1'/);
+ assert.match(r,/ready\.stdout\.strip\(\)==b'1'/);
+ assert.doesNotMatch(r,/'pg_isready',/);
 });
 test('legacy R70.19C source SHA inventory is immutable and explicitly DRIFT-HELD in joined source',()=>{
  assert.equal(ledger.entries.length,22);
