@@ -46,6 +46,7 @@ const NAV_ITEMS = [
   { path: '/labtools/admin/command-center/field-engines', label: 'Field Engines', icon: Activity },
   { path: '/labtools/admin/command-center/conversations', label: 'Conversations', icon: MessageSquare },
   { path: '/labtools/admin/command-center/members', label: 'Members', icon: Users },
+  { path: '/labtools/admin/command-center/member-access', label: 'Member Access', icon: Lock },
   { path: '/labtools/admin/command-center/system', label: 'System', icon: Server },
   { path: '/labtools/admin/command-center/actions', label: 'Actions', icon: Zap },
 ];
