@@ -34,6 +34,12 @@ const settingsRow = {
  key:'fictional-ui-only',value:{enabled:false},description:'fictional',
  updated_at:null,updated_by:'fictional-admin'
 };
+function loginAuditRows():unknown[][] {
+ return db.mock.calls.filter((call:unknown[]) =>
+  String(call[0]).includes('INSERT INTO admin_access_log') &&
+  Array.isArray(call[1]) && call[1][3] === 'POST /api/admin/auth'
+ ).map((call:unknown[]) => call[1] as unknown[]);
+}
 function fakeSql(sql:string, params:unknown[]=[]){
  const token=String(params[0]??'');
  const candidate=fixture[token];
@@ -53,10 +59,10 @@ let counter=0;
 function request(path:string,opts:{
  token?:string, headerToken?:string, passwordHeader?:string,
  bearerPassword?:string, method?:'GET'|'POST', body?:unknown,
- forgedRoles?:boolean,memberClaim?:string,
+ forgedRoles?:boolean,memberClaim?:string,ip?:string,
 }={}):NextRequest{
  const hdr:Record<string,string>={
-  host:'soullab.life','x-forwarded-for':'192.0.2.'+(++counter%230+10),
+  host:'soullab.life','x-forwarded-for':opts.ip||'192.0.2.'+(++counter%230+10),
  };
  if(opts.token)hdr.cookie='maia_session='+opts.token;
  if(opts.headerToken)hdr['x-session-token']=opts.headerToken;
@@ -297,5 +303,124 @@ describe('Review-only actual-method legacy admin routing',()=>{
    });
    expect(reflect?.rolesAnyOf).toBeUndefined();
    expect(matchRule('/api/admin/settings/anything')).toBeNull();
+ });
+
+ it('audits an early anonymous 401 and owner-without-app-admin 403 without ever accepting the password',async()=>{
+   const ip='198.51.100.41';
+   const anonymous=await passwordPOST(request('/api/admin/auth',{
+     method:'POST',ip,body:{password:SHARED},memberClaim:FOUNDER,forgedRoles:true
+   }));
+   expect(anonymous.status).toBe(401);
+   expect(loginAuditRows()).toEqual([['denied',null,null,'POST /api/admin/auth',ip]]);
+   db.mockClear();
+   const ownerOnly=await passwordPOST(request('/api/admin/auth',{
+     token:'fixture-cto-role-only',method:'POST',ip:'198.51.100.42',body:{password:SHARED}
+   }));
+   expect(ownerOnly.status).toBe(403);
+   expect(loginAuditRows()).toEqual([['denied',null,null,'POST /api/admin/auth','198.51.100.42']]);
+   expect(JSON.stringify(db.mock.calls)).not.toContain(SHARED);
+ });
+
+ it('audits successful password verification with no invented founder/member role or secret',async()=>{
+   const ip='198.51.100.43';
+   const res=await passwordPOST(request('/api/admin/auth',{
+     token:'fixture-app-admin-only',method:'POST',ip,body:{password:SHARED}
+   }));
+   expect(res.status).toBe(200);
+   expect((await res.json()).success).toBe(true);
+   expect(loginAuditRows()).toEqual([['password',null,null,'POST /api/admin/auth',ip]]);
+   expect(JSON.stringify(db.mock.calls)).not.toContain(SHARED);
+ });
+
+ it('audits rejected incorrect password and does not write attempted password to the DB',async()=>{
+   const bad='fictional-wrong-secret-do-not-store';
+   const res=await passwordPOST(request('/api/admin/auth',{
+     token:'fixture-founder-both',method:'POST',ip:'198.51.100.44',body:{password:bad}
+   }));
+   expect(res.status).toBe(401);
+   expect(loginAuditRows()).toEqual([['denied',null,null,'POST /api/admin/auth','198.51.100.44']]);
+   expect(JSON.stringify(db.mock.calls)).not.toContain(bad);
+ });
+
+ it('audits the sixth rate-limited attempt as denied, even if its password is correct',async()=>{
+   const ip='198.51.100.45';
+   for(let attempt=0;attempt<5;attempt++){
+     const r=await passwordPOST(request('/api/admin/auth',{
+       token:'fixture-app-admin-only',method:'POST',ip,body:{password:'incorrect'}
+     }));
+     expect(r.status).toBe(401);
+   }
+   const locked=await passwordPOST(request('/api/admin/auth',{
+     token:'fixture-app-admin-only',method:'POST',ip,body:{password:SHARED}
+   }));
+   expect(locked.status).toBe(429);
+   expect(loginAuditRows()).toHaveLength(6);
+   expect(loginAuditRows().every(row=>row[0]==='denied')).toBe(true);
+ });
+
+ it('audits missing shared password configuration and malformed JSON without logging payloads',async()=>{
+   const old=process.env.LABTOOLS_ADMIN_PASSWORD;
+   const spy=jest.spyOn(console,'error').mockImplementation(()=>{});
+   try{
+     delete process.env.LABTOOLS_ADMIN_PASSWORD;
+     const missing=await passwordPOST(request('/api/admin/auth',{
+       token:'fixture-founder-both',method:'POST',ip:'198.51.100.46',body:{password:'fictional-value'}
+     }));
+     expect(missing.status).toBe(500);
+     process.env.LABTOOLS_ADMIN_PASSWORD=SHARED;
+     const malformed=new NextRequest('https://soullab.life/api/admin/auth',{
+       method:'POST',
+       headers:{cookie:'maia_session=fixture-founder-both','content-type':'application/json',
+         'x-forwarded-for':'198.51.100.47'},
+       body:'{bad-json-with-private-payload'
+     });
+     const bad=await passwordPOST(malformed);
+     expect(bad.status).toBe(500);
+     expect(loginAuditRows().map(row=>row[0])).toEqual(['denied','denied']);
+     expect(JSON.stringify(spy.mock.calls)).not.toContain('bad-json-with-private-payload');
+   }finally{
+     if(old===undefined) delete process.env.LABTOOLS_ADMIN_PASSWORD;
+     else process.env.LABTOOLS_ADMIN_PASSWORD=old;
+     spy.mockRestore();
+   }
+ });
+
+ it('logs a generic audit failure but keeps an authorized response non-blocking',async()=>{
+   const spy=jest.spyOn(console,'error').mockImplementation(()=>{});
+   db.mockImplementation((sql:string,params:unknown[])=>{
+     if(sql.includes('INSERT INTO admin_access_log'))
+       return Promise.reject(new Error('fictional-audit-outage-with-secret'));
+     return fakeSql(sql,params);
+   });
+   try{
+     const res=await passwordPOST(request('/api/admin/auth',{
+       token:'fixture-app-admin-only',method:'POST',ip:'198.51.100.48',body:{password:SHARED}
+     }));
+     expect(res.status).toBe(200);
+     expect(spy).toHaveBeenCalledWith('[admin/audit] admin_access_log write failed');
+     expect(JSON.stringify(spy.mock.calls)).not.toContain('fictional-audit-outage-with-secret');
+     expect(JSON.stringify(spy.mock.calls)).not.toContain(SHARED);
+   }finally{
+     spy.mockRestore();
+   }
+ });
+
+ it('owner GET remains separately audited, never mistaken for a password-login POST',async()=>{
+   const checked=await checkOwner('fixture-founder-role-only');
+   expect(checked.body).toMatchObject({isAdmin:true,role:'founder'});
+   expect(loginAuditRows()).toHaveLength(0);
+   expect(db.mock.calls.some((call:unknown[])=>
+     String(call[0]).includes('INSERT INTO admin_access_log') &&
+     Array.isArray(call[1]) && call[1][3]==='/api/admin/auth'
+   )).toBe(true);
+ });
+
+ it('normalizes a trusted-proxy XFF chain to the first IP for the audit record',async()=>{
+   const res=await passwordPOST(request('/api/admin/auth',{
+     token:'fixture-app-admin-only',method:'POST',ip:' 198.51.100.49, 192.0.2.1',
+     body:{password:'incorrect'}
+   }));
+   expect(res.status).toBe(401);
+   expect(loginAuditRows()[0][4]).toBe('198.51.100.49');
  });
 });
