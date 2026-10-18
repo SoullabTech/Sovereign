@@ -52,12 +52,16 @@ export async function POST(req: NextRequest) {
       // Lock the ledger row before any member write; competing redemptions
       // serialize. Never select by email or client-provided member UUID.
       const claim = await tx.query<{ id: string; member_id: string }>(
-        `SELECT id, member_id FROM admin_member_recovery_tokens
-          WHERE token_hash = $1 AND redeemed_at IS NULL AND revoked_at IS NULL
-            AND expires_at > clock_timestamp()
-            AND delivery_method = 'email'
-            AND delivery_status = 'provider_accepted'
-          FOR UPDATE`,
+        `SELECT t.id, t.member_id FROM admin_member_recovery_tokens t
+          JOIN members m ON m.id = t.member_id
+          WHERE t.token_hash = $1 AND t.redeemed_at IS NULL AND t.revoked_at IS NULL
+            AND t.expires_at > clock_timestamp()
+            AND t.delivery_method = 'email'
+            AND t.delivery_status = 'provider_accepted'
+            AND m.email_verified IS TRUE
+            AND m.recovery_email_verification_id IS NOT NULL
+            AND m.recovery_email_verification_id = t.email_verification_id
+          FOR UPDATE OF t, m`,
         [tokenHash],
       );
       if (!claim.rows.length) return false;
