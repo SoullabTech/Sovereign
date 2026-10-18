@@ -180,5 +180,26 @@
     "activate AIN corpus retrieval",
     "modify production or canonical Commons"
   ],
-  "next_founder_decision": "Ratify/modify service promise and first consent-first pilot, not production activation or third-party licensing."
+  "next_founder_decision": "Ratify/modify service promise and first consent-first pilot, not production activation or third-party licensing.",
+  "keeper_hosted_fields": {
+    "status": "approval_candidate_not_active",
+    "scope": "existing dyadic/circle/constellation/interest_commons/co_lab",
+    "charter": "KEEPER-HOSTED-FIELD_APPROVAL-AND-ENGAGEMENT-CANDIDATE_20261017.md",
+    "approval_contract": "KEEPER-HOSTED-FIELD_APPROVAL-CONTRACT_CANDIDATE_20261017.json",
+    "founder_approval_required": true,
+    "keeper_specific_acceptance_required": true,
+    "member_informed_entry_required": true,
+    "verified_operational_access_required": true,
+    "recording_requires_separate_consent": true,
+    "copyright_licensing_independent": true,
+    "role_scope_limited_and_revocable": true,
+    "glenn_perry_field_exists": false,
+    "keeper_role_assigned": false,
+    "member_enrollment_open": false,
+    "keeper_can_access_private_member_data": false,
+    "maia_may_speak_as_keeper": false,
+    "open_events": false,
+    "auto_invitations": false,
+    "live_runtime": false
+  }
 }
