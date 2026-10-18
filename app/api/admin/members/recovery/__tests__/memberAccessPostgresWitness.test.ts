@@ -15,7 +15,17 @@ const FOUNDER = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const TARGET = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const MEMBER_EMAIL = 'fictional-member@example.invalid';
 const URL = 'postgresql://postgres:postgres@127.0.0.1:5432/postgres';
-const mockSend = jest.fn(async (_opts: unknown) => ({ success: true }));
+type FakeMailResult = { success: boolean; provider?: string; id?: string };
+const mockSend = jest.fn<(_opts: unknown) => Promise<FakeMailResult>>(async () =>
+  ({ success: true, provider: 'smtp', id: 'FICTIONAL-SMTP-ID' }));
+const fictionalSmtpProvider = {
+  name: 'smtp',
+  isConfigured: () => true,
+  send: jest.fn(async () => ({ accepted: false as const, rawError: 'never send real mail' })),
+};
+jest.mock('@/lib/email/providers', () => ({
+  __esModule: true, getEmailProvider: () => fictionalSmtpProvider,
+}));
 
 jest.mock('@/lib/email/sendEmail', () => ({
   __esModule: true, SENDERS: { noreply: 'Soullab <noreply@soullab.life>' },
@@ -67,11 +77,16 @@ beforeAll(async () => {
     throw new Error('Refused: recovery SQL witness requires the exact ephemeral CI PostgreSQL URL');
   }
   process.env.MEMBER_ACCESS_RECOVERY_ENABLED = '1';
+  process.env.EMAIL_PROVIDER = 'smtp';
   scratch = new Pool({ connectionString: URL });
   await scratch.query(`
     CREATE TABLE members (
       id uuid PRIMARY KEY, email text, admin_role text, password_hash text,
-      password_changed_at timestamptz, updated_at timestamptz
+      password_changed_at timestamptz, updated_at timestamptz,
+      email_verified boolean NOT NULL DEFAULT false,
+      email_verified_at timestamptz,
+      email_verification_token text,
+      email_verification_sent_at timestamptz
     );
     CREATE TABLE auth_sessions (
       member_id uuid REFERENCES members(id), session_token text PRIMARY KEY,
@@ -101,11 +116,76 @@ afterAll(async () => {
 
 beforeEach(async () => {
   mockSend.mockReset();
-  mockSend.mockResolvedValue({ success: true });
+  mockSend.mockResolvedValue({ success: true, provider: 'smtp', id: 'FICTIONAL-SMTP-ID' });
+  process.env.EMAIL_PROVIDER = 'smtp';
   await query('DELETE FROM admin_member_recovery_tokens');
   await query('DELETE FROM admin_access_log');
   await query('UPDATE auth_sessions SET revoked = false');
+  await query('UPDATE members SET email=$1, email_verified=FALSE, email_verified_at=NULL, email_verification_token=NULL, email_verification_sent_at=NULL WHERE id=$2',
+    [MEMBER_EMAIL, TARGET]);
+  await query("UPDATE members SET email_verification_token='FICTIONAL-VERIFY-TOKEN', email_verification_sent_at=clock_timestamp() WHERE id=$1", [TARGET]);
+  await query('UPDATE members SET email_verified=TRUE, email_verification_token=NULL WHERE id=$1', [TARGET]);
   await query(`UPDATE members SET password_hash='EXISTING_MEMBER_HASH', password_changed_at=NULL WHERE id=$1`, [TARGET]);
+});
+
+describe('verified CURRENT email proof and bound recovery', () => {
+  it('denies legacy email_verified true without a fresh verification nonce', async () => {
+    await query('UPDATE members SET email_verified=FALSE WHERE id=$1', [TARGET]);
+    await query('UPDATE members SET email_verified=TRUE WHERE id=$1', [TARGET]);
+    const row = await query('SELECT email_verified,recovery_email_verification_id FROM members WHERE id=$1', [TARGET]);
+    expect(row.rows[0].email_verified).toBe(true);
+    expect(row.rows[0].recovery_email_verification_id).toBeNull();
+    expect((await issue()).status).toBe(409);
+    expect(mockSend).not.toHaveBeenCalled();
+  });
+
+  it('binds a verified email to a fresh nonce and clears both if the address changes', async () => {
+    const initial = await query('SELECT recovery_email_verification_id,email_verified FROM members WHERE id=$1', [TARGET]);
+    expect(initial.rows[0].email_verified).toBe(true);
+    expect(initial.rows[0].recovery_email_verification_id).not.toBeNull();
+
+    expect((await issue()).status).toBe(200);
+    const rawToken = tokenFromEmail();
+    const issued = await query('SELECT email_verification_id FROM admin_member_recovery_tokens');
+    expect(issued.rows[0].email_verification_id).toEqual(initial.rows[0].recovery_email_verification_id);
+
+    await query('UPDATE members SET email=$1 WHERE id=$2', ['changed@example.invalid', TARGET]);
+    const changed = await query('SELECT email_verified,email_verification_token,recovery_email_verification_id FROM members WHERE id=$1', [TARGET]);
+    expect(changed.rows[0].email_verified).toBe(false);
+    expect(changed.rows[0].recovery_email_verification_id).toBeNull();
+    expect(changed.rows[0].email_verification_token).toBeNull();
+    expect((await redeem(rawToken)).status).toBe(400);
+    expect((await query('SELECT password_hash FROM members WHERE id=$1', [TARGET])).rows[0].password_hash).toBe('EXISTING_MEMBER_HASH');
+  });
+
+  it('re-verification of a changed email issues a DIFFERENT nonce; old link stays unusable', async () => {
+    const first = await query('SELECT recovery_email_verification_id FROM members WHERE id=$1', [TARGET]);
+    expect((await issue()).status).toBe(200);
+    const oldLink = tokenFromEmail();
+    await query('UPDATE members SET email=$1 WHERE id=$2', ['new-current@example.invalid', TARGET]);
+    await query("UPDATE members SET email_verification_token='FICTIONAL-NEW-VERIFY-TOKEN', email_verification_sent_at=clock_timestamp() WHERE id=$1", [TARGET]);
+    await query('UPDATE members SET email_verified=TRUE,email_verification_token=NULL WHERE id=$1', [TARGET]);
+    const next = await query('SELECT recovery_email_verification_id FROM members WHERE id=$1', [TARGET]);
+    expect(next.rows[0].recovery_email_verification_id).not.toBeNull();
+    expect(next.rows[0].recovery_email_verification_id).not.toEqual(first.rows[0].recovery_email_verification_id);
+    expect((await redeem(oldLink)).status).toBe(400);
+    expect((await issue()).status).toBe(200);
+  });
+
+  it('refuses proof minted from expired or impossible future email verification tokens', async () => {
+    await query('UPDATE members SET email_verified=FALSE WHERE id=$1', [TARGET]);
+    await query("UPDATE members SET email_verification_token='EXPIRED', email_verification_sent_at=clock_timestamp()-interval '25 hours' WHERE id=$1", [TARGET]);
+    await query('UPDATE members SET email_verified=TRUE,email_verification_token=NULL WHERE id=$1', [TARGET]);
+    const expired = await query('SELECT recovery_email_verification_id FROM members WHERE id=$1', [TARGET]);
+    expect(expired.rows[0].recovery_email_verification_id).toBeNull();
+    await query('UPDATE members SET email_verified=FALSE WHERE id=$1', [TARGET]);
+    await query("UPDATE members SET email_verification_token='FUTURE', email_verification_sent_at=clock_timestamp()+interval '1 hour' WHERE id=$1", [TARGET]);
+    await query('UPDATE members SET email_verified=TRUE,email_verification_token=NULL WHERE id=$1', [TARGET]);
+    const future = await query('SELECT recovery_email_verification_id FROM members WHERE id=$1', [TARGET]);
+    expect(future.rows[0].recovery_email_verification_id).toBeNull();
+    expect((await issue()).status).toBe(409);
+    expect(mockSend).not.toHaveBeenCalled();
+  });
 });
 
 describe('real PostgreSQL one-use admin recovery', () => {
