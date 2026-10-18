@@ -14,6 +14,18 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## Gathering direction — Online first, then hybrid (Stage G)
+
+**Founder direction accepted for preparation, not event creation.** Start with a private online Wisdom Circle; extend to human study gatherings and keeper-hosted online experiences only by explicit keeper/member choice. Later, introduce local and remote hybrid meetings, workshops and retreats after proving genuine remote participation parity, sound and privacy.
+
+- [Founder-facing online-first/hybrid brief](./STAGE-G_ONLINE-FIRST_TO-HYBRID_FOUNDER-BRIEF_20261017.md) — the four phases and the next one decision: **which existing video account/provider to test privately**.
+- [Stage G full service and operations roadmap](./STAGE-G_ONLINE-FIRST_TO-HYBRID_GATHERINGS-CANDIDATE_20261017.md) — repo media-stack distinctions, provider-agnostic pilot, accessibility, remote/local hosting parity, safeguards and independent hybrid release.
+- [Delivery contract](./STAGE-G_ONLINE-TO-HYBRID_DELIVERY-CONTRACT_CANDIDATE_20261017.json) — **no meeting/provider/URL, invitation, recording, roster, membership, or event activated**; hybrid venue and technical verification also unset.
+- [Stage G source/browser test witness](./STAGE-G_ONLINE-TO-HYBRID_WITNESS_20261017.md) — **153/153 combined isolated checks PASS** at the exact tested source revision, targeted strict preview TypeScript check.
+- The [disabled founder preview](../../../../app/maia/perry-lens-preview/page.tsx) now compares Online first / Hybrid later without live media access.
+
+**Source of truth:** No video provider has been selected or proved privacy-compatible. Soullab's individual Session Room WebRTC and LiveKit token substrate do not certify a private multiperson event; the public event registration endpoint is inappropriate for a private Wisdom Circle. Choose/test a provider first, then date and consent, then separate invitations.
+
 ## First human pilot — Where Symbols Meet Life (Stage F)
 
 **Founder development approved; no invitation, booking or launch authority.** Prepare a small, founder-hosted educational Circle **before** claiming any living keeper partnership. A 75-minute six-movement format begins with an original Soullab elemental inquiry and lets members speak, remain silent, or reject the symbolism. Glenn Perry is only an unaffiliated, correctly linked public source reference.
