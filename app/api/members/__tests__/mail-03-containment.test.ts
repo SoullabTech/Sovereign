@@ -31,6 +31,23 @@ jest.mock('resend', () => ({
   })),
 }));
 
+// Retain MAIL-03 legacy behavior tests while verifying the approved SMTP
+// identity provider with no real network calls or credentials.
+const fictionalSmtpProvider = {
+  name: 'smtp',
+  isConfigured: () => true,
+  send: async (message: unknown) => {
+    const answer = await mockSend(message);
+    if (answer.error || !answer.data?.id) {
+      return { accepted: false as const, rawError: answer.error ?? { name: 'not_accepted' } };
+    }
+    return { accepted: true as const, providerMessageId: answer.data.id };
+  },
+};
+jest.mock('@/lib/email/providers', () => ({
+  __esModule: true, getEmailProvider: () => fictionalSmtpProvider,
+}));
+
 const mockCheckRateLimit = jest.fn<(...args: unknown[]) => Promise<{ allowed: boolean }>>();
 jest.mock('@/lib/auth/rateLimiter', () => ({
   checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
@@ -76,6 +93,7 @@ const sentTo = () =>
 beforeEach(() => {
   jest.clearAllMocks();
   process.env.RESEND_API_KEY = 'test-key';
+  process.env.EMAIL_PROVIDER = 'smtp';
   delete process.env.CAPACITOR_BUILD;
   mockSend.mockResolvedValue({ data: { id: 'provider-id' }, error: null });
   mockCheckRateLimit.mockResolvedValue({ allowed: true });
@@ -138,6 +156,29 @@ describe('POST /api/members/send-verification — the destination is the record'
 
     expect(res.status).toBe(429);
     expect(mockSend).not.toHaveBeenCalled();
+  });
+
+  it('refuses missing/Resend/memory selection before minting a verification token', async () => {
+    for (const selected of [undefined, 'resend', 'memory']) {
+      if (selected === undefined) delete process.env.EMAIL_PROVIDER;
+      else process.env.EMAIL_PROVIDER = selected;
+      const result = await sendVerificationPOST(
+        req('/api/members/send-verification', { memberId: MEMBER.id, email: MEMBER.email }),
+      );
+      expect(result.status).toBe(503);
+    }
+    expect(mockSend).not.toHaveBeenCalled();
+    expect(mockQuery.mock.calls.every(([sql]) => !/SET email_verification_token/i.test(String(sql)))).toBe(true);
+  });
+
+  it('pins the managed noreply sender and current configured SMTP provider', async () => {
+    const result = await sendVerificationPOST(
+      req('/api/members/send-verification', { memberId: MEMBER.id, email: MEMBER.email }),
+    );
+    expect(result.status).toBe(200);
+    expect(sentTo()).toEqual([MEMBER.email]);
+    const sent = mockSend.mock.calls.at(-1)?.[0] as { from?: string };
+    expect(sent.from).toBe('Soullab <noreply@soullab.life>');
   });
 
   it('meters on IP and on member, not just one of them', async () => {
