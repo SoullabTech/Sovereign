@@ -83,6 +83,14 @@ The first gate run correctly failed because the new failure-audit line increased
 6. **Whole-product candidate build:** Stage N previously passed the entire Next16 offline application build using the Gather preview without these auth corrections. Stage P verifies a smaller current-source integrated Next16 build and the full-source type-health gate, **not** a separate full-app production-mode build with this exact auth branch.
 7. **Actual founder staging identity:** no real account/credential, production PostgreSQL, live staging login or persistent deployment was used. Circle cohort admission, private multiperson video, keeper permission and copyrighted source ingestion remain separate release gates.
 
+## Post-test cleanup completed
+
+Before destroying the disposable test database, the aggregate-only inventory contained **two fictional members, 11 synthetic sessions (four revoked), and 11 audit rows**. This is not a production population or independent recovery evidence.
+
+The temporary HTTPS reverse proxy, Next.js auth test server, and Unix-socket PostgreSQL instance were shut down by their verified process/data-directory identities. Their private synthetic account credentials, issued fixture tokens, test-only TLS certificate/key, application files, and separate TypeScript test snapshot were then removed. Ports 3827/3830 closed and the private PostgreSQL socket no longer existed. Production-associated local PostgreSQL listeners at 5432 and 5433 remained untouched.
+
+The **existing founder design preview** at `http://127.0.0.1:3817/fixture` still returned HTTP 200. The Mac Studio active Soullab worktree remained clean; approximately 28 GiB disk space was available after cleanup. No permanent test account, HTTPS listener or production authorization was created.
+
 ### Disposition
 
 **Exact-path web sign-out, durable SQL revocation, genuine founder/nonfounder separation, HTTPS/Safari cookies and baseline-no-regression: ISOLATED PASS.**
