@@ -655,6 +655,11 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/steward/opus-pulse', minTier: 'free', rolesAnyOf: ['steward', 'admin'], notes: 'Opus Pulse internal telemetry — steward/admin only; route also verifies authority directly' },
   { exact: '/api/feedback', public: true, notes: 'Feedback POST is public/member-facing; GET is independently admin-gated in the route handler' },
   { exact: '/api/supervision/transcript/list', minTier: 'free', notes: 'Supervision transcript transport — authenticated outer gate; GET is independently Lab Tools-gated in the handler' },
+  // Reflect E010 status GET: coarse verified-member session at the proxy;
+  // the route itself requires a database-verified founder admin_role and
+  // explicitly rejects shared-password-only administrator sessions.
+  // Do not treat this entry as a Reflect activation or release entitlement.
+  { exact: '/api/admin/reflect-release-status', minTier: 'free', notes: 'Reflect E010 read-only status — authenticated outer gate; founder member-session-only GET authority verified in route' },
   { prefix: '/api/admin/partners/prelude/', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Partner prelude administration — admin only; route also verifies authority directly' },
   { prefix: '/api/supervision', minTier: 'free', notes: 'Supervision API' },
 

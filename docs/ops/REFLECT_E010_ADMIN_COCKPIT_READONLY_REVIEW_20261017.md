@@ -70,3 +70,47 @@ its own beta/production policy review before a wider launch.
 on soullab.life unless separately reviewed and deployed through an approved
 release lane. Even a future approved deployment of this read-only status would
 not supply the qualified operator needed to activate Reflect.
+
+## Additional strict-mode routing qualification — isolated candidate only
+
+The existing seven-file panel PR #1846 does not register
+`/api/admin/reflect-release-status` in `config/accessMatrix.ts`. Under
+`ACCESS_CONTROL_MODE=strict`, the real Next.js proxy would refuse that
+unmapped API as `no-rule-match` (HTTP 404) **before** the status handler and
+its verified-founder-member-session gate can run. The earlier isolated Next.js
+browser fixture did not include the production `proxy.ts`; therefore its
+green browser checks cannot prove strict-mode route admission.
+
+A separately scoped *local-only* review candidate adds the **exact**
+`/api/admin/reflect-release-status` rule with `minTier: 'free'` and no
+`public: true`. This requires a verified member session at the proxy, then
+leaves stronger `checkAdminAuth(req, ['founder'])`, `via === 'member'`
+and founder role requirements in the actual GET handler. No role may be
+inferred from an unverified header or cookie. Nearby sibling URLs remain
+unmapped/denied in strict mode. This extends the E010 cumulative diff from
+seven files to **eight** and requires its own explicit source review and
+CI on the future published SHA. It is not part of PR #1846 as currently
+published.
+
+**Additional pre-existing dependencies:** strict-mode routing does not
+currently map the legacy `/api/admin/auth` or `/api/admin/settings`
+handlers, while `/labtools/admin/system` requires `members.roles` to
+include the application `admin` role, independently of
+`members.admin_role='founder'`. Thus the exact status endpoint mapping
+alone does not prove the entire existing Admin Cockpit works under strict
+routing or for a founder who lacks the separate application role. Do not
+weaken the outer Admin Cockpit gate or make password routes public merely
+to satisfy this isolated status candidate. Those existing boundary
+questions require separate measured reconciliation and authorization.
+
+**Parallel change coordination:** unmerged PR #1849 also modifies
+`config/accessMatrix.ts` for Member Access recovery. Before admission to
+any canonical build, reconcile both exact path sets and retest the combined
+strict matrix. Unmerged PR #1847 also updates
+`lib/admin/adminAuth.ts` auditing, so validate compatibility with its
+exact accepted version if/when that patch lands. Neither parallel PR
+authorizes or supplies the Reflect activation operator.
+
+**Disposition:** strict status endpoint *source* rule can be exercised
+hermetically without production access. All release, deployment,
+emergency-containment, and Reflect activation holds remain in force.

@@ -4,6 +4,7 @@
 import { NextRequest } from 'next/server';
 import { checkAdminAuth } from '@/lib/admin/adminAuth';
 import { GET } from '../reflect-release-status/route';
+import { checkAccess, matchRule } from '@/config/accessMatrix';
 
 jest.mock('@/lib/admin/adminAuth', () => ({
   checkAdminAuth: jest.fn(),
@@ -17,6 +18,46 @@ const makeRequest = () =>
   new NextRequest('https://soullab.life/api/admin/reflect-release-status', {
     method: 'GET',
   });
+
+describe('Reflect E010 strict production proxy route contract', () => {
+  const previous = process.env.ACCESS_CONTROL_MODE;
+  beforeAll(() => { process.env.ACCESS_CONTROL_MODE = 'strict'; });
+  afterAll(() => {
+    if (previous === undefined) delete process.env.ACCESS_CONTROL_MODE;
+    else process.env.ACCESS_CONTROL_MODE = previous;
+  });
+
+  it('explicitly maps the exact status path, never as a public route', () => {
+    const rule = matchRule('/api/admin/reflect-release-status');
+    expect(rule).toMatchObject({
+      exact: '/api/admin/reflect-release-status',
+      minTier: 'free',
+    });
+    expect(rule?.public).not.toBe(true);
+    expect(matchRule('/api/admin/reflect-release-status-forged')).toBeNull();
+  });
+
+  it('denies anonymous and admits an authenticated member only to the founder-gated handler', () => {
+    const path = '/api/admin/reflect-release-status';
+    expect(checkAccess(path, 'free', [], false)).toMatchObject({
+      allowed: false,
+      reason: 'unauthenticated',
+    });
+    // The outer proxy does not know the database admin_role; the GET handler
+    // alone enforces founder-only, denies CTO and shared-password access.
+    expect(checkAccess(path, 'free', ['member'], true).allowed).toBe(true);
+    expect(checkAccess(path, 'free', ['admin'], true).allowed).toBe(true);
+  });
+
+  it('does not make sibling admin paths public or give access to unrelated routes', () => {
+    const status = '/api/admin/reflect-release-status';
+    expect(checkAccess(status, 'free', [], false).allowed).toBe(false);
+    expect(checkAccess(status+'-sibling', 'free', [], false)).toMatchObject({
+      allowed: false,
+      reason: 'no-rule-match',
+    });
+  });
+});
 
 describe('Reflect E010 founder-only read-only admin status GET', () => {
   const previousEnabled = process.env.PRO_STUDIO_REFLECT_BETA_ENABLED;
