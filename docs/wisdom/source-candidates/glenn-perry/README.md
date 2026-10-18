@@ -14,6 +14,17 @@ safe_for_retrieval: false
 
 **State: source-linked editorial candidate only. Not corpus-admitted, licensed full-text retrieval, prompt material, deployed software, or founder-ratified teaching.**
 
+## Stage O — Disposable PostgreSQL sign-in verified; sign-out is a release blocker
+
+**Actual password authentication and founder restriction were verified using the protected route/proxy/session code against a private, Unix-socket-only PostgreSQL 14.19 fixture** with two entirely fictional bcrypt-backed members. This did not use the live Soullab database or real credentials.
+
+- [Stage O real-PostgreSQL witness and sign-out security docket](./STAGE-O_REAL-POSTGRES-FOUNDER-SIGNIN-SIGNOUT-RELEASE-BLOCKER_20261018.md): original wrong/unknown credential denial (401), founder HTTP 200 with durable signed-in session and Secure/HttpOnly cookie, ordinary member denied founder (404), real proxy stripping forged role/tier, four auth audit records.
+- **Confirmed release blocker:** `POST /api/members/signout` returns **404** under the protected strict `config/accessMatrix.ts`: `/api/members/signin` has a declared route, `/api/members/signout` has none. **No database session revocation was proven**. Do not claim sign-out success or loosen an entire API prefix.
+- **Separate code-review risk:** the original password sign-in route includes a catch that may return `success: true` even when durable session creation fails. Requires bounded failure-injection tests, not a production claim.
+- The disposable Next.js auth test app, test PostgreSQL, fictional credentials and synthetic session records were shut down and removed after evidence capture. Existing PostgreSQL listeners on `5432/5433` and the original **Mac Studio-only** Gather Together design preview at `http://127.0.0.1:3817/fixture` remained unchanged.
+
+**Next authorization:** a distinct, independently reviewed **isolated auth-security correction** for exact sign-out access with origin/CSRF discipline and session-creation fail-closed semantics. Then real PostgreSQL sign-out/revocation, HTTPS/Safari and whole-product staging acceptance—**before any genuine founder staging login**. Member rollout, Keeper partnership and source ingestion remain HOLD.
+
 ## Stage N — Full protected Next.js 16 build PASS, canonical type gate PASS (release HOLD)
 
 **Next milestone verified without any production access.** At pinned protected commit `6a144edabc686afc9b99828726c214dc7800158f`, with the three exact Gather Together preview modules from research revision `b316e70627d03ca79ed3eebbbafcf9073961f41e`, the Mac Studio completed a **full Next.js 16.3.8 offline production-mode Webpack build**: exit **0**, **823/823** static pages, `/wisdom-keepers/wisdom/gather-preview` compiled, and the normal Next **Proxy (Middleware)** emitted.
