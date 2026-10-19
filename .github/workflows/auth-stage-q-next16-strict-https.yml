@@ -1,0 +1,97 @@
+# Stage Q genuine Next16 strict-proxy HTTP acceptance.
+# Never accesses deployed Soullab or invokes deployment machinery.
+# Source copies and Next build live exclusively in /tmp on the CI runner.
+name: Stage Q Next16 Strict HTTPS Fixture (NO DEPLOY)
+
+on:
+  push:
+    branches:
+      - security/auth-stage-q-next16-edge-contract-20261019
+  pull_request:
+    branches:
+      - security/auth-stage-q-https-webkit-preflight-20261019
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-q-next16-https-fixture
+  cancel-in-progress: true
+
+jobs:
+  next16-http:
+    name: Fictional Next16 proxy + HTTPS WebKit + PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: stageq_next16_fixture
+          POSTGRES_PASSWORD: stageq_next16_fictional_password_only
+          POSTGRES_DB: stageq_next16_fictional
+        ports:
+          - 5549:5432
+        options: >-
+          --health-cmd "pg_isready -U stageq_next16_fixture -d stageq_next16_fictional"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
+    env:
+      STAGE_Q_NEXT16_DISPOSABLE: stageq-next16-fictional-only
+      PGHOST: 127.0.0.1
+      PGPORT: "5549"
+      PGDATABASE: stageq_next16_fictional
+      PGUSER: stageq_next16_fixture
+      PGPASSWORD: stageq_next16_fictional_password_only
+      DATABASE_URL: postgresql://stageq_next16_fixture:stageq_next16_fictional_password_only@127.0.0.1:5549/stageq_next16_fictional
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - name: Checkout isolated source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked test dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      - name: Apply pinned package patches for genuine Next build
+        run: ./node_modules/.bin/patch-package
+
+      - name: Install genuine Linux WebKit
+        run: ./node_modules/.bin/playwright install --with-deps webkit
+
+      - name: Verify source custody
+        run: |
+          git rev-parse HEAD
+          git hash-object proxy.ts
+          git hash-object config/accessMatrix.ts
+          git hash-object lib/auth/verifiedAccess.ts
+          git hash-object app/api/members/signout/route.ts
+          git hash-object docs/security/auth-stage-q-next16-fixture-build.cjs
+          git hash-object docs/security/auth-stage-q-next16-realhttp.test.cjs
+
+      - name: Compile disposable Next16 strict-proxy application
+        run: node docs/security/auth-stage-q-next16-fixture-build.cjs build
+
+      - name: Execute real Next16 / HTTPS / WebKit / SQL tests
+        run: node --test docs/security/auth-stage-q-next16-realhttp.test.cjs
+
+      - name: Remove disposable Next16 application and manifest
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ -f "/tmp/soullab-stageq-next16-${GITHUB_SHA:0:16}/.stageq-fixture" ]; then
+            node docs/security/auth-stage-q-next16-fixture-build.cjs cleanup
+          fi
