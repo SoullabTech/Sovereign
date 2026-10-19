@@ -63,7 +63,7 @@ export function FieldMemory({ circleId }: FieldMemoryProps) {
           This circle&apos;s journey has just begun.
         </p>
         <p className="mt-1 text-xs text-maia-ink-20">
-          Past inquiries and their syntheses will appear here.
+          Past inquiries will appear here.
         </p>
       </div>
     );

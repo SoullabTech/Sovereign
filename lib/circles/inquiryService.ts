@@ -89,29 +89,40 @@ export async function respondToInquiry(
 
 export async function closeInquiry(
   inquiryId: string,
+  circleId: string,
   memberId: string,
-  fieldSynthesis?: string
+  fieldSynthesis?: string | null
 ): Promise<CircleInquiryRow> {
-  const inquiry = await queryOne<CircleInquiryRow>(
-    `SELECT * FROM circle_inquiries WHERE id = $1`,
+  // R1F: synthesis remains unavailable until separate provenance/consent approval.
+  if (fieldSynthesis != null) throw new Error('SYNTHESIS_DISABLED');
+
+  const inquiry = await queryOne<Pick<CircleInquiryRow, 'id' | 'circle_id' | 'opened_by' | 'status'>>(
+    `SELECT id, circle_id, opened_by, status FROM circle_inquiries WHERE id = $1`,
     [inquiryId]
   );
-  if (!inquiry) throw new Error('NOT_FOUND');
-  if (inquiry.status !== 'open') throw new Error('INQUIRY_NOT_OPEN');
+  if (!inquiry || inquiry.circle_id !== circleId) throw new Error('NOT_FOUND');
+  await getCircleWithMembership(circleId, memberId);
   if (inquiry.opened_by !== memberId) throw new Error('NOT_OPENER');
+  if (inquiry.status !== 'open') throw new Error('INQUIRY_NOT_OPEN');
 
-  // Always 'closed' (B-09, founder ruling E). A synthesis is an optional
-  // property of a closed inquiry, never a second status — encoding it as one
-  // duplicated `field_synthesis IS NOT NULL` and could drift from it.
+  // The conditional transition rejects competing closes and removed members.
+  // Membership row lock coordinates with concurrent Circle leave/removal writes.
   const result = await queryOne<CircleInquiryRow>(
-    `UPDATE circle_inquiries
-     SET status = 'closed', closed_at = NOW(), field_synthesis = $1
-     WHERE id = $2
-     RETURNING *`,
-    [fieldSynthesis ?? null, inquiryId]
+    `UPDATE circle_inquiries ci
+     SET status = 'closed', closed_at = NOW(), field_synthesis = NULL
+     WHERE ci.id = $1 AND ci.circle_id = $2 AND ci.opened_by = $3
+       AND ci.status = 'open'
+       AND EXISTS (
+         SELECT 1 FROM circle_memberships cm
+         WHERE cm.circle_id = ci.circle_id AND cm.member_id = $3
+           AND cm.status = 'active'
+         FOR SHARE
+       )
+     RETURNING ci.*`,
+    [inquiryId, circleId, memberId]
   );
-
-  return result!;
+  if (!result) throw new Error('INQUIRY_NOT_OPEN');
+  return result;
 }
 
 // ── List Inquiries ───────────────────────────────────────────
@@ -123,12 +134,14 @@ export async function listInquiries(
 ): Promise<(CircleInquiryRow & { opener_name: string | null })[]> {
   await getCircleWithMembership(circleId, memberId);
 
-  const statusClause = status ? `AND ci.status = $3` : '';
-  const params: any[] = [circleId, memberId];
+  const statusClause = status ? `AND ci.status = $2` : '';
+  const params: any[] = [circleId];
   if (status) params.push(status);
 
   const result = await query(
-    `SELECT ci.*,
+    `SELECT ci.id, ci.circle_id, ci.opened_by, ci.question, ci.status,
+       ci.opened_at, ci.closed_at, ci.created_at, ci.updated_at,
+       NULL::text AS field_synthesis,
        m.name AS opener_name
      FROM circle_inquiries ci
      LEFT JOIN members m ON m.id = ci.opened_by
@@ -155,7 +168,9 @@ export async function getInquiryWithResponses(
   hasResponded: boolean;
 }> {
   const inquiry = await queryOne<CircleInquiryRow & { opener_name: string | null }>(
-    `SELECT ci.*, m.name AS opener_name
+    `SELECT ci.id, ci.circle_id, ci.opened_by, ci.question, ci.status,
+       ci.opened_at, ci.closed_at, ci.created_at, ci.updated_at,
+       NULL::text AS field_synthesis, m.name AS opener_name
      FROM circle_inquiries ci
      LEFT JOIN members m ON m.id = ci.opened_by
      WHERE ci.id = $1`,
