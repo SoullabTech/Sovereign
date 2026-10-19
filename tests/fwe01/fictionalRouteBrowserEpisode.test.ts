@@ -253,7 +253,9 @@ async function handler(incoming: IncomingMessage, outgoing: ServerResponse) {
       html(outgoing, 404, '<p>Unrecognized fictional manuscript.</p>');
       return;
     }
-    const contextResponse = await contextGET(req);
+    const contextRequest = makeNextReq(incoming,
+      '/api/writers-studio/rebuild/context?manuscriptId=' + MANUSCRIPT);
+    const contextResponse = await contextGET(contextRequest);
     if (!contextResponse.ok) {
       await sendResponse(outgoing, contextResponse);
       return;
