@@ -39,10 +39,10 @@ const originals = [
 // Preserve the exact small display-name function without loading unrelated
 // practitioner/PHI modules into a fictional authentication-only fixture.
 const clientsOriginal=fs.readFileSync(path.join(root,'lib/stellium/clients.ts'),'utf8');
-const displayFragment=clientsOriginal.match(/export function resolveMemberDisplayName\\([\\s\\S]*?\\n\\}/);
+const displayFragment=clientsOriginal.match(/export function resolveMemberDisplayName\([\s\S]*?\n\}/);
 if(!displayFragment)throw Error('Reviewed display-name resolver extraction failed');
 const fixtureFiles = {
-  'lib/stellium/clients.ts': displayFragment[0]+'\\n',
+  'lib/stellium/clients.ts': displayFragment[0]+'\n',
   'app/layout.tsx': [
     'export default function Layout({children}:{children:React.ReactNode}){',
     'return <html lang="en"><body>{children}</body></html>;',
