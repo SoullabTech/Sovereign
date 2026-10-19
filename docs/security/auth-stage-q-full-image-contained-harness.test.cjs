@@ -122,10 +122,16 @@ test.before(async()=>{
   '-e','POSTGRES_USER='+PG_USER,'-e','POSTGRES_PASSWORD='+PG_PASSWORD,
   '-e','POSTGRES_DB='+DB_NAME,'postgres:14-alpine']);
  await eventually(async()=>{
-  const p=spawnSync('docker',['exec',PG,'pg_isready','-U',PG_USER,'-d',DB_NAME],
-   {encoding:'utf8',timeout:4000});
-  if(p.status!==0)throw Error('Fictional PostgreSQL not ready');
- },'Fictional postgres');
+  // pg_isready can return OK during the image's temporary startup server,
+  // before POSTGRES_DB has actually been created. Require the exact database
+  // and user to accept an authenticated SQL query, then seed our schema.
+  const p=spawnSync('docker',['exec',PG,'psql','-X','-q','-A','-t',
+   '-v','ON_ERROR_STOP=1','-U',PG_USER,'-d',DB_NAME,
+   '-c','SELECT current_database(),current_user;'],{
+   encoding:'utf8',timeout:5000});
+  if(p.status!==0||(p.stdout||'').trim()!==DB_NAME+'|'+PG_USER)
+   throw Error('Exact fictional PostgreSQL database not fully initialized');
+ },'Fictional PostgreSQL database created and authenticated',45000);
  const meta=psql('SELECT current_database(),current_user;').split('\n').at(-1);
  assert.equal(meta,DB_NAME+'|'+PG_USER,'Wrong SQL database authority');
  psql([
