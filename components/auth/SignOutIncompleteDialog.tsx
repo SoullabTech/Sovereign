@@ -10,10 +10,12 @@ interface SignOutIncompleteDialogProps {
   detail: string | null;
   onStay: () => void;
   onLeaveDevice: () => void;
+  onRetry: () => void;
+  canClearDevice: boolean;
 }
 
 export function SignOutIncompleteDialog({
-  detail, onStay, onLeaveDevice,
+  detail, onStay, onLeaveDevice, onRetry, canClearDevice,
 }: SignOutIncompleteDialogProps) {
   const stayButton = useRef<HTMLButtonElement>(null);
 
@@ -39,9 +41,9 @@ export function SignOutIncompleteDialog({
           {detail}
         </p>
         <p className="mt-3 text-sm leading-relaxed text-slate-300">
-          You can stay here, or remove this device's saved sign-in information.
-          Leaving this device does not revoke an unconfirmed server session or
-          sign out other devices.
+          {canClearDevice
+            ? "The server reported clearing the browser cookies. You may now remove this device's stored sign-in information, but an unrevoked server session could remain valid elsewhere."
+            : "The server has not confirmed clearing the HttpOnly cookie. JavaScript cannot clear it. Retry sign-out or clear Soullab site data using your browser settings before sharing this device."}
         </p>
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row">
           <button
@@ -52,13 +54,23 @@ export function SignOutIncompleteDialog({
           >
             Stay here
           </button>
-          <button
-            type="button"
-            onClick={onLeaveDevice}
-            className="min-h-11 flex-1 rounded-xl bg-amber-100 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
-          >
-            Leave this device only
-          </button>
+          {canClearDevice ? (
+            <button
+              type="button"
+              onClick={onLeaveDevice}
+              className="min-h-11 flex-1 rounded-xl bg-amber-100 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+            >
+              Clear this device only
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="min-h-11 flex-1 rounded-xl bg-amber-100 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+            >
+              Retry sign-out
+            </button>
+          )}
         </div>
       </div>
     </div>
