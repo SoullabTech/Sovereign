@@ -58,6 +58,10 @@ export function HomeThreshold() {
             </div>
           ))}
         </div>
+        <div className={styles.discover}>
+          <Link href="/explore">Explore the independent doorways →</Link>
+          <p>Discover the vision and current availability before entering a private space.</p>
+        </div>
       </section>
 
       <footer className={styles.footer}>
