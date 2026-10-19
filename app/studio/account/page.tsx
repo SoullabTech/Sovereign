@@ -16,6 +16,8 @@ import {
   Globe,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { signOutCurrentBrowserSession, leaveThisBrowser } from '@/lib/auth/webSignOut';
+import { SignOutIncompleteDialog } from '@/components/auth/SignOutIncompleteDialog';
 
 interface MemberData {
   id: string;
@@ -89,6 +91,7 @@ export default function StudioAccountPage() {
   const [practitioner, setPractitioner] = useState<PractitionerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
+  const [signOutIssue, setSignOutIssue] = useState<{ detail: string; cookieClearingConfirmed: boolean } | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -140,26 +143,29 @@ export default function StudioAccountPage() {
     if (signingOut) return;
     setSigningOut(true);
     try {
-      await apiFetch('/api/members/signout', { method: 'POST' });
+      const outcome = await signOutCurrentBrowserSession();
+      if (outcome.kind === 'incomplete') {
+        setSignOutIssue(outcome);
+        return;
+      }
+      if (!leaveThisBrowser(false, true)) {
+        setSignOutIssue({ detail: 'Local sign-in information could not be cleared. Server revocation and local cleanup are separate.', cookieClearingConfirmed: true });
+      }
     } catch {
-      // Continue with client-side cleanup
+      setSignOutIssue({ detail: 'Soullab could not verify sign-out. Your server session may still be active.', cookieClearingConfirmed: false });
+    } finally {
+      setSigningOut(false);
     }
-    try {
-      localStorage.removeItem('beta_user');
-      localStorage.removeItem('soullab_member');
-      localStorage.removeItem('member_profile');
-      localStorage.removeItem('explorerId');
-      localStorage.removeItem('explorerName');
-      localStorage.removeItem('explorerPreferredName');
-      localStorage.removeItem('maia_session_version');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('displayName');
-      localStorage.removeItem('userTier');
-      sessionStorage.clear();
-    } catch {
-      // localStorage may not be available
+  }
+
+  function leaveWithoutConfirmedRevocation() {
+    if (signOutIssue?.cookieClearingConfirmed !== true) return;
+    if (!leaveThisBrowser(true, true)) {
+      setSignOutIssue({
+        detail: 'This device could not clear its saved sign-in information. Remove Soullab site data using browser settings before sharing it.',
+        cookieClearingConfirmed: false,
+      });
     }
-    window.location.href = '/signin';
   }
 
   const displayName = member?.preferredName || member?.name || member?.username || '...';
@@ -338,6 +344,14 @@ export default function StudioAccountPage() {
         </div>
       </div>
 
+      <SignOutIncompleteDialog
+        detail={signOutIssue?.detail ?? null}
+        canClearDevice={signOutIssue?.cookieClearingConfirmed === true}
+        onStay={() => setSignOutIssue(null)}
+        onRetry={() => { setSignOutIssue(null); void handleSignOut(); }}
+        onLeaveDevice={leaveWithoutConfirmedRevocation}
+      />
+
       {/* Sign Out */}
       <div className="pt-2">
         <button
@@ -346,7 +360,7 @@ export default function StudioAccountPage() {
           className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-red-400 transition-colors disabled:opacity-50"
         >
           <LogOut className="w-4 h-4" />
-          {signingOut ? 'Signing out...' : 'Sign out of all devices'}
+          {signingOut ? 'Signing out...' : 'Sign out of this device'}
         </button>
       </div>
     </div>

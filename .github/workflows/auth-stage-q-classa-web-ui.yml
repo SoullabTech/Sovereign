@@ -1,0 +1,68 @@
+# Full browser sign-out UI source qualification against PR1870's Class A
+# authentication changes. Not a staging, native, production or deploy workflow.
+name: Stage Q Class A Web UI Integration (NO DEPLOY)
+
+on:
+  push:
+    branches:
+      - security/auth-stage-q-reflect-full-web-ui-20261019
+  pull_request:
+    branches:
+      - security/auth-stage-q-reflect-realpg-20261019
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-q-classa-browser-ui-review
+  cancel-in-progress: true
+
+jobs:
+  ui-contract-and-typehealth:
+    name: MAIA / Studio / sign-in state correctness
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout pinned isolated review source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Use Node 22 with locked npm dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install npm dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      - name: Record exact source custody
+        run: |
+          git rev-parse HEAD
+          git hash-object lib/auth/verifiedAccess.ts
+          git hash-object app/api/members/signin/route.ts
+          git hash-object app/api/members/signout/route.ts
+          git hash-object config/accessMatrix.ts
+          git hash-object lib/auth/webSignOut.ts
+          git hash-object app/maia/page.tsx
+          git hash-object app/studio/account/page.tsx
+          git hash-object components/auth/UnifiedAuth.tsx
+          git hash-object components/auth/SignOutIncompleteDialog.tsx
+          git hash-object docs/security/auth-stage-q-client-signout.test.cjs
+
+      - name: Execute 15 browser-signout contract and UI wiring tests
+        run: node --test docs/security/auth-stage-q-client-signout.test.cjs
+
+      - name: Apply pinned patch-package and generate disposable Prisma types
+        env:
+          DATABASE_URL: postgresql://fictional:fictional@127.0.0.1:65535/stageq_classa_ui
+        run: |
+          ./node_modules/.bin/patch-package
+          ./node_modules/.bin/prisma generate --schema prisma/schema.prisma
+
+      - name: Enforce whole-source TypeScript no-regression
+        run: npm run typecheck
