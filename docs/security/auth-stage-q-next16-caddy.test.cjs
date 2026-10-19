@@ -17,7 +17,7 @@ const {Client}=require('pg'),bcrypt=require('bcrypt'),{webkit}=require('playwrig
 const required={
   sentinel:'fictional-next16-ci-only',
   host:'127.0.0.1', pgport:5550, db:'stageq_next_fictional',
-  dbUser:'stageq_next_fixture', nextPort:3827, httpsPort:3844,
+  dbUser:'stageq_next_fixture', nextPort:3827, httpsPort:443,
 };
 if(process.env.STAGE_Q_NEXT_FIXTURE!==required.sentinel ||
    process.env.PGHOST!==required.host ||
@@ -28,7 +28,7 @@ if(process.env.STAGE_Q_NEXT_FIXTURE!==required.sentinel ||
 }
 const workspace=path.resolve(__dirname,'../..');
 const fixture=path.join(process.env.RUNNER_TEMP||os.tmpdir(),'stageq-next16-fictional');
-const origin='https://'+required.host+':'+required.httpsPort;
+const origin='https://'+required.host;
 const nextOrigin='http://'+required.host+':'+required.nextPort;
 const reverseName='stageq-caddy-fixture-'+process.pid;
 let db,browser,nextProcess,caddyProcess,tmpdir,memberRecord;
@@ -84,7 +84,7 @@ function tlsFiles(){
  assert.equal(result.status,0,'Ephemeral loopback certificate generation');
  fs.chmodSync(key,0o600);
  const caddy=[
-  'https://127.0.0.1:'+required.httpsPort+' {',
+  'https://127.0.0.1 {',
   ' tls /fixture/fictional.crt /fixture/fictional.key',
   ' reverse_proxy 127.0.0.1:'+required.nextPort+' {',
   '   header_up Host {http.request.host}',
@@ -250,7 +250,7 @@ test('real Next sign-in creates Secure/HttpOnly cookie; proxy derives identity a
   assert.equal(allowed.data.memberId,memberRecord.id);
   assert.equal(allowed.data.tier,'free');
   assert.equal(allowed.data.roles,'member');
-  assert.equal(allowed.data.host,'127.0.0.1:'+required.httpsPort);
+  assert.equal(allowed.data.host,'127.0.0.1');
   assert.equal(allowed.data.forwardedProto,'https');
   const admin=await webCall(page,'/admin');
   assert.equal(admin.status,403,'Nonadmin must not bypass founder role by tier waiver');
