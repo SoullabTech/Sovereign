@@ -168,6 +168,62 @@ enabled('C0 strict Next proxy with real synthetic PostgreSQL sessions', () => {
     expect(response.status).toBe(200);
   });
 
+  it('rejects simultaneous VALID cookie and header credentials for different members', async () => {
+    const response = await admission('/api/members/profile', {
+      cookie: 'FICTIONAL_VALID_COOKIE',
+      header: 'FICTIONAL_OTHER_MEMBER',
+    });
+    expect(response.status).toBe(401);
+    expect(response.headers.get('x-middleware-next')).not.toBe('1');
+  });
+
+  it('rejects a simultaneous foreign header despite a matching member-ID claim', async () => {
+    const response = await admission('/api/members/profile', {
+      cookie: 'FICTIONAL_VALID_COOKIE',
+      header: 'FICTIONAL_OTHER_MEMBER',
+      claim: A,
+    });
+    expect(response.status).toBe(401);
+  });
+
+  it('allows different valid cookie and header tokens when both name the SAME member', async () => {
+    const response = await admission('/api/members/profile', {
+      cookie: 'FICTIONAL_VALID_COOKIE',
+      header: 'FICTIONAL_VALID_SAFARI',
+    });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-middleware-request-x-access-member-id')).toBe(A);
+    expect(response.headers.get('x-middleware-request-x-access-roles')).toBe('member');
+  });
+
+  it('rejects mixed cookie/header conflicts on protected routes as well as profile', async () => {
+    for (const pathname of ['/api/members/password', '/api/members/change-password']) {
+      const response = await admission(pathname, {
+        cookie: 'FICTIONAL_VALID_COOKIE',
+        header: 'FICTIONAL_OTHER_MEMBER',
+      });
+      expect(response.status).toBe(401);
+    }
+  });
+
+  it('preserves Safari fallback from a revoked cookie without promoting its authority', async () => {
+    const response = await admission('/api/members/profile', {
+      cookie: 'FICTIONAL_REVOKED',
+      header: 'FICTIONAL_VALID_SAFARI',
+    });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-middleware-request-x-access-member-id')).toBe(A);
+  });
+
+  it('preserves SSE query-token admission only under the original no-cookie/no-header path', async () => {
+    const queryOnly = await admission('/api/members/profile?_t=FICTIONAL_VALID_SAFARI');
+    expect(queryOnly.status).toBe(200);
+    const withExpiredCookie = await admission('/api/members/profile?_t=FICTIONAL_VALID_SAFARI', {
+      cookie: 'FICTIONAL_EXPIRED',
+    });
+    expect(withExpiredCookie.status).toBe(401);
+  });
+
   it('does not accept a real member ID without a valid session', async () => {
     const response = await admission('/api/members/profile', { claim: A });
     expect(response.status).toBe(401);
