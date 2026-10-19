@@ -1,0 +1,80 @@
+# Class A/Stage Q source-pinned interoperability against genuine fictional SQL.
+# Only this exact disposable database is used. No production/staging, member
+# identities, live Next service, native transport or deployment action.
+name: Stage Q Reflect Real PostgreSQL Interop (NO DEPLOY)
+
+on:
+  push:
+    branches:
+      - security/auth-stage-q-reflect-realpg-20261019
+  pull_request:
+    branches:
+      - security/auth-stage-q-reflect-interoperability-20261019
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-q-reflect-realpg-fictional
+  cancel-in-progress: true
+
+jobs:
+  real-sql-interop:
+    name: Class A dual-token resolver plus Stage Q signout
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: stageq_reflect_fixture
+          POSTGRES_PASSWORD: stageq_reflect_fictional_password_only
+          POSTGRES_DB: stageq_reflect_fictional
+        ports:
+          - 5552:5432
+        options: >-
+          --health-cmd "pg_isready -U stageq_reflect_fixture -d stageq_reflect_fictional"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
+    env:
+      STAGE_Q_REFLECT_REALPG: stageq-reflect-realpg-fiction-only
+      PGHOST: 127.0.0.1
+      PGPORT: "5552"
+      PGDATABASE: stageq_reflect_fictional
+      PGUSER: stageq_reflect_fixture
+      PGPASSWORD: stageq_reflect_fictional_password_only
+
+    steps:
+      - name: Checkout exact isolated review candidate
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Node 22 and locked test dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      - name: Record authentication source and SQL migration hashes
+        run: |
+          git rev-parse HEAD
+          git hash-object lib/auth/verifiedAccess.ts
+          git hash-object lib/auth/serverSessions.ts
+          git hash-object app/api/members/signout/route.ts
+          git hash-object app/api/members/signin/route.ts
+          git hash-object lib/auth/webSignOut.ts
+          git hash-object config/accessMatrix.ts
+          git hash-object database/migrations/20260119000001_auth_sessions.sql
+          git hash-object docs/security/auth-stage-q-reflect-real-postgres.test.cjs
+
+      - name: Execute eight real-SQL Class A and Stage Q interoperability falsifiers
+        run: node --test docs/security/auth-stage-q-reflect-real-postgres.test.cjs
