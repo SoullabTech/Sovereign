@@ -93,11 +93,15 @@ describe('C0-SSE-R2 dotted routes are not static assets at proxy', () => {
     expect(mockQuery).toHaveBeenCalledTimes(1);
   });
 
-  it('rejects dotted protected unrelated member and administrator API paths', async () => {
-    for (const path of ['/api/members/profile.json', '/api/admin/partners/prelude/x.yaml']) {
+  it('rejects dotted member and administrator paths through their real matrix policies', async () => {
+    const expected = [
+      ['/api/members/profile.json', 404], // truly unmapped in strict mode
+      ['/api/admin/partners/prelude/x.yaml', 401], // matched protected admin prefix
+    ] as const;
+    for (const [path, status] of expected) {
       mockQuery.mockClear();
       const response = await proxy(request(path));
-      expect(response.status).toBe(404); // unmapped under strict mode
+      expect(response.status).toBe(status);
       expect(forwarded(response)).toBe(false);
       expect(mockQuery).not.toHaveBeenCalled();
     }
