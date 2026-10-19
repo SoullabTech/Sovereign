@@ -3,9 +3,10 @@
 // Clients use Last-Event-ID for transparent reconnect.
 
 import { NextRequest } from 'next/server';
-import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
+import { deriveVerifiedAccess, deriveVerifiedAccessInTransaction } from '@/lib/auth/verifiedAccess';
+import { transaction } from '@/lib/db/postgres';
 import { getMessagesSince } from '@/lib/team/ChannelService';
-import { requireChannelAccess } from '@/lib/team/permissions';
+import { requireChannelAccess, requireChannelAccessInTransaction } from '@/lib/team/permissions';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -76,40 +77,50 @@ export async function GET(
       const tick = async () => {
         if (closed || req.signal.aborted) { closeStream(); return; }
         try {
-          const messages = await getMessagesSince(channelId, afterTs);
+          // C0-SSE-ATOMIC Stage A: one short-lived transaction per poll.
+          // The member's session row(s), channel visibility and private
+          // membership row are locked through the SYNCHRONOUS enqueue.
+          // Never hold a transaction between polls or duplicate auth rules.
+          const stillAuthorized = await transaction(async (tx) => {
+            const live = await deriveVerifiedAccessInTransaction(req, tx);
+            if (!live.authenticated || live.memberId !== memberId ||
+                !live.sessionExpiresAt) return false;
 
-          // C0-SSE-LIVE: membership and session may be revoked AFTER the GET
-          // handshake. Recheck BOTH after fetching but before any message
-          // is released, even on idle polls. Keep the original principal.
-          const live = await deriveVerifiedAccess(req);
-          if (!live.authenticated || live.memberId !== memberId) {
-            closeStream();
-            return;
-          }
-          const currentMembership = await requireChannelAccess(channelId, memberId);
-          if (!currentMembership.allowed || closed || req.signal.aborted) {
-            closeStream();
-            return;
-          }
+            const currentMembership = await requireChannelAccessInTransaction(
+              channelId, memberId, tx,
+            );
+            if (!currentMembership.allowed || closed || req.signal.aborted) {
+              return false;
+            }
+            const messages = await getMessagesSince(channelId, afterTs, tx);
+            // Expiration advances without a database UPDATE. Check the fresh
+            // clock immediately before enqueue while row locks remain held.
+            if (live.sessionExpiresAt.getTime() <= Date.now() ||
+                closed || req.signal.aborted) return false;
 
-          if (messages.length > 0) {
-            const maxTs = Math.max(...messages.map(m => new Date(m.createdAt).getTime()));
-            afterTs = maxTs;
-
-            emit([
-              `id: ${afterTs}`,
-              'event: messages',
-              `data: ${JSON.stringify({ messages, afterTs })}`,
-            ]);
-
-            idleCycles = 0;
-          } else {
-            emit([`: keepalive ${Date.now()}`]);
-            idleCycles++;
-          }
+            if (messages.length > 0) {
+              const maxTs = Math.max(...messages.map(m => new Date(m.createdAt).getTime()));
+              const eventAfterTs = maxTs;
+              emit([
+                `id: ${eventAfterTs}`,
+                'event: messages',
+                `data: ${JSON.stringify({ messages, afterTs: eventAfterTs })}`,
+              ]);
+              afterTs = eventAfterTs;
+              idleCycles = 0;
+            } else {
+              emit([`: keepalive ${Date.now()}`]);
+              idleCycles++;
+            }
+            // transaction() commits AFTER callback return, so revocation
+            // writers cannot commit through the held session/member locks
+            // until our synchronous enqueue has happened.
+            return true;
+          });
+          if (!stillAuthorized) { closeStream(); return; }
         } catch {
-          // If current authority cannot be checked, no content can be sent.
-          // Do not echo SQL or session error text to the EventSource client.
+          // Rollback/lock/query failures close the stream, never grant from
+          // the initial GET and never emit free-form SQL/credential errors.
           closeStream();
           return;
         }
