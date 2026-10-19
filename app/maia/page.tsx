@@ -689,7 +689,7 @@ function MAIAPageContent() {
     window.dispatchEvent(new Event('conversationStyleChanged'));
   };
 
-  const [signOutIssue, setSignOutIssue] = useState<string | null>(null);
+  const [signOutIssue, setSignOutIssue] = useState<{ detail: string; cookieClearingConfirmed: boolean } | null>(null);
   const [signOutInProgress, setSignOutInProgress] = useState(false);
 
   const handleSignOut = async () => {
@@ -698,23 +698,27 @@ function MAIAPageContent() {
     try {
       const outcome = await signOutCurrentBrowserSession();
       if (outcome.kind === 'incomplete') {
-        setSignOutIssue(outcome.detail);
+        setSignOutIssue(outcome);
         return;
       }
       // This ends only credentials present in this browser, not all devices.
-      if (!leaveThisBrowser(false)) {
-        setSignOutIssue('Local sign-in information could not be cleared. Server revocation and local cleanup are separate.');
+      if (!leaveThisBrowser(false, true)) {
+        setSignOutIssue({ detail: 'Local sign-in information could not be cleared. Server revocation and local cleanup are separate.', cookieClearingConfirmed: true });
       }
     } catch {
-      setSignOutIssue('Soullab could not verify sign-out. Your server session may still be active.');
+      setSignOutIssue({ detail: 'Soullab could not verify sign-out. Your server session may still be active.', cookieClearingConfirmed: false });
     } finally {
       setSignOutInProgress(false);
     }
   };
 
   const leaveWithoutConfirmedRevocation = () => {
-    if (!leaveThisBrowser(true)) {
-      setSignOutIssue('This device could not clear its saved sign-in information. Close the browser and remove Soullab site data before sharing this device.');
+    if (signOutIssue?.cookieClearingConfirmed !== true) return;
+    if (!leaveThisBrowser(true, true)) {
+      setSignOutIssue({
+        detail: 'This device could not clear its saved sign-in information. Remove Soullab site data using browser settings before sharing it.',
+        cookieClearingConfirmed: false,
+      });
     }
   };
 
@@ -921,8 +925,10 @@ function MAIAPageContent() {
           explorerName={explorerName}
         />
         <SignOutIncompleteDialog
-          detail={signOutIssue}
+          detail={signOutIssue?.detail ?? null}
+          canClearDevice={signOutIssue?.cookieClearingConfirmed === true}
           onStay={() => setSignOutIssue(null)}
+          onRetry={() => { setSignOutIssue(null); void handleSignOut(); }}
           onLeaveDevice={leaveWithoutConfirmedRevocation}
         />
       </ErrorBoundary>
@@ -2180,8 +2186,10 @@ function MAIAPageContent() {
 
       {/* Beta Tester Feedback Hub removed - feedback available via Account menu */}
       <SignOutIncompleteDialog
-        detail={signOutIssue}
+        detail={signOutIssue?.detail ?? null}
+        canClearDevice={signOutIssue?.cookieClearingConfirmed === true}
         onStay={() => setSignOutIssue(null)}
+        onRetry={() => { setSignOutIssue(null); void handleSignOut(); }}
         onLeaveDevice={leaveWithoutConfirmedRevocation}
       />
     </ErrorBoundary>
