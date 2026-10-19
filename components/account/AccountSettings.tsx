@@ -183,6 +183,7 @@ export function AccountSettings() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [birthSaveError, setBirthSaveError] = useState<string | null>(null);
+  const [profileSaveError, setProfileSaveError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
   // Practitioner projects state
@@ -574,6 +575,7 @@ export function AccountSettings() {
   const saveProfile = useCallback(async () => {
     if (!userId) return;
     setSaving(true);
+    setProfileSaveError(null);
 
     try {
       const res = await apiFetch('/api/members/profile', {
@@ -584,7 +586,6 @@ export function AccountSettings() {
           name: editName,
           preferredName: editPreferredName,
           pronouns: editPronouns.trim() || null,
-          email: editEmail,
           bio: editBio,
           timezone: editTimezone || null,
         }),
@@ -612,13 +613,17 @@ export function AccountSettings() {
         }
 
         showSaveIndicator();
+      } else {
+        const failure = await res.json().catch(() => null);
+        setProfileSaveError(failure?.error || 'Your profile was not saved. Please try again.');
       }
     } catch (err) {
       console.error('[AccountSettings] Save profile error:', err);
+      setProfileSaveError('Your profile was not saved. Please check your connection and retry.');
     } finally {
       setSaving(false);
     }
-  }, [userId, editName, editPreferredName, editPronouns, editEmail, editBio, editTimezone, showSaveIndicator]);
+  }, [userId, editName, editPreferredName, editPronouns, editBio, editTimezone, showSaveIndicator]);
 
   // Search for birth location
   const searchLocation = useCallback(async (query: string) => {
@@ -972,14 +977,19 @@ export function AccountSettings() {
         </p>
       </div>
       <div>
-        <label className="text-sm text-stone-400 mb-2 block">Email</label>
+        <label htmlFor="profile-account-email" className="text-sm text-stone-400 mb-2 block">Account email</label>
         <input
+          id="profile-account-email"
           type="email"
           value={editEmail}
-          onChange={(e) => setEditEmail(e.target.value)}
-          placeholder="your@email.com"
-          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
+          readOnly
+          aria-describedby="profile-email-guidance"
+          placeholder="No email on file"
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-300 cursor-not-allowed"
         />
+        <p id="profile-email-guidance" className="text-xs text-stone-400 mt-2">
+          Account email changes require separate verification and are not available in this beta screen. Contact support if you need help.
+        </p>
       </div>
       <div>
         <label className="text-sm text-stone-400 mb-2 block">Bio</label>
@@ -1051,6 +1061,9 @@ export function AccountSettings() {
       >
         {saving ? 'Saving...' : 'Save Profile'}
       </motion.button>
+      {profileSaveError && (
+        <p role="alert" className="text-sm text-red-300" aria-live="polite">{profileSaveError}</p>
+      )}
 
       {/* ── Birth Chart ──────────────────────────────────────────────── */}
       <div className="border-t border-white/10 pt-6 mt-2">
