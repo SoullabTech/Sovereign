@@ -39,7 +39,12 @@ async function requestOne(
       // Explicit web-only transport. Never follow a redirect to an HTML login
       // page and mistake an HTTP 200 for a successful sign-out.
       credentials: 'same-origin',
-      mode: 'same-origin',
+      // This fixed relative path and credentials:'same-origin' still target
+      // only this website. Fetch mode:'same-origin' combined with Caddy's
+      // Referrer-Policy:no-referrer can send Origin:null, which our strict
+      // web-only sign-out correctly refuses. CORS mode sends the real Origin
+      // for the same-origin POST, without changing the destination/credentials.
+      mode: 'cors',
       redirect: 'error',
       cache: 'no-store',
       ...(headerToken ? { headers: { 'x-session-token': headerToken } } : {}),
