@@ -47,6 +47,8 @@ type Creds = {
   memberCookie?: string;
   secondaryClaim?: string;
   query?: string;
+  path?: string;
+  method?: string;
   injectedRole?: string;
 };
 function make(opts: Creds = {}): NextRequest {
@@ -62,8 +64,8 @@ function make(opts: Creds = {}): NextRequest {
   const cookie = Object.entries(mockJar).map(([k, v]) => k + '=' + v).join('; ');
   if (cookie) headers.set('cookie', cookie);
   return new NextRequest(
-    'https://fictional.invalid/api/test' + (opts.query ? '?_t=' + opts.query : ''),
-    { headers },
+    'https://fictional.invalid' + (opts.path || '/api/test') + (opts.query ? '?_t=' + opts.query : ''),
+    { headers, method: opts.method || 'GET' },
   );
 }
 beforeEach(() => {
@@ -164,7 +166,7 @@ describe('C0-AUTH all server session resolvers agree', () => {
   });
 
   it('preserves query-token authority ONLY at the existing proxy boundary', async () => {
-    const request = make({ query: COOKIE_A });
+    const request = make({ query: COOKIE_A, path: '/api/team/channels/fictional/stream' });
     expect((await deriveVerifiedAccess(request)).memberId).toBe(A);
     expect(await getMemberIdFromRequest(request)).toBeNull();
     await expect(requireMemberId()).rejects.toThrow('AUTH_REQUIRED');
@@ -172,7 +174,7 @@ describe('C0-AUTH all server session resolvers agree', () => {
   });
 
   it('does not fall through an expired cookie to query-token authority', async () => {
-    const request = make({ cookie: EXPIRED, query: COOKIE_A });
+    const request = make({ cookie: EXPIRED, query: COOKIE_A, path: '/api/team/dm/fictional/stream' });
     expect((await deriveVerifiedAccess(request)).authenticated).toBe(false);
   });
 
