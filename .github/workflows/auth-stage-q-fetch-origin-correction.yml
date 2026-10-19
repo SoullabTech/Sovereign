@@ -1,0 +1,133 @@
+# Stage Q: real Caddy binary with a derivative of the reviewed apex site's
+# emergency-deny, CORS and Host forwarding rules, compiled Next16 and WebKit.
+# No production Caddy file replacement, staging, member DB or deploy.
+name: Stage Q Web Fetch Origin Correction (NO DEPLOY)
+
+on:
+  push:
+    branches:
+      - security/auth-stage-q-rendered-fetch-origin-review-20261019
+  pull_request:
+    branches:
+      - security/auth-stage-q-classa-rendered-ui-20261019
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-q-web-origin-correction-fictional
+  cancel-in-progress: true
+
+jobs:
+  caddy-edge:
+    name: Actual Origin for rendered Studio signout via Caddy/WebKit
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: stageq_next16_fixture
+          POSTGRES_PASSWORD: stageq_next16_fictional_password_only
+          POSTGRES_DB: stageq_next16_fictional
+        ports:
+          - 5549:5432
+        options: >-
+          --health-cmd "pg_isready -U stageq_next16_fixture -d stageq_next16_fictional"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      STAGE_Q_NEXT16_DISPOSABLE: stageq-next16-fictional-only
+      STAGE_Q_CADDY_DISPOSABLE: stageq-caddy-fictional-ci-only
+      PGHOST: 127.0.0.1
+      PGPORT: "5549"
+      PGDATABASE: stageq_next16_fictional
+      PGUSER: stageq_next16_fixture
+      PGPASSWORD: stageq_next16_fictional_password_only
+      DATABASE_URL: postgresql://stageq_next16_fixture:stageq_next16_fictional_password_only@127.0.0.1:5549/stageq_next16_fictional
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - name: Checkout exact isolated candidate
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Node 22 with locked dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install test dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      - name: Revalidate full MAIA/Studio browser signout contracts (15)
+        run: node --test docs/security/auth-stage-q-client-signout.test.cjs
+
+      - name: Revalidate Class A dual-credential simulated contracts (9)
+        run: node --test docs/security/auth-stage-q-reflect-interop.test.cjs
+
+      - name: Apply pinned patches, generate Prisma, and install Linux WebKit
+        run: |
+          ./node_modules/.bin/patch-package
+          ./node_modules/.bin/prisma generate --schema prisma/schema.prisma
+          ./node_modules/.bin/playwright install --with-deps webkit
+
+      - name: Governed whole-source TypeScript no-regression
+        run: npm run typecheck
+
+      - name: Validate disposable fixture JavaScript syntax
+        run: |
+          node --check docs/security/auth-stage-q-next16-fixture-build.cjs
+          node --check docs/security/auth-stage-q-caddy-webkit.test.cjs
+
+      - name: Source custody and reduced compiled Next16 fixture
+        run: |
+          git rev-parse HEAD
+          git hash-object Caddyfile
+          git hash-object proxy.ts
+          git hash-object app/api/members/signout/route.ts
+          git hash-object app/api/members/signin/route.ts
+          git hash-object lib/auth/rateLimiter.ts
+          git hash-object lib/security/authAudit.ts
+          git hash-object lib/auth/passwordUtils.ts
+          git hash-object docs/security/auth-stage-q-caddy-webkit.test.cjs
+          git hash-object app/signin/page.tsx
+          git hash-object components/auth/UnifiedAuth.tsx
+          git hash-object app/studio/account/page.tsx
+          git hash-object components/auth/SignOutIncompleteDialog.tsx
+          git hash-object lib/auth/webSignOut.ts
+          git hash-object lib/auth/webBiometricOffer.ts
+          git hash-object docs/security/auth-stage-q-next16-fixture-build.cjs
+          node docs/security/auth-stage-q-next16-fixture-build.cjs build
+
+      - name: Derive original Caddy apex and deny rules for loopback
+        run: node docs/security/auth-stage-q-caddy-derive.cjs derive
+
+      - name: Prepare fictional-only hostname and pinned Caddy image
+        run: |
+          printf '127.0.0.1 stageq-next16.invalid\n' | sudo tee -a /etc/hosts > /dev/null
+          getent hosts stageq-next16.invalid
+          docker pull caddy:2.10.2-alpine
+          docker image inspect caddy:2.10.2-alpine --format '{{.Id}}'
+
+      - name: Run eighteen rendered/real-signin Caddy/Next16/WebKit/SQL tests
+        run: node --test docs/security/auth-stage-q-caddy-webkit.test.cjs
+
+      - name: Clean up only labeled disposable Caddy and Next16 artifacts
+        if: always()
+        run: |
+          owned="stageq-caddy-${GITHUB_SHA:0:12}"
+          label="$(docker inspect --format '{{index .Config.Labels "soullab.stageq"}}' "$owned" 2>/dev/null || true)"
+          if [ "$label" = "fictional" ]; then docker rm -f "$owned"; fi
+          if [ -f "/tmp/soullab-stageq-caddy-${GITHUB_SHA:0:16}/.stageq-owned" ]; then
+            node docs/security/auth-stage-q-caddy-derive.cjs cleanup
+          fi
+          if [ -f "/tmp/soullab-stageq-next16-${GITHUB_SHA:0:16}/.stageq-fixture" ]; then
+            node docs/security/auth-stage-q-next16-fixture-build.cjs cleanup
+          fi
