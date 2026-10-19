@@ -34,9 +34,17 @@ if(!fs.existsSync(path.join(nextFixture,'.stageq-fixture'))||
  throw Error('Both source-pinned, owned Next16 and Caddy fixtures are required');
 }
 const edge=JSON.parse(fs.readFileSync(path.join(caddyFixture,'STAGE_Q_CADDY_CUSTODY.json'),'utf8'));
-if(edge.sourceCommit!==sha||edge.sourceCaddyBlob!=='9cffaa85d5b42a05cd1de7eb0726d8435b69'||
- edge.upstreamCount!==5||edge.preservedHostHeaderCount!==5){
- throw Error('Caddy source custody/route shape mismatch');
+const custody={
+ commitMatches:edge.sourceCommit===sha,
+ blobMatches:edge.sourceCaddyBlob==='9cffaa85d5b42a05cd1de7eb0726d8435b3e5b69',
+ activeUpstreams:edge.upstreamCount,
+ activeHostMappings:edge.preservedHostHeaderCount,
+ nullCorsHeaders:edge.preservedNullCorsHeaders,
+};
+if(!custody.commitMatches||!custody.blobMatches||
+ custody.activeUpstreams!==5||custody.activeHostMappings!==5||
+ custody.nullCorsHeaders!==2){
+ throw Error('Caddy source custody/route shape mismatch: '+JSON.stringify(custody));
 }
 const sourceManifest=JSON.parse(fs.readFileSync(
  path.join(nextFixture,'STAGE_Q_BUILD_MANIFEST.json'),'utf8'));
