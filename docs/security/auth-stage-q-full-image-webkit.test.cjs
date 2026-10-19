@@ -141,7 +141,7 @@ test.before(async()=>{
  for(const name of [PG,APP,EDGE])assertAbsent(name);
  const exists=spawnSync('docker',['network','inspect',NET],{encoding:'utf8',timeout:10000});
  assert.notEqual(exists.status,0,'Refusing to reuse existing network name');
- dc('network','create','--internal','--driver','bridge',NET);
+ dc('network','create','--label','soullab.stageq='+label,'--internal','--driver','bridge',NET);
  createdNetwork=true;
  startContainer(PG,['--network',NET,
   '-e','POSTGRES_USER='+PG_USER,'-e','POSTGRES_PASSWORD='+PG_PASSWORD,
@@ -220,6 +220,12 @@ test.after(async()=>{
   if(p.status!==0)console.error('Owned fictional container cleanup failed: '+name);
  }
  if(createdNetwork){
+  const owner=spawnSync('docker',['network','inspect','--format',
+   '{{index .Labels "soullab.stageq"}}',NET],{encoding:'utf8',timeout:10000});
+  if(owner.status!==0||(owner.stdout||'').trim()!==label){
+   console.error('Refusing to clean network without matching ownership marker');
+   return;
+  }
   const p=spawnSync('docker',['network','rm',NET],{encoding:'utf8',timeout:10000});
   if(p.status!==0)console.error('Owned fictional network cleanup failed: '+NET);
  }
