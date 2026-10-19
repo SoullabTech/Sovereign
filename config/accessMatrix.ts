@@ -637,6 +637,16 @@ export const ACCESS_RULES: AccessRule[] = [
      excuse. */
   { prefix: '/api/writers-studio/editorial/', minTier: 'free', notes: "Writer's Studio editorial corridor — authenticated members only (WS-ACCESS-CONTAINMENT-01); same policy as /api/sovereign, never /api/ain's admin gate" },
 
+  /* FWE-ROUTE-01 Class A — EXACT Writer's Studio section-aware context GET.
+     The canonical Write room requests this member-owned read snapshot. An
+     unmapped path is denied in strict mode, even with a verified session.
+     Only this exact path is admitted to authenticated members: no shared
+     /api/writers-studio/ prefix, no public exception, no tier/role bypass.
+     This matrix is path-only; the route exports GET, and the route's
+     getMemberIdFromRequest + member_id checks remain the data authority.
+     Do not infer access to neighboring /rebuild or /focus endpoints. */
+  { exact: '/api/writers-studio/rebuild/context', minTier: 'free', notes: "FWE-ROUTE-01 — member-authenticated Writer's Studio read context; handler separately verifies manuscript ownership" },
+
   /* Invite API — the issuing side of member admission. Declared EXPLICITLY
      rather than inheriting the permissive unmapped-route default (#717), which
      had left create/list/revoke reachable with no session at all while each
