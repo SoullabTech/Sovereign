@@ -8,6 +8,7 @@
  * There is deliberately no public API for signing out ALL devices here.
  */
 import { clearAuthState, isNativeCapacitor } from '@/lib/http/apiBase';
+import { Capacitor } from '@capacitor/core';
 
 type SignOutWireResponse = {
   success?: unknown;
@@ -17,14 +18,14 @@ type SignOutWireResponse = {
 
 export type WebSignOutOutcome =
   | { kind: 'complete'; confirmedRevocations: number; headerCredentialChecked: boolean }
-  | { kind: 'incomplete'; detail: string; confirmedRevocations: number };
+  | { kind: 'incomplete'; detail: string; confirmedRevocations: number; cookieClearingConfirmed: boolean };
 
 type ResponseLike = Pick<Response, 'status' | 'ok' | 'json'>;
 export type SignOutTransport = (path: string, options: RequestInit) => Promise<ResponseLike>;
 
 type Attempt =
   | { ok: true; revoked: boolean }
-  | { ok: false; detail: string };
+  | { ok: false; detail: string; cookieClearingConfirmed: boolean };
 
 const SIGNOUT_PATH = '/api/members/signout';
 
@@ -47,8 +48,12 @@ async function requestOne(
     try {
       body = await response.json() as SignOutWireResponse;
     } catch {
-      return { ok: false, detail: 'The sign-out response could not be verified.' };
+      return { ok: false, detail: 'The sign-out response could not be verified.', cookieClearingConfirmed: false };
     }
+    // Only the reviewed 503 response explicitly reports cookie expiration
+    // without server revocation. A malformed/foreign response is not proof.
+    const cookieClearingConfirmed =
+      response.status === 503 && body?.localCookiesCleared === true;
     if (
       response.status !== 200 || !response.ok ||
       body?.success !== true ||
@@ -56,20 +61,20 @@ async function requestOne(
       typeof body.serverSessionRevoked !== 'boolean'
     ) {
       if (response.status === 403) {
-        return { ok: false, detail: 'Sign-out was refused by the browser security boundary. Your server session may still be active.' };
+        return { ok: false, detail: 'Sign-out was refused by the browser security boundary. The HttpOnly cookie may still be active.', cookieClearingConfirmed: false };
       }
       if (response.status === 409) {
-        return { ok: false, detail: 'Conflicting session credentials were refused. Your server session may still be active.' };
+        return { ok: false, detail: 'Conflicting session credentials were refused. The HttpOnly cookie may still be active.', cookieClearingConfirmed: false };
       }
       if (response.status === 503) {
-        return { ok: false, detail: 'Server revocation is unavailable. Cookies may have been cleared, but your server session may remain active.' };
+        return { ok: false, detail: 'Server revocation is unavailable. The server reported clearing browser cookies, but the old session may remain valid.', cookieClearingConfirmed };
       }
-      return { ok: false, detail: 'Soullab could not confirm that the server session ended.' };
+      return { ok: false, detail: 'Soullab could not confirm that the server session ended.', cookieClearingConfirmed: false };
     }
     return { ok: true, revoked: body.serverSessionRevoked };
   } catch {
     // A network error cannot prove that a POST did not reach the server.
-    return { ok: false, detail: 'The connection ended without confirmation. The server session may remain active.' };
+    return { ok: false, detail: 'The connection ended without confirmation. The HttpOnly cookie and server session may remain active.', cookieClearingConfirmed: false };
   }
 }
 
@@ -87,7 +92,7 @@ export async function signOutWebCredentials(
 ): Promise<WebSignOutOutcome> {
   const cookie = await requestOne(transport);
   if (!cookie.ok) {
-    return { kind: 'incomplete', detail: cookie.detail, confirmedRevocations: 0 };
+    return { kind: 'incomplete', detail: cookie.detail, confirmedRevocations: 0, cookieClearingConfirmed: cookie.cookieClearingConfirmed };
   }
   const cookieRevocations = cookie.revoked ? 1 : 0;
   if (headerToken) {
@@ -97,6 +102,7 @@ export async function signOutWebCredentials(
         kind: 'incomplete',
         detail: 'The browser cookie was processed, but the stored session token could not be verified. ' + header.detail,
         confirmedRevocations: cookieRevocations,
+        cookieClearingConfirmed: true,
       };
     }
     return {
@@ -111,13 +117,14 @@ export async function signOutWebCredentials(
 /** Browser wrapper; no native-origin exception and no implicit API base fallback. */
 export async function signOutCurrentBrowserSession(): Promise<WebSignOutOutcome> {
   if (typeof window === 'undefined') {
-    return { kind: 'incomplete', detail: 'Browser sign-out is not available here.', confirmedRevocations: 0 };
+    return { kind: 'incomplete', detail: 'Browser sign-out is not available here.', confirmedRevocations: 0, cookieClearingConfirmed: false };
   }
-  if (isNativeCapacitor()) {
+  if (isNativeCapacitor() || Capacitor.isNativePlatform()) {
     return {
       kind: 'incomplete',
-      detail: 'Native app session revocation is not yet qualified. The server session may remain active.',
+      detail: 'Native app session revocation is not yet qualified. The server session and native cookies may remain active.',
       confirmedRevocations: 0,
+      cookieClearingConfirmed: false,
     };
   }
   let headerToken: string | null;
@@ -128,6 +135,7 @@ export async function signOutCurrentBrowserSession(): Promise<WebSignOutOutcome>
       kind: 'incomplete',
       detail: 'The browser session store could not be inspected. Server sign-out is unconfirmed.',
       confirmedRevocations: 0,
+      cookieClearingConfirmed: false,
     };
   }
   return signOutWebCredentials((path, init) => fetch(path, init), headerToken);
@@ -138,8 +146,10 @@ export async function signOutCurrentBrowserSession(): Promise<WebSignOutOutcome>
  * entry displays a warning when "incomplete" is true. Return false if local
  * cleanup failed rather than falsely claiming this device was cleared.
  */
-export function leaveThisBrowser(incomplete: boolean): boolean {
-  if (typeof window === 'undefined') return false;
+export function leaveThisBrowser(incomplete: boolean, cookieClearingConfirmed: boolean): boolean {
+  // JavaScript cannot remove an HttpOnly cookie. Never claim local-only exit
+  // after a 403/409/network loss that may have left the cookie intact.
+  if (!cookieClearingConfirmed || typeof window === 'undefined') return false;
   try {
     clearAuthState();
     for (const key of ['userName', 'displayName', 'userTier']) {
