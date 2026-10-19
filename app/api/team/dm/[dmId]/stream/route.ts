@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getMemberIdFromRequest, getMemberIdFromSessionToken } from '@/lib/auth/getMemberFromRequest';
+import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
 import { getDMMessagesSince } from '@/lib/team/DMService';
 
 export const runtime = 'nodejs';
@@ -19,10 +19,15 @@ export async function GET(
   // iOS/native may pass a *validated* session token as the `_t` query param. The
   // old `_m` (raw member id) fallback was forgeable and is removed.
   const url = new URL(req.url);
-  const memberId =
-    (await getMemberIdFromRequest(req)) ??
-    (await getMemberIdFromSessionToken(url.searchParams.get('_t')));
-  if (!memberId) return new Response('Unauthorized', { status: 401 });
+  // C0-SSE-R2: use the SAME server-validated, fail-closed principal as proxy.
+  // A conflicting cookie/header pair must not turn into a grant by falling
+  // through to a separate _t token. The shared boundary accepts a URL bearer
+  // only for this exact GET SSE route and only when no cookie/header exists.
+  const access = await deriveVerifiedAccess(req);
+  const memberId = access.memberId;
+  if (!access.authenticated || !memberId) {
+    return new Response('Unauthorized', { status: 401 });
+  }
 
   const { dmId } = await params;
 
