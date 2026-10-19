@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  image-builder:
+  image_builder:
     name: Freeze full Docker image from exact PR1883 source
     if: github.repository == 'SoullabTech/Sovereign'
     runs-on: ubuntu-24.04
@@ -110,17 +110,17 @@ jobs:
           compression-level: 0
           if-no-files-found: error
 
-  fresh-runtime-reader:
+  fresh_runtime_reader:
     name: Verify archived image and compiled sign-in on a separate runner
-    needs: image-builder
+    needs: image_builder
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
       SOURCE_SHA: 9ed5d83ba856b4e8c4940ef7f928447ae28c3837
       IMAGE: maia-sovereign:stageq-classa-1883-review-only
       ARCHIVE: stageq-classa-1883-linux-amd64.docker.tar.gz
-      EXPECTED_IMAGE_ID: ${{ needs.image-builder.outputs.image_id }
-      EXPECTED_ARCHIVE_SHA256: ${{ needs.image-builder.outputs.archive_sha256 }
+      EXPECTED_IMAGE_ID: ${{ needs.image_builder.outputs.image_id }
+      EXPECTED_ARCHIVE_SHA256: ${{ needs.image_builder.outputs.archive_sha256 }
       CONTAINER: stageq-classa-1883-reader
     steps:
       - name: Download immutable artifact on independent runner
