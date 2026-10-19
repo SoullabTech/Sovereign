@@ -21,7 +21,56 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  topology_gate:
+    name: Prove internal Docker bridge can expose only runner loopback
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Exercise a label-owned Caddy HTTP probe, with no app or database
+        shell: bash
+        run: |
+          set -euo pipefail
+          container="stageq-netprobe-$(printf '%s' "$GITHUB_SHA" | cut -c1-10)"
+          network="stageq-netprobe-net-$(printf '%s' "$GITHUB_SHA" | cut -c1-10)"
+          owner="stageq-fullimage-preflight"
+          if docker inspect "$container" >/dev/null 2>&1; then exit 1; fi
+          if docker network inspect "$network" >/dev/null 2>&1; then exit 1; fi
+          mkdir -p "$RUNNER_TEMP/stageq-bridge-probe"
+          printf ':8080 {\n  respond "stageq-loopback-only" 200\n}\n' > "$RUNNER_TEMP/stageq-bridge-probe/Caddyfile"
+          cleanup() {
+            label="$(docker inspect "$container" --format '{{index .Config.Labels "soullab.stageq"}}' 2>/dev/null || true)"
+            if [ "$label" = "$owner" ]; then docker rm -f "$container" || true; fi
+            label="$(docker network inspect "$network" --format '{{index .Labels "soullab.stageq"}}' 2>/dev/null || true)"
+            if [ "$label" = "$owner" ]; then docker network rm "$network" || true; fi
+          }
+          trap cleanup EXIT
+          docker pull caddy:2.10.2-alpine
+          docker network create --internal --driver bridge --label "soullab.stageq=$owner" "$network"
+          docker run -d --name "$container" --network "$network" \
+            --label "soullab.stageq=$owner" \
+            -p 127.0.0.1:38771:8080 \
+            -v "$RUNNER_TEMP/stageq-bridge-probe:/etc/stageq:ro" \
+            caddy:2.10.2-alpine caddy run --config /etc/stageq/Caddyfile --adapter caddyfile
+          test "$(docker inspect "$container" --format '{{.HostConfig.NetworkMode}}')" = "$network"
+          mapped="$(docker port "$container" 8080/tcp)"
+          test "$mapped" = "127.0.0.1:38771"
+          okay=false
+          for attempt in $(seq 1 25); do
+            if curl -fsS --max-time 2 http://127.0.0.1:38771/ 2>/dev/null |
+              grep -Fx 'stageq-loopback-only'; then
+              okay=true
+              break
+            fi
+            sleep 1
+          done
+          if [ "$okay" != true ]; then
+            echo 'Internal Docker bridge cannot serve runner-local published port. Abort before image download.'
+            exit 1
+          fi
+          echo 'Internal-only Docker network plus published runner loopback passes.'
+
   rendered-full-image:
+    needs: topology_gate
     name: WebKit rendered sign-in against source-attested complete image
     runs-on: ubuntu-24.04
     timeout-minutes: 30
