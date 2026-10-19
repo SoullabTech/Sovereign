@@ -577,6 +577,9 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/members/register', public: true, notes: 'Register member' },
   { exact: '/api/members/register-email', public: true, notes: 'Register via magic link (no passkey)' },
   { exact: '/api/members/signin', public: true, notes: 'Sign in' },
+  // The browser must be able to clear expired credentials in strict mode.
+  // The handler independently requires trusted same-origin POST before any SQL.
+  { exact: '/api/members/signout', public: true, notes: 'Stage Q web sign-out: handler enforces origin verification and durable revocation' },
   { exact: '/api/auth/refresh-and-redirect', public: true, notes: 'Refresh session cookies and redirect' },
   { exact: '/api/practitioners/check', public: true, notes: 'Check practitioner status' },
   { exact: '/api/commons/contributions', public: true, notes: 'GET public contributions' },

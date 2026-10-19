@@ -1,0 +1,64 @@
+# Isolated source-pinned Class A/Stage Q interoperability falsifiers.
+# PR #1870 identity resolver + Stage Q web signout/browser contract.
+# No production/staging, database, native-client exception or deployment.
+name: Stage Q Reflect Auth Interop (NO DEPLOY)
+
+on:
+  push:
+    branches:
+      - security/auth-stage-q-reflect-interoperability-20261019
+  pull_request:
+    branches:
+      - fix/rf01-c0auth-reflect-classa-review-20261019
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-q-reflect-interop
+  cancel-in-progress: true
+
+jobs:
+  bounded-composition:
+    name: Dual-credential authority and signout contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      - name: Record reviewed source identity
+        run: |
+          git rev-parse HEAD
+          git hash-object lib/auth/verifiedAccess.ts
+          git hash-object app/api/members/signout/route.ts
+          git hash-object lib/auth/webSignOut.ts
+          git hash-object app/api/members/signin/route.ts
+          git hash-object docs/security/auth-stage-q-reflect-interop.test.cjs
+
+      - name: Execute nine fictional composition falsifiers
+        run: node --test docs/security/auth-stage-q-reflect-interop.test.cjs
+
+      - name: Apply declared postinstall without untrusted lifecycle scripts
+        env:
+          DATABASE_URL: postgresql://fictional:fictional@127.0.0.1:65535/stageq_interop
+        run: |
+          ./node_modules/.bin/patch-package
+          ./node_modules/.bin/prisma generate --schema prisma/schema.prisma
+
+      - name: Enforce whole-source TypeScript no-regression
+        run: npm run typecheck
