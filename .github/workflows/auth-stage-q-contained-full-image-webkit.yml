@@ -1,0 +1,167 @@
+# Stage Q source-frozen full image, genuine rendered Linux WebKit.
+# Browser shares Caddy's private network namespace; NO HOST PORTS, no egress.
+# The application uses only fictional PostgreSQL and never deploys.
+name: Stage Q Contained Full Image WebKit (NO DEPLOY)
+
+on:
+  push:
+    branches: [security/auth-stage-q-full-image-contained-webkit-20261019]
+  pull_request:
+    branches: [security/auth-stage-q-full-image-webui-20261019]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: stageq-contained-full-image-webkit
+  cancel-in-progress: true
+
+jobs:
+  topology_gate:
+    name: Prove private Caddy namespace is reachable without published ports
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Run Caddy and a second process in the same internal network namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="$(printf '%s' "$GITHUB_SHA" | cut -c1-10)"
+          edge="stageq-contained-probe-$tag"
+          net="stageq-contained-net-$tag"
+          owner=stageq-contained-preflight
+          if docker inspect "$edge" >/dev/null 2>&1; then exit 1; fi
+          if docker network inspect "$net" >/dev/null 2>&1; then exit 1; fi
+          mkdir -p "$RUNNER_TEMP/stageq-contained-topology"
+          printf ':8080 {\n respond "stageq-private-namespace" 200\n}\n' > "$RUNNER_TEMP/stageq-contained-topology/Caddyfile"
+          cleanup() {
+            label="$(docker inspect "$edge" --format '{{index .Config.Labels "soullab.stageq"}}' 2>/dev/null || true)"
+            if [ "$label" = "$owner" ]; then docker rm -f "$edge" || true; fi
+            label="$(docker network inspect "$net" --format '{{index .Labels "soullab.stageq"}}' 2>/dev/null || true)"
+            if [ "$label" = "$owner" ]; then docker network rm "$net" || true; fi
+          }
+          trap cleanup EXIT
+          docker pull caddy:2.10.2-alpine
+          docker network create --internal --driver bridge --label "soullab.stageq=$owner" "$net"
+          docker run -d --name "$edge" --label "soullab.stageq=$owner" --network "$net" \
+            -v "$RUNNER_TEMP/stageq-contained-topology:/etc/stageq:ro" \
+            caddy:2.10.2-alpine caddy run --config /etc/stageq/Caddyfile --adapter caddyfile
+          test -z "$(docker port "$edge")"
+          ready=false
+          for attempt in $(seq 1 25); do
+            if docker run --rm --pull never --network "container:$edge" --entrypoint /bin/sh \
+              caddy:2.10.2-alpine -c 'wget -qO- http://127.0.0.1:8080/' 2>/dev/null |
+              grep -Fx 'stageq-private-namespace'; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" = true
+          echo 'PRIVATE_CADDY_NAMESPACE_WITHOUT_PUBLISHED_HOST_PORTS_PASS'
+
+  contained_browser:
+    name: Reopen exact immutable full image; render real WebKit with fictional SQL
+    needs: topology_gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
+    env:
+      STAGE_Q_FULL_IMAGE_FIXTURE: stageq-full-image-rendered-fictional-only
+      FROZEN_SOURCE_SHA: 9ed5d83ba856b4e8c4940ef7f928447ae28c3837
+      IMAGE: maia-sovereign:stageq-classa-1883-review-only
+      IMAGE_ID: sha256:ee8ea174a90dc7465921a3cd6db801321cfe82a0f35633d94ed8371eba63b6e9
+      ARCHIVE_SHA256: 1231d686322eed99d6b7d97b75f9dd0d8e8cab7692fd42acd2e02cef6ca102f2
+      ARCHIVE: stageq-classa-1883-linux-amd64.docker.tar.gz
+    steps:
+      - name: Checkout exact test-only branch, never merge into canonical
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Set up Node 22 for pure test orchestration
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked Node dependencies with lifecycle scripts disabled
+        run: npm ci --ignore-scripts
+
+      - name: Syntax-check both isolated test programs
+        run: |
+          node --check docs/security/auth-stage-q-full-image-contained-harness.test.cjs
+          node --check docs/security/auth-stage-q-full-image-contained-browser.test.cjs
+
+      - name: Fetch the exact private full image from previously attested run
+        uses: actions/download-artifact@v4
+        with:
+          name: stageq-classa-1883-private-image
+          run-id: 39314980454
+          repository: SoullabTech/Sovereign
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/stageq-contained-fullimage
+
+      - name: Independently verify source/archive/image SHA and test-only lane
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/stageq-contained-fullimage"
+          test -f "$ARCHIVE" && test -f "$ARCHIVE.sha256"
+          test -f stageq-classa-image-identity.txt
+          echo "$ARCHIVE_SHA256  $ARCHIVE" | sha256sum -c -
+          sha256sum -c "$ARCHIVE.sha256"
+          grep -Fx "SOURCE_SHA=$FROZEN_SOURCE_SHA" stageq-classa-image-identity.txt
+          grep -Fx "IMAGE_ID=$IMAGE_ID" stageq-classa-image-identity.txt
+          grep -Fx "ARCHIVE_SHA256=$ARCHIVE_SHA256" stageq-classa-image-identity.txt
+          grep -Fx 'BUILD_LANE=ci-review-image-only' stageq-classa-image-identity.txt
+          grep -Fx 'ARCHITECTURE=amd64' stageq-classa-image-identity.txt
+          grep -Fx 'PRODUCTION_DEPLOYED=false' stageq-classa-image-identity.txt
+          grep -Fx 'RELEASE_AUTHORIZED=false' stageq-classa-image-identity.txt
+          gzip -dc "$ARCHIVE" | docker load
+          test "$(docker image inspect "$IMAGE" --format '{{.Id}}')" = "$IMAGE_ID"
+          test "$(docker image inspect "$IMAGE" --format '{{.Architecture}}')" = amd64
+          docker image inspect "$IMAGE" --format '{{range .Config.Env}}{{println .}}{{end}}' |
+            grep -Fx "GIT_COMMIT=$FROZEN_SOURCE_SHA"
+          docker image inspect "$IMAGE" --format '{{range .Config.Env}}{{println .}}{{end}}' |
+            grep -Fx 'DEPLOY_LANE=ci-review-image-only'
+
+      - name: Fetch pinned fake DB, Caddy and matching WebKit runtime images
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull postgres:14-alpine
+          docker pull caddy:2.10.2-alpine
+          docker pull mcr.microsoft.com/playwright:v1.56.1-noble
+          docker image inspect mcr.microsoft.com/playwright:v1.56.1-noble --format '{{.Id}}'
+
+      - name: Execute full-image browser inside Caddy private network namespace
+        shell: bash
+        run: node --test docs/security/auth-stage-q-full-image-contained-harness.test.cjs
+
+      - name: Clean up only labeled fake DB/application/Caddy/browser and network
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="$(printf '%s' "$GITHUB_SHA" | cut -c1-10)"
+          for name in "stageqfull-browser-$tag" "stageqfull-edge-$tag" "stageqfull-app-$tag" "stageqfull-pg-$tag"; do
+            label="$(docker inspect "$name" --format '{{index .Config.Labels "soullab.stageq"}}' 2>/dev/null || true)"
+            if [ "$label" = "stageq-full-image-fictional" ]; then docker rm -f "$name"; fi
+            if docker ps -a --format '{{.Names}}' | grep -Fx "$name"; then
+              echo "Unexpected surviving fixture: $name"
+              exit 1
+            fi
+          done
+          net="stageqfull-net-$tag"
+          label="$(docker network inspect "$net" --format '{{index .Labels "soullab.stageq"}}' 2>/dev/null || true)"
+          if [ "$label" = "stageq-full-image-fictional" ]; then docker network rm "$net"; fi
+          if docker network ls --format '{{.Name}}' | grep -Fx "$net"; then
+            echo 'Unexpected surviving private fixture network'
+            exit 1
+          fi
+          echo 'NO_PRODUCTION_CONNECTIVITY_NO_DEPLOYMENT_CLEANUP_PASS'
