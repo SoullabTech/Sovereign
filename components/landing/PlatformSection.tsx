@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { SectionReveal } from './SectionReveal';
 
 const FACETS = [
@@ -92,6 +93,12 @@ export function PlatformSection() {
             >
               Enter Soullab
             </a>
+            <div className="mt-5">
+              <Link href="/explore"
+                 className="inline-flex items-center justify-center rounded-xl border border-white/20 px-6 py-3 text-sm text-white/80 hover:border-maia-spice-400 hover:text-white">
+                Discover the different doorways →
+              </Link>
+            </div>
           </div>
         </SectionReveal>
       </div>

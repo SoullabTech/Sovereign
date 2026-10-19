@@ -41,6 +41,19 @@ export const ACCESS_RULES: AccessRule[] = [
   // Landing & Marketing
   { exact: '/', public: true, notes: 'Studio landing page' },
   { exact: '/home', public: true, notes: 'Soullab canonical entry — signed-out visitors see the Soullab threshold; authenticated members enter Home' },
+
+  // P0 public marketing discovery, separately scoped from working/consent-gated Studios.
+  // Exact-only whitelist; NEVER grant /explore/* wildcards or weaken private
+  // /writers-studio, /studio, /maia/encounter, chart or API admission.
+  { exact: '/explore', public: true, notes: 'Public Many Doors introduction; no member data' },
+  { exact: '/explore/writers-studio', public: true, notes: 'Public writer vision; manuscript features remain gated' },
+  { exact: '/explore/pro-studio', public: true, notes: 'Public professional preview; clinical workflows remain gated' },
+  { exact: '/explore/astrology-pro', public: true, notes: 'Public professional astrology preview; private charts remain gated' },
+  { exact: '/explore/maia', public: true, notes: 'Public MAIA introduction; member encounter remains gated' },
+  { exact: '/explore/ain-os', public: true, notes: 'AIN OS research; not a licensed public download' },
+  { exact: '/explore/sound-resonance', public: true, notes: 'Sound experience preview; no public player or audio recording' },
+  { exact: '/explore/elemental-academy', public: true, notes: 'Academy curriculum preview; no course access' },
+
   { exact: '/enter', public: true, notes: 'Smart routing entry point (MAIA/onboarding)' },
   { exact: '/faq', public: true, notes: 'Public FAQ' },
   { exact: '/downloads', public: true, notes: 'Downloads page' },
