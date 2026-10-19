@@ -692,7 +692,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               I’m with this exact place now. You do not need to hunt through another panel
               before we can work with it.
             </p>
-            <div className="p4r1-locus-actions">
               <button
                 type="button"
                 className="p4r1-talk"
@@ -702,11 +701,15 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
                   'Do not rewrite anything unless I ask.',
                 ].join('\n\n'))}
               >
-                Talk about this
+                Talk about this place
               </button>
-              <button type="button" onClick={() => props.onMode('develop')}>Develop this place</button>
-              <button type="button" onClick={() => props.onMode('review')}>Review this place</button>
-            </div>
+            <details className="p4r1-locus-more">
+              <summary>More ways to work here</summary>
+              <div>
+                <button type="button" onClick={() => props.onMode('develop')}>Develop this place</button>
+                <button type="button" onClick={() => props.onMode('review')}>Review this place</button>
+              </div>
+            </details>
             <p className="fr-also">Select exact words in the manuscript for passage-level revision.</p>
           </div>
         ) : (
