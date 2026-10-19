@@ -7,6 +7,7 @@
 // Admin actions: channel owner/admin OR global team_admin/admin role.
 
 import { query } from '@/lib/db/postgres';
+import type { TransactionClient } from '@/lib/db/postgres';
 
 export type AccessReason = 'not_member' | 'not_found';
 
@@ -45,6 +46,36 @@ export async function requireChannelAccess(
   if (!row) return { allowed: false, reason: 'not_found' };
   if (!row.is_private) return { allowed: true };
   if (row.is_member) return { allowed: true };
+  return { allowed: false, reason: 'not_member' };
+}
+
+/**
+ * C0-SSE-ATOMIC Stage A — transactional variation of the same public/private
+ * channel policy. The session row must already be locked by the caller.
+ *
+ * Lock the channel row FIRST (protecting is_private and channel deletion),
+ * then the private membership row (protecting membership removal).
+ * Holding both until synchronous enqueue orders permission removal with
+ * the enqueue point. The database transaction must not span stream idle time.
+ */
+export async function requireChannelAccessInTransaction(
+  channelId: string,
+  memberId: string,
+  tx: TransactionClient,
+): Promise<ChannelAccessResult> {
+  const channel = await tx.query<{ is_private: boolean }>(
+    'SELECT tc.is_private FROM team_channels tc WHERE tc.id = $1 FOR SHARE OF tc',
+    [channelId],
+  );
+  const row = channel.rows[0];
+  if (!row) return { allowed: false, reason: 'not_found' };
+  if (!row.is_private) return { allowed: true };
+
+  const membership = await tx.query<{ present: number }>(
+    'SELECT 1 AS present FROM team_channel_members WHERE channel_id = $1 AND member_id = $2 FOR SHARE',
+    [channelId, memberId],
+  );
+  if (membership.rows[0]) return { allowed: true };
   return { allowed: false, reason: 'not_member' };
 }
 
