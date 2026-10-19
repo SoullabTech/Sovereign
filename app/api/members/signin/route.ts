@@ -173,11 +173,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update last sign in
-    await query(
-      `UPDATE members SET last_sign_in = NOW() WHERE id = $1`,
-      [member.id]
-    );
+    // The durable session and response cookies are already issued. This
+    // timestamp is non-authoritative metadata, not a second login gate:
+    // failing here previously returned HTTP 500 for an existing live session.
+    // Keep that state honest without logging the member/token or raw DB error.
+    try {
+      await query(
+        `UPDATE members SET last_sign_in = NOW() WHERE id = $1`,
+        [member.id]
+      );
+    } catch {
+      console.error('[PasswordSignin] Noncritical last_sign_in metadata unavailable');
+    }
 
     await logAuthEvent({
       action: 'password_signin',
