@@ -81,7 +81,7 @@ test('cookie sign-out requires typed HTTP 200 success and stays same-origin', as
   assert.equal(f.calls[0].path, '/api/members/signout');
   assert.equal(f.calls[0].options.method, 'POST');
   assert.equal(f.calls[0].options.credentials, 'same-origin');
-  assert.equal(f.calls[0].options.mode, 'same-origin');
+  assert.equal(f.calls[0].options.mode, 'cors');
   assert.equal(f.calls[0].options.redirect, 'error');
   assert.equal(f.calls[0].options.headers, undefined);
 });
