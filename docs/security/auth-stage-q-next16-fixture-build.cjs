@@ -31,8 +31,18 @@ const originals = [
   'lib/db/postgres.ts',
   'lib/writersStudio/canonicalStudioRoute.ts',
   'app/api/members/signout/route.ts',
+  // Exact PR #1870 password sign-in source and its real auth dependencies.
+  'app/api/members/signin/route.ts',
+  'lib/auth/rateLimiter.ts',
+  'lib/security/authAudit.ts',
 ];
+// Preserve the exact small display-name function without loading unrelated
+// practitioner/PHI modules into a fictional authentication-only fixture.
+const clientsOriginal=fs.readFileSync(path.join(root,'lib/stellium/clients.ts'),'utf8');
+const displayFragment=clientsOriginal.match(/export function resolveMemberDisplayName\([\s\S]*?\n\}/);
+if(!displayFragment)throw Error('Reviewed display-name resolver extraction failed');
 const fixtureFiles = {
+  'lib/stellium/clients.ts': displayFragment[0]+'\n',
   'app/layout.tsx': [
     'export default function Layout({children}:{children:React.ReactNode}){',
     'return <html lang="en"><body>{children}</body></html>;',
@@ -48,32 +58,6 @@ const fixtureFiles = {
     'return <main data-testid="protected-room" data-authed={h.get("x-access-authed")||""}',
     ' data-roles={h.get("x-access-roles")||""} data-member={h.get("x-access-member-id")||""}>',
     'Fictional private room</main>;',
-    '}',
-  ].join('\n'),
-  'app/api/members/signin/route.ts': [
-    "import {NextResponse} from 'next/server';",
-    "import {query} from '@/lib/db/postgres';",
-    "import {createSession,setSessionCookie,setAccessCookies} from '@/lib/auth/serverSessions';",
-    "export const dynamic='force-dynamic';",
-    'export async function POST(req:Request){',
-    " if(process.env.STAGE_Q_NEXT16_DISPOSABLE!=='stageq-next16-fictional-only')",
-    " return NextResponse.json({error:'fixture disabled'},{status:403});",
-    " const origin=req.headers.get('origin');",
-    " const expected=process.env.AUTH_SIGNOUT_TRUSTED_WEB_ORIGINS;",
-    " if(!expected||origin!==expected||req.headers.get('host')!==new URL(expected).host)",
-    " return NextResponse.json({error:'fixture origin refused'},{status:403});",
-    " const input=await req.json().catch(()=>null);",
-    " if(!input||!['fixture_member','fixture_second'].includes(input.username)||",
-    " !['cookie','bearer'].includes(input.transport))",
-    " return NextResponse.json({error:'invalid fictional fixture input'},{status:400});",
-    " const q=await query('SELECT id FROM members WHERE username=$1',[input.username]);",
-    " const row=q.rows[0];if(!row)return NextResponse.json({error:'fixture not seeded'},{status:404});",
-    " const s=await createSession({memberId:row.id,ipAddress:'127.0.0.1',userAgent:'fiction-only'});",
-    " if(input.transport==='cookie'){",
-    "  await setSessionCookie(s.sessionToken,s.expiresAt);",
-    "  await setAccessCookies(row.id,'free',['member'],s.expiresAt);",
-    ' }',
-    " return NextResponse.json({fixture:true,token:s.sessionToken},{headers:{'Cache-Control':'no-store'}});",
     '}',
   ].join('\n'),
   'app/api/members/undocumented/route.ts': [
@@ -134,6 +118,8 @@ write('next.config.js', [
 ].join('\n'));
 fs.symlinkSync(path.join(root,'node_modules'),path.join(base,'node_modules'),'dir');
 const manifest={ sourceCommit:sha,sourceFiles:checks,fixtureOnly:Object.keys(fixtureFiles),
+  signinHandlerSource: 'exact PR1870 route', authenticationDependencies: 'exact source',
+  displayResolverFragmentSha256:crypto.createHash('sha256').update(displayFragment[0]).digest('hex'),
   strictMode:true,realNextProxy:true,fullProduct:false,fixturePath:base };
 write('STAGE_Q_BUILD_MANIFEST.json',JSON.stringify(manifest,null,2));
 process.stdout.write('Building disposable Next16 fixture from '+checks.length+' exact source files\n');
