@@ -349,3 +349,43 @@ deletion, would have returned 63 GB on day one.
 Additional roots found the same day, neither known to any instrument:
 `~/.jarvis` (22 GB) and `~/.worktrees` (16 GB) — a fourth and fifth worktree
 root, further instances of the scope defect recorded above.
+
+### Old worktrees cannot push their own custody
+
+Measured 2026-10-19. Twelve worktrees held 24 commits that existed on no
+remote. Every push failed identically:
+
+```
+❌ pre-push: no governance policy at this revision.
+   Expected: <worktree>/.githooks/pre-push
+   This revision predates tracked hook governance, or the file was removed.
+```
+
+The hook looks for `.githooks/pre-push` in the **working tree of the repository
+the push runs from**. Commits made before `.githooks/` was tracked therefore
+cannot be pushed from their own worktree — ever. No credential, branch name or
+retry changes this, and the trees most likely to hold forgotten work are
+exactly the oldest ones, so the failure concentrates precisely where custody
+matters most.
+
+**The route that works**, preserving exact SHAs and running the real scans:
+
+```
+git -C <governed-repo> fetch <old-worktree> HEAD:refs/heads/chore/backup-<name>-<date>
+git -C <governed-repo> push origin refs/heads/chore/backup-<name>-<date>
+```
+
+The push runs from a repository whose working tree carries `.githooks/`, so the
+secret and large-file scans execute normally. Nothing is bypassed. Verify with
+`local=$(git -C <old-worktree> rev-parse HEAD)` against the remote ref; equality
+is the proof. Delete the temporary local branches afterwards.
+
+**Why not the alternatives.** `--no-verify` skips the secret and large-file
+scans, which is the one thing the hook exists to guarantee. A cherry-pick onto
+current canonical works but mints new SHAs and can conflict — acceptable for a
+single commit (used once, 2026-10-15), poor for twelve trees at up to five
+commits each.
+
+⚠️ Pushing work secured this way **flips those trees to SAFE**, so the next
+sweep reclaims them. That is correct and it is also the moment the checkout
+disappears — see *reclaimable is not disposable* above.
