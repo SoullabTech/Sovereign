@@ -28,15 +28,29 @@
     "not_now artifact choice versus separately typed inquiry response"
   ],
   "execution": {
-    "preflightNodeTests": "NOT_EXECUTED_ON_BRANCH",
+    "preflightNodeTests": "OFFLINE_ONLY_15_OF_15_PASS_BRANCH_BYTE_MATCH",
     "postgres": "NOT_STARTED",
     "imageDigests": "NOT_ATTESTED",
     "containerIsolation": "NOT_ATTESTED",
     "actualService": "NOT_STARTED",
     "migration": "NOT_APPLIED",
-    "memberTest": "FORBIDDEN"
+    "memberTest": "FORBIDDEN",
+    "composePolicyTests": "OFFLINE_ONLY_20_OF_20_PASS_STATIC_YAML_PLUS_FAULT_INJECTION",
+    "staticPreflightRevision": "OFFLINE_RECHECK_COMPLETE_2026_10_19",
+    "composeProfilesSeparated": "DECLARED_NOT_RUNTIME_VERIFIED"
   },
   "filesRestrictedTo": [
     "tests/ubuntu-r1f-stage-b/"
-  ]
+  ],
+  "safetyRevision": {
+    "reason": "prior preflight unintentionally coupled PostgreSQL startup and mounted entire repository",
+    "static": "compose.preparation.yaml",
+    "futureDb": "compose.db-proposal.yaml",
+    "preflightNetworkMode": "none",
+    "preflightMountAllowlist": [
+      "./preflight.mjs"
+    ],
+    "pgServiceIncludedInStaticFile": false,
+    "runtimeStarted": false
+  }
 }

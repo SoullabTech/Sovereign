@@ -24,11 +24,13 @@ Pinned source Git blobs:
 
 - preflight.mjs — pure configuration refusal; no DB, DNS, app imports or network.
 - preflight.test.mjs — named negative safety tests using Node's built-in test framework.
-- compose.preparation.yaml — proposed disposable PostgreSQL + preflight containers with an internal-only Docker network, no published ports, tmpfs data, read-only source mount, no image pulls, and explicit image-digest requirements.
-- init/01-fixture-attestation.sql — creates only fictional fixture identity and restricted test role.
+- compose.preparation.yaml — static preflight only, with network_mode:none, no database service/dependency, and one read-only file mount.
+- compose.db-proposal.yaml — separate unexecuted PostgreSQL plan with a different profile, internal-only network, no published ports, tmpfs and required image digest.
+- compose.policy.test.py — offline structural YAML and adversarial-mutation safety checks; no Docker, sockets, SQL or source service.
+- init/01-fixture-attestation.sql — unexecuted fictional fixture identity and restricted test role.
 - acceptance.manifest.json — separate source/fixture expected outcomes.
 
-Important: Docker, PostgreSQL and app dependencies are not available in the preparing workspace. The compose file is a DESIGN/READY-TO-REVIEW candidate, not proof images ran, tmpfs was mounted, airgap was enforced, or the server became reachable. Static environment strings and a SQL attestation row cannot themselves prove a disposable network. Image digests, volumes, UID permissions, Docker network, DB host, actual schema and cleanup require an independent witness BEFORE connection or testing.
+Important: Docker, PostgreSQL and app dependencies are not available in the preparing workspace. Both Compose files are DESIGN/READY-TO-REVIEW candidates, not proof images ran, tmpfs was mounted, airgap was enforced, or the server became reachable. Static environment strings and a SQL attestation row cannot themselves prove a disposable network. Image digests, volumes, UID permissions, Docker network, DB host, actual schema and cleanup require an independent witness BEFORE connection or testing.
 
 ## Existing verifier is NOT an execution recipe
 
@@ -57,3 +59,13 @@ Red baseline observations MUST NOT be reported as passing safety tests. No autom
 ## Separate authority still required
 
 Actual PostgreSQL container creation/pull/build; migrations; source-service tests; code patches; network access; member beta admission; canonical merge; constitutional ratification; release. Each requires a specifically bounded founder decision and appropriate review/rollback/erasure custody. A general “continue” or a passing STATIC preflight is not enough.
+
+## Safety correction — separate static preflight from future PostgreSQL
+
+The prior preparation YAML declared PostgreSQL and preflight in the same profile and included a `depends_on: pg-fixture` dependency. Running the preflight Compose profile could therefore start a PostgreSQL service despite preflight-only authority. It also mounted the whole repository read-only, potentially exposing unrelated local `.env` material; read-only does NOT provide confidentiality.
+
+The static preflight now lives alone in `compose.preparation.yaml`, has `network_mode: none`, has no `depends_on`, and mounts ONLY `preflight.mjs`. The future PostgreSQL plan is a separate `compose.db-proposal.yaml` file with an unrelated profile. Neither Docker profile has been started; runtime image digests, UID compatibility, network isolation and data cleanup remain unverified.
+
+Offline reproducibility: `node --test tests/ubuntu-r1f-stage-b/preflight.test.mjs` and `python3 tests/ubuntu-r1f-stage-b/compose.policy.test.py` (the latter uses PyYAML). Both are static preparation, not actual Circle behavior. Do not claim that a parsed Compose file proves any Docker or PostgreSQL isolation property.
+
+Do not start either Compose profile, source service, or database without independent, exact-scope execution authority.

@@ -1,59 +1,27 @@
-# PREPARATION ONLY. No production ports, credentials, mounts, or connections.
-# Pinned images must first be independently reviewed and preloaded; pull_policy never.
-# The runner invokes the STATIC PREFLIGHT ONLY; no app services or SQL tests.
-name: ubuntu-r1f-stageb-prep
+# STATIC PREFLIGHT ONLY. No PostgreSQL service, network, application, or SQL.
+# Prepared for review; Docker execution requires separate authorization.
+name: ubuntu-r1f-stageb-static-preflight
 services:
-  pg-fixture:
-    profiles: [stageb-preflight]
-    image: "${R1F_PG_IMAGE_DIGEST:?must supply a verified, preloaded PostgreSQL image digest}"
-    pull_policy: never
-    restart: "no"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: fictional_bootstrap_only
-      POSTGRES_DB: ubuntu_r1f_ephemeral
-      PGDATA: /var/lib/postgresql/data/pgdata
-    tmpfs:
-      - /var/lib/postgresql/data:rw,nosuid,nodev,size=512m,mode=1777
-      - /var/run/postgresql:rw,nosuid,nodev,size=8m,mode=1777
-      - /tmp:rw,nosuid,nodev,size=32m
-    volumes:
-      - type: bind
-        source: ./init/01-fixture-attestation.sql
-        target: /docker-entrypoint-initdb.d/01-fixture-attestation.sql
-        read_only: true
-    networks: [fictional-only]
-    ports: []
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ubuntu_r1f_ephemeral"]
-      interval: 3s
-      timeout: 3s
-      retries: 12
-    mem_limit: 768m
-    pids_limit: 96
   static-preflight:
     profiles: [stageb-preflight]
-    image: "${R1F_NODE_IMAGE_DIGEST:?must supply a verified, preloaded Node image digest}"
+    image: "${R1F_NODE_IMAGE_DIGEST:?must supply independently verified preloaded immutable Node image digest}"
     pull_policy: never
     restart: "no"
     init: true
+    network_mode: none
     read_only: true
     user: "10001:10001"
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
-    networks: [fictional-only]
     ports: []
     tmpfs:
       - /tmp:rw,nosuid,nodev,size=32m
     volumes:
       - type: bind
-        source: ../..
-        target: /workspace
+        source: ./preflight.mjs
+        target: /workspace/preflight.mjs
         read_only: true
     working_dir: /workspace
-    depends_on:
-      pg-fixture:
-        condition: service_healthy
     environment:
       NODE_ENV: test
       R1F_STAGE_B_SCOPE: FICTIONAL_DISPOSABLE_ONLY
@@ -62,10 +30,6 @@ services:
       R1F_EGRESS: INTERNAL_ONLY
       R1F_DATABASE_ATTESTATION: NOT_YET_VERIFIED
       DATABASE_URL: postgresql://ubuntu_fixture_test:fictional_fixture_only@pg-fixture:5432/ubuntu_r1f_ephemeral
-    command: ["node", "tests/ubuntu-r1f-stage-b/preflight.mjs", "--preflight"]
+    command: ["node", "/workspace/preflight.mjs", "--preflight"]
     mem_limit: 256m
     pids_limit: 40
-networks:
-  fictional-only:
-    internal: true
-    driver: bridge
