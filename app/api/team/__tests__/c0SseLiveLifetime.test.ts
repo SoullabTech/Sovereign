@@ -119,15 +119,25 @@ async function open(kind: StreamKind) {
   return { controller, reader };
 }
 
+async function readWithTimeout(reader: ReadableStreamDefaultReader<Uint8Array>, timeout: number) {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      reader.read(),
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('SSE reader timeout')), timeout);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
 async function waitForClose(reader: ReadableStreamDefaultReader<Uint8Array>, timeout = 2600) {
   let accumulated = '';
   const began = Date.now();
   while (Date.now() - began < timeout) {
-    const received = await Promise.race([
-      reader.read(),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('SSE did not close after withdrawal')), timeout)),
-    ]);
+    const received = await readWithTimeout(reader, Math.max(1, timeout - (Date.now() - began)));
     if (received.done) return accumulated;
     accumulated += new TextDecoder().decode(received.value);
   }
@@ -138,11 +148,7 @@ async function nextMessages(reader: ReadableStreamDefaultReader<Uint8Array>, tim
   let accumulated = '';
   const begun = Date.now();
   while (Date.now() - begun < timeout) {
-    const received = await Promise.race([
-      reader.read(),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Expected fictional messages event')), timeout)),
-    ]);
+    const received = await readWithTimeout(reader, Math.max(1, timeout - (Date.now() - begun)));
     if (received.done) throw new Error('SSE closed unexpectedly');
     accumulated += new TextDecoder().decode(received.value);
     if (accumulated.includes('event: messages')) return accumulated;
