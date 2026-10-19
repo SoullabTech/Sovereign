@@ -1,14 +1,4 @@
-/**
- * Authorization tests for POST /api/members/password.
- *
- * Defect (fixed): the route took `memberId` from the request body and wrote
- * `UPDATE members SET password_hash = ... WHERE id = <body memberId>` with no
- * authentication of any kind, so any caller could set any member's password.
- *
- * The member is now derived from the verified session. These tests lock that
- * in: the cases marked "TAKEOVER" are the ones that previously FALSE-PASSED.
- */
-
+/** C0 fictional-account tests: session-only credential changes MUST fail closed. */
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import type { NextRequest } from 'next/server';
 import { existsSync } from 'node:fs';
@@ -17,122 +7,82 @@ import path from 'node:path';
 const SESSION_MEMBER = '11111111-1111-4111-8111-111111111111';
 const VICTIM_MEMBER = '22222222-2222-4222-8222-222222222222';
 
-// --- Mocks (registered before the route is imported) ---
 const mockGetMemberIdFromRequest =
   jest.fn<(request: NextRequest) => Promise<string | null>>();
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({
   __esModule: true,
-  getMemberIdFromRequest: (request: NextRequest) =>
-    mockGetMemberIdFromRequest(request),
+  getMemberIdFromRequest: (req: NextRequest) => mockGetMemberIdFromRequest(req),
 }));
 
-const mockQuery =
-  jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: unknown[] }>>();
+const mockQuery = jest.fn();
 jest.mock('@/lib/db/postgres', () => ({
   __esModule: true,
-  default: { query: (sql: string, params?: unknown[]) => mockQuery(sql, params) },
-  query: (sql: string, params?: unknown[]) => mockQuery(sql, params),
-}));
-
-jest.mock('@/lib/auth/passwordUtils', () => ({
-  __esModule: true,
-  hashPassword: async (pw: string) => `hashed:${pw}`,
+  query: (...args: unknown[]) => mockQuery(...args),
 }));
 
 import { POST } from '../route';
 
-function reqWith(body: unknown): NextRequest {
+function reqWith(body: unknown, headerToken?: string): NextRequest {
+  const headers = new Headers();
+  if (headerToken) headers.set('x-session-token', headerToken);
   return {
     json: async () => body,
-    headers: new Headers(),
+    headers,
   } as unknown as NextRequest;
 }
-
-/** Every UPDATE issued against members, with its bound params. */
-function memberUpdates() {
-  return mockQuery.mock.calls.filter(
-    ([sql]) => typeof sql === 'string' && /UPDATE\s+members/i.test(sql),
-  );
-}
-
 beforeEach(() => {
   mockGetMemberIdFromRequest.mockReset();
   mockQuery.mockReset();
-  mockQuery.mockResolvedValue({ rows: [{ id: SESSION_MEMBER }] });
 });
 
-describe('POST /api/members/password — authorization', () => {
-  it('TAKEOVER: an unauthenticated caller is rejected and writes nothing', async () => {
+describe('POST /api/members/password — C0 refusal', () => {
+  it('refuses unauthenticated requests with no account write', async () => {
     mockGetMemberIdFromRequest.mockResolvedValue(null);
-
-    const res = await POST(
-      reqWith({ memberId: VICTIM_MEMBER, newPassword: 'newpassword123' }),
-    );
-
-    expect(res.status).toBe(401);
-    expect(memberUpdates()).toHaveLength(0);
+    const response = await POST(reqWith({ memberId: VICTIM_MEMBER, newPassword: 'fictional-strong-password' }));
+    expect(response.status).toBe(401);
+    expect(mockQuery).not.toHaveBeenCalled();
   });
 
-  it('TAKEOVER: member A cannot change member B\'s password', async () => {
+  it('does not allow a valid session to set its own password without fresh authority', async () => {
     mockGetMemberIdFromRequest.mockResolvedValue(SESSION_MEMBER);
-
-    const res = await POST(
-      reqWith({ memberId: VICTIM_MEMBER, newPassword: 'newpassword123' }),
-    );
-
-    expect(res.status).toBe(403);
-    expect(memberUpdates()).toHaveLength(0);
+    const response = await POST(reqWith({ memberId: SESSION_MEMBER, newPassword: 'fictional-strong-password' }));
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'PASSWORD_SETUP_REQUIRES_REVERIFICATION',
+    });
+    expect(mockQuery).not.toHaveBeenCalled();
   });
 
-  it('never binds a body-supplied member id to the UPDATE', async () => {
+  it('cannot set another member password even with a valid session', async () => {
     mockGetMemberIdFromRequest.mockResolvedValue(SESSION_MEMBER);
-
-    await POST(reqWith({ newPassword: 'newpassword123' }));
-
-    const updates = memberUpdates();
-    expect(updates).toHaveLength(1);
-    const params = updates[0][1] as unknown[];
-    expect(params).toContain(SESSION_MEMBER);
-    expect(params).not.toContain(VICTIM_MEMBER);
+    const response = await POST(reqWith({ memberId: VICTIM_MEMBER, newPassword: 'fictional-strong-password' }));
+    expect(response.status).toBe(403);
+    expect(mockQuery).not.toHaveBeenCalled();
   });
 
-  it('allows the authenticated member to change their own password', async () => {
+  it('cannot bypass the refusal with short, absent, or malformed request content', async () => {
     mockGetMemberIdFromRequest.mockResolvedValue(SESSION_MEMBER);
-
-    const res = await POST(reqWith({ newPassword: 'newpassword123' }));
-
-    expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ success: true });
-    expect(memberUpdates()).toHaveLength(1);
+    for (const body of [{ newPassword: 'short' }, {}, null, { newPassword: 1234 }]) {
+      const response = await POST(reqWith(body));
+      expect(response.status).toBe(403);
+    }
+    expect(mockQuery).not.toHaveBeenCalled();
   });
 
-  it('allows a body member id that matches the session (existing client behavior)', async () => {
+  it('supports iOS credential transport without granting write authority', async () => {
     mockGetMemberIdFromRequest.mockResolvedValue(SESSION_MEMBER);
-
-    const res = await POST(
-      reqWith({ memberId: SESSION_MEMBER, newPassword: 'newpassword123' }),
-    );
-
-    expect(res.status).toBe(200);
-    expect(memberUpdates()).toHaveLength(1);
+    const req = reqWith({ newPassword: 'fictional-strong-password' }, 'fictional-safari-session');
+    const response = await POST(req);
+    expect(mockGetMemberIdFromRequest).toHaveBeenCalledWith(req);
+    expect(response.status).toBe(403);
+    expect(mockQuery).not.toHaveBeenCalled();
   });
 
-  it('still enforces the minimum password length for an authenticated member', async () => {
-    mockGetMemberIdFromRequest.mockResolvedValue(SESSION_MEMBER);
-
-    const res = await POST(reqWith({ newPassword: 'short' }));
-
-    expect(res.status).toBe(400);
-    expect(memberUpdates()).toHaveLength(0);
-  });
-
-  it('rejects a missing password without writing', async () => {
-    mockGetMemberIdFromRequest.mockResolvedValue(SESSION_MEMBER);
-
-    const res = await POST(reqWith({}));
-
-    expect(res.status).toBe(400);
-    expect(memberUpdates()).toHaveLength(0);
+  it('fails closed on session lookup failure', async () => {
+    mockGetMemberIdFromRequest.mockRejectedValue(new Error('fictional session backend unavailable'));
+    const response = await POST(reqWith({ newPassword: 'fictional-strong-password' }));
+    expect(response.status).toBe(503);
+    expect(mockQuery).not.toHaveBeenCalled();
   });
 });
 
