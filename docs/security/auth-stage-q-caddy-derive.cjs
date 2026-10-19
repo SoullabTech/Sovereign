@@ -54,16 +54,26 @@ const snippet=extract('(deny_disabled_routes) {');
 let site=extract('soullab.life {');
 if(!site.startsWith('soullab.life {'))throw Error('Wrong site extracted');
 if(!site.includes('import deny_disabled_routes'))throw Error('Canonical edge-deny import missing');
-const upstream=(site.match(/maia-sovereign:3000/g)||[]).length;
-const hosts=(site.match(/header_up Host \{host\}/g)||[]).length;
-const corsNull=(site.match(/Access-Control-Allow-Origin "null"/g)||[]).length;
-if(upstream!==5||hosts!==5||corsNull!==2){
- throw Error('Unexpected canonical Caddy topology: upstream='+upstream+
- ' hosts='+hosts+' null-CORS='+corsNull);
+// The production file also carries an intentionally DISABLED admin example:
+// its commented reverse_proxy/header_up lines are not active policy and must
+// not be rewritten or counted as a live upstream.
+const activeLines=site.split('\n').filter(line=>!line.trim().startsWith('#'));
+const liveSource=activeLines.join('\n');
+const upstream=(liveSource.match(/maia-sovereign:3000/g)||[]).length;
+const hosts=(liveSource.match(/header_up Host \{host\}/g)||[]).length;
+const allUpstreams=(site.match(/maia-sovereign:3000/g)||[]).length;
+const allHosts=(site.match(/header_up Host \{host\}/g)||[]).length;
+const corsNull=(liveSource.match(/Access-Control-Allow-Origin "null"/g)||[]).length;
+if(upstream!==5||hosts!==5||allUpstreams!==6||allHosts!==6||corsNull!==2){
+ throw Error('Unexpected canonical Caddy topology: active upstream='+upstream+
+ ' active hosts='+hosts+' commented examples='+(allUpstreams-upstream)+
+ ' null-CORS='+corsNull);
 }
 site=site.replace(/^soullab\.life \{/,
  'stageq-next16.invalid {\n    bind 127.0.0.1\n    tls /etc/stageq/fixture.crt /etc/stageq/fixture.key');
-site=site.replaceAll('maia-sovereign:3000','127.0.0.1:3829');
+site=site.split('\n').map(line=>
+ line.trim().startsWith('#')?line:line.replaceAll('maia-sovereign:3000','127.0.0.1:3829')
+).join('\n');
 const logBlock=[
 '    log {',
 '        output file /var/log/caddy/access.log {',
