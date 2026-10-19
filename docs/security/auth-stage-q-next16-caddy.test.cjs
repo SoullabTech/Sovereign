@@ -84,7 +84,12 @@ function tlsFiles(){
  assert.equal(result.status,0,'Ephemeral loopback certificate generation');
  fs.chmodSync(key,0o600);
  const caddy=[
+  '{',
+  ' admin off',
+  ' auto_https disable_redirects',
+  '}',
   'https://127.0.0.1 {',
+  ' bind 127.0.0.1',
   ' tls /fixture/fictional.crt /fixture/fictional.key',
   ' reverse_proxy 127.0.0.1:'+required.nextPort+' {',
   '   header_up Host {http.request.host}',
