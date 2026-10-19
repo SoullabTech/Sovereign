@@ -1,0 +1,90 @@
+# Stage Q: real Next16 proxy + route pipeline behind disposable Caddy HTTPS,
+# using only fictional Postgres 14 accounts in this GitHub runner. NO DEPLOY.
+name: Stage Q Next16 Caddy HTTPS Fixture (NO DEPLOY)
+
+on:
+  push:
+    branches:
+      - security/auth-stage-q-next16-caddy-preflight-20261019
+  pull_request:
+    branches:
+      - security/auth-stage-q-https-webkit-preflight-20261019
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-q-next16-caddy-fictional
+  cancel-in-progress: true
+
+jobs:
+  next16-caddy:
+    name: Genuine Next16 proxy and Caddy with fictional SQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: stageq_next_fixture
+          POSTGRES_PASSWORD: stageq_next_fictional_password_only
+          POSTGRES_DB: stageq_next_fictional
+        ports:
+          - 5550:5432
+        options: >-
+          --health-cmd "pg_isready -U stageq_next_fixture -d stageq_next_fictional"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
+    env:
+      STAGE_Q_NEXT_FIXTURE: fictional-next16-ci-only
+      PGHOST: 127.0.0.1
+      PGPORT: "5550"
+      PGDATABASE: stageq_next_fictional
+      PGUSER: stageq_next_fixture
+      PGPASSWORD: stageq_next_fictional_password_only
+      DATABASE_URL: postgresql://stageq_next_fixture:stageq_next_fictional_password_only@127.0.0.1:5550/stageq_next_fictional
+      AUTH_SIGNOUT_TRUSTED_WEB_ORIGINS: https://127.0.0.1:3844
+      ACCESS_CONTROL_MODE: strict
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - name: Checkout exact isolated candidate without credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      - name: Verify native bcrypt and install real WebKit
+        run: |
+          npm rebuild bcrypt
+          node -e "require('bcrypt').hashSync('fiction-only',4)"
+          ./node_modules/.bin/playwright install --with-deps webkit
+
+      - name: Assemble exact-hash reviewed Next16 auth fixture
+        run: node docs/security/auth-stage-q-next16-fixture-build.cjs
+
+      - name: Build actual Next16 route and proxy pipeline
+        working-directory: ${{ runner.temp }}/stageq-next16-fictional
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: |
+          node "${{ github.workspace }}/node_modules/next/dist/bin/next" build --webpack
+          test -f .next/BUILD_ID
+
+      - name: Fetch isolated Caddy reverse proxy image
+        run: docker pull caddy:2.10-alpine
+
+      - name: Exercise WebKit against Next16 via loopback Caddy HTTPS and PostgreSQL
+        run: node --test docs/security/auth-stage-q-next16-caddy.test.cjs
