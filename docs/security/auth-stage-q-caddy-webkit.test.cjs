@@ -570,7 +570,7 @@ test('unconfirmed signout warning remains visible with still-valid cookie instea
   const token=await issue(page);
   assert.equal(await revoked(token),false);
   await page.goto(origin+'/signin?signout=unconfirmed',{waitUntil:'load'});
-  const warning=page.getByRole('alert');
+  const warning=page.getByRole('alert').filter({hasText:'Server sign-out was not confirmed.'});
   await warning.getByText('Server sign-out was not confirmed.').waitFor({timeout:12000});
   // The real UI normally redirects to /home for a validated session. Here
   // the warning-state entry explicitly disables that redirect.
@@ -588,8 +588,27 @@ test('actual Studio Account button revokes SQL-backed cookie and stored bearer t
   await page.goto(origin+'/studio/account',{waitUntil:'load'});
   const button=page.getByRole('button',{name:'Sign out of this device'});
   await button.waitFor({timeout:15000});
+  const statusCodes=[];
+  page.on('response',response=>{
+   if(new URL(response.url()).pathname==='/api/members/signout')
+    statusCodes.push(response.status());
+  });
   await button.click();
-  await page.waitForURL(/\/signin\?from=signout/,{timeout:20000});
+  try {
+   await page.waitForURL(/\/signin\?from=signout/,{timeout:12000});
+  }catch{
+   const dialog=page.getByRole('alertdialog');
+   const summary={
+    endpointStatuses:statusCodes,
+    dialogVisible:await dialog.isVisible().catch(()=>false),
+    dialogText:(await dialog.innerText().catch(()=>'' )).slice(0,600),
+    stillAtStudio:page.url().includes('/studio/account'),
+    sqlSessionRevoked:await revoked(token),
+    cookiePresent:(await context.cookies(origin)).some(c=>c.name==='maia_session'),
+    storedBearerPresent:await page.evaluate(()=>!!localStorage.getItem('maia_session_token')),
+   };
+   throw Error('UI signout did not navigate: '+JSON.stringify(summary));
+  }
   assert.equal(await revoked(token),true);
   assert.equal((await context.cookies(origin)).some(c=>c.name==='maia_session'),false);
   assert.equal(await page.evaluate(()=>localStorage.getItem('maia_session_token')),null);
@@ -608,14 +627,22 @@ test('actual Studio Account shows partial SQL failure and explicit local-only ex
    const modal=page.getByRole('alertdialog',{name:'Sign-out could not be confirmed'});
    await modal.waitFor({timeout:18000});
    assert.equal(await modal.getByRole('button',{name:'Stay here'}).isVisible(),true);
-   assert.equal(await modal.getByRole('button',{name:'Clear this device only'}).isVisible(),true);
+   if(!(await modal.getByRole('button',{name:'Clear this device only'}).isVisible().catch(()=>false))){
+    const summary={
+     dialogText:(await modal.innerText()).slice(0,600),
+     sessionRevoked:await revoked(token),
+     cookiePresent:(await context.cookies(origin)).some(c=>c.name==='maia_session'),
+     urlAtStudio:page.url().includes('/studio/account'),
+    };
+    throw Error('No local-only option after injected SQL revocation failure: '+JSON.stringify(summary));
+   }
    assert.equal(await modal.getByRole('button',{name:'Retry sign-out'}).count(),0);
    assert.equal(await page.evaluate(()=>document.activeElement?.textContent?.trim()),'Stay here');
    assert.equal(await revoked(token),false);
    assert.equal((await context.cookies(origin)).some(c=>c.name==='maia_session'),false);
    await modal.getByRole('button',{name:'Clear this device only'}).click();
    await page.waitForURL(/\/signin\?signout=unconfirmed/,{timeout:15000});
-   assert.equal(await page.getByRole('alert').isVisible(),true);
+   assert.equal(await page.getByRole('alert').filter({hasText:'Server sign-out was not confirmed.'}).isVisible(),true);
    assert.equal(await page.evaluate(()=>localStorage.getItem('maia_session_token')),null);
    assert.equal(await revoked(token),false);
   }finally{await trigger(false)}
