@@ -349,6 +349,22 @@ isReady('FWE-01 isolated loopback browser + real source handlers', () => {
     if (counts.rows[0]?.members !== 2 || counts.rows[0]?.manuscripts !== 1) {
       throw new Error('FWE01_REFUSE_NONFICTIONAL_FIXTURE');
     }
+    // Repeatability: an earlier accepted fictional episode intentionally
+    // revokes A's old token and changes its draft. Reset only this synthetic
+    // fixture after verifying the exact DB/socket/member counts above.
+    await mockPool.query('DELETE FROM auth_sessions WHERE session_token=$1', [A_FRESH]);
+    await mockPool.query(
+      "UPDATE auth_sessions SET revoked=FALSE, expires_at=NOW()+interval '2 hours' " +
+      'WHERE session_token = ANY($1::text[])', [[A_TOKEN, B_TOKEN]],
+    );
+    await mockPool.query(
+      'UPDATE manuscript_draft_sections SET text=$2 WHERE id=$1',
+      [SECTION, ORIGINAL],
+    );
+    await mockPool.query(
+      'UPDATE manuscript_working_drafts SET content=$2, version=1, updated_at=created_at ' +
+      'WHERE manuscript_id=$1', [MANUSCRIPT, ORIGINAL],
+    );
     server = createServer((incoming, outgoing) => { void handler(incoming, outgoing); });
     await new Promise<void>((resolve, reject) => {
       server.once('error', reject);
