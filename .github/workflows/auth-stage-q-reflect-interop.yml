@@ -7,6 +7,10 @@ on:
   push:
     branches:
       - security/auth-stage-q-reflect-interoperability-20261019
+  pull_request:
+    branches:
+      - fix/rf01-c0auth-reflect-classa-review-20261019
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
