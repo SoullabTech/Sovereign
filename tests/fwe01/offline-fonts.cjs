@@ -17,6 +17,6 @@ module.exports = new Proxy({}, {
       '  font-weight: 100 900;',
       '  src: url(fwe01-synthetic-font-data) format("woff2");',
       '}',
-    ].join('\\n');
+    ].join('\n');
   },
 });
