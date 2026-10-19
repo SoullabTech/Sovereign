@@ -144,7 +144,18 @@ export async function signOutCurrentBrowserSession(): Promise<WebSignOutOutcome>
       cookieClearingConfirmed: false,
     };
   }
-  return signOutWebCredentials((path, init) => fetch(path, init), headerToken);
+  // CORS fetch mode is required to preserve a real Origin under the site's
+  // no-referrer policy. Pin the URL to window.location.origin explicitly:
+  // resolving a relative fetch directly could honor an injected <base href>
+  // and send the explicit Safari bearer to an attacker-controlled endpoint.
+  return signOutWebCredentials((path, init) => {
+    const target = new URL(path, window.location.origin);
+    if (target.origin !== window.location.origin ||
+        target.pathname !== SIGNOUT_PATH || target.search || target.hash) {
+      throw new Error('Untrusted web sign-out destination');
+    }
+    return fetch(target.href, init);
+  }, headerToken);
 }
 
 /**
