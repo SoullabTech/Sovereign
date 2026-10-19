@@ -143,6 +143,16 @@ test('503 cookie-clearing failure is incomplete; never claim success via a secon
   assert.equal(f.calls.length, 1);
 });
 
+test('malformed 503 cannot assert that the HttpOnly cookie was cleared', async () => {
+  const api = actualApi();
+  const f = fakeTransport([
+    serverReply({ status: 503, success: true, localCookiesCleared: true, serverSessionRevoked: false }),
+  ]);
+  const result = await api.signOutWebCredentials(f.request, null);
+  assert.equal(result.kind, 'incomplete');
+  assert.equal(result.cookieClearingConfirmed, false);
+});
+
 test('second-phase refusal remains incomplete even after a confirmed cookie revocation', async () => {
   const api = actualApi();
   const f = fakeTransport([
