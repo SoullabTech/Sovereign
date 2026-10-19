@@ -210,6 +210,17 @@ gated('FWE-ROUTE-01 genuine fictional PostgreSQL + strict proxy', () => {
     expect(r.handlerStatus).toBeNull();
   });
 
+  it('never exposes a fictional manuscript when only a URL ?_t bearer is presented', async () => {
+    // Existing outer proxy recognizes _t, but this ordinary read handler
+    // independently requires a cookie or Safari header; preserve that denial.
+    const r = await serve(request({
+      route: TARGET + '?manuscriptId=' + M + '&_t=' + OWN,
+    }));
+    expect(r.proxyStatus).toBe(200);
+    expect(r.handlerStatus).toBe(401);
+    expect(r.body?.error).toBe('unauthenticated');
+  });
+
   it('adjacent unmapped endpoint is still refused under strict mode', async () => {
     const r = await serve(request({
       cookie: OWN, route: '/api/writers-studio/rebuild/context-extra?manuscriptId=' + M,
