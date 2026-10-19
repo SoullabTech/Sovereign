@@ -50,7 +50,7 @@ if(!custody.commitMatches||!custody.blobMatches||
 }
 const sourceManifest=JSON.parse(fs.readFileSync(
  path.join(nextFixture,'STAGE_Q_BUILD_MANIFEST.json'),'utf8'));
-if(sourceManifest.sourceCommit!==sha||sourceManifest.sourceFiles.length!==12)
+if(sourceManifest.sourceCommit!==sha||sourceManifest.sourceFiles.length!==18)
  throw Error('Next16 source custody mismatch');
 
 let db,next,browser,containerId=null,nextLog='';
@@ -514,4 +514,190 @@ test('exact-source custody for combined PR1870/Stage Q web candidate',()=>{
   assert.equal(read.status,0,'source must exist: '+relative);
   assert.equal(read.stdout.trim(),sha,'reviewed source blob changed: '+relative);
  }
+});
+
+
+/**
+ * These tests mount ACTUAL reviewed JSX source for /signin and /studio/account
+ * in WebKit. The Next handler/authorization/Caddy/PostgreSQL are exact source,
+ * while non-auth devices/biometry, art and apiBase are inert fixture-only stubs.
+ */
+async function loginThroughRenderedForm(page) {
+ await page.goto(origin+'/signin',{waitUntil:'load'});
+ await page.getByPlaceholder('Email or username').fill('fixture_member');
+ await page.getByPlaceholder('Password').fill(FIXTURE_PASSWORD);
+ await page.getByRole('button',{name:'Sign in',exact:true}).click();
+ await page.waitForURL(origin+'/home',{timeout:16000});
+ const token=await page.evaluate(()=>localStorage.getItem('maia_session_token'));
+ assert.match(token||'',/^[0-9a-f]{64}$/);
+ return token;
+}
+
+test('actual UnifiedAuth renders password entry and rejects incorrect bcrypt password',async()=>{
+ const context=await browserContext(),page=await context.newPage();
+ try{
+  await page.goto(origin+'/signin',{waitUntil:'load'});
+  const name=page.getByPlaceholder('Email or username');
+  const password=page.getByPlaceholder('Password');
+  assert.equal(await name.isVisible(),true);
+  assert.equal(await password.isVisible(),true);
+  await name.fill('fixture_member');
+  await password.fill('wrong-fixture-password');
+  await page.getByRole('button',{name:'Sign in',exact:true}).click();
+  await page.getByText('Invalid username or password',{exact:true}).waitFor({timeout:12000});
+  assert.match(page.url(),/\/signin/);
+  assert.equal((await context.cookies(origin)).some(c=>c.name==='maia_session'),false);
+ }finally{await context.close()}
+});
+
+test('actual UnifiedAuth successful password entry stores bearer and reaches fictional Home',async()=>{
+ const context=await browserContext(),page=await context.newPage();
+ try{
+  const token=await loginThroughRenderedForm(page);
+  assert.equal(await revoked(token),false);
+  const saved=(await context.cookies(origin)).find(c=>c.name==='maia_session');
+  assert.ok(saved);
+  assert.equal(saved.httpOnly,true);
+  assert.equal(saved.secure,true);
+  assert.equal(await page.getByTestId('fictional-home').isVisible(),true);
+ }finally{await context.close()}
+});
+
+test('unconfirmed signout warning remains visible with still-valid cookie instead of silent redirect',async()=>{
+ const context=await browserContext(),page=await context.newPage();
+ try{
+  await page.goto(origin+'/',{waitUntil:'load'});
+  const token=await issue(page);
+  assert.equal(await revoked(token),false);
+  await page.goto(origin+'/signin?signout=unconfirmed',{waitUntil:'load'});
+  const warning=page.getByRole('alert').filter({hasText:'Server sign-out was not confirmed.'});
+  await warning.getByText('Server sign-out was not confirmed.').waitFor({timeout:12000});
+  // The real UI normally redirects to /home for a validated session. Here
+  // the warning-state entry explicitly disables that redirect.
+  await page.waitForTimeout(3400);
+  assert.match(page.url(),/signout=unconfirmed/);
+  assert.equal(await warning.isVisible(),true);
+  assert.equal(await revoked(token),false);
+ }finally{await context.close()}
+});
+
+test('actual Studio Account button revokes SQL-backed cookie and stored bearer then redirects',async()=>{
+ const context=await browserContext(),page=await context.newPage();
+ try{
+  const token=await loginThroughRenderedForm(page);
+  await page.goto(origin+'/studio/account',{waitUntil:'load'});
+  const button=page.getByRole('button',{name:'Sign out of this device'});
+  await button.waitFor({timeout:15000});
+  const statusCodes=[];
+  const requestMetadata=[];
+  page.on('request',request=>{
+   if(new URL(request.url()).pathname!=='/api/members/signout'||request.method()!=='POST')return;
+   void request.allHeaders().then(headers=>requestMetadata.push({
+    originPresent:!!headers.origin,
+    originMatchesFictionalHost:headers.origin===origin,
+    fetchSite:headers['sec-fetch-site']||null,
+    fetchMode:headers['sec-fetch-mode']||null,
+    refererSameOrigin:(headers.referer||'').startsWith(origin),
+   })).catch(()=>{});
+  });
+  page.on('response',response=>{
+   if(new URL(response.url()).pathname==='/api/members/signout')
+    statusCodes.push(response.status());
+  });
+  await button.click();
+  try {
+   await page.waitForURL(/\/signin\?from=signout/,{timeout:12000});
+  }catch{
+   const dialog=page.getByRole('alertdialog');
+   const summary={
+    endpointStatuses:statusCodes,
+    requestMetadata,
+    dialogVisible:await dialog.isVisible().catch(()=>false),
+    dialogText:(await dialog.innerText().catch(()=>'' )).slice(0,600),
+    stillAtStudio:page.url().includes('/studio/account'),
+    sqlSessionRevoked:await revoked(token),
+    cookiePresent:(await context.cookies(origin)).some(c=>c.name==='maia_session'),
+    storedBearerPresent:await page.evaluate(()=>!!localStorage.getItem('maia_session_token')),
+   };
+   throw Error('UI signout did not navigate: '+JSON.stringify(summary));
+  }
+  assert.equal(await revoked(token),true);
+  assert.equal((await context.cookies(origin)).some(c=>c.name==='maia_session'),false);
+  assert.equal(await page.evaluate(()=>localStorage.getItem('maia_session_token')),null);
+ }finally{await context.close()}
+});
+
+test('actual Studio Account shows partial SQL failure and explicit local-only exit',async()=>{
+ const context=await browserContext(),page=await context.newPage();
+ try{
+  const token=await loginThroughRenderedForm(page);
+  await page.goto(origin+'/studio/account',{waitUntil:'load'});
+  await page.getByRole('button',{name:'Sign out of this device'}).waitFor({timeout:15000});
+  await trigger(true);
+  try{
+   const responseCodes=[];
+   const requestMetadata=[];
+   page.on('request',request=>{
+    if(new URL(request.url()).pathname!=='/api/members/signout'||request.method()!=='POST')return;
+    void request.allHeaders().then(headers=>requestMetadata.push({
+     originPresent:!!headers.origin,
+     originMatchesFictionalHost:headers.origin===origin,
+     fetchSite:headers['sec-fetch-site']||null,
+     fetchMode:headers['sec-fetch-mode']||null,
+    })).catch(()=>{});
+   });
+   page.on('response',response=>{
+    if(new URL(response.url()).pathname==='/api/members/signout')responseCodes.push(response.status());
+   });
+   await page.getByRole('button',{name:'Sign out of this device'}).click();
+   const modal=page.getByRole('alertdialog',{name:'Sign-out could not be confirmed'});
+   await modal.waitFor({timeout:18000});
+   assert.equal(await modal.getByRole('button',{name:'Stay here'}).isVisible(),true);
+   if(!(await modal.getByRole('button',{name:'Clear this device only'}).isVisible().catch(()=>false))){
+    const summary={
+     dialogText:(await modal.innerText()).slice(0,600),
+     endpointStatuses:responseCodes,
+     requestMetadata,
+     sessionRevoked:await revoked(token),
+     cookiePresent:(await context.cookies(origin)).some(c=>c.name==='maia_session'),
+     urlAtStudio:page.url().includes('/studio/account'),
+    };
+    throw Error('No local-only option after injected SQL revocation failure: '+JSON.stringify(summary));
+   }
+   assert.equal(await modal.getByRole('button',{name:'Retry sign-out'}).count(),0);
+   assert.equal(await page.evaluate(()=>document.activeElement?.textContent?.trim()),'Stay here');
+   assert.equal(await revoked(token),false);
+   assert.equal((await context.cookies(origin)).some(c=>c.name==='maia_session'),false);
+   await modal.getByRole('button',{name:'Clear this device only'}).click();
+   await page.waitForURL(/\/signin\?signout=unconfirmed/,{timeout:15000});
+   assert.equal(await page.getByRole('alert').filter({hasText:'Server sign-out was not confirmed.'}).isVisible(),true);
+   assert.equal(await page.evaluate(()=>localStorage.getItem('maia_session_token')),null);
+   assert.equal(await revoked(token),false);
+  }finally{await trigger(false)}
+ }finally{await context.close()}
+});
+
+test('actual Studio Account refuses local-only exit without HttpOnly cookie-clearing proof',async()=>{
+ const context=await browserContext(),page=await context.newPage();
+ try{
+  const token=await loginThroughRenderedForm(page);
+  await page.goto(origin+'/studio/account',{waitUntil:'load'});
+  await page.getByRole('button',{name:'Sign out of this device'}).waitFor({timeout:15000});
+  // Browser transport failure/403 is synthetic. It must not trigger server
+  // revocation or allow a false local-only exit.
+  await page.route('**/api/members/signout',route=>route.fulfill({
+   status:403,contentType:'application/json',
+   body:JSON.stringify({success:false,error:'Fictional Origin denial'}),
+  }));
+  await page.getByRole('button',{name:'Sign out of this device'}).click();
+  const modal=page.getByRole('alertdialog',{name:'Sign-out could not be confirmed'});
+  await modal.waitFor({timeout:15000});
+  assert.equal(await modal.getByRole('button',{name:'Retry sign-out'}).isVisible(),true);
+  assert.equal(await modal.getByRole('button',{name:'Clear this device only'}).count(),0);
+  assert.equal((await context.cookies(origin)).some(c=>c.name==='maia_session'),true);
+  assert.equal(await revoked(token),false);
+  await modal.getByRole('button',{name:'Stay here'}).click();
+  assert.equal(await modal.count(),0);
+  assert.match(page.url(),/\/studio\/account/);
+ }finally{await context.close()}
 });
