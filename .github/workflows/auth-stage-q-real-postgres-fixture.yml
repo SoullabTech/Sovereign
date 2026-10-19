@@ -1,0 +1,73 @@
+# Genuine PostgreSQL acceptance against a disposable fictional CI database only.
+# Does not access production, native devices, staging endpoints, secrets or members.
+name: Stage Q Real PostgreSQL Fixture (NO DEPLOY)
+
+on:
+  push:
+    branches:
+      - security/auth-stage-q-real-postgres-preflight-20261019
+  pull_request:
+    branches:
+      - security/auth-stage-q-combined-preflight-20261019
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-q-realpg-fictional
+  cancel-in-progress: true
+
+jobs:
+  isolated-postgres:
+    name: Fictional SQL session and revocation acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: stageq_fixture
+          POSTGRES_PASSWORD: stageq_fictional_password_only
+          POSTGRES_DB: stageq_fictional
+        ports:
+          - 5547:5432
+        options: >-
+          --health-cmd "pg_isready -U stageq_fixture -d stageq_fictional"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
+    env:
+      STAGE_Q_DISPOSABLE_POSTGRES: fictional-ci-only
+      PGHOST: 127.0.0.1
+      PGPORT: "5547"
+      PGDATABASE: stageq_fictional
+      PGUSER: stageq_fixture
+      PGPASSWORD: stageq_fictional_password_only
+
+    steps:
+      - name: Checkout exact isolated review commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install locked JS test dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      - name: Record code and migration custody
+        run: |
+          git rev-parse HEAD
+          git hash-object app/api/members/signout/route.ts
+          git hash-object lib/auth/serverSessions.ts
+          git hash-object lib/auth/verifiedAccess.ts
+          git hash-object database/migrations/20260119000001_auth_sessions.sql
+
+      - name: Prove fictional PostgreSQL session writes and replay denial
+        run: node --test docs/security/auth-stage-q-real-postgres.test.cjs
