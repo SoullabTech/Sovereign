@@ -119,9 +119,10 @@ test('successful fixture session remains accepted after both cookie steps',async
  assert.equal(h.calls.audits.at(-1)?.result,'success');
 });
 function signoutHarness({origin='https://fictional.invalid',host='fictional.invalid',
- site='same-origin',token='unit-test-token',throwDb=false,rowCount=1}={}){
- const calls={queries:0,cleared:[],reads:0};
+ site='same-origin',token='unit-test-token',headerToken=null,throwDb=false,rowCount=1}={}){
+ const calls={queries:0,cleared:[],reads:0,queryParams:[]};
  const headers=new Headers({Origin:origin,Host:host,'Sec-Fetch-Site':site});
+ if(headerToken)headers.set('x-session-token',headerToken);
  const req={headers,nextUrl:new URL('https://fictional.invalid/api/members/signout')};
  const imports=new Map([
   ['next/server',{NextResponse:fakeNextResponse()}],
@@ -129,8 +130,9 @@ function signoutHarness({origin='https://fictional.invalid',host='fictional.inva
    get:name=>{calls.reads++;return token?{value:token}:undefined},
    set:(name,value)=>calls.cleared.push({name,value})
   })}],
-  ['@/lib/db/postgres',{query:async()=>{
+  ['@/lib/db/postgres',{query:async(sql,params)=>{
    calls.queries++;
+   calls.queryParams.push(params);
    if(throwDb)throw Error('Synthetic DB outage');
    return {rowCount};
   }}]
@@ -197,4 +199,32 @@ test('unset trusted-web-origin configuration never grants sign-out authority',as
   if(previous===undefined)delete process.env.AUTH_SIGNOUT_TRUSTED_WEB_ORIGINS;
   else process.env.AUTH_SIGNOUT_TRUSTED_WEB_ORIGINS=previous;
  }
+});
+
+// Stage Q: web-only bearer revocation contract; this does not qualify native clients.
+test('same-origin header token without cookie is durably revoked',async()=>{
+ const {h,response}=await doSignout({token:null,headerToken:'fictional-header-token'});
+ assert.equal(response.status,200);
+ assert.equal(response.body.serverSessionRevoked,true);
+ assert.deepEqual(h.calls.queryParams,[['fictional-header-token']]);
+ assert.equal(h.calls.cleared.length,4);
+});
+test('conflicting cookie and header credentials refuse without any revocation',async()=>{
+ const {h,response}=await doSignout({token:'fictional-cookie',headerToken:'fictional-header'});
+ assert.equal(response.status,409);
+ assert.equal(response.body.success,false);
+ assert.equal(h.calls.queries,0);
+ assert.equal(h.calls.cleared.length,0);
+});
+test('matching cookie and header credentials revoke once',async()=>{
+ const {h,response}=await doSignout({token:'same-fictional',headerToken:'same-fictional'});
+ assert.equal(response.status,200);
+ assert.equal(h.calls.queries,1);
+ assert.deepEqual(h.calls.queryParams,[['same-fictional']]);
+});
+test('untrusted origin cannot revoke even when bearer header is provided',async()=>{
+ const {h,response}=await doSignout({origin:'null',token:null,headerToken:'fictional-native-token'});
+ assert.equal(response.status,403);
+ assert.equal(h.calls.queries,0);
+ assert.equal(h.calls.cleared.length,0);
 });
