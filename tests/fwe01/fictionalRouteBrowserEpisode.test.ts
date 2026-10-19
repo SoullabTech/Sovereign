@@ -382,6 +382,26 @@ isReady('FWE-01 isolated loopback browser + real source handlers', () => {
       .toBe('56ff91dca2d18fd0d1d0d8968535f7f7bda2239c');
   });
 
+  it('records the strict-proxy Context API admission gap without changing policy', async () => {
+    const previous = process.env.ACCESS_CONTROL_MODE;
+    process.env.ACCESS_CONTROL_MODE = 'strict';
+    try {
+      const req = new NextRequest('https://fictional.invalid/api/writers-studio/rebuild/context?manuscriptId=' +
+        MANUSCRIPT, { headers: { cookie: 'maia_session=' + A_TOKEN } });
+      const response = await proxy(req);
+      expect(response.status).toBe(404);
+      expect(response.headers.get('x-middleware-next')).not.toBe('1');
+      console.log('FWE01_STRICT_POLICY_ROUTE_WITNESS', JSON.stringify({
+        path:'/api/writers-studio/rebuild/context',
+        mode:'strict',session:'fictional-valid',status:response.status,
+        admitted:false,need:'separate access-matrix review, not a Stage 1 runtime edit',
+      }));
+    } finally {
+      if (previous === undefined) delete process.env.ACCESS_CONTROL_MODE;
+      else process.env.ACCESS_CONTROL_MODE = previous;
+    }
+  });
+
   it('runs a fictional A writing episode, choice, session departure, fresh return, and B refusals', async () => {
     const context = await browser.newContext({ viewport: {width: 1250, height: 800} });
     await context.route('**/*', route => {
@@ -416,6 +436,9 @@ isReady('FWE-01 isolated loopback browser + real source handlers', () => {
       expect(await page.locator('#draft-text').inputValue()).toBe(ORIGINAL);
 
       await page.locator('#draft-text').fill(WRITTEN);
+      // This is a harness-only dirty indicator, not real Writer's Studio's
+      // RebuildWritingBoundary beforeunload contract.
+      expect(await page.locator('body').getAttribute('data-unsaved')).toBe('true');
       await page.locator('#save-writing').click();
       await page.waitForFunction(() => document.querySelector('#save-status')?.textContent === 'Saved version 2');
       const persisted = await mockPool.query(
