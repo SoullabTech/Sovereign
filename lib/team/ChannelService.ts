@@ -2,6 +2,7 @@
 // All DB operations for team messaging. Uses local PostgreSQL only.
 
 import { query, transaction } from '@/lib/db/postgres';
+import type { TransactionClient } from '@/lib/db/postgres';
 import type { TeamChannel, TeamMessage, MessageReaction, PromptScaffoldField, ChannelMember, MessageKind } from './types';
 import { notifyChannelMentions, notifyThreadReply } from '@/lib/team/notifications';
 import { createAttentionItemsForMessage } from '@/lib/team/attention';
@@ -255,10 +256,14 @@ export async function getMessages(
 
 export async function getMessagesSince(
   channelId: string,
-  afterTs: number
+  afterTs: number,
+  tx?: TransactionClient,
 ): Promise<TeamMessage[]> {
   const afterDate = new Date(afterTs).toISOString();
-  const result = await query<{
+  // The Stage A stream callback passes a transaction client. All data reads
+  // then use the SAME row-lock-bearing connection as the authority check.
+  const db = tx ?? { query };
+  const result = await db.query<{
     id: string;
     channel_id: string;
     sender_id: string;
