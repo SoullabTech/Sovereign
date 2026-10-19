@@ -23,6 +23,8 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { NextRequest } from 'next/server';
 
 const VALID_TOKEN = 'valid-session-token-64hex';
+const VALID_SECOND_MEMBER_TOKEN = 'valid-other-member-64hex';
+const VALID_SAME_MEMBER_HEADER = 'valid-second-token-same-member';
 /** Present on the device, backed by no auth_sessions row. */
 const STALE_TOKEN = 'stale-cookie-token-no-row';
 /** Present, has a row, but the row is expired. */
@@ -74,12 +76,13 @@ beforeEach(() => {
     if (/auth_sessions/i.test(text)) {
       if (/UPDATE/i.test(text)) return { rows: [], rowCount: 1 };
       const token = params?.[0];
-      if (token === VALID_TOKEN) {
+      if ([VALID_TOKEN, VALID_SECOND_MEMBER_TOKEN, VALID_SAME_MEMBER_HEADER].includes(String(token))) {
+        const resultMember = token === VALID_SECOND_MEMBER_TOKEN ? VICTIM_MEMBER : REAL_MEMBER;
         return {
           rows: [{
             id: SESSION_ROW_ID,
-            member_id: REAL_MEMBER,
-            session_token: VALID_TOKEN,
+            member_id: resultMember,
+            session_token: token,
             device_id: null,
             ip_address: null,
             user_agent: null,
@@ -99,9 +102,13 @@ beforeEach(() => {
     }
     // Member lookup.
     if (/FROM members/i.test(text)) {
-      return params?.[0] === REAL_MEMBER
-        ? { rows: [{ id: REAL_MEMBER, username: 'kelly', name: 'Kelly', preferred_name: 'Kelly', tier: 'free', is_practitioner: false, onboarded: true, onboarding_step: 'complete' }] }
-        : { rows: [] };
+      if (params?.[0] === REAL_MEMBER) {
+        return { rows: [{ id: REAL_MEMBER, username: 'fictional_a', name: 'Fictional A', preferred_name: 'Fictional A', tier: 'free', is_practitioner: false, onboarded: true, onboarding_step: 'complete' }] };
+      }
+      if (params?.[0] === VICTIM_MEMBER) {
+        return { rows: [{ id: VICTIM_MEMBER, username: 'fictional_b', name: 'Fictional B', preferred_name: 'Fictional B', tier: 'free', is_practitioner: false, onboarded: true, onboarding_step: 'complete' }] };
+      }
+      return { rows: [] };
     }
     return { rows: [] };
   });
@@ -194,6 +201,37 @@ describe('whoami — CONTROL: one authority, not two similar predicates', () => 
     const body = await res.json();
     expect(body.authed).toBe(true);
     expect(body.memberId).toBe(REAL_MEMBER);
+  });
+});
+
+describe('whoami — C0-AUTH dual verified credential consistency', () => {
+  it('never reports one account authenticated when cookie and header name different members', async () => {
+    mockCookieJar.maia_session = VALID_TOKEN;
+    const res = await GET(req({ 'x-session-token': VALID_SECOND_MEMBER_TOKEN }));
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.authed).toBe(false);
+    expect(data.memberId).toBeUndefined();
+    expect(data.credentialSource).toBe('none');
+    expect(data.reason).toBe('identity_claim_mismatch');
+  });
+
+  it('allows two distinct valid tokens naming the same member', async () => {
+    mockCookieJar.maia_session = VALID_TOKEN;
+    const res = await GET(req({ 'x-session-token': VALID_SAME_MEMBER_HEADER }));
+    const data = await res.json();
+    expect(data.authed).toBe(true);
+    expect(data.memberId).toBe(REAL_MEMBER);
+    expect(data.credentialSource).toBe('cookie');
+  });
+
+  it('allows a valid alternate-member Safari header when the cookie is stale', async () => {
+    mockCookieJar.maia_session = STALE_TOKEN;
+    const res = await GET(req({ 'x-session-token': VALID_SECOND_MEMBER_TOKEN }));
+    const data = await res.json();
+    expect(data.authed).toBe(true);
+    expect(data.memberId).toBe(VICTIM_MEMBER);
+    expect(data.credentialSource).toBe('header');
   });
 });
 
