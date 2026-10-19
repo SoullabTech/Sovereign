@@ -5,6 +5,7 @@
 // No global roster exposure. No cross-Co-Lab DM threads.
 
 import { query } from '@/lib/db/postgres';
+import type { TransactionClient } from '@/lib/db/postgres';
 import { notifyDMRecipient } from '@/lib/team/notifications';
 import { getTeamRole } from '@/lib/auth/teamPermissions';
 
@@ -262,19 +263,41 @@ export async function getDMMessages(
   }));
 }
 
+/**
+ * Lock the member's live DM membership row through a short-lived stream
+ * transaction. This is an additional read/emit boundary; the ordinary
+ * getDMMessagesSince() member-check still runs below.
+ *
+ * Callers must already have locked/verified the session rows first, ensuring
+ * a consistent order of auth -> membership -> message fetch.
+ */
+export async function requireDMThreadMembershipInTransaction(
+  dmThreadId: string,
+  memberId: string,
+  tx: TransactionClient,
+): Promise<boolean> {
+  const membership = await tx.query<{ present: number }>(
+    'SELECT 1 AS present FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2 FOR SHARE',
+    [dmThreadId, memberId],
+  );
+  return Boolean(membership.rows[0]);
+}
+
 export async function getDMMessagesSince(
   dmThreadId: string,
   memberId: string,
-  afterTs: number
+  afterTs: number,
+  tx?: TransactionClient,
 ): Promise<DMMessage[]> {
-  const access = await query(
+  const db = tx ?? { query };
+  const access = await db.query(
     `SELECT 1 FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2`,
     [dmThreadId, memberId]
   );
   if (!access.rows[0]) return [];
 
   const afterDate = new Date(afterTs).toISOString();
-  const result = await query<{
+  const result = await db.query<{
     id: string;
     dm_thread_id: string;
     sender_id: string;
