@@ -16,7 +16,8 @@ const DM = '44444444-4444-4444-8444-444444444444';
 const TOKEN = 'FICTIONAL_VALID_SAFARI';
 const MESSAGE = 'FICTIONAL_INSERTED_AFTER_HANDSHAKE';
 
-let pool: Pool;
+let mockPool: Pool;
+const mockObservedSql: string[] = [];
 const enabled = process.env.C0_PG_WITNESS === '1' ? describe : describe.skip;
 const mockQuery = jest.fn<(sql: string, params?: unknown[]) => Promise<{
   rows: Record<string, unknown>[]; rowCount: number | null;
@@ -25,6 +26,29 @@ const mockQuery = jest.fn<(sql: string, params?: unknown[]) => Promise<{
 jest.mock('@/lib/db/postgres', () => ({
   __esModule: true,
   query: (sql: string, params?: unknown[]) => mockQuery(sql, params),
+  // Stage A: a real PostgreSQL connection and actual BEGIN/COMMIT scope,
+  // following the shape of lib/db/postgres.ts transaction(callback).
+  transaction: async <T>(callback: (tx: {
+    query: (sql: string, params?: unknown[]) => Promise<unknown>;
+  }) => Promise<T>): Promise<T> => {
+    const client = await mockPool.connect();
+    try {
+      await client.query('BEGIN');
+      const value = await callback({
+        query: async (sql: string, params?: unknown[]) => {
+          mockObservedSql.push(sql);
+          return client.query(sql, params as unknown[] | undefined);
+        },
+      });
+      await client.query('COMMIT');
+      return value;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  },
 }));
 jest.mock('@/lib/team/notifications', () => ({
   __esModule: true, notifyChannelMentions: jest.fn(),
@@ -124,22 +148,23 @@ async function cleanup(controller: AbortController, reader: ReadableStreamDefaul
 
 async function insertMessage(kind: StreamType) {
   if (kind === 'channel') {
-    await pool.query(
+    await mockPool.query(
       'INSERT INTO team_messages(id,channel_id,sender_id,body,created_at) VALUES($1,$2,$3,$4,NOW())',
       ['55555555-5555-4555-8555-555555555555', CH, A, MESSAGE],
     );
   } else {
-    await pool.query(
+    await mockPool.query(
       'INSERT INTO team_dm_messages(id,dm_thread_id,sender_id,body,created_at) VALUES($1,$2,$3,$4,NOW())',
       ['66666666-6666-4666-8666-666666666666', DM, A, MESSAGE],
     );
   }
 }
 function callTypes(start: number) {
-  return mockQuery.mock.calls.slice(start).map(([sql]) => {
+  return mockObservedSql.slice(start).map((sql) => {
     const query = String(sql);
     if (/FROM auth_sessions/i.test(query)) return 'auth';
-    if (/FROM team_channels tc/i.test(query)) return 'channel_membership';
+    if (/FROM team_channels tc/i.test(query)) return 'channel_visibility';
+    if (/FROM team_channel_members/i.test(query)) return 'channel_membership';
     if (/FROM team_dm_members/i.test(query)) return 'dm_membership';
     if (/FROM team_messages tm/i.test(query)) return 'channel_messages';
     if (/FROM team_dm_messages dm/i.test(query)) return 'dm_messages';
@@ -158,11 +183,11 @@ enabled('C0-SSE-LIVE authentic PG17 SSE authorization liveness', () => {
       process.env.CAPACITOR_BUILD) {
       throw new Error('C0-SSE-LIVE Postgres refused: synthetic database only');
     }
-    pool = new Pool({
+    mockPool = new Pool({
       host: socket, port: 55473, user: 'soullab', database: 'c0_fictional',
       max: 3, connectionTimeoutMillis: 2000,
     });
-    const proof = await pool.query(
+    const proof = await mockPool.query(
       'SELECT current_database() AS db, inet_server_addr() IS NULL AS local, current_setting($1)::integer AS version',
       ['server_version_num'],
     );
@@ -170,32 +195,35 @@ enabled('C0-SSE-LIVE authentic PG17 SSE authorization liveness', () => {
       proof.rows[0]?.version < 170000) {
       throw new Error('C0-SSE-LIVE wrong database, transport, or version');
     }
-    await pool.query(fixtureDDL);
-    mockQuery.mockImplementation(async (sql, args) =>
-      (await pool.query(sql, args as unknown[] | undefined)));
+    await mockPool.query(fixtureDDL);
+    mockQuery.mockImplementation(async (sql, args) => {
+      mockObservedSql.push(sql);
+      return mockPool.query(sql, args as unknown[] | undefined);
+    });
   }, 15000);
 
   afterAll(async () => {
-    if (pool) {
-      await pool.query('DROP TABLE IF EXISTS team_dm_messages, team_dm_members, team_messages, team_channel_members, team_channels;');
-      await pool.end();
+    if (mockPool) {
+      await mockPool.query('DROP TABLE IF EXISTS team_dm_messages, team_dm_members, team_messages, team_channel_members, team_channels;');
+      await mockPool.end();
     }
   });
 
   beforeEach(async () => {
-    await pool.query('TRUNCATE team_dm_messages, team_dm_members, team_messages, team_channel_members, team_channels');
-    await pool.query('UPDATE auth_sessions SET revoked=FALSE, expires_at=NOW()+interval \'2 hours\' WHERE session_token=$1', [TOKEN]);
-    await pool.query('INSERT INTO team_channels(id,is_private) VALUES($1,TRUE)', [CH]);
-    await pool.query('INSERT INTO team_channel_members(channel_id,member_id) VALUES($1,$2)', [CH,A]);
-    await pool.query('INSERT INTO team_dm_members(dm_thread_id,member_id) VALUES($1,$2)', [DM,A]);
+    await mockPool.query('TRUNCATE team_dm_messages, team_dm_members, team_messages, team_channel_members, team_channels');
+    await mockPool.query('UPDATE auth_sessions SET revoked=FALSE, expires_at=NOW()+interval \'2 hours\' WHERE session_token=$1', [TOKEN]);
+    await mockPool.query('INSERT INTO team_channels(id,is_private) VALUES($1,TRUE)', [CH]);
+    await mockPool.query('INSERT INTO team_channel_members(channel_id,member_id) VALUES($1,$2)', [CH,A]);
+    await mockPool.query('INSERT INTO team_dm_members(dm_thread_id,member_id) VALUES($1,$2)', [DM,A]);
     mockQuery.mockClear();
+    mockObservedSql.length = 0;
   });
 
   it.each(['channel','dm'] as const)('%s closes after POST-handshake revocation before any inserted message is emitted', async kind => {
     const { controller, reader } = await open(kind);
     try {
-      const since = mockQuery.mock.calls.length;
-      await pool.query('UPDATE auth_sessions SET revoked=TRUE WHERE session_token=$1', [TOKEN]);
+      const since = mockObservedSql.length;
+      await mockPool.query('UPDATE auth_sessions SET revoked=TRUE WHERE session_token=$1', [TOKEN]);
       await insertMessage(kind);
       await expectClosedWithoutMessage(reader);
       const polled = callTypes(since);
@@ -208,8 +236,8 @@ enabled('C0-SSE-LIVE authentic PG17 SSE authorization liveness', () => {
   it('channel closes when private membership is withdrawn after open', async () => {
     const { controller, reader } = await open('channel');
     try {
-      const since = mockQuery.mock.calls.length;
-      await pool.query('DELETE FROM team_channel_members WHERE channel_id=$1 AND member_id=$2', [CH,A]);
+      const since = mockObservedSql.length;
+      await mockPool.query('DELETE FROM team_channel_members WHERE channel_id=$1 AND member_id=$2', [CH,A]);
       await insertMessage('channel');
       await expectClosedWithoutMessage(reader);
       expect(callTypes(since)).toContain('channel_membership');
@@ -219,8 +247,8 @@ enabled('C0-SSE-LIVE authentic PG17 SSE authorization liveness', () => {
   it('DM closes when thread membership is withdrawn after open', async () => {
     const { controller, reader } = await open('dm');
     try {
-      const since = mockQuery.mock.calls.length;
-      await pool.query('DELETE FROM team_dm_members WHERE dm_thread_id=$1 AND member_id=$2', [DM,A]);
+      const since = mockObservedSql.length;
+      await mockPool.query('DELETE FROM team_dm_members WHERE dm_thread_id=$1 AND member_id=$2', [DM,A]);
       await insertMessage('dm');
       await expectClosedWithoutMessage(reader);
       expect(callTypes(since)).toContain('dm_membership');
@@ -230,7 +258,7 @@ enabled('C0-SSE-LIVE authentic PG17 SSE authorization liveness', () => {
   it.each(['channel','dm'] as const)('%s closes after session expires while stream remains open', async kind => {
     const { controller, reader } = await open(kind);
     try {
-      await pool.query('UPDATE auth_sessions SET expires_at=NOW()-interval \'1 minute\' WHERE session_token=$1', [TOKEN]);
+      await mockPool.query('UPDATE auth_sessions SET expires_at=NOW()-interval \'1 minute\' WHERE session_token=$1', [TOKEN]);
       await insertMessage(kind);
       await expectClosedWithoutMessage(reader);
     } finally { await cleanup(controller, reader); }
@@ -248,22 +276,22 @@ enabled('C0-SSE-LIVE authentic PG17 SSE authorization liveness', () => {
   it('measures extra database queries for one authorized active channel poll', async () => {
     const { controller, reader } = await open('channel');
     try {
-      const since = mockQuery.mock.calls.length;
+      const since = mockObservedSql.length;
       await insertMessage('channel');
       expect(await readMessage(reader)).toContain(MESSAGE);
       const operations = callTypes(since);
-      expect(operations).toEqual(['channel_messages', 'auth', 'channel_membership']);
+      expect(operations).toEqual(['auth', 'channel_visibility', 'channel_membership', 'channel_messages']);
     } finally { await cleanup(controller, reader); }
   }, 8000);
 
   it('measures extra database queries for one authorized active DM poll', async () => {
     const { controller, reader } = await open('dm');
     try {
-      const since = mockQuery.mock.calls.length;
+      const since = mockObservedSql.length;
       await insertMessage('dm');
       expect(await readMessage(reader)).toContain(MESSAGE);
       const operations = callTypes(since);
-      expect(operations).toEqual(['dm_membership', 'dm_messages', 'auth', 'dm_membership']);
+      expect(operations).toEqual(['auth', 'dm_membership', 'dm_membership', 'dm_messages']);
     } finally { await cleanup(controller, reader); }
   }, 8000);
 });
