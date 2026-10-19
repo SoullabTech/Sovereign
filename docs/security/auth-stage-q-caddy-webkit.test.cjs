@@ -621,6 +621,10 @@ test('actual Studio Account button revokes SQL-backed cookie and stored bearer t
    };
    throw Error('UI signout did not navigate: '+JSON.stringify(summary));
   }
+  assert.ok(statusCodes.length>=1,'Real UI signout must reach endpoint');
+  assert.ok(requestMetadata.length>=1,'Capture browser request metadata');
+  assert.ok(requestMetadata.every(meta=>meta.originMatchesFictionalHost),
+   'CORS-mode signout must carry the real configured Origin');
   assert.equal(await revoked(token),true);
   assert.equal((await context.cookies(origin)).some(c=>c.name==='maia_session'),false);
   assert.equal(await page.evaluate(()=>localStorage.getItem('maia_session_token')),null);
@@ -665,6 +669,9 @@ test('actual Studio Account shows partial SQL failure and explicit local-only ex
     throw Error('No local-only option after injected SQL revocation failure: '+JSON.stringify(summary));
    }
    assert.equal(await modal.getByRole('button',{name:'Retry sign-out'}).count(),0);
+   assert.ok(requestMetadata.length>=1&&requestMetadata.every(meta=>meta.originMatchesFictionalHost),
+    'Real Origin must also survive the injected SQL failure path');
+   assert.ok(responseCodes.includes(503),'SQL failure must yield the typed 503 response');
    assert.equal(await page.evaluate(()=>document.activeElement?.textContent?.trim()),'Stay here');
    assert.equal(await revoked(token),false);
    assert.equal((await context.cookies(origin)).some(c=>c.name==='maia_session'),false);

@@ -108,7 +108,7 @@ function harness({cookie=null,header=null,rows={},dbDown=false}={}){
  async function transport(route,options){
   assert.equal(route,'/api/members/signout');
   assert.equal(options.credentials,'same-origin');
-  assert.equal(options.mode,'same-origin');
+  assert.equal(options.mode,'cors');
   return post(options.headers?.['x-session-token']||null);
  }
  return {access,web,cookies,request,post,transport,

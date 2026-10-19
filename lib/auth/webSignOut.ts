@@ -39,7 +39,12 @@ async function requestOne(
       // Explicit web-only transport. Never follow a redirect to an HTML login
       // page and mistake an HTTP 200 for a successful sign-out.
       credentials: 'same-origin',
-      mode: 'same-origin',
+      // This fixed relative path and credentials:'same-origin' still target
+      // only this website. Fetch mode:'same-origin' combined with Caddy's
+      // Referrer-Policy:no-referrer can send Origin:null, which our strict
+      // web-only sign-out correctly refuses. CORS mode sends the real Origin
+      // for the same-origin POST, without changing the destination/credentials.
+      mode: 'cors',
       redirect: 'error',
       cache: 'no-store',
       ...(headerToken ? { headers: { 'x-session-token': headerToken } } : {}),
@@ -139,7 +144,18 @@ export async function signOutCurrentBrowserSession(): Promise<WebSignOutOutcome>
       cookieClearingConfirmed: false,
     };
   }
-  return signOutWebCredentials((path, init) => fetch(path, init), headerToken);
+  // CORS fetch mode is required to preserve a real Origin under the site's
+  // no-referrer policy. Pin the URL to window.location.origin explicitly:
+  // resolving a relative fetch directly could honor an injected <base href>
+  // and send the explicit Safari bearer to an attacker-controlled endpoint.
+  return signOutWebCredentials((path, init) => {
+    const target = new URL(path, window.location.origin);
+    if (target.origin !== window.location.origin ||
+        target.pathname !== SIGNOUT_PATH || target.search || target.hash) {
+      throw new Error('Untrusted web sign-out destination');
+    }
+    return fetch(target.href, init);
+  }, headerToken);
 }
 
 /**
