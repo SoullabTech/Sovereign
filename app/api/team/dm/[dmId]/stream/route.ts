@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
-import { getDMMessagesSince } from '@/lib/team/DMService';
-import { query } from '@/lib/db/postgres';
+import { deriveVerifiedAccess, deriveVerifiedAccessInTransaction } from '@/lib/auth/verifiedAccess';
+import { getDMMessagesSince, requireDMThreadMembershipInTransaction } from '@/lib/team/DMService';
+import { transaction } from '@/lib/db/postgres';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -66,39 +66,40 @@ export async function GET(
       const tick = async () => {
         if (closed || req.signal.aborted) { closeStream(); return; }
         try {
-          const messages = await getDMMessagesSince(dmId, memberId, afterTs);
+          // C0-SSE-ATOMIC Stage A: session/DM membership row locks,
+          // message read and SYNCHRONOUS enqueue share one transaction.
+          // No database transaction is held across the SSE idle interval.
+          const stillAuthorized = await transaction(async (tx) => {
+            const live = await deriveVerifiedAccessInTransaction(req, tx);
+            if (!live.authenticated || live.memberId !== memberId ||
+                !live.sessionExpiresAt) return false;
 
-          // C0-SSE-LIVE: GET was authorized at the handshake, but the
-          // session or DM membership may be withdrawn during a long stream.
-          // Recheck both AFTER reading and immediately before any delivery.
-          // The service also checks DM membership before reading messages;
-          // this second check detects withdrawal between its read and emit.
-          const live = await deriveVerifiedAccess(req);
-          if (!live.authenticated || live.memberId !== memberId) {
-            closeStream();
-            return;
-          }
-          const currentMembership = await query<{ present: number }>(
-            'SELECT 1 AS present FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2 LIMIT 1',
-            [dmId, memberId],
-          );
-          if (!currentMembership.rows[0] || closed || req.signal.aborted) {
-            closeStream();
-            return;
-          }
+            const memberStillPresent = await requireDMThreadMembershipInTransaction(
+              dmId, memberId, tx,
+            );
+            if (!memberStillPresent || closed || req.signal.aborted) return false;
 
-          if (messages.length > 0) {
-            const maxTs = Math.max(...messages.map(m => new Date(m.createdAt).getTime()));
-            afterTs = maxTs;
-            emit([`id: ${afterTs}`, 'event: messages', `data: ${JSON.stringify({ messages, afterTs })}`]);
-            idleCycles = 0;
-          } else {
-            emit([`: keepalive ${Date.now()}`]);
-            idleCycles++;
-          }
+            // Existing member-scoped message service still checks membership.
+            const messages = await getDMMessagesSince(dmId, memberId, afterTs, tx);
+            if (live.sessionExpiresAt.getTime() <= Date.now() ||
+                closed || req.signal.aborted) return false;
+
+            if (messages.length > 0) {
+              const maxTs = Math.max(...messages.map(m => new Date(m.createdAt).getTime()));
+              const eventAfterTs = maxTs;
+              emit([`id: ${eventAfterTs}`, 'event: messages',
+                `data: ${JSON.stringify({ messages, afterTs: eventAfterTs })}`]);
+              afterTs = eventAfterTs;
+              idleCycles = 0;
+            } else {
+              emit([`: keepalive ${Date.now()}`]);
+              idleCycles++;
+            }
+            return true;
+          });
+          if (!stillAuthorized) { closeStream(); return; }
         } catch {
-          // A failing authority/membership query must never allow content to
-          // flow on the previous grant. Also avoid error-detail disclosure.
+          // Rollback/SQL failures cannot revive a revoked session or DM member.
           closeStream();
           return;
         }
