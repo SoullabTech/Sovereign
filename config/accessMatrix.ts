@@ -569,6 +569,14 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/commons/contributions', public: true, notes: 'GET public contributions' },
   { exact: '/api/commons/contributions/orientation', public: true, notes: 'Orientation content' },
 
+  // C0-PROXY — exact member account routes, never a broad /api/members prefix.
+  // The outer gate requires a verified member session in strict AND permissive
+  // modes. Each handler independently enforces supported HTTP methods and its
+  // finer-grained credential/identity rules.
+  { exact: '/api/members/profile', minTier: 'free', notes: 'Member-owned profile GET/PUT — route independently verifies session and refuses direct email changes' },
+  { exact: '/api/members/password', minTier: 'free', notes: 'Legacy beta password POST — session required at proxy, C0 route always refuses password mutations' },
+  { exact: '/api/members/change-password', minTier: 'free', notes: 'Existing current-password POST — route independently verifies cookie session, password and exact request origin' },
+
   // Member API — contribution is participation, open to all
   { regex: /^\/api\/commons\/contributions\/[^/]+$/, minTier: 'free', notes: 'Contribution detail — depth' },
   { exact: '/api/commons/contributions/my-offerings', minTier: 'free', notes: 'User offerings — depth' },
