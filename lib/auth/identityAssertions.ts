@@ -107,8 +107,8 @@ export function forgedIdentityHeaders(inbound: Headers): string[] {
  * Dedicated getMemberIdFromSessionToken callers are intentionally untouched.
  */
 const TEAM_SSE_QUERY_TOKEN_PATHS: readonly RegExp[] = [
-  /^\\/api\\/team\\/channels\\/[^/%]+\\/stream$/,
-  /^\\/api\\/team\\/dm\\/[^/%]+\\/stream$/,
+  /^\/api\/team\/channels\/[^/%]+\/stream$/,
+  /^\/api\/team\/dm\/[^/%]+\/stream$/,
 ];
 
 export function readSessionCredential(req: NextRequest): string | null {
