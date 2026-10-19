@@ -1,0 +1,127 @@
+# Stage Q persistent session proof across a deliberately crashed fictional
+# PostgreSQL container. The job uses Docker ownership labels and a loopback-only
+# port. It neither connects to, nor modifies, any Soullab deployment.
+name: Stage Q PostgreSQL Crash-Recovery (NO DEPLOY)
+
+on:
+  push:
+    branches:
+      - security/auth-stage-q-postgres-crash-recovery-20261019
+  pull_request:
+    branches:
+      - security/auth-stage-q-caddy-replay-20261019
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-q-postgres-crash-fixture
+  cancel-in-progress: true
+
+jobs:
+  crash-recovery:
+    name: Fictional SQL crash/restart and authentication fail-closed
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      STAGE_Q_CRASH_DISPOSABLE: stageq-postgres-crash-fictional-only
+      PGHOST: 127.0.0.1
+      PGPORT: "5550"
+      PGDATABASE: stageq_crash_fictional
+      PGUSER: stageq_crash_fixture
+      PGPASSWORD: stageq_crash_fictional_password_only
+
+    steps:
+      - name: Checkout pinned Stage Q security candidate
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      - name: Record exact source and database migration custody
+        run: |
+          git rev-parse HEAD
+          git hash-object lib/auth/serverSessions.ts
+          git hash-object lib/auth/verifiedAccess.ts
+          git hash-object app/api/members/signout/route.ts
+          git hash-object database/migrations/20260119000001_auth_sessions.sql
+          git hash-object docs/security/auth-stage-q-postgres-crash-restart.cjs
+
+      - name: Start exclusively labeled fictional PostgreSQL container
+        run: |
+          name="stageq-pg-crash-$(printf '%s' "$GITHUB_SHA" | cut -c1-12)"
+          if docker inspect "$name" >/dev/null 2>&1; then
+            echo "Fixture name already exists — refusing reuse"
+            exit 1
+          fi
+          docker run -d --name "$name" \
+            --label soullab.stageq=fictional-crash \
+            -e POSTGRES_USER=stageq_crash_fixture \
+            -e POSTGRES_PASSWORD=stageq_crash_fictional_password_only \
+            -e POSTGRES_DB=stageq_crash_fictional \
+            -p 127.0.0.1:5550:5432 postgres:14-alpine
+          ready=0
+          for attempt in $(seq 1 40); do
+            if docker exec "$name" pg_isready -U stageq_crash_fixture -d stageq_crash_fictional >/dev/null 2>&1; then
+              ready=1; break
+            fi
+            sleep 1
+          done
+          test "$ready" -eq 1
+          test "$(docker inspect --format '{{index .Config.Labels "soullab.stageq"}}' "$name")" = "fictional-crash"
+
+      - name: Seed durable SQL sessions from actual reviewed source
+        run: node docs/security/auth-stage-q-postgres-crash-restart.cjs seed
+
+      - name: Force abrupt crash of that one identified test container
+        run: |
+          name="stageq-pg-crash-$(printf '%s' "$GITHUB_SHA" | cut -c1-12)"
+          test "$(docker inspect --format '{{index .Config.Labels "soullab.stageq"}}' "$name")" = "fictional-crash"
+          test "$(docker inspect --format '{{.State.Running}}' "$name")" = "true"
+          docker kill --signal KILL "$name"
+          test "$(docker inspect --format '{{.State.Running}}' "$name")" = "false"
+
+      - name: Demonstrate fail-closed verification and truthful 503 during outage
+        run: node docs/security/auth-stage-q-postgres-crash-restart.cjs offline
+
+      - name: Restart exact labeled PostgreSQL container preserving its disk
+        run: |
+          name="stageq-pg-crash-$(printf '%s' "$GITHUB_SHA" | cut -c1-12)"
+          test "$(docker inspect --format '{{index .Config.Labels "soullab.stageq"}}' "$name")" = "fictional-crash"
+          test "$(docker inspect --format '{{.State.Running}}' "$name")" = "false"
+          docker start "$name"
+          ready=0
+          for attempt in $(seq 1 40); do
+            if docker exec "$name" pg_isready -U stageq_crash_fixture -d stageq_crash_fictional >/dev/null 2>&1; then
+              ready=1; break
+            fi
+            sleep 1
+          done
+          test "$ready" -eq 1
+
+      - name: Prove persisted revocation/expiry and recovered replay denial
+        run: node docs/security/auth-stage-q-postgres-crash-restart.cjs recovered
+
+      - name: Dispose of only this labeled container and fixture records
+        if: always()
+        run: |
+          name="stageq-pg-crash-$(printf '%s' "$GITHUB_SHA" | cut -c1-12)"
+          label="$(docker inspect --format '{{index .Config.Labels "soullab.stageq"}}' "$name" 2>/dev/null || true)"
+          if [ "$label" = "fictional-crash" ]; then
+            docker rm -f "$name"
+          fi
+          short="$(printf '%s' "$GITHUB_SHA" | cut -c1-16)"
+          if [ -f "/tmp/soullab-stageq-crash-$short/.stageq-owned" ]; then
+            node docs/security/auth-stage-q-postgres-crash-restart.cjs cleanup
+          fi
