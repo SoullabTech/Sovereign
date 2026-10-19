@@ -405,6 +405,12 @@ isReady('FWE-01 isolated loopback browser + real source handlers', () => {
       await page.locator('#choose-manuscript').click();
       expect(new URL(page.url()).searchParams.get('mode')).toBe('write');
       expect(new URL(page.url()).searchParams.get('m')).toBe(MANUSCRIPT);
+      // Fail promptly with a synthetic diagnostic if actual source handlers
+      // refuse the fixture, rather than waiting 30s for an absent textarea.
+      const writeBody = (await page.locator('body').textContent()) ?? '';
+      if (await page.locator('#draft-text').count() !== 1) {
+        throw new Error('FWE01_WRITE_PAGE_UNAVAILABLE: ' + writeBody.slice(0, 500));
+      }
       expect(await page.locator('#draft-text').inputValue()).toBe(ORIGINAL);
 
       await page.locator('#draft-text').fill(WRITTEN);
