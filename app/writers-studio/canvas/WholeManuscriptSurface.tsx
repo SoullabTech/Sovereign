@@ -104,6 +104,8 @@ export interface WholeManuscriptSurfaceProps {
    * the viewport covers.
    */
   onPlaceChange?: (sectionId: string) => void;
+  /** Show authored headings above section editors while preserving section-native editing. */
+  showHeadings?: boolean;
   /** Exact frozen passage to illuminate in a read-only manuscript. Never used for editing. */
   readOnlyHighlight?: { sectionId: string; range: CodePointRange } | null;
 }
@@ -128,7 +130,7 @@ export interface WholeManuscriptSurfaceHandle {
 export const WholeManuscriptSurface = forwardRef<
   WholeManuscriptSurfaceHandle, WholeManuscriptSurfaceProps
 >(function WholeManuscriptSurface({
-  writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, readOnlyHighlight = null,
+  writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, showHeadings = false, readOnlyHighlight = null,
 }, handleRef) {
   const sections = writing.sections;
   const indexOfId = useMemo(() => {
@@ -368,6 +370,18 @@ export const WholeManuscriptSurface = forwardRef<
                 }}
               />
             )}
+            {showHeadings && section.heading?.trim() ? (
+              <h2
+                data-whole-manuscript-heading
+                style={{
+                  margin: i === 0 ? `0 0 ${SPACE.base}px` : `0 0 ${SPACE.comfortable}px`,
+                  color: INK.primary, fontWeight: 600, lineHeight: 1.25,
+                  fontSize: i === 0 ? 30 : 22,
+                }}
+              >
+                {section.heading.trim()}
+              </h2>
+            ) : null}
             {!isMounted ? null : section.editable ? (
               <textarea
                 ref={(n) => { if (n) fields.current.set(section.id, n); }}
