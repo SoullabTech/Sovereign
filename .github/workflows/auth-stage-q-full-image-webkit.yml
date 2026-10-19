@@ -1,0 +1,183 @@
+# Real rendered WebKit + complete, independently attested archived application.
+# The actual browser and all containers are fictional and localhost-only.
+# Does NOT build/push/deploy an image or access production/staging.
+name: Stage Q Full Image WebKit Signin (NO DEPLOY)
+
+on:
+  push:
+    branches:
+      - security/auth-stage-q-full-image-webui-20261019
+  pull_request:
+    branches:
+      - security/auth-stage-q-classa-image-attestation-20261019
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: stageq-full-image-browser-review
+  cancel-in-progress: true
+
+jobs:
+  topology_gate:
+    name: Prove internal Docker bridge can expose only runner loopback
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Exercise a label-owned Caddy HTTP probe, with no app or database
+        shell: bash
+        run: |
+          set -euo pipefail
+          container="stageq-netprobe-$(printf '%s' "$GITHUB_SHA" | cut -c1-10)"
+          network="stageq-netprobe-net-$(printf '%s' "$GITHUB_SHA" | cut -c1-10)"
+          owner="stageq-fullimage-preflight"
+          if docker inspect "$container" >/dev/null 2>&1; then exit 1; fi
+          if docker network inspect "$network" >/dev/null 2>&1; then exit 1; fi
+          mkdir -p "$RUNNER_TEMP/stageq-bridge-probe"
+          printf ':8080 {\n  respond "stageq-loopback-only" 200\n}\n' > "$RUNNER_TEMP/stageq-bridge-probe/Caddyfile"
+          cleanup() {
+            label="$(docker inspect "$container" --format '{{index .Config.Labels "soullab.stageq"}}' 2>/dev/null || true)"
+            if [ "$label" = "$owner" ]; then docker rm -f "$container" || true; fi
+            label="$(docker network inspect "$network" --format '{{index .Labels "soullab.stageq"}}' 2>/dev/null || true)"
+            if [ "$label" = "$owner" ]; then docker network rm "$network" || true; fi
+          }
+          trap cleanup EXIT
+          docker pull caddy:2.10.2-alpine
+          docker network create --internal --driver bridge --label "soullab.stageq=$owner" "$network"
+          docker run -d --name "$container" --network "$network" \
+            --label "soullab.stageq=$owner" \
+            -p 127.0.0.1:38771:8080 \
+            -v "$RUNNER_TEMP/stageq-bridge-probe:/etc/stageq:ro" \
+            caddy:2.10.2-alpine caddy run --config /etc/stageq/Caddyfile --adapter caddyfile
+          test "$(docker inspect "$container" --format '{{.HostConfig.NetworkMode}}')" = "$network"
+          mapped="$(docker port "$container" 8080/tcp)"
+          test "$mapped" = "127.0.0.1:38771"
+          okay=false
+          for attempt in $(seq 1 25); do
+            if curl -fsS --max-time 2 http://127.0.0.1:38771/ 2>/dev/null |
+              grep -Fx 'stageq-loopback-only'; then
+              okay=true
+              break
+            fi
+            sleep 1
+          done
+          if [ "$okay" != true ]; then
+            echo 'Internal Docker bridge cannot serve runner-local published port. Abort before image download.'
+            exit 1
+          fi
+          echo 'Internal-only Docker network plus published runner loopback passes.'
+
+  rendered-full-image:
+    needs: topology_gate
+    name: WebKit rendered sign-in against source-attested complete image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GITHUB_ACTIONS: "true"
+      STAGE_Q_FULL_IMAGE_FIXTURE: stageq-full-image-rendered-fictional-only
+      FROZEN_SOURCE_SHA: 9ed5d83ba856b4e8c4940ef7f928447ae28c3837
+      IMAGE: maia-sovereign:stageq-classa-1883-review-only
+      IMAGE_ID: sha256:ee8ea174a90dc7465921a3cd6db801321cfe82a0f35633d94ed8371eba63b6e9
+      ARCHIVE_SHA256: 1231d686322eed99d6b7d97b75f9dd0d8e8cab7692fd42acd2e02cef6ca102f2
+      ARCHIVE: stageq-classa-1883-linux-amd64.docker.tar.gz
+
+    steps:
+      - name: Checkout test-only candidate, not a merge or deployed source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Install locked Node 22 test dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      - name: Syntax-check isolated Node acceptance harness
+        run: node --check docs/security/auth-stage-q-full-image-webkit.test.cjs
+
+      - name: Install genuine Linux WebKit and its runtime libraries
+        run: ./node_modules/.bin/playwright install --with-deps webkit
+
+      - name: Download exact private immutable image from attested prior run
+        uses: actions/download-artifact@v4
+        with:
+          name: stageq-classa-1883-private-image
+          run-id: 39314980454
+          repository: SoullabTech/Sovereign
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/stageq-full-image
+
+      - name: Verify frozen source, archive SHA and complete image identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object docs/security/auth-stage-q-full-image-webkit.test.cjs)" != ''
+          for name in 20260119000001_auth_sessions.sql 20260119000004_auth_rate_limits.sql 20260828000001_audit_logs.sql; do
+            test -f "database/migrations/$name"
+          done
+          available_kb="$(df -Pk / | awk 'NR==2 {print $4}')"
+          test "$available_kb" -gt 9000000
+          cd "$RUNNER_TEMP/stageq-full-image"
+          test -f "$ARCHIVE" && test -f "$ARCHIVE.sha256"
+          test -f stageq-classa-image-identity.txt
+          echo "$ARCHIVE_SHA256  $ARCHIVE" | sha256sum -c -
+          sha256sum -c "$ARCHIVE.sha256"
+          grep -Fx "SOURCE_SHA=$FROZEN_SOURCE_SHA" stageq-classa-image-identity.txt
+          grep -Fx "IMAGE_ID=$IMAGE_ID" stageq-classa-image-identity.txt
+          grep -Fx "ARCHIVE_SHA256=$ARCHIVE_SHA256" stageq-classa-image-identity.txt
+          grep -Fx 'ARCHITECTURE=amd64' stageq-classa-image-identity.txt
+          grep -Fx 'BUILD_LANE=ci-review-image-only' stageq-classa-image-identity.txt
+          grep -Fx 'PRODUCTION_DEPLOYED=false' stageq-classa-image-identity.txt
+          grep -Fx 'RELEASE_AUTHORIZED=false' stageq-classa-image-identity.txt
+          gzip -dc "$ARCHIVE" | docker load
+          test "$(docker image inspect "$IMAGE" --format '{{.Id}}')" = "$IMAGE_ID"
+          test "$(docker image inspect "$IMAGE" --format '{{.Architecture}}')" = amd64
+          docker image inspect "$IMAGE" --format '{{range .Config.Env}}{{println .}}{{end}}' |
+            grep -Fx "GIT_COMMIT=$FROZEN_SOURCE_SHA"
+          docker image inspect "$IMAGE" --format '{{range .Config.Env}}{{println .}}{{end}}' |
+            grep -Fx 'DEPLOY_LANE=ci-review-image-only'
+          echo 'Fresh test runner verified the immutable production-shaped source image.'
+
+      - name: Prepull disposable PostgreSQL and local TLS proxy binaries
+        run: |
+          docker pull postgres:14-alpine
+          docker pull caddy:2.10.2-alpine
+
+      - name: Render real sign-in UI using only https localhost and synthetic SQL
+        run: node --test docs/security/auth-stage-q-full-image-webkit.test.cjs
+
+      - name: Verify no unrelated Docker resources and clean only exact labeled fixtures
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          prefix="$(printf '%s' "$GITHUB_SHA" | cut -c1-10)"
+          for name in "stageqfull-edge-$prefix" "stageqfull-app-$prefix" "stageqfull-pg-$prefix"; do
+            label="$(docker inspect "$name" --format '{{index .Config.Labels "soullab.stageq"}}' 2>/dev/null || true)"
+            if [ "$label" = "stageq-full-image-fictional" ]; then
+              docker rm -f "$name"
+            fi
+            if docker ps -a --format '{{.Names}}' | grep -Fx "$name"; then
+              echo "Owned fixture survived cleanup: $name"
+              exit 1
+            fi
+          done
+          network="stageqfull-net-$prefix"
+          label="$(docker network inspect "$network" --format '{{index .Labels "soullab.stageq"}}' 2>/dev/null || true)"
+          if [ "$label" = "stageq-full-image-fictional" ]; then
+            docker network rm "$network"
+          fi
+          if docker network ls --format '{{.Name}}' | grep -Fx "$network"; then
+            echo 'Owned fictional network survived cleanup'
+            exit 1
+          fi
+          echo 'All exact-name, label-verified test containers and Docker network disposed.'
