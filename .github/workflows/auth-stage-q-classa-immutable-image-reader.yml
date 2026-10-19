@@ -1,0 +1,219 @@
+# Frozen source, real production Dockerfile, private two-day archive.
+# Fresh CI runner verifies image and boots it without a network. NO DEPLOY.
+name: Stage Q Class A Immutable Image / Independent Reader (NO DEPLOY)
+
+on:
+  push:
+    branches: [security/auth-stage-q-classa-image-attestation-20261019]
+  pull_request:
+    branches: [security/auth-stage-q-classa-real-signin-webkit-20261019]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: stageq-classa-immutable-review
+  cancel-in-progress: true
+
+jobs:
+  image_builder:
+    name: Freeze full Docker image from exact PR1883 source
+    if: github.repository == 'SoullabTech/Sovereign'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    outputs:
+      image_id: ${{ steps.archive.outputs.image_id }}
+      archive_sha256: ${{ steps.archive.outputs.archive_sha256 }}
+    env:
+      SOURCE_SHA: 9ed5d83ba856b4e8c4940ef7f928447ae28c3837
+      IMAGE: maia-sovereign:stageq-classa-1883-review-only
+      ARCHIVE: stageq-classa-1883-linux-amd64.docker.tar.gz
+    steps:
+      - name: Checkout exact audited source, never a synthetic PR merge
+        uses: actions/checkout@v4
+        with:
+          ref: 9ed5d83ba856b4e8c4940ef7f928447ae28c3837
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify source custody, refuse env files and check disk safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          for candidate in .env .env.production .env.staging .env.test .env.local .env.development; do
+            if [ -e "$candidate" ]; then
+              echo 'Refusing accidental environment-file packaging.'
+              exit 1
+            fi
+          done
+          test "$(git hash-object Dockerfile)" = 9c4da86d385406b95f4f91a79d4037fb68b2085f
+          test "$(git hash-object .dockerignore)" = 53ba9868ffdf48cebf163302db75f3f7c401b93f
+          test "$(git hash-object app/api/members/signin/route.ts)" = 4ea14beb385e83320cf6e586f990784fe47aacd8
+          test "$(git hash-object app/api/members/signout/route.ts)" = 5ef39a974759dc5d4f60bf5bf2eea375c7e7451e
+          test "$(git hash-object lib/auth/verifiedAccess.ts)" = 6a0821fedf2e921d2d7e7091cdb73da11d197296
+          kb="$(df -Pk / | awk 'NR==2 {print $4}')"
+          echo "Runner free space KB: $kb"
+          if [ "$kb" -lt 15000000 ]; then
+            echo 'Insufficient ephemeral disk for portable image archive.'
+            exit 1
+          fi
+      - name: Set up isolated BuildKit
+        uses: docker/setup-buildx-action@v3
+      - name: Compile full immutable source image without pushing
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker buildx build --platform linux/amd64 --progress=plain --pull \
+            --cache-from type=gha \
+            --build-arg DEPLOY_LANE_TOKEN=ci-review-image-only \
+            --build-arg GIT_COMMIT="$SOURCE_SHA" \
+            --build-arg APP_VERSION=1.2.0 \
+            --load --tag "$IMAGE" .
+          test "$(docker image inspect "$IMAGE" --format '{{.Architecture}}')" = amd64
+          test "$(docker image inspect "$IMAGE" --format '{{.Config.User}}')" = node
+          docker image inspect "$IMAGE" --format '{{range .Config.Env}}{{println .}}{{end}}' |
+            grep -Fx "GIT_COMMIT=$SOURCE_SHA"
+          docker image inspect "$IMAGE" --format '{{range .Config.Env}}{{println .}}{{end}}' |
+            grep -Fx 'DEPLOY_LANE=ci-review-image-only'
+      - name: Archive image with source-stamped SHA-256 record
+        id: archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          image_id="$(docker image inspect "$IMAGE" --format '{{.Id}}')"
+          test -n "$image_id"
+          docker save "$IMAGE" | gzip -1 > "$RUNNER_TEMP/$ARCHIVE"
+          gzip -t "$RUNNER_TEMP/$ARCHIVE"
+          (cd "$RUNNER_TEMP"; sha256sum "$ARCHIVE" > "$ARCHIVE.sha256")
+          (cd "$RUNNER_TEMP"; sha256sum -c "$ARCHIVE.sha256")
+          digest="$(sha256sum "$RUNNER_TEMP/$ARCHIVE" | cut -d ' ' -f1)"
+          printf '%s\n' \
+            "SOURCE_SHA=$SOURCE_SHA" "IMAGE_ID=$image_id" "ARCHIVE_SHA256=$digest" \
+            'ARCHITECTURE=amd64' 'BUILD_LANE=ci-review-image-only' \
+            'PRODUCTION_DEPLOYED=false' 'RELEASE_AUTHORIZED=false' \
+            > "$RUNNER_TEMP/stageq-classa-image-identity.txt"
+          echo "image_id=$image_id" >> "$GITHUB_OUTPUT"
+          echo "archive_sha256=$digest" >> "$GITHUB_OUTPUT"
+          echo 'Private image archive ready for a second runner, not a release.'
+      - name: Retain access-controlled portable image for 2 days
+        uses: actions/upload-artifact@v4
+        with:
+          name: stageq-classa-1883-private-image
+          path: |
+            ${{ runner.temp }}/stageq-classa-1883-linux-amd64.docker.tar.gz
+            ${{ runner.temp }}/stageq-classa-1883-linux-amd64.docker.tar.gz.sha256
+            ${{ runner.temp }}/stageq-classa-image-identity.txt
+          retention-days: 2
+          compression-level: 0
+          if-no-files-found: error
+
+  fresh_runtime_reader:
+    name: Verify archived image and compiled sign-in on a separate runner
+    needs: image_builder
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      SOURCE_SHA: 9ed5d83ba856b4e8c4940ef7f928447ae28c3837
+      IMAGE: maia-sovereign:stageq-classa-1883-review-only
+      ARCHIVE: stageq-classa-1883-linux-amd64.docker.tar.gz
+      EXPECTED_IMAGE_ID: ${{ needs.image_builder.outputs.image_id }}
+      EXPECTED_ARCHIVE_SHA256: ${{ needs.image_builder.outputs.archive_sha256 }}
+      CONTAINER: stageq-classa-1883-reader
+    steps:
+      - name: Download immutable artifact on independent runner
+        uses: actions/download-artifact@v4
+        with:
+          name: stageq-classa-1883-private-image
+          path: ${{ runner.temp }}/stageq-classa-review
+      - name: Independently verify SHA, source, image ID and build lane
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/stageq-classa-review"
+          test -f "$ARCHIVE"
+          test -f "$ARCHIVE.sha256"
+          test -f stageq-classa-image-identity.txt
+          test -n "$EXPECTED_IMAGE_ID"
+          test -n "$EXPECTED_ARCHIVE_SHA256"
+          echo "$EXPECTED_ARCHIVE_SHA256  $ARCHIVE" | sha256sum -c -
+          sha256sum -c "$ARCHIVE.sha256"
+          grep -Fx "SOURCE_SHA=$SOURCE_SHA" stageq-classa-image-identity.txt
+          grep -Fx "IMAGE_ID=$EXPECTED_IMAGE_ID" stageq-classa-image-identity.txt
+          grep -Fx "ARCHIVE_SHA256=$EXPECTED_ARCHIVE_SHA256" stageq-classa-image-identity.txt
+          grep -Fx 'ARCHITECTURE=amd64' stageq-classa-image-identity.txt
+          grep -Fx 'BUILD_LANE=ci-review-image-only' stageq-classa-image-identity.txt
+          grep -Fx 'PRODUCTION_DEPLOYED=false' stageq-classa-image-identity.txt
+          grep -Fx 'RELEASE_AUTHORIZED=false' stageq-classa-image-identity.txt
+          gzip -dc "$ARCHIVE" | docker load
+          test "$(docker image inspect "$IMAGE" --format '{{.Id}}')" = "$EXPECTED_IMAGE_ID"
+          test "$(docker image inspect "$IMAGE" --format '{{.Architecture}}')" = amd64
+          test "$(docker image inspect "$IMAGE" --format '{{.Config.User}}')" = node
+          docker image inspect "$IMAGE" --format '{{range .Config.Env}}{{println .}}{{end}}' |
+            grep -Fx "GIT_COMMIT=$SOURCE_SHA"
+          docker image inspect "$IMAGE" --format '{{range .Config.Env}}{{println .}}{{end}}' |
+            grep -Fx 'DEPLOY_LANE=ci-review-image-only'
+      - name: Boot compiled image with NO network and verify sign-in doorway
+        shell: bash
+        run: |
+          set -euo pipefail
+          if docker inspect "$CONTAINER" >/dev/null 2>&1; then
+            echo 'Refusing existing test container name'
+            exit 1
+          fi
+          docker run -d --name "$CONTAINER" \
+            --label soullab.stageq=independent-reader \
+            --network none --cap-drop ALL --security-opt no-new-privileges \
+            --pids-limit 256 --memory 3g --tmpfs /tmp:rw,nosuid,nodev,size=128m \
+            -e DATABASE_URL=postgresql://fictional:fictional@127.0.0.1:65535/stageq_attestation \
+            "$IMAGE" >/dev/null
+          test -z "$(docker port "$CONTAINER")"
+          test "$(docker inspect "$CONTAINER" --format '{{.HostConfig.NetworkMode}}')" = none
+          ready=false
+          for attempt in $(seq 1 55); do
+            if docker exec "$CONTAINER" node -e \
+              "require('http').get('http://127.0.0.1:3000/signin',r=>{let b='';r.on('data',x=>b+=x);r.on('end',()=>process.exit(r.statusCode===200&&b.includes('<html')?0:1))}).on('error',()=>process.exit(1))" >/dev/null 2>&1; then
+              ready=true
+              break
+            fi
+            if [ "$(docker inspect "$CONTAINER" --format '{{.State.Running}}')" != true ]; then
+              echo 'Review image exited before it could serve sign-in'
+              exit 1
+            fi
+            sleep 2
+          done
+          test "$ready" = true
+          echo 'Independent runner verified compiled /signin HTTP 200 with network disabled.'
+          echo 'No authentication or production release implied.'
+      - name: Write source-linked independent-reader receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' \
+            "SOURCE_SHA=$SOURCE_SHA" "IMAGE_ID=$EXPECTED_IMAGE_ID" \
+            "ARCHIVE_SHA256=$EXPECTED_ARCHIVE_SHA256" \
+            'FRESH_RUNNER_IMAGE_LOAD=true' 'NETWORK_MODE=none' \
+            'SIGNIN_DOORWAY_HTTP_200=true' \
+            'PRODUCTION_DEPLOYED=false' 'RELEASE_AUTHORIZED=false' \
+            > "$RUNNER_TEMP/stageq-classa-independent-reader.txt"
+      - name: Retain independent verification record for 2 days
+        uses: actions/upload-artifact@v4
+        with:
+          name: stageq-classa-1883-independent-reader-receipt
+          path: ${{ runner.temp }}/stageq-classa-independent-reader.txt
+          retention-days: 2
+          if-no-files-found: error
+      - name: Remove only owned networkless reader container
+        if: always()
+        shell: bash
+        run: |
+          label="$(docker inspect "$CONTAINER" --format '{{index .Config.Labels "soullab.stageq"}}' 2>/dev/null || true)"
+          if [ "$label" = independent-reader ]; then
+            docker rm -f "$CONTAINER"
+          fi
+          if docker ps -a --format '{{.Names}}' | grep -Fx "$CONTAINER"; then
+            echo 'Owned reader container survived cleanup'
+            exit 1
+          fi
