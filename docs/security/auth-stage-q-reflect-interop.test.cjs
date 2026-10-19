@@ -219,10 +219,34 @@ test('source-custody: PR1870 resolver and Stage Q route/helper have pinned blobs
   ['lib/auth/verifiedAccess.ts','6a0821fedf2e921d2d7e7091cdb73da11d197296'],
   ['app/api/members/signout/route.ts','5ef39a974759dc5d4f60bf5bf2eea375c7e7451e'],
   ['lib/auth/webSignOut.ts','1fe1f1dda2d78216415d0c24b5e4f81963bedaca'],
+  ['config/accessMatrix.ts','a93c5d3d382037a68828ee5a7423106a03adad2f'],
+  ['app/api/members/signin/route.ts','4ea14beb385e83320cf6e586f990784fe47aacd8'],
  ]);
  const {execFileSync}=require('node:child_process');
  for(const [p,expectedSha] of expected){
   const actualSha=execFileSync('git',['hash-object',p],{cwd:root,encoding:'utf8'}).trim();
   assert.equal(actualSha,expectedSha,p+' source drift');
+ }
+});
+
+test('strict access matrix admits only exact web signout and not member API namespace',()=>{
+ const matrix=actual('config/accessMatrix.ts',new Map());
+ const old=process.env.ACCESS_CONTROL_MODE;
+ const oldNode=process.env.NODE_ENV;
+ process.env.ACCESS_CONTROL_MODE='strict';
+ process.env.NODE_ENV='production';
+ try{
+  const signout=matrix.checkAccess('/api/members/signout','free',[],false);
+  assert.equal(signout.allowed,true);
+  assert.equal(signout.rule?.exact,'/api/members/signout');
+  assert.equal(signout.rule?.public,true);
+  const unmapped=matrix.checkAccess('/api/members/fictional-unmapped','free',[],false);
+  assert.equal(unmapped.allowed,false);
+  assert.equal(unmapped.unmapped,true);
+ }finally{
+  if(old===undefined)delete process.env.ACCESS_CONTROL_MODE;
+  else process.env.ACCESS_CONTROL_MODE=old;
+  if(oldNode===undefined)delete process.env.NODE_ENV;
+  else process.env.NODE_ENV=oldNode;
  }
 });
