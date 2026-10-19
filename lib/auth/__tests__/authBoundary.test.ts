@@ -60,6 +60,7 @@ function req(opts: {
     cookies: { get: (n: string) => (jar[n] ? { value: jar[n] } : undefined) },
     url,
     nextUrl: new URL(url),
+    method: 'GET',
   } as unknown as NextRequest;
 }
 
@@ -275,7 +276,7 @@ describe('6. valid ordinary member session', () => {
 
   it('authenticates via ?_t= for transports that cannot set headers (SSE)', async () => {
     const access = await deriveVerifiedAccess(
-      req({ url: `https://soullab.life/api/stream?_t=${VALID_TOKEN}` }),
+      req({ url: `https://soullab.life/api/team/channels/fictional-channel/stream?_t=${VALID_TOKEN}` }),
     );
     expect(access.authenticated).toBe(true);
     expect(access.memberId).toBe(MEMBER_A);
