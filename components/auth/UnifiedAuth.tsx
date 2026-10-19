@@ -182,6 +182,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preVerified = searchParams?.get('verified') === 'true';
+  const signOutUnconfirmed = searchParams?.get('signout') === 'unconfirmed';
   const emailParam = searchParams?.get('email') || '';
   const usernameParam = searchParams?.get('u') || '';
   const requestedNext = searchParams?.get('next') || '';
@@ -300,7 +301,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   // Silent, server-confirmed authed redirect (web only). Uses whoami, NOT
   // localStorage — so a stale beta_user never bounces a real visitor away.
   useEffect(() => {
-    if (preVerified) return;
+    if (preVerified || signOutUnconfirmed) return;
     if (Capacitor.isNativePlatform()) return;
     if (typeof window !== 'undefined' && localStorage.getItem('maia_signed_out') === '1') return;
     const controller = new AbortController();
@@ -309,7 +310,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
       .then((r) => r.json())
       .then((d) => { clearTimeout(t); if (d?.authed) window.location.replace(afterAuth); })
       .catch(() => clearTimeout(t));
-  }, [afterAuth, preVerified]);
+  }, [afterAuth, preVerified, signOutUnconfirmed]);
 
   function storeSession(
     user: { id: string; username: string; name: string; preferredName?: string; onboarded: boolean },
@@ -588,6 +589,16 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
 
   return (
     <div className="min-h-[100dvh] bg-soullab-core flex flex-col items-center justify-center px-4 py-10" style={arrivalSignin ? { background: 'radial-gradient(58% 40% at 50% 12%, rgba(124,94,170,0.16), rgba(90,70,150,0.05) 40%, transparent 60%), linear-gradient(180deg, #071426 0%, #050f1f 52%, #030814 100%)' } : undefined}>
+      {signOutUnconfirmed && (
+        <div role="alert" className="mb-6 w-full max-w-sm rounded-2xl border border-amber-400/40 bg-amber-900/25 p-4 text-sm leading-relaxed text-amber-100">
+          <p className="font-semibold">Server sign-out was not confirmed.</p>
+          <p className="mt-2">
+            This device's saved sign-in information was cleared, but a server session
+            may remain active. Signing in again does not automatically prove that
+            earlier sessions were revoked.
+          </p>
+        </div>
+      )}
       <div className="mb-12">
         <div className="w-28 h-28 mx-auto">
           <Holoflower size="xl" glowIntensity={arrivalSignin ? 'low' : 'medium'} animate={true} theme="dark" variant={arrivalSignin ? 'spectrum' : undefined} crisp={arrivalSignin} />
