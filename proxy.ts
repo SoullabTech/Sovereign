@@ -206,11 +206,14 @@ export async function proxy(req: NextRequest) {
     pathname.startsWith('/assets') ||
     pathname.startsWith('/images') ||
     pathname.startsWith('/fonts') ||
-    pathname.includes('.') // Skip files with extensions (.css, .js, .png, etc.)
+    // C0-SSE-R2: an API path is never a static asset simply because an
+    // arbitrary dynamic identifier contains a dot. Its auth/matrix boundary
+    // must run even for /api/team/channels/example.name/stream.
+    (!pathname.startsWith('/api/') && pathname.includes('.'))
   ) {
-    // `pathname.includes('.')` is broad enough to match a real route, so this
-    // fast path strips assertions too rather than assuming it only ever serves
-    // static files.
+    // Keep the existing static-asset shortcuts and explicit API transport
+    // exclusions. All other dotted /api/* paths reach normal authorization.
+    // Asserted identity headers remain stripped even on genuine static paths.
     return forwardSanitized(req);
   }
 
