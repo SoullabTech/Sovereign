@@ -97,7 +97,8 @@ async function eventually(fn,name,ms=75000){
 }
 function tlsGet(pathname){
  return new Promise((resolve,reject)=>{
-  const req=https.get({hostname:'localhost',port:443,path:pathname,
+  const req=https.get({hostname:'127.0.0.1',servername:'localhost',
+   headers:{Host:'localhost'},port:443,path:pathname,
    rejectUnauthorized:false,timeout:3000},res=>{
    res.resume();res.on('end',()=>resolve(res.statusCode));
   });
@@ -205,10 +206,31 @@ test.before(async()=>{
  startContainer(EDGE,['--network',NET,'-p','127.0.0.1:443:443',
   '-v',workdir+':/etc/stageq:ro','caddy:2.10.2-alpine',
   'caddy','run','--config','/etc/stageq/Caddyfile','--adapter','caddyfile']);
- await eventually(async()=>{
-  const status=await tlsGet('/signin');
-  if(status!==200)throw Error('Full image /signin: HTTP '+status);
- },'Source-attested full application HTTPS signin',90000);
+ try {
+  await eventually(async()=>{
+   const status=await tlsGet('/signin');
+   if(status!==200)throw Error('Full image /signin: HTTP '+status);
+  },'Source-attested full application HTTPS signin',60000);
+ }catch(e){
+  // Only fictional process health and container-local proxy diagnostics, never
+  // secret values or session credentials; no browser has signed in yet.
+  function inspect(name){
+   const p=spawnSync('docker',['inspect',name,'--format',
+    '{{.State.Status}}|{{.State.ExitCode}}|{{.HostConfig.NetworkMode}}'],{
+    encoding:'utf8',timeout:8000});
+   return p.status===0?(p.stdout||'').trim():'unavailable';
+  }
+  const logs=spawnSync('docker',['logs','--tail','14',EDGE],{
+   encoding:'utf8',timeout:8000});
+  const edgeTail=(logs.stderr||logs.stdout||'').slice(-950)
+    .replace(/[a-f0-9]{64}/gi,'[redacted]')
+    .replaceAll(PG_PASSWORD,'[fixture-password]');
+  console.error('[stageq-fullimage] local-only edge unavailable:',JSON.stringify({
+   appState:inspect(APP),edgeState:inspect(EDGE),pgState:inspect(PG),
+   errorCode:e?.code||'fixture-unavailable',edgeTail,
+  }));
+  throw e;
+ }
  browser=await webkit.launch({headless:true});
 });
 
