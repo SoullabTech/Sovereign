@@ -35,6 +35,13 @@ const originals = [
   'app/api/members/signin/route.ts',
   'lib/auth/rateLimiter.ts',
   'lib/security/authAudit.ts',
+  // Actual member-facing source, copied byte-for-byte into disposable Next.
+  'app/signin/page.tsx',
+  'components/auth/UnifiedAuth.tsx',
+  'app/studio/account/page.tsx',
+  'components/auth/SignOutIncompleteDialog.tsx',
+  'lib/auth/webSignOut.ts',
+  'lib/auth/webBiometricOffer.ts',
 ];
 // Preserve the exact small display-name function without loading unrelated
 // practitioner/PHI modules into a fictional authentication-only fixture.
@@ -42,6 +49,70 @@ const clientsOriginal=fs.readFileSync(path.join(root,'lib/stellium/clients.ts'),
 const displayFragment=clientsOriginal.match(/export function resolveMemberDisplayName\([\s\S]*?\n\}/);
 if(!displayFragment)throw Error('Reviewed display-name resolver extraction failed');
 const fixtureFiles = {
+  // Unrelated biometric/device dependencies remain inert: only auth code
+  // (server routes, resolver, web signout helper, member-facing React pages)
+  // is exact source. No client path can call a real external service here.
+  'components/ui/Holoflower.tsx': [
+    "'use client';",
+    'export function Holoflower(_props:any){return <span data-testid="fixture-visual-only" aria-hidden="true"/>}',
+  ].join('\n'),
+  'lib/auth/biometricAuth.ts': [
+    "'use client';",
+    'export const biometricAuth={',
+    "getBiometricName:()=> 'Touch ID',",
+    'getAvailability:async()=>({available:false,platformAvailable:false}),',
+    "authenticate:async()=>({success:false,error:'Disabled in fictional fixture'}),",
+    'register:async()=>({success:false}),',
+    '};',
+  ].join('\n'),
+  'lib/auth/unifiedBiometry.ts': [
+    "'use client';",
+    'export const unifiedBiometry={',
+    'getAvailability:async()=>({available:false}),',
+    "authenticate:async()=>({success:false,error:'Disabled in fictional fixture'}),",
+    '};',
+  ].join('\n'),
+  'lib/auth/deviceTrust.ts': [
+    "'use client';",
+    '// Device trust is deliberately not registered in fictional UI testing.',
+    'export const deviceTrust={trustDevice:async()=>({success:false})};',
+  ].join('\n'),
+  'lib/features/flags.ts': 'export function getFeatureFlag(_name:string){return false}',
+  'lib/utils/feature-flags.ts': 'export function isFeatureEnabled(_name:string){return false}',
+  'lib/http/apiBase.ts': [
+    "'use client';",
+    '// Fixture transport is strictly relative; never fall back to soullab.life.',
+    "export function apiUrl(p:string){if(!p.startsWith('/api/'))throw Error('Nonfixture target refused');return p}",
+    "export function apiFetch(p:string,init:RequestInit={}){return fetch(apiUrl(p),{credentials:'same-origin',...init})}",
+    "export function isNativeCapacitor(){return false}",
+    'export function clearAuthState(){',
+    "for(const p of ['maia_session_token','memberId','beta_user','explorerId','explorerName','explorerPreferredName','betaOnboardingComplete','signup_completed','maia_session_version'])localStorage.removeItem(p);",
+    '}',
+  ].join('\n'),
+  'app/home/page.tsx': 'export default function Page(){return <main data-testid="fictional-home">Fictional Home</main>}',
+  'app/api/auth/whoami/route.ts': [
+    "import {NextResponse} from 'next/server';",
+    "import {deriveVerifiedAccess} from '@/lib/auth/verifiedAccess';",
+    "export const dynamic='force-dynamic';",
+    'export async function GET(req:Request){',
+    'const resolved=await deriveVerifiedAccess(req as any);',
+    "return NextResponse.json({authed:resolved.authenticated},{headers:{'Cache-Control':'no-store'}});",
+    '}',
+  ].join('\n'),
+  'app/api/members/me/route.ts': [
+    "import {NextResponse} from 'next/server';",
+    "import {deriveVerifiedAccess} from '@/lib/auth/verifiedAccess';",
+    "export const dynamic='force-dynamic';",
+    'export async function GET(req:Request){',
+    'const a=await deriveVerifiedAccess(req as any);',
+    "if(!a.authenticated)return NextResponse.json({error:'Not signed in'},{status:401});",
+    "return NextResponse.json({member:{id:a.memberId,username:'fixture_member',name:'Fictional member',preferredName:'Fictional member',email:'fixture_member@example.invalid',circleTier:'explorer',onboarded:true,createdAt:'2026-10-19T00:00:00Z',lastSignIn:null}});",
+    '}',
+  ].join('\n'),
+  'app/api/studio/whoami/route.ts': [
+    "import {NextResponse} from 'next/server';",
+    "export function GET(){return NextResponse.json({identity:null})}",
+  ].join('\n'),
   'lib/stellium/clients.ts': displayFragment[0]+'\n',
   'app/layout.tsx': [
     'export default function Layout({children}:{children:React.ReactNode}){',
@@ -49,7 +120,6 @@ const fixtureFiles = {
     '}',
   ].join('\n'),
   'app/page.tsx': 'export default function Page(){return <main>Fictional Stage Q fixture only</main>}',
-  'app/signin/page.tsx': 'export default function Page(){return <main data-testid="signin-only">Fictional sign-in doorway</main>}',
   'app/writers-studio/page.tsx': [
     "import {headers} from 'next/headers';",
     'export const dynamic="force-dynamic";',
@@ -120,6 +190,9 @@ fs.symlinkSync(path.join(root,'node_modules'),path.join(base,'node_modules'),'di
 const manifest={ sourceCommit:sha,sourceFiles:checks,fixtureOnly:Object.keys(fixtureFiles),
   signinHandlerSource: 'exact PR1870 route', authenticationDependencies: 'exact source',
   displayResolverFragmentSha256:crypto.createHash('sha256').update(displayFragment[0]).digest('hex'),
+  renderedUISources:['app/signin/page.tsx','components/auth/UnifiedAuth.tsx','app/studio/account/page.tsx','components/auth/SignOutIncompleteDialog.tsx'],
+  stubbedOnly:['biometricAuth','unifiedBiometry','deviceTrust','apiBase','Holoflower','featureFlags','fixtureHome','fixtureWhoami'],
+  browserTransport:'fictional same-origin only',
   strictMode:true,realNextProxy:true,fullProduct:false,fixturePath:base };
 write('STAGE_Q_BUILD_MANIFEST.json',JSON.stringify(manifest,null,2));
 process.stdout.write('Building disposable Next16 fixture from '+checks.length+' exact source files\n');
