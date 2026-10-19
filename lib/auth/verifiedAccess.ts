@@ -38,6 +38,7 @@
 
 import type { NextRequest } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import type { TransactionClient } from '@/lib/db/postgres';
 import type { Role, Tier } from '@/config/accessMatrix';
 import { readSessionCredential } from './identityAssertions';
 
@@ -78,6 +79,8 @@ export interface VerifiedAccess {
   tier: Tier;
   /** Read from `members.roles`. Empty when unauthenticated — never `['member']`. */
   roles: Role[];
+  /** Transaction-scoped, server-read expiry for a final pre-enqueue clock check. */
+  sessionExpiresAt?: Date;
   /** Why authority was refused. Absent when `authenticated` is true. */
   reason?: AccessDenialReason;
 }
@@ -145,7 +148,31 @@ export async function resolveConsistentSessionCredentials<Row extends { member_i
  * session, or a session naming a member row that no longer exists, all resolve
  * to the same least-privilege answer: unauthenticated, no roles, free tier.
  */
+/**
+ * Shared authority implementation for both ordinary requests and a short-lived
+ * read/emit transaction. Only the supplied transaction client may be used for
+ * its authentication reads; that keeps its row locks meaningful.
+ */
 export async function deriveVerifiedAccess(req: NextRequest): Promise<VerifiedAccess> {
+  return deriveVerifiedAccessCore(req);
+}
+
+/**
+ * Stage A prototype: the exact same credential/claim authority as ordinary
+ * deriveVerifiedAccess, but with all valid source-session rows locked until the
+ * owning database transaction exits. Do not use outside transaction(callback).
+ */
+export async function deriveVerifiedAccessInTransaction(
+  req: NextRequest,
+  tx: TransactionClient,
+): Promise<VerifiedAccess> {
+  return deriveVerifiedAccessCore(req, tx);
+}
+
+async function deriveVerifiedAccessCore(
+  req: NextRequest,
+  tx?: TransactionClient,
+): Promise<VerifiedAccess> {
   const cookieToken = req.cookies.get('maia_session')?.value || null;
   const headerToken = req.headers.get('x-session-token');
 
@@ -158,35 +185,68 @@ export async function deriveVerifiedAccess(req: NextRequest): Promise<VerifiedAc
   const providedHeaderOrQuery = headerToken || existingQueryToken;
   if (!cookieToken && !providedHeaderOrQuery) return denied('no_credential');
 
-  type AccessRow = { member_id: string; tier: string | null; roles: unknown };
+  type AccessRow = {
+    member_id: string;
+    tier: string | null;
+    roles: unknown;
+    expires_at?: Date;
+  };
   let resolved: Awaited<ReturnType<typeof resolveConsistentSessionCredentials<AccessRow>>>;
   try {
-    resolved = await resolveConsistentSessionCredentials<AccessRow>(
-      cookieToken,
-      providedHeaderOrQuery,
-      async (token) => {
-        const result = await query<AccessRow>(
-          `SELECT s.member_id, m.tier, m.roles
+    // A shared transaction must acquire locks in one deterministic token
+    // order. Otherwise cookie-A/header-B and header-B/cookie-A could invert
+    // row-lock ordering and deadlock during concurrent session revocation.
+    const verifiedByToken = new Map<string, AccessRow | null>();
+    const validate = async (token: string): Promise<AccessRow | null> => {
+      const statement = tx
+        ? `SELECT s.member_id, m.tier, m.roles, s.expires_at
+             FROM auth_sessions s
+             JOIN members m ON m.id = s.member_id
+            WHERE s.session_token = $1
+              AND s.revoked = FALSE
+              AND s.expires_at > clock_timestamp()
+            LIMIT 1
+            FOR SHARE OF s, m`
+        : `SELECT s.member_id, m.tier, m.roles
              FROM auth_sessions s
              JOIN members m ON m.id = s.member_id
             WHERE s.session_token = $1
               AND s.revoked = FALSE
               AND s.expires_at > NOW()
-            LIMIT 1`,
-          [token],
-        );
-        return result.rows[0] ?? null;
-      },
+            LIMIT 1`;
+      const result = tx
+        ? await tx.query<AccessRow>(statement, [token])
+        : await query<AccessRow>(statement, [token]);
+      return result.rows[0] ?? null;
+    };
+    if (tx) {
+      const sortedTokens = [...new Set([cookieToken, providedHeaderOrQuery]
+        .filter((value): value is string => Boolean(value)))].sort();
+      for (const token of sortedTokens) {
+        verifiedByToken.set(token, await validate(token));
+      }
+    }
+    resolved = await resolveConsistentSessionCredentials<AccessRow>(
+      cookieToken,
+      providedHeaderOrQuery,
+      (token) => tx ? Promise.resolve(verifiedByToken.get(token) ?? null) : validate(token),
     );
   } catch {
-    // Server validation failures cannot become grants. Never log secrets,
-    // token values or free-form database error strings here.
+    // Never turn unavailable SQL or row-lock errors into authority.
     console.error('[auth-boundary] session validation unavailable');
     return denied('invalid_session');
   }
 
   if (!resolved.member) return denied(resolved.reason);
   const row = resolved.member;
+  // The wall clock can cross expiration even while UPDATE revocation is
+  // blocked by row locks. The caller MUST additionally check this immediately
+  // before synchronous enqueue, while the transaction is still open.
+  if (tx && (!(row.expires_at instanceof Date) ||
+      !Number.isFinite(row.expires_at.getTime()) ||
+      row.expires_at.getTime() <= Date.now())) {
+    return denied('invalid_session');
+  }
 
   // Every supplied member-ID assertion must agree with the verified member.
   // Checking only the FIRST assertion would let a later conflicting assertion
@@ -206,5 +266,6 @@ export async function deriveVerifiedAccess(req: NextRequest): Promise<VerifiedAc
     memberId: row.member_id,
     tier: normalizeTier(row.tier),
     roles: normalizeRoles(row.roles),
+    ...(tx && row.expires_at ? { sessionExpiresAt: row.expires_at } : {}),
   };
 }
