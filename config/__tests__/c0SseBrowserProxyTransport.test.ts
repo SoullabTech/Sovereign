@@ -33,6 +33,9 @@ let origin = '';
 
 const channel = '/api/team/channels/fictional-channel/stream';
 const dm = '/api/team/dm/fictional-dm/stream';
+const dottedChannel = '/api/team/channels/fictional.channel/stream';
+const dottedDm = '/api/team/dm/fictional.dm/stream';
+const allowedStreamPaths = new Set([channel, dm, dottedChannel, dottedDm]);
 const allowedPages = new Set([
   '/api/members/profile',
   '/api/steward/opus-pulse',
@@ -40,6 +43,9 @@ const allowedPages = new Set([
   '/api/feedback',
   channel,
   dm,
+  dottedChannel,
+  dottedDm,
+  '/api/members/profile.json',
 ]);
 
 suite('C0-SSE real Chrome and mobile WebKit query-token transport', () => {
@@ -97,7 +103,7 @@ suite('C0-SSE real Chrome and mobile WebKit query-token transport', () => {
           ? response.headers.get('x-middleware-request-x-access-member-id')
           : null;
         const payload = JSON.stringify({ forwarded, memberId });
-        const stream = (target.pathname === channel || target.pathname === dm) &&
+        const stream = allowedStreamPaths.has(target.pathname) &&
           incoming.method === 'GET' &&
           String(incoming.headers.accept ?? '').includes('text/event-stream');
         if (stream && forwarded) {
@@ -263,6 +269,50 @@ suite('C0-SSE real Chrome and mobile WebKit query-token transport', () => {
     const response = await browserRequest(desktop, false,
       channel + '?_t=FICTIONAL_REVOKED');
     expect(response.status).toBe(401);
+  }, 45000);
+
+  it('mobile WebKit refuses a dotted Team stream without credentials at real proxy', async () => {
+    const result = await browserRequest(mobile, true, dottedChannel);
+    expect(result.status).toBe(401);
+    expect(result.body.memberId).toBeNull();
+  }, 45000);
+
+  it('desktop Chrome refuses a dotted DM stream with a revoked URL token', async () => {
+    const result = await browserRequest(desktop, false, dottedDm + '?_t=FICTIONAL_REVOKED');
+    expect(result.status).toBe(401);
+    expect(result.body.forwarded).toBe(false);
+  }, 45000);
+
+  it('desktop Chrome admits a valid cookie at the dotted API proxy while still deriving identity', async () => {
+    const result = await browserRequest(desktop, false, dottedChannel, {
+      cookie: 'FICTIONAL_VALID_COOKIE',
+    });
+    expect(result).toEqual({ status: 200, body: { forwarded: true, memberId: A } });
+  }, 45000);
+
+  it('mobile WebKit refuses two different valid cookie/header members even with an SSE URL token', async () => {
+    const result = await browserRequest(mobile, true,
+      channel + '?_t=FICTIONAL_VALID_SAFARI', {
+        cookie: 'FICTIONAL_VALID_COOKIE',
+        header: 'FICTIONAL_OTHER_MEMBER',
+      });
+    expect(result.status).toBe(401);
+    expect(result.body.forwarded).toBe(false);
+  }, 45000);
+
+  it('mobile WebKit retains stale-cookie fallback through a valid Safari header on a dotted API path', async () => {
+    const result = await browserRequest(mobile, true, dottedDm, {
+      cookie: 'FICTIONAL_EXPIRED',
+      header: 'FICTIONAL_VALID_SAFARI',
+    });
+    expect(result).toEqual({ status: 200, body: { forwarded: true, memberId: A } });
+  }, 45000);
+
+  it('desktop Chrome never bypasses an unmapped dotted member route in strict mode', async () => {
+    const result = await browserRequest(desktop, false,
+      '/api/members/profile.json');
+    expect(result.status).toBe(404);
+    expect(result.body.forwarded).toBe(false);
   }, 45000);
 
   it('SSE query bearer does not override an expired cookie', async () => {
