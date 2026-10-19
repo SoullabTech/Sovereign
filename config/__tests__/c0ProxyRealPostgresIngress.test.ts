@@ -261,6 +261,54 @@ enabled('C0 strict Next proxy with real synthetic PostgreSQL sessions', () => {
     expect(response.status).toBe(401);
   });
 
+  it('denies an unauthenticated dotted channel GET at actual proxy against PG17', async () => {
+    const response = await admission('/api/team/channels/dotted.channel/stream', { method: 'GET' });
+    expect(response.status).toBe(401);
+    expect(response.headers.get('x-middleware-next')).not.toBe('1');
+  });
+
+  it('does not admit revoked or expired URL bearers via dotted Team GET paths', async () => {
+    for (const pathname of ['/api/team/channels/dotted.channel/stream', '/api/team/dm/dotted.dm/stream']) {
+      for (const token of ['FICTIONAL_REVOKED', 'FICTIONAL_EXPIRED', 'NOT_A_SESSION']) {
+        const response = await admission(pathname + '?_t=' + token, { method: 'GET' });
+        expect(response.status).toBe(401);
+        expect(response.headers.get('x-middleware-next')).not.toBe('1');
+      }
+    }
+  });
+
+  it('validates a valid URL session through PG17 even when a Team identifier has dots', async () => {
+    for (const pathname of ['/api/team/channels/dotted.channel/stream', '/api/team/dm/dotted.dm/stream']) {
+      const response = await admission(pathname + '?_t=FICTIONAL_VALID_SAFARI', { method: 'GET' });
+      expect(response.status).toBe(200);
+      expect(response.headers.get('x-middleware-request-x-access-member-id')).toBe(A);
+    }
+  });
+
+  it('fails closed for two different PG-verified cookie and header members even when URL _t exists', async () => {
+    for (const pathname of [
+      '/api/team/channels/fictional-channel/stream',
+      '/api/team/dm/fictional-dm/stream',
+      '/api/team/channels/dotted.channel/stream',
+    ]) {
+      const response = await admission(pathname + '?_t=FICTIONAL_VALID_COOKIE', {
+        method: 'GET', cookie: 'FICTIONAL_VALID_COOKIE',
+        header: 'FICTIONAL_OTHER_MEMBER',
+      });
+      expect(response.status).toBe(401);
+      expect(response.headers.get('x-middleware-next')).not.toBe('1');
+    }
+  });
+
+  it('preserves private role and tier derivation when a dotted API path has a valid header', async () => {
+    const response = await admission('/api/team/dm/dotted.dm/stream', {
+      method: 'GET', header: 'FICTIONAL_VALID_SAFARI', fakeRole: 'admin',
+    });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-middleware-request-x-access-roles')).toBe('member');
+    expect(response.headers.get('x-middleware-request-x-access-member-id')).toBe(A);
+  });
+
   it('does not accept a real member ID without a valid session', async () => {
     const response = await admission('/api/members/profile', { claim: A });
     expect(response.status).toBe(401);
