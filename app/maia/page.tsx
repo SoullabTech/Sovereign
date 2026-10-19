@@ -61,7 +61,9 @@ import {
   THERAPEUTIC_FRAMEWORKS,
   REFLECTION_LENSES,
 } from '@/lib/consciousness/therapeuticFrameworks';
-import { apiUrl, apiFetch, clearAuthState } from '@/lib/http/apiBase';
+import { apiUrl, apiFetch } from '@/lib/http/apiBase';
+import { signOutCurrentBrowserSession, leaveThisBrowser } from '@/lib/auth/webSignOut';
+import { SignOutIncompleteDialog } from '@/components/auth/SignOutIncompleteDialog';
 import { reportServerIdentityParity } from '@/lib/auth/verifyServerIdentity';
 
 // Migration version - increment to force re-auth for all users
@@ -687,24 +689,37 @@ function MAIAPageContent() {
     window.dispatchEvent(new Event('conversationStyleChanged'));
   };
 
+  const [signOutIssue, setSignOutIssue] = useState<{ detail: string; cookieClearingConfirmed: boolean } | null>(null);
+  const [signOutInProgress, setSignOutInProgress] = useState(false);
+
   const handleSignOut = async () => {
+    if (signOutInProgress) return;
+    setSignOutInProgress(true);
     try {
-      // 1) Kill server session + clear cookies
-      await apiFetch('/api/members/signout', { method: 'POST' });
-    } catch (e) {
-      console.warn('[MAIA] Server signout failed (continuing with client cleanup):', e);
+      const outcome = await signOutCurrentBrowserSession();
+      if (outcome.kind === 'incomplete') {
+        setSignOutIssue(outcome);
+        return;
+      }
+      // This ends only credentials present in this browser, not all devices.
+      if (!leaveThisBrowser(false, true)) {
+        setSignOutIssue({ detail: 'Local sign-in information could not be cleared. Server revocation and local cleanup are separate.', cookieClearingConfirmed: true });
+      }
+    } catch {
+      setSignOutIssue({ detail: 'Soullab could not verify sign-out. Your server session may still be active.', cookieClearingConfirmed: false });
+    } finally {
+      setSignOutInProgress(false);
     }
+  };
 
-    // 2) Clear ALL local auth state
-    clearAuthState();
-    sessionStorage.removeItem('maia_root_redirect_once');
-
-    // 3) Set signout latch AFTER cleanup (survives any future broad clears)
-    localStorage.setItem('maia_signed_out', '1');
-    localStorage.setItem('maia_signed_out_at', String(Date.now()));
-
-    // 4) Hard navigation to signin
-    window.location.replace('/signin?from=signout');
+  const leaveWithoutConfirmedRevocation = () => {
+    if (signOutIssue?.cookieClearingConfirmed !== true) return;
+    if (!leaveThisBrowser(true, true)) {
+      setSignOutIssue({
+        detail: 'This device could not clear its saved sign-in information. Remove Soullab site data using browser settings before sharing it.',
+        cookieClearingConfirmed: false,
+      });
+    }
   };
 
   const handleWeekZeroComplete = (onboardingData: any) => {
@@ -908,6 +923,13 @@ function MAIAPageContent() {
           onOpenFeedback={() => setShowFeedbackSheet(true)}
           onSignOut={handleSignOut}
           explorerName={explorerName}
+        />
+        <SignOutIncompleteDialog
+          detail={signOutIssue?.detail ?? null}
+          canClearDevice={signOutIssue?.cookieClearingConfirmed === true}
+          onStay={() => setSignOutIssue(null)}
+          onRetry={() => { setSignOutIssue(null); void handleSignOut(); }}
+          onLeaveDevice={leaveWithoutConfirmedRevocation}
         />
       </ErrorBoundary>
     );
@@ -2163,6 +2185,13 @@ function MAIAPageContent() {
       </AnimatePresence>
 
       {/* Beta Tester Feedback Hub removed - feedback available via Account menu */}
+      <SignOutIncompleteDialog
+        detail={signOutIssue?.detail ?? null}
+        canClearDevice={signOutIssue?.cookieClearingConfirmed === true}
+        onStay={() => setSignOutIssue(null)}
+        onRetry={() => { setSignOutIssue(null); void handleSignOut(); }}
+        onLeaveDevice={leaveWithoutConfirmedRevocation}
+      />
     </ErrorBoundary>
   );
 }
