@@ -69,6 +69,16 @@ jest.mock('@/lib/db/postgres', () => ({
   },
 }));
 
+// This route's Cabin branch is never exercised in the fictional WEB test.
+// Refuse any accidental offline-member/file-store path rather than importing
+// server-only Cabin infrastructure into the isolated Jest runner.
+jest.mock('@/lib/cabin/request', () => ({
+  __esModule: true,
+  cabinStore: () => { throw new Error('FWE01_REFUSE_CABIN_FILESYSTEM'); },
+  cabinMemberFromRequest: () => { throw new Error('FWE01_REFUSE_CABIN_MEMBER'); },
+  setCabinSessionCookie: () => { throw new Error('FWE01_REFUSE_CABIN_COOKIE'); },
+}));
+
 import { requireMemberId } from '@/lib/auth/session';
 import { proxy } from '@/proxy';
 import { GET as worksGET } from '@/app/api/sovereign/living-works/route';
