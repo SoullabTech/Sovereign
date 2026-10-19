@@ -204,7 +204,7 @@ test('strict real Next proxy denies anonymous protected room and unmapped member
   assert.equal(await page.locator('[data-testid="protected-room"]').count(),0);
   const unpublished=await fromWeb(page,'/api/members/undocumented');
   assert.equal(unpublished.status,404);
-  assert.doesNotMatch(String(unpublished.body),'MUST_NOT_BE_REACHABLE');
+  assert.doesNotMatch(String(unpublished.body),/MUST_NOT_BE_REACHABLE/);
  }finally{await context.close()}
 });
 test('real Next session cookie is Secure/HttpOnly, role server-derived; signout and replay denial',async()=>{
@@ -232,7 +232,7 @@ test('real Next session cookie is Secure/HttpOnly, role server-derived; signout 
   assert.equal((await context.cookies(origin)).some(x=>x.name==='maia_session'),false);
   const reuse=await raw('/writers-studio','GET',{'x-session-token':token});
   assert.notEqual(reuse.status,200);
-  assert.doesNotMatch(reuse.body,'Fictional private room');
+  assert.doesNotMatch(reuse.body,/Fictional private room/);
  }finally{await context.close()}
 });
 test('Next handler denies GET, missing/null/foreign Origin and hostile cross-site requests',async()=>{
