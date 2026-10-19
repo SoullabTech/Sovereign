@@ -1,3 +1,4 @@
+import { recentConversationTurns, modelConversationContext } from './conversation-context.cjs';
 import { createServer } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { readFileSync, chmodSync } from 'node:fs';
@@ -30,7 +31,7 @@ let session = String(store.db.prepare("SELECT value FROM cabin_meta WHERE key='d
 if (!session) { session = randomUUID(); store.db.prepare("INSERT INTO cabin_meta(key,value) VALUES('desktop_session',?)").run(session); }
 let sanctuary = false;
 let sanctuaryTurns: {id:string;role:'user'|'assistant';content:string}[] = [];
-function currentTurns() { return sanctuary ? sanctuaryTurns : store.getSessionTurns(owner,session,500); }
+function currentTurns() { return sanctuary ? sanctuaryTurns : recentConversationTurns(store.db,owner,session); }
 function changeConversation(privateMode: boolean, id = randomUUID()) {
  sanctuaryTurns = []; sanctuary = privateMode; session = id;
  if (!sanctuary) store.db.prepare("UPDATE cabin_meta SET value=? WHERE key='desktop_session'").run(session);
@@ -265,7 +266,7 @@ const server = createServer(async(req,res)=>{
      const turnSession=session;
      if(data.session!==undefined && data.session!==session)fail('Conversation changed. Review your message before sending.',409);
      const message=exact(data.message,6000).trim();if(!message) fail('Write a message first');
-     const prior=currentTurns().slice(-12).map(t=>({role:t.role,content:t.content.slice(0,4000)}));
+     const prior=modelConversationContext(currentTurns());
      const answer=await infer([{role:'system',content:basePrompt},...prior,{role:'user',content:message}],false,pending.controller.signal);
      if(pending.controller.signal.aborted)fail('Response stopped. Your message is still in draft.',499);
      if(session!==turnSession)fail('Conversation changed. The answer was not added.',409);
