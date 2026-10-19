@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
+import { resolveConsistentSessionCredentials } from './verifiedAccess';
 
 /**
  * Resolve the member ID for a request from a VERIFIED credential only.
@@ -11,10 +12,12 @@ import { query } from '@/lib/db/postgres';
  * match the member resolved from the session, and a mismatch is rejected as a
  * possible impersonation attempt.
  *
- * Credential sources (in priority order):
+ * Credentials (both independently validated when provided):
  * 1. `maia_session` cookie    → auth_sessions lookup (web)
  * 2. `x-session-token` header  → auth_sessions lookup (Safari/iOS, cookies
- *    blocked by ITP — set by apiFetch from localStorage `maia_session_token`)
+ *    blocked or stale — set by apiFetch from localStorage `maia_session_token`)
+ * An expired cookie cannot mask a valid header; valid credentials naming
+ * different members are refused, not chosen by order.
  *
  * SECURITY: A previous version trusted `x-member-id` / `maia_member_id` after a
  * mere existence check (`SELECT id FROM members WHERE id = $1`). Because member
@@ -29,45 +32,35 @@ import { query } from '@/lib/db/postgres';
  */
 export async function getMemberIdFromRequest(request: NextRequest): Promise<string | null> {
   const cookieStore = await cookies();
+  const cookieToken = cookieStore.get('maia_session')?.value || null;
+  const headerToken = request.headers.get('x-session-token');
 
-  // 1. Resolve the authenticated identity from a real session credential.
-  let verifiedMemberId: string | null = null;
+  // Compare the independently validated cookie and Safari/iOS header. A bad
+  // cookie must not mask a legitimate header; two valid but DIFFERENT member
+  // identities must refuse rather than choose by request order.
+  const resolved = await resolveConsistentSessionCredentials<{ member_id: string }>(
+    cookieToken,
+    headerToken,
+    async (token) => {
+      const memberId = await memberIdForSessionToken(token);
+      return memberId ? { member_id: memberId } : null;
+    },
+  );
+  if (!resolved.member) return null;
 
-  // 1a. maia_session cookie (web — sent automatically, incl. by EventSource).
-  const sessionCookie = cookieStore.get('maia_session')?.value;
-  if (sessionCookie) {
-    verifiedMemberId = await memberIdForSessionToken(sessionCookie);
-  }
-
-  // 1b. x-session-token header (Safari/iOS fallback when cookies are blocked).
-  if (!verifiedMemberId) {
-    const headerToken = request.headers.get('x-session-token');
-    if (headerToken) {
-      verifiedMemberId = await memberIdForSessionToken(headerToken);
-    }
-  }
-
-  // No verified session → do NOT trust a bare x-member-id / maia_member_id.
-  if (!verifiedMemberId) {
+  // Bare identity assertions are never authority. All present claims must
+  // match the same server-verified member, not merely the first claim found.
+  const claims = [
+    request.headers.get('x-member-id'),
+    request.headers.get('x-maia-member-id'),
+    cookieStore.get('maia_member_id')?.value,
+  ];
+  if (claims.some((claim) => claim && claim !== resolved.member.member_id)) {
+    console.warn('[auth] member identity claim mismatch — refusing');
     return null;
   }
 
-  // 2. If an identity claim is present, it must match the authenticated member.
-  //    A mismatch is an impersonation attempt — reject rather than silently
-  //    preferring either side.
-  const claimedMemberId =
-    request.headers.get('x-member-id') ||
-    cookieStore.get('maia_member_id')?.value ||
-    null;
-
-  if (claimedMemberId && claimedMemberId !== verifiedMemberId) {
-    console.warn(
-      '[auth] x-member-id/maia_member_id claim does not match authenticated session — rejecting (possible impersonation attempt)'
-    );
-    return null;
-  }
-
-  return verifiedMemberId;
+  return resolved.member.member_id;
 }
 
 /**

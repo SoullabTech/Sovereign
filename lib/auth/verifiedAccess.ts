@@ -66,6 +66,7 @@ export type AccessDenialReason =
   | 'no_credential'
   | 'invalid_session'
   | 'claim_mismatch'
+  | 'conflicting_credentials'
   | 'member_missing';
 
 export interface VerifiedAccess {
@@ -101,6 +102,41 @@ function normalizeRoles(raw: unknown): Role[] {
   return roles.length > 0 ? roles : ['member'];
 }
 
+
+/**
+ * Resolve BOTH presented web/mobile session credentials, never just the first
+ * token's presence. A failed cookie may yield to a validated Safari header,
+ * but two VALID tokens naming different members fail closed.
+ *
+ * Only the caller's server-side validator can grant identity. Token contents,
+ * raw request headers and cookie values never appear in logs or return values.
+ * SSE query-token selection remains outside this helper and is unchanged.
+ */
+export async function resolveConsistentSessionCredentials<Row extends { member_id: string }>(
+  cookieToken: string | null | undefined,
+  headerToken: string | null | undefined,
+  validate: (token: string) => Promise<Row | null | undefined>,
+): Promise<
+  | { member: Row; source: 'cookie' | 'header' }
+  | { member: null; reason: 'no_credential' | 'invalid_session' | 'conflicting_credentials' }
+> {
+  const cookie = cookieToken || null;
+  const header = headerToken || null;
+  if (!cookie && !header) return { member: null, reason: 'no_credential' };
+
+  const cookieMember = cookie ? await validate(cookie) : null;
+  const headerMember = header
+    ? (header === cookie ? cookieMember : await validate(header))
+    : null;
+
+  if (cookieMember && headerMember && cookieMember.member_id !== headerMember.member_id) {
+    return { member: null, reason: 'conflicting_credentials' };
+  }
+  if (cookieMember) return { member: cookieMember, source: 'cookie' };
+  if (headerMember) return { member: headerMember, source: 'header' };
+  return { member: null, reason: 'invalid_session' };
+}
+
 /**
  * Derive authenticated identity, roles, and tier from a validated session.
  *
@@ -110,43 +146,58 @@ function normalizeRoles(raw: unknown): Role[] {
  * to the same least-privilege answer: unauthenticated, no roles, free tier.
  */
 export async function deriveVerifiedAccess(req: NextRequest): Promise<VerifiedAccess> {
-  const token = readSessionCredential(req);
-  if (!token) return denied('no_credential');
+  const cookieToken = req.cookies.get('maia_session')?.value || null;
+  const headerToken = req.headers.get('x-session-token');
 
-  let row: { member_id: string; tier: string | null; roles: unknown } | undefined;
+  // Preserve existing SSE/EventSource query-token behavior exactly: it is
+  // considered only when NO cookie or header credential was presented.
+  // In particular, a stale cookie never falls through to a URL query token.
+  const existingQueryToken = !cookieToken && !headerToken
+    ? readSessionCredential(req)
+    : null;
+  const providedHeaderOrQuery = headerToken || existingQueryToken;
+  if (!cookieToken && !providedHeaderOrQuery) return denied('no_credential');
+
+  type AccessRow = { member_id: string; tier: string | null; roles: unknown };
+  let resolved: Awaited<ReturnType<typeof resolveConsistentSessionCredentials<AccessRow>>>;
   try {
-    const result = await query<{ member_id: string; tier: string | null; roles: unknown }>(
-      `SELECT s.member_id, m.tier, m.roles
-         FROM auth_sessions s
-         JOIN members m ON m.id = s.member_id
-        WHERE s.session_token = $1
-          AND s.revoked = FALSE
-          AND s.expires_at > NOW()
-        LIMIT 1`,
-      [token],
+    resolved = await resolveConsistentSessionCredentials<AccessRow>(
+      cookieToken,
+      providedHeaderOrQuery,
+      async (token) => {
+        const result = await query<AccessRow>(
+          `SELECT s.member_id, m.tier, m.roles
+             FROM auth_sessions s
+             JOIN members m ON m.id = s.member_id
+            WHERE s.session_token = $1
+              AND s.revoked = FALSE
+              AND s.expires_at > NOW()
+            LIMIT 1`,
+          [token],
+        );
+        return result.rows[0] ?? null;
+      },
     );
-    row = result.rows[0];
-  } catch (error) {
-    // A database failure must not become an access grant.
-    console.error('[auth-boundary] session validation failed:', error);
+  } catch {
+    // Server validation failures cannot become grants. Never log secrets,
+    // token values or free-form database error strings here.
+    console.error('[auth-boundary] session validation unavailable');
     return denied('invalid_session');
   }
 
-  if (!row) return denied('invalid_session');
+  if (!resolved.member) return denied(resolved.reason);
+  const row = resolved.member;
 
-  // An identity claim, if present, must agree with the session. A mismatch is
-  // an impersonation attempt, not a preference to resolve — same rule as
-  // `lib/auth/getMemberFromRequest.ts`.
-  const claimedMemberId =
-    req.headers.get('x-member-id') ||
-    req.headers.get('x-maia-member-id') ||
-    req.cookies.get('maia_member_id')?.value ||
-    null;
-
-  if (claimedMemberId && claimedMemberId !== row.member_id) {
-    console.warn(
-      '[auth-boundary] identity claim does not match authenticated session — refusing (possible impersonation attempt)',
-    );
+  // Every supplied member-ID assertion must agree with the verified member.
+  // Checking only the FIRST assertion would let a later conflicting assertion
+  // survive into an application handler that chooses a different precedence.
+  const claims = [
+    req.headers.get('x-member-id'),
+    req.headers.get('x-maia-member-id'),
+    req.cookies.get('maia_member_id')?.value,
+  ];
+  if (claims.some((claim) => claim && claim !== row.member_id)) {
+    console.warn('[auth-boundary] member identity claim mismatch — refusing');
     return denied('claim_mismatch');
   }
 
