@@ -31,6 +31,12 @@ const mockChannelMessages = jest.fn<() => Promise<Array<{ id: string; createdAt:
 jest.mock('@/lib/db/postgres', () => ({
   __esModule: true,
   query: (sql: string, args?: unknown[]) => mockQuery(sql, args),
+  // In-memory transaction fixture: captures all reads on one synthetic
+  // transaction client. Real BEGIN/COMMIT semantics are covered in PG tests.
+  transaction: async <T>(callback: (tx: {
+    query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[] }>;
+  }) => Promise<T>): Promise<T> =>
+    callback({ query: (sql, params) => mockQuery(sql, params) }),
 }));
 jest.mock('@/lib/team/ChannelService', () => ({
   __esModule: true,
@@ -72,14 +78,19 @@ beforeEach(() => {
     if (/FROM auth_sessions/i.test(statement)) {
       state.dbCalls.push('session');
       expect(statement).toMatch(/revoked\s*=\s*FALSE/i);
-      expect(statement).toMatch(/expires_at\s*>\s*NOW\(\)/i);
+      expect(statement).toMatch(/expires_at\s*>\s*(?:NOW\(\)|clock_timestamp\(\))/i);
       if (state.throwOnAuth) throw new Error('FICTIONAL_CONNECTION_FAILURE_WITH_PRIVATE_DETAILS');
       return { rows: state.active && params?.[0] === TOKEN
-        ? [{ member_id: state.principal, tier: 'free', roles: ['member'] }] : [] };
+        ? [{ member_id: state.principal, tier: 'free', roles: ['member'],
+             expires_at: new Date(Date.now() + 60_000) }] : [] };
     }
     if (/FROM team_channels tc/i.test(statement)) {
       state.dbCalls.push('channel_membership');
       return { rows: [{ is_private: true, is_member: state.channelMember }] };
+    }
+    if (/FROM team_channel_members/i.test(statement)) {
+      state.dbCalls.push('channel_membership');
+      return { rows: state.channelMember ? [{ present: 1 }] : [] };
     }
     if (/FROM team_dm_members/i.test(statement)) {
       state.dbCalls.push('dm_membership');
