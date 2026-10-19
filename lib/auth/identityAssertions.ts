@@ -88,12 +88,29 @@ export function forgedIdentityHeaders(inbound: Headers): string[] {
  *
  * 1. `maia_session` cookie    — web, sent automatically (incl. by EventSource)
  * 2. `x-session-token` header — Safari/iOS, where ITP blocks the cookie
- * 3. `?_t=` query param        — SSE/EventSource, which cannot set headers
+ * 3. `?_t=` query param        — GET on approved Team SSE routes ONLY.
+ *    EventSource cannot send custom headers, but its URL bearer must never
+ *    authenticate ordinary member, admin, or other non-stream endpoints.
  *
  * Note what is NOT here: `x-member-id`, and the `?_m=` member-id query param.
  * Presenting an identifier is not presenting a credential. Treating `_m` as
  * authentication is precisely the defect this unit repairs.
  */
+/**
+ * Class A C0-SSE: only the existing Team stream GET handlers may supply a
+ * session credential through the URL. Exact segment patterns prevent the
+ * former global query-token fallback from reaching administrative or general
+ * member endpoints. Encoded route separators are not accepted as IDs.
+ *
+ * This is an ingress eligibility check, not authentication: any candidate
+ * token is still validated by deriveVerifiedAccess against auth_sessions.
+ * Dedicated getMemberIdFromSessionToken callers are intentionally untouched.
+ */
+const TEAM_SSE_QUERY_TOKEN_PATHS: readonly RegExp[] = [
+  /^\\/api\\/team\\/channels\\/[^/%]+\\/stream$/,
+  /^\\/api\\/team\\/dm\\/[^/%]+\\/stream$/,
+];
+
 export function readSessionCredential(req: NextRequest): string | null {
   const cookieToken = req.cookies.get('maia_session')?.value;
   if (cookieToken) return cookieToken;
@@ -101,11 +118,17 @@ export function readSessionCredential(req: NextRequest): string | null {
   const headerToken = req.headers.get('x-session-token');
   if (headerToken) return headerToken;
 
-  try {
-    const queryToken = new URL(req.url).searchParams.get('_t');
-    if (queryToken) return queryToken;
-  } catch {
-    // Malformed URL — no credential.
+  // No query-token authority for POST, ordinary GET, or neighboring paths.
+  // The normal cookie and Safari/iOS header transports above stay unchanged.
+  if (req.method === 'GET') {
+    try {
+      const url = new URL(req.url);
+      if (TEAM_SSE_QUERY_TOKEN_PATHS.some((route) => route.test(url.pathname))) {
+        return url.searchParams.get('_t') || null;
+      }
+    } catch {
+      // Malformed URL — no credential.
+    }
   }
 
   return null;
