@@ -125,7 +125,7 @@ async function revoked(value){
 }
 async function webTransport(route,options){
   assert.equal(route,'/api/members/signout');
-  assert.equal(options.mode,'same-origin');
+  assert.equal(options.mode,'cors');
   assert.equal(options.credentials,'same-origin');
   assert.equal(options.redirect,'error');
   return post(options.headers?.['x-session-token']||null);
