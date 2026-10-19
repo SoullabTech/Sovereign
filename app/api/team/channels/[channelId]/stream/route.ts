@@ -55,8 +55,18 @@ export async function GET(
     start(controller) {
       let idleCycles = 0;
       let timer: ReturnType<typeof setTimeout> | null = null;
+      let closed = false;
+
+      const closeStream = () => {
+        if (closed) return;
+        closed = true;
+        if (timer) clearTimeout(timer);
+        timer = null;
+        try { controller.close(); } catch { /* already closed */ }
+      };
 
       const emit = (lines: string[]) => {
+        if (closed || req.signal.aborted) return;
         controller.enqueue(encoder.encode(lines.join('\n') + '\n\n'));
       };
 
@@ -64,8 +74,23 @@ export async function GET(
       emit(['event: ready', `data: ${JSON.stringify({ channelId, afterTs })}`]);
 
       const tick = async () => {
+        if (closed || req.signal.aborted) { closeStream(); return; }
         try {
           const messages = await getMessagesSince(channelId, afterTs);
+
+          // C0-SSE-LIVE: membership and session may be revoked AFTER the GET
+          // handshake. Recheck BOTH after fetching but before any message
+          // is released, even on idle polls. Keep the original principal.
+          const live = await deriveVerifiedAccess(req);
+          if (!live.authenticated || live.memberId !== memberId) {
+            closeStream();
+            return;
+          }
+          const currentMembership = await requireChannelAccess(channelId, memberId);
+          if (!currentMembership.allowed || closed || req.signal.aborted) {
+            closeStream();
+            return;
+          }
 
           if (messages.length > 0) {
             const maxTs = Math.max(...messages.map(m => new Date(m.createdAt).getTime()));
@@ -82,23 +107,21 @@ export async function GET(
             emit([`: keepalive ${Date.now()}`]);
             idleCycles++;
           }
-        } catch (err) {
-          emit([
-            'event: error',
-            `data: ${JSON.stringify({ message: err instanceof Error ? err.message : String(err) })}`,
-          ]);
+        } catch {
+          // If current authority cannot be checked, no content can be sent.
+          // Do not echo SQL or session error text to the EventSource client.
+          closeStream();
+          return;
         }
 
+        if (closed || req.signal.aborted) { closeStream(); return; }
         const idx = Math.min(idleCycles, INTERVALS.length - 1);
         timer = setTimeout(tick, INTERVALS[idx]);
       };
 
       timer = setTimeout(tick, INTERVALS[0]);
 
-      req.signal.addEventListener('abort', () => {
-        if (timer) clearTimeout(timer);
-        try { controller.close(); } catch { /* ignore */ }
-      });
+      req.signal.addEventListener('abort', closeStream, { once: true });
     },
   });
 
