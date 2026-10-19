@@ -589,6 +589,17 @@ test('actual Studio Account button revokes SQL-backed cookie and stored bearer t
   const button=page.getByRole('button',{name:'Sign out of this device'});
   await button.waitFor({timeout:15000});
   const statusCodes=[];
+  const requestMetadata=[];
+  page.on('request',request=>{
+   if(new URL(request.url()).pathname!=='/api/members/signout'||request.method()!=='POST')return;
+   void request.allHeaders().then(headers=>requestMetadata.push({
+    originPresent:!!headers.origin,
+    originMatchesFictionalHost:headers.origin===origin,
+    fetchSite:headers['sec-fetch-site']||null,
+    fetchMode:headers['sec-fetch-mode']||null,
+    refererSameOrigin:(headers.referer||'').startsWith(origin),
+   })).catch(()=>{});
+  });
   page.on('response',response=>{
    if(new URL(response.url()).pathname==='/api/members/signout')
     statusCodes.push(response.status());
@@ -600,6 +611,7 @@ test('actual Studio Account button revokes SQL-backed cookie and stored bearer t
    const dialog=page.getByRole('alertdialog');
    const summary={
     endpointStatuses:statusCodes,
+    requestMetadata,
     dialogVisible:await dialog.isVisible().catch(()=>false),
     dialogText:(await dialog.innerText().catch(()=>'' )).slice(0,600),
     stillAtStudio:page.url().includes('/studio/account'),
@@ -623,6 +635,20 @@ test('actual Studio Account shows partial SQL failure and explicit local-only ex
   await page.getByRole('button',{name:'Sign out of this device'}).waitFor({timeout:15000});
   await trigger(true);
   try{
+   const responseCodes=[];
+   const requestMetadata=[];
+   page.on('request',request=>{
+    if(new URL(request.url()).pathname!=='/api/members/signout'||request.method()!=='POST')return;
+    void request.allHeaders().then(headers=>requestMetadata.push({
+     originPresent:!!headers.origin,
+     originMatchesFictionalHost:headers.origin===origin,
+     fetchSite:headers['sec-fetch-site']||null,
+     fetchMode:headers['sec-fetch-mode']||null,
+    })).catch(()=>{});
+   });
+   page.on('response',response=>{
+    if(new URL(response.url()).pathname==='/api/members/signout')responseCodes.push(response.status());
+   });
    await page.getByRole('button',{name:'Sign out of this device'}).click();
    const modal=page.getByRole('alertdialog',{name:'Sign-out could not be confirmed'});
    await modal.waitFor({timeout:18000});
@@ -630,6 +656,8 @@ test('actual Studio Account shows partial SQL failure and explicit local-only ex
    if(!(await modal.getByRole('button',{name:'Clear this device only'}).isVisible().catch(()=>false))){
     const summary={
      dialogText:(await modal.innerText()).slice(0,600),
+     endpointStatuses:responseCodes,
+     requestMetadata,
      sessionRevoked:await revoked(token),
      cookiePresent:(await context.cookies(origin)).some(c=>c.name==='maia_session'),
      urlAtStudio:page.url().includes('/studio/account'),
