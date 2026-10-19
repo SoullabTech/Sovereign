@@ -250,8 +250,29 @@ export async function PUT(request: NextRequest) {
     );
   }
 
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: 'Invalid profile update', code: 'INVALID_BODY', correlationId },
+      { status: 400, headers }
+    );
+  }
+
+  // C0: changing an account's sign-in/recovery address needs independent proof.
+  // Reject the entire request (including unchanged or mixed-field submissions)
+  // before any database write.
+  if (Object.prototype.hasOwnProperty.call(body, 'email')) {
+    return NextResponse.json(
+      {
+        error: 'Changing your account email requires separate verification. Your profile was not changed.',
+        code: 'EMAIL_CHANGE_REQUIRES_VERIFICATION',
+        correlationId,
+      },
+      { status: 409, headers }
+    );
+  }
+
   try {
-    const { name, preferredName, pronouns, email, bio, timezone, birthData, astrologyConsent } = body;
+    const { name, preferredName, pronouns, bio, timezone, birthData, astrologyConsent } = body;
 
     // TEEN-CLOSED-01: a birth date that computes to under 18 is refused here too,
     // or a later edit would recompute an adult account into a youth tier.
@@ -283,10 +304,6 @@ export async function PUT(request: NextRequest) {
       const trimmed = typeof pronouns === 'string' ? pronouns.trim() : '';
       setClauses.push(`pronouns = $${paramIndex++}`);
       values.push(trimmed.length > 0 ? trimmed : null);
-    }
-    if (email !== undefined) {
-      setClauses.push(`email = $${paramIndex++}`);
-      values.push(email);
     }
     if (bio !== undefined) {
       setClauses.push(`bio = $${paramIndex++}`);
