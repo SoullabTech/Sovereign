@@ -12,10 +12,12 @@ import { resolveConsistentSessionCredentials } from './verifiedAccess';
  * match the member resolved from the session, and a mismatch is rejected as a
  * possible impersonation attempt.
  *
- * Credential sources (in priority order):
+ * Credentials (both independently validated when provided):
  * 1. `maia_session` cookie    → auth_sessions lookup (web)
  * 2. `x-session-token` header  → auth_sessions lookup (Safari/iOS, cookies
- *    blocked by ITP — set by apiFetch from localStorage `maia_session_token`)
+ *    blocked or stale — set by apiFetch from localStorage `maia_session_token`)
+ * An expired cookie cannot mask a valid header; valid credentials naming
+ * different members are refused, not chosen by order.
  *
  * SECURITY: A previous version trusted `x-member-id` / `maia_member_id` after a
  * mere existence check (`SELECT id FROM members WHERE id = $1`). Because member
