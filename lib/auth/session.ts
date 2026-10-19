@@ -3,7 +3,7 @@
  *
  * Provides secure member authentication via:
  * 1. httpOnly session cookies (primary)
- * 2. x-member-id header with session token (fallback for Safari/iOS)
+ * 2. x-session-token header (fallback for Safari/iOS)
  *
  * Safari ITP blocks cookies in cross-origin contexts. The header fallback
  * allows clients to include their session token directly when cookies fail.
@@ -22,10 +22,11 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
  * Require authenticated member from session cookie or header fallback.
  * Throws if no valid session exists.
  *
- * Authentication methods (in priority order):
+ * Authentication credentials (each independently checked if present):
  * 1. maia_session cookie → lookup session in DB
  * 2. x-session-token header → lookup session in DB (Safari/iOS fallback)
- * 3. x-member-id header → direct member ID (legacy Capacitor support, requires valid session)
+ * Two valid credentials must identify the same member; identity claims never
+ * stand in for credentials. Query-token SSE authority stays in its own path.
  *
  * @returns memberId from verified session
  * @throws Error with message 'AUTH_REQUIRED' if not authenticated
