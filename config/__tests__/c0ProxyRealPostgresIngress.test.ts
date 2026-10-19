@@ -26,6 +26,7 @@ function input(pathname: string, opts: {
   claim?: string;
   claimCookie?: string;
   fakeRole?: string;
+  method?: 'GET' | 'POST';
 } = {}): NextRequest {
   const headers: Record<string, string> = {};
   const cookies: string[] = [];
@@ -36,7 +37,7 @@ function input(pathname: string, opts: {
   if (opts.claim) headers['x-member-id'] = opts.claim;
   if (opts.fakeRole) headers['x-access-roles'] = opts.fakeRole;
   return new NextRequest('https://fictional-c0.invalid' + pathname, {
-    method: 'POST',
+    method: opts.method || 'POST',
     headers,
   });
 }
@@ -215,13 +216,49 @@ enabled('C0 strict Next proxy with real synthetic PostgreSQL sessions', () => {
     expect(response.headers.get('x-middleware-request-x-access-member-id')).toBe(A);
   });
 
-  it('preserves SSE query-token admission only under the original no-cookie/no-header path', async () => {
-    const queryOnly = await admission('/api/members/profile?_t=FICTIONAL_VALID_SAFARI');
-    expect(queryOnly.status).toBe(200);
-    const withExpiredCookie = await admission('/api/members/profile?_t=FICTIONAL_VALID_SAFARI', {
+  it('admits query-only session tokens on exactly the two authorized Team SSE GET routes', async () => {
+    for (const pathname of [
+      '/api/team/channels/fictional-channel/stream',
+      '/api/team/dm/fictional-dm/stream',
+    ]) {
+      const response = await admission(pathname + '?_t=FICTIONAL_VALID_SAFARI', { method: 'GET' });
+      expect(response.status).toBe(200);
+      expect(response.headers.get('x-middleware-request-x-access-member-id')).toBe(A);
+      expect(response.headers.get('x-middleware-next')).toBe('1');
+    }
+  });
+
+  it('rejects query-only credentials on member, Steward, admin, and feedback GETs', async () => {
+    for (const pathname of [
+      '/api/members/profile',
+      '/api/members/password',
+      '/api/steward/opus-pulse',
+      '/api/admin/partners/prelude/default',
+      '/api/feedback',
+    ]) {
+      const response = await admission(pathname + '?_t=FICTIONAL_VALID_SAFARI', { method: 'GET' });
+      if (pathname === '/api/feedback') {
+        // Public route is allowed through the proxy but receives NO
+        // authenticated identity from _t; handler must verify admin separately.
+        expect(response.headers.get('x-middleware-request-x-access-member-id')).toBeNull();
+      } else {
+        expect(response.status).toBe(401);
+        expect(response.headers.get('x-middleware-next')).not.toBe('1');
+      }
+    }
+  });
+
+  it('does not let query credentials through on POST even on an approved SSE path', async () => {
+    const response = await admission('/api/team/channels/fictional-channel/stream?_t=FICTIONAL_VALID_SAFARI');
+    expect(response.status).toBe(401);
+  });
+
+  it('does not fall through a stale cookie to an SSE URL credential', async () => {
+    const response = await admission('/api/team/channels/fictional-channel/stream?_t=FICTIONAL_VALID_SAFARI', {
       cookie: 'FICTIONAL_EXPIRED',
+      method: 'GET',
     });
-    expect(withExpiredCookie.status).toBe(401);
+    expect(response.status).toBe(401);
   });
 
   it('does not accept a real member ID without a valid session', async () => {
