@@ -1,0 +1,80 @@
+# WebKit browser acceptance: isolated HTTPS adapter, no staging or deployment.
+# Tests actual reviewed auth/session modules against a disposable PostgreSQL 14
+# service and actual Playwright WebKit (NOT Apple's Safari application).
+name: Stage Q HTTPS WebKit Fixture (NO DEPLOY)
+
+on:
+  push:
+    branches:
+      - security/auth-stage-q-https-webkit-preflight-20261019
+  pull_request:
+    branches:
+      - security/auth-stage-q-real-postgres-preflight-20261019
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-q-https-webkit-fictional
+  cancel-in-progress: true
+
+jobs:
+  https-webkit:
+    name: Fictional HTTPS WebKit cookie and PostgreSQL acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: stageq_webkit_fixture
+          POSTGRES_PASSWORD: stageq_webkit_fictional_password_only
+          POSTGRES_DB: stageq_webkit_fictional
+        ports:
+          - 5548:5432
+        options: >-
+          --health-cmd "pg_isready -U stageq_webkit_fixture -d stageq_webkit_fictional"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
+    env:
+      STAGE_Q_WEBKIT_DISPOSABLE: fictional-webkit-ci-only
+      PGHOST: 127.0.0.1
+      PGPORT: "5548"
+      PGDATABASE: stageq_webkit_fictional
+      PGUSER: stageq_webkit_fixture
+      PGPASSWORD: stageq_webkit_fictional_password_only
+
+    steps:
+      - name: Checkout exact isolated review commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked JS dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      - name: Install real WebKit browser and dependencies
+        run: ./node_modules/.bin/playwright install --with-deps webkit
+
+      - name: Record exact reviewed code and test custody
+        run: |
+          git rev-parse HEAD
+          git hash-object app/api/members/signout/route.ts
+          git hash-object lib/auth/serverSessions.ts
+          git hash-object lib/auth/verifiedAccess.ts
+          git hash-object lib/auth/webSignOut.ts
+          git hash-object docs/security/auth-stage-q-https-webkit.test.cjs
+
+      - name: Run disposable HTTPS WebKit + real PostgreSQL tests
+        run: node --test docs/security/auth-stage-q-https-webkit.test.cjs
