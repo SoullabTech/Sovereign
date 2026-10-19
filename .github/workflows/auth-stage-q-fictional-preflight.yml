@@ -41,6 +41,16 @@ jobs:
       - name: Install locked dependencies without package lifecycle scripts
         run: npm ci --ignore-scripts
 
+      # Recreate the repository's declared postinstall effects explicitly,
+      # without allowing dependency lifecycle scripts during npm ci. The URL
+      # is deliberately nonexistent; Prisma generate reads schema, not members.
+      - name: Apply pinned patches and generate disposable Prisma types
+        env:
+          DATABASE_URL: postgresql://fictional:fictional@127.0.0.1:65535/stageq_fictional
+        run: |
+          ./node_modules/.bin/patch-package
+          ./node_modules/.bin/prisma generate --schema prisma/schema.prisma
+
       - name: Record source custody
         run: |
           git rev-parse HEAD
