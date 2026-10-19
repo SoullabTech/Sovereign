@@ -311,3 +311,107 @@ test('Caddy preserves truthful 503 partial exit and successful recovered bearer 
   assert.equal(await revoked(token),true);
  }finally{await context.close()}
 });
+
+test('Class A resolver authorizes valid header through a stale cookie at real Caddy/Next edge',async()=>{
+ const context=await browserContext(),page=await context.newPage();
+ try {
+  await page.goto(origin+'/',{waitUntil:'load'});
+  const staleCookie=await issue(page,'cookie','fixture_member');
+  const headerToken=await issue(page,'bearer','fixture_member');
+  assert.equal((await context.cookies(origin)).some(c=>c.name==='maia_session'),true);
+  const changed=await db.query(
+   'UPDATE auth_sessions SET revoked=TRUE,revoked_at=NOW() WHERE session_token=$1 AND revoked=FALSE',
+   [staleCookie],
+  );
+  assert.equal(changed.rowCount,1);
+  const protectedRoute=await raw('/writers-studio','GET',{
+   Cookie:'maia_session='+staleCookie,'x-session-token':headerToken,
+  });
+  assert.equal(protectedRoute.status,200,
+   'verified Class A header must not be masked by revoked cookie');
+  assert.match(protectedRoute.body,/Fictional private room/);
+  const first=await fromPage(page,'/api/members/signout',{method:'POST'});
+  assert.equal(first.status,200);
+  assert.equal(first.data.serverSessionRevoked,false,
+   'already-revoked cookie must not fabricate a new revocation');
+  assert.equal((await context.cookies(origin)).some(c=>c.name==='maia_session'),false);
+  const second=await fromPage(page,'/api/members/signout',{
+   method:'POST',headers:{'x-session-token':headerToken},
+  });
+  assert.equal(second.status,200);
+  assert.equal(second.data.serverSessionRevoked,true);
+  assert.equal(await revoked(headerToken),true);
+  const replay=await raw('/writers-studio','GET',{'x-session-token':headerToken});
+  assert.notEqual(replay.status,200);
+  assert.doesNotMatch(replay.body,/Fictional private room/);
+ } finally { await context.close() }
+});
+
+test('Class A resolver denies different-member cookie and header behind actual Caddy',async()=>{
+ const context=await browserContext(),page=await context.newPage();
+ try{
+  await page.goto(origin+'/',{waitUntil:'load'});
+  const cookie=await issue(page,'cookie','fixture_member');
+  const other=await issue(page,'bearer','fixture_second');
+  const privateRoom=await raw('/writers-studio','GET',{
+    Cookie:'maia_session='+cookie,'x-session-token':other,
+  });
+  assert.notEqual(privateRoom.status,200,
+   'different verified member identities must never be resolved by precedence');
+  assert.doesNotMatch(privateRoom.body,/Fictional private room/);
+  const conflict=await fromPage(page,'/api/members/signout',{
+   method:'POST',headers:{'x-session-token':other},
+  });
+  assert.equal(conflict.status,409);
+  assert.equal(conflict.data.success,false);
+  assert.equal(await revoked(cookie),false);
+  assert.equal(await revoked(other),false);
+  assert.equal((await context.cookies(origin)).some(c=>c.name==='maia_session'),true);
+ }finally{await context.close()}
+});
+
+test('Class A accepts two different same-member credentials but signout still separates them',async()=>{
+ const context=await browserContext(),page=await context.newPage();
+ try{
+  await page.goto(origin+'/',{waitUntil:'load'});
+  const cookie=await issue(page,'cookie','fixture_member');
+  const bearer=await issue(page,'bearer','fixture_member');
+  const permitted=await raw('/writers-studio','GET',{
+   Cookie:'maia_session='+cookie,'x-session-token':bearer,
+  });
+  assert.equal(permitted.status,200);
+  assert.match(permitted.body,/Fictional private room/);
+  const simultaneous=await fromPage(page,'/api/members/signout',{
+   method:'POST',headers:{'x-session-token':bearer},
+  });
+  assert.equal(simultaneous.status,409,
+   'different cookie/header tokens should never be silently chosen for mutation');
+  assert.equal(await revoked(cookie),false);
+  assert.equal(await revoked(bearer),false);
+  assert.equal((await fromPage(page,'/api/members/signout',{method:'POST'})).data.serverSessionRevoked,true);
+  assert.equal((await fromPage(page,'/api/members/signout',{
+   method:'POST',headers:{'x-session-token':bearer},
+  })).data.serverSessionRevoked,true);
+  assert.equal(await revoked(cookie),true);
+  assert.equal(await revoked(bearer),true);
+ }finally{await context.close()}
+});
+
+test('exact-source custody for combined PR1870/Stage Q web candidate',()=>{
+ const expected={
+  'lib/auth/verifiedAccess.ts':'6a0821fedf2e921d2d7e7091cdb73da11d197296',
+  'app/api/members/signin/route.ts':'4ea14beb385e83320cf6e586f990784fe47aacd8',
+  'app/api/members/signout/route.ts':'5ef39a974759dc5d4f60bf5bf2eea375c7e7451e',
+  'config/accessMatrix.ts':'a93c5d3d382037a68828ee5a7423106a03adad2f',
+  'lib/auth/webSignOut.ts':'1fe1f1dda2d78216415d0c24b5e4f81963bedaca',
+  'Caddyfile':'9cffaa85d5b42a05cd1de7eb0726d8435b3e5b69',
+  'proxy.ts':'0c9f42abc46bd55e67b1857d4864e0a42574d2e6',
+ };
+ for(const [relative,sha] of Object.entries(expected)){
+  const read=spawnSync('git',['hash-object',relative],{
+   cwd:root,encoding:'utf8',timeout:10000,
+  });
+  assert.equal(read.status,0,'source must exist: '+relative);
+  assert.equal(read.stdout.trim(),sha,'reviewed source blob changed: '+relative);
+ }
+});
