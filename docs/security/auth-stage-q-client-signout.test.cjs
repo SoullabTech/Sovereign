@@ -125,6 +125,7 @@ test('403 and 409 refuse before a second bearer request', async () => {
     const result = await api.signOutWebCredentials(f.request, 'fictional-bearer');
     assert.equal(result.kind, 'incomplete');
     assert.equal(result.confirmedRevocations, 0);
+    assert.equal(result.cookieClearingConfirmed, false);
     assert.equal(f.calls.length, 1);
   }
 });
@@ -137,7 +138,8 @@ test('503 cookie-clearing failure is incomplete; never claim success via a secon
   const result = await api.signOutWebCredentials(f.request, 'fictional-bearer');
   assert.equal(result.kind, 'incomplete');
   assert.equal(result.confirmedRevocations, 0);
-  assert.match(result.detail, /remain active/i);
+  assert.equal(result.cookieClearingConfirmed, true);
+  assert.match(result.detail, /remain valid/i);
   assert.equal(f.calls.length, 1);
 });
 
@@ -150,6 +152,7 @@ test('second-phase refusal remains incomplete even after a confirmed cookie revo
   const result = await api.signOutWebCredentials(f.request, 'fictional-bearer');
   assert.equal(result.kind, 'incomplete');
   assert.equal(result.confirmedRevocations, 1);
+  assert.equal(result.cookieClearingConfirmed, true);
   assert.equal(f.calls.length, 2);
 });
 
@@ -182,6 +185,7 @@ test('native clients are refused without invoking browser signout fetch', async 
     const result = await api.signOutCurrentBrowserSession();
     assert.equal(result.kind, 'incomplete');
     assert.match(result.detail, /Native app/);
+    assert.equal(result.cookieClearingConfirmed, false);
     assert.equal(networkCalls, 0);
   } finally {
     global.window = oldWindow;
@@ -205,7 +209,7 @@ test('local-only exit preserves the unconfirmed marker without claiming revocati
     location: { replace: (path) => { location = path; } },
   };
   try {
-    assert.equal(api.leaveThisBrowser(true), true);
+    assert.equal(api.leaveThisBrowser(true, true), true);
     assert.equal(location, '/signin?signout=unconfirmed');
     assert.equal(set.maia_signed_out, '1');
     assert.equal(clears[0], 'clearAuthState');
@@ -225,7 +229,7 @@ test('failed storage clearing refuses to claim device cleanup or navigate', () =
     location: { replace: () => { navigated = true; } },
   };
   try {
-    assert.equal(api.leaveThisBrowser(true), false);
+    assert.equal(api.leaveThisBrowser(true, true), false);
     assert.equal(navigated, false);
   } finally {
     global.window = oldWindow;
@@ -241,4 +245,23 @@ test('UI wiring never treats raw successful fetch resolution as sign-out proof',
   assert.doesNotMatch(studio, /Sign out of all devices/);
   assert.match(auth, /signOutUnconfirmed/);
   assert.match(auth, /role="alert"/);
+});
+
+test('HttpOnly cookie not confirmed cleared forbids any local-only exit claim', () => {
+  const api = actualApi();
+  const oldWindow = global.window;
+  let navigated = false;
+  let touchedStorage = false;
+  global.window = {
+    localStorage: { setItem: () => { touchedStorage = true; } },
+    sessionStorage: { clear: () => { touchedStorage = true; } },
+    location: { replace: () => { navigated = true; } },
+  };
+  try {
+    assert.equal(api.leaveThisBrowser(true, false), false);
+    assert.equal(touchedStorage, false);
+    assert.equal(navigated, false);
+  } finally {
+    global.window = oldWindow;
+  }
 });
