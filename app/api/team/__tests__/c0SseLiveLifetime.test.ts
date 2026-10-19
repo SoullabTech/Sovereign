@@ -183,8 +183,9 @@ describe('C0-SSE-LIVE post-handshake authority', () => {
       expect(content).not.toContain(MESSAGE);
       const polls = state.dbCalls.slice(prior);
       expect(polls).toContain('session');
-      // Reading may precede revalidation; sending must not.
-      expect(polls).toContain(kind === 'channel' ? 'channel_messages' : 'dm_membership');
+      // Stage A validates the locked session FIRST. If it has already
+      // been revoked, the transaction does not touch Team membership/content.
+      expect(polls).not.toContain(kind === 'channel' ? 'channel_messages' : 'dm_membership');
     } finally { await dispose(controller, reader); }
   }, 7000);
 
