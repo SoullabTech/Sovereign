@@ -17,7 +17,7 @@ import {
   ToggleRight,
   ChevronRight,
 } from 'lucide-react';
-import { storeAdminPassword } from '@/lib/admin/adminFetch';
+import { adminFetch, storeAdminPassword } from '@/lib/admin/adminFetch';
 
 // ─── Refresh Context ────────────────────────────────────────────────
 interface RefreshContextValue {
@@ -46,6 +46,7 @@ const NAV_ITEMS = [
   { path: '/labtools/admin/command-center/field-engines', label: 'Field Engines', icon: Activity },
   { path: '/labtools/admin/command-center/conversations', label: 'Conversations', icon: MessageSquare },
   { path: '/labtools/admin/command-center/members', label: 'Members', icon: Users },
+  { path: '/labtools/admin/command-center/member-access', label: 'Member Access', icon: Lock },
   { path: '/labtools/admin/command-center/system', label: 'System', icon: Server },
   { path: '/labtools/admin/command-center/actions', label: 'Actions', icon: Zap },
 ];
@@ -133,11 +134,23 @@ export default function CommandCenterLayout({
   const [refreshKey, setRefreshKey] = useState(0);
   const intervalMs = 30000;
 
-  // Check existing auth
+  // The old sessionStorage marker was decorative: only /api/admin/auth
+  // can verify a real founder/member session or a retained shared password.
+  // A valid founder member session must enter without retyping an admin secret.
   useEffect(() => {
-    const token = sessionStorage.getItem('maia_admin_token');
-    if (token) setAuthenticated(true);
-    setCheckingAuth(false);
+    let active = true;
+    (async () => {
+      try {
+        const res = await adminFetch('/api/admin/auth', { cache: 'no-store' });
+        const state = await res.json().catch(() => ({}));
+        if (active) setAuthenticated(res.ok && state?.isAdmin === true);
+      } catch {
+        if (active) setAuthenticated(false);
+      } finally {
+        if (active) setCheckingAuth(false);
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   // Auto-refresh interval

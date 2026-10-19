@@ -26,8 +26,11 @@ export async function GET(req: NextRequest) {
       username: string | null;
       email: string | null;
       admin_role: AdminRole | null;
+      recovery_email_verified: boolean;
     }>(
-      `SELECT id, name, username, email, admin_role
+      `SELECT id, name, username, email, admin_role,
+              (email_verified IS TRUE AND recovery_email_verification_id IS NOT NULL)
+                AS recovery_email_verified
          FROM members
         ORDER BY (admin_role IS NULL), name NULLS LAST, username NULLS LAST`,
     );

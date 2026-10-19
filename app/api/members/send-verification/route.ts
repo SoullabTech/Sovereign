@@ -37,7 +37,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { betaConfig } from '@/lib/auth/betaConfig';
 import crypto from 'crypto';
-import { sendEmail } from '@/lib/email/sendEmail';
+import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
+import { approvedVerificationSmtp, acceptedVerificationSmtp } from '@/lib/email/approvedVerificationSmtp';
 import {
   checkRateLimit,
   getClientIP,
@@ -77,6 +78,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Too many verification requests. Please try again later.' },
         { status: 429, headers: buildRateLimitHeaders(memberLimit) }
+      );
+    }
+
+    // Existing public registration path stays accessible, but identity mail
+    // MUST use the explicitly configured SMTP provider. No implicit Resend,
+    // test-memory or vendor fallback is permitted for a verification token.
+    // Refuse before minting or writing the verification capability.
+    const smtpProvider = approvedVerificationSmtp();
+    if (!smtpProvider) {
+      return NextResponse.json(
+        { error: 'Soullab verification email transport is unavailable' },
+        { status: 503, headers: { 'Cache-Control': 'no-store' } },
       );
     }
 
@@ -130,22 +143,36 @@ export async function POST(request: NextRequest) {
     // Generate verification token
     const token = crypto.randomBytes(32).toString('hex');
 
-    // Store token
-    await query(
+    // Store the token ONLY if the on-file destination has not changed since
+    // lookup. A concurrent member email update invalidates this issuance
+    // rather than allowing an old address to verify a new one.
+    const stored = await query(
       `UPDATE members
-       SET email_verification_token = $1, email_verification_sent_at = NOW()
-       WHERE id = $2`,
-      [token, memberId]
+         SET email_verification_token = $1,
+             email_verification_sent_at = clock_timestamp()
+       WHERE id = $2 AND email IS NOT DISTINCT FROM $3
+       RETURNING id`,
+      [token, memberId, member.email],
     );
+    if (stored.rows.length !== 1) {
+      return NextResponse.json(
+        { error: 'Email changed during verification; please retry' },
+        { status: 409, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
 
     // Build verification URL
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://soullab.life';
-    const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
+    // The token lives in a URL fragment, not an HTTP GET query, and the
+    // receiving page requires an explicit member click before POST redemption.
+    // Do not let link-preview bots or proxy access logs consume the token.
+    const verificationUrl = `${baseUrl}/verify-email#token=${token}`;
 
     // Send verification email
     const delivery = await sendEmail({
       purpose: 'auth:verification',
-      from: 'Kelly Nezat <kelly@soullab.life>',
+      provider: smtpProvider,
+      from: SENDERS.noreply,
       to: targetEmail,
       subject: 'Verify your Soullab email',
       html: `
@@ -189,11 +216,24 @@ export async function POST(request: NextRequest) {
       `,
     });
 
-    if (!delivery.success) {
+    if (!acceptedVerificationSmtp(delivery)) {
+      // A provider rejection, missing SMTP receipt or a misrouted "success"
+      // cannot leave a live verification token behind. Guard against
+      // superseding another in-flight request: retire ONLY our own token.
+      try {
+        await query(
+          `UPDATE members
+             SET email_verification_token = NULL, email_verification_sent_at = NULL
+           WHERE id = $1 AND email_verification_token = $2`,
+          [member.id, token],
+        );
+      } catch {
+        console.error('[SendVerification] Unable to retire an unaccepted verification token');
+      }
       console.error(
         `[SendVerification] Provider REFUSED the send for member=${memberRef(member.id)} — status=${delivery.status} failureKind=${delivery.failureKind ?? 'unclassified'} providerCode=${delivery.providerCode ?? 'unnamed'} retryable=${delivery.retryable === true} error=${delivery.error ?? 'none'}`
       );
-      if (!delivery.ourFault) {
+      if (delivery.success === false && delivery.ourFault === false) {
         return NextResponse.json(
           {
             error: "We couldn't send to that address. Please check it and try again.",
@@ -215,13 +255,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(
-      `[SendVerification] Email sent for member=${memberRef(member.id)} (id: ${delivery.id ?? 'none'})`
-    );
+    console.log('[SendVerification] SMTP provider accepted on-file verification message');
 
     return NextResponse.json({
       success: true,
-      message: 'Verification email sent',
+      message: 'Verification email accepted by SMTP provider; delivery not yet confirmed',
     });
 
   } catch (error) {

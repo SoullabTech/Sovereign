@@ -1,0 +1,131 @@
+# Class A Member Access regression check: independent of production recovery.
+# NO real members, passwords, email deliveries, API access or database mutation.
+name: Member Access Recovery Regression
+
+on:
+  pull_request:
+    branches: [clean-main-no-secrets]
+    paths:
+      - 'lib/admin/memberRecovery.ts'
+      - 'lib/email/approvedVerificationSmtp.ts'
+      - 'app/api/members/__tests__/mail-03-containment.test.ts'
+      - 'config/accessMatrix.ts'
+      - 'config/__tests__/memberRecoveryAccessPolicy.test.ts'
+      - 'app/api/admin/members/recovery/**'
+      - 'app/api/members/admin-recovery/**'
+      - 'app/api/members/verify-email/route.ts'
+      - 'app/api/members/send-verification/route.ts'
+      - 'app/verify-email/page.tsx'
+      - 'app/api/admin/members/route.ts'
+      - 'app/labtools/admin/command-center/member-access/**'
+      - 'app/member-recovery/**'
+      - 'app/admin/member-access/**'
+      - 'components/studio/AdminManagementSection.tsx'
+      - 'e2e/fixtures/member-access-browser-seed.mjs'
+      - 'e2e/tests/member-access-fictional.spec.ts'
+      - 'e2e/member-access.playwright.config.ts'
+      - 'database/migrations/20261018000001_admin_member_recovery_tokens.sql'
+      - '.github/workflows/member-access-recovery-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  fictional-member-access:
+    name: One-use reset and founder-authority falsifiers
+    runs-on: ubuntu-latest
+    env:
+      CI: 'true'
+      DATABASE_URL: 'postgresql://invalid:invalid@127.0.0.1:1/fixture_denied'
+      LABTOOLS_ADMIN_PASSWORD: ''
+      ADMIN_RESET_SECRET: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: Check fictional-account security regressions
+        run: >-
+          npx --no-install jest --config jest.config.js --runInBand --runTestsByPath
+          app/api/admin/members/recovery/__tests__/memberAccessRecovery.test.ts
+          app/api/members/__tests__/mail-03-containment.test.ts
+          config/__tests__/memberRecoveryAccessPolicy.test.ts
+
+  ephemeral-postgres-witness:
+    name: Fictional PostgreSQL atomicity and concurrent replay
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: 'true'
+      DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:5432/postgres'
+      LABTOOLS_ADMIN_PASSWORD: ''
+      ADMIN_RESET_SECRET: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: Run Class A source against temporary fictional PostgreSQL
+        run: >-
+          npx --no-install jest --config jest.config.js --runInBand --runTestsByPath
+          app/api/admin/members/recovery/__tests__/memberAccessPostgresWitness.test.ts
+
+  fictional-browser-acceptance:
+    name: Admin and member recovery — Chromium and mobile WebKit
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+      MEMBER_ACCESS_RECOVERY_ENABLED: '0'
+      DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:5432/postgres'
+      LABTOOLS_ADMIN_PASSWORD: ''
+      ADMIN_RESET_SECRET: ''
+      RESEND_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: Seed only the fictional founder and verified session in temporary Postgres
+        run: node e2e/fixtures/member-access-browser-seed.mjs
+      - name: Install isolated Chromium and mobile WebKit
+        run: npx --no-install playwright install --with-deps chromium webkit
+      - name: Exercise actual Member Access UI with fictional API responses
+        run: npx --no-install playwright test --config=e2e/member-access.playwright.config.ts

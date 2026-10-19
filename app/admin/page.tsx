@@ -181,6 +181,7 @@ export default function AdminPage() {
                 { label: 'Opus Pulse', href: '/admin/opus-pulse' },
                 { label: 'Analytics', href: '/admin/consciousness-analytics' },
                 { label: 'Videos', href: '/admin/library/videos' },
+                { label: 'Member Access', href: '/admin/member-access' },
                 { label: 'Command Center', href: '/labtools/admin/command-center' },
                 { label: 'Platform Overview', href: '/admin/platform-overview' },
                 { label: 'Security', href: '/admin/security' },
@@ -288,6 +289,14 @@ export default function AdminPage() {
         {/* Add User Button */}
         <div className="mb-6 flex justify-between items-center">
           <h2 className="text-xl font-cinzel text-white">User Management</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => router.push('/admin/member-access')}
+              className="rounded-lg border border-amber-500/60 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-500/20"
+            >
+              Member Access
+            </button>
           <button
             onClick={() => setShowAddForm(true)}
             className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
@@ -295,6 +304,7 @@ export default function AdminPage() {
             <UserPlus className="w-4 h-4" />
             <span>Add User</span>
           </button>
+          </div>
         </div>
 
         {/* Add User Form */}
