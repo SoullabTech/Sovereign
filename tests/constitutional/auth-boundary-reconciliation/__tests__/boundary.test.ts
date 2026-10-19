@@ -128,7 +128,13 @@ describe('credential transports and sanitization', () => {
   });
 
   it('accepts ?_t= for EventSource/SSE', async () => {
-    expectForwarded(await proxy(request(`${MEMBER_API}?_t=${MEMBER_TOKEN}`)));
+    expectForwarded(await proxy(request(`/api/team/channels/fictional-channel/stream?_t=${MEMBER_TOKEN}`)));
+  });
+
+  it('refuses query-only session tokens on ordinary member API paths', async () => {
+    const response = await proxy(request(`${MEMBER_API}?_t=${MEMBER_TOKEN}`));
+    expect(response.status).toBe(401);
+    expect(response.headers.get('x-middleware-next')).not.toBe('1');
   });
 
   it('does not authenticate from ?_m= member id alone', async () => {
