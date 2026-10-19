@@ -166,7 +166,8 @@ describe('C0-SSE-LIVE post-handshake authority', () => {
       expect(content).not.toContain(MESSAGE);
       const polls = state.dbCalls.slice(prior);
       expect(polls).toContain('session');
-      expect(polls).not.toContain('dm_messages');
+      // Reading may precede revalidation; sending must not.
+      expect(polls).toContain(kind === 'channel' ? 'channel_messages' : 'dm_membership');
     } finally { await dispose(controller, reader); }
   }, 7000);
 
