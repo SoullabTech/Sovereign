@@ -31,40 +31,60 @@ interface MemberRow {
  * Validate that request originates from our own domain (CSRF protection)
  */
 function validateOrigin(request: NextRequest): boolean {
-  const origin = request.headers.get('origin');
-  const referer = request.headers.get('referer');
-
-  // Allow production domain and localhost for development
-  const allowedOrigins = [
+  // C0-PROXY: compare parsed origins for exact scheme, host and port.
+  // Prefix checks admitted lookalikes such as soullab.life.attacker.invalid.
+  const allowed = [
     'https://soullab.life',
     'https://www.soullab.life',
     process.env.NEXT_PUBLIC_APP_URL,
     'http://localhost:3000',
     'https://localhost:3000',
-  ].filter(Boolean);
+  ].filter((value): value is string => typeof value === 'string' && value.length > 0);
 
-  // Check Origin header first (preferred)
-  if (origin) {
-    return allowedOrigins.some(allowed => origin.startsWith(allowed!));
+  const approvedOrigins = new Set(
+    allowed.flatMap((value) => {
+      try {
+        const parsed = new URL(value);
+        // A configured destination cannot supply authentication credentials.
+        return parsed.username || parsed.password ? [] : [parsed.origin];
+      } catch {
+        return [];
+      }
+    })
+  );
+
+  const origin = request.headers.get('origin');
+  if (origin !== null) {
+    try {
+      const parsed = new URL(origin);
+      // The Origin header must itself be exactly a serialized origin,
+      // never a path, userinfo, query, fragment or lookalike host.
+      return parsed.href === parsed.origin + '/' &&
+        origin === parsed.origin &&
+        approvedOrigins.has(parsed.origin);
+    } catch {
+      return false;
+    }
   }
 
-  // Fall back to Referer header
-  if (referer) {
-    return allowedOrigins.some(allowed => referer.startsWith(allowed!));
+  // Some compatible clients send Referer instead of Origin. Accept only the
+  // same approved parsed origin; never allow an invalid Origin to fall back.
+  const referer = request.headers.get('referer');
+  if (!referer) return false;
+  try {
+    const parsed = new URL(referer);
+    return !parsed.username && !parsed.password && approvedOrigins.has(parsed.origin);
+  } catch {
+    return false;
   }
-
-  // No origin/referer is suspicious for a POST request
-  return false;
 }
 
 export async function POST(request: NextRequest) {
   try {
     // CSRF protection: validate request origin
-    const origin = request.headers.get('origin');
-    const referer = request.headers.get('referer');
-
     if (!validateOrigin(request)) {
-      console.warn(`[MEMBERS] Change password blocked: invalid origin. Origin: ${origin}, Referer: ${referer}`);
+      // Do not echo untrusted Origin/Referer: they may contain sensitive URLs.
+      console.warn('[MEMBERS] Change password blocked: unapproved request origin');
       return NextResponse.json(
         { error: 'Invalid request origin' },
         { status: 403 }
