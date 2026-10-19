@@ -4,6 +4,7 @@
 // Readiness means the runtime answered; it does not certify cognition or recovery.
 const CABIN_ORIGIN = 'http://127.0.0.1:43121';
 const CABIN_URL = CABIN_ORIGIN + '/cabin';
+const REQUIRED_MODEL = 'qwen2.5:7b';
 const MODEL_URL = 'http://127.0.0.1:11434/api/tags';
 
 async function inspectCabin({ fetchImpl = fetch } = {}) {
@@ -24,11 +25,12 @@ async function inspectCabin({ fetchImpl = fetch } = {}) {
     && typeof health?.build === 'string' && health.build !== 'UNSTAMPED'
     && ['empty', 'mounted'].includes(health?.context);
   const modelsAvailable = Array.isArray(inventory?.models)
-    && inventory.models.some(m => typeof m.name === 'string' && m.name.length
+    && inventory.models.some(m => m?.name === REQUIRED_MODEL
       && Array.isArray(m.capabilities) && m.capabilities.includes('completion'));
   return {
     observedAt, runtime: runtimeReady ? 'READY' : 'NEEDS_SETUP',
     models: modelsAvailable ? 'AVAILABLE' : 'UNVERIFIED',
+    requiredModel: REQUIRED_MODEL,
     canOpen: runtimeReady,
     conversation: 'UNVERIFIED', writing: 'UNVERIFIED',
     voice: 'UNVERIFIED', recovery: 'UNVERIFIED', resume: 'UNVERIFIED',

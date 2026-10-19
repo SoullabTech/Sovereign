@@ -10,7 +10,7 @@ function fake(health = healthy) {
     assert.equal(options.redirect, 'error');
     assert.ok(options.signal);
     return { ok: true, json: async () => url.endsWith('/api/tags')
-      ? { models: [{ name: 'local-model', capabilities: ['completion'] }] } : health };
+      ? { models: [{ name: 'qwen2.5:7b', capabilities: ['completion'] }] } : health };
   };
 }
 test('runtime readiness does not imply accepted conversation, writing, or recovery', async () => {
@@ -43,4 +43,22 @@ test('network failure becomes setup state without a fallback destination', async
 });
 test('failed browser opening is not reported as success', async () => {
   await assert.rejects(openCabin({ fetchImpl: fake(), openView: async () => { throw new Error('failed'); } }), /failed/);
+});
+
+test('only the exact Cabin model with completion capability is available', async () => {
+ for(const models of [[],[{name:'other:7b',capabilities:['completion']}],[{name:'qwen2.5:7b',capabilities:['embedding']}],[{name:'qwen2.5:7b'}],[null]]){
+  const result=await inspectCabin({fetchImpl:async url=>({ok:true,json:async()=>url.endsWith('/api/tags')?{models}:healthy})});
+  assert.equal(result.models,'UNVERIFIED');
+  assert.equal(result.canOpen,true);
+  assert.equal(result.requiredModel,'qwen2.5:7b');
+ }
+ const valid=await inspectCabin({fetchImpl:fake()});
+ assert.equal(valid.models,'AVAILABLE');
+});
+test('unavailable model service leaves the local writing doorway open',async()=>{
+ const result=await inspectCabin({fetchImpl:async url=>{
+  if(url.endsWith('/api/tags'))throw Error('offline');
+  return {ok:true,json:async()=>healthy};
+ }});
+ assert.equal(result.canOpen,true);assert.equal(result.models,'UNVERIFIED');
 });

@@ -9,10 +9,10 @@ async function refresh() {
     const result = await window.cabin.readiness();
     const time = new Date(result.observedAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'});
     status.textContent = result.canOpen
-      ? 'Workspace ready. Check completed at ' + time + '. You can open it below.'
+      ? 'Workspace ready. Check completed at ' + time + (result.models === 'AVAILABLE' ? '. You can open it below.' : '. Writing is available; MAIA’s local model could not be verified.')
       : 'Check completed at ' + time + '. The workspace needs attention. Close other Cabin test windows and check again.';
     document.getElementById('models').textContent = result.models === 'AVAILABLE'
-      ? 'Local models are available on this Mac.' : 'Local model availability could not be verified.';
+      ? 'MAIA’s qwen2.5:7b model is installed locally. This check does not generate a reply.' : 'MAIA needs qwen2.5:7b in Ollama. Open Ollama, then check again. Saved writing can still open.';
     open.disabled = !result.canOpen;
   } catch { status.textContent = 'Check failed: the local workspace could not start. Close other Cabin test windows and try again.'; }
   finally { check.disabled = false; check.textContent = 'Check readiness'; }
