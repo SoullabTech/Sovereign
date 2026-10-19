@@ -16,6 +16,8 @@ const sha=process.env.GITHUB_SHA||'isolated-local';
 const nextFixture=path.join(os.tmpdir(),'soullab-stageq-next16-'+sha.slice(0,16));
 const caddyFixture=path.join(os.tmpdir(),'soullab-stageq-caddy-'+sha.slice(0,16));
 const origin='https://stageq-next16.invalid';
+// Fictional, fixed, not a credential for any account outside this disposable DB.
+const FIXTURE_PASSWORD='stageq-fully-fictional-bcrypt-password';
 const dockerName='stageq-caddy-'+sha.slice(0,12);
 if(process.env.STAGE_Q_CADDY_DISPOSABLE!==guard||
    process.env.STAGE_Q_NEXT16_DISPOSABLE!==fixtureGuard||
@@ -48,7 +50,7 @@ if(!custody.commitMatches||!custody.blobMatches||
 }
 const sourceManifest=JSON.parse(fs.readFileSync(
  path.join(nextFixture,'STAGE_Q_BUILD_MANIFEST.json'),'utf8'));
-if(sourceManifest.sourceCommit!==sha||sourceManifest.sourceFiles.length!==9)
+if(sourceManifest.sourceCommit!==sha||sourceManifest.sourceFiles.length!==12)
  throw Error('Next16 source custody mismatch');
 
 let db,next,browser,containerId=null,nextLog='';
@@ -144,14 +146,23 @@ function raw(endpoint,method='GET',headers={}){
  });
 }
 async function issue(page,transport='cookie',username='fixture_member'){
+ // The real PR1870 signin handler always sets an HttpOnly browser cookie and
+ // also returns the same session token to the Safari header transport.
+ // For a bearer-only test, restore the browser's prior cookie state after
+ // issuing a separate, real SQL-backed session.
+ const snapshot=transport==='bearer'?await page.context().cookies(origin):null;
  const answer=await fromPage(page,'/api/members/signin',{
   method:'POST',headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({username,transport}),
+  body:JSON.stringify({username,password:FIXTURE_PASSWORD}),
  });
- assert.equal(answer.status,200,'Fictional Next sign-in must pass Caddy');
- assert.equal(answer.data.fixture,true);
- assert.match(answer.data.token,/^[0-9a-f]{64}$/);
- return answer.data.token;
+ assert.equal(answer.status,200,'Real Class A signin must pass Caddy');
+ assert.equal(answer.data.success,true);
+ assert.match(answer.data.session?.token,/^[a-f0-9]{64}$/);
+ if(transport==='bearer'){
+  await page.context().clearCookies();
+  if(snapshot.length)await page.context().addCookies(snapshot);
+ }
+ return answer.data.session.token;
 }
 async function revoked(token){
  const r=await db.query('SELECT revoked FROM auth_sessions WHERE session_token=$1',[token]);
@@ -173,11 +184,30 @@ test.before(async()=>{
  const meta=await db.query('SELECT current_database() db,current_user usr');
  assert.equal(meta.rows[0].db,'stageq_next16_fictional');
  assert.equal(meta.rows[0].usr,'stageq_next16_fixture');
- await db.query("CREATE TABLE members(id UUID PRIMARY KEY,username TEXT UNIQUE NOT NULL,tier TEXT DEFAULT 'free',roles TEXT[] DEFAULT ARRAY['member'])");
- await db.query(fs.readFileSync(path.join(root,'database/migrations/20260119000001_auth_sessions.sql'),'utf8'));
+ await db.query([
+  'CREATE TABLE members (',
+  ' id UUID PRIMARY KEY, username TEXT UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL,',
+  ' passkey TEXT, password_hash TEXT NOT NULL, name TEXT, preferred_name TEXT,',
+  ' onboarded BOOLEAN DEFAULT TRUE, onboarding_step TEXT,',
+  " tier TEXT DEFAULT 'free', roles TEXT[] DEFAULT ARRAY['member'],",
+  ' subscription_active BOOLEAN DEFAULT FALSE, subscription_expires_at TIMESTAMPTZ,',
+  ' has_webauthn BOOLEAN DEFAULT FALSE, preferred_auth_method TEXT DEFAULT \'password\',',
+  ' must_reset_password BOOLEAN DEFAULT FALSE, last_sign_in TIMESTAMPTZ',
+  ')',
+ ].join('\\n'));
+ for(const filename of [
+  '20260119000001_auth_sessions.sql',
+  '20260119000004_auth_rate_limits.sql',
+  '20260828000001_audit_logs.sql',
+ ]){
+  await db.query(fs.readFileSync(path.join(root,'database/migrations',filename),'utf8'));
+ }
+ const passwordHash=await require('bcrypt').hash(FIXTURE_PASSWORD,12);
  for(const name of ['fixture_member','fixture_second']){
-  await db.query("INSERT INTO members(id,username,tier,roles) VALUES($1,$2,'free',ARRAY['member'])",
-   [crypto.randomUUID(),name]);
+  await db.query(
+   'INSERT INTO members(id,username,email,password_hash,name,preferred_name,tier,roles)'+
+   " VALUES($1,$2,$3,$4,'Fictional account','Fictional account','free',ARRAY['member'])",
+   [crypto.randomUUID(),name,name+'@example.invalid',passwordHash]);
  }
  startNext();
  await eventual(nodeReady,'Compiled Next16 application');
@@ -394,6 +424,76 @@ test('Class A accepts two different same-member credentials but signout still se
   })).data.serverSessionRevoked,true);
   assert.equal(await revoked(cookie),true);
   assert.equal(await revoked(bearer),true);
+ }finally{await context.close()}
+});
+
+
+test('real Class A password verification refuses fictional bad password before issuing a session',async()=>{
+ const context=await browserContext(),page=await context.newPage();
+ try {
+  await page.goto(origin+'/',{waitUntil:'load'});
+  const count=await db.query(
+   'SELECT count(*) AS n FROM auth_sessions s JOIN members m ON m.id=s.member_id WHERE m.username=$1',
+   ['fixture_member']);
+  const refused=await fromPage(page,'/api/members/signin',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({username:'fixture_member',password:'incorrect-fictional-password'}),
+  });
+  assert.equal(refused.status,401);
+  assert.equal((await context.cookies(origin)).some(c=>c.name==='maia_session'),false);
+  const nextCount=await db.query(
+   'SELECT count(*) AS n FROM auth_sessions s JOIN members m ON m.id=s.member_id WHERE m.username=$1',
+   ['fixture_member']);
+  assert.equal(nextCount.rows[0].n,count.rows[0].n);
+ }finally{await context.close()}
+});
+
+test('real Class A signin stays truthful if last_sign_in SQL metadata update fails',async()=>{
+ const context=await browserContext(),page=await context.newPage();
+ try {
+  await page.goto(origin+'/',{waitUntil:'load'});
+  await db.query("CREATE FUNCTION stageq_fail_metadata() RETURNS trigger LANGUAGE plpgsql AS $ BEGIN RAISE EXCEPTION 'synthetic metadata failure'; END; $");
+  await db.query('CREATE TRIGGER stageq_bad_metadata BEFORE UPDATE OF last_sign_in ON members FOR EACH ROW EXECUTE FUNCTION stageq_fail_metadata()');
+  let answer;
+  try {
+   answer=await fromPage(page,'/api/members/signin',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({username:'fixture_member',password:FIXTURE_PASSWORD}),
+   });
+  }finally{
+   await db.query('DROP TRIGGER stageq_bad_metadata ON members');
+   await db.query('DROP FUNCTION stageq_fail_metadata()');
+  }
+  assert.equal(answer.status,200);
+  assert.equal(answer.data.success,true);
+  assert.match(answer.data.session?.token,/^[0-9a-f]{64}$/);
+  assert.equal(await revoked(answer.data.session.token),false);
+  const stored=(await context.cookies(origin)).find(c=>c.name==='maia_session');
+  assert.equal(stored?.httpOnly,true);
+  assert.equal(stored?.secure,true);
+ }finally{await context.close()}
+});
+
+test('real Class A signin refuses 503 without success after SQL session INSERT failure',async()=>{
+ const context=await browserContext(),page=await context.newPage();
+ try {
+  await page.goto(origin+'/',{waitUntil:'load'});
+  await db.query("CREATE FUNCTION stageq_fail_session() RETURNS trigger LANGUAGE plpgsql AS $ BEGIN RAISE EXCEPTION 'synthetic session insert failure'; END; $");
+  await db.query('CREATE TRIGGER stageq_bad_session BEFORE INSERT ON auth_sessions FOR EACH ROW EXECUTE FUNCTION stageq_fail_session()');
+  let result;
+  try {
+   result=await fromPage(page,'/api/members/signin',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({username:'fixture_member',password:FIXTURE_PASSWORD}),
+   });
+  }finally{
+   await db.query('DROP TRIGGER stageq_bad_session ON auth_sessions');
+   await db.query('DROP FUNCTION stageq_fail_session()');
+  }
+  assert.equal(result.status,503);
+  assert.notEqual(result.data.success,true);
+  assert.equal(result.data.session,undefined);
+  assert.equal((await context.cookies(origin)).some(c=>c.name==='maia_session'),false);
  }finally{await context.close()}
 });
 
