@@ -287,6 +287,35 @@ describe('real proxy ingress plus unchanged member-scoped context GET', () => {
     expect(content?.data.error).toBe('manuscriptId is required');
   });
 
+  it('preserves the existing URL-token distinction: proxy may recognize _t, but the context handler refuses query-only access', async () => {
+    // The pinned canonical auth reader still recognizes a generic ?_t token
+    // at outer ingress. The member-context handler authenticates ONLY its
+    // web cookie or Safari header; opening this new exact route must not
+    // expose any manuscript through URL bearer alone.
+    const { edge, content } = await openContext(request({
+      route: TARGET + '?manuscriptId=' + MANUSCRIPT + '&_t=' + TOKEN_A,
+    }));
+    expect(isForwarded(edge)).toBe(true);
+    expect(content?.status).toBe(401);
+    expect(content?.data.error).toBe('unauthenticated');
+  });
+
+  it('client-forged derived roles and tier without a session cannot unlock the route', async () => {
+    const req = new NextRequest('https://soullab.life' + TARGET, {
+      method: 'GET',
+      headers: {
+        host: 'soullab.life',
+        'x-access-authed': 'true',
+        'x-access-member-id': A,
+        'x-access-roles': 'admin',
+        'x-access-tier': 'pro',
+        'x-maia-tier': 'pro',
+      },
+    });
+    expect((await proxy(req)).status).toBe(401);
+    expect(mockQuery).not.toHaveBeenCalled();
+  });
+
   it('keeps adjacent paths denied by actual proxy under strict mode', async () => {
     for (const route of [
       '/api/writers-studio/rebuild/context/next',
