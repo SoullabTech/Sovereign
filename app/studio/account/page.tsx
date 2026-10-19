@@ -91,7 +91,7 @@ export default function StudioAccountPage() {
   const [practitioner, setPractitioner] = useState<PractitionerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
-  const [signOutIssue, setSignOutIssue] = useState<string | null>(null);
+  const [signOutIssue, setSignOutIssue] = useState<{ detail: string; cookieClearingConfirmed: boolean } | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -145,22 +145,26 @@ export default function StudioAccountPage() {
     try {
       const outcome = await signOutCurrentBrowserSession();
       if (outcome.kind === 'incomplete') {
-        setSignOutIssue(outcome.detail);
+        setSignOutIssue(outcome);
         return;
       }
-      if (!leaveThisBrowser(false)) {
-        setSignOutIssue('Local sign-in information could not be cleared. Server revocation and local cleanup are separate.');
+      if (!leaveThisBrowser(false, true)) {
+        setSignOutIssue({ detail: 'Local sign-in information could not be cleared. Server revocation and local cleanup are separate.', cookieClearingConfirmed: true });
       }
     } catch {
-      setSignOutIssue('Soullab could not verify sign-out. Your server session may still be active.');
+      setSignOutIssue({ detail: 'Soullab could not verify sign-out. Your server session may still be active.', cookieClearingConfirmed: false });
     } finally {
       setSigningOut(false);
     }
   }
 
   function leaveWithoutConfirmedRevocation() {
-    if (!leaveThisBrowser(true)) {
-      setSignOutIssue('This device could not clear its saved sign-in information. Close the browser and remove Soullab site data before sharing this device.');
+    if (signOutIssue?.cookieClearingConfirmed !== true) return;
+    if (!leaveThisBrowser(true, true)) {
+      setSignOutIssue({
+        detail: 'This device could not clear its saved sign-in information. Remove Soullab site data using browser settings before sharing it.',
+        cookieClearingConfirmed: false,
+      });
     }
   }
 
@@ -341,8 +345,10 @@ export default function StudioAccountPage() {
       </div>
 
       <SignOutIncompleteDialog
-        detail={signOutIssue}
+        detail={signOutIssue?.detail ?? null}
+        canClearDevice={signOutIssue?.cookieClearingConfirmed === true}
         onStay={() => setSignOutIssue(null)}
+        onRetry={() => { setSignOutIssue(null); void handleSignOut(); }}
         onLeaveDevice={leaveWithoutConfirmedRevocation}
       />
 
