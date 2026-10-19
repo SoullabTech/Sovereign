@@ -1,0 +1,71 @@
+# Isolated Stage Q fictional contract checks only.
+# Source is a disposable security-preflight branch, not canonical.
+# Does not run deployment, launch a server, contact PostgreSQL, or read secrets.
+name: Stage Q Auth Fictional Preflight (NO DEPLOY)
+
+on:
+  push:
+    branches:
+      - security/auth-stage-q-combined-preflight-20261019
+  pull_request:
+    branches:
+      - security/auth-stage-q-client-signout-review-20261018
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-q-fictional-preflight
+  cancel-in-progress: true
+
+jobs:
+  fictional-acceptance:
+    name: Combined auth contracts and type-health
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact candidate commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies without package lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      # Recreate the repository's declared postinstall effects explicitly,
+      # without allowing dependency lifecycle scripts during npm ci. The URL
+      # is deliberately nonexistent; Prisma generate reads schema, not members.
+      - name: Apply pinned patches and generate disposable Prisma types
+        env:
+          DATABASE_URL: postgresql://fictional:fictional@127.0.0.1:65535/stageq_fictional
+        run: |
+          ./node_modules/.bin/patch-package
+          ./node_modules/.bin/prisma generate --schema prisma/schema.prisma
+
+      - name: Record source custody
+        run: |
+          git rev-parse HEAD
+          git hash-object app/api/members/signin/route.ts
+          git hash-object app/api/members/signout/route.ts
+          git hash-object lib/auth/webSignOut.ts
+
+      - name: Source-pinned fictional server contract
+        run: node --test docs/security/auth-signout-session-failure-contract.test.cjs
+
+      - name: Source-pinned fictional browser/client contract with full UI files
+        run: node --test docs/security/auth-stage-q-client-signout.test.cjs
+
+      - name: In-process two-transport integration simulation
+        run: node --test docs/security/auth-stage-q-two-transport-integration.test.cjs
+
+      - name: Governed whole-source TypeScript no-regression
+        run: npm run typecheck

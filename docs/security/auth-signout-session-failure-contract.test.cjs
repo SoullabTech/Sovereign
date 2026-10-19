@@ -48,7 +48,10 @@ function signinHarness(mode='ok',revokeOk=true){
   ['@/lib/db/postgres',{query:async(sql)=>{
    calls.queries.push(sql);
    if(sql.includes('FROM members'))return {rows:[member]};
-   if(sql.includes('UPDATE members'))return {rowCount:1};
+   if(sql.includes('UPDATE members')){
+    if(mode==='fail-last-sign-in')throw Error('Synthetic post-issuance metadata write failure');
+    return {rowCount:1};
+   }
    throw Error('Unexpected test query');
   }}],
   ['@/lib/auth/passwordUtils',{verifyPassword:async()=>({ok:true,needsUpgrade:false})}],
@@ -118,6 +121,27 @@ test('successful fixture session remains accepted after both cookie steps',async
  assert.equal(h.calls.revokes.length,0);
  assert.equal(h.calls.audits.at(-1)?.result,'success');
 });
+test('post-issuance last_sign_in failure preserves truthful successful session',async()=>{
+ const h=signinHarness('fail-last-sign-in');
+ const printed=[];
+ const priorError=console.error;
+ console.error=(...parts)=>printed.push(parts.join(' '));
+ let r;
+ try {
+  r=await h.post(h.request);
+ } finally {
+  console.error=priorError;
+ }
+ assert.equal(r.status,200);
+ assert.equal(r.body.success,true);
+ assert.equal(r.body.session.token,'synthetic-token-no-authority');
+ assert.equal(h.calls.revokes.length,0);
+ assert.ok(h.calls.queries.some(sql=>sql.includes('UPDATE members')));
+ assert.equal(h.calls.audits.at(-1)?.result,'success');
+ assert.equal(printed.some(line=>line.includes('synthetic-token-no-authority')),false);
+ assert.ok(printed.some(line=>line.includes('Noncritical last_sign_in metadata unavailable')));
+});
+
 function signoutHarness({origin='https://fictional.invalid',host='fictional.invalid',
  site='same-origin',token='unit-test-token',headerToken=null,throwDb=false,rowCount=1}={}){
  const calls={queries:0,cleared:[],reads:0,queryParams:[]};
