@@ -62,7 +62,7 @@ el('file').onchange=()=>act(async()=>{
  } finally {el('file').value='';}
 });
 let pendingChat;
-el('send').onclick=()=>act(async()=>{
+async function sendCurrentMessage(){
  const message=el('message').value;if(!message.trim())throw Error('Write a message first');
  const request={request:crypto.randomUUID(),session:state.session};pendingChat=request;
  el('stop-response').hidden=false;el('stop-response').disabled=false;
@@ -72,7 +72,9 @@ el('send').onclick=()=>act(async()=>{
   if(el('message').value===message)el('message').value='';
   status(state.sanctuary?'MAIA replied in Sanctuary. This conversation is not saved.':'MAIA replied. This conversation is saved locally.');
  }finally{pendingChat=null;el('stop-response').hidden=true;}
-});
+ if(typeof speakCurrentReply==='function'&&el('talk-mode').checked)await speakCurrentReply();
+}
+el('send').onclick=()=>act(sendCurrentMessage);
 el('stop-response').onclick=async()=>{
  if(!pendingChat)return;
  el('stop-response').disabled=true;
