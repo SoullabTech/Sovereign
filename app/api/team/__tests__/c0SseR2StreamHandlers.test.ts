@@ -5,7 +5,7 @@
  * auth_sessions database. No production queries, mail, members or network.
  * All successful streams are aborted immediately to avoid background polls.
  */
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
 
 const MEMBER_A = '11111111-1111-4111-8111-111111111111';
