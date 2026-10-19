@@ -53,7 +53,8 @@ async function requestOne(
     // Only the reviewed 503 response explicitly reports cookie expiration
     // without server revocation. A malformed/foreign response is not proof.
     const cookieClearingConfirmed =
-      response.status === 503 && body?.localCookiesCleared === true;
+      response.status === 503 && body?.success === false &&
+      body.localCookiesCleared === true && body.serverSessionRevoked === false;
     if (
       response.status !== 200 || !response.ok ||
       body?.success !== true ||
