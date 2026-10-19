@@ -7,6 +7,8 @@ export const dynamic = 'force-dynamic';
  *
  * AUTH SECURITY CANDIDATE ONLY. Native callers are NOT qualified here:
  * no Origin:null, implicit host trust, or unverified Capacitor bypass.
+ * Same-origin web callers may present x-session-token when cookies are unavailable.
+ * Conflicting cookie/header credentials are refused rather than silently choosing one.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
@@ -60,7 +62,17 @@ export async function POST(request: NextRequest) {
   }
 
   const cookieStore = await cookies();
-  const token = cookieStore.get('maia_session')?.value;
+  const cookieToken = cookieStore.get('maia_session')?.value || null;
+  const headerToken = request.headers.get('x-session-token') || null;
+  // Explicitly exclude query-string credentials (_t): sign-out is POST only,
+  // and query tokens are not an authorized mutation transport.
+  if (cookieToken && headerToken && cookieToken !== headerToken) {
+    return NextResponse.json(
+      { success: false, error: 'Conflicting session credentials' },
+      { status: 409, headers: { 'Cache-Control': 'no-store' } }
+    );
+  }
+  const token = cookieToken || headerToken;
   let serverSessionRevoked = false;
   let revocationUnavailable = false;
 
