@@ -155,7 +155,9 @@ enabled('C0 strict Next proxy with real synthetic PostgreSQL sessions', () => {
       cookie: 'FICTIONAL_VALID_COOKIE',
       fakeRole: 'admin',
     });
-    expect(response.status).toBe(403);
+    // This admin endpoint has no rule in strict mode: a 404 is the
+    // intended fail-closed response, not a 403 role-gate finding.
+    expect(response.status).toBe(404);
   });
 
   it('preserves Safari header fallback despite an expired cookie', async () => {
