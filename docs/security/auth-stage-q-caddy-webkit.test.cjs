@@ -194,7 +194,7 @@ test.before(async()=>{
   ' has_webauthn BOOLEAN DEFAULT FALSE, preferred_auth_method TEXT DEFAULT \'password\',',
   ' must_reset_password BOOLEAN DEFAULT FALSE, last_sign_in TIMESTAMPTZ',
   ')',
- ].join('\\n'));
+ ].join(' '));
  for(const filename of [
   '20260119000001_auth_sessions.sql',
   '20260119000004_auth_rate_limits.sql',
@@ -452,7 +452,7 @@ test('real Class A signin stays truthful if last_sign_in SQL metadata update fai
  const context=await browserContext(),page=await context.newPage();
  try {
   await page.goto(origin+'/',{waitUntil:'load'});
-  await db.query("CREATE FUNCTION stageq_fail_metadata() RETURNS trigger LANGUAGE plpgsql AS $ BEGIN RAISE EXCEPTION 'synthetic metadata failure'; END; $");
+  await db.query("CREATE FUNCTION stageq_fail_metadata() RETURNS trigger LANGUAGE plpgsql AS 'BEGIN RAISE EXCEPTION ''synthetic metadata failure''; END;'");
   await db.query('CREATE TRIGGER stageq_bad_metadata BEFORE UPDATE OF last_sign_in ON members FOR EACH ROW EXECUTE FUNCTION stageq_fail_metadata()');
   let answer;
   try {
@@ -478,7 +478,7 @@ test('real Class A signin refuses 503 without success after SQL session INSERT f
  const context=await browserContext(),page=await context.newPage();
  try {
   await page.goto(origin+'/',{waitUntil:'load'});
-  await db.query("CREATE FUNCTION stageq_fail_session() RETURNS trigger LANGUAGE plpgsql AS $ BEGIN RAISE EXCEPTION 'synthetic session insert failure'; END; $");
+  await db.query("CREATE FUNCTION stageq_fail_session() RETURNS trigger LANGUAGE plpgsql AS 'BEGIN RAISE EXCEPTION ''synthetic session insert failure''; END;'");
   await db.query('CREATE TRIGGER stageq_bad_session BEFORE INSERT ON auth_sessions FOR EACH ROW EXECUTE FUNCTION stageq_fail_session()');
   let result;
   try {
