@@ -11,6 +11,7 @@
 
 import { cookies, headers } from 'next/headers';
 import { query } from '@/lib/db/postgres';
+import { resolveConsistentSessionCredentials } from './verifiedAccess';
 
 /**
  * UUID validation regex
@@ -33,29 +34,29 @@ export async function requireMemberId(): Promise<string> {
   const cookieStore = await cookies();
   const headerStore = await headers();
 
-  // Method 1: Session cookie (preferred - works when cookies are sent)
-  const cookieToken = cookieStore.get('maia_session')?.value;
-  if (cookieToken) {
-    const memberId = await validateSessionToken(cookieToken);
-    if (memberId) {
-      return memberId;
-    }
+  const resolved = await resolveConsistentSessionCredentials<{ member_id: string }>(
+    cookieStore.get('maia_session')?.value || null,
+    headerStore.get('x-session-token'),
+    async (token) => {
+      const memberId = await validateSessionToken(token);
+      return memberId ? { member_id: memberId } : null;
+    },
+  );
+  if (!resolved.member) throw new Error('AUTH_REQUIRED');
+  const memberId = resolved.member.member_id;
+
+  // All client-provided identity claims are untrusted: no bare x-member-id,
+  // stale member cookie, or second conflicting claim can select a principal.
+  const claims = [
+    headerStore.get('x-member-id'),
+    headerStore.get('x-maia-member-id'),
+    cookieStore.get('maia_member_id')?.value,
+  ];
+  if (claims.some((claim) => claim && claim !== memberId)) {
+    throw new Error('AUTH_REQUIRED');
   }
 
-  // Method 2: Session token header (Safari/iOS fallback when cookies blocked)
-  const headerToken = headerStore.get('x-session-token');
-  if (headerToken) {
-    const memberId = await validateSessionToken(headerToken);
-    if (memberId) {
-      return memberId;
-    }
-  }
-
-  // Method 3 (x-member-id without session token) REMOVED for security.
-  // Previously accepted any valid member UUID if they had an active session,
-  // which allowed impersonation attacks. Use x-session-token header instead.
-
-  throw new Error('AUTH_REQUIRED');
+  return memberId;
 }
 
 /**
