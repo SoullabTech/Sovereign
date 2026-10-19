@@ -46,7 +46,7 @@ jobs:
       PGUSER: stageq_next_fixture
       PGPASSWORD: stageq_next_fictional_password_only
       DATABASE_URL: postgresql://stageq_next_fixture:stageq_next_fictional_password_only@127.0.0.1:5550/stageq_next_fictional
-      AUTH_SIGNOUT_TRUSTED_WEB_ORIGINS: https://127.0.0.1:3844
+      AUTH_SIGNOUT_TRUSTED_WEB_ORIGINS: https://127.0.0.1
       ACCESS_CONTROL_MODE: strict
       NEXT_TELEMETRY_DISABLED: "1"
 
