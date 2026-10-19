@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
 import { getDMMessagesSince } from '@/lib/team/DMService';
+import { query } from '@/lib/db/postgres';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -44,8 +45,18 @@ export async function GET(
     start(controller) {
       let idleCycles = 0;
       let timer: ReturnType<typeof setTimeout> | null = null;
+      let closed = false;
+
+      const closeStream = () => {
+        if (closed) return;
+        closed = true;
+        if (timer) clearTimeout(timer);
+        timer = null;
+        try { controller.close(); } catch { /* already closed */ }
+      };
 
       const emit = (lines: string[]) => {
+        if (closed || req.signal.aborted) return;
         controller.enqueue(encoder.encode(lines.join('\n') + '\n\n'));
       };
 
@@ -53,8 +64,28 @@ export async function GET(
       emit(['event: ready', `data: ${JSON.stringify({ dmId, afterTs })}`]);
 
       const tick = async () => {
+        if (closed || req.signal.aborted) { closeStream(); return; }
         try {
           const messages = await getDMMessagesSince(dmId, memberId, afterTs);
+
+          // C0-SSE-LIVE: GET was authorized at the handshake, but the
+          // session or DM membership may be withdrawn during a long stream.
+          // Recheck both AFTER reading and immediately before any delivery.
+          // The service also checks DM membership before reading messages;
+          // this second check detects withdrawal between its read and emit.
+          const live = await deriveVerifiedAccess(req);
+          if (!live.authenticated || live.memberId !== memberId) {
+            closeStream();
+            return;
+          }
+          const currentMembership = await query<{ present: number }>(
+            'SELECT 1 AS present FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2 LIMIT 1',
+            [dmId, memberId],
+          );
+          if (!currentMembership.rows[0] || closed || req.signal.aborted) {
+            closeStream();
+            return;
+          }
 
           if (messages.length > 0) {
             const maxTs = Math.max(...messages.map(m => new Date(m.createdAt).getTime()));
@@ -66,19 +97,20 @@ export async function GET(
             idleCycles++;
           }
         } catch {
-          emit([`: keepalive ${Date.now()}`]);
+          // A failing authority/membership query must never allow content to
+          // flow on the previous grant. Also avoid error-detail disclosure.
+          closeStream();
+          return;
         }
 
+        if (closed || req.signal.aborted) { closeStream(); return; }
         const idx = Math.min(idleCycles, INTERVALS.length - 1);
         timer = setTimeout(tick, INTERVALS[idx]);
       };
 
       timer = setTimeout(tick, INTERVALS[0]);
 
-      req.signal.addEventListener('abort', () => {
-        if (timer) clearTimeout(timer);
-        try { controller.close(); } catch { /* ignore */ }
-      });
+      req.signal.addEventListener('abort', closeStream, { once: true });
     },
   });
 
