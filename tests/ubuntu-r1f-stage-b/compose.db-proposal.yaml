@@ -1,0 +1,38 @@
+# FUTURE DISPOSABLE DATABASE PROPOSAL / NOT AUTHORIZED TO START.
+# Deliberately separated from the static preflight; no app services or automated tests.
+name: ubuntu-r1f-stageb-future-db-proposal
+services:
+  pg-fixture:
+    profiles: [stageb-db-future-authority-required]
+    image: "${R1F_PG_IMAGE_DIGEST:?must supply a verified, preloaded PostgreSQL image digest}"
+    pull_policy: never
+    restart: "no"
+    read_only: true
+    security_opt: ["no-new-privileges:true"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: fictional_bootstrap_only
+      POSTGRES_DB: ubuntu_r1f_ephemeral
+      PGDATA: /var/lib/postgresql/data/pgdata
+    tmpfs:
+      - /var/lib/postgresql/data:rw,nosuid,nodev,size=512m,mode=1777
+      - /var/run/postgresql:rw,nosuid,nodev,size=8m,mode=1777
+      - /tmp:rw,nosuid,nodev,size=32m
+    volumes:
+      - type: bind
+        source: ./init/01-fixture-attestation.sql
+        target: /docker-entrypoint-initdb.d/01-fixture-attestation.sql
+        read_only: true
+    networks: [fictional-only]
+    ports: []
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ubuntu_r1f_ephemeral"]
+      interval: 3s
+      timeout: 3s
+      retries: 12
+    mem_limit: 768m
+    pids_limit: 96
+networks:
+  fictional-only:
+    internal: true
+    driver: bridge
