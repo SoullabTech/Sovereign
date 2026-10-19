@@ -38,6 +38,7 @@ const cases = [
   },
 ] as const;
 
+async function main() {
 for (const c of cases) {
   const browser = await c.type.launch(c.launch);
   try {
@@ -63,3 +64,9 @@ for (const c of cases) {
   }
 }
 console.log('C0_BROWSER_UI_WITNESS_PASS 2/2');
+}
+
+main().catch((error) => {
+  console.error('C0_BROWSER_UI_WITNESS_FAIL', error instanceof Error ? error.message : 'unknown');
+  process.exitCode = 1;
+});
