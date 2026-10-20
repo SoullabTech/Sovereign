@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { checkAdminAuth } from '@/lib/admin/adminAuth';
+import { checkAdminAuth, adminRequestIp, auditAdminPasswordLogin } from '@/lib/admin/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,12 +16,6 @@ export const dynamic = 'force-dynamic';
 const failedAttempts = new Map<string, { count: number; lastAttempt: number }>();
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
-
-function getClientIP(req: NextRequest): string {
-  return req.headers.get('x-forwarded-for')?.split(',')[0] ||
-         req.headers.get('x-real-ip') ||
-         'unknown';
-}
 
 function isRateLimited(ip: string): boolean {
   const record = failedAttempts.get(ip);
@@ -60,10 +54,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const ip = getClientIP(req);
+  const ip = adminRequestIp(req);
 
   // Check rate limit
   if (isRateLimited(ip)) {
+    await auditAdminPasswordLogin(req, false);
     return NextResponse.json(
       { error: 'Too many failed attempts. Try again later.' },
       { status: 429 }
@@ -77,6 +72,7 @@ export async function POST(req: NextRequest) {
 
     if (!adminPassword) {
       console.error('[admin/auth] LABTOOLS_ADMIN_PASSWORD not set');
+      await auditAdminPasswordLogin(req, false);
       return NextResponse.json(
         { error: 'Admin authentication not configured' },
         { status: 500 }
@@ -84,10 +80,12 @@ export async function POST(req: NextRequest) {
     }
 
     if (password === adminPassword) {
-      clearFailedAttempts(ip);
-
-      // Generate a simple session token (in production, use proper JWT)
+      // Retain the existing response contract; the returned token is not a
+      // verified server session and confers no independent authority.
       const token = Buffer.from(`admin:${Date.now()}:${crypto.randomUUID()}`).toString('base64');
+
+      await auditAdminPasswordLogin(req, true);
+      clearFailedAttempts(ip);
 
       return NextResponse.json({
         success: true,
@@ -97,6 +95,7 @@ export async function POST(req: NextRequest) {
     }
 
     recordFailedAttempt(ip);
+    await auditAdminPasswordLogin(req, false);
     const record = failedAttempts.get(ip);
     const remaining = MAX_ATTEMPTS - (record?.count || 0);
 
@@ -104,8 +103,10 @@ export async function POST(req: NextRequest) {
       { error: 'Invalid password', attemptsRemaining: remaining },
       { status: 401 }
     );
-  } catch (error) {
-    console.error('[admin/auth] Error:', error);
+  } catch {
+    // Never include a malformed password payload in error logs.
+    await auditAdminPasswordLogin(req, false);
+    console.error('[admin/auth] Invalid or failed password-authentication request');
     return NextResponse.json(
       { error: 'Authentication failed' },
       { status: 500 }

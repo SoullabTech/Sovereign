@@ -37,8 +37,36 @@ async function auditLog(
       [via, memberId ?? null, role ?? null, route, ip],
     );
   } catch {
-    // Audit log must never block access
+    // Audit writes remain non-blocking, but an outage must be observable.
+    // Do not log request headers, credentials, member identifiers, or DB payloads.
+    console.error('[admin/audit] admin_access_log write failed');
   }
+}
+
+/**
+ * IP is supplied by the trusted reverse-proxy boundary, not independently
+ * authenticated here. Do not treat arbitrary X-Forwarded-For as proof of origin.
+ */
+export function adminRequestIp(req: NextRequest): string {
+  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || req.headers.get('x-real-ip')?.trim()
+    || 'unknown';
+}
+
+/**
+ * Record shared-password POST outcomes separately from GET admin checks.
+ * The existing schema permits password/denied only; the route's POST prefix
+ * distinguishes this event without a migration or credential-bearing payload.
+ * Storage failures are intentionally non-blocking and observable.
+ */
+export async function auditAdminPasswordLogin(req: NextRequest, granted: boolean): Promise<void> {
+  await auditLog(
+    granted ? 'password' : 'denied',
+    `POST ${req.nextUrl.pathname}`,
+    adminRequestIp(req),
+    undefined,
+    granted ? 'founder' : undefined,
+  );
 }
 
 /**
@@ -50,10 +78,7 @@ export async function checkAdminAuth(
   allowedRoles: AdminRole[] = ALL_ADMIN_ROLES,
   routeOverride?: string,
 ): Promise<AdminAuthResult> {
-  const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    req.headers.get('x-real-ip') ??
-    'unknown';
+  const ip = adminRequestIp(req);
   const route = routeOverride ?? req.nextUrl.pathname;
 
   // --- Path 1: VERIFIED member session ---
