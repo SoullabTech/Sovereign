@@ -116,6 +116,12 @@ export type ReturnPreference =
   | 'contextual_doorway'    // MAIA may offer when proximity filter passes (Phase 2)
   | 'ritual_review_opt_in'; // appears in member-enabled review surfaces (Phase 2+)
 
+/** Provenance of the current return preference — preference alone is not authority. */
+export type ReturnPreferenceAuthority =
+  | 'legacy_ambiguous' // predates explicit provenance; never sufficient for ambient return
+  | 'default_private'  // created private; no REOPEN authority has been granted
+  | 'member_explicit'; // current preference was set by an explicit member gesture
+
 /**
  * The member's verdict on an observation surfaced ABOUT them (a
  * practitioner_observation atom). NULL until the member responds.
@@ -208,6 +214,7 @@ export interface CrystallizedMemory {
 
   // Return loop preferences
   returnPreference: ReturnPreference;
+  returnAuthority: ReturnPreferenceAuthority;
   lastSurfacedAt: string | null;
   surfaceCount: number;
 

@@ -72,38 +72,45 @@ describe('the member\'s turn survives recognition', () => {
   });
 });
 
-describe('recognition does not commit', () => {
-  it('the material branch surfaces a doorway, it does not open the panel', () => {
-    const material = KEEP_BLOCK.slice(KEEP_BLOCK.indexOf("keepIntent.kind === 'open_keep'"));
-    const doorway = material.slice(material.indexOf('} else if'));
-    expect(doorway).toContain('buildUiAction');
-    expect(doorway).not.toContain('handleCaptureSpiritRef');
+describe('recognition does not commit or select', () => {
+  it('bare keep_material requires an exact referent instead of Reflection distillation', () => {
+    const material = KEEP_BLOCK.slice(KEEP_BLOCK.indexOf('} else {'));
+    expect(material).toContain("type: 'clarify_keep_referent'");
+    expect(material).toContain('Which exact words do you want to keep?');
+    expect(material).not.toContain("getIntentRoute('reflection_mark')");
+    expect(material).not.toContain('handleCaptureSpiritRef');
   });
 
-  it('nothing in the block persists anything', () => {
-    expect(KEEP_BLOCK).not.toMatch(/apiFetch|createCapsule|\/api\/capsules/);
+  it('nothing in the block persists or prepares a Reflection Capsule', () => {
+    expect(KEEP_BLOCK).not.toMatch(/apiFetch|createCapsule|\/api\/capsules|handleCaptureSpiritRef/);
+    expect(KEEP_BLOCK).not.toContain("type: 'open_reflection'");
   });
 
-  it('the doorway names the member as the one who asked, not MAIA as noticer', () => {
-    expect(KEEP_BLOCK).toContain("leadIn: 'You asked to keep this.'");
+  it('the clarifier names the boundary instead of claiming significance', () => {
+    expect(KEEP_BLOCK).toContain('I won’t choose for you.');
   });
 });
 
-describe('explicit "open Keep" opens Keep, and only opens it', () => {
-  it('the explicit branch invokes the capture handler', () => {
+describe('explicit "open Keep" means the Keep room, not Reflection capture', () => {
+  it('attaches the qualified Keep-room action', () => {
     const open = KEEP_BLOCK.slice(
       KEEP_BLOCK.indexOf("keepIntent.kind === 'open_keep'"),
+      KEEP_BLOCK.indexOf('} else {', KEEP_BLOCK.indexOf("keepIntent.kind === 'open_keep'")),
     );
-    expect(open).toContain('handleCaptureSpiritRef.current?.()');
+    expect(open).toContain("type: 'open_keep_home'");
+    expect(open).not.toContain('handleCaptureSpiritRef');
+    expect(open).not.toContain('open_reflection');
   });
 
-  it('opening is safe because the open seam no longer writes', () => {
-    // The precondition Kelly set before authorizing this wire.
-    const route = readFileSync(
-      join(__dirname, '..', '..', 'app', 'api', 'capsules', 'from-chat-window', 'route.ts'),
-      'utf8',
-    ).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
-    expect(route).not.toMatch(/\bcreateCapsule\s*\(/);
+  it('the doorway handler routes generic Keep to the Keep room', () => {
+    expect(SOURCE).toContain("case 'open_keep_home':");
+    expect(SOURCE).toContain("router.push('/maia/keep-capture');");
+  });
+
+  it('the persistent generic Keep bookmark also opens the Keep room', () => {
+    const bookmark = SOURCE.indexOf('aria-label="Open Keep"');
+    expect(bookmark).toBeGreaterThan(-1);
+    expect(SOURCE.slice(Math.max(0, bookmark - 500), bookmark)).toContain("router.push('/maia/keep-capture')");
   });
 });
 

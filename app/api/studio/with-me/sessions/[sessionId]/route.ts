@@ -138,14 +138,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
                (member_id, source_type, source_id,
                 facilitator_id, title, body,
                 primary_register, registers, elemental_lenses,
-                epistemological_status, status, return_preference,
+                epistemological_status, status, return_preference, return_authority,
                 crossing_allowed, provenance,
                 posture_at_creation, generated_by)
              VALUES
                ($1, 'practitioner_observation', $2,
                 $3, $4, $5,
                 'witnessed', ARRAY['witnessed']::text[], $6::text[],
-                'observed', 'active', 'contextual_doorway',
+                'observed', 'active', 'member_pulled', 'default_private',
                 false, $7::jsonb,
                 'normal', 'practitioner-observation')
              ON CONFLICT DO NOTHING

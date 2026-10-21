@@ -157,6 +157,17 @@ const FILING_PATTERNS: FilingPattern[] = [
 ];
 
 /**
+ * R9 exact-referent guard. A bare deictic names an intention to keep, not the
+ * material itself. Until a governed referent resolver exists, this seam must
+ * refuse to manufacture one from adjacency or model judgment.
+ */
+export function hasUnresolvedKeepReferent(utterance: string): boolean {
+  const text = utterance.trim();
+  if (!/\b(this|that|it)\b/i.test(text)) return false;
+  return /\b(keep|save|store|file|put|add|remember|hold|journal|protect)\b/i.test(text);
+}
+
+/**
  * Parse a member-directed FILING instruction from an utterance.
  * Returns null when no filing-shaped pattern matches.
  *
@@ -166,6 +177,10 @@ const FILING_PATTERNS: FilingPattern[] = [
 export function parseFilingInstruction(input: { utterance: string }): FilingInstruction | null {
   const utterance = input.utterance.trim();
   if (!utterance) return null;
+  // Every current filing pattern points with this/that/it. Without a referent
+  // resolver, returning an instruction here would persist the command text,
+  // not the material the member meant. Withhold all deictic filings for now.
+  if (/\b(this|that|it)\b/i.test(utterance)) return null;
 
   for (const { pattern, destination, confidence } of FILING_PATTERNS) {
     const match = utterance.match(pattern);
@@ -294,6 +309,8 @@ function isAmbiguous(utterance: string): boolean {
 
 export interface KeepWorthinessInput {
   utterance: string;
+  /** J4: candidate generation requires an explicit member request for help. */
+  memberRequestedCandidates?: boolean;
   conversationTurn: number;
   recentOfferCount: number;
   recentDeclineCount: number;
@@ -321,6 +338,9 @@ export const KEEP_OFFER_POLICY = {
  *   - Threshold raised by repeated declines and this signal doesn't clear it
  */
 export function evaluateKeepOffer(input: KeepWorthinessInput): KeepOffer | null {
+  // Candidate generation is not selection authority. Current route callers do
+  // not carry an explicit candidate-help act, so proactive Keep offers fail closed.
+  if (input.memberRequestedCandidates !== true) return null;
   if (input.offersPaused) return null;
   if (input.recentOfferCount >= KEEP_OFFER_POLICY.maxOffersPerConversation) return null;
   if (input.conversationTurn < KEEP_OFFER_POLICY.minTurnsBeforeOffer) return null;
@@ -333,6 +353,7 @@ export function evaluateKeepOffer(input: KeepWorthinessInput): KeepOffer | null 
 
   const utterance = input.utterance.trim();
   if (!utterance) return null;
+  if (hasUnresolvedKeepReferent(utterance)) return null;
 
   // Ambiguity suppression — confidence floor.
   // Member-tentative language doesn't trigger the offer; it raises internal

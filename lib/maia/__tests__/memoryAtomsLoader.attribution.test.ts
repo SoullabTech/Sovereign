@@ -31,6 +31,7 @@ function snapshot(overrides: Partial<MemoryAtomSnapshot> = {}): MemoryAtomSnapsh
     status: 'active',
     keptAt: new Date('2026-06-01T00:00:00Z'),
     returnPreference: 'contextual_doorway',
+    returnAuthority: 'member_explicit',
     sourceType: 'idea',
     isBreakthrough: false,
     markedBreakthroughAt: null,
