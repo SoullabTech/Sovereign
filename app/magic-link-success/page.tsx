@@ -121,29 +121,29 @@ function MagicLinkSuccessContent() {
     >
       {phase === 'error' ? (
         <>
-          <div className="w-12 h-12 bg-amber-100/60 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-amber-600 text-2xl">!</span>
+          <div className="w-12 h-12 bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-amber-400 text-2xl">!</span>
           </div>
-          <p className="text-teal-900 font-light mb-4">Something went wrong with that link.</p>
+          <p className="text-slate-200 font-light mb-4">Something went wrong with that link.</p>
           <button
             onClick={() => router.push('/signin')}
-            className="px-6 py-2 rounded-xl bg-teal-700 text-white text-sm font-medium hover:bg-teal-800 transition"
+            className="px-6 py-2 rounded-xl bg-maia-navy-700 text-white text-sm font-medium hover:bg-maia-navy-600 transition-all"
           >
             Try again
           </button>
         </>
       ) : phase === 'redirecting' ? (
         <>
-          <div className="w-12 h-12 bg-emerald-100/60 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-emerald-600 text-2xl">✓</span>
+          <div className="w-12 h-12 bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-emerald-400 text-2xl">✓</span>
           </div>
-          <p className="text-teal-900 font-light tracking-wide text-lg">{greeting}</p>
-          <p className="text-teal-700/60 text-sm mt-2">Taking you in…</p>
+          <p className="text-slate-200 font-light tracking-wide text-lg">{greeting}</p>
+          <p className="text-slate-400 text-sm mt-2">Taking you in…</p>
         </>
       ) : (
         <>
-          <div className="animate-spin w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-teal-900 font-light tracking-wide">
+          <div className="animate-spin w-8 h-8 border-2 border-slate-300 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-slate-200 font-light tracking-wide">
             {phase === 'hydrating' ? 'Signing you in…' : 'Checking your progress…'}
           </p>
         </>
@@ -156,7 +156,7 @@ function MagicLinkSuccessContent() {
 
 export default function MagicLinkSuccessPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4">
+    <div className="min-h-[100dvh] bg-soullab-core flex flex-col items-center justify-center px-4">
       <div className="mb-8 z-10 relative">
         <div className="w-32 h-32 flex items-center justify-center">
           <Holoflower size="lg" glowIntensity="medium" animate={true} />
@@ -167,18 +167,19 @@ export default function MagicLinkSuccessPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="rounded-2xl p-8 shadow-2xl border max-w-md w-full text-center"
+        className="rounded-2xl p-8 max-w-md w-full text-center"
         style={{
-          background: 'linear-gradient(145deg, rgba(255,255,255,0.18), rgba(110,231,183,0.05), rgba(255,255,255,0.15))',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          boxShadow: '0 0 60px rgba(251,191,36,0.3), 0 0 100px rgba(245,158,11,0.2)',
+          background: 'linear-gradient(165deg, rgba(15, 29, 50, 0.8), rgba(10, 22, 40, 0.6))',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(30, 58, 95, 0.5)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(30, 58, 95, 0.3)',
         }}
       >
         <Suspense fallback={
           <div className="text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full mx-auto mb-4" />
-            <p className="text-teal-900 font-light tracking-wide">Signing you in…</p>
+            <div className="animate-spin w-8 h-8 border-2 border-slate-300 border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-slate-200 font-light tracking-wide">Signing you in…</p>
           </div>
         }>
           <MagicLinkSuccessContent />
