@@ -89,6 +89,26 @@ function humanFounderAsk(u) {
   return `A decision is waiting for you: ${need.what || need.action || 'review this work'}.`;
 }
 
+function founderAttentionGate(u) {
+  const need=arr(u?.needs_founder)[0];
+  if (!need) return null;
+  const adjudication=need.action==='canonical-adjudicate';
+  return {
+    whyKelly: adjudication
+      ? 'Only founder adjudication can advance this governed work.'
+      : 'This work has reached an explicit founder-authority boundary.',
+    whyNow: adjudication
+      ? 'The evidence is ready for a pass, revise, or hold decision.'
+      : `JARVIS is waiting on: ${need.what || need.action || 'your decision'}.`,
+    ifNothing: 'The work stays held. JARVIS does not advance it without your authority.',
+  };
+}
+
+function attentionGateDetails(gate) {
+  if (!gate) return '';
+  return `<div class="attentionGate"><div><b>Why you</b> · ${esc(gate.whyKelly)}</div><div><b>Why now</b> · ${esc(gate.whyNow)}</div><div><b>If you do nothing today</b> · ${esc(gate.ifNothing)}</div></div>`;
+}
+
 function friendlyProgrammeName(p) {
   const id=String(p?.name||p?.id||'Programme');
   if (id==='JOP-04') return 'JARVIS Desktop rules';
@@ -289,7 +309,7 @@ function deriveActiveFields() {
     const ask=humanFounderAsk(u);
     fields.push({
       bucket: ask?'needs':'motion', kind:'work', id:u.id, label:humanWorkSubject(u), source:u.file,
-      what:humanWorkStatus(u), moving:u.state_plain||u.state, needs:ask, changed:u.last_event||null,
+      what:humanWorkStatus(u), moving:u.state_plain||u.state, needs:ask, gate:founderAttentionGate(u), changed:u.last_event||null,
       level:ask?'warn':'neutral', type:ask?'Needs Kelly':'In motion',
       technical:[`Work Unit: ${u.title}`, `State: ${u.state}`, u.route?`Route: ${u.route}`:null, `Evidence: ${u.evidence_state}`, u.file?`Source: ${u.file}`:null],
     });
@@ -317,7 +337,129 @@ function deriveActiveFields() {
 }
 
 function activeFieldRow(f, origin='Today') {
-  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(f.label)}</div><div class="rowPlain">${esc(f.what||'Observed field')}</div>${f.needs?`<div class="rowPlain"><b>Needs Kelly:</b> ${esc(f.needs)}</div>`:''}${f.changed?`<div class="rowMeta">Changed: ${esc(f.changed)}</div>`:''}${technicalDetails(f.technical)}<div class="actions">${contextButton(f.kind,f.id,f.label,origin,f.source,'Enter field')}${f.source?evidenceButton(f.source):''}</div></div>${pill(f.type,f.level)}</div></div>`;
+  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(f.label)}</div><div class="rowPlain">${esc(f.what||'Observed field')}</div>${f.needs?`<div class="rowPlain"><b>Needs Kelly:</b> ${esc(f.needs)}</div>`:''}${attentionGateDetails(f.gate)}${f.changed?`<div class="rowMeta">Changed: ${esc(f.changed)}</div>`:''}${technicalDetails(f.technical)}<div class="actions">${contextButton(f.kind,f.id,f.label,origin,f.source,'Enter field')}${f.source?evidenceButton(f.source):''}</div></div>${pill(f.type,f.level)}</div></div>`;
+}
+
+function deriveAttentionDomains(fields) {
+  const vm=state.vm;
+  const work=arr(vm.work?.units);
+  const programmes=arr(vm.programme_state?.programmes);
+  const monitor=arr(vm.monitor);
+  const founderFocus=vm.work?.founder_focus || { visibility:'not-connected', items:[] };
+  const focusItems=arr(founderFocus.items);
+  const memberAttention=vm.work?.member_attention || { visibility:'not-connected', items:[] };
+  const memberItems=arr(memberAttention.items);
+  const teamAttention=vm.work?.team_attention || { visibility:'not-connected', items:[] };
+  const teamItems=arr(teamAttention.items);
+  const worldAttention=vm.work?.world_attention || { visibility:'not-connected', items:[] };
+  const worldItems=arr(worldAttention.items);
+  const teamObserved=work.length>0;
+  const platformObserved=work.length>0 || programmes.length>0 || monitor.length>0;
+  return [
+    {
+      id:'members', label:'Members', visibility:memberAttention.visibility || 'not-connected', memberItems,
+      plain:memberAttention.visibility==='partial'
+        ? (memberItems.length ? 'Founder follow-up signals are visible here. Other member signals are not yet joined, so this is not a complete all-clear.' : 'Founder Ops is visible and has no due member/beta follow-ups, but other member signals are not yet joined.')
+        : 'Member relationship signals are not connected to this Founder Workspace yet. JARVIS will not interpret silence as nobody needing you.',
+      source:memberAttention.source || 'No admitted member-attention organ in founder-workspace-viewmodel.v1.',
+    },
+    {
+      id:'team', label:'Team', visibility:teamAttention.visibility || (teamObserved?'partial':'not-connected'), teamItems,
+      plain:(teamAttention.visibility==='partial' || teamObserved)
+        ? (teamItems.length ? 'AI-partner handoffs and governed JARVIS work are visible. Human-team channels are not yet joined, so this remains partial.' : 'Governed JARVIS work is visible here. Human-team channels are not yet joined.')
+        : 'No governed team-work signal is visible in this snapshot.',
+      source:teamAttention.source || (teamObserved?'work.units · governed Work Unit records':'No observed Work Unit rows.'),
+    },
+    {
+      id:'platform', label:'Platform', visibility:platformObserved?'observed':'not-connected',
+      plain:platformObserved
+        ? 'Platform work, programme standing, and admitted observations can contribute to Today.'
+        : 'Platform state has not been observed in this snapshot.',
+      source:platformObserved?'work.units · programme_state · monitor':'No observed platform rows.',
+    },
+    {
+      id:'finance', label:'Finance', visibility:'not-connected',
+      plain:'Cash, revenue, receivables, spending, taxes, runway, pricing, and family-provision signals are not connected yet. JARVIS will not infer financial safety from missing data.',
+      source:'No admitted finance organ in founder-workspace-viewmodel.v1.',
+    },
+    {
+      id:'world', label:'World', visibility:worldAttention.visibility || 'not-connected', worldItems,
+      plain:worldAttention.visibility==='partial'
+        ? (worldItems.length ? 'Due next actions for leads, partners, and press are visible. Campaign performance and the wider market are not yet joined.' : 'Founder Ops is visible and has no due lead/partner/press follow-ups, but campaign and market signals are not yet joined.')
+        : 'Outreach, partnerships, publishing, GTM, and outside-world signals are not connected to this Founder Workspace yet.',
+      source:worldAttention.source || 'No admitted world-attention organ in founder-workspace-viewmodel.v1.',
+    },
+    {
+      id:'your-work', label:'Your Work', visibility:founderFocus.visibility || 'not-connected', items:focusItems,
+      plain:founderFocus.visibility==='observed'
+        ? (focusItems.length ? 'Your protected work is explicitly named by you and held apart from operational noise.' : 'Your focus organ is connected, but you have not named protected work yet.')
+        : founderFocus.visibility==='partial'
+          ? 'Your protected-work record was only partly readable. JARVIS will not fill the gaps.'
+          : 'Protected creative work is not yet connected as a governed attention source. Today will not guess what your deepest work should be.',
+      source:founderFocus.source || 'No admitted founder-focus organ in founder-workspace-viewmodel.v1.',
+    },
+  ];
+}
+
+function attentionDomainCard(d) {
+  const label=d.visibility==='observed'?'Observed':d.visibility==='partial'?'Partial':'Not connected';
+  const level=d.visibility==='observed'?'good':d.visibility==='partial'?'warn':'unobserved';
+  const items=arr(d.items);
+  const members=arr(d.memberItems);
+  const team=arr(d.teamItems);
+  const world=arr(d.worldItems);
+  const focus=items.length?`<div class="protectedWork">${items.map(x=>`<div class="protectedWorkItem"><b>${esc(x.label)}</b><div>${esc(x.intention)}</div>${x.next_act?`<div class="nextAct"><b>Next act</b> · ${esc(x.next_act)}</div>`:''}</div>`).join('')}</div>`:'';
+  const memberRows=members.length?`<div class="protectedWork memberAttention">${members.map(x=>`<div class="protectedWorkItem"><b>${esc(x.name)}</b><div>${esc(x.next_action)}</div><div class="nextAct">${esc(x.relationship)} · ${esc(x.stage)}${x.due_at?` · due ${esc(String(x.due_at).slice(0,10))}`:''}</div></div>`).join('')}</div>`:'';
+  const teamRows=team.length?`<div class="protectedWork teamAttention">${team.map(x=>`<div class="protectedWorkItem"><b>${esc(x.source)}</b><div>${esc(x.field)}</div><div class="nextAct">${esc(x.summary)}</div></div>`).join('')}</div>`:'';
+  const worldRows=world.length?`<div class="protectedWork worldAttention">${world.map(x=>`<div class="protectedWorkItem"><b>${esc(x.name)}</b><div>${esc(x.next_action)}</div><div class="nextAct">${esc(x.relationship)} · ${esc(x.stage)}${x.due_at?` · due ${esc(String(x.due_at).slice(0,10))}`:''}</div></div>`).join('')}</div>`:'';
+  return `<div class="attentionDomain"><div class="attentionDomainTop"><b>${esc(d.label)}</b>${pill(label,level)}</div><div class="rowPlain">${esc(d.plain)}</div>${memberRows}${teamRows}${worldRows}${focus}${technicalDetails([`Visibility: ${label}`,`Source: ${d.source}`])}</div>`;
+}
+
+function renderAttentionDomains(fields) {
+  const domains=deriveAttentionDomains(fields);
+  return `<section class="section attentionDomains"><h2>Your field <span class="muted">what JARVIS can and cannot see today</span></h2><div class="attentionDomainGrid">${domains.map(attentionDomainCard).join('')}</div></section>`;
+}
+
+function deriveDailySynthesis(fields) {
+  const domains=deriveAttentionDomains(fields);
+  const needs=fields.filter(f=>f.bucket==='needs');
+  const members=domains.find(d=>d.id==='members');
+  const world=domains.find(d=>d.id==='world');
+  const yourWork=domains.find(d=>d.id==='your-work');
+  const due=[...arr(members?.memberItems), ...arr(world?.worldItems)];
+  const protectedItems=arr(yourWork?.items).filter(x=>x.protected!==false);
+  const attention=[];
+  for (const f of needs.slice(0,3)) attention.push({
+    kind:'requires', label:f.label, text:f.needs || f.what, meta:'Requires your authority',
+  });
+  for (const x of due.slice(0,Math.max(0,3-attention.length))) attention.push({
+    kind:'review', label:x.name, text:x.next_action, meta:`${x.relationship} · due follow-up`,
+  });
+  if (attention.length<3 && protectedItems.length) {
+    const x=protectedItems[0];
+    attention.push({ kind:'protect', label:x.label, text:x.next_act || x.intention, meta:'Protected work' });
+  }
+  return {
+    attention,
+    hiddenNeeds:Math.max(0,needs.length-attention.filter(x=>x.kind==='requires').length),
+    coverageGaps:domains.filter(d=>d.visibility==='not-connected').map(d=>d.label),
+  };
+}
+
+function dailyAttentionCard(item) {
+  const label=item.kind==='requires'?'Needs you':item.kind==='review'?'Review':'Protect';
+  const level=item.kind==='requires'?'warn':item.kind==='review'?'neutral':'good';
+  return `<div class="dailyAttentionItem"><div class="dailyAttentionTop"><b>${esc(item.label)}</b>${pill(label,level)}</div><div class="rowPlain">${esc(item.text)}</div><div class="rowMeta">${esc(item.meta)}</div></div>`;
+}
+
+function renderDailySynthesis(fields) {
+  const s=deriveDailySynthesis(fields);
+  const body=s.attention.length
+    ? s.attention.map(dailyAttentionCard).join('')
+    : `<div class="empty">Nothing currently earns your attention. Protect your own work.</div>`;
+  const more=s.hiddenNeeds?`<div class="rowMeta">${s.hiddenNeeds} additional founder decision${s.hiddenNeeds===1?'':'s'} remain in Needs Kelly below.</div>`:'';
+  const gaps=s.coverageGaps.length?`<div class="coverageNote"><b>Still not visible:</b> ${esc(s.coverageGaps.join(' · '))}. Missing visibility is not an all-clear.</div>`:'';
+  return `<section class="section dailySynthesis"><h2>What deserves you today <span class="muted">JARVIS synthesis</span></h2><div class="dailyAttentionGrid">${body}</div>${more}${gaps}</section>`;
 }
 
 function renderToday() {
@@ -334,11 +476,14 @@ function renderToday() {
       : 'Nothing is asking for your attention right now.';
   const listOrEmpty=(xs,msg)=>xs.length?xs.map(f=>activeFieldRow(f)).join(''):`<div class="empty">${esc(msg)}</div>`;
   const recent=events.length?`<div class="card"><div class="timeline">${events.slice(0,14).map(e=>`<div class="date">${esc(String(e.at||'').slice(0,16)||'—')}</div><div>${esc(e.text||e.kind)} <span class="muted mono">· ${esc(e.source||'')}</span>${e.source?` ${evidenceButton(e.source,'Open')}`:''}</div>`).join('')}</div></div>`:`<div class="empty">No recent events are recorded in the local event organ.</div>`;
-  return `<div class="eyebrow">Today · Kelly's world</div><h1>${headline}</h1>
-    <p class="lede">Start with what requires you, then what is already moving, then what only needs watching. Technical truth is still here, one layer down. ${unclassified} source subject${unclassified===1?' is':'s are'} unclassified${unreadable?`; ${unreadable} are unreadable`:''}.</p>
-    <section class="section"><h2>Needs Kelly <span class="muted">decisions waiting for you</span></h2><div class="list">${listOrEmpty(needs,'Nothing is waiting for a decision from you.')}</div></section>
-    <section class="section"><h2>In motion <span class="muted">work already moving</span></h2><div class="list">${listOrEmpty(motion,'No governed work is currently moving.')}</div></section>
-    <section class="section"><h2>Watching <span class="muted">uncertainty and observed conditions</span></h2><div class="list">${listOrEmpty(watching,'Nothing currently needs watching.')}</div></section>
+  return `<div class="eyebrow">Today · Daily check-in</div><h1>${headline}</h1>
+    <p class="lede">JARVIS filters for your attention before showing you the machinery. Start with what only you can decide, then what is already being carried, then what merely needs watching. Technical truth remains one layer down. ${unclassified} source subject${unclassified===1?' is':'s are'} unclassified${unreadable?`; ${unreadable} are unreadable`:''}.</p>
+    <div class="card attentionLaw"><b>Attention law</b><p>Nothing belongs in Needs Kelly merely because it exists. It must require your presence, judgment, authorship, care, or authority. If JARVIS can lawfully carry it, it stays out of your way.</p></div>
+    ${renderDailySynthesis(fields)}
+    ${renderAttentionDomains(fields)}
+    <section class="section"><h2>Needs Kelly <span class="muted">only work that cannot lawfully move without you</span></h2><div class="list">${listOrEmpty(needs,'Nothing is waiting for a decision from you.')}</div></section>
+    <section class="section"><h2>In motion <span class="muted">already being carried — no action from you</span></h2><div class="list">${listOrEmpty(motion,'No governed work is currently moving.')}</div></section>
+    <section class="section"><h2>Watching <span class="muted">stay aware; do not act unless this changes</span></h2><div class="list">${listOrEmpty(watching,'Nothing currently needs watching.')}</div></section>
     <details class="secondaryDetails"><summary>Everything else</summary><div class="detailsBody"><h2>Changed recently</h2>${recent}${workspaceCard()}</div></details>`;
 }
 
