@@ -379,6 +379,12 @@ export function clearAuthState(): void {
   localStorage.removeItem('maia_session_token'); // Safari/iOS header-based auth
   localStorage.removeItem('maia_session_id');
   localStorage.removeItem('maia_session_date');
+
+  // Ownership of the cached defaultMemoryMode ends with the session. The
+  // cached settings themselves are left alone (device-local voice/display
+  // prefs); only the claim that they belong to a member is withdrawn, so the
+  // next member must re-prove it via server hydration (SANCTUARY-MEMBER-SCOPE-01).
+  localStorage.removeItem('maia_account_settings_owner');
 }
 
 // Expose healIdentity for console debugging
