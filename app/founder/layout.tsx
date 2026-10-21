@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Hexagon } from 'lucide-react';
-import { FOUNDER_NAV } from '@/lib/founder/founderNav';
+import { FOUNDER_NAV, CONSTELLATION_FOUNDER_NAV } from '@/lib/founder/founderNav';
+import { isConstellationFounderPath, shouldShowFounderShell } from '@/lib/founder/constellationShell';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { isFeatureEnabled } from '@/lib/utils/feature-flags';
 
@@ -22,8 +23,8 @@ export default function FounderLayout({
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Feature flag gate
-  if (typeof window !== 'undefined' && !isFeatureEnabled('founderConsole')) {
+  // Presentation only: Constellation has its own whole-subtree server founder guard.
+  if (typeof window !== 'undefined' && !shouldShowFounderShell(pathname, isFeatureEnabled('founderConsole'))) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[var(--sl-bg-canvas)]">
         <p className="text-[var(--sl-text-muted)]">Founder console is not enabled.</p>
@@ -35,8 +36,8 @@ export default function FounderLayout({
 
   const navContent = (
     <nav className="flex flex-col gap-1 px-2 py-4">
-      {FOUNDER_NAV.map((item) => {
-        const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+      {(isConstellationFounderPath(pathname) ? CONSTELLATION_FOUNDER_NAV : FOUNDER_NAV).map((item) => {
+        const isActive = pathname === item.href || (item.href !== '/founder/constellation' && pathname?.startsWith(item.href + '/'));
         const Icon = item.icon;
         return (
           <Link
