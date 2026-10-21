@@ -28,7 +28,6 @@ type VoiceHintLike = {
 };
 
 type PersistedSpiralStateLike = {
-  relational_phase?: number | null; // 1..4
   autonomy_streak?: number | null;  // >=0
   return_count?: number | null;     // >=0
 };
@@ -103,7 +102,6 @@ const detectBoundaryNeed = (message: string) => {
 export function decideRelationalHint(input: DecideRelationalStanceInput): RelationalHint {
   const intensity = clamp01(input.voiceHint?.intensity ?? 0.55);
 
-  const relationalPhase = input.persistedState?.relational_phase ?? null; // 1..4
   const autonomyStreak = input.persistedState?.autonomy_streak ?? 0;
   const returnCount = input.persistedState?.return_count ?? 0;
 
@@ -111,11 +109,12 @@ export function decideRelationalHint(input: DecideRelationalStanceInput): Relati
   const dependencyPull = detectDependencyPull(input.message);
   const boundaryNeeded = detectBoundaryNeed(input.message);
 
-  const seasonalReturn =
-    (relationalPhase !== null && relationalPhase >= 4) ||
-    (returnCount >= 2 && input.conversationDepth <= 3);
+  // relational_phase retired as a behavioral signal (ADR-003): it is person-state,
+  // uncomputed (static default), and removed from member-facing display. Stance now
+  // keys only on observed signals — returnCount and autonomyStreak.
+  const seasonalReturn = returnCount >= 2 && input.conversationDepth <= 3;
 
-  const competence = autonomyStreak >= 3 || (relationalPhase !== null && relationalPhase >= 3);
+  const competence = autonomyStreak >= 3;
 
   let stance: RelationalStance = 'MIRROR';
 

@@ -9,7 +9,6 @@ type SpiralStateResponse =
       currentElement: 'fire' | 'water' | 'earth' | 'air' | 'aether' | string;
       phase: number | null;
       motion: 'ascending' | 'stuck' | 'breakthrough' | null;
-      relationalPhase: number | null;
       autonomyStreak: number | null;
       updatedAt: string | null;
     };
@@ -65,13 +64,6 @@ const elementMeta: Record<
     bgClass: 'bg-violet-400/10',
     textClass: 'text-violet-100',
   },
-};
-
-const relationalPhaseLabels: Record<number, string> = {
-  1: 'Orientation',
-  2: 'Capacity',
-  3: 'Autonomy',
-  4: 'Seasonal Return',
 };
 
 const motionLabels: Record<string, string> = {
@@ -195,7 +187,7 @@ export default function ContinuityView() {
   if (hasError) {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/70">
-        Unable to load your current position right now.
+        Unable to load your current register right now.
       </div>
     );
   }
@@ -204,17 +196,13 @@ export default function ContinuityView() {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
         <p className="text-sm text-white/70">
-          No sessions yet. Your position will appear here after your first conversation.
+          No sessions yet. Your current register will appear here after your first conversation.
         </p>
       </div>
     );
   }
 
   const motionLabel = data.motion ? (motionLabels[data.motion] ?? data.motion) : null;
-  const relationalLabel =
-    data.relationalPhase != null
-      ? (relationalPhaseLabels[data.relationalPhase] ?? `Phase ${data.relationalPhase}`)
-      : null;
   const relativeTime = formatRelativeTime(data.updatedAt);
 
   return (
@@ -228,6 +216,7 @@ export default function ContinuityView() {
         </div>
 
         <div className="min-w-0">
+          <div className="text-xs uppercase tracking-wide text-white/40">Current register</div>
           <div className={`text-lg font-medium ${meta?.textClass}`}>{meta?.label}</div>
 
           {data.phase != null && (
@@ -241,12 +230,6 @@ export default function ContinuityView() {
       </div>
 
       <div className="mt-6 space-y-2 text-sm">
-        {relationalLabel && (
-          <div className="text-white/75">
-            Relational phase: <span className="text-white">{relationalLabel}</span>
-          </div>
-        )}
-
         <div className="text-white/75">
           Autonomy streak:{' '}
           <span className="text-white">
