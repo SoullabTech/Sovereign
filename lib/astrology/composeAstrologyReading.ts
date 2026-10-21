@@ -25,6 +25,7 @@ import { runTransitsEngine, type TransitsEngineResult } from "./engines/transits
 import { runLifeCyclesEngine, type LifeCyclesEngineResult } from "./engines/lifeCyclesEngine";
 import { runNarrativeEngine, type NarrativeEngineResult } from "./engines/narrativeEngine";
 import { runSpiralogicEngine, type SpiralogicEngineResult } from "./engines/spiralogicEngine";
+import { dominanceSentence, type DominanceVerdict } from "@/lib/spiralogic/interpretation";
 
 function nowMs() {
   return Date.now();
@@ -300,9 +301,20 @@ export async function composeAstrologyReading(input: ComposerInput): Promise<Uni
   // Spiralogic guidance
   if (spiralogicSection?.ok && spiralogicSection.summary) {
     const sp = spiralogicSection.summary as any;
-    integrationPath.push(
-      `Elemental balance: Dominant ${sp.dominantElement}, strengthen ${sp.deficientElement}.`
-    );
+    // Dominance is the single versioned rule's claim (C-fence) and may be
+    // null. When it is, the copy says balanced honestly — no invented crown.
+    if (sp.dominantElement) {
+      integrationPath.push(
+        `Elemental balance: Dominant ${sp.dominantElement}${sp.deficientElement ? `, strengthen ${sp.deficientElement}` : ""}.`
+      );
+    } else {
+      const verdict = sp.elementalBalance?.dominance as DominanceVerdict | undefined;
+      if (verdict) {
+        integrationPath.push(`Elemental balance: ${dominanceSentence(verdict)}`);
+      }
+      // No verdict at all (chart could not be registered): no elemental
+      // line — absence propagates as absence.
+    }
     if (sp.practices?.length) {
       integrationPath.push(...sp.practices.slice(0, 2));
     }
