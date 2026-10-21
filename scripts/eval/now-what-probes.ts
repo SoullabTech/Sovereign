@@ -37,8 +37,10 @@ import {
   createEvalMember,
   authenticateEvalMember,
   cleanupEvalMember,
+  describeTeardown,
   type Db,
   type EvalMember,
+  type TeardownReport,
 } from './lib/evalMember';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -1036,6 +1038,7 @@ function renderReport(args: {
   member: EvalMember | null;
   results: ProbeResult[];
   scenariosRun: Scenario[];
+  teardown: TeardownReport | null;
 }): string {
   const { results } = args;
   const counts = {
@@ -1051,6 +1054,18 @@ function renderReport(args: {
   lines.push(`**Result:** ${counts.fail === 0 ? '✅' : '❌'} ${counts.pass} passed · ${counts.fail} failed · ${counts.skip} skipped`);
   if (args.member) {
     lines.push(`**Eval member:** \`${args.member.username}\` (synthetic, \`tester=true\` at creation, email under \`.invalid\`)`);
+  }
+  if (args.teardown) {
+    lines.push(
+      args.teardown.clean
+        ? '**Teardown:** ✅ fixture removed — no synthetic residue in the target database'
+        : '**Teardown:** ❌ **REFUSED — synthetic rows remain in the target database.** Evidence from a *subsequent* run against this same database is compromised until they are removed.',
+    );
+    if (!args.teardown.clean) {
+      for (const b of args.teardown.blocked) {
+        lines.push(`> - \`${b.table}\`${b.rows >= 0 ? ` (${b.rows} rows)` : ''}: ${b.reason}`);
+      }
+    }
   }
   lines.push('');
   lines.push('> **Scope boundary (travels with every citation of this harness):** this run evaluates the');
@@ -1205,6 +1220,7 @@ async function main(): Promise<void> {
   const results: ProbeResult[] = [];
   let member: EvalMember | null = null;
   let cookie: string | null = null;
+  let teardown: TeardownReport | null = null;
 
   const localOk = await ollamaReachable();
 
@@ -1248,8 +1264,34 @@ async function main(): Promise<void> {
     }
   } finally {
     if (member && !cli.keepMember) {
-      await cleanupEvalMember(db, member).catch((e) => console.warn('cleanup failed:', e));
-      console.log(`\n${DIM}synthetic records cleaned up (pass --keep-member to retain)${RESET}`);
+      // Teardown is part of the run's result, not an afterthought: a harness
+      // that advertises self-cleanup and leaves synthetic rows behind has made
+      // a false claim, and on a shared dev DB that residue is what breaks the
+      // next run's evidence. So the outcome is printed as its own verdict and
+      // carried into the exit code — never a warning under a green summary.
+      teardown = await cleanupEvalMember(db, member).catch((e) => ({
+        clean: false as const,
+        deleted: [],
+        blocked: [{ table: '(teardown)', rows: -1, reason: e instanceof Error ? e.message : String(e) }],
+      }));
+      const lines = describeTeardown(teardown);
+      console.log('');
+      for (const line of lines) {
+        console.log(teardown.clean ? `${DIM}${line}${RESET}` : `${RED}${line}${RESET}`);
+      }
+      if (teardown.clean) {
+        console.log(`${DIM}synthetic records cleaned up (pass --keep-member to retain)${RESET}`);
+      } else {
+        // State the reason the database actually gave; do not narrate a cause.
+        const appendOnly = teardown.blocked.some((b) => /append-only/.test(b.reason));
+        console.log(
+          `${RED}synthetic records REMAIN for member ${member.username} (${member.id}).${RESET}\n` +
+            (appendOnly
+              ? `${DIM}Rows in append-only tables cannot be removed by design, and this harness will not disable a guard to remove them.\n`
+              : `${DIM}The reason above is what the database reported; teardown changed nothing.\n`) +
+            `Run against a disposable database (see the teardown contract in scripts/eval/README.md), or clean up by hand.${RESET}`,
+        );
+      }
     } else if (member) {
       console.log(`\n${DIM}kept eval member ${member.username} (labeled synthetic, tester=true)${RESET}`);
     }
@@ -1262,15 +1304,22 @@ async function main(): Promise<void> {
   mkdirSync(dirname(reportPath), { recursive: true });
   writeFileSync(
     reportPath,
-    renderReport({ runId, startedAt, appDescribe, mode: externalMode ? 'external' : 'managed', member, results, scenariosRun: scenariosToRun }),
+    renderReport({ runId, startedAt, appDescribe, mode: externalMode ? 'external' : 'managed', member, results, scenariosRun: scenariosToRun, teardown }),
   );
 
   const fails = results.filter((r) => r.status === 'FAIL').length;
   const passes = results.filter((r) => r.status === 'PASS').length;
   const skips = results.filter((r) => r.status === 'SKIP').length;
   console.log(`\n${BOLD}${fails === 0 ? GREEN + '✅' : RED + '❌'} ${passes} passed · ${fails} failed · ${skips} skipped${RESET}`);
+  if (teardown && !teardown.clean) {
+    console.log(`${BOLD}${RED}❌ teardown failed — synthetic rows remain (exit 3)${RESET}`);
+  }
   console.log(`${DIM}report: ${reportPath}${RESET}`);
-  process.exit(fails === 0 ? 0 : 1);
+  // Distinct codes: 1 = a probe failed, 3 = probes fine but the fixture is
+  // still in the database. Both are non-zero; conflating them would hide the
+  // one that only shows up on the NEXT run.
+  if (fails > 0) process.exit(1);
+  process.exit(teardown && !teardown.clean ? 3 : 0);
 }
 
 main().catch((err) => {
