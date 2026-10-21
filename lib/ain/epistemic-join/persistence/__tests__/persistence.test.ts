@@ -9,12 +9,15 @@ import {
 import { epistemicJoinPersistenceEnabled } from '../feature';
 
 describe('I3 persistence feature gate', () => {
-  it('is OFF for every value except literal 1', () => {
+  it('is OFF for every value except exact literal true', () => {
     expect(epistemicJoinPersistenceEnabled({})).toBe(false);
     expect(epistemicJoinPersistenceEnabled({ AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED: '' })).toBe(false);
-    expect(epistemicJoinPersistenceEnabled({ AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED: 'true' })).toBe(false);
+    expect(epistemicJoinPersistenceEnabled({ AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED: 'false' })).toBe(false);
     expect(epistemicJoinPersistenceEnabled({ AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED: '0' })).toBe(false);
-    expect(epistemicJoinPersistenceEnabled({ AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED: '1' })).toBe(true);
+    expect(epistemicJoinPersistenceEnabled({ AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED: '1' })).toBe(false);
+    expect(epistemicJoinPersistenceEnabled({ AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED: 'TRUE' })).toBe(false);
+    expect(epistemicJoinPersistenceEnabled({ AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED: 'yes' })).toBe(false);
+    expect(epistemicJoinPersistenceEnabled({ AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED: 'true' })).toBe(true);
   });
 
   it('does not touch transaction or randomness while OFF', async () => {
