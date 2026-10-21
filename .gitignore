@@ -372,6 +372,7 @@ backups/
 !docker-compose.production.yml
 !docker-compose.staging.yml
 !docker-compose.local-voice.yml
+!docker-compose.device-test.yml
 !Caddyfile
 !Caddyfile.staging
 
