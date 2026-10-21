@@ -19,7 +19,7 @@ export function MaiaSection() {
   return (
     <section
       id="maia"
-      className="relative py-24 sm:py-32 px-4"
+      className="relative overflow-x-clip py-24 sm:py-32 px-4"
       style={{
         background: 'linear-gradient(180deg, #0b0f1c 0%, #0f1328 50%, #0b0f1c 100%)',
       }}
@@ -64,8 +64,9 @@ export function MaiaSection() {
               </p>
               <p className="text-base text-white/50 leading-relaxed mb-8" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
                 Governed by an irreducible oath — consent, containment, non-manipulation, continuity.
-                MAIA offers reflection and choice, never command or diagnosis. She is built to return you,
-                more fully, to your own life.
+                MAIA offers reflection and choice, never command, diagnosis, or an assignment to serve.
+                What matters and how you participate remain yours to decide; MAIA is here to return you
+                more fully to your own life.
               </p>
 
               <div className="space-y-3.5 border-l border-white/10 pl-5 mb-8">

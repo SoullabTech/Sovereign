@@ -1,0 +1,112 @@
+[
+  {
+    "viewport": [
+      1280,
+      850
+    ],
+    "data": {
+      "hero": {
+        "y": 0,
+        "bottom": 1014,
+        "height": 1014,
+        "x": 0,
+        "width": 1280,
+        "top": 0
+      },
+      "content": {
+        "y": 0,
+        "bottom": 1014,
+        "height": 1014,
+        "x": 192,
+        "width": 896,
+        "top": 0
+      },
+      "cta": {
+        "y": 901,
+        "bottom": 953,
+        "height": 52,
+        "x": 449.546875,
+        "width": 166.3125,
+        "top": 901
+      },
+      "trust": {
+        "y": 998,
+        "bottom": 1014,
+        "height": 16,
+        "x": 380.28125,
+        "width": 519.421875,
+        "top": 998
+      },
+      "platform": {
+        "y": 1014,
+        "bottom": 2172.75,
+        "height": 1158.75,
+        "x": 0,
+        "width": 1280,
+        "top": 1014
+      },
+      "clientHeight": 1014,
+      "scrollHeight": 1014,
+      "overflow": "hidden",
+      "ctaClip": false,
+      "heroCTAVisible": true,
+      "scrollY": 0,
+      "windowHeight": 850
+    }
+  },
+  {
+    "viewport": [
+      390,
+      844
+    ],
+    "data": {
+      "hero": {
+        "y": 0,
+        "bottom": 886,
+        "height": 886,
+        "x": 0,
+        "width": 390,
+        "top": 0
+      },
+      "content": {
+        "y": 0,
+        "bottom": 886,
+        "height": 886,
+        "x": 16,
+        "width": 358,
+        "top": 0
+      },
+      "cta": {
+        "y": 688,
+        "bottom": 740,
+        "height": 52,
+        "x": 111.84375,
+        "width": 166.3125,
+        "top": 688
+      },
+      "trust": {
+        "y": 854,
+        "bottom": 886,
+        "height": 32,
+        "x": 16,
+        "width": 358,
+        "top": 854
+      },
+      "platform": {
+        "y": 886,
+        "bottom": 2498.75,
+        "height": 1612.75,
+        "x": 0,
+        "width": 390,
+        "top": 886
+      },
+      "clientHeight": 886,
+      "scrollHeight": 886,
+      "overflow": "hidden",
+      "ctaClip": false,
+      "heroCTAVisible": true,
+      "scrollY": 0,
+      "windowHeight": 844
+    }
+  }
+]

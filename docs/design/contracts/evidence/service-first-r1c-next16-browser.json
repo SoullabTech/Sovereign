@@ -1,0 +1,185 @@
+{
+  "kind": "real_next16_production_build_browser_with_synthetic_local_postgres",
+  "candidate": "70d73b09bc4e7da3ef71117cf35ce60375a0f0cd",
+  "passed": 20,
+  "failed": 0,
+  "results": [
+    {
+      "name": "desktop actual Next 16 / renders",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "desktop actual Hero text and Home link",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "desktop actual Platform signature",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "desktop actual MAIA nonpersuasion",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "desktop real Next CSS hero contrast",
+      "pass": true,
+      "detail": [
+        {
+          "text": "For those in service to self and world.",
+          "color": "rgba(255, 255, 255, 0.75)"
+        },
+        {
+          "text": "A life is not a project to perfect. Technology should leave ",
+          "color": "rgba(255, 255, 255, 0.75)"
+        }
+      ]
+    },
+    {
+      "name": "desktop real Next targeted WCAG AA contrast ratios",
+      "pass": true,
+      "detail": [
+        {
+          "label": "service invitation",
+          "color": "rgba(255, 255, 255, 0.75)",
+          "minContrast": 10.29
+        },
+        {
+          "label": "central meaning",
+          "color": "rgba(255, 255, 255, 0.75)",
+          "minContrast": 10.29
+        },
+        {
+          "label": "trust line",
+          "color": "rgba(255, 255, 255, 0.6)",
+          "minContrast": 6.99
+        }
+      ]
+    },
+    {
+      "name": "desktop / no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "sw": 1280,
+        "iw": 1280
+      }
+    },
+    {
+      "name": "desktop verified invite actual Reflect",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "desktop actual Reflect no overflow",
+      "pass": true,
+      "detail": {
+        "sw": 1280,
+        "iw": 1280
+      }
+    },
+    {
+      "name": "mobile actual Next 16 / renders",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "mobile actual Hero text and Home link",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "mobile actual Platform signature",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "mobile actual MAIA nonpersuasion",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "mobile real Next CSS hero contrast",
+      "pass": true,
+      "detail": [
+        {
+          "text": "For those in service to self and world.",
+          "color": "rgba(255, 255, 255, 0.75)"
+        },
+        {
+          "text": "A life is not a project to perfect. Technology should leave ",
+          "color": "rgba(255, 255, 255, 0.75)"
+        }
+      ]
+    },
+    {
+      "name": "mobile real Next targeted WCAG AA contrast ratios",
+      "pass": true,
+      "detail": [
+        {
+          "label": "service invitation",
+          "color": "rgba(255, 255, 255, 0.75)",
+          "minContrast": 10.29
+        },
+        {
+          "label": "central meaning",
+          "color": "rgba(255, 255, 255, 0.75)",
+          "minContrast": 10.29
+        },
+        {
+          "label": "trust line",
+          "color": "rgba(255, 255, 255, 0.6)",
+          "minContrast": 6.99
+        }
+      ]
+    },
+    {
+      "name": "mobile / no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "sw": 390,
+        "iw": 390
+      }
+    },
+    {
+      "name": "mobile verified invite actual Reflect",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "mobile actual Reflect no overflow",
+      "pass": true,
+      "detail": {
+        "sw": 390,
+        "iw": 390
+      }
+    },
+    {
+      "name": "no external resource traffic from real isolated site",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "no client javascript errors",
+      "pass": true,
+      "detail": null
+    }
+  ],
+  "external": [],
+  "errors": [],
+  "shots": [
+    "hero-desktop.png",
+    "hero-mobile.png",
+    "reflect-desktop.png",
+    "reflect-mobile.png"
+  ],
+  "limitations": [
+    "fictional local identities only",
+    "no member data or third-party providers",
+    "does not witness full MAIA conversation",
+    "no real iOS Safari engine",
+    "not a live prod artifact attestation"
+  ]
+}

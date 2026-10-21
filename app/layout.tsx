@@ -16,9 +16,13 @@ import { MaiaPresence } from "@/components/maia/presence/MaiaPresence";
 
 const inter = Inter({ subsets: ["latin"] });
 
+// Public brand metadata follows the founder-ratified Service First purpose.
+// This is an invitation and a promise of belonging, not a member obligation.
+const serviceFirstDescription = "Soullab supports those in service to self and world through reflection, relationship, and creativity. Service First. Not Self Last. No one must prove usefulness to belong.";
+
 export const metadata: Metadata = {
   title: "Soullab — We build for the soul",
-  description: "Soullab explores what carries transformation forward. We build environments that help meaningful relationships, experiences, and practices continue shaping our lives over time.",
+  description: serviceFirstDescription,
   manifest: "/manifest.json",
   metadataBase: process.env.MAIA_CABIN_MODE === "offline"
     ? new URL(process.env.MAIA_CABIN_ORIGIN || "http://127.0.0.1:43121")
@@ -31,7 +35,7 @@ export const metadata: Metadata = {
       : "https://soullab.life",
     siteName: "Soullab",
     title: "Soullab — We build for the soul",
-    description: "Soullab explores what carries transformation forward. We build environments that help meaningful relationships, experiences, and practices continue shaping our lives over time. Through MAIA, practitioner worlds, and living communities, we seek to support relationships of care, wisdom, and service while returning people more fully to their own lives.",
+    description: serviceFirstDescription,
     images: [
       {
         url: "/og-image.png",
@@ -44,7 +48,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Soullab — We build for the soul",
-    description: "Soullab explores what carries transformation forward. We build environments that help meaningful relationships, experiences, and practices continue shaping our lives over time.",
+    description: serviceFirstDescription,
     images: ["/og-image.png"],
   },
   appleWebApp: {
