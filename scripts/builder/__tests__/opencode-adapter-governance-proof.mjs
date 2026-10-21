@@ -440,6 +440,11 @@ console.log('\n=== P6: project OpenCode config carries no credential or default 
       && !configText.includes('TINKER_API_KEY')
       && secretLikePrefixes.every((prefix) => !configText.includes(prefix)));
 
+  const delegateText = readFileSync(DELEGATE, 'utf8');
+  assert('legacy OpenCode execution uses v2 standalone isolation and carries no retired --pure flag',
+    !delegateText.includes('opencode run --pure')
+      && (delegateText.match(/opencode run --standalone --agent/g) || []).length === 2);
+
   const agent = readFileSync(path.join(REPO, '.opencode', 'agents', 'jarvis-readonly.md'), 'utf8');
   assert('read-only agent denies mutation, shell, web, subagents, and external directories',
     /edit: deny/.test(agent) && /bash: deny/.test(agent)
