@@ -32,7 +32,7 @@
  *   sync      --session <id> --reason "<why>"   owner acknowledges own change
  *   close     --session <id> --state completed|handed-off|paused|abandoned
  *   recover   --session <id> --reason "<why>"   explicit stale-claim recovery
- *   status    [--json]
+ *   status    [--session <id>] [--json]   includes caller claim-mismatch reading
  *   report    [--since <iso>] [--json]
  *
  * EXITS  0 ok · 1 refused · 2 collision · 3 queued · 4 usage/not-found
@@ -577,6 +577,138 @@ function rateReading() {
   }
 }
 
+/**
+ * P1 — CALLER CLAIM-MISMATCH VISIBILITY.
+ *
+ * THE DEFECT THIS ANSWERS
+ *   Builder observed CLAIMS, never ACTS. `cmdCheck` measures `rec.worktree` — the
+ *   workspace NAMED on the claim — so a session that writes into a DIFFERENT worktree
+ *   is undetectable by construction: that worktree is in no session's measured set.
+ *   On 2026-08-11 a session whose claim named one workspace authored a full changeset
+ *   in another; two lanes then had to reason from `git status` and mtimes about whether
+ *   that work was live or abandoned. The aperture was the claim, not the mutation.
+ *   Record: docs/ops/BUILDER_UNCLAIMED_WORKTREE_MUTATION_DEFECT_2026-08-11.md
+ *
+ * WHY IT IS CALLER-LOCAL AND NOT A CENSUS
+ *   Measured 2026-08-11: **36 of 56 worktrees are dirty with no Builder claim.**
+ *   Unclaimed-and-dirty is the NORM here, so "warn on every unclaimed dirty worktree"
+ *   would fire ~36 times per invocation and become wallpaper within a day. A control
+ *   that always fires is not a control; it is ambient noise, and worse than none because
+ *   it looks like coverage. This reading therefore makes at most TWO `measure()` calls:
+ *   the caller's cwd, and the workspace named by `--session` when one is given.
+ *
+ * WHAT IT IS NOT
+ *   - It does NOT block cross-worktree writes. Legitimate ones exist (reading a sibling
+ *     checkout, comparing branches). A refused-around control is worse than an honest one.
+ *   - It does NOT make claiming mandatory, and does NOT widen `check`. Widening `check`
+ *     while nothing invokes it would be a false fix (Dormant Instrument Failure).
+ *   - It RECORDS NOTHING. `status` observes; `check` is what preserves evidence and
+ *     `sync` is what acknowledges it. Observing a mismatch must never resolve it.
+ */
+function callerPosition(all, cfg) {
+  const cwd = canonicalWorktree(process.cwd());
+  const here = measure(cwd);
+  const active = all.filter((r) => liveness(r, cfg).counts_active);
+  const covering = active.filter((r) => canonicalWorktree(r.worktree) === cwd);
+
+  // A session may name itself for a precise reading. Without it we can only speak about
+  // the WORKSPACE's coverage — never about who the caller is. Guessing identity from pid
+  // ancestry would be the same class of error as inferring ownership from a live process.
+  const declaredId = opt('--session');
+  let declared = null;
+  if (declaredId) {
+    const rec = all.find((r) => r.session_id === declaredId);
+    if (!rec) {
+      declared = { session_id: declaredId, found: false };
+    } else {
+      const claimed = canonicalWorktree(rec.worktree);
+      const cur = measure(claimed);
+      const readable = cur.head_sha !== null;
+      declared = {
+        session_id: rec.session_id, found: true, state: rec.state, mode: rec.mode,
+        claimed_worktree: rec.worktree,
+        claimed_worktree_readable: readable,
+        location_mismatch: claimed !== cwd,
+        // Reuses collision semantics READ-ONLY. Nothing is written to the record here.
+        baseline_moved: (rec.baseline && readable) ? collide(rec, cur).map((m) => m.field) : [],
+      };
+    }
+  }
+
+  return {
+    cwd,
+    is_git_worktree: here.head_sha !== null,
+    here,
+    covered_by: covering.map((r) => r.session_id),
+    claim_coverage: covering.length ? 'CLAIMED' : 'UNCLAIMED',
+    active_claims_elsewhere: active
+      .filter((r) => canonicalWorktree(r.worktree) !== cwd)
+      .map((r) => ({ session_id: r.session_id, work_unit: r.work_unit, worktree: r.worktree })),
+    declared,
+  };
+}
+
+function renderCallerPosition(p) {
+  console.log(`\nYOU ARE HERE`);
+  console.log(`  workspace  ${p.cwd}`);
+
+  if (!p.is_git_worktree) {
+    console.log(`  ⚠ not a readable git worktree — no workspace reading available here`);
+    return;
+  }
+
+  // Dirty state is ORDINARY. It is named as such so it can never be read as a custody
+  // signal — the two were conflated in the incident this exists to prevent.
+  console.log(`  checkout   ${p.here.branch} @ ${String(p.here.head_sha).slice(0, 9)}`
+            + `   ${p.here.dirty_count} dirty (ordinary working state, not a custody signal)`);
+
+  if (p.claim_coverage === 'CLAIMED') {
+    console.log(`  claim      ● governed by ${p.covered_by.join(', ')} — mutations here are measured`);
+  } else {
+    console.log(`  claim      🔶 CLAIM MISMATCH — no active Builder claim covers this workspace.`);
+    console.log(`             Mutations here are ungoverned: no baseline, no collision detection,`);
+    console.log(`             and this work will read as ownerless to every other lane.`);
+    if (p.active_claims_elsewhere.length) {
+      console.log(`             ${p.active_claims_elsewhere.length} active claim(s) name other workspaces:`);
+      for (const c of p.active_claims_elsewhere) {
+        console.log(`               ${c.session_id}  ${c.work_unit}`);
+        console.log(`                 ${c.worktree}`);
+      }
+    } else {
+      console.log(`             (no active claims anywhere)`);
+    }
+    console.log(`             NOT BLOCKED. If this is deliberate, leave a record:`);
+    console.log(`               node scripts/builder/session.mjs open --unit <id> --branch ${p.here.branch}`);
+  }
+
+  const d = p.declared;
+  if (!d) return;
+  if (!d.found) {
+    console.log(`  session    ⚠ --session ${d.session_id} — no such record`);
+    return;
+  }
+  console.log(`  session    ${d.session_id} (${d.state}/${d.mode}) declares`);
+  console.log(`               ${d.claimed_worktree}`);
+  if (d.location_mismatch) {
+    console.log(`             🔶 LOCATION MISMATCH — that session's claim names a DIFFERENT workspace`);
+    console.log(`               than the one you are operating in. Collision detection measures the`);
+    console.log(`               claimed workspace only; everything you write here is unmeasured.`);
+  } else {
+    console.log(`             ● location agrees with your workspace`);
+  }
+  if (!d.claimed_worktree_readable) {
+    console.log(`             ⚠ claimed workspace is not readable as a git worktree`);
+  } else if (d.baseline_moved.length) {
+    // Scenario 2: legitimate change to the CLAIMED workspace must stay legible, and must
+    // stay clearly distinct from the mismatch above. Reported, never recorded or synced.
+    console.log(`             ◆ claimed workspace moved since baseline: ${d.baseline_moved.join(', ')}`);
+    console.log(`               Evidence is preserved as-is. Record it with \`check\`, acknowledge`);
+    console.log(`               it with \`sync --reason\`. \`status\` resolves nothing.`);
+  } else {
+    console.log(`             ● claimed workspace unchanged since baseline`);
+  }
+}
+
 function cmdStatus() {
   const cfg = config();
   const all = allRecs();
@@ -591,10 +723,14 @@ function cmdStatus() {
   // number imply a calm request rate — they can and did diverge.
   const rate = rateReading();
 
+  // P1. Caller-local, at most two measurements, records nothing.
+  const caller = callerPosition(all, cfg);
+
   if (flag('--json')) {
     console.log(JSON.stringify({
       limit: cfg.max_active, limit_source: cfg.max_active_source,
       active: active.length, queued: queued.length,
+      caller_position: caller,
       sessions: active.map((r) => ({ ...r, liveness: liveness(r, cfg) })),
       queued_sessions: queued, overrides, collisions, recoverable,
       local_request_rate: rate,
@@ -610,6 +746,10 @@ function cmdStatus() {
   console.log(`\nBUILDER OS — Claude session governance`);
   console.log(`  Claude sessions active: ${active.length} / ${cfg.max_active}   (limit source: ${cfg.max_active_source})`);
   console.log(`  Queued: ${queued.length}`);
+
+  // Printed BEFORE the rate/active blocks: a custody mismatch that scrolls past the
+  // noisy sections is a mismatch nobody reads.
+  renderCallerPosition(caller);
 
   console.log(`\nLOCAL REQUEST RATE  (⛔ not Anthropic quota units — local transcript counts)`);
   if (rate.error || rate.overall_band === 'UNKNOWN') {
@@ -742,7 +882,7 @@ switch (cmd) {
   close     --session <id> --state completed|handed-off|paused|abandoned
   recover   --session <id> --reason "<why>" [--force]      stale claims only
   reconcile --session <id> --reason "<why>"                AMBIGUOUS_OWNERSHIP only
-  status    [--json]
+  status    [--session <id>] [--json]
   report    [--since <iso>] [--json]
 
   A heartbeat asserts "I still hold execution authority" and requires the lease token
