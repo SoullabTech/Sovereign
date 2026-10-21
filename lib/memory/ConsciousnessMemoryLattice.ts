@@ -150,7 +150,35 @@ export interface MemoryField {
   // Collective wisdom
   ainDeliberations: AINDeliberation[];
   sharedInsights: string[];
+
+  // ── Recall availability (U4-C) ──────────────────────────────────────────────
+  // Distinguishes "this dimension found nothing" from "this dimension could not
+  // be consulted". Without this, a contained failure is indistinguishable from a
+  // genuine empty result, and an unpopulated lattice would masquerade as
+  // restored capability. Optional so existing consumers are unaffected.
+  recallAvailability?: {
+    /** Dimensions that could not be consulted this call, by name. */
+    unavailable: RecallDimension[];
+    /**
+     * Tri-state, and deliberately NOT a boolean:
+     *   true  — a lattice_nodes read was attempted and succeeded
+     *   false — a lattice_nodes read was attempted and failed
+     *   null  — no read was attempted, so availability is UNKNOWN
+     * `null` must never be collapsed to `true`. Claiming the substrate is
+     * available without having consulted it is the "looks repaired" failure
+     * this field exists to prevent.
+     */
+    latticeAvailable: boolean | null;
+  };
 }
+
+/** Named recall dimensions fanned out by resonanceRecall (U4-C). */
+export type RecallDimension =
+  | 'semantic'
+  | 'spiral'
+  | 'somatic'
+  | 'emotional'
+  | 'temporal';
 
 export interface SpiralCycle {
   facet: string;
@@ -322,37 +350,62 @@ export class ConsciousnessMemoryLattice {
   ): Promise<MemoryField> {
     console.log(`🔮 [RESONANCE RECALL] QueryChars: ${currentState.query?.length ?? 0}`); // Never log query content
 
-    // Multi-dimensional retrieval
+    // ── Multi-dimensional retrieval (U4-C: per-dimension failure containment) ──
+    // Previously this was a bare Promise.all. Promise.all rejects on the FIRST
+    // rejection, so a single failing dimension discarded every other dimension's
+    // result — including the four that read developmental_memories and would have
+    // returned normally. In production the temporal dimension joins lattice_nodes,
+    // a relation that does not exist, so ALL recall was being cancelled by one
+    // failing branch. allSettled contains each dimension independently.
+    //
+    // A contained failure yields an empty contribution and is RECORDED as
+    // unavailable — it is never presented as "nothing found", and no substitute
+    // or synthesised contribution is invented in its place.
+    const unavailable: RecallDimension[] = [];
+
+    const settled = await Promise.allSettled([
+      // Semantic dimension
+      currentState.query
+        ? developmentalMemory.semanticSearch(userId, currentState.query, 10)
+        : Promise.resolve([]),
+
+      // Spiral dimension
+      currentState.facet
+        ? developmentalMemory.retrieveMemories({ userId, facet: currentState.facet.code, limit: 10 })
+        : Promise.resolve([]),
+
+      // Somatic dimension
+      currentState.bodyRegion
+        ? developmentalMemory.retrieveMemories({ userId, entities: [currentState.bodyRegion], type: 'effective_practice', limit: 5 })
+        : Promise.resolve([]),
+
+      // Emotional dimension
+      currentState.emotion
+        ? developmentalMemory.retrieveMemories({ userId, entities: [currentState.emotion], limit: 5 })
+        : Promise.resolve([]),
+
+      // Temporal dimension (same time of spiral cycle)
+      this.getTemporalResonance(userId, currentState.facet)
+    ]);
+
+    const DIMENSIONS: RecallDimension[] = ['semantic', 'spiral', 'somatic', 'emotional', 'temporal'];
+
     const [
       semanticMatches,
       facetMatches,
       somaticMatches,
       emotionalMatches,
       temporalMatches
-    ] = await Promise.all([
-      // Semantic dimension
-      currentState.query
-        ? developmentalMemory.semanticSearch(userId, currentState.query, 10)
-        : [],
-
-      // Spiral dimension
-      currentState.facet
-        ? developmentalMemory.retrieveMemories({ userId, facet: currentState.facet.code, limit: 10 })
-        : [],
-
-      // Somatic dimension
-      currentState.bodyRegion
-        ? developmentalMemory.retrieveMemories({ userId, entities: [currentState.bodyRegion], type: 'effective_practice', limit: 5 })
-        : [],
-
-      // Emotional dimension
-      currentState.emotion
-        ? developmentalMemory.retrieveMemories({ userId, entities: [currentState.emotion], limit: 5 })
-        : [],
-
-      // Temporal dimension (same time of spiral cycle)
-      this.getTemporalResonance(userId, currentState.facet)
-    ]);
+    ] = settled.map((outcome, i) => {
+      if (outcome.status === 'fulfilled') return outcome.value || [];
+      unavailable.push(DIMENSIONS[i]);
+      // Reason only — never the query or any memory content.
+      console.warn(
+        `⚠️ [RESONANCE RECALL] Dimension unavailable: ${DIMENSIONS[i]} — ` +
+        `${(outcome.reason as any)?.message ?? 'unknown error'}`
+      );
+      return [];
+    });
 
     // Synthesize into memory field
     const field = await this.synthesizeMemoryField(
@@ -363,6 +416,24 @@ export class ConsciousnessMemoryLattice {
       emotionalMatches,
       temporalMatches
     );
+
+    // Merge fan-out availability with the substrate availability recorded during
+    // synthesis. If the lattice itself could not be read, temporal recall is not
+    // meaningfully available even when its query happened to resolve.
+    // Carry the substrate verdict through UNCHANGED — including null. Coercing
+    // "not consulted" into "available" would assert a fact never observed.
+    field.recallAvailability = {
+      unavailable: Array.from(new Set([...(field.recallAvailability?.unavailable ?? []), ...unavailable])),
+      latticeAvailable: field.recallAvailability?.latticeAvailable ?? null
+    };
+
+    if (field.recallAvailability.unavailable.length > 0) {
+      console.warn(
+        `⚠️ [RESONANCE RECALL] Partial recall — unavailable: ` +
+        `${field.recallAvailability.unavailable.join(', ')} ` +
+        `(latticeAvailable=${field.recallAvailability.latticeAvailable})`
+      );
+    }
 
     console.log(`🌐 [FIELD ASSEMBLED] Nodes: ${field.nodes.length}, Cycles: ${field.spiralCycles.length}, Breakthroughs: ${field.breakthroughMoments.length}`);
 
@@ -740,16 +811,33 @@ export class ConsciousnessMemoryLattice {
 
     const memories = Array.from(uniqueMemories.values());
 
-    // Get corresponding lattice nodes
+    // Get corresponding lattice nodes.
+    // U4-C: contained. This is the second lattice_nodes read on the live recall
+    // path — isolating only the fan-out would still let this query throw and
+    // cancel the whole field. On failure the field carries zero nodes and is
+    // marked latticeAvailable=false, so "no lattice contribution" is never
+    // reported as "no resonance found".
     const memoryIds = memories.map(m => m.id);
-    const nodesResult = memoryIds.length > 0
-      ? await dbQuery(
+    // null = not consulted. Only an actual attempt may set true/false.
+    let latticeAvailable: boolean | null = null;
+    let nodesResult: { rows: any[] } = { rows: [] };
+    if (memoryIds.length > 0) {
+      try {
+        nodesResult = await dbQuery(
           `SELECT * FROM lattice_nodes
            WHERE user_id = $1 AND memory_trace_id = ANY($2)
            ORDER BY created_at DESC`,
           [userId, memoryIds]
-        )
-      : { rows: [] };
+        );
+        latticeAvailable = true;
+      } catch (err) {
+        latticeAvailable = false;
+        console.warn(
+          `⚠️ [FIELD ASSEMBLY] lattice_nodes unavailable — field assembled without lattice nodes: ` +
+          `${(err as any)?.message ?? 'unknown error'}`
+        );
+      }
+    }
 
     const nodes: LatticeNode[] = nodesResult.rows.map(row => ({
       id: row.id,
@@ -824,7 +912,13 @@ export class ConsciousnessMemoryLattice {
       breakthroughMoments,
       integrationThreads: [],  // TODO: Implement integration thread detection
       ainDeliberations: [],     // Populated by getAINHistory
-      sharedInsights: []
+      sharedInsights: [],
+      // U4-C: when the substrate is unreadable, temporal recall is not merely
+      // empty — it could not be consulted. Recorded, not inferred downstream.
+      recallAvailability: {
+        unavailable: latticeAvailable ? [] : (['temporal'] as RecallDimension[]),
+        latticeAvailable
+      }
     };
   }
 
