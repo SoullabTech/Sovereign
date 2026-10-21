@@ -152,6 +152,7 @@ async function sendToAllBetaTesters() {
     try {
       const result = await sendEmail({
         purpose: 'broadcast:update',
+        admission: { authority: { kind: 'admin', actorId: 'beta-ops' }, destination: 'actor-supplied' },
         triggerType: 'script',
         triggerRef: 'send-maia-ready-email',
         campaignRef: 'maia-ready',

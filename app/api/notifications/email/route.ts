@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
 
     const result = await sendEmail({
       purpose: 'reminder:session',
+      admission: { authority: { kind: 'actor', actorId: practitionerId }, destination: 'actor-supplied' },
       from: 'Session Reminder <reminders@soullab.life>',
       to,
       subject,

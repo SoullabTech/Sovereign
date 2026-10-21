@@ -183,6 +183,10 @@ services:
     command: ["./scripts/entrypoint.sh"]
 
     volumes:
+      # MAIL-10: Proton SMTP token supplied from owner-only host storage.
+      # No token value in .env.production, Git, image layers or docker inspect.
+      # The mounted file is UID 1000/mode 0600; container runs as node UID 1000.
+      - /home/soullab/.config/soullab-mail/noreply.smtp-token:/run/secrets/soullab_smtp_token:ro
       # Large media files - mounted from host instead of bundled in image
       - ./public/audiobook:/app/public/audiobook:ro
       # Community Commons library content

@@ -33,6 +33,8 @@
  */
 
 import type { EmailProvider, ProviderEmailMessage, ProviderSendResult } from './types';
+import { extractRecipientMailbox } from '../capacity';
+import { readFileSync, statSync } from 'node:fs';
 
 type Transporter = {
   sendMail(opts: Record<string, unknown>): Promise<{
@@ -70,7 +72,26 @@ function readConfig(config?: SmtpProviderConfig) {
 
   const host = process.env.SMTP_HOST?.trim();
   const user = process.env.SMTP_USER?.trim();
-  const pass = process.env.SMTP_PASSWORD ?? process.env.SMTP_PASS;
+  // Prefer a root/owner-only file bind-mounted into the container, never an
+  // inspectable container environment variable. Ambiguous sources fail closed.
+  const filePath = process.env.SMTP_PASSWORD_FILE?.trim();
+  const envPass = process.env.SMTP_PASSWORD ?? process.env.SMTP_PASS;
+  let pass: string | undefined;
+  if (filePath && !envPass) {
+    try {
+      const details = statSync(filePath);
+      // Host file is owner-only (mode 0600), with container user UID 1000.
+      // Refuse group/world-readable secrets and non-files.
+      if (details.isFile() && details.size > 1 && details.size <= 4096 &&
+          (details.mode & 0o077) === 0) {
+        pass = readFileSync(filePath, 'utf8').replace(/\r?\n$/, '');
+      }
+    } catch {
+      pass = undefined; // No path or secret value in logs.
+    }
+  } else if (!filePath) {
+    pass = envPass;
+  }
   const parsedPort = Number(process.env.SMTP_PORT ?? 587);
   const port = Number.isFinite(parsedPort) ? parsedPort : 587;
 
@@ -92,6 +113,9 @@ export class SmtpProvider implements EmailProvider {
 
   isConfigured(): boolean {
     const { host, user, pass } = readConfig(this.config);
+    // Founder-approved managed mail identity. A separate explicit configuration
+    // is used by the independent alert pager and is not impersonated here.
+    if (this.config === undefined && user?.toLowerCase() !== 'noreply@soullab.life') return false;
     // A host alone is not enough: an unauthenticated relay that happens to
     // accept mail is not a transport we should be reporting as configured.
     return Boolean(host && user && pass);
@@ -131,6 +155,17 @@ export class SmtpProvider implements EmailProvider {
 
   async send(message: ProviderEmailMessage): Promise<ProviderSendResult> {
     const recipients = Array.isArray(message.to) ? message.to : [message.to];
+    const { user } = readConfig(this.config);
+    const requestedFrom = extractRecipientMailbox(message.from);
+    // Proton submission credentials are bound to the selected email address.
+    // Refuse before creating an SMTP connection rather than testing whether
+    // a relay might accept an impersonated From envelope.
+    if (!requestedFrom || !user || requestedFrom !== user.toLowerCase()) {
+      return {
+        accepted: false,
+        rawError: { name: 'smtp_sender_not_authorized', message: 'SMTP From does not match the qualified authentication identity' },
+      };
+    }
 
     let info;
     try {

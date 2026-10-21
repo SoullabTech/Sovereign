@@ -44,6 +44,7 @@ ${body.body.trim()}
 
     const sent = await sendEmail({
       purpose: 'notify:field-message',
+      admission: { authority: { kind: 'anonymous' }, destination: 'configured' },
       from: FROM_ADDRESS,
       to: FOUNDER_EMAIL,
       subject,

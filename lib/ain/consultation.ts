@@ -9,7 +9,7 @@
 
 import { readFile, readdir } from 'fs/promises';
 import { join } from 'path';
-import matter from 'gray-matter';
+import { parseMarkdownFrontmatter } from '@/lib/content/parseMarkdownFrontmatter';
 import type {
   Council,
   ConsultationRequest,
@@ -92,7 +92,7 @@ export async function loadFraming(id: string): Promise<Framing | null> {
     const path = join(FRAMINGS_PATH, domain, `${id}.md`);
     try {
       const content = await readFile(path, 'utf-8');
-      const { data, content: body } = matter(content);
+      const { data, content: body } = parseMarkdownFrontmatter(content);
 
       return {
         id,

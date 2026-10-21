@@ -17,6 +17,14 @@ async function main() {
   console.log(
     `[MAIA/email] ledger prune complete · rolled_up=${rolled_up} aggregate row(s) · deleted=${deleted} recipient-level row(s)`
   );
+  // MAIL-05 budget counters are ephemeral, keyed HMAC data.
+  // Purge separately from the observational ledger's longer retention.
+  const budget = await query<{ deleted: string }>(
+    'SELECT public.prune_soullab_mail_capacity() AS deleted'
+  );
+  console.log(
+    `[Soullab Mail] capacity prune complete · deleted=${budget.rows[0]?.deleted ?? '0'} expired counter(s)`
+  );
 }
 
 main()
