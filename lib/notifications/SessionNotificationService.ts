@@ -17,6 +17,8 @@ const TWILIO_APPOINTMENT_TEMPLATE_SID = 'HXb5b62575e6e4ff6129ad7c8efe1f983e';
 
 interface SessionDetails {
   id: string;
+  /** practitioner_clients.id — the reminder recipient; used for the reminder-consent lookup */
+  clientId?: string;
   clientName: string;
   clientPhone?: string;
   clientEmail?: string;
@@ -459,6 +461,76 @@ async function getTwilioCredentials(practitionerId?: string): Promise<{
 }
 
 /**
+ * CONSENT GATE — classifier for which notification types are CLIENT-recipient reminders.
+ *
+ * Only client reminder sends (to session.clientPhone) are consent-gated. Booking
+ * confirmations and any practitioner_* types are intentionally excluded: practitioner
+ * self-reminders run through sendPractitionerReminder and never reach the client
+ * phone-send paths, and a booking confirmation is not a reminder. Matching on the literal
+ * "reminder_" / "manual_reminder" prefixes keeps "practitioner_reminder_*" (which starts
+ * with "practitioner_") correctly OUT of the gate.
+ */
+export function isClientReminderType(notifTypePrefix: string): boolean {
+  return notifTypePrefix.startsWith('reminder_') || notifTypePrefix === 'manual_reminder';
+}
+
+/**
+ * CONSENT GATE — has the client consented to receive appointment reminders at their phone?
+ *
+ * Consent lives on practitioner_clients.reminder_consent — the record that owns the actual
+ * reminder recipient (practitioner_clients.phone). This is deliberately NOT client_contacts:
+ * that table is reserved for third-party contacts (parent / caregiver / teacher) and is
+ * never the recipient of a client reminder. (Supersedes the earlier client_contacts-based
+ * gate, which could never grant consent for the client and so failed closed for everyone.)
+ *
+ * Fails CLOSED — a missing clientId, no matching row, reminder_consent false/null, or any
+ * lookup error all return false (skip the send). Never throws, so the cron flow is never
+ * broken by this check.
+ */
+async function clientHasReminderConsent(clientId: string | undefined): Promise<boolean> {
+  if (!clientId) return false;
+
+  try {
+    const result = await query(
+      `SELECT reminder_consent FROM practitioner_clients WHERE id = $1`,
+      [clientId]
+    );
+    if (result.rows.length === 0) return false; // no client row => not consented
+    return result.rows[0].reminder_consent === true; // false / null => not consented
+  } catch (error) {
+    console.error(
+      '[SessionReminders] Reminder-consent lookup failed; failing closed (no send):',
+      error instanceof Error ? error.message : error
+    );
+    return false;
+  }
+}
+
+/**
+ * CONSENT GATE — auditable counterpart to the [SessionReminders] skipped_no_client_consent
+ * log marker. Records one row per (session, type) noting the reminder was suppressed for
+ * lack of consent. The distinct *_skipped_no_client_consent type never collides with the
+ * *_whatsapp / *_sms rows the reminder de-dup query checks, so the session stays eligible
+ * and will send normally once consent is granted. Never throws.
+ */
+async function logSkippedNoClientConsent(sessionId: string, notifTypePrefix: string): Promise<void> {
+  try {
+    await query(
+      `INSERT INTO session_notifications (session_id, notification_type, channel, status, error_message, sent_at)
+       VALUES ($1, $2, 'none', 'skipped', 'no client consent (practitioner_clients.reminder_consent not true)', NOW())
+       ON CONFLICT (session_id, notification_type) DO UPDATE
+       SET status = 'skipped', error_message = EXCLUDED.error_message, sent_at = NOW()`,
+      [sessionId, `${notifTypePrefix}_skipped_no_client_consent`]
+    );
+  } catch (error) {
+    console.error(
+      '[SessionReminders] Failed to log consent skip:',
+      error instanceof Error ? error.message : error
+    );
+  }
+}
+
+/**
  * Send DUAL notification (WhatsApp + SMS) for better US coverage
  * Many US users don't check WhatsApp regularly, so we send both
  */
@@ -467,23 +539,41 @@ export async function sendDualChannelNotification(
   notificationType: string,
   practitionerId?: string
 ): Promise<{ whatsapp: NotificationResult; sms: NotificationResult }> {
-  const credentials = await getTwilioCredentials(practitionerId);
-
   const results = {
     whatsapp: { success: false, channel: 'whatsapp' as const, error: 'Not sent' },
     sms: { success: false, channel: 'sms' as const, error: 'Not sent' },
   };
 
+  if (!session.clientPhone) {
+    results.whatsapp.error = 'No phone number';
+    results.sms.error = 'No phone number';
+    return results;
+  }
+
+  // CONSENT GATE — a client reminder must not leave the system unless the client has
+  // reminder_consent = true on their practitioner_clients record (the actual recipient of
+  // this phone send). Evaluated BEFORE credentials so the decision is independent of send
+  // capability (and unit-testable). Fails closed — see clientHasReminderConsent. Booking
+  // confirmations and practitioner self-reminders are intentionally NOT gated here.
+  if (isClientReminderType(notificationType)) {
+    const consented = await clientHasReminderConsent(session.clientId);
+    if (!consented) {
+      console.warn(
+        `[SessionReminders] skipped_no_client_consent { sessionId: ${session.id}, type: ${notificationType}, channels: whatsapp+sms }`
+      );
+      await logSkippedNoClientConsent(session.id, notificationType);
+      const reason = 'Skipped: no client consent';
+      results.whatsapp.error = reason;
+      results.sms.error = reason;
+      return results;
+    }
+  }
+
+  const credentials = await getTwilioCredentials(practitionerId);
   if (!credentials) {
     console.warn('[SessionNotifications] No Twilio credentials configured');
     results.whatsapp.error = 'No credentials';
     results.sms.error = 'No credentials';
-    return results;
-  }
-
-  if (!session.clientPhone) {
-    results.whatsapp.error = 'No phone number';
-    results.sms.error = 'No phone number';
     return results;
   }
 
@@ -571,6 +661,7 @@ export async function getSessionForNotification(sessionId: string): Promise<Sess
   const result = await query(
     `SELECT
        s.id,
+       s.client_id,
        s.scheduled_start,
        s.scheduled_end,
        s.location_type,
@@ -594,6 +685,7 @@ export async function getSessionForNotification(sessionId: string): Promise<Sess
   const row = result.rows[0];
   return {
     id: row.id,
+    clientId: row.client_id,
     clientName: row.client_name,
     clientPhone: row.client_phone,
     clientEmail: row.client_email,
@@ -638,6 +730,7 @@ export async function getSessionsNeedingReminder(
   const result = await query(
     `SELECT
        s.id,
+       s.client_id,
        s.scheduled_start,
        s.scheduled_end,
        s.location_type,
@@ -672,6 +765,7 @@ export async function getSessionsNeedingReminder(
 
   return result.rows.map(row => ({
     id: row.id,
+    clientId: row.client_id,
     clientName: row.client_name,
     clientPhone: row.client_phone,
     clientEmail: row.client_email,
