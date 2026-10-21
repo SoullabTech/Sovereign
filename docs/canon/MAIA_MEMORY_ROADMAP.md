@@ -1,3 +1,7 @@
+---
+level: architecture
+---
+
 # MAIA Memory System — Roadmap
 
 > Single source of truth for the MAIA memory architecture build. Read by the weekly Monday governance review (cloud-scheduled trigger). Updated as the system evolves.

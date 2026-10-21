@@ -1,3 +1,7 @@
+---
+level: architecture
+---
+
 # Intelligence Field Access Map
 
 **Status:** Working audit — not implementation spec.

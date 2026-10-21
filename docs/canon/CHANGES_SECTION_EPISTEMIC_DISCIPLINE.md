@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # Changes Section — Epistemic Discipline
 
 **Status:** Canon

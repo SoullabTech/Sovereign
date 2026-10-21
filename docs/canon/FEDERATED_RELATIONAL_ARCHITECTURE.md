@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # Federated Relational Architecture
 
 **Status:** Canon — binding structural law

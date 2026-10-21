@@ -1,3 +1,7 @@
+---
+level: protocol
+---
+
 # Four-Layer Substitution
 
 **Status:** Canon doctrine. Discriminates Anthropic-default behavior wearing MAIA-vocabulary.

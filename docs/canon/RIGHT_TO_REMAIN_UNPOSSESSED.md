@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # The Right to Remain Unpossessed
 
 **Architectural self-discipline for sacred-respecting intelligence.**

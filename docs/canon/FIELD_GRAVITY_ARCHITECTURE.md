@@ -1,3 +1,7 @@
+---
+level: architecture
+---
+
 # Field Gravity Architecture
 
 **Status: Phase 0 — binding architecture canon under observation.**

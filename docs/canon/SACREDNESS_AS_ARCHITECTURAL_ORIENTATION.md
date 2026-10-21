@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # Sacredness as Architectural Orientation
 
 **Doctrine protecting the conditions under which sacredness can be encountered without being possessed.**

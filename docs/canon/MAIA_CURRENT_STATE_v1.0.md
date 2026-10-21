@@ -1,3 +1,7 @@
+---
+level: architecture
+---
+
 # MAIA CURRENT STATE v1.0
 
 **Status:** Ground truth contract between the system and reality
