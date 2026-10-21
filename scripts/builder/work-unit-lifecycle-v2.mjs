@@ -566,6 +566,10 @@ function transitionRecord(workUnit, from, request) {
   };
 }
 
+export function validateLifecycleEnvelopeV2(envelope) {
+  return deepFreeze([...envelopeBlockers(envelope)]);
+}
+
 export function transitionLifecycleV2(envelope, request) {
   const envBlocks = envelopeBlockers(envelope);
   const reqBlocks = requestBlockers(request);
