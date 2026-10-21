@@ -44,6 +44,58 @@ function withHome(fn) {
     .finally(() => fs.rmSync(home, { recursive: true, force: true }));
 }
 
+
+test('W0.v2 preserves optional line-range evidence selectors without changing file-level read authority', () => {
+  const ranged = C.canonicalInputFromSpec(spec({
+    evidenceFocus: 'scripts/builder/work-unit-v2.mjs:1-5',
+  }), {
+    canonicalSha: SHA,
+    workUnitId: 'v2-range-proof',
+  });
+  assert.equal(ranged.ok, true, JSON.stringify(ranged.blockers));
+  assert.deepEqual(ranged.input.scope.allowed_paths, ['scripts/builder/work-unit-v2.mjs']);
+  assert.deepEqual(ranged.input.scope.evidence_selectors, [{
+    ref: 'scripts/builder/work-unit-v2.mjs',
+    selector: { type: 'lines', start: 1, end: 5 },
+  }]);
+
+  const legacy = C.canonicalInputFromSpec(spec(), {
+    canonicalSha: SHA,
+    workUnitId: 'v2-legacy-shape-proof',
+  });
+  assert.equal(legacy.ok, true);
+  assert.equal(Object.hasOwn(legacy.input.scope, 'evidence_selectors'), false);
+});
+
+
+test('line-range selectors survive canonical create and route lifecycle unchanged', async () => {
+  await withHome(async (_home, env) => {
+    let out = await C.createCanonicalV2(REPO, spec({
+      evidenceFocus: 'scripts/builder/work-unit-v2.mjs:1-5',
+    }), {
+      canonicalSha: SHA,
+      nowMs: 999,
+      env,
+      actorId: 'human:test',
+    });
+    assert.equal(out.ok, true);
+    assert.deepEqual(out.work_unit.scope.evidence_selectors, [{
+      ref: 'scripts/builder/work-unit-v2.mjs',
+      selector: { type: 'lines', start: 1, end: 5 },
+    }]);
+
+    const id = out.work_unit_id;
+    out = await C.transitionCanonicalV2(REPO, id, 'BOUNDED', { env, actorId: 'human:test' });
+    out = await C.transitionCanonicalV2(REPO, id, 'AUTHORIZED', { env, actorId: 'human:test' });
+    out = await C.bindCanonicalRouteV2(REPO, id, { env, actorId: 'human:test' });
+    assert.equal(out.ok, true);
+    assert.deepEqual(out.work_unit.scope.evidence_selectors, [{
+      ref: 'scripts/builder/work-unit-v2.mjs',
+      selector: { type: 'lines', start: 1, end: 5 },
+    }]);
+  });
+});
+
 test('prospective J5 preview is explicitly noncanonical and family-first', async () => {
   await withHome(async (_home, env) => {
     const out = await C.prospectivePreview(REPO, spec(), {

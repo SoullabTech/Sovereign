@@ -173,6 +173,24 @@ function boundedRepoPath(value) {
   if (p.startsWith('/') || p.startsWith('../') || p.includes('/../') || p.includes('\\')) return null;
   return p;
 }
+function parseEvidenceFocus(value) {
+  const raw = String(value || '').trim();
+  const match = /^(.*):(\d+)-(\d+)$/.exec(raw);
+  const path = boundedRepoPath(raw);
+  if (!path) return { ok: false, path: null, selector: null, raw };
+  if (!match) return { ok: true, path, selector: null, raw };
+  const start = Number(match[2]);
+  const end = Number(match[3]);
+  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end < start) {
+    return { ok: false, path, selector: null, raw };
+  }
+  return {
+    ok: true,
+    path,
+    selector: { ref: path, selector: { type: 'lines', start, end } },
+    raw,
+  };
+}
 function validateSpecShape(spec) {
   const blocks = [];
   if (!isObject(spec)) return [blocker('CANONICAL_SPEC_REQUIRED', 'Canonical v2 intent must be structured.')];
@@ -214,7 +232,15 @@ function canonicalInputFromSpec(spec, { canonicalSha, workUnitId }) {
   }
   if (!safeId(workUnitId)) blocks.push(blocker('WORK_UNIT_ID_REQUIRED', 'MAIN must derive canonical Work Unit identity.'));
 
-  const focus = unique(lines(spec?.evidenceFocus).map(boundedRepoPath).filter(Boolean));
+  const focusEntries = unique(lines(spec?.evidenceFocus)).map(parseEvidenceFocus);
+  const invalidFocus = focusEntries.filter((entry) => !entry.ok);
+  for (const entry of invalidFocus) {
+    blocks.push(blocker('INVALID_EVIDENCE_FOCUS', 'Evidence focus must be a bounded repository path or path:start-end line range.', 'evidenceFocus'));
+  }
+  const focus = unique(focusEntries.filter((entry) => entry.ok).map((entry) => entry.path));
+  const evidenceSelectors = focusEntries
+    .filter((entry) => entry.ok && entry.selector)
+    .map((entry) => entry.selector);
   const acceptance = lines(spec?.acceptanceCriteria);
   const falsification = lines(spec?.falsificationConditions);
   const stopConditions = lines(spec?.stopConditions);
@@ -279,6 +305,7 @@ function canonicalInputFromSpec(spec, { canonicalSha, workUnitId }) {
       base_ref: canonicalSha,
       allowed_paths: isTaskTextOnly ? [] : focus,
       forbidden_paths: [],
+      ...(evidenceSelectors.length ? { evidence_selectors: evidenceSelectors } : {}),
     },
     authority: {
       repository_read: !isTaskTextOnly,
@@ -317,7 +344,7 @@ function prospectiveIntentKey(spec, canonicalSha) {
     evidenceClass: text(spec?.evidenceClass),
     requestedPosture: text(spec?.requestedPosture),
     reviewPressure: text(spec?.reviewPressure),
-    evidenceFocus: unique(lines(spec?.evidenceFocus).map(stripLineSelector)),
+    evidenceFocus: unique(lines(spec?.evidenceFocus)),
     acceptanceCriteria: lines(spec?.acceptanceCriteria),
     falsificationConditions: lines(spec?.falsificationConditions),
     stopConditions: lines(spec?.stopConditions),
@@ -1280,6 +1307,68 @@ async function statusCanonicalV2(root, workUnitId, opts = {}) {
   });
 }
 
+async function listCanonicalV2(root, opts = {}) {
+  const dir = canonicalHome(opts.env);
+  const limit = Math.min(Math.max(Number(opts.limit) || 200, 1), 500);
+  if (!fs.existsSync(dir)) {
+    return deepFreeze({
+      ok: true,
+      status: 'CANONICAL_V2_LIST',
+      population: { total: 0, returned: 0, truncated: false, unreadable: 0 },
+      items: [],
+    });
+  }
+
+  const candidates = fs.readdirSync(dir)
+    .filter((name) => name.endsWith('.json')
+      && !name.endsWith('.desktop.json')
+      && !name.includes('.tmp-'))
+    .map((name) => {
+      const id = name.slice(0, -'.json'.length);
+      const file = path.join(dir, name);
+      let mtimeMs = 0;
+      try { mtimeMs = fs.statSync(file).mtimeMs; } catch {}
+      return { id, file, mtimeMs };
+    })
+    .filter((entry) => safeId(entry.id))
+    .sort((a, b) => b.mtimeMs - a.mtimeMs || a.id.localeCompare(b.id));
+
+  const items = [];
+  let unreadable = 0;
+  for (const entry of candidates.slice(0, limit)) {
+    try {
+      const snapshot = await statusCanonicalV2(root, entry.id, opts);
+      items.push({
+        work_unit_id: entry.id,
+        observed_mtime_ms: entry.mtimeMs,
+        readable: snapshot.ok === true,
+        snapshot,
+      });
+    } catch (error) {
+      unreadable += 1;
+      items.push({
+        work_unit_id: entry.id,
+        observed_mtime_ms: entry.mtimeMs,
+        readable: false,
+        error: String(error?.message || error),
+        snapshot: null,
+      });
+    }
+  }
+
+  return deepFreeze({
+    ok: true,
+    status: 'CANONICAL_V2_LIST',
+    population: {
+      total: candidates.length,
+      returned: items.length,
+      truncated: candidates.length > items.length,
+      unreadable,
+    },
+    items,
+  });
+}
+
 module.exports = {
   MODE,
   STORE_VERSION,
@@ -1307,4 +1396,5 @@ module.exports = {
   adjudicateCanonicalV2,
   closeCanonicalV2,
   statusCanonicalV2,
+  listCanonicalV2,
 };

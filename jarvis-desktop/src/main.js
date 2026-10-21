@@ -952,6 +952,12 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
         snapshot,
       };
     }
+    if (action === 'canonical-list') {
+      return await CWUV2.listCanonicalV2(root, {
+        env: process.env,
+        limit: 200,
+      });
+    }
     if (action === 'status') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
       if (CWUV2.existsCanonicalV2(req.work_unit_id, process.env)) {
