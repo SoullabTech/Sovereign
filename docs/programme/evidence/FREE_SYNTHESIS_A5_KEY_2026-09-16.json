@@ -1,0 +1,82 @@
+[
+  {
+    "id": "R01",
+    "condition": "A",
+    "systemChars": 28562
+  },
+  {
+    "id": "R02",
+    "condition": "B",
+    "systemChars": 2313
+  },
+  {
+    "id": "R03",
+    "condition": "C",
+    "systemChars": 1114
+  },
+  {
+    "id": "R04",
+    "condition": "D",
+    "systemChars": 1492
+  },
+  {
+    "id": "R05",
+    "condition": "A",
+    "systemChars": 28562
+  },
+  {
+    "id": "R06",
+    "condition": "B",
+    "systemChars": 2313
+  },
+  {
+    "id": "R07",
+    "condition": "C",
+    "systemChars": 1114
+  },
+  {
+    "id": "R08",
+    "condition": "D",
+    "systemChars": 1492
+  },
+  {
+    "id": "R09",
+    "condition": "A",
+    "systemChars": 28562
+  },
+  {
+    "id": "R10",
+    "condition": "B",
+    "systemChars": 2313
+  },
+  {
+    "id": "R11",
+    "condition": "C",
+    "systemChars": 1114
+  },
+  {
+    "id": "R12",
+    "condition": "D",
+    "systemChars": 1492
+  },
+  {
+    "id": "R13",
+    "condition": "A",
+    "systemChars": 28562
+  },
+  {
+    "id": "R14",
+    "condition": "B",
+    "systemChars": 2313
+  },
+  {
+    "id": "R15",
+    "condition": "C",
+    "systemChars": 1114
+  },
+  {
+    "id": "R16",
+    "condition": "D",
+    "systemChars": 1492
+  }
+]

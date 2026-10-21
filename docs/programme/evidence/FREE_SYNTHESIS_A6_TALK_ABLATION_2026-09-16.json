@@ -1,0 +1,26 @@
+[
+  {
+    "rep": 1,
+    "label": "TALK",
+    "chars": 28486,
+    "text": "The silver cedar. I hear you mentioning it in a way that feels significant. It sounds like this tree might be carrying some symbolic weight for you. Can you tell me more about what's alive for you in relation to the silver cedar?"
+  },
+  {
+    "rep": 1,
+    "label": "NO_TALK",
+    "chars": 26303,
+    "text": "I hear you saying the silver cedar. It's a tree that's often associated with protection, clarity, and a connection to the natural world. It sounds like something in you is drawn to its symbolism, perhaps as a way to anchor yourself in the midst of change or uncertainty. What is it about the silver cedar that resonates with you right now?"
+  },
+  {
+    "rep": 2,
+    "label": "TALK",
+    "chars": 28486,
+    "text": "The silver cedar. I hear you mentioning it in a way that feels significant. It sounds like the silver cedar might be connected to something important for you, perhaps a symbol or a reminder of a value that's relevant to your current situation. Can you tell me more about what comes to mind when you think of the silver cedar?"
+  },
+  {
+    "rep": 2,
+    "label": "NO_TALK",
+    "chars": 26303,
+    "text": "I hear you mentioning the silver cedar. It sounds like this tree has a special place in your heart or perhaps in your current reflections. What is it about the silver cedar that resonates with you right now?"
+  }
+]

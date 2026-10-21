@@ -1,0 +1,127 @@
+{
+  "judge": "qwen2.5:7b",
+  "seeds": [
+    11,
+    73
+  ],
+  "per_id": {
+    "R01": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0,
+      "condition": "A"
+    },
+    "R02": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0,
+      "condition": "B"
+    },
+    "R03": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 2,
+      "ED": 2,
+      "SI": 1,
+      "RP": 0,
+      "total": 5,
+      "condition": "C"
+    },
+    "R04": {
+      "EM": 1.5,
+      "QD": 0,
+      "OE": 2,
+      "ED": 2,
+      "SI": 1,
+      "RP": 0.5,
+      "total": 7.0,
+      "condition": "D"
+    },
+    "R05": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0,
+      "condition": "A"
+    },
+    "R06": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0,
+      "condition": "B"
+    },
+    "R07": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 2,
+      "ED": 2,
+      "SI": 1,
+      "RP": 0,
+      "total": 5,
+      "condition": "C"
+    },
+    "R08": {
+      "EM": 1.5,
+      "QD": 0,
+      "OE": 2,
+      "ED": 2,
+      "SI": 1,
+      "RP": 0.5,
+      "total": 7.0,
+      "condition": "D"
+    }
+  },
+  "by_condition": {
+    "A": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0
+    },
+    "B": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 0,
+      "ED": 0,
+      "SI": 0,
+      "RP": 0,
+      "total": 0
+    },
+    "C": {
+      "EM": 0,
+      "QD": 0,
+      "OE": 2,
+      "ED": 2,
+      "SI": 1,
+      "RP": 0,
+      "total": 5
+    },
+    "D": {
+      "EM": 1.5,
+      "QD": 0,
+      "OE": 2,
+      "ED": 2,
+      "SI": 1,
+      "RP": 0.5,
+      "total": 7.0
+    }
+  }
+}
