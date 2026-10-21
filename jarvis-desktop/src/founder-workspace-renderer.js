@@ -58,7 +58,15 @@ function inspectButton(kind,id,label,origin,source='') {
 }
 function pill(text, level='neutral') { return `<span class="pill ${levelClass(level)}">${esc(text)}</span>`; }
 
+const WRITER_BETA_WORK_ID='v2-writer-s-studio-small-beta-launch-mv5adx5f';
+function isWriterBetaUnit(u) {
+  return u?.id===WRITER_BETA_WORK_ID && u?.title==='Writer’s Studio — Small Beta Launch';
+}
+function writerBetaUnit() {
+  return arr(state.vm?.work?.units).find(isWriterBetaUnit)||null;
+}
 function humanWorkSubject(u) {
+  if (isWriterBetaUnit(u)) return 'Writer’s Studio — Small Beta Launch';
   const t=String(u?.title||'').toLowerCase();
   if (t.includes("writer's studio") || t.includes('writers studio') || t.includes('writer studio')) return "Writer's Studio";
   if (t.includes('model mode') || (t.includes('qwen') && t.includes('gpt-oss'))) return 'JARVIS model routing';
@@ -71,6 +79,7 @@ function humanWorkSubject(u) {
 }
 
 function humanWorkStatus(u) {
+  if (isWriterBetaUnit(u)) return 'The launch is being prepared. No beta deployment or invitation is authorized.';
   const state=String(u?.state||'').toUpperCase();
   if (state==='EVIDENCE_READY') return 'A completed JARVIS check is ready for your review.';
   if (state==='EXECUTING') return 'JARVIS is checking this now under an authority already granted.';
@@ -83,10 +92,68 @@ function humanWorkStatus(u) {
 }
 
 function humanFounderAsk(u) {
-  const need=arr(u?.needs_founder)[0];
+  // Scoping an E0 Draft is engineering orientation, not a founder release
+  // decision. Do not inflate the Needs Kelly lane for this coordination record.
+  const needs=arr(u?.needs_founder).filter(n=>!(isWriterBetaUnit(u) && u?.state==='DRAFT' && n?.action==='canonical-bound'));
+  const need=needs[0];
   if (!need) return null;
   if (need.action==='canonical-adjudicate') return 'Review the evidence and decide whether this work passes.';
   return `A decision is waiting for you: ${need.what || need.action || 'review this work'}.`;
+}
+
+function founderAttentionGate(u) {
+  const need=isWriterBetaUnit(u) && u?.state==='DRAFT'
+    ? arr(u?.needs_founder).find(n=>n?.action!=='canonical-bound')
+    : arr(u?.needs_founder)[0];
+  if (!need) return null;
+  if (!need) return null;
+  const adjudication=need.action==='canonical-adjudicate';
+  return {
+    whyKelly: adjudication
+      ? 'Only founder adjudication can advance this governed work.'
+      : 'This work has reached an explicit founder-authority boundary.',
+    whyNow: adjudication
+      ? 'The evidence is ready for a pass, revise, or hold decision.'
+      : `JARVIS is waiting on: ${need.what || need.action || 'your decision'}.`,
+    ifNothing: 'The work stays held. JARVIS does not advance it without your authority.',
+  };
+}
+
+/**
+ * One evidence index read through the Work Unit. It is historical,
+ * never a release permit, live health check, or second programme.
+ */
+function releaseGatesMarkup(u) {
+  if (!isWriterBetaUnit(u)) return '';
+  const snap=u.release_snapshot;
+  if (!snap || snap.work_unit_id!==u.id || snap.authority!=='orientation_only' || snap.release_approval!=='NOT_AUTHORIZED') {
+    return '<div class="callout slate" data-beta-release-unverified><b>Release evidence not yet readable.</b> JARVIS will not infer approval or an all-clear.</div>';
+  }
+  const when=String(snap.recorded_at||'').slice(0,10)||'date unavailable';
+  const meanings={
+    witnessed:'Witnessed earlier · not a live guarantee',
+    hold:'Held · cannot advance',
+    open:'Still to verify',
+    unverified:'Evidence changed or cannot be checked',
+    'future-decision':'Separate founder decision required',
+  };
+  const rows=arr(snap.gates).map(g=>{
+    const status=meanings[g.standing]||'Not verified';
+    const isHeld=['hold','unverified','open','future-decision'].includes(g.standing);
+    return `<div class="row" data-beta-gate="${attr(g.id)}" data-beta-standing="${attr(g.standing)}"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(g.label)}</div><div class="rowPlain">${esc(g.plain)}</div><div class="rowMeta">${esc(status)}${g.recorded_at?' · observed '+esc(g.recorded_at):''}${g.receipt_verified?' · receipt hash verified':''}</div></div>${pill(isHeld?'Outstanding':'Historical',isHeld?'warn':'neutral')}</div></div>`;
+  }).join('');
+  return `<div data-beta-release-workstream><p class="rowPlain"><b>Small beta release held.</b> One JARVIS Work Unit; evidence recorded ${esc(when)}. Nothing here authorizes schema writes, production deployment, or an invitation.</p><details class="secondaryDetails"><summary>Release gates · ${arr(snap.gates).length} recorded</summary><div class="detailsBody"><div class="list">${rows||'<div class="empty">No trustworthy release gates observed.</div>'}</div><div class="rowMeta">${esc(snap.reason||'Historical orientation only.')}</div></div></details><div class="actions">${snap.file?evidenceButton(snap.file,'Open the evidence index'):''}</div></div>`;
+}
+
+function releaseWorkstreamSection(origin='Work') {
+  const unit=writerBetaUnit();
+  if (!unit) return '';
+  return `<section class="section" data-ws-beta-section><h2>Writer’s Studio — Small Beta Launch <span class="muted">JARVIS governed work</span></h2><div class="card"><p>${esc(humanWorkStatus(unit))}</p>${releaseGatesMarkup(unit)}<div class="actions">${contextButton('work',unit.id,'Writer’s Studio — Small Beta Launch',origin,unit.file,'Enter release work')}</div></div></section>`;
+}
+
+function attentionGateDetails(gate) {
+  if (!gate) return '';
+  return `<div class="attentionGate"><div><b>Why you</b> · ${esc(gate.whyKelly)}</div><div><b>Why now</b> · ${esc(gate.whyNow)}</div><div><b>If you do nothing today</b> · ${esc(gate.ifNothing)}</div></div>`;
 }
 
 function friendlyProgrammeName(p) {
@@ -260,7 +327,7 @@ function render() {
 
 function renderRail() {
   if (!state.vm) return;
-  const needs = arr(state.vm.work?.units).filter(u => arr(u.needs_founder).length).length;
+  const needs = arr(state.vm.work?.units).filter(u => humanFounderAsk(u)).length;
   const active = arr(state.vm.work?.units).filter(u => !['CLOSED','ADJUDICATED'].includes(u.state)).length;
   const attention = arr(state.vm.monitor).filter(m => ['warn','failed'].includes(m.level)).length;
   setBadge('today', needs || ''); setBadge('work', active || ''); setBadge('monitor', attention || '');
@@ -289,7 +356,7 @@ function deriveActiveFields() {
     const ask=humanFounderAsk(u);
     fields.push({
       bucket: ask?'needs':'motion', kind:'work', id:u.id, label:humanWorkSubject(u), source:u.file,
-      what:humanWorkStatus(u), moving:u.state_plain||u.state, needs:ask, changed:u.last_event||null,
+      what:humanWorkStatus(u), moving:u.state_plain||u.state, needs:ask, gate:founderAttentionGate(u), changed:u.last_event||null,
       level:ask?'warn':'neutral', type:ask?'Needs Kelly':'In motion',
       technical:[`Work Unit: ${u.title}`, `State: ${u.state}`, u.route?`Route: ${u.route}`:null, `Evidence: ${u.evidence_state}`, u.file?`Source: ${u.file}`:null],
     });
@@ -317,7 +384,130 @@ function deriveActiveFields() {
 }
 
 function activeFieldRow(f, origin='Today') {
-  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(f.label)}</div><div class="rowPlain">${esc(f.what||'Observed field')}</div>${f.needs?`<div class="rowPlain"><b>Needs Kelly:</b> ${esc(f.needs)}</div>`:''}${f.changed?`<div class="rowMeta">Changed: ${esc(f.changed)}</div>`:''}${technicalDetails(f.technical)}<div class="actions">${contextButton(f.kind,f.id,f.label,origin,f.source,'Enter field')}${f.source?evidenceButton(f.source):''}</div></div>${pill(f.type,f.level)}</div></div>`;
+  const release=releaseGatesMarkup(arr(state.vm?.work?.units).find(u=>u.id===f.id));
+  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(f.label)}</div><div class="rowPlain">${esc(f.what||'Observed field')}</div>${release}${f.needs?`<div class="rowPlain"><b>Needs Kelly:</b> ${esc(f.needs)}</div>`:''}${attentionGateDetails(f.gate)}${f.changed?`<div class="rowMeta">Changed: ${esc(f.changed)}</div>`:''}${technicalDetails(f.technical)}<div class="actions">${contextButton(f.kind,f.id,f.label,origin,f.source,'Enter field')}${f.source?evidenceButton(f.source):''}</div></div>${pill(f.type,f.level)}</div></div>`;
+}
+
+function deriveAttentionDomains(fields) {
+  const vm=state.vm;
+  const work=arr(vm.work?.units);
+  const programmes=arr(vm.programme_state?.programmes);
+  const monitor=arr(vm.monitor);
+  const founderFocus=vm.work?.founder_focus || { visibility:'not-connected', items:[] };
+  const focusItems=arr(founderFocus.items);
+  const memberAttention=vm.work?.member_attention || { visibility:'not-connected', items:[] };
+  const memberItems=arr(memberAttention.items);
+  const teamAttention=vm.work?.team_attention || { visibility:'not-connected', items:[] };
+  const teamItems=arr(teamAttention.items);
+  const worldAttention=vm.work?.world_attention || { visibility:'not-connected', items:[] };
+  const worldItems=arr(worldAttention.items);
+  const teamObserved=work.length>0;
+  const platformObserved=work.length>0 || programmes.length>0 || monitor.length>0;
+  return [
+    {
+      id:'members', label:'Members', visibility:memberAttention.visibility || 'not-connected', memberItems,
+      plain:memberAttention.visibility==='partial'
+        ? (memberItems.length ? 'Founder follow-up signals are visible here. Other member signals are not yet joined, so this is not a complete all-clear.' : 'Founder Ops is visible and has no due member/beta follow-ups, but other member signals are not yet joined.')
+        : 'Member relationship signals are not connected to this Founder Workspace yet. JARVIS will not interpret silence as nobody needing you.',
+      source:memberAttention.source || 'No admitted member-attention organ in founder-workspace-viewmodel.v1.',
+    },
+    {
+      id:'team', label:'Team', visibility:teamAttention.visibility || (teamObserved?'partial':'not-connected'), teamItems,
+      plain:(teamAttention.visibility==='partial' || teamObserved)
+        ? (teamItems.length ? 'AI-partner handoffs and governed JARVIS work are visible. Human-team channels are not yet joined, so this remains partial.' : 'Governed JARVIS work is visible here. Human-team channels are not yet joined.')
+        : 'No governed team-work signal is visible in this snapshot.',
+      source:teamAttention.source || (teamObserved?'work.units · governed Work Unit records':'No observed Work Unit rows.'),
+    },
+    {
+      id:'platform', label:'Platform', visibility:platformObserved?'observed':'not-connected',
+      plain:platformObserved
+        ? 'Platform work, programme standing, and admitted observations can contribute to Today.'
+        : 'Platform state has not been observed in this snapshot.',
+      source:platformObserved?'work.units · programme_state · monitor':'No observed platform rows.',
+    },
+    {
+      id:'finance', label:'Finance', visibility:'not-connected',
+      plain:'Cash, revenue, receivables, spending, taxes, runway, pricing, and family-provision signals are not connected yet. JARVIS will not infer financial safety from missing data.',
+      source:'No admitted finance organ in founder-workspace-viewmodel.v1.',
+    },
+    {
+      id:'world', label:'World', visibility:worldAttention.visibility || 'not-connected', worldItems,
+      plain:worldAttention.visibility==='partial'
+        ? (worldItems.length ? 'Due next actions for leads, partners, and press are visible. Campaign performance and the wider market are not yet joined.' : 'Founder Ops is visible and has no due lead/partner/press follow-ups, but campaign and market signals are not yet joined.')
+        : 'Outreach, partnerships, publishing, GTM, and outside-world signals are not connected to this Founder Workspace yet.',
+      source:worldAttention.source || 'No admitted world-attention organ in founder-workspace-viewmodel.v1.',
+    },
+    {
+      id:'your-work', label:'Your Work', visibility:founderFocus.visibility || 'not-connected', items:focusItems,
+      plain:founderFocus.visibility==='observed'
+        ? (focusItems.length ? 'Your protected work is explicitly named by you and held apart from operational noise.' : 'Your focus organ is connected, but you have not named protected work yet.')
+        : founderFocus.visibility==='partial'
+          ? 'Your protected-work record was only partly readable. JARVIS will not fill the gaps.'
+          : 'Protected creative work is not yet connected as a governed attention source. Today will not guess what your deepest work should be.',
+      source:founderFocus.source || 'No admitted founder-focus organ in founder-workspace-viewmodel.v1.',
+    },
+  ];
+}
+
+function attentionDomainCard(d) {
+  const label=d.visibility==='observed'?'Observed':d.visibility==='partial'?'Partial':'Not connected';
+  const level=d.visibility==='observed'?'good':d.visibility==='partial'?'warn':'unobserved';
+  const items=arr(d.items);
+  const members=arr(d.memberItems);
+  const team=arr(d.teamItems);
+  const world=arr(d.worldItems);
+  const focus=items.length?`<div class="protectedWork">${items.map(x=>`<div class="protectedWorkItem"><b>${esc(x.label)}</b><div>${esc(x.intention)}</div>${x.next_act?`<div class="nextAct"><b>Next act</b> · ${esc(x.next_act)}</div>`:''}</div>`).join('')}</div>`:'';
+  const memberRows=members.length?`<div class="protectedWork memberAttention">${members.map(x=>`<div class="protectedWorkItem"><b>${esc(x.name)}</b><div>${esc(x.next_action)}</div><div class="nextAct">${esc(x.relationship)} · ${esc(x.stage)}${x.due_at?` · due ${esc(String(x.due_at).slice(0,10))}`:''}</div></div>`).join('')}</div>`:'';
+  const teamRows=team.length?`<div class="protectedWork teamAttention">${team.map(x=>`<div class="protectedWorkItem"><b>${esc(x.source)}</b><div>${esc(x.field)}</div><div class="nextAct">${esc(x.plain)}</div></div>`).join('')}</div>`:'';
+  const worldRows=world.length?`<div class="protectedWork worldAttention">${world.map(x=>`<div class="protectedWorkItem"><b>${esc(x.name)}</b><div>${esc(x.next_action)}</div><div class="nextAct">${esc(x.relationship)} · ${esc(x.stage)}${x.due_at?` · due ${esc(String(x.due_at).slice(0,10))}`:''}</div></div>`).join('')}</div>`:'';
+  return `<div class="attentionDomain"><div class="attentionDomainTop"><b>${esc(d.label)}</b>${pill(label,level)}</div><div class="rowPlain">${esc(d.plain)}</div>${memberRows}${teamRows}${worldRows}${focus}${technicalDetails([`Visibility: ${label}`,`Source: ${d.source}`])}</div>`;
+}
+
+function renderAttentionDomains(fields) {
+  const domains=deriveAttentionDomains(fields);
+  return `<section class="section attentionDomains"><h2>Your field <span class="muted">what JARVIS can and cannot see today</span></h2><div class="attentionDomainGrid">${domains.map(attentionDomainCard).join('')}</div></section>`;
+}
+
+function deriveDailySynthesis(fields) {
+  const domains=deriveAttentionDomains(fields);
+  const needs=fields.filter(f=>f.bucket==='needs');
+  const members=domains.find(d=>d.id==='members');
+  const world=domains.find(d=>d.id==='world');
+  const yourWork=domains.find(d=>d.id==='your-work');
+  const due=[...arr(members?.memberItems), ...arr(world?.worldItems)];
+  const protectedItems=arr(yourWork?.items).filter(x=>x.protected!==false);
+  const attention=[];
+  for (const f of needs.slice(0,3)) attention.push({
+    kind:'requires', label:f.label, text:f.needs || f.what, meta:'Requires your authority',
+  });
+  for (const x of due.slice(0,Math.max(0,3-attention.length))) attention.push({
+    kind:'review', label:x.name, text:x.next_action, meta:`${x.relationship} · due follow-up`,
+  });
+  if (attention.length<3 && protectedItems.length) {
+    const x=protectedItems[0];
+    attention.push({ kind:'protect', label:x.label, text:x.next_act || x.intention, meta:'Protected work' });
+  }
+  return {
+    attention,
+    hiddenNeeds:Math.max(0,needs.length-attention.filter(x=>x.kind==='requires').length),
+    coverageGaps:domains.filter(d=>d.visibility==='not-connected').map(d=>d.label),
+  };
+}
+
+function dailyAttentionCard(item) {
+  const label=item.kind==='requires'?'Needs you':item.kind==='review'?'Review':'Protect';
+  const level=item.kind==='requires'?'warn':item.kind==='review'?'neutral':'good';
+  return `<div class="dailyAttentionItem"><div class="dailyAttentionTop"><b>${esc(item.label)}</b>${pill(label,level)}</div><div class="rowPlain">${esc(item.text)}</div><div class="rowMeta">${esc(item.meta)}</div></div>`;
+}
+
+function renderDailySynthesis(fields) {
+  const s=deriveDailySynthesis(fields);
+  const body=s.attention.length
+    ? s.attention.map(dailyAttentionCard).join('')
+    : `<div class="empty">Nothing currently earns your attention. Protect your own work.</div>`;
+  const more=s.hiddenNeeds?`<div class="rowMeta">${s.hiddenNeeds} additional founder decision${s.hiddenNeeds===1?'':'s'} remain in Needs Kelly below.</div>`:'';
+  const gaps=s.coverageGaps.length?`<div class="coverageNote"><b>Still not visible:</b> ${esc(s.coverageGaps.join(' · '))}. Missing visibility is not an all-clear.</div>`:'';
+  return `<section class="section dailySynthesis"><h2>What deserves you today <span class="muted">JARVIS synthesis</span></h2><div class="dailyAttentionGrid">${body}</div>${more}${gaps}</section>`;
 }
 
 function renderToday() {
@@ -334,11 +524,14 @@ function renderToday() {
       : 'Nothing is asking for your attention right now.';
   const listOrEmpty=(xs,msg)=>xs.length?xs.map(f=>activeFieldRow(f)).join(''):`<div class="empty">${esc(msg)}</div>`;
   const recent=events.length?`<div class="card"><div class="timeline">${events.slice(0,14).map(e=>`<div class="date">${esc(String(e.at||'').slice(0,16)||'—')}</div><div>${esc(e.text||e.kind)} <span class="muted mono">· ${esc(e.source||'')}</span>${e.source?` ${evidenceButton(e.source,'Open')}`:''}</div>`).join('')}</div></div>`:`<div class="empty">No recent events are recorded in the local event organ.</div>`;
-  return `<div class="eyebrow">Today · Kelly's world</div><h1>${headline}</h1>
-    <p class="lede">Start with what requires you, then what is already moving, then what only needs watching. Technical truth is still here, one layer down. ${unclassified} source subject${unclassified===1?' is':'s are'} unclassified${unreadable?`; ${unreadable} are unreadable`:''}.</p>
-    <section class="section"><h2>Needs Kelly <span class="muted">decisions waiting for you</span></h2><div class="list">${listOrEmpty(needs,'Nothing is waiting for a decision from you.')}</div></section>
-    <section class="section"><h2>In motion <span class="muted">work already moving</span></h2><div class="list">${listOrEmpty(motion,'No governed work is currently moving.')}</div></section>
-    <section class="section"><h2>Watching <span class="muted">uncertainty and observed conditions</span></h2><div class="list">${listOrEmpty(watching,'Nothing currently needs watching.')}</div></section>
+  return `<div class="eyebrow">Today · Daily check-in</div><h1>${headline}</h1>
+    <p class="lede">JARVIS filters for your attention before showing you the machinery. Start with what only you can decide, then what is already being carried, then what merely needs watching. Technical truth remains one layer down. ${unclassified} source subject${unclassified===1?' is':'s are'} unclassified${unreadable?`; ${unreadable} are unreadable`:''}.</p>
+    <div class="card attentionLaw"><b>Attention law</b><p>Nothing belongs in Needs Kelly merely because it exists. It must require your presence, judgment, authorship, care, or authority. If JARVIS can lawfully carry it, it stays out of your way.</p></div>
+    ${renderDailySynthesis(fields)}
+    ${renderAttentionDomains(fields)}
+    <section class="section"><h2>Needs Kelly <span class="muted">only work that cannot lawfully move without you</span></h2><div class="list">${listOrEmpty(needs,'Nothing is waiting for a decision from you.')}</div></section>
+    <section class="section"><h2>In motion <span class="muted">already being carried — no action from you</span></h2><div class="list">${listOrEmpty(motion,'No governed work is currently moving.')}</div></section>
+    <section class="section"><h2>Watching <span class="muted">stay aware; do not act unless this changes</span></h2><div class="list">${listOrEmpty(watching,'Nothing currently needs watching.')}</div></section>
     <details class="secondaryDetails"><summary>Everything else</summary><div class="detailsBody"><h2>Changed recently</h2>${recent}${workspaceCard()}</div></details>`;
 }
 
@@ -430,6 +623,7 @@ function renderWork() {
     conversation=workConversation(ctx);
   }
   return `<div class="eyebrow">Work · Kelly + partners</div><h1>This is where we work.</h1><p class="lede">Tell JARVIS what you want to investigate, prepare, change, or prepare for release. Your words become governed intent and a bounded plan before anything runs. Local reasoning requires a separate explicit gesture.</p>
+    ${releaseWorkstreamSection('Work')}
     ${renderB6Room()}
     <section class="section"><h2>Current field context</h2>${conversation}</section>
     <section class="section"><h2>Your AI partners</h2><div class="grid2"><div class="card"><h3>JARVIS · local</h3><p>Live here now: governed intent, bounded planning, local reasoning, evidence and programme context.</p></div><div class="card"><h3>MAIA · ChatGPT · Claude Code</h3><p>B6R1 can now accept bounded local handoff receipts from these partners when one exists for the current field. A handoff is orientation only: it does not become repository evidence and grants no authority.</p></div></div></section>
@@ -444,7 +638,7 @@ function workConversation(ctx) {
   }
   if (c.kind==='work') {
     const label=humanWorkSubject(ctx), ask=humanFounderAsk(ctx);
-    return `<div class="contextCard"><b>${esc(label)}</b><div class="why">${esc(humanWorkStatus(ctx))}</div>${ask?`<div class="rowPlain" style="margin-top:9px"><b>Needs Kelly:</b> ${esc(ask)}</div>`:''}${technicalDetails([`Work Unit: ${ctx.title}`,`State: ${ctx.state}`,ctx.route?`Route: ${ctx.route}`:null,`Evidence: ${ctx.evidence_state}`,ctx.file?`Source: ${ctx.file}`:null])}<div class="actions">${evidenceButton(ctx.file)}<button class="btn" data-view-jump="graph">Graph</button><button class="btn" data-view-jump="monitor">Monitor</button><button class="btn" data-view-jump="system">System</button></div></div>`;
+    return `<div class="contextCard"><b>${esc(label)}</b><div class="why">${esc(humanWorkStatus(ctx))}</div>${releaseGatesMarkup(ctx)}${ask?`<div class="rowPlain" style="margin-top:9px"><b>Needs Kelly:</b> ${esc(ask)}</div>`:''}${technicalDetails([`Work Unit: ${ctx.title}`,`State: ${ctx.state}`,ctx.route?`Route: ${ctx.route}`:null,`Evidence: ${ctx.evidence_state}`,ctx.file?`Source: ${ctx.file}`:null])}<div class="actions">${evidenceButton(ctx.file)}<button class="btn" data-view-jump="graph">Graph</button><button class="btn" data-view-jump="monitor">Monitor</button><button class="btn" data-view-jump="system">System</button></div></div>`;
   }
   if (c.kind==='monitor') {
     return `<div class="contextCard"><b>You opened “${esc(ctx.subject)}” from Monitor.</b><div class="why">The observation remains attached as the reason this working context exists. Use the working room above to investigate it.</div><div class="rowPlain" style="margin-top:9px">${esc(ctx.plain)}</div><div class="rowMeta">${esc(ctx.value)} · ${esc(ctx.freshness)} · ${esc(ctx.evidence_state)}</div><div class="actions"><button class="btn" data-view-jump="monitor">Back to observation</button><button class="btn" data-action="refresh-monitor">Refresh observation</button></div></div>`;
@@ -504,8 +698,9 @@ function renderGraph() {
   const relationHtml=center
     ? (direct.length?grouped:`<div class="empty"><b>No evidenced one-hop relationships are available for this node.</b><br>Graph does not fill empty space with inferred links.</div>`)
     : '';
+  const betaContext=center?.id===`work:${WRITER_BETA_WORK_ID}` ? releaseGatesMarkup(writerBetaUnit()) : '';
   return `<div class="eyebrow">Graph · how your world connects</div><h1>${center?`What ${esc(center.label)} is connected to.`:'See your work through evidenced relationships.'}</h1><p class="lede">The real Graph is now live. It opens on the current field and shows one evidenced neighborhood at a time. <b>No evidence → no relationship.</b> Similar names, shared prefixes, co-mentions and AI guesses do not create edges.</p>
-    <section class="section">${centreHtml}</section>
+    <section class="section">${centreHtml}${betaContext}</section>
     ${center?`<section class="section"><div class="graphScope"><b>${direct.length} direct relationship${direct.length===1?'':'s'}</b><span> · one hop only · technical identity underneath · evidence opens in place</span></div>${relationHtml}</section>`:''}
     <details class="secondaryDetails" ${center?'':'open'}><summary>Choose a programme focus</summary><div class="detailsBody"><div class="focusList">${arr(state.vm.programme_state?.programmes).slice(0,60).map(p=>{const label=friendlyProgrammeName(p);return `<button class="focusChip ${centerId===`programme:${p.id}`?'active':''}" data-action="context-only" data-kind="programme" data-id="${attr(enc(p.id))}" data-label="${attr(enc(label))}" data-origin="${attr(enc('Graph'))}" data-source="${attr(enc(arr(p.sources)[0]||''))}">${esc(label)}</button>`}).join('')}</div></div></details>`;
 }
@@ -513,7 +708,7 @@ function nodeLabel(g,id){return graphNode(g,id)?.label||id;}
 
 function renderMonitor() {
   const rows=arr(state.vm.monitor), groups=[...new Set(rows.map(r=>r.group))];
-  const founderNeeds=arr(state.vm.work?.units).filter(u=>arr(u.needs_founder).length);
+  const founderNeeds=arr(state.vm.work?.units).filter(u=>humanFounderAsk(u));
   const conflicts=arr(state.vm.programme_state?.programmes).filter(p=>p.evidence_state==='UNVERIFIED / CONFLICT');
   const observedAttention=rows.filter(m=>['warn','failed'].includes(m.level));
   const needsHtml=founderNeeds.length?founderNeeds.map(u=>{
@@ -524,6 +719,7 @@ function renderMonitor() {
   const systemHtml=groups.map(g=>`<section class="section"><h2>${esc(g)}</h2><div class="list">${rows.filter(r=>r.group===g).map(m=>monitorRow(m)).join('')}</div></section>`).join('');
   return `<div class="eyebrow">Monitor · what needs watching</div><h1>${founderNeeds.length} need${founderNeeds.length===1?'s':''} you · ${watching.length} ${watching.length===1?'thing needs':'things need'} watching.</h1><p class="lede"><b>Needs attention is not the same as broken.</b> Decisions come first. Uncertainty and observed conditions come next. The full technical observation field stays available underneath.</p>
     <section class="section"><h2>Needs Kelly <span class="muted">explicit decisions</span></h2><div class="list">${needsHtml}</div></section>
+    ${releaseWorkstreamSection('Monitor')}
     <section class="section"><h2>Watching <span class="muted">uncertainty and observed conditions</span></h2><div class="list">${watching.length?watching.join(''):'<div class="empty">Nothing currently needs watching.</div>'}</div></section>
     <details class="secondaryDetails"><summary>System observations</summary><div class="detailsBody"><div class="actions"><button class="btn primary" data-action="refresh-monitor">Refresh observations</button></div>${systemHtml}</div></details>`;
 }
@@ -543,6 +739,7 @@ function renderSystem() {
   const sourceRefs=ctx?.sources?arr(ctx.sources):ctx?.file?[ctx.file]:state.context?.source?[state.context.source]:[];
   return `<div class="eyebrow">System · accountability</div><h1>Why JARVIS believes what it is showing you.</h1><p class="lede"><b>Human world first. Technical truth one layer down.</b> System is where you descend when you want artifact/substrate identity, projected standing, population limits, authority, and exact local evidence.</p>
     <section class="section"><h2>Which JARVIS is this?</h2><div class="grid2"><div class="card"><h3>Running artifact</h3><p>${esc(p.artifact?.app_build_sha||'Build stamp not observed')}</p><p class="muted">${esc(p.artifact?.evidence_state||'UNOBSERVED')}</p></div><div class="card"><h3>Bound substrate</h3><p>${esc(p.substrate?.branch||'branch unobserved')} · <span class="mono">${esc(String(p.substrate?.head||'').slice(0,12)||'head unobserved')}</span></p><p class="muted">${esc(p.substrate?.evidence_state||'UNOBSERVED')}</p></div></div><p class="muted" style="margin-top:8px">${esc(p.rule||'')}</p></section>
+    ${releaseWorkstreamSection('System')}
     <section class="section"><h2>Current context provenance</h2>${state.context?`<div class="contextCard"><b>${esc(state.context.label)}</b><div class="why">${esc(state.context.kind)} · from ${esc(state.context.origin)}</div><div class="actions">${sourceRefs.slice(0,8).map(s=>evidenceButton(s)).join('')}<button class="btn" data-view-jump="work">Back to Work</button></div></div>`:'<div class="empty">No subject is selected. Choose one from Today, Work, Graph or Monitor.</div>'}</section>
     <section class="section"><h2>Programme state</h2><div class="tableWrap"><table><thead><tr><th>Programme</th><th>Evidence state</th><th>Standing</th><th>Source</th></tr></thead><tbody>${programmes.slice(0,100).map(pr=>{const src=arr(pr.sources)[0]||pr.last_change?.source||'';return `<tr><td><b>${esc(pr.name||pr.id)}</b><br><span class="mono muted">${esc(pr.id)}</span></td><td>${esc(pr.evidence_state)}</td><td>${esc(pr.standing||'—')}</td><td>${src?evidenceButton(src,'Open'):'<span class="muted">none projected</span>'}</td></tr>`}).join('')}</tbody></table></div></section>
     <section class="section"><h2>Population honesty</h2><div class="card"><p>${esc(state.vm.programme_state?.population?.why_not_complete || 'Population reports complete under its deterministic projector.')}</p><div class="rowMeta">projector ${esc(state.vm.programme_state?.projector||'unknown')} · observed against <span class="mono">${esc(String(state.vm.meta?.observed_against||'').slice(0,12))}</span></div><div class="actions"><button class="btn" data-action="reveal-workspace">Reveal bound workspace</button></div></div></section>

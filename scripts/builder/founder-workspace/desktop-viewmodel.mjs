@@ -18,6 +18,7 @@ import { readTree, project } from './programme-state-projector.mjs';
 import { buildRegistry, observeAll, readObservationHistory } from './instrument-registry.mjs';
 import { validateViewModel } from './viewmodel-v1.mjs';
 import { buildEvidenceGraph, parseExplicitProgrammeRelation } from './graph-join.mjs';
+import { readWriterBetaReleaseEvidence, WORK_ID as BETA_WORK_ID } from './release-workstream-reader.mjs';
 
 const SAFE_EXT = new Set(['.md', '.txt', '.json', '.jsonl', '.mjs', '.js', '.cjs', '.ts', '.tsx', '.html', '.sh', '.yml', '.yaml']);
 const MAX_PREVIEW_BYTES = 64 * 1024;
@@ -148,6 +149,10 @@ export async function buildDesktopViewModel(input) {
   });
 
   if (root) {
+    // ONE governed Work Unit, plus a read-only evidence index. The index is
+    // historical orientation, never a second programme standing or grant.
+    const unit = vm.work.units.find((u) => u.id === BETA_WORK_ID);
+    if (unit) unit.release_snapshot = readWriterBetaReleaseEvidence({ env });
     const explicitRelations = projectCanonicalProgrammeRelations(root, input.observedAgainst, vm.programme_state);
     vm.graph = buildEvidenceGraph({
       programme_state: vm.programme_state,

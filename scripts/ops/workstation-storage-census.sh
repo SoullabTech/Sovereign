@@ -194,9 +194,20 @@ else
   row "~/.ollama/models" "$(gb_of "$om") GB" "(on internal disk)"
 fi
 [[ -n "${OLLAMA_MODELS:-}" ]] && row "\$OLLAMA_MODELS" "$(gb_of "$OLLAMA_MODELS") GB" "$OLLAMA_MODELS"
-for cand in /Volumes/*/ollama-models /Volumes/*/models "$HOME/models" /usr/share/ollama/.ollama/models; do
-  [[ -d "$cand" ]] && row "$cand" "$(gb_of "$cand") GB"
-done
+# A bounded constitutional witness may deliberately exclude external drives.
+# In that case surface NOT OBSERVED, never a false zero; ordinary census mode
+# still visits the same external paths exactly as before. This also prevents a
+# flaky USB volume from turning a bounded synthetic test into an unbounded I/O.
+if [[ "${CENSUS_SKIP_EXTERNAL_MODELS:-0}" == "1" ]]; then
+  row "external model volumes" "not observed" "bounded witness: external volumes deliberately not scanned"
+  for cand in "$HOME/models" /usr/share/ollama/.ollama/models; do
+    [[ -d "$cand" ]] && row "$cand" "$(gb_of "$cand") GB"
+  done
+else
+  for cand in /Volumes/*/ollama-models /Volumes/*/models "$HOME/models" /usr/share/ollama/.ollama/models; do
+    [[ -d "$cand" ]] && row "$cand" "$(gb_of "$cand") GB"
+  done
+fi
 if command -v ollama >/dev/null 2>&1; then
   echo "  ollama list:"; bounded "$BOUND_SECS" ollama list | sed 's/^/    /' | head -30 || echo "    OLLAMA = UNKNOWN (no answer within ${BOUND_SECS}s)"
 fi
