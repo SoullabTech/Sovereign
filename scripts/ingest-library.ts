@@ -554,6 +554,11 @@ async function main() {
   // A fail-closed manifest may lawfully admit zero. That empty output must not
   // become authority to erase the existing library and rebuild nothing.
   const sourceAdmission = skipSources ? null : admittedSourceFiles();
+  if (!isDryRun && !skipSources && sourceAdmission!.admitted.length > 0) {
+    console.error('🛑 REFUSED: generic Living Library source writes do not carry governed normalization/provenance.');
+    console.error('   Use an approved subject-specific corpus build executor, or --skip-sources for intentionally separate Phase B work.');
+    process.exit(1);
+  }
   if (isForce && !isDryRun && !skipSources && sourceAdmission!.admitted.length === 0) {
     console.error('🛑 REFUSED: --force would clear the Living Library while source admission admits 0 files.');
     console.error('   Classify at least one source collection, or use --skip-sources only if intentionally rebuilding Phase B alone.');
