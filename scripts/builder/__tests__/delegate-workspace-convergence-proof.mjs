@@ -13,6 +13,7 @@
 import { mkdtempSync, mkdirSync, writeFileSync, chmodSync, rmSync, existsSync, realpathSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 
 let passed = 0, failed = 0;
@@ -22,7 +23,7 @@ const assert = (name, cond, detail = '') => {
   if (detail) console.log(`          ${detail}`);
 };
 
-const REPO = '/Users/soullab/MAIA-SOVEREIGN';
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const DELEGATE = path.join(REPO, 'scripts', 'ain-delegate.sh');
 const SESSION = path.join(REPO, 'scripts', 'builder', 'session.mjs');
 
