@@ -11,6 +11,8 @@
  * applied. The HTTP routes are thin IO wrappers over them.
  */
 
+import { getSessionRoomName } from './sessionRoom';
+
 export type ConsentActorType = 'practitioner' | 'client' | 'system';
 export type ConsentAction = 'set' | 'accept' | 'refuse' | 'change' | 'revoke';
 
@@ -151,6 +153,51 @@ export function authorizeClientRoomJoin(args: {
 
   return {
     status: 200,
-    authorization: { room: sessionId, identity: `client:${clientId}`, role: 'client' },
+    authorization: { room: getSessionRoomName(sessionId), identity: `client:${clientId}`, role: 'client' },
+  };
+}
+
+export type PractitionerRoomAuthzResult =
+  | { status: 200; authorization: RoomAuthorization }
+  | { status: 403 | 409; reason: string };
+
+/**
+ * Practitioner room-join authorization (pure). The PRACTITIONER is the HOST: unlike the client they
+ * are NOT consent-ledger-gated (they author the agreement, they don't accept it), so they may enter
+ * a PRE-ENCOUNTER (empty) room before the client accepts — "arranging chairs," not the encounter.
+ * The encounter becomes live only when the consent-gated CLIENT joins (authorizeClientRoomJoin).
+ *
+ * Gate: the caller must OWN the session (session.member_id === caller's member id); an agreement
+ * must already be SET (so the room has a defined retention/Sanctuary posture before anyone enters);
+ * and the room must be non-terminal ('pre' = preparing, 'active' = live). Identity is CONSTRUCTED
+ * server-side from the practitioner id (never request-supplied). The room name comes from
+ * getSessionRoomName — the SAME function authorizeClientRoomJoin uses — so both parties always
+ * resolve to one room (room parity; prevents a "session:123" vs "123" split).
+ */
+export function authorizePractitionerRoomJoin(args: {
+  sessionId: string;
+  sessionMemberId: string | null; // scribe_sessions.member_id (the owning practitioner's member id)
+  callerMemberId: string; // authenticated caller (already resolved to a practitioner)
+  practitionerId: string; // server-derived practitioner id (identity source)
+  agreementSet: boolean; // consent_practitioner_at present => the agreement/retention posture exists
+  roomState: string; // scribe_sessions.room_state
+}): PractitionerRoomAuthzResult {
+  const { sessionId, sessionMemberId, callerMemberId, practitionerId, agreementSet, roomState } = args;
+  if (!sessionMemberId || sessionMemberId !== callerMemberId) {
+    return { status: 403, reason: 'not_session_owner' };
+  }
+  if (!agreementSet) {
+    return { status: 409, reason: 'agreement_not_set' };
+  }
+  if (roomState !== 'pre' && roomState !== 'active') {
+    return { status: 409, reason: 'session_not_joinable' };
+  }
+  return {
+    status: 200,
+    authorization: {
+      room: getSessionRoomName(sessionId),
+      identity: `practitioner:${practitionerId}`,
+      role: 'practitioner',
+    },
   };
 }

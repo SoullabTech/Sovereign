@@ -3,10 +3,12 @@ import {
   isClientConsentActive,
   validateJoinToken,
   authorizeClientRoomJoin,
+  authorizePractitionerRoomJoin,
   type JoinTokenState,
   type LedgerEvent,
   type ConsentAction,
 } from '../ClientConsent';
+import { getSessionRoomName } from '../sessionRoom';
 
 const V = 'v2';
 const NOW = 1000;
@@ -146,5 +148,100 @@ describe('authorizeClientRoomJoin — consent ledger → room authorization (the
   it('identity is server-constructed from clientId, not caller-supplied', () => {
     const r = authorizeClientRoomJoin({ token: token(), ledger: [clientEvent('accept')], ...base, clientId: 'other-client' });
     expect(r).toMatchObject({ status: 200, authorization: { identity: 'client:other-client' } });
+  });
+});
+
+// PR4a — practitioner room authorization. The HOST may enter a pre-encounter room before the client
+// accepts (owns-session, NOT consent-gated); identity is server-derived; the room name comes from
+// the SAME getSessionRoomName as the client path.
+describe('authorizePractitionerRoomJoin — owns-session gate (PR4a)', () => {
+  const base = {
+    sessionId: 'sess-1',
+    sessionMemberId: 'mem-1',
+    callerMemberId: 'mem-1',
+    practitionerId: 'prac-1',
+    agreementSet: true,
+    roomState: 'pre',
+  };
+
+  it('owner + agreement set + pre → 200 with server-derived practitioner identity', () => {
+    expect(authorizePractitionerRoomJoin(base)).toEqual({
+      status: 200,
+      authorization: { room: 'sess-1', identity: 'practitioner:prac-1', role: 'practitioner' },
+    });
+  });
+
+  it('owner may enter while the session is active (rejoin)', () => {
+    expect(authorizePractitionerRoomJoin({ ...base, roomState: 'active' }).status).toBe(200);
+  });
+
+  it('owner may enter BEFORE any client accepts — the host is not consent-gated', () => {
+    // There is no ledger parameter at all: pre-encounter entry is by design.
+    expect(authorizePractitionerRoomJoin(base).status).toBe(200);
+  });
+
+  it('wrong practitioner (does not own the session) → 403 not_session_owner', () => {
+    expect(authorizePractitionerRoomJoin({ ...base, callerMemberId: 'mem-2' })).toEqual({
+      status: 403,
+      reason: 'not_session_owner',
+    });
+  });
+
+  it('null session owner never matches a caller → 403 not_session_owner', () => {
+    expect(authorizePractitionerRoomJoin({ ...base, sessionMemberId: null })).toEqual({
+      status: 403,
+      reason: 'not_session_owner',
+    });
+  });
+
+  it('agreement not set → 409 agreement_not_set (no retention posture defined yet)', () => {
+    expect(authorizePractitionerRoomJoin({ ...base, agreementSet: false })).toEqual({
+      status: 409,
+      reason: 'agreement_not_set',
+    });
+  });
+
+  it('terminal/closed session → 409 session_not_joinable', () => {
+    expect(authorizePractitionerRoomJoin({ ...base, roomState: 'closing' })).toEqual({
+      status: 409,
+      reason: 'session_not_joinable',
+    });
+    expect(authorizePractitionerRoomJoin({ ...base, roomState: 'closed' })).toEqual({
+      status: 409,
+      reason: 'session_not_joinable',
+    });
+  });
+
+  it('identity is server-constructed from practitionerId, not request-supplied', () => {
+    const r = authorizePractitionerRoomJoin({ ...base, practitionerId: 'prac-99' });
+    expect(r).toMatchObject({ status: 200, authorization: { identity: 'practitioner:prac-99' } });
+  });
+});
+
+// THE guard against the silent "two participants in different rooms" failure: both mint paths derive
+// the room name from the SAME function, so a practitioner and an accepted client for one session
+// always resolve to one room.
+describe('room-name parity — client and practitioner resolve to the SAME room', () => {
+  it('both authorizations derive room from getSessionRoomName(sessionId)', () => {
+    const sessionId = 'sess-parity-123';
+    const client = authorizeClientRoomJoin({
+      token: token(),
+      ledger: [clientEvent('accept')],
+      now: NOW,
+      sessionId,
+      clientId: 'cli-1',
+    });
+    const practitioner = authorizePractitionerRoomJoin({
+      sessionId,
+      sessionMemberId: 'mem-1',
+      callerMemberId: 'mem-1',
+      practitionerId: 'prac-1',
+      agreementSet: true,
+      roomState: 'pre',
+    });
+    if (client.status !== 200 || practitioner.status !== 200) throw new Error('expected both authorized');
+    expect(client.authorization.room).toBe(getSessionRoomName(sessionId));
+    expect(practitioner.authorization.room).toBe(getSessionRoomName(sessionId));
+    expect(client.authorization.room).toBe(practitioner.authorization.room);
   });
 });
