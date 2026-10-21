@@ -190,6 +190,35 @@ export async function publishOwnedPortrait(id: string, ownerMemberId: string): P
 }
 
 /**
+ * Correct the minor flag on an UNPUBLISHED draft the caller owns.
+ *
+ * The flag lives in TWO places and they must never diverge: the
+ * `subject_is_minor` column (what the send route's guardian refusal gates on)
+ * and `immutable_text.person.isMinor` (written at generation) — both are
+ * updated in one statement. Owner-scoped like every write here, and
+ * additionally gated on `published_at IS NULL`: a published portrait is
+ * write-once (Gate 2 trigger), so the refusal is structural in the WHERE
+ * clause, not left to the trigger's exception. Non-owner, unknown id, or
+ * already-published → null (caller distinguishes by reading first).
+ */
+export async function setOwnedDraftMinorFlag(
+  id: string,
+  ownerMemberId: string,
+  isMinor: boolean,
+): Promise<StoredPortrait | null> {
+  const row = await queryOne<any>(
+    `UPDATE soul_portraits
+        SET subject_is_minor = $3,
+            immutable_text = jsonb_set(immutable_text, '{person,isMinor}', to_jsonb($3::boolean), true),
+            updated_at = NOW()
+      WHERE id = $1 AND owner_member_id = $2 AND published_at IS NULL
+      RETURNING *`,
+    [id, ownerMemberId, isMinor],
+  );
+  return row ? rowToStored(row) : null;
+}
+
+/**
  * DELIVERY READ — the one deliberate exception to owner-scoping, for the
  * recipient-facing route (/soul-portrait/view/[slug]). It is narrow by
  * construction: only PUBLISHED rows resolve, and the route MUST additionally

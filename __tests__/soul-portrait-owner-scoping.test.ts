@@ -15,6 +15,7 @@
 
 const OWNER_A = 'owner-aaaa';
 const OWNER_B = 'owner-bbbb';
+const OWNER_C = 'owner-cccc';
 
 const ROWS: any[] = [
   {
@@ -29,6 +30,22 @@ const ROWS: any[] = [
     portrait_kind: 'gift', consent_state: 'pending', published_at: null,
     immutable_text: { person: { name: 'Client of B' } }, created_at: '2026-07-04T00:00:00Z',
   },
+  // Owner C's rows exist only for the minor-flag correction tests (kept off
+  // A/B so the list assertions above stay exact).
+  // Unpublished draft wrongly flagged as a minor — the correction target.
+  {
+    id: 'portrait-M', slug: 'm-33333333', owner_member_id: OWNER_C,
+    subject_member_id: null, subject_person_id: null, subject_is_minor: true,
+    portrait_kind: 'gift', consent_state: 'pending', published_at: null,
+    immutable_text: { person: { name: 'Elder of C', isMinor: true } }, created_at: '2026-07-16T00:00:00Z',
+  },
+  // PUBLISHED (write-once) portrait, flagged — correction must refuse even for the owner.
+  {
+    id: 'portrait-P', slug: 'p-44444444', owner_member_id: OWNER_C,
+    subject_member_id: null, subject_person_id: null, subject_is_minor: true,
+    portrait_kind: 'gift', consent_state: 'active', published_at: '2026-07-10T00:00:00Z',
+    immutable_text: { person: { name: 'Published of C', isMinor: true } }, created_at: '2026-07-10T00:00:00Z',
+  },
 ];
 
 // An accessor is owner-scoped iff its SQL constrains owner_member_id.
@@ -38,7 +55,19 @@ const mockQueryOne = jest.fn(async (sql: string, params: any[]) => {
   // id/slug predicate is params[0]; owner predicate (when scoped) is params[1].
   let rows = ROWS.filter((r) => r.id === params[0] || r.slug === params[0]);
   if (scopesByOwner(sql)) rows = rows.filter((r) => r.owner_member_id === params[1]);
-  return rows[0] ?? null;
+  // Draft-only writes (minor-flag correction) gate on published_at IS NULL —
+  // if a future edit drops that clause, the published row matches → test fails.
+  if (/published_at\s+IS\s+NULL/i.test(sql)) rows = rows.filter((r) => r.published_at == null);
+  const row = rows[0] ?? null;
+  if (row && /^\s*UPDATE/i.test(sql) && /subject_is_minor\s*=\s*\$3/.test(sql)) {
+    // Non-mutating simulation of the two-place flag write (column + jsonb_set).
+    return {
+      ...row,
+      subject_is_minor: params[2],
+      immutable_text: { ...row.immutable_text, person: { ...(row.immutable_text?.person ?? {}), isMinor: params[2] } },
+    };
+  }
+  return row;
 });
 
 const mockQuery = jest.fn(async (sql: string, params: any[]) => {
@@ -104,6 +133,32 @@ describe('Soul Portrait — Stage 1 owner-scoping (cross-practitioner leak refus
     const allSql = [...mockQueryOne.mock.calls, ...mockQuery.mock.calls].map((c) => String(c[0]));
     expect(allSql.length).toBeGreaterThan(0);
     for (const sql of allSql) expect(scopesByOwner(sql)).toBe(true);
+  });
+
+  describe('minor-flag correction (setOwnedDraftMinorFlag)', () => {
+    it('the owner corrects the flag on their own UNPUBLISHED draft — both places updated', async () => {
+      const p = await store.setOwnedDraftMinorFlag('portrait-M', OWNER_C, false);
+      expect(p?.id).toBe('portrait-M');
+      expect(p?.subjectIsMinor).toBe(false);
+      expect(p?.immutableText?.person?.isMinor).toBe(false);
+    });
+
+    it('FAIL CLOSED: practitioner B cannot correct practitioner C’s draft', async () => {
+      const leaked = await store.setOwnedDraftMinorFlag('portrait-M', OWNER_B, false);
+      expect(leaked).toBeNull();
+    });
+
+    it('FAIL CLOSED: a PUBLISHED portrait is write-once — correction refused even for the owner', async () => {
+      const refused = await store.setOwnedDraftMinorFlag('portrait-P', OWNER_C, false);
+      expect(refused).toBeNull();
+    });
+
+    it('the correction UPDATE is structurally owner-scoped AND draft-gated', async () => {
+      await store.setOwnedDraftMinorFlag('portrait-M', OWNER_C, false);
+      const sql = String(mockQueryOne.mock.calls[0][0]);
+      expect(scopesByOwner(sql)).toBe(true);
+      expect(/published_at\s+IS\s+NULL/i.test(sql)).toBe(true);
+    });
   });
 
   it('Grade A: no unscoped read accessor is exported from the store', () => {
