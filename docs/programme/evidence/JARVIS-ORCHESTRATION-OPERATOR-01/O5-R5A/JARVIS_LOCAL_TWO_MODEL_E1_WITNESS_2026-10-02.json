@@ -1,0 +1,168 @@
+{
+  "witness": "JARVIS_LOCAL_TWO_MODEL_E1_2026-10-02",
+  "work_unit_id": "v2-independently-inspect-scripts-buil-murecu0d",
+  "repository_sha": "8707daacd33298ecb38763ee7c25d38a3e49aff0",
+  "lifecycle": {
+    "version": "W2.v2",
+    "state": "EVIDENCE_READY",
+    "disposition": "open",
+    "transitions": []
+  },
+  "route": {
+    "route_version": "J5.v1",
+    "governing_law": "JARVIS-ROUTING-INTELLIGENCE-01/J5",
+    "deterministic": {
+      "selected": false,
+      "capability": null
+    },
+    "evidence_class": "E1_REPOSITORY_LOCAL",
+    "task_shape": "CODE_GROUNDED",
+    "review_pressure": "ordinary",
+    "challenge_mode": "none",
+    "frontier_posture": "none",
+    "primary": {
+      "participant_id": "primary",
+      "model_family": "QWEN",
+      "role": "code_primary",
+      "review_dimension": "primary",
+      "required_for_completion": true,
+      "response_budget_profile_id": "LOCAL_QWEN_EXISTING_ADAPTER"
+    },
+    "challengers": [
+      {
+        "participant_id": "local-review-1",
+        "model_family": "GPT_OSS",
+        "role": "independent_local_challenger",
+        "review_dimension": "distinct_model_family",
+        "required_for_completion": true,
+        "response_budget_profile_id": "LOCAL_GPT_OSS_EXISTING_ADAPTER"
+      }
+    ],
+    "review_policy": {
+      "local": "independent_local_second",
+      "external": "none"
+    },
+    "evidence_policy": {
+      "primary": {
+        "participant_id": "primary",
+        "model_family": "QWEN",
+        "evidence_class": "E1_REPOSITORY_LOCAL",
+        "kind": "local_worktree_read_only"
+      },
+      "challengers": [
+        {
+          "participant_id": "local-review-1",
+          "model_family": "GPT_OSS",
+          "evidence_class": "E1_REPOSITORY_LOCAL",
+          "kind": "local_worktree_read_only"
+        }
+      ]
+    },
+    "required_authority": {
+      "acts": [],
+      "disclosures": []
+    },
+    "granted_authority": [],
+    "response_budget_profiles": [
+      "LOCAL_QWEN_EXISTING_ADAPTER",
+      "LOCAL_GPT_OSS_EXISTING_ADAPTER"
+    ],
+    "execution_disposition": "planned_local",
+    "execution_authorized": false,
+    "blockers": [],
+    "routing_reason_codes": [
+      "QWEN_CODE_PRIMARY",
+      "INDEPENDENT_LOCAL_REVIEW_REQUIRED"
+    ]
+  },
+  "attempts": [
+    {
+      "attempt_id": "e1-attempt-01-primary",
+      "route_participant_id": "primary",
+      "transport_binding_id": "e1-ready-primary-0990055d798c",
+      "model_identity_id": "e1-mi-primary-005f18858259",
+      "model_family": "QWEN",
+      "provider_id": "qwen-local",
+      "model_id": "qwen3-coder:30b",
+      "adapter_id": "ollama-direct",
+      "role": "code_primary",
+      "actor_id": null,
+      "attempt_kind": "primary",
+      "parent_attempt_id": null,
+      "status": "completed",
+      "evidence_refs": [
+        "canonical-result:v2-independently-inspect-scripts-buil-murecu0d:e1-e9979295b68c1d2f690759c9b6988d45"
+      ]
+    },
+    {
+      "attempt_id": "e1-attempt-02-local-review-1",
+      "route_participant_id": "local-review-1",
+      "transport_binding_id": "e1-ready-local-review-1-3df85ea4510d",
+      "model_identity_id": "e1-mi-local-review-1-c6ee92fa4124",
+      "model_family": "GPT_OSS",
+      "provider_id": "gpt-oss-local",
+      "model_id": "gpt-oss:20b",
+      "adapter_id": "ollama-direct",
+      "role": "independent_local_challenger",
+      "actor_id": null,
+      "attempt_kind": "independent_model_review",
+      "parent_attempt_id": "e1-attempt-01-primary",
+      "status": "completed",
+      "evidence_refs": [
+        "canonical-result:v2-independently-inspect-scripts-buil-murecu0d:e1-b7ca16bf60156a4fd5b434c85f73a810"
+      ]
+    }
+  ],
+  "verifiers": [
+    {
+      "verifier_result_id": "e1-vr-e1-attempt-01-primary-e1-attempt-02-local-review-1",
+      "target_attempt_id": "e1-attempt-01-primary",
+      "verifier_attempt_id": "e1-attempt-02-local-review-1",
+      "verifier_kind": "independent_model_review",
+      "verifier_model_family": "GPT_OSS",
+      "verifier_actor_id": null,
+      "disposition": "supports",
+      "evidence_refs": [
+        "canonical-result:v2-independently-inspect-scripts-buil-murecu0d:e1-e9979295b68c1d2f690759c9b6988d45",
+        "canonical-result:v2-independently-inspect-scripts-buil-murecu0d:e1-b7ca16bf60156a4fd5b434c85f73a810"
+      ]
+    }
+  ],
+  "adjudication": null,
+  "results": [
+    {
+      "file": "e1-b7ca16bf60156a4fd5b434c85f73a810.json",
+      "execution_version": "E1.v1",
+      "work_unit_id": "v2-independently-inspect-scripts-buil-murecu0d",
+      "grant_id": "e1-b7ca16bf60156a4fd5b434c85f73a810",
+      "route_participant_id": "local-review-1",
+      "transport_binding_id": "e1-ready-local-review-1-3df85ea4510d",
+      "provider_id": "gpt-oss-local",
+      "model_id": "gpt-oss:20b",
+      "adapter_id": "ollama-direct",
+      "exit_code": 0,
+      "test_results": "not_run",
+      "escalation_required": false,
+      "recommended_next_action": "review-evidence",
+      "output_excerpt": "**Evidence**\n\n- The `TRANSPORTS` object defines the GPT_OSS transport as:\n\n  ```js\n  GPT_OSS: Object.freeze({\n    provider_id: 'gpt-oss-local',\n    model_id: 'gpt-oss:20b',\n    adapter_id: 'ollama-direct',\n    transport_posture: 'local',\n    execution_mode: 'automatic',\n    response_budget_profile_id: 'LOCAL_GPT_OSS_EXISTING_ADAPTER',\n    metered: false,\n    external: false,\n  }),\n  ```\n\n  (Lines 30‑41 of `scripts/builder/work-unit-transport-v1.mjs`)\n\n  - `adapter_id: 'ollama-direct'` → the transport uses the **ollama‑direct** adapter.  \n  - `external: false` → the transport is marked **not external**.  \n  - `metered: false` → the transport is **not metered** (no provider‑spend authority).\n\n**Uncertainty**\n\n- None. The file explicitly lists the adapter, external flag, and metered flag for GPT_OSS.\n\n**Falsifiers**\n\n- No falsifiers are present in the supplied repository evidence.",
+      "stderr_excerpt": ""
+    },
+    {
+      "file": "e1-e9979295b68c1d2f690759c9b6988d45.json",
+      "execution_version": "E1.v1",
+      "work_unit_id": "v2-independently-inspect-scripts-buil-murecu0d",
+      "grant_id": "e1-e9979295b68c1d2f690759c9b6988d45",
+      "route_participant_id": "primary",
+      "transport_binding_id": "e1-ready-primary-0990055d798c",
+      "provider_id": "qwen-local",
+      "model_id": "qwen3-coder:30b",
+      "adapter_id": "ollama-direct",
+      "exit_code": 0,
+      "test_results": "not_run",
+      "escalation_required": false,
+      "recommended_next_action": "review-evidence",
+      "output_excerpt": "### **Evidence:**\n\nFrom `scripts/builder/work-unit-transport-v1.mjs`, the `TRANSPORTS` object defines two local model families:\n\n1. **QWEN**:\n   ```js\n   QWEN: Object.freeze({\n     provider_id: 'qwen-local',\n     model_id: 'qwen3-coder:30b',\n     adapter_id: 'ollama-direct',\n     transport_posture: 'local',\n     execution_mode: 'automatic',\n     response_budget_profile_id: 'LOCAL_QWEN_EXISTING_ADAPTER',\n     metered: false,\n     external: false,\n   }),\n   ```\n\n2. **GPT_OSS**:\n   ```js\n   GPT_OSS: Object.freeze({\n     provider_id: 'gpt-oss-local',\n     model_id: 'gpt-oss:20b',\n     adapter_id: 'ollama-direct',\n     transport_posture: 'local',\n     execution_mode: 'automatic',\n     response_budget_profile_id: 'LOCAL_GPT_OSS_EXISTING_ADAPTER',\n     metered: false,\n     external: false,\n   }),\n   ```\n\nBoth `QWEN` and `GPT_OSS` have:\n- `adapter_id: 'ollama-direct'`\n- `transport_posture: 'local'`\n- `external: false`\n- `metered: false`\n\n### **Uncertainty:**\n\nNone.\n\n### **Falsifiers:**\n\nNone.",
+      "stderr_excerpt": ""
+    }
+  ]
+}
