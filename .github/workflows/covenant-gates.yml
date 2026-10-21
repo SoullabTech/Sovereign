@@ -45,17 +45,25 @@ jobs:
 
             // Per-class constitutional obligations. Note: NO approval fields.
             // "Who must approve" is GitHub's job (branch protection + CODEOWNERS).
+            //
+            // ⚠️ A CLASS IS A CATEGORY, NOT A SEVERITY RANK.
+            // Class A (Sacred Boundaries) does not "outrank" Class B (Structural
+            // Risk) — they describe different things and a change can be both.
+            // This gate previously picked ONE winning class (A > frontier > B > C)
+            // and read obligations only from that winner, so a database migration
+            // marked Class A silently skipped rollback discipline entirely. Classes
+            // are now CUMULATIVE, and path facts add obligations of their own.
             const REQUIREMENTS = {
               'class-a': { description: 'Sacred Boundaries (privacy/consent/safety/sovereignty)' },
-              'class-b': { rollbackRequired: true, description: 'Structural Risk (migrations/auth/routing/infra)' },
+              'class-b': { description: 'Structural Risk (migrations/auth/routing/infra)' },
               'class-c': { description: 'Routine Improvement (refactor/copy/UX/prompt tuning)' },
-              'frontier-dependent': { verificationRequired: true, description: 'Frontier-Dependent (models/providers/pricing)' }
+              'frontier-dependent': { description: 'Frontier-Dependent (models/providers/pricing)' }
             };
 
             // ── CLASSIFICATION ──────────────────────────────────────────────
-            // From PR-body checkbox OR label. Path-based safety rails below act as
-            // a backstop so a mislabeled PR that touches sacred/migration paths
-            // cannot slip through under a lower class.
+            // From PR-body checkbox OR label. Path facts below are not a fallback
+            // for a missing label — they are independent obligations that hold
+            // whatever the author checked.
             const classAChecked = body.includes('[x] **Class A');
             const classBChecked = body.includes('[x] **Class B');
             const classCChecked = body.includes('[x] **Class C');
@@ -66,49 +74,29 @@ jobs:
             const hasClassC = classCChecked || labels.includes('class-c');
             const hasFrontier = frontierChecked || labels.includes('frontier-dependent');
 
-            let effectiveClass = null;
-            if (hasClassA) effectiveClass = 'class-a';
-            else if (hasFrontier) effectiveClass = 'frontier-dependent';
-            else if (hasClassB) effectiveClass = 'class-b';
-            else if (hasClassC) effectiveClass = 'class-c';
+            const declaredClasses = [
+              hasClassA && 'class-a',
+              hasFrontier && 'frontier-dependent',
+              hasClassB && 'class-b',
+              hasClassC && 'class-c'
+            ].filter(Boolean);
 
-            const reqs = effectiveClass ? REQUIREMENTS[effectiveClass] : null;
+            // Display only — every declared class is named, none is hidden behind a
+            // "winner". Obligations are computed from the full set, never from this.
+            const classLabel = declaredClasses.length ? declaredClasses.join(' + ') : null;
+            const classDescription = declaredClasses.map(c => REQUIREMENTS[c].description).join(' · ');
+
             const failures = [];
 
-            if (!effectiveClass) {
-              failures.push('No change classification found — check a Class box in the PR body, or apply a `class-a` / `class-b` / `class-c` / `frontier-dependent` label.');
-            } else {
-              console.log(`📋 Classification: ${effectiveClass}`);
-              console.log(`📜 ${reqs.description}`);
-            }
-
-            // ── ROLLBACK DISCIPLINE (Class B) ───────────────────────────────
-            if (reqs && reqs.rollbackRequired) {
-              const hasRollbackPlan =
-                body.includes('[x] Revert commit is sufficient') ||
-                body.includes('[x] Migration rollback script provided') ||
-                body.includes('[x] Feature flag can disable') ||
-                body.includes('[x] **No rollback possible**');
-              if (!hasRollbackPlan) {
-                failures.push('Rollback plan required — check one rollback option in the PR body (revert / migration rollback / feature flag / no rollback possible).');
-              }
-            }
-
-            // ── FRONTIER VERIFICATION ───────────────────────────────────────
-            if (reqs && reqs.verificationRequired) {
-              if (!body.includes('[x] Verified by Mentor:')) {
-                failures.push('Frontier verification required — add a `Verified by Mentor:` line to the PR body for external-dependency (model/provider/pricing) changes.');
-              }
-            }
-
-            // ── FILE-PATH CONSTITUTIONAL RAILS ──────────────────────────────
+            // ── FILE-PATH FACTS ─────────────────────────────────────────────
+            // Read BEFORE obligations, because paths carry obligations too.
             const { data: files } = await github.rest.pulls.listFiles({
               owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number
             });
             const changedPaths = files.map(f => f.filename);
 
-            // Sacred paths require Class A — safety/consent/sovereignty ENFORCEMENT
-            // CODE only. Governance *documentation* is classified by real risk, not
+            // Sacred paths are safety/consent/sovereignty ENFORCEMENT CODE only.
+            // Governance *documentation* is classified by real risk, not
             // force-elevated (see COVENANT_GATES_REDESIGN + #556).
             const sacredPaths = [
               'lib/safety/',
@@ -118,14 +106,47 @@ jobs:
               'app/api/session/'
             ];
             const touchesSacred = changedPaths.some(p => sacredPaths.some(s => p.startsWith(s)));
-            if (touchesSacred && effectiveClass !== 'class-a') {
-              failures.push('Modifies Sacred Boundary code but is not classified Class A — update classification to Class A for files in: ' + sacredPaths.join(', '));
+            const touchesMigrations = changedPaths.some(p => p.startsWith('database/migrations/'));
+
+            if (declaredClasses.length === 0) {
+              failures.push('No change classification found — check a Class box in the PR body, or apply a `class-a` / `class-b` / `class-c` / `frontier-dependent` label.');
+            } else {
+              console.log(`📋 Classification: ${declaredClasses.join(' + ')}`);
+              for (const c of declaredClasses) console.log(`📜 ${REQUIREMENTS[c].description}`);
+            }
+            if (touchesSacred)     console.log('🔒 Path fact: touches Sacred Boundary code');
+            if (touchesMigrations) console.log('🗃️  Path fact: touches database migrations');
+
+            // ── CONSTITUTIONAL RAILS ────────────────────────────────────────
+            if (touchesSacred && !hasClassA) {
+              failures.push('Modifies Sacred Boundary code but is not classified Class A — add Class A for files in: ' + sacredPaths.join(', '));
             }
 
-            // Migrations require at least Class B.
-            const touchesMigrations = changedPaths.some(p => p.startsWith('database/migrations/'));
-            if (touchesMigrations && effectiveClass === 'class-c') {
-              failures.push('Modifies database migrations but is classified Class C — update classification to at least Class B.');
+            // A migration IS structural risk. Class A may also apply — it describes
+            // a different axis and never substitutes for Class B.
+            if (touchesMigrations && !hasClassB) {
+              failures.push('Modifies database migrations but is not classified Class B — a migration is Structural Risk. Add Class B (Class A is a different axis and does not substitute for it).');
+            }
+
+            // ── ROLLBACK DISCIPLINE ─────────────────────────────────────────
+            // Owed by Class B, and owed by any migration regardless of class, so a
+            // mislabeled migration cannot skip it.
+            const rollbackRequired = hasClassB || touchesMigrations;
+            if (rollbackRequired) {
+              const hasRollbackPlan =
+                body.includes('[x] Revert commit is sufficient') ||
+                body.includes('[x] Migration rollback script provided') ||
+                body.includes('[x] Feature flag can disable') ||
+                body.includes('[x] **No rollback possible**');
+              if (!hasRollbackPlan) {
+                failures.push('Rollback plan required — check one rollback option in the PR body (revert / migration rollback / feature flag / no rollback possible). The checkbox text must match the template exactly; a paraphrase does not count.');
+              }
+            }
+
+            // ── FRONTIER VERIFICATION ───────────────────────────────────────
+            // Owed whenever the PR is frontier-dependent, even alongside another class.
+            if (hasFrontier && !body.includes('[x] Verified by Mentor:')) {
+              failures.push('Frontier verification required — add a `Verified by Mentor:` line to the PR body for external-dependency (model/provider/pricing) changes.');
             }
 
             // ═══════════════════════════════════════════════════════════════
@@ -145,8 +166,8 @@ jobs:
               if (fails.some(f => /Sacred Boundary code|update classification to Class A/i.test(f))) {
                 tips.push('- **Sacred path** — this touches enforcement code; set classification to **Class A** (and expect CODEOWNERS review on merge).');
               }
-              if (fails.some(f => /at least Class B/i.test(f))) {
-                tips.push('- **Migration** — set classification to at least **Class B** and provide a rollback plan.');
+              if (fails.some(f => /is not classified Class B/i.test(f))) {
+                tips.push('- **Migration** — a migration is Structural Risk: add **Class B** and a rollback plan. Class A may also apply; it does not substitute.');
               }
               if (fails.some(f => /Frontier verification/i.test(f))) {
                 tips.push('- **Frontier** — add a `Verified by Mentor:` line for external-dependency changes.');
@@ -174,8 +195,8 @@ jobs:
             if (failures.length > 0) {
               const tips = guidanceFor(failures);
               const commentBody =
-                `### ❌ Covenant Gates — constitutional check failed${effectiveClass ? ` (\`${effectiveClass}\`)` : ''}\n\n` +
-                (reqs ? `**${reqs.description}**\n\n` : '') +
+                `### ❌ Covenant Gates — constitutional check failed${classLabel ? ` (\`${classLabel}\`)` : ''}\n\n` +
+                (classDescription ? `**${classDescription}**\n\n` : '') +
                 `**Unmet:**\n` +
                 failures.map(f => `- ${f}`).join('\n') + `\n\n` +
                 (tips.length ? `**How to clear this gate:**\n${tips.join('\n')}\n\n` : '') +
@@ -184,14 +205,14 @@ jobs:
               await upsertGateComment(commentBody, true);
 
               core.setFailed(
-                `❌ Covenant Gates failed${effectiveClass ? ` for ${effectiveClass}` : ''}\n\n` +
+                `❌ Covenant Gates failed${classLabel ? ` for ${classLabel}` : ''}\n\n` +
                 `Unmet constitutional requirements:\n` +
                 failures.map(f => `- ${f}`).join('\n') + `\n\n` +
                 `Merge authority is GitHub's (branch protection + CODEOWNERS). This gate enforces constitutional obligations only.\n` +
                 `See docs/GOVERNANCE_MENTOR_COVENANT.md.`
               );
             } else {
-              console.log(`✅ Covenant Gates passed for ${effectiveClass} — constitutional obligations satisfied.`);
+              console.log(`✅ Covenant Gates passed for ${classLabel} — constitutional obligations satisfied.`);
               // Clear a prior red comment if present; don't spam green on clean PRs.
-              await upsertGateComment(`### ✅ Covenant Gates passed (\`${effectiveClass}\`)\n\nConstitutional obligations satisfied. Merge eligibility is determined by GitHub branch protection.`, false);
+              await upsertGateComment(`### ✅ Covenant Gates passed (\`${classLabel}\`)\n\nConstitutional obligations satisfied. Merge eligibility is determined by GitHub branch protection.`, false);
             }
