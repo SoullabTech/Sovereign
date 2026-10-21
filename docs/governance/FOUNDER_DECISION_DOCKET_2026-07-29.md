@@ -37,7 +37,7 @@ updated to point at it. If those two ever disagree, the governing artifact wins.
 | **Option B** | Stated at full strength in `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q1 Option B. |
 | **What this unblocks** | House review Pass 2 (fresh walk). The first field-study calibration sitting. Every subsequent review in the ten-review program. |
 | **Current status** | ✅ **RULED 2026-07-29 → Option A.** Recorded in `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q1 (see *RULED* subsection there — that is the authoritative text, including three binding exclusions). Consequence: House Pass 2 does **not** open; calibrate on Now What? against the pinned instrument first. ⚠️ Selection ≠ ratification (see D8). |
-| **References** | `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q1 ⚠️ **untracked** · `docs/reviews/ECOSYSTEM_EXPERIENTIAL_REVIEW_CHARTER_2026-07-29.md` ⚠️ **untracked** · `docs/specs/developmental-environment/FIELD_STUDY_METHOD_CANDIDATE_2026-07-29.md` (tracked, merged `ea39fe3b0`) |
+| **References** | `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q1 ✅ **preserved `d531974e2`** · `docs/reviews/ECOSYSTEM_EXPERIENTIAL_REVIEW_CHARTER_2026-07-29.md` ✅ **preserved `d531974e2`** · `docs/specs/developmental-environment/FIELD_STUDY_METHOD_CANDIDATE_2026-07-29.md` (tracked, merged `ea39fe3b0`) |
 
 ⚠️ **Precondition on record:** before D1 is opened, two artifacts known to exist
 but not yet read in this queue's context must be read first — the #810
@@ -54,14 +54,14 @@ be read as having done so.
 | Field | Value |
 |---|---|
 | **Decision ID** | D2 |
-| **Question** | Which of the currently untracked governance artifacts are committed, and under what classification? |
+| **Question** | Which of the currently untracked governance artifacts are committed, and under what classification? ⚠️ **Durability portion discharged** for the listed artifacts via canonical merge `d531974e2`; the classification / standing determination remains **open and unruled**. |
 | **Question (2)** | *(distinct sub-question, do not collapse)* Does "preserve as evidence" authorize a commit? |
-| **Context** | Kelly's process ruling step 1 is "preserve both candidate instruments unchanged." That is satisfied *as evidence*. It is not satisfied *as durability* — "preserve" does not implicitly authorize a commit. Verified 2026-07-29: of eight artifacts governing the open decisions, **seven are untracked and absent from trunk**, including `docs/canon/THE_HOUSE.md` (the House's own canon, 0 commits on any ref) and `HOUSE_00_FOUNDER_QUEUE.md` (the file holding D1, D3 and D4). Only the field-study method is durable. |
+| **Context** | Kelly's process ruling step 1 is "preserve both candidate instruments unchanged." That is satisfied *as evidence*. It is not satisfied *as durability* — "preserve" does not implicitly authorize a commit. Verified 2026-07-29: of eight artifacts governing the open decisions, **seven are untracked and absent from trunk**, including `docs/canon/THE_HOUSE.md` (the House's own canon, 0 commits on any ref) and `HOUSE_00_FOUNDER_QUEUE.md` (the file holding D1, D3 and D4). Only the field-study method is durable. **Superseded in part 2026-07-29 (later same day):** ten governance artifacts — including `HOUSE_00_FOUNDER_QUEUE.md`, the ecosystem review charter, this docket, and `THE_HOUSE.md` (relocated to `docs/governance/candidates/THE_HOUSE_CANDIDATE.md`) — were preserved on `clean-main-no-secrets` via merge `d531974e2` (PR #814). The count above is retained as the record *as verified at that hour*. ⛔ The merge proves survival in the authoritative tree; it does **not** decide standing. |
 | **Option A** | Stated at full strength in `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q2. |
 | **Option B** | Stated at full strength in `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q2. |
 | **What this unblocks** | Step 1 of the process ruling. Removes the recursion in which the queue recording the decisions is itself at risk of loss. Any citation of these artifacts from a tracked document. |
-| **Current status** | Awaiting ruling. Currently blocks step 1 of the process ruling. |
-| **References** | `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q2 ⚠️ **untracked** (including its own "preservation is not durability" refinement) |
+| **Current status** | **Durability portion discharged** via canonical merge `d531974e2` — step 1 of the process ruling is no longer blocked by loss risk. **Classification / standing remains awaiting ruling.** ⚠️ Do not read the merge as a D2 ruling: PR #814 states explicitly that it rules nothing. |
+| **References** | `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q2 ✅ **preserved `d531974e2`** (including its own "preservation is not durability" refinement) |
 
 ⭐ **Founder observation added 2026-07-29 — context only, NOT a third option.** Kelly, at
 the close of the Candidate C sitting: *"Selection is reversible. Loss is not."* D1's risk
@@ -90,7 +90,7 @@ Options A and B in `HOUSE_00_FOUNDER_QUEUE.md` §Q2 are unamended.
 | **Option B** | Stated at full strength in `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q3. |
 | **What this unblocks** | Three open PRs, all currently `MERGEABLE` (verified 2026-07-29). The precedent for how a falsified-premise audit is retired without discarding its valid parts. |
 | **Current status** | Awaiting ruling. |
-| **References** | `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q3 ⚠️ **untracked** · PRs #801, #803, #804 · Issue #807 |
+| **References** | `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q3 ✅ **preserved `d531974e2`** · PRs #801, #803, #804 · Issue #807 |
 
 ### D4 — The sitting vs. the lane (charter §9)
 
@@ -103,7 +103,7 @@ Options A and B in `HOUSE_00_FOUNDER_QUEUE.md` §Q2 are unamended.
 | **Option B** | Stated at full strength in `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q4. |
 | **What this unblocks** | How review findings accumulate across ten reviews. Whether the AIN Design Grammar synthesis has a defined substrate. |
 | **Current status** | Awaiting ruling. |
-| **References** | `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q4 ⚠️ **untracked** |
+| **References** | `docs/reviews/HOUSE_00_FOUNDER_QUEUE.md` §Q4 ✅ **preserved `d531974e2`** |
 
 ### D5 — Theme scope
 
@@ -117,7 +117,7 @@ Options A and B in `HOUSE_00_FOUNDER_QUEUE.md` §Q2 are unamended.
 | **Sub-question 3** | Split. Definition carried into corrected part 3; classification of the specific aura **deferred** — see below. |
 | **What this unblocks** | Auth-surface theme migration (#667 · #668 · #669). The interior/landing jurisdiction boundary. Track D of the visual language program (which may never precede Track B). Whether future auditors must reconstruct intent from commit history. |
 | **Current status** | ⛔ **NOT RULED — returned for correction of the decision instrument (2026-07-29).** Still the designated starting point for founder review; that ordering remains ruled. Founder judgment on the substance must not be exercised until the recut below replaces the superseded cut. |
-| **References** | `docs/architecture/AIN_VISUAL_LANGUAGE_CANDIDATE_2026-07-29.md` ⚠️ **untracked** · `docs/field-studies/soullab-landing/2026-07-29/DISPOSITION_2026-07-29.md` ⚠️ **untracked, and the sitting is ruled PROVISIONAL / not calibration-admissible** · PRs #667, #668, #669 |
+| **References** | `docs/architecture/AIN_VISUAL_LANGUAGE_CANDIDATE_2026-07-29.md` ✅ **preserved `d531974e2`** · `docs/field-studies/soullab-landing/2026-07-29/DISPOSITION_2026-07-29.md` ⚠️ **untracked, and the sitting is ruled PROVISIONAL / not calibration-admissible** · PRs #667, #668, #669 |
 
 ⚠️ The ruling, when made, must be explicit enough that a later auditor need not
 reconstruct intent from commit history. That requirement was stated when the
@@ -236,7 +236,7 @@ alternate R1–R4 cut included matters outside theme scope.
 | **Option B** | Not stated at full strength — no competing formulation has been authored. |
 | **What this unblocks** | Track B visual semantics. Whether illustration of members, books and journeys may proceed independently of the MAIA-depiction question. |
 | **Current status** | Awaiting ruling. Candidate exists; alternatives unauthored. |
-| **References** | `docs/architecture/AIN_SEMANTIC_PRIMITIVES_v0.1.md` ⚠️ **untracked** · `MAIA_CANON_v1.1` §10 (tracked) |
+| **References** | `docs/architecture/AIN_SEMANTIC_PRIMITIVES_v0.1.md` ✅ **preserved `d531974e2`** · `MAIA_CANON_v1.1` §10 (tracked) |
 
 ### D8 — Ratification path for the field-study method
 
