@@ -1513,27 +1513,27 @@ export function AccountSettings() {
             value={currentPassword}
             onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(null); }}
             placeholder="Current password"
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-100 placeholder:text-stone-300 focus:border-amber-500/50 focus:outline-none"
           />
           <input
             type="password"
             value={newPassword}
             onChange={(e) => { setNewPassword(e.target.value); setPasswordError(null); }}
             placeholder="New password (min 8 characters)"
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-100 placeholder:text-stone-300 focus:border-amber-500/50 focus:outline-none"
           />
           <input
             type="password"
             value={confirmPassword}
             onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(null); }}
             placeholder="Confirm new password"
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-100 placeholder:text-stone-300 focus:border-amber-500/50 focus:outline-none"
           />
           <motion.button
             type="button"
             onClick={handleChangePassword}
             disabled={!currentPassword || !newPassword || newPassword !== confirmPassword || passwordChanging}
-            className="w-full py-3 bg-white/10 hover:bg-white/15 border border-white/10 rounded-xl text-stone-200 font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-white/10 hover:bg-white/15 border border-white/10 rounded-xl text-stone-100 font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             whileTap={{ scale: 0.98 }}
           >
             {passwordChanging ? 'Updating...' : 'Update Password'}
