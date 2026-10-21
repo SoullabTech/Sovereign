@@ -163,6 +163,7 @@ import {
   emitShadowDiff,
   ROOM_POLICIES,
 } from '@/lib/maia/canonical-turn';
+import { observeMemoryBundleStanding, emitMemoryBundleStandingShadow } from '@/lib/maia/canonical-turn/memoryBundleShadow';
 // 🌀 Cut 2 — Spiral Orientation (read-only developmental context)
 // PARKED: Cut 2 is design-only / parked. Orientation must not enter the MAIA
 // prompt automatically yet (preserves Path B: Journey surfaces orientation first,
@@ -1630,6 +1631,12 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           turnId: exchangeId,
         });
         emitShadowDiff(shadowTurn.turnId, compareLegacyToCanonical(legacyAddenda, shadowTurn, declaredPartitions));
+        if (memoryBundle || memoryContext) {
+          emitMemoryBundleStandingShadow(
+            shadowTurn.turnId,
+            observeMemoryBundleStanding(memoryBundle, memoryContext),
+          );
+        }
       } catch (shadowErr) {
         console.warn(
           '[MAIA/shadow] canonical construction failed (non-fatal; legacy turn unaffected):',
