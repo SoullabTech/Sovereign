@@ -49,7 +49,8 @@ export class MaiaVoiceSystem {
     
     this.config = {
       voiceId: config?.voiceId || defaultVoiceId,
-      elevenLabsApiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
+      // SOVEREIGNTY (Phase 0): client-exposed provider secret removed; server-only (inert module)
+      elevenLabsApiKey: process.env.ELEVENLABS_API_KEY,
       fallbackToWebSpeech: true,
       agentConfig: config?.agentConfig,
       naturalSettings: isAnthony ? {

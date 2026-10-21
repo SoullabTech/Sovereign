@@ -99,9 +99,11 @@ export class PersonalizedVoiceService {
 
   private async detectAvailableProviders(): Promise<void> {
     // Check for API keys in environment
-    const hasElevenLabsKey = !!process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
-    const hasOpenAIKey = !!process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-    const hasAzureKey = !!process.env.NEXT_PUBLIC_AZURE_SPEECH_KEY;
+    // SOVEREIGNTY (Phase 0): provider secrets are server-only; removed NEXT_PUBLIC_ client
+    // exposure. This module has no live importers (inert) — behavior-neutral.
+    const hasElevenLabsKey = !!process.env.ELEVENLABS_API_KEY;
+    const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
+    const hasAzureKey = !!process.env.AZURE_SPEECH_KEY;
     
     // Filter providers based on availability
     this.providers = this.providers.filter(provider => {
@@ -164,7 +166,7 @@ export class PersonalizedVoiceService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'xi-api-key': process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY!
+        'xi-api-key': process.env.ELEVENLABS_API_KEY ?? ''
       },
       body: JSON.stringify({
         text: options.text,
@@ -202,7 +204,7 @@ export class PersonalizedVoiceService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY ?? ''}`
       },
       body: JSON.stringify({
         model: 'tts-1-hd',
@@ -236,7 +238,7 @@ export class PersonalizedVoiceService {
       {
         method: 'POST',
         headers: {
-          'Ocp-Apim-Subscription-Key': process.env.NEXT_PUBLIC_AZURE_SPEECH_KEY!,
+          'Ocp-Apim-Subscription-Key': process.env.AZURE_SPEECH_KEY ?? '',
           'Content-Type': 'application/ssml+xml',
           'X-Microsoft-OutputFormat': 'audio-48khz-192kbitrate-mono-mp3'
         },
