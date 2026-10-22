@@ -7866,7 +7866,17 @@ I'm not sure what I'm feeling yet.`;
   const handleResumeSession = useCallback(() => {
     if (!savedSessionData) return;
 
-    console.log('💾 Resuming saved session:', savedSessionData.sessionId);
+    const currentMemberClaim = getValidMemberId();
+    if (!currentMemberClaim || currentMemberClaim !== userId ||
+        savedSessionData.userId !== currentMemberClaim ||
+        savedSessionData.sessionId !== sessionId) {
+      setInputSubmitError('This saved timer does not belong to your verified conversation. Nothing was resumed.');
+      return;
+    }
+    // This handler is intentionally NOT exposed as a live Resume action:
+    // ResumeSessionPrompt defaults verifiedResumeAdmission to false. A
+    // future server-owned active-session proof must precede enabling it.
+    console.log('💾 Resuming locally matched session timer');
 
     // Restore timer from saved data
     const timer = SessionTimer.fromSavedData(
@@ -8024,23 +8034,23 @@ I'm not sure what I'm feeling yet.`;
     console.log('🕯️ Closing ritual skipped');
   }, []);
 
-  // Check for saved session on mount
+  // A browser-stored timer is NOT proof of session ownership. Do not even
+  // offer the unverified resume notice for another member or daily SID.
+  // The separate resume UI also defaults both state-changing actions OFF
+  // until a future authenticated, server-owned admission is integrated.
   useEffect(() => {
     const saved = loadSession();
-    if (saved) {
-      const remainingTime = getSavedSessionTimeRemaining();
-      const phase = getSavedSessionPhase();
-
-      console.log('📂 Found saved session:', {
-        sessionId: saved.sessionId,
-        remainingTime,
-        phase
-      });
-
-      setSavedSessionData(saved);
-      setShowResumePrompt(true);
+    const memberClaim = getValidMemberId();
+    if (!saved || !memberClaim || !userId || !sessionId ||
+        saved.userId !== memberClaim || userId !== memberClaim ||
+        saved.sessionId !== sessionId) {
+      setSavedSessionData(null);
+      setShowResumePrompt(false);
+      return;
     }
-  }, []); // Only run on mount
+    setSavedSessionData(saved);
+    setShowResumePrompt(true);
+  }, [sessionId, userId]);
 
   // Clean up timer and auto-save on unmount
   useEffect(() => {
