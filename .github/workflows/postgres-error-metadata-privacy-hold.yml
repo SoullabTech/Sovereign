@@ -1,0 +1,36 @@
+name: Postgres Metadata Privacy Negative Proof — Expected RED
+
+# Tests ONLY on unchanged shared DB source. Never interpret RED as setup failure.
+# No secrets, network, database, provider, migration or production actions.
+on:
+  pull_request:
+    paths:
+      - 'lib/db/__tests__/errorMetadataPrivacyHold.test.ts'
+      - '.github/workflows/postgres-error-metadata-privacy-hold.yml'
+  push:
+    branches:
+      - review/pg-error-metadata-privacy-negative-20261022
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  negative-metadata-witness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked existing dependencies
+        run: npm ci
+      - name: Run source-exact fictional DB diagnostic falsifiers (expected RED)
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/db/__tests__/errorMetadataPrivacyHold.test.ts \
+            lib/db/__tests__/paramRedaction.test.ts \
+            lib/db/__tests__/postgres.missingTable.test.ts
