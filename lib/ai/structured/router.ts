@@ -37,7 +37,7 @@
 
 import type { InferenceMode } from '../types';
 import { resolveStructuredMode } from './policy';
-import { dispatchOf } from './dispatch';
+import { StructuredDispatchError, dispatchOf, type DispatchObservation } from './dispatch';
 import type {
   StructuredOutcome, StructuredProvider, StructuredRequest,
 } from './types';
@@ -108,63 +108,71 @@ async function route(
   let p: StructuredProvider;
   try {
     p = await defaultProvider();
-  } catch (err) {
-    /* ⛔ No `dispatch`. The adapter module could not even be loaded, so no
-       provider was reached and the question does not arise. ⭐ Absent is not
-       `no_response_observed` — it is "not applicable", and a caller that needs
-       an answer must read a value rather than infer one from silence. */
-    return { ok: false, refusal: 'not_configured', detail: String(err) };
+  } catch {
+    /* ⛔ No `dispatch`: the adapter failed before it could be called.
+     * The exception text is untrusted and might contain author material.
+     * Return only a fixed content-free refusal. */
+    return {
+      ok: false,
+      refusal: 'not_configured',
+      detail: 'structured_adapter_unavailable',
+    };
   }
   return execute(p, req);
 }
 
-async function execute(
+async function executasync function execute(
   provider: StructuredProvider, req: StructuredRequest,
 ): Promise<StructuredOutcome> {
   try {
     return { ok: true, result: await provider.execute(req) };
   } catch (err) {
-    /* ⭐ CLASSIFY, SERVER-SIDE ONLY. `provider_unavailable` covers four
-     * different worlds — a key that never resolved, a socket that never
-     * opened, a provider that refused, a tool contract that was rejected —
-     * and callers upstream keep only the refusal word, so from outside they
-     * are indistinguishable. This names the world without changing routing,
-     * authorization, fallback, or what is returned.
+    /* Class A review candidate — DO NOT SHIP UNTIL GOVERNED SEAM ACCEPTANCE.
      *
-     * ⛔⛔ THE MESSAGE IS LOGGED ONLY WHEN THE REQUEST NEVER REACHED THE WIRE.
-     * A pre-flight throw (no `status`) cannot carry provider output and cannot
-     * echo the request, so its message is safe and is the only thing that
-     * distinguishes, say, an unresolved credential from a bad base URL. Once a
-     * status exists the request DID go up, and a provider's error body may
-     * quote the field that offended it — which on this path is a tool schema
-     * carrying the writer's own sentence. So after the wire: shape only. */
-    const e = err as { name?: unknown; status?: unknown; code?: unknown;
-      cause?: { code?: unknown }; error?: { type?: unknown } };
-    const reachedWire = typeof e.status === 'number';
-    console.error('[structured] provider_unavailable', {
-      name: typeof e.name === 'string' ? e.name : 'unknown',
-      status: reachedWire ? e.status : null,
-      providerErrorType: typeof e.error?.type === 'string' ? e.error.type : null,
-      code: (typeof e.code === 'string' ? e.code : null)
-        ?? (typeof e.cause?.code === 'string' ? e.cause.code : null),
-      ...(reachedWire ? {} : {
-        preflightMessage: err instanceof Error ? err.message : String(err),
-      }),
-    });
+     * The provider's exception is UNTRUSTED: not merely its message but also
+     * its name, code, nested response/cause and even status getters can contain
+     * manuscript text or throw while a refusal is being reported.
+     *
+     * Only this seam's locally minted StructuredDispatchError may attest an
+     * observed response. A bare error's delivery is unknown, never silently
+     * reclassified as no_response_observed. Neither provider choice, model
+     * pin, tool contract, retry count nor fallback policy changes here.
+     */
+    let dispatch: DispatchObservation = 'unknown';
+    let status: number | null = null;
+    try {
+      if (err instanceof StructuredDispatchError) {
+        const observation = dispatchOf(err);
+        if (
+          observation === 'response_observed'
+          || observation === 'no_response_observed'
+          || observation === 'unknown'
+        ) {
+          dispatch = observation;
+        }
+        if (dispatch === 'response_observed') {
+          // Own VALUE only; do not invoke a prototype/instance status getter.
+          // The governed adapter's wrapper sets this as a bounded integer.
+          const own = Object.getOwnPropertyDescriptor(err, 'status');
+          const value: unknown = own && 'value' in own ? own.value : null;
+          if (typeof value === 'number' && Number.isInteger(value)
+            && value >= 100 && value <= 599) {
+            status = value;
+          }
+        }
+      }
+    } catch {
+      // Hostile accessors/proxies never escape the privacy refusal boundary.
+      dispatch = 'unknown';
+      status = null;
+    }
 
-    /* THE FAILURE STOPS HERE. No second provider, no local text path, no
-       degraded template. A structured request that could not be served exactly
-       was not served. */
+    console.error('[structured] provider_unavailable', { dispatch, status });
     return {
       ok: false,
       refusal: 'provider_unavailable',
-      detail: err instanceof Error ? err.message : String(err),
-      /* ⭐ THE ONE FACT ADDED HERE, and the reason this seam changed at all: a
-         disclosure receipt must distinguish a request that demonstrably arrived
-         from one that never left. ⛔ The router does not classify — it cannot,
-         without importing the vendor SDK and destroying the lazy-load property
-         the module header defends. It reads what the adapter attached. */
-      dispatch: dispatchOf(err),
+      detail: 'structured_provider_error_redacted',
+      dispatch,
     };
   }
 }
