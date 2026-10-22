@@ -24,15 +24,23 @@ export function SessionTimeAwareness({
   timer,
 }: SessionTimeAwarenessProps) {
   const [clock, setClock] = useState<SessionTimeContext | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number | null>(null);
 
   useEffect(() => {
     if (!timer) {
       setClock(null);
+      setElapsedSeconds(null);
       return;
     }
     const update = () => {
       const current = timer.getTimeContext();
       setClock(current);
+      // The spoken/phase context intentionally uses whole minutes. The
+      // visible clock, however, must advance in real seconds rather than
+      // appearing frozen until the next full minute.
+      setElapsedSeconds(Math.max(0, Math.floor(
+        (Date.now() - timer.getStartTime().getTime()) / 1000,
+      )));
       onTimeUpdate?.(current.elapsedMinutes);
     };
     update();
@@ -40,13 +48,14 @@ export function SessionTimeAwareness({
     return () => clearInterval(interval);
   }, [timer, onTimeUpdate]);
 
-  const elapsed = clock?.elapsedMinutes ?? elapsedTime;
+  const elapsed = elapsedSeconds !== null ? elapsedSeconds / 60 : elapsedTime;
   const total = clock?.totalMinutes ?? sessionDuration;
   const progress = total > 0 ? Math.min(100, Math.max(0, (elapsed / total) * 100)) : 0;
 
   const formatTime = (minutes: number) => {
-    const mins = Math.floor(minutes);
-    const secs = Math.floor((minutes - mins) * 60);
+    const seconds = Math.max(0, Math.floor(minutes * 60 + 0.00001));
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
