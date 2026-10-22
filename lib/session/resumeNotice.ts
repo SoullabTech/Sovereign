@@ -6,7 +6,7 @@
  * It only decides if showing a local, content-free saved-timer notice would
  * accidentally reveal metadata belonging to another displayed member/SID.
  */
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SESSION_ID = /^session_[a-zA-Z0-9_-]{1,92}$/;
 
 export interface SavedTimerIdentity {
