@@ -52,7 +52,7 @@ describe('MAIA ritual and visible timer — client-only P0 regressions', () => {
       (button) => button.textContent?.includes('Request session close'),
     );
     expect(request).toBeDefined();
-    act(() => request?.click());
+    act(() => { request?.click(); request?.click(); });
     expect(nextClose).toHaveBeenCalledTimes(1);
   });
 
