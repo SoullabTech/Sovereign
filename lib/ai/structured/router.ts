@@ -37,7 +37,7 @@
 
 import type { InferenceMode } from '../types';
 import { resolveStructuredMode } from './policy';
-import { dispatchOf } from './dispatch';
+import { dispatchOf, StructuredDispatchError } from './dispatch';
 import type {
   StructuredOutcome, StructuredProvider, StructuredRequest,
 } from './types';
@@ -108,12 +108,12 @@ async function route(
   let p: StructuredProvider;
   try {
     p = await defaultProvider();
-  } catch (err) {
+  } catch {
     /* ⛔ No `dispatch`. The adapter module could not even be loaded, so no
        provider was reached and the question does not arise. ⭐ Absent is not
        `no_response_observed` — it is "not applicable", and a caller that needs
        an answer must read a value rather than infer one from silence. */
-    return { ok: false, refusal: 'not_configured', detail: String(err) };
+    return { ok: false, refusal: 'not_configured', detail: 'structured_adapter_unavailable' };
   }
   return execute(p, req);
 }
@@ -138,19 +138,15 @@ async function execute(
      * status exists the request DID go up, and a provider's error body may
      * quote the field that offended it — which on this path is a tool schema
      * carrying the writer's own sentence. So after the wire: shape only. */
-    const e = err as { name?: unknown; status?: unknown; code?: unknown;
-      cause?: { code?: unknown }; error?: { type?: unknown } };
-    const reachedWire = typeof e.status === 'number';
-    console.error('[structured] provider_unavailable', {
-      name: typeof e.name === 'string' ? e.name : 'unknown',
-      status: reachedWire ? e.status : null,
-      providerErrorType: typeof e.error?.type === 'string' ? e.error.type : null,
-      code: (typeof e.code === 'string' ? e.code : null)
-        ?? (typeof e.cause?.code === 'string' ? e.cause.code : null),
-      ...(reachedWire ? {} : {
-        preflightMessage: err instanceof Error ? err.message : String(err),
-      }),
-    });
+    // A bare Error or user-controlled thrown object provides NO trustworthy
+    // fields, including status, name, code, message or cause. Only the neutral
+    // adapter-created wrapper is allowed to carry an observed HTTP status.
+    // Never inspect arbitrary getters: even checking typeof err.status can
+    // throw or disclose data. The dispatch fact is already classified by the
+    // approved adapter; unknown does not mean nothing crossed.
+    const dispatch = dispatchOf(err);
+    const status = err instanceof StructuredDispatchError ? err.status ?? null : null;
+    console.error('[structured] provider_unavailable', { dispatch, status });
 
     /* THE FAILURE STOPS HERE. No second provider, no local text path, no
        degraded template. A structured request that could not be served exactly
@@ -158,13 +154,13 @@ async function execute(
     return {
       ok: false,
       refusal: 'provider_unavailable',
-      detail: err instanceof Error ? err.message : String(err),
+      detail: 'structured_provider_error_redacted',
       /* ⭐ THE ONE FACT ADDED HERE, and the reason this seam changed at all: a
          disclosure receipt must distinguish a request that demonstrably arrived
          from one that never left. ⛔ The router does not classify — it cannot,
          without importing the vendor SDK and destroying the lazy-load property
          the module header defends. It reads what the adapter attached. */
-      dispatch: dispatchOf(err),
+      dispatch,
     };
   }
 }
