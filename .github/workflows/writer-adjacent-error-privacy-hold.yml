@@ -1,0 +1,38 @@
+name: Writer Adjacent Error Privacy Negative Proof — Expected RED
+
+# Read-only, no secret, no DB, no provider; intentionally RED to guard Class A.
+# This workflow is NOT merge or release authority. Do not invert assertions.
+on:
+  pull_request:
+    paths:
+      - 'lib/disclosure/__tests__/disclosureExceptionPrivacyHold.test.ts'
+      - 'lib/ai/structured/__tests__/invalidModeDetailPrivacyHold.test.ts'
+      - '.github/workflows/writer-adjacent-error-privacy-hold.yml'
+  push:
+    branches:
+      - review/ws-adjacent-error-privacy-negative-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  negative-privacy-witness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked dependencies, no secrets
+        run: npm ci
+      - name: Execute real-source adjacent refusal/log falsifiers (expected RED)
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/disclosure/__tests__/disclosureExceptionPrivacyHold.test.ts \
+            lib/ai/structured/__tests__/invalidModeDetailPrivacyHold.test.ts
