@@ -1,5 +1,5 @@
 import {
-  assessClosureResponse, clearConfirmedContinuityHint,
+  assessClosureResponse, requestQualifiedClosure, clearConfirmedContinuityHint,
   preserveClosureHint, readClosureHint,
   type PendingClosureHint,
 } from '../closureReceipt';
@@ -96,5 +96,104 @@ describe('content-free closure hints cannot grant account/erasure authority', ()
     expect(preserveClosureHint(mockStorage, invalid)).toBe(false);
     expect(storage.size).toBe(0);
     expect(JSON.stringify(hint())).not.toContain('memberWords');
+  });
+});
+
+
+describe('R2 closure dispatch — fictional transport and crash recovery', () => {
+  let values: Map<string, string>;
+  let storage: {
+    setItem: (key: string, val: string) => void;
+    getItem: (key: string) => string | null;
+    removeItem: (key: string) => void;
+  };
+  const requestTime = '2026-10-22T12:00:00Z';
+
+  beforeEach(() => {
+    values = new Map();
+    storage = {
+      setItem: (key, val) => { values.set(key, val); },
+      getItem: (key) => values.get(key) ?? null,
+      removeItem: (key) => { values.delete(key); },
+    };
+  });
+
+  it('default-off capability gate sends NOTHING and creates no hint', async () => {
+    const send = jest.fn(async () => ({ status: 200, json: async () => continuity }));
+    const result = await requestQualifiedClosure({
+      enabled: false, claimedMemberId: A, currentMemberClaim: A,
+      sessionId: SID, expectedPrivacy: 'continuity', storage, send, requestTime,
+    });
+    expect(result.kind).toBe('unavailable');
+    expect(send).not.toHaveBeenCalled();
+    expect(values.size).toBe(0);
+  });
+
+  it('rejects member/account mismatch before writing or sending', async () => {
+    const send = jest.fn(async () => ({ status: 200, json: async () => continuity }));
+    const result = await requestQualifiedClosure({
+      enabled: true, claimedMemberId: A, currentMemberClaim: B,
+      sessionId: SID, expectedPrivacy: 'continuity', storage, send, requestTime,
+    });
+    expect(result.kind).toBe('unverified');
+    expect(send).not.toHaveBeenCalled();
+    expect(values.size).toBe(0);
+  });
+
+  it('if recovery storage fails, never sends potentially destructive close', async () => {
+    const send = jest.fn(async () => ({ status: 200, json: async () => continuity }));
+    const result = await requestQualifiedClosure({
+      enabled: true, claimedMemberId: A, currentMemberClaim: A,
+      sessionId: SID, expectedPrivacy: 'continuity',
+      storage: {
+        setItem: () => { throw Error('QuotaExceeded'); },
+        removeItem: () => {},
+      },
+      send, requestTime,
+    });
+    expect(result.kind).toBe('unavailable');
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('exact 200 Continuity receipt clears ONLY that close hint', async () => {
+    const send = jest.fn(async () => ({ status: 200, json: async () => continuity }));
+    const result = await requestQualifiedClosure({
+      enabled: true, claimedMemberId: A, currentMemberClaim: A,
+      sessionId: SID, expectedPrivacy: 'continuity', storage, send, requestTime,
+    });
+    expect(result).toEqual({ kind: 'continuity_closed', sessionId: SID });
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledWith({
+      memberId: A, sessionId: SID, isSanctuary: false, endedAt: requestTime,
+    });
+    expect(readClosureHint(storage, A, SID)).toBeNull();
+  });
+
+  it('202 Sanctuary creates a pending obligation pointer, NOT erased=true', async () => {
+    const send = jest.fn(async () => ({ status: 202, json: async () => sanctuary }));
+    const result = await requestQualifiedClosure({
+      enabled: true, claimedMemberId: A, currentMemberClaim: A,
+      sessionId: SID, expectedPrivacy: 'sanctuary', storage, send, requestTime,
+    });
+    expect(result).toEqual({ kind: 'sanctuary_erasure_pending', sessionId: SID });
+    expect(readClosureHint(storage, A, SID)?.state).toBe('sanctuary_erasure_pending');
+    expect(readClosureHint(storage, B, SID)).toBeNull();
+  });
+
+  it('legacy 200, refused 409, and transport failure retain unverified hint', async () => {
+    for (const response of [
+      async () => ({ status: 200, json: async () => ({ ok: true, sanctuary: true }) }),
+      async () => ({ status: 409, json: async () => ({ code: 'CONFLICT' }) }),
+      async (): Promise<{status:number;json:()=>Promise<unknown>}> => { throw Error('lost connection'); },
+    ]) {
+      values.clear();
+      const result = await requestQualifiedClosure({
+        enabled: true, claimedMemberId: A, currentMemberClaim: A,
+        sessionId: SID, expectedPrivacy: 'sanctuary', storage, send: response,
+        requestTime,
+      });
+      expect(['unverified', 'refused', 'unavailable']).toContain(result.kind);
+      expect(readClosureHint(storage, A, SID)?.state).toBe('request_unverified');
+    }
   });
 });
