@@ -71,6 +71,8 @@ export class SessionTimer {
    * Start the timer with automatic phase tracking
    */
   start(updateIntervalMs: number = 30000): void {
+    // Starting the same timer twice must not create competing completion loops.
+    this.stop();
     // Check immediately
     this.checkPhaseAndWarnings();
 
@@ -96,13 +98,14 @@ export class SessionTimer {
   getTimeContext(): SessionTimeContext {
     const elapsed = Date.now() - this.startTime.getTime();
     const elapsedMinutes = Math.floor(elapsed / 60000);
-    const remainingMinutes = Math.max(0, this.config.durationMinutes - elapsedMinutes);
+    const totalMinutes = this.getDurationMinutes();
+    const remainingMinutes = Math.max(0, totalMinutes - elapsedMinutes);
     const phase = this.getCurrentPhase(elapsedMinutes);
 
     return {
       elapsedMinutes,
       remainingMinutes,
-      totalMinutes: this.config.durationMinutes,
+      totalMinutes,
       phase,
       phaseDescription: this.getPhaseDescription(phase, elapsedMinutes, remainingMinutes),
       systemPromptContext: this.getSystemPromptContext(phase, elapsedMinutes, remainingMinutes)
@@ -121,7 +124,7 @@ export class SessionTimer {
    * Determine session phase based on elapsed time
    */
   private getCurrentPhase(elapsedMinutes: number): SessionPhase {
-    const duration = this.config.durationMinutes;
+    const duration = this.getDurationMinutes();
     const percentComplete = (elapsedMinutes / duration) * 100;
 
     if (elapsedMinutes >= duration) return 'complete';
@@ -154,7 +157,7 @@ export class SessionTimer {
    * This is injected into MAIA's consciousness
    */
   private getSystemPromptContext(phase: SessionPhase, elapsed: number, remaining: number): string {
-    const total = this.config.durationMinutes;
+    const total = this.getDurationMinutes();
 
     switch (phase) {
       case 'opening':
