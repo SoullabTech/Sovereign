@@ -146,6 +146,9 @@ async function executeOnce(
 ): Promise<StructuredResult> {
   const client = opts.client ?? new Anthropic();
   const params = toAnthropicParams(req);
+  // Class A draft only: zero SDK retry fan-out on this one structured request.
+  // Per-request options must override even an injected SDK client's defaults.
+  const singleAttemptOptions = { maxRetries: 0 } as const;
   const t0 = Date.now();
 
   /* THE REQUIREMENT IS NEUTRAL; THE MECHANISM IS THIS ADAPTER'S CHOICE.
@@ -155,8 +158,8 @@ async function executeOnce(
      simply not having the timeout. Consumed whole either way, so the
      neutral result is identical. */
   const message = req.execution?.completion === 'long-running'
-    ? await (client.messages.stream(params as never)).finalMessage()
-    : await client.messages.create(params as never) as Anthropic.Message;
+    ? await (client.messages.stream(params as never, singleAttemptOptions)).finalMessage()
+    : await client.messages.create(params as never, singleAttemptOptions) as Anthropic.Message;
 
   return {
     content: toBlocks(message.content as readonly unknown[]),
