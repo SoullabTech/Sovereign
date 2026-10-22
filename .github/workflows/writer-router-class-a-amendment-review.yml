@@ -1,0 +1,68 @@
+name: Writer Router Class A Amendment Review — HOLD
+
+# REVIEW-ONLY: this branch proposes changing the historically byte-pinned
+# structured router. It deliberately MUST NOT green-light merge or deploy.
+# Functional negative tests should PASS; the historical seam pin should
+# FAIL until a Founder-approved governed baseline amendment is admitted.
+on:
+  push:
+    branches:
+      - review/ws-structured-router-class-a-amendment-20261022
+  pull_request:
+    paths:
+      - 'lib/ai/structured/**'
+      - 'lib/disclosure/**'
+      - '.github/workflows/writer-router-class-a-amendment-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  content-free-functional-falsifiers:
+    name: Fictional privacy and no-fallback behavior
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Test router fix, real adapter, mode policy and disclosure
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/ai/structured/__tests__/unwrappedRouterPrivacyAmendment.test.ts \
+            lib/ai/structured/__tests__/nonFallbackable.test.ts \
+            lib/ai/structured/__tests__/providerErrorRedaction.test.ts \
+            lib/ai/structured/__tests__/adapterErrorEdge.test.ts \
+            lib/ai/structured/__tests__/requestEquivalence.test.ts \
+            lib/ai/structured/__tests__/modePolicy.test.ts \
+            lib/disclosure/__tests__/editorialDisclosureFalsifiers.test.ts
+
+  historical-pin-hold:
+    name: GOVERNANCE HOLD — historical source pin must fail until ratified
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Keep unchanged governed router byte-pin enforced (EXPECTED RED)
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/ai/structured/__tests__/seamIsolation.test.ts
