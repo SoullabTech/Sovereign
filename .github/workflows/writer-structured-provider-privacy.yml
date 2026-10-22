@@ -36,4 +36,7 @@ jobs:
           npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
             lib/ai/structured/__tests__/providerErrorRedaction.test.ts \
             lib/ai/structured/__tests__/nonFallbackable.test.ts \
-            lib/ai/structured/__tests__/requestEquivalence.test.ts
+            lib/ai/structured/__tests__/requestEquivalence.test.ts \
+            lib/ai/structured/__tests__/modePolicy.test.ts \
+            lib/ai/structured/__tests__/seamIsolation.test.ts \
+            lib/disclosure/__tests__/editorialDisclosureFalsifiers.test.ts
