@@ -139,6 +139,17 @@ export function readClosureHint(
 }
 
 /** Only a verified Continuity close can clear its own recovery hint. */
+/**
+ * A browser-stored pending marker is NEVER a signed or authenticated R20
+ * receipt. Reopen as UNVERIFIED; the current server must be consulted before
+ * claiming any active pending deletion or completed closure state.
+ */
+export function displayStateForRestoredClosureHint(
+  hint: PendingClosureHint | null,
+): ClosureDisplayState {
+  return hint ? 'unverified' : 'ready';
+}
+
 export function clearConfirmedContinuityHint(
   storage: Pick<Storage, 'removeItem'>,
   claimedMemberId: string,
