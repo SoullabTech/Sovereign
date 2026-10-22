@@ -8,6 +8,14 @@
  * attest any S5/R20 erasure and MUST NOT be treated as a verified close.
  */
 
+/**
+ * New versioned route intentionally has NO legacy POST implementation.
+ * Even a misconfigured build-time flag must not fall through to the older
+ * mode-based whole-session purge route. A source-owner approved R2 handler is
+ * required at this exact path before closing can be enabled.
+ */
+export const QUALIFIED_R2_CLOSE_PATH = '/api/sovereign/session/finalize-r2' as const;
+
 export type ClosureExpectation = 'continuity' | 'sanctuary';
 
 export type ClosureAssessment =
