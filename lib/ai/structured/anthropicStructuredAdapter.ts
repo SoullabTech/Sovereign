@@ -43,10 +43,11 @@ function classifyDispatch(err: unknown): DispatchObservation {
     if (err instanceof Anthropic.APIError && typeof (err as { status?: unknown }).status === 'number') {
       return 'response_observed';
     }
-    /* Connection refused, DNS failure, TLS failure — no response came back.
-       The unconstructable-client case lands here too: it throws before
-       `toAnthropicParams` has even built a body. */
-    if (err instanceof Anthropic.APIConnectionError) return 'no_response_observed';
+    /* An APIConnectionError only establishes that the SDK got no usable
+       HTTP response. A peer can accept the entire request and then reset the
+       connection before replying. Absence of a response cannot prove that
+       no writer text crossed the boundary. Preserve delivery uncertainty. */
+    if (err instanceof Anthropic.APIConnectionError) return 'unknown';
     return 'unknown';
   } catch {
     /* ⛔ If the SDK's shape is not what we expect, the honest answer is that we

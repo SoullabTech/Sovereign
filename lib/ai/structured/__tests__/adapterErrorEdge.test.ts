@@ -55,7 +55,9 @@ describe('real structured Anthropic adapter: fictional delivery failures', () =>
   it.each([
     ['API HTTP 400', Anthropic.APIError.prototype, 400, 'response_observed'],
     ['connection timeout', Anthropic.APIConnectionTimeoutError.prototype, undefined, 'unknown'],
-    ['connection refused', Anthropic.APIConnectionError.prototype, undefined, 'no_response_observed'],
+    // Class A candidate: transport errors cannot prove absence of server receipt.
+    // This historical expectation change requires independent ratification.
+    ['ambiguous connection failure', Anthropic.APIConnectionError.prototype, undefined, 'unknown'],
   ] as const)('%s is classified without retaining provider text',
     async (_label, prototype, status, dispatch) => {
       const raw = syntheticSdkError(prototype, status);
