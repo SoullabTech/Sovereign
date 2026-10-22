@@ -215,7 +215,8 @@ import type { CapsuleDTO } from '@/lib/capsules/types';
 import { TransformationalPresence, type PresenceState } from './nlp/TransformationalPresence';
 import { SessionTimer, SESSION_PRESETS } from '@/lib/session/SessionTimer';
 import {
-  readClosureHint, requestQualifiedClosure, type ClosureDisplayState,
+  displayStateForRestoredClosureHint, readClosureHint, requestQualifiedClosure,
+  type ClosureDisplayState,
 } from '@/lib/session/closureReceipt';
 import { SessionTimeAwareness } from '@/components/session/SessionTimeAwareness';
 import { SessionDurationSelector } from '@/components/session/SessionDurationSelector';
@@ -1540,7 +1541,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     // antirollback witness. Even a cached "erasure_pending" hint must be
     // presented as UNVERIFIED after app restart until the verified server
     // reconciles its current session/R20 status.
-    setClosureUiState('unverified');
+    setClosureUiState(displayStateForRestoredClosureHint(previous));
     setShowClosingRitual(true);
   }, [sessionId, userId]);
 
