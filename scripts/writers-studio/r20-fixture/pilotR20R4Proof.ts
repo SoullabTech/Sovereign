@@ -119,8 +119,13 @@ async function main() {
       'UPDATE writer_studio_pilot_admission_control SET founder_member_id=$1 WHERE singleton=TRUE',
       [founder],
     );
-    const { approvePilotWriter, acceptPilotWriter, readWriterPilotApproval, revokePilotWriter } =
-      await import('../../../lib/writersStudio/pilotGrantServer');
+    const { readWriterPilotApproval } = await import(
+      '../../../lib/writersStudio/pilotGrantServer'
+    );
+    // Review-only model is hard-restricted to disposable 127.0.0.1:55439.
+    const { approvePilotWriter, acceptPilotWriter, revokePilotWriter } = await import(
+      '../r9-fixture/fictionalPilotGrantDbModel'
+    );
     const { writerStudioPlanForMember } = await import('../../../lib/writersStudio/planAccessServer');
     const { closePool } = await import('../../../lib/db/postgres');
 

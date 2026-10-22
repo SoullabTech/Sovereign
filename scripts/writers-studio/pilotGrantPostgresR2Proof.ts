@@ -116,9 +116,14 @@ async function main() {
     await direct.query(
       "UPDATE auth_sessions SET expires_at=NOW()-INTERVAL '1 minute' WHERE session_token='expired-session'",
     );
-    const {
-      readWriterPilotApproval, approvePilotWriter, acceptPilotWriter, revokePilotWriter,
-    } = await import('../../lib/writersStudio/pilotGrantServer');
+    const { readWriterPilotApproval } = await import(
+      '../../lib/writersStudio/pilotGrantServer'
+    );
+    // Only the fictitious SQL model can be invoked on this guarded,
+    // throwaway loopback PostgreSQL16 witness. Application exports refuse.
+    const { approvePilotWriter, acceptPilotWriter, revokePilotWriter } = await import(
+      './r9-fixture/fictionalPilotGrantDbModel'
+    );
     const { verifiedPilotWriterActor, isTrustedPilotWrite } =
       await import('../../lib/writersStudio/pilotWriteSecurity');
     const { POST: approveRoute, DELETE: revokeRoute } =
