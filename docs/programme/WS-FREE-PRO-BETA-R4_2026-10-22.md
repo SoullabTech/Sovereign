@@ -13,7 +13,7 @@ R4 does **not** create or enroll a real writer. The public Free/Pro enrollment, 
 - `lib/writersStudio/pilotR20ReceiptProtocol.ts` — static TypeScript verification of two independent Ed25519 signatures. An ACTIVE decision must have the same verified member/grant, audience, current 32-byte nonce, signer key ID, short lifetime, and a monotonic minimum epoch.
 - `lib/writersStudio/__tests__/pilotR20ReceiptProtocol.test.ts` — success and negative controls using only ephemeral in-process Ed25519 keypairs. No real private keys are written, sent or checked in.
 - `scripts/writers-studio/r20-fixture/FixtureR20Authority.ts` — **fictional** PostgreSQL-only authority state and in-memory signer; does not have independent WORM or approved recovery custody.
-- `scripts/writers-studio/r20-fixture/pilotR20R4Proof.ts` — planned three-independent-database `pg_dump` / `pg_restore` rehearsal; only fixed fictional loopback DB ports may be used.
+- `scripts/writers-studio/r20-fixture/pilotR20R4Proof.ts` — executed three-independent-database `pg_dump` / `pg_restore` fictional rehearsal, restricted to fixed loopback DB ports and fresh empty PostgreSQL 16 fixtures.
 
 The existing production-bound `lib/writersStudio/pilotR20Authority.ts` is deliberately unchanged and **always refuses**. A locally valid research receipt cannot unlock any member’s real Writer Pro account.
 
@@ -36,9 +36,9 @@ That trusted high-water floor is an **unimplemented production prerequisite**, n
 
 ## R4 evidence boundary
 
-**24/24** signed-receipt Jest tests passed, including deliberately negative tests for compromised or restored state and equivalent differently formatted public keys. The proposed three-PostgreSQL replay was prepared but **has not been executed successfully** in this workstream. No claim of real three-database integration or independent signed live custody is made.
+**24/24** signed-receipt Jest tests passed, including negative cases for compromised or restored state and equivalent differently formatted public keys. Subsequently the prepared three-PostgreSQL 16 rehearsal executed successfully: **29/29 PASS**. It verified two fictional writers, actual three-database pre-revocation dumps/restores, member DB resurrection, one-signer rollback denial, both-signer rollback unsafe dual-positive, and refusal under a separately held epoch floor. This is real disposable PostgreSQL integration evidence, **not** proof of operational WORM/immutable key custody.
 
-The R3 separate-PostgreSQL evidence remains 51/51, R3 focused tests 56/56. R4 combined regression and exact source commit will be recorded after the source is committed; no real account or key is part of these tests.
+The R3 PostgreSQL evidence remains 51/51; R4 source checkpoint `2be576728c6fbc5296e4780dd2e10d25803ed31d` passed 80/80 focused tests on ten suites. The later R5 continuation adds a separate checkpoint verification contract and tests. No real accounts or production private keys were used.
 
 ## Remaining mandatory Class A proof
 

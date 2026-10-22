@@ -4,15 +4,21 @@
  * The fixture explicitly demonstrates the remaining simultaneous rollback hole.
  */
 import assert from 'node:assert/strict';
+import { generateKeyPairSync, sign } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, statfsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Client } from 'pg';
 import { FixtureR20Authority } from './FixtureR20Authority';
 import {
   createR20Nonce, verifyTwoIndependentR20Receipts,
   PilotR20ReceiptRefused, type R20VerificationRequest,
-} from '../../../lib/writersStudio/pilotR20ReceiptProtocol';
+ } from '../../../lib/writersStudio/pilotR20ReceiptProtocol';
+import {
+  R20_CHECKPOINT_AUDIENCE, r20CheckpointBytes,
+  verifyR20WithIndependentCheckpoint, PilotR20CheckpointRefused,
+  type R20CheckpointClaims, type R20CheckpointTrust, type R20TripleRequest,
+} from '../../../lib/writersStudio/pilotR20CheckpointProtocol';
 
 const ENV = [
   ['WS_R4_MEMBER_DATABASE', 55439],
@@ -33,6 +39,14 @@ function guardedUrl(env: string, port: number): string {
   return raw;
 }
 const [memberUrl, authorityUrl, witnessUrl] = ENV.map(([env, port]) => guardedUrl(env, port));
+// Avoid consuming the remaining disk space on the founder's Mac Studio.
+// This is an isolated integration rehearsal, never release-critical at the
+// expense of live application and unrelated engineering lanes.
+const disk = statfsSync(process.cwd());
+const availableGiB = (disk.bavail * disk.bsize) / (1024 ** 3);
+if (availableGiB < 6) {
+  throw new Error('R5_FIXTURE_REFUSED_INSUFFICIENT_DISK_MINIMUM_6GIB');
+}
 process.env.DATABASE_URL = memberUrl;
 process.env.WRITER_PILOT_GRANT_WRITES_ENABLED = '1';
 
@@ -153,6 +167,50 @@ async function main() {
         return false;
       }
     };
+    // This signer is only a short-lived test representation of the third
+    // independent checkpoint. It is NOT external WORM or production custody.
+    const checkpointKey = generateKeyPairSync('ed25519');
+    const checkpointTrust: R20CheckpointTrust = {
+      issuer: 'fictional-sealed-recovery-checkpoint',
+      keyId: 'ephemeral-checkpoint-key',
+      publicKeyPem: checkpointKey.publicKey.export({
+        format: 'pem', type: 'spki',
+      }).toString('utf8'),
+      minimumSequence: 1,
+    };
+    const checkTriple = async (
+      memberId: string, grantId: string,
+      state: 'active' | 'revoked',
+      epochA: number, epochB: number, checkpointSequence: number,
+      minimumSequence = 1,
+    ): Promise<boolean> => {
+      const nonce = createR20Nonce();
+      const request: R20TripleRequest = {
+        memberId, grantId, nonce, nowMs: clock,
+        signerA: pinnedA, signerB: pinnedB,
+        checkpointTrust: { ...checkpointTrust, minimumSequence },
+      };
+      const first = await authority.issueFixtureReceipt(memberId, grantId, nonce, clock);
+      const second = await witness.issueFixtureReceipt(memberId, grantId, nonce, clock);
+      const claims: R20CheckpointClaims = {
+        version: 1, audience: R20_CHECKPOINT_AUDIENCE,
+        issuer: checkpointTrust.issuer, keyId: checkpointTrust.keyId,
+        memberId, grantId, state, epochA, epochB, checkpointSequence,
+        nonce, issuedAtMs: clock, expiresAtMs: clock + 15_000,
+      };
+      const sealed = {
+        claims,
+        signature: sign(null, r20CheckpointBytes(claims), checkpointKey.privateKey)
+          .toString('base64url'),
+      };
+      try {
+        verifyR20WithIndependentCheckpoint(first, second, sealed, request);
+        return true;
+      } catch (error) {
+        if (!(error instanceof PilotR20CheckpointRefused)) throw error;
+        return false;
+      }
+    };
     prove('no R20 approval from DB accepted-grant status alone',
       !(await checkDual(writerA, grantA)));
     prove('one signer cannot authorize Pro while other is missing',
@@ -166,6 +224,10 @@ async function main() {
       await authority.activateFixture(writerB, grantB)
       && await witness.activateFixture(writerB, grantB)
       && await checkDual(writerB, grantB));
+    prove('fictional healthy signer A/B and checkpoint signatures agree for writer A',
+      await checkTriple(writerA, grantA, 'active', 1, 1, 1));
+    prove('fictional healthy signer A/B and checkpoint signatures agree for writer B',
+      await checkTriple(writerB, grantB, 'active', 2, 2, 2));
     prove('duplicate activation is refused by independent witness',
       !(await witness.activateFixture(writerA, grantA)));
 
@@ -194,6 +256,9 @@ async function main() {
     const postRevocationFloorB = await witness.currentEpoch(writerA, grantA);
     prove('separate authorities have monotonic revocation epochs',
       postRevocationFloorA > 0 && postRevocationFloorB > 0);
+    prove('signed revoked checkpoint refuses Pro even with valid signer receipts',
+      !(await checkTriple(writerA, grantA, 'revoked',
+        postRevocationFloorA, postRevocationFloorB, 3)));
     prove('member DB can also record the writer A revocation',
       await revokePilotWriter(writerA, founder));
     prove('independent writer B retains active status during A revocation',
@@ -257,6 +322,14 @@ async function main() {
     authority.useRestoredFixtureDatabase(oldAuthority);
     prove('DOUBLE R20 rollback CAN sign an unsafe dual-positive without WORM floor',
       await checkDual(writerA, grantA));
+    prove('signed revoked checkpoint refuses double-signer rollback',
+      !(await checkTriple(writerA, grantA, 'revoked',
+        postRevocationFloorA, postRevocationFloorB, 3)));
+    prove('signed checkpoint floors reject both old signer epochs',
+      !(await checkTriple(writerA, grantA, 'active',
+        postRevocationFloorA, postRevocationFloorB, 3)));
+    prove('externally trusted minimum checkpoint sequence rejects a stale positive checkpoint',
+      !(await checkTriple(writerA, grantA, 'active', 1, 1, 1, 3)));
 
     prove('a separately trusted high-water floor would reject both rolled-back signatures',
       !(await checkDual(
