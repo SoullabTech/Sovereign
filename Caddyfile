@@ -199,9 +199,6 @@ soullab.life {
     @ionic_origin {
         header Origin ionic://localhost
     }
-    @localhost_origin {
-        header Origin http://localhost*
-    }
 
     # Handle CORS preflight (OPTIONS) requests for API
     @cors_preflight {
@@ -226,28 +223,6 @@ soullab.life {
         }
         header @preflight_ionic {
             Access-Control-Allow-Origin "ionic://localhost"
-            Access-Control-Allow-Credentials "true"
-            Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID, X-Member-Id, X-Maia-Tier, X-Maia-Roles"
-            Access-Control-Max-Age "86400"
-        }
-        # Localhost origin (dev)
-        @preflight_localhost {
-            header_regexp Origin ^http://localhost
-        }
-        header @preflight_localhost {
-            Access-Control-Allow-Origin "{header.Origin}"
-            Access-Control-Allow-Credentials "true"
-            Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID, X-Member-Id, X-Maia-Tier, X-Maia-Roles"
-            Access-Control-Max-Age "86400"
-        }
-        # Null origin (WebKit edge case - some Capacitor/WKWebView contexts)
-        @preflight_null {
-            header Origin null
-        }
-        header @preflight_null {
-            Access-Control-Allow-Origin "null"
             Access-Control-Allow-Credentials "true"
             Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
             Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID, X-Member-Id, X-Maia-Tier, X-Maia-Roles"
@@ -333,13 +308,6 @@ soullab.life {
         }
         header @api_ionic {
             Access-Control-Allow-Origin "ionic://localhost"
-            Access-Control-Allow-Credentials "true"
-        }
-        @api_null {
-            header Origin null
-        }
-        header @api_null {
-            Access-Control-Allow-Origin "null"
             Access-Control-Allow-Credentials "true"
         }
     }
