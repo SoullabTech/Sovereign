@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'scripts/witness/r20_pg16_ci_standalone_20261022.py'
+      - 'tests/test_r20_pg16_ci_standalone_20261022.py'
       - '.github/workflows/r20-pg16-two-target-fictional-20261022.yml'
   workflow_dispatch:
 
@@ -20,6 +21,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m py_compile scripts/witness/r20_pg16_ci_standalone_20261022.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_r20_pg16_ci_standalone_20261022.py -v
           if python3 scripts/witness/r20_pg16_ci_standalone_20261022.py --fictional-only; then
             echo 'FAIL: witness proceeded without its isolated PostgreSQL test container'
             exit 1
