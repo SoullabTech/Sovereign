@@ -9,7 +9,7 @@
 //
 // Default root matches the studio vault: /app/data/vault (override via FILE_STORAGE_PATH).
 
-import { mkdir, writeFile, readFile, unlink, stat } from 'fs/promises';
+import { mkdir, writeFile, readFile, unlink, lstat, realpath } from 'fs/promises';
 import path from 'path';
 
 export function resolveVaultRoot(): string {
@@ -50,72 +50,128 @@ export async function writeVaultBytes(
   ext: string,
   buffer: Buffer
 ): Promise<string> {
-  const root = resolveVaultRoot();
-  const dir = path.join(root, namespace);
-  await mkdir(dir, { recursive: true });
-  const storagePath = path.join(namespace, `${fileId}.${ext}`);
-  await writeFile(path.join(root, storagePath), buffer);
+  // Namespaces may be nested (one validated path segment at a time), but may
+  // never redirect mkdir/write outside the physically resolved vault.
+  const segments = namespace.split('/');
+  const safeSegment = (s: string) =>
+    s.length > 0 && s.length <= 200 &&
+    /^[a-zA-Z0-9._-]+$/.test(s) && s !== '.' && s !== '..';
+  if (!segments.every(safeSegment) || !safeSegment(fileId) ||
+      ext.length < 1 || ext.length > 32 || !/^[a-zA-Z0-9._-]+$/.test(ext) ||
+      ext === '.' || ext === '..') {
+    throw new Error('Invalid vault storage component');
+  }
+  let root: string;
+  try {
+    root = await realpath(path.resolve(resolveVaultRoot()));
+  } catch {
+    throw new Error('Vault root unavailable');
+  }
+  if (!(await lstat(root)).isDirectory()) {
+    throw new Error('Vault root is not a directory');
+  }
+  let dir = root;
+  for (const segment of segments) {
+    dir = path.join(dir, segment);
+    try {
+      await mkdir(dir, { mode: 0o700 });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException)?.code !== 'EEXIST') throw error;
+    }
+    // Crucially, check each parent before creating its descendants. A single
+    // bulk recursive mkdir could create files outside via a symlinked parent.
+    const info = await lstat(dir);
+    if (info.isSymbolicLink() || !info.isDirectory()) {
+      throw new Error('Vault storage directory must not be a symlink');
+    }
+  }
+  const storagePath = path.join(...segments, fileId + '.' + ext);
+  // Exclusive create refuses overwrite and a pre-planted leaf symlink.
+  await writeFile(path.join(root, storagePath), buffer, { flag: 'wx', mode: 0o600 });
   return storagePath;
 }
 
 /**
- * Read bytes for a vault-relative storagePath. Resolves against the vault root and
- * refuses any path that escapes it (defense-in-depth against traversal, even though
- * storagePath originates server-side).
+ * Resolve only physically resident regular files beneath the vault root.
+ * A lexical prefix test alone is insufficient: any parent may be a symlink
+ * into an unrelated directory. Forbid symlink components AND leaf symlinks,
+ * and refuse hard-linked files whose other links could retain private bytes.
+ *
+ * This is a per-operation boundary check, not a filesystem transaction.
+ * The broader recovery protocol must still pause vault-mutating workers.
  */
-export async function readVaultBytes(storagePath: string): Promise<Buffer> {
-  const root = path.resolve(resolveVaultRoot());
-  const full = path.resolve(root, storagePath);
-  if (full !== root && !full.startsWith(root + path.sep)) {
+async function confinedExistingVaultFile(storagePath: string): Promise<string> {
+  if (typeof storagePath !== 'string' || !storagePath || storagePath.includes('\\0')) {
     throw new Error('Invalid storage path');
   }
-  return readFile(full);
+  let root: string;
+  try {
+    root = await realpath(path.resolve(resolveVaultRoot()));
+  } catch {
+    // A missing mount/root is a custody failure, never proof of erasure.
+    throw new Error('Vault root unavailable');
+  }
+  if (!(await lstat(root)).isDirectory()) {
+    throw new Error('Vault root is not a directory');
+  }
+  const requested = path.resolve(root, storagePath);
+  if (requested === root || !requested.startsWith(root + path.sep)) {
+    throw new Error('Refusing a path outside the vault root');
+  }
+  const parts = path.relative(root, requested).split(path.sep);
+  let parent = root;
+  for (const part of parts.slice(0, -1)) {
+    parent = path.join(parent, part);
+    const info = await lstat(parent);
+    if (info.isSymbolicLink() || !info.isDirectory()) {
+      throw new Error('Vault parent directory must not be a symlink');
+    }
+  }
+  const entry = await lstat(requested);
+  if (entry.isSymbolicLink() || !entry.isFile() || entry.nlink !== 1) {
+    throw new Error('Vault entry is not an exclusive regular file');
+  }
+  const resolved = await realpath(requested);
+  if (resolved !== requested) {
+    throw new Error('Vault resolved path does not match requested path');
+  }
+  return requested;
 }
 
-/** Best-effort delete of a vault-relative storagePath. Never throws. */
+/** Read only a safely resolved, vault-contained regular file. */
+export async function readVaultBytes(storagePath: string): Promise<Buffer> {
+  return readFile(await confinedExistingVaultFile(storagePath));
+}
+
+/** Best-effort deletion. Unsafe paths are never opened or unlinked. */
 export async function deleteVaultBytes(storagePath: string): Promise<void> {
   try {
-    const root = path.resolve(resolveVaultRoot());
-    const full = path.resolve(root, storagePath);
-    if (full !== root && !full.startsWith(root + path.sep)) return;
-    await unlink(full);
+    await unlink(await confinedExistingVaultFile(storagePath));
   } catch {
-    /* already gone / never written */
+    // Preserve the existing non-throwing best-effort contract.
   }
 }
 
 /**
- * Destroy bytes, and prove it. Throws unless the path is gone afterwards.
- *
- * WS-DELETE-01 (founder ruling 2026-09-07). `deleteVaultBytes` is best-effort by
- * design, which is right for cleanup and wrong for custody: a permission error,
- * a read-only mount, or a path the traversal guard declines all return normally,
- * so a caller relying on it can report "deleted" over bytes that are still on
- * disk. That is precisely the failure the ruling names — *unreferenced but
- * retained*. When erasure is a promise made to a member, absence must be
- * observed rather than attempted.
- *
- * A path that was never written counts as destroyed. A path outside the vault
- * root does not — it is refused, loudly, rather than reported as success.
+ * Strict erasure: remove a confined regular file and verify its absence.
+ * Missing paths count as already erased; symlink/hardlink/traversal does NOT.
+ * The caller's owed-erasure queue remains in place on boundary failure.
  */
 export async function destroyVaultBytes(storagePath: string): Promise<void> {
-  const root = path.resolve(resolveVaultRoot());
-  const full = path.resolve(root, storagePath);
-  if (full !== root && !full.startsWith(root + path.sep)) {
-    throw new Error('Refusing to destroy a path outside the vault root');
+  let full: string;
+  try {
+    full = await confinedExistingVaultFile(storagePath);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') return;
+    throw err;
   }
-
   try {
     await unlink(full);
   } catch (err) {
-    /* Already absent is the outcome we wanted. Anything else stands. */
     if ((err as NodeJS.ErrnoException)?.code !== 'ENOENT') throw err;
   }
-
-  /* The unlink may have been a no-op on a filesystem that reports success it did
-     not deliver. Confirm rather than trust. */
   try {
-    await stat(full);
+    await lstat(full);
   } catch (err) {
     if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') return;
     throw err;
