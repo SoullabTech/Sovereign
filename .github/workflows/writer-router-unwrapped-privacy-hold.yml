@@ -1,0 +1,37 @@
+name: Writer Router Unwrapped Privacy HOLD
+
+# CLASS A NEGATIVE CONTROL. This workflow is EXPECTED TO FAIL on the
+# currently governed structured router. Its purpose is to prevent a green
+# provider-wrapper PR from being mistaken for complete error-boundary safety.
+# Only a separately authorized router amendment may make the test green.
+on:
+  pull_request:
+    paths:
+      - 'lib/ai/structured/**'
+      - '.github/workflows/writer-router-unwrapped-privacy-hold.yml'
+  push:
+    branches:
+      - review/ws-structured-router-unwrapped-error-falsifier-20261022
+
+permissions:
+  contents: read
+
+jobs:
+  negative-router-privacy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install lockfile dependencies
+        run: npm ci
+      - name: Class A negative router privacy proof — expected RED until ratified
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/ai/structured/__tests__/unwrappedRouterPrivacyHold.test.ts
