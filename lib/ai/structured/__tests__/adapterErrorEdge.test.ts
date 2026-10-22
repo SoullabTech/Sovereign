@@ -129,3 +129,46 @@ describe('real structured Anthropic adapter: fictional delivery failures', () =>
     assertRedactedFailure(failure, 'unknown');
   });
 });
+
+
+/**
+ * CLASS A INTENTIONALLY RED NEGATIVE: issue #1928.
+ * This checks the real SDK default retry layer, unlike the injected
+ * messages.create jest mocks above. An injected content-free fake fetch is
+ * the only transport, so no outbound connection or real credential exists.
+ *
+ * The production adapter currently constructs an Anthropic client without
+ * disabling the SDK default retries. The custom client here preserves
+ * that default and illustrates why a top-level single execute call is not
+ * proof of a single wire attempt. This is a falsifier, not a release test.
+ */
+describe('Class A intentional HOLD: implicit SDK retry truth (#1928)', () => {
+  it('RED: one structured invocation must not make hidden second HTTP attempts on 503', async () => {
+    const calls = jest.fn(async () => new Response(
+      JSON.stringify({
+        type: 'error',
+        error: { type: 'api_error', message: 'FICTIONAL_503_NO_MEMBER_DATA' },
+      }),
+      { status: 503, headers: { 'content-type': 'application/json' } },
+    ));
+
+    // SDK created with its default retry settings; fake fetch is the ONLY
+    // network entry point, and always returns a synthetic 503 in-process.
+    const sdk = new Anthropic({
+      apiKey: 'FICTIONAL_LOCAL_TEST_KEY_NOT_A_CREDENTIAL',
+      fetch: calls as never,
+    });
+    const provider = anthropicStructuredProvider({ client: sdk });
+
+    let failure: unknown;
+    try {
+      await provider.execute(request);
+    } catch (err) {
+      failure = err;
+    }
+    assertRedactedFailure(failure, 'response_observed', 503);
+    // Expected security contract: ONE attempted request, zero silent SDK
+    // retries. Currently this is intentionally RED because defaults retry.
+    expect(calls).toHaveBeenCalledTimes(1);
+  });
+});
