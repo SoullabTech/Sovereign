@@ -1,0 +1,43 @@
+name: Writer R5G84 Actual SDK Loopback — DRAFT HOLD
+
+# Test-only, no real provider calls and no secrets.
+# This branch is not authorized for release or governed pin promotion.
+on:
+  pull_request:
+    paths:
+      - 'lib/ai/structured/**'
+      - '.github/workflows/writer-r5g84-actual-sdk-loopback.yml'
+  push:
+    branches:
+      - review/ws-r5g84-actual-sdk-loopback-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  actual-sdk-one-request:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact repository lockfile dependencies
+        run: npm ci
+      - name: Verify no production Anthropic key supplied
+        run: |
+          test -z "${ANTHROPIC_API_KEY:-}"
+          test -z "${MAIA_EDITORIAL_MODEL:-}"
+      - name: Qualify REAL installed SDK against local fictional server only
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/ai/structured/__tests__/r5g84ActualSdkLoopbackOneAttempt.test.ts \
+            lib/ai/structured/__tests__/r5g84FullRouterActualSdkLoopback.test.ts
