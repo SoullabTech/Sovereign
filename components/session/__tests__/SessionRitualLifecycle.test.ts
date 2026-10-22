@@ -89,8 +89,13 @@ describe('MAIA ritual and visible timer — client-only P0 regressions', () => {
 
     timer.extend(15);
     act(() => jest.advanceTimersByTime(1000));
-    expect(host.textContent).toContain('0:00 / 65:00');
+    expect(host.textContent).toContain('0:01 / 65:00');
     expect(host.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('0');
+
+    // The displayed seconds should advance independently from MAIA's
+    // intentionally rounded, minute-level response context.
+    act(() => jest.advanceTimersByTime(89_000));
+    expect(host.textContent).toContain('1:30 / 65:00');
   });
   it('never offers unverified resume or New; dismissed notice carries no session authority', () => {
     const onResume = jest.fn();
