@@ -53,6 +53,15 @@ The reviewed candidate:
   `{dispatch,status}`, where numeric HTTP status comes from a validated
   own DATA descriptor on the neutral `StructuredDispatchError`
   **and only** when a provider response is confirmed.
+- **Constructor-minted delivery fact is now REQUIRED.** The exact review
+  `lib/ai/structured/dispatch.ts` implementation was converged from the
+  stronger parallel [Class A draft PR #1922](https://github.com/SoullabTech/Sovereign/pull/1922).
+  A private `WeakSet` distinguishes genuinely constructed neutral wrappers
+  from arbitrary errors whose prototypes were forged with
+  `Object.setPrototypeOf`. Nonwritable/nonconfigurable own data
+  descriptors freeze `dispatch` and valid numeric `status`. A forged
+  `instanceof` can no longer falsely claim a confirmed provider crossing
+  or mutate a genuine response classification after construction.
 - Preserves platform-owned inference mode, one caller-pinned model,
   nonfallbackable structured result, no duplicate requests, no unauthorized
   tool fallback and explicit attempted-versus-crossed disclosure facts.
@@ -69,6 +78,13 @@ The new
 copies every assertion from independent red PR #1920 **without weakening**
 and adds confirmation cases for a real neutral wrapped
 `response_observed` HTTP error and nonconfirming delivery states.
+**Two additional falsifiers** now prove that a forged `instanceof`
+prototype cannot mint `response_observed` and an already constructed
+`response_observed` cannot be downgraded by mutation. The first router-only
+candidate passed 89/89 earlier assertions but **failed both new spoof/mutation
+tests (89/91)**. The branded, immutable `dispatch.ts` candidate was added
+after that diagnostic failure; rerun results must be verified on its final
+exact source, not borrowed from the earlier 89-test result.
 
 The dedicated review CI
 `.github/workflows/writer-router-class-a-amendment-review.yml` has two
