@@ -274,12 +274,12 @@ export async function mintDisclosureAttempt(
       disclosureIdPrefix: attempt.disclosureId.slice(0, 12), state,
     });
     return { kind: 'existing', id: String(row.id), state };
-  } catch (err) {
+  } catch {
     // Fail closed. The accountability substrate being unavailable is exactly the
     // case where a disclosure may not proceed.
     console.error('[DISCLOSURE] mint failed — disclosure refused', {
       disclosureIdPrefix: attempt.disclosureId.slice(0, 12),
-      error: err instanceof Error ? err.message : String(err),
+      error: 'disclosure_mint_store_unavailable',
     });
     return { kind: 'unavailable' };
   }
@@ -311,10 +311,10 @@ export async function confirmDisclosureCrossed(disclosureId: string): Promise<bo
       return false;
     }
     return true;
-  } catch (err) {
+  } catch {
     console.error('[DISCLOSURE] ⛔ UNRESOLVED CROSSING — confirm failed after the boundary was crossed', {
       disclosureIdPrefix: disclosureId.slice(0, 12),
-      error: err instanceof Error ? err.message : String(err),
+      error: 'disclosure_crossing_confirmation_unresolved',
     });
     return false;
   }
