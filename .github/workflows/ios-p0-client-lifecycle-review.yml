@@ -35,5 +35,6 @@ jobs:
           lib/session/__tests__/SessionTimerLifecycle.test.ts
           lib/session/__tests__/closureReceipt.test.ts
           lib/session/__tests__/resumeNotice.test.ts
+          lib/session/__tests__/LegacyNewConversationHold.test.ts
           components/session/__tests__/SessionRitualLifecycle.test.ts
           --silent --passWithNoTests=false
