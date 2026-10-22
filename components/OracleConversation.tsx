@@ -7878,7 +7878,9 @@ I'm not sure what I'm feeling yet.`;
       sessionId,
       lastSavedAt: new Date().toISOString(),
       wasExtended: savedSessionData.wasExtended,
-      totalExtensionMinutes: savedSessionData.totalExtensionMinutes
+      // getDurationMinutes() is already the full resumed duration. Carrying
+      // the old extension again would inflate 50+15 to 80 on the next resume.
+      totalExtensionMinutes: 0
     }));
     autoSaveCleanupRef.current = cleanup;
 
