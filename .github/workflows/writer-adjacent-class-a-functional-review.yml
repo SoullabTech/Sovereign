@@ -1,0 +1,65 @@
+name: Writer Adjacent Class A Functional Review Only
+
+# Supplemental evidence, NOT approval, release or a source-pin waiver.
+# Governance job must remain RED for changed historically pinned policy.ts
+# until an independently ratified source-baseline transition is recorded.
+on:
+  pull_request:
+    paths:
+      - 'lib/disclosure/**'
+      - 'lib/ai/structured/**'
+      - '.github/workflows/writer-adjacent-class-a-functional-review.yml'
+  push:
+    branches:
+      - review/ws-adjacent-content-free-class-a-candidate-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  functional-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked existing dependencies
+        run: npm ci
+      - name: Review-only, fictional privacy negatives now expected GREEN
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/disclosure/__tests__/disclosureExceptionPrivacyHold.test.ts \
+            lib/ai/structured/__tests__/invalidModeDetailPrivacyHold.test.ts \
+            lib/disclosure/__tests__/adjacentErrorPrivacyHardening.test.ts \
+            lib/disclosure/__tests__/contextDisclosureReceipt.test.ts \
+            lib/ai/structured/__tests__/modePolicy.test.ts
+
+  governed-seam-stop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked existing dependencies
+        run: npm ci
+      - name: Unwaived historical seam byte identity (EXPECTED RED)
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/ai/structured/__tests__/seamIsolation.test.ts

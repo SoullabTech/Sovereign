@@ -47,6 +47,6 @@ export function resolveStructuredMode(
   return {
     ok: false,
     refusal: 'invalid_inference_mode',
-    detail: `MAIA_INFERENCE_MODE=${JSON.stringify(v)} is not one of ${VALID.join(', ')}`,
+    detail: 'structured_inference_configuration_invalid',
   };
 }
