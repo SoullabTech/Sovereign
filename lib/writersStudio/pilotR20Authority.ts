@@ -27,3 +27,28 @@ export async function requireIndependentPilotR20Grant(
   // An admitted DB row therefore CANNOT become operational Pro yet.
   throw new PilotR20AuthorityUnavailable();
 }
+
+/**
+ * R7 — authorization-changing writes MUST be sealed externally BEFORE any
+ * locally committed effect. A boolean environment flag cannot mint authority.
+ *
+ * For a future approved implementation, 'approve' must generate a stable
+ * grant generation ID before the external seal, then carry that SAME ID
+ * transactionally into the member DB. Accept/revoke must seal against that
+ * generation and the writer's current account. Crash/retry and irreversible
+ * event reconciliation need independent Class A approval.
+ *
+ * Current source has NO trusted signer or monotonic head, so it refuses ALL
+ * mutations, even if WRITER_PILOT_GRANT_WRITES_ENABLED='1'. No bypass flag.
+ */
+export type PilotR20MutationIntent = Readonly<{
+  action: 'approve' | 'accept' | 'revoke';
+  memberId: string;
+  actorId: string;
+}>;
+
+export async function requireIndependentPilotR20MutationReceipt(
+  _intent: PilotR20MutationIntent,
+): Promise<void> {
+  throw new PilotR20AuthorityUnavailable();
+}

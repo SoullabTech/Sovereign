@@ -7,6 +7,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { approvePilotWriter, revokePilotWriter } from '@/lib/writersStudio/pilotGrantServer';
 import { isTrustedPilotWrite, verifiedPilotWriterActor } from '@/lib/writersStudio/pilotWriteSecurity';
+import {
+  PilotR20AuthorityUnavailable,
+  requireIndependentPilotR20MutationReceipt,
+} from '@/lib/writersStudio/pilotR20Authority';
 
 export const dynamic = 'force-dynamic';
 const headers = { 'Cache-Control': 'private, no-store' };
@@ -33,12 +37,21 @@ async function mutate(req: NextRequest, action: 'approve' | 'revoke') {
       return response({ error: 'invalid_member_id' }, 400);
     }
 
+    // An enabled feature flag and founder session are NOT sufficient.
+    // The independent R20 grant-generation seal MUST precede every DB write.
+    // Current authority is unprovisioned, so this refuses in production.
+    await requireIndependentPilotR20MutationReceipt({
+      action, memberId, actorId: actor.memberId,
+    });
     const changed = action === 'approve'
       ? await approvePilotWriter(memberId, actor.memberId)
       : await revokePilotWriter(memberId, actor.memberId);
     if (!changed) return response({ error: 'grant_not_changed' }, 409);
     return response({ ok: true, action }, 200);
-  } catch {
+  } catch (error) {
+    if (error instanceof PilotR20AuthorityUnavailable) {
+      return response({ error: 'pilot_r20_authority_held' }, 423);
+    }
     // No member IDs, invitation data or submitted payloads in error logs.
     return response({ error: 'pilot_grant_unavailable' }, 503);
   }

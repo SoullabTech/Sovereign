@@ -127,6 +127,17 @@ async function main() {
       await import('../../app/api/sovereign/writers-studio/pilot-accept/route');
     const { closePool } = await import('../../lib/db/postgres');
     const { writerStudioPlanForMember } = await import('../../lib/writersStudio/planAccessServer');
+    const { writersStudioBetaAccess } = await import('../../lib/writersStudio/betaAccessServer');
+    // R7: beta-access and feedback now use the same strict request-bound
+    // dual-credential authenticator as grant writes, not Next's older
+    // cookies() request-store resolver. Direct-handler + REAL PostgreSQL
+    // validation is therefore possible; this is not a deployed HTTP server.
+    const { GET: betaAccessRoute } = await import(
+      '../../app/api/sovereign/writers-studio/beta-access/route'
+    );
+    const { POST: betaFeedbackRoute } = await import(
+      '../../app/api/sovereign/writers-studio/beta-feedback/route'
+    );
     const { PilotR20AuthorityUnavailable } = await import('../../lib/writersStudio/pilotR20Authority');
 
     const request = (path: string, token: string, method: 'POST' | 'DELETE' = 'POST',
@@ -204,10 +215,15 @@ async function main() {
     ));
     proof('actual handler refuses cross-site founder approval', crossOrigin.status === 403);
 
-    const realApproval = await approveRoute(request(
+    const heldApproval = await approveRoute(request(
       'pilot-approval', 'founder-session', 'POST', { memberId: writerB },
     ));
-    proof('actual handler accepts one explicitly founded account grant', realApproval.status === 200);
+    proof('enabled pilot flag alone cannot bypass real unprovisioned R20 APPROVE seal',
+      heldApproval.status === 423);
+    proof('HTTP R20 refusal created no unintended second writer grant',
+      (await direct.query('SELECT COUNT(*)::int AS n FROM writer_studio_beta_grants')).rows[0]?.n === 1);
+    proof('disposable DB-only candidate explicitly approves fictional writer B for modeling',
+      await approvePilotWriter(writerB, founder));
     proof('newly approved writer B remains pending until own acceptance',
       !(await readWriterPilotApproval(writerB)).eligible);
     proof('exactly two seats have been issued, independent of current grant status',
@@ -218,8 +234,8 @@ async function main() {
     const thirdRoute = await approveRoute(request(
       'pilot-approval', 'founder-session', 'POST', { memberId: outsider },
     ));
-    proof('actual founder route refuses a third seat until independent canary expansion',
-      thirdRoute.status === 409);
+    proof('HTTP R20 seal refuses even a founder attempt at third seat',
+      thirdRoute.status === 423);
     let directThirdRefused = false;
     try {
       await direct.query(
@@ -231,16 +247,81 @@ async function main() {
       directThirdRefused);
 
     const wrongWriterAccept = await acceptRoute(request('pilot-accept', 'outsider-session'));
-    proof('unapproved account cannot accept another writer’s grant',
-      wrongWriterAccept.status === 409 && !(await readWriterPilotApproval(outsider)).eligible);
+    proof('HTTP R20 seal refuses outside writer acceptance',
+      wrongWriterAccept.status === 423 && !(await readWriterPilotApproval(outsider)).eligible);
+    proof('unapproved fictional account has no pending DB grant',
+      !(await acceptPilotWriter(outsider)));
 
-    const acceptedA = await acceptRoute(request('pilot-accept', 'writer-a-session'));
-    proof('writer A accepts with own verified session', acceptedA.status === 200);
-    const acceptedB = await acceptRoute(request('pilot-accept', 'writer-b-session'));
-    proof('writer B accepts with own verified session', acceptedB.status === 200);
+    const heldAcceptA = await acceptRoute(request('pilot-accept', 'writer-a-session'));
+    const heldAcceptB = await acceptRoute(request('pilot-accept', 'writer-b-session'));
+    proof('even individually founder-approved writers cannot accept without sealed R20',
+      heldAcceptA.status === 423 && heldAcceptB.status === 423);
+    proof('fictional DB-only model can test writer A acceptance',
+      await acceptPilotWriter(writerA));
+    proof('fictional DB-only model can test writer B acceptance',
+      await acceptPilotWriter(writerB));
     proof('both founder-approved and accepted writers have DB-level Pro candidature',
       (await readWriterPilotApproval(writerA)).basis === 'founder_approved_beta'
       && (await readWriterPilotApproval(writerB)).basis === 'founder_approved_beta');
+
+    // R7: all beta presentation and feedback must consume the SAME accepted
+    // founder+external R20 authorization, not merely an active CRM contact.
+    proof('CRM-only outsider is no longer eligible for beta UI',
+      !(await writersStudioBetaAccess(outsider)).eligible);
+    proof('strictly selected founder can witness the beta without a tester CRM label',
+      (await writersStudioBetaAccess(founder)).basis === 'founder_witness');
+    let betaR20Held = false;
+    try { await writersStudioBetaAccess(writerA); }
+    catch { betaR20Held = true; }
+    proof('approved and accepted writer cannot bypass absent R20 through beta-access resolver',
+      betaR20Held);
+
+    // Direct Next handler execution on real PostgreSQL confirms the new
+    // request-local dual-session resolver. Production-build HTTP remains a
+    // separate Class A/browser acceptance (these are not deployed URLs).
+    const betaGet = (token: string) => new NextRequest(
+      'https://beta.soullab.test/api/sovereign/writers-studio/beta-access',
+      { headers: { 'x-session-token': token } },
+    );
+    const outsiderView = await betaAccessRoute(betaGet('outsider-session'));
+    proof('R7 beta-access refuses a CRM-only account without R20',
+      outsiderView.status === 200 && (await outsiderView.json()).eligible === false);
+    const founderView = await betaAccessRoute(betaGet('founder-session'));
+    proof('R7 beta-access recognizes only the selected founder witness',
+      founderView.status === 200
+      && (await founderView.json()).basis === 'founder_witness');
+    const approvedView = await betaAccessRoute(betaGet('writer-a-session'));
+    proof('R7 beta-access fails closed for accepted DB grant with missing R20 authority',
+      approvedView.status === 503);
+    const conflict = betaGet('writer-a-session');
+    conflict.cookies.set('maia_session', 'outsider-session');
+    const conflictView = await betaAccessRoute(conflict);
+    proof('R7 beta-access rejects conflicting valid A/B cookie + header sessions',
+      conflictView.status === 401);
+    const expiredPair = betaGet('writer-a-session');
+    expiredPair.cookies.set('maia_session', 'expired-session');
+    proof('R7 beta-access refuses stale cookie paired with an otherwise valid header',
+      (await betaAccessRoute(expiredPair)).status === 401);
+
+    const outsiderFeedback = await betaFeedbackRoute(request(
+      'beta-feedback', 'outsider-session', 'POST',
+      { signal: 'felt_like_my_voice', orientationContext: {} },
+    ));
+    proof('R7 feedback route refuses CRM-only outsider without inserting member words',
+      outsiderFeedback.status === 403);
+    const approvedFeedback = await betaFeedbackRoute(request(
+      'beta-feedback', 'writer-a-session', 'POST',
+      { signal: 'felt_like_my_voice', orientationContext: {} },
+    ));
+    proof('R7 feedback route cannot insert writer narrative when R20 is unavailable',
+      approvedFeedback.status === 503);
+    const foreignFeedback = await betaFeedbackRoute(request(
+      'beta-feedback', 'writer-a-session', 'POST',
+      { signal: 'felt_like_my_voice', orientationContext: {} }, 'https://foreign.test',
+    ));
+    proof('R7 feedback rejects foreign Origin before attempting author access',
+      foreignFeedback.status === 403);
+
     const admittedA = await direct.query<{ grant_id: string }>(
       'SELECT grant_id::text FROM writer_studio_beta_grants WHERE member_id=$1',
       [writerA],
@@ -279,7 +360,9 @@ async function main() {
     const revokeResponse = await revokeRoute(request(
       'pilot-approval', 'founder-session', 'DELETE', { memberId: writerA },
     ));
-    proof('founder can explicitly revoke writer A grant', revokeResponse.status === 200);
+    proof('HTTP R20 seal refuses unsealed local founder revocation', revokeResponse.status === 423);
+    proof('disposable DB-only model explicitly revokes fictional writer A',
+      await revokePilotWriter(writerA, founder));
     proof('revoked member A no longer receives Pro',
       !(await readWriterPilotApproval(writerA)).eligible);
     proof('revoked grant cannot be silently approved again',
