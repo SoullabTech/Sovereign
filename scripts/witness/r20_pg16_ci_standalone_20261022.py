@@ -97,6 +97,7 @@ CREATE TABLE deletion_scopes(session_id text primary key);""")
         # The fictional deletion happens AFTER the snapshot.
         pg(source,"DELETE FROM member_manuscripts WHERE id=%s;"%sqlq(IDS["dead_m"]))
         pg(source,"DELETE FROM living_works WHERE id=%s;"%sqlq(IDS["dead_w"]))
+        pg(source,"DELETE FROM synthetic_fragments WHERE session_id=%s;"%sqlq(IDS["dead_s"]))
         # The independent ledger is sealed only after the older SQL dump.
         key=secrets.token_bytes(32)
         ledger=dict(generation=2,deleted=[IDS["dead_m"],IDS["dead_w"]],session=IDS["dead_s"],vault=["writer/dead.txt"])
@@ -126,6 +127,8 @@ CREATE TABLE deletion_scopes(session_id text primary key);""")
             empty=pg(db,"SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p','v','S');")
             if empty!="0":refuse("REPLACEMENT_TARGET_NOT_EMPTY")
             restore_dump(db,dump)
+            before_erasure=pg(db,"SELECT (SELECT count(*) FROM member_manuscripts)||','||(SELECT count(*) FROM living_works)||','||(SELECT count(*) FROM synthetic_fragments);")
+            if before_erasure!="2,2,2":refuse("OLD_FICTIONAL_PGDUMP_REPLAY_INCOMPLETE")
             pg(db,"""BEGIN;
 INSERT INTO provenance_tombstones VALUES ('member_manuscripts',%s),('living_works',%s);
 INSERT INTO deletion_scopes VALUES (%s);
@@ -152,6 +155,8 @@ COMMIT;"""%(sqlq(signed["deleted"][0]),sqlq(signed["deleted"][1]),sqlq(signed["s
             if counts!="1,1,1,2,1":refuse("FICTIONAL_ERASURE_COUNTS_INVALID")
             if pg(db,"INSERT INTO member_manuscripts VALUES (%s,'FICTITIOUS');"%sqlq(signed["deleted"][0]),ok=False)==0:
                 refuse("DELETED_UUID_REUSED")
+            if pg(db,"INSERT INTO living_works VALUES (%s,%s);"%(sqlq(signed["deleted"][1]),sqlq(signed["deleted"][0])),ok=False)==0:
+                refuse("DELETED_WORK_ID_REUSED")
             if pg(db,"INSERT INTO synthetic_fragments VALUES ('reused',%s);"%sqlq(signed["session"]),ok=False)==0:
                 refuse("DELETED_SESSION_REUSED")
             target=p/("replacement"+str(i));target.mkdir(mode=0o700)
