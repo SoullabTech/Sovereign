@@ -1520,6 +1520,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [closureUiState, setClosureUiState] = useState<ClosureDisplayState>('ready');
   const closureRequestStartedRef = useRef(false);
   const liveClosureSessionIdRef = useRef(sessionId);
+  const liveClosureMemberClaimRef = useRef(userId);
   const [pendingSessionDuration, setPendingSessionDuration] = useState<number | null>(null);
 
   // Local hints are CONTENT-FREE recovery pointers, not authentication,
@@ -1527,6 +1528,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // potentially destructive request after native/WebKit restart.
   useEffect(() => {
     liveClosureSessionIdRef.current = sessionId;
+    liveClosureMemberClaimRef.current = userId;
     closureRequestStartedRef.current = false;
     setClosureUiState('ready');
     if (typeof window === 'undefined' || !sessionId || !userId) return;
@@ -7990,6 +7992,7 @@ I'm not sure what I'm feeling yet.`;
     }).then((assessment) => {
       // A late network reply may not close a DIFFERENT member's conversation.
       if (liveClosureSessionIdRef.current !== sessionId ||
+          liveClosureMemberClaimRef.current !== memberId ||
           getValidMemberId() !== memberId) return;
 
       if (assessment.kind === 'continuity_closed' ||
@@ -8007,6 +8010,7 @@ I'm not sure what I'm feeling yet.`;
       setClosureUiState(assessment.kind);
     }).catch(() => {
       if (liveClosureSessionIdRef.current === sessionId &&
+          liveClosureMemberClaimRef.current === memberId &&
           getValidMemberId() === memberId) {
         setClosureUiState('unavailable');
       }
