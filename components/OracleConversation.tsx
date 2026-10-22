@@ -217,7 +217,7 @@ import { SessionTimer, SESSION_PRESETS } from '@/lib/session/SessionTimer';
 import { canDisplayLocalResumeNotice } from '@/lib/session/resumeNotice';
 import {
   displayStateForRestoredClosureHint, readClosureHint, requestQualifiedClosure,
-  type ClosureDisplayState,
+  QUALIFIED_R2_CLOSE_PATH, type ClosureDisplayState,
 } from '@/lib/session/closureReceipt';
 import { SessionTimeAwareness } from '@/components/session/SessionTimeAwareness';
 import { SessionDurationSelector } from '@/components/session/SessionDurationSelector';
@@ -7998,7 +7998,7 @@ I'm not sure what I'm feeling yet.`;
       sessionId,
       expectedPrivacy: isSanctuary ? 'sanctuary' : 'continuity',
       storage: window.localStorage,
-      send: (payload) => apiFetch('/api/sovereign/session/finalize', {
+      send: (payload) => apiFetch(QUALIFIED_R2_CLOSE_PATH, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
