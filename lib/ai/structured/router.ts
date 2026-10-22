@@ -121,7 +121,7 @@ async function route(
   return execute(p, req);
 }
 
-async function executasync function execute(
+async function execute(
   provider: StructuredProvider, req: StructuredRequest,
 ): Promise<StructuredOutcome> {
   try {
