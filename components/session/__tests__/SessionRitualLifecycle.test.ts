@@ -4,6 +4,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { SessionRitualOpening } from '../SessionRitualOpening';
 import { SessionRitualClosing } from '../SessionRitualClosing';
+import { ResumeSessionPrompt } from '../ResumeSessionPrompt';
 import { SessionTimeAwareness } from '../SessionTimeAwareness';
 import { SessionTimer } from '@/lib/session/SessionTimer';
 
@@ -91,4 +92,45 @@ describe('MAIA ritual and visible timer — client-only P0 regressions', () => {
     expect(host.textContent).toContain('0:00 / 65:00');
     expect(host.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('0');
   });
+  it('never offers unverified resume or New; dismissed notice carries no session authority', () => {
+    const onResume = jest.fn();
+    const onStartNew = jest.fn();
+    const onDismiss = jest.fn();
+    const view = (isOpen: boolean, verified: boolean) =>
+      React.createElement(ResumeSessionPrompt, {
+        isOpen,
+        onResume,
+        onStartNew,
+        onDismiss,
+        verifiedResumeAdmission: verified,
+        verifiedNewConversationAdmission: verified,
+      });
+
+    act(() => root.render(view(false, false)));
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+
+    act(() => root.render(view(true, false)));
+    expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+    const buttons = Array.from(host.querySelectorAll('button'));
+    expect(buttons).toHaveLength(3);
+    expect(buttons[0].disabled).toBe(true);
+    expect(buttons[1].disabled).toBe(true);
+    expect(buttons[2].disabled).toBe(false);
+
+    act(() => { buttons[0].click(); buttons[1].click(); buttons[2].click(); });
+    expect(onResume).not.toHaveBeenCalled();
+    expect(onStartNew).not.toHaveBeenCalled();
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+
+    // These inputs can only come from a future server-verified parent
+    // admission. No local storage value makes them true by default.
+    act(() => root.render(view(true, true)));
+    const allowed = Array.from(host.querySelectorAll('button'));
+    expect(allowed[0].disabled).toBe(false);
+    expect(allowed[1].disabled).toBe(false);
+    act(() => { allowed[0].click(); allowed[1].click(); });
+    expect(onResume).toHaveBeenCalledTimes(1);
+    expect(onStartNew).toHaveBeenCalledTimes(1);
+  });
+
 });
