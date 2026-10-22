@@ -1536,9 +1536,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     if (!actorClaim || actorClaim !== userId) return;
     const previous = readClosureHint(window.localStorage, actorClaim, sessionId);
     if (!previous) return;
-    setClosureUiState(previous.state === 'sanctuary_erasure_pending'
-      ? 'sanctuary_erasure_pending'
-      : 'unverified');
+    // Local storage is neither an authenticated server receipt nor an
+    // antirollback witness. Even a cached "erasure_pending" hint must be
+    // presented as UNVERIFIED after app restart until the verified server
+    // reconciles its current session/R20 status.
+    setClosureUiState('unverified');
     setShowClosingRitual(true);
   }, [sessionId, userId]);
 
