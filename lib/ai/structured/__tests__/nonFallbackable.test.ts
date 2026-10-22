@@ -60,7 +60,7 @@ describe('primary: executed exactly, and never fallen back from', () => {
        did not classify (a bare Error carries no observation). It is the value that
        does NOT confirm a disclosure crossing — absent is never read as arrived. */
     expect(r).toEqual({
-      ok: false, refusal: 'provider_unavailable', detail: '529 overloaded', dispatch: 'unknown',
+      ok: false, refusal: 'provider_unavailable', detail: 'structured_provider_error_redacted', dispatch: 'unknown',
     });
     expect(execute).toHaveBeenCalledTimes(1);
   });
