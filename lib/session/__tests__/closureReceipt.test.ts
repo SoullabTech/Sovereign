@@ -1,5 +1,6 @@
 import {
-  assessClosureResponse, requestQualifiedClosure, clearConfirmedContinuityHint,
+  assessClosureResponse, displayStateForRestoredClosureHint,
+  requestQualifiedClosure, clearConfirmedContinuityHint,
   preserveClosureHint, readClosureHint,
   type PendingClosureHint,
 } from '../closureReceipt';
@@ -195,5 +196,24 @@ describe('R2 closure dispatch — fictional transport and crash recovery', () =>
       expect(['unverified', 'refused', 'unavailable']).toContain(result.kind);
       expect(readClosureHint(storage, A, SID)?.state).toBe('request_unverified');
     }
+  });
+});
+
+
+describe('browser restart cannot promote local storage to erasure authority', () => {
+  it('presents an unresolved or even pending stored hint ONLY as unverified', () => {
+    const prior: PendingClosureHint = {
+      version: 1,
+      sessionId: SID,
+      claimedMemberId: A,
+      expectedPrivacy: 'sanctuary',
+      state: 'sanctuary_erasure_pending',
+      createdAt: '2026-10-22T12:00:00Z',
+    };
+    expect(displayStateForRestoredClosureHint(null)).toBe('ready');
+    expect(displayStateForRestoredClosureHint(prior)).toBe('unverified');
+    expect(displayStateForRestoredClosureHint({
+      ...prior, state: 'request_unverified',
+    })).toBe('unverified');
   });
 });
