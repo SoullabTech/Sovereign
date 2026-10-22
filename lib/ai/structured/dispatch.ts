@@ -44,14 +44,36 @@ export type DispatchObservation =
  */
 export class StructuredDispatchError extends Error {
   readonly dispatch: DispatchObservation;
-  /** ⭐ The original, unmodified. ⛔ This wrapper adds a fact; it never replaces one. */
-  readonly original: unknown;
+  /** Safe numeric metadata only; never copy a provider error body. */
+  readonly status?: number;
 
   constructor(dispatch: DispatchObservation, original: unknown) {
-    super(original instanceof Error ? original.message : String(original));
+    // The adapter classified delivery BEFORE constructing this error. The
+    // original vendor error is no longer needed here, and it may contain
+    // a rejected tool schema or a writer's exact words. Do not retain it:
+    // hiding a raw property from JSON is insufficient for deep diagnostics.
+    super('structured_provider_error_redacted');
     this.name = 'StructuredDispatchError';
     this.dispatch = dispatch;
-    this.original = original;
+
+    // The structured router needs only a safe numeric HTTP status to know
+    // a response arrived. Do not copy message, cause, response body, stack,
+    // error type or any other field from the provider.
+    let status: unknown;
+    try {
+      status = original !== null && typeof original === 'object'
+        ? (original as { status?: unknown }).status
+        : undefined;
+    } catch {
+      // An exotic error with a throwing status getter is not a safe source.
+      status = undefined;
+    }
+    if (dispatch === 'response_observed'
+      && typeof status === 'number'
+      && Number.isInteger(status)
+      && status >= 100 && status <= 599) {
+      this.status = status;
+    }
   }
 }
 

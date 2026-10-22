@@ -1,0 +1,45 @@
+name: Writer Structured Provider Privacy Regression
+
+# Class A privacy review: run the actual fictional provider-error tests.
+# No API key, provider call, database, real member text, or deployment.
+on:
+  pull_request:
+    paths:
+      - 'lib/ai/structured/**'
+      - '.github/workflows/writer-structured-provider-privacy.yml'
+  push:
+    branches:
+      - fix/ws-structured-provider-error-redaction-review-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  provider-error-redaction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Governing seam byte pins compare historical reviewed commits.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Verify actual structured provider redaction and non-fallback tests
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/ai/structured/__tests__/providerErrorRedaction.test.ts \
+            lib/ai/structured/__tests__/adapterErrorEdge.test.ts \
+            lib/ai/structured/__tests__/nonFallbackable.test.ts \
+            lib/ai/structured/__tests__/requestEquivalence.test.ts \
+            lib/ai/structured/__tests__/modePolicy.test.ts \
+            lib/ai/structured/__tests__/seamIsolation.test.ts \
+            lib/disclosure/__tests__/editorialDisclosureFalsifiers.test.ts
