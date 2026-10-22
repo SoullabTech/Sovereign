@@ -148,3 +148,81 @@ export function clearConfirmedContinuityHint(
   if (!key) return;
   try { storage.removeItem(key); } catch { /* recovery hint remains held */ }
 }
+
+
+/**
+ * All client-side close requests pass this controlled seam.
+ *
+ * It is NOT the authenticated server's release decision. The build-time gate
+ * remains OFF until the canonical owner independently certifies the real R2
+ * endpoint, its owner checks, R3 transaction and R20 erasure protection.
+ * No request is made if content-free crash recovery cannot be recorded.
+ */
+export async function requestQualifiedClosure(args: {
+  enabled: boolean;
+  claimedMemberId: string;
+  currentMemberClaim: string;
+  sessionId: string;
+  expectedPrivacy: ClosureExpectation;
+  storage: Pick<Storage, 'setItem' | 'removeItem'>;
+  send: (payload: {
+    memberId: string;
+    sessionId: string;
+    isSanctuary: boolean;
+    endedAt: string;
+  }) => Promise<{ status: number; json: () => Promise<unknown> }>;
+  requestTime?: string;
+}): Promise<ClosureAssessment> {
+  if (!args.enabled) {
+    return { kind: 'unavailable', reason: 'CLOSE_UNAVAILABLE' };
+  }
+  if (!MEMBER_ID.test(args.claimedMemberId) ||
+      args.claimedMemberId !== args.currentMemberClaim ||
+      !SESSION_ID.test(args.sessionId)) {
+    return { kind: 'unverified', reason: 'RECEIPT_NOT_VERIFIED' };
+  }
+  const requestedAt = args.requestTime ?? new Date().toISOString();
+  const hint: PendingClosureHint = {
+    version: 1,
+    sessionId: args.sessionId,
+    claimedMemberId: args.claimedMemberId,
+    expectedPrivacy: args.expectedPrivacy,
+    state: 'request_unverified',
+    createdAt: requestedAt,
+  };
+  if (!preserveClosureHint(args.storage, hint)) {
+    return { kind: 'unavailable', reason: 'CLOSE_UNAVAILABLE' };
+  }
+
+  try {
+    const response = await args.send({
+      memberId: args.claimedMemberId,
+      sessionId: args.sessionId,
+      isSanctuary: args.expectedPrivacy === 'sanctuary',
+      endedAt: requestedAt,
+    });
+    const raw = await response.json().catch(() => null);
+    const assessment = assessClosureResponse(
+      response.status, raw, args.sessionId, args.expectedPrivacy,
+    );
+
+    if (assessment.kind === 'continuity_closed') {
+      clearConfirmedContinuityHint(
+        args.storage, args.claimedMemberId, args.sessionId,
+      );
+    } else if (assessment.kind === 'sanctuary_erasure_pending') {
+      if (!preserveClosureHint(args.storage, {
+        ...hint, state: 'sanctuary_erasure_pending',
+      })) {
+        // Could not preserve the authoritative pending status locally.
+        // Server custody may exist, but UI must remain unverified.
+        return { kind: 'unverified', reason: 'RECEIPT_NOT_VERIFIED' };
+      }
+    }
+    return assessment;
+  } catch {
+    // The HTTP request might have committed before transport failed. Never
+    // retry automatically or treat a missing reply as deletion/closure proof.
+    return { kind: 'unavailable', reason: 'CLOSE_UNAVAILABLE' };
+  }
+}
