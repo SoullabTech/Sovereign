@@ -34,5 +34,6 @@ jobs:
           npx jest --config jest.config.js --runInBand
           lib/session/__tests__/SessionTimerLifecycle.test.ts
           lib/session/__tests__/closureReceipt.test.ts
+          lib/session/__tests__/resumeNotice.test.ts
           components/session/__tests__/SessionRitualLifecycle.test.ts
           --silent --passWithNoTests=false
