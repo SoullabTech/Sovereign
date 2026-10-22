@@ -57,12 +57,12 @@ def staged_vault(archive,parent):
     # Fixture-only whitelist: this is deliberately NOT a general TAR extractor.
     with tarfile.open(archive,"r:gz") as t:
         members=t.getmembers()
-        if [m.name for m in members]!=["writer/","writer/dead.txt","writer/keep.txt"]:
+        if [m.name for m in members]!=["writer","writer/dead.txt","writer/keep.txt"]:
             refuse("FICTIONAL_ARCHIVE_ENTRY_SET_UNEXPECTED")
         for m in members:
             if not (m.isdir() or m.isfile()) or m.issym() or m.islnk() or m.size>1024:
                 refuse("FICTIONAL_UNSAFE_TAR_MEMBER")
-            if m.name=="writer/":(vault/"writer").mkdir(mode=0o700);continue
+            if m.isdir() and m.name=="writer":(vault/"writer").mkdir(mode=0o700);continue
             fd=os.open(vault,os.O_DIRECTORY|os.O_RDONLY|os.O_NOFOLLOW)
             try:
                 child=os.open("writer",os.O_DIRECTORY|os.O_RDONLY|os.O_NOFOLLOW,dir_fd=fd)
