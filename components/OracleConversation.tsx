@@ -214,6 +214,7 @@ import { detectCaptureTrigger } from '@/lib/capsules/types';
 import type { CapsuleDTO } from '@/lib/capsules/types';
 import { TransformationalPresence, type PresenceState } from './nlp/TransformationalPresence';
 import { SessionTimer, SESSION_PRESETS } from '@/lib/session/SessionTimer';
+import { canDisplayLocalResumeNotice } from '@/lib/session/resumeNotice';
 import {
   displayStateForRestoredClosureHint, readClosureHint, requestQualifiedClosure,
   type ClosureDisplayState,
@@ -8042,9 +8043,12 @@ I'm not sure what I'm feeling yet.`;
   useEffect(() => {
     const saved = loadSession();
     const memberClaim = getValidMemberId();
-    if (!saved || !memberClaim || !userId || !sessionId ||
-        saved.userId !== memberClaim || userId !== memberClaim ||
-        saved.sessionId !== sessionId) {
+    if (!canDisplayLocalResumeNotice({
+      saved,
+      currentMemberClaim: memberClaim,
+      displayedUserId: userId,
+      displayedSessionId: sessionId,
+    })) {
       setSavedSessionData(null);
       setShowResumePrompt(false);
       return;
