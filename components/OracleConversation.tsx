@@ -1477,34 +1477,21 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     };
   }, []);
 
-  // 🆕 Listen for "New Conversation" action from QuickSettingsSheet
+  // New Conversation must mint a fresh authenticated, member-owned SID
+  // (held RF01 R1-D). Clearing the display under the SAME SID impersonates a
+  // new privacy encounter and can hide older writing while keeping its
+  // history and server authority. Keep this legacy action held until the
+  // independently qualified R1-D source is admitted.
   useEffect(() => {
     const handleNewConversation = () => {
-      console.log('🆕 [New Conversation] Clearing history and resetting to welcome');
-      // Clear messages (UI display)
-      setMessages([]);
-      lastSyncedCountRef.current = 0; // fresh thread — resync from the start
-      // Clear historical messages (API context) - truly fresh start
-      historicalMessagesRef.current = [];
-      // Reset activation state to show welcome screen
-      setHasActivated(false);
-      // Reset session-restored flag so the welcome greeting can show for the new conversation
-      sessionRestoredRef.current = false;
-      // Clear navigation flag so next mount doesn't restore the cleared conversation
-      sessionStorage.removeItem('maia_nav_teardown');
-      // Clear localStorage for current session
-      if (typeof window !== 'undefined' && sessionId) {
-        const storageKey = `maia_conversation_${sessionId}`;
-        localStorage.removeItem(storageKey);
-        console.log(`🆕 [New Conversation] Cleared localStorage: ${storageKey}`);
-      }
+      toast.error(
+        'A new conversation requires a verified member session. Your existing conversation was preserved.',
+        { duration: 7000 },
+      );
     };
-
     window.addEventListener('maia-new-conversation', handleNewConversation);
-    return () => {
-      window.removeEventListener('maia-new-conversation', handleNewConversation);
-    };
-  }, [sessionId]);
+    return () => window.removeEventListener('maia-new-conversation', handleNewConversation);
+  }, []);
 
   // 🧭 THERAPEUTIC FRAMEWORK: Selected in Counsel mode (Jungian, Somatic, CBT, IFS, etc.)
   // Now handled by lib/consciousness/therapeuticFrameworks.ts
