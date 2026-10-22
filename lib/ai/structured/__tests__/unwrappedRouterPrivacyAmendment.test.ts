@@ -148,6 +148,48 @@ describe('Class A security HOLD: unwrapped router refuses without leaking', () =
     },
   );
 
+  test('provenance cannot be forged by spoofing the wrapper prototype', async () => {
+    const raw = Object.assign(new Error(PRIVATE_MARKER), {
+      dispatch: 'response_observed', status: 200,
+    });
+    // The caller did NOT go through the trusted provider adapter or wrapper
+    // constructor. instanceof alone would falsely label the raw error as
+    // proof that the provider received a request.
+    Object.setPrototypeOf(raw, StructuredDispatchError.prototype);
+    mockExecute.mockRejectedValueOnce(raw);
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const outcome = await runStructured(req);
+    expect(outcome).toMatchObject({
+      ok: false, refusal: 'provider_unavailable',
+      detail: 'structured_provider_error_redacted',
+      dispatch: 'unknown',
+    });
+    expect(spy.mock.calls[0][1]).toMatchObject({
+      dispatch: 'unknown', status: null,
+    });
+  });
+
+  test('a minted response-observed fact cannot be changed after construction', async () => {
+    const wrapped = new StructuredDispatchError('response_observed',
+      Object.assign(new Error(PRIVATE_MARKER), { status: 400 }));
+    // An error's delivery fact must remain the one the trusted adapter
+    // classified. This mutation MUST NOT downgrade a confirmed crossing.
+    try {
+      Object.defineProperty(wrapped, 'dispatch', {
+        value: 'no_response_observed',
+      });
+    } catch {
+      // A frozen/nonconfigurable descriptor is the intended protection.
+    }
+    mockExecute.mockRejectedValueOnce(wrapped);
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const outcome = await runStructured(req);
+    expect(outcome.ok === false && outcome.dispatch).toBe('response_observed');
+    expect(spy.mock.calls[0][1]).toMatchObject({
+      dispatch: 'response_observed', status: 400,
+    });
+  });
+
   test.each(['sovereign', 'local_only'])(
     'SOVEREIGN CONTROL: %s refuses without reaching the adapter',
     async (mode) => {
