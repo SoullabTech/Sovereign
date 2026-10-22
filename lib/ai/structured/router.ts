@@ -37,7 +37,7 @@
 
 import type { InferenceMode } from '../types';
 import { resolveStructuredMode } from './policy';
-import { dispatchOf } from './dispatch';
+import { dispatchOf, StructuredDispatchError } from './dispatch';
 import type {
   StructuredOutcome, StructuredProvider, StructuredRequest,
 } from './types';
@@ -113,7 +113,12 @@ async function route(
        provider was reached and the question does not arise. ⭐ Absent is not
        `no_response_observed` — it is "not applicable", and a caller that needs
        an answer must read a value rather than infer one from silence. */
-    return { ok: false, refusal: 'not_configured', detail: String(err) };
+    // Adapter load/constructor errors are untrusted and may quote author
+    // text or schema content. A failed preflight has NO provider dispatch.
+    return {
+      ok: false, refusal: 'not_configured',
+      detail: 'structured_adapter_unavailable',
+    };
   }
   return execute(p, req);
 }
@@ -124,47 +129,49 @@ async function execute(
   try {
     return { ok: true, result: await provider.execute(req) };
   } catch (err) {
-    /* ⭐ CLASSIFY, SERVER-SIDE ONLY. `provider_unavailable` covers four
-     * different worlds — a key that never resolved, a socket that never
-     * opened, a provider that refused, a tool contract that was rejected —
-     * and callers upstream keep only the refusal word, so from outside they
-     * are indistinguishable. This names the world without changing routing,
-     * authorization, fallback, or what is returned.
+    /* Class A router-amendment candidate. An error may contain a writer's
+     * words in message, code, type, cause or even an accessor. Only neutral
+     * adapter-minted delivery classification can cross the boundary.
      *
-     * ⛔⛔ THE MESSAGE IS LOGGED ONLY WHEN THE REQUEST NEVER REACHED THE WIRE.
-     * A pre-flight throw (no `status`) cannot carry provider output and cannot
-     * echo the request, so its message is safe and is the only thing that
-     * distinguishes, say, an unresolved credential from a bad base URL. Once a
-     * status exists the request DID go up, and a provider's error body may
-     * quote the field that offended it — which on this path is a tool schema
-     * carrying the writer's own sentence. So after the wire: shape only. */
-    const e = err as { name?: unknown; status?: unknown; code?: unknown;
-      cause?: { code?: unknown }; error?: { type?: unknown } };
-    const reachedWire = typeof e.status === 'number';
-    console.error('[structured] provider_unavailable', {
-      name: typeof e.name === 'string' ? e.name : 'unknown',
-      status: reachedWire ? e.status : null,
-      providerErrorType: typeof e.error?.type === 'string' ? e.error.type : null,
-      code: (typeof e.code === 'string' ? e.code : null)
-        ?? (typeof e.cause?.code === 'string' ? e.cause.code : null),
-      ...(reachedWire ? {} : {
-        preflightMessage: err instanceof Error ? err.message : String(err),
-      }),
-    });
+     * An unwrapped failure is UNKNOWN; never reinterpret it as proof
+     * that nothing crossed. No fallback and no second dispatch. */
+    let dispatch: ReturnType<typeof dispatchOf> = 'unknown';
+    try {
+      const classified = dispatchOf(err);
+      if (classified === 'response_observed'
+        || classified === 'no_response_observed'
+        || classified === 'unknown') {
+        dispatch = classified;
+      }
+    } catch {
+      // Hostile proxies/getters cannot escape the structured refusal.
+      dispatch = 'unknown';
+    }
 
-    /* THE FAILURE STOPS HERE. No second provider, no local text path, no
-       degraded template. A structured request that could not be served exactly
-       was not served. */
+    let status: number | null = null;
+    if (dispatch === 'response_observed') {
+      try {
+        if (err instanceof StructuredDispatchError) {
+          // Read only an OWN DATA DESCRIPTOR, never an untrusted accessor.
+          const own = Object.getOwnPropertyDescriptor(err, 'status');
+          const numeric = own && 'value' in own ? own.value : undefined;
+          if (typeof numeric === 'number'
+            && Number.isInteger(numeric)
+            && numeric >= 100 && numeric <= 599) {
+            status = numeric;
+          }
+        }
+      } catch {
+        status = null;
+      }
+    }
+
+    console.error('[structured] provider_unavailable', { dispatch, status });
     return {
       ok: false,
       refusal: 'provider_unavailable',
-      detail: err instanceof Error ? err.message : String(err),
-      /* ⭐ THE ONE FACT ADDED HERE, and the reason this seam changed at all: a
-         disclosure receipt must distinguish a request that demonstrably arrived
-         from one that never left. ⛔ The router does not classify — it cannot,
-         without importing the vendor SDK and destroying the lazy-load property
-         the module header defends. It reads what the adapter attached. */
-      dispatch: dispatchOf(err),
+      detail: 'structured_provider_error_redacted',
+      dispatch,
     };
   }
 }
