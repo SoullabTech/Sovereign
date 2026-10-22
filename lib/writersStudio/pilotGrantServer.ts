@@ -10,11 +10,12 @@
 import { query, transaction } from '@/lib/db/postgres';
 
 export type WriterPilotApproval =
-  | { eligible: true; basis: 'founder_approved_beta' | 'founder_witness' }
+  | { eligible: true; basis: 'founder_approved_beta'; grantId: string }
+  | { eligible: true; basis: 'founder_witness' }
   | { eligible: false; basis: 'no_founder_approval' };
 
 export async function readWriterPilotApproval(memberId: string): Promise<WriterPilotApproval> {
-  const r = await query<{ founder: boolean; granted: boolean }>(
+  const r = await query<{ founder: boolean; grant_id: string | null }>(
     `SELECT
        EXISTS (
          SELECT 1 FROM members m
@@ -24,8 +25,7 @@ export async function readWriterPilotApproval(memberId: string): Promise<WriterP
              WHERE a.singleton = TRUE AND a.founder_member_id = m.id
            )
        ) AS founder,
-       EXISTS (
-         SELECT 1 FROM writer_studio_beta_grants g
+       (SELECT g.grant_id::text FROM writer_studio_beta_grants g
          JOIN members f ON f.id = g.approved_by
            AND f.admin_role = 'founder'
          JOIN writer_studio_pilot_admission_control a
@@ -40,30 +40,34 @@ export async function readWriterPilotApproval(memberId: string): Promise<WriterP
                 AND c.contact_type = 'beta_tester'
                 AND c.pipeline_stage = 'active'
            )
-       ) AS granted`,
+         LIMIT 1) AS grant_id`,
     [memberId],
   );
   const row = r.rows[0];
   if (row?.founder === true) return { eligible: true, basis: 'founder_witness' };
-  if (row?.granted === true) return { eligible: true, basis: 'founder_approved_beta' };
+  if (typeof row?.grant_id === 'string') return {
+    eligible: true, basis: 'founder_approved_beta', grantId: row.grant_id,
+  };
   return { eligible: false, basis: 'no_founder_approval' };
 }
 
 export async function approvePilotWriter(memberId: string, founderId: string): Promise<boolean> {
   return transaction(async (tx) => {
-    // Serializes approvals across simultaneous requests. We deliberately
-    // count revoked rows too: two original canary seats do not silently
-    // replenish on revocation or create a rolling beta cohort.
-    const gate = await tx.query<{ initial_seat_cap: number; founder_member_id: string | null }>(
-      `SELECT initial_seat_cap, founder_member_id FROM writer_studio_pilot_admission_control
+    // Serialize approvals, and use a nonreplenishing issuance counter:
+    // a revoked grant removed during member deletion does not create
+    // a third canary place. The independent R20 floor must also survive DB restore.
+    const gate = await tx.query<{
+      initial_seat_cap: number;
+      issued_seats: number;
+      founder_member_id: string | null;
+    }>(
+      `SELECT initial_seat_cap, issued_seats, founder_member_id
+         FROM writer_studio_pilot_admission_control
         WHERE singleton = TRUE FOR UPDATE`,
     );
     if (gate.rows[0]?.initial_seat_cap !== 2
+      || gate.rows[0]?.issued_seats >= 2
       || gate.rows[0]?.founder_member_id !== founderId) return false;
-    const count = await tx.query<{ n: number }>(
-      `SELECT COUNT(*)::int AS n FROM writer_studio_beta_grants`,
-    );
-    if (!count.rows[0] || count.rows[0].n >= 2) return false;
 
     const r = await tx.query<{ member_id: string }>(
       `INSERT INTO writer_studio_beta_grants (member_id, approved_by)

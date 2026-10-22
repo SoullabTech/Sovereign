@@ -6,6 +6,7 @@
  * Soullab DB. This script creates the complete fictional test schema itself.
  */
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Client } from 'pg';
@@ -17,6 +18,23 @@ const parsed = new URL(url);
 if (parsed.hostname !== '127.0.0.1' || parsed.port !== '55439'
   || parsed.pathname !== '/postgres' || parsed.username !== 'postgres') {
   throw new Error('REFUSED: test URL is not the dedicated loopback fictional PostgreSQL container');
+}
+const RESTORE_WITNESS = process.env.WS_PILOT_RESTORE_WITNESS === '1';
+const R20_URL = process.env.WS_PILOT_R20_WITNESS_URL;
+if (RESTORE_WITNESS) {
+  if (!R20_URL) throw new Error('Explicit disposable R20 witness URL required');
+  const r20 = new URL(R20_URL);
+  if (r20.hostname !== '127.0.0.1' || r20.port !== '55440'
+      || r20.pathname !== '/postgres' || r20.username !== 'postgres') {
+    throw new Error('REFUSED: R20 witness must be a separate, fixed fictional loopback container');
+  }
+}
+function dockerFictional(...args: string[]): void {
+  if (!RESTORE_WITNESS) throw new Error('Restore proof mode required');
+  // Fixed container name; no caller-supplied Docker target.
+  execFileSync('/usr/local/bin/docker', ['exec', 'ws-tiers-r2-fictional-20261022', ...args], {
+    stdio: 'pipe', timeout: 30000,
+  });
 }
 process.env.DATABASE_URL = url;
 process.env.WRITER_PILOT_GRANT_WRITES_ENABLED = '1';
@@ -31,6 +49,16 @@ const otherFounder = '66666666-6666-4666-8666-666666666666';
 async function main() {
   const direct = new Client({ connectionString: url });
   await direct.connect();
+  const outsideR20 = RESTORE_WITNESS
+    ? new Client({ connectionString: R20_URL })
+    : null;
+  if (outsideR20) {
+    await outsideR20.connect();
+    await outsideR20.query(`CREATE TABLE fictional_r20_revoked_grants (
+      grant_id UUID PRIMARY KEY,
+      revoked_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+  }
   let checks = 0;
   const proof = (name: string, condition: boolean) => {
     assert.equal(condition, true, name);
@@ -98,6 +126,8 @@ async function main() {
     const { POST: acceptRoute } =
       await import('../../app/api/sovereign/writers-studio/pilot-accept/route');
     const { closePool } = await import('../../lib/db/postgres');
+    const { writerStudioPlanForMember } = await import('../../lib/writersStudio/planAccessServer');
+    const { PilotR20AuthorityUnavailable } = await import('../../lib/writersStudio/pilotR20Authority');
 
     const request = (path: string, token: string, method: 'POST' | 'DELETE' = 'POST',
       body?: Record<string, unknown>, origin = 'https://beta.soullab.test') => new NextRequest(
@@ -153,6 +183,8 @@ async function main() {
     );
     proof('8 simultaneous founder approvals admit exactly one grant',
       simultaneous.filter(Boolean).length === 1);
+    proof('duplicate/concurrent requests consume exactly one irreversible seat',
+      (await direct.query('SELECT issued_seats FROM writer_studio_pilot_admission_control')).rows[0]?.issued_seats === 1);
     proof('founder approval remains pending until writer accepts',
       !(await readWriterPilotApproval(writerA)).eligible);
 
@@ -178,6 +210,8 @@ async function main() {
     proof('actual handler accepts one explicitly founded account grant', realApproval.status === 200);
     proof('newly approved writer B remains pending until own acceptance',
       !(await readWriterPilotApproval(writerB)).eligible);
+    proof('exactly two seats have been issued, independent of current grant status',
+      (await direct.query('SELECT issued_seats FROM writer_studio_pilot_admission_control')).rows[0]?.issued_seats === 2);
 
     proof('third independently eligible CRM candidate cannot bypass two-seat canary',
       !(await approvePilotWriter(outsider, founder)));
@@ -204,9 +238,28 @@ async function main() {
     proof('writer A accepts with own verified session', acceptedA.status === 200);
     const acceptedB = await acceptRoute(request('pilot-accept', 'writer-b-session'));
     proof('writer B accepts with own verified session', acceptedB.status === 200);
-    proof('both founder-approved and accepted writers have complimentary Pro inclusion',
+    proof('both founder-approved and accepted writers have DB-level Pro candidature',
       (await readWriterPilotApproval(writerA)).basis === 'founder_approved_beta'
       && (await readWriterPilotApproval(writerB)).basis === 'founder_approved_beta');
+    const admittedA = await direct.query<{ grant_id: string }>(
+      'SELECT grant_id::text FROM writer_studio_beta_grants WHERE member_id=$1',
+      [writerA],
+    );
+    const historicalGrantId = admittedA.rows[0]?.grant_id;
+    proof('accepted writer has a stable grant generation identifier',
+      typeof historicalGrantId === 'string' && historicalGrantId.length === 36);
+
+    let proHeldByR20 = false;
+    try { await writerStudioPlanForMember(writerA); }
+    catch (error) { proHeldByR20 = error instanceof PilotR20AuthorityUnavailable; }
+    proof('unprovisioned independent R20 authority refuses operational Pro despite DB acceptance',
+      proHeldByR20);
+
+    if (outsideR20) {
+      dockerFictional('pg_dump', '-U', 'postgres', '-Fc', '-f',
+        '/tmp/ws_r20_pre_revocation_r3.dump', 'postgres');
+      proof('full fictional PostgreSQL pre-revocation backup captured', true);
+    }
     proof('repeated acceptance is refused', !(await acceptPilotWriter(writerA)));
 
     await direct.query("UPDATE members SET admin_role='cto' WHERE id=$1", [founder]);
@@ -244,6 +297,40 @@ async function main() {
     proof('unrelated writer B remains admitted after writer A revocation',
       (await readWriterPilotApproval(writerB)).eligible);
 
+    if (outsideR20) {
+      await outsideR20.query(
+        'INSERT INTO fictional_r20_revoked_grants (grant_id) VALUES ($1)',
+        [historicalGrantId],
+      );
+      dockerFictional('createdb', '-U', 'postgres', 'ws_r20_preimage_r3');
+      dockerFictional('pg_restore', '-U', 'postgres', '-d', 'ws_r20_preimage_r3',
+        '--no-owner', '/tmp/ws_r20_pre_revocation_r3.dump');
+      const restoredUrl = url!.replace(/\/postgres$/, '/ws_r20_preimage_r3');
+      const restored = new Client({ connectionString: restoredUrl });
+      await restored.connect();
+      try {
+        const old = await restored.query<{ grant_state: string; grant_id: string; revoked_at: Date | null }>(
+          'SELECT grant_state, grant_id::text, revoked_at FROM writer_studio_beta_grants WHERE member_id=$1',
+          [writerA],
+        );
+        proof('actual old PostgreSQL backup restore resurrects a DB-accepted grant',
+          old.rows[0]?.grant_state === 'accepted'
+            && old.rows[0]?.grant_id === historicalGrantId
+            && old.rows[0]?.revoked_at === null);
+        const outside = await outsideR20.query<{ grant_id: string }>(
+          'SELECT grant_id::text FROM fictional_r20_revoked_grants WHERE grant_id=$1',
+          [historicalGrantId],
+        );
+        proof('second independent database still holds revocation after primary restore',
+          outside.rows[0]?.grant_id === historicalGrantId);
+        proof('external-grant-ID tombstone would refuse stale restored Pro state',
+          old.rows[0]?.grant_state === 'accepted'
+          && outside.rows[0]?.grant_id === old.rows[0]?.grant_id);
+      } finally {
+        await restored.end();
+      }
+    }
+
     const badHeaderPair = request('pilot-approval', 'founder-session');
     badHeaderPair.cookies.set('maia_session', 'writer-a-session');
     proof('conflicting two valid sessions fail identity verification',
@@ -266,10 +353,31 @@ async function main() {
     proof('revoked approval retains no manuscript/feedback fields',
       row.rows[0]?.grant_state === 'revoked' && !!row.rows[0]?.revoked_at);
 
+    // Ordinary member-account erasure can cascade-delete the member-linked
+    // approval row. It must NEVER silently refill the initial pilot cohort.
+    await direct.query('DELETE FROM writer_studio_beta_grants WHERE member_id=$1', [writerA]);
+    const remaining = await direct.query(
+      'SELECT issued_seats FROM writer_studio_pilot_admission_control',
+    );
+    proof('deleting a revoked grant row cannot return an issued pilot seat',
+      remaining.rows[0]?.issued_seats === 2);
+    proof('service still refuses a third writer after revoked-row cleanup',
+      !(await approvePilotWriter(outsider, founder)));
+    let rawReissueDenied = false;
+    try {
+      await direct.query(
+        'INSERT INTO writer_studio_beta_grants (member_id, approved_by) VALUES ($1,$2)',
+        [outsider, founder],
+      );
+    } catch { rawReissueDenied = true; }
+    proof('database also refuses third writer after revoked-row cleanup',
+      rawReissueDenied);
+
     await closePool();
     process.stdout.write('RESULT: ' + checks + '/' + checks + ' isolated PostgreSQL/handler checks PASS\n');
   } finally {
     await direct.end();
+    if (outsideR20) await outsideR20.end();
   }
 }
 

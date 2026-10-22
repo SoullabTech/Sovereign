@@ -8,7 +8,18 @@
  */
 import { readWriterPilotApproval } from './pilotGrantServer';
 import { decideWriterStudioPlan } from './planPolicy';
+import { requireIndependentPilotR20Grant } from './pilotR20Authority';
 
 export async function writerStudioPlanForMember(memberId: string) {
-  return decideWriterStudioPlan(await readWriterPilotApproval(memberId));
+  const approval = await readWriterPilotApproval(memberId);
+  if (approval.eligible && approval.basis === 'founder_approved_beta') {
+    // The database candidate alone is insufficient after a restore.
+    // No positive Pro projection until a separate R20 authority proves
+    // this exact member + grant generation is still valid.
+    await requireIndependentPilotR20Grant({
+      memberId,
+      grantId: approval.grantId,
+    });
+  }
+  return decideWriterStudioPlan(approval);
 }

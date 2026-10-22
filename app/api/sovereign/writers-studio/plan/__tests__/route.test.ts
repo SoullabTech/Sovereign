@@ -27,7 +27,7 @@ describe('Writer Studio plan endpoint: private read-only projection', () => {
   it('returns complimentary Pro to a verified pilot writer, ignoring query claims', async () => {
     getMember.mockResolvedValue('member-a');
     planForMember.mockResolvedValue(decideWriterStudioPlan({
-      eligible: true, basis: 'founder_approved_beta',
+      eligible: true, basis: 'founder_approved_beta', grantId: '11111111-1111-4111-8111-111111111111',
     }));
     const res = await GET(request('?plan=free'));
     const body = await res.json();

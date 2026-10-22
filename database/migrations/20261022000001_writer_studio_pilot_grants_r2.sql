@@ -7,6 +7,10 @@ BEGIN;
 
 CREATE TABLE IF NOT EXISTS writer_studio_beta_grants (
   member_id UUID PRIMARY KEY REFERENCES members(id) ON DELETE CASCADE,
+  -- Stable grant generation identifier for independent R20 witness matching.
+  -- A restored older grant preserves this ID and must remain revoked if its
+  -- independently held tombstone says so.
+  grant_id UUID NOT NULL DEFAULT gen_random_uuid() UNIQUE,
   approved_by UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
   grant_state TEXT NOT NULL DEFAULT 'pending'
     CHECK (grant_state IN ('pending', 'accepted', 'revoked')),
@@ -34,6 +38,9 @@ CREATE TABLE IF NOT EXISTS writer_studio_beta_grants (
 CREATE TABLE IF NOT EXISTS writer_studio_pilot_admission_control (
   singleton BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (singleton = TRUE),
   initial_seat_cap INTEGER NOT NULL DEFAULT 2 CHECK (initial_seat_cap = 2),
+  -- Never replenishes if a revoked/expired grant row is later removed as
+  -- part of an independently authorized member-erasure process.
+  issued_seats INTEGER NOT NULL DEFAULT 0 CHECK (issued_seats BETWEEN 0 AND 2),
   -- Founder member ID deliberately UNBOUND at migration time. Independent
   -- founder-account proof must bind it before any real grant is possible.
   founder_member_id UUID REFERENCES members(id) ON DELETE SET NULL
@@ -49,12 +56,12 @@ CREATE OR REPLACE FUNCTION writer_studio_beta_grant_guard_r2()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE
   cap INTEGER;
-  current_grants INTEGER;
+  seats_ever INTEGER;
   authorized_founder UUID;
 BEGIN
   IF TG_OP = 'INSERT' THEN
-    SELECT initial_seat_cap, founder_member_id
-      INTO cap, authorized_founder
+    SELECT initial_seat_cap, issued_seats, founder_member_id
+      INTO cap, seats_ever, authorized_founder
       FROM writer_studio_pilot_admission_control
      WHERE singleton = TRUE FOR UPDATE;
     IF authorized_founder IS NULL OR authorized_founder <> NEW.approved_by THEN
@@ -63,8 +70,7 @@ BEGIN
     IF cap IS DISTINCT FROM 2 THEN
       RAISE EXCEPTION 'writer_pilot_admission_gate_unavailable';
     END IF;
-    SELECT COUNT(*) INTO current_grants FROM writer_studio_beta_grants;
-    IF current_grants >= cap THEN
+    IF seats_ever IS NULL OR seats_ever >= cap THEN
       RAISE EXCEPTION 'writer_pilot_initial_two_seat_cap';
     END IF;
     IF NOT EXISTS (
@@ -85,9 +91,9 @@ BEGIN
 
   -- A grant belongs to exactly one member and one founder decision. Nothing
   -- quietly transfers it, extends its lifetime or backdates its approval.
-  IF (NEW.member_id, NEW.approved_by, NEW.approved_at, NEW.valid_until)
+  IF (NEW.member_id, NEW.grant_id, NEW.approved_by, NEW.approved_at, NEW.valid_until)
     IS DISTINCT FROM
-    (OLD.member_id, OLD.approved_by, OLD.approved_at, OLD.valid_until) THEN
+    (OLD.member_id, OLD.grant_id, OLD.approved_by, OLD.approved_at, OLD.valid_until) THEN
     RAISE EXCEPTION 'writer_pilot_identity_and_approval_immutable';
   END IF;
   IF OLD.grant_state = 'revoked' THEN
@@ -114,6 +120,29 @@ DROP TRIGGER IF EXISTS writer_studio_beta_grant_guard_r2
 CREATE TRIGGER writer_studio_beta_grant_guard_r2
   BEFORE INSERT OR UPDATE ON writer_studio_beta_grants
   FOR EACH ROW EXECUTE FUNCTION writer_studio_beta_grant_guard_r2();
+
+-- Charge an irreversible seat only for a row ACTUALLY inserted. A BEFORE
+-- INSERT trigger alone would also charge ON CONFLICT DO NOTHING attempts.
+-- The guarded singleton row is already locked by the BEFORE trigger and
+-- serializes concurrent candidates. Future member account deletion may
+-- remove a grant row without reopening the spent canary seat.
+CREATE OR REPLACE FUNCTION writer_studio_beta_issued_seat_r3()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE writer_studio_pilot_admission_control
+     SET issued_seats = issued_seats + 1
+   WHERE singleton = TRUE AND issued_seats < initial_seat_cap;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'writer_pilot_seat_counter_unavailable';
+  END IF;
+  RETURN NEW;
+END $$;
+
+DROP TRIGGER IF EXISTS writer_studio_beta_issued_seat_r3
+  ON writer_studio_beta_grants;
+CREATE TRIGGER writer_studio_beta_issued_seat_r3
+  AFTER INSERT ON writer_studio_beta_grants
+  FOR EACH ROW EXECUTE FUNCTION writer_studio_beta_issued_seat_r3();
 
 COMMENT ON TABLE writer_studio_beta_grants IS
   'Review-only individual Writer Studio founder approvals and writer acceptance; never inferred from CRM alone. R20 anti-resurrection external authority is still required.';

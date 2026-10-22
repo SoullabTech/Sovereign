@@ -1,4 +1,10 @@
 # Writer’s Studio Free + Pro — R2 individual beta authorization
+
+**R3 continuation:** `WS-FREE-PRO-BETA-R3_2026-10-22.md` adds a
+stable `grant_id`, a strict fail-closed independent R20 check before beta
+Pro presentation, full PostgreSQL pre-revocation backup/restore negative
+proof, and a nonreplenishing initial two-seat counter. The R2 evidence
+below remains historical; R3 exact-source acceptance is separate.
 **Status:** 22 October 2026 · isolated source only · DRAFT HOLD · no deployment or member invitations
 
 ## Founder intent and admission authority
@@ -95,7 +101,8 @@ canary proof and a later explicit founder-governed design/code change.
 A dedicated `postgres:16` Docker container was bound to
 **127.0.0.1:55439**, with disposable fictional accounts and credentials.
 The pre-founder-ID-binding R2 revision's migration and direct handler proof
-reported **35/35 PASS** including:
+reported **35/35 PASS**. The final exact source subsequently reported **40/40
+PASS** with founder-binding additions, including:
 
 - CRM-only, no approval, no acceptance, missing member, wrong actor and
   nonfounder/direct-insert refusals.
@@ -111,10 +118,15 @@ reported **35/35 PASS** including:
 
 After the exact-founder binding was added, **51/51 focused Jest tests passed**
 across eight suites, and Writer-specific TypeScript and targeted ESLint passed.
-The disposable PostgreSQL proof was expanded to test the new unbound/selected
-founder rule; its execution on that final source is **NOT VERIFIED** because
-the latest run could not be completed. Do not treat 35/35 on the earlier source
-as proof of this latest migration.
+On the exact source commit `17735c151c352e15fcaf9b7c71875dcfc0dce00b`,
+the fresh disposable PostgreSQL 16 container replay completed **40/40 PASS**
+on 2026-10-22. It included null-founder refusal, explicit fictional
+single-founder binding, unselected founder rejection, two-seat serialized
+admission, writer-owned acceptance, revocation, two-member separation,
+credential conflict, and exact-origin checks. The PG container is disposable
+and must not be confused with production. This resolves the previously open
+exact-source replay question, NOT the independently held R20 recovery and
+live account acceptance gates.
 
 These are isolated **direct Next route-handler / actual PostgreSQL** tests
 where explicitly observed, not live authenticated public-domain HTTP or
