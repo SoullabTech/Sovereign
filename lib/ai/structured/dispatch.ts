@@ -20,6 +20,10 @@
  * `attempted` / `crossed` vocabulary was built to refuse.
  */
 
+// An instanceof check alone is forgeable via Object.setPrototypeOf and must
+// not authorize a "provider response observed" disclosure receipt.
+const mintedDispatchErrors = new WeakSet<object>();
+
 export type DispatchObservation =
   /** A provider responded. ⭐ The request demonstrably arrived. Says NOTHING about
    *  whether the response was valid, usable, or an error — only that it exists. */
@@ -54,7 +58,16 @@ export class StructuredDispatchError extends Error {
     // hiding a raw property from JSON is insufficient for deep diagnostics.
     super('structured_provider_error_redacted');
     this.name = 'StructuredDispatchError';
-    this.dispatch = dispatch;
+    const boundedDispatch: DispatchObservation =
+      dispatch === 'response_observed' || dispatch === 'no_response_observed'
+      || dispatch === 'unknown' ? dispatch : 'unknown';
+    this.dispatch = boundedDispatch;
+    // A fabricated instanceof object or subsequent mutation cannot mint a
+    // truthful disclosure classification.
+    Object.defineProperty(this, 'dispatch', {
+      value: boundedDispatch, writable: false,
+      configurable: false, enumerable: true,
+    });
 
     // The structured router needs only a safe numeric HTTP status to know
     // a response arrived. Do not copy message, cause, response body, stack,
@@ -73,11 +86,38 @@ export class StructuredDispatchError extends Error {
       && Number.isInteger(status)
       && status >= 100 && status <= 599) {
       this.status = status;
+      Object.defineProperty(this, 'status', {
+        value: status, writable: false, configurable: false, enumerable: true,
+      });
     }
+    mintedDispatchErrors.add(this);
   }
 }
 
-/** ⛔ Fails open to `unknown`: an unrecognised error shape is undetermined, never a denial. */
+/** A constructor-minted wrapper, not a forged prototype or arbitrary Error. */
+export function isMintedStructuredDispatchError(
+  err: unknown,
+): err is StructuredDispatchError {
+  try {
+    return typeof err === 'object' && err !== null
+      && mintedDispatchErrors.has(err);
+  } catch {
+    return false;
+  }
+}
+
+/** Unknown is the safe answer without a genuinely minted dispatch fact. */
 export function dispatchOf(err: unknown): DispatchObservation {
-  return err instanceof StructuredDispatchError ? err.dispatch : 'unknown';
+  if (!isMintedStructuredDispatchError(err)) return 'unknown';
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(err, 'dispatch');
+    const observation = descriptor && 'value' in descriptor
+      ? descriptor.value : undefined;
+    if (observation === 'response_observed'
+      || observation === 'no_response_observed'
+      || observation === 'unknown') return observation;
+  } catch {
+    // A thrown descriptor/proxy trap must never escape a refusal boundary.
+  }
+  return 'unknown';
 }
