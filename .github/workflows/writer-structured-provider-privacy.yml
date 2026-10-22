@@ -21,10 +21,12 @@ jobs:
     timeout-minutes: 20
     env:
       CI: 'true'
-      MAIA_INFERENCE_MODE: sovereign
       TZ: UTC
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Governing seam byte pins compare historical reviewed commits.
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 20
