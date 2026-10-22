@@ -44,14 +44,37 @@ export type DispatchObservation =
  */
 export class StructuredDispatchError extends Error {
   readonly dispatch: DispatchObservation;
-  /** ⭐ The original, unmodified. ⛔ This wrapper adds a fact; it never replaces one. */
+  /**
+   * The original vendor error may contain a rejected tool schema or member
+   * text. Preserve it for narrow in-process classification, but do not make
+   * it an enumerable property that ordinary JSON logging can copy.
+   */
   readonly original: unknown;
+  /** Safe numeric metadata only; never copy a provider error body. */
+  readonly status?: number;
 
   constructor(dispatch: DispatchObservation, original: unknown) {
-    super(original instanceof Error ? original.message : String(original));
+    // The structured router logs and returns err.message on provider refusal.
+    // Passing through the SDK's untrusted message could disclose a writer's
+    // passage through server diagnostics. Always make that field generic.
+    super('structured_provider_error_redacted');
     this.name = 'StructuredDispatchError';
     this.dispatch = dispatch;
     this.original = original;
+    Object.defineProperty(this, 'original', { enumerable: false });
+
+    // A genuine provider HTTP error arrived even though the router cannot
+    // inspect SDK classes. Preserve only the *number* so the router correctly
+    // omits preflight text and reports a structural status.
+    const status = original !== null && typeof original === 'object'
+      ? (original as { status?: unknown }).status
+      : undefined;
+    if (dispatch === 'response_observed'
+      && typeof status === 'number'
+      && Number.isInteger(status)
+      && status >= 100 && status <= 599) {
+      this.status = status;
+    }
   }
 }
 
