@@ -9,6 +9,7 @@
  * the provider adapter is mocked. NO provider, network, key, member or Work.
  */
 import type { StructuredProvider, StructuredRequest } from '../types';
+import { StructuredDispatchError } from '../dispatch';
 
 const mockExecute = jest.fn();
 let mockFactoryFailure = false;
@@ -114,6 +115,31 @@ describe('Class A security HOLD: unwrapped router refuses without leaking', () =
     });
     expect(spy).toHaveBeenCalledTimes(1);
   });
+
+  test.each([
+    ['response_observed', 400],
+    ['unknown', undefined],
+    ['no_response_observed', undefined],
+  ] as const)(
+    'GREEN WHEN FIXED: trusted classified %s retains dispatch, not provider text',
+    async (dispatch, status) => {
+      const raw = Object.assign(new Error(PRIVATE_MARKER),
+        status === undefined ? {} : { status });
+      mockExecute.mockRejectedValueOnce(new StructuredDispatchError(dispatch, raw));
+      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const outcome = await runStructured(req);
+      expect(outcome).toMatchObject({
+        ok: false, refusal: 'provider_unavailable', dispatch,
+      });
+      expect(JSON.stringify(outcome)).not.toContain(PRIVATE_MARKER);
+      expect(JSON.stringify(spy.mock.calls)).not.toContain(PRIVATE_MARKER);
+      expect(spy.mock.calls[0][1]).toMatchObject({
+        dispatch,
+        status: status ?? null,
+      });
+      expect(mockExecute).toHaveBeenCalledTimes(1);
+    },
+  );
 
   test.each(['sovereign', 'local_only'])(
     'GREEN CONTROL: %s refuses without reaching the adapter',
