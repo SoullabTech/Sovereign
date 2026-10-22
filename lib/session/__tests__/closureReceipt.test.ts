@@ -1,6 +1,6 @@
 import {
   assessClosureResponse, displayStateForRestoredClosureHint,
-  requestQualifiedClosure, clearConfirmedContinuityHint,
+  QUALIFIED_R2_CLOSE_PATH, requestQualifiedClosure, clearConfirmedContinuityHint,
   preserveClosureHint, readClosureHint,
   type PendingClosureHint,
 } from '../closureReceipt';
@@ -215,5 +215,22 @@ describe('browser restart cannot promote local storage to erasure authority', ()
     expect(displayStateForRestoredClosureHint({
       ...prior, state: 'request_unverified',
     })).toBe('unverified');
+  });
+});
+
+describe('legacy-destructive-endpoint cannot be selected by client flag', () => {
+  it('uses a NEW guarded route with no legacy finalize fallthrough', () => {
+    expect(QUALIFIED_R2_CLOSE_PATH).toBe('/api/sovereign/session/finalize-r2');
+    // The separately governed R2 endpoint is NOT implemented by this PR.
+    // Until it is approved, attempting a request must fail, never run legacy.
+    const fs = require('fs') as typeof import('fs');
+    const path = require('path') as typeof import('path');
+    const oracle = fs.readFileSync(
+      path.join(process.cwd(), 'components/OracleConversation.tsx'), 'utf8',
+    );
+    expect(oracle).toContain('send: (payload) => apiFetch(QUALIFIED_R2_CLOSE_PATH');
+    expect(oracle).not.toContain(
+      "send: (payload) => apiFetch('/api/sovereign/session/finalize'",
+    );
   });
 });
