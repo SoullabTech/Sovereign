@@ -102,16 +102,24 @@ CREATE TABLE deletion_scopes(session_id text primary key);""")
         ledger=dict(generation=2,deleted=[IDS["dead_m"],IDS["dead_w"]],session=IDS["dead_s"],vault=["writer/dead.txt"])
         newer=authority/"ledger.json";newer.write_bytes(packed(sig(ledger,key)))
         high=authority/"highwater.json";high.write_bytes(packed(sig({"min_generation":2,"ledger_sha256":hashlib.sha256(newer.read_bytes()).hexdigest()},key)))
-        if old in newer.parents or old in high.parents or newer.is_symlink() or high.is_symlink():
+        if old in newer.parents or old in high.parents or newer.is_symlink() or high.is_symlink() or newer.stat().st_nlink!=1 or high.stat().st_nlink!=1:
             refuse("AUTHORITY_NOT_INDEPENDENT")
         signed=check(json.loads(newer.read_text()),key)
         seal=check(json.loads(high.read_text()),key)
+        if (set(signed)!={"generation","deleted","session","vault"} or
+            signed["generation"]!=2 or signed["deleted"]!=[IDS["dead_m"],IDS["dead_w"]] or
+            signed["session"]!=IDS["dead_s"] or signed["vault"]!=["writer/dead.txt"]):
+            refuse("FICTIONAL_LEDGER_SCOPE_NOT_AUTHORIZED")
         if signed["generation"]<seal["min_generation"] or seal["ledger_sha256"]!=hashlib.sha256(newer.read_bytes()).hexdigest():
             refuse("FICTIONAL_LEDGER_ROLLBACK")
         tampered=json.loads(newer.read_text());tampered["data"]["generation"]=0
         try:check(tampered,key)
         except RuntimeError:pass
         else:refuse("TAMPERED_LEDGER_ACCEPTED")
+        changed_high=json.loads(high.read_text());changed_high["data"]["min_generation"]=3
+        try:check(changed_high,key)
+        except RuntimeError:pass
+        else:refuse("TAMPERED_HIGHWATER_ACCEPTED")
         for i in (1,2):
             db="r20ficttarget"+str(i)
             createdb(db)
@@ -139,16 +147,23 @@ END $g$;
 CREATE TRIGGER deny_manuscripts BEFORE INSERT ON member_manuscripts FOR EACH ROW EXECUTE FUNCTION fictional_r20_object_guard();
 CREATE TRIGGER deny_works BEFORE INSERT ON living_works FOR EACH ROW EXECUTE FUNCTION fictional_r20_object_guard();
 CREATE TRIGGER deny_fragments BEFORE INSERT ON synthetic_fragments FOR EACH ROW EXECUTE FUNCTION fictional_r20_session_guard();
-COMMIT;"""%(sqlq(IDS["dead_m"]),sqlq(IDS["dead_w"]),sqlq(IDS["dead_s"]),sqlq(IDS["dead_m"]),sqlq(IDS["dead_w"]),sqlq(IDS["dead_s"])))
+COMMIT;"""%(sqlq(signed["deleted"][0]),sqlq(signed["deleted"][1]),sqlq(signed["session"]),sqlq(signed["deleted"][0]),sqlq(signed["deleted"][1]),sqlq(signed["session"])))
             counts=pg(db,"SELECT (SELECT count(*) FROM member_manuscripts)||','||(SELECT count(*) FROM living_works)||','||(SELECT count(*) FROM synthetic_fragments)||','||(SELECT count(*) FROM provenance_tombstones)||','||(SELECT count(*) FROM deletion_scopes);")
             if counts!="1,1,1,2,1":refuse("FICTIONAL_ERASURE_COUNTS_INVALID")
-            if pg(db,"INSERT INTO member_manuscripts VALUES (%s,'FICTITIOUS');"%sqlq(IDS["dead_m"]),ok=False)==0:
+            if pg(db,"INSERT INTO member_manuscripts VALUES (%s,'FICTITIOUS');"%sqlq(signed["deleted"][0]),ok=False)==0:
                 refuse("DELETED_UUID_REUSED")
-            if pg(db,"INSERT INTO synthetic_fragments VALUES ('reused',%s);"%sqlq(IDS["dead_s"]),ok=False)==0:
+            if pg(db,"INSERT INTO synthetic_fragments VALUES ('reused',%s);"%sqlq(signed["session"]),ok=False)==0:
                 refuse("DELETED_SESSION_REUSED")
             target=p/("replacement"+str(i));target.mkdir(mode=0o700)
             vault=staged_vault(archive,target)
-            (vault/"writer/dead.txt").unlink()
+            # Deletion target comes from the independently authenticated ledger.
+            for rel in signed["vault"]:
+                parentfd=os.open(vault,os.O_DIRECTORY|os.O_RDONLY|os.O_NOFOLLOW)
+                try:
+                    child=os.open("writer",os.O_DIRECTORY|os.O_RDONLY|os.O_NOFOLLOW,dir_fd=parentfd)
+                    try:os.unlink(rel.split("/")[-1],dir_fd=child)
+                    finally:os.close(child)
+                finally:os.close(parentfd)
             if (vault/"writer/dead.txt").exists() or (vault/"writer/keep.txt").read_bytes()!=fake["writer/keep.txt"]:
                 refuse("FICTIONAL_VAULT_POSTCONDITION_FAILED")
         print(json.dumps({"result":"PASS","engine":"PostgreSQL 16.13","isolated":True,
