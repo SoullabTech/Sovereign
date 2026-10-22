@@ -39,4 +39,5 @@ jobs:
       - name: Qualify REAL installed SDK against local fictional server only
         run: |
           npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
-            lib/ai/structured/__tests__/r5g84ActualSdkLoopbackOneAttempt.test.ts
+            lib/ai/structured/__tests__/r5g84ActualSdkLoopbackOneAttempt.test.ts \
+            lib/ai/structured/__tests__/r5g84FullRouterActualSdkLoopback.test.ts
