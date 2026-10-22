@@ -6,6 +6,7 @@
  * and the actual dispatch-error wrapper. Provider errors must not reach
  * diagnostics or StructuredOutcome.detail as raw prose.
  */
+import { inspect } from 'node:util';
 import { StructuredDispatchError, type DispatchObservation } from '../dispatch';
 import type { StructuredProvider, StructuredRequest } from '../types';
 
@@ -55,10 +56,12 @@ describe('untrusted structured provider error redaction', () => {
       dispatch as DispatchObservation, source,
     );
     expect(wrapped.dispatch).toBe(dispatch);
-    expect(wrapped.original).toBe(source);
     expect(wrapped.message).toBe('structured_provider_error_redacted');
+    expect(Object.getOwnPropertyNames(wrapped)).not.toContain('original');
     expect(Object.keys(wrapped)).not.toContain('original');
     expect(JSON.stringify(wrapped)).not.toContain(PRIVATE_MARKER);
+    expect(inspect(wrapped, { showHidden: true })).not.toContain(PRIVATE_MARKER);
+    expect(wrapped.stack).not.toContain(PRIVATE_MARKER);
     expect(wrapped.status).toBe(status);
 
     executeProvider.mockRejectedValueOnce(wrapped);
