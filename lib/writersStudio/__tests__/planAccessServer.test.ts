@@ -1,13 +1,13 @@
 import { writerStudioPlanForMember } from '../planAccessServer';
-import { writersStudioBetaAccess } from '../betaAccessServer';
+import { readWriterPilotApproval } from '../pilotGrantServer';
 
-jest.mock('../betaAccessServer', () => ({ writersStudioBetaAccess: jest.fn() }));
-const betaCheck = writersStudioBetaAccess as jest.Mock;
+jest.mock('../pilotGrantServer', () => ({ readWriterPilotApproval: jest.fn() }));
+const betaCheck = readWriterPilotApproval as jest.Mock;
 
 beforeEach(() => jest.resetAllMocks());
 
 test('requires a server-resolved, member-scoped active pilot before complimentary Pro', async () => {
-  betaCheck.mockResolvedValue({ eligible: true, basis: 'active_beta_tester' });
+  betaCheck.mockResolvedValue({ eligible: true, basis: 'founder_approved_beta' });
   const result = await writerStudioPlanForMember('fictional-member-1');
   expect(betaCheck).toHaveBeenCalledTimes(1);
   expect(betaCheck).toHaveBeenCalledWith('fictional-member-1');
@@ -16,7 +16,7 @@ test('requires a server-resolved, member-scoped active pilot before complimentar
 });
 
 test('unadmitted member remains on informational free product plan', async () => {
-  betaCheck.mockResolvedValue({ eligible: false, basis: 'not_in_pilot' });
+  betaCheck.mockResolvedValue({ eligible: false, basis: 'no_founder_approval' });
   const result = await writerStudioPlanForMember('fictional-member-2');
   expect(result.plan).toBe('free');
   expect(result.pilotEligible).toBe(false);

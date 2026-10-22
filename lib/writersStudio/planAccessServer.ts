@@ -6,9 +6,9 @@
  * or local storage as a Writer's Studio Pro entitlement. A paid source of truth
  * requires its own separately reviewed contract before commercial launch.
  */
-import { writersStudioBetaAccess } from './betaAccessServer';
+import { readWriterPilotApproval } from './pilotGrantServer';
 import { decideWriterStudioPlan } from './planPolicy';
 
 export async function writerStudioPlanForMember(memberId: string) {
-  return decideWriterStudioPlan(await writersStudioBetaAccess(memberId));
+  return decideWriterStudioPlan(await readWriterPilotApproval(memberId));
 }

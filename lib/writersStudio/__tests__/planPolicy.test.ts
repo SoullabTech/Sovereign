@@ -7,13 +7,13 @@ import {
 } from '../planPolicy';
 
 describe('WS-TIERS-R1: Free, Pro and complimentary beta', () => {
-  const outsider = decideWriterStudioPlan({ eligible: false, basis: 'not_in_pilot' });
-  const beta = decideWriterStudioPlan({ eligible: true, basis: 'active_beta_tester' });
+  const outsider = decideWriterStudioPlan({ eligible: false, basis: 'no_founder_approval' });
+  const beta = decideWriterStudioPlan({ eligible: true, basis: 'founder_approved_beta' });
   const founder = decideWriterStudioPlan({ eligible: true, basis: 'founder_witness' });
 
   it('grants all proposed Pro inclusions to the existing approved beta authority for free', () => {
     expect(beta).toMatchObject({
-      plan: 'pro', basis: 'active_beta_tester',
+      plan: 'pro', basis: 'founder_approved_beta',
       pilotEligible: true, complimentary: true,
       paymentEnabled: false, publicEnrollmentEnabled: false,
     });
@@ -51,6 +51,6 @@ describe('WS-TIERS-R1: Free, Pro and complimentary beta', () => {
   it('does not allow plan mutations to alter the canonical inclusion table', () => {
     (beta.included as Record<string, boolean>).advanced_review = false;
     expect(WRITER_STUDIO_FEATURE_INCLUSION.advanced_review.pro).toBe(true);
-    expect(decideWriterStudioPlan({ eligible: true, basis: 'active_beta_tester' }).included.advanced_review).toBe(true);
+    expect(decideWriterStudioPlan({ eligible: true, basis: 'founder_approved_beta' }).included.advanced_review).toBe(true);
   });
 });

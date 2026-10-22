@@ -1,5 +1,11 @@
 # Writer’s Studio Free + Pro — WS-TIERS-R1 (22 October 2026)
 
+**R2 follow-on:** This R1 product policy remains the baseline for Free/Pro
+inclusion, but its broad-CRM complimentary-beta projection has been **replaced**
+in the review branch by the explicit founder-bound, writer-accepted R2 candidate
+described in `WS-FREE-PRO-BETA-R2_2026-10-22.md`. The older R1 beta predicate
+is not authorization to enroll or upgrade anyone.
+
 ## Founder decision and non-negotiable beta exception
 
 Soullab will develop **Free** (ongoing) and **Pro** (initial price hypothesis: $19/month, $180/year). The existing small, invitation-only **Writer’s Studio beta team is complimentary Pro** throughout their authorized pilot. There is no trial countdown, payment-card requirement, seat-based upgrade, or feature degradation among approved beta writers.

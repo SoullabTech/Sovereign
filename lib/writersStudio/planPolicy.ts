@@ -6,11 +6,11 @@
  * purchase, or authorize public enrollment. Server-side operations must keep
  * their own authenticated membership, Work ownership and release checks.
  */
-import type { WritersStudioBetaAccess } from './betaAccessServer';
+import type { WriterPilotApproval } from './pilotGrantServer';
 
 export type WriterStudioPlan = 'free' | 'pro';
 export type WriterStudioPlanBasis =
-  | 'active_beta_tester'
+  | 'founder_approved_beta'
   | 'founder_witness'
   | 'public_not_launched';
 
@@ -83,7 +83,7 @@ export const WRITER_STUDIO_PRICE_PROPOSAL = {
 export type WriterStudioPlanDecision = Readonly<{
   plan: WriterStudioPlan;
   basis: WriterStudioPlanBasis;
-  /** Eligibility from the existing private small-beta authority, not a new grant. */
+  /** Verified founder-approved member grant or founder witness, not a CRM label. */
   pilotEligible: boolean;
   complimentary: boolean;
   publicEnrollmentEnabled: false;
@@ -108,7 +108,7 @@ function includedFor(plan: WriterStudioPlan): Record<WriterStudioFeature, boolea
  * informational Free inclusion proposal; that does not open the Studio.
  */
 export function decideWriterStudioPlan(
-  pilot: WritersStudioBetaAccess,
+  pilot: WriterPilotApproval,
 ): WriterStudioPlanDecision {
   if (pilot.eligible) {
     return {
