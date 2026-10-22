@@ -73,3 +73,36 @@ describe('GREEN controls: preserve established source-custody and fail-closed SQ
     await expect(query('SELECT id FROM fictional_absent_table', [])).rejects.toBe(err);
   });
 });
+
+describe('Class A HOLD: SQL text is not approved for value-bearing diagnostics', () => {
+  test('EXPECTED RED: generic query failure must not print fictional inline SQL text', async () => {
+    const err = Object.assign(new Error('fictional query failed'), {code:'42P01'});
+    mockPoolQuery.mockRejectedValueOnce(err);
+    await expect(query("SELECT '" + MARKER + "' AS fictional_value", []))
+      .rejects.toBe(err);
+    // Parameter redaction is not enough when a query string carries values.
+    expect(JSON.stringify(logSpy.mock.calls)).not.toContain(MARKER);
+  });
+
+  test('EXPECTED RED: unexpected governed-refusal query failure must not print inline SQL text', async () => {
+    const err = Object.assign(new Error('fictional unexpected failure'), {code:'XX999'});
+    mockPoolQuery.mockRejectedValueOnce(err);
+    const { queryWithExpectedRefusal } = require('../postgres') as typeof import('../postgres');
+    await expect(queryWithExpectedRefusal(
+      "SELECT '" + MARKER + "' AS fictional_value", [],
+      {fragment: 'KNOWN_REFUSAL_NOT_PRESENT', why: 'fictional-only fixture'},
+    )).rejects.toBe(err);
+    expect(JSON.stringify(logSpy.mock.calls)).not.toContain(MARKER);
+  });
+
+  test('GREEN control: a declared expected SQL refusal remains silent and explicit', async () => {
+    const err = new Error('FICTIONAL_EXPECTED_DENIAL');
+    mockPoolQuery.mockRejectedValueOnce(err);
+    const { queryWithExpectedRefusal } = require('../postgres') as typeof import('../postgres');
+    const result = await queryWithExpectedRefusal(
+      'SELECT 1', [], {fragment: 'FICTIONAL_EXPECTED_DENIAL', why: 'synthetic refusal'},
+    );
+    expect(result).toEqual({ refused: true });
+    expect(logSpy).not.toHaveBeenCalled();
+  });
+});
