@@ -215,8 +215,7 @@ import type { CapsuleDTO } from '@/lib/capsules/types';
 import { TransformationalPresence, type PresenceState } from './nlp/TransformationalPresence';
 import { SessionTimer, SESSION_PRESETS } from '@/lib/session/SessionTimer';
 import {
-  assessClosureResponse, clearConfirmedContinuityHint, preserveClosureHint,
-  readClosureHint, type ClosureDisplayState, type PendingClosureHint,
+  readClosureHint, requestQualifiedClosure, type ClosureDisplayState,
 } from '@/lib/session/closureReceipt';
 import { SessionTimeAwareness } from '@/components/session/SessionTimeAwareness';
 import { SessionDurationSelector } from '@/components/session/SessionDurationSelector';
@@ -7961,97 +7960,57 @@ I'm not sure what I'm feeling yet.`;
     closureRequestStartedRef.current = true;
 
     const memberId = getValidMemberId();
-    if (!memberId || memberId !== userId || !sessionId) {
+    if (!memberId || memberId !== userId || !sessionId ||
+        typeof window === 'undefined') {
       setClosureUiState('unverified');
       return;
     }
 
-    // Compile-time safety gate. Merely switching this on does NOT certify R2;
-    // the source owner must independently verify the exact server image and
-    // S5/R20 handling before enabling it. Legacy finalize must never be called
-    // by this review candidate.
-    if (process.env.NEXT_PUBLIC_MAIA_R2_CLOSURE_VERIFIED !== 'true') {
-      setClosureUiState('unavailable');
-      return;
-    }
-
-    const expectation = isSanctuary ? 'sanctuary' as const : 'continuity' as const;
-    const requestedAt = new Date().toISOString();
-    const hint: PendingClosureHint = {
-      version: 1,
-      sessionId,
-      claimedMemberId: memberId,
-      expectedPrivacy: expectation,
-      state: 'request_unverified',
-      createdAt: requestedAt,
-    };
-    // A crash or app restart must not erase the fact that a closure MAY have
-    // reached the server. No personal content or credential enters this hint.
-    if (typeof window === 'undefined' ||
-        !preserveClosureHint(window.localStorage, hint)) {
+    // A build-time enablement is a procedural release gate, NOT proof of a
+    // genuine R2 server or any R20 erasure capability. Defaults to OFF.
+    const enabled = process.env.NEXT_PUBLIC_MAIA_R2_CLOSURE_VERIFIED === 'true';
+    if (!enabled) {
       setClosureUiState('unavailable');
       return;
     }
     setClosureUiState('requesting');
 
-    void (async () => {
-      try {
-        const response = await apiFetch('/api/sovereign/session/finalize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            memberId, sessionId, isSanctuary,
-            endedAt: requestedAt,
-          }),
-        });
-        const raw: unknown = await response.json().catch(() => null);
-        // A response arriving AFTER session/account switch must not mutate
-        // the newly displayed encounter or clear its local state.
-        if (liveClosureSessionIdRef.current !== sessionId ||
-            getValidMemberId() !== memberId) return;
+    void requestQualifiedClosure({
+      enabled,
+      claimedMemberId: memberId,
+      currentMemberClaim: userId,
+      sessionId,
+      expectedPrivacy: isSanctuary ? 'sanctuary' : 'continuity',
+      storage: window.localStorage,
+      send: (payload) => apiFetch('/api/sovereign/session/finalize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }),
+    }).then((assessment) => {
+      // A late network reply may not close a DIFFERENT member's conversation.
+      if (liveClosureSessionIdRef.current !== sessionId ||
+          getValidMemberId() !== memberId) return;
 
-        const assessment = assessClosureResponse(
-          response.status, raw, sessionId, expectation,
-        );
-
-        if (assessment.kind === 'continuity_closed') {
-          clearConfirmedContinuityHint(window.localStorage, memberId, sessionId);
-          autoSaveCleanupRef.current?.();
-          autoSaveCleanupRef.current = null;
-          sessionTimer?.stop();
-          setSessionTimer(null);
-          clearSession();
-          onSessionActiveChange?.(false);
-          setClosureUiState('continuity_closed');
-        } else if (assessment.kind === 'sanctuary_erasure_pending') {
-          if (!preserveClosureHint(window.localStorage, {
-            ...hint, state: 'sanctuary_erasure_pending',
-          })) {
-            setClosureUiState('unverified');
-            return;
-          }
-          // The R2 server holds the session, but R20 erasure remains owed.
-          // Keep the content-free hint after clearing the obsolete timer.
-          autoSaveCleanupRef.current?.();
-          autoSaveCleanupRef.current = null;
-          sessionTimer?.stop();
-          setSessionTimer(null);
-          clearSession();
-          onSessionActiveChange?.(false);
-          setClosureUiState('sanctuary_erasure_pending');
-        } else {
-          // HTTP 409/503 and legacy {ok:true} are NOT successful closure.
-          // The hint remains until a verified server reconciliation exists.
-          setClosureUiState(assessment.kind);
-        }
-      } catch {
-        if (liveClosureSessionIdRef.current === sessionId &&
-            getValidMemberId() === memberId) {
-          // The request might have reached the server before transport failed.
-          setClosureUiState('unavailable');
-        }
+      if (assessment.kind === 'continuity_closed' ||
+          assessment.kind === 'sanctuary_erasure_pending') {
+        // The trusted R2 response has either terminally closed Continuity or
+        // accepted a still-pending Sanctuary deletion obligation. The local
+        // TIMER is obsolete in either case; R20 status is not.
+        autoSaveCleanupRef.current?.();
+        autoSaveCleanupRef.current = null;
+        sessionTimer?.stop();
+        setSessionTimer(null);
+        clearSession();
+        onSessionActiveChange?.(false);
       }
-    })();
+      setClosureUiState(assessment.kind);
+    }).catch(() => {
+      if (liveClosureSessionIdRef.current === sessionId &&
+          getValidMemberId() === memberId) {
+        setClosureUiState('unavailable');
+      }
+    });
   }, [onSessionActiveChange, sessionId, userId, isSanctuary, sessionTimer]);
 
   const handleClosingRitualSkip = useCallback(() => {
