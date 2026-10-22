@@ -91,6 +91,32 @@ describe('untrusted structured provider error redaction', () => {
     expect(JSON.stringify(err)).not.toContain(PRIVATE_MARKER);
   });
 
+  it('does not retain nested vendor errors in a deep diagnostic dump', () => {
+    const raw = Object.assign(new Error(PRIVATE_MARKER), {
+      status: 500,
+      cause: new Error('NESTED_' + PRIVATE_MARKER),
+      response: { error: PRIVATE_MARKER, body: [PRIVATE_MARKER] },
+    });
+    const wrapped = new StructuredDispatchError('response_observed', raw);
+    expect(wrapped.status).toBe(500);
+    expect('original' in wrapped).toBe(false);
+    expect('cause' in wrapped).toBe(false);
+    expect(inspect(wrapped, { showHidden: true, depth: 8 }))
+      .not.toContain(PRIVATE_MARKER);
+    expect(JSON.stringify(Object.getOwnPropertyDescriptors(wrapped)))
+      .not.toContain(PRIVATE_MARKER);
+  });
+
+  it('does not throw or echo a crafted status getter', () => {
+    const raw = Object.defineProperty(new Error(PRIVATE_MARKER), 'status', {
+      get() { throw new Error('GETTER_' + PRIVATE_MARKER); },
+    });
+    const wrapped = new StructuredDispatchError('response_observed', raw);
+    expect(wrapped.status).toBeUndefined();
+    expect(inspect(wrapped, { showHidden: true }))
+      .not.toContain(PRIVATE_MARKER);
+  });
+
   it.each(['sovereign', 'local_only'])(
     'never invokes an external provider in %s mode', async (mode) => {
       process.env.MAIA_INFERENCE_MODE = mode;
