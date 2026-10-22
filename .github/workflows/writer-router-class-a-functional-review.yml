@@ -1,0 +1,45 @@
+name: Writer Router Class A Functional Review Only
+
+# SUPPLEMENTAL evidence, NOT merge or release authority.
+# The main Structured Provider Privacy Regression still exercises the
+# founder-governed immutable seam byte-pin and MUST remain RED until
+# explicitly ratified. Do not replace, skip or alter that pin.
+on:
+  pull_request:
+    paths:
+      - 'lib/ai/structured/**'
+      - 'lib/disclosure/**'
+      - '.github/workflows/writer-router-class-a-functional-review.yml'
+  push:
+    branches:
+      - review/ws-governed-router-safe-error-candidate-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unratified-functional-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked, existing dependencies
+        run: npm ci
+      - name: Review only — raw error falsifiers and no-fallback behavior
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/ai/structured/__tests__/unwrappedRouterPrivacyHold.test.ts \
+            lib/ai/structured/__tests__/providerErrorRedaction.test.ts \
+            lib/ai/structured/__tests__/adapterErrorEdge.test.ts \
+            lib/ai/structured/__tests__/nonFallbackable.test.ts \
+            lib/ai/structured/__tests__/requestEquivalence.test.ts \
+            lib/ai/structured/__tests__/modePolicy.test.ts \
+            lib/disclosure/__tests__/editorialDisclosureFalsifiers.test.ts
