@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface SessionRitualClosingProps {
   /** Requests a server-confirmed close; does not itself prove erasure. */
@@ -23,6 +23,18 @@ export function SessionRitualClosing({
   onComplete,
   onSkip,
 }: SessionRitualClosingProps) {
+  const requestStarted = useRef(false);
+
+  useEffect(() => {
+    if (isOpen !== true) requestStarted.current = false;
+  }, [isOpen]);
+
+  const requestClosureOnce = () => {
+    if (requestStarted.current || !onComplete) return;
+    requestStarted.current = true;
+    onComplete();
+  };
+
   if (isOpen !== true) return null;
 
   return (
@@ -46,7 +58,7 @@ export function SessionRitualClosing({
           <button
             type="button"
             className="rounded-xl bg-stone-200 px-4 py-3 text-sm font-medium text-stone-950"
-            onClick={() => onComplete?.()}
+            onClick={requestClosureOnce}
             disabled={!onComplete}
           >
             Request session close
