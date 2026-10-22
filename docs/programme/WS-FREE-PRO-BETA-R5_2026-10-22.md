@@ -79,16 +79,25 @@ three fictional signatures can be validated in a unit test.
   and the exact source SHA are recorded by the ensuing review-only Git commit
   and draft PR.
 - Tests use process-local ephemeral Ed25519 keys and fictional UUIDs only.
-- The R4 three-database rehearsal source now includes additional R5
-  integration cases: current triple signatures, revoked checkpoints,
-  signer rollback, epoch floor and minimum checkpoint sequence. The NEW
-  three-database R5 replay is **NOT VERIFIED**: the fresh Docker test
-  containers exited at startup while the Mac Studio had about **2.6 GiB**
-  free. A minimum 6 GiB free-space preflight now prevents further unsafe
-  fixture runs. Do not prune shared Docker resources or unrelated builds.
-- These unit tests do not prove independent WORM durability; the earlier R4
-  29/29 PostgreSQL experiments expressly prove ordinary database durability
-  insufficient.
+- **R5 enhanced three-database PostgreSQL 16 integration: 35/35 PASS** on
+  exact R5 source `3cc858721c17a6231446b34a69d4208a3e25288c`. Tests
+  exercised healthy triple-signature decisions for fictional writers A and B,
+  revoked checkpoints, restored historical member-grant rows, one/both signer
+  rollbacks, checkpoint epoch floors and minimum checkpoint sequence.
+  Each database used a fresh, isolated `postgres:16` container with its
+  database files and `pg_dump` archives on Docker **tmpfs (memory)**, bound
+  only to loopback ports 55439–55441. The three containers were stopped.
+  The temporary fixtures did not require Docker image/volume pruning, and
+  did not touch production or unrelated workstream storage.
+  A previous attempt had exited with Docker-internal `No space left on
+  device` while creating `pg_wal`; this did not indicate a product
+  authorization failure. The test script retains a 6 GiB host-disk minimum.
+- The R5 35/35 integration proof demonstrates protocol correctness and a
+  rollback counterexample in a fictional environment, **not** actual
+  independent WORM retention, signed trusted-latest attestation, or
+  production key custody. Even three ordinary signing databases can be
+  simultaneously restored; a separately governed nonrollbackable
+  high-water trust anchor remains mandatory.
 
 ## Concrete production R20 checkpoint requirements
 
@@ -128,10 +137,15 @@ The next release candidate must independently attest:
 
 Potential independent storage technologies must be evaluated against these
 requirements; using a third ordinary PostgreSQL server is insufficient.
-The R5 integration rehearsal can be repeated on a fresh controlled runtime
-with at least 6 GiB free, using only dedicated fictional Postgres 16
-containers bound to loopback ports 55439–55441. Existing running Docker
-containers owned by other Soullab workstreams must remain untouched.
+The R5 rehearsal is reproducible with three clean, dedicated PostgreSQL 16
+fixtures bound only to loopback ports 55439–55441 and at least 6 GiB of
+host-disk safety margin. Docker's internal disk may be full despite ample
+host-disk space; ephemeral `--tmpfs /var/lib/postgresql/data` and
+`--tmpfs /tmp` mounts allow the original fixed-name fixture to execute
+without consuming or deleting shared Docker image/volume storage. For
+future runs, confirm that each database is freshly empty, bound to the
+correct container and entirely fictional. Never reuse production DBs or
+prune unrelated Docker workstreams.
 No external resources, paid cloud services or secrets are being provisioned
 by this R5 candidate.
 
