@@ -1,0 +1,41 @@
+name: Writer R5G85 Post-send Reset Negative — DRAFT HOLD
+
+# Intentionally failing security test; never release or auto-ratify from this branch.
+on:
+  push:
+    branches:
+      - review/ws-r5g85-postsend-reset-falsifier-20261022
+  pull_request:
+    paths:
+      - 'lib/ai/structured/__tests__/r5g85PostSendResetDisclosureNegative.test.ts'
+      - '.github/workflows/writer-r5g85-postsend-negative.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postsend-reset-falsifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact repository lockfile dependencies
+        run: npm ci
+      - name: Verify no live provider credentials are supplied
+        run: |
+          test -z "${ANTHROPIC_API_KEY:-}"
+          test -z "${MAIA_EDITORIAL_MODEL:-}"
+      - name: Reproduce post-send reset using real SDK and fictional localhost only (EXPECTED RED)
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/ai/structured/__tests__/r5g85PostSendResetDisclosureNegative.test.ts
