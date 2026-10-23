@@ -185,7 +185,7 @@ refuse D26_original_intent_Work_immutable \
   "UPDATE writer_source_v2_import_intents SET living_work_id='$(id 103)' WHERE arrival_id='$(id 301)'" writer_source_v2_immutable_record
 equal D26_failed_reassociation_keeps_original_intent \
   "SELECT count(*) FROM writer_source_v2_import_intents WHERE arrival_id='$(id 301)' AND living_work_id='$(id 101)' AND manuscript_id='$(id 201)'" 1
-echo D26_EXPECTED_SHARED_WORK_PUBLICATION_GAP: Work W103 lawfully declares M201 but cannot get its own D21B Source intent/pending receipt; choose manuscript-level Source custody and independently signed current per-Work rights before owner authorizes same-M Work transitions
+echo "D26_EXPECTED_SHARED_WORK_PUBLICATION_GAP: Work W103 lawfully declares M201 but cannot get its own D21B Source intent/pending receipt; choose manuscript-level Source custody and independently signed current per-Work rights before owner authorizes same-M Work transitions"
 echo D26_SQL_ONLY_NO_GO: immutable original, current R20 relationship epoch, safe detach/delete, encrypted projections and verified cross-Work reads remain unimplemented
 
 echo D23_PHYSICAL_PG16_EXPECTED_PASS: exact same candidate source, physically guarded initial insert, no external authority/serving GO
