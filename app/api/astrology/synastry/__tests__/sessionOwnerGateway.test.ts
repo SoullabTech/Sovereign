@@ -160,6 +160,25 @@ describe('Synastry privacy — real handlers', () => {
   });
 });
 
+describe('Synastry SQL read custody', () => {
+  it('requires an exact session-owner predicate in the database query', () => {
+    const { readFileSync } = require('node:fs');
+    const { join } = require('node:path');
+    const store: string = readFileSync(
+      join(process.cwd(), 'lib/astrology/synastry/synastryStore.ts'), 'utf8'
+    );
+    const ownerScoped = store.slice(store.indexOf('export async function getOwnedSynastryAnalysisById('));
+    const only = ownerScoped.slice(0, ownerScoped.indexOf('\n}\n') + 2);
+    expect(only).toContain('WHERE id = $1::uuid AND requested_by_member_id = $2');
+    expect(only).toContain('[analysisId, sessionMemberId]');
+    const route: string = readFileSync(
+      join(process.cwd(), 'app/api/astrology/synastry/list/route.ts'), 'utf8'
+    );
+    expect(route).toContain('getOwnedSynastryAnalysisById(analysisId, sessionMemberId)');
+    expect(route).not.toContain('getSynastryAnalysisById(analysisId)');
+  });
+});
+
 describe('Astrology extended access registry', () => {
   const paths = [
     '/api/astrology/synastry/list',
