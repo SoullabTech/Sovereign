@@ -139,7 +139,7 @@ const SAFE_SQL_OPERATIONS = new Set([
 ]);
 function describeSqlOperation(sql: unknown): string {
   if (typeof sql !== 'string') return 'unknown';
-  const m = /^\\s*([A-Za-z]+)\\b/.exec(sql.slice(0, 64));
+  const m = /^\s*([A-Za-z]+)\b/.exec(sql.slice(0, 64));
   if (!m) return 'other';
   const op = m[1].toUpperCase();
   return SAFE_SQL_OPERATIONS.has(op) ? op : 'other';
