@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
+import { useState } from 'react';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface SynastryActionsProps {
   analysisId: string;
@@ -11,24 +11,18 @@ interface SynastryActionsProps {
 export function SynastryActions({ analysisId, initialSavedAt }: SynastryActionsProps) {
   const [savedAt, setSavedAt] = useState<string | null>(initialSavedAt);
   const [saving, setSaving] = useState(false);
-  const [memberId, setMemberId] = useState<string>('');
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    setMemberId(getOrCreateExplorerId());
-  }, []);
-
   async function toggleSave() {
-    if (!analysisId || !memberId || saving) return;
+    if (!analysisId || saving) return;
 
     setSaving(true);
     try {
-      const res = await fetch('/api/astrology/synastry/save', {
+      const res = await apiFetch('/api/astrology/synastry/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           analysisId,
-          memberId,
           saved: !savedAt,
         }),
       });
@@ -62,7 +56,7 @@ export function SynastryActions({ analysisId, initialSavedAt }: SynastryActionsP
         {copied ? 'Copied!' : 'Copy Link'}
       </button>
 
-      {memberId && (
+      {(
         <button
           onClick={toggleSave}
           disabled={saving}
