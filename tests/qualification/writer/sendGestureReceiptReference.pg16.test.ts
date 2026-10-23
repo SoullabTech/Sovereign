@@ -1,5 +1,5 @@
 /**
- * @jest-environment node
+ * Runtime environment: Jest node (from repository jest.config.js).
  * Class A Writer Gate 3 — positive PostgreSQL16 SEND receipt REFERENCE,
  * not production runtime/migration/real provider, and not a source approval.
  * Only a fresh fixed GitHub localhost fictional DB may be contacted.
