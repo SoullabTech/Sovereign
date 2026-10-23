@@ -1,0 +1,45 @@
+name: Writer R5G87 Full Router Post-send Reset — CLASS A DRAFT HOLD
+
+# Source-exact test-only witness, fictional loopback transport; no provider secret.
+# This must not merge, deploy, amend protected pins or grant production inference.
+on:
+  push:
+    branches:
+      - review/ws-r5g87-fullrouter-postsend-evidence-20261022
+  pull_request:
+    paths:
+      - 'lib/ai/structured/__tests__/r5g87FullRouterPostSendReset.test.ts'
+      - '.github/workflows/writer-r5g87-full-router-postsend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-router-uncertain-delivery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install repository lockfile dependencies
+        run: npm ci
+      - name: Verify no genuine provider credentials or authorized editorial model
+        run: |
+          test -z "${ANTHROPIC_API_KEY:-}"
+          test -z "${MAIA_EDITORIAL_MODEL:-}"
+      - name: Real SDK full-router post-send reset witness with fictional local HTTP
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/ai/structured/__tests__/r5g87FullRouterPostSendReset.test.ts \
+            lib/ai/structured/__tests__/r5g85PostSendResetDisclosureNegative.test.ts \
+            lib/ai/structured/__tests__/r5g84ActualSdkLoopbackOneAttempt.test.ts \
+            lib/ai/structured/__tests__/r5g84FullRouterActualSdkLoopback.test.ts
