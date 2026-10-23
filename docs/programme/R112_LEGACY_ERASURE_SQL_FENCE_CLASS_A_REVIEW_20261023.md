@@ -6,7 +6,7 @@
 
 R111 [draft #1973](https://github.com/SoullabTech/Sovereign/pull/1973) executed the actual unmodified `run-media-worker.ts` against real disposable PostgreSQL16 and a fictional Docker named vault. Without that mount, its `destroyVaultBytes()` returned on `ENOENT` and its original `sweepVaultErasureQueue()` deleted the actual queue row even though the original fictional file survived. A code-only mount identity guard cannot protect an **older worker process with its old SQL DELETE credential**.
 
-This R112 review isolates one necessary, NOT sufficient guard: a distinct **legacy role** retains SELECT/UPDATE access for its existing poll path but has NO DELETE privilege on `vault_erasure_queue`. The actual unmodified old worker should be unable to discharge a durable erasure obligation, even if its application code sees a missing image-local vault.
+This R112 review isolates one necessary, NOT sufficient guard: a distinct **legacy role** retains SELECT and only limited retry-metadata UPDATE access for its existing poll path (never UPDATE on `artifact_ref`) but has NO DELETE privilege on `vault_erasure_queue`. The actual unmodified old worker should be unable to discharge a durable erasure obligation, even if its application code sees a missing image-local vault.
 
 ## Exact executable witness
 
@@ -16,7 +16,7 @@ GitHub-hosted Linux runner ONLY, with no remote/nondefault Docker context, no pr
 - `scripts/run-media-worker.ts` `46935ab7ec048d85a30396d904042f78493f62ed`
 - `docker-compose.production.yml` `30e0d9f50e952535aeff86ede389c2343a2e2b49`
 
-Fixture uses a NEW isolated Postgres 16 instance, original media_jobs and `vault_erasure_queue` migrations, an **internal Docker network with no exposed host port**, and a new test-only Docker volume with exactly two fictional files. It creates a fictional, no-password `legacy_worker` PG login scoped to the isolated network; SELECT/UPDATE permission on `media_jobs` and erasure queue only; **DELETE explicitly refused** by PG. No production role/grant/migration exists in this PR.
+Fixture uses a NEW isolated Postgres 16 instance, original media_jobs and `vault_erasure_queue` migrations, an **internal Docker network with no exposed host port**, and a new test-only Docker volume with exactly two fictional files. It creates a fictional, no-password `legacy_worker` PG login scoped to the isolated network; SELECT/UPDATE permission on `media_jobs`, SELECT on the erasure queue and UPDATE only on its `attempts`, `last_attempt_at` and `last_error` columns; queue `DELETE` and `artifact_ref` UPDATE explicitly refused by PostgreSQL. No production role/grant/migration exists in this PR.
 
 1. Spawn unmodified worker without the QA vault mounted, pointing to `legacy_worker`. Require actual failed erasure/discharge attempt (`attempts >= 1`), SQL row remains present, and both original fictional file and bystander remain intact.
 2. Destroy that temporary worker container, spawn a separate worker process with the same fictional DB credentials, and require attempts advance (`attempts >= 2`) but queue and physical bytes still remain. This proves legacy worker process restart does not bypass **this limited SQL grant fence**.
