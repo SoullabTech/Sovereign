@@ -96,13 +96,16 @@ docker exec -i "$pg" psql -X -q -h 127.0.0.1 -v ON_ERROR_STOP=1 -U r112 -d r112 
 CREATE ROLE legacy_worker LOGIN;
 GRANT USAGE ON SCHEMA public TO legacy_worker;
 GRANT SELECT, UPDATE ON public.media_jobs TO legacy_worker;
-GRANT SELECT, UPDATE ON public.vault_erasure_queue TO legacy_worker;
+GRANT SELECT ON public.vault_erasure_queue TO legacy_worker;
+GRANT UPDATE (attempts, last_attempt_at, last_error)
+  ON public.vault_erasure_queue TO legacy_worker;
 REVOKE DELETE ON public.vault_erasure_queue FROM PUBLIC;
 REVOKE DELETE ON public.vault_erasure_queue FROM legacy_worker;
 SQL
 test "$(sql "SELECT has_table_privilege('legacy_worker','vault_erasure_queue','DELETE')")" = f || fail "legacy DELETE still available"
 test "$(sql "SELECT has_table_privilege('legacy_worker','vault_erasure_queue','SELECT')")" = t || fail "no legacy SELECT"
-test "$(sql "SELECT has_table_privilege('legacy_worker','vault_erasure_queue','UPDATE')")" = t || fail "no legacy UPDATE"
+test "$(sql "SELECT has_column_privilege('legacy_worker','vault_erasure_queue','attempts','UPDATE')")" = t || fail "retry bookkeeping forbidden"
+test "$(sql "SELECT has_column_privilege('legacy_worker','vault_erasure_queue','artifact_ref','UPDATE')")" = f || fail "unsafe obligation target rewrite granted"
 
 docker run --rm --network none \
   --mount "type=volume,source=$vol,target=/app/data/vault" node:22-bookworm sh -ceu '
