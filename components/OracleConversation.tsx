@@ -7780,20 +7780,14 @@ I'm not sure what I'm feeling yet.`;
   const handleStartSession = useCallback((durationMinutes: number) => {
     console.log(`⏰ Starting ${durationMinutes}-minute session with temporal container`);
 
-    // 🧹 Clear previous conversation when starting a new session
-    console.log('🧹 Clearing previous conversation for fresh session start');
-    setMessages([]);
-    lastSyncedCountRef.current = 0; // fresh thread — resync from the start
-    historicalMessagesRef.current = []; // Clear API context too
-    sessionRestoredRef.current = false; // Allow greeting to run for fresh session
-    sessionStorage.removeItem('maia_nav_teardown'); // Don't restore on next navigation
-    setHasActivated(false); // Reset to show welcome/greeting
-    // Clear localStorage for previous conversation
-    if (typeof window !== 'undefined' && sessionId) {
-      const storageKey = `maia_conversation_${sessionId}`;
-      localStorage.removeItem(storageKey);
-      console.log(`🧹 Cleared localStorage: ${storageKey}`);
-    }
+    // This is a TIME CONTAINER around the existing conversation, NOT a
+    // verified New Conversation. No new server SID was minted here.
+    // Never discard member-authored words or clear prior history merely
+    // because the member selected a new duration. Genuine encounter
+    // rotation must use the held RF01 R1-D server-confirmed flow.
+    sessionTimer?.stop();
+    autoSaveCleanupRef.current?.();
+    autoSaveCleanupRef.current = null;
 
     const timer = new SessionTimer({
       durationMinutes,
@@ -7838,7 +7832,7 @@ I'm not sure what I'm feeling yet.`;
     autoSaveCleanupRef.current = cleanup;
 
     console.log(`✅ Session timer initialized - MAIA will be temporally aware`);
-  }, [userId, userName, sessionId]);
+  }, [userId, userName, sessionId, sessionTimer]);
 
   const handleExtendSession = useCallback((additionalMinutes: number) => {
     if (sessionTimer) {
@@ -7915,23 +7909,14 @@ I'm not sure what I'm feeling yet.`;
   }, [savedSessionData, userId, userName, sessionId]);
 
   const handleStartNewSession = useCallback(() => {
-    console.log('🗑️ Clearing saved session and starting fresh');
-    clearSession();
-    setShowResumePrompt(false);
-    setSavedSessionData(null);
-    // 🧹 Clear previous conversation messages
-    setMessages([]);
-    lastSyncedCountRef.current = 0; // fresh thread — resync from the start
-    historicalMessagesRef.current = []; // Clear API context too
-    sessionRestoredRef.current = false; // Allow greeting to run for fresh session
-    sessionStorage.removeItem('maia_nav_teardown'); // Don't restore on next navigation
-    setHasActivated(false);
-    if (typeof window !== 'undefined' && sessionId) {
-      const storageKey = `maia_conversation_${sessionId}`;
-      localStorage.removeItem(storageKey);
-    }
-    // Note: User will click header button to open session selector
-  }, [sessionId]);
+    // Legacy saved-timer "New" has NO verified replacement session ID.
+    // Even if a future caller accidentally invokes this handler, it cannot
+    // discard the current transcript, local timer, or content-free R20 hint.
+    toast.error(
+      'A new conversation requires a verified member session. Your existing writing was preserved.',
+      { duration: 7000 },
+    );
+  }, []);
 
   // 🕯️ Ritual Handlers
   const handleDurationSelected = useCallback((durationMinutes: number) => {
