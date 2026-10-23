@@ -30,6 +30,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 const VALID_TOKEN = 'valid-session-token-64hex';
 const ADMIN_TOKEN = 'valid-admin-session-token';
+const PRO_MEMBER_TOKEN = 'valid-pro-ordinary-member-session-token';
 const REVOKED_TOKEN = 'revoked-session-token';
 const EXPIRED_TOKEN = 'expired-session-token';
 const MEMBER_A = '11111111-1111-4111-8111-111111111111';
@@ -128,6 +129,9 @@ beforeEach(() => {
       }
       if (params[0] === ADMIN_TOKEN) {
         return { rows: [{ member_id: ADMIN_M, tier: 'pro', roles: ['admin'] }] };
+      }
+      if (params[0] === PRO_MEMBER_TOKEN) {
+        return { rows: [{ member_id: MEMBER_A, tier: 'pro', roles: ['member'] }] };
       }
       // REVOKED_TOKEN / EXPIRED_TOKEN / anything else: the SQL predicate
       // (revoked = FALSE AND expires_at > NOW()) excludes them.
@@ -358,8 +362,8 @@ describe('Astrology beta access through real proxy', () => {
     expectForwarded(await middleware(request(path, { headers: { 'x-session-token': VALID_TOKEN } })));
   });
 
-  it.each(memberPaths)('admits a verified Pro member at %s', async (path) => {
-    expectForwarded(await middleware(request(path, { headers: { 'x-session-token': ADMIN_TOKEN } })));
+  it.each(memberPaths)('admits a verified Pro member without admin role at %s', async (path) => {
+    expectForwarded(await middleware(request(path, { headers: { 'x-session-token': PRO_MEMBER_TOKEN } })));
   });
 
   it('rejects an identity mismatch even when the caller has a valid Free session', async () => {
