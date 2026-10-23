@@ -71,11 +71,16 @@ beforeAll(async () => {
     db: string; user_name: string; server_addr: string;
   }>(`SELECT current_database() db, current_user user_name,
              inet_server_addr()::text server_addr`);
-  expect(db.rows[0]).toEqual({
+  // The CLIENT uses the exact loopback DATABASE_URL above. A GitHub-hosted
+  // PostgreSQL service reports its internal Docker bridge address here, not
+  // the client's localhost endpoint (e.g. 172.18.0.2/32 in the first run).
+  // Verify the actual database name/user and a nonempty service address.
+  expect(db.rows[0]).toMatchObject({
     db: 'fictional_writer_gesture_qa',
     user_name: 'fictional_writer_qa',
-    server_addr: '127.0.0.1',
+    server_addr: expect.any(String),
   });
+  expect(db.rows[0]!.server_addr.length).toBeGreaterThan(0);
   await pool.query(`
     CREATE TABLE ask_threads (
       id UUID PRIMARY KEY,
