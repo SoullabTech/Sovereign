@@ -129,3 +129,268 @@ describe('real structured Anthropic adapter: fictional delivery failures', () =>
     assertRedactedFailure(failure, 'unknown');
   });
 });
+
+
+/**
+ * CLASS A INTENTIONALLY RED NEGATIVE: issue #1928.
+ * This checks the real SDK default retry layer, unlike the injected
+ * messages.create jest mocks above. An injected content-free fake fetch is
+ * the only transport, so no outbound connection or real credential exists.
+ *
+ * The production adapter currently constructs an Anthropic client without
+ * disabling the SDK default retries. The custom client here preserves
+ * that default and illustrates why a top-level single execute call is not
+ * proof of a single wire attempt. This is a falsifier, not a release test.
+ */
+describe('Class A intentional HOLD: implicit SDK retry truth (#1928)', () => {
+  it('RED: one structured invocation must not make hidden second HTTP attempts on 503', async () => {
+    const calls = jest.fn(async () => new Response(
+      JSON.stringify({
+        type: 'error',
+        error: { type: 'api_error', message: 'FICTIONAL_503_NO_MEMBER_DATA' },
+      }),
+      { status: 503, headers: { 'content-type': 'application/json' } },
+    ));
+
+    // SDK created with its default retry settings; fake fetch is the ONLY
+    // network entry point, and always returns a synthetic 503 in-process.
+    const sdk = new Anthropic({
+      apiKey: 'FICTIONAL_LOCAL_TEST_KEY_NOT_A_CREDENTIAL',
+      fetch: calls as never,
+    });
+    const provider = anthropicStructuredProvider({ client: sdk });
+
+    let failure: unknown;
+    try {
+      await provider.execute(request);
+    } catch (err) {
+      failure = err;
+    }
+    assertRedactedFailure(failure, 'response_observed', 503);
+    // Expected security contract: ONE attempted request, zero silent SDK
+    // retries. Currently this is intentionally RED because defaults retry.
+    expect(calls).toHaveBeenCalledTimes(1);
+  });
+});
+
+
+/**
+ * CLASS A GREEN CONTROLS — SDK transport in-process only.
+ * These tests prove the available no-retry mechanisms; they do NOT change
+ * the still-unsafe governed production adapter and do NOT authorize dispatch.
+ */
+describe('Class A no-hidden-retry configuration controls (#1928)', () => {
+  const testKey = 'FICTIONAL_LOCAL_KEY_NEVER_VALID';
+
+  function fakeHttpFailure(status: number) {
+    const fakeFetch = jest.fn(async () => new Response(
+      JSON.stringify({
+        type: 'error',
+        error: { type: 'api_error', message: 'FICTIONAL_HTTP_ERROR_NO_MEMBER_DATA' },
+      }),
+      { status, headers: { 'content-type': 'application/json' } },
+    ));
+    return fakeFetch;
+  }
+
+  it.each([408, 409, 429, 503] as const)(
+    'client maxRetries:0 sends exactly one normal request on HTTP %s',
+    async (status) => {
+      const fakeFetch = fakeHttpFailure(status);
+      const sdk = new Anthropic({
+        apiKey: testKey,
+        maxRetries: 0,
+        fetch: fakeFetch as never,
+      });
+      const provider = anthropicStructuredProvider({ client: sdk });
+
+      let failure: unknown;
+      try {
+        await provider.execute(request);
+      } catch (err) {
+        failure = err;
+      }
+      assertRedactedFailure(failure, 'response_observed', status);
+      expect(fakeFetch).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('client maxRetries:0 makes one failed connection attempt, without quoting failure text', async () => {
+    const fakeFetch = jest.fn(async () => {
+      throw new TypeError('FICTIONAL_CONNECTION_REFUSED_NO_MEMBER_DATA');
+    });
+    const sdk = new Anthropic({
+      apiKey: testKey,
+      maxRetries: 0,
+      fetch: fakeFetch as never,
+    });
+    const provider = anthropicStructuredProvider({ client: sdk });
+    let failure: unknown;
+    try {
+      await provider.execute(request);
+    } catch (err) {
+      failure = err;
+    }
+    assertRedactedFailure(failure, 'no_response_observed');
+    expect(fakeFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('client maxRetries:0 makes only one streaming attempt on HTTP 503', async () => {
+    const fakeFetch = fakeHttpFailure(503);
+    const sdk = new Anthropic({
+      apiKey: testKey,
+      maxRetries: 0,
+      fetch: fakeFetch as never,
+    });
+    const provider = anthropicStructuredProvider({ client: sdk });
+    let failure: unknown;
+    try {
+      await provider.execute({
+        ...request,
+        execution: { completion: 'long-running' },
+      });
+    } catch (err) {
+      failure = err;
+    }
+    assertRedactedFailure(failure, 'response_observed', 503);
+    expect(fakeFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('client maxRetries:0 refuses 503 rather than silently accepting a later 200', async () => {
+    const fakeFetch = jest.fn(async () => {
+      if (fakeFetch.mock.calls.length === 1) {
+        return new Response(
+          JSON.stringify({
+            type: 'error',
+            error: { type: 'api_error', message: 'FICTIONAL_TEMPORARY_FAILURE' },
+          }),
+          { status: 503, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          id: 'fictional-message', type: 'message', role: 'assistant',
+          model: request.model,
+          content: [{ type: 'text', text: 'FICTIONAL_UNREACHABLE_200' }],
+          stop_reason: 'end_turn', usage: { input_tokens: 1, output_tokens: 1 },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    });
+    const sdk = new Anthropic({
+      apiKey: testKey,
+      maxRetries: 0,
+      fetch: fakeFetch as never,
+    });
+    const provider = anthropicStructuredProvider({ client: sdk });
+    let failure: unknown;
+    try {
+      await provider.execute(request);
+    } catch (err) {
+      failure = err;
+    }
+    assertRedactedFailure(failure, 'response_observed', 503);
+    expect(fakeFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('request-scoped maxRetries:0 overrides a retry-enabled SDK client for ordinary use', async () => {
+    const fakeFetch = fakeHttpFailure(503);
+    // Intentionally retain SDK defaults to simulate an injected client
+    // configured elsewhere. The per-request override must still prevail.
+    const sdk = new Anthropic({ apiKey: testKey, fetch: fakeFetch as never });
+    let failure: unknown;
+    try {
+      await sdk.messages.create({
+        model: request.model,
+        system: request.system,
+        messages: request.messages,
+        max_tokens: request.maxTokens,
+      } as never, { maxRetries: 0 });
+    } catch (err) {
+      failure = err;
+    }
+    expect(failure).toBeInstanceOf(Anthropic.APIError);
+    expect((failure as { status: number }).status).toBe(503);
+    expect(fakeFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('request-scoped maxRetries:0 overrides a retry-enabled SDK client for streaming', async () => {
+    const fakeFetch = fakeHttpFailure(503);
+    const sdk = new Anthropic({ apiKey: testKey, fetch: fakeFetch as never });
+    let failure: unknown;
+    try {
+      await sdk.messages.stream({
+        model: request.model,
+        system: request.system,
+        messages: request.messages,
+        max_tokens: request.maxTokens,
+      } as never, { maxRetries: 0 }).finalMessage();
+    } catch (err) {
+      failure = err;
+    }
+    expect(failure).toBeInstanceOf(Anthropic.APIError);
+    expect((failure as { status: number }).status).toBe(503);
+    expect(fakeFetch).toHaveBeenCalledTimes(1);
+  });
+
+
+  it('SDK default retries can erase an earlier observed HTTP response from the final delivery fact', async () => {
+    let attempts = 0;
+    const fakeFetch = jest.fn(async () => {
+      attempts += 1;
+      if (attempts === 1) {
+        // First actual transport attempt demonstrably receives an HTTP 503.
+        return new Response(
+          JSON.stringify({
+            type: 'error',
+            error: { type: 'api_error', message: 'FICTIONAL_FIRST_RESPONSE' },
+          }),
+          { status: 503, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      // Subsequent transport attempts fail before a response is seen.
+      // The SDK reports only the last exception to this adapter.
+      throw new TypeError(PRIVATE_MARKER);
+    });
+    const sdk = new Anthropic({ apiKey: testKey, fetch: fakeFetch as never });
+    let failure: unknown;
+    try {
+      await anthropicStructuredProvider({ client: sdk }).execute(request);
+    } catch (err) {
+      failure = err;
+    }
+
+    // A separate first-attempt HTTP response undeniably happened, but the
+    // existing adapter receives the SDK's terminal connection error only.
+    assertRedactedFailure(failure, 'no_response_observed');
+    expect(fakeFetch).toHaveBeenCalledTimes(3);
+    expect(attempts).toBe(3);
+  });
+
+  it('SDK defaults can hide an initial 503 behind a later successful synthetic 200', async () => {
+    const fakeFetch = jest.fn(async () => {
+      if (fakeFetch.mock.calls.length === 1) {
+        return new Response(
+          JSON.stringify({
+            type: 'error', error: { type: 'api_error', message: 'FICTIONAL_503_FIRST' },
+          }),
+          { status: 503, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          id: 'fictional-retry-message', type: 'message', role: 'assistant',
+          model: request.model,
+          content: [{ type: 'text', text: 'FICTIONAL_RETRY_RECOVERY' }],
+          stop_reason: 'end_turn', usage: { input_tokens: 1, output_tokens: 1 },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    });
+    const sdk = new Anthropic({ apiKey: testKey, fetch: fakeFetch as never });
+    const result = await anthropicStructuredProvider({ client: sdk }).execute(request);
+    expect(fakeFetch).toHaveBeenCalledTimes(2);
+    expect(result.content[0]).toEqual({ type: 'text', text: 'FICTIONAL_RETRY_RECOVERY' });
+    expect(result.provenance.modelAgreement).toBe('agreed');
+  });
+});
