@@ -10,6 +10,7 @@ on:
   pull_request:
     paths:
       - 'tests/qualification/writer/sendGestureReceiptReference.pg16.test.ts'
+      - 'tests/qualification/writer/sendGestureCrashChild.review.cjs'
       - '.github/workflows/writer-send-gesture-reference-pg16-review.yml'
   workflow_dispatch:
 

@@ -6,6 +6,7 @@
  * This deliberately does not import the Writer app, auth, SDK or R20.
  */
 import type { Pool, PoolClient } from 'pg';
+import { spawnSync } from 'node:child_process';
 
 const FIXED_URL = 'postgresql://fictional_writer_qa:fictional_only@127.0.0.1:5432/fictional_writer_gesture_qa';
 const FLAG = 'WRITER_SEND_REFERENCE_PG16_QA';
@@ -327,5 +328,50 @@ suite('test-only PG16 durable Send gesture receipt reference (NO app/source inte
     const receipt=await pool!.query('SELECT * FROM writer_send_reference.gesture_receipts');
     expect(JSON.stringify(receipt.rows)).not.toContain(WORDS);
     expect(await counts()).toEqual({acts:1,receipts:1,attempted:0});
+  });
+
+  /**
+   * Genuine process termination, rather than a same-process receipt readback.
+   * The child runs an equivalent fictional PG outbound claim under the exact
+   * guarded QA database, then exits without closing its pg.Client.
+   * These prove PostgreSQL transaction durability/rollback, not the real
+   * application's crash lifecycle or actual network delivery.
+   */
+  test('separate process crashes AFTER COMMIT: claimed state survives reopening and cannot resend',async()=>{
+    const input=gesture();
+    expect((await admit(input)).kind).toBe('created');
+    const child=spawnSync(
+      process.execPath,
+      [require.resolve('./sendGestureCrashChild.review.cjs'),'after_commit'],
+      {cwd:process.cwd(),env:process.env,encoding:'utf8',timeout:12000}
+    );
+    expect(child.error).toBeUndefined();
+    expect(child.status).toBe(73);
+    expect(child.stdout).not.toContain(WORDS);
+    expect(child.stderr).not.toContain(WORDS);
+    expect(await counts()).toEqual({acts:1,receipts:1,attempted:1});
+    expect(await admit(input)).toMatchObject({
+      kind:'replay',turnIndex:0,state:'attempted_unknown'
+    });
+    expect(await claimDispatchOnce(input)).toBe(false);
+    expect(await counts()).toEqual({acts:1,receipts:1,attempted:1});
+  });
+
+  test('separate process crashes BEFORE COMMIT: PG rolls back claim and permits ONE later claim',async()=>{
+    const input=gesture();
+    expect((await admit(input)).kind).toBe('created');
+    const child=spawnSync(
+      process.execPath,
+      [require.resolve('./sendGestureCrashChild.review.cjs'),'before_commit'],
+      {cwd:process.cwd(),env:process.env,encoding:'utf8',timeout:12000}
+    );
+    expect(child.error).toBeUndefined();
+    expect(child.status).toBe(72);
+    expect(child.stdout).not.toContain(WORDS);
+    expect(child.stderr).not.toContain(WORDS);
+    expect(await counts()).toEqual({acts:1,receipts:1,attempted:0});
+    expect(await claimDispatchOnce(input)).toBe(true);
+    expect(await claimDispatchOnce(input)).toBe(false);
+    expect(await counts()).toEqual({acts:1,receipts:1,attempted:1});
   });
 });
