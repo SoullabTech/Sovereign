@@ -374,4 +374,42 @@ suite('test-only PG16 durable Send gesture receipt reference (NO app/source inte
     expect(await claimDispatchOnce(input)).toBe(false);
     expect(await counts()).toEqual({acts:1,receipts:1,attempted:1});
   });
+
+  test('separate process dies BEFORE author+receipt COMMIT: no partial act or increment survives',async()=>{
+    const input=gesture();
+    const child=spawnSync(
+      process.execPath,
+      [require.resolve('./sendGestureCrashChild.review.cjs'),'author_before_commit'],
+      {cwd:process.cwd(),env:process.env,encoding:'utf8',timeout:12000}
+    );
+    expect(child.error).toBeUndefined();
+    expect(child.status).toBe(75);
+    expect(child.stdout).not.toContain(WORDS);
+    expect(child.stderr).not.toContain(WORDS);
+    expect(await counts()).toEqual({acts:0,receipts:0,attempted:0});
+    const index=await pool!.query('SELECT next_index FROM writer_send_reference.threads WHERE id=$1',[THREAD]);
+    expect(index.rows[0].next_index).toBe(0);
+    expect(await admit(input)).toMatchObject({kind:'created',turnIndex:0,state:'ready'});
+    expect(await counts()).toEqual({acts:1,receipts:1,attempted:0});
+  });
+
+  test('separate process dies AFTER author+receipt COMMIT: matching replay cannot create second act',async()=>{
+    const input=gesture();
+    const child=spawnSync(
+      process.execPath,
+      [require.resolve('./sendGestureCrashChild.review.cjs'),'author_after_commit'],
+      {cwd:process.cwd(),env:process.env,encoding:'utf8',timeout:12000}
+    );
+    expect(child.error).toBeUndefined();
+    expect(child.status).toBe(76);
+    expect(child.stdout).not.toContain(WORDS);
+    expect(child.stderr).not.toContain(WORDS);
+    expect(await counts()).toEqual({acts:1,receipts:1,attempted:0});
+    expect(await admit(input)).toMatchObject({kind:'replay',turnIndex:0,state:'ready'});
+    const index=await pool!.query('SELECT next_index FROM writer_send_reference.threads WHERE id=$1',[THREAD]);
+    expect(index.rows[0].next_index).toBe(1);
+    expect(await claimDispatchOnce(input)).toBe(true);
+    expect(await claimDispatchOnce(input)).toBe(false);
+    expect(await counts()).toEqual({acts:1,receipts:1,attempted:1});
+  });
 });
