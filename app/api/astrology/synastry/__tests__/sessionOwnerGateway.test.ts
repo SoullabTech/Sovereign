@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { getSynastryAnalysisById, setSynastryAnalysisSaved } from '@/lib/astrology/synastry/synastryStore';
+import { getOwnedSynastryAnalysisById, setSynastryAnalysisSaved } from '@/lib/astrology/synastry/synastryStore';
 import { GET, POST, OPTIONS } from '../list/route';
 import { POST as SAVE, OPTIONS as SAVE_OPTIONS } from '../save/route';
 import { checkAccess, matchRule } from '@/config/accessMatrix';
@@ -8,7 +8,7 @@ import { checkAccess, matchRule } from '@/config/accessMatrix';
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: jest.fn() }));
 jest.mock('@/lib/astrology/synastry/synastryStore', () => ({
   createSynastryAnalysis: jest.fn(),
-  getSynastryAnalysisById: jest.fn(),
+  getOwnedSynastryAnalysisById: jest.fn(),
   setSynastryAnalysisSaved: jest.fn(),
 }));
 
@@ -16,7 +16,7 @@ const A = '11111111-1111-4111-8111-111111111111';
 const B = '22222222-2222-4222-8222-222222222222';
 const ID = '33333333-3333-4333-8333-333333333333';
 const auth = jest.mocked(getMemberIdFromRequest);
-const getAnalysis = jest.mocked(getSynastryAnalysisById);
+const getAnalysis = jest.mocked(getOwnedSynastryAnalysisById);
 const saveAnalysis = jest.mocked(setSynastryAnalysisSaved);
 const url = 'https://soullab.life/api/astrology/synastry/';
 function req(path: string, data?: object, headers?: Record<string, string>) {
@@ -39,13 +39,10 @@ describe('Synastry privacy — real handlers', () => {
 
   it('returns a non-enumerating 404 for a foreign owner', async () => {
     auth.mockResolvedValue(A);
-    getAnalysis.mockResolvedValue({
-      id: ID, requested_by_member_id: B, result: { success: true, secret: 'private' },
-      created_at: '', updated_at: '', saved_at: null, a_member_id: null,
-      b_member_id: null, a_birth: null, b_birth: null,
-    });
+    getAnalysis.mockResolvedValue(null); // SQL filters foreign owner before returning a row
     const res = await GET(req('list?analysisId=' + ID));
     expect(res.status).toBe(404);
+    expect(getAnalysis).toHaveBeenCalledWith(ID, A);
     expect(JSON.stringify(await res.json())).not.toContain('private');
   });
 
@@ -59,6 +56,7 @@ describe('Synastry privacy — real handlers', () => {
     const res = await GET(req('list?analysisId=' + ID));
     expect(res.status).toBe(200);
     expect((await res.json()).analysisId).toBe(ID);
+    expect(getAnalysis).toHaveBeenCalledWith(ID, A);
   });
 
   it('rejects foreign stored member birth data before querying it', async () => {
