@@ -1,0 +1,48 @@
+name: Writer R5G97 Post-provider Receipt V4 Falsifiers — EXPECTED RED HOLD
+
+# Review-only. Installed actual SDK is localhost forced with a bogus key;
+# no real provider, production DB, member Work, live receipt or model spend.
+# An intentional negative RED is a Class A release blocker, not a test waiver.
+on:
+  push:
+    branches:
+      - review/ws-r5g97-postprovider-receipt-negative-20261023
+  pull_request:
+    paths:
+      - 'lib/manuscript/editorialRuntime/__tests__/r5g97ActualSdkReceiptConfirmationNegative.test.ts'
+      - '.github/workflows/writer-r5g97-postprovider-v4-negative.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-sdk-v4-receipt-negative:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact lockfile
+        run: npm ci
+      - name: Assert exact reviewed SDK and runtime; refuse real keys
+        run: |
+          test "$(git hash-object lib/ai/structured/anthropicStructuredAdapter.ts)" = "10f8058d3941128d8792fb1b7a31adc60cc094e7"
+          test "$(git hash-object lib/manuscript/editorialRuntime/turn.ts)" = "dec900a812bf1638fc6832eb6d780a471abdf734"
+          test -z "${DATABASE_URL:-}"
+          test -z "${ANTHROPIC_API_KEY:-}"
+          test -z "${MAIA_EDITORIAL_MODEL:-}"
+      - name: Actual SDK + real editorial V4 receipt false/throw negative (EXPECTED RED)
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/manuscript/editorialRuntime/__tests__/r5g97ActualSdkReceiptConfirmationNegative.test.ts \
+            lib/manuscript/editorialRuntime/__tests__/r5g96ActualSdkUsageToEditorialRefusal.test.ts \
+            lib/manuscript/editorialRuntime/__tests__/modelAttributionRuntimePrivacyHold.test.ts
