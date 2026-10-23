@@ -5,6 +5,13 @@ on:
   push:
     branches:
       - review/d22-source-v2-intent-pg16-20261023
+  pull_request:
+    branches:
+      - clean-main-no-secrets
+    paths:
+      - .github/workflows/d22-source-v2-intent-pg16-review.yml
+      - scripts/qualification/d22-source-v2-intent-pg16.review.sh
+      - scripts/qualification/fixtures/D21_SOURCE_V2_INTENT_REVIEW.sql
 
 permissions:
   contents: read
