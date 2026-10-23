@@ -63,6 +63,7 @@ const tests = [
     path,
     status: 204,
     method: 'OPTIONS',
+    requestedMethod: path === '/api/members/profile' ? 'PUT' : 'POST',
     origin: betaOrigin,
     expectedCors: betaOrigin,
   })),
@@ -80,7 +81,7 @@ let failed = 0;
 for (const test of tests) {
   const headers = test.method === 'OPTIONS' ? {
     Origin: test.origin,
-    'Access-Control-Request-Method': 'POST',
+    'Access-Control-Request-Method': test.requestedMethod || 'POST',
     'Access-Control-Request-Headers': 'content-type,x-session-token',
   } : {};
   let result = '';
@@ -95,10 +96,12 @@ for (const test of tests) {
     });
     const allowOrigin = response.headers.get('access-control-allow-origin');
     const credentials = response.headers.get('access-control-allow-credentials');
+    const allowedMethods = (response.headers.get('access-control-allow-methods') || '')
+      .split(',').map(method => method.trim().toUpperCase());
     const ctype = response.headers.get('content-type') || '';
     ok = response.status === test.status &&
       (!test.contentType || test.contentType.test(ctype)) &&
-      (!test.expectedCors || (allowOrigin === test.expectedCors && credentials === 'true')) &&
+      (!test.expectedCors || (allowOrigin === test.expectedCors && credentials === 'true' && allowedMethods.includes(test.requestedMethod || 'POST'))) &&
       (!test.forbiddenCors || (allowOrigin !== test.forbiddenCors && allowOrigin !== '*'));
     result = 'HTTP ' + response.status;
     if (test.expectedCors) result += ', beta CORS ' + (allowOrigin === betaOrigin ? 'present' : 'missing');
