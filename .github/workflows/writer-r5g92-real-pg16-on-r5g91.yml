@@ -1,0 +1,56 @@
+name: Writer R5G92 Real PG16 Against R5G91 — CLASS A REVIEW HOLD
+
+# Actual postgres driver, fictional-only ephemeral GitHub Actions service.
+# No member material, actual service credential, external DB, model, or deployment.
+on:
+  push:
+    branches:
+      - review/ws-r5g92-pg16-driver-on-r5g91-20261022
+  pull_request:
+    paths:
+      - 'lib/db/__tests__/postgresRealFictionalDriver.test.ts'
+      - '.github/workflows/writer-r5g92-real-pg16-on-r5g91.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  disposable-real-pg16-review-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: fictional_writer_qa
+          POSTGRES_PASSWORD: fictional_only
+          POSTGRES_DB: fictional_writer_privacy_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fictional_writer_qa -d fictional_writer_privacy_qa"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      CI: 'true'
+      TZ: UTC
+      QA_PG16_EXACT: EXACT_DISPOSABLE_PG16_FICTIONAL_ONLY
+      DATABASE_URL: postgresql://fictional_writer_qa:fictional_only@127.0.0.1:5432/fictional_writer_privacy_qa
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked repository dependencies
+        run: npm ci
+      - name: Refuse any genuine external Anthropic credential
+        run: test -z "${ANTHROPIC_API_KEY:-}"
+      - name: Run original unchanged real PostgreSQL16 driver witness on new proposed source
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/db/__tests__/postgresRealFictionalDriver.test.ts
