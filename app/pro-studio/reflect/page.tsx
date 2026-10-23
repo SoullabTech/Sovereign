@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { isReflectBetaAllowed } from '@/lib/proStudio/reflectBetaAccess';
-import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { headers } from 'next/headers';
+import { NextRequest } from 'next/server';
+import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
 import { ReflectArrivalView } from '@/components/pro-studio/ReflectArrivalView';
 
 /**
@@ -23,12 +25,25 @@ export const metadata: Metadata = {
 };
 
 export default async function ReflectArrival() {
-  const session = await getCurrentSession();
-  if (!session) redirect('/signin?next=%2Fpro-studio%2Freflect');
+  // Reflect uses the same server-verified cookie/header authority as the
+  // request gate. A cookie-only helper would refuse a legitimate mobile
+  // x-session-token after the strict proxy had already authenticated it.
+  //
+  // Construct a local request ONLY to reuse the existing verifier.
+  // No request-origin claims, URL query-token admission, or client tier/role
+  // assertions become authority through this bridge.
+  const requestHeaders = await headers();
+  const request = new NextRequest('https://soullab.invalid/pro-studio/reflect', {
+    headers: new Headers(requestHeaders),
+  });
+  const verified = await deriveVerifiedAccess(request);
+  if (!verified.authenticated || !verified.memberId) {
+    redirect('/signin?next=%2Fpro-studio%2Freflect');
+  }
 
   // Beta invitations are separate from practitioner role, Field Lab tester status,
   // free MAIA access, and any future paid Reflect entitlement. Default is closed.
-  if (!isReflectBetaAllowed(session.memberId, {
+  if (!isReflectBetaAllowed(verified.memberId, {
     enabled: process.env.PRO_STUDIO_REFLECT_BETA_ENABLED,
     memberIds: process.env.PRO_STUDIO_REFLECT_BETA_MEMBER_IDS,
   })) notFound();
