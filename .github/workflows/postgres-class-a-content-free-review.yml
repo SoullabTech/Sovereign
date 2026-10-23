@@ -1,0 +1,41 @@
+name: Postgres Class A Content-Free Functional Review Only
+
+# Supplemental evidence on an unapproved, shared DB source. NEVER release authority.
+# The original negative source remains intact on draft #1936 and must stay RED.
+on:
+  pull_request:
+    paths:
+      - 'lib/db/**'
+      - '.github/workflows/postgres-class-a-content-free-review.yml'
+  push:
+    branches:
+      - review/pg-content-free-diagnostics-class-a-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-db-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked existing dependencies
+        run: npm ci
+      - name: Execute original RED security assertions as GREEN on candidate
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/db/__tests__/errorMetadataPrivacyHold.test.ts \
+            lib/db/__tests__/errorMetadataPrivacyHardening.test.ts \
+            lib/db/__tests__/paramRedaction.test.ts \
+            lib/db/__tests__/postgres.missingTable.test.ts
