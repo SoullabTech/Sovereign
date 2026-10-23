@@ -1,0 +1,21 @@
+name: D22 Source V2 D21 Intent PostgreSQL16 QA Only
+
+# REVIEW-ONLY. No deployment, migrations on target DB, or source admission.
+on:
+  push:
+    branches:
+      - review/d22-source-v2-intent-pg16-20261023
+
+permissions:
+  contents: read
+
+jobs:
+  d21-intent-pg16:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run unchanged D21 SQL against isolated fictional PG16
+        run: bash scripts/qualification/d22-source-v2-intent-pg16.review.sh
