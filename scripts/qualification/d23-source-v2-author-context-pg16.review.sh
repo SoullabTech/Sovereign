@@ -118,4 +118,54 @@ echo D23_EXPECTED_UNSAFE_INSERT_ONLY_GUARD: canonical declaration can change aft
 sql "UPDATE living_work_expressions SET expression_id='$(id 201)' WHERE id='$(id 701)'" >/dev/null
 refuse canonical_delete_BLOCKED_pending_FK "DELETE FROM member_manuscripts WHERE id='$(id 201)'" "foreign key"
 echo D23_EXPECTED_ERASURE_BLOCKER: a pending FK is not completed deletion/revocation and requires independent R20 custodian
+
+# D25: Extend the SAME D21B+canonical PG16 harness without changing SQL.
+# All rows are fictional. These SQL-local reads MUST NOT authorize Source V2.
+# The ontology explicitly permits one manuscript to appear in multiple Works.
+equal D25_two_same_author_Works_share_manuscript \
+  "SELECT count(*) FROM living_work_expressions WHERE expression_type='manuscript' AND expression_id='$(id 201)' AND declared_by='$(id 1)' AND living_work_id IN ('$(id 101)','$(id 103)')" 2
+# A published Source linked to Work 101 currently prevents author detach.
+refuse D25_selected_Work_detach_BLOCKED_by_pending_FK \
+  "DELETE FROM living_work_expressions WHERE id='$(id 701)'" "foreign key"
+# The unrelated Work 103 edge is independently removable; the common manuscript remains.
+# ROLLBACK makes this a non-destructive control even in the fictional database.
+equal D25_other_Work_detach_preserves_shared_manuscript \
+  "BEGIN; DELETE FROM living_work_expressions WHERE id='$(id 703)'; SELECT count(*) FROM member_manuscripts WHERE id='$(id 201)'; ROLLBACK;" 1
+equal D25_other_Work_declaration_restored \
+  "SELECT count(*) FROM living_work_expressions WHERE id='$(id 703)' AND expression_id='$(id 201)'" 1
+
+# Strongest possible purely SQL-local current join, not an external R20 authority.
+# The missing independently administered revocation epoch is the expected red.
+current_context="SELECT count(*) FROM writer_source_v2_pending_publications p
+JOIN writer_source_v2_import_intents i ON i.arrival_id=p.arrival_id AND i.member_id=p.member_id AND i.living_work_id=p.living_work_id AND i.manuscript_id=p.manuscript_id
+JOIN writer_source_v2_completed_originals o ON o.arrival_id=p.arrival_id AND o.object_id=i.object_id
+JOIN living_works w ON w.id=p.living_work_id AND w.member_id=p.member_id
+JOIN member_manuscripts m ON m.id=p.manuscript_id AND m.member_id=p.member_id
+JOIN living_work_expressions e ON e.id=p.declaration_id AND e.living_work_id=p.living_work_id AND e.expression_type='manuscript' AND e.expression_id=p.manuscript_id AND e.declared_by=p.member_id
+JOIN manuscript_working_drafts d ON d.id=p.draft_id AND d.manuscript_id=p.manuscript_id AND d.member_id=p.member_id
+JOIN working_draft_revisions r ON r.id=p.first_revision_id AND r.draft_id=p.draft_id AND r.revision_number=1 AND r.saved_by=p.member_id
+WHERE p.arrival_id='$(id 301)'"
+equal D25_local_join_before_change "$current_context" 1
+sql "UPDATE living_work_expressions SET expression_id='$(id 203)' WHERE id='$(id 701)'" >/dev/null
+equal D25_local_join_refuses_rebound_away "$current_context" 0
+equal D25_other_Work_remains_valid \
+  "SELECT count(*) FROM living_work_expressions WHERE id='$(id 703)' AND living_work_id='$(id 103)' AND expression_id='$(id 201)'" 1
+equal D25_pending_survives_rebind_away \
+  "SELECT count(*) FROM writer_source_v2_pending_publications WHERE arrival_id='$(id 301)'" 1
+sql "UPDATE living_work_expressions SET expression_id='$(id 201)' WHERE id='$(id 701)'" >/dev/null
+equal D25_LOCAL_JOIN_ABA_returns_true_without_epoch "$current_context" 1
+echo "D25_EXPECTED_UNSAFE_ABA_REBIND: local join returns true after declaration rebind, although no independent generation/withdrawal attestation was issued"
+
+# Canonical Work ownership itself is mutable under the original migrations.
+# The guard is only BEFORE INSERT; it cannot protect post-commit owner changes.
+sql "UPDATE living_works SET member_id='$(id 2)' WHERE id='$(id 101)'" >/dev/null
+equal D25_local_join_refuses_changed_Work_owner "$current_context" 0
+equal D25_pending_still_exists_after_Work_owner_change \
+  "SELECT count(*) FROM writer_source_v2_pending_publications WHERE arrival_id='$(id 301)'" 1
+sql "UPDATE living_works SET member_id='$(id 1)' WHERE id='$(id 101)'" >/dev/null
+equal D25_LOCAL_JOIN_owner_ABA_returns_true "$current_context" 1
+echo "D25_EXPECTED_UNSAFE_OWNER_ABA: the canonical Work owner can change and revert without invalidating the local pending publication"
+echo "D25_EXPECTED_ERASURE_BLOCKER: selected-Work detachment is FK-blocked; other-Work detachment is possible without deleting shared manuscript"
+echo "D25_SQL_LOCAL_ONLY: no trusted R20, encrypted projection, vault actor, actual HTTP, author import, or deletion completion is qualified"
+
 echo D23_PHYSICAL_PG16_EXPECTED_PASS: exact same candidate source, physically guarded initial insert, no external authority/serving GO
