@@ -87,7 +87,7 @@ const ACT = {
   sanctuary:false,
 };
 
-type Scenario = 'mismatch' | 'http503' | 'reset';
+type Scenario = 'agreed' | 'mismatch' | 'http503' | 'reset';
 const originalMode = process.env.MAIA_INFERENCE_MODE;
 
 beforeEach(() => {
@@ -139,7 +139,7 @@ async function withServer(
       res.writeHead(200, {'content-type':'application/json'});
       res.end(JSON.stringify({
         id:'msg_r5g97',type:'message',role:'assistant',
-        model:'fictional-reported-model-other-than-requested',
+        model:scenario === 'agreed' ? body.model : 'fictional-reported-model-other-than-requested',
         content:[{type:'tool_use',id:'toolu_r5g97',name:'editorial_outcome',
           input:{kind:'reply_only',reply:'Invented feedback only.'}}],
         stop_reason:'tool_use',stop_sequence:null,
@@ -164,6 +164,7 @@ async function withServer(
 
 describe('R5G.97 original V4 receipt-accountability negatives with real SDK', () => {
   it.each([
+    ['agreed','false'], ['agreed','throw'],
     ['mismatch','false'], ['mismatch','throw'],
     ['http503','false'], ['http503','throw'],
   ] as const)(
@@ -185,6 +186,25 @@ describe('R5G.97 original V4 receipt-accountability negatives with real SDK', ()
       expect(fakeConfirm).toHaveBeenCalledTimes(1);
       expect(fakeConfirm).toHaveBeenCalledWith(expect.any(String));
       expect(fakePersist).not.toHaveBeenCalled();
+      expect(sdkInstances).toBe(1);
+      expect(JSON.stringify([result,diagnostics.mock.calls])).not.toContain(AUTHOR);
+      expect(JSON.stringify([result,diagnostics.mock.calls])).not.toContain(PRIVATE);
+    }),
+  );
+
+  it('GREEN: an agreed model with confirmed crossing reaches the governed persistence seam once',async () =>
+    withServer('agreed',async wires=>{
+      const diagnostics=jest.spyOn(console,'error').mockImplementation(()=>{});
+      // Mock the durable seam with an explicit fictional refusal: prove that
+      // this otherwise-successful response would reach it exactly once.
+      fakePersist.mockResolvedValueOnce({ok:false,reason:'fictional_persistence_hold',
+        detail:'fictional_custody_unavailable'});
+      const result=await runEditorialTurn(ACT);
+      expect(result).toEqual({ok:false,reason:'fictional_persistence_hold',
+        detail:'fictional_custody_unavailable'});
+      expect(wires).toHaveLength(1);
+      expect(fakeConfirm).toHaveBeenCalledTimes(1);
+      expect(fakePersist).toHaveBeenCalledTimes(1);
       expect(sdkInstances).toBe(1);
       expect(JSON.stringify([result,diagnostics.mock.calls])).not.toContain(AUTHOR);
       expect(JSON.stringify([result,diagnostics.mock.calls])).not.toContain(PRIVATE);
