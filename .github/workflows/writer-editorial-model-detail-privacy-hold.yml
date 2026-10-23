@@ -34,4 +34,5 @@ jobs:
         run: |
           npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
             app/api/writers-studio/editorial/turn/__tests__/modelAttributionDetailPrivacyHold.test.ts \
-            app/api/writers-studio/editorial/turn/__tests__/a2CarryRoute.test.ts
+            app/api/writers-studio/editorial/turn/__tests__/a2CarryRoute.test.ts \
+            lib/manuscript/editorialRuntime/__tests__/modelAttributionRuntimePrivacyHold.test.ts

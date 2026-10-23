@@ -23,3 +23,10 @@ The real Next.js HTTP POST handler is invoked after mocking internal verified id
 - [ ] Do not merge into current Writer R87/source, lift R20 / Source HTTP423, or enable live provider/beta accounts until release gate separately accepted.
 
 Related [#1917](https://github.com/SoullabTech/Sovereign/issues/1917), [#1942](https://github.com/SoullabTech/Sovereign/pull/1942), [#1800](https://github.com/SoullabTech/Sovereign/issues/1800).
+
+
+### Additional actual-runtime source-specific falsifier
+
+A second completely fictional Jest suite `lib/manuscript/editorialRuntime/__tests__/modelAttributionRuntimePrivacyHold.test.ts` now runs the **real** `runEditorialTurn` method, with only its database, consent/disclosure, provider, canonical renderer, assembly and persistence dependencies injected. It returns a fake successful structured-provider result carrying an invented, mismatched `reportedModel` and expects the refusal detail NOT to echo that arbitrary text. The unchanged source is **expected RED** on that assertion; separate positive controls require truthful `model_unattributable`, no persisted MAIA turn, and unresolved model identity refusal. This closes the original review limitation that the route-only fixture mocked the entire editorial runtime.
+
+The source modules, historic pins, route runtime, router, database and user data remain untouched. New exact-head CI must be inspected before claiming an outcome; this supplements, not replaces, the original two negative HTTP/log assertions.
