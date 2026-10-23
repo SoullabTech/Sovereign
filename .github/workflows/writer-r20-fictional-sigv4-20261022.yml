@@ -1,0 +1,61 @@
+name: Writer R20 fictional STS/S3 SigV4 wire witness (HOLD)
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/writer-r20-fictional-sigv4-20261022.yml'
+      - 'scripts/witness/writer-r20-sigv4-20261022/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sigv4-localhost-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      AWS_EC2_METADATA_DISABLED: 'true'
+      AWS_SDK_LOAD_CONFIG: 'false'
+      AWS_REGION: 'us-east-1'
+      CI: 'true'
+    steps:
+      - name: Checkout test-only source
+        uses: actions/checkout@v4
+      - name: Configure Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify R22/R24 corrected verifier against fictional requests
+        run: bash scripts/witness/writer-r20-sigv4-20261022/run-localhost-witness.sh --offline
+      - name: Install matching public AWS SDKs outside Writer source
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk="$RUNNER_TEMP/r20-fictional-sdk"
+          test ! -e "$sdk"
+          mkdir -m 700 "$sdk"
+          printf '%s\n' '{"name":"r20-fictional-aws-sdk-witness","version":"0.0.0","private":true,"dependencies":{"@aws-sdk/client-s3":"3.658.1","@aws-sdk/client-sts":"3.658.1"}}' > "$sdk/package.json"
+          npm install --prefix "$sdk" --ignore-scripts --no-audit --no-fund --save-exact
+          node - "$sdk" <<'JS'
+          const fs=require('node:fs'),path=require('node:path');
+          const root=process.argv[2];
+          for(const service of ['s3','sts']){
+            const d=JSON.parse(fs.readFileSync(path.join(root,'node_modules','@aws-sdk','client-'+service,'package.json'),'utf8'));
+            if(d.name!=='@aws-sdk/client-'+service||d.version!=='3.658.1')throw Error('unexpected_sdk_version');
+          }
+          const lock=JSON.parse(fs.readFileSync(path.join(root,'package-lock.json'),'utf8'));
+          for(const service of ['s3','sts']){
+            const entry=lock.packages['node_modules/@aws-sdk/client-'+service];
+            if(!entry||entry.version!=='3.658.1'||!String(entry.integrity).startsWith('sha512-'))throw Error('unverified_sdk_lockfile');
+          }
+          console.log('R20_MATCHED_REAL_AWS_SDK_LOCK_INTEGRITY_PASS');
+          JS
+      - name: Verify actual SDK-signed S3/STS requests against localhost only
+        shell: bash
+        run: |
+          set -euo pipefail
+          export R20_FICTIONAL_SDK_DIR="$RUNNER_TEMP/r20-fictional-sdk"
+          bash scripts/witness/writer-r20-sigv4-20261022/run-localhost-witness.sh --real-sdk
+      - name: Preserve production HOLD
+        run: echo 'Review-only localhost signature test. No AWS resources, member grants, billing, deployment or authorization.'
