@@ -1,0 +1,47 @@
+name: Writer R5G91 PG Expected Refusal Descriptor — CLASS A DRAFT HOLD
+
+# Review-only: exact source with mock pg.Pool and fictional data.
+# No production or real PostgreSQL/database credentials; source pins unchanged.
+on:
+  pull_request:
+    paths:
+      - 'lib/db/**'
+      - '.github/workflows/writer-r5g91-pg-refusal-descriptor-review.yml'
+  push:
+    branches:
+      - review/ws-r5g91-expected-refusal-descriptor-candidate-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-exact-expected-refusal-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install repository lockfile dependencies
+        run: npm ci
+      - name: Refuse real database or provider keys
+        run: |
+          test -z "${DATABASE_URL:-}"
+          test -z "${ANTHROPIC_API_KEY:-}"
+      - name: Original unchanged negatives plus separate edge and existing safety suites
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/db/__tests__/r5g90ExpectedRefusalGetterHold.test.ts \
+            lib/db/__tests__/r5g91ExpectedRefusalDescriptorEdges.test.ts \
+            lib/db/__tests__/errorMetadataPrivacyHold.test.ts \
+            lib/db/__tests__/errorMetadataPrivacyHardening.test.ts \
+            lib/db/__tests__/paramRedaction.test.ts \
+            lib/db/__tests__/postgres.missingTable.test.ts

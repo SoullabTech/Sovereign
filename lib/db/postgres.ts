@@ -250,9 +250,25 @@ export async function queryWithExpectedRefusal<T extends QueryResultRow = any>(
   try {
     return { refused: false, result: await pool.query<T>(sql, params) };
   } catch (error: any) {
-    const message = typeof error?.message === 'string' ? error.message : '';
-    if (message.includes(expectedRefusal.fragment)) {
-      // The refusal the caller declared. ⛔ No SQL, no params, no identities.
+    /* Class A review candidate: an expected refusal may only be classified
+       from a string stored directly on the thrown error object. Never read
+       error.message: an inherited/accessor getter can execute arbitrary code,
+       replace the original failure or fabricate the declared refusal.
+       Proxies may also throw while their descriptors are inspected. None of
+       those cases is proof that the intended database refusal occurred. */
+    let message: string | null = null;
+    try {
+      if (error !== null && typeof error === 'object') {
+        const own = Object.getOwnPropertyDescriptor(error, 'message');
+        if (own && 'value' in own && typeof own.value === 'string') {
+          message = own.value;
+        }
+      }
+    } catch {
+      // Untrusted metadata must not replace the original database exception.
+    }
+    if (message !== null && message.includes(expectedRefusal.fragment)) {
+      // The refusal the caller declared. No SQL, params or identities in logs.
       return { refused: true };
     }
     console.error('❌ [POSTGRES] Query error:', describeDbError(error));
