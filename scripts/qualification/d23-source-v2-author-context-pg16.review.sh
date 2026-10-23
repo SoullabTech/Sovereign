@@ -84,7 +84,7 @@ docker exec -i "$pg" psql -X -q -v ON_ERROR_STOP=1 -U d23 -d d23 < "$candidate" 
   fail amended_d21b_sql
 equal five_canonical_FKs "SELECT count(*) FROM pg_constraint WHERE conrelid='writer_source_v2_pending_publications'::regclass AND contype='f' AND confrelid IN ('living_works'::regclass,'member_manuscripts'::regclass,'living_work_expressions'::regclass,'manuscript_working_drafts'::regclass,'working_draft_revisions'::regclass)" 5
 sql "$(intent 1 101 201 301 501 401); $(sealed 301 501)" >/dev/null
-refuse D22_missing_canonical_rejected "$(pending 301 1 101 201 701 901 801)" "foreign key"
+refuse D22_missing_canonical_rejected "$(pending 301 1 101 201 701 901 801)" "writer_source_v2_author_context_unverified"
 equal missing_canonical_leaves_zero_pending "SELECT count(*) FROM writer_source_v2_pending_publications" 0
 
 sql "INSERT INTO living_works(id,member_id,title) VALUES ('$(id 101)','$(id 1)','Fictional Work A'),('$(id 102)','$(id 2)','Fictional Work B'),('$(id 103)','$(id 1)','Fictional Work A2'); INSERT INTO member_manuscripts(id,member_id,title) VALUES ('$(id 201)','$(id 1)','Fictional Manuscript A'),('$(id 202)','$(id 2)','Fictional Manuscript B'),('$(id 203)','$(id 1)','Fictional Manuscript A2')" >/dev/null
