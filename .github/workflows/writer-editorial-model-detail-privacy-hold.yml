@@ -1,0 +1,38 @@
+name: Writer Editorial Model Attribution Detail Privacy — Expected RED
+
+# Test-only Class A evidence; real route with fictional internal return object.
+# The original runtime/router and historic pins MUST NOT be modified here.
+on:
+  pull_request:
+    paths:
+      - 'app/api/writers-studio/editorial/turn/__tests__/modelAttributionDetailPrivacyHold.test.ts'
+      - '.github/workflows/writer-editorial-model-detail-privacy-hold.yml'
+  push:
+    branches:
+      - review/ws-editorial-model-identity-refusal-privacy-negative-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  negative-model-identity-refusal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install existing pinned dependencies
+        run: npm ci
+      - name: Real HTTP route, mocked editorial runtime, invented markers (EXPECTED RED)
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            app/api/writers-studio/editorial/turn/__tests__/modelAttributionDetailPrivacyHold.test.ts \
+            app/api/writers-studio/editorial/turn/__tests__/a2CarryRoute.test.ts \
+            lib/manuscript/editorialRuntime/__tests__/modelAttributionRuntimePrivacyHold.test.ts
