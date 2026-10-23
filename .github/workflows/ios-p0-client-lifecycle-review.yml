@@ -6,6 +6,8 @@ on:
       - 'lib/session/**'
       - 'components/session/**'
       - 'components/OracleConversation.tsx'
+      - 'e2e/ios-p0-client/**'
+      - 'tests/ios-p0-client/**'
       - '.github/workflows/ios-p0-client-lifecycle-review.yml'
 
 permissions:
@@ -38,3 +40,30 @@ jobs:
           lib/session/__tests__/LegacyNewConversationHold.test.ts
           components/session/__tests__/SessionRitualLifecycle.test.ts
           --silent --passWithNoTests=false
+
+  webkit-client-smoke:
+    name: WebKit mobile/desktop client-only smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CI: 'true'
+      NEXT_PUBLIC_MAIA_R2_CLOSURE_VERIFIED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install JS dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install isolated WebKit browser
+        run: ./node_modules/.bin/playwright install --with-deps webkit
+      - name: Bundle client-only React test harness
+        run: >
+          ./node_modules/.bin/esbuild
+          tests/ios-p0-client/browserHarness.tsx
+          --bundle --platform=browser --format=iife --jsx=automatic --minify
+          --outfile=tests/ios-p0-client/browserHarness.bundle.js
+      - name: Check true WebKit component behavior with fictional state
+        run: >
+          ./node_modules/.bin/playwright test
+          --config=e2e/ios-p0-client/playwright.config.ts
