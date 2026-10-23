@@ -6,6 +6,8 @@ on:
   pull_request:
     paths:
       - 'lib/manuscript/editorialRuntime/**'
+      - 'app/api/writers-studio/editorial/turn/**'
+      - 'lib/writersStudio/rebuild/__tests__/postDispatchReceiptClientHold.review.test.ts'
       - '.github/workflows/writer-postdispatch-receipt-negative-hold.yml'
   push:
     branches:
@@ -33,4 +35,6 @@ jobs:
       - name: Class A negative proof — EXPECTED RED until accepted source amendment
         run: |
           npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
-            lib/manuscript/editorialRuntime/__tests__/refusalReceiptAcknowledgement.review.test.ts
+            lib/manuscript/editorialRuntime/__tests__/refusalReceiptAcknowledgement.review.test.ts \
+            app/api/writers-studio/editorial/turn/__tests__/postDispatchReceiptHttpHold.review.test.ts \
+            lib/writersStudio/rebuild/__tests__/postDispatchReceiptClientHold.review.test.ts
