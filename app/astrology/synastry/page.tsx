@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
+import { apiFetch } from '@/lib/http/apiBase';
 
 type BirthInput = {
   name?: string;
@@ -65,12 +65,6 @@ export default function SynastryPage() {
   const [b, setB] = useState<BirthInput>({ date: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [memberId, setMemberId] = useState<string>('');
-
-  useEffect(() => {
-    setMemberId(getOrCreateExplorerId());
-  }, []);
-
   const canSubmit = useMemo(() => Boolean(a.date && b.date), [a.date, b.date]);
 
   async function runSynastry() {
@@ -80,14 +74,13 @@ export default function SynastryPage() {
     setError(null);
 
     try {
-      const res = await fetch('/api/astrology/synastry/list', {
+      const res = await apiFetch('/api/astrology/synastry/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           persist: true,
           a: { birth: a },
           b: { birth: b },
-          requestedByMemberId: memberId || undefined,
         }),
       });
 
