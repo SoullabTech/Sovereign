@@ -1,0 +1,36 @@
+name: Writer Editorial Gesture Replay Class A Negative Witness
+
+# Intentionally RED on unchanged current source; never source, merge, or release approval.
+# All member/Work/MAIA/PG data is fictional with mocked collaborators.
+on:
+  pull_request:
+    paths:
+      - 'app/api/writers-studio/editorial/turn/**'
+      - '.github/workflows/writer-editorial-gesture-replay-hold.yml'
+  push:
+    branches:
+      - review/ws-editorial-gesture-once-only-negative-20261023
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  author-gesture-replay-negative:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install existing lockfile dependencies
+        run: npm ci
+      - name: Source-exact gesture replay witness (2 EXPECTED RED, 5 GREEN)
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            app/api/writers-studio/editorial/turn/__tests__/sendGestureReplayHold.review.test.ts
