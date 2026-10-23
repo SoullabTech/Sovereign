@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { existsSync } from 'fs';
 import { resolve } from 'path';
 
 /**
@@ -7,10 +8,16 @@ import { resolve } from 'path';
  * Test only the isolated MAIA React components; do not load a Soullab API.
  */
 
+const bundlePath = resolve(process.cwd(), 'tests/ios-p0-client/browserHarness.bundle.js');
+// A generic project's Playwright run does not generate this isolated bundle.
+// Skip there instead of turning a scoped review suite into a global failure.
+// The dedicated CI workflow always builds it before invoking this test.
+test.skip(!existsSync(bundlePath), 'Isolated MAIA client harness is not bundled.');
+
 test.beforeEach(async ({ page }) => {
   await page.setContent('<main id="maia-test-host"></main>');
   await page.addScriptTag({
-    path: resolve(process.cwd(), 'tests/ios-p0-client/browserHarness.bundle.js'),
+    path: bundlePath,
   });
 });
 
