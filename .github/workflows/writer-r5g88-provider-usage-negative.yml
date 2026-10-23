@@ -1,0 +1,42 @@
+name: Writer R5G88 Provider Usage Falsifiers — INTENTIONAL RED HOLD
+
+# Review-only real SDK with invented localhost responses; no model/key/member data.
+# A RED missing-usage assertion is a security accounting finding, not CI flakiness.
+on:
+  push:
+    branches:
+      - review/ws-r5g88-provider-usage-negative-20261022
+  pull_request:
+    paths:
+      - 'lib/ai/structured/__tests__/r5g88UsageProvenanceNegative.test.ts'
+      - '.github/workflows/writer-r5g88-provider-usage-negative.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fictional-usage-falsifiers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact repository lockfile
+        run: npm ci
+      - name: Refuse a job with real provider environment
+        run: |
+          test -z "${ANTHROPIC_API_KEY:-}"
+          test -z "${MAIA_EDITORIAL_MODEL:-}"
+      - name: Exercise incomplete provider usage through real SDK and router (EXPECTED RED)
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/ai/structured/__tests__/r5g88UsageProvenanceNegative.test.ts
