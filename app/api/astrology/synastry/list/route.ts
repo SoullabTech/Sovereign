@@ -20,7 +20,9 @@ import { query } from '@/lib/db/postgres';
 import { calculateBirthChart, type BirthData, type BirthChart } from '@/lib/astrology/ephemerisCalculator';
 import { calculateSynastryFromCharts, chartToLongitudes } from '@/lib/astrology/synastry/calculateSynastry';
 import type { SynastryRequest, SynastryResponse, SynastryOptions } from '@/lib/astrology/synastry/types';
-import { createSynastryAnalysis, getSynastryAnalysisById } from '@/lib/astrology/synastry/synastryStore';
+import { createSynastryAnalysis, getOwnedSynastryAnalysisById } from '@/lib/astrology/synastry/synastryStore';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { authorizedSynastryMutation, synastryPreflight, withSynastryCors } from '@/lib/astrology/synastry/synastryOrigin';
 
 export const dynamic = 'force-dynamic';
 
@@ -98,12 +100,16 @@ function getChartSummary(chart: BirthChart, memberId?: string) {
 /**
  * GET - Retrieve a persisted synastry analysis by ID
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
   }
   try {
+    const sessionMemberId = await getMemberIdFromRequest(request);
+    if (!sessionMemberId) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+    }
     const { searchParams } = new URL(request.url);
     const analysisId = searchParams.get('analysisId');
 
@@ -114,13 +120,12 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const row = await getSynastryAnalysisById(analysisId);
+    const row = await getOwnedSynastryAnalysisById(analysisId, sessionMemberId);
 
+    // A guessable analysis UUID is never evidence of ownership. No legacy
+    // browser/explorer owner fallback: unbound records await migration review.
     if (!row) {
-      return NextResponse.json({
-        success: false,
-        error: `Analysis ${analysisId} not found`,
-      }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Analysis not found' }, { status: 404 });
     }
 
     // Return the stored result with metadata
@@ -139,7 +144,7 @@ export async function GET(request: NextRequest) {
     console.error('[Synastry API] GET error:', error);
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to retrieve synastry analysis',
+      error: 'Failed to retrieve synastry analysis',
     }, { status: 500 });
   }
 }
@@ -147,9 +152,26 @@ export async function GET(request: NextRequest) {
 /**
  * POST - Calculate synastry between two charts (with optional persistence)
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
+    const sessionMemberId = await getMemberIdFromRequest(request);
+    if (!sessionMemberId) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+    }
+    if (!authorizedSynastryMutation(request)) {
+      return NextResponse.json({ success: false, error: 'Origin not allowed' }, { status: 403 });
+    }
     const body: SynastryRequest = await request.json();
+    // Browser claims may never select the owner of persisted relationship data.
+    if (body.requestedByMemberId && body.requestedByMemberId !== sessionMemberId) {
+      return NextResponse.json({ success: false, error: 'Member identity mismatch' }, { status: 403 });
+    }
+    // Stored member charts are private unless separately and explicitly shared.
+    // Only a caller's OWN chart may be resolved via a member ID here.
+    if ((body.a?.memberId && body.a.memberId !== sessionMemberId) ||
+        (body.b?.memberId && body.b.memberId !== sessionMemberId)) {
+      return NextResponse.json({ success: false, error: 'Private chart access denied' }, { status: 403 });
+    }
 
     // Validate request structure
     if (!body.a || !body.b) {
@@ -257,7 +279,7 @@ export async function POST(request: NextRequest) {
         bMemberId: memberIdB ?? null,
         aBirth: body.a.birth ?? null,
         bBirth: body.b.birth ?? null,
-        requestedByMemberId: body.requestedByMemberId ?? null,
+        requestedByMemberId: sessionMemberId,
         result: responsePayload,
       });
       console.log(`[Synastry API] Persisted as ${saved.id}`);
@@ -276,7 +298,19 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to calculate synastry',
+      error: 'Failed to calculate synastry',
     } as SynastryResponse, { status: 500 });
   }
+}
+
+// Decorate responses from ALL branches (including errors) for credentialed
+// requests from the exact approved beta/native shell Origins.
+export async function GET(request: NextRequest) {
+  return withSynastryCors(request, await handleGET(request));
+}
+export async function POST(request: NextRequest) {
+  return withSynastryCors(request, await handlePOST(request));
+}
+export async function OPTIONS(request: NextRequest) {
+  return synastryPreflight(request);
 }

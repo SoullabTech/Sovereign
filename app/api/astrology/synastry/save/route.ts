@@ -5,20 +5,34 @@
  *   Toggle saved_at for a synastry analysis (Save to Timeline)
  *   Request body:
  *     analysisId: string (uuid)
- *     memberId: string
+ *     memberId?: string (legacy assertion only; verified session owns the record)
  *     saved?: boolean (default true)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { setSynastryAnalysisSaved } from '@/lib/astrology/synastry/synastryStore';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { authorizedSynastryMutation, synastryPreflight, withSynastryCors } from '@/lib/astrology/synastry/synastryOrigin';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
+    const sessionMemberId = await getMemberIdFromRequest(request);
+    if (!sessionMemberId) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+    }
+    if (!authorizedSynastryMutation(request)) {
+      return NextResponse.json({ success: false, error: 'Origin not allowed' }, { status: 403 });
+    }
     const body = await request.json();
-
-    const { analysisId, memberId, saved = true } = body;
+    const { analysisId, saved = true } = body;
+    if (body.memberId && body.memberId !== sessionMemberId) {
+      return NextResponse.json({ success: false, error: 'Member identity mismatch' }, { status: 403 });
+    }
+    if (typeof saved !== 'boolean') {
+      return NextResponse.json({ success: false, error: 'saved must be a boolean' }, { status: 400 });
+    }
 
     if (!analysisId || typeof analysisId !== 'string') {
       return NextResponse.json({
@@ -27,14 +41,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    if (!memberId || typeof memberId !== 'string') {
-      return NextResponse.json({
-        success: false,
-        error: 'memberId is required',
-      }, { status: 400 });
-    }
-
-    const result = await setSynastryAnalysisSaved(analysisId, memberId, saved);
+    const result = await setSynastryAnalysisSaved(analysisId, sessionMemberId, saved);
 
     if (!result) {
       return NextResponse.json({
@@ -53,7 +60,14 @@ export async function POST(request: NextRequest) {
     console.error('[Synastry Save API] Error:', error);
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to save synastry',
+      error: 'Failed to save synastry',
     }, { status: 500 });
   }
+}
+
+export async function POST(request: NextRequest) {
+  return withSynastryCors(request, await handlePOST(request));
+}
+export async function OPTIONS(request: NextRequest) {
+  return synastryPreflight(request);
 }

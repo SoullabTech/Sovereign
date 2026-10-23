@@ -74,6 +74,23 @@ export async function getSynastryAnalysisById(
 }
 
 /**
+ * Read a stored analysis ONLY for its server-verified requesting member.
+ * Constrain ownership in SQL, not after loading someone else's birth records.
+ * Legacy rows without a verified owner remain unavailable for custody review.
+ */
+export async function getOwnedSynastryAnalysisById(
+  analysisId: string,
+  sessionMemberId: string
+): Promise<SynastryAnalysisRow | null> {
+  const res = await query<SynastryAnalysisRow>(
+    `SELECT * FROM synastry_analyses
+     WHERE id = $1::uuid AND requested_by_member_id = $2`,
+    [analysisId, sessionMemberId]
+  );
+  return res.rows[0] ?? null;
+}
+
+/**
  * Delete a synastry analysis by ID
  */
 export async function deleteSynastryAnalysisById(analysisId: string): Promise<boolean> {
