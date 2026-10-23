@@ -333,6 +333,40 @@ describe('Class A no-hidden-retry configuration controls (#1928)', () => {
     expect(fakeFetch).toHaveBeenCalledTimes(1);
   });
 
+
+  it('SDK default retries can erase an earlier observed HTTP response from the final delivery fact', async () => {
+    let attempts = 0;
+    const fakeFetch = jest.fn(async () => {
+      attempts += 1;
+      if (attempts === 1) {
+        // First actual transport attempt demonstrably receives an HTTP 503.
+        return new Response(
+          JSON.stringify({
+            type: 'error',
+            error: { type: 'api_error', message: 'FICTIONAL_FIRST_RESPONSE' },
+          }),
+          { status: 503, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      // Subsequent transport attempts fail before a response is seen.
+      // The SDK reports only the last exception to this adapter.
+      throw new TypeError(PRIVATE_MARKER);
+    });
+    const sdk = new Anthropic({ apiKey: testKey, fetch: fakeFetch as never });
+    let failure: unknown;
+    try {
+      await anthropicStructuredProvider({ client: sdk }).execute(request);
+    } catch (err) {
+      failure = err;
+    }
+
+    // A separate first-attempt HTTP response undeniably happened, but the
+    // existing adapter receives the SDK's terminal connection error only.
+    assertRedactedFailure(failure, 'no_response_observed');
+    expect(fakeFetch).toHaveBeenCalledTimes(3);
+    expect(attempts).toBe(3);
+  });
+
   it('SDK defaults can hide an initial 503 behind a later successful synthetic 200', async () => {
     const fakeFetch = jest.fn(async () => {
       if (fakeFetch.mock.calls.length === 1) {
