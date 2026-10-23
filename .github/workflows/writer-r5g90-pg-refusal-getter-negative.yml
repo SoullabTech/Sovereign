@@ -1,0 +1,46 @@
+name: Writer R5G90 PostgreSQL Refusal Getter Negatives — INTENTIONAL RED HOLD
+
+# Review-only. No production DB, credentials, migrations, member content or API.
+# Expected negative assertions must remain RED until independent Class A source fix.
+on:
+  push:
+    branches:
+      - review/ws-class-a-pg-expected-refusal-getter-negative-20261022
+  pull_request:
+    paths:
+      - 'lib/db/__tests__/r5g90ExpectedRefusalGetterHold.test.ts'
+      - '.github/workflows/writer-r5g90-pg-refusal-getter-negative.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pg-refusal-getter-negative:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked repository dependencies
+        run: npm ci
+      - name: Ensure no external database/provider configuration
+        run: |
+          test -z "${DATABASE_URL:-}"
+          test -z "${ANTHROPIC_API_KEY:-}"
+      - name: Source-exact adversarial getter witnesses plus original DB controls (EXPECTED RED)
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/db/__tests__/r5g90ExpectedRefusalGetterHold.test.ts \
+            lib/db/__tests__/errorMetadataPrivacyHold.test.ts \
+            lib/db/__tests__/errorMetadataPrivacyHardening.test.ts \
+            lib/db/__tests__/paramRedaction.test.ts \
+            lib/db/__tests__/postgres.missingTable.test.ts
