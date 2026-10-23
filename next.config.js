@@ -122,10 +122,41 @@ const nextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
 
+// Cross-origin beta frontend API transport, scoped to routes audited under
+// Astrology PRs #1964/#1977. This is a RESPONSE permission for one approved
+// web origin, NOT authentication, authorization, or a proxy bypass.
+// Synastry list/save implement their own dynamic exact-Origin CORS and are
+// deliberately excluded. No /api/astrology wildcard.
+const ASTROLOGY_BETA_CORS_PATHS = Object.freeze([
+  '/api/members/profile',
+  '/api/astrology/birth-chart',
+  '/api/astrology/current-transits',
+  '/api/astrology/geocode',
+  '/api/astrology/reflection',
+  '/api/astrology/synastry/saved',
+  '/api/astrology/spiralogic-report',
+  '/api/astrology/vedic/list',
+  '/api/astrology/vedic/gochara',
+  '/api/astrology/vedic/ashtakavarga',
+  '/api/astrology/vedic/dasha',
+  '/api/astrology/da-yun',
+  '/api/astrology/chinese/discuss',
+]);
+
   // PWA Headers - only for web builds (not compatible with static export for Capacitor)
   ...(process.env.CAPACITOR_BUILD ? {} : {
     async headers() {
       return [
+        ...ASTROLOGY_BETA_CORS_PATHS.map(source => ({
+          source,
+          headers: [
+            { key: 'Access-Control-Allow-Origin', value: 'https://beta.soullab.life' },
+            { key: 'Access-Control-Allow-Credentials', value: 'true' },
+            { key: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
+            { key: 'Access-Control-Allow-Headers', value: 'Content-Type, X-Session-Token, X-Member-Id, X-Maia-Anon-Id, X-App-Shell' },
+            { key: 'Vary', value: 'Origin' },
+          ],
+        })),
         {
           source: '/sw.js',
           headers: [
