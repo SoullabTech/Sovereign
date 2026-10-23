@@ -1,0 +1,55 @@
+name: PostgreSQL16 Genuine Driver — Fictional Privacy Qualification Only
+
+# DRAFT / READ ONLY / NOT PRODUCTION. A disposable GitHub Actions service is
+# started with hard-coded non-secret fictional credentials and schema; nothing
+# in the repository's real cloud, Mac, member or production DB is contacted.
+on:
+  pull_request:
+    paths:
+      - 'lib/db/__tests__/postgresRealFictionalDriver.test.ts'
+      - '.github/workflows/postgres16-real-driver-fictional-privacy.yml'
+  push:
+    branches:
+      - review/pg16-real-driver-fictional-privacy-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  disposable-real-pg16:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: fictional_writer_qa
+          POSTGRES_PASSWORD: fictional_only
+          POSTGRES_DB: fictional_writer_privacy_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fictional_writer_qa -d fictional_writer_privacy_qa"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      CI: 'true'
+      TZ: UTC
+      QA_PG16_EXACT: EXACT_DISPOSABLE_PG16_FICTIONAL_ONLY
+      DATABASE_URL: postgresql://fictional_writer_qa:fictional_only@127.0.0.1:5432/fictional_writer_privacy_qa
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked existing dependencies
+        run: npm ci
+      - name: Real PG16 driver test, exact fictional localhost only
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/db/__tests__/postgresRealFictionalDriver.test.ts
