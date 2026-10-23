@@ -153,7 +153,7 @@ const nextConfig = {
           headers: [
             { key: 'Access-Control-Allow-Origin', value: 'https://beta.soullab.life' },
             { key: 'Access-Control-Allow-Credentials', value: 'true' },
-            { key: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
+            { key: 'Access-Control-Allow-Methods', value: source === '/api/members/profile' ? 'GET, PUT, OPTIONS' : 'GET, POST, OPTIONS' },
             { key: 'Access-Control-Allow-Headers', value: 'Content-Type, X-Session-Token, X-Member-Id, X-Maia-Anon-Id, X-App-Shell' },
             { key: 'Vary', value: 'Origin' },
           ],
