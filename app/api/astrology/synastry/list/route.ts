@@ -22,6 +22,7 @@ import { calculateSynastryFromCharts, chartToLongitudes } from '@/lib/astrology/
 import type { SynastryRequest, SynastryResponse, SynastryOptions } from '@/lib/astrology/synastry/types';
 import { createSynastryAnalysis, getSynastryAnalysisById } from '@/lib/astrology/synastry/synastryStore';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { authorizedSynastryMutation, synastryPreflight, withSynastryCors } from '@/lib/astrology/synastry/synastryOrigin';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,7 +100,7 @@ function getChartSummary(chart: BirthChart, memberId?: string) {
 /**
  * GET - Retrieve a persisted synastry analysis by ID
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
@@ -151,14 +152,13 @@ export async function GET(request: NextRequest) {
 /**
  * POST - Calculate synastry between two charts (with optional persistence)
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const sessionMemberId = await getMemberIdFromRequest(request);
     if (!sessionMemberId) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
     }
-    const origin = request.headers.get('origin');
-    if (origin && origin !== new URL(request.url).origin) {
+    if (!authorizedSynastryMutation(request)) {
       return NextResponse.json({ success: false, error: 'Origin not allowed' }, { status: 403 });
     }
     const body: SynastryRequest = await request.json();
@@ -301,4 +301,16 @@ export async function POST(request: NextRequest) {
       error: 'Failed to calculate synastry',
     } as SynastryResponse, { status: 500 });
   }
+}
+
+// Decorate responses from ALL branches (including errors) for credentialed
+// requests from the exact approved beta/native shell Origins.
+export async function GET(request: NextRequest) {
+  return withSynastryCors(request, await handleGET(request));
+}
+export async function POST(request: NextRequest) {
+  return withSynastryCors(request, await handlePOST(request));
+}
+export async function OPTIONS(request: NextRequest) {
+  return synastryPreflight(request);
 }
