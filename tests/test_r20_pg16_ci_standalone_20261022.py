@@ -66,4 +66,42 @@ class StandaloneFixture(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,"FICTIONAL_EXPECTED_POLICY_MARKER_INVALID"):
             r.pg_denies("fictionaldb","SELECT 1;","wrong-marker")
 
+    def test_newer_caller_pin_refuses_old_signer_and_co_rollback(self):
+        current_key=b'new-fictional-signer-32-byte-key!!'
+        old_key=b'old-fictional-signer-32-byte-key!!'
+        self.assertEqual(len(current_key),32)
+        self.assertEqual(len(old_key),32)
+        new_ledger=r.sig({"generation":2,"deleted":["fictional-revoked"]},current_key)
+        new_digest=r.hashlib.sha256(r.packed(new_ledger)).hexdigest()
+        new_checkpoint=r.sig({"min_generation":2,"ledger_sha256":new_digest},current_key)
+        current_pin={"generation":2,"ledger_sha256":new_digest,
+                     "signer_key_sha256":r.hashlib.sha256(current_key).hexdigest()}
+        self.assertEqual(r.check_caller_pinned_head(new_ledger,new_checkpoint,current_key,current_pin)["generation"],2)
+
+        old_ledger=r.sig({"generation":1,"deleted":[]},old_key)
+        old_digest=r.hashlib.sha256(r.packed(old_ledger)).hexdigest()
+        old_checkpoint=r.sig({"min_generation":1,"ledger_sha256":old_digest},old_key)
+        old_pin={"generation":1,"ledger_sha256":old_digest,
+                 "signer_key_sha256":r.hashlib.sha256(old_key).hexdigest()}
+        # Deliberate unsafe result: replacing EVERY local trust anchor accepts old.
+        self.assertEqual(r.check_caller_pinned_head(old_ledger,old_checkpoint,old_key,old_pin)["generation"],1)
+        # A caller that actually retains the newer pin refuses the complete old bundle.
+        with self.assertRaisesRegex(RuntimeError,"FICTIONAL_CURRENT_SIGNER_MISMATCH"):
+            r.check_caller_pinned_head(old_ledger,old_checkpoint,old_key,current_pin)
+
+    def test_anchor_absence_conflict_and_stale_generation_refuse(self):
+        key=b'x'*32
+        ledger=r.sig({"generation":2},key)
+        digest=r.hashlib.sha256(r.packed(ledger)).hexdigest()
+        checkpoint=r.sig({"min_generation":2,"ledger_sha256":digest},key)
+        pin={"generation":2,"ledger_sha256":digest,"signer_key_sha256":r.hashlib.sha256(key).hexdigest()}
+        with self.assertRaisesRegex(RuntimeError,"FICTIONAL_CURRENT_ANCHOR_MISSING_OR_INVALID"):
+            r.check_caller_pinned_head(ledger,checkpoint,key,None)
+        for invalid in [dict(pin,generation=1),dict(pin,ledger_sha256="0"*64)]:
+            with self.subTest(pin=invalid),self.assertRaisesRegex(RuntimeError,"FICTIONAL_OLD_OR_CONFLICTING_AUTHORITY"):
+                r.check_caller_pinned_head(ledger,checkpoint,key,invalid)
+        for invalid in [{},dict(pin,signer_key_sha256="not-a-hash"),dict(pin,generation=True)]:
+            with self.subTest(pin=invalid),self.assertRaisesRegex(RuntimeError,"FICTIONAL_CURRENT_ANCHOR_MISSING_OR_INVALID"):
+                r.check_caller_pinned_head(ledger,checkpoint,key,invalid)
+
 if __name__=='__main__': unittest.main()

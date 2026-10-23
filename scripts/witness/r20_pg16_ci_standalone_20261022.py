@@ -42,6 +42,31 @@ def check(envelope,k):
         refuse("FICTIONAL_SIGNATURE_INVALID")
     return envelope["data"]
 
+def check_caller_pinned_head(ledger_envelope,checkpoint_envelope,key,anchor):
+    """Fixture-only comparison to an assumed fresh, caller-supplied authority pin.
+
+    The test runner controls BOTH key and pin. This is NOT independent custody.
+    A rolled-back pin supplied by an attacker defeats this model.
+    """
+    if (not isinstance(anchor,dict) or set(anchor)!={"generation","ledger_sha256","signer_key_sha256"}
+        or type(anchor["generation"]) is not int or anchor["generation"]<1
+        or not all(isinstance(anchor[k],str) and re.fullmatch(r"[0-9a-f]{64}",anchor[k])
+                    for k in ("ledger_sha256","signer_key_sha256"))):
+        refuse("FICTIONAL_CURRENT_ANCHOR_MISSING_OR_INVALID")
+    if not isinstance(key,bytes) or hashlib.sha256(key).hexdigest()!=anchor["signer_key_sha256"]:
+        refuse("FICTIONAL_CURRENT_SIGNER_MISMATCH")
+    ledger=check(ledger_envelope,key)
+    checkpoint=check(checkpoint_envelope,key)
+    digest=hashlib.sha256(packed(ledger_envelope)).hexdigest()
+    if (not isinstance(ledger,dict) or type(ledger.get("generation")) is not int
+        or not isinstance(checkpoint,dict) or type(checkpoint.get("min_generation")) is not int
+        or ledger["generation"]!=anchor["generation"]
+        or checkpoint["min_generation"]!=anchor["generation"]
+        or checkpoint.get("ledger_sha256")!=digest
+        or anchor["ledger_sha256"]!=digest):
+        refuse("FICTIONAL_OLD_OR_CONFLICTING_AUTHORITY")
+    return ledger
+
 def guarded_container():
     if not re.fullmatch(r"r20-pg16-fictional-[0-9a-z-]{1,44}",NAME):refuse("WRONG_TEST_CONTAINER_NAME")
     x=json.loads(cmd(["docker","inspect",NAME]))[0]
@@ -130,6 +155,39 @@ CREATE TABLE deletion_scopes(session_id text primary key);""")
         try:check(changed_high,key)
         except RuntimeError:pass
         else:refuse("TAMPERED_HIGHWATER_ACCEPTED")
+        # All following work still runs under ONE CI account; the purported
+        # external anchor is a caller-supplied logical contract, not a real AEA.
+        newest_envelope=json.loads(newer.read_text())
+        checkpoint_envelope=json.loads(high.read_text())
+        pinned=dict(generation=2,
+                    ledger_sha256=hashlib.sha256(newer.read_bytes()).hexdigest(),
+                    signer_key_sha256=hashlib.sha256(key).hexdigest())
+
+        # Recreating an OLD signer + signed head + old ledger can pass local HMAC.
+        # This is an intentional unsafe witness if the caller also rolls back pin.
+        old_key=secrets.token_bytes(32)
+        older_envelope=sig(dict(generation=1,deleted=[],session="",vault=[]),old_key)
+        old_checksum=hashlib.sha256(packed(older_envelope)).hexdigest()
+        older_checkpoint=sig(dict(min_generation=1,ledger_sha256=old_checksum),old_key)
+        rolled_back_pin=dict(generation=1,ledger_sha256=old_checksum,
+                             signer_key_sha256=hashlib.sha256(old_key).hexdigest())
+        if check_caller_pinned_head(older_envelope,older_checkpoint,old_key,rolled_back_pin)["generation"]!=1:
+            refuse("FICTIONAL_OLD_SIGNER_ROLLBACK_WITNESS_MISSING")
+        for attempted in (
+            (older_envelope,older_checkpoint,old_key,pinned),
+            (newest_envelope,checkpoint_envelope,key,None),
+            (newest_envelope,checkpoint_envelope,key,rolled_back_pin),
+        ):
+            try:check_caller_pinned_head(*attempted)
+            except RuntimeError:pass
+            else:refuse("FICTIONAL_ANCHOR_ROLLBACK_OR_OUTAGE_ADMITTED")
+
+        # Refusals above occur BEFORE either replacement database exists.
+        nonexistent=pg("postgres","SELECT count(*) FROM pg_database WHERE datname IN ('r20ficttarget1','r20ficttarget2');")
+        if nonexistent!="0":refuse("FICTIONAL_TARGET_CREATED_BEFORE_AUTHORITY")
+        if check_caller_pinned_head(newest_envelope,checkpoint_envelope,key,pinned)!=signed:
+            refuse("FICTIONAL_CURRENT_AUTHORITY_DISAGREES")
+
         for i in (1,2):
             db="r20ficttarget"+str(i)
             createdb(db)
@@ -195,7 +253,8 @@ COMMIT;"""%(sqlq(signed["deleted"][0]),sqlq(signed["deleted"][1]),sqlq(signed["s
         print(json.dumps({"result":"PASS","engine":"PostgreSQL 16.13","isolated":True,
            "replacement_databases":2,"erased_records_refused":True,"doomed_vault_entries_absent":True,"revoked_identity_updates_refused":True,
            "revoked_manuscript_references_refused":True,
-           "bystanders_preserved":True,"independent_fictional_highwater":True,
+           "bystanders_preserved":True,"caller_pinned_fictional_head_checked":True,
+           "old_bundle_with_rolled_back_anchor_accepted":True,"real_independent_authority_proven":False,
            "actual_soullab_r20_recovery":False,"release_authorized":False},sort_keys=True))
 
 if __name__=="__main__":

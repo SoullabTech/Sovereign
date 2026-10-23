@@ -15,17 +15,18 @@ GitHub Actions creates a temporary postgres:16.13-bookworm Docker container with
 1. Seed fictional deleted and surviving manuscripts, Works and session fragments in PostgreSQL.
 2. Capture an OLD pg_dump before a fictional delete.
 3. Generate a NEWER independent synthetic HMAC deletion ledger and high-water.
-4. Restore the old SQL twice into separate EMPTY replacement PostgreSQL databases.
-5. Apply the newer deletion metadata and actual PostgreSQL INSERT/UPDATE triggers refusing deleted manuscript IDs, Work IDs, session scopes, and new/rewritten Work references to deleted manuscripts.
-6. Recreate a strictly whitelisted FICTIONAL vault archive in each private stage; erase doomed bytes and verify the unaffected file survives.
-7. Assert policy-specific PostgreSQL refusal messages (not merely any SQL error), unchanged survivor identity/content/reference and unchanged tombstone counts. The receipt separately confirms the doomed fictional vault bytes are absent.
-8. Remove temporary data and the Docker test container.
+4. Exercise an old signer + old signed deletion ledger + old signed checkpoint rollback. Demonstrate that an entirely co-rolled-back local pin **accepts** the old state (intentional unsafe observation), while an assumed, separately supplied newer pin or unavailable/conflicting pin refuses the same old state **before either target exists**. This models an authority API contract; it is NOT an external authority.
+5. Restore the old SQL twice into separate EMPTY replacement PostgreSQL databases.
+6. Apply the newer deletion metadata and actual PostgreSQL INSERT/UPDATE triggers refusing deleted manuscript IDs, Work IDs, session scopes, and new/rewritten Work references to deleted manuscripts.
+7. Recreate a strictly whitelisted FICTIONAL vault archive in each private stage; erase doomed bytes and verify the unaffected file survives.
+8. Assert policy-specific PostgreSQL refusal messages (not merely any SQL error), unchanged survivor identity/content/reference and unchanged tombstone counts. The receipt separately confirms the doomed fictional vault bytes are absent.
+9. Remove temporary data and the Docker test container.
 
 The witness requires --fictional-only and suppresses raw database command errors in output. It does not access actual member data, real signatures, real recovery archives, or services.
 
 ## Scope limitations / review HOLD
 
-The reference is NOT the unpublished Writer/JARVIS coherent recovery script or production database schema. Its fictional ledger uses a test-generated HMAC key, not the real Ed25519 signing custody/high-water. Its tar handling is fixture-specific, NOT the production-grade archive preflight and stager under issue #1919. It does not prove full R20 vault recovery, crash recovery, live mount identity, worker pause, ownership/TOCTOU security, production release or consented email deliverability.
+The reference is NOT the unpublished Writer/JARVIS coherent recovery script or production database schema. Its fictional ledger uses a test-generated HMAC key and a caller-supplied pin from the **same job and administrator**, not real Ed25519 signing custody, actual separately administered current-head service, immutable monotonic store, or enforced read/unwrap/egress. The intentional counterexample `old_bundle_with_rolled_back_anchor_accepted=true` is an **unresolved trust-topology weakness**, not a safety pass. A future host/root/signing-key administrative separation and old-image bypass refusal must be witnessed independently. Its tar handling is fixture-specific, NOT the production-grade archive preflight and stager under issue #1919. It does not prove full R20 vault recovery, crash recovery, live mount identity, worker pause, ownership/TOCTOU security, production release or consented email deliverability.
 
 The previous INSERT-only triggers could be bypassed by UPDATE reassignment and by a surviving Work pointing at a deleted manuscript. The negative control was deliberately added before the fix; the corrected fixture requires PostgreSQL 16.13 to reject these writes. This neither tests nor changes live Soullab code.
 
