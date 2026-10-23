@@ -20,7 +20,7 @@ import { query } from '@/lib/db/postgres';
 import { calculateBirthChart, type BirthData, type BirthChart } from '@/lib/astrology/ephemerisCalculator';
 import { calculateSynastryFromCharts, chartToLongitudes } from '@/lib/astrology/synastry/calculateSynastry';
 import type { SynastryRequest, SynastryResponse, SynastryOptions } from '@/lib/astrology/synastry/types';
-import { createSynastryAnalysis, getSynastryAnalysisById } from '@/lib/astrology/synastry/synastryStore';
+import { createSynastryAnalysis, getOwnedSynastryAnalysisById } from '@/lib/astrology/synastry/synastryStore';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { authorizedSynastryMutation, synastryPreflight, withSynastryCors } from '@/lib/astrology/synastry/synastryOrigin';
 
@@ -120,11 +120,11 @@ async function handleGET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const row = await getSynastryAnalysisById(analysisId);
+    const row = await getOwnedSynastryAnalysisById(analysisId, sessionMemberId);
 
     // A guessable analysis UUID is never evidence of ownership. No legacy
     // browser/explorer owner fallback: unbound records await migration review.
-    if (!row || row.requested_by_member_id !== sessionMemberId) {
+    if (!row) {
       return NextResponse.json({ success: false, error: 'Analysis not found' }, { status: 404 });
     }
 
