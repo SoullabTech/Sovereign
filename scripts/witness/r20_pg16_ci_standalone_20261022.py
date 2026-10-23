@@ -19,6 +19,15 @@ def pg(db,sql,ok=True):
     v=cmd(a,sql.encode(),ok)
     return v.decode().strip() if ok else v
 
+def pg_denies(db,sql,expected_marker):
+    """A failed command is accepted only if PostgreSQL emitted our own refusal."""
+    if expected_marker not in {"fictional_erasure_refusal","fictional_scope_refusal"}:
+        refuse("FICTIONAL_EXPECTED_POLICY_MARKER_INVALID")
+    args=["docker","exec","-i",NAME,"psql","-X","-q","-A","-t","-v","ON_ERROR_STOP=1","-U","postgres","-d",db]
+    r=subprocess.run(args,input=sql.encode(),capture_output=True,timeout=70)
+    if r.returncode==0 or expected_marker.encode() not in r.stderr:
+        refuse("FICTIONAL_POLICY_DENIAL_NOT_PROVEN")
+
 def restore_dump(db,dump):
     cmd(["docker","exec","-i",NAME,"psql","-X","-q","-v","ON_ERROR_STOP=1","-U","postgres","-d",db],dump)
 def createdb(name):cmd(["docker","exec",NAME,"createdb","-U","postgres",name])
@@ -139,6 +148,10 @@ CREATE FUNCTION fictional_r20_object_guard() RETURNS trigger LANGUAGE plpgsql AS
 BEGIN
  IF EXISTS (SELECT 1 FROM provenance_tombstones WHERE object_kind=TG_TABLE_NAME AND object_id=NEW.id) THEN
    RAISE EXCEPTION 'fictional_erasure_refusal' USING ERRCODE='23514'; END IF;
+ IF TG_TABLE_NAME='living_works' THEN
+   IF EXISTS (SELECT 1 FROM provenance_tombstones WHERE object_kind='member_manuscripts' AND object_id=NEW.manuscript_id) THEN
+     RAISE EXCEPTION 'fictional_erasure_refusal' USING ERRCODE='23514'; END IF;
+ END IF;
  RETURN NEW;
 END $g$;
 CREATE FUNCTION fictional_r20_session_guard() RETURNS trigger LANGUAGE plpgsql AS $g$
@@ -147,31 +160,26 @@ BEGIN
    RAISE EXCEPTION 'fictional_scope_refusal' USING ERRCODE='23514'; END IF;
  RETURN NEW;
 END $g$;
-CREATE TRIGGER deny_manuscripts BEFORE INSERT ON member_manuscripts FOR EACH ROW EXECUTE FUNCTION fictional_r20_object_guard();
-CREATE TRIGGER deny_works BEFORE INSERT ON living_works FOR EACH ROW EXECUTE FUNCTION fictional_r20_object_guard();
-CREATE TRIGGER deny_fragments BEFORE INSERT ON synthetic_fragments FOR EACH ROW EXECUTE FUNCTION fictional_r20_session_guard();
+CREATE TRIGGER deny_manuscripts BEFORE INSERT OR UPDATE ON member_manuscripts FOR EACH ROW EXECUTE FUNCTION fictional_r20_object_guard();
+CREATE TRIGGER deny_works BEFORE INSERT OR UPDATE ON living_works FOR EACH ROW EXECUTE FUNCTION fictional_r20_object_guard();
+CREATE TRIGGER deny_fragments BEFORE INSERT OR UPDATE ON synthetic_fragments FOR EACH ROW EXECUTE FUNCTION fictional_r20_session_guard();
 COMMIT;"""%(sqlq(signed["deleted"][0]),sqlq(signed["deleted"][1]),sqlq(signed["session"]),sqlq(signed["deleted"][0]),sqlq(signed["deleted"][1]),sqlq(signed["session"])))
             counts=pg(db,"SELECT (SELECT count(*) FROM member_manuscripts)||','||(SELECT count(*) FROM living_works)||','||(SELECT count(*) FROM synthetic_fragments)||','||(SELECT count(*) FROM provenance_tombstones)||','||(SELECT count(*) FROM deletion_scopes);")
             if counts!="1,1,1,2,1":refuse("FICTIONAL_ERASURE_COUNTS_INVALID")
-            if pg(db,"INSERT INTO member_manuscripts VALUES (%s,'FICTITIOUS');"%sqlq(signed["deleted"][0]),ok=False)==0:
-                refuse("DELETED_UUID_REUSED")
-            if pg(db,"INSERT INTO living_works VALUES (%s,%s);"%(sqlq(signed["deleted"][1]),sqlq(signed["deleted"][0])),ok=False)==0:
-                refuse("DELETED_WORK_ID_REUSED")
-            if pg(db,"INSERT INTO synthetic_fragments VALUES ('reused',%s);"%sqlq(signed["session"]),ok=False)==0:
-                refuse("DELETED_SESSION_REUSED")
-            # Negative PostgreSQL controls: this fixture must reject all attempts to
-            # reassign surviving identities/references into the independently revoked set.
-            # The first test intentionally fails against the older INSERT-only triggers.
-            if pg(db,"UPDATE member_manuscripts SET id=%s WHERE id=%s;"%(sqlq(signed["deleted"][0]),sqlq(IDS["good_m"])),ok=False)==0:
-                refuse("REVOKED_MANUSCRIPT_UPDATE_ADMITTED")
-            if pg(db,"UPDATE living_works SET id=%s WHERE id=%s;"%(sqlq(signed["deleted"][1]),sqlq(IDS["good_w"])),ok=False)==0:
-                refuse("REVOKED_WORK_UPDATE_ADMITTED")
-            if pg(db,"UPDATE synthetic_fragments SET session_id=%s WHERE id='fragment-good';"%sqlq(signed["session"]),ok=False)==0:
-                refuse("REVOKED_SESSION_UPDATE_ADMITTED")
-            if pg(db,"INSERT INTO living_works VALUES ('fictional-new-work',%s);"%sqlq(signed["deleted"][0]),ok=False)==0:
-                refuse("REVOKED_MANUSCRIPT_REFERENCE_INSERT_ADMITTED")
-            if pg(db,"UPDATE living_works SET manuscript_id=%s WHERE id=%s;"%(sqlq(signed["deleted"][0]),sqlq(IDS["good_w"])),ok=False)==0:
-                refuse("REVOKED_MANUSCRIPT_REFERENCE_UPDATE_ADMITTED")
+            # All rejection receipts must match this witness's own PostgreSQL guard.
+            pg_denies(db,"INSERT INTO member_manuscripts VALUES (%s,'FICTITIOUS');"%sqlq(signed["deleted"][0]),"fictional_erasure_refusal")
+            pg_denies(db,"INSERT INTO living_works VALUES (%s,%s);"%(sqlq(signed["deleted"][1]),sqlq(signed["deleted"][0])),"fictional_erasure_refusal")
+            pg_denies(db,"INSERT INTO synthetic_fragments VALUES ('reused',%s);"%sqlq(signed["session"]),"fictional_scope_refusal")
+            pg_denies(db,"UPDATE member_manuscripts SET id=%s WHERE id=%s;"%(sqlq(signed["deleted"][0]),sqlq(IDS["good_m"])),"fictional_erasure_refusal")
+            pg_denies(db,"UPDATE living_works SET id=%s WHERE id=%s;"%(sqlq(signed["deleted"][1]),sqlq(IDS["good_w"])),"fictional_erasure_refusal")
+            pg_denies(db,"UPDATE synthetic_fragments SET session_id=%s WHERE id='fragment-good';"%sqlq(signed["session"]),"fictional_scope_refusal")
+            pg_denies(db,"INSERT INTO living_works VALUES ('fictional-new-work',%s);"%sqlq(signed["deleted"][0]),"fictional_erasure_refusal")
+            pg_denies(db,"UPDATE living_works SET manuscript_id=%s WHERE id=%s;"%(sqlq(signed["deleted"][0]),sqlq(IDS["good_w"])),"fictional_erasure_refusal")
+            survivors=pg(db,"SELECT (SELECT text_content FROM member_manuscripts WHERE id=%s)||','||(SELECT manuscript_id FROM living_works WHERE id=%s)||','||(SELECT session_id FROM synthetic_fragments WHERE id='fragment-good');"%(sqlq(IDS["good_m"]),sqlq(IDS["good_w"])))
+            if survivors!="FICTITIOUS,"+IDS["good_m"]+","+IDS["good_s"]:
+                refuse("FICTIONAL_SURVIVOR_IDENTITY_OR_REFERENCE_CHANGED")
+            after_denials=pg(db,"SELECT (SELECT count(*) FROM member_manuscripts)||','||(SELECT count(*) FROM living_works)||','||(SELECT count(*) FROM synthetic_fragments)||','||(SELECT count(*) FROM provenance_tombstones)||','||(SELECT count(*) FROM deletion_scopes);")
+            if after_denials!="1,1,1,2,1":refuse("FICTIONAL_DENIAL_POSTCONDITIONS_FAILED")
             target=p/("replacement"+str(i));target.mkdir(mode=0o700)
             vault=staged_vault(archive,target)
             # Deletion target comes from the independently authenticated ledger.
@@ -185,7 +193,8 @@ COMMIT;"""%(sqlq(signed["deleted"][0]),sqlq(signed["deleted"][1]),sqlq(signed["s
             if (vault/"writer/dead.txt").exists() or (vault/"writer/keep.txt").read_bytes()!=fake["writer/keep.txt"]:
                 refuse("FICTIONAL_VAULT_POSTCONDITION_FAILED")
         print(json.dumps({"result":"PASS","engine":"PostgreSQL 16.13","isolated":True,
-           "replacement_databases":2,"erased_records_refused":True,"vault_erasures_refused":True,
+           "replacement_databases":2,"erased_records_refused":True,"doomed_vault_entries_absent":True,"revoked_identity_updates_refused":True,
+           "revoked_manuscript_references_refused":True,
            "bystanders_preserved":True,"independent_fictional_highwater":True,
            "actual_soullab_r20_recovery":False,"release_authorized":False},sort_keys=True))
 

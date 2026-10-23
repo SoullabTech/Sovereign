@@ -6,6 +6,8 @@ import sys
 import tarfile
 import tempfile
 import unittest
+from unittest import mock
+from types import SimpleNamespace
 
 SOURCE=Path(__file__).resolve().parents[1]/'scripts'/'witness'/'r20_pg16_ci_standalone_20261022.py'
 spec=importlib.util.spec_from_file_location('r20_fictional_pg16_reference',SOURCE)
@@ -44,5 +46,24 @@ class StandaloneFixture(unittest.TestCase):
         envelope['data']['generation']=0
         with self.assertRaisesRegex(RuntimeError,'FICTIONAL_SIGNATURE_INVALID'):
             r.check(envelope,key)
+
+    def test_pg_denial_requires_the_expected_guard_marker(self):
+        synthetic=SimpleNamespace(returncode=3,stderr=b"ERROR: fictional_erasure_refusal",stdout=b"")
+        with mock.patch.object(r.subprocess,"run",return_value=synthetic):
+            r.pg_denies("fictionaldb","SELECT 1;","fictional_erasure_refusal")
+            with self.assertRaisesRegex(RuntimeError,"FICTIONAL_POLICY_DENIAL_NOT_PROVEN"):
+                r.pg_denies("fictionaldb","SELECT 1;","fictional_scope_refusal")
+
+    def test_pg_denial_refuses_success_and_unrelated_database_errors(self):
+        cases=[
+            SimpleNamespace(returncode=0,stderr=b"",stdout=b""),
+            SimpleNamespace(returncode=3,stderr=b"ERROR: fictional_unrelated_failure",stdout=b"")
+        ]
+        for synthetic in cases:
+            with self.subTest(code=synthetic.returncode),mock.patch.object(r.subprocess,"run",return_value=synthetic):
+                with self.assertRaisesRegex(RuntimeError,"FICTIONAL_POLICY_DENIAL_NOT_PROVEN"):
+                    r.pg_denies("fictionaldb","SELECT 1;","fictional_erasure_refusal")
+        with self.assertRaisesRegex(RuntimeError,"FICTIONAL_EXPECTED_POLICY_MARKER_INVALID"):
+            r.pg_denies("fictionaldb","SELECT 1;","wrong-marker")
 
 if __name__=='__main__': unittest.main()
