@@ -1,0 +1,57 @@
+name: Writer Model Attribution Runtime Only — Class A Split Review
+
+# Supplemental, fictional and read-only. It deliberately separates a proposed
+# hardened runtime from the unchanged still-unsafe HTTP route. It is NOT merge
+# or release authority; governed router/policy source-pin STOP is preserved.
+on:
+  pull_request:
+    paths:
+      - 'lib/manuscript/editorialRuntime/turn.ts'
+      - '.github/workflows/writer-model-attribution-runtime-review.yml'
+  push:
+    branches:
+      - review/ws-content-free-model-attribution-refusal-class-a-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-only-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked existing dependencies
+        run: npm ci
+      - name: Actual writer runtime refusal and non-persistence contract
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/manuscript/editorialRuntime/__tests__/modelAttributionRuntimePrivacyHold.test.ts
+
+  http-route-safety-hold:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked existing dependencies
+        run: npm ci
+      - name: Unchanged actual HTTP handler negative controls (EXPECTED RED)
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            app/api/writers-studio/editorial/turn/__tests__/modelAttributionDetailPrivacyHold.test.ts \
+            app/api/writers-studio/editorial/turn/__tests__/a2CarryRoute.test.ts
