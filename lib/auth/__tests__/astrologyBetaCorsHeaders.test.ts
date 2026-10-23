@@ -34,6 +34,13 @@ describe('Astrology beta exact API CORS', () => {
       expect(headers['access-control-allow-headers']).toContain('X-Session-Token');
       expect(entry.source).not.toContain('*');
     }
+    const profile = astroApi.find(x => x.source === '/api/members/profile');
+    const profileMethods = profile?.headers.find(h => h.key.toLowerCase() === 'access-control-allow-methods')?.value;
+    expect(profileMethods).toContain('PUT'); // useBirthChart.saveBirthData needs PUT.
+    const birthCalculator = astroApi.find(x => x.source === '/api/astrology/birth-chart');
+    expect(birthCalculator?.headers.find(h => h.key.toLowerCase() === 'access-control-allow-methods')?.value)
+      .toContain('POST');
+    expect(profileMethods).not.toContain('DELETE');
     expect(astroApi.some(x => x.source === '/api/astrology/synastry/list')).toBe(false);
     expect(astroApi.some(x => x.source === '/api/astrology/synastry/save')).toBe(false);
   });
