@@ -87,7 +87,7 @@ const ACT = {
   sanctuary:false,
 };
 
-type Scenario = 'agreed' | 'mismatch' | 'http503' | 'reset';
+type Scenario = 'agreed' | 'mismatch' | 'usage_invalid' | 'http503' | 'reset';
 const originalMode = process.env.MAIA_INFERENCE_MODE;
 
 beforeEach(() => {
@@ -139,11 +139,13 @@ async function withServer(
       res.writeHead(200, {'content-type':'application/json'});
       res.end(JSON.stringify({
         id:'msg_r5g97',type:'message',role:'assistant',
-        model:scenario === 'agreed' ? body.model : 'fictional-reported-model-other-than-requested',
+        model:scenario === 'agreed' || scenario === 'usage_invalid' ? body.model : 'fictional-reported-model-other-than-requested',
         content:[{type:'tool_use',id:'toolu_r5g97',name:'editorial_outcome',
           input:{kind:'reply_only',reply:'Invented feedback only.'}}],
         stop_reason:'tool_use',stop_sequence:null,
-        usage:{input_tokens:10,output_tokens:3},
+        usage:scenario === 'usage_invalid'
+          ? {input_tokens:PRIVATE,output_tokens:3}
+          : {input_tokens:10,output_tokens:3},
       }));
     } catch {
       if (!res.destroyed) res.destroy();
@@ -167,6 +169,7 @@ describe('R5G.97 original V4 receipt-accountability negatives with real SDK', ()
     ['agreed','false'], ['agreed','throw'],
     ['mismatch','false'], ['mismatch','throw'],
     ['http503','false'], ['http503','throw'],
+    ['usage_invalid','false'], ['usage_invalid','throw'],
   ] as const)(
     'EXPECTED RED: provider %s + receipt confirmation %s is accountability_unresolved, not ordinary refusal',
     async (scenario,confirmation) => withServer(scenario,async wires => {
@@ -208,6 +211,20 @@ describe('R5G.97 original V4 receipt-accountability negatives with real SDK', ()
       expect(sdkInstances).toBe(1);
       expect(JSON.stringify([result,diagnostics.mock.calls])).not.toContain(AUTHOR);
       expect(JSON.stringify([result,diagnostics.mock.calls])).not.toContain(PRIVATE);
+    }),
+  );
+
+  it('GREEN: confirmed crossing with invalid provider usage still refuses MAIA persistence',async () =>
+    withServer('usage_invalid',async wires=>{
+      const diagnostic=jest.spyOn(console,'error').mockImplementation(()=>{});
+      const result=await runEditorialTurn(ACT);
+      expect(result).toEqual({ok:false,reason:'structured_refused',
+        detail:'provider_unavailable',dispatch:'response_observed'});
+      expect(wires).toHaveLength(1);
+      expect(fakeConfirm).toHaveBeenCalledTimes(1);
+      expect(fakePersist).not.toHaveBeenCalled();
+      expect(JSON.stringify([result,diagnostic.mock.calls])).not.toContain(PRIVATE);
+      expect(JSON.stringify([result,diagnostic.mock.calls])).not.toContain(AUTHOR);
     }),
   );
 
