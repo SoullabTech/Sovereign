@@ -1,0 +1,36 @@
+name: Writer Post-Dispatch Receipt Confirmation HOLD
+
+# Intentional RED Class A negative control on unmodified editorial runtime.
+# No secrets, provider calls, member data, database, deployment or merge.
+on:
+  pull_request:
+    paths:
+      - 'lib/manuscript/editorialRuntime/**'
+      - '.github/workflows/writer-postdispatch-receipt-negative-hold.yml'
+  push:
+    branches:
+      - review/ws-postdispatch-receipt-negative-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postdispatch-accountability-negative:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install lockfile dependencies
+        run: npm ci
+      - name: Class A negative proof — EXPECTED RED until accepted source amendment
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/manuscript/editorialRuntime/__tests__/refusalReceiptAcknowledgement.review.test.ts
