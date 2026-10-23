@@ -70,6 +70,14 @@ describe('Astrology beta — exact access-matrix repair', () => {
     expect(route).not.toContain("error: error instanceof Error ? error.message");
   });
 
+  it('public natal calculator does not echo birth details in logs or errors', () => {
+    const calculator = readFileSync(join(process.cwd(), 'app/api/astrology/birth-chart/route.ts'), 'utf8');
+    expect(calculator).not.toContain("console.log('[Birth Chart] Calculating for:'");
+    expect(calculator).not.toContain('date: birthData.date,\\n      time: birthData.time');
+    expect(calculator).not.toContain('details: error instanceof Error ? error.message');
+    expect(calculator).toContain("error: 'Birth chart calculation failed'");
+  });
+
   it('Astrology never authorizes a saved chart using an explorer/browser ID', () => {
     const page = readFileSync(join(process.cwd(), 'app/astrology/page.tsx'), 'utf8');
     expect(page).toContain("apiFetch('/api/members/profile')");
