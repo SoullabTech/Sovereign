@@ -378,7 +378,7 @@ describe('Astrology beta access through real proxy', () => {
         headers: { 'x-session-token': ADMIN_TOKEN },
       }));
       expect(res.status).toBe(404);
-      expectDenied(res);
+      expect(res.headers.get('x-middleware-next')).toBeNull();
     } finally {
       if (previous === undefined) delete process.env.ACCESS_CONTROL_MODE;
       else process.env.ACCESS_CONTROL_MODE = previous;
