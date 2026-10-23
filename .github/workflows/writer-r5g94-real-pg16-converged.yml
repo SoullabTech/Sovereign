@@ -1,0 +1,59 @@
+name: Writer R5G94 Real PG16 Source-Converged — CLASS A DRAFT HOLD
+
+# Test-only real PG16 fixture against the exact R5G93 combined source.
+# Not production; no signer, model key, member material, or release approval.
+on:
+  push:
+    branches:
+      - review/ws-r5g94-combined-real-pg16-20261023
+  pull_request:
+    paths:
+      - 'lib/db/__tests__/postgresRealFictionalDriver.test.ts'
+      - '.github/workflows/writer-r5g94-real-pg16-converged.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-converged-disposable-pg16:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: fictional_writer_qa
+          POSTGRES_PASSWORD: fictional_only
+          POSTGRES_DB: fictional_writer_privacy_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fictional_writer_qa -d fictional_writer_privacy_qa"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      CI: 'true'
+      TZ: UTC
+      QA_PG16_EXACT: EXACT_DISPOSABLE_PG16_FICTIONAL_ONLY
+      DATABASE_URL: postgresql://fictional_writer_qa:fictional_only@127.0.0.1:5432/fictional_writer_privacy_qa
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Verify exact R5G93 DB source and no live model credentials
+        run: |
+          test "$(git hash-object lib/db/postgres.ts)" = "40ee70176263727bb7191b7bd075b845839729ca"
+          test -z "${ANTHROPIC_API_KEY:-}"
+          test -z "${MAIA_EDITORIAL_MODEL:-}"
+      - name: Install exact repository lockfile
+        run: npm ci
+      - name: Actual PostgreSQL16 driver test against exact combined R5G93 source
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/db/__tests__/postgresRealFictionalDriver.test.ts
