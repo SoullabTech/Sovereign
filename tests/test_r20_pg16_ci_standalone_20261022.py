@@ -67,8 +67,8 @@ class StandaloneFixture(unittest.TestCase):
             r.pg_denies("fictionaldb","SELECT 1;","wrong-marker")
 
     def test_newer_caller_pin_refuses_old_signer_and_co_rollback(self):
-        current_key=b'new-fictional-signer-32-byte-key!!'
-        old_key=b'old-fictional-signer-32-byte-key!!'
+        current_key=b'n'*32
+        old_key=b'o'*32
         self.assertEqual(len(current_key),32)
         self.assertEqual(len(old_key),32)
         new_ledger=r.sig({"generation":2,"deleted":["fictional-revoked"]},current_key)
