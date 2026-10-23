@@ -1,0 +1,49 @@
+name: Writer R5G96 Real SDK-to-Editorial Custody — CLASS A DRAFT HOLD
+
+# Fictional-only test, no real model or database. The real installed SDK
+# may call ONLY 127.0.0.1 fake HTTP; editorial persistence is jest-mocked.
+# No protected byte-pin, production, Source, or release authority affected.
+on:
+  push:
+    branches:
+      - review/ws-r5g96-real-sdk-editorial-boundary-20261023
+  pull_request:
+    paths:
+      - 'lib/manuscript/editorialRuntime/__tests__/r5g96ActualSdkUsageToEditorialRefusal.test.ts'
+      - '.github/workflows/writer-r5g96-editorial-real-sdk-boundary.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  actual-sdk-editorial-runtime-custody:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact repository lockfile
+        run: npm ci
+      - name: Assert exact SDK/editorial source and absent real provider/database keys
+        run: |
+          test "$(git hash-object lib/ai/structured/anthropicStructuredAdapter.ts)" = "10f8058d3941128d8792fb1b7a31adc60cc094e7"
+          test "$(git hash-object lib/manuscript/editorialRuntime/turn.ts)" = "dec900a812bf1638fc6832eb6d780a471abdf734"
+          test -z "${ANTHROPIC_API_KEY:-}"
+          test -z "${DATABASE_URL:-}"
+          test -z "${MAIA_EDITORIAL_MODEL:-}"
+      - name: Actual installed SDK + full editorial runtime, fictional localhost and mocked DB
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/manuscript/editorialRuntime/__tests__/r5g96ActualSdkUsageToEditorialRefusal.test.ts \
+            lib/manuscript/editorialRuntime/__tests__/modelAttributionRuntimePrivacyHold.test.ts \
+            lib/ai/structured/__tests__/r5g88UsageProvenanceNegative.test.ts \
+            lib/ai/structured/__tests__/r5g87FullRouterPostSendReset.test.ts
