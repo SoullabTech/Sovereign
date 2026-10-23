@@ -168,4 +168,24 @@ echo "D25_EXPECTED_UNSAFE_OWNER_ABA: the canonical Work owner can change and rev
 echo "D25_EXPECTED_ERASURE_BLOCKER: selected-Work detachment is FK-blocked; other-Work detachment is possible without deleting shared manuscript"
 echo "D25_SQL_LOCAL_ONLY: no trusted R20, encrypted projection, vault actor, actual HTTP, author import, or deletion completion is qualified"
 
+
+# D26 one-schema / two-Work Source V2 binding negative. The *canonical*
+# Living Work ontology permits A's manuscript M201 in both W101 and W103,
+# while this EXACT D21B candidate uniquely reserves M201 to one Work.
+# This is a constrained QA witness, NOT license to weaken Source uniqueness.
+equal D26_second_author_Work_declaration_is_valid \
+  "SELECT count(*) FROM living_work_expressions e JOIN living_works w ON w.id=e.living_work_id AND w.member_id=e.declared_by WHERE e.id='$(id 703)' AND e.expression_id='$(id 201)' AND e.expression_type='manuscript' AND e.living_work_id='$(id 103)' AND e.declared_by='$(id 1)'" 1
+equal D26_existing_publisher_binds_only_original_Work \
+  "SELECT count(*) FROM writer_source_v2_pending_publications WHERE manuscript_id='$(id 201)' AND living_work_id='$(id 101)'" 1
+equal D26_other_legitimate_Work_has_no_publisher \
+  "SELECT count(*) FROM writer_source_v2_pending_publications WHERE manuscript_id='$(id 201)' AND living_work_id='$(id 103)'" 0
+refuse D26_second_Work_same_manuscript_intent_blocked \
+  "$(intent 1 103 201 303 503 403)" "duplicate key"
+refuse D26_original_intent_Work_immutable \
+  "UPDATE writer_source_v2_import_intents SET living_work_id='$(id 103)' WHERE arrival_id='$(id 301)'" writer_source_v2_immutable_record
+equal D26_failed_reassociation_keeps_original_intent \
+  "SELECT count(*) FROM writer_source_v2_import_intents WHERE arrival_id='$(id 301)' AND living_work_id='$(id 101)' AND manuscript_id='$(id 201)'" 1
+echo D26_EXPECTED_SHARED_WORK_PUBLICATION_GAP: Work W103 lawfully declares M201 but cannot get its own D21B Source intent/pending receipt; choose manuscript-level Source custody and independently signed current per-Work rights before owner authorizes same-M Work transitions
+echo D26_SQL_ONLY_NO_GO: immutable original, current R20 relationship epoch, safe detach/delete, encrypted projections and verified cross-Work reads remain unimplemented
+
 echo D23_PHYSICAL_PG16_EXPECTED_PASS: exact same candidate source, physically guarded initial insert, no external authority/serving GO
