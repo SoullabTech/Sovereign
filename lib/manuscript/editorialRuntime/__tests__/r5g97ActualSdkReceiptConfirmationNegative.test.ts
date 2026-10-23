@@ -179,10 +179,20 @@ describe('R5G.97 original V4 receipt-accountability negatives with real SDK', ()
       // An observed provider reply/refusal can already have incurred cost and
       // disclosed writing. A bad receipt cannot assert "no external crossing".
       const result = await runEditorialTurn(ACT);
-      expect(result).toEqual({
+      // V4 may return dispatch: response_observed for a provider refusal,
+      // while a successful result need not carry the structured-refusal field.
+      // Do not demand field absence or accidentally permit a false UNKNOWN.
+      expect(result).toMatchObject({
         ok:false,reason:'disclosure_confirmation_unresolved',
         detail:'accountability_unresolved',
       });
+      if ('dispatch' in result) {
+        expect(result.dispatch).toBe('response_observed');
+      }
+      if (scenario === 'http503' || scenario === 'usage_invalid') {
+        // Provider-refusal paths already carry the observed transport fact.
+        expect(result).toMatchObject({dispatch:'response_observed'});
+      }
       expect(wires).toHaveLength(1);
       expect(wires[0].model).toBe(EDITORIAL_MODEL);
       expect(wires[0].messages[0].content).toBe(AUTHOR);
