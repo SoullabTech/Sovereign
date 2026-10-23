@@ -43,10 +43,11 @@ function classifyDispatch(err: unknown): DispatchObservation {
     if (err instanceof Anthropic.APIError && typeof (err as { status?: unknown }).status === 'number') {
       return 'response_observed';
     }
-    /* Connection refused, DNS failure, TLS failure — no response came back.
-       The unconstructable-client case lands here too: it throws before
-       `toAnthropicParams` has even built a body. */
-    if (err instanceof Anthropic.APIConnectionError) return 'no_response_observed';
+    /* An APIConnectionError only establishes that the SDK got no usable
+       HTTP response. A peer can accept the entire request and then reset the
+       connection before replying. Absence of a response cannot prove that
+       no writer text crossed the boundary. Preserve delivery uncertainty. */
+    if (err instanceof Anthropic.APIConnectionError) return 'unknown';
     return 'unknown';
   } catch {
     /* ⛔ If the SDK's shape is not what we expect, the honest answer is that we
@@ -130,12 +131,20 @@ export function anthropicStructuredProvider(
          inside: a missing key throws there, BEFORE `toAnthropicParams` builds a
          body, so nothing left the process — and that is a fact the receipt is
          entitled to. ⛔ Wrapping only the network call would lose it. */
+      /* A completed SDK response has reached this process even if its usage
+         envelope fails validation later. Never misreport that as unknown or as
+         no_response_observed. This state is per invocation, not shared. */
+      let completeResponseObserved = false;
       try {
-        return await executeOnce(opts, req);
+        return await executeOnce(opts, req, () => { completeResponseObserved = true; });
       } catch (err) {
-        /* ⛔ RE-THROWN, NOT SWALLOWED. The router still decides what a failure
-           means; this adds one fact and changes no control flow. */
-        throw new StructuredDispatchError(classifyDispatch(err), err);
+        /* The failed response is already observed. The original exception is
+           never retained or logged; diagnostics see only a minted, content-free
+           dispatch fact. Errors before response still use the SDK classifier. */
+        throw new StructuredDispatchError(
+          completeResponseObserved ? 'response_observed' : classifyDispatch(err),
+          completeResponseObserved ? null : err,
+        );
       }
     },
   };
@@ -143,9 +152,13 @@ export function anthropicStructuredProvider(
 
 async function executeOnce(
   opts: AnthropicStructuredOptions, req: StructuredRequest,
+  markCompleteResponse: () => void,
 ): Promise<StructuredResult> {
   const client = opts.client ?? new Anthropic();
   const params = toAnthropicParams(req);
+  // Class A draft only: zero SDK retry fan-out on this one structured request.
+  // Per-request options must override even an injected SDK client's defaults.
+  const singleAttemptOptions = { maxRetries: 0 } as const;
   const t0 = Date.now();
 
   /* THE REQUIREMENT IS NEUTRAL; THE MECHANISM IS THIS ADAPTER'S CHOICE.
@@ -155,16 +168,26 @@ async function executeOnce(
      simply not having the timeout. Consumed whole either way, so the
      neutral result is identical. */
   const message = req.execution?.completion === 'long-running'
-    ? await (client.messages.stream(params as never)).finalMessage()
-    : await client.messages.create(params as never) as Anthropic.Message;
+    ? await (client.messages.stream(params as never, singleAttemptOptions)).finalMessage()
+    : await client.messages.create(params as never, singleAttemptOptions) as Anthropic.Message;
+
+  /* Validation occurs AFTER a complete HTTP result. A missing counter is not
+     a measured zero. Reject untrusted numbers and do not admit any tool output
+     or authoring provenance from a response without verifiable token counts.
+     The enclosing wrapper records response_observed even if a getter throws. */
+  markCompleteResponse();
+  const inputTokens: unknown = message.usage?.input_tokens;
+  const outputTokens: unknown = message.usage?.output_tokens;
+  const validCount = (value: unknown): value is number =>
+    typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+  if (!validCount(inputTokens) || !validCount(outputTokens)) {
+    throw new Error('structured_provider_usage_unverified');
+  }
 
   return {
     content: toBlocks(message.content as readonly unknown[]),
     stopReason: (message.stop_reason as string | null) ?? null,
-    usage: {
-      inputTokens: message.usage?.input_tokens ?? 0,
-      outputTokens: message.usage?.output_tokens ?? 0,
-    },
+    usage: { inputTokens, outputTokens },
     provenance: {
       provider,
       /* THE MODEL REQUESTED AND SENT. Taken from the request that went up the
