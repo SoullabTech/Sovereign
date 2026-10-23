@@ -60,9 +60,9 @@ export function SessionDurationSelector({
               <div className="flex items-center gap-3">
                 <Clock className="w-6 h-6 text-amber-400" />
                 <div>
-                  <h3 className="text-lg font-medium text-white">Start Session</h3>
+                  <h3 className="text-lg font-medium text-white">Set conversation time</h3>
                   <p className="text-sm text-stone-400">
-                    {tierLabel ? `${tierLabel} \u2014 choose duration` : 'Choose your session duration'}
+                    {tierLabel ? `${tierLabel} — choose time` : 'This times your current conversation; it does not create a new one.'}
                   </p>
                 </div>
               </div>

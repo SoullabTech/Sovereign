@@ -214,6 +214,11 @@ import { detectCaptureTrigger } from '@/lib/capsules/types';
 import type { CapsuleDTO } from '@/lib/capsules/types';
 import { TransformationalPresence, type PresenceState } from './nlp/TransformationalPresence';
 import { SessionTimer, SESSION_PRESETS } from '@/lib/session/SessionTimer';
+import { canDisplayLocalResumeNotice } from '@/lib/session/resumeNotice';
+import {
+  displayStateForRestoredClosureHint, readClosureHint, requestQualifiedClosure,
+  QUALIFIED_R2_CLOSE_PATH, type ClosureDisplayState,
+} from '@/lib/session/closureReceipt';
 import { SessionTimeAwareness } from '@/components/session/SessionTimeAwareness';
 import { SessionDurationSelector } from '@/components/session/SessionDurationSelector';
 import { ResumeSessionPrompt } from '@/components/session/ResumeSessionPrompt';
@@ -1472,34 +1477,21 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     };
   }, []);
 
-  // 🆕 Listen for "New Conversation" action from QuickSettingsSheet
+  // New Conversation must mint a fresh authenticated, member-owned SID
+  // (held RF01 R1-D). Clearing the display under the SAME SID impersonates a
+  // new privacy encounter and can hide older writing while keeping its
+  // history and server authority. Keep this legacy action held until the
+  // independently qualified R1-D source is admitted.
   useEffect(() => {
     const handleNewConversation = () => {
-      console.log('🆕 [New Conversation] Clearing history and resetting to welcome');
-      // Clear messages (UI display)
-      setMessages([]);
-      lastSyncedCountRef.current = 0; // fresh thread — resync from the start
-      // Clear historical messages (API context) - truly fresh start
-      historicalMessagesRef.current = [];
-      // Reset activation state to show welcome screen
-      setHasActivated(false);
-      // Reset session-restored flag so the welcome greeting can show for the new conversation
-      sessionRestoredRef.current = false;
-      // Clear navigation flag so next mount doesn't restore the cleared conversation
-      sessionStorage.removeItem('maia_nav_teardown');
-      // Clear localStorage for current session
-      if (typeof window !== 'undefined' && sessionId) {
-        const storageKey = `maia_conversation_${sessionId}`;
-        localStorage.removeItem(storageKey);
-        console.log(`🆕 [New Conversation] Cleared localStorage: ${storageKey}`);
-      }
+      toast.error(
+        'A new conversation requires a verified member session. Your existing conversation was preserved.',
+        { duration: 7000 },
+      );
     };
-
     window.addEventListener('maia-new-conversation', handleNewConversation);
-    return () => {
-      window.removeEventListener('maia-new-conversation', handleNewConversation);
-    };
-  }, [sessionId]);
+    return () => window.removeEventListener('maia-new-conversation', handleNewConversation);
+  }, []);
 
   // 🧭 THERAPEUTIC FRAMEWORK: Selected in Counsel mode (Jungian, Somatic, CBT, IFS, etc.)
   // Now handled by lib/consciousness/therapeuticFrameworks.ts
@@ -1514,7 +1506,32 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // Ritual state
   const [showOpeningRitual, setShowOpeningRitual] = useState(false);
   const [showClosingRitual, setShowClosingRitual] = useState(false);
+  const [closureUiState, setClosureUiState] = useState<ClosureDisplayState>('ready');
+  const closureRequestStartedRef = useRef(false);
+  const liveClosureSessionIdRef = useRef(sessionId);
+  const liveClosureMemberClaimRef = useRef(userId);
   const [pendingSessionDuration, setPendingSessionDuration] = useState<number | null>(null);
+
+  // Local hints are CONTENT-FREE recovery pointers, not authentication,
+  // closure authority or completed erasure. Never automatically retry a
+  // potentially destructive request after native/WebKit restart.
+  useEffect(() => {
+    liveClosureSessionIdRef.current = sessionId;
+    liveClosureMemberClaimRef.current = userId;
+    closureRequestStartedRef.current = false;
+    setClosureUiState('ready');
+    if (typeof window === 'undefined' || !sessionId || !userId) return;
+    const actorClaim = getValidMemberId();
+    if (!actorClaim || actorClaim !== userId) return;
+    const previous = readClosureHint(window.localStorage, actorClaim, sessionId);
+    if (!previous) return;
+    // Local storage is neither an authenticated server receipt nor an
+    // antirollback witness. Even a cached "erasure_pending" hint must be
+    // presented as UNVERIFIED after app restart until the verified server
+    // reconciles its current session/R20 status.
+    setClosureUiState(displayStateForRestoredClosureHint(previous));
+    setShowClosingRitual(true);
+  }, [sessionId, userId]);
 
   // Soul Prompts & Session Synthesis state
   const [showPromptPicker, setShowPromptPicker] = useState(false);
@@ -7763,20 +7780,14 @@ I'm not sure what I'm feeling yet.`;
   const handleStartSession = useCallback((durationMinutes: number) => {
     console.log(`⏰ Starting ${durationMinutes}-minute session with temporal container`);
 
-    // 🧹 Clear previous conversation when starting a new session
-    console.log('🧹 Clearing previous conversation for fresh session start');
-    setMessages([]);
-    lastSyncedCountRef.current = 0; // fresh thread — resync from the start
-    historicalMessagesRef.current = []; // Clear API context too
-    sessionRestoredRef.current = false; // Allow greeting to run for fresh session
-    sessionStorage.removeItem('maia_nav_teardown'); // Don't restore on next navigation
-    setHasActivated(false); // Reset to show welcome/greeting
-    // Clear localStorage for previous conversation
-    if (typeof window !== 'undefined' && sessionId) {
-      const storageKey = `maia_conversation_${sessionId}`;
-      localStorage.removeItem(storageKey);
-      console.log(`🧹 Cleared localStorage: ${storageKey}`);
-    }
+    // This is a TIME CONTAINER around the existing conversation, NOT a
+    // verified New Conversation. No new server SID was minted here.
+    // Never discard member-authored words or clear prior history merely
+    // because the member selected a new duration. Genuine encounter
+    // rotation must use the held RF01 R1-D server-confirmed flow.
+    sessionTimer?.stop();
+    autoSaveCleanupRef.current?.();
+    autoSaveCleanupRef.current = null;
 
     const timer = new SessionTimer({
       durationMinutes,
@@ -7821,7 +7832,7 @@ I'm not sure what I'm feeling yet.`;
     autoSaveCleanupRef.current = cleanup;
 
     console.log(`✅ Session timer initialized - MAIA will be temporally aware`);
-  }, [userId, userName, sessionId]);
+  }, [userId, userName, sessionId, sessionTimer]);
 
   const handleExtendSession = useCallback((additionalMinutes: number) => {
     if (sessionTimer) {
@@ -7838,7 +7849,17 @@ I'm not sure what I'm feeling yet.`;
   const handleResumeSession = useCallback(() => {
     if (!savedSessionData) return;
 
-    console.log('💾 Resuming saved session:', savedSessionData.sessionId);
+    const currentMemberClaim = getValidMemberId();
+    if (!currentMemberClaim || currentMemberClaim !== userId ||
+        savedSessionData.userId !== currentMemberClaim ||
+        savedSessionData.sessionId !== sessionId) {
+      setInputSubmitError('This saved timer does not belong to your verified conversation. Nothing was resumed.');
+      return;
+    }
+    // This handler is intentionally NOT exposed as a live Resume action:
+    // ResumeSessionPrompt defaults verifiedResumeAdmission to false. A
+    // future server-owned active-session proof must precede enabling it.
+    console.log('💾 Resuming locally matched session timer');
 
     // Restore timer from saved data
     const timer = SessionTimer.fromSavedData(
@@ -7878,7 +7899,9 @@ I'm not sure what I'm feeling yet.`;
       sessionId,
       lastSavedAt: new Date().toISOString(),
       wasExtended: savedSessionData.wasExtended,
-      totalExtensionMinutes: savedSessionData.totalExtensionMinutes
+      // getDurationMinutes() is already the full resumed duration. Carrying
+      // the old extension again would inflate 50+15 to 80 on the next resume.
+      totalExtensionMinutes: 0
     }));
     autoSaveCleanupRef.current = cleanup;
 
@@ -7886,23 +7909,14 @@ I'm not sure what I'm feeling yet.`;
   }, [savedSessionData, userId, userName, sessionId]);
 
   const handleStartNewSession = useCallback(() => {
-    console.log('🗑️ Clearing saved session and starting fresh');
-    clearSession();
-    setShowResumePrompt(false);
-    setSavedSessionData(null);
-    // 🧹 Clear previous conversation messages
-    setMessages([]);
-    lastSyncedCountRef.current = 0; // fresh thread — resync from the start
-    historicalMessagesRef.current = []; // Clear API context too
-    sessionRestoredRef.current = false; // Allow greeting to run for fresh session
-    sessionStorage.removeItem('maia_nav_teardown'); // Don't restore on next navigation
-    setHasActivated(false);
-    if (typeof window !== 'undefined' && sessionId) {
-      const storageKey = `maia_conversation_${sessionId}`;
-      localStorage.removeItem(storageKey);
-    }
-    // Note: User will click header button to open session selector
-  }, [sessionId]);
+    // Legacy saved-timer "New" has NO verified replacement session ID.
+    // Even if a future caller accidentally invokes this handler, it cannot
+    // discard the current transcript, local timer, or content-free R20 hint.
+    toast.error(
+      'A new conversation requires a verified member session. Your existing writing was preserved.',
+      { duration: 7000 },
+    );
+  }, []);
 
   // 🕯️ Ritual Handlers
   const handleDurationSelected = useCallback((durationMinutes: number) => {
@@ -7930,63 +7944,90 @@ I'm not sure what I'm feeling yet.`;
   }, [pendingSessionDuration]);
 
   const handleClosingRitualComplete = useCallback(() => {
-    setShowClosingRitual(false);
-    console.log('🕯️ Closing ritual complete - session ended');
+    if (closureRequestStartedRef.current) return;
+    closureRequestStartedRef.current = true;
 
-    // Play closing gong
-    const gong = getSessionGong(0.3);
-    gong.playClosingGong().catch(err =>
-      console.warn('Could not play closing gong:', err)
-    );
-
-    // Clean up session
-    clearSession();
-    autoSaveCleanupRef.current?.();
-    autoSaveCleanupRef.current = null;
-    setSessionTimer(null);
-    onSessionActiveChange?.(false); // Notify parent that session ended
-
-    // Finalize session: Sanctuary purge or Continuity summary pipeline
-    // Uses apiFetch for iOS/Capacitor compatibility (x-member-id header)
     const memberId = getValidMemberId();
-    if (memberId && sessionId) {
-      apiFetch('/api/sovereign/session/finalize', {
+    if (!memberId || memberId !== userId || !sessionId ||
+        typeof window === 'undefined') {
+      setClosureUiState('unverified');
+      return;
+    }
+
+    // A build-time enablement is a procedural release gate, NOT proof of a
+    // genuine R2 server or any R20 erasure capability. Defaults to OFF.
+    const enabled = process.env.NEXT_PUBLIC_MAIA_R2_CLOSURE_VERIFIED === 'true';
+    if (!enabled) {
+      setClosureUiState('unavailable');
+      return;
+    }
+    setClosureUiState('requesting');
+
+    void requestQualifiedClosure({
+      enabled,
+      claimedMemberId: memberId,
+      currentMemberClaim: userId,
+      sessionId,
+      expectedPrivacy: isSanctuary ? 'sanctuary' : 'continuity',
+      storage: window.localStorage,
+      send: (payload) => apiFetch(QUALIFIED_R2_CLOSE_PATH, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          memberId,
-          sessionId,
-          isSanctuary,
-          endedAt: new Date().toISOString(),
-        }),
-      }).catch(err =>
-        console.warn('Session finalize failed (non-blocking):', err)
-      );
-    }
-  }, [onSessionActiveChange, sessionId, isSanctuary]);
+        body: JSON.stringify(payload),
+      }),
+    }).then((assessment) => {
+      // A late network reply may not close a DIFFERENT member's conversation.
+      if (liveClosureSessionIdRef.current !== sessionId ||
+          liveClosureMemberClaimRef.current !== memberId ||
+          getValidMemberId() !== memberId) return;
+
+      if (assessment.kind === 'continuity_closed' ||
+          assessment.kind === 'sanctuary_erasure_pending') {
+        // The trusted R2 response has either terminally closed Continuity or
+        // accepted a still-pending Sanctuary deletion obligation. The local
+        // TIMER is obsolete in either case; R20 status is not.
+        autoSaveCleanupRef.current?.();
+        autoSaveCleanupRef.current = null;
+        sessionTimer?.stop();
+        setSessionTimer(null);
+        clearSession();
+        onSessionActiveChange?.(false);
+      }
+      setClosureUiState(assessment.kind);
+    }).catch(() => {
+      if (liveClosureSessionIdRef.current === sessionId &&
+          liveClosureMemberClaimRef.current === memberId &&
+          getValidMemberId() === memberId) {
+        setClosureUiState('unavailable');
+      }
+    });
+  }, [onSessionActiveChange, sessionId, userId, isSanctuary, sessionTimer]);
 
   const handleClosingRitualSkip = useCallback(() => {
     setShowClosingRitual(false);
     console.log('🕯️ Closing ritual skipped');
   }, []);
 
-  // Check for saved session on mount
+  // A browser-stored timer is NOT proof of session ownership. Do not even
+  // offer the unverified resume notice for another member or daily SID.
+  // The separate resume UI also defaults both state-changing actions OFF
+  // until a future authenticated, server-owned admission is integrated.
   useEffect(() => {
     const saved = loadSession();
-    if (saved) {
-      const remainingTime = getSavedSessionTimeRemaining();
-      const phase = getSavedSessionPhase();
-
-      console.log('📂 Found saved session:', {
-        sessionId: saved.sessionId,
-        remainingTime,
-        phase
-      });
-
-      setSavedSessionData(saved);
-      setShowResumePrompt(true);
+    const memberClaim = getValidMemberId();
+    if (!canDisplayLocalResumeNotice({
+      saved,
+      currentMemberClaim: memberClaim,
+      displayedUserId: userId,
+      displayedSessionId: sessionId,
+    })) {
+      setSavedSessionData(null);
+      setShowResumePrompt(false);
+      return;
     }
-  }, []); // Only run on mount
+    setSavedSessionData(saved);
+    setShowResumePrompt(true);
+  }, [sessionId, userId]);
 
   // Clean up timer and auto-save on unmount
   useEffect(() => {
@@ -11001,6 +11042,7 @@ I'm not sure what I'm feeling yet.`;
       {/* 🕯️ Closing Ritual */}
       <SessionRitualClosing
         isOpen={showClosingRitual}
+        closureState={closureUiState}
         isReturningUser={isReturningUser}
         onComplete={handleClosingRitualComplete}
         onSkip={handleClosingRitualSkip}
