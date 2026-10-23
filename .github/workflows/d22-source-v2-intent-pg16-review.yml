@@ -1,0 +1,32 @@
+name: D22-D23 Source V2 D21B PostgreSQL16 QA Only
+
+# REVIEW-ONLY. No app, source, target migrations or deployments.
+on:
+  push:
+    branches:
+      - review/d22-source-v2-intent-pg16-20261023
+  pull_request:
+    branches:
+      - clean-main-no-secrets
+    paths:
+      - .github/workflows/d22-source-v2-intent-pg16-review.yml
+      - scripts/qualification/d22-source-v2-intent-pg16.review.sh
+      - scripts/qualification/d23-source-v2-author-context-pg16.review.sh
+      - scripts/qualification/fixtures/D21_SOURCE_V2_INTENT_REVIEW.sql
+      - scripts/qualification/fixtures/D21B_AUTHOR_CONTEXT_GUARD_REVIEW_ONLY.patch
+
+permissions:
+  contents: read
+
+jobs:
+  d21b-intent-and-guard-pg16:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Baseline unamended D21B SQL, including expected negative
+        run: bash scripts/qualification/d22-source-v2-intent-pg16.review.sh
+      - name: Reproduce exact existing D21B author-context addendum on new fictional PG16
+        run: bash scripts/qualification/d23-source-v2-author-context-pg16.review.sh
