@@ -1,0 +1,53 @@
+name: Writer Editorial Send Gesture PostgreSQL16 Negative Review
+
+# REVIEW-ONLY / deliberately RED. A fresh GitHub-local PostgreSQL16 service
+# and invented data only. No secrets, real member Work, model, production DB
+# or production source are accessed. Never release/merge authority.
+on:
+  pull_request:
+    paths:
+      - 'app/api/writers-studio/editorial/turn/__tests__/sendGestureReplay.pg16.review.test.ts'
+      - '.github/workflows/writer-editorial-send-pg16-negative-hold.yml'
+  push:
+    branches:
+      - review/ws-editorial-gesture-once-only-negative-20261023
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  physical-postgres16-negative:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: fictional_writer_qa
+          POSTGRES_PASSWORD: fictional_only
+          POSTGRES_DB: fictional_writer_gesture_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fictional_writer_qa -d fictional_writer_gesture_qa"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: 'true'
+      TZ: UTC
+      WRITER_SEND_GESTURE_PG16_QA: 'TRUE_EXPLICIT_TEST_ONLY'
+      DATABASE_URL: 'postgresql://fictional_writer_qa:fictional_only@127.0.0.1:5432/fictional_writer_gesture_qa'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Execute real PG16 Writer POST-to-memberAct duplicate-send witness
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            app/api/writers-studio/editorial/turn/__tests__/sendGestureReplay.pg16.review.test.ts
