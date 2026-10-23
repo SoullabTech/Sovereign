@@ -55,14 +55,8 @@ export async function POST(request: NextRequest) {
       houseSystem: houseSystem || 'placidus',
     };
 
-    console.log('[Birth Chart] Calculating for:', {
-      date: birthData.date,
-      time: birthData.time,
-      lat: birthData.location.lat,
-      lng: birthData.location.lng,
-      timezone: birthData.location.timezone,
-      houseSystem: birthData.houseSystem,
-    });
+    // Birth date, time and coordinates are private user-supplied material.
+    // Never persist them in routine request logs, including on public calculators.
 
     // Calculate the birth chart
     const chart = await calculateBirthChart(birthData);
@@ -85,12 +79,11 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Birth Chart] Calculation error:', error);
+    console.error('[Birth Chart] Calculation error:', error instanceof Error ? error.name : 'unknown');
 
     return NextResponse.json(
       {
         error: 'Birth chart calculation failed',
-        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

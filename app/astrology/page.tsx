@@ -26,7 +26,6 @@ import { getZodiacArchetype, generateArchetypalDescription } from '@/lib/astrolo
 import { getPlanetaryArchetype } from '@/lib/astrology/spiralogicMapping';
 import { getSpiralogicHouseData } from '@/lib/astrology/spiralogicHouseMapping';
 import { synthesizeAspect, AspectType } from '@/lib/astrology/aspectSynthesis';
-import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getTooltip, CARD_COPY } from '@/lib/content/CrossSystemConvergenceCopy';
 import { useUserAuth } from '@/lib/hooks/useUserAuth';
@@ -348,16 +347,13 @@ export default function AstrologyPage() {
 
   // Fetch saved synastry
   useEffect(() => {
-    const memberId = getOrCreateExplorerId();
-    if (!memberId) return;
-
     let isMounted = true;
 
     (async () => {
       try {
         setSavedSynastryLoading(true);
         const res = await apiFetch(
-          `/api/astrology/synastry/saved?memberId=${encodeURIComponent(memberId)}&limit=3`,
+          '/api/astrology/synastry/saved?limit=3',
           { cache: 'no-store' }
         );
         const json = await res.json();

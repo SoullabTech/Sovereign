@@ -582,6 +582,20 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/commons/contributions', public: true, notes: 'GET public contributions' },
   { exact: '/api/commons/contributions/orientation', public: true, notes: 'Orientation content' },
 
+  // ASTROLOGY-BETA-ACCESS-20261023 — exact routes only, no /api/astrology/* wildcard.
+  // Calculators accept supplied sky/birth facts and never resolve a member or
+  // read persisted member data. Their existing web/native callers deliberately
+  // use identity-free fetch, including on devices without cookie transport.
+  { exact: '/api/astrology/birth-chart', public: true, notes: 'Identity-free natal calculation; no member profile lookup' },
+  { exact: '/api/astrology/current-transits', public: true, notes: 'Identity-free sky/transit calculator; no member profile lookup' },
+
+  // Member data/actions use verified sessions for Free, Personal, and Pro.
+  // These must never become public just to repair beta availability.
+  { exact: '/api/members/profile', minTier: 'free', notes: 'Authenticated profile; handler independently resolves verified session ownership' },
+  { exact: '/api/astrology/geocode', minTier: 'free', notes: 'Member-facing birth-location lookup, authenticated to protect external provider' },
+  { exact: '/api/astrology/reflection', minTier: 'free', notes: 'Member-owned chart recognition; independent handler session check' },
+  { exact: '/api/astrology/synastry/saved', minTier: 'free', notes: 'Saved synastry; route derives owner from verified session and rejects divergent memberId claim' },
+
   // Member API — contribution is participation, open to all
   { regex: /^\/api\/commons\/contributions\/[^/]+$/, minTier: 'free', notes: 'Contribution detail — depth' },
   { exact: '/api/commons/contributions/my-offerings', minTier: 'free', notes: 'User offerings — depth' },

@@ -30,6 +30,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 const VALID_TOKEN = 'valid-session-token-64hex';
 const ADMIN_TOKEN = 'valid-admin-session-token';
+const PRO_MEMBER_TOKEN = 'valid-pro-ordinary-member-session-token';
 const REVOKED_TOKEN = 'revoked-session-token';
 const EXPIRED_TOKEN = 'expired-session-token';
 const MEMBER_A = '11111111-1111-4111-8111-111111111111';
@@ -43,7 +44,9 @@ jest.mock('@/lib/db/postgres', () => ({
 }));
 
 import { NextRequest, NextResponse } from 'next/server';
-import { middleware } from '../../../middleware';
+// Next 16 moved the runtime boundary from middleware.ts to proxy.ts.
+// Test the real deployed entrypoint rather than a removed legacy file.
+import { proxy as middleware } from '../../../proxy';
 
 /**
  * Build a real NextRequest so cookie parsing, URL parsing and header casing are
@@ -126,6 +129,9 @@ beforeEach(() => {
       }
       if (params[0] === ADMIN_TOKEN) {
         return { rows: [{ member_id: ADMIN_M, tier: 'pro', roles: ['admin'] }] };
+      }
+      if (params[0] === PRO_MEMBER_TOKEN) {
+        return { rows: [{ member_id: MEMBER_A, tier: 'pro', roles: ['member'] }] };
       }
       // REVOKED_TOKEN / EXPIRED_TOKEN / anything else: the SQL predicate
       // (revoked = FALSE AND expires_at > NOW()) excludes them.
@@ -327,6 +333,60 @@ describe('transport paths that must be unchanged', () => {
   it('?_m= alone does NOT authenticate', async () => {
     const res = await middleware(request(`${MEMBER_API}?_m=${MEMBER_A}`));
     expectDenied(res);
+  });
+});
+
+// Astrology routes pass through the REAL Next proxy. This complements the
+// pure access-matrix test with verified-cookie and header transport coverage.
+describe('Astrology beta access through real proxy', () => {
+  const memberPaths = [
+    '/api/members/profile',
+    '/api/astrology/geocode',
+    '/api/astrology/reflection',
+    '/api/astrology/synastry/saved',
+  ];
+
+  it.each(['/api/astrology/birth-chart', '/api/astrology/current-transits'])(
+    'preserves identity-free calculator admission at %s', async (path) => {
+      expectForwarded(await middleware(request(path)));
+    },
+  );
+
+  it.each(memberPaths)('refuses anonymous requests for %s', async (path) => {
+    const res = await middleware(request(path));
+    expect(res.status).toBe(401);
+    expectDenied(res);
+  });
+
+  it.each(memberPaths)('admits a verified Free member at %s', async (path) => {
+    expectForwarded(await middleware(request(path, { headers: { 'x-session-token': VALID_TOKEN } })));
+  });
+
+  it.each(memberPaths)('admits a verified Pro member without admin role at %s', async (path) => {
+    expectForwarded(await middleware(request(path, { headers: { 'x-session-token': PRO_MEMBER_TOKEN } })));
+  });
+
+  it('rejects an identity mismatch even when the caller has a valid Free session', async () => {
+    const res = await middleware(request('/api/members/profile', {
+      headers: { 'x-session-token': VALID_TOKEN, 'x-member-id': ADMIN_M },
+    }));
+    expect(res.status).toBe(401);
+    expectDenied(res);
+  });
+
+  it('does not admit an unknown astrology endpoint in strict mode', async () => {
+    const previous = process.env.ACCESS_CONTROL_MODE;
+    process.env.ACCESS_CONTROL_MODE = 'strict';
+    try {
+      const res = await middleware(request('/api/astrology/private-exports', {
+        headers: { 'x-session-token': ADMIN_TOKEN },
+      }));
+      expect(res.status).toBe(404);
+      expect(res.headers.get('x-middleware-next')).toBeNull();
+    } finally {
+      if (previous === undefined) delete process.env.ACCESS_CONTROL_MODE;
+      else process.env.ACCESS_CONTROL_MODE = previous;
+    }
   });
 });
 

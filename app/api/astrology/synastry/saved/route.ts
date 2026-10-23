@@ -1,12 +1,13 @@
 /**
  * Saved Synastry API
  *
- * GET /api/astrology/synastry/saved?memberId=<uuid>
- *   List synastry analyses saved to timeline by this member.
+ * GET /api/astrology/synastry/saved?limit=3
+ *   Lists only the authenticated member's own saved synastry analyses.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { listSavedSynastryAnalyses } from '@/lib/astrology/synastry/synastryStore';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,16 +18,24 @@ export async function GET(request: NextRequest) {
   }
   try {
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get('memberId');
-    const limit = parseInt(searchParams.get('limit') ?? '20', 10);
-    const offset = parseInt(searchParams.get('offset') ?? '0', 10);
-
+    // Never choose a private record owner from client parameters. The session
+    // determines ownership independently of the access-matrix outer gate.
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
-      return NextResponse.json({
-        success: false,
-        error: 'memberId query parameter is required',
-      }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
     }
+
+    // Reject (rather than silently substitute for) a contradictory legacy
+    // identity claim, preventing accidental account mixing on old clients.
+    const claimedMemberId = searchParams.get('memberId');
+    if (claimedMemberId && claimedMemberId !== memberId) {
+      return NextResponse.json({ success: false, error: 'Member identity mismatch' }, { status: 403 });
+    }
+
+    const rawLimit = Number(searchParams.get('limit') ?? '20');
+    const rawOffset = Number(searchParams.get('offset') ?? '0');
+    const limit = Number.isSafeInteger(rawLimit) ? Math.max(1, Math.min(50, rawLimit)) : 20;
+    const offset = Number.isSafeInteger(rawOffset) ? Math.max(0, rawOffset) : 0;
 
     const rows = await listSavedSynastryAnalyses(memberId, { limit, offset });
 
@@ -63,7 +72,7 @@ export async function GET(request: NextRequest) {
     console.error('[Saved Synastry API] Error:', error);
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to list saved synastry',
+      error: 'Failed to list saved synastry',
     }, { status: 500 });
   }
 }
