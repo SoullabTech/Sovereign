@@ -21,6 +21,7 @@ import { calculateBirthChart, type BirthData, type BirthChart } from '@/lib/astr
 import { calculateSynastryFromCharts, chartToLongitudes } from '@/lib/astrology/synastry/calculateSynastry';
 import type { SynastryRequest, SynastryResponse, SynastryOptions } from '@/lib/astrology/synastry/types';
 import { createSynastryAnalysis, getSynastryAnalysisById } from '@/lib/astrology/synastry/synastryStore';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,6 +105,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ stub: true });
   }
   try {
+    const sessionMemberId = await getMemberIdFromRequest(request);
+    if (!sessionMemberId) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+    }
     const { searchParams } = new URL(request.url);
     const analysisId = searchParams.get('analysisId');
 
@@ -116,11 +121,10 @@ export async function GET(request: NextRequest) {
 
     const row = await getSynastryAnalysisById(analysisId);
 
-    if (!row) {
-      return NextResponse.json({
-        success: false,
-        error: `Analysis ${analysisId} not found`,
-      }, { status: 404 });
+    // A guessable analysis UUID is never evidence of ownership. No legacy
+    // browser/explorer owner fallback: unbound records await migration review.
+    if (!row || row.requested_by_member_id !== sessionMemberId) {
+      return NextResponse.json({ success: false, error: 'Analysis not found' }, { status: 404 });
     }
 
     // Return the stored result with metadata
@@ -139,7 +143,7 @@ export async function GET(request: NextRequest) {
     console.error('[Synastry API] GET error:', error);
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to retrieve synastry analysis',
+      error: 'Failed to retrieve synastry analysis',
     }, { status: 500 });
   }
 }
@@ -149,7 +153,25 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const sessionMemberId = await getMemberIdFromRequest(request);
+    if (!sessionMemberId) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+    }
+    const origin = request.headers.get('origin');
+    if (origin && origin !== new URL(request.url).origin) {
+      return NextResponse.json({ success: false, error: 'Origin not allowed' }, { status: 403 });
+    }
     const body: SynastryRequest = await request.json();
+    // Browser claims may never select the owner of persisted relationship data.
+    if (body.requestedByMemberId && body.requestedByMemberId !== sessionMemberId) {
+      return NextResponse.json({ success: false, error: 'Member identity mismatch' }, { status: 403 });
+    }
+    // Stored member charts are private unless separately and explicitly shared.
+    // Only a caller's OWN chart may be resolved via a member ID here.
+    if ((body.a?.memberId && body.a.memberId !== sessionMemberId) ||
+        (body.b?.memberId && body.b.memberId !== sessionMemberId)) {
+      return NextResponse.json({ success: false, error: 'Private chart access denied' }, { status: 403 });
+    }
 
     // Validate request structure
     if (!body.a || !body.b) {
@@ -257,7 +279,7 @@ export async function POST(request: NextRequest) {
         bMemberId: memberIdB ?? null,
         aBirth: body.a.birth ?? null,
         bBirth: body.b.birth ?? null,
-        requestedByMemberId: body.requestedByMemberId ?? null,
+        requestedByMemberId: sessionMemberId,
         result: responsePayload,
       });
       console.log(`[Synastry API] Persisted as ${saved.id}`);
@@ -276,7 +298,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to calculate synastry',
+      error: 'Failed to calculate synastry',
     } as SynastryResponse, { status: 500 });
   }
 }
