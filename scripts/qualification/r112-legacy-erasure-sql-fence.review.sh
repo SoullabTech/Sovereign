@@ -120,10 +120,12 @@ launch_old_worker "$old_one"
 wait_attempts 1
 verify_vault_unchanged
 test "$(sql 'SELECT count(*) FROM vault_erasure_queue')" = 1 || fail "legacy worker incorrectly cleared obligation"
-first_attempts="$(sql 'SELECT attempts FROM vault_erasure_queue LIMIT 1')"
 if docker logs "$old_one" 2>&1 | grep -q FICTIONAL_R112_; then fail "fictional bytes leaked in first worker log"; fi
 docker rm -f "$old_one" >/dev/null
 active_worker=""
+# Sample attempts ONLY after old process is gone. Any advance observed
+# in the second stage must then originate with the newly spawned process.
+first_attempts="$(sql 'SELECT attempts FROM vault_erasure_queue LIMIT 1')"
 echo R112_LEGACY_FIRST_PROCESS:real_old_worker_denied_queue_DELETE_original_file_and_obligation_retained
 
 # A separate worker process retries the SAME persisted obligation after restart.
