@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface SavedSynastryItem {
   analysisId: string;
@@ -27,17 +27,15 @@ function SynastryCard({ item, onUnsave }: { item: SavedSynastryItem; onUnsave: (
   const [unsaving, setUnsaving] = useState(false);
 
   async function handleUnsave() {
-    const memberId = getOrCreateExplorerId();
-    if (!memberId || unsaving) return;
+    if (unsaving) return;
 
     setUnsaving(true);
     try {
-      const res = await fetch('/api/astrology/synastry/save', {
+      const res = await apiFetch('/api/astrology/synastry/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           analysisId: item.analysisId,
-          memberId,
           saved: false,
         }),
       });
@@ -113,14 +111,8 @@ export default function SavedSynastryPage() {
 
   useEffect(() => {
     async function load() {
-      const memberId = getOrCreateExplorerId();
-      if (!memberId) {
-        setLoading(false);
-        return;
-      }
-
       try {
-        const res = await fetch(`/api/astrology/synastry/saved?memberId=${encodeURIComponent(memberId)}`);
+        const res = await apiFetch('/api/astrology/synastry/saved');
         const json = await res.json();
 
         if (!json?.success) {
