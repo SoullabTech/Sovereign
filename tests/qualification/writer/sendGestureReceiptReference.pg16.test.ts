@@ -127,11 +127,25 @@ async function claimDispatchOnce(input:Gesture):Promise<boolean>{
       'AND work_id=$3 AND manuscript_id=$4 AND a2_id=$5 AND epoch_id=$6 FOR UPDATE',
       [input.threadId,input.memberId,input.workId,input.manuscriptId,input.a2Id,input.creationEpochId]);
     if(owned.rowCount!==1){await tx.query('ROLLBACK');return false;}
+    // Even a claim to call an external service must revalidate the canonical
+    // ORIGINAL authored act. An attacker or stale caller may know a gesture
+    // UUID without possessing its author text/scope. No untrusted retry payload
+    // can consume a receipt or trigger a provider attempt.
     const q=await tx.query(
-      "UPDATE writer_send_reference.gesture_receipts SET state='attempted_unknown', claimed_at=now() "+
-      "WHERE member_id=$1 AND gesture_id=$2 AND thread_id=$3 AND a2_id=$4 AND epoch_id=$5 "+
-      "AND state='ready' RETURNING gesture_id",
-      [input.memberId,input.gestureId,input.threadId,input.a2Id,input.creationEpochId]);
+      "UPDATE writer_send_reference.gesture_receipts AS r "+
+      "SET state='attempted_unknown', claimed_at=now() "+
+      "FROM writer_send_reference.author_acts AS a "+
+      "WHERE r.member_id=$1 AND r.gesture_id=$2 AND r.thread_id=$3 "+
+      "AND r.a2_id=$4 AND r.epoch_id=$5 AND r.work_id=$6 "+
+      "AND r.manuscript_id=$7 AND r.state='ready' "+
+      "AND a.thread_id=r.thread_id AND a.turn_index=r.turn_index "+
+      "AND a.body=$8 AND a.kind=$9 "+
+      "AND a.refers_to IS NOT DISTINCT FROM $10 "+
+      "AND a.scope=$11::jsonb "+
+      "RETURNING r.gesture_id",
+      [input.memberId,input.gestureId,input.threadId,input.a2Id,
+       input.creationEpochId,input.workId,input.manuscriptId,
+       input.body,input.actKind,input.refersTo,JSON.stringify(input.scope)]);
     await tx.query('COMMIT');
     return q.rowCount===1;
   }catch(e){await tx.query('ROLLBACK');throw e;}
@@ -251,6 +265,28 @@ suite('test-only PG16 durable Send gesture receipt reference (NO app/source inte
   ])('wrong member, Work, manuscript, A2, epoch or thread cannot inspect or persist',async scope=>{
     expect(await admit(gesture(scope))).toEqual({kind:'unauthorized'});
     expect(await counts()).toEqual({acts:0,receipts:0,attempted:0});
+  });
+
+  test('outbound claim cannot be consumed by a changed author text or scope',async()=>{
+    const input=gesture();
+    expect((await admit(input)).kind).toBe('created');
+    expect(await claimDispatchOnce(gesture({body:'FICTIONAL_DIFFERENT_TEXT'}))).toBe(false);
+    expect(await claimDispatchOnce(gesture({
+      scope:{latitude:3,mayRemoveParagraphs:true}
+    }))).toBe(false);
+    expect(await counts()).toEqual({acts:1,receipts:1,attempted:0});
+    expect(await claimDispatchOnce(input)).toBe(true);
+    expect(await counts()).toEqual({acts:1,receipts:1,attempted:1});
+  });
+
+  test('knowing a gesture UUID does not permit a mismatched Work/A2/epoch claim',async()=>{
+    const input=gesture();
+    expect((await admit(input)).kind).toBe('created');
+    expect(await claimDispatchOnce(gesture({workId:OTHER}))).toBe(false);
+    expect(await claimDispatchOnce(gesture({a2Id:OTHER}))).toBe(false);
+    expect(await claimDispatchOnce(gesture({creationEpochId:OTHER}))).toBe(false);
+    expect(await claimDispatchOnce(gesture({memberId:OTHER}))).toBe(false);
+    expect(await counts()).toEqual({acts:1,receipts:1,attempted:0});
   });
 
   test('declared Work epoch change invalidates old receipt access and claim',async()=>{
