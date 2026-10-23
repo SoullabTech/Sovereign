@@ -1,0 +1,88 @@
+--- a/database/migrations/20261023000003_writer_source_v2_intent_publication_REVIEW_ONLY.sql
++++ b/database/migrations/20261023000003_writer_source_v2_intent_publication_REVIEW_ONLY.sql
+@@ -67,7 +67,12 @@
+ );
+ 
+ -- This is a locally committed PENDING publication record, never itself a
+--- certified R20/PG COMMIT acknowledgement. The real one-publisher transaction
++-- certified R20/PG COMMIT acknowledgement. It MAY NOT be populated with
++-- unencrypted full prose in existing manuscript_sections.body,
++-- manuscript_working_drafts.content or working_draft_revisions.content and
++-- then be advertised as protected Source V2. A qualified encrypted-projection
++-- schema, reader/writer migration and antirollback fence remain separately
++-- required before any real author bytes. The real one-publisher transaction
+ -- must additionally include Source-backed encrypted sections/first revision,
+ -- author declaration and Work binding under the same verified gesture.
+ -- A durable independent COMMIT attestation is mandatory before disclosure.
+@@ -75,10 +80,14 @@
+   arrival_id uuid PRIMARY KEY REFERENCES writer_source_v2_completed_originals(arrival_id)
+     ON DELETE RESTRICT,
+   member_id uuid NOT NULL,
+-  living_work_id uuid NOT NULL,
+-  manuscript_id uuid NOT NULL,
+-  declaration_id uuid NOT NULL,
+-  first_revision_id uuid NOT NULL,
++  -- Final publication must resolve the AUTHOR'S OWN canonical records.
++  -- These references verify identity; they do NOT certify encrypted content,
++  -- independent R20 currentness, or durable external Source publication.
++  living_work_id uuid NOT NULL REFERENCES living_works(id) ON DELETE RESTRICT,
++  manuscript_id uuid NOT NULL REFERENCES member_manuscripts(id) ON DELETE RESTRICT,
++  declaration_id uuid NOT NULL UNIQUE REFERENCES living_work_expressions(id) ON DELETE RESTRICT,
++  draft_id uuid NOT NULL UNIQUE REFERENCES manuscript_working_drafts(id) ON DELETE RESTRICT,
++  first_revision_id uuid NOT NULL UNIQUE REFERENCES working_draft_revisions(id) ON DELETE RESTRICT,
+   section_count integer NOT NULL CHECK (section_count > 0),
+   figure_reference_count integer NOT NULL CHECK (figure_reference_count >= 0),
+   confirmed_cuts_sha256 text NOT NULL CHECK (confirmed_cuts_sha256 ~ '^[0-9a-f]{64}$'),
+@@ -95,6 +104,52 @@
+     ) ON DELETE RESTRICT,
+   CONSTRAINT writer_source_v2_publication_one_manuscript UNIQUE (manuscript_id)
+ );
++
++-- D21 REVIEW ADDENDUM: SQL-LOCAL AUTHOR-CONTEXT GUARD (never a release ACK).
++-- A direct FK proves that a row exists, NOT who authored it, whether its
++-- membership declaration remains current, or whether the referenced revision
++-- belongs to the same manuscript. This guard runs in the publisher transaction
++-- AFTER the author's five canonical rows have been inserted/verified.
++-- In particular: `living_work_id` must be author-selected, not inferred from
++-- the manuscript ID; a manuscript may lawfully declare more than one Work.
++-- The v2 Source original and encrypted projections need external R20 + complete
++-- vault/PG commit proof BEFORE the member sees a successful import.
++CREATE FUNCTION writer_source_v2_pending_author_context_guard()
++RETURNS trigger LANGUAGE plpgsql AS $$
++BEGIN
++  PERFORM 1
++    FROM writer_source_v2_import_intents i
++    JOIN writer_source_v2_completed_originals o
++      ON o.arrival_id = i.arrival_id AND o.object_id = i.object_id
++    JOIN living_works w ON w.id = NEW.living_work_id
++    JOIN member_manuscripts m ON m.id = NEW.manuscript_id
++    JOIN living_work_expressions e ON e.id = NEW.declaration_id
++    JOIN manuscript_working_drafts d ON d.id = NEW.draft_id
++    JOIN working_draft_revisions r ON r.id = NEW.first_revision_id
++   WHERE i.arrival_id = NEW.arrival_id
++     AND i.member_id = NEW.member_id
++     AND i.living_work_id = NEW.living_work_id
++     AND i.manuscript_id = NEW.manuscript_id
++     AND w.member_id = NEW.member_id
++     AND m.member_id = NEW.member_id
++     AND e.living_work_id = NEW.living_work_id
++     AND e.expression_type = 'manuscript'
++     AND e.expression_id = NEW.manuscript_id
++     AND e.declared_by = NEW.member_id
++     AND d.manuscript_id = NEW.manuscript_id
++     AND d.member_id = NEW.member_id
++     AND r.draft_id = NEW.draft_id
++     AND r.revision_number = 1
++     AND r.saved_by = NEW.member_id;
++  IF NOT FOUND THEN
++    RAISE EXCEPTION 'writer_source_v2_author_context_unverified'
++      USING ERRCODE = '23514';
++  END IF;
++  RETURN NEW;
++END $$;
++CREATE TRIGGER writer_source_v2_pending_context_insert
++  BEFORE INSERT ON writer_source_v2_pending_publications
++  FOR EACH ROW EXECUTE FUNCTION writer_source_v2_pending_author_context_guard();
+ 
+ -- Updates could relabel evidence after an author's gesture. Refuse.
+ -- DELETE is NOT evidence of completed erasure; approved erasure must be
