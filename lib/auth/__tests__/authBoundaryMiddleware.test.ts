@@ -43,7 +43,9 @@ jest.mock('@/lib/db/postgres', () => ({
 }));
 
 import { NextRequest, NextResponse } from 'next/server';
-import { middleware } from '../../../middleware';
+// Next 16 moved the runtime boundary from middleware.ts to proxy.ts.
+// Test the real deployed entrypoint rather than a removed legacy file.
+import { proxy as middleware } from '../../../proxy';
 
 /**
  * Build a real NextRequest so cookie parsing, URL parsing and header casing are
