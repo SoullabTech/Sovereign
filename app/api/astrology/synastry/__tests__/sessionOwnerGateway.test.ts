@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getSynastryAnalysisById, setSynastryAnalysisSaved } from '@/lib/astrology/synastry/synastryStore';
-import { GET, POST } from '../list/route';
-import { POST as SAVE } from '../save/route';
+import { GET, POST, OPTIONS } from '../list/route';
+import { POST as SAVE, OPTIONS as SAVE_OPTIONS } from '../save/route';
 import { checkAccess, matchRule } from '@/config/accessMatrix';
 
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: jest.fn() }));
@@ -22,7 +22,7 @@ const url = 'https://soullab.life/api/astrology/synastry/';
 function req(path: string, data?: object, headers?: Record<string, string>) {
   return new NextRequest(url + path, {
     method: data ? 'POST' : 'GET',
-    headers: data ? { 'content-type': 'application/json', ...headers } : headers,
+    headers: data ? { 'content-type': 'application/json', origin: 'https://soullab.life', ...headers } : headers,
     body: data ? JSON.stringify(data) : undefined,
   });
 }
@@ -77,6 +77,59 @@ describe('Synastry privacy — real handlers', () => {
     auth.mockResolvedValue(A);
     const res = await POST(req('list', { a: {}, b: {} }, { origin: 'https://evil.example' }));
     expect(res.status).toBe(403);
+  });
+
+  it('accepts exact beta Origin for authenticated comparison POST', async () => {
+    auth.mockResolvedValue(A);
+    const res = await POST(req('list', { a: {}, b: {} }, { origin: 'https://beta.soullab.life' }));
+    expect(res.status).toBe(400); // validated request reached its body requirements
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://beta.soullab.life');
+    expect(res.headers.get('access-control-allow-credentials')).toBe('true');
+  });
+
+  it('accepts exact beta Origin for authenticated Save', async () => {
+    auth.mockResolvedValue(A);
+    saveAnalysis.mockResolvedValue({ id: ID, saved_at: '2026-10-23T00:00:00Z' });
+    const res = await SAVE(req('save', { analysisId: ID }, { origin: 'https://beta.soullab.life' }));
+    expect(res.status).toBe(200);
+    expect(saveAnalysis).toHaveBeenCalledWith(ID, A, true);
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://beta.soullab.life');
+  });
+
+  it('preflight admits approved beta and Capacitor Origins without cookies', async () => {
+    for (const origin of ['https://beta.soullab.life', 'capacitor://localhost']) {
+      const res = await OPTIONS(req('list', undefined, { origin }));
+      expect(res.status).toBe(204);
+      expect(res.headers.get('access-control-allow-origin')).toBe(origin);
+      const save = await SAVE_OPTIONS(req('save', undefined, { origin }));
+      expect(save.status).toBe(204);
+      expect(save.headers.get('access-control-allow-origin')).toBe(origin);
+    }
+  });
+
+  it('rejects lookalike/foreign Origin even on preflight', async () => {
+    for (const origin of ['https://beta.soullab.life.attacker.example', 'https://evil.example', 'null']) {
+      const res = await OPTIONS(req('list', undefined, { origin }));
+      expect(res.status).toBe(403);
+      expect(res.headers.get('access-control-allow-origin')).toBeNull();
+    }
+  });
+
+  it('does not admit cookie-only mutation without an Origin', async () => {
+    auth.mockResolvedValue(A);
+    const res = await SAVE(req('save', { analysisId: ID }, { origin: '' }));
+    expect(res.status).toBe(403);
+    expect(saveAnalysis).not.toHaveBeenCalled();
+  });
+
+  it('admits Origin-less native token requests but still resolves ownership', async () => {
+    auth.mockResolvedValue(A);
+    saveAnalysis.mockResolvedValue({ id: ID, saved_at: '2026-10-23T00:00:00Z' });
+    const res = await SAVE(req('save', { analysisId: ID }, {
+      origin: '', 'x-session-token': 'fictional-disposable-token',
+    }));
+    expect(res.status).toBe(200);
+    expect(saveAnalysis).toHaveBeenCalledWith(ID, A, true);
   });
 
   it('rejects anonymous Save even when a memberId is provided', async () => {
