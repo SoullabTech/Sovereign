@@ -30,6 +30,28 @@ const BUILD_MODE =
 // as 1.2.0. Derived, not restated: one authority, no second literal to drift.
 const APP_VERSION = require('./package.json').version;
 
+// Cross-origin beta frontend API transport, scoped to routes audited under
+// Astrology PRs #1964/#1977. This is a RESPONSE permission for one approved
+// web origin, NOT authentication, authorization, or a proxy bypass.
+// Synastry list/save implement their own dynamic exact-Origin CORS and are
+// deliberately excluded. No /api/astrology wildcard.
+const ASTROLOGY_BETA_CORS_PATHS = Object.freeze([
+  '/api/members/profile',
+  '/api/astrology/birth-chart',
+  '/api/astrology/current-transits',
+  '/api/astrology/geocode',
+  '/api/astrology/reflection',
+  '/api/astrology/synastry/saved',
+  '/api/astrology/spiralogic-report',
+  '/api/astrology/vedic/list',
+  '/api/astrology/vedic/gochara',
+  '/api/astrology/vedic/ashtakavarga',
+  '/api/astrology/vedic/dasha',
+  '/api/astrology/da-yun',
+  '/api/astrology/chinese/discuss',
+]);
+
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Member surface ≠ admin/monitor surface. Next's dev indicator (the "N" pill
@@ -121,27 +143,6 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
-
-// Cross-origin beta frontend API transport, scoped to routes audited under
-// Astrology PRs #1964/#1977. This is a RESPONSE permission for one approved
-// web origin, NOT authentication, authorization, or a proxy bypass.
-// Synastry list/save implement their own dynamic exact-Origin CORS and are
-// deliberately excluded. No /api/astrology wildcard.
-const ASTROLOGY_BETA_CORS_PATHS = Object.freeze([
-  '/api/members/profile',
-  '/api/astrology/birth-chart',
-  '/api/astrology/current-transits',
-  '/api/astrology/geocode',
-  '/api/astrology/reflection',
-  '/api/astrology/synastry/saved',
-  '/api/astrology/spiralogic-report',
-  '/api/astrology/vedic/list',
-  '/api/astrology/vedic/gochara',
-  '/api/astrology/vedic/ashtakavarga',
-  '/api/astrology/vedic/dasha',
-  '/api/astrology/da-yun',
-  '/api/astrology/chinese/discuss',
-]);
 
   // PWA Headers - only for web builds (not compatible with static export for Capacitor)
   ...(process.env.CAPACITOR_BUILD ? {} : {
