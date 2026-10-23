@@ -12,17 +12,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { setSynastryAnalysisSaved } from '@/lib/astrology/synastry/synastryStore';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { authorizedSynastryMutation, synastryPreflight, withSynastryCors } from '@/lib/astrology/synastry/synastryOrigin';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const sessionMemberId = await getMemberIdFromRequest(request);
     if (!sessionMemberId) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
     }
-    const origin = request.headers.get('origin');
-    if (origin && origin !== new URL(request.url).origin) {
+    if (!authorizedSynastryMutation(request)) {
       return NextResponse.json({ success: false, error: 'Origin not allowed' }, { status: 403 });
     }
     const body = await request.json();
@@ -63,4 +63,11 @@ export async function POST(request: NextRequest) {
       error: 'Failed to save synastry',
     }, { status: 500 });
   }
+}
+
+export async function POST(request: NextRequest) {
+  return withSynastryCors(request, await handlePOST(request));
+}
+export async function OPTIONS(request: NextRequest) {
+  return synastryPreflight(request);
 }
