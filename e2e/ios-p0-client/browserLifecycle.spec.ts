@@ -80,5 +80,13 @@ test('the actual session clock updates seconds and extended total', async ({ pag
   await page.evaluate(() => (window as any).__maiaIosP0.extendTimer(15));
   await expect(display).toContainText('65:00');
   await expect(display).toContainText('0:01 / 65:00', { timeout: 4500 });
-  await expect(page.getByRole('progressbar', { name: 'Session time elapsed' })).toBeVisible();
+  // This isolated bundle intentionally does not load the production
+  // Tailwind stylesheet, so visual dimensions are not meaningful here.
+  // Verify the accessible progress role/value instead; the actual clock
+  // progression and extended total are asserted immediately above.
+  const progress = page.getByRole('progressbar', { name: 'Session time elapsed' });
+  await expect(progress).toHaveCount(1);
+  await expect(progress).toHaveAttribute('aria-valuemin', '0');
+  await expect(progress).toHaveAttribute('aria-valuemax', '100');
+  await expect(progress).toHaveAttribute('aria-valuenow', /\\d+/);
 });
