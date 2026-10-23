@@ -43,8 +43,12 @@ jest.mock('@/lib/manuscript/editorialRuntime/turn', () => ({
   runEditorialTurn: (...args: unknown[]) => mockProvider(...args),
 }));
 
-import { POST } from '../route';
-import { pool, closePool } from '@/lib/db/postgres';
+// Deliberately perform runtime imports only AFTER the fail-closed QA gate.
+// Type-only import() forms below are erased; no PG pool is constructed first.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { POST } = require('../route') as typeof import('../route');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { pool, closePool } = require('@/lib/db/postgres') as typeof import('@/lib/db/postgres');
 
 const MEMBER = '11111111-1111-4111-8111-111111111111';
 const OTHER = '22222222-2222-4222-8222-222222222222';
