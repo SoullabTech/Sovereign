@@ -57,5 +57,10 @@ jobs:
           set -euo pipefail
           export R20_FICTIONAL_SDK_DIR="$RUNNER_TEMP/r20-fictional-sdk"
           bash scripts/witness/writer-r20-sigv4-20261022/run-localhost-witness.sh --real-sdk
+      - name: Verify real S3 SDK HEAD GET and version inventory against localhost
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/witness/writer-r20-sigv4-20261022/R25_REAL_SDK_S3_READ_CONTRACT.mjs --project "$RUNNER_TEMP/r20-fictional-sdk"
       - name: Preserve production HOLD
-        run: echo 'Review-only localhost signature test. No AWS resources, member grants, billing, deployment or authorization.'
+        run: echo 'Review-only localhost signature and version-evidence test. No AWS resources, member grants, billing, deployment or authorization.'
