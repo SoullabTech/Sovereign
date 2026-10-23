@@ -17,7 +17,7 @@ fail(){ echo "D22_FAIL $*" >&2; exit 92; }
 docker run -d --name "$pg" --network none --memory 512m --cpus 1   -e POSTGRES_DB=d22 -e POSTGRES_USER=d22 -e POSTGRES_PASSWORD=D22_SYNTHETIC_ONLY   postgres:16-alpine >/dev/null
 ready=0
 for i in $(seq 1 50); do
-  if docker exec "$pg" pg_isready -q -U d22 -d d22; then ready=1; break; fi
+  if docker exec "$pg" psql -X -qAt -v ON_ERROR_STOP=1 -U d22 -d d22 -c "SELECT 1" >/dev/null 2>&1; then ready=1; break; fi
   sleep 1
 done
 test "$ready" = 1 || fail pg16_not_ready
