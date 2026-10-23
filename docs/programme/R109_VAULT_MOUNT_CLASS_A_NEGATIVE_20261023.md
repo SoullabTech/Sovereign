@@ -21,3 +21,11 @@ DRAFT / TEST ONLY / DO NOT MERGE, DEPLOY OR CHANGE THE ACTUAL VAULT.
 - Privileged deployed-container mount inspection, Class A reviewer, Owner, independent recoverable rollback, Source original HTTP423/noautoexpiry, R20 old-image/SQL/vault/backup antiresurrection, and Founder production/beta GO all remain HOLD.
 
 No product code/migration/worker/Compose modification in this PR. Original source and historical pins untouched. The branch's expected RED negative assertions are an unwaived release STOP.
+
+## R110 real PostgreSQL16 queue qualification — NEW follow-up (still unratified)
+
+Additional *test-only* `r110RealPgQueueHold.pg16.review.test.ts` runs unchanged real `sweepVaultErasureQueue()` + `destroyVaultBytes()` + unmocked `lib/db/postgres.ts` against a wholly ephemeral GitHub-hosted PostgreSQL16 service. It constructs an identical but minimal fictional `vault_erasure_queue` table, two invented original-file payloads on disposable physically distinct local paths, and an explicit read-only source-lineage scope. Both **wrong worker mount** and **missing mount** assertions are EXPECTED RED: the source clears a real PG obligation while the other-root original survives. Correct root, traversal failure, lawful ENOENT, duplicate owed rows, and an unrelated Work obligation are positive/structural controls. The test requires `GITHUB_ACTIONS`, the exact test-only localhost `DATABASE_URL`, and `R110_REAL_PG16_QA` before importing either actual Postgres or erasure modules.
+
+The unrelated Work control shows how `remaining:1` can refer exclusively to *another* Work's owed object even when target A's bytes were erased. A global queue counter cannot certify specific author deletion completion. This is NOT a full per-Work erasure readout, real HTTP or signed R20 ledger test.
+
+These tests are intentionally expected RED and do NOT implement or approve mount identity, erasure receipts, R20 revocation or worker/container changes. Actual production equivalence requires **the real worker/HTTP/CLI callers and two-container named-volume+PG fixture**, with independently established mount identity and least-privilege eraser, before any source or operational correction.
