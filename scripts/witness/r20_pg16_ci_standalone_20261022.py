@@ -159,6 +159,19 @@ COMMIT;"""%(sqlq(signed["deleted"][0]),sqlq(signed["deleted"][1]),sqlq(signed["s
                 refuse("DELETED_WORK_ID_REUSED")
             if pg(db,"INSERT INTO synthetic_fragments VALUES ('reused',%s);"%sqlq(signed["session"]),ok=False)==0:
                 refuse("DELETED_SESSION_REUSED")
+            # Negative PostgreSQL controls: this fixture must reject all attempts to
+            # reassign surviving identities/references into the independently revoked set.
+            # The first test intentionally fails against the older INSERT-only triggers.
+            if pg(db,"UPDATE member_manuscripts SET id=%s WHERE id=%s;"%(sqlq(signed["deleted"][0]),sqlq(IDS["good_m"])),ok=False)==0:
+                refuse("REVOKED_MANUSCRIPT_UPDATE_ADMITTED")
+            if pg(db,"UPDATE living_works SET id=%s WHERE id=%s;"%(sqlq(signed["deleted"][1]),sqlq(IDS["good_w"])),ok=False)==0:
+                refuse("REVOKED_WORK_UPDATE_ADMITTED")
+            if pg(db,"UPDATE synthetic_fragments SET session_id=%s WHERE id='fragment-good';"%sqlq(signed["session"]),ok=False)==0:
+                refuse("REVOKED_SESSION_UPDATE_ADMITTED")
+            if pg(db,"INSERT INTO living_works VALUES ('fictional-new-work',%s);"%sqlq(signed["deleted"][0]),ok=False)==0:
+                refuse("REVOKED_MANUSCRIPT_REFERENCE_INSERT_ADMITTED")
+            if pg(db,"UPDATE living_works SET manuscript_id=%s WHERE id=%s;"%(sqlq(signed["deleted"][0]),sqlq(IDS["good_w"])),ok=False)==0:
+                refuse("REVOKED_MANUSCRIPT_REFERENCE_UPDATE_ADMITTED")
             target=p/("replacement"+str(i));target.mkdir(mode=0o700)
             vault=staged_vault(archive,target)
             # Deletion target comes from the independently authenticated ledger.
