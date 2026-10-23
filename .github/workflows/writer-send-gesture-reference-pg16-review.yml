@@ -1,0 +1,54 @@
+name: Writer Send Gesture Reference PostgreSQL16 — Review Only
+
+# Positive reference implementation, NOT Writer source or Class A approval.
+# Fresh fictional localhost PG, no external provider, production database,
+# R20 keys/grants, member data, Source original files, or release operation.
+on:
+  push:
+    branches:
+      - review/ws-send-gesture-reference-pg16-20261023
+  pull_request:
+    paths:
+      - 'tests/qualification/writer/sendGestureReceiptReference.pg16.test.ts'
+      - '.github/workflows/writer-send-gesture-reference-pg16-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reference-receipt-pg16:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: fictional_writer_qa
+          POSTGRES_PASSWORD: fictional_only
+          POSTGRES_DB: fictional_writer_gesture_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fictional_writer_qa -d fictional_writer_gesture_qa"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: 'true'
+      GITHUB_ACTIONS: 'true'
+      TZ: UTC
+      WRITER_SEND_REFERENCE_PG16_QA: 'TRUE_EXPLICIT_TEST_ONLY'
+      DATABASE_URL: 'postgresql://fictional_writer_qa:fictional_only@127.0.0.1:5432/fictional_writer_gesture_qa'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Locked local project dependencies
+        run: npm ci
+      - name: Test-only original Send gesture PG16 design — no model/network
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            tests/qualification/writer/sendGestureReceiptReference.pg16.test.ts
