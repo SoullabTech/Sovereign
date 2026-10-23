@@ -188,4 +188,36 @@ equal D26_failed_reassociation_keeps_original_intent \
 echo "D26_EXPECTED_SHARED_WORK_PUBLICATION_GAP: Work W103 lawfully declares M201 but cannot get its own D21B Source intent/pending receipt; choose manuscript-level Source custody and independently signed current per-Work rights before owner authorizes same-M Work transitions"
 echo D26_SQL_ONLY_NO_GO: immutable original, current R20 relationship epoch, safe detach/delete, encrypted projections and verified cross-Work reads remain unimplemented
 
+# D27 SQL-LOCAL ERASURE ORDERING — REVIEW ONLY. These tests do not perform
+# physical Source erasure or constitute any independent R20 withdrawal.
+# They demonstrate why canonical foreign keys and SQL COMMIT/ROLLBACK cannot
+# themselves certify deletion of encrypted original, projections or figures.
+# All operations use disposable fictional PG16 data and roll back.
+equal D27_LOCAL_PENDING_DELETE_ALLOWED_WITH_ORIGINAL_INTACT \
+  "BEGIN; DELETE FROM writer_source_v2_pending_publications WHERE arrival_id='$(id 301)'; SELECT (SELECT count(*) FROM writer_source_v2_pending_publications WHERE arrival_id='$(id 301)')::text || '/' || (SELECT count(*) FROM writer_source_v2_completed_originals WHERE arrival_id='$(id 301)') || '/' || (SELECT count(*) FROM member_manuscripts WHERE id='$(id 201)'); ROLLBACK;" "0/1/1"
+equal D27_LOCAL_PENDING_DELETE_ROLLBACK_RESTORES \
+  "SELECT count(*) FROM writer_source_v2_pending_publications WHERE arrival_id='$(id 301)'" 1
+echo "D27_EXPECTED_UNQUALIFIED_ERASURE_EVIDENCE: privileged SQL can delete pending publication metadata without erasing encrypted Source; this test does not exercise member-access roles"
+
+# DETACH selected Work 101 can be done locally only after deleting its
+# pending publication. The unrelated Work 103 declaration must survive.
+equal D27_LOCAL_SELECTED_WORK_DETACH_WITH_PENDING_REMOVAL \
+  "BEGIN; DELETE FROM writer_source_v2_pending_publications WHERE arrival_id='$(id 301)'; DELETE FROM living_work_expressions WHERE id='$(id 701)'; SELECT (SELECT count(*) FROM living_work_expressions WHERE id='$(id 701)')::text || '/' || (SELECT count(*) FROM living_work_expressions WHERE id='$(id 703)') || '/' || (SELECT count(*) FROM member_manuscripts WHERE id='$(id 201)') || '/' || (SELECT count(*) FROM writer_source_v2_completed_originals WHERE arrival_id='$(id 301)'); ROLLBACK;" "0/1/1/1"
+equal D27_LOCAL_SELECTED_WORK_DETACH_ROLLBACK_RESTORES \
+  "SELECT count(*) FROM living_work_expressions WHERE id='$(id 701)'" 1
+
+# Canonical hard-delete is possible if children and the D21B metadata are
+# explicitly removed in dependency order. Neither this SQL operation nor its
+# rollback touches an external vault, irreversible denial ledger, or backups.
+equal D27_LOCAL_FULL_DELETE_A_DEPENDENCY_ORDER \
+  "BEGIN; DELETE FROM writer_source_v2_pending_publications WHERE arrival_id='$(id 301)'; DELETE FROM writer_source_v2_completed_originals WHERE arrival_id='$(id 301)'; DELETE FROM writer_source_v2_import_intents WHERE arrival_id='$(id 301)'; DELETE FROM living_work_expressions WHERE id IN ('$(id 701)','$(id 703)'); DELETE FROM member_manuscripts WHERE id='$(id 201)'; SELECT (SELECT count(*) FROM writer_source_v2_pending_publications WHERE arrival_id='$(id 301)')::text || '/' || (SELECT count(*) FROM writer_source_v2_completed_originals WHERE arrival_id='$(id 301)') || '/' || (SELECT count(*) FROM writer_source_v2_import_intents WHERE arrival_id='$(id 301)') || '/' || (SELECT count(*) FROM living_work_expressions WHERE id IN ('$(id 701)','$(id 703)')) || '/' || (SELECT count(*) FROM member_manuscripts WHERE id='$(id 201)') || '/' || (SELECT count(*) FROM manuscript_working_drafts WHERE id='$(id 901)') || '/' || (SELECT count(*) FROM working_draft_revisions WHERE draft_id='$(id 901)'); ROLLBACK;" "0/0/0/0/0/0/0"
+equal D27_LOCAL_FULL_DELETE_ROLLBACK_RESTORES_A \
+  "SELECT (SELECT count(*) FROM writer_source_v2_pending_publications WHERE arrival_id='$(id 301)')::text || '/' || (SELECT count(*) FROM writer_source_v2_completed_originals WHERE arrival_id='$(id 301)') || '/' || (SELECT count(*) FROM writer_source_v2_import_intents WHERE arrival_id='$(id 301)') || '/' || (SELECT count(*) FROM living_work_expressions WHERE id IN ('$(id 701)','$(id 703)')) || '/' || (SELECT count(*) FROM member_manuscripts WHERE id='$(id 201)') || '/' || (SELECT count(*) FROM manuscript_working_drafts WHERE id='$(id 901)') || '/' || (SELECT count(*) FROM working_draft_revisions WHERE draft_id='$(id 901)')" "1/1/1/2/1/1/3"
+equal D27_OTHER_AUTHOR_B_REMAINS_UNCHANGED \
+  "SELECT (SELECT count(*) FROM writer_source_v2_pending_publications WHERE arrival_id='$(id 302)')::text || '/' || (SELECT count(*) FROM writer_source_v2_completed_originals WHERE arrival_id='$(id 302)') || '/' || (SELECT count(*) FROM writer_source_v2_import_intents WHERE arrival_id='$(id 302)') || '/' || (SELECT count(*) FROM member_manuscripts WHERE id='$(id 202)')" "1/1/1/1"
+equal D27_PLURAL_WORK_RECORDS_SURVIVE_MANUSCRIPT_DELETE_ROLLBACK \
+  "SELECT count(*) FROM living_works WHERE id IN ('$(id 101)','$(id 103)') AND member_id='$(id 1)'" 2
+echo "D27_EXPECTED_UNQUALIFIED_ATTESTATION: ordered SQL-local deletion and rollback prove FK dependency behavior only; they neither create nor verify independently governed deny/tombstone, vault/key/figure erasure, restored-old-image refusal, or a durable publication/erasure receipt"
+echo "D27_PHYSICAL_SQL_QA_ONLY: do not operationalize this dependency order absent Class A/R20 and a signer-controlled external obligation journal"
+
 echo D23_PHYSICAL_PG16_EXPECTED_PASS: exact same candidate source, physically guarded initial insert, no external authority/serving GO
