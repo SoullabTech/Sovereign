@@ -66,6 +66,18 @@ class StandaloneFixture(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,"FICTIONAL_EXPECTED_POLICY_MARKER_INVALID"):
             r.pg_denies("fictionaldb","SELECT 1;","wrong-marker")
 
+    def test_staged_unlink_does_not_erase_historical_vault_archive(self):
+        with tempfile.TemporaryDirectory() as base:
+            root=Path(base)
+            archive,source=r.archive_fixture(root)
+            stage=root/'replacement';stage.mkdir()
+            staged=r.staged_vault(archive,stage)
+            (staged/'writer/dead.txt').unlink()
+            self.assertFalse((staged/'writer/dead.txt').exists())
+            self.assertEqual((staged/'writer/keep.txt').read_bytes(),source['writer/keep.txt'])
+            with tarfile.open(archive,'r:gz') as t:
+                self.assertEqual(t.extractfile('writer/dead.txt').read(),source['writer/dead.txt'])
+
     def test_newer_caller_pin_refuses_old_signer_and_co_rollback(self):
         current_key=b'n'*32
         old_key=b'o'*32

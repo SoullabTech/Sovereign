@@ -238,6 +238,20 @@ COMMIT;"""%(sqlq(signed["deleted"][0]),sqlq(signed["deleted"][1]),sqlq(signed["s
                 refuse("FICTIONAL_SURVIVOR_IDENTITY_OR_REFERENCE_CHANGED")
             after_denials=pg(db,"SELECT (SELECT count(*) FROM member_manuscripts)||','||(SELECT count(*) FROM living_works)||','||(SELECT count(*) FROM synthetic_fragments)||','||(SELECT count(*) FROM provenance_tombstones)||','||(SELECT count(*) FROM deletion_scopes);")
             if after_denials!="1,1,1,2,1":refuse("FICTIONAL_DENIAL_POSTCONDITIONS_FAILED")
+            # UNSAFE PHYSICAL COUNTEREXAMPLE: PostgreSQL superuser can disable
+            # table triggers for the transaction. This proves the trigger layer
+            # alone cannot fence a restored legacy image/DB-root.
+            superuser_bypass=pg(db,"BEGIN; SET LOCAL session_replication_role=replica; "
+                                   "INSERT INTO member_manuscripts VALUES (%s,'FICTIONAL-PRIVILEGED-RESTORE'); "
+                                   "SELECT count(*) FROM member_manuscripts WHERE id=%s; "
+                                   "ROLLBACK;"%(sqlq(signed["deleted"][0]),sqlq(signed["deleted"][0])))
+            if superuser_bypass!="1":refuse("FICTIONAL_SUPERUSER_BYPASS_WITNESS_NOT_SEEN")
+            # The bypass was rolled back: the fictional restoration result
+            # still contains ONLY the unaffected Work and deletion markers.
+            if pg(db,"SELECT count(*) FROM member_manuscripts WHERE id=%s;"%sqlq(signed["deleted"][0]))!="0":
+                refuse("FICTIONAL_SUPERUSER_ROLLBACK_LEFT_DELETED_ROW")
+            after_bypass=pg(db,"SELECT (SELECT count(*) FROM member_manuscripts)||','||(SELECT count(*) FROM living_works)||','||(SELECT count(*) FROM synthetic_fragments)||','||(SELECT count(*) FROM provenance_tombstones)||','||(SELECT count(*) FROM deletion_scopes);")
+            if after_bypass!="1,1,1,2,1":refuse("FICTIONAL_SUPERUSER_ROLLBACK_CHANGED_SURVIVORS")
             target=p/("replacement"+str(i));target.mkdir(mode=0o700)
             vault=staged_vault(archive,target)
             # Deletion target comes from the independently authenticated ledger.
@@ -250,10 +264,23 @@ COMMIT;"""%(sqlq(signed["deleted"][0]),sqlq(signed["deleted"][1]),sqlq(signed["s
                 finally:os.close(parentfd)
             if (vault/"writer/dead.txt").exists() or (vault/"writer/keep.txt").read_bytes()!=fake["writer/keep.txt"]:
                 refuse("FICTIONAL_VAULT_POSTCONDITION_FAILED")
+        # UNSAFE HISTORICAL-COPY COUNTEREXAMPLE: removing the doomed
+        # bytes from both staged vaults does not remove original archived
+        # bytes; the pre-deletion SQL dump also still contains deleted Works.
+        if IDS["dead_m"].encode() not in dump or IDS["dead_w"].encode() not in dump:
+            refuse("FICTIONAL_HISTORIC_SQL_NO_LONGER_RECONSTRUCTIVE")
+        with tarfile.open(archive,"r:gz") as historical:
+            old_member=historical.extractfile("writer/dead.txt")
+            if old_member is None or old_member.read()!=fake["writer/dead.txt"]:
+                refuse("FICTIONAL_HISTORIC_VAULT_NO_LONGER_RECONSTRUCTIVE")
         print(json.dumps({"result":"PASS","engine":"PostgreSQL 16.13","isolated":True,
            "replacement_databases":2,"erased_records_refused":True,"doomed_vault_entries_absent":True,"revoked_identity_updates_refused":True,
            "revoked_manuscript_references_refused":True,
-           "bystanders_preserved":True,"caller_pinned_fictional_head_checked":True,
+           "bystanders_preserved":True,
+           "historical_sql_and_vault_archives_reconstructive":True,
+           "privileged_postgres_trigger_bypass_observed":True,
+           "independent_egress_fence_proven":False,
+           "caller_pinned_fictional_head_checked":True,
            "old_bundle_with_rolled_back_anchor_accepted":True,"real_independent_authority_proven":False,
            "actual_soullab_r20_recovery":False,"release_authorized":False},sort_keys=True))
 
