@@ -1,0 +1,27 @@
+name: R111 Actual Media Worker + PG16 Vault — EXPECTED UNSAFE (Class A HOLD)
+
+# Test-only expected-negative evidence. This is NOT a security acceptance gate.
+# Runner isolation and script refusal guards prohibit use against live infrastructure.
+on:
+  push:
+    branches:
+      - review/r111-real-media-worker-pg16-vault-negative-20261023
+
+permissions:
+  contents: read
+
+jobs:
+  disposable-actual-worker-real-pg16:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install exact locked dependencies on GitHub runner
+        run: npm ci --no-audit --no-fund
+      - name: Reproduce wrong-vault false completion and prove correct-vault control
+        run: bash scripts/qualification/r111-real-media-worker-pg16-vault-negative.review.sh
