@@ -78,15 +78,71 @@ function describeParam(value: unknown): string {
  * (for example a unique-constraint detail naming an email), so only structural
  * metadata with no row payload is admitted here.
  */
+/**
+ * Class A REVIEW CANDIDATE (not approved): all emitted metadata is selected
+ * from literal server-owned vocabularies, never copied from an error object.
+ *
+ * PostgreSQL metadata is usually structural, but an arbitrary rejected Error
+ * can carry a passage, email or secret in *any* property. A regex/length bound
+ * would still leak characters; only enumerated values may reach log sinks.
+ *
+ * This intentionally sacrifices unknown table/constraint/routine names until
+ * an independent custody reviewer accepts additional static safe identifiers.
+ * The existing source-custody T7 sample values are admitted exactly.
+ */
+const SAFE_DB_ERROR_FIELDS: Readonly<Record<string, ReadonlySet<string>>> = {
+  name: new Set(['error', 'Error', 'DatabaseError', 'PostgresError', 'ConnectionError']),
+  code: new Set([
+    '08000', '08001', '08006', '22001', '22P02', '23502', '23503',
+    '23505', '23514', '25006', '40001', '40P01', '42702', '42703',
+    '42P01', '42P07', '53300', '55P03', '57P01', '57P03', 'P0001',
+    'XX000',
+  ]),
+  severity: new Set(['DEBUG', 'INFO', 'LOG', 'NOTICE', 'WARNING', 'ERROR', 'FATAL', 'PANIC']),
+  schema: new Set(['public', 'pg_catalog', 'information_schema']),
+  table: new Set(['members']),
+  column: new Set(['id', 'member_id', 'email']),
+  dataType: new Set(['uuid', 'text', 'integer', 'bigint', 'boolean', 'timestamp', 'timestamptz']),
+  constraint: new Set(['members_email_key']),
+  // Routine names are omitted: an arbitrary routine string has no bounded
+  // vocabulary here and is not evidence of an approved diagnostic category.
+};
+
 export function describeDbError(error: unknown): Record<string, string> {
-  const e = (typeof error === 'object' && error !== null ? error : {}) as Record<string, unknown>;
+  if (error === null || typeof error !== 'object') return { name: 'unknown' };
   const out: Record<string, string> = {};
-  for (const key of ['name', 'code', 'severity', 'schema', 'table', 'column', 'dataType', 'constraint', 'routine']) {
-    const value = e[key];
-    if (typeof value === 'string' && value.length > 0) out[key] = value;
+  try {
+    for (const [key, allowed] of Object.entries(SAFE_DB_ERROR_FIELDS)) {
+      // Own VALUE descriptor only. Never call arbitrary getters or traverse a
+      // spoofed prototype. Proxy descriptor traps can throw: refuse all facts.
+      const descriptor = Object.getOwnPropertyDescriptor(error, key);
+      if (!descriptor || !('value' in descriptor)) continue;
+      const value: unknown = descriptor.value;
+      if (typeof value === 'string' && allowed.has(value)) out[key] = value;
+    }
+  } catch {
+    return { name: 'unknown' };
   }
-  if (Object.keys(out).length === 0) out.name = error instanceof Error ? error.name : typeof error;
-  return out;
+  return Object.keys(out).length > 0 ? out : { name: 'unknown' };
+}
+
+/**
+ * Safe SQL diagnostic: keep only a recognized statement verb. Never emit the
+ * original SQL, a prefix, a comment, identifier, literal or supplied value.
+ * Limit scanning to 64 bytes so arbitrary SQL cannot create work/log volume.
+ */
+const SAFE_SQL_OPERATIONS = new Set([
+  'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'WITH', 'BEGIN', 'COMMIT',
+  'ROLLBACK', 'CREATE', 'ALTER', 'DROP', 'TRUNCATE', 'GRANT', 'REVOKE',
+  'SET', 'SHOW', 'COPY', 'DO', 'CALL', 'MERGE', 'EXPLAIN', 'VACUUM',
+  'REFRESH', 'VALUES', 'LOCK',
+]);
+function describeSqlOperation(sql: unknown): string {
+  if (typeof sql !== 'string') return 'unknown';
+  const m = /^\\s*([A-Za-z]+)\\b/.exec(sql.slice(0, 64));
+  if (!m) return 'other';
+  const op = m[1].toUpperCase();
+  return SAFE_SQL_OPERATIONS.has(op) ? op : 'other';
 }
 
 /**
@@ -116,7 +172,7 @@ export async function query<T extends QueryResultRow = any>(
 
     // Log slow queries (>100ms)
     if (duration > 100) {
-      console.warn(`⚠️  [POSTGRES] Slow query (${duration}ms):`, sql.substring(0, 100));
+      console.warn(`⚠️  [POSTGRES] Slow query (${duration}ms):`, describeSqlOperation(sql));
     }
 
     return result;
@@ -140,7 +196,7 @@ export async function query<T extends QueryResultRow = any>(
        of deciding product semantics for callers that never asked.
        Ruling + caller inventory: docs/ops/DB_MISSING_TABLE_DEGRADATION_AUDIT_2026-08-01.md */
     console.error('❌ [POSTGRES] Query error:', describeDbError(error));
-    console.error('   SQL:', sql);
+    console.error('   SQL operation:', describeSqlOperation(sql));
     console.error('   Params:', describeParams(params));
     throw error;
   }
@@ -200,7 +256,7 @@ export async function queryWithExpectedRefusal<T extends QueryResultRow = any>(
       return { refused: true };
     }
     console.error('❌ [POSTGRES] Query error:', describeDbError(error));
-    console.error('   SQL:', sql);
+    console.error('   SQL operation:', describeSqlOperation(sql));
     console.error('   Params:', describeParams(params));
     throw error;
   }
