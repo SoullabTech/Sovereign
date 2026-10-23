@@ -1,0 +1,77 @@
+name: Writer Class A Combined Fictional Privacy Qualification Only
+
+# UNRATIFIED, READ-ONLY, NO SECRETS. No provider, member Work, real PostgreSQL,
+# deployment or model call. Functional PASS does not override historical source
+# pins; the separate original source-integrity job MUST remain RED without
+# independently ratified Founder/Class A source-baseline transitions.
+on:
+  pull_request:
+    paths:
+      - 'lib/ai/structured/**'
+      - 'lib/disclosure/**'
+      - 'lib/db/**'
+      - '.github/workflows/writer-class-a-combined-privacy-review.yml'
+  push:
+    branches:
+      - review/ws-class-a-privacy-combined-falsifier-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fictional-combined-functional:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked dependencies (no secrets)
+        run: npm ci
+      - name: Original negative assertions and existing contracts, unchanged
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/ai/structured/__tests__/unwrappedRouterPrivacyHold.test.ts \
+            lib/ai/structured/__tests__/providerErrorRedaction.test.ts \
+            lib/ai/structured/__tests__/adapterErrorEdge.test.ts \
+            lib/ai/structured/__tests__/nonFallbackable.test.ts \
+            lib/ai/structured/__tests__/requestEquivalence.test.ts \
+            lib/ai/structured/__tests__/modePolicy.test.ts \
+            lib/ai/structured/__tests__/invalidModeDetailPrivacyHold.test.ts \
+            lib/disclosure/__tests__/editorialDisclosureFalsifiers.test.ts \
+            lib/disclosure/__tests__/contextDisclosureReceipt.test.ts \
+            lib/disclosure/__tests__/disclosureExceptionPrivacyHold.test.ts \
+            lib/disclosure/__tests__/adjacentErrorPrivacyHardening.test.ts \
+            lib/db/__tests__/errorMetadataPrivacyHold.test.ts \
+            lib/db/__tests__/errorMetadataPrivacyHardening.test.ts \
+            lib/db/__tests__/paramRedaction.test.ts \
+            lib/db/__tests__/postgres.missingTable.test.ts
+
+  historical-governed-source-stop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked existing dependencies
+        run: npm ci
+      - name: Unchanged historical router AND policy source pin (EXPECTED RED)
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/ai/structured/__tests__/seamIsolation.test.ts
