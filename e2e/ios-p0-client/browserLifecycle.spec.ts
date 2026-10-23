@@ -88,5 +88,5 @@ test('the actual session clock updates seconds and extended total', async ({ pag
   await expect(progress).toHaveCount(1);
   await expect(progress).toHaveAttribute('aria-valuemin', '0');
   await expect(progress).toHaveAttribute('aria-valuemax', '100');
-  await expect(progress).toHaveAttribute('aria-valuenow', /\\d+/);
+  await expect(progress).toHaveAttribute('aria-valuenow', /^[0-9]+$/);
 });
