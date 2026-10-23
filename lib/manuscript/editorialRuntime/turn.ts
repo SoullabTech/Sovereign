@@ -460,7 +460,12 @@ export async function runEditorialTurn(
   if (reportedModel === null || modelAgreement !== 'agreed') {
     return {
       ok: false, reason: 'model_unattributable',
-      detail: `requested=${structured.result.provenance.model} reported=${reportedModel ?? 'none'} agreement=${modelAgreement}`,
+      /* Class A review only: the provider-reported model string is untrusted
+       * diagnostic input. Preserve honest refusal without copying model text
+       * into a general runtime return that HTTP callers log/serialize.
+       * Requested/reported identity remains available on protected in-process
+       * provenance only; do not invent successful attribution. */
+      detail: 'editorial_model_attribution_unverified',
     };
   }
 
