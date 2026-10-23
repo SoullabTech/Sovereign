@@ -596,6 +596,19 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/astrology/reflection', minTier: 'free', notes: 'Member-owned chart recognition; independent handler session check' },
   { exact: '/api/astrology/synastry/saved', minTier: 'free', notes: 'Saved synastry; route derives owner from verified session and rejects divergent memberId claim' },
 
+  // ASTROLOGY-BETA-EXTENDED-20261023 — exact member-accessible subroutes.
+  // A verified session is required for every entry. No broad wildcard; private
+  // Synastry analyses also require independent per-record ownership checks.
+  { exact: '/api/astrology/synastry/list', minTier: 'free', notes: 'Session-owned private comparison; foreign member birth profiles denied in handler' },
+  { exact: '/api/astrology/synastry/save', minTier: 'free', notes: 'Session-owned Save/Unsave; handler checks record ownership' },
+  { exact: '/api/astrology/spiralogic-report', minTier: 'free', notes: 'Session-owned evolutionary report; handler independently authenticates' },
+  { exact: '/api/astrology/vedic/list', minTier: 'free', notes: 'Authenticated Vedic calculation for beta member' },
+  { exact: '/api/astrology/vedic/gochara', minTier: 'free', notes: 'Authenticated Vedic transit calculation for beta member' },
+  { exact: '/api/astrology/vedic/ashtakavarga', minTier: 'free', notes: 'Authenticated Vedic Ashtakavarga calculation for beta member' },
+  { exact: '/api/astrology/vedic/dasha', minTier: 'free', notes: 'Authenticated Vedic Dasha calculation for beta member' },
+  { exact: '/api/astrology/da-yun', minTier: 'free', notes: 'Authenticated Da Yun cycle calculation for beta member' },
+  { exact: '/api/astrology/chinese/discuss', minTier: 'free', notes: 'Authenticated Chinese astrology conversation; resource controls need independent release review' },
+
   // Member API — contribution is participation, open to all
   { regex: /^\/api\/commons\/contributions\/[^/]+$/, minTier: 'free', notes: 'Contribution detail — depth' },
   { exact: '/api/commons/contributions/my-offerings', minTier: 'free', notes: 'User offerings — depth' },
