@@ -1,0 +1,41 @@
+name: R109 Vault Mount Identity — Class A Expected RED Review
+
+# Test-only: source-exact missing vault-mount negative, NEVER release authority.
+# Genuine disposable GitHub runner Docker volumes; no production or real bytes.
+on:
+  push:
+    branches:
+      - review/r109-media-vault-mount-erasure-negative-20261023
+  pull_request:
+    paths:
+      - 'lib/manuscript/source/__tests__/r109MountErasureHold.review.test.ts'
+      - 'scripts/qualification/r109-vault-mount-physical.review.sh'
+      - '.github/workflows/r109-vault-erasure-mount-negative.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-exact-expected-red:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Run actual erasure queue with fictional physical vault directories
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/manuscript/source/__tests__/r109MountErasureHold.review.test.ts
+
+  disposable-two-container-mount-witness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run original fileVault.ts inside isolated containers and one disposable Docker volume
+        run: bash scripts/qualification/r109-vault-mount-physical.review.sh
