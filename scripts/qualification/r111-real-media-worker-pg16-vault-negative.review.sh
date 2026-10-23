@@ -83,7 +83,13 @@ docker run --detach --name "$pg" --network "$net" --network-alias r111-pg \
   postgres:16-alpine >/dev/null
 ready=0
 for ((i=0; i<60; i++)); do
-  if docker exec "$pg" pg_isready -U r111 -d r111 >/dev/null 2>&1; then ready=1; break; fi
+  # The Postgres Docker entrypoint starts a TEMPORARY Unix-socket server
+  # during init, then shuts it down; pg_isready -without -h can briefly
+  # report a false READY. Require a working final TCP query instead.
+  if docker exec "$pg" psql -X -qAt -h 127.0.0.1 -v ON_ERROR_STOP=1 -U r111 -d r111 -c 'SELECT 1' 2>/dev/null | grep -qx 1; then
+    ready=1
+    break
+  fi
   sleep 1
 done
 [ "$ready" = 1 ] || fail "PG16 not ready"
