@@ -1,4 +1,4 @@
-/** LISTEN-03 — server-only reference decision contract, NOT a delivery endpoint.
+/** LISTEN-04 — fail-closed candidate inspection, NOT a delivery endpoint.
  * Never pass browser-derived grant or territory data as authority. Entitlements,
  * signed rights receipts, member access and territory must be server verified.
  * This module is intentionally not imported into client UI. */
@@ -29,7 +29,7 @@ export type PlaybackClaim = {
   usage: UsageMode;
   now: string;        // server timestamp ISO 8601
 };
-export type RightsDecision = { allowed: false; reason: string } | { allowed: true; reason: 'VERIFIED' };
+export type RightsDecision = { allowed: false; reason: string };
 const FAIL = (reason: string): RightsDecision => ({ allowed: false, reason });
 const MODES = new Set<UsageMode>(['on_demand','shared_session','offline_cabin','download','remix','ai_processing']);
 function isValidTime(value: unknown): value is string {
@@ -62,6 +62,9 @@ export function evaluateRecordingRights(grant: RecordingGrant | null | undefined
     !Array.isArray(grant.territories) ||
     (!grant.territories.includes(ctx.territory) && !grant.territories.includes('WORLD'))) return FAIL('TERRITORY_NOT_CLEARED');
   if (!MODES.has(ctx.usage) || !Array.isArray(grant.uses) || !grant.uses.includes(ctx.usage)) return FAIL('USE_NOT_CLEARED');
-  return { allowed: true, reason: 'VERIFIED' };
+  // Claims above are structural declarations only, NOT authenticated evidence.
+  // Never authorize music delivery from caller-provided holder/evidenceRef fields.
+  // An independently accepted receipt verifier, revocation source, entitlement
+  // service and per-request signer must exist before an audio URL can be issued.
+  return FAIL('INDEPENDENT_RIGHTS_AUTHORITY_REQUIRED');
 }
-
