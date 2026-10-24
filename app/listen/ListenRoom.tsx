@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MAX_RESTORE_BYTES, parseCSV, parseM3U, recognizedPlaylistUrl, restoreMemberShelf, tidyText } from '@/lib/listening/portableCollections';
 import LocalAudioDesk from './LocalAudioDesk';
+import PrivateBackupDesk from './PrivateBackupDesk';
 import type { MemberCollection, TrackReference } from '@/lib/listening/portableCollections';
 import styles from './listen.module.css';
 
@@ -126,7 +127,7 @@ export default function ListenRoom() {
   };
   const exportShelf=()=>{
     download('soullab-listening-room-export.json',JSON.stringify({format:'SOULLAB_LISTEN_03_MEMBER_EXPORT',collections,journal:note},null,2),'application/json');
-    setStatus('A copy was exported to your device. Nothing was uploaded to Soullab.');
+    setStatus('A readable JSON copy was exported to your device. Use encrypted backup for private reflections.');
   };
   const clearShelf=()=>{if(!window.confirm('Clear imported playlists and private journal from this browser tab?'))return;setCollections([]);setNote('');setStatus('This tab’s collection and journal have been cleared.');};
   return <main className={styles.shell}>
@@ -159,8 +160,8 @@ export default function ListenRoom() {
         <section aria-labelledby="moods-title"><div className={styles.sectionHead}><div><span className={styles.smallcaps}>CHOOSE YOUR ATMOSPHERE</span><h2 id="moods-title">Where would you like to go?</h2></div></div>
           <div className={styles.tileGrid}>{moodKeys.map(key=><button type="button" key={key} onClick={()=>selectMood(key)} className={`${styles.tile} ${styles['tile'+key]} ${mood===key?styles.selectedTile:''}`} aria-pressed={mood===key}><span>{journeys[key].label}</span><small>{journeys[key].subtitle}</small></button>)}</div>
         </section>
-        {showJournal&&<section className={styles.panel} aria-labelledby="journal-title"><span className={styles.smallcaps}>PRIVATE · THIS TAB ONLY</span><h2 id="journal-title">What did you notice?</h2><label htmlFor="listen-note">A listening reflection, without MAIA interpretation</label><textarea id="listen-note" rows={3} value={note} onChange={e=>setNote(e.target.value.slice(0,4000))} placeholder="An image, a feeling, or nothing at all…"/><p className={styles.muted}>No server storage, microphone access, or AI analysis. Export if you want to keep it.</p></section>}
-        <section className={styles.panel} aria-labelledby="library-title"><div className={styles.sectionHead}><div><span className={styles.smallcaps}>YOUR MUSIC, YOUR WAY</span><h2 id="library-title">Bring your collections</h2></div><button className={styles.ghost} type="button" onClick={exportShelf}>Export shelf ↗</button></div>
+        {showJournal&&<section className={styles.panel} aria-labelledby="journal-title"><span className={styles.smallcaps}>PRIVATE · THIS TAB ONLY</span><h2 id="journal-title">What did you notice?</h2><label htmlFor="listen-note">A listening reflection, without MAIA interpretation</label><textarea id="listen-note" rows={3} value={note} onChange={e=>setNote(e.target.value.slice(0,4000))} placeholder="An image, a feeling, or nothing at all…"/><p className={styles.muted}>No server storage, microphone access, or AI analysis. Save an encrypted backup below to keep it privately.</p></section>}
+        <section className={styles.panel} aria-labelledby="library-title"><div className={styles.sectionHead}><div><span className={styles.smallcaps}>YOUR MUSIC, YOUR WAY</span><h2 id="library-title">Bring your collections</h2></div><button className={styles.ghost} type="button" onClick={exportShelf}>Export plain JSON ↗</button></div>
           <p className={styles.muted}>Add a playlist link from Spotify, TIDAL, Apple Music, Qobuz or SoundCloud; or import a CSV/M3U list of titles. Soullab does not access streaming accounts or copy recordings.</p>
           <div className={styles.formRow}><label htmlFor="list-name">Collection name <input id="list-name" value={name} maxLength={100} onChange={e=>setName(e.target.value)} placeholder="Existential Bliss"/></label><label htmlFor="list-url">Playlist URL <input id="list-url" value={link} maxLength={2048} onChange={e=>setLink(e.target.value)} placeholder="https://open.spotify.com/playlist/…"/></label><button type="button" className={styles.addButton} onClick={addLink}>Add link</button></div>
           <div className={styles.importRow}><label className={styles.fileLabel} htmlFor="import-playlist">Import CSV / M3U <input id="import-playlist" type="file" accept=".csv,.m3u,.m3u8,text/csv" onChange={e=>{void importFile(e.target.files?.[0]||null);e.currentTarget.value='';}} /></label>
@@ -169,6 +170,7 @@ export default function ListenRoom() {
           <div className={styles.collectionList}>{collections.length?collections.map(c=><article className={styles.collection} key={c.id}><div><strong>{c.name}</strong><small>{c.provider||'User-supplied track list'} · {c.tracks.length} references</small>{c.tracks.length>0&&<span className={styles.trackPreview}>{c.tracks.slice(0,3).map(t=>t.title).join(' · ')}{c.tracks.length>3?'…':''}</span>}</div>{c.link&&<a href={c.link} target="_blank" rel="noopener noreferrer" aria-label={`Open ${c.name} on ${c.provider}`}>Open in {c.provider} ↗</a>}</article>):<p className={styles.empty}>Your collections will appear here. They remain in this tab until you export them.</p>}</div>
           <div className={styles.shelfFoot}><span>Not saved to an account or browser storage. No tracking or hidden synchronization.</span><button className={styles.danger} onClick={clearShelf} type="button">Clear tab data</button></div>
         </section>
+        <PrivateBackupDesk collections={collections} journal={note} onRestore={data=>{setCollections(data.collections);setNote(data.journal);setStatus(`Unlocked ${data.collections.length} collections from your private backup.`);}} />
         <LocalAudioDesk audioRef={memberAudioRef} onBegin={stop} />
         <section className={styles.article} aria-labelledby="rights-title"><span className={styles.smallcaps}>QUALITY & STEWARDSHIP</span><h2 id="rights-title">Sound deserves attention.</h2><p>Real Soullab recordings will have documented master and composition rights, truthful audio-source labels, and optional lossless playback where supported. Until those rights, private storage and recovery safeguards are approved, this review page offers synthesized studies, device-local files and external links only.</p></section>
       </div>
