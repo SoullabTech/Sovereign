@@ -1,0 +1,18 @@
+--- protected_source/app/writers-studio/insight/MaiaListen.tsx
++++ review_candidate/app/writers-studio/insight/MaiaListen.tsx
+@@ -1,6 +1,7 @@
+ 'use client';
+ import { useCallback, useEffect, useRef, useState } from 'react';
+ import { apiFetch } from '@/lib/http/apiBase';
++import { requestAudioFocus } from '@/lib/listening/audioFocus';
+ 
+ /** Preserve every word and keep each request inside the existing TTS limit. */
+ export function speechChunks(text: string): string[] {
+@@ -40,6 +41,7 @@
+   }, [text, active, stop]);
+   const listen = async () => {
+     if (!active || !text.trim()) return;
++    requestAudioFocus('writers-listen');
+     window.dispatchEvent(new Event(STOP_EVENT));
+     const controller = new AbortController(); request.current = controller;
+     setError(null); setState('loading');
