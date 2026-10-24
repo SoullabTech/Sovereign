@@ -20,9 +20,9 @@
 
 - `node --experimental-strip-types --test tests/listening/contracts.test.mjs tests/listening/private_backup.test.mjs` ⇒ **35/35 PASS**, of which seven validate encrypt, decrypt, unique salt/IV, tamper/wrong passphrase, downgrade refusal, oversized payload rejection and unsafe input refusal.
 - `node --test tests/listening/page_authentication.test.cjs` ⇒ **3/3** isolated mocked session cases; NOT Next/PG.
-- `node tests/listening/source_integrity.cjs` ⇒ **24/24** parsing/structural tests; NOT a type-safe full Next build or independent audit.
+- `node tests/listening/source_integrity.cjs` ⇒ **25/25** parsing/structural tests; NOT a type-safe full Next build or independent audit.
 - `tsc --noEmit --strict --target es2022 --lib es2022,dom --module esnext --moduleResolution bundler --allowImportingTsExtensions lib/listening/*.ts` ⇒ PASS for all pure TS modules; TSX compatibility requires the real React/Next source-runtime dependencies.
-- Real Safari/iPhone, long-form audio/DAC fidelity, encryption UX device test, deletion/restore/revocation, human source-owner signoff: **NOT DONE**.
+- Browser WebCrypto witness attempted but this execution environment blocks navigation to all localhost/file/remote test origins (`ERR_BLOCKED_BY_ADMINISTRATOR`); **NOT QUALIFIED**. Real Safari/iPhone, long-form audio/DAC fidelity, encryption UX device test, deletion/restore/revocation, human source-owner signoff: **NOT DONE**.
 
 ## Next bounded admission
 
