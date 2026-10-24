@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { requireMemberId } from '@/lib/auth/session';
 import ListenRoom from './ListenRoom';
 
@@ -15,7 +15,13 @@ export const metadata: Metadata = {
 
 export default async function ListenPage() {
   if (process.env.SOULLAB_LISTEN_REVIEW_ENABLED !== '1') notFound();
-  await requireMemberId();
+  try {
+    await requireMemberId();
+  } catch (error) {
+    if (error instanceof Error && error.message === 'AUTH_REQUIRED')
+      redirect('/signin?next=%2Flisten');
+    throw error;
+  }
   return <ListenRoom />;
 }
 
