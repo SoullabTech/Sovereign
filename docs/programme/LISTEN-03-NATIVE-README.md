@@ -25,4 +25,6 @@ An **isolated, source-owner-review-only** Next.js App Router integration candida
 
 Optional passphrase-encrypted export/restore of the member's **metadata and journal only**, via local WebCrypto AES-256-GCM / PBKDF2. New `app/listen/PrivateBackupDesk.tsx`, `lib/listening/privateBackup.ts`, tests, and review doc. No provider service integration, account storage, secret storage, or cloud synchronization. A forgotten passphrase cannot be recovered by Soullab. Independent crypto/security acceptance required before member test.
 
-**Verified in isolated source:** 35/35 privacy/rights/portability/pure-crypto tests, 3/3 mocked auth tests, 24/24 syntax/structure checks, strict TypeScript compile for pure modules. **Not** a joined real Next/PostgreSQL build. See `docs/LISTEN05_SOURCE_OWNER_REVIEW.md` for the important COOKIE+header concordance mismatch and native iPhone route hold.
+**Verified in isolated source:** 35/35 privacy/rights/portability/pure-crypto tests, 3/3 mocked auth tests, 25/25 syntax/structure checks, strict TypeScript compile for pure modules. **Not** a joined real Next/PostgreSQL build. See `docs/LISTEN05_SOURCE_OWNER_REVIEW.md` for the important COOKIE+header concordance mismatch and native iPhone route hold.
+
+Project-compatible TypeScript import paths were verified without `allowImportingTsExtensions`; run isolated Node tests with `--loader tests/listening/ts_resolution_loader.mjs`, which is never shipped to production. Chromium browser WebCrypto qualification is blocked by test-host navigation policy.
