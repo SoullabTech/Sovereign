@@ -6,7 +6,7 @@
 - Protected baseline: `clean-main-no-secrets`; existing audio source, speech, web and native controllers remain unchanged.
 - Review branch: `review/audio-platform-authority-v1-20261024`
 - Build subject: a universal pure audio focus policy and injectable transaction interface covering 12 currently named Soullab experience groups.
-- Local test result: **86/86 Node automated policy and adapter-contract checks PASS**. TypeScript 5.8.3 strict type-check PASS. Results are local source/pure behavior tests, **not** browser/integrated MAIA/iPhone/Writer/Sound Sanctuary acceptance.
+- Local test result: **86/86 Node automated policy and adapter-contract checks PASS**. TypeScript 5.8.3 strict type-check PASS. The exact GitHub-published source was independently fetched on Mac Studio (Node v22.22.3), compiled with strict TypeScript, and rerun **86/86 PASS**. Chrome and WebKit policy-only smoke each **16/16 PASS**, no nonlocal browser requests or JavaScript page errors; browser witness source was also read back and replayed. Results are local source/pure behavior tests, **not** browser/integrated MAIA/iPhone/Writer/Sound Sanctuary acceptance.
 - Prior separate LISTEN-14 was itself limited to same-origin cooperating Chrome/WebKit browser tabs, fictional audio and a disposable Next/PostgreSQL environment; it is not a universal native/cross-device lock.
 
 ## Exact development stance
