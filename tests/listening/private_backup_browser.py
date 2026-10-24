@@ -3,7 +3,7 @@ Uses localhost only; no member account, Next runtime, real keys or server storag
 """
 import asyncio, json, os, pathlib, subprocess, tempfile, functools, threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, Error as PlaywrightError
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 
@@ -15,7 +15,7 @@ async def main():
           for(const base of ['portableCollections','privateBackup']){
             const source=fs.readFileSync(path.join(process.argv[1],'lib/listening',base+'.ts'),'utf8');
             let js=ts.transpileModule(source,{fileName:base+'.ts',compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
-            js=js.replaceAll('./portableCollections.ts','./portableCollections.js');
+            js=js.replaceAll('./portableCollections','./portableCollections.js');
             fs.writeFileSync(path.join(process.argv[2],base+'.js'),js);
           }
         """
@@ -31,7 +31,15 @@ async def main():
                 page=await browser.new_page()
                 requests=[]
                 page.on('request', lambda r: requests.append(r.url))
-                await page.goto(f'http://127.0.0.1:{server.server_port}/index.html')
+                try:
+                    await page.goto(f'http://127.0.0.1:{server.server_port}/index.html')
+                except PlaywrightError as exc:
+                    if 'ERR_BLOCKED_BY_ADMINISTRATOR' in str(exc):
+                        print(json.dumps({'engine':'Chromium','status':'BLOCKED_BY_EXECUTION_ENVIRONMENT',
+                          'note':'Browser forbids localhost navigation. No WebCrypto browser PASS claimed.'},indent=2))
+                        await browser.close()
+                        return
+                    raise
                 await page.wait_for_function('document.body.dataset.ready === "yes"',timeout=10000)
                 result=await page.evaluate("""async () => {
                   const fixture=JSON.stringify({format:'SOULLAB_LISTEN_03_MEMBER_EXPORT',collections:[{id:'fake',name:'A Sound Journey',provider:null,link:null,tracks:[]}],journal:'A quiet listening reflection'});
