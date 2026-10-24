@@ -1,12 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluateRecordingRights } from '../../lib/listening/rightsPolicy.ts';
-import { recognizedPlaylistUrl, recognizedProviderUrl, parseCSV, parseM3U, exportCollectionCSV } from '../../lib/listening/portableCollections.ts';
+import { recognizedPlaylistUrl, recognizedProviderUrl, parseCSV, parseM3U, exportCollectionCSV, restoreMemberShelf, SOULLAB_EXPORT_FORMAT, MAX_RESTORE_BYTES } from '../../lib/listening/portableCollections.ts';
+import { validateLocalAudio, MAX_LOCAL_AUDIO_BYTES } from '../../lib/listening/localAudio.ts';
 const now = '2026-10-24T14:00:00Z';
 const claim = {holder:'Fictional cleared owner',evidenceRef:'fictional-witness-only',verifiedAt:'2026-10-01T00:00:00Z'};
 const grant={id:'fictional-test',status:'active',master:claim,composition:claim,samples:'none_declared',sampleStatusReceipt:claim,effectiveAt:'2026-10-01T00:00:00Z',expiresAt:'2026-11-01T00:00:00Z',territories:['US'],uses:['on_demand']};
 const ctx={memberAuthenticated:true,memberEntitled:true,territory:'US',usage:'on_demand',now};
-test('verified fictional grant accepts only its cleared use',()=>assert.deepEqual(evaluateRecordingRights(grant,ctx),{allowed:true,reason:'VERIFIED'}));
+test('even a structurally complete fictional rights claim never authorizes playback',()=>assert.deepEqual(evaluateRecordingRights(grant,ctx),{allowed:false,reason:'INDEPENDENT_RIGHTS_AUTHORITY_REQUIRED'}));
 test('missing recording fails closed',()=>assert.equal(evaluateRecordingRights(null,ctx).allowed,false));
 test('member authentication required',()=>assert.equal(evaluateRecordingRights(grant,{...ctx,memberAuthenticated:false}).reason,'AUTH_REQUIRED'));
 test('member entitlement required',()=>assert.equal(evaluateRecordingRights(grant,{...ctx,memberEntitled:false}).reason,'ENTITLEMENT_REQUIRED'));
@@ -25,3 +26,51 @@ test('CSV quotes and escaped formulas as inert content',()=>{const v=parseCSV('T
 test('CSV rejects malformed and excessive sources',()=>{assert.throws(()=>parseCSV('Title,Artist\n"bad,foo'));assert.throws(()=>parseCSV('x'.repeat(1024*1024+1)))});
 test('M3U paths become text only, not media URLs',()=>{const v=parseM3U('#EXTM3U\n#EXTINF:-1,Tycho - A Walk\nfile:///Users/foo/music.mp3\n');assert.equal(v[0].artist,'Tycho');assert.equal(v[0].url,null)});
 
+const sample = { format: SOULLAB_EXPORT_FORMAT, collections: [{ id: 'forged-id',name:'Existential Bliss', provider:'FAKE', link:'https://open.spotify.com/playlist/123?utm=tracking',tracks:[{title:'=SAFE TEXT',artist:'Emancipator',album:'',url:'https://music.apple.com/us/album/123?clickid=secret',service:'FAKE'}] }], journal:'Quiet and beautiful.' };
+test('export restoration strips tracking and untrusted supplied IDs/providers',()=>{
+  const v=restoreMemberShelf(JSON.stringify(sample));
+  assert.equal(v.collections[0].id, 'restored-1');
+  assert.equal(v.collections[0].provider,'Spotify');
+  assert.equal(v.collections[0].link, 'https://open.spotify.com/playlist/123');
+  assert.equal(v.collections[0].tracks[0].service,'Apple Music');
+  assert.equal(v.collections[0].tracks[0].url, 'https://music.apple.com/us/album/123');
+  assert.equal(v.journal, 'Quiet and beautiful.');
+});
+test('export restoration fails on injected collection URL',()=>{
+  assert.throws(()=>restoreMemberShelf(JSON.stringify({...sample,collections:[{...sample.collections[0],link:'javascript:alert(1)'}]})));
+});
+test('export restoration rejects wrong format and malformed JSON',()=>{
+  assert.throws(()=>restoreMemberShelf('bad-json'));
+  assert.throws(()=>restoreMemberShelf(JSON.stringify({...sample,format:'UNTRUSTED'})));
+});
+test('export restoration enforces file and collection limits',()=>{
+  assert.throws(()=>restoreMemberShelf(' '.repeat(MAX_RESTORE_BYTES+1)));
+  assert.throws(()=>restoreMemberShelf(JSON.stringify({...sample,collections:Array(31).fill(sample.collections[0])})));
+  assert.throws(()=>restoreMemberShelf(JSON.stringify({...sample,collections:[{...sample.collections[0],tracks:Array(1001).fill(sample.collections[0].tracks[0])}]})));
+});
+test('export restoration sanitizes untrusted track metadata',()=>{
+  const bad={...sample,collections:[{...sample.collections[0],tracks:[{title:'<script>x</script>',artist:42,url:'file:///private.wav'}]}]};
+  const v=restoreMemberShelf(JSON.stringify(bad));
+  assert.equal(v.collections[0].tracks[0].title,'<script>x</script>');
+  assert.equal(v.collections[0].tracks[0].artist,'');
+  assert.equal(v.collections[0].tracks[0].url,null);
+});
+test('local lossless file accepted as private browser object only',()=>{
+  assert.deepEqual(validateLocalAudio({name:'Album.FLAC',type:'audio/flac',size:11e6}),{allowed:true,label:'FLAC',name:'Album.FLAC'});
+});
+test('local audio refuses mislabeled HTML and unsafe extensions',()=>{
+  assert.equal(validateLocalAudio({name:'music.flac',type:'text/html',size:123}).allowed,false);
+  assert.equal(validateLocalAudio({name:'music.exe',type:'audio/mpeg',size:123}).allowed,false);
+});
+test('local audio enforces size and nonempty file',()=>{
+  assert.equal(validateLocalAudio({name:'music.mp3',type:'audio/mpeg',size:MAX_LOCAL_AUDIO_BYTES+1}).allowed,false);
+  assert.equal(validateLocalAudio({name:'music.mp3',type:'audio/mpeg',size:0}).allowed,false);
+});
+test('empty MIME can be decoded on browser-selected FLAC without false hi-res promise',()=>{
+  assert.equal(validateLocalAudio({name:'music.flac',type:'',size:123}).allowed,true);
+});
+
+test('forged rights evidence cannot become a positive music grant',()=>{
+  const forged={...grant,master:{holder:'Counterfeit',evidenceRef:'signed:forged',verifiedAt:now},composition:claim};
+  assert.equal(evaluateRecordingRights(forged,ctx).allowed,false);
+});
