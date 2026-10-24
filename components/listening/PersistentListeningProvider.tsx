@@ -5,6 +5,7 @@ import {
 } from 'react';
 import type { ReactNode, RefObject } from 'react';
 import { validateLocalAudio } from '@/lib/listening/localAudio';
+import { isMaiaSpeechActive } from '@/lib/listening/maiaSpeechFocus';
 import {
   SOULLAB_AUDIO_FOCUS_EVENT, SOULLAB_AUDIO_TAB_CHANNEL,
   SOULLAB_SESSION_END_EVENT, audioFocusSource, requestAudioFocus,
@@ -47,9 +48,9 @@ export type ListeningTransport = {
   snapshot: ListeningSnapshot;
   volume: number;
   setVolume: (volume: number) => void;
-  playSketch: (mood: ListeningMood, frequencies: number[]) => Promise<void>;
+  playSketch: (mood: ListeningMood, frequencies: number[]) => Promise<boolean>;
   selectLocalFile: (file: File) => { accepted: boolean; message: string };
-  playLocalFile: () => Promise<void>;
+  playLocalFile: () => Promise<boolean>;
   pause: () => void;
   removeLocalFile: () => void;
 };
@@ -210,7 +211,19 @@ export function PersistentListeningProvider({
     if (media.current) media.current.volume = next / 100;
   }, []);
 
-  const playSketch = useCallback(async (mood: ListeningMood, frequencies: number[]) => {
+  const refuseDuringMaiaSpeech = useCallback((): boolean => {
+    if (!isMaiaSpeechActive()) return false;
+    setSnapshot(old => ({
+      ...old,
+      playback: old.playback === 'playing' ? 'paused' : old.playback,
+      message: 'MAIA is speaking. Stop or finish MAIA before playing music.',
+    }));
+    return true;
+  }, []);
+
+  const playSketch = useCallback(async (mood: ListeningMood, frequencies: number[]): Promise<boolean> => {
+    // Refuse BEFORE allocating or resuming a sound context.
+    if (refuseDuringMaiaSpeech()) return false;
     if (!Array.isArray(frequencies) || frequencies.length !== 3 ||
       frequencies.some(f => !Number.isFinite(f) || f < 50 || f > 700)) {
       throw new Error('This review sketch contains invalid frequencies.');
@@ -227,9 +240,10 @@ export function PersistentListeningProvider({
     }
     try {
       await active.context.resume();
-      if (generation !== epoch.current || kind.current !== 'sketch') {
+      if (generation !== epoch.current || kind.current !== 'sketch' || isMaiaSpeechActive()) {
         void active.context.suspend().catch(() => undefined);
-        return;
+        if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
+        return false;
       }
       claimFocus();
       setSnapshot({
@@ -241,11 +255,13 @@ export function PersistentListeningProvider({
         fileFormat: null,
         message: 'Original, locally synthesized sound study · not a commercial recording.',
       });
+      return true;
     } catch {
       if (sketch.current === active) { endSketch(active); sketch.current = null; }
       setSnapshot(old => ({ ...old, playback: 'error', message: 'Audio could not start.' }));
+      return false;
     }
-  }, [claimFocus]);
+  }, [claimFocus, refuseDuringMaiaSpeech]);
 
   const selectLocalFile = useCallback((file: File) => {
     const result = validateLocalAudio(file);
@@ -266,17 +282,27 @@ export function PersistentListeningProvider({
     return { accepted: true, message: 'File selected locally; use the persistent player.' };
   }, []);
 
-  const playLocalFile = useCallback(async () => {
-    if (!selected.current || !media.current) return;
+  const playLocalFile = useCallback(async (): Promise<boolean> => {
+    if (!selected.current || !media.current) return false;
+    if (refuseDuringMaiaSpeech()) return false;
     ++epoch.current;
     kind.current = 'local-file';
     if (sketch.current) { endSketch(sketch.current); sketch.current = null; }
-    try { await media.current.play(); }
-    catch {
+    try {
+      await media.current.play();
+      // A MAIA queue might become audible while HTMLMediaElement.play awaits.
+      if (isMaiaSpeechActive()) {
+        media.current?.pause();
+        refuseDuringMaiaSpeech();
+        return false;
+      }
+      return true;
+    } catch {
       setSnapshot(old => ({ ...old, playback:'error',
         message:'This browser could not decode or play the selected recording.' }));
+      return false;
     }
-  }, []);
+  }, [refuseDuringMaiaSpeech]);
 
   const removeLocalFile = useCallback(() => {
     if (kind.current !== 'local-file') return;
@@ -285,12 +311,13 @@ export function PersistentListeningProvider({
 
   const onLocalPlay = useCallback(() => {
     if (kind.current !== 'local-file' || !selected.current) return;
+    if (isMaiaSpeechActive()) { media.current?.pause(); refuseDuringMaiaSpeech(); return; }
     claimFocus();
     setSnapshot(old => ({
       ...old, kind:'local-file', playback:'playing',
       message:'Playing only your device-local file. No upload or analysis.',
     }));
-  }, [claimFocus]);
+  }, [claimFocus, refuseDuringMaiaSpeech]);
 
   const onLocalPause = useCallback(() => {
     if (kind.current !== 'local-file') return;
@@ -301,7 +328,7 @@ export function PersistentListeningProvider({
     snapshot, volume, setVolume, playSketch, selectLocalFile, playLocalFile,
     pause, removeLocalFile,
   };
-  const displayed = snapshot.kind !== 'none';
+  const displayed = snapshot.kind !== 'none' || snapshot.message.startsWith('MAIA is speaking.');
   return <Context.Provider value={transport}>
     {children}
     <div
