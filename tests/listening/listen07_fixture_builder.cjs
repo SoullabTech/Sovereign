@@ -29,7 +29,9 @@ const media=path.join(dir,'fictional-24bit-48k.flac');
 cp.execFileSync(process.env.FFMPEG_BIN||'ffmpeg',['-hide_banner','-loglevel','error','-y','-f','lavfi','-i','sine=frequency=220:duration=4','-af','volume=0.035','-ar','48000','-ac','2','-c:a','flac','-sample_fmt','s32','-bits_per_raw_sample','24',media],{stdio:'pipe',timeout:20000});
 (async()=>{
  await esbuild.build({entryPoints:[path.join(dir,'entry.jsx')],outfile:path.join(dir,'bundle.js'),bundle:true,format:'iife',
-  platform:'browser',jsx:'automatic',target:'es2022',alias:{'@':repo},nodePaths:[nodePath],
+  platform:'browser',jsx:'automatic',target:'es2022',
+  alias:{'@':repo,'react':require.resolve('react',{paths:[nodePath]}),
+    'react/jsx-runtime':require.resolve('react/jsx-runtime',{paths:[nodePath]})},nodePaths:[nodePath],
   plugins:[{name:'review-only-Next-Link-shim',setup(build){
     const linkShim=path.join(dir,'next-link-shim.jsx');
     fs.writeFileSync(linkShim,"import React from 'react'; export default function Link({href,children,...rest}){return React.createElement('a',{href,...rest},children)};");
