@@ -33,7 +33,7 @@ cp.execFileSync(process.env.FFMPEG_BIN||'ffmpeg',['-hide_banner','-loglevel','er
   plugins:[{name:'review-only-Next-Link-shim',setup(build){
     build.onResolve({filter:/^next\/link$/},()=>({path:'review-link',namespace:'listen-review-link'}));
     build.onLoad({filter:/.*/,namespace:'listen-review-link'},()=>({
-      contents:"import React from 'react'; export default function Link({href,children,...rest}){return React.createElement('a',{href,...rest},children)};",
+      contents:"import React from "+JSON.stringify(require.resolve('react',{paths:[nodePath]}))+"; export default function Link({href,children,...rest}){return React.createElement('a',{href,...rest},children)};",
       loader:'js'
     }));
   }},{name:'review-only-CSS-classnames',setup(build){
