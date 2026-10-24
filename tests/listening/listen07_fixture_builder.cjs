@@ -31,11 +31,9 @@ cp.execFileSync(process.env.FFMPEG_BIN||'ffmpeg',['-hide_banner','-loglevel','er
  await esbuild.build({entryPoints:[path.join(dir,'entry.jsx')],outfile:path.join(dir,'bundle.js'),bundle:true,format:'iife',
   platform:'browser',jsx:'automatic',target:'es2022',alias:{'@':repo},nodePaths:[nodePath],
   plugins:[{name:'review-only-Next-Link-shim',setup(build){
-    build.onResolve({filter:/^next\/link$/},()=>({path:'review-link',namespace:'listen-review-link'}));
-    build.onLoad({filter:/.*/,namespace:'listen-review-link'},()=>({
-      contents:"import React from "+JSON.stringify(require.resolve('react',{paths:[nodePath]}))+"; export default function Link({href,children,...rest}){return React.createElement('a',{href,...rest},children)};",
-      loader:'js'
-    }));
+    const linkShim=path.join(dir,'next-link-shim.jsx');
+    fs.writeFileSync(linkShim,"import React from 'react'; export default function Link({href,children,...rest}){return React.createElement('a',{href,...rest},children)};");
+    build.onResolve({filter:/^next\/link$/},()=>({path:linkShim}));
   }},{name:'review-only-CSS-classnames',setup(build){
     build.onLoad({filter:/\.module\.css$/},()=>({contents:"export default new Proxy({}, {get: (_,prop) => String(prop)});",loader:'js'}));
   }}],logLevel:'silent'});
