@@ -40,7 +40,7 @@ export function recognizedPlaylistUrl(raw: unknown): { service: string; href: st
   return ok ? { service: found.service, href: found.href } : null;
 }
 export function parseCSV(raw: string): TrackReference[] {
-  if (raw.length > MAX_PLAYLIST_BYTES) throw new Error('Playlist file exceeds 1 MB.');
+  if (new TextEncoder().encode(raw).byteLength > MAX_PLAYLIST_BYTES) throw new Error('Playlist file exceeds 1 MB.');
   const rows: string[][] = []; let row: string[] = [], cell = '', quoted = false;
   const s = raw.replace(/^\uFEFF/, '');
   for (let i = 0; i < s.length; i++) {
@@ -73,7 +73,7 @@ export function parseCSV(raw: string): TrackReference[] {
   });
 }
 export function parseM3U(raw: string): TrackReference[] {
-  if (raw.length > MAX_PLAYLIST_BYTES) throw new Error('Playlist file exceeds 1 MB.');
+  if (new TextEncoder().encode(raw).byteLength > MAX_PLAYLIST_BYTES) throw new Error('Playlist file exceeds 1 MB.');
   const tracks: TrackReference[] = []; let label = '';
   for (const row of raw.replace(/^\uFEFF/, '').split(/\r?\n/)) {
     const line = row.trim(); if (!line) continue;
@@ -98,3 +98,55 @@ export function exportCollectionCSV(tracks: TrackReference[]): string {
   return ['Title,Artist,Album,URL', ...tracks.slice(0,MAX_TRACKS).map(t => [t.title,t.artist,t.album,t.url||''].map(csvCell).join(','))].join('\r\n') + '\r\n';
 }
 
+
+/** Offline restoration of an explicit Soullab-created export. This is NOT
+ * provider synchronization or server-side member custody. All imported data is
+ * treated as untrusted even when the export declares Soullab as its source. */
+export const SOULLAB_EXPORT_FORMAT = 'SOULLAB_LISTEN_03_MEMBER_EXPORT';
+export const MAX_RESTORE_BYTES = 5 * 1024 * 1024;
+export const MAX_COLLECTIONS = 30;
+function plainRecord(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === 'object' && !Array.isArray(v);
+}
+export function restoreMemberShelf(raw: string): { collections: MemberCollection[]; journal: string } {
+  if (typeof raw !== 'string' || new TextEncoder().encode(raw).byteLength > MAX_RESTORE_BYTES)
+    throw new Error('Listening export exceeds the 5 MB limit.');
+  let data: unknown;
+  try { data = JSON.parse(raw); }
+  catch { throw new Error('Listening export is not valid JSON.'); }
+  if (!plainRecord(data) || data.format !== SOULLAB_EXPORT_FORMAT ||
+      !Array.isArray(data.collections) || data.collections.length > MAX_COLLECTIONS ||
+      typeof data.journal !== 'string') {
+    throw new Error('This is not a supported Soullab Listening Room export.');
+  }
+  let total = 0;
+  const collections = data.collections.map((collection, index): MemberCollection => {
+    if (!plainRecord(collection) || typeof collection.name !== 'string' ||
+        !Array.isArray(collection.tracks) || collection.tracks.length > MAX_TRACKS) {
+      throw new Error('A collection has an invalid structure or too many tracks.');
+    }
+    total += collection.tracks.length;
+    if (total > MAX_COLLECTIONS * MAX_TRACKS) throw new Error('Too many imported tracks.');
+    const name = tidyText(collection.name, 100);
+    if (!name) throw new Error('A collection is missing its name.');
+    const external = collection.link == null ? null : recognizedPlaylistUrl(collection.link);
+    if (collection.link != null && !external)
+      throw new Error('A collection contains an unrecognized playlist link.');
+    const tracks = collection.tracks.map((track): TrackReference => {
+      if (!plainRecord(track) || typeof track.title !== 'string' || !tidyText(track.title))
+        throw new Error('A collection contains a track without a title.');
+      const url = recognizedProviderUrl(track.url);
+      return {
+        title: tidyText(track.title),
+        artist: tidyText(typeof track.artist === 'string' ? track.artist : ''),
+        album: tidyText(typeof track.album === 'string' ? track.album : ''),
+        url: url?.href || null,
+        service: url?.service || null,
+      };
+    });
+    // Never reuse supplied IDs, provider labels or untrusted external URL schemes.
+    return { id: 'restored-' + (index + 1), name,
+      provider: external?.service || null, link: external?.href || null, tracks };
+  });
+  return { collections, journal: data.journal.slice(0, 4000) };
+}
