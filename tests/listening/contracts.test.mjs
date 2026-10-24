@@ -1,0 +1,27 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { evaluateRecordingRights } from '../../lib/listening/rightsPolicy.ts';
+import { recognizedPlaylistUrl, recognizedProviderUrl, parseCSV, parseM3U, exportCollectionCSV } from '../../lib/listening/portableCollections.ts';
+const now = '2026-10-24T14:00:00Z';
+const claim = {holder:'Fictional cleared owner',evidenceRef:'fictional-witness-only',verifiedAt:'2026-10-01T00:00:00Z'};
+const grant={id:'fictional-test',status:'active',master:claim,composition:claim,samples:'none_declared',sampleStatusReceipt:claim,effectiveAt:'2026-10-01T00:00:00Z',expiresAt:'2026-11-01T00:00:00Z',territories:['US'],uses:['on_demand']};
+const ctx={memberAuthenticated:true,memberEntitled:true,territory:'US',usage:'on_demand',now};
+test('verified fictional grant accepts only its cleared use',()=>assert.deepEqual(evaluateRecordingRights(grant,ctx),{allowed:true,reason:'VERIFIED'}));
+test('missing recording fails closed',()=>assert.equal(evaluateRecordingRights(null,ctx).allowed,false));
+test('member authentication required',()=>assert.equal(evaluateRecordingRights(grant,{...ctx,memberAuthenticated:false}).reason,'AUTH_REQUIRED'));
+test('member entitlement required',()=>assert.equal(evaluateRecordingRights(grant,{...ctx,memberEntitled:false}).reason,'ENTITLEMENT_REQUIRED'));
+test('revoked license blocked',()=>assert.equal(evaluateRecordingRights({...grant,status:'withdrawn'},ctx).allowed,false));
+test('expired license blocked',()=>assert.equal(evaluateRecordingRights(grant,{...ctx,now:'2026-11-02T00:00:00Z'}).allowed,false));
+test('uncleared territory blocked',()=>assert.equal(evaluateRecordingRights(grant,{...ctx,territory:'GB'}).reason,'TERRITORY_NOT_CLEARED'));
+test('group listening blocked without its grant',()=>assert.equal(evaluateRecordingRights(grant,{...ctx,usage:'shared_session'}).reason,'USE_NOT_CLEARED'));
+test('unknown samples blocked',()=>assert.equal(evaluateRecordingRights({...grant,samples:'unknown'},ctx).reason,'SAMPLE_STATUS_UNKNOWN'));
+test('missing sample declaration blocked',()=>assert.equal(evaluateRecordingRights({...grant,sampleStatusReceipt:undefined},ctx).reason,'SAMPLE_DECLARATION_UNVERIFIED'));
+test('missing publisher blocked',()=>assert.equal(evaluateRecordingRights({...grant,composition:undefined},ctx).reason,'COMPOSITION_RIGHTS_UNVERIFIED'));
+test('expired evidence blocks playback',()=>assert.equal(evaluateRecordingRights({...grant,master:{...claim,validUntil:'2026-10-23T00:00:00Z'}},ctx).allowed,false));
+test('only approved Spotify playlist URLs',()=>{assert.equal(recognizedPlaylistUrl('https://open.spotify.com/playlist/123?si=x')?.href,'https://open.spotify.com/playlist/123');assert.equal(recognizedPlaylistUrl('https://open.spotify.com/track/123'),null)});
+test('host spoofing and scheme are refused',()=>{assert.equal(recognizedProviderUrl('https://open.spotify.com.evil.test/playlist/123'),null);assert.equal(recognizedProviderUrl('javascript:alert(1)'),null);assert.equal(recognizedProviderUrl('https://spotify.com@bad.test/playlist/123'),null)});
+test('TIDAL/Apple Music playlist handoff',()=>{assert.equal(recognizedPlaylistUrl('https://tidal.com/playlist/123')?.service,'TIDAL');assert.equal(recognizedPlaylistUrl('https://music.apple.com/us/playlist/p/pl.123')?.service,'Apple Music')});
+test('CSV quotes and escaped formulas as inert content',()=>{const v=parseCSV('Title,Artist,Album,URL\n"A, B",Jazz,,https://open.spotify.com/track/1\n"<script>xx</script>",Foo,,\n');assert.equal(v.length,2);assert.equal(v[0].title,'A, B');assert.equal(v[1].title,'<script>xx</script>');assert.ok(exportCollectionCSV([{...v[0],title:'=cmd|test'}]).includes('"\'=cmd|test"'))});
+test('CSV rejects malformed and excessive sources',()=>{assert.throws(()=>parseCSV('Title,Artist\n"bad,foo'));assert.throws(()=>parseCSV('x'.repeat(1024*1024+1)))});
+test('M3U paths become text only, not media URLs',()=>{const v=parseM3U('#EXTM3U\n#EXTINF:-1,Tycho - A Walk\nfile:///Users/foo/music.mp3\n');assert.equal(v[0].artist,'Tycho');assert.equal(v[0].url,null)});
+
