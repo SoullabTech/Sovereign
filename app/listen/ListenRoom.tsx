@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { parseCSV, parseM3U, recognizedPlaylistUrl, tidyText } from '@/lib/listening/portableCollections';
+import { MAX_RESTORE_BYTES, parseCSV, parseM3U, recognizedPlaylistUrl, restoreMemberShelf, tidyText } from '@/lib/listening/portableCollections';
+import LocalAudioDesk from './LocalAudioDesk';
 import type { MemberCollection, TrackReference } from '@/lib/listening/portableCollections';
 import styles from './listen.module.css';
 
@@ -62,6 +63,7 @@ export default function ListenRoom() {
   const [showJournal, setShowJournal] = useState(false);
   const [status, setStatus] = useState('Ready for your listening journey.');
   const sketch = useRef<SketchHandle | null>(null);
+  const memberAudioRef = useRef<HTMLAudioElement | null>(null);
   const player = journeys[mood];
 
   const stop = useCallback(() => {
@@ -74,6 +76,8 @@ export default function ListenRoom() {
   const toggle=async()=>{
     if (playing) { stop(); return; }
     try {
+      // Keep the two audio surfaces mutually exclusive.
+      memberAudioRef.current?.pause();
       // Cooperate with Writer's existing STOP event when both surfaces share a document.
       window.dispatchEvent(new Event('ws-stop-maia-reading'));
       const instance=createSketch(player.frequencies,volume/100);
@@ -109,6 +113,16 @@ export default function ListenRoom() {
       setCollections(c=>[{id:makeId(),name:display,provider:null,link:null,tracks},...c]);
       setStatus(`Imported ${tracks.length} track references, not recordings, from ${file.name}.`);
     } catch(e) {setStatus(e instanceof Error?e.message:'Could not read playlist.');}
+  };
+  const restoreShelf = async (file: File | null) => {
+    if (!file) return;
+    if (file.size > MAX_RESTORE_BYTES) { setStatus('Listening export exceeds the 5 MB limit.'); return; }
+    try {
+      const restored = restoreMemberShelf(await file.text());
+      if ((collections.length || note) && !window.confirm('Replace the current tab collection and reflection with this export?')) return;
+      setCollections(restored.collections); setNote(restored.journal);
+      setStatus(`Restored ${restored.collections.length} private collections in this tab, without server access.`);
+    } catch (e) { setStatus(e instanceof Error ? e.message : 'Could not restore this listening export.'); }
   };
   const exportShelf=()=>{
     download('soullab-listening-room-export.json',JSON.stringify({format:'SOULLAB_LISTEN_03_MEMBER_EXPORT',collections,journal:note},null,2),'application/json');
@@ -149,14 +163,16 @@ export default function ListenRoom() {
         <section className={styles.panel} aria-labelledby="library-title"><div className={styles.sectionHead}><div><span className={styles.smallcaps}>YOUR MUSIC, YOUR WAY</span><h2 id="library-title">Bring your collections</h2></div><button className={styles.ghost} type="button" onClick={exportShelf}>Export shelf ↗</button></div>
           <p className={styles.muted}>Add a playlist link from Spotify, TIDAL, Apple Music, Qobuz or SoundCloud; or import a CSV/M3U list of titles. Soullab does not access streaming accounts or copy recordings.</p>
           <div className={styles.formRow}><label htmlFor="list-name">Collection name <input id="list-name" value={name} maxLength={100} onChange={e=>setName(e.target.value)} placeholder="Existential Bliss"/></label><label htmlFor="list-url">Playlist URL <input id="list-url" value={link} maxLength={2048} onChange={e=>setLink(e.target.value)} placeholder="https://open.spotify.com/playlist/…"/></label><button type="button" className={styles.addButton} onClick={addLink}>Add link</button></div>
-          <div className={styles.importRow}><label className={styles.fileLabel} htmlFor="import-playlist">Import CSV / M3U <input id="import-playlist" type="file" accept=".csv,.m3u,.m3u8,text/csv" onChange={e=>{void importFile(e.target.files?.[0]||null);e.currentTarget.value='';}} /></label><span className={styles.muted}>Metadata only · up to 1,000 tracks per collection</span></div>
+          <div className={styles.importRow}><label className={styles.fileLabel} htmlFor="import-playlist">Import CSV / M3U <input id="import-playlist" type="file" accept=".csv,.m3u,.m3u8,text/csv" onChange={e=>{void importFile(e.target.files?.[0]||null);e.currentTarget.value='';}} /></label>
+            <label className={styles.fileLabel} htmlFor="restore-shelf">Restore Soullab export <input id="restore-shelf" type="file" accept=".json,application/json" onChange={e=>{void restoreShelf(e.currentTarget.files?.[0]||null);e.currentTarget.value='';}} /></label>
+            <span className={styles.muted}>Metadata only · up to 1,000 tracks per collection</span></div>
           <div className={styles.collectionList}>{collections.length?collections.map(c=><article className={styles.collection} key={c.id}><div><strong>{c.name}</strong><small>{c.provider||'User-supplied track list'} · {c.tracks.length} references</small>{c.tracks.length>0&&<span className={styles.trackPreview}>{c.tracks.slice(0,3).map(t=>t.title).join(' · ')}{c.tracks.length>3?'…':''}</span>}</div>{c.link&&<a href={c.link} target="_blank" rel="noopener noreferrer" aria-label={`Open ${c.name} on ${c.provider}`}>Open in {c.provider} ↗</a>}</article>):<p className={styles.empty}>Your collections will appear here. They remain in this tab until you export them.</p>}</div>
           <div className={styles.shelfFoot}><span>Not saved to an account or browser storage. No tracking or hidden synchronization.</span><button className={styles.danger} onClick={clearShelf} type="button">Clear tab data</button></div>
         </section>
-        <section className={styles.article} aria-labelledby="rights-title"><span className={styles.smallcaps}>QUALITY & STEWARDSHIP</span><h2 id="rights-title">Sound deserves attention.</h2><p>Real Soullab recordings will have documented master and composition rights, truthful audio-source labels, and optional lossless playback where supported. Until those rights, private storage and recovery safeguards are approved, this page offers only a synthesized study and links that open externally.</p></section>
+        <LocalAudioDesk audioRef={memberAudioRef} onBegin={stop} />
+        <section className={styles.article} aria-labelledby="rights-title"><span className={styles.smallcaps}>QUALITY & STEWARDSHIP</span><h2 id="rights-title">Sound deserves attention.</h2><p>Real Soullab recordings will have documented master and composition rights, truthful audio-source labels, and optional lossless playback where supported. Until those rights, private storage and recovery safeguards are approved, this review page offers synthesized studies, device-local files and external links only.</p></section>
       </div>
       <div className={styles.bottomPlayer} role="region" aria-label="Listening controls"><div><span className={styles.playerTitle}>{player.title}</span><span className={styles.playerSub}>Original sound sketch · browser synthesis</span></div><button className={styles.roundControl} type="button" onClick={()=>void toggle()} aria-label={playing?'Pause original sound sketch':'Play original sound sketch'}>{playing?'Ⅱ':'▶'}</button><label htmlFor="listen-volume" className={styles.volumeLabel}>Volume <input id="listen-volume" type="range" min="0" max="100" value={volume} onChange={e=>changeVolume(Number(e.target.value))}/></label><span className={styles.status} role="status" aria-live="polite">{status}</span></div>
     </div>
   </main>;
 }
-
