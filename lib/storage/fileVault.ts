@@ -9,7 +9,8 @@
 //
 // Default root matches the studio vault: /app/data/vault (override via FILE_STORAGE_PATH).
 
-import { mkdir, writeFile, readFile, unlink, stat } from 'fs/promises';
+import { mkdir, writeFile, readFile, unlink, stat, open, link } from 'fs/promises';
+import { randomBytes, createHash } from 'crypto';
 import path from 'path';
 
 export function resolveVaultRoot(): string {
@@ -56,6 +57,60 @@ export async function writeVaultBytes(
   const storagePath = path.join(namespace, `${fileId}.${ext}`);
   await writeFile(path.join(root, storagePath), buffer);
   return storagePath;
+}
+
+/**
+ * Durable, immutable source-byte arrival.
+ *
+ * Unlike the ordinary file-vault writer, this operation cannot expose a
+ * partially written FINAL path or overwrite an existing custodied artifact.
+ *
+ *  - Exclusive temporary file, write + fsync before publication.
+ *  - Hard-link into final name: atomic, fails closed on existing destination.
+ *  - Remove temporary link, then fsync the parent directory.
+ *  - Read back and hash before a caller may insert a DB custody row.
+ *
+ * A crash before return may leave an orphan, but no row is ever recorded over
+ * unconfirmed bytes. The caller keeps its DB insertion AFTER this completes.
+ * Never use this as a replacement for a separate source-retention policy.
+ */
+export async function writeDurableVaultBytes(
+  namespace: string, fileId: string, ext: string, buffer: Buffer,
+): Promise<string> {
+  const root = resolveVaultRoot();
+  const dir = path.join(root, namespace);
+  await mkdir(dir, { recursive: true });
+  const name = `${fileId}.${ext}`;
+  const rel = path.join(namespace, name);
+  const final = path.join(dir, name);
+  const staged = path.join(dir, `.${name}.${randomBytes(12).toString('hex')}.pending`);
+  let handle: Awaited<ReturnType<typeof open>> | null = null;
+  try {
+    handle = await open(staged, 'wx', 0o600);
+    await handle.writeFile(buffer);
+    await handle.sync();
+    await handle.close();
+    handle = null;
+
+    // Unlike rename(), link() never replaces an existing final file.
+    await link(staged, final);
+    await unlink(staged);
+    const directory = await open(dir, 'r');
+    try { await directory.sync(); } finally { await directory.close(); }
+
+    const recovered = await readFile(final);
+    if (recovered.length !== buffer.length
+      || createHash('sha256').update(recovered).digest('hex')
+        !== createHash('sha256').update(buffer).digest('hex')) {
+      throw new Error('Source bytes failed read-back verification');
+    }
+    return rel;
+  } finally {
+    if (handle) await handle.close().catch(() => undefined);
+    // Never remove final here: an error after publication leaves an unclaimed
+    // orphan for custody recovery, not an unproven destructive cleanup.
+    await unlink(staged).catch(() => undefined);
+  }
 }
 
 /**

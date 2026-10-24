@@ -9,7 +9,7 @@
 import { watch } from 'chokidar';
 import fs from 'fs';
 import path from 'path';
-import matter from 'gray-matter';
+import { readMarkdownFrontMatter } from '@/lib/security/frontMatterSafe';
 import { IntellectualPropertyEngine } from './intellectual-property-engine';
 import { VectorEmbeddingService } from './vector-embeddings';
 
@@ -139,7 +139,7 @@ export class ObsidianKnowledgeIntegration {
   private async processNote(filePath: string): Promise<void> {
     try {
       const content = fs.readFileSync(filePath, 'utf-8');
-      const parsed = matter(content);
+      const parsed = readMarkdownFrontMatter(content);
       const relativePath = path.relative(this.vaultPath, filePath);
 
       // Extract links (Obsidian [[link]] format)
