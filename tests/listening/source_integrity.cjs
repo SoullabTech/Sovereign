@@ -23,4 +23,5 @@ check('backup excludes audio provider API and server request',!backupUI.includes
 check('backup treats decrypted bytes as untrusted and revalidates',privateBackup.includes('return restoreMemberShelf(decoded)'));
 check('restore asks before replacing existing unsaved data',backupUI.includes('window.confirm('));
 check('backup explicitly warns about missing server recovery',backupUI.includes('Soullab cannot recover it'));
+check('crypto module imports without forbidden .ts extension',privateBackup.includes("from './portableCollections'")&&!privateBackup.includes("from './portableCollections.ts'"));
 console.log('TOTAL',checks,'PASS');
