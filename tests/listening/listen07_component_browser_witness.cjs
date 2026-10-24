@@ -1,4 +1,8 @@
-/** LISTEN-07: Execute real Chrome interactions against a temporary React bundle of reviewed source.\n * File-origin; no Next / member auth / production data. Depends on Puppeteer-core and Chrome.\n * Generate fixture with listen07_fixture_builder.cjs; never silently claim Safari/native coverage.\n */\n'use strict';
+/** LISTEN-07: Execute real Chrome interactions against a temporary React bundle of reviewed source.
+ * File-origin; no Next / member auth / production data. Depends on Puppeteer-core and Chrome.
+ * Generate fixture with listen07_fixture_builder.cjs; never silently claim Safari/native coverage.
+ */
+'use strict';
 const pp=require('puppeteer-core');
 const fs=require('node:fs');
 const root=process.env.LISTEN_UI_FIXTURE_DIR;
