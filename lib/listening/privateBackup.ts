@@ -54,7 +54,8 @@ async function keyFor(password: string, salt: Uint8Array): Promise<CryptoKey> {
   const c = webCrypto();
   const imported = await c.subtle.importKey('raw', new TextEncoder().encode(password),
     'PBKDF2', false, ['deriveKey']);
-  return c.subtle.deriveKey({name:'PBKDF2', salt, iterations: ITERATIONS, hash: 'SHA-256'},
+  // A new ArrayBuffer-backed view satisfies modern DOM BufferSource typing.
+  return c.subtle.deriveKey({name:'PBKDF2', salt: new Uint8Array(salt), iterations: ITERATIONS, hash: 'SHA-256'},
     imported, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
 }
 /** Verifies Soullab's portable format before encrypting. Never retains password. */
@@ -98,7 +99,7 @@ export async function decryptListeningExport(wrapped: string, passphrase: string
     throw new Error('This is not a supported private Listening Room backup.');
   try {
     const key = await keyFor(passphrase, salt);
-    const unsealed = await webCrypto().subtle.decrypt({name:'AES-GCM',iv}, key, ciphertext);
+    const unsealed = await webCrypto().subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(iv)}, key, new Uint8Array(ciphertext));
     const decoded = new TextDecoder('utf-8', {fatal:true}).decode(unsealed);
     return restoreMemberShelf(decoded);
   } catch {
