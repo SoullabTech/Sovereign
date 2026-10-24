@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { validateLocalAudio } from '@/lib/listening/localAudio';
 import { usePersistentListening } from '@/components/listening/PersistentListeningProvider';
+import { isMaiaSpeechActive } from '@/lib/listening/maiaSpeechFocus';
 import styles from './listen.module.css';
 
 type LocalSelection = { url: string; name: string; format: string; bytes: number };
@@ -37,6 +38,11 @@ export default function LocalAudioDesk({ audioRef, onBegin }: Props) {
   };
   const clear = () => { release(); setSelection(null); setStatus('Local audio removed from this tab.'); };
   const start = () => {
+    if (isMaiaSpeechActive()) {
+      audioRef.current?.pause();
+      setStatus('MAIA is speaking. Stop or finish MAIA before playing music.');
+      return;
+    }
     onBegin();
     window.dispatchEvent(new Event('ws-stop-maia-reading'));
     setStatus('Playing your local file only; no upload or recording occurs.');
