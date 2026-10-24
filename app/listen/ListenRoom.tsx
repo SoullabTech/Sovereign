@@ -1,5 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { usePersistentListening } from '@/components/listening/PersistentListeningProvider';
 import { MAX_RESTORE_BYTES, parseCSV, parseM3U, recognizedPlaylistUrl, restoreMemberShelf, tidyText } from '@/lib/listening/portableCollections';
 import LocalAudioDesk from './LocalAudioDesk';
 import PrivateBackupDesk from './PrivateBackupDesk';
@@ -54,6 +56,8 @@ function fileExtension(name: string) { return name.toLowerCase().split('.').pop(
 function makeId() { return typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : String(Date.now()); }
 
 export default function ListenRoom() {
+  // Source-owner optional shared shell; standalone room remains usable.
+  const persistent = usePersistentListening();
   const [mood, setMood] = useState<Mood>('drift');
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(45);
@@ -66,6 +70,10 @@ export default function ListenRoom() {
   const sketch = useRef<SketchHandle | null>(null);
   const memberAudioRef = useRef<HTMLAudioElement | null>(null);
   const player = journeys[mood];
+  const isPlaying = persistent
+    ? persistent.snapshot.playback === 'playing' && persistent.snapshot.kind === 'sketch' && persistent.snapshot.mood === mood
+    : playing;
+  const shownStatus = persistent?.snapshot.kind === 'sketch' ? persistent.snapshot.message : status;
 
   const stop = useCallback(() => {
     if (sketch.current) { releaseSketch(sketch.current); sketch.current = null; }
@@ -75,8 +83,13 @@ export default function ListenRoom() {
   // A member-initiated journey stays active when they switch tabs to write or code.
   // Explicit Pause, changing journeys and unmount still stop it. Browsers may
   // independently suspend background audio, especially on mobile devices.
-  const selectMood=(next:Mood)=>{stop();setMood(next);setStatus(`Selected ${journeys[next].label}.`);};
+  const selectMood=(next:Mood)=>{if(persistent) persistent.pause(); else stop(); setMood(next);setStatus(`Selected ${journeys[next].label}.`);};
   const toggle=async()=>{
+    if (persistent) {
+      if (isPlaying) { persistent.pause(); return; }
+      await persistent.playSketch(mood, player.frequencies);
+      return;
+    }
     if (playing) { stop(); return; }
     try {
       // Keep the two audio surfaces mutually exclusive.
@@ -91,6 +104,7 @@ export default function ListenRoom() {
     } catch {stop();setStatus('Your browser could not start audio. Try again after enabling sound.');}
   };
   const changeVolume=(n:number)=>{
+    if(persistent) { persistent.setVolume(n); return; }
     setVolume(n);
     if(sketch.current){const {context,master}=sketch.current;master.gain.setTargetAtTime(Math.max(0.00001,(n/100)*0.027),context.currentTime,0.10);}
   };
@@ -136,7 +150,7 @@ export default function ListenRoom() {
     <aside className={styles.rail} aria-label="Listening Room navigation">
       <div className={styles.brand}><span className={styles.sunmark} aria-hidden="true">◒</span><div><span className={styles.wordmark}>SOULLAB</span><span className={styles.descriptor}>LISTENING ROOM</span></div></div>
       <div className={styles.navTitle}>Explore</div>
-      <nav className={styles.nav} aria-label="Soullab">{nav.map(item=><a key={item.href} href={item.href}>{item.title}<span aria-hidden="true">↗</span></a>)}</nav>
+      <nav className={styles.nav} aria-label="Soullab">{nav.map(item=><Link key={item.href} href={item.href}>{item.title}<span aria-hidden="true">↗</span></Link>)}</nav>
       <div className={styles.navTitle}>Listening journeys</div>
       <div className={styles.moodList}>{moodKeys.map(key=><button className={mood===key?styles.activeMood:styles.moodButton} type="button" aria-pressed={mood===key} key={key} onClick={()=>selectMood(key)}><span className={styles.moodDot} aria-hidden="true" />{journeys[key].label}</button>)}</div>
       <div className={styles.railFoot}>For the life you live.<br/>For the world we make.</div>
@@ -151,7 +165,7 @@ export default function ListenRoom() {
           <p className={styles.intro}>{player.description}</p>
           <div className={styles.keywords}><span>Ambient</span><span>Contemplative</span><span>Human-centered</span><span>Unhurried</span></div>
           <div className={styles.heroButtons}>
-            <button className={styles.play} type="button" onClick={()=>void toggle()} aria-pressed={playing}>{playing?'Ⅱ  Pause sound sketch':'▶  Listen to sound sketch'}</button>
+            <button className={styles.play} type="button" onClick={()=>void toggle()} aria-pressed={isPlaying}>{isPlaying?'Ⅱ  Pause sound sketch':'▶  Listen to sound sketch'}</button>
             <button className={styles.secondary} type="button" onClick={()=>setShowJournal(x=>!x)} aria-expanded={showJournal}>Personal reflection</button>
           </div>
           <p className={styles.quality}>LIVE SYNTHESIS · LOW-VOLUME STUDY · NOT A MASTERED OR LICENSED RECORDING</p>
@@ -176,7 +190,7 @@ export default function ListenRoom() {
         <LocalAudioDesk audioRef={memberAudioRef} onBegin={stop} />
         <section className={styles.article} aria-labelledby="rights-title"><span className={styles.smallcaps}>QUALITY & STEWARDSHIP</span><h2 id="rights-title">Sound deserves attention.</h2><p>Real Soullab recordings will have documented master and composition rights, truthful audio-source labels, and optional lossless playback where supported. Until those rights, private storage and recovery safeguards are approved, this review page offers synthesized studies, device-local files and external links only.</p></section>
       </div>
-      <div className={styles.bottomPlayer} role="region" aria-label="Listening controls"><div><span className={styles.playerTitle}>{player.title}</span><span className={styles.playerSub}>Original sound sketch · browser synthesis</span></div><button className={styles.roundControl} type="button" onClick={()=>void toggle()} aria-label={playing?'Pause original sound sketch':'Play original sound sketch'}>{playing?'Ⅱ':'▶'}</button><label htmlFor="listen-volume" className={styles.volumeLabel}>Volume <input id="listen-volume" type="range" min="0" max="100" value={volume} onChange={e=>changeVolume(Number(e.target.value))}/></label><span className={styles.status} role="status" aria-live="polite">{status}</span></div>
+      {!persistent && <div className={styles.bottomPlayer} role="region" aria-label="Listening controls"><div><span className={styles.playerTitle}>{player.title}</span><span className={styles.playerSub}>Original sound sketch · browser synthesis</span></div><button className={styles.roundControl} type="button" onClick={()=>void toggle()} aria-label={isPlaying?'Pause original sound sketch':'Play original sound sketch'}>{isPlaying?'Ⅱ':'▶'}</button><label htmlFor="listen-volume" className={styles.volumeLabel}>Volume <input id="listen-volume" type="range" min="0" max="100" value={volume} onChange={e=>changeVolume(Number(e.target.value))}/></label><span className={styles.status} role="status" aria-live="polite">{shownStatus}</span></div>}
     </div>
   </main>;
 }
