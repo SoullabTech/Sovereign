@@ -1,7 +1,7 @@
 const fs=require('fs'),assert=require('assert'),path=require('path'),ts=require('typescript');
 const root=path.resolve(__dirname,'../..');
 const read=(file)=>fs.readFileSync(path.join(root,file),'utf8');
-const files=['app/listen/page.tsx','app/listen/ListenRoom.tsx','lib/listening/rightsPolicy.ts','lib/listening/portableCollections.ts'];
+const files=['app/listen/page.tsx','app/listen/ListenRoom.tsx','app/listen/LocalAudioDesk.tsx','lib/listening/rightsPolicy.ts','lib/listening/portableCollections.ts','lib/listening/localAudio.ts'];
 let checks=0;
 function check(message,pred){assert(pred,message);console.log('PASS',message);checks++;}
 for(const f of files){const r=ts.transpileModule(read(f),{fileName:f,reportDiagnostics:true,compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.ESNext}});check(f+' parses',!(r.diagnostics||[]).some(d=>d.category===ts.DiagnosticCategory.Error));}
@@ -13,6 +13,7 @@ check('no provider API credentials',!room.includes('access_token')&&!room.includ
 check('never media-fetch imported URLs',!parser.includes('fetch(')&&!parser.includes('new Audio('));
 check('rights policy not imported in client',!room.includes('rightsPolicy'));
 check('signer/media URL not falsely claimed',!rights.includes('signedDeliveryURL'));
+check('offline shelf restore has size and format gate',parser.includes('MAX_RESTORE_BYTES')&&parser.includes('SOULLAB_EXPORT_FORMAT'));
+check('local file never uploaded by native component',!read('app/listen/LocalAudioDesk.tsx').includes('fetch(') && !read('app/listen/LocalAudioDesk.tsx').includes('localStorage'));
 check('private page not indexed',page.includes('index: false'));
 console.log('TOTAL',checks,'PASS');
-
