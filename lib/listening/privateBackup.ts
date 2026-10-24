@@ -2,8 +2,8 @@
  * No server, provider audio, member account, or third-party keys involved.
  * This is NOT a replacement for authenticated encrypted storage or recovery.
  * Design is held for independent cryptography/privacy review before release. */
-import { MAX_RESTORE_BYTES, restoreMemberShelf } from './portableCollections.ts';
-import type { MemberCollection } from './portableCollections.ts';
+import { MAX_RESTORE_BYTES, restoreMemberShelf } from './portableCollections';
+import type { MemberCollection } from './portableCollections';
 
 export const PRIVATE_BACKUP_FORMAT = 'SOULLAB_LISTEN_PRIVATE_BACKUP_V1';
 export const MAX_PRIVATE_BACKUP_BYTES = 8 * 1024 * 1024;
