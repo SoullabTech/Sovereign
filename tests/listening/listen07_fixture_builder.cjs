@@ -30,7 +30,13 @@ cp.execFileSync(process.env.FFMPEG_BIN||'ffmpeg',['-hide_banner','-loglevel','er
 (async()=>{
  await esbuild.build({entryPoints:[path.join(dir,'entry.jsx')],outfile:path.join(dir,'bundle.js'),bundle:true,format:'iife',
   platform:'browser',jsx:'automatic',target:'es2022',alias:{'@':repo},nodePaths:[nodePath],
-  plugins:[{name:'review-only-CSS-classnames',setup(build){
+  plugins:[{name:'review-only-Next-Link-shim',setup(build){
+    build.onResolve({filter:/^next\/link$/},()=>({path:'review-link',namespace:'listen-review-link'}));
+    build.onLoad({filter:/.*/,namespace:'listen-review-link'},()=>({
+      contents:"import React from 'react'; export default function Link({href,children,...rest}){return React.createElement('a',{href,...rest},children)};",
+      loader:'js'
+    }));
+  }},{name:'review-only-CSS-classnames',setup(build){
     build.onLoad({filter:/\.module\.css$/},()=>({contents:"export default new Proxy({}, {get: (_,prop) => String(prop)});",loader:'js'}));
   }}],logLevel:'silent'});
  console.log(JSON.stringify({status:'READY',fixture:dir,sourceHashes:hashes,flacBytes:fs.statSync(media).size,appBundleBytes:fs.statSync(path.join(dir,'bundle.js')).size},null,2));
