@@ -1,0 +1,53 @@
+name: R20 fictional PostgreSQL 16.13 and vault two-target witness
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/witness/r20_pg16_ci_standalone_20261022.py'
+      - 'tests/test_r20_pg16_ci_standalone_20261022.py'
+      - '.github/workflows/r20-pg16-two-target-fictional-20261022.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fictional-pg16:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure fictional witness refuses a missing container
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/witness/r20_pg16_ci_standalone_20261022.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_r20_pg16_ci_standalone_20261022.py -v
+          if python3 scripts/witness/r20_pg16_ci_standalone_20261022.py --fictional-only; then
+            echo 'FAIL: witness proceeded without its isolated PostgreSQL test container'
+            exit 1
+          fi
+          echo 'Missing-container refusal PASS'
+      - name: Run two PostgreSQL 16.13 replacements without a container network
+        run: |
+          set -euo pipefail
+          name="r20-pg16-fictional-$GITHUB_RUN_ID"
+          docker pull postgres:16.13-bookworm
+          docker run --rm -d --name "$name" --network none --cpus 2 --memory 768m \
+            --pids-limit 80 \
+            --tmpfs /var/lib/postgresql/data:rw,size=448m,mode=700 \
+            --tmpfs /tmp:rw,size=64m,mode=1777 \
+            -e POSTGRES_USER=postgres -e POSTGRES_HOST_AUTH_METHOD=trust \
+            postgres:16.13-bookworm >/dev/null
+          trap 'docker rm -f "$name" >/dev/null 2>&1 || true' EXIT
+          ready=0
+          for i in $(seq 1 75); do
+            if docker exec "$name" pg_isready -U postgres -d postgres >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" -eq 1
+          R20_PG_DOCKER_CONTAINER="$name" \
+            python3 scripts/witness/r20_pg16_ci_standalone_20261022.py --fictional-only
+          echo 'Two fictional PG16 databases, two vault stages; source and release stay HOLD'
