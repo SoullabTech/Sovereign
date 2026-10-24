@@ -104,7 +104,7 @@ export default function ListenRoom() {
     if (persistent) {
       if (isPlaying) { persistent.pause(); return; }
       const started = await persistent.playSketch(mood, player.frequencies);
-      if (!started) setStatus('MAIA is speaking. Stop or finish MAIA before playing music.');
+      if (!started) setStatus('Audio is currently busy in this Soullab tab or another tab, or audio coordination is unavailable. Try again after it stops.');
       return;
     }
     if (playing) { stop(); return; }
@@ -194,6 +194,7 @@ export default function ListenRoom() {
             <button className={styles.secondary} type="button" onClick={()=>setShowJournal(x=>!x)} aria-expanded={showJournal}>Personal reflection</button>
           </div>
           <p className={styles.quality}>LIVE SYNTHESIS · LOW-VOLUME STUDY · NOT A MASTERED OR LICENSED RECORDING</p>
+          {persistent && <p role="status" aria-live="polite">{status}</p>}
         </div>
         <div className={styles.orb} aria-hidden="true" />
       </section>
