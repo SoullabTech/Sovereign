@@ -2,6 +2,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePersistentListening } from '@/components/listening/PersistentListeningProvider';
+import { isMaiaSpeechActive } from '@/lib/listening/maiaSpeechFocus';
+import { SOULLAB_AUDIO_FOCUS_EVENT, audioFocusSource } from '@/lib/listening/audioFocus';
 import { MAX_RESTORE_BYTES, parseCSV, parseM3U, recognizedPlaylistUrl, restoreMemberShelf, tidyText } from '@/lib/listening/portableCollections';
 import LocalAudioDesk from './LocalAudioDesk';
 import PrivateBackupDesk from './PrivateBackupDesk';
@@ -79,6 +81,20 @@ export default function ListenRoom() {
     if (sketch.current) { releaseSketch(sketch.current); sketch.current = null; }
     setPlaying(false);
   }, []);
+  // Standalone fallback still obeys MAIA focus; the real stable-root provider
+  // handles this when present, so do not attach a duplicate listener.
+  useEffect(() => {
+    if (persistent) return;
+    const onFocus=(event: Event) => {
+      if(audioFocusSource(event) === 'maia-voice') {
+        stop();
+        memberAudioRef.current?.pause();
+        setStatus('MAIA is speaking. Music was paused.');
+      }
+    };
+    window.addEventListener(SOULLAB_AUDIO_FOCUS_EVENT, onFocus);
+    return () => window.removeEventListener(SOULLAB_AUDIO_FOCUS_EVENT, onFocus);
+  }, [persistent, stop]);
   useEffect(() => () => { if(sketch.current) releaseSketch(sketch.current); sketch.current=null; }, []);
   // A member-initiated journey stays active when they switch tabs to write or code.
   // Explicit Pause, changing journeys and unmount still stop it. Browsers may
@@ -87,10 +103,15 @@ export default function ListenRoom() {
   const toggle=async()=>{
     if (persistent) {
       if (isPlaying) { persistent.pause(); return; }
-      await persistent.playSketch(mood, player.frequencies);
+      const started = await persistent.playSketch(mood, player.frequencies);
+      if (!started) setStatus('MAIA is speaking. Stop or finish MAIA before playing music.');
       return;
     }
     if (playing) { stop(); return; }
+    if (isMaiaSpeechActive()) {
+      setStatus('MAIA is speaking. Stop or finish MAIA before playing music.');
+      return;
+    }
     try {
       // Keep the two audio surfaces mutually exclusive.
       memberAudioRef.current?.pause();
@@ -99,6 +120,10 @@ export default function ListenRoom() {
       const instance=createSketch(player.frequencies,volume/100);
       sketch.current=instance;
       await instance.context.resume();
+      if(isMaiaSpeechActive()) {
+        stop(); setStatus('MAIA is speaking. Stop or finish MAIA before playing music.');
+        return;
+      }
       setPlaying(true);
       setStatus('Playing a locally synthesized sound sketch. This is not commercial music or mastered FLAC.');
     } catch {stop();setStatus('Your browser could not start audio. Try again after enabling sound.');}
