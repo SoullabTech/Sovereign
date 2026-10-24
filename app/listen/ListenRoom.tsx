@@ -37,7 +37,7 @@ function createSketch(frequencies: number[], volume: number): SketchHandle {
   return { context, oscillators, master };
 }
 function releaseSketch(sketch: SketchHandle) {
-  // Stops on navigation, mood changes, loss of visibility and an explicit Pause.
+  // Stops on navigation/unmount, mood changes and explicit Pause.
   const { context, master, oscillators } = sketch;
   try { master.gain.cancelScheduledValues(context.currentTime); master.gain.setTargetAtTime(0.00001,context.currentTime,0.08); } catch {}
   for (const o of oscillators) { try { o.stop(context.currentTime + 0.35); } catch {} }
@@ -72,7 +72,9 @@ export default function ListenRoom() {
     setPlaying(false);
   }, []);
   useEffect(() => () => { if(sketch.current) releaseSketch(sketch.current); sketch.current=null; }, []);
-  useEffect(() => { const onVisibility=()=>{ if(document.hidden) stop(); }; document.addEventListener('visibilitychange',onVisibility); return ()=>document.removeEventListener('visibilitychange',onVisibility); },[stop]);
+  // A member-initiated journey stays active when they switch tabs to write or code.
+  // Explicit Pause, changing journeys and unmount still stop it. Browsers may
+  // independently suspend background audio, especially on mobile devices.
   const selectMood=(next:Mood)=>{stop();setMood(next);setStatus(`Selected ${journeys[next].label}.`);};
   const toggle=async()=>{
     if (playing) { stop(); return; }
