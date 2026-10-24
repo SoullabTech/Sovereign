@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { validateLocalAudio } from '@/lib/listening/localAudio';
+import { usePersistentListening } from '@/components/listening/PersistentListeningProvider';
 import styles from './listen.module.css';
 
 type LocalSelection = { url: string; name: string; format: string; bytes: number };
@@ -10,6 +11,7 @@ type Props = { audioRef: RefObject<HTMLAudioElement | null>; onBegin: () => void
 /** Only the member's File object is played. No upload, service worker cache,
  * metadata extraction, account sync, microphone or recording analysis. */
 export default function LocalAudioDesk({ audioRef, onBegin }: Props) {
+  const persistent = usePersistentListening();
   const [selection, setSelection] = useState<LocalSelection | null>(null);
   const [status, setStatus] = useState('No local audio selected.');
   const objectUrl = useRef<string | null>(null);
@@ -26,7 +28,7 @@ export default function LocalAudioDesk({ audioRef, onBegin }: Props) {
   const choose = (file: File | null) => {
     if (!file) return;
     const accepted = validateLocalAudio(file);
-    if (!accepted.allowed) { setStatus(accepted.reason); return; }
+    if (accepted.allowed === false) { setStatus(accepted.reason); return; }
     release();
     const url = URL.createObjectURL(file);
     objectUrl.current = url;
@@ -39,6 +41,28 @@ export default function LocalAudioDesk({ audioRef, onBegin }: Props) {
     window.dispatchEvent(new Event('ws-stop-maia-reading'));
     setStatus('Playing your local file only; no upload or recording occurs.');
   };
+  // Shared shell is the sole owner of the media File and audio element.
+  // The room supplies a picker and controls; returning from navigation never
+  // creates another player. Original standalone local player remains below.
+  if (persistent) return <section className={styles.panel} aria-labelledby="member-audio-title">
+    <span className={styles.smallcaps}>PRIVATE · DEVICE-LOCAL LISTENING</span>
+    <h2 id="member-audio-title">Play your own music</h2>
+    <p className={styles.muted}>Choose music on this device. The selection stays in browser memory as you move through Soullab. Nothing is uploaded or analyzed.</p>
+    <label className={styles.fileLabel} htmlFor="member-audio-file">Choose local audio
+      <input id="member-audio-file" type="file" accept=".flac,.wav,.mp3,.m4a,.aac,.ogg,.opus,audio/*"
+        onChange={e=>{ const file=e.currentTarget.files?.[0]; if(file){const result=persistent.selectLocalFile(file);setStatus(result.message);} e.currentTarget.value=''; }} />
+    </label>
+    {persistent.snapshot.kind === 'local-file' && <div className={styles.localAudioCard}>
+      <strong>{persistent.snapshot.title}</strong>
+      <p className={styles.muted}>{persistent.snapshot.fileFormat} source · actual output format depends on the browser, OS, and connected device</p>
+      <button type="button" className={styles.addButton}
+        onClick={()=>persistent.snapshot.playback === 'playing' ? persistent.pause() : void persistent.playLocalFile()}>
+        {persistent.snapshot.playback === 'playing' ? 'Pause local recording':'Play local recording'}
+      </button>
+      <button type="button" className={styles.danger} onClick={()=>persistent.removeLocalFile()}>Remove local recording</button>
+    </div>}
+    <p role="status" aria-live="polite" className={styles.muted}>{status}</p>
+  </section>;
   return <section className={styles.panel} aria-labelledby="member-audio-title">
     <span className={styles.smallcaps}>PRIVATE · DEVICE-LOCAL LISTENING</span>
     <div className={styles.sectionHead}><div><h2 id="member-audio-title">Play your own music</h2></div></div>
