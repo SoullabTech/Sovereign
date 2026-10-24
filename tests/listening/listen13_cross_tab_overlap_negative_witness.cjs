@@ -1,3 +1,8 @@
+/** LISTEN-13 EXPECTED FAILURE WITNESS. A zero process exit means cross-tab
+ * MAIA/music overlap was successfully REPRODUCED. It NEVER means release PASS.
+ * Uses two same-origin browser tabs with only fictional TTS/identity.
+ * Do not promote music/voice integration while this witness is UNSAFE.
+ */
 'use strict';
 const {chromium,webkit}=require('playwright-core');
 (async()=>{
