@@ -56,7 +56,7 @@ The browser-first candidate mounts one transport only for a server-verified memb
 - Journal;
 - Astrology.
 
-The strict application access matrix admits exactly `/listen` and exactly `/api/members/session` for authenticated members. It grants no `/listen/*` or `/api/members/session/*` wildcard. The page remains disabled by default behind the existing review flag; the current-session receipt is the only identity seam consumed by this boundary.
+The strict application access matrix admits exactly `/listen`, `/api/members/session`, and `/api/members/signout` for authenticated members. It grants no `/listen/*` or member-session wildcard. The page remains disabled by default behind the existing review flag; the current-session receipt is the only identity seam consumed by this boundary, and the exact sign-out route must revoke that session rather than merely hide the player.
 
 Public, sign-in, account, administrative, practitioner/live-session, Cabin, and unapproved routes receive no player and no private listening state. Browser strings, URLs, local storage, feature labels, and MAIA visibility are not identity evidence.
 

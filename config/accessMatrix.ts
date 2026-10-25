@@ -120,6 +120,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // inherit admission by accident.
   { exact: '/listen', minTier: 'free', notes: 'Sound Field review room — authenticated browser members only; feature-disabled by default; no /listen/* wildcard' },
   { exact: '/api/members/session', minTier: 'free', notes: 'Current verified member/session receipt used by the Sound Field root boundary and existing session consumers; exact route only' },
+  { exact: '/api/members/signout', minTier: 'free', notes: 'Authenticated session revocation and cookie clearing; exact route only so sign-out cannot silently degrade under strict access mode' },
 
   { exact: '/now-what/welcome', public: true, notes: 'What Now? public landing — additive; /now-what room-as-entry redirect unchanged' },
   // Now What? (Larry Closs program) — room as entry (2026-07-08). /now-what
