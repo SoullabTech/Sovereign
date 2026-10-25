@@ -112,6 +112,15 @@ export const ACCESS_RULES: AccessRule[] = [
   // the precise failure the explicit-mapping doctrine above exists to prevent.
   { exact: '/writers-studio', minTier: 'free', notes: "Writer's Studio Home (Layer 2) — same member-facing policy as /press/studio, whose address it inherited; unauthenticated visitors are redirected to sign-in before the door" },
   { prefix: '/writers-studio/', minTier: 'free', notes: "Writer's Studio member corridor — authenticated members of any tier before every Studio subroute; individual proving/lab surfaces may impose a stricter server-side gate after this outer boundary" },
+
+  // LISTEN-45 — exact authenticated Sound Field door and exact current-session
+  // receipt. The page remains disabled-by-default behind
+  // SOULLAB_LISTEN_REVIEW_ENABLED and carries its own server session check.
+  // Exact-only is deliberate: no nested/private listening or member APIs
+  // inherit admission by accident.
+  { exact: '/listen', minTier: 'free', notes: 'Sound Field review room — authenticated browser members only; feature-disabled by default; no /listen/* wildcard' },
+  { exact: '/api/members/session', minTier: 'free', notes: 'Current verified member/session receipt used by the Sound Field root boundary and existing session consumers; exact route only' },
+
   { exact: '/now-what/welcome', public: true, notes: 'What Now? public landing — additive; /now-what room-as-entry redirect unchanged' },
   // Now What? (Larry Closs program) — room as entry (2026-07-08). /now-what
   // redirects at the edge (next.config redirects(), which run BEFORE middleware)
