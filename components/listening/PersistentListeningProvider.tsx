@@ -5,6 +5,7 @@ import {
 } from 'react';
 import type { ReactNode, RefObject } from 'react';
 import { validateLocalAudio } from '@/lib/listening/localAudio';
+import { listeningTime } from '@/lib/listening/founderListeningJourney';
 import { isMaiaSpeechActive } from '@/lib/listening/maiaSpeechFocus';
 import {
   acquireAudioOutput, AUDIO_OUTPUT_TAB_NONCE, SOULLAB_AUDIO_PREFLIGHT_VERSION,
@@ -37,6 +38,8 @@ export type ListeningSnapshot = {
   mood: ListeningMood | null;
   title: string;
   fileFormat: string | null;
+  elapsedSeconds: number;
+  durationSeconds: number | null;
   message: string;
 };
 
@@ -55,13 +58,15 @@ export type ListeningTransport = {
   playSketch: (mood: ListeningMood, frequencies: number[]) => Promise<boolean>;
   selectLocalFile: (file: File) => { accepted: boolean; message: string };
   playLocalFile: () => Promise<boolean>;
+  seekTo: (seconds: number) => boolean;
   pause: () => void;
   removeLocalFile: () => void;
 };
 
 const defaultSnapshot: ListeningSnapshot = {
   kind: 'none', playback: 'idle', mood: null, title: '',
-  fileFormat: null, message: 'Choose an original sound study or a local file.',
+  fileFormat: null, elapsedSeconds: 0, durationSeconds: null,
+  message: 'Choose an original sound study or a local file.',
 };
 const Context = createContext<ListeningTransport | null>(null);
 export function usePersistentListening(): ListeningTransport | null {
@@ -286,7 +291,7 @@ export function PersistentListeningProvider({
           focus: 'Between the Tides', create: 'Velvet Current',
           drift: 'The Blue Hour', rest: 'Moonwater',
         }[mood],
-        fileFormat: null,
+        fileFormat: null, elapsedSeconds: 0, durationSeconds: null,
         message: 'Original, locally synthesized sound study · not a commercial recording.',
       });
       return true;
@@ -312,7 +317,7 @@ export function PersistentListeningProvider({
     setMediaURL(blobURL.current);
     setSnapshot({
       kind: 'local-file', playback: 'paused', mood: null,
-      title: result.name, fileFormat: result.label,
+      title: result.name, fileFormat: result.label, elapsedSeconds: 0, durationSeconds: null,
       message: 'Your file stays on this device. Browser output fidelity varies.',
     });
     return { accepted: true, message: 'File selected locally; use the persistent player.' };
@@ -354,6 +359,46 @@ export function PersistentListeningProvider({
     }
   }, [refuseDuringMaiaSpeech, pause, releaseOutput]);
 
+  const seekTo = useCallback((seconds: number): boolean => {
+    const audio=media.current;
+    if (kind.current !== 'local-file' || !selected.current || !audio ||
+      !Number.isFinite(seconds) || !Number.isFinite(audio.duration) ||
+      audio.duration <= 0) return false;
+    // Seeking changes position only, never requests focus or starts playback.
+    const position=Math.min(Math.max(seconds,0),audio.duration);
+    try {
+      audio.currentTime=position;
+      setSnapshot(old => old.kind === 'local-file'
+        ? { ...old, elapsedSeconds: position, durationSeconds: audio.duration } : old);
+      return true;
+    } catch { return false; }
+  }, []);
+
+  const updateLocalDuration = useCallback(() => {
+    const audio=media.current;
+    if (kind.current !== 'local-file' || !selected.current || !audio) return;
+    const duration=Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : null;
+    setSnapshot(old => old.kind === 'local-file'
+      ? { ...old, durationSeconds: duration } : old);
+  }, []);
+
+  const updateLocalTime = useCallback(() => {
+    const audio=media.current;
+    if (kind.current !== 'local-file' || !selected.current || !audio) return;
+    const elapsed=Number.isFinite(audio.currentTime) && audio.currentTime>=0 ? audio.currentTime : 0;
+    setSnapshot(old => old.kind === 'local-file' && Math.abs(old.elapsedSeconds-elapsed)>=0.12
+      ? { ...old, elapsedSeconds: elapsed } : old);
+  }, []);
+
+  const onLocalEnded = useCallback(() => {
+    releaseOutput();
+    setSnapshot(old => old.kind === 'local-file' ? {
+      ...old, playback: 'paused',
+      elapsedSeconds: old.durationSeconds ?? old.elapsedSeconds,
+      message: 'Your recording has finished. Play again only when you choose.',
+    } : old);
+  }, [releaseOutput]);
+
   const removeLocalFile = useCallback(() => {
     if (kind.current !== 'local-file') return;
     stopAll();
@@ -379,7 +424,7 @@ export function PersistentListeningProvider({
 
   const transport: ListeningTransport = {
     snapshot, volume, setVolume, playSketch, selectLocalFile, playLocalFile,
-    pause, removeLocalFile,
+    seekTo, pause, removeLocalFile,
   };
   const displayed = snapshot.kind !== 'none' || snapshot.message.startsWith('MAIA is speaking.');
   return <Context.Provider value={transport}>
@@ -414,6 +459,19 @@ export function PersistentListeningProvider({
         onClick={()=>snapshot.playback === 'playing' ? pause() : void playLocalFile()}>
         {snapshot.playback === 'playing' ? 'Pause' : 'Play'}
       </button>}
+      {snapshot.kind === 'local-file' && snapshot.durationSeconds !== null && <div
+        data-listen16-progress="true"
+        style={{display:'grid',gap:3,minWidth:160,width:'min(250px,100%)',fontSize:11}}>
+        <label htmlFor="listen16-audio-progress">Recording position</label>
+        <input id="listen16-audio-progress" type="range"
+          aria-label="Seek within the selected local recording"
+          min={0} max={Math.max(1,Math.floor(snapshot.durationSeconds))}
+          step={1} value={Math.min(snapshot.elapsedSeconds,snapshot.durationSeconds)}
+          onChange={event=>{seekTo(Number(event.target.value));}}/>
+        <span data-listen16-time="true" style={{fontVariantNumeric:'tabular-nums'}}>
+          {listeningTime(snapshot.elapsedSeconds)} / {listeningTime(Math.round(snapshot.durationSeconds))}
+        </span>
+      </div>}
       <label style={{fontSize:12}}>Volume
         <input aria-label="Persistent music volume" type="range" min="0" max="100"
           value={volume} onChange={e=>setVolume(Number(e.target.value))}/>
@@ -426,7 +484,9 @@ export function PersistentListeningProvider({
         style={{display:'none'}}
         src={mediaURL || undefined} preload="metadata"
         onPlay={onLocalPlay} onPause={onLocalPause}
-        onEnded={releaseOutput}
+        onLoadedMetadata={updateLocalDuration} onDurationChange={updateLocalDuration}
+        onTimeUpdate={updateLocalTime} onSeeked={updateLocalTime}
+        onEnded={onLocalEnded}
         onError={()=>{releaseOutput();snapshot.kind==='local-file' && setSnapshot(old=>({
           ...old, playback:'error',message:'Local audio cannot be decoded.',
         }));}}/>
