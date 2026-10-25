@@ -5,6 +5,12 @@ import {
 } from 'react';
 import type { ReactNode, RefObject } from 'react';
 import { validateLocalAudio } from '@/lib/listening/localAudio';
+import {
+  ORIGINAL_RECEPTIVE_CONTROLS, validatedReceptiveControls,
+  validateReceptiveRecipe, exportReceptiveShelf,
+  RECEPTIVE_SHELF_MAX_FIELDS,
+} from '@/lib/listening/receptiveField';
+import type { ReceptiveControls, ReceptiveFieldRecipe } from '@/lib/listening/receptiveField';
 import { isMaiaSpeechActive } from '@/lib/listening/maiaSpeechFocus';
 import {
   acquireAudioOutput, AUDIO_OUTPUT_TAB_NONCE, SOULLAB_AUDIO_PREFLIGHT_VERSION,
@@ -44,6 +50,10 @@ type Sketch = {
   context: AudioContext;
   oscillators: OscillatorNode[];
   master: GainNode;
+  voices: GainNode[];
+  filter: BiquadFilterNode;
+  movement: OscillatorNode;
+  movementDepth: GainNode;
   mood: ListeningMood;
   frequencies: number[];
 };
@@ -52,6 +62,12 @@ export type ListeningTransport = {
   snapshot: ListeningSnapshot;
   volume: number;
   setVolume: (volume: number) => void;
+  shape: ReceptiveControls;
+  setShape: (shape: ReceptiveControls) => void;
+  fields: ReceptiveFieldRecipe[];
+  keepField: (recipe: ReceptiveFieldRecipe) => boolean;
+  dropField: (id: string) => void;
+  replaceFields: (recipes: ReceptiveFieldRecipe[]) => void;
   playSketch: (mood: ListeningMood, frequencies: number[]) => Promise<boolean>;
   selectLocalFile: (file: File) => { accepted: boolean; message: string };
   playLocalFile: () => Promise<boolean>;
@@ -71,14 +87,32 @@ export function usePersistentListening(): ListeningTransport | null {
 function endSketch(sketch: Sketch | null): void {
   if (!sketch) return;
   try { sketch.master.gain.setValueAtTime(0, sketch.context.currentTime); } catch {}
-  for (const osc of sketch.oscillators) {
+  for (const osc of [...sketch.oscillators,sketch.movement]) {
     try { osc.stop(); } catch {}
   }
   void sketch.context.close().catch(() => undefined);
 }
 
+/** Smooth controls apply ONLY to Soullab's low-volume synthetic sound sketch.
+ * They never process the member's local File or a commercial/provider master.
+ * All 50/50/50 restores the original review-study oscillator/filter mix.
+ */
+function applyReceptiveShape(sketch: Sketch, shape: ReceptiveControls) {
+  const t=sketch.context.currentTime;
+  const gently=(parameter:AudioParam,value:number)=>parameter.setTargetAtTime(value,t,0.13);
+  gently(sketch.voices[0].gain,0.24*(0.5+shape.pulse/100));
+  gently(sketch.voices[1].gain,0.14*(0.5+shape.density/100));
+  gently(sketch.voices[2].gain,0.09*(0.5+shape.space/100));
+  gently(sketch.filter.frequency,660+(shape.space-50)*5);
+  // Only AFTER the artist-sketch neutral 50 does a gentle periodic pulse enter.
+  // It stays comfortably below the oscillator's always-positive baseline gain.
+  gently(sketch.movementDepth.gain,Math.max(0,shape.pulse-50)/50*0.032);
+  gently(sketch.movement.frequency,0.55+shape.pulse/100*0.55);
+}
+
 function newSketch(
   mood: ListeningMood, frequencies: number[], level: number,
+  shape: ReceptiveControls,
 ): Sketch {
   const AudioCtor: typeof AudioContext =
     window.AudioContext ||
@@ -94,6 +128,7 @@ function newSketch(
   filter.type = 'lowpass';
   filter.frequency.value = 660;
   filter.connect(master); master.connect(context.destination);
+  const voices:GainNode[]=[];
   const oscillators = frequencies.map((frequency, index) => {
     const osc = context.createOscillator();
     const gain = context.createGain();
@@ -102,10 +137,21 @@ function newSketch(
     osc.detune.value = index === 1 ? 2.4 : -1.1;
     gain.gain.value = index === 0 ? 0.24 : index === 1 ? 0.14 : 0.09;
     osc.connect(gain); gain.connect(filter);
+    voices.push(gain);
     osc.start();
     return osc;
   });
-  return { context, oscillators, master, mood, frequencies };
+  const movement=context.createOscillator();
+  const movementDepth=context.createGain();
+  movement.type='sine';
+  movement.frequency.value=0.8;
+  movementDepth.gain.value=0;
+  movement.connect(movementDepth);
+  movementDepth.connect(voices[0].gain); // modulation, NOT extra direct audio output
+  movement.start();
+  const sketch={context,oscillators,master,voices,filter,movement,movementDepth,mood,frequencies};
+  applyReceptiveShape(sketch,shape);
+  return sketch;
 }
 
 export function PersistentListeningProvider({
@@ -114,6 +160,10 @@ export function PersistentListeningProvider({
 }: { children: ReactNode; reviewMemberKey: string }) {
   const [snapshot, setSnapshot] = useState(defaultSnapshot);
   const [volume, saveVolume] = useState(45);
+  const [shape, saveShape] = useState<ReceptiveControls>({...ORIGINAL_RECEPTIVE_CONTROLS});
+  const shapeRef = useRef<ReceptiveControls>({...ORIGINAL_RECEPTIVE_CONTROLS});
+  const [fields,saveFields] = useState<ReceptiveFieldRecipe[]>([]);
+  const fieldsRef = useRef<ReceptiveFieldRecipe[]>([]);
   const [mediaURL, setMediaURL] = useState<string | null>(null);
 
   const kind = useRef<Kind>('none');
@@ -130,6 +180,32 @@ export function PersistentListeningProvider({
   const releaseOutput = useCallback(() => {
     outputLease.current?.release();
     outputLease.current = null;
+  }, []);
+
+  const clearPrivateFields = useCallback(() => {
+    fieldsRef.current=[];
+    saveFields([]);
+  }, []);
+  const keepField = useCallback((recipe:ReceptiveFieldRecipe):boolean => {
+    const checked=validateReceptiveRecipe(recipe);
+    const previous=fieldsRef.current;
+    if(previous.length>=RECEPTIVE_SHELF_MAX_FIELDS ||
+       previous.some(v=>v.id===checked.id)) return false;
+    const next=[checked,...previous];
+    fieldsRef.current=next;
+    saveFields(next);
+    return true;
+  }, []);
+  const dropField = useCallback((id:string) => {
+    const next=fieldsRef.current.filter(v=>v.id!==id);
+    fieldsRef.current=next;
+    saveFields(next);
+  }, []);
+  const replaceFields = useCallback((entries:ReceptiveFieldRecipe[]) => {
+    const serialized=exportReceptiveShelf(entries);
+    const restored=JSON.parse(serialized).fields as ReceptiveFieldRecipe[];
+    fieldsRef.current=restored;
+    saveFields(restored);
   }, []);
 
   const pause = useCallback(() => {
@@ -157,6 +233,8 @@ export function PersistentListeningProvider({
     selected.current = null;
     kind.current = 'none';
     setMediaURL(null);
+    shapeRef.current={...ORIGINAL_RECEPTIVE_CONTROLS};
+    saveShape(shapeRef.current);
     setSnapshot(defaultSnapshot);
   }, [releaseOutput]);
 
@@ -195,7 +273,7 @@ export function PersistentListeningProvider({
       const source = audioFocusSource(event);
       if (source && source !== 'listening-room') pause();
     };
-    const onSessionEnd = () => stopAll();
+    const onSessionEnd = () => {stopAll();clearPrivateFields();};
     window.addEventListener(SOULLAB_AUDIO_FOCUS_EVENT, onFocus);
     window.addEventListener(SOULLAB_SESSION_END_EVENT, onSessionEnd);
     return () => {
@@ -210,15 +288,16 @@ export function PersistentListeningProvider({
       if (sketch.current) { endSketch(sketch.current); sketch.current = null; }
       if (blobURL.current) { URL.revokeObjectURL(blobURL.current); blobURL.current = null; }
     };
-  }, [pause, stopAll, releaseOutput]);
+  }, [pause, stopAll, releaseOutput, clearPrivateFields]);
 
   useEffect(() => {
     if (lastMember.current !== reviewMemberKey) {
       // An authenticated member switch must never inherit the prior File.
       lastMember.current = reviewMemberKey;
       stopAll();
+      clearPrivateFields();
     }
-  }, [reviewMemberKey, stopAll]);
+  }, [reviewMemberKey, stopAll, clearPrivateFields]);
 
   const setVolume = useCallback((value: number) => {
     const next = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
@@ -240,6 +319,15 @@ export function PersistentListeningProvider({
       message: 'MAIA is speaking. Stop or finish MAIA before playing music.',
     }));
     return true;
+  }, []);
+
+  const setShape = useCallback((input: ReceptiveControls) => {
+    const next=validatedReceptiveControls(input);
+    shapeRef.current=next;
+    saveShape(next);
+    if(sketch.current && kind.current==='sketch')
+      applyReceptiveShape(sketch.current,next);
+    // Changes do NOT start an AudioContext or request audio focus.
   }, []);
 
   const playSketch = useCallback(async (mood: ListeningMood, frequencies: number[]): Promise<boolean> => {
@@ -268,8 +356,10 @@ export function PersistentListeningProvider({
     if (!active || active.mood !== mood ||
       JSON.stringify(active.frequencies) !== JSON.stringify(frequencies)) {
       if (active) endSketch(active);
-      active = newSketch(mood, frequencies, volumeRef.current / 100);
+      active = newSketch(mood, frequencies, volumeRef.current / 100,shapeRef.current);
       sketch.current = active;
+    } else {
+      applyReceptiveShape(active,shapeRef.current);
     }
     try {
       await active.context.resume();
@@ -378,7 +468,9 @@ export function PersistentListeningProvider({
   }, [releaseOutput]);
 
   const transport: ListeningTransport = {
-    snapshot, volume, setVolume, playSketch, selectLocalFile, playLocalFile,
+    snapshot, volume, setVolume, shape, setShape,
+    fields, keepField, dropField, replaceFields,
+    playSketch, selectLocalFile, playLocalFile,
     pause, removeLocalFile,
   };
   const displayed = snapshot.kind !== 'none' || snapshot.message.startsWith('MAIA is speaking.');
