@@ -6,6 +6,7 @@ import { isMaiaSpeechActive } from '@/lib/listening/maiaSpeechFocus';
 import { SOULLAB_AUDIO_FOCUS_EVENT, audioFocusSource } from '@/lib/listening/audioFocus';
 import { MAX_RESTORE_BYTES, parseCSV, parseM3U, recognizedPlaylistUrl, restoreMemberShelf, tidyText } from '@/lib/listening/portableCollections';
 import LocalAudioDesk from './LocalAudioDesk';
+import ReceptiveFieldDesk from './ReceptiveFieldDesk';
 import PrivateBackupDesk from './PrivateBackupDesk';
 import type { MemberCollection, TrackReference } from '@/lib/listening/portableCollections';
 import styles from './listen.module.css';
@@ -202,6 +203,10 @@ export default function ListenRoom() {
         <section aria-labelledby="moods-title"><div className={styles.sectionHead}><div><span className={styles.smallcaps}>CHOOSE YOUR ATMOSPHERE</span><h2 id="moods-title">Where would you like to go?</h2></div></div>
           <div className={styles.tileGrid}>{moodKeys.map(key=><button type="button" key={key} onClick={()=>selectMood(key)} className={`${styles.tile} ${styles['tile'+key]} ${mood===key?styles.selectedTile:''}`} aria-pressed={mood===key}><span>{journeys[key].label}</span><small>{journeys[key].subtitle}</small></button>)}</div>
         </section>
+        <ReceptiveFieldDesk journey={mood} onSelectJourney={selectMood}
+          onPlay={next=>persistent
+            ? persistent.playSketch(next,journeys[next].frequencies)
+            : Promise.resolve(false)}/>
         {showJournal&&<section className={styles.panel} aria-labelledby="journal-title"><span className={styles.smallcaps}>PRIVATE · THIS TAB ONLY</span><h2 id="journal-title">What did you notice?</h2><label htmlFor="listen-note">A listening reflection, without MAIA interpretation</label><textarea id="listen-note" rows={3} value={note} onChange={e=>setNote(e.target.value.slice(0,4000))} placeholder="An image, a feeling, or nothing at all…"/><p className={styles.muted}>No server storage, microphone access, or AI analysis. Save an encrypted backup below to keep it privately.</p></section>}
         <section className={styles.panel} aria-labelledby="library-title"><div className={styles.sectionHead}><div><span className={styles.smallcaps}>YOUR MUSIC, YOUR WAY</span><h2 id="library-title">Bring your collections</h2></div><button className={styles.ghost} type="button" onClick={exportShelf}>Export plain JSON ↗</button></div>
           <p className={styles.muted}>Add a playlist link from Spotify, TIDAL, Apple Music, Qobuz or SoundCloud; or import a CSV/M3U list of titles. Soullab does not access streaming accounts or copy recordings.</p>
