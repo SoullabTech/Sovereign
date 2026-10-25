@@ -33,20 +33,30 @@ const check=async(name,fn)=>{const detail=await fn();const pass=!!detail;results
   const first=await page.evaluate(()=>({count:window.__listen41Contexts.length,id:window.__listen41Contexts[0]?.__listen41ID,state:window.__listen41Contexts[0]?.state}));
   await check('member-action-starts-actual-transport',()=>Promise.resolve(first.count===1&&first.state==='running'));
 
-  await page.evaluate(()=>window.__setFixturePath('/home'));
-  await page.locator('[data-pathname]').filter({hasText:'/home'}).waitFor();
-  await page.locator('[data-playback]').filter({hasText:'playing'}).waitFor();
-  const home=await page.evaluate(()=>({count:window.__listen41Contexts.length,id:window.__listen41Contexts[0]?.__listen41ID,state:window.__listen41Contexts[0]?.state}));
-  await check('eligible-navigation-preserves-one-playing-context',()=>Promise.resolve(home.count===1&&home.id===first.id&&home.state==='running'));
+  const approvedRoutes=['/home','/house','/maia','/writers-studio','/journal','/astrology'];
+  const routeStates=[];
+  for(const route of approvedRoutes){
+    await page.evaluate(next=>window.__setFixturePath(next),route);
+    await page.locator('[data-pathname]').filter({hasText:route}).waitFor();
+    await page.locator('[data-playback]').filter({hasText:'playing'}).waitFor();
+    const observed=await page.evaluate(()=>({count:window.__listen41Contexts.length,id:window.__listen41Contexts[0]?.__listen41ID,state:window.__listen41Contexts[0]?.state}));
+    routeStates.push({route,...observed});
+    await check(`route-${route}-preserves-one-playing-context`,()=>Promise.resolve(observed.count===1&&observed.id===first.id&&observed.state==='running'));
+  }
 
-  await page.evaluate(()=>window.__setFixturePath('/maia'));
-  await page.locator('[data-pathname]').filter({hasText:'/maia'}).waitFor();
-  await check('maia-route-retains-transport',()=>page.locator('[data-playback]').textContent().then(x=>x==='playing'));
+  await page.getByRole('button',{name:'Stop and clear persistent music'}).click();
+  await page.locator('[data-playback]').filter({hasText:'idle'}).waitFor();
+  await check('explicit-stop-clears-selection',()=>page.locator('[data-kind]').textContent().then(x=>x==='none'));
+  await page.waitForFunction(()=>window.__listen41Contexts.at(-1)?.state==='closed');
+  await check('explicit-stop-closes-audio-context',()=>page.evaluate(()=>window.__listen41Contexts.at(-1)?.state==='closed'));
+
+  await page.locator('[data-start]').click();
+  await page.locator('[data-playback]').filter({hasText:'playing'}).waitFor();
 
   await page.evaluate(()=>window.__setFixturePath('/signin'));
   await page.locator('[data-transport]').filter({hasText:'none'}).waitFor();
   await page.waitForTimeout(80);
-  const publicState=await page.evaluate(()=>window.__listen41Contexts[0]?.state);
+  const publicState=await page.evaluate(()=>window.__listen41Contexts.at(-1)?.state);
   await check('public-route-unmounts-and-closes-audio',()=>Promise.resolve(publicState==='closed'));
 
   await page.evaluate(()=>window.__setFixturePath('/listen'));
@@ -77,7 +87,7 @@ const check=async(name,fn)=>{const detail=await fn();const pass=!!detail;results
 
   await check('no-external-network',()=>Promise.resolve(outside.length===0));
   await check('no-page-errors',()=>Promise.resolve(errors.length===0));
-  console.log('LISTEN41_CHROMIUM',JSON.stringify({status:'PASS',passed:results.length,results,first,home,publicState,errors,outside},null,2));
+  console.log('LISTEN41_CHROMIUM',JSON.stringify({status:'PASS',passed:results.length,results,first,routeStates,publicState,errors,outside},null,2));
  }catch(error){
   console.error('LISTEN41_CHROMIUM_ERROR',error.stack);
   console.log('LISTEN41_CHROMIUM',JSON.stringify({status:'FAIL',passed:results.filter(x=>x.pass).length,results,errors,outside},null,2));
