@@ -326,6 +326,11 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/commons/join', public: true, notes: 'Join circle via invite — DECLARED public (the address stays reachable); ENFORCED closed by app/commons/join/layout.tsx, which solicits no token and no consent while Circles are closed for v1. Submit target /api/circles/join is gated by requireCircleAccess().' },
 
   // Elemental Alchemy — depth
+  // LISTEN-47: Reader owns narration and member reading moments, so its page and
+  // exact APIs are named independently before the broader book-companion prefix.
+  { exact: '/maia/community/elemental-alchemy/reader', minTier: 'free', notes: 'Elemental Alchemy Reader — authenticated browser member; narration uses shared audio-output authority' },
+  { exact: '/api/reader/moments', minTier: 'free', notes: 'Reader moments — verified session-owned reads and writes; exact route only' },
+  { exact: '/api/reader/ask', minTier: 'free', notes: 'Reader Ask MAIA — verified session-owned question and saved insight; exact route only' },
   { prefix: '/maia/community/elemental-alchemy', minTier: 'free', notes: 'Elemental alchemy — depth, open to all' },
 
   // Oracle tools — depth, capacity-governed by LimitsEnforcer

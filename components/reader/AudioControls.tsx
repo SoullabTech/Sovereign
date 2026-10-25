@@ -1,13 +1,16 @@
 'use client'
 
-import { Play, Pause, SkipBack, SkipForward, Volume2 } from 'lucide-react'
+import { Play, Pause, SkipBack, SkipForward, Square } from 'lucide-react'
 
 interface AudioControlsProps {
   isPlaying: boolean
   currentTime: number
   duration: number
   playbackRate: number
+  disabled?: boolean
+  statusMessage?: string
   onPlayPause: () => void
+  onStop: () => void
   onSeek: (time: number) => void
   onRateChange: (rate: number) => void
   onSkipBack: () => void
@@ -19,7 +22,10 @@ export function AudioControls({
   currentTime,
   duration,
   playbackRate,
+  disabled = false,
+  statusMessage = '',
   onPlayPause,
+  onStop,
   onSeek,
   onRateChange,
   onSkipBack,
@@ -36,9 +42,10 @@ export function AudioControls({
 
   return (
     <div className="flex flex-col gap-2 p-4 bg-stone-900/80 backdrop-blur rounded-xl">
-      {/* Progress bar */}
-      <div className="relative h-2 bg-stone-700 rounded-full cursor-pointer group"
+      <div
+        className="relative h-2 bg-stone-700 rounded-full cursor-pointer group"
         onClick={(e) => {
+          if (disabled) return
           const rect = e.currentTarget.getBoundingClientRect()
           const percent = (e.clientX - rect.left) / rect.width
           onSeek(percent * duration)
@@ -54,25 +61,29 @@ export function AudioControls({
         />
       </div>
 
-      {/* Time display */}
       <div className="flex justify-between text-xs text-stone-400">
         <span>{formatTime(currentTime)}</span>
         <span>{formatTime(duration)}</span>
       </div>
 
-      {/* Controls */}
       <div className="flex items-center justify-center gap-4">
         <button
+          type="button"
           onClick={onSkipBack}
-          className="p-2 hover:bg-stone-800 rounded-full transition-colors"
+          disabled={disabled}
+          className="p-2 hover:bg-stone-800 rounded-full transition-colors disabled:opacity-40"
           title="Back 10s"
+          aria-label="Back 10 seconds"
         >
           <SkipBack className="w-5 h-5 text-stone-300" />
         </button>
 
         <button
+          type="button"
           onClick={onPlayPause}
-          className="p-4 bg-amber-600 hover:bg-amber-500 rounded-full transition-colors"
+          disabled={disabled}
+          className="p-4 bg-amber-600 hover:bg-amber-500 rounded-full transition-colors disabled:opacity-40"
+          aria-label={isPlaying ? 'Pause narration' : 'Play narration'}
         >
           {isPlaying ? (
             <Pause className="w-6 h-6 text-white" />
@@ -82,18 +93,33 @@ export function AudioControls({
         </button>
 
         <button
+          type="button"
+          onClick={onStop}
+          disabled={disabled}
+          className="p-2 hover:bg-stone-800 rounded-full transition-colors disabled:opacity-40"
+          title="Stop"
+          aria-label="Stop narration"
+        >
+          <Square className="w-5 h-5 text-stone-300" />
+        </button>
+
+        <button
+          type="button"
           onClick={onSkipForward}
-          className="p-2 hover:bg-stone-800 rounded-full transition-colors"
+          disabled={disabled}
+          className="p-2 hover:bg-stone-800 rounded-full transition-colors disabled:opacity-40"
           title="Forward 30s"
+          aria-label="Forward 30 seconds"
         >
           <SkipForward className="w-5 h-5 text-stone-300" />
         </button>
 
-        {/* Playback speed */}
         <select
           value={playbackRate}
           onChange={(e) => onRateChange(parseFloat(e.target.value))}
-          className="ml-4 px-2 py-1 bg-stone-800 text-stone-300 text-sm rounded border border-stone-700"
+          disabled={disabled}
+          aria-label="Narration speed"
+          className="ml-4 px-2 py-1 bg-stone-800 text-stone-300 text-sm rounded border border-stone-700 disabled:opacity-40"
         >
           <option value={0.5}>0.5x</option>
           <option value={0.75}>0.75x</option>
@@ -103,6 +129,10 @@ export function AudioControls({
           <option value={2}>2x</option>
         </select>
       </div>
+
+      <p role="status" className="text-center text-xs text-stone-400" data-reader-status="true">
+        {statusMessage}
+      </p>
     </div>
   )
 }

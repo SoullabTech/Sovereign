@@ -5,8 +5,10 @@ import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { SOULLAB_SESSION_END_EVENT } from '@/lib/listening/audioFocus';
+import { VerifiedAudioMemberProvider } from './VerifiedAudioMemberContext';
 import {
   isOnlineListeningRoute,
+  isReaderNarrationRoute,
   verifiedListeningMemberKey,
 } from '@/lib/listening/listeningSessionBoundary';
 import { PersistentListeningProvider } from './PersistentListeningProvider';
@@ -37,8 +39,14 @@ export function AuthenticatedListeningBoundary({
   runtimeMode,
 }: AuthenticatedListeningBoundaryProps) {
   const pathname = usePathname();
-  const routeEligible =
-    enabled && runtimeMode === 'online' && isOnlineListeningRoute(pathname);
+  const onlineRoute =
+    runtimeMode === 'online' && isOnlineListeningRoute(pathname);
+  const readerRoute =
+    runtimeMode === 'online' && isReaderNarrationRoute(pathname);
+  // Reader needs a verified receipt even when persistent Listening review is
+  // disabled. Music transport still mounts only behind the review flag.
+  const receiptEligible = readerRoute || (enabled && onlineRoute);
+  const transportEligible = enabled && onlineRoute;
   const [memberKey, setMemberKey] = useState<string | null>(null);
   const requestGeneration = useRef(0);
   const requestController = useRef<AbortController | null>(null);
@@ -52,7 +60,7 @@ export function AuthenticatedListeningBoundary({
   }, []);
 
   const verifyCurrentSession = useCallback(async () => {
-    if (!routeEligible || blockedBySessionEnd.current) {
+    if (!receiptEligible || blockedBySessionEnd.current) {
       clearMember();
       return;
     }
@@ -89,10 +97,10 @@ export function AuthenticatedListeningBoundary({
       if (generation === requestGeneration.current)
         requestController.current = null;
     }
-  }, [clearMember, routeEligible]);
+  }, [clearMember, receiptEligible]);
 
   useEffect(() => {
-    if (!routeEligible) {
+    if (!receiptEligible) {
       blockedBySessionEnd.current = false;
       requestGeneration.current += 1;
       requestController.current?.abort();
@@ -115,10 +123,10 @@ export function AuthenticatedListeningBoundary({
       requestController.current?.abort();
       requestController.current = null;
     };
-  }, [pathname, routeEligible, verifyCurrentSession]);
+  }, [pathname, receiptEligible, verifyCurrentSession]);
 
   useEffect(() => {
-    if (!routeEligible) return;
+    if (!receiptEligible) return;
 
     const revalidate = () => void verifyCurrentSession();
     const onVisibility = () => {
@@ -142,16 +150,21 @@ export function AuthenticatedListeningBoundary({
       window.removeEventListener(SOULLAB_SESSION_END_EVENT, onSessionEnd);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [routeEligible, clearMember, verifyCurrentSession]);
+  }, [receiptEligible, clearMember, verifyCurrentSession]);
 
-  const activeMemberKey = routeEligible ? memberKey : null;
-  if (!activeMemberKey) return <>{children}</>;
-  return (
+  const activeMemberKey = receiptEligible ? memberKey : null;
+  const content = transportEligible && activeMemberKey ? (
     <PersistentListeningProvider
       key={activeMemberKey}
       reviewMemberKey={activeMemberKey}
     >
       {children}
     </PersistentListeningProvider>
+  ) : children;
+
+  return (
+    <VerifiedAudioMemberProvider memberKey={activeMemberKey}>
+      {content}
+    </VerifiedAudioMemberProvider>
   );
 }

@@ -261,6 +261,7 @@ export function PersistentListeningProvider({
         if (message.version === SOULLAB_AUDIO_PREFLIGHT_VERSION) {
           if (message.tab === AUDIO_OUTPUT_TAB_NONCE) return;
           if (message.type === 'maia-speech-preflight' ||
+              message.type === 'reader-narration-preflight' ||
               message.type === 'music-preflight') pause();
           return;
         }

@@ -23,6 +23,7 @@ const CHAPTERS: ChapterOption[] = [
 ]
 
 interface ManifestSegment {
+  id?: string
   text: string
   startMs: number
   endMs: number
@@ -53,7 +54,7 @@ async function loadChapter(chapterSlug: string): Promise<Chapter | null> {
       audioUrl: `/audiobook/elemental-alchemy/${chapterSlug}/${manifest.audioFile}`,
       durationMs: manifest.durationMs,
       segments: manifest.segments.map((seg, idx): AudioSegment => ({
-        id: `${manifest.id}-${idx}`,
+        id: seg.id || `${manifest.id}-${idx}`,
         index: idx,
         text: seg.text,
         startMs: seg.startMs,
@@ -71,23 +72,6 @@ export default function ElementalAlchemyReaderPage() {
   const [chapterSlug, setChapterSlug] = useState<string>('preface')
   const [chapter, setChapter] = useState<Chapter | null>(null)
   const [loading, setLoading] = useState(true)
-  const [memberId, setMemberId] = useState<string>('')
-
-  // Get member ID from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem('beta_user')
-    if (stored) {
-      try {
-        const user = JSON.parse(stored)
-        setMemberId(user.id || 'local-dev-user')
-      } catch {
-        setMemberId('local-dev-user')
-      }
-    } else {
-      setMemberId('local-dev-user')
-    }
-  }, [])
-
   // Load chapter when slug changes
   useEffect(() => {
     let cancelled = false
@@ -157,7 +141,6 @@ export default function ElementalAlchemyReaderPage() {
         <AudiobookReader
           key={chapter.id}
           chapter={chapter}
-          memberId={memberId}
         />
       </div>
     </div>
