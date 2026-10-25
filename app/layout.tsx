@@ -13,6 +13,7 @@ import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { BetaBanner } from "@/components/BetaBanner";
 import BugReportButton from "@/components/bugs/BugReportButton";
 import { MaiaPresence } from "@/components/maia/presence/MaiaPresence";
+import { AuthenticatedListeningBoundary } from "@/components/listening/AuthenticatedListeningBoundary";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -224,9 +225,14 @@ export default function RootLayout({
                       Renders a quiet handle + conversation sheet on governed
                       member rooms only; children pass through untouched
                       everywhere else. See components/maia/presence/MaiaPresence.tsx */}
-                  <MaiaPresence>
-                    {children}
-                  </MaiaPresence>
+                  <AuthenticatedListeningBoundary
+                    enabled={process.env.SOULLAB_LISTEN_REVIEW_ENABLED === "1"}
+                    runtimeMode={process.env.MAIA_CABIN_MODE === "offline" ? "offline" : "online"}
+                  >
+                    <MaiaPresence>
+                      {children}
+                    </MaiaPresence>
+                  </AuthenticatedListeningBoundary>
                 </MobileRouteGuard>
               </FeatureTooltipProvider>
             </AethericConsciousnessProvider>
