@@ -18,12 +18,12 @@ services:
   # Kokoro TTS - Local Text-to-Speech (OpenAI-compatible API)
   # ═════════════════════════════════════════════════════════════════════════════
   # 82M parameter model. Runs on CPU. Fast enough for real-time.
-  # Exposes OpenAI-compatible /v1/audio/speech endpoint on port 8880.
+  # Available only on the MAIA internal Docker network at http://kokoro-tts:8880.
+  # No host port is published.
   #
-  # Test: curl -X POST http://localhost:8880/v1/audio/speech \
-  #         -H "Content-Type: application/json" \
-  #         -d '{"input": "Hello from MAIA", "voice": "af_heart", "model": "kokoro"}' \
-  #         --output test.mp3
+  # Test from the MAIA API container:
+  #   docker exec maia-api node -e
+  #     "fetch('http://kokoro-tts:8880/docs').then(r => console.log(r.status))"
   kokoro-tts:
     image: ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2
     # No container_name — let compose auto-name to avoid ghost collisions
@@ -34,8 +34,8 @@ services:
         max-size: "10m"
         max-file: "3"
 
-    ports:
-      - "8880:8880"
+    expose:
+      - "8880"
 
     environment:
       # Default voice — validate available voices after first boot
