@@ -44,6 +44,18 @@ const check=async(name,fn)=>{const detail=await fn();const pass=!!detail;results
     await check(`route-${route}-preserves-one-playing-context`,()=>Promise.resolve(observed.count===1&&observed.id===first.id&&observed.state==='running'));
   }
 
+  await page.evaluate(()=>window.__setFixturePath('/maia/community/elemental-alchemy/reader'));
+  await page.locator('[data-transport]').filter({hasText:'none'}).waitFor();
+  await page.waitForTimeout(80);
+  const readerState=await page.evaluate(()=>window.__listen41Contexts.at(-1)?.state);
+  await check('reader-route-is-excluded-and-closes-music',()=>Promise.resolve(readerState==='closed'));
+
+  await page.evaluate(()=>window.__setFixturePath('/listen'));
+  await page.locator('[data-transport]').filter({hasText:'mounted'}).waitFor();
+  await check('return-from-reader-does-not-auto-resume',()=>page.locator('[data-playback]').textContent().then(x=>x==='idle'));
+
+  await page.locator('[data-start]').click();
+  await page.locator('[data-playback]').filter({hasText:'playing'}).waitFor();
   await page.getByRole('button',{name:'Stop and clear persistent music'}).click();
   await page.locator('[data-playback]').filter({hasText:'idle'}).waitFor();
   await check('explicit-stop-clears-selection',()=>page.locator('[data-kind]').textContent().then(x=>x==='none'));
@@ -87,7 +99,7 @@ const check=async(name,fn)=>{const detail=await fn();const pass=!!detail;results
 
   await check('no-external-network',()=>Promise.resolve(outside.length===0));
   await check('no-page-errors',()=>Promise.resolve(errors.length===0));
-  console.log('LISTEN41_CHROMIUM',JSON.stringify({status:'PASS',passed:results.length,results,first,routeStates,publicState,errors,outside},null,2));
+  console.log('LISTEN41_CHROMIUM',JSON.stringify({status:'PASS',passed:results.length,results,first,routeStates,readerState,publicState,errors,outside},null,2));
  }catch(error){
   console.error('LISTEN41_CHROMIUM_ERROR',error.stack);
   console.log('LISTEN41_CHROMIUM',JSON.stringify({status:'FAIL',passed:results.filter(x=>x.pass).length,results,errors,outside},null,2));

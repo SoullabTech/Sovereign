@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
+  ONLINE_LISTENING_ROUTE_EXCLUSIONS,
   ONLINE_LISTENING_ROUTE_PREFIXES,
   isOnlineListeningRoute,
   verifiedListeningMemberKey,
@@ -24,6 +25,15 @@ test('only the seven browser-first Sound Field route families are admitted', () 
     assert.equal(isOnlineListeningRoute(route), true, route);
     assert.equal(isOnlineListeningRoute(`${route}/fictional-child`), true, route);
   }
+});
+
+test('Reader remains excluded until its independent narration authority is admitted', () => {
+  assert.deepEqual([...ONLINE_LISTENING_ROUTE_EXCLUSIONS], [
+    '/maia/community/elemental-alchemy/reader',
+  ]);
+  assert.equal(isOnlineListeningRoute('/maia/community/elemental-alchemy/reader'), false);
+  assert.equal(isOnlineListeningRoute('/maia/community/elemental-alchemy/reader/chapter-1'), false);
+  assert.equal(isOnlineListeningRoute('/maia/community/elemental-alchemy'), true);
 });
 
 test('public, administrative, live-practice, Cabin and prefix-spoof routes fail closed', () => {

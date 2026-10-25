@@ -14,13 +14,27 @@ export const ONLINE_LISTENING_ROUTE_PREFIXES = [
   '/astrology',
 ] as const;
 
+/** Routes beneath an otherwise approved family that own separate audio or identity.
+ * They remain closed until their own authority is explicitly integrated.
+ */
+export const ONLINE_LISTENING_ROUTE_EXCLUSIONS = [
+  '/maia/community/elemental-alchemy/reader',
+] as const;
+
+function matchesRoutePrefix(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
 const MEMBER_UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function isOnlineListeningRoute(pathname: string | null | undefined): boolean {
   if (!pathname || pathname[0] !== '/') return false;
+  if (ONLINE_LISTENING_ROUTE_EXCLUSIONS.some(
+    prefix => matchesRoutePrefix(pathname, prefix),
+  )) return false;
   return ONLINE_LISTENING_ROUTE_PREFIXES.some(
-    prefix => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    prefix => matchesRoutePrefix(pathname, prefix),
   );
 }
 
