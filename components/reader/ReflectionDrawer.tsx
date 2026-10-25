@@ -7,7 +7,6 @@ import { AudioSegment, RitualMode } from './types'
 interface ReflectionDrawerProps {
   segment: AudioSegment | null
   ritualMode: RitualMode
-  memberId: string
   onClose: () => void
   onMomentSaved: () => void
 }
@@ -15,7 +14,6 @@ interface ReflectionDrawerProps {
 export function ReflectionDrawer({
   segment,
   ritualMode,
-  memberId,
   onClose,
   onMomentSaved
 }: ReflectionDrawerProps) {
@@ -24,26 +22,34 @@ export function ReflectionDrawer({
   const [journalNote, setJournalNote] = useState('')
   const [maiaResponse, setMaiaResponse] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   if (!segment) return null
 
+  const postReader = async (path: string, body: Record<string, unknown>) => {
+    const response = await fetch(path, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    if (!response.ok) throw new Error(`Reader request refused (${response.status}).`)
+    return response
+  }
+
   const handleSaveHighlight = async () => {
     setIsLoading(true)
+    setErrorMessage('')
     try {
-      await fetch('/api/reader/moments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-member-id': memberId
-        },
-        body: JSON.stringify({
-          segmentId: segment.id,
-          momentType: 'highlight',
-          ritualMode
-        })
+      await postReader('/api/reader/moments', {
+        segmentId: segment.id,
+        momentType: 'highlight',
+        ritualMode,
       })
       onMomentSaved()
       onClose()
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to save this moment.')
     } finally {
       setIsLoading(false)
     }
@@ -54,22 +60,18 @@ export function ReflectionDrawer({
     setIsLoading(true)
     setMaiaResponse('')
 
+    setErrorMessage('')
     try {
-      const res = await fetch('/api/reader/ask', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-member-id': memberId
-        },
-        body: JSON.stringify({
-          segmentId: segment.id,
-          question,
-          ritualMode
-        })
+      const res = await postReader('/api/reader/ask', {
+        segmentId: segment.id,
+        question,
+        ritualMode,
       })
-      const data = await res.json()
-      setMaiaResponse(data.response)
+      const data: { response?: string } = await res.json()
+      setMaiaResponse(data.response || '')
       onMomentSaved()
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'MAIA could not respond.')
     } finally {
       setIsLoading(false)
     }
@@ -79,23 +81,19 @@ export function ReflectionDrawer({
     if (!journalNote.trim()) return
     setIsLoading(true)
 
+    setErrorMessage('')
     try {
-      await fetch('/api/reader/moments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-member-id': memberId
-        },
-        body: JSON.stringify({
-          segmentId: segment.id,
-          momentType: 'note',
-          content: journalNote,
-          ritualMode
-        })
+      await postReader('/api/reader/moments', {
+        segmentId: segment.id,
+        momentType: 'note',
+        content: journalNote,
+        ritualMode,
       })
       setJournalNote('')
       onMomentSaved()
       onClose()
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to save this note.')
     } finally {
       setIsLoading(false)
     }
@@ -140,6 +138,10 @@ export function ReflectionDrawer({
             </button>
           ))}
         </div>
+
+        {errorMessage && (
+          <p role="alert" className="mb-3 text-sm text-red-300">{errorMessage}</p>
+        )}
 
         {/* Tab content */}
         <div className="min-h-[150px]">

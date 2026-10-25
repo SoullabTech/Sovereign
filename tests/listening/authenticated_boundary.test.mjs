@@ -5,7 +5,9 @@ import path from 'node:path';
 import {
   ONLINE_LISTENING_ROUTE_EXCLUSIONS,
   ONLINE_LISTENING_ROUTE_PREFIXES,
+  READER_NARRATION_ROUTE,
   isOnlineListeningRoute,
+  isReaderNarrationRoute,
   verifiedListeningMemberKey,
 } from '../../lib/listening/listeningSessionBoundary.ts';
 
@@ -27,13 +29,14 @@ test('only the seven browser-first Sound Field route families are admitted', () 
   }
 });
 
-test('Reader remains excluded until its independent narration authority is admitted', () => {
-  assert.deepEqual([...ONLINE_LISTENING_ROUTE_EXCLUSIONS], [
-    '/maia/community/elemental-alchemy/reader',
-  ]);
-  assert.equal(isOnlineListeningRoute('/maia/community/elemental-alchemy/reader'), false);
-  assert.equal(isOnlineListeningRoute('/maia/community/elemental-alchemy/reader/chapter-1'), false);
-  assert.equal(isOnlineListeningRoute('/maia/community/elemental-alchemy'), true);
+test('Reader is admitted only after receiving verified narration authority', () => {
+  assert.equal(READER_NARRATION_ROUTE, '/maia/community/elemental-alchemy/reader');
+  assert.deepEqual([...ONLINE_LISTENING_ROUTE_EXCLUSIONS], []);
+  assert.equal(isReaderNarrationRoute(READER_NARRATION_ROUTE), true);
+  assert.equal(isReaderNarrationRoute(`${READER_NARRATION_ROUTE}/chapter-1`), false);
+  assert.equal(isReaderNarrationRoute('/maia/community/elemental-alchemy'), false);
+  assert.equal(isOnlineListeningRoute(READER_NARRATION_ROUTE), true);
+  assert.equal(isOnlineListeningRoute(`${READER_NARRATION_ROUTE}/chapter-1`), true);
 });
 
 test('public, administrative, live-practice, Cabin and prefix-spoof routes fail closed', () => {
@@ -63,6 +66,9 @@ test('client boundary uses the canonical session seam and contains no browser id
   assert.match(boundarySource, /cache:\s*'no-store'/);
   assert.match(boundarySource, /SOULLAB_SESSION_END_EVENT/);
   assert.match(boundarySource, /PersistentListeningProvider/);
+  assert.match(boundarySource, /VerifiedAudioMemberProvider/);
+  assert.match(boundarySource, /readerRoute \|\| \(enabled && onlineRoute\)/);
+  assert.match(boundarySource, /transportEligible = enabled && onlineRoute/);
   assert.match(boundarySource, /runtimeMode === 'online'/);
   assert.match(boundarySource, /setMemberKey\(null\)/);
   assert.doesNotMatch(boundarySource, /localStorage|sessionStorage|getValidMemberId|x-member-id/);

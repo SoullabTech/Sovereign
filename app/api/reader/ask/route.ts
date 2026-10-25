@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider'
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { unauthenticatedResponse } from '@/lib/auth/authFailure';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure'
+import { readerRitualMode, readerText, readerUuid } from '@/lib/reader/readerValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,11 +15,16 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json()
-    const { segmentId, question, ritualMode } = body
+    const body = await request.json() as Record<string, unknown>
+    const segmentId = readerUuid(body.segmentId)
+    const question = readerText(body.question, 4_000)
+    const ritualMode = readerRitualMode(body.ritualMode)
 
     if (!segmentId || !question) {
-      return NextResponse.json({ error: 'segmentId and question required' }, { status: 400 })
+      return NextResponse.json({ error: 'Valid segmentId and question required' }, { status: 400 })
+    }
+    if (body.ritualMode != null && body.ritualMode !== '' && !ritualMode) {
+      return NextResponse.json({ error: 'Invalid ritualMode' }, { status: 400 })
     }
 
     // Get the segment text and surrounding context

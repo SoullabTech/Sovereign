@@ -18,7 +18,12 @@ const journeys: Record<Mood, { label: string; title: string; subtitle: string; d
   drift:{ label:'Chill out',title:'The Blue Hour',subtitle:'Downtempo & atmosphere',description:'An invitation to saunter, feel the evening unfold, and linger between ideas.',gradient:'drift',frequencies:[98,146.83,196] },
   rest:{ label:'Deep rest',title:'Moonwater',subtitle:'Stillness without demand',description:'For unhurried listening, ease, reflection and the passage into sleep.',gradient:'rest',frequencies:[82.41,123.47,164.81] },
 };
-const nav = [{title:'House',href:'/home'},{title:'Writer’s Studio',href:'/writers-studio'},{title:'Explore Soullab',href:'/explore'}];
+const nav = [
+  {title:'House',href:'/home'},
+  {title:'Writer’s Studio',href:'/writers-studio'},
+  {title:'Elemental Alchemy Reader',href:'/maia/community/elemental-alchemy/reader'},
+  {title:'Explore Soullab',href:'/explore'},
+];
 const moodKeys: Mood[] = ['focus','create','drift','rest'];
 
 type SketchHandle = { context: AudioContext; oscillators: OscillatorNode[]; master: GainNode };

@@ -14,12 +14,15 @@ export const ONLINE_LISTENING_ROUTE_PREFIXES = [
   '/astrology',
 ] as const;
 
-/** Routes beneath an otherwise approved family that own separate audio or identity.
- * They remain closed until their own authority is explicitly integrated.
+export const READER_NARRATION_ROUTE =
+  '/maia/community/elemental-alchemy/reader' as const;
+
+/**
+ * LISTEN-47 removes Reader from the exclusion list only after Reader receives
+ * the same verified session receipt and shared output lease. Keep the list as
+ * an explicit fail-closed extension point for future independently-owned audio.
  */
-export const ONLINE_LISTENING_ROUTE_EXCLUSIONS = [
-  '/maia/community/elemental-alchemy/reader',
-] as const;
+export const ONLINE_LISTENING_ROUTE_EXCLUSIONS = [] as const;
 
 function matchesRoutePrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
@@ -27,6 +30,12 @@ function matchesRoutePrefix(pathname: string, prefix: string): boolean {
 
 const MEMBER_UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isReaderNarrationRoute(
+  pathname: string | null | undefined,
+): boolean {
+  return pathname === READER_NARRATION_ROUTE;
+}
 
 export function isOnlineListeningRoute(pathname: string | null | undefined): boolean {
   if (!pathname || pathname[0] !== '/') return false;

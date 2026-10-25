@@ -10,8 +10,15 @@ test.after(() => {
   else process.env.ACCESS_CONTROL_MODE = priorMode;
 });
 
-test('the Sound Field page and member session seams have exact authenticated rules', () => {
-  for (const pathname of ['/listen', '/api/members/session', '/api/members/signout']) {
+test('the Sound Field, Reader and member session seams have exact authenticated rules', () => {
+  for (const pathname of [
+    '/listen',
+    '/maia/community/elemental-alchemy/reader',
+    '/api/reader/moments',
+    '/api/reader/ask',
+    '/api/members/session',
+    '/api/members/signout',
+  ]) {
     const rule = matchRule(pathname);
     assert.ok(rule, pathname);
     assert.equal(rule.exact, pathname);
@@ -22,7 +29,14 @@ test('the Sound Field page and member session seams have exact authenticated rul
 });
 
 test('authenticated members enter all exact seams and anonymous visitors do not', () => {
-  for (const pathname of ['/listen', '/api/members/session', '/api/members/signout']) {
+  for (const pathname of [
+    '/listen',
+    '/maia/community/elemental-alchemy/reader',
+    '/api/reader/moments',
+    '/api/reader/ask',
+    '/api/members/session',
+    '/api/members/signout',
+  ]) {
     assert.equal(checkAccess(pathname, 'free', ['member'], true).allowed, true, pathname);
     const anonymous = checkAccess(pathname, 'free', [], false);
     assert.equal(anonymous.allowed, false, pathname);
@@ -35,6 +49,7 @@ test('adjacent and nested listening/member routes remain unmapped and fail close
     '/listen-extra', '/listener', '/listen/private', '/listen/reader',
     '/api/members/session/refresh', '/api/members/session-extra',
     '/api/members/signout/all', '/api/members/signout-extra',
+    '/api/reader/moments/other', '/api/reader/ask/other', '/api/reader-extra',
   ]) {
     assert.equal(matchRule(pathname), null, pathname);
     const result = checkAccess(pathname, 'free', ['member'], true);
