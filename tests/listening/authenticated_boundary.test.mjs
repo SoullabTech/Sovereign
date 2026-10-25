@@ -59,6 +59,12 @@ test('client boundary uses the canonical session seam and contains no browser id
   assert.doesNotMatch(boundarySource, /preferredName|username|tier|roles/);
 });
 
+test('eligible-route rechecks cannot clear the current transport through an aborted stale request', () => {
+  assert.match(boundarySource, /controller\.signal\.aborted/);
+  assert.match(boundarySource, /requestGeneration\.current \+= 1;[\s\S]*requestController\.current\?\.abort\(\)/);
+  assert.match(boundarySource, /key=\{activeMemberKey\}/);
+});
+
 test('root mounts the listening boundary outside MaiaPresence and behind review/offline gates', () => {
   const boundaryOpen = layoutSource.indexOf('<AuthenticatedListeningBoundary');
   const maiaOpen = layoutSource.indexOf('<MaiaPresence>', boundaryOpen);

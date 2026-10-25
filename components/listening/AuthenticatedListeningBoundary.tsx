@@ -80,6 +80,10 @@ export function AuthenticatedListeningBoundary({
       const nextMemberKey = verifiedListeningMemberKey(payload);
       setMemberKey(current => current === nextMemberKey ? current : nextMemberKey);
     } catch {
+      // Route changes and newer rechecks intentionally abort older requests.
+      // An aborted request is not an authentication failure and must never
+      // tear down an otherwise current member's playing transport.
+      if (controller.signal.aborted) return;
       if (generation === requestGeneration.current) setMemberKey(null);
     } finally {
       if (generation === requestGeneration.current)
@@ -104,7 +108,12 @@ export function AuthenticatedListeningBoundary({
     }, 0);
     return () => {
       window.clearTimeout(verifySession);
+      // Retire the in-flight request before aborting it. Otherwise its catch
+      // can still look current during a fast eligible-route transition and
+      // clear the member receipt, unmounting the one persistent transport.
+      requestGeneration.current += 1;
       requestController.current?.abort();
+      requestController.current = null;
     };
   }, [pathname, routeEligible, verifyCurrentSession]);
 
@@ -138,7 +147,10 @@ export function AuthenticatedListeningBoundary({
   const activeMemberKey = routeEligible ? memberKey : null;
   if (!activeMemberKey) return <>{children}</>;
   return (
-    <PersistentListeningProvider reviewMemberKey={activeMemberKey}>
+    <PersistentListeningProvider
+      key={activeMemberKey}
+      reviewMemberKey={activeMemberKey}
+    >
       {children}
     </PersistentListeningProvider>
   );
