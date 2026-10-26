@@ -18,6 +18,7 @@
 import 'server-only';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
+import { estimateVoiceSeconds, isProviderSpendGateError, reserveVoiceProviderSpend } from '@/lib/limits/ProviderSpendGate';
 import { NextRequest } from 'next/server';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
     if (!text) return jsonError("Missing 'text' in request body", 400, { requestId });
     if (text.length > 4096) return jsonError('Text too long (max 4096 chars)', 400, { requestId });
 
-    const estimatedSeconds = Math.ceil(text.length / 12.5);
+    const estimatedSeconds = estimateVoiceSeconds(text);
 
     const limitsCheck = await LimitsEnforcer.checkUsage({
       memberId: memberId || undefined,
@@ -116,6 +117,7 @@ export async function POST(req: NextRequest) {
     let provider: string;
     let fallback = false;
     let fallbackReason: string | undefined;
+    let cloudUsageReserved = false;
 
     try {
       const result = await ttsRouter.synthesize({ text, voice, format, speed });
@@ -167,6 +169,13 @@ export async function POST(req: NextRequest) {
         }
 
         console.log(`[local-tts:${requestId}] ${fallback ? 'falling back' : 'routing'} to OpenAI TTS (reason=${fallbackReason})`);
+        await reserveVoiceProviderSpend({
+          memberId: memberId!,
+          estimatedSeconds,
+          provider: 'openai',
+          purpose: 'voice_tts',
+        });
+        cloudUsageReserved = true;
         const speech = await synthesizeSpeech({ text, voice, format, speed });
         audioBuffer = Buffer.from(await speech.arrayBuffer());
         contentType = format === 'mp3' ? 'audio/mpeg'
@@ -195,15 +204,19 @@ export async function POST(req: NextRequest) {
       textLength: text.length,
     });
 
-    // Record usage (non-blocking)
-    const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
-    LimitsEnforcer.recordUsage({
-      memberId: memberId || undefined,
-      anonId,
-      tier: memberTier,
-      resource: 'voice_tts',
-      amount: actualSeconds,
-    }).catch(err => console.error(`[local-tts:${requestId}] Usage recording failed:`, err));
+    // Paid provider usage was reserved atomically before dispatch. Local usage
+    // retains the existing best-effort meter and remains available during a
+    // provider-accounting outage.
+    if (!cloudUsageReserved) {
+      const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
+      LimitsEnforcer.recordUsage({
+        memberId: memberId || undefined,
+        anonId,
+        tier: memberTier,
+        resource: 'voice_tts',
+        amount: actualSeconds,
+      }).catch(err => console.error(`[local-tts:${requestId}] Usage recording failed:`, err));
+    }
 
     return new Response(new Uint8Array(audioBuffer), {
       status: 200,
@@ -218,10 +231,12 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err: any) {
+    if (isProviderSpendGateError(err)) {
+      return jsonError(err.message, err.status, { requestId, code: err.code });
+    }
     const status = err?.status ?? 500;
-    const detail = err?.message ?? 'Unknown TTS error';
-    console.error(`[local-tts:${requestId}] FAIL status=${status} detail=${detail}`);
-    return jsonError('Failed to generate speech', status, { requestId, detail });
+    console.error(`[local-tts:${requestId}] FAIL status=${status} category=${err?.name ?? typeof err}`);
+    return jsonError('Failed to generate speech', status, { requestId });
   }
 }
 

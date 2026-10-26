@@ -84,7 +84,7 @@ import { fireAndForgetFieldMonitor } from '@/lib/consciousness/fieldMonitorTelem
 import { storeTrustObservation, inferEngagementProxy, classifyResponseType, isTrustObservationEnabled } from '@/lib/trust/trustObservationService';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { LimitsEnforcer, getMemberTier } from '@/lib/limits/LimitsEnforcer';
+import { isProviderSpendGateError, estimateVoiceSeconds, reserveTextProviderSpend, reserveVoiceProviderSpend } from '@/lib/limits/ProviderSpendGate';
 import { classifyConversationDepth, tierToBrevity } from '@/lib/consciousness/conversationDepthClassifier';
 import { resolveCouncil, buildCouncilPromptSection, normalizeGuideId } from '@/lib/consciousness/interpretiveCouncil';
 import { buildMaiaContext } from '@/lib/maia/context/buildMaiaContext';
@@ -96,6 +96,20 @@ import { detectIdeaCandidate } from '@/lib/consciousness/ideaDetection';
 // ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
 // OpenAI TTS is needed to speak Claude's text. Set TTS_OPENAI_FALLBACK=false to disable.
 const USE_OPENAI_FALLBACK = process.env.TTS_OPENAI_FALLBACK !== 'false';
+
+async function synthesizeAccountedOpenAiSpeech(
+  memberId: string,
+  text: string,
+  options: Record<string, unknown>,
+) {
+  await reserveVoiceProviderSpend({
+    memberId,
+    estimatedSeconds: estimateVoiceSeconds(text),
+    provider: 'openai',
+    purpose: 'voice_tts',
+  });
+  return synthesizeSpeech({ text, ...options } as any);
+}
 
 /**
  * TTS with sovereign provider routing:
@@ -130,6 +144,8 @@ async function synthesizeWithFallback(
      * Omit or pass null to use plain shaped text.
      */
     ssml?: string | null;
+    /** Authenticated member authority for any paid provider dispatch. */
+    memberId: string;
   }
 ): Promise<{ audio: string; format: string; source: string } | null> {
   // ── PersonaPlex (Sesame CSM) — gate on health cache to avoid stalling ──
@@ -278,8 +294,7 @@ async function synthesizeWithFallback(
     // route the canon has closed.
     console.info('[tts.attempt]', JSON.stringify({ provider: 'openai', voice: finalOpenaiVoice, reason: 'member_chose_cloud' }));
     try {
-      const response = await synthesizeSpeech({
-        text,
+      const response = await synthesizeAccountedOpenAiSpeech(options.memberId, text, {
         voice: finalOpenaiVoice,
         format: 'mp3',
         speed: options.speed,
@@ -287,7 +302,7 @@ async function synthesizeWithFallback(
       const buffer = Buffer.from(await response.arrayBuffer());
       return { audio: buffer.toString('base64'), format: 'mp3', source: 'openai' };
     } catch (e) {
-      console.error(`[TTS] OpenAI failed: ${e instanceof Error ? e.message : e}`);
+      console.error(`[TTS] OpenAI failed category=${e instanceof Error ? e.name : typeof e}`);
       // ⛔ Deliberately NO `return null` here. The founder ruling is explicit:
       //
       //   cloud preference + cloud unavailable -> local, if local is healthy
@@ -524,6 +539,7 @@ interface StreamRequest {
  * Returns base64 audio data or null on failure.
  */
 async function synthesizeSentence(
+  memberId: string,
   text: string,
   voice: string = 'maia_core',
   speed: number = 1.0,
@@ -562,11 +578,11 @@ async function synthesizeSentence(
       // If the router specified a voice (archetype-driven), use it directly
       if (err.voice) {
         try {
-          const response = await synthesizeSpeech({ text, voice: err.voice, format: 'mp3', speed });
+          const response = await synthesizeAccountedOpenAiSpeech(memberId, text, { voice: err.voice, format: 'mp3', speed });
           const buffer = Buffer.from(await response.arrayBuffer());
           return { audio: buffer.toString('base64'), format: 'mp3' };
         } catch (e) {
-          console.error(`[synthesizeSentence] OpenAI archetype voice failed: ${e instanceof Error ? e.message : e}`);
+          console.error(`[synthesizeSentence] OpenAI archetype voice failed category=${e instanceof Error ? e.name : typeof e}`);
         }
       }
       // Fall through to final OpenAI fallback
@@ -584,8 +600,7 @@ async function synthesizeSentence(
     const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
     const openaiVoice = resolvedOpenai ?? elementVoice ?? 'nova';
 
-    const response = await synthesizeSpeech({
-      text,
+    const response = await synthesizeAccountedOpenAiSpeech(memberId, text, {
       voice: openaiVoice,
       format: 'mp3',
       speed,
@@ -595,7 +610,7 @@ async function synthesizeSentence(
     const audio = buffer.toString('base64');
     return { audio, format: 'mp3' };
   } catch (e) {
-    console.error('[StreamConversation] OpenAI TTS fallback failed:', e);
+    console.error(`[StreamConversation] OpenAI TTS fallback failed category=${e instanceof Error ? e.name : typeof e}`);
     return null;
   }
 }
@@ -685,19 +700,6 @@ export async function POST(req: NextRequest) {
     console.warn('🔊 [StreamConversation] ⚠️ Empty message received');
     return new Response('Missing message', { status: 400 });
   }
-
-  const memberTier = await getMemberTier(userId);
-  const usageCheck = await LimitsEnforcer.checkUsage({
-    memberId: userId, tier: memberTier, resource: 'text', amount: 1,
-  });
-  if (usageCheck.action === 'block' || usageCheck.action === 'suggest_addon') {
-    return new Response(JSON.stringify({ error: usageCheck.message, blocked: true }), {
-      status: 429, headers: { 'Content-Type': 'application/json' },
-    });
-  }
-  await LimitsEnforcer.recordUsage({
-    memberId: userId, tier: memberTier, resource: 'text', amount: 1,
-  });
 
   const encoder = new TextEncoder();
 
@@ -863,7 +865,7 @@ export async function POST(req: NextRequest) {
             identityContext = await buildMaiaContext(userId);
             if (identityContext.hasBirthData || identityContext.userName) {
               console.log(
-                `🌟 [StreamConversation] Identity layer loaded for ${userId.substring(0, 8)}... ` +
+                '🌟 [StreamConversation] Identity layer loaded for authenticated member ' +
                   `(natal=${!!identityContext.astrologyAddendum}, name=${!!identityContext.userName})`,
               );
             }
@@ -1004,6 +1006,7 @@ export async function POST(req: NextRequest) {
             ttsProvider: memberTtsProvider,
             skipPersonaPlex: isIosPwa,
             ssml: thresholdSSML,
+            memberId: userId,
           }) : null;
 
           if (thresholdTtsResult) {
@@ -1091,6 +1094,27 @@ export async function POST(req: NextRequest) {
         }
 
         // ============ FULL LLM PATH ============
+        // Silence and threshold turns never reach a paid text provider and are
+        // therefore not charged. Reserve atomically only at the actual provider
+        // boundary, immediately before creating the Claude service.
+        try {
+          await reserveTextProviderSpend({
+            memberId: userId,
+            provider: 'anthropic',
+            purpose: 'text_generation',
+          });
+        } catch (error) {
+          if (isProviderSpendGateError(error)) {
+            emit('error', {
+              error: error.message,
+              code: error.code,
+              timestamp: Date.now(),
+            });
+            controller.close();
+            return;
+          }
+          throw error;
+        }
         const claudeService = getClaudeService();
         timer.mark('llm_starting');
 
@@ -1459,6 +1483,7 @@ export async function POST(req: NextRequest) {
                 ttsProvider: memberTtsProvider,
                 skipPersonaPlex: isIosPwa,
                 ssml: chunkSSML,
+                memberId: userId,
               });
 
               if (result) {

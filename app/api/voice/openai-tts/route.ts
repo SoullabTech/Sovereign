@@ -8,6 +8,7 @@ import 'server-only';
 import OpenAI from "openai";
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
+import { estimateVoiceSeconds, isProviderSpendGateError, reserveVoiceProviderSpend } from '@/lib/limits/ProviderSpendGate';
 import { NextRequest } from 'next/server';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
     const text = body?.text?.trim();
     if (!text) return jsonError("Missing 'text' in request body", 400, { requestId });
 
-    const estimatedSeconds = Math.ceil(text.length / 12.5);
+    const estimatedSeconds = estimateVoiceSeconds(text);
 
     const limitsCheck = await LimitsEnforcer.checkUsage({
       memberId: memberId || undefined,
@@ -99,7 +100,7 @@ export async function POST(req: NextRequest) {
       console.warn(JSON.stringify({
         tag: 'pfi.tts.no_voice_plan',
         requestId,
-        memberId: memberId ?? 'anon',
+        authenticatedMember: true,
         text_length: text.length,
         note: 'TTS called without VoicePlan instructions — ad-hoc voice, sovereignty not guaranteed',
       }));
@@ -146,21 +147,18 @@ export async function POST(req: NextRequest) {
         speed,
         ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
       };
+      await reserveVoiceProviderSpend({
+        memberId,
+        estimatedSeconds,
+        provider: 'openai',
+        purpose: 'voice_tts',
+      });
       const speech = await getOpenAI().audio.speech.create(speechParams);
 
       const audioBuffer = Buffer.from(await speech.arrayBuffer());
       const ms = Date.now() - t0;
 
       console.log(`[openai-tts:${requestId}] ARCHETYPE provider=openai voice=${voice} archetype=${effectiveArchetype} hasInstructions=${Boolean(ttsInstructions)} bytes=${audioBuffer.length} ms=${ms}`);
-
-      const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
-      LimitsEnforcer.recordUsage({
-        memberId: memberId || undefined,
-        anonId,
-        tier: memberTier,
-        resource: 'voice_tts',
-        amount: actualSeconds,
-      }).catch(err => console.error(`[openai-tts:${requestId}] Usage recording failed:`, err));
 
       const contentType =
         format === "mp3" ? "audio/mpeg"
@@ -314,22 +312,18 @@ export async function POST(req: NextRequest) {
       speed,
       ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
     };
+    await reserveVoiceProviderSpend({
+      memberId,
+      estimatedSeconds,
+      provider: 'openai',
+      purpose: 'voice_tts',
+    });
     const speech = await getOpenAI().audio.speech.create(fallbackSpeechParams);
 
     const audioBuffer = Buffer.from(await speech.arrayBuffer());
     const ms = Date.now() - t0;
 
     console.log(`[openai-tts:${requestId}] ok model=${fallbackModel} voice=${voice} format=${format} bytes=${audioBuffer.length} ms=${ms}`);
-
-    // ═══ RECORD VOICE USAGE (non-blocking) ═══
-    const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
-    LimitsEnforcer.recordUsage({
-      memberId: memberId || undefined,
-      anonId,
-      tier: memberTier,
-      resource: 'voice_tts',
-      amount: actualSeconds,
-    }).catch(err => console.error(`[openai-tts:${requestId}] Usage recording failed:`, err));
 
     const contentType =
       format === "mp3" ? "audio/mpeg"
@@ -356,6 +350,9 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err: any) {
+    if (isProviderSpendGateError(err)) {
+      return jsonError(err.message, err.status, { requestId, code: err.code });
+    }
     const upstreamStatus = Number(err?.status ?? err?.response?.status ?? 500);
     const status = upstreamStatus >= 400 && upstreamStatus < 600 ? upstreamStatus : 500;
     console.error(`[openai-tts:${requestId}] FAIL category=upstream_${status}`);

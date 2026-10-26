@@ -7,6 +7,8 @@
  * Philosophy: Enforce with dignity, not punishment.
  */
 
+import 'server-only';
+
 import { query } from '../db/postgres';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -14,6 +16,7 @@ import { query } from '../db/postgres';
 // ═══════════════════════════════════════════════════════════════════════════
 
 export type MemberTier = 'free' | 'member_plus' | 'studio_pro';
+export const FREE_TEXT_TURNS_PER_DAY = 10;
 
 export type EnforcementDecision =
   | { action: 'allow' }
@@ -37,7 +40,7 @@ export interface UsageCheckParams {
 
 const LIMITS = {
   free: {
-    text_turns_per_day: 10,
+    text_turns_per_day: FREE_TEXT_TURNS_PER_DAY,
     voice_demo_seconds_lifetime: 180, // 3 min
     journals_saved: true,   // Sanctuary Economy: journals are depth, not capacity. Always saved.
     threads_saved: true,    // Sanctuary Economy: threads are continuity. Always saved.
@@ -506,10 +509,10 @@ export async function getMemberTier(memberId: string): Promise<MemberTier> {
 
     const tier = result.rows[0]?.tier;
 
-    if (tier === 'studio_pro' || tier === 'studio') {
+    if (tier === 'studio_pro' || tier === 'studio' || tier === 'pro') {
       return 'studio_pro';
     }
-    if (tier === 'member_plus' || tier === 'supporter' || tier === 'member') {
+    if (tier === 'member_plus' || tier === 'supporter' || tier === 'member' || tier === 'personal') {
       return 'member_plus';
     }
 

@@ -19,6 +19,7 @@ import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireMemberId } from '@/lib/auth/session';
 import { LimitsEnforcer, getMemberTier } from '@/lib/limits/LimitsEnforcer';
+import { PROVIDER_SPEND_LIMIT_REACHED, estimateVoiceSeconds, isProviderSpendGateError, reserveVoiceProviderSpend } from '@/lib/limits/ProviderSpendGate';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import { resolveVoicePreference } from '@/lib/tts/cloudVoicePolicy';
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
   }
 
   const memberTier = await getMemberTier(memberId);
-  const estimatedSeconds = Math.ceil(text.length / 12.5);
+  const estimatedSeconds = estimateVoiceSeconds(text);
   const usageCheck = await LimitsEnforcer.checkUsage({
     memberId, tier: memberTier, resource: 'voice_tts', amount: estimatedSeconds,
   });
@@ -115,6 +116,7 @@ export async function POST(req: NextRequest) {
 
   // Generate MP3 bytes
   let audioBuffer: Buffer;
+  let cloudUsageReserved = false;
 
   // ── Member chose "local" → Kokoro only, no cloud fallback ──
   if (providerPref === 'local') {
@@ -172,9 +174,22 @@ export async function POST(req: NextRequest) {
     } else {
       console.info('[tts.attempt]', JSON.stringify({ path: 'preview', provider: 'openai', voice, reason: 'member_chose_cloud' }));
       try {
+        await reserveVoiceProviderSpend({
+          memberId,
+          estimatedSeconds,
+          provider: 'openai',
+          purpose: 'voice_tts',
+        });
+        cloudUsageReserved = true;
         const speech = await synthesizeSpeech({ text, voice, format: 'mp3', speed });
         audioBuffer = Buffer.from(await speech.arrayBuffer());
       } catch (err: any) {
+        if (isProviderSpendGateError(err) && err.code === PROVIDER_SPEND_LIMIT_REACHED) {
+          return NextResponse.json(
+            { error: err.message, blocked: true, code: err.code },
+            { status: err.status },
+          );
+        }
         // ⛔ Deliberately NO early 503 for a cloud member. Only an explicit
         // `cloud` preference can reach this branch at all, and the ruling says
         // that member falls to local when their provider is unavailable — the
@@ -185,7 +200,7 @@ export async function POST(req: NextRequest) {
           audioBuffer = result.audioBuffer;
         } catch {
           return NextResponse.json(
-            { error: 'Both cloud and local TTS failed', detail: err?.message },
+            { error: 'Both cloud and local TTS failed' },
             { status: 503 },
           );
         }
@@ -201,9 +216,11 @@ export async function POST(req: NextRequest) {
   const filename = `${memberId}_${id}.mp3`;
   const fullPath = path.join(PREVIEW_DIR, filename);
   await fs.writeFile(fullPath, audioBuffer);
-  void LimitsEnforcer.recordUsage({
-    memberId, tier: memberTier, resource: 'voice_tts', amount: estimatedSeconds,
-  });
+  if (!cloudUsageReserved) {
+    void LimitsEnforcer.recordUsage({
+      memberId, tier: memberTier, resource: 'voice_tts', amount: estimatedSeconds,
+    });
+  }
 
   const audioUrl = `/api/voice/preview/${encodeURIComponent(filename)}`;
 

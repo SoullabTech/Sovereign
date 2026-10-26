@@ -16,6 +16,8 @@ SERVER_MODULES = (
     "lib/services/ClaudeService.ts",
     "lib/services/VoiceServiceWithFallback.ts",
     "lib/utils/modelService.ts",
+    "lib/limits/LimitsEnforcer.ts",
+    "lib/limits/ProviderSpendGate.ts",
 )
 ROUTES = (
     "app/api/voice/local-tts/route.ts",
@@ -85,6 +87,23 @@ def before(text: str, first: str, second: str) -> bool:
     return left >= 0 and right >= 0 and left < right
 
 
+def positions(text: str, needle: str) -> list[int]:
+    found: list[int] = []
+    start = 0
+    while True:
+        index = text.find(needle, start)
+        if index < 0:
+            return found
+        found.append(index)
+        start = index + len(needle)
+
+
+def paired_before(text: str, first: str, second: str, count: int) -> bool:
+    left = positions(text, first)
+    right = positions(text, second)
+    return len(left) == count and len(right) == count and all(a < b for a, b in zip(left, right))
+
+
 def evaluate(source: dict[str, str]) -> dict[str, object]:
     violations: list[tuple[str, str]] = []
 
@@ -140,6 +159,30 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
     ):
         add("lib/voice/MaiaRealtimeWebRTC.ts", "CLIENT_IDENTITY_CONTEXT_IN_REALTIME_QUERY")
 
+    path = "lib/limits/LimitsEnforcer.ts"
+    text = source.get(path, "")
+    if "tier === 'pro'" not in text or "tier === 'personal'" not in text:
+        add(path, "CANONICAL_MEMBER_TIER_MAPPING_REQUIRED")
+
+    path = "lib/limits/ProviderSpendGate.ts"
+    text = source.get(path, "")
+    if "value === 'pro'" not in text or "value === 'personal'" not in text:
+        add(path, "CANONICAL_SPEND_TIER_MAPPING_REQUIRED")
+    for needle, code in (
+        ("PROVIDER_SPEND_ACCOUNTING_UNAVAILABLE", "SPEND_FAIL_CLOSED_ERROR_REQUIRED"),
+        ("dependencies.transaction", "SPEND_TRANSACTION_BOUNDARY_REQUIRED"),
+        ("provider-spend:text-free-reserve", "SPEND_FREE_TEXT_RESERVATION_REQUIRED"),
+        ("provider-spend:text-metered-reserve", "SPEND_METERED_TEXT_RESERVATION_REQUIRED"),
+        ("provider-spend:free-reserve", "SPEND_FREE_VOICE_RESERVATION_REQUIRED"),
+        ("provider-spend:member-plus-reserve", "SPEND_MEMBER_PLUS_VOICE_RESERVATION_REQUIRED"),
+        ("provider-spend:daily-reserve", "SPEND_DAILY_VOICE_RESERVATION_REQUIRED"),
+        ("COALESCE(text_turns, 0) < $3", "SPEND_FREE_TEXT_ATOMIC_LIMIT_REQUIRED"),
+        ("RETURNING text_turns", "SPEND_TEXT_RETURNING_REQUIRED"),
+        ("RETURNING voice_seconds_used", "SPEND_VOICE_RETURNING_REQUIRED"),
+    ):
+        if needle not in text:
+            add(path, code)
+
     path = "app/api/voice/openai-tts/route.ts"
     text = source.get(path, "")
     for needle, code in (
@@ -151,6 +194,10 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
             add(path, code)
     if not before(text, "getMemberIdFromRequest(req)", "getOpenAI().audio.speech.create"):
         add(path, "CLOUD_AUTH_MUST_PRECEDE_PROVIDER")
+    if not paired_before(text, "reserveVoiceProviderSpend({", "getOpenAI().audio.speech.create", 2):
+        add(path, "CLOUD_SPEND_RESERVATION_BEFORE_PROVIDER_REQUIRED")
+    if "isProviderSpendGateError(err)" not in text:
+        add(path, "CLOUD_SPEND_REFUSAL_RESPONSE_REQUIRED")
     if "x-maia-anon-id" in text or "anon_${" in text:
         add(path, "CLOUD_ANONYMOUS_ID_FORBIDDEN")
     if any(
@@ -175,6 +222,8 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
         add(path, "ANON_CLOUD_FALLBACK_REFUSAL_REQUIRED")
     if not before(text, "if (isAnon) {", "const speech = await synthesizeSpeech"):
         add(path, "ANON_REFUSAL_MUST_PRECEDE_CLOUD")
+    if not before(text, "reserveVoiceProviderSpend({", "const speech = await synthesizeSpeech"):
+        add(path, "LOCAL_FALLBACK_SPEND_RESERVATION_REQUIRED")
 
     path = "app/api/voice/stream-conversation/route.ts"
     text = source.get(path, "")
@@ -184,16 +233,22 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
         add(path, "STREAM_BODY_IDENTITY_FALLBACK_FORBIDDEN")
     if "bodyUserId && bodyUserId !== verifiedUserId" not in text:
         add(path, "STREAM_IDENTITY_MISMATCH_REQUIRED")
-    for needle, code in (
-        ("LimitsEnforcer.checkUsage", "STREAM_QUOTA_CHECK_REQUIRED"),
-        ("LimitsEnforcer.recordUsage", "STREAM_QUOTA_RECORD_REQUIRED"),
-    ):
-        if needle not in text:
-            add(path, code)
-    if not before(text, "LimitsEnforcer.checkUsage", "new ReadableStream"):
-        add(path, "STREAM_QUOTA_BEFORE_PROVIDER_STREAM")
+    if "reserveTextProviderSpend({" not in text:
+        add(path, "STREAM_TEXT_SPEND_RESERVATION_REQUIRED")
+    if not before(text, "reserveTextProviderSpend({", "const claudeService = getClaudeService()"):
+        add(path, "STREAM_TEXT_RESERVATION_BEFORE_PROVIDER_DISPATCH")
+    if before(text, "reserveTextProviderSpend({", "if (!turnDecision.shouldSpeak)"):
+        add(path, "STREAM_TEXT_RESERVATION_MUST_FOLLOW_SILENCE_GATE")
+    if before(text, "reserveTextProviderSpend({", "if (thresholdResult.skipLLM"):
+        add(path, "STREAM_TEXT_RESERVATION_MUST_FOLLOW_THRESHOLD_GATE")
+    if "reserveVoiceProviderSpend({" not in text or "synthesizeAccountedOpenAiSpeech" not in text:
+        add(path, "STREAM_VOICE_SPEND_RESERVATION_REQUIRED")
+    if not before(text, "reserveVoiceProviderSpend({", "return synthesizeSpeech({ text, ...options }"):
+        add(path, "STREAM_VOICE_RESERVATION_BEFORE_PROVIDER_REQUIRED")
     if ".substring(0, 80)" in text or "[StreamConversation] Message:" in text:
         add(path, "MEMBER_MESSAGE_LOGGING_FORBIDDEN")
+    if "userId.substring(" in text or "userId.slice(" in text:
+        add(path, "MEMBER_ID_PREFIX_LOGGING_FORBIDDEN")
 
     path = "app/api/voice/webrtc-session/route.ts"
     text = source.get(path, "")
@@ -201,6 +256,8 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
         add(path, "REALTIME_AUTH_BEFORE_SDP_REQUIRED")
     if "OPENAI_REALTIME_BROKER_RELEASED" not in text:
         add(path, "REALTIME_DEFAULT_OFF_RELEASE_GATE_REQUIRED")
+    if "OPENAI_REALTIME_USAGE_ACCOUNTING_RELEASED" not in text:
+        add(path, "REALTIME_ACCOUNTING_RELEASE_GATE_REQUIRED")
     if not before(text, "OPENAI_REALTIME_BROKER_RELEASED", "fetch('https://api.openai.com"):
         add(path, "REALTIME_RELEASE_GATE_BEFORE_PROVIDER")
     if "searchParams.get('userId')" in text or "searchParams.get('userName')" in text:
@@ -221,6 +278,8 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
             add(path, code)
     if ".slice(0, 8)" in text:
         add(path, "MEMBER_ID_PREFIX_LOGGING_FORBIDDEN")
+    if not before(text, "reserveVoiceProviderSpend({", "const speech = await synthesizeSpeech"):
+        add(path, "PREVIEW_SPEND_RESERVATION_REQUIRED")
 
     rows = sorted(set(violations))
     return {

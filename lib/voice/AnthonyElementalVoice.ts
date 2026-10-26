@@ -387,7 +387,7 @@ export class AnthonyElementalVoice {
       const plainText = ssml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
       return await requestSoullabTts(plainText, {
         voice: 'onyx',
-        speed: Math.max(0.8, Math.min(1.2, 0.95 + modulation.airiness * 0.1)),
+        speed: Math.max(0.8, Math.min(1.2, modulation.speed)),
         format: 'mp3',
       });
     } catch (error) {

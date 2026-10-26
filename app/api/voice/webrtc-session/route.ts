@@ -17,7 +17,11 @@ export async function POST(req: NextRequest) {
     if (!memberId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
-    if (process.env.ALLOW_OPENAI_REALTIME !== 'true' || process.env.OPENAI_REALTIME_BROKER_RELEASED !== 'true') {
+    if (
+      process.env.ALLOW_OPENAI_REALTIME !== 'true' ||
+      process.env.OPENAI_REALTIME_BROKER_RELEASED !== 'true' ||
+      process.env.OPENAI_REALTIME_USAGE_ACCOUNTING_RELEASED !== 'true'
+    ) {
       return NextResponse.json({ error: 'Realtime voice is not released' }, { status: 503 });
     }
 

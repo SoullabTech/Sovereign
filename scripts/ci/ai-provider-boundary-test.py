@@ -160,6 +160,69 @@ class BoundaryMutations(unittest.TestCase):
         )
         self.assertIn("MEMBER_ID_PREFIX_LOGGING_FORBIDDEN", self.codes(result))
 
+    def test_spend_transaction_boundary_removal_fails(self):
+        result = self.evaluate(
+            "lib/limits/ProviderSpendGate.ts",
+            lambda s: s.replace("dependencies.transaction(async (client) =>", "Promise.resolve(async (client) =>", 1),
+        )
+        self.assertIn("SPEND_TRANSACTION_BOUNDARY_REQUIRED", self.codes(result))
+
+    def test_free_text_atomic_limit_removal_fails(self):
+        result = self.evaluate(
+            "lib/limits/ProviderSpendGate.ts",
+            lambda s: s.replace("COALESCE(text_turns, 0) < $3", "TRUE", 1),
+        )
+        self.assertIn("SPEND_FREE_TEXT_ATOMIC_LIMIT_REQUIRED", self.codes(result))
+
+    def test_openai_spend_reservation_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s.replace("await reserveVoiceProviderSpend({", "await Promise.resolve({", 1),
+        )
+        self.assertIn("CLOUD_SPEND_RESERVATION_BEFORE_PROVIDER_REQUIRED", self.codes(result))
+
+    def test_stream_text_reservation_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/stream-conversation/route.ts",
+            lambda s: s.replace("await reserveTextProviderSpend({", "await Promise.resolve({", 1),
+        )
+        self.assertIn("STREAM_TEXT_SPEND_RESERVATION_REQUIRED", self.codes(result))
+
+    def test_realtime_accounting_gate_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/webrtc-session/route.ts",
+            lambda s: s.replace("OPENAI_REALTIME_USAGE_ACCOUNTING_RELEASED", "REMOVED_ACCOUNTING_GATE", 1),
+        )
+        self.assertIn("REALTIME_ACCOUNTING_RELEASE_GATE_REQUIRED", self.codes(result))
+
+    def test_canonical_personal_tier_mapping_removal_fails(self):
+        result = self.evaluate(
+            "lib/limits/ProviderSpendGate.ts",
+            lambda s: s.replace(" || value === 'personal'", "", 1),
+        )
+        self.assertIn("CANONICAL_SPEND_TIER_MAPPING_REQUIRED", self.codes(result))
+
+    def test_limits_pro_tier_mapping_removal_fails(self):
+        result = self.evaluate(
+            "lib/limits/LimitsEnforcer.ts",
+            lambda s: s.replace(" || tier === 'pro'", "", 1),
+        )
+        self.assertIn("CANONICAL_MEMBER_TIER_MAPPING_REQUIRED", self.codes(result))
+
+    def test_stream_early_text_reservation_fails(self):
+        def move_early(text: str) -> str:
+            start = text.index("        try {\n          await reserveTextProviderSpend({")
+            end = text.index("        const claudeService = getClaudeService();", start)
+            block = text[start:end]
+            text = text[:start] + text[end:]
+            insertion = text.index("  const encoder = new TextEncoder();")
+            return text[:insertion] + block.lstrip() + text[insertion:]
+        result = self.evaluate("app/api/voice/stream-conversation/route.ts", move_early)
+        self.assertTrue(
+            {"STREAM_TEXT_RESERVATION_MUST_FOLLOW_SILENCE_GATE", "STREAM_TEXT_RESERVATION_MUST_FOLLOW_THRESHOLD_GATE"}
+            & self.codes(result)
+        )
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
