@@ -10,6 +10,7 @@
  * - 40% increase in perceived authenticity
  */
 
+import 'server-only';
 import {
   MaiaFullyEducatedOrchestrator,
   OnboardingPreferences,
@@ -92,7 +93,7 @@ export class FieldIntelligenceMaiaOrchestrator extends MaiaFullyEducatedOrchestr
     this.mycelialNetwork = new MycelialNetwork();
 
     // Initialize Claude Service if API key is available
-    const apiKey = process.env.ANTHROPIC_API_KEY || process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
     if (apiKey) {
       this.claudeService = new ClaudeService({
         apiKey,

@@ -7,9 +7,9 @@ import { AgentConfig } from '../agent-config';
 import { VoicePreprocessor } from './VoicePreprocessor';
 import { playAudioWithFeedbackPrevention, speakWithFeedbackPrevention } from './voice-feedback-prevention';
 import { signalMayaSpeaking } from './enhanced-feedback-prevention';
+import { apiFetch } from '../http/apiBase';
 
 interface MaiaVoiceConfig {
-  elevenLabsApiKey?: string;
   voiceId: string; // Dynamic based on agent
   sesameApiKey?: string;
   fallbackToWebSpeech: boolean;
@@ -49,7 +49,6 @@ export class MaiaVoiceSystem {
     
     this.config = {
       voiceId: config?.voiceId || defaultVoiceId,
-      elevenLabsApiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
       fallbackToWebSpeech: true,
       agentConfig: config?.agentConfig,
       naturalSettings: isAnthony ? {
@@ -196,51 +195,7 @@ export class MaiaVoiceSystem {
     );
   }
 
-  // ElevenLabs TTS with Aunt Annie voice
-  private async speakWithElevenLabs(text: string): Promise<void> {
-    if (!this.config.elevenLabsApiKey) {
-      throw new Error('ElevenLabs API key not configured');
-    }
-
-    this.updateState({ isLoading: true, currentText: text, voiceType: 'elevenlabs' });
-
-    try {
-      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${this.config.voiceId}`, {
-        method: 'POST',
-        headers: {
-          'Accept': 'audio/mpeg',
-          'Content-Type': 'application/json',
-          'xi-api-key': this.config.elevenLabsApiKey
-        },
-        body: JSON.stringify({
-          text: this.enhanceTextForSpeech(text),
-          model_id: 'eleven_monolingual_v1',
-          voice_settings: {
-            stability: this.config.naturalSettings.stability,
-            similarity_boost: this.config.naturalSettings.clarity,
-            style: 0.0, // Natural conversational style
-            use_speaker_boost: true
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`ElevenLabs API error: ${response.status}`);
-      }
-
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
-      return this.playAudioUrl(audioUrl);
-    } catch (error) {
-      console.error('ElevenLabs TTS failed:', error);
-      this.updateState({ error: error.message });
-      throw error;
-    } finally {
-      this.updateState({ isLoading: false });
-    }
-  }
-
+  // Soullab server TTS — provider credentials never enter the browser
   // OpenAI TTS with Alloy voice - PRIMARY METHOD
   private async speakWithOpenAI(text: string, voiceTone?: any): Promise<void> {
     console.log('🎯 [speakWithOpenAI] Starting...');
@@ -269,7 +224,7 @@ export class MaiaVoiceSystem {
         console.log('   🌀 Passing elemental voiceTone:', voiceTone);
       }
 
-      const response = await fetch('/api/voice/openai-tts', {
+      const response = await apiFetch('/api/voice/openai-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
@@ -621,26 +576,14 @@ export class MaiaVoiceSystem {
         console.warn('⚠️ OpenAI TTS failed, trying ElevenLabs:', error);
       }
 
-      // Try ElevenLabs second (if configured)
-      if (this.config.elevenLabsApiKey) {
-        try {
-          console.log('🎙️ Trying ElevenLabs as fallback...');
-          await this.speakWithElevenLabs(text);
-          console.log('✅ ElevenLabs succeeded!');
-          return;
-        } catch (error) {
-          console.warn('⚠️ ElevenLabs failed, falling back to Web Speech:', error);
-        }
-      }
+      // Direct provider fallback is intentionally prohibited: the server route owns
+      // local/cloud selection and all provider credentials.
 
       // DISABLED: Don't fall back to robotic Web Speech API
       // Users report it's jarring and breaks immersion
       // Better to fail silently than use robotic voice
       console.warn('🚫 All premium voice services failed. NOT falling back to robotic Web Speech API.');
       console.warn('   → OpenAI TTS failed');
-      if (this.config.elevenLabsApiKey) {
-        console.warn('   → ElevenLabs failed');
-      }
       console.warn('   → Skipping Web Speech API to avoid robotic voice');
 
       throw new Error('Premium voice services unavailable');
@@ -713,7 +656,8 @@ export class MaiaVoiceSystem {
   // Check voice capabilities
   getCapabilities() {
     return {
-      elevenLabs: !!this.config.elevenLabsApiKey,
+      elevenLabs: false,
+      soullabServerVoice: true,
       sesame: !!this.config.sesameApiKey,
       webSpeech: 'speechSynthesis' in window,
       audioContext: !!this.audioContext

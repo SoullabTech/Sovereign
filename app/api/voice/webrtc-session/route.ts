@@ -1,4 +1,6 @@
+import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export const dynamic = 'force-dynamic';
 /**
@@ -11,6 +13,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ stub: true });
   }
   try {
+    const memberId = await getMemberIdFromRequest(req);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    if (process.env.ALLOW_OPENAI_REALTIME !== 'true' || process.env.OPENAI_REALTIME_BROKER_RELEASED !== 'true') {
+      return NextResponse.json({ error: 'Realtime voice is not released' }, { status: 503 });
+    }
+
     // Get SDP from browser
     const sdp = await req.text();
 
@@ -23,14 +33,17 @@ export async function POST(req: NextRequest) {
 
     console.log('📞 Received SDP offer from client');
 
-    // Get user context from URL params
+    // Client input selects only bounded presentation options; identity stays server-side.
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId') || 'anonymous';
-    const userName = searchParams.get('userName') || 'Explorer';
-    const mode = (searchParams.get('mode') || 'dialogue') as 'dialogue' | 'patient' | 'scribe';
-    const voice = searchParams.get('voice') || 'shimmer';
+    const allowedModes = new Set(['dialogue', 'patient', 'scribe']);
+    const allowedVoices = new Set(['alloy', 'echo', 'shimmer', 'ash', 'ballad', 'coral', 'sage', 'verse']);
+    const requestedMode = searchParams.get('mode') || 'dialogue';
+    const requestedVoice = searchParams.get('voice') || 'shimmer';
+    const mode = (allowedModes.has(requestedMode) ? requestedMode : 'dialogue') as 'dialogue' | 'patient' | 'scribe';
+    const voice = allowedVoices.has(requestedVoice) ? requestedVoice : 'shimmer';
+    const userName = 'the member';
 
-    console.log(`🌀 Session config: user=${userName}, mode=${mode}, voice=${voice}`);
+    console.log(`🌀 Realtime session config: mode=${mode}, voice=${voice}`);
 
     // Build mode-based instructions
     const modeInstructions = {
@@ -151,10 +164,9 @@ You are the witnessing presence. Trust the unfolding.`
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ OpenAI API error:', response.status, errorText);
+      console.error('❌ OpenAI Realtime API error status:', response.status);
       return NextResponse.json(
-        { error: `OpenAI API error: ${response.status}`, details: errorText },
+        { error: 'Realtime provider request failed' },
         { status: response.status }
       );
     }
@@ -167,13 +179,14 @@ You are the witnessing presence. Trust the unfolding.`
       status: 200,
       headers: {
         'Content-Type': 'application/sdp',
+        'Cache-Control': 'no-store',
       },
     });
 
   } catch (error) {
-    console.error('❌ WebRTC session error:', error);
+    console.error('❌ WebRTC session failed');
     return NextResponse.json(
-      { error: 'Failed to create WebRTC session', details: String(error) },
+      { error: 'Failed to create WebRTC session' },
       { status: 500 }
     );
   }

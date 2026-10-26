@@ -15,6 +15,7 @@
  *   X-Voice-Policy   — the sovereignty policy in effect
  */
 
+import 'server-only';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
 import { NextRequest } from 'next/server';
@@ -49,7 +50,10 @@ export async function POST(req: NextRequest) {
     const memberId = await getMemberIdFromRequest(req);
     const headerAnonId = req.headers.get('x-maia-anon-id') ?? undefined;
     const isAnon = !memberId;
-    const anonId = isAnon ? (headerAnonId || `anon_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`) : undefined;
+    if (isAnon && !headerAnonId) {
+      return jsonError('Stable anonymous voice session required', 400, { requestId });
+    }
+    const anonId = isAnon ? headerAnonId : undefined;
 
     // ═══ TIER-BASED LIMITS CHECK ═══
     const memberTier: MemberTier = isAnon ? 'free' : memberId ? await getMemberTier(memberId) : 'free';
@@ -121,6 +125,9 @@ export async function POST(req: NextRequest) {
       fallback = result.fallback;
     } catch (err) {
       if (err instanceof TTSFallbackToOpenAI) {
+        if (isAnon) {
+          return jsonError('Local voice unavailable for anonymous session', 503, { requestId });
+        }
         fallback = err.isFallback;
         fallbackReason = err.reason;
 

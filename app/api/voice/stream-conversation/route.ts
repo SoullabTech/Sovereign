@@ -21,6 +21,7 @@
  * The user hears MAIA begin speaking while she's still thinking.
  */
 
+import 'server-only';
 import { resolveVoicePreference } from '@/lib/tts/cloudVoicePolicy';
 import { sanitizeForSpeech } from '@/lib/tts/sanitizeForSpeech';
 import { NextRequest } from 'next/server';
@@ -83,6 +84,7 @@ import { fireAndForgetFieldMonitor } from '@/lib/consciousness/fieldMonitorTelem
 import { storeTrustObservation, inferEngagementProxy, classifyResponseType, isTrustObservationEnabled } from '@/lib/trust/trustObservationService';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { LimitsEnforcer, getMemberTier } from '@/lib/limits/LimitsEnforcer';
 import { classifyConversationDepth, tierToBrevity } from '@/lib/consciousness/conversationDepthClassifier';
 import { resolveCouncil, buildCouncilPromptSection, normalizeGuideId } from '@/lib/consciousness/interpretiveCouncil';
 import { buildMaiaContext } from '@/lib/maia/context/buildMaiaContext';
@@ -599,6 +601,8 @@ async function synthesizeSentence(
 }
 
 export async function POST(req: NextRequest) {
+  const verifiedUserId = await getMemberIdFromRequest(req);
+  if (!verifiedUserId) return new Response('Authentication required', { status: 401 });
   const body: StreamRequest = await req.json();
 
   // ─── TURN INSTRUMENTATION ───
@@ -633,8 +637,11 @@ export async function POST(req: NextRequest) {
   const isIosPwa = /iPhone|iPad/i.test(ua);
   if (isIosPwa) console.log('[StreamConversation] iOS client detected — PersonaPlex skipped');
 
-  // Resolve member ID: body first, then header fallback (iOS/Safari x-member-id)
-  const userId = bodyUserId || await getMemberIdFromRequest(req);
+  // The verified session is the only identity authority.
+  if (bodyUserId && bodyUserId !== verifiedUserId) {
+    return new Response('Member identity mismatch', { status: 403 });
+  }
+  const userId = verifiedUserId;
 
   // Initialize timing instrumentation
   const timer = createVoiceTimer({ turnId, host });
@@ -672,12 +679,25 @@ export async function POST(req: NextRequest) {
   }
 
   console.log('🔊 [StreamConversation] Received voice settings:', { voice: effectiveVoice, speed, mode, sanctuary, ttsProvider: memberTtsProvider });
-  console.log(`🔊 [StreamConversation] Message: "${(message || '').substring(0, 80)}" (${conversationHistory?.length ?? 0} history msgs)`);
+  console.log(`🔊 [StreamConversation] Message received chars=${(message || '').length} history=${conversationHistory?.length ?? 0}`);
 
   if (!message?.trim()) {
-    console.warn('🔊 [StreamConversation] ⚠️ Empty message received! Raw value:', JSON.stringify(message));
+    console.warn('🔊 [StreamConversation] ⚠️ Empty message received');
     return new Response('Missing message', { status: 400 });
   }
+
+  const memberTier = await getMemberTier(userId);
+  const usageCheck = await LimitsEnforcer.checkUsage({
+    memberId: userId, tier: memberTier, resource: 'text', amount: 1,
+  });
+  if (usageCheck.action === 'block' || usageCheck.action === 'suggest_addon') {
+    return new Response(JSON.stringify({ error: usageCheck.message, blocked: true }), {
+      status: 429, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  await LimitsEnforcer.recordUsage({
+    memberId: userId, tier: memberTier, resource: 'text', amount: 1,
+  });
 
   const encoder = new TextEncoder();
 
@@ -1352,7 +1372,7 @@ export async function POST(req: NextRequest) {
             const identityCheck = enforceMaiaIdentity(chunk.text);
             if (!identityCheck.safe) {
               console.warn('[Voice] Identity breach intercepted:', {
-                originalText: chunk.text.substring(0, 80),
+                originalTextLength: chunk.text.length,
                 patterns: identityCheck.breachPatterns,
               });
             }
@@ -1374,7 +1394,7 @@ export async function POST(req: NextRequest) {
               console.warn('[Voice] §V amnesia posture intercepted mid-stream:', {
                 index: chunk.index,
                 reason: canonVerdict.reason,
-                originalText: identityCheck.sanitized.substring(0, 80),
+                originalTextLength: identityCheck.sanitized.length,
                 hasLoadedContext: voiceMemoryLoaded,
               });
             }

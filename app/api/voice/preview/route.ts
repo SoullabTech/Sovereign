@@ -15,8 +15,10 @@
  * Preview files are scoped to the requesting member and cannot be accessed by others.
  */
 
+import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireMemberId } from '@/lib/auth/session';
+import { LimitsEnforcer, getMemberTier } from '@/lib/limits/LimitsEnforcer';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import { resolveVoicePreference } from '@/lib/tts/cloudVoicePolicy';
@@ -89,6 +91,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const memberTier = await getMemberTier(memberId);
+  const estimatedSeconds = Math.ceil(text.length / 12.5);
+  const usageCheck = await LimitsEnforcer.checkUsage({
+    memberId, tier: memberTier, resource: 'voice_tts', amount: estimatedSeconds,
+  });
+  if (usageCheck.action === 'block' || usageCheck.action === 'suggest_addon') {
+    return NextResponse.json({ error: usageCheck.message, blocked: true }, { status: 429 });
+  }
+
   const voice = body.voiceId || 'alloy';
   const speed = clamp(body.speed ?? 1.0, SPEED_MIN, SPEED_MAX);
   const providerPref = body.ttsProvider || 'auto';
@@ -96,7 +107,7 @@ export async function POST(req: NextRequest) {
   // ── Resolve log: what this preview request decided ──
   console.info('[tts.resolve]', JSON.stringify({
     path: 'preview',
-    memberId: (memberId || '').slice(0, 8),
+    authenticatedMember: true,
     ttsProviderPref: providerPref,
     voiceId: voice,
     localEnabled: process.env.MAIA_LOCAL_VOICE_ENABLED === '1',
@@ -190,6 +201,9 @@ export async function POST(req: NextRequest) {
   const filename = `${memberId}_${id}.mp3`;
   const fullPath = path.join(PREVIEW_DIR, filename);
   await fs.writeFile(fullPath, audioBuffer);
+  void LimitsEnforcer.recordUsage({
+    memberId, tier: memberTier, resource: 'voice_tts', amount: estimatedSeconds,
+  });
 
   const audioUrl = `/api/voice/preview/${encodeURIComponent(filename)}`;
 

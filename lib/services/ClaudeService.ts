@@ -1,4 +1,5 @@
 // @ts-nocheck - Services prototype, not type-checked
+import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
 import type { UserReadiness } from '@/lib/services/UserReadinessService';
 import { userReadinessService } from '@/lib/services/UserReadinessService';
@@ -1217,14 +1218,12 @@ export function initializeClaudeService(apiKey: string): ClaudeService {
 export function getClaudeService(): ClaudeService {
   if (!claudeService) {
     const apiKey = process.env.ANTHROPIC_API_KEY ||
-                   process.env.CLAUDE_API_KEY ||
-                   process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
+                   process.env.CLAUDE_API_KEY;
 
     if (!apiKey) {
       console.error('Claude API key not found. Checked:', {
         ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
-        CLAUDE_API_KEY: !!process.env.CLAUDE_API_KEY,
-        NEXT_PUBLIC_ANTHROPIC_API_KEY: !!process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY
+        CLAUDE_API_KEY: !!process.env.CLAUDE_API_KEY
       });
       throw new Error('Claude API key not configured - check ANTHROPIC_API_KEY in .env.local');
     }

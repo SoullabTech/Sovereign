@@ -4,6 +4,7 @@
 // first before falling back to OpenAI. The frontend doesn't need to change —
 // all existing calls to /api/voice/openai-tts automatically get local voice.
 //
+import 'server-only';
 import OpenAI from "openai";
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
@@ -41,15 +42,13 @@ export async function POST(req: NextRequest) {
   try {
     // ═══ IDENTITY RESOLUTION ═══
     const memberId = await getMemberIdFromRequest(req);
-    const headerAnonId = req.headers.get('x-maia-anon-id') ?? undefined;
-    const isAnon = !memberId;
-    if (isAnon && !headerAnonId) {
-      console.warn('[limits] Missing x-maia-anon-id header; TTS usage may not accumulate properly');
+    if (!memberId) {
+      return jsonError('Authentication required for cloud voice', 401, { requestId });
     }
-    const anonId = isAnon ? (headerAnonId || `anon_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`) : undefined;
+    const anonId: undefined = undefined;
 
     // ═══ TIER-BASED LIMITS CHECK ═══
-    const memberTier: MemberTier = isAnon ? 'free' : memberId ? await getMemberTier(memberId) : 'free';
+    const memberTier: MemberTier = await getMemberTier(memberId);
 
     const body = await req.json().catch(() => null) as null | {
       text?: string;
@@ -357,28 +356,10 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err: any) {
-    // This is the money: surface upstream details
-    const status = err?.status ?? err?.response?.status ?? 500;
-
-    // OpenAI SDK often provides err.error or err.response; keep it safe but informative
-    const detail =
-      err?.error?.message ??
-      err?.message ??
-      "Unknown TTS error";
-
-    console.error(`[openai-tts:${requestId}] FAIL status=${status} detail=${detail}`);
-    if (err?.error) console.error(`[openai-tts:${requestId}] error object:`, err.error);
-    if (err?.response) console.error(`[openai-tts:${requestId}] response:`, err.response);
-    if (err?.stack) console.error(err.stack);
-
-    // Also log key presence for debugging
-    console.log(`[openai-tts:${requestId}] OPENAI_API_KEY present?`, Boolean(process.env.OPENAI_API_KEY));
-    console.log(`[openai-tts:${requestId}] OPENAI_API_KEY length:`, process.env.OPENAI_API_KEY?.length || 0);
-
-    return jsonError("Failed to generate speech", status, {
-      requestId,
-      detail,
-    });
+    const upstreamStatus = Number(err?.status ?? err?.response?.status ?? 500);
+    const status = upstreamStatus >= 400 && upstreamStatus < 600 ? upstreamStatus : 500;
+    console.error(`[openai-tts:${requestId}] FAIL category=upstream_${status}`);
+    return jsonError("Failed to generate speech", status, { requestId });
   }
 }
 

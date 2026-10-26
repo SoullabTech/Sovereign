@@ -13,6 +13,7 @@ import { VoiceFeedbackPrevention } from './voice-feedback-prevention';
 import { ensureAudioReady, getAudioStatus } from './ios-audio-session';
 import { pushVoiceDebug } from './voiceDebugBus';
 import { logVoiceEvent } from './voiceDiagnostics';
+import { apiFetch } from '../http/apiBase';
 
 export interface AudioQueueItem {
   audio: HTMLAudioElement;
@@ -593,7 +594,7 @@ export async function generateAudioChunk(
   console.log('🎤 [TTS] Generating audio for:', text.length, 'chars'); // Never log content
 
   try {
-    const response = await fetch('/api/voice/openai-tts', {
+    const response = await apiFetch('/api/voice/openai-tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

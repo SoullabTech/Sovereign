@@ -1,5 +1,6 @@
 // @ts-nocheck
 // lib/services/VoiceServiceWithFallback.ts
+import 'server-only';
 import OpenAI from 'openai';
 import { EventEmitter } from 'events';
 import { VoiceProfile, getVoiceProfile } from '../config/voiceProfiles';
@@ -27,13 +28,13 @@ export class VoiceServiceWithFallback extends EventEmitter {
     super();
 
     // Initialize OpenAI if available
-    const openAIKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    const openAIKey = process.env.OPENAI_API_KEY;
     if (openAIKey) {
       this.openai = new OpenAI({ apiKey: openAIKey });
     }
 
     // Store ElevenLabs key
-    this.elevenLabsKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
+    this.elevenLabsKey = process.env.ELEVENLABS_API_KEY;
   }
 
   async generateSpeech(options: VoiceGenerationOptions): Promise<{
