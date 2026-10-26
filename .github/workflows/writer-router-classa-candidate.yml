@@ -1,0 +1,45 @@
+name: Writer Router Class A Candidate Qualification
+
+# Review only. Functional passing tests DO NOT update the governed seam
+# baseline or authorize merging the historically byte-pinned router.
+on:
+  pull_request:
+    paths:
+      - 'lib/ai/structured/**'
+      - '.github/workflows/writer-router-classa-candidate.yml'
+  push:
+    branches:
+      - review/ws-structured-router-classa-remediation-20261022
+
+permissions:
+  contents: read
+
+jobs:
+  router-functional-falsifiers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Exercise unchanged negative tests and governed behavior (no network)
+        run: |
+          npx jest --config jest.config.js --runInBand --no-cache --runTestsByPath \
+            lib/ai/structured/__tests__/unwrappedRouterPrivacyHold.test.ts \
+            lib/ai/structured/__tests__/nonFallbackable.test.ts \
+            lib/ai/structured/__tests__/requestEquivalence.test.ts \
+            lib/ai/structured/__tests__/modePolicy.test.ts \
+            lib/disclosure/__tests__/editorialDisclosureFalsifiers.test.ts
+      - name: Governance baseline is deliberately NOT ratified by this review
+        run: |
+          echo "HOLD: router.ts is changed against its governed byte pin."
+          echo "The historical seamIsolation byte pin must NOT be updated automatically."
+          echo "Functional tests are not Class A approval to merge/deploy."
