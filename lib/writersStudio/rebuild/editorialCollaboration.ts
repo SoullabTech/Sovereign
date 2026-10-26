@@ -177,6 +177,7 @@ export type EditorialTurnOutcome =
        * 'unknown' must remain genuinely unknown; no retry is implied. */
       dispatch?: DispatchObservation;
       reason: 'unavailable' | 'unreadable' | 'locus_mismatch' | 'turn_refused' | 'scope_refused'
+        | 'accountability_unresolved'
         | 'posture_unresolved' | 'sanctuary_unavailable' | 'relationship_required' | 'origin_unavailable';
       detail?: string;
       voice?: VoiceNotice;
@@ -269,6 +270,14 @@ export async function sendBoundEditorialTurn(
           detail: typeof body?.detail === 'string'
             ? body.detail
             : 'MAIA stayed in exploration. Nothing was added to the revision options.',
+        };
+      }
+      if (res.status === 500 && body?.error === 'disclosure_confirmation_unresolved') {
+        return {
+          ok: false,
+          ...priorAct,
+          reason: 'accountability_unresolved',
+          detail: 'MAIA may have received the passage, but Soullab could not confirm the disclosure record. The response was withheld. Nothing was applied, and this request will not be retried automatically.',
         };
       }
       if (res.status === 409 && (body?.scope || body?.voice || body?.error === 'sequence_discussion_first')) {

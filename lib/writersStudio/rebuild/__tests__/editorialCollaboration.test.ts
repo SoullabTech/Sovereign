@@ -63,6 +63,31 @@ describe('revision collaboration binding', () => {
     expect(body.act.text).toBe(exact);
     expect(body.act.act).toBe('discourse');
   });
+  it('withholds an unaccounted provider reply and never retries automatically', async () => {
+    fetchMock.mockResolvedValueOnce(response({
+      threadId: 'th-1',
+      memberTurnIndex: 4,
+      persisted: true,
+      error: 'disclosure_confirmation_unresolved',
+      detail: 'provider_disclosure_confirmation_unresolved',
+      dispatch: 'response_observed',
+    }, 500));
+    const out = await sendBoundEditorialTurn(
+      'th-1', 'draft-200', 'Fictional author question.',
+      { resolved: true, sanctuary: false }, undefined, 'rel-1',
+    );
+    expect(out).toMatchObject({
+      ok: false,
+      reason: 'accountability_unresolved',
+      memberTurnIndex: 4,
+      dispatch: 'response_observed',
+    });
+    expect(out.ok === false ? out.detail : '').toContain('will not be retried automatically');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(String(init.body))).toMatchObject({ relationshipId: 'rel-1' });
+  });
+
   it('adopts only a version that belongs to the bound thread', async () => {
     fetchMock.mockResolvedValueOnce(response(thread()));
     const out = await adoptBoundEditorialVersion('th-1', 'draft-200', 'not-here', 'rel-1');

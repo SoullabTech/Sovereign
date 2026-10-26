@@ -1171,6 +1171,8 @@ export default function FlagshipWriteEditController() {
           }
         } else if (outcome.reason === 'sanctuary_unavailable') {
           setEditorialFailure('Editorial revision is unavailable in Sanctuary. Nothing was changed.');
+        } else if (outcome.reason === 'accountability_unresolved') {
+          setEditorialFailure('MAIA may have received the passage, but Soullab could not confirm the disclosure record. The response was withheld. Nothing was applied, and this request will not be retried automatically.');
         } else {
           setEditorialFailure(outcome.detail
             ?? 'MAIA could not complete that editorial turn. Nothing was changed.');

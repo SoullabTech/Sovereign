@@ -311,6 +311,16 @@ export async function POST(request: NextRequest) {
        and nothing was sent. ⛔ 502 would blame the provider for a line this
        system drew before reaching it. */
     const disclosureRefused = turn.reason === 'disclosure_unavailable';
+    const accountabilityUnresolved = turn.reason === 'disclosure_confirmation_unresolved';
+    const safeDetail = scopeRefused || disclosureRefused
+      ? turn.detail
+      : turn.reason === 'structured_refused'
+        ? turn.detail
+        : turn.reason === 'model_unattributable'
+          ? 'model_attribution_unverified'
+          : accountabilityUnresolved
+            ? 'provider_disclosure_confirmation_unresolved'
+            : undefined;
     /* ⭐ THE DIAGNOSTIC THAT WAS MISLEADING, CORRECTED.
      *
      * `detail` is withheld from the RESPONSE for non-scope refusals, and that is
@@ -323,7 +333,7 @@ export async function POST(request: NextRequest) {
     if (!scopeRefused && !disclosureRefused) {
       console.error('[editorial/turn] refused', {
         reason: turn.reason,
-        detail: turn.detail,
+        detail: safeDetail ?? 'redacted',
         dispatch: turn.dispatch ?? 'not_applicable',
         threadId: parsed.threadId,
         memberTurnIndex: act.turnIndex,
@@ -332,6 +342,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       threadId: parsed.threadId,
       memberTurnIndex: act.turnIndex,
+      persisted: true,
       direction: act.direction ? { id: act.direction.id } : null,
       error: turn.reason,
       /* ⭐ SAFE TO RETURN, and the reason the field exists: it reports whether a
@@ -356,7 +367,7 @@ export async function POST(request: NextRequest) {
        * ⛔ Still never content: every detail on this path is a fixed code, a
        * model name, or the writer-facing refusal sentence. ⛔ No authored prose,
        * no candidate wording. A refusal is not an occasion to disclose. */
-      ...(turn.detail !== undefined ? { detail: turn.detail } : {}),
+      ...(safeDetail !== undefined ? { detail: safeDetail } : {}),
       ...(turn.scope ? {
         scope: {
           declared: parsed.scope,
@@ -367,7 +378,7 @@ export async function POST(request: NextRequest) {
           wouldPassAtLatitude: turn.scope!.wouldPassAtLatitude,
         },
       } : {}),
-    }, { status: scopeRefused || disclosureRefused ? 409 : 502 });
+    }, { status: scopeRefused || disclosureRefused ? 409 : accountabilityUnresolved ? 500 : 502 });
   }
 
   /* ⛔ THIN. No StructuredRequest, no systemPrompt, no EditorialInvocation, no
@@ -376,6 +387,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     threadId: parsed.threadId,
     memberTurnIndex: act.turnIndex,
+    persisted: true,
     maiaTurnIndex: turn.persisted.turnIndex,
     response: turn.persisted.reply,
     direction: turn.persisted.direction ? { id: turn.persisted.direction.id } : null,
