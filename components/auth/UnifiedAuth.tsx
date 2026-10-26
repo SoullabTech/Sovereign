@@ -206,6 +206,10 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   // on every new attempt.
   const [sendBlocked, setSendBlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // The last password attempt was refused. Accounts made through the email-code
+  // flow hold a generated password the member never saw, so "wrong password" is
+  // the expected outcome for them — the card must hand them the code door.
+  const [passwordRefused, setPasswordRefused] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioPlatformAvailable, setBioPlatformAvailable] = useState(false);
   // AUTH-BIOMETRIC-01B. Capability (above) and enrollment (below) are separate
@@ -331,6 +335,16 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
 
   async function trustThisDevice() {
     try { await deviceTrust.trustDevice(undefined, 'standard'); } catch { /* non-blocking */ }
+  }
+
+  // Move to the email-code door carrying whatever the member already typed:
+  // an address entered as the "username" must not be asked for a second time.
+  function goToEmailCode() {
+    const typed = username.trim();
+    if (typed.includes('@') && !email.trim()) setEmail(typed.toLowerCase());
+    setPhase('email');
+    setError('');
+    setPasswordRefused(false);
   }
 
   function enterSoullab() {
@@ -497,6 +511,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
     e.preventDefault();
     if (isLoading) return;
     setError('');
+    setPasswordRefused(false);
     setIsLoading(true);
     try {
       const res = await apiFetch('/api/members/signin', {
@@ -507,7 +522,12 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
       let data: any = {};
       try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
       if (!res.ok) {
-        setError(data?.error || `Sign in failed (${res.status})`);
+        if (res.status === 401) {
+          setPasswordRefused(true);
+          setError('That email/username and password didn’t match. If you joined with an emailed code, you don’t have a password — we can email you a new code instead.');
+        } else {
+          setError(data?.error || `Sign in failed (${res.status})`);
+        }
         setIsLoading(false);
         return;
       }
@@ -635,8 +655,8 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                   the email-code flow were given a generated password they have never
                   seen, so this cannot be a dead end for them — it is how they get out
                   of a phase they should not have landed in. */}
-              <button type="button" onClick={() => { setPhase('email'); setError(''); }} disabled={isLoading} className={`${outlineBtn} mt-3`}>
-                Email me a sign-in code instead
+              <button type="button" onClick={goToEmailCode} disabled={isLoading} className={`${passwordRefused ? primaryBtn : outlineBtn} mt-3`}>
+                {passwordRefused ? 'Email me a sign-in code' : 'Email me a sign-in code instead'}
               </button>
 
               {/* MEMBER-ACCESS-RECOVERY-01
@@ -653,7 +673,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                 <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
                   <button
                     type="button"
-                    onClick={() => { setPhase('email'); setError(''); }}
+                    onClick={goToEmailCode}
                     disabled={isLoading}
                     className="block w-full text-left text-amber-300/90 hover:text-amber-200 transition-colors disabled:opacity-50"
                   >
