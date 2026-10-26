@@ -7,7 +7,7 @@ import { isMaiaSpeechActive } from '@/lib/listening/maiaSpeechFocus';
 import styles from './listen.module.css';
 
 type LocalSelection = { url: string; name: string; format: string; bytes: number };
-type Props = { audioRef: RefObject<HTMLAudioElement | null>; onBegin: () => void };
+type Props = { audioRef: RefObject<HTMLAudioElement>; onBegin: () => void };
 
 /** Only the member's File object is played. No upload, service worker cache,
  * metadata extraction, account sync, microphone or recording analysis. */

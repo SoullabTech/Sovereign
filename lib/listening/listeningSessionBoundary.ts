@@ -1,5 +1,5 @@
 /**
- * LISTEN-41 browser-web admission policy.
+ * LISTEN-41 / LISTEN-47 browser-web admission policy.
  *
  * This module is deliberately pure so route and response parsing can be
  * reviewed without mounting React, opening audio, or contacting a server.
@@ -15,11 +15,10 @@ export const ONLINE_LISTENING_ROUTE_PREFIXES = [
 ] as const;
 
 /** Routes beneath an otherwise approved family that own separate audio or identity.
- * They remain closed until their own authority is explicitly integrated.
+ * LISTEN-47 reconciles Reader with the verified session and shared output lease,
+ * so no current route-family exception remains in the browser review candidate.
  */
-export const ONLINE_LISTENING_ROUTE_EXCLUSIONS = [
-  '/maia/community/elemental-alchemy/reader',
-] as const;
+export const ONLINE_LISTENING_ROUTE_EXCLUSIONS = [] as const;
 
 function matchesRoutePrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);

@@ -27,12 +27,10 @@ test('only the seven browser-first Sound Field route families are admitted', () 
   }
 });
 
-test('Reader remains excluded until its independent narration authority is admitted', () => {
-  assert.deepEqual([...ONLINE_LISTENING_ROUTE_EXCLUSIONS], [
-    '/maia/community/elemental-alchemy/reader',
-  ]);
-  assert.equal(isOnlineListeningRoute('/maia/community/elemental-alchemy/reader'), false);
-  assert.equal(isOnlineListeningRoute('/maia/community/elemental-alchemy/reader/chapter-1'), false);
+test('Reader is admitted only after LISTEN-47 reconciles narration authority', () => {
+  assert.deepEqual([...ONLINE_LISTENING_ROUTE_EXCLUSIONS], []);
+  assert.equal(isOnlineListeningRoute('/maia/community/elemental-alchemy/reader'), true);
+  assert.equal(isOnlineListeningRoute('/maia/community/elemental-alchemy/reader/chapter-1'), true);
   assert.equal(isOnlineListeningRoute('/maia/community/elemental-alchemy'), true);
 });
 
@@ -59,7 +57,7 @@ test('minimum session receipt requires authenticated true plus a UUID member id'
 });
 
 test('client boundary uses the canonical session seam and contains no browser identity fallback', () => {
-  assert.match(boundarySource, /apiFetch\('\/api\/members\/session'/);
+  assert.match(boundarySource, /verifiedSessionFetch\('\/api\/members\/session'/);
   assert.match(boundarySource, /cache:\s*'no-store'/);
   assert.match(boundarySource, /SOULLAB_SESSION_END_EVENT/);
   assert.match(boundarySource, /PersistentListeningProvider/);

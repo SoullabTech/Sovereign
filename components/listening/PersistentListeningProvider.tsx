@@ -84,6 +84,25 @@ export function usePersistentListening(): ListeningTransport | null {
   return useContext(Context);
 }
 
+export type ListeningBoundaryStatus =
+  | 'standalone'
+  | 'not-applicable'
+  | 'checking'
+  | 'ready'
+  | 'denied'
+  | 'unavailable';
+
+const BoundaryStatusContext = createContext<ListeningBoundaryStatus>('standalone');
+export function ListeningBoundaryStatusProvider({
+  children,
+  status,
+}: { children: ReactNode; status: ListeningBoundaryStatus }) {
+  return <BoundaryStatusContext.Provider value={status}>{children}</BoundaryStatusContext.Provider>;
+}
+export function useListeningBoundaryStatus(): ListeningBoundaryStatus {
+  return useContext(BoundaryStatusContext);
+}
+
 function endSketch(sketch: Sketch | null): void {
   if (!sketch) return;
   try { sketch.master.gain.setValueAtTime(0, sketch.context.currentTime); } catch {}
@@ -261,6 +280,7 @@ export function PersistentListeningProvider({
         if (message.version === SOULLAB_AUDIO_PREFLIGHT_VERSION) {
           if (message.tab === AUDIO_OUTPUT_TAB_NONCE) return;
           if (message.type === 'maia-speech-preflight' ||
+              message.type === 'reader-narration-preflight' ||
               message.type === 'music-preflight') pause();
           return;
         }

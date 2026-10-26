@@ -11,7 +11,7 @@
  */
 
 import { EXPLORER_ID_KEY } from './explorerId';
-import { apiUrl } from '@/lib/http/apiBase';
+import { verifiedSessionFetch } from '@/lib/http/verifiedSessionFetch';
 
 export type HealResult =
   | { status: 'healed'; memberId: string; changes: string[] }
@@ -34,7 +34,7 @@ interface MemberData {
 interface MeResponse {
   success?: boolean;
   correlationId?: string;
-  action?: 'sync' | 'reauth' | 'clear_and_reauth' | 'retry';
+  action?: 'sync' | 'signin' | 'reauth' | 'clear_and_reauth' | 'retry';
   member?: MemberData;
   error?: string;
   code?: string;
@@ -84,6 +84,14 @@ function getLocalIdentity(): { id: string | null; source: string } {
  */
 function syncLocalStorage(member: MemberData): string[] {
   const changes: string[] = [];
+
+  // Keep the direct key aligned because legacy apiFetch still reads it first.
+  // The value is cache only; the server credential remains the authority.
+  const currentMemberId = localStorage.getItem('memberId');
+  if (currentMemberId !== member.id) {
+    localStorage.setItem('memberId', member.id);
+    changes.push(`memberId: ${currentMemberId} -> ${member.id}`);
+  }
 
   // Update explorerId
   const currentExplorerId = localStorage.getItem('explorerId');
@@ -142,12 +150,14 @@ export function clearIdentityCache(): void {
   if (typeof window === 'undefined') return;
 
   const keys = [
+    'memberId',
     'explorerId',
     'explorerName',
     EXPLORER_ID_KEY,
     'beta_user',
     'betaUserId',
     'maia_session',
+    'maia_session_token',
   ];
 
   keys.forEach(key => localStorage.removeItem(key));
@@ -177,12 +187,9 @@ export async function healIdentity(options?: {
 
   const { id: localId, source } = getLocalIdentity();
 
-  if (!localId) {
-    // No identity to heal - user needs to authenticate
-    return { status: 'reauth_required', reason: 'No local identity found' };
-  }
-
-  console.log(`[Identity] Healing from ${source}: ${localId.substring(0, 8)}...`);
+  console.log(localId
+    ? `[Identity] Healing cached ${source}: ${localId.substring(0, 8)}...`
+    : '[Identity] No usable local identity; verifying the server credential...');
 
   let lastError: Error | null = null;
   let attempt = 0;
@@ -194,22 +201,22 @@ export async function healIdentity(options?: {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      // Use apiUrl() for Capacitor compatibility (relative URLs don't work in iOS WebView)
-      // Also send x-member-id header for Capacitor (cookies don't work cross-origin)
-      const response = await fetch(apiUrl(`/api/members/me`), {
-        method: 'GET',
-        signal: controller.signal,
-        credentials: 'include',
-        mode: 'cors',
-        headers: {
-          'Accept': 'application/json',
-          'x-member-id': localId, // For Capacitor where cookies fail
-        },
-      });
+      // Identity must come from the verified credential. Web uses the httpOnly
+      // cookie; Safari/Capacitor may use x-session-token. Never echo the stale
+      // browser member ID back as an identity assertion during healing.
+      let response: Response;
+      try {
+        response = await verifiedSessionFetch('/api/members/me', {
+          method: 'GET',
+          cache: 'no-store',
+          signal: controller.signal,
+          headers: { Accept: 'application/json' },
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
-      clearTimeout(timeoutId);
-
-      const data: MeResponse = await response.json();
+      const data: MeResponse = await response.json().catch(() => ({}));
 
       // Handle response based on status code
       if (response.ok && data.success && data.member) {
@@ -234,6 +241,7 @@ export async function healIdentity(options?: {
 
       // Handle specific error codes
       switch (data.action) {
+        case 'signin':
         case 'reauth':
         case 'clear_and_reauth':
           // Server says identity is invalid - clear and require re-auth

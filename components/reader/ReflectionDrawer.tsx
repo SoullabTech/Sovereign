@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { verifiedSessionFetch } from '@/lib/http/verifiedSessionFetch'
+import { SOULLAB_SESSION_END_EVENT } from '@/lib/listening/audioFocus'
 import { X, Bookmark, MessageCircle, PenLine, Sparkles, Send, Loader2 } from 'lucide-react'
 import { AudioSegment, RitualMode } from './types'
 
 interface ReflectionDrawerProps {
   segment: AudioSegment | null
   ritualMode: RitualMode
-  memberId: string
   onClose: () => void
   onMomentSaved: () => void
 }
@@ -15,7 +16,6 @@ interface ReflectionDrawerProps {
 export function ReflectionDrawer({
   segment,
   ritualMode,
-  memberId,
   onClose,
   onMomentSaved
 }: ReflectionDrawerProps) {
@@ -24,17 +24,27 @@ export function ReflectionDrawer({
   const [journalNote, setJournalNote] = useState('')
   const [maiaResponse, setMaiaResponse] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [actionError, setActionError] = useState('')
+
+  const requireReaderResponse = async (response: Response, action: string) => {
+    if (response.status === 401) {
+      window.dispatchEvent(new Event(SOULLAB_SESSION_END_EVENT))
+      throw new Error('Your reading session ended. Sign in again before continuing.')
+    }
+    if (!response.ok) throw new Error(`${action} failed (${response.status}).`)
+    return response
+  }
 
   if (!segment) return null
 
   const handleSaveHighlight = async () => {
     setIsLoading(true)
+    setActionError('')
     try {
-      await fetch('/api/reader/moments', {
+      const response = await verifiedSessionFetch('/api/reader/moments', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-member-id': memberId
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           segmentId: segment.id,
@@ -42,8 +52,11 @@ export function ReflectionDrawer({
           ritualMode
         })
       })
+      await requireReaderResponse(response, 'Saving the highlight')
       onMomentSaved()
       onClose()
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'The highlight could not be saved.')
     } finally {
       setIsLoading(false)
     }
@@ -53,13 +66,13 @@ export function ReflectionDrawer({
     if (!question.trim()) return
     setIsLoading(true)
     setMaiaResponse('')
+    setActionError('')
 
     try {
-      const res = await fetch('/api/reader/ask', {
+      const res = await verifiedSessionFetch('/api/reader/ask', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-member-id': memberId
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           segmentId: segment.id,
@@ -67,9 +80,12 @@ export function ReflectionDrawer({
           ritualMode
         })
       })
+      await requireReaderResponse(res, 'Asking MAIA')
       const data = await res.json()
       setMaiaResponse(data.response)
       onMomentSaved()
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'MAIA could not respond.')
     } finally {
       setIsLoading(false)
     }
@@ -78,13 +94,13 @@ export function ReflectionDrawer({
   const handleSaveJournal = async () => {
     if (!journalNote.trim()) return
     setIsLoading(true)
+    setActionError('')
 
     try {
-      await fetch('/api/reader/moments', {
+      const response = await verifiedSessionFetch('/api/reader/moments', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-member-id': memberId
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           segmentId: segment.id,
@@ -93,9 +109,12 @@ export function ReflectionDrawer({
           ritualMode
         })
       })
+      await requireReaderResponse(response, 'Saving the journal entry')
       setJournalNote('')
       onMomentSaved()
       onClose()
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'The journal entry could not be saved.')
     } finally {
       setIsLoading(false)
     }
@@ -140,6 +159,12 @@ export function ReflectionDrawer({
             </button>
           ))}
         </div>
+
+        {actionError && (
+          <p role="alert" className="mb-4 rounded-lg border border-rose-500/30 bg-rose-950/30 px-4 py-3 text-sm text-rose-200">
+            {actionError}
+          </p>
+        )}
 
         {/* Tab content */}
         <div className="min-h-[150px]">

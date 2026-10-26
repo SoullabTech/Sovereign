@@ -6,6 +6,7 @@ export type AudioFocusSource =
   | 'listening-room'
   | 'writers-listen'
   | 'maia-voice'
+  | 'reader-narration'
   | 'sound-sanctuary'
   | 'external';
 
@@ -28,7 +29,8 @@ export function audioFocusSource(event: Event): AudioFocusSource | null {
   if (!(event instanceof CustomEvent)) return null;
   const value: unknown = event.detail?.source;
   if (value === 'listening-room' || value === 'writers-listen' ||
-      value === 'maia-voice' || value === 'sound-sanctuary' || value === 'external')
+      value === 'maia-voice' || value === 'reader-narration' ||
+      value === 'sound-sanctuary' || value === 'external')
     return value;
   return null;
 }
