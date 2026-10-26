@@ -7,6 +7,7 @@ import { VoiceSettings } from '../context/OraclePersonalizationContext';
 import { Element, ResonanceState } from '../resonanceEngine';
 import { PersonalizedVoiceService } from './PersonalizedVoiceService';
 import { EmotionalVoiceModulator, VoiceModulation } from './EmotionalVoiceModulation';
+import { requestSoullabTts } from './serverTtsClient';
 
 export interface AnthonyVoiceProfile {
   baseVoice: 'anthony';
@@ -382,38 +383,17 @@ export class AnthonyElementalVoice {
     ssml: string,
     modulation: AlchemicalVoiceModulation
   ): Promise<ArrayBuffer | void> {
-    // Use ElevenLabs Anthony voice ID or fallback
-    const anthonyVoiceId = process.env.NEXT_PUBLIC_ANTHONY_VOICE_ID || 'TxGEqnHWrfWFTfGW9XjX';
-    
     try {
-      // Try ElevenLabs with Anthony's voice
-      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${anthonyVoiceId}/stream`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'xi-api-key': process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY!
-        },
-        body: JSON.stringify({
-          text: ssml,
-          model_id: 'eleven_multilingual_v2',
-          voice_settings: {
-            stability: 0.75 + (modulation.earthiness * 0.15),
-            similarity_boost: 0.8,
-            style: modulation.warmth,
-            use_speaker_boost: true
-          }
-        })
+      const plainText = ssml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      return await requestSoullabTts(plainText, {
+        voice: 'onyx',
+        speed: Math.max(0.8, Math.min(1.2, modulation.speed)),
+        format: 'mp3',
       });
-
-      if (response.ok) {
-        return await response.arrayBuffer();
-      }
     } catch (error) {
-      console.error('Failed to synthesize Anthony voice:', error);
+      console.error('Soullab server voice failed for Anthony:', error);
+      this.fallbackToWebSpeech(ssml, modulation);
     }
-
-    // Fallback to Web Speech API with masculine voice
-    this.fallbackToWebSpeech(ssml, modulation);
   }
 
   /**

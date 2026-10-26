@@ -3,6 +3,8 @@
  * Optimizations for mobile devices, bandwidth constraints, and touch interactions
  */
 
+import { apiFetch } from '../http/apiBase';
+
 interface MobileVoiceConfig {
   // Bandwidth optimization
   compressionLevel: 'low' | 'medium' | 'high';
@@ -126,7 +128,7 @@ export class MayaVoiceMobile {
       const audioSettings = this.getOptimizedAudioSettings();
       
       // Request audio generation with mobile optimizations
-      const response = await fetch('/api/voice/mobile-optimized', {
+      const response = await apiFetch('/api/voice/mobile-optimized', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

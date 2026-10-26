@@ -1,30 +1,45 @@
-// AI Health Check Endpoint
-// Returns provider configuration status for smoke tests
+import 'server-only';
+import { NextRequest, NextResponse } from 'next/server';
+import { adminUnauthorized, checkAdminAuth } from '@/lib/admin/adminAuth';
+
 export const dynamic = 'force-dynamic';
 export const revalidate = false;
 
-import { NextResponse } from 'next/server';
+/**
+ * Administrative AI availability summary.
+ *
+ * Never returns provider-key bytes or prefixes, provider URLs, environment
+ * values, or upstream error bodies. The route is independently admin-gated in
+ * addition to its explicit access-matrix rule.
+ */
+export async function GET(req: NextRequest) {
+  const auth = await checkAdminAuth(
+    req,
+    ['founder', 'cto', 'operations'],
+    '/api/ai/health',
+  );
+  if (!auth.authed) return adminUnauthorized();
 
-export async function GET() {
-  const hasAnthropicKey = Boolean(process.env.ANTHROPIC_API_KEY);
-  const ollamaUrl = process.env.OLLAMA_BASE_URL || process.env.OLLAMA_HOST;
+  const anthropicAvailable = Boolean(process.env.ANTHROPIC_API_KEY);
+  const localAvailable = Boolean(
+    process.env.OLLAMA_BASE_URL || process.env.OLLAMA_HOST,
+  );
 
-  return NextResponse.json({
-    ok: true,
-    providers: {
-      anthropic: {
-        configured: hasAnthropicKey,
-        keyPrefix: hasAnthropicKey
-          ? process.env.ANTHROPIC_API_KEY?.slice(0, 12) + '...'
-          : null,
+  return NextResponse.json(
+    {
+      ok: anthropicAvailable || localAvailable,
+      providers: {
+        anthropic: { status: anthropicAvailable ? 'available' : 'unavailable' },
+        local: { status: localAvailable ? 'available' : 'unavailable' },
       },
-      ollama: {
-        enabled: Boolean(ollamaUrl),
-        url: ollamaUrl || null,
+      smoke: {
+        noFallback: process.env.SMOKE_NO_FALLBACK === '1',
       },
     },
-    smoke: {
-      noFallback: process.env.SMOKE_NO_FALLBACK === '1',
+    {
+      headers: {
+        'Cache-Control': 'no-store',
+      },
     },
-  });
+  );
 }

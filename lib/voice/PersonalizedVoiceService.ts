@@ -4,6 +4,7 @@
  */
 
 import { VoiceSettings } from '../context/OraclePersonalizationContext';
+import { requestSoullabTts } from './serverTtsClient';
 
 export interface VoiceProvider {
   id: string;
@@ -98,34 +99,18 @@ export class PersonalizedVoiceService {
   }
 
   private async detectAvailableProviders(): Promise<void> {
-    // Check for API keys in environment
-    const hasElevenLabsKey = !!process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
-    const hasOpenAIKey = !!process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-    const hasAzureKey = !!process.env.NEXT_PUBLIC_AZURE_SPEECH_KEY;
-    
-    // Filter providers based on availability
-    this.providers = this.providers.filter(provider => {
-      switch (provider.id) {
-        case 'elevenlabs':
-          return hasElevenLabsKey;
-        case 'openai':
-          return hasOpenAIKey;
-        case 'azure':
-          return hasAzureKey;
-        case 'web-speech':
-          return 'speechSynthesis' in window;
-        default:
-          return false;
-      }
-    });
+    // Cloud credentials never enter the browser. Keep only the same-origin
+    // Soullab server route and the device-local Web Speech fallback.
+    this.providers = this.providers.filter((provider) =>
+      provider.id === 'openai' ||
+      (provider.id === 'web-speech' && 'speechSynthesis' in window),
+    );
   }
 
   private async selectOptimalProvider(): Promise<void> {
-    // Prioritize providers with streaming support for better UX
-    const streamingProviders = this.providers.filter(p => p.supportsStreaming);
-    if (streamingProviders.length > 0) {
-      this.currentProvider = streamingProviders[0];
-    }
+    this.currentProvider =
+      this.providers.find((provider) => provider.id === 'openai') ||
+      this.providers.find((provider) => provider.id === 'web-speech')!;
   }
 
   public async synthesize(options: VoiceSynthesisOptions): Promise<ArrayBuffer | void> {
@@ -157,105 +142,27 @@ export class PersonalizedVoiceService {
     }
   }
 
-  private async synthesizeWithElevenLabs(options: VoiceSynthesisOptions): Promise<ArrayBuffer> {
-    const voiceId = this.getElevenLabsVoiceId(options.voiceSettings);
-    
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'xi-api-key': process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY!
-      },
-      body: JSON.stringify({
-        text: options.text,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: {
-          stability: this.getStabilityFromStyle(options.voiceSettings.style),
-          similarity_boost: 0.75,
-          style: this.getElevenLabsStyle(options.voiceSettings.style),
-          use_speaker_boost: true
-        }
-      })
+  private async synthesizeWithSoullabServer(options: VoiceSynthesisOptions): Promise<ArrayBuffer> {
+    const audioData = await requestSoullabTts(options.text, {
+      voice: this.getOpenAIVoice(options.voiceSettings),
+      speed: options.voiceSettings.speed,
+      format: 'mp3',
     });
-
-    if (!response.ok) {
-      throw new Error(`ElevenLabs API error: ${response.status}`);
-    }
-
-    const audioData = await response.arrayBuffer();
-    
-    // Cache the result
     this.voiceCache.set(this.getCacheKey(options), audioData);
-    
-    // Stream if callback provided
-    if (options.streamCallback) {
-      options.streamCallback(audioData);
-    }
-    
+    options.streamCallback?.(audioData);
     return audioData;
+  }
+
+  private async synthesizeWithElevenLabs(options: VoiceSynthesisOptions): Promise<ArrayBuffer> {
+    return this.synthesizeWithSoullabServer(options);
   }
 
   private async synthesizeWithOpenAI(options: VoiceSynthesisOptions): Promise<ArrayBuffer> {
-    const voice = this.getOpenAIVoice(options.voiceSettings);
-    
-    const response = await fetch('https://api.openai.com/v1/audio/speech', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'tts-1-hd',
-        input: options.text,
-        voice: voice,
-        speed: options.voiceSettings.speed
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenAI TTS API error: ${response.status}`);
-    }
-
-    const audioData = await response.arrayBuffer();
-    this.voiceCache.set(this.getCacheKey(options), audioData);
-    
-    if (options.streamCallback) {
-      options.streamCallback(audioData);
-    }
-    
-    return audioData;
+    return this.synthesizeWithSoullabServer(options);
   }
 
   private async synthesizeWithAzure(options: VoiceSynthesisOptions): Promise<ArrayBuffer> {
-    // Azure implementation
-    const ssml = this.buildSSML(options);
-    const voice = this.getAzureVoice(options.voiceSettings);
-    
-    const response = await fetch(
-      `https://${process.env.NEXT_PUBLIC_AZURE_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`,
-      {
-        method: 'POST',
-        headers: {
-          'Ocp-Apim-Subscription-Key': process.env.NEXT_PUBLIC_AZURE_SPEECH_KEY!,
-          'Content-Type': 'application/ssml+xml',
-          'X-Microsoft-OutputFormat': 'audio-48khz-192kbitrate-mono-mp3'
-        },
-        body: ssml
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Azure TTS API error: ${response.status}`);
-    }
-
-    const audioData = await response.arrayBuffer();
-    this.voiceCache.set(this.getCacheKey(options), audioData);
-    
-    if (options.streamCallback) {
-      options.streamCallback(audioData);
-    }
-    
-    return audioData;
+    return this.synthesizeWithSoullabServer(options);
   }
 
   private synthesizeWithWebSpeech(options: VoiceSynthesisOptions): void {

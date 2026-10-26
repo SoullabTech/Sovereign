@@ -1,0 +1,61 @@
+# AI PROVIDER BOUNDARY — exact client/server/gateway custody gate.
+#
+# A green run establishes that the tracked static contract passes, deliberate
+# regressions are refused, the actual TTS route obeys its authority matrix under
+# provider-free deterministic doubles, and spend reservations survive a disposable
+# PostgreSQL race. It does not establish real-provider behavior, credential rotation,
+# physical-device acceptance, deployment approval or production release.
+name: AI Provider Boundary
+
+on:
+  pull_request:
+    branches: [clean-main-no-secrets]
+  push:
+    branches: [clean-main-no-secrets]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-provider-boundary-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  provider-boundary:
+    name: AI provider boundary
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: provider_gate
+          POSTGRES_PASSWORD: provider_gate_fixture
+          POSTGRES_DB: provider_gate
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U provider_gate -d provider_gate"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgresql://provider_gate:provider_gate_fixture@127.0.0.1:5432/provider_gate
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Static contract, mutation falsifiers, route authority and accounting proof
+        run: npm run ci:ai-provider-boundary
+
+      - name: Physical PostgreSQL concurrency and outage proof
+        run: npm run ci:provider-spend-postgres

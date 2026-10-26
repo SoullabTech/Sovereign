@@ -11,6 +11,8 @@
  * - WebRTC is the recommended approach for browser-based clients (Dec 2024+)
  */
 
+import { apiFetch } from '../http/apiBase';
+
 export interface MaiaRealtimeConfig {
   model?: string;
   voice?: 'alloy' | 'echo' | 'shimmer' | 'ash' | 'ballad' | 'coral' | 'sage' | 'verse';
@@ -197,17 +199,13 @@ You are the witnessing presence. Trust the unfolding.`
 
       // Step 6: Send SDP to our backend (unified interface)
       // Our backend combines SDP with session config and forwards to OpenAI
-      // Pass user context for full MAIA consciousness integration
+      // Identity and member context are resolved server-side from the verified session.
       const params = new URLSearchParams({
-        userId: this.config.userId,
-        userName: this.config.userName,
         mode: this.config.mode,
-        element: this.config.element,
-        conversationStyle: this.config.conversationStyle,
         voice: this.config.voice,
       });
 
-      const sdpResponse = await fetch(`/api/voice/webrtc-session?${params}`, {
+      const sdpResponse = await apiFetch(`/api/voice/webrtc-session?${params}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/sdp',
@@ -510,28 +508,26 @@ You are the witnessing presence. Trust the unfolding.`
       const functionName = data.name;
       const args = JSON.parse(data.arguments);
 
-      console.log('🜃 Routing to Spiralogic:', functionName, args);
+      console.log('🜃 Routing to Spiralogic:', functionName, { argumentKeys: Object.keys(args ?? {}) });
 
       // Route to PersonalOracleAgent backend
-      const response = await fetch('/api/oracle/personal', {
+      const response = await apiFetch('/api/oracle/personal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: args.user_message,
-          userId: this.config.userId,
           sessionId: `voice-${Date.now()}`,
           conversationHistory: [], // Realtime API manages its own history
           mode: this.config.mode,
           emotionalQuality: args.emotional_quality,
-          conversationDepth: args.conversation_depth,
-          userName: this.config.userName
+          conversationDepth: args.conversation_depth
         })
       });
 
       const result = await response.json();
       const spiralogicResponse = result.response || result.message || 'No response from Spiralogic';
 
-      console.log('🜃 Spiralogic response:', spiralogicResponse);
+      console.log('🜃 Spiralogic response received chars=', String(spiralogicResponse).length);
 
       // Send function output back to OpenAI
       this.sendEvent({

@@ -3,6 +3,7 @@
 
 "use strict";
 
+import 'server-only';
 import OpenAI from 'openai';
 
 export interface ModelResponse {
@@ -25,7 +26,7 @@ class ModelService {
   private openai: OpenAI | null = null;
 
   constructor() {
-    const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (apiKey) {
       this.openai = new OpenAI({ apiKey });
     }

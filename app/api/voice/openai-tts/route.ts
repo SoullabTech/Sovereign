@@ -1,17 +1,19 @@
 // backend: app/api/voice/openai-tts/route.ts
 //
-// SOVEREIGNTY: When MAIA_LOCAL_VOICE_ENABLED=1, this route tries Kokoro (local)
-// first before falling back to OpenAI. The frontend doesn't need to change —
-// all existing calls to /api/voice/openai-tts automatically get local voice.
+// SOVEREIGNTY: this legacy-named gateway is local by default. Cloud voice is
+// reachable only when the authenticated member explicitly chose `cloud` AND
+// MAIA_ALLOW_CLOUD_VOICE=1. A request/header or archetype alone is not consent.
 //
+import 'server-only';
 import OpenAI from "openai";
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
+import { PROVIDER_SPEND_LIMIT_REACHED, estimateVoiceSeconds, isProviderSpendGateError, reserveVoiceProviderSpend } from '@/lib/limits/ProviderSpendGate';
 import { NextRequest } from 'next/server';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
-import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
+import { resolveVoicePreference } from '@/lib/tts/cloudVoicePolicy';
 import { logFallbackEvent, checkCloudConsent, resolveVoicePolicy } from '@/lib/tts/voiceSovereignty';
-import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
+import { resolveArchetypeToKokoro, resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
 import { getMemberVoicePreferences } from '@/lib/voice/voiceControlsService';
 
 export const runtime = "nodejs"; // important: TTS returns binary; avoid edge surprises
@@ -41,15 +43,13 @@ export async function POST(req: NextRequest) {
   try {
     // ═══ IDENTITY RESOLUTION ═══
     const memberId = await getMemberIdFromRequest(req);
-    const headerAnonId = req.headers.get('x-maia-anon-id') ?? undefined;
-    const isAnon = !memberId;
-    if (isAnon && !headerAnonId) {
-      console.warn('[limits] Missing x-maia-anon-id header; TTS usage may not accumulate properly');
+    if (!memberId) {
+      return jsonError('Authentication required for cloud voice', 401, { requestId });
     }
-    const anonId = isAnon ? (headerAnonId || `anon_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`) : undefined;
+    const anonId: undefined = undefined;
 
     // ═══ TIER-BASED LIMITS CHECK ═══
-    const memberTier: MemberTier = isAnon ? 'free' : memberId ? await getMemberTier(memberId) : 'free';
+    const memberTier: MemberTier = await getMemberTier(memberId);
 
     const body = await req.json().catch(() => null) as null | {
       text?: string;
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     const text = body?.text?.trim();
     if (!text) return jsonError("Missing 'text' in request body", 400, { requestId });
 
-    const estimatedSeconds = Math.ceil(text.length / 12.5);
+    const estimatedSeconds = estimateVoiceSeconds(text);
 
     const limitsCheck = await LimitsEnforcer.checkUsage({
       memberId: memberId || undefined,
@@ -86,9 +86,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const rawVoice = body?.voice ?? "alloy";
-    const format = body?.format ?? "mp3";
-    const speed = body?.speed ?? 1.0;
+    const allowedFormats = new Set(['mp3', 'wav', 'opus', 'aac', 'flac']);
+    const requestedFormat = body?.format;
+    const format = requestedFormat && allowedFormats.has(requestedFormat) ? requestedFormat : 'mp3';
+    const requestedSpeed = Number(body?.speed ?? 1.0);
+    const speed = Number.isFinite(requestedSpeed)
+      ? Math.max(0.25, Math.min(4.0, requestedSpeed))
+      : 1.0;
     // MAIA vocal intent: if present, upgrade model to gpt-4o-mini-tts which supports instructions
     const ttsInstructions = body?.instructions?.trim() || undefined;
 
@@ -100,7 +104,7 @@ export async function POST(req: NextRequest) {
       console.warn(JSON.stringify({
         tag: 'pfi.tts.no_voice_plan',
         requestId,
-        memberId: memberId ?? 'anon',
+        authenticatedMember: true,
         text_length: text.length,
         note: 'TTS called without VoicePlan instructions — ad-hoc voice, sovereignty not guaranteed',
       }));
@@ -111,282 +115,213 @@ export async function POST(req: NextRequest) {
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // ARCHETYPE-AWARE VOICE ROUTING
-    // MAIA vow: default voice is always maia_core (OpenAI Alloy).
-    // Load member's archetype → resolve provider → route accordingly.
+    // SOVEREIGN VOICE AUTHORITY
+    //
+    // Provider choice comes from the authenticated member's stored preference,
+    // not from the request body, route name, archetype metadata, or provider
+    // availability. `auto`, unset, and local all remain local. Cloud requires:
+    //   1. stored tts_provider === "cloud";
+    //   2. MAIA_ALLOW_CLOUD_VOICE=1;
+    //   3. no per-request local-only override;
+    //   4. no recorded global/member denial.
     // ═══════════════════════════════════════════════════════════════════
     let memberArchetype: string | null = null;
-    if (memberId) {
-      try {
-        const prefs = await getMemberVoicePreferences(memberId);
-        memberArchetype = prefs?.voiceArchetype ?? null;
-      } catch (e) {
-        // Non-blocking: if prefs fail, default to maia_core
-      }
+    let memberProviderPreference: string | null = null;
+    try {
+      const prefs = await getMemberVoicePreferences(memberId);
+      memberArchetype = prefs?.voiceArchetype ?? null;
+      memberProviderPreference = prefs?.ttsProvider ?? null;
+    } catch {
+      // Preference uncertainty must fail local, never cloud.
     }
+
     const effectiveArchetype = memberArchetype || 'maia_core';
     const archetypeResolution = resolveArchetypeVoice(effectiveArchetype);
+    const localVoice = resolveArchetypeToKokoro(effectiveArchetype);
+    const localOnlyHeader = req.headers.get('x-voice-local-only') === '1';
+    const voicePreference = resolveVoicePreference(memberProviderPreference);
+    const recordedCloudConsent = await checkCloudConsent({ memberId, localOnlyHeader });
+    const cloudVoiceAuthorized =
+      !localOnlyHeader &&
+      recordedCloudConsent.allowed &&
+      voicePreference.effective === 'cloud' &&
+      archetypeResolution.provider === 'openai';
 
-    // If archetype routes to OpenAI (MAIA feminine voices), skip Kokoro entirely
-    if (archetypeResolution.provider === 'openai') {
-      const voice = archetypeResolution.voice;
-      const t0 = Date.now();
-      console.log(`[openai-tts:${requestId}] archetype=${effectiveArchetype} → OpenAI ${voice} (skipping Kokoro)`);
+    const localFormat: 'mp3' | 'wav' | 'opus' =
+      format === 'wav' || format === 'opus' ? format : 'mp3';
 
-      if (!process.env.OPENAI_API_KEY) {
-        return jsonError("Missing OPENAI_API_KEY on server", 500, { requestId });
-      }
-
-      const speechParams: any = {
-        // gpt-4o-mini-tts is MAIA's default voice model (supports instructions + better quality)
-        // Client can override via body.model; ttsInstructions always requires gpt-4o-mini-tts
-        model: ttsInstructions ? "gpt-4o-mini-tts" : (body?.model ?? "gpt-4o-mini-tts"),
-        voice: voice,
-        input: text,
-        response_format: format,
-        speed,
-        ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
-      };
-      const speech = await getOpenAI().audio.speech.create(speechParams);
-
-      const audioBuffer = Buffer.from(await speech.arrayBuffer());
-      const ms = Date.now() - t0;
-
-      console.log(`[openai-tts:${requestId}] ARCHETYPE provider=openai voice=${voice} archetype=${effectiveArchetype} hasInstructions=${Boolean(ttsInstructions)} bytes=${audioBuffer.length} ms=${ms}`);
-
-      const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
-      LimitsEnforcer.recordUsage({
-        memberId: memberId || undefined,
-        anonId,
-        tier: memberTier,
-        resource: 'voice_tts',
-        amount: actualSeconds,
-      }).catch(err => console.error(`[openai-tts:${requestId}] Usage recording failed:`, err));
-
-      const contentType =
-        format === "mp3" ? "audio/mpeg"
-        : format === "wav" ? "audio/wav"
-        : format === "opus" ? "audio/opus"
-        : format === "aac" ? "audio/aac"
-        : format === "flac" ? "audio/flac"
-        : "application/octet-stream";
-
-      return new Response(new Uint8Array(audioBuffer), {
-        status: 200,
-        headers: {
-          "Content-Type": contentType,
-          "Content-Length": audioBuffer.length.toString(),
-          "Cache-Control": "no-store",
-          "X-Request-Id": requestId,
-          "X-TTS-Provider": "openai",
-          "X-TTS-Fallback": "0",
-          "X-Voice-Archetype": effectiveArchetype,
-          "X-PFI-Voice-Plan": ttsInstructions ? "1" : "0",  // Observability: 0 = sovereignty leak
-          "X-PFI-TTS-Text-Len": String(text?.length ?? 0),
-        },
-      });
-    }
-
-    // Kokoro archetype (Atlas, Puck) — use voice from archetype, not from client
-    const voice = archetypeResolution.voice;
-    console.log(`[openai-tts:${requestId}] archetype=${effectiveArchetype} → Kokoro ${voice}`);
-
-    const t0 = Date.now();
-
-    // ═══════════════════════════════════════════════════════════════════
-    // SOVEREIGN LOCAL VOICE INTERCEPT
-    // Only attempt Kokoro when explicitly configured as the primary provider.
-    // Default ('auto') now routes directly to OpenAI for reliability.
-    // Set MAIA_TTS_PROVIDER=kokoro to re-enable local-first routing.
-    // ═══════════════════════════════════════════════════════════════════
-    const configuredProvider = ttsRouter.getConfiguredProvider();
-    const useLocalFirst = ttsRouter.isLocalVoiceEnabled() && configuredProvider === 'kokoro';
-    if (useLocalFirst) {
+    const synthesizeLocal = async (reason: string): Promise<Response> => {
+      const localStartedAt = Date.now();
       try {
-        const result = await ttsRouter.synthesize({ text, voice, format: format as any, speed });
-        const ms = Date.now() - t0;
-
-        console.log(`[openai-tts:${requestId}] LOCAL provider=${result.provider} voice=${voice} bytes=${result.audioBuffer.length} ms=${ms}`);
-
-        // Audit: log the successful local synthesis
+        // Pin the local provider explicitly. Do not let an environment default,
+        // archetype intercept, or local failure construct a cloud fallback.
+        const result = await ttsRouter.synthesize({
+          text,
+          voice: localVoice,
+          format: localFormat,
+          speed,
+          providerOverride: 'kokoro',
+          ttsProviderPref: 'local',
+        });
+        const ms = Date.now() - localStartedAt;
         logFallbackEvent({
           requestId,
-          memberId: memberId || undefined,
-          anonId,
-          intendedProvider: 'kokoro',
+          memberId,
+          intendedProvider: cloudVoiceAuthorized ? 'openai' : 'kokoro',
           actualProvider: result.provider,
-          isFallback: false,
-          reason: 'local_success',
+          isFallback: cloudVoiceAuthorized,
+          reason,
           latencyMs: ms,
           audioBytes: result.audioBuffer.length,
           textLength: text.length,
         });
-
-        // Record usage
-        const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
-        LimitsEnforcer.recordUsage({
-          memberId: memberId || undefined,
-          anonId,
+        // Local synthesis has no paid-provider reservation. Retain the existing
+        // best-effort product meter without making local speech depend on it.
+        void LimitsEnforcer.recordUsage({
+          memberId,
           tier: memberTier,
           resource: 'voice_tts',
-          amount: actualSeconds,
-        }).catch(err => console.error(`[openai-tts:${requestId}] Usage recording failed:`, err));
-
-        const localPolicy = resolveVoicePolicy({
-          localVoiceEnabled: true,
-          configuredProvider: ttsRouter.getConfiguredProvider(),
-          cloudConsentAllowed: true,
+          amount: estimatedSeconds,
         });
-
         return new Response(new Uint8Array(result.audioBuffer), {
           status: 200,
           headers: {
-            "Content-Type": result.contentType,
-            "Content-Length": result.audioBuffer.length.toString(),
-            "Cache-Control": "no-store",
-            "X-Request-Id": requestId,
-            "X-TTS-Provider": result.provider,
-            "X-TTS-Fallback": "0",
-            "X-Voice-Policy": localPolicy,
-            "X-PFI-Voice-Plan": ttsInstructions ? "1" : "0",
-            "X-PFI-TTS-Text-Len": String(text?.length ?? 0),
+            'Content-Type': result.contentType,
+            'Content-Length': result.audioBuffer.length.toString(),
+            'Cache-Control': 'no-store',
+            'X-Request-Id': requestId,
+            'X-TTS-Provider': result.provider,
+            'X-TTS-Fallback': cloudVoiceAuthorized ? '1' : '0',
+            'X-Voice-Policy': 'local-only',
+            'X-Voice-Archetype': effectiveArchetype,
+            'X-PFI-Voice-Plan': ttsInstructions ? '1' : '0',
+            'X-PFI-TTS-Text-Len': String(text.length),
           },
         });
-      } catch (localErr: any) {
-        // Local failed — check consent before falling through to OpenAI
-        const localOnlyHeader = req.headers.get('x-voice-local-only') === '1';
-        const cloudConsent = await checkCloudConsent({
-          memberId: memberId || undefined,
-          localOnlyHeader,
-        });
-
-        if (!cloudConsent.allowed) {
-          logFallbackEvent({
-            requestId,
-            memberId: memberId || undefined,
-            anonId,
-            intendedProvider: 'kokoro',
-            actualProvider: 'none',
-            isFallback: true,
-            reason: `consent_denied:${cloudConsent.reason}`,
-            textLength: text.length,
-          });
-
-          return jsonError('Local voice unavailable and cloud fallback is not permitted', 503, {
-            requestId,
-            policy: 'local-only',
-          });
-        }
-
-        // Log the fallback
-        logFallbackEvent({
+      } catch (localError) {
+        console.warn(`[openai-tts:${requestId}] LOCAL_UNAVAILABLE category=${localError instanceof Error ? localError.name : typeof localError}`);
+        return jsonError('Local voice is temporarily unavailable', 503, {
           requestId,
-          memberId: memberId || undefined,
-          anonId,
-          intendedProvider: 'kokoro',
-          actualProvider: 'openai',
-          isFallback: true,
-          reason: localErr?.reason || 'kokoro_error',
-          textLength: text.length,
+          code: 'LOCAL_VOICE_UNAVAILABLE',
         });
-
-        console.warn(`[openai-tts:${requestId}] Local TTS failed, falling through to OpenAI: ${localErr?.message}`);
-        // Fall through to existing OpenAI logic below
       }
+    };
+
+    if (!cloudVoiceAuthorized) {
+      console.info('[tts.policy]', JSON.stringify({
+        path: 'openai-tts',
+        storedPreference: voicePreference.stored,
+        effective: voicePreference.effective,
+        archetypeProvider: archetypeResolution.provider,
+        localOnlyHeader,
+        cloudConsentAllowed: recordedCloudConsent.allowed,
+        decision: 'local',
+      }));
+      return synthesizeLocal('sovereign_primary');
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // OPENAI TTS (original path, or fallback from local)
-    // ═══════════════════════════════════════════════════════════════════
+    // Explicit member choice + explicit deployment permission. Reserve paid
+    // usage atomically before provider dispatch. If accounting or the provider
+    // is unavailable, preserve speech locally; a limit refusal remains a limit.
+    const voice = archetypeResolution.voice;
+    const cloudStartedAt = Date.now();
     if (!process.env.OPENAI_API_KEY) {
-      return jsonError("Missing OPENAI_API_KEY on server", 500, { requestId });
+      return synthesizeLocal('cloud_key_unavailable');
     }
 
-    // For Kokoro archetypes falling back to OpenAI, use alloy (Kokoro voice IDs aren't valid for OpenAI)
-    const openaiVoice = archetypeResolution.provider === 'kokoro' ? 'alloy' : voice;
-    const fallbackModel = ttsInstructions ? "gpt-4o-mini-tts" : (body?.model ?? "gpt-4o-mini-tts");
-    console.log(`[openai-tts:${requestId}] FALLBACK model=${fallbackModel} voice=${openaiVoice} archetype=${effectiveArchetype} hasInstructions=${Boolean(ttsInstructions)} format=${format} chars=${text.length}`);
-
-    const fallbackSpeechParams: any = {
-      model: fallbackModel,
-      voice: openaiVoice,
+    const allowedModels = new Set(['gpt-4o-mini-tts', 'tts-1', 'tts-1-hd']);
+    const requestedModel = body?.model ?? 'gpt-4o-mini-tts';
+    const model = ttsInstructions
+      ? 'gpt-4o-mini-tts'
+      : allowedModels.has(requestedModel)
+        ? requestedModel
+        : 'gpt-4o-mini-tts';
+    const speechParams: any = {
+      model,
+      voice,
       input: text,
       response_format: format,
       speed,
       ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
     };
-    const speech = await getOpenAI().audio.speech.create(fallbackSpeechParams);
 
-    const audioBuffer = Buffer.from(await speech.arrayBuffer());
-    const ms = Date.now() - t0;
-
-    console.log(`[openai-tts:${requestId}] ok model=${fallbackModel} voice=${voice} format=${format} bytes=${audioBuffer.length} ms=${ms}`);
-
-    // ═══ RECORD VOICE USAGE (non-blocking) ═══
-    const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
-    LimitsEnforcer.recordUsage({
-      memberId: memberId || undefined,
-      anonId,
-      tier: memberTier,
-      resource: 'voice_tts',
-      amount: actualSeconds,
-    }).catch(err => console.error(`[openai-tts:${requestId}] Usage recording failed:`, err));
-
-    const contentType =
-      format === "mp3" ? "audio/mpeg"
-      : format === "wav" ? "audio/wav"
-      : format === "opus" ? "audio/opus"
-      : format === "aac" ? "audio/aac"
-      : format === "flac" ? "audio/flac"
-      : "application/octet-stream";
-
-    const isFallbackFromLocal = ttsRouter.isLocalVoiceEnabled();
-
-    return new Response(new Uint8Array(audioBuffer), {
-      status: 200,
-      headers: {
-        "Content-Type": contentType,
-        "Content-Length": audioBuffer.length.toString(),
-        "Cache-Control": "no-store",
-        "X-Request-Id": requestId,
-        "X-TTS-Provider": "openai",
-        "X-TTS-Fallback": isFallbackFromLocal ? "1" : "0",
-        "X-Voice-Policy": isFallbackFromLocal ? "local-prefer" : "cloud-primary",
-        "X-PFI-Voice-Plan": ttsInstructions ? "1" : "0",
-        "X-PFI-TTS-Text-Len": String(text?.length ?? 0),
-      },
-    });
+    try {
+      await reserveVoiceProviderSpend({
+        memberId,
+        estimatedSeconds,
+        provider: 'openai',
+        purpose: 'voice_tts',
+      });
+      const speech = await getOpenAI().audio.speech.create(speechParams);
+      const audioBuffer = Buffer.from(await speech.arrayBuffer());
+      const ms = Date.now() - cloudStartedAt;
+      logFallbackEvent({
+        requestId,
+        memberId,
+        intendedProvider: 'openai',
+        actualProvider: 'openai',
+        isFallback: false,
+        reason: 'member_chose_cloud',
+        latencyMs: ms,
+        audioBytes: audioBuffer.length,
+        textLength: text.length,
+      });
+      const contentType =
+        format === 'mp3' ? 'audio/mpeg'
+        : format === 'wav' ? 'audio/wav'
+        : format === 'opus' ? 'audio/opus'
+        : format === 'aac' ? 'audio/aac'
+        : format === 'flac' ? 'audio/flac'
+        : 'application/octet-stream';
+      return new Response(new Uint8Array(audioBuffer), {
+        status: 200,
+        headers: {
+          'Content-Type': contentType,
+          'Content-Length': audioBuffer.length.toString(),
+          'Cache-Control': 'no-store',
+          'X-Request-Id': requestId,
+          'X-TTS-Provider': 'openai',
+          'X-TTS-Fallback': '0',
+          'X-Voice-Policy': resolveVoicePolicy({
+            localVoiceEnabled: ttsRouter.isLocalVoiceEnabled(),
+            configuredProvider: 'openai',
+            cloudConsentAllowed: true,
+          }),
+          'X-Voice-Archetype': effectiveArchetype,
+          'X-PFI-Voice-Plan': ttsInstructions ? '1' : '0',
+          'X-PFI-TTS-Text-Len': String(text.length),
+        },
+      });
+    } catch (cloudError) {
+      if (
+        isProviderSpendGateError(cloudError) &&
+        cloudError.code === PROVIDER_SPEND_LIMIT_REACHED
+      ) {
+        throw cloudError;
+      }
+      console.warn(`[openai-tts:${requestId}] CLOUD_UNAVAILABLE category=${cloudError instanceof Error ? cloudError.name : typeof cloudError}`);
+      return synthesizeLocal(
+        isProviderSpendGateError(cloudError)
+          ? 'provider_accounting_unavailable'
+          : 'cloud_provider_unavailable',
+      );
+    }
   } catch (err: any) {
-    // This is the money: surface upstream details
-    const status = err?.status ?? err?.response?.status ?? 500;
-
-    // OpenAI SDK often provides err.error or err.response; keep it safe but informative
-    const detail =
-      err?.error?.message ??
-      err?.message ??
-      "Unknown TTS error";
-
-    console.error(`[openai-tts:${requestId}] FAIL status=${status} detail=${detail}`);
-    if (err?.error) console.error(`[openai-tts:${requestId}] error object:`, err.error);
-    if (err?.response) console.error(`[openai-tts:${requestId}] response:`, err.response);
-    if (err?.stack) console.error(err.stack);
-
-    // Also log key presence for debugging
-    console.log(`[openai-tts:${requestId}] OPENAI_API_KEY present?`, Boolean(process.env.OPENAI_API_KEY));
-    console.log(`[openai-tts:${requestId}] OPENAI_API_KEY length:`, process.env.OPENAI_API_KEY?.length || 0);
-
-    return jsonError("Failed to generate speech", status, {
-      requestId,
-      detail,
-    });
+    if (isProviderSpendGateError(err)) {
+      return jsonError(err.message, err.status, { requestId, code: err.code });
+    }
+    const upstreamStatus = Number(err?.status ?? err?.response?.status ?? 500);
+    const status = upstreamStatus >= 400 && upstreamStatus < 600 ? upstreamStatus : 500;
+    console.error(`[openai-tts:${requestId}] FAIL category=upstream_${status}`);
+    return jsonError("Failed to generate speech", status, { requestId });
   }
 }
 
 export async function GET() {
   return new Response(JSON.stringify({
-    message: "OpenAI TTS endpoint active",
-    voices: ["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
-    usage: 'POST with { "text": "...", "voice": "alloy", "format": "mp3" }'
+    message: 'Soullab TTS gateway active',
+    policy: 'local by default; cloud requires an authenticated explicit member choice and release flag',
+    usage: 'POST with { "text": "...", "format": "mp3" }',
   }), {
     headers: { "Content-Type": "application/json" },
   });

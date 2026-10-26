@@ -4,6 +4,7 @@
  */
 
 import { getAccountSettings } from '@/lib/settings/accountSettings';
+import { apiFetch } from '../http/apiBase';
 
 interface VoiceOptions {
   voice?: string;
@@ -75,7 +76,7 @@ export class MayaVoiceSynthesis {
                               element === 'air' ? 1.05 : 1.0;
       const finalSpeed = voiceSettings.speed * elementSpeedMod;
 
-      const response = await fetch('/api/voice/openai-tts', {
+      const response = await apiFetch('/api/voice/openai-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -90,8 +91,8 @@ export class MayaVoiceSynthesis {
         return null;
       }
 
-      const data = await response.json();
-      return data.audioUrl || null;
+      const audioBlob = await response.blob();
+      return URL.createObjectURL(audioBlob);
     } catch (error) {
       console.log('TTS generation failed, using browser fallback');
       return null;
@@ -110,12 +111,14 @@ export class MayaVoiceSynthesis {
       audio.onended = () => {
         this.isSpeaking = false;
         this.audioQueue = this.audioQueue.filter(a => a !== audio);
+        if (audioUrl.startsWith('blob:')) URL.revokeObjectURL(audioUrl);
         resolve();
       };
 
       audio.onerror = () => {
         this.isSpeaking = false;
         this.audioQueue = this.audioQueue.filter(a => a !== audio);
+        if (audioUrl.startsWith('blob:')) URL.revokeObjectURL(audioUrl);
         reject(new Error('Audio playback failed'));
       };
 
