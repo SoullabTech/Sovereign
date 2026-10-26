@@ -1162,7 +1162,7 @@ export default function FlagshipWriteEditController() {
             const current = LATITUDE_BANDS[editLatitude].label;
             const needed = LATITUDE_BANDS[outcome.scope.wouldPassAtLatitude].label;
             setEditorialFailure(
-              `This revision goes beyond your current “${current}” latitude. It would fit at “${needed}.” Nothing was changed. You can change Revision latitude in Preferences, then choose Revise from this again.`,
+              `This revision goes beyond your current “${current}” latitude. It would fit at “${needed}.” Nothing was changed. You can change Revision latitude in Preferences, then choose Show revision options again.`,
             );
           } else {
             setEditorialFailure(outcome.voice?.note

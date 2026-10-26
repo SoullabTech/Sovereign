@@ -357,7 +357,7 @@ test('a MAIA response without a proposal stays visible and keeps exploration act
   expect(container.textContent).toContain('Continue from here');
   expect(container.textContent).toContain('Show examples');
   expect(container.textContent).toContain('Give me ideas');
-  expect(container.textContent).toContain('Revise from this');
+  expect(container.textContent).toContain('Show revision options');
   expect(container.querySelector('.p4r1-dance-start-actions')).toBeNull();
   expect(container.textContent).not.toContain('Apply my version');
 });
