@@ -109,12 +109,21 @@ export async function eraseManuscript(
 
     /* The paths, read while the rows that name them still exist. After the
        cascade nothing in the database knows these files were ever ours. */
-    const arrivals = await tx.query<{ artifact_ref: string }>(
-      `SELECT artifact_ref FROM manuscript_source_arrivals
-        WHERE manuscript_id = $1 AND member_id = $2 AND artifact_ref IS NOT NULL
+    const arrivals = await tx.query<{ id: string; artifact_ref: string | null }>(
+      `SELECT id, artifact_ref FROM manuscript_source_arrivals
+        WHERE manuscript_id = $1 AND member_id = $2
         FOR UPDATE`,
       [manuscriptId, memberId],
     );
+    const arrivalIds = arrivals.rows.map((row) => row.id);
+    const landings = arrivalIds.length === 0
+      ? { rows: [] as Array<{ id: string }> }
+      : await tx.query<{ id: string }>(
+          `SELECT id FROM writer_source_landing_intents
+            WHERE member_id = $2::uuid AND arrival_id = ANY($1::uuid[])
+            FOR UPDATE`,
+          [arrivalIds, memberId],
+        );
 
     const removed = await tx.query<{ id: string }>(
       `DELETE FROM member_manuscripts WHERE id = $1 AND member_id = $2 RETURNING id`,
@@ -145,6 +154,14 @@ export async function eraseManuscript(
       kinds.push('living_works');
       ids.push(declaration.workRemovedId);
     }
+    for (const arrivalId of arrivalIds) {
+      kinds.push('manuscript_source_arrivals');
+      ids.push(arrivalId);
+    }
+    for (const landing of landings.rows) {
+      kinds.push('writer_source_landing_intents');
+      ids.push(landing.id);
+    }
     await tx.query(
       `INSERT INTO provenance_tombstones (manifest_id, object_kind, object_id)
        SELECT $1::uuid, item.kind, item.id
@@ -165,7 +182,9 @@ export async function eraseManuscript(
     /* Written inside the transaction: if the commit fails, nothing was destroyed
        and nothing is owed. If it succeeds, every path is recoverable until it is
        actually gone. */
-    const refs = arrivals.rows.map((r) => r.artifact_ref);
+    const refs = arrivals.rows
+      .map((row) => row.artifact_ref)
+      .filter((ref): ref is string => typeof ref === 'string' && ref.length > 0);
     if (refs.length > 0) {
       await tx.query(
         `INSERT INTO vault_erasure_queue (artifact_ref)

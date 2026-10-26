@@ -26,6 +26,7 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { inspectBookProduction, renderMemberBook } from '@/lib/manuscript/render/renderMemberBook';
 import { loadMemberRenderSource } from '@/lib/manuscript/render/loadMemberRenderSource';
 import { memberRef } from '@/lib/privacy/memberRef';
+import { writerReleaseAuthority } from '@/lib/writersStudio/releaseAuthority';
 
 type Format = 'pdf' | 'epub';
 
@@ -55,6 +56,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
   }
 
   const issues = inspectBookProduction(source.sections);
+  const release = writerReleaseAuthority();
   return NextResponse.json({
     ready: issues.length === 0,
     title: source.title,
@@ -62,6 +64,8 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
     sourceAuthority: source.sourceAuthority,
     sourceRevision: source.sourceRevision,
     issues,
+    releaseManifestId: release.manifestId,
+    exportsCertified: release.exportsCertified,
     publicationBoundary: 'This creates a file from your current writing. It does not publish or distribute it.',
   });
 }
@@ -116,6 +120,19 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     return NextResponse.json(
       { error: 'Your writing changed since the production check. Check again before preparing a file.' },
       { status: 409, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
+
+  const release = writerReleaseAuthority();
+  if (release.exportsCertified[format] !== true) {
+    return NextResponse.json(
+      {
+        error: `${format.toUpperCase()} preparation is not certified on this Writer image.`,
+        format,
+        exportsCertified: false,
+        releaseManifestId: release.manifestId,
+      },
+      { status: 423, headers: { 'Cache-Control': 'private, no-store' } },
     );
   }
 

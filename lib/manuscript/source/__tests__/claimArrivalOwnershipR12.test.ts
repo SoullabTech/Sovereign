@@ -7,6 +7,10 @@ import { claimArrival } from '../arrivals';
 import { hashBytes, hashText, ARTIFACT_EXTRACTION, MEMBER_SUPPLIED_TEXT } from '../custody';
 import { transaction } from '@/lib/db/postgres';
 import { readVaultBytes } from '@/lib/storage/fileVault';
+import {
+  getEncryptedLandingForArrival,
+  recoverEncryptedLandingBytes,
+} from '../encryptedLanding';
 
 jest.mock('@/lib/db/postgres', () => ({
   query: jest.fn(),
@@ -15,6 +19,10 @@ jest.mock('@/lib/db/postgres', () => ({
 jest.mock('@/lib/storage/fileVault', () => ({
   readVaultBytes: jest.fn(),
   writeDurableVaultBytes: jest.fn(),
+}));
+jest.mock('../encryptedLanding', () => ({
+  getEncryptedLandingForArrival: jest.fn(),
+  recoverEncryptedLandingBytes: jest.fn(),
 }));
 
 const memberA = '5b40ec03-3e87-4f9d-8aa1-aa18ee5bd204';
@@ -35,6 +43,8 @@ const original = {
 };
 const mockedTx = transaction as jest.Mock;
 const mockedRead = readVaultBytes as jest.Mock;
+const mockedEncryptedLanding = getEncryptedLandingForArrival as jest.Mock;
+const mockedRecoverEncrypted = recoverEncryptedLandingBytes as jest.Mock;
 let state: typeof original;
 let markOutcome: number;
 let seen: string[];
@@ -47,6 +57,8 @@ beforeEach(() => {
   markOutcome = 1;
   afterMarkOutcome = 1;
   mockedRead.mockResolvedValue(Buffer.from(bytes));
+  mockedEncryptedLanding.mockResolvedValue(null);
+  mockedRecoverEncrypted.mockResolvedValue(Buffer.from(bytes));
   mockedTx.mockImplementation(async (callback: (tx: { query: (sql: string, params: unknown[]) => Promise<unknown> }) => Promise<boolean>) => {
     let tentative = { ...state };
     const tx = { query: async (sql: string, params: unknown[]) => {
@@ -86,6 +98,16 @@ describe('R12 real importer Source claim ownership and atomicity', () => {
     expect(seen[2]).toContain('manuscript_id IS NULL');
     expect(seen[3]).toContain("source_custody = 'source_custodied'");
     expect(mockedTx).toHaveBeenCalledTimes(1);
+  });
+
+  it('decrypts a ciphertext-first arrival before claiming and never reads it as plaintext vault bytes', async () => {
+    const landing = { id: 'fictional-encrypted-landing' };
+    mockedEncryptedLanding.mockResolvedValueOnce(landing);
+
+    await expect(claimArrival(arrivalId, manuscriptA, memberA)).resolves.toBe(true);
+    expect(mockedRecoverEncrypted).toHaveBeenCalledWith(landing);
+    expect(mockedRead).not.toHaveBeenCalled();
+    expect(state.manuscript_id).toBe(manuscriptA);
   });
 
   it('refuses foreign target manuscript even if the pending Source is owned', async () => {

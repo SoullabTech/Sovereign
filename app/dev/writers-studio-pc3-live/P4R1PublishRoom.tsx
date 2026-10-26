@@ -9,6 +9,7 @@ import P4R1ProducePanel from './P4R1ProducePanel';
 import P4R1InteriorProof from './P4R1InteriorProof';
 import P4R1CoverStudy from './P4R1CoverStudy';
 import { studioNavigationBase } from '@/lib/writersStudio/studioNavigationBase';
+import { useWriterReleaseCapabilities } from '@/lib/writersStudio/useWriterReleaseCapabilities';
 
 export default function P4R1PublishRoom() {
   const params = useSearchParams();
@@ -17,6 +18,10 @@ export default function P4R1PublishRoom() {
   const { id: appearance } = useAtmosphere();
   const manuscriptId = params?.get('m') ?? '';
   const localReviewArtifacts = params?.get('localReview') === '1';
+  const releaseCapabilities = useWriterReleaseCapabilities();
+  const exportsCertified =
+    releaseCapabilities.authority.exportsCertified.pdf &&
+    releaseCapabilities.authority.exportsCertified.epub;
 
   const changeMode = (mode: StudioMode) => {
     const next = new URLSearchParams(params?.toString() ?? '');
@@ -39,7 +44,7 @@ export default function P4R1PublishRoom() {
             <P4R1CoverStudy key={'cover-' + manuscriptId} manuscriptId={manuscriptId} />
             <P4R1ProducePanel
               manuscriptId={manuscriptId}
-              exportsCertified={false}
+              exportsCertified={exportsCertified}
               localReviewArtifacts={localReviewArtifacts}
               onClose={() => changeMode('review')}
             />

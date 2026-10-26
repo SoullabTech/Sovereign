@@ -128,7 +128,8 @@ describe('F3 · valid membership cannot override the authorized Source intake HO
     expect(admission.length).toBeGreaterThan(0);
     // Retain all four identity refusals, then a distinct explicit hold.
     expect(admission.match(/status: 401/g) ?? []).toHaveLength(4);
-    expect(src).toMatch(/const PRESS_SOURCE_INTAKE_RELEASED: boolean = false/);
+    expect(src).toContain('const PRESS_SOURCE_INTAKE_RELEASED = writerReleaseAuthority().sourceIntakeReleased');
+    expect(read('lib/writersStudio/releaseAuthority.ts')).toContain('sourceIntakeReleased: false');
     expect(admission).toMatch(/if \(!PRESS_SOURCE_INTAKE_RELEASED\)[\s\S]{0,260}status: 423/);
     expect(admission).not.toMatch(/process\.env\./);
     expect(admission.indexOf('if (!PRESS_SOURCE_INTAKE_RELEASED)')).toBeLessThan(
@@ -309,13 +310,11 @@ describe('F7 · behavioural — what the handler can still see when it reads the
   const MEMBER = '11111111-1111-1111-1111-111111111111';
   const OTHER = '22222222-2222-2222-2222-222222222222';
 
-  /* eslint-disable @typescript-eslint/no-var-requires */
   const { query } = require('@/lib/db/postgres');
   const { cookies } = require('next/headers');
   const { parseUpload } = require('@/lib/manuscript/ingest/parseUpload');
   const { recordArtifactArrival } = require('@/lib/manuscript/source/arrivals');
   const { POST } = require('../route');
-  /* eslint-enable @typescript-eslint/no-var-requires */
 
   beforeEach(() => {
     jest.clearAllMocks();

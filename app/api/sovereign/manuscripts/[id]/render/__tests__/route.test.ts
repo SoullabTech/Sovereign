@@ -18,6 +18,17 @@ jest.mock('@/lib/manuscript/render/renderMemberBook', () => ({
   renderMemberBook: jest.fn(),
   inspectBookProduction: jest.fn(() => []),
 }));
+// Existing positive renderer tests exercise the certified branch explicitly.
+// The production-default false authority is covered separately in routeHold.test.
+jest.mock('@/lib/writersStudio/releaseAuthority', () => ({
+  writerReleaseAuthority: jest.fn(() => ({
+    manifestId: 'test-certified-renderer',
+    sourceIntakeReleased: false,
+    importFormats: ['docx', 'pdf', 'epub', 'text'],
+    exportsCertified: { pdf: true, epub: true },
+    permanentErasureCertified: false,
+  })),
+}));
 
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';

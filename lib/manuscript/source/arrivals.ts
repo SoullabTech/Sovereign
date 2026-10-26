@@ -1,15 +1,17 @@
-import { randomUUID } from 'node:crypto';
 import { query, transaction } from '@/lib/db/postgres';
-import { readVaultBytes, writeDurableVaultBytes } from '@/lib/storage/fileVault';
+import { readVaultBytes } from '@/lib/storage/fileVault';
+import {
+  getEncryptedLandingForArrival,
+  recordEncryptedArtifactArrival,
+  recoverEncryptedLandingBytes,
+} from './encryptedLanding';
 import {
   ARTIFACT_EXTRACTION,
-  artifactExt,
   buildArrival,
   certifiesCustody,
   hashBytes,
   hashText,
   MEMBER_SUPPLIED_TEXT,
-  type ArrivalInput,
   type ExtractorKey,
   type SourceKind,
 } from './custody';
@@ -21,15 +23,13 @@ import {
  * the immutable bytes. This module is the only place those two are joined, so
  * "the bytes exist" and "a row says they do" cannot drift apart silently.
  *
- * Bytes are written to the vault BEFORE the row is inserted. The failure that
- * ordering prevents is the one the founder's negative control names: a row
- * asserting custody over bytes that were never durably written. The reverse
- * leak — bytes with no row — is an UNKNOWN-CUSTODY artifact, not harmless.
- * It must be preserved and adjudicated under the member-deletion law, never
- * automatically swept or deemed abandoned on the basis of missing metadata.
+ * File-backed arrivals now begin with a committed member-bound landing intent.
+ * A random per-arrival key encrypts the original in memory; only ciphertext is
+ * written durably. The immutable arrival row is inserted only after independent
+ * read-back, authenticated decryption and exact original hash/length checks.
+ * Existing pre-migration arrivals retain their legacy plaintext read path.
  */
 
-const VAULT_NAMESPACE = 'manuscript-sources';
 
 export interface StoredArrival {
   id: string;
@@ -38,6 +38,7 @@ export interface StoredArrival {
   sourceTextHash: string;
   artifactRef: string | null;
   artifactHash: string | null;
+  landingIntentId?: string;
 }
 
 /** Persist a file-backed arrival: bytes to the vault, then the governing row. */
@@ -48,30 +49,21 @@ export async function recordArtifactArrival(params: {
   mimeType: string | null;
   sourceText: string;
   extractor: ExtractorKey;
+  idempotencyKey?: string | null;
 }): Promise<StoredArrival> {
-  const artifactHash = hashBytes(params.bytes);
-  // A fresh random identity prevents two simultaneous copies of the same
-  // file from ever sharing a vault path and therefore a deletion fate.
-  const fileId = `${randomUUID()}-${artifactHash.slice(0, 16)}`;
-  const artifactRef = await writeDurableVaultBytes(
-    VAULT_NAMESPACE,
-    fileId,
-    artifactExt(params.originalFilename),
-    params.bytes,
-  );
-
-  const record = buildArrival({
-    kind: ARTIFACT_EXTRACTION,
-    artifactRef,
-    artifactHash,
-    artifactSize: params.bytes.byteLength,
+  if (params.extractor === 'supplied') {
+    throw new Error('artifact_arrival_cannot_use_supplied_extractor');
+  }
+  return recordEncryptedArtifactArrival({
+    memberId: params.memberId,
+    bytes: params.bytes,
     originalFilename: params.originalFilename,
     mimeType: params.mimeType,
     sourceText: params.sourceText,
     extractor: params.extractor,
-  } satisfies ArrivalInput);
-
-  return insertArrival(params.memberId, record);
+    format: params.extractor,
+    idempotencyKey: params.idempotencyKey,
+  });
 }
 
 /**
@@ -143,6 +135,9 @@ export async function claimArrival(
   manuscriptId: string,
   memberId: string,
 ): Promise<boolean> {
+  // New arrivals are ciphertext-first and carry a DB-bound envelope. Existing
+  // pre-migration arrivals remain readable through the legacy plaintext path.
+  const encryptedLanding = await getEncryptedLandingForArrival(arrivalId, memberId);
   return transaction(async (tx) => {
     const arrival = await tx.query<{
       source_kind: string;
@@ -175,7 +170,9 @@ export async function claimArrival(
       if (!source.artifact_ref || !source.artifact_hash) return false;
       // A stored hash alone does not certify custody. The original bytes must
       // still be present and identical when this member claims the arrival.
-      const bytes = await readVaultBytes(source.artifact_ref);
+      const bytes = encryptedLanding
+        ? await recoverEncryptedLandingBytes(encryptedLanding)
+        : await readVaultBytes(source.artifact_ref);
       if (hashBytes(bytes) !== source.artifact_hash) return false;
     } else if (source.source_kind === MEMBER_SUPPLIED_TEXT) {
       if (source.artifact_ref !== null || source.artifact_hash !== null) return false;
@@ -222,11 +219,12 @@ export async function verifyCustody(manuscriptId: string, memberId: string): Pro
   reason: string;
 }> {
   const res = await query<{
+    id: string;
     source_kind: string;
     artifact_ref: string | null;
     artifact_hash: string | null;
   }>(
-    `SELECT source_kind, artifact_ref, artifact_hash
+    `SELECT id, source_kind, artifact_ref, artifact_hash
        FROM manuscript_source_arrivals
       WHERE manuscript_id = $1 AND member_id = $2
       ORDER BY created_at ASC LIMIT 1`,
@@ -249,7 +247,10 @@ export async function verifyCustody(manuscriptId: string, memberId: string): Pro
   let recoverable = false;
   let reason = 'artifact_unreadable';
   try {
-    const bytes = await readVaultBytes(row.artifact_ref!);
+    const encryptedLanding = await getEncryptedLandingForArrival(row.id, memberId);
+    const bytes = encryptedLanding
+      ? await recoverEncryptedLandingBytes(encryptedLanding)
+      : await readVaultBytes(row.artifact_ref!);
     if (hashBytes(bytes) === row.artifact_hash) {
       recoverable = true;
       reason = 'artifact_recovered';
