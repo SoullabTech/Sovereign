@@ -42,6 +42,9 @@ const ctx = { params: Promise.resolve({ id: 'm1' }) };
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // A mid-render refusal intentionally leaves a mocked future query unused.
+  // Reset one-shot SQL responses so its fixture never leaks into another test.
+  mockQuery.mockReset();
   mockInspect.mockReturnValue([]);
 });
 
@@ -170,6 +173,11 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toBe('application/pdf');
     expect(res.headers.get('content-disposition')).toContain('attachment');
+    // Author-scoped release facts consumed by the Publish/KDP cover preview.
+    expect(res.headers.get('x-soullab-page-count')).toBe('1');
+    expect(res.headers.get('x-soullab-production-profile')).toBe('hallmark-6x9-v1');
+    expect(res.headers.get('x-soullab-source-hash')).toBe('abc123');
+
 
     // author's own name passed to the renderer as book author
     expect(mockRender).toHaveBeenCalledWith(
@@ -197,6 +205,110 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
     await expect(fs.access(tmp)).rejects.toBeTruthy();
   });
 
+  it('omits a guessed page count for EPUB while retaining source/provenance metadata', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+      .mockResolvedValueOnce({ rows: [{ heading: 'Chapter', body: 'fiction', heading_depth: 1, heading_signal: 'markdown' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 });
+
+    const tmp = path.join(os.tmpdir(), `render-metadata-${process.pid}-${Date.now()}.epub`);
+    await fs.writeFile(tmp, Buffer.from('EPUB fixture'));
+    mockRender.mockResolvedValue({
+      filePath: tmp, sizeBytes: 12,
+      sourceHash: 'fiction-source-hash', sectionCount: 1,
+      productionProfile: 'hallmark-6x9-v1',
+    });
+
+    const res = await POST(req({ format: 'epub' }), ctx);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('x-soullab-page-count')).toBeNull();
+    expect(res.headers.get('x-soullab-production-profile')).toBe('hallmark-6x9-v1');
+    expect(res.headers.get('x-soullab-source-hash')).toBe('fiction-source-hash');
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    await new Promise((r) => setTimeout(r, 25));
+    await expect(fs.access(tmp)).rejects.toBeTruthy();
+  });
+
+  it('refuses stale preflight revisions BEFORE starting a print render', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title: 'Fiction Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: 'd1', version: '10', section_addressable_at: new Date() }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ heading: 'Ch', body: 'Fictional revised wording', heading_depth: 1, heading_signal: 'markdown' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Fiction Author' }], rowCount: 1 });
+
+    const response = await POST(req({
+      format: 'pdf', expectedSourceAuthority: 'working_draft', expectedSourceRevision: '9',
+    }), ctx);
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ error: expect.stringContaining('changed') });
+    expect(mockRender).not.toHaveBeenCalled();
+    expect(mockQuery.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO manuscript_renders'))).toBe(false);
+  });
+
+  it('withholds and removes a rendered file if the manuscript changes WHILE rendering', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      // First source check: matches writer-confirmed preflight v9.
+      .mockResolvedValueOnce({ rows: [{ title: 'Fiction Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: 'd1', version: '9', section_addressable_at: new Date() }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ heading: 'Ch', body: 'Before another edit', heading_depth: 1, heading_signal: 'markdown' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Fiction Author' }], rowCount: 1 })
+      // Verification after expensive rendering: draft changed to v10.
+      .mockResolvedValueOnce({ rows: [{ title: 'Fiction Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: 'd1', version: '10', section_addressable_at: new Date() }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ heading: 'Ch', body: 'After another edit', heading_depth: 1, heading_signal: 'markdown' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Fiction Author' }], rowCount: 1 });
+
+    const tmp = path.join(os.tmpdir(), `render-inflight-${process.pid}-${Date.now()}.pdf`);
+    await fs.writeFile(tmp, Buffer.from('%PDF-1.4 before edit'));
+    mockRender.mockResolvedValue({
+      filePath: tmp, sizeBytes: 20, pageCount: 1,
+      sourceHash: 'old-revision-hash', sectionCount: 1, productionProfile: 'hallmark-6x9-v1',
+    });
+
+    const res = await POST(req({
+      format: 'pdf', expectedSourceAuthority: 'working_draft', expectedSourceRevision: '9',
+    }), ctx);
+    expect(res.status).toBe(409);
+    expect(mockRender).toHaveBeenCalledTimes(1);
+    expect(mockQuery.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO manuscript_renders'))).toBe(false);
+    await expect(fs.access(tmp)).rejects.toBeTruthy();
+  });
+
+  it('refuses a change of source authority since preflight', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title: 'Fiction Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: 'd1', version: '1', section_addressable_at: new Date() }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ heading: 'Ch', body: 'Fictional draft', heading_depth: 1, heading_signal: 'markdown' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Fiction Author' }], rowCount: 1 });
+    const response = await POST(req({
+      format: 'pdf', expectedSourceAuthority: 'source', expectedSourceRevision: null,
+    }), ctx);
+    expect(response.status).toBe(409);
+    expect(mockRender).not.toHaveBeenCalled();
+  });
+
+  it('refuses incomplete or malformed preflight tokens rather than assuming consent', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    for (const malformed of [
+      { expectedSourceAuthority: 'working_draft' },
+      { expectedSourceRevision: '9' },
+      { expectedSourceAuthority: 'working_draft', expectedSourceRevision: null },
+      { expectedSourceAuthority: 'source', expectedSourceRevision: '9' },
+      { expectedSourceAuthority: 'unknown', expectedSourceRevision: '9' },
+    ]) {
+      const response = await POST(req({ format: 'pdf', ...malformed }), ctx);
+      expect(response.status).toBe(400);
+    }
+    expect(mockRender).not.toHaveBeenCalled();
+    expect(mockQuery).not.toHaveBeenCalled();
+  });
+
   it('renders the current section-addressable draft instead of stale source prose', async () => {
     mockAuth.mockResolvedValue(MEMBER);
     mockQuery
@@ -221,6 +333,40 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
     const insert = mockQuery.mock.calls.find((c) => String(c[0]).includes('INSERT INTO manuscript_renders'));
     expect(insert?.[1]?.slice(-3)).toEqual(['hallmark-6x9-v1', 'working_draft', '9']);
     await new Promise((r) => setTimeout(r, 25));
+  });
+
+  it('permits a matching preflight revision through both checks and delivers the real file receipt', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    const versionRow = { rows: [{ id: 'd1', version: '9', section_addressable_at: new Date() }], rowCount: 1 };
+    const titleRow = { rows: [{ title: 'Fiction Book' }], rowCount: 1 };
+    const chapterRow = { rows: [{ heading: 'Ch', body: 'Same author wording', heading_depth: 1, heading_signal: 'markdown' }], rowCount: 1 };
+    const writerRow = { rows: [{ name: 'Fiction Author' }], rowCount: 1 };
+    mockQuery
+      .mockResolvedValueOnce(titleRow).mockResolvedValueOnce(versionRow)
+      .mockResolvedValueOnce(chapterRow).mockResolvedValueOnce(writerRow)
+      .mockResolvedValueOnce(titleRow).mockResolvedValueOnce(versionRow)
+      .mockResolvedValueOnce(chapterRow).mockResolvedValueOnce(writerRow)
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // provenance
+
+    const tmp = path.join(os.tmpdir(), `render-match-${process.pid}-${Date.now()}.pdf`);
+    await fs.writeFile(tmp, Buffer.from('%PDF-1.4 matching text'));
+    mockRender.mockResolvedValue({
+      filePath: tmp, sizeBytes: 22, pageCount: 1,
+      sourceHash: 'matching-content-hash', sectionCount: 1,
+      productionProfile: 'hallmark-6x9-v1',
+    });
+    const response = await POST(req({
+      format: 'pdf', expectedSourceAuthority: 'working_draft', expectedSourceRevision: '9',
+    }), ctx);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-soullab-source-hash')).toBe('matching-content-hash');
+    expect(response.headers.get('x-soullab-page-count')).toBe('1');
+    expect((await response.arrayBuffer()).byteLength).toBeGreaterThan(10);
+    expect(mockRender).toHaveBeenCalledTimes(1);
+    expect(mockQuery.mock.calls.filter(([sql]) => String(sql).includes('SELECT title FROM member_manuscripts'))).toHaveLength(2);
+    expect(mockQuery.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO manuscript_renders'))).toBe(true);
+    await new Promise((r) => setTimeout(r, 25));
+    await expect(fs.access(tmp)).rejects.toBeTruthy();
   });
 
   it('refuses rather than substituting source when an addressable draft has no readable sections', async () => {

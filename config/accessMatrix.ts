@@ -41,6 +41,19 @@ export const ACCESS_RULES: AccessRule[] = [
   // Landing & Marketing
   { exact: '/', public: true, notes: 'Studio landing page' },
   { exact: '/home', public: true, notes: 'Soullab canonical entry — signed-out visitors see the Soullab threshold; authenticated members enter Home' },
+
+  // P0 public marketing discovery, separately scoped from working/consent-gated Studios.
+  // Exact-only whitelist; NEVER grant /explore/* wildcards or weaken private
+  // /writers-studio, /studio, /maia/encounter, chart or API admission.
+  { exact: '/explore', public: true, notes: 'Public Many Doors introduction; no member data' },
+  { exact: '/explore/writers-studio', public: true, notes: 'Public writer vision; manuscript features remain gated' },
+  { exact: '/explore/pro-studio', public: true, notes: 'Public professional preview; clinical workflows remain gated' },
+  { exact: '/explore/astrology-pro', public: true, notes: 'Public professional astrology preview; private charts remain gated' },
+  { exact: '/explore/maia', public: true, notes: 'Public MAIA introduction; member encounter remains gated' },
+  { exact: '/explore/ain-os', public: true, notes: 'AIN OS research; not a licensed public download' },
+  { exact: '/explore/sound-resonance', public: true, notes: 'Sound experience preview; no public player or audio recording' },
+  { exact: '/explore/elemental-academy', public: true, notes: 'Academy curriculum preview; no course access' },
+
   { exact: '/enter', public: true, notes: 'Smart routing entry point (MAIA/onboarding)' },
   { exact: '/faq', public: true, notes: 'Public FAQ' },
   { exact: '/downloads', public: true, notes: 'Downloads page' },
@@ -563,6 +576,13 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/members/check', public: true, notes: 'Check member exists' },
   { exact: '/api/members/register', public: true, notes: 'Register member' },
   { exact: '/api/members/register-email', public: true, notes: 'Register via magic link (no passkey)' },
+  // WRITER-IDENTITY-01: canonical member self-read used by Writer's Studio.
+  // The outer matrix requires an authenticated member at any tier; the handler
+  // independently resolves the verified credential and refuses caller-supplied identity.
+  { exact: '/api/members/me', minTier: 'free', notes: 'Canonical current-member identity for Writer and member surfaces; handler independently verifies credential and exact member row' },
+  // R20: authenticated member may request a deletion verdict. The handler
+  // derives the target from the verified session and automatic deletion is held.
+  { exact: '/api/members/delete-account', minTier: 'free', notes: 'R20 member-scoped deletion request; automatic deletion held fail-closed' },
   { exact: '/api/members/signin', public: true, notes: 'Sign in' },
   { exact: '/api/auth/refresh-and-redirect', public: true, notes: 'Refresh session cookies and redirect' },
   { exact: '/api/practitioners/check', public: true, notes: 'Check practitioner status' },
@@ -623,6 +643,35 @@ export const ACCESS_RULES: AccessRule[] = [
      that gets through. Neither layer is permitted to become the other's
      excuse. */
   { prefix: '/api/writers-studio/editorial/', minTier: 'free', notes: "Writer's Studio editorial corridor — authenticated members only (WS-ACCESS-CONTAINMENT-01); same policy as /api/sovereign, never /api/ain's admin gate" },
+
+  /* FWE-ROUTE-01 Class A — EXACT Writer's Studio section-aware context GET.
+     The canonical Write room requests this member-owned read snapshot. An
+     unmapped path is denied in strict mode, even with a verified session.
+     Only this exact path is admitted to authenticated members: no shared
+     /api/writers-studio/ prefix, no public exception, no tier/role bypass.
+     This matrix is path-only; the route exports GET, and the route's
+     getMemberIdFromRequest + member_id checks remain the data authority.
+     Do not infer access to neighboring /rebuild or /focus endpoints. */
+  { exact: '/api/writers-studio/rebuild/context', minTier: 'free', notes: "FWE-ROUTE-01 — member-authenticated Writer's Studio read context; handler separately verifies manuscript ownership" },
+
+  /* FWE-ROUTE-02A — ten EXISTING Writer's Studio API route shapes, no more.
+     Outer admission requires an authenticated member at any tier. Independent
+     handler-level identity, ownership, Source custody, consent, and disabled
+     feature flags remain authoritative; this adds none of those powers.
+     Avoid /api/writers-studio/ prefix: it would silently admit unknown future
+     APIs. Dynamic rules match exactly ONE identifier segment and are anchored
+     to prevent neighboring paths inheriting an admission ruling.
+     Do not infer production strict mode, release, or expanded beta access. */
+  { exact: '/api/writers-studio/return/relationship', minTier: 'free', notes: 'FWE-ROUTE-02A: existing member-owned relationship return GET/PUT/DELETE; custody remains in handler' },
+  { exact: '/api/writers-studio/return/place', minTier: 'free', notes: 'FWE-ROUTE-02A: existing member-owned manuscript place GET/PUT/DELETE; custody remains in handler' },
+  { exact: '/api/writers-studio/focus', minTier: 'free', notes: 'FWE-ROUTE-02A: existing Focus POST; independently verified MAIA consent and WRITERS_STUDIO_FOCUS_ENABLED hold' },
+  { exact: '/api/writers-studio/sources', minTier: 'free', notes: 'FWE-ROUTE-02A: existing member Source list/ingest; handler verifies member identity and custody' },
+  { exact: '/api/writers-studio/rebuild/editorial/thread', minTier: 'free', notes: 'FWE-ROUTE-02A: existing editorial thread POST; independently guarded by WRITERS_STUDIO_EDITORIAL_ENABLED' },
+  { exact: '/api/writers-studio/relationships', minTier: 'free', notes: 'FWE-ROUTE-02A: existing member editorial relationships GET/POST; existing feature flags retained' },
+  { regex: /^\/api\/writers-studio\/sources\/[^/]+$/, minTier: 'free', notes: 'FWE-ROUTE-02A: existing single-source GET/PATCH/DELETE; handler independently checks arranger ownership' },
+  { regex: /^\/api\/writers-studio\/sources\/[^/]+\/file$/, minTier: 'free', notes: 'FWE-ROUTE-02A: existing member-scoped Source file GET; no Safari transport policy change' },
+  { regex: /^\/api\/writers-studio\/relationships\/[^/]+$/, minTier: 'free', notes: 'FWE-ROUTE-02A: existing single relationship GET; member-owned and feature-flagged' },
+  { regex: /^\/api\/writers-studio\/relationships\/[^/]+\/carry-sources$/, minTier: 'free', notes: 'FWE-ROUTE-02A: existing relationship carry-sources GET; member-owned and feature-flagged' },
 
   /* Invite API — the issuing side of member admission. Declared EXPLICITLY
      rather than inheriting the permissive unmapped-route default (#717), which

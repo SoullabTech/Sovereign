@@ -12,6 +12,7 @@ import {
   type CSSProperties,
 } from 'react';
 import { passageContext } from '@/lib/writersStudio/editorialApproaches';
+import { readSavedStudioReadingSize, setStudioReadingSize, subscribeStudioReadingSize, type StudioReadingSize } from '@/lib/writersStudio/readingSizePreference';
 import { appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import {
@@ -54,7 +55,7 @@ const clamp = (value: number) => Math.max(MIN_LEFT, Math.min(MAX_LEFT, value));
 const SESSION_PREF_KEY = 'writers-studio:p4r1:focus-view';
 
 type FocusLayout = 'balanced' | 'passage' | 'maia' | 'stacked' | 'custom';
-type ReadingSize = 'large' | 'larger' | 'largest';
+type ReadingSize = StudioReadingSize;
 type LineSpacing = 'open' | 'more-open';
 
 type SessionFocusPrefs = {
@@ -156,20 +157,25 @@ export default function IsolatedEditorialRoom({
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const saved = parseSessionPrefs(window.sessionStorage.getItem(SESSION_PREF_KEY));
+    const sharedReadingSize = readSavedStudioReadingSize();
     if (saved) {
       setLayout(saved.layout);
       setLeftPercent(saved.leftPercent);
-      setReadingSize(saved.readingSize);
+      setReadingSize(sharedReadingSize ?? saved.readingSize);
       setLineSpacing(saved.lineSpacing);
       setShowDirections(saved.showDirections);
       setShowWorkingDraft(saved.showWorkingDraft);
       setShowCraftDepth(saved.showCraftDepth);
+    } else if (sharedReadingSize) {
+      setReadingSize(sharedReadingSize);
     }
     const working = readWorkingStyle();
     setWorkingPace(working.pace);
     setExplanationDepth(working.explanation);
     setPrefsLoaded(true);
   }, []);
+
+  useEffect(() => subscribeStudioReadingSize(setReadingSize), []);
 
   useEffect(() => {
     if (!prefsLoaded || typeof window === 'undefined') return;
@@ -255,7 +261,7 @@ export default function IsolatedEditorialRoom({
   const resetView = useCallback(() => {
     setLayout('balanced');
     setLeftPercent(50);
-    setReadingSize('large');
+    // Resetting this room must not erase the writer's Studio-wide reading size.
     setLineSpacing('open');
     setShowDirections(true);
     setShowWorkingDraft(true);
@@ -444,7 +450,10 @@ export default function IsolatedEditorialRoom({
                       name="isolated-reading-size"
                       value={id}
                       checked={readingSize === id}
-                      onChange={() => setReadingSize(id)}
+                      onChange={() => {
+                        setReadingSize(id);
+                        setStudioReadingSize(id);
+                      }}
                     />
                     <span>{label}</span>
                   </label>

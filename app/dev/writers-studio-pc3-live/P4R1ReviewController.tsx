@@ -242,7 +242,7 @@ type ReadyReview = {
     router.push(`${pathname}?${next.toString()}`);
   }, [params, pathname, router]);
 
-  const goMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review', sectionId?: string) => {
+  const goMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review' | 'publish' | 'listen', sectionId?: string) => {
     if (mode === 'home') {
       const query = studioHomeReturnSearch(params?.toString() ?? '');
       router.push(`${pathname}${query ? `?${query}` : ''}`);

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { isCabinOrigin, cabinReturnPath } from '@/lib/cabin/doorway';
+import { isStudioReadingSize, readStudioReadingSize, setStudioReadingSize, subscribeStudioReadingSize, type StudioReadingSize } from '@/lib/writersStudio/readingSizePreference';
 import { appearanceVars, geometryVars } from './tokens';
 import { PRIMARY_MODES, type Appearance, type ShellGeometry, type StudioMode } from './types';
 
@@ -69,28 +70,6 @@ export function Shell(props: ShellProps) {
   const { mode, appearance, geometry } = props;
   const searchParams = useSearchParams();
   const currentPathname = usePathname();
-  const listeningRoute = currentPathname === '/writers-studio' && searchParams?.get('mode') === 'listen';
-  const publishingRoute = currentPathname === '/writers-studio' && searchParams?.get('publish') === '1';
-  const listenHref = currentPathname === '/writers-studio' && searchParams?.get('m')
-    ? '/writers-studio?' + (() => {
-        const next = new URLSearchParams(searchParams.toString());
-        next.set('mode', 'listen');
-        next.delete('publish');
-        return next.toString();
-      })()
-    : null;
-  const publishHref = currentPathname === '/writers-studio' && searchParams?.get('m')
-    ? '/writers-studio?' + (() => {
-        const next = new URLSearchParams(searchParams.toString());
-        next.set('mode', 'home');
-        next.set('publish', '1');
-        next.delete('developField');
-        next.delete('r');
-        next.delete('reviewRun');
-        next.delete('reviewFinding');
-        return next.toString();
-      })()
-    : null;
   const fromCabin = isCabinOrigin(searchParams);
   const oneRoom = props.manuscript === undefined && props.maia === undefined;
   const canvas = props.canvas === true;
@@ -105,6 +84,7 @@ export function Shell(props: ShellProps) {
   const [rightExpanded, setRightExpanded] = useState(rightInitiallyExpanded);
   const [leftWidth, setLeftWidth] = useState(geometry.manuscriptWidth);
   const [rightWidth, setRightWidth] = useState(geometry.maiaWidth);
+  const [readingSize, setReadingSize] = useState<StudioReadingSize>('large');
   // Do not let a render with the old mode/defaults overwrite the new mode's
   // saved widths before its hydration effect has completed.
   const hydrationKey = `${mode}:${geometry.manuscriptWidth}:${geometry.maiaWidth}:${rightInitiallyExpanded}`;
@@ -113,6 +93,11 @@ export function Shell(props: ShellProps) {
   const hasRight = !oneRoom && !canvas && props.maia !== undefined;
   const leftVisible = hasLeft && leftExpanded;
   const rightVisible = hasRight && rightExpanded;
+
+  useEffect(() => {
+    setReadingSize(readStudioReadingSize());
+    return subscribeStudioReadingSize(setReadingSize);
+  }, []);
 
   useEffect(() => {
     let parsed: Record<string, unknown> | null = null;
@@ -207,6 +192,7 @@ export function Shell(props: ShellProps) {
       data-right-open={rightVisible ? 'true' : 'false'}
       data-appearance={appearance}
       data-mode={mode}
+      data-studio-reading-size={readingSize}
       data-work-panel={geometry.workPanel ? 'framed' : 'ground'}
       data-canvas={props.canvas === undefined ? undefined : canvas ? 'full' : 'resting'}
       style={style}
@@ -228,27 +214,32 @@ export function Shell(props: ShellProps) {
                 key={m.id}
                 type="button"
                 className="fr-nav-item"
-                aria-current={m.id === mode && !listeningRoute && !publishingRoute ? 'page' : undefined}
+                aria-current={m.id === mode ? 'page' : undefined}
                 data-mode={m.id}
                 onClick={() => props.onSelectMode?.(m.id)}
               >
                 {m.label}
               </button>
             ))}
-            {listenHref ? listeningRoute
-              ? <span className="fr-nav-item" data-writers-listen-entry aria-current="page" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>Listen</span>
-              : <a className="fr-nav-item" href={listenHref} data-writers-listen-entry style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', whiteSpace: 'nowrap' }}>Listen</a>
-              : null}
-            {currentPathname === '/writers-studio'
-              ? publishHref
-                ? publishingRoute
-                  ? <span className="fr-nav-item" data-writers-publish-entry aria-current="page" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>Publish</span>
-                  : <a className="fr-nav-item" href={publishHref} data-writers-publish-entry style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', whiteSpace: 'nowrap' }}>Publish</a>
-                : <span className="fr-nav-item" data-writers-publish-entry aria-disabled="true" title="Open a Work to prepare it for publishing." style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap', opacity: 0.52, cursor: 'default' }}>Publish</span>
-              : null}
           </nav>
           {/* Preserve existing writer-owned topbar download/actions. */}
           <div className="fr-bar-accessories" data-studio-topbar-accessories />
+          {currentPathname === '/writers-studio' ? (
+            <label className="fr-reading-choice" data-studio-reading-control>
+              <span aria-hidden="true">Aa</span>
+              <select aria-label="Studio reading size" value={readingSize}
+                onChange={(event) => {
+                  const next = event.currentTarget.value;
+                  if (!isStudioReadingSize(next)) return;
+                  setReadingSize(next);
+                  setStudioReadingSize(next);
+                }}>
+                <option value="large">Large</option>
+                <option value="larger">Larger</option>
+                <option value="largest">Largest</option>
+              </select>
+            </label>
+          ) : null}
           {!oneRoom && !canvas ? (
             <div className="fr-panel-controls" aria-label="Studio panels">
               {props.manuscript !== undefined ? (

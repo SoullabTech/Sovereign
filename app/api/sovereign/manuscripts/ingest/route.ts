@@ -41,10 +41,15 @@ import {
   CLIENT_ASSERTABLE_IDENTITY_HEADERS,
   forgedIdentityHeaders,
 } from '@/lib/auth/identityAssertions';
-import { parseUpload, UnsupportedUploadError } from '@/lib/manuscript/ingest/parseUpload';
+import { parseUpload, UnsupportedUploadError, UnsupportedDocxStructureError } from '@/lib/manuscript/ingest/parseUpload';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { titleFromFilename } from '@/lib/manuscript/ingest/titleSuggestion';
 import { recordArtifactArrival } from '@/lib/manuscript/source/arrivals';
+
+// P0 private original manuscript/EPUB intake remains held. Not controlled
+// by environment variables. Lifting the hold requires separate recorded
+// Founder-Steward beta Class A review and complete custody/restore acceptance.
+const PRESS_SOURCE_INTAKE_RELEASED: boolean = false;
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB — generous for a full book file
 const MAX_TEXT_CHARS = 2_000_000; // mirrors the save path's cap in ../route.ts
@@ -245,6 +250,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Application-local ingress guard, after present member-identity checks.
+    // This exact multipart route is intentionally excluded from the Next proxy.
+    // Refuse before formData(), parseUpload() or recordArtifactArrival().
+    if (!PRESS_SOURCE_INTAKE_RELEASED) {
+      return NextResponse.json(
+        { error: 'Original manuscript intake is not available during this beta.' },
+        { status: 423, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+
     // ── 4. SANITISE — the SAME request, in place ───────────────────────────
     // Authority has finished inspecting the caller's claims, so nothing
     // downstream may see them. Deleting from `request.headers` mutates the
@@ -315,6 +330,11 @@ export async function POST(request: NextRequest) {
       if (err instanceof UnsupportedUploadError) {
         return NextResponse.json({ error: err.message }, { status: 415 });
       }
+      if (err instanceof UnsupportedDocxStructureError) {
+        // Do not flatten unrepresentable Word structure into an editable draft.
+        // The author sees the bounded reason; nothing enters Source custody.
+        return NextResponse.json({ error: err.message }, { status: 422 });
+      }
       console.error('[press/manuscripts/ingest] parse error:', err);
       return NextResponse.json(
         { error: 'We could not read that file. Try a .docx, .pdf, .txt, or .md.' },
@@ -363,6 +383,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       text: result.text,
       warnings: result.warnings,
+      fidelity: result.fidelity ?? null,
       title: titleFromFilename(file.name),
       format: result.format,
       sourceArrivalId,

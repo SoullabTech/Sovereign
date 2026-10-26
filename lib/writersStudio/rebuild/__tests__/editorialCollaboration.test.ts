@@ -30,7 +30,7 @@ describe('revision collaboration binding', () => {
 
   it('refuses a thread whose durable target is not the visible section', async () => {
     fetchMock.mockResolvedValueOnce(response(thread('draft-0')));
-    const out = await readBoundEditorialThread('th-1', 'draft-200');
+    const out = await readBoundEditorialThread('th-1', 'draft-200', 'rel-1');
     expect(out).toMatchObject({ ok: false, reason: 'locus_mismatch' });
   });
 
@@ -41,10 +41,22 @@ describe('revision collaboration binding', () => {
 
   it('carries the writer’s exact typed words into the editorial act', async () => {
     const exact = '  Make this less abstract, but keep my cadence.  ';
+    // A successful turn now requires the exact server-named author/MAIA
+    // pair in readback. A bare HTTP 200 is not a delivery receipt.
+    const maiaReply = 'FICTIONAL MAIA reply for this passage.';
     fetchMock
-      .mockResolvedValueOnce(response({ version: { id: 'v1' } }))
-      .mockResolvedValueOnce(response(thread()));
-    const out = await sendBoundEditorialTurn('th-1', 'draft-200', exact, { resolved: true, sanctuary: false });
+      .mockResolvedValueOnce(response({
+        threadId: 'th-1', memberTurnIndex: 0, maiaTurnIndex: 1,
+        response: maiaReply, version: { id: 'v1' },
+      }))
+      .mockResolvedValueOnce(response({
+        ...thread(),
+        turns: [
+          { turnIndex: 0, speaker: 'author', body: exact, at: '2026-10-20T10:00:00Z' },
+          { turnIndex: 1, speaker: 'maia', body: maiaReply, at: '2026-10-20T10:00:01Z' },
+        ],
+      }));
+    const out = await sendBoundEditorialTurn('th-1', 'draft-200', exact, { resolved: true, sanctuary: false }, undefined, 'rel-1');
     expect(out.ok).toBe(true);
     const init = fetchMock.mock.calls[0][1] as RequestInit;
     const body = JSON.parse(String(init.body));
@@ -53,7 +65,7 @@ describe('revision collaboration binding', () => {
   });
   it('adopts only a version that belongs to the bound thread', async () => {
     fetchMock.mockResolvedValueOnce(response(thread()));
-    const out = await adoptBoundEditorialVersion('th-1', 'draft-200', 'not-here');
+    const out = await adoptBoundEditorialVersion('th-1', 'draft-200', 'not-here', 'rel-1');
     expect(out).toEqual({ ok: false, reason: 'version_not_in_bound_thread' });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });

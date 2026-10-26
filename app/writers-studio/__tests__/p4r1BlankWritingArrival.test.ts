@@ -131,7 +131,12 @@ test('starting to write dismisses the helper and focuses the real PC3 editor wit
   const slice = write.slice(start, end);
 
   expect(slice).toContain('setBlankArrivalDismissed(true)');
-  expect(slice).toContain("document.querySelector<HTMLElement>(selector)?.focus");
+  expect(slice).toContain('editor.focus({ preventScroll: true });');
+  expect(slice).toContain('selection.addRange(insertion);');
+  expect(slice).toContain('if (!reveal()) window.setTimeout(reveal, 80)');
+  const css = fs.readFileSync(path.join(process.cwd(), 'app/dev/writers-studio-p4r1/p4r1-live.css'), 'utf8');
+  expect(css).toContain('.p4r1-root .fr-write-page [data-write-editor]');
+  expect(css).toContain('min-height: min(45vh, 440px);');
   expect(slice).not.toContain('props.writing.edit');
   expect(slice).not.toContain('onEditBody');
   expect(slice).not.toContain('material');

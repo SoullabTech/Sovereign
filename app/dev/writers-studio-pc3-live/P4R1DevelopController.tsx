@@ -565,7 +565,7 @@ export default function P4R1DevelopController() {
     });
   }, [updateQuery]);
 
-  const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
+  const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review' | 'publish' | 'listen') => {
     if (mode === 'home') {
       const query = studioHomeReturnSearch(params?.toString() ?? '');
       router.push(`${pathname}${query ? `?${query}` : ''}`);

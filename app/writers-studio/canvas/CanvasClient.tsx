@@ -478,34 +478,10 @@ function CanvasRoom({ editorialEnabled }: { editorialEnabled: boolean }) {
       setEditorialOpening(false);
       return;
     }
-    try {
-      const res = await apiFetch('/api/writers-studio/editorial/thread', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sectionId, sanctuary: posture.sanctuary }),
-      });
-      if (res.status === 409) {
-        const why = await res.json().catch(() => null);
-        setEditorialRefusal(why?.error === 'sanctuary_unavailable'
-          ? 'Sanctuary is on. A conversation about your passage is durable by construction, so it is unavailable until Sanctuary is off. Nothing was written.'
-          : 'This passage could not be opened for conversation.');
-        return;
-      }
-      if (!res.ok) {
-        setEditorialRefusal('This passage could not be opened for conversation.');
-        return;
-      }
-      const { threadId } = await res.json();
-      if (typeof threadId !== 'string') {
-        setEditorialRefusal('This passage could not be opened for conversation.');
-        return;
-      }
-      adoptEditorialThread(threadId);
-    } catch {
-      setEditorialRefusal('This passage could not be opened for conversation.');
-    } finally {
-      setEditorialOpening(false);
-    }
+    // This legacy Canvas does not hold a verified Work-level A2 relationship.
+    // First-open provenance must never be guessed from a shared manuscript.
+    setEditorialRefusal('Open this passage from the current Living Work and choose its MAIA relationship first. Nothing was written.');
+    setEditorialOpening(false);
   }, [editorialEnabled, editorialOpening, writing, adoptEditorialThread]);
 
   const [compact, setCompact] = useState(false);

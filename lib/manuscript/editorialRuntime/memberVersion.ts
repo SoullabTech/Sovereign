@@ -33,10 +33,11 @@
  * reintroduce it one layer up.
  */
 
-import { query } from '@/lib/db/postgres';
-import { appendAuthoredVersion, type AppendRefusal } from '../proposalChain/store';
+import { query, transaction } from '@/lib/db/postgres';
+import { appendAuthoredVersion, appendAuthoredVersionWithExecutor, type AppendRefusal, type AppendResult } from '../proposalChain/store';
 import type { ProposalVersion } from '../proposalChain/contract';
 import type { VerifiedIdentity } from './turn';
+import { lockCurrentEditorialOriginWithClient } from '@/lib/writers-studio/threadOrigin';
 
 export interface MemberVersionInput {
   readonly identity: VerifiedIdentity;
@@ -92,4 +93,31 @@ export async function appendMemberEditorialVersion(
   return appended.outcome === 'appended'
     ? { ok: true, version: appended.version }
     : { ok: false, reason: appended.reason };
+}
+
+export type AppendCurrentMemberVersionResult = AppendResult
+  | { outcome: 'refused'; reason: 'origin_unavailable' };
+
+/** Existing-thread Save under the same current Work/A2/declaration authority as first Save. */
+export async function appendCurrentMemberVersion(input: {
+  memberId: string;
+  relationshipId: string;
+  threadId: string;
+  supersedes: string | null;
+  replacementText: string;
+  purpose?: string;
+}): Promise<AppendCurrentMemberVersionResult> {
+  return transaction(async tx => {
+    const current = await lockCurrentEditorialOriginWithClient(tx, {
+      memberId: input.memberId,
+      relationshipId: input.relationshipId,
+      threadId: input.threadId,
+    });
+    if (!current.ok) return { outcome: 'refused' as const, reason: 'origin_unavailable' as const };
+    return appendAuthoredVersionWithExecutor(tx, input.memberId, current.origin.proposalChainId, {
+      author: 'member', supersedes: input.supersedes,
+      replacementText: input.replacementText,
+      ...(input.purpose ? { rationale: input.purpose } : {}),
+    });
+  });
 }

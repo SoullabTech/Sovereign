@@ -81,14 +81,42 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
-  const format = (body as { format?: unknown })?.format;
+  const input = body && typeof body === 'object' && !Array.isArray(body)
+    ? body as { format?: unknown; expectedSourceAuthority?: unknown; expectedSourceRevision?: unknown }
+    : {};
+  const format = input.format;
   if (format !== 'pdf' && format !== 'epub') {
     return NextResponse.json({ error: "format must be 'pdf' or 'epub'" }, { status: 400 });
+  }
+
+  // Current Publish sends its preflight identity. Legacy authorized callers
+  // remain supported until separately governed migration; neither client flag
+  // nor an untrusted revision grants publication or member permission.
+  const hasVersionClaim =
+    Object.prototype.hasOwnProperty.call(input, 'expectedSourceAuthority') ||
+    Object.prototype.hasOwnProperty.call(input, 'expectedSourceRevision');
+  if (hasVersionClaim) {
+    const authority = input.expectedSourceAuthority;
+    const revision = input.expectedSourceRevision;
+    if ((authority !== 'working_draft' && authority !== 'source') ||
+        (authority === 'working_draft'
+          ? typeof revision !== 'string' || revision.length === 0
+          : revision !== null)) {
+      return NextResponse.json({ error: 'Invalid production preflight.' }, { status: 400 });
+    }
   }
 
   const source = await loadMemberRenderSource(id, memberId);
   if (!source.ok) {
     return NextResponse.json({ error: source.error }, { status: source.status });
+  }
+  if (hasVersionClaim &&
+      (source.sourceAuthority !== input.expectedSourceAuthority ||
+       source.sourceRevision !== input.expectedSourceRevision)) {
+    return NextResponse.json(
+      { error: 'Your writing changed since the production check. Check again before preparing a file.' },
+      { status: 409, headers: { 'Cache-Control': 'no-store' } },
+    );
   }
 
   const {
@@ -116,6 +144,23 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       { error: 'Could not make your book just now. Please try again in a moment.' },
       { status: toolingMissing ? 503 : 500 },
     );
+  }
+
+  if (hasVersionClaim) {
+    // PDF setting can take minutes. A writer may have saved another revision
+    // while the file was being prepared. Recheck before recording provenance
+    // or exposing bytes. A failed or unavailable recheck is NOT permission to
+    // deliver an edition labeled as the author's current text.
+    const confirmed = await loadMemberRenderSource(id, memberId);
+    if (!confirmed.ok ||
+        confirmed.sourceAuthority !== input.expectedSourceAuthority ||
+        confirmed.sourceRevision !== input.expectedSourceRevision) {
+      await fs.unlink(result.filePath).catch(() => undefined);
+      return NextResponse.json(
+        { error: 'Your writing changed or could not be reconfirmed during production. Check again before making a file.' },
+        { status: 409, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
   }
 
   // Record the authorization + provenance (counts + hash only, never content).
@@ -160,6 +205,14 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         `attachment; filename="${name}.${format}"; ` +
         `filename*=UTF-8''${encodeURIComponent(`${title}.${format}`)}`,
       'Cache-Control': 'no-store',
+      // Only an authenticated owner reaches this response. These non-content
+      // production facts bind Publish's cover/proof UI to the bytes downloaded.
+      // Unknown page count is omitted rather than invented for spine geometry.
+      ...(Number.isInteger(result.pageCount) && (result.pageCount ?? 0) > 0
+        ? { 'X-Soullab-Page-Count': String(result.pageCount) }
+        : {}),
+      'X-Soullab-Production-Profile': result.productionProfile,
+      'X-Soullab-Source-Hash': result.sourceHash,
     },
   });
 }

@@ -20,7 +20,10 @@ import { readApplicationRecovery, type ApplicationRecovery } from './recovery';
  * the same law the Direction store uses for authorship.
  */
 
-import { query, transaction } from '@/lib/db/postgres';
+import { randomUUID } from 'node:crypto';
+import { query, transaction, type TransactionClient } from '@/lib/db/postgres';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { lockCurrentEditorialOriginWithClient, recordEditorialThreadOriginWithClient } from '@/lib/writers-studio/threadOrigin';
 import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 import { projectEditorialSelection, type EditorialSelectionRange } from './selection';
 import { locusIsAdoptable } from '../proposalChain/legacyLocus';
@@ -37,6 +40,10 @@ export interface OpenEditorialInput {
    * never accepted, for the same reason the turn route refuses a `chainId`.
    */
   readonly sectionId: string;
+  /** Explicit selection claim, never inferred from a shared manuscript. */
+  readonly relationshipId: string;
+  /** The existing request-resolved posture; not a substitute for consent authority. */
+  readonly posture: TurnPosture;
 }
 
 export interface OpenEditorialSelectionInput extends OpenEditorialInput {
@@ -70,7 +77,11 @@ export type OpenEditorialRefusal =
   | 'selection_stale'
   | 'selection_invalid'
   | 'selection_ambiguous'
-  | 'chain_refused';
+  | 'chain_refused'
+  | 'relationship_required'
+  | 'origin_unavailable'
+  | 'posture_required'
+  | 'sanctuary_unavailable';
 
 export type OpenEditorialResult =
   | { readonly ok: true; readonly threadId: string; readonly chainId: string }
@@ -101,71 +112,189 @@ export async function openEditorialRelationshipAtSelection(
   });
 }
 
-async function openEditorialRelationshipResolved(
+const ORIGIN_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+interface OpeningRelationship {
+  id: string; member_id: string; living_work_id: string;
+  manuscript_id: string; creation_expression_id: string;
+}
+
+/** Metadata-only admission under one transaction; no history or passage reads. */
+async function lockOpeningRelationship(
+  tx: TransactionClient, memberId: string, relationshipId: string,
+): Promise<OpeningRelationship> {
+  const statement = `SELECT id, member_id, living_work_id, manuscript_id, creation_expression_id
+    FROM writer_editorial_relationships WHERE id = $1 AND member_id = $2
+      AND contract_version = 'A2-1'`;
+  const initial = await tx.query<OpeningRelationship>(statement, [relationshipId, memberId]);
+  if (initial.rows.length !== 1) throw new OpenRefused('origin_unavailable');
+  const r = initial.rows[0]!;
+  if (r.id !== relationshipId || r.member_id !== memberId
+      || ![r.living_work_id, r.manuscript_id, r.creation_expression_id]
+        .every(id => typeof id === 'string' && ORIGIN_UUID.test(id))) {
+    throw new OpenRefused('origin_unavailable');
+  }
+  // Match the established Work -> manuscript -> original declaration -> A2
+  // order. SHARE fences both withdrawal and non-key owner/declaration edits.
+  const checks: Array<[string, string[]]> = [
+    ['SELECT id FROM living_works WHERE id = $1 AND member_id = $2 FOR SHARE',
+      [r.living_work_id, memberId]],
+    ['SELECT id FROM member_manuscripts WHERE id = $1 AND member_id = $2 FOR SHARE',
+      [r.manuscript_id, memberId]],
+    [`SELECT id FROM living_work_expressions WHERE id = $1 AND living_work_id = $2
+      AND expression_type = 'manuscript' AND expression_id = $3 AND declared_by = $4 FOR SHARE`,
+      [r.creation_expression_id, r.living_work_id, r.manuscript_id, memberId]],
+  ];
+  for (const [sql, args] of checks) {
+    const found = await tx.query<{ id: string }>(sql, args);
+    if (found.rows.length !== 1 || found.rows[0]!.id !== args[0]) {
+      throw new OpenRefused('origin_unavailable');
+    }
+  }
+  const locked = await tx.query<OpeningRelationship>(statement + ' FOR SHARE', [relationshipId, memberId]);
+  const now = locked.rows[0];
+  if (locked.rows.length !== 1 || !now || now.id !== r.id || now.member_id !== r.member_id
+      || now.living_work_id !== r.living_work_id || now.manuscript_id !== r.manuscript_id
+      || now.creation_expression_id !== r.creation_expression_id) {
+    throw new OpenRefused('origin_unavailable');
+  }
+  return now;
+}
+
+export type EditorialOpenSelection =
+  | { readonly range: EditorialSelectionRange; readonly revisionNumber: number }
+  | null;
+
+function openInputRefusal(input: OpenEditorialInput): OpenEditorialRefusal | null {
+  const memberId = input.identity.memberId;
+  if (input.identity.status !== 'verified' || typeof memberId !== 'string'
+      || !ORIGIN_UUID.test(memberId)) return 'origin_unavailable';
+  if (typeof input.relationshipId !== 'string' || !ORIGIN_UUID.test(input.relationshipId)) {
+    return 'relationship_required';
+  }
+  if (!(input.posture instanceof TurnPosture)) return 'posture_required';
+  if (input.posture.sanctuary) return 'sanctuary_unavailable';
+  return null;
+}
+
+/**
+ * Transaction-local first-open seam. A caller may append the member's first
+ * authored version with the SAME executor before commit. No MAIA turn exists.
+ */
+export async function openEditorialRelationshipWithClient(
+  tx: TransactionClient,
   input: OpenEditorialInput,
-  selection: { readonly range: EditorialSelectionRange; readonly revisionNumber: number } | null,
+  selection: EditorialOpenSelection,
 ): Promise<OpenEditorialResult> {
+  const refusal = openInputRefusal(input);
+  if (refusal) return { ok: false, reason: refusal };
   const memberId = input.identity.memberId;
   try {
-    return await transaction(async (tx) => {
-      const s = await tx.query<{
-        draft_id: string; manuscript_id: string; revision_count: number; draft_version: string;
-        text: string; heading: string | null;
-      }>(
-        `SELECT s.draft_id, d.manuscript_id, d.revision_count, d.version AS draft_version,
-                s.text, ms.heading
-           FROM manuscript_draft_sections s
-           JOIN manuscript_working_drafts d ON d.id = s.draft_id
-           LEFT JOIN manuscript_sections ms ON ms.id = s.source_section_id
-          WHERE s.id = $1 AND d.member_id = $2`,
-        [input.sectionId, memberId]);
-      if (s.rows.length === 0) throw new OpenRefused('section_not_found');
-      const row = s.rows[0]!;
+    const binding = await lockOpeningRelationship(tx, memberId, input.relationshipId);
+    // Resolve/lock the selected section's container WITHOUT reading text.
+    const metadata = await tx.query<{
+      draft_id: string; manuscript_id: string; revision_count: number; draft_version: string;
+    }>(`SELECT s.draft_id, d.manuscript_id, d.revision_count, d.version AS draft_version
+        FROM manuscript_draft_sections s
+        JOIN manuscript_working_drafts d ON d.id = s.draft_id
+       WHERE s.id = $1 AND d.member_id = $2
+       FOR SHARE OF d, s`, [input.sectionId, memberId]);
+    const before = metadata.rows[0];
+    if (metadata.rows.length !== 1 || !before) throw new OpenRefused('section_not_found');
+    if (before.manuscript_id !== binding.manuscript_id
+        || !Number.isSafeInteger(Number(before.draft_version)) || Number(before.draft_version) < 0
+        || !Number.isSafeInteger(Number(before.revision_count)) || Number(before.revision_count) < 0) {
+      throw new OpenRefused('origin_unavailable');
+    }
+    if (selection && Number(before.draft_version) !== selection.revisionNumber) {
+      throw new OpenRefused('selection_stale');
+    }
+    const s = await tx.query<{
+      draft_id: string; manuscript_id: string; revision_count: number; draft_version: string;
+      text: string; heading: string | null;
+    }>(
+      `SELECT s.draft_id, d.manuscript_id, d.revision_count, d.version AS draft_version,
+              s.text, ms.heading
+         FROM manuscript_draft_sections s
+         JOIN manuscript_working_drafts d ON d.id = s.draft_id
+         LEFT JOIN manuscript_sections ms ON ms.id = s.source_section_id
+        WHERE s.id = $1 AND d.member_id = $2`,
+      [input.sectionId, memberId]);
+    if (s.rows.length === 0) throw new OpenRefused('section_not_found');
+    const row = s.rows[0]!;
+    if (s.rows.length !== 1 || row.draft_id !== before.draft_id
+        || row.manuscript_id !== binding.manuscript_id
+        || Number(row.draft_version) !== Number(before.draft_version)
+        || Number(row.revision_count) !== Number(before.revision_count)) {
+      throw new OpenRefused('origin_unavailable');
+    }
 
-      const split = splitStoredSection(row.text, row.heading);
-      if (!split) throw new OpenRefused('section_unprojectable');
-      if (split.body.length === 0) throw new OpenRefused('section_has_no_body');
+    const split = splitStoredSection(row.text, row.heading);
+    if (!split) throw new OpenRefused('section_unprojectable');
+    if (split.body.length === 0) throw new OpenRefused('section_has_no_body');
 
-      let expectedText = split.body;
-      if (selection) {
-        if (!Number.isInteger(selection.revisionNumber)
-            || Number(row.draft_version) !== selection.revisionNumber) {
-          throw new OpenRefused('selection_stale');
-        }
-        const projected = projectEditorialSelection(split.body, selection.range);
-        if (!projected.ok) {
-          const reason = projected.reason === 'selection_ambiguous'
-            ? 'selection_ambiguous' : 'selection_invalid';
-          throw new OpenRefused(reason);
-        }
-        expectedText = projected.text;
+    let expectedText = split.body;
+    if (selection) {
+      if (!Number.isInteger(selection.revisionNumber)
+          || Number(row.draft_version) !== selection.revisionNumber) {
+        throw new OpenRefused('selection_stale');
       }
+      const projected = projectEditorialSelection(split.body, selection.range);
+      if (!projected.ok) {
+        const reason = projected.reason === 'selection_ambiguous'
+          ? 'selection_ambiguous' : 'selection_invalid';
+        throw new OpenRefused(reason);
+      }
+      expectedText = projected.text;
+    }
 
-      const chain = await openChainWithExecutor(tx, memberId, {
-        locus: {
-          workId: row.manuscript_id,
-          draftId: row.draft_id,
-          baseVersion: Number(row.revision_count),
-          targetSectionId: input.sectionId,
-          locusScopeKind: selection === null ? 'section' : 'passage',
-          expectedText,
-        },
-      });
-
-      const t = await tx.query<{ id: string }>(
-        `INSERT INTO ask_threads
-           (manuscript_id, member_id, anchor, reading_identity,
-            canonical_at_open, initiated_by, proposal_chain_id)
-         VALUES ($1, $2, NULL, NULL, $3, 'author', $4)
-         RETURNING id`,
-        [row.manuscript_id, memberId, `draft:${row.draft_id}@${row.revision_count}`, chain.id]);
-
-      return { ok: true as const, threadId: t.rows[0]!.id, chainId: chain.id };
+    const chain = await openChainWithExecutor(tx, memberId, {
+      locus: {
+        workId: row.manuscript_id,
+        draftId: row.draft_id,
+        baseVersion: Number(row.revision_count),
+        targetSectionId: input.sectionId,
+        locusScopeKind: selection === null ? 'section' : 'passage',
+        expectedText,
+      },
     });
+
+    const originId = randomUUID();
+    const t = await tx.query<{ id: string }>(
+      `INSERT INTO ask_threads
+         (manuscript_id, member_id, anchor, reading_identity,
+          canonical_at_open, initiated_by, proposal_chain_id, editorial_origin_id)
+       VALUES ($1, $2, NULL, NULL, $3, 'author', $4, $5)
+       RETURNING id`,
+      [row.manuscript_id, memberId, `draft:${row.draft_id}@${row.revision_count}`, chain.id, originId]);
+    if (t.rows.length !== 1 || typeof t.rows[0]?.id !== 'string') {
+      throw new OpenRefused('origin_unavailable');
+    }
+    const threadId = t.rows[0]!.id;
+    // The caller's SAME transaction must own chain, thread and exact origin.
+    // A missing/mismatched receipt throws, so the entire callback rolls back.
+    await recordEditorialThreadOriginWithClient(tx, {
+      id: originId, threadId, proposalChainId: chain.id, memberId,
+      livingWorkId: binding.living_work_id, manuscriptId: binding.manuscript_id,
+      relationshipId: binding.id, creationExpressionId: binding.creation_expression_id,
+      draftId: row.draft_id, targetSectionId: input.sectionId,
+      draftVersion: Number(row.draft_version), draftRevisionCount: Number(row.revision_count),
+      locusScopeKind: selection === null ? 'section' : 'passage',
+    });
+    return { ok: true as const, threadId, chainId: chain.id };
+
   } catch (e) {
     if (e instanceof OpenRefused) return { ok: false, reason: e.reason, detail: e.detail };
     throw e;
   }
+}
+
+async function openEditorialRelationshipResolved(
+  input: OpenEditorialInput,
+  selection: EditorialOpenSelection,
+): Promise<OpenEditorialResult> {
+  const refusal = openInputRefusal(input);
+  if (refusal) return { ok: false, reason: refusal };
+  return transaction((tx) => openEditorialRelationshipWithClient(tx, input, selection));
 }
 
 class OpenRefused extends Error {
@@ -267,7 +396,7 @@ export interface EditorialThreadView {
   readonly headVersionId: string | null;
 }
 
-export type ReadEditorialRefusal = 'thread_not_found' | 'not_editorial' | 'chain_unreadable';
+export type ReadEditorialRefusal = 'thread_not_found' | 'not_editorial' | 'chain_unreadable' | 'relationship_required' | 'origin_unavailable';
 
 export type ReadEditorialResult =
   | { readonly ok: true; readonly view: EditorialThreadView }
@@ -278,6 +407,25 @@ export type ReadEditorialResult =
  * survives close, reopen and navigation: nothing below is reconstructed from a
  * component, and there is no client transcript to disagree with it.
  */
+export async function readCurrentEditorialThread(
+  identity: VerifiedIdentity,
+  relationshipId: string,
+  threadId: string,
+): Promise<ReadEditorialResult> {
+  if (typeof relationshipId !== 'string' || !ORIGIN_UUID.test(relationshipId)) {
+    return { ok: false, reason: 'relationship_required' };
+  }
+  return transaction(async (tx) => {
+    const current = await lockCurrentEditorialOriginWithClient(tx, {
+      memberId: identity.memberId, relationshipId, threadId,
+    });
+    if (!current.ok) return { ok: false as const, reason: 'origin_unavailable' as const };
+    // Current Work/declaration/A2 rows stay SHARE-locked until all protected
+    // prose/version reads below finish. Provenance itself is not consent.
+    return readEditorialThread(identity, threadId);
+  });
+}
+
 export async function readEditorialThread(
   identity: VerifiedIdentity, threadId: string,
 ): Promise<ReadEditorialResult> {

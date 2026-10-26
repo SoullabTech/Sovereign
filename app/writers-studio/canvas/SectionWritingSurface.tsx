@@ -136,7 +136,7 @@ function KeepAVersion({
       : phase === 'unsettled'
         ? 'Your last edits are still saving. Nothing was kept, so nothing is missing from a version. Try again in a moment.'
         : phase === 'error'
-          ? 'The version could not be kept just now. Your writing is unchanged.'
+          ? 'Version not confirmed. Your writing is here. Check versions before trying again.'
           : phase === 'kept'
             ? 'version kept'
             : null;

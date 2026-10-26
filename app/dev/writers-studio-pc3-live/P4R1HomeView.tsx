@@ -248,11 +248,11 @@ export interface P4R1HomeViewProps {
   busy: boolean;
   error: string | null;
   pendingMode: {
-    mode: 'write' | 'develop' | 'review';
+    mode: 'write' | 'develop' | 'review' | 'publish' | 'listen';
     manuscriptIds: readonly string[];
   } | null;
-  onMode: (mode: 'home' | 'write' | 'develop' | 'review') => void;
-  onChooseManuscript: (mode: 'write' | 'develop' | 'review', manuscriptId: string) => void;
+  onMode: (mode: 'home' | 'write' | 'develop' | 'review' | 'publish' | 'listen') => void;
+  onChooseManuscript: (mode: 'write' | 'develop' | 'review' | 'publish' | 'listen', manuscriptId: string) => void;
   onBegin: (title: string) => void;
   onOpen: (manuscriptId: string, sectionId?: string) => void;
   onMakeWork: (manuscriptId: string, title: string | null) => void;
@@ -286,7 +286,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
       {!beginning ? (
         <div className="fr-home-actions">
           <button type="button" className="fr-home-primary" onClick={() => setBeginning(true)}>New Work</button>
-          <button type="button" className="fr-home-quiet" onClick={props.onImport}>Upload / import writing</button>
+          <button type="button" className="fr-home-quiet" onClick={props.onImport}>Import writing</button>
           <button type="button" className="fr-home-quiet" onClick={props.onSources}>Notes &amp; sources</button>
         </div>
       ) : (
@@ -296,7 +296,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             <input id="p4r1-work-title" autoFocus value={title} onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !props.busy) props.onBegin(title); if (e.key === 'Escape') setBeginning(false); }} />
             <button type="button" className="fr-home-primary" disabled={props.busy} onClick={() => props.onBegin(title)}>
-              {props.busy ? 'Beginning…' : 'Begin'}
+              {props.busy ? 'Beginning…' : 'Start writing'}
             </button>
             <button type="button" className="fr-home-quiet" onClick={() => setBeginning(false)}>Cancel</button>
           </div>
@@ -311,7 +311,11 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
               ? 'Choose a manuscript to write'
               : props.pendingMode.mode === 'develop'
                 ? 'Choose a manuscript to develop'
-                : 'Choose a manuscript to review'
+                : props.pendingMode.mode === 'review'
+                  ? 'Choose a manuscript to review'
+                  : props.pendingMode.mode === 'publish'
+                    ? 'Choose a manuscript to publish'
+                    : 'Choose a manuscript to listen to'
           }
           onChoose={(id) => props.onChooseManuscript(props.pendingMode!.mode, id)}
         />
@@ -324,7 +328,6 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
     work = (
       <div className="fr-home fr-home-returning" data-home-return-work={props.returnWork.id}>
         <div className="fr-home-field" data-field="room">
-          {creationControls}
           <WorkAnchor
             work={props.returnWork}
             manuscripts={props.manuscripts}
@@ -333,6 +336,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             onStartWriting={props.onStartWriting}
             busy={props.busy}
           />
+          {creationControls}
           {recentHistory.length > 0 ? (
             <section className="fr-home-region p4r1-home-history">
               <p className="fr-home-eyebrow">History</p>
@@ -350,8 +354,8 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             <h1 className="fr-home-welcome">{HOME_COPY.beginWelcome}</h1>
             {!beginning ? (
               <div className="fr-home-actions">
-                <button type="button" className="fr-home-primary" onClick={() => setBeginning(true)}>Begin a new Work</button>
-                <button type="button" className="fr-home-quiet" onClick={props.onImport}>Upload / import writing</button>
+                <button type="button" className="fr-home-primary" onClick={() => setBeginning(true)}>Start writing</button>
+                <button type="button" className="fr-home-quiet" onClick={props.onImport}>Import writing</button>
                 <button type="button" className="fr-home-quiet" onClick={props.onSources}>Bring notes &amp; sources</button>
               </div>
             ) : (
@@ -361,7 +365,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
                   <input id="p4r1-work-title" autoFocus value={title} onChange={(e) => setTitle(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter' && !props.busy) props.onBegin(title); if (e.key === 'Escape') setBeginning(false); }} />
                   <button type="button" className="fr-home-primary" disabled={props.busy} onClick={() => props.onBegin(title)}>
-                    {props.busy ? 'Beginning…' : 'Begin'}
+                    {props.busy ? 'Beginning…' : 'Start writing'}
                   </button>
                   <button type="button" className="fr-home-quiet" onClick={() => setBeginning(false)}>Cancel</button>
                 </div>
@@ -377,7 +381,6 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
     work = (
       <div className="fr-home fr-home-returning">
         <div className="fr-home-field" data-field="room">
-          {creationControls}
           <WorkAnchor
             work={props.arrival.resume}
             manuscripts={props.manuscripts}
@@ -386,6 +389,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             onStartWriting={props.onStartWriting}
             busy={props.busy}
           />
+          {creationControls}
           {props.arrival.alsoWritten.length > 0 ? (
             <section className="fr-home-region">
               <p className="fr-home-eyebrow">Also written</p>
@@ -416,7 +420,6 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
     work = (
       <div className="fr-home fr-home-unclaimed">
         <div className="fr-home-field" data-field="room">
-          {creationControls}
           <p className="fr-home-here">{HOME_COPY.writingHere}</p>
           <div className="fr-home-writing-list">
             {unclaimed.map((manuscript) => (
@@ -424,6 +427,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
                 onOpen={(id) => props.onOpen(id)} onMakeWork={props.onMakeWork} onAddToWork={props.onAddToWork} />
             ))}
           </div>
+          {creationControls}
           {props.works.length > 0 ? (
             <section className="fr-home-region">
               <p className="fr-home-eyebrow">Your Works</p>
@@ -446,7 +450,6 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
     work = (
       <div className="fr-home fr-home-many">
         <div className="fr-home-field" data-field="room">
-          {creationControls}
           <section className="fr-home-region">
             <p className="fr-home-eyebrow">Your Works</p>
             <div className="fr-home-shelf fr-home-shelf-4">
@@ -460,6 +463,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
 />)}
             </div>
           </section>
+          {creationControls}
         </div>
       </div>
     );

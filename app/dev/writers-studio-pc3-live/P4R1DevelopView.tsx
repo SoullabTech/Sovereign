@@ -194,7 +194,7 @@ export interface P4R1DevelopViewProps {
   themeError: string | null;
   onField: (field: DevelopField) => void;
   onIntent: (intent: DevelopIntentKey, field: Exclude<DevelopField, 'overview'>) => void;
-  onMode: (mode: 'home' | 'write' | 'develop' | 'review') => void;
+  onMode: (mode: 'home' | 'write' | 'develop' | 'review' | 'publish' | 'listen') => void;
   onSection: (sectionId: string) => void;
   onReading: (readingId: string) => void;
   onScope: (scope: DevelopScopeChoice) => void;

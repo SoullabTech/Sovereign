@@ -33,7 +33,7 @@ describe('Writer Studio manuscript typesetting', () => {
     expect(words(blocks.map((b) => b.text).join(' '))).toBe(words(body));
   });
 
-  it('renders likely PDF folios as their own quiet block instead of burying them in prose', () => {
+  it('keeps unproven PDF-looking numbers as authored paragraphs, separately readable', () => {
     const body = [
       'A long typeset line continues across the page with enough characters to establish the normal measure.',
       'Another long typeset line continues across the page with enough characters to establish the measure.',
@@ -41,6 +41,17 @@ describe('Writer Studio manuscript typesetting', () => {
       'The next page continues with another long typeset line carrying the writer’s actual manuscript text.',
     ].join('\n');
     const blocks = typesetManuscriptBody(body);
-    expect(blocks.some((b) => b.kind === 'folio' && b.text === '161')).toBe(true);
+    expect(blocks.some((b) => b.kind === 'paragraph' && b.text === '161')).toBe(true);
+    expect(blocks.some((b) => b.kind === 'folio')).toBe(false);
+    expect(words(blocks.map((b) => b.text).join(' '))).toBe(words(body));
+  });
+
+  it('does not demote an authored standalone year or leading-zero number to a folio', () => {
+    const body = 'In the year\n\n2026\n\nwe returned.\n\nThe code was\n\n007\n\nand it mattered.';
+    const blocks = typesetManuscriptBody(body);
+    expect(blocks.filter((b) => b.text === '2026' || b.text === '007'))
+      .toEqual([{ text: '2026', kind: 'paragraph' }, { text: '007', kind: 'paragraph' }]);
+    expect(blocks.some((b) => b.kind === 'folio')).toBe(false);
+    expect(words(blocks.map((b) => b.text).join(' '))).toBe(words(body));
   });
 });

@@ -67,7 +67,7 @@ type Parsed =
       act: { act: MemberActKind; text: string; refersTo: string | null };
       sanctuary: boolean;
       scope: EditorialScopeDeclaration;
-      relationshipId: string | null;
+      relationshipId: string;
       carry: { kind: 'prior_maia_editorial_turn'; sourceEpisodeSequence: number } | null;
       /** ⭐ The writer's PER-WORK release of the sequence gate. ⛔ Default false. */
       mayProposeImmediately: boolean;
@@ -95,9 +95,8 @@ function parseClosed(body: unknown): Parsed {
   if (typeof b.threadId !== 'string' || b.threadId.length === 0) {
     return { ok: false, error: 'threadId is required' };
   }
-  if (!(b.relationshipId === undefined
-      || (typeof b.relationshipId === 'string' && b.relationshipId.length > 0))) {
-    return { ok: false, error: 'relationshipId must be a non-empty string when provided' };
+  if (typeof b.relationshipId !== 'string' || b.relationshipId.length === 0) {
+    return { ok: false, error: 'relationship_required' };
   }
 
   let carry: { kind: 'prior_maia_editorial_turn'; sourceEpisodeSequence: number } | null = null;
@@ -189,7 +188,7 @@ function parseClosed(body: unknown): Parsed {
        contradictory nested affirmative still fails closed to Sanctuary. */
     sanctuary: TurnPosture.resolve(b).sanctuary,
     scope,
-    relationshipId: typeof b.relationshipId === 'string' ? b.relationshipId : null,
+    relationshipId: b.relationshipId,
     carry,
     mayProposeImmediately,
     proposalPolicy,
@@ -230,23 +229,21 @@ export async function POST(request: NextRequest) {
 
   const memberId = identity.memberId;
 
-  if (parsed.relationshipId !== null) {
-    const relationship = await preflightEditorialRelationshipCarriage({
-      memberId,
-      relationshipId: parsed.relationshipId,
-      threadId: parsed.threadId,
-    });
-    if (!relationship.ok) {
-      const status = relationship.reason === 'relationship_not_found' ? 404 : 409;
-      return NextResponse.json({ error: relationship.reason, persisted: false }, { status });
-    }
+  const relationship = await preflightEditorialRelationshipCarriage({
+    memberId,
+    relationshipId: parsed.relationshipId,
+    threadId: parsed.threadId,
+  });
+  if (!relationship.ok) {
+    const status = relationship.reason === 'relationship_not_found' ? 404 : 409;
+    return NextResponse.json({ error: relationship.reason, persisted: false }, { status });
   }
 
   let resolvedCarry: ResolvedPriorMaiaEditorialCarry | undefined;
   if (parsed.carry !== null) {
     const carry = await resolvePriorMaiaEditorialCarry({
       memberId,
-      relationshipId: parsed.relationshipId!,
+      relationshipId: parsed.relationshipId,
       receiverThreadId: parsed.threadId,
       sourceEpisodeSequence: parsed.carry.sourceEpisodeSequence,
     });
@@ -270,7 +267,7 @@ export async function POST(request: NextRequest) {
     /* ⭐ THE SAME MINTED OBJECT. ⛔ No second identity crosses this boundary. */
     identity,
     threadId: parsed.threadId,
-    ...(parsed.relationshipId !== null ? { relationshipId: parsed.relationshipId } : {}),
+    relationshipId: parsed.relationshipId,
     ...(resolvedCarry ? { carry: resolvedCarry } : {}),
     currentTurnIndex: act.turnIndex,
     declaredAct: parsed.act.act,

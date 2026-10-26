@@ -21,5 +21,14 @@ export async function GET(
 
   const relationship = await readEditorialRelationshipCustody(memberId, id);
   if (!relationship) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+  // This is an ACTIVE relationship door, never an implicit archive/share grant.
+  // The private custody service retains historical metadata; the mounted client
+  // treats 2xx as usable, so an inactive parent must fail closed at HTTP level.
+  if (!relationship.active) {
+    return NextResponse.json(
+      { error: 'relationship_inactive', active: false },
+      { status: 409, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
   return NextResponse.json(relationship);
 }

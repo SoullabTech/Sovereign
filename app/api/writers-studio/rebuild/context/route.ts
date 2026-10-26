@@ -17,6 +17,16 @@ import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection'
 
 export const dynamic = 'force-dynamic';
 
+// Author manuscript prose is never suitable for browser/shared-cache reuse.
+// The same response contract applies to identity refusal and held drafts.
+const privateJson = (body: unknown, init?: ResponseInit) => {
+  // Preserve the exact 400/401/404 refusal status while adding private no-store.
+  // A refusal that accidentally becomes HTTP 200 is a privacy/UX violation.
+  const headers = new Headers(init?.headers);
+  headers.set('Cache-Control', 'private, no-store');
+  return NextResponse.json(body, { ...init, headers });
+};
+
 interface DraftRow {
   id: string;
   version: string;
@@ -36,11 +46,11 @@ interface SectionRow {
 
 export async function GET(req: NextRequest) {
   const memberId = await getMemberIdFromRequest(req);
-  if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  if (!memberId) return privateJson({ error: 'unauthenticated' }, { status: 401 });
 
   const manuscriptId = req.nextUrl.searchParams.get('manuscriptId');
   if (!manuscriptId) {
-    return NextResponse.json({ error: 'manuscriptId is required' }, { status: 400 });
+    return privateJson({ error: 'manuscriptId is required' }, { status: 400 });
   }
 
   const manuscript = await query<{ id: string; title: string | null }>(
@@ -48,7 +58,7 @@ export async function GET(req: NextRequest) {
     [manuscriptId, memberId],
   );
   if (manuscript.rows.length === 0) {
-    return NextResponse.json({ error: 'not_found' }, { status: 404 });
+    return privateJson({ error: 'not_found' }, { status: 404 });
   }
 
   const draft = await query<DraftRow>(
@@ -58,13 +68,13 @@ export async function GET(req: NextRequest) {
     [manuscriptId, memberId],
   );
   if (draft.rows.length === 0) {
-    return NextResponse.json({
+    return privateJson({
       state: 'no_draft', manuscriptId, title: manuscript.rows[0].title,
     });
   }
   const d = draft.rows[0];
   if (d.section_addressable_at === null) {
-    return NextResponse.json({
+    return privateJson({
       state: 'continuous', manuscriptId, title: manuscript.rows[0].title,
       version: Number(d.version), updatedAt: d.updated_at.toISOString(),
     });
@@ -107,7 +117,7 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  return NextResponse.json({
+  return privateJson({
     state: 'section_aware', manuscriptId, title: manuscript.rows[0].title,
     version: Number(d.version), draftRevision,
     updatedAt: d.updated_at.toISOString(), sections,

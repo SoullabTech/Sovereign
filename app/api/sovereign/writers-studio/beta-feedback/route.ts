@@ -6,7 +6,7 @@ import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
 
 export const dynamic = 'force-dynamic';
 
-const MODES = new Set(['home', 'write', 'develop', 'review']);
+const MODES = new Set(['home', 'write', 'develop', 'review', 'publish', 'listen']);
 const CONTEXT_KEYS = new Set([
   'developField', 'developmentalMovement', 'sectionId',
   'attentionReturn', 'reviewFinding', 'lineageCandidate',

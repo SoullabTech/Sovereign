@@ -77,6 +77,8 @@ export type EditorialRelationshipEpisode =
 
 export interface RelationshipWithEpisodes {
   readonly relationship: EditorialRelationshipCustody;
+  /** Never infer current authorization from historic existence or a 200 GET. */
+  readonly active: boolean;
   readonly episodes: readonly EditorialRelationshipEpisode[];
 }
 
@@ -235,6 +237,12 @@ export async function listEditorialRelationshipCustody(input: {
     `SELECT r.id, r.living_work_id, r.manuscript_id, r.created_at,
             count(e.id)::text AS episode_count
        FROM writer_editorial_relationships r
+       JOIN living_work_expressions current_declaration
+         ON current_declaration.id = r.creation_expression_id
+        AND current_declaration.living_work_id = r.living_work_id
+        AND current_declaration.expression_type = 'manuscript'
+        AND current_declaration.expression_id = r.manuscript_id
+        AND current_declaration.declared_by = r.member_id
        LEFT JOIN writer_editorial_relationship_episodes e
          ON e.relationship_id = r.id
       WHERE r.member_id = $1
@@ -266,6 +274,26 @@ export async function readEditorialRelationshipCustody(
   );
   if (rel.rows.length === 0) return null;
 
+  const parent = rel.rows[0]!;
+  // Read-only archival metadata remains member-owned, but an inactive parent's
+  // historical MAIA episode pointers must not masquerade as current authority.
+  const current = typeof parent.creation_expression_id === 'string'
+    && parent.creation_expression_id.length > 0
+    ? await query<{ id: string }>(
+        `SELECT id FROM living_work_expressions
+          WHERE id = $1
+            AND living_work_id = $2
+            AND expression_type = 'manuscript'
+            AND expression_id = $3
+            AND declared_by = $4`,
+        [parent.creation_expression_id, parent.living_work_id,
+         parent.manuscript_id, memberId],
+      )
+    : null;
+  const active = current !== null && current.rows.length === 1
+    && current.rows[0]?.id === parent.creation_expression_id;
+  if (!active) return { relationship: mapRelationship(parent), active: false, episodes: [] };
+
   const episodes = await query<EpisodeRow>(
     `SELECT *
        FROM writer_editorial_relationship_episodes
@@ -274,7 +302,8 @@ export async function readEditorialRelationshipCustody(
     [relationshipId],
   );
   return {
-    relationship: mapRelationship(rel.rows[0]!),
+    relationship: mapRelationship(parent),
+    active: true,
     episodes: episodes.rows.map(mapEpisode),
   };
 }
@@ -316,16 +345,21 @@ export async function prepareRelationshipForAppendWithClient(
   );
   if (manuscript.rows.length !== 1) throw new RelationshipCustodyRefused('manuscript_not_owned');
 
-  const declaration = await tx.query(
+  const declaration = await tx.query<{ id: string }>(
     `SELECT id FROM living_work_expressions
       WHERE living_work_id = $1
         AND expression_type = 'manuscript'
         AND expression_id = $2
         AND declared_by = $3
+        AND id = $4
       FOR KEY SHARE`,
-    [r.living_work_id, r.manuscript_id, input.memberId],
+    [r.living_work_id, r.manuscript_id, input.memberId, r.creation_expression_id],
   );
-  if (declaration.rows.length !== 1) {
+  // Re-declaring the same manuscript cannot reauthorize the old A2 parent.
+  if (declaration.rows.length !== 1
+      || typeof r.creation_expression_id !== 'string'
+      || !r.creation_expression_id
+      || declaration.rows[0]?.id !== r.creation_expression_id) {
     throw new RelationshipCustodyRefused('current_declaration_unavailable');
   }
 
@@ -339,7 +373,10 @@ export async function prepareRelationshipForAppendWithClient(
   );
   if (locked.rows.length !== 1) throw new RelationshipCustodyRefused('relationship_not_found');
   const now = locked.rows[0]!;
-  if (now.living_work_id !== r.living_work_id || now.manuscript_id !== r.manuscript_id) {
+  if (now.member_id !== r.member_id
+      || now.living_work_id !== r.living_work_id
+      || now.manuscript_id !== r.manuscript_id
+      || now.creation_expression_id !== r.creation_expression_id) {
     throw new RelationshipCustodyRefused('relationship_binding_changed');
   }
 

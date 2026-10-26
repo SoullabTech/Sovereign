@@ -27,6 +27,8 @@
  */
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { WRITE_COPY } from './fixtures';
+import { typesetManuscriptBody } from './manuscriptTypesetting';
+import { projectRawBodyToDisplay } from './j7SourceDisplayProjection';
 
 type Copy = typeof WRITE_COPY;
 
@@ -68,6 +70,8 @@ export type WriteRoomData = {
 export type WriteRoomLivePorts = {
   /** A1 is the authority when supplied; fixture mode leaves this absent. */
   saveState?: string;
+  /** Exact section body before presentation typesetting. Live editing authority only. */
+  canonicalBody?: string;
   onEditBody?: (body: string) => void;
   onPrevious?: () => void;
   onNext?: () => void;
@@ -167,8 +171,7 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct, live }
     return () => window.removeEventListener('keydown', onKey);
   }, [canvas, leave]);
 
-  const onEdited = useCallback(() => {
-    const body = editorRef.current?.innerText ?? '';
+  const onEdited = useCallback((body: string) => {
     if (liveRef.current?.onEditBody) liveRef.current.onEditBody(body);
     else setLocalSaveState(fixture.unsaved);
     setWords(countWords(body));
@@ -232,6 +235,7 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct, live }
             blocks={fixture.blocks}
             heldParagraph={fixture.heldParagraph}
             label={copy.editorLabel}
+            canonicalBody={live?.canonicalBody}
             onEdited={onEdited}
           />
         </div>
@@ -274,6 +278,10 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct, live }
  * bold/italic/list commands, so no formatting model can arrive by keystroke.
  * Its props never change across Full Canvas, so it never re-renders there.
  */
+/**
+ * Disposable J7 experiment only: canonical source string + lossless projection
+ * segments. Existing product source must remain untouched until full acceptance.
+ */
 const Editor = memo(function Editor({
   editorRef,
   sectionId,
@@ -281,6 +289,7 @@ const Editor = memo(function Editor({
   blocks,
   heldParagraph,
   label,
+  canonicalBody,
   onEdited,
 }: {
   editorRef: React.RefObject<HTMLDivElement>;
@@ -289,17 +298,338 @@ const Editor = memo(function Editor({
   blocks?: ReadonlyArray<WriteBlock>;
   heldParagraph?: number;
   label: string;
-  onEdited: () => void;
+  canonicalBody?: string;
+  onEdited: (body: string) => void;
 }) {
-  /* The editor owns the visible DOM for the lifetime of one section. Parent
-     rerenders from A1 status changes must never rewrite text under the cursor.
-     A section change remounts this component via its key and receives that
-     section's newest A1 body as the new initial snapshot. */
   const [initial] = useState(() => ({
-    paragraphs,
+    body: canonicalBody ?? paragraphs.join('\n\n'),
     blocks: blocks ?? paragraphs.map((text) => ({ text, kind: 'paragraph' as const })),
     heldParagraph,
   }));
+  const canonicalRef = useRef(initial.body);
+  const projectionRef = useRef<ReturnType<typeof projectRawBodyToDisplay> | null>(null);
+  const pendingRef = useRef<{ body: string; caret: number; inputType: string } | null>(null);
+
+  const currentProjection = (body: string) => {
+    const normalized = body.replace(/\r\n?/g, '\n');
+    let displayBlocks = typesetManuscriptBody(normalized);
+    let projection = projectRawBodyToDisplay(body, displayBlocks);
+    // The typesetter returns one empty display block for whitespace-only source.
+    // In the editable view, show those authored characters rather than losing them.
+    if (!projection.ok && normalized.trim() === '' && normalized.length > 0) {
+      displayBlocks = [{ text: normalized, kind: 'paragraph' }];
+      projection = projectRawBodyToDisplay(body, displayBlocks);
+    }
+    return { projection, displayBlocks };
+  };
+
+  const nodeLength = (node: Node): number => {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent?.length ?? 0;
+    if (node instanceof HTMLBRElement) return 1;
+    return Array.from(node.childNodes).reduce((n, child) => n + nodeLength(child), 0);
+  };
+
+  const domPointToNormalized = (root: HTMLElement, target: Node, offset: number): number | null => {
+    if (target !== root && !root.contains(target)) return null;
+    const pointInside = (node: Node, localOffset: number): number => {
+      if (node.nodeType === Node.TEXT_NODE) return Math.max(0, Math.min(localOffset, node.textContent?.length ?? 0));
+      if (node instanceof HTMLBRElement) return localOffset > 0 ? 1 : 0;
+      return Array.from(node.childNodes).slice(0, Math.max(0, Math.min(localOffset, node.childNodes.length))).reduce((sum, c) => sum + nodeLength(c), 0);
+    };
+    const walk = (node: Node, base: number): { found: boolean; value: number } => {
+      if (node === target) return { found: true, value: base + pointInside(node, offset) };
+      let cursor = base;
+      for (const child of Array.from(node.childNodes)) {
+        const result = walk(child, cursor);
+        if (result.found) return result;
+        cursor += nodeLength(child);
+      }
+      return { found: false, value: -1 };
+    };
+    const result = walk(root, 0);
+    return result.found ? result.value : null;
+  };
+
+  const normalizedToDomPoint = (root: HTMLElement, wanted: number): [Node, number] | null => {
+    const walk = (node: Node, base: number): [Node, number] | null => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const len = node.textContent?.length ?? 0;
+        return wanted >= base && wanted <= base + len ? [node, wanted - base] : null;
+      }
+      if (node instanceof HTMLBRElement) {
+        const parent = node.parentNode;
+        if (!parent) return null;
+        const index = Array.prototype.indexOf.call(parent.childNodes, node) as number;
+        if (wanted === base) return [parent, index];
+        if (wanted === base + 1) return [parent, index + 1];
+        return null;
+      }
+      if (node.childNodes.length === 0) {
+        return wanted === base ? [node, 0] : null;
+      }
+      let cursor = base;
+      for (const child of Array.from(node.childNodes)) {
+        const found = walk(child, cursor);
+        if (found) return found;
+        cursor += nodeLength(child);
+      }
+      if (wanted === cursor) return [node, node.childNodes.length];
+      return null;
+    };
+    return walk(root, 0);
+  };
+
+  const renderCanonical = useCallback((body: string, caretRaw: number): boolean => {
+    const root = editorRef.current;
+    if (!root) return false;
+    const { projection, displayBlocks } = currentProjection(body);
+    root.replaceChildren();
+    projectionRef.current = projection;
+    canonicalRef.current = body;
+    root.dataset.j7Canonical = body;
+    root.dataset.j7Reconcile = projection.ok ? '' : 'projection:' + (projection.reason ?? 'unknown');
+    if (!projection.ok) {
+      // Keep source safe. This display is intentionally read-only/unqualified.
+      const fallback = document.createElement('p');
+      fallback.dataset.j7ProjectionRefused = '';
+      fallback.style.whiteSpace = 'pre-wrap';
+      fallback.textContent = body.replace(/\r\n?/g, '\n');
+      root.appendChild(fallback);
+      root.setAttribute('contenteditable', 'false');
+      return false;
+    }
+    root.setAttribute('contenteditable', 'plaintext-only');
+    const normToRaw = projection.normalizedBoundaryToRaw;
+    const appendVisibleGap = (holder: HTMLElement, text: string, normStart: number) => {
+      let cursor = 0;
+      for (const match of text.matchAll(/\n/g)) {
+        const index = match.index ?? 0;
+        if (index > cursor) {
+          const chunk = document.createElement('span');
+          chunk.dataset.j7NormalizedStart = String(normStart + cursor);
+          chunk.dataset.j7NormalizedEnd = String(normStart + index);
+          chunk.style.whiteSpace = 'pre-wrap';
+          chunk.textContent = text.slice(cursor, index);
+          holder.appendChild(chunk);
+        }
+        const br = document.createElement('br');
+        br.dataset.j7GapBreak = '';
+        br.dataset.j7NormalizedStart = String(normStart + index);
+        br.dataset.j7NormalizedEnd = String(normStart + index + 1);
+        holder.appendChild(br);
+        cursor = index + 1;
+      }
+      if (cursor < text.length) {
+        const chunk = document.createElement('span');
+        chunk.dataset.j7NormalizedStart = String(normStart + cursor);
+        chunk.dataset.j7NormalizedEnd = String(normStart + text.length);
+        chunk.style.whiteSpace = 'pre-wrap';
+        chunk.textContent = text.slice(cursor);
+        holder.appendChild(chunk);
+      }
+    };
+
+    for (const segment of projection.segments) {
+      const text = projection.normalizedBody.slice(segment.normalizedStart, segment.normalizedEnd);
+      if (segment.kind === 'block') {
+        const p = document.createElement('p');
+        p.dataset.writeBlock = displayBlocks[segment.blockIndex]?.kind ?? 'paragraph';
+        p.dataset.j7Segment = 'block';
+        p.dataset.j7BlockIndex = String(segment.blockIndex);
+        p.dataset.j7NormalizedStart = String(segment.normalizedStart);
+        p.dataset.j7NormalizedEnd = String(segment.normalizedEnd);
+        p.style.whiteSpace = 'pre-wrap';
+        p.style.fontSize = '21px';
+        p.style.lineHeight = '1.72';
+        p.style.fontFamily = 'Georgia, "Times New Roman", serif';
+        p.style.margin = '0 0 30px 0';
+        p.textContent = text;
+        root.appendChild(p);
+        continue;
+      }
+
+      const gap = document.createElement('span');
+      gap.dataset.j7Segment = 'gap';
+      gap.dataset.j7NormalizedStart = String(segment.normalizedStart);
+      gap.dataset.j7NormalizedEnd = String(segment.normalizedEnd);
+      gap.style.whiteSpace = 'pre-wrap';
+      gap.style.display = 'contents';
+      const previousBlock = projection.segments.some(s => s.kind === 'block' && s.normalizedEnd === segment.normalizedStart);
+      const nextBlock = projection.segments.some(s => s.kind === 'block' && s.normalizedStart === segment.normalizedEnd);
+      const delimiterMatch = previousBlock && nextBlock ? /\n[ \t]*\n/.exec(text) : null;
+      if (!delimiterMatch) {
+        appendVisibleGap(gap, text, segment.normalizedStart);
+      } else {
+        const delimiterStart = delimiterMatch.index;
+        const delimiterEnd = delimiterStart + delimiterMatch[0].length;
+        appendVisibleGap(gap, text.slice(0, delimiterStart), segment.normalizedStart);
+        const hidden = document.createElement('span');
+        hidden.dataset.j7GapBase = '';
+        hidden.dataset.j7NormalizedStart = String(segment.normalizedStart + delimiterStart);
+        hidden.dataset.j7NormalizedEnd = String(segment.normalizedStart + delimiterEnd);
+        hidden.style.display = 'inline-block';
+        hidden.style.width = '0';
+        hidden.style.height = '0';
+        hidden.style.overflow = 'hidden';
+        hidden.style.fontSize = '0';
+        hidden.style.lineHeight = '0';
+        hidden.style.whiteSpace = 'pre';
+        hidden.textContent = delimiterMatch[0];
+        gap.appendChild(hidden);
+        appendVisibleGap(gap, text.slice(delimiterEnd), segment.normalizedStart + delimiterEnd);
+      }
+      root.appendChild(gap);
+    }
+    // A truly empty source still needs a focusable caret target, but that
+    // scaffold has zero canonical length and is not confused with an authored P.
+    if (projection.normalizedBody.length === 0 && root.childNodes.length === 0) {
+      const empty = document.createElement('p');
+      empty.dataset.j7EmptyStart = '';
+      empty.style.minHeight = '1.72em';
+      empty.style.margin = '0 0 30px 0';
+      root.appendChild(empty);
+    }
+
+    const normalizedWanted = normToRaw.indexOf(caretRaw);
+    if (normalizedWanted < 0) {
+      root.dataset.j7Reconcile = 'caret-not-on-source-boundary';
+      return false;
+    }
+    const point = normalizedToDomPoint(root, normalizedWanted);
+    const selection = window.getSelection();
+    if (point && selection) {
+      selection.removeAllRanges();
+      const range = document.createRange();
+      range.setStart(point[0], point[1]);
+      range.collapse(true);
+      selection.addRange(range);
+    } else {
+      root.dataset.j7Reconcile = 'caret-unmapped';
+      return false;
+    }
+    root.dataset.j7Caret = String(caretRaw);
+    return true;
+  }, [editorRef]);
+
+  useLayoutEffect(() => {
+    renderCanonical(initial.body, initial.body.length);
+  }, [initial.body, renderCanonical]);
+
+  useEffect(() => {
+    const root = editorRef.current;
+    if (!root) return;
+    const selected = (): [number, number] | null => {
+      const selection = window.getSelection();
+      const projection = projectionRef.current;
+      if (!selection || selection.rangeCount === 0 || !projection?.ok) return null;
+      const range = selection.getRangeAt(0);
+      if (!root.contains(range.startContainer) || !root.contains(range.endContainer)) return null;
+      const startNorm = domPointToNormalized(root, range.startContainer, range.startOffset);
+      const endNorm = domPointToNormalized(root, range.endContainer, range.endOffset);
+      if (startNorm === null || endNorm === null) return null;
+      const startRaw = projection.normalizedBoundaryToRaw[startNorm];
+      const endRaw = projection.normalizedBoundaryToRaw[endNorm];
+      if (startRaw === undefined || endRaw === undefined) return null;
+      return [Math.min(startRaw, endRaw), Math.max(startRaw, endRaw)];
+    };
+    const dominantEol = (body: string) => {
+      const matches = body.match(/\r\n|\r|\n/g) ?? [];
+      if (!matches.length) return '\n';
+      const counts: Record<string, number> = {};
+      for (const eol of matches) counts[eol] = (counts[eol] ?? 0) + 1;
+      return Object.entries(counts).sort((a,b) => b[1]-a[1])[0]![0];
+    };
+    const normalizeInsertedEols = (value: string) => value.replace(/\r\n?/g, '\n').replace(/\n/g, dominantEol(canonicalRef.current));
+    const commit = (type: string, data: string | null) => {
+      const range = selected();
+      if (!range) { root.dataset.j7Reconcile = 'unmapped-selection'; return false; }
+      let [start, end] = range;
+      let insert = '';
+      const raw = canonicalRef.current;
+      switch (type) {
+        case 'insertText':
+        case 'insertReplacementText':
+        case 'insertFromPaste':
+        case 'insertFromDrop':
+          if (typeof data !== 'string') return false;
+          insert = normalizeInsertedEols(data); break;
+        case 'insertLineBreak':
+        case 'insertParagraph':
+          insert = dominantEol(raw); break;
+        case 'deleteContentBackward':
+          if (start === end && start > 0) {
+            if (raw.slice(start-2,start) === '\r\n') start -= 2;
+            else start -= 1;
+          }
+          break;
+        case 'deleteContentForward':
+          if (start === end && end < raw.length) {
+            if (raw.slice(end,end+2) === '\r\n') end += 2;
+            else end += 1;
+          }
+          break;
+        case 'deleteByCut':
+        case 'deleteContent':
+          break;
+        default:
+          return false;
+      }
+      const next = raw.slice(0, start) + insert + raw.slice(end);
+      const caret = start + insert.length;
+      // Render the new projection first. The raw value is not committed and no
+      // save is issued if the caret has no unambiguous visible/source position.
+      const ok = renderCanonical(next, caret);
+      if (!ok) { renderCanonical(raw, start); root.dataset.j7Reconcile = 'edit-refused-projection-or-caret'; return false; }
+      canonicalRef.current = next;
+      onEdited(next);
+      return true;
+    };
+    const before = (event: InputEvent) => {
+      if (event.isComposing || event.inputType.startsWith('insertComposition') || event.inputType.startsWith('history')) {
+        root.dataset.j7Reconcile = 'unsupported:' + event.inputType;
+        if (event.cancelable) event.preventDefault();
+        else {
+          const current = selected();
+          pendingRef.current = { body: canonicalRef.current, caret: current?.[1] ?? canonicalRef.current.length, inputType: event.inputType };
+        }
+        return;
+      }
+      if (!event.cancelable) {
+        const current = selected();
+        pendingRef.current = { body: canonicalRef.current, caret: current?.[1] ?? canonicalRef.current.length, inputType: event.inputType };
+        root.dataset.j7Reconcile = 'noncancelable:' + event.inputType;
+        return;
+      }
+      if (event.inputType === 'insertFromPaste') return;
+      const committed = commit(event.inputType, event.data);
+      // Unsupported operations are refused rather than allowed to mutate a
+      // DOM model that cannot be reconciled to canonical source.
+      event.preventDefault();
+      if (!committed) root.dataset.j7Reconcile = 'unsupported-or-unmapped:' + event.inputType;
+    };
+    const onInput = () => {
+      const pending = pendingRef.current;
+      if (!pending) return;
+      pendingRef.current = null;
+      renderCanonical(pending.body, pending.caret);
+      root.dataset.j7Reconcile = 'refused-and-restored:' + pending.inputType;
+    };
+    const paste = (event: ClipboardEvent) => {
+      const text = event.clipboardData?.getData('text/plain');
+      if (typeof text !== 'string') return;
+      event.preventDefault();
+      commit('insertFromPaste', text);
+    };
+    root.addEventListener('beforeinput', before);
+    root.addEventListener('input', onInput);
+    root.addEventListener('paste', paste);
+    return () => {
+      root.removeEventListener('beforeinput', before);
+      root.removeEventListener('input', onInput);
+      root.removeEventListener('paste', paste);
+    };
+  }, [editorRef, onEdited, renderCanonical]);
+
   return (
     <div
       ref={editorRef}
@@ -313,18 +643,7 @@ const Editor = memo(function Editor({
       contentEditable="plaintext-only"
       suppressContentEditableWarning
       spellCheck
-      onInput={onEdited}
-    >
-      {initial.blocks.map((block, i) => (
-        <p
-          key={i}
-          data-write-block={block.kind}
-          data-held={i === initial.heldParagraph ? '' : undefined}
-        >
-          {block.text}
-        </p>
-      ))}
-    </div>
+    />
   );
 });
 
