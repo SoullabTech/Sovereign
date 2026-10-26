@@ -120,3 +120,11 @@ Private feedback is optional and bounded to Helped, Neutral, or Distracting plus
 The desktop and mobile screenshots are from the actual LISTEN-49 Next/Chromium review candidate with a fictional authenticated PostgreSQL member. They show the Guide Me form, independent focus-need and musical-world structure, transparent suggestion, and responsive layout. They are not claims about licensed channels, final visual polish, iPhone behavior, or the integrated production application.
 
 The LISTEN-47 Chromium/PostgreSQL witness passed twenty-one Reader/music authority checks. The later LISTEN-49 witness passed twenty-one Focus Field checks on the same admitted boundary: explicit no-audio start, Guide Me/Browse, cross-room timer continuity, MAIA and Reader pause, no automatic resume, explicit retune/Stop, private in-memory feedback, verified-member clearing, zero external network, and zero page errors. These are browser review results only.
+
+## LISTEN-50 · First Eight Focus Channel Gate
+
+The Focus Field catalog begins with eight production briefs: Deep Classical, Piano Concentration, Ambient Stillness, Cinematic Momentum, Organic Attention, Downtempo Flow, Nature Current, and High-Stimulation Focus.
+
+Their names and creative briefs are not playback authority. Every initial entry is unplayable, contains no media URL, and requires independently verified master, composition, performer, sample, territory, term, on-demand, timed-session, cross-route, background, mobile, editing/looping, credit, and revocation receipts. Even a structurally complete package remains blocked pending the independent media authority.
+
+No download, offline Cabin, public broadcast, shared session, unbounded remix, stem isolation, AI analysis, model training, or voice imitation is included in this gate. The 48-second synthetic review studies are not channel masters.
