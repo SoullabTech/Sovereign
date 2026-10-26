@@ -11,6 +11,7 @@ import { MAX_RESTORE_BYTES, parseCSV, parseM3U, recognizedPlaylistUrl, restoreMe
 import LocalAudioDesk from './LocalAudioDesk';
 import ReceptiveFieldDesk from './ReceptiveFieldDesk';
 import PrivateBackupDesk from './PrivateBackupDesk';
+import FocusFieldDesk from '@/components/listening/FocusFieldDesk';
 import type { MemberCollection, TrackReference } from '@/lib/listening/portableCollections';
 import styles from './listen.module.css';
 
@@ -21,7 +22,12 @@ const journeys: Record<Mood, { label: string; title: string; subtitle: string; d
   drift:{ label:'Chill out',title:'The Blue Hour',subtitle:'Downtempo & atmosphere',description:'An invitation to saunter, feel the evening unfold, and linger between ideas.',gradient:'drift',frequencies:[98,146.83,196] },
   rest:{ label:'Deep rest',title:'Moonwater',subtitle:'Stillness without demand',description:'For unhurried listening, ease, reflection and the passage into sleep.',gradient:'rest',frequencies:[82.41,123.47,164.81] },
 };
-const nav = [{title:'House',href:'/home'},{title:'Writer’s Studio',href:'/writers-studio'},{title:'Explore Soullab',href:'/explore'}];
+const nav = [
+  {title:'Focus Field',href:'#focus-field'},
+  {title:'House',href:'/home'},
+  {title:'Writer’s Studio',href:'/writers-studio'},
+  {title:'Explore Soullab',href:'/explore'},
+];
 const moodKeys: Mood[] = ['focus','create','drift','rest'];
 
 type SketchHandle = { context: AudioContext; oscillators: OscillatorNode[]; master: GainNode };
@@ -232,6 +238,7 @@ export default function ListenRoom() {
         <div className={styles.orb} aria-hidden="true" />
       </section>
       <div className={styles.body}>
+        <FocusFieldDesk />
         <section aria-labelledby="moods-title"><div className={styles.sectionHead}><div><span className={styles.smallcaps}>CHOOSE YOUR ATMOSPHERE</span><h2 id="moods-title">Where would you like to go?</h2></div></div>
           <div className={styles.tileGrid}>{moodKeys.map(key=><button type="button" key={key} onClick={()=>selectMood(key)} className={`${styles.tile} ${styles['tile'+key]} ${mood===key?styles.selectedTile:''}`} aria-pressed={mood===key}><span>{journeys[key].label}</span><small>{journeys[key].subtitle}</small></button>)}</div>
         </section>
