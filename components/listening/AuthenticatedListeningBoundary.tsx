@@ -3,13 +3,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import { apiFetch } from '@/lib/http/apiBase';
+import { verifiedSessionFetch } from '@/lib/http/verifiedSessionFetch';
 import { SOULLAB_SESSION_END_EVENT } from '@/lib/listening/audioFocus';
 import {
   isOnlineListeningRoute,
   verifiedListeningMemberKey,
 } from '@/lib/listening/listeningSessionBoundary';
-import { PersistentListeningProvider } from './PersistentListeningProvider';
+import {
+  ListeningBoundaryStatusProvider,
+  PersistentListeningProvider,
+} from './PersistentListeningProvider';
+import type { ListeningBoundaryStatus } from './PersistentListeningProvider';
 
 type ListeningRuntimeMode = 'online' | 'offline';
 
@@ -25,11 +29,11 @@ type AuthenticatedListeningBoundaryProps = {
  * The root layout spans public and private routes, so the persistent transport
  * may not mount there without an independent member/session and route gate.
  * This boundary keeps ordinary page rendering untouched while mounting exactly
- * one listening transport only for a current, cookie-authenticated online
- * member on an approved Soullab destination.
- *
- * Safari/iOS header-token auth and Cabin-local identity are intentionally not
- * admitted by this candidate. Both fail closed and require separate reviews.
+ * one listening transport only for a current, server-authenticated online
+ * member on an approved Soullab destination. Web uses the httpOnly cookie;
+ * Safari/native may use the existing x-session-token credential transport.
+ * Bare browser member-id claims are never attached or trusted. Real Safari/iOS
+ * device qualification and Cabin-local identity remain separate reviews.
  */
 export function AuthenticatedListeningBoundary({
   children,
@@ -40,22 +44,29 @@ export function AuthenticatedListeningBoundary({
   const routeEligible =
     enabled && runtimeMode === 'online' && isOnlineListeningRoute(pathname);
   const [memberKey, setMemberKey] = useState<string | null>(null);
+  const [sessionStatus, setSessionStatus] = useState<ListeningBoundaryStatus>('checking');
   const requestGeneration = useRef(0);
   const requestController = useRef<AbortController | null>(null);
   const blockedBySessionEnd = useRef(false);
 
-  const clearMember = useCallback(() => {
+  const clearMember = useCallback((status: ListeningBoundaryStatus = 'denied') => {
     requestGeneration.current += 1;
     requestController.current?.abort();
     requestController.current = null;
     setMemberKey(null);
+    setSessionStatus(status);
   }, []);
 
   const verifyCurrentSession = useCallback(async () => {
-    if (!routeEligible || blockedBySessionEnd.current) {
-      clearMember();
+    if (!routeEligible) {
+      clearMember('not-applicable');
       return;
     }
+    if (blockedBySessionEnd.current) {
+      clearMember('denied');
+      return;
+    }
+    setSessionStatus(current => current === 'ready' ? current : 'checking');
 
     requestController.current?.abort();
     const controller = new AbortController();
@@ -63,7 +74,7 @@ export function AuthenticatedListeningBoundary({
     const generation = ++requestGeneration.current;
 
     try {
-      const response = await apiFetch('/api/members/session', {
+      const response = await verifiedSessionFetch('/api/members/session', {
         method: 'GET',
         cache: 'no-store',
         headers: { Accept: 'application/json' },
@@ -72,6 +83,7 @@ export function AuthenticatedListeningBoundary({
       if (generation !== requestGeneration.current) return;
       if (!response.ok) {
         setMemberKey(null);
+        setSessionStatus('denied');
         return;
       }
 
@@ -79,12 +91,16 @@ export function AuthenticatedListeningBoundary({
       if (generation !== requestGeneration.current) return;
       const nextMemberKey = verifiedListeningMemberKey(payload);
       setMemberKey(current => current === nextMemberKey ? current : nextMemberKey);
+      setSessionStatus(nextMemberKey ? 'ready' : 'denied');
     } catch {
       // Route changes and newer rechecks intentionally abort older requests.
       // An aborted request is not an authentication failure and must never
       // tear down an otherwise current member's playing transport.
       if (controller.signal.aborted) return;
-      if (generation === requestGeneration.current) setMemberKey(null);
+      if (generation === requestGeneration.current) {
+        setMemberKey(null);
+        setSessionStatus('unavailable');
+      }
     } finally {
       if (generation === requestGeneration.current)
         requestController.current = null;
@@ -100,7 +116,10 @@ export function AuthenticatedListeningBoundary({
       // Rendering already unmounts the provider immediately on an ineligible
       // route. Retire the cached receipt outside the effect's synchronous body
       // so a later return must pass a fresh session check before remounting.
-      const clearReceipt = window.setTimeout(() => setMemberKey(null), 0);
+      const clearReceipt = window.setTimeout(() => {
+        setMemberKey(null);
+        setSessionStatus('not-applicable');
+      }, 0);
       return () => window.clearTimeout(clearReceipt);
     }
     const verifySession = window.setTimeout(() => {
@@ -126,7 +145,7 @@ export function AuthenticatedListeningBoundary({
     };
     const onSessionEnd = () => {
       blockedBySessionEnd.current = true;
-      clearMember();
+      clearMember('denied');
     };
 
     window.addEventListener('focus', revalidate);
@@ -145,13 +164,20 @@ export function AuthenticatedListeningBoundary({
   }, [routeEligible, clearMember, verifyCurrentSession]);
 
   const activeMemberKey = routeEligible ? memberKey : null;
-  if (!activeMemberKey) return <>{children}</>;
-  return (
+  const boundaryStatus: ListeningBoundaryStatus = !routeEligible
+    ? 'not-applicable'
+    : activeMemberKey ? 'ready' : sessionStatus;
+  const content = activeMemberKey ? (
     <PersistentListeningProvider
       key={activeMemberKey}
       reviewMemberKey={activeMemberKey}
     >
       {children}
     </PersistentListeningProvider>
+  ) : children;
+  return (
+    <ListeningBoundaryStatusProvider status={boundaryStatus}>
+      {content}
+    </ListeningBoundaryStatusProvider>
   );
 }

@@ -1,9 +1,17 @@
 ---
 room: Sound Field
-human_activity: choosing a sound field and carrying it through Soullab while remaining free to pause, stop, leave, or continue without surrendering control or collapsing distinct rooms into one music application.
+human_activity: choosing a sound field or member-started Reader narration and carrying one governed audio experience through Soullab while remaining free to pause, stop, leave, or continue without surrendering control or collapsing distinct rooms into one music application.
 surfaces:
   - app/layout.tsx
+  - app/listen/ListenRoom.tsx
+  - app/listen/LocalAudioDesk.tsx
+  - app/maia/community/elemental-alchemy/page.tsx
+  - app/maia/community/elemental-alchemy/reader/page.tsx
   - components/listening/AuthenticatedListeningBoundary.tsx
+  - components/listening/PersistentListeningProvider.tsx
+  - components/reader/AudioControls.tsx
+  - components/reader/AudiobookReader.tsx
+  - components/reader/ReflectionDrawer.tsx
 change_class: experiential
 principles:
   - INHABITABLE_ARCHITECTURE_STANDARD — continuity may cross rooms without erasing the purpose or character of any room
@@ -20,7 +28,7 @@ shared_with_house: verified member/session truth, restrained hierarchy, explicit
 distinct_to_room: the Sound Field is member-held auditory continuity. Other rooms do not become music interfaces; the dock appears only after an explicit listening gesture, never reads room content, never interprets the member, and never lets MAIA, memory, or navigation silently reshape the sound.
 screenshot_desktop: docs/design/contracts/screenshots/sound-field-persistent-listening-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/sound-field-persistent-listening-mobile.png
-experience_verification: 2026-10-25 isolated Chromium walk using the actual authenticated boundary and persistent transport components. Twenty of twenty checks passed. One AudioContext persisted through Listening, Home, House, MAIA, Writer's Studio, Journal, and Astrology; the separately governed Elemental Alchemy Reader route closed the field and did not auto-resume on return; explicit Stop cleared the field and closed the context; public navigation closed it; returning did not auto-resume; member switch, session end, and rejected authentication cleared the private player; no external network request or page error occurred. The screenshots show this bounded fixture witness, not a full Next.js, production, rights, or release acceptance.
+experience_verification: 2026-10-26 Chromium + fictional PostgreSQL acceptance using the actual root boundary, Sound Field transport, Elemental Alchemy Reader, and shared output lease. Twenty-one of twenty-one checks passed. A deliberately delayed first session receipt kept every root audio start surface disabled until verified; Reader narration preempted music, music could not preempt Reader, MAIA paused Reader, Pause/Stop/ended/error and verified member/session transitions released output, revoked and anonymous sessions failed closed, and no sound resumed automatically. Zero external requests and zero page errors occurred. The existing screenshots remain bounded persistent-field references; they are not claims of final Reader visual polish, native-device behavior, artist rights, production, or release acceptance.
 ---
 
 # Sound Field — Experience Contract
@@ -54,17 +62,18 @@ The browser-first candidate mounts one transport only for a server-verified memb
 - MAIA;
 - Writer's Studio;
 - Journal;
-- Astrology.
+- Astrology;
+- the Elemental Alchemy Reader.
 
-The strict application access matrix admits exactly `/listen`, `/api/members/session`, and `/api/members/signout` for authenticated members. It grants no `/listen/*` or member-session wildcard. The page remains disabled by default behind the existing review flag; the current-session receipt is the only identity seam consumed by this boundary, and the exact sign-out route must revoke that session rather than merely hide the player.
+The strict application access matrix admits exactly `/listen`, `/api/members/session`, `/api/members/me`, `/api/members/signout`, `/api/reader/moments`, and `/api/reader/ask` at the authenticated outer boundary. It grants no `/listen/*`, member-session, or Reader API wildcard. Reader handlers independently derive member ownership from the verified credential. The page remains disabled by default behind the existing review flag; the current-session receipt is the only identity seam consumed by this boundary, and the exact sign-out route must revoke that session rather than merely hide the player.
 
 Public, sign-in, account, administrative, practitioner/live-session, Cabin, and unapproved routes receive no player and no private listening state. Browser strings, URLs, local storage, feature labels, and MAIA visibility are not identity evidence.
 
-Safari/iOS header-token authentication, native wrappers, JARVIS/Electron, and Cabin/offline remain separate qualifications. The current Elemental Alchemy Reader route is explicitly excluded because it owns a separate audiobook element and identity path; Reader admission requires the next audio-authority integration rather than inheriting this route family implicitly.
+The browser client uses the httpOnly session cookie and may carry the established `x-session-token` credential in Safari/Capacitor contexts; it never attaches a browser-stored member ID as authority. Real Safari/iOS device behavior, native wrappers, JARVIS/Electron, and Cabin/offline remain separate qualifications. Reader is admitted only because its audiobook element now uses this verified session boundary and the shared output lease rather than inheriting authority implicitly.
 
 ## Audio relationship
 
-The Sound Field is one participant in the shared audio authority, never a second authority. MAIA speech and protected live sessions have priority. A focus loss or interruption may pause sound, but nothing automatically restarts it. Resume requires a fresh member act.
+The Sound Field and Reader are participants in one shared audio authority, never parallel authorities. MAIA speech and protected live sessions have highest priority; member-started Reader narration may preempt persistent music; music may not preempt active narration. A focus loss, member switch, session revocation, route disposal, Pause, Stop, end, or error releases output, but nothing automatically restarts earlier sound. Resume requires a fresh member act.
 
 The field carries only its own playback state. It does not carry page text, Journal content, astrology data, manuscript material, MAIA conversation, developmental inference, or member memory into audio processing.
 
@@ -72,7 +81,7 @@ The field carries only its own playback state. It does not carry page text, Jour
 
 - sound or private player state on a public or signed-out route;
 - automatic start or automatic restart;
-- more than one persistent transport for the same member surface;
+- more than one persistent transport or simultaneously audible Reader/music output for the same member surface;
 - identity inferred from local storage, a route parameter, or a bare member ID;
 - a room's content silently altering music, density, rhythm, mood, or recommendation;
 - MAIA interpreting what the member's listening “means” without an explicit encounter;
@@ -90,4 +99,4 @@ The field carries only its own playback state. It does not carry page text, Jour
 
 The desktop and mobile screenshots are from an isolated fictional browser fixture built from the actual boundary and transport source. They demonstrate route persistence and the dock's presence at two viewports. They are not claims about final visual polish or the integrated production application.
 
-The corresponding Chromium witness passed twenty checks: verified-session mount, no-store session request, member-started playback, one continuing AudioContext through Home, House, MAIA, Writer's Studio, Journal, and Astrology, Reader-route teardown with no automatic resume, explicit Stop clearing the field and closing the context, public-route teardown, no auto-resume, member-switch cleanup, session-end cleanup, rejected-session failure closed, zero external network, and zero page errors.
+The current Chromium/PostgreSQL witness passed twenty-one checks: the root play surface remained disabled during a deliberately delayed session receipt; verified readiness exposed one music transport; browser identity claims could not override the verified cookie member; Reader requests carried no bare member header; narration preempted music and held the exclusive lease; music could not preempt narration; Pause and MAIA focus released narration without music auto-resume; explicit Stop reset narration; verified A→B transition retired A and remounted B idle; PostgreSQL revocation cleared Reader; anonymous route/API access failed closed; zero external network and zero page errors occurred.

@@ -120,6 +120,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // inherit admission by accident.
   { exact: '/listen', minTier: 'free', notes: 'Sound Field review room — authenticated browser members only; feature-disabled by default; no /listen/* wildcard' },
   { exact: '/api/members/session', minTier: 'free', notes: 'Current verified member/session receipt used by the Sound Field root boundary and existing session consumers; exact route only' },
+  { exact: '/api/members/me', minTier: 'free', notes: 'Canonical server-truth member receipt used to repair stale browser identity caches from a verified cookie or x-session-token credential; exact route only' },
   { exact: '/api/members/signout', minTier: 'free', notes: 'Authenticated session revocation and cookie clearing; exact route only so sign-out cannot silently degrade under strict access mode' },
 
   { exact: '/now-what/welcome', public: true, notes: 'What Now? public landing — additive; /now-what room-as-entry redirect unchanged' },
@@ -327,6 +328,8 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Elemental Alchemy — depth
   { prefix: '/maia/community/elemental-alchemy', minTier: 'free', notes: 'Elemental alchemy — depth, open to all' },
+  { exact: '/api/reader/moments', minTier: 'free', notes: 'Elemental Alchemy Reader moments — authenticated outer gate; handler independently derives member ownership from the verified session' },
+  { exact: '/api/reader/ask', minTier: 'free', notes: 'Elemental Alchemy Reader MAIA reflection — authenticated outer gate; handler independently derives member ownership from the verified session' },
 
   // Oracle tools — depth, capacity-governed by LimitsEnforcer
   { exact: '/oracle/iching', minTier: 'free', notes: 'I-Ching readings — depth, rate-limited' },

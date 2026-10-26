@@ -1,7 +1,10 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { usePersistentListening } from '@/components/listening/PersistentListeningProvider';
+import {
+  useListeningBoundaryStatus,
+  usePersistentListening,
+} from '@/components/listening/PersistentListeningProvider';
 import { isMaiaSpeechActive } from '@/lib/listening/maiaSpeechFocus';
 import { SOULLAB_AUDIO_FOCUS_EVENT, audioFocusSource } from '@/lib/listening/audioFocus';
 import { MAX_RESTORE_BYTES, parseCSV, parseM3U, recognizedPlaylistUrl, restoreMemberShelf, tidyText } from '@/lib/listening/portableCollections';
@@ -61,6 +64,14 @@ function makeId() { return typeof crypto.randomUUID === 'function' ? crypto.rand
 export default function ListenRoom() {
   // Source-owner optional shared shell; standalone room remains usable.
   const persistent = usePersistentListening();
+  const boundaryStatus = useListeningBoundaryStatus();
+  const standalone = boundaryStatus === 'standalone';
+  const transportReady = Boolean(persistent) || standalone;
+  const boundaryMessage = boundaryStatus === 'checking'
+    ? 'Verifying your private listening session…'
+    : boundaryStatus === 'unavailable'
+      ? 'Listening is temporarily unavailable because the session could not be verified.'
+      : 'Your listening session is not available. Sign in again to continue.';
   const [mood, setMood] = useState<Mood>('drift');
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(45);
@@ -71,7 +82,7 @@ export default function ListenRoom() {
   const [showJournal, setShowJournal] = useState(false);
   const [status, setStatus] = useState('Ready for your listening journey.');
   const sketch = useRef<SketchHandle | null>(null);
-  const memberAudioRef = useRef<HTMLAudioElement | null>(null);
+  const memberAudioRef = useRef<HTMLAudioElement>(null);
   const player = journeys[mood];
   const isPlaying = persistent
     ? persistent.snapshot.playback === 'playing' && persistent.snapshot.kind === 'sketch' && persistent.snapshot.mood === mood
@@ -85,7 +96,7 @@ export default function ListenRoom() {
   // Standalone fallback still obeys MAIA focus; the real stable-root provider
   // handles this when present, so do not attach a duplicate listener.
   useEffect(() => {
-    if (persistent) return;
+    if (persistent || !standalone) return;
     const onFocus=(event: Event) => {
       if(audioFocusSource(event) === 'maia-voice') {
         stop();
@@ -95,17 +106,21 @@ export default function ListenRoom() {
     };
     window.addEventListener(SOULLAB_AUDIO_FOCUS_EVENT, onFocus);
     return () => window.removeEventListener(SOULLAB_AUDIO_FOCUS_EVENT, onFocus);
-  }, [persistent, stop]);
+  }, [persistent, standalone, stop]);
   useEffect(() => () => { if(sketch.current) releaseSketch(sketch.current); sketch.current=null; }, []);
   // A member-initiated journey stays active when they switch tabs to write or code.
   // Explicit Pause, changing journeys and unmount still stop it. Browsers may
   // independently suspend background audio, especially on mobile devices.
-  const selectMood=(next:Mood)=>{if(persistent) persistent.pause(); else stop(); setMood(next);setStatus(`Selected ${journeys[next].label}.`);};
+  const selectMood=(next:Mood)=>{if(persistent) persistent.pause(); else if(standalone) stop(); setMood(next);setStatus(`Selected ${journeys[next].label}.`);};
   const toggle=async()=>{
     if (persistent) {
       if (isPlaying) { persistent.pause(); return; }
       const started = await persistent.playSketch(mood, player.frequencies);
       if (!started) setStatus('Audio is currently busy in this Soullab tab or another tab, or audio coordination is unavailable. Try again after it stops.');
+      return;
+    }
+    if (!standalone) {
+      setStatus(boundaryMessage);
       return;
     }
     if (playing) { stop(); return; }
@@ -191,11 +206,28 @@ export default function ListenRoom() {
           <p className={styles.intro}>{player.description}</p>
           <div className={styles.keywords}><span>Ambient</span><span>Contemplative</span><span>Human-centered</span><span>Unhurried</span></div>
           <div className={styles.heroButtons}>
-            <button className={styles.play} type="button" onClick={()=>void toggle()} aria-pressed={isPlaying}>{isPlaying?'Ⅱ  Pause sound sketch':'▶  Listen to sound sketch'}</button>
+            <button
+              className={styles.play}
+              type="button"
+              onClick={()=>void toggle()}
+              aria-pressed={isPlaying}
+              aria-label={transportReady
+                ? isPlaying ? 'Pause sound sketch' : 'Listen to sound sketch'
+                : boundaryStatus === 'checking'
+                  ? 'Listening transport is verifying your session'
+                  : 'Listening transport unavailable'}
+              data-listening-boundary-status={boundaryStatus}
+              disabled={!transportReady}
+            >
+              {!transportReady
+                ? boundaryStatus === 'checking' ? '…  Verifying private listening' : 'Listening unavailable'
+                : isPlaying ? 'Ⅱ  Pause sound sketch' : '▶  Listen to sound sketch'}
+            </button>
             <button className={styles.secondary} type="button" onClick={()=>setShowJournal(x=>!x)} aria-expanded={showJournal}>Personal reflection</button>
           </div>
           <p className={styles.quality}>LIVE SYNTHESIS · LOW-VOLUME STUDY · NOT A MASTERED OR LICENSED RECORDING</p>
           {persistent && <p role="status" aria-live="polite">{status}</p>}
+          {!persistent && !standalone && <p role="status" aria-live="polite">{boundaryMessage}</p>}
         </div>
         <div className={styles.orb} aria-hidden="true" />
       </section>
@@ -203,10 +235,14 @@ export default function ListenRoom() {
         <section aria-labelledby="moods-title"><div className={styles.sectionHead}><div><span className={styles.smallcaps}>CHOOSE YOUR ATMOSPHERE</span><h2 id="moods-title">Where would you like to go?</h2></div></div>
           <div className={styles.tileGrid}>{moodKeys.map(key=><button type="button" key={key} onClick={()=>selectMood(key)} className={`${styles.tile} ${styles['tile'+key]} ${mood===key?styles.selectedTile:''}`} aria-pressed={mood===key}><span>{journeys[key].label}</span><small>{journeys[key].subtitle}</small></button>)}</div>
         </section>
-        <ReceptiveFieldDesk journey={mood} onSelectJourney={selectMood}
+        {transportReady ? <ReceptiveFieldDesk journey={mood} onSelectJourney={selectMood}
           onPlay={next=>persistent
             ? persistent.playSketch(next,journeys[next].frequencies)
-            : Promise.resolve(false)}/>
+            : Promise.resolve(false)}/> : <section className={styles.panel} aria-live="polite">
+          <span className={styles.smallcaps}>PRIVATE LISTENING</span>
+          <h2>Preparing your Sound Field</h2>
+          <p className={styles.muted}>{boundaryMessage}</p>
+        </section>}
         {showJournal&&<section className={styles.panel} aria-labelledby="journal-title"><span className={styles.smallcaps}>PRIVATE · THIS TAB ONLY</span><h2 id="journal-title">What did you notice?</h2><label htmlFor="listen-note">A listening reflection, without MAIA interpretation</label><textarea id="listen-note" rows={3} value={note} onChange={e=>setNote(e.target.value.slice(0,4000))} placeholder="An image, a feeling, or nothing at all…"/><p className={styles.muted}>No server storage, microphone access, or AI analysis. Save an encrypted backup below to keep it privately.</p></section>}
         <section className={styles.panel} aria-labelledby="library-title"><div className={styles.sectionHead}><div><span className={styles.smallcaps}>YOUR MUSIC, YOUR WAY</span><h2 id="library-title">Bring your collections</h2></div><button className={styles.ghost} type="button" onClick={exportShelf}>Export plain JSON ↗</button></div>
           <p className={styles.muted}>Add a playlist link from Spotify, TIDAL, Apple Music, Qobuz or SoundCloud; or import a CSV/M3U list of titles. Soullab does not access streaming accounts or copy recordings.</p>
@@ -218,10 +254,10 @@ export default function ListenRoom() {
           <div className={styles.shelfFoot}><span>Not saved to an account or browser storage. No tracking or hidden synchronization.</span><button className={styles.danger} onClick={clearShelf} type="button">Clear tab data</button></div>
         </section>
         <PrivateBackupDesk collections={collections} journal={note} onRestore={data=>{setCollections(data.collections);setNote(data.journal);setStatus(`Unlocked ${data.collections.length} collections from your private backup.`);}} />
-        <LocalAudioDesk audioRef={memberAudioRef} onBegin={stop} />
+        {transportReady && <LocalAudioDesk audioRef={memberAudioRef} onBegin={stop} />}
         <section className={styles.article} aria-labelledby="rights-title"><span className={styles.smallcaps}>QUALITY & STEWARDSHIP</span><h2 id="rights-title">Sound deserves attention.</h2><p>Real Soullab recordings will have documented master and composition rights, truthful audio-source labels, and optional lossless playback where supported. Until those rights, private storage and recovery safeguards are approved, this review page offers synthesized studies, device-local files and external links only.</p></section>
       </div>
-      {!persistent && <div className={styles.bottomPlayer} role="region" aria-label="Listening controls"><div><span className={styles.playerTitle}>{player.title}</span><span className={styles.playerSub}>Original sound sketch · browser synthesis</span></div><button className={styles.roundControl} type="button" onClick={()=>void toggle()} aria-label={isPlaying?'Pause original sound sketch':'Play original sound sketch'}>{isPlaying?'Ⅱ':'▶'}</button><label htmlFor="listen-volume" className={styles.volumeLabel}>Volume <input id="listen-volume" type="range" min="0" max="100" value={volume} onChange={e=>changeVolume(Number(e.target.value))}/></label><span className={styles.status} role="status" aria-live="polite">{shownStatus}</span></div>}
+      {!persistent && standalone && <div className={styles.bottomPlayer} role="region" aria-label="Listening controls"><div><span className={styles.playerTitle}>{player.title}</span><span className={styles.playerSub}>Original sound sketch · browser synthesis</span></div><button className={styles.roundControl} type="button" onClick={()=>void toggle()} aria-label={isPlaying?'Pause original sound sketch':'Play original sound sketch'}>{isPlaying?'Ⅱ':'▶'}</button><label htmlFor="listen-volume" className={styles.volumeLabel}>Volume <input id="listen-volume" type="range" min="0" max="100" value={volume} onChange={e=>changeVolume(Number(e.target.value))}/></label><span className={styles.status} role="status" aria-live="polite">{shownStatus}</span></div>}
     </div>
   </main>;
 }

@@ -1,13 +1,15 @@
 'use client'
 
-import { Play, Pause, SkipBack, SkipForward, Volume2 } from 'lucide-react'
+import { Loader2, Pause, Play, SkipBack, SkipForward, Square } from 'lucide-react'
 
 interface AudioControlsProps {
   isPlaying: boolean
+  isPreparing?: boolean
   currentTime: number
   duration: number
   playbackRate: number
-  onPlayPause: () => void
+  onPlayPause: () => void | Promise<void>
+  onStop: () => void
   onSeek: (time: number) => void
   onRateChange: (rate: number) => void
   onSkipBack: () => void
@@ -16,10 +18,12 @@ interface AudioControlsProps {
 
 export function AudioControls({
   isPlaying,
+  isPreparing = false,
   currentTime,
   duration,
   playbackRate,
   onPlayPause,
+  onStop,
   onSeek,
   onRateChange,
   onSkipBack,
@@ -36,11 +40,11 @@ export function AudioControls({
 
   return (
     <div className="flex flex-col gap-2 p-4 bg-stone-900/80 backdrop-blur rounded-xl">
-      {/* Progress bar */}
-      <div className="relative h-2 bg-stone-700 rounded-full cursor-pointer group"
-        onClick={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect()
-          const percent = (e.clientX - rect.left) / rect.width
+      <div
+        className="relative h-2 bg-stone-700 rounded-full cursor-pointer group"
+        onClick={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect()
+          const percent = (event.clientX - rect.left) / rect.width
           onSeek(percent * duration)
         }}
       >
@@ -54,27 +58,32 @@ export function AudioControls({
         />
       </div>
 
-      {/* Time display */}
       <div className="flex justify-between text-xs text-stone-400">
         <span>{formatTime(currentTime)}</span>
         <span>{formatTime(duration)}</span>
       </div>
 
-      {/* Controls */}
       <div className="flex items-center justify-center gap-4">
         <button
+          type="button"
           onClick={onSkipBack}
           className="p-2 hover:bg-stone-800 rounded-full transition-colors"
           title="Back 10s"
+          aria-label="Back 10 seconds"
         >
           <SkipBack className="w-5 h-5 text-stone-300" />
         </button>
 
         <button
-          onClick={onPlayPause}
-          className="p-4 bg-amber-600 hover:bg-amber-500 rounded-full transition-colors"
+          type="button"
+          onClick={() => void onPlayPause()}
+          disabled={isPreparing}
+          className="p-4 bg-amber-600 hover:bg-amber-500 rounded-full transition-colors disabled:opacity-50"
+          aria-label={isPlaying ? 'Pause narration' : 'Play narration'}
         >
-          {isPlaying ? (
+          {isPreparing ? (
+            <Loader2 className="w-6 h-6 text-white animate-spin" />
+          ) : isPlaying ? (
             <Pause className="w-6 h-6 text-white" />
           ) : (
             <Play className="w-6 h-6 text-white ml-0.5" />
@@ -82,18 +91,30 @@ export function AudioControls({
         </button>
 
         <button
+          type="button"
+          onClick={onStop}
+          className="p-2 hover:bg-stone-800 rounded-full transition-colors"
+          title="Stop narration"
+          aria-label="Stop narration"
+        >
+          <Square className="w-5 h-5 text-stone-300" />
+        </button>
+
+        <button
+          type="button"
           onClick={onSkipForward}
           className="p-2 hover:bg-stone-800 rounded-full transition-colors"
           title="Forward 30s"
+          aria-label="Forward 30 seconds"
         >
           <SkipForward className="w-5 h-5 text-stone-300" />
         </button>
 
-        {/* Playback speed */}
         <select
           value={playbackRate}
-          onChange={(e) => onRateChange(parseFloat(e.target.value))}
+          onChange={(event) => onRateChange(parseFloat(event.target.value))}
           className="ml-4 px-2 py-1 bg-stone-800 text-stone-300 text-sm rounded border border-stone-700"
+          aria-label="Narration speed"
         >
           <option value={0.5}>0.5x</option>
           <option value={0.75}>0.75x</option>
