@@ -27,6 +27,11 @@ ROUTES = (
     "app/api/voice/webrtc-session/route.ts",
 )
 AUTH_MATRIX = ("config/accessMatrix.ts",)
+CI_META = (
+    "package.json",
+    ".github/workflows/ai-provider-boundary.yml",
+    "scripts/ci/openai-tts-authority-proof.mjs",
+)
 CLIENTS = (
     "lib/voice/AnthonyElementalVoice.ts",
     "lib/voice/MaiaRealtimeWebRTC.ts",
@@ -38,7 +43,7 @@ CLIENTS = (
     "lib/voice/maia-voice-mobile.ts",
     "lib/voice/serverTtsClient.ts",
 )
-ALL = SERVER_MODULES + ROUTES + CLIENTS + AUTH_MATRIX
+ALL = SERVER_MODULES + ROUTES + CLIENTS + AUTH_MATRIX + CI_META
 API_FETCH_CLIENTS = (
     "lib/voice/MaiaRealtimeWebRTC.ts",
     "lib/voice/MaiaVoiceSynthesis.ts",
@@ -212,15 +217,42 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
         ("Authentication required for cloud voice", "CLOUD_AUTH_REQUIRED"),
         ("LimitsEnforcer.checkUsage", "CLOUD_QUOTA_CHECK_REQUIRED"),
         ("LimitsEnforcer.recordUsage", "CLOUD_QUOTA_RECORD_REQUIRED"),
+        ("memberProviderPreference = prefs?.ttsProvider ?? null", "CLOUD_MEMBER_PROVIDER_PREF_REQUIRED"),
+        ("const voicePreference = resolveVoicePreference(memberProviderPreference)", "CLOUD_CANONICAL_PREFERENCE_RESOLVER_REQUIRED"),
+        ("const recordedCloudConsent = await checkCloudConsent({ memberId, localOnlyHeader })", "CLOUD_RECORDED_CONSENT_REQUIRED"),
+        ("const cloudVoiceAuthorized =", "CLOUD_COMPOSITE_AUTHORITY_REQUIRED"),
+        ("!localOnlyHeader &&", "CLOUD_LOCAL_ONLY_OVERRIDE_REQUIRED"),
+        ("recordedCloudConsent.allowed &&", "CLOUD_RECORDED_DENIAL_MUST_BIND"),
+        ("voicePreference.effective === 'cloud' &&", "CLOUD_EXPLICIT_MEMBER_CHOICE_REQUIRED"),
+        ("archetypeResolution.provider === 'openai';", "CLOUD_ARCHETYPE_PROVIDER_MATCH_REQUIRED"),
+        ("providerOverride: 'kokoro'", "LOCAL_PROVIDER_PIN_REQUIRED"),
+        ("ttsProviderPref: 'local'", "LOCAL_PREFERENCE_PIN_REQUIRED"),
+        ("return synthesizeLocal('sovereign_primary');", "LOCAL_DEFAULT_RETURN_REQUIRED"),
+        ("const allowedFormats = new Set(['mp3', 'wav', 'opus', 'aac', 'flac'])", "TTS_FORMAT_ALLOWLIST_REQUIRED"),
+        ("Math.max(0.25, Math.min(4.0, requestedSpeed))", "TTS_SPEED_CLAMP_REQUIRED"),
+        ("const voice = archetypeResolution.voice", "CLOUD_SERVER_VOICE_RESOLUTION_REQUIRED"),
+        ("const allowedModels = new Set(['gpt-4o-mini-tts', 'tts-1', 'tts-1-hd'])", "CLOUD_MODEL_ALLOWLIST_REQUIRED"),
+        ("cloudError.code === PROVIDER_SPEND_LIMIT_REACHED", "CLOUD_LIMIT_REFUSAL_MUST_NOT_FALLBACK"),
+        ("'provider_accounting_unavailable'", "CLOUD_ACCOUNTING_FAILURE_LOCAL_FALLBACK_REQUIRED"),
+        ("'cloud_provider_unavailable'", "CLOUD_PROVIDER_FAILURE_LOCAL_FALLBACK_REQUIRED"),
     ):
         if needle not in text:
             add(path, code)
-    if not before(text, "getMemberIdFromRequest(req)", "getOpenAI().audio.speech.create"):
+    provider_dispatch = "getOpenAI().audio.speech.create"
+    if len(positions(text, provider_dispatch)) != 1:
+        add(path, "CLOUD_SINGLE_PROVIDER_DISPATCH_REQUIRED")
+    if not before(text, "getMemberIdFromRequest(req)", provider_dispatch):
         add(path, "CLOUD_AUTH_MUST_PRECEDE_PROVIDER")
-    if not paired_before(text, "reserveVoiceProviderSpend({", "getOpenAI().audio.speech.create", 2):
+    if not before(text, "if (!cloudVoiceAuthorized)", provider_dispatch):
+        add(path, "CLOUD_COMPOSITE_AUTHORITY_MUST_PRECEDE_PROVIDER")
+    if not paired_before(text, "reserveVoiceProviderSpend({", provider_dispatch, 1):
         add(path, "CLOUD_SPEND_RESERVATION_BEFORE_PROVIDER_REQUIRED")
     if "isProviderSpendGateError(err)" not in text:
         add(path, "CLOUD_SPEND_REFUSAL_RESPONSE_REQUIRED")
+    if re.search(r"memberProviderPreference\s*=\s*(?:body|req|searchParams)", text):
+        add(path, "CLOUD_PROVIDER_PREFERENCE_CLIENT_CONTROL_FORBIDDEN")
+    if re.search(r"const\s+voice\s*=\s*(?:body|req|searchParams)", text):
+        add(path, "CLOUD_VOICE_CLIENT_CONTROL_FORBIDDEN")
     if "x-maia-anon-id" in text or "anon_${" in text:
         add(path, "CLOUD_ANONYMOUS_ID_FORBIDDEN")
     if any(
@@ -307,6 +339,35 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
         add(path, "MEMBER_ID_PREFIX_LOGGING_FORBIDDEN")
     if not before(text, "reserveVoiceProviderSpend({", "const speech = await synthesizeSpeech"):
         add(path, "PREVIEW_SPEND_RESERVATION_REQUIRED")
+
+    path = "package.json"
+    text = source.get(path, "")
+    if "node scripts/ci/openai-tts-authority-proof.mjs" not in text:
+        add(path, "CI_ROUTE_AUTHORITY_PROOF_REQUIRED")
+
+    path = ".github/workflows/ai-provider-boundary.yml"
+    text = source.get(path, "")
+    if "run: npm run ci:ai-provider-boundary" not in text:
+        add(path, "CI_BOUNDARY_WORKFLOW_REQUIRED")
+    if "run: npm run ci:provider-spend-postgres" not in text or "postgres:16-alpine" not in text:
+        add(path, "CI_PHYSICAL_SPEND_PROOF_REQUIRED")
+
+    path = "scripts/ci/openai-tts-authority-proof.mjs"
+    text = source.get(path, "")
+    for needle, code in (
+        ("unset-stays-local-with-flag", "TTS_AUTHORITY_UNSET_LOCAL_CASE_REQUIRED"),
+        ("auto-stays-local-with-flag", "TTS_AUTHORITY_AUTO_LOCAL_CASE_REQUIRED"),
+        ("local-only-overrides-cloud-choice", "TTS_AUTHORITY_LOCAL_ONLY_CASE_REQUIRED"),
+        ("recorded-denial-overrides-cloud-choice", "TTS_AUTHORITY_RECORDED_DENIAL_CASE_REQUIRED"),
+        ("accounting-outage-falls-local-before-provider", "TTS_AUTHORITY_ACCOUNTING_OUTAGE_CASE_REQUIRED"),
+        ("spend-limit-refuses-without-provider", "TTS_AUTHORITY_LIMIT_CASE_REQUIRED"),
+        ("explicit-cloud-dispatches-once", "TTS_AUTHORITY_EXPLICIT_CLOUD_CASE_REQUIRED"),
+        ("local-unavailable-never-falls-cloud-without-authority", "TTS_AUTHORITY_NO_FALLTHROUGH_CASE_REQUIRED"),
+        ("provider_calls_are_test_doubles: true", "TTS_AUTHORITY_TEST_DOUBLE_DISCLOSURE_REQUIRED"),
+        ("real_provider_calls_made: false", "TTS_AUTHORITY_NO_REAL_PROVIDER_CLAIM_REQUIRED"),
+    ):
+        if needle not in text:
+            add(path, code)
 
     rows = sorted(set(violations))
     return {

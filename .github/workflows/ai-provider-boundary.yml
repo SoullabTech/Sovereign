@@ -1,9 +1,10 @@
 # AI PROVIDER BOUNDARY — exact client/server/gateway custody gate.
 #
-# A green run establishes only that the tracked static contract passes and that
-# deliberate in-memory regressions are refused. It does not establish runtime
-# provider behavior, credential rotation, physical-device acceptance, deployment
-# approval or production release.
+# A green run establishes that the tracked static contract passes, deliberate
+# regressions are refused, the actual TTS route obeys its authority matrix under
+# provider-free deterministic doubles, and spend reservations survive a disposable
+# PostgreSQL race. It does not establish real-provider behavior, credential rotation,
+# physical-device acceptance, deployment approval or production release.
 name: AI Provider Boundary
 
 on:
@@ -53,7 +54,7 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
-      - name: Static contract, mutation falsifiers and accounting proof
+      - name: Static contract, mutation falsifiers, route authority and accounting proof
         run: npm run ci:ai-provider-boundary
 
       - name: Physical PostgreSQL concurrency and outage proof

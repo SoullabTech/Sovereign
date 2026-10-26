@@ -36,6 +36,27 @@ class BoundaryMutations(unittest.TestCase):
     def test_current_tree_passes(self):
         self.assertEqual(self.evaluate()["status"], "PASS")
 
+    def test_route_authority_proof_cannot_be_removed_from_ci_script(self):
+        result = self.evaluate(
+            "package.json",
+            lambda s: s.replace(" && node scripts/ci/openai-tts-authority-proof.mjs", "", 1),
+        )
+        self.assertIn("CI_ROUTE_AUTHORITY_PROOF_REQUIRED", self.codes(result))
+
+    def test_physical_spend_proof_cannot_be_removed_from_workflow(self):
+        result = self.evaluate(
+            ".github/workflows/ai-provider-boundary.yml",
+            lambda s: s.replace("run: npm run ci:provider-spend-postgres", "run: echo removed", 1),
+        )
+        self.assertIn("CI_PHYSICAL_SPEND_PROOF_REQUIRED", self.codes(result))
+
+    def test_explicit_cloud_authority_case_cannot_be_removed(self):
+        result = self.evaluate(
+            "scripts/ci/openai-tts-authority-proof.mjs",
+            lambda s: s.replace("explicit-cloud-dispatches-once", "removed-explicit-cloud-case", 1),
+        )
+        self.assertIn("TTS_AUTHORITY_EXPLICIT_CLOUD_CASE_REQUIRED", self.codes(result))
+
     def test_openai_route_mapping_removal_fails(self):
         result = self.evaluate(
             "config/accessMatrix.ts",
@@ -107,6 +128,123 @@ class BoundaryMutations(unittest.TestCase):
             ),
         )
         self.assertIn("CLOUD_AUTH_REQUIRED", self.codes(result))
+
+    def test_cloud_explicit_member_choice_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s.replace("voicePreference.effective === 'cloud'", "true", 1),
+        )
+        self.assertIn("CLOUD_EXPLICIT_MEMBER_CHOICE_REQUIRED", self.codes(result))
+
+    def test_cloud_local_only_override_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s.replace("!localOnlyHeader &&", "true &&", 1),
+        )
+        self.assertIn("CLOUD_LOCAL_ONLY_OVERRIDE_REQUIRED", self.codes(result))
+
+    def test_cloud_recorded_denial_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s.replace("recordedCloudConsent.allowed &&", "true &&", 1),
+        )
+        self.assertIn("CLOUD_RECORDED_DENIAL_MUST_BIND", self.codes(result))
+
+    def test_cloud_provider_preference_cannot_come_from_body(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s.replace(
+                "memberProviderPreference = prefs?.ttsProvider ?? null;",
+                "memberProviderPreference = body?.ttsProvider ?? null;",
+                1,
+            ),
+        )
+        self.assertIn("CLOUD_PROVIDER_PREFERENCE_CLIENT_CONTROL_FORBIDDEN", self.codes(result))
+        self.assertIn("CLOUD_MEMBER_PROVIDER_PREF_REQUIRED", self.codes(result))
+
+    def test_default_local_provider_pin_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s.replace("providerOverride: 'kokoro',", "providerOverride: 'auto',", 1),
+        )
+        self.assertIn("LOCAL_PROVIDER_PIN_REQUIRED", self.codes(result))
+
+    def test_default_local_preference_pin_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s.replace("ttsProviderPref: 'local',", "ttsProviderPref: 'auto',", 1),
+        )
+        self.assertIn("LOCAL_PREFERENCE_PIN_REQUIRED", self.codes(result))
+
+    def test_default_local_return_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s.replace(
+                "return synthesizeLocal('sovereign_primary');",
+                "void synthesizeLocal('sovereign_primary');",
+                1,
+            ),
+        )
+        self.assertIn("LOCAL_DEFAULT_RETURN_REQUIRED", self.codes(result))
+
+    def test_second_cloud_dispatch_fails(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s + "\nvoid getOpenAI().audio.speech.create({} as any);\n",
+        )
+        self.assertIn("CLOUD_SINGLE_PROVIDER_DISPATCH_REQUIRED", self.codes(result))
+
+    def test_tts_format_allowlist_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s.replace(
+                "const allowedFormats = new Set(['mp3', 'wav', 'opus', 'aac', 'flac'])",
+                "const allowedFormats = new Set([requestedFormat])",
+                1,
+            ),
+        )
+        self.assertIn("TTS_FORMAT_ALLOWLIST_REQUIRED", self.codes(result))
+
+    def test_tts_speed_clamp_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s.replace(
+                "Math.max(0.25, Math.min(4.0, requestedSpeed))",
+                "requestedSpeed",
+                1,
+            ),
+        )
+        self.assertIn("TTS_SPEED_CLAMP_REQUIRED", self.codes(result))
+
+    def test_cloud_voice_cannot_come_from_body(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s.replace(
+                "const voice = archetypeResolution.voice;",
+                "const voice = body?.voice ?? archetypeResolution.voice;",
+                1,
+            ),
+        )
+        self.assertIn("CLOUD_SERVER_VOICE_RESOLUTION_REQUIRED", self.codes(result))
+        self.assertIn("CLOUD_VOICE_CLIENT_CONTROL_FORBIDDEN", self.codes(result))
+
+    def test_cloud_model_allowlist_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s.replace(
+                "const allowedModels = new Set(['gpt-4o-mini-tts', 'tts-1', 'tts-1-hd'])",
+                "const allowedModels = new Set([requestedModel])",
+                1,
+            ),
+        )
+        self.assertIn("CLOUD_MODEL_ALLOWLIST_REQUIRED", self.codes(result))
+
+    def test_cloud_accounting_failure_local_fallback_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/openai-tts/route.ts",
+            lambda s: s.replace("'provider_accounting_unavailable'", "'removed_accounting_fallback'", 1),
+        )
+        self.assertIn("CLOUD_ACCOUNTING_FAILURE_LOCAL_FALLBACK_REQUIRED", self.codes(result))
 
     def test_cloud_anon_id_fails(self):
         result = self.evaluate(
