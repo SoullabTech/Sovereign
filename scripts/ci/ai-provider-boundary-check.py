@@ -26,6 +26,7 @@ ROUTES = (
     "app/api/voice/stream-conversation/route.ts",
     "app/api/voice/webrtc-session/route.ts",
 )
+AUTH_MATRIX = ("config/accessMatrix.ts",)
 CLIENTS = (
     "lib/voice/AnthonyElementalVoice.ts",
     "lib/voice/MaiaRealtimeWebRTC.ts",
@@ -37,7 +38,7 @@ CLIENTS = (
     "lib/voice/maia-voice-mobile.ts",
     "lib/voice/serverTtsClient.ts",
 )
-ALL = SERVER_MODULES + ROUTES + CLIENTS
+ALL = SERVER_MODULES + ROUTES + CLIENTS + AUTH_MATRIX
 API_FETCH_CLIENTS = (
     "lib/voice/MaiaRealtimeWebRTC.ts",
     "lib/voice/MaiaVoiceSynthesis.ts",
@@ -158,6 +159,28 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
         )
     ):
         add("lib/voice/MaiaRealtimeWebRTC.ts", "CLIENT_IDENTITY_CONTEXT_IN_REALTIME_QUERY")
+
+    path = "config/accessMatrix.ts"
+    text = source.get(path, "")
+    route_contracts = (
+        (r"\{\s*exact:\s*'/api/voice/local-tts',\s*public:\s*true", "LOCAL_TTS_PUBLIC_EXACT_RULE_REQUIRED"),
+        (r"\{\s*exact:\s*'/api/voice/openai-tts',\s*minTier:\s*'free'", "OPENAI_TTS_AUTH_EXACT_RULE_REQUIRED"),
+        (r"\{\s*exact:\s*'/api/voice/preview',\s*minTier:\s*'free'", "VOICE_PREVIEW_AUTH_EXACT_RULE_REQUIRED"),
+        (r"\{\s*prefix:\s*'/api/voice/preview/',\s*minTier:\s*'free'", "VOICE_PREVIEW_FILE_AUTH_PREFIX_REQUIRED"),
+        (r"\{\s*exact:\s*'/api/voice/stream-conversation',\s*minTier:\s*'free'", "VOICE_STREAM_AUTH_EXACT_RULE_REQUIRED"),
+        (r"\{\s*exact:\s*'/api/voice/webrtc-session',\s*minTier:\s*'free'", "VOICE_REALTIME_AUTH_EXACT_RULE_REQUIRED"),
+    )
+    for pattern, code in route_contracts:
+        if not re.search(pattern, text):
+            add(path, code)
+    for route in (
+        '/api/voice/openai-tts',
+        '/api/voice/preview',
+        '/api/voice/stream-conversation',
+        '/api/voice/webrtc-session',
+    ):
+        if re.search(r"\{\s*exact:\s*'" + re.escape(route) + r"'\s*,\s*public:\s*true", text):
+            add(path, "PAID_OR_PRIVATE_VOICE_ROUTE_MUST_NOT_BE_PUBLIC")
 
     path = "lib/limits/LimitsEnforcer.ts"
     text = source.get(path, "")

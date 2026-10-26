@@ -36,6 +36,39 @@ class BoundaryMutations(unittest.TestCase):
     def test_current_tree_passes(self):
         self.assertEqual(self.evaluate()["status"], "PASS")
 
+    def test_openai_route_mapping_removal_fails(self):
+        result = self.evaluate(
+            "config/accessMatrix.ts",
+            lambda s: s.replace(
+                "  { exact: '/api/voice/openai-tts', minTier: 'free', notes: 'Authenticated paid TTS gateway; server-side key and atomic spend reservation' },\n",
+                "",
+                1,
+            ),
+        )
+        self.assertIn("OPENAI_TTS_AUTH_EXACT_RULE_REQUIRED", self.codes(result))
+
+    def test_stream_route_accidentally_public_fails(self):
+        result = self.evaluate(
+            "config/accessMatrix.ts",
+            lambda s: s.replace(
+                "{ exact: '/api/voice/stream-conversation', minTier: 'free'",
+                "{ exact: '/api/voice/stream-conversation', public: true, minTier: 'free'",
+                1,
+            ),
+        )
+        self.assertIn("PAID_OR_PRIVATE_VOICE_ROUTE_MUST_NOT_BE_PUBLIC", self.codes(result))
+
+    def test_local_tts_public_mapping_removal_fails(self):
+        result = self.evaluate(
+            "config/accessMatrix.ts",
+            lambda s: s.replace(
+                "{ exact: '/api/voice/local-tts', public: true",
+                "{ exact: '/api/voice/local-tts', minTier: 'free'",
+                1,
+            ),
+        )
+        self.assertIn("LOCAL_TTS_PUBLIC_EXACT_RULE_REQUIRED", self.codes(result))
+
     def test_direct_client_fetch_fails(self):
         result = self.evaluate(
             "lib/voice/serverTtsClient.ts", lambda s: s.replace("apiFetch(", "fetch(", 1)

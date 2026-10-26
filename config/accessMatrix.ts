@@ -565,6 +565,18 @@ export const ACCESS_RULES: AccessRule[] = [
   // metadata; no PII beyond a 120-char UA. Anon by design.
   { exact: '/api/telemetry/client', public: true, notes: 'Client diagnostic telemetry — reachable in unauthenticated/broken states (signin breaker + voice events). See PR #328.' },
 
+  // AI provider boundary — exact routes only. Local TTS is the sole anonymous
+  // voice surface and independently requires a stable visitor identity; every
+  // paid/private provider route must reach its handler with a verified session.
+  // Explicit mapping is load-bearing in permissive mode: an invalid or
+  // mismatched credential must be denied, never sanitized into an unmapped pass.
+  { exact: '/api/voice/local-tts', public: true, notes: 'Anonymous-capable local-only voice; route refuses cloud fallback and requires stable visitor identity' },
+  { exact: '/api/voice/openai-tts', minTier: 'free', notes: 'Authenticated paid TTS gateway; server-side key and atomic spend reservation' },
+  { exact: '/api/voice/preview', minTier: 'free', notes: 'Authenticated member voice preview; provider choice and spend are server-governed' },
+  { prefix: '/api/voice/preview/', minTier: 'free', notes: 'Authenticated member-scoped ephemeral preview audio delivery' },
+  { exact: '/api/voice/stream-conversation', minTier: 'free', notes: 'Authenticated streamed conversation; body identity cannot select member authority' },
+  { exact: '/api/voice/webrtc-session', minTier: 'free', notes: 'Authenticated realtime broker; separately default-off for release and accounting' },
+
   // Local Cabin runtime — these exact paths must cross the Proxy even when
   // connected-mode auth is absent. The handlers themselves enforce the
   // offline-mode boundary and, for /api/cabin/context, the local Cabin session.
