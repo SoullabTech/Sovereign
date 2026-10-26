@@ -17,7 +17,7 @@
     "worker": "AIN_WORKER=true npx tsx scripts/start-ain-worker.ts",
     "comms:worker": "npx tsx scripts/run-comms-analysis-worker.ts",
     "check:imports": "node scripts/check-internal-imports.js",
-    "build": "export NODE_OPTIONS=--max-old-space-size=8192; node scripts/verify-aetheric-consciousness.js && node scripts/validate-critical-files.js && node scripts/check-internal-imports.js && next build",
+    "build": "export NODE_OPTIONS=--max-old-space-size=8192; node scripts/verify-aetheric-consciousness.js && node scripts/validate-critical-files.js && node scripts/check-internal-imports.js && next build --webpack",
     "build:docker": "export NODE_OPTIONS=--max-old-space-size=8192; node scripts/verify-aetheric-consciousness.js && node scripts/validate-critical-files.js && node scripts/check-internal-imports.js && next build --webpack",
     "build:sovereign": "bash scripts/sovereign-build.sh",
     "android:build": "bash scripts/build-android.sh debug",
