@@ -3,6 +3,7 @@ import { Client } from 'pg';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { closePool } from '@/lib/db/postgres';
 import { saveWorkingEditorialVersion } from '../workingSave';
 import { readCurrentEditorialThread } from '../thread';
 
@@ -75,7 +76,10 @@ CREATE TABLE manuscript_application_recovery(authorization_id UUID PRIMARY KEY,b
   await db.query('INSERT INTO manuscript_sections VALUES($1,NULL)',[SECTION]);
   await db.query("INSERT INTO manuscript_draft_sections VALUES($1,$2,$1,'Original line')",[SECTION,DRAFT]);
  });
- afterAll(async()=>{await db.end();});
+ afterAll(async()=>{
+  await db.end();
+  await closePool();
+ });
 
  it('commits chain, thread, immutable origin, member root and receipt together with no MAIA turn',async()=>{
   const saved=await saveWorkingEditorialVersion({identity,posture,request:{...base,idempotencyKey:KEY1}});
