@@ -40,9 +40,11 @@ describe('WRITERS-STUDIO-SMALL-BETA-01', () => {
     expect(beta).toContain("params?.get('beta') === '1'");
     expect(beta).toContain("/api/sovereign/writers-studio/beta-access");
     expect(beta).toContain('!requested || !accessSettled || !eligible');
-    expect(betaAccess).toContain("contact_type = 'beta_tester'");
-    expect(betaAccess).toContain("pipeline_stage = 'active'");
-    expect(betaAccess).toContain('c.member_id = $1');
+    expect(betaAccess).toContain('writerStudioPlanForMember');
+    expect(betaAccess).toContain("decision.basis === 'founder_approved_beta'");
+    expect(betaAccess).not.toContain("contact_type = 'beta_tester'");
+    expect(betaAccess).not.toContain("pipeline_stage = 'active'");
+    expect(feedbackRoute).toContain('isTrustedPilotWrite(req)');
     expect(feedbackRoute).toContain('not_in_beta_pilot');
     expect(beta).toContain('Keep beta note');
   });
