@@ -1,6 +1,6 @@
 ---
 room: Sound Field
-human_activity: choosing a sound field or member-started Reader narration and carrying one governed audio experience through Soullab while remaining free to pause, stop, leave, or continue without surrendering control or collapsing distinct rooms into one music application.
+human_activity: choosing a sound field, beginning member-started Reader narration, or holding a member-directed focus session and carrying that governed auditory or attentional field through Soullab while remaining free to pause, stop, leave, retune, or continue without surrendering control or collapsing distinct rooms into one music application.
 surfaces:
   - app/layout.tsx
   - app/listen/ListenRoom.tsx
@@ -9,10 +9,12 @@ surfaces:
   - app/maia/community/elemental-alchemy/reader/page.tsx
   - components/listening/AuthenticatedListeningBoundary.tsx
   - components/listening/PersistentListeningProvider.tsx
+  - components/listening/FocusFieldDesk.tsx
   - components/reader/AudioControls.tsx
   - components/reader/AudiobookReader.tsx
   - components/reader/ReflectionDrawer.tsx
   - lib/listening/focusFieldSession.ts
+  - lib/listening/focusFieldGuide.ts
 change_class: experiential
 principles:
   - INHABITABLE_ARCHITECTURE_STANDARD — continuity may cross rooms without erasing the purpose or character of any room
@@ -22,14 +24,16 @@ principles:
 reference_surfaces:
   - app/listen/ListenRoom.tsx
   - components/listening/PersistentListeningProvider.tsx
+  - components/listening/FocusFieldDesk.tsx
+  - lib/listening/focusFieldSession.ts
   - docs/design/contracts/house-room.md
   - docs/design/contracts/maia-room.md
   - docs/design/contracts/flagship-studio.md
 shared_with_house: verified member/session truth, restrained hierarchy, explicit choice, clear leaving and returning, and one coherent field across approved destinations.
 distinct_to_room: the Sound Field is member-held auditory continuity. Other rooms do not become music interfaces; the dock appears only after an explicit listening gesture, never reads room content, never interprets the member, and never lets MAIA, memory, or navigation silently reshape the sound.
-screenshot_desktop: docs/design/contracts/screenshots/sound-field-persistent-listening-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/sound-field-persistent-listening-mobile.png
-experience_verification: 2026-10-26 Chromium + fictional PostgreSQL acceptance using the actual root boundary, Sound Field transport, Elemental Alchemy Reader, and shared output lease. Twenty-one of twenty-one checks passed. A deliberately delayed first session receipt kept every root audio start surface disabled until verified; Reader narration preempted music, music could not preempt Reader, MAIA paused Reader, Pause/Stop/ended/error and verified member/session transitions released output, revoked and anonymous sessions failed closed, and no sound resumed automatically. Zero external requests and zero page errors occurred. The existing screenshots remain bounded persistent-field references; they are not claims of final Reader visual polish, native-device behavior, artist rights, production, or release acceptance.
+screenshot_desktop: docs/design/contracts/screenshots/sound-field-focus-field-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/sound-field-focus-field-mobile.png
+experience_verification: 2026-10-26 actual Next 16.3.8 + Chromium + fictional PostgreSQL acceptance on the existing authenticated Sound Field. LISTEN-49 passed 21 of 21 checks: Guide Me and Browse were both available; the visible Activate/High/Administration choices transparently suggested Rhythmic; starting a session started no audio; the timer persisted through real Writer’s Studio client navigation; MAIA and real Reader narration paused the session without automatic resume; a fresh member act resumed it; musical world and stimulation retuned without resetting task or clock; Stop was terminal; bounded feedback remained in memory; verified A→B member change cleared the private session; zero external requests and zero page errors occurred. This is additive to LISTEN-47’s separate 21-of-21 Reader/music shared-output acceptance. Desktop and mobile screenshots show the actual Guide Me surface at two viewports, not licensed channels, final music, native-device behavior, artist rights, production, or release acceptance.
 ---
 
 # Sound Field — Experience Contract
@@ -42,16 +46,19 @@ This contract governs the root admission boundary and the persistent listening p
 
 ## Arrival
 
-The boundary adds no new arrival message and no new application shell. The member enters through the existing Listening Room and begins sound through an explicit gesture. Only then may the persistent dock accompany them to another approved room.
+The boundary adds no new arrival message and no new application shell. The member enters through the existing Listening Room. Sound begins only through an explicit listening gesture. Focus Field begins only through a separate explicit session gesture and initially starts a private clock—not audio. Only an active member-held sound or focus session may place its restrained dock across another approved room.
 
 ## Gestures
 
 | Gesture | Language used | Why this wording |
 |---|---|---|
 | Begin a sound study | Existing Listening Room language | Sound begins only after member action; no ambient autoplay or inferred desire. |
-| Pause | `Pause` | Temporarily quiets the member's chosen field without pretending it has ended. |
-| Stop | `Stop` | Ends and clears the field; this is the unambiguous sovereignty gesture. |
-| Move to another approved room | Existing House and room navigation | Navigation remains navigation. The sound follows without making the destination speak or behave like Sound Sanctuary. |
+| Start focus session | `Start focus session` | Starts a private timer and chosen attention frame only. It does not start music or claim a channel. |
+| Pause | `Pause` / `Pause session` | Temporarily quiets sound or pauses the focus clock without pretending the experience has ended. |
+| Resume | `Resume by my action` | Makes the fresh member act explicit after MAIA, Reader, device, route, or voluntary interruption. |
+| Retune | Musical world and stimulation selectors | Changes the member's chosen support without resetting task or clock and without inspecting the work. |
+| Stop | `Stop` / `Stop session` | Ends and clears the field or session; this is the unambiguous sovereignty gesture. |
+| Move to another approved room | Existing House and room navigation | Navigation remains navigation. The field follows without making the destination speak or behave like Sound Sanctuary. |
 | Return to Listening | Existing return path | The member may return to shape or replace the field without losing authorship of the choice. |
 
 ## Route and identity boundary
@@ -84,7 +91,9 @@ Focus Field is a member-directed way to hold a work session inside this same Sou
 
 The pure session model does not play audio, select a recording, inspect work, or score productivity. It starts only through member action. Reader, MAIA, protected live audio, device interruption, route interruption, or error may pause it; every resume requires another member act. Session end, member switch, rights revocation, or source unavailability stops it. Changing musical world or stimulation preserves the task and timer.
 
-Private feedback is optional and bounded to Helped, Neutral, or Distracting plus a small set of member-chosen observations. A saved combination keeps broad preferences but excludes the task label, session history, identity, credentials, and audio metadata. It does not become global MAIA memory automatically.
+The current interface offers two doors. **Guide Me** uses only the task, focus need, and stimulation visible in the current unsaved form. Its deterministic table declares `current-visible-choices-only`, exposes a primary suggestion plus alternatives, and lets the member replace any result. It has no profile, history, learned weights, provider model, analytics, or hidden state. **Browse** lets the member select the musical world directly. Neither door starts sound. Classical, Ambient, Cinematic, Downtempo/Electronic, Organic/Acoustic, Nature-integrated, and Rhythmic/Percussive remain musical-world preferences until independently rights-cleared channels are admitted.
+
+Private feedback is optional and bounded to Helped, Neutral, or Distracting plus a small set of member-chosen observations. In LISTEN-49 it remains in the authenticated provider's memory only; no server or browser persistence is added. A later saved combination may keep broad preferences but must exclude the task label, session history, identity, credentials, and audio metadata. It does not become global MAIA memory automatically.
 
 `FOCUS_SESSION_MEDIA_AUTHORITY` remains `none`. Every playable focus channel must later pass independent identity, entitlement, media-rights, source, and output-lease gates.
 
@@ -108,6 +117,6 @@ Private feedback is optional and bounded to Helped, Neutral, or Distracting plus
 
 ## Evidence standing
 
-The desktop and mobile screenshots are from an isolated fictional browser fixture built from the actual boundary and transport source. They demonstrate route persistence and the dock's presence at two viewports. They are not claims about final visual polish or the integrated production application.
+The desktop and mobile screenshots are from the actual LISTEN-49 Next/Chromium review candidate with a fictional authenticated PostgreSQL member. They show the Guide Me form, independent focus-need and musical-world structure, transparent suggestion, and responsive layout. They are not claims about licensed channels, final visual polish, iPhone behavior, or the integrated production application.
 
-The current Chromium/PostgreSQL witness passed twenty-one checks: the root play surface remained disabled during a deliberately delayed session receipt; verified readiness exposed one music transport; browser identity claims could not override the verified cookie member; Reader requests carried no bare member header; narration preempted music and held the exclusive lease; music could not preempt narration; Pause and MAIA focus released narration without music auto-resume; explicit Stop reset narration; verified A→B transition retired A and remounted B idle; PostgreSQL revocation cleared Reader; anonymous route/API access failed closed; zero external network and zero page errors occurred.
+The LISTEN-47 Chromium/PostgreSQL witness passed twenty-one Reader/music authority checks. The later LISTEN-49 witness passed twenty-one Focus Field checks on the same admitted boundary: explicit no-audio start, Guide Me/Browse, cross-room timer continuity, MAIA and Reader pause, no automatic resume, explicit retune/Stop, private in-memory feedback, verified-member clearing, zero external network, and zero page errors. These are browser review results only.

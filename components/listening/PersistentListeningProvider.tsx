@@ -20,6 +20,22 @@ import {
   SOULLAB_AUDIO_FOCUS_EVENT, SOULLAB_AUDIO_TAB_CHANNEL,
   SOULLAB_SESSION_END_EVENT, audioFocusSource, requestAudioFocus,
 } from '@/lib/listening/audioFocus';
+import {
+  advanceFocusSession as advanceFocusSessionModel,
+  createFocusSession as createFocusSessionModel,
+  focusRemainingMs,
+  interruptFocusSession as interruptFocusSessionModel,
+  isFocusSessionTerminal,
+  recordFocusFeedback as recordFocusFeedbackModel,
+  resumeFocusSession as resumeFocusSessionModel,
+  retuneFocusSession as retuneFocusSessionModel,
+  startFocusSession as startFocusSessionModel,
+  stopFocusSession as stopFocusSessionModel,
+} from '@/lib/listening/focusFieldSession';
+import type {
+  FocusFeedbackOutcome, FocusFeedbackTag, FocusInterruptionReason,
+  FocusRetune, FocusSession, FocusSessionPlanInput,
+} from '@/lib/listening/focusFieldSession';
 
 /**
  * LISTEN-10 · Isolated cross-room transport candidate.
@@ -73,12 +89,36 @@ export type ListeningTransport = {
   playLocalFile: () => Promise<boolean>;
   pause: () => void;
   removeLocalFile: () => void;
+  focusSession: FocusSession | null;
+  focusClockMs: number;
+  startFocusSession: (plan: FocusSessionPlanInput) => boolean;
+  pauseFocusSession: (reason?: FocusInterruptionReason) => boolean;
+  resumeFocusSession: () => boolean;
+  retuneFocusSession: (input: FocusRetune) => boolean;
+  stopFocusSession: () => boolean;
+  recordFocusFeedback: (
+    outcome: FocusFeedbackOutcome,
+    tags?: readonly FocusFeedbackTag[],
+  ) => boolean;
+  clearFocusSession: () => void;
 };
 
 const defaultSnapshot: ListeningSnapshot = {
   kind: 'none', playback: 'idle', mood: null, title: '',
   fileFormat: null, message: 'Choose an original sound study or a local file.',
 };
+function formatFocusClock(milliseconds: number | null): string {
+  if (milliseconds === null) return 'Untimed';
+  const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+  return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, '0')}`;
+}
+
+function newFocusSessionID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+    return crypto.randomUUID().toLowerCase();
+  return `focus_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 const Context = createContext<ListeningTransport | null>(null);
 export function usePersistentListening(): ListeningTransport | null {
   return useContext(Context);
@@ -183,6 +223,9 @@ export function PersistentListeningProvider({
   const shapeRef = useRef<ReceptiveControls>({...ORIGINAL_RECEPTIVE_CONTROLS});
   const [fields,saveFields] = useState<ReceptiveFieldRecipe[]>([]);
   const fieldsRef = useRef<ReceptiveFieldRecipe[]>([]);
+  const [focusSession, setFocusSession] = useState<FocusSession | null>(null);
+  const focusSessionRef = useRef<FocusSession | null>(null);
+  const [focusClockMs, setFocusClockMs] = useState(() => Date.now());
   const [mediaURL, setMediaURL] = useState<string | null>(null);
 
   const kind = useRef<Kind>('none');
@@ -257,6 +300,80 @@ export function PersistentListeningProvider({
     setSnapshot(defaultSnapshot);
   }, [releaseOutput]);
 
+  const commitFocusSession = useCallback((next: FocusSession | null) => {
+    focusSessionRef.current = next;
+    setFocusSession(next);
+    setFocusClockMs(Date.now());
+  }, []);
+
+  const interruptCurrentFocus = useCallback((reason: FocusInterruptionReason): boolean => {
+    const current = focusSessionRef.current;
+    if (!current || current.status !== 'running') return false;
+    try {
+      commitFocusSession(interruptFocusSessionModel(current, reason, new Date()));
+      return true;
+    } catch { return false; }
+  }, [commitFocusSession]);
+
+  const beginFocusSession = useCallback((plan: FocusSessionPlanInput): boolean => {
+    const current = focusSessionRef.current;
+    if (current && !isFocusSessionTerminal(current)) return false;
+    try {
+      const now = new Date();
+      const ready = createFocusSessionModel(plan, { id: newFocusSessionID(), at: now });
+      commitFocusSession(startFocusSessionModel(ready, now));
+      return true;
+    } catch { return false; }
+  }, [commitFocusSession]);
+
+  const pauseFocusSession = useCallback((reason: FocusInterruptionReason = 'member'): boolean => {
+    const interrupted = interruptCurrentFocus(reason);
+    if (interrupted) pause();
+    return interrupted;
+  }, [interruptCurrentFocus, pause]);
+
+  const resumeCurrentFocus = useCallback((): boolean => {
+    const current = focusSessionRef.current;
+    if (!current || current.status !== 'paused') return false;
+    try {
+      commitFocusSession(resumeFocusSessionModel(current, new Date(), true));
+      return true;
+    } catch { return false; }
+  }, [commitFocusSession]);
+
+  const retuneCurrentFocus = useCallback((input: FocusRetune): boolean => {
+    const current = focusSessionRef.current;
+    if (!current || isFocusSessionTerminal(current)) return false;
+    try {
+      commitFocusSession(retuneFocusSessionModel(current, input, new Date()));
+      return true;
+    } catch { return false; }
+  }, [commitFocusSession]);
+
+  const stopCurrentFocus = useCallback((): boolean => {
+    const current = focusSessionRef.current;
+    if (!current || isFocusSessionTerminal(current)) return false;
+    try {
+      commitFocusSession(stopFocusSessionModel(current, new Date(), 'member-stop'));
+      pause();
+      return true;
+    } catch { return false; }
+  }, [commitFocusSession, pause]);
+
+  const recordCurrentFocusFeedback = useCallback((
+    outcome: FocusFeedbackOutcome,
+    tags: readonly FocusFeedbackTag[] = [],
+  ): boolean => {
+    const current = focusSessionRef.current;
+    if (!current || !isFocusSessionTerminal(current)) return false;
+    try {
+      commitFocusSession(recordFocusFeedbackModel(current, { outcome, tags, at: new Date() }));
+      return true;
+    } catch { return false; }
+  }, [commitFocusSession]);
+
+  const clearCurrentFocus = useCallback(() => commitFocusSession(null), [commitFocusSession]);
+
   const claimFocus = useCallback(() => {
     // This merely requests cooperation; it never asserts identity or rights.
     requestAudioFocus('listening-room');
@@ -279,23 +396,39 @@ export function PersistentListeningProvider({
         if (!message || typeof message !== 'object') return;
         if (message.version === SOULLAB_AUDIO_PREFLIGHT_VERSION) {
           if (message.tab === AUDIO_OUTPUT_TAB_NONCE) return;
-          if (message.type === 'maia-speech-preflight' ||
-              message.type === 'reader-narration-preflight' ||
-              message.type === 'music-preflight') pause();
+          if (message.type === 'maia-speech-preflight') {
+            pause(); interruptCurrentFocus('maia');
+          } else if (message.type === 'reader-narration-preflight') {
+            pause(); interruptCurrentFocus('reader');
+          } else if (message.type === 'music-preflight') {
+            pause(); interruptCurrentFocus('device');
+          }
           return;
         }
         if (message.type === 'focus-claimed' && message.version === 1 &&
-            message.owner !== instanceID.current) pause();
+            message.owner !== instanceID.current) {
+          pause();
+          interruptCurrentFocus('device');
+        }
       };
       } catch { focusChannel.current = null; /* Missing channel => all new audio refuses to start. */ }
     }
     const onFocus = (event: Event) => {
       const source = audioFocusSource(event);
-      if (source && source !== 'listening-room') pause();
+      if (!source || source === 'listening-room') return;
+      pause();
+      interruptCurrentFocus(source === 'maia-voice'
+        ? 'maia'
+        : source === 'reader-narration'
+          ? 'reader'
+          : 'device');
     };
-    const onSessionEnd = () => {stopAll();clearPrivateFields();};
+    const onSessionEnd = () => {
+      stopAll(); clearPrivateFields(); commitFocusSession(null);
+    };
     window.addEventListener(SOULLAB_AUDIO_FOCUS_EVENT, onFocus);
     window.addEventListener(SOULLAB_SESSION_END_EVENT, onSessionEnd);
+    const mountedMedia = media.current;
     return () => {
       window.removeEventListener(SOULLAB_AUDIO_FOCUS_EVENT, onFocus);
       window.removeEventListener(SOULLAB_SESSION_END_EVENT, onSessionEnd);
@@ -303,12 +436,15 @@ export function PersistentListeningProvider({
         focusChannel.current.close();
         focusChannel.current = null;
       }
-      media.current?.pause();
+      mountedMedia?.pause();
       releaseOutput();
       if (sketch.current) { endSketch(sketch.current); sketch.current = null; }
       if (blobURL.current) { URL.revokeObjectURL(blobURL.current); blobURL.current = null; }
     };
-  }, [pause, stopAll, releaseOutput, clearPrivateFields]);
+  }, [
+    pause, stopAll, releaseOutput, clearPrivateFields,
+    interruptCurrentFocus, commitFocusSession,
+  ]);
 
   useEffect(() => {
     if (lastMember.current !== reviewMemberKey) {
@@ -316,8 +452,28 @@ export function PersistentListeningProvider({
       lastMember.current = reviewMemberKey;
       stopAll();
       clearPrivateFields();
+      commitFocusSession(null);
     }
-  }, [reviewMemberKey, stopAll, clearPrivateFields]);
+  }, [reviewMemberKey, stopAll, clearPrivateFields, commitFocusSession]);
+
+  useEffect(() => {
+    if (focusSession?.status !== 'running') return;
+    const tick = () => {
+      const current = focusSessionRef.current;
+      const now = new Date();
+      setFocusClockMs(now.getTime());
+      if (!current || current.status !== 'running') return;
+      try {
+        const next = advanceFocusSessionModel(current, now);
+        if (next !== current) {
+          if (next.status === 'completed') pause();
+          commitFocusSession(next);
+        }
+      } catch { /* A rejected clock movement never mutates the accepted session. */ }
+    };
+    const interval = window.setInterval(tick, 1000);
+    return () => window.clearInterval(interval);
+  }, [focusSession?.status, commitFocusSession, pause]);
 
   const setVolume = useCallback((value: number) => {
     const next = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
@@ -492,8 +648,18 @@ export function PersistentListeningProvider({
     fields, keepField, dropField, replaceFields,
     playSketch, selectLocalFile, playLocalFile,
     pause, removeLocalFile,
+    focusSession, focusClockMs,
+    startFocusSession: beginFocusSession,
+    pauseFocusSession,
+    resumeFocusSession: resumeCurrentFocus,
+    retuneFocusSession: retuneCurrentFocus,
+    stopFocusSession: stopCurrentFocus,
+    recordFocusFeedback: recordCurrentFocusFeedback,
+    clearFocusSession: clearCurrentFocus,
   };
-  const displayed = snapshot.kind !== 'none' || snapshot.message.startsWith('MAIA is speaking.');
+  const audioDisplayed = snapshot.kind !== 'none' || snapshot.message.startsWith('MAIA is speaking.');
+  const focusDisplayed = Boolean(focusSession && !isFocusSessionTerminal(focusSession));
+  const displayed = audioDisplayed || focusDisplayed;
   return <Context.Provider value={transport}>
     {children}
     <div
@@ -507,14 +673,33 @@ export function PersistentListeningProvider({
         background:'rgba(10,23,29,0.97)',color:'#f3e6d3',
         borderTop:'1px solid #857a62',backdropFilter:'blur(16px)',
       }}>
-      <div style={{flex:1,minWidth:165}}>
+      {focusDisplayed && focusSession && <div
+        data-focus-field-dock="true" style={{flex:1,minWidth:240}}>
+        <strong>Focus Field · {focusSession.plan.taskLabel || focusSession.plan.task}</strong>
+        <div style={{fontSize:11,color:'#bad0cf'}}>
+          {focusSession.plan.focusNeed} · {focusSession.plan.musicalWorld} · {focusSession.status} · {' '}
+          {formatFocusClock(focusRemainingMs(focusSession, new Date(focusClockMs)))}
+        </div>
+        <a href="/listen#focus-field" style={{fontSize:10,color:'#e7c995'}}>Open Focus Field</a>
+      </div>}
+      {audioDisplayed && <div style={{flex:1,minWidth:165}}>
         <strong data-listen10-title="true">{snapshot.title}</strong>
         <div data-listen10-state="true" style={{fontSize:11,color:'#bad0cf'}}>
           {snapshot.kind === 'local-file'
             ? snapshot.fileFormat + ' file (source type; output not guaranteed lossless)'
             : 'Low-volume synthesized sound study'} · {snapshot.playback}
         </div>
-      </div>
+      </div>}
+      {focusDisplayed && focusSession?.status === 'running' && <button type="button"
+        onClick={() => pauseFocusSession('member')} aria-label="Pause Focus Field session">
+        Pause focus
+      </button>}
+      {focusDisplayed && focusSession?.status === 'paused' && <button type="button"
+        onClick={resumeCurrentFocus} aria-label="Resume Focus Field session by member action">
+        Resume focus
+      </button>}
+      {focusDisplayed && <button type="button" onClick={stopCurrentFocus}
+        aria-label="Stop Focus Field session">Stop focus</button>}
       {snapshot.kind === 'sketch' && <button type="button"
         aria-label={snapshot.playback === 'playing' ? 'Pause persistent music':'Resume persistent music'}
         onClick={() => snapshot.playback === 'playing' ? pause()
@@ -526,13 +711,12 @@ export function PersistentListeningProvider({
         onClick={()=>snapshot.playback === 'playing' ? pause() : void playLocalFile()}>
         {snapshot.playback === 'playing' ? 'Pause' : 'Play'}
       </button>}
-      <label style={{fontSize:12}}>Volume
+      {audioDisplayed && <label style={{fontSize:12}}>Volume
         <input aria-label="Persistent music volume" type="range" min="0" max="100"
           value={volume} onChange={e=>setVolume(Number(e.target.value))}/>
-      </label>
-      <button type="button" onClick={stopAll} aria-label="Stop and clear persistent music">
-        Stop
-      </button>
+      </label>}
+      {audioDisplayed && <button type="button" onClick={stopAll}
+        aria-label="Stop and clear persistent music">Stop music</button>}
       <audio ref={media} data-listen10-audio="true"
         // Native controls bypass the output-lock check; use only controlled Play/Pause.
         style={{display:'none'}}
@@ -542,9 +726,9 @@ export function PersistentListeningProvider({
         onError={()=>{releaseOutput();snapshot.kind==='local-file' && setSnapshot(old=>({
           ...old, playback:'error',message:'Local audio cannot be decoded.',
         }));}}/>
-      <span role="status" style={{fontSize:10,color:'#a9bec1'}}>
+      {audioDisplayed && <span role="status" style={{fontSize:10,color:'#a9bec1'}}>
         {snapshot.message}
-      </span>
+      </span>}
     </div>
   </Context.Provider>;
 }
