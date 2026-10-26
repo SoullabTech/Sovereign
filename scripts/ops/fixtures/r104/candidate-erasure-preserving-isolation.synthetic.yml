@@ -1,0 +1,7 @@
+# R105 transitional REVIEW-ONLY: keep current erasure consumer's vault access.
+# Drop inherited R20 key and authority mounts; still requires Class A review.
+services:
+  maia-media-worker:
+    volumes: !override
+      - synthetic_media:/app/data/media
+      - synthetic_vault:/app/data/vault

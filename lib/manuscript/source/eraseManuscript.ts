@@ -61,6 +61,7 @@
 
 import { transaction, query, type TransactionClient } from '@/lib/db/postgres';
 import { destroyVaultBytes } from '@/lib/storage/fileVault';
+import { vaultErasureErrnoR105 } from './vaultErasureSafeLogR105';
 import { r20LedgerErrorCode, sealR20DeletionLedger } from '@/lib/recovery/r20DeletionLedger';
 
 export type EraseOutcome =
@@ -280,18 +281,14 @@ export async function sweepVaultErasureQueue(
          and make this row carry more provenance than the one field it is allowed.
          The errno is also the operationally useful half: EACCES, EPERM and EROFS
          each name a different thing for an operator to fix. */
-      const code =
-        (err as NodeJS.ErrnoException)?.code
-        ?? (err instanceof Error && /still present/.test(err.message) ? 'ESTILLPRESENT' : 'UNKNOWN');
+      const code = vaultErasureErrnoR105(err);
       await query(
         `UPDATE vault_erasure_queue
             SET attempts = attempts + 1, last_attempt_at = now(), last_error = $2
           WHERE id = $1`,
         [row.id, String(code).slice(0, 32)],
       );
-      console.error('[MAIA/press] vault erasure still owed', {
-        obligationId: row.id, code: String(code).slice(0, 32),
-      });
+      console.error('[MAIA/press] vault erasure still owed (errno='+code+')');
     }
   }
 

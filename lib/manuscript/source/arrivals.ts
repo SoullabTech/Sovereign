@@ -1,11 +1,13 @@
-import { query } from '@/lib/db/postgres';
-import { readVaultBytes, writeVaultBytes } from '@/lib/storage/fileVault';
+import { randomUUID } from 'node:crypto';
+import { query, transaction } from '@/lib/db/postgres';
+import { readVaultBytes, writeDurableVaultBytes } from '@/lib/storage/fileVault';
 import {
   ARTIFACT_EXTRACTION,
   artifactExt,
   buildArrival,
   certifiesCustody,
   hashBytes,
+  hashText,
   MEMBER_SUPPLIED_TEXT,
   type ArrivalInput,
   type ExtractorKey,
@@ -22,8 +24,9 @@ import {
  * Bytes are written to the vault BEFORE the row is inserted. The failure that
  * ordering prevents is the one the founder's negative control names: a row
  * asserting custody over bytes that were never durably written. The reverse
- * leak — bytes with no row — is a harmless orphan a sweep can collect, and is
- * strictly preferable to a false claim of custody.
+ * leak — bytes with no row — is an UNKNOWN-CUSTODY artifact, not harmless.
+ * It must be preserved and adjudicated under the member-deletion law, never
+ * automatically swept or deemed abandoned on the basis of missing metadata.
  */
 
 const VAULT_NAMESPACE = 'manuscript-sources';
@@ -47,8 +50,10 @@ export async function recordArtifactArrival(params: {
   extractor: ExtractorKey;
 }): Promise<StoredArrival> {
   const artifactHash = hashBytes(params.bytes);
-  const fileId = `${Date.now().toString(36)}-${artifactHash.slice(0, 16)}`;
-  const artifactRef = await writeVaultBytes(
+  // A fresh random identity prevents two simultaneous copies of the same
+  // file from ever sharing a vault path and therefore a deletion fate.
+  const fileId = `${randomUUID()}-${artifactHash.slice(0, 16)}`;
+  const artifactRef = await writeDurableVaultBytes(
     VAULT_NAMESPACE,
     fileId,
     artifactExt(params.originalFilename),
@@ -122,30 +127,82 @@ async function insertArrival(
 }
 
 /**
- * Attach an unclaimed arrival to the manuscript the member just confirmed, and
- * mark that manuscript as carrying real source custody.
+ * R12 isolated beta candidate — atomically bind a pending Source arrival to a
+ * SAME-MEMBER manuscript. Do not grant custody from the arrival owner alone.
  *
- * Member-scoped and single-claim by the same predicate: an arrival belonging to
- * someone else, or already claimed by another manuscript, matches zero rows.
+ * Lock order is arrival first, then destination. discardUnclaimedArrival()
+ * locks the same arrival before deletion, serializing claim vs member discard.
+ * A failed destination update aborts both changes in ONE transaction.
+ *
+ * This does NOT activate encrypted backup, change imported text, assert that
+ * historical unreferenced vault bytes are abandoned, or transfer a pending
+ * arrival's future encryption key. Those remain separate release gates.
  */
 export async function claimArrival(
   arrivalId: string,
   manuscriptId: string,
   memberId: string,
 ): Promise<boolean> {
-  const res = await query(
-    `UPDATE manuscript_source_arrivals
-        SET manuscript_id = $2
-      WHERE id = $1 AND member_id = $3 AND manuscript_id IS NULL`,
-    [arrivalId, manuscriptId, memberId],
-  );
-  if ((res.rowCount ?? 0) === 0) return false;
-  await query(
-    `UPDATE member_manuscripts SET source_custody = 'source_custodied'
-      WHERE id = $1 AND member_id = $2`,
-    [manuscriptId, memberId],
-  );
-  return true;
+  return transaction(async (tx) => {
+    const arrival = await tx.query<{
+      source_kind: string;
+      source_text: string;
+      source_text_hash: string;
+      artifact_ref: string | null;
+      artifact_hash: string | null;
+    }>(
+      `SELECT source_kind, source_text, source_text_hash, artifact_ref, artifact_hash
+         FROM manuscript_source_arrivals
+        WHERE id = $1 AND member_id = $2 AND manuscript_id IS NULL
+        FOR UPDATE`,
+      [arrivalId, memberId],
+    );
+    if (arrival.rows.length !== 1) return false;
+
+    // Independently authorize the DESTINATION inside this same transaction.
+    // The foreign key on manuscript_id alone does not require same-member
+    // ownership. A missing, foreign or already-deleted Work must be refused.
+    const destination = await tx.query<{ id: string }>(
+      `SELECT id FROM member_manuscripts
+        WHERE id = $1 AND member_id = $2 FOR UPDATE`,
+      [manuscriptId, memberId],
+    );
+    if (destination.rows.length !== 1) return false;
+
+    const source = arrival.rows[0];
+    if (hashText(source.source_text) !== source.source_text_hash) return false;
+    if (source.source_kind === ARTIFACT_EXTRACTION) {
+      if (!source.artifact_ref || !source.artifact_hash) return false;
+      // A stored hash alone does not certify custody. The original bytes must
+      // still be present and identical when this member claims the arrival.
+      const bytes = await readVaultBytes(source.artifact_ref);
+      if (hashBytes(bytes) !== source.artifact_hash) return false;
+    } else if (source.source_kind === MEMBER_SUPPLIED_TEXT) {
+      if (source.artifact_ref !== null || source.artifact_hash !== null) return false;
+    } else {
+      return false;
+    }
+
+    const claimed = await tx.query(
+      `UPDATE manuscript_source_arrivals
+          SET manuscript_id = $2
+        WHERE id = $1 AND member_id = $3 AND manuscript_id IS NULL`,
+      [arrivalId, manuscriptId, memberId],
+    );
+    if (claimed.rowCount !== 1) {
+      throw new Error('source_claim_changed_under_lock');
+    }
+    const marked = await tx.query(
+      `UPDATE member_manuscripts
+          SET source_custody = 'source_custodied'
+        WHERE id = $1 AND member_id = $2`,
+      [manuscriptId, memberId],
+    );
+    if (marked.rowCount !== 1) {
+      throw new Error('source_destination_changed_under_lock');
+    }
+    return true;
+  });
 }
 
 /**
