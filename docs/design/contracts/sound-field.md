@@ -12,6 +12,7 @@ surfaces:
   - components/reader/AudioControls.tsx
   - components/reader/AudiobookReader.tsx
   - components/reader/ReflectionDrawer.tsx
+  - lib/listening/focusFieldSession.ts
 change_class: experiential
 principles:
   - INHABITABLE_ARCHITECTURE_STANDARD — continuity may cross rooms without erasing the purpose or character of any room
@@ -76,6 +77,16 @@ The browser client uses the httpOnly session cookie and may carry the establishe
 The Sound Field and Reader are participants in one shared audio authority, never parallel authorities. MAIA speech and protected live sessions have highest priority; member-started Reader narration may preempt persistent music; music may not preempt active narration. A focus loss, member switch, session revocation, route disposal, Pause, Stop, end, or error releases output, but nothing automatically restarts earlier sound. Resume requires a fresh member act.
 
 The field carries only its own playback state. It does not carry page text, Journal content, astrology data, manuscript material, MAIA conversation, developmental inference, or member memory into audio processing.
+
+## Focus Field session foundation
+
+Focus Field is a member-directed way to hold a work session inside this same Sound Field. It keeps task kind, focus need, musical world, stimulation, and duration as separate choices. Classical, Ambient, Cinematic, Electronic, Organic, Nature, and Rhythmic are preferences—not channels, tracks, or rights grants. Arrive, Steady, Deep, Activate, Create, and Reset describe the kind of support requested today, not a fixed brain type.
+
+The pure session model does not play audio, select a recording, inspect work, or score productivity. It starts only through member action. Reader, MAIA, protected live audio, device interruption, route interruption, or error may pause it; every resume requires another member act. Session end, member switch, rights revocation, or source unavailability stops it. Changing musical world or stimulation preserves the task and timer.
+
+Private feedback is optional and bounded to Helped, Neutral, or Distracting plus a small set of member-chosen observations. A saved combination keeps broad preferences but excludes the task label, session history, identity, credentials, and audio metadata. It does not become global MAIA memory automatically.
+
+`FOCUS_SESSION_MEDIA_AUTHORITY` remains `none`. Every playable focus channel must later pass independent identity, entitlement, media-rights, source, and output-lease gates.
 
 ## Forbidden here
 
