@@ -565,11 +565,17 @@ export const ACCESS_RULES: AccessRule[] = [
   // metadata; no PII beyond a 120-char UA. Anon by design.
   { exact: '/api/telemetry/client', public: true, notes: 'Client diagnostic telemetry — reachable in unauthenticated/broken states (signin breaker + voice events). See PR #328.' },
 
-  // AI provider boundary — exact routes only. Local TTS is the sole anonymous
-  // voice surface and independently requires a stable visitor identity; every
-  // paid/private provider route must reach its handler with a verified session.
-  // Explicit mapping is load-bearing in permissive mode: an invalid or
-  // mismatched credential must be denied, never sanitized into an unmapped pass.
+  // AI provider boundary — exact routes only. Provider and local-runtime health
+  // reveal operational posture, so they require the admin role at the edge and
+  // re-check administrator authority inside the handler. Explicit mapping is
+  // load-bearing in permissive mode: an invalid or mismatched credential must
+  // be denied, never sanitized into an unmapped pass.
+  { exact: '/api/ai/health', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Administrative AI availability summary; no key prefix, provider URL or environment value' },
+  { exact: '/api/health/local-voice', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Administrative local voice health summary; internal service URLs and provider-key configuration are withheld' },
+
+  // Local TTS is the sole anonymous voice surface and independently requires a
+  // stable visitor identity; every paid/private provider route must reach its
+  // handler with a verified session.
   { exact: '/api/voice/local-tts', public: true, notes: 'Anonymous-capable local-only voice; route refuses cloud fallback and requires stable visitor identity' },
   { exact: '/api/voice/openai-tts', minTier: 'free', notes: 'Authenticated paid TTS gateway; server-side key and atomic spend reservation' },
   { exact: '/api/voice/preview', minTier: 'free', notes: 'Authenticated member voice preview; provider choice and spend are server-governed' },

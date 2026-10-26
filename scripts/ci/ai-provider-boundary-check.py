@@ -18,8 +18,12 @@ SERVER_MODULES = (
     "lib/utils/modelService.ts",
     "lib/limits/LimitsEnforcer.ts",
     "lib/limits/ProviderSpendGate.ts",
+    "lib/tts/openaiTts.ts",
+    "lib/consciousness/OpenAIVoiceSynthesis.ts",
 )
 ROUTES = (
+    "app/api/ai/health/route.ts",
+    "app/api/health/local-voice/route.ts",
     "app/api/voice/local-tts/route.ts",
     "app/api/voice/openai-tts/route.ts",
     "app/api/voice/preview/route.ts",
@@ -130,6 +134,43 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
         if source.get(path) and not first_import_server_only(source[path]):
             add(path, "SERVER_ONLY_FIRST_IMPORT_REQUIRED")
 
+    path = "lib/tts/openaiTts.ts"
+    text = source.get(path, "")
+    if "[openai-tts] dispatch" not in text:
+        add(path, "OPENAI_TTS_SAFE_DISPATCH_LOG_REQUIRED")
+    if any(
+        value in text
+        for value in (
+            "hasApiKey",
+            "keyLength",
+            "OPENAI_API_KEY present?",
+            "OPENAI_API_KEY length",
+            "process.env.OPENAI_API_KEY?.length",
+        )
+    ):
+        add(path, "PROVIDER_KEY_METADATA_LOG_FORBIDDEN")
+
+    path = "lib/consciousness/OpenAIVoiceSynthesis.ts"
+    text = source.get(path, "")
+    if "[legacy-openai-voice] dispatch" not in text:
+        add(path, "LEGACY_OPENAI_SAFE_DISPATCH_LOG_REQUIRED")
+    if "[legacy-openai-voice] provider failure" not in text:
+        add(path, "LEGACY_OPENAI_SAFE_FAILURE_LOG_REQUIRED")
+    if "error: 'provider_unavailable'" not in text:
+        add(path, "LEGACY_OPENAI_SAFE_ERROR_RESULT_REQUIRED")
+    if any(
+        value in text
+        for value in (
+            "OpenAI API Key check",
+            "process.env.OPENAI_API_KEY?.substring",
+            "process.env.OPENAI_API_KEY?.length",
+            "prefix: process.env.OPENAI_API_KEY",
+            "fullError",
+            "error: error?.message",
+        )
+    ):
+        add(path, "LEGACY_PROVIDER_KEY_OR_ERROR_METADATA_FORBIDDEN")
+
     for path in CLIENTS:
         text = source.get(path, "")
         if any(endpoint in text for endpoint in DIRECT_PROVIDER):
@@ -168,6 +209,8 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
     path = "config/accessMatrix.ts"
     text = source.get(path, "")
     route_contracts = (
+        (r"\{\s*exact:\s*'/api/ai/health',\s*minTier:\s*'free',\s*rolesAnyOf:\s*\['admin'\]", "AI_HEALTH_ADMIN_EXACT_RULE_REQUIRED"),
+        (r"\{\s*exact:\s*'/api/health/local-voice',\s*minTier:\s*'free',\s*rolesAnyOf:\s*\['admin'\]", "LOCAL_VOICE_HEALTH_ADMIN_EXACT_RULE_REQUIRED"),
         (r"\{\s*exact:\s*'/api/voice/local-tts',\s*public:\s*true", "LOCAL_TTS_PUBLIC_EXACT_RULE_REQUIRED"),
         (r"\{\s*exact:\s*'/api/voice/openai-tts',\s*minTier:\s*'free'", "OPENAI_TTS_AUTH_EXACT_RULE_REQUIRED"),
         (r"\{\s*exact:\s*'/api/voice/preview',\s*minTier:\s*'free'", "VOICE_PREVIEW_AUTH_EXACT_RULE_REQUIRED"),
@@ -179,6 +222,8 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
         if not re.search(pattern, text):
             add(path, code)
     for route in (
+        '/api/ai/health',
+        '/api/health/local-voice',
         '/api/voice/openai-tts',
         '/api/voice/preview',
         '/api/voice/stream-conversation',
@@ -186,6 +231,50 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
     ):
         if re.search(r"\{\s*exact:\s*'" + re.escape(route) + r"'\s*,\s*public:\s*true", text):
             add(path, "PAID_OR_PRIVATE_VOICE_ROUTE_MUST_NOT_BE_PUBLIC")
+
+    path = "app/api/ai/health/route.ts"
+    text = source.get(path, "")
+    for needle, code in (
+        ("checkAdminAuth(", "AI_HEALTH_DIRECT_ADMIN_GATE_REQUIRED"),
+        ("adminUnauthorized()", "AI_HEALTH_DIRECT_ADMIN_DENIAL_REQUIRED"),
+        ("'/api/ai/health'", "AI_HEALTH_AUDIT_ROUTE_REQUIRED"),
+        ("'Cache-Control': 'no-store'", "AI_HEALTH_NO_STORE_REQUIRED"),
+    ):
+        if needle not in text:
+            add(path, code)
+    if any(
+        value in text
+        for value in (
+            "keyPrefix",
+            "ANTHROPIC_API_KEY?.slice",
+            "url: ollamaUrl",
+            "OLLAMA_BASE_URL || process.env.OLLAMA_HOST;",
+        )
+    ):
+        add(path, "AI_HEALTH_KEY_PREFIX_OR_INTERNAL_URL_FORBIDDEN")
+
+    path = "app/api/health/local-voice/route.ts"
+    text = source.get(path, "")
+    for needle, code in (
+        ("checkAdminAuth(", "LOCAL_VOICE_HEALTH_DIRECT_ADMIN_GATE_REQUIRED"),
+        ("adminUnauthorized()", "LOCAL_VOICE_HEALTH_DIRECT_ADMIN_DENIAL_REQUIRED"),
+        ("'/api/health/local-voice'", "LOCAL_VOICE_HEALTH_AUDIT_ROUTE_REQUIRED"),
+        ("'Cache-Control': 'no-store'", "LOCAL_VOICE_HEALTH_NO_STORE_REQUIRED"),
+    ):
+        if needle not in text:
+            add(path, code)
+    if any(
+        value in text
+        for value in (
+            "openai: ttsHealth.openai",
+            "kokoro: ttsHealth.kokoro",
+            "sesame: ttsHealth.sesame",
+            "whisper: whisperHealth",
+            "url: whisperUrl",
+            "error: err?.message",
+        )
+    ):
+        add(path, "LOCAL_VOICE_HEALTH_RAW_PROVIDER_DETAIL_FORBIDDEN")
 
     path = "lib/limits/LimitsEnforcer.ts"
     text = source.get(path, "")

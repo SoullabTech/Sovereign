@@ -1,5 +1,6 @@
 // backend: lib/tts/openaiTts.ts
 
+import 'server-only';
 import OpenAI from 'openai';
 
 const DEFAULT_TTS_MODEL = process.env.OPENAI_TTS_MODEL || 'tts-1';
@@ -28,12 +29,10 @@ export async function synthesizeSpeech(params: {
 }) {
   const { text, voice = 'alloy', format = 'mp3', speed = 1.0, model } = params;
 
-  console.log('🔊 [openai-tts] request', {
+  console.log('🔊 [openai-tts] dispatch', {
     model: model || DEFAULT_TTS_MODEL,
     voice,
     inputLength: text?.length ?? 0,
-    hasApiKey: Boolean(process.env.OPENAI_API_KEY),
-    keyLength: process.env.OPENAI_API_KEY?.length || 0,
   });
 
   // Bound the cloud TTS call. The OpenAI SDK defaults to a ~600s timeout with

@@ -8,6 +8,7 @@
  * Claude remains as background advisor for pattern analysis.
  */
 
+import 'server-only';
 import OpenAI from 'openai';
 import { detectCommunicatorType, getHighBandwidthStrategy } from './HighBandwidthCommunicator';
 import { VoiceCognitiveArchitecture } from './VoiceCognitiveArchitecture';
@@ -234,10 +235,10 @@ This wisdom is not "background" - it's your living knowledge. Integrate it natur
   });
 
   try {
-    console.log('🔑 OpenAI API Key check:', {
-      exists: !!process.env.OPENAI_API_KEY,
-      length: process.env.OPENAI_API_KEY?.length,
-      prefix: process.env.OPENAI_API_KEY?.substring(0, 7)
+    console.log('🔊 [legacy-openai-voice] dispatch', {
+      model: 'gpt-4',
+      historyMessages: context.conversationHistory?.length ?? 0,
+      inputLength: context.userInput.length,
     });
 
     const completion = await getOpenAI().chat.completions.create({
@@ -281,13 +282,10 @@ This wisdom is not "background" - it's your living knowledge. Integrate it natur
     };
 
   } catch (error: any) {
-    console.error('❌ OpenAI voice synthesis error:', {
-      message: error?.message,
-      status: error?.status,
-      statusText: error?.statusText,
-      type: error?.type,
-      code: error?.code,
-      fullError: error
+    console.error('❌ [legacy-openai-voice] provider failure', {
+      category: error?.name ?? typeof error,
+      status: Number.isInteger(error?.status) ? error.status : undefined,
+      code: typeof error?.code === 'string' ? error.code.slice(0, 80) : undefined,
     });
 
     // Warm fallback - NEVER echo user input
@@ -296,7 +294,7 @@ This wisdom is not "background" - it's your living knowledge. Integrate it natur
       element: 'aether',
       metadata: {
         model: 'gpt-4-fallback',
-        error: error?.message || 'Unknown error'
+        error: 'provider_unavailable'
       }
     };
   }

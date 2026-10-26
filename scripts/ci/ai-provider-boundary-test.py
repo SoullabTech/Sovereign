@@ -90,6 +90,77 @@ class BoundaryMutations(unittest.TestCase):
         )
         self.assertIn("LOCAL_TTS_PUBLIC_EXACT_RULE_REQUIRED", self.codes(result))
 
+    def test_ai_health_admin_mapping_removal_fails(self):
+        result = self.evaluate(
+            "config/accessMatrix.ts",
+            lambda s: s.replace(
+                "{ exact: '/api/ai/health', minTier: 'free', rolesAnyOf: ['admin']",
+                "{ exact: '/api/ai/health', public: true",
+                1,
+            ),
+        )
+        self.assertIn("AI_HEALTH_ADMIN_EXACT_RULE_REQUIRED", self.codes(result))
+        self.assertIn("PAID_OR_PRIVATE_VOICE_ROUTE_MUST_NOT_BE_PUBLIC", self.codes(result))
+
+    def test_local_voice_health_admin_mapping_removal_fails(self):
+        result = self.evaluate(
+            "config/accessMatrix.ts",
+            lambda s: s.replace(
+                "{ exact: '/api/health/local-voice', minTier: 'free', rolesAnyOf: ['admin']",
+                "{ exact: '/api/health/local-voice', public: true",
+                1,
+            ),
+        )
+        self.assertIn("LOCAL_VOICE_HEALTH_ADMIN_EXACT_RULE_REQUIRED", self.codes(result))
+        self.assertIn("PAID_OR_PRIVATE_VOICE_ROUTE_MUST_NOT_BE_PUBLIC", self.codes(result))
+
+    def test_ai_health_direct_admin_gate_removal_fails(self):
+        result = self.evaluate(
+            "app/api/ai/health/route.ts",
+            lambda s: s.replace("const auth = await checkAdminAuth(", "const auth = await removedAdminGate(", 1),
+        )
+        self.assertIn("AI_HEALTH_DIRECT_ADMIN_GATE_REQUIRED", self.codes(result))
+
+    def test_ai_health_key_prefix_reintroduction_fails(self):
+        result = self.evaluate(
+            "app/api/ai/health/route.ts",
+            lambda s: s.replace(
+                "anthropic: { status: anthropicAvailable ? 'available' : 'unavailable' },",
+                "anthropic: { status: anthropicAvailable ? 'available' : 'unavailable', keyPrefix: process.env.ANTHROPIC_API_KEY?.slice(0, 12) },",
+                1,
+            ),
+        )
+        self.assertIn("AI_HEALTH_KEY_PREFIX_OR_INTERNAL_URL_FORBIDDEN", self.codes(result))
+
+    def test_local_voice_health_raw_provider_detail_fails(self):
+        result = self.evaluate(
+            "app/api/health/local-voice/route.ts",
+            lambda s: s.replace("tts: { kokoro, sesame, pplex },", "tts: { kokoro: ttsHealth.kokoro, sesame, pplex },", 1),
+        )
+        self.assertIn("LOCAL_VOICE_HEALTH_RAW_PROVIDER_DETAIL_FORBIDDEN", self.codes(result))
+
+    def test_legacy_openai_key_prefix_log_fails(self):
+        result = self.evaluate(
+            "lib/consciousness/OpenAIVoiceSynthesis.ts",
+            lambda s: s.replace(
+                "inputLength: context.userInput.length,",
+                "inputLength: context.userInput.length, prefix: process.env.OPENAI_API_KEY?.substring(0, 7),",
+                1,
+            ),
+        )
+        self.assertIn("LEGACY_PROVIDER_KEY_OR_ERROR_METADATA_FORBIDDEN", self.codes(result))
+
+    def test_legacy_openai_full_error_log_fails(self):
+        result = self.evaluate(
+            "lib/consciousness/OpenAIVoiceSynthesis.ts",
+            lambda s: s.replace(
+                "code: typeof error?.code === 'string' ? error.code.slice(0, 80) : undefined,",
+                "code: error?.code, fullError: error,",
+                1,
+            ),
+        )
+        self.assertIn("LEGACY_PROVIDER_KEY_OR_ERROR_METADATA_FORBIDDEN", self.codes(result))
+
     def test_direct_client_fetch_fails(self):
         result = self.evaluate(
             "lib/voice/serverTtsClient.ts", lambda s: s.replace("apiFetch(", "fetch(", 1)
@@ -259,6 +330,24 @@ class BoundaryMutations(unittest.TestCase):
             lambda s: s + "\nconsole.log('OPENAI_API_KEY length');\n",
         )
         self.assertIn("PROVIDER_DIAGNOSTIC_LEAK", self.codes(result))
+
+    def test_shared_tts_helper_key_metadata_log_fails(self):
+        result = self.evaluate(
+            "lib/tts/openaiTts.ts",
+            lambda s: s.replace(
+                "inputLength: text?.length ?? 0,",
+                "inputLength: text?.length ?? 0, hasApiKey: Boolean(process.env.OPENAI_API_KEY), keyLength: process.env.OPENAI_API_KEY?.length || 0,",
+                1,
+            ),
+        )
+        self.assertIn("PROVIDER_KEY_METADATA_LOG_FORBIDDEN", self.codes(result))
+
+    def test_shared_tts_helper_safe_dispatch_log_cannot_be_removed(self):
+        result = self.evaluate(
+            "lib/tts/openaiTts.ts",
+            lambda s: s.replace("[openai-tts] dispatch", "[openai-tts] request", 1),
+        )
+        self.assertIn("OPENAI_TTS_SAFE_DISPATCH_LOG_REQUIRED", self.codes(result))
 
     def test_random_anon_fails(self):
         result = self.evaluate(
