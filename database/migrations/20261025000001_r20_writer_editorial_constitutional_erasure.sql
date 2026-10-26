@@ -19,6 +19,12 @@
 
 BEGIN;
 
+-- PostgreSQL cannot change a function return type through CREATE OR REPLACE.
+-- The production predecessor has the same identity arguments and returns INTEGER;
+-- this migration replaces it with the content-free JSONB receipt below. No database
+-- object depends on the predecessor, and the enclosing transaction makes the swap atomic.
+DROP FUNCTION IF EXISTS public.r20_erase_writer_editorial_history(UUID, UUID, UUID);
+
 CREATE OR REPLACE FUNCTION public.r20_erase_writer_editorial_history(
   p_manifest_id UUID,
   p_member_id UUID,

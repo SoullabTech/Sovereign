@@ -10,6 +10,18 @@ const originMigration = fs.readFileSync(path.join(ROOT,
   'database/migrations/20261020000001_writer_editorial_thread_origins.sql'), 'utf8');
 
 describe('R20 Writer editorial constitutional erasure source law', () => {
+  it('atomically replaces the production INTEGER predecessor before creating the JSONB receipt', () => {
+    const drop = migration.indexOf(
+      'DROP FUNCTION IF EXISTS public.r20_erase_writer_editorial_history(UUID, UUID, UUID)',
+    );
+    const create = migration.indexOf(
+      'CREATE OR REPLACE FUNCTION public.r20_erase_writer_editorial_history(',
+    );
+    expect(drop).toBeGreaterThan(migration.indexOf('BEGIN;'));
+    expect(create).toBeGreaterThan(drop);
+    expect(migration).toContain(') RETURNS JSONB');
+  });
+
   it('requires exact same-transaction deletion authority before authored-history erasure', () => {
     expect(migration).toContain("reason_class = 'member_deletion'");
     expect(migration).toContain("t.object_kind = 'member_manuscripts'");
