@@ -23,6 +23,7 @@ import { NextRequest } from 'next/server';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
+import { CloudVoiceForbidden } from '@/lib/tts/cloudVoicePolicy';
 import { logFallbackEvent, checkCloudConsent, resolveVoicePolicy } from '@/lib/tts/voiceSovereignty';
 
 export const runtime = 'nodejs';
@@ -126,6 +127,15 @@ export async function POST(req: NextRequest) {
       provider = result.provider;
       fallback = result.fallback;
     } catch (err) {
+      if (err instanceof CloudVoiceForbidden) {
+        return jsonError(
+          isAnon
+            ? 'Local voice unavailable for anonymous session'
+            : 'Local voice unavailable and cloud fallback is not permitted',
+          503,
+          { requestId },
+        );
+      }
       if (err instanceof TTSFallbackToOpenAI) {
         if (isAnon) {
           return jsonError('Local voice unavailable for anonymous session', 503, { requestId });

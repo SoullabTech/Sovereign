@@ -247,6 +247,10 @@ def evaluate(source: dict[str, str]) -> dict[str, object]:
         add(path, "ANON_REFUSAL_MUST_PRECEDE_CLOUD")
     if not before(text, "reserveVoiceProviderSpend({", "const speech = await synthesizeSpeech"):
         add(path, "LOCAL_FALLBACK_SPEND_RESERVATION_REQUIRED")
+    if "err instanceof CloudVoiceForbidden" not in text or "Local voice unavailable for anonymous session" not in text:
+        add(path, "LOCAL_CLOUD_REFUSAL_MUST_TRANSLATE_503")
+    if not before(text, "err instanceof CloudVoiceForbidden", "err instanceof TTSFallbackToOpenAI"):
+        add(path, "LOCAL_CLOUD_REFUSAL_MUST_PRECEDE_FALLBACK_SENTINEL")
 
     path = "app/api/voice/stream-conversation/route.ts"
     text = source.get(path, "")

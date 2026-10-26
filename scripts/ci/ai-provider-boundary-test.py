@@ -137,12 +137,18 @@ class BoundaryMutations(unittest.TestCase):
         result = self.evaluate(
             "app/api/voice/local-tts/route.ts",
             lambda s: s.replace(
-                "return jsonError('Local voice unavailable for anonymous session', 503, { requestId });",
-                "return jsonError('continue', 200);",
-                1,
+                "Local voice unavailable for anonymous session",
+                "removed local voice refusal",
             ),
         )
         self.assertIn("ANON_CLOUD_FALLBACK_REFUSAL_REQUIRED", self.codes(result))
+
+    def test_cloud_voice_forbidden_translation_removal_fails(self):
+        result = self.evaluate(
+            "app/api/voice/local-tts/route.ts",
+            lambda s: s.replace("err instanceof CloudVoiceForbidden", "false", 1),
+        )
+        self.assertIn("LOCAL_CLOUD_REFUSAL_MUST_TRANSLATE_503", self.codes(result))
 
     def test_stream_body_identity_fails(self):
         result = self.evaluate(
