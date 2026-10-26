@@ -1,0 +1,26 @@
+name: R112 Legacy SQL Erasure Fence — Class A Synthetic Review
+
+# EXPLICIT REVIEW-ONLY diagnostic, NOT production remediation or release authority.
+on:
+  push:
+    branches:
+      - review/r112-legacy-erasure-sql-fence-20261023
+
+permissions:
+  contents: read
+
+jobs:
+  old-worker-pg16-delete-refusal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install exact locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Verify actual legacy worker cannot clear fictional owed row without PG privilege
+        run: bash scripts/qualification/r112-legacy-erasure-sql-fence.review.sh
