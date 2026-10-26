@@ -65,6 +65,9 @@ function clockSeconds(text) {
       executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
       args: [
         '--no-first-run', '--disable-extensions', '--disable-background-networking',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
         '--autoplay-policy=no-user-gesture-required',
       ],
     });
@@ -116,8 +119,8 @@ function clockSeconds(text) {
       return button && !button.disabled;
     }, null, { timeout: 15000 });
     check('focus-ui-has-guide-and-browse',
-      await page.getByRole('tab', { name: /Guide me/ }).isVisible() &&
-      await page.getByRole('tab', { name: /Browse/ }).isVisible());
+      await page.getByRole('button', { name: /Guide me/ }).isVisible() &&
+      await page.getByRole('button', { name: /Browse/ }).isVisible());
     check('focus-ui-declares-no-surveillance',
       compact(await page.locator('#focus-field').textContent()).includes('No work inspection · no productivity score'));
 
@@ -225,7 +228,7 @@ function clockSeconds(text) {
       compact(await page.locator('#focus-field').textContent()).includes('Private session feedback recorded in memory only'));
 
     await page.getByRole('button', { name: 'New session' }).click();
-    await page.getByRole('tab', { name: /Browse/ }).click();
+    await page.getByRole('button', { name: /Browse/ }).click();
     await page.locator('#focus-field').getByRole('button', { name: /Classical/ }).click();
     await page.locator('#focus-field').getByRole('button', { name: /^Deep Long/ }).click();
     await page.locator('#focus-field').getByRole('button', { name: 'No timer' }).click();

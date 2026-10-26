@@ -56,6 +56,9 @@ test('Guide Me implementation has no profile, history, model or network mechanis
 test('Focus Field UI exposes Guide Me and Browse without starting audio', () => {
   assert.match(desk, />Guide me</);
   assert.match(desk, />Browse</);
+  assert.match(desk, /role="group" aria-label="Focus Field entry"/);
+  assert.match(desk, /aria-pressed=\{entryMode === 'guide-me'\}/);
+  assert.doesNotMatch(desk, /role="tab"|role="tablist"|aria-selected=/);
   assert.match(desk, /Start focus session/);
   assert.match(desk, /No work inspection · no productivity score/);
   assert.match(desk, /Music never starts automatically/);

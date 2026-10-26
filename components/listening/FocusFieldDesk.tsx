@@ -171,13 +171,13 @@ export default function FocusFieldDesk() {
 
       {!sessionActive && !sessionTerminal && (
         <>
-          <div className={styles.focusDoors} role="tablist" aria-label="Focus Field entry">
-            <button type="button" role="tab" aria-selected={entryMode === 'guide-me'}
+          <div className={styles.focusDoors} role="group" aria-label="Focus Field entry">
+            <button type="button" aria-pressed={entryMode === 'guide-me'}
               className={entryMode === 'guide-me' ? styles.focusDoorActive : styles.focusDoor}
               onClick={() => chooseEntryMode('guide-me')}>
               <strong>Guide me</strong><span>Use this session’s visible choices to suggest musical worlds.</span>
             </button>
-            <button type="button" role="tab" aria-selected={entryMode === 'browse'}
+            <button type="button" aria-pressed={entryMode === 'browse'}
               className={entryMode === 'browse' ? styles.focusDoorActive : styles.focusDoor}
               onClick={() => chooseEntryMode('browse')}>
               <strong>Browse</strong><span>Choose the focus state and musical world yourself.</span>
