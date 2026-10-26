@@ -1,0 +1,141 @@
+# PREPARATION ONLY — not committed, pushed, dispatched or deployed.
+name: RF01 Class A exact-source review image (NO DEPLOY)
+on:
+  pull_request:
+    paths:
+      - .github/workflows/rf01-source-review-image-20261019.yml
+permissions:
+  contents: read
+concurrency:
+  group: rf01-aede-fixed-image-review
+  cancel-in-progress: true
+env:
+  SOURCE_SHA: aede4b604be10d198261624d8effbb270077a1fa
+  SOURCE_TREE: ad8b13fa75c3ed0121607fc683a40f6bf7fd0042
+  IMAGE: maia-sovereign:rf01-aede-review-only
+jobs:
+  build-source-pinned:
+    name: Exact Linux image and nondeploy archive
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - name: Checkout EXACT RF01 source, no persistent credentials
+        uses: actions/checkout@v4
+        with:
+          ref: aede4b604be10d198261624d8effbb270077a1fa
+          persist-credentials: false
+      - name: Refuse changed source or insufficient ephemeral space
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          available="$(df -Pk / | awk 'NR==2 {print $4}')"
+          test "$available" -ge 15000000
+      - name: Setup isolated BuildKit
+        uses: docker/setup-buildx-action@v3
+      - name: Build EXACT linux/amd64 candidate without publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker buildx build --platform linux/amd64 --progress=plain --pull \
+            --cache-from type=gha \
+            --build-arg DEPLOY_LANE_TOKEN=ci-review-image-only \
+            --build-arg GIT_COMMIT="$SOURCE_SHA" \
+            --build-arg APP_VERSION=1.2.0 \
+            --load --tag "$IMAGE" .
+      - name: Identity and archive custody
+        shell: bash
+        run: |
+          set -euo pipefail
+          id="$(docker image inspect "$IMAGE" --format '{{.Id}}')"
+          arch="$(docker image inspect "$IMAGE" --format '{{.Architecture}}')"
+          image_env="$(docker image inspect "$IMAGE" --format '{{range .Config.Env}}{{println .}}{{end}}')"
+          test "$arch" = amd64
+          printf '%s\n' "$id" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          printf '%s\n' "$image_env" | grep -Fx "GIT_COMMIT=$SOURCE_SHA"
+          printf '%s\n' "$image_env" | grep -Fx 'DEPLOY_LANE=ci-review-image-only'
+          available="$(df -Pk /tmp | awk 'NR==2 {print $4}')"
+          test "$available" -ge 6500000
+          cd /tmp
+          docker save "$IMAGE" | gzip -1 > rf01-aede.docker.tar.gz
+          gzip -t rf01-aede.docker.tar.gz
+          sha256sum rf01-aede.docker.tar.gz > rf01-aede.docker.tar.gz.sha256
+          sha256sum -c rf01-aede.docker.tar.gz.sha256
+          printf 'SOURCE_SHA=%s\nSOURCE_TREE=%s\nIMAGE_ID=%s\nARCHITECTURE=amd64\nDEPLOY_LANE=ci-review-image-only\nPRODUCTION_DEPLOYED=false\n' \
+            "$SOURCE_SHA" "$SOURCE_TREE" "$id" > rf01-aede-identity.txt
+      - name: Upload short-lived, private review-only source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rf01-aede-reviewed-image
+          retention-days: 2
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            /tmp/rf01-aede.docker.tar.gz
+            /tmp/rf01-aede.docker.tar.gz.sha256
+            /tmp/rf01-aede-identity.txt
+
+  reopen-independent:
+    name: Independently reopen exact artifact without external provider access
+    needs: build-source-pinned
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    steps:
+      - name: Download artifact from THIS run only
+        uses: actions/download-artifact@v4
+        with:
+          name: rf01-aede-reviewed-image
+          path: /tmp/rf01-review
+      - name: Prove source, tree, image and archive integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/rf01-review
+          grep -Fx "SOURCE_SHA=$SOURCE_SHA" rf01-aede-identity.txt
+          grep -Fx "SOURCE_TREE=$SOURCE_TREE" rf01-aede-identity.txt
+          grep -Fx 'PRODUCTION_DEPLOYED=false' rf01-aede-identity.txt
+          grep -Fx 'ARCHITECTURE=amd64' rf01-aede-identity.txt
+          grep -Fx 'DEPLOY_LANE=ci-review-image-only' rf01-aede-identity.txt
+          sha256sum -c rf01-aede.docker.tar.gz.sha256
+          gzip -t rf01-aede.docker.tar.gz
+          gzip -dc rf01-aede.docker.tar.gz | docker load
+          expected="$(sed -n 's/^IMAGE_ID=//p' rf01-aede-identity.txt)"
+          actual="$(docker image inspect "$IMAGE" --format '{{.Id}}')"
+          test "$expected" = "$actual"
+          test "$(docker image inspect "$IMAGE" --format '{{.Architecture}}')" = amd64
+          docker image inspect "$IMAGE" --format '{{range .Config.Env}}{{println .}}{{end}}' |
+            grep -Fx "GIT_COMMIT=$SOURCE_SHA"
+          echo 'Exact review-only image reloaded on a different GitHub runner.'
+      - name: Offline anonymous-route refusal smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          cleanup() { docker rm -f rf01-aede-app >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          # No network: no email, AI, production DB, payments or provider calls.
+          docker run --rm -d --name rf01-aede-app --network none \
+            -e DATABASE_URL=postgresql://fiction:fiction@127.0.0.1:1/fiction \
+            -e PRO_STUDIO_REFLECT_BETA_ENABLED=false \
+            -e NEXT_PUBLIC_WS_BETA_REAL_MEMBER_ENABLED=false \
+            "$IMAGE" >/dev/null
+          ready=false
+          for n in $(seq 1 70); do
+            if docker exec rf01-aede-app curl --max-time 3 -fsS \
+              -o /dev/null http://127.0.0.1:3000/explore >/dev/null 2>&1;then
+              ready=true
+              break
+            fi
+            docker inspect rf01-aede-app --format '{{.State.Running}}' | grep -qx true
+            sleep 1
+          done
+          test "$ready" = true
+          code="$(docker exec rf01-aede-app curl -sS -o /dev/null \
+            -w '%{http_code}' http://127.0.0.1:3000/writers-studio)"
+          test "$code" = 307 -o "$code" = 302
+          code="$(docker exec rf01-aede-app curl -sS -o /dev/null \
+            -w '%{http_code}' http://127.0.0.1:3000/maia/encounter)"
+          test "$code" = 307 -o "$code" = 302
+          echo 'Public entry and protected anonymous refusal passed.'
