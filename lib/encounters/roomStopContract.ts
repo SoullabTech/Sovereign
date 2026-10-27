@@ -3,8 +3,8 @@
  *
  * Requesting Stop immediately closes admission for later work. Completion is
  * true only after every required subsystem acknowledges the same stop
- * generation. Unknown, stale, missing, or failed acknowledgements never become
- * success by UI transition or timeout.
+ * generation. Unknown, stale, missing, malformed, or failed state never becomes
+ * success by UI transition, timeout, or caller mutation.
  */
 
 export const ROOM_STOP_TARGETS = [
@@ -31,12 +31,12 @@ export interface RoomStopRequest {
 }
 
 export interface RoomStopContract extends RoomStopRequest {
-  targets: Record<RoomStopTarget, RoomStopTargetState>;
+  targets: Readonly<Record<RoomStopTarget, RoomStopTargetState>>;
   lateWorkAdmission: 'closed';
 }
 
 export type BeginRoomStopResult =
-  | { ok: true; contract: RoomStopContract }
+  | { ok: true; contract: Readonly<RoomStopContract> }
   | { ok: false; reason: 'invalid_request' };
 
 export interface RoomStopAcknowledgement {
@@ -48,22 +48,35 @@ export interface RoomStopAcknowledgement {
 }
 
 export type AcknowledgeRoomStopResult =
-  | { ok: true; contract: RoomStopContract }
+  | { ok: true; contract: Readonly<RoomStopContract> }
   | {
       ok: false;
-      reason: 'wrong_encounter' | 'wrong_generation' | 'unknown_target' | 'invalid_ack' | 'conflicting_ack';
-      contract: RoomStopContract;
+      reason: 'invalid_contract' | 'wrong_encounter' | 'wrong_generation' | 'unknown_target' | 'invalid_ack' | 'conflicting_ack';
+      contract: Readonly<RoomStopContract>;
     };
 
 export interface RoomStopSummary {
-  status: 'pending' | 'failed' | 'complete';
+  status: 'invalid' | 'pending' | 'failed' | 'complete';
   pending: RoomStopTarget[];
   failed: RoomStopTarget[];
   stopped: RoomStopTarget[];
 }
 
 const TARGETS = new Set<string>(ROOM_STOP_TARGETS);
+const TARGET_STATES = new Set<string>(['pending', 'stopped', 'failed']);
 const REASONS = new Set<string>(['participant_withdrawal', 'room_ended', 'steward_emergency', 'system_failure']);
+const CONTRACT_KEYS = new Set(['encounterId', 'requestedByParticipantId', 'stopGeneration', 'requestedAt', 'reason', 'targets', 'lateWorkAdmission']);
+
+function plainObject(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function exactKeys(value: Record<string, unknown>, keys: ReadonlySet<string>): boolean {
+  const actual = Object.keys(value);
+  return actual.length === keys.size && actual.every((key) => keys.has(key));
+}
 
 function nonEmpty(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
@@ -84,6 +97,23 @@ function initialTargets(): Record<RoomStopTarget, RoomStopTargetState> {
   >;
 }
 
+function freezeContract(contract: RoomStopContract): Readonly<RoomStopContract> {
+  const targets = Object.freeze({ ...contract.targets });
+  return Object.freeze({ ...contract, targets });
+}
+
+export function validateRoomStopContract(value: unknown): value is Readonly<RoomStopContract> {
+  if (!plainObject(value) || !exactKeys(value, CONTRACT_KEYS)) return false;
+  if (!nonEmpty(value.encounterId) || !nonEmpty(value.requestedByParticipantId)
+    || !positiveGeneration(value.stopGeneration) || !validTimestamp(value.requestedAt)
+    || !REASONS.has(String(value.reason)) || value.lateWorkAdmission !== 'closed'
+    || !plainObject(value.targets)) return false;
+  const targetKeys = Object.keys(value.targets);
+  return targetKeys.length === ROOM_STOP_TARGETS.length
+    && targetKeys.every((target) => TARGETS.has(target))
+    && ROOM_STOP_TARGETS.every((target) => TARGET_STATES.has(String(value.targets[target])));
+}
+
 export function beginRoomStop(request: RoomStopRequest): BeginRoomStopResult {
   if (!nonEmpty(request.encounterId)
     || !nonEmpty(request.requestedByParticipantId)
@@ -95,18 +125,19 @@ export function beginRoomStop(request: RoomStopRequest): BeginRoomStopResult {
 
   return {
     ok: true,
-    contract: {
+    contract: freezeContract({
       ...request,
       targets: initialTargets(),
       lateWorkAdmission: 'closed',
-    },
+    }),
   };
 }
 
 export function acknowledgeRoomStop(
-  contract: RoomStopContract,
+  contract: Readonly<RoomStopContract>,
   acknowledgement: RoomStopAcknowledgement,
 ): AcknowledgeRoomStopResult {
+  if (!validateRoomStopContract(contract)) return { ok: false, reason: 'invalid_contract', contract };
   if (acknowledgement.encounterId !== contract.encounterId) {
     return { ok: false, reason: 'wrong_encounter', contract };
   }
@@ -130,17 +161,20 @@ export function acknowledgeRoomStop(
 
   return {
     ok: true,
-    contract: {
+    contract: freezeContract({
       ...contract,
       targets: {
         ...contract.targets,
         [acknowledgement.target]: acknowledgement.state,
       },
-    },
+    }),
   };
 }
 
-export function summarizeRoomStop(contract: RoomStopContract): RoomStopSummary {
+export function summarizeRoomStop(contract: Readonly<RoomStopContract>): RoomStopSummary {
+  if (!validateRoomStopContract(contract)) {
+    return { status: 'invalid', pending: [...ROOM_STOP_TARGETS], failed: [], stopped: [] };
+  }
   const pending = ROOM_STOP_TARGETS.filter((target) => contract.targets[target] === 'pending');
   const failed = ROOM_STOP_TARGETS.filter((target) => contract.targets[target] === 'failed');
   const stopped = ROOM_STOP_TARGETS.filter((target) => contract.targets[target] === 'stopped');
@@ -155,10 +189,11 @@ export function summarizeRoomStop(contract: RoomStopContract): RoomStopSummary {
 
 /** Once a Stop generation exists, late work is refused immediately. */
 export function decideLateRoomWork(
-  contract: RoomStopContract,
+  contract: Readonly<RoomStopContract>,
   encounterId: string,
   stopGeneration: number,
-): { allowed: false; reason: 'wrong_encounter' | 'wrong_generation' | 'stop_requested' } {
+): { allowed: false; reason: 'invalid_contract' | 'wrong_encounter' | 'wrong_generation' | 'stop_requested' } {
+  if (!validateRoomStopContract(contract)) return { allowed: false, reason: 'invalid_contract' };
   if (encounterId !== contract.encounterId) return { allowed: false, reason: 'wrong_encounter' };
   if (stopGeneration !== contract.stopGeneration) return { allowed: false, reason: 'wrong_generation' };
   return { allowed: false, reason: 'stop_requested' };

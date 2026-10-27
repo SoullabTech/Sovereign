@@ -123,3 +123,24 @@ describe('Encounter room Stop contract', () => {
     })).toEqual({ ok: false, reason: 'invalid_request' });
   });
 });
+
+it('returns deeply frozen contracts so callers cannot manufacture acknowledgements by mutation', () => {
+  const stop = contract();
+  expect(Object.isFrozen(stop)).toBe(true);
+  expect(Object.isFrozen(stop.targets)).toBe(true);
+  expect(() => {
+    (stop.targets as Record<RoomStopTarget, string>).local_media = 'stopped';
+  }).toThrow(TypeError);
+  expect(summarizeRoomStop(stop).status).toBe('pending');
+});
+
+it('a malformed or caller-reconstructed contract never summarizes as complete', () => {
+  const malformed = { ...contract(), targets: {}, lateWorkAdmission: 'open' } as unknown as RoomStopContract;
+  expect(summarizeRoomStop(malformed)).toEqual({
+    status: 'invalid',
+    pending: [...ROOM_STOP_TARGETS],
+    failed: [],
+    stopped: [],
+  });
+  expect(decideLateRoomWork(malformed, 'enc-1', 7)).toEqual({ allowed: false, reason: 'invalid_contract' });
+});

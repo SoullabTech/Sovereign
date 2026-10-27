@@ -31,6 +31,7 @@ export interface EncounterConsentScope {
 
 export interface EncounterConsentEvent extends EncounterConsentScope {
   eventId: string;
+  actorParticipantId: string;
   action: EncounterConsentAction;
   createdAt: number;
 }
@@ -42,6 +43,7 @@ export type ConsentDecisionReason =
   | 'revoked'
   | 'invalid_scope'
   | 'invalid_event'
+  | 'wrong_actor'
   | 'ambiguous_latest_event';
 
 export interface EncounterConsentDecision {
@@ -84,19 +86,20 @@ function identifiesScope(event: Partial<EncounterConsentEvent>, scope: Encounter
 function validEvent(event: EncounterConsentEvent): boolean {
   return validScope(event)
     && nonEmpty(event.eventId)
+    && nonEmpty(event.actorParticipantId)
     && ACTIONS.has(event.action)
     && Number.isFinite(event.createdAt)
     && event.createdAt >= 0;
 }
 
 function denied(reason: ConsentDecisionReason, shutdownRequired = false): EncounterConsentDecision {
-  return {
+  return Object.freeze({
     allowed: false,
     reason,
-    shutdown: shutdownRequired
-      ? { required: true, state: 'required_unacknowledged' }
-      : { required: false, state: 'not_required' },
-  };
+    shutdown: Object.freeze(shutdownRequired
+      ? { required: true, state: 'required_unacknowledged' as const }
+      : { required: false, state: 'not_required' as const }),
+  });
 }
 
 /**
@@ -118,6 +121,7 @@ export function decideEncounterConsent(
   for (const event of events) {
     if (!identifiesScope(event, scope)) continue;
     if (!validEvent(event) || seenIds.has(event.eventId)) return denied('invalid_event');
+    if (event.actorParticipantId !== scope.participantId) return denied('wrong_actor');
     seenIds.add(event.eventId);
     exact.push(event);
   }
@@ -130,23 +134,23 @@ export function decideEncounterConsent(
 
   const event = latest[0];
   if (event.action === 'grant') {
-    return {
+    return Object.freeze({
       allowed: true,
-      reason: 'granted',
+      reason: 'granted' as const,
       authoritativeEventId: event.eventId,
-      shutdown: { required: false, state: 'not_required' },
-    };
+      shutdown: Object.freeze({ required: false, state: 'not_required' as const }),
+    });
   }
 
   if (event.action === 'revoke') {
-    return {
+    return Object.freeze({
       ...denied('revoked', true),
       authoritativeEventId: event.eventId,
-    };
+    });
   }
 
-  return {
+  return Object.freeze({
     ...denied('refused'),
     authoritativeEventId: event.eventId,
-  };
+  });
 }

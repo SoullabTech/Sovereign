@@ -21,6 +21,7 @@ function event(
   return {
     ...scope,
     eventId: `event-${action}-${createdAt}`,
+    actorParticipantId: scope.participantId,
     action,
     createdAt,
     ...overrides,
@@ -49,6 +50,13 @@ describe('Encounter consent decision law', () => {
       reason: 'no_decision',
       shutdown: { required: false, state: 'not_required' },
     });
+  });
+
+
+  it('refuses a decision not authored by the scoped participant', () => {
+    expect(decideEncounterConsent([
+      event('grant', 10, { actorParticipantId: 'participant-2' }),
+    ], scope)).toMatchObject({ allowed: false, reason: 'wrong_actor' });
   });
 
   it('a join grant never grants recording, captions, MAIA, memory, or sharing', () => {
