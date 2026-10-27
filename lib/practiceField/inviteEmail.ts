@@ -8,9 +8,11 @@
  */
 
 import { sendEmail } from '@/lib/email/sendEmail';
+import type { AdmissionRequest } from '@/lib/email/admission';
 
 export interface RelationshipInviteEmailParams {
   clientEmail: string;
+  admission: Omit<AdmissionRequest, 'purpose'>;
   clientName?: string;
   practitionerName: string;
   welcomeMessage?: string | null;
@@ -84,6 +86,7 @@ export async function sendRelationshipInviteEmail(
   try {
     const result = await sendEmail({
       purpose: 'invite:practice-field',
+      admission: params.admission,
       from: 'Soullab <noreply@soullab.life>',
       to: params.clientEmail,
       subject: `${params.practitionerName} has invited you into a shared space`,

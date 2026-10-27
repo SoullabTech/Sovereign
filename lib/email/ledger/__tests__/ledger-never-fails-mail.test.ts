@@ -8,12 +8,12 @@
  */
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 
-const mockSend = jest.fn<(...args: unknown[]) => Promise<unknown>>();
-jest.mock('resend', () => ({
-  Resend: jest.fn().mockImplementation(() => ({
-    emails: { send: (...args: unknown[]) => mockSend(...args) },
-  })),
-}));
+const mockSend = jest.fn<(...args: unknown[]) => Promise<any>>();
+const provider = {
+  name: 'smtp-test',
+  isConfigured: () => true,
+  send: (...args: unknown[]) => mockSend(...args),
+};
 
 // The database is down for the whole of this suite.
 const mockQuery = jest.fn<(...args: unknown[]) => Promise<unknown>>();
@@ -29,7 +29,7 @@ beforeEach(() => {
   mockSend.mockReset();
   mockQuery.mockReset();
   mockQuery.mockRejectedValue(new Error('ECONNREFUSED: the ledger is down'));
-  process.env = { ...ENV, RESEND_API_KEY: 'test-key', EMAIL_LEDGER_FINGERPRINT_KEY: 'a'.repeat(64) };
+  process.env = { ...ENV, EMAIL_LEDGER_FINGERPRINT_KEY: 'a'.repeat(64) };
   resetLedgerWriteFailures();
   jest.spyOn(console, 'error').mockImplementation(() => {});
   jest.spyOn(console, 'log').mockImplementation(() => {});
@@ -40,11 +40,11 @@ afterEach(() => {
 });
 
 const authSend = () =>
-  sendEmail({ purpose: 'auth:email-code', to: 'member@example.com', subject: 's', text: 't' });
+  sendEmail({ purpose: 'auth:email-code', to: 'member@example.com', subject: 's', text: 't', provider: provider as any });
 
 describe('a ledger outage cannot fail a send', () => {
   it('A P0 AUTH SEND STILL SUCCEEDS with every ledger write throwing', async () => {
-    mockSend.mockResolvedValue({ data: { id: 'msg_1' }, error: null });
+    mockSend.mockResolvedValue({ accepted: true, providerMessageId: 'msg_1' });
 
     const result = await authSend();
 
@@ -56,10 +56,7 @@ describe('a ledger outage cannot fail a send', () => {
   });
 
   it('a provider refusal is still reported truthfully during a ledger outage', async () => {
-    mockSend.mockResolvedValue({
-      data: null,
-      error: { name: 'monthly_quota_exceeded', message: 'limit reached' },
-    });
+    mockSend.mockResolvedValue({ accepted: false, rawError: { name: 'monthly_quota_exceeded', message: 'limit reached' } });
 
     const result = await authSend();
 
@@ -71,7 +68,7 @@ describe('a ledger outage cannot fail a send', () => {
   });
 
   it('the dropped writes are COUNTED, so the loss is never silent', async () => {
-    mockSend.mockResolvedValue({ data: { id: 'msg_1' }, error: null });
+    mockSend.mockResolvedValue({ accepted: true, providerMessageId: 'msg_1' });
     await authSend();
     // Only the open write is attempted: with no row id, settle has nothing to
     // update and does not pretend otherwise.
@@ -84,7 +81,7 @@ describe('a ledger outage cannot fail a send', () => {
     mockQuery
       .mockResolvedValueOnce({ rows: [{ id: 'row-1' }] })
       .mockRejectedValue(new Error('ECONNREFUSED'));
-    mockSend.mockResolvedValue({ data: { id: 'msg_2' }, error: null });
+    mockSend.mockResolvedValue({ accepted: true, providerMessageId: 'msg_2' });
 
     const result = await authSend();
 
@@ -94,7 +91,7 @@ describe('a ledger outage cannot fail a send', () => {
 
   it('CONTROL: with a healthy ledger, nothing is counted as lost', async () => {
     mockQuery.mockResolvedValue({ rows: [{ id: 'row-1' }] });
-    mockSend.mockResolvedValue({ data: { id: 'msg_3' }, error: null });
+    mockSend.mockResolvedValue({ accepted: true, providerMessageId: 'msg_3' });
 
     const result = await authSend();
 
@@ -105,7 +102,7 @@ describe('a ledger outage cannot fail a send', () => {
   it('the ledger is opened BEFORE the provider is called', async () => {
     const order: string[] = [];
     mockQuery.mockImplementation(async () => { order.push('ledger'); return { rows: [{ id: 'r' }] }; });
-    mockSend.mockImplementation(async () => { order.push('provider'); return { data: { id: 'm' }, error: null }; });
+    mockSend.mockImplementation(async () => { order.push('provider'); return { accepted: true, providerMessageId: 'm' }; });
 
     await authSend();
 

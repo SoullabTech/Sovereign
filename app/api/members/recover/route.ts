@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
     // Send recovery email
     const delivery = await sendEmail({
       purpose: 'auth:passkey-recovery',
+      admission: { authority: { kind: 'anonymous' }, destination: 'member-record' },
       from: SENDERS.noreply,
         to: email,
         subject: 'Your Soullab Passkey',

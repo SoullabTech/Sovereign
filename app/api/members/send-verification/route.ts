@@ -145,6 +145,7 @@ export async function POST(request: NextRequest) {
     // Send verification email
     const delivery = await sendEmail({
       purpose: 'auth:verification',
+      admission: { authority: { kind: 'anonymous' }, destination: 'member-record' },
       from: 'Kelly Nezat <kelly@soullab.life>',
       to: targetEmail,
       subject: 'Verify your Soullab email',

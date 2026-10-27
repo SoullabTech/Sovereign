@@ -6,6 +6,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { sendEmail } from '@/lib/email/sendEmail';
 import {
   getProvider,
   getDefaultProviderForChannel,
@@ -291,13 +292,69 @@ export class DeliveryService {
    * Deliver a single queued message
    */
   async deliverMessage(item: DeliveryQueueItem): Promise<DeliveryResult> {
+    const settingsResult = await query<{
+      default_email: string | null;
+      default_phone: string | null;
+      email_from_name: string | null;
+    }>(
+      `SELECT default_email, default_phone, email_from_name
+       FROM practitioner_comms_settings
+       WHERE practitioner_id = $1`,
+      [item.practitionerId]
+    );
+    const settings = settingsResult.rows[0];
+
+    if (item.channelType === 'email') {
+      const fromEmail = settings?.default_email || 'noreply@soullab.life';
+      const fromName = settings?.email_from_name || 'Soullab';
+      const result = await sendEmail({
+        purpose: 'comms:queued-email',
+        admission: { authority: { kind: 'system', trigger: 'comms-queue' }, destination: 'stored-record' },
+        triggerType: 'worker',
+        triggerRef: 'lib/comms/DeliveryService.ts',
+        from: `${fromName} <${fromEmail}>`,
+        to: item.recipientName
+          ? `${item.recipientName} <${item.recipientAddress}>`
+          : item.recipientAddress,
+        subject: item.subject || '',
+        html: item.bodyHtml || undefined,
+        text: item.bodyText,
+        correlationId: item.messageId,
+        metadata: { queue_id: item.id },
+      });
+
+      const delivery: DeliveryResult = result.success
+        ? { success: true, status: 'sent', externalId: result.id }
+        : {
+            success: false,
+            status: 'failed',
+            errorCode: result.failureKind || 'SMTP_ERROR',
+            errorMessage: result.error || 'SMTP send failed',
+          };
+
+      if (delivery.success) {
+        await this.markDeliverySent(item.id, delivery.externalId || null);
+      } else if (item.retryCount < item.maxRetries && result.retryable) {
+        await this.markDeliveryForRetry(
+          item.id,
+          delivery.errorCode || 'SMTP_ERROR',
+          delivery.errorMessage || 'SMTP send failed'
+        );
+      } else {
+        await this.markDeliveryFailed(
+          item.id,
+          delivery.errorCode || 'SMTP_ERROR',
+          delivery.errorMessage || 'SMTP send failed'
+        );
+      }
+      return delivery;
+    }
+
     const credentials = await this.getCredentials(
       item.practitionerId,
       item.provider as ProviderType
     );
-
     if (!credentials) {
-      // No credentials configured
       await this.markDeliveryFailed(
         item.id,
         'NO_CREDENTIALS',
@@ -312,71 +369,40 @@ export class DeliveryService {
     }
 
     const provider = getProvider(item.provider as ProviderType);
-
     const payload: DeliveryPayload = {
       to: item.recipientAddress,
       toName: item.recipientName || undefined,
-      subject: item.subject || undefined,
-      bodyHtml: item.bodyHtml || undefined,
       bodyText: item.bodyText,
       messageId: item.messageId,
       practitionerId: item.practitionerId,
-      tags: {
-        message_id: item.messageId,
-        queue_id: item.id,
-      },
+      tags: { message_id: item.messageId, queue_id: item.id },
     };
-
-    // Get sender info from comms settings
-    const settingsResult = await query<{
-      default_email: string | null;
-      default_phone: string | null;
-      email_from_name: string | null;
-    }>(
-      `SELECT default_email, default_phone, email_from_name
-       FROM practitioner_comms_settings
-       WHERE practitioner_id = $1`,
-      [item.practitionerId]
-    );
-
-    if (settingsResult.rows.length > 0) {
-      const settings = settingsResult.rows[0];
-      if (item.channelType === 'email' && settings.default_email) {
-        payload.from = settings.default_email;
-        payload.fromName = settings.email_from_name || undefined;
-      }
-    }
+    if (settings?.default_phone) payload.from = settings.default_phone;
 
     try {
       const result = await provider.send(payload, credentials);
-
       if (result.success) {
         await this.markDeliverySent(item.id, result.externalId || null);
+      } else if (item.retryCount < item.maxRetries) {
+        await this.markDeliveryForRetry(
+          item.id,
+          result.errorCode || 'UNKNOWN',
+          result.errorMessage || 'Unknown error'
+        );
       } else {
-        // Check if we should retry
-        if (item.retryCount < item.maxRetries) {
-          await this.markDeliveryForRetry(
-            item.id,
-            result.errorCode || 'UNKNOWN',
-            result.errorMessage || 'Unknown error'
-          );
-        } else {
-          await this.markDeliveryFailed(
-            item.id,
-            result.errorCode || 'UNKNOWN',
-            result.errorMessage || 'Unknown error'
-          );
-        }
+        await this.markDeliveryFailed(
+          item.id,
+          result.errorCode || 'UNKNOWN',
+          result.errorMessage || 'Unknown error'
+        );
       }
 
-      // Update credential last_used_at
       await query(
         `UPDATE practitioner_comms_credentials
          SET last_used_at = NOW()
          WHERE practitioner_id = $1 AND provider = $2`,
         [item.practitionerId, item.provider]
       );
-
       return result;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';

@@ -15,6 +15,8 @@ human_activity: adjusting how MAIA behaves for me, and seeing plainly what is an
 surfaces:
   - components/account/AccountSettings.tsx
   - app/account/settings/page.tsx
+  - app/stellium/settings/page.tsx
+  - app/studio/settings/page.tsx
 
 change_class: structural
 
@@ -71,8 +73,16 @@ structural_rationale: >
   both, env inset 53px in both. No gesture, content, section, or ordering
   changes; the member-visible delta is the ABSENCE of a defect.
 
-  Neither repair constitutes an experiential walk of Settings, and this contract
-  does not approve the room's current composition. A walk remains owed.
+  (3) Managed-mail truthfulness. Two practitioner/studio settings surfaces
+  previously named and configured a retired third-party email vendor. The mail
+  migration removes that vendor capability and makes managed SMTP the sole
+  production email path. The settings change is therefore structural: remove the
+  obsolete vendor-credential affordance and name the existing platform-managed
+  email capability truthfully. No new communication permission, member action,
+  consent path, or messaging capability is introduced.
+
+  None of these repairs constitutes an experiential walk of Settings, and this
+  contract does not approve the room's current composition. A walk remains owed.
 ---
 
 # Settings — Experience Contract (narrow)

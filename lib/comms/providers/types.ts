@@ -4,7 +4,7 @@
  * Common types for email/SMS delivery providers
  */
 
-export type ProviderType = 'resend' | 'twilio' | 'sendgrid' | 'postmark';
+export type ProviderType = 'smtp' | 'twilio';
 
 export type DeliveryChannel = 'email' | 'sms';
 

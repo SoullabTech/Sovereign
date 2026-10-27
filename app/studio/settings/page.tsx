@@ -1561,7 +1561,7 @@ function SettingsContent() {
               <h3 className="text-sm font-medium text-slate-300 mb-4">Messaging Channels</h3>
             </div>
 
-            {/* Email (Resend) */}
+            {/* Email — managed by Soullab SMTP */}
             <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
@@ -1569,7 +1569,7 @@ function SettingsContent() {
                     <Mail className="w-5 h-5 text-blue-400" />
                   </div>
                   <div>
-                    <div className="text-white font-medium">Email (Resend)</div>
+                    <div className="text-white font-medium">Email (Soullab)</div>
                     <div className="flex items-center gap-2 text-sm text-teal-400">
                       <CheckCircle2 className="w-3 h-3" />
                       Configured

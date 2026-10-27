@@ -79,8 +79,10 @@ function runTsc(extraArgs) {
 
 /** Paths in the compilation program, repo-relative, excluding node_modules. */
 function collectProgramPaths() {
-  // --listFilesOnly skips type checking entirely, so this is cheap.
-  const out = runTsc(['--listFilesOnly']);
+  // TypeScript's incremental cache may return NO file names for a previously
+  // checked project even though its compilation coverage has not changed.
+  // Disable incremental mode for this enumeration, not for diagnostics.
+  const out = runTsc(['--listFilesOnly', '--incremental', 'false']);
   const paths = new Set();
   for (const raw of out.split('\n')) {
     const line = raw.trim();
@@ -89,6 +91,10 @@ function collectProgramPaths() {
     const rel = path.relative(REPO_ROOT, line);
     if (rel.startsWith('..')) continue;
     paths.add(toPosix(rel));
+  }
+  if (paths.size === 0) {
+    throw new Error('TypeScript file enumeration returned zero paths; refusing a false coverage verdict. ' +
+      'Check compiler output and cache instead of weakening the baseline.');
   }
   return paths;
 }

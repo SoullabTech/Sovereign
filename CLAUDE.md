@@ -35,6 +35,8 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 
 ## Known recurring traps (read before debugging)
 
+- **2026-10-15 founder correction — email:** Soullab retired Resend. The existing Proton SMTP token is provisioned on the host; do NOT request or rotate an API key. The live October 2 `maia-sovereign` image still routes through legacy Resend and needs a separately qualified release. Before mail work, read `docs/ops/EMAIL_PROVIDER_FOUNDER_CORRECTION_2026-10-15.md` and `docs/ops/SOULLAB_MAIL_PROTON_CUTOVER_20261012.md`. No production deployment is authorized by these notes.
+
 - **Capacitor + cookies**: `SameSite=Lax` cookies are not sent cross-origin from iOS WebView → use `x-member-id` via `apiFetch()` (`lib/http/apiBase.ts`).
 - **Static export limits**: some Next.js routes and middleware are incompatible with `CAPACITOR_BUILD` static export → exclude via `capacitor-patch-routes.sh`.
 - **"It forgot me" symptoms**: usually indicate localStorage or cookie loss after rebuilds or WebView resets — check `beta_user`.

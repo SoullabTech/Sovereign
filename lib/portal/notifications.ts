@@ -52,12 +52,35 @@ export async function sendBookingConfirmation(
   booking: BookingDetails,
   practitioner: PractitionerInfo
 ): Promise<{ success: boolean; id?: string; error?: string }> {
+  // MAIL-04 / F1-PUBLIC-PORTAL HOLD:
+  // Public booking and conversational booking accept arbitrary client email
+  // values without verifying mailbox control. Copying such a value into a DB
+  // row does NOT make it a trusted 'stored-record' destination. Sending the
+  // booking link would turn a public input into an unsolicited email relay.
+  // Until a reviewed recipient-verification flow is available, no automatic
+  // email to a client can leave this helper. Practitioner notifications still
+  // use their independently established address from the practitioner record.
+  void booking;
+  void practitioner;
+  return { success: false, error: 'recipient_email_ownership_unverified' };
+
+  // DO NOT reinstate the legacy delivery body without recipient-specific
+  // verification and a new independent acceptance decision.
+}
+
+// Legacy unreachable body intentionally moved to a separate, non-exported
+// helper for review and template-preservation during this isolated rollout.
+async function legacyBookingConfirmationNotAuthorized(
+  booking: BookingDetails,
+  practitioner: PractitionerInfo
+): Promise<{ success: boolean; id?: string; error?: string }> {
   const formattedDate = formatDateTime(booking.dateTime, booking.timezone);
   const practitionerDisplay = practitioner.businessName || practitioner.name;
 
   try {
     const result = await sendEmail({
       purpose: 'portal:booking-confirmation',
+      admission: { authority: { kind: 'system', trigger: 'portal-transaction' }, destination: 'stored-record' },
       from: `${practitionerDisplay} <bookings@soullab.life>`,
       replyTo: practitioner.email,
       to: booking.clientEmail,
@@ -71,7 +94,7 @@ export async function sendBookingConfirmation(
 
     });
 
-    console.log(`[Portal Notifications] Booking confirmation sent to ${booking.clientEmail}`);
+    console.log('[Portal Notifications] Booking confirmation SMTP acceptance checked');
     if (!result.success) {
       // The provider REFUSES by resolving, so the try/catch around this call
       // never saw a refusal: every portal notification reported success.
@@ -228,6 +251,7 @@ export async function sendBookingNotificationToPractitioner(
   try {
     const result = await sendEmail({
       purpose: 'portal:booking-notification',
+      admission: { authority: { kind: 'system', trigger: 'portal-transaction' }, destination: 'stored-record' },
       from: 'Soullab Bookings <bookings@soullab.life>',
       replyTo: 'support@soullab.life',
       to: practitioner.email,
@@ -329,12 +353,25 @@ export async function sendCancellationNotification(
   practitioner: PractitionerInfo,
   reason?: string
 ): Promise<{ success: boolean; id?: string; error?: string }> {
+  // MAIL-04 recipient-origin restriction: cancellation/rescheduling mail must
+  // not be sent to an email merely copied from an anonymous booking request.
+  // The portal currently lacks independent client mailbox verification.
+  // Hold the external client channel until verification is implemented.
+  return { success: false, error: 'recipient_email_ownership_unverified' };
+}
+
+async function legacyCancellationNotificationHeld(
+  booking: BookingDetails,
+  practitioner: PractitionerInfo,
+  reason?: string
+): Promise<{ success: boolean; id?: string; error?: string }> {
   const formattedDate = formatDateTime(booking.dateTime, booking.timezone);
   const practitionerDisplay = practitioner.businessName || practitioner.name;
 
   try {
     const result = await sendEmail({
       purpose: 'portal:booking-cancellation',
+      admission: { authority: { kind: 'system', trigger: 'portal-transaction' }, destination: 'stored-record' },
       from: `${practitionerDisplay} <bookings@soullab.life>`,
       replyTo: practitioner.email,
       to: booking.clientEmail,
@@ -375,6 +412,7 @@ export async function sendCancellationNotificationToPractitioner(
   try {
     const result = await sendEmail({
       purpose: 'portal:booking-cancellation-practitioner',
+      admission: { authority: { kind: 'system', trigger: 'portal-transaction' }, destination: 'stored-record' },
       from: 'Soullab Bookings <bookings@soullab.life>',
       replyTo: 'support@soullab.life',
       to: practitioner.email,
@@ -499,6 +537,19 @@ export async function sendRescheduleNotification(
   oldDateTime: Date,
   newDateTime: Date
 ): Promise<{ success: boolean; id?: string; error?: string }> {
+  // MAIL-04 recipient-origin restriction: cancellation/rescheduling mail must
+  // not be sent to an email merely copied from an anonymous booking request.
+  // The portal currently lacks independent client mailbox verification.
+  // Hold the external client channel until verification is implemented.
+  return { success: false, error: 'recipient_email_ownership_unverified' };
+}
+
+async function legacyRescheduleNotificationHeld(
+  booking: BookingDetails,
+  practitioner: PractitionerInfo,
+  oldDateTime: Date,
+  newDateTime: Date
+): Promise<{ success: boolean; id?: string; error?: string }> {
   const oldFormatted = formatDateTime(oldDateTime, booking.timezone);
   const newFormatted = formatDateTime(newDateTime, booking.timezone);
   const practitionerDisplay = practitioner.businessName || practitioner.name;
@@ -506,6 +557,7 @@ export async function sendRescheduleNotification(
   try {
     const result = await sendEmail({
       purpose: 'portal:booking-reschedule',
+      admission: { authority: { kind: 'system', trigger: 'portal-transaction' }, destination: 'stored-record' },
       from: `${practitionerDisplay} <bookings@soullab.life>`,
       replyTo: practitioner.email,
       to: booking.clientEmail,
@@ -548,6 +600,7 @@ export async function sendRescheduleNotificationToPractitioner(
   try {
     const result = await sendEmail({
       purpose: 'portal:booking-reschedule-practitioner',
+      admission: { authority: { kind: 'system', trigger: 'portal-transaction' }, destination: 'stored-record' },
       from: 'Soullab Bookings <bookings@soullab.life>',
       replyTo: 'support@soullab.life',
       to: practitioner.email,
@@ -685,6 +738,7 @@ export async function sendInquiryNotification(
   try {
     const result = await sendEmail({
       purpose: 'portal:inquiry-notification',
+      admission: { authority: { kind: 'system', trigger: 'portal-transaction' }, destination: 'stored-record' },
       from: 'Soullab Portal <portal@soullab.life>',
       to: practitioner.email,
       replyTo: inquiry.email || undefined,
@@ -796,11 +850,24 @@ export async function sendPortalClaimEmail(
   invite: ClaimInviteDetails,
   practitioner: PractitionerInfo
 ): Promise<{ success: boolean; id?: string; error?: string }> {
+  // MAIL-04: the previously issued claim URL may carry access authority.
+  // Do not transmit it to a potentially attacker-supplied booking address
+  // without a separately reviewed recipient ownership/identity-claim flow.
+  void invite;
+  void practitioner;
+  return { success: false, error: 'recipient_email_ownership_unverified' };
+}
+
+async function legacyPortalClaimNotAuthorized(
+  invite: ClaimInviteDetails,
+  practitioner: PractitionerInfo
+): Promise<{ success: boolean; id?: string; error?: string }> {
   const practitionerDisplay = practitioner.businessName || practitioner.name;
 
   try {
     const result = await sendEmail({
       purpose: 'portal:portal-claim-invite',
+      admission: { authority: { kind: 'system', trigger: 'portal-transaction' }, destination: 'stored-record' },
       from: `${practitionerDisplay} <bookings@soullab.life>`,
       replyTo: practitioner.email,
       to: invite.clientEmail,

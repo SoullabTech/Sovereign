@@ -1,49 +1,35 @@
 /**
  * COMMS PROVIDERS INDEX
  *
- * Export all provider implementations
+ * Credential-backed provider registry. Email is managed by Soullab's sovereign
+ * SMTP transport and therefore is not a practitioner credential provider here.
  */
 
 export * from './types';
-export { ResendProvider } from './ResendProvider';
 export { TwilioProvider } from './TwilioProvider';
 
 import type { CommsProvider, ProviderType, DeliveryChannel } from './types';
-import { ResendProvider } from './ResendProvider';
 import { TwilioProvider } from './TwilioProvider';
 
-/**
- * Provider registry for dynamic instantiation
- */
-const providerRegistry: Record<ProviderType, new () => CommsProvider> = {
-  resend: ResendProvider,
+const providerRegistry: Partial<Record<ProviderType, new () => CommsProvider>> = {
   twilio: TwilioProvider,
-  // Future providers can be added here
-  sendgrid: ResendProvider, // Placeholder - would have SendGridProvider
-  postmark: ResendProvider, // Placeholder - would have PostmarkProvider
 };
 
-/**
- * Get a provider instance by type
- */
 export function getProvider(providerType: ProviderType): CommsProvider {
   const ProviderClass = providerRegistry[providerType];
   if (!ProviderClass) {
-    throw new Error(`Unknown provider: ${providerType}`);
+    throw new Error(
+      `Provider ${providerType} is managed outside the credential registry`
+    );
   }
   return new ProviderClass();
 }
 
-/**
- * Get the default provider for a channel
- */
 export function getDefaultProviderForChannel(channel: DeliveryChannel): ProviderType {
   switch (channel) {
     case 'email':
-      return 'resend';
+      return 'smtp';
     case 'sms':
       return 'twilio';
-    default:
-      throw new Error(`No default provider for channel: ${channel}`);
   }
 }

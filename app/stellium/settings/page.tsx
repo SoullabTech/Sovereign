@@ -888,12 +888,11 @@ function CommsTab() {
   const [settings, setSettings] = useState<CommsSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showAddProvider, setShowAddProvider] = useState<'resend' | 'twilio' | null>(null);
+  const [showAddProvider, setShowAddProvider] = useState<'twilio' | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   // Credential form state
-  const [apiKey, setApiKey] = useState('');
   const [accountSid, setAccountSid] = useState('');
   const [authToken, setAuthToken] = useState('');
   const [fromNumber, setFromNumber] = useState('');
@@ -943,14 +942,12 @@ function CommsTab() {
     }
   }
 
-  async function addProvider(provider: 'resend' | 'twilio') {
+  async function addProvider(provider: 'twilio') {
     setSaving(true);
     setError(null);
 
     try {
-      const credentials = provider === 'resend'
-        ? { api_key: apiKey }
-        : { account_sid: accountSid, auth_token: authToken, from_number: fromNumber };
+      const credentials = { account_sid: accountSid, auth_token: authToken, from_number: fromNumber };
 
       const res = await fetch('/api/stellium/comms/credentials', {
         method: 'POST',
@@ -965,7 +962,6 @@ function CommsTab() {
       // Refresh providers list
       await fetchData();
       setShowAddProvider(null);
-      setApiKey('');
       setAccountSid('');
       setAuthToken('');
       setFromNumber('');
@@ -1015,7 +1011,6 @@ function CommsTab() {
     }
   }
 
-  const hasEmailProvider = providers.some(p => p.channel === 'email');
   const hasSmsProvider = providers.some(p => p.channel === 'sms');
 
   if (loading) {
@@ -1088,18 +1083,18 @@ function CommsTab() {
             </div>
           )}
 
+          <div className="rounded-lg border border-gray-700/60 bg-gray-800/20 p-4">
+            <div className="flex items-center gap-3">
+              <Mail className="w-5 h-5 text-blue-400" />
+              <div>
+                <p className="text-gray-200 font-medium">Email is managed by Soullab</p>
+                <p className="text-gray-500 text-xs">Secure SMTP delivery is provided by the platform. No external email-provider key is needed here.</p>
+              </div>
+            </div>
+          </div>
+
           {/* Add Provider Buttons */}
           <div className="flex flex-wrap gap-3 pt-2">
-            {!hasEmailProvider && (
-              <button
-                onClick={() => setShowAddProvider('resend')}
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                <Mail className="w-4 h-4" />
-                <span>Add Resend (Email)</span>
-              </button>
-            )}
             {!hasSmsProvider && (
               <button
                 onClick={() => setShowAddProvider('twilio')}
@@ -1111,45 +1106,6 @@ function CommsTab() {
               </button>
             )}
           </div>
-
-          {/* Add Resend Form */}
-          {showAddProvider === 'resend' && (
-            <div className="p-4 bg-gray-800/50 rounded-lg space-y-4 border border-gray-700">
-              <h4 className="text-gray-200 font-medium">Connect Resend</h4>
-              <p className="text-gray-500 text-sm">
-                Get your API key from{' '}
-                <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-sacred-gold hover:underline">
-                  resend.com/api-keys
-                </a>
-              </p>
-              <div className="space-y-2">
-                <label className="text-sm text-gray-400">API Key</label>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="re_..."
-                  className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-sacred-gold/50 focus:outline-none"
-                />
-              </div>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => addProvider('resend')}
-                  disabled={!apiKey || saving}
-                  className="flex items-center space-x-2 px-4 py-2 bg-sacred-gold/20 hover:bg-sacred-gold/30 text-sacred-gold rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  <span>Connect</span>
-                </button>
-                <button
-                  onClick={() => { setShowAddProvider(null); setApiKey(''); }}
-                  className="px-4 py-2 text-gray-400 hover:text-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Add Twilio Form */}
           {showAddProvider === 'twilio' && (

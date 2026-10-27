@@ -318,6 +318,7 @@ async function sendPasskeyReminders() {
 
       const result = await sendEmail({
         purpose: 'auth:passkey-recovery',
+        admission: { authority: { kind: 'system', trigger: 'recovery-reminder' }, destination: 'member-record' },
         from: 'Kelly @ Soullab <kelly@soullab.life>',
         to: recipient,
         subject,
