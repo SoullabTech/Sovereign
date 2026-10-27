@@ -18,16 +18,25 @@ jest.mock('@/lib/manuscript/render/renderMemberBook', () => ({
   renderMemberBook: jest.fn(),
   inspectBookProduction: jest.fn(() => []),
 }));
+jest.mock('@/lib/manuscript/render/memberBookExportRelease', () => ({
+  isMemberBookExportReleased: jest.fn(),
+}));
 
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { inspectBookProduction, renderMemberBook } from '@/lib/manuscript/render/renderMemberBook';
+import { isMemberBookExportReleased } from '@/lib/manuscript/render/memberBookExportRelease';
 import { GET, POST } from '../route';
 
 const mockAuth = getMemberIdFromRequest as jest.Mock;
 const mockQuery = query as jest.Mock;
 const mockRender = renderMemberBook as jest.Mock;
 const mockInspect = inspectBookProduction as jest.Mock;
+const mockExportReleased = isMemberBookExportReleased as jest.Mock;
+const actualExportRelease = (
+  jest.requireActual('@/lib/manuscript/render/memberBookExportRelease') as
+    typeof import('@/lib/manuscript/render/memberBookExportRelease')
+).isMemberBookExportReleased;
 
 const MEMBER = '11111111-1111-1111-1111-111111111111';
 
@@ -46,6 +55,7 @@ beforeEach(() => {
   // Reset one-shot SQL responses so its fixture never leaks into another test.
   mockQuery.mockReset();
   mockInspect.mockReturnValue([]);
+  mockExportReleased.mockReturnValue(true);
 });
 
 
@@ -116,6 +126,106 @@ describe('GET /api/sovereign/manuscripts/[id]/render — production preflight', 
 });
 
 describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () => {
+  it('holds an owned current export before source prose, renderer, provenance, or bytes', async () => {
+    mockExportReleased.mockImplementation(actualExportRelease);
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: 'm1' }], rowCount: 1 })
+      .mockResolvedValueOnce({
+        rows: [{ version: '9', section_addressable_at: new Date() }],
+        rowCount: 1,
+      });
+
+    const res = await POST(req({
+      format: 'pdf',
+      expectedSourceAuthority: 'working_draft',
+      expectedSourceRevision: '9',
+    }), ctx);
+
+    expect(res.status).toBe(423);
+    expect(res.headers.get('cache-control')).toBe('private, no-store');
+    await expect(res.json()).resolves.toEqual({
+      error: 'PDF and EPUB delivery is not yet available.',
+      code: 'MEMBER_BOOK_EXPORT_HELD',
+    });
+    expect(mockRender).not.toHaveBeenCalled();
+    expect(mockInspect).not.toHaveBeenCalled();
+    expect(mockQuery).toHaveBeenCalledTimes(2);
+    const sql = mockQuery.mock.calls.map(([statement]) => String(statement)).join('\n');
+    expect(sql).toContain('SELECT id FROM member_manuscripts');
+    expect(sql).toContain('SELECT version, section_addressable_at');
+    expect(sql).not.toContain('manuscript_draft_sections');
+    expect(sql).not.toContain('manuscript_sections');
+    expect(sql).not.toContain('SELECT name FROM members');
+    expect(sql).not.toContain('INSERT INTO manuscript_renders');
+  });
+
+  it('holds a legacy owned request with no revision claim before source prose', async () => {
+    mockExportReleased.mockImplementation(actualExportRelease);
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: 'm1' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 });
+
+    const res = await POST(req({ format: 'epub' }), ctx);
+
+    expect(res.status).toBe(423);
+    await expect(res.json()).resolves.toMatchObject({ code: 'MEMBER_BOOK_EXPORT_HELD' });
+    expect(mockQuery).toHaveBeenCalledTimes(2);
+    expect(mockRender).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when the held export authority cannot verify ownership', async () => {
+    mockExportReleased.mockImplementation(actualExportRelease);
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery.mockRejectedValueOnce(new Error('database unavailable'));
+
+    const res = await POST(req({ format: 'pdf' }), ctx);
+
+    expect(res.status).toBe(500);
+    expect(res.headers.get('cache-control')).toBe('private, no-store');
+    await expect(res.json()).resolves.toEqual({
+      error: 'Could not verify this manuscript just now.',
+    });
+    expect(mockRender).not.toHaveBeenCalled();
+  });
+
+  it('preserves foreign-Work 404 while member delivery is held', async () => {
+    mockExportReleased.mockImplementation(actualExportRelease);
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery.mockResolvedValueOnce({ rows: [], rowCount: 0 });
+
+    const res = await POST(req({ format: 'epub' }), ctx);
+
+    expect(res.status).toBe(404);
+    expect(res.headers.get('cache-control')).toBe('private, no-store');
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+    expect(mockRender).not.toHaveBeenCalled();
+  });
+
+  it('preserves stale preflight 409 before returning the export hold', async () => {
+    mockExportReleased.mockImplementation(actualExportRelease);
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: 'm1' }], rowCount: 1 })
+      .mockResolvedValueOnce({
+        rows: [{ version: '10', section_addressable_at: new Date() }],
+        rowCount: 1,
+      });
+
+    const res = await POST(req({
+      format: 'pdf',
+      expectedSourceAuthority: 'working_draft',
+      expectedSourceRevision: '9',
+    }), ctx);
+
+    expect(res.status).toBe(409);
+    expect(res.headers.get('cache-control')).toBe('private, no-store');
+    await expect(res.json()).resolves.toMatchObject({ error: expect.stringContaining('changed') });
+    expect(mockRender).not.toHaveBeenCalled();
+    expect(mockQuery).toHaveBeenCalledTimes(2);
+  });
+
   it('401 when there is no verified member', async () => {
     mockAuth.mockResolvedValue(null);
     const res = await POST(req({ format: 'pdf' }), ctx);
