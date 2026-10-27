@@ -17,6 +17,7 @@
  *   docker exec maia-sovereign sh -c 'npx tsx scripts/spotcheck-embeddings.ts'
  */
 import { Pool } from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 import { writeFileSync } from 'fs';
 
 const OLLAMA = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
@@ -64,7 +65,7 @@ function topK(cueVec: number[], vecs: number[][], skip: number): number[] {
 }
 
 async function main() {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const pool = new Pool({ connectionString: requireDatabaseUrl(process.env.DATABASE_URL) });
   const { rows } = await pool.query(
     `SELECT id, coalesce(experience_title,'') AS title, coalesce(experience_description,'') AS descr, semantic_vector
        FROM episodic_memories WHERE semantic_vector IS NOT NULL ORDER BY id`);

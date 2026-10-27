@@ -17,8 +17,8 @@ import {
 import { stripClientIdentityAssertions } from './lib/auth/identityAssertions';
 import { deriveVerifiedAccess, type VerifiedAccess } from './lib/auth/verifiedAccess';
 import { canonicalStudioRoute } from './lib/writersStudio/canonicalStudioRoute';
-// NOTE: entitlements are still checked in route handlers, not here — they are a
-// commercial concern with their own surface, not part of the trust boundary.
+import { writerStudioAdmissionForMember } from './lib/writersStudio/admissionServer';
+import { isWriterStudioRestrictedPath } from './lib/writersStudio/restrictedCorridor';
 
 // =============================================================================
 // AUTH EXTRACTION — SERVER-DERIVED, AUTHORITATIVE
@@ -597,6 +597,72 @@ export async function proxy(req: NextRequest) {
   }
 
   // ---------------------------------------------------------------------
+  // WRITER'S STUDIO INVITATION AUTHORITY
+  // ---------------------------------------------------------------------
+  // The access matrix above establishes ordinary authentication. Writer's
+  // Studio is narrower during the founder-approved beta: one existing private
+  // roster grants complimentary Pro. Query flags, member tier, and browser
+  // state cannot open this corridor.
+  if (isWriterStudioRestrictedPath(pathname)) {
+    if (!verified.memberId) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { error: 'Unauthorized', message: 'Authentication required.', rid },
+          { status: 401, headers: { 'Cache-Control': 'private, no-store' } },
+        );
+      }
+      const signIn = req.nextUrl.clone();
+      signIn.pathname = '/signin';
+      signIn.search = '';
+      signIn.searchParams.set('next', pathname + (req.nextUrl.search || ''));
+      signIn.searchParams.set('reason', 'no_session_cookie');
+      signIn.searchParams.set('rid', rid);
+      return NextResponse.redirect(signIn);
+    }
+
+    try {
+      const admission = await writerStudioAdmissionForMember(verified.memberId);
+      if (!admission.allowed) {
+        if (pathname.startsWith('/api/')) {
+          return NextResponse.json(
+            {
+              error: 'Forbidden',
+              code: admission.code,
+              message: "Writer's Studio is invitation-only during this beta.",
+              rid,
+            },
+            { status: 403, headers: { 'Cache-Control': 'private, no-store' } },
+          );
+        }
+        const invitation = req.nextUrl.clone();
+        invitation.pathname = '/explore/writers-studio';
+        invitation.search = '';
+        invitation.searchParams.set('access', 'invitation-required');
+        invitation.searchParams.set('rid', rid);
+        const response = NextResponse.redirect(invitation);
+        response.headers.set('Cache-Control', 'private, no-store');
+        return response;
+      }
+    } catch {
+      console.error(`[Middleware] Writer admission authority unavailable rid=${rid}`);
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          {
+            error: 'Service Unavailable',
+            code: 'WRITER_STUDIO_ADMISSION_UNAVAILABLE',
+            rid,
+          },
+          { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+        );
+      }
+      return new NextResponse(
+        "Writer's Studio admission is temporarily unavailable.",
+        { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+      );
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // Access granted - add context headers for downstream use
   // ---------------------------------------------------------------------
   // Derived context, written onto the forwarded REQUEST so handlers actually
@@ -623,9 +689,9 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // NOTE: Entitlements are NOT set in middleware headers because the postgres
-  // driver requires Node.js runtime. Route handlers call getEntitlements directly.
-  // This is intentional - entitlement checks happen at the route level.
+  // Commercial entitlements remain route-owned. The Writer invitation grant
+  // above is a distinct product-admission boundary backed by the existing beta
+  // roster; no plan or roster fact is forwarded as a client-visible header.
 
   /* Writer's Studio convergence. Keep access enforcement first, then retire
      only legacy routes whose meanings are already proven equivalent. Query

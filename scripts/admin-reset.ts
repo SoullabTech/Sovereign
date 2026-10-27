@@ -14,10 +14,11 @@
  */
 
 import { Pool } from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 
-const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness';
+const DATABASE_URL = requireDatabaseUrl(process.env.DATABASE_URL);
 const BASE_URL = process.env.NEXTAUTH_URL || process.env.BASE_URL || 'https://soullab.life';
 
 const pool = new Pool({ connectionString: DATABASE_URL });

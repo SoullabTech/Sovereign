@@ -22,10 +22,9 @@
  */
 
 import { Pool } from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 
-const DATABASE_URL =
-  process.env.DATABASE_URL ||
-  'postgresql://soullab@localhost:5432/maia_consciousness';
+const DATABASE_URL = requireDatabaseUrl(process.env.DATABASE_URL);
 
 const pool = new Pool({ connectionString: DATABASE_URL });
 

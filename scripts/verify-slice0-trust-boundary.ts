@@ -24,8 +24,9 @@ import { execSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { Client } from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 
-const ADMIN_URL = process.env.TEST_PG_ADMIN_URL ?? 'postgresql://soullab@localhost:5432/postgres';
+const ADMIN_URL = requireDatabaseUrl(process.env.TEST_PG_ADMIN_URL);
 const TEST_DB = `maia_slice0_trust_${process.pid}`;
 const TEST_URL = `${ADMIN_URL.slice(0, ADMIN_URL.lastIndexOf('/'))}/${TEST_DB}`;
 const REPO = join(__dirname, '..');

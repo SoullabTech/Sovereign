@@ -5,6 +5,8 @@
 
 set -e
 
+: "${DATABASE_URL:?DATABASE_URL must be set explicitly before enabling skills}"
+
 MODE="${1:-silent}"
 
 echo "🧩 MAIA Skills System — Enablement Script"
@@ -12,7 +14,7 @@ echo ""
 
 # Check if database is running
 echo "1️⃣  Checking database connection..."
-if psql "${DATABASE_URL:-postgresql://soullab@localhost:5432/maia_consciousness}" -c "SELECT 1;" > /dev/null 2>&1; then
+if psql "$DATABASE_URL" -c "SELECT 1;" > /dev/null 2>&1; then
   echo "   ✅ Database connected"
 else
   echo "   ❌ Database not available"
@@ -23,7 +25,7 @@ fi
 # Check if migrations are applied
 echo ""
 echo "2️⃣  Checking skills tables..."
-TABLE_COUNT=$(psql "${DATABASE_URL:-postgresql://soullab@localhost:5432/maia_consciousness}" -t -c "SELECT COUNT(*) FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE 'skill%';" 2>/dev/null | xargs)
+TABLE_COUNT=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE 'skill%';" 2>/dev/null | xargs)
 
 if [ "$TABLE_COUNT" -eq "4" ]; then
   echo "   ✅ Skills tables exist (4/4)"
@@ -94,10 +96,10 @@ esac
 # Verify skills exist
 echo ""
 echo "5️⃣  Verifying skills..."
-SKILL_COUNT=$(psql "${DATABASE_URL:-postgresql://soullab@localhost:5432/maia_consciousness}" -t -c "SELECT COUNT(*) FROM skills_registry WHERE enabled = true;" 2>/dev/null | xargs)
+SKILL_COUNT=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM skills_registry WHERE enabled = true;" 2>/dev/null | xargs)
 echo "   ✅ $SKILL_COUNT enabled skills in registry"
 
-psql "${DATABASE_URL:-postgresql://soullab@localhost:5432/maia_consciousness}" -c "
+psql "$DATABASE_URL" -c "
   SELECT
     skill_id,
     meta->>'tier' as tier,

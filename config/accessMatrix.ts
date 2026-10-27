@@ -644,6 +644,8 @@ export const ACCESS_RULES: AccessRule[] = [
      excuse. */
   { prefix: '/api/writers-studio/editorial/', minTier: 'free', notes: "Writer's Studio editorial corridor — authenticated members only (WS-ACCESS-CONTAINMENT-01); same policy as /api/sovereign, never /api/ain's admin gate" },
 
+  { prefix: '/api/writers-studio/', minTier: 'free', notes: "Writer's Studio API corridor — authenticated outer boundary; proxy applies the separate invitation-only server grant and handlers retain member/Work ownership checks" },
+
   /* FWE-ROUTE-01 Class A — EXACT Writer's Studio section-aware context GET.
      The canonical Write room requests this member-owned read snapshot. An
      unmapped path is denied in strict mode, even with a verified session.

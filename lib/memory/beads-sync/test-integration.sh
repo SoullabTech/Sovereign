@@ -49,10 +49,7 @@ fi
 echo -e "${GREEN}✓${NC} Beads sync service healthy"
 
 # 3. Check database connection
-if [ -z "$DATABASE_URL" ]; then
-  echo -e "${YELLOW}⚠${NC}  DATABASE_URL not set (will use default)"
-  export DATABASE_URL="postgresql://soullab@localhost:5432/maia_consciousness"
-fi
+: "${DATABASE_URL:?DATABASE_URL must be set explicitly for the Beads integration test}"
 
 if ! psql "$DATABASE_URL" -c "SELECT 1" > /dev/null 2>&1; then
   echo -e "${RED}❌ Database connection failed${NC}"

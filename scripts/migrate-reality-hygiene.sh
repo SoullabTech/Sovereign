@@ -5,11 +5,10 @@
 
 set -e
 
-# Default to local dev database
-DATABASE_URL=${DATABASE_URL:-"postgresql://maia:maia_dev_password@localhost:5433/maia_sovereign"}
+: "${DATABASE_URL:?DATABASE_URL must be set explicitly for the Reality Hygiene migration}"
 
 echo "🔍 Reality Hygiene Migration"
-echo "Database: $DATABASE_URL"
+echo "Database: explicit PostgreSQL authority configured"
 echo ""
 
 # Check if psql is available

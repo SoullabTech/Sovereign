@@ -6,6 +6,7 @@
  * and a rule that exists but is shadowed would pass a text scan and fail here.
  */
 import { matchRule, checkAccess, ACCESS_RULES } from '../config/accessMatrix';
+import { isWriterStudioRestrictedPath } from '../lib/writersStudio/restrictedCorridor';
 
 const EDITORIAL = [
   '/api/writers-studio/editorial/thread',
@@ -32,12 +33,10 @@ describe('the Writer’s Studio editorial corridor is contained', () => {
     }
   });
 
-  it('⛔ containment must not empty the corridor — an ordinary member still passes', () => {
-    /* The routes serve any authenticated member writing in their own Studio.
-       A rule that refused them would "contain" the corridor by closing it. */
+  it('keeps the matrix as the outer auth gate while the server grant remains separate', () => {
     for (const p of EDITORIAL) {
       expect(checkAccess(p, 'free', ['member'], true).allowed).toBe(true);
-      expect(checkAccess(p, 'free', [], true).allowed).toBe(true);
+      expect(isWriterStudioRestrictedPath(p)).toBe(true);
     }
   });
 
@@ -69,12 +68,14 @@ describe('the Writer’s Studio editorial corridor is contained', () => {
     expect(shadowing).toEqual([]);
   });
 
-  it('⚠️ records what is NOT contained by this act', () => {
-    /* /api/writers-studio/focus carries the identical gap and is outside the
-       authorized scope. Asserted as STILL UNMAPPED so the finding cannot be
-       quietly closed without a ruling — if someone contains it, this fails and
-       makes them say so. */
-    expect(matchRule('/api/writers-studio/focus')).toBeNull();
+  it('contains the rest of the Writer API corridor without collapsing its product grant', () => {
+    const focus = '/api/writers-studio/focus';
+    expect(matchRule(focus)).toMatchObject({ minTier: 'free' });
+    expect(matchRule(focus)?.exact ?? matchRule(focus)?.prefix).toBe('/api/writers-studio/focus');
+    expect(checkAccess(focus, 'free', [], false)).toMatchObject({
+      allowed: false, reason: 'unauthenticated',
+    });
+    expect(isWriterStudioRestrictedPath(focus)).toBe(true);
   });
 
   it('⛔ neighbours are untouched', () => {

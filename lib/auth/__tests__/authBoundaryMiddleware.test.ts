@@ -43,7 +43,7 @@ jest.mock('@/lib/db/postgres', () => ({
 }));
 
 import { NextRequest, NextResponse } from 'next/server';
-import { middleware } from '../../../middleware';
+import { proxy as middleware } from '../../../proxy';
 
 /**
  * Build a real NextRequest so cookie parsing, URL parsing and header casing are

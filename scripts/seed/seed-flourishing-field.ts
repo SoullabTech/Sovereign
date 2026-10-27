@@ -17,7 +17,7 @@
  *     never speaks AS him
  * These land as Layer 4 guidance (narrow-only, validated at save and compose).
  *
- * Idempotent: re-running updates the same rows. Targets LOCAL dev by default;
+ * Idempotent: re-running updates the same rows. Requires an explicit database;
  * production markers are refused (deploy-time prod seeding goes through
  * Kelly's gate, like every prod act).
  *
@@ -27,6 +27,7 @@
 import { createRequire } from 'node:module';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { requireDatabaseUrl } from '../../lib/db/databaseUrl.js';
 
 const APP_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -109,16 +110,14 @@ const FIELD_CONTENT = {
 };
 
 function parseArgs(argv: string[]) {
-  let databaseUrl =
-    process.env.SEED_DATABASE_URL ||
-    process.env.DATABASE_URL ||
-    'postgresql://soullab@localhost:5432/maia_consciousness';
+  let databaseUrl = process.env.SEED_DATABASE_URL || process.env.DATABASE_URL || '';
   let slug = 'now-what-demo';
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--database-url') databaseUrl = argv[++i];
     else if (argv[i] === '--slug') slug = argv[++i];
     else throw new Error(`unknown flag: ${argv[i]}`);
   }
+  databaseUrl = requireDatabaseUrl(databaseUrl);
   for (const marker of PROD_MARKERS) {
     if (databaseUrl.includes(marker)) {
       throw new Error(

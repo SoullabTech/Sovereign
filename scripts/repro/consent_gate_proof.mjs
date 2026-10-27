@@ -8,6 +8,7 @@
 // Drives the worktree dev server (separate port) so this verifies the real route, not a
 // replica. Run:  CONSENT_TOKEN=<session> node scripts/repro/consent_gate_proof.mjs
 import pg from 'pg';
+import { requireDatabaseUrl } from '../lib/explicit-database-url.mjs';
 
 const BASE = process.env.BASE || 'http://localhost:3100';
 const TOK = process.env.CONSENT_TOKEN;
@@ -39,7 +40,7 @@ async function waitReady(ms = 120000) {
   return false;
 }
 
-const db = new pg.Client({ connectionString: 'postgresql://soullab@localhost:5432/maia_consciousness' });
+const db = new pg.Client({ connectionString: requireDatabaseUrl(process.env.DATABASE_URL) });
 
 async function rowCount(sql, params) {
   return (await db.query(sql, params)).rows[0];

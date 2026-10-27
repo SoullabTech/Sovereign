@@ -16,6 +16,7 @@
  */
 
 import { Pool } from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 import {
   classifyChunkSpiralogic,
   type SpiralogicElement,
@@ -25,7 +26,7 @@ const isDryRun = process.argv.includes('--dry-run');
 
 async function main() {
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
+    connectionString: requireDatabaseUrl(process.env.DATABASE_URL),
   });
 
   try {

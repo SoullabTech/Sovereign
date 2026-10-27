@@ -18,8 +18,9 @@
  */
 
 import pg from 'pg';
+import { requireDatabaseUrl } from '../lib/explicit-database-url.mjs';
 
-const DSN = process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness';
+const DSN = requireDatabaseUrl(process.env.DATABASE_URL);
 
 if (!/@?localhost|127\.0\.0\.1/.test(DSN)) {
   console.error('REFUSED: fixture is local-only, and DATABASE_URL is not local:', DSN);

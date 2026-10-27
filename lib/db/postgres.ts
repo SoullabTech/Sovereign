@@ -20,58 +20,16 @@ import type { Pool, QueryResult, QueryResultRow } from 'pg';
 const isServer = typeof window === 'undefined';
 let pool: Pool | null = null;
 
-export type DatabaseConfigurationErrorCode =
-  | 'DATABASE_URL_REQUIRED'
-  | 'DATABASE_URL_INVALID';
+import {
+  DatabaseConfigurationError,
+  requireDatabaseUrl,
+  type DatabaseConfigurationErrorCode,
+} from './databaseUrl';
 
-export class DatabaseConfigurationError extends Error {
-  readonly code: DatabaseConfigurationErrorCode;
-
-  constructor(code: DatabaseConfigurationErrorCode, message: string) {
-    super(message);
-    this.name = 'DatabaseConfigurationError';
-    this.code = code;
-  }
-}
+export { DatabaseConfigurationError, requireDatabaseUrl };
+export type { DatabaseConfigurationErrorCode };
 
 let databaseConfigurationError: DatabaseConfigurationError | null = null;
-
-/**
- * Validate the database authority supplied by the runtime.
- *
- * The returned value is the original trimmed URL so node-postgres retains its
- * normal parsing behaviour. Error messages never include the URL because it may
- * contain credentials.
- */
-export function requireDatabaseUrl(raw: string | undefined): string {
-  const value = raw?.trim();
-  if (!value) {
-    throw new DatabaseConfigurationError(
-      'DATABASE_URL_REQUIRED',
-      '[POSTGRES] DATABASE_URL is required; implicit local database fallback is disabled',
-    );
-  }
-
-  let parsed: URL;
-  try {
-    parsed = new URL(value);
-  } catch {
-    throw new DatabaseConfigurationError(
-      'DATABASE_URL_INVALID',
-      '[POSTGRES] DATABASE_URL must be a valid PostgreSQL URL',
-    );
-  }
-
-  const hasDatabaseName = parsed.pathname.length > 1;
-  if (!['postgres:', 'postgresql:'].includes(parsed.protocol) || !hasDatabaseName) {
-    throw new DatabaseConfigurationError(
-      'DATABASE_URL_INVALID',
-      '[POSTGRES] DATABASE_URL must name a PostgreSQL database',
-    );
-  }
-
-  return value;
-}
 
 function requireDatabasePool(operation: string): Pool {
   if (!isServer) {

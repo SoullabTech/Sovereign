@@ -24,6 +24,8 @@
 
 set -euo pipefail
 
+: "${DATABASE_URL:?DATABASE_URL must be set explicitly for constitutional verification}"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 GREEN='\033[0;32m'
@@ -84,7 +86,7 @@ run_verifier() {
   echo -e "\n${BOLD}── $name $( printf '─%.0s' $(seq 1 $((58 - ${#name}))) )${NC}"
 
   local output exit_code
-  output=$(DATABASE_URL="${DATABASE_URL:-}" npx tsx "$script_path" 2>&1) || exit_code=$?
+  output=$(DATABASE_URL="$DATABASE_URL" npx tsx "$script_path" 2>&1) || exit_code=$?
   exit_code=${exit_code:-0}
 
   echo "$output"

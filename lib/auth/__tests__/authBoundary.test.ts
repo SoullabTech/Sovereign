@@ -25,6 +25,8 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import type { NextRequest } from 'next/server';
 
 const VALID_TOKEN = 'valid-session-token-64hex';
+const SECOND_VALID_TOKEN = 'second-valid-token-same-member';
+const OTHER_MEMBER_TOKEN = 'valid-token-for-other-member';
 const REVOKED_TOKEN = 'revoked-session-token';
 const EXPIRED_TOKEN = 'expired-session-token';
 const MEMBER_A = '11111111-1111-4111-8111-111111111111';
@@ -71,8 +73,11 @@ beforeEach(() => {
       // expired tokens are filtered out by the SQL predicate itself
       // (revoked = FALSE AND expires_at > NOW()), so they return no rows —
       // exactly as the real database would.
-      if (params[0] === VALID_TOKEN) {
+      if (params[0] === VALID_TOKEN || params[0] === SECOND_VALID_TOKEN) {
         return { rows: [{ member_id: MEMBER_A, tier: 'personal', roles: ['member'] }] };
+      }
+      if (params[0] === OTHER_MEMBER_TOKEN) {
+        return { rows: [{ member_id: MEMBER_B, tier: 'free', roles: ['member'] }] };
       }
       return { rows: [] };
     }
@@ -286,6 +291,49 @@ describe('6. valid ordinary member session', () => {
       req({ headers: { 'x-session-token': VALID_TOKEN, 'x-member-id': MEMBER_A } }),
     );
     expect(access.authenticated).toBe(true);
+  });
+
+  it('fails closed when a valid cookie is accompanied by an invalid header token', async () => {
+    const access = await deriveVerifiedAccess(req({
+      cookies: { maia_session: VALID_TOKEN },
+      headers: { 'x-session-token': 'invalid' },
+    }));
+    expect(access).toMatchObject({ authenticated: false, reason: 'invalid_session' });
+  });
+
+  it('fails closed when two valid transports name different members', async () => {
+    const access = await deriveVerifiedAccess(req({
+      cookies: { maia_session: VALID_TOKEN },
+      headers: { 'x-session-token': OTHER_MEMBER_TOKEN },
+    }));
+    expect(access).toMatchObject({ authenticated: false, reason: 'credential_conflict' });
+  });
+
+  it('accepts duplicate transport of the same token with one lookup', async () => {
+    const access = await deriveVerifiedAccess(req({
+      cookies: { maia_session: VALID_TOKEN },
+      headers: { 'x-session-token': VALID_TOKEN },
+    }));
+    expect(access.authenticated).toBe(true);
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+  });
+
+  it('accepts two distinct valid tokens only when both name the same member', async () => {
+    const access = await deriveVerifiedAccess(req({
+      cookies: { maia_session: VALID_TOKEN },
+      headers: { 'x-session-token': SECOND_VALID_TOKEN },
+    }));
+    expect(access.authenticated).toBe(true);
+    expect(access.memberId).toBe(MEMBER_A);
+    expect(mockQuery).toHaveBeenCalledTimes(2);
+  });
+
+  it('refuses a valid SSE token that conflicts with a valid header token', async () => {
+    const access = await deriveVerifiedAccess(req({
+      url: `https://soullab.life/api/stream?_t=${VALID_TOKEN}`,
+      headers: { 'x-session-token': OTHER_MEMBER_TOKEN },
+    }));
+    expect(access).toMatchObject({ authenticated: false, reason: 'credential_conflict' });
   });
 });
 

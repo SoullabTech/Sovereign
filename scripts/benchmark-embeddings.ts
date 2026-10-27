@@ -16,6 +16,7 @@
  *   docker exec maia-sovereign sh -c 'npx tsx scripts/benchmark-embeddings.ts'
  */
 import { Pool } from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 
 const OLLAMA = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 const MODEL = process.env.OLLAMA_EMBED_MODEL || 'nomic-embed-text';
@@ -55,7 +56,7 @@ function topK(i: number, sims: number[][], k: number): Set<number> {
 }
 
 async function main() {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const pool = new Pool({ connectionString: requireDatabaseUrl(process.env.DATABASE_URL) });
   const { rows } = await pool.query(
     `SELECT id,
             coalesce(experience_title,'')       AS title,

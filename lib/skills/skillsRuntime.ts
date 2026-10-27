@@ -11,6 +11,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { Pool } from 'pg';
+import { requireDatabaseUrl } from '@/lib/db/databaseUrl';
 
 // ==============================================================================
 // TYPES
@@ -99,15 +100,13 @@ export interface SkillResult {
 // ==============================================================================
 
 const SKILLS_ROOT = path.join(process.cwd(), 'skills');
-const DATABASE_URL = process.env.DATABASE_URL || '';
-
 // Database connection pool
 let dbPool: Pool | null = null;
 
 function getDbPool(): Pool {
   if (!dbPool) {
     dbPool = new Pool({
-      connectionString: DATABASE_URL,
+      connectionString: requireDatabaseUrl(process.env.DATABASE_URL),
       max: 10,
     });
   }

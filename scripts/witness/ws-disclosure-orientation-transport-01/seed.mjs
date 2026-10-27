@@ -1,8 +1,9 @@
 import pg from 'pg';
+import { requireDatabaseUrl } from '../../lib/explicit-database-url.mjs';
 import { randomUUID, createHash } from 'crypto';
 
 const sha = (s) => createHash('sha256').update(s, 'utf8').digest('hex');
-const c = new pg.Client({ connectionString: process.env.DATABASE_URL });
+const c = new pg.Client({ connectionString: requireDatabaseUrl(process.env.DATABASE_URL) });
 await c.connect();
 
 const memberId = randomUUID();

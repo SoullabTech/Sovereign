@@ -3,8 +3,10 @@
 # Verifies: L1→Opus (new user), L4+established→Sonnet, L4+deep→Opus
 set -e
 
+: "${DATABASE_URL:?DATABASE_URL must be set explicitly for routing probes}"
+
 API_URL="http://localhost:3000/api/between/chat"
-DB_URL="postgresql://soullab@localhost:5432/maia_consciousness"
+DB_URL="$DATABASE_URL"
 TEST_USER="routing-test-l4-established"
 SESSION_ID="test-established-session-$(date +%s)"
 

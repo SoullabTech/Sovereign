@@ -79,6 +79,10 @@ describe('Postgres explicit configuration authority', () => {
       name: 'DatabaseConfigurationError',
       code: 'DATABASE_URL_REQUIRED',
     });
+    await expect(db.transaction(async () => undefined)).rejects.toMatchObject({
+      name: 'DatabaseConfigurationError',
+      code: 'DATABASE_URL_REQUIRED',
+    });
   });
 
   it.each([

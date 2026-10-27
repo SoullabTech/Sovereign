@@ -21,6 +21,7 @@
  */
 
 import { Client } from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 
 interface Args {
   fieldSlug: string;
@@ -39,7 +40,7 @@ function parseArgs(): Args {
     fieldSlug: get('--field-slug') ?? 'now-what-demo',
     baseUrl: get('--base-url') ?? 'http://localhost:3000',
     databaseUrl:
-      get('--database-url') ?? process.env.DATABASE_URL ?? 'postgresql://soullab@localhost:5432/maia_consciousness',
+      requireDatabaseUrl(get('--database-url') ?? process.env.DATABASE_URL ?? undefined),
     fieldFocalPoint: get('--field-focal-point'),
   };
 }
