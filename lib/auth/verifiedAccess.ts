@@ -25,7 +25,8 @@ export type AccessDenialReason =
   | 'invalid_session'
   | 'credential_conflict'
   | 'claim_mismatch'
-  | 'member_missing';
+  | 'member_missing'
+  | 'authority_unavailable';
 
 export interface VerifiedAccess {
   authenticated: boolean;
@@ -77,8 +78,8 @@ export async function deriveVerifiedAccess(req: NextRequest): Promise<VerifiedAc
       { source: 'query', presented: queryPresented, value: queryToken },
     ]);
   } catch {
-    console.error('[auth-boundary] session validation failed');
-    return denied('invalid_session');
+    console.error('[auth-boundary] session authority unavailable');
+    return denied('authority_unavailable');
   }
   if (!authority.ok) return denied(authority.reason);
 

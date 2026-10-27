@@ -444,6 +444,25 @@ export async function proxy(req: NextRequest) {
   const verified = await deriveVerifiedAccess(req);
   const { authenticated: authed, tier, roles } = verified;
 
+  if (!authed && verified.reason === 'authority_unavailable') {
+    console.error(`[Middleware] authentication authority unavailable for ${pathname} rid=${rid}`);
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        {
+          error: 'Service Unavailable',
+          code: 'AUTHORITY_UNAVAILABLE',
+          message: 'Authentication authority is temporarily unavailable.',
+          rid,
+        },
+        { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+      );
+    }
+    return new NextResponse(
+      'Authentication is temporarily unavailable.',
+      { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+    );
+  }
+
   if (!authed && verified.reason && verified.reason !== 'no_credential') {
     // A credential was presented and REFUSED. Distinct from anonymous, and
     // worth a line: this is what a stolen, stale, or forged token looks like.

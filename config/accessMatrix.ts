@@ -631,11 +631,11 @@ export const ACCESS_RULES: AccessRule[] = [
      contain the corridor by emptying it. The neighbour whose policy actually
      fits is /api/sovereign directly above: authenticated, free tier, no role.
 
-     ⛔ NARROWEST THAT COVERS THE ROUTES IN SCOPE, deliberately. A
-     '/api/writers-studio/' prefix would also capture /api/writers-studio/focus,
-     which carries the identical gap and is NOT part of this act — naming it
-     here would silently widen the ruling. It is recorded as an open finding
-     instead.
+     ⛔ NARROWEST THAT COVERS THE ROUTES IN SCOPE, deliberately. A broad
+     '/api/writers-studio/' prefix is prohibited: it would shadow the explicit
+     exact/regex route census, silently admit future APIs in strict mode, and
+     incorrectly impose member-session auth on the separately capability-gated
+     founder-local review endpoints.
 
      ⛔ This changes nothing inside the handlers. resolveCanonicalIdentity stays
      exactly where it is: the matrix stops an unauthenticated request at the
@@ -644,7 +644,13 @@ export const ACCESS_RULES: AccessRule[] = [
      excuse. */
   { prefix: '/api/writers-studio/editorial/', minTier: 'free', notes: "Writer's Studio editorial corridor — authenticated members only (WS-ACCESS-CONTAINMENT-01); same policy as /api/sovereign, never /api/ain's admin gate" },
 
-  { prefix: '/api/writers-studio/', minTier: 'free', notes: "Writer's Studio API corridor — authenticated outer boundary; proxy applies the separate invitation-only server grant and handlers retain member/Work ownership checks" },
+  /* Founder-local review routes use a separate process capability plus loopback
+     Host/Origin checks. They deliberately do not authenticate a Soullab member,
+     write Source custody or survive outside WS_FOUNDER_LOCAL_REVIEW=1. Exact
+     public outer declarations let those route-owned checks run without granting
+     any neighboring Writer API. Production flag-off behavior remains 404. */
+  { exact: '/api/writers-studio/local-review/import', public: true, notes: 'Founder-local Writer import review — exact route; loopback + process capability enforced inside route; no member or Source authority' },
+  { exact: '/api/writers-studio/local-review/render', public: true, notes: 'Founder-local Writer render review — exact route; loopback + process capability enforced inside route; no publication or retention authority' },
 
   /* FWE-ROUTE-01 Class A — EXACT Writer's Studio section-aware context GET.
      The canonical Write room requests this member-owned read snapshot. An

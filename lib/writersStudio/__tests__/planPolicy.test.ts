@@ -53,6 +53,8 @@ describe('Writer Studio Free/Pro product policy', () => {
     expect(WRITER_INDEPENDENT_RELEASE_HOLDS).toEqual(expect.arrayContaining([
       'new_original_file_ingest',
       'member_pdf_epub_delivery',
+      'live_provider_inference',
+      'deletion_safe_recovery',
       'cloud_offline_sync',
       'automatic_publisher_submission',
     ]));

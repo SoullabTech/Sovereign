@@ -22,8 +22,8 @@ export type WriterStudioFeature =
   | 'basic_review'
   | 'basic_maia'
   | 'author_controlled_edits'
-  | 'essential_export'
-  | 'privacy_and_deletion'
+  | 'author_owned_text_copy'
+  | 'privacy_controls'
   | 'academy_foundations'
   | 'advanced_develop'
   | 'advanced_review'
@@ -43,8 +43,8 @@ export const WRITER_STUDIO_FEATURE_INCLUSION: Readonly<
   basic_review: { free: true, pro: true },
   basic_maia: { free: true, pro: true },
   author_controlled_edits: { free: true, pro: true },
-  essential_export: { free: true, pro: true },
-  privacy_and_deletion: { free: true, pro: true },
+  author_owned_text_copy: { free: true, pro: true },
+  privacy_controls: { free: true, pro: true },
   academy_foundations: { free: true, pro: true },
   advanced_develop: { free: false, pro: true },
   advanced_review: { free: false, pro: true },
@@ -59,14 +59,19 @@ export const WRITER_STUDIO_FEATURE_INCLUSION: Readonly<
 export const WRITER_ALWAYS_PROTECTED = [
   'author_owned_writing',
   'author_controlled_edits',
-  'essential_export',
-  'privacy_and_deletion',
+  'author_owned_text_copy',
+  'privacy_controls',
 ] as const satisfies readonly WriterStudioFeature[];
 
-/** These remain governed by their own release and custody decisions. */
+/**
+ * These operations remain governed by their own release, custody, consent and
+ * recovery decisions. Plan inclusion must never imply that they are available.
+ */
 export const WRITER_INDEPENDENT_RELEASE_HOLDS = [
   'new_original_file_ingest',
   'member_pdf_epub_delivery',
+  'live_provider_inference',
+  'deletion_safe_recovery',
   'cloud_offline_sync',
   'automatic_publisher_submission',
 ] as const;

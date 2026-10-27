@@ -172,7 +172,7 @@ describe('3. invalid token carrying forged identity', () => {
     expect(access.roles).toEqual([]);
   });
 
-  it('fails closed when the database itself errors', async () => {
+  it('fails closed and reports authority unavailable when the database errors', async () => {
     mockQuery.mockImplementation(async () => {
       throw new Error('connection refused');
     });
@@ -180,6 +180,7 @@ describe('3. invalid token carrying forged identity', () => {
       req({ headers: { 'x-session-token': VALID_TOKEN, ...FULL_FORGERY } }),
     );
     expect(access.authenticated).toBe(false);
+    expect(access.reason).toBe('authority_unavailable');
     expect(access.roles).toEqual([]);
   });
 });

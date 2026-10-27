@@ -5,8 +5,32 @@
  * rule file: `matchRule` resolution order is what actually decides containment,
  * and a rule that exists but is shadowed would pass a text scan and fail here.
  */
+import { execFileSync } from 'node:child_process';
 import { matchRule, checkAccess, ACCESS_RULES } from '../config/accessMatrix';
 import { isWriterStudioRestrictedPath } from '../lib/writersStudio/restrictedCorridor';
+
+const WRITER_API_ROUTES = execFileSync(
+  'git',
+  ['ls-files', 'app/api/writers-studio/**/route.ts'],
+  { encoding: 'utf8' },
+)
+  .trim()
+  .split('\n')
+  .filter(Boolean)
+  .map((file) => ({
+    file,
+    pathname: `/${file
+      .replace(/^app\//, '')
+      .replace(/\/route\.ts$/, '')
+      .replace(/\[\.\.\.([^\]]+)\]/g, 'fictional/a')
+      .replace(/\[\[\.\.\.([^\]]+)\]\]/g, 'fictional')
+      .replace(/\[([^\]]+)\]/g, 'fictional')}`,
+  }));
+
+const LOCAL_REVIEW = new Set([
+  '/api/writers-studio/local-review/import',
+  '/api/writers-studio/local-review/render',
+]);
 
 const EDITORIAL = [
   '/api/writers-studio/editorial/thread',
@@ -15,6 +39,26 @@ const EDITORIAL = [
 ];
 
 describe('the Writer’s Studio editorial corridor is contained', () => {
+  it('keeps the API census explicit and forbids a broad shadowing prefix', () => {
+    expect(ACCESS_RULES.some((rule) => rule.prefix === '/api/writers-studio/')).toBe(false);
+    expect(WRITER_API_ROUTES.length).toBeGreaterThan(0);
+
+    for (const { file, pathname } of WRITER_API_ROUTES) {
+      const rule = matchRule(pathname);
+      expect({ file, pathname, mapped: Boolean(rule) }).toEqual({
+        file,
+        pathname,
+        mapped: true,
+      });
+      expect(rule?.prefix).not.toBe('/api/writers-studio/');
+      if (LOCAL_REVIEW.has(pathname)) {
+        expect(rule).toMatchObject({ exact: pathname, public: true });
+      } else {
+        expect(rule?.public).not.toBe(true);
+      }
+    }
+  });
+
   it('⭐ every editorial route resolves to a rule — no permissive forwarding', () => {
     for (const p of EDITORIAL) {
       const rule = matchRule(p);
