@@ -6,6 +6,7 @@ import '../dev/writers-studio-full-redesign-review/full-redesign-review.css';
 import './insight/insight.css';
 import '../dev/writers-studio-p4r1/p4r1-live.css';
 import '../dev/writers-studio-pc3-live/craft-editorial-r1.css';
+import '../dev/writers-studio-p4r1/writerPlan.css';
 
 const serif = Newsreader({
   subsets: ['latin'],

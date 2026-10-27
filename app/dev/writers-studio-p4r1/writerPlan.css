@@ -1,0 +1,49 @@
+
+.ws-plan-notice {
+  position: fixed;
+  z-index: 29;
+  inset: auto 14px max(16px, env(safe-area-inset-bottom)) auto;
+  width: min(372px, calc(100vw - 28px));
+  font-family: var(--fr-sans-stack, system-ui, sans-serif);
+  color: var(--fr-ink, #243032);
+}
+
+.ws-plan-notice details {
+  overflow: hidden;
+  border: 1px solid var(--fr-line, #c8d1c7);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--fr-panel, #fffdf7) 94%, transparent);
+  box-shadow: 0 10px 32px rgba(10, 19, 23, .13);
+  backdrop-filter: blur(12px);
+}
+
+.ws-plan-notice summary {
+  cursor: pointer;
+  padding: 8px 13px;
+  font-size: 12px;
+  font-weight: 680;
+  letter-spacing: .018em;
+  color: var(--fr-title, #213934);
+}
+
+.ws-plan-notice summary:focus-visible,
+.ws-plan-notice a:focus-visible {
+  outline: 2px solid var(--fr-action, #376b57);
+  outline-offset: 2px;
+}
+
+.ws-plan-notice-body {
+  padding: 2px 14px 13px;
+  border-top: 1px solid var(--fr-line-soft, #e2e7df);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.ws-plan-notice-body strong { display: block; margin-top: 10px; }
+.ws-plan-notice-body p { margin: 8px 0 0; }
+.ws-plan-notice-held { color: var(--fr-muted, #5d6d68); }
+.ws-plan-notice a { display: inline-block; margin-top: 10px; color: var(--fr-action, #376b57); font-weight: 650; }
+
+@media (max-width: 680px) {
+  .ws-plan-notice { inset: auto 10px max(10px, env(safe-area-inset-bottom)) 10px; width: auto; }
+}

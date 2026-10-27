@@ -9,6 +9,7 @@ import P4R1PublishRoom from '../writers-studio-pc3-live/P4R1PublishRoom';
 import ListenPilot from '../writers-studio-pc3-live/ListenPilot';
 import P4R1ThemeMenu from './P4R1ThemeMenu';
 import P4R1BetaFeedback from './P4R1BetaFeedback';
+import WriterStudioPlanNotice from './WriterStudioPlanNotice';
 
 export type UnifiedStudioMode = 'home' | 'write' | 'develop' | 'review' | 'publish' | 'listen';
 
@@ -42,6 +43,7 @@ export default function P4R1StudioHost({
     <>
       <P4R1ThemeMenu />
       <P4R1BetaFeedback mode={mode} />
+      <WriterStudioPlanNotice />
       {room}
     </>
   );
