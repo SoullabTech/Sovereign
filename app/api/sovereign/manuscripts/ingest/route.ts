@@ -45,14 +45,18 @@ import { parseUpload, UnsupportedUploadError, UnsupportedDocxStructureError } fr
 import { memberRef } from '@/lib/privacy/memberRef';
 import { titleFromFilename } from '@/lib/manuscript/ingest/titleSuggestion';
 import { recordArtifactArrival } from '@/lib/manuscript/source/arrivals';
+import { SourceLandingIncompleteError } from '@/lib/manuscript/source/encryptedLanding';
+import { SOURCE_UPLOAD_IDEMPOTENCY_HEADER } from '@/lib/writersStudio/sourceUploadAttempt';
+import { writerReleaseAuthority } from '@/lib/writersStudio/releaseAuthority';
 
-// P0 private original manuscript/EPUB intake remains held. Not controlled
-// by environment variables. Lifting the hold requires separate recorded
-// Founder-Steward beta Class A review and complete custody/restore acceptance.
-const PRESS_SOURCE_INTAKE_RELEASED: boolean = false;
+// P0 private original manuscript/EPUB intake remains held by the exact server
+// release manifest. No environment variable, browser flag or request header can
+// lift it. Changing the manifest requires a newly admitted and requalified image.
+const PRESS_SOURCE_INTAKE_RELEASED = writerReleaseAuthority().sourceIntakeReleased;
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB — generous for a full book file
 const MAX_TEXT_CHARS = 2_000_000; // mirrors the save path's cap in ../route.ts
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
  * INGEST-TRANSPORT — the authority boundary this route must carry itself.
@@ -260,6 +264,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Every released upload carries a caller-stable UUID. A retry with the same
+    // UUID must resolve to the same member-bound landing intent; a different
+    // original under that UUID is refused. The hold above remains first so no
+    // client can use this validation as an oracle while intake is unavailable.
+    const idempotencyKey = request.headers.get(SOURCE_UPLOAD_IDEMPOTENCY_HEADER);
+    if (!idempotencyKey || !UUID_PATTERN.test(idempotencyKey)) {
+      return NextResponse.json(
+        {
+          error: 'A valid upload retry identifier is required.',
+          requiredHeader: SOURCE_UPLOAD_IDEMPOTENCY_HEADER,
+        },
+        { status: 400, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+
     // ── 4. SANITISE — the SAME request, in place ───────────────────────────
     // Authority has finished inspecting the caller's claims, so nothing
     // downstream may see them. Deleting from `request.headers` mutates the
@@ -337,7 +356,7 @@ export async function POST(request: NextRequest) {
       }
       console.error('[press/manuscripts/ingest] parse error:', err);
       return NextResponse.json(
-        { error: 'We could not read that file. Try a .docx, .pdf, .txt, or .md.' },
+        { error: 'We could not read that file. Try a .docx, .pdf, .epub, .txt, or .md.' },
         { status: 422 },
       );
     }
@@ -364,13 +383,35 @@ export async function POST(request: NextRequest) {
         mimeType: file.type || null,
         sourceText: result.text,
         extractor: result.format,
+        idempotencyKey,
       });
       sourceArrivalId = arrival.id;
     } catch (err) {
-      console.error('[press/manuscripts/ingest] source custody failed', err);
+      if (err instanceof SourceLandingIncompleteError) {
+        // A DB-first intent may deliberately survive a failed ciphertext write
+        // or final arrival commit. Never tell the member that "nothing" was
+        // saved; ask for a same-key retry and keep the recoverable state honest.
+        console.error('[press/manuscripts/ingest] encrypted Source landing incomplete', {
+          memberRef: memberRef(memberId),
+          code: err.code,
+          intentRecorded: err.intentId !== null,
+        });
+        return NextResponse.json(
+          {
+            error: 'The upload did not finish. Your protected upload record was preserved; retry the same file.',
+            retryable: true,
+            retryHeader: SOURCE_UPLOAD_IDEMPOTENCY_HEADER,
+          },
+          { status: 503, headers: { 'Cache-Control': 'no-store' } },
+        );
+      }
+      console.error('[press/manuscripts/ingest] source custody failed', {
+        memberRef: memberRef(memberId),
+        code: 'source_landing_refused',
+      });
       return NextResponse.json(
-        { error: 'We could not take custody of that file. Nothing was saved — please try again.' },
-        { status: 500 },
+        { error: 'We could not securely receive that file. No manuscript was created.' },
+        { status: 500, headers: { 'Cache-Control': 'no-store' } },
       );
     }
 

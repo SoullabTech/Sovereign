@@ -21,6 +21,17 @@ jest.mock('@/lib/manuscript/render/renderMemberBook', () => ({
 jest.mock('@/lib/manuscript/render/memberBookExportRelease', () => ({
   isMemberBookExportReleased: jest.fn(),
 }));
+// Positive renderer tests must pass both independent release controls. The
+// production-default false authorities are covered by the dedicated hold tests.
+jest.mock('@/lib/writersStudio/releaseAuthority', () => ({
+  writerReleaseAuthority: jest.fn(() => ({
+    manifestId: 'test-certified-renderer',
+    sourceIntakeReleased: false,
+    importFormats: ['docx', 'pdf', 'epub', 'text'],
+    exportsCertified: { pdf: true, epub: true },
+    permanentErasureCertified: false,
+  })),
+}));
 
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';

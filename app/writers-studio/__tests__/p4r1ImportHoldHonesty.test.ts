@@ -14,6 +14,7 @@ const room = read('app/dev/writers-studio-pc3-live/P4R1ImportManuscript.tsx');
 const localRoute = read('app/api/writers-studio/local-review/import/route.ts');
 const authority = read('lib/writersStudio/localReviewAuthority.ts');
 const ingest = read('app/api/sovereign/manuscripts/ingest/route.ts');
+const release = read('lib/writersStudio/releaseAuthority.ts');
 
 describe('W3 — integrated import truth', () => {
   it('keeps Import inside the six-room Studio rather than leaving for legacy Press', () => {
@@ -27,12 +28,14 @@ describe('W3 — integrated import truth', () => {
     expect(controller).not.toContain('window.location.assign');
   });
 
-  it('offers a real chooser only in explicitly marked founder-local review', () => {
-    expect(room).toContain('{localReview ? (');
+  it('offers a chooser only for local review or a server-released production image', () => {
+    expect(room).toContain('const fileIntakeAvailable = localReview || sourceIntakeReleased');
+    expect(room).toContain('{fileIntakeAvailable ? (');
     expect(room).toContain('type="file"');
     expect(room).toContain('.docx,.pdf,.epub,.txt,.md,.markdown');
-    expect(room).toContain('File import is in founder-local review.');
+    expect(room).toContain('Original-file import is held on this Writer image.');
     expect(room).toContain('PDF, EPUB and Word files are not accepted from member accounts yet.');
+    expect(controller).toContain('sourceIntakeReleased={releaseCapabilities.authority.sourceIntakeReleased}');
     expect(room).toContain("'/api/writers-studio/local-review/import'");
     expect(room).toContain("'/api/sovereign/manuscripts/ingest'");
   });
@@ -62,7 +65,8 @@ describe('W3 — integrated import truth', () => {
   });
 
   it('does not loosen the production Source authority', () => {
-    expect(ingest).toContain('const PRESS_SOURCE_INTAKE_RELEASED: boolean = false');
+    expect(release).toContain('sourceIntakeReleased: false');
+    expect(ingest).toContain('writerReleaseAuthority().sourceIntakeReleased');
     expect(ingest).toContain('status: 423');
     expect(ingest).toContain('recordArtifactArrival');
     expect(ingest).toContain('getMemberIdFromRequest');

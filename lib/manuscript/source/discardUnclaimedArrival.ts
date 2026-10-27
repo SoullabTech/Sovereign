@@ -10,6 +10,7 @@
  * separate, member-approved policy and backup/deletion contract.
  */
 import { query, transaction } from '@/lib/db/postgres';
+import { r20LedgerErrorCode, sealR20DeletionLedger } from '@/lib/recovery/r20DeletionLedger';
 import { destroyVaultBytes } from '@/lib/storage/fileVault';
 
 export type DiscardArrivalOutcome =
@@ -37,6 +38,15 @@ export async function discardUnclaimedArrival(
     const row = arrival.rows[0];
     if (row.manuscript_id !== null) return { kind: 'already_claimed' as const };
 
+    const landing = await tx.query<{ id: string }>(
+      `SELECT id FROM writer_source_landing_intents
+        WHERE arrival_id = $1::uuid AND member_id = $2::uuid
+        FOR UPDATE`,
+      [arrivalId, memberId],
+    );
+    if (landing.rows.length > 1) throw new Error('multiple landing intents for one arrival');
+    const landingIntentId = landing.rows[0]?.id ?? null;
+
     const deleted = await tx.query<{ id: string }>(
       `DELETE FROM manuscript_source_arrivals
         WHERE id = $1 AND member_id = $2 AND manuscript_id IS NULL
@@ -44,6 +54,32 @@ export async function discardUnclaimedArrival(
       [arrivalId, memberId],
     );
     if (deleted.rows.length !== 1) throw new Error('unclaimed arrival changed under lock');
+
+    // An explicit member discard is a sovereignty deletion, not merely live-row
+    // cleanup. Preserve exact refusal markers so an older SQL snapshot cannot
+    // reintroduce the arrival or its wrapped encryption key.
+    const manifest = await tx.query<{ id: string }>(
+      `INSERT INTO deletion_manifests
+         (reason_class, authorized_by, executed_at, note)
+       VALUES ('member_deletion', 'verified-member-self-service', now(),
+               'Unclaimed Writer original discarded by verified member request')
+       RETURNING id`,
+    );
+    const manifestId = manifest.rows[0]?.id;
+    if (!manifestId) throw new Error('unclaimed_discard_manifest_not_created');
+    const kinds = ['manuscript_source_arrivals'];
+    const ids = [arrivalId];
+    if (landingIntentId) {
+      kinds.push('writer_source_landing_intents');
+      ids.push(landingIntentId);
+    }
+    await tx.query(
+      `INSERT INTO provenance_tombstones (manifest_id, object_kind, object_id)
+       SELECT $1::uuid, item.kind, item.id
+         FROM unnest($2::text[], $3::text[]) AS item(kind, id)
+       ON CONFLICT (object_kind, object_id) DO NOTHING`,
+      [manifestId, kinds, ids],
+    );
 
     // Source artifacts are named by a unique vault-relative reference. Refuse
     // a deletion if another arrival still owns the same bytes.
@@ -67,6 +103,20 @@ export async function discardUnclaimedArrival(
   });
 
   if (locked.kind === 'not_found' || locked.kind === 'already_claimed') return locked;
+
+  // Do not physically finish or report the discard while the independent
+  // rollback-refusal ledger is unavailable. The database tombstones and any
+  // queued byte obligation remain durable for a later retry.
+  try {
+    const sealed = await sealR20DeletionLedger();
+    if (!sealed.sealed) return { kind: 'erasure_pending' };
+  } catch (error) {
+    console.error('[MAIA/press] unclaimed Source R20 seal still owed', {
+      code: r20LedgerErrorCode(error),
+    });
+    return { kind: 'erasure_pending' };
+  }
+
   if (locked.kind === 'without_bytes') return { kind: 'discarded', bytesDestroyed: true };
 
   try {

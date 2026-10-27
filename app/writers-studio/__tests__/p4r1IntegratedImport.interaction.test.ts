@@ -13,6 +13,7 @@ import { readLocalReviewManuscript } from '@/lib/writersStudio/localReviewManusc
 const mocked = apiFetch as jest.Mock;
 let root: Root;
 let container: HTMLDivElement;
+let originalRandomUuid: PropertyDescriptor | undefined;
 
 const response = (status: number, body: unknown) => ({
   status,
@@ -36,6 +37,11 @@ const button = (label: string) => {
 beforeEach(() => {
   mocked.mockReset();
   sessionStorage.clear();
+  originalRandomUuid = Object.getOwnPropertyDescriptor(globalThis.crypto, 'randomUUID');
+  Object.defineProperty(globalThis.crypto, 'randomUUID', {
+    configurable: true,
+    value: jest.fn(() => '33333333-3333-4333-8333-333333333333'),
+  });
   container = document.createElement('div');
   document.body.append(container);
   root = createRoot(container);
@@ -44,6 +50,11 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
+  if (originalRandomUuid) {
+    Object.defineProperty(globalThis.crypto, 'randomUUID', originalRandomUuid);
+  } else {
+    delete (globalThis.crypto as unknown as { randomUUID?: unknown }).randomUUID;
+  }
 });
 
 test('local review carries EPUB through source preview, author structure confirmation and exact manuscript identity', async () => {
@@ -135,6 +146,100 @@ test('local review carries EPUB through source preview, author structure confirm
     author: null,
     sections: [{ heading: 'Still Water', body: 'The lantern crossed the fictional river.' }],
   });
+});
+
+test('released production import reuses one upload identity after interruption and saves the returned Source arrival', async () => {
+  const onComplete = jest.fn();
+  const uuid = '33333333-3333-4333-8333-333333333333';
+  const randomUUID = (globalThis.crypto as unknown as { randomUUID: jest.Mock }).randomUUID;
+  mocked
+    .mockResolvedValueOnce(response(503, {
+      error: 'The upload did not finish. Your protected upload record was preserved; retry the same file.',
+      retryable: true,
+      retryHeader: 'x-writer-upload-idempotency-key',
+    }))
+    .mockResolvedValueOnce(response(200, {
+      title: 'Fictional River',
+      format: 'docx',
+      text: '# Opening\n\nThe fictional river moved under the bridge.',
+      warnings: [],
+      sourceArrivalId: '44444444-4444-4444-8444-444444444444',
+    }))
+    .mockResolvedValueOnce(response(200, {
+      lossless: true,
+      preview: [{
+        position: 0,
+        heading: 'Opening',
+        body: 'The fictional river moved under the bridge.',
+        headingDepth: 1,
+        headingSignal: 'markdown',
+      }],
+    }))
+    .mockResolvedValueOnce(response(201, {
+      id: '55555555-5555-4555-8555-555555555555',
+      sectionCount: 1,
+      sourceCustody: 'source_custodied',
+    }));
+
+  await act(async () => {
+    root.render(React.createElement(P4R1ImportManuscript, {
+      localReview: false,
+      sourceIntakeReleased: true,
+      onCancel: jest.fn(),
+      onComplete,
+    }));
+  });
+
+  expect(container.textContent).toContain('Your original is encrypted before durable storage');
+  const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+  const file = new File(['fictional-docx-package'], 'fictional-river.docx', {
+    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    lastModified: 1_793_028_000_000,
+  });
+
+  const select = async () => {
+    Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })));
+    await settle();
+  };
+
+  await select();
+  expect(container.textContent).toContain('protected upload record was preserved');
+  expect(mocked).toHaveBeenCalledTimes(1);
+  expect(mocked.mock.calls[0][0]).toBe('/api/sovereign/manuscripts/ingest');
+  expect(mocked.mock.calls[0][1]).toMatchObject({
+    method: 'POST',
+    headers: { 'x-writer-upload-idempotency-key': uuid },
+  });
+
+  await select();
+  expect(mocked).toHaveBeenCalledTimes(2);
+  expect(mocked.mock.calls[1][0]).toBe('/api/sovereign/manuscripts/ingest');
+  expect(mocked.mock.calls[1][1]).toMatchObject({
+    method: 'POST',
+    headers: { 'x-writer-upload-idempotency-key': uuid },
+  });
+  expect(randomUUID).toHaveBeenCalledTimes(1);
+  expect((container.querySelector('textarea') as HTMLTextAreaElement).value)
+    .toBe('# Opening\n\nThe fictional river moved under the bridge.');
+
+  await act(async () => button('Review structure').click());
+  await settle();
+  await act(async () => button('Confirm and open in Write').click());
+  await settle();
+
+  expect(mocked).toHaveBeenCalledTimes(4);
+  const saveBody = JSON.parse(String(mocked.mock.calls[3][1].body));
+  expect(saveBody.sourceArrivalId).toBe('44444444-4444-4444-8444-444444444444');
+  expect('confirmedText' in saveBody).toBe(false);
+  expect(saveBody.sections).toEqual([{
+    position: 0,
+    heading: 'Opening',
+    body: 'The fictional river moved under the bridge.',
+    headingDepth: 1,
+    headingSignal: 'markdown',
+  }]);
+  expect(onComplete).toHaveBeenCalledWith('55555555-5555-4555-8555-555555555555');
 });
 
 test('the integrated Home path owns Import and no longer leaves for the legacy Press page', () => {

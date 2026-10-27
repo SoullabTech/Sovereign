@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { writerPublicReleaseCapabilities } from '@/lib/writersStudio/releaseAuthority';
 
 export const dynamic = 'force-dynamic';
 const privateHeaders = {
@@ -17,8 +18,9 @@ export async function GET(req: NextRequest) {
         { status: 401, headers: privateHeaders },
       );
     }
+    const access = await writersStudioBetaAccess(memberId);
     return NextResponse.json(
-      await writersStudioBetaAccess(memberId),
+      { ...access, capabilities: writerPublicReleaseCapabilities() },
       { headers: privateHeaders },
     );
   } catch {

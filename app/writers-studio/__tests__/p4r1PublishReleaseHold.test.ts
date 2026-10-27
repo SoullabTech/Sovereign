@@ -17,6 +17,19 @@ jest.mock('@/app/writers-studio/full-redesign/Shell', () => ({
   Shell: ({ work }: { work: React.ReactNode }) =>
     React.createElement('main', { 'data-real-publish-room': '' }, work),
 }));
+jest.mock('@/lib/writersStudio/useWriterReleaseCapabilities', () => ({
+  useWriterReleaseCapabilities: () => ({
+    settled: true,
+    eligible: true,
+    authority: {
+      manifestId: 'test-held-manifest',
+      sourceIntakeReleased: false,
+      importFormats: ['docx', 'pdf', 'epub', 'text'],
+      exportsCertified: { pdf: false, epub: false },
+      permanentErasureCertified: false,
+    },
+  }),
+}));
 jest.mock('@/app/dev/writers-studio-pc3-live/P4R1ProducePanel', () => ({
   __esModule: true,
   default: (props: { manuscriptId: string; exportsCertified?: boolean }) => {

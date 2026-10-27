@@ -3,6 +3,11 @@
 import { useMemo, useRef, useState, type DragEvent } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { writeLocalReviewManuscript } from '@/lib/writersStudio/localReviewManuscript';
+import {
+  SOURCE_UPLOAD_IDEMPOTENCY_HEADER,
+  sourceUploadAttempt,
+  type SourceUploadAttempt,
+} from '@/lib/writersStudio/sourceUploadAttempt';
 
 const ACCEPT = '.docx,.pdf,.epub,.txt,.md,.markdown';
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
@@ -23,6 +28,7 @@ type Busy = 'reading' | 'previewing' | 'saving' | null;
 
 export type P4R1ImportManuscriptProps = {
   localReview: boolean;
+  sourceIntakeReleased?: boolean;
   onCancel: () => void;
   onComplete: (manuscriptId: string) => void;
 };
@@ -43,10 +49,12 @@ function renumber(sections: readonly ImportSection[]): ImportSection[] {
 
 export default function P4R1ImportManuscript({
   localReview,
+  sourceIntakeReleased = false,
   onCancel,
   onComplete,
 }: P4R1ImportManuscriptProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const uploadAttemptRef = useRef<SourceUploadAttempt | null>(null);
   const [phase, setPhase] = useState<ImportPhase>('source');
   const [busy, setBusy] = useState<Busy>(null);
   const [dragging, setDragging] = useState(false);
@@ -64,8 +72,13 @@ export default function P4R1ImportManuscript({
     const words = text.trim() ? text.trim().split(/\s+/).length : 0;
     return { words, characters: text.length };
   }, [text]);
+  const fileIntakeAvailable = localReview || sourceIntakeReleased;
 
   const readFile = async (file: File) => {
+    if (!fileIntakeAvailable) {
+      setError('Original-file import is not released on this Writer image. Nothing was sent.');
+      return;
+    }
     setError(null);
     setWarnings([]);
     setSourceArrivalId(null);
@@ -79,6 +92,21 @@ export default function P4R1ImportManuscript({
       return;
     }
 
+    let uploadAttempt: SourceUploadAttempt | null = null;
+    if (!localReview) {
+      try {
+        uploadAttempt = sourceUploadAttempt(
+          uploadAttemptRef.current,
+          file,
+          () => globalThis.crypto.randomUUID(),
+        );
+        uploadAttemptRef.current = uploadAttempt;
+      } catch {
+        setError('A secure retry identity could not be created for this file. Nothing was sent.');
+        return;
+      }
+    }
+
     setBusy('reading');
     try {
       const form = new FormData();
@@ -86,7 +114,13 @@ export default function P4R1ImportManuscript({
       const endpoint = localReview
         ? '/api/writers-studio/local-review/import'
         : '/api/sovereign/manuscripts/ingest';
-      const response = await apiFetch(endpoint, { method: 'POST', body: form });
+      const response = await apiFetch(endpoint, {
+        method: 'POST',
+        body: form,
+        ...(uploadAttempt
+          ? { headers: { [SOURCE_UPLOAD_IDEMPOTENCY_HEADER]: uploadAttempt.idempotencyKey } }
+          : {}),
+      });
       const body = await response.json().catch(() => null) as Record<string, unknown> | null;
       if (!response.ok) {
         if (response.status === 423) {
@@ -235,7 +269,9 @@ export default function P4R1ImportManuscript({
   };
 
   return (
-    <main className="p4r1-import" data-writer-import data-local-review={localReview ? 'true' : 'false'}>
+    <main className="p4r1-import" data-writer-import
+      data-local-review={localReview ? 'true' : 'false'}
+      data-source-intake={sourceIntakeReleased ? 'released' : 'held'}>
       <header className="p4r1-import-head">
         <button type="button" className="p4r1-import-back" onClick={onCancel}>← Home</button>
         <div>
@@ -244,7 +280,9 @@ export default function P4R1ImportManuscript({
           <p>
             {localReview
               ? 'Bring a PDF, EPUB, Word document, Markdown or plain-text manuscript. You will see the extracted words and confirm every proposed section before anything becomes a manuscript.'
-              : 'Paste writing you already have and confirm every proposed section before anything becomes a manuscript. PDF and EPUB file import is in founder-local review while protected Source custody remains held.'}
+              : sourceIntakeReleased
+                ? 'Bring a PDF, EPUB, Word document, Markdown or plain-text manuscript. Your original is encrypted before durable storage, and you confirm every proposed section before it becomes a manuscript.'
+                : 'Paste writing you already have and confirm every proposed section before anything becomes a manuscript. Original-file import remains held on this Writer image.'}
           </p>
         </div>
         {localReview ? <span className="p4r1-import-local">Local review · not retained</span> : null}
@@ -258,7 +296,7 @@ export default function P4R1ImportManuscript({
 
       {phase === 'source' ? (
         <section className="p4r1-import-source">
-          {localReview ? (
+          {fileIntakeAvailable ? (
             <>
               <div
                 className="p4r1-import-drop"
@@ -298,8 +336,8 @@ export default function P4R1ImportManuscript({
             </>
           ) : (
             <div className="p4r1-import-held" role="note">
-              <b>File import is in founder-local review.</b>
-              <p>PDF, EPUB and Word files are not accepted from member accounts yet. Paste your writing below; nothing is sent until you review its proposed structure.</p>
+              <b>Original-file import is held on this Writer image.</b>
+              <p>PDF, EPUB and Word files are not accepted from member accounts yet. Paste a working copy below; nothing is sent until you review its proposed structure.</p>
             </div>
           )}
 
@@ -328,7 +366,9 @@ export default function P4R1ImportManuscript({
             <p>
               {localReview
                 ? 'This review session keeps the file and extracted manuscript in memory only. Closing the dedicated window clears it.'
-                : 'The original file remains separate from the editable Working Draft. Nothing is interpreted or rewritten by MAIA during import.'}
+                : sourceIntakeReleased
+                  ? 'The original is encrypted before durable storage and remains separate from the editable Working Draft. Nothing is interpreted or rewritten by MAIA during import.'
+                  : 'Paste import creates an editable Working Draft only. Original-file custody remains held on this Writer image.'}
             </p>
             <button type="button" className="p4r1-import-primary" disabled={busy !== null || !title.trim() || !text.trim()}
               onClick={() => void previewStructure()}>

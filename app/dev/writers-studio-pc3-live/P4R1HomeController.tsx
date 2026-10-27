@@ -22,6 +22,7 @@ import {
 } from '@/app/writers-studio/situatedWork';
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival, withoutStudioWork } from '@/app/writers-studio/h1Arrival';
+import { useWriterReleaseCapabilities } from '@/lib/writersStudio/useWriterReleaseCapabilities';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -40,6 +41,7 @@ export default function P4R1HomeController() {
   // Presentation hint only. The server-side review route independently requires
   // a loopback host and WS_FOUNDER_LOCAL_REVIEW=1 on every request.
   const localReviewRequested = params?.get('localReview') === '1';
+  const releaseCapabilities = useWriterReleaseCapabilities();
 
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
   const { phase: manuscriptPhase, manuscripts, reload: reloadManuscripts } = useCurrentManuscript();
@@ -276,6 +278,7 @@ export default function P4R1HomeController() {
         work={
           <P4R1ImportManuscript
             localReview={localReviewRequested}
+            sourceIntakeReleased={releaseCapabilities.authority.sourceIntakeReleased}
             onCancel={closeImport}
             onComplete={(manuscriptId) => void completeImport(manuscriptId)}
           />
