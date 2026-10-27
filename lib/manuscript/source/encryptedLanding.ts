@@ -5,6 +5,8 @@ import {
   ARTIFACT_EXTRACTION,
   buildArrival,
   hashBytes,
+  hashText,
+  type ArrivalRecord,
   type ExtractorKey,
   type SourceKind,
 } from './custody';
@@ -85,6 +87,12 @@ export interface RecordedEncryptedArrival {
   artifactRef: string;
   artifactHash: string;
   landingIntentId: string;
+}
+
+export interface StoredArrivalProvenance {
+  sourceTextHash: string;
+  extractionMethod: string;
+  extractorVersion: string;
 }
 
 export class SourceLandingIncompleteError extends Error {
@@ -414,6 +422,7 @@ export async function commitEncryptedArrival(input: {
   mimeType: string | null;
   sourceText: string;
   extractor: ExtractorKey;
+  storedProvenance?: StoredArrivalProvenance;
 }): Promise<RecordedEncryptedArrival> {
   if (!input.originalFilename || typeof input.sourceText !== 'string' ||
       input.sourceText.length === 0 || input.sourceText.length > 2_000_000) {
@@ -447,16 +456,36 @@ export async function commitEncryptedArrival(input: {
       throw new Error('source_landing_commit_fenced');
     }
 
-    const record = buildArrival({
-      kind: ARTIFACT_EXTRACTION,
-      artifactRef: current.artifact_ref,
-      artifactHash: current.original_sha256,
-      artifactSize: numberOf(current.original_bytes, 'source_landing_original_bytes'),
-      originalFilename: input.originalFilename,
-      mimeType: input.mimeType,
-      sourceText: input.sourceText,
-      extractor: input.extractor,
-    });
+    const record: ArrivalRecord = input.storedProvenance
+      ? (() => {
+          if (hashText(input.sourceText) !== input.storedProvenance.sourceTextHash ||
+              input.storedProvenance.extractionMethod.length === 0 ||
+              input.storedProvenance.extractorVersion.length === 0) {
+            throw new Error('source_landing_stored_provenance_invalid');
+          }
+          return {
+            sourceKind: ARTIFACT_EXTRACTION,
+            artifactRef: current.artifact_ref,
+            artifactHash: current.original_sha256,
+            artifactSize: numberOf(current.original_bytes, 'source_landing_original_bytes'),
+            originalFilename: input.originalFilename,
+            mimeType: input.mimeType,
+            sourceText: input.sourceText,
+            sourceTextHash: input.storedProvenance.sourceTextHash,
+            extractionMethod: input.storedProvenance.extractionMethod,
+            extractorVersion: input.storedProvenance.extractorVersion,
+          };
+        })()
+      : buildArrival({
+          kind: ARTIFACT_EXTRACTION,
+          artifactRef: current.artifact_ref,
+          artifactHash: current.original_sha256,
+          artifactSize: numberOf(current.original_bytes, 'source_landing_original_bytes'),
+          originalFilename: input.originalFilename,
+          mimeType: input.mimeType,
+          sourceText: input.sourceText,
+          extractor: input.extractor,
+        });
     const inserted = await tx.query<{ id: string }>(
       `INSERT INTO manuscript_source_arrivals
          (member_id, source_kind, artifact_ref, artifact_hash, artifact_size,
@@ -651,6 +680,97 @@ export async function recordEncryptedArtifactArrival(input: {
     } catch (error) {
       // A concurrent retry may have committed the same member-bound arrival.
       // Return it only after re-reading the intent's authoritative state.
+      const final = await reloadLanding(intent.id, input.memberId);
+      if (final.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(final);
+      throw error;
+    }
+  } catch (error) {
+    throw new SourceLandingIncompleteError('source_landing_incomplete', intentId, error);
+  }
+}
+
+/**
+ * One-time replacement for a pre-encryption Source arrival. The original
+ * extraction provenance is copied exactly; migration does not pretend that the
+ * file was re-parsed by today's libraries.
+ */
+export async function recordEncryptedLegacyReplacementArrival(input: {
+  memberId: string;
+  bytes: Buffer;
+  originalFilename: string;
+  mimeType: string | null;
+  sourceText: string;
+  sourceTextHash: string;
+  extractionMethod: string;
+  extractorVersion: string;
+  extractor: ExtractorKey;
+  format: SourceArtifactFormat;
+  idempotencyKey: string;
+}): Promise<RecordedEncryptedArrival> {
+  let intentId: string | null = null;
+  try {
+    let intent = await beginEncryptedLanding({
+      memberId: input.memberId,
+      bytes: input.bytes,
+      format: input.format,
+      idempotencyKey: input.idempotencyKey,
+    });
+    intentId = intent.id;
+    if (intent.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(intent);
+    if (intent.state === 'WRITING_BYTES') {
+      intent = await renewExpiredWritingLease(intent);
+      if (intent.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(intent);
+    }
+
+    let lease: LandingLease;
+    if (intent.state === 'PENDING_BYTES') {
+      const prepared = await prepareEncryptedWrite({
+        memberId: input.memberId,
+        intentId: intent.id,
+        bytes: input.bytes,
+      });
+      await writePreparedCiphertext(prepared);
+      lease = prepared.lease;
+    } else if (intent.state === 'WRITING_BYTES') {
+      lease = await resumeWritingLanding(intent, input.bytes);
+    } else if (intent.state === 'BYTES_VERIFIED') {
+      lease = leaseFromRow(intent);
+    } else {
+      throw new Error('source_landing_state_refused');
+    }
+
+    intent = await reloadLanding(intent.id, input.memberId);
+    if (intent.state === 'WRITING_BYTES') {
+      const verified = await markEncryptedBytesVerified(lease);
+      if (!verified.accepted) {
+        intent = await reloadLanding(intent.id, input.memberId);
+        if (intent.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(intent);
+        if (intent.state !== 'BYTES_VERIFIED') {
+          throw new Error('source_landing_verification_refused');
+        }
+      } else {
+        intent = await reloadLanding(intent.id, input.memberId);
+      }
+    }
+    if (intent.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(intent);
+    if (intent.state !== 'BYTES_VERIFIED') {
+      throw new Error('source_landing_not_ready_for_arrival');
+    }
+
+    try {
+      return await commitEncryptedArrival({
+        lease: leaseFromRow(intent),
+        originalFilename: input.originalFilename,
+        mimeType: input.mimeType,
+        sourceText: input.sourceText,
+        extractor: input.extractor,
+        storedProvenance: {
+          sourceTextHash: input.sourceTextHash,
+          extractionMethod: input.extractionMethod,
+          extractorVersion: input.extractorVersion,
+        },
+      });
+    } catch (error) {
       const final = await reloadLanding(intent.id, input.memberId);
       if (final.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(final);
       throw error;
