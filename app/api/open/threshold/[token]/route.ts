@@ -1,100 +1,59 @@
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-/**
- * Encounter Threshold — participant side. PUBLIC (guest joins with a link).
- *
- * GET  /api/open/threshold/[token]  — what is being consented to (title, name, consent text)
- * POST /api/open/threshold/[token]  — author this participant's consent (join + record)
- *
- * The token is a participant-scoped HMAC capability minted by the practitioner route.
- * Holding it = acting as that participant; the consent row is authored at the client's
- * own device, at the threshold (spec §3). Idempotent: re-consent upserts nothing new
- * (UNIQUE encounter/participant/kind).
- *
- * This route writes ONLY consent rows. No media, no stream, no recorder state. The
- * recorder path (Phase B step 2) is separately refused by the R-A1 DB trigger unless
- * the `record` row written here exists.
- */
-
-import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db/postgres';
-import { verifyThresholdToken, RECORD_CONSENT_TEXT } from '@/lib/encounters/threshold';
-
-async function loadThresholdContext(token: string) {
-  const claims = verifyThresholdToken(token);
-  if (!claims) return null;
-  const result = await db.query(
-    `SELECT e.id AS encounter_id, e.title, e.status,
-            ep.id AS participant_id, ep.display_name, ep.role
-     FROM encounters e
-     JOIN encounter_participants ep ON ep.encounter_id = e.id
-     WHERE e.id = $1 AND ep.id = $2`,
-    [claims.encounterId, claims.participantId]
-  );
-  return result.rows[0] ?? null;
+export const runtime='nodejs';
+export const dynamic='force-dynamic';
+import {NextRequest,NextResponse} from 'next/server';
+import {
+  appendEncounterConsentDecision,
+  decideStoredEncounterConsent,
+  loadEncounterConsentContext,
+  scopeFromContext,
+} from '@/lib/encounters/consentLedgerStore';
+import type {EncounterConsentAction,EncounterConsentPurpose} from '@/lib/encounters/consentDecision';
+import {JOIN_CONSENT_TEXT,RECORD_CONSENT_TEXT,verifyThresholdToken} from '@/lib/encounters/threshold';
+const THRESHOLD_PURPOSES=new Set<EncounterConsentPurpose>(['join','record_audio']);
+const ACTIONS=new Set<EncounterConsentAction>(['grant','refuse','revoke']);
+async function loadThresholdContext(token:string){
+  const claims=verifyThresholdToken(token);if(!claims)return null;
+  const context=await loadEncounterConsentContext(claims.encounterId,claims.participantId);
+  if(!context||context.agreementVersion!==claims.agreementVersion||context.generation!==claims.generation)return null;
+  return {claims,context};
 }
-
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ token: string }> }) {
-  try {
-    const { token } = await params;
-    const ctx = await loadThresholdContext(token);
-    if (!ctx) return NextResponse.json({ error: 'Invalid or expired threshold link' }, { status: 404 });
-
-    const consents = await db.query(
-      `SELECT kind FROM encounter_consent_events WHERE encounter_id = $1 AND participant_id = $2`,
-      [ctx.encounter_id, ctx.participant_id]
-    );
-    const kinds = consents.rows.map((r) => r.kind as string);
-
-    return NextResponse.json({
-      encounterId: ctx.encounter_id,
-      encounterTitle: ctx.title,
-      displayName: ctx.display_name,
-      role: ctx.role,
-      consentText: RECORD_CONSENT_TEXT,
-      joined: kinds.includes('join'),
-      recordConsented: kinds.includes('record'),
-    });
-  } catch (error) {
-    console.error('[Threshold/open] GET error:', error);
-    return NextResponse.json({ error: 'Failed to load threshold' }, { status: 500 });
-  }
+export async function GET(_request:NextRequest,{params}:{params:Promise<{token:string}>}){
+ try{
+  const {token}=await params;const loaded=await loadThresholdContext(token);
+  if(!loaded)return NextResponse.json({error:'Invalid, expired, or superseded threshold link'},{status:404});
+  const joinScope=scopeFromContext(loaded.context,'join');
+  const recordScope=scopeFromContext(loaded.context,'record_audio');
+  const [joinDecision,recordDecision]=await Promise.all([
+    decideStoredEncounterConsent(joinScope),decideStoredEncounterConsent(recordScope),
+  ]);
+  return NextResponse.json({encounterId:loaded.context.encounterId,displayName:loaded.context.displayName,
+    role:loaded.context.role,agreementVersion:loaded.context.agreementVersion,generation:loaded.context.generation,
+    joinConsentText:JOIN_CONSENT_TEXT,recordConsentText:RECORD_CONSENT_TEXT,
+    joined:joinDecision.allowed,recordConsented:recordDecision.allowed,
+    joinDecision:joinDecision.reason,recordDecision:recordDecision.reason});
+ }catch(error){console.error('[Threshold/open] GET error:',error instanceof Error?error.name:'unknown');
+  return NextResponse.json({error:'Failed to load threshold'},{status:500});}
 }
-
-export async function POST(request: NextRequest, { params }: { params: Promise<{ token: string }> }) {
-  try {
-    const { token } = await params;
-    const ctx = await loadThresholdContext(token);
-    if (!ctx) return NextResponse.json({ error: 'Invalid or expired threshold link' }, { status: 404 });
-
-    let body: { consent?: boolean };
-    try {
-      body = await request.json();
-    } catch {
-      body = {};
-    }
-    // Explicit affirmative only. Absence, false, or anything else writes nothing.
-    if (body.consent !== true) {
-      return NextResponse.json({ error: 'Consent requires an explicit affirmative' }, { status: 400 });
-    }
-
-    // join + record, idempotent (UNIQUE encounter_id, participant_id, kind).
-    await db.query(
-      `INSERT INTO encounter_consent_events (encounter_id, participant_id, kind, text_snapshot)
-       VALUES ($1, $2, 'join', NULL), ($1, $2, 'record', $3)
-       ON CONFLICT (encounter_id, participant_id, kind) DO NOTHING`,
-      [ctx.encounter_id, ctx.participant_id, RECORD_CONSENT_TEXT]
-    );
-
-    console.log('[Threshold/open] record consent authored', {
-      encounterIdPrefix: String(ctx.encounter_id).slice(0, 8),
-      participantIdPrefix: String(ctx.participant_id).slice(0, 8),
-    });
-
-    return NextResponse.json({ ok: true, encounterId: ctx.encounter_id, joined: true, recordConsented: true });
-  } catch (error) {
-    console.error('[Threshold/open] POST error:', error);
-    return NextResponse.json({ error: 'Failed to record consent' }, { status: 500 });
-  }
+export async function POST(request:NextRequest,{params}:{params:Promise<{token:string}>}){
+ try{
+  const {token}=await params;const loaded=await loadThresholdContext(token);
+  if(!loaded)return NextResponse.json({error:'Invalid, expired, or superseded threshold link'},{status:404});
+  let body:{purpose?:unknown;action?:unknown};try{body=await request.json();}catch{body={};}
+  if(typeof body.purpose!=='string'||!THRESHOLD_PURPOSES.has(body.purpose as EncounterConsentPurpose)
+     ||typeof body.action!=='string'||!ACTIONS.has(body.action as EncounterConsentAction))
+    return NextResponse.json({error:'purpose and action must name one supported decision'},{status:400});
+  const purpose=body.purpose as EncounterConsentPurpose;const action=body.action as EncounterConsentAction;
+  const scope=scopeFromContext(loaded.context,purpose);
+  await appendEncounterConsentDecision({...scope,action,textSnapshot:action==='grant'
+    ?(purpose==='join'?JOIN_CONSENT_TEXT:RECORD_CONSENT_TEXT):null});
+  const decision=await decideStoredEncounterConsent(scope);
+  console.log('[Threshold/open] consent decision appended',{purpose,action,
+    encounterIdPrefix:loaded.context.encounterId.slice(0,8),participantIdPrefix:loaded.context.participantId.slice(0,8)});
+  return NextResponse.json({ok:true,purpose,action,allowed:decision.allowed,reason:decision.reason,
+    agreementVersion:scope.agreementVersion,generation:scope.generation});
+ }catch(error){
+  if(error instanceof Error&&error.message==='CONSENT_SCOPE_STALE_OR_UNKNOWN')
+   return NextResponse.json({error:'The consent agreement changed; reopen the current threshold link'},{status:409});
+  console.error('[Threshold/open] POST error:',error instanceof Error?error.name:'unknown');
+  return NextResponse.json({error:'Failed to record consent decision'},{status:500});}
 }
