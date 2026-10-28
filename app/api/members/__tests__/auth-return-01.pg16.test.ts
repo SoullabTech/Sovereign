@@ -13,11 +13,18 @@ const mockLockProof = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockHashPassword = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockRevokeSession = jest.fn<(...args: unknown[]) => Promise<boolean>>();
 const mockSetSessionCookies = jest.fn<(...args: unknown[]) => unknown>();
+const mockDeriveVerifiedAccess = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockProgressQuery = jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount: number }>>();
 const mockClientQuery = jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount: number }>>();
 const mockClient = { query: mockClientQuery };
 
 jest.mock('@/lib/db/postgres', () => ({
   transaction: (fn: (client: typeof mockClient) => unknown) => fn(mockClient),
+  query: (...args: [string, unknown[]?]) => mockProgressQuery(...args),
+}));
+
+jest.mock('@/lib/auth/verifiedAccess', () => ({
+  deriveVerifiedAccess: (...args: unknown[]) => mockDeriveVerifiedAccess(...args),
 }));
 
 jest.mock('@/lib/auth/registrationProof', () => {
@@ -49,9 +56,11 @@ jest.mock('@/lib/auth/rateLimiter', () => ({
 }));
 
 import { POST } from '../register-email/route';
+import { GET as GET_PROGRESS, POST as POST_PROGRESS } from '../progress/route';
 import { RegistrationProofError } from '@/lib/auth/registrationProof';
 
 const MEMBER_ID = '22222222-2222-4222-8222-222222222222';
+const OTHER_MEMBER_ID = '33333333-3333-4333-8333-333333333333';
 
 function request(options: {
   proofCookie?: string;
@@ -231,5 +240,157 @@ describe('POST /api/members/register-email — AUTH-RETURN-01', () => {
       },
     }));
     expect((await res.json()).redirect).toBe('/faq?next=%2Fhome');
+  });
+});
+
+type ProgressFixture = {
+  id: string;
+  onboarded: boolean;
+  onboarding_step: string;
+  youth_onboarded: boolean;
+};
+
+function progressRequest(options: {
+  method?: 'GET' | 'POST';
+  body?: Record<string, unknown>;
+  origin?: string;
+  memberClaim?: string;
+} = {}) {
+  const method = options.method ?? 'POST';
+  const origin = options.origin ?? 'http://localhost';
+  const headers: Record<string, string> = {
+    origin,
+    'sec-fetch-site': origin === 'http://localhost' ? 'same-origin' : 'cross-site',
+    'content-type': 'application/json',
+  };
+  if (options.memberClaim) headers['x-member-id'] = options.memberClaim;
+  return new NextRequest('http://localhost/api/members/progress', {
+    method,
+    headers,
+    ...(method === 'POST' ? { body: JSON.stringify(options.body ?? { step: 'onboarding' }) } : {}),
+  });
+}
+
+function installProgressDatabase(initial: Partial<ProgressFixture> = {}) {
+  const row: ProgressFixture = {
+    id: MEMBER_ID,
+    onboarded: false,
+    onboarding_step: 'faq',
+    youth_onboarded: false,
+    ...initial,
+  };
+  mockProgressQuery.mockImplementation(async (sql: string, params: unknown[] = []) => {
+    if (/UPDATE members/.test(sql)) {
+      const target = sql.includes('onboarding_step = $1') ? String(params[1]) : String(params[0]);
+      if (target !== row.id) return { rows: [], rowCount: 0 };
+      if (sql.includes("onboarding_step = 'complete'")) {
+        row.onboarded = true;
+        row.onboarding_step = 'complete';
+        if (params[1] === true) row.youth_onboarded = true;
+      } else if (sql.includes('SET youth_onboarded = TRUE')) {
+        row.youth_onboarded = true;
+      } else if (sql.includes('SET onboarding_step = $1')) {
+        row.onboarding_step = String(params[0]);
+      }
+      return { rows: [{ ...row }], rowCount: 1 };
+    }
+    if (/SELECT id, onboarded, onboarding_step, youth_onboarded/.test(sql)) {
+      return String(params[0]) === row.id
+        ? { rows: [{ ...row }], rowCount: 1 }
+        : { rows: [], rowCount: 0 };
+    }
+    throw new Error(`unexpected progress SQL: ${sql}`);
+  });
+  return row;
+}
+
+describe('/api/members/progress — verified self-ownership', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockDeriveVerifiedAccess.mockResolvedValue({
+      authenticated: true,
+      memberId: MEMBER_ID,
+      tier: 'free',
+      roles: ['member'],
+    });
+    installProgressDatabase();
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => { jest.restoreAllMocks(); });
+
+  it('updates only the member resolved from verified session authority', async () => {
+    const res = await POST_PROGRESS(progressRequest({
+      body: { memberId: MEMBER_ID, complete: true },
+    }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ success: true, onboarded: true, step: 'complete' });
+    expect(mockProgressQuery).toHaveBeenCalledWith(
+      expect.stringContaining('WHERE id = $1'),
+      [MEMBER_ID, false],
+    );
+  });
+
+  it('accepts the compatibility body without a memberId and still uses session ownership', async () => {
+    const res = await POST_PROGRESS(progressRequest({ body: { step: 'onboarding' } }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ success: true, step: 'onboarding' });
+    expect(mockProgressQuery).toHaveBeenCalledWith(
+      expect.stringContaining('SET onboarding_step = $1'),
+      ['onboarding', MEMBER_ID],
+    );
+  });
+
+  it('refuses a conflicting body member before database work', async () => {
+    const res = await POST_PROGRESS(progressRequest({
+      body: { memberId: OTHER_MEMBER_ID, complete: true },
+    }));
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({ reason: 'member_claim_mismatch' });
+    expect(mockProgressQuery).not.toHaveBeenCalled();
+  });
+
+  it('refuses unauthenticated and unavailable authority without database work', async () => {
+    mockDeriveVerifiedAccess.mockResolvedValueOnce({
+      authenticated: false, memberId: null, tier: 'free', roles: [], reason: 'no_credential',
+    });
+    let res = await POST_PROGRESS(progressRequest());
+    expect(res.status).toBe(401);
+    expect(mockProgressQuery).not.toHaveBeenCalled();
+
+    mockDeriveVerifiedAccess.mockResolvedValueOnce({
+      authenticated: false, memberId: null, tier: 'free', roles: [], reason: 'authority_unavailable',
+    });
+    res = await POST_PROGRESS(progressRequest());
+    expect(res.status).toBe(503);
+    expect(mockProgressQuery).not.toHaveBeenCalled();
+  });
+
+  it('refuses a cross-site mutation before session or database work', async () => {
+    const res = await POST_PROGRESS(progressRequest({ origin: 'https://outside.invalid' }));
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({ reason: 'AUTH_ORIGIN_REFUSED' });
+    expect(mockDeriveVerifiedAccess).not.toHaveBeenCalled();
+    expect(mockProgressQuery).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 rather than claiming progress for a missing verified member', async () => {
+    mockProgressQuery.mockResolvedValueOnce({ rows: [], rowCount: 0 });
+    const res = await POST_PROGRESS(progressRequest({ body: { step: 'faq' } }));
+    expect(res.status).toBe(404);
+    expect(await res.json()).toMatchObject({ reason: 'member_not_found' });
+  });
+
+  it('reads only the verified member and ignores URL identity as authority', async () => {
+    const res = await GET_PROGRESS(new NextRequest(
+      `http://localhost/api/members/progress?memberId=${OTHER_MEMBER_ID}`,
+      { method: 'GET' },
+    ));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ onboarded: false, step: 'faq' });
+    expect(mockProgressQuery).toHaveBeenCalledWith(
+      expect.stringContaining('WHERE id = $1'),
+      [MEMBER_ID],
+    );
   });
 });

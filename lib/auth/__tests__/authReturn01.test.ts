@@ -25,6 +25,12 @@ const publicPosts = [
   '/api/members/register-email',
   '/api/members/register',
   '/api/members/signout',
+  '/api/members/lookup-email',
+];
+const authenticatedPosts = [
+  '/api/auth/device/trust',
+  '/api/onboarding/telemetry',
+  '/api/members/progress',
 ];
 const neighbors = [
   '/api/members/email-code-extra',
@@ -38,6 +44,16 @@ const neighbors = [
   '/api/members/session/child',
   '/api/members/signout-extra',
   '/api/members/signout/child',
+  '/api/members/lookup-email-extra',
+  '/api/members/lookup-email/child',
+  '/api/auth/whoami-extra',
+  '/api/auth/whoami/child',
+  '/api/auth/device/trust-extra',
+  '/api/auth/device/trust/child',
+  '/api/onboarding/telemetry-extra',
+  '/api/onboarding/telemetry/child',
+  '/api/members/progress-extra',
+  '/api/members/progress/child',
 ];
 const assertedHeaders: Record<string, string> = {
   'x-member-id': 'fictional-birch',
@@ -101,6 +117,49 @@ describe('AUTH-RETURN-01 exact route and method admission', () => {
     for (const name of Object.keys(assertedHeaders)) {
       expect(response.headers.get(`x-middleware-request-${name}`)).toBeNull();
     }
+    expect(authority).not.toHaveBeenCalled();
+  });
+
+  it.each(['GET', 'OPTIONS'])('admits the exact public whoami %s while leaving credential truth to its handler', async (method) => {
+    expect(matchRule('/api/auth/whoami')).toEqual(expect.objectContaining({
+      exact: '/api/auth/whoami', public: true, methods: ['GET', 'OPTIONS'],
+    }));
+    const response = await proxy(request('/api/auth/whoami', method, assertedHeaders));
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+    expect(authority).not.toHaveBeenCalled();
+  });
+
+  it.each(['HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'])('refuses unlisted whoami method %s', async (method) => {
+    const response = await proxy(request('/api/auth/whoami', method, assertedHeaders));
+    expect(response.status).toBe(405);
+    expect(response.headers.get('allow')).toBe('GET, OPTIONS');
+    expect(authority).not.toHaveBeenCalled();
+  });
+
+  it.each(authenticatedPosts)('requires verified authority for exact member mutation %s', async (path) => {
+    expect(matchRule(path)).toEqual(expect.objectContaining({ exact: path, minTier: 'free', methods: ['POST'] }));
+    const response = await proxy(request(path, 'POST', assertedHeaders));
+    expect(response.status).toBe(401);
+    expect(response.headers.get('x-middleware-next')).toBeNull();
+    expect(authority).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(authenticatedPosts)('forwards exact member mutation %s with authority-derived identity', async (path) => {
+    authority.mockResolvedValue(memberA);
+    const response = await proxy(request(path, 'POST', assertedHeaders));
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+    expect(response.headers.get('x-middleware-request-x-access-member-id')).toBe('fictional-alder');
+    expect(response.headers.get('x-middleware-request-x-access-tier')).toBe('free');
+    expect(response.headers.get('x-middleware-request-x-access-roles')).toBe('member');
+    expect(response.headers.get('x-middleware-request-x-member-id')).toBeNull();
+  });
+
+  it.each(authenticatedPosts.flatMap((path) => ['GET', 'HEAD', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+    .map((method) => [path, method])))
+  ('refuses unlisted method at %s %s before authority lookup', async (path, method) => {
+    const response = await proxy(request(path, method, assertedHeaders));
+    expect(response.status).toBe(405);
+    expect(response.headers.get('allow')).toBe('POST');
     expect(authority).not.toHaveBeenCalled();
   });
 

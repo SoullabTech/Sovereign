@@ -584,6 +584,15 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/members/email-code/verify', public: true, methods: ['POST'], notes: 'Consume a challenge into verified session or one-use registration proof' },
   { exact: '/api/members/session', minTier: 'free', methods: ['GET', 'HEAD', 'POST'], notes: 'Verified current-session readback and cookie refresh; handler independently verifies authority' },
   { exact: '/api/members/signout', public: true, methods: ['POST'], notes: 'Clear the caller session, including stale credentials; handler confines revocation to that session' },
+  // AUTH-RETURN-01 whole-journey routes. Exact methods only: no auth/onboarding wildcard.
+  // Public admission reaches handlers that independently validate or deliberately
+  // disclose only a tightly bounded pre-auth fact. Member mutations require the
+  // verified outer identity and must independently re-check it in the handler.
+  { exact: '/api/auth/whoami', public: true, methods: ['GET', 'OPTIONS'], notes: 'Current-session readback; handler independently validates every presented credential' },
+  { exact: '/api/members/lookup-email', public: true, methods: ['POST'], notes: 'Rate-limited pre-auth lookup with a two-boolean disclosure budget' },
+  { exact: '/api/auth/device/trust', minTier: 'free', methods: ['POST'], notes: 'Authenticated device-trust mutation; handler independently validates current session' },
+  { exact: '/api/onboarding/telemetry', minTier: 'free', methods: ['POST'], notes: 'Authenticated, non-critical onboarding telemetry' },
+  { exact: '/api/members/progress', minTier: 'free', methods: ['POST'], notes: 'Session-owned onboarding progress mutation; handler refuses cross-origin and conflicting member claims' },
   // WRITER-IDENTITY-01: canonical member self-read used by Writer's Studio.
   // The outer matrix requires an authenticated member at any tier; the handler
   // independently resolves the verified credential and refuses caller-supplied identity.
