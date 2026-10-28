@@ -77,7 +77,8 @@ test('approved run sanitizes ambient state and uses restricted temp custody', as
   assert.equal(r.continuity_access, false);
   assert.ok(seen.cwd.startsWith(os.tmpdir()));
   assert.ok(!seen.args.join(' ').includes('/Users/soullab/MAIA-SOVEREIGN'));
-  assert.deepEqual(seen.args.slice(0, 4), ['run', '--pure', '--agent', 'jarvis-frontier']);
+  assert.deepEqual(seen.args.slice(0, 4), ['run', '--standalone', '--agent', 'jarvis-frontier']);
+  assert.equal(seen.args.includes('--pure'), false);
   assert.match(seen.agent, /"\*": deny/);
   assert.match(seen.agent, /read: deny/);
   assert.match(seen.agent, /bash: deny/);

@@ -163,7 +163,7 @@ function run(req, opts = {}) {
   const exec = opts.execFileImpl || execFile;
   const env = buildSanitizedEnv(tempHome, opts.env || process.env);
   const args = [
-    'run', '--pure', '--agent', 'jarvis-frontier',
+    'run', '--standalone', '--agent', 'jarvis-frontier',
     boundaryPrompt(checked.prompt),
   ];
   const cleanup = () => {
