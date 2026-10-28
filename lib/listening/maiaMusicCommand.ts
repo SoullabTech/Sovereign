@@ -1,12 +1,13 @@
 /**
  * LISTEN-54 R1 / LISTEN-55 source-owner revision: SIDE-EFFECT-FREE command grammar.
  *
- * REVIEW PACKET ONLY. This file is not installed in the Soullab repository.
+ * REVIEW SOURCE CANDIDATE. Source presence does not imply release acceptance.
+ * Media rights, device acceptance and production release remain separate gates.
  * It neither authenticates a member nor plays sound, fetches private content,
  * produces provider inference, licenses recordings, starts a timer, or modifies
  * the existing VoiceCommandDetector / FocusFieldSession / audio authority.
  *
- * Any eventual caller MUST use the existing verified session and listening
+ * Every caller MUST use the existing verified session and listening
  * boundary, not trust a client memberId or a model-authored intent. Audio
  * effects belong exclusively to the single PersistentListeningProvider under
  * AUDIO-PLATFORM-01 with rights/media delivery authority independently proven.

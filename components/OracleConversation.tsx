@@ -5099,6 +5099,28 @@ I'm not sure what I'm feeling yet.`;
     const commandResult = commandContext?.parseResult ?? detectMaiaCommands(authoredText);
     const { commands: maiaCommands, onlyCommands } = commandResult;
     const freshMusicIntent = !retryOf ? commandContext?.freshMusicIntent : undefined;
+
+    // Safety Stop is immediate, even without an available F1 server.  Music
+    // output remains strictly local; it never operates on another member.
+    // A later F1 failure must not reverse an explicit member Stop.
+    let musicStoppedLocally = false;
+    if (freshMusicIntent && musicMounted.current &&
+      freshMusicIntent.epoch === musicCommandEpoch.current &&
+      isCurrentListeningInstance(freshMusicIntent.instance,
+        currentMusicBoundary.current.transport?.listeningInstance ?? null) &&
+      (freshMusicIntent.command.kind === 'music-stop' ||
+       freshMusicIntent.command.kind === 'focus-session-stop')) {
+      const current = currentMusicBoundary.current;
+      const result = executeMaiaMusicCommandInExistingTransport(
+        freshMusicIntent.command,
+        { listeningBoundaryReady: current.status === 'ready',
+          port: current.transport, maiaProtectedSpeechActive: isMaiaSpeechActive() },
+      );
+      musicStoppedLocally = true;
+      setMusicCommandFeedback(result.message);
+      toast(result.message, { duration: 4500 });
+    }
+
     const modeCommand = maiaCommands.find(
       (cmd): cmd is Extract<MaiaCommand, { type: 'mode' }> => cmd.type === 'mode',
     );
@@ -5275,27 +5297,6 @@ I'm not sure what I'm feeling yet.`;
       onMemberExpressionRef.current?.();
     }
 
-    // Safety Stop is immediate, even without an available F1 server.  Music
-    // output remains strictly local; it never operates on another member.
-    // A later F1 failure must not reverse an explicit member Stop.
-    let musicStoppedLocally = false;
-    if (freshMusicIntent && musicMounted.current &&
-      freshMusicIntent.epoch === musicCommandEpoch.current &&
-      isCurrentListeningInstance(freshMusicIntent.instance,
-        currentMusicBoundary.current.transport?.listeningInstance ?? null) &&
-      (freshMusicIntent.command.kind === 'music-stop' ||
-       freshMusicIntent.command.kind === 'focus-session-stop')) {
-      const current = currentMusicBoundary.current;
-      const result = executeMaiaMusicCommandInExistingTransport(
-        freshMusicIntent.command,
-        { listeningBoundaryReady: current.status === 'ready',
-          port: current.transport, maiaProtectedSpeechActive: isMaiaSpeechActive() },
-      );
-      musicStoppedLocally = true;
-      setMusicCommandFeedback(result.message);
-      toast(result.message, { duration: 4500 });
-    }
-
     // TII-03 — a pure interface command is still a member-authored turn.
     // Preserve it in the transcript and, on the live sovereign route, ask F1 to
     // accept it durably without invoking O8, F2, or ordinary cognition.
@@ -5332,7 +5333,13 @@ I'm not sure what I'm feeling yet.`;
             setInputSubmitError(
               'The command changed locally, but the turn was not durably accepted. You can resend.',
             );
-            if (freshMusicIntent) setMusicCommandFeedback('MAIA could not verify this music command. Nothing started.');
+            // A failed older request must not replace a current local Stop or newer outcome.
+            if (freshMusicIntent && !musicStoppedLocally && musicMounted.current &&
+                freshMusicIntent.epoch === musicCommandEpoch.current &&
+                isCurrentListeningInstance(freshMusicIntent.instance,
+                  currentMusicBoundary.current.transport?.listeningInstance ?? null)) {
+              setMusicCommandFeedback('MAIA could not verify this music command. Nothing started.');
+            }
           } else if (freshMusicIntent && !musicStoppedLocally &&
               musicMounted.current &&
               freshMusicIntent.epoch === musicCommandEpoch.current) {
@@ -5362,7 +5369,13 @@ I'm not sure what I'm feeling yet.`;
           setInputSubmitError(
             'The command changed locally, but the turn could not be durably accepted. You can resend.',
           );
-          if (freshMusicIntent) setMusicCommandFeedback('MAIA could not verify this music command. Nothing started.');
+          // A failed older request must not replace a current local Stop or newer outcome.
+          if (freshMusicIntent && !musicStoppedLocally && musicMounted.current &&
+              freshMusicIntent.epoch === musicCommandEpoch.current &&
+              isCurrentListeningInstance(freshMusicIntent.instance,
+                currentMusicBoundary.current.transport?.listeningInstance ?? null)) {
+            setMusicCommandFeedback('MAIA could not verify this music command. Nothing started.');
+          }
         } finally {
           setIsProcessing(false);
           setIsResponding(false);
