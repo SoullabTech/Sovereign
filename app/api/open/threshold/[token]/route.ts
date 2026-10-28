@@ -47,8 +47,7 @@ export async function POST(request:NextRequest,{params}:{params:Promise<{token:s
   await appendEncounterConsentDecision({...scope,action,textSnapshot:action==='grant'
     ?(purpose==='join'?JOIN_CONSENT_TEXT:RECORD_CONSENT_TEXT):null});
   const decision=await decideStoredEncounterConsent(scope);
-  console.log('[Threshold/open] consent decision appended',{purpose,action,
-    encounterIdPrefix:loaded.context.encounterId.slice(0,8),participantIdPrefix:loaded.context.participantId.slice(0,8)});
+  console.log('[Threshold/open] consent decision appended',{purpose,action});
   return NextResponse.json({ok:true,purpose,action,allowed:decision.allowed,reason:decision.reason,
     agreementVersion:scope.agreementVersion,generation:scope.generation});
  }catch(error){

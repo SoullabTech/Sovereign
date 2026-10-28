@@ -7,6 +7,7 @@ describe('threshold Policy R3A source boundary',()=>{
   expect(route).toContain('appendEncounterConsentDecision');
   expect(route).not.toContain('body.consent');
   expect(route).not.toContain("VALUES ($1, $2, 'join'");
+  expect(route).not.toContain('participantIdPrefix');expect(route).not.toContain('encounterIdPrefix');
  });
  it('presents joining and recording as separate choices and does not start the recorder',()=>{
   const page=read('app/open/threshold/[token]/page.tsx');
@@ -22,7 +23,10 @@ describe('threshold Policy R3A source boundary',()=>{
   expect(migration).toContain('legacy_provenance = FALSE');
   expect(migration).toContain('actor_participant_id = participant_id');
   expect(migration).toContain('enforce_encounter_consent_append_only');
-  expect(migration).toContain("pg_trigger_depth() > 1");
+  expect(migration).not.toContain('pg_trigger_depth()');
+  expect(migration).toContain('NOT EXISTS (SELECT 1 FROM public.encounters');
+  expect(migration).toContain('NOT EXISTS (SELECT 1 FROM public.encounter_participants');
+  expect(migration).toContain('trg_encounter_consent_no_truncate');
   const streamRoute=read('app/api/open/threshold/[token]/stream/route.ts');
   expect(streamRoute).toContain("kind = 'record'");
   expect(migration).toContain('legacy_provenance = FALSE AND generation > 0 AND kind IS NULL');

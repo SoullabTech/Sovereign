@@ -111,11 +111,14 @@ COMMENT ON COLUMN encounter_consent_events.actor_participant_id IS
 
 -- Decisions are append-only. Direct UPDATE/DELETE is refused. A parent Encounter
 -- or participant lifecycle deletion may still cascade through the existing FKs;
--- that cascade runs at trigger depth > 1 and is not a decision rewrite.
+-- the child delete is allowed only after its governing parent is no longer visible.
 CREATE OR REPLACE FUNCTION enforce_encounter_consent_append_only()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF TG_OP = 'DELETE' AND pg_trigger_depth() > 1 THEN
+  IF TG_OP = 'DELETE' AND (
+    NOT EXISTS (SELECT 1 FROM public.encounters WHERE id = OLD.encounter_id)
+    OR NOT EXISTS (SELECT 1 FROM public.encounter_participants WHERE id = OLD.participant_id)
+  ) THEN
     RETURN OLD;
   END IF;
   RAISE EXCEPTION 'encounter-consent-append-only: % is not permitted', TG_OP;
@@ -126,5 +129,10 @@ DROP TRIGGER IF EXISTS trg_encounter_consent_append_only ON encounter_consent_ev
 CREATE TRIGGER trg_encounter_consent_append_only
   BEFORE UPDATE OR DELETE ON encounter_consent_events
   FOR EACH ROW EXECUTE FUNCTION enforce_encounter_consent_append_only();
+
+DROP TRIGGER IF EXISTS trg_encounter_consent_no_truncate ON encounter_consent_events;
+CREATE TRIGGER trg_encounter_consent_no_truncate
+  BEFORE TRUNCATE ON encounter_consent_events
+  FOR EACH STATEMENT EXECUTE FUNCTION enforce_encounter_consent_append_only();
 
 COMMIT;
