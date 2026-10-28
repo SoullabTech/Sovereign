@@ -1342,7 +1342,7 @@ export default function FlagshipWriteEditController() {
     workGestureEpoch,
   ]);
 
-  const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
+  const refreshContext = useCallback(async (publish = true): Promise<ContextReady | null> => {
     if (!context) return null;
     const manuscriptAtRequest = context.manuscriptId;
     const scopeAtRequest = editorialActScopeRef.current;
@@ -1354,7 +1354,8 @@ export default function FlagshipWriteEditController() {
     if (body.state !== 'section_aware' || body.manuscriptId !== manuscriptAtRequest
       || editorialActScopeRef.current !== scopeAtRequest) return null;
     // A delayed old manuscript response never replaces the current Work.
-    setContext(body);
+    // Undo first reconciles its exact clean session before publishing this read.
+    if (publish) setContext(body);
     return body;
   }, [context]);
 
@@ -1436,9 +1437,25 @@ export default function FlagshipWriteEditController() {
 
   const undoSuggested = useCallback(async () => {
     const application = scopedEditorialThread?.application;
-    if (!application?.canUndo || !scopedA2Relationship || adoptionBusy || workReentryRequired.current
+    if (!focusId || !application?.canUndo || !scopedA2Relationship || adoptionBusy || workReentryRequired.current
       || !currentWorkGesture()) return;
     const scopeAtGesture = memberSaveScopeRef.current;
+    const writingAtGesture = writingRef.current;
+    const observation = writingAtGesture?.observeCleanSection?.(focusId);
+    if (!writingAtGesture || !observation
+      || typeof writingAtGesture.reconcileCleanSection !== 'function') {
+      setUndoMessage('Finish or reconcile your current writing before Undo. Nothing was submitted for Undo.');
+      return;
+    }
+    // This stable callback identifies the mounted queue, including A→B→A
+    // remounts that could otherwise happen to have matching body and revision.
+    const revisionReader = writingAtGesture.currentRevisionId;
+    const sameRequest = () => currentWorkGesture()
+      && memberSaveScopeRef.current === scopeAtGesture
+      && !workReentryRequired.current
+      && writingRef.current?.currentRevisionId === revisionReader;
+    let serverUndone = false;
+    let visibleRestored = false;
 
     setAdoptionBusy(true);
     setUndoMessage(null);
@@ -1450,23 +1467,44 @@ export default function FlagshipWriteEditController() {
         body: JSON.stringify({ authorizationId: application.authorizationId }),
       });
       const body = await response.json().catch(() => null);
-      if (!currentWorkGesture() || memberSaveScopeRef.current !== scopeAtGesture
-        || workReentryRequired.current) return;
+      if (!sameRequest()) return;
       if (response.ok && body?.kind === 'undone') {
-        setUndoMessage('That application was undone. The original passage is restored.');
+        serverUndone = true;
+        const fresh = await refreshContext(false);
+        if (!sameRequest()) return;
+        const reconciled = fresh && writingRef.current?.reconcileCleanSection?.({
+          observation,
+          authoritativeRevision: fresh.version,
+          authoritativeSections: fresh.sections.map((section) => ({
+            id: section.draftSectionId, body: section.body, editable: section.editable,
+          })),
+        });
+        if (reconciled && fresh) {
+          visibleRestored = true;
+          setContext(fresh);
+          setSelectedPassage(null);
+          setUndoMessage('That application was undone. The original passage is restored.');
+        } else {
+          setUndoMessage('Undo was saved on the server, but the current writing could not be safely refreshed. Your local writing has been preserved; review it before continuing.');
+        }
         setAppliedVersionId(null);
-        await refreshContext();
       } else {
         setUndoMessage('That application could not be undone just now. Nothing else was changed.');
       }
 
-      if (focusId && scopedEditorialThread) {
+      if (scopedEditorialThread) {
         const reread = await readBoundEditorialThread(scopedEditorialThread.threadId, focusId, scopedA2Relationship.id);
-        if (reread.ok && currentWorkGesture()
-          && memberSaveScopeRef.current === scopeAtGesture
-          && !workReentryRequired.current) setEditorialThread(reread.thread);
+        if (reread.ok && sameRequest()) setEditorialThread(reread.thread);
       }
+    } catch {
+      if (sameRequest()) setUndoMessage(visibleRestored
+        ? 'The original passage is restored. Its editorial history could not be refreshed just now.'
+        : serverUndone
+          ? 'Undo was saved on the server, but its current text could not be read. Your local writing has been preserved.'
+          : 'The Studio could not confirm Undo just now. Your current writing has been preserved.');
     } finally {
+      // A same-Work navigation may invalidate publication while this operation
+      // still owns its busy state. The existing Work epoch fences newer Works.
       if (currentWorkGesture()) setAdoptionBusy(false);
     }
   }, [editorialThread, scopedEditorialThread, scopedA2Relationship, adoptionBusy, refreshContext, focusId,

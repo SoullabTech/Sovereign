@@ -279,3 +279,60 @@ describe('local text stays authoritative while pending', () => {
     expect(q.localBody('untouched')).toBeNull();
   });
 });
+
+
+describe('protected authoritative reconciliation does not bypass the save queue', () => {
+  it('publishes a settled body and revision together, then uses that revision for the next save', async () => {
+    const server = fakeServer(17);
+    const queue = new SectionSaveQueue(12, server.save);
+    let visible = 'applied';
+    const observations: Array<[string, number]> = [];
+    queue.onChange(() => observations.push([visible, queue.state().version]));
+    expect(queue.reconcileSettledVersion(12, 17, () => { visible = 'original'; })).toBe(true);
+    expect(observations).toEqual([['original', 17]]);
+    queue.enqueue('A', 'new author words after Undo');
+    await queue.settled();
+    expect(server.committed).toEqual([{ sectionId: 'A', body: 'new author words after Undo' }]);
+    expect(queue.state().version).toBe(18);
+  });
+
+  it.each([
+    [11, 13], [12, 12], [12, 11], [12, Number.NaN],
+    [12, Number.POSITIVE_INFINITY], [12, 13.5], [-1, 13],
+  ])('refuses a stale or invalid version pair %s -> %s without publishing', (expected, authoritative) => {
+    const queue = new SectionSaveQueue(12, async () => ({ ok: true, version: 13 }));
+    const publish = jest.fn();
+    expect(queue.reconcileSettledVersion(expected, authoritative, publish)).toBe(false);
+    expect(publish).not.toHaveBeenCalled();
+    expect(queue.state().version).toBe(12);
+  });
+
+  it('preserves an in-flight body and a queued neighboring body', async () => {
+    const server = fakeServer(12);
+    const queue = new SectionSaveQueue(12, server.save);
+    server.holdNextSave();
+    queue.enqueue('A', 'in flight');
+    queue.enqueue('B', 'neighbor waiting');
+    const before = queue.state();
+    const publish = jest.fn();
+    expect(queue.reconcileSettledVersion(12, 13, publish)).toBe(false);
+    expect(queue.state()).toEqual(before);
+    expect(queue.localBody('A')).toBe('in flight');
+    expect(queue.localBody('B')).toBe('neighbor waiting');
+    expect(publish).not.toHaveBeenCalled();
+    server.release();
+    await queue.settled();
+  });
+
+  it.each(['stale_base', 'error'])('preserves a refused %s outcome and its exact body', async (refusal) => {
+    const queue = new SectionSaveQueue(12, async () => ({ ok: false, refusal }));
+    queue.enqueue('B', 'unsettled neighboring words');
+    await queue.settled();
+    const before = queue.state();
+    const publish = jest.fn();
+    expect(queue.reconcileSettledVersion(12, 13, publish)).toBe(false);
+    expect(queue.state()).toEqual(before);
+    expect(queue.localBody('B')).toBe('unsettled neighboring words');
+    expect(publish).not.toHaveBeenCalled();
+  });
+});

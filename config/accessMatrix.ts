@@ -593,6 +593,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/auth/device/trust', minTier: 'free', methods: ['POST'], notes: 'Authenticated device-trust mutation; handler independently validates current session' },
   { exact: '/api/onboarding/telemetry', minTier: 'free', methods: ['POST'], notes: 'Authenticated, non-critical onboarding telemetry' },
   { exact: '/api/members/progress', minTier: 'free', methods: ['POST'], notes: 'Session-owned onboarding progress mutation; handler refuses cross-origin and conflicting member claims' },
+  { exact: '/api/members/profile', minTier: 'free', methods: ['GET', 'PUT'], notes: 'Session-owned profile and durable consent; exact methods, same-origin mutation, no email-identity changes' },
   // WRITER-IDENTITY-01: canonical member self-read used by Writer's Studio.
   // The outer matrix requires an authenticated member at any tier; the handler
   // independently resolves the verified credential and refuses caller-supplied identity.

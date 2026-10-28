@@ -46,6 +46,21 @@ export interface WritingSection {
   editable: boolean;
 }
 
+export interface CleanSectionObservation {
+  readonly sectionId: string;
+  readonly body: string;
+  readonly revision: number;
+  /** Opaque in-memory freshness only; never member or server authority. */
+  readonly changeToken: object;
+}
+
+export interface CleanSectionReconciliation {
+  observation: CleanSectionObservation;
+  /** Complete section snapshot from the protected post-mutation context read. */
+  authoritativeRevision: number;
+  authoritativeSections: readonly Pick<WritingSection, 'id' | 'body' | 'editable'>[];
+}
+
 export interface SectionWriting {
   sections: WritingSection[];
   activeId: string | null;
@@ -70,6 +85,12 @@ export interface SectionWriting {
   hasUnsavedWork: () => boolean;
   /** The draft version last acknowledged by the serialized server save lane. */
   currentRevisionId: () => number;
+  /**
+   * Publish one protected server mutation into this settled session. Optional
+   * for older presentation-only adapters; callers must refuse when absent.
+   */
+  observeCleanSection?: (sectionId: string) => CleanSectionObservation | null;
+  reconcileCleanSection?: (input: CleanSectionReconciliation) => boolean;
   /**
    * Send the active section's staged text NOW, without waiting out the
    * autosave delay.
@@ -209,7 +230,12 @@ export function useSectionWriting(
       if (outcome.ok) persisted.set(sectionId, body);
       return outcome;
     });
-    return { queue, persisted };
+    const activity = { token: {} };
+    // A numeric draft revision may intentionally stay put after a body-based
+    // save admission. Any intervening queue activity must still invalidate a
+    // pending reconciliation, including an edit-and-return-to-the-same-body.
+    queue.onChange(() => { activity.token = {}; });
+    return { queue, persisted, activity };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftKey]);
   const queue = session.queue;
@@ -320,6 +346,7 @@ export function useSectionWriting(
     const section = sectionsById.get(sectionId);
     if (!section?.editable) return;
     if (sectionId === activeId) visibleBody.current = body;
+    session.activity.token = {};
     staged.current.set(sectionId, body);
     setStagedTick((n) => n + 1);
     clearTimerFor(sectionId);
@@ -327,7 +354,7 @@ export function useSectionWriting(
       timers.current.delete(sectionId);
       flush(sectionId);
     }, AUTOSAVE_DELAY_MS));
-  }, [activeId, clearTimerFor, flush, sectionsById]);
+  }, [activeId, clearTimerFor, flush, sectionsById, session.activity]);
 
   /**
    * ⭐ F-1's INVARIANT. A section may not unmount until its exact visible state
@@ -439,6 +466,49 @@ export function useSectionWriting(
      server-acknowledged base this writing session is entitled to assert. */
   const currentRevisionId = useCallback(() => queue.state().version, [queue]);
 
+  const observeCleanSection = useCallback((sectionId: string): CleanSectionObservation | null => {
+    if (!sectionsById.get(sectionId)?.editable || staged.current.size > 0 || timers.current.size > 0
+      || queue.hasUnsavedWork() || queue.statusOf(sectionId) !== 'clean') return null;
+    const revision = queue.state().version;
+    if (!Number.isSafeInteger(revision) || revision < 0) return null;
+    return Object.freeze({ sectionId, body: bodyOf(sectionId), revision, changeToken: session.activity.token });
+  }, [bodyOf, queue, sectionsById, session.activity]);
+
+  const reconcileCleanSection = useCallback((input: CleanSectionReconciliation): boolean => {
+    const observation = input.observation;
+    if (!observation || typeof observation.sectionId !== 'string') return false;
+    const target = sectionsById.get(observation.sectionId);
+    if (observation.changeToken !== session.activity.token
+      || !target?.editable || typeof observation.body !== 'string'
+      || staged.current.size > 0 || timers.current.size > 0
+      || queue.statusOf(observation.sectionId) !== 'clean'
+      || bodyOf(observation.sectionId) !== observation.body
+      || !Array.isArray(input.authoritativeSections)
+      || input.authoritativeSections.length !== sectionsById.size) return false;
+
+    const returned = new Map<string, Pick<WritingSection, 'id' | 'body' | 'editable'>>();
+    for (const section of input.authoritativeSections) {
+      if (!section || typeof section.id !== 'string' || typeof section.body !== 'string'
+        || typeof section.editable !== 'boolean' || returned.has(section.id)) return false;
+      returned.set(section.id, section);
+    }
+    // The revision is draft-wide. Adopting it while another section's cache
+    // disagrees with the protected snapshot would bless stale neighboring
+    // text. Refuse that case; never reset or overwrite another section.
+    for (const [id, section] of sectionsById) {
+      const fresh = returned.get(id);
+      if (!fresh || fresh.editable !== section.editable
+        || (id !== observation.sectionId && fresh.body !== bodyOf(id))) return false;
+    }
+    const freshTarget = returned.get(observation.sectionId);
+    if (!freshTarget?.editable) return false;
+    return queue.reconcileSettledVersion(observation.revision, input.authoritativeRevision, () => {
+      persisted.set(observation.sectionId, freshTarget.body);
+      if (activeId === observation.sectionId) visibleBody.current = freshTarget.body;
+      setStagedTick((n) => n + 1);
+    });
+  }, [activeId, bodyOf, persisted, queue, sectionsById, session.activity]);
+
   /**
    * THE PUBLISHED SESSION MUST BE REFERENTIALLY STABLE.
    *
@@ -469,9 +539,11 @@ export function useSectionWriting(
       goToSection,
       hasUnsavedWork,
       currentRevisionId,
+      observeCleanSection,
+      reconcileCleanSection,
       flushPending,
     }),
     [initialSections, activeId, active, activeBody, statusOf, edit, editSection, captureForUnmount,
-     bodyOf, goToSection, hasUnsavedWork, currentRevisionId, flushPending],
+     bodyOf, goToSection, hasUnsavedWork, currentRevisionId, observeCleanSection, reconcileCleanSection, flushPending],
   );
 }

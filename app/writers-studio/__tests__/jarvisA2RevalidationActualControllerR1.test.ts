@@ -43,12 +43,30 @@ let mockResolveTurn=null;
 const mockSendBound=jest.fn();
 const mockAdopt=jest.fn();
 const mockApiCalls=[];
+let mockWritingBody=original;
+let mockWritingRevision=1;
+let mockWritingStatus='clean';
+let mockWritingUnsaved=false;
+let mockContextRead=null;
+let mockUndoReply=null;
+let mockReconcileResult=true;
+let mockChangeToken={};
+const mockRevisionReader=()=>mockWritingRevision;
+const mockReconcile=jest.fn((input)=>{
+  if(!mockReconcileResult)return false;
+  mockWritingBody=input.authoritativeSections.find(section=>section.id===input.observation.sectionId).body;
+  mockWritingRevision=input.authoritativeRevision;
+  return true;
+});
 const mockWriting={
-  sections:[{id:'section-a'}],activeId:'section-a',active:section,
-  activeBody:original,statusOf:()=> 'saved',bodyOf:()=>original,
+  sections:[section],activeId:'section-a',active:section,
+  get activeBody(){return mockWritingBody},statusOf:()=>mockWritingStatus,bodyOf:()=>mockWritingBody,
   goToSection:jest.fn(),edit:jest.fn(),editSection:jest.fn(),
-  captureForUnmount:()=>true, hasUnsavedWork:()=>false,
-  currentRevisionId:()=>1,flushPending:jest.fn(),
+  captureForUnmount:()=>true, hasUnsavedWork:()=>mockWritingUnsaved,
+  currentRevisionId:mockRevisionReader,
+  observeCleanSection:(sectionId)=> mockWritingUnsaved || mockWritingStatus!=='clean' ? null
+    : ({sectionId,body:mockWritingBody,revision:mockWritingRevision,changeToken:mockChangeToken}),
+  reconcileCleanSection:mockReconcile,flushPending:jest.fn(),
 };
 const mockThread={
   threadId:'fiction-thread',chainId:'fiction-chain',workId:'fiction-manuscript',
@@ -70,13 +88,13 @@ jest.mock('@/app/writers-studio/atmosphere/StudioAtmosphere',()=>({
 }));
 jest.mock('@/lib/http/apiBase',()=>({
   apiFetch: jest.fn(async (url,options)=>{
-    mockApiCalls.push({url:String(url),method:options?.method||'GET'});
+    mockApiCalls.push({url:String(url),method:options?.method||'GET',body:options?.body});
     if(String(url).startsWith('/api/writers-studio/rebuild/context?'))
-      return {status:200,ok:true,json:async()=>mockContext};
+      return mockContextRead ? mockContextRead() : {status:200,ok:true,json:async()=>mockContext};
     if(String(url)==='/api/writers-studio/editorial/version')
       return {status:409,ok:false,json:async()=>({})};
     if(String(url)==='/api/writers-studio/editorial/undo')
-      return {status:409,ok:false,json:async()=>({kind:'refused'})};
+      return mockUndoReply ? mockUndoReply() : {status:409,ok:false,json:async()=>({kind:'refused'})};
     throw Error('Unexpected fake URL '+url);
   })
 }));
@@ -205,6 +223,11 @@ describe('G3 reviewer independent: mounted actual controller deferred MAIA turn'
   beforeEach(()=>{
     globalThis.IS_REACT_ACT_ENVIRONMENT=true;
     mockWorkKey='A';mockCreateDeferred=false;mockResolveCreate=null;mockAddressChanges.length=0;mockReturnWrites.length=0;mockDeepLinkThreadId=null;mockEnableBRelationship=false;mockBDeclarationWithdrawn=false;mockDiscoverLegacyThread=false;mockPosture={resolved:true,sanctuary:false};
+    mockWritingBody=original;mockWritingRevision=1;mockWritingStatus='clean';mockWritingUnsaved=false;
+    mockWriting.currentRevisionId=mockRevisionReader;mockContextRead=null;mockUndoReply=null;mockReconcileResult=true;mockChangeToken={};
+    mockReconcile.mockClear();mockContext.version=1;mockContext.sections=[{...section}];
+    mockThread.versions=[];mockThread.headVersionId=null;
+    require('@/lib/writersStudio/rebuild/editorialCollaboration').readBoundEditorialThread.mockImplementation(async()=>({ok:true,thread:mockThread}));
     mockApiCalls.length=0;mockThread.application=null;mockResolveTurn=null;mockViewProps=null;mockThread.turns=[];mockSendBound.mockReset();mockAdopt.mockReset();mockAdopt.mockResolvedValue({ok:true,outcome:{kind:'applied'}});
     mockSendBound.mockImplementation(()=>new Promise(resolve=>{mockResolveTurn=resolve;}));
     window.localStorage.clear();
@@ -493,6 +516,131 @@ it('C18 a relationship choice cancels an already-pending reply with truthful fee
   expect(mockViewProps.editorialFailure).toContain('No change was applied');
   expect(mockAdopt).not.toHaveBeenCalled();
   expect(mockSendBound).toHaveBeenCalledTimes(1); // no hidden retry
+});
+
+
+// Real controller orchestration with simulated protected HTTP and an explicit
+// writing-session adapter. The separate mounted boundary/hook suite exercises
+// the real reconciliation contract and save queue; neither suite is a browser
+// or physical PostgreSQL acceptance claim.
+const appliedWords='The fictional revised lantern beside the river.';
+async function mountAppliedThread() {
+  await mountB();
+  mockSendBound.mockResolvedValue({ok:true,thread:mockThread,producedVersionId:null,voice:null});
+  await React.act(async()=>{
+    mockViewProps.onSendEditorial('Fictional opening request');await settle(100);
+  });
+  expect(mockViewProps.editorialThread?.threadId).toBe('fiction-thread');
+  mockThread.application={authorizationId:'fiction-authorization',versionId:'fiction-applied',
+    resultingVersion:2,undone:false,canUndo:true};
+  mockThread.versions=[{id:'fiction-applied',author:'member',wording:appliedWords,
+    supersedes:null,rationale:null}];
+  mockThread.headVersionId='fiction-applied';
+  mockWritingBody=appliedWords;mockWritingRevision=2;
+  mockContext.version=2;mockContext.sections=[{...section,body:appliedWords}];
+  await render();
+  expect(mockViewProps.editorialThread?.application?.canUndo).toBe(true);
+}
+function freshUndoContext() {
+  return {...mockContext,version:3,sections:[{...section,body:original}]};
+}
+function admitUndoReadback() {
+  mockUndoReply=async()=>({status:200,ok:true,json:async()=>({kind:'undone'})});
+  mockContextRead=async()=>({status:200,ok:true,json:async()=>freshUndoContext()});
+  require('@/lib/writersStudio/rebuild/editorialCollaboration').readBoundEditorialThread
+    .mockResolvedValue({ok:true,thread:{...mockThread,
+      application:{...mockThread.application,undone:true,canUndo:false}}});
+}
+
+it('U01 Undo publishes restored wording only after the protected context is accepted by the same writing session',async()=>{
+  await mountAppliedThread();admitUndoReadback();
+  await React.act(async()=>{mockViewProps.onUndo();await settle(100)});
+  expect(mockApiCalls.filter(call=>call.url==='/api/writers-studio/editorial/undo'))
+    .toEqual([{url:'/api/writers-studio/editorial/undo',method:'POST',
+      body:JSON.stringify({authorizationId:'fiction-authorization'})}]);
+  expect(mockReconcile).toHaveBeenCalledTimes(1);
+  expect(mockReconcile).toHaveBeenCalledWith({observation:{sectionId:'section-a',body:appliedWords,revision:2,changeToken:mockChangeToken},
+    authoritativeRevision:3,
+    authoritativeSections:[{id:'section-a',body:original,editable:true}]});
+  expect(mockViewProps.context.version).toBe(3);
+  expect(mockWritingBody).toBe(original);
+  expect(mockViewProps.undoMessage).toContain('original passage is restored');
+});
+
+it('U02 unsettled member writing blocks Undo before an HTTP mutation is sent',async()=>{
+  await mountAppliedThread();admitUndoReadback();
+  mockWritingUnsaved=true;mockWritingStatus='dirty';mockWritingBody='Newer member words';
+  await React.act(async()=>{mockViewProps.onUndo();await settle(60)});
+  expect(mockApiCalls.some(call=>call.url==='/api/writers-studio/editorial/undo')).toBe(false);
+  expect(mockReconcile).not.toHaveBeenCalled();
+  expect(mockWritingBody).toBe('Newer member words');
+  expect(mockViewProps.undoMessage).toContain('Nothing was submitted');
+});
+
+it('U03 a refused local reconciliation never claims visible restoration after the server Undo succeeds',async()=>{
+  await mountAppliedThread();admitUndoReadback();
+  mockReconcileResult=false;
+  await React.act(async()=>{mockViewProps.onUndo();await settle(100)});
+  expect(mockReconcile).toHaveBeenCalledTimes(1);
+  expect(mockWritingBody).toBe(appliedWords);
+  expect(mockViewProps.context.version).toBe(2);
+  expect(mockViewProps.undoMessage).toContain('Undo was saved on the server');
+  expect(mockViewProps.undoMessage).toContain('local writing has been preserved');
+  expect(mockViewProps.undoMessage).not.toContain('original passage is restored');
+});
+
+it('U04 a changed writing-session identity invalidates the pending Undo publication',async()=>{
+  await mountAppliedThread();admitUndoReadback();
+  let resolveUndo;
+  mockUndoReply=()=>new Promise(resolve=>{resolveUndo=resolve});
+  await React.act(async()=>{mockViewProps.onUndo();await settle(30)});
+  expect(typeof resolveUndo).toBe('function');
+  mockWriting.currentRevisionId=()=>2; // a different mounted queue, same numeric revision
+  await React.act(async()=>{
+    resolveUndo({status:200,ok:true,json:async()=>({kind:'undone'})});await settle(80);
+  });
+  expect(mockReconcile).not.toHaveBeenCalled();
+  expect(mockWritingBody).toBe(appliedWords);
+  expect(mockViewProps.adoptionBusy).toBe(false);
+});
+
+it('U05 a Work change while the protected context read is pending cannot publish the old Work body',async()=>{
+  await mountAppliedThread();admitUndoReadback();
+  let resolveContext;
+  mockContextRead=()=>new Promise(resolve=>{resolveContext=resolve});
+  await React.act(async()=>{mockViewProps.onUndo();await settle(35)});
+  expect(typeof resolveContext).toBe('function');
+  const oldRead=freshUndoContext();
+  mockWorkKey='A';mockEnableBRelationship=false;await render();
+  await React.act(async()=>{
+    resolveContext({status:200,ok:true,json:async()=>oldRead});await settle(90);
+  });
+  expect(mockReconcile).not.toHaveBeenCalled();
+  expect(mockViewProps.work.id).toBe('fiction-work-A');
+  expect(mockViewProps.context.version).toBe(2);
+});
+
+it('U06 unreadable post-Undo context keeps the local text and reports the confirmed server result truthfully',async()=>{
+  await mountAppliedThread();admitUndoReadback();
+  mockContextRead=async()=>{throw Error('fictional read failure')};
+  await React.act(async()=>{mockViewProps.onUndo();await settle(80)});
+  expect(mockReconcile).not.toHaveBeenCalled();
+  expect(mockWritingBody).toBe(appliedWords);
+  expect(mockViewProps.undoMessage).toContain('Undo was saved on the server');
+  expect(mockViewProps.undoMessage).not.toContain('original passage is restored');
+});
+
+it('U07 a history read failure after reconciliation does not misreport the already restored local text',async()=>{
+  await mountAppliedThread();admitUndoReadback();
+  require('@/lib/writersStudio/rebuild/editorialCollaboration').readBoundEditorialThread
+    .mockRejectedValueOnce(Error('fictional history read failure'));
+  await React.act(async()=>{mockViewProps.onUndo();await settle(80)});
+  expect(mockWritingBody).toBe(original);
+  expect(mockViewProps.context.version).toBe(3);
+  expect(mockViewProps.undoMessage).toContain('original passage is restored');
+  expect(mockViewProps.undoMessage).toContain('history could not be refreshed');
+  expect(mockViewProps.undoMessage).not.toContain('current text could not be read');
+  expect(mockViewProps.adoptionBusy).toBe(false);
 });
 
 });
