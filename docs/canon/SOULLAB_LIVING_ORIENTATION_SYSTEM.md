@@ -20,6 +20,30 @@ Soullab honors reflection because it can make space for fuller life, not because
 
 **People come alive helping others come alive.** This is our founding invitation and signature, not an empirical guarantee, a duty imposed on members, or a standard of personal worth.
 
+## Defining design principle — a living environment for learning, becoming, choice, and responsible service
+
+> **Soullab is a living environment for learning from symbolic traditions, developing self-understanding, making choices, and eventually translating that knowledge into responsible service.**
+
+This is a defining design principle for **all of Soullab**, not an Astrology-only position statement. Soullab is an environment in which a person can encounter knowledge, methods, practices, relationships, creative work, and symbolic traditions; learn on their own terms; deepen self-understanding without being reduced to a system's account of them; make choices that remain their own; and, when freely chosen, bring what they learn into responsible service.
+
+This principle does not require every World to use symbolic interpretation, nor does it collapse distinct Worlds into a single method. Each World honors its own subject, knowledge standards, authorship, cultural provenance, permissions, and human purpose. Their coherence comes from serving a person's life—not from making them interchangeable.
+
+### Design consequences
+
+- **Rigor and soulful depth belong together.** Calculations, factual claims, source-based teaching, and technical operations must be trustworthy and appropriately qualified. Beauty and evocative language never compensate for inaccurate or unverified claims.
+- **Learning is not prediction alone.** Where a symbolic tradition offers forecasting, it may be available as one member-chosen mode. Its methods, assumptions, and uncertainty remain visible; a forecast is not fate, diagnosis, a verdict about another person, or a confirmed truth about the member.
+- **The member remains the author of meaning and choice.** MAIA and each World may explain, question, compare, suggest, and invite reflection. They may not impose a developmental sequence, declare a member's identity, assign a calling, or turn a system interpretation into member-owned recognition without the member's own authorship and acceptance.
+- **Practice and service are invitations, not obligations.** A person may explore a chart, enjoy a soundscape, write, learn a method, receive support, rest, or choose another next step. No one must publish, join a community, buy professional tools, help others, or demonstrate growth to belong or receive care.
+- **Knowledge may mature into responsible service.** When members choose to teach, practice, or work with others, Soullab should support method competence, discernment, humility, client autonomy, confidentiality, cultural care, transparent limitations, and accountability appropriate to the offering. A generated answer or attractive interface is not professional qualification.
+- **Distinct Worlds remain distinct.** Shared purpose does not authorize automatic transfer of private material, collapse of source provenance, or centralization of practitioner/cultural authority. Crossings require the existing source-specific consent and authority rules.
+- **Build and claim only what evidence supports.** This canon guides design and prioritization; it does not claim every capability already exists or is accepted. Live versus designed, tested, qualified, and released states must remain explicit.
+
+### The defining design question
+
+> **Does this experience help a person learn, understand, reflect, make their own choices, and—if they freely choose—translate knowledge into responsible service, while preserving their dignity, sovereignty, and freedom to return to life beyond Soullab?**
+
+This principle is platform-wide. It complements rather than overrides the constitutional authority rules, Service First. Not Self Last, federated sovereignty, source provenance, consent, privacy, and each existing World owner's acceptance gates.
+
 MAIA may accompany self-understanding; MAIA may never assign a calling, prescribe self-transcendence, score service, or push members toward an organizational ideal. Meaning and action remain authored by the person. Pro Studio, Ganesha, Writer's Studio, and the rest of Soullab inherit this purpose while honoring the distinct permissions and agency boundaries of each room.
 
 **Soullab's obligation is not to hold anyone's attention captive, but to protect the freedom to return to life beyond the platform.**
