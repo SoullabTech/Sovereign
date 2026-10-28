@@ -5055,6 +5055,15 @@ I'm not sure what I'm feeling yet.`;
   const musicBoundaryStatus = useListeningBoundaryStatus();
   // LISTEN-56 R3: visible, locally owned command outcome; never MAIA memory or music playback.
   const [musicCommandFeedback, setMusicCommandFeedback] = useState<string | null>(null);
+  // Command acknowledgments may overlap only for an explicit local Stop.
+  // A newer completion must not release the composer while an older one waits.
+  const pendingCommandAcceptances = useRef(0);
+  const [hasPendingCommandAcceptance, setHasPendingCommandAcceptance] = useState(false);
+  const allowPendingMusicStop = (text: string): boolean => {
+    const decision = recognizeMaiaMusicCommand(text, 'typed-final-user');
+    return decision.status === 'recognized' &&
+      (decision.command.kind === 'music-stop' || decision.command.kind === 'focus-session-stop');
+  };
   const musicCommandEpoch = useRef(0);
   const musicMounted = useRef(true);
   const currentMusicBoundary = useRef({ transport: musicTransport, status: musicBoundaryStatus });
@@ -5078,6 +5087,16 @@ I'm not sure what I'm feeling yet.`;
     },
   ) => {
     const authoredText = text;
+    const freshMusicIntent = !retryOf ? commandContext?.freshMusicIntent : undefined;
+    const mayStopLocally = !!freshMusicIntent && !attachments?.length && musicMounted.current &&
+      freshMusicIntent.epoch === musicCommandEpoch.current &&
+      isCurrentListeningInstance(freshMusicIntent.instance,
+        currentMusicBoundary.current.transport?.listeningInstance ?? null) &&
+      (freshMusicIntent.command.kind === 'music-stop' ||
+       freshMusicIntent.command.kind === 'focus-session-stop');
+    // Recheck at the handler boundary: stale UI, resend, file and injected turns
+    // cannot bypass the pending-command gate or acquire music-action provenance.
+    if (pendingCommandAcceptances.current > 0 && !mayStopLocally) return;
     console.log('📝 Text message received:', { text: authoredText, isProcessing, isAudioPlaying, isResponding });
 
     // 🎯 Mark as activated when user sends a message - hides welcome screen
@@ -5098,18 +5117,12 @@ I'm not sure what I'm feeling yet.`;
     // turn so it can preserve its existing command acknowledgement behavior.
     const commandResult = commandContext?.parseResult ?? detectMaiaCommands(authoredText);
     const { commands: maiaCommands, onlyCommands } = commandResult;
-    const freshMusicIntent = !retryOf ? commandContext?.freshMusicIntent : undefined;
 
     // Safety Stop is immediate, even without an available F1 server.  Music
     // output remains strictly local; it never operates on another member.
     // A later F1 failure must not reverse an explicit member Stop.
     let musicStoppedLocally = false;
-    if (freshMusicIntent && musicMounted.current &&
-      freshMusicIntent.epoch === musicCommandEpoch.current &&
-      isCurrentListeningInstance(freshMusicIntent.instance,
-        currentMusicBoundary.current.transport?.listeningInstance ?? null) &&
-      (freshMusicIntent.command.kind === 'music-stop' ||
-       freshMusicIntent.command.kind === 'focus-session-stop')) {
+    if (mayStopLocally && freshMusicIntent) {
       const current = currentMusicBoundary.current;
       const result = executeMaiaMusicCommandInExistingTransport(
         freshMusicIntent.command,
@@ -5179,7 +5192,7 @@ I'm not sure what I'm feeling yet.`;
     }
 
     // Text input is a deliberate user action - FORCE state reset if stuck
-    if (isProcessing || isResponding || isAudioPlaying) {
+    if (pendingCommandAcceptances.current === 0 && (isProcessing || isResponding || isAudioPlaying)) {
       console.log('⚠️ States were stuck - forcing reset for text input', {
         isProcessing,
         isResponding,
@@ -5303,7 +5316,14 @@ I'm not sure what I'm feeling yet.`;
     if (onlyCommands || freshMusicIntent) {
       if (apiEndpoint === '/api/sovereign/app/maia/list') {
         const commandSanctuary = effectiveSanctuary;
+        const commandPresentationEpoch = musicCommandEpoch.current;
+        const canPresentCommandError = () => musicMounted.current &&
+          commandPresentationEpoch === musicCommandEpoch.current &&
+          (!freshMusicIntent || isCurrentListeningInstance(freshMusicIntent.instance,
+            currentMusicBoundary.current.transport?.listeningInstance ?? null));
 
+        pendingCommandAcceptances.current += 1;
+        setHasPendingCommandAcceptance(true);
         setIsProcessing(true);
         try {
           const commandAcceptance = await apiFetch(apiEndpoint, {
@@ -5330,9 +5350,11 @@ I'm not sure what I'm feeling yet.`;
               targetMessageId,
               commandAcceptance.status === 401 ? 'auth' : 'server',
             ));
-            setInputSubmitError(
-              'The command changed locally, but the turn was not durably accepted. You can resend.',
-            );
+            if (canPresentCommandError()) {
+              setInputSubmitError(
+                'The command changed locally, but the turn was not durably accepted. You can resend.',
+              );
+            }
             // A failed older request must not replace a current local Stop or newer outcome.
             if (freshMusicIntent && !musicStoppedLocally && musicMounted.current &&
                 freshMusicIntent.epoch === musicCommandEpoch.current &&
@@ -5366,9 +5388,11 @@ I'm not sure what I'm feeling yet.`;
         } catch (commandAcceptanceError) {
           console.error('[TII-03] command-only F1 acceptance failed:', commandAcceptanceError);
           setMessages(prev => markFailed(prev, targetMessageId, 'network'));
-          setInputSubmitError(
-            'The command changed locally, but the turn could not be durably accepted. You can resend.',
-          );
+          if (canPresentCommandError()) {
+            setInputSubmitError(
+              'The command changed locally, but the turn could not be durably accepted. You can resend.',
+            );
+          }
           // A failed older request must not replace a current local Stop or newer outcome.
           if (freshMusicIntent && !musicStoppedLocally && musicMounted.current &&
               freshMusicIntent.epoch === musicCommandEpoch.current &&
@@ -5377,8 +5401,12 @@ I'm not sure what I'm feeling yet.`;
             setMusicCommandFeedback('MAIA could not verify this music command. Nothing started.');
           }
         } finally {
-          setIsProcessing(false);
-          setIsResponding(false);
+          pendingCommandAcceptances.current -= 1;
+          if (pendingCommandAcceptances.current === 0 && musicMounted.current) {
+            setHasPendingCommandAcceptance(false);
+            setIsProcessing(false);
+            setIsResponding(false);
+          }
         }
       } else {
         console.warn(
@@ -7026,6 +7054,9 @@ I'm not sure what I'm feeling yet.`;
 
   // LISTEN-56: fresh direct text submit (not seeded/injected/retried text).
   const submitHumanMusicText = (text: string, attachments?: File[]) => {
+    // Do not cancel a current command or clear its outcome for a blocked draft.
+    if (pendingCommandAcceptances.current > 0 &&
+        (attachments?.length || !allowPendingMusicStop(text))) return;
     setMusicCommandFeedback(null);
     musicCommandEpoch.current += 1; // cancels any delayed older command
     const decision = attachments?.length ? { status: 'no-command' as const } :
@@ -10517,8 +10548,9 @@ I'm not sure what I'm feeling yet.`;
                     value={draftMessage}
                     onChange={setDraftMessage}
                     externalValue={composerDraft}
-                    disabled={isProcessing}
-                    isProcessing={isProcessing}
+                    disabled={isProcessing && !hasPendingCommandAcceptance}
+                    isProcessing={isProcessing || hasPendingCommandAcceptance}
+                    canSubmitWhileProcessing={hasPendingCommandAcceptance ? allowPendingMusicStop : undefined}
                     enableVoiceInChat={voiceEnabled && enableVoiceInChat}
                     showVoiceInputButton={voiceEnabled}
                     onSubmit={(msg, files) => {
@@ -10554,6 +10586,11 @@ I'm not sure what I'm feeling yet.`;
                     submitError={inputSubmitError}
                     onClearSubmitError={() => setInputSubmitError(null)}
                   />
+                  {hasPendingCommandAcceptance && (
+                    <p className="mt-2 px-3 text-xs text-white/50" role="status">
+                      You can still type “stop the music” or “stop the focus session.”
+                    </p>
+                  )}
                 </div>
               </div>
               )}
