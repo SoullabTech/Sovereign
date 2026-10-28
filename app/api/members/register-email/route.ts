@@ -1,160 +1,238 @@
 export const dynamic = 'force-dynamic';
 
-/**
- * Register via Email (Magic Link Path)
- *
- * No passkey required. Used when a new tester enters via magic link.
- * Creates account with onboarded: false so normal onboarding continues.
- *
- * POST /api/members/register-email
- * Body: { email, username, password, name }
- *
- * Sets HttpOnly session cookies on success so middleware recognises the
- * new member as authenticated immediately (no separate sign-in step).
- */
+/** AUTH-RETURN-01 — create a member from one exact registration proof. */
 
+import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
-import { hashPassword } from '@/lib/auth/passwordUtils';
-import { createSession } from '@/lib/auth/serverSessions';
-import { trackOnboarding } from '@/lib/onboarding/telemetry';
+import { transaction } from '@/lib/db/postgres';
+import { consumeRegistrationProof, lockRegistrationProof, RegistrationProofError } from '@/lib/auth/registrationProof';
+import { generateSecureToken, hashPassword } from '@/lib/auth/passwordUtils';
+import { setSessionCookies } from '@/lib/auth/setSessionCookies';
+import { revokeSession } from '@/lib/auth/serverSessions';
 import {
-  checkRateLimit,
-  getClientIP,
-  buildRateLimitHeaders
-} from '@/lib/auth/rateLimiter';
+  AuthOriginError,
+  normalizeReturnDestination,
+  requireSameOriginAuthMutation,
+} from '@/lib/auth/returnDestination';
+import { checkRateLimit, getClientIP, buildRateLimitHeaders } from '@/lib/auth/rateLimiter';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 const ENDPOINT = '/api/members/register-email';
+const NO_STORE = { 'Cache-Control': 'private, no-store' };
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const PROOF_COOKIE = 'maia_registration_proof';
+
+function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
+  return NextResponse.json(body, { status, headers: { ...NO_STORE, ...headers } });
+}
+
+class RegistrationConflict extends Error {
+  constructor(readonly field: 'email' | 'username') {
+    super(`${field} is already registered`);
+    this.name = 'RegistrationConflict';
+  }
+}
 
 export async function POST(request: NextRequest) {
-  const clientIP = getClientIP(request);
+  try {
+    requireSameOriginAuthMutation(request);
+  } catch (error) {
+    if (error instanceof AuthOriginError) {
+      return json({ error: 'Request origin refused', reason: error.code }, 403);
+    }
+    throw error;
+  }
 
+  const clientIP = getClientIP(request);
   const rateLimitResult = await checkRateLimit(clientIP, 'ip', ENDPOINT);
   if (!rateLimitResult.allowed) {
-    const headers = buildRateLimitHeaders(rateLimitResult);
-    return NextResponse.json(
+    return json(
       { error: 'Too many registration attempts. Please try again later.' },
-      { status: 429, headers }
+      429,
+      buildRateLimitHeaders(rateLimitResult),
     );
   }
 
+  let committedSessionId: string | undefined;
   try {
-    const { email, username, password, name } = await request.json();
+    const body = await request.json();
+    const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
+    const username = typeof body?.username === 'string' ? body.username.trim() : '';
+    const password = typeof body?.password === 'string' ? body.password : '';
+    const name = typeof body?.name === 'string' ? body.name.trim() : '';
+    const bodyProof = typeof body?.registrationProof === 'string' ? body.registrationProof.trim() : '';
+    const registrationProof = bodyProof || request.cookies.get(PROOF_COOKIE)?.value || '';
+    const requestedReturn = normalizeReturnDestination(body?.next, '/home');
 
-    if (!email || !username || !password) {
-      return NextResponse.json(
-        { error: 'Email, username, and password required' },
-        { status: 400 }
-      );
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return json({ error: 'A valid email is required.' }, 400);
+    }
+    if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) {
+      return json({ error: 'Username must be 3–32 letters, numbers, or underscores.' }, 400);
+    }
+    if (password.length < 12 || password.length > 200) {
+      return json({ error: 'Password must be at least 12 characters.' }, 400);
+    }
+    if (!registrationProof) {
+      return json({ error: 'A verified registration proof is required.' }, 403);
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-    const cleanUsername = username.trim();
+    // Slow password work occurs before the transaction, while the proof remains
+    // unconsumed. The transaction then performs only bounded indexed work.
+    const passwordHash = await hashPassword(password);
+    const memberId = randomUUID();
+    const sessionId = randomUUID();
+    // Match the existing session schema and createSession's 256-bit token.
+    const sessionToken = generateSecureToken(32);
+    const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
+    const displayName = name || username;
+    const syntheticPasskey = `EMAIL-${randomUUID()}`;
+    const userAgent = request.headers.get('user-agent') || '';
 
-    // Verify this email had a recent magic link token (within 30 minutes)
-    const tokenCheck = await query(
-      `SELECT id FROM magic_link_tokens
-       WHERE email = $1 AND used = true
-         AND COALESCE(used_at, created_at) > NOW() - INTERVAL '30 minutes'
-       LIMIT 1`,
-      [normalizedEmail]
-    ).catch((err: unknown) => {
-      console.warn('[register-email] magic_link_tokens query failed (table may not exist):', err instanceof Error ? err.message : err);
-      return { rows: [] };
+    const created = await transaction(async (client) => {
+      await client.query(
+        `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`,
+        [`AUTH-RETURN-01:register:${email}`],
+      );
+      await client.query(
+        `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`,
+        [`AUTH-RETURN-01:username:${username.toLowerCase()}`],
+      );
+
+      // Establish proof authority before disclosing conflicts or creating a
+      // member. Retain the proof lock until the whole transaction completes.
+      await lockRegistrationProof(client, {
+        proof: registrationProof, email,
+      });
+
+      const emailConflict = await client.query(
+        `SELECT id FROM members WHERE LOWER(email) = $1 LIMIT 1`,
+        [email],
+      );
+      if (emailConflict.rows.length) throw new RegistrationConflict('email');
+      const usernameConflict = await client.query(
+        `SELECT id FROM members WHERE LOWER(username) = LOWER($1) LIMIT 1`,
+        [username],
+      );
+      if (usernameConflict.rows.length) throw new RegistrationConflict('username');
+
+      const memberResult = await client.query(
+        `INSERT INTO members (
+           id, passkey, username, password_hash, name, email, onboarding_step
+         ) VALUES ($1, $2, $3, $4, $5, $6, 'faq')
+         RETURNING id, username, name, onboarded, onboarding_step,
+                   COALESCE(tier, 'free') AS tier,
+                   COALESCE(roles, ARRAY['member']::TEXT[]) AS roles`,
+        [memberId, syntheticPasskey, username, passwordHash, displayName, email],
+      );
+      const member = memberResult.rows[0] as {
+        id: string; username: string; name: string; onboarded: boolean;
+        onboarding_step: string | null; tier: 'free'; roles: Array<'member'>;
+      };
+
+      // The member now exists for the proof's immediate foreign key. Proof,
+      // member and session still commit together or all roll back on failure.
+      await consumeRegistrationProof(client, {
+        proof: registrationProof, email, memberId,
+      });
+
+      await client.query(
+        `INSERT INTO auth_sessions (
+           id, member_id, session_token, expires_at, ip_address, user_agent
+         ) VALUES ($1, $2, $3, $4, $5, $6)`,
+        [sessionId, memberId, sessionToken, expiresAt.toISOString(), clientIP || null, userAgent || null],
+      );
+      const sessionReadback = await client.query(
+        `SELECT id, member_id, session_token, revoked, expires_at
+           FROM auth_sessions
+          WHERE id = $1 AND member_id = $2 AND session_token = $3
+            AND revoked = FALSE AND expires_at > NOW()
+          LIMIT 1`,
+        [sessionId, memberId, sessionToken],
+      );
+      const durableSession = sessionReadback.rows[0] as {
+        id?: string; member_id?: string; session_token?: string; revoked?: boolean;
+      } | undefined;
+      if (
+        !durableSession
+        || durableSession.id !== sessionId
+        || durableSession.member_id !== memberId
+        || durableSession.session_token !== sessionToken
+        || durableSession.revoked !== false
+      ) {
+        throw new Error('registration session readback did not match issuance');
+      }
+
+      return member;
     });
 
-    if (tokenCheck.rows.length === 0) {
-      console.warn(`[register-email] Unverified email attempt: ${normalizedEmail}`);
-      return NextResponse.json(
-        { error: 'Email not verified. Please use the magic link sent to your email.' },
-        { status: 403 }
-      );
-    }
-
-    // Check username uniqueness
-    const existingUsername = await query(
-      'SELECT id FROM members WHERE LOWER(username) = LOWER($1)',
-      [cleanUsername]
-    );
-    if (existingUsername.rows.length > 0) {
-      return NextResponse.json(
-        { error: 'Username already taken. Please choose a different one.' },
-        { status: 409 }
-      );
-    }
-
-    // Check email uniqueness
-    const existingEmail = await query(
-      'SELECT id FROM members WHERE email = $1',
-      [normalizedEmail]
-    );
-    if (existingEmail.rows.length > 0) {
-      return NextResponse.json(
-        { error: 'An account with this email already exists. Try signing in instead.' },
-        { status: 409 }
-      );
-    }
-
-    const passwordHash = await hashPassword(password);
-    const displayName = name?.trim() || cleanUsername;
-    // Generate a synthetic passkey so the column constraint is satisfied
-    const syntheticPasskey = `EMAIL-${cleanUsername.toUpperCase()}-${Date.now()}`;
-
-    const result = await query(
-      `INSERT INTO members (passkey, username, password_hash, name, email, onboarding_step)
-       VALUES ($1, $2, $3, $4, $5, 'faq')
-       RETURNING id, username, name, onboarded, onboarding_step`,
-      [syntheticPasskey, cleanUsername, passwordHash, displayName, normalizedEmail]
-    );
-
-    const member = result.rows[0];
-    console.log(`[register-email] Created: ${cleanUsername} (${member.id})`);
-    trackOnboarding({ event: 'profile_saved', memberId: String(member.id), email: normalizedEmail, path: 'register-email' });
-
-    // Build response
-    const responseBody = {
+    committedSessionId = sessionId;
+    const onboardingRedirect = `/faq?next=${encodeURIComponent(requestedReturn)}`;
+    const response = json({
       success: true,
+      authenticated: true,
       member: {
-        id: member.id,
-        username: member.username,
-        name: member.name,
-        onboarded: member.onboarded,
-        onboardingStep: member.onboarding_step,
+        id: created.id,
+        username: created.username,
+        name: created.name,
+        onboarded: created.onboarded,
+        onboardingStep: created.onboarding_step,
+        tier: created.tier,
+        roles: created.roles,
       },
-    };
-
-    const response = NextResponse.json(responseBody);
-
-    // Create a server session so middleware recognises the member as authenticated.
-    // Failures here are non-fatal — log and continue; the client has localStorage.
-    try {
-      const userAgent = request.headers.get('user-agent') || '';
-      const session = await createSession({ memberId: String(member.id), ipAddress: clientIP, userAgent });
-      const cookieOpts = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax' as const,
-        path: '/',
-        expires: session.expiresAt,
-      };
-      response.cookies.set('maia_session', session.sessionToken, cookieOpts);
-      response.cookies.set('maia_member_id', String(member.id), cookieOpts);
-      response.cookies.set('maia_tier', 'free', cookieOpts);
-      response.cookies.set('maia_roles', JSON.stringify(['member']), cookieOpts);
-      trackOnboarding({ event: 'session_created', memberId: String(member.id), email: normalizedEmail, path: 'register-email' });
-      console.log(`[register-email] Session created for: ${cleanUsername}`);
-    } catch (sessionErr) {
-      trackOnboarding({ event: 'session_missing_after_verify', memberId: String(member.id), email: normalizedEmail, path: 'register-email' });
-      console.error('[register-email] Session creation failed (non-fatal):', sessionErr);
-    }
-
+      redirect: onboardingRedirect,
+    });
+    setSessionCookies(response, {
+      memberId: created.id,
+      tier: created.tier,
+      roles: created.roles,
+      sessionToken,
+    });
+    response.cookies.set(PROOF_COOKIE, '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: ENDPOINT,
+      maxAge: 0,
+    });
+    console.log(`[register-email] Member and verified session committed member=${memberRef(created.id)}`);
     return response;
-
   } catch (error) {
-    console.error('[register-email] Error:', error);
-    return NextResponse.json(
-      { error: 'Registration failed. Please try again.' },
-      { status: 500 }
-    );
+    if (committedSessionId) {
+      // Account, proof and session already committed. A failed response cannot
+      // undo that fact or be reported as a retryable, uncreated registration.
+      const revoked = await revokeSession(committedSessionId, 'registration_response_failed');
+      if (!revoked) console.error('[register-email] Unreturned session revocation unavailable');
+      console.error('[register-email] Account created; authentication response could not be completed');
+      return json({
+        success: false,
+        authenticated: false,
+        registrationCreated: true,
+        error: 'Your account was created, but we could not confirm a secure session. Please sign in to continue.',
+        reason: 'session_issuance_failed',
+        recovery: { action: 'signin', path: '/signin' },
+      }, 503);
+    }
+    if (error instanceof RegistrationProofError) {
+      const status = error.code === 'REGISTRATION_PROOF_CONSUMED' ? 409 : 403;
+      return json({ error: error.message, reason: error.code }, status);
+    }
+    if (error instanceof RegistrationConflict) {
+      return json(
+        {
+          error: error.field === 'email'
+            ? 'An account with this email already exists. Try signing in instead.'
+            : 'Username already taken. Please choose a different one.',
+          reason: `registration_${error.field}_conflict`,
+        },
+        409,
+      );
+    }
+    const code = (error as { code?: unknown })?.code;
+    if (code === '23505') {
+      return json({ error: 'That email or username is already registered.' }, 409);
+    }
+    console.error('[register-email] Registration outcome could not be confirmed');
+    return json({ error: 'We could not confirm registration. Please try signing in or contact support.' }, 500);
   }
 }

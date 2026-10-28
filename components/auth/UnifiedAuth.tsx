@@ -46,7 +46,7 @@
  */
 'use client';
 
-import { Suspense, useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Holoflower } from '@/components/ui/Holoflower';
@@ -60,6 +60,7 @@ import {
 } from '@/lib/auth/webBiometricOffer';
 import { unifiedBiometry } from '@/lib/auth/unifiedBiometry';
 import { deviceTrust } from '@/lib/auth/deviceTrust';
+import { normalizeReturnDestination } from '@/lib/auth/returnDestination';
 import { apiUrl, apiFetch } from '@/lib/http/apiBase';
 import { Capacitor } from '@capacitor/core';
 import { getFeatureFlag } from '@/lib/features/flags';
@@ -121,6 +122,12 @@ function generatePassword(): string {
   crypto.getRandomValues(a);
   return Array.from(a, (b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
 }
+function generateAuthRequestKey(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const a = new Uint8Array(24);
+  crypto.getRandomValues(a);
+  return Array.from(a, (b) => b.toString(16).padStart(2, '0')).join('');
+}
 
 type Phase = 'email' | 'code' | 'name' | 'password';
 
@@ -181,17 +188,18 @@ export type AuthMode = 'signin' | 'signup';
 function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const preVerified = searchParams?.get('verified') === 'true';
+  // URL parameters may carry presentation hints, never authentication proof.
+  // AUTH-RETURN-01 deliberately ignores the retired `?verified=true` shortcut.
   const emailParam = searchParams?.get('email') || '';
   const usernameParam = searchParams?.get('u') || '';
   const requestedNext = searchParams?.get('next') || '';
-  const afterAuth = requestedNext.startsWith('/') && !requestedNext.startsWith('//') ? requestedNext : '/home';
+  const afterAuth = normalizeReturnDestination(requestedNext);
 
-  // `?verified=` and `?u=` still win — they name a specific person mid-flow.
+  // `?u=` may choose the returning-member presentation, but it grants no authority.
   // Otherwise the arrival intent decides. A returning member opens on password;
   // someone joining opens on email.
   const [phase, setPhase] = useState<Phase>(
-    preVerified ? 'name' : usernameParam ? 'password' : mode === 'signin' ? 'password' : 'email'
+    usernameParam ? 'password' : mode === 'signin' ? 'password' : 'email'
   );
   const [email, setEmail] = useState(emailParam);
   const [code, setCode] = useState('');
@@ -212,13 +220,18 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   // facts; the button requires both. See lib/auth/webBiometricOffer.ts.
   const [webEnrollment, setWebEnrollment] = useState<WebEnrollment>('unknown');
   const [localPasskey, setLocalPasskey] = useState(false);
+  // Reuse one idempotency key after a browser/network ambiguity. A definitive
+  // response clears it so the next intentional send becomes a new request.
+  const authRequestKeyRef = useRef('');
+  const authRequestEmailRef = useRef('');
+  const [deliveryUncertain, setDeliveryUncertain] = useState(false);
 
   // If this browser hit an email-send failure recently, open on username + password
   // instead of walking the member back into the door we know is shut. Runs after
   // mount (never in the useState initializer) so the server-rendered markup and the
   // first client render agree — localStorage does not exist during SSR.
   useEffect(() => {
-    if (preVerified || usernameParam) return; // an explicit intent already chose the phase
+    if (usernameParam) return; // an explicit returning-member hint chose the phase
     if (!hasRecentEmailSendFailure()) return;
     // Restore the failed-transport PRESENTATION on the full card — never jump the
     // member into the password phase. Accounts created through the email-code flow
@@ -230,7 +243,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
     // what is actually stored: a send failed recently. Not that it is failing now,
     // and not "a few minutes ago" — the window runs to 30.
     setError('Recently we couldn’t send a sign-in code. You can try again, or use another way in below.');
-  }, [preVerified, usernameParam]);
+  }, [usernameParam]);
   const arrivalSignin = isFeatureEnabled('arrivalSignin'); // Arrival remodel — fully transitioned (default on; flag is a kill-switch). Presentation only.
   // Arrival remodel — navy cosmos + subtle plum atmosphere; the controls stay the original navy (plum reverted per brand
   // direction 2026-07-22: navy foundation, plum only as the bloom). Only card + field + holoflower + copy differ. Presentation only.
@@ -300,7 +313,6 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   // Silent, server-confirmed authed redirect (web only). Uses whoami, NOT
   // localStorage — so a stale beta_user never bounces a real visitor away.
   useEffect(() => {
-    if (preVerified) return;
     if (Capacitor.isNativePlatform()) return;
     if (typeof window !== 'undefined' && localStorage.getItem('maia_signed_out') === '1') return;
     const controller = new AbortController();
@@ -309,7 +321,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
       .then((r) => r.json())
       .then((d) => { clearTimeout(t); if (d?.authed) window.location.replace(afterAuth); })
       .catch(() => clearTimeout(t));
-  }, [afterAuth, preVerified]);
+  }, [afterAuth]);
 
   function storeSession(
     user: { id: string; username: string; name: string; preferredName?: string; onboarded: boolean },
@@ -329,6 +341,22 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
     localStorage.removeItem('maia_signed_out_at');
   }
 
+  async function requireServerSession(expectedMemberId: string) {
+    const response = await fetch(apiUrl('/api/members/session'), {
+      method: 'GET',
+      credentials: 'include',
+      cache: 'no-store',
+      headers: { accept: 'application/json' },
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data?.authenticated !== true || data?.member?.id !== expectedMemberId) {
+      throw new Error('The secure session could not be confirmed. Please sign in again.');
+    }
+    return data.member as {
+      id: string; username: string; name: string; preferredName?: string; onboarded: boolean;
+    };
+  }
+
   async function trustThisDevice() {
     try { await deviceTrust.trustDevice(undefined, 'standard'); } catch { /* non-blocking */ }
   }
@@ -340,6 +368,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   // ── Email → request a code ───────────────────────────────────────────────
   async function sendCode(e?: React.FormEvent) {
     e?.preventDefault();
+    if (isLoading) return;
     setError('');
     setSendBlocked(false);
     const clean = email.toLowerCase().trim();
@@ -349,20 +378,38 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
     setEmail(clean);
     setIsLoading(true);
     try {
+      const requestKey = (authRequestEmailRef.current === clean && authRequestKeyRef.current) || generateAuthRequestKey();
+      authRequestKeyRef.current = requestKey;
+      authRequestEmailRef.current = clean;
       const res = await fetch(apiUrl('/api/members/email-code'), {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: clean }),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Soullab-Auth-Request': requestKey,
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email: clean }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        // Keep the key only when delivery may have happened. A retry with the
+        // same key asks the server for truth without sending a second message.
+        const uncertain = data?.reason === 'delivery_state_unknown';
+        setDeliveryUncertain(uncertain);
+        if (!uncertain) authRequestKeyRef.current = '';
         setError(data?.error || 'Could not send the code. Please try again.');
         setSendBlocked(true);
         markRecentEmailSendFailure();
         return;
       }
+      authRequestKeyRef.current = '';
+      setDeliveryUncertain(false);
+      clearRecentEmailSendFailure();
       setCode('');
       setPhase('code');
     } catch {
-      setError('Could not send the code. Please try again.');
+      setDeliveryUncertain(true);
+      setError('We could not confirm whether the code was sent. You can request a new code.');
       setSendBlocked(true);
       markRecentEmailSendFailure();
     } finally {
@@ -377,21 +424,27 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
     try {
       const res = await fetch(apiUrl('/api/members/email-code/verify'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ email: email.toLowerCase().trim(), code: submitCode }),
+        body: JSON.stringify({
+          email: email.toLowerCase().trim(),
+          code: submitCode,
+          next: afterAuth,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { setError(data?.error || 'Incorrect code.'); setIsLoading(false); return; }
-      if (data.member) {
-        storeSession({
-          id: data.member.id, username: data.member.username, name: data.member.name,
-          preferredName: data.member.name, onboarded: !!data.member.onboarded,
-        });
+      if (data.authenticated === true && data.member?.id) {
+        const confirmed = await requireServerSession(String(data.member.id));
+        storeSession(confirmed);
         await trustThisDevice();
-        enterSoullab();
+        window.location.assign(normalizeReturnDestination(data.redirect, afterAuth));
         return;
       }
-      setPhase('name');
-      setIsLoading(false);
+      if (data.registrationRequired === true) {
+        setPhase('name');
+        setIsLoading(false);
+        return;
+      }
+      throw new Error('The server did not establish a secure authentication state.');
     } catch {
       setError('Could not verify the code. Please try again.');
       setIsLoading(false);
@@ -418,20 +471,27 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
       for (let attempt = 0; attempt < 3; attempt++) {
         res = await fetch(apiUrl('/api/members/register-email'), {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-          body: JSON.stringify({ email: cleanEmail, username: uname, password: pwd, name: name.trim() || uname }),
+          body: JSON.stringify({
+            email: cleanEmail,
+            username: uname,
+            password: pwd,
+            name: name.trim() || uname,
+            next: afterAuth,
+          }),
         });
         data = await res.json().catch(() => ({}));
         if (res.status === 409 && /username/i.test(data?.error || '')) { uname = `${deriveUsername(cleanEmail)}${randomSuffix()}`; continue; }
         break;
       }
       if (!res || !res.ok) { setError(data?.error || 'Could not complete signup. Please try again.'); setIsLoading(false); return; }
-      storeSession({
-        id: data.member.id, username: data.member.username, name: data.member.name || name,
-        preferredName: name || data.member.name, onboarded: !!data.member.onboarded,
-      });
+      if (data.authenticated !== true || !data.member?.id) {
+        throw new Error('Registration completed without a verified session. Please sign in again.');
+      }
+      const confirmed = await requireServerSession(String(data.member.id));
+      storeSession(confirmed);
       await trustThisDevice();
       if (bioAvailable && bioPlatformAvailable) { try { await biometricAuth.register(); markLocalPasskeyEvidence(); } catch { /* optional */ } }
-      window.location.assign(data.member.onboarded ? afterAuth : `/onboarding?next=${encodeURIComponent(afterAuth)}`);
+      window.location.assign(normalizeReturnDestination(data.redirect, afterAuth));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not complete signup. Please try again.');
       setIsLoading(false);
@@ -583,7 +643,18 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   };
 
   const errorBlock = error ? (
-    <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-900/20 p-3 text-sm text-amber-300/90">{error}</div>
+    <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-900/20 p-3 text-sm text-amber-300/90">
+      {error}
+      {deliveryUncertain && (
+        <button type="button" disabled={isLoading} onClick={() => {
+          authRequestKeyRef.current = '';
+          setDeliveryUncertain(false);
+          void sendCode();
+        }} className="mt-3 block underline underline-offset-4 disabled:opacity-50">
+          Request a new code
+        </button>
+      )}
+    </div>
   ) : null;
 
   return (
@@ -722,7 +793,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
               {errorBlock}
 
               <form onSubmit={sendCode} className="space-y-3">
-                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email address" autoComplete="email" autoFocus className={inputCls} />
+                <input value={email} disabled={isLoading} onChange={(e) => { setEmail(e.target.value); authRequestKeyRef.current = ''; setDeliveryUncertain(false); }} type="email" placeholder="Email address" autoComplete="email" autoFocus className={inputCls} />
                 {/* sendBlocked demotes Continue so the username+password button can carry
                     primary weight instead. That button only exists on /signin — nobody
                     joining has a password — so on /signup the demotion would leave the

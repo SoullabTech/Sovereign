@@ -299,6 +299,16 @@ function isExplicitPublicStaticFile(pathname: string): boolean {
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const host = req.headers.get('host') ?? '';
+  const preRule = matchRule(pathname);
+
+  // AUTH-RETURN-01 method admission precedes public and OPTIONS shortcuts.
+  // Only routes declaring methods are affected; neighboring routes remain unmapped.
+  if (preRule?.methods && !preRule.methods.includes(req.method.toUpperCase())) {
+    return NextResponse.json(
+      { error: 'Method not allowed', reason: 'method_not_allowed' },
+      { status: 405, headers: { Allow: preRule.methods.join(', '), 'Cache-Control': 'no-store' } },
+    );
+  }
 
   // ---------------------------------------------------------------------
   // MASTER FIELDS: Subdomain routing — jondi.soullab.life → /fields/jondi
@@ -425,7 +435,6 @@ export async function proxy(req: NextRequest) {
   // request is still SANITIZED — a public route is exactly where an unstripped
   // assertion would ride through untouched.
   // ---------------------------------------------------------------------
-  const preRule = matchRule(pathname);
   if (preRule?.public) {
     return forwardSanitized(req);
   }

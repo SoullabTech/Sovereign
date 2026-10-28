@@ -18,6 +18,9 @@ export interface AccessRule {
   /** Exact route match */
   exact?: string;
 
+  /** Explicit HTTP methods for narrowly scoped routes; checked before forwarding. */
+  methods?: readonly string[];
+
   /** If true, no auth required */
   public?: boolean;
   /** Minimum tier required (free < personal < pro) */
@@ -574,8 +577,13 @@ export const ACCESS_RULES: AccessRule[] = [
   // Public API
   { exact: '/api/ask', public: true, notes: 'Landing page Ask Kelly/MAIA' },
   { exact: '/api/members/check', public: true, notes: 'Check member exists' },
-  { exact: '/api/members/register', public: true, notes: 'Register member' },
-  { exact: '/api/members/register-email', public: true, notes: 'Register via magic link (no passkey)' },
+  { exact: '/api/members/register', public: true, methods: ['POST', 'OPTIONS'], notes: 'Invite-admitted registration; handler verifies admission and session outcome' },
+  { exact: '/api/members/register-email', public: true, methods: ['POST'], notes: 'Email registration; handler requires a one-use verified email proof' },
+  // AUTH-RETURN-01: exact auth endpoints; no wildcard member API admission.
+  { exact: '/api/members/email-code', public: true, methods: ['POST'], notes: 'Issue a rate-limited email challenge with truthful provider acceptance' },
+  { exact: '/api/members/email-code/verify', public: true, methods: ['POST'], notes: 'Consume a challenge into verified session or one-use registration proof' },
+  { exact: '/api/members/session', minTier: 'free', methods: ['GET', 'HEAD', 'POST'], notes: 'Verified current-session readback and cookie refresh; handler independently verifies authority' },
+  { exact: '/api/members/signout', public: true, methods: ['POST'], notes: 'Clear the caller session, including stale credentials; handler confines revocation to that session' },
   // WRITER-IDENTITY-01: canonical member self-read used by Writer's Studio.
   // The outer matrix requires an authenticated member at any tier; the handler
   // independently resolves the verified credential and refuses caller-supplied identity.

@@ -14,6 +14,24 @@ const logAuthEventMock = jest.fn();
 const checkRateLimitMock = jest.fn();
 const resetRateLimitMock = jest.fn();
 const trackOnboardingMock = jest.fn();
+const sessionCookieValues = new Map<string, string>();
+const sessionCookieSetMock = jest.fn();
+const cabinStoreMock = {
+  resolveSession: jest.fn(), ensureLocalMember: jest.fn(),
+  issueSession: jest.fn(), close: jest.fn(),
+};
+
+jest.mock('next/headers', () => ({
+  cookies: async () => ({
+    get: (name: string) => sessionCookieValues.has(name)
+      ? { name, value: sessionCookieValues.get(name)! }
+      : undefined,
+    set: (...args: unknown[]) => sessionCookieSetMock(...args),
+  }),
+}));
+jest.mock('@/lib/cabin/localStore', () => ({
+  CabinLocalStore: jest.fn(() => cabinStoreMock),
+}));
 
 jest.mock('@/lib/db/postgres', () => ({
   query: (...args: unknown[]) => queryMock(...args),
@@ -54,6 +72,8 @@ jest.mock('@/lib/onboarding/telemetry', () => ({
 
 import { POST as passwordSignin } from '../signin/route';
 import { GET as magicSignin } from '../magic-link/route';
+import { GET as sessionRead, POST as sessionRefresh } from '../session/route';
+import { POST as signout } from '../signout/route';
 
 const A = '11111111-1111-4111-8111-111111111111';
 const SESSION = {
@@ -82,6 +102,9 @@ const linkRequest = () =>
 
 beforeEach(() => {
   jest.clearAllMocks();
+  sessionCookieValues.clear();
+  delete process.env.MAIA_CABIN_MODE;
+  delete process.env.MAIA_CABIN_DATA_PATH;
   process.env.NEXTAUTH_URL = 'https://example.invalid';
   checkRateLimitMock.mockResolvedValue({allowed:true,remainingAttempts:4});
   resetRateLimitMock.mockResolvedValue(undefined);
@@ -97,6 +120,194 @@ beforeEach(() => {
     }]};
     if (sql.includes('FROM members')) return {rows:[{ ...member, found_member_id:A }]};
     return {rows:[],rowCount:1};
+  });
+});
+
+const B = '22222222-2222-4222-8222-222222222222';
+const SESSION_A_TOKEN = 'a'.repeat(64);
+const SESSION_B_TOKEN = 'b'.repeat(64);
+
+function sessionRequest(options: {
+  method?: 'GET' | 'POST';
+  token?: string | null;
+  headerToken?: string;
+  queryToken?: string;
+  memberClaim?: string;
+  memberCookieClaim?: string;
+  origin?: string;
+  path?: string;
+} = {}) {
+  sessionCookieValues.clear();
+  const token = options.token === undefined ? SESSION_A_TOKEN : options.token;
+  if (token !== null) sessionCookieValues.set('maia_session', token);
+  const headers: Record<string, string> = {
+    origin: options.origin ?? 'https://example.invalid',
+    'sec-fetch-site': options.origin && options.origin !== 'https://example.invalid'
+      ? 'cross-site' : 'same-origin',
+  };
+  if (token !== null) headers.cookie = `maia_session=${token}`;
+  if (options.memberCookieClaim !== undefined) {
+    sessionCookieValues.set('maia_member_id', options.memberCookieClaim);
+    headers.cookie = [headers.cookie, `maia_member_id=${options.memberCookieClaim}`].filter(Boolean).join('; ');
+  }
+  if (options.headerToken !== undefined) headers['x-session-token'] = options.headerToken;
+  if (options.memberClaim !== undefined) headers['x-member-id'] = options.memberClaim;
+  const url = new URL(options.path ?? '/api/members/session', 'https://example.invalid');
+  if (options.queryToken !== undefined) url.searchParams.set('_t', options.queryToken);
+  return new NextRequest(url, { method: options.method ?? 'GET', headers });
+}
+
+function installSessionDatabase(options: { revoked?: boolean; expiresAt?: Date } = {}) {
+  const rows = new Map([
+    [SESSION_A_TOKEN, {
+      member_id: A, revoked: options.revoked ?? false,
+      expires_at: options.expiresAt ?? new Date(Date.now() + 60_000),
+    }],
+    [SESSION_B_TOKEN, { member_id: B, revoked: false, expires_at: new Date(Date.now() + 60_000) }],
+  ]);
+  queryMock.mockImplementation(async (sql: string, params: unknown[] = []) => {
+    if (sql.includes('FROM auth_sessions')) {
+      const row = rows.get(String(params[0]));
+      if (!row || row.revoked || row.expires_at.getTime() <= Date.now()) return { rows: [], rowCount: 0 };
+      if (params[1] && params[1] !== row.member_id) return { rows: [], rowCount: 0 };
+      return { rows: [{ ...row, tier: 'free', roles: ['member'] }], rowCount: 1 };
+    }
+    if (sql.includes('FROM members WHERE id')) {
+      return { rows: [{ ...member, id: String(params[0]) }], rowCount: 1 };
+    }
+    throw new Error('Unexpected fictional session SQL');
+  });
+}
+
+describe('session handler independently validates credential concordance', () => {
+  test.each(['GET', 'POST'] as const)('%s fails closed when connected mode has no request', async (method) => {
+    const handler = method === 'GET' ? sessionRead : sessionRefresh;
+    const res = await handler();
+    expect(res.status).toBe(401);
+    expect(await res.json()).toMatchObject({ reason: 'request_required' });
+    expect(queryMock).not.toHaveBeenCalled();
+    expect(sessionCookieSetMock).not.toHaveBeenCalled();
+  });
+
+  test('connected refresh refuses cross-site mutation before authority or cookies', async () => {
+    const res = await sessionRefresh(sessionRequest({ method: 'POST', origin: 'https://foreign.invalid' }));
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({ refreshed: false, reason: 'AUTH_ORIGIN_REFUSED' });
+    expect(queryMock).not.toHaveBeenCalled();
+    expect(sessionCookieSetMock).not.toHaveBeenCalled();
+  });
+
+  test.each(['GET', 'POST'] as const)('%s refuses a foreign header or query session alongside a valid cookie', async (method) => {
+    installSessionDatabase();
+    const handler = method === 'GET' ? sessionRead : sessionRefresh;
+    for (const extra of [{ headerToken: SESSION_B_TOKEN }, { queryToken: SESSION_B_TOKEN }]) {
+      const res = await handler(sessionRequest({ method, ...extra }));
+      expect(res.status).toBe(401);
+      expect(await res.json()).toMatchObject({ reason: 'credential_conflict' });
+      expect(res.headers.get('Cache-Control')).toContain('no-store');
+    }
+    expect(sessionCookieSetMock).not.toHaveBeenCalled();
+  });
+
+  test.each(['GET', 'POST'] as const)('%s refuses an invalid additional credential or foreign member claim', async (method) => {
+    installSessionDatabase();
+    const handler = method === 'GET' ? sessionRead : sessionRefresh;
+    for (const extra of [{ headerToken: 'invalid' }, { headerToken: '' }, { memberClaim: B }, { memberCookieClaim: B }]) {
+      const res = await handler(sessionRequest({ method, ...extra }));
+      expect(res.status).toBe(401);
+      expect(await res.json()).not.toHaveProperty('member');
+    }
+    expect(sessionCookieSetMock).not.toHaveBeenCalled();
+  });
+
+  test.each(['GET', 'POST'] as const)('%s refuses revoked and expired sessions without refreshing cookies', async (method) => {
+    const handler = method === 'GET' ? sessionRead : sessionRefresh;
+    for (const state of [{ revoked: true }, { expiresAt: new Date(0) }]) {
+      installSessionDatabase(state);
+      const res = await handler(sessionRequest({ method }));
+      expect(res.status).toBe(401);
+      expect(await res.json()).not.toHaveProperty('member');
+    }
+    expect(sessionCookieSetMock).not.toHaveBeenCalled();
+  });
+
+  test('expiry equal to the current instant is already expired', async () => {
+    const now = Date.now();
+    const clock = jest.spyOn(Date, 'now').mockReturnValue(now);
+    try {
+      installSessionDatabase({ expiresAt: new Date(now) });
+      const res = await sessionRead(sessionRequest());
+      expect(res.status).toBe(401);
+      expect(await res.json()).not.toHaveProperty('member');
+    } finally { clock.mockRestore(); }
+  });
+
+  test('a valid concordant session reads its own member with no-store', async () => {
+    installSessionDatabase();
+    const res = await sessionRead(sessionRequest({ headerToken: SESSION_A_TOKEN, memberClaim: A }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ authenticated: true, member: { id: A } });
+    expect(res.headers.get('Cache-Control')).toContain('no-store');
+    expect(sessionCookieSetMock).not.toHaveBeenCalled();
+  });
+
+  test('a valid refresh writes only its verified member access cookies', async () => {
+    installSessionDatabase();
+    const res = await sessionRefresh(sessionRequest({ method: 'POST' }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ refreshed: true, member: { id: A } });
+    expect(sessionCookieSetMock).toHaveBeenCalledWith('maia_member_id', A, expect.objectContaining({ httpOnly: true }));
+  });
+
+  test('authority outage is unavailable rather than successful or signed-out', async () => {
+    queryMock.mockRejectedValue(new Error('fictional authority unavailable'));
+    const res = await sessionRead(sessionRequest());
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({ authenticated: false, reason: 'authority_unavailable' });
+    expect(res.headers.get('Cache-Control')).toContain('no-store');
+  });
+
+  test.each(['GET', 'POST'] as const)('Cabin offline %s direct invocation stays before connected-mode authority', async (method) => {
+    process.env.MAIA_CABIN_MODE = 'offline';
+    process.env.MAIA_CABIN_DATA_PATH = '/fictional/cabin-only';
+    cabinStoreMock.resolveSession.mockReturnValue({
+      id: A, username: 'local-fiction', name: 'Local Fiction',
+      onboarded: true, onboardingStep: 'complete', tier: 'free', roles: ['member'],
+    });
+    const handler = method === 'GET' ? sessionRead : sessionRefresh;
+    const res = await handler();
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ authenticated: true, member: { id: A } });
+    expect(queryMock).not.toHaveBeenCalled();
+    expect(cabinStoreMock.close).toHaveBeenCalled();
+  });
+});
+
+describe('same-origin signout preserves stale-cookie cleanup', () => {
+  test('refuses cross-site signout before revocation or cookie mutation', async () => {
+    const res = await signout(sessionRequest({
+      method: 'POST', path: '/api/members/signout', origin: 'https://foreign.invalid',
+    }));
+    expect(res.status).toBe(403);
+    expect(queryMock).not.toHaveBeenCalled();
+    expect(sessionCookieSetMock).not.toHaveBeenCalled();
+  });
+
+  test('revokes only its own cookie token and clears stale access cookies', async () => {
+    const res = await signout(sessionRequest({
+      method: 'POST', path: '/api/members/signout', headerToken: SESSION_B_TOKEN,
+    }));
+    expect(res.status).toBe(200);
+    expect(queryMock).toHaveBeenCalledWith(expect.stringContaining('UPDATE auth_sessions'), [SESSION_A_TOKEN]);
+    expect(sessionCookieSetMock).toHaveBeenCalledWith('maia_session', '', expect.anything());
+    expect(res.headers.get('Cache-Control')).toContain('no-store');
+  });
+
+  test('missing cookie still permits local stale-cookie cleanup', async () => {
+    const res = await signout(sessionRequest({ method: 'POST', path: '/api/members/signout', token: null }));
+    expect(res.status).toBe(200);
+    expect(queryMock).not.toHaveBeenCalled();
+    expect(sessionCookieSetMock).toHaveBeenCalledWith('maia_member_id', '', expect.anything());
   });
 });
 
