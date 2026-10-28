@@ -88,6 +88,10 @@ export type ListeningTransport = {
   selectLocalFile: (file: File) => { accepted: boolean; message: string };
   playLocalFile: () => Promise<boolean>;
   pause: () => void;
+  /** Terminally clear just this member-bound music; does not stop Focus time. */
+  stopMusic: () => void;
+  /** Opaque, unshared lifecycle scope; changes with each verified provider remount. */
+  listeningInstance: object;
   removeLocalFile: () => void;
   focusSession: FocusSession | null;
   focusClockMs: number;
@@ -235,6 +239,8 @@ export function PersistentListeningProvider({
   const selected = useRef<{ title: string; format: string } | null>(null);
   const volumeRef = useRef(45);
   const epoch = useRef(0);
+  // Stable within this one member-bound provider instance, never serialized or shared.
+  const listeningInstance = useRef<object>({}).current;
   const focusChannel = useRef<BroadcastChannel | null>(null);
   const instanceID = useRef('');
   const lastMember = useRef(reviewMemberKey);
@@ -647,7 +653,7 @@ export function PersistentListeningProvider({
     snapshot, volume, setVolume, shape, setShape,
     fields, keepField, dropField, replaceFields,
     playSketch, selectLocalFile, playLocalFile,
-    pause, removeLocalFile,
+    pause, stopMusic: stopAll, listeningInstance, removeLocalFile,
     focusSession, focusClockMs,
     startFocusSession: beginFocusSession,
     pauseFocusSession,

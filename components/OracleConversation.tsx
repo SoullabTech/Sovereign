@@ -29,6 +29,12 @@ import { EnhancedVoiceMicButton } from './ui/EnhancedVoiceMicButton';
 import AdaptiveVoiceMicButton from './ui/AdaptiveVoiceMicButton';
 import { detectVoiceCommand, isOnlyModeSwitch, getModeConfirmation, detectMaiaCommands, getMaiaCommandConfirmation } from '@/lib/voice/VoiceCommandDetector';
 import type { MaiaCommand, CommandParseResult } from '@/lib/voice/VoiceCommandDetector';
+import { recognizeMaiaMusicCommand } from '@/lib/listening/maiaMusicCommand';
+import type { MaiaMusicCommand } from '@/lib/listening/maiaMusicCommand';
+import { executeMaiaMusicCommandInExistingTransport, isCurrentListeningInstance } from '@/lib/listening/maiaMusicBridge';
+import { useListeningBoundaryStatus, usePersistentListening } from '@/components/listening/PersistentListeningProvider';
+import { isMaiaSpeechActive } from '@/lib/listening/maiaSpeechFocus';
+import { requestAudioFocus } from '@/lib/listening/audioFocus';
 import {
   matchVoiceCommand,
   applySettingsDelta,
@@ -1870,6 +1876,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     setIsActivating(false); // Clear activating state - we now know the truth
     setIsListening(isRecording);
     if (isRecording) {
+      // LISTEN-59 QA candidate: once member-authorized MAIA capture is truly
+      // live, ask the EXISTING audio-focus owner to pause music and Focus.
+      // Do not start a second player, assume media rights or auto-resume sound.
+      if (voiceEnabled) requestAudioFocus('maia-voice');
       console.log('✅ Mic is LIVE - orange dot should be visible');
       // 🎯 Mark as activated when user starts listening - hides welcome screen
       setHasActivated(true);
@@ -1889,7 +1899,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         pwaVoice.micStopped();
       }
     }
-  }, [isPwaVoice, pwaVoice]);
+  }, [isPwaVoice, pwaVoice, voiceEnabled]);
 
   // ==================== AUDIO LEVEL CALLBACK (THROTTLED) ====================
   // Prevent infinite render loop by throttling setState calls
@@ -5039,6 +5049,21 @@ I'm not sure what I'm feeling yet.`;
     });
   }, [messages, userName]);
 
+  // LISTEN-56: the same private Listening provider is the ONLY music action owner.
+  // Strictly avoid a global browser command bus or a second AudioContext/player.
+  const musicTransport = usePersistentListening();
+  const musicBoundaryStatus = useListeningBoundaryStatus();
+  // LISTEN-56 R3: visible, locally owned command outcome; never MAIA memory or music playback.
+  const [musicCommandFeedback, setMusicCommandFeedback] = useState<string | null>(null);
+  const musicCommandEpoch = useRef(0);
+  const musicMounted = useRef(true);
+  const currentMusicBoundary = useRef({ transport: musicTransport, status: musicBoundaryStatus });
+  currentMusicBoundary.current = { transport: musicTransport, status: musicBoundaryStatus };
+  useEffect(() => {
+    musicMounted.current = true;
+    return () => { musicMounted.current = false; musicCommandEpoch.current += 1; };
+  }, []);
+
   // Handle text messages from chat interface - MUST be defined before handleVoiceTranscript
   const handleTextMessage = useCallback(async (
     text: string,
@@ -5048,6 +5073,8 @@ I'm not sure what I'm feeling yet.`;
       parseResult?: CommandParseResult;
       commandsAlreadyApplied?: boolean;
       confirmationHandled?: boolean;
+      /** Only a fresh physical composer submit or finalized user-voice callback may supply this. */
+      freshMusicIntent?: { command: MaiaMusicCommand; epoch: number; instance: object | null };
     },
   ) => {
     const authoredText = text;
@@ -5071,6 +5098,7 @@ I'm not sure what I'm feeling yet.`;
     // turn so it can preserve its existing command acknowledgement behavior.
     const commandResult = commandContext?.parseResult ?? detectMaiaCommands(authoredText);
     const { commands: maiaCommands, onlyCommands } = commandResult;
+    const freshMusicIntent = !retryOf ? commandContext?.freshMusicIntent : undefined;
     const modeCommand = maiaCommands.find(
       (cmd): cmd is Extract<MaiaCommand, { type: 'mode' }> => cmd.type === 'mode',
     );
@@ -5247,10 +5275,31 @@ I'm not sure what I'm feeling yet.`;
       onMemberExpressionRef.current?.();
     }
 
+    // Safety Stop is immediate, even without an available F1 server.  Music
+    // output remains strictly local; it never operates on another member.
+    // A later F1 failure must not reverse an explicit member Stop.
+    let musicStoppedLocally = false;
+    if (freshMusicIntent && musicMounted.current &&
+      freshMusicIntent.epoch === musicCommandEpoch.current &&
+      isCurrentListeningInstance(freshMusicIntent.instance,
+        currentMusicBoundary.current.transport?.listeningInstance ?? null) &&
+      (freshMusicIntent.command.kind === 'music-stop' ||
+       freshMusicIntent.command.kind === 'focus-session-stop')) {
+      const current = currentMusicBoundary.current;
+      const result = executeMaiaMusicCommandInExistingTransport(
+        freshMusicIntent.command,
+        { listeningBoundaryReady: current.status === 'ready',
+          port: current.transport, maiaProtectedSpeechActive: isMaiaSpeechActive() },
+      );
+      musicStoppedLocally = true;
+      setMusicCommandFeedback(result.message);
+      toast(result.message, { duration: 4500 });
+    }
+
     // TII-03 — a pure interface command is still a member-authored turn.
     // Preserve it in the transcript and, on the live sovereign route, ask F1 to
     // accept it durably without invoking O8, F2, or ordinary cognition.
-    if (onlyCommands) {
+    if (onlyCommands || freshMusicIntent) {
       if (apiEndpoint === '/api/sovereign/app/maia/list') {
         const commandSanctuary = effectiveSanctuary;
 
@@ -5283,6 +5332,29 @@ I'm not sure what I'm feeling yet.`;
             setInputSubmitError(
               'The command changed locally, but the turn was not durably accepted. You can resend.',
             );
+            if (freshMusicIntent) setMusicCommandFeedback('MAIA could not verify this music command. Nothing started.');
+          } else if (freshMusicIntent && !musicStoppedLocally &&
+              musicMounted.current &&
+              freshMusicIntent.epoch === musicCommandEpoch.current) {
+            // The F1-accepted utterance belongs to the original verified
+            // Listening provider. Never dispatch to a NEW member's provider.
+            const current = currentMusicBoundary.current;
+            if (!isCurrentListeningInstance(freshMusicIntent.instance,
+                current.transport?.listeningInstance ?? null)) {
+              setMusicCommandFeedback('The private Listening session changed. No music action was taken.');
+              toast('The private Listening session changed. No music action was taken.', {duration: 5000});
+              return;
+            }
+            // F1 acceptance is NOT a playable-media grant. All eight works deny.
+            const result = executeMaiaMusicCommandInExistingTransport(
+              freshMusicIntent.command,
+              { listeningBoundaryReady: current.status === 'ready',
+                port: current.transport, maiaProtectedSpeechActive: isMaiaSpeechActive() },
+            );
+            setMusicCommandFeedback(result.message);
+            toast(result.message, { duration: 5500 });
+            if (result.code === 'SHOW_LISTENING_CHOICES' && current.status === 'ready')
+              router.push('/listen');
           }
         } catch (commandAcceptanceError) {
           console.error('[TII-03] command-only F1 acceptance failed:', commandAcceptanceError);
@@ -5290,6 +5362,7 @@ I'm not sure what I'm feeling yet.`;
           setInputSubmitError(
             'The command changed locally, but the turn could not be durably accepted. You can resend.',
           );
+          if (freshMusicIntent) setMusicCommandFeedback('MAIA could not verify this music command. Nothing started.');
         } finally {
           setIsProcessing(false);
           setIsResponding(false);
@@ -6938,6 +7011,19 @@ I'm not sure what I'm feeling yet.`;
       .finally(() => { retryingIdsRef.current.delete(messageId); });
   }, [messages, handleTextMessage]);
 
+  // LISTEN-56: fresh direct text submit (not seeded/injected/retried text).
+  const submitHumanMusicText = (text: string, attachments?: File[]) => {
+    setMusicCommandFeedback(null);
+    musicCommandEpoch.current += 1; // cancels any delayed older command
+    const decision = attachments?.length ? { status: 'no-command' as const } :
+      recognizeMaiaMusicCommand(text, 'typed-final-user');
+    const freshMusicIntent = decision.status === 'recognized'
+      ? { command: decision.command, epoch: musicCommandEpoch.current,
+          instance: currentMusicBoundary.current.transport?.listeningInstance ?? null }
+      : undefined;
+    void handleTextMessage(text, attachments, undefined, { freshMusicIntent });
+  };
+
   // ==================== SEED PROMPT PROCESSOR ====================
   // Process pending seed prompt once handleTextMessage is available
   // This runs after handleTextMessage is defined and sends any pending seed
@@ -7572,10 +7658,17 @@ I'm not sure what I'm feeling yet.`;
       // command classification so handleTextMessage neither rewrites nor
       // executes the same command twice.
       console.log('🌀 Routing voice through THE BETWEEN...');
+      const musicDecision = recognizeMaiaMusicCommand(t, 'voice-final-user');
+      if (musicDecision.status === 'recognized') setMusicCommandFeedback(null);
+      musicCommandEpoch.current += 1;
       await handleTextMessage(t, undefined, undefined, {
         parseResult: voiceMaiaResult,
         commandsAlreadyApplied: voiceMaiaResult.disposition === 'EXECUTE',
         confirmationHandled: voiceMaiaResult.disposition === 'EXECUTE',
+        freshMusicIntent: musicDecision.status === 'recognized'
+          ? { command: musicDecision.command, epoch: musicCommandEpoch.current,
+              instance: currentMusicBoundary.current.transport?.listeningInstance ?? null }
+          : undefined,
       });
 
       const duration = Date.now() - voiceStartTime;
@@ -8130,6 +8223,11 @@ I'm not sure what I'm feeling yet.`;
       style={isContainedPresentation ? { transform: 'translateZ(0)' } : undefined}
     >
       <div className="bg-soul-background absolute inset-0 pointer-events-none" aria-hidden="true" />
+      {musicCommandFeedback && (
+        <div data-listen56-member-feedback="true" role="status" aria-live="polite"
+          className="fixed bottom-48 left-1/2 -translate-x-1/2 z-[110] w-[min(92vw,640px)] rounded-xl border border-amber-300/30 bg-[#0b1720]/95 px-5 py-4 text-center text-sm leading-relaxed text-[#f1e3cd] shadow-xl"
+        >{musicCommandFeedback}</div>
+      )}
       {/* iOS Audio Enable Button - Required for TTS on iOS Safari */}
       {needsIOSAudioPermission && (
         <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur flex items-center justify-center">
@@ -8328,7 +8426,7 @@ I'm not sure what I'm feeling yet.`;
                 greeting={welcomeGreeting.greeting}
                 subtext={welcomeGreeting.subtext}
                 userInitial={(userName || 'K').trim().charAt(0).toUpperCase()}
-                onSend={(text) => handleTextMessage(text)}
+                onSend={(text) => submitHumanMusicText(text)}
                 onActivate={() => {
                   // #736: hasActivated alone cannot exit — the gate above is a
                   // disjunction and ignores it while shouldRenderArrival is
@@ -10411,7 +10509,7 @@ I'm not sure what I'm feeling yet.`;
                     enableVoiceInChat={voiceEnabled && enableVoiceInChat}
                     showVoiceInputButton={voiceEnabled}
                     onSubmit={(msg, files) => {
-                      handleTextMessage(msg, files);
+                      submitHumanMusicText(msg, files);
                       setDraftMessage(''); // Clear draft after sending
                     }}
                     onVoiceResponseToggle={voiceEnabled ? () => {
@@ -10563,7 +10661,7 @@ I'm not sure what I'm feeling yet.`;
             setIsListening(false);
           }}
           onInterrupt={handleVoiceInterrupt}
-          onTextSubmit={(text) => handleTextMessage(text)}
+          onTextSubmit={(text) => submitHumanMusicText(text)}
           explicitYield={turnTakingPreferences.floorControlMode === 'explicit'}
           onDone={() => voiceMicRef.current?.commitTurn()}
         />

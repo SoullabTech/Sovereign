@@ -195,7 +195,7 @@ export default function ListenRoom() {
   const clearShelf=()=>{if(!window.confirm('Clear imported playlists and private journal from this browser tab?'))return;setCollections([]);setNote('');setStatus('This tab’s collection and journal have been cleared.');};
   return <main className={styles.shell}>
     <aside className={styles.rail} aria-label="Listening Room navigation">
-      <div className={styles.brand}><span className={styles.sunmark} aria-hidden="true">◒</span><div><span className={styles.wordmark}>SOULLAB</span><span className={styles.descriptor}>LISTENING ROOM</span></div></div>
+      <div className={styles.brand}><span className={styles.sunmark} aria-hidden="true">◒</span><div><span className={styles.wordmark}>SOULLAB</span><span className={styles.descriptor}>LISTENING ROOM</span></div><Link href="/home" className={styles.mobileHomeLink} aria-label="Return to Soullab Home">Home</Link></div>
       <div className={styles.navTitle}>Explore</div>
       <nav className={styles.nav} aria-label="Soullab">{nav.map(item=><Link key={item.href} href={item.href}>{item.title}<span aria-hidden="true">↗</span></Link>)}</nav>
       <div className={styles.navTitle}>Listening journeys</div>
