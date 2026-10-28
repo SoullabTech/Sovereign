@@ -4,6 +4,7 @@ import {
   createContext, useCallback, useContext, useEffect, useRef, useState,
 } from 'react';
 import type { ReactNode, RefObject } from 'react';
+import Link from 'next/link';
 import { validateLocalAudio } from '@/lib/listening/localAudio';
 import {
   ORIGINAL_RECEPTIVE_CONTROLS, validatedReceptiveControls,
@@ -686,7 +687,7 @@ export function PersistentListeningProvider({
           {focusSession.plan.focusNeed} · {focusSession.plan.musicalWorld} · {focusSession.status} · {' '}
           {formatFocusClock(focusRemainingMs(focusSession, new Date(focusClockMs)))}
         </div>
-        <a href="/listen#focus-field" style={{fontSize:10,color:'#e7c995'}}>Open Focus Field</a>
+        <Link href="/listen#focus-field" style={{fontSize:10,color:'#e7c995'}}>Open Focus Field</Link>
       </div>}
       {audioDisplayed && <div style={{flex:1,minWidth:165}}>
         <strong data-listen10-title="true">{snapshot.title}</strong>
