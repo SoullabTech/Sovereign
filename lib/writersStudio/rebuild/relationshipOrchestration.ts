@@ -6,6 +6,12 @@ export interface A2RelationshipSummary {
   readonly manuscriptId: string;
   readonly createdAt: string;
   readonly episodeCount: number;
+  /**
+   * Present only after the protected relationship-detail read. This is derived
+   * from the newest server-owned EDITORIAL_TURN episode; list/create responses
+   * carry no thread authority and therefore leave it absent.
+   */
+  readonly latestEditorialThreadId?: string | null;
 }
 
 export type RelationshipListOutcome =
@@ -79,6 +85,47 @@ export async function createA2Relationship(
   }
 }
 
+type ReturnEpisodeParse =
+  | { readonly ok: true; readonly latestEditorialThreadId: string | null }
+  | { readonly ok: false };
+
+/**
+ * Parse only the minimum server-owned episode facts needed to recover a
+ * relationship-bound editorial thread. Any schema drift fails closed; the
+ * client never falls back to URL, localStorage, prose similarity or position.
+ */
+export function parseReturnEditorialEpisode(raw: unknown): ReturnEpisodeParse {
+  if (!Array.isArray(raw)) return { ok: false };
+  let latest: { sequence: number; threadId: string } | null = null;
+  const sequences = new Set<number>();
+  for (const item of raw) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return { ok: false };
+    const episode = item as Record<string, unknown>;
+    const sequence = episode.sequence;
+    if (!Number.isInteger(sequence) || Number(sequence) < 1 || sequences.has(Number(sequence))) {
+      return { ok: false };
+    }
+    sequences.add(Number(sequence));
+    if (episode.childKind === 'REVIEW_DISCUSS') {
+      if (episode.continuationAuthorized !== false) return { ok: false };
+      continue;
+    }
+    if (episode.childKind !== 'EDITORIAL_TURN'
+      || episode.continuationAuthorized !== true
+      || episode.authorityClass !== 'EDITORIAL_CHAIN'
+      || typeof episode.threadId !== 'string'
+      || episode.threadId.length < 1
+      || episode.threadId.length > 200
+      || /[\u0000-\u001f]/.test(episode.threadId)) {
+      return { ok: false };
+    }
+    if (!latest || Number(sequence) > latest.sequence) {
+      latest = { sequence: Number(sequence), threadId: episode.threadId };
+    }
+  }
+  return { ok: true, latestEditorialThreadId: latest?.threadId ?? null };
+}
+
 export async function readA2Relationship(
   relationshipId: string,
 ): Promise<RelationshipReadOutcome> {
@@ -89,10 +136,14 @@ export async function readA2Relationship(
     if (res.status === 404) return { ok: false, reason: 'not_found' };
     if (!res.ok) return { ok: false, reason: 'unavailable' };
     const body = await res.json().catch(() => null);
-    const relationship = summaryOf(body?.relationship,
-      Array.isArray(body?.episodes) ? body.episodes.length : undefined);
+    const episodes = parseReturnEditorialEpisode(body?.episodes);
+    if (!episodes.ok) return { ok: false, reason: 'unreadable' };
+    const relationship = summaryOf(body?.relationship, body.episodes.length);
     return relationship
-      ? { ok: true, relationship }
+      ? { ok: true, relationship: {
+          ...relationship,
+          latestEditorialThreadId: episodes.latestEditorialThreadId,
+        } }
       : { ok: false, reason: 'unreadable' };
   } catch {
     return { ok: false, reason: 'unavailable' };

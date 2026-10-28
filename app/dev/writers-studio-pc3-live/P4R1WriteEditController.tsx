@@ -91,6 +91,13 @@ type SelectedCarrySource = EligibleCarrySource & {
   readonly receiverThreadId: string;
 };
 
+type EditorialReturnCandidate = {
+  readonly scope: string;
+  readonly relationshipId: string;
+  readonly threadId: string;
+  readonly sectionId: string;
+};
+
 export default function FlagshipWriteEditController() {
   const params = useSearchParams();
   const router = useRouter();
@@ -143,6 +150,8 @@ export default function FlagshipWriteEditController() {
   const [a2RelationshipPhase, setA2RelationshipPhase] = useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
   const [a2RelationshipBusy, setA2RelationshipBusy] = useState(false);
   const [a2RelationshipMessage, setA2RelationshipMessage] = useState<string | null>(null);
+  const [editorialReturnCandidate, setEditorialReturnCandidate] = useState<EditorialReturnCandidate | null>(null);
+  const editorialReturnPreparationRef = useRef<string | null>(null);
   // A refusal notice is only safe to show under its originating Work scope,
   // even when no active A2 relationship remains in presentation state.
   const a2MessageScopeRef = useRef<string | null>(null);
@@ -368,6 +377,7 @@ export default function FlagshipWriteEditController() {
     setA2RelationshipChoices([]);
     setA2RelationshipPhase('idle');
     setA2RelationshipMessage(null);
+    setEditorialReturnCandidate(null);
     setCarryPostureAvailable(false);
     setSelectedCarrySource(null);
     setCarryChooser({ kind: 'closed' });
@@ -560,6 +570,78 @@ export default function FlagshipWriteEditController() {
     context,
     requestedRelationship,
     replaceA2RelationshipAddress,
+    work,
+    workContext.kind,
+  ]);
+
+  useEffect(() => {
+    const threadId = a2Relationship?.latestEditorialThreadId;
+    if (!threadId || !context || !work || workContext.kind !== 'work'
+      || !currentLivingWorkScope || workReentryRequired.current) return;
+
+    const relationshipId = a2Relationship.id;
+    const preparationKey = JSON.stringify([currentLivingWorkScope, relationshipId, threadId]);
+    if (editorialReturnPreparationRef.current === preparationKey) return;
+
+    const scopeAtRead = currentLivingWorkScope;
+    const generationAtRead = a2AsyncGenerationRef.current;
+    let cancelled = false;
+    const stillCurrent = () => !cancelled
+      && activeA2ScopeRef.current === scopeAtRead
+      && a2AsyncGenerationRef.current === generationAtRead
+      && a2RelationshipIdRef.current === relationshipId
+      && !workReentryRequired.current;
+
+    void (async () => {
+      let sectionId = requestedSection && context.sections.some(
+        (section) => section.draftSectionId === requestedSection,
+      ) ? requestedSection : focusId;
+
+      // Durable place is part of the return proof. A URL-named section remains
+      // the writer's explicit instruction; otherwise the server-owned place wins.
+      if (!requestedSection) {
+        const saved = await readPlaceReturnClient({
+          livingWorkId: work.id,
+          manuscriptId: context.manuscriptId,
+        });
+        if (!stillCurrent()) return;
+        if (saved.ok && saved.sectionId && context.sections.some(
+          (section) => section.draftSectionId === saved.sectionId,
+        )) {
+          sectionId = saved.sectionId;
+        }
+      }
+
+      if (!stillCurrent() || !sectionId || !context.sections.some(
+        (section) => section.draftSectionId === sectionId,
+      )) return;
+
+      if (sectionId !== focusId) {
+        setFocusId(sectionId);
+        writingRef.current?.goToSection(sectionId);
+        if (typeof window !== 'undefined') {
+          replacePlaceAddress(
+            locationForSection(window.location.pathname, window.location.search, sectionId),
+          );
+        }
+      }
+      editorialReturnPreparationRef.current = preparationKey;
+      setEditorialReturnCandidate({
+        scope: scopeAtRead,
+        relationshipId,
+        threadId,
+        sectionId,
+      });
+    })();
+
+    return () => { cancelled = true; };
+  }, [
+    a2Relationship?.id,
+    a2Relationship?.latestEditorialThreadId,
+    context,
+    currentLivingWorkScope,
+    focusId,
+    requestedSection,
     work,
     workContext.kind,
   ]);
@@ -893,6 +975,47 @@ export default function FlagshipWriteEditController() {
     return true;
   }, [focusId, focusSection, context?.version, context?.manuscriptId, work?.id,
     workContext.kind, workGestureEpoch]);
+
+  useEffect(() => {
+    const candidate = editorialReturnCandidate;
+    if (!candidate || !focusId || candidate.sectionId !== focusId
+      || candidate.scope !== currentLivingWorkScope
+      || scopedA2Relationship?.id !== candidate.relationshipId
+      || workReentryRequired.current
+      || scopedEditorialThread?.threadId === candidate.threadId) return;
+
+    const scopeAtRead = currentLivingWorkScope;
+    const generationAtRead = a2AsyncGenerationRef.current;
+    let cancelled = false;
+    void readBoundEditorialThread(
+      candidate.threadId,
+      candidate.sectionId,
+      candidate.relationshipId,
+    ).then((out) => {
+      if (cancelled
+        || activeA2ScopeRef.current !== scopeAtRead
+        || a2AsyncGenerationRef.current !== generationAtRead
+        || a2RelationshipIdRef.current !== candidate.relationshipId
+        || workReentryRequired.current) return;
+      setEditorialReturnCandidate(null);
+      if (!out.ok) {
+        if (out.reason !== 'locus_mismatch') {
+          setEditorialFailure('The Studio found saved revision history for this Work but could not verify it for the returned section. Nothing was opened or changed.');
+        }
+        return;
+      }
+      bindEditorialThread(out.thread);
+    });
+
+    return () => { cancelled = true; };
+  }, [
+    bindEditorialThread,
+    currentLivingWorkScope,
+    editorialReturnCandidate,
+    focusId,
+    scopedA2Relationship?.id,
+    scopedEditorialThread?.threadId,
+  ]);
 
   useEffect(() => {
     if (!requestedEditorialThread || !focusId || !currentLivingWorkScope) return;

@@ -13,7 +13,7 @@ describe('live witness recovery surface', () => {
   it('reads durable recovery only after the Work context refresh', () => {
     const apply = source.slice(source.indexOf('const applySuggested'));
     const refresh = apply.indexOf('const fresh = await refreshContext()');
-    const reread = apply.indexOf('const reread = await readBoundEditorialThread(editorialThread.threadId, focusId)');
+    const reread = apply.indexOf('const reread = await readBoundEditorialThread(editorialThread.threadId, focusId, null)');
     expect(refresh).toBeGreaterThan(-1);
     expect(reread).toBeGreaterThan(refresh);
   });
