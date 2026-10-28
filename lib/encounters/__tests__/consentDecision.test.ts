@@ -92,12 +92,26 @@ describe('Encounter consent decision law', () => {
     });
   });
 
-  it('equal-time competing latest events fail closed instead of trusting array order', () => {
+
+  it('a revoke is terminal for the exact version and generation even if the same link later grants', () => {
+    expect(decideEncounterConsent([
+      event('grant', 10), event('revoke', 11), event('grant', 12),
+    ], scope)).toMatchObject({
+      allowed: false,
+      reason: 'revoked',
+      authoritativeEventId: 'event-revoke-11',
+      shutdown: { required: true, state: 'required_unacknowledged' },
+    });
+  });
+
+  it('an equal-time revoke remains terminal instead of trusting array order', () => {
     const grant = event('grant', 10, { eventId: 'grant' });
     const revoke = event('revoke', 10, { eventId: 'revoke' });
     expect(decideEncounterConsent([grant, revoke], scope)).toMatchObject({
       allowed: false,
-      reason: 'ambiguous_latest_event',
+      reason: 'revoked',
+      authoritativeEventId: 'revoke',
+      shutdown: { required: true, state: 'required_unacknowledged' },
     });
   });
 

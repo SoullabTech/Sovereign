@@ -128,6 +128,19 @@ export function decideEncounterConsent(
 
   if (exact.length === 0) return denied('no_decision');
 
+  // Revocation is terminal for one exact agreement version + generation. A
+  // later grant carried by the same threshold capability cannot resurrect the
+  // room. Re-entry requires a separately governed new generation and token.
+  const revocations = exact.filter((event) => event.action === 'revoke');
+  if (revocations.length > 0) {
+    const latestRevokeAt = Math.max(...revocations.map((event) => event.createdAt));
+    const latestRevokes = revocations.filter((event) => event.createdAt === latestRevokeAt);
+    return Object.freeze({
+      ...denied('revoked', true),
+      ...(latestRevokes.length === 1 ? { authoritativeEventId: latestRevokes[0].eventId } : {}),
+    });
+  }
+
   const latestAt = Math.max(...exact.map((event) => event.createdAt));
   const latest = exact.filter((event) => event.createdAt === latestAt);
   if (latest.length !== 1) return denied('ambiguous_latest_event');
@@ -139,13 +152,6 @@ export function decideEncounterConsent(
       reason: 'granted' as const,
       authoritativeEventId: event.eventId,
       shutdown: Object.freeze({ required: false, state: 'not_required' as const }),
-    });
-  }
-
-  if (event.action === 'revoke') {
-    return Object.freeze({
-      ...denied('revoked', true),
-      authoritativeEventId: event.eventId,
     });
   }
 

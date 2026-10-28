@@ -29,6 +29,21 @@ ALTER TABLE encounters DROP CONSTRAINT IF EXISTS encounters_consent_agreement_ve
 ALTER TABLE encounters ADD CONSTRAINT encounters_consent_agreement_version_check
   CHECK (length(btrim(consent_agreement_version)) > 0);
 
+-- Exact Encounter + participant scope must also be structural. The participant
+-- UUID alone is globally unique, but without this composite key a direct writer
+-- could pair a participant from Encounter B with Encounter A.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'encounter_participants'::regclass
+       AND conname = 'encounter_participants_encounter_id_id_key'
+  ) THEN
+    ALTER TABLE encounter_participants
+      ADD CONSTRAINT encounter_participants_encounter_id_id_key UNIQUE (encounter_id, id);
+  END IF;
+END $$;
+
 ALTER TABLE encounter_consent_events
   ADD COLUMN IF NOT EXISTS actor_participant_id UUID,
   ADD COLUMN IF NOT EXISTS purpose TEXT,
@@ -77,7 +92,8 @@ ALTER TABLE encounter_consent_events
   DROP CONSTRAINT IF EXISTS encounter_consent_events_actor_self_check,
   DROP CONSTRAINT IF EXISTS encounter_consent_events_legacy_shape_check,
   DROP CONSTRAINT IF EXISTS encounter_consent_events_agreement_version_check,
-  DROP CONSTRAINT IF EXISTS encounter_consent_events_actor_participant_id_fkey;
+  DROP CONSTRAINT IF EXISTS encounter_consent_events_actor_participant_id_fkey,
+  DROP CONSTRAINT IF EXISTS encounter_consent_events_encounter_participant_fkey;
 
 ALTER TABLE encounter_consent_events
   ADD CONSTRAINT encounter_consent_events_purpose_check CHECK (purpose IN (
@@ -95,7 +111,10 @@ ALTER TABLE encounter_consent_events
     (legacy_provenance = FALSE AND generation > 0 AND kind IS NULL)
   ),
   ADD CONSTRAINT encounter_consent_events_actor_participant_id_fkey
-    FOREIGN KEY (actor_participant_id) REFERENCES encounter_participants(id) ON DELETE CASCADE;
+    FOREIGN KEY (actor_participant_id) REFERENCES encounter_participants(id) ON DELETE CASCADE,
+  ADD CONSTRAINT encounter_consent_events_encounter_participant_fkey
+    FOREIGN KEY (encounter_id, participant_id)
+    REFERENCES encounter_participants(encounter_id, id) ON DELETE CASCADE;
 
 CREATE INDEX IF NOT EXISTS idx_encounter_consent_scope_latest
   ON encounter_consent_events
@@ -108,6 +127,47 @@ COMMENT ON COLUMN encounter_consent_events.legacy_provenance IS
   'True only for pre-R3A standing grants retained as historical evidence; never current-generation authority.';
 COMMENT ON COLUMN encounter_consent_events.actor_participant_id IS
   'The participant capability that authored this decision; R3A requires self-authorship.';
+
+-- A revoke is terminal for one exact scope. Serialize all inserts for that
+-- scope so a concurrent grant cannot race past the revoke check.
+CREATE OR REPLACE FUNCTION enforce_encounter_consent_generation_terminal()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.legacy_provenance = TRUE THEN RETURN NEW; END IF;
+  PERFORM pg_advisory_xact_lock(hashtextextended(
+    NEW.encounter_id::text || '|' || NEW.participant_id::text || '|' || NEW.purpose || '|' ||
+    NEW.agreement_version || '|' || NEW.generation::text, 0));
+  IF (
+    SELECT count(*) FROM encounter_consent_events
+     WHERE encounter_id = NEW.encounter_id
+       AND participant_id = NEW.participant_id
+       AND purpose = NEW.purpose
+       AND agreement_version = NEW.agreement_version
+       AND generation = NEW.generation
+       AND legacy_provenance = FALSE
+  ) >= 64 THEN
+    RAISE EXCEPTION 'encounter-consent-generation-event-limit';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM encounter_consent_events
+     WHERE encounter_id = NEW.encounter_id
+       AND participant_id = NEW.participant_id
+       AND purpose = NEW.purpose
+       AND agreement_version = NEW.agreement_version
+       AND generation = NEW.generation
+       AND legacy_provenance = FALSE
+       AND action = 'revoke'
+  ) THEN
+    RAISE EXCEPTION 'encounter-consent-generation-revoked';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_encounter_consent_generation_terminal ON encounter_consent_events;
+CREATE TRIGGER trg_encounter_consent_generation_terminal
+  BEFORE INSERT ON encounter_consent_events
+  FOR EACH ROW EXECUTE FUNCTION enforce_encounter_consent_generation_terminal();
 
 -- Decisions are append-only. Direct UPDATE/DELETE is refused. A parent Encounter
 -- or participant lifecycle deletion may still cascade through the existing FKs;

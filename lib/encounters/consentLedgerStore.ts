@@ -1,4 +1,4 @@
-import db from '@/lib/db/postgres';
+import db, { queryWithExpectedRefusal } from '@/lib/db/postgres';
 import type { QueryResultRow } from 'pg';
 import {
   decideEncounterConsent,
@@ -134,8 +134,7 @@ export async function appendEncounterConsentDecision(
       || !nonEmpty(input.agreementVersion) || !currentGeneration(input.generation)) {
     throw new Error('INVALID_ENCOUNTER_CONSENT_DECISION');
   }
-  const result = await database.query<ConsentEventRow>(
-    `INSERT INTO encounter_consent_events
+  const sql = `INSERT INTO encounter_consent_events
        (encounter_id, participant_id, actor_participant_id, kind, purpose, action,
         agreement_version, generation, decided_at, text_snapshot, legacy_provenance)
      SELECT e.id, ep.id, ep.id, NULL, $3, $4, $5, $6, clock_timestamp(), $7, FALSE
@@ -147,10 +146,20 @@ export async function appendEncounterConsentDecision(
         AND e.consent_generation = $6
      RETURNING id AS event_id, encounter_id, participant_id, actor_participant_id,
                purpose, action, agreement_version, generation,
-               EXTRACT(EPOCH FROM decided_at) * 1000 AS decided_at_ms`,
-    [input.encounterId, input.participantId, input.purpose, input.action,
-     input.agreementVersion, input.generation, input.textSnapshot ?? null],
-  );
+               EXTRACT(EPOCH FROM decided_at) * 1000 AS decided_at_ms`;
+  const params = [input.encounterId, input.participantId, input.purpose, input.action,
+    input.agreementVersion, input.generation, input.textSnapshot ?? null];
+  let result: { rows: ConsentEventRow[] };
+  if (database === db) {
+    const outcome = await queryWithExpectedRefusal<ConsentEventRow>(sql, params, {
+      fragment: 'encounter-consent-generation-',
+      why: 'A closed or exhausted consent generation cannot accept another decision',
+    });
+    if (outcome.refused) throw new Error('CONSENT_GENERATION_CLOSED');
+    result = outcome.result;
+  } else {
+    result = await database.query<ConsentEventRow>(sql, params);
+  }
   if (result.rows.length !== 1) throw new Error('CONSENT_SCOPE_STALE_OR_UNKNOWN');
   return mapEvent(result.rows[0]);
 }

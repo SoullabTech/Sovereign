@@ -15,6 +15,18 @@ describe('threshold Policy R3A source boundary',()=>{
   expect(page).not.toContain('RecordingCoordinator');expect(page).toContain('does not start a recorder');
   expect(page).toContain('Prevent future room entry');expect(page).toContain('already-open room is a later held gate');
  });
+ it('keeps revocation terminal, bounds the public append route, and requires a new invitation',()=>{
+  const route=read('app/api/open/threshold/[token]/route.ts');
+  const page=read('app/open/threshold/[token]/page.tsx');
+  const migration=read('database/migrations/20261027000002_exp21_encounter_consent_ledger.sql');
+  expect(route).toContain('RATE_MAX=12');expect(route).toContain("before.reason==='revoked'");
+  expect(route).toContain('CONSENT_GENERATION_CLOSED');
+  expect(page).toContain('A new consent generation and invitation are required before re-entry');
+  expect(migration).toContain('enforce_encounter_consent_generation_terminal');
+  expect(migration).toContain('trg_encounter_consent_no_truncate');
+  expect(migration).toContain('encounter-consent-generation-event-limit');
+  expect(migration).toContain('encounter_consent_events_encounter_participant_fkey');
+ });
  it('preserves old grants as legacy generation-zero provenance rather than current authority',()=>{
   const migration=read('database/migrations/20261027000002_exp21_encounter_consent_ledger.sql');
   expect(migration).toContain("agreement_version = 'legacy-v0'");

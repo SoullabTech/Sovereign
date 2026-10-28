@@ -46,17 +46,19 @@ export default function ThresholdPage(){
      <p className="text-sm text-neutral-400">{ctx.displayName} · agreement {ctx.agreementVersion} · generation {ctx.generation}</p></header>
     <section className="rounded-xl bg-neutral-900 border border-neutral-800 p-5 space-y-4">
      <h2 className="font-medium">1. Enter the human room</h2><p className="text-sm text-neutral-300">{ctx.joinConsentText}</p>
+     {ctx.joinDecision==='revoked'?<p className="text-sm text-amber-200">This invitation was revoked. A new consent generation and invitation are required before re-entry.</p>:
      <div className="flex gap-2 flex-wrap">
       <button disabled={state==='saving'} onClick={()=>void decide('join','grant')} className="px-4 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300">Enter this room</button>
       <button disabled={state==='saving'} onClick={()=>void decide('join',ctx.joined?'revoke':'refuse')} className="px-4 py-2 rounded-lg border border-neutral-700 text-neutral-300">{ctx.joined?'Prevent future room entry':'Not now'}</button>
-     </div><p className="text-xs text-neutral-500">Current decision: {ctx.joinDecision}</p>
+     </div>}<p className="text-xs text-neutral-500">Current decision: {ctx.joinDecision}</p>
     </section>
     <section className="rounded-xl bg-neutral-900 border border-neutral-800 p-5 space-y-4">
      <h2 className="font-medium">2. Recording is a separate choice</h2><p className="text-sm text-neutral-300">{ctx.recordConsentText}</p>
+     {ctx.recordDecision==='revoked'?<p className="text-sm text-amber-200">Recording permission was revoked for this generation. A new invitation is required to ask again.</p>:
      <div className="flex gap-2 flex-wrap">
       <button disabled={state==='saving'} onClick={()=>void decide('record_audio','grant')} className="px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/40 text-amber-200">Allow recording</button>
       <button disabled={state==='saving'} onClick={()=>void decide('record_audio',ctx.recordConsented?'revoke':'refuse')} className="px-4 py-2 rounded-lg border border-neutral-700 text-neutral-300">{ctx.recordConsented?'Prevent future recording':'Do not record'}</button>
-     </div><p className="text-xs text-neutral-500">Current decision: {ctx.recordDecision}. This policy candidate does not start a recorder.</p>
+     </div>}<p className="text-xs text-neutral-500">Current decision: {ctx.recordDecision}. This policy candidate does not start a recorder.</p>
     </section>
     {ctx.joined&&<a href={`/open/session-room/${ctx.encounterId}?role=${ctx.role==='practitioner'?'practitioner':'guest'}&threshold=${encodeURIComponent(token)}`}
       className="block w-full text-center px-4 py-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-medium">Enter the session room</a>}
