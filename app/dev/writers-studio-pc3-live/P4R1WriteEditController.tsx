@@ -57,6 +57,7 @@ import {
   listA2Relationships,
   readA2Relationship,
   readEligibleCarrySources,
+  resolveEditorialReturnBinding,
   type A2RelationshipSummary,
   type EligibleCarrySource,
 } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
@@ -949,17 +950,17 @@ export default function FlagshipWriteEditController() {
     }
 
     const live = writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '';
-    if (thread.locusText !== live) {
-      const located = locateUniquePassage(live, thread.locusText);
-      if (!located) {
-        setEditorialFailure('This conversation’s passage is no longer uniquely present here. Nothing was changed.');
-        return false;
-      }
+    const returnBinding = resolveEditorialReturnBinding(thread, live);
+    if (!returnBinding) {
+      setEditorialFailure('This conversation’s original or actively applied passage is no longer uniquely present here. Nothing was changed.');
+      return false;
+    }
+    if (returnBinding.text !== live || returnBinding.source === 'active_application') {
       setSelectedPassage({
         draftSectionId: focusId,
-        start: located.start,
-        end: located.end,
-        text: thread.locusText,
+        start: returnBinding.start,
+        end: returnBinding.end,
+        text: returnBinding.text,
         revisionNumber: writingRef.current?.currentRevisionId() ?? context?.version ?? 0,
       });
     }

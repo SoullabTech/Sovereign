@@ -1,4 +1,9 @@
 import { apiFetch } from '@/lib/http/apiBase';
+import {
+  exactVersion,
+  locateUniquePassage,
+  type RebuildEditorialThread,
+} from './editorialCollaboration';
 
 export interface A2RelationshipSummary {
   readonly id: string;
@@ -124,6 +129,47 @@ export function parseReturnEditorialEpisode(raw: unknown): ReturnEpisodeParse {
     }
   }
   return { ok: true, latestEditorialThreadId: latest?.threadId ?? null };
+}
+
+export interface EditorialReturnBinding {
+  readonly source: 'original_locus' | 'active_application';
+  readonly text: string;
+  readonly start: number;
+  readonly end: number;
+}
+
+function exactReturnBinding(
+  liveText: string,
+  expectedText: string,
+  source: EditorialReturnBinding['source'],
+): EditorialReturnBinding | null {
+  const located = locateUniquePassage(liveText, expectedText);
+  return located ? { source, text: expectedText, ...located } : null;
+}
+
+/**
+ * Recover the exact visible locus for a protected editorial thread.
+ *
+ * The original locus remains the first authority when it still appears once.
+ * After an explicit Apply, the original may correctly be absent. In that case
+ * only the server-owned current application may nominate a replacement: it
+ * must still be undoable, must name an exact saved version in this protected
+ * thread, and that exact wording must appear once in the current section.
+ * Head/latest versions, URL state, prose similarity and client memory confer
+ * no return authority.
+ */
+export function resolveEditorialReturnBinding(
+  thread: RebuildEditorialThread,
+  liveText: string,
+): EditorialReturnBinding | null {
+  const original = exactReturnBinding(liveText, thread.locusText, 'original_locus');
+  if (original) return original;
+
+  const application = thread.application;
+  if (!application || application.undone || application.canUndo !== true) return null;
+  const appliedVersion = exactVersion(thread, application.versionId);
+  if (!appliedVersion) return null;
+  return exactReturnBinding(liveText, appliedVersion.wording, 'active_application');
 }
 
 export async function readA2Relationship(

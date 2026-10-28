@@ -157,7 +157,25 @@ jest.mock('@/lib/writersStudio/rebuild/relationshipOrchestration',()=>({
   readA2Relationship:jest.fn(async()=> mockEnableBRelationship ? {ok:true,relationship:{
     id:'fiction-relationship-b',livingWorkId:'fiction-work-B',manuscriptId:'fiction-manuscript'
   }}:{ok:false}),
-  readEligibleCarrySources:jest.fn(async()=>({ok:false}))
+  readEligibleCarrySources:jest.fn(async()=>({ok:false})),
+  // Preserve the real controller's exact return-binding contract while this
+  // suite replaces the network-facing relationship module. This is test-only:
+  // no URL, client memory, latest-version or fuzzy prose authority is admitted.
+  resolveEditorialReturnBinding:(thread,liveText)=>{
+    const locate=(text,source)=>{
+      if(!text)return null;
+      const first=liveText.indexOf(text);
+      if(first<0||liveText.indexOf(text,first+1)>=0)return null;
+      const start=[...liveText.slice(0,first)].length;
+      return {source,text,start,end:start+[...text].length};
+    };
+    const original=locate(thread.locusText,'original_locus');
+    if(original)return original;
+    const app=thread.application;
+    if(!app||app.undone||app.canUndo!==true)return null;
+    const version=thread.versions?.find(item=>item.id===app.versionId);
+    return version?locate(version.wording,'active_application'):null;
+  }
 }));
 jest.mock('@/lib/writersStudio/rebuild/returnStateClient',()=>({
   readPlaceReturnClient:jest.fn(async()=>({ok:true,sectionId:null})),
