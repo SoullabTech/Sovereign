@@ -34,6 +34,7 @@ import {
   type EditorialScopeDeclaration,
 } from '@/lib/manuscript/editorialScope/contract';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
+import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,7 +49,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  * the mistake is legible rather than mysterious.
  */
 const TOP_KEYS = [
-  'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'relationshipId', 'carry',
+  'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'responseDepth', 'relationshipId', 'carry',
 ] as const;
 const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
@@ -73,6 +74,7 @@ type Parsed =
       mayProposeImmediately: boolean;
       /** Turn-local outcome vocabulary. ⛔ Defaults to allow. */
       proposalPolicy: ProposalPolicy;
+      responseDepth: EditorialDepth;
     }
   | { ok: false; error: string };
 
@@ -144,6 +146,13 @@ function parseClosed(body: unknown): Parsed {
   /* ⛔ Absence is not release — the discussion-first order is the default. */
   let mayProposeImmediately = false;
   let proposalPolicy: ProposalPolicy = 'allow';
+  // Only the explicit writer's requested EXPLANATION register may vary.
+  // It NEVER permits a wider Read, revision latitude, or more authored prose.
+  const responseDepth: EditorialDepth = b.responseDepth === undefined
+    ? 'guided' : b.responseDepth as EditorialDepth;
+  if (!(['guided','learning','direct'] as readonly string[]).includes(responseDepth)) {
+    return { ok: false, error: 'responseDepth must be guided, learning, or direct' };
+  }
   if (b.proposalPolicy !== undefined) {
     if (!(b.proposalPolicy === 'allow' || b.proposalPolicy === 'reply_only')) {
       return { ok: false, error: 'proposalPolicy must be allow or reply_only' };
@@ -192,6 +201,7 @@ function parseClosed(body: unknown): Parsed {
     carry,
     mayProposeImmediately,
     proposalPolicy,
+    responseDepth,
   };
 }
 
@@ -279,6 +289,7 @@ export async function POST(request: NextRequest) {
     scope: parsed.scope,
     mayProposeImmediately: parsed.mayProposeImmediately,
     proposalPolicy: parsed.proposalPolicy,
+    responseDepth: parsed.responseDepth,
   });
 
   if (!turn.ok) {

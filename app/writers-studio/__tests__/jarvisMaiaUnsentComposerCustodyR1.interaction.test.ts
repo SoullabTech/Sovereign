@@ -91,7 +91,12 @@ describe('JARVIS MAIA unsent message custody — actual component, inert service
     expect(visible?.querySelector('p')?.textContent).toBe(literal);
     expect(visible?.textContent).toContain('Not confirmed');
     expect(visible?.textContent).not.toContain('Keep our conversation in view');
-    expect(send.mock.calls[0]?.[0]).toContain('Keep our conversation in view');
+    // R10 relational Craft contract: the prompt scaffolding belongs to the
+    // SERVER's system instruction. The client sends only the writer's own
+    // words (never the private scaffold) plus a structured plan, so the scaffold
+    // cannot leak into author text, the visible transcript or a retry.
+    expect(send.mock.calls[0]?.[0]).toBe(literal);
+    expect(send.mock.calls[0]?.[0]).not.toContain('Keep our conversation in view');
     expect(send.mock.calls[0]?.[1]).toMatchObject({ displayText: literal });
     expect(currentText()).toBe(literal); // still edit-ready
   });

@@ -71,7 +71,9 @@ describe('C7 — existing Work → begin writing without copying materials', () 
     expect(home).toContain('Notes &amp; sources');
     // BEGIN, returning Work, unclaimed writing, and general many-Works Home
     // all keep creation/import affordances available.
-    expect(home.match(/\{creationControls\}/g)?.length).toBe(4);
+    // R10 adds a fifth arrival state (the new-work room), which also keeps the
+    // controls visible: every state offers creation/import.
+    expect(home.match(/\{creationControls\}/g)?.length).toBe(5);
     expect(home).toContain('data-home-return-work={props.returnWork.id}');
     expect(controller).toContain("import P4R1ImportManuscript from './P4R1ImportManuscript';");
     expect(controller).toContain('onImport={openImport}');
