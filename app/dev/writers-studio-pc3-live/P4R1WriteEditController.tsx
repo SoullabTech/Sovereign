@@ -68,7 +68,7 @@ import {
   readRelationshipReturnClient,
   writeRelationshipReturnClient,
 } from '@/lib/writersStudio/rebuild/returnStateClient';
-import { P4R1Pc3WriteEditView, type Pc3HeldPassage } from './P4R1Pc3WriteEditView';
+import { P4R1Pc3WriteEditView, UNDO_RESTORED_MESSAGES, type Pc3HeldPassage } from './P4R1Pc3WriteEditView';
 
 interface ContextReady {
   state: 'section_aware';
@@ -1483,7 +1483,7 @@ export default function FlagshipWriteEditController() {
           visibleRestored = true;
           setContext(fresh);
           setSelectedPassage(null);
-          setUndoMessage('That application was undone. The original passage is restored.');
+          setUndoMessage(UNDO_RESTORED_MESSAGES.complete);
         } else {
           setUndoMessage('Undo was saved on the server, but the current writing could not be safely refreshed. Your local writing has been preserved; review it before continuing.');
         }
@@ -1498,7 +1498,7 @@ export default function FlagshipWriteEditController() {
       }
     } catch {
       if (sameRequest()) setUndoMessage(visibleRestored
-        ? 'The original passage is restored. Its editorial history could not be refreshed just now.'
+        ? UNDO_RESTORED_MESSAGES.historyPending
         : serverUndone
           ? 'Undo was saved on the server, but its current text could not be read. Your local writing has been preserved.'
           : 'The Studio could not confirm Undo just now. Your current writing has been preserved.');

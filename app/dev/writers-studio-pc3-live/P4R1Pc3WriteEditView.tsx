@@ -2,9 +2,27 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
-import { WriteManuscriptRail, WriteRoom } from '@/app/writers-studio/full-redesign/WriteRoom';
+import { WriteManuscriptRail, WriteRoom, isWriteRoomReadbackCurrent, type WriteRoomReadback } from '@/app/writers-studio/full-redesign/WriteRoom';
 import { WRITE_COPY } from '@/app/writers-studio/full-redesign/fixtures';
 import { WRITE_GEOMETRY, appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
+
+export const UNDO_RESTORED_MESSAGES = {
+  complete: 'That application was undone. The original passage is restored.',
+  historyPending: 'The original passage is restored. Its editorial history could not be refreshed just now.',
+} as const;
+
+export function undoMessageForVisibleDraft(
+  message: string | null,
+  readback: WriteRoomReadback | null,
+  sectionId: string | null,
+  body: string,
+): string | null {
+  const claimsRestoration = message === UNDO_RESTORED_MESSAGES.complete
+    || message === UNDO_RESTORED_MESSAGES.historyPending;
+  return claimsRestoration && !isWriteRoomReadbackCurrent(readback, sectionId, body)
+    ? 'The words on this page have not been confirmed against the saved draft. Your current writing remains visible.'
+    : message;
+}
 
 const WRITE_RELATIONAL_GEOMETRY = {
   ...WRITE_GEOMETRY,
@@ -154,6 +172,12 @@ function selectionInPc3Editor(): { sectionId: string; text: string; rect: DOMRec
 
 export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [canvas, setCanvas] = useState(false);
+  const [writeReadback, setWriteReadback] = useState<WriteRoomReadback | null>(null);
+  const onWriteReadback = useCallback((next: WriteRoomReadback) => {
+    setWriteReadback((previous) => previous?.sectionId === next.sectionId
+      && previous.requestedBody === next.requestedBody && previous.visibleBody === next.visibleBody
+      && previous.state === next.state ? previous : next);
+  }, []);
   const [workConversationOpen, setWorkConversationOpen] = useState(false);
   const [workConversationStarter, setWorkConversationStarter] = useState('');
   const [maiaRelationshipChooserOpen, setMaiaRelationshipChooserOpen] = useState(false);
@@ -401,6 +425,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   const busy = props.editorialBusy || props.adoptionBusy || props.memberVersionBusy;
   const currentBody = props.focusId ? props.writing.bodyOf(props.focusId) : '';
+  const visibleUndoMessage = undoMessageForVisibleDraft(props.undoMessage, writeReadback, props.focusId, currentBody);
   const currentText = props.held?.draftSectionId === props.focusId
     ? props.held.text
     : currentBody;
@@ -784,7 +809,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         message={props.editorialFailure ?? (props.adoptionOutcome && props.appliedVersionId === props.suggestedVersion?.id
           ? props.adoptionOutcome.kind === 'applied' ? null : 'The Work could not accept this revision. Nothing was changed.'
           : null)}
-        undoMessage={props.undoMessage}
+        undoMessage={visibleUndoMessage}
         onSelectVersion={props.onSelectVersion}
         onSend={props.onSendEditorial}
         onSaveMember={props.onSaveMember}
@@ -823,7 +848,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           onKeep={props.onKeep}
           appliedVersionId={props.appliedVersionId}
           onUndo={props.onUndo}
-          undoMessage={props.undoMessage}
+          undoMessage={visibleUndoMessage}
           latitude={props.editLatitude}
           onLatitude={props.onLatitude}
           mayRemoveParagraphs={props.mayRemoveParagraphs}
@@ -958,8 +983,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       onCanvasChange={setCanvas}
       live={{
         saveState: projection.data.saveState,
-            canonicalBody: projection.canonicalBody,
+        canonicalBody: projection.canonicalBody,
         onEditBody: props.writing.edit,
+        onReadback: onWriteReadback,
         onPrevious: () => go(projection.previousId),
         onNext: () => go(projection.nextId),
         onOpenChapter: go,
@@ -1240,7 +1266,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         message={props.editorialFailure ?? (props.adoptionOutcome && props.appliedVersionId === props.suggestedVersion?.id
           ? props.adoptionOutcome.kind === 'applied' ? null : 'The Work could not accept this revision. Nothing was changed.'
           : null)}
-        undoMessage={props.undoMessage}
+        undoMessage={visibleUndoMessage}
         onSelectVersion={props.onSelectVersion}
         onSend={props.onSendEditorial}
         onSaveMember={props.onSaveMember}

@@ -67,12 +67,32 @@ export type WriteRoomData = {
   unsaved: string;
 };
 
+export type WriteRoomReadback = {
+  sectionId: string;
+  requestedBody: string;
+  /** Null while native input prevents an exact display readback. */
+  visibleBody: string | null;
+  state: 'current' | 'deferred' | 'refused';
+};
+
+export function isWriteRoomReadbackCurrent(
+  readback: WriteRoomReadback | null,
+  sectionId: string | null,
+  body: string,
+): boolean {
+  return readback !== null && readback.state === 'current'
+    && readback.sectionId === sectionId
+    && readback.requestedBody === body && readback.visibleBody === body;
+}
+
 export type WriteRoomLivePorts = {
   /** A1 is the authority when supplied; fixture mode leaves this absent. */
   saveState?: string;
   /** Exact section body before presentation typesetting. Live editing authority only. */
   canonicalBody?: string;
   onEditBody?: (body: string) => void;
+  /** Display acknowledgment only; must not create an author edit or save. */
+  onReadback?: (readback: WriteRoomReadback) => void;
   onPrevious?: () => void;
   onNext?: () => void;
   onOpenChapter?: (chapterId: string) => void;
@@ -102,7 +122,7 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct, live }
   const liveRef = useRef<WriteRoomLivePorts | undefined>(live);
   liveRef.current = live;
   const [localSaveState, setLocalSaveState] = useState<string>(fixture.saveState);
-  const [words, setWords] = useState<number>(() => countWords(fixture.paragraphs.join(' ')));
+  const [words, setWords] = useState<number>(() => countWords(live?.canonicalBody ?? fixture.paragraphs.join(' ')));
   const saveState = live?.saveState ?? localSaveState;
 
   // The editor's selection is remembered whenever it changes inside the editor.
@@ -177,6 +197,11 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct, live }
     setWords(countWords(body));
   }, [fixture.unsaved]);
 
+  const onReadback = useCallback((readback: WriteRoomReadback) => {
+    if (readback.visibleBody !== null) setWords(countWords(readback.visibleBody));
+    liveRef.current?.onReadback?.(readback);
+  }, []);
+
   // Keep the editor's focus when a control is pressed with the pointer.
   const keepFocus = (e: React.MouseEvent) => e.preventDefault();
 
@@ -237,6 +262,7 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct, live }
             label={copy.editorLabel}
             canonicalBody={live?.canonicalBody}
             onEdited={onEdited}
+            onReadback={onReadback}
           />
         </div>
       </div>
@@ -291,6 +317,7 @@ const Editor = memo(function Editor({
   label,
   canonicalBody,
   onEdited,
+  onReadback,
 }: {
   editorRef: React.RefObject<HTMLDivElement>;
   sectionId: string;
@@ -300,6 +327,7 @@ const Editor = memo(function Editor({
   label: string;
   canonicalBody?: string;
   onEdited: (body: string) => void;
+  onReadback: (readback: WriteRoomReadback) => void;
 }) {
   const [initial] = useState(() => ({
     body: canonicalBody ?? paragraphs.join('\n\n'),
@@ -309,6 +337,17 @@ const Editor = memo(function Editor({
   const canonicalRef = useRef(initial.body);
   const projectionRef = useRef<ReturnType<typeof projectRawBodyToDisplay> | null>(null);
   const pendingRef = useRef<{ body: string; caret: number; inputType: string } | null>(null);
+  // This is the last canonical prop acknowledged by this editor, not merely
+  // the last value observed. Refused replacements never become its baseline.
+  const acknowledgedPropRef = useRef(initial.body);
+  const composingRef = useRef(false);
+  const [reconciliationTick, setReconciliationTick] = useState(0);
+
+  const reportReadback = useCallback((state: WriteRoomReadback['state'], visibleBody: string | null) => {
+    if (typeof canonicalBody === 'string') {
+      onReadback({ sectionId, requestedBody: canonicalBody, visibleBody, state });
+    }
+  }, [canonicalBody, onReadback, sectionId]);
 
   const currentProjection = (body: string) => {
     const normalized = body.replace(/\r\n?/g, '\n');
@@ -379,7 +418,7 @@ const Editor = memo(function Editor({
     return walk(root, 0);
   };
 
-  const renderCanonical = useCallback((body: string, caretRaw: number): boolean => {
+  const renderCanonical = useCallback((body: string, caretRaw: number, restoreSelection = true): boolean => {
     const root = editorRef.current;
     if (!root) return false;
     const { projection, displayBlocks } = currentProjection(body);
@@ -495,6 +534,10 @@ const Editor = memo(function Editor({
       root.dataset.j7Reconcile = 'caret-not-on-source-boundary';
       return false;
     }
+    if (!restoreSelection) {
+      root.dataset.j7Caret = String(caretRaw);
+      return true;
+    }
     const point = normalizedToDomPoint(root, normalizedWanted);
     const selection = window.getSelection();
     if (point && selection) {
@@ -514,6 +557,84 @@ const Editor = memo(function Editor({
   useLayoutEffect(() => {
     renderCanonical(initial.body, initial.body.length);
   }, [initial.body, renderCanonical]);
+
+  useLayoutEffect(() => {
+    const root = editorRef.current;
+    if (!root || typeof canonicalBody !== 'string') return;
+
+    // An authoritative replacement must not consume an unfinished native input
+    // or composition. Their completion triggers a fresh reconciliation.
+    if (pendingRef.current || composingRef.current) {
+      root.dataset.j7Reconcile = 'external-update-deferred-native-input';
+      reportReadback('deferred', null);
+      return;
+    }
+    // Ordinary typing is already rendered by this editor before its owner
+    // echoes the same body. Acknowledge it without rebuilding DOM or selection.
+    if (canonicalBody === canonicalRef.current) {
+      if (!projectionRef.current?.ok) {
+        reportReadback('refused', null);
+        return;
+      }
+      acknowledgedPropRef.current = canonicalBody;
+      if (root.dataset.j7Reconcile?.startsWith('external-update-')) root.dataset.j7Reconcile = '';
+      reportReadback('current', canonicalRef.current);
+      return;
+    }
+    if (canonicalRef.current !== acknowledgedPropRef.current) {
+      root.dataset.j7Reconcile = 'external-update-refused-local-change';
+      reportReadback('refused', canonicalRef.current);
+      return;
+    }
+
+    const previous = canonicalRef.current;
+    const selection = window.getSelection();
+    const selectionInEditor = Boolean(selection?.rangeCount && selection.anchorNode && selection.focusNode
+      && root.contains(selection.anchorNode) && root.contains(selection.focusNode));
+    const editorOwnsFocus = document.activeElement === root
+      || Boolean(document.activeElement && root.contains(document.activeElement));
+    const restoreSelection = selectionInEditor && editorOwnsFocus;
+    const rawPoint = (node: Node | null, offset: number): number => {
+      const normalized = node && selectionInEditor ? domPointToNormalized(root, node, offset) : null;
+      return normalized === null ? previous.length
+        : projectionRef.current?.normalizedBoundaryToRaw[normalized] ?? previous.length;
+    };
+    const oldAnchor = rawPoint(selection?.anchorNode ?? null, selection?.anchorOffset ?? 0);
+    const oldFocus = rawPoint(selection?.focusNode ?? null, selection?.focusOffset ?? 0);
+    // Preserve both ends and direction of a selection. Never choose the middle
+    // of a surrogate pair or CRLF, both of which are source/display units.
+    const clamp = (offset: number, body: string): number => {
+      let point = Math.min(offset, body.length);
+      if (point > 0 && point < body.length
+        && ((body.charCodeAt(point - 1) >= 0xd800 && body.charCodeAt(point - 1) <= 0xdbff
+          && body.charCodeAt(point) >= 0xdc00 && body.charCodeAt(point) <= 0xdfff)
+          || body.slice(point - 1, point + 1) === '\r\n')) point -= 1;
+      return point;
+    };
+    const renderReadback = (body: string): boolean => {
+      const anchor = clamp(oldAnchor, body);
+      const focus = clamp(oldFocus, body);
+      if (!renderCanonical(body, focus, false)) return false;
+      if (!restoreSelection || !selection) return true;
+      const map = projectionRef.current?.normalizedBoundaryToRaw;
+      const anchorPoint = normalizedToDomPoint(root, map?.indexOf(anchor) ?? -1);
+      const focusPoint = normalizedToDomPoint(root, map?.indexOf(focus) ?? -1);
+      if (!anchorPoint || !focusPoint) return false;
+      selection.setBaseAndExtent(anchorPoint[0], anchorPoint[1], focusPoint[0], focusPoint[1]);
+      return true;
+    };
+
+    if (renderReadback(canonicalBody)) {
+      acknowledgedPropRef.current = canonicalBody;
+      reportReadback('current', canonicalRef.current);
+    } else {
+      const restored = renderReadback(previous);
+      root.dataset.j7Reconcile = 'external-update-refused-projection-or-caret';
+      reportReadback('refused', restored ? previous : null);
+    }
+    // This is a readback of an existing save/Undo, never a new author edit:
+    // deliberately do not call onEdited or enqueue another save.
+  }, [canonicalBody, editorRef, reconciliationTick, renderCanonical, reportReadback]);
 
   useEffect(() => {
     const root = editorRef.current;
@@ -582,6 +703,7 @@ const Editor = memo(function Editor({
       if (!ok) { renderCanonical(raw, start); root.dataset.j7Reconcile = 'edit-refused-projection-or-caret'; return false; }
       canonicalRef.current = next;
       onEdited(next);
+      reportReadback(canonicalBody === next ? 'current' : 'refused', next);
       return true;
     };
     const before = (event: InputEvent) => {
@@ -591,6 +713,7 @@ const Editor = memo(function Editor({
         else {
           const current = selected();
           pendingRef.current = { body: canonicalRef.current, caret: current?.[1] ?? canonicalRef.current.length, inputType: event.inputType };
+          reportReadback('deferred', null);
         }
         return;
       }
@@ -598,6 +721,7 @@ const Editor = memo(function Editor({
         const current = selected();
         pendingRef.current = { body: canonicalRef.current, caret: current?.[1] ?? canonicalRef.current.length, inputType: event.inputType };
         root.dataset.j7Reconcile = 'noncancelable:' + event.inputType;
+        reportReadback('deferred', null);
         return;
       }
       if (event.inputType === 'insertFromPaste') return;
@@ -613,6 +737,15 @@ const Editor = memo(function Editor({
       pendingRef.current = null;
       renderCanonical(pending.body, pending.caret);
       root.dataset.j7Reconcile = 'refused-and-restored:' + pending.inputType;
+      setReconciliationTick((value) => value + 1);
+    };
+    const compositionStart = () => {
+      composingRef.current = true;
+      reportReadback('deferred', null);
+    };
+    const compositionEnd = () => {
+      composingRef.current = false;
+      setReconciliationTick((value) => value + 1);
     };
     const paste = (event: ClipboardEvent) => {
       const text = event.clipboardData?.getData('text/plain');
@@ -623,12 +756,16 @@ const Editor = memo(function Editor({
     root.addEventListener('beforeinput', before);
     root.addEventListener('input', onInput);
     root.addEventListener('paste', paste);
+    root.addEventListener('compositionstart', compositionStart);
+    root.addEventListener('compositionend', compositionEnd);
     return () => {
       root.removeEventListener('beforeinput', before);
       root.removeEventListener('input', onInput);
       root.removeEventListener('paste', paste);
+      root.removeEventListener('compositionstart', compositionStart);
+      root.removeEventListener('compositionend', compositionEnd);
     };
-  }, [editorRef, onEdited, renderCanonical]);
+  }, [canonicalBody, editorRef, onEdited, renderCanonical, reportReadback]);
 
   return (
     <div
