@@ -534,7 +534,7 @@ export default function ListenPilot() {
                       </>
                     )}
                     <div className={styles.channelPicker}>
-                      <label htmlFor="listen-input-channel" className={styles.fieldLabel}>Which Scarlett input has your microphone?</label>
+                      <label htmlFor="listen-input-channel" className={styles.fieldLabel}>Which input is your microphone connected to?</label>
                       <select
                         id="listen-input-channel"
                         value={inputChannel}
@@ -545,10 +545,20 @@ export default function ListenPilot() {
                         <option value={1}>Input 1 (left) — microphone in first jack</option>
                         <option value={2} disabled={captureInfo?.microphoneChannels === 1}>Input 2 (right) — microphone in second jack</option>
                       </select>
-                      <p className={styles.channelHelp}>Listen captures the selected physical input as one centered mono channel. Use Input 1 for the microphone used in your first Preface take.</p>
+                      <p className={styles.channelHelp}>If you use a USB audio interface, choose the jack your microphone is connected to. Listen records that input as one centered mono channel.</p>
                     </div>
                     <div className={styles.formatPanel} data-capture-format-panel>
-                      <h4 className={styles.formatHeading}>Recording specifications</h4>
+                      {/* Any mismatch is safety-relevant and remains visible without opening
+                          optional technical details. No automatic mic inspection. */}
+                      {captureInfo?.microphoneSampleRateHz && captureInfo.microphoneSampleRateHz !== 48000 && (
+                        <p className={styles.formatWarning} role="status">
+                          Your input is reporting {(captureInfo.microphoneSampleRateHz / 1000).toLocaleString()} kHz, not 48 kHz. Check your microphone or audio interface settings, then inspect again.
+                        </p>
+                      )}
+                      <details className={styles.formatDetails} data-listen-format-details>
+                        <summary className={styles.formatHeading}>
+                          Recording details <span>Sample rate, format, and conversion</span>
+                        </summary>
                       <dl className={styles.formatFacts}>
                         <div><dt>Reported microphone rate</dt><dd>{captureInfo?.microphoneSampleRateHz ? (captureInfo.microphoneSampleRateHz / 1000).toLocaleString() + ' kHz' : 'Not reported yet'}</dd></div>
                         <div><dt>Microphone channels</dt><dd>{captureInfo?.microphoneChannels ?? 'Not reported yet'}</dd></div>
@@ -558,17 +568,13 @@ export default function ListenPilot() {
                           ? 'Confirmed by track settings' : 'Confirmed by explicit audio graph; track metadata unavailable'}</dd></div>}
                         <div><dt>24-bit PCM WAV</dt><dd>Available as a local conversion after recording; browser capture itself is not a 24-bit master</dd></div>
                       </dl>
-                      {captureInfo?.microphoneSampleRateHz && captureInfo.microphoneSampleRateHz !== 48000 && (
-                        <p className={styles.formatWarning} role="status">
-                          Your input is reporting {(captureInfo.microphoneSampleRateHz / 1000).toLocaleString()} kHz, not 48 kHz. Check the interface rate in macOS Audio MIDI Setup, then inspect again.
-                        </p>
-                      )}
                       {captureInfo?.microphoneChannels && captureInfo.microphoneChannels !== 1 && (
                         <p className={styles.formatInfo}>
                           Your interface exposes {captureInfo.microphoneChannels} physical input channels. The new mono route selects input {inputChannel} and records it centered instead of leaving the opposite speaker silent.
                         </p>
                       )}
                       <p className={styles.formatExplanation}>We request a 48 kHz mono microphone feed with processing off, but your browser and hardware decide the actual input settings. A reported input rate does not make the compressed recording a 24-bit WAV master.</p>
+                      </details>
                     </div>
 
                     <section className={styles.voiceField} aria-label="Live voice field">

@@ -786,3 +786,174 @@
   .fr-reading-choice > span { display: none; }
   .fr-reading-choice select { max-width: min(96px,24vw); min-height: 44px; font-size: 14px; }
 }
+
+
+/* 2026-10-23: discoverable presentation controls without toolbar overload. */
+.fr-root .fr-room-switcher {display:none;align-items:center;gap:6px;font:inherit;font-size:12px;min-width:0;}
+.fr-root .fr-room-switcher select {
+  min-width:110px;max-width:165px;height:34px;padding:5px 18px 5px 9px;border-radius:8px;
+  border:1px solid var(--fr-line);color:var(--fr-title);background:var(--fr-panel);font:inherit;
+}
+.fr-root .fr-writer-preferences {position:relative;flex:none;margin-left:7px;font:inherit;}
+.fr-root .fr-writer-preferences>summary {
+  list-style:none;display:flex;align-items:center;justify-content:center;
+  min-height:34px;padding:7px 11px;border-radius:8px;border:1px solid var(--fr-line);
+  font-size:12px;color:var(--fr-ink2);cursor:pointer;white-space:nowrap;
+}
+.fr-root .fr-writer-preferences>summary::-webkit-details-marker {display:none;}
+.fr-root .fr-writer-preferences[open]>summary {border-color:var(--fr-action);color:var(--fr-title);}
+.fr-root .fr-writer-preference-panel {
+  position:absolute;right:0;top:calc(100% + 8px);width:min(390px,calc(100vw - 24px));
+  padding:18px;border-radius:12px;border:1px solid var(--fr-line);
+  color:var(--fr-ink);background:var(--fr-panel);box-shadow:0 20px 45px rgba(0,0,0,.22);
+  z-index:80;max-height:min(78vh,710px);overflow:auto;line-height:1.5;
+}
+.fr-root .fr-writer-preference-panel h2 {font-family:var(--fr-serif-stack);font-size:21px;font-weight:500;margin:0 0 8px;}
+.fr-root .fr-writer-preference-panel p {font-size:12px;opacity:.79;margin:7px 0 12px;}
+.fr-root .fr-writer-preference-panel form label {display:block;font-size:12px;font-weight:600;margin-bottom:7px;}
+.fr-root .fr-writer-request-entry {display:flex;gap:6px;align-items:stretch;min-height:40px;}
+.fr-root .fr-writer-request-entry input {flex:1;min-width:0;padding:8px 10px;font:inherit;font-size:13px;
+  color:inherit;background:transparent;border:1px solid var(--fr-line);border-radius:8px;}
+.fr-root .fr-writer-request-entry button,.fr-root .fr-writer-pref-actions button {padding:8px 12px;
+  border:1px solid var(--fr-line);border-radius:8px;min-height:37px;font-size:12px;cursor:pointer;}
+.fr-root .fr-writer-request-entry button:disabled {opacity:.45;cursor:default;}
+.fr-root .fr-writer-proposal {padding:11px 12px;margin-top:12px;border-radius:9px;border:1px solid var(--fr-action);}
+.fr-root .fr-writer-proposal strong {font-size:14px;}
+.fr-root .fr-writer-pref-actions {display:flex;gap:8px;flex-wrap:wrap;}
+.fr-root .fr-writer-pref-actions button:first-child {background:var(--fr-action);color:var(--fr-ground);font-weight:600;}
+.fr-root .fr-writer-pref-status {border-left:3px solid var(--fr-action);padding-left:10px;}
+.fr-root .fr-writer-fine-tune {margin:17px 0 9px;border-top:1px solid var(--fr-line);padding-top:10px;}
+.fr-root .fr-writer-fine-tune>summary {cursor:pointer;font-weight:600;font-size:12px;padding:8px 0;}
+.fr-root .fr-writer-pref-grid {display:grid;grid-template-columns:1fr;gap:12px;padding:7px 0;}
+.fr-root .fr-writer-pref-grid label {display:flex;flex-direction:column;gap:4px;font-size:12px;}
+.fr-root .fr-writer-pref-grid select {width:100%;padding:7px 8px;font:inherit;color:var(--fr-ink);
+  border:1px solid var(--fr-line);border-radius:8px;background:var(--fr-panel);}
+.fr-root .fr-writer-preference-panel .fr-writer-pref-foot {font-size:11px;opacity:.71;margin:12px 0 0;}
+/* Desktop 1100+: compress chrome rather than hiding destinations in overflow. */
+@media (max-width:1300px) {
+  .fr-root .fr-bar {padding-left:12px;padding-right:10px;gap:5px;}
+  .fr-root .fr-brand {margin-right:15px;font-size:21px;}
+  .fr-root .fr-nav-item {padding:0 11px;font-size:13px;}
+  .fr-root .fr-workpick {max-width:140px;overflow:hidden;padding:0 8px;}
+  .fr-root .fr-workpick>span {min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  .fr-root .fr-reading-choice {display:none;}
+  .fr-root .fr-panel-reset {display:none;}
+}
+@media (max-width:1090px) {
+  .fr-root .fr-nav {display:none;}
+  .fr-root .fr-room-switcher {display:inline-flex;flex:0 0 auto;}
+  .fr-root .fr-writer-preferences {margin-left:auto;}
+  .fr-root .fr-bar-accessories {min-width:0;max-width:120px;overflow:hidden;}
+  .fr-root .fr-brand {margin-right:7px;}
+}
+@media (max-width:640px) {
+  .fr-root .fr-bar {gap:4px;padding:0 8px;}
+  .fr-root .fr-brand {font-size:18px;margin-right:2px;gap:5px;}
+  .fr-root .fr-mark {width:20px;height:20px;}
+  .fr-root .fr-room-switcher span {font-size:11px;}
+  .fr-root .fr-room-switcher select {min-width:100px;max-width:112px;padding-left:6px;}
+  .fr-root .fr-writer-preferences>summary {min-height:32px;padding:6px 8px;font-size:11px;}
+  .fr-root .fr-workpick,.fr-root .fr-bar-accessories {display:none;}
+}
+
+
+/* Living World Grammar R10: recognizable family, different places to act.
+   All color role values derive from the writer-chosen atmosphere. A room's
+   EXPLICIT mode changes surface rhythm and emphasis; it never infers mood,
+   skill, identity, plan, manuscript meaning or permission. No new overlay,
+   pop-up, animation loop, or distraction is required for belonging. */
+.fr-root .fr-shell[data-world='soullab'] {
+  --fr-world-line: var(--fr-line);
+  --fr-world-focus: var(--fr-action);
+  --fr-world-space: 18px;
+  --fr-world-transition: 180ms;
+}
+.fr-root .fr-shell[data-world='soullab'] .fr-work {
+  transition: background-color var(--fr-world-transition) ease,
+              border-color var(--fr-world-transition) ease;
+}
+.fr-root .fr-shell[data-world='soullab'] .fr-nav-item[aria-current='page']::after {
+  background: var(--fr-world-focus);
+}
+/* ARRIVAL: unhurried threshold, the person and their work come first. */
+.fr-root .fr-shell[data-world-intent='arrival'] {
+  --fr-world-space: 27px;
+  --fr-world-focus: var(--fr-gold);
+}
+.fr-root .fr-shell[data-world-intent='arrival'] .fr-room-single .fr-work {
+  background: linear-gradient(154deg,
+    color-mix(in srgb, var(--fr-field) 84%, var(--fr-panel)) 0%,
+    var(--fr-ground) 100%);
+}
+/* COMPOSITION: the manuscript plane has absolute visual priority. */
+.fr-root .fr-shell[data-world-intent='composition'] {
+  --fr-world-space: 24px;
+  --fr-world-focus: var(--fr-action);
+}
+.fr-root .fr-shell[data-world-intent='composition'] .fr-work {
+  background: var(--fr-panel);
+}
+/* EXPLORATION: spacious questions, no compulsory analytic dashboard. */
+.fr-root .fr-shell[data-world-intent='exploration'] {
+  --fr-world-space: 22px;
+  --fr-world-focus: var(--fr-gold);
+}
+.fr-root .fr-shell[data-world-intent='exploration'] .fr-work {
+  background: linear-gradient(176deg,
+    color-mix(in srgb, var(--fr-field) 88%, var(--fr-action-soft)) 0%,
+    var(--fr-ground) 85%);
+}
+.fr-root .fr-shell[data-world-intent='exploration'] .fr-maia {
+  border-color: var(--fr-field-line);
+}
+/* DISCERNMENT: clearer edges for comparison, less ambient effect. */
+.fr-root .fr-shell[data-world-intent='discernment'] {
+  --fr-world-space: 16px;
+  --fr-world-focus: var(--fr-action);
+}
+.fr-root .fr-shell[data-world-intent='discernment'] .fr-work {
+  background: var(--fr-ground);
+}
+.fr-root .fr-shell[data-world-intent='discernment'] .fr-panel {
+  border-color: var(--fr-line);
+}
+/* RESONANCE: a quiet acoustic field, no pulses, auto-playing animations or
+   forced nighttime aesthetic. The chosen atmosphere remains authoritative. */
+.fr-root .fr-shell[data-world-intent='resonance'] {
+  --fr-world-space: 27px;
+  --fr-world-focus: var(--fr-gold);
+}
+.fr-root .fr-shell[data-world-intent='resonance'] .fr-work {
+  background: linear-gradient(150deg,
+    var(--fr-panel) 8%,
+    color-mix(in srgb, var(--fr-panel) 87%, var(--fr-maia-card)) 95%);
+}
+/* OFFERING: deliberate manuscript-to-world transition, but the interface
+   never suggests publication is ready if source/export is still held. */
+.fr-root .fr-shell[data-world-intent='offering'] {
+  --fr-world-space: 24px;
+  --fr-world-focus: var(--fr-gold);
+}
+.fr-root .fr-shell[data-world-intent='offering'] .fr-work {
+  background: linear-gradient(165deg,
+    var(--fr-field) 0%,var(--fr-panel) 92%);
+}
+/* Readability and accessibility outrank atmosphere. */
+@media (prefers-reduced-motion: reduce) {
+  .fr-root .fr-shell[data-world='soullab'] {
+    --fr-world-transition: 0ms;
+  }
+}
+@media (forced-colors: active) {
+  .fr-root .fr-shell[data-world='soullab'] .fr-work,
+  .fr-root .fr-shell[data-world='soullab'] .fr-room-single .fr-work {
+    background: Canvas;
+  }
+}
+
+/* Access is informative, never a plan-colored banner competing with writing. */
+.fr-root .fr-writer-about-access {margin-top:12px;padding-top:10px;
+ border-top:1px solid var(--fr-line);font-size:12px;}
+.fr-root .fr-writer-about-access summary {cursor:pointer;padding:7px 0;}
+.fr-root .fr-writer-about-access p {line-height:1.65;}
+.fr-root .fr-writer-about-access a {color:var(--fr-action);text-underline-offset:3px;}

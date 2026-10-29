@@ -34,7 +34,7 @@ import {
   type RebuildEditorialThread,
 } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import { useEditingLatitude } from '@/app/writers-studio/insight/EditingLatitude';
-import { DEFAULT_EDITORIAL_DEPTH, editorialDirective, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
+import { DEFAULT_EDITORIAL_DEPTH, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
 import {
   LATITUDE_BANDS,
@@ -1232,7 +1232,10 @@ export default function FlagshipWriteEditController() {
         if (stillCurrent()) setEditorialFailure('MAIA editorial work is unavailable in Sanctuary or before Ordinary is chosen. Nothing was sent.');
         return;
       }
-      const exactWords = text + '\n\n' + editorialDirective(editorialDepth);
+      // The current writer act MUST contain ONLY the authored text. Any
+      // register, pedagogy or model policy is server-owned and never stored as
+      // another sentence apparently spoken by the author in ask_turns.
+      const exactWords = text;
       const carry = selectedCarrySource
         && a2Relationship
         && selectedCarrySource.relationshipId === a2Relationship.id
@@ -1259,6 +1262,7 @@ export default function FlagshipWriteEditController() {
           // Keep display-safe writer wording out of the orchestration/API
           // options. The client has no durable display-text custody contract.
           ...(options?.proposalPolicy ? { proposalPolicy: options.proposalPolicy } : {}),
+          responseDepth: editorialDepth,
           ...(a2Relationship ? { relationshipId: a2Relationship.id } : {}),
           ...(carry ? { carry } : {}),
         },
@@ -1341,6 +1345,19 @@ export default function FlagshipWriteEditController() {
     selectedCarrySource,
     workGestureEpoch,
   ]);
+
+  // An explicit author STOP immediately retires this browser's current
+  // editorial response generation. Existing HTTP work may already have
+  // reached the server, but may not be presented against the current Work
+  // after the stop. It never grants a new thread or changes writing.
+  const stopEditorialForAuthor = useCallback(() => {
+    editorialActGenerationRef.current += 1;
+    setEditorialBusy(false);
+    setSuggestedVersionId(null);
+    // This is a member-chosen boundary, not an editorial service failure.
+    // The companion shows the precise no-remote-cancellation limitation.
+    setEditorialFailure(null);
+  }, []);
 
   const refreshContext = useCallback(async (publish = true): Promise<ContextReady | null> => {
     if (!context) return null;
@@ -1979,6 +1996,7 @@ export default function FlagshipWriteEditController() {
             onDepth={(value) => { if (currentContextGesture()) setEditorialDepth(value); }}
             onInstruction={(text) => { if (currentContextGesture()) setEditorialDraft(text); }}
             onSendEditorial={(text, options) => void sendEditorial(text, options)}
+            onStopEditorial={stopEditorialForAuthor}
             onSelectVersion={(id) => {
               if (!scopedEditorialThread || workReentryRequired.current
                 || !currentWorkGesture()) return;

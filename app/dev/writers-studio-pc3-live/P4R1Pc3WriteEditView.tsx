@@ -116,6 +116,8 @@ export type P4R1Pc3WriteEditViewProps = {
     /** Safe local presentation only; never a durable author turn or permission. */
     displayText?: string;
   }) => void;
+  /** Retire pending visible editorial result after an author STOP. */
+  onStopEditorial: () => void;
   onSelectVersion: (id: string) => void;
   onApply: () => void;
   onUndo?: () => void;
@@ -159,6 +161,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [maiaRelationshipChooserOpen, setMaiaRelationshipChooserOpen] = useState(false);
   const [blankArrivalDismissed, setBlankArrivalDismissed] = useState(false);
   const [selectionRect, setSelectionRect] = useState<DOMRect | null>(null);
+  const [morePassageOptions, setMorePassageOptions] = useState(false);
   const [selectedRevisionEdits, setSelectedRevisionEdits] = useState<ReadonlySet<number>>(new Set());
   const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
   const [isolatedEditorial, setIsolatedEditorial] = useState(false);
@@ -177,6 +180,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [craftNotice, setCraftNotice] = useState<string | null>(null);
   const craftPort = useRef<CraftTablePort | null>(null);
   const maiaComposerPort = useRef<MaiaCraftComposerPort | null>(null);
+  // This is a local, exact-passage gate, not a new durable author preference.
+  const craftRevisionPauseRef = useRef(false);
   const pendingCraftDeparture = useRef<{ action: () => void; proof: string; label: string } | null>(null);
   const [craftDiscardOffer, setCraftDiscardOffer] = useState<string | null>(null);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
@@ -202,6 +207,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       setIsolatedEditorial(true);
     }
   }, [props.workspaceOpen, props.held, isolatedEditorial, craftOpen, craftOwnerScope]);
+
+  useEffect(() => {
+    craftRevisionPauseRef.current = false;
+  }, [currentCraftScope]);
 
   useEffect(() => {
     if (!craftScopeChanged) return;
@@ -532,7 +541,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         type="button"
         className="p4r1-selection-trigger"
         aria-expanded={selectionMenuOpen}
-        onClick={() => setSelectionMenuOpen((open) => !open)}
+        onClick={() => setSelectionMenuOpen((open) => { if (!open) setMorePassageOptions(false); return !open; })}
       >
         Work with passage <span aria-hidden="true">›</span>
       </button>
@@ -572,6 +581,32 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           <button type="button" role="menuitem" onClick={() => {
             setSelectionMenuOpen(false);
             props.onOpenWorkspace();
+            props.onSendEditorial([
+              'Discuss what is happening in this exact passage with me before proposing any edits.',
+              'Reflect what you notice in plain language and ask me one useful question about what I am trying to do.',
+              'Do not propose replacement wording unless I ask.',
+            ].join('\n\n'));
+          }}>
+            <b>Discuss</b>
+            <span>Talk about the passage before changing anything.</span>
+          </button>
+
+
+          <button
+            type="button"
+            role="menuitem"
+            className="p4r1-passage-more"
+            aria-expanded={morePassageOptions}
+            onClick={() => setMorePassageOptions((open) => !open)}
+          >
+            <b>{morePassageOptions ? 'Fewer ways' : 'More ways to work'}</b>
+            <span>Revision, learning, and deeper editorial reasoning, when you want them.</span>
+          </button>
+          {morePassageOptions ? (
+            <>
+          <button type="button" role="menuitem" onClick={() => {
+            setSelectionMenuOpen(false);
+            props.onOpenWorkspace();
             setIsolatedEditorial(true);
             props.onSendEditorial([
               'Help me revise this exact passage.',
@@ -586,19 +621,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           }}>
             <b>Revise</b>
             <span>Ask MAIA for one useful editorial move.</span>
-          </button>
-
-          <button type="button" role="menuitem" onClick={() => {
-            setSelectionMenuOpen(false);
-            props.onOpenWorkspace();
-            props.onSendEditorial([
-              'Discuss what is happening in this exact passage with me before proposing any edits.',
-              'Reflect what you notice in plain language and ask me one useful question about what I am trying to do.',
-              'Do not propose replacement wording unless I ask.',
-            ].join('\n\n'));
-          }}>
-            <b>Discuss</b>
-            <span>Talk about the passage before changing anything.</span>
           </button>
 
           <button type="button" role="menuitem" onClick={() => {
@@ -620,6 +642,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             <b>Go deeper</b>
             <span>Open the technical reasoning, evidence, and tradeoffs.</span>
           </button>
+            </>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -1056,6 +1080,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   };
 
   const sendCraft = (text?: string, options?: CraftSendOptions) => {
+    if (craftRevisionPauseRef.current) {
+      setCraftNotice('You paused MAIA revisions in this passage. Resume them explicitly before making another request. Your words remain untouched.');
+      return;
+    }
     if (!craftVisible || !craftTarget || !props.workspaceOpen || busy || !text?.trim()) return;
     if (!props.sessionPosture.resolved || props.sessionPosture.sanctuary) {
       setCraftNotice('Choose an available Ordinary editorial session first. No request was sent.');
@@ -1161,6 +1189,27 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       sessionPosture={props.sessionPosture}
       onChooseSessionPosture={props.onChooseSessionPosture}
       onSend={sendCraft}
+      onStopRevisions={() => {
+        craftRevisionPauseRef.current = true;
+        props.onStopEditorial();
+        setCraftNotice('You asked MAIA to stop. No more editorial requests in this selected passage until you resume.');
+      }}
+      onResumeRevisions={() => {
+        craftRevisionPauseRef.current = false;
+        setCraftNotice(null);
+      }}
+      onKeepExactWords={(phrase) => {
+        if (!craftVisible || !craftTarget || !props.workspaceOpen
+          || !targetStillMatches(craftTarget, props.writing.bodyOf(craftTarget.sectionId), craftRevision)
+          || !craftPort.current) {
+          return { ok: false, message: 'The current exact passage could not be verified for this mark. Nothing was protected or changed.' };
+        }
+        // Existing Craft author-owned Keep/STET API. No Source or manuscript
+        // mutation; the author must separately save a working version.
+        const receipt = craftPort.current.keepOriginal(phrase);
+        if (receipt.ok) setCraftNotice(receipt.message);
+        return receipt;
+      }}
       onConnect={port => { maiaComposerPort.current = port; }}
       onDepth={props.onDepth}
       onReturn={exitCraft}

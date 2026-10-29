@@ -6,6 +6,8 @@ import { isCabinOrigin, cabinReturnPath } from '@/lib/cabin/doorway';
 import { isStudioReadingSize, readStudioReadingSize, setStudioReadingSize, subscribeStudioReadingSize, type StudioReadingSize } from '@/lib/writersStudio/readingSizePreference';
 import { appearanceVars, geometryVars } from './tokens';
 import { PRIMARY_MODES, type Appearance, type ShellGeometry, type StudioMode } from './types';
+import WriterPreferencesMenu from './WriterPreferencesMenu';
+import { designForWriterActivity } from '@/lib/design/livingWorldLanguage';
 
 /**
  * PC3-S1 — the canonical Light Shell.
@@ -68,6 +70,10 @@ const PANEL_STORAGE_KEY = (mode: StudioMode) => 'soullab.studio.panel-layout.v1.
  */
 export function Shell(props: ShellProps) {
   const { mode, appearance, geometry } = props;
+  // A room is a different activity within one Soullab world. Presentation
+  // responds only to the member's explicit navigation, never a guess about
+  // emotion, tier, ability or what their manuscript supposedly means.
+  const scene = designForWriterActivity(mode);
   const searchParams = useSearchParams();
   const currentPathname = usePathname();
   const fromCabin = isCabinOrigin(searchParams);
@@ -192,6 +198,11 @@ export function Shell(props: ShellProps) {
       data-right-open={rightVisible ? 'true' : 'false'}
       data-appearance={appearance}
       data-mode={mode}
+      data-world="soullab"
+      data-world-intent={scene.intent}
+      data-world-rhythm={scene.rhythm}
+      data-world-priority={scene.priority}
+      data-maia-presence={scene.maia}
       data-studio-reading-size={readingSize}
       data-work-panel={geometry.workPanel ? 'framed' : 'ground'}
       data-canvas={props.canvas === undefined ? undefined : canvas ? 'full' : 'resting'}
@@ -222,6 +233,18 @@ export function Shell(props: ShellProps) {
               </button>
             ))}
           </nav>
+          {/* All six rooms remain explicitly reachable at narrow widths. An
+              invisible scroll rail had previously hidden Listen/Publish. */}
+          <label className="fr-room-switcher" data-writer-room-switcher>
+            <span>Room</span>
+            <select aria-label="Studio room" value={mode}
+              onChange={event => props.onSelectMode?.(event.target.value as StudioMode)}>
+              {PRIMARY_MODES.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+            </select>
+          </label>
+          {/* Presentation preferences are visible across the six real rooms.
+              They never grant source, MAIA or editorial authorization. */}
+          <WriterPreferencesMenu />
           {/* Preserve existing writer-owned topbar download/actions. */}
           <div className="fr-bar-accessories" data-studio-topbar-accessories />
           {currentPathname === '/writers-studio' ? (
