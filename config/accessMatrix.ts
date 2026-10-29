@@ -272,6 +272,13 @@ export const ACCESS_RULES: AccessRule[] = [
   // leaving every /maia/moments/* neighbor unmapped. The page's Sovereign
   // API independently enforces member identity and row ownership.
   { exact: '/maia/moments', minTier: 'free', notes: 'Marked Moments — authenticated member-owned verbatim keeps; exact route only' },
+  // KEEP-CAPTURE-ACCESS-01 — Home's existing Keep/Capture door and the two
+  // GET endpoints its initial load calls. Exact rules only: no namespace
+  // grant, no mutation endpoint, no /api/psyche/portfolio/atoms/[id] child.
+  // Both handlers resolve a verified member session and bind row ownership.
+  { exact: '/maia/keep-capture', minTier: 'free', notes: 'Keep/Capture — authenticated member room; exact route only' },
+  { exact: '/api/psyche/portfolio/atoms', minTier: 'free', notes: 'Keep/Capture initial load — member-owned atoms (GET); exact path only' },
+  { exact: '/api/psyche/portfolio/source-candidates', minTier: 'free', notes: 'Keep/Capture initial load — member-owned source candidates (GET); exact path only' },
   { exact: '/maia/vision-studio', minTier: 'free', notes: 'Vision Studio — authenticated member creative room inside Soullab' },
   { exact: '/maia/compact', minTier: 'free', notes: 'MAIA compact' },
   { exact: '/maia/mandala', minTier: 'free', notes: 'Mandala interface' },
