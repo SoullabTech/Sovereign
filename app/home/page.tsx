@@ -22,9 +22,16 @@ export default async function HomePage({ searchParams }: HomeProps) {
   if (!memberId) return <HomeThreshold />;
   const p = (await searchParams) || {};
   if (p.field !== 'v3') return <HouseExperience current="home" />;
-  const member = await query('SELECT name FROM members WHERE id = $1', [memberId]);
+  const member = await query('SELECT name, preferred_name FROM members WHERE id = $1', [memberId]);
   if (member.rows.length !== 1) return <HomeThreshold />;
-  const firstName = String(member.rows[0].name || 'there').trim().split(/\s+/)[0].slice(0,45);
+  // The member's chosen form of address is authoritative. A full preferred
+  // name is intentional; only the fallback registered name uses a first word.
+  // Never derive a name by stripping fictional/test labels or guessing identity.
+  const preferredName = typeof member.rows[0].preferred_name === 'string'
+    ? member.rows[0].preferred_name.trim() : '';
+  const registeredName = typeof member.rows[0].name === 'string'
+    ? member.rows[0].name.trim() : '';
+  const greetingName = (preferredName || registeredName.split(/\s+/)[0] || 'there').slice(0, 45);
   // The same strict owner/declarer/manuscript proof as corrected H0R1.
   const works = await query(`
     SELECT w.title
@@ -47,5 +54,5 @@ export default async function HomePage({ searchParams }: HomeProps) {
   // No member IDs, tokens, raw conversation, or
   // other-person data enter the iframe. Every destination is reauthorized by
   // the actual application when opened.
-  return <FieldV3Shell firstName={firstName} works={displayTitles} nonce={nonce}/>;
+  return <FieldV3Shell firstName={greetingName} works={displayTitles} nonce={nonce}/>;
 }
