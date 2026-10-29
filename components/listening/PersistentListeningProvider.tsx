@@ -4,7 +4,9 @@ import {
   createContext, useCallback, useContext, useEffect, useRef, useState,
 } from 'react';
 import type { ReactNode, RefObject } from 'react';
-import Link from 'next/link';
+import PersistentListeningDock from './PersistentListeningDock';
+// Compatibility contract: PersistentListeningDock renders data-focus-field-dock="true"
+// from this one member-bound provider; extraction did not create a second owner.
 import { validateLocalAudio } from '@/lib/listening/localAudio';
 import {
   ORIGINAL_RECEPTIVE_CONTROLS, validatedReceptiveControls,
@@ -37,6 +39,8 @@ import type {
   FocusFeedbackOutcome, FocusFeedbackTag, FocusInterruptionReason,
   FocusRetune, FocusSession, FocusSessionPlanInput,
 } from '@/lib/listening/focusFieldSession';
+import { soundPassageAt } from '@/lib/listening/soundStudioExperience';
+import type { SoundExperiencePlayback } from '@/lib/listening/soundStudioExperience';
 
 /**
  * LISTEN-10 · Isolated cross-room transport candidate.
@@ -61,6 +65,11 @@ export type ListeningSnapshot = {
   title: string;
   fileFormat: string | null;
   message: string;
+  experienceId?: string | null;
+  subtitle?: string;
+  durationMs?: number | null;
+  elapsedMs?: number;
+  passage?: string | null;
 };
 
 type Sketch = {
@@ -85,7 +94,9 @@ export type ListeningTransport = {
   keepField: (recipe: ReceptiveFieldRecipe) => boolean;
   dropField: (id: string) => void;
   replaceFields: (recipes: ReceptiveFieldRecipe[]) => void;
-  playSketch: (mood: ListeningMood, frequencies: number[]) => Promise<boolean>;
+  playSketch: (
+    mood: ListeningMood, frequencies: number[], experience?: SoundExperiencePlayback,
+  ) => Promise<boolean>;
   selectLocalFile: (file: File) => { accepted: boolean; message: string };
   playLocalFile: () => Promise<boolean>;
   pause: () => void;
@@ -246,10 +257,28 @@ export function PersistentListeningProvider({
   const instanceID = useRef('');
   const lastMember = useRef(reviewMemberKey);
   const outputLease = useRef<AudioOutputLease | null>(null);
+  const experience = useRef<{
+    definition: SoundExperiencePlayback;
+    elapsedMs: number;
+    startedAt: number | null;
+  } | null>(null);
   const releaseOutput = useCallback(() => {
     outputLease.current?.release();
     outputLease.current = null;
   }, []);
+  const experienceElapsed = useCallback((at = Date.now()): number => {
+    const current = experience.current;
+    if (!current) return 0;
+    const running = current.startedAt === null ? 0 : Math.max(0, at - current.startedAt);
+    return Math.min(current.definition.durationMs, current.elapsedMs + running);
+  }, []);
+  const pauseExperienceClock = useCallback((): number => {
+    const current = experience.current;
+    if (!current) return 0;
+    current.elapsedMs = experienceElapsed();
+    current.startedAt = null;
+    return current.elapsedMs;
+  }, [experienceElapsed]);
 
   const clearPrivateFields = useCallback(() => {
     fieldsRef.current=[];
@@ -279,6 +308,7 @@ export function PersistentListeningProvider({
 
   const pause = useCallback(() => {
     ++epoch.current;
+    const elapsedMs = pauseExperienceClock();
     if (sketch.current) {
       // Pause rather than deleting the sketch so member can explicitly resume.
       void sketch.current.context.suspend().catch(() => undefined);
@@ -286,9 +316,16 @@ export function PersistentListeningProvider({
     media.current?.pause();
     releaseOutput();
     setSnapshot(old => old.playback === 'playing'
-      ? { ...old, playback: 'paused', message: 'Paused by you or another audio experience.' }
+      ? {
+          ...old, playback: 'paused',
+          message: 'Paused by you or another audio experience.',
+          elapsedMs: experience.current ? elapsedMs : old.elapsedMs,
+          passage: experience.current
+            ? soundPassageAt(experience.current.definition.passages, elapsedMs)?.label ?? null
+            : old.passage,
+        }
       : old);
-  }, [releaseOutput]);
+  }, [pauseExperienceClock, releaseOutput]);
 
   const stopAll = useCallback(() => {
     ++epoch.current;
@@ -301,6 +338,7 @@ export function PersistentListeningProvider({
     }
     selected.current = null;
     kind.current = 'none';
+    experience.current = null;
     setMediaURL(null);
     shapeRef.current={...ORIGINAL_RECEPTIVE_CONTROLS};
     saveShape(shapeRef.current);
@@ -482,6 +520,32 @@ export function PersistentListeningProvider({
     return () => window.clearInterval(interval);
   }, [focusSession?.status, commitFocusSession, pause]);
 
+  useEffect(() => {
+    if (snapshot.kind !== 'sketch' || snapshot.playback !== 'playing' || !experience.current) return;
+    const tick = () => {
+      const current = experience.current;
+      if (!current || current.startedAt === null) return;
+      const elapsedMs = experienceElapsed();
+      const passage = soundPassageAt(current.definition.passages, elapsedMs)?.label ?? null;
+      if (elapsedMs >= current.definition.durationMs) {
+        current.elapsedMs = current.definition.durationMs;
+        current.startedAt = null;
+        void sketch.current?.context.suspend().catch(() => undefined);
+        releaseOutput();
+        setSnapshot(old => old.experienceId === current.definition.id ? {
+          ...old, playback: 'paused', elapsedMs, passage,
+          message: `${current.definition.title} is complete. It will not restart automatically.`,
+        } : old);
+        return;
+      }
+      setSnapshot(old => old.experienceId === current.definition.id
+        ? { ...old, elapsedMs, passage } : old);
+    };
+    tick();
+    const interval = window.setInterval(tick, 500);
+    return () => window.clearInterval(interval);
+  }, [snapshot.kind, snapshot.playback, experienceElapsed, releaseOutput]);
+
   const setVolume = useCallback((value: number) => {
     const next = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
     volumeRef.current = next;
@@ -513,12 +577,22 @@ export function PersistentListeningProvider({
     // Changes do NOT start an AudioContext or request audio focus.
   }, []);
 
-  const playSketch = useCallback(async (mood: ListeningMood, frequencies: number[]): Promise<boolean> => {
+  const playSketch = useCallback(async (
+    mood: ListeningMood, frequencies: number[], requestedExperience?: SoundExperiencePlayback,
+  ): Promise<boolean> => {
     // Refuse BEFORE allocating or resuming a sound context.
     if (refuseDuringMaiaSpeech()) return false;
     if (!Array.isArray(frequencies) || frequencies.length !== 3 ||
       frequencies.some(f => !Number.isFinite(f) || f < 50 || f > 700)) {
       throw new Error('This review sketch contains invalid frequencies.');
+    }
+    if (requestedExperience) {
+      const current = experience.current;
+      if (!current || current.definition.id !== requestedExperience.id) {
+        experience.current = { definition: requestedExperience, elapsedMs: 0, startedAt: null };
+      }
+    } else {
+      experience.current = null;
     }
     if (outputLease.current) pause();
     const generation = ++epoch.current;
@@ -553,14 +627,26 @@ export function PersistentListeningProvider({
         return false;
       }
       claimFocus();
+      const activeExperience = experience.current;
+      if (activeExperience) activeExperience.startedAt = Date.now();
+      const elapsedMs = activeExperience ? experienceElapsed() : 0;
       setSnapshot({
         kind: 'sketch', playback: 'playing', mood,
-        title: {
+        title: activeExperience?.definition.title ?? {
           focus: 'Between the Tides', create: 'Velvet Current',
           drift: 'The Blue Hour', rest: 'Moonwater',
         }[mood],
+        subtitle: activeExperience?.definition.subtitle ?? '',
+        experienceId: activeExperience?.definition.id ?? null,
+        durationMs: activeExperience?.definition.durationMs ?? null,
+        elapsedMs,
+        passage: activeExperience
+          ? soundPassageAt(activeExperience.definition.passages, elapsedMs)?.label ?? null
+          : null,
         fileFormat: null,
-        message: 'Original, locally synthesized sound study · not a commercial recording.',
+        message: activeExperience
+          ? `${activeExperience.definition.title} · procedural review edition.`
+          : 'Original, locally synthesized sound study · not a commercial recording.',
       });
       return true;
     } catch {
@@ -569,7 +655,7 @@ export function PersistentListeningProvider({
       setSnapshot(old => ({ ...old, playback: 'error', message: 'Audio could not start.' }));
       return false;
     }
-  }, [claimFocus, refuseDuringMaiaSpeech, releaseOutput, pause]);
+  }, [claimFocus, refuseDuringMaiaSpeech, releaseOutput, pause, experienceElapsed]);
 
   const selectLocalFile = useCallback((file: File) => {
     const result = validateLocalAudio(file);
@@ -581,6 +667,7 @@ export function PersistentListeningProvider({
     if (blobURL.current) URL.revokeObjectURL(blobURL.current);
     blobURL.current = URL.createObjectURL(file);
     selected.current = { title: result.name, format: result.label };
+    experience.current = null;
     kind.current = 'local-file';
     setMediaURL(blobURL.current);
     setSnapshot({
@@ -667,75 +754,41 @@ export function PersistentListeningProvider({
   const audioDisplayed = snapshot.kind !== 'none' || snapshot.message.startsWith('MAIA is speaking.');
   const focusDisplayed = Boolean(focusSession && !isFocusSessionTerminal(focusSession));
   const displayed = audioDisplayed || focusDisplayed;
+  const resumeMusic = () => {
+    if (snapshot.kind === 'local-file') { void playLocalFile(); return; }
+    if (snapshot.kind === 'sketch') {
+      void playSketch(
+        snapshot.mood || 'drift',
+        sketch.current?.frequencies || [98,146.83,196],
+        experience.current?.definition,
+      );
+    }
+  };
   return <Context.Provider value={transport}>
     {children}
-    <div
-      data-listen10-persistent-dock="true"
-      role="region" aria-label="Persistent Soullab listening controls"
-      style={{
-        display: displayed ? 'flex' : 'none',
-        position:'fixed',zIndex:90,bottom:0,left:0,right:0,
-        minHeight:76,padding:'10px 22px',
-        gap:16,alignItems:'center',flexWrap:'wrap',
-        background:'rgba(10,23,29,0.97)',color:'#f3e6d3',
-        borderTop:'1px solid #857a62',backdropFilter:'blur(16px)',
-      }}>
-      {focusDisplayed && focusSession && <div
-        data-focus-field-dock="true" style={{flex:1,minWidth:240}}>
-        <strong>Focus Field · {focusSession.plan.taskLabel || focusSession.plan.task}</strong>
-        <div style={{fontSize:11,color:'#bad0cf'}}>
-          {focusSession.plan.focusNeed} · {focusSession.plan.musicalWorld} · {focusSession.status} · {' '}
-          {formatFocusClock(focusRemainingMs(focusSession, new Date(focusClockMs)))}
-        </div>
-        <Link href="/listen#focus-field" style={{fontSize:10,color:'#e7c995'}}>Open Focus Field</Link>
-      </div>}
-      {audioDisplayed && <div style={{flex:1,minWidth:165}}>
-        <strong data-listen10-title="true">{snapshot.title}</strong>
-        <div data-listen10-state="true" style={{fontSize:11,color:'#bad0cf'}}>
-          {snapshot.kind === 'local-file'
-            ? snapshot.fileFormat + ' file (source type; output not guaranteed lossless)'
-            : 'Low-volume synthesized sound study'} · {snapshot.playback}
-        </div>
-      </div>}
-      {focusDisplayed && focusSession?.status === 'running' && <button type="button"
-        onClick={() => pauseFocusSession('member')} aria-label="Pause Focus Field session">
-        Pause focus
-      </button>}
-      {focusDisplayed && focusSession?.status === 'paused' && <button type="button"
-        onClick={resumeCurrentFocus} aria-label="Resume Focus Field session by member action">
-        Resume focus
-      </button>}
-      {focusDisplayed && <button type="button" onClick={stopCurrentFocus}
-        aria-label="Stop Focus Field session">Stop focus</button>}
-      {snapshot.kind === 'sketch' && <button type="button"
-        aria-label={snapshot.playback === 'playing' ? 'Pause persistent music':'Resume persistent music'}
-        onClick={() => snapshot.playback === 'playing' ? pause()
-          : void playSketch(snapshot.mood || 'drift', sketch.current?.frequencies || [98,146.83,196])}>
-        {snapshot.playback === 'playing' ? 'Pause' : 'Resume'}
-      </button>}
-      {snapshot.kind === 'local-file' && <button type="button"
-        aria-label={snapshot.playback === 'playing' ? 'Pause local music':'Play local music'}
-        onClick={()=>snapshot.playback === 'playing' ? pause() : void playLocalFile()}>
-        {snapshot.playback === 'playing' ? 'Pause' : 'Play'}
-      </button>}
-      {audioDisplayed && <label style={{fontSize:12}}>Volume
-        <input aria-label="Persistent music volume" type="range" min="0" max="100"
-          value={volume} onChange={e=>setVolume(Number(e.target.value))}/>
-      </label>}
-      {audioDisplayed && <button type="button" onClick={stopAll}
-        aria-label="Stop and clear persistent music">Stop music</button>}
-      <audio ref={media} data-listen10-audio="true"
-        // Native controls bypass the output-lock check; use only controlled Play/Pause.
-        style={{display:'none'}}
-        src={mediaURL || undefined} preload="metadata"
-        onPlay={onLocalPlay} onPause={onLocalPause}
-        onEnded={releaseOutput}
-        onError={()=>{releaseOutput();snapshot.kind==='local-file' && setSnapshot(old=>({
-          ...old, playback:'error',message:'Local audio cannot be decoded.',
-        }));}}/>
-      {audioDisplayed && <span role="status" style={{fontSize:10,color:'#a9bec1'}}>
-        {snapshot.message}
-      </span>}
-    </div>
+    <PersistentListeningDock
+      snapshot={snapshot}
+      volume={volume}
+      displayed={displayed}
+      focusSession={focusDisplayed ? focusSession : null}
+      focusRemainingLabel={focusSession
+        ? formatFocusClock(focusRemainingMs(focusSession, new Date(focusClockMs)))
+        : 'Untimed'}
+      onPauseMusic={pause}
+      onResumeMusic={resumeMusic}
+      onStopMusic={stopAll}
+      onVolume={setVolume}
+      onPauseFocus={() => { pauseFocusSession('member'); }}
+      onResumeFocus={() => { resumeCurrentFocus(); }}
+      onStopFocus={() => { stopCurrentFocus(); }}
+    />
+    <audio ref={media} data-listen10-audio="true"
+      style={{display:'none'}}
+      src={mediaURL || undefined} preload="metadata"
+      onPlay={onLocalPlay} onPause={onLocalPause}
+      onEnded={releaseOutput}
+      onError={()=>{releaseOutput();snapshot.kind==='local-file' && setSnapshot(old=>({
+        ...old, playback:'error',message:'Local audio cannot be decoded.',
+      }));}}/>
   </Context.Provider>;
 }
