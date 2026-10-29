@@ -272,6 +272,10 @@ export const ACCESS_RULES: AccessRule[] = [
   // leaving every /maia/moments/* neighbor unmapped. The page's Sovereign
   // API independently enforces member identity and row ownership.
   { exact: '/maia/moments', minTier: 'free', notes: 'Marked Moments — authenticated member-owned verbatim keeps; exact route only' },
+  // KEEP-CAPTURE-ACCESS-01 — this existing portfolio room is member-owned,
+  // authenticated and exact-only. It is not a public surface and does not
+  // authorize the /maia/keep-capture/* namespace or any portfolio API.
+  { exact: '/maia/keep-capture', minTier: 'free', notes: 'Keep/Capture portfolio — authenticated member-owned memory surface; exact route only' },
   { exact: '/maia/vision-studio', minTier: 'free', notes: 'Vision Studio — authenticated member creative room inside Soullab' },
   { exact: '/maia/compact', minTier: 'free', notes: 'MAIA compact' },
   { exact: '/maia/mandala', minTier: 'free', notes: 'Mandala interface' },
