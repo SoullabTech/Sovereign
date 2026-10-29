@@ -266,6 +266,12 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/maia', public: true, notes: 'Legacy MAIA threshold — routes people into canonical Soullab Home or explicit MAIA encounter' },
   { exact: '/maia/encounter', minTier: 'free', notes: 'Direct MAIA encounter — authenticated member destination inside Soullab' },
   { exact: '/maia/reflection', minTier: 'free', notes: 'Developmental reflection — member-only (beta v0)' },
+  // MARKED-MOMENTS-ACCESS-01 — this is an existing member-owned room,
+  // not a public surface and not a namespace grant. The exact declaration
+  // keeps strict mode aligned with Home's existing memberMoments door while
+  // leaving every /maia/moments/* neighbor unmapped. The page's Sovereign
+  // API independently enforces member identity and row ownership.
+  { exact: '/maia/moments', minTier: 'free', notes: 'Marked Moments — authenticated member-owned verbatim keeps; exact route only' },
   { exact: '/maia/vision-studio', minTier: 'free', notes: 'Vision Studio — authenticated member creative room inside Soullab' },
   { exact: '/maia/compact', minTier: 'free', notes: 'MAIA compact' },
   { exact: '/maia/mandala', minTier: 'free', notes: 'Mandala interface' },
