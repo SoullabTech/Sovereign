@@ -247,6 +247,34 @@ test.describe(`Writer's Studio journey WJ-1 [defeat=${DEFEAT}]`, () => {
     await ctx.close();
   });
 
+  // KD-2 regression (fixed 2026-10-30): a space typed at the end of the last paragraph used to be drawn as a gap BELOW the
+  // paragraph, so the caret jumped down one paragraph margin and came back on the next letter.
+  test('KD-2 the caret stays on the same line after a space is typed at the end of a paragraph', async ({ browser, baseURL }) => {
+    const ctx = await browser.newContext({ baseURL }); const page = await ctx.newPage();
+    expect((await signIn(ctx.request, BOB)).status()).toBe(200);
+    await page.goto('/writers-studio'); await page.waitForTimeout(2000);
+    const made = await page.evaluate(async () => {
+      const a = await fetch('/api/sovereign/living-works', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ title: 'KD-2 witness' }) });
+      const w = await a.json(); const wid = w.id || w.work?.id || w.livingWork?.id;
+      const b = await fetch(`/api/sovereign/living-works/${wid}/start-writing`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+      return await b.text();
+    });
+    const m = /"manuscriptId":"([0-9a-f-]{36})"/.exec(made)?.[1] || /"id":"([0-9a-f-]{36})"/.exec(made)?.[1] || '';
+    expect(m).not.toBe('');
+    await page.goto(`/writers-studio?mode=write&m=${m}`); await page.waitForTimeout(2500);
+    await page.getByText('Just start writing').click(); await page.waitForTimeout(1500);
+    const caretTop = () => page.evaluate(() => {
+      const r = window.getSelection()!.getRangeAt(0); const q = r.getClientRects()[0] || r.getBoundingClientRect();
+      return Math.round(q.top);
+    });
+    await page.keyboard.type('This is a test of the', { delay: 60 });
+    const before = await caretTop();
+    await page.keyboard.type(' ', { delay: 60 }); await page.waitForTimeout(300);
+    const afterSpace = await caretTop();
+    expect(afterSpace, `caret top ${afterSpace} after the space vs ${before} before it`).toBe(before);
+    await ctx.close();
+  });
+
   test('S19 no uncaught page errors during the whole journey', async () => {
     expect(pageErrors, `uncaught page errors:\n${pageErrors.join('\n')}`).toEqual([]);
   });
