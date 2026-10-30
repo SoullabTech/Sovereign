@@ -21,6 +21,8 @@ type Props = {
   onVolume: (volume: number) => void;
   onLooping: (enabled: boolean) => void;
   volumeAdjustable?: boolean;
+  focusSoundLabel?: string | null;
+  onPlayFocusSound?: () => void;
   onPauseFocus: () => void;
   onResumeFocus: () => void;
   onStopFocus: () => void;
@@ -38,7 +40,7 @@ const FADE_STEPS = 24;
 
 export default function PersistentListeningDock({
   snapshot, volume, looping, loopAvailable, displayed, focusSession, focusRemainingLabel,
-  onPauseMusic, onResumeMusic, onStopMusic, onVolume, onLooping, volumeAdjustable = true,
+  onPauseMusic, onResumeMusic, onStopMusic, onVolume, onLooping, volumeAdjustable = true, focusSoundLabel = null, onPlayFocusSound,
   onPauseFocus, onResumeFocus, onStopFocus,
 }: Props) {
   const [mixOpen, setMixOpen] = useState(false);
@@ -207,6 +209,10 @@ export default function PersistentListeningDock({
       )}
 
       <div className={styles.controls}>
+        {focusDisplayed && focusSoundLabel && snapshot.kind === 'none' && onPlayFocusSound && (
+          <button type="button" className={styles.control} data-focus-dock-play-sound="true"
+            onClick={onPlayFocusSound} aria-label={`Play ${focusSoundLabel}`}>▶ {focusSoundLabel}</button>
+        )}
         {focusDisplayed && focusSession?.status === 'running' && (
           <button type="button" className={styles.focusControl}
             onClick={onPauseFocus} aria-label="Pause Focus Field session">Pause focus</button>
