@@ -340,13 +340,16 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
               </div>
             )}
 
-            <p className={styles.immersiveStatus} role="status" aria-live="polite">{message}</p>
+            {/* Before sound, the status line guides. Once the field holds the player, the human line above
+                says everything the member needs; the technical sentence moves to About this field. */}
+            {!isCurrent && <p className={styles.immersiveStatus} role="status" aria-live="polite">{message}</p>}
 
             <details className={styles.aboutField}>
               <summary>About this field</summary>
               <div>
                 <p>{selected.kind}</p>
                 <p>{selected.description}</p>
+                {isCurrent && <p data-sound-studio-technical-status="true">{message}</p>}
                 <ol className={styles.immersivePassages} aria-label={`${selected.title} passages`}>
                   {selected.passages.map(item => (
                     <li key={item.id} data-current={passage?.id === item.id ? 'true' : 'false'}>
