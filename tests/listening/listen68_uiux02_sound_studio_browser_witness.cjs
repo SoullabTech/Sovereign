@@ -70,6 +70,18 @@ const PROFILES=[{name:'phone-320',w:320,h:640,m:true,t:true},{name:'phone-360',w
   check(p.name,'focus-quick-start-hides-tuning',!(await page.getByRole('button',{name:/Guide me/}).isVisible()));
   await page.getByText('Tune session').click();
   check(p.name,'tune-session-reveals-guide-and-browse',await page.getByRole('button',{name:/Guide me/}).isVisible()&&await page.getByRole('button',{name:/Browse/}).isVisible());
+  // Focus sound choice: choosing and starting never play; Play is a separate member act; one transport set
+  check(p.name,'focus-sound-choice-offered',await page.locator('[data-focus-sound]').count()===4);
+  await page.locator('[data-focus-sound="open-ground"]').click();
+  await page.getByRole('button',{name:'Start focus session'}).click();
+  await page.getByRole('button',{name:'Pause Focus Field session'}).waitFor();
+  check(p.name,'choosing-sound-and-starting-focus-plays-nothing',await page.locator('[data-listen10-audio="true"]').evaluate(a=>a.getAttribute('src')===null&&a.paused));
+  check(p.name,'focus-has-one-transport-set',await page.getByRole('button',{name:'Pause session'}).count()===0&&await page.getByRole('button',{name:'Stop session'}).count()===0&&await page.getByRole('button',{name:'Pause Focus Field session'}).count()===1);
+  await page.locator('[data-focus-play-sound="true"]').click();
+  await page.waitForFunction(()=>{const a=document.querySelector('[data-listen10-audio="true"]');return a&&!a.paused&&a.currentTime>0},{},{timeout:12000}).catch(()=>{});
+  check(p.name,'play-is-a-separate-member-act-and-sound-starts',await page.locator('[data-listen10-audio="true"]').evaluate(a=>!a.paused));
+  await page.getByRole('button',{name:'Stop and clear persistent music'}).click();
+  await page.getByRole('button',{name:'Stop Focus Field session'}).click();
   // Night family
   await page.locator('[data-studio-'+(p.w<=700?'tab':'section')+'="fields"]').click();
   check(p.name,'one-night-ground-catalogue-card',await page.locator('[data-sound-studio-work="night-ground-family"]').count()===1&&await page.locator('[data-sound-studio-work^="night-ground-01"]').count()===0);

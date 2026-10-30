@@ -155,3 +155,6 @@
 .shell .nav a{min-height:44px;align-items:center}
 .immersiveHeld{margin:18px 0 0;font-size:13px;color:#cbbd9e}
 :global(body[data-sound-immersive-active="night"]) :global([data-listen10-persistent-dock="true"]){filter:brightness(.82) saturate(.8)}
+.focusSound{display:grid;gap:10px;margin:0 0 18px;padding:18px 20px;border:1px solid rgba(226,216,194,.14);border-radius:14px;background:rgba(4,12,16,.34)}
+.focusSound h3{margin:0;font-family:Georgia,serif;font-size:18px;font-weight:400;color:#e9d3ae}
+.focusSound .play{justify-self:start;min-height:44px}
