@@ -1,13 +1,13 @@
 /**
- * Encounter room Stop contract (PURE, no IO).
+ * Encounter room Stop state machine (pure, no I/O or authentication).
  *
- * Requesting Stop immediately closes admission for later work. Completion is
- * true only after every required subsystem acknowledges the same stop
- * generation. Unknown, stale, missing, malformed, or failed state never becomes
- * success by UI transition, timeout, or caller mutation.
+ * The durable store issues operation identity and Stop generation. The authority
+ * boundary authenticates requesters and subsystem reports before applying this
+ * reducer. Acknowledged means the required components reported outcomes; it is
+ * never evidence that a remote person's physical media has been terminated.
  */
 
-export const ROOM_STOP_TARGETS = [
+export const ROOM_STOP_TARGETS = Object.freeze([
   'local_media',
   'remote_media',
   'signaling',
@@ -16,22 +16,43 @@ export const ROOM_STOP_TARGETS = [
   'maia_inference',
   'maia_playback',
   'late_work',
-] as const;
+] as const);
 
 export type RoomStopTarget = (typeof ROOM_STOP_TARGETS)[number];
-export type RoomStopTargetState = 'pending' | 'stopped' | 'failed';
+export type RoomStopTargetState = 'pending' | 'stopped' | 'failed' | 'not_started';
+export type RoomStopEvidenceKind = 'server_component' | 'client_report' | 'simulated';
 export type RoomStopReason = 'participant_withdrawal' | 'room_ended' | 'steward_emergency' | 'system_failure';
 
-export interface RoomStopRequest {
+export interface RoomStopScope {
   encounterId: string;
-  requestedByParticipantId: string;
+  participantId: string;
+  agreementVersion: string;
+  consentGeneration: number;
+  runtimeId: string;
+}
+
+export interface RoomStopTargetBinding {
+  principalId: string;
+  adapterRuntimeId: string;
+  evidenceKind: RoomStopEvidenceKind;
+}
+
+export type RoomStopTargetBindings = Readonly<Record<RoomStopTarget, Readonly<RoomStopTargetBinding>>>;
+
+export interface RoomStopRequest {
+  operationId: string;
+  requestKey: string;
+  scope: Readonly<RoomStopScope>;
   stopGeneration: number;
+  requestedByParticipantId: string;
   requestedAt: number;
   reason: RoomStopReason;
+  targetBindings: RoomStopTargetBindings;
 }
 
 export interface RoomStopContract extends RoomStopRequest {
   targets: Readonly<Record<RoomStopTarget, RoomStopTargetState>>;
+  acknowledgedAt: Readonly<Record<RoomStopTarget, number | null>>;
   lateWorkAdmission: 'closed';
 }
 
@@ -40,10 +61,14 @@ export type BeginRoomStopResult =
   | { ok: false; reason: 'invalid_request' };
 
 export interface RoomStopAcknowledgement {
-  encounterId: string;
+  operationId: string;
+  scope: Readonly<RoomStopScope>;
   stopGeneration: number;
   target: RoomStopTarget;
-  state: 'stopped' | 'failed';
+  principalId: string;
+  adapterRuntimeId: string;
+  evidenceKind: RoomStopEvidenceKind;
+  state: Exclude<RoomStopTargetState, 'pending'>;
   acknowledgedAt: number;
 }
 
@@ -51,21 +76,37 @@ export type AcknowledgeRoomStopResult =
   | { ok: true; contract: Readonly<RoomStopContract> }
   | {
       ok: false;
-      reason: 'invalid_contract' | 'wrong_encounter' | 'wrong_generation' | 'unknown_target' | 'invalid_ack' | 'conflicting_ack';
+      reason: 'invalid_contract' | 'wrong_operation' | 'wrong_scope' | 'wrong_generation'
+        | 'unknown_target' | 'wrong_principal' | 'wrong_adapter_runtime' | 'wrong_evidence'
+        | 'invalid_ack' | 'conflicting_ack';
       contract: Readonly<RoomStopContract>;
     };
 
 export interface RoomStopSummary {
-  status: 'invalid' | 'pending' | 'failed' | 'complete';
+  status: 'invalid' | 'pending' | 'failed' | 'acknowledged';
+  physicalMediaVerified: false;
   pending: RoomStopTarget[];
   failed: RoomStopTarget[];
+  acknowledged: RoomStopTarget[];
   stopped: RoomStopTarget[];
+  notStarted: RoomStopTarget[];
 }
 
 const TARGETS = new Set<string>(ROOM_STOP_TARGETS);
-const TARGET_STATES = new Set<string>(['pending', 'stopped', 'failed']);
+const TARGET_STATES = new Set<string>(['pending', 'stopped', 'failed', 'not_started']);
+const EVIDENCE_KINDS = new Set<string>(['server_component', 'client_report', 'simulated']);
 const REASONS = new Set<string>(['participant_withdrawal', 'room_ended', 'steward_emergency', 'system_failure']);
-const CONTRACT_KEYS = new Set(['encounterId', 'requestedByParticipantId', 'stopGeneration', 'requestedAt', 'reason', 'targets', 'lateWorkAdmission']);
+const SCOPE_KEYS = new Set(['encounterId', 'participantId', 'agreementVersion', 'consentGeneration', 'runtimeId']);
+const BINDING_KEYS = new Set(['principalId', 'adapterRuntimeId', 'evidenceKind']);
+const REQUEST_KEYS = new Set([
+  'operationId', 'requestKey', 'scope', 'stopGeneration', 'requestedByParticipantId',
+  'requestedAt', 'reason', 'targetBindings',
+]);
+const CONTRACT_KEYS = new Set([...REQUEST_KEYS, 'targets', 'acknowledgedAt', 'lateWorkAdmission']);
+const ACK_KEYS = new Set([
+  'operationId', 'scope', 'stopGeneration', 'target', 'principalId', 'adapterRuntimeId',
+  'evidenceKind', 'state', 'acknowledgedAt',
+]);
 
 function plainObject(value: unknown): value is Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -78,8 +119,9 @@ function exactKeys(value: Record<string, unknown>, keys: ReadonlySet<string>): b
   return actual.length === keys.size && actual.every((key) => keys.has(key));
 }
 
-function nonEmpty(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
+function identifier(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && value.length <= 200
+    && value.trim() === value;
 }
 
 function positiveGeneration(value: unknown): value is number {
@@ -87,50 +129,78 @@ function positiveGeneration(value: unknown): value is number {
 }
 
 function validTimestamp(value: unknown): value is number {
-  return Number.isFinite(value) && Number(value) >= 0;
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
 }
 
-function initialTargets(): Record<RoomStopTarget, RoomStopTargetState> {
-  return Object.fromEntries(ROOM_STOP_TARGETS.map((target) => [target, 'pending'])) as Record<
-    RoomStopTarget,
-    RoomStopTargetState
-  >;
+export function validateRoomStopScope(value: unknown): value is Readonly<RoomStopScope> {
+  return plainObject(value) && exactKeys(value, SCOPE_KEYS)
+    && identifier(value.encounterId) && identifier(value.participantId)
+    && identifier(value.agreementVersion) && positiveGeneration(value.consentGeneration)
+    && identifier(value.runtimeId);
+}
+
+export function sameRoomStopScope(left: RoomStopScope, right: RoomStopScope): boolean {
+  return validateRoomStopScope(left) && validateRoomStopScope(right)
+    && left.encounterId === right.encounterId && left.participantId === right.participantId
+    && left.agreementVersion === right.agreementVersion
+    && left.consentGeneration === right.consentGeneration && left.runtimeId === right.runtimeId;
+}
+
+export function validateRoomStopTargetBindings(value: unknown): value is RoomStopTargetBindings {
+  if (!plainObject(value) || !exactKeys(value, TARGETS)) return false;
+  return ROOM_STOP_TARGETS.every((target) => {
+    const binding = value[target];
+    return plainObject(binding) && exactKeys(binding, BINDING_KEYS)
+      && identifier(binding.principalId) && identifier(binding.adapterRuntimeId)
+      && typeof binding.evidenceKind === 'string' && EVIDENCE_KINDS.has(binding.evidenceKind);
+  });
+}
+
+function validRequestFields(value: Record<string, unknown>): boolean {
+  return identifier(value.operationId) && identifier(value.requestKey)
+    && validateRoomStopScope(value.scope) && positiveGeneration(value.stopGeneration)
+    && identifier(value.requestedByParticipantId)
+    && value.requestedByParticipantId === value.scope.participantId
+    && validTimestamp(value.requestedAt) && typeof value.reason === 'string'
+    && REASONS.has(value.reason) && validateRoomStopTargetBindings(value.targetBindings);
 }
 
 function freezeContract(contract: RoomStopContract): Readonly<RoomStopContract> {
-  const targets = Object.freeze({ ...contract.targets });
-  return Object.freeze({ ...contract, targets });
+  const targetBindings = Object.freeze(Object.fromEntries(ROOM_STOP_TARGETS.map((target) => [
+    target, Object.freeze({ ...contract.targetBindings[target] }),
+  ]))) as RoomStopTargetBindings;
+  return Object.freeze({
+    ...contract,
+    scope: Object.freeze({ ...contract.scope }),
+    targetBindings,
+    targets: Object.freeze({ ...contract.targets }),
+    acknowledgedAt: Object.freeze({ ...contract.acknowledgedAt }),
+  });
 }
 
 export function validateRoomStopContract(value: unknown): value is Readonly<RoomStopContract> {
-  if (!plainObject(value) || !exactKeys(value, CONTRACT_KEYS)) return false;
-  if (!nonEmpty(value.encounterId) || !nonEmpty(value.requestedByParticipantId)
-    || !positiveGeneration(value.stopGeneration) || !validTimestamp(value.requestedAt)
-    || !REASONS.has(String(value.reason)) || value.lateWorkAdmission !== 'closed'
-    || !plainObject(value.targets)) return false;
-  const targetKeys = Object.keys(value.targets);
-  return targetKeys.length === ROOM_STOP_TARGETS.length
-    && targetKeys.every((target) => TARGETS.has(target))
-    && ROOM_STOP_TARGETS.every((target) => TARGET_STATES.has(String(value.targets[target])));
+  if (!plainObject(value) || !exactKeys(value, CONTRACT_KEYS) || !validRequestFields(value)
+      || value.lateWorkAdmission !== 'closed' || !plainObject(value.targets)
+      || !exactKeys(value.targets, TARGETS) || !plainObject(value.acknowledgedAt)
+      || !exactKeys(value.acknowledgedAt, TARGETS)) return false;
+  const targets = value.targets;
+  const acknowledgedAt = value.acknowledgedAt;
+  const requestedAt = value.requestedAt as number;
+  return ROOM_STOP_TARGETS.every((target) => {
+    const state = targets[target];
+    const at = acknowledgedAt[target];
+    return typeof state === 'string' && TARGET_STATES.has(state)
+      && (state === 'pending' ? at === null : validTimestamp(at) && at >= requestedAt);
+  });
 }
 
 export function beginRoomStop(request: RoomStopRequest): BeginRoomStopResult {
-  if (!nonEmpty(request.encounterId)
-    || !nonEmpty(request.requestedByParticipantId)
-    || !positiveGeneration(request.stopGeneration)
-    || !validTimestamp(request.requestedAt)
-    || !REASONS.has(request.reason)) {
+  if (!plainObject(request) || !exactKeys(request, REQUEST_KEYS) || !validRequestFields(request)) {
     return { ok: false, reason: 'invalid_request' };
   }
-
-  return {
-    ok: true,
-    contract: freezeContract({
-      ...request,
-      targets: initialTargets(),
-      lateWorkAdmission: 'closed',
-    }),
-  };
+  const targets = Object.fromEntries(ROOM_STOP_TARGETS.map((target) => [target, 'pending'])) as Record<RoomStopTarget, RoomStopTargetState>;
+  const acknowledgedAt = Object.fromEntries(ROOM_STOP_TARGETS.map((target) => [target, null])) as Record<RoomStopTarget, number | null>;
+  return { ok: true, contract: freezeContract({ ...request, targets, acknowledgedAt, lateWorkAdmission: 'closed' }) };
 }
 
 export function acknowledgeRoomStop(
@@ -138,63 +208,56 @@ export function acknowledgeRoomStop(
   acknowledgement: RoomStopAcknowledgement,
 ): AcknowledgeRoomStopResult {
   if (!validateRoomStopContract(contract)) return { ok: false, reason: 'invalid_contract', contract };
-  if (acknowledgement.encounterId !== contract.encounterId) {
-    return { ok: false, reason: 'wrong_encounter', contract };
-  }
-  if (acknowledgement.stopGeneration !== contract.stopGeneration) {
-    return { ok: false, reason: 'wrong_generation', contract };
-  }
-  if (!TARGETS.has(acknowledgement.target)) {
-    return { ok: false, reason: 'unknown_target', contract };
-  }
-  if ((acknowledgement.state !== 'stopped' && acknowledgement.state !== 'failed')
-    || !validTimestamp(acknowledgement.acknowledgedAt)
-    || acknowledgement.acknowledgedAt < contract.requestedAt) {
-    return { ok: false, reason: 'invalid_ack', contract };
-  }
+  if (!plainObject(acknowledgement) || !exactKeys(acknowledgement, ACK_KEYS)
+      || !validateRoomStopScope(acknowledgement.scope)) return { ok: false, reason: 'invalid_ack', contract };
+  if (acknowledgement.operationId !== contract.operationId) return { ok: false, reason: 'wrong_operation', contract };
+  if (!sameRoomStopScope(acknowledgement.scope, contract.scope)) return { ok: false, reason: 'wrong_scope', contract };
+  if (acknowledgement.stopGeneration !== contract.stopGeneration) return { ok: false, reason: 'wrong_generation', contract };
+  if (!TARGETS.has(acknowledgement.target)) return { ok: false, reason: 'unknown_target', contract };
+  const binding = contract.targetBindings[acknowledgement.target];
+  if (acknowledgement.principalId !== binding.principalId) return { ok: false, reason: 'wrong_principal', contract };
+  if (acknowledgement.adapterRuntimeId !== binding.adapterRuntimeId) return { ok: false, reason: 'wrong_adapter_runtime', contract };
+  if (acknowledgement.evidenceKind !== binding.evidenceKind) return { ok: false, reason: 'wrong_evidence', contract };
+  if (!['stopped', 'failed', 'not_started'].includes(acknowledgement.state)
+      || !validTimestamp(acknowledgement.acknowledgedAt)
+      || acknowledgement.acknowledgedAt < contract.requestedAt) return { ok: false, reason: 'invalid_ack', contract };
 
   const current = contract.targets[acknowledgement.target];
   if (current !== 'pending') {
-    if (current === acknowledgement.state) return { ok: true, contract };
-    return { ok: false, reason: 'conflicting_ack', contract };
+    return current === acknowledgement.state
+      ? { ok: true, contract }
+      : { ok: false, reason: 'conflicting_ack', contract };
   }
-
   return {
     ok: true,
     contract: freezeContract({
       ...contract,
-      targets: {
-        ...contract.targets,
-        [acknowledgement.target]: acknowledgement.state,
-      },
+      targets: { ...contract.targets, [acknowledgement.target]: acknowledgement.state },
+      acknowledgedAt: { ...contract.acknowledgedAt, [acknowledgement.target]: acknowledgement.acknowledgedAt },
     }),
   };
 }
 
 export function summarizeRoomStop(contract: Readonly<RoomStopContract>): RoomStopSummary {
   if (!validateRoomStopContract(contract)) {
-    return { status: 'invalid', pending: [...ROOM_STOP_TARGETS], failed: [], stopped: [] };
+    return { status: 'invalid', physicalMediaVerified: false, pending: [...ROOM_STOP_TARGETS],
+      failed: [], acknowledged: [], stopped: [], notStarted: [] };
   }
   const pending = ROOM_STOP_TARGETS.filter((target) => contract.targets[target] === 'pending');
   const failed = ROOM_STOP_TARGETS.filter((target) => contract.targets[target] === 'failed');
   const stopped = ROOM_STOP_TARGETS.filter((target) => contract.targets[target] === 'stopped');
-
-  return {
-    status: failed.length > 0 ? 'failed' : pending.length > 0 ? 'pending' : 'complete',
-    pending,
-    failed,
-    stopped,
-  };
+  const notStarted = ROOM_STOP_TARGETS.filter((target) => contract.targets[target] === 'not_started');
+  const acknowledged = ROOM_STOP_TARGETS.filter((target) => ['stopped', 'not_started'].includes(contract.targets[target]));
+  return { status: failed.length ? 'failed' : pending.length ? 'pending' : 'acknowledged',
+    physicalMediaVerified: false, pending, failed, acknowledged, stopped, notStarted };
 }
 
-/** Once a Stop generation exists, late work is refused immediately. */
+/** Stop closes this operation immediately; absence of a Stop is never a consent grant. */
 export function decideLateRoomWork(
-  contract: Readonly<RoomStopContract>,
-  encounterId: string,
-  stopGeneration: number,
-): { allowed: false; reason: 'invalid_contract' | 'wrong_encounter' | 'wrong_generation' | 'stop_requested' } {
+  contract: Readonly<RoomStopContract>, scope: RoomStopScope, stopGeneration: number,
+): { allowed: false; reason: 'invalid_contract' | 'wrong_scope' | 'wrong_generation' | 'stop_requested' } {
   if (!validateRoomStopContract(contract)) return { allowed: false, reason: 'invalid_contract' };
-  if (encounterId !== contract.encounterId) return { allowed: false, reason: 'wrong_encounter' };
+  if (!sameRoomStopScope(scope, contract.scope)) return { allowed: false, reason: 'wrong_scope' };
   if (stopGeneration !== contract.stopGeneration) return { allowed: false, reason: 'wrong_generation' };
   return { allowed: false, reason: 'stop_requested' };
 }
