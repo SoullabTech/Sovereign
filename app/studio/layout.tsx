@@ -26,6 +26,7 @@ import { MaiaBoundaryLayout } from '@/components/maia/MaiaBoundaryLayout';
 import { RAIL_WIDTH_PX } from '@/lib/navigation/maiaNav';
 import { apiFetch } from '@/lib/http/apiBase';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
+import { studioSignInRedirect } from '@/lib/studio/studioSignInRedirect';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import {
   getVisibleModules,
@@ -156,15 +157,15 @@ export default function StudioLayout({
       return;
     }
 
-    const memberId = getLocalMemberId();
-    if (!memberId) {
-      router.replace('/signin');
-      return;
-    }
-
+    // Identity is decided by the SERVER (cookie session), never by localStorage:
+    // a cleared local cache must not make a signed-in member look signed out.
     async function checkPractitioner() {
       try {
         const response = await apiFetch('/api/studio/whoami');
+        if (response.status === 401) {
+          router.replace(studioSignInRedirect(pathname));
+          return;
+        }
         const data = await response.json();
 
         if (data.isPractitioner) {
