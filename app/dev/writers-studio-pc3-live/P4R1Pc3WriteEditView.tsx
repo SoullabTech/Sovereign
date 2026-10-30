@@ -462,8 +462,11 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       // A focused EMPTY contentEditable div can have no insertion range in
       // Chromium, even though activeElement is correct. Put the caret in its
       // already-rendered empty paragraph; do not seed or modify any author text.
+      // If the writer has already begun typing in the two frames before this
+      // runs, the browser has placed the caret correctly: leave it alone.
+      const alreadyBegun = (editor.textContent ?? '').length > 0;
       const selection = window.getSelection();
-      if (selection) {
+      if (selection && !alreadyBegun) {
         const firstLine = editor.querySelector('p') ?? editor;
         const insertion = document.createRange();
         insertion.selectNodeContents(firstLine);

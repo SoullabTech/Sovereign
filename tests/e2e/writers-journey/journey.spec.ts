@@ -222,13 +222,10 @@ test.describe(`Writer's Studio journey WJ-1 [defeat=${DEFEAT}]`, () => {
     });
   });
 
-  // KNOWN DEFECT KD-1 — reported 2026-10-30. EXPECTED TO FAIL until fixed (Playwright test.fail()):
-  // `focusRealEditor` (app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx) puts the caret at the START of the editor two
-  // animation frames after "Just start writing" is clicked, even if the writer has already typed. Typing straight away then
-  // saves e.g. "he orchard … softly.T". When the defect is fixed this test will PASS, Playwright will report it as an
-  // unexpected pass, and the annotation must be removed so it becomes a normal regression test.
-  test('KD-1 typing straight after "Just start writing" keeps the first words in order [KNOWN DEFECT, expected to fail]', async ({ browser, baseURL }) => {
-    test.fail(true, 'KD-1: caret is reset to the start of the editor after the first keystroke');
+  // KD-1 regression (fixed 2026-10-30): `focusRealEditor` (app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx) used to put the
+  // caret at the START of the editor two animation frames after "Just start writing" was clicked, even if the writer had already
+  // typed, so typing straight away saved e.g. "he orchard … softly.T". It now leaves the caret alone once text exists.
+  test('KD-1 typing straight after "Just start writing" keeps the first words in order', async ({ browser, baseURL }) => {
     const ctx = await browser.newContext({ baseURL }); const page = await ctx.newPage();
     expect((await signIn(ctx.request, BOB)).status()).toBe(200);
     await page.goto('/writers-studio'); await page.waitForTimeout(2000);

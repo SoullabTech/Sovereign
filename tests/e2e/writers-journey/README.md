@@ -9,8 +9,8 @@ Run: `bash tests/e2e/writers-journey/run-journey.sh [--build] [--defeat MODE] [-
 - S13-S18 Bob and Carol (and signed-out visitors) cannot reach Alice's words; Carol is refused the studio and the Writer corridor's API.
 - S19 no uncaught page errors during the journey.
 
-## Known defect witness
-KD-1: typing immediately after "Just start writing" moves the first character to the end. Marked expected-to-fail; when the defect is fixed this test starts failing, which is the signal to remove the marker.
+## Regression test: KD-1
+KD-1 (fixed): typing immediately after "Just start writing" keeps the first characters in order; kept as a regression test.
 
 ## Proof the test can fail (`--defeat`)
 - `no_roster`: Alice removed from the roster -> fails at S02.
