@@ -276,6 +276,12 @@ export async function proxy(req: NextRequest) {
   // Handle denials
   // ---------------------------------------------------------------------
   if (!allowed) {
+    // Review-only F3R2 correction. Responses denied by proxy never reach
+    // the member-profile handler's private, no-store response headers.
+    const denialHeaders = {
+      'Cache-Control': 'private, no-store',
+      'X-Content-Type-Options': 'nosniff',
+    };
     const url = req.nextUrl.clone();
 
     switch (reason) {
@@ -284,7 +290,7 @@ export async function proxy(req: NextRequest) {
         if (pathname.startsWith('/api/')) {
           return NextResponse.json(
             { error: 'Unauthorized', message: 'Authentication required.', rid },
-            { status: 401 }
+            { status: 401, headers: denialHeaders }
           );
         }
         // For Capacitor/mobile apps: Let page load, handle auth client-side
@@ -368,7 +374,7 @@ export async function proxy(req: NextRequest) {
               requiredRoles: rule.rolesAnyOf,
               rid,
             }),
-            { status: 403, headers: { 'Content-Type': 'application/json' } },
+            { status: 403, headers: { ...denialHeaders, 'Content-Type': 'application/json' } },
           );
         }
         console.log(`[Middleware] Tier gate bypassed for ${pathname} (required: ${rule?.minTier})`);
@@ -386,7 +392,7 @@ export async function proxy(req: NextRequest) {
           }),
           {
             status: 403,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { ...denialHeaders, 'Content-Type': 'application/json' },
           }
         );
 
@@ -401,13 +407,13 @@ export async function proxy(req: NextRequest) {
           }),
           {
             status: 404,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { ...denialHeaders, 'Content-Type': 'application/json' },
           }
         );
 
       default:
         // Shouldn't happen, but handle gracefully
-        return new NextResponse('Access Denied', { status: 403 });
+        return new NextResponse('Access Denied', { status: 403, headers: denialHeaders });
     }
   }
 

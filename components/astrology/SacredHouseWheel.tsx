@@ -73,7 +73,7 @@ interface TransitAspect {
   natalPlanet: string;
   aspectType: 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition' | 'quincunx';
   orb: number;
-  applying: boolean; // Is aspect getting tighter?
+  applying: boolean | null; // true = tightening, false = separating, null = method cannot determine
 }
 
 interface SacredHouseWheelProps {
@@ -2656,7 +2656,7 @@ export function SacredHouseWheel({
                       }}
                     >
                       <p className={`text-xs ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
-                        <span className="opacity-80">✨ Ask MAIA about current transits to this placement</span>
+                        <span className="opacity-80">Notice what current transits stir in this placement</span>
                       </p>
                     </div>
                   </>
@@ -2760,8 +2760,18 @@ export function SacredHouseWheel({
                                   <span className={`text-sm font-medium ${isDayMode ? 'text-stone-800' : 'text-stone-200'}`}>
                                     {aspect.aspectType.charAt(0).toUpperCase() + aspect.aspectType.slice(1)} natal {aspect.natalPlanet}
                                   </span>
-                                  <span className={`text-xs ${aspect.applying ? 'text-green-400' : 'text-amber-400'}`}>
-                                    {aspect.applying ? '→ applying' : '← separating'} ({aspect.orb.toFixed(1)}°)
+                                  <span className={`text-xs ${
+                                    aspect.applying === true
+                                      ? 'text-green-400'
+                                      : aspect.applying === false
+                                        ? 'text-amber-400'
+                                        : 'text-stone-400'
+                                  }`}>
+                                    {aspect.applying === true
+                                      ? '→ applying'
+                                      : aspect.applying === false
+                                        ? '← separating'
+                                        : 'timing uncertain'} ({aspect.orb.toFixed(1)}°)
                                   </span>
                                 </div>
                               </div>
@@ -2809,7 +2819,7 @@ export function SacredHouseWheel({
                       }}
                     >
                       <p className={`text-xs ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
-                        ✨ Ask MAIA for deeper transit insights
+                        Stay with the transit pattern and your own experience
                       </p>
                     </div>
                   </>
@@ -3186,7 +3196,7 @@ export function SacredHouseWheel({
                   }}
                 >
                   <p className={`text-xs ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
-                    ☊ Ask MAIA about your nodal axis for deeper destiny insights
+                    Reflect on how your nodal axis appears in lived experience
                   </p>
                 </div>
               </div>
@@ -3418,7 +3428,7 @@ export function SacredHouseWheel({
                 }}
               >
                 <p className={`text-xs ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
-                  ⬡ Ask MAIA about your aspect patterns for deeper configuration insights
+                  Notice how these aspect patterns behave in your life
                 </p>
               </div>
             </div>

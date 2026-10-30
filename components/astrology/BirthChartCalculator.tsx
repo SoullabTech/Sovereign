@@ -21,9 +21,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calculator, Calendar, Clock, MapPin, ChevronDown, ChevronUp, Sparkles, X, Check } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { useBirthChart, type BirthData, type BirthLocation } from '@/lib/hooks/useBirthChart';
+import { normalizeBirthCoordinates } from '@/lib/astrology/birthCoordinates';
 
 interface BirthChartCalculatorProps {
-  onCalculate?: (data: BirthData) => void;
+  onCalculate?: (data: BirthData) => void | Promise<void>;
   isDayMode?: boolean;
   variant?: 'corner' | 'inline';
 }
@@ -38,6 +39,8 @@ export function BirthChartCalculator({
   const [isOpen, setIsOpen] = useState(variant === 'inline');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const saveInFlightRef = useRef(false);
 
   // Form fields
   const [date, setDate] = useState('');
@@ -91,7 +94,7 @@ export function BirthChartCalculator({
         setLocationResults([]);
       }
     } catch (error) {
-      console.error('Location search error:', error);
+      console.error('[BirthChartCalculator] LOCATION_SEARCH_FAILED');
       setLocationResults([]);
     } finally {
       setIsSearching(false);
@@ -132,7 +135,7 @@ export function BirthChartCalculator({
           location.timezone = data.data[0].timezone;
         }
       } catch (error) {
-        console.error('Timezone fetch error:', error);
+        console.error('[BirthChartCalculator] TIMEZONE_LOOKUP_FAILED');
       } finally {
         setIsSearching(false);
       }
@@ -144,56 +147,64 @@ export function BirthChartCalculator({
   };
 
   const handleCalculate = async () => {
-    if (!date || !time || !selectedLocation) {
+    if (saveInFlightRef.current || !date || !time || !selectedLocation) return;
+    const coordinates = normalizeBirthCoordinates(selectedLocation.lat, selectedLocation.lon);
+    if (!coordinates) {
+      setSaveError('Choose a birth location with valid coordinates.');
       return;
     }
-
+    saveInFlightRef.current = true;
     setIsSaving(true);
     setSaveSuccess(false);
-
+    setSaveError(null);
     const newBirthData: BirthData = {
       date,
       time,
       location: {
         name: selectedLocation.display_name,
-        lat: parseFloat(String(selectedLocation.lat)),
-        lng: parseFloat(String(selectedLocation.lon)),
+        ...coordinates,
         timezone: selectedLocation.timezone || 'UTC',
       },
       houseSystem: 'porphyry',
     };
 
     try {
-      // Save using the shared hook (updates all storage locations + broadcasts event)
-      const success = await save(newBirthData);
-
-      if (success) {
-        setSaveSuccess(true);
-
-        // Callback for parent component
-        if (onCalculate) {
-          onCalculate(newBirthData);
-        }
-
-        // Close the panel after successful save (corner variant only)
-        if (variant === 'corner') {
-          setTimeout(() => {
-            setIsOpen(false);
-            setSaveSuccess(false);
-          }, 1500);
-        } else {
-          // For inline variant, show success briefly
-          setTimeout(() => setSaveSuccess(false), 2000);
-        }
+      let success = false;
+      try {
+        success = await save(newBirthData);
+      } catch {
+        setSaveError('Your birth details could not be saved. Please try again.');
+        return;
       }
-    } catch (error) {
-      console.error('Error saving birth data:', error);
+      if (!success) {
+        setSaveError('Your birth details could not be saved. Please try again.');
+        return;
+      }
+      setSaveSuccess(true);
+      // Calculation can fail after a confirmed save. Keep the two outcomes
+      // separate, and consume async callbacks so rejections never escape.
+      try {
+        await onCalculate?.(newBirthData);
+      } catch {
+        setSaveError('Your birth details were saved, but the chart could not be refreshed.');
+      }
+      if (variant === 'corner') {
+        setTimeout(() => {
+          setIsOpen(false);
+          setSaveSuccess(false);
+        }, 1500);
+      } else {
+        setTimeout(() => setSaveSuccess(false), 2000);
+      }
     } finally {
+      saveInFlightRef.current = false;
       setIsSaving(false);
     }
   };
 
-  const isFormValid = date && time && selectedLocation;
+  const isFormValid = Boolean(date && time && selectedLocation &&
+    typeof selectedLocation.timezone === 'string' && selectedLocation.timezone.trim() &&
+    normalizeBirthCoordinates(selectedLocation.lat, selectedLocation.lon));
 
   // Inline variant - renders as a card without fixed positioning
   if (variant === 'inline') {
@@ -450,6 +461,10 @@ export function BirthChartCalculator({
             </span>
           )}
         </motion.button>
+
+        {saveError && (
+          <p role="alert" className="text-xs text-amber-500">{saveError}</p>
+        )}
 
         {/* Info Text */}
         <p className={`text-[10px] text-center ${isDayMode ? 'text-amber-600' : 'text-amber-500/60'}`}>

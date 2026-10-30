@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, Sparkles, Sun as SunIcon, Moon as MoonIcon } from 'lucide-react';
 import ZodiacToggle, { type ZodiacSystem } from '@/components/astrology/ZodiacToggle';
+import { useVerifiedFreeAstrologyBirthProfile } from '@/lib/hooks/useVerifiedFreeAstrologyBirthProfile';
 import { motion } from 'framer-motion';
 import {
   calculateMayanBirthSign,
@@ -34,6 +35,7 @@ export default function MayanAstrologyPage() {
     if (mode === 'chinese') { router.push('/astrology/chinese'); }
   }, [router]);
 
+  const verifiedBirth = useVerifiedFreeAstrologyBirthProfile();
   const [birthDate, setBirthDate] = useState('');
   const [birthSign, setBirthSign] = useState<MayanBirthSign | null>(null);
   const [todaySign, setTodaySign] = useState<MayanBirthSign | null>(null);
@@ -41,65 +43,23 @@ export default function MayanAstrologyPage() {
   const [completeProfile, setCompleteProfile] = useState<CompleteMayanProfile | null>(null);
   const [activeView, setActiveView] = useState<'signature' | 'pillars' | 'today'>('pillars');
 
+  // Public today's Dreamspell calendar display never needs natal data.
   useEffect(() => {
-    // Always show today's sign
     setTodaySign(getTodaysMayanSign());
-
-    // Helper: normalize any stored birth date to YYYY-MM-DD (for <input type="date">)
-    const toDateInputValue = (raw: unknown): string | null => {
-      if (!raw) return null;
-      try {
-        if (typeof raw === 'string') {
-          // Already YYYY-MM-DD
-          if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-          return new Date(raw).toISOString().split('T')[0];
-        }
-        return new Date(raw as string | number | Date).toISOString().split('T')[0];
-      } catch {
-        return null;
-      }
-    };
-
-    const applyDate = (dateStr: string) => {
-      setBirthDate(dateStr);
-      calculateSign(new Date(dateStr));
-    };
-
-    // 1) Try member profile API (server-of-truth, cross-device)
-    const loadFromProfile = async () => {
-      try {
-        const storedUser = localStorage.getItem('beta_user');
-        const memberId = storedUser ? JSON.parse(storedUser)?.id : null;
-
-        if (memberId) {
-          const res = await fetch(`/api/members/profile?id=${encodeURIComponent(memberId)}`);
-          if (res.ok) {
-            const profile = await res.json();
-            const d = toDateInputValue(profile?.birthData?.date);
-            if (d) { applyDate(d); return true; }
-          }
-        }
-
-        // 2) beta_user.birthData.date in localStorage
-        if (storedUser) {
-          const user = JSON.parse(storedUser);
-          const d = toDateInputValue(user?.birthData?.date);
-          if (d) { applyDate(d); return true; }
-        }
-
-        // 3) Legacy keys used only by this page
-        const legacy = localStorage.getItem('birthDate');
-        const d = toDateInputValue(legacy);
-        if (d) { applyDate(d); return true; }
-
-        return false;
-      } catch {
-        return false;
-      }
-    };
-
-    loadFromProfile();
   }, []);
+
+  // A saved personal date may only arrive from the verified member profile.
+  // Historic local birthDate and beta_user caches are left untouched and
+  // cannot automatically become a different person's calendar reading.
+  useEffect(() => {
+    setBirthDate('');
+    setBirthSign(null);
+    setCompleteProfile(null);
+    const day=verifiedBirth.status==='verified'?verifiedBirth.birthData?.date:null;
+    if(!day)return;
+    setBirthDate(day);
+    calculateSign(new Date(day+'T12:00:00.000Z'));
+  },[verifiedBirth.status,verifiedBirth.memberId,verifiedBirth.birthData?.date]);
 
   const calculateSign = (date: Date) => {
     const sign = calculateMayanBirthSign(date);
@@ -111,8 +71,10 @@ export default function MayanAstrologyPage() {
   const handleDateChange = (dateString: string) => {
     setBirthDate(dateString);
     if (dateString) {
-      localStorage.setItem('birthDate', dateString);
-      calculateSign(new Date(dateString));
+      calculateSign(new Date(dateString+'T12:00:00.000Z'));
+    } else {
+      setBirthSign(null);
+      setCompleteProfile(null);
     }
   };
 
@@ -474,15 +436,16 @@ export default function MayanAstrologyPage() {
         >
           <div className="inline-flex items-center gap-2 text-amber-500 mb-4">
             <Calendar className="w-6 h-6" />
-            <span className="text-sm uppercase tracking-wider font-light">Tzolk'in Sacred Calendar</span>
+            <span className="text-sm uppercase tracking-wider font-light">Modern Dreamspell · Calendar-Inspired Reflection</span>
           </div>
           <h1 className="text-5xl font-bold text-amber-100 mb-4">
-            Mayan Astrology
+            Dreamspell · Modern Calendar-Inspired Astrology
           </h1>
           <p className="text-amber-300/80 text-lg max-w-3xl mx-auto leading-relaxed">
-            Discover your galactic signature through the sacred Tzolk'in and Haab calendars.
-            The Path of Life reveals three pillars—Youth, Adulthood, and Future—mapping
-            your soul's journey from past influences through present power to ultimate destiny.
+            Explore an optional symbolic reading from the modern Dreamspell
+            system. Its Solar Seals and Galactic Tones are not identical to
+            traditional Tzolk'in/Chol Q'ij daykeeping in living Maya communities.
+            These reflections are possibilities, not facts about your future.
           </p>
         </motion.div>
 
@@ -577,27 +540,6 @@ export default function MayanAstrologyPage() {
           )}
         </div>
 
-        {/* Talk to MAIA CTA */}
-        {birthSign && (
-          <div className="mt-16 text-center">
-            <div className="bg-gradient-to-br from-amber-950/40 to-stone-900/80 border border-amber-900/30 rounded-2xl p-8 max-w-2xl mx-auto">
-              <h3 className="text-2xl font-bold text-amber-100 mb-4">
-                Explore Your Mayan Signature with MAIA
-              </h3>
-              <p className="text-amber-400/70 mb-6">
-                Have a conversation with MAIA about how your {birthSign.daySign.name} energy
-                flows through your life and integrates with your Western astrology chart.
-              </p>
-              <Link
-                href="/maia"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg shadow-amber-900/30 hover:shadow-amber-600/30 transition-all duration-300"
-              >
-                <Sparkles className="w-5 h-5" />
-                Talk to MAIA
-              </Link>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

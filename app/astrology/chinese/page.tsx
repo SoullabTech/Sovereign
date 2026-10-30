@@ -8,6 +8,7 @@ import { ArrowLeft, Calendar, User, Compass, Clock, ChevronDown, Sparkles } from
 import { motion, AnimatePresence } from 'framer-motion';
 import ZodiacToggle, { type ZodiacSystem } from '@/components/astrology/ZodiacToggle';
 import { apiUrl } from '@/lib/http/apiBase';
+import { useVerifiedFreeAstrologyBirthProfile } from '@/lib/hooks/useVerifiedFreeAstrologyBirthProfile';
 import {
   ChineseZodiacAnimal,
   ChineseElement,
@@ -19,8 +20,7 @@ import {
   getElementHolisticProfile
 } from '@/lib/astrology/chineseAstrology';
 import DaYunTimeline from '@/components/astrology/DaYunTimeline';
-import ChineseAstrologyDiscussion from '@/components/astrology/ChineseAstrologyDiscussion';
-import type { DaYunProfile, Gender } from '@/lib/astrology/types/daYun';
+import type { Gender } from '@/lib/astrology/types/daYun';
 
 type ViewMode = 'profile' | 'da-yun';
 
@@ -64,81 +64,36 @@ export default function ChineseAstrologyPage() {
   const [reading, setReading] = useState<ChineseReadingData | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [daYunProfile, setDaYunProfile] = useState<DaYunProfile | null>(null);
   const didAutoLoad = useRef(false);
+  const generationEpochRef = useRef(0);
+  const verifiedBirth = useVerifiedFreeAstrologyBirthProfile();
 
   const toggleSection = (section: string) => {
     setExpandedSection(prev => prev === section ? null : section);
   };
 
-  // Auto-load birth data from profile API, then localStorage fallback
+  // Only a session-verified profile can auto-fill personal birth details.
+  // Never revive legacy beta_user/birthDate or gender caches across accounts.
   useEffect(() => {
-    if (didAutoLoad.current) return;
-    didAutoLoad.current = true;
+    ++generationEpochRef.current;
+    didAutoLoad.current=false;
+    setReading(null);
+    setDaYunProfile(null);
+    setBirthDate('');
+    setBirthYear('');
+    setBirthTime('');
+    setGender('');
 
-    const loadBirthData = async () => {
-      // 1. Try profile API (database — single source of truth)
-      try {
-        const storedUser = localStorage.getItem('beta_user');
-        const memberId = storedUser ? JSON.parse(storedUser)?.id : null;
+    const current=verifiedBirth.status==='verified'?verifiedBirth.birthData:null;
+    if(!current)return;
+    setBirthDate(current.date);
+    setBirthYear(current.date.slice(0,4));
+    setBirthTime(current.time||'');
+    didAutoLoad.current=true;
+  },[verifiedBirth.status,verifiedBirth.memberId,
+     verifiedBirth.birthData?.date,verifiedBirth.birthData?.time]);
 
-        if (memberId) {
-          const profileRes = await fetch(apiUrl(`/api/members/profile?id=${encodeURIComponent(memberId)}`));
-          if (profileRes.ok) {
-            const profile = await profileRes.json();
-            if (profile.birthData?.date) {
-              const dateStr = typeof profile.birthData.date === 'string'
-                ? profile.birthData.date.split('T')[0]
-                : new Date(profile.birthData.date).toISOString().split('T')[0];
-
-              setBirthDate(dateStr);
-
-              if (profile.birthData.time) {
-                const timeStr = profile.birthData.time.includes(':')
-                  ? profile.birthData.time.substring(0, 5)
-                  : profile.birthData.time;
-                setBirthTime(timeStr);
-              }
-
-              // Also set birthYear for profile view
-              const year = dateStr.split('-')[0];
-              if (year) setBirthYear(year);
-
-              // Load saved gender from localStorage (not in DB)
-              const savedGender = localStorage.getItem('chineseAstrology_gender');
-              if (savedGender === 'male' || savedGender === 'female') {
-                setGender(savedGender);
-              }
-
-              return; // Got data from server
-            }
-          }
-        }
-      } catch (err) {
-        console.error('[Chinese Astrology] Error fetching profile:', err);
-      }
-
-      // 2. Fallback: localStorage birthDate (legacy/journey flow)
-      const saved = localStorage.getItem('birthDate');
-      if (saved) {
-        setBirthDate(saved);
-        const year = saved.split('-')[0];
-        if (year) setBirthYear(year);
-      }
-
-      const savedTime = localStorage.getItem('birthTime');
-      if (savedTime) setBirthTime(savedTime);
-
-      const savedGender = localStorage.getItem('chineseAstrology_gender');
-      if (savedGender === 'male' || savedGender === 'female') {
-        setGender(savedGender);
-      }
-    };
-
-    loadBirthData();
-  }, []);
-
-  // Auto-calculate when birthDate is set from localStorage
+  // Automatically calculate only from an authenticated saved profile
   useEffect(() => {
     if (birthDate && didAutoLoad.current && !reading) {
       generateReading();
@@ -157,8 +112,10 @@ export default function ChineseAstrologyPage() {
 
     setIsCalculating(true);
 
-    // Calculate actual Chinese astrology data from the birth date
+    // Discard late results if the member session/source is revalidated.
+    const request=++generationEpochRef.current;
     setTimeout(() => {
+      if(request!==generationEpochRef.current)return;
       const date = new Date(birthDate);
       const year = date.getFullYear();
       const zodiacAnimal = getChineseZodiacAnimal(year);
@@ -243,17 +200,11 @@ export default function ChineseAstrologyPage() {
       {/* Navigation */}
       <div className="fixed top-4 left-4 z-50 flex gap-2">
         <Link
-          href="/maia"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">MAIA</span>
-        </Link>
-        <Link
           href="/astrology"
           className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
         >
-          <span className="text-sm font-medium">Blueprint</span>
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm font-medium">Back to Astrology</span>
         </Link>
       </div>
 
@@ -279,7 +230,7 @@ export default function ChineseAstrologyPage() {
           </h1>
           <p className="text-lg md:text-xl text-orange-200 max-w-3xl mx-auto leading-relaxed">
             Discover the ancient wisdom of Chinese zodiac animals, five elements, and the cosmic cycles
-            that shape your destiny through thousands of years of celestial observation.
+            used in distinctive traditions of symbolic interpretation and calendrical inquiry.
           </p>
         </div>
 
@@ -332,6 +283,10 @@ export default function ChineseAstrologyPage() {
                       type="date"
                       value={birthDate}
                       onChange={(e) => {
+                        ++generationEpochRef.current;
+                        didAutoLoad.current=false;
+                        setReading(null);
+                        setDaYunProfile(null);
                         setBirthDate(e.target.value);
                         if (e.target.value) {
                           setBirthYear(e.target.value.split('-')[0]);
@@ -361,7 +316,7 @@ export default function ChineseAstrologyPage() {
                   disabled={!birthDate || isCalculating}
                   className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 disabled:from-gray-600 disabled:to-gray-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 disabled:cursor-not-allowed"
                 >
-                  {isCalculating ? 'Calculating...' : 'Reveal Destiny'}
+                  {isCalculating ? 'Calculating...' : 'Explore Your Symbolic Reading'}
                 </button>
                 <p className="text-xs text-orange-400/50 text-center mt-3">
                   Reveals your animal sign, element, and five-layer profile (physical, emotional, mental, spiritual, ancestral).
@@ -387,6 +342,10 @@ export default function ChineseAstrologyPage() {
                       type="date"
                       value={birthDate}
                       onChange={(e) => {
+                        ++generationEpochRef.current;
+                        didAutoLoad.current=false;
+                        setReading(null);
+                        setDaYunProfile(null);
                         setBirthDate(e.target.value);
                         // Also update birthYear for profile view sync
                         if (e.target.value) {
@@ -419,7 +378,7 @@ export default function ChineseAstrologyPage() {
                     </label>
                     <div className="flex gap-4">
                       <button
-                        onClick={() => { setGender('male'); localStorage.setItem('chineseAstrology_gender', 'male'); }}
+                        onClick={() => setGender('male')}
                         className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
                           gender === 'male'
                             ? 'bg-orange-500/30 border-orange-500/50 text-orange-200'
@@ -429,7 +388,7 @@ export default function ChineseAstrologyPage() {
                         Male
                       </button>
                       <button
-                        onClick={() => { setGender('female'); localStorage.setItem('chineseAstrology_gender', 'female'); }}
+                        onClick={() => setGender('female')}
                         className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
                           gender === 'female'
                             ? 'bg-orange-500/30 border-orange-500/50 text-orange-200'
@@ -459,40 +418,7 @@ export default function ChineseAstrologyPage() {
               birthDate={birthDate}
               birthTime={birthTime || undefined}
               gender={gender || undefined}
-              onProfileLoaded={setDaYunProfile}
             />
-            {daYunProfile?.currentPeriod && (
-              <ChineseAstrologyDiscussion
-                mode="da-yun"
-                daYunContext={{
-                  currentPeriod: {
-                    element: daYunProfile.currentPeriod.element,
-                    stem: daYunProfile.currentPeriod.heavenlyStem,
-                    branch: daYunProfile.currentPeriod.earthlyBranch,
-                    ageRange: `${daYunProfile.currentPeriod.ageRange.start}-${daYunProfile.currentPeriod.ageRange.end}`,
-                    lifeTheme: daYunProfile.currentPeriod.lifeTheme,
-                    description: daYunProfile.currentPeriod.description,
-                    opportunities: daYunProfile.currentPeriod.opportunities,
-                    challenges: daYunProfile.currentPeriod.challenges,
-                    healthGuidance: daYunProfile.currentPeriod.healthGuidance,
-                    natalHarmony: daYunProfile.currentPeriod.natalHarmony,
-                    spiritFocus: daYunProfile.currentPeriod.spiritFocus,
-                  },
-                  previousPeriod: daYunProfile.previousPeriod ? {
-                    element: daYunProfile.previousPeriod.element,
-                    lifeTheme: daYunProfile.previousPeriod.lifeTheme,
-                    ageRange: `${daYunProfile.previousPeriod.ageRange.start}-${daYunProfile.previousPeriod.ageRange.end}`,
-                  } : undefined,
-                  nextPeriod: daYunProfile.nextPeriod ? {
-                    element: daYunProfile.nextPeriod.element,
-                    lifeTheme: daYunProfile.nextPeriod.lifeTheme,
-                    ageRange: `${daYunProfile.nextPeriod.ageRange.start}-${daYunProfile.nextPeriod.ageRange.end}`,
-                  } : undefined,
-                  currentAge: daYunProfile.currentAge,
-                  periodProgress: daYunProfile.periodProgress,
-                }}
-              />
-            )}
           </div>
         )}
 
@@ -1223,21 +1149,6 @@ export default function ChineseAstrologyPage() {
               </p>
             </div>
 
-            {/* MAIA Discussion — Profile */}
-            <ChineseAstrologyDiscussion
-              mode="profile"
-              profileContext={{
-                animal: reading.zodiacAnimal.name,
-                element: reading.element.name,
-                yinYang: reading.yinYang,
-                cyclePosition: reading.cycleYear,
-                archetype: reading.zodiacAnimal.archetype,
-                compatibility: reading.compatibility.mostCompatible,
-                holisticHighlights: reading.holisticProfile
-                  ? `Physical: ${reading.holisticProfile.physical.yinOrgan}/${reading.holisticProfile.physical.yangOrgan}. Emotional: ${reading.holisticProfile.emotional.primaryEmotion} (shadow: ${reading.holisticProfile.emotional.shadowEmotion}). Spiritual: ${reading.holisticProfile.spiritual.soulLesson}. Ancestral: ${reading.holisticProfile.ancestral.lineageTheme}.`
-                  : undefined,
-              }}
-            />
           </div>
         )}
       </div>

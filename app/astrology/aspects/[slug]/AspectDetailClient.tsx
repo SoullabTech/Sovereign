@@ -17,8 +17,7 @@ import {
   Sun,
   Heart,
   Compass,
-  ChevronDown,
-  MessageCircle
+  ChevronDown
 } from 'lucide-react';
 import { synthesizeAspect, type AspectType, type AspectInterpretation } from '@/lib/astrology/aspectSynthesis';
 
@@ -251,7 +250,7 @@ export default function AspectDetailClient() {
     },
   };
 
-  const synthesis = aspectData.synthesis || (() => {
+  const synthesis: AspectInterpretation = aspectData.synthesis || (() => {
     const dynamic = ASPECT_DYNAMICS[aspectType] || ASPECT_DYNAMICS.conjunction;
     return {
       essence: dynamic.essence,
@@ -479,25 +478,6 @@ export default function AspectDetailClient() {
           )}
         </div>
 
-        {/* Talk to MAIA CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.6 }}
-          className="mt-8 text-center"
-        >
-          <p className="text-amber-200/70 mb-4">
-            Want to explore this aspect more personally? MAIA can help you understand
-            how it shows up specifically in your life.
-          </p>
-          <Link
-            href="/maia"
-            className={`inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-400 text-gray-900 px-8 py-4 rounded-full font-semibold hover:shadow-lg ${style.glow} transition-all duration-300`}
-          >
-            <MessageCircle className="w-5 h-5" />
-            Explore with MAIA
-          </Link>
-        </motion.div>
       </div>
     </div>
   );

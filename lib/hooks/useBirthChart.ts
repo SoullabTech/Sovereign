@@ -8,13 +8,14 @@
  * - /astrology (cosmic blueprint)
  * - Account Settings (Birth Chart section)
  *
- * Reads from: server profile → localStorage.birthChartData → localStorage.beta_user.birthData
- * Writes to: all three locations simultaneously
+ * Reads from: authenticated server profile only
+ * Writes: authenticated server profile only; legacy browser bytes are preserved but never auto-used
  * Broadcasts: 'birthchart:updated' event for cross-tab sync
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { normalizeBirthCoordinates } from '@/lib/astrology/birthCoordinates';
 
 export interface BirthLocation {
   name: string;
@@ -33,15 +34,6 @@ export interface BirthData {
 const LS_KEY_CHART = 'birthChartData';
 const LS_KEY_BETA_USER = 'beta_user';
 const BIRTH_CHART_EVENT = 'birthchart:updated';
-
-function safeJsonParse<T>(value: string | null): T | null {
-  if (!value) return null;
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Emit an event to notify other tabs/components that birth chart data has changed
@@ -65,19 +57,32 @@ function normalizeBirthData(data: any): BirthData | null {
   // Handle location - could be nested or flat
   let location: BirthLocation | null = null;
   if (data.location && typeof data.location === 'object') {
-    location = {
-      name: data.location.name || data.location.display_name || '',
-      lat: parseFloat(data.location.lat) || 0,
-      lng: parseFloat(data.location.lng || data.location.lon) || 0,
-      timezone: data.location.timezone || 'UTC',
-    };
-  } else if (data.lat && data.lng) {
-    location = {
-      name: data.place || data.locationName || '',
-      lat: parseFloat(data.lat),
-      lng: parseFloat(data.lng),
-      timezone: data.tz || data.timezone || 'UTC',
-    };
+    // A present canonical lng wins even when it is zero or invalid. The legacy
+    // lon alias is used only when the canonical property is absent.
+    const coordinates = normalizeBirthCoordinates(
+      data.location.lat,
+      Object.prototype.hasOwnProperty.call(data.location, 'lng')
+        ? data.location.lng
+        : data.location.lon,
+    );
+    if (coordinates) {
+      location = {
+        name: data.location.name || data.location.display_name || '',
+        lat: coordinates.lat,
+        lng: coordinates.lng,
+        timezone: data.location.timezone || 'UTC',
+      };
+    }
+  } else {
+    const coordinates = normalizeBirthCoordinates(data.lat, data.lng);
+    if (coordinates) {
+      location = {
+        name: data.place || data.locationName || '',
+        lat: coordinates.lat,
+        lng: coordinates.lng,
+        timezone: data.tz || data.timezone || 'UTC',
+      };
+    }
   }
 
   if (!date || !location) return null;
@@ -99,8 +104,9 @@ export function isBirthDataComplete(data: BirthData | null): boolean {
     data.date &&
     data.time &&
     data.location?.name &&
-    data.location?.lat &&
-    data.location?.lng
+    typeof data.location?.lat === 'number' &&
+    typeof data.location?.lng === 'number' &&
+    normalizeBirthCoordinates(data.location.lat, data.location.lng)
   );
 }
 
@@ -172,23 +178,8 @@ async function putBirthData(birthData: BirthData | null): Promise<boolean> {
     }
     return true;
   } catch (e) {
-    console.warn('[useBirthChart] Profile PUT transport failure:', e);
+    console.warn('[useBirthChart] PROFILE_SAVE_TRANSPORT_FAILED');
     return false;
-  }
-}
-
-/**
- * Mirror server-established birth data into localStorage.
- *
- * This is a CACHE for instant reads only. It is written after the server has
- * accepted the value — never as a substitute for persistence.
- */
-function mirrorToCache(data: BirthData): void {
-  localStorage.setItem(LS_KEY_CHART, JSON.stringify(data));
-  const betaUser = safeJsonParse<any>(localStorage.getItem(LS_KEY_BETA_USER));
-  if (betaUser) {
-    betaUser.birthData = data;
-    localStorage.setItem(LS_KEY_BETA_USER, JSON.stringify(betaUser));
   }
 }
 
@@ -221,121 +212,44 @@ export function useBirthChart() {
   /**
    * Load birth data from all sources in priority order
    */
+  const loadEpoch = useRef(0);
   const load = useCallback(async () => {
+    const epoch = ++loadEpoch.current;
+    // Immediately mask the previous account's chart while authority is checked.
+    setBirthData(null);
     setIsLoading(true);
     setError(null);
     setMigrationUnresolved(false);
-
     try {
-      const betaUser = safeJsonParse<any>(localStorage.getItem(LS_KEY_BETA_USER));
-
-      // 1) The authenticated member profile is canonical. Identity comes from
-      //    the verified session credential (cookie, or x-session-token on
-      //    Safari/iOS) — the server decides who you are, so no id is sent.
-      let authenticatedMemberId: string | null = null;
-      let profileResolved = false;
-
-      try {
-        const res = await apiFetch('/api/members/profile');
-        if (res.ok) {
-          const profile = await res.json();
-          profileResolved = true;
-          authenticatedMemberId = profile?.id ?? null;
-
-          const serverBirth = normalizeBirthData(profile.birthData);
-          if (serverBirth && isBirthDataComplete(serverBirth)) {
-            setBirthData(serverBirth);
-            mirrorToCache(serverBirth);
-            setIsLoading(false);
-            return;
-          }
-        } else if (res.status === 401) {
-          console.log('[useBirthChart] No session — local cache only');
-        }
-      } catch (e) {
-        console.warn('[useBirthChart] Profile unreachable, falling back to cache:', e);
-      }
-
-      // 2) Legacy reconciliation. Some members entered birth data before server
-      //    persistence worked, so it lives only in THIS browser. Migrate it —
-      //    but ONLY when ownership is provably bound to the member the server
-      //    just authenticated. beta_user carries the member id; the bare
-      //    birthChartData key does not, so it can never prove ownership and is
-      //    never a migration source.
-      if (profileResolved && authenticatedMemberId) {
-        const ownedLocal =
-          betaUser && betaUser.id === authenticatedMemberId
-            ? normalizeBirthData(betaUser.birthData)
-            : null;
-
-        if (ownedLocal && isBirthDataComplete(ownedLocal)) {
-          // One automatic attempt per member per session; an explicit
-          // retryMigration() clears the guard.
-          if (migrationAttemptedThisSession(authenticatedMemberId)) {
-            setBirthData(ownedLocal);
-            setMigrationUnresolved(true);
-            setIsLoading(false);
-            return;
-          }
-
-          markMigrationAttempted(authenticatedMemberId);
-
-          if (await putBirthData(ownedLocal)) {
-            console.log('[useBirthChart] Migrated legacy local birth data to member profile');
-            clearMigrationGuard(authenticatedMemberId);
-            setBirthData(ownedLocal);
-            mirrorToCache(ownedLocal);
-            setIsLoading(false);
-            return;
-          }
-
-          // Retain the owned local data — it is provably this member's — but
-          // do not treat it as account persistence.
-          console.warn('[useBirthChart] Legacy migration unresolved for this session');
-          setBirthData(ownedLocal);
-          setMigrationUnresolved(true);
-          setIsLoading(false);
-          return;
-        }
-
-        // Authenticated, the profile holds no birth data, and nothing local can
-        // be proven to belong to this member. Report absent rather than render
-        // a cache that may belong to a previously signed-in member.
+      const res = await apiFetch('/api/members/profile');
+      if (epoch !== loadEpoch.current) return;
+      if (!res.ok) {
+        // Missing, expired, denied, or unreachable authorization never falls
+        // back to a browser-owned birth record.
         setBirthData(null);
         setIsLoading(false);
         return;
       }
-
-      // 3) Unauthenticated or offline: cache-only read, unchanged behavior.
-      const localChart = normalizeBirthData(
-        safeJsonParse<any>(localStorage.getItem(LS_KEY_CHART))
-      );
-      if (localChart && isBirthDataComplete(localChart)) {
-        setBirthData(localChart);
+      const profile = await res.json();
+      if (epoch !== loadEpoch.current) return;
+      if (typeof profile?.id !== 'string' || !profile.id) {
+        setBirthData(null);
+        setError('Your saved birth details could not be verified.');
         setIsLoading(false);
         return;
       }
-
-      const betaBirth = normalizeBirthData(betaUser?.birthData);
-      if (betaBirth && isBirthDataComplete(betaBirth)) {
-        setBirthData(betaBirth);
-        setIsLoading(false);
-        return;
-      }
-
-      // No valid birth data found
-      setBirthData(null);
+      const serverBirth = normalizeBirthData(profile.birthData);
+      setBirthData(serverBirth && isBirthDataComplete(serverBirth) ? serverBirth : null);
       setIsLoading(false);
-    } catch (e) {
-      console.error('[useBirthChart] Load error:', e);
-      setError('Failed to load birth data');
+    } catch {
+      if (epoch !== loadEpoch.current) return;
+      setBirthData(null);
+      setError('Your saved birth details could not be verified. Please reconnect and try again.');
       setIsLoading(false);
     }
   }, []);
 
-  /**
-   * Save birth data to all storage locations
-   */
+  /** Save birth data to the authenticated member profile only. */
   const save = useCallback(async (data: BirthData): Promise<boolean> => {
     setError(null);
     try {
@@ -352,21 +266,18 @@ export function useBirthChart() {
       }
 
       // Persistence established — the cache may now mirror it.
-      mirrorToCache(data);
       setBirthData(data);
       emitBirthChartUpdated();
 
       return true;
     } catch (e) {
-      console.error('[useBirthChart] Save error:', e);
+      console.error('[useBirthChart] BIRTH_DATA_SAVE_FAILED');
       setError('Could not save your birth details. Please try again.');
       return false;
     }
   }, []);
 
-  /**
-   * Clear birth data from all storage locations
-   */
+  /** Clear birth data from the authenticated member profile only. */
   const clear = useCallback(async (): Promise<boolean> => {
     setError(null);
     try {
@@ -378,34 +289,22 @@ export function useBirthChart() {
         return false;
       }
 
-      localStorage.removeItem(LS_KEY_CHART);
-      const betaUser = safeJsonParse<any>(localStorage.getItem(LS_KEY_BETA_USER));
-      if (betaUser) {
-        delete betaUser.birthData;
-        localStorage.setItem(LS_KEY_BETA_USER, JSON.stringify(betaUser));
-      }
+      // Historic unbound browser copies remain untouched; their deletion/recovery
+      // is governed separately and is not claimed by this profile operation.
 
       setBirthData(null);
       emitBirthChartUpdated();
 
       return true;
     } catch (e) {
-      console.error('[useBirthChart] Clear error:', e);
+      console.error('[useBirthChart] BIRTH_DATA_CLEAR_FAILED');
       setError('Could not remove your birth details. Please try again.');
       return false;
     }
   }, []);
 
-  /**
-   * Explicit member-initiated retry of an unresolved legacy migration.
-   *
-   * Clears this session's guard and re-runs resolution. Consumers read
-   * `migrationUnresolved` afterwards for the outcome — it is not returned here,
-   * because React state is not settled by the time this resolves.
-   */
+  /** Recheck the current authenticated profile; never retry legacy cache migration. */
   const retryMigration = useCallback(async (): Promise<void> => {
-    const betaUser = safeJsonParse<any>(localStorage.getItem(LS_KEY_BETA_USER));
-    if (betaUser?.id) clearMigrationGuard(betaUser.id);
     await load();
   }, [load]);
 
@@ -441,7 +340,7 @@ export function useBirthChart() {
     isLoading,
     error,
     isComplete: isBirthDataComplete(birthData),
-    /** Owned local data exists but the server has not accepted it — shown, not saved. */
+    /** Preserved compatibility field; automatic legacy cache migration is disabled. */
     migrationUnresolved,
     retryMigration,
     reload: load,

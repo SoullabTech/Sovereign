@@ -182,6 +182,9 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preVerified = searchParams?.get('verified') === 'true';
+  // Suppress only the automatic old-Cookie redirect on an explicit chart
+  // reauthentication journey; the sign-in methods still verify credentials.
+  const chartReauthRequested = mode === 'signin' && searchParams?.get('reauth') === 'chart';
   const emailParam = searchParams?.get('email') || '';
   const usernameParam = searchParams?.get('u') || '';
   const requestedNext = searchParams?.get('next') || '';
@@ -300,7 +303,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   // Silent, server-confirmed authed redirect (web only). Uses whoami, NOT
   // localStorage — so a stale beta_user never bounces a real visitor away.
   useEffect(() => {
-    if (preVerified) return;
+    if (preVerified || chartReauthRequested) return;
     if (Capacitor.isNativePlatform()) return;
     if (typeof window !== 'undefined' && localStorage.getItem('maia_signed_out') === '1') return;
     const controller = new AbortController();
@@ -309,7 +312,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
       .then((r) => r.json())
       .then((d) => { clearTimeout(t); if (d?.authed) window.location.replace(afterAuth); })
       .catch(() => clearTimeout(t));
-  }, [afterAuth, preVerified]);
+  }, [afterAuth, preVerified, chartReauthRequested]);
 
   function storeSession(
     user: { id: string; username: string; name: string; preferredName?: string; onboarded: boolean },

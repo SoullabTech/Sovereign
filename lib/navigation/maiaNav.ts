@@ -143,11 +143,11 @@ export const CIRCLES_RAIL_ITEM: MaiaRailItem = {
 
 export const ASTROLOGY_RAIL_ITEM: MaiaRailItem = {
   id: 'astrology',
-  label: 'Astrology',
+  label: 'Free Astrology',
   icon: Orbit,
   route: '/astrology',
   classification: 'studio',
-  tooltip: 'Your cosmic spiral',
+  tooltip: 'Your personal birth chart and current sky',
   isBoundaryTransition: true,
 };
 
