@@ -81,7 +81,7 @@ Disposable-shadow database witness required (as S3 W-A/W-B): concurrent webhook 
 
 ## 9. Open decisions (founder/steward)
 
-1. **Who may perform a steward act** and how that authority is itself verified.
+1. **Who may perform a steward act** — ✅ RULED 2026-10-30: **founder only, for now.** `granted_by` for non-paid paths must therefore be the founder's member id, checked server-side against the founder authority (`requireFounder()`), never supplied by the request. A delegated steward role is a later, separate ruling; the table's `granted_by` already records who acted, so widening needs no schema change. Founder acts remain attributable: each carries a source reference, and the 20–30% cap rule applies to the founder exactly as to anyone.
 2. **How a granted member obtains a practitioner context.** Today entering the studio provisions a practitioner row via the legacy path held under Ganesha G2 (`getCurrentPractitioner` is `LIMIT 1`). A grant must not silently create or select a practitioner identity — this is a dependency on G2, not something this record can solve.
 3. **Whether apprenticeship counts toward the cap** as a whole or only its scholarship seats (canon says the latter).
 4. Stripe period retrieval at webhook time (needs an API read; confirm acceptable).
