@@ -468,8 +468,15 @@ const Editor = memo(function Editor({
       }
     };
 
-    for (const segment of projection.segments) {
+    let lastBlock: HTMLElement | null = null;
+    for (const [segmentIndex, segment] of projection.segments.entries()) {
       const text = projection.normalizedBody.slice(segment.normalizedStart, segment.normalizedEnd);
+      // Horizontal whitespace typed at the very end of the last paragraph belongs to that line. As a sibling gap it sat
+      // below the paragraph, so the caret drew a paragraph-margin lower until the next letter was typed.
+      if (segment.kind !== 'block' && lastBlock && segmentIndex === projection.segments.length - 1 && /^[ \t]+$/.test(text)) {
+        appendVisibleGap(lastBlock, text, segment.normalizedStart);
+        continue;
+      }
       if (segment.kind === 'block') {
         const p = document.createElement('p');
         p.dataset.writeBlock = displayBlocks[segment.blockIndex]?.kind ?? 'paragraph';
@@ -484,6 +491,7 @@ const Editor = memo(function Editor({
         p.style.margin = '0 0 30px 0';
         p.textContent = text;
         root.appendChild(p);
+        lastBlock = p;
         continue;
       }
 

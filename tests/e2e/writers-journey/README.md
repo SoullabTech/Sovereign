@@ -10,7 +10,7 @@ Run: `bash tests/e2e/writers-journey/run-journey.sh [--build] [--defeat MODE] [-
 - S19 no uncaught page errors during the journey.
 
 ## Regression test: KD-1
-KD-1 (fixed): typing immediately after "Just start writing" keeps the first characters in order; kept as a regression test.
+KD-1 and KD-2 (both fixed) are kept as regression tests: first characters stay in order when typing right after "Just start writing"; the caret stays on its line after a space at the end of a paragraph.
 
 ## Proof the test can fail (`--defeat`)
 - `no_roster`: Alice removed from the roster -> fails at S02.
