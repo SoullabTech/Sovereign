@@ -35,6 +35,41 @@ beforeEach(() => {
 });
 
 describe('checkRateLimit when the durable limiter is unavailable', () => {
+
+  it('makes the configured maximum literal for the durable SQL contract', async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ allowed: true }] })
+      .mockResolvedValueOnce({ rows: [{ attempts: 5 }] });
+
+    const fifth = await checkRateLimit('198.51.100.20', 'ip', 'members/recover', { maxAttempts: 5 });
+
+    expect(fifth.allowed).toBe(true);
+    expect(fifth.remainingAttempts).toBe(0);
+    expect(fifth.limit).toBe(5);
+    expect(mockQuery.mock.calls[0]?.[1]?.slice(3)).toEqual([6, 15]);
+  });
+
+  it('retains the preexisting durable SQL threshold for default callers', async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ allowed: true }] })
+      .mockResolvedValueOnce({ rows: [{ attempts: 4 }] });
+    const result = await checkRateLimit('198.51.100.24', 'ip', 'members/recover');
+    expect(result.allowed).toBe(true);
+    expect(mockQuery.mock.calls[0]?.[1]?.slice(3)).toEqual([5, 15]);
+  });
+
+  it('honors a larger explicit IP ceiling in degraded mode without becoming unbounded', async () => {
+    limiterDown();
+    const verdicts = [];
+    for (let i = 0; i < 21; i++) {
+      verdicts.push((await checkRateLimit(
+        '198.51.100.21', 'ip', 'members/email-code', { maxAttempts: 20 },
+      )).allowed);
+    }
+    expect(verdicts.slice(0, 20).every(Boolean)).toBe(true);
+    expect(verdicts[20]).toBe(false);
+  });
+
   it('does NOT allow unbounded attempts', async () => {
     limiterDown();
 

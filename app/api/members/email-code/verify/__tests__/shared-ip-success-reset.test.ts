@@ -72,12 +72,9 @@ function request(body: Record<string, unknown> = {
   });
 }
 
-const EXPECTED_RESETS = [
-  ['198.51.100.77', 'ip', '/api/members/email-code'],
-  ['198.51.100.77', 'ip', '/api/members/email-code/verify'],
-];
-
-describe('successful email-code proof releases shared-IP auth buckets', () => {
+// The shared-IP allowance is a FINITE ceiling. A successful proof of one address must never refresh it:
+// otherwise anyone who can complete a single real sign-in can keep requesting codes for other people's addresses.
+describe('successful email-code proof does NOT release the shared-IP auth buckets', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.AUTH_CODE_PEPPER = 'fictional-auth-code-pepper-with-more-than-32-characters';
@@ -98,7 +95,7 @@ describe('successful email-code proof releases shared-IP auth buckets', () => {
 
   afterEach(() => { jest.restoreAllMocks(); });
 
-  it('clears issuance and verification buckets after registration proof succeeds', async () => {
+  it('leaves issuance and verification buckets untouched after registration proof succeeds', async () => {
     mockVerify.mockResolvedValue({
       kind: 'registration-required',
       challengeId: '11111111-1111-4111-8111-111111111111',
@@ -110,19 +107,28 @@ describe('successful email-code proof releases shared-IP auth buckets', () => {
     const response = await POST(request());
 
     expect(response.status).toBe(200);
-    expect(mockResetRateLimit.mock.calls).toEqual(EXPECTED_RESETS);
+    expect(mockResetRateLimit).not.toHaveBeenCalled();
     expect(mockCreateSession).not.toHaveBeenCalled();
   });
 
-  it('clears both buckets after an existing member proves the code', async () => {
+  it('leaves both buckets untouched after an existing member proves the code', async () => {
     const response = await POST(request());
 
     expect(response.status).toBe(200);
     expect((await response.json()).authenticated).toBe(true);
-    expect(mockResetRateLimit.mock.calls).toEqual(EXPECTED_RESETS);
+    expect(mockResetRateLimit).not.toHaveBeenCalled();
   });
 
-  it('does not clear either bucket for an incorrect or expired code', async () => {
+  it('never refreshes the allowance however many proofs succeed in a row', async () => {
+    for (let i = 0; i < 3; i += 1) {
+      const response = await POST(request());
+      expect(response.status).toBe(200);
+    }
+    expect(mockResetRateLimit).not.toHaveBeenCalled();
+    expect(mockCheckRateLimit).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not touch either bucket for an incorrect or expired code', async () => {
     mockVerify.mockResolvedValue({
       kind: 'refused', code: 'AUTH_CODE_INCORRECT', message: 'Authentication code is incorrect',
     });
@@ -134,7 +140,7 @@ describe('successful email-code proof releases shared-IP auth buckets', () => {
     expect(mockCreateSession).not.toHaveBeenCalled();
   });
 
-  it('does not clear either bucket when challenge verification throws', async () => {
+  it('does not touch either bucket when challenge verification throws', async () => {
     mockVerify.mockRejectedValue(new Error('fictional database failure'));
 
     const response = await POST(request());
@@ -143,12 +149,12 @@ describe('successful email-code proof releases shared-IP auth buckets', () => {
     expect(mockResetRateLimit).not.toHaveBeenCalled();
   });
 
-  it('keeps the proven member eligible for a new code when session issuance later fails', async () => {
+  it('does not touch either bucket when session issuance later fails', async () => {
     mockCreateSession.mockRejectedValue(new Error('fictional session failure'));
 
     const response = await POST(request());
 
     expect(response.status).toBe(503);
-    expect(mockResetRateLimit.mock.calls).toEqual(EXPECTED_RESETS);
+    expect(mockResetRateLimit).not.toHaveBeenCalled();
   });
 });

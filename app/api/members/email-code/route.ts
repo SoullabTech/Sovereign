@@ -17,6 +17,10 @@ import { memberRef } from '@/lib/privacy/memberRef';
 import { redactEmails } from '@/lib/privacy/redactEmails';
 
 const ENDPOINT = '/api/members/email-code';
+// Shared networks (homes, schools, clinics, offices) must not make one person's
+// successful sign-ins consume another person's entire allowance. Keep a
+// durable IP abuse ceiling while enforcing the tighter limit per email.
+const IP_MAX_ATTEMPTS = 20;
 const NO_STORE = { 'Cache-Control': 'private, no-store' };
 
 function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
@@ -42,12 +46,12 @@ export async function POST(request: NextRequest) {
   }
 
   const clientIP = getClientIP(request);
-  const rateLimitResult = await checkRateLimit(clientIP, 'ip', ENDPOINT);
-  if (!rateLimitResult.allowed) {
+  const ipLimit = await checkRateLimit(clientIP, 'ip', ENDPOINT, { maxAttempts: IP_MAX_ATTEMPTS });
+  if (!ipLimit.allowed) {
     return json(
       { error: 'Too many requests. Please wait a moment and try again.' },
       429,
-      buildRateLimitHeaders(rateLimitResult),
+      buildRateLimitHeaders(ipLimit),
     );
   }
 
@@ -56,6 +60,17 @@ export async function POST(request: NextRequest) {
     if (!validEmail(body?.email)) {
       return json({ error: 'A valid email is required.' }, 400);
     }
+
+    const normalizedEmail = body.email.trim().toLowerCase();
+    const emailLimit = await checkRateLimit(normalizedEmail, 'email', ENDPOINT, { maxAttempts: 5 });
+    if (!emailLimit.allowed) {
+      return json(
+        { error: 'Too many requests. Please wait a moment and try again.' },
+        429,
+        buildRateLimitHeaders(emailLimit),
+      );
+    }
+
     const requestKey = request.headers.get('x-soullab-auth-request') ?? '';
     const started = await transaction((client) =>
       beginEmailChallenge(client, { email: body.email, requestKey }),

@@ -7,6 +7,7 @@ const mockBegin = jest.fn();
 const mockAccepted = jest.fn();
 const mockFailure = jest.fn();
 const mockSendEmail = jest.fn();
+const mockCheckRateLimit = jest.fn(async () => ({ allowed: true, remainingAttempts: 4, blockedUntil: null, retryAfterSeconds: null, limit: 5 }));
 const mockClient = { query: jest.fn() };
 
 jest.mock('@/lib/db/postgres', () => ({
@@ -29,7 +30,7 @@ jest.mock('@/lib/email/sendEmail', () => ({
 }));
 
 jest.mock('@/lib/auth/rateLimiter', () => ({
-  checkRateLimit: jest.fn(async () => ({ allowed: true })),
+  checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
   getClientIP: jest.fn(() => '127.0.0.1'),
   buildRateLimitHeaders: jest.fn(() => ({})),
 }));
@@ -71,6 +72,7 @@ function request(options: {
 describe('POST /api/members/email-code — AUTH-RETURN-01', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCheckRateLimit.mockResolvedValue({ allowed: true, remainingAttempts: 4, blockedUntil: null, retryAfterSeconds: null, limit: 5 });
     delete process.env.CAPACITOR_BUILD;
     process.env.AUTH_CODE_PEPPER = 'fictional-auth-code-pepper-with-more-than-32-characters';
     mockBegin.mockResolvedValue({ created: true, code: '123456', challenge: BASE_CHALLENGE });
@@ -84,6 +86,50 @@ describe('POST /api/members/email-code — AUTH-RETURN-01', () => {
   });
 
   afterEach(() => { jest.restoreAllMocks(); });
+
+
+  it('keeps a durable shared-IP ceiling and a separate normalized-email ceiling', async () => {
+    const res = await POST(request({ email: 'Fiction@Example.Invalid' }));
+    expect(res.status).toBe(200);
+    expect(mockCheckRateLimit).toHaveBeenNthCalledWith(
+      1, '127.0.0.1', 'ip', '/api/members/email-code', { maxAttempts: 20 },
+    );
+    expect(mockCheckRateLimit).toHaveBeenNthCalledWith(
+      2, 'fiction@example.invalid', 'email', '/api/members/email-code', { maxAttempts: 5 },
+    );
+  });
+
+  it('refuses a spent shared-IP ceiling before email or delivery work', async () => {
+    mockCheckRateLimit.mockResolvedValueOnce({
+      allowed: false, remainingAttempts: 0, blockedUntil: new Date(), retryAfterSeconds: 60, limit: 20,
+    });
+    const res = await POST(request());
+    expect(res.status).toBe(429);
+    expect(mockCheckRateLimit).toHaveBeenCalledTimes(1);
+    expect(mockBegin).not.toHaveBeenCalled();
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  it('refuses a spent per-email allowance before challenge or delivery work', async () => {
+    mockCheckRateLimit
+      .mockResolvedValueOnce({ allowed: true, remainingAttempts: 19, blockedUntil: null, retryAfterSeconds: null, limit: 20 })
+      .mockResolvedValueOnce({ allowed: false, remainingAttempts: 0, blockedUntil: new Date(), retryAfterSeconds: 60, limit: 5 });
+    const res = await POST(request());
+    expect(res.status).toBe(429);
+    expect(mockCheckRateLimit).toHaveBeenCalledTimes(2);
+    expect(mockBegin).not.toHaveBeenCalled();
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  it('retains the shared-IP abuse gate for malformed email payloads', async () => {
+    const res = await POST(request({ email: 'not-an-email' }));
+    expect(res.status).toBe(400);
+    expect(mockCheckRateLimit).toHaveBeenCalledTimes(1);
+    expect(mockCheckRateLimit).toHaveBeenNthCalledWith(1, '127.0.0.1', 'ip',
+      '/api/members/email-code', { maxAttempts: 20 });
+    expect(mockBegin).not.toHaveBeenCalled();
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
 
   it('requires an explicit idempotency key and passes it into the challenge service', async () => {
     const res = await POST(request({ requestKey: 'fictional-request-key-42' }));
