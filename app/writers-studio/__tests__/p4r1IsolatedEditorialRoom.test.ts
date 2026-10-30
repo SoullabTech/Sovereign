@@ -98,7 +98,9 @@ test('layout presets, tools, preferences and reset all change only isolated pres
 
   act(() => button('Reset view').click());
   expect(room.dataset.layout).toBe('balanced');
-  expect(room.dataset.readingSize).toBe('large');
+  // Accepted shared reading-size contract: local layout reset preserves this choice.
+  expect(room.dataset.readingSize).toBe('largest');
+  expect(window.localStorage.getItem('soullab.studio.reading-size.v1')).toBe('largest');
   expect(room.dataset.lineSpacing).toBe('open');
   expect(room.dataset.showDirections).toBe('true');
   expect(room.dataset.showWorking).toBe('true');
@@ -195,4 +197,17 @@ test('Working style exposes pace and explanation sliders with a live plain-langu
   });
   expect(room.dataset.workingPace).toBe('mapped');
   expect(window.localStorage.getItem('writers-studio:working-style:v1')).toContain('"pace":"mapped"');
+});
+
+
+test.each(['large', 'larger', 'largest'])('Reset view preserves shared %s reading size and author permissions', (size) => {
+  window.localStorage.setItem('soullab.studio.reading-size.v1',size);
+  const latitude=jest.fn(), paragraphs=jest.fn(), proposals=jest.fn();
+  renderRoom({onEditingLatitude:latitude,onMayRemoveParagraphs:paragraphs,onMayProposeImmediately:proposals});
+  const button=Array.from(container.querySelectorAll('button')).find(b=>b.textContent?.trim()==='Reset view')!;
+  act(()=>button.click());
+  const room=container.querySelector('[data-isolated-editorial]') as HTMLElement;
+  expect(room.dataset.readingSize).toBe(size);
+  expect(window.localStorage.getItem('soullab.studio.reading-size.v1')).toBe(size);
+  expect(latitude).not.toHaveBeenCalled();expect(paragraphs).not.toHaveBeenCalled();expect(proposals).not.toHaveBeenCalled();
 });

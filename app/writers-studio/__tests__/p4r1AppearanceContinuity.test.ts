@@ -1,3 +1,4 @@
+import postcss from 'postcss';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { ATMOSPHERE_LIST } from '@/app/writers-studio/atmosphere/atmospheres';
@@ -22,14 +23,21 @@ describe('P4R1 appearance continuity', () => {
 
 
   it('keeps the theme chooser on the Studio atmosphere membrane, not shell-local colour variables', () => {
-    const start = p4css.indexOf('/* P4R1 appearance continuity: member-chosen Studio themes restored.');
-    const block = p4css.slice(start);
-    expect(start).toBeGreaterThanOrEqual(0);
-    expect(block).toContain('background:var(--ws-ground-raised');
-    expect(block).toContain('color:var(--ws-ink-primary');
-    expect(block).toContain('border:1px solid var(--ws-rule');
-    expect(block).not.toContain('background:var(--fr-panel)');
-    expect(block).not.toContain('color:var(--fr-ink2)');
+    // Inspect actual chooser declarations across the whole sheet, including
+    // media queries; unrelated appended components do not belong to this contract.
+    const inspect=(source:string)=>{
+      const rules:any[]=[];
+      postcss.parse(source).walkRules(rule=>{if(rule.selectors.some(s=>/\.p4r1-theme-(?:menu|trigger|swatch|popover|title|option)(?![\w-])/.test(s)))rules.push(rule);});
+      expect(rules.length).toBeGreaterThan(8);
+      const declarations=rules.flatMap(rule=>rule.nodes.filter((n:any)=>n.type==='decl'));
+      expect(declarations.some((d:any)=>d.prop==='background'&&d.value.includes('--ws-ground-raised'))).toBe(true);
+      expect(declarations.some((d:any)=>d.prop==='color'&&d.value.includes('--ws-ink-primary'))).toBe(true);
+      expect(declarations.some((d:any)=>d.prop==='border'&&d.value.includes('--ws-rule'))).toBe(true);
+      for(const d of declarations){if(/^(?:background|color|border)(?:-|$)/.test(d.prop))expect(d.value).not.toMatch(/--fr-/);}
+    };
+    inspect(p4css);
+    expect(()=>inspect(p4css+'\n.p4r1-theme-popover{background:var(--fr-panel)}')).toThrow();
+    expect(()=>inspect('/* chooser removed */')).toThrow();
   });
 
   it('defaults P4R1 to Day only when no member choice has been remembered', () => {

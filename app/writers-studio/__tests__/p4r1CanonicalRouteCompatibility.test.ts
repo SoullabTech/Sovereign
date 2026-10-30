@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import ts from 'typescript';
 import {
   CANONICAL_STUDIO_PATH,
   canonicalStudioRoute,
@@ -93,13 +94,36 @@ describe('C3 canonical route compatibility', () => {
     });
   });
 
-  it('unified Write reads exact editorialThread addresses through the existing strict binder', () => {
+  it('unified Write preserves thread addresses without granting URL-only LivingWork authority', () => {
     const write = read('app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx');
-    expect(write).toContain("import { editorialThreadIdFrom }");
-    expect(write).toContain('const requestedEditorialThread = params ? editorialThreadIdFrom(params) : null;');
-    expect(write).toContain('readBoundEditorialThread(requestedEditorialThread, focusId)');
-    expect(write).toContain('bindEditorialThread(out.thread)');
-    expect(write).toContain('setWorkspaceOpen(true)');
-    expect(write).toContain('The revision conversation named by this link could not be resumed at this place.');
+    const ast = ts.createSourceFile('controller.tsx', write, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const nodes: ts.Node[] = [];
+    const walk = (node: ts.Node): void => { nodes.push(node); ts.forEachChild(node, walk); };walk(ast);
+    const declaration = ast.statements.find((node): node is ts.ImportDeclaration =>
+      ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)
+      && node.moduleSpecifier.text === '@/app/writers-studio/canvasIdentity');
+    const names=declaration?.importClause?.namedBindings;
+    expect(names && ts.isNamedImports(names) && names.elements.some((x)=>x.name.text==='editorialThreadIdFrom')).toBe(true);
+    const requested=nodes.find((node):node is ts.VariableDeclaration=>ts.isVariableDeclaration(node)&&node.name.getText(ast)==='requestedEditorialThread');
+    expect(requested?.initializer?.getText(ast)).toBe('params ? editorialThreadIdFrom(params) : null');
+    const effects=nodes.filter((node):node is ts.CallExpression=>ts.isCallExpression(node)&&node.expression.getText(ast)==='useEffect')
+      .map((x)=>x.arguments[0]).filter((x):x is ts.ArrowFunction=>Boolean(x)&&ts.isArrowFunction(x));
+    const url=effects.filter((x)=>x.body.getText(ast).includes('if (!requestedEditorialThread || !focusId || !currentLivingWorkScope) return;'));
+    expect(url).toHaveLength(1);
+    expect(url[0].body.getText(ast)).toContain('if (scopedEditorialThread?.threadId === requestedEditorialThread) return;');
+    expect(url[0].body.getText(ast)).toContain('has not been verified for the current Living Work');
+    const calls:string[]=[];
+    const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node))calls.push(node.expression.getText(ast));ts.forEachChild(node,visit);};visit(url[0].body);
+    expect(calls).toEqual(['setEditorialFailure']);
+    const returned=effects.filter((x)=>x.body.getText(ast).includes('const candidate = editorialReturnCandidate;'));
+    expect(returned).toHaveLength(1);
+    for(const guard of ['candidate.sectionId !== focusId','candidate.scope !== currentLivingWorkScope',
+      'scopedA2Relationship?.id !== candidate.relationshipId','activeA2ScopeRef.current !== scopeAtRead',
+      'a2AsyncGenerationRef.current !== generationAtRead','a2RelationshipIdRef.current !== candidate.relationshipId',
+      'workReentryRequired.current','if (!out.ok)','bindEditorialThread(out.thread)'])expect(returned[0].body.getText(ast)).toContain(guard);
+    const reads:ts.CallExpression[]=[];
+    const getReads=(node:ts.Node):void=>{if(ts.isCallExpression(node)&&node.expression.getText(ast)==='readBoundEditorialThread')reads.push(node);ts.forEachChild(node,getReads);};getReads(returned[0].body);
+    expect(reads).toHaveLength(1);
+    expect(reads[0].arguments.map((x)=>x.getText(ast))).toEqual(['candidate.threadId','candidate.sectionId','candidate.relationshipId']);
   });
 });

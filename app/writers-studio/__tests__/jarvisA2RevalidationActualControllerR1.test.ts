@@ -203,6 +203,7 @@ jest.mock('@/lib/writersStudio/rebuild/returnStateClient',()=>({
   clearRelationshipReturnClient:jest.fn(async()=>{})
 }));
 jest.mock('@/app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView',()=>({
+  UNDO_RESTORED_MESSAGES: {complete: 'That application was undone. The original passage is restored.', historyPending: 'The original passage is restored. Its editorial history could not be refreshed just now.'},
   P4R1Pc3WriteEditView:(props)=>{
     mockViewProps=props;
     return React.createElement('main',{'data-testid':'fictional-controller-view'},
@@ -518,6 +519,56 @@ it('C18 a relationship choice cancels an already-pending reply with truthful fee
   expect(mockSendBound).toHaveBeenCalledTimes(1); // no hidden retry
 });
 
+
+
+// The accepted 732efd162e boundary forbids URL/prose-only ownership claims.
+// Preserve all 25 original test bodies and assertions; add the negatives below.
+const legacyModule = () => require('@/lib/writersStudio/rebuild/editorialCollaboration');
+function noLegacyThreadOperations() {
+  expect(legacyModule().readBoundEditorialThread).not.toHaveBeenCalled();
+  expect(legacyModule().openBoundEditorialThread).not.toHaveBeenCalled();
+  expect(legacyModule().openBoundEditorialPassage).not.toHaveBeenCalled();
+  noProtectedOrAutomaticEffects();
+}
+it('D01 URL-only thread cannot read, open, send, save or apply history', async () => {
+  mockDeepLinkThreadId='fiction-thread';await render();await React.act(async()=>{await settle(85)});
+  expect(mockViewProps.editorialThread).toBeNull();
+  expect(mockViewProps.editorialFailure).toContain('has not been verified for the current Living Work');
+  noLegacyThreadOperations();
+});
+it('D02 verified A2 relationship is not ownership of a URL-only manuscript thread', async () => {
+  mockDeepLinkThreadId='fiction-thread';await mountB();
+  expect(mockViewProps.maiaRelationship?.id).toBe('fiction-relationship-b');
+  expect(mockViewProps.editorialThread).toBeNull();
+  expect(mockViewProps.editorialFailure).toContain('Nothing was opened, sent, saved or applied');
+  noLegacyThreadOperations();
+});
+it('D03 explicit legacy-thread selection cannot invent LivingWork provenance', async () => {
+  await mountB();await React.act(async()=>{mockViewProps.onChooseRelationship('fiction-thread');await settle(85)});
+  expect(mockViewProps.editorialThread).toBeNull();
+  expect(mockViewProps.editorialFailure).toContain('independently verified');noLegacyThreadOperations();
+});
+it('D04 matching discovered prose cannot authorize historical-thread reuse', async () => {
+  mockDiscoverLegacyThread=true;await mountB();
+  await React.act(async()=>{mockViewProps.onSendEditorial('Fictional request with legacy history');await settle(100)});
+  expect(legacyModule().discoverEditorialRelationships).toHaveBeenCalled();
+  expect(mockViewProps.editorialThread).toBeNull();
+  expect(mockViewProps.editorialFailure).toContain('no verified binding');noLegacyThreadOperations();
+});
+it('D05 explicitly requested new thread rejects a foreign manuscript response', async () => {
+  await mountB();legacyModule().openBoundEditorialThread.mockResolvedValueOnce({ok:true,thread:{...mockThread,workId:'fiction-foreign-manuscript'}});
+  await React.act(async()=>{mockViewProps.onSendEditorial('Fictional wrong manuscript response');await settle(100)});
+  expect(mockViewProps.editorialThread).toBeNull();
+  expect(mockViewProps.editorialFailure).toContain('could not be verified against the active Work and section');
+  expect(mockSendBound).not.toHaveBeenCalled();expect(mockAdopt).not.toHaveBeenCalled();
+});
+it('D06 explicitly requested new thread rejects a different section response', async () => {
+  await mountB();legacyModule().openBoundEditorialThread.mockResolvedValueOnce({ok:true,thread:{...mockThread,targetSectionId:'fiction-foreign-section'}});
+  await React.act(async()=>{mockViewProps.onSendEditorial('Fictional wrong section response');await settle(100)});
+  expect(mockViewProps.editorialThread).toBeNull();
+  expect(mockViewProps.editorialFailure).toContain('could not be verified against the active Work and section');
+  expect(mockSendBound).not.toHaveBeenCalled();expect(mockAdopt).not.toHaveBeenCalled();
+});
 
 // Real controller orchestration with simulated protected HTTP and an explicit
 // writing-session adapter. The separate mounted boundary/hook suite exercises
