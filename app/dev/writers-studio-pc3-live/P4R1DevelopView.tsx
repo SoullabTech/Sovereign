@@ -8,6 +8,7 @@ import { STATE_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import { IMAGES } from '@/app/writers-studio/full-redesign/fixtures';
 import ObservationDialogue from '@/app/writers-studio/develop/ObservationDialogue';
 import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
+import { requestConversationDeparture } from '@/lib/writersStudio/conversationDeparture';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import type { ReadingView } from '@/lib/writersStudio/developPresentation';
@@ -248,9 +249,11 @@ function ManuscriptRail({ sections, currentSectionId, onSection }: {
       if (index === 0) return true;
       return all[index - 1]?.heading?.trim().toLowerCase() !== section.heading?.trim().toLowerCase();
     });
-  const railSections = structural.length > 0
-    ? structural
-    : sections.filter((section) => section.heading?.trim());
+  // A new Work starts with an editable section that has no heading.
+  // Keep it addressable without inventing a chapter title or changing its text.
+  const railSections = sections.filter((section) => structural.length > 0
+    ? structural.includes(section) || (!section.heading?.trim() && section.editable)
+    : Boolean(section.heading?.trim()) || section.editable);
 
   let activeRailId: string | null = currentSectionId;
   if (current && !railSections.some((section) => section.draftSectionId === currentSectionId)) {
@@ -274,7 +277,7 @@ function ManuscriptRail({ sections, currentSectionId, onSection }: {
               onClick={() => onSection(section.draftSectionId)}
               aria-current={section.draftSectionId === activeRailId ? 'true' : undefined}
             >
-              <b>{section.heading?.trim()}</b>
+              <b>{section.heading?.trim() || `Section ${section.position + 1}`}</b>
             </button>
           </li>
         ))}
@@ -393,11 +396,11 @@ function ScopeChooser({ scope, sections, sectionScope, chapterScope, onScope }: 
             const n = Number(e.target.value);
             onScope({ kind: 'range', fromIndex: n, toIndex: Math.max(n, to) });
           }}>
-            {sections.map((s, i) => <option key={s.draftSectionId} value={i}>{s.heading ?? `Section ${i + 1}`}</option>)}
+            {sections.map((s, i) => <option key={s.draftSectionId} value={i}>{s.heading?.trim() || `Section ${s.position + 1}`}</option>)}
           </select>
           <span>to</span>
           <select value={to} onChange={(e) => onScope({ kind: 'range', fromIndex: from, toIndex: Number(e.target.value) })}>
-            {sections.map((s, i) => <option key={s.draftSectionId} value={i} disabled={i < from}>{s.heading ?? `Section ${i + 1}`}</option>)}
+            {sections.map((s, i) => <option key={s.draftSectionId} value={i} disabled={i < from}>{s.heading?.trim() || `Section ${s.position + 1}`}</option>)}
           </select>
         </div>
       ) : null}
@@ -1376,6 +1379,10 @@ function ChapterLineagePanel({
                                   <Link
                                     key={option.id}
                                     href={sourceIntakeHref}
+                                    onClick={(event) => {
+                                      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                                      if (!requestConversationDeparture()) event.preventDefault();
+                                    }}
                                     className="p4r1-source-verification-link"
                                   >
                                     <b>{option.label}</b>
@@ -1616,9 +1623,42 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const [dialoguePrompt, setDialoguePrompt] = useState('');
   // No speculative Work-level MAIA request just because the room opened.
   // A member's Talk gesture creates the conversation, not navigation.
-  const [workTalking, setWorkTalking] = useState(false);
-  const [attentionConversationDraft, setAttentionConversationDraft] = useState('');
+  const workConversationScope = JSON.stringify([props.work?.id ?? null, props.manuscriptId]);
+  const [workConversationState, setWorkConversationState] = useState(() => ({
+    scope: workConversationScope, open: false, starter: '',
+  }));
+  // Scope is checked during render: a new Work must never receive even one
+  // frame of the previous Work's starter or open conversation state.
+  const workTalking = workConversationState.scope === workConversationScope && workConversationState.open;
+  const attentionConversationDraft = workConversationState.scope === workConversationScope ? workConversationState.starter : '';
+  const setWorkTalking = (open: boolean) => setWorkConversationState(previous => ({
+    scope: workConversationScope, open,
+    starter: previous.scope === workConversationScope ? previous.starter : '',
+  }));
+  const setAttentionConversationDraft = (starter: string) => setWorkConversationState(previous => ({
+    scope: workConversationScope,
+    open: previous.scope === workConversationScope && previous.open, starter,
+  }));
+  useEffect(() => {
+    setWorkConversationState(previous => previous.scope === workConversationScope
+      ? previous : { scope: workConversationScope, open: false, starter: '' });
+  }, [workConversationScope]);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
+
+  const navigateMode: P4R1DevelopViewProps['onMode'] = (mode) => {
+    if (requestConversationDeparture()) props.onMode(mode);
+  };
+  const openReading: P4R1DevelopViewProps['onReading'] = (readingId) => {
+    if (!requestConversationDeparture()) return;
+    setWorkTalking(false);
+    props.onReading(readingId);
+  };
+  const prepareWriting = () => {
+    if (props.preparing || !requestConversationDeparture()) return;
+    setWorkTalking(false);
+    setAttentionConversationDraft('');
+    props.onPrepare();
+  };
 
   // Founder-accepted R6: Focused by default; Guided and Full only on request.
   // This changes the density of UI, not reader authority or available evidence.
@@ -1645,9 +1685,12 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const selectedRailSection = props.sections.find(
     (section) => section.draftSectionId === railSelectionId,
   ) ?? null;
-  const selectedRailLabel = selectedRailSection?.heading?.trim() || 'Selected place';
+  const selectedRailLabel = selectedRailSection
+    ? selectedRailSection.heading?.trim() || `Section ${selectedRailSection.position + 1}`
+    : 'Selected place';
 
   const selectManuscriptLocus = (sectionId: string) => {
+    if (!requestConversationDeparture()) return;
     setRailSelectionId(sectionId);
     setTalking(false);
     setDialoguePrompt('');
@@ -1705,6 +1748,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       : 'No manuscript prose is present yet';
 
   const beginWholeConversation = (prompt: string) => {
+    if (props.preparing) return;
+    if (workTalking && prompt !== attentionConversationDraft && !requestConversationDeparture()) return;
     setAttentionConversationDraft(prompt);
     setTalking(false);
     setWorkTalking(true);
@@ -1724,7 +1769,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         return;
       case 'explore-part-or-chapter':
       case 'begin-writing':
-        props.onMode('write');
+        navigateMode('write');
         return;
       case 'trace-source-or-lineage':
         document.querySelector('[data-lineage-panel]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1755,17 +1800,16 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         beginWholeConversation('I want to stay at the current scale and keep thinking before we move closer.');
         return;
       case 'descend-one-scale':
-        props.onMode('write');
+        navigateMode('write');
         return;
       case 'something-else':
-        setAttentionConversationDraft('');
-        setTalking(false);
-        setWorkTalking(true);
+        beginWholeConversation('');
         return;
     }
   };
 
   const discussAttentionItem = (item: AttentionItem) => {
+    if (!requestConversationDeparture()) return;
     const lenses = [...new Set(item.evidence.map((evidence) => evidence.lens))];
     setAttentionConversationDraft([
       'I want to talk through this whole-manuscript Attention Map observation:',
@@ -1788,7 +1832,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   };
 
   const discussLineageCandidate = (candidate: ChapterLineageCandidate) => {
-    if (!props.chapterLineage) return;
+    if (!props.chapterLineage || !requestConversationDeparture()) return;
     const bibliography = new Map(
       props.chapterLineage.bibliographyEntries.map((entry) => [entry.key, entry.raw] as const),
     );
@@ -1865,6 +1909,17 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
           <option value="guided">Guided</option>
           <option value="full">Full</option>
         </select>
+        <button type="button" className="p4r1-develop-prefs-link"
+          aria-label="Open writing preferences"
+          onClick={(event) => {
+            const preferences = event.currentTarget.closest('.fr-shell')
+              ?.querySelector<HTMLDetailsElement>('[data-writer-preferences]');
+            if (!preferences) return;
+            preferences.open = true;
+            preferences.querySelector<HTMLInputElement>('#writer-presentation-request')?.focus();
+          }}>
+          Preferences
+        </button>
         {props.field !== 'overview' && developView !== 'full' ? (
           <button type="button" className="p4r1-develop-back" onClick={() => props.onField('overview')}>
             Back to your questions
@@ -1916,7 +1971,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               >
                 Talk with MAIA about this
               </button>
-              {!props.work ? <p>Your Work needs to be opened before a conversation can begin.</p> : null}
+              {!props.work ? <p>A Work connection for this manuscript could not be confirmed. Your writing remains available in Write.</p> : null}
             </div>
             <div className="p4r1-develop-three-questions" aria-label="Three ways to begin">
               {focusedQuestions.map((key) => {
@@ -1925,7 +1980,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                   <button
                     key={key}
                     type="button"
-                    onClick={() => { setWorkTalking(false); props.onIntent(starter.key, starter.field); }}
+                    onClick={() => { if (!requestConversationDeparture()) return; setWorkTalking(false); props.onIntent(starter.key, starter.field); }}
                   >
                     <b>{starter.label}</b>
                     <span>{starter.detail}</span>
@@ -1935,7 +1990,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             </div>
             {hasExplicitPlace ? (
               <button type="button" className="p4r1-develop-secondary"
-                onClick={() => props.onMode('write')}>Open this chapter in Write</button>
+                onClick={() => navigateMode('write')}>Open this chapter in Write</button>
             ) : null}
             {developView === 'guided' ? (
               <details className="p4r1-develop-guided-additions">
@@ -1945,7 +2000,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                     const starter = INTENT_STARTERS.find((item) => item.key === key);
                     return starter ? (
                       <button key={key} type="button"
-                        onClick={() => { setWorkTalking(false); props.onIntent(starter.key, starter.field); }}>
+                        onClick={() => { if (!requestConversationDeparture()) return; setWorkTalking(false); props.onIntent(starter.key, starter.field); }}>
                         <b>{starter.label}</b>
                         <span>{starter.detail}</span>
                       </button>
@@ -1986,7 +2041,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 >
                   Talk with MAIA
                 </button>
-                <button type="button" onClick={() => props.onMode('write')}>Open in Write</button>
+                <button type="button" onClick={() => navigateMode('write')}>Open in Write</button>
               </div>
             </section>
 
@@ -2030,8 +2085,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             error={props.attentionError}
             selectedItemId={props.selectedAttentionItemId}
             onCommission={props.onCommissionAttentionMap}
-            onShow={props.onShowAttentionItem}
-            onWork={props.onWorkWithAttentionItem}
+            onShow={(...args) => { if (requestConversationDeparture()) props.onShowAttentionItem(...args); }}
+            onWork={(...args) => { if (requestConversationDeparture()) props.onWorkWithAttentionItem(...args); }}
             onDiscuss={discussAttentionItem}
           />
 
@@ -2203,6 +2258,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                   type="button"
                   className="p4r1-intent-card"
                   onClick={() => {
+                    if (!requestConversationDeparture()) return;
                     setWorkTalking(true);
                     props.onIntent(starter.key, starter.field);
                   }}
@@ -2255,7 +2311,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             } : null}
             selectedCandidateId={props.selectedLineageCandidateId}
             sourceIntakeHref={sourceIntakeHref}
-            onShowCandidate={props.onShowLineageCandidate}
+            onShowCandidate={(...args) => { if (requestConversationDeparture()) props.onShowLineageCandidate(...args); }}
             onDiscussCandidate={discussLineageCandidate}
           />
 
@@ -2277,7 +2333,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               field="overview"
               summaries={props.summaries}
               loading={props.summariesLoading}
-              onReading={props.onReading}
+              onReading={openReading}
             />
           </section>
         </div>
@@ -2297,7 +2353,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 <button
                   type="button"
                   className="p4r1-intent-next"
-                  onClick={() => props.onReading(latestForField(activeField, props.summaries)!.id)}
+                  onClick={() => openReading(latestForField(activeField, props.summaries)!.id)}
                 >
                   Show me what you already noticed
                 </button>
@@ -2337,7 +2393,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                     ? 'MAIA is reading…'
                     : `Read this ${props.scope.kind === 'chapter' ? 'chapter' : 'section'} for ${LABEL[activeField]}`}
                 </button>
-                <button type="button" onClick={() => props.onMode('write')}>Open the text</button>
+                <button type="button" onClick={() => navigateMode('write')}>Open the text</button>
               </div>
               <p className="fr-also">You can change the lens at any time. Nothing is edited by reading.</p>
             </section>
@@ -2347,7 +2403,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             prep={props.prep}
             error={props.prepError}
             preparing={props.preparing}
-            onPrepare={props.onPrepare}
+            onPrepare={prepareWriting}
           />
 
           {props.field === 'themes' ? (
@@ -2357,6 +2413,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               error={props.themeError}
               onMutation={props.onThemeMutation}
               onTalkCandidate={(candidate) => {
+                if (!requestConversationDeparture()) return;
+                setWorkTalking(false);
                 setSelectedObservationKey(candidate.observationKey);
                 setDialoguePrompt('');
                 setTalking(true);
@@ -2374,26 +2432,34 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               field={props.field}
               selectedObservationKey={selectedObservationKey}
               onSelectObservation={(key) => {
+                if (!requestConversationDeparture()) return;
+                setWorkTalking(false);
                 setSelectedObservationKey(key);
                 setTalking(false);
               }}
               onTalkObservation={(key) => {
+                if (!requestConversationDeparture()) return;
+                setWorkTalking(false);
                 setSelectedObservationKey(key);
                 setDialoguePrompt('');
                 setTalking(true);
               }}
               onTeachObservation={(key) => {
+                if (!requestConversationDeparture()) return;
+                setWorkTalking(false);
                 setSelectedObservationKey(key);
                 setDialoguePrompt('Teach me the one writing or craft idea most at work in this observation. Explain it in plain language first and show me in my own words. Do not suggest replacement wording unless I ask.');
                 setTalking(true);
               }}
               onDeepObservation={(key) => {
+                if (!requestConversationDeparture()) return;
+                setWorkTalking(false);
                 setSelectedObservationKey(key);
                 setDialoguePrompt('Go deeper on this observation. Use the full editorial vocabulary, evidence, provenance, tradeoffs, and uncertainty. Keep the claim exactly within what the evidence supports. Do not propose replacement wording unless I ask.');
                 setTalking(true);
               }}
-              onGoToObservation={props.onGoToObservation}
-              onWorkWithObservation={props.onWorkWithObservation}
+              onGoToObservation={(...args) => { if (requestConversationDeparture()) props.onGoToObservation(...args); }}
+              onWorkWithObservation={(...args) => { if (requestConversationDeparture()) props.onWorkWithObservation(...args); }}
               targets={props.observationTargets}
               workTargets={props.observationWorkTargets}
             />
@@ -2402,7 +2468,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               field={activeField}
               summaries={props.summaries}
               loading={props.summariesLoading}
-              onReading={props.onReading}
+              onReading={openReading}
             />
           ) : null}
 
@@ -2443,7 +2509,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             field={props.field}
             summaries={props.summaries}
             loading={props.summariesLoading}
-            onReading={props.onReading}
+            onReading={openReading}
           />
         </>
       )}
@@ -2467,14 +2533,19 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody p4r1-develop-maia">
-        {props.field === 'overview' && developView !== 'full' && !selectedObservation && !workTalking ? (
+        {props.preparing ? (
+          <section className="p4r1-develop-maia-quiet" role="status" aria-live="polite">
+            <h3>Preparing your writing for Develop…</h3>
+            <p>You can begin another conversation when preparation finishes.</p>
+          </section>
+        ) : props.field === 'overview' && developView !== 'full' && !selectedObservation && !workTalking ? (
           <section className="p4r1-develop-maia-quiet" data-develop-maia-context>
             <span className="p4r1-eyebrow">Here with you</span>
             <h3>{contextLabel}</h3>
             <p>Tell me what you notice or wonder about. We can talk before choosing an editorial method.</p>
             <p className="fr-also">Use the invitation beside your Work whenever you're ready. Nothing new is read or edited automatically.</p>
           </section>
-        ) : selectedObservation && props.reading && talking ? (
+        ) : !workTalking && selectedObservation && props.reading && talking ? (
           <>
             <div className="p4r1-observation-conversation-anchor">
               <span className="p4r1-eyebrow">We’re talking about</span>
@@ -2506,7 +2577,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               }}
             />
           </>
-        ) : selectedObservation && props.reading ? (
+        ) : !workTalking && selectedObservation && props.reading ? (
           <div className="p4r1-observation-maia-ready">
             <span className="p4r1-eyebrow">I’m here with this</span>
             <h3>{friendlyObservation(selectedObservation.phenomenonLabel).title}</h3>
@@ -2575,7 +2646,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               <button type="button" onClick={() => props.onField('themes')}>Notice what returns</button>
               <button type="button" onClick={() => props.onField('continuity')}>See what carries through</button>
               <button type="button" onClick={() => props.onField('reader')}>Meet it as a reader</button>
-              <button type="button" onClick={() => props.onMode('write')}>Open the text</button>
+              <button type="button" onClick={() => navigateMode('write')}>Open the text</button>
             </div>
             <p className="fr-also">I do not read anything new until you ask me to.</p>
           </div>

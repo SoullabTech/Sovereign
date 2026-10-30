@@ -80,8 +80,8 @@ export function projectPc3LiveWrite(input: {
 
   const statuses = ordered.map((s) => input.statusOf(s.draftSectionId));
   const identity = input.workTitle ?? input.manuscriptTitle ?? '';
-  const place = active.heading ?? undefined;
-  const title = active.heading ?? undefined;
+  const place = active.heading?.trim() || `Section ${active.position + 1}`;
+  const title = place;
   const canonicalBody = input.bodyOf(active.draftSectionId);
 
   return {

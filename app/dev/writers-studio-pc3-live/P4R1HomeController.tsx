@@ -89,8 +89,11 @@ export default function P4R1HomeController() {
     await Promise.all([reloadWorks(), reloadManuscripts()]);
   }, [reloadWorks, reloadManuscripts]);
 
-  const open = useCallback((manuscriptId: string, sectionId?: string) => {
-    const next = new URLSearchParams(params?.toString() ?? '');
+  const open = useCallback((manuscriptId: string, sectionId?: string, newImport = false) => {
+    const search = params?.toString() ?? '';
+    // A newly declared Work cannot inherit a different Work's arrival claim.
+    const next = new URLSearchParams(newImport ? withoutStudioWork(search) : search);
+    if (newImport) next.delete('from');
     next.set('mode', 'write');
     next.set('m', manuscriptId);
     // Import is a threshold, not durable room state. Once a manuscript opens,
@@ -106,7 +109,8 @@ export default function P4R1HomeController() {
   }, [params, pathname, router]);
 
   const openImport = useCallback(() => {
-    const next = new URLSearchParams(params?.toString() ?? '');
+    const next = new URLSearchParams(withoutStudioWork(params?.toString() ?? ''));
+    next.delete('from');
     next.set('mode', 'home');
     next.set('import', '1');
     next.delete('m');
@@ -132,7 +136,7 @@ export default function P4R1HomeController() {
     // founder fixture. A transient list failure must not strand a successfully
     // created manuscript, so identity navigation remains the final authority.
     await refresh().catch(() => undefined);
-    open(manuscriptId);
+    open(manuscriptId, undefined, true);
   }, [refresh, open]);
 
   /* H1-R2 — a mode request with no Work carried. A single manuscript (in the
@@ -280,7 +284,7 @@ export default function P4R1HomeController() {
             localReview={localReviewRequested}
             sourceIntakeReleased={releaseCapabilities.authority.sourceIntakeReleased}
             onCancel={closeImport}
-            onComplete={(manuscriptId) => void completeImport(manuscriptId)}
+            onComplete={completeImport}
           />
         }
       />

@@ -10,6 +10,10 @@ import P4R1InteriorProof from './P4R1InteriorProof';
 import P4R1CoverStudy from './P4R1CoverStudy';
 import { studioNavigationBase } from '@/lib/writersStudio/studioNavigationBase';
 import { useWriterReleaseCapabilities } from '@/lib/writersStudio/useWriterReleaseCapabilities';
+import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
+import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
+import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 
 export default function P4R1PublishRoom() {
   const params = useSearchParams();
@@ -18,6 +22,12 @@ export default function P4R1PublishRoom() {
   const { id: appearance } = useAtmosphere();
   const manuscriptId = params?.get('m') ?? '';
   const localReviewArtifacts = params?.get('localReview') === '1';
+  const { phase: worksPhase, works } = useLivingWorks();
+  const h1 = useHouseStudioH1WorkClaim(h1AdmissionNeeded(params));
+  const { workId: carriedWorkId, pending: h1AdmissionChecking } = resolveH1Arrival(params, h1);
+  const workContext = resolveSituatedWorkContext(worksPhase, works, manuscriptId, carriedWorkId);
+  const currentWork = workContext.kind === 'work' ? workContext.work : null;
+  const previewKey = manuscriptId + ':' + (currentWork?.id ?? '');
   const releaseCapabilities = useWriterReleaseCapabilities();
   const exportsCertified =
     releaseCapabilities.authority.exportsCertified.pdf &&
@@ -36,12 +46,15 @@ export default function P4R1PublishRoom() {
       appearance={appearance}
       geometry={HOME_GEOMETRY}
       memberInitial=""
+      workTitle={currentWork?.title ?? undefined}
       onSelectMode={changeMode}
       work={
         manuscriptId ? (
           <div data-publish-studio-room>
-            <P4R1InteriorProof key={manuscriptId} manuscriptId={manuscriptId} />
-            <P4R1CoverStudy key={'cover-' + manuscriptId} manuscriptId={manuscriptId} />
+            {worksPhase === 'loading' || h1AdmissionChecking ? <p role="status">Opening your Work…</p> : <>
+              <P4R1InteriorProof key={previewKey} manuscriptId={manuscriptId} workTitle={currentWork?.title} />
+              <P4R1CoverStudy key={'cover-' + previewKey} manuscriptId={manuscriptId} workTitle={currentWork?.title} />
+            </>}
             <P4R1ProducePanel
               manuscriptId={manuscriptId}
               exportsCertified={exportsCertified}

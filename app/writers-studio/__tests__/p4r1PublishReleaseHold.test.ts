@@ -10,6 +10,12 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: fakePush }),
   useSearchParams: () => new URLSearchParams('mode=publish&m=fiction-manuscript'),
 }));
+jest.mock('@/app/writers-studio/useLivingWorks', () => ({
+  useLivingWorks: () => ({ phase: 'ready', works: [] }),
+}));
+jest.mock('@/app/writers-studio/useHouseStudioH1WorkClaim', () => ({
+  useHouseStudioH1WorkClaim: () => ({ admitted: false, resolved: true }),
+}));
 jest.mock('@/app/writers-studio/atmosphere/StudioAtmosphere', () => ({
   useAtmosphere: () => ({ id: 'day' }),
 }));

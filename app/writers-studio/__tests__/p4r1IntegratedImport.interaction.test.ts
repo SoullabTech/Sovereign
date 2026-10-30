@@ -225,7 +225,7 @@ test('released production import reuses one upload identity after interruption a
 
   await act(async () => button('Review structure').click());
   await settle();
-  await act(async () => button('Confirm and open in Write').click());
+  await act(async () => button('Create Work and open in Write').click());
   await settle();
 
   expect(mocked).toHaveBeenCalledTimes(4);

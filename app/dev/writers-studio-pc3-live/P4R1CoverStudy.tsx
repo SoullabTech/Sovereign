@@ -7,13 +7,13 @@
  * The owner must explicitly open this study; GET obtains only verified member
  * manuscript metadata. Never look at or transmit Source prose.
  */
-import { useEffect, useReducer, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { activeCoverEdition, coverSessionReducer, EMPTY_COVER_SESSION } from '@/lib/writersStudio/publish/coverDesignSession';
 import { apiFetch } from '@/lib/http/apiBase';
 
 type Proof = { title: string; authority: 'working_draft' | 'source'; revision: string | null };
 
-function readProof(value: unknown): Proof | null {
+function readProof(value: unknown, workTitle?: string | null): Proof | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const entry = value as Record<string, unknown>;
   if (typeof entry.title !== 'string' || entry.title.trim().length === 0) return null;
@@ -21,18 +21,28 @@ function readProof(value: unknown): Proof | null {
   if (entry.sourceAuthority === 'working_draft'
     ? (typeof entry.sourceRevision !== 'string' || !entry.sourceRevision)
     : entry.sourceRevision !== null) return null;
+  // The raw title distinguishes an unnamed expression from an author who
+  // deliberately called their manuscript “Your writing”. Never guess from a
+  // display placeholder or overwrite an authored expression title.
+  if ('manuscriptTitle' in entry && entry.manuscriptTitle !== null
+    && typeof entry.manuscriptTitle !== 'string') return null;
+  const title = 'manuscriptTitle' in entry
+    ? (entry.manuscriptTitle as string | null)?.trim() || workTitle?.trim() || entry.title.trim()
+    : entry.title.trim();
   return {
-    title: entry.title.trim(),
+    title,
     authority: entry.sourceAuthority,
     revision: entry.sourceRevision as string | null,
   };
 }
 
-export default function P4R1CoverStudy({ manuscriptId }: { manuscriptId: string }) {
+export default function P4R1CoverStudy({ manuscriptId, workTitle }: { manuscriptId: string; workTitle?: string | null }) {
   const [expanded, setExpanded] = useState(false);
   const [proof, setProof] = useState<Proof | null>(null);
   const [status, setStatus] = useState<'closed' | 'loading' | 'held' | 'ready'>('closed');
   const [design, dispatch] = useReducer(coverSessionReducer, EMPTY_COVER_SESSION);
+  const workTitleRef = useRef(workTitle);
+  useEffect(() => { workTitleRef.current = workTitle; }, [workTitle]);
 
   useEffect(() => {
     if (!expanded) {
@@ -54,7 +64,7 @@ export default function P4R1CoverStudy({ manuscriptId }: { manuscriptId: string 
         const response = await apiFetch(url, { method: 'GET', cache: 'no-store', signal: controller.signal });
         if (!response.ok) throw new Error('unavailable');
         const envelope: unknown = await response.json();
-        const current = readProof(envelope);
+        const current = readProof(envelope, workTitleRef.current);
         if (!live) return;
         if (!current) {
           setStatus('held');

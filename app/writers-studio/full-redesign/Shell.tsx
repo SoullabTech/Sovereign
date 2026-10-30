@@ -8,6 +8,7 @@ import { appearanceVars, geometryVars } from './tokens';
 import { PRIMARY_MODES, type Appearance, type ShellGeometry, type StudioMode } from './types';
 import WriterPreferencesMenu from './WriterPreferencesMenu';
 import { designForWriterActivity } from '@/lib/design/livingWorldLanguage';
+import { requestConversationDeparture } from '@/lib/writersStudio/conversationDeparture';
 
 /**
  * PC3-S1 — the canonical Light Shell.
@@ -74,6 +75,10 @@ export function Shell(props: ShellProps) {
   // responds only to the member's explicit navigation, never a guess about
   // emotion, tier, ability or what their manuscript supposedly means.
   const scene = designForWriterActivity(mode);
+  const selectMode = (next: StudioMode) => {
+    if (next === mode || !props.onSelectMode) return;
+    if (requestConversationDeparture()) props.onSelectMode(next);
+  };
   const searchParams = useSearchParams();
   const currentPathname = usePathname();
   const fromCabin = isCabinOrigin(searchParams);
@@ -190,6 +195,25 @@ export function Shell(props: ShellProps) {
     '--fr-maia-w': rightVisible ? `${constrain('right', rightWidth)}px` : '0px',
   } as React.CSSProperties;
 
+  // The "View" menu keeps the top bar calm: appearance, text size, panel
+  // toggles and Reset widths live behind one button. Presentation only.
+  const viewMenuRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const close = (event: Event) => {
+      const menu = viewMenuRef.current;
+      if (!menu?.open) return;
+      if (event.type === 'keydown' && (event as globalThis.KeyboardEvent).key !== 'Escape') return;
+      if (event.type === 'pointerdown' && menu.contains(event.target as Node)) return;
+      menu.open = false;
+    };
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', close);
+    };
+  }, []);
+
   return (
     <div
       ref={shellRef}
@@ -227,7 +251,7 @@ export function Shell(props: ShellProps) {
                 className="fr-nav-item"
                 aria-current={m.id === mode ? 'page' : undefined}
                 data-mode={m.id}
-                onClick={() => props.onSelectMode?.(m.id)}
+                onClick={() => selectMode(m.id)}
               >
                 {m.label}
               </button>
@@ -238,13 +262,16 @@ export function Shell(props: ShellProps) {
           <label className="fr-room-switcher" data-writer-room-switcher>
             <span>Room</span>
             <select aria-label="Studio room" value={mode}
-              onChange={event => props.onSelectMode?.(event.target.value as StudioMode)}>
+              onChange={event => selectMode(event.target.value as StudioMode)}>
               {PRIMARY_MODES.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
             </select>
           </label>
           {/* Presentation preferences are visible across the six real rooms.
               They never grant source, MAIA or editorial authorization. */}
           <WriterPreferencesMenu />
+          <details className="fr-view-menu" ref={viewMenuRef} data-studio-view-menu>
+            <summary>View</summary>
+            <div className="fr-view-menu-body">
           {/* Preserve existing writer-owned topbar download/actions. */}
           <div className="fr-bar-accessories" data-studio-topbar-accessories />
           {currentPathname === '/writers-studio' ? (
@@ -301,12 +328,16 @@ export function Shell(props: ShellProps) {
               ) : null}
             </div>
           ) : null}
+            </div>
+          </details>
           {props.workTitle !== undefined ? (
-            <div className="fr-workpick" aria-label="Current Work">
+            <button type="button" className="fr-workpick" aria-label="Choose another Work"
+              title="Choose another Work from Studio Home" disabled={!props.onSelectMode}
+              onClick={() => selectMode('home')}>
               <DocIcon />
               <span>{props.workTitle}</span>
               <ChevronDown />
-            </div>
+            </button>
           ) : (
             <span className="fr-bar-spacer" aria-hidden="true" />
           )}

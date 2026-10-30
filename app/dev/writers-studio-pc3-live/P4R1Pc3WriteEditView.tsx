@@ -33,6 +33,7 @@ const WRITE_RELATIONAL_GEOMETRY = {
 };
 import { projectPc3LiveWrite } from '@/app/writers-studio/full-redesign/liveWriteAdapter';
 import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
+import { requestConversationDeparture } from '@/lib/writersStudio/conversationDeparture';
 import RevisionDesk, { type CarryChooserPresentation, type MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
 import InsightReadings from '@/app/writers-studio/insight/InsightReadings';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
@@ -180,8 +181,26 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       && previous.requestedBody === next.requestedBody && previous.visibleBody === next.visibleBody
       && previous.state === next.state ? previous : next);
   }, []);
-  const [workConversationOpen, setWorkConversationOpen] = useState(false);
-  const [workConversationStarter, setWorkConversationStarter] = useState('');
+  const workConversationScope = JSON.stringify([props.work?.id ?? null, props.context.manuscriptId]);
+  const [workConversationState, setWorkConversationState] = useState(() => ({
+    scope: workConversationScope, open: false, starter: '',
+  }));
+  // Scope is checked during render: a new Work must never receive even one
+  // frame of the previous Work's starter or open conversation state.
+  const workConversationOpen = workConversationState.scope === workConversationScope && workConversationState.open;
+  const workConversationStarter = workConversationState.scope === workConversationScope ? workConversationState.starter : '';
+  const setWorkConversationOpen = (open: boolean) => setWorkConversationState(previous => ({
+    scope: workConversationScope, open,
+    starter: previous.scope === workConversationScope ? previous.starter : '',
+  }));
+  const setWorkConversationStarter = (starter: string) => setWorkConversationState(previous => ({
+    scope: workConversationScope,
+    open: previous.scope === workConversationScope && previous.open, starter,
+  }));
+  useEffect(() => {
+    setWorkConversationState(previous => previous.scope === workConversationScope
+      ? previous : { scope: workConversationScope, open: false, starter: '' });
+  }, [workConversationScope]);
   const [maiaRelationshipChooserOpen, setMaiaRelationshipChooserOpen] = useState(false);
   const [blankArrivalDismissed, setBlankArrivalDismissed] = useState(false);
   const [selectionRect, setSelectionRect] = useState<DOMRect | null>(null);
@@ -215,7 +234,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   useEffect(() => {
     setBlankArrivalDismissed(false);
-    setWorkConversationStarter('');
   }, [props.focusId]);
 
   useEffect(() => {
@@ -418,16 +436,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     return () => document.removeEventListener('selectionchange', inspect);
   }, [props.context.sections, props.writing, props.onHoldPassage]);
 
-  useEffect(() => {
-    const click = (event: MouseEvent) => {
-      const target = event.target instanceof Element ? event.target : null;
-      if (!target?.closest('.fr-workpick') || !props.work) return;
-      setWorkConversationOpen((open) => !open);
-    };
-    document.addEventListener('click', click);
-    return () => document.removeEventListener('click', click);
-  }, [props.work]);
-
   if (!projection) {
     return <main className="fr-root"><div style={{ padding: 32 }}>This manuscript has no editable place to open.</div></main>;
   }
@@ -475,7 +483,13 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     });
   };
 
+  const navigateMode: P4R1Pc3WriteEditViewProps['onMode'] = (mode) => {
+    if (!requestConversationDeparture()) return;
+    requestCraftDeparture('Switch Studio room', () => props.onMode(mode));
+  };
+
   const openWorkConversation = (starter = '') => {
+    if (workConversationOpen && starter !== workConversationStarter && !requestConversationDeparture()) return;
     setWorkConversationStarter(starter);
     setWorkConversationOpen(true);
   };
@@ -583,6 +597,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           </button>
 
           <button type="button" role="menuitem" data-open-craftsmans-table onClick={() => {
+            if (!requestConversationDeparture()) return;
             setSelectionMenuOpen(false);
             if (!props.held || !currentCraftScope) return;
             const body = props.writing.bodyOf(props.held.draftSectionId);
@@ -923,7 +938,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const railSection = props.context.sections.find(
     (section) => section.draftSectionId === (railSelectionId ?? props.focusId),
   ) ?? null;
-  const railLabel = railSection?.heading?.trim() || 'this section';
+  const railLabel = railSection
+    ? railSection.heading?.trim() || `Section ${railSection.position + 1}`
+    : 'this section';
 
   const writeMaia = props.work ? (
     <div className="fr-maia-inner p4r1-write-maia">
@@ -960,8 +977,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             <details className="p4r1-locus-more">
               <summary>More ways to work here</summary>
               <div>
-                <button type="button" onClick={() => props.onMode('develop')}>Develop this place</button>
-                <button type="button" onClick={() => props.onMode('review')}>Review this place</button>
+                <button type="button" onClick={() => navigateMode('develop')}>Develop this place</button>
+                <button type="button" onClick={() => navigateMode('review')}>Review this place</button>
               </div>
             </details>
             <p className="fr-also">Select exact words in the manuscript for passage-level revision.</p>
@@ -1002,7 +1019,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const writeRoom = (
     <WriteRoom
       fixture={projection.data}
-      copy={WRITE_COPY}
+      copy={{ ...WRITE_COPY, editorLabel: projection.data.title }}
       canvas={canvas}
       onCanvasChange={setCanvas}
       live={{
@@ -1037,12 +1054,12 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         {props.attentionReturnItemId ? (
           <>
             <span><b>From Attention Map</b> · this is one exact place behind the synthesis.</span>
-            <button type="button" onClick={() => props.onMode('develop')}>Return to Attention Map</button>
+            <button type="button" onClick={() => navigateMode('develop')}>Return to Attention Map</button>
           </>
         ) : (
           <>
             <span><b>From intellectual lineage</b> · this is one manuscript locus behind the provenance question.</span>
-            <button type="button" onClick={() => props.onMode('develop')}>Return to lineage</button>
+            <button type="button" onClick={() => navigateMode('develop')}>Return to lineage</button>
           </>
         )}
       </div>
@@ -1277,7 +1294,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => props.onMode(props.carriedInsightReturnMode!)}
+                onClick={() => navigateMode(props.carriedInsightReturnMode!)}
               >
                 {props.attentionReturnItemId
                   ? 'Return to Attention Map'

@@ -957,3 +957,80 @@
 .fr-root .fr-writer-about-access summary {cursor:pointer;padding:7px 0;}
 .fr-root .fr-writer-about-access p {line-height:1.65;}
 .fr-root .fr-writer-about-access a {color:var(--fr-action);text-underline-offset:3px;}
+
+/* UX fix (founder walk 2026-10-29): the top bar must never clip a Studio tab.
+   The Studio tabs keep their natural width; the long Work title in the picker
+   gives up space and truncates with an ellipsis instead. */
+.fr-root .fr-bar .fr-nav { flex: 0 0 auto; overflow: visible; }
+.fr-root .fr-bar .fr-workpick { flex: 1 1 140px; min-width: 120px; max-width: 380px; }
+.fr-root .fr-bar .fr-workpick > *,
+.fr-root .fr-bar .fr-workpick select,
+.fr-root .fr-bar .fr-workpick button { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* "View" menu: appearance, text size, panel toggles and Reset widths behind one
+   button so the top bar stays calm. Presentation only; nothing here changes
+   what MAIA may read, consent, or which words may be revised. */
+.fr-root .fr-view-menu { position: relative; flex: none; margin-left: 7px; font: inherit; }
+.fr-root .fr-view-menu > summary {
+  list-style: none; display: flex; align-items: center; justify-content: center;
+  min-height: 34px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--fr-line);
+  font-size: 12px; color: var(--fr-ink2); cursor: pointer; white-space: nowrap;
+}
+.fr-root .fr-view-menu > summary::-webkit-details-marker { display: none; }
+.fr-root .fr-view-menu > summary::after { content: '▾'; margin-left: 7px; font-size: 10px; opacity: .7; }
+.fr-root .fr-view-menu[open] > summary { border-color: var(--fr-action); color: var(--fr-title); }
+.fr-root .fr-view-menu-body {
+  position: absolute; right: 0; top: calc(100% + 8px); width: min(300px, calc(100vw - 24px));
+  display: flex; flex-direction: column; align-items: stretch; gap: 12px;
+  padding: 16px; border-radius: 12px; border: 1px solid var(--fr-line);
+  color: var(--fr-ink); background: var(--fr-panel); box-shadow: 0 20px 45px rgba(0, 0, 0, .22);
+  z-index: 80; line-height: 1.5;
+}
+.fr-root .fr-view-menu-body > * { margin: 0 !important; }
+.fr-root .fr-view-menu-body .fr-bar-accessories { display: flex; flex-wrap: wrap; gap: 8px; width: auto; }
+.fr-root .fr-view-menu-body .fr-bar-accessories:empty { display: none; }
+.fr-root .fr-view-menu-body .fr-reading-choice { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.fr-root .fr-view-menu-body .fr-panel-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.fr-root .fr-view-menu-body .fr-panel-toggle { flex: 1 1 auto; }
+
+/* The floating "Report a bug" button sits at the bottom-right of every signed-in
+   page; keep the MAIA footer line clear of it. */
+.fr-root .fr-foot { padding-bottom: 46px; box-sizing: content-box; }
+.fr-root .p4r1-develop-prefs-link { margin-left: 12px; }
+
+/* Field QA repair: the Work chooser is keyboard accessible and reaches the
+   existing Home chooser through the same unsaved-writing navigation guards. */
+.fr-root .fr-bar .fr-workpick { font: inherit; text-align: left; cursor: pointer; }
+.fr-root .fr-bar .fr-workpick > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fr-root .fr-bar .fr-workpick:focus-visible { outline: 2px solid var(--fr-action); outline-offset: 3px; }
+.fr-root .fr-bar .fr-workpick:disabled { cursor: default; }
+
+/* At phone width, give Room, Preferences, View and the Work chooser their own
+   space instead of hiding choices or forcing the header past the viewport. */
+@media (max-width: 600px) {
+  .fr-root .fr-shell .fr-bar {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 10px; height: auto; min-height: 0; padding: 10px 12px;
+  }
+  .fr-root .fr-shell .fr-brand { grid-column: 1; min-width: 0; margin: 0; }
+  .fr-root .fr-shell .fr-bar .fr-nav { display: none; }
+  .fr-root .fr-shell .fr-room-switcher { grid-column: 2; display: inline-flex; margin: 0; min-width: 0; }
+  .fr-root .fr-shell .fr-writer-preferences { grid-column: 1; min-width: 0; margin: 0; }
+  .fr-root .fr-shell .fr-view-menu { grid-column: 2; min-width: 0; margin: 0; }
+  .fr-root .fr-shell .fr-bar .fr-workpick {
+    grid-column: 1 / -1; display: flex; width: 100%; max-width: none;
+    margin: 0; min-width: 0; box-sizing: border-box;
+  }
+  .fr-root .fr-shell .fr-bar-spacer { display: none; }
+  .fr-root .fr-shell .fr-writer-preference-panel {
+    left: 0; right: auto; width: min(350px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px); box-sizing: border-box;
+  }
+  .fr-root .fr-shell .fr-view-menu-body {
+    left: auto; right: 0; width: min(350px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px); box-sizing: border-box;
+  }
+  .fr-root .fr-shell .fr-view-menu-body .fr-bar-accessories {
+    max-width: none; overflow: visible;
+  }
+}

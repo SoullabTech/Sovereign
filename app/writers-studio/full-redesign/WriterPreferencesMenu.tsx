@@ -10,7 +10,7 @@ import {
   subscribeStudioPresentation, proposePresentationRequest,
   type StudioDepth, type SafePresentationProposal,
 } from '@/lib/writersStudio/presentationRequests';
-import { readStudioReadingSize, setStudioReadingSize, type StudioReadingSize } from '@/lib/writersStudio/readingSizePreference';
+import { readStudioReadingSize, setStudioReadingSize, subscribeStudioReadingSize, type StudioReadingSize } from '@/lib/writersStudio/readingSizePreference';
 
 export default function WriterPreferencesMenu() {
   const ref = useRef<HTMLDetailsElement>(null);
@@ -30,6 +30,7 @@ export default function WriterPreferencesMenu() {
     };
     window.addEventListener('writers-studio-working-style-changed', changed);
     const unsubDepth = subscribeStudioPresentation(next => setDepth(next.depth));
+    const unsubSize = subscribeStudioReadingSize(setSize);
     const outside = (event: PointerEvent) => {
       if (ref.current?.open && !ref.current.contains(event.target as Node)) ref.current.open = false;
     };
@@ -37,6 +38,7 @@ export default function WriterPreferencesMenu() {
     return () => {
       window.removeEventListener('writers-studio-working-style-changed', changed);
       unsubDepth();
+      unsubSize();
       document.removeEventListener('pointerdown', outside);
     };
   }, []);

@@ -28,6 +28,7 @@ import {
   type SafePresentationProposal,
 } from '@/lib/writersStudio/presentationRequests';
 import { setStudioReadingSize } from '@/lib/writersStudio/readingSizePreference';
+import { CONVERSATION_DEPARTURE_EVENT, requestConversationDeparture } from '@/lib/writersStudio/conversationDeparture';
 import { WRITER_CORRECTION_KINDS, WRITER_CORRECTION_LABEL, type WriterCorrectionKind } from '@/lib/writersStudio/writerCorrections';
 
 /**
@@ -123,6 +124,13 @@ export const WORK_CONVERSATION_PLACEHOLDER = 'Ask MAIA about this work…';
 
 const WORK_ANCHOR = { on: 'work' } as const;
 
+const REORIENTATION_PROMPT = [
+  'Help me reorient before we do anything else.',
+  'From only this conversation and the Work context you actually have, tell me briefly:',
+  'where we are, what question or concern brought us here if that is established, what has changed, what remains untouched, and how I can return to the larger Work.',
+  'If any of that is unknown, say so. Do not introduce a new interpretation yet.',
+].join('\n');
+
 const REFUSAL_SAYS: Record<string, string> = {
   unreachable: 'That didn’t reach her. Nothing was lost — try again.',
   empty_answer: 'MAIA returned nothing. Try asking again.',
@@ -150,10 +158,20 @@ export interface WorkConversationProps {
   onClose: () => void;
 }
 
-export default function WorkConversation({
-  work, manuscriptId, sectionId, initialDraft = '', onClose,
-}: WorkConversationProps) {
+export default function WorkConversation(props: WorkConversationProps) {
   const identity = useMemberIdentity();
+  // A retained room must not carry one member's or Work's unsent text and
+  // loaded conversation into another. Section changes keep this same scope.
+  return <ScopedWorkConversation
+    key={JSON.stringify([identity.memberId ?? identity.phase, props.work.id, props.manuscriptId])}
+    {...props}
+    identity={identity}
+  />;
+}
+
+function ScopedWorkConversation({
+  work, manuscriptId, sectionId, initialDraft = '', onClose, identity,
+}: WorkConversationProps & { identity: ReturnType<typeof useMemberIdentity> }) {
   const { keeps } = useManuscriptKeeps(manuscriptId);
   const [showKeeps, setShowKeeps] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
@@ -163,6 +181,7 @@ export default function WorkConversation({
   const [thread, setThread] = useState<AskThreadView | null>(null);
 
   const [draft, setDraft] = useState(initialDraft);
+  const [reorientationOffered, setReorientationOffered] = useState(false);
   const [presentationConfirmation, setPresentationConfirmation] = useState<SafePresentationProposal | null>(null);
   const [presentationNotice, setPresentationNotice] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
@@ -173,6 +192,33 @@ export default function WorkConversation({
   const [correctionBusy, setCorrectionBusy] = useState(false);
   const [correctionStatus, setCorrectionStatus] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
+  // A draft belongs to its edit generation, not to text equality.
+  const draftRevisionRef = useRef(0);
+  // Synchronous fence for two sends before React rerenders.
+  const inFlightRef = useRef(false);
+
+  useEffect(() => {
+    // Unsent text stays in the mounted conversation. Leaving is an explicit
+    // discard; neither browser storage nor a server turn is created for it.
+    const hasUnsentText = draft.length > 0 || correctionDraft.length > 0 || pending !== null;
+    if (!hasUnsentText) return;
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    const confirmDeparture = (event: Event) => {
+      if (event.defaultPrevented) return;
+      if (!window.confirm('You have unsent text in this MAIA conversation. Leave and discard that text?')) {
+        event.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', warnBeforeLeaving);
+    window.addEventListener(CONVERSATION_DEPARTURE_EVENT, confirmDeparture);
+    return () => {
+      window.removeEventListener('beforeunload', warnBeforeLeaving);
+      window.removeEventListener(CONVERSATION_DEPARTURE_EVENT, confirmDeparture);
+    };
+  }, [draft, correctionDraft, pending]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
@@ -219,18 +265,28 @@ export default function WorkConversation({
     writeWorkingStyle(fresh.style);
     if (fresh.depth) writeStudioPresentation({depth:fresh.depth});
     if (fresh.readingSize) setStudioReadingSize(fresh.readingSize);
+    draftRevisionRef.current += 1;
     setDraft('');
     setPresentationConfirmation(null);
     setPresentationNotice('The Studio presentation changed on this device. No manuscript was read or changed, and nothing was sent to MAIA.');
   };
 
+  const addReorientation = () => {
+    draftRevisionRef.current += 1;
+    setDraft((current) => current.includes(REORIENTATION_PROMPT)
+      ? current
+      : current ? current + '\n\n' + REORIENTATION_PROMPT : REORIENTATION_PROMPT);
+    setReorientationOffered(false);
+    setPresentationConfirmation(null);
+    setPresentationNotice(null);
+  };
   const reorient = () => {
-    setDraft([
-      'Help me reorient before we do anything else.',
-      'From only this conversation and the Work context you actually have, tell me briefly:',
-      'where we are, what question or concern brought us here if that is established, what has changed, what remains untouched, and how I can return to the larger Work.',
-      'If any of that is unknown, say so. Do not introduce a new interpretation yet.',
-    ].join('\n'));
+    if (draft.includes(REORIENTATION_PROMPT)) return;
+    if (draft.length > 0) {
+      setReorientationOffered(true);
+      return;
+    }
+    addReorientation();
   };
 
   const keepCorrection = async (maiaTurnIndex: number) => {
@@ -256,11 +312,8 @@ export default function WorkConversation({
 
   const send = async () => {
     const question = draft.trim();
-    /* ⭐⭐ ONE CALL DECIDES BOTH THE PERMISSION AND THE PAYLOAD. A surface that
-       disabled the button from one rule and picked `{anchor}` vs `{threadId}`
-       from another would have two chances to disagree, and the disagreement
-       writes a row. */
-    if (!question || pending !== null) return;
+    // Synchronous guard: two send events can fire before pending state renders.
+    if (!question || pending !== null || inFlightRef.current) return;
     const requestedPresentation = proposePresentationRequest(question, readWorkingStyle());
     if (requestedPresentation) {
       setPresentationConfirmation(requestedPresentation);
@@ -268,32 +321,43 @@ export default function WorkConversation({
       return;
     }
     if (mode.kind === 'blocked') return;
-    setDraft('');
+
+    const submittedRevision = draftRevisionRef.current;
+    inFlightRef.current = true;
+    setReorientationOffered(false);
     setRefusal(null);
     setPending(question);
-    const r = manuscriptId
-      ? await ask({
-          manuscriptId,
-          question,
-          ...(mode.kind === 'resume' ? { threadId: mode.threadId } : { anchor: WORK_ANCHOR }),
-          ...(sectionId ? { sectionId } : {}),
-        })
-      : await askLivingWork({
-          workId: work.id,
-          question,
-          ...(mode.kind === 'resume' ? { threadId: mode.threadId } : {}),
-        });
-    setPending(null);
-    if (r.ok) {
-      setThreadId(r.threadId);
-      setThread(r.thread);
-      return;
+    try {
+      const r = manuscriptId
+        ? await ask({
+            manuscriptId,
+            question,
+            ...(mode.kind === 'resume' ? { threadId: mode.threadId } : { anchor: WORK_ANCHOR }),
+            ...(sectionId ? { sectionId } : {}),
+          })
+        : await askLivingWork({
+            workId: work.id,
+            question,
+            ...(mode.kind === 'resume' ? { threadId: mode.threadId } : {}),
+          });
+      if (r.ok) {
+        // Text can be edited away and retyped identically. Compare edit
+        // ownership, not string equality; read the live ref in the updater.
+        setDraft((current) => draftRevisionRef.current === submittedRevision ? '' : current);
+        setThreadId(r.threadId);
+        setThread(r.thread);
+        return;
+      }
+      // Refusals must retain literal text and any server-returned thread id.
+      if (r.threadId) { setThreadId(r.threadId); void adopt(r.threadId); }
+      setRefusal(REFUSAL_SAYS[r.refusal] ?? REFUSAL_SAYS.unreachable);
+    } catch {
+      // A transport error is an ambiguous delivery, never an automatic retry.
+      setRefusal(REFUSAL_SAYS.unreachable);
+    } finally {
+      inFlightRef.current = false;
+      setPending(null);
     }
-    /* The author's turn may already be persisted behind a failed answer; the
-       server returns the thread id with the refusal, and holding it is what
-       makes "nothing was lost" true rather than reassuring. */
-    if (r.threadId) { setThreadId(r.threadId); void adopt(r.threadId); }
-    setRefusal(REFUSAL_SAYS[r.refusal] ?? REFUSAL_SAYS.unreachable);
   };
 
   if (identity.phase === 'loading') {
@@ -367,7 +431,7 @@ export default function WorkConversation({
         </button>
         <button
           type="button"
-          onClick={onClose}
+          onClick={() => { if (requestConversationDeparture()) onClose(); }}
           aria-label="Close the conversation and return to writing"
           data-close-conversation="true"
           style={{
@@ -572,6 +636,7 @@ export default function WorkConversation({
                      member decides what to ask about it, and sends it as their
                      own turn. */
                   const quoted = `From ${k.sectionHeading ?? 'my manuscript'}:\n\n“${k.verbatimText}”\n\n`;
+                  draftRevisionRef.current += 1;
                   setDraft((d) => (d ? `${quoted}${d}` : quoted));
                   setShowKeeps(false);
                 }}
@@ -610,7 +675,7 @@ export default function WorkConversation({
         </div>
         <textarea
           value={draft}
-          onChange={(e) => { setDraft(e.target.value); setPresentationConfirmation(null); setPresentationNotice(null); }}
+          onChange={(e) => { draftRevisionRef.current += 1; setDraft(e.target.value); setPresentationConfirmation(null); setPresentationNotice(null); }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
@@ -629,6 +694,23 @@ export default function WorkConversation({
             padding: SPACE.snug, outline: 'none',
           }}
         />
+        {reorientationOffered ? (
+          <div data-reorientation-confirm role="group" aria-label="Reorientation prompt"
+            style={{ border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm, padding: SPACE.snug, marginTop: SPACE.snug }}>
+            <StudioText role="panelLabel" as="strong">Keep your question, then add a prompt</StudioText>
+            <p style={{ fontSize: 13, whiteSpace: 'pre-wrap', margin: '8px 0' }}>{REORIENTATION_PROMPT}</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: SPACE.tight }}>
+              <button type="button" onClick={addReorientation}
+                style={{ border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm, padding: '8px 12px' }}>
+                Add to my draft
+              </button>
+              <button type="button" onClick={() => setReorientationOffered(false)}
+                style={{ border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm, padding: '8px 12px' }}>
+                Keep my draft
+              </button>
+            </div>
+          </div>
+        ) : null}
         {presentationConfirmation ? (
           <div data-maia-presentation-confirm role="group" aria-label="Review Studio presentation change"
             style={{border:`1px solid ${RULE.soft}`,padding:SPACE.snug,borderRadius:RADIUS.sm,marginTop:SPACE.snug}}>
@@ -673,6 +755,7 @@ export default function WorkConversation({
             <Link
               href={handoffToMaia('/maia', { workId: work.id, manuscriptId })}
               data-open-in-maia="true"
+              onClick={(event) => { if (!requestConversationDeparture()) event.preventDefault(); }}
               style={{ textDecoration: 'none' }}
             >
               <StudioText role="metadata" as="span">Open in MAIA →</StudioText>

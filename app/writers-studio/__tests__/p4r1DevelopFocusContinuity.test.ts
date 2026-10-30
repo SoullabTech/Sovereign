@@ -93,7 +93,9 @@ describe('C3 Develop → Focus continuity', () => {
     expect(writeView).toContain('From MAIA’s reading');
     expect(writeView).toContain('props.carriedInsight.observation.observation');
     expect(writeView).toContain('props.carriedInsightReturnMode');
-    expect(writeView).toContain('props.onMode(props.carriedInsightReturnMode!)');
+    expect(writeView).toContain('navigateMode(props.carriedInsightReturnMode!)');
+    expect(writeView).toContain('if (!requestConversationDeparture()) return;');
+    expect(writeView).toContain("requestCraftDeparture('Switch Studio room', () => props.onMode(mode))");
     expect(writeView).toContain("props.carriedInsightReturnMode === 'review' ? 'Review' : 'Develop'");
   });
 

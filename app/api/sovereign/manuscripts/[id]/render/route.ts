@@ -129,6 +129,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
   return NextResponse.json({
     ready: issues.length === 0,
     title: source.title,
+    manuscriptTitle: source.manuscriptTitle,
     sectionCount: source.sections.length,
     sourceAuthority: source.sourceAuthority,
     sourceRevision: source.sourceRevision,

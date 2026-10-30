@@ -30,7 +30,7 @@ export type P4R1ImportManuscriptProps = {
   localReview: boolean;
   sourceIntakeReleased?: boolean;
   onCancel: () => void;
-  onComplete: (manuscriptId: string) => void;
+  onComplete: (manuscriptId: string) => void | Promise<void>;
 };
 
 function fileSize(bytes: number): string {
@@ -55,6 +55,8 @@ export default function P4R1ImportManuscript({
 }: P4R1ImportManuscriptProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const uploadAttemptRef = useRef<SourceUploadAttempt | null>(null);
+  const savedManuscriptIdRef = useRef<string | null>(null);
+  const saveInFlightRef = useRef(false);
   const [phase, setPhase] = useState<ImportPhase>('source');
   const [busy, setBusy] = useState<Busy>(null);
   const [dragging, setDragging] = useState(false);
@@ -65,6 +67,7 @@ export default function P4R1ImportManuscript({
   const [warnings, setWarnings] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [sourceArrivalId, setSourceArrivalId] = useState<string | null>(null);
+  const [savedManuscriptId, setSavedManuscriptId] = useState<string | null>(null);
   const [sections, setSections] = useState<ImportSection[]>([]);
   const [splitOpen, setSplitOpen] = useState<number | null>(null);
 
@@ -183,25 +186,36 @@ export default function P4R1ImportManuscript({
   };
 
   const save = async () => {
-    if (!sections.length || busy) return;
+    if (!sections.length || busy || saveInFlightRef.current) return;
+    saveInFlightRef.current = true;
     setError(null);
     setBusy('saving');
     try {
-      const response = await apiFetch('/api/sovereign/manuscripts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: title.trim(),
-          sections,
-          ...(sourceArrivalId && !localReview
-            ? { sourceArrivalId }
-            : { confirmedText: text }),
-        }),
-      });
-      const body = await response.json().catch(() => null) as Record<string, unknown> | null;
-      if (!response.ok) throw new Error(errorFrom(body, 'The manuscript could not be opened.'));
-      const id = typeof body?.id === 'string' ? body.id : null;
-      if (!id) throw new Error('The manuscript opened without an identity. Nothing further was changed.');
+      let id = savedManuscriptIdRef.current;
+      if (!id) {
+        const response = await apiFetch('/api/sovereign/manuscripts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: title.trim(),
+            sections,
+            // The final button explicitly declares this imported manuscript as
+            // a new Work. Local review remains a temporary, separate fixture.
+            ...(!localReview ? { createWork: true } : {}),
+            ...(sourceArrivalId && !localReview
+              ? { sourceArrivalId }
+              : { confirmedText: text }),
+          }),
+        });
+        const body = await response.json().catch(() => null) as Record<string, unknown> | null;
+        if (!response.ok) throw new Error(errorFrom(body, 'The manuscript could not be opened.'));
+        id = typeof body?.id === 'string' ? body.id : null;
+        if (!id) throw new Error('The manuscript opened without an identity. Nothing further was changed.');
+        // A confirmed save may outlive the router transition. Remember its
+        // identity before opening it, so retrying navigation cannot import twice.
+        savedManuscriptIdRef.current = id;
+        setSavedManuscriptId(id);
+      }
       if (localReview) {
         const held = writeLocalReviewManuscript({
           manuscriptId: id,
@@ -213,10 +227,19 @@ export default function P4R1ImportManuscript({
           throw new Error('The temporary local manuscript could not be held for the next room. Nothing was persisted.');
         }
       }
-      onComplete(id);
+      // Keep confirmation disabled while the parent refreshes the exact Work
+      // and manuscript and navigates away from this completed import.
+      try {
+        await onComplete(id);
+      } catch {
+        setError(localReview
+          ? 'Your temporary writing is ready, but it could not be opened. Choose Open temporary writing to try again.'
+          : 'Your writing was saved, but it could not be opened. Choose Open saved writing to try again. This will not create another copy.');
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'The manuscript could not be opened.');
     } finally {
+      saveInFlightRef.current = false;
       setBusy(null);
     }
   };
@@ -344,7 +367,7 @@ export default function P4R1ImportManuscript({
           <label className="p4r1-import-field">
             <span>Manuscript title</span>
             <input value={title} onChange={(event) => setTitle(event.currentTarget.value)}
-              placeholder="Title of the Work" />
+              placeholder="Title of the Work" maxLength={localReview ? undefined : 300} />
           </label>
           <label className="p4r1-import-field">
             <span>Extracted or pasted writing</span>
@@ -384,7 +407,8 @@ export default function P4R1ImportManuscript({
               <h2>{sections.length} proposed section{sections.length === 1 ? '' : 's'}</h2>
               <p>Edit a heading, merge a false boundary, or cut where a heading was missed. No cut is accepted without your final gesture.</p>
             </div>
-            <button type="button" onClick={() => { setPhase('source'); setSplitOpen(null); }}>Back to source</button>
+            <button type="button" disabled={busy !== null || savedManuscriptId !== null}
+              onClick={() => { setPhase('source'); setSplitOpen(null); }}>Back to source</button>
           </div>
 
           <div className="p4r1-import-section-list">
@@ -395,6 +419,7 @@ export default function P4R1ImportManuscript({
                   {section.headingDepth ? <span className="p4r1-import-depth">H{section.headingDepth}</span> : null}
                   <input
                     aria-label={`Section ${index + 1} heading`}
+                    disabled={busy !== null || savedManuscriptId !== null}
                     value={section.heading ?? ''}
                     placeholder="Untitled section"
                     onChange={(event) => {
@@ -406,10 +431,12 @@ export default function P4R1ImportManuscript({
                   />
                   <span>{section.body.length.toLocaleString()} chars</span>
                   <button type="button" aria-expanded={splitOpen === index}
+                    disabled={busy !== null || savedManuscriptId !== null}
                     onClick={() => setSplitOpen((open) => open === index ? null : index)}>
                     {splitOpen === index ? 'Close cuts' : 'Add cut'}
                   </button>
-                  {index > 0 ? <button type="button" onClick={() => mergeUp(index)}>Merge ↑</button> : null}
+                  {index > 0 ? <button type="button" disabled={busy !== null || savedManuscriptId !== null}
+                    onClick={() => mergeUp(index)}>Merge ↑</button> : null}
                 </div>
                 <p className="p4r1-import-excerpt">{section.body.slice(0, 230)}{section.body.length > 230 ? '…' : ''}</p>
                 {splitOpen === index ? (
@@ -423,7 +450,7 @@ export default function P4R1ImportManuscript({
                         && lines.slice(lineIndex + 1).join('').trim(),
                       );
                       return (
-                        <button key={lineIndex} type="button" disabled={!valid}
+                        <button key={lineIndex} type="button" disabled={!valid || busy !== null || savedManuscriptId !== null}
                           onClick={() => splitAt(index, lineIndex)}>{label}</button>
                       );
                     })}
@@ -436,13 +463,19 @@ export default function P4R1ImportManuscript({
           {error ? <p className="p4r1-import-error" role="alert">{error}</p> : null}
           <footer className="p4r1-import-actions">
             <p>
-              {localReview
+              {savedManuscriptId
+                ? localReview
+                  ? 'Your temporary writing is ready. Open it in Write to continue.'
+                  : 'Your writing and its Work were saved. Open this saved writing in Write to continue editing.'
+                : localReview
                 ? 'Open in Write creates a temporary fictional manuscript for this dedicated review window.'
-                : 'Open in Write saves only the sections you confirm. The original remains separately held as Source.'}
+                : `This creates a new Work named “${title.trim()}” and saves the sections you confirm. The original remains separately held as Source. Nothing is read or rewritten by MAIA during import.`}
             </p>
             <button type="button" className="p4r1-import-primary" disabled={busy !== null || !sections.length}
               onClick={() => void save()}>
-              {busy === 'saving' ? 'Opening manuscript…' : 'Confirm and open in Write'}
+              {busy === 'saving' ? 'Opening manuscript…' : savedManuscriptId
+                ? localReview ? 'Open temporary writing' : 'Open saved writing'
+                : localReview ? 'Confirm and open in Write' : 'Create Work and open in Write'}
             </button>
           </footer>
         </section>

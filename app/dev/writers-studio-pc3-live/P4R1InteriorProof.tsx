@@ -69,7 +69,7 @@ const STYLE_OPTIONS: { id: PageStyle; label: string }[] = [
   { id: 'plain', label: 'Contemporary' },
 ];
 
-export default function P4R1InteriorProof({ manuscriptId }: { manuscriptId: string }) {
+export default function P4R1InteriorProof({ manuscriptId, workTitle }: { manuscriptId: string; workTitle?: string | null }) {
   const [expanded, setExpanded] = useState(false);
   const [revision, setRevision] = useState<CurrentDraft | null>(null);
   const [phase, setPhase] = useState<Phase>('closed');
@@ -125,7 +125,7 @@ export default function P4R1InteriorProof({ manuscriptId }: { manuscriptId: stri
     () => pages?.[Math.min(selectedIndex, pages.length - 1)] ?? null,
     [pages, selectedIndex],
   );
-  const title = revision?.title?.trim() || 'Untitled Work';
+  const title = revision?.title?.trim() || workTitle?.trim() || 'Untitled Work';
   const index = pages && chosen ? pages.indexOf(chosen) : 0;
 
   return (
