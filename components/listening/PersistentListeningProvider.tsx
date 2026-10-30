@@ -1221,7 +1221,9 @@ export function PersistentListeningProvider({
       onStopMusic={stopAll}
       onVolume={setVolume}
       onLooping={setLooping}
-      volumeAdjustable={volumeAdjustable}
+      // The page cannot set the level of a media file on some phones, but it always sets the level of a sound it
+      // generates itself (the soundscape's master gain), so that control is offered whenever such a sound is playing.
+      volumeAdjustable={volumeAdjustable || snapshot.kind === 'sketch'}
       focusSoundLabel={focusSoundChoice === 'none' ? null : focusSoundLabel(focusSoundChoice)}
       onPlayFocusSound={() => { void playFocusSound(); }}
       onPauseFocus={() => { pauseFocusSession('member'); }}
