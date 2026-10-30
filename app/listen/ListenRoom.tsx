@@ -12,6 +12,8 @@ import LocalAudioDesk from './LocalAudioDesk';
 import ReceptiveFieldDesk from './ReceptiveFieldDesk';
 import PrivateBackupDesk from './PrivateBackupDesk';
 import SoundStudioField from './SoundStudioField';
+import SoundStudioNow from './SoundStudioNow';
+import type { StudioView } from './SoundStudioNow';
 import FocusFieldDesk from '@/components/listening/FocusFieldDesk';
 import type { MemberCollection, TrackReference } from '@/lib/listening/portableCollections';
 import styles from './listen.module.css';
@@ -24,7 +26,6 @@ const journeys: Record<Mood, { label: string; title: string; subtitle: string; d
   rest:{ label:'Deep rest',title:'Moonwater',subtitle:'Stillness without demand',description:'For unhurried listening, ease, reflection and the passage into sleep.',gradient:'rest',frequencies:[82.41,123.47,164.81] },
 };
 const nav = [
-  {title:'Sound Studio',href:'#sound-studio'},
   {title:'Focus Field',href:'#focus-field'},
   {title:'House',href:'/home'},
   {title:'Writer’s Studio',href:'/writers-studio'},
@@ -87,9 +88,21 @@ export default function ListenRoom() {
   const [link, setLink] = useState('');
   const [collections, setCollections] = useState<MemberCollection[]>([]);
   const [note, setNote] = useState('');
-  const [showJournal, setShowJournal] = useState(false);
   const [status, setStatus] = useState('Ready for your listening journey.');
   const sketch = useRef<SketchHandle | null>(null);
+  const [view, setView] = useState<StudioView>('now');
+  const [fieldWork, setFieldWork] = useState<string | undefined>(undefined);
+  const [fieldKey, setFieldKey] = useState(0);
+  const go = useCallback((next: StudioView, workId?: string) => {
+    setView(next);
+    if (next === 'fields') { setFieldWork(workId); setFieldKey(k => k + 1); }
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0 });
+  }, []);
+  // Lets the shared player sit above the phone tab bar while this room is open.
+  useEffect(() => {
+    document.body.setAttribute('data-studio-tabbar', '1');
+    return () => document.body.removeAttribute('data-studio-tabbar');
+  }, []);
   const memberAudioRef = useRef<HTMLAudioElement>(null);
   const player = journeys[mood];
   const isPlaying = persistent
@@ -195,21 +208,62 @@ export default function ListenRoom() {
     setStatus('A readable JSON copy was exported to your device. Use encrypted backup for private reflections.');
   };
   const clearShelf=()=>{if(!window.confirm('Clear imported playlists and private journal from this browser tab?'))return;setCollections([]);setNote('');setStatus('This tab’s collection and journal have been cleared.');};
-  return <main className={styles.shell}>
+  const sections: ReadonlyArray<{ view: StudioView; label: string; glyph: string }> = [
+    { view: 'now', label: 'Now', glyph: '◒' },
+    { view: 'fields', label: 'Fields', glyph: '◌' },
+    { view: 'shelf', label: 'Shelf', glyph: '▤' },
+    { view: 'studio', label: 'Studio', glyph: '◇' },
+    { view: 'lab', label: 'Lab', glyph: '△' },
+  ];
+  const activeSection: StudioView = view === 'focus' ? 'now' : view;
+  const goHash = (href: string) => go(href === '#focus-field' ? 'focus' : 'fields');
+  return <main className={styles.shell} data-studio-view={view}>
     <aside className={styles.rail} aria-label="Listening Room navigation">
       <div className={styles.brand}><span className={styles.sunmark} aria-hidden="true">◒</span><div><span className={styles.wordmark}>SOULLAB</span><span className={styles.descriptor}>SOUND STUDIO</span></div><Link href="/home" className={styles.mobileHomeLink} aria-label="Return to Soullab Home">Home</Link></div>
+      <div className={styles.navTitle}>Sound Studio</div>
+      <nav className={styles.nav} aria-label="Sound Studio sections">{sections.map(item=><button type="button" key={item.view} className={activeSection===item.view?styles.navActive:styles.navButton} aria-current={activeSection===item.view?'page':undefined} data-studio-section={item.view} onClick={()=>go(item.view)}>{item.label}</button>)}</nav>
       <div className={styles.navTitle}>Explore</div>
-      <nav className={styles.nav} aria-label="Soullab">{nav.map(item=><Link key={item.href} href={item.href}>{item.title}<span aria-hidden="true">↗</span></Link>)}</nav>
-      <div className={styles.navTitle}>Listening journeys</div>
-      <div className={styles.moodList}>{moodKeys.map(key=><button className={mood===key?styles.activeMood:styles.moodButton} type="button" aria-pressed={mood===key} key={key} onClick={()=>selectMood(key)}><span className={styles.moodDot} aria-hidden="true" />{journeys[key].label}</button>)}</div>
+      <nav className={styles.nav} aria-label="Soullab">{nav.map(item=>item.href.startsWith('#')
+        ? <button type="button" key={item.href} className={styles.navButton} onClick={()=>goHash(item.href)}>{item.title}</button>
+        : <Link key={item.href} href={item.href}>{item.title}<span aria-hidden="true">↗</span></Link>)}</nav>
       <div className={styles.railFoot}>For the life you live.<br/>For the world we make.</div>
     </aside>
     <div className={styles.main}>
-      <div className={styles.topline}><span>SOULLAB / SOUND STUDIO & PRESENCE</span><span className={styles.review}>ISOLATED REVIEW · NOT PUBLIC</span></div>
-      <SoundStudioField />
+      <div className={styles.topline}><span>SOULLAB / SOUND STUDIO</span><span className={styles.review}>REVIEW BUILD · NOT PUBLIC</span></div>
+      {view==='now' && <SoundStudioNow onNavigate={go} />}
+      {view==='focus' && <div className={styles.body}><button type="button" className={styles.backLink} onClick={()=>go('now')}>← Now</button><FocusFieldDesk /></div>}
+      {view==='fields' && <SoundStudioField key={fieldKey} initialWorkId={fieldWork} />}
+      {view==='shelf' && <div className={styles.body}>
+        <section aria-labelledby="shelf-title" className={styles.shelfHead}><span className={styles.smallcaps}>SOUND SHELF</span><h2 id="shelf-title">What you keep, and how.</h2><p className={styles.muted}>Your collections, private notes, local files and backup. Nothing here is analyzed, and nothing leaves your device unless you export it.</p></section>
+        <section className={styles.panel} aria-labelledby="journal-title"><span className={styles.smallcaps}>PRIVATE · THIS TAB ONLY</span><h2 id="journal-title">What did you notice?</h2><label htmlFor="listen-note">A listening reflection, without MAIA interpretation</label><textarea id="listen-note" rows={3} value={note} onChange={e=>setNote(e.target.value.slice(0,4000))} placeholder="An image, a feeling, or nothing at all…"/><p className={styles.muted}>No server storage, microphone access, or AI analysis. Save an encrypted backup below to keep it privately.</p></section>
+        <section className={styles.panel} aria-labelledby="library-title"><div className={styles.sectionHead}><div><span className={styles.smallcaps}>YOUR MUSIC, YOUR WAY</span><h2 id="library-title">Bring your collections</h2></div><button className={styles.ghost} type="button" onClick={exportShelf}>Export plain JSON ↗</button></div>
+          <p className={styles.muted}>Add a playlist link from Spotify, TIDAL, Apple Music, Qobuz or SoundCloud; or import a CSV/M3U list of titles. Soullab does not access streaming accounts or copy recordings.</p>
+          <div className={styles.formRow}><label htmlFor="list-name">Collection name <input id="list-name" value={name} maxLength={100} onChange={e=>setName(e.target.value)} placeholder="Existential Bliss"/></label><label htmlFor="list-url">Playlist URL <input id="list-url" value={link} maxLength={2048} onChange={e=>setLink(e.target.value)} placeholder="https://open.spotify.com/playlist/…"/></label><button type="button" className={styles.addButton} onClick={addLink}>Add link</button></div>
+          <div className={styles.importRow}><label className={styles.fileLabel} htmlFor="import-playlist">Import CSV / M3U <input id="import-playlist" type="file" accept=".csv,.m3u,.m3u8,text/csv" onChange={e=>{void importFile(e.target.files?.[0]||null);e.currentTarget.value='';}} /></label>
+            <label className={styles.fileLabel} htmlFor="restore-shelf">Restore Soullab export <input id="restore-shelf" type="file" accept=".json,application/json" onChange={e=>{void restoreShelf(e.currentTarget.files?.[0]||null);e.currentTarget.value='';}} /></label>
+            <span className={styles.muted}>Metadata only · up to 1,000 tracks per collection</span></div>
+          <div className={styles.collectionList}>{collections.length?collections.map(c=><article className={styles.collection} key={c.id}><div><strong>{c.name}</strong><small>{c.provider||'User-supplied track list'} · {c.tracks.length} references</small>{c.tracks.length>0&&<span className={styles.trackPreview}>{c.tracks.slice(0,3).map(t=>t.title).join(' · ')}{c.tracks.length>3?'…':''}</span>}</div>{c.link&&<a href={c.link} target="_blank" rel="noopener noreferrer" aria-label={`Open ${c.name} on ${c.provider}`}>Open in {c.provider} ↗</a>}</article>):<p className={styles.empty}>Your collections will appear here. They remain in this tab until you export them.</p>}</div>
+          <div className={styles.shelfFoot}><span>Not saved to an account or browser storage. No tracking or hidden synchronization.</span><button className={styles.danger} onClick={clearShelf} type="button">Clear tab data</button></div>
+        </section>
+        <PrivateBackupDesk collections={collections} journal={note} onRestore={data=>{setCollections(data.collections);setNote(data.journal);setStatus(`Unlocked ${data.collections.length} collections from your private backup.`);}} />
+        {transportReady && <LocalAudioDesk audioRef={memberAudioRef} onBegin={stop} />}
+      </div>}
+      {view==='studio' && <div className={styles.body}>
+        <section aria-labelledby="studio-title" className={styles.shelfHead}><span className={styles.smallcaps}>STUDIO</span><h2 id="studio-title">Shape what you hear.</h2><p className={styles.muted}>Receptive shaping of a field, kept as a private recipe you can undo. Making, stems and artist originals arrive here as they are admitted.</p></section>
+        {transportReady ? <ReceptiveFieldDesk journey={mood} onSelectJourney={selectMood}
+          onPlay={next=>persistent
+            ? persistent.playSketch(next,journeys[next].frequencies)
+            : Promise.resolve(false)}/> : <section className={styles.panel} aria-live="polite">
+          <span className={styles.smallcaps}>PRIVATE LISTENING</span>
+          <h2>Preparing your Sound Field</h2>
+          <p className={styles.muted}>{boundaryMessage}</p>
+        </section>}
+      </div>}
+      {view==='lab' && <>
+        <div className={styles.body}><section aria-labelledby="lab-title" className={styles.shelfHead}><span className={styles.smallcaps}>LAB</span><h2 id="lab-title">Studies and inquiry.</h2><p className={styles.muted}>Early sound studies and, later, comparisons and research protocols. Nothing here claims an effect on mind or body.</p></section></div>
       <section className={`${styles.hero} ${styles[player.gradient]}`} aria-labelledby="listen-title" data-daily-listening-world="true">
         <div className={styles.heroInner}>
-          <div className={styles.eyebrow}>DAILY LISTENING WORLD · EXISTING REVIEW PATH</div>
+          <div className={styles.eyebrow}>STUDIES · EXISTING REVIEW PATH</div>
           <h1 id="listen-title">{player.title}</h1>
           <p className={styles.subtitle}>{player.subtitle}</p>
           <p className={styles.intro}>{player.description}</p>
@@ -232,7 +286,7 @@ export default function ListenRoom() {
                 ? boundaryStatus === 'checking' ? '…  Verifying private listening' : 'Listening unavailable'
                 : isPlaying ? 'Ⅱ  Pause sound sketch' : '▶  Listen to sound sketch'}
             </button>
-            <button className={styles.secondary} type="button" onClick={()=>setShowJournal(x=>!x)} aria-expanded={showJournal}>Personal reflection</button>
+            <button className={styles.secondary} type="button" onClick={()=>go('shelf')}>Personal reflection</button>
           </div>
           <p className={styles.quality}>LIVE SYNTHESIS · LOW-VOLUME STUDY · NOT A MASTERED OR LICENSED RECORDING</p>
           {persistent && <p role="status" aria-live="polite">{status}</p>}
@@ -240,34 +294,15 @@ export default function ListenRoom() {
         </div>
         <div className={styles.orb} aria-hidden="true" />
       </section>
-      <div className={styles.body}>
-        <FocusFieldDesk />
+        <div className={styles.body}>
         <section aria-labelledby="moods-title"><div className={styles.sectionHead}><div><span className={styles.smallcaps}>CHOOSE YOUR ATMOSPHERE</span><h2 id="moods-title">Where would you like to go?</h2></div></div>
           <div className={styles.tileGrid}>{moodKeys.map(key=><button type="button" key={key} onClick={()=>selectMood(key)} className={`${styles.tile} ${styles['tile'+key]} ${mood===key?styles.selectedTile:''}`} aria-pressed={mood===key}><span>{journeys[key].label}</span><small>{journeys[key].subtitle}</small></button>)}</div>
         </section>
-        {transportReady ? <ReceptiveFieldDesk journey={mood} onSelectJourney={selectMood}
-          onPlay={next=>persistent
-            ? persistent.playSketch(next,journeys[next].frequencies)
-            : Promise.resolve(false)}/> : <section className={styles.panel} aria-live="polite">
-          <span className={styles.smallcaps}>PRIVATE LISTENING</span>
-          <h2>Preparing your Sound Field</h2>
-          <p className={styles.muted}>{boundaryMessage}</p>
-        </section>}
-        {showJournal&&<section className={styles.panel} aria-labelledby="journal-title"><span className={styles.smallcaps}>PRIVATE · THIS TAB ONLY</span><h2 id="journal-title">What did you notice?</h2><label htmlFor="listen-note">A listening reflection, without MAIA interpretation</label><textarea id="listen-note" rows={3} value={note} onChange={e=>setNote(e.target.value.slice(0,4000))} placeholder="An image, a feeling, or nothing at all…"/><p className={styles.muted}>No server storage, microphone access, or AI analysis. Save an encrypted backup below to keep it privately.</p></section>}
-        <section className={styles.panel} aria-labelledby="library-title"><div className={styles.sectionHead}><div><span className={styles.smallcaps}>YOUR MUSIC, YOUR WAY</span><h2 id="library-title">Bring your collections</h2></div><button className={styles.ghost} type="button" onClick={exportShelf}>Export plain JSON ↗</button></div>
-          <p className={styles.muted}>Add a playlist link from Spotify, TIDAL, Apple Music, Qobuz or SoundCloud; or import a CSV/M3U list of titles. Soullab does not access streaming accounts or copy recordings.</p>
-          <div className={styles.formRow}><label htmlFor="list-name">Collection name <input id="list-name" value={name} maxLength={100} onChange={e=>setName(e.target.value)} placeholder="Existential Bliss"/></label><label htmlFor="list-url">Playlist URL <input id="list-url" value={link} maxLength={2048} onChange={e=>setLink(e.target.value)} placeholder="https://open.spotify.com/playlist/…"/></label><button type="button" className={styles.addButton} onClick={addLink}>Add link</button></div>
-          <div className={styles.importRow}><label className={styles.fileLabel} htmlFor="import-playlist">Import CSV / M3U <input id="import-playlist" type="file" accept=".csv,.m3u,.m3u8,text/csv" onChange={e=>{void importFile(e.target.files?.[0]||null);e.currentTarget.value='';}} /></label>
-            <label className={styles.fileLabel} htmlFor="restore-shelf">Restore Soullab export <input id="restore-shelf" type="file" accept=".json,application/json" onChange={e=>{void restoreShelf(e.currentTarget.files?.[0]||null);e.currentTarget.value='';}} /></label>
-            <span className={styles.muted}>Metadata only · up to 1,000 tracks per collection</span></div>
-          <div className={styles.collectionList}>{collections.length?collections.map(c=><article className={styles.collection} key={c.id}><div><strong>{c.name}</strong><small>{c.provider||'User-supplied track list'} · {c.tracks.length} references</small>{c.tracks.length>0&&<span className={styles.trackPreview}>{c.tracks.slice(0,3).map(t=>t.title).join(' · ')}{c.tracks.length>3?'…':''}</span>}</div>{c.link&&<a href={c.link} target="_blank" rel="noopener noreferrer" aria-label={`Open ${c.name} on ${c.provider}`}>Open in {c.provider} ↗</a>}</article>):<p className={styles.empty}>Your collections will appear here. They remain in this tab until you export them.</p>}</div>
-          <div className={styles.shelfFoot}><span>Not saved to an account or browser storage. No tracking or hidden synchronization.</span><button className={styles.danger} onClick={clearShelf} type="button">Clear tab data</button></div>
-        </section>
-        <PrivateBackupDesk collections={collections} journal={note} onRestore={data=>{setCollections(data.collections);setNote(data.journal);setStatus(`Unlocked ${data.collections.length} collections from your private backup.`);}} />
-        {transportReady && <LocalAudioDesk audioRef={memberAudioRef} onBegin={stop} />}
         <section className={styles.article} aria-labelledby="rights-title"><span className={styles.smallcaps}>QUALITY & STEWARDSHIP</span><h2 id="rights-title">Sound deserves attention.</h2><p>Real Soullab recordings will have documented master and composition rights, truthful audio-source labels, and optional lossless playback where supported. Until those rights, private storage and recovery safeguards are approved, this review page offers synthesized studies, device-local files and external links only.</p></section>
-      </div>
+        </div>
+      </>}
       {!persistent && standalone && <div className={styles.bottomPlayer} role="region" aria-label="Listening controls"><div><span className={styles.playerTitle}>{player.title}</span><span className={styles.playerSub}>Original sound sketch · browser synthesis</span></div><button className={styles.roundControl} type="button" onClick={()=>void toggle()} aria-label={isPlaying?'Pause original sound sketch':'Play original sound sketch'}>{isPlaying?'Ⅱ':'▶'}</button><label htmlFor="listen-volume" className={styles.volumeLabel}>Volume <input id="listen-volume" type="range" min="0" max="100" value={volume} onChange={e=>changeVolume(Number(e.target.value))}/></label><span className={styles.status} role="status" aria-live="polite">{shownStatus}</span></div>}
     </div>
+    <nav className={styles.tabBar} aria-label="Sound Studio sections">{sections.map(item=><button type="button" key={item.view} className={activeSection===item.view?styles.tabActive:styles.tab} aria-current={activeSection===item.view?'page':undefined} data-studio-tab={item.view} onClick={()=>go(item.view)}><span aria-hidden="true">{item.glyph}</span>{item.label}</button>)}</nav>
   </main>;
 }
