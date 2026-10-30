@@ -259,18 +259,20 @@ export function PersistentListeningProvider({
   const focusSessionRef = useRef<FocusSession | null>(null);
   const [focusClockMs, setFocusClockMs] = useState(() => Date.now());
   const [focusTimeDisplay, setFocusTimeDisplay] = useState<FocusTimeDisplay>('countdown');
-  // iOS ignores a page's HTMLMediaElement.volume (only the hardware buttons change it). Detect it
-  // rather than assume, so no control claims a level change the device will not make.
+  // iOS ignores a page's HTMLMediaElement.volume: an assignment reads back for an instant, then the
+  // platform value returns to 1 (measured on device). Detect it after a beat, not in the same tick,
+  // so no control claims a level change the device will not make.
   const [volumeAdjustable, setVolumeAdjustable] = useState(true);
   useEffect(() => {
     const element = media.current;
     if (!element) return;
     const before = element.volume;
-    try {
-      element.volume = 0.5;
+    try { element.volume = 0.5; } catch { setVolumeAdjustable(false); return; }
+    const timer = window.setTimeout(() => {
       setVolumeAdjustable(Math.abs(element.volume - 0.5) < 0.01);
-    } catch { setVolumeAdjustable(false); }
-    try { element.volume = before; } catch { /* read-only on this platform */ }
+      try { element.volume = before; } catch { /* read-only on this platform */ }
+    }, 150);
+    return () => window.clearTimeout(timer);
   }, []);
   const [mediaURL, setMediaURL] = useState<string | null>(null);
 
