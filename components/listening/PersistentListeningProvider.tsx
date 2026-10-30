@@ -39,8 +39,8 @@ import type {
   FocusFeedbackOutcome, FocusFeedbackTag, FocusInterruptionReason,
   FocusRetune, FocusSession, FocusSessionPlanInput,
 } from '@/lib/listening/focusFieldSession';
-import { soundPassageAt } from '@/lib/listening/soundStudioExperience';
-import type { SoundExperiencePlayback } from '@/lib/listening/soundStudioExperience';
+import { reviewMediaEdition, soundPassageAt } from '@/lib/listening/soundStudioExperience';
+import type { SoundExperienceManifest, SoundExperiencePlayback } from '@/lib/listening/soundStudioExperience';
 
 /**
  * LISTEN-10 · Isolated cross-room transport candidate.
@@ -55,7 +55,7 @@ import type { SoundExperiencePlayback } from '@/lib/listening/soundStudioExperie
  * account tokens are used.
  */
 export type ListeningMood = 'focus' | 'create' | 'drift' | 'rest';
-type Kind = 'none' | 'sketch' | 'local-file';
+type Kind = 'none' | 'sketch' | 'local-file' | 'review-media';
 type Playback = 'idle' | 'playing' | 'paused' | 'error';
 
 export type ListeningSnapshot = {
@@ -97,6 +97,7 @@ export type ListeningTransport = {
   playSketch: (
     mood: ListeningMood, frequencies: number[], experience?: SoundExperiencePlayback,
   ) => Promise<boolean>;
+  playExperienceMedia: (manifest: SoundExperienceManifest) => Promise<boolean>;
   selectLocalFile: (file: File) => { accepted: boolean; message: string };
   playLocalFile: () => Promise<boolean>;
   pause: () => void;
@@ -249,6 +250,7 @@ export function PersistentListeningProvider({
   const media = useRef<HTMLAudioElement | null>(null);
   const blobURL = useRef<string | null>(null);
   const selected = useRef<{ title: string; format: string } | null>(null);
+  const reviewManifest = useRef<SoundExperienceManifest | null>(null);
   const volumeRef = useRef(45);
   const epoch = useRef(0);
   // Stable within this one member-bound provider instance, never serialized or shared.
@@ -308,7 +310,13 @@ export function PersistentListeningProvider({
 
   const pause = useCallback(() => {
     ++epoch.current;
-    const elapsedMs = pauseExperienceClock();
+    const elapsedMs = kind.current === 'review-media' && media.current
+      ? Math.min(reviewManifest.current?.durationMs ?? Number.MAX_SAFE_INTEGER, media.current.currentTime * 1000)
+      : pauseExperienceClock();
+    if (kind.current === 'review-media' && experience.current) {
+      experience.current.elapsedMs = elapsedMs;
+      experience.current.startedAt = null;
+    }
     if (sketch.current) {
       // Pause rather than deleting the sketch so member can explicitly resume.
       void sketch.current.context.suspend().catch(() => undefined);
@@ -330,6 +338,10 @@ export function PersistentListeningProvider({
   const stopAll = useCallback(() => {
     ++epoch.current;
     media.current?.pause();
+    if (media.current) {
+      media.current.removeAttribute('src');
+      media.current.load();
+    }
     releaseOutput();
     if (sketch.current) { endSketch(sketch.current); sketch.current = null; }
     if (blobURL.current) {
@@ -337,6 +349,7 @@ export function PersistentListeningProvider({
       blobURL.current = null;
     }
     selected.current = null;
+    reviewManifest.current = null;
     kind.current = 'none';
     experience.current = null;
     setMediaURL(null);
@@ -657,6 +670,95 @@ export function PersistentListeningProvider({
     }
   }, [claimFocus, refuseDuringMaiaSpeech, releaseOutput, pause, experienceElapsed]);
 
+  const playExperienceMedia = useCallback(async (
+    manifest: SoundExperienceManifest,
+  ): Promise<boolean> => {
+    const edition = reviewMediaEdition(manifest);
+    if (!edition?.path) {
+      setSnapshot(old => ({ ...old, playback: 'error',
+        message: 'This experience has no accepted private-review media edition.' }));
+      return false;
+    }
+    if (refuseDuringMaiaSpeech()) return false;
+    const audio = media.current;
+    if (!audio) return false;
+    if (outputLease.current) pause();
+    const generation = ++epoch.current;
+    const lease = await acquireAudioOutput('listening-music');
+    if (!lease || generation !== epoch.current || isMaiaSpeechActive()) {
+      lease?.release();
+      if (generation === epoch.current) {
+        if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
+        else setSnapshot(old => ({ ...old, playback: 'paused',
+          message: 'Another Soullab tab is playing audio, or coordination is unavailable. Please try again.' }));
+      }
+      return false;
+    }
+    outputLease.current = lease;
+    if (sketch.current) { endSketch(sketch.current); sketch.current = null; }
+    const continuing = kind.current === 'review-media' &&
+      reviewManifest.current?.manifestId === manifest.manifestId &&
+      audio.getAttribute('src') === edition.path;
+    if (!continuing) {
+      audio.pause();
+      audio.src = edition.path;
+      audio.preload = 'auto';
+      audio.load();
+      kind.current = 'review-media';
+      reviewManifest.current = manifest;
+      selected.current = { title: manifest.title, format: edition.codecLabel };
+      experience.current = {
+        definition: {
+          id: manifest.experienceId, title: manifest.title, subtitle: manifest.subtitle,
+          durationMs: manifest.durationMs, passages: manifest.passages,
+        },
+        elapsedMs: 0, startedAt: null,
+      };
+      // Keep admitted review media on the existing imperative element. The
+      // local-file URL remains React-owned; assigning both here would cause a
+      // post-play src reconciliation that reloads and pauses this same media.
+      setSnapshot({
+        kind: 'review-media', playback: 'paused', mood: null,
+        title: manifest.title, subtitle: manifest.subtitle,
+        experienceId: manifest.experienceId, durationMs: manifest.durationMs,
+        elapsedMs: 0, passage: manifest.passages[0]?.label ?? null,
+        fileFormat: edition.codecLabel,
+        message: `${edition.codecLabel} · exact private-review media.`,
+      });
+    }
+    try {
+      audio.volume = volumeRef.current / 100;
+      await audio.play();
+      if (generation !== epoch.current || kind.current !== 'review-media' ||
+          reviewManifest.current?.manifestId !== manifest.manifestId || isMaiaSpeechActive()) {
+        audio.pause();
+        releaseOutput();
+        if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
+        return false;
+      }
+      claimFocus();
+      const elapsedMs = Math.min(manifest.durationMs, audio.currentTime * 1000);
+      if (experience.current) {
+        experience.current.elapsedMs = elapsedMs;
+        experience.current.startedAt = null;
+      }
+      setSnapshot({
+        kind: 'review-media', playback: 'playing', mood: null,
+        title: manifest.title, subtitle: manifest.subtitle,
+        experienceId: manifest.experienceId, durationMs: manifest.durationMs,
+        elapsedMs, passage: soundPassageAt(manifest.passages, elapsedMs)?.label ?? null,
+        fileFormat: edition.codecLabel,
+        message: `${edition.codecLabel} · exact private-review media.`,
+      });
+      return true;
+    } catch {
+      releaseOutput();
+      setSnapshot(old => ({ ...old, playback: 'error',
+        message: 'This browser could not decode or play the accepted review recording.' }));
+      return false;
+    }
+  }, [claimFocus, pause, refuseDuringMaiaSpeech, releaseOutput]);
+
   const selectLocalFile = useCallback((file: File) => {
     const result = validateLocalAudio(file);
     if (result.allowed === false) return { accepted: false, message: result.reason };
@@ -719,28 +821,72 @@ export function PersistentListeningProvider({
     stopAll();
   }, [stopAll]);
 
-  const onLocalPlay = useCallback(() => {
-    if (kind.current !== 'local-file' || !selected.current) return;
+  const onMediaPlay = useCallback(() => {
+    if ((kind.current !== 'local-file' && kind.current !== 'review-media') || !selected.current) return;
     if (isMaiaSpeechActive() || !outputLease.current) {
       media.current?.pause(); releaseOutput(); refuseDuringMaiaSpeech(); return;
     }
     claimFocus();
     setSnapshot(old => ({
-      ...old, kind:'local-file', playback:'playing',
-      message:'Playing only your device-local file. No upload or analysis.',
+      ...old, playback:'playing',
+      message: kind.current === 'review-media'
+        ? `${selected.current?.format} · exact private-review media.`
+        : 'Playing only your device-local file. No upload or analysis.',
     }));
   }, [claimFocus, refuseDuringMaiaSpeech, releaseOutput]);
 
-  const onLocalPause = useCallback(() => {
-    if (kind.current !== 'local-file') return;
+  const onMediaPause = useCallback(() => {
+    if (kind.current !== 'local-file' && kind.current !== 'review-media') return;
+    const elapsedMs = kind.current === 'review-media' && media.current
+      ? Math.min(reviewManifest.current?.durationMs ?? Number.MAX_SAFE_INTEGER, media.current.currentTime * 1000)
+      : snapshot.elapsedMs;
+    if (kind.current === 'review-media' && experience.current && typeof elapsedMs === 'number') {
+      experience.current.elapsedMs = elapsedMs;
+      experience.current.startedAt = null;
+    }
     releaseOutput();
-    setSnapshot(old => old.playback === 'playing' ? { ...old, playback:'paused' } : old);
+    setSnapshot(old => old.playback === 'playing' ? {
+      ...old, playback:'paused',
+      elapsedMs: typeof elapsedMs === 'number' ? elapsedMs : old.elapsedMs,
+      passage: kind.current === 'review-media' && reviewManifest.current && typeof elapsedMs === 'number'
+        ? soundPassageAt(reviewManifest.current.passages, elapsedMs)?.label ?? null
+        : old.passage,
+    } : old);
+  }, [releaseOutput, snapshot.elapsedMs]);
+
+  const onMediaTimeUpdate = useCallback(() => {
+    if (kind.current !== 'review-media' || !media.current || !reviewManifest.current) return;
+    const manifest = reviewManifest.current;
+    const elapsedMs = Math.min(manifest.durationMs, media.current.currentTime * 1000);
+    if (experience.current) {
+      experience.current.elapsedMs = elapsedMs;
+      experience.current.startedAt = null;
+    }
+    setSnapshot(old => old.experienceId === manifest.experienceId ? {
+      ...old, elapsedMs,
+      passage: soundPassageAt(manifest.passages, elapsedMs)?.label ?? null,
+    } : old);
+  }, []);
+
+  const onMediaEnded = useCallback(() => {
+    releaseOutput();
+    if (kind.current !== 'review-media' || !reviewManifest.current) return;
+    const manifest = reviewManifest.current;
+    if (experience.current) {
+      experience.current.elapsedMs = manifest.durationMs;
+      experience.current.startedAt = null;
+    }
+    setSnapshot(old => old.experienceId === manifest.experienceId ? {
+      ...old, playback: 'paused', elapsedMs: manifest.durationMs,
+      passage: manifest.passages[manifest.passages.length - 1]?.label ?? null,
+      message: `${manifest.title} is complete. It will not restart automatically.`,
+    } : old);
   }, [releaseOutput]);
 
   const transport: ListeningTransport = {
     snapshot, volume, setVolume, shape, setShape,
     fields, keepField, dropField, replaceFields,
-    playSketch, selectLocalFile, playLocalFile,
+    playSketch, playExperienceMedia, selectLocalFile, playLocalFile,
     pause, stopMusic: stopAll, listeningInstance, removeLocalFile,
     focusSession, focusClockMs,
     startFocusSession: beginFocusSession,
@@ -756,6 +902,9 @@ export function PersistentListeningProvider({
   const displayed = audioDisplayed || focusDisplayed;
   const resumeMusic = () => {
     if (snapshot.kind === 'local-file') { void playLocalFile(); return; }
+    if (snapshot.kind === 'review-media' && reviewManifest.current) {
+      void playExperienceMedia(reviewManifest.current); return;
+    }
     if (snapshot.kind === 'sketch') {
       void playSketch(
         snapshot.mood || 'drift',
@@ -785,10 +934,16 @@ export function PersistentListeningProvider({
     <audio ref={media} data-listen10-audio="true"
       style={{display:'none'}}
       src={mediaURL || undefined} preload="metadata"
-      onPlay={onLocalPlay} onPause={onLocalPause}
-      onEnded={releaseOutput}
-      onError={()=>{releaseOutput();snapshot.kind==='local-file' && setSnapshot(old=>({
-        ...old, playback:'error',message:'Local audio cannot be decoded.',
-      }));}}/>
+      onPlay={onMediaPlay} onPause={onMediaPause}
+      onTimeUpdate={onMediaTimeUpdate} onEnded={onMediaEnded}
+      onError={()=>{
+        releaseOutput();
+        if (snapshot.kind === 'local-file') setSnapshot(old=>({
+          ...old, playback:'error',message:'Local audio cannot be decoded.',
+        }));
+        if (snapshot.kind === 'review-media') setSnapshot(old=>({
+          ...old, playback:'error',message:'Accepted review media cannot be decoded on this device.',
+        }));
+      }}/>
   </Context.Provider>;
 }

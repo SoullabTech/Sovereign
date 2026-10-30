@@ -1,3 +1,5 @@
+import openGroundManifestSource from './manifests/open-ground-432-v1.json';
+
 export type SoundStudioDoorID = 'experience' | 'explore' | 'create' | 'professional';
 
 export type SoundStudioDoor = {
@@ -24,6 +26,98 @@ export type SoundExperiencePlayback = {
   passages: readonly SoundExperiencePassage[];
 };
 
+export type SoundExperienceMediaEdition = {
+  id: string;
+  role: 'mobile_listening_review' | 'preservation_master';
+  path: string | null;
+  mimeType: string;
+  codecLabel: string;
+  sha256: string;
+  sizeBytes: number;
+  sampleRateHz: number;
+  channels: number;
+  durationMs: number;
+  bundled: boolean;
+  custody?: string;
+};
+
+export type SoundExperienceManifest = {
+  schema: 'soullab.sound.experience-manifest.v1';
+  manifestId: string;
+  experienceId: string;
+  version: string;
+  title: string;
+  subtitle: string;
+  status: 'private_review';
+  ownerLane: string;
+  durationMs: number;
+  authorship: {
+    creativeDirection: string;
+    composition: string;
+    performers: readonly string[];
+    thirdPartyAudio: boolean;
+    learnedAudioModel: boolean;
+  };
+  editions: {
+    defaultReview: SoundExperienceMediaEdition;
+    preservationMaster: SoundExperienceMediaEdition;
+  };
+  sourceEvidence: {
+    listeningGuideSha256: string;
+    listeningGuideSizeBytes: number;
+    sourcePackageSha256: string;
+    sourcePackageSizeBytes: number;
+    technicalQualification: string;
+  };
+  script: null;
+  voice: null;
+  techniques: {
+    tuningReferenceHz: number;
+    tonalCenterHz: number;
+    rootHz: number;
+    pitchSystem: string;
+    regularBeat: boolean;
+    designedBinauralProtocol: boolean;
+    designedIsochronicProtocol: boolean;
+    fadeInSeconds: number;
+    fadeOutSeconds: number;
+  };
+  passages: readonly SoundExperiencePassage[];
+  permissions: {
+    scope: 'authenticated_founder_private_review';
+    onDemandReview: boolean;
+    productionRelease: boolean;
+    download: boolean;
+    offlineCabin: boolean;
+    shaping: boolean;
+    aiAudioAnalysis: boolean;
+    thirdPartyRights: 'none_present';
+    rightsAuthority: string;
+  };
+  acceptance: Record<string, string>;
+};
+
+export const OPEN_GROUND_EXPERIENCE_MANIFEST =
+  openGroundManifestSource as unknown as SoundExperienceManifest;
+
+export function reviewMediaEdition(
+  manifest: SoundExperienceManifest,
+): SoundExperienceMediaEdition | null {
+  const media = manifest.editions.defaultReview;
+  if (manifest.schema !== 'soullab.sound.experience-manifest.v1' ||
+      manifest.status !== 'private_review' ||
+      manifest.permissions.scope !== 'authenticated_founder_private_review' ||
+      !manifest.permissions.onDemandReview ||
+      manifest.permissions.productionRelease ||
+      manifest.permissions.aiAudioAnalysis ||
+      manifest.authorship.thirdPartyAudio ||
+      !media.bundled || !media.path?.startsWith('/media/sound-studio/') ||
+      !/^[a-f0-9]{64}$/.test(media.sha256) ||
+      media.durationMs !== manifest.durationMs ||
+      media.channels !== 2 || media.sampleRateHz !== 48_000) return null;
+  return media;
+}
+
 export type SoundStudioWork = SoundExperiencePlayback & {
   state: 'review' | 'study' | 'proposed';
   kind: string;
@@ -32,6 +126,7 @@ export type SoundStudioWork = SoundExperiencePlayback & {
   frequencies: readonly [number, number, number];
   qualities: readonly string[];
   primaryDoor: SoundStudioDoorID;
+  manifest?: SoundExperienceManifest;
 };
 
 export const SOUND_STUDIO_DOORS: readonly SoundStudioDoor[] = [
@@ -66,25 +161,20 @@ export const SOUND_STUDIO_DOORS: readonly SoundStudioDoor[] = [
 ] as const;
 
 export const OPEN_GROUND: SoundStudioWork = {
-  id: 'open-ground-432-v1',
-  title: 'Open Ground',
-  subtitle: 'A sustained tonal world',
-  durationMs: 6 * 60 * 1000,
+  id: OPEN_GROUND_EXPERIENCE_MANIFEST.experienceId,
+  title: OPEN_GROUND_EXPERIENCE_MANIFEST.title,
+  subtitle: OPEN_GROUND_EXPERIENCE_MANIFEST.subtitle,
+  durationMs: OPEN_GROUND_EXPERIENCE_MANIFEST.durationMs,
   state: 'review',
-  kind: 'Drone study · procedural review edition',
+  kind: 'Original procedural composition · exact reviewed media edition',
   description: 'A low foundation, slowly changing overtones and a quiet field of air. Nothing to achieve; enough time to notice what becomes perceptible.',
   mood: 'drift',
   frequencies: [72, 144, 216],
-  qualities: ['A4 = 432 Hz reference', 'No regular beat', 'Music only', 'Six minutes'],
+  qualities: ['A4 = 432 Hz reference', 'AAC review edition', '24-bit master preserved', 'Six minutes'],
   primaryDoor: 'experience',
-  passages: [
-    { id: 'arrival', label: 'Arrival', startMs: 0, endMs: 60_000, invitation: 'Let the tonal center meet the room around you.' },
-    { id: 'opening', label: 'Opening', startMs: 60_000, endMs: 150_000, invitation: 'Intervals and overtone color become perceptible.' },
-    { id: 'dwelling', label: 'Dwelling', startMs: 150_000, endMs: 270_000, invitation: 'Remain with the field while small changes keep it alive.' },
-    { id: 'return', label: 'Return', startMs: 270_000, endMs: 360_000, invitation: 'Let the material gather and make room for what follows.' },
-  ],
+  passages: OPEN_GROUND_EXPERIENCE_MANIFEST.passages,
+  manifest: OPEN_GROUND_EXPERIENCE_MANIFEST,
 };
-
 export const SOUND_STUDIO_WORKS: readonly SoundStudioWork[] = [
   OPEN_GROUND,
   {

@@ -17,7 +17,7 @@ import type {
 } from './maiaMusicCommand';
 
 export type MaiaMusicBridgePort = {
-  readonly snapshot: { readonly playback: 'idle' | 'playing' | 'paused' | 'error'; readonly kind?: 'none' | 'sketch' | 'local-file' };
+  readonly snapshot: { readonly playback: 'idle' | 'playing' | 'paused' | 'error'; readonly kind?: 'none' | 'sketch' | 'local-file' | 'review-media' };
   readonly focusSession: { readonly status: 'ready' | 'running' | 'paused' | 'completed' | 'stopped' } | null;
   readonly pause: () => void;
   readonly stopMusic: () => void;

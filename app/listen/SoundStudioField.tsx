@@ -55,20 +55,24 @@ export default function SoundStudioField() {
       setMessage('Paused by you. The experience remains available to resume.');
       return;
     }
-    const started = await transport.playSketch(
-      selected.mood,
-      [...selected.frequencies],
-      {
-        id: selected.id,
-        title: selected.title,
-        subtitle: selected.subtitle,
-        durationMs: selected.durationMs,
-        passages: selected.passages,
-      },
-    );
+    const started = selected.manifest
+      ? await transport.playExperienceMedia(selected.manifest)
+      : await transport.playSketch(
+          selected.mood,
+          [...selected.frequencies],
+          {
+            id: selected.id,
+            title: selected.title,
+            subtitle: selected.subtitle,
+            durationMs: selected.durationMs,
+            passages: selected.passages,
+          },
+        );
     setMessage(started
-      ? `Playing ${selected.title} through the existing Soullab listening session.`
-      : 'Sound did not start. Another Soullab audio experience may be active, or coordination is unavailable.');
+      ? selected.manifest
+        ? `Playing the exact ${selected.manifest.editions.defaultReview.codecLabel} through the existing Soullab listening session.`
+        : `Playing ${selected.title} through the existing Soullab listening session.`
+      : 'Sound did not start. Another Soullab audio experience may be active, the media may be unavailable, or coordination is unavailable.');
   };
 
   const stop = () => {
@@ -158,7 +162,7 @@ export default function SoundStudioField() {
                   setSelectedID(work.id);
                   if (work.id === OPEN_GROUND.id) {
                     setImmersive(true);
-                    setMessage('Open Ground is ready. Sound waits for your explicit Play.');
+                    setMessage('Open Ground is ready with its exact reviewed AAC edition. Sound waits for your explicit Play.');
                   } else {
                     setImmersive(false);
                     setMessage(`${work.title} is preserved as an authoring study. Open Ground is the complete responsive prototype in this build.`);
@@ -217,7 +221,7 @@ export default function SoundStudioField() {
             </div>
             <p className={styles.immersiveStatus} role="status" aria-live="polite">{message}</p>
             <p className={styles.quality}>
-              PROCEDURAL REVIEW EDITION · EXISTING PERSISTENT PLAYER · NO BIOMETRICS · NO HIDDEN ANALYSIS
+              EXACT REVIEWED AAC EDITION · 24-BIT MASTER PRESERVED · EXISTING PERSISTENT PLAYER · NO BIOMETRICS · NO HIDDEN ANALYSIS
             </p>
           </div>
         </section>

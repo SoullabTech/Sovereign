@@ -41,11 +41,17 @@ test('one Sound Studio field progressively discloses four reasons to enter', () 
   assert.match(field, /One studio, one listening authority/);
 });
 
-test('Open Ground is a complete six-minute experience with four passages', () => {
+test('Open Ground is a manifest-bound six-minute experience with four passages', () => {
   const model = read('lib/listening/soundStudioExperience.ts');
-  assert.match(model, /id: 'open-ground-432-v1'/);
-  assert.match(model, /durationMs: 6 \* 60 \* 1000/);
-  for (const passage of ['Arrival', 'Opening', 'Dwelling', 'Return']) assert.match(model, new RegExp(`label: '${passage}'`));
+  const manifest = JSON.parse(read('lib/listening/manifests/open-ground-432-v1.json'));
+  assert.equal(manifest.schema, 'soullab.sound.experience-manifest.v1');
+  assert.equal(manifest.experienceId, 'open-ground-432-v1');
+  assert.equal(manifest.durationMs, 6 * 60 * 1000);
+  assert.deepEqual(manifest.passages.map(passage => passage.label),
+    ['Arrival', 'Opening', 'Dwelling', 'Return']);
+  assert.equal(manifest.techniques.tuningReferenceHz, 432);
+  assert.match(model, /OPEN_GROUND_EXPERIENCE_MANIFEST\.experienceId/);
+  assert.match(model, /reviewMediaEdition/);
   assert.match(model, /A4 = 432 Hz reference/);
 });
 
@@ -55,8 +61,10 @@ test('new field reuses provider and creates no second audio engine', () => {
   const provider = read('components/listening/PersistentListeningProvider.tsx');
   assert.doesNotMatch(field, /new AudioContext|new Audio\(|<audio/);
   assert.doesNotMatch(dock, /new AudioContext|new Audio\(|<audio/);
+  assert.match(field, /transport\.playExperienceMedia/);
   assert.match(field, /transport\.playSketch/);
   assert.match(provider, /function newSketch/);
+  assert.match(provider, /const playExperienceMedia/);
   assert.equal((provider.match(/<audio ref=\{media\}/g) || []).length, 1);
 });
 
