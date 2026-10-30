@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -56,6 +56,13 @@ export default function P4R1HomeController() {
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /* F6 — "create a Work, then place writing in it" is two requests. If the
+     second fails the Work already exists, empty. A retry of the SAME gesture
+     reuses that Work instead of creating another. Keyed by the gesture (which
+     writing, or which title), cleared when the gesture completes, and held only
+     in this view: a reload forgets it. Nothing is stored or inferred. */
+  const createdWorkForGesture = useRef(new Map<string, string>());
 
   const post = useCallback(async (url: string, body?: unknown) => {
     const response = await apiFetch(url, {
@@ -188,9 +195,13 @@ export default function P4R1HomeController() {
     setBusy(true);
     setError(null);
     try {
-      const workId = idFrom(await post('/api/sovereign/living-works', title.trim() ? { title: title.trim() } : {}));
+      const gesture = 'begin:' + title.trim();
+      const workId = createdWorkForGesture.current.get(gesture)
+        ?? idFrom(await post('/api/sovereign/living-works', title.trim() ? { title: title.trim() } : {}));
       if (!workId) throw new Error('work id');
+      createdWorkForGesture.current.set(gesture, workId);
       const manuscriptId = await startWritingInWork(workId);
+      createdWorkForGesture.current.delete(gesture);
       await refresh();
       open(manuscriptId);
     } catch {
@@ -223,9 +234,13 @@ export default function P4R1HomeController() {
     setBusy(true);
     setError(null);
     try {
-      const workId = idFrom(await post('/api/sovereign/living-works', title?.trim() ? { title: title.trim() } : {}));
+      const gesture = 'make:' + manuscriptId;
+      const workId = createdWorkForGesture.current.get(gesture)
+        ?? idFrom(await post('/api/sovereign/living-works', title?.trim() ? { title: title.trim() } : {}));
       if (!workId) throw new Error('work id');
+      createdWorkForGesture.current.set(gesture, workId);
       await declare(workId, manuscriptId);
+      createdWorkForGesture.current.delete(gesture);
       await refresh();
     } catch {
       setError('That writing could not be placed in a new Work just now. The writing itself has not changed.');
