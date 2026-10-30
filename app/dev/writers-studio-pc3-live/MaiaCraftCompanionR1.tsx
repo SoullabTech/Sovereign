@@ -10,6 +10,8 @@ import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { CraftDialogueTurn, CraftSendOptions } from '@/lib/writersStudio/craftDialogueR1';
 import { craftTargetKey, type CraftFocusTarget } from '@/lib/writersStudio/craftFocusR1';
+import { authorRelationalBoundary } from '@/lib/writersStudio/relationalCraftExchange';
+import { RELATIONAL_WRITING_INVITATIONS, composeRelationalCraftRequest, optionsForRelationalCraftPlan } from '@/lib/writersStudio/relationalCraftExchange';
 import {
   EDITORIAL_LATITUDES,
   LATITUDE_BANDS,
@@ -39,6 +41,11 @@ export type MaiaCraftCompanionR1Props = {
   sessionPosture: CurrentPostureRead;
   onChooseSessionPosture: (sanctuary: boolean) => void;
   onSend: (text?: string, options?: CraftSendOptions) => void;
+  /** Exact current-Work stop gate: invalidates visible in-flight editorial reply. */
+  onStopRevisions: () => void;
+  onResumeRevisions: () => void;
+  /** Use existing Craft Table Keep/STET mark, never modify manuscript. */
+  onKeepExactWords: (words: string) => { ok: boolean; message: string };
   /** Presentation-only access to author-owned unsent wording in this mounted focus. */
   onConnect?: (port: MaiaCraftComposerPort | null) => void;
   onDepth: (depth: EditorialDepth) => void;
@@ -67,6 +74,13 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
   const [lastRequested, setLastRequested] = useState<string | null>(null);
   const [draftNotice, setDraftNotice] = useState<string | null>(null);
   const [localAuthorAttempts, setLocalAuthorAttempts] = useState<readonly LocalAuthorAttempt[]>([]);
+  // These are NOT saved memories or inferred traits. They belong solely to
+  // the exact currently mounted Craft focus and are lost on scope departure.
+  const [revisionsPaused, setRevisionsPaused] = useState(false);
+  const [authorCorrection, setAuthorCorrection] = useState<string | null>(null);
+  const [keptExactPhrase, setKeptExactPhrase] = useState<string | null>(null);
+  const [pendingKeepPhrase, setPendingKeepPhrase] = useState<string | null>(null);
+  const turnsAtStop = useRef<number | null>(null);
   const attemptCounter = useRef(0);
   const sameTickSubmission = useRef(false);
   const focusKey = props.currentFocus ? craftTargetKey(props.currentFocus) : null;
@@ -81,6 +95,11 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
     setLastRequested(null);
     setDraftNotice(null);
     setLocalAuthorAttempts([]);
+    setRevisionsPaused(false);
+    setAuthorCorrection(null);
+    setKeptExactPhrase(null);
+    setPendingKeepPhrase(null);
+    turnsAtStop.current = null;
   }, [focusKey]);
   useEffect(() => {
     props.onConnect?.(focusKey ? {
@@ -89,6 +108,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
     return () => props.onConnect?.(null);
   });
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [invitationIndex, setInvitationIndex] = useState(0);
   const transcriptRef = useRef<HTMLDivElement | null>(null);
 
   const ordinary = props.sessionPosture.resolved && !props.sessionPosture.sanctuary;
@@ -96,13 +116,22 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
   // A Sanctuary/unresolved transition retires local attempted words rather
   // than resurrecting them on returning to Ordinary. No browser storage.
   useEffect(() => {
-    if (!ordinary) setLocalAuthorAttempts([]);
+    if (!ordinary) {
+      setLocalAuthorAttempts([]);
+      setAuthorCorrection(null);
+      setKeptExactPhrase(null);
+      setPendingKeepPhrase(null);
+    }
   }, [ordinary]);
 
   // Only the actual author-composed, current-focus literal can become a You
   // bubble here. Server "author" bodies may contain private prompt scaffolding
   // and are NOT automatically presentation-safe or confirmation of delivery.
-  const dialogue: CraftDialogueTurn[] = [...props.dialogue];
+  // Once the writer stops, even a delayed server reply from a prior request
+  // cannot silently become a new visible suggestion in this Craft window.
+  const dialogue: CraftDialogueTurn[] = revisionsPaused && turnsAtStop.current !== null
+    ? [...props.dialogue.slice(0, turnsAtStop.current)]
+    : [...props.dialogue];
   const currentAttempts = ordinary && focusKey
     ? localAuthorAttempts.filter(turn => turn.focusKey === focusKey) : [];
   for (let i = currentAttempts.length - 1; i >= 0; i--) {
@@ -118,21 +147,74 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
     node.scrollTop = node.scrollHeight;
   }, [props.dialogue.length, props.activity, props.busy]);
 
+  const stopRevisions = (commandWasTyped: boolean) => {
+    turnsAtStop.current = props.dialogue.length;
+    setRevisionsPaused(true);
+    setPendingKeepPhrase(null);
+    props.onStopRevisions();
+    if (commandWasTyped) setDraft('');
+    setLastRequested(null);
+    setDraftNotice('Stopped in this passage. Nothing was applied. No new revision requests will be sent until you resume. An earlier server request may still complete, but its reply is withheld here.');
+  };
+
+  const resumeRevisions = (commandWasTyped: boolean) => {
+    props.onResumeRevisions();
+    setRevisionsPaused(false);
+    turnsAtStop.current = null;
+    if (commandWasTyped) setDraft('');
+    setDraftNotice('You chose to resume this passage. Nothing has been submitted automatically.');
+  };
+
+  const keepChosenPhrase = () => {
+    if (!pendingKeepPhrase || revisionsPaused || props.busy) return;
+    const receipt = props.onKeepExactWords(pendingKeepPhrase);
+    if (receipt.ok) {
+      setKeptExactPhrase(pendingKeepPhrase);
+      setDraft('');
+      setLastRequested(null);
+      setPendingKeepPhrase(null);
+      setDraftNotice('These exact words are marked Keep in your current Craft working copy. The manuscript is unchanged; explicitly save working choices if you want them retained.');
+    } else {
+      setDraftNotice(receipt.message);
+    }
+  };
+
   const send = (
     text: string,
     depth?: EditorialDepth,
     options?: CraftSendOptions,
     displayText?: string,
   ) => {
-    if (!ordinary || props.busy) return;
+    if (revisionsPaused || !ordinary || props.busy) return;
     if (depth) props.onDepth(depth);
     props.onSend(text, displayText ? { ...options, displayText } : options);
   };
 
   const sendDraft = () => {
-    // Test emptiness with trim; preserve the exact authored Unicode/spacing.
+    // The author's exact words remain primary. A conservative, local planner
+    // only narrows the reply/proposal contract, never the authorized passage.
     const request = draft;
-    if (!request.trim() || !ordinary || props.busy || !focusKey || sameTickSubmission.current) return;
+    const boundary = authorRelationalBoundary(request);
+    if (boundary?.kind === 'stop') {
+      stopRevisions(true);
+      return;
+    }
+    if (boundary?.kind === 'resume') {
+      resumeRevisions(true);
+      return;
+    }
+    if (revisionsPaused) {
+      setDraftNotice('You chose to stop revisions here. Resume explicitly before asking MAIA to work on this passage again.');
+      return;
+    }
+    if (boundary?.kind === 'keep_phrase') {
+      if (!ordinary || props.busy || !focusKey) return;
+      setPendingKeepPhrase(boundary.phrase);
+      setDraftNotice('Review the exact words before placing a Keep mark. This does not change the manuscript.');
+      return;
+    }
+    const plan = composeRelationalCraftRequest(request);
+    if (!plan || !ordinary || props.busy || !focusKey || sameTickSubmission.current) return;
     sameTickSubmission.current = true;
     // This is visibly "attempted · not confirmed", NOT a persisted transcript.
     // It stays scoped to the mounted exact focus and never includes the
@@ -142,16 +224,16 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
       key, focusKey, body: request, afterIndex: props.dialogue.length,
     }].slice(-8));
     try {
-      send([
-      'Keep our conversation in view. Follow the writer’s requested reading scope; keep any wording proposal inside the active editing passage. Wider reading does not itself move focus or authorize Apply.',
-      '',
-      'What I want the writing to do:',
-      request,
-      '',
-      'Respond to my intention first. If wording would help, offer a bounded craft move directly against this passage.',
-      'Preserve my voice, meaning, cadence, imagery, worldview, and intentional ambiguity unless I explicitly ask to change one of them.',
-      'Nothing is applied automatically.',
-    ].join('\n'), undefined, { displayText: request });
+      // Real editorial endpoint independently verifies signed current Work,
+      // exact original section, revision, relationship and session posture.
+      // A conversational prompt never grants new rights or applies an edit.
+      // ER-R1 persists EXACT member-authored bytes in ask_turns. The model
+      // scaffolding belongs to the SERVER's system instruction, not here.
+      // A prior correction is already a distinct author turn if it was
+      // delivered; an unconfirmed correction is never smuggled into a new
+      // durable author turn as if it were part of the writer's current words.
+      send(plan.authorText, undefined, optionsForRelationalCraftPlan(plan));
+      if (boundary?.kind === 'correction') setAuthorCorrection(boundary.words);
       // The onSend interface returns void. Calling it is not confirmation that
       // the service accepted or delivered the message. Never erase author text
       // on an uncertain acknowledgment or a later failure.
@@ -213,7 +295,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                   </div>
                 ))}
               </div>
-            ) : props.lastMaiaTurn?.body ? (
+            ) : !revisionsPaused && props.lastMaiaTurn?.body ? (
               <div className="p4r1-maia-craft-r1-transcript">
                 <div className="p4r1-maia-craft-r1-turn" data-speaker="maia">
                   <span>MAIA</span>
@@ -255,6 +337,45 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
           </div>
 
           <div className="p4r1-maia-craft-r1-compose">
+            <section className="p4r1-maia-author-boundary" data-maia-author-boundary>
+              {revisionsPaused ? (
+                <div data-craft-author-stop role="status">
+                  <b>Revisions paused.</b>
+                  <span> We stay with your words. Nothing new will be requested until you choose to resume.</span>
+                  <button type="button" onClick={() => resumeRevisions(false)}>Resume revisions</button>
+                </div>
+              ) : (
+                <button type="button" className="p4r1-maia-stop" onClick={() => stopRevisions(false)}>
+                  Stop revisions
+                </button>
+              )}
+              {authorCorrection && !revisionsPaused ? (
+                <small data-author-correction-active>Your clarification is held for this exact passage; MAIA's receipt has not been confirmed.</small>
+              ) : null}
+              {keptExactPhrase && !revisionsPaused ? (
+                <small data-author-keep-active>Keeping your chosen original wording in this working copy: “{keptExactPhrase}”.</small>
+              ) : null}
+            </section>
+            <p className="p4r1-maia-craft-intention">What are you trying to bring alive in these words?</p>
+            <details className="p4r1-maia-craft-starters" data-relational-writing-invitations>
+              <summary>Help me find a way to ask</summary>
+              <p>One possibility. Use your own words, or change this completely.</p>
+              <blockquote>{RELATIONAL_WRITING_INVITATIONS[invitationIndex].example}</blockquote>
+              <div>
+                <button type="button" disabled={props.busy} onClick={() =>
+                  setInvitationIndex(current => (current + 1) % RELATIONAL_WRITING_INVITATIONS.length)}>
+                  Another example
+                </button>
+                <button type="button" disabled={props.busy} onClick={() => {
+                  const example = RELATIONAL_WRITING_INVITATIONS[invitationIndex].example;
+                  setDraft(previous => previous.trim() ? previous.trimEnd() + '\n\n' + example : example);
+                  setDraftNotice(null);
+                  setLastRequested(null);
+                }}>
+                  Bring into my question
+                </button>
+              </div>
+            </details>
             <textarea
               value={draft}
               disabled={props.busy}
@@ -263,6 +384,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
               aria-label="Talk with MAIA about the writing"
               onChange={(event) => {
                 setDraft(event.target.value);
+                setPendingKeepPhrase(null);
                 setLastRequested(null);
                 setDraftNotice(null);
               }}
@@ -294,6 +416,16 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                 setLocalAuthorAttempts([]);
               }}>Clear draft</button> : null}
             </div>
+            {pendingKeepPhrase ? (
+              <div role="group" className="p4r1-maia-keep-confirm" data-craft-confirm-keep>
+                <p>Keep these words exactly in the current Craft working copy?</p>
+                <blockquote>“{pendingKeepPhrase}”</blockquote>
+                <div>
+                  <button type="button" disabled={props.busy} onClick={keepChosenPhrase}>Keep these exact words</button>
+                  <button type="button" onClick={() => { setPendingKeepPhrase(null); setDraftNotice('Keep request canceled; your original wording remains.'); }}>Not now</button>
+                </div>
+              </div>
+            ) : null}
             {draftNotice ? <small role="status" data-maia-unsent-send-receipt>{draftNotice}</small> : null}
 
             {toolsOpen ? (

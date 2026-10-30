@@ -22,6 +22,12 @@ import {
 } from '@/lib/writersStudio/observationDialogueResume';
 import type { LivingWork } from '../useLivingWorks';
 import { createWriterCorrection } from '@/lib/writersStudio/writerCorrectionsClient';
+import { readWorkingStyle, writeWorkingStyle } from '@/lib/writersStudio/workingStyle';
+import {
+  proposePresentationRequest, writeStudioPresentation,
+  type SafePresentationProposal,
+} from '@/lib/writersStudio/presentationRequests';
+import { setStudioReadingSize } from '@/lib/writersStudio/readingSizePreference';
 import { WRITER_CORRECTION_KINDS, WRITER_CORRECTION_LABEL, type WriterCorrectionKind } from '@/lib/writersStudio/writerCorrections';
 
 /**
@@ -157,6 +163,8 @@ export default function WorkConversation({
   const [thread, setThread] = useState<AskThreadView | null>(null);
 
   const [draft, setDraft] = useState(initialDraft);
+  const [presentationConfirmation, setPresentationConfirmation] = useState<SafePresentationProposal | null>(null);
+  const [presentationNotice, setPresentationNotice] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
   const [correctingTurn, setCorrectingTurn] = useState<number | null>(null);
@@ -196,6 +204,25 @@ export default function WorkConversation({
   }, [manuscriptId, work.id, adopt]);
 
   const mode = sendMode(decision, threadId);
+  // Only a deliberately phrased request is recognized. There is NO model
+  // profiling, no MAIA server turn, and no inferred author preference.
+  const localPresentationRequest = proposePresentationRequest(draft);
+  const displayRequestMaySubmit = Boolean(draft.trim() && (mode.kind !== 'blocked' || localPresentationRequest));
+  const approvePresentation = () => {
+    if (!presentationConfirmation) return;
+    const fresh = proposePresentationRequest(draft, readWorkingStyle());
+    if (!fresh || fresh.label !== presentationConfirmation.label) {
+      setPresentationConfirmation(null);
+      setPresentationNotice('The request changed. Please review it again.');
+      return;
+    }
+    writeWorkingStyle(fresh.style);
+    if (fresh.depth) writeStudioPresentation({depth:fresh.depth});
+    if (fresh.readingSize) setStudioReadingSize(fresh.readingSize);
+    setDraft('');
+    setPresentationConfirmation(null);
+    setPresentationNotice('The Studio presentation changed on this device. No manuscript was read or changed, and nothing was sent to MAIA.');
+  };
 
   const reorient = () => {
     setDraft([
@@ -233,7 +260,14 @@ export default function WorkConversation({
        disabled the button from one rule and picked `{anchor}` vs `{threadId}`
        from another would have two chances to disagree, and the disagreement
        writes a row. */
-    if (!question || pending !== null || mode.kind === 'blocked') return;
+    if (!question || pending !== null) return;
+    const requestedPresentation = proposePresentationRequest(question, readWorkingStyle());
+    if (requestedPresentation) {
+      setPresentationConfirmation(requestedPresentation);
+      setPresentationNotice(null);
+      return;
+    }
+    if (mode.kind === 'blocked') return;
     setDraft('');
     setRefusal(null);
     setPending(question);
@@ -576,7 +610,7 @@ export default function WorkConversation({
         </div>
         <textarea
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => { setDraft(e.target.value); setPresentationConfirmation(null); setPresentationNotice(null); }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
@@ -595,6 +629,26 @@ export default function WorkConversation({
             padding: SPACE.snug, outline: 'none',
           }}
         />
+        {presentationConfirmation ? (
+          <div data-maia-presentation-confirm role="group" aria-label="Review Studio presentation change"
+            style={{border:`1px solid ${RULE.soft}`,padding:SPACE.snug,borderRadius:RADIUS.sm,marginTop:SPACE.snug}}>
+            <StudioText role="panelLabel" as="strong">{presentationConfirmation.label}</StudioText>
+            <p style={{margin:'6px 0',fontSize:13}}>{presentationConfirmation.explanation}</p>
+            <p style={{margin:'4px 0',fontSize:12}}>Presentation only. Your words, permissions, and MAIA reading consent remain unchanged.</p>
+            <div style={{display:'flex',gap:10,marginTop:10}}>
+              <button type="button" onClick={approvePresentation}
+                style={{border:`1px solid ${RULE.soft}`,borderRadius:RADIUS.sm,padding:'8px 12px'}}>
+                Apply display change
+              </button>
+              <button type="button" onClick={() => setPresentationConfirmation(null)}
+                style={{border:`1px solid ${RULE.soft}`,borderRadius:RADIUS.sm,padding:'8px 12px'}}>
+                Keep current view
+              </button>
+            </div>
+          </div>
+        ) : null}
+        {presentationNotice ? <p role="status" data-maia-presentation-notice
+          style={{fontSize:12,margin:'8px 0'}}>{presentationNotice}</p> : null}
         <div style={{ display: 'flex', alignItems: 'center', gap: SPACE.base, marginTop: SPACE.snug }}>
           {manuscriptId ? (
             <button
@@ -628,18 +682,16 @@ export default function WorkConversation({
           <button
             type="button"
             onClick={() => void send()}
-            disabled={pending !== null || draft.trim() === '' || mode.kind === 'blocked'}
+            disabled={pending !== null || !displayRequestMaySubmit}
             style={{
               background: GROUND.active, border: `1px solid ${RULE.soft}`,
               borderRadius: RADIUS.sm, padding: `${SPACE.tight}px ${SPACE.base}px`,
-              cursor: pending !== null || draft.trim() === '' || mode.kind === 'blocked'
-                ? 'default' : 'pointer',
-              opacity: pending !== null || draft.trim() === '' || mode.kind === 'blocked'
-                ? 0.4 : 1,
+              cursor: pending !== null || !displayRequestMaySubmit ? 'default' : 'pointer',
+              opacity: pending !== null || !displayRequestMaySubmit ? 0.4 : 1,
               color: INK.primary,
             }}
           >
-            <StudioText role="metadata" as="span">Send</StudioText>
+            <StudioText role="metadata" as="span">{localPresentationRequest ? 'Review change' : 'Send'}</StudioText>
           </button>
         </div>
       </div>

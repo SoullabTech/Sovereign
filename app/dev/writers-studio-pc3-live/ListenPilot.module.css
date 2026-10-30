@@ -143,6 +143,27 @@
   color: #294b4e;
   margin: 0 0 11px;
 }
+/* Human-scale Listen: actual specifications remain accessible without being
+   imposed before the writer asks. Native details preserves keyboard support. */
+.formatDetails > summary {
+  cursor: pointer;
+  list-style-position: inside;
+}
+.formatDetails > summary span {
+  display: block;
+  color: #647479;
+  font: 400 12px/1.55 var(--fr-sans-stack, system-ui);
+  margin: 3px 0 0 19px;
+}
+.formatDetails:not([open]) > summary { margin-bottom: 0; }
+.formatDetails[open] > summary { margin-bottom: 11px; }
+.formatDetails > summary:focus-visible {
+  outline: 2px solid #315e62;
+  outline-offset: 3px;
+  border-radius: 5px;
+}
+.formatPanel:has(.formatDetails:not([open])) { padding-block: 10px; }
+
 .formatFacts { margin: 0; display: grid; gap: 7px; }
 .formatFacts > div {
   display: flex;

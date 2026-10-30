@@ -469,6 +469,19 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
     );
   }
 
+  // A writer who chooses New Work enters a quiet threshold, not a form
+  // squeezed beside the Work they just left. Home data stays available and
+  // reappears on Cancel; no manuscript is modified or silently reselected.
+  if (beginning && props.arrival.kind !== 'begin') {
+    work = (
+      <div className="fr-home fr-home-new-work">
+        <div className="fr-home-field" data-field="room">
+          {creationControls}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Shell
       mode="home"

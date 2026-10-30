@@ -3,6 +3,7 @@ import { occurrences } from '@/lib/manuscript/exactText';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
 import type { DispatchObservation } from '@/lib/ai/structured/dispatch';
+import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 
 /**
  * SANCTUARY-EDITORIAL-PERSISTENCE-01 / E1 — POSTURE IS CARRIED, NEVER DEFAULTED.
@@ -211,6 +212,8 @@ export async function sendBoundEditorialTurn(
   options?: {
     /** Exploratory turns may close the outcome vocabulary to reply_only. */
     proposalPolicy?: ProposalPolicy;
+    /** Explicit author-chosen explanation depth; never writer skill or edit authority. */
+    responseDepth?: EditorialDepth;
     /** Selected durable Work-level editorial relationship, when carrying one. */
     relationshipId?: string;
     /** One explicitly selected prior MAIA editorial response from this relationship. */
@@ -219,6 +222,7 @@ export async function sendBoundEditorialTurn(
 ): Promise<EditorialTurnOutcome> {
   if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
   const proposalPolicy = typeof options === 'string' ? undefined : options?.proposalPolicy;
+  const responseDepth = typeof options === 'string' ? undefined : options?.responseDepth;
   const relationshipId = typeof options === 'string' ? options : options?.relationshipId;
   const carry = typeof options === 'string' ? undefined : options?.carry;
   if (!relationshipId) return { ok: false, reason: 'scope_refused', detail: 'relationship_required' };
@@ -231,6 +235,7 @@ export async function sendBoundEditorialTurn(
         sanctuary: posture.sanctuary,
         ...(scope ? { scope } : {}),
         ...(proposalPolicy ? { proposalPolicy } : {}),
+        ...(responseDepth ? { responseDepth } : {}),
         relationshipId,
         ...(carry ? { carry } : {}),
       }),

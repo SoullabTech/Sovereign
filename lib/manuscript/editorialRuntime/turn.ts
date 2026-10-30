@@ -53,6 +53,8 @@ import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
+import { editorialDirective, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
+import { relationalCraftSystemGuidance } from '@/lib/writersStudio/relationalCraftExchange';
 import {
   admitEditorialToolEnvelope, EDITORIAL_TOOL_NAME, editorialToolSchemaForKinds,
   editorialTurnIdentity, priorRelationshipMaiaEditorialTurnCandidate,
@@ -132,6 +134,8 @@ export interface EditorialTurnInput {
   /** Turn-local outcome permission. ⛔ Defaults to allow; exploratory surfaces
    * may close the proposal/direction vocabulary to reply_only. */
   readonly proposalPolicy?: ProposalPolicy;
+  /** Explicitly selected response register; NEVER inferred from the writer. */
+  readonly responseDepth?: EditorialDepth;
 }
 
 export type EditorialTurnRefusal =
@@ -392,6 +396,11 @@ export async function runEditorialTurn(
        back, and deleting this line would not change what is permitted. */
     system: [
       proof.systemPrompt,
+      // Server-owned fixed editorial register, not author-authored speech.
+      // Both derive from the exact durable utterance and chosen depth only.
+      // No new context, corpus, or identity crosses this instruction.
+      editorialDirective(input.responseDepth ?? 'guided'),
+      relationalCraftSystemGuidance(utterance),
       latitudeInstruction(scope),
       sequenceInstruction(gated),
       proposalPolicyInstruction(proposalPolicy),
