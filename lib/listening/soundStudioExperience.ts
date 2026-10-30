@@ -2,6 +2,7 @@ import openGroundManifestSource from './manifests/open-ground-432-v1.json';
 import nightGroundManifestSource from './manifests/night-ground-01-guided-arrival-v0.1.json';
 import nightGroundNicoleFirstNightManifestSource from './manifests/night-ground-01-nicole-first-night-v0.1.json';
 import nightGroundExtendedNightManifestSource from './manifests/night-ground-01-extended-night-v0.1.json';
+import nightGroundMusicOnlyManifestSource from './manifests/night-ground-01-music-only-v0.1.json';
 
 export type SoundStudioDoorID = 'experience' | 'explore' | 'create' | 'professional';
 
@@ -131,6 +132,8 @@ export const NIGHT_GROUND_NICOLE_FIRST_NIGHT_EXPERIENCE_MANIFEST =
   nightGroundNicoleFirstNightManifestSource as unknown as SoundExperienceManifest;
 export const NIGHT_GROUND_EXTENDED_NIGHT_EXPERIENCE_MANIFEST =
   nightGroundExtendedNightManifestSource as unknown as SoundExperienceManifest;
+export const NIGHT_GROUND_MUSIC_ONLY_EXPERIENCE_MANIFEST =
+  nightGroundMusicOnlyManifestSource as unknown as SoundExperienceManifest;
 
 function validReviewMedia(media: SoundExperienceMediaEdition): boolean {
   return Boolean(media.bundled && media.path?.startsWith('/media/sound-studio/') &&
@@ -274,6 +277,25 @@ export const NIGHT_GROUND_NICOLE_FIRST_NIGHT: SoundStudioWork = {
   qualityStatement: 'EXACT 109-MINUTE PRIVATE REVIEW · NICOLE ONCE · TWO CONTIGUOUS AAC SEGMENTS · ORIGINAL 48 KHZ NIGHT GROUND SOURCE PRESERVED · RELEASE HOLD',
 };
 
+export const NIGHT_GROUND_MUSIC_ONLY: SoundStudioWork = {
+  id: NIGHT_GROUND_MUSIC_ONLY_EXPERIENCE_MANIFEST.experienceId,
+  title: NIGHT_GROUND_MUSIC_ONLY_EXPERIENCE_MANIFEST.title,
+  subtitle: NIGHT_GROUND_MUSIC_ONLY_EXPERIENCE_MANIFEST.subtitle,
+  durationMs: NIGHT_GROUND_MUSIC_ONLY_EXPERIENCE_MANIFEST.durationMs,
+  state: 'review',
+  kind: 'Dream Field music-only night · the original composition, no voice',
+  description: 'The whole night as composed, with no voice at any point. Arrival and descent play once, then the continuous field carries the rest of the 109 minutes. It does not repeat.',
+  mood: 'rest',
+  frequencies: [72, 144, 216],
+  qualities: ['No voice', '109 minutes', 'Original composition', 'No automatic loop'],
+  primaryDoor: 'experience',
+  passages: NIGHT_GROUND_MUSIC_ONLY_EXPERIENCE_MANIFEST.passages,
+  manifest: NIGHT_GROUND_MUSIC_ONLY_EXPERIENCE_MANIFEST,
+  fieldLabel: 'DREAM FIELD 01 · MUSIC ONLY · PRIVATE REVIEW',
+  immersiveQuestion: 'What is the night when nothing is said, and only the field remains?',
+  qualityStatement: 'ORIGINAL VOICE-FREE COMPOSITION · TWO CONTIGUOUS AAC SEGMENTS · 48 KHZ MASTER PRESERVED · RELEASE HOLD',
+};
+
 export const NIGHT_GROUND: SoundStudioWork = {
   id: NIGHT_GROUND_EXPERIENCE_MANIFEST.experienceId,
   title: NIGHT_GROUND_EXPERIENCE_MANIFEST.title,
@@ -297,6 +319,7 @@ export const SOUND_STUDIO_WORKS: readonly SoundStudioWork[] = [
   OPEN_GROUND,
   NIGHT_GROUND_EXTENDED_NIGHT,
   NIGHT_GROUND_NICOLE_FIRST_NIGHT,
+  NIGHT_GROUND_MUSIC_ONLY,
   NIGHT_GROUND,
   {
     id: 'still-current-study-01',
