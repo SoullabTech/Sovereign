@@ -5,6 +5,7 @@ surfaces:
   - app/listen/page.tsx
   - app/listen/ListenRoom.tsx
   - app/listen/SoundStudioField.tsx
+  - app/listen/FocusSoundPicker.tsx
   - components/listening/PersistentListeningDock.tsx
 change_class: experiential
 principles:

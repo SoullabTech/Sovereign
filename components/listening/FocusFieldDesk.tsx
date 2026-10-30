@@ -224,6 +224,7 @@ export default function FocusFieldDesk() {
                 </label>
               )}
             </fieldset>
+
           </div>
 
           <details className={styles.focusTune}>
@@ -331,13 +332,9 @@ export default function FocusFieldDesk() {
                 </label>
               </div>
               <div className={styles.focusActions}>
-                {session.status === 'running' ? (
-                  <button type="button" onClick={() => transport?.pauseFocusSession('member')}>Pause session</button>
-                ) : (
-                  <button type="button" onClick={() => transport?.resumeFocusSession()}>Resume by my action</button>
-                )}
-                <button type="button" className={styles.danger}
-                  onClick={() => transport?.stopFocusSession()}>Stop session</button>
+                <p className={styles.focusExplanation}>
+                  Pause and Stop for this session are in the player below.
+                </p>
               </div>
             </>
           )}
