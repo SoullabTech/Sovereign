@@ -70,6 +70,8 @@ export type ListeningSnapshot = {
   durationMs?: number | null;
   elapsedMs?: number;
   passage?: string | null;
+  continuation?: 'until-stop' | null;
+  continuationCycle?: number;
 };
 
 type Sketch = {
@@ -258,6 +260,7 @@ export function PersistentListeningProvider({
   const reviewManifest = useRef<SoundExperienceManifest | null>(null);
   const reviewSequence = useRef<readonly SoundExperienceMediaEdition[]>([]);
   const reviewSegmentIndex = useRef(0);
+  const reviewContinuationCycles = useRef(0);
   const segmentTransitioning = useRef(false);
   const volumeRef = useRef(45);
   const epoch = useRef(0);
@@ -316,14 +319,24 @@ export function PersistentListeningProvider({
     saveFields(restored);
   }, []);
 
-  const reviewOffsetMs = useCallback((): number =>
-    reviewSequence.current.slice(0, reviewSegmentIndex.current)
-      .reduce((sum, item) => sum + item.durationMs, 0), []);
+  const reviewOffsetMs = useCallback((): number => {
+    const base = reviewSequence.current.slice(0, reviewSegmentIndex.current)
+      .reduce((sum, item) => sum + item.durationMs, 0);
+    const manifest = reviewManifest.current;
+    const continuation = manifest?.continuation;
+    const current = reviewSequence.current[reviewSegmentIndex.current];
+    if (continuation?.mode === 'loop_final_segment' && current &&
+        reviewSegmentIndex.current === continuation.repeatSegmentIndex) {
+      return base + reviewContinuationCycles.current * current.durationMs;
+    }
+    return base;
+  }, []);
   const reviewElapsedMs = useCallback((): number => {
     const manifest = reviewManifest.current;
     const audio = media.current;
     if (!manifest || !audio) return 0;
-    return Math.min(manifest.durationMs, reviewOffsetMs() + audio.currentTime * 1000);
+    const elapsed = reviewOffsetMs() + audio.currentTime * 1000;
+    return manifest.continuation ? elapsed : Math.min(manifest.durationMs, elapsed);
   }, [reviewOffsetMs]);
 
   const pause = useCallback(() => {
@@ -373,6 +386,7 @@ export function PersistentListeningProvider({
     reviewManifest.current = null;
     reviewSequence.current = [];
     reviewSegmentIndex.current = 0;
+    reviewContinuationCycles.current = 0;
     segmentTransitioning.current = false;
     kind.current = 'none';
     experience.current = null;
@@ -597,7 +611,8 @@ export function PersistentListeningProvider({
 
   const setLooping = useCallback((enabled: boolean) => {
     const permitted = kind.current === 'local-file' ||
-      (kind.current === 'review-media' && reviewManifest.current?.permissions.looping === true);
+      (kind.current === 'review-media' && reviewManifest.current?.permissions.looping === true &&
+        reviewSequence.current.length === 1);
     const next = Boolean(enabled && permitted);
     if (media.current) media.current.loop = next;
     saveLooping(next);
@@ -743,6 +758,7 @@ export function PersistentListeningProvider({
       saveLoopAvailable(manifest.permissions.looping === true && sequence.length === 1);
       reviewSequence.current = sequence;
       reviewSegmentIndex.current = 0;
+      reviewContinuationCycles.current = 0;
       segmentTransitioning.current = false;
       audio.src = edition.path;
       audio.preload = 'auto';
@@ -766,7 +782,11 @@ export function PersistentListeningProvider({
         experienceId: manifest.experienceId, durationMs: manifest.durationMs,
         elapsedMs: 0, passage: manifest.passages[0]?.label ?? null,
         fileFormat: edition.codecLabel,
-        message: `${edition.codecLabel} · exact private-review media.`,
+        continuation: manifest.continuation ? 'until-stop' : null,
+        continuationCycle: 0,
+        message: manifest.continuation
+          ? `${edition.codecLabel} · Nicole once, then the continuous core repeats until Stop.`
+          : `${edition.codecLabel} · exact private-review media.`,
       });
     }
     try {
@@ -791,7 +811,11 @@ export function PersistentListeningProvider({
         experienceId: manifest.experienceId, durationMs: manifest.durationMs,
         elapsedMs, passage: soundPassageAt(manifest.passages, elapsedMs)?.label ?? null,
         fileFormat: edition.codecLabel,
-        message: `${edition.codecLabel} · exact private-review media.`,
+        continuation: manifest.continuation ? 'until-stop' : null,
+        continuationCycle: reviewContinuationCycles.current,
+        message: manifest.continuation
+          ? 'Extended Night is playing. Nicole will not return; only the continuous core repeats.'
+          : `${edition.codecLabel} · exact private-review media.`,
       });
       return true;
     } catch {
@@ -876,15 +900,19 @@ export function PersistentListeningProvider({
     setSnapshot(old => ({
       ...old, playback:'playing',
       message: kind.current === 'review-media'
-        ? `${selected.current?.format} · exact private-review media.`
+        ? reviewManifest.current?.continuation && reviewContinuationCycles.current > 0
+          ? `${reviewManifest.current.continuation.label} · voice and descent will not repeat.`
+          : `${selected.current?.format} · exact private-review media.`
         : 'Playing only your device-local file. No upload or analysis.',
     }));
   }, [claimFocus, refuseDuringMaiaSpeech, releaseOutput]);
 
   const onMediaPause = useCallback(() => {
     if (segmentTransitioning.current) return;
-    if (kind.current === 'review-media' && media.current?.ended &&
-        reviewSequence.current[reviewSegmentIndex.current + 1]) return;
+    if (kind.current === 'review-media' && media.current?.ended && (
+        reviewSequence.current[reviewSegmentIndex.current + 1] ||
+        reviewManifest.current?.continuation?.repeatSegmentIndex === reviewSegmentIndex.current
+      )) return;
     if (kind.current !== 'local-file' && kind.current !== 'review-media') return;
     const elapsedMs = kind.current === 'review-media' && media.current
       ? reviewElapsedMs()
@@ -913,6 +941,8 @@ export function PersistentListeningProvider({
     }
     setSnapshot(old => old.experienceId === manifest.experienceId ? {
       ...old, elapsedMs,
+      continuation: manifest.continuation ? 'until-stop' : old.continuation,
+      continuationCycle: reviewContinuationCycles.current,
       passage: soundPassageAt(manifest.passages, elapsedMs)?.label ?? null,
     } : old);
   }, [reviewElapsedMs]);
@@ -931,6 +961,7 @@ export function PersistentListeningProvider({
       reviewSegmentIndex.current = nextIndex;
       segmentTransitioning.current = true;
       audio.loop = false;
+      selected.current = { title: manifest.title, format: next.codecLabel };
       audio.src = next.path;
       audio.preload = 'auto';
       audio.load();
@@ -942,9 +973,14 @@ export function PersistentListeningProvider({
         ...old, playback: isMaiaSpeechActive() ? 'paused' : 'playing',
         elapsedMs: Math.min(manifest.durationMs, offsetMs),
         passage: soundPassageAt(manifest.passages, offsetMs)?.label ?? null,
+        fileFormat: next.codecLabel,
+        continuation: manifest.continuation ? 'until-stop' : old.continuation,
+        continuationCycle: reviewContinuationCycles.current,
         message: isMaiaSpeechActive()
           ? 'The next part is ready. MAIA is speaking; resume only when you choose.'
-          : `${manifest.title} continues without returning to guidance.`,
+          : manifest.continuation
+            ? 'Nicole has left. The continuous music core is now playing and will repeat until Stop.'
+            : `${manifest.title} continues without returning to guidance.`,
       } : old);
       if (isMaiaSpeechActive()) {
         segmentTransitioning.current = false;
@@ -962,6 +998,49 @@ export function PersistentListeningProvider({
       });
       return;
     }
+    const continuation = manifest.continuation;
+    if (continuation?.mode === 'loop_final_segment' &&
+        reviewSegmentIndex.current === continuation.repeatSegmentIndex) {
+      const audio = media.current;
+      const current = reviewSequence.current[reviewSegmentIndex.current];
+      if (!current) { releaseOutput(); return; }
+      reviewContinuationCycles.current += 1;
+      const elapsedMs = reviewOffsetMs();
+      segmentTransitioning.current = true;
+      audio.loop = false;
+      audio.currentTime = 0;
+      if (experience.current) {
+        experience.current.elapsedMs = elapsedMs;
+        experience.current.startedAt = null;
+      }
+      setSnapshot(old => old.experienceId === manifest.experienceId ? {
+        ...old,
+        playback: isMaiaSpeechActive() ? 'paused' : 'playing',
+        elapsedMs,
+        passage: continuation.label,
+        continuation: 'until-stop',
+        continuationCycle: reviewContinuationCycles.current,
+        fileFormat: current.codecLabel,
+        message: isMaiaSpeechActive()
+          ? 'The continuous core is ready. MAIA is speaking; resume only when you choose.'
+          : `${continuation.label} · guidance will not repeat.`,
+      } : old);
+      if (isMaiaSpeechActive()) {
+        segmentTransitioning.current = false;
+        releaseOutput();
+        return;
+      }
+      void audio.play().then(() => {
+        segmentTransitioning.current = false;
+        claimFocus();
+      }).catch(() => {
+        segmentTransitioning.current = false;
+        releaseOutput();
+        setSnapshot(old => ({ ...old, playback: 'error',
+          message: 'The continuous night core could not repeat.' }));
+      });
+      return;
+    }
     releaseOutput();
     if (experience.current) {
       experience.current.elapsedMs = manifest.durationMs;
@@ -972,7 +1051,7 @@ export function PersistentListeningProvider({
       passage: manifest.passages[manifest.passages.length - 1]?.label ?? null,
       message: `${manifest.title} is complete. It will not restart automatically.`,
     } : old);
-  }, [claimFocus, releaseOutput]);
+  }, [claimFocus, releaseOutput, reviewOffsetMs]);
 
   const transport: ListeningTransport = {
     snapshot, volume, setVolume, looping, loopAvailable, setLooping, shape, setShape,

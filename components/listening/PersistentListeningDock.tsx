@@ -121,6 +121,7 @@ export default function PersistentListeningDock({
   return (
     <div data-listen10-persistent-dock="true"
       data-listen-companion-mode={companionMode ? 'on' : 'off'}
+      data-listen-continuation={snapshot.continuation ?? 'none'}
       role="region" aria-label="Persistent Soullab listening controls"
       className={styles.dock}
       style={{ display: displayed ? 'flex' : 'none' }}>
@@ -140,7 +141,10 @@ export default function PersistentListeningDock({
         <div className={styles.passage} data-listen62-passage={snapshot.passage || ''}>
           <b>{passage}</b>
           <span className={styles.passageProgress} aria-hidden="true"><i style={{ width: `${progress * 100}%` }}/></span>
-          <span>{formatExperienceTime(snapshot.elapsedMs ?? 0)} / {formatExperienceTime(snapshot.durationMs)}</span>
+          <span>{snapshot.continuation === 'until-stop'
+            ? `${formatExperienceTime(snapshot.elapsedMs ?? 0)} · Until Stop`
+            : `${formatExperienceTime(snapshot.elapsedMs ?? 0)} / ${formatExperienceTime(snapshot.durationMs)}`}
+          </span>
         </div>
       )}
 
@@ -183,7 +187,9 @@ export default function PersistentListeningDock({
             aria-expanded={mixOpen} aria-controls="soullab-companion-controls"
             aria-label={`${mixOpen ? 'Close' : 'Open'} companion, volume, and loop controls`}
             onClick={() => setMixOpen(value => !value)}>
-            {looping ? `Loop · ${Math.round(volume)}%` : `Mix ${Math.round(volume)}%`}
+            {snapshot.continuation === 'until-stop'
+              ? `Until Stop · ${Math.round(volume)}%`
+              : looping ? `Loop · ${Math.round(volume)}%` : `Mix ${Math.round(volume)}%`}
           </button>
         )}
       </div>
@@ -234,6 +240,11 @@ export default function PersistentListeningDock({
               <strong>{volume === 0 ? 'Restore' : 'Mute'}</strong>
               <span>{volume === 0 ? `${lastAudibleVolume.current}%` : '0%'}</span>
             </button>
+            {snapshot.continuation === 'until-stop' && (
+              <div className={styles.preset} data-listen-extended-night="true">
+                <strong>Core repeats</strong><span>Until Stop</span>
+              </div>
+            )}
             {loopAvailable && (
               <button type="button" className={styles.preset}
                 data-listen-companion-loop="true" aria-pressed={looping}
@@ -250,7 +261,9 @@ export default function PersistentListeningDock({
           </div>
 
           <p className={styles.mixBoundary}>
-            Soullab does not read, analyze, pause, or control the other app. Loop repeats only this exact permitted piece after it ends; Stop clears looping. MAIA speech still pauses this field and never resumes it automatically.
+            {snapshot.continuation === 'until-stop'
+              ? 'Extended Night repeats only the continuous music core after Nicole and the descent have ended. Stop clears all continuation. MAIA speech pauses the field and never resumes it automatically.'
+              : 'Soullab does not read, analyze, pause, or control the other app. Loop repeats only this exact permitted piece after it ends; Stop clears looping. MAIA speech still pauses this field and never resumes it automatically.'}
           </p>
         </section>
       )}

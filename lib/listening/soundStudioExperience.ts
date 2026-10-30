@@ -1,6 +1,7 @@
 import openGroundManifestSource from './manifests/open-ground-432-v1.json';
 import nightGroundManifestSource from './manifests/night-ground-01-guided-arrival-v0.1.json';
 import nightGroundNicoleFirstNightManifestSource from './manifests/night-ground-01-nicole-first-night-v0.1.json';
+import nightGroundExtendedNightManifestSource from './manifests/night-ground-01-extended-night-v0.1.json';
 
 export type SoundStudioDoorID = 'experience' | 'explore' | 'create' | 'professional';
 
@@ -100,6 +101,13 @@ export type SoundExperienceManifest = {
     fadeOutSeconds: number;
   };
   passages: readonly SoundExperiencePassage[];
+  continuation?: {
+    mode: 'loop_final_segment';
+    repeatSegmentIndex: number;
+    startsAfterMs: number;
+    memberSelectedByExperience: boolean;
+    label: string;
+  };
   permissions: {
     scope: 'authenticated_founder_private_review';
     onDemandReview: boolean;
@@ -121,6 +129,8 @@ export const NIGHT_GROUND_EXPERIENCE_MANIFEST =
   nightGroundManifestSource as unknown as SoundExperienceManifest;
 export const NIGHT_GROUND_NICOLE_FIRST_NIGHT_EXPERIENCE_MANIFEST =
   nightGroundNicoleFirstNightManifestSource as unknown as SoundExperienceManifest;
+export const NIGHT_GROUND_EXTENDED_NIGHT_EXPERIENCE_MANIFEST =
+  nightGroundExtendedNightManifestSource as unknown as SoundExperienceManifest;
 
 function validReviewMedia(media: SoundExperienceMediaEdition): boolean {
   return Boolean(media.bundled && media.path?.startsWith('/media/sound-studio/') &&
@@ -143,6 +153,14 @@ export function reviewMediaSequence(
   if (!sequence.every(validReviewMedia)) return null;
   const total = sequence.reduce((sum, media) => sum + media.durationMs, 0);
   if (Math.abs(total - manifest.durationMs) > 250) return null;
+  if (manifest.continuation) {
+    const continuation = manifest.continuation;
+    if (!manifest.permissions.looping || sequence.length < 2 ||
+        continuation.mode !== 'loop_final_segment' ||
+        continuation.repeatSegmentIndex !== sequence.length - 1 ||
+        continuation.startsAfterMs !== manifest.durationMs ||
+        !continuation.memberSelectedByExperience) return null;
+  }
   return sequence;
 }
 
@@ -164,6 +182,7 @@ export type SoundStudioWork = SoundExperiencePlayback & {
   fieldLabel?: string;
   immersiveQuestion?: string;
   qualityStatement?: string;
+  durationLabel?: string;
 };
 
 export const SOUND_STUDIO_DOORS: readonly SoundStudioDoor[] = [
@@ -216,6 +235,26 @@ export const OPEN_GROUND: SoundStudioWork = {
   qualityStatement: 'EXACT REVIEWED AAC EDITION · 24-BIT MASTER PRESERVED · EXISTING PERSISTENT PLAYER · NO BIOMETRICS · NO HIDDEN ANALYSIS',
 };
 
+export const NIGHT_GROUND_EXTENDED_NIGHT: SoundStudioWork = {
+  id: NIGHT_GROUND_EXTENDED_NIGHT_EXPERIENCE_MANIFEST.experienceId,
+  title: NIGHT_GROUND_EXTENDED_NIGHT_EXPERIENCE_MANIFEST.title,
+  subtitle: NIGHT_GROUND_EXTENDED_NIGHT_EXPERIENCE_MANIFEST.subtitle,
+  durationMs: NIGHT_GROUND_EXTENDED_NIGHT_EXPERIENCE_MANIFEST.durationMs,
+  durationLabel: '109 min, then until Stop',
+  state: 'review',
+  kind: 'Dream Field extended-night meditation · core-only continuation',
+  description: 'Nicole opens the field once. Arrival and descent play once; after the first 109 minutes only the continuous music core repeats until you Stop.',
+  mood: 'rest',
+  frequencies: [72, 144, 216],
+  qualities: ['Nicole once', 'Core repeats', 'Until Stop', 'No automatic dawn return'],
+  primaryDoor: 'experience',
+  passages: NIGHT_GROUND_EXTENDED_NIGHT_EXPERIENCE_MANIFEST.passages,
+  manifest: NIGHT_GROUND_EXTENDED_NIGHT_EXPERIENCE_MANIFEST,
+  fieldLabel: 'DREAM FIELD 01 · EXTENDED NIGHT · PRIVATE REVIEW',
+  immersiveQuestion: 'What becomes possible when guidance opens the threshold once, then only the continuous night field remains?',
+  qualityStatement: 'EXACT NICOLE FIRST-NIGHT SEQUENCE · FINAL MUSIC CORE CONTINUES UNTIL STOP · VOICE NEVER REPEATS · RELEASE HOLD',
+};
+
 export const NIGHT_GROUND_NICOLE_FIRST_NIGHT: SoundStudioWork = {
   id: NIGHT_GROUND_NICOLE_FIRST_NIGHT_EXPERIENCE_MANIFEST.experienceId,
   title: NIGHT_GROUND_NICOLE_FIRST_NIGHT_EXPERIENCE_MANIFEST.title,
@@ -256,6 +295,7 @@ export const NIGHT_GROUND: SoundStudioWork = {
 
 export const SOUND_STUDIO_WORKS: readonly SoundStudioWork[] = [
   OPEN_GROUND,
+  NIGHT_GROUND_EXTENDED_NIGHT,
   NIGHT_GROUND_NICOLE_FIRST_NIGHT,
   NIGHT_GROUND,
   {

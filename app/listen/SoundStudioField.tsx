@@ -199,7 +199,8 @@ export default function SoundStudioField() {
               <span style={{width: `${progress * 100}%`}}/>
             </div>
             <div className={styles.immersiveTimes}>
-              <span>{formatExperienceTime(elapsedMs)}</span><span>{formatExperienceTime(selected.durationMs)}</span>
+              <span>{formatExperienceTime(elapsedMs)}</span>
+              <span>{selected.durationLabel ?? formatExperienceTime(selected.durationMs)}</span>
             </div>
             <ol className={styles.immersivePassages} aria-label={`${selected.title} passages`}>
               {selected.passages.map(item => (
