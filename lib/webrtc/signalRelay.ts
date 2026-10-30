@@ -1,103 +1,118 @@
-/**
- * WebRTC signaling relay — Phase A (transport smoke test).
- *
- * In-memory, per-room pub/sub for exchanging SDP offers/answers + ICE candidates
- * between two peers. NO persistence, NO DB, NO Encounter/scribe/transcript writes.
- *
- * Single-instance only (fine for a smoke test / single dev or prod container).
- * A multi-instance deploy would need a shared bus (Redis/pg LISTEN); out of scope for Phase A.
- *
- * INSTRUMENTED (2026-07-05): logs room membership at every subscribe/unsubscribe/publish so a
- * failed two-peer rendezvous is diagnosable from the server log. `[signal]` prefix.
- */
-
-// Module-load marker + identity. If this line prints more than once, or MODULE_ID differs
-// between two peers' subscribe logs, the in-memory Map is NOT shared (module was instantiated
-// more than once) — which is the root cause of "peers never see each other".
-const MODULE_ID = Math.floor(Math.random() * 1e6).toString(36);
-// eslint-disable-next-line no-console
-console.log(`[signal] relay module loaded — MODULE_ID=${MODULE_ID}`);
+/** Local transport only; durable authority is checked by each subscriber's owner. */
+import type { RoomRuntimeSession } from '../encounters/roomRuntime';
+import type { RoomStopScope } from '../encounters/roomStopContract';
 
 export type SignalMessage = {
-  type: 'offer' | 'answer' | 'ice' | 'peer-join' | 'peer-present' | 'peer-leave' | 'connected' | 'ping';
-  from: string;
-  to?: string;
-  payload?: unknown;
+  type: 'offer'|'answer'|'ice'|'peer-join'|'peer-present'|'peer-leave'|'connected'|'ping'|'terminal';
+  from: string; to?: string; payload?: unknown;
 };
-
-type Send = (msg: SignalMessage) => void;
-
-// Next.js dev (and some prod bundling) evaluates this module MORE THAN ONCE per process — the
-// MODULE_ID logs proved it. Module-scoped state would then split, so two peers on different
-// instances never rendezvous. Pin the room map to a per-process globalThis singleton so every
-// instance shares ONE map. (Single-container prod: same. MULTI-instance prod needs a real bus —
-// pg LISTEN/NOTIFY or Redis — a named Phase-A hardening item; globalThis is per-process only.)
-const globalForRelay = globalThis as unknown as { __signalRooms?: Map<string, Map<string, Send>> };
-const rooms: Map<string, Map<string, Send>> = (globalForRelay.__signalRooms ??= new Map());
-
-const members = (roomId: string) => [...(rooms.get(roomId)?.keys() ?? [])].join(',');
-
-export function subscribe(roomId: string, peerId: string, send: Send): void {
-  let room = rooms.get(roomId);
-  if (!room) {
-    room = new Map();
-    rooms.set(roomId, room);
-  }
-  const isReconnect = room.has(peerId);
-  room.set(peerId, send);
-  // eslint-disable-next-line no-console
-  console.log(`[signal] ${isReconnect ? 'RE-SUBSCRIBE' : 'SUBSCRIBE'} ${peerId} room=${roomId} MODULE_ID=${MODULE_ID} members=[${members(roomId)}]`);
-
-  // Tell the newcomer who is already here, and tell the incumbents someone joined.
-  for (const [pid, incumbentSend] of room) {
-    if (pid === peerId) continue;
-    send({ type: 'peer-present', from: pid });
-    incumbentSend({ type: 'peer-join', from: peerId });
-    // eslint-disable-next-line no-console
-    console.log(`[signal] announce peer-present(${pid})->${peerId} + peer-join(${peerId})->${pid}`);
-  }
+export type ClientSignal = { type:'offer'|'answer'|'ice'|'peer-leave';to?:string;payload?:unknown };
+export interface RelaySubscription { readonly id:number; readonly session:Readonly<RoomRuntimeSession> }
+export interface RoomSignalRelay {
+  subscribe(session:RoomRuntimeSession,send:(message:SignalMessage)=>void,
+    authorize?:()=>Promise<boolean>):RelaySubscription;
+  isCurrent(handle:RelaySubscription):boolean;
+  unsubscribe(handle:RelaySubscription):void;
+  publish(session:RoomRuntimeSession,message:ClientSignal):Promise<number>;
+  closeRuntime(session:RoomRuntimeSession):void;
+  closeScope(scope:Readonly<RoomStopScope>):void;
+  size(encounterId:string):number;
 }
-
-/**
- * Remove a peer. `send` (when provided) guards a reconnect race: the OLD connection's
- * abort may fire AFTER the new one re-subscribed with the same peerId — deleting by
- * peerId alone would evict the NEW connection and broadcast a spurious peer-leave.
- * Only delete if the current entry belongs to the departing connection.
- */
-export function unsubscribe(roomId: string, peerId: string, send?: Send): void {
-  const room = rooms.get(roomId);
-  if (!room) return;
-  if (send && room.get(peerId) !== send) {
-    // eslint-disable-next-line no-console
-    console.log(`[signal] stale UNSUBSCRIBE ignored for ${peerId} room=${roomId} (reconnected already)`);
-    return;
+type Entry={handle:RelaySubscription;send:(message:SignalMessage)=>void;authorize:()=>Promise<boolean>;queue:Promise<void>;active:boolean};
+type Origin={kind:'live';entry:Entry}|{kind:'departed';handle:RelaySubscription};
+const sameScope=(a:Readonly<RoomStopScope>,b:Readonly<RoomStopScope>)=>a.encounterId===b.encounterId
+  &&a.participantId===b.participantId&&a.agreementVersion===b.agreementVersion&&a.consentGeneration===b.consentGeneration;
+const sameRoom=(a:RoomRuntimeSession,b:RoomRuntimeSession)=>a.scope.encounterId===b.scope.encounterId
+  &&a.scope.agreementVersion===b.scope.agreementVersion&&a.scope.consentGeneration===b.scope.consentGeneration;
+function validSession(s:RoomRuntimeSession):boolean{return !!s&&!!s.scope&&s.runtimeId===s.scope.runtimeId
+  &&s.peerId==='p_'+s.runtimeId&&typeof s.runtimeCredential==='string'&&s.runtimeCredential.length>0
+  &&typeof s.scope.encounterId==='string'&&typeof s.scope.participantId==='string';}
+export function createSignalRelay():RoomSignalRelay{
+  let next=0;const rooms=new Map<string,Map<string,Entry>>();
+  function entries(room:string){return rooms.get(room);}
+  function current(e:Entry){return e.active&&entries(e.handle.session.scope.encounterId)?.get(e.handle.session.peerId)===e;}
+  function remove(e:Entry){
+    if(!current(e))return;e.active=false;const room=entries(e.handle.session.scope.encounterId)!;
+    room.delete(e.handle.session.peerId);if(!room.size)rooms.delete(e.handle.session.scope.encounterId);
   }
-  room.delete(peerId);
-  // eslint-disable-next-line no-console
-  console.log(`[signal] UNSUBSCRIBE ${peerId} room=${roomId} remaining=[${members(roomId)}]`);
-  for (const [, send] of room) send({ type: 'peer-leave', from: peerId });
-  if (room.size === 0) rooms.delete(roomId);
-}
-
-/** Relay a message to the other peer(s) in the room. Never echoes to the sender. */
-export function publish(roomId: string, msg: SignalMessage): void {
-  const room = rooms.get(roomId);
-  if (!room) {
-    // eslint-disable-next-line no-console
-    console.log(`[signal] PUBLISH from=${msg.from} type=${msg.type} room=${roomId} — NO ROOM (empty relay)`);
-    return;
+  function currentOrigin(origin:Origin):boolean{
+    if(origin.kind==='live')return current(origin.entry);
+    // A departure queued before a reconnect must not close the replacement peer.
+    const {session}=origin.handle;
+    return !entries(session.scope.encounterId)?.has(session.peerId);
   }
-  const recipients: string[] = [];
-  for (const [pid, send] of room) {
-    if (pid === msg.from) continue;
-    if (msg.to && pid !== msg.to) continue;
-    send(msg);
-    recipients.push(pid);
+  async function deliver(e:Entry,message:SignalMessage,origin:Origin):Promise<boolean>{
+    let delivered=false;
+    const work=e.queue.then(async()=>{
+      if(!current(e)||!currentOrigin(origin))return;
+      let allowed=false;try{allowed=await e.authorize();}catch{/* authority outage closes */}
+      if(!current(e))return;
+      if(!allowed){remove(e);return;}
+      if(!currentOrigin(origin))return;
+      if(origin.kind==='live'){
+        // Queue waits may outlive the origin's permission or exact subscription.
+        // Recheck at delivery admission; this is not an atomic network/DB fence.
+        let originAllowed=false;try{originAllowed=await origin.entry.authorize();}catch{/* refuse stale origin */}
+        if(!originAllowed){remove(origin.entry);return;}
+      }
+      if(!current(e)||!currentOrigin(origin))return;
+      try{e.send(message);delivered=true;}catch{remove(e);}
+    });
+    e.queue=work.catch(()=>{remove(e);});await work;return delivered;
   }
-  // eslint-disable-next-line no-console
-  console.log(`[signal] PUBLISH from=${msg.from} type=${msg.type} room=${roomId} members=[${members(roomId)}] -> [${recipients.join(',')}]`);
-}
-
-export function roomSize(roomId: string): number {
-  return rooms.get(roomId)?.size ?? 0;
+  const api:RoomSignalRelay={
+    subscribe(session,send,authorize=async()=>false){
+      if(!validSession(session)||typeof send!=='function')throw new Error('INVALID_RELAY_SESSION');
+      const frozen=Object.freeze({...session,scope:Object.freeze({...session.scope})});
+      let room=entries(session.scope.encounterId);
+      if(!room){room=new Map();rooms.set(session.scope.encounterId,room);}
+      const existing=room.get(session.peerId);
+      if(existing&&(!sameScope(existing.handle.session.scope,session.scope)||existing.handle.session.runtimeId!==session.runtimeId))
+        throw new Error('RELAY_IDENTITY_CONFLICT');
+      const people=new Set([...room.values()].map(e=>e.handle.session.scope.participantId));people.add(session.scope.participantId);
+      if(people.size>2)throw new Error('ROOM_PARTICIPANT_LIMIT');
+      if(existing)existing.active=false;
+      const handle=Object.freeze({id:++next,session:frozen});
+      const entry:Entry={handle,send,authorize,queue:Promise.resolve(),active:true};room.set(session.peerId,entry);
+      for(const other of room.values()){
+        if(other===entry||!sameRoom(other.handle.session,session)||other.handle.session.scope.participantId===session.scope.participantId)continue;
+        void deliver(entry,{type:'peer-present',from:other.handle.session.peerId},{kind:'live',entry:other});
+        void deliver(other,{type:'peer-join',from:session.peerId},{kind:'live',entry});
+      }
+      return handle;
+    },
+    isCurrent(handle){
+      const e=entries(handle.session.scope.encounterId)?.get(handle.session.peerId);
+      return !!e&&e.handle===handle&&current(e);
+    },
+    unsubscribe(handle){
+      const e=entries(handle.session.scope.encounterId)?.get(handle.session.peerId);
+      if(!e||e.handle!==handle)return;remove(e);
+      for(const other of entries(handle.session.scope.encounterId)?.values()??[])
+        if(sameRoom(other.handle.session,handle.session)&&other.handle.session.scope.participantId!==handle.session.scope.participantId)
+          void deliver(other,{type:'peer-leave',from:handle.session.peerId},{kind:'departed',handle});
+    },
+    async publish(session,message){
+      if(!validSession(session)||!message||!['offer','answer','ice','peer-leave'].includes(message.type)
+        ||Object.keys(message).some(k=>!['type','to','payload'].includes(k))
+        ||(message.to!==undefined&&(typeof message.to!=='string'||message.to.length>200)))
+        throw new Error('INVALID_CLIENT_SIGNAL');
+      const room=entries(session.scope.encounterId),sender=room?.get(session.peerId);
+      if(!sender||!current(sender)||!sameScope(sender.handle.session.scope,session.scope)
+        ||sender.handle.session.runtimeCredential!==session.runtimeCredential)throw new Error('UNBOUND_SIGNAL_SENDER');
+      let senderAllowed=false;try{senderAllowed=await sender.authorize();}catch{/* outage refuses and removes */}
+      if(!senderAllowed||!current(sender)){remove(sender);throw new Error('SIGNAL_SENDER_REFUSED');}
+      const recipients=[...room!.values()].filter(e=>e!==sender&&sameRoom(e.handle.session,session)
+        &&e.handle.session.scope.participantId!==session.scope.participantId
+        &&(message.to===undefined||e.handle.session.peerId===message.to));
+      if(message.to!==undefined&&recipients.length!==1)throw new Error('SIGNAL_RECIPIENT_REFUSED');
+      const clean:SignalMessage={type:message.type,from:session.peerId};
+      if(message.to!==undefined)clean.to=message.to;if(message.payload!==undefined)clean.payload=message.payload;
+      const delivered=await Promise.all(recipients.map(e=>deliver(e,clean,{kind:'live',entry:sender})));
+      return delivered.filter(Boolean).length;
+    },
+    closeRuntime(session){const e=entries(session.scope.encounterId)?.get(session.peerId);if(e&&sameScope(e.handle.session.scope,session.scope))remove(e);},
+    closeScope(scope){for(const e of [...(entries(scope.encounterId)?.values()??[])])if(sameScope(e.handle.session.scope,scope))remove(e);},
+    size(encounterId){return entries(encounterId)?.size??0;},
+  };return Object.freeze(api);
 }
