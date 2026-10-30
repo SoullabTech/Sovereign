@@ -142,3 +142,16 @@
 @media(max-width:700px){.immersiveContent h3{font-size:clamp(36px,10.5vw,52px)}.immersiveContent{padding-top:72px}.immersiveExperience{min-height:0}}
 @media(max-width:420px){.nowSupports{grid-template-columns:1fr 1fr}.nowSupport{min-height:104px;padding:14px}.nowSupport strong{font-size:21px}.nowSupport span{font-size:12px}}
 .immersiveTopline button{min-height:44px;min-width:44px;padding:8px 16px}
+.focusTune{margin:16px 0 0;border:1px solid rgba(226,216,194,.14);border-radius:14px;padding:4px 16px 14px;background:rgba(4,12,16,.3)}
+.focusTune summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:#e9d3ae;font-family:Georgia,serif;font-size:18px}
+.focusTune .focusDoors{margin:8px 0 16px}.focusTune .focusForm{margin-top:4px}
+
+/* UIUX-02 revision: Stop never recedes with the field; essential meaning is never 9–10 px */
+.immersiveExperience[data-quiet="true"] .immersiveActions{opacity:1}
+.immersiveExperience[data-quiet="true"] .play{opacity:.55}
+.immersiveExperience[data-quiet="true"] .secondary{opacity:1;color:#f0dfc0;border-color:rgba(238,210,160,.6);background:rgba(0,0,0,.5)}
+.studioWork>span,.studioWorkSelected>span{font-size:11px}.studioWorkQualities small{font-size:11px;padding:5px 9px}
+.immersivePassages span{font-size:11px}.quality{font-size:11px}.focusWorld span{font-size:11px}.focusPrivacy{font-size:11px}
+.shell .nav a{min-height:44px;align-items:center}
+.immersiveHeld{margin:18px 0 0;font-size:13px;color:#cbbd9e}
+:global(body[data-sound-immersive-active="night"]) :global([data-listen10-persistent-dock="true"]){filter:brightness(.82) saturate(.8)}

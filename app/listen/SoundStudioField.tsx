@@ -30,6 +30,10 @@ const NIGHT_EDITIONS: ReadonlyArray<{ work: SoundStudioWork; label: string; line
   { work: NIGHT_GROUND, label: 'Guided Arrival', line: 'Bella, a 12-minute threshold' },
 ];
 
+// One catalogue card stands for the whole Night Ground family.
+const NIGHT_FAMILY = 'night-ground-family' as const;
+type CatalogueItem = SoundStudioWork | typeof NIGHT_FAMILY;
+
 function stateLabel(work: SoundStudioWork): string {
   return work.state === 'review' ? 'Ready for private review'
     : work.state === 'study' ? 'Authoring study' : 'Proposed work';
@@ -55,6 +59,17 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
     () => SOUND_STUDIO_WORKS.find(work => work.id === selectedID) ?? OPEN_GROUND,
     [selectedID],
   );
+  const catalogue = useMemo(() => {
+    const nightIds = new Set(NIGHT_EDITIONS.map(edition => edition.work.id));
+    const list: CatalogueItem[] = [];
+    let placed = false;
+    for (const work of SOUND_STUDIO_WORKS) {
+      if (nightIds.has(work.id)) {
+        if (!placed) { list.push(NIGHT_FAMILY); placed = true; }
+      } else list.push(work);
+    }
+    return list;
+  }, []);
   const currentDoor = SOUND_STUDIO_DOORS.find(item => item.id === door) ?? SOUND_STUDIO_DOORS[0];
   const snapshot = transport?.snapshot;
   const isCurrent = snapshot?.experienceId === selected.id;
@@ -144,11 +159,6 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
       : 'Sound did not start. Another Soullab audio experience may be active, the media may be unavailable, or coordination is unavailable.');
   };
 
-  const stop = () => {
-    transport?.stopMusic();
-    setMessage('Stopped by you. Nothing will restart automatically.');
-  };
-
   return (
     <section id="sound-studio" className={styles.studioField} aria-labelledby="sound-studio-title"
       data-sound-studio-field="true" data-sound-studio-door={door}>
@@ -196,7 +206,28 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
       </div>
 
       <div className={styles.studioWorkGrid} data-sound-studio-shelf="true">
-        {SOUND_STUDIO_WORKS.map(work => {
+        {catalogue.map(work => {
+          if (work === NIGHT_FAMILY) {
+            return (
+              <article key="night-ground-family"
+                className={nightEdition ? styles.studioWorkSelected : styles.studioWork}
+                data-sound-studio-work="night-ground-family">
+                <div className={styles.studioWorkOrb} aria-hidden="true"/>
+                <span>Ready for private review</span>
+                <h3>Night Ground</h3>
+                <p className={styles.studioWorkSubtitle}>A long-form night field</p>
+                <p>Meditation, descent, and continuous night listening.</p>
+                <button type="button" className={styles.studioWorkAction}
+                  onClick={() => {
+                    if (!nightEdition) setSelectedID(NIGHT_GROUND_EXTENDED_NIGHT.id);
+                    setImmersive(true);
+                    setMessage('Night Ground is ready. Choose how the night should hold you; sound waits for your explicit Play.');
+                  }}>
+                  Enter Night Ground
+                </button>
+              </article>
+            );
+          }
           const selectedWork = selected.id === work.id;
           return (
             <article key={work.id}
@@ -256,6 +287,7 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
                 <div className={styles.editionRow}>
                   {NIGHT_EDITIONS.map(edition => (
                     <button key={edition.work.id} type="button"
+                      data-sound-studio-edition={edition.work.id}
                       className={selected.id === edition.work.id ? styles.editionActive : styles.edition}
                       aria-pressed={selected.id === edition.work.id}
                       onClick={() => {
@@ -282,15 +314,21 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
               <span>{untilStop ? 'then until Stop' : selected.durationLabel ?? formatExperienceTime(selected.durationMs)}</span>
             </div>
 
-            <div className={styles.immersiveActions}>
-              <button type="button" className={styles.play} onClick={() => void begin()}
-                aria-label={isPlaying ? `Pause ${selected.title}` : elapsedMs > 0 ? `Resume ${selected.title}` : `Play ${selected.title}`}
-                disabled={!transportReady && boundaryStatus !== 'checking'}>
-                {isPlaying ? 'Ⅱ  Pause' : elapsedMs > 0 ? '▶  Resume' : `▶  Begin ${selected.title}`}
-              </button>
-              {isCurrent && <button type="button" className={styles.secondary}
-                onClick={stop} aria-label={`Stop ${selected.title}`}>Stop</button>}
-            </div>
+            {/* One control set: before sound the field offers Begin; once this experience holds the
+                player, Pause, Resume and Stop live in the shared player so they are never doubled. */}
+            {!isCurrent ? (
+              <div className={styles.immersiveActions}>
+                <button type="button" className={styles.play} onClick={() => void begin()}
+                  aria-label={`Play ${selected.title}`}
+                  disabled={!transportReady && boundaryStatus !== 'checking'}>
+                  {`▶  Begin ${selected.title}`}
+                </button>
+              </div>
+            ) : (
+              <p className={styles.immersiveHeld} aria-live="polite">
+                {isPlaying ? 'Playing. Pause and Stop are in the player below.' : 'Paused. Resume or Stop in the player below.'}
+              </p>
+            )}
 
             {afterListening && (
               <div className={styles.returnRow} role="group" aria-label="When you are ready">

@@ -171,6 +171,63 @@ export default function FocusFieldDesk() {
 
       {!sessionActive && !sessionTerminal && (
         <>
+          <div className={styles.focusForm}>
+            <fieldset className={styles.focusFieldset}>
+              <legend>What are you doing?</legend>
+              <div className={styles.focusChoiceGrid}>
+                {FOCUS_TASK_KINDS.map(value => (
+                  <button key={value} type="button" aria-pressed={task === value}
+                    className={task === value ? styles.focusChoiceActive : styles.focusChoice}
+                    onClick={() => chooseTask(value)}>{TASK_LABELS[value]}</button>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className={styles.focusFieldset}>
+              <legend>What support would help?</legend>
+              <div className={styles.focusNeedGrid}>
+                {FOCUS_NEEDS.map(value => (
+                  <button key={value} type="button" aria-pressed={focusNeed === value}
+                    className={focusNeed === value ? styles.focusNeedActive : styles.focusNeed}
+                    onClick={() => chooseFocusNeed(value)}>
+                    <strong>{NEED_LABELS[value]}</strong><span>{NEED_LINES[value]}</span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className={styles.focusFieldset}>
+              <legend>How long?</legend>
+              <div className={styles.focusInlineChoices}>
+                {FOCUS_PRESET_MINUTES.map(minutes => (
+                  <button key={minutes} type="button"
+                    aria-pressed={durationMode === 'preset' && presetMinutes === minutes}
+                    className={durationMode === 'preset' && presetMinutes === minutes
+                      ? styles.focusChoiceActive : styles.focusChoice}
+                    onClick={() => { setDurationMode('preset'); setPresetMinutes(minutes); }}>
+                    {minutes} minutes
+                  </button>
+                ))}
+                <button type="button" aria-pressed={durationMode === 'custom'}
+                  className={durationMode === 'custom' ? styles.focusChoiceActive : styles.focusChoice}
+                  onClick={() => setDurationMode('custom')}>Custom</button>
+                <button type="button" aria-pressed={durationMode === 'untimed'}
+                  className={durationMode === 'untimed' ? styles.focusChoiceActive : styles.focusChoice}
+                  onClick={() => setDurationMode('untimed')}>No timer</button>
+              </div>
+              {durationMode === 'custom' && (
+                <label className={styles.focusTextLabel} htmlFor="focus-custom-minutes">
+                  Custom minutes (5–240)
+                  <input id="focus-custom-minutes" type="number" min="5" max="240" step="1"
+                    value={customMinutes}
+                    onChange={event => setCustomMinutes(Math.max(5, Math.min(240, Number(event.target.value) || 5)))} />
+                </label>
+              )}
+            </fieldset>
+          </div>
+
+          <details className={styles.focusTune}>
+            <summary>Tune session</summary>
           <div className={styles.focusDoors} role="group" aria-label="Focus Field entry">
             <button type="button" aria-pressed={entryMode === 'guide-me'}
               className={entryMode === 'guide-me' ? styles.focusDoorActive : styles.focusDoor}
@@ -184,37 +241,13 @@ export default function FocusFieldDesk() {
             </button>
           </div>
 
-          <div className={styles.focusForm}>
-            <fieldset className={styles.focusFieldset}>
-              <legend>What are you doing?</legend>
-              <div className={styles.focusChoiceGrid}>
-                {FOCUS_TASK_KINDS.map(value => (
-                  <button key={value} type="button" aria-pressed={task === value}
-                    className={task === value ? styles.focusChoiceActive : styles.focusChoice}
-                    onClick={() => chooseTask(value)}>{TASK_LABELS[value]}</button>
-                ))}
-              </div>
+            <div className={styles.focusForm}>
               <label className={styles.focusTextLabel} htmlFor="focus-task-label">
                 Optional private label
                 <input id="focus-task-label" maxLength={120} value={taskLabel}
                   onChange={event => setTaskLabel(event.target.value)}
                   placeholder="Chapter 4, budget review, open studio…" />
               </label>
-            </fieldset>
-
-            <fieldset className={styles.focusFieldset}>
-              <legend>What kind of focus?</legend>
-              <div className={styles.focusNeedGrid}>
-                {FOCUS_NEEDS.map(value => (
-                  <button key={value} type="button" aria-pressed={focusNeed === value}
-                    className={focusNeed === value ? styles.focusNeedActive : styles.focusNeed}
-                    onClick={() => chooseFocusNeed(value)}>
-                    <strong>{NEED_LABELS[value]}</strong><span>{NEED_LINES[value]}</span>
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-
             <fieldset className={styles.focusFieldset}>
               <legend>How much stimulation?</legend>
               <div className={styles.focusInlineChoices}>
@@ -255,36 +288,8 @@ export default function FocusFieldDesk() {
                 </div>
               </fieldset>
             )}
-
-            <fieldset className={styles.focusFieldset}>
-              <legend>How long?</legend>
-              <div className={styles.focusInlineChoices}>
-                {FOCUS_PRESET_MINUTES.map(minutes => (
-                  <button key={minutes} type="button"
-                    aria-pressed={durationMode === 'preset' && presetMinutes === minutes}
-                    className={durationMode === 'preset' && presetMinutes === minutes
-                      ? styles.focusChoiceActive : styles.focusChoice}
-                    onClick={() => { setDurationMode('preset'); setPresetMinutes(minutes); }}>
-                    {minutes} minutes
-                  </button>
-                ))}
-                <button type="button" aria-pressed={durationMode === 'custom'}
-                  className={durationMode === 'custom' ? styles.focusChoiceActive : styles.focusChoice}
-                  onClick={() => setDurationMode('custom')}>Custom</button>
-                <button type="button" aria-pressed={durationMode === 'untimed'}
-                  className={durationMode === 'untimed' ? styles.focusChoiceActive : styles.focusChoice}
-                  onClick={() => setDurationMode('untimed')}>No timer</button>
-              </div>
-              {durationMode === 'custom' && (
-                <label className={styles.focusTextLabel} htmlFor="focus-custom-minutes">
-                  Custom minutes (5–240)
-                  <input id="focus-custom-minutes" type="number" min="5" max="240" step="1"
-                    value={customMinutes}
-                    onChange={event => setCustomMinutes(Math.max(5, Math.min(240, Number(event.target.value) || 5)))} />
-                </label>
-              )}
-            </fieldset>
-          </div>
+            </div>
+          </details>
 
           <div className={styles.focusStartRow}>
             <div>
