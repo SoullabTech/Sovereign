@@ -141,3 +141,4 @@
 .immersiveExperience{min-height:0}.immersiveContent{min-height:0;justify-content:flex-start;padding-top:clamp(64px,8vw,96px)}
 @media(max-width:700px){.immersiveContent h3{font-size:clamp(36px,10.5vw,52px)}.immersiveContent{padding-top:72px}.immersiveExperience{min-height:0}}
 @media(max-width:420px){.nowSupports{grid-template-columns:1fr 1fr}.nowSupport{min-height:104px;padding:14px}.nowSupport strong{font-size:21px}.nowSupport span{font-size:12px}}
+.immersiveTopline button{min-height:44px;min-width:44px;padding:8px 16px}
