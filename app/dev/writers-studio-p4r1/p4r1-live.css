@@ -4243,12 +4243,3 @@
   border:1px solid var(--fr-line,#8887);border-radius:7px;
   padding:8px 10px;min-height:36px;font-size:12px;cursor:pointer;
 }
-
-/* UX fix (founder walk 2026-10-29): the top bar must never clip a Studio tab.
-   The Studio tabs keep their natural width; the long Work title in the picker
-   gives up space and truncates with an ellipsis instead. */
-.fr-root .fr-bar .fr-nav { flex: 0 0 auto; overflow: visible; }
-.fr-root .fr-bar .fr-workpick { flex: 1 1 140px; min-width: 120px; max-width: 380px; }
-.fr-root .fr-bar .fr-workpick > *,
-.fr-root .fr-bar .fr-workpick select,
-.fr-root .fr-bar .fr-workpick button { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

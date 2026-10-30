@@ -190,6 +190,25 @@ export function Shell(props: ShellProps) {
     '--fr-maia-w': rightVisible ? `${constrain('right', rightWidth)}px` : '0px',
   } as React.CSSProperties;
 
+  // The "View" menu keeps the top bar calm: appearance, text size, panel
+  // toggles and Reset widths live behind one button. Presentation only.
+  const viewMenuRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const close = (event: Event) => {
+      const menu = viewMenuRef.current;
+      if (!menu?.open) return;
+      if (event.type === 'keydown' && (event as globalThis.KeyboardEvent).key !== 'Escape') return;
+      if (event.type === 'pointerdown' && menu.contains(event.target as Node)) return;
+      menu.open = false;
+    };
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', close);
+    };
+  }, []);
+
   return (
     <div
       ref={shellRef}
@@ -245,6 +264,9 @@ export function Shell(props: ShellProps) {
           {/* Presentation preferences are visible across the six real rooms.
               They never grant source, MAIA or editorial authorization. */}
           <WriterPreferencesMenu />
+          <details className="fr-view-menu" ref={viewMenuRef} data-studio-view-menu>
+            <summary>View</summary>
+            <div className="fr-view-menu-body">
           {/* Preserve existing writer-owned topbar download/actions. */}
           <div className="fr-bar-accessories" data-studio-topbar-accessories />
           {currentPathname === '/writers-studio' ? (
@@ -301,6 +323,8 @@ export function Shell(props: ShellProps) {
               ) : null}
             </div>
           ) : null}
+            </div>
+          </details>
           {props.workTitle !== undefined ? (
             <div className="fr-workpick" aria-label="Current Work">
               <DocIcon />
