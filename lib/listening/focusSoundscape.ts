@@ -18,8 +18,13 @@ export type SoundscapeInput = {
 export type VoiceSpec = { ratio: number; type: 'sine' | 'triangle' | 'sawtooth' | 'square'; gain: number; detuneCents: number; pan: number };
 export type NoiseSpec = { gain: number; bandHz: number; q: number; sweepHz: number };
 export type TickSpec = { kind: 'click' | 'pluck' | 'soft'; bpm: number; gain: number };
+// Real recorded nature layers (loops). Gains are 0..1.2 relative levels; the engine plays a layer only when its
+// gain is above zero and its file can be loaded, so a missing recording leaves the synthesized sound alone.
+export type RecordedLayerId = 'night' | 'forest' | 'wind' | 'waves' | 'rain';
+export type RecordedMix = Partial<Record<RecordedLayerId, number>>;
 export type SoundscapeSpec = {
   world: FocusMusicalWorld;
+  recorded: RecordedMix | null;
   root: number;
   voices: VoiceSpec[];
   lowpassHz: number;
@@ -67,10 +72,30 @@ const STIM = {
   medium: { lp: 1,   depth: 1,   tick: 1,   drift: 1,   bpm: 1,   shimmer: .03 },
   high:   { lp: 1.35, depth: 1.5, tick: 1.4, drift: 1.2, bpm: 1.2, shimmer: .075 },
 } as const;
+// Which recordings each need leans on (nature world). Stimulation scales the whole mix; verbal tasks keep the
+// louder, changing layers (wind, waves) down so they do not compete with reading or writing.
+const NATURE_MIX: Record<FocusNeed, RecordedMix> = {
+  arrive:   { night: .7, forest: .5 },
+  steady:   { forest: .8, wind: .25 },
+  deep:     { rain: .8, night: .4 },
+  activate: { wind: .6, waves: .5, forest: .3 },
+  create:   { forest: .6, waves: .5 },
+  reset:    { waves: .8, wind: .3 },
+};
+const NATURE_STIM: Record<FocusStimulation, number> = { low: .7, medium: 1, high: 1.3 };
 const VERBAL: ReadonlySet<FocusTaskKind> = new Set<FocusTaskKind>(['reading', 'writing', 'studying', 'thinking']);
 
 const round = (n: number, d = 3) => Math.round(n * 10 ** d) / 10 ** d;
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
+
+function natureMix(input: SoundscapeInput, verbal: boolean): RecordedMix {
+  const mix: RecordedMix = {};
+  for (const [id, gain] of Object.entries(NATURE_MIX[input.need]) as [RecordedLayerId, number][]) {
+    const quiet = verbal && (id === 'wind' || id === 'waves') ? .7 : 1;
+    mix[id] = round(clamp(gain * NATURE_STIM[input.stimulation] * quiet, 0, 1.2));
+  }
+  return mix;
+}
 
 export function focusSoundscapeSpec(input: SoundscapeInput): SoundscapeSpec {
   const palette = PALETTE[input.world];
@@ -90,6 +115,7 @@ export function focusSoundscapeSpec(input: SoundscapeInput): SoundscapeSpec {
   };
   return {
     world: input.world,
+    recorded: input.world === 'nature' ? natureMix(input, verbal) : null,
     root: palette.root,
     voices: [...palette.voices.slice(0, need.voices), ...(need.extra ? [need.extra] : []), v(6, 'sine', round(stim.shimmer * NEED_SHIMMER[input.need], 4), 0, 0)].map(voice => ({ ...voice })),
     lowpassHz: round(clamp(palette.lowpass * need.lp * stim.lp * taskLp, 300, 5000), 1),

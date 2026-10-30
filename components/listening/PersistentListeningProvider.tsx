@@ -260,13 +260,28 @@ function newSketch(
   return sketch;
 }
 
+// Recorded nature loops (private development folder; absent in a build without it, which is a quiet no-op).
+const recordedCache = new Map<string, Promise<AudioBuffer | null>>();
+function loadRecordedLoop(context: BaseAudioContext, id: string): Promise<AudioBuffer | null> {
+  const key = id;
+  let pending = recordedCache.get(key);
+  if (!pending) {
+    pending = fetch(`/media/dev-private/nature/${id}.wav`)
+      .then(response => (response.ok ? response.arrayBuffer() : null))
+      .then(bytes => (bytes ? context.decodeAudioData(bytes) : null))
+      .catch(() => null);
+    recordedCache.set(key, pending);
+  }
+  return pending;
+}
+
 function newSoundscapeSketch(spec: SoundscapeSpec, level: number): Sketch {
   const AudioCtor: typeof AudioContext =
     window.AudioContext ||
     (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext!;
   if (!AudioCtor) throw new Error('This browser cannot open an AudioContext.');
   const context = new AudioCtor();
-  const handle = buildSoundscape(context, context.destination, spec, level);
+  const handle = buildSoundscape(context, context.destination, spec, level, id => loadRecordedLoop(context, id));
   return {
     context, oscillators: handle.oscillators, master: handle.master, voices: handle.voices, filter: handle.filter,
     movement: handle.movement, movementDepth: handle.movementDepth, mood: 'focus', frequencies: [spec.root], soundscape: handle,
