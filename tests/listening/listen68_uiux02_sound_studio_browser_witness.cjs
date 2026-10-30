@@ -81,6 +81,11 @@ const PROFILES=[{name:'phone-320',w:320,h:640,m:true,t:true},{name:'phone-360',w
   await page.waitForFunction(()=>{const a=document.querySelector('[data-listen10-audio="true"]');return a&&!a.paused&&a.currentTime>0},{},{timeout:12000}).catch(()=>{});
   check(p.name,'play-is-a-separate-member-act-and-sound-starts',await page.locator('[data-listen10-audio="true"]').evaluate(a=>!a.paused));
   await page.getByRole('button',{name:'Stop and clear persistent music'}).click();
+  check(p.name,'focus-player-bar-offers-play-when-nothing-plays',await page.locator('[data-focus-dock-play-sound="true"]').isVisible());
+  await page.locator('[data-focus-dock-play-sound="true"]').click();
+  await page.waitForFunction(()=>{const a=document.querySelector('[data-listen10-audio="true"]');return a&&!a.paused&&a.currentTime>0},{},{timeout:12000}).catch(()=>{});
+  check(p.name,'focus-player-bar-play-starts-the-chosen-sound',await page.locator('[data-listen10-audio="true"]').evaluate(a=>!a.paused));
+  await page.getByRole('button',{name:'Stop and clear persistent music'}).click();
   await page.getByRole('button',{name:'Stop Focus Field session'}).click();
   // ADHD support section: member-opened, starts a quiet timer only, five-more is a member act
   check(p.name,'adhd-section-present-and-closed',await page.locator('[data-adhd-section] details').evaluate(d=>!d.open));

@@ -5,6 +5,8 @@ import {
 } from 'react';
 import type { ReactNode, RefObject } from 'react';
 import { focusTimeLabel } from '@/lib/listening/focusTimeDisplay';
+import { FOCUS_SOUND_SKETCHES, focusSoundLabel } from '@/lib/listening/focusSoundChoices';
+import type { FocusSoundId } from '@/lib/listening/focusSoundChoices';
 import type { FocusTimeDisplay } from '@/lib/listening/focusTimeDisplay';
 import PersistentListeningDock from './PersistentListeningDock';
 import { usePlatformAudioSession } from './usePlatformAudioSession';
@@ -44,7 +46,7 @@ import type {
   FocusFeedbackOutcome, FocusFeedbackTag, FocusInterruptionReason,
   FocusRetune, FocusSession, FocusSessionPlanInput,
 } from '@/lib/listening/focusFieldSession';
-import { reviewMediaEdition, reviewMediaSequence, soundPassageAt } from '@/lib/listening/soundStudioExperience';
+import { OPEN_GROUND, reviewMediaEdition, reviewMediaSequence, soundPassageAt } from '@/lib/listening/soundStudioExperience';
 import type { SoundExperienceManifest, SoundExperienceMediaEdition, SoundExperiencePlayback } from '@/lib/listening/soundStudioExperience';
 
 /**
@@ -119,6 +121,11 @@ export type ListeningTransport = {
   focusSession: FocusSession | null;
   focusClockMs: number;
   focusTimeDisplay: FocusTimeDisplay;
+  /** The sound the member chose for Focus. Choosing plays nothing. */
+  focusSoundChoice: FocusSoundId;
+  setFocusSoundChoice: (id: FocusSoundId) => void;
+  /** Member-initiated: plays the chosen Focus sound through the one persistent player. */
+  playFocusSound: () => Promise<boolean>;
   /** false where the platform fixes the media level (iOS): volume, presets and fade cannot work. */
   volumeAdjustable: boolean;
   setFocusTimeDisplay: (mode: FocusTimeDisplay) => void;
@@ -260,6 +267,7 @@ export function PersistentListeningProvider({
   const focusSessionRef = useRef<FocusSession | null>(null);
   const [focusClockMs, setFocusClockMs] = useState(() => Date.now());
   const [focusTimeDisplay, setFocusTimeDisplay] = useState<FocusTimeDisplay>('countdown');
+  const [focusSoundChoice, setFocusSoundChoice] = useState<FocusSoundId>('none');
   // iOS ignores a page's HTMLMediaElement.volume: an assignment reads back for an instant, then the
   // platform value returns to 1 (measured on device). Detect it after a beat, not in the same tick,
   // so no control claims a level change the device will not make.
@@ -1078,6 +1086,15 @@ export function PersistentListeningProvider({
     } : old);
   }, [claimFocus, releaseOutput, reviewOffsetMs]);
 
+  const playFocusSound = useCallback(async (): Promise<boolean> => {
+    if (focusSoundChoice === 'none') return false;
+    if (focusSoundChoice === 'open-ground') {
+      return OPEN_GROUND.manifest ? playExperienceMedia(OPEN_GROUND.manifest) : false;
+    }
+    const sketch = FOCUS_SOUND_SKETCHES[focusSoundChoice];
+    return playSketch(sketch.mood, [...sketch.frequencies]);
+  }, [focusSoundChoice, playExperienceMedia, playSketch]);
+
   const transport: ListeningTransport = {
     snapshot, volume, setVolume, looping, loopAvailable, setLooping, shape, setShape,
     fields, keepField, dropField, replaceFields,
@@ -1085,6 +1102,7 @@ export function PersistentListeningProvider({
     pause, stopMusic: stopAll, listeningInstance, removeLocalFile,
     focusSession, focusClockMs,
     focusTimeDisplay, setFocusTimeDisplay,
+    focusSoundChoice, setFocusSoundChoice, playFocusSound,
     volumeAdjustable,
     startFocusSession: beginFocusSession,
     pauseFocusSession,
@@ -1139,6 +1157,8 @@ export function PersistentListeningProvider({
       onLooping={setLooping}
       onCompanionMode={setCompanionMode}
       volumeAdjustable={volumeAdjustable}
+      focusSoundLabel={focusSoundChoice === 'none' ? null : focusSoundLabel(focusSoundChoice)}
+      onPlayFocusSound={() => { void playFocusSound(); }}
       onPauseFocus={() => { pauseFocusSession('member'); }}
       onResumeFocus={() => { resumeCurrentFocus(); }}
       onStopFocus={() => { stopCurrentFocus(); }}

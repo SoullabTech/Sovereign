@@ -62,3 +62,16 @@ test('the player never claims a level change the device will not make', () => {
   assert.match(dock, /data-listen-volume-fixed/);
   assert.match(dock, /volumeAdjustable \? sleepAction : 'stop'/);
 });
+
+test('the Focus player-bar Play shortcut is a member tap, never automatic, and the desk stays audio-free', () => {
+  const dock = code(read('components/listening/PersistentListeningDock.tsx'));
+  const uses = dock.match(/onPlayFocusSound/g) || [];
+  assert.ok(uses.length >= 3);
+  assert.match(dock, /focusSoundLabel && snapshot\.kind === 'none' && onPlayFocusSound/);
+  assert.match(dock, /onClick=\{onPlayFocusSound\}/);
+  assert.doesNotMatch(dock, /useEffect\([^)]*onPlayFocusSound/s);
+  const provider = code(read('components/listening/PersistentListeningProvider.tsx'));
+  assert.match(provider, /const playFocusSound = useCallback/);
+  const desk = code(read('components/listening/FocusFieldDesk.tsx'));
+  assert.doesNotMatch(desk, /playFocusSound|playSketch|playExperienceMedia|playLocalFile/);
+});
