@@ -8,6 +8,8 @@ import {
   FOCUS_PRESET_MINUTES,
   FOCUS_STIMULATION_LEVELS,
   FOCUS_TASK_KINDS,
+  focusDurationMs,
+  focusElapsedMs,
   focusRemainingMs,
   type FocusDuration,
   type FocusFeedbackOutcome,
@@ -18,6 +20,7 @@ import {
   type FocusTaskKind,
 } from '@/lib/listening/focusFieldSession';
 import { suggestFocusWorlds } from '@/lib/listening/focusFieldGuide';
+import { focusTimeLabel } from '@/lib/listening/focusTimeDisplay';
 import { usePersistentListening } from './PersistentListeningProvider';
 import styles from '@/app/listen/listen.module.css';
 
@@ -307,7 +310,13 @@ export default function FocusFieldDesk() {
         <div className={styles.focusActiveSession} data-focus-field-session={session.status}>
           <div className={styles.focusClock} aria-live="polite">
             <span>{session.status === 'running' ? 'In focus' : session.status === 'paused' ? 'Paused' : session.status === 'completed' ? 'Complete' : 'Stopped'}</span>
-            <strong>{formatClock(remaining)}</strong>
+            <strong>{transport && session
+              ? (focusTimeLabel(transport.focusTimeDisplay, {
+                  elapsedMs: focusElapsedMs(session, new Date(transport.focusClockMs)),
+                  totalMs: focusDurationMs(session.plan.duration),
+                  countdownLabel: formatClock(remaining),
+                }) || '·')
+              : formatClock(remaining)}</strong>
           </div>
           <div className={styles.focusSessionSummary}>
             <h3>{session.plan.taskLabel || TASK_LABELS[session.plan.task]}</h3>

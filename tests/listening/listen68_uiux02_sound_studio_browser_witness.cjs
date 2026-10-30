@@ -82,6 +82,24 @@ const PROFILES=[{name:'phone-320',w:320,h:640,m:true,t:true},{name:'phone-360',w
   check(p.name,'play-is-a-separate-member-act-and-sound-starts',await page.locator('[data-listen10-audio="true"]').evaluate(a=>!a.paused));
   await page.getByRole('button',{name:'Stop and clear persistent music'}).click();
   await page.getByRole('button',{name:'Stop Focus Field session'}).click();
+  // ADHD support section: member-opened, starts a quiet timer only, five-more is a member act
+  check(p.name,'adhd-section-present-and-closed',await page.locator('[data-adhd-section] details').evaluate(d=>!d.open));
+  await page.locator('[data-adhd-section] summary').click();
+  await page.locator('[data-adhd-start="true"]').click();
+  check(p.name,'adhd-suggestion-starts-a-timer-and-plays-nothing',await page.locator('[data-listen10-audio="true"]').evaluate(a=>a.getAttribute('src')===null&&a.paused)&&await page.getByRole('button',{name:'Pause Focus Field session'}).count()===1);
+  await page.locator('[data-adhd-time="gentle"]').click();
+  check(p.name,'adhd-gentle-position-shows-a-word-not-a-number',await page.locator('[data-adhd-position="true"]').textContent()==='Early');
+  await page.locator('[data-adhd-time="none"]').click();
+  check(p.name,'adhd-time-none-hides-time',(await page.locator('[data-focus-field-dock="true"]').textContent()).replace(/[^0-9:]/g,'').length===0||!/\d+:\d\d/.test(await page.locator('[data-focus-field-dock="true"]').textContent()));
+  await page.locator('[data-adhd-quiet="true"]').click();
+  check(p.name,'adhd-quiet-screen-keeps-stop-reachable',await page.evaluate(()=>document.body.hasAttribute('data-quiet-ui'))&&await page.getByRole('button',{name:'Stop Focus Field session'}).isVisible());
+  await page.locator('[data-adhd-quiet="true"]').click();
+  await page.clock.fastForward('10:05');
+  await page.locator('[data-adhd-five-more="true"]').waitFor({timeout:8000});
+  check(p.name,'adhd-session-ends-and-does-not-extend-itself',await page.locator('[data-adhd-five-more="true"]').isVisible()&&await page.getByRole('button',{name:'Pause Focus Field session'}).count()===0);
+  await page.locator('[data-adhd-five-more="true"]').click();
+  check(p.name,'adhd-five-more-is-a-member-act',await page.getByRole('button',{name:'Pause Focus Field session'}).count()===1);
+  await page.getByRole('button',{name:'Stop Focus Field session'}).click();
   // Night family
   await page.locator('[data-studio-'+(p.w<=700?'tab':'section')+'="fields"]').click();
   check(p.name,'one-night-ground-catalogue-card',await page.locator('[data-sound-studio-work="night-ground-family"]').count()===1&&await page.locator('[data-sound-studio-work^="night-ground-01"]').count()===0);

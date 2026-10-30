@@ -14,6 +14,7 @@ import PrivateBackupDesk from './PrivateBackupDesk';
 import SoundStudioField from './SoundStudioField';
 import SoundStudioNow from './SoundStudioNow';
 import FocusSoundPicker from './FocusSoundPicker';
+import FocusAdhdSupport from './FocusAdhdSupport';
 import type { StudioView } from './SoundStudioNow';
 import FocusFieldDesk from '@/components/listening/FocusFieldDesk';
 import type { MemberCollection, TrackReference } from '@/lib/listening/portableCollections';
@@ -232,7 +233,7 @@ export default function ListenRoom() {
     <div className={styles.main}>
       <div className={styles.topline}><span>SOULLAB / SOUND STUDIO</span><span className={styles.review}>REVIEW BUILD · NOT PUBLIC</span></div>
       {view==='now' && <SoundStudioNow onNavigate={go} />}
-      {view==='focus' && <div className={styles.body}><button type="button" className={styles.backLink} onClick={()=>go('now')}>← Now</button><FocusSoundPicker /><FocusFieldDesk /></div>}
+      {view==='focus' && <div className={styles.body}><button type="button" className={styles.backLink} onClick={()=>go('now')}>← Now</button><FocusAdhdSupport /><FocusSoundPicker /><FocusFieldDesk /></div>}
       {view==='fields' && <SoundStudioField key={fieldKey} initialWorkId={fieldWork} />}
       {view==='shelf' && <div className={styles.body}>
         <section aria-labelledby="shelf-title" className={styles.shelfHead}><span className={styles.smallcaps}>SOUND SHELF</span><h2 id="shelf-title">What you keep, and how.</h2><p className={styles.muted}>Your collections, private notes, local files and backup. Nothing here is analyzed, and nothing leaves your device unless you export it.</p></section>
