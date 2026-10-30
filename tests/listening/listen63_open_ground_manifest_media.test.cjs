@@ -92,7 +92,7 @@ test('Sound Studio uses the manifest and exact-media path', () => {
   assert.match(model, /openGroundManifestSource/);
   assert.match(model, /reviewMediaEdition/);
   assert.match(field, /playExperienceMedia\(selected\.manifest\)/);
-  assert.match(field, /exact reviewed AAC edition/i);
+  assert.match(field, /exact reviewed media edition/i);
 });
 
 test('exact media reuses one persistent HTML audio element and existing output lease', () => {

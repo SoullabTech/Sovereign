@@ -160,36 +160,36 @@ export default function SoundStudioField() {
               <button type="button" className={styles.studioWorkAction}
                 onClick={() => {
                   setSelectedID(work.id);
-                  if (work.id === OPEN_GROUND.id) {
+                  if (work.manifest) {
                     setImmersive(true);
-                    setMessage('Open Ground is ready with its exact reviewed AAC edition. Sound waits for your explicit Play.');
+                    setMessage(`${work.title} is ready with its exact reviewed media edition. Sound waits for your explicit Play.`);
                   } else {
                     setImmersive(false);
-                    setMessage(`${work.title} is preserved as an authoring study. Open Ground is the complete responsive prototype in this build.`);
+                    setMessage(`${work.title} is preserved as an authoring study. Manifest-bound experiences are the complete responsive prototypes in this build.`);
                   }
                 }}>
-                {work.id === OPEN_GROUND.id ? 'Enter experience' : 'View study'}
+                {work.manifest ? 'Enter experience' : 'View study'}
               </button>
             </article>
           );
         })}
       </div>
 
-      {immersive && selected.id === OPEN_GROUND.id && (
-        <section className={styles.immersiveExperience} aria-labelledby="open-ground-title"
-          data-sound-studio-immersive="open-ground">
+      {immersive && selected.manifest && (
+        <section className={styles.immersiveExperience} aria-labelledby={`${selected.id}-title`}
+          data-sound-studio-immersive={selected.id === OPEN_GROUND.id ? 'open-ground' : selected.id}>
           <div className={styles.immersiveVisual} aria-hidden="true">
             <div className={styles.immersiveHorizon}/><div className={styles.immersiveOrb}/>
           </div>
           <div className={styles.immersiveContent}>
             <div className={styles.immersiveTopline}>
-              <span>FIELD 01 · MUSIC ONLY · PRIVATE REVIEW</span>
-              <button type="button" onClick={() => setImmersive(false)} aria-label="Close Open Ground experience">Close</button>
+              <span>{selected.fieldLabel ?? 'SOULLAB SOUND FIELD · PRIVATE REVIEW'}</span>
+              <button type="button" onClick={() => setImmersive(false)} aria-label={`Close ${selected.title} experience`}>Close</button>
             </div>
-            <span className={styles.smallcaps}>A SUSTAINED TONAL WORLD</span>
-            <h3 id="open-ground-title">Open Ground</h3>
+            <span className={styles.smallcaps}>{selected.kind}</span>
+            <h3 id={`${selected.id}-title`}>{selected.title}</h3>
             <p className={styles.immersiveInvitation}>
-              What can a sustained tonal world reveal when we give it time, subtle internal movement and a carefully composed return?
+              {selected.immersiveQuestion ?? selected.description}
             </p>
             <div className={styles.immersiveStage} aria-live="polite">
               <span>{passage?.label ?? 'Ready'}</span>
@@ -201,7 +201,7 @@ export default function SoundStudioField() {
             <div className={styles.immersiveTimes}>
               <span>{formatExperienceTime(elapsedMs)}</span><span>{formatExperienceTime(selected.durationMs)}</span>
             </div>
-            <ol className={styles.immersivePassages} aria-label="Open Ground passages">
+            <ol className={styles.immersivePassages} aria-label={`${selected.title} passages`}>
               {selected.passages.map(item => (
                 <li key={item.id} data-current={passage?.id === item.id ? 'true' : 'false'}>
                   <span>{formatExperienceTime(item.startMs)}</span><strong>{item.label}</strong>
@@ -210,18 +210,18 @@ export default function SoundStudioField() {
             </ol>
             <div className={styles.immersiveActions}>
               <button type="button" className={styles.play} onClick={() => void begin()}
-                aria-label={isPlaying ? 'Pause Open Ground' : elapsedMs > 0 ? 'Resume Open Ground' : 'Play Open Ground'}
+                aria-label={isPlaying ? `Pause ${selected.title}` : elapsedMs > 0 ? `Resume ${selected.title}` : `Play ${selected.title}`}
                 disabled={!transportReady && boundaryStatus !== 'checking'}>
-                {isPlaying ? 'Ⅱ  Pause' : elapsedMs > 0 ? '▶  Resume' : '▶  Begin Open Ground'}
+                {isPlaying ? 'Ⅱ  Pause' : elapsedMs > 0 ? '▶  Resume' : `▶  Begin ${selected.title}`}
               </button>
               {isCurrent && <button type="button" className={styles.secondary}
-                onClick={stop} aria-label="Stop Open Ground">Stop</button>}
+                onClick={stop} aria-label={`Stop ${selected.title}`}>Stop</button>}
               <button type="button" className={styles.ghost}
                 onClick={() => setMessage('Reflection remains optional. Continue listening, write privately, invite MAIA later, or simply return to life.')}>After listening</button>
             </div>
             <p className={styles.immersiveStatus} role="status" aria-live="polite">{message}</p>
             <p className={styles.quality}>
-              EXACT REVIEWED AAC EDITION · 24-BIT MASTER PRESERVED · EXISTING PERSISTENT PLAYER · NO BIOMETRICS · NO HIDDEN ANALYSIS
+              {selected.qualityStatement ?? 'EXACT REVIEW MEDIA · EXISTING PERSISTENT PLAYER · RELEASE HOLD'}
             </p>
           </div>
         </section>

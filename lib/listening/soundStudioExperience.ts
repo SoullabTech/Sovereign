@@ -1,4 +1,5 @@
 import openGroundManifestSource from './manifests/open-ground-432-v1.json';
+import nightGroundManifestSource from './manifests/night-ground-01-guided-arrival-v0.1.json';
 
 export type SoundStudioDoorID = 'experience' | 'explore' | 'create' | 'professional';
 
@@ -69,8 +70,22 @@ export type SoundExperienceManifest = {
     sourcePackageSizeBytes: number;
     technicalQualification: string;
   };
-  script: null;
-  voice: null;
+  script: null | {
+    id: string;
+    language: string;
+    cueCount: number;
+    delivery: string;
+    hiddenOrReversedContent: boolean;
+    finalCueEndBeforeMs: number;
+  };
+  voice: null | {
+    provider: string;
+    voiceId: string;
+    displayName: string;
+    speed: number;
+    clonedVoice: boolean;
+    mixRelativeToOrdinaryNarrationDb: number;
+  };
   techniques: {
     tuningReferenceHz: number;
     tonalCenterHz: number;
@@ -100,6 +115,8 @@ export type SoundExperienceManifest = {
 
 export const OPEN_GROUND_EXPERIENCE_MANIFEST =
   openGroundManifestSource as unknown as SoundExperienceManifest;
+export const NIGHT_GROUND_EXPERIENCE_MANIFEST =
+  nightGroundManifestSource as unknown as SoundExperienceManifest;
 
 export function reviewMediaEdition(
   manifest: SoundExperienceManifest,
@@ -129,6 +146,9 @@ export type SoundStudioWork = SoundExperiencePlayback & {
   qualities: readonly string[];
   primaryDoor: SoundStudioDoorID;
   manifest?: SoundExperienceManifest;
+  fieldLabel?: string;
+  immersiveQuestion?: string;
+  qualityStatement?: string;
 };
 
 export const SOUND_STUDIO_DOORS: readonly SoundStudioDoor[] = [
@@ -176,9 +196,33 @@ export const OPEN_GROUND: SoundStudioWork = {
   primaryDoor: 'experience',
   passages: OPEN_GROUND_EXPERIENCE_MANIFEST.passages,
   manifest: OPEN_GROUND_EXPERIENCE_MANIFEST,
+  fieldLabel: 'FIELD 01 · MUSIC ONLY · PRIVATE REVIEW',
+  immersiveQuestion: 'What can a sustained tonal world reveal when we give it time, subtle internal movement and a carefully composed return?',
+  qualityStatement: 'EXACT REVIEWED AAC EDITION · 24-BIT MASTER PRESERVED · EXISTING PERSISTENT PLAYER · NO BIOMETRICS · NO HIDDEN ANALYSIS',
 };
+
+export const NIGHT_GROUND: SoundStudioWork = {
+  id: NIGHT_GROUND_EXPERIENCE_MANIFEST.experienceId,
+  title: NIGHT_GROUND_EXPERIENCE_MANIFEST.title,
+  subtitle: NIGHT_GROUND_EXPERIENCE_MANIFEST.subtitle,
+  durationMs: NIGHT_GROUND_EXPERIENCE_MANIFEST.durationMs,
+  state: 'review',
+  kind: 'Dream Field guided arrival · exact reviewed media edition',
+  description: 'A sparse guided entrance into Night Ground. Bella speaks five quiet cues, then leaves the field without hidden suggestion or automatic continuation.',
+  mood: 'rest',
+  frequencies: [72, 144, 216],
+  qualities: ['A4 = 432 Hz reference', 'Bella / Kokoro', '12 minutes', 'Guidance does not loop'],
+  primaryDoor: 'experience',
+  passages: NIGHT_GROUND_EXPERIENCE_MANIFEST.passages,
+  manifest: NIGHT_GROUND_EXPERIENCE_MANIFEST,
+  fieldLabel: 'DREAM FIELD 01 · GUIDED ARRIVAL · PRIVATE REVIEW',
+  immersiveQuestion: 'What changes when a voice offers only enough orientation to let the night field become self-sustaining?',
+  qualityStatement: 'EXACT GUIDED AAC EDITION · 24-BIT MASTER PRESERVED · BELLA / KOKORO · NO HIDDEN SUGGESTION · LOOP HELD',
+};
+
 export const SOUND_STUDIO_WORKS: readonly SoundStudioWork[] = [
   OPEN_GROUND,
+  NIGHT_GROUND,
   {
     id: 'still-current-study-01',
     title: 'Still Current',

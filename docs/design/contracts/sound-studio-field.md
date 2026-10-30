@@ -109,6 +109,17 @@ These are three expressions of the same field. This witness demonstrates respons
 
 Open Ground is the first complete experience mounted in the responsive field. It is a six-minute original procedural composition with a 432 Hz A4 reference, no regular beat and four composed passages. The exact private-review AAC listening edition is manifest-bound and played through the one existing persistent HTML audio element; its separately preserved 24-bit/48 kHz FLAC master is not Git-served. This remains private review media, not an admitted member catalogue recording, a therapeutic protocol or a physical Neuropod session.
 
+## Dream Field — Night Ground 01
+
+Night Ground 01 is the second manifest-bound private-review experience and the first Dream Field work inside the existing Sound Studio. It does not create a sleep app, a new player, or a biologic authority.
+
+- The admitted review edition is a twelve-minute sparse guided arrival using the original Night Ground sound field and five consciously audible Bella / Kokoro cues.
+- The voice leaves before the end; there is no hidden, reversed, or subliminal instruction.
+- Loop is denied for this guided edition. A spoken arrival may be replayed only through a new explicit member start, never as an automatic night loop.
+- The complete music-only Night Ground architecture, continuous sleep core and dawn return remain separately preserved authoring artifacts until their exact sequence and physical-device behavior receive their own admission.
+- Lucid Threshold, Inner Passage, Gamma Inquiry and biologic adaptation remain distinct protocols. Playback of Night Ground grants none of their permissions.
+- Sleep, lucidity, gamma activity, healing, remote perception and spiritual meaning are not inferred from playback or usage.
+
 ## Companion listening
 
 A member may run Soullab quietly beneath music chosen in another app. This is a relationship between two independently controlled sources, not an in-Soullab integration with the external platform.
@@ -122,6 +133,10 @@ A member may run Soullab quietly beneath music chosen in another app. This is a 
 - Tonal, spectral, rhythmic or adaptive shaping is not exposed for a fixed master merely because volume control exists. Those controls require actual stems, transparent method, and creator permission.
 
 The boundary text remains visible in the control panel: other music stays in its original app, and Soullab changes only its own field.
+
+## 29 October 2026 Night Ground guided-review verification
+
+The exact twelve-minute guided AAC was bound to its own manifest and exercised through the one persistent player at desktop, iPad-size and iPhone-size browser profiles. **86/86** responsive checks passed with zero browser errors and zero external requests. The witness verified exact 48 kHz media selection, four-part passage timing, direct Pause / Resume / Stop, current passage and elapsed time, continuity through another Soullab room, MAIA interruption without automatic restart, and the absence of a Loop control for the guided edition. Physical iPhone listening, screen-lock/background behavior, founder felt acceptance of Bella’s mix, optimized build, independent security/privacy review and release remain separate.
 
 ## Forbidden here
 

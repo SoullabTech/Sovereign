@@ -55,6 +55,21 @@ test('Open Ground is a manifest-bound six-minute experience with four passages',
   assert.match(model, /A4 = 432 Hz reference/);
 });
 
+
+test('Night Ground is a distinct manifest-bound guided Dream Field experience', () => {
+  const model = read('lib/listening/soundStudioExperience.ts');
+  const field = read('app/listen/SoundStudioField.tsx');
+  const manifest = JSON.parse(read('lib/listening/manifests/night-ground-01-guided-arrival-v0.1.json'));
+  assert.equal(manifest.experienceId, 'night-ground-01-guided-arrival-v0.1');
+  assert.equal(manifest.durationMs, 12 * 60 * 1000);
+  assert.equal(manifest.voice.voiceId, 'af_bella');
+  assert.equal(manifest.script.hiddenOrReversedContent, false);
+  assert.equal(manifest.permissions.looping, false);
+  assert.match(model, /NIGHT_GROUND_EXPERIENCE_MANIFEST\.experienceId/);
+  assert.match(field, /work\.manifest \? 'Enter experience' : 'View study'/);
+  assert.match(field, /selected\.qualityStatement/);
+});
+
 test('new field reuses provider and creates no second audio engine', () => {
   const field = read('app/listen/SoundStudioField.tsx');
   const dock = read('components/listening/PersistentListeningDock.tsx');
