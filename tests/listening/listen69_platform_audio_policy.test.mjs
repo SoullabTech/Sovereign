@@ -59,8 +59,11 @@ test('native plugin has no microphone, no player, no auto-resume, and reports no
   assert.doesNotMatch(swift, /requestRecordPermission|AVAudioRecorder|AVAudioEngine|inputNode|playAndRecord|AVAudioPlayer|AVPlayer|SFSpeech/);
   assert.doesNotMatch(swift, /shouldResume|InterruptionOptionKey|\.play\(\)/);
   assert.doesNotMatch(swift, /portName|currentRoute|inputs|outputs/);
-  assert.match(swift, /mix \? \[\.mixWithOthers\] : \[\]/);
-  assert.match(swift, /setCategory\(\.playback/);
+  // Measured on a physical iPhone (30 Oct 2026): force-activating the session from the plugin collided with the
+  // web view's own activation and produced an immediate spurious interruption that paused the field. The
+  // category is therefore touched only for member-chosen companion mode, and never force-activated.
+  assert.match(swift, /if mix \{\s*try session\.setCategory\(\.playback, mode: \.default, options: \[\.mixWithOthers\]\)/);
+  assert.doesNotMatch(swift, /setActive\(true/);
   assert.match(swift, /notifyListeners\("interruption", data: \["phase":/);
   assert.match(swift, /command\.isEnabled = false/);
 });

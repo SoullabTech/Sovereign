@@ -37,8 +37,14 @@ public class SoundFieldAudio: CAPPlugin, CAPBridgedPlugin {
         do {
             // .playback keeps audio going with the screen locked and the silent switch on.
             // mixWithOthers is set ONLY when the member chose companion mode.
-            try session.setCategory(.playback, mode: .default, options: mix ? [.mixWithOthers] : [])
-            try session.setActive(true, options: [])
+            // The web view's media element already drives a playback session (UIBackgroundModes: audio).
+            // Re-activating it from here collided with WebKit's own activation and produced an immediate
+            // spurious interruption (measured on device), so the category is touched ONLY when the member
+            // chose companion mode, and the session is never force-activated.
+            if mix {
+                try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            }
+            NSLog("[SoundFieldAudio] activate category=\(session.category.rawValue) mix=\(mix) otherAudio=\(session.isOtherAudioPlaying)")
             startObserving()
             enableRemoteCommands()
             call.resolve(["category": session.category.rawValue, "mixWithOthers": mix])
@@ -48,6 +54,7 @@ public class SoundFieldAudio: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func deactivate(_ call: CAPPluginCall) {
+        NSLog("[SoundFieldAudio] deactivate")
         stopObserving()
         disableRemoteCommands()
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
@@ -90,6 +97,7 @@ public class SoundFieldAudio: CAPPlugin, CAPBridgedPlugin {
         func bind(_ command: MPRemoteCommand, _ name: String) {
             command.isEnabled = true
             let token = command.addTarget { [weak self] _ in
+                NSLog("[SoundFieldAudio] remoteCommand \(name)")
                 self?.notifyListeners("remoteCommand", data: ["command": name])
                 return .success
             }
@@ -140,6 +148,18 @@ public class SoundFieldAudio: CAPPlugin, CAPBridgedPlugin {
         guard let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
               let type = AVAudioSession.InterruptionType(rawValue: raw) else { return }
         // The system's `shouldResume` option is deliberately dropped: there is no auto-resume.
+        var reasonName = "none"
+        if let reasonRaw = note.userInfo?[AVAudioSessionInterruptionReasonKey] as? UInt,
+           let reason = AVAudioSession.InterruptionReason(rawValue: reasonRaw) {
+            switch reason {
+            case .default: reasonName = "default"
+            case .appWasSuspended: reasonName = "appWasSuspended"
+            case .builtInMicMuted: reasonName = "builtInMicMuted"
+            case .routeDisconnected: reasonName = "routeDisconnected"
+            @unknown default: reasonName = "unknown"
+            }
+        }
+        NSLog("[SoundFieldAudio] interruption \(type == .began ? "began" : "ended") reason=\(reasonName) otherAudio=\(session.isOtherAudioPlaying) category=\(session.category.rawValue)")
         notifyListeners("interruption", data: ["phase": type == .began ? "began" : "ended"])
     }
 
@@ -153,6 +173,7 @@ public class SoundFieldAudio: CAPPlugin, CAPBridgedPlugin {
         case .categoryChange: name = "categoryChange"
         default: name = "other"
         }
+        NSLog("[SoundFieldAudio] routeChange \(name)")
         // Port types only; device names (for example a person's AirPods) are never reported.
         notifyListeners("routeChange", data: ["reason": name])
     }
