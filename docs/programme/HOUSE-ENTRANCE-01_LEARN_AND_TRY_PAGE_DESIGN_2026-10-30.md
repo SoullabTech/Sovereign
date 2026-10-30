@@ -44,6 +44,12 @@ That is thin on purpose. Candidates that would make it richer, each with its dep
 | Read-only sample studio on fictional data | NOT BUILT | design + fictional-data fixtures + no member data |
 | Limited real studio (a few modules, no clients) | NOT BUILT | tier limits undecided; practitioner-row provisioning is the legacy G2-held path |
 
+### 4a. Founder direction (2026-10-30): both, staged
+
+- **Stage 1 — now:** "Talk with MAIA about your practice" is the only try-action. Nothing new is needed beyond the page and its Experience Contract.
+- **Stage 2 — later, separate design:** a read-only sample studio on fictional data, so a member can see the shape of the studio without a practitioner record. ⛔ Not part of Stage 1; the page must not mention it until it exists (failure test).
+- Reflect-first stays HELD. A real limited studio stays undecided with the tier limits.
+
 ## 5. Hard prohibitions
 
 No enrollment button · no practitioner creation (`/api/studio/personal/enter` is never called) · no form, waitlist or interest capture (collecting a sovereign act needs its own consent design) · no price, tier name, trial length or feature-limit claim · no upsell pressure or lock-screen framing · no fake preview data · no use of practitioner row, `studioMode` or any subscription claim as authority · no change to free MAIA continuity or Sanctuary behaviour.
