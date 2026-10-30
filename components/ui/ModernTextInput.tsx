@@ -29,6 +29,8 @@ interface ModernTextInputProps {
   placeholder?: string;
   disabled?: boolean;
   isProcessing?: boolean;
+  /** Optional narrow interrupt rule. Hard-disabled and recording inputs stay blocked. */
+  canSubmitWhileProcessing?: (message: string) => boolean;
   enableVoiceInput?: boolean;
   /** Whether the empty-input dictation affordance is offered at all. */
   showVoiceInputButton?: boolean;
@@ -62,6 +64,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   placeholder = "Message MAIA...",
   disabled = false,
   isProcessing = false,
+  canSubmitWhileProcessing,
   enableVoiceInput = false,
   showVoiceInputButton = true,
   enableVoiceInChat = false,
@@ -231,9 +234,12 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   };
 
   const isWithinLengthLimit = !maxLength || value.length <= maxLength;
+  const canSubmit = value.trim().length > 0 && isWithinLengthLimit && !disabled &&
+    (!isProcessing || canSubmitWhileProcessing?.(value.trim()) === true) &&
+    !enableVoiceInput && !isRecording;
 
   const handleSubmit = () => {
-    if (value.trim() && isWithinLengthLimit && !disabled && !isProcessing && !enableVoiceInput) {
+    if (canSubmit) {
       onSubmit?.(value.trim());
       setValue('');
     }
@@ -258,7 +264,6 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
     fileInputRef.current?.click();
   };
 
-  const canSubmit = value.trim().length > 0 && isWithinLengthLimit && !disabled && !isProcessing && !enableVoiceInput && !isRecording;
   const showMic = showVoiceInputButton && value.trim().length === 0 && !isRecording && !disabled && !isProcessing;
 
   return (
@@ -484,10 +489,11 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
               // Voice/recording genuinely disables the field. Processing does NOT:
               // a `disabled` textarea is force-blurred by the browser, which drops
               // the soft keyboard (and the cursor) every turn. `readOnly` blocks
-              // typing during processing while keeping focus — so the field stays
-              // ready reply-to-reply without re-selecting it.
+              // typing during processing while keeping focus. A caller may offer
+              // a narrow interrupt rule; drafting is then allowed, but Send and
+              // Enter still require that rule. Hard-disabled inputs stay blocked.
               disabled={enableVoiceInput || isRecording}
-              readOnly={disabled || isProcessing}
+              readOnly={disabled || (isProcessing && !canSubmitWhileProcessing)}
               // No `autoFocus` attribute: mount focus is applied imperatively
               // above so it can be withheld on touch devices. See the comment there.
               autoComplete="off"

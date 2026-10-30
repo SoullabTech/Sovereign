@@ -99,6 +99,9 @@ export const GOVERNED_ROOMS: readonly GoverendRoom[] = [
   { placeId: 'session-room', placeName: 'Session Room', routePrefix: '/studio/session-room', purpose: 'A live room for one-to-one sessions.' },
   { placeId: 'encounters', placeName: 'Encounters', routePrefix: '/studio/encounters', purpose: 'Records of live session encounters.' },
   { placeId: 'soul-portrait', placeName: 'Soul Portrait', routePrefix: '/soul-portrait', purpose: 'A member\'s soul portrait, offered individually with consent.' },
+  // LISTEN-57 review-only: MAIA may be deliberately invited in this authenticated room.
+  // This grants no microphone, automatic music, media entitlement or source rights.
+  { placeId: 'listen', placeName: 'Listening Room', routePrefix: '/listen', purpose: 'Member-chosen listening and focus journeys.' },
   { placeId: 'home', placeName: 'Home', routePrefix: '/home', purpose: 'The member landing threshold.' },
 ] as const;
 

@@ -9,7 +9,7 @@ import ListenRoom from './ListenRoom';
  */
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
-  title: 'Listening Room · Soullab (review)',
+  title: 'Sound Studio · Soullab (review)',
   robots: { index: false, follow: false },
 };
 

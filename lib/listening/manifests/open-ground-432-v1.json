@@ -1,0 +1,121 @@
+{
+  "schema": "soullab.sound.experience-manifest.v1",
+  "manifestId": "open-ground-432-v1-private-review",
+  "experienceId": "open-ground-432-v1",
+  "version": "1.0.0",
+  "title": "Open Ground",
+  "subtitle": "A sustained tonal world",
+  "status": "private_review",
+  "ownerLane": "LISTEN-01#1979",
+  "durationMs": 360000,
+  "authorship": {
+    "creativeDirection": "Kelly Nezat / Soullab",
+    "composition": "AI-assisted original procedural study developed under Kelly Nezat's Soullab direction",
+    "performers": [],
+    "thirdPartyAudio": false,
+    "learnedAudioModel": false
+  },
+  "editions": {
+    "defaultReview": {
+      "id": "open-ground-music-only-aac-v1",
+      "role": "mobile_listening_review",
+      "path": "/media/sound-studio/open-ground/Open_Ground_Drone01_6min_v1.m4a",
+      "mimeType": "audio/mp4",
+      "codecLabel": "AAC 256 kbps listening edition",
+      "sha256": "6e3749cd6cd62b6618daf2585269655817e963a0d2b3ea929e1a011c47cddcd5",
+      "sizeBytes": 11428586,
+      "sampleRateHz": 48000,
+      "channels": 2,
+      "durationMs": 360000,
+      "bundled": true
+    },
+    "preservationMaster": {
+      "id": "open-ground-music-only-flac-v1",
+      "role": "preservation_master",
+      "path": null,
+      "mimeType": "audio/flac",
+      "codecLabel": "FLAC 24-bit / 48 kHz preservation master",
+      "sha256": "878491a7d83c13518c4f92fc8b7c151fde73a6155d20c2bc338e2cea1866f5ae",
+      "sizeBytes": 47999260,
+      "sampleRateHz": 48000,
+      "channels": 2,
+      "durationMs": 360000,
+      "bundled": false,
+      "custody": "Founder Library and LISTEN-63 review evidence; deliberately excluded from Git source"
+    }
+  },
+  "sourceEvidence": {
+    "listeningGuideSha256": "21a81a9c940eb2c20287318e9541bee5fdf19372005412bcc51fedc31c13fc0e",
+    "listeningGuideSizeBytes": 6064,
+    "sourcePackageSha256": "2a23d95576722c764bbb10fdc4502d2d05c2eecf7bfa3a3f84cb6a5f1a2df1c6",
+    "sourcePackageSizeBytes": 382720,
+    "technicalQualification": "32/32 independent digital checks recorded in the preserved source-and-evidence package"
+  },
+  "script": null,
+  "voice": null,
+  "techniques": {
+    "tuningReferenceHz": 432,
+    "tonalCenterHz": 144,
+    "rootHz": 72,
+    "pitchSystem": "Rational intervals anchored to A4=432 Hz",
+    "regularBeat": false,
+    "designedBinauralProtocol": false,
+    "designedIsochronicProtocol": false,
+    "fadeInSeconds": 24,
+    "fadeOutSeconds": 45
+  },
+  "passages": [
+    {
+      "id": "arrival",
+      "label": "Arrival",
+      "startMs": 0,
+      "endMs": 60000,
+      "invitation": "Let the tonal center meet the room around you."
+    },
+    {
+      "id": "opening",
+      "label": "Opening",
+      "startMs": 60000,
+      "endMs": 150000,
+      "invitation": "Intervals and overtone color become perceptible."
+    },
+    {
+      "id": "dwelling",
+      "label": "Dwelling",
+      "startMs": 150000,
+      "endMs": 270000,
+      "invitation": "Remain with the field while small changes keep it alive."
+    },
+    {
+      "id": "return",
+      "label": "Return",
+      "startMs": 270000,
+      "endMs": 360000,
+      "invitation": "Let the material gather and make room for what follows."
+    }
+  ],
+  "permissions": {
+    "scope": "authenticated_founder_private_review",
+    "onDemandReview": true,
+    "productionRelease": false,
+    "download": false,
+    "offlineCabin": false,
+    "shaping": false,
+    "aiAudioAnalysis": false,
+    "thirdPartyRights": "none_present",
+    "rightsAuthority": "Founder-declared original-study custody; independent release-rights and serving authority remain pending",
+    "looping": true
+  },
+  "acceptance": {
+    "founderListening": "positive",
+    "mediaIntegrity": "verified_against_preserved_library_copy",
+    "desktopChrome": "verified_exact_media_private_review_77_of_77_responsive_browser_checks",
+    "desktopSafari": "pending_physical_safari",
+    "physicalIPad": "pending_physical_ipad",
+    "physicalIPhone": "pending_physical_iphone",
+    "bluetoothAndRouteChanges": "pending",
+    "independentSecurityPrivacy": "pending",
+    "release": "hold",
+    "responsiveDeviceEmulation": "verified_chrome_desktop_ipad_iphone_profiles_not_physical_devices"
+  }
+}

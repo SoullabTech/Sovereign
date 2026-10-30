@@ -11,6 +11,7 @@ import { MAX_RESTORE_BYTES, parseCSV, parseM3U, recognizedPlaylistUrl, restoreMe
 import LocalAudioDesk from './LocalAudioDesk';
 import ReceptiveFieldDesk from './ReceptiveFieldDesk';
 import PrivateBackupDesk from './PrivateBackupDesk';
+import SoundStudioField from './SoundStudioField';
 import FocusFieldDesk from '@/components/listening/FocusFieldDesk';
 import type { MemberCollection, TrackReference } from '@/lib/listening/portableCollections';
 import styles from './listen.module.css';
@@ -23,6 +24,7 @@ const journeys: Record<Mood, { label: string; title: string; subtitle: string; d
   rest:{ label:'Deep rest',title:'Moonwater',subtitle:'Stillness without demand',description:'For unhurried listening, ease, reflection and the passage into sleep.',gradient:'rest',frequencies:[82.41,123.47,164.81] },
 };
 const nav = [
+  {title:'Sound Studio',href:'#sound-studio'},
   {title:'Focus Field',href:'#focus-field'},
   {title:'House',href:'/home'},
   {title:'Writer’s Studio',href:'/writers-studio'},
@@ -195,7 +197,7 @@ export default function ListenRoom() {
   const clearShelf=()=>{if(!window.confirm('Clear imported playlists and private journal from this browser tab?'))return;setCollections([]);setNote('');setStatus('This tab’s collection and journal have been cleared.');};
   return <main className={styles.shell}>
     <aside className={styles.rail} aria-label="Listening Room navigation">
-      <div className={styles.brand}><span className={styles.sunmark} aria-hidden="true">◒</span><div><span className={styles.wordmark}>SOULLAB</span><span className={styles.descriptor}>LISTENING ROOM</span></div></div>
+      <div className={styles.brand}><span className={styles.sunmark} aria-hidden="true">◒</span><div><span className={styles.wordmark}>SOULLAB</span><span className={styles.descriptor}>SOUND STUDIO</span></div><Link href="/home" className={styles.mobileHomeLink} aria-label="Return to Soullab Home">Home</Link></div>
       <div className={styles.navTitle}>Explore</div>
       <nav className={styles.nav} aria-label="Soullab">{nav.map(item=><Link key={item.href} href={item.href}>{item.title}<span aria-hidden="true">↗</span></Link>)}</nav>
       <div className={styles.navTitle}>Listening journeys</div>
@@ -203,10 +205,11 @@ export default function ListenRoom() {
       <div className={styles.railFoot}>For the life you live.<br/>For the world we make.</div>
     </aside>
     <div className={styles.main}>
-      <div className={styles.topline}><span>SOULLAB / SOUND & PRESENCE</span><span className={styles.review}>ISOLATED REVIEW · NOT PUBLIC</span></div>
-      <section className={`${styles.hero} ${styles[player.gradient]}`} aria-labelledby="listen-title">
+      <div className={styles.topline}><span>SOULLAB / SOUND STUDIO & PRESENCE</span><span className={styles.review}>ISOLATED REVIEW · NOT PUBLIC</span></div>
+      <SoundStudioField />
+      <section className={`${styles.hero} ${styles[player.gradient]}`} aria-labelledby="listen-title" data-daily-listening-world="true">
         <div className={styles.heroInner}>
-          <div className={styles.eyebrow}>A SOULLAB LISTENING JOURNEY</div>
+          <div className={styles.eyebrow}>DAILY LISTENING WORLD · EXISTING REVIEW PATH</div>
           <h1 id="listen-title">{player.title}</h1>
           <p className={styles.subtitle}>{player.subtitle}</p>
           <p className={styles.intro}>{player.description}</p>

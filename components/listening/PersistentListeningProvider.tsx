@@ -4,6 +4,9 @@ import {
   createContext, useCallback, useContext, useEffect, useRef, useState,
 } from 'react';
 import type { ReactNode, RefObject } from 'react';
+import PersistentListeningDock from './PersistentListeningDock';
+// Compatibility contract: PersistentListeningDock renders data-focus-field-dock="true"
+// from this one member-bound provider; extraction did not create a second owner.
 import { validateLocalAudio } from '@/lib/listening/localAudio';
 import {
   ORIGINAL_RECEPTIVE_CONTROLS, validatedReceptiveControls,
@@ -36,6 +39,8 @@ import type {
   FocusFeedbackOutcome, FocusFeedbackTag, FocusInterruptionReason,
   FocusRetune, FocusSession, FocusSessionPlanInput,
 } from '@/lib/listening/focusFieldSession';
+import { reviewMediaEdition, reviewMediaSequence, soundPassageAt } from '@/lib/listening/soundStudioExperience';
+import type { SoundExperienceManifest, SoundExperienceMediaEdition, SoundExperiencePlayback } from '@/lib/listening/soundStudioExperience';
 
 /**
  * LISTEN-10 · Isolated cross-room transport candidate.
@@ -50,7 +55,7 @@ import type {
  * account tokens are used.
  */
 export type ListeningMood = 'focus' | 'create' | 'drift' | 'rest';
-type Kind = 'none' | 'sketch' | 'local-file';
+type Kind = 'none' | 'sketch' | 'local-file' | 'review-media';
 type Playback = 'idle' | 'playing' | 'paused' | 'error';
 
 export type ListeningSnapshot = {
@@ -60,6 +65,13 @@ export type ListeningSnapshot = {
   title: string;
   fileFormat: string | null;
   message: string;
+  experienceId?: string | null;
+  subtitle?: string;
+  durationMs?: number | null;
+  elapsedMs?: number;
+  passage?: string | null;
+  continuation?: 'until-stop' | null;
+  continuationCycle?: number;
 };
 
 type Sketch = {
@@ -78,16 +90,26 @@ export type ListeningTransport = {
   snapshot: ListeningSnapshot;
   volume: number;
   setVolume: (volume: number) => void;
+  looping: boolean;
+  loopAvailable: boolean;
+  setLooping: (enabled: boolean) => void;
   shape: ReceptiveControls;
   setShape: (shape: ReceptiveControls) => void;
   fields: ReceptiveFieldRecipe[];
   keepField: (recipe: ReceptiveFieldRecipe) => boolean;
   dropField: (id: string) => void;
   replaceFields: (recipes: ReceptiveFieldRecipe[]) => void;
-  playSketch: (mood: ListeningMood, frequencies: number[]) => Promise<boolean>;
+  playSketch: (
+    mood: ListeningMood, frequencies: number[], experience?: SoundExperiencePlayback,
+  ) => Promise<boolean>;
+  playExperienceMedia: (manifest: SoundExperienceManifest) => Promise<boolean>;
   selectLocalFile: (file: File) => { accepted: boolean; message: string };
   playLocalFile: () => Promise<boolean>;
   pause: () => void;
+  /** Terminally clear just this member-bound music; does not stop Focus time. */
+  stopMusic: () => void;
+  /** Opaque, unshared lifecycle scope; changes with each verified provider remount. */
+  listeningInstance: object;
   removeLocalFile: () => void;
   focusSession: FocusSession | null;
   focusClockMs: number;
@@ -219,6 +241,8 @@ export function PersistentListeningProvider({
 }: { children: ReactNode; reviewMemberKey: string }) {
   const [snapshot, setSnapshot] = useState(defaultSnapshot);
   const [volume, saveVolume] = useState(45);
+  const [looping, saveLooping] = useState(false);
+  const [loopAvailable, saveLoopAvailable] = useState(false);
   const [shape, saveShape] = useState<ReceptiveControls>({...ORIGINAL_RECEPTIVE_CONTROLS});
   const shapeRef = useRef<ReceptiveControls>({...ORIGINAL_RECEPTIVE_CONTROLS});
   const [fields,saveFields] = useState<ReceptiveFieldRecipe[]>([]);
@@ -233,16 +257,41 @@ export function PersistentListeningProvider({
   const media = useRef<HTMLAudioElement | null>(null);
   const blobURL = useRef<string | null>(null);
   const selected = useRef<{ title: string; format: string } | null>(null);
+  const reviewManifest = useRef<SoundExperienceManifest | null>(null);
+  const reviewSequence = useRef<readonly SoundExperienceMediaEdition[]>([]);
+  const reviewSegmentIndex = useRef(0);
+  const reviewContinuationCycles = useRef(0);
+  const segmentTransitioning = useRef(false);
   const volumeRef = useRef(45);
   const epoch = useRef(0);
+  // Stable within this one member-bound provider instance, never serialized or shared.
+  const listeningInstance = useRef<object>({}).current;
   const focusChannel = useRef<BroadcastChannel | null>(null);
   const instanceID = useRef('');
   const lastMember = useRef(reviewMemberKey);
   const outputLease = useRef<AudioOutputLease | null>(null);
+  const experience = useRef<{
+    definition: SoundExperiencePlayback;
+    elapsedMs: number;
+    startedAt: number | null;
+  } | null>(null);
   const releaseOutput = useCallback(() => {
     outputLease.current?.release();
     outputLease.current = null;
   }, []);
+  const experienceElapsed = useCallback((at = Date.now()): number => {
+    const current = experience.current;
+    if (!current) return 0;
+    const running = current.startedAt === null ? 0 : Math.max(0, at - current.startedAt);
+    return Math.min(current.definition.durationMs, current.elapsedMs + running);
+  }, []);
+  const pauseExperienceClock = useCallback((): number => {
+    const current = experience.current;
+    if (!current) return 0;
+    current.elapsedMs = experienceElapsed();
+    current.startedAt = null;
+    return current.elapsedMs;
+  }, [experienceElapsed]);
 
   const clearPrivateFields = useCallback(() => {
     fieldsRef.current=[];
@@ -270,8 +319,35 @@ export function PersistentListeningProvider({
     saveFields(restored);
   }, []);
 
+  const reviewOffsetMs = useCallback((): number => {
+    const base = reviewSequence.current.slice(0, reviewSegmentIndex.current)
+      .reduce((sum, item) => sum + item.durationMs, 0);
+    const manifest = reviewManifest.current;
+    const continuation = manifest?.continuation;
+    const current = reviewSequence.current[reviewSegmentIndex.current];
+    if (continuation?.mode === 'loop_final_segment' && current &&
+        reviewSegmentIndex.current === continuation.repeatSegmentIndex) {
+      return base + reviewContinuationCycles.current * current.durationMs;
+    }
+    return base;
+  }, []);
+  const reviewElapsedMs = useCallback((): number => {
+    const manifest = reviewManifest.current;
+    const audio = media.current;
+    if (!manifest || !audio) return 0;
+    const elapsed = reviewOffsetMs() + audio.currentTime * 1000;
+    return manifest.continuation ? elapsed : Math.min(manifest.durationMs, elapsed);
+  }, [reviewOffsetMs]);
+
   const pause = useCallback(() => {
     ++epoch.current;
+    const elapsedMs = kind.current === 'review-media' && media.current
+      ? reviewElapsedMs()
+      : pauseExperienceClock();
+    if (kind.current === 'review-media' && experience.current) {
+      experience.current.elapsedMs = elapsedMs;
+      experience.current.startedAt = null;
+    }
     if (sketch.current) {
       // Pause rather than deleting the sketch so member can explicitly resume.
       void sketch.current.context.suspend().catch(() => undefined);
@@ -279,13 +355,27 @@ export function PersistentListeningProvider({
     media.current?.pause();
     releaseOutput();
     setSnapshot(old => old.playback === 'playing'
-      ? { ...old, playback: 'paused', message: 'Paused by you or another audio experience.' }
+      ? {
+          ...old, playback: 'paused',
+          message: 'Paused by you or another audio experience.',
+          elapsedMs: experience.current ? elapsedMs : old.elapsedMs,
+          passage: experience.current
+            ? soundPassageAt(experience.current.definition.passages, elapsedMs)?.label ?? null
+            : old.passage,
+        }
       : old);
-  }, [releaseOutput]);
+  }, [pauseExperienceClock, releaseOutput, reviewElapsedMs]);
 
   const stopAll = useCallback(() => {
     ++epoch.current;
     media.current?.pause();
+    if (media.current) {
+      media.current.loop = false;
+      media.current.removeAttribute('src');
+      media.current.load();
+    }
+    saveLooping(false);
+    saveLoopAvailable(false);
     releaseOutput();
     if (sketch.current) { endSketch(sketch.current); sketch.current = null; }
     if (blobURL.current) {
@@ -293,7 +383,13 @@ export function PersistentListeningProvider({
       blobURL.current = null;
     }
     selected.current = null;
+    reviewManifest.current = null;
+    reviewSequence.current = [];
+    reviewSegmentIndex.current = 0;
+    reviewContinuationCycles.current = 0;
+    segmentTransitioning.current = false;
     kind.current = 'none';
+    experience.current = null;
     setMediaURL(null);
     shapeRef.current={...ORIGINAL_RECEPTIVE_CONTROLS};
     saveShape(shapeRef.current);
@@ -475,6 +571,32 @@ export function PersistentListeningProvider({
     return () => window.clearInterval(interval);
   }, [focusSession?.status, commitFocusSession, pause]);
 
+  useEffect(() => {
+    if (snapshot.kind !== 'sketch' || snapshot.playback !== 'playing' || !experience.current) return;
+    const tick = () => {
+      const current = experience.current;
+      if (!current || current.startedAt === null) return;
+      const elapsedMs = experienceElapsed();
+      const passage = soundPassageAt(current.definition.passages, elapsedMs)?.label ?? null;
+      if (elapsedMs >= current.definition.durationMs) {
+        current.elapsedMs = current.definition.durationMs;
+        current.startedAt = null;
+        void sketch.current?.context.suspend().catch(() => undefined);
+        releaseOutput();
+        setSnapshot(old => old.experienceId === current.definition.id ? {
+          ...old, playback: 'paused', elapsedMs, passage,
+          message: `${current.definition.title} is complete. It will not restart automatically.`,
+        } : old);
+        return;
+      }
+      setSnapshot(old => old.experienceId === current.definition.id
+        ? { ...old, elapsedMs, passage } : old);
+    };
+    tick();
+    const interval = window.setInterval(tick, 500);
+    return () => window.clearInterval(interval);
+  }, [snapshot.kind, snapshot.playback, experienceElapsed, releaseOutput]);
+
   const setVolume = useCallback((value: number) => {
     const next = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
     volumeRef.current = next;
@@ -485,6 +607,15 @@ export function PersistentListeningProvider({
         context.currentTime, 0.06);
     }
     if (media.current) media.current.volume = next / 100;
+  }, []);
+
+  const setLooping = useCallback((enabled: boolean) => {
+    const permitted = kind.current === 'local-file' ||
+      (kind.current === 'review-media' && reviewManifest.current?.permissions.looping === true &&
+        reviewSequence.current.length === 1);
+    const next = Boolean(enabled && permitted);
+    if (media.current) media.current.loop = next;
+    saveLooping(next);
   }, []);
 
   const refuseDuringMaiaSpeech = useCallback((): boolean => {
@@ -506,12 +637,22 @@ export function PersistentListeningProvider({
     // Changes do NOT start an AudioContext or request audio focus.
   }, []);
 
-  const playSketch = useCallback(async (mood: ListeningMood, frequencies: number[]): Promise<boolean> => {
+  const playSketch = useCallback(async (
+    mood: ListeningMood, frequencies: number[], requestedExperience?: SoundExperiencePlayback,
+  ): Promise<boolean> => {
     // Refuse BEFORE allocating or resuming a sound context.
     if (refuseDuringMaiaSpeech()) return false;
     if (!Array.isArray(frequencies) || frequencies.length !== 3 ||
       frequencies.some(f => !Number.isFinite(f) || f < 50 || f > 700)) {
       throw new Error('This review sketch contains invalid frequencies.');
+    }
+    if (requestedExperience) {
+      const current = experience.current;
+      if (!current || current.definition.id !== requestedExperience.id) {
+        experience.current = { definition: requestedExperience, elapsedMs: 0, startedAt: null };
+      }
+    } else {
+      experience.current = null;
     }
     if (outputLease.current) pause();
     const generation = ++epoch.current;
@@ -527,6 +668,9 @@ export function PersistentListeningProvider({
     }
     outputLease.current = lease;
     media.current?.pause();
+    if (media.current) media.current.loop = false;
+    saveLooping(false);
+    saveLoopAvailable(false);
     kind.current = 'sketch';
     let active = sketch.current;
     if (!active || active.mood !== mood ||
@@ -546,14 +690,26 @@ export function PersistentListeningProvider({
         return false;
       }
       claimFocus();
+      const activeExperience = experience.current;
+      if (activeExperience) activeExperience.startedAt = Date.now();
+      const elapsedMs = activeExperience ? experienceElapsed() : 0;
       setSnapshot({
         kind: 'sketch', playback: 'playing', mood,
-        title: {
+        title: activeExperience?.definition.title ?? {
           focus: 'Between the Tides', create: 'Velvet Current',
           drift: 'The Blue Hour', rest: 'Moonwater',
         }[mood],
+        subtitle: activeExperience?.definition.subtitle ?? '',
+        experienceId: activeExperience?.definition.id ?? null,
+        durationMs: activeExperience?.definition.durationMs ?? null,
+        elapsedMs,
+        passage: activeExperience
+          ? soundPassageAt(activeExperience.definition.passages, elapsedMs)?.label ?? null
+          : null,
         fileFormat: null,
-        message: 'Original, locally synthesized sound study · not a commercial recording.',
+        message: activeExperience
+          ? `${activeExperience.definition.title} · procedural review edition.`
+          : 'Original, locally synthesized sound study · not a commercial recording.',
       });
       return true;
     } catch {
@@ -562,7 +718,113 @@ export function PersistentListeningProvider({
       setSnapshot(old => ({ ...old, playback: 'error', message: 'Audio could not start.' }));
       return false;
     }
-  }, [claimFocus, refuseDuringMaiaSpeech, releaseOutput, pause]);
+  }, [claimFocus, refuseDuringMaiaSpeech, releaseOutput, pause, experienceElapsed]);
+
+  const playExperienceMedia = useCallback(async (
+    manifest: SoundExperienceManifest,
+  ): Promise<boolean> => {
+    const sequence = reviewMediaSequence(manifest);
+    const edition = sequence?.[0] ?? reviewMediaEdition(manifest);
+    if (!edition?.path || !sequence?.length) {
+      setSnapshot(old => ({ ...old, playback: 'error',
+        message: 'This experience has no accepted private-review media edition.' }));
+      return false;
+    }
+    if (refuseDuringMaiaSpeech()) return false;
+    const audio = media.current;
+    if (!audio) return false;
+    if (outputLease.current) pause();
+    const generation = ++epoch.current;
+    const lease = await acquireAudioOutput('listening-music');
+    if (!lease || generation !== epoch.current || isMaiaSpeechActive()) {
+      lease?.release();
+      if (generation === epoch.current) {
+        if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
+        else setSnapshot(old => ({ ...old, playback: 'paused',
+          message: 'Another Soullab tab is playing audio, or coordination is unavailable. Please try again.' }));
+      }
+      return false;
+    }
+    outputLease.current = lease;
+    if (sketch.current) { endSketch(sketch.current); sketch.current = null; }
+    const currentSegment = reviewSequence.current[reviewSegmentIndex.current];
+    const continuing = kind.current === 'review-media' &&
+      reviewManifest.current?.manifestId === manifest.manifestId &&
+      Boolean(currentSegment?.path) && audio.getAttribute('src') === currentSegment?.path;
+    if (!continuing) {
+      audio.pause();
+      audio.loop = false;
+      saveLooping(false);
+      saveLoopAvailable(manifest.permissions.looping === true && sequence.length === 1);
+      reviewSequence.current = sequence;
+      reviewSegmentIndex.current = 0;
+      reviewContinuationCycles.current = 0;
+      segmentTransitioning.current = false;
+      audio.src = edition.path;
+      audio.preload = 'auto';
+      audio.load();
+      kind.current = 'review-media';
+      reviewManifest.current = manifest;
+      selected.current = { title: manifest.title, format: edition.codecLabel };
+      experience.current = {
+        definition: {
+          id: manifest.experienceId, title: manifest.title, subtitle: manifest.subtitle,
+          durationMs: manifest.durationMs, passages: manifest.passages,
+        },
+        elapsedMs: 0, startedAt: null,
+      };
+      // Keep admitted review media on the existing imperative element. The
+      // local-file URL remains React-owned; assigning both here would cause a
+      // post-play src reconciliation that reloads and pauses this same media.
+      setSnapshot({
+        kind: 'review-media', playback: 'paused', mood: null,
+        title: manifest.title, subtitle: manifest.subtitle,
+        experienceId: manifest.experienceId, durationMs: manifest.durationMs,
+        elapsedMs: 0, passage: manifest.passages[0]?.label ?? null,
+        fileFormat: edition.codecLabel,
+        continuation: manifest.continuation ? 'until-stop' : null,
+        continuationCycle: 0,
+        message: manifest.continuation
+          ? `${edition.codecLabel} · Nicole once, then the continuous core repeats until Stop.`
+          : `${edition.codecLabel} · exact private-review media.`,
+      });
+    }
+    try {
+      audio.volume = volumeRef.current / 100;
+      await audio.play();
+      if (generation !== epoch.current || kind.current !== 'review-media' ||
+          reviewManifest.current?.manifestId !== manifest.manifestId || isMaiaSpeechActive()) {
+        audio.pause();
+        releaseOutput();
+        if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
+        return false;
+      }
+      claimFocus();
+      const elapsedMs = reviewElapsedMs();
+      if (experience.current) {
+        experience.current.elapsedMs = elapsedMs;
+        experience.current.startedAt = null;
+      }
+      setSnapshot({
+        kind: 'review-media', playback: 'playing', mood: null,
+        title: manifest.title, subtitle: manifest.subtitle,
+        experienceId: manifest.experienceId, durationMs: manifest.durationMs,
+        elapsedMs, passage: soundPassageAt(manifest.passages, elapsedMs)?.label ?? null,
+        fileFormat: edition.codecLabel,
+        continuation: manifest.continuation ? 'until-stop' : null,
+        continuationCycle: reviewContinuationCycles.current,
+        message: manifest.continuation
+          ? 'Extended Night is playing. Nicole will not return; only the continuous core repeats.'
+          : `${edition.codecLabel} · exact private-review media.`,
+      });
+      return true;
+    } catch {
+      releaseOutput();
+      setSnapshot(old => ({ ...old, playback: 'error',
+        message: 'This browser could not decode or play the accepted review recording.' }));
+      return false;
+    }
+  }, [claimFocus, pause, refuseDuringMaiaSpeech, releaseOutput, reviewElapsedMs]);
 
   const selectLocalFile = useCallback((file: File) => {
     const result = validateLocalAudio(file);
@@ -574,7 +836,11 @@ export function PersistentListeningProvider({
     if (blobURL.current) URL.revokeObjectURL(blobURL.current);
     blobURL.current = URL.createObjectURL(file);
     selected.current = { title: result.name, format: result.label };
+    experience.current = null;
     kind.current = 'local-file';
+    if (media.current) media.current.loop = false;
+    saveLooping(false);
+    saveLoopAvailable(true);
     setMediaURL(blobURL.current);
     setSnapshot({
       kind: 'local-file', playback: 'paused', mood: null,
@@ -625,29 +891,173 @@ export function PersistentListeningProvider({
     stopAll();
   }, [stopAll]);
 
-  const onLocalPlay = useCallback(() => {
-    if (kind.current !== 'local-file' || !selected.current) return;
+  const onMediaPlay = useCallback(() => {
+    if ((kind.current !== 'local-file' && kind.current !== 'review-media') || !selected.current) return;
     if (isMaiaSpeechActive() || !outputLease.current) {
       media.current?.pause(); releaseOutput(); refuseDuringMaiaSpeech(); return;
     }
     claimFocus();
     setSnapshot(old => ({
-      ...old, kind:'local-file', playback:'playing',
-      message:'Playing only your device-local file. No upload or analysis.',
+      ...old, playback:'playing',
+      message: kind.current === 'review-media'
+        ? reviewManifest.current?.continuation && reviewContinuationCycles.current > 0
+          ? `${reviewManifest.current.continuation.label} · voice and descent will not repeat.`
+          : `${selected.current?.format} · exact private-review media.`
+        : 'Playing only your device-local file. No upload or analysis.',
     }));
   }, [claimFocus, refuseDuringMaiaSpeech, releaseOutput]);
 
-  const onLocalPause = useCallback(() => {
-    if (kind.current !== 'local-file') return;
+  const onMediaPause = useCallback(() => {
+    if (segmentTransitioning.current) return;
+    if (kind.current === 'review-media' && media.current?.ended && (
+        reviewSequence.current[reviewSegmentIndex.current + 1] ||
+        reviewManifest.current?.continuation?.repeatSegmentIndex === reviewSegmentIndex.current
+      )) return;
+    if (kind.current !== 'local-file' && kind.current !== 'review-media') return;
+    const elapsedMs = kind.current === 'review-media' && media.current
+      ? reviewElapsedMs()
+      : snapshot.elapsedMs;
+    if (kind.current === 'review-media' && experience.current && typeof elapsedMs === 'number') {
+      experience.current.elapsedMs = elapsedMs;
+      experience.current.startedAt = null;
+    }
     releaseOutput();
-    setSnapshot(old => old.playback === 'playing' ? { ...old, playback:'paused' } : old);
-  }, [releaseOutput]);
+    setSnapshot(old => old.playback === 'playing' ? {
+      ...old, playback:'paused',
+      elapsedMs: typeof elapsedMs === 'number' ? elapsedMs : old.elapsedMs,
+      passage: kind.current === 'review-media' && reviewManifest.current && typeof elapsedMs === 'number'
+        ? soundPassageAt(reviewManifest.current.passages, elapsedMs)?.label ?? null
+        : old.passage,
+    } : old);
+  }, [releaseOutput, reviewElapsedMs, snapshot.elapsedMs]);
+
+  const onMediaTimeUpdate = useCallback(() => {
+    if (kind.current !== 'review-media' || !media.current || !reviewManifest.current) return;
+    const manifest = reviewManifest.current;
+    const elapsedMs = reviewElapsedMs();
+    if (experience.current) {
+      experience.current.elapsedMs = elapsedMs;
+      experience.current.startedAt = null;
+    }
+    setSnapshot(old => old.experienceId === manifest.experienceId ? {
+      ...old, elapsedMs,
+      continuation: manifest.continuation ? 'until-stop' : old.continuation,
+      continuationCycle: reviewContinuationCycles.current,
+      passage: soundPassageAt(manifest.passages, elapsedMs)?.label ?? null,
+    } : old);
+  }, [reviewElapsedMs]);
+
+  const onMediaEnded = useCallback(() => {
+    if (kind.current !== 'review-media' || !reviewManifest.current || !media.current) {
+      releaseOutput(); return;
+    }
+    const manifest = reviewManifest.current;
+    const nextIndex = reviewSegmentIndex.current + 1;
+    const next = reviewSequence.current[nextIndex];
+    if (next?.path) {
+      const audio = media.current;
+      const offsetMs = reviewSequence.current.slice(0, nextIndex)
+        .reduce((sum, item) => sum + item.durationMs, 0);
+      reviewSegmentIndex.current = nextIndex;
+      segmentTransitioning.current = true;
+      audio.loop = false;
+      selected.current = { title: manifest.title, format: next.codecLabel };
+      audio.src = next.path;
+      audio.preload = 'auto';
+      audio.load();
+      if (experience.current) {
+        experience.current.elapsedMs = Math.min(manifest.durationMs, offsetMs);
+        experience.current.startedAt = null;
+      }
+      setSnapshot(old => old.experienceId === manifest.experienceId ? {
+        ...old, playback: isMaiaSpeechActive() ? 'paused' : 'playing',
+        elapsedMs: Math.min(manifest.durationMs, offsetMs),
+        passage: soundPassageAt(manifest.passages, offsetMs)?.label ?? null,
+        fileFormat: next.codecLabel,
+        continuation: manifest.continuation ? 'until-stop' : old.continuation,
+        continuationCycle: reviewContinuationCycles.current,
+        message: isMaiaSpeechActive()
+          ? 'The next part is ready. MAIA is speaking; resume only when you choose.'
+          : manifest.continuation
+            ? 'Nicole has left. The continuous music core is now playing and will repeat until Stop.'
+            : `${manifest.title} continues without returning to guidance.`,
+      } : old);
+      if (isMaiaSpeechActive()) {
+        segmentTransitioning.current = false;
+        releaseOutput();
+        return;
+      }
+      void audio.play().then(() => {
+        segmentTransitioning.current = false;
+        claimFocus();
+      }).catch(() => {
+        segmentTransitioning.current = false;
+        releaseOutput();
+        setSnapshot(old => ({ ...old, playback: 'error',
+          message: 'The next part of this private-review experience could not begin.' }));
+      });
+      return;
+    }
+    const continuation = manifest.continuation;
+    if (continuation?.mode === 'loop_final_segment' &&
+        reviewSegmentIndex.current === continuation.repeatSegmentIndex) {
+      const audio = media.current;
+      const current = reviewSequence.current[reviewSegmentIndex.current];
+      if (!current) { releaseOutput(); return; }
+      reviewContinuationCycles.current += 1;
+      const elapsedMs = reviewOffsetMs();
+      segmentTransitioning.current = true;
+      audio.loop = false;
+      audio.currentTime = 0;
+      if (experience.current) {
+        experience.current.elapsedMs = elapsedMs;
+        experience.current.startedAt = null;
+      }
+      setSnapshot(old => old.experienceId === manifest.experienceId ? {
+        ...old,
+        playback: isMaiaSpeechActive() ? 'paused' : 'playing',
+        elapsedMs,
+        passage: continuation.label,
+        continuation: 'until-stop',
+        continuationCycle: reviewContinuationCycles.current,
+        fileFormat: current.codecLabel,
+        message: isMaiaSpeechActive()
+          ? 'The continuous core is ready. MAIA is speaking; resume only when you choose.'
+          : `${continuation.label} · guidance will not repeat.`,
+      } : old);
+      if (isMaiaSpeechActive()) {
+        segmentTransitioning.current = false;
+        releaseOutput();
+        return;
+      }
+      void audio.play().then(() => {
+        segmentTransitioning.current = false;
+        claimFocus();
+      }).catch(() => {
+        segmentTransitioning.current = false;
+        releaseOutput();
+        setSnapshot(old => ({ ...old, playback: 'error',
+          message: 'The continuous night core could not repeat.' }));
+      });
+      return;
+    }
+    releaseOutput();
+    if (experience.current) {
+      experience.current.elapsedMs = manifest.durationMs;
+      experience.current.startedAt = null;
+    }
+    setSnapshot(old => old.experienceId === manifest.experienceId ? {
+      ...old, playback: 'paused', elapsedMs: manifest.durationMs,
+      passage: manifest.passages[manifest.passages.length - 1]?.label ?? null,
+      message: `${manifest.title} is complete. It will not restart automatically.`,
+    } : old);
+  }, [claimFocus, releaseOutput, reviewOffsetMs]);
 
   const transport: ListeningTransport = {
-    snapshot, volume, setVolume, shape, setShape,
+    snapshot, volume, setVolume, looping, loopAvailable, setLooping, shape, setShape,
     fields, keepField, dropField, replaceFields,
-    playSketch, selectLocalFile, playLocalFile,
-    pause, removeLocalFile,
+    playSketch, playExperienceMedia, selectLocalFile, playLocalFile,
+    pause, stopMusic: stopAll, listeningInstance, removeLocalFile,
     focusSession, focusClockMs,
     startFocusSession: beginFocusSession,
     pauseFocusSession,
@@ -660,75 +1070,53 @@ export function PersistentListeningProvider({
   const audioDisplayed = snapshot.kind !== 'none' || snapshot.message.startsWith('MAIA is speaking.');
   const focusDisplayed = Boolean(focusSession && !isFocusSessionTerminal(focusSession));
   const displayed = audioDisplayed || focusDisplayed;
+  const resumeMusic = () => {
+    if (snapshot.kind === 'local-file') { void playLocalFile(); return; }
+    if (snapshot.kind === 'review-media' && reviewManifest.current) {
+      void playExperienceMedia(reviewManifest.current); return;
+    }
+    if (snapshot.kind === 'sketch') {
+      void playSketch(
+        snapshot.mood || 'drift',
+        sketch.current?.frequencies || [98,146.83,196],
+        experience.current?.definition,
+      );
+    }
+  };
   return <Context.Provider value={transport}>
     {children}
-    <div
-      data-listen10-persistent-dock="true"
-      role="region" aria-label="Persistent Soullab listening controls"
-      style={{
-        display: displayed ? 'flex' : 'none',
-        position:'fixed',zIndex:90,bottom:0,left:0,right:0,
-        minHeight:76,padding:'10px 22px',
-        gap:16,alignItems:'center',flexWrap:'wrap',
-        background:'rgba(10,23,29,0.97)',color:'#f3e6d3',
-        borderTop:'1px solid #857a62',backdropFilter:'blur(16px)',
-      }}>
-      {focusDisplayed && focusSession && <div
-        data-focus-field-dock="true" style={{flex:1,minWidth:240}}>
-        <strong>Focus Field · {focusSession.plan.taskLabel || focusSession.plan.task}</strong>
-        <div style={{fontSize:11,color:'#bad0cf'}}>
-          {focusSession.plan.focusNeed} · {focusSession.plan.musicalWorld} · {focusSession.status} · {' '}
-          {formatFocusClock(focusRemainingMs(focusSession, new Date(focusClockMs)))}
-        </div>
-        <a href="/listen#focus-field" style={{fontSize:10,color:'#e7c995'}}>Open Focus Field</a>
-      </div>}
-      {audioDisplayed && <div style={{flex:1,minWidth:165}}>
-        <strong data-listen10-title="true">{snapshot.title}</strong>
-        <div data-listen10-state="true" style={{fontSize:11,color:'#bad0cf'}}>
-          {snapshot.kind === 'local-file'
-            ? snapshot.fileFormat + ' file (source type; output not guaranteed lossless)'
-            : 'Low-volume synthesized sound study'} · {snapshot.playback}
-        </div>
-      </div>}
-      {focusDisplayed && focusSession?.status === 'running' && <button type="button"
-        onClick={() => pauseFocusSession('member')} aria-label="Pause Focus Field session">
-        Pause focus
-      </button>}
-      {focusDisplayed && focusSession?.status === 'paused' && <button type="button"
-        onClick={resumeCurrentFocus} aria-label="Resume Focus Field session by member action">
-        Resume focus
-      </button>}
-      {focusDisplayed && <button type="button" onClick={stopCurrentFocus}
-        aria-label="Stop Focus Field session">Stop focus</button>}
-      {snapshot.kind === 'sketch' && <button type="button"
-        aria-label={snapshot.playback === 'playing' ? 'Pause persistent music':'Resume persistent music'}
-        onClick={() => snapshot.playback === 'playing' ? pause()
-          : void playSketch(snapshot.mood || 'drift', sketch.current?.frequencies || [98,146.83,196])}>
-        {snapshot.playback === 'playing' ? 'Pause' : 'Resume'}
-      </button>}
-      {snapshot.kind === 'local-file' && <button type="button"
-        aria-label={snapshot.playback === 'playing' ? 'Pause local music':'Play local music'}
-        onClick={()=>snapshot.playback === 'playing' ? pause() : void playLocalFile()}>
-        {snapshot.playback === 'playing' ? 'Pause' : 'Play'}
-      </button>}
-      {audioDisplayed && <label style={{fontSize:12}}>Volume
-        <input aria-label="Persistent music volume" type="range" min="0" max="100"
-          value={volume} onChange={e=>setVolume(Number(e.target.value))}/>
-      </label>}
-      {audioDisplayed && <button type="button" onClick={stopAll}
-        aria-label="Stop and clear persistent music">Stop music</button>}
-      <audio ref={media} data-listen10-audio="true"
-        // Native controls bypass the output-lock check; use only controlled Play/Pause.
-        style={{display:'none'}}
-        src={mediaURL || undefined} preload="metadata"
-        onPlay={onLocalPlay} onPause={onLocalPause}
-        onEnded={releaseOutput}
-        onError={()=>{releaseOutput();snapshot.kind==='local-file' && setSnapshot(old=>({
+    <PersistentListeningDock
+      snapshot={snapshot}
+      volume={volume}
+      looping={looping}
+      loopAvailable={loopAvailable}
+      displayed={displayed}
+      focusSession={focusDisplayed ? focusSession : null}
+      focusRemainingLabel={focusSession
+        ? formatFocusClock(focusRemainingMs(focusSession, new Date(focusClockMs)))
+        : 'Untimed'}
+      onPauseMusic={pause}
+      onResumeMusic={resumeMusic}
+      onStopMusic={stopAll}
+      onVolume={setVolume}
+      onLooping={setLooping}
+      onPauseFocus={() => { pauseFocusSession('member'); }}
+      onResumeFocus={() => { resumeCurrentFocus(); }}
+      onStopFocus={() => { stopCurrentFocus(); }}
+    />
+    <audio ref={media} data-listen10-audio="true"
+      style={{display:'none'}}
+      src={mediaURL || undefined} preload="metadata" loop={looping}
+      onPlay={onMediaPlay} onPause={onMediaPause}
+      onTimeUpdate={onMediaTimeUpdate} onEnded={onMediaEnded}
+      onError={()=>{
+        releaseOutput();
+        if (snapshot.kind === 'local-file') setSnapshot(old=>({
           ...old, playback:'error',message:'Local audio cannot be decoded.',
-        }));}}/>
-      {audioDisplayed && <span role="status" style={{fontSize:10,color:'#a9bec1'}}>
-        {snapshot.message}
-      </span>}
-    </div>
+        }));
+        if (snapshot.kind === 'review-media') setSnapshot(old=>({
+          ...old, playback:'error',message:'Accepted review media cannot be decoded on this device.',
+        }));
+      }}/>
   </Context.Provider>;
 }
