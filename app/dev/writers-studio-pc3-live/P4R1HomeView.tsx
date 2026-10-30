@@ -323,6 +323,18 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
     </section>
   );
 
+  const unclaimedWriting = unclaimed.length > 0 ? (
+    <section className="fr-home-region" aria-label="Writing not yet in a Work">
+      <p className="fr-home-here">{HOME_COPY.writingHere}</p>
+      <div className="fr-home-writing-list">
+        {unclaimed.map((manuscript) => (
+          <WritingCard key={manuscript.id} manuscript={manuscript} works={props.works}
+            onOpen={(id) => props.onOpen(id)} onMakeWork={props.onMakeWork} onAddToWork={props.onAddToWork} />
+        ))}
+      </div>
+    </section>
+  ) : null;
+
   let work: React.ReactNode;
   if (props.returnWork) {
     work = (
@@ -336,6 +348,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             onStartWriting={props.onStartWriting}
             busy={props.busy}
           />
+          {unclaimedWriting}
           {creationControls}
           {recentHistory.length > 0 ? (
             <section className="fr-home-region p4r1-home-history">
@@ -389,6 +402,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             onStartWriting={props.onStartWriting}
             busy={props.busy}
           />
+          {unclaimedWriting}
           {creationControls}
           {props.arrival.alsoWritten.length > 0 ? (
             <section className="fr-home-region">
