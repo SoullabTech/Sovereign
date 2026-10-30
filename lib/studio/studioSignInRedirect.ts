@@ -10,7 +10,9 @@
  * where to go once the SERVER has said so, and carries the route so the member
  * returns to where they were headed.
  */
-export function studioSignInRedirect(pathname: string): string {
-  const safe = pathname.startsWith('/studio') && !pathname.startsWith('//') ? pathname : '/studio';
+export function studioSignInRedirect(pathname: string | null | undefined): string {
+  // usePathname() is typed `string | null`; a missing path falls back to the Studio root.
+  const path = pathname ?? '';
+  const safe = path.startsWith('/studio') && !path.startsWith('//') ? path : '/studio';
   return `/signin?next=${encodeURIComponent(safe)}`;
 }

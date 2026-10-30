@@ -11,6 +11,11 @@ describe('STUDIO-GATE-01 — signed-out redirect carries the destination', () =>
     expect(studioSignInRedirect('/studio/clients')).toBe('/signin?next=%2Fstudio%2Fclients');
   });
 
+  test('a missing pathname (usePathname() can be null) falls back to the Studio root', () => {
+    expect(studioSignInRedirect(null)).toBe('/signin?next=%2Fstudio');
+    expect(studioSignInRedirect(undefined)).toBe('/signin?next=%2Fstudio');
+  });
+
   test('never becomes an open redirect or leaves the Studio', () => {
     expect(studioSignInRedirect('//evil.example')).toBe('/signin?next=%2Fstudio');
     expect(studioSignInRedirect('https://evil.example')).toBe('/signin?next=%2Fstudio');
