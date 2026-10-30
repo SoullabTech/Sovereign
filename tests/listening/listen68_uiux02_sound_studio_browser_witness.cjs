@@ -71,7 +71,7 @@ const PROFILES=[{name:'phone-320',w:320,h:640,m:true,t:true},{name:'phone-360',w
   await page.getByText('Tune session').click();
   check(p.name,'tune-session-reveals-guide-and-browse',await page.getByRole('button',{name:/Guide me/}).isVisible()&&await page.getByRole('button',{name:/Browse/}).isVisible());
   // Focus sound choice: choosing and starting never play; Play is a separate member act; one transport set
-  check(p.name,'focus-sound-choice-offered',await page.locator('[data-focus-sound]').count()===4);
+  check(p.name,'focus-sound-choice-offered',await page.locator('[data-focus-sound]').count()===5);
   await page.locator('[data-focus-sound="open-ground"]').click();
   await page.getByRole('button',{name:'Start focus session'}).click();
   await page.getByRole('button',{name:'Pause Focus Field session'}).waitFor();

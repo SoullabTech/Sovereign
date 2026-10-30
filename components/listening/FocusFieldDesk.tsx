@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   FOCUS_FEEDBACK_TAGS,
   FOCUS_MUSICAL_WORLDS,
@@ -105,6 +105,11 @@ export default function FocusFieldDesk() {
     if (entryMode === 'guide-me')
       setMusicalWorld(suggestFocusWorlds({ task, focusNeed, stimulation: next }).primary);
   };
+  // Share the choices as they are shaped, so a soundscape can follow them. State only: the desk plays nothing.
+  const setFocusDraft = transport?.setFocusDraft;
+  useEffect(() => {
+    setFocusDraft?.({ need: focusNeed, stimulation, world: musicalWorld, task });
+  }, [setFocusDraft, focusNeed, stimulation, musicalWorld, task]);
   const session = transport?.focusSession ?? null;
   const remaining = session && transport
     ? focusRemainingMs(session, new Date(transport.focusClockMs))
