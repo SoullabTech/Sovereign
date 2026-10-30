@@ -82,7 +82,13 @@ const NATURE_MIX: Record<FocusNeed, RecordedMix> = {
   create:   { forest: .6, waves: .5 },
   reset:    { waves: .8, wind: .3 },
 };
-const NATURE_STIM: Record<FocusStimulation, number> = { low: .7, medium: 1, high: 1.3 };
+// Stimulation changes the character of the mix, not only its level: Low keeps the calm layers (night, forest, rain)
+// and thins the moving ones (wind, waves); High brings the moving layers forward and, where a need has none,
+// adds a little wind so there is always more movement than at Low.
+const CALM_LAYERS: ReadonlySet<RecordedLayerId> = new Set<RecordedLayerId>(['night', 'forest', 'rain']);
+const NATURE_STIM: Record<FocusStimulation, { calm: number; moving: number }> = {
+  low: { calm: 1, moving: .3 }, medium: { calm: 1, moving: 1 }, high: { calm: .85, moving: 1.6 },
+};
 const VERBAL: ReadonlySet<FocusTaskKind> = new Set<FocusTaskKind>(['reading', 'writing', 'studying', 'thinking']);
 
 const round = (n: number, d = 3) => Math.round(n * 10 ** d) / 10 ** d;
@@ -90,10 +96,14 @@ const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n
 
 function natureMix(input: SoundscapeInput, verbal: boolean): RecordedMix {
   const mix: RecordedMix = {};
+  const stim = NATURE_STIM[input.stimulation];
   for (const [id, gain] of Object.entries(NATURE_MIX[input.need]) as [RecordedLayerId, number][]) {
-    const quiet = verbal && (id === 'wind' || id === 'waves') ? .7 : 1;
-    mix[id] = round(clamp(gain * NATURE_STIM[input.stimulation] * quiet, 0, 1.2));
+    const calm = CALM_LAYERS.has(id);
+    const quiet = verbal && !calm ? .7 : 1;
+    const value = round(clamp(gain * (calm ? stim.calm : stim.moving) * quiet, 0, 1.2));
+    if (value >= .08) mix[id] = value; // a layer thinned below audibility is dropped, not left as a hum
   }
+  if (input.stimulation === 'high' && mix.wind === undefined) mix.wind = round(verbal ? .2 : .3);
   return mix;
 }
 
