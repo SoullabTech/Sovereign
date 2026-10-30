@@ -19,6 +19,10 @@
  * input type so the tests can show they have no effect; `proStudioEntitlement`
  * must come from a verified entitlement source, which does not exist yet — so
  * production callers must pass 'absent' until it does.
+ *
+ * ⛔ `members.tier === 'pro'` is NOT that source: it can be set by hand, its
+ * expiry is an estimate, and scholarship / Practice Exchange / apprenticeship
+ * access has no representation at all. See the design brief §9.
  */
 
 export type ProStudioEntrance = 'signed_out_intro' | 'limited_try' | 'full_workspace';

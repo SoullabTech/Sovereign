@@ -70,3 +70,15 @@ What "limited" includes · the entitlement source and key (`resolveEntitlements`
 ## 8. Owed before build
 
 Founder choice in §4 · Experience Contract · a verified route for `full_workspace` or an explicit "not yet" · rendered evidence (not produced in this session — no page exists).
+
+## 9. Founder ruling (2026-10-30) and entitlement provenance finding
+
+**Ruling.** The free learn-and-try Pro Studio is an **exploration path, not a fifth professional membership category**; the four canon paths (paid, scholarship, Practice Exchange, apprenticeship) are intact. It does **not** count toward the 20–30% supported-seat cap. Initial release uses only capabilities that have passed their existing acceptance/release gates — a launch boundary, not a permanent limit. Reflect beta stays closed. Personal Portal stays independent with full foundational MAIA depth and continuity. Pricing and final capability allocations: separate decision.
+
+**Provenance finding (read-only, source at this branch):**
+- `members.tier` is server-derived (`lib/auth/verifiedAccess.ts`; values `free|personal|pro`) and the Stripe webhook (`app/api/stripe/webhook/route.ts`) verifies its signature and writes `tier`, `subscription_active`, `subscription_expires_at`. Cancellation downgrades to `free`.
+- ⚠️ But `tier = 'pro'` is **not proof of current payment or professional authorization**: (1) the checkout handler takes `tier` and `memberId` from session metadata; (2) `subscription_expires_at` is a **fallback estimate** (now + 1 month/year), not the Stripe period end; (3) `subscription_active` has no reader outside the webhook and an admin list; (4) a hand-set `tier` is indistinguishable from a paid one.
+- ⚠️ **Scholarship, Practice Exchange and apprenticeship have no representation** in schema or source. A member receiving full professional access through those paths could only be given `tier='pro'` — identical to a paying member. So a single `tier` value cannot be the entitlement.
+- Legacy prices in `lib/auth/tierAccess.ts` ($9 Personal, $35 Pro) differ from the Sanctuary Economy structure and must not silently become stewardship prices.
+
+**Consequence for the resolver:** `proStudioEntitlement: 'verified'` must come from a **dedicated, provenance-bearing grant** (path: paid | scholarship | exchange | apprenticeship; current; revocable; who granted), not from `members.tier`. That grant does not exist yet. Until it does, production callers pass `'absent'` and every signed-in member gets the limited entry. Also: an entitlement to the workspace confers no client-data or Co-lab permission.
