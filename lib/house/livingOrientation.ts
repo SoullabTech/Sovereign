@@ -106,6 +106,12 @@ export const ORIENTATION_FACETS = {
     activity: 'Putting lived experience into the member’s own words and returning to it later.',
     relationToWhole: 'Preserves authored experience as evidence before interpretation.',
   },
+  'pro-studio': {
+    label: 'Pro Studio',
+    question: 'How do I hold the work I do with others, and the field of my own practice?',
+    activity: 'Tending a practice workspace — people, sessions and continuity — with the member\u2019s own Personal Field alongside it.',
+    relationToWhole: 'One workspace entered in different relational contexts; it holds the practitioner\u2019s work without becoming the center of the member.',
+  },
   dream: {
     label: 'Dream',
     question: 'What has visited me in sleep, and what becomes more alive when I stay with it?',
