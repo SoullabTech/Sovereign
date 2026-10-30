@@ -52,3 +52,13 @@ test('Five more minutes needs a completed session and extends nothing automatica
   assert.match(text, /if \(!transport \|\| !session \|\| !completed\) return/);
   assert.match(text, /duration: \{ mode: 'custom', minutes: 5 \}/);
 });
+
+test('the player never claims a level change the device will not make', () => {
+  const provider = code(read('components/listening/PersistentListeningProvider.tsx'));
+  const dock = code(read('components/listening/PersistentListeningDock.tsx'));
+  assert.match(provider, /element\.volume = 0\.5/);
+  assert.match(provider, /volumeAdjustable/);
+  assert.match(dock, /volumeAdjustable \? \(/);
+  assert.match(dock, /data-listen-volume-fixed/);
+  assert.match(dock, /volumeAdjustable \? sleepAction : 'stop'/);
+});
