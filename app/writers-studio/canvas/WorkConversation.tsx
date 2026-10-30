@@ -255,7 +255,8 @@ export default function WorkConversation({
   };
 
   const send = async () => {
-    const question = draft.trim();
+    const submittedDraft = draft;
+    const question = submittedDraft.trim();
     /* ⭐⭐ ONE CALL DECIDES BOTH THE PERMISSION AND THE PAYLOAD. A surface that
        disabled the button from one rule and picked `{anchor}` vs `{threadId}`
        from another would have two chances to disagree, and the disagreement
@@ -268,7 +269,6 @@ export default function WorkConversation({
       return;
     }
     if (mode.kind === 'blocked') return;
-    setDraft('');
     setRefusal(null);
     setPending(question);
     const r = manuscriptId
@@ -285,6 +285,8 @@ export default function WorkConversation({
         });
     setPending(null);
     if (r.ok) {
+      // Clear only the acknowledged submission; preserve words typed while it was pending.
+      setDraft((current) => current === submittedDraft ? '' : current);
       setThreadId(r.threadId);
       setThread(r.thread);
       return;
