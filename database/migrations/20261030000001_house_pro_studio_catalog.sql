@@ -1,5 +1,6 @@
--- HOUSE-PRO-STUDIO-01 — admit Pro Studio (one door: Personal Field + Practice Portal modes
--- live inside /studio) into member-chosen House placement. Full-catalog idempotent reassertion.
+-- HOUSE-PRO-STUDIO-01 — admit Pro Studio (the practitioner offering) into member-chosen House
+-- placement. Full-catalog idempotent reassertion. Personal Portal/Ganesha is a SEPARATE offering
+-- and is NOT admitted here (ADR-010; owner #1807).
 BEGIN;
 
 ALTER TABLE house_member_preferences

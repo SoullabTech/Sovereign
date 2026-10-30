@@ -109,8 +109,8 @@ export const ORIENTATION_FACETS = {
   'pro-studio': {
     label: 'Pro Studio',
     question: 'How do I hold the work I do with others, and the field of my own practice?',
-    activity: 'Tending a practice workspace — people, sessions and continuity — with the member\u2019s own Personal Field alongside it.',
-    relationToWhole: 'One workspace entered in different relational contexts; it holds the practitioner\u2019s work without becoming the center of the member.',
+    activity: 'Tending a practice workspace: the people, sessions and continuity of a practitioner\u2019s work.',
+    relationToWhole: 'A separate practitioner offering; it holds the work of a practice without becoming the center of the member, and is not a prerequisite for personal continuity.',
   },
   dream: {
     label: 'Dream',
