@@ -21,6 +21,7 @@ type Props = {
   onVolume: (volume: number) => void;
   onLooping: (enabled: boolean) => void;
   onCompanionMode?: (enabled: boolean) => void;
+  volumeAdjustable?: boolean;
   onPauseFocus: () => void;
   onResumeFocus: () => void;
   onStopFocus: () => void;
@@ -38,7 +39,7 @@ const FADE_STEPS = 24;
 
 export default function PersistentListeningDock({
   snapshot, volume, looping, loopAvailable, displayed, focusSession, focusRemainingLabel,
-  onPauseMusic, onResumeMusic, onStopMusic, onVolume, onLooping, onCompanionMode,
+  onPauseMusic, onResumeMusic, onStopMusic, onVolume, onLooping, onCompanionMode, volumeAdjustable = true,
   onPauseFocus, onResumeFocus, onStopFocus,
 }: Props) {
   const [mixOpen, setMixOpen] = useState(false);
@@ -86,7 +87,7 @@ export default function PersistentListeningDock({
   }, [snapshot.kind, sleep]);
 
   const armSleep = (endsAt: number, label: string) => {
-    setSleep({ endsAt, label, action: sleepAction });
+    setSleep({ endsAt, label, action: volumeAdjustable ? sleepAction : 'stop' });
   };
   const armSleepMinutes = (minutes: number) =>
     armSleep(Date.now() + minutes * 60_000, `${minutes} minutes`);
@@ -269,6 +270,8 @@ export default function PersistentListeningDock({
             </button>
           </div>
 
+          {volumeAdjustable ? (
+            <>
           <label className={styles.mixVolume}>
             <span>Field volume <output>{Math.round(volume)}%</output></span>
             <input aria-label="Soullab field volume" type="range" min="0" max="100"
@@ -310,6 +313,12 @@ export default function PersistentListeningDock({
               {fading ? 'Fading…' : 'Fade 12s & stop'}
             </button>
           </div>
+            </>
+          ) : (
+            <p className={styles.mixBoundary} data-listen-volume-fixed="true">
+              This device sets the level of this sound: use your phone's volume buttons. Soullab cannot change it, so there is no volume slider or fade here.
+            </p>
+          )}
 
           <div className={styles.sleepTimer} data-listen-sleep-timer="true" role="group" aria-label="Sleep timer">
             <div className={styles.sleepHead}>
@@ -340,7 +349,7 @@ export default function PersistentListeningDock({
                 <strong>Set</strong>
               </button>
             </div>
-            <div className={styles.presets} role="radiogroup" aria-label="When the timer ends">
+            {volumeAdjustable && <div className={styles.presets} role="radiogroup" aria-label="When the timer ends">
               <button type="button" role="radio" aria-checked={sleepAction === 'fade'} className={styles.preset}
                 onClick={() => { setSleepAction('fade'); setSleep(current => current ? { ...current, action: 'fade' } : current); }}>
                 <strong>Fade 12 seconds, then Stop</strong>
@@ -349,7 +358,7 @@ export default function PersistentListeningDock({
                 onClick={() => { setSleepAction('stop'); setSleep(current => current ? { ...current, action: 'stop' } : current); }}>
                 <strong>Stop immediately</strong>
               </button>
-            </div>
+            </div>}
             <p className={styles.mixBoundary}>
               The timer ends in Stop and nothing else. It plays no guidance, never starts a Dawn Return, and never resumes sound after an interruption. Changing it takes your action.
             </p>

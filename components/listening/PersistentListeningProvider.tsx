@@ -119,6 +119,8 @@ export type ListeningTransport = {
   focusSession: FocusSession | null;
   focusClockMs: number;
   focusTimeDisplay: FocusTimeDisplay;
+  /** false where the platform fixes the media level (iOS): volume, presets and fade cannot work. */
+  volumeAdjustable: boolean;
   setFocusTimeDisplay: (mode: FocusTimeDisplay) => void;
   startFocusSession: (plan: FocusSessionPlanInput) => boolean;
   pauseFocusSession: (reason?: FocusInterruptionReason) => boolean;
@@ -258,6 +260,19 @@ export function PersistentListeningProvider({
   const focusSessionRef = useRef<FocusSession | null>(null);
   const [focusClockMs, setFocusClockMs] = useState(() => Date.now());
   const [focusTimeDisplay, setFocusTimeDisplay] = useState<FocusTimeDisplay>('countdown');
+  // iOS ignores a page's HTMLMediaElement.volume (only the hardware buttons change it). Detect it
+  // rather than assume, so no control claims a level change the device will not make.
+  const [volumeAdjustable, setVolumeAdjustable] = useState(true);
+  useEffect(() => {
+    const element = media.current;
+    if (!element) return;
+    const before = element.volume;
+    try {
+      element.volume = 0.5;
+      setVolumeAdjustable(Math.abs(element.volume - 0.5) < 0.01);
+    } catch { setVolumeAdjustable(false); }
+    try { element.volume = before; } catch { /* read-only on this platform */ }
+  }, []);
   const [mediaURL, setMediaURL] = useState<string | null>(null);
 
   const kind = useRef<Kind>('none');
@@ -1068,6 +1083,7 @@ export function PersistentListeningProvider({
     pause, stopMusic: stopAll, listeningInstance, removeLocalFile,
     focusSession, focusClockMs,
     focusTimeDisplay, setFocusTimeDisplay,
+    volumeAdjustable,
     startFocusSession: beginFocusSession,
     pauseFocusSession,
     resumeFocusSession: resumeCurrentFocus,
@@ -1120,6 +1136,7 @@ export function PersistentListeningProvider({
       onVolume={setVolume}
       onLooping={setLooping}
       onCompanionMode={setCompanionMode}
+      volumeAdjustable={volumeAdjustable}
       onPauseFocus={() => { pauseFocusSession('member'); }}
       onResumeFocus={() => { resumeCurrentFocus(); }}
       onStopFocus={() => { stopCurrentFocus(); }}
