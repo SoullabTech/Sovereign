@@ -992,3 +992,8 @@
 .fr-root .fr-view-menu-body .fr-reading-choice { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .fr-root .fr-view-menu-body .fr-panel-controls { display: flex; flex-wrap: wrap; gap: 8px; }
 .fr-root .fr-view-menu-body .fr-panel-toggle { flex: 1 1 auto; }
+
+/* The floating "Report a bug" button sits at the bottom-right of every signed-in
+   page; keep the MAIA footer line clear of it. */
+.fr-root .fr-foot { padding-bottom: 46px; box-sizing: content-box; }
+.fr-root .p4r1-develop-prefs-link { margin-left: 12px; }

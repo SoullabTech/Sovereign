@@ -1870,6 +1870,22 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             Back to your questions
           </button>
         ) : null}
+        {/* The "how would you like to work" box lives in the top-bar Preferences
+            menu; this makes it findable from the page that needs it. It only
+            opens that menu: presentation preferences never change what MAIA
+            may read, consent, or which words may be revised. */}
+        <button
+          type="button"
+          className="p4r1-develop-back p4r1-develop-prefs-link"
+          onClick={() => {
+            const menu = document.querySelector<HTMLDetailsElement>('[data-writer-preferences]');
+            if (!menu) return;
+            menu.open = true;
+            menu.querySelector<HTMLInputElement>('input')?.focus();
+          }}
+        >
+          Tell the Studio how you’d like to work
+        </button>
       </div>
 
       {developView === 'full' ? (
@@ -1916,7 +1932,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               >
                 Talk with MAIA about this
               </button>
-              {!props.work ? <p>Your Work needs to be opened before a conversation can begin.</p> : null}
+              {!props.work ? <p>To talk with MAIA, open this Work from Home first: choose “Return to this work”, then come back to Develop.</p> : null}
             </div>
             <div className="p4r1-develop-three-questions" aria-label="Three ways to begin">
               {focusedQuestions.map((key) => {
