@@ -31,6 +31,7 @@ const PROFILES=[{name:'phone-320',w:320,h:640,m:true,t:true},{name:'phone-360',w
   await page.getByRole('button',{name:'Play Night Ground 01 — Extended Night'}).click();
   await page.waitForFunction(()=>{const a=document.querySelector('[data-listen10-audio="true"]');return a&&!a.paused&&a.currentTime>0});
   check(p.name,'first-sound-in-two-actions',true);
+  check(p.name,'lock-screen-metadata-names-the-field',await page.evaluate(()=>navigator.mediaSession&&navigator.mediaSession.metadata&&navigator.mediaSession.metadata.title.includes('Night Ground')&&navigator.mediaSession.metadata.artist==='Soullab Sound Studio'&&navigator.mediaSession.playbackState==='playing'));
   const dockBox=await page.locator('[data-listen10-persistent-dock="true"]').boundingBox();check(p.name,'compact-dock-visible',!!dockBox);
   check(p.name,'compact-hides-volume-until-expanded',!(await page.getByLabel('Persistent music volume').isVisible()));
   await page.screenshot({path:path.join(evidence,`UIUX02_${p.name}_night_playing.png`)});
@@ -59,6 +60,7 @@ const PROFILES=[{name:'phone-320',w:320,h:640,m:true,t:true},{name:'phone-360',w
   check(p.name,'timer-requires-member-action-and-shows-time',(await page.locator('[data-listen-sleep-timer="true"]').textContent()).includes('Stops in'));
   await page.clock.fastForward('15:05');
   await page.waitForFunction(()=>document.querySelector('[data-listen10-persistent-dock="true"]')?.style.display==='none',{},{timeout:8000});
+  check(p.name,'lock-screen-clears-on-stop',await page.evaluate(()=>navigator.mediaSession.metadata===null&&navigator.mediaSession.playbackState==='none'));
   check(p.name,'timer-ends-in-terminal-stop',await page.locator('[data-listen10-audio="true"]').evaluate(a=>a.getAttribute('src')===null&&a.paused));
   await page.waitForTimeout(500);
   check(p.name,'timer-never-restarts-sound',await page.locator('[data-listen10-audio="true"]').evaluate(a=>a.paused&&a.getAttribute('src')===null));

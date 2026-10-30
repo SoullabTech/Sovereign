@@ -5,6 +5,7 @@ import {
 } from 'react';
 import type { ReactNode, RefObject } from 'react';
 import PersistentListeningDock from './PersistentListeningDock';
+import { usePlatformAudioSession } from './usePlatformAudioSession';
 // Compatibility contract: PersistentListeningDock renders data-focus-field-dock="true"
 // from this one member-bound provider; extraction did not create a second owner.
 import { validateLocalAudio } from '@/lib/listening/localAudio';
@@ -1083,6 +1084,12 @@ export function PersistentListeningProvider({
       );
     }
   };
+  const [companionMode, setCompanionMode] = useState(false);
+  usePlatformAudioSession(snapshot, companionMode, {
+    onPause: pause,
+    onResume: resumeMusic,
+    onStop: stopAll,
+  });
   return <Context.Provider value={transport}>
     {children}
     <PersistentListeningDock
@@ -1100,6 +1107,7 @@ export function PersistentListeningProvider({
       onStopMusic={stopAll}
       onVolume={setVolume}
       onLooping={setLooping}
+      onCompanionMode={setCompanionMode}
       onPauseFocus={() => { pauseFocusSession('member'); }}
       onResumeFocus={() => { resumeCurrentFocus(); }}
       onStopFocus={() => { stopCurrentFocus(); }}

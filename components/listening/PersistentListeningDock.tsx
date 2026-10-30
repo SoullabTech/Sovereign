@@ -20,6 +20,7 @@ type Props = {
   onStopMusic: () => void;
   onVolume: (volume: number) => void;
   onLooping: (enabled: boolean) => void;
+  onCompanionMode?: (enabled: boolean) => void;
   onPauseFocus: () => void;
   onResumeFocus: () => void;
   onStopFocus: () => void;
@@ -37,7 +38,7 @@ const FADE_STEPS = 24;
 
 export default function PersistentListeningDock({
   snapshot, volume, looping, loopAvailable, displayed, focusSession, focusRemainingLabel,
-  onPauseMusic, onResumeMusic, onStopMusic, onVolume, onLooping,
+  onPauseMusic, onResumeMusic, onStopMusic, onVolume, onLooping, onCompanionMode,
   onPauseFocus, onResumeFocus, onStopFocus,
 }: Props) {
   const [mixOpen, setMixOpen] = useState(false);
@@ -140,6 +141,7 @@ export default function PersistentListeningDock({
   const toggleCompanionMode = () => {
     const next = !companionMode;
     setCompanionMode(next);
+    onCompanionMode?.(next);
     setMixOpen(true);
     if (next && (volume === 0 || volume > 28)) setFieldVolume(22);
   };
