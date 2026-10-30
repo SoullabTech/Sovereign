@@ -65,6 +65,7 @@ test('private-review permission never implies production, download, shaping or A
   assert.equal(permissions.download, false);
   assert.equal(permissions.offlineCabin, false);
   assert.equal(permissions.shaping, false);
+  assert.equal(permissions.looping, true);
   assert.equal(permissions.aiAudioAnalysis, false);
   assert.match(manifest.acceptance.desktopChrome, /verified_exact_media/);
   assert.match(manifest.acceptance.responsiveDeviceEmulation, /not_physical_devices/);

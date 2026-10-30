@@ -246,6 +246,21 @@ const check = (profile, name, pass, detail = '') => {
       const restoredState = await page.locator('[data-listen10-audio="true"]').evaluate(audio => ({ volume: audio.volume, paused: audio.paused }));
       check(profile.name, 'restore-returns-prior-volume-and-keeps-playing',
         Math.abs(restoredState.volume - 0.35) < 0.001 && restoredState.paused === false, JSON.stringify(restoredState));
+      const loopButton = page.locator('[data-listen-companion-loop="true"]');
+      check(profile.name, 'loop-control-is-visible-for-permitted-piece', await loopButton.isVisible());
+      await loopButton.click();
+      await page.waitForFunction(() => document.querySelector('[data-listen10-audio="true"]')?.loop === true);
+      check(profile.name, 'loop-is-explicitly-enabled',
+        await page.locator('[data-listen10-audio="true"]').evaluate(audio => audio.loop && !audio.paused));
+      await page.locator('[data-listen10-audio="true"]').evaluate(audio => {
+        audio.currentTime = Math.max(0, audio.duration - 0.35);
+      });
+      await page.waitForFunction(() => {
+        const audio = document.querySelector('[data-listen10-audio="true"]');
+        return audio && audio.loop && !audio.paused && audio.currentTime < 1.5;
+      }, null, { timeout: 6_000 });
+      check(profile.name, 'exact-piece-repeats-only-after-reaching-the-end',
+        await page.locator('[data-listen10-audio="true"]').evaluate(audio => audio.loop && !audio.paused && audio.currentTime < 1.5));
       const companionWidths = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth, body: document.body.scrollWidth }));
       check(profile.name, 'expanded-companion-controls-do-not-overflow',
         companionWidths.document <= companionWidths.viewport + 1 && companionWidths.body <= companionWidths.viewport + 1,
@@ -297,6 +312,8 @@ const check = (profile, name, pass, detail = '') => {
       await page.getByRole('button', { name: 'Writer’s Studio' }).click();
       await page.locator('[data-test-other-room="writer"]').waitFor();
       check(profile.name, 'player-persists-in-another-soullab-room', await page.locator('[data-listen10-title="true"]').textContent() === 'Open Ground');
+      check(profile.name, 'explicit-loop-setting-persists-across-room-navigation',
+        await page.locator('[data-listen10-audio="true"]').evaluate(audio => audio.loop === true));
       await page.waitForFunction(previous => {
         const current = document.querySelector('[data-listen10-persistent-dock="true"]')?.textContent || '';
         return current !== previous;
@@ -315,6 +332,8 @@ const check = (profile, name, pass, detail = '') => {
       await stop.click();
       await page.waitForFunction(() => document.querySelector('[data-listen10-persistent-dock="true"]')?.style.display === 'none');
       check(profile.name, 'explicit-stop-clears-player', await page.locator('[data-listen10-persistent-dock="true"]').getAttribute('style').then(style => style.includes('none')));
+      check(profile.name, 'explicit-stop-clears-loop-setting',
+        await page.locator('[data-listen10-audio="true"]').evaluate(audio => audio.loop === false && audio.getAttribute('src') === null));
       await context.close();
     }
 

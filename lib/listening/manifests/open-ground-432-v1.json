@@ -103,7 +103,8 @@
     "shaping": false,
     "aiAudioAnalysis": false,
     "thirdPartyRights": "none_present",
-    "rightsAuthority": "Founder-declared original-study custody; independent release-rights and serving authority remain pending"
+    "rightsAuthority": "Founder-declared original-study custody; independent release-rights and serving authority remain pending",
+    "looping": true
   },
   "acceptance": {
     "founderListening": "positive",

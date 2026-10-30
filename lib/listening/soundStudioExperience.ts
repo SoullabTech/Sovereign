@@ -90,6 +90,7 @@ export type SoundExperienceManifest = {
     download: boolean;
     offlineCabin: boolean;
     shaping: boolean;
+    looping: boolean;
     aiAudioAnalysis: boolean;
     thirdPartyRights: 'none_present';
     rightsAuthority: string;
@@ -109,6 +110,7 @@ export function reviewMediaEdition(
       manifest.permissions.scope !== 'authenticated_founder_private_review' ||
       !manifest.permissions.onDemandReview ||
       manifest.permissions.productionRelease ||
+      typeof manifest.permissions.looping !== 'boolean' ||
       manifest.permissions.aiAudioAnalysis ||
       manifest.authorship.thirdPartyAudio ||
       !media.bundled || !media.path?.startsWith('/media/sound-studio/') ||

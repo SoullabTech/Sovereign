@@ -88,6 +88,9 @@ export type ListeningTransport = {
   snapshot: ListeningSnapshot;
   volume: number;
   setVolume: (volume: number) => void;
+  looping: boolean;
+  loopAvailable: boolean;
+  setLooping: (enabled: boolean) => void;
   shape: ReceptiveControls;
   setShape: (shape: ReceptiveControls) => void;
   fields: ReceptiveFieldRecipe[];
@@ -236,6 +239,8 @@ export function PersistentListeningProvider({
 }: { children: ReactNode; reviewMemberKey: string }) {
   const [snapshot, setSnapshot] = useState(defaultSnapshot);
   const [volume, saveVolume] = useState(45);
+  const [looping, saveLooping] = useState(false);
+  const [loopAvailable, saveLoopAvailable] = useState(false);
   const [shape, saveShape] = useState<ReceptiveControls>({...ORIGINAL_RECEPTIVE_CONTROLS});
   const shapeRef = useRef<ReceptiveControls>({...ORIGINAL_RECEPTIVE_CONTROLS});
   const [fields,saveFields] = useState<ReceptiveFieldRecipe[]>([]);
@@ -339,9 +344,12 @@ export function PersistentListeningProvider({
     ++epoch.current;
     media.current?.pause();
     if (media.current) {
+      media.current.loop = false;
       media.current.removeAttribute('src');
       media.current.load();
     }
+    saveLooping(false);
+    saveLoopAvailable(false);
     releaseOutput();
     if (sketch.current) { endSketch(sketch.current); sketch.current = null; }
     if (blobURL.current) {
@@ -571,6 +579,14 @@ export function PersistentListeningProvider({
     if (media.current) media.current.volume = next / 100;
   }, []);
 
+  const setLooping = useCallback((enabled: boolean) => {
+    const permitted = kind.current === 'local-file' ||
+      (kind.current === 'review-media' && reviewManifest.current?.permissions.looping === true);
+    const next = Boolean(enabled && permitted);
+    if (media.current) media.current.loop = next;
+    saveLooping(next);
+  }, []);
+
   const refuseDuringMaiaSpeech = useCallback((): boolean => {
     if (!isMaiaSpeechActive()) return false;
     setSnapshot(old => ({
@@ -621,6 +637,9 @@ export function PersistentListeningProvider({
     }
     outputLease.current = lease;
     media.current?.pause();
+    if (media.current) media.current.loop = false;
+    saveLooping(false);
+    saveLoopAvailable(false);
     kind.current = 'sketch';
     let active = sketch.current;
     if (!active || active.mood !== mood ||
@@ -701,6 +720,9 @@ export function PersistentListeningProvider({
       audio.getAttribute('src') === edition.path;
     if (!continuing) {
       audio.pause();
+      audio.loop = false;
+      saveLooping(false);
+      saveLoopAvailable(manifest.permissions.looping === true);
       audio.src = edition.path;
       audio.preload = 'auto';
       audio.load();
@@ -771,6 +793,9 @@ export function PersistentListeningProvider({
     selected.current = { title: result.name, format: result.label };
     experience.current = null;
     kind.current = 'local-file';
+    if (media.current) media.current.loop = false;
+    saveLooping(false);
+    saveLoopAvailable(true);
     setMediaURL(blobURL.current);
     setSnapshot({
       kind: 'local-file', playback: 'paused', mood: null,
@@ -884,7 +909,7 @@ export function PersistentListeningProvider({
   }, [releaseOutput]);
 
   const transport: ListeningTransport = {
-    snapshot, volume, setVolume, shape, setShape,
+    snapshot, volume, setVolume, looping, loopAvailable, setLooping, shape, setShape,
     fields, keepField, dropField, replaceFields,
     playSketch, playExperienceMedia, selectLocalFile, playLocalFile,
     pause, stopMusic: stopAll, listeningInstance, removeLocalFile,
@@ -918,6 +943,8 @@ export function PersistentListeningProvider({
     <PersistentListeningDock
       snapshot={snapshot}
       volume={volume}
+      looping={looping}
+      loopAvailable={loopAvailable}
       displayed={displayed}
       focusSession={focusDisplayed ? focusSession : null}
       focusRemainingLabel={focusSession
@@ -927,13 +954,14 @@ export function PersistentListeningProvider({
       onResumeMusic={resumeMusic}
       onStopMusic={stopAll}
       onVolume={setVolume}
+      onLooping={setLooping}
       onPauseFocus={() => { pauseFocusSession('member'); }}
       onResumeFocus={() => { resumeCurrentFocus(); }}
       onStopFocus={() => { stopCurrentFocus(); }}
     />
     <audio ref={media} data-listen10-audio="true"
       style={{display:'none'}}
-      src={mediaURL || undefined} preload="metadata"
+      src={mediaURL || undefined} preload="metadata" loop={looping}
       onPlay={onMediaPlay} onPause={onMediaPause}
       onTimeUpdate={onMediaTimeUpdate} onEnded={onMediaEnded}
       onError={()=>{

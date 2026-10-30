@@ -10,6 +10,8 @@ import styles from './persistentListeningDock.module.css';
 type Props = {
   snapshot: ListeningSnapshot;
   volume: number;
+  looping: boolean;
+  loopAvailable: boolean;
   displayed: boolean;
   focusSession: FocusSession | null;
   focusRemainingLabel: string;
@@ -17,6 +19,7 @@ type Props = {
   onResumeMusic: () => void;
   onStopMusic: () => void;
   onVolume: (volume: number) => void;
+  onLooping: (enabled: boolean) => void;
   onPauseFocus: () => void;
   onResumeFocus: () => void;
   onStopFocus: () => void;
@@ -31,8 +34,8 @@ const FADE_DURATION_MS = 12_000;
 const FADE_STEPS = 24;
 
 export default function PersistentListeningDock({
-  snapshot, volume, displayed, focusSession, focusRemainingLabel,
-  onPauseMusic, onResumeMusic, onStopMusic, onVolume,
+  snapshot, volume, looping, loopAvailable, displayed, focusSession, focusRemainingLabel,
+  onPauseMusic, onResumeMusic, onStopMusic, onVolume, onLooping,
   onPauseFocus, onResumeFocus, onStopFocus,
 }: Props) {
   const [mixOpen, setMixOpen] = useState(false);
@@ -178,9 +181,9 @@ export default function PersistentListeningDock({
           <button type="button" className={styles.mixToggle}
             data-listen-companion-toggle="true"
             aria-expanded={mixOpen} aria-controls="soullab-companion-controls"
-            aria-label={`${mixOpen ? 'Close' : 'Open'} companion and volume controls`}
+            aria-label={`${mixOpen ? 'Close' : 'Open'} companion, volume, and loop controls`}
             onClick={() => setMixOpen(value => !value)}>
-            Mix {Math.round(volume)}%
+            {looping ? `Loop · ${Math.round(volume)}%` : `Mix ${Math.round(volume)}%`}
           </button>
         )}
       </div>
@@ -231,6 +234,14 @@ export default function PersistentListeningDock({
               <strong>{volume === 0 ? 'Restore' : 'Mute'}</strong>
               <span>{volume === 0 ? `${lastAudibleVolume.current}%` : '0%'}</span>
             </button>
+            {loopAvailable && (
+              <button type="button" className={styles.preset}
+                data-listen-companion-loop="true" aria-pressed={looping}
+                onClick={() => onLooping(!looping)}>
+                <strong>{looping ? 'Loop on' : 'Loop piece'}</strong>
+                <span>{looping ? 'Repeats' : 'Once'}</span>
+              </button>
+            )}
             <button type="button" className={styles.fade}
               data-listen-companion-fade="true" disabled={fading}
               onClick={fadeAndStop}>
@@ -239,7 +250,7 @@ export default function PersistentListeningDock({
           </div>
 
           <p className={styles.mixBoundary}>
-            Soullab does not read, analyze, pause, or control the other app. MAIA speech still pauses this field and never resumes it automatically.
+            Soullab does not read, analyze, pause, or control the other app. Loop repeats only this exact permitted piece after it ends; Stop clears looping. MAIA speech still pauses this field and never resumes it automatically.
           </p>
         </section>
       )}

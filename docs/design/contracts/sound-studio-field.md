@@ -70,7 +70,8 @@ The doors progressively disclose depth. They are not four competing applications
 | enter a complete work | `Enter experience` | names an encounter rather than opening a media asset |
 | begin by choice | `Begin Open Ground` | the title and member act remain explicit; no autoplay |
 | suspend without losing place | `Pause` / `Resume` | ordinary, direct control with no interpretive language |
-| end immediately | `Stop` | always visible and final for that playing context |
+| repeat a permitted work | `Loop piece` / `Loop on` | repetition is an explicit member choice tied to that exact work, never hidden autoplay |
+| end immediately | `Stop` | always visible, clears looping, and is final for that playing context |
 | understand the arc | `Arrival · Opening · Dwelling · Return` | temporal orientation without predicting the member’s state |
 | return from elsewhere | the playing work title / `Open field` | the persistent dock is a doorway back to the same field, not a second player |
 | balance beneath another app | `Mix` / `Play alongside another app` | makes the Soullab field independently adjustable without claiming access to the foreground service |
@@ -86,6 +87,7 @@ The independent player is independent of the current room, not independent of So
 - The same context may continue while the member moves through authorized Soullab rooms.
 - Pause, Resume, Stop, elapsed time and current passage remain directly legible.
 - No route, voice interruption, error, completion or device handoff may automatically restart sound.
+- A rights-permitted work may repeat only after the member explicitly enables Loop; Pause preserves that session choice, while Stop clears it.
 - Playback grants no microphone, analysis, memory, biometric, rights or research authority.
 - The dock must remain usable at phone width without hiding Stop or widening the document.
 - Companion Mode may change only Soullab's own field. It cannot read, analyze, pause, mix, or control another music app.
@@ -115,6 +117,7 @@ A member may run Soullab quietly beneath music chosen in another app. This is a 
 - **Soft** begins at 22% and is the default when Companion Mode is enabled from a louder setting.
 - **Present** begins at 35% when the member wants the field clearly audible.
 - **Mute / Restore** silences only Soullab without pausing or losing the prior chosen level.
+- **Loop piece** repeats the exact rights-permitted recording only after it reaches its end; **Stop** clears Loop. Open Ground's present edition retains its composed fade-out and fade-in, so the repeat breathes rather than claiming a seamless join.
 - **Fade 12s & stop** gives a gentle ending; **Stop** remains immediate and final.
 - Tonal, spectral, rhythmic or adaptive shaping is not exposed for a fixed master merely because volume control exists. Those controls require actual stems, transparent method, and creator permission.
 
@@ -152,4 +155,4 @@ The boundary text remains visible in the control panel: other music stays in its
 
 ## 29 October 2026 companion-control verification
 
-On the exact local successor above `d423a796…`, Companion Mode was walked against the exact Open Ground AAC on desktop, iPad-size and iPhone-size browser profiles. **104/104** responsive browser checks passed with zero page errors and zero external requests. The test verified the visible mobile Mix control, the 12% / 22% / 35% levels, mute without pause, exact restore, route continuity, MAIA pause/no-auto-resume, Stop, and no horizontal overflow. A separate real-time desktop witness proved the twelve-second fade reaches Stop, clears the media, and restores the selected volume for the next deliberate start. Physical iPhone playback, app-switch continuity and founder felt acceptance are separately recorded in the LISTEN-63 device evidence; physical iPad and native AVAudioSession mixing remain held.
+On the exact local loop successor directly above `ae207f7…`, Companion Mode was walked against the exact Open Ground AAC on desktop, iPad-size and iPhone-size browser profiles. **119/119** responsive browser checks passed with zero page errors and zero external requests. The test verified the visible mobile Mix control, the 12% / 22% / 35% levels, mute without pause, exact restore, permission-bound Loop, a real end-to-beginning repeat, loop continuity across room navigation, MAIA pause/no-auto-resume, Stop clearing Loop, and no horizontal overflow. A separate real-time desktop witness proved the twelve-second fade reaches Stop, clears the media, and restores the selected volume for the next deliberate start. Physical iPhone playback, app-switch continuity and founder felt acceptance are separately recorded in the LISTEN-63 device evidence; physical testing of the new Loop control, physical iPad and native AVAudioSession mixing remain held.
