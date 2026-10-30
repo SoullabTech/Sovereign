@@ -6,6 +6,7 @@ const mockQuery = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockCreateSession = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockValidateSession = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockRevokeSession = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockResetRateLimit = jest.fn<(...args: unknown[]) => Promise<void>>();
 const mockClient = { query: jest.fn() };
 
 jest.mock('@/lib/db/postgres', () => ({
@@ -26,6 +27,7 @@ jest.mock('@/lib/auth/serverSessions', () => ({
 
 jest.mock('@/lib/auth/rateLimiter', () => ({
   checkRateLimit: jest.fn(async () => ({ allowed: true })),
+  resetRateLimit: (...args: unknown[]) => mockResetRateLimit(...args),
   getClientIP: jest.fn(() => '127.0.0.1'),
   buildRateLimitHeaders: jest.fn(() => ({})),
 }));
@@ -86,6 +88,7 @@ describe('POST /api/members/email-code/verify — session is authentication', ()
     mockCreateSession.mockResolvedValue(SESSION);
     mockValidateSession.mockResolvedValue(SESSION);
     mockRevokeSession.mockResolvedValue(undefined);
+    mockResetRateLimit.mockResolvedValue(undefined);
     jest.spyOn(console, 'log').mockImplementation(() => {});
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });

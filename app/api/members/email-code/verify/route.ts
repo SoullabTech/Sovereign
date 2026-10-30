@@ -12,12 +12,13 @@ import {
   normalizeReturnDestination,
   requireSameOriginAuthMutation,
 } from '@/lib/auth/returnDestination';
-import { checkRateLimit, getClientIP, buildRateLimitHeaders } from '@/lib/auth/rateLimiter';
+import { checkRateLimit, resetRateLimit, getClientIP, buildRateLimitHeaders } from '@/lib/auth/rateLimiter';
 import { getNextOnboardingStep } from '@/lib/onboarding/state';
 import { memberRef } from '@/lib/privacy/memberRef';
 import type { Tier, Role } from '@/config/accessMatrix';
 
 const ENDPOINT = '/api/members/email-code/verify';
+const ISSUE_ENDPOINT = '/api/members/email-code';
 const NO_STORE = { 'Cache-Control': 'private, no-store' };
 
 function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
@@ -73,6 +74,13 @@ export async function POST(request: NextRequest) {
     if (verified.kind === 'refused') {
       return json({ error: verified.message, reason: verified.code }, 400);
     }
+
+    // A correct one-time code proves control of the address. Clear both IP
+    // buckets only after that proof succeeds, so multiple legitimate members
+    // behind one household/network do not lock one another out. Incorrect,
+    // expired and unavailable challenges remain counted.
+    await resetRateLimit(clientIP, 'ip', ISSUE_ENDPOINT);
+    await resetRateLimit(clientIP, 'ip', ENDPOINT);
 
     if (verified.kind === 'registration-required') {
       const response = json({
