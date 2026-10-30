@@ -104,6 +104,38 @@ Tier G uses the manual §18 closure record.
 
 ---
 
+## Amendment A — Capability roster for additional providers · PROPOSED, ⛔ NOT ADOPTED
+
+Occasioned by the founder's direction (2026-10-30) to integrate other services (Gemini, Perplexity and others) for their distinct strengths. This amendment is a proposal against the adopted v0.1; it takes effect only on a founder ruling.
+
+**A.1 Assign by capability, not by brand.** Roles are stable; providers are *slots* filled by evidence. JARVIS remains the single orchestrator; no provider dispatches another.
+
+| Capability | Job in a project | Slot candidates (⚠️ strengths **unconfirmed**, to be established by trial §A.2) | May receive |
+|---|---|---|---|
+| Repo-grounded execution + verification | census, build, verify, deploy, witness | Claude Code under JARVIS | repo source (only slot with custody) |
+| Divergent design | options, naming, rough design | ChatGPT | Brief (Class 1) |
+| Grounded external research | prior art, standards, docs, market facts, with sources | Perplexity-class | research questions (Class 2) |
+| Long-context / multimodal synthesis | large public documents, screenshots, recordings | Gemini-class | Brief + public material (Class 0–1) |
+| Adversarial review | find what breaks the Brief/design | any provider that did **not** author it | Brief + design artifact (Class 1) |
+
+**A.2 Admission by trial, not reputation.** A provider enters a slot after a bake-off on a real Brief: the same question to the candidates; JARVIS records what each found that the others missed, any error found on verification, and cost in time/effort. The result is written to a roster record. Strengths are never asserted from marketing or from this document's own table.
+
+**A.3 Egress classes (working names; proposal only).** The provider tier table has no class for these materials (see the 2026-09-20 finding), so these labels are ⛔ **not the governance act** and edit nothing.
+- **Class 0** — public material.
+- **Class 1** — Brief / product-level description in the founder's words.
+- **Class 2** — a research question, phrased so that it contains no source, no unreleased specifics beyond what the question strictly needs, and no member data.
+- **Class 3** — repository source, diffs, SQL, canon/constitution text, member data, credentials: ⛔ **Claude-side only** while the dev-lane hold stands.
+
+**A.4 Outside output is CANDIDATE.** Research output and its citations are leads, not evidence. Each load-bearing claim is verified against its cited source (by JARVIS/Claude) before it enters a Brief as anything stronger than CANDIDATE. An unverifiable claim is recorded as UNVERIFIED, never silently dropped or silently kept.
+
+**A.5 Consult log and cap.** Every outside consult is logged in the Brief: provider · egress class · the question · result tag. Default cap: **two outside providers per diverge window**, renewable only by the founder. More voices is the cheapest way to restart a spiral.
+
+**A.6 Development lane only.** MAIA's runtime provider rule (Anthropic primary, local fallback, no other cloud AI) and the member-data boundary are untouched. Nothing here admits any of these services into MAIA's runtime or near member data.
+
+**A.7 Before first use of any new provider (unverified, owed):** its data-retention / training terms for the plan actually used, and whether the account is a personal or organizational one. Neither has been checked.
+
+---
+
 ## Founder rulings
 
 1. **Adopt this protocol?** ✅ **TAKEN 2026-10-30: adopt v0.1 for new projects only; review after the first three closures; ⛔ no retroactive application to existing lanes.**
@@ -115,7 +147,8 @@ Items 2–5 were **not separately answered**. They stand as drafted *because the
 3. **WIP limit** — one ship-lane, or one per owner stream? Recommended: one, until a first project closes under the protocol.
 4. **ChatGPT scope** — confirm the §3 working rule is the correct reading of the 2026-09-20 hold, or direct otherwise.
 5. **Diverge clock** — one sitting / two rounds, or another bound?
+6. **Amendment A** — adopt as written? Sub-questions: which providers get slots and accounts · confirm the Class 0–3 working names · confirm the cap of two outside providers per diverge window.
 
 ## Not authorized by this draft
 
-Any change to the manual, `CLAUDE.md`, the provider tier table or governance canon · lifting the dev-lane hold · opening a lane · retroactive re-tiering · implementation, merge, deploy or production change · any claim that this protocol is in force.
+Any change to the manual, `CLAUDE.md`, the provider tier table or governance canon · lifting the dev-lane hold · opening a lane · retroactive re-tiering · implementation, merge, deploy or production change · any claim that this protocol governs existing lanes or that Amendment A is adopted.
