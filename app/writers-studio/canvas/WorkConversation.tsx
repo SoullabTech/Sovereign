@@ -173,6 +173,12 @@ export default function WorkConversation({
   const [correctionBusy, setCorrectionBusy] = useState(false);
   const [correctionStatus, setCorrectionStatus] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
+  /* The send in flight, as a token. State (`pending`) updates a render late, so
+     two Enters in one tick could both pass a state check. The token is also how
+     a reply knows it is stale: anything that changes whose conversation this is
+     (Work, manuscript, unmount) drops it, and a reply whose token is gone writes
+     nothing into the view. The server keeps that turn on its own thread. */
+  const inFlight = useRef<object | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
@@ -190,6 +196,14 @@ export default function WorkConversation({
   useEffect(() => {
     let cancelled = false;
     setDecision(null);
+    /* A different Work is a different conversation. An adopted thread outranks
+       the decision in `sendMode`, so a thread carried over from the previous
+       Work would receive the next question. The draft stays: it is the writer's
+       own words, and nothing sends it without them. */
+    setThreadId(null);
+    setThread(null);
+    setPending(null);
+    setRefusal(null);
     void (async () => {
       const discovery: ThreadDiscovery = manuscriptId
         ? await threadsOn(manuscriptId, WORK_ANCHOR)
@@ -200,7 +214,7 @@ export default function WorkConversation({
       /* ⭐ One relationship is not a choice. Adopting it writes nothing. */
       if (d.kind === 'resume') await adopt(d.threadId);
     })();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; inFlight.current = null; };
   }, [manuscriptId, work.id, adopt]);
 
   const mode = sendMode(decision, threadId);
@@ -261,7 +275,7 @@ export default function WorkConversation({
        disabled the button from one rule and picked `{anchor}` vs `{threadId}`
        from another would have two chances to disagree, and the disagreement
        writes a row. */
-    if (!question || pending !== null) return;
+    if (!question || pending !== null || inFlight.current !== null) return;
     const requestedPresentation = proposePresentationRequest(question, readWorkingStyle());
     if (requestedPresentation) {
       setPresentationConfirmation(requestedPresentation);
@@ -269,6 +283,8 @@ export default function WorkConversation({
       return;
     }
     if (mode.kind === 'blocked') return;
+    const token = {};
+    inFlight.current = token;
     setRefusal(null);
     setPending(question);
     const r = manuscriptId
@@ -283,6 +299,8 @@ export default function WorkConversation({
           question,
           ...(mode.kind === 'resume' ? { threadId: mode.threadId } : {}),
         });
+    if (inFlight.current !== token) return;
+    inFlight.current = null;
     setPending(null);
     if (r.ok) {
       // Clear only the acknowledged submission; preserve words typed while it was pending.
