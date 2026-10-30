@@ -17,6 +17,7 @@ import {
 import { stripClientIdentityAssertions } from './lib/auth/identityAssertions';
 import { deriveVerifiedAccess, type VerifiedAccess } from './lib/auth/verifiedAccess';
 import { canonicalStudioRoute } from './lib/writersStudio/canonicalStudioRoute';
+import { isTesterGatedAstrologyPage, memberIsAstrologyTester } from './lib/astrology/testerGate';
 // NOTE: entitlements are still checked in route handlers, not here — they are a
 // commercial concern with their own surface, not part of the trust boundary.
 
@@ -231,6 +232,22 @@ export async function proxy(req: NextRequest) {
   // Short ID is sufficient for debugging - not cryptographic
   // ---------------------------------------------------------------------
   const rid = Math.random().toString(36).substring(2, 10);
+
+  // ---------------------------------------------------------------------
+  // Free Astrology: testers only (founder admission 2026-10-30).
+  // Runs before the public-route shortcut because most Astrology pages are
+  // public routes. Non-testers get a hard 404 here, before any rendering.
+  // See lib/astrology/testerGate.ts for what is deliberately not gated.
+  // ---------------------------------------------------------------------
+  if (isTesterGatedAstrologyPage(pathname)) {
+    const access = await deriveVerifiedAccess(req);
+    if (!access.authenticated || !access.memberId || !(await memberIsAstrologyTester(access.memberId))) {
+      return new NextResponse(null, {
+        status: 404,
+        headers: { 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' },
+      });
+    }
+  }
 
   // ---------------------------------------------------------------------
   // Public routes: answered without touching the database
