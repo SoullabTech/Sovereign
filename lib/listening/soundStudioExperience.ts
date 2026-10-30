@@ -1,5 +1,6 @@
 import openGroundManifestSource from './manifests/open-ground-432-v1.json';
 import nightGroundManifestSource from './manifests/night-ground-01-guided-arrival-v0.1.json';
+import nightGroundNicoleFirstNightManifestSource from './manifests/night-ground-01-nicole-first-night-v0.1.json';
 
 export type SoundStudioDoorID = 'experience' | 'explore' | 'create' | 'professional';
 
@@ -62,6 +63,7 @@ export type SoundExperienceManifest = {
   editions: {
     defaultReview: SoundExperienceMediaEdition;
     preservationMaster: SoundExperienceMediaEdition;
+    sequence?: readonly SoundExperienceMediaEdition[];
   };
   sourceEvidence: {
     listeningGuideSha256: string;
@@ -117,24 +119,37 @@ export const OPEN_GROUND_EXPERIENCE_MANIFEST =
   openGroundManifestSource as unknown as SoundExperienceManifest;
 export const NIGHT_GROUND_EXPERIENCE_MANIFEST =
   nightGroundManifestSource as unknown as SoundExperienceManifest;
+export const NIGHT_GROUND_NICOLE_FIRST_NIGHT_EXPERIENCE_MANIFEST =
+  nightGroundNicoleFirstNightManifestSource as unknown as SoundExperienceManifest;
+
+function validReviewMedia(media: SoundExperienceMediaEdition): boolean {
+  return Boolean(media.bundled && media.path?.startsWith('/media/sound-studio/') &&
+    /^[a-f0-9]{64}$/.test(media.sha256) && media.durationMs > 0 && media.channels === 2 &&
+    (media.sampleRateHz === 44_100 || media.sampleRateHz === 48_000));
+}
+
+export function reviewMediaSequence(
+  manifest: SoundExperienceManifest,
+): readonly SoundExperienceMediaEdition[] | null {
+  if (manifest.schema !== 'soullab.sound.experience-manifest.v1' ||
+      manifest.status !== 'private_review' ||
+      manifest.permissions.scope !== 'authenticated_founder_private_review' ||
+      !manifest.permissions.onDemandReview || manifest.permissions.productionRelease ||
+      typeof manifest.permissions.looping !== 'boolean' || manifest.permissions.aiAudioAnalysis ||
+      manifest.authorship.thirdPartyAudio) return null;
+  const sequence = manifest.editions.sequence?.length
+    ? manifest.editions.sequence
+    : [manifest.editions.defaultReview];
+  if (!sequence.every(validReviewMedia)) return null;
+  const total = sequence.reduce((sum, media) => sum + media.durationMs, 0);
+  if (Math.abs(total - manifest.durationMs) > 250) return null;
+  return sequence;
+}
 
 export function reviewMediaEdition(
   manifest: SoundExperienceManifest,
 ): SoundExperienceMediaEdition | null {
-  const media = manifest.editions.defaultReview;
-  if (manifest.schema !== 'soullab.sound.experience-manifest.v1' ||
-      manifest.status !== 'private_review' ||
-      manifest.permissions.scope !== 'authenticated_founder_private_review' ||
-      !manifest.permissions.onDemandReview ||
-      manifest.permissions.productionRelease ||
-      typeof manifest.permissions.looping !== 'boolean' ||
-      manifest.permissions.aiAudioAnalysis ||
-      manifest.authorship.thirdPartyAudio ||
-      !media.bundled || !media.path?.startsWith('/media/sound-studio/') ||
-      !/^[a-f0-9]{64}$/.test(media.sha256) ||
-      media.durationMs !== manifest.durationMs ||
-      media.channels !== 2 || media.sampleRateHz !== 48_000) return null;
-  return media;
+  return reviewMediaSequence(manifest)?.[0] ?? null;
 }
 
 export type SoundStudioWork = SoundExperiencePlayback & {
@@ -201,6 +216,25 @@ export const OPEN_GROUND: SoundStudioWork = {
   qualityStatement: 'EXACT REVIEWED AAC EDITION · 24-BIT MASTER PRESERVED · EXISTING PERSISTENT PLAYER · NO BIOMETRICS · NO HIDDEN ANALYSIS',
 };
 
+export const NIGHT_GROUND_NICOLE_FIRST_NIGHT: SoundStudioWork = {
+  id: NIGHT_GROUND_NICOLE_FIRST_NIGHT_EXPERIENCE_MANIFEST.experienceId,
+  title: NIGHT_GROUND_NICOLE_FIRST_NIGHT_EXPERIENCE_MANIFEST.title,
+  subtitle: NIGHT_GROUND_NICOLE_FIRST_NIGHT_EXPERIENCE_MANIFEST.subtitle,
+  durationMs: NIGHT_GROUND_NICOLE_FIRST_NIGHT_EXPERIENCE_MANIFEST.durationMs,
+  state: 'review',
+  kind: 'Dream Field first-night meditation · two-part exact review sequence',
+  description: 'Nicole appears only in the opening. After twelve minutes the voice is gone and the same Night Ground field continues through the night without returning to guidance.',
+  mood: 'rest',
+  frequencies: [72, 144, 216],
+  qualities: ['Nicole / Kokoro', '109 minutes', 'Voice once', 'No automatic loop'],
+  primaryDoor: 'experience',
+  passages: NIGHT_GROUND_NICOLE_FIRST_NIGHT_EXPERIENCE_MANIFEST.passages,
+  manifest: NIGHT_GROUND_NICOLE_FIRST_NIGHT_EXPERIENCE_MANIFEST,
+  fieldLabel: 'DREAM FIELD 01 · NICOLE FIRST NIGHT · PRIVATE REVIEW',
+  immersiveQuestion: 'What changes when guidance appears only long enough to open the threshold, then disappears for the rest of the night field?',
+  qualityStatement: 'EXACT 109-MINUTE PRIVATE REVIEW · NICOLE ONCE · TWO CONTIGUOUS AAC SEGMENTS · ORIGINAL 48 KHZ NIGHT GROUND SOURCE PRESERVED · RELEASE HOLD',
+};
+
 export const NIGHT_GROUND: SoundStudioWork = {
   id: NIGHT_GROUND_EXPERIENCE_MANIFEST.experienceId,
   title: NIGHT_GROUND_EXPERIENCE_MANIFEST.title,
@@ -222,6 +256,7 @@ export const NIGHT_GROUND: SoundStudioWork = {
 
 export const SOUND_STUDIO_WORKS: readonly SoundStudioWork[] = [
   OPEN_GROUND,
+  NIGHT_GROUND_NICOLE_FIRST_NIGHT,
   NIGHT_GROUND,
   {
     id: 'still-current-study-01',

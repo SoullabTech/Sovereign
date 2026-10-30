@@ -171,3 +171,14 @@ The exact twelve-minute guided AAC was bound to its own manifest and exercised t
 ## 29 October 2026 companion-control verification
 
 On the exact local loop successor directly above `ae207f7…`, Companion Mode was walked against the exact Open Ground AAC on desktop, iPad-size and iPhone-size browser profiles. **119/119** responsive browser checks passed with zero page errors and zero external requests. The test verified the visible mobile Mix control, the 12% / 22% / 35% levels, mute without pause, exact restore, permission-bound Loop, a real end-to-beginning repeat, loop continuity across room navigation, MAIA pause/no-auto-resume, Stop clearing Loop, and no horizontal overflow. A separate real-time desktop witness proved the twelve-second fade reaches Stop, clears the media, and restores the selected volume for the next deliberate start. Physical iPhone playback, app-switch continuity and founder felt acceptance are separately recorded in the LISTEN-63 device evidence; physical testing of the new Loop control, physical iPad and native AVAudioSession mixing remain held.
+
+## 30 October 2026 · long-form sequence review law
+
+A long-form Dream Field may be represented by more than one exact media object when custody or delivery constraints make one giant file inappropriate. This does **not** create a playlist or a second player. One deliberate member Start owns one Experience Manifest and one persistent audio element. Internal progression from one declared segment to the next is continuation of that same authored experience.
+
+- Segment order, media SHA-256, duration and total experience duration are declared in the manifest.
+- The experience clock and passage language span the whole sequence rather than restarting at each file boundary.
+- MAIA or another higher-priority speech event may pause the sequence; it never grants automatic resume.
+- Immediate Stop clears the sequence and any pending continuation.
+- A sequence does not imply looping. Night Ground Nicole First Night completes after 109 minutes unless a later, separately admitted extended-night edition explicitly grants core continuation.
+- Review delivery format is described truthfully. A 44.1 kHz private-review export is not relabeled as a 48 kHz serving master; the original Night Ground 48 kHz source remains separately preserved.

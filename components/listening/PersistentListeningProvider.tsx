@@ -39,8 +39,8 @@ import type {
   FocusFeedbackOutcome, FocusFeedbackTag, FocusInterruptionReason,
   FocusRetune, FocusSession, FocusSessionPlanInput,
 } from '@/lib/listening/focusFieldSession';
-import { reviewMediaEdition, soundPassageAt } from '@/lib/listening/soundStudioExperience';
-import type { SoundExperienceManifest, SoundExperiencePlayback } from '@/lib/listening/soundStudioExperience';
+import { reviewMediaEdition, reviewMediaSequence, soundPassageAt } from '@/lib/listening/soundStudioExperience';
+import type { SoundExperienceManifest, SoundExperienceMediaEdition, SoundExperiencePlayback } from '@/lib/listening/soundStudioExperience';
 
 /**
  * LISTEN-10 · Isolated cross-room transport candidate.
@@ -256,6 +256,9 @@ export function PersistentListeningProvider({
   const blobURL = useRef<string | null>(null);
   const selected = useRef<{ title: string; format: string } | null>(null);
   const reviewManifest = useRef<SoundExperienceManifest | null>(null);
+  const reviewSequence = useRef<readonly SoundExperienceMediaEdition[]>([]);
+  const reviewSegmentIndex = useRef(0);
+  const segmentTransitioning = useRef(false);
   const volumeRef = useRef(45);
   const epoch = useRef(0);
   // Stable within this one member-bound provider instance, never serialized or shared.
@@ -313,10 +316,20 @@ export function PersistentListeningProvider({
     saveFields(restored);
   }, []);
 
+  const reviewOffsetMs = useCallback((): number =>
+    reviewSequence.current.slice(0, reviewSegmentIndex.current)
+      .reduce((sum, item) => sum + item.durationMs, 0), []);
+  const reviewElapsedMs = useCallback((): number => {
+    const manifest = reviewManifest.current;
+    const audio = media.current;
+    if (!manifest || !audio) return 0;
+    return Math.min(manifest.durationMs, reviewOffsetMs() + audio.currentTime * 1000);
+  }, [reviewOffsetMs]);
+
   const pause = useCallback(() => {
     ++epoch.current;
     const elapsedMs = kind.current === 'review-media' && media.current
-      ? Math.min(reviewManifest.current?.durationMs ?? Number.MAX_SAFE_INTEGER, media.current.currentTime * 1000)
+      ? reviewElapsedMs()
       : pauseExperienceClock();
     if (kind.current === 'review-media' && experience.current) {
       experience.current.elapsedMs = elapsedMs;
@@ -338,7 +351,7 @@ export function PersistentListeningProvider({
             : old.passage,
         }
       : old);
-  }, [pauseExperienceClock, releaseOutput]);
+  }, [pauseExperienceClock, releaseOutput, reviewElapsedMs]);
 
   const stopAll = useCallback(() => {
     ++epoch.current;
@@ -358,6 +371,9 @@ export function PersistentListeningProvider({
     }
     selected.current = null;
     reviewManifest.current = null;
+    reviewSequence.current = [];
+    reviewSegmentIndex.current = 0;
+    segmentTransitioning.current = false;
     kind.current = 'none';
     experience.current = null;
     setMediaURL(null);
@@ -692,8 +708,9 @@ export function PersistentListeningProvider({
   const playExperienceMedia = useCallback(async (
     manifest: SoundExperienceManifest,
   ): Promise<boolean> => {
-    const edition = reviewMediaEdition(manifest);
-    if (!edition?.path) {
+    const sequence = reviewMediaSequence(manifest);
+    const edition = sequence?.[0] ?? reviewMediaEdition(manifest);
+    if (!edition?.path || !sequence?.length) {
       setSnapshot(old => ({ ...old, playback: 'error',
         message: 'This experience has no accepted private-review media edition.' }));
       return false;
@@ -715,14 +732,18 @@ export function PersistentListeningProvider({
     }
     outputLease.current = lease;
     if (sketch.current) { endSketch(sketch.current); sketch.current = null; }
+    const currentSegment = reviewSequence.current[reviewSegmentIndex.current];
     const continuing = kind.current === 'review-media' &&
       reviewManifest.current?.manifestId === manifest.manifestId &&
-      audio.getAttribute('src') === edition.path;
+      Boolean(currentSegment?.path) && audio.getAttribute('src') === currentSegment?.path;
     if (!continuing) {
       audio.pause();
       audio.loop = false;
       saveLooping(false);
-      saveLoopAvailable(manifest.permissions.looping === true);
+      saveLoopAvailable(manifest.permissions.looping === true && sequence.length === 1);
+      reviewSequence.current = sequence;
+      reviewSegmentIndex.current = 0;
+      segmentTransitioning.current = false;
       audio.src = edition.path;
       audio.preload = 'auto';
       audio.load();
@@ -759,7 +780,7 @@ export function PersistentListeningProvider({
         return false;
       }
       claimFocus();
-      const elapsedMs = Math.min(manifest.durationMs, audio.currentTime * 1000);
+      const elapsedMs = reviewElapsedMs();
       if (experience.current) {
         experience.current.elapsedMs = elapsedMs;
         experience.current.startedAt = null;
@@ -779,7 +800,7 @@ export function PersistentListeningProvider({
         message: 'This browser could not decode or play the accepted review recording.' }));
       return false;
     }
-  }, [claimFocus, pause, refuseDuringMaiaSpeech, releaseOutput]);
+  }, [claimFocus, pause, refuseDuringMaiaSpeech, releaseOutput, reviewElapsedMs]);
 
   const selectLocalFile = useCallback((file: File) => {
     const result = validateLocalAudio(file);
@@ -861,9 +882,12 @@ export function PersistentListeningProvider({
   }, [claimFocus, refuseDuringMaiaSpeech, releaseOutput]);
 
   const onMediaPause = useCallback(() => {
+    if (segmentTransitioning.current) return;
+    if (kind.current === 'review-media' && media.current?.ended &&
+        reviewSequence.current[reviewSegmentIndex.current + 1]) return;
     if (kind.current !== 'local-file' && kind.current !== 'review-media') return;
     const elapsedMs = kind.current === 'review-media' && media.current
-      ? Math.min(reviewManifest.current?.durationMs ?? Number.MAX_SAFE_INTEGER, media.current.currentTime * 1000)
+      ? reviewElapsedMs()
       : snapshot.elapsedMs;
     if (kind.current === 'review-media' && experience.current && typeof elapsedMs === 'number') {
       experience.current.elapsedMs = elapsedMs;
@@ -877,12 +901,12 @@ export function PersistentListeningProvider({
         ? soundPassageAt(reviewManifest.current.passages, elapsedMs)?.label ?? null
         : old.passage,
     } : old);
-  }, [releaseOutput, snapshot.elapsedMs]);
+  }, [releaseOutput, reviewElapsedMs, snapshot.elapsedMs]);
 
   const onMediaTimeUpdate = useCallback(() => {
     if (kind.current !== 'review-media' || !media.current || !reviewManifest.current) return;
     const manifest = reviewManifest.current;
-    const elapsedMs = Math.min(manifest.durationMs, media.current.currentTime * 1000);
+    const elapsedMs = reviewElapsedMs();
     if (experience.current) {
       experience.current.elapsedMs = elapsedMs;
       experience.current.startedAt = null;
@@ -891,12 +915,54 @@ export function PersistentListeningProvider({
       ...old, elapsedMs,
       passage: soundPassageAt(manifest.passages, elapsedMs)?.label ?? null,
     } : old);
-  }, []);
+  }, [reviewElapsedMs]);
 
   const onMediaEnded = useCallback(() => {
-    releaseOutput();
-    if (kind.current !== 'review-media' || !reviewManifest.current) return;
+    if (kind.current !== 'review-media' || !reviewManifest.current || !media.current) {
+      releaseOutput(); return;
+    }
     const manifest = reviewManifest.current;
+    const nextIndex = reviewSegmentIndex.current + 1;
+    const next = reviewSequence.current[nextIndex];
+    if (next?.path) {
+      const audio = media.current;
+      const offsetMs = reviewSequence.current.slice(0, nextIndex)
+        .reduce((sum, item) => sum + item.durationMs, 0);
+      reviewSegmentIndex.current = nextIndex;
+      segmentTransitioning.current = true;
+      audio.loop = false;
+      audio.src = next.path;
+      audio.preload = 'auto';
+      audio.load();
+      if (experience.current) {
+        experience.current.elapsedMs = Math.min(manifest.durationMs, offsetMs);
+        experience.current.startedAt = null;
+      }
+      setSnapshot(old => old.experienceId === manifest.experienceId ? {
+        ...old, playback: isMaiaSpeechActive() ? 'paused' : 'playing',
+        elapsedMs: Math.min(manifest.durationMs, offsetMs),
+        passage: soundPassageAt(manifest.passages, offsetMs)?.label ?? null,
+        message: isMaiaSpeechActive()
+          ? 'The next part is ready. MAIA is speaking; resume only when you choose.'
+          : `${manifest.title} continues without returning to guidance.`,
+      } : old);
+      if (isMaiaSpeechActive()) {
+        segmentTransitioning.current = false;
+        releaseOutput();
+        return;
+      }
+      void audio.play().then(() => {
+        segmentTransitioning.current = false;
+        claimFocus();
+      }).catch(() => {
+        segmentTransitioning.current = false;
+        releaseOutput();
+        setSnapshot(old => ({ ...old, playback: 'error',
+          message: 'The next part of this private-review experience could not begin.' }));
+      });
+      return;
+    }
+    releaseOutput();
     if (experience.current) {
       experience.current.elapsedMs = manifest.durationMs;
       experience.current.startedAt = null;
@@ -906,7 +972,7 @@ export function PersistentListeningProvider({
       passage: manifest.passages[manifest.passages.length - 1]?.label ?? null,
       message: `${manifest.title} is complete. It will not restart automatically.`,
     } : old);
-  }, [releaseOutput]);
+  }, [claimFocus, releaseOutput]);
 
   const transport: ListeningTransport = {
     snapshot, volume, setVolume, looping, loopAvailable, setLooping, shape, setShape,
