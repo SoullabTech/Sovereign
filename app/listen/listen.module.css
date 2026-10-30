@@ -158,3 +158,11 @@
 .focusSound{display:grid;gap:10px;margin:0 0 18px;padding:18px 20px;border:1px solid rgba(226,216,194,.14);border-radius:14px;background:rgba(4,12,16,.34)}
 .focusSound h3{margin:0;font-family:Georgia,serif;font-size:18px;font-weight:400;color:#e9d3ae}
 .focusSound .play{justify-self:start;min-height:44px}
+
+/* Focus · ADHD support section (member-opened) */
+.focusAdhd{margin:0 0 18px;border:1px solid rgba(226,216,194,.14);border-radius:14px;background:rgba(4,12,16,.34);padding:4px 20px 16px}
+.focusAdhd summary{display:flex;align-items:center;min-height:44px;cursor:pointer;font-family:Georgia,serif;font-size:18px;color:#e9d3ae}
+.adhdBlock{display:grid;gap:8px;margin-top:16px}.adhdBlock h3{margin:0;font-family:Georgia,serif;font-size:16px;font-weight:400;color:#f1dfc1}.adhdBlock .play,.adhdBlock .secondary{justify-self:start;min-height:44px}
+/* A quieter screen: fewer ornaments, no motion; controls and Stop are untouched */
+:global(body[data-quiet-ui]) .studioAtmosphere,:global(body[data-quiet-ui]) .orb,:global(body[data-quiet-ui]) .immersiveVisual,:global(body[data-quiet-ui]) .studioWorkOrb{display:none}
+:global(body[data-quiet-ui]) *{animation:none!important;transition:none!important;scroll-behavior:auto!important}

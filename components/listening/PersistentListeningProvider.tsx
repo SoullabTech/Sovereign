@@ -4,6 +4,8 @@ import {
   createContext, useCallback, useContext, useEffect, useRef, useState,
 } from 'react';
 import type { ReactNode, RefObject } from 'react';
+import { focusTimeLabel } from '@/lib/listening/focusTimeDisplay';
+import type { FocusTimeDisplay } from '@/lib/listening/focusTimeDisplay';
 import PersistentListeningDock from './PersistentListeningDock';
 // Compatibility contract: PersistentListeningDock renders data-focus-field-dock="true"
 // from this one member-bound provider; extraction did not create a second owner.
@@ -26,6 +28,8 @@ import {
 import {
   advanceFocusSession as advanceFocusSessionModel,
   createFocusSession as createFocusSessionModel,
+  focusDurationMs,
+  focusElapsedMs,
   focusRemainingMs,
   interruptFocusSession as interruptFocusSessionModel,
   isFocusSessionTerminal,
@@ -113,6 +117,8 @@ export type ListeningTransport = {
   removeLocalFile: () => void;
   focusSession: FocusSession | null;
   focusClockMs: number;
+  focusTimeDisplay: FocusTimeDisplay;
+  setFocusTimeDisplay: (mode: FocusTimeDisplay) => void;
   startFocusSession: (plan: FocusSessionPlanInput) => boolean;
   pauseFocusSession: (reason?: FocusInterruptionReason) => boolean;
   resumeFocusSession: () => boolean;
@@ -250,6 +256,7 @@ export function PersistentListeningProvider({
   const [focusSession, setFocusSession] = useState<FocusSession | null>(null);
   const focusSessionRef = useRef<FocusSession | null>(null);
   const [focusClockMs, setFocusClockMs] = useState(() => Date.now());
+  const [focusTimeDisplay, setFocusTimeDisplay] = useState<FocusTimeDisplay>('countdown');
   const [mediaURL, setMediaURL] = useState<string | null>(null);
 
   const kind = useRef<Kind>('none');
@@ -1059,6 +1066,7 @@ export function PersistentListeningProvider({
     playSketch, playExperienceMedia, selectLocalFile, playLocalFile,
     pause, stopMusic: stopAll, listeningInstance, removeLocalFile,
     focusSession, focusClockMs,
+    focusTimeDisplay, setFocusTimeDisplay,
     startFocusSession: beginFocusSession,
     pauseFocusSession,
     resumeFocusSession: resumeCurrentFocus,
@@ -1093,7 +1101,11 @@ export function PersistentListeningProvider({
       displayed={displayed}
       focusSession={focusDisplayed ? focusSession : null}
       focusRemainingLabel={focusSession
-        ? formatFocusClock(focusRemainingMs(focusSession, new Date(focusClockMs)))
+        ? focusTimeLabel(focusTimeDisplay, {
+            elapsedMs: focusElapsedMs(focusSession, new Date(focusClockMs)),
+            totalMs: focusDurationMs(focusSession.plan.duration),
+            countdownLabel: formatFocusClock(focusRemainingMs(focusSession, new Date(focusClockMs))),
+          })
         : 'Untimed'}
       onPauseMusic={pause}
       onResumeMusic={resumeMusic}
