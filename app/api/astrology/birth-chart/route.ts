@@ -10,53 +10,19 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { calculateBirthChart, type BirthData } from '@/lib/astrology/ephemerisCalculator';
+import { calculateBirthChart } from '@/lib/astrology/ephemerisCalculator';
+import { BIRTH_CHART_BODY_LIMIT, takeCalculatorBudget, readCalculatorObject, validateBirthChartRequest, calculatorFailureResponse, CALCULATOR_PRIVATE_HEADERS } from '@/lib/astrology/calculatorRequests';
 import { detectAlienPatterns } from '@/lib/astrology/alienPatterns';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { date, time, location, houseSystem } = body;
-
-    // Validate required fields
-    if (!date) {
-      return NextResponse.json(
-        { error: 'Birth date is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!time) {
-      return NextResponse.json(
-        { error: 'Birth time is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!location || typeof location.lat !== 'number' || typeof location.lng !== 'number') {
-      return NextResponse.json(
-        { error: 'Location with lat/lng coordinates is required' },
-        { status: 400 }
-      );
-    }
-
-    // Prepare birth data
-    const birthData: BirthData = {
-      date,
-      time,
-      location: {
-        lat: location.lat,
-        lng: location.lng,
-        // Pass through as-is: defaulting to 'UTC' would misread the local wall
-        // time as UTC. Absent/invalid values trigger the calculator's
-        // longitude-approximation fallback instead.
-        timezone: location.timezone || undefined,
-      },
-      houseSystem: houseSystem || 'placidus',
-    };
-
-    // Birth date, time and coordinates are private user-supplied material.
-    // Never persist them in routine request logs, including on public calculators.
+    const budgetFailure = takeCalculatorBudget();
+    if (budgetFailure) return calculatorFailureResponse(budgetFailure);
+    const body = await readCalculatorObject(request, BIRTH_CHART_BODY_LIMIT);
+    if (!body.ok) return calculatorFailureResponse(body);
+    const admission = validateBirthChartRequest(body.value);
+    if (!admission.ok) return calculatorFailureResponse(admission);
+    const birthData = admission.value;
 
     // Calculate the birth chart
     const chart = await calculateBirthChart(birthData);
@@ -76,16 +42,17 @@ export async function POST(request: NextRequest) {
         location: birthData.location,
         houseSystem: birthData.houseSystem,
       },
-    });
+    }, { headers: CALCULATOR_PRIVATE_HEADERS });
 
   } catch (error) {
-    console.error('[Birth Chart] Calculation error:', error instanceof Error ? error.name : 'unknown');
+    console.error('[Birth Chart] BIRTH_CHART_CALCULATION_FAILED');
 
     return NextResponse.json(
       {
         error: 'Birth chart calculation failed',
+        details: 'BIRTH_CHART_CALCULATION_FAILED',
       },
-      { status: 500 }
+      { status: 500, headers: CALCULATOR_PRIVATE_HEADERS }
     );
   }
 }

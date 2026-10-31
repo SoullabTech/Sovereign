@@ -340,32 +340,13 @@ export default function PathwayDetailClient({ element }: PathwayDetailClientProp
               {/* TODO: Show planets in this house from user's chart */}
               <div className="mt-8 pt-6 border-t border-amber-900/30">
                 <p className="text-amber-600/60 text-sm">
-                  Connect your birth chart to see which planets activate this house in your life
+                  Return to your chart to notice which planets occupy these houses in your own map.
                 </p>
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* Talk to MAIA CTA */}
-        <div className="mt-16 text-center">
-          <div className="bg-gradient-to-br from-amber-950/40 to-stone-900/80 border border-amber-900/30 rounded-2xl p-8">
-            <h3 className="text-2xl font-bold text-amber-100 mb-4">
-              Explore This Pathway with MAIA
-            </h3>
-            <p className="text-amber-400/70 mb-6 max-w-2xl mx-auto">
-              Have a conversation with MAIA about how the {pathway.name.toLowerCase()} shows up in your life.
-              She can help you understand the archetypal journey through these houses.
-            </p>
-            <Link
-              href="/maia"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg shadow-amber-900/30 hover:shadow-amber-600/30 transition-all duration-300"
-            >
-              <Sparkles className="w-5 h-5" />
-              Talk to MAIA
-            </Link>
-          </div>
-        </div>
       </div>
     </div>
   );

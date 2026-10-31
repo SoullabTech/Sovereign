@@ -1,0 +1,25 @@
+.workbench {
+  border: 1px solid rgba(174, 195, 208, 0.28);
+  border-radius: 18px;
+  background: linear-gradient(130deg, rgba(35, 58, 69, 0.22), rgba(20, 29, 47, 0.13));
+  color: inherit;
+  min-width: 0;
+  padding: clamp(18px, 3vw, 28px);
+}
+.eyebrow { font-size: 0.68rem; font-weight: 750; letter-spacing: 0.14em; opacity: 0.8; }
+.heading h3 { font-size: clamp(1.2rem, 2vw, 1.6rem); margin: 9px 0 10px; }
+.heading p { max-width: 68ch; line-height: 1.55; margin: 0 0 20px; opacity: 0.9; }
+.privatePrompt, .boundary, .caution, .disclaimer { line-height: 1.55; font-size: 0.9rem; }
+.privatePrompt, .boundary { padding: 13px 16px; background: rgba(125, 155, 177, 0.12); border-radius: 12px; }
+.boundary { margin: 0 0 18px; }
+.caution { opacity: 0.85; }
+.anchorGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 12px; }
+.anchor { padding: 16px; border: 1px solid rgba(170, 186, 200, 0.24); border-radius: 13px; min-width: 0; }
+.anchor h4 { font-size: 1.06rem; margin: 0 0 8px; }
+.position { font-size: 0.87rem; opacity: 0.86; margin: 0 0 12px; }
+.question { font-size: 0.95rem; line-height: 1.55; margin: 0; }
+.aspectPanel { margin-top: 18px; padding: 15px 16px; border-radius: 13px; background: rgba(125, 155, 177, 0.09); }
+.aspectPanel h4 { margin: 0 0 10px; font-size: 1rem; }
+.aspectPanel ul { margin: 0; padding-left: 1.25rem; display: grid; gap: 7px; line-height: 1.5; }
+.disclaimer { margin: 18px 0 0; opacity: 0.85; }
+@media (max-width: 600px) { .workbench { padding: 16px; } .anchorGrid { grid-template-columns: 1fr; } }

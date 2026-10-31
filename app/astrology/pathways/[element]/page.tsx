@@ -1,50 +1,39 @@
 /**
  * Elemental Pathway Detail Page
- *
- * Shows the 3 houses in each elemental pathway (Fire/Water/Earth/Air)
- * and the archetypal journey through consciousness
- *
- * Dune/Blade Runner aesthetic: Desert mysticism meets cyberpunk precision
  */
 
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import PathwayDetailClient from './PathwayDetailClient';
 
-// Generate static params for all pathway elements
-export async function generateStaticParams() {
-  const elementSlugs = [
-    'fire',
-    'water',
-    'earth',
-    'air'
-  ];
+const ELEMENTS = ['fire', 'water', 'earth', 'air'] as const;
+type PathwayElement = (typeof ELEMENTS)[number];
 
-  return elementSlugs.map((element) => ({
-    element,
-  }));
+type PathwayPageProps = {
+  params: Promise<{ element: string }>;
+};
+
+export async function generateStaticParams() {
+  return ELEMENTS.map((element) => ({ element }));
 }
 
-// Generate metadata for each pathway
-export async function generateMetadata({ params }: { params: { element: string } }): Promise<Metadata> {
-  const elementNames = {
+export async function generateMetadata({ params }: PathwayPageProps): Promise<Metadata> {
+  const { element } = await params;
+  const elementNames: Record<PathwayElement, string> = {
     fire: 'Fire Pathway - Vision & Projection',
     water: 'Water Pathway - Introspection & Depth',
     earth: 'Earth Pathway - Manifestation & Grounding',
-    air: 'Air Pathway - Communication & Connection'
+    air: 'Air Pathway - Communication & Connection',
   };
-
-  const title = elementNames[params.element as keyof typeof elementNames] || 'Elemental Pathway';
-
+  const title = ELEMENTS.includes(element as PathwayElement)
+    ? elementNames[element as PathwayElement]
+    : 'Elemental Pathway';
   return {
-    title: `${title} | MAIA Astrology`,
-    description: `Explore the archetypal journey through the ${params.element} houses and their consciousness evolution.`,
+    title: `${title} | Soullab Astrology`,
+    description: `Explore the archetypal journey through the ${element} houses and their consciousness evolution.`,
   };
 }
 
-interface PathwayDetailPageProps {
-  params: { element: string };
-}
-
-export default function PathwayDetailPage({ params }: PathwayDetailPageProps) {
-  return <PathwayDetailClient element={params.element} />;
+export default async function PathwayDetailPage({ params }: PathwayPageProps) {
+  const { element } = await params;
+  return <PathwayDetailClient element={element} />;
 }

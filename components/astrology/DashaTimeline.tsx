@@ -25,6 +25,7 @@ interface DashaTimelineProps {
     timezone?: string;
   };
   ayanamsa?: AyanamsaType;
+  displayTimeZone?: string;
   compact?: boolean;
   profile?: VimshottariDashaProfile; // Can pass pre-calculated profile
 }
@@ -46,11 +47,12 @@ function getDashaInfo(ruler: DashaRuler): MahadashaInfo {
   return MAHADASHA_SEQUENCE.find(m => m.ruler === ruler)!;
 }
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
+function formatDate(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     year: 'numeric',
-  });
+    timeZone,
+  }).format(date);
 }
 
 // Helper to ensure a value is a Date object (handles JSON-serialized dates)
@@ -90,7 +92,7 @@ function normalizeDashaProfile(profile: VimshottariDashaProfile): VimshottariDas
           startDate: ensureDateValue(profile.currentAntardasha.startDate),
           endDate: ensureDateValue(profile.currentAntardasha.endDate),
         }
-      : undefined,
+      : null,
   };
 }
 
@@ -107,6 +109,7 @@ export default function DashaTimeline({
   birthTime = '12:00',
   location,
   ayanamsa = 'lahiri',
+  displayTimeZone,
   compact = false,
   profile: passedProfile,
 }: DashaTimelineProps) {
@@ -114,6 +117,7 @@ export default function DashaTimeline({
   const [profile, setProfile] = useState<VimshottariDashaProfile | null>(
     passedProfile ? normalizeDashaProfile(passedProfile) : null
   );
+  const dateTimeZone = displayTimeZone || location?.timezone || 'UTC';
   const [loading, setLoading] = useState(!passedProfile && !!birthDate);
   const [error, setError] = useState<string | null>(null);
   const [expandedPeriod, setExpandedPeriod] = useState<number | null>(null);
@@ -223,8 +227,11 @@ export default function DashaTimeline({
               <div className={`text-sm font-semibold ${colors.text}`}>
                 {graha.westernName} Mahadasha
               </div>
-              <div className="text-xs text-indigo-400/60">
-                {formatDate(current.startDate)} – {formatDate(current.endDate)}
+              <div data-testid="dasha-current-dates" className="text-xs text-indigo-400/60">
+                {formatDate(current.startDate, dateTimeZone)} – {formatDate(current.endDate, dateTimeZone)}
+              </div>
+              <div className="text-[11px] text-indigo-400/45">
+                Provisional symbolic timeline · {dateTimeZone}
               </div>
             </div>
           </div>
@@ -260,7 +267,8 @@ export default function DashaTimeline({
             Vimshottari Dasha Timeline
           </h3>
           <p className="text-sm text-indigo-400/60 mt-1">
-            120-year planetary period cycle based on your Moon nakshatra ({profile.birthNakshatra.name})
+            Provisional symbolic 120-year cycle based on the Moon nakshatra ({profile.birthNakshatra.name}).
+            Dates are shown in {dateTimeZone}; professional timing qualification remains held.
           </p>
         </div>
         <div className="text-right">
@@ -316,7 +324,8 @@ export default function DashaTimeline({
             period={period}
             isExpanded={expandedPeriod === index}
             onToggle={() => setExpandedPeriod(expandedPeriod === index ? null : index)}
-            birthDate={birthDate ? new Date(birthDate) : new Date()}
+            birthDate={profile.mahadashas[0]?.startDate || new Date(0)}
+            timeZone={dateTimeZone}
           />
         ))}
       </div>
@@ -345,11 +354,13 @@ function DashaPeriodCard({
   isExpanded,
   onToggle,
   birthDate,
+  timeZone,
 }: {
   period: DashaPeriod;
   isExpanded: boolean;
   onToggle: () => void;
   birthDate: Date;
+  timeZone: string;
 }) {
   const colors = DASHA_COLORS[period.ruler];
   const info = getDashaInfo(period.ruler);
@@ -383,7 +394,7 @@ function DashaPeriodCard({
               {graha.westernName} ({graha.name}) Mahadasha
             </div>
             <div className="text-xs text-indigo-400/60 mt-0.5">
-              Ages {startAge}–{endAge} • {formatDate(periodStartDate)} – {formatDate(periodEndDate)}
+              Ages {startAge}–{endAge} • {formatDate(periodStartDate, timeZone)} – {formatDate(periodEndDate, timeZone)}
             </div>
           </div>
         </div>
@@ -547,7 +558,7 @@ function DashaPeriodCard({
                             )}
                           </div>
                           <div className="text-xs text-indigo-400/60">
-                            {formatDate(sub.startDate)} – {formatDate(sub.endDate)}
+                            {formatDate(sub.startDate, timeZone)} – {formatDate(sub.endDate, timeZone)}
                           </div>
                         </div>
                       );

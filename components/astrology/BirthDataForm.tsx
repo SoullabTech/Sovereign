@@ -71,14 +71,13 @@ export function BirthDataForm({ onSubmit, loading = false, isDayMode = false, ti
       const data = await response.json();
 
       if (data.success && data.data?.length > 0) {
-        console.log(`📍 Location search results from ${data.provider}:`, data.data.length, 'results');
         setLocationResults(data.data);
       } else {
-        console.warn('📍 Location search returned no results for:', query);
+        console.warn('[BirthDataForm] LOCATION_SEARCH_NO_RESULTS');
         setLocationResults([]);
       }
     } catch (error) {
-      console.error('📍 Location search error:', error);
+      console.error('[BirthDataForm] LOCATION_SEARCH_FAILED');
       setLocationResults([]);
     } finally {
       setIsSearching(false);
@@ -107,7 +106,6 @@ export function BirthDataForm({ onSubmit, loading = false, isDayMode = false, ti
   }, [searchQuery, selectedLocation, searchLocation]);
 
   const handleLocationSelect = async (location: any) => {
-    console.log('Location selected:', location);
 
     // If this location doesn't have timezone info yet, fetch it
     if (!location.timezone) {
@@ -124,7 +122,7 @@ export function BirthDataForm({ onSubmit, loading = false, isDayMode = false, ti
           location.utcOffset = data.data[0].utcOffset;
         }
       } catch (error) {
-        console.error('Timezone detection error:', error);
+        console.error('[BirthDataForm] TIMEZONE_LOOKUP_FAILED');
       } finally {
         setIsSearching(false);
       }
@@ -324,7 +322,6 @@ export function BirthDataForm({ onSubmit, loading = false, isDayMode = false, ti
           disabled={loading || !date || !time || !selectedLocation}
           whileHover={{ scale: loading ? 1 : 1.01 }}
           whileTap={{ scale: loading ? 1 : 0.99 }}
-          onClick={() => console.log('Button state:', { loading, date, time, selectedLocation })}
           className={`w-full py-4 font-serif text-lg transition-all duration-300 border
             ${loading || !date || !time || !selectedLocation
               ? 'opacity-40 cursor-not-allowed bg-orange-950/20 border-orange-900/20'

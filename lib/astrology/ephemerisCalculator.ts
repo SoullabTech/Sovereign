@@ -30,6 +30,12 @@ export interface BirthData {
   houseSystem?: HouseSystem; // Default: 'porphyry' (matches calculateBirthChart default and DB column default)
 }
 
+export type PlanetMotionStatus =
+  | 'direct'
+  | 'retrograde'
+  | 'stationary-uncertain'
+  | 'not-evaluated';
+
 export interface PlanetPosition {
   sign: string;
   degree: number;
@@ -167,6 +173,63 @@ function calculateTrueNode(time: Astronomy.AstroTime): number {
   return ((meanNode % 360) + 360) % 360;
 }
 
+// R4b: conservative geocentric-motion guard bands in degrees/day.
+// Selected to mark +/-10m around seven independently referenced 2026 stations
+// as uncertain while retaining resolved +/-2h phases in the diagnostic sample.
+// Mars uses independently referenced 2024/2025 station checks. These are
+// PROVISIONAL uncertainty thresholds, not certified universal accuracy bounds.
+const MOTION_STATION_GUARD_DEG_PER_DAY: Readonly<Record<string, number>> = Object.freeze({
+  Mercury: 0.002,
+  Venus: 0.0008,
+  Mars: 0.00025,
+  Jupiter: 0.00006,
+  Saturn: 0.00003,
+  Uranus: 0.000025,
+  Neptune: 0.000022,
+  Pluto: 0.000015,
+});
+
+// Apparent retrograde is Earth-observed westward ecliptic motion. Never use
+// heliocentric EclipticLongitude() to decide whether a body is retrograde.
+// Evaluate two centered windows to detect uncertain motion near stations;
+// modular differences preserve the sign through 0° Aries. Do not return an
+// unconditional direct/retrograde label in the empirically uncertain region.
+export function classifyApparentMotion(
+  body: Astronomy.Body, date: Date,
+): { retrograde: boolean; motionStatus: PlanetMotionStatus } {
+  try {
+    const longitudeAt = (instant: Date): number => {
+      const time = Astronomy.MakeTime(instant);
+      return Astronomy.Ecliptic(Astronomy.GeoVector(body, time, true)).elon;
+    };
+    const rateDegPerDay = (hours: number): number => {
+      const delta = hours * 30 * 60 * 1000;
+      const before = longitudeAt(new Date(date.getTime() - delta));
+      const after = longitudeAt(new Date(date.getTime() + delta));
+      return (((after - before + 540) % 360) - 180) * (24 / hours);
+    };
+    const rate1 = rateDegPerDay(1);
+    const rate6 = rateDegPerDay(6);
+    if (!Number.isFinite(rate1) || !Number.isFinite(rate6)) {
+      throw new Error('INVALID_APPARENT_MOTION_RATE');
+    }
+    const threshold = MOTION_STATION_GUARD_DEG_PER_DAY[String(body)] ?? 0.0001;
+    const uncertain = Math.abs(rate1) <= threshold ||
+      Math.abs(rate6) <= threshold ||
+      (rate1 < 0) !== (rate6 < 0);
+    if (uncertain) {
+      // The legacy bool must not claim retrograde during an unresolved station.
+      return { retrograde: false, motionStatus: 'stationary-uncertain' };
+    }
+    return rate1 < 0
+      ? { retrograde: true, motionStatus: 'retrograde' }
+      : { retrograde: false, motionStatus: 'direct' };
+  } catch {
+    // No private birth inputs or raw ephemeris exception details in errors.
+    throw new Error('RETROGRADE_CALCULATION_UNAVAILABLE');
+  }
+}
+
 // Check if a planet is retrograde
 function isRetrograde(body: Astronomy.Body, date: Date): boolean {
   try {
@@ -278,7 +341,6 @@ function calculatePlacidusHouses(
   obliquity: number
 ): number[] {
   // For now, fall back to Porphyry until true Placidus is implemented
-  console.log('Using Porphyry as Placidus approximation');
   return calculatePorphyryHouses(lat, lng, time, ascendant, obliquity);
 }
 
@@ -319,14 +381,12 @@ function calculateHouseCusps(
       case 'koch':
         // TODO: Implement Koch calculations
         // For now, fall back to Porphyry houses
-        console.warn(`${system} not yet implemented, using Porphyry houses`);
         return calculatePorphyryHouses(lat, lng, time, ascendant, obliquity);
 
       default:
         return calculateWholeSignHouses(ascendant);
     }
   } catch (error) {
-    console.error('House cusp calculation error:', error);
     // Return equal house cusps as fallback
     const fallbackCusps: number[] = [];
     for (let i = 0; i < 12; i++) {
@@ -743,22 +803,15 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
 
     const time = Astronomy.MakeTime(birthDate);
 
-    const tzSource = resolution.source === 'iana'
-      ? `iana:${birthData.location.timezone}`
-      : 'longitude-approximation';
-    console.log(`Birth time conversion: ${year}-${month}-${day} ${hours}:${minutes} local (${resolution.offsetLabel}, tz-source=${tzSource}) → ${birthDate.toISOString()} UTC`);
-
     // Calculate house cusps using selected system (default to Porphyry - best for Spiralogic)
     // Porphyry gives the "breathing" asymmetry without Placidus distortion
     const houseSystem = birthData.houseSystem || 'porphyry';
-    console.log(`House system requested: ${houseSystem}`);
     const houseCusps = calculateHouseCusps(
       birthDate,
       birthData.location.lat,
       birthData.location.lng,
       houseSystem
     );
-    console.log('House cusps:', houseCusps.map((cusp, i) => `House ${i+1}: ${cusp.toFixed(2)}°`).join(', '));
 
     // Calculate planetary positions
     const planetLongitudes: Record<string, number> = {};
@@ -855,27 +908,18 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
     const vestaLon = calculateVestaApprox(birthDate);
     planetLongitudes.Vesta = vestaLon;
 
-    // DEBUG: Log all calculated longitudes for comparison
-    console.log('\n=== CALCULATED PLANETARY LONGITUDES ===');
-    Object.entries(planetLongitudes).forEach(([planet, lon]) => {
-      const zodiac = longitudeToZodiac(lon);
-      console.log(`${planet}: ${lon.toFixed(2)}° → ${zodiac.sign} ${zodiac.degree.toFixed(2)}°`);
-    });
-
     // Convert to zodiac positions with houses
     const sun = {
       ...longitudeToZodiac(sunLon),
       house: calculateHouse(sunLon, houseCusps),
       retrograde: false // Sun never retrogrades
     };
-    console.log(`Sun: ${sun.sign} ${sun.degree.toFixed(1)}° → House ${sun.house}`);
 
     const moon = {
       ...longitudeToZodiac(moonLon),
       house: calculateHouse(moonLon, houseCusps),
       retrograde: false // Moon never retrogrades
     };
-    console.log(`Moon: ${moon.sign} ${moon.degree.toFixed(1)}° → House ${moon.house}`);
 
     const mercury = {
       ...longitudeToZodiac(planetLongitudes.Mercury),
@@ -1007,7 +1051,6 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
     };
 
   } catch (error) {
-    console.error('Birth chart calculation error:', error);
     throw new Error(`Failed to calculate birth chart: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

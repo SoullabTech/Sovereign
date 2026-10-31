@@ -13,6 +13,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import * as Astronomy from 'astronomy-engine';
+import { classifyApparentMotion, type PlanetMotionStatus } from '@/lib/astrology/ephemerisCalculator';
+import { TRANSIT_BODY_LIMIT, takeCalculatorBudget, readCalculatorObject, validateTransitChartRequest, calculatorFailureResponse, CALCULATOR_PRIVATE_HEADERS } from '@/lib/astrology/calculatorRequests';
 
 // Zodiac signs in order
 const ZODIAC_SIGNS = [
@@ -38,6 +40,9 @@ interface Transit {
   degree: number;
   longitude: number;
   retrograde: boolean;
+  // R4c: distinguish a verified direction from near-station uncertainty or
+  // approximate bodies whose motion has not been independently evaluated.
+  motionStatus?: PlanetMotionStatus;
 }
 
 // ============================================================================
@@ -195,9 +200,10 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree,
       longitude: Number(sunLon.toFixed(4)),
       retrograde: false,
+      motionStatus: 'direct',
     });
   } catch (error) {
-    console.error('[Transits] Error calculating Sun:', error);
+    console.error('[Transits] SUN_CALCULATION_FAILED');
   }
 
   // Moon - use EclipticGeoMoon for best accuracy
@@ -211,9 +217,10 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree,
       longitude: Number(moonLon.toFixed(4)),
       retrograde: false,
+      motionStatus: 'direct',
     });
   } catch (error) {
-    console.error('[Transits] Error calculating Moon:', error);
+    console.error('[Transits] MOON_CALCULATION_FAILED');
   }
 
   // Other planets - use GeoVector for geocentric positions
@@ -234,32 +241,21 @@ function calculateTransitPositions(date: Date): Transit[] {
       const ecl = Astronomy.Ecliptic(vec);
       const longitude = ecl.elon;
 
-      // Check for retrograde by comparing with yesterday
-      let retrograde = false;
-      try {
-        const yesterday = new Date(date.getTime() - 24 * 60 * 60 * 1000);
-        const timeYesterday = Astronomy.MakeTime(yesterday);
-        const vecYesterday = Astronomy.GeoVector(body, timeYesterday, true);
-        const eclYesterday = Astronomy.Ecliptic(vecYesterday);
-
-        let diff = longitude - eclYesterday.elon;
-        if (diff > 180) diff -= 360;
-        if (diff < -180) diff += 360;
-        retrograde = diff < 0;
-      } catch {
-        // Skip retrograde check if it fails
-      }
-
+      // R4c: geocentric, station-aware motion from the qualified classifier.
+      // A small or disputed speed is explicitly uncertain, never silently
+      // direct/retrograde based on yesterday.
+      const motion = classifyApparentMotion(body, date);
       const { sign, degree } = longitudeToZodiac(longitude);
       transits.push({
         planet: name,
         sign,
         degree,
         longitude: Number(longitude.toFixed(4)),
-        retrograde,
+        retrograde: motion.retrograde,
+        motionStatus: motion.motionStatus,
       });
     } catch (error) {
-      console.error(`[Transits] Error calculating ${name}:`, error);
+      console.error('[Transits] PLANET_CALCULATION_FAILED');
     }
   }
 
@@ -274,7 +270,8 @@ function calculateTransitPositions(date: Date): Transit[] {
       sign: nnSign,
       degree: nnDegree,
       longitude: Number(northNodeLon.toFixed(4)),
-      retrograde: true, // North Node always moves retrograde
+      retrograde: true, // Legacy mean-node assumption; motion not independently evaluated.
+      motionStatus: 'not-evaluated',
     });
 
     // South Node is exactly opposite
@@ -286,9 +283,10 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree: snDegree,
       longitude: Number(southNodeLon.toFixed(4)),
       retrograde: true,
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
-    console.error('[Transits] Error calculating Nodes:', error);
+    console.error('[Transits] NODES_CALCULATION_FAILED');
   }
 
   // ========================================================================
@@ -302,10 +300,11 @@ function calculateTransitPositions(date: Date): Transit[] {
       sign,
       degree,
       longitude: Number(chironLon.toFixed(4)),
-      retrograde: false, // Simplified - would need velocity check
+      retrograde: false, // Legacy compatibility only; not a verified motion result.
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
-    console.error('[Transits] Error calculating Chiron:', error);
+    console.error('[Transits] CHIRON_CALCULATION_FAILED');
   }
 
   // ========================================================================
@@ -321,10 +320,11 @@ function calculateTransitPositions(date: Date): Transit[] {
       sign,
       degree,
       longitude: Number(lilithLon.toFixed(4)),
-      retrograde: false, // Lilith always moves direct
+      retrograde: false, // Legacy approximation; direction not verified.
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
-    console.error('[Transits] Error calculating Lilith:', error);
+    console.error('[Transits] LILITH_CALCULATION_FAILED');
   }
 
   // Ceres
@@ -337,9 +337,10 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree,
       longitude: Number(ceresLon.toFixed(4)),
       retrograde: false,
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
-    console.error('[Transits] Error calculating Ceres:', error);
+    console.error('[Transits] CERES_CALCULATION_FAILED');
   }
 
   // Pallas
@@ -352,9 +353,10 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree,
       longitude: Number(pallasLon.toFixed(4)),
       retrograde: false,
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
-    console.error('[Transits] Error calculating Pallas:', error);
+    console.error('[Transits] PALLAS_CALCULATION_FAILED');
   }
 
   // Juno
@@ -367,9 +369,10 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree,
       longitude: Number(junoLon.toFixed(4)),
       retrograde: false,
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
-    console.error('[Transits] Error calculating Juno:', error);
+    console.error('[Transits] JUNO_CALCULATION_FAILED');
   }
 
   // Vesta
@@ -382,9 +385,10 @@ function calculateTransitPositions(date: Date): Transit[] {
       degree,
       longitude: Number(vestaLon.toFixed(4)),
       retrograde: false,
+      motionStatus: 'not-evaluated',
     });
   } catch (error) {
-    console.error('[Transits] Error calculating Vesta:', error);
+    console.error('[Transits] VESTA_CALCULATION_FAILED');
   }
 
   return transits;
@@ -392,6 +396,8 @@ function calculateTransitPositions(date: Date): Transit[] {
 
 export async function GET() {
   try {
+    const budgetFailure = takeCalculatorBudget();
+    if (budgetFailure) return calculatorFailureResponse(budgetFailure);
     const now = new Date();
     const transits = calculateTransitPositions(now);
 
@@ -405,7 +411,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('[Transits] Error:', error);
+    console.error('[Transits] CURRENT_TRANSITS_CALCULATION_FAILED');
 
     return NextResponse.json(
       { error: 'Failed to calculate current transits' },
@@ -435,7 +441,8 @@ interface TransitAspect {
   natalPlanet: string;
   aspectType: string;
   orb: number;
-  applying: boolean;
+  // Null preserves unresolved motion or an exact aspect instead of inventing a phase.
+  applying: boolean | null;
 }
 
 // Calculate aspects between transit and natal planets
@@ -446,30 +453,39 @@ function calculateTransitAspects(
   const aspects: TransitAspect[] = [];
 
   // Convert sign + degree to absolute longitude
-  const getAbsoluteLongitude = (planet: NatalPlanet): number => {
+  const getAbsoluteLongitude = (planet: NatalPlanet | null | undefined): number | null => {
+    if (!planet || typeof planet.sign !== 'string' ||
+        typeof planet.degree !== 'number' || !Number.isFinite(planet.degree) ||
+        planet.degree < 0 || planet.degree >= 30) return null;
     const signIndex = ZODIAC_SIGNS.indexOf(planet.sign);
-    if (signIndex === -1) return 0;
+    if (signIndex === -1) return null;
     return signIndex * 30 + planet.degree;
   };
 
   // Check each transit against each natal planet
   for (const transit of transits) {
     for (const [natalName, natalPlanet] of Object.entries(birthChart)) {
-      if (!natalPlanet?.sign || !natalPlanet?.degree) continue;
-
       const transitLon = transit.longitude;
+      if (typeof transitLon !== 'number' || !Number.isFinite(transitLon)) continue;
       const natalLon = getAbsoluteLongitude(natalPlanet);
+      if (natalLon === null) continue;
 
-      // Calculate angular difference
-      let diff = Math.abs(transitLon - natalLon);
-      if (diff > 180) diff = 360 - diff;
+      // Signed shortest displacement retains direction through 0 degrees Aries.
+      const signedDiff = ((((transitLon - natalLon) % 360) + 540) % 360) - 180;
+      const diff = Math.abs(signedDiff);
 
       // Check each aspect type
       for (const [aspectName, aspectDef] of Object.entries(ASPECT_TYPES)) {
         const orb = Math.abs(diff - aspectDef.angle);
         if (orb <= aspectDef.orb) {
-          // Determine if aspect is applying or separating
-          const applying = diff < aspectDef.angle;
+          // With the natal point fixed, an aspect applies only when its orb
+          // decreases in the independently classified apparent-motion direction.
+          // A geometric side alone cannot establish whether a body approaches.
+          const direction = transit.motionStatus === 'direct' && transit.retrograde === false ? 1
+            : transit.motionStatus === 'retrograde' && transit.retrograde === true ? -1 : null;
+          const orbSlope = Math.sign(diff - aspectDef.angle) * Math.sign(signedDiff);
+          const applying = direction === null || orb <= 1e-9 || orbSlope === 0
+            ? null : orbSlope * direction < 0;
 
           aspects.push({
             transitPlanet: transit.planet,
@@ -490,8 +506,13 @@ function calculateTransitAspects(
 // POST handler: Calculate transits with natal chart aspects
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { birthChart } = body;
+    const budgetFailure = takeCalculatorBudget();
+    if (budgetFailure) return calculatorFailureResponse(budgetFailure);
+    const body = await readCalculatorObject(request, TRANSIT_BODY_LIMIT);
+    if (!body.ok) return calculatorFailureResponse(body);
+    const admission = validateTransitChartRequest(body.value);
+    if (!admission.ok) return calculatorFailureResponse(admission);
+    const birthChart = admission.value as Record<string, NatalPlanet> | null | undefined;
 
     const now = new Date();
     const transits = calculateTransitPositions(now);
@@ -510,14 +531,14 @@ export async function POST(request: NextRequest) {
       },
       transits,
       calculatedAt: now.toISOString(),
-    });
+    }, { headers: CALCULATOR_PRIVATE_HEADERS });
 
   } catch (error) {
-    console.error('[Transits POST] Error:', error);
+    console.error('[Transits POST] TRANSITS_CALCULATION_FAILED');
 
     return NextResponse.json(
       { error: 'Failed to calculate transits' },
-      { status: 500 }
+      { status: 500, headers: CALCULATOR_PRIVATE_HEADERS }
     );
   }
 }

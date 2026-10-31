@@ -20,7 +20,17 @@ distinct_to_room: Astrology explicitly withholds birth date/time/location and al
 screenshot_desktop: docs/design/contracts/screenshots/astrology-ux-04-maia-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/astrology-ux-04-maia-mobile.png
 experience_verification: 2026-09-27 authenticated local witness on isolated localhost:3701 using a temporary member with server-owned birth data and a real calculated natal chart. Opening Explore this chart with MAIA mounted the canonical OracleConversation in contained mode and produced zero conversation POSTs. The explicit Bring these chart facts to MAIA gesture produced exactly one conversation POST using stable session id astrology-natal-<member uuid>. The payload contained selected derived facts (Sun, Moon, Ascendant and selected aspect relations) plus an explicit anti-authority instruction, while the member's raw birth date and location were absent. Closing and reopening MAIA produced zero additional conversation POSTs. No member_memory_atoms were created. Desktop and mobile captures passed; temporary member/session were removed.
+deviation: The chart-to-MAIA encounter described here (Explore this chart with MAIA / Bring these chart facts to MAIA) is not present on /astrology. The founder-accepted Free Astrology image removed it under the R4F privacy hold, and the founder ruled on 2026-10-30 that this image supersedes the 2026-09-27 Astrology page.
+authority: Founder ruling, Kelly Nezat, 2026-10-30 ("Yes, Free supersedes"), recorded in the ASTRO-PRO-04 handoff as EXPERIENCE_SUPERSESSION_RULING.json; R4F hold per SoullabTech/Sovereign#1817; FG20 commit "hard-off Free MAIA pending R4F authority".
 ---
+> **SUPERSEDED ON /astrology — 2026-10-30.** The encounter below was witnessed on
+> 2026-09-27 and is kept here as an accurate record of that witness. It is not part
+> of the current Astrology page. The founder-accepted Free Astrology image removed it
+> while one-time chart sharing and its memory consequences remain under the R4F
+> privacy hold (#1817), and the founder ruled that this image supersedes the Sep-27
+> page. Restoring the encounter requires the R4F hold to be lifted and a new
+> experiential witness; this contract does not authorize it.
+
 
 # ASTROLOGY-UX-04 — MAIA Conversation Through the Chart + Explicit Context Custody
 

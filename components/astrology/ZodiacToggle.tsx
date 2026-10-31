@@ -41,6 +41,7 @@ interface ZodiacToggleProps {
   onChange: (value: ZodiacSystem) => void;
   ayanamsa?: AyanamsaType;
   onAyanamsaChange?: (value: AyanamsaType) => void;
+  ayanamsaDescriptionMode?: 'default' | 'provisional' | 'hidden';
   compact?: boolean;
   className?: string;
 }
@@ -50,6 +51,7 @@ export default function ZodiacToggle({
   onChange,
   ayanamsa = 'lahiri',
   onAyanamsaChange,
+  ayanamsaDescriptionMode = 'default',
   compact = false,
   className = '',
 }: ZodiacToggleProps) {
@@ -195,7 +197,13 @@ export default function ZodiacToggle({
                       `}
                     >
                       <div className="text-sm font-medium">{option.label}</div>
-                      <div className="text-xs text-indigo-400/50">{option.description}</div>
+                      {ayanamsaDescriptionMode !== 'hidden' && (
+                        <div className="text-xs text-indigo-400/50">
+                          {ayanamsaDescriptionMode === 'provisional'
+                            ? `Soullab provisional approximation to ${option.label}`
+                            : option.description}
+                        </div>
+                      )}
                     </button>
                   ))}
                 </motion.div>
