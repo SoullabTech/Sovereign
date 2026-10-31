@@ -1,9 +1,9 @@
 {
   "instrument": "writers-studio-academy-freeze/v1",
   "frozen_at": "2026-10-31",
-  "freeze_commit_pending": "No commit has been taken. These blob hashes name the exact bytes frozen; they were written to the object store with git hash-object -w so they exist as blobs. A freeze_commit field is added by the commit that lands this suite.",
-  "authority": "founder act, 2026-10-31 (\"Freeze suite\") — S3 / review-custody Class-B precedent",
-  "law": "Implementation fails suite -> repair the implementation. Modifying any AF0..AF16 expectation, the AcademyCore interface, or the reference decisions requires a formal, named founder act with evidence the LAW or the INSTRUMENT was wrong — never that an implementation was inconvenient.",
+  "freeze_commit": "314cba9883e2c57b3282308198149165b8c12e22",
+  "authority": "founder act, 2026-10-31 (\"Freeze suite\") \u2014 S3 / review-custody Class-B precedent",
+  "law": "Implementation fails suite -> repair the implementation. Modifying any AF0..AF16 expectation, the AcademyCore interface, or the reference decisions requires a formal, named founder act with evidence the LAW or the INSTRUMENT was wrong \u2014 never that an implementation was inconvenient.",
   "additive_law_permitted": "New law may be ADDED at its own address with its own falsifiers and defeat candidates. Adding never edits a frozen file; a frozen file's blob hash is the mechanical test.",
   "frozen": {
     "tests/constitutional/writers-studio-academy/contract.ts": "39a8213bb0979dd969ba9bc114259e852cbe6cce",
@@ -16,5 +16,6 @@
     "tsconfig.ws-academy.json": "typecheck configuration; widening its include set cannot weaken a falsifier"
   },
   "scope_note": "Lethality is decision-level. AF5 is a PROXY. 'Describes technique, not prescribes quality' is NOT tested here and stays UNKNOWN pending human witness. The reference is a test double, not a design for the store.",
-  "note": "Blob hashes, not a commit diff: they survive history rewriting and say exactly which bytes are law."
+  "note": "Blob hashes, not a commit diff: they survive history rewriting and say exactly which bytes are law.",
+  "freeze_commit_note": "The commit that first landed the frozen bytes. Added by a follow-up commit because a commit cannot name its own hash; the blob hashes under `frozen` are unchanged and remain the test."
 }
