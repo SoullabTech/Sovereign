@@ -375,7 +375,7 @@ export default function SecuritySettingsPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-maia-navy-900 flex items-center justify-center">
-        <div className="text-maia-cream-100/60">Loading security settings...</div>
+        <div className="text-maia-ink-100/60">Loading security settings...</div>
       </main>
     );
   }
@@ -390,12 +390,12 @@ export default function SecuritySettingsPage() {
         <div className="mb-8">
           <Link
             href="/account/settings"
-            className="text-maia-cream-100/60 hover:text-maia-cream-100 text-sm mb-4 inline-block"
+            className="text-maia-ink-100/60 hover:text-maia-ink-100 text-sm mb-4 inline-block"
           >
             ← Account Settings
           </Link>
-          <h1 className="text-2xl font-medium text-maia-cream-100">Security</h1>
-          <p className="text-maia-cream-100/60 mt-1">
+          <h1 className="text-2xl font-medium text-maia-ink-100">Security</h1>
+          <p className="text-maia-ink-100/60 mt-1">
             Manage how you sign in and keep your account secure
           </p>
         </div>
@@ -405,8 +405,8 @@ export default function SecuritySettingsPage() {
           <div className="mb-6 rounded-2xl border border-maia-navy-700/50 bg-maia-navy-800/50 p-4 md:p-5">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <div className="text-sm text-maia-cream-100/70">Security status</div>
-                <div className="mt-1 text-lg font-semibold text-maia-cream-100">
+                <div className="text-sm text-maia-ink-100/70">Security status</div>
+                <div className="mt-1 text-lg font-semibold text-maia-ink-100">
                   {status.hasPasskey ? '✓ Passkey enabled' : '○ Passkey not set'} ·{' '}
                   {status.emailVerified === null
                     ? 'Email status unknown'
@@ -414,7 +414,7 @@ export default function SecuritySettingsPage() {
                       ? '✓ Email verified'
                       : '○ Email unverified'}
                 </div>
-                <div className="mt-1 text-sm text-maia-cream-100/60">
+                <div className="mt-1 text-sm text-maia-ink-100/60">
                   {status.sessionsCount} active session{status.sessionsCount === 1 ? '' : 's'} ·{' '}
                   {status.devicesCount} trusted device{status.devicesCount === 1 ? '' : 's'}
                 </div>
@@ -451,7 +451,7 @@ export default function SecuritySettingsPage() {
               className={`px-4 py-2 rounded-full text-sm transition-colors ${
                 activeSection === section
                   ? 'bg-maia-spice-500 text-white'
-                  : 'bg-maia-navy-700/50 text-maia-cream-100/60 hover:text-maia-cream-100'
+                  : 'bg-maia-navy-700/50 text-maia-ink-100/60 hover:text-maia-ink-100'
               }`}
             >
               {section === 'signin-methods' && 'Sign-in methods'}
@@ -473,16 +473,16 @@ export default function SecuritySettingsPage() {
                     <span className="text-xl">🔑</span>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-maia-cream-100 font-medium mb-1">
+                    <h3 className="text-maia-ink-100 font-medium mb-1">
                       New device? Face ID stopped working?
                     </h3>
-                    <p className="text-sm text-maia-cream-100/70 mb-3">
+                    <p className="text-sm text-maia-ink-100/70 mb-3">
                       If your passkey was created before the SOULLAB upgrade, it won't work anymore. Just create a fresh one — takes 10 seconds.
                     </p>
-                    <div className="text-sm text-maia-cream-100/60 space-y-1.5 mb-4">
+                    <div className="text-sm text-maia-ink-100/60 space-y-1.5 mb-4">
                       <div className="flex gap-2">
                         <span className="text-amber-400">1.</span>
-                        <span>Click <strong className="text-maia-cream-100">Add passkey</strong> below</span>
+                        <span>Click <strong className="text-maia-ink-100">Add passkey</strong> below</span>
                       </div>
                       <div className="flex gap-2">
                         <span className="text-amber-400">2.</span>
@@ -490,7 +490,7 @@ export default function SecuritySettingsPage() {
                       </div>
                       <div className="flex gap-2">
                         <span className="text-amber-400">3.</span>
-                        <span>Name it <strong className="text-maia-cream-100">SOULLAB-[YourName]</strong></span>
+                        <span>Name it <strong className="text-maia-ink-100">SOULLAB-[YourName]</strong></span>
                       </div>
                     </div>
                     <button
@@ -508,8 +508,8 @@ export default function SecuritySettingsPage() {
             <section className="bg-maia-navy-800/50 rounded-xl p-6 border border-maia-navy-700/50">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-lg font-medium text-maia-cream-100">Passkeys</h2>
-                  <p className="text-sm text-maia-cream-100/60">
+                  <h2 className="text-lg font-medium text-maia-ink-100">Passkeys</h2>
+                  <p className="text-sm text-maia-ink-100/60">
                     Sign in with Face ID, Touch ID, or Windows Hello
                   </p>
                 </div>
@@ -522,7 +522,7 @@ export default function SecuritySettingsPage() {
               </div>
 
               {passkeys.length === 0 ? (
-                <p className="text-maia-cream-100/40 text-sm py-4">
+                <p className="text-maia-ink-100/60 text-sm py-4">
                   No passkeys registered. Add one for faster, more secure sign-in.
                 </p>
               ) : (
@@ -533,10 +533,10 @@ export default function SecuritySettingsPage() {
                       className="flex items-center justify-between p-4 bg-maia-navy-700/30 rounded-lg"
                     >
                       <div>
-                        <div className="text-maia-cream-100 font-medium">
+                        <div className="text-maia-ink-100 font-medium">
                           {passkey.deviceName || 'Unnamed passkey'}
                         </div>
-                        <div className="text-sm text-maia-cream-100/60">
+                        <div className="text-sm text-maia-ink-100/60">
                           {passkey.deviceType === 'platform' ? 'Built-in' : 'Security key'} •
                           Last used {formatDate(passkey.lastUsedAt)}
                         </div>
@@ -555,7 +555,7 @@ export default function SecuritySettingsPage() {
 
             {/* OAuth */}
             <section className="bg-maia-navy-800/50 rounded-xl p-6 border border-maia-navy-700/50">
-              <h2 className="text-lg font-medium text-maia-cream-100 mb-4">Connected accounts</h2>
+              <h2 className="text-lg font-medium text-maia-ink-100 mb-4">Connected accounts</h2>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-4 bg-maia-navy-700/30 rounded-lg">
@@ -563,9 +563,9 @@ export default function SecuritySettingsPage() {
                     <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
                       <span className="text-lg">G</span>
                     </div>
-                    <span className="text-maia-cream-100">Google</span>
+                    <span className="text-maia-ink-100">Google</span>
                   </div>
-                  <span className={`text-sm ${memberAuth?.oauthProvider === 'google' ? 'text-green-400' : 'text-maia-cream-100/40'}`}>
+                  <span className={`text-sm ${memberAuth?.oauthProvider === 'google' ? 'text-green-400' : 'text-maia-ink-100/60'}`}>
                     {memberAuth?.oauthProvider === 'google' ? '✓ Connected' : 'Not connected'}
                   </span>
                 </div>
@@ -575,26 +575,26 @@ export default function SecuritySettingsPage() {
                     <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
                       <span className="text-white text-lg"></span>
                     </div>
-                    <span className="text-maia-cream-100">Apple</span>
+                    <span className="text-maia-ink-100">Apple</span>
                   </div>
-                  <span className={`text-sm ${memberAuth?.oauthProvider === 'apple' ? 'text-green-400' : 'text-maia-cream-100/40'}`}>
+                  <span className={`text-sm ${memberAuth?.oauthProvider === 'apple' ? 'text-green-400' : 'text-maia-ink-100/60'}`}>
                     {memberAuth?.oauthProvider === 'apple' ? '✓ Connected' : 'Not connected'}
                   </span>
                 </div>
               </div>
 
-              <p className="text-xs text-maia-cream-100/40 mt-4">
+              <p className="text-xs text-maia-ink-100/60 mt-4">
                 Social sign-in can be added during your next sign-in if you choose Google or Apple.
               </p>
             </section>
 
             {/* Password */}
             <section className="bg-maia-navy-800/50 rounded-xl p-6 border border-maia-navy-700/50">
-              <h2 className="text-lg font-medium text-maia-cream-100 mb-4">Password</h2>
-              <p className="text-sm text-maia-cream-100/60 mb-4">
+              <h2 className="text-lg font-medium text-maia-ink-100 mb-4">Password</h2>
+              <p className="text-sm text-maia-ink-100/60 mb-4">
                 Password is a fallback sign-in method. Passkeys are more secure.
               </p>
-              <button className="text-maia-spice-400 hover:text-maia-spice-300 text-sm">
+              <button className="text-maia-spice-400 hover:text-maia-spice-400 text-sm">
                 Change password
               </button>
             </section>
@@ -604,13 +604,13 @@ export default function SecuritySettingsPage() {
         {/* Trusted Devices Section */}
         {activeSection === 'devices' && (
           <section className="bg-maia-navy-800/50 rounded-xl p-6 border border-maia-navy-700/50">
-            <h2 className="text-lg font-medium text-maia-cream-100 mb-4">Trusted devices</h2>
-            <p className="text-sm text-maia-cream-100/60 mb-4">
+            <h2 className="text-lg font-medium text-maia-ink-100 mb-4">Trusted devices</h2>
+            <p className="text-sm text-maia-ink-100/60 mb-4">
               Devices you've marked as trusted won't require additional verification.
             </p>
 
             {devices.length === 0 ? (
-              <p className="text-maia-cream-100/40 text-sm py-4">
+              <p className="text-maia-ink-100/60 text-sm py-4">
                 No trusted devices yet.
               </p>
             ) : (
@@ -621,10 +621,10 @@ export default function SecuritySettingsPage() {
                     className="flex items-center justify-between p-4 bg-maia-navy-700/30 rounded-lg"
                   >
                     <div>
-                      <div className="text-maia-cream-100 font-medium">
+                      <div className="text-maia-ink-100 font-medium">
                         {device.deviceName || device.deviceType || 'Unknown device'}
                       </div>
-                      <div className="text-sm text-maia-cream-100/60">
+                      <div className="text-sm text-maia-ink-100/60">
                         Last seen {formatDate(device.lastSeenAt)}
                       </div>
                     </div>
@@ -645,22 +645,22 @@ export default function SecuritySettingsPage() {
         {activeSection === 'sessions' && (
           <section className="bg-maia-navy-800/50 rounded-xl p-6 border border-maia-navy-700/50">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-maia-cream-100">Active sessions</h2>
+              <h2 className="text-lg font-medium text-maia-ink-100">Active sessions</h2>
               {sessions.filter(s => !s.isCurrent).length > 0 && (
                 <button
                   onClick={handleSignOutOtherSessions}
-                  className="rounded-xl border border-maia-navy-600/50 bg-maia-navy-700/30 px-3 py-2 text-sm text-maia-cream-100 hover:bg-maia-navy-700/50 transition-colors"
+                  className="rounded-xl border border-maia-navy-600/50 bg-maia-navy-700/30 px-3 py-2 text-sm text-maia-ink-100 hover:bg-maia-navy-700/50 transition-colors"
                 >
                   Sign out other sessions
                 </button>
               )}
             </div>
-            <p className="text-sm text-maia-cream-100/60 mb-4">
+            <p className="text-sm text-maia-ink-100/60 mb-4">
               Devices where you're currently signed in. Sign out of any you don't recognize.
             </p>
 
             {sessions.length === 0 ? (
-              <p className="text-maia-cream-100/40 text-sm py-4">
+              <p className="text-maia-ink-100/60 text-sm py-4">
                 No active sessions.
               </p>
             ) : (
@@ -671,7 +671,7 @@ export default function SecuritySettingsPage() {
                     className="flex items-center justify-between p-4 bg-maia-navy-700/30 rounded-lg"
                   >
                     <div>
-                      <div className="text-maia-cream-100 font-medium flex items-center gap-2">
+                      <div className="text-maia-ink-100 font-medium flex items-center gap-2">
                         {session.userAgent?.includes('Mobile') ? 'Mobile' : 'Desktop'}
                         {session.isCurrent && (
                           <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">
@@ -679,7 +679,7 @@ export default function SecuritySettingsPage() {
                           </span>
                         )}
                       </div>
-                      <div className="text-sm text-maia-cream-100/60">
+                      <div className="text-sm text-maia-ink-100/60">
                         {session.ipAddress || 'Unknown IP'} •
                         Active {formatDate(session.lastActiveAt)}
                       </div>
@@ -703,25 +703,25 @@ export default function SecuritySettingsPage() {
         {activeSection === 'faq' && (
           <section className="space-y-4">
             <div className="bg-amber-500/10 rounded-xl p-6 border border-amber-500/30">
-              <h3 className="text-maia-cream-100 font-medium mb-2">My Face ID / Touch ID stopped working?</h3>
-              <p className="text-sm text-maia-cream-100/60 mb-3">
+              <h3 className="text-maia-ink-100 font-medium mb-2">My Face ID / Touch ID stopped working?</h3>
+              <p className="text-sm text-maia-ink-100/60 mb-3">
                 If your passkey was created before the SOULLAB upgrade, it won't work anymore.
                 Your account is safe — you just need to create a fresh passkey:
               </p>
-              <ol className="text-sm text-maia-cream-100/60 list-decimal list-inside space-y-1 mb-3">
+              <ol className="text-sm text-maia-ink-100/60 list-decimal list-inside space-y-1 mb-3">
                 <li>Sign in with your password (or Google)</li>
-                <li>Go to <strong className="text-maia-cream-100">Sign-in methods</strong> tab</li>
-                <li>Click <strong className="text-maia-cream-100">Add passkey</strong></li>
-                <li>Name it <strong className="text-maia-cream-100">SOULLAB-[YourName]</strong></li>
+                <li>Go to <strong className="text-maia-ink-100">Sign-in methods</strong> tab</li>
+                <li>Click <strong className="text-maia-ink-100">Add passkey</strong></li>
+                <li>Name it <strong className="text-maia-ink-100">SOULLAB-[YourName]</strong></li>
               </ol>
-              <p className="text-sm text-maia-cream-100/60">
+              <p className="text-sm text-maia-ink-100/60">
                 Takes about 10 seconds. Then Face ID will work again.
               </p>
             </div>
 
             <div className="bg-maia-navy-800/50 rounded-xl p-6 border border-maia-navy-700/50">
-              <h3 className="text-maia-cream-100 font-medium mb-2">What is a passkey?</h3>
-              <p className="text-sm text-maia-cream-100/60">
+              <h3 className="text-maia-ink-100 font-medium mb-2">What is a passkey?</h3>
+              <p className="text-sm text-maia-ink-100/60">
                 A passkey is a modern replacement for passwords. It uses your device's built-in
                 security (Face ID, Touch ID, or Windows Hello) to verify it's really you.
                 Passkeys are phishing-resistant and can't be stolen in a data breach.
@@ -729,8 +729,8 @@ export default function SecuritySettingsPage() {
             </div>
 
             <div className="bg-maia-navy-800/50 rounded-xl p-6 border border-maia-navy-700/50">
-              <h3 className="text-maia-cream-100 font-medium mb-2">Does MAIA store my Face ID?</h3>
-              <p className="text-sm text-maia-cream-100/60">
+              <h3 className="text-maia-ink-100 font-medium mb-2">Does MAIA store my Face ID?</h3>
+              <p className="text-sm text-maia-ink-100/60">
                 No. Your biometric data never leaves your device. MAIA only stores a public key
                 that can verify your identity - it can't be used to recreate your Face ID or
                 fingerprint.
@@ -738,16 +738,16 @@ export default function SecuritySettingsPage() {
             </div>
 
             <div className="bg-maia-navy-800/50 rounded-xl p-6 border border-maia-navy-700/50">
-              <h3 className="text-maia-cream-100 font-medium mb-2">What if I lose my phone?</h3>
-              <p className="text-sm text-maia-cream-100/60">
+              <h3 className="text-maia-ink-100 font-medium mb-2">What if I lose my phone?</h3>
+              <p className="text-sm text-maia-ink-100/60">
                 You can always sign in with your password, magic link, or another connected
                 account (Google/Apple). Then remove the lost device's passkey from this page.
               </p>
             </div>
 
             <div className="bg-maia-navy-800/50 rounded-xl p-6 border border-maia-navy-700/50">
-              <h3 className="text-maia-cream-100 font-medium mb-2">How do I revoke access?</h3>
-              <p className="text-sm text-maia-cream-100/60">
+              <h3 className="text-maia-ink-100 font-medium mb-2">How do I revoke access?</h3>
+              <p className="text-sm text-maia-ink-100/60">
                 Go to "Active sessions" to sign out of any device. Go to "Sign-in methods" to
                 remove passkeys or disconnect OAuth accounts.
               </p>
