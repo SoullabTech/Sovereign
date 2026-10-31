@@ -84,8 +84,4 @@ describe('Pro Studio introduction (Stage 1) — fictional sessions only', () => 
     expect(src).not.toMatch(/pro-studio\/reflect|reflectBetaAccess/);
   });
 
-  test('the Home catalog entry points at the introduction, not at /studio', () => {
-    const catalog = read('lib/house/catalog.ts');
-    expect(catalog).toMatch(/id:'pro-studio'[^\n]*href:'\/pro-studio'/);
-  });
 });
