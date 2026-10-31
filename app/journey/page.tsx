@@ -80,7 +80,7 @@ interface TransitAspect {
   natalPlanet: string;
   aspectType: 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition' | 'quincunx';
   orb: number;
-  applying: boolean;
+  applying: boolean | null;
 }
 
 // Arrakis night color palette - desert mysticism after the twin moons rise
@@ -225,156 +225,11 @@ export default function AstrologyPage() {
   }, [hookLoading, isComplete, hookBirthData, chartData, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    // Force night mode for Arrakis aesthetic
+    // Preserve unknown historical browser data; do not delete or render it by
+    // name, demo markers, guessed account identity, or local cache fallback.
+    // Personal birth details are loaded only through the existing verified
+    // member-profile hook and its existing calculateChart effect.
     setIsDayMode(false);
-
-    // Clear any example/demo data from localStorage to ensure fresh experience
-    const clearDemoData = () => {
-      // Check and clear birthChartData
-      const savedData = localStorage.getItem('birthChartData');
-      if (savedData) {
-        try {
-          const parsedData = JSON.parse(savedData);
-          // Clear if it's Kelly's demo data or has example flag
-          if (parsedData.location?.name?.includes('Kelly') || parsedData.isExample) {
-            localStorage.removeItem('birthChartData');
-            console.log('Cleared demo/example data from localStorage');
-          }
-        } catch (error) {
-          console.error('Error checking localStorage data:', error);
-        }
-      }
-
-      // Also check beta_user profile for demo data
-      const betaUser = localStorage.getItem('beta_user');
-      if (betaUser) {
-        try {
-          const userData = JSON.parse(betaUser);
-          if (userData.birthData?.location?.name?.includes('Kelly') || userData.birthData?.isExample) {
-            delete userData.birthData;
-            localStorage.setItem('beta_user', JSON.stringify(userData));
-            console.log('Cleared demo data from user profile');
-          }
-        } catch (error) {
-          console.error('Error checking user profile data:', error);
-        }
-      }
-    };
-    clearDemoData();
-
-    // Load saved birth data - prioritize database, then localStorage
-    const loadBirthData = async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let birthDataToLoad: any = null;
-
-      // Priority 1: Fetch from profile API (database - most persistent)
-      try {
-        const betaUser = localStorage.getItem('beta_user');
-        if (betaUser) {
-          const userData = JSON.parse(betaUser);
-          const memberId = userData.id || userData.passkey;
-
-          if (memberId) {
-            console.log('[Journey] Fetching birth data from profile API for:', memberId);
-            // Identity resolves from the verified session credential; the route
-            // ignores any client-supplied ?id=. apiFetch carries x-session-token
-            // on native, where cookies are unavailable.
-            const profileRes = await apiFetch('/api/members/profile');
-            if (profileRes.ok) {
-              const profile = await profileRes.json();
-              console.log('[Journey] Profile response:', profile);
-
-              if (profile.birthData?.date) {
-                // Normalize time format (strip seconds if present)
-                const timeStr = profile.birthData.time
-                  ? profile.birthData.time.substring(0, 5)
-                  : '12:00';
-
-                birthDataToLoad = {
-                  date: profile.birthData.date,
-                  time: timeStr,
-                  location: profile.birthData.location || {
-                    lat: 30.4515,
-                    lng: -91.1871,
-                    name: 'Unknown',
-                    timezone: 'America/Chicago',
-                  },
-                  houseSystem: 'porphyry',
-                };
-                console.log('✅ Loaded birth data from profile API:', birthDataToLoad);
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error('[Journey] Error fetching from profile API:', error);
-      }
-
-      // Priority 2: Check localStorage beta_user.birthData
-      if (!birthDataToLoad) {
-        try {
-          const betaUser = localStorage.getItem('beta_user');
-          if (betaUser) {
-            const userData = JSON.parse(betaUser);
-            if (userData.birthData?.date) {
-              const timeStr = userData.birthData.time
-                ? userData.birthData.time.substring(0, 5)
-                : '12:00';
-              birthDataToLoad = {
-                date: userData.birthData.date,
-                time: timeStr,
-                location: userData.birthData.location || {
-                  lat: 30.4515,
-                  lng: -91.1871,
-                  name: 'Unknown',
-                  timezone: 'America/Chicago',
-                },
-                houseSystem: 'porphyry',
-              };
-              console.log('✅ Loaded birth data from localStorage beta_user');
-            }
-          }
-        } catch (error) {
-          console.error('Error loading from localStorage:', error);
-        }
-      }
-
-      // Priority 3: Fallback to birthChartData localStorage
-      if (!birthDataToLoad) {
-        const savedBirthData = localStorage.getItem('birthChartData');
-        if (savedBirthData) {
-          try {
-            birthDataToLoad = JSON.parse(savedBirthData);
-            // Normalize time format
-            if (birthDataToLoad.time && birthDataToLoad.time.length > 5) {
-              birthDataToLoad.time = birthDataToLoad.time.substring(0, 5);
-            }
-            console.log('✅ Loaded birth data from birthChartData localStorage');
-          } catch (error) {
-            console.error('Error parsing birthChartData:', error);
-          }
-        }
-      }
-
-      // Calculate chart if we have valid data
-      if (birthDataToLoad && !birthDataToLoad.isExample) {
-        try {
-          if (!birthDataToLoad.houseSystem) {
-            birthDataToLoad.houseSystem = 'porphyry';
-          }
-          console.log('[Journey] Calculating chart with:', birthDataToLoad);
-          calculateChart(birthDataToLoad);
-        } catch (error) {
-          console.error('Failed to calculate chart:', error);
-          setLoading(false);
-        }
-      } else {
-        console.log('ℹ️ No saved birth data found - showing input form');
-        setLoading(false);
-      }
-    };
-
-    loadBirthData();
   }, []);
 
   // Load member name from session
@@ -567,7 +422,7 @@ export default function AstrologyPage() {
 
         // Convert aspects to TransitAspect format
         if (result.data.aspects) {
-          const aspectData: TransitAspect[] = result.data.aspects.map((a: { transitPlanet: string; natalPlanet: string; aspectType: string; orb: number; applying: boolean }) => ({
+          const aspectData: TransitAspect[] = result.data.aspects.map((a: { transitPlanet: string; natalPlanet: string; aspectType: string; orb: number; applying: boolean | null }) => ({
             transitPlanet: a.transitPlanet,
             natalPlanet: a.natalPlanet,
             aspectType: a.aspectType as TransitAspect['aspectType'],

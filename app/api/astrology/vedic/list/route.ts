@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { VEDIC_BODY_LIMIT, takeCalculatorBudget, readCalculatorObject, validateVedicChartRequest, admitVedicBirthInstant, calculatorFailureResponse, CALCULATOR_PRIVATE_HEADERS } from '@/lib/astrology/calculatorRequests';
 import {
   calculateBirthChart,
   type BirthData,
@@ -143,68 +144,40 @@ function convertToVedicChart(
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const budgetFailure = takeCalculatorBudget();
+    if (budgetFailure) return calculatorFailureResponse(budgetFailure);
+    const body = await readCalculatorObject(request, VEDIC_BODY_LIMIT);
+    if (!body.ok) return calculatorFailureResponse(body);
+    const admission = validateVedicChartRequest(body.value);
+    if (!admission.ok) return calculatorFailureResponse(admission);
+    const input = admission.value;
+    const birthInstant = admitVedicBirthInstant(input.date, input.time, input.location);
+    if (!birthInstant.ok) return calculatorFailureResponse(birthInstant);
 
-    // Validate required fields
-    if (!body.date || !body.time || !body.location) {
-      return NextResponse.json({
-        success: false,
-        error: 'Missing required fields: date, time, location',
-      }, { status: 400 });
-    }
-
-    // Validate location has lat/lng
-    if (typeof body.location.lat !== 'number' || typeof body.location.lng !== 'number') {
-      return NextResponse.json({
-        success: false,
-        error: 'Location must include numeric lat and lng',
-      }, { status: 400 });
-    }
-
-    const ayanamsaType: AyanamsaType = body.ayanamsa || 'lahiri';
-    const includeDasha = body.includeDasha !== false;
-
-    // Prepare birth data
+    const exactBirthInstant = birthInstant.value.instant;
+    const exactBirthIso = exactBirthInstant.toISOString();
     const birthData: BirthData = {
-      date: body.date,
-      time: body.time,
-      location: {
-        lat: body.location.lat,
-        lng: body.location.lng,
-        timezone: body.location.timezone || undefined,
-      },
-      houseSystem: 'whole-sign', // Vedic typically uses whole sign houses
+      // The natal engine receives the already-admitted UTC civil fields, so it
+      // cannot independently reinterpret the member's original wall clock.
+      date: exactBirthIso.slice(0, 10),
+      time: exactBirthIso.slice(11, 16),
+      location: { ...input.location, timezone: 'UTC' },
+      houseSystem: 'whole-sign',
     };
-
-    console.log('[Vedic API] Calculating chart for:', {
-      date: birthData.date,
-      time: birthData.time,
-      ayanamsa: ayanamsaType,
-    });
-
-    // Calculate tropical birth chart first
     const tropicalChart = await calculateBirthChart(birthData);
-
-    // Convert to Vedic (sidereal) chart
-    const birthDate = new Date(`${body.date}T${body.time}`);
-    const vedicChart = convertToVedicChart(tropicalChart, birthDate, ayanamsaType);
-
-    // Calculate Vimshottari Dasha if requested
-    let dasha: ReturnType<typeof calculateVimshottariDasha> | null = null;
-    if (includeDasha) {
-      const moonSiderealLong = vedicChart.grahas.Chandra.longitude;
-      dasha = calculateVimshottariDasha(birthDate, moonSiderealLong);
-    }
-
-    // Get key signs for profile
+    const vedicChart = convertToVedicChart(
+      tropicalChart, exactBirthInstant, input.ayanamsa,
+    );
+    const dasha = input.includeDasha
+      ? calculateVimshottariDasha(
+          exactBirthInstant,
+          vedicChart.grahas.Chandra.longitude,
+        )
+      : null;
     const moonSign = vedicChart.grahas.Chandra.rashi;
     const sunSign = vedicChart.grahas.Surya.rashi;
     const ascendantSign = vedicChart.ascendant.rashi;
     const birthNakshatra = vedicChart.grahas.Chandra.nakshatra;
-
-    // Generate Spiralogic integration
-    const spiralogicIntegration = generateSpiralogicIntegration(moonSign, birthNakshatra);
-
     const profile: CompleteVedicProfile = {
       chart: vedicChart,
       dasha: dasha!,
@@ -212,43 +185,40 @@ export async function POST(request: NextRequest) {
       moonSign,
       sunSign,
       ascendantSign,
-      spiralogicIntegration,
+      spiralogicIntegration: generateSpiralogicIntegration(moonSign, birthNakshatra),
     };
-
-    console.log('[Vedic API] Chart calculated:', {
-      moonSign: moonSign.name,
-      sunSign: sunSign.name,
-      ascendant: ascendantSign.name,
-      nakshatra: birthNakshatra.name,
-      ayanamsaValue: vedicChart.ayanamsaValue.toFixed(2),
-    });
-
     return NextResponse.json({
       success: true,
       data: profile,
       meta: {
-        ayanamsa: ayanamsaType,
+        ayanamsa: input.ayanamsa,
         ayanamsaValue: vedicChart.ayanamsaValue,
+        houseSystem: 'whole-sign',
+        method: 'soullab-provisional-linear-j2000-v1',
+        birthInstantUtc: birthInstant.value.iso,
+        birthTimeZone: birthInstant.value.timeZone,
+        appliedOffset: birthInstant.value.offsetLabel,
+        ayanamsaReferenceQualified: false,
+        dashaTimingQualified: false,
+        professionalEphemerisQualified: false,
         calculatedAt: new Date().toISOString(),
       },
-    });
-
-  } catch (error) {
-    console.error('[Vedic API] Error:', error);
-
-    return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to calculate Vedic chart',
-    }, { status: 500 });
+    }, { headers: CALCULATOR_PRIVATE_HEADERS });
+  } catch {
+    console.error('[Vedic API] VEDIC_CHART_CALCULATION_FAILED');
+    return NextResponse.json(
+      { success: false, error: 'Vedic chart calculation failed', code: 'VEDIC_CHART_CALCULATION_FAILED' },
+      { status: 500, headers: CALCULATOR_PRIVATE_HEADERS },
+    );
   }
 }
 
-export async function GET(request: NextRequest) {
-  // Return available ayanamsa options
+export async function GET() {
   const ayanamsaOptions = Object.values(AYANAMSA_CONFIGS).map(config => ({
     type: config.type,
     label: config.label,
-    description: config.description,
+    description: `Soullab provisional approximation to the ${config.label} convention`,
+    referenceQualified: false,
   }));
 
   return NextResponse.json({
@@ -257,14 +227,17 @@ export async function GET(request: NextRequest) {
       ayanamsaOptions,
       info: {
         name: 'Vedic Astrology (Jyotish) API',
+        method: 'soullab-provisional-linear-j2000-v1',
+        ayanamsaReferenceQualified: false,
+        dashaTimingQualified: false,
         features: [
-          'Sidereal zodiac with selectable ayanamsa',
+          'Provisional sidereal zodiac with selectable convention',
           '27 Nakshatra calculation',
-          'Vimshottari Dasha periods',
-          'Planetary dignities (exaltation, debilitation, etc.)',
+          'Provisional symbolic Vimshottari Dasha timeline',
+          'Planetary dignities as symbolic study material',
           'Spiralogic integration',
         ],
       },
     },
-  });
+  }, { headers: CALCULATOR_PRIVATE_HEADERS });
 }

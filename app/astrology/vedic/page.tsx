@@ -31,10 +31,10 @@ import NakshatraCard from '@/components/astrology/NakshatraCard';
 import DashaTimeline from '@/components/astrology/DashaTimeline';
 import type { CompleteVedicProfile, RashiInfo, GrahaPosition, GrahaName } from '@/lib/astrology/types/vedic';
 import { GRAHAS } from '@/lib/astrology/types/vedic';
-import type { GocharaProfile } from '@/lib/astrology/gocharaTransits';
-import type { AshtakavargaProfile } from '@/lib/astrology/ashtakavarga';
+import { apiUrl } from '@/lib/http/apiBase';
+import { useVerifiedFreeAstrologyBirthProfile } from '@/lib/hooks/useVerifiedFreeAstrologyBirthProfile';
 
-type ViewMode = 'profile' | 'dasha' | 'chart' | 'gochara' | 'ashtakavarga';
+type ViewMode = 'profile' | 'dasha' | 'chart';
 
 export default function VedicAstrologyPage() {
   const router = useRouter();
@@ -56,43 +56,41 @@ export default function VedicAstrologyPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ViewMode>('profile');
   const [showSettings, setShowSettings] = useState(false);
-  const didAutoLoad = useRef(false);
+  const verifiedBirth = useVerifiedFreeAstrologyBirthProfile();
+  const calculationEpochRef = useRef(0);
 
-  // Vedic forecasting state
-  const [gocharaProfile, setGocharaProfile] = useState<GocharaProfile | null>(null);
-  const [gocharaLoading, setGocharaLoading] = useState(false);
-  const [ashtakavargaProfile, setAshtakavargaProfile] = useState<AshtakavargaProfile | null>(null);
-  const [ashtakavargaLoading, setAshtakavargaLoading] = useState(false);
-
-  // Load saved data from localStorage
+  // Server-verified saved birth facts only; no local birth-date/location
+  // restoration. Unknown historical browser values remain untouched.
   useEffect(() => {
-    const savedDate = localStorage.getItem('birthDate');
-    const savedTime = localStorage.getItem('birthTime');
-    const savedLocation = localStorage.getItem('birthLocation');
-    const savedAyanamsa = localStorage.getItem('ayanamsa');
+    ++calculationEpochRef.current;
+    setProfile(null);
+    setBirthDate('');
+    setBirthTime('');
+    setLocation(null);
+    setError(null);
 
-    if (savedDate) setBirthDate(savedDate);
-    if (savedTime) setBirthTime(savedTime);
-    if (savedLocation) {
-      try {
-        setLocation(JSON.parse(savedLocation));
-      } catch {
-        // Use default location
-        setLocation({ lat: 0, lng: 0, timezone: 'UTC' });
-      }
+    const data=verifiedBirth.status==='verified' ? verifiedBirth.birthData : null;
+    if(!data)return;
+    setBirthDate(data.date);
+    setBirthTime(data.time||'');
+    if(data.location){
+      setLocation({
+        lat:data.location.lat,lng:data.location.lng,
+        timezone:data.location.timezone,
+      });
+      // Use EXACT verified source of this member for the initial calculation;
+      // not stale state from the preceding member or an unbound browser cache.
+      void calculateProfileFor(
+        data.date,data.time||'',
+        {lat:data.location.lat,lng:data.location.lng,
+         timezone:data.location.timezone},
+      );
     }
-    if (savedAyanamsa) setAyanamsa(savedAyanamsa as AyanamsaType);
-  }, []);
-
-  // Auto-calculate only when restoring saved data on mount (not during fresh input)
-  const isRestoringRef = useRef(true);
-  useEffect(() => {
-    if (isRestoringRef.current && birthDate && !didAutoLoad.current && !profile) {
-      didAutoLoad.current = true;
-      calculateProfile();
-    }
-    isRestoringRef.current = false;
-  }, [birthDate]);
+  }, [verifiedBirth.status,verifiedBirth.memberId,
+      verifiedBirth.birthData?.date,verifiedBirth.birthData?.time,
+      verifiedBirth.birthData?.location?.lat,
+      verifiedBirth.birthData?.location?.lng,
+      verifiedBirth.birthData?.location?.timezone]);
 
   // Save ayanamsa preference
   useEffect(() => {
@@ -103,114 +101,69 @@ export default function VedicAstrologyPage() {
     }
   }, [ayanamsa]);
 
-  const calculateProfile = async () => {
-    if (!birthDate) return;
-
+  const calculateProfileFor = async (
+    date:string, time:string,
+    verifiedLocation:{lat:number;lng:number;timezone:string}|null,
+  ) => {
+    if(!date||!verifiedLocation||
+      !Number.isFinite(verifiedLocation.lat)||
+      !Number.isFinite(verifiedLocation.lng)||
+      !verifiedLocation.timezone){
+      setError('Choose a verified birth place and timezone in your chart information first.');
+      return;
+    }
+    const request=++calculationEpochRef.current;
     setLoading(true);
     setError(null);
-
     try {
-      const response = await fetch('/api/astrology/vedic/list', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date: birthDate,
-          time: birthTime || '12:00',
-          location: location || { lat: 0, lng: 0, timezone: 'UTC' },
-          ayanamsa,
-          includeDasha: true,
+      // Identity-free astronomical calculator. Never attach a member bearer
+      // or route private natal data into ordinary MAIA.
+      const response=await fetch(apiUrl('/api/astrology/vedic/list'),{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          date,time:time||'12:00',location:verifiedLocation,
+          ayanamsa,includeDasha:Boolean(time),
         }),
       });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to calculate Vedic chart');
+      if(request!==calculationEpochRef.current)return;
+      const result=await response.json().catch(()=>null);
+      if(request!==calculationEpochRef.current)return;
+      if(!response.ok||result?.success!==true||!result.data){
+        const message = result?.code === 'VEDIC_BIRTH_TIME_NONEXISTENT'
+          ? 'That local clock time did not occur in the saved birthplace timezone. Correct the recorded birth time before calculating this chart.'
+          : result?.code === 'VEDIC_BIRTH_TIME_AMBIGUOUS'
+          ? 'That local time occurred twice in the saved birthplace timezone. Soullab will not choose between the two instants; time-sensitive Vedic calculation is withheld until an explicit offset choice is available.'
+          : result?.code === 'VEDIC_BIRTH_TIME_UNRESOLVED'
+          ? 'Soullab could not establish one exact birth instant from the saved local time and timezone. Review the recorded birth details before calculating this chart.'
+          : 'This chart could not be calculated. Check your verified birth details and try again.';
+        throw new Error(message);
       }
-
       setProfile(result.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to calculate chart');
+    } catch (caught) {
+      if(request===calculationEpochRef.current)
+        setError(caught instanceof Error
+          ? caught.message
+          : 'This chart could not be calculated. Check your verified birth details and try again.');
     } finally {
-      setLoading(false);
+      if(request===calculationEpochRef.current)setLoading(false);
     }
   };
-
-  // Calculate Gochara (Vedic Transits)
-  const calculateGochara = async () => {
-    if (!profile) return;
-
-    setGocharaLoading(true);
-    try {
-      const response = await fetch('/api/astrology/vedic/gochara', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          natalMoonRashi: profile.moonSign.name,
-          ayanamsa,
-        }),
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        setGocharaProfile(result.data.profile);
-      }
-    } catch (err) {
-      console.error('Gochara calculation error:', err);
-    } finally {
-      setGocharaLoading(false);
-    }
+  const calculateProfile=async()=>{
+    await calculateProfileFor(birthDate,birthTime,location);
   };
-
-  // Calculate Ashtakavarga (Transit Strength)
-  const calculateAshtakavarga = async () => {
-    if (!birthDate) return;
-
-    setAshtakavargaLoading(true);
-    try {
-      const response = await fetch('/api/astrology/vedic/ashtakavarga', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date: birthDate,
-          time: birthTime || '12:00',
-          location: location || { lat: 0, lng: 0, timezone: 'UTC' },
-          ayanamsa,
-          includeCurrentTransits: true,
-        }),
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        setAshtakavargaProfile(result.data.profile);
-      }
-    } catch (err) {
-      console.error('Ashtakavarga calculation error:', err);
-    } finally {
-      setAshtakavargaLoading(false);
-    }
-  };
-
-  // Auto-load forecasting data when switching views
-  useEffect(() => {
-    if (activeView === 'gochara' && profile && !gocharaProfile && !gocharaLoading) {
-      calculateGochara();
-    }
-    if (activeView === 'ashtakavarga' && birthDate && !ashtakavargaProfile && !ashtakavargaLoading) {
-      calculateAshtakavarga();
-    }
-  }, [activeView, profile, birthDate]);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setBirthDate(value);
-    localStorage.setItem('birthDate', value);
+    ++calculationEpochRef.current;
+    setProfile(null);
   };
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setBirthTime(value);
-    localStorage.setItem('birthTime', value);
+    ++calculationEpochRef.current;
+    setProfile(null);
   };
 
   return (
@@ -249,13 +202,19 @@ export default function VedicAstrologyPage() {
                 Vedic Astrology
               </h1>
               <p className="text-indigo-400/60 mt-2 max-w-xl">
-                Jyotish — the science of light. Explore your sidereal birth chart,
-                lunar nakshatra, and the Vimshottari Dasha periods that map your life's cosmic rhythm.
+                Jyotish — the science of light. Explore a locally calculated sidereal chart,
+                lunar nakshatra and Vimshottari Dasha timeline as symbolic lenses rather than fixed verdicts.
+              </p>
+              <p className="mt-3 max-w-2xl rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/80" role="note">
+                Method boundary: this local natal and nakshatra view uses Soullab provisional approximations
+                to named ayanamsa conventions. The Dasha timeline is symbolic and not professionally certified timing.
+                Current Gochara and Ashtakavarga forecasts remain withheld pending independent qualification.
               </p>
             </div>
 
             {/* Settings Button */}
             <button
+              aria-label="Vedic calculation settings"
               onClick={() => setShowSettings(!showSettings)}
               className={`
                 p-2 rounded-lg transition-colors
@@ -292,11 +251,12 @@ export default function VedicAstrologyPage() {
                     onChange={() => {}}
                     ayanamsa={ayanamsa}
                     onAyanamsaChange={setAyanamsa}
+                    ayanamsaDescriptionMode="provisional"
                     compact
                   />
                   <p className="text-xs text-indigo-400/50 mt-2">
-                    The ayanamsa determines the offset between tropical and sidereal zodiacs (~24°).
-                    Lahiri is the most widely used standard.
+                    The selected name orients the provisional local offset model; it does not claim an exact,
+                    official or reference-certified implementation of that convention.
                   </p>
                 </div>
               </div>
@@ -342,9 +302,24 @@ export default function VedicAstrologyPage() {
               </div>
             </div>
 
+            {!location && (
+              <p role="status" className="mt-4 text-xs text-indigo-200/75">
+                Birthplace/timezone unknown. You can study Jyotisha here,
+                but a personalized chart requires the location saved in
+                <Link href="/astrology" className="underline ml-1">
+                  your existing Chart Information
+                </Link>. No geographic default is assumed.
+              </p>
+            )}
+            {!birthTime && (
+              <p className="mt-3 text-xs text-indigo-200/75">
+                Without a recorded birth time, noon is an explicitly
+                approximate calculation and a Dasha timeline is withheld.
+              </p>
+            )}
             <button
               onClick={calculateProfile}
-              disabled={!birthDate || loading}
+              disabled={!birthDate || !location || loading}
               className={`
                 mt-4 px-6 py-2.5 rounded-lg font-medium
                 flex items-center gap-2 transition-all
@@ -391,8 +366,6 @@ export default function VedicAstrologyPage() {
                   { id: 'profile', label: 'Profile', icon: Star },
                   { id: 'dasha', label: 'Dasha', icon: Clock, requiresDasha: true },
                   { id: 'chart', label: 'Planets', icon: Sun },
-                  { id: 'gochara', label: 'Transits', icon: Moon },
-                  { id: 'ashtakavarga', label: 'Strength', icon: Sparkles },
                 ]
                   .filter((tab) => !tab.requiresDasha || profile.dasha)
                   .map(({ id, label, icon: Icon }) => (
@@ -417,8 +390,8 @@ export default function VedicAstrologyPage() {
               {/* New Chart Button */}
               <button
                 onClick={() => {
+                  ++calculationEpochRef.current;
                   setProfile(null);
-                  didAutoLoad.current = false;
                 }}
                 className="text-sm text-indigo-400/60 hover:text-indigo-400 transition-colors"
               >
@@ -440,7 +413,7 @@ export default function VedicAstrologyPage() {
                   <div className="grid md:grid-cols-3 gap-4">
                     <RashiCard
                       title="Moon Sign"
-                      subtitle="Chandra Rashi (Core Identity)"
+                      subtitle="Primary lunar reference"
                       rashi={profile.moonSign}
                       highlight
                     />
@@ -477,7 +450,11 @@ export default function VedicAstrologyPage() {
                     </h3>
                     {profile.dasha ? (
                       <>
-                        <DashaTimeline profile={profile.dasha} compact />
+                        <DashaTimeline
+                          profile={profile.dasha}
+                          displayTimeZone={location?.timezone || 'UTC'}
+                          compact
+                        />
                         <button
                           onClick={() => setActiveView('dasha')}
                           className="mt-3 text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
@@ -488,7 +465,7 @@ export default function VedicAstrologyPage() {
                       </>
                     ) : (
                       <div className="bg-indigo-900/20 border border-indigo-700/30 rounded-xl p-4 text-sm text-indigo-400/70">
-                        Dasha timeline requires birth time for accurate calculation.
+                        A recorded birth time is required. The resulting timeline remains provisional and unqualified.
                       </div>
                     )}
                   </div>
@@ -514,7 +491,7 @@ export default function VedicAstrologyPage() {
 
                   {/* Ayanamsa Info */}
                   <div className="text-center text-xs text-indigo-400/50">
-                    Calculated using {profile.chart.ayanamsa.label} ayanamsa ({profile.chart.ayanamsaValue.toFixed(2)}°)
+                    Soullab provisional approximation to {profile.chart.ayanamsa.label} ({profile.chart.ayanamsaValue.toFixed(2)}°); not reference-certified
                   </div>
                 </motion.div>
               )}
@@ -531,6 +508,8 @@ export default function VedicAstrologyPage() {
                     profile={profile.dasha}
                     birthDate={birthDate}
                     birthTime={birthTime}
+                    location={location || undefined}
+                    displayTimeZone={location?.timezone || 'UTC'}
                   />
                 </motion.div>
               )}
@@ -560,182 +539,8 @@ export default function VedicAstrologyPage() {
                 </motion.div>
               )}
 
-              {/* Gochara View */}
-              {activeView === 'gochara' && (
-                <motion.div
-                  key="gochara"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-indigo-200 flex items-center gap-2">
-                      <Moon className="w-5 h-5 text-indigo-400" />
-                      Gochara — Current Transits from Moon
-                    </h3>
-                    <button
-                      onClick={calculateGochara}
-                      disabled={gocharaLoading}
-                      className="text-sm text-indigo-400 hover:text-indigo-300 disabled:opacity-50"
-                    >
-                      {gocharaLoading ? 'Updating...' : 'Refresh'}
-                    </button>
-                  </div>
-
-                  <p className="text-sm text-indigo-400/60">
-                    Vedic transits are read from your Moon sign ({profile.moonSign.name}), not the Sun.
-                    This shows how current planetary positions affect you.
-                  </p>
-
-                  {gocharaLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                      >
-                        <Sparkles className="w-6 h-6 text-indigo-400" />
-                      </motion.div>
-                    </div>
-                  ) : gocharaProfile ? (
-                    <div className="space-y-4">
-                      {/* Overall Tone */}
-                      <div className={`
-                        p-4 rounded-xl border
-                        ${gocharaProfile.overallTone === 'excellent' || gocharaProfile.overallTone === 'good'
-                          ? 'bg-emerald-900/20 border-emerald-700/30'
-                          : gocharaProfile.overallTone === 'challenging' || gocharaProfile.overallTone === 'difficult'
-                          ? 'bg-amber-900/20 border-amber-700/30'
-                          : 'bg-indigo-900/20 border-indigo-700/30'
-                        }
-                      `}>
-                        <div className="text-sm font-medium text-indigo-200 mb-1">
-                          Overall Transit Period: {gocharaProfile.overallTone.charAt(0).toUpperCase() + gocharaProfile.overallTone.slice(1)}
-                        </div>
-                        <div className="text-sm text-indigo-400/70">
-                          {gocharaProfile.summary}
-                        </div>
-                      </div>
-
-                      {/* Transit Cards */}
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {gocharaProfile.transits.map((transit, idx) => (
-                          <GocharaCard key={idx} transit={transit} />
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-indigo-400/60">
-                      Loading transit data...
-                    </div>
-                  )}
-                </motion.div>
-              )}
-
-              {/* Ashtakavarga View */}
-              {activeView === 'ashtakavarga' && (
-                <motion.div
-                  key="ashtakavarga"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-indigo-200 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-indigo-400" />
-                      Ashtakavarga — Transit Strength
-                    </h3>
-                    <button
-                      onClick={calculateAshtakavarga}
-                      disabled={ashtakavargaLoading}
-                      className="text-sm text-indigo-400 hover:text-indigo-300 disabled:opacity-50"
-                    >
-                      {ashtakavargaLoading ? 'Updating...' : 'Refresh'}
-                    </button>
-                  </div>
-
-                  <p className="text-sm text-indigo-400/60">
-                    The 8-point strength system reveals which transits carry power.
-                    Higher bindu counts indicate stronger, more favorable transit effects.
-                  </p>
-
-                  {ashtakavargaLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                      >
-                        <Sparkles className="w-6 h-6 text-indigo-400" />
-                      </motion.div>
-                    </div>
-                  ) : ashtakavargaProfile ? (
-                    <div className="space-y-6">
-                      {/* SAV Summary */}
-                      <div className="bg-indigo-900/20 border border-indigo-700/30 rounded-xl p-4">
-                        <div className="text-sm font-medium text-indigo-200 mb-2">
-                          Sarva Ashtakavarga — Combined Chart Strength
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-3xl font-bold text-indigo-100">
-                            {ashtakavargaProfile.sarvaAshtakavarga.totalSarva}
-                          </div>
-                          <div className="text-sm text-indigo-400/70">
-                            Total bindus across all houses
-                            <br />
-                            <span className="text-xs">
-                              Strong houses: {ashtakavargaProfile.sarvaAshtakavarga.sarvaBindus.map((b, i) => b >= 28 ? i + 1 : null).filter(Boolean).join(', ') || 'None'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Transit Strength Cards */}
-                      <div>
-                        <h4 className="text-sm font-medium text-indigo-300 mb-3">
-                          Current Transit Strengths
-                        </h4>
-                        <div className="grid md:grid-cols-2 gap-4">
-                          {ashtakavargaProfile.transitStrengths.map((transit, idx) => (
-                            <AshtakavargaCard key={idx} transit={transit} />
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Bindu Scale Legend */}
-                      <div className="text-xs text-indigo-400/50 border-t border-indigo-800/30 pt-4">
-                        <div className="font-medium mb-1">Bindu Scale:</div>
-                        <div className="flex flex-wrap gap-3">
-                          <span><span className="text-emerald-400">6-8</span> Excellent</span>
-                          <span><span className="text-green-400">5</span> Good</span>
-                          <span><span className="text-indigo-400">4</span> Average</span>
-                          <span><span className="text-amber-400">3</span> Weak</span>
-                          <span><span className="text-red-400">0-2</span> Poor</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-indigo-400/60">
-                      Loading strength data...
-                    </div>
-                  )}
-                </motion.div>
-              )}
             </AnimatePresence>
 
-            {/* Talk to MAIA CTA */}
-            <div className="mt-12 pt-8 border-t border-indigo-800/30 text-center">
-              <p className="text-indigo-400/60 mb-4">
-                Want to explore what your Vedic chart means for your life path?
-              </p>
-              <Link
-                href="/maia"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors"
-              >
-                <Sparkles className="w-4 h-4" />
-                Talk to MAIA about your chart
-              </Link>
-            </div>
           </>
         )}
       </div>
@@ -862,122 +667,6 @@ function GrahaCard({ position }: { position: GrahaPosition }) {
           </span>
         </div>
       </div>
-    </div>
-  );
-}
-
-// Sub-component for Gochara transit display
-function GocharaCard({ transit }: { transit: GocharaProfile['transits'][0] }) {
-  const effectColors: Record<string, string> = {
-    benefic: 'from-emerald-900/40 to-green-900/40 border-emerald-500/30',
-    malefic: 'from-amber-900/40 to-orange-900/40 border-amber-500/30',
-    neutral: 'from-stone-900/40 to-indigo-950/40 border-indigo-500/30',
-  };
-
-  const colors = effectColors[transit.effect] || effectColors.neutral;
-
-  return (
-    <div className={`bg-gradient-to-br ${colors} border rounded-xl p-4`}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <div>
-            <div className="text-sm font-semibold text-indigo-200">
-              {transit.graha}
-            </div>
-            <div className="text-xs text-indigo-400/60">
-              House {transit.houseFromMoon} from Moon
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {transit.vedhaBlocked && (
-            <span className="px-2 py-0.5 bg-red-500/20 text-red-300 text-xs rounded border border-red-500/30">
-              Blocked
-            </span>
-          )}
-          <span className={`
-            px-2 py-0.5 text-xs rounded
-            ${transit.effect === 'excellent' || transit.effect === 'good'
-              ? 'bg-emerald-500/20 text-emerald-300'
-              : transit.effect === 'challenging' || transit.effect === 'difficult'
-              ? 'bg-amber-500/20 text-amber-300'
-              : 'bg-indigo-500/20 text-indigo-300'
-            }
-          `}>
-            {transit.effect}
-          </span>
-        </div>
-      </div>
-
-      <div className="text-sm text-indigo-300/70 mb-2">
-        {transit.interpretation}
-      </div>
-
-      {transit.keywords && transit.keywords.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {transit.keywords.map((keyword, i) => (
-            <span
-              key={i}
-              className="px-2 py-0.5 bg-indigo-900/40 text-xs text-indigo-400 rounded"
-            >
-              {keyword}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Sub-component for Ashtakavarga transit strength display
-function AshtakavargaCard({
-  transit,
-}: {
-  transit: AshtakavargaProfile['transitStrengths'][0];
-}) {
-  const strengthColors: Record<string, string> = {
-    excellent: 'from-emerald-900/40 to-green-900/40 border-emerald-500/30',
-    good: 'from-green-900/40 to-emerald-900/40 border-green-500/30',
-    average: 'from-indigo-900/40 to-purple-900/40 border-indigo-500/30',
-    weak: 'from-amber-900/40 to-orange-900/40 border-amber-500/30',
-    poor: 'from-red-900/40 to-orange-900/40 border-red-500/30',
-  };
-
-  const colors = strengthColors[transit.strength] || strengthColors.average;
-
-  return (
-    <div className={`bg-gradient-to-br ${colors} border rounded-xl p-4`}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-sm font-semibold text-indigo-200">
-          {transit.planet}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-indigo-100">
-            {transit.bindus}
-          </span>
-          <span className="text-xs text-indigo-400/60">bindus</span>
-        </div>
-      </div>
-
-      <div className="text-xs text-indigo-400/60 mb-2">
-        House {transit.transitHouse} • {transit.strength.charAt(0).toUpperCase() + transit.strength.slice(1)} strength
-      </div>
-
-      <div className="text-sm text-indigo-300/70">
-        {transit.interpretation}
-      </div>
-
-      {/* Show remedies for weak transits */}
-      {'remedies' in transit && (transit as { remedies?: string[] }).remedies && (transit as { remedies: string[] }).remedies.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-indigo-700/30">
-          <div className="text-xs text-amber-400 mb-1">Remedial Measures:</div>
-          <ul className="text-xs text-indigo-400/70 space-y-0.5">
-            {(transit as { remedies: string[] }).remedies.slice(0, 2).map((remedy, i) => (
-              <li key={i}>• {remedy}</li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }

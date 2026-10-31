@@ -9,19 +9,17 @@
  * Integrates:
  * - Birth chart archetypal essence
  * - Elemental balance (Fire/Water/Earth/Air/Aether)
- * - MAIA's astrological intelligence
  * - Circadian color rhythm (day/night transitions)
  */
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, Settings2, ChevronDown, ChevronUp, Info, Lock, MessageCircle, X } from 'lucide-react';
+import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, Settings2, ChevronDown, ChevronUp, Info, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch, apiUrl } from '@/lib/http/apiBase';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
-import { MiniHoloflower } from '@/components/holoflower/MiniHoloflower';
 import { getZodiacArchetype, generateArchetypalDescription } from '@/lib/astrology/archetypeLibrary';
 import { getPlanetaryArchetype } from '@/lib/astrology/spiralogicMapping';
 import { getSpiralogicHouseData } from '@/lib/astrology/spiralogicHouseMapping';
@@ -35,11 +33,11 @@ import ZodiacToggle, { type ZodiacSystem, type AyanamsaType } from '@/components
 import { calculateAyanamsa, tropicalToSidereal } from '@/lib/astrology/ayanamsaCalculator';
 import { BirthChartCalculator } from '@/components/astrology/BirthChartCalculator';
 import { BirthDataForm } from '@/components/astrology/BirthDataForm';
-import { useBirthChart } from '@/lib/hooks/useBirthChart';
+import { useBirthChart, type BirthData } from '@/lib/hooks/useBirthChart';
+import { normalizeBirthCoordinates } from '@/lib/astrology/birthCoordinates';
 import type { AlienPattern } from '@/lib/astrology/alienPatterns';
-import { OracleConversation } from '@/components/OracleConversation';
-import { CurrentTransitsField } from '@/components/astrology/CurrentTransitsField';
 import styles from './astrology-room.module.css';
+
 
 // Elemental colors for planet insights
 const elementalColors = {
@@ -105,16 +103,84 @@ interface BirthChartData {
   }>;
 }
 
-interface SavedSynastryItem {
-  analysisId: string;
-  savedAt?: string;  // Optional - edge cases may omit
-  chartA?: { sunSign?: string; moonSign?: string; name?: string };
-  chartB?: { sunSign?: string; moonSign?: string; name?: string };
-  scores?: { attraction?: number; harmony?: number; friction?: number; growth?: number };
-}
 
 // House system options with descriptions
 type HouseSystemType = 'porphyry' | 'placidus' | 'whole-sign' | 'equal' | 'koch';
+
+
+type CalculatedBirthChartData = BirthChartData & {
+  date: string;
+  time: string;
+  location: BirthData['location'];
+  houseSystem: HouseSystemType;
+};
+
+// Preserve the existing date/time policy, but never invent a saved location.
+function normalizeSavedBirthData(raw: any): BirthData | null {
+  if (!raw || typeof raw !== 'object' || !raw.date) return null;
+  const coordinates = normalizeBirthCoordinates(raw.location?.lat, raw.location?.lng);
+  if (!coordinates) return null;
+  const date = typeof raw.date === 'string'
+    ? raw.date.split('T')[0]
+    : new Date(raw.date).toISOString().split('T')[0];
+  const time = raw.time
+    ? (raw.time.includes(':') ? raw.time.substring(0, 5) : raw.time)
+    : '12:00';
+  return {
+    date,
+    time,
+    location: { ...raw.location, ...coordinates },
+    houseSystem: 'porphyry',
+  };
+}
+
+function isUsableBirthChart(value: unknown): value is BirthChartData {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const data = value as Record<string, any>;
+  const validPoint = (point: any, withHouse: boolean) =>
+    point && typeof point === 'object' && !Array.isArray(point) &&
+    ZODIAC_SIGNS.includes(point.sign) &&
+    typeof point.degree === 'number' && Number.isFinite(point.degree) &&
+    point.degree >= 0 && point.degree < 30 &&
+    (!withHouse || (Number.isInteger(point.house) && point.house >= 1 && point.house <= 12)) &&
+    (point.retrograde === undefined || typeof point.retrograde === 'boolean');
+  if (!validPoint(data.sun, true) || !validPoint(data.moon, true) ||
+      !validPoint(data.ascendant, false)) return false;
+  for (const key of ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus',
+    'neptune', 'pluto', 'chiron', 'northNode', 'southNode', 'lilith', 'ceres',
+    'pallas', 'juno', 'vesta']) {
+    if (data[key] !== undefined && !validPoint(data[key], true)) return false;
+  }
+  if (data.midheaven !== undefined && !validPoint(data.midheaven, false)) return false;
+  return Array.isArray(data.aspects) && data.aspects.every((aspect: any) =>
+    aspect && typeof aspect === 'object' && !Array.isArray(aspect) &&
+    typeof aspect.planet1 === 'string' && typeof aspect.planet2 === 'string' &&
+    typeof aspect.type === 'string' && typeof aspect.orb === 'number' &&
+    Number.isFinite(aspect.orb) && aspect.orb >= 0);
+}
+
+function isUsableAlienPatterns(value: unknown): value is AlienPattern[] {
+  return Array.isArray(value) && value.every((pattern: any) =>
+    pattern && typeof pattern === 'object' && !Array.isArray(pattern) &&
+    ['power', 'vessel', 'instrument', 'mutual_reception', 'adept'].includes(pattern.type) &&
+    typeof pattern.label === 'string' && typeof pattern.description === 'string' &&
+    (pattern.planet === undefined || ['saturn', 'uranus', 'neptune', 'pluto'].includes(pattern.planet)) &&
+    (pattern.point === undefined || ['sun', 'moon', 'ascendant'].includes(pattern.point)) &&
+    (pattern.orb === undefined || (typeof pattern.orb === 'number' && Number.isFinite(pattern.orb) && pattern.orb >= 0)) &&
+    (pattern.element === undefined || typeof pattern.element === 'string') &&
+    (pattern.mode === undefined || typeof pattern.mode === 'string') &&
+    (pattern.livePrompt === undefined || typeof pattern.livePrompt === 'string'));
+}
+
+// Honest boundary notice only. The professional workstation is not opened
+// from Free Astrology until its own accuracy, security and release gates pass.
+function ProAstrologyPreviewNotice() {
+  return (
+    <div aria-label="Pro Astrology development preview">
+      <small>PRO ASTROLOGY · IN DEVELOPMENT</small>
+    </div>
+  );
+}
 
 const HOUSE_SYSTEMS: { value: HouseSystemType; label: string; description: string; fallback?: boolean }[] = [
   { value: 'porphyry', label: 'Porphyry', description: 'Destiny spine — crisp identity + vocation clarity' },
@@ -171,13 +237,23 @@ function chartDataToPlanets(chart: BirthChartData) {
 
 export default function AstrologyPage() {
   const router = useRouter();
+
+  // Only a deliberate member click starts reauthentication. Never resolve
+  // conflicting cookie/header credentials by choosing either identity, deleting
+  // the other session, or showing ownerless cached chart data.
+  const restartVerifiedChartSignIn = useCallback(() => {
+    router.push('/signin?reauth=chart&next=%2Fastrology');
+  }, [router]);
   // Beta: all users have full access
   const isPersonal = true;
-  const [chartData, setChartData] = useState<BirthChartData | null>(null);
+  const [chartData, setChartData] = useState<CalculatedBirthChartData | null>(null);
+  const chartRequestRef = useRef(0);
+  const chartMountedRef = useRef(true);
+  const chartReplacingRef = useRef(false);
+  const birthSaveInFlightRef = useRef(false);
+  const [chartRefreshing, setChartRefreshing] = useState(false);
+  const [chartError, setChartError] = useState<string | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
-  const [maiaOpen, setMaiaOpen] = useState(false);
-  const [chartContextShared, setChartContextShared] = useState(false);
-  const [maiaInjection, setMaiaInjection] = useState<{ text: string; nonce: number } | null>(null);
   const [recognitionText, setRecognitionText] = useState('');
   const [recognitionSaving, setRecognitionSaving] = useState(false);
   const [recognitionError, setRecognitionError] = useState<string | null>(null);
@@ -214,10 +290,6 @@ export default function AstrologyPage() {
 
   // Expanded planet for planetary positions panel
   const [expandedPlanet, setExpandedPlanet] = useState<string | null>(null);
-
-  // Saved synastry for timeline surfacing
-  const [savedSynastry, setSavedSynastry] = useState<SavedSynastryItem[]>([]);
-  const [savedSynastryLoading, setSavedSynastryLoading] = useState(false);
 
   // House system selection
   const [houseSystem, setHouseSystem] = useState<HouseSystemType>('porphyry');
@@ -256,15 +328,6 @@ export default function AstrologyPage() {
       : audienceMode;
   }, [audienceMode]);
 
-  // Memoized sort - avoid re-sorting on every render
-  const sortedSavedSynastry = useMemo(() => {
-    // NaN-safe timestamp parser (handles malformed dates gracefully)
-    const ts = (s?: string) => {
-      const n = s ? Date.parse(s) : 0;
-      return Number.isFinite(n) ? n : 0;
-    };
-    return [...savedSynastry].sort((a, b) => ts(b.savedAt) - ts(a.savedAt));
-  }, [savedSynastry]);
 
   const primaryAspectReadings = useMemo(() => {
     if (!chartData?.aspects?.length) return [];
@@ -345,33 +408,13 @@ export default function AstrologyPage() {
     setIsDayMode(hour >= 6 && hour < 20); // Day mode 6am-8pm
   }, []);
 
-  // Fetch saved synastry
+
+  // Resolve saved birth data from the authenticated profile; never from a cache.
   useEffect(() => {
-    let isMounted = true;
-
-    (async () => {
-      try {
-        setSavedSynastryLoading(true);
-        const res = await apiFetch(
-          '/api/astrology/synastry/saved?limit=3',
-          { cache: 'no-store' }
-        );
-        const json = await res.json();
-        const items = Array.isArray(json?.items) ? json.items : [];
-        if (isMounted) setSavedSynastry(items);
-      } catch {
-        // Silent fail - not critical
-      } finally {
-        if (isMounted) setSavedSynastryLoading(false);
-      }
-    })();
-
-    return () => { isMounted = false; };
-  }, []);
-
-  // Load birth chart data from profile API, then localStorage fallback
-  useEffect(() => {
+    chartMountedRef.current = true;
     const loadChartData = async () => {
+      const requestId = ++chartRequestRef.current;
+      const isCurrentRequest = () => chartMountedRef.current && requestId === chartRequestRef.current;
       try {
         // Client-cached identity plays NO part in resolving member birth data.
         // It previously did two harmful things here:
@@ -427,83 +470,37 @@ export default function AstrologyPage() {
           try {
             console.log('[Astrology] Fetching from profile API...');
             const profileRes = await apiFetch('/api/members/profile');
+            if (!isCurrentRequest()) return;
             console.log('[Astrology] Profile API response status:', profileRes.status);
             if (profileRes.status === 401 || profileRes.status === 403) {
               authRefused = true;
             }
             if (profileRes.ok) {
               const profile = await profileRes.json();
+              if (!isCurrentRequest()) return;
               setMemberId(typeof profile.id === 'string' ? profile.id : null);
               // The server has now named the authenticated member. Whatever it
               // says about birthData — present or absent — is AUTHORITATIVE for
               // this member, and outranks any cache.
               memberEstablished = true;
-              console.log('[Astrology] Profile data:', profile);
               if (profile.birthData?.date) {
-                console.log('[Astrology] Found birth data in profile:', profile.birthData);
-                // We have birth data saved in database - use it to calculate chart
-                const birthData = profile.birthData;
-
-                // Format date for API (YYYY-MM-DD)
-                const dateStr = typeof birthData.date === 'string'
-                  ? birthData.date.split('T')[0]
-                  : new Date(birthData.date).toISOString().split('T')[0];
-
-                // Format time (HH:MM)
-                const timeStr = birthData.time
-                  ? (birthData.time.includes(':') ? birthData.time.substring(0, 5) : birthData.time)
-                  : '12:00';
-
-                // Build location object - use defaults if not saved
-                const location = birthData.location || {
-                  lat: 30.4515, // Default to Baton Rouge if no location
-                  lng: -91.1871,
-                  name: 'Baton Rouge, Louisiana',
-                  timezone: 'America/Chicago',
-                };
-
-                console.log('[Astrology] Calculating chart with:', { date: dateStr, time: timeStr, location });
-
-                // Calculate the chart
-                // Calculator route: apiUrl() for Capacitor host correctness,
-                // plain fetch so it acquires no member/session identity.
-                const chartRes = await fetch(apiUrl('/api/astrology/birth-chart'), {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    date: dateStr,
-                    time: timeStr,
-                    location,
-                    houseSystem: 'porphyry',
-                  }),
-                });
-
-                console.log('[Astrology] Chart API response status:', chartRes.status);
-                if (chartRes.ok) {
-                  const chartJson = await chartRes.json();
-                  const data = chartJson.data;
-                  const fullChart = {
-                    ...data,
-                    date: dateStr,
-                    time: timeStr,
-                    location,
-                    houseSystem: 'porphyry',
-                  };
-
-                  // Cache in localStorage for faster subsequent loads
-                  localStorage.setItem('birthChartData', JSON.stringify(fullChart));
-
-                  setChartData(fullChart);
-                  if (chartJson.alienPatterns) setAlienPatterns(chartJson.alienPatterns);
-                  setHasBirthData(true);
-                  calculateElementalBalance(fullChart);
+                const savedBirthData = normalizeSavedBirthData(profile.birthData);
+                if (!savedBirthData) {
+                  setChartError('Your saved birth details need a valid birth location before a chart can be calculated.');
+                  setHasBirthData(false);
                   setLoading(false);
                   return;
                 }
+                const fullChart = await calculateAndDisplayChart(savedBirthData, 'porphyry', requestId);
+                if (!isCurrentRequest() || !fullChart) return;
+                setLoading(false);
+                return;
               }
             }
           } catch (profileErr) {
-            console.error('Error fetching profile birth data:', profileErr);
+            if (!isCurrentRequest()) return;
+            console.error('[Astrology] PROFILE_OR_CHART_LOAD_FAILED');
+            if (memberEstablished) setChartError('Your saved birth details could not be calculated. Please try again.');
           }
         }
 
@@ -511,6 +508,7 @@ export default function AstrologyPage() {
         //
         // UNAVAILABLE ≠ ABSENT. These are different states and must not collapse
         // into the same screen.
+        if (!isCurrentRequest()) return;
         if (!memberEstablished) {
           // The server did not name the member: no session, a rejected identity
           // claim, a 5xx, or a transport failure. We do not know whose browser
@@ -564,13 +562,18 @@ export default function AstrologyPage() {
         setHasBirthData(false);
 
       } catch (error) {
-        console.error('Error loading chart data:', error);
+        if (!isCurrentRequest()) return;
+        console.error('[Astrology] CHART_LOAD_FAILED');
         setLoading(false);
         setHasBirthData(false);
       }
     };
 
     loadChartData();
+    return () => {
+      chartMountedRef.current = false;
+      chartRequestRef.current += 1;
+    };
   }, []);
 
   // Elemental balance from the chart's inner planets. Lifted to component
@@ -607,105 +610,162 @@ export default function AstrologyPage() {
     });
   }, []);
 
-  /**
-   * Birth data entered on this page.
-   *
-   * Persist first, calculate second. If the profile write does not land, the
-   * hook surfaces a retryable error and no chart is drawn — a chart resting on
-   * birth data that failed to persist is the state that made this page look
-   * like it had forgotten the member.
-   */
+  // One epoch orders initial load, saved edits and house requests. Clearing the
+  // old chart also closes its encounter before the old subtree can remount.
+  const beginChartReplacement = () => {
+    const requestId = ++chartRequestRef.current;
+    chartReplacingRef.current = true;
+    setChartRefreshing(true);
+    setChartError(null);
+    setUnresolvedReason(null);
+    setChartData(null);
+    setHasBirthData(false);
+    setAlienPatterns([]);
+    setHouseSystemLoading(false);
+    setLoading(false);
+    return requestId;
+  };
+
+  const calculateAndDisplayChart = async (
+    data: BirthData,
+    newSystem: HouseSystemType,
+    requestId: number,
+  ): Promise<CalculatedBirthChartData | null> => {
+    if (!chartMountedRef.current || requestId !== chartRequestRef.current) return null;
+    const coordinates = normalizeBirthCoordinates(data.location?.lat, data.location?.lng);
+    if (!coordinates) throw new Error('Invalid birth coordinates');
+    const location = { ...data.location, ...coordinates };
+    // Identity-free calculator: retain apiUrl/plain-fetch transport.
+    const chartRes = await fetch(apiUrl('/api/astrology/birth-chart'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: data.date, time: data.time, location, houseSystem: newSystem }),
+    });
+    if (!chartMountedRef.current || requestId !== chartRequestRef.current) return null;
+    if (!chartRes.ok) throw new Error('Chart calculation unavailable');
+    const chartJson = await chartRes.json();
+    if (!chartMountedRef.current || requestId !== chartRequestRef.current) return null;
+    if (chartJson?.success !== true || !isUsableBirthChart(chartJson.data) ||
+        (chartJson.alienPatterns !== undefined && !isUsableAlienPatterns(chartJson.alienPatterns))) {
+      throw new Error('Invalid chart response');
+    }
+    const fullChart: CalculatedBirthChartData = {
+      ...chartJson.data,
+      date: data.date,
+      time: data.time,
+      location,
+      houseSystem: newSystem,
+    };
+    // Never persist calculated private placements into an unbound browser cache.
+    // Historical cache bytes are left untouched for governed reconciliation.
+    setChartData(fullChart);
+    setAlienPatterns(chartJson.alienPatterns ?? []);
+    setHasBirthData(true);
+    setUnresolvedReason(null);
+    setChartError(null);
+    setHouseSystem(newSystem);
+    calculateElementalBalance(fullChart);
+    return fullChart;
+  };
+
+  // The editor has already saved. Read that canonical result without a second
+  // PUT, cache lookup/write, raw-data log, or automatic MAIA transfer.
+  const refreshSavedBirthChart = async () => {
+    if (!chartMountedRef.current) return;
+    const requestId = beginChartReplacement();
+    try {
+      const profileRes = await apiFetch('/api/members/profile');
+      if (!chartMountedRef.current || requestId !== chartRequestRef.current) return;
+      if (!profileRes.ok) {
+        setMemberId(null);
+        setUnresolvedReason(profileRes.status === 401 || profileRes.status === 403 ? 'signed-out' : 'unreachable');
+        return;
+      }
+      const profile = await profileRes.json();
+      if (!chartMountedRef.current || requestId !== chartRequestRef.current) return;
+      if (typeof profile?.id !== 'string' || !profile.id) {
+        setMemberId(null);
+        setUnresolvedReason('unreachable');
+        return;
+      }
+      setMemberId(profile.id);
+      const data = normalizeSavedBirthData(profile.birthData);
+      if (!data) {
+        setChartError('Your birth details were saved, but a valid saved birth location is needed to calculate your chart.');
+        return;
+      }
+      await calculateAndDisplayChart(data, 'porphyry', requestId);
+    } catch {
+      if (!chartMountedRef.current || requestId !== chartRequestRef.current) return;
+      setChartError('Your birth details were saved, but the chart could not be calculated. Please try again.');
+    } finally {
+      if (chartMountedRef.current && requestId === chartRequestRef.current) {
+        chartReplacingRef.current = false;
+        setChartRefreshing(false);
+        setHouseSystemLoading(false);
+      }
+    }
+  };
+
+  /** Persist empty-state entry first; a refused save cannot produce a chart. */
   const handleBirthDataSubmit = async (data: {
     date: string;
     time: string;
     location: { name: string; lat: number; lng: number; timezone: string };
     houseSystem?: string;
   }) => {
-    const persisted = await saveBirthData({
-      date: data.date,
-      time: data.time,
-      location: data.location,
-      houseSystem: data.houseSystem || 'porphyry',
-    });
-    if (!persisted) return;
-
-    setLoading(true);
+    if (!chartMountedRef.current || birthSaveInFlightRef.current) return;
+    const coordinates = normalizeBirthCoordinates(data.location?.lat, data.location?.lng);
+    if (!coordinates) {
+      setChartError('Choose a birth location with valid coordinates before saving.');
+      return;
+    }
+    birthSaveInFlightRef.current = true;
+    let requestId: number | null = null;
     try {
-      // Calculator route — identity-free by contract.
-      const chartRes = await fetch(apiUrl('/api/astrology/birth-chart'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date: data.date,
-          time: data.time,
-          location: data.location,
-          houseSystem: 'porphyry',
-        }),
+      const persisted = await saveBirthData({
+        date: data.date,
+        time: data.time,
+        location: { ...data.location, ...coordinates },
+        houseSystem: data.houseSystem || 'porphyry',
       });
-
-      if (chartRes.ok) {
-        const chartJson = await chartRes.json();
-        const fullChart = {
-          ...chartJson.data,
-          date: data.date,
-          time: data.time,
-          location: data.location,
-          houseSystem: 'porphyry',
-        };
-        setChartData(fullChart);
-        if (chartJson.alienPatterns) setAlienPatterns(chartJson.alienPatterns);
-        setHasBirthData(true);
-        setUnresolvedReason(null);
-        calculateElementalBalance(fullChart);
-      } else {
-        console.error('[Astrology] Chart calculation failed:', chartRes.status);
+      if (!persisted) return;
+      if (!chartMountedRef.current) return;
+      requestId = beginChartReplacement();
+      await calculateAndDisplayChart({ ...data, location: { ...data.location, ...coordinates } }, 'porphyry', requestId);
+    } catch {
+      if (!chartMountedRef.current) return;
+      if (requestId === null) {
+        setChartError('Your birth details could not be saved. Please try again.');
+      } else if (chartMountedRef.current && requestId === chartRequestRef.current) {
+        setChartError('Your birth details were saved, but the chart could not be calculated. Please try again.');
       }
-    } catch (error) {
-      console.error('[Astrology] Error calculating chart:', error);
     } finally {
-      setLoading(false);
+      birthSaveInFlightRef.current = false;
+      if (chartMountedRef.current && requestId !== null && requestId === chartRequestRef.current) {
+        chartReplacingRef.current = false;
+        setChartRefreshing(false);
+      }
     }
   };
 
-  // Handle house system change - recalculate chart with new system
+  // Recalculate from the displayed authoritative inputs, never an old cache.
   const handleHouseSystemChange = async (newSystem: HouseSystemType) => {
-    if (!chartData || newSystem === houseSystem) return;
-
+    if (!chartData || !chartMountedRef.current || chartReplacingRef.current || newSystem === houseSystem) return;
+    const data: BirthData = { date: chartData.date, time: chartData.time, location: chartData.location };
+    const requestId = beginChartReplacement();
     setHouseSystemLoading(true);
     try {
-      const savedChartJson = localStorage.getItem('birthChartData');
-      if (!savedChartJson) return;
-
-      const savedChart = JSON.parse(savedChartJson);
-      if (!savedChart.date || !savedChart.time || !savedChart.location) {
-        console.error('Missing birth data for recalculation');
-        return;
-      }
-
-      // Calculator route — see the calculator contract in birthDataResolution.test
-      const res = await fetch(apiUrl('/api/astrology/birth-chart'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date: savedChart.date,
-          time: savedChart.time,
-          location: savedChart.location,
-          houseSystem: newSystem,
-        }),
-      });
-
-      if (res.ok) {
-        const resJson4 = await res.json();
-        const fullChart = { ...savedChart, ...resJson4.data, houseSystem: newSystem };
-        localStorage.setItem('birthChartData', JSON.stringify(fullChart));
-        setChartData(fullChart);
-        if (resJson4.alienPatterns) setAlienPatterns(resJson4.alienPatterns);
-        setHouseSystem(newSystem);
-      }
-    } catch (error) {
-      console.error('Error changing house system:', error);
+      await calculateAndDisplayChart(data, newSystem, requestId);
+    } catch {
+      if (!chartMountedRef.current || requestId !== chartRequestRef.current) return;
+      setChartError('Your chart could not be recalculated. Please try again.');
     } finally {
-      setHouseSystemLoading(false);
+      if (chartMountedRef.current && requestId === chartRequestRef.current) {
+        chartReplacingRef.current = false;
+        setChartRefreshing(false);
+        setHouseSystemLoading(false);
+      }
     }
   };
 
@@ -741,12 +801,6 @@ export default function AstrologyPage() {
     }
   }, [showTransits, transitPositions.length]);
 
-  function closeMaiaEncounter() {
-    setMaiaOpen(false);
-    // A context injection is a one-time member gesture. Clearing the carrier on
-    // close prevents a remounted canonical conversation from re-sending it.
-    setMaiaInjection(null);
-  }
 
   async function keepRecognitionAsReflection() {
     const text = recognitionText.trim();
@@ -779,35 +833,16 @@ export default function AstrologyPage() {
     setKeptReflectionId(null);
   }
 
-  function bringChartFactsToMaia() {
-    if (!chartData) return;
-    const aspectFacts = primaryAspectReadings.slice(0, 4).map((aspect) =>
-      aspect.planet1 + ' ' + aspect.type + ' ' + aspect.planet2 + ' (' + aspect.orb.toFixed(1) + '° orb)'
-    );
-    const parts = [
-      'I am explicitly bringing selected calculated facts from my natal chart into this conversation.',
-      'Current lens: ' + (zodiacMode === 'tropical' ? 'Tropical' : zodiacMode) + ' · ' + (HOUSE_SYSTEMS.find((item) => item.value === houseSystem)?.label || houseSystem),
-      'Sun: ' + chartData.sun.sign + ' ' + chartData.sun.degree.toFixed(1) + '° · House ' + chartData.sun.house,
-      'Moon: ' + chartData.moon.sign + ' ' + chartData.moon.degree.toFixed(1) + '° · House ' + chartData.moon.house,
-      'Ascendant: ' + chartData.ascendant.sign + ' ' + chartData.ascendant.degree.toFixed(1) + '°',
-    ];
-    if (aspectFacts.length) {
-      parts.push('Selected chart relationships: ' + aspectFacts.join('; '));
-    }
-    parts.push(
-      'Please keep calculated facts distinct from symbolic interpretation. Offer possibilities rather than identity claims or predictions, and ask what I recognize in lived experience. Do not treat chart symbolism as established truth about me.'
-    );
-    setMaiaInjection({ text: parts.join('\n\n'), nonce: Date.now() });
-    setChartContextShared(true);
-  }
 
   if (loading) {
     return (
       <main className={styles.loadingRoom}>
         <div className={styles.emptyInner}>
-          <MiniHoloflower size={72} isDayMode={false} animated={true} />
-          <h1>Gathering your chart</h1>
-          <p>Calculating the sky you were born into.</p>
+          <div className={styles.holoflowerWelcome}>
+            <img src="/logo_flower 2.png" alt="Soullab Holoflower" width={180} height={180} />
+          </div>
+          <p className={styles.kicker}>FREE ASTROLOGY</p>
+          <h1>Gathering your sky.</h1>
         </div>
       </main>
     );
@@ -816,38 +851,42 @@ export default function AstrologyPage() {
   if (!chartData || !hasBirthData) {
     return (
       <main className={styles.room}>
-        <header className={styles.threshold} aria-label="Astrology room navigation">
-          <Link href="/house" className={styles.brand} aria-label="Return to the House">
-            <img src="/holoflower-studio-transparent.png" alt="" />
-            <span>SOULLAB</span>
-          </Link>
-          <div className={styles.roomName}>
-            <span>THE HOUSE</span>
-            <b>ASTROLOGY</b>
-          </div>
-          <Link href="/house" className={styles.return}>Return to House →</Link>
-        </header>
         <section className={styles.emptyRoom}>
           <div className={styles.emptyInner}>
-            <MiniHoloflower size={72} isDayMode={false} animated={true} />
-            {unresolvedReason ? (
+            <div className={styles.holoflowerWelcome}>
+              <img src="/logo_flower 2.png" alt="Soullab Holoflower" width={180} height={180} />
+            </div>
+            <p className={styles.kicker}>FREE ASTROLOGY</p>
+            {chartRefreshing ? (
               <>
-                <h1>{unresolvedReason === 'signed-out' ? 'Sign in to see your chart' : 'We couldn’t reach your chart'}</h1>
+                <h1>Gathering your sky.</h1>
+                <p role="status">One moment.</p>
+              </>
+            ) : unresolvedReason ? (
+              <>
+                <h1>{unresolvedReason === 'signed-out' ? 'Your chart is waiting.' : 'Your chart is resting.'}</h1>
                 <p>
                   {unresolvedReason === 'signed-out'
-                    ? 'Your chart belongs to your account, so Soullab needs to know who you are before showing it.'
-                    : 'We could not confirm your account just now, so no chart is shown rather than risk showing the wrong one.'}
+                    ? 'Sign in to return to your sky.'
+                    : 'We couldn’t reach it just now.'}
                 </p>
                 {unresolvedReason === 'signed-out' ? (
-                  <Link href="/signin" className={styles.reportLink}>Sign in</Link>
+                  <button type="button" onClick={restartVerifiedChartSignIn} className={`${styles.reportLink} ${styles.primaryAction}`}>Enter your chart</button>
                 ) : (
-                  <button type="button" onClick={() => window.location.reload()} className={styles.reportLink}>Try again</button>
+                  <button type="button" onClick={() => window.location.reload()} className={`${styles.reportLink} ${styles.primaryAction}`}>Try again</button>
                 )}
               </>
             ) : (
               <>
-                <h1>Your birth chart</h1>
-                <p>Add your birth date, time, and place. These details are used to calculate your chart; they do not determine who you are.</p>
+                <h1>{chartError ? 'Your chart needs another look.' : 'Begin with the moment you arrived.'}</h1>
+                {chartError ? (
+                  <>
+                    <p role="alert">{chartError}</p>
+                    <button type="button" onClick={refreshSavedBirthChart} className={`${styles.reportLink} ${styles.primaryAction}`}>Try the chart again</button>
+                  </>
+                ) : (
+                  <p>Add your birth date, time, and place.</p>
+                )}
                 <div className="w-full max-w-xl mx-auto text-left">
                   <BirthDataForm
                     onSubmit={handleBirthDataSubmit}
@@ -864,6 +903,9 @@ export default function AstrologyPage() {
                 </div>
               </>
             )}
+            <aside className={styles.proWhisper}>
+              <ProAstrologyPreviewNotice />
+            </aside>
           </div>
         </section>
       </main>
@@ -872,33 +914,24 @@ export default function AstrologyPage() {
 
   return (
     <main className={styles.room}>
-      <BirthChartCalculator isDayMode={isDayMode} />
-
-      <header className={styles.threshold} aria-label="Astrology room navigation">
-        <Link href="/house" className={styles.brand} aria-label="Return to the House">
-          <img src="/holoflower-studio-transparent.png" alt="" />
-          <span>SOULLAB</span>
-        </Link>
-        <div className={styles.roomName}>
-          <span>THE HOUSE</span>
-          <b>ASTROLOGY</b>
-        </div>
-        <Link href="/house" className={styles.return}>Return to House →</Link>
-      </header>
+      <BirthChartCalculator isDayMode={isDayMode} onCalculate={refreshSavedBirthChart} />
 
       <div className={styles.content}>
         <section className={styles.arrival}>
-          <div>
-            <p className={styles.kicker}>ASTROLOGY · NATAL CHART</p>
-            <h1>A symbolic map of your sky at birth.</h1>
-            <p className={styles.lead}>
-              Your chart begins with calculated positions. Symbolic traditions can help us think with those patterns,
-              but they do not tell you who you are.
-            </p>
+          <div className={styles.arrivalIntro}>
+            <img src="/logo_flower 2.png" alt="" width={104} height={104} className={styles.arrivalHoloflower} />
+            <div>
+              <p className={styles.kicker}>FREE ASTROLOGY</p>
+              <h1>Your birth sky</h1>
+              <p className={styles.lead}>
+                A living map of the moment you arrived. The chart offers patterns; the meaning remains yours.
+              </p>
+            </div>
           </div>
           <aside className={styles.boundary}>
             <small>THE CHART IS A LENS</small>
-            <p>Facts can be calculated. Interpretation remains provisional. Lived meaning belongs to you.</p>
+            <p>Calculated with care. Interpreted with humility.</p>
+            <ProAstrologyPreviewNotice />
           </aside>
         </section>
 
@@ -917,19 +950,16 @@ export default function AstrologyPage() {
                 <small>SUN</small>
                 <h3>{chartData.sun.sign} · {chartData.sun.degree.toFixed(1)}°</h3>
                 <p>House {chartData.sun.house}</p>
-                <Link href="/astrology/placements/sun" prefetch={false}>Explore this placement →</Link>
               </article>
               <article className={styles.fact}>
                 <small>MOON</small>
                 <h3>{chartData.moon.sign} · {chartData.moon.degree.toFixed(1)}°</h3>
                 <p>House {chartData.moon.house}</p>
-                <Link href="/astrology/placements/moon" prefetch={false}>Explore this placement →</Link>
               </article>
               <article className={styles.fact}>
                 <small>ASCENDANT</small>
                 <h3>{chartData.ascendant.sign} · {chartData.ascendant.degree.toFixed(1)}°</h3>
                 <p>The eastern horizon at birth.</p>
-                <Link href="/astrology/placements/ascendant" prefetch={false}>Explore this placement →</Link>
               </article>
             </div>
 
@@ -962,108 +992,15 @@ export default function AstrologyPage() {
               />
             </div>
           </div>
-          <div className={styles.lensActions}>
-            <Link href="/astrology/report" className={styles.reportLink}>Open the full chart report →</Link>
-            {memberId ? (
-              <button type="button" className={styles.maiaDoor} onClick={() => setMaiaOpen(true)}>
-                <MessageCircle aria-hidden="true" />
-                Explore this chart with MAIA
-              </button>
-            ) : null}
-          </div>
         </section>
-
-        <CurrentTransitsField birthChart={chartData} variant="astrology" />
-
-        {maiaOpen && memberId ? (
-          <section className={styles.maiaEncounter} aria-label="Explore this chart with MAIA">
-            <article className={styles.chartAnchor}>
-              <div className={styles.chartAnchorHead}>
-                <div>
-                  <small>THE CHART REMAINS IN VIEW</small>
-                  <h2>Selected calculated facts</h2>
-                </div>
-                <button type="button" onClick={closeMaiaEncounter} aria-label="Close MAIA conversation">
-                  <X aria-hidden="true" />
-                </button>
-              </div>
-
-              <div className={styles.chartFactList}>
-                <div><span>Sun</span><strong>{chartData.sun.sign} · {chartData.sun.degree.toFixed(1)}° · House {chartData.sun.house}</strong></div>
-                <div><span>Moon</span><strong>{chartData.moon.sign} · {chartData.moon.degree.toFixed(1)}° · House {chartData.moon.house}</strong></div>
-                <div><span>Ascendant</span><strong>{chartData.ascendant.sign} · {chartData.ascendant.degree.toFixed(1)}°</strong></div>
-              </div>
-
-              {primaryAspectReadings.length ? (
-                <div className={styles.chartAspectFacts}>
-                  <small>SELECTED RELATIONSHIPS</small>
-                  {primaryAspectReadings.slice(0,4).map((aspect,index) => (
-                    <p key={aspect.planet1 + '-' + aspect.type + '-' + aspect.planet2 + '-' + index}>
-                      {aspect.planet1} {aspect.type} {aspect.planet2} · {aspect.orb.toFixed(1)}° orb
-                    </p>
-                  ))}
-                </div>
-              ) : null}
-
-              <div className={styles.contextConsent}>
-                <small>CONTEXT STAYS WITH YOU UNTIL YOU SEND IT</small>
-                <p>
-                  Opening MAIA does not send your chart. The conversation knows only that you are in Astrology
-                  until you explicitly bring these selected chart facts into it.
-                </p>
-                <button type="button" onClick={bringChartFactsToMaia}>
-                  {chartContextShared ? 'Bring the current chart facts again' : 'Bring these chart facts to MAIA'} <span>→</span>
-                </button>
-              </div>
-            </article>
-
-            <div className={styles.maiaChamber}>
-              <div className={styles.maiaChamberHead}>
-                <div>
-                  <span className={styles.orb} aria-hidden="true" />
-                  <div>
-                    <small>MAIA · ASTROLOGY</small>
-                    <strong>Think with the chart, not from above it</strong>
-                  </div>
-                </div>
-                <button type="button" onClick={closeMaiaEncounter} aria-label="Return to Astrology">
-                  <X aria-hidden="true" />
-                </button>
-              </div>
-              <div className={styles.maiaConversation}>
-                <OracleConversation
-                  userId={memberId}
-                  sessionId={'astrology-natal-' + memberId}
-                  presentationMode="contained"
-                  initialShowChatInterface
-                  voiceEnabled
-                  includeStoredBirthData={false}
-                  showAnalytics={false}
-                  shouldRenderArrival={false}
-                  surface="maia"
-                  placeContext={{
-                    placeId: 'astrology',
-                    placeName: 'Astrology',
-                    route: '/astrology',
-                    purpose: 'A room for reflective orientation through a member-owned birth chart.',
-                    objectType: 'natal_chart',
-                    objectId: memberId,
-                  }}
-                  injectedMessage={maiaInjection}
-                  onSessionEnd={closeMaiaEncounter}
-                />
-              </div>
-            </div>
-          </section>
-        ) : null}
 
         <section className={styles.memberMeaning} aria-label="Your meaning">
           <div className={styles.memberMeaningIntro}>
             <small>YOUR MEANING</small>
             <h2>What do you recognize here?</h2>
             <p>
-              Keep only what becomes true in your own experience. The chart can suggest a pattern and MAIA can reflect with you,
-              but neither gets to author what it means for your life.
+              Keep only what becomes true in your own experience. The chart can suggest a pattern,
+              but no chart or system gets to author what it means for your life.
             </p>
           </div>
 
@@ -1090,8 +1027,8 @@ export default function AstrologyPage() {
                   <small>{recognitionText.trim() ? 'YOUR WORDS ONLY' : 'NOTHING IS KEPT YET'}</small>
                   <p>
                     {recognitionText.trim()
-                      ? 'Keeping creates a Reflection from these exact words. MAIA’s interpretation is not copied.'
-                      : 'Write first. Nothing from the chart or conversation is saved as your meaning automatically.'}
+                      ? 'Keeping creates a Reflection from these exact words. No generated interpretation is copied.'
+                      : 'Write first. Nothing from the chart is saved as your meaning automatically.'}
                   </p>
                 </div>
                 <button
@@ -1732,31 +1669,6 @@ export default function AstrologyPage() {
               </Link>
             </div>
 
-            {/* Deep Dive Link */}
-            <div className="mt-8">
-              <Link
-                href="/deep-dive"
-                className="group block bg-black/30 hover:bg-black/50 border border-spice-orange/40 hover:border-spice-orange/70 rounded-xl p-8 transition-all duration-300 shadow-lg hover:shadow-spice-orange/20"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="text-5xl">📖</div>
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-dune-amber group-hover:text-spice-orange transition-colors mb-2">
-                      The Deep Dive: Elemental Alchemy
-                    </h3>
-                    <p className="text-amber-200/90 mb-3">
-                      Go beyond your chart into the phenomenological journey through consciousness.
-                      Kelly Nezat's book as living curriculum.
-                    </p>
-                    <div className="flex items-center gap-2 text-spice-glow text-sm">
-                      <span>Begin your transformation</span>
-                      <span>→</span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            </div>
-
             {/* Cross-System Convergence */}
             <div className="mt-6">
               <div className="flex items-center gap-2 mb-4">
@@ -1835,21 +1747,6 @@ export default function AstrologyPage() {
                     </div>
                   </Link>
 
-                  {/* Synastry */}
-                  <Link
-                    href="/astrology/synastry"
-                    className="group inline-flex items-center gap-3 bg-black/30 hover:bg-black/50 border border-violet-500/40 hover:border-violet-500/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-violet-500/20"
-                  >
-                    <div className="text-4xl">💞</div>
-                    <div className="text-left">
-                      <h3 className="text-xl font-bold text-dune-amber group-hover:text-violet-300 transition-colors">
-                        Synastry
-                      </h3>
-                      <p className="text-amber-200/90 text-sm">
-                        Compare two charts through relationship patterns and symbolic dynamics →
-                      </p>
-                    </div>
-                  </Link>
                 </div>
               ) : (
                 /* Free user - preview with upgrade CTA */
@@ -1897,29 +1794,16 @@ export default function AstrologyPage() {
                       </div>
                     </div>
 
-                    {/* Synastry - locked preview */}
-                    <div className="inline-flex items-center gap-3 bg-black/30 border border-violet-500/30 rounded-xl p-6">
-                      <div className="text-4xl opacity-50">💞</div>
-                      <div className="text-left">
-                        <h3 className="text-xl font-bold text-dune-amber/70 flex items-center gap-2">
-                          Synastry
-                          <Lock className="w-4 h-4" />
-                        </h3>
-                        <p className="text-amber-200/70 text-sm">
-                          Chart comparison, relationship analysis
-                        </p>
-                      </div>
-                    </div>
                   </div>
 
                   {/* Upgrade CTA overlay */}
                   <div className="mt-6 flex flex-col items-center text-center py-6 bg-black/40 rounded-xl border border-dune-amber/30">
                     <Lock className="w-8 h-8 text-dune-amber mb-3" />
                     <h3 className="text-lg font-medium text-dune-amber mb-2">
-                      Unlock 4 Wisdom Systems
+                      Explore Three Wisdom Systems
                     </h3>
                     <p className="text-amber-200/90 text-sm mb-4 max-w-md">
-                      Access Vedic, Mayan, Chinese astrology and Synastry relationship analysis with Personal Mentor
+                      Explore Vedic, modern Dreamspell and Chinese symbolic traditions within their stated limits
                     </p>
                     <Link
                       href="/maia/membership"
@@ -1933,70 +1817,6 @@ export default function AstrologyPage() {
               )}
             </div>
 
-            {/* Saved Synastry - only show for paid users */}
-            {isPersonal && (
-              <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5 shadow-lg">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-lg font-semibold text-amber-200">Saved Synastry</h2>
-                    <p className="text-sm text-amber-200/70">Your recent relationship analyses</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href="/astrology/synastry"
-                      className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-amber-200/70 hover:bg-white/15"
-                    >
-                      New
-                    </Link>
-                    <Link
-                      href="/astrology/synastry/saved"
-                      className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-amber-200/70 hover:bg-white/15"
-                    >
-                      View all
-                    </Link>
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-3 md:grid-cols-3">
-                  {savedSynastryLoading ? (
-                    <>
-                      <div className="h-20 rounded-xl bg-white/10 animate-pulse" />
-                      <div className="h-20 rounded-xl bg-white/10 animate-pulse" />
-                      <div className="h-20 rounded-xl bg-white/10 animate-pulse" />
-                    </>
-                  ) : sortedSavedSynastry.length === 0 ? (
-                    <div className="col-span-3 text-sm text-amber-200/70 py-4">
-                      No saved synastry yet. Run one and hit <span className="text-amber-200/90">Save to Timeline</span>.
-                    </div>
-                  ) : (
-                    sortedSavedSynastry.map((item) => {
-                      const a = item.chartA?.sunSign ?? 'Person A';
-                      const b = item.chartB?.sunSign ?? 'Person B';
-                      const when = item.savedAt ? new Date(item.savedAt).toLocaleDateString() : '';
-                      const s = item.scores ?? {};
-                      return (
-                        <Link
-                          key={item.analysisId}
-                          href={`/astrology/synastry/${item.analysisId}`}
-                          className="group rounded-xl border border-white/10 bg-black/20 p-4 hover:border-violet-500/40 hover:bg-black/40 transition"
-                        >
-                          <div className="text-sm font-semibold text-amber-200 group-hover:text-violet-200">
-                            {a} × {b}
-                          </div>
-                          <div className="mt-1 text-xs text-amber-200/60">Saved {when}</div>
-                          <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-amber-200/60">
-                            {typeof s.attraction === 'number' && <span>A:{s.attraction.toFixed(1)}</span>}
-                            {typeof s.harmony === 'number' && <span>H:{s.harmony.toFixed(1)}</span>}
-                            {typeof s.friction === 'number' && <span>F:{s.friction.toFixed(1)}</span>}
-                            {typeof s.growth === 'number' && <span>G:{s.growth.toFixed(1)}</span>}
-                          </div>
-                        </Link>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

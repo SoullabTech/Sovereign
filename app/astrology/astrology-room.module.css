@@ -78,11 +78,23 @@
 .arrival{
   max-width:1180px;
   margin:0 auto;
-  padding:60px 34px 34px;
+  padding:48px 34px 34px;
   display:grid;
   grid-template-columns:minmax(0,1fr) minmax(280px,.44fr);
-  gap:52px;
-  align-items:end;
+  gap:48px;
+  align-items:center;
+}
+.arrivalIntro{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:clamp(22px,3vw,38px);
+}
+.arrivalHoloflower{
+  width:clamp(88px,10vw,112px);
+  height:auto;
+  flex:0 0 auto;
+  filter:drop-shadow(0 18px 34px rgba(0,0,0,.34)) drop-shadow(0 0 24px rgba(203,157,82,.12));
 }
 .kicker{
   margin:0;
@@ -95,16 +107,16 @@
   max-width:780px;
   margin:14px 0 12px;
   color:#f2e9dc;
-  font-size:clamp(48px,5vw,72px);
+  font-size:clamp(46px,5vw,68px);
   line-height:.98;
   font-weight:300;
   letter-spacing:-.025em;
 }
 .lead{
-  max-width:700px;
+  max-width:640px;
   margin:0;
-  color:#c5b6a3;
-  font-size:20px;
+  color:#cbbca8;
+  font-size:19px;
   line-height:1.55;
 }
 .boundary{
@@ -277,12 +289,25 @@
   display:inline-flex;
   align-items:center;
   padding:0 18px;
-  border:1px solid rgba(201,165,109,.28);
-  border-radius:9px;
-  color:#d8b77f;
+  border:1px solid rgba(201,165,109,.34);
+  border-radius:999px;
+  color:#ecd2a6;
   text-decoration:none;
-  font:16px/1.35 Arial,sans-serif;
-  background:rgba(201,165,109,.06);
+  font:600 15px/1.35 Arial,sans-serif;
+  letter-spacing:.02em;
+  background:rgba(201,165,109,.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+  transition:transform .22s ease,border-color .22s ease,background .22s ease,box-shadow .22s ease;
+}
+.reportLink:hover{
+  transform:translateY(-1px);
+  border-color:rgba(225,190,135,.62);
+  background:rgba(201,165,109,.14);
+  box-shadow:0 12px 30px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.08);
+}
+.reportLink:focus-visible{
+  outline:2px solid #e2bf89;
+  outline-offset:4px;
 }
 .detailWrap{
   max-width:1180px;
@@ -303,18 +328,110 @@
 .detailWrap :global(a){font-size:max(16px,1em)}
 .detailWrap :global(.text-\[10px\]){font-size:14px!important;line-height:1.45!important}
 .loadingRoom,.emptyRoom{
-  min-height:100svh;
+  min-height:calc(100svh - 68px);
+  position:relative;
   display:grid;
   place-items:center;
-  background:#0c0a08;
+  overflow:hidden;
   color:#d8cbb9;
   font-family:'Astrology Crimson',Georgia,serif;
+  background:
+    radial-gradient(circle at 50% 30%,rgba(206,158,83,.13),transparent 34%),
+    radial-gradient(circle at 50% 72%,rgba(44,116,111,.10),transparent 38%),
+    linear-gradient(180deg,rgba(10,8,7,.48),rgba(10,8,7,.90));
 }
-.emptyInner{max-width:660px;padding:42px 24px;text-align:center}
-.emptyInner h1{margin:14px 0 10px;font-size:38px;font-weight:300;color:#f0e5d6}
-.emptyInner p{margin:0 auto 24px;max-width:560px;font-size:17px;line-height:1.6;color:#b6a894}
+.loadingRoom{
+  min-height:100svh;
+  background:
+    radial-gradient(circle at 50% 30%,rgba(206,158,83,.13),transparent 34%),
+    radial-gradient(circle at 50% 72%,rgba(44,116,111,.10),transparent 38%),
+    linear-gradient(180deg,rgba(10,8,7,.46),rgba(10,8,7,.92)),
+    url('/house/house-architecture-7a638061.webp') center top/cover no-repeat;
+}
+.emptyInner{
+  position:relative;
+  z-index:1;
+  width:min(660px,100%);
+  padding:clamp(52px,8vh,86px) 24px 54px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+}
+.emptyInner .kicker{margin:0 0 14px}
+.emptyInner h1{
+  margin:0 0 12px;
+  color:#f3e8d8;
+  font-size:clamp(42px,5vw,58px);
+  line-height:1.04;
+  font-weight:300;
+  letter-spacing:-.018em;
+}
+.emptyInner p{
+  margin:0 auto 24px;
+  max-width:470px;
+  color:#c1b19d;
+  font-size:18px;
+  line-height:1.55;
+}
+.holoflowerWelcome{
+  position:relative;
+  isolation:isolate;
+  width:clamp(154px,20vw,194px);
+  margin:0 auto 24px;
+}
+.holoflowerWelcome::before{
+  content:'';
+  position:absolute;
+  z-index:-1;
+  inset:16%;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(219,169,83,.20),rgba(35,100,96,.10) 48%,transparent 72%);
+  filter:blur(20px);
+  transform:scale(1.35);
+}
+.holoflowerWelcome img{
+  display:block;
+  width:100%;
+  height:auto;
+  filter:drop-shadow(0 24px 42px rgba(0,0,0,.38));
+  animation:astroBreathe 8s ease-in-out infinite;
+}
+.primaryAction{
+  min-width:174px;
+  justify-content:center;
+  margin-top:2px;
+  padding:0 28px;
+  color:#f4dfbd;
+  border-color:rgba(220,179,112,.52);
+  background:linear-gradient(135deg,rgba(203,159,91,.18),rgba(125,89,48,.10));
+}
+.proWhisper{
+  width:min(460px,100%);
+  margin-top:44px;
+  padding-top:18px;
+  border-top:1px solid rgba(218,184,137,.14);
+}
+.proWhisper small{
+  color:#91a5bb;
+  font:11px/1.4 Arial,sans-serif;
+  letter-spacing:.15em;
+}
+.proWhisper p{
+  margin:6px auto 0;
+  max-width:400px;
+  color:#8f8375;
+  font-size:14px;
+  line-height:1.5;
+  font-style:italic;
+}
+@keyframes astroBreathe{
+  0%,100%{transform:scale(1);filter:drop-shadow(0 24px 42px rgba(0,0,0,.38))}
+  50%{transform:scale(1.025);filter:drop-shadow(0 26px 48px rgba(0,0,0,.42)) drop-shadow(0 0 18px rgba(211,163,84,.10))}
+}
 @media(max-width:900px){
-  .arrival{grid-template-columns:1fr;gap:24px}
+  .arrival{grid-template-columns:1fr;gap:28px}
+  .arrivalIntro{align-items:flex-start}
   .lensBar{grid-template-columns:1fr}
   .factGrid{grid-template-columns:1fr}
   .fact{padding:18px 0}
@@ -325,9 +442,14 @@
   .roomName{display:none}
   .brand img{width:28px;height:28px}
   .return{font-size:16px}
-  .arrival{padding:34px 16px 24px}
+  .arrival{padding:32px 16px 24px}
+  .arrivalIntro{display:block}
+  .arrivalHoloflower{width:84px;margin-bottom:18px}
   .arrival h1{font-size:44px}
   .lead{font-size:18px}
+  .emptyInner{padding:42px 18px 44px}
+  .holoflowerWelcome{width:148px;margin-bottom:22px}
+  .emptyInner h1{font-size:42px}
   .atlas,.lensBar,.detailWrap{padding-left:16px;padding-right:16px}
   .atlasPaper{padding:24px 22px}
   .atlasHead{display:block}
@@ -881,4 +1003,9 @@
   .memberMeaningKeep{align-items:flex-start;flex-direction:column}
   .memberMeaningKeep button{width:100%}
   .keptMeaning>div{align-items:flex-start;flex-direction:column}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .holoflowerWelcome img{animation:none}
+  .reportLink{transition:none}
 }

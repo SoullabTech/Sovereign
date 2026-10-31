@@ -1,0 +1,46 @@
+.workbench {
+  min-width: 0;
+  border: 1px solid rgba(180, 197, 211, 0.25);
+  border-radius: 18px;
+  padding: clamp(18px, 3vw, 28px);
+  background: linear-gradient(150deg, rgba(40, 58, 76, 0.22), rgba(12, 22, 37, 0.14));
+  color: inherit;
+}
+.heading h3 { margin: 9px 0 10px; font-size: clamp(1.2rem, 2vw, 1.6rem); letter-spacing: 0.01em; }
+.heading p { margin: 0 0 20px; max-width: 68ch; line-height: 1.55; opacity: 0.88; }
+.eyebrow { font-size: 0.68rem; font-weight: 750; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.72; }
+.privatePrompt {
+  padding: 20px 22px;
+  border: 1px dashed rgba(170, 185, 202, 0.5);
+  border-radius: 12px;
+  max-width: 72ch;
+  line-height: 1.55;
+}
+.privateFacts { min-width: 0; }
+.disclosure { font-size: 0.85rem; line-height: 1.58; opacity: 0.82; margin: 14px 0; }
+.tableScroll { max-width: 100%; overflow-x: auto; border: 1px solid rgba(160, 175, 193, 0.22); border-radius: 12px; }
+.table { width: 100%; border-collapse: collapse; font-size: 0.85rem; line-height: 1.5; white-space: nowrap; }
+.table caption { text-align: left; font-size: 0.78rem; opacity: 0.75; padding: 12px 14px 3px; }
+.table thead { background: rgba(100, 130, 154, 0.14); }
+.table th, .table td {
+  text-align: left; padding: 11px 14px; vertical-align: top;
+  border-bottom: 1px solid rgba(158, 179, 194, 0.17);
+}
+.table tr:last-child th, .table tr:last-child td { border-bottom: none; }
+.table tbody tr:hover { background: rgba(126, 161, 186, 0.09); }
+.table th { font-weight: 650; }
+.difference { display: inline; font-size: 0.74rem; opacity: 0.85; }
+.aspectHeading { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin: 22px 0 12px; }
+.aspectHeading h4 { margin: 0; font-size: 1.06rem; }
+.aspectHeading label { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 0.85rem; }
+.aspectHeading select {
+  border-radius: 8px; min-height: 36px; padding: 6px 10px;
+  border: 1px solid rgba(145, 164, 184, 0.44);
+  background: #24374c; color: #f5f7f8;
+}
+.aspectHeading select:focus-visible { outline: 2px solid #f0cc8e; outline-offset: 2px; }
+@media (max-width: 600px) {
+  .workbench { padding: 16px; }
+  .table { font-size: 0.78rem; }
+  .table th, .table td { padding: 9px 10px; }
+}

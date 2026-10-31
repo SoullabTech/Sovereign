@@ -588,6 +588,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // use identity-free fetch, including on devices without cookie transport.
   { exact: '/api/astrology/birth-chart', public: true, notes: 'Identity-free natal calculation; no member profile lookup' },
   { exact: '/api/astrology/current-transits', public: true, notes: 'Identity-free sky/transit calculator; no member profile lookup' },
+  { exact: '/api/astrology/vedic/list', public: true, notes: 'Identity-free bounded provisional sidereal natal calculator; exact civil-time admission required and professional reference qualification remains held' },
 
   // Member data/actions use verified sessions for Free, Personal, and Pro.
   // These must never become public just to repair beta availability.
@@ -595,6 +596,14 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/astrology/geocode', minTier: 'free', notes: 'Member-facing birth-location lookup, authenticated to protect external provider' },
   { exact: '/api/astrology/reflection', minTier: 'free', notes: 'Member-owned chart recognition; independent handler session check' },
   { exact: '/api/astrology/synastry/saved', minTier: 'free', notes: 'Saved synastry; route derives owner from verified session and rejects divergent memberId claim' },
+
+  // Founder-only Pro pilot: these are exact authenticated doors, NOT Pro
+  // entitlement or member-wide chart admission. Both installed page and API
+  // independently recheck actual server session, explicit founder allowlist
+  // and member-owned consent/revision. The entire feature remains disabled
+  // by default pending an independent release decision.
+  { exact: '/astrology/pro-preview', minTier: 'free', notes: 'Founder-only Pro workstation preview; server page checks enabled feature and verified founder session' },
+  { exact: '/api/astrology/pro/my-chart', minTier: 'free', notes: 'Founder-only Pro owned chart API; handler rechecks founder allowlist, member session and astrology consent' },
 
   // Member API — contribution is participation, open to all
   { regex: /^\/api\/commons\/contributions\/[^/]+$/, minTier: 'free', notes: 'Contribution detail — depth' },
