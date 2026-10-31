@@ -349,6 +349,15 @@ export default function FocusFieldDesk() {
                 <p className={styles.focusExplanation}>
                   Pause and Stop for this session are in the player below.
                 </p>
+                <button type="button" className={styles.secondary} data-focus-choose-another="true"
+                  onClick={() => {
+                    transport?.stopFocusSession();
+                    transport?.clearFocusSession();
+                    setFeedbackTags([]);
+                    setMessage('Ready for another member-directed focus session.');
+                  }}>
+                  Stop and choose a different field
+                </button>
               </div>
             </>
           )}
