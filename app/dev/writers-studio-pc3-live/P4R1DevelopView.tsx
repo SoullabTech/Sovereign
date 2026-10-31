@@ -1733,6 +1733,10 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     [props.sections],
   );
   const declaredState = props.work?.manuscriptState ?? null;
+  // No Work declares this writing: the author is offered the way out wherever she is in Develop, not only beside the
+  // focused starter. The focused view carries it beside its own Talk button; every other view carries it in the MAIA pane.
+  const needsWork = !props.work && props.workContextKind === 'none';
+  const focusedAttachShown = needsWork && props.field === 'overview' && developView !== 'full';
   const selectedMovement = props.developmentalOrientation?.movements.find(
     (movement) => movement.id === props.selectedDevelopmentalMovementId,
   ) ?? null;
@@ -1990,7 +1994,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               >
                 Talk with MAIA about this
               </button>
-              {!props.work && props.workContextKind === 'none' ? (
+              {needsWork ? (
                 <DevelopAddToWork
                   works={props.allWorks}
                   busy={props.declaring}
@@ -2560,6 +2564,15 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody p4r1-develop-maia">
+        {needsWork && !focusedAttachShown ? (
+          <DevelopAddToWork
+            works={props.allWorks}
+            busy={props.declaring}
+            error={props.declareError}
+            onAddToWork={props.onAddToWork}
+            onMakeWork={props.onMakeWork}
+          />
+        ) : null}
         {props.preparing ? (
           <section className="p4r1-develop-maia-quiet" role="status" aria-live="polite">
             <h3>Preparing your writing for Develop…</h3>
