@@ -9,6 +9,7 @@ import { proxy } from '@/proxy';
 import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
 import {
   isSameOriginAuthMutation,
+  resetOriginWarningForTests,
   normalizeReturnDestination,
   requireSameOriginAuthMutation,
 } from '@/lib/auth/returnDestination';
@@ -273,6 +274,29 @@ describe('AUTH-RETURN-01 return and request-origin authority', () => {
       'x-forwarded-host': 'outside.invalid',
       'x-forwarded-proto': 'https',
     }))).toBe(false);
+  });
+
+  it('warns once, naming origins only, when production refuses an origin and none is configured', () => {
+    resetOriginWarningForTests();
+    const prev = process.env.NODE_ENV;
+    (process.env as Record<string, string>).NODE_ENV = 'production';
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const req = originRequest({ origin: 'https://public.invalid', cookie: 'secret=1' });
+      expect(isSameOriginAuthMutation(req)).toBe(false);
+      expect(isSameOriginAuthMutation(req)).toBe(false);
+      expect(warn).toHaveBeenCalledTimes(1);
+      const line = String(warn.mock.calls[0][0]);
+      expect(line).toContain('AUTH_ALLOWED_ORIGINS');
+      expect(line).toContain('https://public.invalid');
+      expect(line).not.toContain('secret');
+      process.env.AUTH_ALLOWED_ORIGINS = 'https://public.invalid';
+      expect(isSameOriginAuthMutation(req)).toBe(true);
+    } finally {
+      warn.mockRestore();
+      (process.env as Record<string, string | undefined>).NODE_ENV = prev;
+      resetOriginWarningForTests();
+    }
   });
 
   it('refuses cross-site metadata even when that origin is configured', () => {
