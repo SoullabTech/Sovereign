@@ -19,6 +19,8 @@ import type { MarkedLine } from '@/app/writers-studio/useMarkedLines';
 import type { StudioAct } from '@/app/writers-studio/studioHistory';
 import { sentenceFor } from '@/app/writers-studio/studioHistory';
 import P4R1WorkMaterialsSummary from './P4R1WorkMaterialsSummary';
+import { WritingDeleteConfirm } from './WritingDeleteConfirm';
+import { DeletionUnconfirmed } from '@/lib/writersStudio/deleteWork';
 import P4R1ProducePanel from './P4R1ProducePanel';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 
@@ -197,15 +199,30 @@ function WorkShelfCard({ work, manuscripts, onOpen, onStartWriting, busy }: {
   );
 }
 
-function WritingCard({ manuscript, works, onOpen, onMakeWork, onAddToWork }: {
+function WritingCard({ manuscript, works, onOpen, onMakeWork, onAddToWork, onAskDelete, deletion }: {
   manuscript: CurrentManuscript;
   works: readonly LivingWork[];
   onOpen: (id: string) => void;
   onMakeWork: (id: string, title: string | null) => void;
   onAddToWork: (manuscriptId: string, workId: string) => void;
+  onAskDelete: (id: string) => void;
+  deletion: { confirming: boolean; busy: boolean; error: string | null; onConfirm: () => void; onCancel: () => void };
 }) {
   const [choosing, setChoosing] = useState(false);
   const extent = homeWritingExtent(manuscript);
+  if (deletion.confirming) {
+    return (
+      <article className="fr-home-writing p4r1-home-writing" data-kind="writing" data-deleting-confirmation style={{ display: 'block' }}>
+        <WritingDeleteConfirm
+          title={manuscript.title?.trim() || 'Untitled writing'}
+          busy={deletion.busy}
+          error={deletion.error}
+          onConfirm={deletion.onConfirm}
+          onCancel={deletion.onCancel}
+        />
+      </article>
+    );
+  }
   return (
     <article className="fr-home-writing p4r1-home-writing" data-kind="writing">
       <span className="fr-home-page" aria-hidden="true">◇</span>
@@ -222,6 +239,7 @@ function WritingCard({ manuscript, works, onOpen, onMakeWork, onAddToWork }: {
           {works.length > 0 ? (
             <button type="button" className="fr-home-quiet" onClick={() => setChoosing((v) => !v)}>Add to a Work</button>
           ) : null}
+          <button type="button" className="fr-home-quiet p4r1-home-delete-open" onClick={() => onAskDelete(manuscript.id)}>Delete</button>
         </div>
         {choosing ? (
           <ul className="fr-home-chooser">
@@ -257,6 +275,8 @@ export interface P4R1HomeViewProps {
   onOpen: (manuscriptId: string, sectionId?: string) => void;
   onMakeWork: (manuscriptId: string, title: string | null) => void;
   onAddToWork: (manuscriptId: string, workId: string) => void;
+  /** Permanently deletes one writing through the product's own erase (WS-DELETE-01). Rejects with a member-facing message. */
+  onDeleteWriting: (manuscriptId: string) => Promise<void>;
   onStartWriting: (workId: string) => void;
   onImport: () => void;
   onSources: () => void;
@@ -265,6 +285,36 @@ export interface P4R1HomeViewProps {
 export default function P4R1HomeView(props: P4R1HomeViewProps) {
   const [beginning, setBeginning] = useState(false);
   const [title, setTitle] = useState('');
+  // Only one deletion question is ever open: a confirmation the author has lost track of has stopped confirming anything.
+  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  // Removed, but the server could not yet confirm the whole custody ending: the writing is no longer listed, and this says so.
+  const [deleteNotice, setDeleteNotice] = useState<string | null>(null);
+  const deletionFor = (manuscriptId: string) => ({
+    confirming: confirmingDelete === manuscriptId,
+    busy: deletingId === manuscriptId,
+    error: confirmingDelete === manuscriptId ? deleteError : null,
+    onCancel: () => { if (!deletingId) { setConfirmingDelete(null); setDeleteError(null); } },
+    onConfirm: async () => {
+      if (deletingId) return;
+      setDeletingId(manuscriptId);
+      setDeleteError(null);
+      try {
+        await props.onDeleteWriting(manuscriptId);
+        setConfirmingDelete(null);
+      } catch (err) {
+        if (err instanceof DeletionUnconfirmed) {
+          setConfirmingDelete(null);
+          setDeleteNotice(err.message);
+          return;
+        }
+        setDeleteError(err instanceof Error ? err.message : 'That writing could not be deleted just now. Nothing was removed. Please try again.');
+      } finally {
+        setDeletingId(null);
+      }
+    },
+  });
 
   const claimed = useMemo(
     () => new Set(props.works.flatMap(manuscriptIdsOf)),
@@ -326,10 +376,16 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   const unclaimedWriting = unclaimed.length > 0 ? (
     <section className="fr-home-region" aria-label="Writing not yet in a Work">
       <p className="fr-home-here">{HOME_COPY.writingHere}</p>
+          {deleteNotice ? (
+            <p role="status" className="p4r1-home-delete-notice">
+              {deleteNotice} <button type="button" onClick={() => setDeleteNotice(null)}>Dismiss</button>
+            </p>
+          ) : null}
       <div className="fr-home-writing-list">
         {unclaimed.map((manuscript) => (
           <WritingCard key={manuscript.id} manuscript={manuscript} works={props.works}
-            onOpen={(id) => props.onOpen(id)} onMakeWork={props.onMakeWork} onAddToWork={props.onAddToWork} />
+            onOpen={(id) => props.onOpen(id)} onMakeWork={props.onMakeWork} onAddToWork={props.onAddToWork}
+            onAskDelete={(id) => { setDeleteError(null); setConfirmingDelete(id); }} deletion={deletionFor(manuscript.id)} />
         ))}
       </div>
     </section>
@@ -435,10 +491,16 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
       <div className="fr-home fr-home-unclaimed">
         <div className="fr-home-field" data-field="room">
           <p className="fr-home-here">{HOME_COPY.writingHere}</p>
+          {deleteNotice ? (
+            <p role="status" className="p4r1-home-delete-notice">
+              {deleteNotice} <button type="button" onClick={() => setDeleteNotice(null)}>Dismiss</button>
+            </p>
+          ) : null}
           <div className="fr-home-writing-list">
             {unclaimed.map((manuscript) => (
               <WritingCard key={manuscript.id} manuscript={manuscript} works={props.works}
-                onOpen={(id) => props.onOpen(id)} onMakeWork={props.onMakeWork} onAddToWork={props.onAddToWork} />
+                onOpen={(id) => props.onOpen(id)} onMakeWork={props.onMakeWork} onAddToWork={props.onAddToWork}
+            onAskDelete={(id) => { setDeleteError(null); setConfirmingDelete(id); }} deletion={deletionFor(manuscript.id)} />
             ))}
           </div>
           {creationControls}

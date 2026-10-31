@@ -332,11 +332,13 @@ export default function P4R1DevelopController() {
   // The author's own declaration that this writing belongs to a Work (the same routes the Studio Home uses). The Studio
   // never infers it; after it lands the Works are re-read, the context resolves to that Work, and Talk becomes available.
   const declareManuscript = useCallback(async (workId: string) => {
-    const manuscriptId = context?.manuscriptId ?? manuscriptId;
+    // `id`, not `manuscriptId`: a local of that name would shadow the page's own and read itself before it exists.
+    const id = context?.manuscriptId ?? manuscriptId;
+    if (!id) throw new Error('declare:no-manuscript');
     const response = await apiFetch('/api/sovereign/living-works/' + workId + '/expressions', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ expressionType: 'manuscript', expressionId: manuscriptId }),
+      body: JSON.stringify({ expressionType: 'manuscript', expressionId: id }),
     });
     if (!response.ok) throw new Error('declare:' + response.status);
   }, [context?.manuscriptId, manuscriptId]);
