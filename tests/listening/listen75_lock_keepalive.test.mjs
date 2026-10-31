@@ -8,6 +8,9 @@ test('a generated soundscape starts a private silent media element so iOS keeps 
   assert.match(src, /function silentKeepAlive\(\)/);
   assert.match(src, /el\.loop = true/);
   assert.match(src, /if \(soundscape && !keepAlive\.current\)/);
+  // started before the first await (the output lease), so it stays inside the member's tap
+  const play = src.indexOf('const playSketch');
+  assert.ok(src.indexOf('const el = silentKeepAlive()', play) < src.indexOf("await acquireAudioOutput('listening-music')", play));
 });
 
 test('every stop path ends the keep-alive element (it is released with the output)', () => {

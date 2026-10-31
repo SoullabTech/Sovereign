@@ -752,9 +752,16 @@ export function PersistentListeningProvider({
       experience.current = null;
     }
     if (outputLease.current) pause();
+    // Started here, before any await: iOS only lets a media element begin inside the member's tap, and the output
+    // lease and context resume below both await. Every refusal path below releases it.
+    if (soundscape && !keepAlive.current) {
+      const el = silentKeepAlive();
+      if (el) { keepAlive.current = el; void el.play().catch(() => { if (keepAlive.current === el) keepAlive.current = null; }); }
+    }
     const generation = ++epoch.current;
     const lease = await acquireAudioOutput('listening-music');
     if (!lease || generation !== epoch.current || isMaiaSpeechActive()) {
+      if (keepAlive.current) { keepAlive.current.pause(); keepAlive.current = null; }
       lease?.release();
       if (generation === epoch.current) {
         if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
@@ -791,10 +798,6 @@ export function PersistentListeningProvider({
         releaseOutput();
         if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
         return false;
-      }
-      if (soundscape && !keepAlive.current) {
-        const el = silentKeepAlive();
-        if (el) { keepAlive.current = el; void el.play().catch(() => { keepAlive.current = null; }); }
       }
       claimFocus();
       const activeExperience = experience.current;
