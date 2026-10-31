@@ -7,6 +7,7 @@
  *
  * Defeat modes (WJ_DEFEAT) exist so the journey can be proven to FAIL when the product is broken:
  *   no_roster       Alice is removed from the beta roster            -> the studio must NOT open (S02 fails)
+ *   no_marker       Alice stays an active beta tester but loses the Writer pilot marker -> the studio must NOT open (S02 fails)
  *   bad_password    Alice signs in with a wrong password              -> sign-in must fail (S01 fails)
  *   block_autosave  the draft-save request is blocked in the browser  -> "Saved" must never appear (S06 fails)
  */
@@ -16,6 +17,7 @@ const DEFEAT = process.env.WJ_DEFEAT || 'none';
 const ALICE = { username: 'journey_alice', password: 'journey-alice-pass-1' };
 const BOB = { username: 'journey_bob', password: 'journey-bob-pass-1' };
 const CAROL = { username: 'journey_carol', password: 'journey-carol-pass-1' };
+const DAVE = { username: 'journey_dave', password: 'journey-dave-pass-1' };
 
 const PROSE = 'The orchard behind the old house was made entirely of glass. Every morning the light came through the trees and the whole garden rang softly.';
 const PASTED = `# The Salt Road
@@ -171,6 +173,17 @@ test.describe(`Writer's Studio journey WJ-1 [defeat=${DEFEAT}]`, () => {
       await expect(page).toHaveURL(/invitation-required/);
       const r = await apiGet(page, `/api/sovereign/manuscripts/${aliceWorkId}/draft`);
       expect([401, 403, 404], 'a non-roster member must not read Alice’s draft').toContain(r.status);
+      expect(r.text).not.toContain('orchard behind the old house');
+      await ctx.close();
+    });
+
+    await test.step('S14a Dave (an active beta tester for another lane, NOT marked for the Writer pilot) is refused the studio', async () => {
+      const ctx = await browser.newContext({ baseURL }); const page = await ctx.newPage();
+      expect((await signIn(ctx.request, DAVE)).status()).toBe(200);
+      await page.goto('/writers-studio');
+      await expect(page).toHaveURL(/invitation-required/);
+      const r = await apiGet(page, `/api/sovereign/manuscripts/${aliceWorkId}/draft`);
+      expect([401, 403, 404], 'an unmarked beta tester must not read Alice’s draft').toContain(r.status);
       expect(r.text).not.toContain('orchard behind the old house');
       await ctx.close();
     });

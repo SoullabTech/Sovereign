@@ -1,4 +1,4 @@
-// Seeds two FICTIONAL writers into a THROWAWAY database. Refuses anything that does not look disposable.
+// Seeds FICTIONAL writers (two admitted, two refused) into a THROWAWAY database. Refuses anything that does not look disposable.
 // Passwords go through the app's own bcrypt entrypoint semantics (bcrypt, cost 10 here for speed).
 const { Client } = require('pg');
 const bcrypt = require('bcrypt');
@@ -12,6 +12,8 @@ const WRITERS = [
   { username: 'journey_bob',   name: 'Bob Fictional',   passkey: 'WJ-JOURNEY-BOB',   password: 'journey-bob-pass-1' },
   // Negative control: a member who is NOT on the beta roster. The invitation gate must refuse her.
   { username: 'journey_carol', name: 'Carol Fictional', passkey: 'WJ-JOURNEY-CAROL', password: 'journey-carol-pass-1', roster: false },
+  // Negative control: an ACTIVE beta tester for some other lane, NOT marked for the Writer's Studio pilot. Must be refused.
+  { username: 'journey_dave', name: 'Dave Fictional', passkey: 'WJ-JOURNEY-DAVE', password: 'journey-dave-pass-1', writerMarker: false },
 ];
 (async () => {
   const c = new Client({ connectionString: url }); await c.connect();
@@ -28,8 +30,8 @@ const WRITERS = [
     if (w.roster !== false) {
       await c.query(`DELETE FROM ops_contacts WHERE member_id = $1`, [ids[w.username]]);
       await c.query(
-        `INSERT INTO ops_contacts (name, member_id, contact_type, pipeline_stage) VALUES ($1,$2,'beta_tester','active')`,
-        [w.name, ids[w.username]]);
+        `INSERT INTO ops_contacts (name, member_id, contact_type, pipeline_stage, metadata) VALUES ($1,$2,'beta_tester','active',$3::jsonb)`,
+        [w.name, ids[w.username], JSON.stringify(w.writerMarker === false ? {} : { writers_studio_beta: true })]);
     }
   }
   console.log(JSON.stringify(ids));

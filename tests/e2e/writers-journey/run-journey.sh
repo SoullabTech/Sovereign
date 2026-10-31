@@ -34,6 +34,10 @@ if [ "$DEFEAT" = no_roster ]; then
   docker exec "$CONT" psql -U postgres -d wj -qc "DELETE FROM ops_contacts WHERE member_id = (SELECT id FROM members WHERE username='journey_alice')"
 fi
 
+if [ "$DEFEAT" = no_marker ]; then
+  docker exec "$CONT" psql -U postgres -d wj -qc "UPDATE ops_contacts SET metadata = '{}'::jsonb WHERE member_id = (SELECT id FROM members WHERE username='journey_alice')"
+fi
+
 echo "== app on :$APPPORT"
 NODE_ENV=production PORT="$APPPORT" NEXT_TELEMETRY_DISABLED=1 npx next start -p "$APPPORT" >/tmp/wj-server.log 2>&1 &
 SERVER_PID=$!
