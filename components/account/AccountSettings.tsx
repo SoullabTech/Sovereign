@@ -183,6 +183,10 @@ export function AccountSettings() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [birthSaveError, setBirthSaveError] = useState<string | null>(null);
+  const [profileSaveError, setProfileSaveError] = useState<string | null>(null);
+  // Inline confirmation next to the button that was pressed (the header "Saved"
+  // label is out of view when the member is down at the save button).
+  const [justSaved, setJustSaved] = useState<'profile' | 'birth' | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
   // Practitioner projects state
@@ -445,6 +449,11 @@ export function AccountSettings() {
   // Save Handlers
   // ─────────────────────────────────────────────────────────────────────────
 
+  const flashInlineSaved = useCallback((which: 'profile' | 'birth') => {
+    setJustSaved(which);
+    setTimeout(() => setJustSaved(cur => (cur === which ? null : cur)), 3500);
+  }, []);
+
   const showSaveIndicator = useCallback(() => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -574,6 +583,8 @@ export function AccountSettings() {
   const saveProfile = useCallback(async () => {
     if (!userId) return;
     setSaving(true);
+    setProfileSaveError(null);
+    setJustSaved(null);
 
     try {
       const res = await apiFetch('/api/members/profile', {
@@ -612,13 +623,18 @@ export function AccountSettings() {
         }
 
         showSaveIndicator();
+        flashInlineSaved('profile');
+      } else {
+        const errBody = await res.json().catch(() => ({}));
+        setProfileSaveError(errBody?.error || `Save failed (${res.status})`);
       }
     } catch (err) {
       console.error('[AccountSettings] Save profile error:', err);
+      setProfileSaveError('Network error — check your connection and try again');
     } finally {
       setSaving(false);
     }
-  }, [userId, editName, editPreferredName, editPronouns, editEmail, editBio, editTimezone, showSaveIndicator]);
+  }, [userId, editName, editPreferredName, editPronouns, editEmail, editBio, editTimezone, showSaveIndicator, flashInlineSaved]);
 
   // Search for birth location
   const searchLocation = useCallback(async (query: string) => {
@@ -659,6 +675,7 @@ export function AccountSettings() {
     if (!userId) return;
     setSaving(true);
     setBirthSaveError(null);
+    setJustSaved(null);
 
     try {
       const birthData = editBirthDate ? {
@@ -679,6 +696,7 @@ export function AccountSettings() {
       });
 
       if (res.ok) {
+        flashInlineSaved('birth');
         setProfile(prev => prev ? { ...prev, birthData } : null);
         const storedUser = localStorage.getItem('beta_user');
         if (storedUser) {
@@ -700,7 +718,7 @@ export function AccountSettings() {
     } finally {
       setSaving(false);
     }
-  }, [userId, editBirthDate, editBirthTime, selectedLocation, showSaveIndicator]);
+  }, [userId, editBirthDate, editBirthTime, selectedLocation, showSaveIndicator, flashInlineSaved]);
 
   // Remove birth data — explicit null PUT, bypasses form state closure
   const removeBirthData = useCallback(async () => {
@@ -1049,8 +1067,14 @@ export function AccountSettings() {
         className="w-full py-3 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl text-amber-300 font-medium transition-colors disabled:opacity-50"
         whileTap={{ scale: 0.98 }}
       >
-        {saving ? 'Saving...' : 'Save Profile'}
+        {saving ? 'Saving...' : justSaved === 'profile' ? 'Saved ✓' : 'Save Profile'}
       </motion.button>
+      {profileSaveError && (
+        <p role="alert" className="text-red-400 text-sm text-center">{profileSaveError}</p>
+      )}
+      {justSaved === 'profile' && (
+        <p role="status" className="text-green-400 text-sm text-center">Profile saved</p>
+      )}
 
       {/* ── Birth Chart ──────────────────────────────────────────────── */}
       <div className="border-t border-white/10 pt-6 mt-2">
@@ -1196,8 +1220,11 @@ export function AccountSettings() {
           className="w-full py-3 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl text-amber-300 font-medium transition-colors disabled:opacity-50"
           whileTap={{ scale: 0.98 }}
         >
-          {saving ? 'Saving...' : 'Save Birth Data'}
+          {saving ? 'Saving...' : justSaved === 'birth' ? 'Saved ✓' : 'Save Birth Data'}
         </motion.button>
+        {justSaved === 'birth' && (
+          <p role="status" className="text-green-400 text-sm text-center">Birth data saved</p>
+        )}
 
         {/* Clear Birth Data */}
         {profile?.birthData?.date && (
@@ -1451,8 +1478,11 @@ export function AccountSettings() {
                 className="w-full py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl text-amber-300 text-sm font-medium transition-colors disabled:opacity-50"
                 whileTap={{ scale: 0.98 }}
               >
-                {saving ? 'Saving…' : (hasBirthData ? 'Update Birth Data' : 'Save Birth Data')}
+                {saving ? 'Saving…' : justSaved === 'birth' ? 'Saved ✓' : (hasBirthData ? 'Update Birth Data' : 'Save Birth Data')}
               </motion.button>
+              {justSaved === 'birth' && (
+                <p role="status" className="text-green-400 text-xs text-center">Birth data saved</p>
+              )}
 
               {/* Remove */}
               {hasBirthData && (
