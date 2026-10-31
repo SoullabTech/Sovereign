@@ -20,7 +20,7 @@ export type NoiseSpec = { gain: number; bandHz: number; q: number; sweepHz: numb
 export type TickSpec = { kind: 'click' | 'pluck' | 'soft'; bpm: number; gain: number };
 // Real recorded nature layers (loops). Gains are 0..1.2 relative levels; the engine plays a layer only when its
 // gain is above zero and its file can be loaded, so a missing recording leaves the synthesized sound alone.
-export type RecordedLayerId = 'night' | 'forest' | 'wind' | 'waves' | 'rain' | 'birds';
+export type RecordedLayerId = 'night' | 'forest' | 'wind' | 'waves' | 'rain' | 'birds' | 'trees';
 export type RecordedMix = Partial<Record<RecordedLayerId, number>>;
 export type SoundscapeSpec = {
   world: FocusMusicalWorld;
@@ -75,11 +75,11 @@ const STIM = {
 // Which recordings each need leans on (nature world). Stimulation scales the whole mix; verbal tasks keep the
 // louder, changing layers (wind, waves) down so they do not compete with reading or writing.
 const NATURE_MIX: Record<FocusNeed, RecordedMix> = {
-  arrive:   { night: .7, forest: .5, birds: .45 },
-  steady:   { forest: .8, wind: .25 },
+  arrive:   { night: .7, forest: .5, birds: .45, trees: .25 },
+  steady:   { forest: .8, wind: .25, trees: .35 },
   deep:     { rain: .8, night: .4 },
   activate: { wind: .6, waves: .5, forest: .3 },
-  create:   { forest: .6, waves: .5 },
+  create:   { forest: .6, waves: .5, trees: .3 },
   reset:    { waves: .8, wind: .3 },
 };
 // Stimulation changes the character of the mix, not only its level: Low keeps the calm layers (night, forest, rain, birds)
