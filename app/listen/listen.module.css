@@ -166,3 +166,5 @@
 /* A quieter screen: fewer ornaments, no motion; controls and Stop are untouched */
 :global(body[data-quiet-ui]) .studioAtmosphere,:global(body[data-quiet-ui]) .orb,:global(body[data-quiet-ui]) .immersiveVisual,:global(body[data-quiet-ui]) .studioWorkOrb{display:none}
 :global(body[data-quiet-ui]) *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+
+.studioWorkNote{margin:12px 0 0;padding:10px 12px;border-left:2px solid #e1c28c;background:rgba(225,194,140,.08);color:#e6d8bf;font-size:13px;line-height:1.5}

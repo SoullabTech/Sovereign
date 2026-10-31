@@ -254,6 +254,11 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
                 }}>
                 {work.manifest ? 'Enter experience' : 'View study'}
               </button>
+              {selectedWork && !work.manifest && (
+                <p className={styles.studioWorkNote} role="status" data-sound-studio-study-note={work.id}>
+                  {work.title} is an authoring study. It is kept here for review and does not have playable sound in this build.
+                </p>
+              )}
             </article>
           );
         })}
