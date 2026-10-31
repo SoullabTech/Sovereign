@@ -20,10 +20,15 @@ type Props = {
   onStopMusic: () => void;
   onVolume: (volume: number) => void;
   onLooping: (enabled: boolean) => void;
+  volumeAdjustable?: boolean;
+  focusSoundLabel?: string | null;
+  onPlayFocusSound?: () => void;
   onPauseFocus: () => void;
   onResumeFocus: () => void;
   onStopFocus: () => void;
 };
+
+type SleepAction = 'fade' | 'stop';
 
 const COMPANION_LEVELS = [
   { id: 'under', label: 'Under', value: 12, description: 'Very quiet beneath foreground music' },
@@ -35,12 +40,17 @@ const FADE_STEPS = 24;
 
 export default function PersistentListeningDock({
   snapshot, volume, looping, loopAvailable, displayed, focusSession, focusRemainingLabel,
-  onPauseMusic, onResumeMusic, onStopMusic, onVolume, onLooping,
+  onPauseMusic, onResumeMusic, onStopMusic, onVolume, onLooping, volumeAdjustable = true, focusSoundLabel = null, onPlayFocusSound,
   onPauseFocus, onResumeFocus, onStopFocus,
 }: Props) {
   const [mixOpen, setMixOpen] = useState(false);
   const [companionMode, setCompanionMode] = useState(false);
   const [fading, setFading] = useState(false);
+  // Sleep timer: member-set only, ends in a terminal Stop, never resumes anything.
+  const [sleep, setSleep] = useState<{ endsAt: number; label: string; action: SleepAction } | null>(null);
+  const [sleepAction, setSleepAction] = useState<SleepAction>('fade');
+  const [clockTime, setClockTime] = useState('');
+  const [, setTick] = useState(0);
   const lastAudibleVolume = useRef(volume > 0 ? volume : 22);
   const fadeTimer = useRef<number | null>(null);
   const audioDisplayed = snapshot.kind !== 'none' || snapshot.message.startsWith('MAIA is speaking.');
@@ -55,6 +65,47 @@ export default function PersistentListeningDock({
   useEffect(() => () => {
     if (fadeTimer.current !== null) window.clearInterval(fadeTimer.current);
   }, []);
+
+  // Always call the latest fade/stop so a timer set long ago never acts on stale state.
+  const boundary = useRef<() => void>(() => undefined);
+  boundary.current = () => {
+    if (!sleep) return;
+    const action = sleep.action;
+    setSleep(null);
+    if (action === 'fade') fadeAndStop(); else stopNow();
+  };
+  useEffect(() => {
+    if (!sleep) return;
+    const timer = window.setInterval(() => {
+      if (Date.now() >= sleep.endsAt) boundary.current();
+      else setTick(value => value + 1);
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [sleep]);
+  // Stopping or clearing the field ends the timer; it can never restart sound.
+  useEffect(() => {
+    if (snapshot.kind === 'none' && sleep) setSleep(null);
+  }, [snapshot.kind, sleep]);
+
+  const armSleep = (endsAt: number, label: string) => {
+    setSleep({ endsAt, label, action: volumeAdjustable ? sleepAction : 'stop' });
+  };
+  const armSleepMinutes = (minutes: number) =>
+    armSleep(Date.now() + minutes * 60_000, `${minutes} minutes`);
+  const armSleepClock = () => {
+    const match = /^(\d{1,2}):(\d{2})$/.exec(clockTime);
+    if (!match) return;
+    const target = new Date();
+    target.setHours(Number(match[1]), Number(match[2]), 0, 0);
+    if (target.getTime() <= Date.now() + 30_000) target.setDate(target.getDate() + 1);
+    armSleep(target.getTime(), `${match[1].padStart(2, '0')}:${match[2]}`);
+  };
+  const sleepRemainingLabel = (endsAt: number) => {
+    const seconds = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return hours > 0 ? `${hours}h ${String(minutes).padStart(2, '0')}m` : `${minutes}m ${String(seconds % 60).padStart(2, '0')}s`;
+  };
 
   const cancelFade = () => {
     if (fadeTimer.current !== null) {
@@ -123,6 +174,7 @@ export default function PersistentListeningDock({
       data-listen-companion-mode={companionMode ? 'on' : 'off'}
       data-listen-continuation={snapshot.continuation ?? 'none'}
       role="region" aria-label="Persistent Soullab listening controls"
+      data-dock-expanded={mixOpen ? 'true' : 'false'}
       className={styles.dock}
       style={{ display: displayed ? 'flex' : 'none' }}>
       {audioDisplayed && (
@@ -157,6 +209,10 @@ export default function PersistentListeningDock({
       )}
 
       <div className={styles.controls}>
+        {focusDisplayed && focusSoundLabel && snapshot.kind === 'none' && onPlayFocusSound && (
+          <button type="button" className={styles.control} data-focus-dock-play-sound="true"
+            onClick={onPlayFocusSound} aria-label={`Play ${focusSoundLabel}`}>▶ {focusSoundLabel}</button>
+        )}
         {focusDisplayed && focusSession?.status === 'running' && (
           <button type="button" className={styles.focusControl}
             onClick={onPauseFocus} aria-label="Pause Focus Field session">Pause focus</button>
@@ -187,9 +243,7 @@ export default function PersistentListeningDock({
             aria-expanded={mixOpen} aria-controls="soullab-companion-controls"
             aria-label={`${mixOpen ? 'Close' : 'Open'} companion, volume, and loop controls`}
             onClick={() => setMixOpen(value => !value)}>
-            {snapshot.continuation === 'until-stop'
-              ? `Until Stop · ${Math.round(volume)}%`
-              : looping ? `Loop · ${Math.round(volume)}%` : `Mix ${Math.round(volume)}%`}
+            {mixOpen ? 'Less' : 'More'}
           </button>
         )}
       </div>
@@ -208,6 +262,8 @@ export default function PersistentListeningDock({
           data-listen-companion-panel="true" aria-label="Companion listening controls">
           <div className={styles.mixHeader}>
             <div>
+              <strong data-listen-sheet-title="true">{snapshot.title}</strong>
+              <span>{snapshot.subtitle}</span>
               <strong>Soullab field</strong>
               <span>Other music stays in its original app. These controls change only Soullab.</span>
             </div>
@@ -218,6 +274,8 @@ export default function PersistentListeningDock({
             </button>
           </div>
 
+          {volumeAdjustable ? (
+            <>
           <label className={styles.mixVolume}>
             <span>Field volume <output>{Math.round(volume)}%</output></span>
             <input aria-label="Soullab field volume" type="range" min="0" max="100"
@@ -258,6 +316,56 @@ export default function PersistentListeningDock({
               onClick={fadeAndStop}>
               {fading ? 'Fading…' : 'Fade 12s & stop'}
             </button>
+          </div>
+            </>
+          ) : (
+            <p className={styles.mixBoundary} data-listen-volume-fixed="true">
+              This device sets the level of this sound: use your phone's volume buttons. Soullab cannot change it, so there is no volume slider or fade here.
+            </p>
+          )}
+
+          <div className={styles.sleepTimer} data-listen-sleep-timer="true" role="group" aria-label="Sleep timer">
+            <div className={styles.sleepHead}>
+              <strong>Sleep timer</strong>
+              <span>{sleep
+                ? `${sleep.action === 'fade' ? 'Fade begins' : 'Stops'} in ${sleepRemainingLabel(sleep.endsAt)} · ${sleep.label}`
+                : 'Until I Stop — nothing ends this field but you.'}</span>
+            </div>
+            <div className={styles.presets}>
+              {[15, 30, 60, 90].map(minutes => (
+                <button key={minutes} type="button" className={styles.preset}
+                  data-listen-sleep-minutes={minutes}
+                  aria-pressed={sleep?.label === `${minutes} minutes`}
+                  onClick={() => armSleepMinutes(minutes)}>
+                  <strong>{minutes} min</strong>
+                </button>
+              ))}
+              <button type="button" className={styles.preset} data-listen-sleep-off="true"
+                aria-pressed={!sleep} onClick={() => setSleep(null)}>
+                <strong>Until I Stop</strong>
+              </button>
+            </div>
+            <div className={styles.sleepClock}>
+              <label>At a clock time
+                <input type="time" value={clockTime} onChange={event => setClockTime(event.target.value)} />
+              </label>
+              <button type="button" className={styles.preset} onClick={armSleepClock} disabled={!clockTime}>
+                <strong>Set</strong>
+              </button>
+            </div>
+            {volumeAdjustable && <div className={styles.presets} role="radiogroup" aria-label="When the timer ends">
+              <button type="button" role="radio" aria-checked={sleepAction === 'fade'} className={styles.preset}
+                onClick={() => { setSleepAction('fade'); setSleep(current => current ? { ...current, action: 'fade' } : current); }}>
+                <strong>Fade 12 seconds, then Stop</strong>
+              </button>
+              <button type="button" role="radio" aria-checked={sleepAction === 'stop'} className={styles.preset}
+                onClick={() => { setSleepAction('stop'); setSleep(current => current ? { ...current, action: 'stop' } : current); }}>
+                <strong>Stop immediately</strong>
+              </button>
+            </div>}
+            <p className={styles.mixBoundary}>
+              The timer ends in Stop and nothing else. It plays no guidance, never starts a Dawn Return, and never resumes sound after an interruption. Changing it takes your action.
+            </p>
           </div>
 
           <p className={styles.mixBoundary}>

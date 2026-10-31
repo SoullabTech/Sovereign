@@ -324,7 +324,7 @@ const check = (profile, name, pass, detail = '') => {
       await page.getByRole('button', { name: 'Sound Studio' }).click();
       await page.locator('[data-sound-studio-field="true"]').waitFor();
       await page.locator('[data-sound-studio-work="open-ground-432-v1"] button').click();
-      check(profile.name, 'return-rejoins-same-open-ground-session', await page.getByRole('button', { name: 'Pause Open Ground' }).isVisible());
+      check(profile.name, 'return-rejoins-same-open-ground-session', await page.getByRole('button', { name: 'Pause persistent music' }).isVisible());
       const immersiveWidths = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
       check(profile.name, 'no-horizontal-overflow-in-immersive-mode', immersiveWidths.document <= immersiveWidths.viewport + 1, JSON.stringify(immersiveWidths));
 

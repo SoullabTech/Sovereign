@@ -59,3 +59,110 @@
 @media(max-width:700px){.studioField{margin:0 10px 24px;padding:22px 16px;border-radius:15px;scroll-margin-top:12px}.studioHeader h2{font-size:42px}.studioHeader p{font-size:13px}.studioContinuity{display:grid;grid-template-columns:1fr}.studioDoorGrid{grid-template-columns:1fr 1fr;gap:7px;margin-top:26px}.studioDoor,.studioDoorActive{min-height:142px;padding:14px}.studioDoor strong,.studioDoorActive strong{font-size:21px}.studioDoor small,.studioDoorActive small{font-size:10px}.studioDoorPanel{padding:15px}.studioDoorPanel h3{font-size:23px}.studioShelfHead{margin-top:36px}.studioWorkGrid{grid-template-columns:1fr}.studioWork,.studioWorkSelected{min-height:270px}.immersiveExperience{min-height:610px;border-radius:14px}.immersiveContent{min-height:610px;padding:78px 20px 34px}.immersiveContent h3{font-size:61px}.immersiveInvitation{font-size:17px}.immersiveOrb{width:360px;height:360px;right:-150px;opacity:.42}.immersivePassages{grid-template-columns:repeat(2,minmax(0,1fr))}.immersiveActions .play,.immersiveActions .secondary,.immersiveActions .ghost{min-height:46px}.immersiveActions .play{flex:1}.studioGlowOne{right:-330px}.studioGlowTwo{left:-50%;width:500px}}
 @media(max-width:420px){.studioDoorGrid{grid-template-columns:1fr}.studioDoor,.studioDoorActive{min-height:126px}.immersiveTopline span{max-width:210px}.immersiveContent h3{font-size:55px}.immersivePassages{grid-template-columns:1fr 1fr}.immersiveTimes{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.studioDoor,.studioDoorActive,.immersiveProgress span{transition:none}.studioDoor:hover{transform:none}}
+
+/* SOUND-STUDIO-UIUX-02 · experience architecture: Now / Fields / Shelf / Studio / Lab.
+   Presentation only. Appended last so it refines, never replaces, earlier layers. */
+.shell .navButton,.shell .navActive{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;text-align:left;border:0;border-radius:9px;padding:11px 13px;background:transparent;font-size:13px;color:#c5cbcb;font-size:13px}
+.shell .navButton:hover{background:rgba(235,221,186,.08);color:white}
+.navActive{background:linear-gradient(90deg,rgba(192,146,90,.25),transparent);color:#f6e5c8;border-left:2px solid var(--amber)}
+.tabBar{display:none}
+.shell .backLink{justify-self:start;min-height:44px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:transparent;color:#ead7b5;font-size:13px}
+.shelfHead h2{font-family:Georgia,serif;font-weight:400;font-size:clamp(28px,3.4vw,42px);letter-spacing:-.03em;margin:6px 0 8px}.shelfHead p{max-width:640px;margin:0}
+
+/* Now */
+.nowField{max-width:980px;margin:0 auto;padding:clamp(28px,6vw,72px) 4.7% 40px;display:grid;gap:30px}
+.nowField h2{font-family:Georgia,'Times New Roman',serif;font-size:clamp(38px,5.4vw,68px);font-weight:400;line-height:1.05;letter-spacing:-.045em;margin:12px 0 12px}
+.nowField header p{margin:0;max-width:560px;color:#c0cac9;font-size:16px;line-height:1.7}
+.nowContinue{display:grid;gap:3px;text-align:left;min-height:88px;padding:20px 24px;border-radius:18px;border:1px solid rgba(223,193,140,.42);background:linear-gradient(135deg,rgba(207,164,94,.2),rgba(37,74,86,.22));color:#f3e6d3}
+.nowContinue span{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#d0b785}.nowContinue strong{font-family:Georgia,serif;font-size:28px;font-weight:400;color:#f5dfbb}.nowContinue small{font-size:12px;color:#aebfc1}
+.nowSupports{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.nowSupport{display:grid;gap:6px;align-content:end;text-align:left;min-height:132px;padding:20px 22px;border-radius:18px;border:1px solid rgba(222,205,176,.16);background:linear-gradient(155deg,rgba(24,44,50,.9),rgba(7,16,21,.96));color:#dce4e1;transition:border-color .2s,transform .2s}
+.nowSupport:hover{border-color:rgba(235,205,155,.5);transform:translateY(-2px)}.nowSupport strong{font-family:Georgia,serif;font-size:27px;font-weight:400;color:#f3dfbd}.nowSupport span{font-size:13px;color:#a9bcbd}
+.nowMore{display:flex;flex-wrap:wrap;gap:10px}.nowMore button,.nowMore a{display:inline-flex;align-items:center;min-height:44px;padding:9px 18px;border-radius:999px;border:1px solid rgba(216,191,148,.34);background:transparent;color:#e9d3ad;font-size:13px}.nowMore button:hover,.nowMore a:hover{border-color:#efd29d}
+
+/* Fields: the four participation doors become a quiet row, the catalogue lighter */
+.studioHeader{grid-template-columns:1fr}.studioHeader h2{font-size:clamp(34px,4.4vw,56px)}
+.studioDoorGrid{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 10px}
+.studioDoor,.studioDoorActive{min-height:44px;padding:9px 18px;border-radius:999px;align-content:center;transition:border-color .2s,background .2s}
+.studioDoor strong,.studioDoorActive strong{font-size:16px}
+.studioDoorPanel{grid-template-columns:1fr;gap:6px;padding:14px 18px}.studioDoorPanel h3{font-size:clamp(19px,2vw,24px);margin:0}
+.studioShelfHead{margin:34px 0 14px}.studioShelfHead h3{font-size:clamp(24px,3vw,34px)}
+.studioWork,.studioWorkSelected{min-height:0}
+.studioWorkAction{min-height:44px}
+
+/* Field detail: one human choice, technical truth one drawer away */
+.editionChooser{border:0;padding:0;margin:20px 0 0;min-width:0}
+.editionChooser legend{padding:0;margin-bottom:10px;font-family:Georgia,serif;font-size:clamp(17px,2vw,21px);color:#eadcc0}
+.editionRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.edition,.editionActive{display:grid;gap:3px;text-align:left;min-height:64px;padding:12px 14px;border-radius:14px;border:1px solid rgba(224,206,173,.2);background:rgba(4,10,14,.45);color:#dfe5e1}
+.edition strong,.editionActive strong{font-family:Georgia,serif;font-size:17px;font-weight:400;color:#f0dcb9}.edition span,.editionActive span{font-size:11px;line-height:1.45;color:#a6b8b9}
+.editionActive{border-color:#d9bc86;background:linear-gradient(145deg,rgba(207,170,103,.2),rgba(37,74,86,.22))}
+.returnRow{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:18px;font-size:12px;color:#aebfc1}
+.aboutField{margin-top:22px;max-width:760px;border-top:1px solid rgba(229,211,181,.14);padding-top:12px}
+.aboutField summary{display:inline-flex;align-items:center;min-height:44px;cursor:pointer;color:#cdbb97;font-size:13px;letter-spacing:.04em}
+.aboutField p{font-size:12px;line-height:1.7;color:#a9bbbc}.aboutField .immersivePassages{margin:14px 0}
+.immersiveTopline span{font-size:10px}.immersiveStatus{font-size:12px}.immersiveTimes{font-size:11px}.studioStatus{font-size:12px}
+
+/* Extended Night modality: near-black, no bright button, the field recedes */
+.immersiveExperience[data-night-mode="true"]{background:#02050a;border-color:rgba(214,194,160,.12)}
+.immersiveExperience[data-night-mode="true"] .immersiveVisual{opacity:.42;filter:saturate(.55) brightness(.7)}
+.immersiveExperience[data-night-mode="true"] .immersiveContent h3{color:#e7d2ae}
+.immersiveExperience[data-night-mode="true"] .play{background:rgba(238,210,160,.14);color:#e5d5b4;border-color:rgba(238,210,160,.34)}
+.immersiveExperience[data-night-mode="true"] .play:hover{background:rgba(238,210,160,.22)}
+.immersiveExperience[data-night-mode="true"] .secondary{background:rgba(0,0,0,.35);color:#d8c9ad}
+.immersiveExperience[data-night-mode="true"] .immersiveProgress span{background:linear-gradient(90deg,#6f5233,#b99a6c)}
+.immersiveContent h3,.immersiveInvitation,.immersiveStage,.immersiveProgress,.immersiveTimes,.immersiveStatus,.aboutField,.immersiveVisual,.immersiveActions,.immersiveTopline{transition:opacity 1.6s ease,filter 1.6s ease}
+.immersiveExperience[data-quiet="true"]{background:#010204}
+.immersiveExperience[data-quiet="true"] .immersiveVisual{opacity:.12}
+.immersiveExperience[data-quiet="true"] .immersiveContent h3,.immersiveExperience[data-quiet="true"] .immersiveInvitation,.immersiveExperience[data-quiet="true"] .immersiveStatus,.immersiveExperience[data-quiet="true"] .aboutField,.immersiveExperience[data-quiet="true"] .immersiveTopline{opacity:.12}
+.immersiveExperience[data-quiet="true"] .immersiveStage,.immersiveExperience[data-quiet="true"] .immersiveProgress,.immersiveExperience[data-quiet="true"] .immersiveTimes{opacity:.32}
+.immersiveExperience[data-quiet="true"] .immersiveActions{opacity:.5}
+
+/* One player, never two control sets: fold the shared dock while the field already carries them */
+:global(body[data-sound-immersive-active]) :global([data-listen10-persistent-dock="true"]) > label,
+:global(body[data-sound-immersive-active]) :global([data-listen10-persistent-dock="true"]) > span[role="status"],
+:global(body[data-sound-immersive-active]) :global([data-listen10-persistent-dock="true"]) > a:nth-of-type(2),
+:global(body[data-sound-immersive-active]) :global([data-listen10-persistent-dock="true"]) > [data-listen62-passage]{display:none}
+:global(body[data-sound-immersive-active="night"]) :global([data-listen10-persistent-dock="true"]){filter:brightness(.62) saturate(.7)}
+
+@media(max-width:1120px){.nowSupports{grid-template-columns:repeat(2,minmax(0,1fr))}.editionRow{grid-template-columns:1fr}}
+@media(max-width:700px){
+  .nowField{padding:26px 16px 30px;gap:22px}.nowSupports{grid-template-columns:1fr 1fr;gap:9px}.nowSupport{min-height:118px;padding:16px}.nowSupport strong{font-size:23px}.nowContinue{padding:16px 18px}
+  .studioDoorGrid{gap:6px}.studioDoor,.studioDoorActive{padding:9px 14px}
+  .tabBar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;z-index:85;left:0;right:0;bottom:0;padding-bottom:env(safe-area-inset-bottom);background:rgba(7,16,21,.97);border-top:1px solid rgba(226,197,147,.28);backdrop-filter:blur(16px)}
+  .tab,.tabActive{display:grid;place-items:center;gap:1px;min-height:56px;padding:6px 2px;border:0;background:transparent;color:#a9b9ba;font-size:11px}
+  .tab span,.tabActive span{font-size:16px;line-height:1}.tabActive{color:#f0d3a0}
+  :global(body[data-studio-tabbar]) :global([data-listen10-persistent-dock="true"]){bottom:calc(56px + env(safe-area-inset-bottom))}
+  .main{padding-bottom:150px}
+}
+@media(max-width:420px){.nowSupports{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.nowSupport,.nowSupport:hover{transition:none;transform:none}.immersiveContent h3,.immersiveInvitation,.immersiveStage,.immersiveProgress,.immersiveTimes,.immersiveStatus,.aboutField,.immersiveVisual,.immersiveActions,.immersiveTopline{transition:none}}
+.immersiveContent h3{font-size:clamp(38px,5vw,68px);line-height:1.02;margin:10px 0}
+.immersiveExperience{min-height:0}.immersiveContent{min-height:0;justify-content:flex-start;padding-top:clamp(64px,8vw,96px)}
+@media(max-width:700px){.immersiveContent h3{font-size:clamp(36px,10.5vw,52px)}.immersiveContent{padding-top:72px}.immersiveExperience{min-height:0}}
+@media(max-width:420px){.nowSupports{grid-template-columns:1fr 1fr}.nowSupport{min-height:104px;padding:14px}.nowSupport strong{font-size:21px}.nowSupport span{font-size:12px}}
+.immersiveTopline button{min-height:44px;min-width:44px;padding:8px 16px}
+.focusTune{margin:16px 0 0;border:1px solid rgba(226,216,194,.14);border-radius:14px;padding:4px 16px 14px;background:rgba(4,12,16,.3)}
+.focusTune summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:#e9d3ae;font-family:Georgia,serif;font-size:18px}
+.focusTune .focusDoors{margin:8px 0 16px}.focusTune .focusForm{margin-top:4px}
+
+/* UIUX-02 revision: Stop never recedes with the field; essential meaning is never 9–10 px */
+.immersiveExperience[data-quiet="true"] .immersiveActions{opacity:1}
+.immersiveExperience[data-quiet="true"] .play{opacity:.55}
+.immersiveExperience[data-quiet="true"] .secondary{opacity:1;color:#f0dfc0;border-color:rgba(238,210,160,.6);background:rgba(0,0,0,.5)}
+.studioWork>span,.studioWorkSelected>span{font-size:11px}.studioWorkQualities small{font-size:11px;padding:5px 9px}
+.immersivePassages span{font-size:11px}.quality{font-size:11px}.focusWorld span{font-size:11px}.focusPrivacy{font-size:11px}
+.shell .nav a{min-height:44px;align-items:center}
+.immersiveHeld{margin:18px 0 0;font-size:13px;color:#cbbd9e}
+:global(body[data-sound-immersive-active="night"]) :global([data-listen10-persistent-dock="true"]){filter:brightness(.82) saturate(.8)}
+.focusSound{display:grid;gap:10px;margin:0 0 18px;padding:18px 20px;border:1px solid rgba(226,216,194,.14);border-radius:14px;background:rgba(4,12,16,.34)}
+.focusSound h3{margin:0;font-family:Georgia,serif;font-size:18px;font-weight:400;color:#e9d3ae}
+.focusSound .play{justify-self:start;min-height:44px}
+
+/* Focus · ADHD support section (member-opened) */
+.focusAdhd{margin:0 0 18px;border:1px solid rgba(226,216,194,.14);border-radius:14px;background:rgba(4,12,16,.34);padding:4px 20px 16px}
+.focusAdhd summary{display:flex;align-items:center;min-height:44px;cursor:pointer;font-family:Georgia,serif;font-size:18px;color:#e9d3ae}
+.adhdBlock{display:grid;gap:8px;margin-top:16px}.adhdBlock h3{margin:0;font-family:Georgia,serif;font-size:16px;font-weight:400;color:#f1dfc1}.adhdBlock .play,.adhdBlock .secondary{justify-self:start;min-height:44px}
+/* A quieter screen: fewer ornaments, no motion; controls and Stop are untouched */
+:global(body[data-quiet-ui]) .studioAtmosphere,:global(body[data-quiet-ui]) .orb,:global(body[data-quiet-ui]) .immersiveVisual,:global(body[data-quiet-ui]) .studioWorkOrb{display:none}
+:global(body[data-quiet-ui]) *{animation:none!important;transition:none!important;scroll-behavior:auto!important}

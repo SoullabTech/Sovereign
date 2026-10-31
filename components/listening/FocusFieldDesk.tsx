@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   FOCUS_FEEDBACK_TAGS,
   FOCUS_MUSICAL_WORLDS,
@@ -8,6 +8,8 @@ import {
   FOCUS_PRESET_MINUTES,
   FOCUS_STIMULATION_LEVELS,
   FOCUS_TASK_KINDS,
+  focusDurationMs,
+  focusElapsedMs,
   focusRemainingMs,
   type FocusDuration,
   type FocusFeedbackOutcome,
@@ -18,6 +20,7 @@ import {
   type FocusTaskKind,
 } from '@/lib/listening/focusFieldSession';
 import { suggestFocusWorlds } from '@/lib/listening/focusFieldGuide';
+import { focusTimeLabel } from '@/lib/listening/focusTimeDisplay';
 import { usePersistentListening } from './PersistentListeningProvider';
 import styles from '@/app/listen/listen.module.css';
 
@@ -102,6 +105,11 @@ export default function FocusFieldDesk() {
     if (entryMode === 'guide-me')
       setMusicalWorld(suggestFocusWorlds({ task, focusNeed, stimulation: next }).primary);
   };
+  // Share the choices as they are shaped, so a soundscape can follow them. State only: the desk plays nothing.
+  const setFocusDraft = transport?.setFocusDraft;
+  useEffect(() => {
+    setFocusDraft?.({ need: focusNeed, stimulation, world: musicalWorld, task });
+  }, [setFocusDraft, focusNeed, stimulation, musicalWorld, task]);
   const session = transport?.focusSession ?? null;
   const remaining = session && transport
     ? focusRemainingMs(session, new Date(transport.focusClockMs))
@@ -171,6 +179,64 @@ export default function FocusFieldDesk() {
 
       {!sessionActive && !sessionTerminal && (
         <>
+          <div className={styles.focusForm}>
+            <fieldset className={styles.focusFieldset}>
+              <legend>What are you doing?</legend>
+              <div className={styles.focusChoiceGrid}>
+                {FOCUS_TASK_KINDS.map(value => (
+                  <button key={value} type="button" aria-pressed={task === value}
+                    className={task === value ? styles.focusChoiceActive : styles.focusChoice}
+                    onClick={() => chooseTask(value)}>{TASK_LABELS[value]}</button>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className={styles.focusFieldset}>
+              <legend>What support would help?</legend>
+              <div className={styles.focusNeedGrid}>
+                {FOCUS_NEEDS.map(value => (
+                  <button key={value} type="button" aria-pressed={focusNeed === value}
+                    className={focusNeed === value ? styles.focusNeedActive : styles.focusNeed}
+                    onClick={() => chooseFocusNeed(value)}>
+                    <strong>{NEED_LABELS[value]}</strong><span>{NEED_LINES[value]}</span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className={styles.focusFieldset}>
+              <legend>How long?</legend>
+              <div className={styles.focusInlineChoices}>
+                {FOCUS_PRESET_MINUTES.map(minutes => (
+                  <button key={minutes} type="button"
+                    aria-pressed={durationMode === 'preset' && presetMinutes === minutes}
+                    className={durationMode === 'preset' && presetMinutes === minutes
+                      ? styles.focusChoiceActive : styles.focusChoice}
+                    onClick={() => { setDurationMode('preset'); setPresetMinutes(minutes); }}>
+                    {minutes} minutes
+                  </button>
+                ))}
+                <button type="button" aria-pressed={durationMode === 'custom'}
+                  className={durationMode === 'custom' ? styles.focusChoiceActive : styles.focusChoice}
+                  onClick={() => setDurationMode('custom')}>Custom</button>
+                <button type="button" aria-pressed={durationMode === 'untimed'}
+                  className={durationMode === 'untimed' ? styles.focusChoiceActive : styles.focusChoice}
+                  onClick={() => setDurationMode('untimed')}>No timer</button>
+              </div>
+              {durationMode === 'custom' && (
+                <label className={styles.focusTextLabel} htmlFor="focus-custom-minutes">
+                  Custom minutes (5–240)
+                  <input id="focus-custom-minutes" type="number" min="5" max="240" step="1"
+                    value={customMinutes}
+                    onChange={event => setCustomMinutes(Math.max(5, Math.min(240, Number(event.target.value) || 5)))} />
+                </label>
+              )}
+            </fieldset>
+
+          </div>
+
+          <details className={styles.focusTune}>
+            <summary>Tune session</summary>
           <div className={styles.focusDoors} role="group" aria-label="Focus Field entry">
             <button type="button" aria-pressed={entryMode === 'guide-me'}
               className={entryMode === 'guide-me' ? styles.focusDoorActive : styles.focusDoor}
@@ -184,37 +250,13 @@ export default function FocusFieldDesk() {
             </button>
           </div>
 
-          <div className={styles.focusForm}>
-            <fieldset className={styles.focusFieldset}>
-              <legend>What are you doing?</legend>
-              <div className={styles.focusChoiceGrid}>
-                {FOCUS_TASK_KINDS.map(value => (
-                  <button key={value} type="button" aria-pressed={task === value}
-                    className={task === value ? styles.focusChoiceActive : styles.focusChoice}
-                    onClick={() => chooseTask(value)}>{TASK_LABELS[value]}</button>
-                ))}
-              </div>
+            <div className={styles.focusForm}>
               <label className={styles.focusTextLabel} htmlFor="focus-task-label">
                 Optional private label
                 <input id="focus-task-label" maxLength={120} value={taskLabel}
                   onChange={event => setTaskLabel(event.target.value)}
                   placeholder="Chapter 4, budget review, open studio…" />
               </label>
-            </fieldset>
-
-            <fieldset className={styles.focusFieldset}>
-              <legend>What kind of focus?</legend>
-              <div className={styles.focusNeedGrid}>
-                {FOCUS_NEEDS.map(value => (
-                  <button key={value} type="button" aria-pressed={focusNeed === value}
-                    className={focusNeed === value ? styles.focusNeedActive : styles.focusNeed}
-                    onClick={() => chooseFocusNeed(value)}>
-                    <strong>{NEED_LABELS[value]}</strong><span>{NEED_LINES[value]}</span>
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-
             <fieldset className={styles.focusFieldset}>
               <legend>How much stimulation?</legend>
               <div className={styles.focusInlineChoices}>
@@ -255,36 +297,8 @@ export default function FocusFieldDesk() {
                 </div>
               </fieldset>
             )}
-
-            <fieldset className={styles.focusFieldset}>
-              <legend>How long?</legend>
-              <div className={styles.focusInlineChoices}>
-                {FOCUS_PRESET_MINUTES.map(minutes => (
-                  <button key={minutes} type="button"
-                    aria-pressed={durationMode === 'preset' && presetMinutes === minutes}
-                    className={durationMode === 'preset' && presetMinutes === minutes
-                      ? styles.focusChoiceActive : styles.focusChoice}
-                    onClick={() => { setDurationMode('preset'); setPresetMinutes(minutes); }}>
-                    {minutes} minutes
-                  </button>
-                ))}
-                <button type="button" aria-pressed={durationMode === 'custom'}
-                  className={durationMode === 'custom' ? styles.focusChoiceActive : styles.focusChoice}
-                  onClick={() => setDurationMode('custom')}>Custom</button>
-                <button type="button" aria-pressed={durationMode === 'untimed'}
-                  className={durationMode === 'untimed' ? styles.focusChoiceActive : styles.focusChoice}
-                  onClick={() => setDurationMode('untimed')}>No timer</button>
-              </div>
-              {durationMode === 'custom' && (
-                <label className={styles.focusTextLabel} htmlFor="focus-custom-minutes">
-                  Custom minutes (5–240)
-                  <input id="focus-custom-minutes" type="number" min="5" max="240" step="1"
-                    value={customMinutes}
-                    onChange={event => setCustomMinutes(Math.max(5, Math.min(240, Number(event.target.value) || 5)))} />
-                </label>
-              )}
-            </fieldset>
-          </div>
+            </div>
+          </details>
 
           <div className={styles.focusStartRow}>
             <div>
@@ -301,7 +315,13 @@ export default function FocusFieldDesk() {
         <div className={styles.focusActiveSession} data-focus-field-session={session.status}>
           <div className={styles.focusClock} aria-live="polite">
             <span>{session.status === 'running' ? 'In focus' : session.status === 'paused' ? 'Paused' : session.status === 'completed' ? 'Complete' : 'Stopped'}</span>
-            <strong>{formatClock(remaining)}</strong>
+            <strong>{transport && session
+              ? (focusTimeLabel(transport.focusTimeDisplay, {
+                  elapsedMs: focusElapsedMs(session, new Date(transport.focusClockMs)),
+                  totalMs: focusDurationMs(session.plan.duration),
+                  countdownLabel: formatClock(remaining),
+                }) || '·')
+              : formatClock(remaining)}</strong>
           </div>
           <div className={styles.focusSessionSummary}>
             <h3>{session.plan.taskLabel || TASK_LABELS[session.plan.task]}</h3>
@@ -326,13 +346,9 @@ export default function FocusFieldDesk() {
                 </label>
               </div>
               <div className={styles.focusActions}>
-                {session.status === 'running' ? (
-                  <button type="button" onClick={() => transport?.pauseFocusSession('member')}>Pause session</button>
-                ) : (
-                  <button type="button" onClick={() => transport?.resumeFocusSession()}>Resume by my action</button>
-                )}
-                <button type="button" className={styles.danger}
-                  onClick={() => transport?.stopFocusSession()}>Stop session</button>
+                <p className={styles.focusExplanation}>
+                  Pause and Stop for this session are in the player below.
+                </p>
               </div>
             </>
           )}
