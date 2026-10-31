@@ -31,6 +31,15 @@ Each side's features were kept. Where the two sides contradicted each other on a
 - **Migration lock-timeout law:** five production migrations predate the law on their own branch and have already run in production. Each carries the law's own exemption comment, and its SQL is unchanged.
 - **Other guards:** `check:no-supabase` and `check:no-openai` pass.
 
+## Expected red check: REFLECT-873 image canary
+This merge brings two one-shot review workflows from production's line onto canonical:
+- `reflect-873-linux-amd64-review-image.yml` builds an image and archives it with `retention-days: 2`.
+- `reflect-873-image-runtime-canary.yml` reopens the image that run `38817290236` archived on 2026-10-15.
+
+Each workflow runs only on a pull request that changes its own file. This PR adds them, so both run. The canary fails with "Artifact not found", because the pinned archive has expired. It cannot pass again.
+
+The check is not required on `clean-main-no-secrets`. It was deliberately left red rather than taught to skip a missing artifact: the evidence it pins is truly gone, and a green skip would claim otherwise. After this PR merges, neither workflow runs again unless its file is edited. Retiring or re-pinning the instrument belongs to the REFLECT-873 lane.
+
 ## Schema custody gap (not repaired here)
 Production's ledger records six applied migrations whose source is not in production's code and is not on canonical:
 
