@@ -9,6 +9,7 @@ import { housePreferenceTag } from '@/lib/house/preferencesStore';
 import { cabinStore } from '@/lib/cabin/request';
 import styles from './house.module.css';
 import { MaiaThresholdLink } from './MaiaThresholdLink';
+import { AccountMenu } from './AccountMenu';
 import { HousePreferencesProvider, HouseMemberControls, HouseCenter, HouseQuickAccess, HouseDirectory, HousePassingThrough } from './HousePreferences';
 import { selectPassingQuote } from './passingContext';
 import { PASSING_QUOTES } from './passingQuotes';
@@ -118,8 +119,7 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
           <MaiaThresholdLink />
         </nav>
         <nav className={styles.railFoot} aria-label="Member">
-          <Link href="/search">Search</Link>
-          <Link href="/profile">You</Link>
+          <AccountMenu />
         </nav>
       </aside>
 
