@@ -1,84 +1,43 @@
 /**
- * Server-side session authentication
+ * Server-side session authentication.
  *
- * Provides secure member authentication via:
- * 1. httpOnly session cookies (primary)
- * 2. x-member-id header with session token (fallback for Safari/iOS)
- *
- * Safari ITP blocks cookies in cross-origin contexts. The header fallback
- * allows clients to include their session token directly when cookies fail.
+ * A web cookie and Safari/iOS header are alternate transports for the same
+ * authority. When both are present, both must be valid and resolve to the same
+ * member; no priority-order fallback may hide a conflicting credential.
  */
-
 import { cookies, headers } from 'next/headers';
-import { query } from '@/lib/db/postgres';
+import { resolveSessionCredentialAuthority } from './sessionCredentialAuthority';
 
-/**
- * UUID validation regex
- */
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/**
- * Require authenticated member from session cookie or header fallback.
- * Throws if no valid session exists.
- *
- * Authentication methods (in priority order):
- * 1. maia_session cookie → lookup session in DB
- * 2. x-session-token header → lookup session in DB (Safari/iOS fallback)
- * 3. x-member-id header → direct member ID (legacy Capacitor support, requires valid session)
- *
- * @returns memberId from verified session
- * @throws Error with message 'AUTH_REQUIRED' if not authenticated
- */
+/** Require one verified member or throw AUTH_REQUIRED. */
 export async function requireMemberId(): Promise<string> {
   const cookieStore = await cookies();
   const headerStore = await headers();
+  const cookie = cookieStore.get('maia_session');
+  const headerPresented = headerStore.has('x-session-token');
 
-  // Method 1: Session cookie (preferred - works when cookies are sent)
-  const cookieToken = cookieStore.get('maia_session')?.value;
-  if (cookieToken) {
-    const memberId = await validateSessionToken(cookieToken);
-    if (memberId) {
-      return memberId;
-    }
+  const authority = await resolveSessionCredentialAuthority([
+    { source: 'cookie', presented: cookie !== undefined, value: cookie?.value },
+    {
+      source: 'header',
+      presented: headerPresented,
+      value: headerStore.get('x-session-token'),
+    },
+  ]);
+  if (!authority.ok) throw new Error('AUTH_REQUIRED');
+
+  const claims = [
+    headerStore.get('x-member-id'),
+    headerStore.get('x-maia-member-id'),
+    cookieStore.get('maia_member_id')?.value,
+  ].filter((claim): claim is string => Boolean(claim));
+  if (claims.some((claim) => claim !== authority.memberId)) {
+    throw new Error('AUTH_REQUIRED');
   }
 
-  // Method 2: Session token header (Safari/iOS fallback when cookies blocked)
-  const headerToken = headerStore.get('x-session-token');
-  if (headerToken) {
-    const memberId = await validateSessionToken(headerToken);
-    if (memberId) {
-      return memberId;
-    }
-  }
-
-  // Method 3 (x-member-id without session token) REMOVED for security.
-  // Previously accepted any valid member UUID if they had an active session,
-  // which allowed impersonation attacks. Use x-session-token header instead.
-
-  throw new Error('AUTH_REQUIRED');
+  return authority.memberId;
 }
 
-/**
- * Validate a session token and return the member ID if valid
- */
-async function validateSessionToken(token: string): Promise<string | null> {
-  const res = await query<{ member_id: string }>(
-    `SELECT member_id
-     FROM auth_sessions
-     WHERE session_token = $1
-       AND revoked = FALSE
-       AND expires_at > NOW()
-     LIMIT 1`,
-    [token]
-  );
-
-  return res.rows[0]?.member_id || null;
-}
-
-/**
- * Get member ID if authenticated, null otherwise.
- * Use this for optional auth (e.g., public pages with optional personalization).
- */
+/** Get member ID if authenticated, otherwise null. */
 export async function getMemberIdIfAuthenticated(): Promise<string | null> {
   try {
     return await requireMemberId();
@@ -87,10 +46,7 @@ export async function getMemberIdIfAuthenticated(): Promise<string | null> {
   }
 }
 
-/**
- * Check if current request has valid authentication.
- */
+/** Check whether the current request has valid authentication. */
 export async function isAuthenticated(): Promise<boolean> {
-  const memberId = await getMemberIdIfAuthenticated();
-  return memberId !== null;
+  return (await getMemberIdIfAuthenticated()) !== null;
 }

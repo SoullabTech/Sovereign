@@ -436,7 +436,8 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
     void commissionDiscuss(guard.current, commissioned, ask, {
       readPosture: () => readCurrentSanctuaryPosture(),
       session: writing,
-      openPassage: openBoundEditorialPassage,
+      openPassage: (sectionId, range, revisionNumber, posture) =>
+        openBoundEditorialPassage(sectionId, range, revisionNumber, posture, null),
       sendTurn: sendBoundEditorialTurn,
     }).then((outcome) => {
       /* LATE RESULT — attaches only to the gesture that commissioned it, on the section still in focus. */

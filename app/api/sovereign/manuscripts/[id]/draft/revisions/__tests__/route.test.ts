@@ -43,6 +43,8 @@ function guardRow(over: Record<string, unknown> = {}) {
       {
         id: DRAFT,
         version: 7,
+        // An unconverted legacy draft returns NULL, never an omitted field.
+        section_addressable_at: null,
         last_idempotency_key: null,
         last_idempotency_op: null,
         last_idempotency_payload_hash: null,
@@ -65,7 +67,11 @@ function jsonRequest(method: string, body?: unknown): NextRequest {
   );
 }
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockQuery.mockReset();
+  mockAuth.mockReset();
+});
 
 describe('revisions — auth & isolation', () => {
   it('GET returns 401 when unauthenticated', async () => {
@@ -93,7 +99,7 @@ describe('GET — list', () => {
   it('lists revisions newest-first without content bodies', async () => {
     mockAuth.mockResolvedValue(MEMBER);
     mockQuery
-      .mockResolvedValueOnce({ rows: [{ id: DRAFT }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: DRAFT, section_addressable_at: null }], rowCount: 1 })
       .mockResolvedValueOnce({
         rows: [
           { revision_number: 2, note: null, content_chars: 120, created_at: 't2' },
@@ -105,13 +111,16 @@ describe('GET — list', () => {
     expect(res.status).toBe(200);
     const payload = await res.json();
     expect(payload.draftId).toBe(DRAFT);
+    expect(payload.sectionAddressable).toBe(false);
+    expect(payload.revisions.every((r: {restorable?:boolean}) => r.restorable === true)).toBe(true);
     expect(payload.revisions).toEqual([
-      { revisionNumber: 2, note: null, contentChars: 120, createdAt: 't2' },
+      { revisionNumber: 2, note: null, contentChars: 120, createdAt: 't2', restorable: true },
       {
         revisionNumber: 1,
         note: 'Initialized verbatim from source',
         contentChars: 100,
         createdAt: 't1',
+        restorable: true,
       },
     ]);
   });
@@ -134,16 +143,19 @@ describe('POST — restore', () => {
 
   it('refuses a stale base rather than discarding newer work', async () => {
     mockAuth.mockResolvedValue(MEMBER);
-    mockQuery.mockResolvedValueOnce(guardRow({ version: 12 }));
+    mockQuery.mockResolvedValueOnce(guardRow({ version: 12 }))
+      .mockResolvedValueOnce(guardRow({ version: 12 }));
     const res = await POST(jsonRequest('POST', { revisionNumber: 2, ...GUARD }), ctx);
     expect(res.status).toBe(409);
     expect(await res.json()).toMatchObject({ reason: 'stale_base', currentRevisionId: 12 });
-    expect(mockQuery.mock.calls.filter((c) => /UPDATE|INSERT/.test(String(c[0])))).toHaveLength(0);
+    expect(mockQuery.mock.calls.filter((c) => /^\s*(UPDATE|INSERT|DELETE)\b/.test(String(c[0])))).toHaveLength(0);
   });
 
   it('returns 404 when the revision does not exist', async () => {
     mockAuth.mockResolvedValue(MEMBER);
-    mockQuery.mockResolvedValueOnce(guardRow()).mockResolvedValueOnce({ rows: [], rowCount: 0 });
+    mockQuery.mockResolvedValueOnce(guardRow())
+      .mockResolvedValueOnce(guardRow()) // locked current draft, before history lookup
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 });
     const res = await POST(jsonRequest('POST', { revisionNumber: 9, ...GUARD }), ctx);
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ error: 'Revision not found' });
@@ -152,7 +164,8 @@ describe('POST — restore', () => {
   it('restores by writing a NEW revision — never UPDATE/DELETE on revisions', async () => {
     mockAuth.mockResolvedValue(MEMBER);
     mockQuery
-      .mockResolvedValueOnce(guardRow()) // draft gate + concurrency guard
+      .mockResolvedValueOnce(guardRow()) // member-scoped representation read
+      .mockResolvedValueOnce(guardRow()) // locked draft + concurrency guard
       .mockResolvedValueOnce({ rows: [{ content: 'older words' }], rowCount: 1 }) // revision fetch
       .mockResolvedValueOnce({
         rows: [

@@ -6,7 +6,7 @@
  * 2. Detect patterns
  * 3. Create memory_links between them
  *
- * Run: DATABASE_URL="postgresql://soullab@localhost:5432/maia_consciousness" npx tsx scripts/proof-pattern-linking.ts
+ * Run: DATABASE_URL="postgresql://user@host:5432/database" npx tsx scripts/proof-pattern-linking.ts
  *
  * Options:
  *   --keep    Keep test data after ritual (for regression inspection)

@@ -9,12 +9,16 @@ import {
 export const dynamic = 'force-dynamic';
 
 const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
-const BODY_KEYS = ['sectionId', 'range', 'revisionNumber', 'sanctuary'] as const;
+const BODY_KEYS = ['sectionId', 'range', 'revisionNumber', 'sanctuary', 'relationshipId'] as const;
 
 function statusFor(reason: OpenEditorialRefusal): number {
   switch (reason) {
     case 'section_not_found': return 404;
-    case 'selection_invalid': return 400;
+    case 'selection_invalid':
+    case 'relationship_required':
+    case 'posture_required': return 400;
+    case 'origin_unavailable':
+    case 'sanctuary_unavailable': return 409;
     case 'selection_stale':
     case 'selection_ambiguous':
     case 'section_unprojectable':
@@ -65,9 +69,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'range.start and range.end must be integers' }, { status: 400 });
   }
 
+  if (typeof body.relationshipId !== 'string' || !body.relationshipId.length) {
+    return NextResponse.json({ error: 'relationship_required', persisted: false }, { status: 400 });
+  }
   const opened = await openEditorialRelationshipAtSelection({
     identity,
     sectionId: body.sectionId,
+    relationshipId: body.relationshipId,
+    posture: TurnPosture.resolve(body),
     revisionNumber: Number(body.revisionNumber),
     range: { start: Number(range.start), end: Number(range.end) },
   });

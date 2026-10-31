@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
@@ -9,6 +9,12 @@ import { HOME_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import type { StudioMode } from '@/app/writers-studio/full-redesign/types';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { fullPrefaceReading } from '@/lib/writersStudio/listen/fullPrefaceReading';
+import { COMPLETE_PREFACE_ID, resolveListenReading, hasListenSessionWork, LISTEN_LEAVE_WARNING } from '@/lib/writersStudio/listen/listenState';
+import { convertedWavBlob } from '@/lib/writersStudio/listen/wavExport';
+import {
+  READING_ATMOSPHERES, readingAtmosphereById,
+  type ReadingAtmosphere,
+} from '@/lib/writersStudio/listen/readingAtmosphere';
 import {
   measureMicLevels, meterPercentage, QUIET_MIC_LEVELS, voiceLevelGuidance,
   type MicLevels,
@@ -26,9 +32,9 @@ import {
   type BrowserCaptureInfo,
 } from '@/lib/writersStudio/listen/browserCaptureInfo';
 import styles from './ListenPilot.module.css';
+import { studioNavigationBase } from '@/lib/writersStudio/studioNavigationBase';
 
 type Source = { state: string; title?: string | null; version?: number; sections?: RebuildSection[] };
-const COMPLETE_PREFACE_ID = 'listen:entire-preface';
 type Take = {
   id: number;
   blob: Blob;
@@ -47,6 +53,7 @@ function formatDuration(seconds: number): string {
 
 export default function ListenPilot() {
   const params = useSearchParams();
+  const pathname = usePathname();
   const router = useRouter();
   const { id: appearance } = useAtmosphere();
   const manuscriptId = params?.get('m') || '';
@@ -55,11 +62,14 @@ export default function ListenPilot() {
   const [error, setError] = useState('');
   const [recording, setRecording] = useState(false);
   const [takes, setTakes] = useState<Take[]>([]);
+  const [wavConvertingId, setWavConvertingId] = useState<number | null>(null);
+  const [wavDownloadError, setWavDownloadError] = useState('');
   const [notes, setNotes] = useState('');
+  const [readingAtmosphere, setReadingAtmosphere] = useState<ReadingAtmosphere>('parchment');
   const [mic, setMic] = useState('');
   const [mics, setMics] = useState<MediaDeviceInfo[]>([]);
   const [inputChannel, setInputChannel] = useState<InputChannel>(1);
-  const [routedOutput, setRoutedOutput] = useState<{ channel: InputChannel; outputChannels: number; rateHz: number } | null>(null);
+  const [routedOutput, setRoutedOutput] = useState<{ channel: InputChannel; outputChannels: number; rateHz: number; verification: 'track-settings' | 'explicit-audio-graph' } | null>(null);
   const [captureInfo, setCaptureInfo] = useState<BrowserCaptureInfo | null>(null);
   const [inspecting, setInspecting] = useState(false);
   const [monitoring, setMonitoring] = useState(false);
@@ -73,8 +83,15 @@ export default function ListenPilot() {
   const meterPeakHold = useRef<Record<InputChannel, number>>({ 1: -60, 2: -60 });
   const chunks = useRef<Blob[]>([]);
   const takesRef = useRef<Take[]>([]);
+  const notesRef = useRef('');
 
   useEffect(() => { takesRef.current = takes; }, [takes]);
+  useEffect(() => { notesRef.current = notes; }, [notes]);
+  useEffect(() => {
+    // A reading atmosphere is an in-session presentation choice. Never leave
+    // manuscript identifiers in cross-login browser storage after Work deletion.
+    setReadingAtmosphere('parchment');
+  }, [manuscriptId]);
   useEffect(() => () => {
     if (meterFrame.current !== null) cancelAnimationFrame(meterFrame.current);
     if (media.current?.state === 'recording') media.current.stop();
@@ -84,7 +101,7 @@ export default function ListenPilot() {
   }, []);
   useEffect(() => {
     const protectUnsaved = (event: BeforeUnloadEvent) => {
-      if (takesRef.current.length > 0 || media.current?.state === 'recording') {
+      if (hasListenSessionWork(takesRef.current.length, notesRef.current, media.current?.state === 'recording')) {
         event.preventDefault();
         event.returnValue = '';
       }
@@ -95,6 +112,8 @@ export default function ListenPilot() {
 
   useEffect(() => {
     let live = true;
+    setSource(null);
+    setError('');
     if (!manuscriptId) { setError('Open Listen with an identified manuscript.'); return; }
     void (async () => {
       try {
@@ -103,12 +122,11 @@ export default function ListenPilot() {
         const s = await r.json() as Source;
         if (s.state !== 'section_aware' || !s.sections?.length) throw new Error('This manuscript is not section-addressable. No sections were guessed.');
         if (!live) return;
-        const requested = params?.get('section') || params?.get('s');
-        const first = s.sections.find((x) => x.draftSectionId === requested)
-          || s.sections.find((x) => /^preface$/i.test(x.heading?.trim() || ''))
-          || s.sections[0]!;
+        const requested = params?.get('section') ?? params?.get('s') ?? null;
+        const selection = resolveListenReading(s.sections, requested);
+        if (selection === null) throw new Error('The requested reading is unavailable. Return to your writing and choose a section.');
         setSource(s);
-        setSectionId(fullPrefaceReading(s.sections) ? COMPLETE_PREFACE_ID : first.draftSectionId);
+        setSectionId(selection);
       } catch (e) { if (live) setError(e instanceof Error ? e.message : 'Unable to read manuscript.'); }
     })();
     return () => { live = false; };
@@ -126,6 +144,11 @@ export default function ListenPilot() {
   );
   const words = readingSections.reduce((total, s) => total + (s.body.match(/\S+/g)?.length ?? 0), 0);
   const selectedTitle = isWholePreface ? 'Preface — complete reading' : (section?.heading || 'passage');
+  const paper = readingAtmosphereById(readingAtmosphere);
+  const chooseReadingAtmosphere = (next: ReadingAtmosphere) => {
+    // Local to this Listen view; manuscript and recording bytes are unchanged.
+    setReadingAtmosphere(next);
+  };
   const pageVoiceEnergy = monitoring
     ? Math.max(0, Math.min(1, meterPercentage(meterLevels[inputChannel].rmsDbfs) / 100))
     : 0;
@@ -133,10 +156,11 @@ export default function ListenPilot() {
   const pageVoiceScale = 0.82 + pageVoiceEnergy * 0.18;
   const changeMode = (mode: StudioMode) => {
     if (recording) return;
-    if (takes.length && !window.confirm('Your recordings have not been saved to the server. Download them before leaving Listen. Leave anyway?')) return;
+    if (hasListenSessionWork(takes.length, notes, recording) && !window.confirm(LISTEN_LEAVE_WARNING)) return;
     const next = new URLSearchParams(params?.toString() ?? '');
     next.set('mode', mode);
-    router.push('/writers-studio?' + next.toString());
+    const localReview = params?.get('localReview') === '1';
+    router.push(studioNavigationBase(pathname, localReview) + '?' + next.toString());
   };
   const startLevelPolling = (route: MonoCaptureRoute) => {
     if (meterFrame.current !== null) cancelAnimationFrame(meterFrame.current);
@@ -206,7 +230,7 @@ export default function ListenPilot() {
         newStream.getAudioTracks()[0]?.getSettings() ?? {}, preferredRecorderMime(),
       ));
       setRoutedOutput({
-        channel: newRoute.inputChannel, outputChannels: newRoute.outputChannels, rateHz: newRoute.outputRateHz,
+        channel: newRoute.inputChannel, outputChannels: newRoute.outputChannels, rateHz: newRoute.outputRateHz, verification: newRoute.verification,
       });
       setMonitoring(true);
       startLevelPolling(newRoute);
@@ -257,7 +281,7 @@ export default function ListenPilot() {
       const routed = monoRouteRef.current ?? await createMonoCaptureRoute(audio, inputChannel);
       monoRouteRef.current = routed;
       if (!monitoring) { setMonitoring(true); startLevelPolling(routed); }
-      setRoutedOutput({ channel: routed.inputChannel, outputChannels: routed.outputChannels, rateHz: routed.outputRateHz });
+      setRoutedOutput({ channel: routed.inputChannel, outputChannels: routed.outputChannels, rateHz: routed.outputRateHz, verification: routed.verification });
       const mime = preferredRecorderMime();
       const rec = new MediaRecorder(routed.stream, mime ? { mimeType: mime } : undefined);
       media.current = rec;
@@ -308,10 +332,29 @@ export default function ListenPilot() {
     a.download = name;
     a.click();
   };
+  const downloadWav = async (take: Take) => {
+    if (wavConvertingId !== null || recording) return;
+    setWavConvertingId(take.id);
+    setWavDownloadError('');
+    try {
+      const wav = await convertedWavBlob(take.blob);
+      const url = URL.createObjectURL(wav);
+      try {
+        download(url, take.filename.replace(/\.(webm|m4a)$/i, '') + '-converted-48kHz-24bit.wav');
+      } finally {
+        // The browser may still be reading the download URL after click().
+        window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      }
+    } catch (cause) {
+      setWavDownloadError(cause instanceof Error ? cause.message : 'WAV conversion failed. Download the original take.');
+    } finally {
+      setWavConvertingId(null);
+    }
+  };
 
   return (
     <Shell
-      mode="write"
+      mode="listen"
       appearance={appearance}
       geometry={HOME_GEOMETRY}
       memberInitial=""
@@ -345,18 +388,68 @@ export default function ListenPilot() {
                     '--page-voice-energy': pageVoiceEnergy,
                     '--page-voice-glow': pageVoiceGlow,
                     '--page-voice-scale': pageVoiceScale,
+                    '--reading-paper': paper.paper,
+                    '--reading-ink': paper.text,
+                    '--reading-heading': paper.heading,
+                    '--reading-muted': paper.muted,
+                    '--reading-rule': paper.rule,
+                    '--reading-accent': paper.accent,
+                    '--reading-control': paper.control,
+                    '--reading-glow-rgb': paper.glow,
                   } as CSSProperties}
                 >
                   <div className={styles.readingHead}>
                     <div className={styles.readingTop}>
                       <div className={styles.eyebrow}>Your manuscript · Version {source.version ?? 'current'} · Read only</div>
-                      {wholePreface && (
-                        <button type="button" className={styles.inlineButton}
-                          disabled={recording || isWholePreface}
-                          onClick={() => setSectionId(COMPLETE_PREFACE_ID)}>
-                          {isWholePreface ? 'Full Preface selected' : 'Read full Preface'} <span aria-hidden="true">↗</span>
-                        </button>
-                      )}
+                      <div className={styles.readingTopActions}>
+                        {wholePreface && (
+                          <button type="button" className={styles.inlineButton}
+                            disabled={recording || isWholePreface}
+                            onClick={() => setSectionId(COMPLETE_PREFACE_ID)}>
+                            {isWholePreface ? 'Full Preface selected' : 'Read full Preface'} <span aria-hidden="true">↗</span>
+                          </button>
+                        )}
+                        {monitoring && !recording ? (
+                          <button type="button" className={styles.inlineButton} onClick={releaseMicrophone}>
+                            Close mic levels
+                          </button>
+                        ) : !monitoring ? (
+                          <button type="button" className={styles.inlineButton}
+                            disabled={recording || inspecting}
+                            onClick={() => void startMicCheck()}
+                            title="Check your microphone before reading or starting an independent WAV capture">
+                            {inspecting ? 'Opening mic…' : 'Show mic levels'}
+                          </button>
+                        ) : <span className={styles.readingMicActive}>Mic live</span>}
+                      </div>
+                    </div>
+                    <div className={styles.atmospherePicker} role="group" aria-label="Reading atmosphere">
+                      <div className={styles.atmosphereCaption}>
+                        <span>Reading atmosphere</span>
+                        <small>Choose what fits the spirit of your work</small>
+                      </div>
+                      <div className={styles.atmosphereChoices}>
+                        {READING_ATMOSPHERES.map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            className={styles.atmosphereChoice}
+                            data-selected={readingAtmosphere === option.id ? 'true' : 'false'}
+                            aria-pressed={readingAtmosphere === option.id}
+                            title={option.meaning}
+                            aria-label={'Reading atmosphere: ' + option.label + '. ' + option.meaning}
+                            onClick={() => chooseReadingAtmosphere(option.id)}
+                          >
+                            <span
+                              className={styles.atmosphereSwatch}
+                              aria-hidden="true"
+                              style={{ background: option.paper, borderColor: option.rule }}
+                            />
+                            <span>{option.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <p className={styles.atmosphereHint}><strong>{paper.label}</strong> — {paper.meaning}. For this listening session only; your writing is unchanged.</p>
                     </div>
                     <label className={styles.fieldLabel} htmlFor="listen-section">Choose a reading</label>
                     <select id="listen-section" className={styles.select}
@@ -373,6 +466,27 @@ export default function ListenPilot() {
                   </div>
                   <div className={styles.manuscriptBody}>
                     <h2 className={styles.manuscriptHeading}>{selectedTitle}</h2>
+                    {monitoring && (
+                      <div className={styles.readerMicStrip} role="group" aria-label="Live microphone peak level during reading">
+                        <span className={styles.readerMicLive} aria-hidden="true" />
+                        <span className={styles.readerMicLabel}>LIVE · Input {inputChannel}</span>
+                        <div
+                          className={styles.readerMicTrack}
+                          role="meter"
+                          aria-label={'Input ' + inputChannel + ' digital peak'}
+                          aria-valuemin={-60}
+                          aria-valuemax={0}
+                          aria-valuenow={meterLevels[inputChannel].peakDbfs}
+                          aria-valuetext={meterLevels[inputChannel].peakDbfs.toFixed(1) + ' decibels full scale'}
+                        >
+                          <span style={{ width: meterPercentage(meterLevels[inputChannel].peakDbfs) + '%' }} />
+                        </div>
+                        <strong className={styles.readerMicNumber}>
+                          {meterLevels[inputChannel].peakDbfs.toFixed(1)} dBFS
+                        </strong>
+                        {meterLevels[inputChannel].clipped && <span className={styles.readerMicWarning} role="alert">Peak warning</span>}
+                      </div>
+                    )}
                     <article className={styles.manuscriptText} data-reading-scope={isWholePreface ? 'whole-preface' : 'single-section'}>
                       {readingSections.length > 0 ? readingSections.map((part, i) => (
                         <section className={styles.readingSection} key={part.draftSectionId} data-source-section-id={part.draftSectionId}>
@@ -420,7 +534,7 @@ export default function ListenPilot() {
                       </>
                     )}
                     <div className={styles.channelPicker}>
-                      <label htmlFor="listen-input-channel" className={styles.fieldLabel}>Which Scarlett input has your microphone?</label>
+                      <label htmlFor="listen-input-channel" className={styles.fieldLabel}>Which input is your microphone connected to?</label>
                       <select
                         id="listen-input-channel"
                         value={inputChannel}
@@ -431,28 +545,36 @@ export default function ListenPilot() {
                         <option value={1}>Input 1 (left) — microphone in first jack</option>
                         <option value={2} disabled={captureInfo?.microphoneChannels === 1}>Input 2 (right) — microphone in second jack</option>
                       </select>
-                      <p className={styles.channelHelp}>Listen captures the selected physical input as one centered mono channel. Use Input 1 for the microphone used in your first Preface take.</p>
+                      <p className={styles.channelHelp}>If you use a USB audio interface, choose the jack your microphone is connected to. Listen records that input as one centered mono channel.</p>
                     </div>
                     <div className={styles.formatPanel} data-capture-format-panel>
-                      <h4 className={styles.formatHeading}>Recording specifications</h4>
+                      {/* Any mismatch is safety-relevant and remains visible without opening
+                          optional technical details. No automatic mic inspection. */}
+                      {captureInfo?.microphoneSampleRateHz && captureInfo.microphoneSampleRateHz !== 48000 && (
+                        <p className={styles.formatWarning} role="status">
+                          Your input is reporting {(captureInfo.microphoneSampleRateHz / 1000).toLocaleString()} kHz, not 48 kHz. Check your microphone or audio interface settings, then inspect again.
+                        </p>
+                      )}
+                      <details className={styles.formatDetails} data-listen-format-details>
+                        <summary className={styles.formatHeading}>
+                          Recording details <span>Sample rate, format, and conversion</span>
+                        </summary>
                       <dl className={styles.formatFacts}>
                         <div><dt>Reported microphone rate</dt><dd>{captureInfo?.microphoneSampleRateHz ? (captureInfo.microphoneSampleRateHz / 1000).toLocaleString() + ' kHz' : 'Not reported yet'}</dd></div>
                         <div><dt>Microphone channels</dt><dd>{captureInfo?.microphoneChannels ?? 'Not reported yet'}</dd></div>
                         <div><dt>Output file</dt><dd>{outputFormatLabel(captureInfo?.outputMimeType ?? preferredRecorderMime())}</dd></div>
                         <div><dt>Output routing</dt><dd>{routedOutput ? 'Input ' + routedOutput.channel + ' → ' + routedOutput.outputChannels + ' channel mono' : 'Input ' + inputChannel + ' → mono when recording'}</dd></div>
-                        <div><dt>24-bit PCM WAV</dt><dd>Not available in this pilot</dd></div>
+                        {routedOutput && <div><dt>Mono routing check</dt><dd>{routedOutput.verification === 'track-settings'
+                          ? 'Confirmed by track settings' : 'Confirmed by explicit audio graph; track metadata unavailable'}</dd></div>}
+                        <div><dt>24-bit PCM WAV</dt><dd>Available as a local conversion after recording; browser capture itself is not a 24-bit master</dd></div>
                       </dl>
-                      {captureInfo?.microphoneSampleRateHz && captureInfo.microphoneSampleRateHz !== 48000 && (
-                        <p className={styles.formatWarning} role="status">
-                          Your input is reporting {(captureInfo.microphoneSampleRateHz / 1000).toLocaleString()} kHz, not 48 kHz. Check the interface rate in macOS Audio MIDI Setup, then inspect again.
-                        </p>
-                      )}
                       {captureInfo?.microphoneChannels && captureInfo.microphoneChannels !== 1 && (
                         <p className={styles.formatInfo}>
                           Your interface exposes {captureInfo.microphoneChannels} physical input channels. The new mono route selects input {inputChannel} and records it centered instead of leaving the opposite speaker silent.
                         </p>
                       )}
                       <p className={styles.formatExplanation}>We request a 48 kHz mono microphone feed with processing off, but your browser and hardware decide the actual input settings. A reported input rate does not make the compressed recording a 24-bit WAV master.</p>
+                      </details>
                     </div>
 
                     <section className={styles.voiceField} aria-label="Live voice field">
@@ -566,14 +688,23 @@ export default function ListenPilot() {
                   <div className={styles.recordBlock}>
                     <h3 className={styles.blockTitle}>2. Listen to your takes</h3>
                     {takes.length === 0 && <div className={styles.empty}>Your recordings will appear here after you stop a take.</div>}
+                    {takes.length > 0 && <p className={styles.takeConversionNotice}>
+                      Download the original recording or a converted 48 kHz / 24-bit PCM WAV.
+                      The WAV comes from the compressed original; conversion does not restore lost audio quality.
+                    </p>}
+                    {wavDownloadError && <p role="alert" className={styles.takeConversionError}>{wavDownloadError}</p>}
                     {takes.map((t) => (
                       <div key={t.id} className={styles.take}>
                         <strong>{t.filename}</strong>
                         <p className={styles.takeDetail}>Manuscript v{t.sourceVersion ?? 'unknown'} · {t.sourceSectionIds.length} source {t.sourceSectionIds.length === 1 ? 'section' : 'sections'} · {formatDuration(t.durationSeconds)} recorded · Input {t.inputChannel} → {t.outputChannels}-channel mono · {outputFormatLabel(t.capture.outputMimeType)}</p>
                         <audio controls src={t.url} className={styles.audio} aria-label={'Listen to ' + t.filename} />
                         <div className={styles.takeActions}>
-                          <button type="button" className={styles.secondaryButton} onClick={() => download(t.url, t.filename)}>Download original</button>
-                          <button type="button" className={styles.quietButton} onClick={() => {
+                          <button type="button" className={styles.secondaryButton} onClick={() => download(t.url, t.filename)}>Download original ({t.filename.toLowerCase().endsWith('.m4a') ? 'M4A' : 'WebM'})</button>
+                          <button type="button" className={styles.secondaryButton}
+                            disabled={recording || wavConvertingId !== null} onClick={() => void downloadWav(t)}>
+                            {wavConvertingId === t.id ? 'Converting WAV…' : 'Download WAV · 48 kHz / 24-bit (converted)'}
+                          </button>
+                          <button type="button" className={styles.quietButton} disabled={wavConvertingId === t.id} onClick={() => {
                             URL.revokeObjectURL(t.url);
                             setTakes((old) => old.filter((x) => x !== t));
                           }}>Discard</button>

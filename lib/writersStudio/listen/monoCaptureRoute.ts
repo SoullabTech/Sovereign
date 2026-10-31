@@ -8,6 +8,8 @@
  * This produces a mono stream for MediaRecorder, which may still use lossy
  * WebM/Opus or M4A. It is NOT native 24-bit PCM WAV capture.
  */
+import { verifyMonoOutput, type MonoOutputEvidence } from './monoOutputEvidence';
+
 export type InputChannel = 1 | 2;
 
 export type MonoCaptureRoute = {
@@ -15,6 +17,7 @@ export type MonoCaptureRoute = {
   inputChannel: InputChannel;
   outputChannels: number;
   outputRateHz: number;
+  verification: MonoOutputEvidence;
   /** Live, unrecorded views of the two physical interface inputs. */
   analysers: Readonly<Record<InputChannel, AnalyserNode>>;
   close: () => Promise<void>;
@@ -43,12 +46,14 @@ export async function createMonoCaptureRoute(
   }
 
   const context = new NativeAudioContext({ sampleRate: 48000 });
+  let outputStream: MediaStream | null = null;
   try {
     const input = context.createMediaStreamSource(sourceStream);
     const splitter = context.createChannelSplitter(2);
     const analyser1 = context.createAnalyser();
     const analyser2 = context.createAnalyser();
     const output = context.createMediaStreamDestination();
+    outputStream = output.stream;
 
     // Observe both physical inputs while routing only the chosen one to MediaRecorder.
     // Nothing connects to speakers, so the live voice field cannot create feedback.
@@ -71,22 +76,24 @@ export async function createMonoCaptureRoute(
     await context.resume();
 
     const monoTrack = output.stream.getAudioTracks()[0];
-    // A WebAudio destination may briefly report the default 2-channel setting
-    // even after it has been reconfigured. Wait for the actual track settings
-    // to settle before refusing the recording; never silently accept stereo.
+    // Reported stereo can briefly be stale, but may never be accepted. Missing
+    // settings on a WebAudio-generated track use the verified explicit graph.
     let reportedChannels = monoTrack?.getSettings().channelCount;
-    for (let i = 0; i < 14 && reportedChannels !== 1; i++) {
+    for (let i = 0; i < 14 && reportedChannels !== undefined && reportedChannels !== 1; i++) {
       await new Promise<void>((resolve) => setTimeout(resolve, 100));
       reportedChannels = monoTrack?.getSettings().channelCount;
     }
-    if (reportedChannels !== 1) {
-      throw new Error('The browser did not confirm mono output; recording was not started.');
-    }
+    const verification = verifyMonoOutput({
+      destinationChannels: output.channelCount, channelCountMode: output.channelCountMode,
+      audioTrackCount: output.stream.getAudioTracks().length,
+      trackKind: monoTrack?.kind, trackReadyState: monoTrack?.readyState, reportedChannels,
+    });
     return {
       stream: output.stream,
       inputChannel,
       outputChannels: 1,
       outputRateHz: context.sampleRate,
+      verification,
       analysers: { 1: analyser1, 2: analyser2 },
       close: async () => {
         try {
@@ -101,6 +108,7 @@ export async function createMonoCaptureRoute(
       },
     };
   } catch (error) {
+    outputStream?.getTracks().forEach(track => track.stop());
     if (context.state !== 'closed') await context.close();
     throw error;
   }

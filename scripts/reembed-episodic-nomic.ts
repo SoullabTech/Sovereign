@@ -12,11 +12,12 @@
  *   docker exec maia-sovereign sh -c 'npx tsx scripts/reembed-episodic-nomic.ts'
  */
 import { Pool } from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 import { writeFileSync } from 'fs';
 import { embedWithOllama } from '../lib/ai/localEmbeddingClient';
 
 async function main() {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const pool = new Pool({ connectionString: requireDatabaseUrl(process.env.DATABASE_URL) });
   const { rows } = await pool.query(
     `SELECT id,
             coalesce(experience_title,'')       AS title,

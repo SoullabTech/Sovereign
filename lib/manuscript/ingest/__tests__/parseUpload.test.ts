@@ -1,5 +1,6 @@
 import path from 'node:path';
 import fs from 'node:fs';
+import JSZip from 'jszip';
 import {
   parseUpload,
   detectFormat,
@@ -27,6 +28,7 @@ describe('detectFormat', () => {
   it('maps known extensions', () => {
     expect(detectFormat('a.docx')).toBe('docx');
     expect(detectFormat('a.pdf')).toBe('pdf');
+    expect(detectFormat('a.epub')).toBe('epub');
     expect(detectFormat('a.txt')).toBe('text');
     expect(detectFormat('a.md')).toBe('text');
     expect(detectFormat('a.markdown')).toBe('text');
@@ -34,12 +36,49 @@ describe('detectFormat', () => {
   });
   it('falls back to MIME when the extension is unknown', () => {
     expect(detectFormat('noext', 'application/pdf')).toBe('pdf');
+    expect(detectFormat('noext', 'application/epub+zip')).toBe('epub');
     expect(detectFormat('noext', 'text/plain')).toBe('text');
     expect(
       detectFormat('noext', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
     ).toBe('docx');
   });
 });
+
+async function epubFixture(options: { encrypted?: boolean } = {}): Promise<Buffer> {
+  const zip = new JSZip();
+  zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
+  zip.file('META-INF/container.xml', `<?xml version="1.0"?>
+    <container xmlns="urn:oasis:names:tc:opendocument:xmlns:container" version="1.0">
+      <rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles>
+    </container>`);
+  zip.file('OEBPS/content.opf', `<?xml version="1.0" encoding="UTF-8"?>
+    <package xmlns="http://www.idpf.org/2007/opf" version="3.0">
+      <metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>A Small River</dc:title></metadata>
+      <manifest>
+        <item id="one" href="chapter-one.xhtml" media-type="application/xhtml+xml"/>
+        <item id="two" href="chapter-two.xhtml" media-type="application/xhtml+xml"/>
+      </manifest>
+      <spine><itemref idref="one"/><itemref idref="two"/></spine>
+    </package>`);
+  zip.file('OEBPS/chapter-one.xhtml', `<?xml version="1.0"?>
+    <html xmlns="http://www.w3.org/1999/xhtml"><body>
+      <h1>Chapter One</h1><p>The morning came slowly over the river.</p>
+    </body></html>`);
+  zip.file('OEBPS/chapter-two.xhtml', `<?xml version="1.0"?>
+    <html xmlns="http://www.w3.org/1999/xhtml"><body>
+      <h2>A Quieter Passage</h2><p>She stayed until the water became still.</p>
+    </body></html>`);
+  if (options.encrypted) {
+    zip.file('META-INF/encryption.xml', `<?xml version="1.0"?>
+      <encryption xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+        <EncryptedData xmlns="http://www.w3.org/2001/04/xmlenc#">
+          <EncryptionMethod Algorithm="urn:fictional:drm"/>
+          <CipherData><CipherReference URI="OEBPS/chapter-one.xhtml"/></CipherData>
+        </EncryptedData>
+      </encryption>`);
+  }
+  return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
+}
 
 describe('parseUpload', () => {
   it('passes plain text through unchanged', async () => {
@@ -84,6 +123,22 @@ describe('parseUpload', () => {
     expect(r.format).toBe('pdf');
     expect(r.text.length).toBeGreaterThan(0);
     expect(r.warnings).toEqual([]);
+  });
+
+  it('extracts EPUB spine text in reading order and carries explicit headings', async () => {
+    const r = await parseUpload(await epubFixture(), 'river.epub', 'application/epub+zip');
+    expect(r.format).toBe('epub');
+    expect(r.text).toContain('# Chapter One');
+    expect(r.text).toContain('## A Quieter Passage');
+    expect(r.text.indexOf('Chapter One')).toBeLessThan(r.text.indexOf('A Quieter Passage'));
+    expect(segment(r.text).some((section) => section.heading === 'Chapter One')).toBe(true);
+    expect(r.warnings.join(' ')).toMatch(/reading order/i);
+    expect(r.warnings.join(' ')).toMatch(/layout/i);
+  });
+
+  it('refuses encrypted or DRM-protected EPUB content', async () => {
+    await expect(parseUpload(await epubFixture({ encrypted: true }), 'locked.epub'))
+      .rejects.toThrow(/encrypted|DRM/i);
   });
 
   it('throws UnsupportedUploadError for a type we cannot read', async () => {

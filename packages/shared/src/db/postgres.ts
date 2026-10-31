@@ -10,6 +10,19 @@
 import pg from 'pg';
 const { Pool } = pg;
 
+export function requireDatabaseUrl(raw: string | undefined): string {
+  const value = raw?.trim();
+  if (!value) throw new Error('DATABASE_URL_REQUIRED: explicit PostgreSQL authority is required');
+  let parsed: URL;
+  try { parsed = new URL(value); } catch {
+    throw new Error('DATABASE_URL_INVALID: expected a PostgreSQL URL');
+  }
+  if (!['postgres:', 'postgresql:'].includes(parsed.protocol) || parsed.pathname.length <= 1) {
+    throw new Error('DATABASE_URL_INVALID: expected a named PostgreSQL database');
+  }
+  return value;
+}
+
 // Singleton pool instance
 let pool: pg.Pool | null = null;
 
@@ -19,7 +32,7 @@ let pool: pg.Pool | null = null;
 function getPool(): pg.Pool {
   if (!pool) {
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
+      connectionString: requireDatabaseUrl(process.env.DATABASE_URL),
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,
@@ -38,7 +51,7 @@ function getPool(): pg.Pool {
   return pool;
 }
 
-export interface QueryResult<T = any> {
+export interface QueryResult<T extends pg.QueryResultRow = pg.QueryResultRow> {
   rows: T[];
   rowCount: number | null;
   command: string;
@@ -49,7 +62,7 @@ export interface QueryResult<T = any> {
 /**
  * Execute a parameterized query
  */
-export async function query<T = any>(
+export async function query<T extends pg.QueryResultRow = pg.QueryResultRow>(
   sql: string,
   params: any[] = []
 ): Promise<QueryResult<T>> {
@@ -82,7 +95,7 @@ export async function query<T = any>(
 /**
  * Execute a single query and return first row
  */
-export async function queryOne<T = any>(
+export async function queryOne<T extends pg.QueryResultRow = pg.QueryResultRow>(
   sql: string,
   params: any[] = []
 ): Promise<T | null> {
@@ -93,7 +106,7 @@ export async function queryOne<T = any>(
 /**
  * Execute a query and return all rows
  */
-export async function queryMany<T = any>(
+export async function queryMany<T extends pg.QueryResultRow = pg.QueryResultRow>(
   sql: string,
   params: any[] = []
 ): Promise<T[]> {
@@ -105,7 +118,7 @@ export async function queryMany<T = any>(
  * Transaction client type
  */
 export interface TransactionClient {
-  query<T = any>(sql: string, params?: any[]): Promise<QueryResult<T>>;
+  query<T extends pg.QueryResultRow = pg.QueryResultRow>(sql: string, params?: any[]): Promise<QueryResult<T>>;
 }
 
 /**
@@ -118,9 +131,10 @@ export async function transaction<T>(
   const client = await p.connect();
 
   const txClient: TransactionClient = {
-    query: async (sql: string, params: any[] = []) => {
-      return client.query(sql, params);
-    }
+    query: async <U extends pg.QueryResultRow = pg.QueryResultRow>(
+      sql: string,
+      params: any[] = [],
+    ): Promise<QueryResult<U>> => client.query<U>(sql, params)
   };
 
   try {
@@ -180,7 +194,7 @@ export async function closePool(): Promise<void> {
 /**
  * Helper: Insert and return the inserted row
  */
-export async function insertOne<T = any>(
+export async function insertOne<T extends pg.QueryResultRow = pg.QueryResultRow>(
   table: string,
   data: Record<string, any>
 ): Promise<T> {
@@ -201,7 +215,7 @@ export async function insertOne<T = any>(
 /**
  * Helper: Update and return the updated row
  */
-export async function updateOne<T = any>(
+export async function updateOne<T extends pg.QueryResultRow = pg.QueryResultRow>(
   table: string,
   id: string,
   data: Record<string, any>
@@ -224,7 +238,7 @@ export async function updateOne<T = any>(
 /**
  * Helper: Find one by condition
  */
-export async function findOne<T = any>(
+export async function findOne<T extends pg.QueryResultRow = pg.QueryResultRow>(
   table: string,
   column: string,
   value: any
@@ -237,7 +251,7 @@ export async function findOne<T = any>(
 /**
  * Helper: Find many by condition
  */
-export async function findMany<T = any>(
+export async function findMany<T extends pg.QueryResultRow = pg.QueryResultRow>(
   table: string,
   column: string,
   value: any,

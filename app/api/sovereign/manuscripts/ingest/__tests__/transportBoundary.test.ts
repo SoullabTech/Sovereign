@@ -26,7 +26,8 @@ import { ACCESS_RULES, TIER_RANK, tierSatisfies } from '@/config/accessMatrix';
 
 const REPO = path.resolve(__dirname, '../../../../../..');
 const read = (p: string) => fs.readFileSync(path.join(REPO, p), 'utf8');
-const middleware = () => read('middleware.ts');
+// Next 16 renamed the runtime matcher from middleware.ts to proxy.ts.
+const middleware = () => read('proxy.ts');
 const route = () => read('app/api/sovereign/manuscripts/ingest/route.ts');
 
 const PATH = '/api/sovereign/manuscripts/ingest';
@@ -117,18 +118,22 @@ describe("F2 · a valid member cannot cause custody to be attributed to another 
   });
 });
 
-describe('F3 · a valid member upload succeeds — nothing new gates it', () => {
-  it('the admission block adds no gate beyond authority and sanitisation', () => {
+describe('F3 · valid membership cannot override the authorized Source intake HOLD', () => {
+  it('the exact Press route has a static 423 before multipart reads; no env-based unlock', () => {
     const src = route();
     const admission = src.slice(
       src.indexOf('const forged = forgedIdentityHeaders'),
       src.indexOf('await request.formData()'),
     );
     expect(admission.length).toBeGreaterThan(0);
-    // Four refusals only: forged names, no member, resolvers disagreeing, and
-    // a survivor of sanitisation. (The matrix denials live in a helper.)
+    // Retain all four identity refusals, then a distinct explicit hold.
     expect(admission.match(/status: 401/g) ?? []).toHaveLength(4);
+    expect(src).toContain('const PRESS_SOURCE_INTAKE_RELEASED = writerReleaseAuthority().sourceIntakeReleased');
+    expect(read('lib/writersStudio/releaseAuthority.ts')).toContain('sourceIntakeReleased: false');
+    expect(admission).toMatch(/if \(!PRESS_SOURCE_INTAKE_RELEASED\)[\s\S]{0,260}status: 423/);
     expect(admission).not.toMatch(/process\.env\./);
+    expect(admission.indexOf('if (!PRESS_SOURCE_INTAKE_RELEASED)')).toBeLessThan(
+      admission.indexOf('request.headers.delete(header)'));
   });
 });
 
@@ -216,7 +221,12 @@ describe('F7 · client assertions cannot survive the excluded boundary', () => {
     expect(NEVER_CLIENT_SENT_IDENTITY_HEADERS).toContain('x-maia-member-id');
     expect(forgedIdentityHeaders(new Headers({ 'x-maia-member-id': 'other' })))
       .toEqual(['x-maia-member-id']);
-    expect(read('lib/auth/getMemberFromRequest.ts')).not.toMatch(/x-maia-member-id/);
+    const resolver = read('lib/auth/getMemberFromRequest.ts');
+    expect(resolver).toContain("request.headers.get('x-maia-member-id')");
+    expect(resolver).toContain('claim !== authority.memberId');
+    expect(resolver.indexOf('resolveSessionCredentialAuthority')).toBeLessThan(
+      resolver.indexOf("request.headers.get('x-maia-member-id')"),
+    );
   });
 
   it('x-member-id is the ONLY exemption, and it has a real sender', () => {
@@ -305,13 +315,11 @@ describe('F7 · behavioural — what the handler can still see when it reads the
   const MEMBER = '11111111-1111-1111-1111-111111111111';
   const OTHER = '22222222-2222-2222-2222-222222222222';
 
-  /* eslint-disable @typescript-eslint/no-var-requires */
   const { query } = require('@/lib/db/postgres');
   const { cookies } = require('next/headers');
   const { parseUpload } = require('@/lib/manuscript/ingest/parseUpload');
   const { recordArtifactArrival } = require('@/lib/manuscript/source/arrivals');
   const { POST } = require('../route');
-  /* eslint-enable @typescript-eslint/no-var-requires */
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -342,35 +350,43 @@ describe('F7 · behavioural — what the handler can still see when it reads the
     return { res, atBody };
   };
 
-  it('a matching x-member-id is accepted through auth — the upload succeeds', async () => {
-    const { res } = await runCapturingHeaders({
-      'x-session-token': 'tok',
-      'x-member-id': MEMBER,
-    });
-    expect(res.status).toBe(200);
-    expect(recordArtifactArrival).toHaveBeenCalledWith(
-      expect.objectContaining({ memberId: MEMBER }),
-    );
-  });
-
-  it('and NO client-assertable header remains when the body is read', async () => {
+  it('a matching x-member-id passes identity checks but is still denied by the Source 423 hold', async () => {
     const { res, atBody } = await runCapturingHeaders({
       'x-session-token': 'tok',
       'x-member-id': MEMBER,
     });
-    expect(res.status).toBe(200);
-    expect(atBody).not.toBeNull();
-    for (const header of CLIENT_ASSERTABLE_IDENTITY_HEADERS) {
-      expect(atBody).not.toContain(header);
-    }
+    expect(res.status).toBe(423);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    expect(query).toHaveBeenCalled(); // fictional session auth only
+    expect(atBody).toBeNull();
+    expect(parseUpload).not.toHaveBeenCalled();
+    expect(recordArtifactArrival).not.toHaveBeenCalled();
   });
 
-  it('while x-session-token IS still there — a credential, not an assertion', async () => {
-    const { atBody } = await runCapturingHeaders({
+  it('valid member assertions never reach multipart parsing under the Source hold', async () => {
+    const { res, atBody } = await runCapturingHeaders({
       'x-session-token': 'tok',
       'x-member-id': MEMBER,
     });
-    expect(atBody).toContain('x-session-token');
+    expect(res.status).toBe(423);
+    expect(atBody).toBeNull();
+    expect(parseUpload).not.toHaveBeenCalled();
+    expect(recordArtifactArrival).not.toHaveBeenCalled();
+    // Once uploads are separately approved, the above source-level
+    // sanitisation checks must also be requalified with a real parsed body.
+  });
+
+  it('the session credential remains available to auth, not to the blocked Source parser', async () => {
+    const req = multipartRequest({
+      'x-session-token': 'tok',
+      'x-member-id': MEMBER,
+    });
+    const body = jest.spyOn(req, 'formData');
+    const res = await POST(req);
+    expect(res.status).toBe(423);
+    expect(req.headers.get('x-session-token')).toBe('tok');
+    expect(body).not.toHaveBeenCalled();
+    expect(recordArtifactArrival).not.toHaveBeenCalled();
   });
 
   it('a mismatched x-member-id is refused — the body is never reached', async () => {

@@ -4,6 +4,8 @@
 
 set -e
 
+: "${DATABASE_URL:?DATABASE_URL must be set explicitly for memory certification}"
+
 PORT=${PORT:-3000}
 BASE_URL="http://localhost:$PORT"
 TEST_SESSION_ID="memory_cert_$(date +%s)"
@@ -274,7 +276,7 @@ sleep 1
 # ============================================
 test_start "DB Sanity Check - Can we query what we just wrote?"
 
-DB_QUERY_TEST=$(psql postgresql://soullab@localhost:5432/maia_consciousness -t -c "SELECT id, turn_count, jsonb_array_length(conversation_history) AS hist_len FROM maia_sessions WHERE id = '$TEST_SESSION_ID';" 2>/dev/null | xargs)
+DB_QUERY_TEST=$(psql "$DATABASE_URL" -t -c "SELECT id, turn_count, jsonb_array_length(conversation_history) AS hist_len FROM maia_sessions WHERE id = '$TEST_SESSION_ID';" 2>/dev/null | xargs)
 
 if echo "$DB_QUERY_TEST" | grep -q "$TEST_SESSION_ID"; then
   HIST_LEN=$(echo "$DB_QUERY_TEST" | awk '{print $NF}')
@@ -292,7 +294,7 @@ fi
 # ============================================
 test_start "Database Persistence - Check PostgreSQL directly"
 
-DB_COUNT=$(psql postgresql://soullab@localhost:5432/maia_consciousness -t -c "SELECT turn_count FROM maia_sessions WHERE id = '$TEST_SESSION_ID'" 2>/dev/null | xargs)
+DB_COUNT=$(psql "$DATABASE_URL" -t -c "SELECT turn_count FROM maia_sessions WHERE id = '$TEST_SESSION_ID'" 2>/dev/null | xargs)
 
 if [ "$DB_COUNT" = "2" ]; then
   test_pass "Database shows 2 turns persisted"
@@ -302,7 +304,7 @@ else
   test_fail "Database turn count mismatch" "Expected 2, got: $DB_COUNT"
 fi
 
-DB_HISTORY=$(psql postgresql://soullab@localhost:5432/maia_consciousness -t -c "SELECT jsonb_array_length(conversation_history) FROM maia_sessions WHERE id = '$TEST_SESSION_ID'" 2>/dev/null | xargs)
+DB_HISTORY=$(psql "$DATABASE_URL" -t -c "SELECT jsonb_array_length(conversation_history) FROM maia_sessions WHERE id = '$TEST_SESSION_ID'" 2>/dev/null | xargs)
 
 if [ "$DB_HISTORY" = "2" ]; then
   test_pass "Database shows 2 conversation exchanges stored"
@@ -409,7 +411,7 @@ fi
 # ============================================
 test_start "Database Integrity - Verify data survived restart"
 
-DB_COUNT_AFTER=$(psql postgresql://soullab@localhost:5432/maia_consciousness -t -c "SELECT turn_count FROM maia_sessions WHERE id = '$TEST_SESSION_ID'" 2>/dev/null | xargs)
+DB_COUNT_AFTER=$(psql "$DATABASE_URL" -t -c "SELECT turn_count FROM maia_sessions WHERE id = '$TEST_SESSION_ID'" 2>/dev/null | xargs)
 
 if [ "$DB_COUNT_AFTER" = "4" ]; then
   test_pass "Database shows 4 total turns after restart"

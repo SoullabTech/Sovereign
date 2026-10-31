@@ -61,10 +61,12 @@
 
 import { transaction, query, type TransactionClient } from '@/lib/db/postgres';
 import { destroyVaultBytes } from '@/lib/storage/fileVault';
+import { vaultErasureErrnoR105 } from './vaultErasureSafeLogR105';
+import { r20LedgerErrorCode, sealR20DeletionLedger } from '@/lib/recovery/r20DeletionLedger';
 
 export type EraseOutcome =
-  /** Rows are gone. `sweptAll` is false when bytes are still owed destruction. */
-  | { readonly ok: true; readonly artifactsQueued: number; readonly sweptAll: boolean }
+  /** Rows are gone. `sweptAll` is false while vault or recovery-ledger custody is still owed. */
+  | { readonly ok: true; readonly artifactsQueued: number; readonly sweptAll: boolean; readonly recoverySealed: boolean }
   | { readonly ok: false; readonly refusal: 'not_found' }
   | { readonly ok: false; readonly refusal: 'declared_in_other_works'; readonly works: number };
 
@@ -80,6 +82,14 @@ export async function eraseManuscript(
   memberId: string,
 ): Promise<EraseOutcome> {
   const result = await transaction(async (tx) => {
+    /* A coherent R20 backup holds the same advisory key while it seals the
+       external ledger, dumps PostgreSQL and captures the paused vault. The
+       deletion therefore happens wholly before or wholly after that recovery
+       point, never half inside it. */
+    await tx.query(
+      `SELECT pg_advisory_xact_lock(hashtextextended('soullab:r20:recovery-capture', 0))`,
+    );
+
     /* Shared material is never erased out from under a Work the member did not
        delete. Inside the transaction, so the answer cannot go stale between the
        check and the deletes. */
@@ -89,7 +99,8 @@ export async function eraseManuscript(
          JOIN living_works w ON w.id = e.living_work_id
         WHERE e.expression_type = 'manuscript'
           AND e.expression_id = $1
-          AND w.member_id = $2`,
+          AND w.member_id = $2
+        FOR UPDATE OF e, w`,
       [manuscriptId, memberId],
     );
     if (claims.rows.length > 1) {
@@ -98,11 +109,21 @@ export async function eraseManuscript(
 
     /* The paths, read while the rows that name them still exist. After the
        cascade nothing in the database knows these files were ever ours. */
-    const arrivals = await tx.query<{ artifact_ref: string }>(
-      `SELECT artifact_ref FROM manuscript_source_arrivals
-        WHERE manuscript_id = $1 AND member_id = $2 AND artifact_ref IS NOT NULL`,
+    const arrivals = await tx.query<{ id: string; artifact_ref: string | null }>(
+      `SELECT id, artifact_ref FROM manuscript_source_arrivals
+        WHERE manuscript_id = $1 AND member_id = $2
+        FOR UPDATE`,
       [manuscriptId, memberId],
     );
+    const arrivalIds = arrivals.rows.map((row) => row.id);
+    const landings = arrivalIds.length === 0
+      ? { rows: [] as Array<{ id: string }> }
+      : await tx.query<{ id: string }>(
+          `SELECT id FROM writer_source_landing_intents
+            WHERE member_id = $2::uuid AND arrival_id = ANY($1::uuid[])
+            FOR UPDATE`,
+          [arrivalIds, memberId],
+        );
 
     const removed = await tx.query<{ id: string }>(
       `DELETE FROM member_manuscripts WHERE id = $1 AND member_id = $2 RETURNING id`,
@@ -112,12 +133,58 @@ export async function eraseManuscript(
       return { ok: false as const, refusal: 'not_found' as const };
     }
 
-    await removeDeclaration(tx, claims.rows[0]?.living_work_id, manuscriptId, memberId);
+    const declaration = await removeDeclaration(tx, claims.rows[0]?.living_work_id, manuscriptId, memberId);
+
+    /* The refusal authority is part of the SAME transaction as the deletion.
+       It is content-free: stable object ids and a bounded act label only. If
+       any insert fails, PostgreSQL rolls the deletion and queue obligations
+       back together. */
+    const manifest = await tx.query<{ id: string }>(
+      `INSERT INTO deletion_manifests
+         (reason_class, authorized_by, executed_at, note)
+       VALUES ('member_deletion', 'verified-member-self-service', now(),
+               'Writer manuscript custody ended by verified member request')
+       RETURNING id`,
+    );
+    const manifestId = manifest.rows[0]?.id;
+    if (!manifestId) throw new Error('r20_manifest_not_created');
+    const kinds = ['member_manuscripts'];
+    const ids = [manuscriptId];
+    if (declaration.workRemovedId) {
+      kinds.push('living_works');
+      ids.push(declaration.workRemovedId);
+    }
+    for (const arrivalId of arrivalIds) {
+      kinds.push('manuscript_source_arrivals');
+      ids.push(arrivalId);
+    }
+    for (const landing of landings.rows) {
+      kinds.push('writer_source_landing_intents');
+      ids.push(landing.id);
+    }
+    await tx.query(
+      `INSERT INTO provenance_tombstones (manifest_id, object_kind, object_id)
+       SELECT $1::uuid, item.kind, item.id
+         FROM unnest($2::text[], $3::text[]) AS item(kind, id)
+       ON CONFLICT (object_kind, object_id) DO NOTHING`,
+      [manifestId, kinds, ids],
+    );
+
+    /* First author Save creates private proposal-chain/version text outside the
+       manuscript FK cascade by design. Constitutional erasure is the separate
+       authority that may remove that history, and only after this exact
+       member-deletion manifest+tombstone exists inside the same transaction. */
+    await tx.query(
+      `SELECT r20_erase_writer_editorial_history($1::uuid, $2::uuid, $3::uuid)`,
+      [manifestId, memberId, manuscriptId],
+    );
 
     /* Written inside the transaction: if the commit fails, nothing was destroyed
        and nothing is owed. If it succeeds, every path is recoverable until it is
        actually gone. */
-    const refs = arrivals.rows.map((r) => r.artifact_ref);
+    const refs = arrivals.rows
+      .map((row) => row.artifact_ref)
+      .filter((ref): ref is string => typeof ref === 'string' && ref.length > 0);
     if (refs.length > 0) {
       await tx.query(
         `INSERT INTO vault_erasure_queue (artifact_ref)
@@ -133,10 +200,20 @@ export async function eraseManuscript(
   /* Past this point the member's Work is gone in every sense they can observe.
      What remains is ours to finish, and the queue guarantees we can. */
   const swept = await sweepVaultErasureQueue();
+  let recoverySealed = false;
+  try {
+    recoverySealed = (await sealR20DeletionLedger()).sealed;
+  } catch (error) {
+    /* The member is not given a completed-custody answer when the independent
+       refusal ledger cannot be sealed. Log only a bounded structural code: key
+       paths and ledger locations belong to the recovery boundary. */
+    console.error('[MAIA/press] R20 recovery seal still owed', { code: r20LedgerErrorCode(error) });
+  }
   return {
     ok: true,
     artifactsQueued: result.refs.length,
-    sweptAll: swept.remaining === 0,
+    sweptAll: swept.remaining === 0 && recoverySealed,
+    recoverySealed,
   };
 }
 
@@ -150,8 +227,8 @@ async function removeDeclaration(
   workId: string | undefined,
   manuscriptId: string,
   memberId: string,
-): Promise<void> {
-  if (!workId) return;
+): Promise<{ readonly workRemovedId?: string }> {
+  if (!workId) return {};
 
   await tx.query(
     `DELETE FROM living_work_expressions
@@ -190,6 +267,7 @@ async function removeDeclaration(
   if (workGone.rows.length > 0 && path) {
     await tx.query(`INSERT INTO vault_erasure_queue (artifact_ref) VALUES ($1)`, [path]);
   }
+  return workGone.rows[0]?.id ? { workRemovedId: workGone.rows[0].id } : {};
 }
 
 /**
@@ -222,16 +300,14 @@ export async function sweepVaultErasureQueue(
          and make this row carry more provenance than the one field it is allowed.
          The errno is also the operationally useful half: EACCES, EPERM and EROFS
          each name a different thing for an operator to fix. */
-      const code =
-        (err as NodeJS.ErrnoException)?.code
-        ?? (err instanceof Error && /still present/.test(err.message) ? 'ESTILLPRESENT' : 'UNKNOWN');
+      const code = vaultErasureErrnoR105(err);
       await query(
         `UPDATE vault_erasure_queue
             SET attempts = attempts + 1, last_attempt_at = now(), last_error = $2
           WHERE id = $1`,
         [row.id, String(code).slice(0, 32)],
       );
-      console.error('[MAIA/press] vault erasure still owed', row.artifact_ref, err);
+      console.error('[MAIA/press] vault erasure still owed (errno='+code+')');
     }
   }
 

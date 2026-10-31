@@ -6,6 +6,7 @@ import { StudioAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphe
 import '../writers-studio-full-redesign-review/full-redesign-review.css';
 import '../../writers-studio/insight/insight.css';
 import './p4r1-live.css';
+import '../writers-studio-pc3-live/craft-editorial-r1.css';
 
 const serif = Newsreader({
   subsets: ['latin'],

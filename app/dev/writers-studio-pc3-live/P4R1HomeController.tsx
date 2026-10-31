@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -10,9 +10,9 @@ import { useMarkedLines } from '@/app/writers-studio/useMarkedLines';
 import { useStudioHistory } from '@/app/writers-studio/useStudioHistory';
 import { useSectionActivity } from '@/app/writers-studio/useSectionActivity';
 import { arrivalFor, manuscriptIdOf, modeEntryTarget } from '@/app/writers-studio/homeState';
-import { IMPORT_HREF } from '@/app/writers-studio/studioMap';
 import P4R1HomeView from './P4R1HomeView';
 import P4R1WorkArrival from './P4R1WorkArrival';
+import P4R1ImportManuscript from './P4R1ImportManuscript';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
 import { HOME_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import {
@@ -22,6 +22,8 @@ import {
 } from '@/app/writers-studio/situatedWork';
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival, withoutStudioWork } from '@/app/writers-studio/h1Arrival';
+import { useWriterReleaseCapabilities } from '@/lib/writersStudio/useWriterReleaseCapabilities';
+import { deleteWork, DeletionUnconfirmed } from '@/lib/writersStudio/deleteWork';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -36,6 +38,11 @@ export default function P4R1HomeController() {
   const pathname = usePathname() ?? '/dev/writers-studio-p4r1';
   const params = useSearchParams();
   const { id: appearance } = useAtmosphere();
+  const importRequested = params?.get('import') === '1';
+  // Presentation hint only. The server-side review route independently requires
+  // a loopback host and WS_FOUNDER_LOCAL_REVIEW=1 on every request.
+  const localReviewRequested = params?.get('localReview') === '1';
+  const releaseCapabilities = useWriterReleaseCapabilities();
 
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
   const { phase: manuscriptPhase, manuscripts, reload: reloadManuscripts } = useCurrentManuscript();
@@ -51,6 +58,13 @@ export default function P4R1HomeController() {
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /* F6 — "create a Work, then place writing in it" is two requests. If the
+     second fails the Work already exists, empty. A retry of the SAME gesture
+     reuses that Work instead of creating another. Keyed by the gesture (which
+     writing, or which title), cleared when the gesture completes, and held only
+     in this view: a reload forgets it. Nothing is stored or inferred. */
+  const createdWorkForGesture = useRef(new Map<string, string>());
 
   const post = useCallback(async (url: string, body?: unknown) => {
     const response = await apiFetch(url, {
@@ -69,15 +83,32 @@ export default function P4R1HomeController() {
     });
   }, [post]);
 
+  // One member gesture, one server transaction: the blank manuscript and its
+  // Work declaration are born together. This is deliberately separate from
+  // `declare`, which remains the explicit "Add existing writing to Work" act.
+  const startWritingInWork = useCallback(async (workId: string) => {
+    const manuscriptId = idFrom(await post(
+      '/api/sovereign/living-works/' + workId + '/start-writing',
+    ));
+    if (!manuscriptId) throw new Error('manuscript id');
+    return manuscriptId;
+  }, [post]);
+
   const refresh = useCallback(async () => {
     await Promise.all([reloadWorks(), reloadManuscripts()]);
   }, [reloadWorks, reloadManuscripts]);
 
-  const open = useCallback((manuscriptId: string, sectionId?: string) => {
-    const next = new URLSearchParams(params?.toString() ?? '');
+  const open = useCallback((manuscriptId: string, sectionId?: string, newImport = false) => {
+    const search = params?.toString() ?? '';
+    // A newly declared Work cannot inherit a different Work's arrival claim.
+    const next = new URLSearchParams(newImport ? withoutStudioWork(search) : search);
+    if (newImport) next.delete('from');
     next.set('mode', 'write');
     next.set('m', manuscriptId);
     next.delete('publish');
+    // Import is a threshold, not durable room state. Once a manuscript opens,
+    // Home must mean Studio Home rather than reopening the completed threshold.
+    next.delete('import');
     next.delete('developField');
     next.delete('r');
     next.delete('reviewRun');
@@ -87,20 +118,52 @@ export default function P4R1HomeController() {
     router.push(pathname + '?' + next.toString());
   }, [params, pathname, router]);
 
+  const openImport = useCallback(() => {
+    const next = new URLSearchParams(withoutStudioWork(params?.toString() ?? ''));
+    next.delete('from');
+    next.set('mode', 'home');
+    next.set('import', '1');
+    next.delete('m');
+    next.delete('s');
+    next.delete('developField');
+    next.delete('r');
+    next.delete('reviewRun');
+    next.delete('reviewFinding');
+    router.push(pathname + '?' + next.toString());
+  }, [params, pathname, router]);
+
+  const closeImport = useCallback(() => {
+    const next = new URLSearchParams(params?.toString() ?? '');
+    next.set('mode', 'home');
+    next.delete('import');
+    next.delete('m');
+    next.delete('s');
+    router.push(pathname + (next.toString() ? '?' + next.toString() : ''));
+  }, [params, pathname, router]);
+
+  const completeImport = useCallback(async (manuscriptId: string) => {
+    // Refresh is useful for the real member path and harmless in the bounded
+    // founder fixture. A transient list failure must not strand a successfully
+    // created manuscript, so identity navigation remains the final authority.
+    await refresh().catch(() => undefined);
+    open(manuscriptId, undefined, true);
+  }, [refresh, open]);
+
   /* H1-R2 — a mode request with no Work carried. A single manuscript (in the
      Continue Work, or in the whole Studio when there is none) is a place to go;
      several are the member's choice, scoped to the Continue Work when known.
      ⛔ Never `manuscripts[0]`: the list is recency-ordered. Nothing is stored. */
   const [pendingMode, setPendingMode] = useState<{
-    mode: 'write' | 'develop' | 'review';
+    mode: 'write' | 'develop' | 'review' | 'publish' | 'listen';
     manuscriptIds: string[];
   } | null>(null);
 
-  const navigateMode = useCallback((mode: 'write' | 'develop' | 'review', manuscriptId: string) => {
+  const navigateMode = useCallback((mode: 'write' | 'develop' | 'review' | 'publish' | 'listen', manuscriptId: string) => {
     const next = new URLSearchParams(params?.toString() ?? '');
     next.set('mode', mode);
     next.set('m', manuscriptId);
     next.delete('publish');
+    next.delete('import');
     if (mode !== 'develop') {
       next.delete('developField');
       next.delete('r');
@@ -112,7 +175,7 @@ export default function P4R1HomeController() {
     router.push(pathname + '?' + next.toString());
   }, [params, pathname, router]);
 
-  const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
+  const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review' | 'publish' | 'listen') => {
     if (mode === 'home') {
       setPendingMode(null);
       if (publishRequested) {
@@ -131,7 +194,7 @@ export default function P4R1HomeController() {
     setPendingMode(target.kind === 'choose' ? { mode, manuscriptIds: target.manuscriptIds } : null);
   }, [arrival.resume, manuscripts, navigateMode, params, pathname, publishRequested, router]);
 
-  const onChooseManuscript = useCallback((mode: 'write' | 'develop' | 'review', manuscriptId: string) => {
+  const onChooseManuscript = useCallback((mode: 'write' | 'develop' | 'review' | 'publish' | 'listen', manuscriptId: string) => {
     setPendingMode(null);
     navigateMode(mode, manuscriptId);
   }, [navigateMode]);
@@ -141,11 +204,13 @@ export default function P4R1HomeController() {
     setBusy(true);
     setError(null);
     try {
-      const workId = idFrom(await post('/api/sovereign/living-works', title.trim() ? { title: title.trim() } : {}));
+      const gesture = 'begin:' + title.trim();
+      const workId = createdWorkForGesture.current.get(gesture)
+        ?? idFrom(await post('/api/sovereign/living-works', title.trim() ? { title: title.trim() } : {}));
       if (!workId) throw new Error('work id');
-      const manuscriptId = idFrom(await post('/api/sovereign/manuscripts/blank'));
-      if (!manuscriptId) throw new Error('manuscript id');
-      await declare(workId, manuscriptId);
+      createdWorkForGesture.current.set(gesture, workId);
+      const manuscriptId = await startWritingInWork(workId);
+      createdWorkForGesture.current.delete(gesture);
       await refresh();
       open(manuscriptId);
     } catch {
@@ -153,19 +218,17 @@ export default function P4R1HomeController() {
     } finally {
       setBusy(false);
     }
-  }, [busy, post, declare, refresh, open]);
+  }, [busy, post, startWritingInWork, refresh, open]);
 
   const onStartWriting = useCallback(async (workId: string) => {
     if (busy) return;
     setBusy(true);
     setError(null);
     try {
-      /* C7 — begin a writing expression for an EXISTING Work. The blank
-         manuscript route owns blank-writing creation; the declaration route
-         owns Work membership. No material is copied, read, or promoted. */
-      const manuscriptId = idFrom(await post('/api/sovereign/manuscripts/blank'));
-      if (!manuscriptId) throw new Error('manuscript id');
-      await declare(workId, manuscriptId);
+      /* C7 — begin a writing expression for an EXISTING Work. The Work-scoped
+         server transaction owns both the blank writing place and declaration.
+         No material is copied, read, or promoted. */
+      const manuscriptId = await startWritingInWork(workId);
       await refresh();
       open(manuscriptId);
     } catch {
@@ -173,16 +236,20 @@ export default function P4R1HomeController() {
     } finally {
       setBusy(false);
     }
-  }, [busy, post, declare, refresh, open]);
+  }, [busy, startWritingInWork, refresh, open]);
 
   const onMakeWork = useCallback(async (manuscriptId: string, title: string | null) => {
     if (busy) return;
     setBusy(true);
     setError(null);
     try {
-      const workId = idFrom(await post('/api/sovereign/living-works', title?.trim() ? { title: title.trim() } : {}));
+      const gesture = 'make:' + manuscriptId;
+      const workId = createdWorkForGesture.current.get(gesture)
+        ?? idFrom(await post('/api/sovereign/living-works', title?.trim() ? { title: title.trim() } : {}));
       if (!workId) throw new Error('work id');
+      createdWorkForGesture.current.set(gesture, workId);
       await declare(workId, manuscriptId);
+      createdWorkForGesture.current.delete(gesture);
       await refresh();
     } catch {
       setError('That writing could not be placed in a new Work just now. The writing itself has not changed.');
@@ -190,6 +257,17 @@ export default function P4R1HomeController() {
       setBusy(false);
     }
   }, [busy, post, declare, refresh]);
+
+  // The author's own permanent deletion of one writing, through the product's governed erase. No optimistic success: the list is
+  // re-read only after the server says it is gone (including "removed, custody not yet confirmed"), and a refusal reaches the
+  // card in the author's own language.
+  const onDeleteWriting = useCallback(async (manuscriptId: string) => {
+    const outcome = await deleteWork({ workId: null, manuscriptId }, (url, init) => apiFetch(url, init));
+    if (outcome.ok) { await refresh().catch(() => undefined); return; }
+    // Removed but not yet confirmed: the writing is gone, so stop listing it, and still tell the author what we could not confirm.
+    if (outcome.removed) { await refresh().catch(() => undefined); throw new DeletionUnconfirmed(outcome.message); }
+    throw new Error(outcome.message);
+  }, [refresh]);
 
   const onAddToWork = useCallback(async (manuscriptId: string, workId: string) => {
     if (busy) return;
@@ -228,6 +306,26 @@ export default function P4R1HomeController() {
     return <main className="fr-root"><div style={{ padding: 32 }}>Sign in to open your Writer’s Studio.</div></main>;
   }
 
+  if (importRequested) {
+    return (
+      <Shell
+        mode="home"
+        appearance={appearance}
+        geometry={HOME_GEOMETRY}
+        memberInitial=""
+        onSelectMode={onMode}
+        work={
+          <P4R1ImportManuscript
+            localReview={localReviewRequested}
+            sourceIntakeReleased={releaseCapabilities.authority.sourceIntakeReleased}
+            onCancel={closeImport}
+            onComplete={completeImport}
+          />
+        }
+      />
+    );
+  }
+
   if (arrivedFromHouse && studioArrival.kind !== 'fallback') {
     const withoutWork = () => {
       const query = withoutStudioWork(params?.toString() ?? '');
@@ -235,7 +333,7 @@ export default function P4R1HomeController() {
     };
     // A mode change from the arrival never guesses: only a single declared
     // manuscript is a place to go without asking.
-    const onArrivalMode = (mode: 'home' | 'write' | 'develop' | 'review') => {
+    const onArrivalMode = (mode: 'home' | 'write' | 'develop' | 'review' | 'publish' | 'listen') => {
       if (mode === 'home' || studioArrival.kind !== 'one') return;
       const next = new URLSearchParams(params?.toString() ?? '');
       next.set('mode', mode);
@@ -285,8 +383,9 @@ export default function P4R1HomeController() {
       onOpen={open}
       onMakeWork={(manuscriptId, title) => void onMakeWork(manuscriptId, title)}
       onAddToWork={(manuscriptId, workId) => void onAddToWork(manuscriptId, workId)}
+      onDeleteWriting={onDeleteWriting}
       onStartWriting={(workId) => void onStartWriting(workId)}
-      onImport={() => window.location.assign(IMPORT_HREF)}
+      onImport={openImport}
       onSources={() => router.push('/writers-studio/sources')}
     />
   );

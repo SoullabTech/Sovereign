@@ -5,9 +5,12 @@ export const dynamic = 'force-dynamic';
  * Revokes session and clears all access control cookies
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
+import { AuthOriginError, requireSameOriginAuthMutation } from '@/lib/auth/returnDestination';
+
+const NO_STORE = { 'Cache-Control': 'private, no-store' };
 
 const COOKIE_OPTIONS = {
   secure: process.env.NODE_ENV === 'production',
@@ -15,7 +18,18 @@ const COOKIE_OPTIONS = {
   path: '/',
 };
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  try {
+    requireSameOriginAuthMutation(request);
+  } catch (error) {
+    if (error instanceof AuthOriginError) {
+      return NextResponse.json(
+        { error: 'Request origin refused', reason: error.code },
+        { status: 403, headers: NO_STORE },
+      );
+    }
+    throw error;
+  }
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('maia_session')?.value;
@@ -41,13 +55,12 @@ export async function POST() {
     cookieStore.set('maia_tier', '', { ...clearOptions, httpOnly: true });
     cookieStore.set('maia_roles', '', { ...clearOptions, httpOnly: true });
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[MEMBERS] Sign out error: ${message}`);
+    return NextResponse.json({ success: true }, { headers: NO_STORE });
+  } catch {
+    console.error('[MEMBERS] Sign out could not be completed');
     return NextResponse.json(
       { error: 'Failed to sign out' },
-      { status: 500 }
+      { status: 500, headers: NO_STORE }
     );
   }
 }

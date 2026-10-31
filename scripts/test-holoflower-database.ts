@@ -6,11 +6,12 @@
  */
 
 import pg from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 
 const { Pool } = pg;
 
 const pool = new Pool({
-  connectionString: 'postgresql://soullab@localhost:5432/maia_consciousness'
+  connectionString: requireDatabaseUrl(process.env.DATABASE_URL)
 });
 
 const TEST_USER_ID = 'test-user-holoflower-' + Date.now();

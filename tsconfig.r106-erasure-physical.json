@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.r105-erasure-log.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/manuscript/source/eraseManuscript.ts",
+    "lib/manuscript/source/vaultErasureSafeLogR105.ts",
+    "scripts/ops/sweep-vault-erasure-queue.ts",
+    "scripts/ops/wsBetaR106FictionalErasureProbe.ts",
+    "lib/manuscript/source/__tests__/r106ErasureRestartSourceLaw.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

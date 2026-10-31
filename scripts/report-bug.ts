@@ -6,7 +6,7 @@
 //   npx tsx scripts/report-bug.ts "Journal button opens the wrong page"
 //   npx tsx scripts/report-bug.ts "Stream stalls on reconnect" --severity=high --url=/maia --title="voice reconnect"
 //
-// Requires DATABASE_URL (defaults to the local maia_consciousness DB).
+// Requires an explicit DATABASE_URL; no local database is selected implicitly.
 
 import { createBugReport } from '@/lib/bugs/bugReports';
 import { BUG_SEVERITIES, type BugSeverity } from '@/lib/bugs/types';

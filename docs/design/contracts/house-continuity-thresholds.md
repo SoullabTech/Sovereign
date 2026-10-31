@@ -13,6 +13,7 @@ surfaces:
   - components/house/HouseRoomThreshold.tsx
   - components/team/TeamSidebar.tsx
   - app/house/page.tsx
+  - app/house/AccountMenu.tsx
   - app/writers-studio/layout.tsx
   - app/writers-studio/StudioHouseReturn.tsx
   - app/writers-studio/situatedWork.ts

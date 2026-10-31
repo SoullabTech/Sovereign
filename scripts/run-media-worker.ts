@@ -16,6 +16,7 @@ import { query, queryOne, closePool } from '../lib/db/postgres';
 import { PROCESSORS } from '../lib/media/processors';
 import type { MediaJobRow } from '../lib/media/types';
 import { sweepVaultErasureQueue } from '../lib/manuscript/source/eraseManuscript';
+import { vaultErasureErrnoR105 } from '../lib/manuscript/source/vaultErasureSafeLogR105';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIGURATION
@@ -241,7 +242,7 @@ async function runVaultErasureStep(): Promise<void> {
       );
     }
   } catch (error) {
-    console.error('[MediaWorker/erasure] sweep failed (non-fatal, will retry):', error);
+    console.error('[MediaWorker/erasure] sweep failed, retry owed (errno='+vaultErasureErrnoR105(error)+')');
   }
 }
 

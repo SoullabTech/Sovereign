@@ -13,7 +13,7 @@
 #
 set -euo pipefail
 
-DATABASE_URL="${DATABASE_URL:-postgresql://soullab@localhost:5432/maia_consciousness}"
+: "${DATABASE_URL:?DATABASE_URL must be set explicitly for the corpus smoke test}"
 
 ts() { date +"%H:%M:%S"; }
 log() { echo "[$(ts)] $*"; }
@@ -21,7 +21,7 @@ ok()  { echo "✅ $*"; }
 no()  { echo "❌ $*"; exit 1; }
 
 log "Corpus-as-Environment smoke test starting…"
-log "DATABASE_URL=${DATABASE_URL%%@*}@..."
+log "DATABASE_URL=(explicit)"
 
 # Test 1: Check tables exist
 log "Test 1: Checking corpus tables exist…"

@@ -149,68 +149,9 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       });
     }
 
-    /* Same bigint coercion as the save route: node-postgres returns bigint as
-       a string, and precheck compares with !== against a number. Without this,
-       restore — the undo path — rejects every attempt as stale_base. */
-    const guardRow = { ...current.rows[0], version: normalizeVersion(current.rows[0].version) };
-    const decision = precheck(guardRow, 'restore', guard.idempotencyKey, hash, guard.baseRevisionId);
-    if (decision.kind === 'replay') {
-      return NextResponse.json(decision.response as object);
-    }
-    if (decision.kind === 'conflict') {
-      return NextResponse.json(conflictBody(decision.reason, decision.currentRevisionId), { status: 409 });
-    }
-
-    const revision = await query<{ content: string }>(
-      `SELECT content FROM working_draft_revisions WHERE draft_id = $1 AND revision_number = $2`,
-      [draftId, revisionNumber]
-    );
-    if (revision.rows.length === 0) {
-      return NextResponse.json({ error: 'Revision not found' }, { status: 404 });
-    }
-    const restoredContent = revision.rows[0].content;
-
-    // Same compare-and-advance as a save: restoring cannot discard work the
-    // writer has not seen. The displaced draft is preserved by construction —
-    // it is already an immutable revision, and history is never rewritten.
-    // The idempotency record is written in the SAME statement.
-    const updated = await query<{ revision_count: number; last_idempotency_response: unknown }>(
-      `UPDATE manuscript_working_drafts
-          SET content = $2,
-              revision_count = revision_count + 1,
-              version = version + 1,
-              updated_at = now(),
-              last_idempotency_key = $4,
-              last_idempotency_op = 'restore',
-              last_idempotency_payload_hash = $5,
-              last_idempotency_response = jsonb_build_object(
-                'revisionCount', revision_count + 1,
-                'revisionId', version + 1,
-                'restoredFrom', $6::int,
-                'updatedAt', now()
-              )
-        WHERE id = $1 AND version = $3
-      RETURNING revision_count, last_idempotency_response`,
-      [draftId, restoredContent, guard.baseRevisionId, guard.idempotencyKey, hash, revisionNumber]
-    );
-    if (updated.rows.length === 0) {
-      const now = await query<{ version: number }>(
-        `SELECT version FROM manuscript_working_drafts WHERE id = $1`,
-        [draftId]
-      );
-      if (now.rows.length === 0) {
-        return NextResponse.json({ error: 'Not found' }, { status: 404 });
-      }
-      return NextResponse.json(conflictBody('stale_base', normalizeVersion(now.rows[0].version)), { status: 409 });
-    }
-
-    await query(
-      `INSERT INTO working_draft_revisions (draft_id, revision_number, content, saved_by, note)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [draftId, updated.rows[0].revision_count, restoredContent, memberId, `Restored from revision ${revisionNumber}`]
-    );
-
-    return NextResponse.json(updated.rows[0].last_idempotency_response as object);
+    return await restoreLegacyAtomic({
+      draftId, memberId, revisionNumber, guard, hash,
+    });
   } catch (error) {
     if (error instanceof RestoreHttp) {
       return NextResponse.json(error.body as object, { status: error.status });
@@ -232,6 +173,113 @@ class RestoreHttp extends Error {
   constructor(readonly status: number, readonly body: unknown) {
     super(`restore ${status}`);
   }
+}
+
+
+/**
+ * LAUNCH-P0 (ISOLATED CANDIDATE): Historical legacy restore and the replay
+ * receipt must be atomic; a failed append cannot become a successful retry.
+ * Section-native restore already follows its own protected transaction path.
+ */
+async function restoreLegacyAtomic(args: {
+  draftId: string;
+  memberId: string;
+  revisionNumber: number;
+  hash: string;
+  guard: { idempotencyKey: string; baseRevisionId: number };
+}): Promise<NextResponse> {
+  const { draftId, memberId, revisionNumber, hash, guard } = args;
+  const receipt = await transaction(async (tx) => {
+    const current = await tx.query<DraftGuardRow & {
+      section_addressable_at: string | null;
+    }>(
+      `SELECT version, section_addressable_at,
+              last_idempotency_key, last_idempotency_op,
+              last_idempotency_payload_hash, last_idempotency_response
+         FROM manuscript_working_drafts
+        WHERE id = $1 AND member_id = $2
+        FOR UPDATE`,
+      [draftId, memberId]
+    );
+    const draft = current.rows[0];
+    if (!draft) throw new RestoreHttp(404, { error: 'Not found' });
+    if (draft.section_addressable_at !== null) {
+      throw new RestoreHttp(409, { refusal: 'representation_changed' });
+    }
+    const guardRow = { ...draft, version: normalizeVersion(draft.version) };
+    const decision = precheck(guardRow, 'restore', guard.idempotencyKey, hash, guard.baseRevisionId);
+    if (decision.kind === 'conflict') {
+      throw new RestoreHttp(409, conflictBody(decision.reason, decision.currentRevisionId));
+    }
+
+    const source = await tx.query<{ content: string }>(
+      `SELECT content FROM working_draft_revisions
+        WHERE draft_id = $1 AND revision_number = $2`,
+      [draftId, revisionNumber]
+    );
+    if (source.rows.length !== 1) {
+      throw new RestoreHttp(404, { error: 'Revision not found' });
+    }
+    const restoredContent = source.rows[0].content;
+    if (decision.kind === 'replay') {
+      const oldReceipt = decision.response as Record<string, unknown> | null;
+      const revisionCount = oldReceipt?.revisionCount;
+      if (!oldReceipt || oldReceipt.restoredFrom !== revisionNumber
+          || typeof revisionCount !== 'number'
+          || !Number.isSafeInteger(revisionCount) || revisionCount < 1) {
+        throw new RestoreHttp(409, { refusal: 'restore_history_unverified' });
+      }
+      const history = await tx.query<{ content: string; saved_by: string }>(
+        `SELECT content, saved_by FROM working_draft_revisions
+          WHERE draft_id = $1 AND revision_number = $2`,
+        [draftId, revisionCount]
+      );
+      if (history.rows.length !== 1
+          || history.rows[0].content !== restoredContent
+          || history.rows[0].saved_by !== memberId) {
+        throw new RestoreHttp(409, { refusal: 'restore_history_unverified' });
+      }
+      throw new RestoreHttp(200, decision.response);
+    }
+
+    const advanced = await tx.query<{
+      revision_count: number; last_idempotency_response: unknown;
+    }>(
+      `UPDATE manuscript_working_drafts
+          SET content = $2,
+              revision_count = revision_count + 1,
+              version = version + 1,
+              updated_at = now(),
+              last_idempotency_key = $4,
+              last_idempotency_op = 'restore',
+              last_idempotency_payload_hash = $5,
+              last_idempotency_response = jsonb_build_object(
+                'revisionCount', revision_count + 1,
+                'revisionId', version + 1,
+                'restoredFrom', $6::int,
+                'updatedAt', now()
+              )
+        WHERE id = $1 AND member_id = $7 AND version = $3
+      RETURNING revision_count, last_idempotency_response`,
+      [draftId, restoredContent, guard.baseRevisionId,
+       guard.idempotencyKey, hash, revisionNumber, memberId]
+    );
+    if (advanced.rows.length !== 1) {
+      throw new RestoreHttp(409, conflictBody('stale_base', guardRow.version));
+    }
+    const appended = await tx.query(
+      `INSERT INTO working_draft_revisions
+          (draft_id, revision_number, content, saved_by, note)
+        VALUES ($1, $2, $3, $4, $5)`,
+      [draftId, advanced.rows[0].revision_count, restoredContent,
+       memberId, 'Restored from revision ' + revisionNumber]
+    );
+    if (appended.rowCount !== 1) {
+      throw new Error('Restore history insert did not append one revision');
+    }
+    return advanced.rows[0].last_idempotency_response;
+  });
+  return NextResponse.json(receipt as object);
 }
 
 /**

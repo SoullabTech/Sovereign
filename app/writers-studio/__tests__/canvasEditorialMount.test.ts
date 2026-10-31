@@ -223,8 +223,15 @@ describe('the room opens a relationship from a gesture, never from a render', ()
     );
     /* ⛔ AND THERE IS EXACTLY ONE. A second writer anywhere in the room fails. */
     expect((client.match(/canvasWithEditorialThread\(/g) ?? []).length).toBe(1);
-    /* ⭐ Both paths reach it: the open gesture, and the chooser's resume. */
-    expect(client).toContain('adoptEditorialThread(threadId)');
+    // The accepted 732efd162e boundary closed legacy first-open without Work/A2
+    // authority. Keep the single address writer for explicit existing-thread resume.
+    const begin = client.indexOf('const openEditorialConversation');
+    const end = client.indexOf('const [compact', begin);
+    expect(begin).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(begin);
+    const opening = client.slice(begin, end);
+    expect(opening).toContain('choose its MAIA relationship first. Nothing was written.');
+    expect(opening).not.toMatch(/apiFetch\s*\(|fetch\s*\(|adoptEditorialThread\s*\(/);
     expect(client).toMatch(/onResume=\{adoptEditorialThread\}/);
   });
 
@@ -328,8 +335,8 @@ describe('WS-EDITORIAL-UI-02 — the writer answers in wording', () => {
 
   it('⛔ never truthiness-checks the wording — `\'\'` is a lawful formulation', () => {
     const route = strip(read(ROUTE));
-    expect(route).toMatch(/typeof b\.replacementText !== 'string'/);
-    expect(route).not.toMatch(/!b\.replacementText|b\.replacementText\.length === 0/);
+    expect(route).toMatch(/typeof (?:b|body)\.replacementText !== 'string'/);
+    expect(route).not.toMatch(/!(?:b|body)\.replacementText|(?:b|body)\.replacementText\.length === 0/);
     expect(route).not.toMatch(/replacementText\.trim\(\)/);
   });
 
@@ -552,5 +559,39 @@ describe('the room source is where its scanners look', () => {
     expect(re.test("read('app/writers-studio/canvas/page.tsx')")).toBe(true);
     expect(re.test("join(__dirname, '..', 'canvas', 'page.tsx')")).toBe(true);
     expect(re.test("join(__dirname, '..', 'canvas', 'CanvasClient.tsx')")).toBe(false);
+  });
+});
+
+
+// Real route function; identity and append are fictional service adapters. No DB.
+jest.mock('@/lib/maia/canonical-turn', () => ({ resolveCanonicalIdentity: jest.fn() }));
+jest.mock('@/lib/manuscript/editorialRuntime/memberVersion', () => ({ appendCurrentMemberVersion: jest.fn() }));
+describe('member formulation route preserves exact author wording', () => {
+  const identity = require('@/lib/maia/canonical-turn').resolveCanonicalIdentity;
+  const append = require('@/lib/manuscript/editorialRuntime/memberVersion').appendCurrentMemberVersion;
+  const { POST } = require('@/app/api/writers-studio/editorial/version/route');
+  const oldFlag = process.env.WRITERS_STUDIO_EDITORIAL_ENABLED;
+  const body = {threadId:'fiction-thread', relationshipId:'fiction-relationship', sanctuary:false, supersedes:'fiction-prior', replacementText:''};
+  beforeEach(() => {
+    process.env.WRITERS_STUDIO_EDITORIAL_ENABLED='1';
+    identity.mockReset().mockResolvedValue({status:'verified',memberId:'fiction-member'});
+    append.mockReset().mockResolvedValue({outcome:'appended',version:{id:'fiction-version',supersedes:'fiction-prior'}});
+  });
+  afterAll(() => { if(oldFlag===undefined) delete process.env.WRITERS_STUDIO_EDITORIAL_ENABLED; else process.env.WRITERS_STUDIO_EDITORIAL_ENABLED=oldFlag; });
+  it.each(['', '  ', '\n', 'Fictional words.'])('forwards exact string %p without manufacturing or trimming words', async (replacementText) => {
+    const reply=await POST({json:async()=>({...body,replacementText})});
+    expect(reply.status).toBe(201);
+    expect(append).toHaveBeenCalledTimes(1);
+    expect(append).toHaveBeenCalledWith({memberId:'fiction-member',relationshipId:body.relationshipId,threadId:body.threadId,supersedes:body.supersedes,replacementText});
+  });
+  it.each([null, undefined, 0, false, {}])('refuses non-string wording %p before persistence', async (replacementText) => {
+    const reply=await POST({json:async()=>({...body,replacementText})});
+    expect(reply.status).toBe(400);expect(append).not.toHaveBeenCalled();
+  });
+  it('refuses an unverified member and Sanctuary without persisting', async () => {
+    identity.mockResolvedValueOnce({status:'unverified'});
+    expect((await POST({json:async()=>body})).status).toBe(401);
+    expect((await POST({json:async()=>({...body,sanctuary:true})})).status).toBe(409);
+    expect(append).not.toHaveBeenCalled();
   });
 });

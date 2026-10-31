@@ -10,7 +10,9 @@ function classify(text: string): WriteBlockKind {
   const t = text.trim();
   const markdownWrapped = /^(\*|_)([\s\S]+)\1$/.exec(t);
   const visible = markdownWrapped ? markdownWrapped[2]!.trim() : t;
-  if (FOLIO.test(visible)) return 'folio';
+  // A numeric-only line may be a year, count or other authored text.
+  // Without trusted import-page provenance it cannot be labeled a folio.
+  if (FOLIO.test(visible)) return 'paragraph';
   if (ROMAN_SUBHEAD.test(visible) || NUMBERED_SUBHEAD.test(visible)) return 'subhead';
   if (visible.split('\n').every((line) => !line.trim() || LIST_LINE.test(line.trim()))) return 'list';
   if (/^[“"‘']/.test(visible) && (/[”"’']\s*[—–-]\s*\S/.test(visible) || /[”"’']$/.test(visible))) return 'epigraph';
@@ -110,4 +112,63 @@ export function typesetManuscriptBody(body: string): WriteBlock[] {
 
 export function typesetParagraphs(body: string): string[] {
   return typesetManuscriptBody(body).map((block) => block.text);
+}
+
+
+/**
+ * Craft-specific reader projection. These helpers do NOT replace or mutate
+ * typesetManuscriptBody, which remains the deployed manuscript view.
+ *
+ * Printed page folios and PDF soft wraps are presentation artifacts; source
+ * text stays untouched. A later Apply requires its separate author authority.
+ */
+function looksLikeImportedHardWrap(body: string): boolean {
+  const normalized = body.replace(/\r\n?/g, '\n');
+  const lines = normalized.split('\n').map(line => line.trim()).filter(Boolean);
+  // A bare numeric line does not prove PDF/printed-page provenance.
+  const prose = lines.filter(line =>
+    !ROMAN_SUBHEAD.test(line) &&
+    !NUMBERED_SUBHEAD.test(line) &&
+    !LIST_LINE.test(line)
+  );
+  if (prose.length < 4) return false;
+  const typical = median(prose.map(line => line.length));
+  const sentenceEnded = prose.filter(line => SENTENCE_END.test(line)).length;
+  return typical >= 45 && sentenceEnded / prose.length < 0.6;
+}
+
+function reflowCraftBlock(block: WriteBlock): string {
+  if (block.kind === 'list') {
+    return block.text.split('\n').map(line => line.trim()).filter(Boolean).join('\n');
+  }
+  return block.text.split('\n').map(line => line.trim()).filter(Boolean).join(' ');
+}
+
+export interface EditableManuscriptProjection {
+  text: string;
+  projected: boolean;
+}
+
+/** Only a display/editing projection, never a silent Source transformation. */
+export function editableManuscriptProjection(body: string): EditableManuscriptProjection {
+  const normalized = body.replace(/\r\n?/g, '\n');
+  if (!looksLikeImportedHardWrap(normalized)) return { text: normalized, projected: false };
+  const text = typesetProseBlocks(normalized)
+    .map(reflowCraftBlock).filter(Boolean).join('\n\n');
+  return { text, projected: text !== normalized };
+}
+
+/**
+ * Reader-only Craft blocks. Numeric-only lines are preserved as authored
+ * text until explicit trusted import evidence proves an actual printed folio.
+ * Neither display heuristics nor CSS can grant source-editing authority.
+ */
+export function typesetProseBlocks(body: string): WriteBlock[] {
+  const blocks = typesetManuscriptBody(body);
+  // Reader and Craft keep every numeric line selectable as authored text.
+  // Preserve fallback handling for older provenance-tagged folio blocks; it
+  // never removes their characters or grants edit authority.
+  return blocks.map(block => block.kind === 'folio'
+    ? { ...block, kind: 'paragraph' as const }
+    : block);
 }

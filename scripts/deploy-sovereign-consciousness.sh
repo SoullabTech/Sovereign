@@ -34,6 +34,9 @@ VOICE_MODELS_DIR="$HOME/maia-voice-models"
 REQUIRED_DISK_SPACE_GB=500
 MIN_RAM_GB=32
 
+: "${MAIA_DB_PASSWORD:?MAIA_DB_PASSWORD must be set explicitly for sovereign infrastructure}"
+: "${DATABASE_URL:?DATABASE_URL must be set explicitly for sovereign configuration}"
+
 # Function to check system requirements
 check_requirements() {
     echo -e "${BLUE}🔍 Checking system requirements for consciousness platform deployment...${NC}"
@@ -231,7 +234,7 @@ services:
     environment:
       POSTGRES_DB: maia_consciousness
       POSTGRES_USER: maia
-      POSTGRES_PASSWORD: sovereign_consciousness_2024
+      POSTGRES_PASSWORD: ${MAIA_DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -323,7 +326,7 @@ ENABLE_CLAUDE_FALLBACK=false
 OLLAMA_BASE_URL=http://localhost:11434
 
 # ===== DATABASE CONFIGURATION =====
-DATABASE_URL=postgresql://maia:sovereign_consciousness_2024@localhost:5432/maia_consciousness
+DATABASE_URL=${DATABASE_URL}
 REDIS_URL=redis://localhost:6379
 
 # ===== VECTOR DATABASE =====

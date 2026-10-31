@@ -94,7 +94,7 @@ function summaryLens(summary: ReadingSummary): DevelopField | null {
 }
 
 function sectionLabel(section: RebuildSection | undefined, index = 0): string {
-  return section?.heading?.trim() || `Section ${index + 1}`;
+  return section?.heading?.trim() || `Section ${(section?.position ?? index) + 1}`;
 }
 
 export default function P4R1DevelopController() {
@@ -119,7 +119,9 @@ export default function P4R1DevelopController() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const { phase: worksPhase, works } = useLivingWorks();
+  const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
+  const [declaring, setDeclaring] = useState(false);
+  const [declareError, setDeclareError] = useState<string | null>(null);
 
   const [summaries, setSummaries] = useState<ReadingSummary[]>([]);
   const [summariesLoading, setSummariesLoading] = useState(true);
@@ -424,7 +426,7 @@ export default function P4R1DevelopController() {
       return {
         kind: 'section',
         sectionId: currentSection.draftSectionId,
-        label: currentSection.heading?.trim() || 'Current section',
+        label: sectionLabel(currentSection),
       };
     });
   }, [context?.manuscriptId, currentSectionId]);
@@ -443,7 +445,7 @@ export default function P4R1DevelopController() {
       setScope({
         kind: 'section',
         sectionId: currentSection.draftSectionId,
-        label: currentSection.heading?.trim() || 'Current section',
+        label: sectionLabel(currentSection),
       });
     }
   }, [context?.manuscriptId]);
@@ -453,6 +455,55 @@ export default function P4R1DevelopController() {
     worksPhase, works, context?.manuscriptId ?? manuscriptId, carriedWorkId,
   );
   const work = currentWork(workContext);
+
+  // The author's own declaration that this writing belongs to a Work (the same routes the Studio Home uses). The Studio
+  // never infers it; after it lands the Works are re-read, the context resolves to that Work, and Talk becomes available.
+  const declareManuscript = useCallback(async (workId: string) => {
+    // `id`, not `manuscriptId`: a local of that name would shadow the page's own and read itself before it exists.
+    const id = context?.manuscriptId ?? manuscriptId;
+    if (!id) throw new Error('declare:no-manuscript');
+    const response = await apiFetch('/api/sovereign/living-works/' + workId + '/expressions', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ expressionType: 'manuscript', expressionId: id }),
+    });
+    if (!response.ok) throw new Error('declare:' + response.status);
+  }, [context?.manuscriptId, manuscriptId]);
+
+  const addToWork = useCallback(async (workId: string) => {
+    setDeclareError(null);
+    setDeclaring(true);
+    try {
+      await declareManuscript(workId);
+      await reloadWorks();
+    } catch {
+      setDeclareError('We couldn’t add this writing to that Work. Nothing was changed. Please try again.');
+    } finally {
+      setDeclaring(false);
+    }
+  }, [declareManuscript, reloadWorks]);
+
+  const makeWork = useCallback(async (title: string) => {
+    setDeclareError(null);
+    setDeclaring(true);
+    try {
+      const created = await apiFetch('/api/sovereign/living-works', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ title }),
+      });
+      if (!created.ok) throw new Error('create:' + created.status);
+      const body = await created.json().catch(() => ({})) as { id?: string; work?: { id?: string }; livingWork?: { id?: string } };
+      const workId = body.id ?? body.work?.id ?? body.livingWork?.id;
+      if (!workId) throw new Error('create:id');
+      await declareManuscript(workId);
+      await reloadWorks();
+    } catch {
+      setDeclareError('We couldn’t make that Work. Please try again; if a Work with that name appears, use “Add to a Work”.');
+    } finally {
+      setDeclaring(false);
+    }
+  }, [declareManuscript, reloadWorks]);
   const workTitle = work?.title ?? context?.title ?? 'This Work';
 
   useEffect(() => {
@@ -692,7 +743,7 @@ export default function P4R1DevelopController() {
     });
   }, [updateQuery]);
 
-  const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
+  const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review' | 'publish' | 'listen') => {
     if (mode === 'home') {
       const query = studioHomeReturnSearch(params?.toString() ?? '');
       router.push(`${pathname}${query ? `?${query}` : ''}`);
@@ -732,7 +783,7 @@ export default function P4R1DevelopController() {
       setScope({
         kind: 'section',
         sectionId,
-        label: selected.heading?.trim() || 'Current section',
+        label: sectionLabel(selected),
       });
     }
 
@@ -1578,6 +1629,12 @@ export default function P4R1DevelopController() {
     <P4R1DevelopView
       manuscriptId={context.manuscriptId}
       work={work}
+      workContextKind={workContext.kind}
+      allWorks={works}
+      declaring={declaring}
+      declareError={declareError}
+      onAddToWork={(id) => void addToWork(id)}
+      onMakeWork={(title) => void makeWork(title)}
       workTitle={workTitle}
       appearance={appearance}
       field={field}

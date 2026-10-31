@@ -31,7 +31,12 @@ export type FullRedesignReviewClientProps = {
   initialAppearance?: Appearance;
 };
 
-const MODE_STATE: Record<StudioMode, ReviewStateId> = { home: 'home-return', write: 'write-resting', develop: 'develop-themes', review: 'review-chapter' };
+const MODE_STATE: Partial<Record<StudioMode, ReviewStateId>> = {
+  home: 'home-return',
+  write: 'write-resting',
+  develop: 'develop-themes',
+  review: 'review-chapter',
+};
 
 const LARGER = [
   'Across the manuscript, change and transition gathers strength from Chapter 5 onward.',
@@ -58,7 +63,12 @@ export function FullRedesignReviewClient({ initialState, initialAppearance = DEF
   const act = (a: string) => setNote(`Fixture — \u201C${a}\u201D would act in the live Studio. Nothing happens here.`);
 
   function selectMode(next: StudioMode) {
-    setState(MODE_STATE[next]);
+    const reviewState = MODE_STATE[next];
+    if (!reviewState) {
+      setNote(`Fixture — ${next === 'publish' ? 'Publish' : 'Listen'} is not captured in this founder-review harness. Nothing happens here.`);
+      return;
+    }
+    setState(reviewState);
     setCanvas(false);
     setNote('');
   }

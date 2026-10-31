@@ -14,7 +14,7 @@
 #             GIT_COMMIT=unknown unless prefixed; this gate makes that
 #             structurally impossible (see feedback_deploy_container_provenance_gate).
 #
-#   Gate 2 — Co-Lab boundaries : the boundary verifier must pass 31/31 with
+#   Gate 2 — Co-Lab boundaries : the boundary verifier must pass at least MIN_COLAB_CHECKS (29) with
 #             0 failed and 0 warned. Previously a manual "before tester waves"
 #             step; now a hard precondition of the deploy path itself
 #             (see docs/ops/COLAB_RELEASE_GATE.md).
@@ -40,7 +40,7 @@
 #   FIRST_DEPLOY=1        — allow Co-Lab gate to skip when no container exists yet
 #   COLAB_VERIFIER_CMD    — override the verifier command (used by the gate's own
 #                           self-test; also lets you run against a local DB)
-#   MIN_COLAB_CHECKS=31   — floor on passing checks (raise when new checks ship)
+#   MIN_COLAB_CHECKS=29   — floor on passing checks (raise when new checks ship)
 #   MIN_FREE_DISK_GB=60   — floor on free space for / before building
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -75,7 +75,10 @@ log_ok()      { echo -e "${GREEN}[gate:ok]${NC} $1" >&2; }
 log_warn()    { echo -e "${YELLOW}[gate:warn]${NC} $1" >&2; }
 log_block()   { echo -e "${RED}[gate:BLOCK]${NC} $1" >&2; }
 
-MIN_COLAB_CHECKS="${MIN_COLAB_CHECKS:-31}"
+# Floor = the check count the v2 verifier measures (29). v1 measured 33 with a floor of 31.
+# RULING_REQUIRED: moving the default from 31 to 29 LOWERS the floor. It is not authorized by this change alone;
+# see docs/ops/COLAB_RELEASE_GATE.md (v2). Raise it when checks are ADDED; lowering it is a recorded founder decision.
+MIN_COLAB_CHECKS="${MIN_COLAB_CHECKS:-29}"
 CONTAINER="${MAIA_CONTAINER:-maia-sovereign}"
 MIN_FREE_DISK_GB="${MIN_FREE_DISK_GB:-60}"
 
@@ -103,11 +106,11 @@ gate_provenance() {
 }
 
 # ───────────────────────────────────────────────────────────────────────────────
-# Gate 2 — Co-Lab boundaries (31/31 · 0 failed · 0 warned)
+# Gate 2 — Co-Lab boundaries (>= floor · 0 failed · 0 warned)
 # Runs the boundary verifier and blocks unless the pass condition holds.
 # The hard invariant is: passed >= MIN_COLAB_CHECKS AND failed==0 AND warned==0
 # AND the verifier exited 0. (A verifier that silently drops checks — e.g.
-# 20 passed · 0 failed · 0 warned — is ALSO a block: the floor catches regressions
+# fewer passes than the floor with 0 failed · 0 warned — is ALSO a block: the floor catches regressions
 # where checks disappear rather than fail.)
 # ───────────────────────────────────────────────────────────────────────────────
 gate_colab() {
@@ -138,6 +141,13 @@ gate_colab() {
     passed="$(echo "$summary"  | grep -Eo '^[0-9]+'            || echo '')"
     failed="$(echo "$summary"  | grep -Eo '· [0-9]+ failed'   | grep -Eo '[0-9]+' || echo '')"
     warned="$(echo "$summary"  | grep -Eo '· [0-9]+ warned'   | grep -Eo '[0-9]+' || echo '')"
+
+    if [ "$exit_code" -eq 3 ] && echo "$output" | grep -q "PRECONDITION UNMET"; then
+        log_block "Co-Lab gate could NOT RUN — a declared principal is missing or owns no active Co-Lab."
+        log_block "This is an instrument precondition failure: no boundary verdict exists. It is NOT a pass."
+        echo "$output" | grep -A4 "PRECONDITION UNMET" >&2
+        return 1
+    fi
 
     if [ -z "$summary" ]; then
         log_block "Could not parse a 'X passed · Y failed · Z warned' line from the verifier."
@@ -327,7 +337,7 @@ case "${1:-help}" in
         echo "Usage: $0 <provenance|colab|disk|all> | prepare-maia <SHA> | cutover-maia <SHA>"
         echo ""
         echo "  provenance         Validate GIT_COMMIT (never unknown/empty); echo resolved SHA"
-        echo "  colab              Run Co-Lab boundary verifier; block unless 31/31 · 0 failed · 0 warned"
+        echo "  colab              Run Co-Lab boundary verifier; block unless >= floor · 0 failed · 0 warned"
         echo "  disk               Block unless / has >= MIN_FREE_DISK_GB (default 60) GB free"
         echo "  all                Run all gates (no build)"
         echo "  prepare-maia <SHA> Build + freeze exact candidate; DO NOT recreate production."

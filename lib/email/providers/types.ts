@@ -24,6 +24,8 @@
 
 /** A message after Soullab policy, before vendor serialisation. */
 export interface ProviderEmailMessage {
+  /** Original policy purpose, before normalization into transport labels. */
+  purpose?: string;
   from: string;
   to: string | string[];
   subject: string;

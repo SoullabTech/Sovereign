@@ -8,9 +8,22 @@
 import pg, { QueryResultRow } from 'pg';
 const { Pool } = pg;
 
+function requireDatabaseUrl(raw: string | undefined): string {
+  const value = raw?.trim();
+  if (!value) throw new Error('DATABASE_URL_REQUIRED: explicit PostgreSQL authority is required');
+  let parsed: URL;
+  try { parsed = new URL(value); } catch {
+    throw new Error('DATABASE_URL_INVALID: expected a PostgreSQL URL');
+  }
+  if (!['postgres:', 'postgresql:'].includes(parsed.protocol) || parsed.pathname.length <= 1) {
+    throw new Error('DATABASE_URL_INVALID: expected a named PostgreSQL database');
+  }
+  return value;
+}
+
 // Create connection pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
+  connectionString: requireDatabaseUrl(process.env.DATABASE_URL),
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,

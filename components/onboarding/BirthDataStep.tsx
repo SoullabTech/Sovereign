@@ -1,39 +1,13 @@
 'use client';
 
 /**
- * BirthDataStep — Onboarding opt-in for birth data / astrology
- *
- * Sovereignty design:
- *   Genuine choice screen before any form appears. Both options carry equal
- *   visual weight. The form only appears after explicit opt-in.
- *
- *   Not everyone uses or believes in astrology. MAIA does not assume it is
- *   desirable. When the user declines, that preference is stored and the step
- *   is skipped on any future onboarding run.
- *
- * Consent states (stored in both localStorage and server):
- *   'unknown'  → show choice screen (default for new members)
- *   'opted_in' → skip directly to next step
- *   'declined' → skip directly to next step
- *
- * Cross-device persistence:
- *   On mount, if localStorage says 'unknown', the server profile is checked
- *   (best-effort). If the server has a resolved consent from another device,
- *   it is stored locally and the step is skipped. If the check fails or the
- *   server also says 'unknown', the choice screen is shown.
- *
- *   When the user makes a choice, consent is written to localStorage
- *   immediately (fast path) and synced to the server in the background
- *   (fire-and-forget, non-fatal on failure).
- *
- * Flow:
- *   unknown  → (mount check) → choice → (opted_in) → form → save → complete
- *                                       → (declined) → complete immediately
- *   opted_in → complete immediately (step skipped)
- *   declined → complete immediately (step skipped)
+ * Optional birth data and astrology consent.
+ * The verified member profile is the source of truth on every mount.
+ * Browser storage is only a cache of a confirmed server result; it never skips
+ * verification or turns an unsuccessful save into completed onboarding.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BirthDataForm } from '@/components/astrology/BirthDataForm';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -46,176 +20,175 @@ interface BirthDataStepProps {
   onComplete: () => void;
 }
 
-function readAstrologyConsent(): AstrologyConsent {
+function storeAstrologyConsent(consent: 'opted_in' | 'declined', memberId: string) {
   try {
     const raw = localStorage.getItem('beta_user');
-    if (!raw) return 'unknown';
+    if (!raw) return true;
     const user = JSON.parse(raw);
-    return (user.astrologyConsent as AstrologyConsent) ?? 'unknown';
-  } catch {
-    return 'unknown';
-  }
-}
-
-function storeAstrologyConsent(consent: 'opted_in' | 'declined') {
-  try {
-    const raw = localStorage.getItem('beta_user');
-    if (!raw) return;
-    const user = JSON.parse(raw);
+    // A changed member cache is a reason to refuse a late completion, never
+    // authority to choose the server-side member.
+    if (typeof user.id === 'string' && !user.id.startsWith('local_') && user.id !== memberId) return false;
+    if (user.id !== memberId) return true;
     user.astrologyConsent = consent;
     localStorage.setItem('beta_user', JSON.stringify(user));
+    return true;
   } catch {
-    // Non-fatal
+    // A cache failure does not undo a confirmed server save.
+    return true;
   }
 }
 
-function getStoredMemberId(): string | null {
-  try {
-    const raw = localStorage.getItem('beta_user');
-    if (!raw) return null;
-    const user = JSON.parse(raw);
-    const id = user.id ?? null;
-    if (!id || id.startsWith('local_')) return null;
-    return id;
-  } catch {
-    return null;
+class ProfileConsentError extends Error {}
+
+function cacheConfirmedConsent(consent: 'opted_in' | 'declined', memberId: string) {
+  if (!storeAstrologyConsent(consent, memberId)) {
+    throw new ProfileConsentError('Your sign-in changed. Please try your choice again.');
   }
 }
 
-/**
- * Sync astrology consent to the server (fire-and-forget).
- * Non-fatal — localStorage is the primary fast path, DB adds cross-device persistence.
- */
-async function syncConsentToServer(consent: 'opted_in' | 'declined'): Promise<void> {
-  const memberId = getStoredMemberId();
-  if (!memberId) return; // local_* or missing — skip server sync
-
+async function readProfileResponse(options: RequestInit): Promise<unknown> {
+  const controller = new AbortController();
+  let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
-    await apiFetch('/api/members/profile', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
-      body: JSON.stringify({ astrologyConsent: consent }),
-    });
-    console.log('[BirthDataStep] Consent synced to server:', consent);
-  } catch (err: any) {
-    // Best-effort — localStorage write already happened
-    console.warn('[BirthDataStep] Server consent sync failed (non-fatal):', err?.message);
+    return await Promise.race([
+      (async () => {
+        const response = await apiFetch('/api/members/profile', {
+          ...options,
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new ProfileConsentError(response.status === 401
+            ? 'Please sign in again to save your preference.'
+            : 'We could not save your preference. Please try again.');
+        }
+        return response.json();
+      })(),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => {
+          controller.abort();
+          reject(new ProfileConsentError('We could not confirm your preference. Please try again.'));
+        }, 30_000);
+      }),
+    ]);
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout);
   }
+}
+
+async function saveProfileConsent(
+  consent: 'opted_in' | 'declined',
+  birthData?: Record<string, unknown>,
+): Promise<string> {
+  const result = await readProfileResponse({
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ astrologyConsent: consent, ...(birthData ? { birthData } : {}) }),
+  });
+  const body = result as { success?: unknown; profile?: { id?: unknown; astrology_consent?: unknown } } | null;
+  if (body?.success !== true || typeof body.profile?.id !== 'string' || !body.profile.id ||
+      body.profile.astrology_consent !== consent) {
+    throw new ProfileConsentError('We could not confirm your preference. Please try again.');
+  }
+  return body.profile.id;
 }
 
 export function BirthDataStep({ userName = 'Explorer', onComplete }: BirthDataStepProps) {
-  // Start in 'checking' while we verify localStorage + server consent
   const [phase, setPhase] = useState<Phase>('checking');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const savingRef = useRef(false);
+  const mountedRef = useRef(false);
+  const completeRef = useRef(onComplete);
+  const completionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── Mount: determine whether to skip this step ─────────────────────────────
+  useEffect(() => { completeRef.current = onComplete; }, [onComplete]);
+
   useEffect(() => {
-    const localConsent = readAstrologyConsent();
-
-    // Fast path: localStorage already has a resolved consent
-    if (localConsent !== 'unknown') {
-      onComplete();
-      return;
-    }
-
-    // localStorage says 'unknown' — check server for cross-device persistence.
-    // If the user decided on another device, we should respect that.
-    const memberId = getStoredMemberId();
-    if (!memberId) {
-      // Can't check server (no valid ID) — show choice screen immediately
-      setPhase('choice');
-      return;
-    }
-
-    apiFetch('/api/members/profile', {
-      method: 'GET',
-      headers: { 'x-member-id': memberId },
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          // Auth issue or server error — show choice screen, don't block
-          setPhase('choice');
-          return;
+    let active = true;
+    mountedRef.current = true;
+    // Always read the verified profile, including when a legacy local cache
+    // says declined/opted_in. Earlier local-only saves are not durable proof.
+    readProfileResponse({ method: 'GET' })
+      .then((result) => {
+        if (!active) return;
+        const profile = result as { id?: unknown; astrologyConsent?: unknown } | null;
+        if (typeof profile?.id !== 'string' || !profile.id ||
+            (typeof profile.astrologyConsent !== 'string' ||
+             !['unknown', 'opted_in', 'declined'].includes(profile.astrologyConsent))) {
+          throw new Error('Profile response was not confirmed');
         }
-        const profile = await res.json();
-        const serverConsent = (profile.astrologyConsent ?? 'unknown') as AstrologyConsent;
-
-        if (serverConsent !== 'unknown') {
-          // Server has a resolved consent from another device — honour it locally
-          storeAstrologyConsent(serverConsent);
-          onComplete();
+        const consent = profile.astrologyConsent as AstrologyConsent;
+        if (consent === 'opted_in' || consent === 'declined') {
+          cacheConfirmedConsent(consent, profile.id);
+          completeRef.current();
         } else {
           setPhase('choice');
         }
       })
       .catch(() => {
-        // Network error — show choice screen, don't block onboarding
+        if (!active) return;
+        setSaveError('We could not check your saved preference. Please try your choice again.');
         setPhase('choice');
       });
-  }, [onComplete]);
+    return () => {
+      active = false;
+      mountedRef.current = false;
+      if (completionTimer.current !== null) clearTimeout(completionTimer.current);
+    };
+  }, []);
 
-  // ── Decline handler ─────────────────────────────────────────────────────────
-  function handleDecline() {
-    storeAstrologyConsent('declined');
-    // Fire-and-forget server sync — don't await
-    syncConsentToServer('declined');
-    onComplete();
+  async function handleDecline() {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const memberId = await saveProfileConsent('declined');
+      if (!mountedRef.current) return;
+      cacheConfirmedConsent('declined', memberId);
+      completeRef.current();
+    } catch (error) {
+      if (mountedRef.current) setSaveError(error instanceof ProfileConsentError
+        ? error.message : 'We could not save your preference. Please try again.');
+    } finally {
+      savingRef.current = false;
+      if (mountedRef.current) setSaving(false);
+    }
   }
 
-  // ── Birth data save handler ─────────────────────────────────────────────────
   async function saveBirthData(data: {
     date: string;
     time: string;
     location: { name: string; lat: number; lng: number; timezone: string };
   }) {
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(true);
     setSaveError(null);
-
     try {
-      const memberId = getStoredMemberId();
-
-      if (!memberId) {
-        console.warn('[BirthDataStep] No valid member ID — skipping server save');
-        storeAstrologyConsent('opted_in');
-        setPhase('saved');
-        setTimeout(onComplete, 900);
-        return;
-      }
-
-      const res = await apiFetch('/api/members/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
-        body: JSON.stringify({
-          birthData: {
-            date: data.date,
-            time: data.time,
-            location: {
-              lat: data.location.lat,
-              lng: data.location.lng,
-              name: data.location.name,
-              timezone: data.location.timezone,
-            },
-          },
-          // Bundle consent into the same request — one round-trip, atomic update
-          astrologyConsent: 'opted_in',
-        }),
+      const memberId = await saveProfileConsent('opted_in', {
+        date: data.date,
+        time: data.time,
+        location: {
+          lat: data.location.lat,
+          lng: data.location.lng,
+          name: data.location.name,
+          timezone: data.location.timezone,
+        },
       });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || `HTTP ${res.status}`);
-      }
-
-      console.log('[BirthDataStep] Birth data + consent saved for member', memberId);
-      storeAstrologyConsent('opted_in');
+      if (!mountedRef.current) return;
+      cacheConfirmedConsent('opted_in', memberId);
       setPhase('saved');
-      setTimeout(onComplete, 900);
-    } catch (err: any) {
-      console.error('[BirthDataStep] Save failed:', err.message);
-      setSaveError(err.message);
+      completionTimer.current = setTimeout(() => {
+        if (mountedRef.current) completeRef.current();
+      }, 900);
+    } catch (error) {
+      if (mountedRef.current) setSaveError(error instanceof ProfileConsentError
+        ? error.message : 'We could not save your preference. Please try again.');
     } finally {
-      setSaving(false);
+      savingRef.current = false;
+      if (mountedRef.current) setSaving(false);
     }
   }
 
@@ -283,12 +256,20 @@ export function BirthDataStep({ userName = 'Explorer', onComplete }: BirthDataSt
               removed anytime in Settings.
             </p>
 
+            {saveError && (
+              <p role="alert" className="mb-4 text-sm" style={{ color: '#fca5a5' }}>
+                {saveError}
+              </p>
+            )}
+            {saving && <p role="status" className="mb-4 text-sm">Saving your preference…</p>}
+
             {/* Equal-weight options — no visual hierarchy between them */}
             <div className="flex flex-col gap-3">
               <motion.button
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                onClick={() => setPhase('form')}
+                onClick={() => { setSaveError(null); setPhase('form'); }}
+                disabled={saving}
                 className="w-full py-4 border font-serif text-base transition-all duration-200"
                 style={{
                   fontWeight: 300,
@@ -304,6 +285,7 @@ export function BirthDataStep({ userName = 'Explorer', onComplete }: BirthDataSt
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
                 onClick={handleDecline}
+                disabled={saving}
                 className="w-full py-4 border font-serif text-base transition-all duration-200"
                 style={{
                   fontWeight: 300,
@@ -339,6 +321,7 @@ export function BirthDataStep({ userName = 'Explorer', onComplete }: BirthDataSt
             {/* Save error — retry-focused; values preserved in BirthDataForm state */}
             {saveError && (
               <motion.div
+                role="alert"
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-4 px-4 py-3 border text-sm text-center w-full max-w-md"
@@ -348,9 +331,9 @@ export function BirthDataStep({ userName = 'Explorer', onComplete }: BirthDataSt
                   color: '#fca5a5',
                 }}
               >
-                <span className="block mb-1">Couldn't save — your entries are still here.</span>
+                <span className="block mb-1">{saveError}</span>
                 <span className="block text-xs opacity-75">
-                  Try submitting again, or continue without birth data and add it later in Settings.
+                  Your entries are still here. Try again, or choose to continue without birth data.
                 </span>
               </motion.div>
             )}
@@ -361,6 +344,7 @@ export function BirthDataStep({ userName = 'Explorer', onComplete }: BirthDataSt
               animate={{ opacity: saveError ? 1 : 0.55 }}
               transition={{ delay: saveError ? 0 : 1.0, duration: 0.4 }}
               onClick={handleDecline}
+              disabled={saving}
               className="mt-5 text-sm transition-opacity"
               style={{ fontWeight: 300, color: saveError ? '#9a6030' : '#6b4020' }}
             >

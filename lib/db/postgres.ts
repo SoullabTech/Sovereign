@@ -1,33 +1,92 @@
 /**
  * POSTGRES DATABASE CLIENT
  *
- * Simple, reliable Postgres client for local development
- * Uses DATABASE_URL from environment
+ * Shared Postgres client for server runtimes
+ * Uses an explicit DATABASE_URL from the environment; there is no local fallback
  *
  * NOTE: Conditionally imports pg only on server-side to avoid bundling for browser
  */
 
 import type { Pool, QueryResult, QueryResultRow } from 'pg';
 
-// Only create pool on server-side (Node.js environment)
+// Only create a pool on the server (Node.js environment).
+//
+// DATABASE_URL is an authority boundary, not a convenience default. An absent
+// value used to connect silently to the populated local `maia_consciousness`
+// database. That made a sanitized or fictional runtime capable of crossing into
+// a real database before its operator had named any database at all. The client
+// now stays inert and every database operation refuses until an explicit,
+// structurally valid PostgreSQL URL is present.
 const isServer = typeof window === 'undefined';
 let pool: Pool | null = null;
 
+import {
+  DatabaseConfigurationError,
+  requireDatabaseUrl,
+  type DatabaseConfigurationErrorCode,
+} from './databaseUrl';
+
+export { DatabaseConfigurationError, requireDatabaseUrl };
+export type { DatabaseConfigurationErrorCode };
+
+let databaseConfigurationError: DatabaseConfigurationError | null = null;
+
+function requireDatabasePool(operation: string): Pool {
+  if (!isServer) {
+    throw new Error(`[POSTGRES] ${operation} can only be executed server-side`);
+  }
+  if (databaseConfigurationError) {
+    throw databaseConfigurationError;
+  }
+  if (!pool) {
+    throw new DatabaseConfigurationError(
+      'DATABASE_URL_REQUIRED',
+      '[POSTGRES] DATABASE_URL is required; database pool is not configured',
+    );
+  }
+  return pool;
+}
+
+/** Refuse early in launchers or workers that require database access. */
+export function assertDatabaseConfigured(): void {
+  requireDatabasePool('Database access');
+}
+
+/** Content-free status for health checks and test witnesses. */
+export function getDatabaseConfigurationStatus(): {
+  configured: boolean;
+  code: DatabaseConfigurationErrorCode | null;
+} {
+  return {
+    configured: pool !== null && databaseConfigurationError === null,
+    code: databaseConfigurationError?.code ?? null,
+  };
+}
+
 if (isServer) {
-  const { Pool: PgPool } = require('pg');
-  const newPool = new PgPool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
-    max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-  });
+  try {
+    const connectionString = requireDatabaseUrl(process.env.DATABASE_URL);
+    const { Pool: PgPool } = require('pg');
+    const newPool = new PgPool({
+      connectionString,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    });
 
-  // Handle pool errors
-  newPool.on('error', (err: Error) => {
-    console.error('❌ [POSTGRES] Unexpected pool error:', describeDbError(err));
-  });
+    // Handle pool errors without admitting free-form database text.
+    newPool.on('error', (err: Error) => {
+      console.error('❌ [POSTGRES] Unexpected pool error:', describeDbError(err));
+    });
 
-  pool = newPool;
+    pool = newPool;
+  } catch (error) {
+    if (error instanceof DatabaseConfigurationError) {
+      databaseConfigurationError = error;
+    } else {
+      throw error;
+    }
+  }
 }
 
 /**
@@ -104,14 +163,12 @@ export async function query<T extends QueryResultRow = any>(
   sql: string,
   params: any[] = []
 ): Promise<QueryResult<T>> {
-  if (!pool) {
-    throw new Error('[POSTGRES] Database queries can only be executed server-side');
-  }
+  const activePool = requireDatabasePool('Database queries');
 
   const start = Date.now();
 
   try {
-    const result = await pool.query<T>(sql, params);
+    const result = await activePool.query<T>(sql, params);
     const duration = Date.now() - start;
 
     // Log slow queries (>100ms)
@@ -184,15 +241,13 @@ export async function queryWithExpectedRefusal<T extends QueryResultRow = any>(
   params: any[],
   expectedRefusal: { readonly fragment: string; readonly why: string },
 ): Promise<ExpectedRefusalOutcome<T>> {
-  if (!pool) {
-    throw new Error('[POSTGRES] Database queries can only be executed server-side');
-  }
+  const activePool = requireDatabasePool('Database queries');
   if (!expectedRefusal.fragment) {
     throw new Error('[POSTGRES] an expected refusal must name the message it expects');
   }
 
   try {
-    return { refused: false, result: await pool.query<T>(sql, params) };
+    return { refused: false, result: await activePool.query<T>(sql, params) };
   } catch (error: any) {
     const message = typeof error?.message === 'string' ? error.message : '';
     if (message.includes(expectedRefusal.fragment)) {
@@ -222,10 +277,8 @@ export async function queryWithExpectedRefusal<T extends QueryResultRow = any>(
 export async function transaction<T>(
   callback: (client: TransactionClient) => Promise<T>
 ): Promise<T> {
-  if (!pool) {
-    throw new Error('[POSTGRES] Transactions can only be executed server-side');
-  }
-  const client = await pool.connect();
+  const activePool = requireDatabasePool('Transactions');
+  const client = await activePool.connect();
 
   try {
     await client.query('BEGIN');
@@ -423,7 +476,7 @@ export async function getMany<T extends QueryResultRow = any>(
 }
 
 // Default export
-export default {
+const postgres = {
   query,
   queryOne,
   transaction,
@@ -439,3 +492,5 @@ export default {
   getMany,
   pool,
 };
+
+export default postgres;

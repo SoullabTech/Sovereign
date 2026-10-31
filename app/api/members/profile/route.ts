@@ -6,6 +6,7 @@ import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest, getMemberIdFromSessionToken } from '@/lib/auth/getMemberFromRequest';
 import { normalizeBirthCoordinates } from '@/lib/astrology/birthCoordinates';
 import { checkYouthAdmission } from '@/lib/youth/youthAdmissionGate';
+import { AuthOriginError, requireSameOriginAuthMutation } from '@/lib/auth/returnDestination';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -397,9 +398,32 @@ export async function PUT(request: NextRequest) {
     'X-Content-Type-Options': 'nosniff',
   };
 
-  // Get identity from a verified session credential (cookie or x-session-token
-  // header) — server decides who you are
-  const memberId = await getMemberIdFromRequest(request);
+  try {
+    requireSameOriginAuthMutation(request);
+  } catch (error) {
+    if (error instanceof AuthOriginError) {
+      return NextResponse.json(
+        { error: 'Request origin refused', code: error.code, correlationId },
+        { status: 403, headers },
+      );
+    }
+    return NextResponse.json(
+      { error: 'Request validation unavailable', correlationId },
+      { status: 503, headers },
+    );
+  }
+
+  // Cookie/header credentials remain the sole authority. A profile update
+  // cannot use browser storage or a body member ID to choose another member.
+  let memberId: string | null;
+  try {
+    memberId = await getMemberIdFromRequest(request);
+  } catch {
+    return NextResponse.json(
+      { error: 'Session verification unavailable', correlationId },
+      { status: 503, headers },
+    );
+  }
 
   if (!memberId) {
     return NextResponse.json(
@@ -426,7 +450,7 @@ export async function PUT(request: NextRequest) {
   }
 
   // Parse body with error handling
-  let body;
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
@@ -436,8 +460,48 @@ export async function PUT(request: NextRequest) {
     );
   }
 
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: 'Object body required', correlationId },
+      { status: 400, headers },
+    );
+  }
+  const input = body as Record<string, unknown>;
+  for (const claim of [input.memberId, input.id]) {
+    if (claim !== undefined && typeof claim !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid member claim', correlationId },
+        { status: 400, headers },
+      );
+    }
+    if (typeof claim === 'string' && claim !== memberId) {
+      return NextResponse.json(
+        { error: 'Member claim does not match authenticated session', correlationId },
+        { status: 403, headers },
+      );
+    }
+  }
+  // Email is an authentication identity. This general profile route must not
+  // bypass the verified email proof/session contract by accepting a new one.
+  if (input.email !== undefined) {
+    return NextResponse.json(
+      { error: 'Email changes require a verified email-change flow', code: 'EMAIL_CHANGE_REQUIRES_VERIFICATION', correlationId },
+      { status: 400, headers },
+    );
+  }
+  if (input.birthData !== undefined && input.birthData !== null &&
+      (typeof input.birthData !== 'object' || Array.isArray(input.birthData))) {
+    return NextResponse.json({ error: 'Invalid birth data', correlationId }, { status: 400, headers });
+  }
+  const birthData = input.birthData as Record<string, unknown> | null | undefined;
+  if (birthData?.location !== undefined && birthData.location !== null &&
+      (typeof birthData.location !== 'object' || Array.isArray(birthData.location))) {
+    return NextResponse.json({ error: 'Invalid birth location', correlationId }, { status: 400, headers });
+  }
+  const birthLocation = birthData?.location as Record<string, unknown> | null | undefined;
+
   try {
-    const { name, preferredName, pronouns, email, bio, timezone, birthData, astrologyConsent } = body;
+    const { name, preferredName, pronouns, bio, timezone, astrologyConsent } = input;
 
     // TEEN-CLOSED-01: a birth date that computes to under 18 is refused here too,
     // or a later edit would recompute an adult account into a youth tier.
@@ -470,10 +534,6 @@ export async function PUT(request: NextRequest) {
       setClauses.push(`pronouns = $${paramIndex++}`);
       values.push(trimmed.length > 0 ? trimmed : null);
     }
-    if (email !== undefined) {
-      setClauses.push(`email = $${paramIndex++}`);
-      values.push(email);
-    }
     if (bio !== undefined) {
       setClauses.push(`bio = $${paramIndex++}`);
       values.push(bio);
@@ -501,21 +561,21 @@ export async function PUT(request: NextRequest) {
           if (birthData.location === null) {
             setClauses.push(`birth_location_lat = NULL, birth_location_lng = NULL, birth_location_name = NULL, birth_timezone = NULL`);
           } else {
-            if (birthData.location.lat !== undefined) {
+            if (birthLocation?.lat !== undefined) {
               setClauses.push(`birth_location_lat = $${paramIndex++}`);
-              values.push(birthData.location.lat);
+              values.push(birthLocation?.lat);
             }
-            if (birthData.location.lng !== undefined) {
+            if (birthLocation?.lng !== undefined) {
               setClauses.push(`birth_location_lng = $${paramIndex++}`);
-              values.push(birthData.location.lng);
+              values.push(birthLocation?.lng);
             }
-            if (birthData.location.name !== undefined) {
+            if (birthLocation?.name !== undefined) {
               setClauses.push(`birth_location_name = $${paramIndex++}`);
-              values.push(birthData.location.name);
+              values.push(birthLocation?.name);
             }
-            if (birthData.location.timezone !== undefined) {
+            if (birthLocation?.timezone !== undefined) {
               setClauses.push(`birth_timezone = $${paramIndex++}`);
-              values.push(birthData.location.timezone);
+              values.push(birthLocation?.timezone);
             }
           }
         }
@@ -525,7 +585,7 @@ export async function PUT(request: NextRequest) {
     // Astrology consent (cross-device persistence for onboarding skip gate)
     if (astrologyConsent !== undefined) {
       const validConsent = ['unknown', 'opted_in', 'declined'];
-      if (!validConsent.includes(astrologyConsent)) {
+      if (typeof astrologyConsent !== 'string' || !validConsent.includes(astrologyConsent)) {
         return NextResponse.json(
           { error: `Invalid astrologyConsent value — must be one of: ${validConsent.join(', ')}`, correlationId },
           { status: 400, headers }

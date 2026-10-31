@@ -15,6 +15,7 @@
 'use strict';
 
 const { Client } = require('pg');
+const { requireDatabaseUrl } = require('./lib/explicit-database-url.cjs');
 
 const scribeSessionId = process.argv[2];
 if (!scribeSessionId) {
@@ -129,7 +130,7 @@ function groupIntoTurns(rows, texts) {
 // ---------------------------------------------------------------------------
 
 async function main() {
-  const db = new Client({ connectionString: process.env.DATABASE_URL });
+  const db = new Client({ connectionString: requireDatabaseUrl(process.env.DATABASE_URL) });
   await db.connect();
 
   try {

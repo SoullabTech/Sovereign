@@ -18,8 +18,8 @@ import { stripClientIdentityAssertions } from './lib/auth/identityAssertions';
 import { deriveVerifiedAccess, type VerifiedAccess } from './lib/auth/verifiedAccess';
 import { canonicalStudioRoute } from './lib/writersStudio/canonicalStudioRoute';
 import { isTesterGatedAstrologyPage, memberIsAstrologyTester } from './lib/astrology/testerGate';
-// NOTE: entitlements are still checked in route handlers, not here — they are a
-// commercial concern with their own surface, not part of the trust boundary.
+import { writerStudioAdmissionForMember } from './lib/writersStudio/admissionServer';
+import { isWriterStudioRestrictedPath } from './lib/writersStudio/restrictedCorridor';
 
 // =============================================================================
 // AUTH EXTRACTION — SERVER-DERIVED, AUTHORITATIVE
@@ -112,12 +112,204 @@ function forwardSanitized(
 }
 
 // =============================================================================
+// PUBLIC FILE FAST PATH — EXPLICIT, NOT "ANY PATH CONTAINING A DOT"
+// =============================================================================
+//
+// Public/ assets are allowed without member admission. Extension-shaped paths
+// in member namespaces are not assets by implication: /writers-studio/foo.pdf
+// and /api/writers-studio/foo.json must still meet the access matrix. Root and
+// mixed-namespace files below are pinned to the assets present in the source;
+// new public files require explicit review rather than implicit authorization.
+// Fonts and icons are dedicated public-asset namespaces.
+const PUBLIC_STATIC_FILES = new Set([
+  '/1.png', '/2.png', '/README.md', '/SL%20LOGO_Tshirt.gif',
+  '/Soullablogo.png', '/app-icon-1024.png', '/apple-touch-icon.png',
+  '/book-studio-canvas.html', '/clear-cache.html',
+  '/consciousness-manifest.json', '/consciousness-sw.js',
+  '/manifest.json', // exact public PWA manifest symlink; do not admit other .json files
+  '/favicon-16x16.png', '/favicon-32x32.png', '/favicon.ico',
+  '/holoflower-amber.png', '/holoflower-studio-transparent.png',
+  '/holoflower-studio.png', '/holoflower-v2-transparent.png',
+  '/holoflower-v2.png', '/holoflower-whatsapp.png',
+  '/holoflower.png', '/holoflower.svg',
+  '/icon-16x16.png', '/icon-192.png', '/icon-192x192.png',
+  '/icon-32x32.png', '/icon-512.png', '/icon-512x512.png',
+  '/icon-fix.css', '/library-index.json', '/fonts/LICENSES.md',
+  '/logo%20transparent.jpg', '/logo-real.svg', '/logo.png', '/logo.svg',
+  '/logo_flower%202.png', '/maia-spiral-logo-alt.png',
+  '/maia-spiral-logo.png', '/og-image.png', '/og-image.svg',
+  '/soullab-logo-transparent.jpg', '/soullab-logo.png',
+  '/writers-studio-hero-960.jpg', '/writers-studio-hero.jpg',
+  '/book-studio/elemental-alchemy-cover.jpg',
+  '/book-studio/elemental-alchemy-wraparound.jpg',
+  '/book-studio/figures/F00-cosmogram.png',
+  '/book-studio/figures/F05-fire-calcinatio.png',
+  '/book-studio/figures/F06-water-solutio.png',
+  '/book-studio/figures/F07-earth-coagulatio.png',
+  '/book-studio/figures/F08-air-sublimatio.png',
+  '/book-studio/figures/F09-aether-conjunctio.png',
+  '/book-studio/qr/qr-atlas.png', '/book-studio/qr/qr-atlas.svg',
+  '/book-studio/qr/test.html',
+  '/download/android.html', '/dream/dream-field.svg',
+  '/experiences/philosophical-tree.webp',
+  '/house/house-architecture-7a638061.webp',
+  '/now-what/index.html', '/now-what/overview.html',
+  '/now-what/preview.html',
+  // FWE-ROUTE-01D: remaining approved font/icon files, exact paths only.
+  '/fonts/atkinson-hyperlegible/OFL.txt',
+  '/fonts/atkinson-hyperlegible/atkinson-hyperlegible-400-normal-latin-ext.woff2',
+  '/fonts/atkinson-hyperlegible/atkinson-hyperlegible-400-normal-latin.woff2',
+  '/fonts/atkinson-hyperlegible/atkinson-hyperlegible-700-normal-latin-ext.woff2',
+  '/fonts/atkinson-hyperlegible/atkinson-hyperlegible-700-normal-latin.woff2',
+  '/fonts/crimson-pro/OFL.txt',
+  '/fonts/crimson-pro/crimson-pro-200-normal-latin-ext.woff2',
+  '/fonts/crimson-pro/crimson-pro-200-normal-latin.woff2',
+  '/fonts/crimson-pro/crimson-pro-200-normal-vietnamese.woff2',
+  '/fonts/crimson-pro/crimson-pro-300-normal-latin-ext.woff2',
+  '/fonts/crimson-pro/crimson-pro-300-normal-latin.woff2',
+  '/fonts/crimson-pro/crimson-pro-300-normal-vietnamese.woff2',
+  '/fonts/crimson-pro/crimson-pro-400-normal-latin-ext.woff2',
+  '/fonts/crimson-pro/crimson-pro-400-normal-latin.woff2',
+  '/fonts/crimson-pro/crimson-pro-400-normal-vietnamese.woff2',
+  '/fonts/crimson-pro/crimson-pro-600-normal-latin-ext.woff2',
+  '/fonts/crimson-pro/crimson-pro-600-normal-latin.woff2',
+  '/fonts/crimson-pro/crimson-pro-600-normal-vietnamese.woff2',
+  '/fonts/ibm-plex-sans/OFL.txt',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-300-normal-cyrillic-ext.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-300-normal-cyrillic.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-300-normal-greek.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-300-normal-latin-ext.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-300-normal-latin.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-300-normal-vietnamese.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-400-normal-cyrillic-ext.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-400-normal-cyrillic.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-400-normal-greek.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-400-normal-latin-ext.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-400-normal-latin.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-400-normal-vietnamese.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-500-normal-cyrillic-ext.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-500-normal-cyrillic.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-500-normal-greek.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-500-normal-latin-ext.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-500-normal-latin.woff2',
+  '/fonts/ibm-plex-sans/ibm-plex-sans-500-normal-vietnamese.woff2',
+  '/fonts/source-sans-pro/OFL.txt',
+  '/fonts/source-sans-pro/source-sans-pro-300-normal-cyrillic-ext.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-300-normal-cyrillic.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-300-normal-greek-ext.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-300-normal-greek.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-300-normal-latin-ext.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-300-normal-latin.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-300-normal-vietnamese.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-400-normal-cyrillic-ext.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-400-normal-cyrillic.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-400-normal-greek-ext.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-400-normal-greek.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-400-normal-latin-ext.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-400-normal-latin.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-400-normal-vietnamese.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-600-normal-cyrillic-ext.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-600-normal-cyrillic.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-600-normal-greek-ext.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-600-normal-greek.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-600-normal-latin-ext.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-600-normal-latin.woff2',
+  '/fonts/source-sans-pro/source-sans-pro-600-normal-vietnamese.woff2',
+  '/fonts/spectral/OFL.txt',
+  '/fonts/spectral/spectral-400-italic-cyrillic-ext.woff2',
+  '/fonts/spectral/spectral-400-italic-cyrillic.woff2',
+  '/fonts/spectral/spectral-400-italic-latin-ext.woff2',
+  '/fonts/spectral/spectral-400-italic-latin.woff2',
+  '/fonts/spectral/spectral-400-italic-vietnamese.woff2',
+  '/fonts/spectral/spectral-400-normal-cyrillic-ext.woff2',
+  '/fonts/spectral/spectral-400-normal-cyrillic.woff2',
+  '/fonts/spectral/spectral-400-normal-latin-ext.woff2',
+  '/fonts/spectral/spectral-400-normal-latin.woff2',
+  '/fonts/spectral/spectral-400-normal-vietnamese.woff2',
+  '/fonts/spectral/spectral-600-italic-cyrillic-ext.woff2',
+  '/fonts/spectral/spectral-600-italic-cyrillic.woff2',
+  '/fonts/spectral/spectral-600-italic-latin-ext.woff2',
+  '/fonts/spectral/spectral-600-italic-latin.woff2',
+  '/fonts/spectral/spectral-600-italic-vietnamese.woff2',
+  '/fonts/spectral/spectral-600-normal-cyrillic-ext.woff2',
+  '/fonts/spectral/spectral-600-normal-cyrillic.woff2',
+  '/fonts/spectral/spectral-600-normal-latin-ext.woff2',
+  '/fonts/spectral/spectral-600-normal-latin.woff2',
+  '/fonts/spectral/spectral-600-normal-vietnamese.woff2',
+  '/icons/apple-icon-180.png',
+  '/icons/apple-splash-1125-2436.jpg',
+  '/icons/apple-splash-1136-640.jpg',
+  '/icons/apple-splash-1170-2532.jpg',
+  '/icons/apple-splash-1179-2556.jpg',
+  '/icons/apple-splash-1206-2622.jpg',
+  '/icons/apple-splash-1242-2208.jpg',
+  '/icons/apple-splash-1242-2688.jpg',
+  '/icons/apple-splash-1260-2736.jpg',
+  '/icons/apple-splash-1284-2778.jpg',
+  '/icons/apple-splash-1290-2796.jpg',
+  '/icons/apple-splash-1320-2868.jpg',
+  '/icons/apple-splash-1334-750.jpg',
+  '/icons/apple-splash-1488-2266.jpg',
+  '/icons/apple-splash-1536-2048.jpg',
+  '/icons/apple-splash-1620-2160.jpg',
+  '/icons/apple-splash-1640-2360.jpg',
+  '/icons/apple-splash-1668-2224.jpg',
+  '/icons/apple-splash-1668-2388.jpg',
+  '/icons/apple-splash-1792-828.jpg',
+  '/icons/apple-splash-2048-1536.jpg',
+  '/icons/apple-splash-2048-2732.jpg',
+  '/icons/apple-splash-2160-1620.jpg',
+  '/icons/apple-splash-2208-1242.jpg',
+  '/icons/apple-splash-2224-1668.jpg',
+  '/icons/apple-splash-2266-1488.jpg',
+  '/icons/apple-splash-2360-1640.jpg',
+  '/icons/apple-splash-2388-1668.jpg',
+  '/icons/apple-splash-2436-1125.jpg',
+  '/icons/apple-splash-2532-1170.jpg',
+  '/icons/apple-splash-2556-1179.jpg',
+  '/icons/apple-splash-2622-1206.jpg',
+  '/icons/apple-splash-2688-1242.jpg',
+  '/icons/apple-splash-2732-2048.jpg',
+  '/icons/apple-splash-2736-1260.jpg',
+  '/icons/apple-splash-2778-1284.jpg',
+  '/icons/apple-splash-2796-1290.jpg',
+  '/icons/apple-splash-2868-1320.jpg',
+  '/icons/apple-splash-640-1136.jpg',
+  '/icons/apple-splash-750-1334.jpg',
+  '/icons/apple-splash-828-1792.jpg',
+  '/icons/icon-128x128.png',
+  '/icons/icon-144x144.png',
+  '/icons/icon-152x152.png',
+  '/icons/icon-192x192.png',
+  '/icons/icon-384x384.png',
+  '/icons/icon-512x512.png',
+  '/icons/icon-72x72.png',
+  '/icons/icon-96x96.png',
+  '/icons/manifest-icon-192.maskable.png',
+  '/icons/manifest-icon-512.maskable.png',
+]);
+
+function isExplicitPublicStaticFile(pathname: string): boolean {
+  return PUBLIC_STATIC_FILES.has(pathname);
+}
+
+// =============================================================================
 // MIDDLEWARE
 // =============================================================================
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const host = req.headers.get('host') ?? '';
+  const preRule = matchRule(pathname);
+
+  // AUTH-RETURN-01 method admission precedes public and OPTIONS shortcuts.
+  // Only routes declaring methods are affected; neighboring routes remain unmapped.
+  if (preRule?.methods && !preRule.methods.includes(req.method.toUpperCase())) {
+    return NextResponse.json(
+      { error: 'Method not allowed', reason: 'method_not_allowed' },
+      { status: 405, headers: { Allow: preRule.methods.join(', '), 'Cache-Control': 'no-store' } },
+    );
+  }
 
   // ---------------------------------------------------------------------
   // MASTER FIELDS: Subdomain routing — jondi.soullab.life → /fields/jondi
@@ -129,14 +321,21 @@ export async function proxy(req: NextRequest) {
   const RESERVED_SUBDOMAINS = ['www', 'api', 'oldhead', 'app'];
 
   if (masterSlug && !RESERVED_SUBDOMAINS.includes(masterSlug)) {
-    const url = req.nextUrl.clone();
     const isStaticAsset = pathname.startsWith('/_next/') || /\.[a-zA-Z0-9]+$/.test(pathname);
-    if (!isStaticAsset && !pathname.startsWith('/fields/') && !pathname.startsWith('/api/')) {
+    // Only public field-page rewrites exit here. A pathname that already
+    // carries a private matrix rule must be authenticated at its real path,
+    // not transformed into an apparently public Field page. APIs, already-
+    // prefixed fields and static paths also follow the normal boundary.
+    const existingRule = matchRule(pathname);
+    if ((!existingRule || existingRule.public) &&
+        !isStaticAsset && !pathname.startsWith('/fields/') &&
+        pathname !== '/api' && !pathname.startsWith('/api/')) {
+      const url = req.nextUrl.clone();
       url.pathname = pathname === '/' ? `/fields/${masterSlug}` : `/fields/${masterSlug}${pathname}`;
+      return NextResponse.rewrite(url, {
+        request: { headers: stripClientIdentityAssertions(req.headers) },
+      });
     }
-    return NextResponse.rewrite(url, {
-      request: { headers: stripClientIdentityAssertions(req.headers) },
-    });
   }
 
   // ---------------------------------------------------------------------
@@ -202,16 +401,12 @@ export async function proxy(req: NextRequest) {
   // Skip middleware for static assets and Next.js internals
   // ---------------------------------------------------------------------
   if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon') ||
-    pathname.startsWith('/assets') ||
-    pathname.startsWith('/images') ||
-    pathname.startsWith('/fonts') ||
-    pathname.includes('.') // Skip files with extensions (.css, .js, .png, etc.)
+    pathname.startsWith('/_next/static/') ||
+    pathname === '/_next/image' ||
+    isExplicitPublicStaticFile(pathname) // Only known public files may skip route admission
   ) {
-    // `pathname.includes('.')` is broad enough to match a real route, so this
-    // fast path strips assertions too rather than assuming it only ever serves
-    // static files.
+    // Static forwarding never confers identity. Caller-asserted authority is
+    // stripped even for these explicitly public resources.
     return forwardSanitized(req);
   }
 
@@ -257,7 +452,6 @@ export async function proxy(req: NextRequest) {
   // request is still SANITIZED — a public route is exactly where an unstripped
   // assertion would ride through untouched.
   // ---------------------------------------------------------------------
-  const preRule = matchRule(pathname);
   if (preRule?.public) {
     return forwardSanitized(req);
   }
@@ -275,6 +469,25 @@ export async function proxy(req: NextRequest) {
   // ---------------------------------------------------------------------
   const verified = await deriveVerifiedAccess(req);
   const { authenticated: authed, tier, roles } = verified;
+
+  if (!authed && verified.reason === 'authority_unavailable') {
+    console.error(`[Middleware] authentication authority unavailable for ${pathname} rid=${rid}`);
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        {
+          error: 'Service Unavailable',
+          code: 'AUTHORITY_UNAVAILABLE',
+          message: 'Authentication authority is temporarily unavailable.',
+          rid,
+        },
+        { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+      );
+    }
+    return new NextResponse(
+      'Authentication is temporarily unavailable.',
+      { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+    );
+  }
 
   if (!authed && verified.reason && verified.reason !== 'no_credential') {
     // A credential was presented and REFUSED. Distinct from anonymous, and
@@ -435,6 +648,72 @@ export async function proxy(req: NextRequest) {
   }
 
   // ---------------------------------------------------------------------
+  // WRITER'S STUDIO INVITATION AUTHORITY
+  // ---------------------------------------------------------------------
+  // The access matrix above establishes ordinary authentication. Writer's
+  // Studio is narrower during the founder-approved beta: one existing private
+  // roster grants complimentary Pro. Query flags, member tier, and browser
+  // state cannot open this corridor.
+  if (isWriterStudioRestrictedPath(pathname)) {
+    if (!verified.memberId) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { error: 'Unauthorized', message: 'Authentication required.', rid },
+          { status: 401, headers: { 'Cache-Control': 'private, no-store' } },
+        );
+      }
+      const signIn = req.nextUrl.clone();
+      signIn.pathname = '/signin';
+      signIn.search = '';
+      signIn.searchParams.set('next', pathname + (req.nextUrl.search || ''));
+      signIn.searchParams.set('reason', 'no_session_cookie');
+      signIn.searchParams.set('rid', rid);
+      return NextResponse.redirect(signIn);
+    }
+
+    try {
+      const admission = await writerStudioAdmissionForMember(verified.memberId);
+      if (!admission.allowed) {
+        if (pathname.startsWith('/api/')) {
+          return NextResponse.json(
+            {
+              error: 'Forbidden',
+              code: admission.code,
+              message: "Writer's Studio is invitation-only during this beta.",
+              rid,
+            },
+            { status: 403, headers: { 'Cache-Control': 'private, no-store' } },
+          );
+        }
+        const invitation = req.nextUrl.clone();
+        invitation.pathname = '/explore/writers-studio';
+        invitation.search = '';
+        invitation.searchParams.set('access', 'invitation-required');
+        invitation.searchParams.set('rid', rid);
+        const response = NextResponse.redirect(invitation);
+        response.headers.set('Cache-Control', 'private, no-store');
+        return response;
+      }
+    } catch {
+      console.error(`[Middleware] Writer admission authority unavailable rid=${rid}`);
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          {
+            error: 'Service Unavailable',
+            code: 'WRITER_STUDIO_ADMISSION_UNAVAILABLE',
+            rid,
+          },
+          { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+        );
+      }
+      return new NextResponse(
+        "Writer's Studio admission is temporarily unavailable.",
+        { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+      );
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // Access granted - add context headers for downstream use
   // ---------------------------------------------------------------------
   // Derived context, written onto the forwarded REQUEST so handlers actually
@@ -461,9 +740,9 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // NOTE: Entitlements are NOT set in middleware headers because the postgres
-  // driver requires Node.js runtime. Route handlers call getEntitlements directly.
-  // This is intentional - entitlement checks happen at the route level.
+  // Commercial entitlements remain route-owned. The Writer invitation grant
+  // above is a distinct product-admission boundary backed by the existing beta
+  // roster; no plan or roster fact is forwarded as a client-visible header.
 
   /* Writer's Studio convergence. Keep access enforcement first, then retire
      only legacy routes whose meanings are already proven equivalent. Query
@@ -511,7 +790,7 @@ export const config = {
      * - api/voice/transcribe-simple (see below)
      * - api/sovereign/manuscripts/ingest (see below)
      */
-    '/((?!_next/static|_next/image|favicon.ico|api/voice/transcribe-simple|api/sovereign/manuscripts/ingest$).*)',
+    '/((?!_next/static(?:/|$)|_next/image$|favicon\\.ico$|api/voice/transcribe-simple$|api/sovereign/manuscripts/ingest$).*)',
   ],
 };
 

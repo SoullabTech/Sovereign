@@ -44,7 +44,7 @@
  * Run:
  *   node --env-file=.env.local --import tsx scripts/verify-episodic-mark.ts
  *   # or, naming the database explicitly:
- *   DATABASE_URL="postgresql://soullab@localhost:5432/maia_consciousness" \
+ *   DATABASE_URL="postgresql://user@host:5432/database" \
  *     npx tsx scripts/verify-episodic-mark.ts
  */
 

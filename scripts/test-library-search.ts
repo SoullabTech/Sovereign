@@ -11,14 +11,15 @@
  * 6. Dynamic range decision logic
  *
  * Usage:
- *   DATABASE_URL="postgresql://soullab@localhost:5432/maia_consciousness" npx tsx scripts/test-library-search.ts
+ *   DATABASE_URL="user@host:5432/database" npx tsx scripts/test-library-search.ts
  */
 
 import pg from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 import { calculateDynamicRange } from '../lib/library/dynamicRange';
 
 const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
+  connectionString: requireDatabaseUrl(process.env.DATABASE_URL),
 });
 
 let passed = 0;

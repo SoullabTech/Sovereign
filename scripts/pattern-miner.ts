@@ -9,9 +9,10 @@
  */
 
 import { Pool } from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 import crypto from 'crypto';
 
-const DATABASE_URL = process.env.DATABASE_URL || '';
+const DATABASE_URL = requireDatabaseUrl(process.env.DATABASE_URL);
 const MIN_COOCCURRENCE_COUNT = 3; // Minimum times skills must co-occur
 const MIN_SUCCESS_RATE = 0.7; // 70% success rate
 const MIN_SUPPORT_COUNT = 2; // At least 2 users must exhibit the pattern

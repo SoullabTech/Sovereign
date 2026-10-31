@@ -13,7 +13,7 @@
  *   3. Otherwise → use platform RESEND_API_KEY (managed)
  */
 
-import { ResendProvider } from '@/lib/email/providers';
+import { ResendProvider } from '@/lib/email/providers/ResendProvider';
 import { classifyProviderError } from '@/lib/email/sendEmail';
 import {
   getEmailIntegration,

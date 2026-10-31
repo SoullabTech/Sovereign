@@ -19,7 +19,7 @@ describe('C4 Review finding → Focus continuity', () => {
     expect(flagshipReview).toContain('canWorkWith ? { ...finding, canWorkWith: true } : finding');
     expect(flagshipReview).toContain('onWorkWith={workWithFinding}');
     expect(reviewRoom).toContain('{finding.canWorkWith ? (');
-    expect(reviewRoom).toContain('Show edit options');
+    expect(reviewRoom).toContain('Work with this');
   });
 
   it('keeps Open in manuscript distinct from editorial Focus', () => {

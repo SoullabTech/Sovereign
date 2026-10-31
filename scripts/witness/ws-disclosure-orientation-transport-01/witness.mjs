@@ -1,10 +1,11 @@
 import pg from 'pg';
+import { requireDatabaseUrl } from '../../lib/explicit-database-url.mjs';
 import { readFileSync } from 'fs';
 
 const F = JSON.parse(readFileSync(process.env.FIXTURE, 'utf8'));
 const BASE = 'http://127.0.0.1:3999';
 const URL_ = `${BASE}/api/sovereign/manuscripts/${F.workId}/ask`;
-const c = new pg.Client({ connectionString: process.env.DATABASE_URL });
+const c = new pg.Client({ connectionString: requireDatabaseUrl(process.env.DATABASE_URL) });
 await c.connect();
 
 const counts = async () => {

@@ -77,8 +77,8 @@ body {
 p {
   margin: 0;
   text-indent: 0.2in;
-  orphans: 2;
-  widows: 2;
+  orphans: 3;
+  widows: 3;
 }
 
 /* Hyperlinks render as plain body text in print — no blue, no underline.

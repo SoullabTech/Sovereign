@@ -161,6 +161,29 @@ describe('invalid token', () => {
   });
 });
 
+describe('authentication authority outage', () => {
+  it('returns a private 503 instead of blaming the credential on an API route', async () => {
+    mockQuery.mockRejectedValue(new Error('database unavailable'));
+    const res = await middleware(
+      request(MEMBER_API, { headers: { 'x-session-token': VALID_TOKEN } }),
+    );
+    expect(res.status).toBe(503);
+    expect(res.headers.get('cache-control')).toBe('private, no-store');
+    expect(res.headers.get('x-middleware-next')).toBeNull();
+    await expect(res.json()).resolves.toMatchObject({ code: 'AUTHORITY_UNAVAILABLE' });
+  });
+
+  it('returns a private 503 instead of redirecting a page to sign in', async () => {
+    mockQuery.mockRejectedValue(new Error('database unavailable'));
+    const res = await middleware(
+      request(ADMIN_PAGE, { headers: { 'x-session-token': ADMIN_TOKEN } }),
+    );
+    expect(res.status).toBe(503);
+    expect(res.headers.get('cache-control')).toBe('private, no-store');
+    expect(res.headers.get('location')).toBeNull();
+  });
+});
+
 describe('invalid token + forged admin cookies and headers', () => {
   it('is DENIED on /founder', async () => {
     const res = await middleware(

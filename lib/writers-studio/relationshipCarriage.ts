@@ -27,13 +27,14 @@ interface RelationshipRow {
   member_id: string;
   living_work_id: string;
   manuscript_id: string;
+  creation_expression_id: string;
 }
 
 async function ownedRelationship(
   memberId: string, relationshipId: string,
 ): Promise<RelationshipRow | null> {
   const r = await query<RelationshipRow>(
-    `SELECT id, member_id, living_work_id, manuscript_id
+    `SELECT id, member_id, living_work_id, manuscript_id, creation_expression_id
        FROM writer_editorial_relationships
       WHERE id = $1 AND member_id = $2`,
     [relationshipId, memberId],
@@ -42,15 +43,92 @@ async function ownedRelationship(
 }
 
 async function hasCurrentDeclaration(r: RelationshipRow): Promise<boolean> {
-  const d = await query(
+  // Historical A2 provenance is never a standing grant after re-declaration.
+  if (typeof r.creation_expression_id !== 'string' || !r.creation_expression_id) return false;
+  const d = await query<{ id: string }>(
     `SELECT id FROM living_work_expressions
       WHERE living_work_id = $1
         AND expression_type = 'manuscript'
         AND expression_id = $2
-        AND declared_by = $3`,
-    [r.living_work_id, r.manuscript_id, r.member_id],
+        AND declared_by = $3
+        AND id = $4`,
+    [r.living_work_id, r.manuscript_id, r.member_id, r.creation_expression_id],
   );
-  return d.rows.length === 1;
+  return d.rows.length === 1 && d.rows[0]?.id === r.creation_expression_id;
+}
+
+interface BoundEditorialThreadOrigin {
+  manuscript_id: string;
+  proposal_chain_id: string;
+  locus_scope_kind: ManuscriptLocusScope | null;
+}
+
+/**
+ * Content-free authority check for a receiving/source editorial thread.
+ *
+ * Manuscript equality is not authority: two Living Works may deliberately
+ * reference the same manuscript. The durable thread origin must match the
+ * selected current relationship's exact Work, original declaration epoch and
+ * A2 parent before any protected history/body is read or any author act is
+ * persisted.
+ */
+async function boundThreadOriginForRelationship(
+  r: RelationshipRow,
+  threadId: string,
+): Promise<BoundEditorialThreadOrigin | null> {
+  const found = await query<BoundEditorialThreadOrigin>(
+    `SELECT o.manuscript_id, o.proposal_chain_id, o.locus_scope_kind
+       FROM writer_editorial_thread_origins o
+       JOIN writer_editorial_chain_origins co
+         ON co.proposal_chain_id = o.proposal_chain_id
+        AND co.member_id = o.member_id
+        AND co.living_work_id = o.living_work_id
+        AND co.manuscript_id = o.manuscript_id
+        AND co.relationship_id = o.relationship_id
+        AND co.creation_expression_id = o.creation_expression_id
+        AND co.draft_id = o.draft_id
+        AND co.target_section_id = o.target_section_id
+        AND co.draft_version = o.draft_version
+        AND co.draft_revision_count = o.draft_revision_count
+        AND co.locus_scope_kind = o.locus_scope_kind
+       JOIN ask_threads th
+         ON th.id = o.thread_id
+        AND th.member_id = o.member_id
+        AND th.manuscript_id = o.manuscript_id
+        AND th.proposal_chain_id = o.proposal_chain_id
+        AND th.editorial_origin_id = o.id
+       JOIN living_work_expressions e
+         ON e.id = o.creation_expression_id
+        AND e.living_work_id = o.living_work_id
+        AND e.expression_type = 'manuscript'
+        AND e.expression_id = o.manuscript_id
+        AND e.declared_by = o.member_id
+       JOIN writer_editorial_relationships wr
+         ON wr.id = o.relationship_id
+        AND wr.member_id = o.member_id
+        AND wr.living_work_id = o.living_work_id
+        AND wr.manuscript_id = o.manuscript_id
+        AND wr.creation_expression_id = o.creation_expression_id
+        AND wr.contract_version = 'A2-1'
+      WHERE o.thread_id = $1
+        AND o.member_id = $2
+        AND o.relationship_id = $3
+        AND o.living_work_id = $4
+        AND o.manuscript_id = $5
+        AND o.creation_expression_id = $6`,
+    [threadId, r.member_id, r.id, r.living_work_id, r.manuscript_id, r.creation_expression_id],
+  );
+  if (found.rows.length !== 1) return null;
+  const origin = found.rows[0]!;
+  if (
+    origin.manuscript_id !== r.manuscript_id
+    || typeof origin.proposal_chain_id !== 'string'
+    || !origin.proposal_chain_id
+    || !(origin.locus_scope_kind === null
+      || origin.locus_scope_kind === 'passage'
+      || origin.locus_scope_kind === 'section')
+  ) return null;
+  return origin;
 }
 
 export async function preflightRelationshipForManuscript(input: {
@@ -79,31 +157,17 @@ export async function preflightEditorialRelationshipCarriage(input: {
   if (!(await hasCurrentDeclaration(r))) {
     return { ok: false, reason: 'current_declaration_unavailable' };
   }
-  const child = await query<{
-    manuscript_id: string;
-    proposal_chain_id: string | null;
-    locus_scope_kind: ManuscriptLocusScope | null;
-  }>(
-    `SELECT th.manuscript_id, th.proposal_chain_id, pc.locus_scope_kind
-       FROM ask_threads th
-       LEFT JOIN proposal_chains pc ON pc.id = th.proposal_chain_id
-      WHERE th.id = $1 AND th.member_id = $2`,
-    [input.threadId, input.memberId],
-  );
-  if (child.rows.length !== 1) return { ok: false, reason: 'editorial_child_invalid' };
-  const c = child.rows[0]!;
-  if (c.manuscript_id !== r.manuscript_id || c.proposal_chain_id === null) {
-    return { ok: false, reason: 'relationship_mismatch' };
-  }
-  if (c.locus_scope_kind === null) {
+  const origin = await boundThreadOriginForRelationship(r, input.threadId);
+  if (!origin) return { ok: false, reason: 'relationship_mismatch' };
+  if (origin.locus_scope_kind === null) {
     return { ok: false, reason: 'editorial_scope_unmeasured' };
   }
   return {
     ok: true,
     relationshipId: r.id,
     manuscriptId: r.manuscript_id,
-    proposalChainId: c.proposal_chain_id,
-    manuscriptLocusScope: c.locus_scope_kind,
+    proposalChainId: origin.proposal_chain_id,
+    manuscriptLocusScope: origin.locus_scope_kind,
   };
 }
 
@@ -157,22 +221,8 @@ export async function resolvePriorMaiaEditorialCarry(input: {
     return { ok: false, reason: 'current_declaration_unavailable' };
   }
 
-  const receiver = await query<{
-    manuscript_id: string;
-    proposal_chain_id: string | null;
-    locus_scope_kind: ManuscriptLocusScope | null;
-  }>(
-    `SELECT th.manuscript_id, th.proposal_chain_id, pc.locus_scope_kind
-       FROM ask_threads th
-       LEFT JOIN proposal_chains pc ON pc.id = th.proposal_chain_id
-      WHERE th.id = $1 AND th.member_id = $2`,
-    [input.receiverThreadId, input.memberId],
-  );
-  if (receiver.rows.length !== 1) return { ok: false, reason: 'receiver_thread_invalid' };
-  const current = receiver.rows[0]!;
-  if (current.manuscript_id !== relationship.manuscript_id || current.proposal_chain_id === null) {
-    return { ok: false, reason: 'receiver_thread_invalid' };
-  }
+  const current = await boundThreadOriginForRelationship(relationship, input.receiverThreadId);
+  if (!current) return { ok: false, reason: 'receiver_thread_invalid' };
   if (current.locus_scope_kind === null) {
     return { ok: false, reason: 'receiver_scope_unmeasured' };
   }
@@ -206,16 +256,10 @@ export async function resolvePriorMaiaEditorialCarry(input: {
     return { ok: false, reason: 'same_thread_source' };
   }
 
-  const sourceThread = await query<{ manuscript_id: string; proposal_chain_id: string | null }>(
-    `SELECT manuscript_id, proposal_chain_id FROM ask_threads
-      WHERE id = $1 AND member_id = $2`,
-    [source.editorial_thread_id, input.memberId],
+  const sourceOrigin = await boundThreadOriginForRelationship(
+    relationship, source.editorial_thread_id,
   );
-  if (
-    sourceThread.rows.length !== 1
-    || sourceThread.rows[0]!.manuscript_id !== relationship.manuscript_id
-    || sourceThread.rows[0]!.proposal_chain_id === null
-  ) return { ok: false, reason: 'source_thread_invalid' };
+  if (!sourceOrigin) return { ok: false, reason: 'source_thread_invalid' };
 
   const sourceTurn = await query<{ speaker: string; body: string | null }>(
     `SELECT speaker, body FROM ask_turns
@@ -305,22 +349,8 @@ export async function listEligiblePriorMaiaEditorialCarrySources(input: {
     return { ok: false, reason: 'current_declaration_unavailable' };
   }
 
-  const receiver = await query<{
-    manuscript_id: string;
-    proposal_chain_id: string | null;
-    locus_scope_kind: ManuscriptLocusScope | null;
-  }>(
-    `SELECT th.manuscript_id, th.proposal_chain_id, pc.locus_scope_kind
-       FROM ask_threads th
-       LEFT JOIN proposal_chains pc ON pc.id = th.proposal_chain_id
-      WHERE th.id = $1 AND th.member_id = $2`,
-    [input.receiverThreadId, input.memberId],
-  );
-  if (receiver.rows.length !== 1) return { ok: false, reason: 'receiver_thread_invalid' };
-  const current = receiver.rows[0]!;
-  if (current.manuscript_id !== relationship.manuscript_id || current.proposal_chain_id === null) {
-    return { ok: false, reason: 'receiver_thread_invalid' };
-  }
+  const current = await boundThreadOriginForRelationship(relationship, input.receiverThreadId);
+  if (!current) return { ok: false, reason: 'receiver_thread_invalid' };
   if (current.locus_scope_kind === null) {
     return { ok: false, reason: 'receiver_scope_unmeasured' };
   }
@@ -333,11 +363,31 @@ export async function listEligiblePriorMaiaEditorialCarrySources(input: {
   }>(
     `SELECT e.sequence, e.manuscript_scope_requested, e.admitted_at, t.body
        FROM writer_editorial_relationship_episodes e
+       JOIN writer_editorial_thread_origins source_origin
+         ON source_origin.thread_id = e.editorial_thread_id
+        AND source_origin.member_id = $2
+        AND source_origin.manuscript_id = $3
+        AND source_origin.relationship_id = $1
+        AND source_origin.living_work_id = $6
+        AND source_origin.creation_expression_id = $7
+       JOIN writer_editorial_chain_origins source_chain
+         ON source_chain.proposal_chain_id = source_origin.proposal_chain_id
+        AND source_chain.member_id = source_origin.member_id
+        AND source_chain.living_work_id = source_origin.living_work_id
+        AND source_chain.manuscript_id = source_origin.manuscript_id
+        AND source_chain.relationship_id = source_origin.relationship_id
+        AND source_chain.creation_expression_id = source_origin.creation_expression_id
+        AND source_chain.draft_id = source_origin.draft_id
+        AND source_chain.target_section_id = source_origin.target_section_id
+        AND source_chain.draft_version = source_origin.draft_version
+        AND source_chain.draft_revision_count = source_origin.draft_revision_count
+        AND source_chain.locus_scope_kind = source_origin.locus_scope_kind
        JOIN ask_threads source_thread
-         ON source_thread.id = e.editorial_thread_id
-        AND source_thread.member_id = $2
-        AND source_thread.manuscript_id = $3
-        AND source_thread.proposal_chain_id IS NOT NULL
+         ON source_thread.id = source_origin.thread_id
+        AND source_thread.member_id = source_origin.member_id
+        AND source_thread.manuscript_id = source_origin.manuscript_id
+        AND source_thread.proposal_chain_id = source_origin.proposal_chain_id
+        AND source_thread.editorial_origin_id = source_origin.id
        JOIN ask_turns t
          ON t.thread_id = e.editorial_thread_id
         AND t.turn_index = e.editorial_maia_turn_index
@@ -354,7 +404,8 @@ export async function listEligiblePriorMaiaEditorialCarrySources(input: {
         AND NOT (e.manuscript_scope_requested = 'passage' AND $5::text = 'section')
       ORDER BY e.admitted_at ASC, e.sequence ASC`,
     [input.relationshipId, input.memberId, relationship.manuscript_id,
-     input.receiverThreadId, current.locus_scope_kind],
+     input.receiverThreadId, current.locus_scope_kind,
+     relationship.living_work_id, relationship.creation_expression_id],
   );
 
   return {

@@ -15,6 +15,7 @@
  */
 const { chromium } = require(process.argv[2] + '/playwright-core');
 const { execSync } = require('child_process');
+const { requireDatabaseUrl } = require('../lib/explicit-database-url.cjs');
 const fs = require('fs');
 const DIR = process.env.WITNESS_DIR || '/var/tmp/pgwitness';
 const IDS = JSON.parse(fs.readFileSync(DIR + '/ids.json', 'utf8'));
@@ -25,7 +26,7 @@ const T = fs.readFileSync(DIR + '/token', 'utf8').trim();
 const DECOY = fs.readFileSync(DIR + '/decoy', 'utf8').trim();
 const W = { one: IDS.one, sev: IDS.sev, none: IDS.none };
 const M = { solo: IDS.solo, intro: IDS.intro };
-const DB = process.env.WITNESS_DATABASE_URL || 'postgresql://soullab@localhost:5439/maia_consciousness';
+const DB = requireDatabaseUrl(process.env.WITNESS_DATABASE_URL, 'WITNESS_DATABASE_URL');
 if (/minisforum|soullab\.life|192\.168\./.test(DB)) throw new Error('refusing: this witness writes and is for a disposable stack only');
 const sql = (q) => execSync(`psql "${DB}" -tAc "${q}"`).toString().trim();
 

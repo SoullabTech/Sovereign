@@ -1,38 +1,14 @@
 /**
- * SMTP PROVIDER — the transport that answers to no vendor account.
- * ================================================================
+ * SMTP PROVIDER — the managed identity transport.
  *
- * Speaks SMTP, so it works against ANY server that does: a commodity relay
- * today, Soullab's own MTA tomorrow. Moving between them is configuration, not
- * code — which is the whole point. An email API company can suspend an account
- * and take P0 identity mail down with it; SMTP is a protocol and cannot be
- * revoked.
- *
- * This is the same adapter for both ends of MAIL-10:
- *
- *     emergency escape from a locked vendor account   (relay credentials)
- *     the sovereign endpoint                          (Soullab MTA)
- *
- * WHAT THIS FILE DOES NOT DO
- * ==========================
- * Nothing above the provider boundary. No classification, no retries, no
- * metering, no policy about what a member is told — those live in
- * lib/email/sendEmail.ts so that swapping transports cannot silently change
- * what a failure MEANS. See ./types.ts.
- *
- * THE ACCEPTANCE RULE, IN SMTP TERMS
- * ==================================
- * `accepted: true` means the server took responsibility AND issued an id.
- * SMTP makes this sharper than an HTTP API does: a server can accept a message
- * for some recipients and reject others in the same transaction. nodemailer
- * reports that as `accepted[]` / `rejected[]`.
- *
- * A partial acceptance is NOT an acceptance. Reporting one as a send would tell
- * a member their sign-in code is on its way when the server refused their
- * address — precisely the 2026-08-24 defect, one layer down.
+ * SMTP is the only registered production transport for AUTH-RETURN-01. The
+ * adapter distinguishes explicit refusal from unknown delivery. STARTTLS is
+ * mandatory on submission ports; unknown acceptance must never trigger a retry.
  */
 
 import type { EmailProvider, ProviderEmailMessage, ProviderSendResult } from './types';
+import { resolveManagedSmtpConfig } from '../protonTransport';
+import { MANAGED_AUTH_MAILBOX, MANAGED_AUTH_PURPOSE, senderMatchesMailbox } from '../senderCapacity';
 
 type Transporter = {
   sendMail(opts: Record<string, unknown>): Promise<{
@@ -49,39 +25,46 @@ export interface SmtpProviderConfig {
   password?: string;
   port?: number;
   secure?: boolean;
+  managedMailbox?: string;
 }
 
-/**
- * With no explicit config, preserve the managed-mail environment contract.
- * With an explicit config, NEVER backfill missing values from global SMTP_*:
- * an isolated pager transport must not accidentally borrow member-mail credentials.
- */
-function readConfig(config?: SmtpProviderConfig) {
+interface ResolvedConfig {
+  host: string;
+  user: string;
+  pass: string;
+  port: number;
+  secure: boolean;
+  managedMailbox: string;
+}
+
+function readConfig(config?: SmtpProviderConfig): ResolvedConfig | null {
   if (config !== undefined) {
-    const port = Number.isFinite(config.port) ? Number(config.port) : 587;
-    return {
-      host: config.host?.trim(),
-      user: config.user?.trim(),
-      pass: config.password,
-      port,
-      secure: config.secure ?? port === 465,
-    };
+    const host = config.host?.trim();
+    const user = config.user?.trim().toLowerCase();
+    const pass = config.password;
+    const port = config.port ?? 587;
+    const managedMailbox = (config.managedMailbox ?? MANAGED_AUTH_MAILBOX).trim().toLowerCase();
+    if (!host || !user || !pass) return null;
+    if (user !== MANAGED_AUTH_MAILBOX || managedMailbox !== MANAGED_AUTH_MAILBOX) {
+      throw new Error('SMTP authenticated user must equal the managed sender mailbox');
+    }
+    if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('SMTP_PORT is invalid');
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Explicit SMTP credentials are only available to isolated non-production fixtures');
+    }
+    return { host, user, pass, port, secure: config.secure ?? port === 465, managedMailbox };
   }
 
-  const host = process.env.SMTP_HOST?.trim();
-  const user = process.env.SMTP_USER?.trim();
-  const pass = process.env.SMTP_PASSWORD ?? process.env.SMTP_PASS;
-  const parsedPort = Number(process.env.SMTP_PORT ?? 587);
-  const port = Number.isFinite(parsedPort) ? parsedPort : 587;
-
-  // Explicit opt-out only. Defaulting to plaintext because a variable is unset
-  // would send credentials and member mail in the clear.
-  const secure =
-    process.env.SMTP_SECURE === 'true' ? true :
-    process.env.SMTP_SECURE === 'false' ? false :
-    port === 465;
-
-  return { host, user, pass, port, secure };
+  const managed = resolveManagedSmtpConfig();
+  if (!managed) return null;
+  return {
+    host: managed.host,
+    user: managed.user,
+    pass: managed.password,
+    port: managed.port,
+    secure: managed.secure,
+    managedMailbox: managed.managedMailbox,
+  };
 }
 
 export class SmtpProvider implements EmailProvider {
@@ -91,33 +74,34 @@ export class SmtpProvider implements EmailProvider {
   constructor(private readonly config?: SmtpProviderConfig) {}
 
   isConfigured(): boolean {
-    const { host, user, pass } = readConfig(this.config);
-    // A host alone is not enough: an unauthenticated relay that happens to
-    // accept mail is not a transport we should be reporting as configured.
-    return Boolean(host && user && pass);
+    try {
+      return readConfig(this.config) !== null;
+    } catch {
+      return false;
+    }
   }
 
-  private getTransporter(): Transporter {
-    if (this.transporter) return this.transporter;
-
-    const { host, user, pass, port, secure } = readConfig(this.config);
-    if (!host || !user || !pass) {
-      throw new Error('[MAIA/email] SmtpProvider is not configured (SMTP_HOST, SMTP_USER, SMTP_PASSWORD)');
+  private resolved(): ResolvedConfig {
+    const config = readConfig(this.config);
+    if (!config) {
+      throw new Error('[MAIA/email] SMTP is not configured');
     }
+    return config;
+  }
+
+  private getTransporter(config: ResolvedConfig): Transporter {
+    if (this.transporter) return this.transporter;
 
     // Required lazily so importing this module never pulls the SMTP client into
     // a bundle that will not use it.
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const nodemailer = require('nodemailer');
-
     this.transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure,
-      auth: { user, pass },
-      // STARTTLS is mandatory on the submission port. A relay that cannot
-      // upgrade is refused rather than silently downgraded to plaintext.
-      requireTLS: !secure,
+      host: config.host,
+      port: config.port,
+      secure: config.secure,
+      auth: { user: config.user, pass: config.pass },
+      requireTLS: !config.secure,
       tls: { minVersion: 'TLSv1.2' },
       pool: true,
       maxConnections: 3,
@@ -125,16 +109,35 @@ export class SmtpProvider implements EmailProvider {
       greetingTimeout: 10_000,
       socketTimeout: 30_000,
     }) as Transporter;
-
     return this.transporter;
   }
 
   async send(message: ProviderEmailMessage): Promise<ProviderSendResult> {
-    const recipients = Array.isArray(message.to) ? message.to : [message.to];
+    let config: ResolvedConfig;
+    try {
+      config = this.resolved();
+    } catch (rawError) {
+      return { accepted: false, rawError };
+    }
 
+    if (message.purpose !== MANAGED_AUTH_PURPOSE ||
+        !senderMatchesMailbox(message.from, config.managedMailbox)) {
+      return {
+        accepted: false,
+        rawError: {
+          name: 'smtp_sender_or_purpose_mismatch',
+          message: `managed SMTP mail must use ${config.managedMailbox} for ${MANAGED_AUTH_PURPOSE}`,
+        },
+      };
+    }
+
+    const recipients = Array.isArray(message.to) ? message.to : [message.to];
+    if (recipients.length !== 1) {
+      return { accepted: false, rawError: { name: 'smtp_recipient_count', message: 'Managed SMTP requires one recipient' } };
+    }
     let info;
     try {
-      info = await this.getTransporter().sendMail({
+      info = await this.getTransporter(config).sendMail({
         from: message.from,
         to: recipients,
         subject: message.subject,
@@ -143,26 +146,28 @@ export class SmtpProvider implements EmailProvider {
         replyTo: message.replyTo,
         headers: {
           ...(message.headers ?? {}),
-          // Tags have no SMTP equivalent, so they travel as headers — keeping
-          // purpose/lane/correlation segmentable the way vendor tags were.
           ...Object.fromEntries(
-            (message.tags ?? []).map((t) => [`X-Soullab-${t.name}`, t.value])
+            (message.tags ?? []).map((tag) => [`X-Soullab-${tag.name}`, tag.value]),
           ),
         },
       });
     } catch (rawError) {
-      // Connection, TLS, auth and timeout faults arrive here. The boundary
-      // contract permits throwing on transport faults, but returning the error
-      // lets the shared classifier read it — a thrown auth failure and a
-      // returned one should not be classified differently.
-      return { accepted: false, rawError };
+      const error = rawError as { code?: unknown; responseCode?: unknown } | null;
+      const responseCode = typeof error?.responseCode === 'number' ? error.responseCode : undefined;
+      // An explicit negative SMTP response is a refusal. A lost connection or
+      // response gives no such evidence: the server may already have accepted.
+      if (error?.code === 'EAUTH' || (responseCode !== undefined && responseCode >= 400 && responseCode < 600)) {
+        return { accepted: false, rawError };
+      }
+      throw rawError;
     }
 
-    const addr = (r: string | { address: string }) => (typeof r === 'string' ? r : r.address);
-    const rejected = (info.rejected ?? []).map(addr);
-    const accepted = (info.accepted ?? []).map(addr);
+    const address = (recipient: string | { address: string }) =>
+      typeof recipient === 'string' ? recipient : recipient.address;
+    const rejected = (info.rejected ?? []).map(address);
+    const accepted = (info.accepted ?? []).map(address);
 
-    if (rejected.length > 0) {
+    if (rejected.length > 0 && accepted.length === 0) {
       return {
         accepted: false,
         rawError: {
@@ -173,17 +178,11 @@ export class SmtpProvider implements EmailProvider {
         },
       };
     }
-
-    if (!info.messageId || accepted.length === 0) {
-      // No id, or nobody accepted: an unidentifiable send is not a send.
-      return {
-        accepted: false,
-        rawError: {
-          name: 'smtp_no_message_id',
-          message: 'server returned no message id or accepted no recipient',
-          response: info.response,
-        },
-      };
+    if (!info.messageId || rejected.length > 0 || accepted.length !== 1 ||
+        accepted[0].trim().toLowerCase() !== recipients[0].trim().toLowerCase()) {
+      throw Object.assign(new Error('SMTP acceptance could not be verified for the exact recipient'), {
+        name: 'smtp_acceptance_unknown',
+      });
     }
 
     return { accepted: true, providerMessageId: info.messageId };
