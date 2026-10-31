@@ -33,6 +33,7 @@ import {
   verificationStanding,
 } from '@/lib/writersStudio/sourceVerification';
 import P4R1WriterUnderstanding from './P4R1WriterUnderstanding';
+import { DevelopAddToWork } from './DevelopAddToWork';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import {
   DEFAULT_WORKING_STYLE,
@@ -151,6 +152,12 @@ export type DevelopScopeChoice =
 export interface P4R1DevelopViewProps {
   manuscriptId: string;
   work: LivingWork | null;
+  workContextKind: 'unknown' | 'none' | 'work' | 'ambiguous';
+  allWorks: readonly LivingWork[];
+  declaring: boolean;
+  declareError: string | null;
+  onAddToWork: (workId: string) => void;
+  onMakeWork: (title: string) => void;
   workTitle: string;
   appearance: Appearance;
   field: DevelopField;
@@ -1971,7 +1978,15 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               >
                 Talk with MAIA about this
               </button>
-              {!props.work ? <p>A Work connection for this manuscript could not be confirmed. Your writing remains available in Write.</p> : null}
+              {!props.work && props.workContextKind === 'none' ? (
+                <DevelopAddToWork
+                  works={props.allWorks}
+                  busy={props.declaring}
+                  error={props.declareError}
+                  onAddToWork={props.onAddToWork}
+                  onMakeWork={props.onMakeWork}
+                />
+              ) : !props.work ? <p>A Work connection for this manuscript could not be confirmed. Your writing remains available in Write.</p> : null}
             </div>
             <div className="p4r1-develop-three-questions" aria-label="Three ways to begin">
               {focusedQuestions.map((key) => {
