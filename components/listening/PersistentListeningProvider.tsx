@@ -1,9 +1,17 @@
 'use client';
 
 import {
-  createContext, useCallback, useContext, useEffect, useRef, useState,
+  createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
 import type { ReactNode, RefObject } from 'react';
+import { focusTimeLabel } from '@/lib/listening/focusTimeDisplay';
+import { FOCUS_SOUND_SKETCHES, focusSoundLabel } from '@/lib/listening/focusSoundChoices';
+import { DEFAULT_SOUNDSCAPE_INPUT, focusSoundscapeSpec } from '@/lib/listening/focusSoundscape';
+import type { SoundscapeInput, SoundscapeSpec } from '@/lib/listening/focusSoundscape';
+import { buildSoundscape } from '@/lib/listening/soundscapeEngine';
+import type { SoundscapeHandle } from '@/lib/listening/soundscapeEngine';
+import type { FocusSoundId } from '@/lib/listening/focusSoundChoices';
+import type { FocusTimeDisplay } from '@/lib/listening/focusTimeDisplay';
 import PersistentListeningDock from './PersistentListeningDock';
 // Compatibility contract: PersistentListeningDock renders data-focus-field-dock="true"
 // from this one member-bound provider; extraction did not create a second owner.
@@ -26,6 +34,8 @@ import {
 import {
   advanceFocusSession as advanceFocusSessionModel,
   createFocusSession as createFocusSessionModel,
+  focusDurationMs,
+  focusElapsedMs,
   focusRemainingMs,
   interruptFocusSession as interruptFocusSessionModel,
   isFocusSessionTerminal,
@@ -39,7 +49,7 @@ import type {
   FocusFeedbackOutcome, FocusFeedbackTag, FocusInterruptionReason,
   FocusRetune, FocusSession, FocusSessionPlanInput,
 } from '@/lib/listening/focusFieldSession';
-import { reviewMediaEdition, reviewMediaSequence, soundPassageAt } from '@/lib/listening/soundStudioExperience';
+import { OPEN_GROUND, reviewMediaEdition, reviewMediaSequence, soundPassageAt } from '@/lib/listening/soundStudioExperience';
 import type { SoundExperienceManifest, SoundExperienceMediaEdition, SoundExperiencePlayback } from '@/lib/listening/soundStudioExperience';
 
 /**
@@ -84,6 +94,11 @@ type Sketch = {
   movementDepth: GainNode;
   mood: ListeningMood;
   frequencies: number[];
+  /** Present for a Focus soundscape: parametric synthesis that updates live from the member's choices. */
+  soundscape?: SoundscapeHandle;
+  /** Soundscape output bus, and the stream tap that lets a media element carry the sound at screen lock. */
+  out?: GainNode;
+  stream?: MediaStreamAudioDestinationNode;
 };
 
 export type ListeningTransport = {
@@ -100,7 +115,7 @@ export type ListeningTransport = {
   dropField: (id: string) => void;
   replaceFields: (recipes: ReceptiveFieldRecipe[]) => void;
   playSketch: (
-    mood: ListeningMood, frequencies: number[], experience?: SoundExperiencePlayback,
+    mood: ListeningMood, frequencies: number[], experience?: SoundExperiencePlayback, soundscape?: SoundscapeSpec,
   ) => Promise<boolean>;
   playExperienceMedia: (manifest: SoundExperienceManifest) => Promise<boolean>;
   selectLocalFile: (file: File) => { accepted: boolean; message: string };
@@ -113,6 +128,18 @@ export type ListeningTransport = {
   removeLocalFile: () => void;
   focusSession: FocusSession | null;
   focusClockMs: number;
+  focusTimeDisplay: FocusTimeDisplay;
+  /** The sound the member chose for Focus. Choosing plays nothing. */
+  focusSoundChoice: FocusSoundId;
+  /** The choices as the member shapes them in Focus (before and during a session): what the soundscape follows. */
+  focusDraft: SoundscapeInput | null;
+  setFocusDraft: (draft: SoundscapeInput) => void;
+  setFocusSoundChoice: (id: FocusSoundId) => void;
+  /** Member-initiated: plays the chosen Focus sound through the one persistent player. */
+  playFocusSound: () => Promise<boolean>;
+  /** false where the platform fixes the media level (iOS): volume, presets and fade cannot work. */
+  volumeAdjustable: boolean;
+  setFocusTimeDisplay: (mode: FocusTimeDisplay) => void;
   startFocusSession: (plan: FocusSessionPlanInput) => boolean;
   pauseFocusSession: (reason?: FocusInterruptionReason) => boolean;
   resumeFocusSession: () => boolean;
@@ -167,6 +194,7 @@ export function useListeningBoundaryStatus(): ListeningBoundaryStatus {
 
 function endSketch(sketch: Sketch | null): void {
   if (!sketch) return;
+  try { sketch.soundscape?.dispose(); } catch {}
   try { sketch.master.gain.setValueAtTime(0, sketch.context.currentTime); } catch {}
   for (const osc of [...sketch.oscillators,sketch.movement]) {
     try { osc.stop(); } catch {}
@@ -235,6 +263,65 @@ function newSketch(
   return sketch;
 }
 
+// Recorded nature loops (private development folder; absent in a build without it, which is a quiet no-op).
+// A generated soundscape is Web Audio only, and iOS suspends a web view's Web Audio when the screen locks unless a
+// media element is playing. This private, silent, looping element keeps the playback session alive; it is not the
+// shared player and carries no handlers, so it cannot change what the listening room believes is playing.
+let silentWavURL: string | null = null;
+function silentKeepAlive(): HTMLAudioElement | null {
+  if (typeof Audio === 'undefined' || typeof URL === 'undefined' || typeof Blob === 'undefined') return null;
+  if (!silentWavURL) {
+    const rate = 8000, samples = rate; // one second of silence, 16-bit mono
+    const bytes = new Uint8Array(44 + samples * 2);
+    const view = new DataView(bytes.buffer);
+    const tag = (at: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(at + i, s.charCodeAt(i)); };
+    tag(0, 'RIFF'); view.setUint32(4, 36 + samples * 2, true); tag(8, 'WAVE'); tag(12, 'fmt ');
+    view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+    view.setUint32(24, rate, true); view.setUint32(28, rate * 2, true); view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true); tag(36, 'data'); view.setUint32(40, samples * 2, true);
+    silentWavURL = URL.createObjectURL(new Blob([bytes], { type: 'audio/wav' }));
+  }
+  const el = new Audio();
+  el.setAttribute('playsinline', '');
+  el.loop = true;
+  return el;
+}
+function silentUrl(): string {
+  silentKeepAlive(); // builds the shared silent clip on first use
+  return silentWavURL ?? '';
+}
+
+const recordedCache = new Map<string, Promise<AudioBuffer | null>>();
+function loadRecordedLoop(context: BaseAudioContext, id: string): Promise<AudioBuffer | null> {
+  const key = id;
+  let pending = recordedCache.get(key);
+  if (!pending) {
+    pending = fetch(`/media/dev-private/nature/${id}.wav`)
+      .then(response => (response.ok ? response.arrayBuffer() : null))
+      .then(bytes => (bytes ? context.decodeAudioData(bytes) : null))
+      .catch(() => null);
+    recordedCache.set(key, pending);
+  }
+  return pending;
+}
+
+function newSoundscapeSketch(spec: SoundscapeSpec, level: number): Sketch {
+  const AudioCtor: typeof AudioContext =
+    window.AudioContext ||
+    (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext!;
+  if (!AudioCtor) throw new Error('This browser cannot open an AudioContext.');
+  const context = new AudioCtor();
+  const out = context.createGain();
+  out.connect(context.destination);
+  const stream = typeof context.createMediaStreamDestination === 'function' ? context.createMediaStreamDestination() : undefined;
+  const handle = buildSoundscape(context, out, spec, level, id => loadRecordedLoop(context, id));
+  return {
+    context, oscillators: handle.oscillators, master: handle.master, voices: handle.voices, filter: handle.filter,
+    movement: handle.movement, movementDepth: handle.movementDepth, mood: 'focus', frequencies: [spec.root], soundscape: handle,
+    out, stream,
+  };
+}
+
 export function PersistentListeningProvider({
   children,
   reviewMemberKey,
@@ -250,12 +337,31 @@ export function PersistentListeningProvider({
   const [focusSession, setFocusSession] = useState<FocusSession | null>(null);
   const focusSessionRef = useRef<FocusSession | null>(null);
   const [focusClockMs, setFocusClockMs] = useState(() => Date.now());
+  const [focusTimeDisplay, setFocusTimeDisplay] = useState<FocusTimeDisplay>('countdown');
+  const [focusSoundChoice, setFocusSoundChoice] = useState<FocusSoundId>('none');
+  const [focusDraft, setFocusDraft] = useState<SoundscapeInput | null>(null);
+  // iOS ignores a page's HTMLMediaElement.volume: an assignment reads back for an instant, then the
+  // platform value returns to 1 (measured on device). Detect it after a beat, not in the same tick,
+  // so no control claims a level change the device will not make.
+  const [volumeAdjustable, setVolumeAdjustable] = useState(true);
+  useEffect(() => {
+    const element = media.current;
+    if (!element) return;
+    const before = element.volume;
+    try { element.volume = 0.5; } catch { setVolumeAdjustable(false); return; }
+    const timer = window.setTimeout(() => {
+      setVolumeAdjustable(Math.abs(element.volume - 0.5) < 0.01);
+      try { element.volume = before; } catch { /* read-only on this platform */ }
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, []);
   const [mediaURL, setMediaURL] = useState<string | null>(null);
 
   const kind = useRef<Kind>('none');
   const sketch = useRef<Sketch | null>(null);
   const media = useRef<HTMLAudioElement | null>(null);
   const blobURL = useRef<string | null>(null);
+  const keepAlive = useRef<HTMLAudioElement | null>(null);
   const selected = useRef<{ title: string; format: string } | null>(null);
   const reviewManifest = useRef<SoundExperienceManifest | null>(null);
   const reviewSequence = useRef<readonly SoundExperienceMediaEdition[]>([]);
@@ -276,6 +382,7 @@ export function PersistentListeningProvider({
     startedAt: number | null;
   } | null>(null);
   const releaseOutput = useCallback(() => {
+    keepAlive.current?.pause();
     outputLease.current?.release();
     outputLease.current = null;
   }, []);
@@ -639,6 +746,7 @@ export function PersistentListeningProvider({
 
   const playSketch = useCallback(async (
     mood: ListeningMood, frequencies: number[], requestedExperience?: SoundExperiencePlayback,
+    soundscape?: SoundscapeSpec,
   ): Promise<boolean> => {
     // Refuse BEFORE allocating or resuming a sound context.
     if (refuseDuringMaiaSpeech()) return false;
@@ -655,9 +763,22 @@ export function PersistentListeningProvider({
       experience.current = null;
     }
     if (outputLease.current) pause();
+    // Started here, before any await: iOS only lets a media element begin inside the member's tap, and the output
+    // lease and context resume below both await. Every refusal path below releases it.
+    if (soundscape) {
+      // One element for the life of the room: once a tap has let it play, iOS lets it play again later, which a
+      // lock-screen Play needs. It starts on silence, then carries the soundscape once the sketch is running.
+      const el = keepAlive.current ?? silentKeepAlive();
+      if (el) {
+        keepAlive.current = el;
+        if (!el.srcObject && !el.src) el.src = silentUrl();
+        void el.play().catch(() => undefined);
+      }
+    }
     const generation = ++epoch.current;
     const lease = await acquireAudioOutput('listening-music');
     if (!lease || generation !== epoch.current || isMaiaSpeechActive()) {
+      keepAlive.current?.pause();
       lease?.release();
       if (generation === epoch.current) {
         if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
@@ -673,7 +794,13 @@ export function PersistentListeningProvider({
     saveLoopAvailable(false);
     kind.current = 'sketch';
     let active = sketch.current;
-    if (!active || active.mood !== mood ||
+    if (soundscape) {
+      if (!(active?.soundscape && active.soundscape.update(soundscape))) {
+        if (active) endSketch(active);
+        active = newSoundscapeSketch(soundscape, volumeRef.current / 100);
+        sketch.current = active;
+      }
+    } else if (!active || active.soundscape || active.mood !== mood ||
       JSON.stringify(active.frequencies) !== JSON.stringify(frequencies)) {
       if (active) endSketch(active);
       active = newSketch(mood, frequencies, volumeRef.current / 100,shapeRef.current);
@@ -689,17 +816,30 @@ export function PersistentListeningProvider({
         if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
         return false;
       }
+      if (soundscape && active.out && active.stream && keepAlive.current) {
+        const el = keepAlive.current;
+        try {
+          el.srcObject = active.stream.stream;
+          el.loop = false;
+          await el.play();
+          active.out.disconnect();
+          active.out.connect(active.stream);
+        } catch {
+          // The element would not carry it: stay on the direct output rather than go silent.
+          try { active.out.disconnect(); active.out.connect(active.context.destination); } catch { /* closed */ }
+        }
+      }
       claimFocus();
       const activeExperience = experience.current;
       if (activeExperience) activeExperience.startedAt = Date.now();
       const elapsedMs = activeExperience ? experienceElapsed() : 0;
       setSnapshot({
         kind: 'sketch', playback: 'playing', mood,
-        title: activeExperience?.definition.title ?? {
+        title: soundscape ? 'Your soundscape' : activeExperience?.definition.title ?? {
           focus: 'Between the Tides', create: 'Velvet Current',
           drift: 'The Blue Hour', rest: 'Moonwater',
         }[mood],
-        subtitle: activeExperience?.definition.subtitle ?? '',
+        subtitle: soundscape ? 'Built from your choices' : activeExperience?.definition.subtitle ?? '',
         experienceId: activeExperience?.definition.id ?? null,
         durationMs: activeExperience?.definition.durationMs ?? null,
         elapsedMs,
@@ -709,6 +849,9 @@ export function PersistentListeningProvider({
         fileFormat: null,
         message: activeExperience
           ? `${activeExperience.definition.title} · procedural review edition.`
+          : soundscape ? (soundscape.recorded
+            ? 'A soundscape built from your Focus choices, with recorded nature sound · it changes as you change them.'
+            : 'A synthesized soundscape built from your Focus choices · it changes as you change them.')
           : 'Original, locally synthesized sound study · not a commercial recording.',
       });
       return true;
@@ -1053,12 +1196,46 @@ export function PersistentListeningProvider({
     } : old);
   }, [claimFocus, releaseOutput, reviewOffsetMs]);
 
+  // What the soundscape follows: the running session's plan, else the choices as the member is shaping them.
+  const liveSoundscapeInput = useMemo<SoundscapeInput>(() => {
+    const plan = focusSession && !isFocusSessionTerminal(focusSession) ? focusSession.plan : null;
+    if (plan) return { need: plan.focusNeed, stimulation: plan.stimulation, world: plan.musicalWorld, task: plan.task };
+    return focusDraft ?? DEFAULT_SOUNDSCAPE_INPUT;
+  }, [focusSession, focusDraft]);
+  const liveSoundscapeKey = JSON.stringify(liveSoundscapeInput);
+
+  const playFocusSound = useCallback(async (): Promise<boolean> => {
+    if (focusSoundChoice === 'none') return false;
+    if (focusSoundChoice === 'open-ground') {
+      return OPEN_GROUND.manifest ? playExperienceMedia(OPEN_GROUND.manifest) : false;
+    }
+    if (focusSoundChoice === 'soundscape') {
+      return playSketch('focus', [110, 164.81, 220], undefined, focusSoundscapeSpec(liveSoundscapeInput));
+    }
+    const sketchChoice = FOCUS_SOUND_SKETCHES[focusSoundChoice];
+    return playSketch(sketchChoice.mood, [...sketchChoice.frequencies]);
+  }, [focusSoundChoice, liveSoundscapeInput, playExperienceMedia, playSketch]);
+
+  // A running soundscape follows the member's choices live: smoothly within a palette, a new fade-in across palettes.
+  useEffect(() => {
+    const active = sketch.current;
+    if (!active?.soundscape || kind.current !== 'sketch') return;
+    const next = focusSoundscapeSpec(liveSoundscapeInput);
+    if (!active.soundscape.update(next) && snapshot.playback === 'playing') {
+      void playSketch('focus', [110, 164.81, 220], undefined, next);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveSoundscapeKey]);
+
   const transport: ListeningTransport = {
     snapshot, volume, setVolume, looping, loopAvailable, setLooping, shape, setShape,
     fields, keepField, dropField, replaceFields,
     playSketch, playExperienceMedia, selectLocalFile, playLocalFile,
     pause, stopMusic: stopAll, listeningInstance, removeLocalFile,
     focusSession, focusClockMs,
+    focusTimeDisplay, setFocusTimeDisplay,
+    focusSoundChoice, setFocusSoundChoice, playFocusSound, focusDraft, setFocusDraft,
+    volumeAdjustable,
     startFocusSession: beginFocusSession,
     pauseFocusSession,
     resumeFocusSession: resumeCurrentFocus,
@@ -1074,6 +1251,10 @@ export function PersistentListeningProvider({
     if (snapshot.kind === 'local-file') { void playLocalFile(); return; }
     if (snapshot.kind === 'review-media' && reviewManifest.current) {
       void playExperienceMedia(reviewManifest.current); return;
+    }
+    if (snapshot.kind === 'sketch' && sketch.current?.soundscape) {
+      void playSketch('focus', [110, 164.81, 220], undefined, focusSoundscapeSpec(liveSoundscapeInput));
+      return;
     }
     if (snapshot.kind === 'sketch') {
       void playSketch(
@@ -1093,13 +1274,22 @@ export function PersistentListeningProvider({
       displayed={displayed}
       focusSession={focusDisplayed ? focusSession : null}
       focusRemainingLabel={focusSession
-        ? formatFocusClock(focusRemainingMs(focusSession, new Date(focusClockMs)))
+        ? focusTimeLabel(focusTimeDisplay, {
+            elapsedMs: focusElapsedMs(focusSession, new Date(focusClockMs)),
+            totalMs: focusDurationMs(focusSession.plan.duration),
+            countdownLabel: formatFocusClock(focusRemainingMs(focusSession, new Date(focusClockMs))),
+          })
         : 'Untimed'}
       onPauseMusic={pause}
       onResumeMusic={resumeMusic}
       onStopMusic={stopAll}
       onVolume={setVolume}
       onLooping={setLooping}
+      // The page cannot set the level of a media file on some phones, but it always sets the level of a sound it
+      // generates itself (the soundscape's master gain), so that control is offered whenever such a sound is playing.
+      volumeAdjustable={volumeAdjustable || snapshot.kind === 'sketch'}
+      focusSoundLabel={focusSoundChoice === 'none' ? null : focusSoundLabel(focusSoundChoice)}
+      onPlayFocusSound={() => { void playFocusSound(); }}
       onPauseFocus={() => { pauseFocusSession('member'); }}
       onResumeFocus={() => { resumeCurrentFocus(); }}
       onStopFocus={() => { stopCurrentFocus(); }}

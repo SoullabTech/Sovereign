@@ -191,7 +191,7 @@ const check = (profile, name, pass, detail = '') => {
         check(profile.name, `door-${door}-selected`, await page.locator('[data-sound-studio-field]').getAttribute('data-sound-studio-door') === door);
       }
       await page.locator('[data-sound-studio-door-button="experience"]').click();
-      await page.locator('[data-sound-studio-work="night-ground-01-guided-arrival-v0.1"] button').click();
+      await page.locator('[data-sound-studio-work="night-ground-family"] button').click(); await page.locator('[data-sound-studio-edition="night-ground-01-guided-arrival-v0.1"]').click();
       await page.locator('[data-sound-studio-immersive="night-ground-01-guided-arrival-v0.1"]').waitFor();
       check(profile.name, 'night-ground-shows-four-passages', await page.locator('[data-sound-studio-immersive="night-ground-01-guided-arrival-v0.1"] li').count() === 4);
 
@@ -274,8 +274,8 @@ const check = (profile, name, pass, detail = '') => {
 
       await page.getByRole('button', { name: 'Sound Studio' }).click();
       await page.locator('[data-sound-studio-field="true"]').waitFor();
-      await page.locator('[data-sound-studio-work="night-ground-01-guided-arrival-v0.1"] button').click();
-      check(profile.name, 'return-rejoins-same-night-ground-session', await page.getByRole('button', { name: 'Pause Night Ground 01' }).isVisible());
+      await page.locator('[data-sound-studio-work="night-ground-family"] button').click(); await page.locator('[data-sound-studio-edition="night-ground-01-guided-arrival-v0.1"]').click();
+      check(profile.name, 'return-rejoins-same-night-ground-session', await page.getByRole('button', { name: 'Pause persistent music' }).isVisible());
       const immersiveWidths = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
       check(profile.name, 'no-horizontal-overflow-in-immersive-mode', immersiveWidths.document <= immersiveWidths.viewport + 1, JSON.stringify(immersiveWidths));
 
