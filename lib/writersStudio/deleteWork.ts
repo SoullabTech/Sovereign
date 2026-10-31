@@ -40,8 +40,15 @@
 
 export type DeleteOutcome =
   | { readonly ok: true }
-  /** Nothing was removed, or not all of it was. The message is member-facing. */
-  | { readonly ok: false; readonly message: string };
+  /** Nothing was removed, or not all of it was. The message is member-facing.
+   *  `removed: true` means the server committed the removal (the writing is gone) but could not yet CONFIRM the whole custody
+   *  ending, so the caller must stop showing the writing AND still show the message: both are true. */
+  | { readonly ok: false; readonly message: string; readonly removed?: boolean };
+
+/** The server committed the removal but could not yet confirm every part of ending custody. The message is member-facing. */
+export class DeletionUnconfirmed extends Error {
+  constructor(message: string) { super(message); this.name = 'DeletionUnconfirmed'; }
+}
 
 export interface DeleteTarget {
   /** The member's declaration, when this card is a declared Work. */
@@ -81,7 +88,24 @@ export async function deleteWork(
      while the response was lost. Absence is the outcome we were seeking. */
   if (res.ok || res.status === 404) return { ok: true };
 
-  return { ok: false, message: await deletionRefusalMessage(res) };
+  const refusal = await deletionRefusal(res);
+  return { ok: false, message: refusal.message, ...(refusal.removed ? { removed: true } : {}) };
+}
+
+async function deletionRefusal(res: Response): Promise<{ message: string; removed: boolean }> {
+  try {
+    const body = (await res.json()) as { error?: unknown; refusal?: unknown; removed?: unknown };
+    return { message: refusalMessageFrom(body), removed: body?.removed === true };
+  } catch {
+    return { message: GENERIC, removed: false };
+  }
+}
+
+/** The same rules as ever: a `refusal` is a classification mapped to copy; an `error` string is already member-directed. */
+function refusalMessageFrom(body: { error?: unknown; refusal?: unknown } | null | undefined): string {
+  if (typeof body?.refusal === 'string') return deletionRefusalCopy(body.refusal);
+  if (typeof body?.error === 'string' && body.error.trim().length > 0) return body.error;
+  return GENERIC;
 }
 
 async function deletionRefusalMessage(res: Response): Promise<string> {

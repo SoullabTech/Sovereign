@@ -326,6 +326,12 @@ export const GOLD_FORBIDDEN = [
 export const MAIA_ACCENT = {
   /** MAIA's speaking voice. Sampled #7A71A0 in 04. */
   voice: '#7A71A0',
+  /**
+   * MAIA's voice as READING TEXT. Same violet hue family as `voice` (hue 250) so she stays separable from the member's
+   * own words (D-019), but light enough to read at body size: `voice` on the navy panel measures about 3.7:1, this about 7.9:1.
+   * Use `voice` for accents and edges, `reading` for sentences the member is meant to read.
+   */
+  reading: '#B4ADD8',
   /** Her panel's chip/inset surface. Sampled #3D2E4D. */
   surface: '#3D2E4D',
   /** Her edge treatment. */

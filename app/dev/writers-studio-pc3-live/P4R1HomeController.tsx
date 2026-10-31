@@ -23,6 +23,7 @@ import {
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival, withoutStudioWork } from '@/app/writers-studio/h1Arrival';
 import { useWriterReleaseCapabilities } from '@/lib/writersStudio/useWriterReleaseCapabilities';
+import { deleteWork, DeletionUnconfirmed } from '@/lib/writersStudio/deleteWork';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -257,6 +258,17 @@ export default function P4R1HomeController() {
     }
   }, [busy, post, declare, refresh]);
 
+  // The author's own permanent deletion of one writing, through the product's governed erase. No optimistic success: the list is
+  // re-read only after the server says it is gone (including "removed, custody not yet confirmed"), and a refusal reaches the
+  // card in the author's own language.
+  const onDeleteWriting = useCallback(async (manuscriptId: string) => {
+    const outcome = await deleteWork({ workId: null, manuscriptId }, (url, init) => apiFetch(url, init));
+    if (outcome.ok) { await refresh().catch(() => undefined); return; }
+    // Removed but not yet confirmed: the writing is gone, so stop listing it, and still tell the author what we could not confirm.
+    if (outcome.removed) { await refresh().catch(() => undefined); throw new DeletionUnconfirmed(outcome.message); }
+    throw new Error(outcome.message);
+  }, [refresh]);
+
   const onAddToWork = useCallback(async (manuscriptId: string, workId: string) => {
     if (busy) return;
     setBusy(true);
@@ -371,6 +383,7 @@ export default function P4R1HomeController() {
       onOpen={open}
       onMakeWork={(manuscriptId, title) => void onMakeWork(manuscriptId, title)}
       onAddToWork={(manuscriptId, workId) => void onAddToWork(manuscriptId, workId)}
+      onDeleteWriting={onDeleteWriting}
       onStartWriting={(workId) => void onStartWriting(workId)}
       onImport={openImport}
       onSources={() => router.push('/writers-studio/sources')}
