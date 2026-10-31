@@ -787,7 +787,9 @@ export function PersistentListeningProvider({
         fileFormat: null,
         message: activeExperience
           ? `${activeExperience.definition.title} · procedural review edition.`
-          : soundscape ? 'A synthesized soundscape built from your Focus choices · it changes as you change them.'
+          : soundscape ? (soundscape.recorded
+            ? 'A soundscape built from your Focus choices, with recorded nature sound · it changes as you change them.'
+            : 'A synthesized soundscape built from your Focus choices · it changes as you change them.')
           : 'Original, locally synthesized sound study · not a commercial recording.',
       });
       return true;
