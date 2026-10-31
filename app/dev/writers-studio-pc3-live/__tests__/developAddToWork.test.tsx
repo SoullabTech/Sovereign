@@ -59,12 +59,23 @@ describe('wiring', () => {
   const view = readFileSync(join(root, 'P4R1DevelopView.tsx'), 'utf8');
   const controller = readFileSync(join(root, 'P4R1DevelopController.tsx'), 'utf8');
   it('the panel replaces the dead-end message ONLY when no Work declares the writing', () => {
-    expect(view).toMatch(/!props\.work && props\.workContextKind === 'none' \? \(\s*<DevelopAddToWork/);
+    expect(view).toContain("const needsWork = !props.work && props.workContextKind === 'none';");
+    expect(view).toMatch(/\{needsWork \? \(\s*<DevelopAddToWork/);
     expect(view).toContain('could not be confirmed'); // unknown/ambiguous keep their honest message
+  });
+  it('is also offered in the MAIA pane for every view where the focused starter is not shown', () => {
+    expect(view).toContain("const focusedAttachShown = needsWork && props.field === 'overview' && developView !== 'full';");
+    expect(view).toMatch(/\{needsWork && !focusedAttachShown \? \(\s*<DevelopAddToWork/);
+    // exactly two mounts: beside the focused Talk button, and in the pane. A third would double the panel somewhere.
+    expect((view.match(/<DevelopAddToWork/g) ?? []).length).toBe(2);
   });
   it('declares through the existing expressions route as the manuscript, then re-reads the Works', () => {
     expect(controller).toContain("'/api/sovereign/living-works/' + workId + '/expressions'");
     expect(controller).toContain("expressionType: 'manuscript'");
     expect(controller).toMatch(/await declareManuscript\(workId\);\s*await reloadWorks\(\);/);
+  });
+  it('never reads the manuscript id through a self-referencing declaration (it would throw on every click)', () => {
+    expect(controller).not.toMatch(/const manuscriptId = [^;]*\bmanuscriptId\b[^;]*;/);
+    expect(controller).toContain('expressionId: targetManuscriptId');
   });
 });
