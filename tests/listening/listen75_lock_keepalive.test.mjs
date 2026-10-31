@@ -3,21 +3,27 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const src = readFileSync(new URL('../../components/listening/PersistentListeningProvider.tsx', import.meta.url), 'utf8');
+const play = src.indexOf('const playSketch');
 
-test('a generated soundscape starts a private silent media element so iOS keeps it playing at screen lock', () => {
-  assert.match(src, /function silentKeepAlive\(\)/);
-  assert.match(src, /el\.loop = true/);
-  assert.match(src, /if \(soundscape && !keepAlive\.current\)/);
-  // started before the first await (the output lease), so it stays inside the member's tap
-  const play = src.indexOf('const playSketch');
-  assert.ok(src.indexOf('const el = silentKeepAlive()', play) < src.indexOf("await acquireAudioOutput('listening-music')", play));
+test('a generated soundscape is carried by a media element so iOS keeps it playing at screen lock', () => {
+  assert.match(src, /createMediaStreamDestination/);
+  assert.match(src, /el\.srcObject = active\.stream\.stream/);
+  assert.match(src, /active\.out\.connect\(active\.stream\)/);
 });
 
-test('every stop path ends the keep-alive element (it is released with the output)', () => {
-  assert.match(src, /const releaseOutput = useCallback\(\(\) => \{\s*if \(keepAlive\.current\) \{ keepAlive\.current\.pause\(\); keepAlive\.current = null; \}/);
+test('the element is unlocked inside the tap, before the first await', () => {
+  assert.ok(src.indexOf('silentKeepAlive()', play) < src.indexOf("await acquireAudioOutput('listening-music')", play));
 });
 
-test('the keep-alive element is private and carries no state handlers', () => {
+test('if the element will not carry the sound, output returns to the direct path instead of going silent', () => {
+  assert.match(src, /active\.out\.connect\(active\.context\.destination\)/);
+});
+
+test('every stop path pauses the element (released with the output); it is kept for later lock-screen Play', () => {
+  assert.match(src, /const releaseOutput = useCallback\(\(\) => \{\s*keepAlive\.current\?\.pause\(\);/);
+});
+
+test('the element is private and carries no state handlers', () => {
   const block = src.slice(src.indexOf('function silentKeepAlive'), src.indexOf('const recordedCache'));
   assert.ok(!/onplay|onpause|onended|addEventListener/i.test(block));
 });

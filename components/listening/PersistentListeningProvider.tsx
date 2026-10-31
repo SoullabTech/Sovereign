@@ -96,6 +96,9 @@ type Sketch = {
   frequencies: number[];
   /** Present for a Focus soundscape: parametric synthesis that updates live from the member's choices. */
   soundscape?: SoundscapeHandle;
+  /** Soundscape output bus, and the stream tap that lets a media element carry the sound at screen lock. */
+  out?: GainNode;
+  stream?: MediaStreamAudioDestinationNode;
 };
 
 export type ListeningTransport = {
@@ -278,10 +281,14 @@ function silentKeepAlive(): HTMLAudioElement | null {
     view.setUint16(34, 16, true); tag(36, 'data'); view.setUint32(40, samples * 2, true);
     silentWavURL = URL.createObjectURL(new Blob([bytes], { type: 'audio/wav' }));
   }
-  const el = new Audio(silentWavURL);
-  el.loop = true;
+  const el = new Audio();
   el.setAttribute('playsinline', '');
+  el.loop = true;
   return el;
+}
+function silentUrl(): string {
+  silentKeepAlive(); // builds the shared silent clip on first use
+  return silentWavURL ?? '';
 }
 
 const recordedCache = new Map<string, Promise<AudioBuffer | null>>();
@@ -304,10 +311,14 @@ function newSoundscapeSketch(spec: SoundscapeSpec, level: number): Sketch {
     (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext!;
   if (!AudioCtor) throw new Error('This browser cannot open an AudioContext.');
   const context = new AudioCtor();
-  const handle = buildSoundscape(context, context.destination, spec, level, id => loadRecordedLoop(context, id));
+  const out = context.createGain();
+  out.connect(context.destination);
+  const stream = typeof context.createMediaStreamDestination === 'function' ? context.createMediaStreamDestination() : undefined;
+  const handle = buildSoundscape(context, out, spec, level, id => loadRecordedLoop(context, id));
   return {
     context, oscillators: handle.oscillators, master: handle.master, voices: handle.voices, filter: handle.filter,
     movement: handle.movement, movementDepth: handle.movementDepth, mood: 'focus', frequencies: [spec.root], soundscape: handle,
+    out, stream,
   };
 }
 
@@ -371,7 +382,7 @@ export function PersistentListeningProvider({
     startedAt: number | null;
   } | null>(null);
   const releaseOutput = useCallback(() => {
-    if (keepAlive.current) { keepAlive.current.pause(); keepAlive.current = null; }
+    keepAlive.current?.pause();
     outputLease.current?.release();
     outputLease.current = null;
   }, []);
@@ -754,14 +765,20 @@ export function PersistentListeningProvider({
     if (outputLease.current) pause();
     // Started here, before any await: iOS only lets a media element begin inside the member's tap, and the output
     // lease and context resume below both await. Every refusal path below releases it.
-    if (soundscape && !keepAlive.current) {
-      const el = silentKeepAlive();
-      if (el) { keepAlive.current = el; void el.play().catch(() => { if (keepAlive.current === el) keepAlive.current = null; }); }
+    if (soundscape) {
+      // One element for the life of the room: once a tap has let it play, iOS lets it play again later, which a
+      // lock-screen Play needs. It starts on silence, then carries the soundscape once the sketch is running.
+      const el = keepAlive.current ?? silentKeepAlive();
+      if (el) {
+        keepAlive.current = el;
+        if (!el.srcObject && !el.src) el.src = silentUrl();
+        void el.play().catch(() => undefined);
+      }
     }
     const generation = ++epoch.current;
     const lease = await acquireAudioOutput('listening-music');
     if (!lease || generation !== epoch.current || isMaiaSpeechActive()) {
-      if (keepAlive.current) { keepAlive.current.pause(); keepAlive.current = null; }
+      keepAlive.current?.pause();
       lease?.release();
       if (generation === epoch.current) {
         if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
@@ -798,6 +815,19 @@ export function PersistentListeningProvider({
         releaseOutput();
         if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
         return false;
+      }
+      if (soundscape && active.out && active.stream && keepAlive.current) {
+        const el = keepAlive.current;
+        try {
+          el.srcObject = active.stream.stream;
+          el.loop = false;
+          await el.play();
+          active.out.disconnect();
+          active.out.connect(active.stream);
+        } catch {
+          // The element would not carry it: stay on the direct output rather than go silent.
+          try { active.out.disconnect(); active.out.connect(active.context.destination); } catch { /* closed */ }
+        }
       }
       claimFocus();
       const activeExperience = experience.current;
