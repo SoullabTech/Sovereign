@@ -34,6 +34,7 @@ import {
 } from '@/lib/writersStudio/sourceVerification';
 import P4R1WriterUnderstanding from './P4R1WriterUnderstanding';
 import { DevelopAddToWork } from './DevelopAddToWork';
+import { FOCUSED_INTENTS, guidedIntents } from './developStarterSets';
 import { PlaceStubNotice } from './PlaceStubNotice';
 import { findLongerSibling } from './stubSibling';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
@@ -63,6 +64,8 @@ export const DEVELOP_FIELDS = [
 export type DevelopField = (typeof DEVELOP_FIELDS)[number];
 
 export const DEVELOP_INTENTS = [
+  'exploring',
+  'maia-thinks',
   'feels-off',
   'shape',
   'thread',
@@ -866,6 +869,22 @@ const INTENT_STARTERS: ReadonlyArray<{
   reflection: string;
   proposal: string;
 }> = [
+  {
+    key: 'exploring',
+    label: 'Just exploring',
+    detail: 'No goal yet. Wander through this chapter with MAIA and see what stands out.',
+    field: 'development',
+    reflection: 'You do not need a reason or a question to begin.',
+    proposal: 'We can simply explore. Tell me what you notice, or ask what stands out to me, and I will stay with the writing rather than steer it.',
+  },
+  {
+    key: 'maia-thinks',
+    label: 'What does MAIA think?',
+    detail: 'Ask for her honest read of this chapter: what she notices and what may be worth a closer look.',
+    field: 'development',
+    reflection: 'You would like to hear how this reads to someone paying close attention.',
+    proposal: 'I can start with what I have already read about this part of the Work and show you one concrete place it comes from. It is a reading for you to react to, not a verdict.',
+  },
   {
     key: 'feels-off',
     label: 'Something feels off',
@@ -1888,16 +1907,9 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       : props.workTitle || 'your Work';
   // Asked, never assumed: a short section sharing its name with a much longer one is probably that chapter's notes.
   const stubSibling = hasExplicitPlace && railSelectionId ? findLongerSibling(props.sections, railSelectionId) : null;
-  const focusedQuestions: readonly DevelopIntentKey[] = (
-    hasExplicitPlace
-      ? ['chapter-role', 'feels-off', 'voice']
-      : ['feels-off', 'shape', 'help-look']
-  );
-  const guidedQuestions: readonly DevelopIntentKey[] = (
-    hasExplicitPlace
-      ? ['recurrence', 'thread', 'reader']
-      : ['thread', 'voice', 'reader']
-  );
+  // Equally warm invitations first; the problem-framed starters wait one step further in (developStarterSets.ts).
+  const focusedQuestions: readonly DevelopIntentKey[] = FOCUSED_INTENTS;
+  const guidedQuestions: readonly DevelopIntentKey[] = guidedIntents(hasExplicitPlace);
   const title = props.field === 'overview'
     ? developView === 'full' ? 'See more of your Work' : 'Explore your Work'
     : LABEL[props.field];
