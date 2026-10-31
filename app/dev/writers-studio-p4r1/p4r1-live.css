@@ -4963,3 +4963,37 @@
   border:1px solid var(--fr-line,#8887);border-radius:7px;
   padding:8px 10px;min-height:36px;font-size:12px;cursor:pointer;
 }
+
+/* Develop: the way out of "this writing is not part of a Work yet" (DevelopAddToWork). */
+.p4r1-root .p4r1-develop-attach {margin:14px 0 4px;padding:16px 18px;border:1px solid var(--fr-line,#8885);border-radius:12px;max-width:60ch;}
+.p4r1-root .p4r1-develop-attach h3 {font-size:16px;font-weight:600;margin:0 0 6px;}
+.p4r1-root .p4r1-develop-attach p {margin:0 0 12px;line-height:1.6;font-size:14px;opacity:.85;}
+.p4r1-root .p4r1-develop-attach-actions {display:flex;flex-wrap:wrap;gap:10px;}
+.p4r1-root .p4r1-develop-attach button {font:inherit;font-size:14px;min-height:44px;padding:10px 16px;border-radius:9px;border:1px solid var(--fr-line,#8885);background:transparent;color:inherit;cursor:pointer;}
+.p4r1-root .p4r1-develop-attach button:disabled {opacity:.5;cursor:not-allowed;}
+.p4r1-root .p4r1-develop-attach-make {display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin-top:12px;}
+.p4r1-root .p4r1-develop-attach-make label {display:flex;flex-direction:column;gap:4px;font-size:13px;flex:1 1 220px;}
+.p4r1-root .p4r1-develop-attach-make input {font:inherit;font-size:15px;min-height:44px;padding:8px 12px;border-radius:9px;border:1px solid var(--fr-line,#8885);background:transparent;color:inherit;}
+.p4r1-root .p4r1-develop-attach-list {list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.p4r1-root .p4r1-develop-attach-list button {width:100%;text-align:left;}
+.p4r1-root .p4r1-develop-attach-error {margin:12px 0 0;color:#f0b9a4;font-size:13px;}
+
+/* Develop: the short-section notice (PlaceStubNotice). */
+.p4r1-root .p4r1-develop-stub {margin:12px 0 4px;padding:14px 16px;border:1px solid var(--fr-line,#8885);border-radius:12px;max-width:60ch;}
+.p4r1-root .p4r1-develop-stub p {margin:0 0 10px;line-height:1.65;font-size:15px;}
+.p4r1-root .p4r1-develop-stub-actions {display:flex;flex-wrap:wrap;gap:10px;}
+.p4r1-root .p4r1-develop-stub button {font:inherit;font-size:14px;min-height:44px;padding:10px 16px;border-radius:9px;border:1px solid var(--fr-line,#8885);background:transparent;color:inherit;cursor:pointer;}
+
+/* Home: permanent deletion of one writing (WritingDeleteConfirm). */
+.p4r1-root .p4r1-home-delete {padding:6px 2px;flex:1 1 100%;width:100%;min-width:0;box-sizing:border-box;}
+.p4r1-root .p4r1-home-delete-notice {margin:0 0 14px;padding:12px 14px;border:1px solid #d98a7a66;border-radius:10px;font-size:14px;line-height:1.6;color:#f0d3ca;}
+.p4r1-root .p4r1-home-delete-notice button {font:inherit;font-size:13px;margin-left:8px;padding:4px 10px;border-radius:7px;border:1px solid var(--fr-line,#8885);background:transparent;color:inherit;cursor:pointer;}
+.p4r1-root .p4r1-home-delete h3 {font-size:18px;font-weight:600;margin:0 0 8px;line-height:1.3;}
+.p4r1-root .p4r1-home-delete p {margin:0 0 14px;line-height:1.6;font-size:14px;opacity:.88;max-width:56ch;}
+.p4r1-root .p4r1-home-delete-actions {display:flex;flex-wrap:wrap;gap:10px;}
+.p4r1-root .p4r1-home-delete button {font:inherit;font-size:14px;min-height:44px;padding:10px 16px;border-radius:9px;border:1px solid var(--fr-line,#8885);background:transparent;color:inherit;cursor:pointer;}
+.p4r1-root .p4r1-home-delete-confirm {border-color:#d98a7a;color:#f3c1b5;}
+.p4r1-root .p4r1-home-delete button:disabled {opacity:.55;cursor:not-allowed;}
+.p4r1-root .p4r1-home-delete-error {margin:12px 0 0;color:#f0b9a4;font-size:13px;}
+.p4r1-root .p4r1-home-delete-open {opacity:.75;}
+.p4r1-root .p4r1-home-delete-open:hover {opacity:1;}

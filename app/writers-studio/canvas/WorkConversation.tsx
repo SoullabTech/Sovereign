@@ -503,7 +503,12 @@ function ScopedWorkConversation({
             </StudioText>
             <StudioText
               role="maiaReading"
-              style={t.speaker === 'maia' ? { color: MAIA_ACCENT.voice } : { color: INK.secondary }}
+              style={{
+                color: t.speaker === 'maia' ? MAIA_ACCENT.reading : INK.secondary,
+                // Readable at conversation distance: body-size text, open leading, a comfortable line length, and the
+                // author's own line breaks kept, so a reply that has paragraphs is not squashed into one block.
+                fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap',
+              }}
             >
               {t.body}
             </StudioText>

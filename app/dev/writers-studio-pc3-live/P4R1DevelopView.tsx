@@ -34,6 +34,10 @@ import {
   verificationStanding,
 } from '@/lib/writersStudio/sourceVerification';
 import P4R1WriterUnderstanding from './P4R1WriterUnderstanding';
+import { DevelopAddToWork } from './DevelopAddToWork';
+import { FOCUSED_INTENTS, guidedIntents } from './developStarterSets';
+import { PlaceStubNotice } from './PlaceStubNotice';
+import { findLongerSibling } from './stubSibling';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import {
   DEFAULT_WORKING_STYLE,
@@ -61,6 +65,8 @@ export const DEVELOP_FIELDS = [
 export type DevelopField = (typeof DEVELOP_FIELDS)[number];
 
 export const DEVELOP_INTENTS = [
+  'exploring',
+  'maia-thinks',
   'feels-off',
   'shape',
   'thread',
@@ -152,6 +158,12 @@ export type DevelopScopeChoice =
 export interface P4R1DevelopViewProps {
   manuscriptId: string;
   work: LivingWork | null;
+  workContextKind: 'unknown' | 'none' | 'work' | 'ambiguous';
+  allWorks: readonly LivingWork[];
+  declaring: boolean;
+  declareError: string | null;
+  onAddToWork: (workId: string) => void;
+  onMakeWork: (title: string) => void;
   workTitle: string;
   appearance: Appearance;
   field: DevelopField;
@@ -971,6 +983,22 @@ const INTENT_STARTERS: ReadonlyArray<{
   reflection: string;
   proposal: string;
 }> = [
+  {
+    key: 'exploring',
+    label: 'Just exploring',
+    detail: 'No goal yet. Wander through this chapter with MAIA and see what stands out.',
+    field: 'development',
+    reflection: 'You do not need a reason or a question to begin.',
+    proposal: 'We can simply explore. Tell me what you notice, or ask what stands out to me, and I will stay with the writing rather than steer it.',
+  },
+  {
+    key: 'maia-thinks',
+    label: 'What does MAIA think?',
+    detail: 'Ask for her honest read of this chapter: what she notices and what may be worth a closer look.',
+    field: 'development',
+    reflection: 'You would like to hear how this reads to someone paying close attention.',
+    proposal: 'I can start with what I have already read about this part of the Work and show you one concrete place it comes from. It is a reading for you to react to, not a verdict.',
+  },
   {
     key: 'feels-off',
     label: 'Something feels off',
@@ -2057,6 +2085,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       ? previous : { scope: workConversationScope, open: false, starter: '' });
   }, [workConversationScope]);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
+  const [stubDismissedFor, setStubDismissedFor] = useState<string | null>(null);
 
   const navigateMode: P4R1DevelopViewProps['onMode'] = (mode) => {
     if (requestConversationDeparture()) props.onMode(mode);
@@ -2142,6 +2171,10 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     [props.sections],
   );
   const declaredState = props.work?.manuscriptState ?? null;
+  // No Work declares this writing: the author is offered the way out wherever she is in Develop, not only beside the
+  // focused starter. The focused view carries it beside its own Talk button; every other view carries it in the MAIA pane.
+  const needsWork = !props.work && props.workContextKind === 'none';
+  const focusedAttachShown = needsWork && props.field === 'overview' && developView !== 'full';
   const selectedMovement = props.developmentalOrientation?.movements.find(
     (movement) => movement.id === props.selectedDevelopmentalMovementId,
   ) ?? null;
@@ -2291,16 +2324,11 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     : props.scope.kind === 'section' || props.scope.kind === 'chapter'
       ? props.scope.label
       : props.workTitle || 'your Work';
-  const focusedQuestions: readonly DevelopIntentKey[] = (
-    hasExplicitPlace
-      ? ['chapter-role', 'feels-off', 'voice']
-      : ['feels-off', 'shape', 'help-look']
-  );
-  const guidedQuestions: readonly DevelopIntentKey[] = (
-    hasExplicitPlace
-      ? ['recurrence', 'thread', 'reader']
-      : ['thread', 'voice', 'reader']
-  );
+  // Asked, never assumed: a short section sharing its name with a much longer one is probably that chapter's notes.
+  const stubSibling = hasExplicitPlace && railSelectionId ? findLongerSibling(props.sections, railSelectionId) : null;
+  // Equally warm invitations first; the problem-framed starters wait one step further in (developStarterSets.ts).
+  const focusedQuestions: readonly DevelopIntentKey[] = FOCUSED_INTENTS;
+  const guidedQuestions: readonly DevelopIntentKey[] = guidedIntents(hasExplicitPlace);
   const title = props.field === 'overview'
     ? developView === 'full' ? 'See more of your Work' : 'Explore your Work'
     : LABEL[props.field];
@@ -2377,6 +2405,13 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 ? 'We can stay with these pages. No need to choose an editorial method first.'
                 : 'You can start with a feeling or a question. You do not need to know the writing terminology.'}
             </p>
+            {stubSibling && stubDismissedFor !== stubSibling.selected.id ? (
+              <PlaceStubNotice
+                found={stubSibling}
+                onOpenLonger={() => selectManuscriptLocus(stubSibling.longer.id)}
+                onStay={() => setStubDismissedFor(stubSibling.selected.id)}
+              />
+            ) : null}
             <div className="p4r1-develop-one-action">
               <button
                 type="button"
@@ -2390,7 +2425,15 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               >
                 Talk with MAIA about this
               </button>
-              {!props.work ? <p>A Work connection for this manuscript could not be confirmed. Your writing remains available in Write.</p> : null}
+              {needsWork ? (
+                <DevelopAddToWork
+                  works={props.allWorks}
+                  busy={props.declaring}
+                  error={props.declareError}
+                  onAddToWork={props.onAddToWork}
+                  onMakeWork={props.onMakeWork}
+                />
+              ) : !props.work ? <p>A Work connection for this manuscript could not be confirmed. Your writing remains available in Write.</p> : null}
             </div>
             <div className="p4r1-develop-three-questions" aria-label="Three ways to begin">
               {focusedQuestions.map((key) => {
@@ -2988,6 +3031,15 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody p4r1-develop-maia">
+        {needsWork && !focusedAttachShown ? (
+          <DevelopAddToWork
+            works={props.allWorks}
+            busy={props.declaring}
+            error={props.declareError}
+            onAddToWork={props.onAddToWork}
+            onMakeWork={props.onMakeWork}
+          />
+        ) : null}
         {props.preparing ? (
           <section className="p4r1-develop-maia-quiet" role="status" aria-live="polite">
             <h3>Preparing your writing for Develop…</h3>

@@ -71,7 +71,31 @@ export function isSameOriginAuthMutation(request: AuthRequestLike): boolean {
 
   const expected = requestOrigin(request);
   if (expected && supplied === expected) return true;
-  return configuredOrigins().has(supplied);
+  const allowed = configuredOrigins();
+  if (allowed.has(supplied)) return true;
+  warnIfOriginsUnconfigured(allowed.size, supplied, expected);
+  return false;
+}
+
+let warnedUnconfigured = false;
+
+/**
+ * Behind a reverse proxy the framework's own origin is the container address,
+ * so a correct browser request is refused unless AUTH_ALLOWED_ORIGINS names the
+ * public origin. Say so once, naming only origins (never headers or bodies).
+ */
+function warnIfOriginsUnconfigured(configuredCount: number, supplied: string, expected: string | null): void {
+  if (configuredCount > 0 || warnedUnconfigured || process.env.NODE_ENV !== 'production') return;
+  warnedUnconfigured = true;
+  console.warn(
+    `[auth] same-origin check refused Origin ${supplied} (expected ${expected ?? 'unknown'}) and AUTH_ALLOWED_ORIGINS is unset. ` +
+      'Behind a proxy, set AUTH_ALLOWED_ORIGINS to the public origin(s), comma-separated.',
+  );
+}
+
+/** Test seam: reset the once-only warning latch. */
+export function resetOriginWarningForTests(): void {
+  warnedUnconfigured = false;
 }
 
 export function requireSameOriginAuthMutation(request: AuthRequestLike): void {
