@@ -36,15 +36,19 @@ A verdict of REVISE or BLOCKED is lawful and must never be converted into approv
 
 ## Documented rollback procedure (judge it, do not trust it)
 
-Revised after an earlier independent review of this same migration returned REVISE on the previous rollback text (the migration itself was judged compatible). The changes are listed so you can verify each independently; do not assume they are correct.
+Revised twice after earlier independent reviews of this same migration returned REVISE on the rollback text only (the migration itself was judged compatible each time). Verify each step independently; do not assume it is correct.
 
-1. **Pre-check the rollback target.** `docker inspect maia-sovereign:previous` must report `GIT_COMMIT` equal to `a9a23e1347444f631111258e7d653674e6d21aa5`. If it reports anything else, stop: the rollback would land on a reader that was not reviewed, and a new review is required.
-2. Run `scripts/deploy-production.sh rollback` (image swap only).
-3. **After the swap succeeds, run the cleanup** (the old reader cannot write `pro-studio`, so this closes the window for good):
-   `UPDATE house_member_preferences SET center_ids = NULLIF(array_remove(center_ids,'pro-studio'), '{}'::text[]), shortcut_ids = array_remove(shortcut_ids,'pro-studio'), revision = revision + 1 WHERE 'pro-studio' = ANY(shortcut_ids) OR 'pro-studio' = ANY(center_ids);`
-   An emptied Center becomes NULL, which the old reader reads as "use the current House default".
-4. **Verify zero rows remain:** `SELECT count(*) FROM house_member_preferences WHERE 'pro-studio' = ANY(shortcut_ids) OR 'pro-studio' = ANY(center_ids);` must return 0.
-5. The widened constraints stay in place: the old reader works against them unchanged. **There is no re-tightening step.** Narrowing the constraints again would need its own reviewed migration and ledger handling and is out of scope.
+**Operator-visible consequence, stated up front:** from the moment the reader is swapped back until step 4 commits, any member whose saved preferences contain \`pro-studio\` will see \`/house\` and \`/home\` fail on the server and \`GET /api/house/preferences\` return 400. Other members are unaffected. Steps 3 to 5 therefore run immediately after the swap, in the same operator session.
+
+1. **Pre-check the rollback target** (informational; \`rollback\` takes the deploy lock itself and the post-swap identity check in step 3 is the authoritative one):
+   \`docker image inspect maia-sovereign:previous --format '{{range .Config.Env}}{{println .}}{{end}}' | sed -n 's/^GIT_COMMIT=//p'\` must print \`a9a23e1347444f631111258e7d653674e6d21aa5\`. If it prints anything else, stop and get a new review. Record the image Id (\`docker image inspect maia-sovereign:previous --format '{{.Id}}'\`).
+2. Run \`scripts/deploy-production.sh rollback\` (image swap only).
+3. **Whatever the exit status of step 2**, run \`docker exec maia-sovereign printenv GIT_COMMIT\`. \`rollback\` retags and recreates the reader before it verifies, so a non-zero exit can still leave the old reader live. If it prints \`a9a23e1347444f631111258e7d653674e6d21aa5\`, continue to step 4 even if step 2 exited non-zero. If it prints anything else, stop: cleanup is not safe to run and the situation needs a human decision.
+4. **Snapshot, then clean up.** First save the affected rows so the members' placement can be restored on a later roll-forward: \`SELECT member_id, center_ids, shortcut_ids, revision FROM house_member_preferences WHERE 'pro-studio' = ANY(shortcut_ids) OR 'pro-studio' = ANY(center_ids);\` written to a file. Then run:
+   \`UPDATE house_member_preferences SET center_ids = NULLIF(array_remove(center_ids,'pro-studio'), '{}'::text[]), shortcut_ids = array_remove(shortcut_ids,'pro-studio'), revision = revision + 1, updated_at = NOW() WHERE 'pro-studio' = ANY(shortcut_ids) OR 'pro-studio' = ANY(center_ids);\`
+   An emptied Center becomes NULL, which the old reader reads as "use the current House default". The old reader cannot write \`pro-studio\`, so this closes the window for good. The loss of those members' Pro Studio placement is accepted; the snapshot allows restoring it.
+5. **Verify zero rows remain:** \`SELECT count(*) FROM house_member_preferences WHERE 'pro-studio' = ANY(shortcut_ids) OR 'pro-studio' = ANY(center_ids);\` must return 0.
+6. The widened constraints stay in place: the old reader works against them unchanged. **There is no re-tightening step.** Narrowing them again would need its own reviewed migration and ledger handling and is out of scope.
 
 ## Minimum physical Reads
 
