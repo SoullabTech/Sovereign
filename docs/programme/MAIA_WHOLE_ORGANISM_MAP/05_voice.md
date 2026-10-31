@@ -148,3 +148,21 @@ Files read (line-cited above): `components/OracleConversation.tsx:423, :646, :87
 Records cited: `docs/canon/MAIA_CONVERSATIONAL_INTELLIGENCE_NON_DEGRADATION.md:92-160, :218-301` · `docs/ops/PRODUCTION_LOG_FINDINGS_2026-08-27.md:34-62` · `docs/ops/MAIA-D01_NATIVE_VOICE_DESKTOP_WITNESS_2026-08-25.md:16, :101, :135, :208-212, :254, :277, :358-365` · `docs/adr/012-openai-tts-production-status.md:1-4` · `docs/architecture/VOICE_CANONICAL_CONVERGENCE_02_EXIT_MAP.md` (status line, 2026-08-31) · `tests/constitutional/refusal-registry/refusal-15-tts-provider-qualification-guard.ts:1-20` · `docs/research/human-experience/SYNTHESIS_v0.2_2026-09-06.md §1.6, §2.6, §3 (P9, P12), §6 (E2)`.
 
 WALKED is claimed only for the 2026-08-27 production-log observation of OpenAI TTS on the stream route (`PRODUCTION_LOG_FINDINGS_2026-08-27.md`), which predates the 2026-08-31 convergence. Everything on the canonical path is READ or UNKNOWN. No runtime, database or production access was used.
+
+
+---
+
+## 9 · Addendum 2026-10-30 — egress parity (PROPOSED; not adjudicated)
+*Added by the external-science input stream (founder ruling R-1) while checking consciousness-attribution language and the delivery seams for an authored nature statement. Base: `origin/clean-main-no-secrets` @ `048ffd7d6`. **READ only; nothing WALKED; nothing here changes MAIA.** The Phase 1 stop rule applies: a defect found here creates no permission to repair it. Scores are **proposals; the founder ranks.***
+
+**Contradicts / notes**
+
+| Finding | Path | Violates |
+|---|---|---|
+| Egress is **two different stacks**: voice = `guardVoiceChunk`/`advanceVoiceGuardTail` + `enforceMaiaIdentity` (per chunk and on the assembled reply); text = `finalizeMemberFacingText` (sanitize → PRESENCE constraints → identity-predicate guard). No call to `finalizeMemberFacingText` found in the voice route | `app/api/voice/stream-conversation/route.ts:1352, :1484`; `lib/sovereign/maiaService.ts:3028-3057` | Deep-Intelligence Gate (voice may not have a different mind) |
+
+**Unknown:** whether the voice path reaches the identity-predicate guard by another route; how the convergence point named in `MAIA_CONVERSATIONAL_INTELLIGENCE_NON_DEGRADATION.md` ("The convergence point, named", line 92) relates to egress (that section was **not read**).
+
+| Gap | Principle/AP | Human impact (1–5) | Architectural leverage (1–5) | Risk (1–5) | Evidence state | Confidence | Smallest intervention |
+|---|---|---|---|---|---|---|---|
+| G3 Text and voice end in different egress filters | Deep-Intelligence Gate | 4 | 4 | 2 | observed (code) | medium | Read-only: diff the two stacks' refusal sets against one list of prohibited properties; **no edit** |

@@ -133,3 +133,24 @@ Files read (line-cited above): `lib/voice/conductor.ts` (full) · `app/api/oracl
 Records cited: `docs/programme/CMT-01_PARTICIPATION_DISPOSITION_CONTRACT.md:1-58` · `docs/programme/MAIA_CANONICAL_TURN_CURRENT_STATE_CENSUS.md:170-180, :352, :507-513` · `docs/architecture/CLARIFY_ENGAGEMENT_SHAPE_2026-05-25.md:9-40, :144-189` · `docs/research/human-experience/SYNTHESIS_v0.2_2026-09-06.md §1.2, §2.4, §2.7, §3, §4, §6` · `docs/research/human-experience/anti-patterns/ANTI_PATTERNS_v0.1.md:13-64` · `docs/research/human-experience/principles/PROVISIONAL_PRINCIPLES_v0.1.md:210-218` · migration `database/migrations/20260115000009_socratic_validator_events.sql` (name only).
 
 No runtime, database or production access was used. WALKED status is claimed for nothing on this page.
+
+
+---
+
+## 9 · Addendum 2026-10-30 — identity guard and relational stance (check against §0 before accepting; some of this may duplicate) (PROPOSED; not adjudicated)
+*Added by the external-science input stream (founder ruling R-1) while checking consciousness-attribution language and the delivery seams for an authored nature statement. Base: `origin/clean-main-no-secrets` @ `048ffd7d6`. **READ only; nothing WALKED; nothing here changes MAIA.** The Phase 1 stop rule applies: a defect found here creates no permission to repair it. Scores are **proposals; the founder ranks.***
+
+**Contradicts / notes**
+
+| Finding | Path | Violates |
+|---|---|---|
+| `enforceMaiaIdentity` replaces the **entire** reply with a fixed line when any breach pattern matches (e.g. "I am an AI assistant", "I'm Claude", Anthropic attributions); it can swallow a truthful answer to "are you an AI?" | `lib/maia/identityGuard.ts` (`BREACH_FALLBACK`, `enforceMaiaIdentity`) | Oath; Invariant 5 (honesty about type) |
+| On a breach the guard logs the **first 100 characters of the response** | `identityGuard.ts` (`console.warn … breachContent`) | #1819/#1975 response-sink hold (privacy) |
+
+**Adds (verify against §0):** relational stance is governed by `lib/consciousness/ModeStanceCharter.ts` (default stance WITNESS; stance changes require consent), read by the voice route (`relationalStance: guidance.posture`, `stream-conversation/route.ts:1590`). The header of `lib/voice/conductor.ts` quotes Invariant 8 ("Only the Conductor decides") though the file implements voice-intent routing — consistent with §0's "Conductor is not one module."
+
+**Unknown:** whether Invariant 8's single enforcement point exists as one module, or is distributed by design — needs an owner statement.
+
+| Gap | Principle/AP | Human impact (1–5) | Architectural leverage (1–5) | Risk (1–5) | Evidence state | Confidence | Smallest intervention |
+|---|---|---|---|---|---|---|---|
+| G2 Identity guard can swallow a truthful reply; logs response text | Oath, Inv 5, sink hold | 3 | 3 | 2 | observed (code) | medium | Read-only: enumerate the guard's patterns against a list of plausible truthful answers; **no edit** |

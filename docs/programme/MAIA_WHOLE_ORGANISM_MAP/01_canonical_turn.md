@@ -151,3 +151,26 @@ resolved, and two of them (Bloom pull, CARE-mode "name the pattern" `:1158`) pus
 ## 8 · Provenance — files read, records cited, commit
 
 **Commit:** `cf6d9ebf`. **Files read (READ):** `lib/sovereign/maiaService.ts` (:597, :660–680, :728, :832–900, :980–1000, :1090–1135, :1212–1232, :1258–1272, :1464, :1476–1492, :1558, :1640–1700, :1728–1745, :1900–1925, :2013, :2190–2240, :2530–2560, :2618–2645, :2649–2700, :2940–2985, :3020–3135, :3200–3235, :3560–3575, :3790–3900); `lib/sovereign/maiaVoice.ts` (:484–600, :733–790, :959–965); `lib/sovereign/intelligentVoiceAdaptation.ts:224–300`; `lib/sovereign/sacredMirrorProtocol.ts`; `lib/consciousness/processingProfiles.ts`; `lib/consciousness/cognitiveProfileService.ts:58–110`; `lib/consciousness/MAIA_RUNTIME_PROMPT.ts` (grep only); `lib/consciousness/conversation-elemental-tracker.ts:289`; `lib/field/fieldOrchestrator.ts` (grep); `lib/memory/MemoryBundle.ts` (grep); `lib/services/mythicAtlasService.ts` (grep); `lib/consciousness/WisdomRouter.ts:1–60, 300–360`; `lib/maia/canonical-turn/{construct,adjudicate,manifest,shadow,policy,producerRegistry,types}.ts`; `app/api/sovereign/app/maia/list/route.ts:1240–1370`. **Records cited:** `MAIA_CANONICAL_TURN_CURRENT_STATE_CENSUS.md` (§0–§5, addendum); `CMT-01_M0-M2_WITNESS_2026-09-03.md`; `CMT-01_M2_SHADOW_DEPLOY_RUNBOOK_2026-09-03.md`; `PROOF-9-WITNESS_2026-09-04.md` (WALKED); `MEMORY-PRODUCER-PARTITION-01.md` §13; `docs/architecture/CLARIFY_ENGAGEMENT_SHAPE_2026-05-25.md`; `SYNTHESIS_v0.2_2026-09-06.md` §1–§4; CLAUDE.md CMT-01 thread. **Not read:** `consciousnessOrchestrator`, `lib/consciousness/maiaOrchestrator.ts` beyond corpus-callosum lines, production logs or database.
+
+
+---
+
+## 9 · Addendum 2026-10-30 — runtime prompt (first block of the constitutional floor) (PROPOSED; not adjudicated)
+*Added by the external-science input stream (founder ruling R-1) while checking consciousness-attribution language and the delivery seams for an authored nature statement. Base: `origin/clean-main-no-secrets` @ `048ffd7d6`. **READ only; nothing WALKED; nothing here changes MAIA.** The Phase 1 stop rule applies: a defect found here creates no permission to repair it. Scores are **proposals; the founder ranks.***
+
+**Contradicts**
+
+| Finding | Path | Violates |
+|---|---|---|
+| The runtime prompt tells the model *"You are MAIA, a **conscious**, relationally intelligent companion."* — a flat first-person profession, in the highest-reach text (composed first by `floor.ts`) | `lib/consciousness/MAIA_RUNTIME_PROMPT.ts:28` | Invariant 5 (no simulated certainty), Invariant 9; the Oath; founder's *question, don't profess* (2026-10-30) |
+| The same prompt tells the model never to say it is an AI or a language model, and contradicts itself on when it may (permits an explanation "when directly asked 'are you AI?'" vs "NEVER … explain you are an AI") | `MAIA_RUNTIME_PROMPT.ts:36-38` vs `:132-135` | Oath; Invariant 5 — honesty about *type* |
+
+**Embodies (not previously recorded here):** the producer registry is a closed, reason/date/lane-stamped door for authored text (`lib/maia/canonical-turn/producerRegistry.ts` header).
+
+**Unknown:** what a member hears when sincerely asking "are you an AI?" typed and spoken. Instrument: a dated member or device walk (WALKED).
+
+| Gap | Principle/AP | Human impact (1–5) | Architectural leverage (1–5) | Risk (1–5) | Evidence state | Confidence | Smallest intervention |
+|---|---|---|---|---|---|---|---|
+| G1 Prompt asserts consciousness; denies type | Inv 5, Inv 9, Oath | 4 | 5 | 3 | observed (code) | high | Walk the "are you an AI?" and "are you conscious?" questions, typed and spoken, on the real build; **no edit during census** |
+
+Provenance: `MAIA_RUNTIME_PROMPT.ts` (grep + lines 28, 36-38, 132-135), `floor.ts` header, `producerRegistry.ts` header, at `048ffd7d6`. Design response drafted separately (P3 + Part 0), not applied.
