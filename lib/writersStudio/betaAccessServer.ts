@@ -4,7 +4,10 @@ import { query } from '@/lib/db/postgres';
  * SMALL-BETA-01 / B4 — server-side cohort membership.
  *
  * A query flag is presentation intent, never entitlement. The pilot consists of
- * active, member-linked founder-ops beta testers. Founder/CTO may enter for
+ * active, member-linked founder-ops beta testers who are ALSO explicitly marked
+ * for the Writer's Studio pilot (ops_contacts.metadata.writers_studio_beta = true).
+ * Being a beta tester for another lane is not Writer's Studio admission; an
+ * unmarked contact fails closed. Founder/CTO may enter for
  * witness/support without being represented as a beta tester.
  */
 export type WritersStudioBetaAccess =
@@ -20,6 +23,7 @@ export async function writersStudioBetaAccess(memberId: string): Promise<Writers
             AND c.deleted_at IS NULL
             AND c.contact_type = 'beta_tester'
             AND c.pipeline_stage = 'active'
+            AND c.metadata @> '{"writers_studio_beta": true}'::jsonb
        ) AS beta,
        EXISTS (
          SELECT 1 FROM members m

@@ -9,7 +9,7 @@
 
 export const CANONICAL_STUDIO_PATH = '/writers-studio';
 
-export type CanonicalStudioMode = 'home' | 'write' | 'develop' | 'review';
+export type CanonicalStudioMode = 'home' | 'write' | 'develop' | 'review' | 'publish' | 'listen';
 
 export type CanonicalRouteDecision =
   | {
@@ -60,7 +60,11 @@ export function canonicalStudioRoute(
     const query = searchOf(search);
     const requested = query.get('mode');
     const mode: CanonicalStudioMode =
-      requested === 'write' || requested === 'develop' || requested === 'review'
+      requested === 'write'
+      || requested === 'develop'
+      || requested === 'review'
+      || requested === 'publish'
+      || requested === 'listen'
         ? requested
         : 'home';
     return {

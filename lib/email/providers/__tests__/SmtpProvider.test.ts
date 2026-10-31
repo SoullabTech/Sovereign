@@ -1,164 +1,174 @@
-/**
- * SMTP PROVIDER — the acceptance rule, in SMTP's own terms.
- * =========================================================
- *
- * The boundary rule is that `accepted: true` means the server took
- * responsibility AND issued an id. SMTP makes this sharper than an HTTP API
- * does, because one transaction can accept some recipients and reject others.
- *
- * These tests exist because reporting a partial acceptance as a send is the
- * 2026-08-24 defect one layer down: a member told their sign-in code is on its
- * way when the server refused their address.
- */
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+/** AUTH-RETURN-01 managed SMTP acceptance boundary. */
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 const mockSendMail = jest.fn<(...args: unknown[]) => Promise<unknown>>();
-const mockCreateTransport = jest.fn(() => ({ sendMail: (o: unknown) => mockSendMail(o) }));
-jest.mock('nodemailer', () => ({ createTransport: (o: unknown) => mockCreateTransport(o) }));
+const mockCreateTransport = jest.fn(() => ({ sendMail: (options: unknown) => mockSendMail(options) }));
+jest.mock('nodemailer', () => ({ createTransport: (options: unknown) => mockCreateTransport(options) }));
 
 import { SmtpProvider } from '../SmtpProvider';
 
-const msg = {
-  from: 'MAIA <noreply@soullab.life>',
-  to: 'member@example.com',
+const MESSAGE = {
+  purpose: 'auth:email-code',
+  from: 'Soullab <noreply@soullab.life>',
+  to: 'fiction@example.invalid',
   subject: 'Your sign-in code',
   text: 'code',
 };
 
 beforeEach(() => {
   jest.clearAllMocks();
-  process.env.SMTP_HOST = 'smtp.example.com';
-  process.env.SMTP_USER = 'user';
-  process.env.SMTP_PASSWORD = 'pass';
+  process.env.NODE_ENV = 'test';
+  process.env.SMTP_HOST = 'smtp.protonmail.ch';
+  process.env.SMTP_USER = 'noreply@soullab.life';
+  process.env.SMTP_PASSWORD = 'fictional-secret';
+  delete process.env.SMTP_PASS;
+  delete process.env.SMTP_PASSWORD_FILE;
   delete process.env.SMTP_PORT;
   delete process.env.SMTP_SECURE;
 });
 
-describe('SmtpProvider.isConfigured', () => {
-  it('is false without credentials — a host alone is not a transport', () => {
-    delete process.env.SMTP_USER;
+describe('SmtpProvider configuration', () => {
+  it('requires host, managed user and a credential', () => {
+    expect(new SmtpProvider().isConfigured()).toBe(true);
     delete process.env.SMTP_PASSWORD;
     expect(new SmtpProvider().isConfigured()).toBe(false);
   });
 
-  it('is true with host, user and password', () => {
-    expect(new SmtpProvider().isConfigured()).toBe(true);
+  it('refuses an authenticated user different from the managed mailbox', () => {
+    process.env.SMTP_USER = 'other@soullab.life';
+    expect(new SmtpProvider().isConfigured()).toBe(false);
   });
 });
 
-describe('SmtpProvider.send — what counts as accepted', () => {
-  it('accepts only when a message id AND an accepted recipient come back', async () => {
+describe('SmtpProvider send truth', () => {
+  it('accepts only when a message id and recipient acceptance both exist', async () => {
+    mockSendMail.mockResolvedValue({
+      messageId: '<abc@soullab.life>', accepted: ['fiction@example.invalid'], rejected: [],
+    });
+    await expect(new SmtpProvider().send(MESSAGE)).resolves.toEqual({
+      accepted: true, providerMessageId: '<abc@soullab.life>',
+    });
+  });
+
+  it('refuses multiple recipients before contacting SMTP', async () => {
     mockSendMail.mockResolvedValue({
       messageId: '<abc@soullab.life>',
-      accepted: ['member@example.com'],
-      rejected: [],
+      accepted: ['ok@example.invalid'],
+      rejected: ['refused@example.invalid'],
     });
-
-    const r = await new SmtpProvider().send(msg);
-
-    expect(r).toEqual({ accepted: true, providerMessageId: '<abc@soullab.life>' });
-  });
-
-  it('REFUSES a partial acceptance — any rejected recipient is not a send', async () => {
-    mockSendMail.mockResolvedValue({
-      messageId: '<abc@soullab.life>',
-      accepted: ['ok@example.com'],
-      rejected: ['refused@example.com'],
+    const result = await new SmtpProvider().send({
+      ...MESSAGE, to: ['ok@example.invalid', 'refused@example.invalid'],
     });
-
-    const r = await new SmtpProvider().send({ ...msg, to: ['ok@example.com', 'refused@example.com'] });
-
-    // A message id is present. It is still not an acceptance.
-    expect(r.accepted).toBe(false);
+    expect(result.accepted).toBe(false);
+    expect(mockSendMail).not.toHaveBeenCalled();
   });
 
-  it('REFUSES a response with no message id — an unidentifiable send is not a send', async () => {
-    mockSendMail.mockResolvedValue({ accepted: ['member@example.com'], rejected: [] });
-    expect((await new SmtpProvider().send(msg)).accepted).toBe(false);
-  });
-
-  it('REFUSES when nobody was accepted, even with an id', async () => {
+  it('reports missing message id or zero acceptance as unknown delivery', async () => {
+    mockSendMail.mockResolvedValue({ accepted: ['fiction@example.invalid'], rejected: [] });
+    await expect(new SmtpProvider().send(MESSAGE)).rejects.toThrow(/acceptance could not be verified/);
     mockSendMail.mockResolvedValue({ messageId: '<x@y>', accepted: [], rejected: [] });
-    expect((await new SmtpProvider().send(msg)).accepted).toBe(false);
+    await expect(new SmtpProvider().send(MESSAGE)).rejects.toThrow(/acceptance could not be verified/);
   });
 
-  it('returns transport faults as rawError so the shared classifier can read them', async () => {
-    // A thrown auth failure and a returned one must not classify differently.
+  it('returns definite authentication refusal as a raw error', async () => {
     mockSendMail.mockRejectedValue(Object.assign(new Error('Invalid login'), { code: 'EAUTH' }));
-
-    const r = await new SmtpProvider().send(msg);
-
-    expect(r.accepted).toBe(false);
-    expect((r as { rawError: unknown }).rawError).toBeDefined();
+    const result = await new SmtpProvider().send(MESSAGE);
+    expect(result.accepted).toBe(false);
+    expect((result as { rawError: unknown }).rawError).toBeDefined();
   });
 
-  it('carries purpose and lane as headers, since SMTP has no tags', async () => {
-    mockSendMail.mockResolvedValue({ messageId: '<a@b>', accepted: ['member@example.com'], rejected: [] });
-
-    await new SmtpProvider().send({
-      ...msg,
-      tags: [{ name: 'purpose', value: 'auth:email-code' }, { name: 'lane', value: 'P0' }],
-    });
-
-    const sent = mockSendMail.mock.calls[0][0] as { headers: Record<string, string> };
-    expect(sent.headers['X-Soullab-purpose']).toBe('auth:email-code');
-    expect(sent.headers['X-Soullab-lane']).toBe('P0');
+  it('preserves socket timeout ambiguity for the caller', async () => {
+    const error = Object.assign(new Error('SMTP response lost'), { code: 'ETIMEDOUT' });
+    mockSendMail.mockRejectedValue(error);
+    await expect(new SmtpProvider().send(MESSAGE)).rejects.toBe(error);
   });
-});
 
-describe('SmtpProvider — TLS is not optional', () => {
-  it('requires STARTTLS rather than silently sending credentials in the clear', async () => {
-    mockSendMail.mockResolvedValue({ messageId: '<a@b>', accepted: ['member@example.com'], rejected: [] });
-    await new SmtpProvider().send(msg);
-
-    const cfg = mockCreateTransport.mock.calls[0][0] as Record<string, unknown>;
-    expect(cfg.requireTLS).toBe(true);
-    expect((cfg.tls as { minVersion: string }).minVersion).toBe('TLSv1.2');
+  it('returns an explicit negative SMTP response as a refusal', async () => {
+    const error = Object.assign(new Error('Recipient refused'), { responseCode: 550 });
+    mockSendMail.mockRejectedValue(error);
+    await expect(new SmtpProvider().send(MESSAGE)).resolves.toEqual({ accepted: false, rawError: error });
   });
-});
 
-
-describe('SmtpProvider — explicit isolated configuration', () => {
-  it('uses explicit credentials instead of ambient SMTP_*', async () => {
-    process.env.SMTP_HOST = 'global.example.com';
-    process.env.SMTP_USER = 'global-user';
-    process.env.SMTP_PASSWORD = 'global-pass';
+  it('does not accept a different recipient or an inconsistent acceptance result', async () => {
+    mockSendMail.mockResolvedValue({ messageId: '<x@y>', accepted: ['other@example.invalid'], rejected: [] });
+    await expect(new SmtpProvider().send(MESSAGE)).rejects.toThrow(/acceptance could not be verified/);
     mockSendMail.mockResolvedValue({
-      messageId: '<alert@soullab.life>',
-      accepted: ['member@example.com'],
-      rejected: [],
+      messageId: '<x@y>', accepted: ['fiction@example.invalid'], rejected: ['fiction@example.invalid'],
     });
+    await expect(new SmtpProvider().send(MESSAGE)).rejects.toThrow(/acceptance could not be verified/);
+  });
 
-    const provider = new SmtpProvider({
+  it('refuses an unapproved purpose without contacting SMTP', async () => {
+    const result = await new SmtpProvider().send({ ...MESSAGE, purpose: 'broadcast:update' });
+    expect(result.accepted).toBe(false);
+    expect(mockSendMail).not.toHaveBeenCalled();
+  });
+
+  it('refuses From drift before contacting SMTP', async () => {
+    const result = await new SmtpProvider().send({ ...MESSAGE, from: 'Kelly <kelly@soullab.life>' });
+    expect(result.accepted).toBe(false);
+    expect(mockCreateTransport).not.toHaveBeenCalled();
+  });
+
+  it('carries purpose and lane as SMTP headers', async () => {
+    mockSendMail.mockResolvedValue({
+      messageId: '<a@b>', accepted: ['fiction@example.invalid'], rejected: [],
+    });
+    await new SmtpProvider().send({
+      ...MESSAGE,
+      tags: [{ name: 'purpose', value: 'auth_email-code' }, { name: 'priority', value: 'P0' }],
+    });
+    const sent = mockSendMail.mock.calls[0][0] as { headers: Record<string, string> };
+    expect(sent.headers['X-Soullab-purpose']).toBe('auth_email-code');
+    expect(sent.headers['X-Soullab-priority']).toBe('P0');
+  });
+});
+
+describe('SmtpProvider transport policy', () => {
+  it('requires STARTTLS and TLS 1.2+', async () => {
+    mockSendMail.mockResolvedValue({
+      messageId: '<a@b>', accepted: ['fiction@example.invalid'], rejected: [],
+    });
+    await new SmtpProvider().send(MESSAGE);
+    expect(mockCreateTransport).toHaveBeenCalledWith(expect.objectContaining({
       host: 'smtp.protonmail.ch',
-      user: 'messages@soullab.life',
-      password: 'alert-secret',
       port: 587,
       secure: false,
-    });
-
-    await provider.send(msg);
-
-    expect(mockCreateTransport).toHaveBeenCalledWith(
-      expect.objectContaining({
-        host: 'smtp.protonmail.ch',
-        port: 587,
-        secure: false,
-        auth: { user: 'messages@soullab.life', pass: 'alert-secret' },
-      })
-    );
+      requireTLS: true,
+      auth: { user: 'noreply@soullab.life', pass: 'fictional-secret' },
+      tls: { minVersion: 'TLSv1.2' },
+    }));
   });
 
-  it('does not backfill a missing explicit credential from global SMTP_*', () => {
-    process.env.SMTP_HOST = 'global.example.com';
-    process.env.SMTP_USER = 'global-user';
-    process.env.SMTP_PASSWORD = 'global-pass';
-
-    const provider = new SmtpProvider({
-      host: 'smtp.protonmail.ch',
-      user: 'messages@soullab.life',
+  it('supports explicit isolated fake-Proton configuration without ambient fallback', async () => {
+    process.env.SMTP_HOST = 'global.invalid';
+    process.env.SMTP_USER = 'noreply@soullab.life';
+    process.env.SMTP_PASSWORD = 'global-secret';
+    mockSendMail.mockResolvedValue({
+      messageId: '<fake-proton@soullab.life>',
+      accepted: ['fiction@example.invalid'],
+      rejected: [],
     });
 
+    const provider = new SmtpProvider({
+      host: '127.0.0.1',
+      user: 'noreply@soullab.life',
+      password: 'isolated-secret',
+      port: 2525,
+      secure: false,
+    });
+    await provider.send(MESSAGE);
+    expect(mockCreateTransport).toHaveBeenCalledWith(expect.objectContaining({
+      host: '127.0.0.1',
+      port: 2525,
+      auth: { user: 'noreply@soullab.life', pass: 'isolated-secret' },
+    }));
+  });
+
+  it('does not backfill missing explicit credentials from ambient SMTP variables', () => {
+    const provider = new SmtpProvider({
+      host: '127.0.0.1', user: 'noreply@soullab.life', port: 2525,
+    });
     expect(provider.isConfigured()).toBe(false);
   });
 });

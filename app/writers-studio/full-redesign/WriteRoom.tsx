@@ -27,8 +27,12 @@
  */
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { WRITE_COPY } from './fixtures';
+import { typesetManuscriptBody } from './manuscriptTypesetting';
+import { projectRawBodyToDisplay } from './j7SourceDisplayProjection';
 
-type Copy = typeof WRITE_COPY;
+// The live room names the editor after the member's own Work, so copy values
+// are strings, not the fixture's literal text.
+type Copy = { readonly [K in keyof typeof WRITE_COPY]: string };
 
 export type WriteChapterView = {
   id: string;
@@ -65,10 +69,32 @@ export type WriteRoomData = {
   unsaved: string;
 };
 
+export type WriteRoomReadback = {
+  sectionId: string;
+  requestedBody: string;
+  /** Null while native input prevents an exact display readback. */
+  visibleBody: string | null;
+  state: 'current' | 'deferred' | 'refused';
+};
+
+export function isWriteRoomReadbackCurrent(
+  readback: WriteRoomReadback | null,
+  sectionId: string | null,
+  body: string,
+): boolean {
+  return readback !== null && readback.state === 'current'
+    && readback.sectionId === sectionId
+    && readback.requestedBody === body && readback.visibleBody === body;
+}
+
 export type WriteRoomLivePorts = {
   /** A1 is the authority when supplied; fixture mode leaves this absent. */
   saveState?: string;
+  /** Exact section body before presentation typesetting. Live editing authority only. */
+  canonicalBody?: string;
   onEditBody?: (body: string) => void;
+  /** Display acknowledgment only; must not create an author edit or save. */
+  onReadback?: (readback: WriteRoomReadback) => void;
   onPrevious?: () => void;
   onNext?: () => void;
   onOpenChapter?: (chapterId: string) => void;
@@ -98,7 +124,7 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct, live }
   const liveRef = useRef<WriteRoomLivePorts | undefined>(live);
   liveRef.current = live;
   const [localSaveState, setLocalSaveState] = useState<string>(fixture.saveState);
-  const [words, setWords] = useState<number>(() => countWords(fixture.paragraphs.join(' ')));
+  const [words, setWords] = useState<number>(() => countWords(live?.canonicalBody ?? fixture.paragraphs.join(' ')));
   const saveState = live?.saveState ?? localSaveState;
 
   // The editor's selection is remembered whenever it changes inside the editor.
@@ -167,12 +193,16 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct, live }
     return () => window.removeEventListener('keydown', onKey);
   }, [canvas, leave]);
 
-  const onEdited = useCallback(() => {
-    const body = editorRef.current?.innerText ?? '';
+  const onEdited = useCallback((body: string) => {
     if (liveRef.current?.onEditBody) liveRef.current.onEditBody(body);
     else setLocalSaveState(fixture.unsaved);
     setWords(countWords(body));
   }, [fixture.unsaved]);
+
+  const onReadback = useCallback((readback: WriteRoomReadback) => {
+    if (readback.visibleBody !== null) setWords(countWords(readback.visibleBody));
+    liveRef.current?.onReadback?.(readback);
+  }, []);
 
   // Keep the editor's focus when a control is pressed with the pointer.
   const keepFocus = (e: React.MouseEvent) => e.preventDefault();
@@ -232,7 +262,9 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct, live }
             blocks={fixture.blocks}
             heldParagraph={fixture.heldParagraph}
             label={copy.editorLabel}
+            canonicalBody={live?.canonicalBody}
             onEdited={onEdited}
+            onReadback={onReadback}
           />
         </div>
       </div>
@@ -274,6 +306,10 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct, live }
  * bold/italic/list commands, so no formatting model can arrive by keystroke.
  * Its props never change across Full Canvas, so it never re-renders there.
  */
+/**
+ * Disposable J7 experiment only: canonical source string + lossless projection
+ * segments. Existing product source must remain untouched until full acceptance.
+ */
 const Editor = memo(function Editor({
   editorRef,
   sectionId,
@@ -281,7 +317,9 @@ const Editor = memo(function Editor({
   blocks,
   heldParagraph,
   label,
+  canonicalBody,
   onEdited,
+  onReadback,
 }: {
   editorRef: React.RefObject<HTMLDivElement>;
   sectionId: string;
@@ -289,17 +327,456 @@ const Editor = memo(function Editor({
   blocks?: ReadonlyArray<WriteBlock>;
   heldParagraph?: number;
   label: string;
-  onEdited: () => void;
+  canonicalBody?: string;
+  onEdited: (body: string) => void;
+  onReadback: (readback: WriteRoomReadback) => void;
 }) {
-  /* The editor owns the visible DOM for the lifetime of one section. Parent
-     rerenders from A1 status changes must never rewrite text under the cursor.
-     A section change remounts this component via its key and receives that
-     section's newest A1 body as the new initial snapshot. */
   const [initial] = useState(() => ({
-    paragraphs,
+    body: canonicalBody ?? paragraphs.join('\n\n'),
     blocks: blocks ?? paragraphs.map((text) => ({ text, kind: 'paragraph' as const })),
     heldParagraph,
   }));
+  const canonicalRef = useRef(initial.body);
+  const projectionRef = useRef<ReturnType<typeof projectRawBodyToDisplay> | null>(null);
+  const pendingRef = useRef<{ body: string; caret: number; inputType: string } | null>(null);
+  // This is the last canonical prop acknowledged by this editor, not merely
+  // the last value observed. Refused replacements never become its baseline.
+  const acknowledgedPropRef = useRef(initial.body);
+  const composingRef = useRef(false);
+  const [reconciliationTick, setReconciliationTick] = useState(0);
+
+  const reportReadback = useCallback((state: WriteRoomReadback['state'], visibleBody: string | null) => {
+    if (typeof canonicalBody === 'string') {
+      onReadback({ sectionId, requestedBody: canonicalBody, visibleBody, state });
+    }
+  }, [canonicalBody, onReadback, sectionId]);
+
+  const currentProjection = (body: string) => {
+    const normalized = body.replace(/\r\n?/g, '\n');
+    let displayBlocks = typesetManuscriptBody(normalized);
+    let projection = projectRawBodyToDisplay(body, displayBlocks);
+    // The typesetter returns one empty display block for whitespace-only source.
+    // In the editable view, show those authored characters rather than losing them.
+    if (!projection.ok && normalized.trim() === '' && normalized.length > 0) {
+      displayBlocks = [{ text: normalized, kind: 'paragraph' }];
+      projection = projectRawBodyToDisplay(body, displayBlocks);
+    }
+    return { projection, displayBlocks };
+  };
+
+  const nodeLength = (node: Node): number => {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent?.length ?? 0;
+    if (node instanceof HTMLBRElement) return 1;
+    return Array.from(node.childNodes).reduce((n, child) => n + nodeLength(child), 0);
+  };
+
+  const domPointToNormalized = (root: HTMLElement, target: Node, offset: number): number | null => {
+    if (target !== root && !root.contains(target)) return null;
+    const pointInside = (node: Node, localOffset: number): number => {
+      if (node.nodeType === Node.TEXT_NODE) return Math.max(0, Math.min(localOffset, node.textContent?.length ?? 0));
+      if (node instanceof HTMLBRElement) return localOffset > 0 ? 1 : 0;
+      return Array.from(node.childNodes).slice(0, Math.max(0, Math.min(localOffset, node.childNodes.length))).reduce((sum, c) => sum + nodeLength(c), 0);
+    };
+    const walk = (node: Node, base: number): { found: boolean; value: number } => {
+      if (node === target) return { found: true, value: base + pointInside(node, offset) };
+      let cursor = base;
+      for (const child of Array.from(node.childNodes)) {
+        const result = walk(child, cursor);
+        if (result.found) return result;
+        cursor += nodeLength(child);
+      }
+      return { found: false, value: -1 };
+    };
+    const result = walk(root, 0);
+    return result.found ? result.value : null;
+  };
+
+  const normalizedToDomPoint = (root: HTMLElement, wanted: number): [Node, number] | null => {
+    const walk = (node: Node, base: number): [Node, number] | null => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const len = node.textContent?.length ?? 0;
+        return wanted >= base && wanted <= base + len ? [node, wanted - base] : null;
+      }
+      if (node instanceof HTMLBRElement) {
+        const parent = node.parentNode;
+        if (!parent) return null;
+        const index = Array.prototype.indexOf.call(parent.childNodes, node) as number;
+        if (wanted === base) return [parent, index];
+        if (wanted === base + 1) return [parent, index + 1];
+        return null;
+      }
+      if (node.childNodes.length === 0) {
+        return wanted === base ? [node, 0] : null;
+      }
+      let cursor = base;
+      for (const child of Array.from(node.childNodes)) {
+        const found = walk(child, cursor);
+        if (found) return found;
+        cursor += nodeLength(child);
+      }
+      if (wanted === cursor) return [node, node.childNodes.length];
+      return null;
+    };
+    return walk(root, 0);
+  };
+
+  const renderCanonical = useCallback((body: string, caretRaw: number, restoreSelection = true): boolean => {
+    const root = editorRef.current;
+    if (!root) return false;
+    const { projection, displayBlocks } = currentProjection(body);
+    root.replaceChildren();
+    projectionRef.current = projection;
+    canonicalRef.current = body;
+    root.dataset.j7Canonical = body;
+    root.dataset.j7Reconcile = projection.ok ? '' : 'projection:' + (projection.reason ?? 'unknown');
+    if (!projection.ok) {
+      // Keep source safe. This display is intentionally read-only/unqualified.
+      const fallback = document.createElement('p');
+      fallback.dataset.j7ProjectionRefused = '';
+      fallback.style.whiteSpace = 'pre-wrap';
+      fallback.textContent = body.replace(/\r\n?/g, '\n');
+      root.appendChild(fallback);
+      root.setAttribute('contenteditable', 'false');
+      return false;
+    }
+    root.setAttribute('contenteditable', 'plaintext-only');
+    const normToRaw = projection.normalizedBoundaryToRaw;
+    const appendVisibleGap = (holder: HTMLElement, text: string, normStart: number) => {
+      let cursor = 0;
+      for (const match of text.matchAll(/\n/g)) {
+        const index = match.index ?? 0;
+        if (index > cursor) {
+          const chunk = document.createElement('span');
+          chunk.dataset.j7NormalizedStart = String(normStart + cursor);
+          chunk.dataset.j7NormalizedEnd = String(normStart + index);
+          chunk.style.whiteSpace = 'pre-wrap';
+          chunk.textContent = text.slice(cursor, index);
+          holder.appendChild(chunk);
+        }
+        const br = document.createElement('br');
+        br.dataset.j7GapBreak = '';
+        br.dataset.j7NormalizedStart = String(normStart + index);
+        br.dataset.j7NormalizedEnd = String(normStart + index + 1);
+        holder.appendChild(br);
+        cursor = index + 1;
+      }
+      if (cursor < text.length) {
+        const chunk = document.createElement('span');
+        chunk.dataset.j7NormalizedStart = String(normStart + cursor);
+        chunk.dataset.j7NormalizedEnd = String(normStart + text.length);
+        chunk.style.whiteSpace = 'pre-wrap';
+        chunk.textContent = text.slice(cursor);
+        holder.appendChild(chunk);
+      }
+    };
+
+    let lastBlock: HTMLElement | null = null;
+    for (const [segmentIndex, segment] of projection.segments.entries()) {
+      const text = projection.normalizedBody.slice(segment.normalizedStart, segment.normalizedEnd);
+      // Horizontal whitespace typed at the very end of the last paragraph belongs to that line. As a sibling gap it sat
+      // below the paragraph, so the caret drew a paragraph-margin lower until the next letter was typed.
+      if (segment.kind !== 'block' && lastBlock && segmentIndex === projection.segments.length - 1 && /^[ \t]+$/.test(text)) {
+        appendVisibleGap(lastBlock, text, segment.normalizedStart);
+        continue;
+      }
+      if (segment.kind === 'block') {
+        const p = document.createElement('p');
+        p.dataset.writeBlock = displayBlocks[segment.blockIndex]?.kind ?? 'paragraph';
+        p.dataset.j7Segment = 'block';
+        p.dataset.j7BlockIndex = String(segment.blockIndex);
+        p.dataset.j7NormalizedStart = String(segment.normalizedStart);
+        p.dataset.j7NormalizedEnd = String(segment.normalizedEnd);
+        p.style.whiteSpace = 'pre-wrap';
+        p.style.fontSize = '21px';
+        p.style.lineHeight = '1.72';
+        p.style.fontFamily = 'Georgia, "Times New Roman", serif';
+        p.style.margin = '0 0 30px 0';
+        p.textContent = text;
+        root.appendChild(p);
+        lastBlock = p;
+        continue;
+      }
+
+      const gap = document.createElement('span');
+      gap.dataset.j7Segment = 'gap';
+      gap.dataset.j7NormalizedStart = String(segment.normalizedStart);
+      gap.dataset.j7NormalizedEnd = String(segment.normalizedEnd);
+      gap.style.whiteSpace = 'pre-wrap';
+      gap.style.display = 'contents';
+      const previousBlock = projection.segments.some(s => s.kind === 'block' && s.normalizedEnd === segment.normalizedStart);
+      const nextBlock = projection.segments.some(s => s.kind === 'block' && s.normalizedStart === segment.normalizedEnd);
+      const delimiterMatch = previousBlock && nextBlock ? /\n[ \t]*\n/.exec(text) : null;
+      if (!delimiterMatch) {
+        appendVisibleGap(gap, text, segment.normalizedStart);
+      } else {
+        const delimiterStart = delimiterMatch.index;
+        const delimiterEnd = delimiterStart + delimiterMatch[0].length;
+        appendVisibleGap(gap, text.slice(0, delimiterStart), segment.normalizedStart);
+        const hidden = document.createElement('span');
+        hidden.dataset.j7GapBase = '';
+        hidden.dataset.j7NormalizedStart = String(segment.normalizedStart + delimiterStart);
+        hidden.dataset.j7NormalizedEnd = String(segment.normalizedStart + delimiterEnd);
+        hidden.style.display = 'inline-block';
+        hidden.style.width = '0';
+        hidden.style.height = '0';
+        hidden.style.overflow = 'hidden';
+        hidden.style.fontSize = '0';
+        hidden.style.lineHeight = '0';
+        hidden.style.whiteSpace = 'pre';
+        hidden.textContent = delimiterMatch[0];
+        gap.appendChild(hidden);
+        appendVisibleGap(gap, text.slice(delimiterEnd), segment.normalizedStart + delimiterEnd);
+      }
+      root.appendChild(gap);
+    }
+    // A truly empty source still needs a focusable caret target, but that
+    // scaffold has zero canonical length and is not confused with an authored P.
+    if (projection.normalizedBody.length === 0 && root.childNodes.length === 0) {
+      const empty = document.createElement('p');
+      empty.dataset.j7EmptyStart = '';
+      empty.style.minHeight = '1.72em';
+      empty.style.margin = '0 0 30px 0';
+      root.appendChild(empty);
+    }
+
+    const normalizedWanted = normToRaw.indexOf(caretRaw);
+    if (normalizedWanted < 0) {
+      root.dataset.j7Reconcile = 'caret-not-on-source-boundary';
+      return false;
+    }
+    if (!restoreSelection) {
+      root.dataset.j7Caret = String(caretRaw);
+      return true;
+    }
+    const point = normalizedToDomPoint(root, normalizedWanted);
+    const selection = window.getSelection();
+    if (point && selection) {
+      selection.removeAllRanges();
+      const range = document.createRange();
+      range.setStart(point[0], point[1]);
+      range.collapse(true);
+      selection.addRange(range);
+    } else {
+      root.dataset.j7Reconcile = 'caret-unmapped';
+      return false;
+    }
+    root.dataset.j7Caret = String(caretRaw);
+    return true;
+  }, [editorRef]);
+
+  useLayoutEffect(() => {
+    renderCanonical(initial.body, initial.body.length);
+  }, [initial.body, renderCanonical]);
+
+  useLayoutEffect(() => {
+    const root = editorRef.current;
+    if (!root || typeof canonicalBody !== 'string') return;
+
+    // An authoritative replacement must not consume an unfinished native input
+    // or composition. Their completion triggers a fresh reconciliation.
+    if (pendingRef.current || composingRef.current) {
+      root.dataset.j7Reconcile = 'external-update-deferred-native-input';
+      reportReadback('deferred', null);
+      return;
+    }
+    // Ordinary typing is already rendered by this editor before its owner
+    // echoes the same body. Acknowledge it without rebuilding DOM or selection.
+    if (canonicalBody === canonicalRef.current) {
+      if (!projectionRef.current?.ok) {
+        reportReadback('refused', null);
+        return;
+      }
+      acknowledgedPropRef.current = canonicalBody;
+      if (root.dataset.j7Reconcile?.startsWith('external-update-')) root.dataset.j7Reconcile = '';
+      reportReadback('current', canonicalRef.current);
+      return;
+    }
+    if (canonicalRef.current !== acknowledgedPropRef.current) {
+      root.dataset.j7Reconcile = 'external-update-refused-local-change';
+      reportReadback('refused', canonicalRef.current);
+      return;
+    }
+
+    const previous = canonicalRef.current;
+    const selection = window.getSelection();
+    const selectionInEditor = Boolean(selection?.rangeCount && selection.anchorNode && selection.focusNode
+      && root.contains(selection.anchorNode) && root.contains(selection.focusNode));
+    const editorOwnsFocus = document.activeElement === root
+      || Boolean(document.activeElement && root.contains(document.activeElement));
+    const restoreSelection = selectionInEditor && editorOwnsFocus;
+    const rawPoint = (node: Node | null, offset: number): number => {
+      const normalized = node && selectionInEditor ? domPointToNormalized(root, node, offset) : null;
+      return normalized === null ? previous.length
+        : projectionRef.current?.normalizedBoundaryToRaw[normalized] ?? previous.length;
+    };
+    const oldAnchor = rawPoint(selection?.anchorNode ?? null, selection?.anchorOffset ?? 0);
+    const oldFocus = rawPoint(selection?.focusNode ?? null, selection?.focusOffset ?? 0);
+    // Preserve both ends and direction of a selection. Never choose the middle
+    // of a surrogate pair or CRLF, both of which are source/display units.
+    const clamp = (offset: number, body: string): number => {
+      let point = Math.min(offset, body.length);
+      if (point > 0 && point < body.length
+        && ((body.charCodeAt(point - 1) >= 0xd800 && body.charCodeAt(point - 1) <= 0xdbff
+          && body.charCodeAt(point) >= 0xdc00 && body.charCodeAt(point) <= 0xdfff)
+          || body.slice(point - 1, point + 1) === '\r\n')) point -= 1;
+      return point;
+    };
+    const renderReadback = (body: string): boolean => {
+      const anchor = clamp(oldAnchor, body);
+      const focus = clamp(oldFocus, body);
+      if (!renderCanonical(body, focus, false)) return false;
+      if (!restoreSelection || !selection) return true;
+      const map = projectionRef.current?.normalizedBoundaryToRaw;
+      const anchorPoint = normalizedToDomPoint(root, map?.indexOf(anchor) ?? -1);
+      const focusPoint = normalizedToDomPoint(root, map?.indexOf(focus) ?? -1);
+      if (!anchorPoint || !focusPoint) return false;
+      selection.setBaseAndExtent(anchorPoint[0], anchorPoint[1], focusPoint[0], focusPoint[1]);
+      return true;
+    };
+
+    if (renderReadback(canonicalBody)) {
+      acknowledgedPropRef.current = canonicalBody;
+      reportReadback('current', canonicalRef.current);
+    } else {
+      const restored = renderReadback(previous);
+      root.dataset.j7Reconcile = 'external-update-refused-projection-or-caret';
+      reportReadback('refused', restored ? previous : null);
+    }
+    // This is a readback of an existing save/Undo, never a new author edit:
+    // deliberately do not call onEdited or enqueue another save.
+  }, [canonicalBody, editorRef, reconciliationTick, renderCanonical, reportReadback]);
+
+  useEffect(() => {
+    const root = editorRef.current;
+    if (!root) return;
+    const selected = (): [number, number] | null => {
+      const selection = window.getSelection();
+      const projection = projectionRef.current;
+      if (!selection || selection.rangeCount === 0 || !projection?.ok) return null;
+      const range = selection.getRangeAt(0);
+      if (!root.contains(range.startContainer) || !root.contains(range.endContainer)) return null;
+      const startNorm = domPointToNormalized(root, range.startContainer, range.startOffset);
+      const endNorm = domPointToNormalized(root, range.endContainer, range.endOffset);
+      if (startNorm === null || endNorm === null) return null;
+      const startRaw = projection.normalizedBoundaryToRaw[startNorm];
+      const endRaw = projection.normalizedBoundaryToRaw[endNorm];
+      if (startRaw === undefined || endRaw === undefined) return null;
+      return [Math.min(startRaw, endRaw), Math.max(startRaw, endRaw)];
+    };
+    const dominantEol = (body: string) => {
+      const matches = body.match(/\r\n|\r|\n/g) ?? [];
+      if (!matches.length) return '\n';
+      const counts: Record<string, number> = {};
+      for (const eol of matches) counts[eol] = (counts[eol] ?? 0) + 1;
+      return Object.entries(counts).sort((a,b) => b[1]-a[1])[0]![0];
+    };
+    const normalizeInsertedEols = (value: string) => value.replace(/\r\n?/g, '\n').replace(/\n/g, dominantEol(canonicalRef.current));
+    const commit = (type: string, data: string | null) => {
+      const range = selected();
+      if (!range) { root.dataset.j7Reconcile = 'unmapped-selection'; return false; }
+      let [start, end] = range;
+      let insert = '';
+      const raw = canonicalRef.current;
+      switch (type) {
+        case 'insertText':
+        case 'insertReplacementText':
+        case 'insertFromPaste':
+        case 'insertFromDrop':
+          if (typeof data !== 'string') return false;
+          insert = normalizeInsertedEols(data); break;
+        case 'insertLineBreak':
+        case 'insertParagraph':
+          insert = dominantEol(raw); break;
+        case 'deleteContentBackward':
+          if (start === end && start > 0) {
+            if (raw.slice(start-2,start) === '\r\n') start -= 2;
+            else start -= 1;
+          }
+          break;
+        case 'deleteContentForward':
+          if (start === end && end < raw.length) {
+            if (raw.slice(end,end+2) === '\r\n') end += 2;
+            else end += 1;
+          }
+          break;
+        case 'deleteByCut':
+        case 'deleteContent':
+          break;
+        default:
+          return false;
+      }
+      const next = raw.slice(0, start) + insert + raw.slice(end);
+      const caret = start + insert.length;
+      // Render the new projection first. The raw value is not committed and no
+      // save is issued if the caret has no unambiguous visible/source position.
+      const ok = renderCanonical(next, caret);
+      if (!ok) { renderCanonical(raw, start); root.dataset.j7Reconcile = 'edit-refused-projection-or-caret'; return false; }
+      canonicalRef.current = next;
+      onEdited(next);
+      reportReadback(canonicalBody === next ? 'current' : 'refused', next);
+      return true;
+    };
+    const before = (event: InputEvent) => {
+      if (event.isComposing || event.inputType.startsWith('insertComposition') || event.inputType.startsWith('history')) {
+        root.dataset.j7Reconcile = 'unsupported:' + event.inputType;
+        if (event.cancelable) event.preventDefault();
+        else {
+          const current = selected();
+          pendingRef.current = { body: canonicalRef.current, caret: current?.[1] ?? canonicalRef.current.length, inputType: event.inputType };
+          reportReadback('deferred', null);
+        }
+        return;
+      }
+      if (!event.cancelable) {
+        const current = selected();
+        pendingRef.current = { body: canonicalRef.current, caret: current?.[1] ?? canonicalRef.current.length, inputType: event.inputType };
+        root.dataset.j7Reconcile = 'noncancelable:' + event.inputType;
+        reportReadback('deferred', null);
+        return;
+      }
+      if (event.inputType === 'insertFromPaste') return;
+      const committed = commit(event.inputType, event.data);
+      // Unsupported operations are refused rather than allowed to mutate a
+      // DOM model that cannot be reconciled to canonical source.
+      event.preventDefault();
+      if (!committed) root.dataset.j7Reconcile = 'unsupported-or-unmapped:' + event.inputType;
+    };
+    const onInput = () => {
+      const pending = pendingRef.current;
+      if (!pending) return;
+      pendingRef.current = null;
+      renderCanonical(pending.body, pending.caret);
+      root.dataset.j7Reconcile = 'refused-and-restored:' + pending.inputType;
+      setReconciliationTick((value) => value + 1);
+    };
+    const compositionStart = () => {
+      composingRef.current = true;
+      reportReadback('deferred', null);
+    };
+    const compositionEnd = () => {
+      composingRef.current = false;
+      setReconciliationTick((value) => value + 1);
+    };
+    const paste = (event: ClipboardEvent) => {
+      const text = event.clipboardData?.getData('text/plain');
+      if (typeof text !== 'string') return;
+      event.preventDefault();
+      commit('insertFromPaste', text);
+    };
+    root.addEventListener('beforeinput', before);
+    root.addEventListener('input', onInput);
+    root.addEventListener('paste', paste);
+    root.addEventListener('compositionstart', compositionStart);
+    root.addEventListener('compositionend', compositionEnd);
+    return () => {
+      root.removeEventListener('beforeinput', before);
+      root.removeEventListener('input', onInput);
+      root.removeEventListener('paste', paste);
+      root.removeEventListener('compositionstart', compositionStart);
+      root.removeEventListener('compositionend', compositionEnd);
+    };
+  }, [canonicalBody, editorRef, onEdited, renderCanonical, reportReadback]);
+
   return (
     <div
       ref={editorRef}
@@ -313,18 +790,7 @@ const Editor = memo(function Editor({
       contentEditable="plaintext-only"
       suppressContentEditableWarning
       spellCheck
-      onInput={onEdited}
-    >
-      {initial.blocks.map((block, i) => (
-        <p
-          key={i}
-          data-write-block={block.kind}
-          data-held={i === initial.heldParagraph ? '' : undefined}
-        >
-          {block.text}
-        </p>
-      ))}
-    </div>
+    />
   );
 });
 

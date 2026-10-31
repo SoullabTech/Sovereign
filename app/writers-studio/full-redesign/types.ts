@@ -6,13 +6,15 @@
  */
 
 /** The four primary movements of the Studio (PC2 §I). No others are primary. */
-export type StudioMode = 'home' | 'write' | 'develop' | 'review';
+export type StudioMode = 'home' | 'write' | 'develop' | 'review' | 'publish' | 'listen';
 
 export const PRIMARY_MODES: ReadonlyArray<{ id: StudioMode; label: string }> = [
   { id: 'home', label: 'Home' },
   { id: 'write', label: 'Write' },
   { id: 'develop', label: 'Develop' },
   { id: 'review', label: 'Review' },
+  { id: 'publish', label: 'Publish' },
+  { id: 'listen', label: 'Listen' },
 ];
 
 import type { AtmosphereId } from '../atmosphere/atmospheres';

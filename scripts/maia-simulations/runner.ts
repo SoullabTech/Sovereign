@@ -30,6 +30,7 @@ import { randomUUID } from 'crypto';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { Pool } from 'pg';
+import { requireDatabaseUrl } from '../../lib/db/databaseUrl';
 
 const TEST_MEMBER_ID = process.env.SIM_TEST_MEMBER_ID || '26ed1765-d38f-4920-ac56-cfae176b09f3';
 const BASE_URL = process.env.SIM_BASE_URL || 'http://localhost:3000';
@@ -70,7 +71,7 @@ interface ScenarioResult {
 }
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://soullab@maia-postgres:5432/maia_consciousness',
+  connectionString: requireDatabaseUrl(process.env.DATABASE_URL),
 });
 
 async function setupAnchor(memberId: string, anchorContent: string): Promise<void> {

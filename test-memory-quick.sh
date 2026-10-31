@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+: "${DATABASE_URL:?DATABASE_URL must be set explicitly for the memory test}"
+
 TEST_SESSION_ID="memory_cert_$(date +%s)"
 BASE_URL="http://localhost:3000"
 
@@ -25,7 +27,7 @@ echo ""
 sleep 2
 
 echo "=== TEST 3: Database Verification ==="
-psql postgresql://soullab@localhost:5432/maia_consciousness -t -c "SELECT turn_count, jsonb_array_length(conversation_history) FROM maia_sessions WHERE id = '$TEST_SESSION_ID'" 2>/dev/null
+psql "$DATABASE_URL" -t -c "SELECT turn_count, jsonb_array_length(conversation_history) FROM maia_sessions WHERE id = '$TEST_SESSION_ID'" 2>/dev/null
 
 echo ""
 echo "=== TEST 4: Memory Recall (before restart) ==="

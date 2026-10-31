@@ -1,0 +1,53 @@
+# Production lineage reconciliation — 2026-10-31
+
+Production runtime `9856e27f7` was not an ancestor of `clean-main-no-secrets`. Production had 65 commits that canonical lacked, and canonical had 227 that production lacked. This branch merges production's commit into canonical tip `eb3394749` (which carries PR #2000 and PR #2002). After it merges, a canonical deploy no longer rolls back what members run today. Founder direction: "Do it here." This document records a merge only. It is not a deploy.
+
+## Resolution rule
+Each side's features were kept. Where the two sides contradicted each other on authority, consent, privacy or data handling, production's rule won, because it is what members run today. 26 files conflicted. The calls that matter:
+
+- **`proxy.ts`**: kept the Astrology tester gate and production's Writer Studio admission corridor together. Dropped the stale comment that said entitlements are not checked in the proxy.
+- **`components/auth/UnifiedAuth.tsx`**: production's AUTH-RETURN-01 rule wins. `?verified=true` is ignored and never treated as proof. Kept canonical's `reauth=chart` suppression.
+- **`P4R1WriteEditController.tsx`**: production's rule wins that the stored author turn holds only the authored text. Depth and an explicit edit request travel as structured fields (`responseDepth`, `mayProposeImmediately`). They are never appended as author wording.
+- **`P4R1ProducePanel.tsx`**: production's export hold (`exportsCertified`, off by default) and its stale-source 409 guard win.
+- **`manuscriptTypesetting.ts`**: production's rule wins. A bare number line is an authored paragraph, never a folio, unless the import proves it is one.
+- **Listen files**: production's versions were taken whole. They already contain canonical's work, and the "never silently accept stereo" guarantee holds.
+- **Studio modes**: one definition in `studioMode.ts`, now including `publish`. Both publish entries exist side by side: `?publish=1` on Home and the `?mode=publish` room. That is a product decision still open.
+
+## Tests updated to the merged rules (not loosened)
+- `p4r1EditorialLatitudeExperience`: now asserts that author words are stored exact and depth is a structured field. It also asserts that the old directive is absent.
+- `p4r1ReviewFocusContinuity`: expects production's renamed Review action, "Work with this".
+- `jarvisA2RevalidationActualControllerR1`: the `canvasIdentity` stand-in now supplies the two thread-address helpers the merged controller calls.
+- `manuscriptTypesetting`, `p4r1ProduceFlow`, `p4r1CanonicalRouteCompatibility` and `p4r1DevelopFocusContinuity` were merged to both sides' assertions.
+
+## Verification
+- **Jest:** Writer's Studio, Pro Studio, studio, the auth boundary and the Astrology gate. 134 suites ran, 1,345 tests passed and 3 failed. Those 3 already failed before the merge:
+  - 2 in `p4r1IsolatedEditorialRoom` fail on canonical `eb3394749`.
+  - 1 in `smallBetaAuthorship` fails on production `9856e27f7`.
+- **Vitest** under `lib/writersStudio/listen`: 26 passed.
+- **TypeScript no-regression gate:** 214 errors against the baseline's 239, with 0 new diagnostics.
+  - ⚠️ The baseline was re-recorded with `--accept-current`. That locks in 25 fixes and removes 2 paths from the program: `lib/encounters/recordingCoordinator.ts` and `lib/encounters/roomDoor.ts`. Production's EXP-21 session-room rewrite no longer imports either file, so they are unused in production and here.
+  - One inherited type error was fixed: `WriteRoom`'s `Copy` type now accepts the member's own Work title.
+- **Member-identifier log gate:** the baseline shrank from 529 to 528 entries. `BirthDataStep` no longer logs a raw member ID.
+- **Migration lock-timeout law:** five production migrations predate the law on their own branch and have already run in production. Each carries the law's own exemption comment, and its SQL is unchanged.
+- **Other guards:** `check:no-supabase` and `check:no-openai` pass.
+
+## Schema custody gap (not repaired here)
+Production's ledger records six applied migrations whose source is not in production's code and is not on canonical:
+
+| Migration | Where a copy exists |
+|---|---|
+| 20260903000001_return_authority_fail_closed | committed only on `origin/fix/maia-p6-return-authority-canonical-r1-20261002` |
+| 20261021000001_writer_r20_restore_refusal | untracked in `~/mail-writer-live-overlay-20261022` and two T7 caches |
+| 20261021000002_writer_r20_editorial_erasure | untracked in `~/mail-writer-live-overlay-20261022` and one T7 cache |
+| 20261022000001_writer_source_arrival_r20_refusal | untracked in `~/mail-writer-live-overlay-20261022` and one T7 cache |
+| 20261022000002_writer_source_arrival_retention_index | untracked in `~/mail-writer-live-overlay-20261022` and one T7 cache |
+| 20261021140000_colab_clean_reboot_operator | not found in any registered worktree |
+
+`20261025000001_r20_writer_editorial_constitutional_erasure` refers to "the production predecessor". That confirms the R20 files ran live before they were committed. Bringing these sources into git is a separate custody act, owed to the Writer and Co-Lab lanes. They were deliberately not added to this merge.
+
+## After merge, before any deploy
+On canonical with this branch merged, production has applied every migration on canonical except two. Both are additive and come from canonical:
+- `20261002000002_writer_studio_chapter_overview_lens`
+- `20261030000001_house_pro_studio_catalog`
+
+A deploy remains a separate founder act, run through `scripts/pre-deploy-gate.sh` and followed by a production witness.

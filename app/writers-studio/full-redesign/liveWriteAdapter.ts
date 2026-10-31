@@ -6,6 +6,7 @@ import { typesetManuscriptBody, typesetParagraphs } from './manuscriptTypesettin
 
 export type Pc3WriteProjection = {
   data: WriteRoomData;
+  canonicalBody: string;
   previousId: string | null;
   nextId: string | null;
 };
@@ -79,8 +80,9 @@ export function projectPc3LiveWrite(input: {
 
   const statuses = ordered.map((s) => input.statusOf(s.draftSectionId));
   const identity = input.workTitle ?? input.manuscriptTitle ?? '';
-  const place = active.heading ?? undefined;
-  const title = active.heading ?? undefined;
+  const place = active.heading?.trim() || `Section ${active.position + 1}`;
+  const title = place;
+  const canonicalBody = input.bodyOf(active.draftSectionId);
 
   return {
     data: {
@@ -90,12 +92,13 @@ export function projectPc3LiveWrite(input: {
       currentChapterId: active.draftSectionId,
       place: place ?? '',
       title: title ?? '',
-      paragraphs: pc3Paragraphs(input.bodyOf(active.draftSectionId)),
-      blocks: typesetManuscriptBody(input.bodyOf(active.draftSectionId)),
+      paragraphs: pc3Paragraphs(canonicalBody),
+      blocks: typesetManuscriptBody(canonicalBody),
       ...(rowStatus(input.statusOf(active.draftSectionId)) ? { activeStatus: rowStatus(input.statusOf(active.draftSectionId)) } : {}),
       saveState: pc3SaveState(statuses),
       unsaved: 'Unsaved',
     },
+    canonicalBody,
     previousId,
     nextId,
   };

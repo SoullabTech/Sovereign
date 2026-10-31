@@ -97,6 +97,7 @@ function LiveWriteView(props: {
           onCanvasChange={setCanvas}
           live={{
             saveState: projection.data.saveState,
+            canonicalBody: projection.canonicalBody,
             onEditBody: writing.edit,
             onPrevious: () => go(projection.previousId),
             onNext: () => go(projection.nextId),

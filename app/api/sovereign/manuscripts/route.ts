@@ -24,7 +24,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
+import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   segment,
@@ -235,6 +235,7 @@ export async function POST(request: NextRequest) {
         title?: unknown;
         text?: unknown;
         sections?: unknown;
+        createWork?: unknown;
       };
 
       if (typeof input.title !== 'string' || input.title.trim().length === 0) {
@@ -277,6 +278,16 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'no non-empty sections' }, { status: 400 });
       }
 
+      // Cabin has its own SQLite custody path. Until that path can commit
+      // the declaration atomically, refuse the new request before any import
+      // write rather than returning an unlinked manuscript as a new Work.
+      if (input.createWork === true) {
+        return NextResponse.json(
+          { error: 'Creating a Work during Cabin import is not available. No manuscript was saved.' },
+          { status: 501 },
+        );
+      }
+
       const manuscript = store.createManuscript(member.id, {
         title: input.title.trim(),
         provenance: 'member_uploaded',
@@ -308,17 +319,26 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
-    const { title, text, sections, sourceArrivalId, confirmedText } = (body ?? {}) as {
+    const { title, text, sections, sourceArrivalId, confirmedText, createWork } = (body ?? {}) as {
       title?: unknown;
       text?: unknown;
       sections?: unknown;
       sourceArrivalId?: unknown;
       /** Save step only: the exact text the member supplied, for a paste. */
       confirmedText?: unknown;
+      /** An explicit member declaration from the Writer import confirmation. */
+      createWork?: unknown;
     };
 
     if (typeof title !== 'string' || title.trim().length === 0) {
       return NextResponse.json({ error: 'title is required' }, { status: 400 });
+    }
+
+    if (createWork !== undefined && typeof createWork !== 'boolean') {
+      return NextResponse.json({ error: 'createWork must be true or false' }, { status: 400 });
+    }
+    if (createWork === true && title.trim().length > 300) {
+      return NextResponse.json({ error: 'Work title is longer than 300 characters' }, { status: 400 });
     }
 
     // Preview step: mechanical segmentation only; nothing is saved.
@@ -386,18 +406,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'no non-empty sections' }, { status: 400 });
     }
 
-    const ms = await query<{ id: string }>(
-      `INSERT INTO member_manuscripts (member_id, title) VALUES ($1, $2) RETURNING id`,
-      [memberId, title.trim()],
-    );
-    const manuscriptId = ms.rows[0].id;
-    for (const s of clean) {
-      await query(
-        `INSERT INTO manuscript_sections (manuscript_id, position, heading, body, heading_depth, heading_signal)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [manuscriptId, s.position, s.heading, s.body, s.headingDepth ?? null, s.headingSignal ?? null],
+    // The member's explicit import confirmation may also declare a new Work.
+    // Keep that declaration and its exact manuscript together: a failed
+    // section, Work, or expression write must never leave a partial import.
+    const created = await transaction(async (client) => {
+      const ms = await client.query<{ id: string }>(
+        `INSERT INTO member_manuscripts (member_id, title) VALUES ($1, $2) RETURNING id`,
+        [memberId, title.trim()],
       );
-    }
+      if (ms.rows.length !== 1) throw new Error('import_manuscript_unconfirmed');
+      const manuscriptId = ms.rows[0]!.id;
+      for (const s of clean) {
+        const inserted = await client.query<{ id: string }>(
+          `INSERT INTO manuscript_sections (manuscript_id, position, heading, body, heading_depth, heading_signal)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           RETURNING id`,
+          [manuscriptId, s.position, s.heading, s.body, s.headingDepth ?? null, s.headingSignal ?? null],
+        );
+        if (inserted.rows.length !== 1) throw new Error('import_section_unconfirmed');
+      }
+
+      let workId: string | null = null;
+      if (createWork === true) {
+        const work = await client.query<{ id: string }>(
+          `INSERT INTO living_works (member_id, title)
+           VALUES ($1, $2) RETURNING id`,
+          [memberId, title.trim()],
+        );
+        if (work.rows.length !== 1) throw new Error('import_work_unconfirmed');
+        workId = work.rows[0]!.id;
+        const declaration = await client.query<{ id: string }>(
+          `INSERT INTO living_work_expressions
+             (living_work_id, expression_type, expression_id, declared_by)
+           VALUES ($1, 'manuscript', $2, $3)
+           RETURNING id`,
+          [workId, manuscriptId, memberId],
+        );
+        if (declaration.rows.length !== 1) throw new Error('import_work_declaration_unconfirmed');
+      }
+      return { manuscriptId, workId };
+    });
+    const { manuscriptId, workId } = created;
 
     /* WS-01 — bind the manuscript to its arrival.
      *
@@ -439,7 +488,7 @@ export async function POST(request: NextRequest) {
         `manuscriptId: ${manuscriptId}, sections: ${clean.length}, custody: ${custody} }`,
     );
     return NextResponse.json(
-      { id: manuscriptId, sectionCount: clean.length, sourceCustody: custody },
+      { id: manuscriptId, ...(workId ? { workId } : {}), sectionCount: clean.length, sourceCustody: custody },
       { status: 201 },
     );
   } catch (err) {

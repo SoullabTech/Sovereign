@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": [],
+    "types": [
+      "node",
+      "jest"
+    ]
+  },
+  "files": [
+    "next-env.d.ts",
+    "lib/manuscript/source/vaultErasureSafeLogR105.ts",
+    "lib/manuscript/source/eraseManuscript.ts",
+    "scripts/run-media-worker.ts",
+    "scripts/ops/sweep-vault-erasure-queue.ts",
+    "lib/manuscript/source/__tests__/vaultErasureSafeLogR105.test.ts",
+    "lib/manuscript/source/__tests__/vaultErasureFunctionalR105.test.ts"
+  ],
+  "include": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

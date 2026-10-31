@@ -10,7 +10,7 @@
  * and classifies chunks with Spiralogic metadata.
  *
  * Usage:
- *   DATABASE_URL="postgresql://soullab@localhost:5432/maia_consciousness" npx tsx scripts/ingest-library.ts
+ *   DATABASE_URL="user@host:5432/database" npx tsx scripts/ingest-library.ts
  *
  * Options:
  *   --dry-run       Show what would be processed without writing
@@ -24,6 +24,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import pg from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 import { chunkText, estimateTokens, extractTitle } from '../lib/ain/knowledge/ChunkingService';
 import { loadDeclaration, decideAdmission, formatVerdict } from '../lib/corpus/admission';
 import { classifyChunkSpiralogic, mergeTagsIntoMeta, isOperationalFile, inferSourceType, extractAuthor } from '../lib/library/spiralogicTagger';
@@ -581,7 +582,7 @@ async function main() {
   // Step 2: Connect to database
   console.log('\n[2/4] Connecting to PostgreSQL...');
   const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
+    connectionString: requireDatabaseUrl(process.env.DATABASE_URL),
   });
 
   try {

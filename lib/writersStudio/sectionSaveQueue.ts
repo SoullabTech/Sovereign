@@ -189,6 +189,31 @@ export class SectionSaveQueue {
     this.emit();
   }
 
+  /**
+   * A protected server mutation may advance the draft outside this save lane.
+   * Its caller must first compare the complete authoritative section snapshot
+   * with the settled writing session. Never advance over pending or unknown
+   * outcomes, or over a save that completed after that comparison began.
+   *
+   * `publishBody` is a synchronous cache update owned by the writing session;
+   * listeners observe its body and the new revision together. It sends nothing.
+   */
+  reconcileSettledVersion(
+    expectedVersion: number,
+    authoritativeVersion: number,
+    publishBody: () => void,
+  ): boolean {
+    if (!Number.isSafeInteger(expectedVersion) || expectedVersion < 0
+      || !Number.isSafeInteger(authoritativeVersion) || authoritativeVersion <= expectedVersion
+      || this.version !== expectedVersion
+      || this.running || this.pending.size > 0 || this.inFlight !== null
+      || this.conflicted.size > 0 || this.errored.size > 0) return false;
+    publishBody();
+    this.version = authoritativeVersion;
+    this.emit();
+    return true;
+  }
+
   state(): QueueState {
     return {
       version: this.version,

@@ -94,7 +94,7 @@ function summaryLens(summary: ReadingSummary): DevelopField | null {
 }
 
 function sectionLabel(section: RebuildSection | undefined, index = 0): string {
-  return section?.heading?.trim() || `Section ${index + 1}`;
+  return section?.heading?.trim() || `Section ${(section?.position ?? index) + 1}`;
 }
 
 export default function P4R1DevelopController() {
@@ -424,7 +424,7 @@ export default function P4R1DevelopController() {
       return {
         kind: 'section',
         sectionId: currentSection.draftSectionId,
-        label: currentSection.heading?.trim() || 'Current section',
+        label: sectionLabel(currentSection),
       };
     });
   }, [context?.manuscriptId, currentSectionId]);
@@ -443,7 +443,7 @@ export default function P4R1DevelopController() {
       setScope({
         kind: 'section',
         sectionId: currentSection.draftSectionId,
-        label: currentSection.heading?.trim() || 'Current section',
+        label: sectionLabel(currentSection),
       });
     }
   }, [context?.manuscriptId]);
@@ -692,7 +692,7 @@ export default function P4R1DevelopController() {
     });
   }, [updateQuery]);
 
-  const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
+  const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review' | 'publish' | 'listen') => {
     if (mode === 'home') {
       const query = studioHomeReturnSearch(params?.toString() ?? '');
       router.push(`${pathname}${query ? `?${query}` : ''}`);
@@ -732,7 +732,7 @@ export default function P4R1DevelopController() {
       setScope({
         kind: 'section',
         sectionId,
-        label: selected.heading?.trim() || 'Current section',
+        label: sectionLabel(selected),
       });
     }
 

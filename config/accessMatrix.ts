@@ -18,6 +18,9 @@ export interface AccessRule {
   /** Exact route match */
   exact?: string;
 
+  /** Explicit HTTP methods for narrowly scoped routes; checked before forwarding. */
+  methods?: readonly string[];
+
   /** If true, no auth required */
   public?: boolean;
   /** Minimum tier required (free < personal < pro) */
@@ -263,6 +266,16 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/maia', public: true, notes: 'Legacy MAIA threshold — routes people into canonical Soullab Home or explicit MAIA encounter' },
   { exact: '/maia/encounter', minTier: 'free', notes: 'Direct MAIA encounter — authenticated member destination inside Soullab' },
   { exact: '/maia/reflection', minTier: 'free', notes: 'Developmental reflection — member-only (beta v0)' },
+  // MARKED-MOMENTS-ACCESS-01 — this is an existing member-owned room,
+  // not a public surface and not a namespace grant. The exact declaration
+  // keeps strict mode aligned with Home's existing memberMoments door while
+  // leaving every /maia/moments/* neighbor unmapped. The page's Sovereign
+  // API independently enforces member identity and row ownership.
+  { exact: '/maia/moments', minTier: 'free', notes: 'Marked Moments — authenticated member-owned verbatim keeps; exact route only' },
+  // KEEP-CAPTURE-ACCESS-01 — this existing portfolio room is member-owned,
+  // authenticated and exact-only. It is not a public surface and does not
+  // authorize the /maia/keep-capture/* namespace or any portfolio API.
+  { exact: '/maia/keep-capture', minTier: 'free', notes: 'Keep/Capture portfolio — authenticated member-owned memory surface; exact route only' },
   { exact: '/maia/vision-studio', minTier: 'free', notes: 'Vision Studio — authenticated member creative room inside Soullab' },
   { exact: '/maia/compact', minTier: 'free', notes: 'MAIA compact' },
   { exact: '/maia/mandala', minTier: 'free', notes: 'Mandala interface' },
@@ -574,8 +587,30 @@ export const ACCESS_RULES: AccessRule[] = [
   // Public API
   { exact: '/api/ask', public: true, notes: 'Landing page Ask Kelly/MAIA' },
   { exact: '/api/members/check', public: true, notes: 'Check member exists' },
-  { exact: '/api/members/register', public: true, notes: 'Register member' },
-  { exact: '/api/members/register-email', public: true, notes: 'Register via magic link (no passkey)' },
+  { exact: '/api/members/register', public: true, methods: ['POST', 'OPTIONS'], notes: 'Invite-admitted registration; handler verifies admission and session outcome' },
+  { exact: '/api/members/register-email', public: true, methods: ['POST'], notes: 'Email registration; handler requires a one-use verified email proof' },
+  // AUTH-RETURN-01: exact auth endpoints; no wildcard member API admission.
+  { exact: '/api/members/email-code', public: true, methods: ['POST'], notes: 'Issue a rate-limited email challenge with truthful provider acceptance' },
+  { exact: '/api/members/email-code/verify', public: true, methods: ['POST'], notes: 'Consume a challenge into verified session or one-use registration proof' },
+  { exact: '/api/members/session', minTier: 'free', methods: ['GET', 'HEAD', 'POST'], notes: 'Verified current-session readback and cookie refresh; handler independently verifies authority' },
+  { exact: '/api/members/signout', public: true, methods: ['POST'], notes: 'Clear the caller session, including stale credentials; handler confines revocation to that session' },
+  // AUTH-RETURN-01 whole-journey routes. Exact methods only: no auth/onboarding wildcard.
+  // Public admission reaches handlers that independently validate or deliberately
+  // disclose only a tightly bounded pre-auth fact. Member mutations require the
+  // verified outer identity and must independently re-check it in the handler.
+  { exact: '/api/auth/whoami', public: true, methods: ['GET', 'OPTIONS'], notes: 'Current-session readback; handler independently validates every presented credential' },
+  { exact: '/api/members/lookup-email', public: true, methods: ['POST'], notes: 'Rate-limited pre-auth lookup with a two-boolean disclosure budget' },
+  { exact: '/api/auth/device/trust', minTier: 'free', methods: ['POST'], notes: 'Authenticated device-trust mutation; handler independently validates current session' },
+  { exact: '/api/onboarding/telemetry', minTier: 'free', methods: ['POST'], notes: 'Authenticated, non-critical onboarding telemetry' },
+  { exact: '/api/members/progress', minTier: 'free', methods: ['POST'], notes: 'Session-owned onboarding progress mutation; handler refuses cross-origin and conflicting member claims' },
+  { exact: '/api/members/profile', minTier: 'free', methods: ['GET', 'PUT'], notes: 'Session-owned profile and durable consent; exact methods, same-origin mutation, no email-identity changes' },
+  // WRITER-IDENTITY-01: canonical member self-read used by Writer's Studio.
+  // The outer matrix requires an authenticated member at any tier; the handler
+  // independently resolves the verified credential and refuses caller-supplied identity.
+  { exact: '/api/members/me', minTier: 'free', notes: 'Canonical current-member identity for Writer and member surfaces; handler independently verifies credential and exact member row' },
+  // R20: authenticated member may request a deletion verdict. The handler
+  // derives the target from the verified session and automatic deletion is held.
+  { exact: '/api/members/delete-account', minTier: 'free', notes: 'R20 member-scoped deletion request; automatic deletion held fail-closed' },
   { exact: '/api/members/signin', public: true, notes: 'Sign in' },
   { exact: '/api/auth/refresh-and-redirect', public: true, notes: 'Refresh session cookies and redirect' },
   { exact: '/api/practitioners/check', public: true, notes: 'Check practitioner status' },
@@ -647,11 +682,11 @@ export const ACCESS_RULES: AccessRule[] = [
      contain the corridor by emptying it. The neighbour whose policy actually
      fits is /api/sovereign directly above: authenticated, free tier, no role.
 
-     ⛔ NARROWEST THAT COVERS THE ROUTES IN SCOPE, deliberately. A
-     '/api/writers-studio/' prefix would also capture /api/writers-studio/focus,
-     which carries the identical gap and is NOT part of this act — naming it
-     here would silently widen the ruling. It is recorded as an open finding
-     instead.
+     ⛔ NARROWEST THAT COVERS THE ROUTES IN SCOPE, deliberately. A broad
+     '/api/writers-studio/' prefix is prohibited: it would shadow the explicit
+     exact/regex route census, silently admit future APIs in strict mode, and
+     incorrectly impose member-session auth on the separately capability-gated
+     founder-local review endpoints.
 
      ⛔ This changes nothing inside the handlers. resolveCanonicalIdentity stays
      exactly where it is: the matrix stops an unauthenticated request at the
@@ -659,6 +694,43 @@ export const ACCESS_RULES: AccessRule[] = [
      that gets through. Neither layer is permitted to become the other's
      excuse. */
   { prefix: '/api/writers-studio/editorial/', minTier: 'free', notes: "Writer's Studio editorial corridor — authenticated members only (WS-ACCESS-CONTAINMENT-01); same policy as /api/sovereign, never /api/ain's admin gate" },
+
+  /* Founder-local review routes use a separate process capability plus loopback
+     Host/Origin checks. They deliberately do not authenticate a Soullab member,
+     write Source custody or survive outside WS_FOUNDER_LOCAL_REVIEW=1. Exact
+     public outer declarations let those route-owned checks run without granting
+     any neighboring Writer API. Production flag-off behavior remains 404. */
+  { exact: '/api/writers-studio/local-review/import', public: true, notes: 'Founder-local Writer import review — exact route; loopback + process capability enforced inside route; no member or Source authority' },
+  { exact: '/api/writers-studio/local-review/render', public: true, notes: 'Founder-local Writer render review — exact route; loopback + process capability enforced inside route; no publication or retention authority' },
+
+  /* FWE-ROUTE-01 Class A — EXACT Writer's Studio section-aware context GET.
+     The canonical Write room requests this member-owned read snapshot. An
+     unmapped path is denied in strict mode, even with a verified session.
+     Only this exact path is admitted to authenticated members: no shared
+     /api/writers-studio/ prefix, no public exception, no tier/role bypass.
+     This matrix is path-only; the route exports GET, and the route's
+     getMemberIdFromRequest + member_id checks remain the data authority.
+     Do not infer access to neighboring /rebuild or /focus endpoints. */
+  { exact: '/api/writers-studio/rebuild/context', minTier: 'free', notes: "FWE-ROUTE-01 — member-authenticated Writer's Studio read context; handler separately verifies manuscript ownership" },
+
+  /* FWE-ROUTE-02A — ten EXISTING Writer's Studio API route shapes, no more.
+     Outer admission requires an authenticated member at any tier. Independent
+     handler-level identity, ownership, Source custody, consent, and disabled
+     feature flags remain authoritative; this adds none of those powers.
+     Avoid /api/writers-studio/ prefix: it would silently admit unknown future
+     APIs. Dynamic rules match exactly ONE identifier segment and are anchored
+     to prevent neighboring paths inheriting an admission ruling.
+     Do not infer production strict mode, release, or expanded beta access. */
+  { exact: '/api/writers-studio/return/relationship', minTier: 'free', notes: 'FWE-ROUTE-02A: existing member-owned relationship return GET/PUT/DELETE; custody remains in handler' },
+  { exact: '/api/writers-studio/return/place', minTier: 'free', notes: 'FWE-ROUTE-02A: existing member-owned manuscript place GET/PUT/DELETE; custody remains in handler' },
+  { exact: '/api/writers-studio/focus', minTier: 'free', notes: 'FWE-ROUTE-02A: existing Focus POST; independently verified MAIA consent and WRITERS_STUDIO_FOCUS_ENABLED hold' },
+  { exact: '/api/writers-studio/sources', minTier: 'free', notes: 'FWE-ROUTE-02A: existing member Source list/ingest; handler verifies member identity and custody' },
+  { exact: '/api/writers-studio/rebuild/editorial/thread', minTier: 'free', notes: 'FWE-ROUTE-02A: existing editorial thread POST; independently guarded by WRITERS_STUDIO_EDITORIAL_ENABLED' },
+  { exact: '/api/writers-studio/relationships', minTier: 'free', notes: 'FWE-ROUTE-02A: existing member editorial relationships GET/POST; existing feature flags retained' },
+  { regex: /^\/api\/writers-studio\/sources\/[^/]+$/, minTier: 'free', notes: 'FWE-ROUTE-02A: existing single-source GET/PATCH/DELETE; handler independently checks arranger ownership' },
+  { regex: /^\/api\/writers-studio\/sources\/[^/]+\/file$/, minTier: 'free', notes: 'FWE-ROUTE-02A: existing member-scoped Source file GET; no Safari transport policy change' },
+  { regex: /^\/api\/writers-studio\/relationships\/[^/]+$/, minTier: 'free', notes: 'FWE-ROUTE-02A: existing single relationship GET; member-owned and feature-flagged' },
+  { regex: /^\/api\/writers-studio\/relationships\/[^/]+\/carry-sources$/, minTier: 'free', notes: 'FWE-ROUTE-02A: existing relationship carry-sources GET; member-owned and feature-flagged' },
 
   /* Invite API — the issuing side of member admission. Declared EXPLICITLY
      rather than inheriting the permissive unmapped-route default (#717), which

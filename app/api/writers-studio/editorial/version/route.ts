@@ -1,116 +1,98 @@
 /**
- * WS-EDITORIAL-UI-02 · THE WRITER'S OWN FORMULATION.
+ * Existing-thread member formulation Save.
  *
- *   POST  append a member-authored version to this thread's chain
- *
- * ⭐ Same posture as the thread and turn routes: ⛔ off by default and 404 —
- * not 403 — ⛔ verified identity only, ⛔ a CLOSED request shape whose unknown
- * keys are refused AND NAMED rather than ignored.
- *
- * ⭐⭐ THE BODY CARRIES THREE THINGS, AND THE THIRD IS THE ONE THAT MATTERS:
- * `supersedes` is the exact formulation the writer acted against, carried from
- * their click to the store unchanged. ⛔ This route never resolves it, never
- * substitutes the current head for it, and never retries on refusal. The
- * machine's timing may judge their relationship stale; it may not rewrite which
- * wording they answered.
+ * The browser names the frozen thread, its exact predecessor and the current
+ * Work-level relationship. The server derives the chain from the immutable
+ * thread origin, revalidates the current declaration/A2 authority under lock,
+ * and appends only the member's wording. No MAIA turn and no Apply occur here.
  */
-
 import { NextResponse, type NextRequest } from 'next/server';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import {
-  appendMemberEditorialVersion, type MemberVersionRefusal,
+  appendCurrentMemberVersion,
+  type AppendCurrentMemberVersionResult,
 } from '@/lib/manuscript/editorialRuntime/memberVersion';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 
 export const dynamic = 'force-dynamic';
-
 const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
+const PRIVATE = { 'Cache-Control': 'private, no-store', Vary: 'Cookie' } as const;
+const BODY_KEYS = [
+  'threadId', 'relationshipId', 'sanctuary',
+  'supersedes', 'replacementText', 'purpose',
+] as const;
+type Refusal = Extract<AppendCurrentMemberVersionResult, { outcome: 'refused' }>['reason'];
 
-/** ⛔ CLOSED. Everything else is a server fact, a closed capability, or both. */
-const BODY_KEYS = ['threadId', 'supersedes', 'replacementText', 'purpose'] as const;
-
-/**
- * ⭐ Which refusals are the writer's exchange having moved (409) and which are
- * this request being wrong (400).
- *
- * ⛔ `simultaneous_append` is a 409 for the same reason `not_successor_of_head`
- * is: both mean another authored act took the slot, and neither is the caller's
- * mistake. ⛔ NO AUTOMATIC RETRY on either.
- */
-function statusFor(reason: MemberVersionRefusal): number {
+function statusFor(reason: Refusal): number {
   switch (reason) {
-    case 'thread_not_found': return 404;
-    case 'not_editorial':    return 400;
-    case 'chain_unknown':    return 404;
+    case 'chain_unknown': return 404;
+    case 'origin_unavailable':
     case 'not_successor_of_head':
     case 'simultaneous_append':
-    case 'version_exists':   return 409;
-    /* ⛔ Corrupt succession is not a refusal the writer can act on, and it is
-       never repaired to make a request succeed. */
-    case 'chain_corrupt':    return 409;
-    default:                 return 409;
+    case 'version_exists':
+    case 'chain_corrupt': return 409;
+    default: return 409;
   }
 }
 
 export async function POST(request: NextRequest) {
-  if (!enabled()) return new NextResponse(null, { status: 404 });
-
+  if (!enabled()) return new NextResponse(null, { status: 404, headers: PRIVATE });
   const identity = await resolveCanonicalIdentity(request);
   if (identity.status !== 'verified') {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401, headers: PRIVATE });
   }
 
   let raw: unknown;
   try { raw = await request.json(); }
-  catch { return NextResponse.json({ error: 'invalid JSON' }, { status: 400 }); }
-
+  catch { return NextResponse.json({ error: 'invalid JSON' }, { status: 400, headers: PRIVATE }); }
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
-    return NextResponse.json({ error: 'a JSON object is required' }, { status: 400 });
+    return NextResponse.json({ error: 'a JSON object is required' }, { status: 400, headers: PRIVATE });
   }
-  const b = raw as Record<string, unknown>;
-
-  /* ⛔ NAMED, NOT IGNORED. A caller that sent `author` or `chainId` and got 201
-     would believe it had standing it does not have — `author` is fixed to
-     `member` in the seam, and the chain is derived from the owned thread. */
-  const stray = Object.keys(b).filter(
-    (k) => !(BODY_KEYS as readonly string[]).includes(k));
+  const body = raw as Record<string, unknown>;
+  const stray = Object.keys(body).filter(key => !(BODY_KEYS as readonly string[]).includes(key));
   if (stray.length) {
-    return NextResponse.json({
-      error: `unknown field(s): ${stray.join(', ')} — these are server-fixed, derived, or not open in this cut, and carry no standing here`,
-    }, { status: 400 });
+    return NextResponse.json({ error: `unknown field(s): ${stray.join(', ')}` },
+      { status: 400, headers: PRIVATE });
+  }
+  if (typeof body.threadId !== 'string' || body.threadId.length === 0) {
+    return NextResponse.json({ error: 'threadId is required' }, { status: 400, headers: PRIVATE });
+  }
+  if (typeof body.relationshipId !== 'string' || body.relationshipId.length === 0) {
+    return NextResponse.json({ error: 'relationship_required' }, { status: 400, headers: PRIVATE });
+  }
+  if (typeof body.sanctuary !== 'boolean') {
+    return NextResponse.json({ error: 'posture_required' }, { status: 400, headers: PRIVATE });
+  }
+  if (!(body.supersedes === null || typeof body.supersedes === 'string')) {
+    return NextResponse.json({ error: 'supersedes must be a version id or null' }, { status: 400, headers: PRIVATE });
+  }
+  if (typeof body.replacementText !== 'string') {
+    return NextResponse.json({ error: 'replacementText is required' }, { status: 400, headers: PRIVATE });
+  }
+  if (body.purpose !== undefined
+      && (typeof body.purpose !== 'string' || !body.purpose.trim() || body.purpose.length > 80)) {
+    return NextResponse.json({ error: 'purpose must be 1–80 characters' }, { status: 400, headers: PRIVATE });
   }
 
-  if (typeof b.threadId !== 'string' || b.threadId.length === 0) {
-    return NextResponse.json({ error: 'threadId is required' }, { status: 400 });
+  const posture = TurnPosture.resolve({ sanctuary: body.sanctuary });
+  if (posture.sanctuary) {
+    return NextResponse.json({ error: 'sanctuary_unavailable', persisted: false },
+      { status: 409, headers: PRIVATE });
   }
-  if (!(b.supersedes === null || typeof b.supersedes === 'string')) {
-    return NextResponse.json({ error: 'supersedes must be a version id or null' }, { status: 400 });
-  }
-  /* ⛔⛔ TYPE ONLY, NEVER TRUTHINESS. `''` is a lawful candidate formulation —
-     a writer may mean *this passage should not be here* — and it changes
-     nothing until adoption, which is closed. A `!b.replacementText` guard here
-     would silently refuse an act the substrate permits. */
-  if (typeof b.replacementText !== 'string') {
-    return NextResponse.json({ error: 'replacementText is required' }, { status: 400 });
-  }
-
-  if (b.purpose !== undefined && (typeof b.purpose !== 'string' || !b.purpose.trim() || b.purpose.length > 80)) {
-    return NextResponse.json({ error: 'purpose must be 1–80 characters' }, { status: 400 });
-  }
-  const appended = await appendMemberEditorialVersion({
-    identity,
-    threadId: b.threadId,
-    supersedes: b.supersedes,
-    replacementText: b.replacementText,
-    ...(typeof b.purpose === 'string' ? { purpose: b.purpose.trim() } : {}),
+  const appended = await appendCurrentMemberVersion({
+    memberId: identity.memberId,
+    relationshipId: body.relationshipId,
+    threadId: body.threadId,
+    supersedes: body.supersedes,
+    replacementText: body.replacementText,
+    ...(typeof body.purpose === 'string' ? { purpose: body.purpose.trim() } : {}),
   });
-
-  if (!appended.ok) {
-    return NextResponse.json({ error: appended.reason }, { status: statusFor(appended.reason) });
+  if (appended.outcome !== 'appended') {
+    return NextResponse.json({ error: appended.reason, persisted: false },
+      { status: statusFor(appended.reason), headers: PRIVATE });
   }
-  /* ⭐ THIN. The new version's identity and its stated predecessor — ⛔ no
-     lineage, no chain, no locus. The surface re-reads the thread, so the screen
-     agrees with storage rather than with what it just sent. */
-  return NextResponse.json(
-    { versionId: appended.version.id, supersedes: appended.version.supersedes },
-    { status: 201 });
+  return NextResponse.json({
+    versionId: appended.version.id,
+    supersedes: appended.version.supersedes,
+  }, { status: 201, headers: PRIVATE });
 }

@@ -9,6 +9,8 @@ export type MemberRenderSource =
   | {
       ok: true;
       title: string;
+      /** Raw expression title; null means the Work name may label a preview. */
+      manuscriptTitle: string | null;
       author: string | null;
       sections: MemberBookSection[];
       sourceAuthority: RenderSourceAuthority;
@@ -133,6 +135,7 @@ export async function loadMemberRenderSource(
     return {
       ok: true,
       title,
+      manuscriptTitle: ms.rows[0]!.title,
       author: who.rows[0]?.name ?? null,
       sections,
       sourceAuthority,

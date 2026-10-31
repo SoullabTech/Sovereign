@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import MaiaListen from './MaiaListen';
 import EditorialApproaches from './EditorialApproaches';
-import { selectedProposalText, alternativeLabel, passageContext } from '@/lib/writersStudio/editorialApproaches';
+import { selectedProposalText, alternativeLabel, passageContext, passageContextAt, type ExactEditorialPassageLocus } from '@/lib/writersStudio/editorialApproaches';
 import type { RebuildEditorialThread, RebuildEditorialVersion } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import WorkInspiration from './WorkInspiration';
 import { EDITORIAL_QUESTIONS } from '@/lib/writersStudio/editorialQuestions';
@@ -25,7 +25,7 @@ export type CarryChooserPresentation =
   | { readonly kind: 'unavailable' };
 export default function RevisionDesk({
   active = true, inline = false, onPreview, onEditOriginal, onReadContext, composedText, depth, onDepth, openDraftNonce, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
-  onApply, onSaveMember, busy, message, response, onKeep, sectionBody, appliedVersionId, onUndo, undoMessage,
+  onApply, onSaveMember, busy, message, response, onKeep, sectionBody, passageLocus, appliedVersionId, onUndo, undoMessage,
   latitude = 1, onLatitude, mayRemoveParagraphs = false, onMayRemoveParagraphs, voiceNotice,
   mayProposeImmediately = false, onMayProposeImmediately,
   carrySourceAvailable = false, carryChooser = { kind: 'closed' }, selectedCarrySource = null,
@@ -53,7 +53,8 @@ export default function RevisionDesk({
   onInstruction: (text: string) => void; onSend: (text?: string) => void;
   onSelectVersion: (id: string) => void; onApply: () => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
-  sectionBody?: string; appliedVersionId?: string | null; onUndo?: () => void; undoMessage?: string | null;
+  sectionBody?: string; passageLocus?: ExactEditorialPassageLocus | null;
+  appliedVersionId?: string | null; onUndo?: () => void; undoMessage?: string | null;
   busy: boolean; message: string | null; response: string | null; onKeep: () => void;
   /** ⭐ The author's editing latitude. ⛔ Defaults to the most protective value. */
   latitude?: EditorialLatitude; onLatitude?: (v: EditorialLatitude) => void;
@@ -82,8 +83,14 @@ export default function RevisionDesk({
   const [directionContext, setDirectionContext] = useState('');
   const [reviewed, setReviewed] = useState<string | null>(null);
   const [purpose, setPurpose] = useState('');
-  const previewKey = JSON.stringify([scopeKey, version?.id, version?.wording, currentText, sectionBody]);
-  const context = passageContext(sectionBody ?? currentText, currentText);
+  // One unchanged phrase can occur in several places: the reviewed identity
+  // must include its EXACT anchored location, not only the same word bytes.
+  const previewKey = JSON.stringify([scopeKey, version?.id, version?.wording, currentText, sectionBody, passageLocus]);
+  const context = passageLocus
+    ? passageLocus.text === currentText
+      ? passageContextAt(sectionBody ?? currentText, passageLocus)
+      : null
+    : passageContext(sectionBody ?? currentText, currentText);
   const versionLabel = version ? alternativeLabel(version, thread?.versions.findIndex(v => v.id === version.id) ?? 0) : '';
   const discuss = () => {
     const question = [editorialQuestion, reasonQuestion, instruction.trim()].filter(Boolean).join('\n');

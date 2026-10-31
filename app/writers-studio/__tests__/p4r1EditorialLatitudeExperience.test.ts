@@ -24,8 +24,12 @@ describe('Writer Studio editorial latitude experience', () => {
   });
 
   it('keeps explanation depth separate from proposal scope', () => {
-    expect(controller).toContain('editorialDirective(editorialDepth)');
-    expect(controller).toContain('The writer explicitly requested proposed wording in this turn.');
+    // Depth and an explicit edit request travel as structured, server-owned
+    // fields; the stored author turn carries only the author's own words.
+    expect(controller).toContain('const exactWords = text;');
+    expect(controller).toContain('responseDepth: editorialDepth');
+    expect(controller).not.toContain('editorialDirective(editorialDepth)');
+    expect(controller).not.toContain('The writer explicitly requested proposed wording in this turn.');
     expect(controller).toContain('mayProposeImmediately: mayProposeImmediately || proposalRequested');
     expect(controller).toContain('latitude: editLatitude');
     expect(controller).toContain('mayRemoveParagraphs');
@@ -53,7 +57,7 @@ describe('Writer Studio editorial latitude experience', () => {
     expect(dance).toContain('MAIA’s latest response');
     expect(dance).toContain('data-editorial-latest-response');
     expect(dance).toContain("{ proposalPolicy: 'allow', proposalRequested: true }");
-    expect(controller).toContain('options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean }');
+    expect(controller).toContain('options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean; displayText?: string }');
     expect(controller).toContain('onSendEditorial={(text, options) => void sendEditorial(text, options)}');
     expect(dance).toContain('{postureGate}');
     expect(dance).toContain('disabled={props.busy || postureBlocksEditorial}');

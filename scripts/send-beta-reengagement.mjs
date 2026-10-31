@@ -6,9 +6,10 @@
 
 import { Resend } from 'resend';
 import pg from 'pg';
+import { requireDatabaseUrl } from './lib/explicit-database-url.mjs';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const db = new pg.Pool({ connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness' });
+const db = new pg.Pool({ connectionString: requireDatabaseUrl(process.env.DATABASE_URL) });
 
 const onboardedEmail = (name) => ({
   subject: "You're back in the room",

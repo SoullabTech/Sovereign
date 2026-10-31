@@ -17,7 +17,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import {
-  openEditorialRelationship, readEditorialThread,
+  openEditorialRelationship, readCurrentEditorialThread,
 } from '@/lib/manuscript/editorialRuntime/thread';
 
 export const dynamic = 'force-dynamic';
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   /* ⛔ CLOSED. `workId`, `draftId`, `chainId`, `expectedText`, `baseVersion` are
      all server facts; a caller that sent one and got 200 would believe it had
      standing. */
-  const stray = Object.keys(b).filter((k) => k !== 'sectionId' && k !== 'sanctuary');
+  const stray = Object.keys(b).filter((k) => k !== 'sectionId' && k !== 'sanctuary' && k !== 'relationshipId');
   if (stray.length) {
     return NextResponse.json({
       error: `unknown field(s): ${stray.join(', ')} — these are derived server-side and carry no standing here`,
@@ -64,7 +64,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'sectionId is required' }, { status: 400 });
   }
 
-  const opened = await openEditorialRelationship({ identity, sectionId: b.sectionId });
+  if (typeof b.relationshipId !== 'string' || !b.relationshipId.length) {
+    return NextResponse.json({ error: 'relationship_required', persisted: false }, { status: 400 });
+  }
+  const opened = await openEditorialRelationship({
+    identity, sectionId: b.sectionId, relationshipId: b.relationshipId,
+    posture: TurnPosture.resolve(b),
+  });
   if (!opened.ok) {
     return NextResponse.json({ error: opened.reason },
       { status: opened.reason === 'section_not_found' ? 404 : 400 });
@@ -79,11 +85,16 @@ export async function GET(request: NextRequest) {
 
   const threadId = request.nextUrl.searchParams.get('threadId');
   if (!threadId) return NextResponse.json({ error: 'threadId is required' }, { status: 400 });
+  const relationshipId = request.nextUrl.searchParams.get('relationshipId');
+  if (!relationshipId) {
+    return NextResponse.json({ error: 'relationship_required' }, { status: 400 });
+  }
 
-  const read = await readEditorialThread(identity, threadId);
+  const read = await readCurrentEditorialThread(identity, relationshipId, threadId);
   if (!read.ok) {
-    return NextResponse.json({ error: read.reason },
-      { status: read.reason === 'thread_not_found' ? 404 : 400 });
+    const status = read.reason === 'thread_not_found' ? 404
+      : read.reason === 'origin_unavailable' ? 409 : 400;
+    return NextResponse.json({ error: read.reason }, { status });
   }
   /* ⭐ The durable conversation, and only it. ⛔ No prompt, no invocation, no
      provider material — the same thinness the turn route keeps. */

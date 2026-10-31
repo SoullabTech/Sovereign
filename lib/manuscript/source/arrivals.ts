@@ -1,13 +1,17 @@
-import { query } from '@/lib/db/postgres';
-import { readVaultBytes, writeVaultBytes } from '@/lib/storage/fileVault';
+import { query, transaction } from '@/lib/db/postgres';
+import { readVaultBytes } from '@/lib/storage/fileVault';
+import {
+  getEncryptedLandingForArrival,
+  recordEncryptedArtifactArrival,
+  recoverEncryptedLandingBytes,
+} from './encryptedLanding';
 import {
   ARTIFACT_EXTRACTION,
-  artifactExt,
   buildArrival,
   certifiesCustody,
   hashBytes,
+  hashText,
   MEMBER_SUPPLIED_TEXT,
-  type ArrivalInput,
   type ExtractorKey,
   type SourceKind,
 } from './custody';
@@ -19,14 +23,13 @@ import {
  * the immutable bytes. This module is the only place those two are joined, so
  * "the bytes exist" and "a row says they do" cannot drift apart silently.
  *
- * Bytes are written to the vault BEFORE the row is inserted. The failure that
- * ordering prevents is the one the founder's negative control names: a row
- * asserting custody over bytes that were never durably written. The reverse
- * leak — bytes with no row — is a harmless orphan a sweep can collect, and is
- * strictly preferable to a false claim of custody.
+ * File-backed arrivals now begin with a committed member-bound landing intent.
+ * A random per-arrival key encrypts the original in memory; only ciphertext is
+ * written durably. The immutable arrival row is inserted only after independent
+ * read-back, authenticated decryption and exact original hash/length checks.
+ * Existing pre-migration arrivals retain their legacy plaintext read path.
  */
 
-const VAULT_NAMESPACE = 'manuscript-sources';
 
 export interface StoredArrival {
   id: string;
@@ -35,6 +38,7 @@ export interface StoredArrival {
   sourceTextHash: string;
   artifactRef: string | null;
   artifactHash: string | null;
+  landingIntentId?: string;
 }
 
 /** Persist a file-backed arrival: bytes to the vault, then the governing row. */
@@ -45,28 +49,21 @@ export async function recordArtifactArrival(params: {
   mimeType: string | null;
   sourceText: string;
   extractor: ExtractorKey;
+  idempotencyKey?: string | null;
 }): Promise<StoredArrival> {
-  const artifactHash = hashBytes(params.bytes);
-  const fileId = `${Date.now().toString(36)}-${artifactHash.slice(0, 16)}`;
-  const artifactRef = await writeVaultBytes(
-    VAULT_NAMESPACE,
-    fileId,
-    artifactExt(params.originalFilename),
-    params.bytes,
-  );
-
-  const record = buildArrival({
-    kind: ARTIFACT_EXTRACTION,
-    artifactRef,
-    artifactHash,
-    artifactSize: params.bytes.byteLength,
+  if (params.extractor === 'supplied') {
+    throw new Error('artifact_arrival_cannot_use_supplied_extractor');
+  }
+  return recordEncryptedArtifactArrival({
+    memberId: params.memberId,
+    bytes: params.bytes,
     originalFilename: params.originalFilename,
     mimeType: params.mimeType,
     sourceText: params.sourceText,
     extractor: params.extractor,
-  } satisfies ArrivalInput);
-
-  return insertArrival(params.memberId, record);
+    format: params.extractor,
+    idempotencyKey: params.idempotencyKey,
+  });
 }
 
 /**
@@ -122,30 +119,87 @@ async function insertArrival(
 }
 
 /**
- * Attach an unclaimed arrival to the manuscript the member just confirmed, and
- * mark that manuscript as carrying real source custody.
+ * R12 isolated beta candidate — atomically bind a pending Source arrival to a
+ * SAME-MEMBER manuscript. Do not grant custody from the arrival owner alone.
  *
- * Member-scoped and single-claim by the same predicate: an arrival belonging to
- * someone else, or already claimed by another manuscript, matches zero rows.
+ * Lock order is arrival first, then destination. discardUnclaimedArrival()
+ * locks the same arrival before deletion, serializing claim vs member discard.
+ * A failed destination update aborts both changes in ONE transaction.
+ *
+ * This does NOT activate encrypted backup, change imported text, assert that
+ * historical unreferenced vault bytes are abandoned, or transfer a pending
+ * arrival's future encryption key. Those remain separate release gates.
  */
 export async function claimArrival(
   arrivalId: string,
   manuscriptId: string,
   memberId: string,
 ): Promise<boolean> {
-  const res = await query(
-    `UPDATE manuscript_source_arrivals
-        SET manuscript_id = $2
-      WHERE id = $1 AND member_id = $3 AND manuscript_id IS NULL`,
-    [arrivalId, manuscriptId, memberId],
-  );
-  if ((res.rowCount ?? 0) === 0) return false;
-  await query(
-    `UPDATE member_manuscripts SET source_custody = 'source_custodied'
-      WHERE id = $1 AND member_id = $2`,
-    [manuscriptId, memberId],
-  );
-  return true;
+  // New arrivals are ciphertext-first and carry a DB-bound envelope. Existing
+  // pre-migration arrivals remain readable through the legacy plaintext path.
+  const encryptedLanding = await getEncryptedLandingForArrival(arrivalId, memberId);
+  return transaction(async (tx) => {
+    const arrival = await tx.query<{
+      source_kind: string;
+      source_text: string;
+      source_text_hash: string;
+      artifact_ref: string | null;
+      artifact_hash: string | null;
+    }>(
+      `SELECT source_kind, source_text, source_text_hash, artifact_ref, artifact_hash
+         FROM manuscript_source_arrivals
+        WHERE id = $1 AND member_id = $2 AND manuscript_id IS NULL
+        FOR UPDATE`,
+      [arrivalId, memberId],
+    );
+    if (arrival.rows.length !== 1) return false;
+
+    // Independently authorize the DESTINATION inside this same transaction.
+    // The foreign key on manuscript_id alone does not require same-member
+    // ownership. A missing, foreign or already-deleted Work must be refused.
+    const destination = await tx.query<{ id: string }>(
+      `SELECT id FROM member_manuscripts
+        WHERE id = $1 AND member_id = $2 FOR UPDATE`,
+      [manuscriptId, memberId],
+    );
+    if (destination.rows.length !== 1) return false;
+
+    const source = arrival.rows[0];
+    if (hashText(source.source_text) !== source.source_text_hash) return false;
+    if (source.source_kind === ARTIFACT_EXTRACTION) {
+      if (!source.artifact_ref || !source.artifact_hash) return false;
+      // A stored hash alone does not certify custody. The original bytes must
+      // still be present and identical when this member claims the arrival.
+      const bytes = encryptedLanding
+        ? await recoverEncryptedLandingBytes(encryptedLanding)
+        : await readVaultBytes(source.artifact_ref);
+      if (hashBytes(bytes) !== source.artifact_hash) return false;
+    } else if (source.source_kind === MEMBER_SUPPLIED_TEXT) {
+      if (source.artifact_ref !== null || source.artifact_hash !== null) return false;
+    } else {
+      return false;
+    }
+
+    const claimed = await tx.query(
+      `UPDATE manuscript_source_arrivals
+          SET manuscript_id = $2
+        WHERE id = $1 AND member_id = $3 AND manuscript_id IS NULL`,
+      [arrivalId, manuscriptId, memberId],
+    );
+    if (claimed.rowCount !== 1) {
+      throw new Error('source_claim_changed_under_lock');
+    }
+    const marked = await tx.query(
+      `UPDATE member_manuscripts
+          SET source_custody = 'source_custodied'
+        WHERE id = $1 AND member_id = $2`,
+      [manuscriptId, memberId],
+    );
+    if (marked.rowCount !== 1) {
+      throw new Error('source_destination_changed_under_lock');
+    }
+    return true;
+  });
 }
 
 /**
@@ -165,11 +219,12 @@ export async function verifyCustody(manuscriptId: string, memberId: string): Pro
   reason: string;
 }> {
   const res = await query<{
+    id: string;
     source_kind: string;
     artifact_ref: string | null;
     artifact_hash: string | null;
   }>(
-    `SELECT source_kind, artifact_ref, artifact_hash
+    `SELECT id, source_kind, artifact_ref, artifact_hash
        FROM manuscript_source_arrivals
       WHERE manuscript_id = $1 AND member_id = $2
       ORDER BY created_at ASC LIMIT 1`,
@@ -192,7 +247,10 @@ export async function verifyCustody(manuscriptId: string, memberId: string): Pro
   let recoverable = false;
   let reason = 'artifact_unreadable';
   try {
-    const bytes = await readVaultBytes(row.artifact_ref!);
+    const encryptedLanding = await getEncryptedLandingForArrival(row.id, memberId);
+    const bytes = encryptedLanding
+      ? await recoverEncryptedLandingBytes(encryptedLanding)
+      : await readVaultBytes(row.artifact_ref!);
     if (hashBytes(bytes) === row.artifact_hash) {
       recoverable = true;
       reason = 'artifact_recovered';

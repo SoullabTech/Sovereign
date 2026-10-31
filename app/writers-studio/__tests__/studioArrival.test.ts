@@ -194,9 +194,9 @@ const code = (rel: string) =>
 describe('surfaces', () => {
   it('House uses the one doorway builder only for H1-admitted members and otherwise preserves plain Studio entry', () => {
     const house = code('app/house/page.tsx');
-    expect(house).toMatch(/const houseStudioH1Admitted = canUseHouseStudioH1\(member\.id\);/);
-    expect(house).toMatch(/href=\{houseWritingHref\(houseStudioH1Admitted, work\.id, studioArrivalFromHouse\)\}/);
-    expect(house).toMatch(/href=\{houseWritingHref\(houseStudioH1Admitted, null, studioArrivalFromHouse\)\}/);
+    expect(house).toMatch(/const houseStudioH1Admitted = !cabinOffline && canUseHouseStudioH1\(member\.id\);/);
+    expect(house).toMatch(/href=\{cabinOffline \? houseWriterStudioHref\(work\.id\) : houseWritingHref\(houseStudioH1Admitted, work\.id, studioArrivalFromHouse\)\}/);
+    expect(house).toMatch(/href=\{cabinOffline \? '\/writers-studio\?from=house' : houseWritingHref\(houseStudioH1Admitted, null, studioArrivalFromHouse\)\}/);
     expect(studioArrivalFromHouse('x')).not.toMatch(/member|intent|thread|title/i);
   });
 

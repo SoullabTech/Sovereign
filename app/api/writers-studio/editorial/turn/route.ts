@@ -34,6 +34,7 @@ import {
   type EditorialScopeDeclaration,
 } from '@/lib/manuscript/editorialScope/contract';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
+import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,7 +49,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  * the mistake is legible rather than mysterious.
  */
 const TOP_KEYS = [
-  'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'relationshipId', 'carry',
+  'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'responseDepth', 'relationshipId', 'carry',
 ] as const;
 const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
@@ -67,12 +68,13 @@ type Parsed =
       act: { act: MemberActKind; text: string; refersTo: string | null };
       sanctuary: boolean;
       scope: EditorialScopeDeclaration;
-      relationshipId: string | null;
+      relationshipId: string;
       carry: { kind: 'prior_maia_editorial_turn'; sourceEpisodeSequence: number } | null;
       /** ⭐ The writer's PER-WORK release of the sequence gate. ⛔ Default false. */
       mayProposeImmediately: boolean;
       /** Turn-local outcome vocabulary. ⛔ Defaults to allow. */
       proposalPolicy: ProposalPolicy;
+      responseDepth: EditorialDepth;
     }
   | { ok: false; error: string };
 
@@ -95,9 +97,8 @@ function parseClosed(body: unknown): Parsed {
   if (typeof b.threadId !== 'string' || b.threadId.length === 0) {
     return { ok: false, error: 'threadId is required' };
   }
-  if (!(b.relationshipId === undefined
-      || (typeof b.relationshipId === 'string' && b.relationshipId.length > 0))) {
-    return { ok: false, error: 'relationshipId must be a non-empty string when provided' };
+  if (typeof b.relationshipId !== 'string' || b.relationshipId.length === 0) {
+    return { ok: false, error: 'relationship_required' };
   }
 
   let carry: { kind: 'prior_maia_editorial_turn'; sourceEpisodeSequence: number } | null = null;
@@ -145,6 +146,13 @@ function parseClosed(body: unknown): Parsed {
   /* ⛔ Absence is not release — the discussion-first order is the default. */
   let mayProposeImmediately = false;
   let proposalPolicy: ProposalPolicy = 'allow';
+  // Only the explicit writer's requested EXPLANATION register may vary.
+  // It NEVER permits a wider Read, revision latitude, or more authored prose.
+  const responseDepth: EditorialDepth = b.responseDepth === undefined
+    ? 'guided' : b.responseDepth as EditorialDepth;
+  if (!(['guided','learning','direct'] as readonly string[]).includes(responseDepth)) {
+    return { ok: false, error: 'responseDepth must be guided, learning, or direct' };
+  }
   if (b.proposalPolicy !== undefined) {
     if (!(b.proposalPolicy === 'allow' || b.proposalPolicy === 'reply_only')) {
       return { ok: false, error: 'proposalPolicy must be allow or reply_only' };
@@ -189,10 +197,11 @@ function parseClosed(body: unknown): Parsed {
        contradictory nested affirmative still fails closed to Sanctuary. */
     sanctuary: TurnPosture.resolve(b).sanctuary,
     scope,
-    relationshipId: typeof b.relationshipId === 'string' ? b.relationshipId : null,
+    relationshipId: b.relationshipId,
     carry,
     mayProposeImmediately,
     proposalPolicy,
+    responseDepth,
   };
 }
 
@@ -230,23 +239,21 @@ export async function POST(request: NextRequest) {
 
   const memberId = identity.memberId;
 
-  if (parsed.relationshipId !== null) {
-    const relationship = await preflightEditorialRelationshipCarriage({
-      memberId,
-      relationshipId: parsed.relationshipId,
-      threadId: parsed.threadId,
-    });
-    if (!relationship.ok) {
-      const status = relationship.reason === 'relationship_not_found' ? 404 : 409;
-      return NextResponse.json({ error: relationship.reason, persisted: false }, { status });
-    }
+  const relationship = await preflightEditorialRelationshipCarriage({
+    memberId,
+    relationshipId: parsed.relationshipId,
+    threadId: parsed.threadId,
+  });
+  if (!relationship.ok) {
+    const status = relationship.reason === 'relationship_not_found' ? 404 : 409;
+    return NextResponse.json({ error: relationship.reason, persisted: false }, { status });
   }
 
   let resolvedCarry: ResolvedPriorMaiaEditorialCarry | undefined;
   if (parsed.carry !== null) {
     const carry = await resolvePriorMaiaEditorialCarry({
       memberId,
-      relationshipId: parsed.relationshipId!,
+      relationshipId: parsed.relationshipId,
       receiverThreadId: parsed.threadId,
       sourceEpisodeSequence: parsed.carry.sourceEpisodeSequence,
     });
@@ -270,7 +277,7 @@ export async function POST(request: NextRequest) {
     /* ⭐ THE SAME MINTED OBJECT. ⛔ No second identity crosses this boundary. */
     identity,
     threadId: parsed.threadId,
-    ...(parsed.relationshipId !== null ? { relationshipId: parsed.relationshipId } : {}),
+    relationshipId: parsed.relationshipId,
     ...(resolvedCarry ? { carry: resolvedCarry } : {}),
     currentTurnIndex: act.turnIndex,
     declaredAct: parsed.act.act,
@@ -282,6 +289,7 @@ export async function POST(request: NextRequest) {
     scope: parsed.scope,
     mayProposeImmediately: parsed.mayProposeImmediately,
     proposalPolicy: parsed.proposalPolicy,
+    responseDepth: parsed.responseDepth,
   });
 
   if (!turn.ok) {
@@ -315,6 +323,16 @@ export async function POST(request: NextRequest) {
        and nothing was sent. ⛔ 502 would blame the provider for a line this
        system drew before reaching it. */
     const disclosureRefused = turn.reason === 'disclosure_unavailable';
+    const accountabilityUnresolved = turn.reason === 'disclosure_confirmation_unresolved';
+    const safeDetail = scopeRefused || disclosureRefused
+      ? turn.detail
+      : turn.reason === 'structured_refused'
+        ? turn.detail
+        : turn.reason === 'model_unattributable'
+          ? 'model_attribution_unverified'
+          : accountabilityUnresolved
+            ? 'provider_disclosure_confirmation_unresolved'
+            : undefined;
     /* ⭐ THE DIAGNOSTIC THAT WAS MISLEADING, CORRECTED.
      *
      * `detail` is withheld from the RESPONSE for non-scope refusals, and that is
@@ -327,7 +345,7 @@ export async function POST(request: NextRequest) {
     if (!scopeRefused && !disclosureRefused) {
       console.error('[editorial/turn] refused', {
         reason: turn.reason,
-        detail: turn.detail,
+        detail: safeDetail ?? 'redacted',
         dispatch: turn.dispatch ?? 'not_applicable',
         threadId: parsed.threadId,
         memberTurnIndex: act.turnIndex,
@@ -336,6 +354,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       threadId: parsed.threadId,
       memberTurnIndex: act.turnIndex,
+      persisted: true,
       direction: act.direction ? { id: act.direction.id } : null,
       error: turn.reason,
       /* ⭐ SAFE TO RETURN, and the reason the field exists: it reports whether a
@@ -360,7 +379,7 @@ export async function POST(request: NextRequest) {
        * ⛔ Still never content: every detail on this path is a fixed code, a
        * model name, or the writer-facing refusal sentence. ⛔ No authored prose,
        * no candidate wording. A refusal is not an occasion to disclose. */
-      ...(turn.detail !== undefined ? { detail: turn.detail } : {}),
+      ...(safeDetail !== undefined ? { detail: safeDetail } : {}),
       ...(turn.scope ? {
         scope: {
           declared: parsed.scope,
@@ -371,7 +390,7 @@ export async function POST(request: NextRequest) {
           wouldPassAtLatitude: turn.scope!.wouldPassAtLatitude,
         },
       } : {}),
-    }, { status: scopeRefused || disclosureRefused ? 409 : 502 });
+    }, { status: scopeRefused || disclosureRefused ? 409 : accountabilityUnresolved ? 500 : 502 });
   }
 
   /* ⛔ THIN. No StructuredRequest, no systemPrompt, no EditorialInvocation, no
@@ -380,6 +399,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     threadId: parsed.threadId,
     memberTurnIndex: act.turnIndex,
+    persisted: true,
     maiaTurnIndex: turn.persisted.turnIndex,
     response: turn.persisted.reply,
     direction: turn.persisted.direction ? { id: turn.persisted.direction.id } : null,

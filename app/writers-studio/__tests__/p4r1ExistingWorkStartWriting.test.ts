@@ -18,15 +18,38 @@ describe('C7 — existing Work → begin writing without copying materials', () 
     expect(home).toContain('Begins a blank writing place. Materials stay where they are.');
   });
 
-  it('reuses blank-manuscript creation and existing Work declaration authority', () => {
+  it('uses one Work-scoped server transaction for blank creation and declaration', () => {
+    const helperStart = controller.indexOf('const startWritingInWork = useCallback');
     const start = controller.indexOf('const onStartWriting = useCallback');
     const end = controller.indexOf('const onMakeWork = useCallback', start);
+    const helper = controller.slice(helperStart, start);
     const slice = controller.slice(start, end);
 
-    expect(slice).toContain("post('/api/sovereign/manuscripts/blank')");
-    expect(slice).toContain('await declare(workId, manuscriptId)');
+    expect(helper).toContain("'/api/sovereign/living-works/' + workId + '/start-writing'");
+    expect(slice).toContain('await startWritingInWork(workId)');
+    expect(slice).not.toContain('/api/sovereign/manuscripts/blank');
+    expect(slice).not.toContain('await declare(');
     expect(slice).toContain('await refresh()');
     expect(slice).toContain('open(manuscriptId)');
+  });
+
+
+  it('uses the same atomic Work-scoped start after creating a new Work', () => {
+    const start = controller.indexOf('const onBegin = useCallback');
+    const end = controller.indexOf('const onStartWriting = useCallback', start);
+    const slice = controller.slice(start, end);
+    expect(slice).toContain("post('/api/sovereign/living-works'");
+    expect(slice).toContain('await startWritingInWork(workId)');
+    expect(slice).not.toContain('/api/sovereign/manuscripts/blank');
+    expect(slice).not.toContain('await declare(');
+  });
+
+  it('keeps explicit Add to Work separate from Start writing', () => {
+    const start = controller.indexOf('const onAddToWork = useCallback');
+    const end = controller.indexOf('/* HOUSE-STUDIO', start);
+    const slice = controller.slice(start, end);
+    expect(slice).toContain('await declare(workId, manuscriptId)');
+    expect(slice).not.toContain('/start-writing');
   });
 
   it('does not create another Work or copy Idea/Source content during Start writing', () => {
@@ -44,14 +67,17 @@ describe('C7 — existing Work → begin writing without copying materials', () 
   it('keeps New Work and import affordances visible after a writer already has Works', () => {
     expect(home).toContain('Start or bring a Work');
     expect(home).toContain('New Work');
-    expect(home).toContain('Upload / import writing');
+    expect(home).toContain('Import writing');
     expect(home).toContain('Notes &amp; sources');
     // BEGIN, returning Work, unclaimed writing, and general many-Works Home
     // all keep creation/import affordances available.
-    expect(home.match(/\{creationControls\}/g)?.length).toBe(4);
+    // R10 adds a fifth arrival state (the new-work room), which also keeps the
+    // controls visible: every state offers creation/import.
+    expect(home.match(/\{creationControls\}/g)?.length).toBe(5);
     expect(home).toContain('data-home-return-work={props.returnWork.id}');
-    expect(controller).toContain("import { IMPORT_HREF } from '@/app/writers-studio/studioMap';");
-    expect(controller).toContain('onImport={() => window.location.assign(IMPORT_HREF)}');
+    expect(controller).toContain("import P4R1ImportManuscript from './P4R1ImportManuscript';");
+    expect(controller).toContain('onImport={openImport}');
+    expect(controller).not.toContain('window.location.assign');
   });
 });
 

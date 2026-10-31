@@ -22,9 +22,19 @@ const THREAD = {
   targetSectionId: 'section-1',
   sectionLabel: null,
   legacyLocus: false,
-  turns: [],
+  turns: [
+    { turnIndex: 0, speaker: 'author', body: 'My question', at: '2026-10-20T10:00:00Z' },
+    { turnIndex: 1, speaker: 'maia', body: 'Reply.', at: '2026-10-20T10:00:01Z' },
+  ],
   versions: [],
   headVersionId: null,
+};
+
+// Deliberately complete fictional receipt: the selected A2 relationship is
+// tested independently of the exact pair matching that protects success.
+const TURN_RECEIPT = {
+  threadId: 'thread-1', memberTurnIndex: 0, maiaTurnIndex: 1,
+  response: 'Reply.', version: null, voice: null,
 };
 
 beforeEach(() => mockedApiFetch.mockReset());
@@ -70,7 +80,7 @@ describe('A2-6 relationship carriage', () => {
 
   it('Editorial carries the exact selected relationshipId', async () => {
     mockedApiFetch
-      .mockResolvedValueOnce(response(200, { response: 'Reply.', version: null, voice: null }))
+      .mockResolvedValueOnce(response(200, TURN_RECEIPT))
       .mockResolvedValueOnce(response(200, THREAD));
 
     const out = await sendBoundEditorialTurn(
@@ -89,7 +99,7 @@ describe('A2-6 relationship carriage', () => {
 
   it('Editorial carry sends only kind and relationship-local episode sequence', async () => {
     mockedApiFetch
-      .mockResolvedValueOnce(response(200, { response: 'Reply.', version: null, voice: null }))
+      .mockResolvedValueOnce(response(200, TURN_RECEIPT))
       .mockResolvedValueOnce(response(200, THREAD));
 
     await sendBoundEditorialTurn(
@@ -106,20 +116,15 @@ describe('A2-6 relationship carriage', () => {
     expect(Object.keys(body.carry).sort()).toEqual(['kind', 'sourceEpisodeSequence']);
   });
 
-  it('Editorial omits relationshipId when no parent is selected', async () => {
-    mockedApiFetch
-      .mockResolvedValueOnce(response(200, { response: 'Reply.', version: null, voice: null }))
-      .mockResolvedValueOnce(response(200, THREAD));
-
-    await sendBoundEditorialTurn(
+  it('Editorial refuses before network when no current parent is selected', async () => {
+    const out = await sendBoundEditorialTurn(
       'thread-1',
       'section-1',
       'My question',
       posture,
       { latitude: 1, mayRemoveParagraphs: false },
     );
-
-    const body = JSON.parse(String(mockedApiFetch.mock.calls[0]![1]?.body));
-    expect('relationshipId' in body).toBe(false);
+    expect(out).toMatchObject({ ok: false, reason: 'scope_refused', detail: 'relationship_required' });
+    expect(mockedApiFetch).not.toHaveBeenCalled();
   });
 });

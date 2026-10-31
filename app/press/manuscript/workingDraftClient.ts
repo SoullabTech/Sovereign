@@ -437,7 +437,28 @@ export async function checkpointServerDraft(
         'idempotency-key': guard.idempotencyKey,
       },
     });
-    return readSaveResponse(res);
+    // A 2xx status alone is not a confirmed member-owned checkpoint. Only
+    // a complete, advancing server revision receipt can justify "version kept".
+    // Keep the generic autosave decoder unchanged; its contract is different.
+    if (!res.ok) return readSaveResponse(res);
+    const data = asRecord(await res.json());
+    if (data.checkpointed !== true
+      || !Number.isSafeInteger(data.revisionCount)
+      || Number(data.revisionCount) < 0
+      || !Number.isSafeInteger(data.revisionId)
+      || Number(data.revisionId) <= guard.baseRevisionId
+      || typeof data.updatedAt !== 'string'
+      || data.updatedAt.length === 0) {
+      // The version might exist; never declare either success or definite
+      // failure, and never automatically repeat a possibly committed request.
+      return { kind: 'error' };
+    }
+    return {
+      kind: 'ok',
+      revisionCount: Number(data.revisionCount),
+      revisionId: Number(data.revisionId),
+      updatedAt: data.updatedAt,
+    };
   } catch {
     return { kind: 'error' };
   }

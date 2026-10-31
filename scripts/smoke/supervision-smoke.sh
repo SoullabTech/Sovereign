@@ -30,12 +30,8 @@ for arg in "$@"; do
   esac
 done
 
-# Use DATABASE_URL if provided; otherwise default to local db name.
-if [[ -n "${DATABASE_URL:-}" ]]; then
-  PSQL_BASE=(psql "$DATABASE_URL" -v ON_ERROR_STOP=1)
-else
-  PSQL_BASE=(psql -d "${PGDATABASE:-maia_consciousness}" -v ON_ERROR_STOP=1)
-fi
+: "${DATABASE_URL:?DATABASE_URL must be set explicitly for supervision smoke testing}"
+PSQL_BASE=(psql "$DATABASE_URL" -v ON_ERROR_STOP=1)
 
 need() { command -v "$1" >/dev/null 2>&1 || { echo "❌ Missing dependency: $1"; exit 1; }; }
 need curl
@@ -82,7 +78,7 @@ http_get_json() {
 
 log "Supervision smoke test starting…"
 log "BASE_URL=${BASE_URL}"
-if [[ -n "${DATABASE_URL:-}" ]]; then log "DATABASE_URL=(set)"; else log "PGDATABASE=${PGDATABASE:-maia_consciousness}"; fi
+log "DATABASE_URL=(explicit)"
 
 # 0) Basic API health check
 log "Checking /api/supervision/sessions?limit=1 …"

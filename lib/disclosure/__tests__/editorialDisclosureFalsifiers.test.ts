@@ -79,19 +79,22 @@ describe('F3 · confirmation follows arrival, not success', () => {
   it('⛔ a result whose receipt cannot be confirmed cannot reach persistence', () => {
     const s = src(TURN);
     const resultConfirm = s.indexOf("if (shouldConfirmCrossing({ kind: 'result' }))");
-    const falseGuard = s.indexOf("if (!confirmed) return { ok: false, reason: 'disclosure_unavailable' };", resultConfirm);
+    const confirmation = s.indexOf('confirmDisclosureCrossed(disclosureId)', resultConfirm);
+    const unresolved = s.indexOf("reason: 'disclosure_confirmation_unresolved'", confirmation);
     const persist = s.indexOf('await persistMaiaEditorialOutcome(', resultConfirm);
     expect(resultConfirm).toBeGreaterThan(-1);
-    expect(falseGuard).toBeGreaterThan(resultConfirm);
-    expect(persist).toBeGreaterThan(falseGuard);
+    expect(confirmation).toBeGreaterThan(resultConfirm);
+    expect(unresolved).toBeGreaterThan(confirmation);
+    expect(persist).toBeGreaterThan(unresolved);
   });
 
   it('the result confirmation boolean is consumed rather than discarded', () => {
     const s = src(TURN);
     const resultConfirm = s.indexOf("if (shouldConfirmCrossing({ kind: 'result' }))");
     const block = s.slice(resultConfirm, s.indexOf('/* 6 ⛔ ADMISSION', resultConfirm));
-    expect(block).toContain('const confirmed = await confirmDisclosureCrossed(disclosureId)');
-    expect(block).toContain('if (!confirmed)');
+    expect(block).toContain('confirmDisclosureCrossed(disclosureId)');
+    expect(block).toContain("reason: 'disclosure_confirmation_unresolved'");
+    expect(block).toContain("dispatch: 'response_observed'");
   });
 });
 

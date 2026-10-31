@@ -64,6 +64,9 @@ function guardRow(over: Record<string, unknown> = {}) {
       {
         id: DRAFT,
         version: 7,
+        // Explicit legacy/unconverted database projection. Omitting it
+        // accidentally routes this fixture into section-native writes.
+        section_addressable_at: null,
         last_idempotency_key: null,
         last_idempotency_op: null,
         last_idempotency_payload_hash: null,
@@ -126,13 +129,18 @@ describe('POST — create from source', () => {
       .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // no existing draft
       .mockResolvedValueOnce({
         rows: [
-          { heading: 'One', body: 'First words.' },
-          { heading: null, body: 'Second words.' },
+          { id: '44444444-4444-4444-4444-444444444444', heading: 'One', body: 'First words.' },
+          { id: '55555555-5555-5555-5555-555555555555', heading: null, body: 'Second words.' },
         ],
         rowCount: 2,
-      }) // sections
+      }) // member-owned original Source sections
       .mockResolvedValueOnce({ rows: [{ id: DRAFT }], rowCount: 1 }) // insert draft
-      .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // insert revision 1
+      .mockResolvedValueOnce({ rows: [], rowCount: 2 }) // insert section partition
+      .mockResolvedValueOnce({ rows: [
+        { id: '66666666-6666-6666-6666-666666666666', text: 'One\n\nFirst words.\n\n' },
+        { id: '77777777-7777-7777-7777-777777777777', text: 'Second words.\n' },
+      ], rowCount: 2 }) // authenticated DB-minted section ids before revision 1
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // append first immutable revision
 
     const res = await POST(jsonRequest('POST'), ctx);
     expect(res.status).toBe(201);
@@ -157,7 +165,15 @@ describe('POST — create from source', () => {
     );
     expect(revisionInsert).toBeDefined();
     expect(revisionInsert![1][0]).toBe(DRAFT);
+    expect(String(revisionInsert![0])).toMatch(/VALUES \(\$1, 1, \$2/);
     expect(revisionInsert![1][1]).toBe('One\n\nFirst words.\n\nSecond words.\n');
+    expect(revisionInsert![1][2]).toBe(MEMBER);
+    // The first version freezes section identities returned by the database,
+    // not guessed from an editor string or supplied by a browser.
+    expect(JSON.parse(revisionInsert![1][3])).toEqual([
+      { sectionId: '66666666-6666-6666-6666-666666666666', start: 0, end: 19 },
+      { sectionId: '77777777-7777-7777-7777-777777777777', start: 19, end: 33 },
+    ]);
   });
 
   it('returns 409 when a draft already exists', async () => {
@@ -181,11 +197,17 @@ describe('POST — create from source', () => {
 });
 
 describe('PUT — autosave and checkpoint', () => {
-  it('rejects a non-string content with 400', async () => {
+  it('rejects non-string legacy content with 400 after a member-scoped read, never a write', async () => {
     mockAuth.mockResolvedValue(MEMBER);
+    // Current API must inspect the member-owned representation to decide
+    // whether a legacy "content" write or section-native write is valid.
+    mockQuery.mockResolvedValueOnce(guardRow());
     const res = await PUT(jsonRequest('PUT', { content: 42, ...GUARD }), ctx);
     expect(res.status).toBe(400);
-    expect(mockQuery).not.toHaveBeenCalled();
+    expect(await res.json()).toMatchObject({ error: 'content must be a string' });
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+    expect(String(mockQuery.mock.calls[0][0])).toContain('member_id = $2');
+    expect(mockQuery.mock.calls.filter(c => /^(UPDATE|INSERT|DELETE)\b/i.test(String(c[0]).trim()))).toHaveLength(0);
   });
 
   it('refuses a save that carries no guard — an unguarded write cannot be safe', async () => {
@@ -219,7 +241,8 @@ describe('PUT — autosave and checkpoint', () => {
   it('checkpoint increments revision_count and appends a revision with the note', async () => {
     mockAuth.mockResolvedValue(MEMBER);
     mockQuery
-      .mockResolvedValueOnce(guardRow())
+      .mockResolvedValueOnce(guardRow()) // representation read
+      .mockResolvedValueOnce(guardRow()) // member-scoped FOR UPDATE inside the transaction
       .mockResolvedValueOnce({
         rows: [
           {
@@ -262,6 +285,7 @@ describe('GET — load draft', () => {
           base_source_hash: 'hash-abc123',
           revision_count: 2,
           version: 6,
+          section_addressable_at: null,
           created_at: 'c1',
           updated_at: 'u1',
         },
@@ -277,6 +301,7 @@ describe('GET — load draft', () => {
       baseSourceHash: 'hash-abc123',
       revisionCount: 2,
       revisionId: 6,
+      sectionAddressable: false,
       createdAt: 'c1',
       updatedAt: 'u1',
     });

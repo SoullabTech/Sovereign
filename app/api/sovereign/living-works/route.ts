@@ -8,10 +8,11 @@ export const dynamic = 'force-dynamic';
  * GET  — the member's declared works. Member-scoped by credential.
  * POST — the member declares that a work exists. Optionally names it.
  *
- * THE ONE THING THIS ROUTE IS FOR: a Living Work comes into existence ONLY
- * here, and only because a member said so. There is no other creation path in
- * the codebase — not on signup, not on import, not on first save, not as a
- * side effect of any other act (`CREATION_REQUIRES_A_MEMBER_ACT`).
+ * THE ONE THING THIS ROUTE IS FOR: a standalone member declaration of a
+ * Living Work. Writer import can also declare one when its final confirmation
+ * explicitly requests `createWork: true`; that declaration, the manuscript and
+ * its expression are committed together. Signup, ordinary import and first
+ * save still cannot silently create a Work (`CREATION_REQUIRES_A_MEMBER_ACT`).
  *
  * WHAT IT REFUSES, and why each refusal is structural rather than intended:
  *

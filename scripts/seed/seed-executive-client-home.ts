@@ -23,6 +23,7 @@
  */
 
 import { Client } from 'pg';
+import { requireDatabaseUrl } from '../../lib/db/databaseUrl';
 
 interface Args {
   member: string | null;
@@ -41,9 +42,7 @@ function parseArgs(): Args {
     member: get('--member'),
     fieldSlug: get('--field-slug') ?? 'now-what-demo',
     databaseUrl:
-      get('--database-url') ??
-      process.env.DATABASE_URL ??
-      'postgresql://soullab@localhost:5432/maia_consciousness',
+      requireDatabaseUrl(get('--database-url') ?? process.env.DATABASE_URL ?? undefined),
     clean: a.includes('--clean'),
   };
 }

@@ -111,5 +111,18 @@ export default function RebuildWritingBoundary({
     return () => window.removeEventListener('beforeunload', guard);
   }, []);
 
-  return <>{children(writing)}</>;
+  const reconciledWriting = useMemo<SectionWriting>(() => ({
+    ...writing,
+    reconcileCleanSection: (input) => {
+      if (!writing.reconcileCleanSection?.(input)) return false;
+      // This section changed outside the ordinary save lane. Retire only its
+      // old body digest, synchronously, so the next save uses the stricter
+      // acknowledged draft version until its own response supplies a digest.
+      advanced.current.add(input.observation.sectionId);
+      observed.current.delete(input.observation.sectionId);
+      return true;
+    },
+  }), [writing]);
+
+  return <>{children(reconciledWriting)}</>;
 }

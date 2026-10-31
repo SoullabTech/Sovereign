@@ -17,6 +17,7 @@
 import { processAllSources, KnowledgeChunk } from '../lib/ain/knowledge/ChunkingService';
 import { toPgVectorLiteral } from '../lib/db/pgvector';
 import pg from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 
 const AIN_SOURCE_DIR = './data/ain/source';
 const OLLAMA_URL = 'http://localhost:11434/api/embeddings';
@@ -110,7 +111,7 @@ async function main() {
   // Connect to database
   console.log('\n[3/5] Connecting to PostgreSQL...');
   const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: requireDatabaseUrl(process.env.DATABASE_URL),
   });
 
   try {

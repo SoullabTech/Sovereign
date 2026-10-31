@@ -3,7 +3,7 @@
  * database.
  *
  *   npx tsx scripts/verify-episodic-sanctuary-guard.ts
- *   (DATABASE_URL respected; defaults to the local sovereign PostgreSQL)
+ *   (requires an explicit DATABASE_URL; no database is selected implicitly)
  *
  * Companion to:
  *   - tests/constitutional/refusal-registry/refusal-18-*.ts  (source-level)
@@ -23,6 +23,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { Client } from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 
 const ROUTE = 'app/api/sovereign/episodes/mark/route.ts';
 
@@ -61,7 +62,7 @@ const CASES: Case[] = [
 async function main() {
   const client = new Client({
     connectionString:
-      process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
+      requireDatabaseUrl(process.env.DATABASE_URL),
   });
   await client.connect();
   let failed = 0;

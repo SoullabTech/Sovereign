@@ -24,10 +24,10 @@
  */
 
 import { Pool } from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL ||
-    'postgresql://soullab@localhost:5432/maia_consciousness',
+  connectionString: requireDatabaseUrl(process.env.DATABASE_URL),
 });
 
 let passed = 0; let failed = 0; let warned = 0;

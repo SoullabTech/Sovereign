@@ -19,24 +19,45 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 const mockSend = jest.fn<(...args: unknown[]) => Promise<unknown>>();
-jest.mock('resend', () => ({
-  Resend: jest.fn().mockImplementation(() => ({
-    emails: { send: (...args: unknown[]) => mockSend(...args) },
-  })),
+const mockSendMail = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockCapacityQuery = jest.fn<(...args: unknown[]) => Promise<{ rows: unknown[]; rowCount: number }>>();
+const mockTransaction = jest.fn<(fn: (client: { query: typeof mockCapacityQuery }) => Promise<unknown>) => Promise<unknown>>();
+const mockSettleAttempt = jest.fn<(...args: unknown[]) => Promise<void>>();
+jest.mock('nodemailer', () => ({
+  createTransport: () => ({ sendMail: (...args: unknown[]) => mockSendMail(...args) }),
+}));
+jest.mock('@/lib/db/postgres', () => ({
+  transaction: (fn: (client: { query: typeof mockCapacityQuery }) => Promise<unknown>) => mockTransaction(fn),
+}));
+jest.mock('../ledger', () => ({
+  openAttempt: async () => 'fictional-delivery-attempt',
+  settleAttempt: (...args: unknown[]) => mockSettleAttempt(...args),
+  stateForFailure: (kind: string) => kind === 'exception' ? 'indeterminate' : 'refused',
 }));
 
-process.env.RESEND_API_KEY = 'test-key';
-
 import { sendEmail, classifyProviderError } from '../sendEmail';
+import { SmtpProvider } from '../providers/SmtpProvider';
+import type { EmailProvider, ProviderSendResult } from '../providers/types';
 
+// Preserve the provider-error taxonomy regression without selecting or
+// registering Resend. These unit cases exercise the vendor-neutral boundary.
+const fictionalProvider: EmailProvider = {
+  name: 'fictional', isConfigured: () => true,
+  send: async (message) => await mockSend(message) as ProviderSendResult,
+};
 const send = () =>
-  sendEmail({ purpose: 'test:unit', to: 'someone@example.com', subject: 's', text: 't' });
+  sendEmail({ purpose: 'test:unit', to: 'someone@example.invalid', subject: 's', text: 't', provider: fictionalProvider });
 
 const refuse = (name: string, message: string) =>
-  mockSend.mockResolvedValue({ data: null, error: { name, message } });
+  mockSend.mockResolvedValue({ accepted: false, rawError: { name, message } });
 
 beforeEach(() => {
   mockSend.mockReset();
+  mockSendMail.mockReset();
+  mockCapacityQuery.mockReset();
+  mockTransaction.mockReset();
+  mockSettleAttempt.mockReset();
+  mockSettleAttempt.mockResolvedValue(undefined);
   jest.spyOn(console, 'error').mockImplementation(() => {});
   jest.spyOn(console, 'log').mockImplementation(() => {});
 });
@@ -76,7 +97,7 @@ describe('sendEmail — a resolved refusal is a failure, never a success', () =>
   });
 
   it('a resolved send with no message id is not a send', async () => {
-    mockSend.mockResolvedValue({ data: null, error: null });
+    mockSend.mockResolvedValue({ accepted: false, rawError: { name: 'no_message_id', message: 'No provider id' } });
     const r = await send();
     expect(r.success).toBe(false);
     expect(r.failureKind).toBe('provider_error');
@@ -92,7 +113,7 @@ describe('sendEmail — a resolved refusal is a failure, never a success', () =>
   });
 
   it('CONTROL: success requires a provider-issued message id', async () => {
-    mockSend.mockResolvedValue({ data: { id: 'msg_abc123' }, error: null });
+    mockSend.mockResolvedValue({ accepted: true, providerMessageId: 'msg_abc123' });
     const r = await send();
     expect(r.success).toBe(true);
     expect(r.id).toBe('msg_abc123');
@@ -198,5 +219,95 @@ describe('classifyProviderError — defensive against shapes we have not seen', 
       message: 'The from address is not a valid email address.',
     });
     expect(r.kind).not.toBe('invalid_recipient');
+  });
+});
+
+
+describe('AUTH-RETURN-01 actual SMTP adapter → helper boundary', () => {
+  const challengeId = 'df3eeaf5-6bc8-4fb5-b832-c00606ce4148';
+  const request = {
+    purpose: 'auth:email-code', from: 'Soullab <noreply@soullab.life>',
+    to: 'fiction@example.invalid', subject: 'Your fictional code', text: 'fixture-only',
+    correlationId: challengeId, idempotencyKey: `AUTH_CODE:${challengeId}`,
+  };
+  const smtp = () => new SmtpProvider({
+    host: '127.0.0.1', port: 2525, user: 'noreply@soullab.life', password: 'fictional-only',
+  });
+
+  beforeEach(() => {
+    process.env.NODE_ENV = 'test';
+    mockTransaction.mockImplementation(async (fn) => fn({ query: mockCapacityQuery }));
+    mockCapacityQuery.mockImplementation(async (statement) => {
+      const sql = String(statement);
+      if (sql.includes('pg_advisory_xact_lock')) return { rows: [], rowCount: 1 };
+      if (sql.includes('minute_count')) return { rows: [{ minute_count: '0', day_count: '0' }], rowCount: 1 };
+      if (sql.includes('SELECT id') || sql.includes('UPDATE auth_email_challenges')) {
+        return { rows: [{ id: challengeId }], rowCount: 1 };
+      }
+      throw new Error('Unexpected fictional capacity query');
+    });
+  });
+
+  it('reports the actual adapter acceptance and settles accepted evidence', async () => {
+    mockSendMail.mockResolvedValue({ messageId: '<fixture@local>', accepted: [request.to], rejected: [] });
+    await expect(sendEmail({ ...request, provider: smtp() })).resolves.toMatchObject({
+      success: true, id: '<fixture@local>', provider: 'smtp',
+    });
+    expect(mockSendMail).toHaveBeenCalledTimes(1);
+    expect(mockSettleAttempt).toHaveBeenLastCalledWith('fictional-delivery-attempt', {
+      state: 'accepted', providerMessageId: '<fixture@local>',
+    });
+  });
+
+  it('keeps an explicit SMTP refusal distinct from unknown delivery', async () => {
+    mockSendMail.mockRejectedValue(Object.assign(new Error('Fictional SMTP refusal'), { responseCode: 550 }));
+    const result = await sendEmail({ ...request, provider: smtp() });
+    expect(result).toMatchObject({ success: false, failureKind: 'provider_error' });
+    expect(mockSettleAttempt).toHaveBeenLastCalledWith('fictional-delivery-attempt', expect.objectContaining({ state: 'refused' }));
+  });
+
+  it('keeps lost response unknown through the real adapter and helper', async () => {
+    mockSendMail.mockRejectedValue(Object.assign(new Error('Fictional response lost'), { code: 'ETIMEDOUT' }));
+    const result = await sendEmail({ ...request, provider: smtp() });
+    expect(result).toMatchObject({ success: false, status: 'exception', failureKind: 'exception', retryable: false });
+    expect(mockSettleAttempt).toHaveBeenLastCalledWith('fictional-delivery-attempt', expect.objectContaining({ state: 'indeterminate' }));
+    expect(mockSendMail).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call incomplete acceptance a definite refusal', async () => {
+    mockSendMail.mockResolvedValue({ accepted: [request.to], rejected: [] });
+    const result = await sendEmail({ ...request, provider: smtp() });
+    expect(result).toMatchObject({ success: false, failureKind: 'exception', retryable: false });
+    expect(mockSettleAttempt).toHaveBeenLastCalledWith('fictional-delivery-attempt', expect.objectContaining({ state: 'indeterminate' }));
+  });
+
+  it('blocks a non-auth purpose before capacity or SMTP calls', async () => {
+    const result = await sendEmail({ ...request, purpose: 'broadcast:update', provider: smtp() });
+    expect(result).toMatchObject({ success: false, failureKind: 'provider_config', providerCode: 'smtp_scope_refused' });
+    expect(mockTransaction).not.toHaveBeenCalled();
+    expect(mockSendMail).not.toHaveBeenCalled();
+  });
+
+  it('fails closed before SMTP when capacity storage is unavailable', async () => {
+    mockTransaction.mockRejectedValue(new Error('Fictional database unavailable'));
+    const result = await sendEmail({ ...request, provider: smtp() });
+    expect(result).toMatchObject({ success: false, providerCode: 'smtp_capacity_unavailable', retryable: false });
+    expect(mockSendMail).not.toHaveBeenCalled();
+  });
+
+  it('does not select Resend even if its key is present', async () => {
+    const oldProvider = process.env.EMAIL_PROVIDER;
+    const oldKey = process.env.RESEND_API_KEY;
+    process.env.EMAIL_PROVIDER = 'resend';
+    process.env.RESEND_API_KEY = 'fictional-unusable-fixture-key';
+    try {
+      await expect(sendEmail(request)).resolves.toMatchObject({ success: false, status: 'not_configured' });
+      expect(mockSendMail).not.toHaveBeenCalled();
+    } finally {
+      if (oldProvider === undefined) delete process.env.EMAIL_PROVIDER;
+      else process.env.EMAIL_PROVIDER = oldProvider;
+      if (oldKey === undefined) delete process.env.RESEND_API_KEY;
+      else process.env.RESEND_API_KEY = oldKey;
+    }
   });
 });
