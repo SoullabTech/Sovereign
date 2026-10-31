@@ -261,6 +261,29 @@ function newSketch(
 }
 
 // Recorded nature loops (private development folder; absent in a build without it, which is a quiet no-op).
+// A generated soundscape is Web Audio only, and iOS suspends a web view's Web Audio when the screen locks unless a
+// media element is playing. This private, silent, looping element keeps the playback session alive; it is not the
+// shared player and carries no handlers, so it cannot change what the listening room believes is playing.
+let silentWavURL: string | null = null;
+function silentKeepAlive(): HTMLAudioElement | null {
+  if (typeof Audio === 'undefined' || typeof URL === 'undefined' || typeof Blob === 'undefined') return null;
+  if (!silentWavURL) {
+    const rate = 8000, samples = rate; // one second of silence, 16-bit mono
+    const bytes = new Uint8Array(44 + samples * 2);
+    const view = new DataView(bytes.buffer);
+    const tag = (at: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(at + i, s.charCodeAt(i)); };
+    tag(0, 'RIFF'); view.setUint32(4, 36 + samples * 2, true); tag(8, 'WAVE'); tag(12, 'fmt ');
+    view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+    view.setUint32(24, rate, true); view.setUint32(28, rate * 2, true); view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true); tag(36, 'data'); view.setUint32(40, samples * 2, true);
+    silentWavURL = URL.createObjectURL(new Blob([bytes], { type: 'audio/wav' }));
+  }
+  const el = new Audio(silentWavURL);
+  el.loop = true;
+  el.setAttribute('playsinline', '');
+  return el;
+}
+
 const recordedCache = new Map<string, Promise<AudioBuffer | null>>();
 function loadRecordedLoop(context: BaseAudioContext, id: string): Promise<AudioBuffer | null> {
   const key = id;
@@ -327,6 +350,7 @@ export function PersistentListeningProvider({
   const sketch = useRef<Sketch | null>(null);
   const media = useRef<HTMLAudioElement | null>(null);
   const blobURL = useRef<string | null>(null);
+  const keepAlive = useRef<HTMLAudioElement | null>(null);
   const selected = useRef<{ title: string; format: string } | null>(null);
   const reviewManifest = useRef<SoundExperienceManifest | null>(null);
   const reviewSequence = useRef<readonly SoundExperienceMediaEdition[]>([]);
@@ -347,6 +371,7 @@ export function PersistentListeningProvider({
     startedAt: number | null;
   } | null>(null);
   const releaseOutput = useCallback(() => {
+    if (keepAlive.current) { keepAlive.current.pause(); keepAlive.current = null; }
     outputLease.current?.release();
     outputLease.current = null;
   }, []);
@@ -766,6 +791,10 @@ export function PersistentListeningProvider({
         releaseOutput();
         if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
         return false;
+      }
+      if (soundscape && !keepAlive.current) {
+        const el = silentKeepAlive();
+        if (el) { keepAlive.current = el; void el.play().catch(() => { keepAlive.current = null; }); }
       }
       claimFocus();
       const activeExperience = experience.current;
