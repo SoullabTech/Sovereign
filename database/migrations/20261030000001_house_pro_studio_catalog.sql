@@ -2,6 +2,7 @@
 -- placement. Full-catalog idempotent reassertion. Personal Portal/Ganesha is a SEPARATE offering
 -- and is NOT admitted here (ADR-010; owner #1807).
 BEGIN;
+SET LOCAL lock_timeout = '5s';
 
 ALTER TABLE house_member_preferences
   DROP CONSTRAINT IF EXISTS house_member_preferences_center_ids_check;
