@@ -102,7 +102,7 @@ export function LiveReviewRail({ data }: { data: Pc3LiveReviewData }) {
             </span>
             {finding.canWorkWith ? (
               <button type="button" className="fr-open fr-open-primary" onClick={() => onWorkWith(finding)}>
-                Show edit options <Arrow />
+                Work with this <Arrow />
               </button>
             ) : null}
             <button type="button" className="fr-open" onClick={() => onOpenFinding(finding)}>

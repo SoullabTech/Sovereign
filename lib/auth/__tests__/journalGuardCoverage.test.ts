@@ -75,7 +75,7 @@ describe('/api/journal/* — every handler derives identity from the session', (
 
   it.each(ROUTES)('%s imports the canonical resolver', (rel) => {
     expect(stripComments(read(rel))).toMatch(
-      /import\s*\{[^}]*getMemberIdFromRequest[^}]*\}\s*from\s*['"]@\/lib\/auth\/getMemberFromRequest['"]/,
+      /import\s*\{[^}]*(?:getMemberIdFromRequest|requireMemberId)[^}]*\}\s*from\s*['"]@\/lib\/auth\/(?:getMemberFromRequest|session)['"]/,
     );
   });
 
@@ -83,7 +83,7 @@ describe('/api/journal/* — every handler derives identity from the session', (
     const bodies = handlerBodies(code(read(rel)));
     expect(bodies.length).toBeGreaterThan(0);
     for (const h of bodies) {
-      expect({ route: rel, method: h.method, resolves: /getMemberIdFromRequest\(/.test(h.body) })
+      expect({ route: rel, method: h.method, resolves: /(?:getMemberIdFromRequest|requireMemberId)\(/.test(h.body) })
         .toEqual({ route: rel, method: h.method, resolves: true });
     }
   });
@@ -108,7 +108,7 @@ describe('/api/journal/* — every handler derives identity from the session', (
     const CALLER_SOURCE = /body|searchParams|nextUrl|headers|params\b|req\.|request\./;
     for (const m of src.matchAll(/const\s+(?:userId|memberId)\s*=\s*([^;]+);/g)) {
       const rhs = m[1].trim();
-      if (/getMemberIdFromRequest\(/.test(rhs)) continue; // the resolver itself
+      if (/(?:getMemberIdFromRequest|requireMemberId)\(/.test(rhs)) continue; // the resolver itself
       expect({ route: rel, assignment: rhs, callerDerived: CALLER_SOURCE.test(rhs) }).toEqual({
         route: rel,
         assignment: rhs,
@@ -130,12 +130,22 @@ jest.mock('@/lib/auth/getMemberFromRequest', () => ({
   __esModule: true,
   getMemberIdFromRequest: (req: unknown) => mockResolve(req),
 }));
+jest.mock('@/lib/auth/session', () => ({
+  __esModule: true,
+  requireMemberId: async () => {
+    const memberId = await mockResolve(undefined);
+    if (!memberId) throw new Error('AUTH_REQUIRED');
+    return memberId;
+  },
+}));
 
 const mockQuery = jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: unknown[] }>>();
 jest.mock('@/lib/db/postgres', () => ({
   __esModule: true,
   default: { query: (s: string, p?: unknown[]) => mockQuery(s, p) },
   query: (s: string, p?: unknown[]) => mockQuery(s, p),
+  transaction: async (work: (client: { query: typeof mockQuery }) => Promise<unknown>) =>
+    work({ query: mockQuery }),
 }));
 
 // Side-effect bridges the route fires and forgets; irrelevant to authorization.

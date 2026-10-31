@@ -1,6 +1,6 @@
-export type UnifiedStudioMode = 'home' | 'write' | 'develop' | 'review' | 'listen';
+export type UnifiedStudioMode = 'home' | 'write' | 'develop' | 'review' | 'publish' | 'listen';
 
-const MODES: readonly UnifiedStudioMode[] = ['home', 'write', 'develop', 'review', 'listen'];
+const MODES: readonly UnifiedStudioMode[] = ['home', 'write', 'develop', 'review', 'publish', 'listen'];
 
 export function unifiedModeFrom(
   value: string | null | undefined,

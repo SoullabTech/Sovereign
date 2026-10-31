@@ -7,6 +7,11 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { buildKeepRequestBody, interpretKeepReply } from './keepRequest';
 import WorkingDraftEditor from './WorkingDraftEditor';
+import {
+  SOURCE_UPLOAD_IDEMPOTENCY_HEADER,
+  sourceUploadAttempt,
+  type SourceUploadAttempt,
+} from '@/lib/writersStudio/sourceUploadAttempt';
 
 /**
  * Mirrors MAX_FILE_BYTES in app/api/sovereign/manuscripts/ingest/route.ts.
@@ -232,6 +237,7 @@ function PressManuscriptRoom() {
      the save act can bind the manuscript to what actually arrived. Null for a
      paste, which has no artifact and must never be given one. */
   const [sourceArrivalId, setSourceArrivalId] = useState<string | null>(null);
+  const uploadAttemptRef = useRef<SourceUploadAttempt | null>(null);
 
   const [sectionCursor, setSectionCursor] = useState(0);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -397,6 +403,19 @@ function PressManuscriptRoom() {
       ]);
       return;
     }
+    let uploadAttempt: SourceUploadAttempt;
+    try {
+      uploadAttempt = sourceUploadAttempt(
+        uploadAttemptRef.current,
+        f,
+        () => globalThis.crypto.randomUUID(),
+      );
+      uploadAttemptRef.current = uploadAttempt;
+    } catch {
+      setWarnings(['A secure retry identity could not be created for this file. Nothing was sent.']);
+      return;
+    }
+
     /* WS-01 — every uploaded file takes the same path, including .txt and .md.
      *
      * They used to be read in the browser, so their bytes never reached the
@@ -413,14 +432,18 @@ function PressManuscriptRoom() {
     try {
       const form = new FormData();
       form.append('file', f);
-      const res = await apiFetch('/api/sovereign/manuscripts/ingest', { method: 'POST', body: form });
+      const res = await apiFetch('/api/sovereign/manuscripts/ingest', {
+        method: 'POST',
+        body: form,
+        headers: { [SOURCE_UPLOAD_IDEMPOTENCY_HEADER]: uploadAttempt.idempotencyKey },
+      });
       if (res.status === 401) {
         setUnauthorized(true);
         return;
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setWarnings([data.error || 'We could not read that file. Try a .docx, .pdf, .txt, or .md.']);
+        setWarnings([data.error || 'We could not read that file. Try a .docx, .pdf, .epub, .txt, or .md.']);
         return;
       }
       setDraftText(data.text || '');
@@ -735,10 +758,10 @@ function PressManuscriptRoom() {
               />
               <div className="flex items-center gap-6">
                 <label className="text-[13px] underline underline-offset-4 opacity-60 cursor-pointer">
-                  {ingesting ? 'reading your file…' : 'or choose a .docx / .pdf / .txt / .md file'}
+                  {ingesting ? 'reading your file…' : 'or choose a .docx / .pdf / .epub / .txt / .md file'}
                   <input
                     type="file"
-                    accept=".txt,.md,.markdown,.docx,.pdf"
+                    accept=".txt,.md,.markdown,.docx,.pdf,.epub"
                     className="hidden"
                     disabled={ingesting}
                     onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}

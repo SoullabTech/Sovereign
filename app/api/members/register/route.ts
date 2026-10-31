@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { resolveAdmission, admissionRefusalMessage } from '@/lib/auth/passkeyAdmission';
-import { createSession } from '@/lib/auth/serverSessions';
+import { createSession, revokeSession, validateSession } from '@/lib/auth/serverSessions';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import {
   checkRateLimit,
@@ -55,6 +55,7 @@ function getCorsHeaders(req: NextRequest): Record<string, string> {
     'Access-Control-Allow-Methods': 'POST,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Accept, X-Member-Id',
     'Access-Control-Allow-Credentials': 'true',
+    'Cache-Control': 'private, no-store',
     'Vary': 'Origin',
   };
 }
@@ -222,9 +223,9 @@ export async function POST(request: NextRequest) {
 
     // Mint a real server session immediately — the member is authenticated on
     // registration, never reliant on localStorage beta_user or a forgeable
-    // x-member-id (closes the sessionless-onboarding generator). Pattern mirrors
-    // /api/members/register-email. Non-fatal: the member row already exists, so a
-    // session failure degrades to "no session" rather than failing registration.
+    // x-member-id (closes the sessionless-onboarding generator). This legacy
+    // path has already committed the member and invite. A later session failure
+    // must say so and require sign-in, never report authenticated success.
     const memberPayload = {
       id: member.id,
       username: member.username,
@@ -235,11 +236,27 @@ export async function POST(request: NextRequest) {
       guardianRequired: member.guardian_required || false,
     };
 
+    let issuedSession: Awaited<ReturnType<typeof createSession>> | undefined;
     try {
       const userAgent = request.headers.get('user-agent') || '';
       const session = await createSession({ memberId: String(member.id), ipAddress: clientIP, userAgent });
+      issuedSession = session;
+      const readback = await validateSession(session.sessionToken);
+      const readbackExpiry = readback ? new Date(readback.expiresAt).getTime() : NaN;
+      if (
+        !readback
+        || readback.id !== session.id
+        || readback.memberId !== String(member.id)
+        || readback.sessionToken !== session.sessionToken
+        || readback.revoked
+        || !Number.isFinite(readbackExpiry)
+        || readbackExpiry <= Date.now()
+      ) {
+        throw new Error('registration session readback did not match issuance');
+      }
       const response = NextResponse.json({
         success: true,
+        authenticated: true,
         member: memberPayload,
         // Token in the body for the Capacitor/iOS x-session-token path: this route
         // is CORS-open to capacitor://localhost, and native clients can't read the
@@ -258,11 +275,19 @@ export async function POST(request: NextRequest) {
       response.cookies.set('maia_tier', 'free', cookieOpts);
       response.cookies.set('maia_roles', JSON.stringify(['member']), cookieOpts);
       return response;
-    } catch (sessionErr) {
-      // Degrade gracefully: member is created; respond without a session. The
-      // member can obtain one by signing in. (Rare — createSession only needs the DB.)
-      console.error('[MEMBERS] Session creation failed (non-fatal):', sessionErr);
-      return NextResponse.json({ success: true, member: memberPayload }, { headers: corsHeaders });
+    } catch {
+      if (issuedSession) {
+        await revokeSession(issuedSession.id, 'registration_session_issuance_failed');
+      }
+      console.error('[MEMBERS] Account created; secure session could not be confirmed');
+      return NextResponse.json({
+        success: false,
+        authenticated: false,
+        registrationCreated: true,
+        error: 'Your account was created, but we could not confirm a secure session. Please sign in to continue.',
+        reason: 'session_issuance_failed',
+        recovery: { action: 'signin', path: '/signin' },
+      }, { status: 503, headers: corsHeaders });
     }
 
   } catch (error) {

@@ -16,6 +16,8 @@ import type { NextRequest } from 'next/server';
 
 // --- Mock the database: a single "valid" session token maps to REAL_MEMBER ---
 const VALID_TOKEN = 'valid-session-token-64hex';
+const SECOND_REAL_TOKEN = 'second-valid-token-same-member';
+const OTHER_MEMBER_TOKEN = 'valid-token-for-other-member';
 const REAL_MEMBER = '11111111-1111-4111-8111-111111111111';
 const VICTIM_MEMBER = '22222222-2222-4222-8222-222222222222';
 
@@ -50,7 +52,13 @@ beforeEach(() => {
   // auth_sessions lookup: token is params[0]; only VALID_TOKEN resolves.
   mockQuery.mockImplementation(async (_sql: string, params?: unknown[]) => {
     const token = params?.[0];
-    return token === VALID_TOKEN ? { rows: [{ member_id: REAL_MEMBER }] } : { rows: [] };
+    if (token === VALID_TOKEN || token === SECOND_REAL_TOKEN) {
+      return { rows: [{ member_id: REAL_MEMBER, tier: 'free', roles: ['member'] }] };
+    }
+    if (token === OTHER_MEMBER_TOKEN) {
+      return { rows: [{ member_id: VICTIM_MEMBER, tier: 'free', roles: ['member'] }] };
+    }
+    return { rows: [] };
   });
 });
 
@@ -95,6 +103,32 @@ describe('getMemberIdFromRequest — impersonation hardening', () => {
     mockCookieJar.maia_session = VALID_TOKEN;
     const result = await getMemberIdFromRequest(reqWith({ 'x-member-id': REAL_MEMBER }));
     expect(result).toBe(REAL_MEMBER);
+  });
+
+  it('fails closed when a valid cookie is accompanied by an invalid header token', async () => {
+    mockCookieJar.maia_session = VALID_TOKEN;
+    const result = await getMemberIdFromRequest(reqWith({ 'x-session-token': 'invalid' }));
+    expect(result).toBeNull();
+  });
+
+  it('fails closed when two valid transports name different members', async () => {
+    mockCookieJar.maia_session = VALID_TOKEN;
+    const result = await getMemberIdFromRequest(reqWith({ 'x-session-token': OTHER_MEMBER_TOKEN }));
+    expect(result).toBeNull();
+  });
+
+  it('accepts the same valid token in cookie and header without a duplicate lookup', async () => {
+    mockCookieJar.maia_session = VALID_TOKEN;
+    const result = await getMemberIdFromRequest(reqWith({ 'x-session-token': VALID_TOKEN }));
+    expect(result).toBe(REAL_MEMBER);
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+  });
+
+  it('accepts two distinct valid tokens only when both name the same member', async () => {
+    mockCookieJar.maia_session = VALID_TOKEN;
+    const result = await getMemberIdFromRequest(reqWith({ 'x-session-token': SECOND_REAL_TOKEN }));
+    expect(result).toBe(REAL_MEMBER);
+    expect(mockQuery).toHaveBeenCalledTimes(2);
   });
 
   it('rejects an expired/revoked/unknown session token', async () => {

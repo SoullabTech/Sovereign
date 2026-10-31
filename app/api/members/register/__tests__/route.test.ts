@@ -8,23 +8,31 @@
  *  2. the maia_session cookie is the REAL token — never the 'active' placeholder
  *  3. the token is returned in the body for the native x-session-token path
  *  4. invite redemption still fires (mint runs after it)
- *  5. session-mint failure degrades non-fatally (member still created)
+ *  5. session failure reports the created account and refuses authenticated success
  *  6. duplicate passkey still 409 (no enumeration change)
  */
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { NextRequest } from 'next/server';
 
 const REAL_TOKEN = 'a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90'; // 64-hex, like generateSecureToken(32)
-const EXPIRES = new Date('2026-12-31T00:00:00.000Z');
+const EXPIRES = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+const SESSION = {
+  id: 'session-uuid-1', memberId: 'mem-uuid-1',
+  sessionToken: REAL_TOKEN, expiresAt: EXPIRES, revoked: false,
+};
 
 const mockQuery = jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount: number }>>();
 jest.mock('@/lib/db/postgres', () => ({
   query: (sql: string, params?: unknown[]) => mockQuery(sql, params),
 }));
 
-const mockCreateSession = jest.fn<(opts: unknown) => Promise<{ sessionToken: string; expiresAt: Date }>>();
+const mockCreateSession = jest.fn<(opts: unknown) => Promise<typeof SESSION>>();
+const mockValidateSession = jest.fn<(token: string) => Promise<typeof SESSION | null>>();
+const mockRevokeSession = jest.fn<(id: string, reason: string) => Promise<boolean>>();
 jest.mock('@/lib/auth/serverSessions', () => ({
   createSession: (opts: unknown) => mockCreateSession(opts),
+  validateSession: (token: string) => mockValidateSession(token),
+  revokeSession: (id: string, reason: string) => mockRevokeSession(id, reason),
 }));
 
 jest.mock('@/lib/auth/passwordUtils', () => ({
@@ -88,7 +96,9 @@ function mockSql(opts: { member?: unknown[]; invite?: unknown[]; usernameTaken?:
 
 function mockHappyPath() {
   mockSql();
-  mockCreateSession.mockResolvedValue({ sessionToken: REAL_TOKEN, expiresAt: EXPIRES });
+  mockCreateSession.mockResolvedValue(SESSION);
+  mockValidateSession.mockResolvedValue(SESSION);
+  mockRevokeSession.mockResolvedValue(true);
 }
 
 describe('POST /api/members/register — session mint', () => {
@@ -108,7 +118,10 @@ describe('POST /api/members/register — session mint', () => {
     // token in body for the Capacitor/iOS x-session-token path
     const data = await res.json();
     expect(data.success).toBe(true);
+    expect(data.authenticated).toBe(true);
     expect(data.session?.token).toBe(REAL_TOKEN);
+    expect(mockValidateSession).toHaveBeenCalledWith(REAL_TOKEN);
+    expect(res.headers.get('Cache-Control')).toContain('no-store');
   });
 
   it("REGRESSION: a newly registered member can never get maia_session='active'", async () => {
@@ -120,8 +133,7 @@ describe('POST /api/members/register — session mint', () => {
   });
 
   it('preserves invite redemption (mint runs after the UPDATE invites)', async () => {
-    mockSql();
-    mockCreateSession.mockResolvedValue({ sessionToken: REAL_TOKEN, expiresAt: EXPIRES });
+    mockHappyPath();
 
     const res = await POST(req(NEW_BODY));
 
@@ -131,17 +143,42 @@ describe('POST /api/members/register — session mint', () => {
     expect(res.cookies.get('maia_session')?.value).toBe(REAL_TOKEN); // session still minted
   });
 
-  it('degrades non-fatally when session mint fails — member created, no session', async () => {
+  it('reports account creation and refuses success when the session cannot be minted', async () => {
     mockHappyPath();
     mockCreateSession.mockRejectedValue(new Error('db down'));
 
     const res = await POST(req(NEW_BODY));
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
     const data = await res.json();
-    expect(data.success).toBe(true);
-    expect(data.member?.id).toBe('mem-uuid-1');
+    expect(data).toMatchObject({
+      success: false, authenticated: false, registrationCreated: true,
+      recovery: { action: 'signin', path: '/signin' },
+    });
+    expect(data.error).toMatch(/account was created/);
+    expect(data.member).toBeUndefined();
     expect(data.session).toBeUndefined();
+    expect(res.cookies.get('maia_session')?.value).toBeFalsy();
+    expect(mockRevokeSession).not.toHaveBeenCalled();
+    expect(res.headers.get('Cache-Control')).toContain('no-store');
+  });
+
+  it.each([
+    null,
+    { ...SESSION, id: 'another-session' },
+    { ...SESSION, memberId: 'another-member' },
+    { ...SESSION, sessionToken: 'another-token' },
+    { ...SESSION, revoked: true },
+    { ...SESSION, expiresAt: new Date(0) },
+  ])('revokes a minted session when exact current readback is absent: %p', async (readback) => {
+    mockHappyPath();
+    mockValidateSession.mockResolvedValue(readback);
+    const res = await POST(req(NEW_BODY));
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({
+      success: false, authenticated: false, registrationCreated: true,
+    });
+    expect(mockRevokeSession).toHaveBeenCalledWith(SESSION.id, 'registration_session_issuance_failed');
     expect(res.cookies.get('maia_session')?.value).toBeFalsy();
   });
 

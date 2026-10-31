@@ -11,7 +11,7 @@
  *   5. card scrub on upload delete   — table layout updated when upload removed
  *
  * Runs against:
- *   postgresql://soullab@localhost:5432/maia_consciousness
+ *   postgresql://user@host:5432/database
  *
  * Cleanup is automatic — every row this script inserts is deleted at the end.
  * Uses the built-in test arranger 00000000-0000-0000-0000-000000000001.

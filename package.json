@@ -9,12 +9,12 @@
   "main": "electron/main.js",
   "homepage": "./",
   "scripts": {
-    "dev": "env -u DATABASE_URL next dev -p ${PORT:-3000}",
-    "dev:clean": "rm -rf .next && lsof -ti:${PORT:-3000} | xargs kill -9 2>/dev/null || true; env -u DATABASE_URL next dev -p ${PORT:-3000}",
-    "clean": "rm -rf .next && echo '\u2713 .next cache cleared'",
+    "dev": "next dev -p ${PORT:-3000}",
+    "dev:clean": "rm -rf .next && lsof -ti:${PORT:-3000} | xargs kill -9 2>/dev/null || true; next dev -p ${PORT:-3000}",
+    "clean": "rm -rf .next && echo '✓ .next cache cleared'",
     "dev:voice": "bash start-voice.sh",
     "dev:https": "node server.mjs",
-    "worker": "env -u DATABASE_URL AIN_WORKER=true npx tsx scripts/start-ain-worker.ts",
+    "worker": "AIN_WORKER=true npx tsx scripts/start-ain-worker.ts",
     "comms:worker": "npx tsx scripts/run-comms-analysis-worker.ts",
     "check:imports": "node scripts/check-internal-imports.js",
     "build": "export NODE_OPTIONS=--max-old-space-size=8192; node scripts/verify-aetheric-consciousness.js && node scripts/validate-critical-files.js && node scripts/check-internal-imports.js && next build --webpack",
@@ -151,7 +151,7 @@
     "check:member-id-log:baseline": "npx tsx scripts/guards/member-id-log-gate.ts --update",
     "ci:sovereignty": "npm run check:no-supabase && npm run check:migration-lock-timeout && npm run check:no-vendor-voices && npm run check:voice-provenance && npm run check:no-openai && npm run check:member-id-log && npm run matrix:safety-crisis && npm run test -- lib/tts/__tests__/voiceIdentityContract.test.ts __tests__/voice-crisis-speech-act-01.test.ts --silent",
     "ci:guard": "jest scripts/ci/maia-route-guard.test.ts --testPathPattern='maia-route-guard' --passWithNoTests=false",
-    "preflight": "bash scripts/check-dark-text-opacity.sh && npm run check:no-supabase && npm run check:migration-lock-timeout && npm run check:no-direct-anthropic && npm run check:no-vendor-voices && npm run check:voice-provenance && npm run check:no-openai && npm run check:member-owned-boundary && npm run ci:guard && bash scripts/preflight-compose-config.sh && echo '\u2705 Preflight passed: opacity + supabase + direct-anthropic + vendor voices + voice-provenance + provider-governance + member-owned-boundary + route-guard + docker checks clean'",
+    "preflight": "bash scripts/check-dark-text-opacity.sh && npm run check:no-supabase && npm run check:migration-lock-timeout && npm run check:no-direct-anthropic && npm run check:no-vendor-voices && npm run check:voice-provenance && npm run check:no-openai && npm run check:member-owned-boundary && npm run ci:guard && bash scripts/preflight-compose-config.sh && echo '✅ Preflight passed: opacity + supabase + direct-anthropic + vendor voices + voice-provenance + provider-governance + member-owned-boundary + route-guard + docker checks clean'",
     "biomarkers:report": "npx tsx scripts/report-biomarker-metrics.ts",
     "biomarkers:verify": "npx tsx scripts/test-biomarker-exports.ts --log artifacts/phase4.2d-barrel-verification.log",
     "pwa:build": "npm run build && npm run pwa:generate-icons",
@@ -300,6 +300,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
     "@aws-crypto/sha256-browser": "^5.2.0",
+    "@aws-sdk/client-kms": "3.1142.0",
     "@aws-sdk/client-s3": "^3.658.1",
     "@aws-sdk/lib-storage": "^3.658.1",
     "@capacitor-community/apple-sign-in": "^7.1.0",
@@ -363,6 +364,7 @@
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
+    "@xmldom/xmldom": "0.8.15",
     "astronomy-engine": "^2.1.19",
     "autoprefixer": "^10.4.20",
     "bcrypt": "^6.0.0",
@@ -380,11 +382,12 @@
     "jose": "^6.1.3",
     "jsdom": "^25.0.1",
     "jspdf": "^4.2.1",
+    "jszip": "3.10.2",
     "langfuse": "^3.38.6",
     "lucide-react": "^0.451.0",
     "luxon": "^3.7.2",
     "mammoth": "^1.12.0",
-    "next": "16.3.8",
+    "next": "16.4.3",
     "next-themes": "^0.3.0",
     "node-cron": "^4.2.1",
     "nodemailer": "^10.0.2",
@@ -467,7 +470,7 @@
       "@babel/runtime": "7.28.6"
     },
     "@qdrant/js-client-rest": {
-      "undici": "7.29.1"
+      "undici": "7.30.1"
     }
   }
 }

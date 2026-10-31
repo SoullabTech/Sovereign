@@ -53,11 +53,10 @@ DEFAULT_EPOCHS = 3
 DEFAULT_BATCH_SIZE = 4
 DEFAULT_LEARNING_RATE = 2e-4
 
-# Database connection (from environment or defaults)
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql://soullab@localhost:5432/maia_consciousness"
-)
+# Database authority is explicit; never select a populated local database implicitly.
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL_REQUIRED: explicit PostgreSQL authority is required")
 
 
 def get_db_connection():
@@ -328,7 +327,7 @@ def main():
     print("=" * 60)
     print(f"Base model: {args.base_model}")
     print(f"Output dir: {args.output_dir}")
-    print(f"Database: {DATABASE_URL[:50]}...")
+    print("Database: explicit PostgreSQL authority configured")
     print("=" * 60)
 
     # Export training data

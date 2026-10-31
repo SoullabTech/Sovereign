@@ -38,6 +38,7 @@ export type SourceKind = typeof ARTIFACT_EXTRACTION | typeof MEMBER_SUPPLIED_TEX
 export const EXTRACTORS = {
   docx: { method: 'mammoth-convertToMarkdown', version: 'mammoth@1.12.0' },
   pdf: { method: 'pdf-parse-getText', version: 'pdf-parse@2.4.5' },
+  epub: { method: 'epub-spine-xhtml', version: 'jszip@3.10.2+xmldom@0.8.15' },
   text: { method: 'utf8-decode', version: 'node-buffer-utf8' },
   /** Not an extraction: the member's own text, recorded as it was confirmed. */
   supplied: { method: 'member-supplied', version: 'n/a' },

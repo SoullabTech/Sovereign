@@ -33,7 +33,10 @@ jest.mock('pg', () => ({
   })),
 }));
 
-import { query } from '../postgres';
+const originalDatabaseUrl = process.env.DATABASE_URL;
+process.env.DATABASE_URL = 'postgresql://writer_test@127.0.0.1:5432/writer_missing_table_unit';
+
+const { query } = require('../postgres') as typeof import('../postgres');
 
 /** Shaped like a real node-postgres error: code plus the relation-naming message. */
 function undefinedTable(table: string) {
@@ -53,6 +56,11 @@ beforeEach(() => {
 
 afterEach(() => {
   errorSpy.mockRestore();
+});
+
+afterAll(() => {
+  if (originalDatabaseUrl === undefined) delete process.env.DATABASE_URL;
+  else process.env.DATABASE_URL = originalDatabaseUrl;
 });
 
 describe('query() — a missing table is infrastructure failure', () => {

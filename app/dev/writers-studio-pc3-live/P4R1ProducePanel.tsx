@@ -7,6 +7,10 @@ import {
   kdpPaperbackCoverGeometry,
   type KdpPaperbackPaper,
 } from '@/lib/writersStudio/publish/kdpCoverGeometry';
+import {
+  readLocalReviewManuscript,
+  type LocalReviewManuscript,
+} from '@/lib/writersStudio/localReviewManuscript';
 
 type ProductionIssue = {
   code: string;
@@ -19,7 +23,7 @@ type Preflight = {
   ready: boolean;
   title: string;
   sectionCount: number;
-  sourceAuthority: 'working_draft' | 'source';
+  sourceAuthority: 'working_draft' | 'source' | 'local_review';
   sourceRevision: string | null;
   issues: ProductionIssue[];
   publicationBoundary: string;
@@ -45,6 +49,8 @@ type ArtifactMeta = {
   pageCount: string | null;
   productionProfile: string | null;
   sourceHash: string | null;
+  artifactHash: string | null;
+  sizeBytes: number | null;
 };
 
 const TARGETS: readonly Target[] = [
@@ -116,9 +122,39 @@ function profileLabel(profile: string | null): string {
   return profile || '6 × 9 in · no bleed';
 }
 
-export default function P4R1ProducePanel({ manuscriptId, onClose }: {
+function artifactBytes(response: Response): number | null {
+  const raw = response.headers.get('x-soullab-artifact-bytes')
+    ?? response.headers.get('content-length');
+  if (!raw || !/^\d+$/.test(raw)) return null;
+  const value = Number.parseInt(raw, 10);
+  return Number.isSafeInteger(value) && value >= 0 ? value : null;
+}
+
+function formatBytes(value: number | null): string | null {
+  if (value === null) return null;
+  if (value < 1024) return `${value} bytes`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+/**
+ * A book-publishing preview for the small beta. File exports are OFF unless
+ * explicitly enabled by a separately certified caller. This is a presentation
+ * boundary, not server entitlement: the existing member-owned render API keeps
+ * its independent authorization and production consumers.
+ */
+export default function P4R1ProducePanel({
+  manuscriptId,
+  onClose,
+  exportsCertified = false,
+  localReviewArtifacts = false,
+}: {
   manuscriptId: string;
   onClose: () => void;
+  /** Only after PDF/EPUB end-to-end acceptance at the exact release build. */
+  exportsCertified?: boolean;
+  /** Loopback-only physical artifact review; never a member export grant. */
+  localReviewArtifacts?: boolean;
 }) {
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const [preflight, setPreflight] = useState<Preflight | null>(null);
@@ -133,14 +169,37 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
     () => TARGETS.find((candidate) => candidate.id === targetId) ?? TARGETS[0],
     [targetId],
   );
+  const filesAvailable = exportsCertified || localReviewArtifacts;
+  const localSource = useCallback((): LocalReviewManuscript | null => (
+    localReviewArtifacts ? readLocalReviewManuscript(manuscriptId) : null
+  ), [localReviewArtifacts, manuscriptId]);
 
   const load = useCallback(async () => {
     setPhase('loading');
     setMessage(null);
+    setPreflight(null);
+    setArtifact(null);
     try {
-      const response = await apiFetch(`/api/sovereign/manuscripts/${manuscriptId}/render`, {
-        method: 'GET',
-      });
+      const local = localSource();
+      if (localReviewArtifacts && !local) {
+        setMessage('This local manuscript is no longer in the review session. Import it again to review edition files.');
+        setPhase('error');
+        return;
+      }
+      const response = localReviewArtifacts
+        ? await apiFetch('/api/writers-studio/local-review/render', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              action: 'inspect',
+              title: local!.title,
+              author: local!.author,
+              sections: local!.sections,
+            }),
+          })
+        : await apiFetch(`/api/sovereign/manuscripts/${manuscriptId}/render`, {
+            method: 'GET',
+          });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) {
         setMessage(typeof body?.error === 'string' ? body.error : 'Could not check this Work for production just now.');
@@ -153,7 +212,7 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
       setMessage('Could not check this Work for production just now.');
       setPhase('error');
     }
-  }, [manuscriptId]);
+  }, [localReviewArtifacts, localSource, manuscriptId]);
 
   useEffect(() => {
     // Initial preflight is the purpose of mounting this bounded Publish panel.
@@ -162,17 +221,51 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
   }, [load]);
 
   const make = useCallback(async (format: 'pdf' | 'epub') => {
-    if (!preflight?.ready || making) return;
+    if (!filesAvailable || !preflight?.ready || making) return;
     setMaking(format);
     setMessage(null);
     try {
-      const response = await apiFetch(`/api/sovereign/manuscripts/${manuscriptId}/render`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ format }),
-      });
+      const local = localSource();
+      if (localReviewArtifacts && !local) {
+        setPreflight(null);
+        setArtifact(null);
+        setPhase('error');
+        setMessage('This local manuscript is no longer in the review session. Import it again before making a file.');
+        return;
+      }
+      const response = localReviewArtifacts
+        ? await apiFetch('/api/writers-studio/local-review/render', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              action: 'render',
+              format,
+              title: local!.title,
+              author: local!.author,
+              sections: local!.sections,
+              expectedSourceHash: preflight.sourceRevision,
+            }),
+          })
+        : await apiFetch(`/api/sovereign/manuscripts/${manuscriptId}/render`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              format,
+              expectedSourceAuthority: preflight.sourceAuthority,
+              expectedSourceRevision: preflight.sourceRevision,
+            }),
+          });
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
+        if (response.status === 409) {
+          // The author may have edited another room after the last preflight.
+          // Never present the previous proof or cover measurements as current.
+          setPreflight(null);
+          setArtifact(null);
+          setPhase('error');
+          setMessage('Your writing changed since the production check. Check again before preparing a file.');
+          return;
+        }
         setMessage(typeof body?.error === 'string' ? body.error : 'Could not make your book file just now.');
         return;
       }
@@ -196,14 +289,18 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
         pageCount: response.headers.get('x-soullab-page-count') || null,
         productionProfile: response.headers.get('x-soullab-production-profile') || null,
         sourceHash: response.headers.get('x-soullab-source-hash') || null,
+        artifactHash: response.headers.get('x-soullab-artifact-sha256') || null,
+        sizeBytes: artifactBytes(response),
       });
-      setMessage(`${format.toUpperCase()} prepared for ${target.short} from your current writing.`);
+      setMessage(localReviewArtifacts
+        ? `${format.toUpperCase()} made on this Mac for artifact review. It is not a certified publication file.`
+        : `${format.toUpperCase()} prepared for ${target.short} from your current writing.`);
     } catch {
       setMessage('Could not make your book file just now.');
     } finally {
       setMaking(null);
     }
-  }, [making, manuscriptId, preflight, target.short]);
+  }, [filesAvailable, localReviewArtifacts, localSource, making, manuscriptId, preflight, target.short]);
 
   const renderedPageCount = artifact?.format === 'pdf' && artifact.pageCount
     ? Number.parseInt(artifact.pageCount, 10)
@@ -216,10 +313,21 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
     <section className="p4r1-produce p4r1-publish" data-produce-panel data-publish-panel>
       <header>
         <div>
-          <span className="p4r1-eyebrow">Publish</span>
-          <h3>Prepare an edition of your book.</h3>
+          <span className="p4r1-eyebrow">
+            Publish · {localReviewArtifacts ? 'Local artifact review' : exportsCertified ? 'Book preparation' : 'Beta preview'}
+          </span>
+          <h3>Explore where this Work could go.</h3>
           <p className="p4r1-publish-lede">
-            Choose where this Work may go. Studio prepares the edition; you decide when, where, and with whom it is published.
+            Choose a possible publishing path, inspect preliminary book requirements, and see what your Work may still need.
+            Book editions are our first publishing form; other kinds of writing will receive their own pathways.
+          </p>
+          <p className="p4r1-publish-beta-state"
+            data-publish-availability={localReviewArtifacts ? 'local-review' : exportsCertified ? 'exports-enabled' : 'preview-only'}>
+            {localReviewArtifacts
+              ? 'This Mac can now generate temporary PDF and EPUB artifacts for physical review. They are not certified publication files, retained editions, or submissions.'
+              : exportsCertified
+                ? 'File preparation is available in this certified environment. You still decide whether and where to submit your Work.'
+                : 'This is a preview. PDF and EPUB downloads are still being verified, and no publishing or submission occurs here.'}
           </p>
         </div>
         <button type="button" className="p4r1-produce-close" onClick={onClose}>Close</button>
@@ -244,14 +352,18 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
                 <span>{preflight.sectionCount} section{preflight.sectionCount === 1 ? '' : 's'}</span>
               </div>
               <p>
-                {preflight.sourceAuthority === 'working_draft'
-                  ? 'This edition will use the writing currently held in Writer’s Studio.'
-                  : 'There is no section-addressable working draft, so this edition will use the current manuscript source.'}
+                {preflight.sourceAuthority === 'local_review'
+                  ? 'The confirmed manuscript held in this browser session is the source for this local artifact review.'
+                  : preflight.sourceAuthority === 'working_draft'
+                    ? 'Your current working draft is the source identified for a possible edition.'
+                    : 'No section-addressable working draft was found. This preview reads the current manuscript source.'}
               </p>
               <details className="p4r1-produce-details">
                 <summary>Source and production details</summary>
                 <p>
-                  Source: {preflight.sourceAuthority === 'working_draft' ? 'working draft' : 'manuscript source'}
+                  Source: {preflight.sourceAuthority === 'local_review'
+                    ? 'ephemeral local review manuscript'
+                    : preflight.sourceAuthority === 'working_draft' ? 'working draft' : 'manuscript source'}
                   {preflight.sourceRevision ? ' · revision ' + preflight.sourceRevision : ''}
                   {' · '}Current print profile: 6 × 9 in · no bleed
                 </p>
@@ -316,14 +428,14 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
 
             {(target.id === 'kdp-paperback' || target.id === 'kdp-hardcover') ? (
               <div className="p4r1-publish-preflight">
-                <b>Current KDP interior profile</b>
+                <b>Planned KDP interior profile · not a KDP approval</b>
                 <ul>
-                  <li data-state="ready">6 × 9 interior geometry</li>
-                  <li data-state="ready">Mirrored print margins</li>
-                  <li data-state="ready">Embedded production typography</li>
-                  <li data-state="ready">Page proof and page numbering</li>
-                  <li data-state="open">Paper/color choice is made in KDP</li>
-                  <li data-state="open">{target.id === 'kdp-paperback' ? 'Paperback cover' : 'Hardcover case-wrap cover'} still needs its own production file</li>
+                  <li data-state="planned">Target: 6 × 9 interior geometry</li>
+                  <li data-state="planned">Target: mirrored print margins</li>
+                  <li data-state="planned">Target: embedded production typography</li>
+                  <li data-state="open">Generated pages, fonts and numbering still require proofing</li>
+                  <li data-state="open">Paper and color choices are made separately in KDP</li>
+                  <li data-state="open">{target.id === 'kdp-paperback' ? 'Paperback cover' : 'Hardcover case-wrap cover'} requires a separate production file</li>
                 </ul>
               </div>
             ) : null}
@@ -377,23 +489,44 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
             <>
               <section className="p4r1-produce-step p4r1-produce-ready">
                 <span className="p4r1-eyebrow">4 · Interior readiness</span>
-                <h4>The current writing can be made into this edition’s book file.</h4>
-                <p>Current preflight found no production blocker in the manuscript structure it checks.</p>
+                <h4>No structural blockers found in these preliminary checks.</h4>
+                <p>This checks the manuscript structure available today. It does not certify the final PDF or EPUB, proof the pages, or establish retailer acceptance.</p>
               </section>
 
               <section className="p4r1-produce-step p4r1-produce-make">
-                <span className="p4r1-eyebrow">5 · Create the edition file</span>
+                <span className="p4r1-eyebrow">5 · Edition files</span>
+                {!filesAvailable ? (
+                  <>
+                    <h4>File downloads are awaiting final verification.</h4>
+                    <p>Here is what will become possible. These controls are intentionally unavailable during the preview; exploring Publish does not change your writing.</p>
+                  </>
+                ) : localReviewArtifacts ? (
+                  <>
+                    <h4>Make a temporary artifact for physical review.</h4>
+                    <p>The real renderer runs on this Mac. The downloaded file is labeled LOCAL REVIEW and receives no production certification or publisher submission.</p>
+                  </>
+                ) : null}
                 <div className="p4r1-produce-actions">
                   {(target.format === 'pdf' || target.format === 'both') ? (
-                    <button type="button" disabled={Boolean(making)} onClick={() => void make('pdf')}>
-                      <b>{making === 'pdf' ? 'Preparing interior PDF…' : target.id.startsWith('kdp-') ? 'Create KDP interior PDF' : 'Create print interior PDF'}</b>
-                      <span>6 × 9 fixed-layout interior · no bleed · ready for page proof and compatible print workflows.</span>
+                    <button type="button" disabled={!filesAvailable || Boolean(making)}
+                      data-publish-export={localReviewArtifacts ? 'local-review' : exportsCertified ? 'enabled' : 'held'}
+                      onClick={() => void make('pdf')}>
+                      <b>{!filesAvailable
+                        ? 'Interior PDF · in verification'
+                        : making === 'pdf' ? 'Preparing interior PDF…'
+                          : localReviewArtifacts ? 'Create local review PDF'
+                            : target.id.startsWith('kdp-') ? 'Create KDP interior PDF' : 'Create print interior PDF'}</b>
+                      <span>6 × 9 fixed-layout interior · no bleed · page proof required before submission.</span>
                     </button>
                   ) : null}
                   {(target.format === 'epub' || target.format === 'both') ? (
-                    <button type="button" disabled={Boolean(making)} onClick={() => void make('epub')}>
-                      <b>{making === 'epub' ? 'Preparing EPUB…' : 'Create EPUB'}</b>
-                      <span>Reflowable EPUB3 for Kindle-compatible and other ebook workflows.</span>
+                    <button type="button" disabled={!filesAvailable || Boolean(making)}
+                      data-publish-export={localReviewArtifacts ? 'local-review' : exportsCertified ? 'enabled' : 'held'}
+                      onClick={() => void make('epub')}>
+                      <b>{!filesAvailable ? 'EPUB3 · in verification'
+                        : making === 'epub' ? 'Preparing EPUB…'
+                          : localReviewArtifacts ? 'Create local review EPUB' : 'Create EPUB'}</b>
+                      <span>Reflowable EPUB3 · reading-device proof required before submission.</span>
                     </button>
                   ) : null}
                 </div>
@@ -402,13 +535,24 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
               {artifact ? (
                 <section className="p4r1-produce-step p4r1-publish-artifact" data-publish-artifact>
                   <span className="p4r1-eyebrow">6 · File made</span>
-                  <h4>{artifact.format.toUpperCase()} prepared from this exact writing.</h4>
+                  <h4>{localReviewArtifacts
+                    ? `${artifact.format.toUpperCase()} local review artifact made from this exact writing.`
+                    : `${artifact.format.toUpperCase()} prepared from this exact writing.`}</h4>
                   <dl>
                     <div><dt>Target</dt><dd>{target.name}</dd></div>
                     <div><dt>File</dt><dd>{artifact.format.toUpperCase()}</dd></div>
                     {artifact.format === 'pdf' ? <div><dt>Interior</dt><dd>{profileLabel(artifact.productionProfile)}</dd></div> : null}
                     {artifact.pageCount ? <div><dt>Rendered pages</dt><dd>{artifact.pageCount}</dd></div> : null}
+                    {formatBytes(artifact.sizeBytes) ? <div><dt>File size</dt><dd>{formatBytes(artifact.sizeBytes)}</dd></div> : null}
                     {artifact.sourceHash ? <div><dt>Source witness</dt><dd>{artifact.sourceHash.slice(0, 12)}</dd></div> : null}
+                    {artifact.artifactHash ? (
+                      <div data-artifact-sha256={artifact.artifactHash}>
+                        <dt>Artifact SHA-256</dt>
+                        <dd style={{ overflowWrap: 'anywhere', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+                          {artifact.artifactHash}
+                        </dd>
+                      </div>
+                    ) : null}
                   </dl>
                 </section>
               ) : null}
@@ -512,21 +656,41 @@ export default function P4R1ProducePanel({ manuscriptId, onClose }: {
               <section className="p4r1-produce-step p4r1-produce-next">
                 <span className="p4r1-eyebrow">{paperbackCover || (artifact?.format === 'pdf' && target.id === 'kdp-hardcover') ? '8' : artifact ? '7' : '6'} · What happens next</span>
                 <ol>
-                  <li><b>Proof the edition.</b><span>Read the rendered pages as a reader will encounter them.</span></li>
-                  <li><b>Prepare the cover separately.</b><span>Trim, page count, binding, and paper choice inform the final cover/spine geometry.</span></li>
+                  {!filesAvailable ? (
+                    <>
+                      <li><b>Keep developing the Work.</b><span>Use Write, Develop and Review to refine what the reader will receive.</span></li>
+                      <li><b>Consider the publication path.</b><span>Use these preliminary requirements to plan the edition, cover and intended readers.</span></li>
+                      <li><b>Return for export when verified.</b><span>Once file preparation is certified, generate and proof an edition before submitting it anywhere.</span></li>
+                    </>
+                  ) : localReviewArtifacts ? (
+                    <>
+                      <li><b>Proof the local artifact.</b><span>Read the PDF pages or open the EPUB in a reading application and record what still needs work.</span></li>
+                      <li><b>Return to the manuscript.</b><span>Any correction belongs in Write, followed by a fresh source check and a newly rendered review file.</span></li>
+                      <li><b>Keep certification separate.</b><span>A successful local render does not enable member export or authorize submission.</span></li>
+                    </>
+                  ) : (
+                    <>
+                      <li><b>Proof the edition.</b><span>Read the rendered pages as a reader will encounter them.</span></li>
+                      <li><b>Prepare the cover separately.</b><span>Trim, page count, binding, and paper choice inform the final cover/spine geometry.</span></li>
+                    </>
+                  )}
                   {target.id === 'soullab-press' ? (
                     <li><b>Choose whether to approach Soullab Press.</b><span>The Press pathway begins only if you explicitly choose it.</span></li>
-                  ) : (
-                    <li><b>Upload when you decide it is ready.</b><span>Studio prepares the file. Submission to the publisher or retailer remains your act.</span></li>
-                  )}
+                  ) : exportsCertified ? (
+                    <li><b>Submit only when ready.</b><span>Studio prepares the file; submission to the publisher or retailer remains your act.</span></li>
+                  ) : null}
                 </ol>
               </section>
             </>
           )}
 
           <p className="p4r1-produce-boundary">
-            {preflight.publicationBoundary} Choosing Soullab Press here expresses interest only; it is not acceptance,
-            a publishing agreement, or transfer of rights.
+            {localReviewArtifacts
+              ? preflight.publicationBoundary + ' Production export remains held.'
+              : exportsCertified
+                ? preflight.publicationBoundary
+                : 'This preview makes no publication file and submits nothing.'}
+            {' '}Exploring Soullab Press here is not an application, acceptance, publishing agreement, or transfer of rights.
           </p>
         </>
       ) : null}

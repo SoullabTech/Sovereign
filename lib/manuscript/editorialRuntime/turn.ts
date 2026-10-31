@@ -53,6 +53,8 @@ import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
+import { editorialDirective, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
+import { relationalCraftSystemGuidance } from '@/lib/writersStudio/relationalCraftExchange';
 import {
   admitEditorialToolEnvelope, EDITORIAL_TOOL_NAME, editorialToolSchemaForKinds,
   editorialTurnIdentity, priorRelationshipMaiaEditorialTurnCandidate,
@@ -133,6 +135,8 @@ export interface EditorialTurnInput {
   /** Turn-local outcome permission. ⛔ Defaults to allow; exploratory surfaces
    * may close the proposal/direction vocabulary to reply_only. */
   readonly proposalPolicy?: ProposalPolicy;
+  /** Explicitly selected response register; NEVER inferred from the writer. */
+  readonly responseDepth?: EditorialDepth;
 }
 
 export type EditorialTurnRefusal =
@@ -156,6 +160,9 @@ export type EditorialTurnRefusal =
    * words enter cognition, which is the whole point of putting it here.
    */
   | 'disclosure_unavailable'
+  /** A provider response may already have crossed, but the durable crossing
+   * receipt could not be confirmed. Never retry or describe this as unsent. */
+  | 'disclosure_confirmation_unresolved'
   /**
    * ⭐⭐ THE PROPOSAL IS IN SOMEONE ELSE'S VOCABULARY, far past what the
    * writer's latitude could plausibly mean. ⛔ Below the bound this is REPORTED
@@ -396,6 +403,11 @@ export async function runEditorialTurn(
        back, and deleting this line would not change what is permitted. */
     system: [
       proof.systemPrompt,
+      // Server-owned fixed editorial register, not author-authored speech.
+      // Both derive from the exact durable utterance and chosen depth only.
+      // No new context, corpus, or identity crosses this instruction.
+      editorialDirective(input.responseDepth ?? 'guided'),
+      relationalCraftSystemGuidance(utterance),
       latitudeInstruction(scope),
       sequenceInstruction(gated),
       proposalPolicyInstruction(proposalPolicy),
@@ -428,7 +440,16 @@ export async function runEditorialTurn(
      * MAY have occurred and was not confirmed* — ⛔ never as nothing crossed.
      * That is the honest state and it needs no new vocabulary. */
     if (shouldConfirmCrossing({ kind: 'refusal', dispatch: structured.dispatch })) {
-      await confirmDisclosureCrossed(disclosureId);
+      let confirmed = false;
+      try { confirmed = await confirmDisclosureCrossed(disclosureId); } catch { confirmed = false; }
+      if (!confirmed) {
+        return {
+          ok: false,
+          reason: 'disclosure_confirmation_unresolved',
+          detail: 'provider_disclosure_confirmation_unresolved',
+          dispatch: structured.dispatch,
+        };
+      }
     }
     return {
       ok: false, reason: 'structured_refused', detail: structured.refusal,
@@ -439,8 +460,16 @@ export async function runEditorialTurn(
    * ⛔ Confirmation is part of accountability, not telemetry. A failed receipt
    * confirmation may never be followed by admission/persistence and a 200. */
   if (shouldConfirmCrossing({ kind: 'result' })) {
-    const confirmed = await confirmDisclosureCrossed(disclosureId);
-    if (!confirmed) return { ok: false, reason: 'disclosure_unavailable' };
+    let confirmed = false;
+    try { confirmed = await confirmDisclosureCrossed(disclosureId); } catch { confirmed = false; }
+    if (!confirmed) {
+      return {
+        ok: false,
+        reason: 'disclosure_confirmation_unresolved',
+        detail: 'provider_disclosure_confirmation_unresolved',
+        dispatch: 'response_observed',
+      };
+    }
   }
 
   /* 6 ⛔ ADMISSION. A refusal here reaches no transaction, and prose is never
@@ -460,7 +489,7 @@ export async function runEditorialTurn(
   if (reportedModel === null || modelAgreement !== 'agreed') {
     return {
       ok: false, reason: 'model_unattributable',
-      detail: `requested=${structured.result.provenance.model} reported=${reportedModel ?? 'none'} agreement=${modelAgreement}`,
+      detail: 'model_attribution_unverified',
     };
   }
 

@@ -360,8 +360,8 @@ export const WRITING_SPACE = {
 } as const;
 
 export const HOME_COPY = {
-  beginWelcome: 'Welcome, writer. You are home.',
-  begin: 'Begin a new work',
+  beginWelcome: 'What are you beginning?',
+  begin: 'Start writing',
   importWriting: 'Import writing',
   bringSources: 'Bring notes & sources',
   trust: 'Your original is always preserved.',

@@ -6,6 +6,8 @@
  */
 
 const { Client } = require('pg');
+const { requireDatabaseUrl } = require('./scripts/lib/explicit-database-url.cjs');
+const DATABASE_URL = requireDatabaseUrl(process.env.DATABASE_URL);
 
 // Mock implementations for testing without full TypeScript compilation
 class TestConsciousnessSystem {
@@ -44,7 +46,7 @@ class TestConsciousnessSystem {
   }
 
   async testDatabaseConnectivity() {
-    const client = new Client(process.env.DATABASE_URL || 'postgresql://postgres:@localhost:5432/maia_consciousness');
+    const client = new Client(DATABASE_URL);
 
     try {
       await client.connect();
@@ -63,7 +65,7 @@ class TestConsciousnessSystem {
   }
 
   async testMemoryTables() {
-    const client = new Client(process.env.DATABASE_URL || 'postgresql://postgres:@localhost:5432/maia_consciousness');
+    const client = new Client(DATABASE_URL);
 
     try {
       await client.connect();
@@ -176,7 +178,7 @@ class TestConsciousnessSystem {
   }
 
   async testMemoryPersistence() {
-    const client = new Client(process.env.DATABASE_URL || 'postgresql://postgres:@localhost:5432/maia_consciousness');
+    const client = new Client(DATABASE_URL);
 
     try {
       await client.connect();

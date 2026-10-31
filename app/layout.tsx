@@ -128,6 +128,9 @@ export default function RootLayout({
 
             function unlockAudio() {
               if (window.__maiaAudioUnlocked) return;
+              // Session Room admits media only after runtime + transport admission.
+              // Never touch audio there; keep listening so leaving the room still unlocks.
+              if (/^\\/(open|studio)\\/session-room(\\/|$)/.test(window.location.pathname)) return;
               console.log('🔓 [GLOBAL] Attempting iOS/PWA audio unlock...');
 
               // METHOD 1: Create and play Audio element SYNCHRONOUSLY

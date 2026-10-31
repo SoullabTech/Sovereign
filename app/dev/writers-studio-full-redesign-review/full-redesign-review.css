@@ -30,6 +30,32 @@
 .fr-nav-item:first-child[aria-current='page']::after { left: -6px; }
 .fr-workpick { margin-left: auto; display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 14px 0 12px;
   border: 1px solid var(--fr-line); border-radius: 8px; background: var(--fr-panel-soft); font-size: 14px; color: var(--fr-ink2); white-space: nowrap; }
+/* Member-owned column geometry. The splitters change width without remounting
+   the manuscript or MAIA; header controls collapse/reopen either available panel. */
+.fr-panel-controls { display: flex; flex: none; align-items: center; gap: 6px; margin: 0 8px; }
+.fr-panel-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  min-height: 30px; padding: 3px 9px !important; border: 1px solid var(--fr-line) !important;
+  border-radius: 7px; font-size: 12px !important; white-space: nowrap; color: var(--fr-ink2) !important; }
+.fr-panel-toggle:hover { background: var(--fr-action-soft); color: var(--fr-title) !important; }
+.fr-panel-toggle[aria-pressed='false'] { opacity: .78; }
+.fr-panel-toggle span { font-size: 18px; line-height: 12px; }
+.fr-room { position: relative; }
+.fr-panel-splitter { position: absolute; top: var(--fr-top); bottom: var(--fr-bottom); width: 14px;
+  z-index: 5; cursor: col-resize; touch-action: none; user-select: none; background: transparent; }
+.fr-panel-splitter::after { content: ''; position: absolute; width: 3px; top: 17px; bottom: 17px;
+  left: 5px; border-radius: 4px; background: transparent; transition: background 120ms ease; }
+.fr-panel-splitter:hover::after, .fr-panel-splitter:focus-visible::after,
+.fr-panel-splitter:active::after { background: var(--fr-action); }
+.fr-panel-splitter-left { left: calc(var(--fr-pad-l) + var(--fr-ms-w) + var(--fr-gap-l) / 2 - 7px); }
+.fr-panel-splitter-right { right: calc(var(--fr-pad-r) + var(--fr-maia-w) + var(--fr-gap-r) / 2 - 7px); }
+.fr-shell[data-left-open='false'] .fr-manuscript,
+.fr-shell[data-right-open='false'] .fr-maia { visibility: hidden; pointer-events: none; }
+.fr-shell[data-left-open='false'] .fr-work { margin-left: 0; }
+.fr-shell[data-right-open='false'] .fr-work { margin-right: 0; }
+@media (max-width: 1023px) {
+  .fr-panel-controls, .fr-panel-splitter { display: none; }
+}
+
 .fr-avatar { margin-left: 50px; width: 32px; height: 32px; border-radius: 50%; background: #8299B1; color: #fff; display: grid; place-items: center;
   font-size: 14px; font-weight: 600; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .35); }
 .fr-more { margin-left: 22px; color: var(--fr-muted); font-size: 16px; letter-spacing: 1px; }
@@ -710,3 +736,302 @@
 .fr-review-live-hero-copy small { font-family: var(--fr-sans-stack); color: var(--fr-muted); }
 .fr-review-live-hero-copy strong { font-family: var(--fr-serif-stack); font-size: 26px; font-weight: 500; }
 .fr-review-live-hero-copy span { font-family: var(--fr-sans-stack); font-size: 12px; color: var(--fr-ink2); }
+
+
+/* WS-JARVIS-R1 · device-local, Studio-wide reading choice.
+   These are display metrics only. The manuscript and MAIA retain their
+   original text, DOM identity, selection coordinates and consent authority. */
+.fr-reading-choice { display: inline-flex; flex: none; align-items: center;
+  gap: 6px; padding: 0 6px; color: var(--fr-ink2); font: 600 13px/1 var(--fr-sans-stack); }
+.fr-reading-choice > span { flex: none; font-size: 16px; letter-spacing: -.06em; }
+.fr-reading-choice select { max-width: 96px; min-height: 40px; padding: 5px 7px;
+  border: 1px solid var(--fr-line); border-radius: 7px;
+  background: var(--fr-panel); color: var(--fr-title);
+  font: 500 15px/1.2 var(--fr-sans-stack); cursor: pointer; }
+.fr-reading-choice select:focus-visible { outline: 2px solid var(--fr-action); outline-offset: 2px; }
+
+.fr-shell[data-studio-reading-size='large'] {
+  --fr-reading-prose: 21px; --fr-reading-maia: 17px;
+  --fr-reading-note: 15px; --fr-reading-leading: 1.7;
+}
+.fr-shell[data-studio-reading-size='larger'] {
+  --fr-reading-prose: 25px; --fr-reading-maia: 19px;
+  --fr-reading-note: 16.5px; --fr-reading-leading: 1.75;
+}
+.fr-shell[data-studio-reading-size='largest'] {
+  --fr-reading-prose: 29px; --fr-reading-maia: 21px;
+  --fr-reading-note: 18px; --fr-reading-leading: 1.78;
+}
+.fr-shell[data-studio-reading-size] .fr-write-editor,
+.fr-shell[data-studio-reading-size] .fr-doc-body p,
+.fr-shell[data-studio-reading-size] .p4r1-prose-page p {
+  font-size: var(--fr-reading-prose); line-height: var(--fr-reading-leading);
+}
+.fr-shell[data-studio-reading-size] .fr-para {
+  font-size: var(--fr-reading-note); line-height: 1.65;
+}
+.fr-shell[data-studio-reading-size] .fr-say,
+.fr-shell[data-studio-reading-size] .fr-say-blue p:not(.fr-say-lead),
+.fr-shell[data-studio-reading-size] .fr-say-rev > p,
+.fr-shell[data-studio-reading-size] .fr-maia-quote {
+  font-size: var(--fr-reading-maia); line-height: 1.65;
+}
+.fr-shell[data-studio-reading-size] .fr-finding-text q,
+.fr-shell[data-studio-reading-size] .fr-finding-text small,
+.fr-shell[data-studio-reading-size] .fr-finding[data-live-finding] .fr-finding-text p {
+  font-size: var(--fr-reading-note); line-height: 1.55;
+  height: auto; display: block; overflow: visible; -webkit-line-clamp: unset;
+}
+@media (max-width: 720px) {
+  .fr-reading-choice { margin-left: 3px; padding: 0 2px; }
+  .fr-reading-choice > span { display: none; }
+  .fr-reading-choice select { max-width: min(96px,24vw); min-height: 44px; font-size: 14px; }
+}
+
+
+/* 2026-10-23: discoverable presentation controls without toolbar overload. */
+.fr-root .fr-room-switcher {display:none;align-items:center;gap:6px;font:inherit;font-size:12px;min-width:0;}
+.fr-root .fr-room-switcher select {
+  min-width:110px;max-width:165px;height:34px;padding:5px 18px 5px 9px;border-radius:8px;
+  border:1px solid var(--fr-line);color:var(--fr-title);background:var(--fr-panel);font:inherit;
+}
+.fr-root .fr-writer-preferences {position:relative;flex:none;margin-left:7px;font:inherit;}
+.fr-root .fr-writer-preferences>summary {
+  list-style:none;display:flex;align-items:center;justify-content:center;
+  min-height:34px;padding:7px 11px;border-radius:8px;border:1px solid var(--fr-line);
+  font-size:12px;color:var(--fr-ink2);cursor:pointer;white-space:nowrap;
+}
+.fr-root .fr-writer-preferences>summary::-webkit-details-marker {display:none;}
+.fr-root .fr-writer-preferences[open]>summary {border-color:var(--fr-action);color:var(--fr-title);}
+.fr-root .fr-writer-preference-panel {
+  position:absolute;right:0;top:calc(100% + 8px);width:min(390px,calc(100vw - 24px));
+  padding:18px;border-radius:12px;border:1px solid var(--fr-line);
+  color:var(--fr-ink);background:var(--fr-panel);box-shadow:0 20px 45px rgba(0,0,0,.22);
+  z-index:80;max-height:min(78vh,710px);overflow:auto;line-height:1.5;
+}
+.fr-root .fr-writer-preference-panel h2 {font-family:var(--fr-serif-stack);font-size:21px;font-weight:500;margin:0 0 8px;}
+.fr-root .fr-writer-preference-panel p {font-size:12px;opacity:.79;margin:7px 0 12px;}
+.fr-root .fr-writer-preference-panel form label {display:block;font-size:12px;font-weight:600;margin-bottom:7px;}
+.fr-root .fr-writer-request-entry {display:flex;gap:6px;align-items:stretch;min-height:40px;}
+.fr-root .fr-writer-request-entry input {flex:1;min-width:0;padding:8px 10px;font:inherit;font-size:13px;
+  color:inherit;background:transparent;border:1px solid var(--fr-line);border-radius:8px;}
+.fr-root .fr-writer-request-entry button,.fr-root .fr-writer-pref-actions button {padding:8px 12px;
+  border:1px solid var(--fr-line);border-radius:8px;min-height:37px;font-size:12px;cursor:pointer;}
+.fr-root .fr-writer-request-entry button:disabled {opacity:.45;cursor:default;}
+.fr-root .fr-writer-proposal {padding:11px 12px;margin-top:12px;border-radius:9px;border:1px solid var(--fr-action);}
+.fr-root .fr-writer-proposal strong {font-size:14px;}
+.fr-root .fr-writer-pref-actions {display:flex;gap:8px;flex-wrap:wrap;}
+.fr-root .fr-writer-pref-actions button:first-child {background:var(--fr-action);color:var(--fr-ground);font-weight:600;}
+.fr-root .fr-writer-pref-status {border-left:3px solid var(--fr-action);padding-left:10px;}
+.fr-root .fr-writer-fine-tune {margin:17px 0 9px;border-top:1px solid var(--fr-line);padding-top:10px;}
+.fr-root .fr-writer-fine-tune>summary {cursor:pointer;font-weight:600;font-size:12px;padding:8px 0;}
+.fr-root .fr-writer-pref-grid {display:grid;grid-template-columns:1fr;gap:12px;padding:7px 0;}
+.fr-root .fr-writer-pref-grid label {display:flex;flex-direction:column;gap:4px;font-size:12px;}
+.fr-root .fr-writer-pref-grid select {width:100%;padding:7px 8px;font:inherit;color:var(--fr-ink);
+  border:1px solid var(--fr-line);border-radius:8px;background:var(--fr-panel);}
+.fr-root .fr-writer-preference-panel .fr-writer-pref-foot {font-size:11px;opacity:.71;margin:12px 0 0;}
+/* Desktop 1100+: compress chrome rather than hiding destinations in overflow. */
+@media (max-width:1300px) {
+  .fr-root .fr-bar {padding-left:12px;padding-right:10px;gap:5px;}
+  .fr-root .fr-brand {margin-right:15px;font-size:21px;}
+  .fr-root .fr-nav-item {padding:0 11px;font-size:13px;}
+  .fr-root .fr-workpick {max-width:140px;overflow:hidden;padding:0 8px;}
+  .fr-root .fr-workpick>span {min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  .fr-root .fr-reading-choice {display:none;}
+  .fr-root .fr-panel-reset {display:none;}
+}
+@media (max-width:1090px) {
+  .fr-root .fr-nav {display:none;}
+  .fr-root .fr-room-switcher {display:inline-flex;flex:0 0 auto;}
+  .fr-root .fr-writer-preferences {margin-left:auto;}
+  .fr-root .fr-bar-accessories {min-width:0;max-width:120px;overflow:hidden;}
+  .fr-root .fr-brand {margin-right:7px;}
+}
+@media (max-width:640px) {
+  .fr-root .fr-bar {gap:4px;padding:0 8px;}
+  .fr-root .fr-brand {font-size:18px;margin-right:2px;gap:5px;}
+  .fr-root .fr-mark {width:20px;height:20px;}
+  .fr-root .fr-room-switcher span {font-size:11px;}
+  .fr-root .fr-room-switcher select {min-width:100px;max-width:112px;padding-left:6px;}
+  .fr-root .fr-writer-preferences>summary {min-height:32px;padding:6px 8px;font-size:11px;}
+  .fr-root .fr-workpick,.fr-root .fr-bar-accessories {display:none;}
+}
+
+
+/* Living World Grammar R10: recognizable family, different places to act.
+   All color role values derive from the writer-chosen atmosphere. A room's
+   EXPLICIT mode changes surface rhythm and emphasis; it never infers mood,
+   skill, identity, plan, manuscript meaning or permission. No new overlay,
+   pop-up, animation loop, or distraction is required for belonging. */
+.fr-root .fr-shell[data-world='soullab'] {
+  --fr-world-line: var(--fr-line);
+  --fr-world-focus: var(--fr-action);
+  --fr-world-space: 18px;
+  --fr-world-transition: 180ms;
+}
+.fr-root .fr-shell[data-world='soullab'] .fr-work {
+  transition: background-color var(--fr-world-transition) ease,
+              border-color var(--fr-world-transition) ease;
+}
+.fr-root .fr-shell[data-world='soullab'] .fr-nav-item[aria-current='page']::after {
+  background: var(--fr-world-focus);
+}
+/* ARRIVAL: unhurried threshold, the person and their work come first. */
+.fr-root .fr-shell[data-world-intent='arrival'] {
+  --fr-world-space: 27px;
+  --fr-world-focus: var(--fr-gold);
+}
+.fr-root .fr-shell[data-world-intent='arrival'] .fr-room-single .fr-work {
+  background: linear-gradient(154deg,
+    color-mix(in srgb, var(--fr-field) 84%, var(--fr-panel)) 0%,
+    var(--fr-ground) 100%);
+}
+/* COMPOSITION: the manuscript plane has absolute visual priority. */
+.fr-root .fr-shell[data-world-intent='composition'] {
+  --fr-world-space: 24px;
+  --fr-world-focus: var(--fr-action);
+}
+.fr-root .fr-shell[data-world-intent='composition'] .fr-work {
+  background: var(--fr-panel);
+}
+/* EXPLORATION: spacious questions, no compulsory analytic dashboard. */
+.fr-root .fr-shell[data-world-intent='exploration'] {
+  --fr-world-space: 22px;
+  --fr-world-focus: var(--fr-gold);
+}
+.fr-root .fr-shell[data-world-intent='exploration'] .fr-work {
+  background: linear-gradient(176deg,
+    color-mix(in srgb, var(--fr-field) 88%, var(--fr-action-soft)) 0%,
+    var(--fr-ground) 85%);
+}
+.fr-root .fr-shell[data-world-intent='exploration'] .fr-maia {
+  border-color: var(--fr-field-line);
+}
+/* DISCERNMENT: clearer edges for comparison, less ambient effect. */
+.fr-root .fr-shell[data-world-intent='discernment'] {
+  --fr-world-space: 16px;
+  --fr-world-focus: var(--fr-action);
+}
+.fr-root .fr-shell[data-world-intent='discernment'] .fr-work {
+  background: var(--fr-ground);
+}
+.fr-root .fr-shell[data-world-intent='discernment'] .fr-panel {
+  border-color: var(--fr-line);
+}
+/* RESONANCE: a quiet acoustic field, no pulses, auto-playing animations or
+   forced nighttime aesthetic. The chosen atmosphere remains authoritative. */
+.fr-root .fr-shell[data-world-intent='resonance'] {
+  --fr-world-space: 27px;
+  --fr-world-focus: var(--fr-gold);
+}
+.fr-root .fr-shell[data-world-intent='resonance'] .fr-work {
+  background: linear-gradient(150deg,
+    var(--fr-panel) 8%,
+    color-mix(in srgb, var(--fr-panel) 87%, var(--fr-maia-card)) 95%);
+}
+/* OFFERING: deliberate manuscript-to-world transition, but the interface
+   never suggests publication is ready if source/export is still held. */
+.fr-root .fr-shell[data-world-intent='offering'] {
+  --fr-world-space: 24px;
+  --fr-world-focus: var(--fr-gold);
+}
+.fr-root .fr-shell[data-world-intent='offering'] .fr-work {
+  background: linear-gradient(165deg,
+    var(--fr-field) 0%,var(--fr-panel) 92%);
+}
+/* Readability and accessibility outrank atmosphere. */
+@media (prefers-reduced-motion: reduce) {
+  .fr-root .fr-shell[data-world='soullab'] {
+    --fr-world-transition: 0ms;
+  }
+}
+@media (forced-colors: active) {
+  .fr-root .fr-shell[data-world='soullab'] .fr-work,
+  .fr-root .fr-shell[data-world='soullab'] .fr-room-single .fr-work {
+    background: Canvas;
+  }
+}
+
+/* Access is informative, never a plan-colored banner competing with writing. */
+.fr-root .fr-writer-about-access {margin-top:12px;padding-top:10px;
+ border-top:1px solid var(--fr-line);font-size:12px;}
+.fr-root .fr-writer-about-access summary {cursor:pointer;padding:7px 0;}
+.fr-root .fr-writer-about-access p {line-height:1.65;}
+.fr-root .fr-writer-about-access a {color:var(--fr-action);text-underline-offset:3px;}
+
+/* UX fix (founder walk 2026-10-29): the top bar must never clip a Studio tab.
+   The Studio tabs keep their natural width; the long Work title in the picker
+   gives up space and truncates with an ellipsis instead. */
+.fr-root .fr-bar .fr-nav { flex: 0 0 auto; overflow: visible; }
+.fr-root .fr-bar .fr-workpick { flex: 1 1 140px; min-width: 120px; max-width: 380px; }
+.fr-root .fr-bar .fr-workpick > *,
+.fr-root .fr-bar .fr-workpick select,
+.fr-root .fr-bar .fr-workpick button { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* "View" menu: appearance, text size, panel toggles and Reset widths behind one
+   button so the top bar stays calm. Presentation only; nothing here changes
+   what MAIA may read, consent, or which words may be revised. */
+.fr-root .fr-view-menu { position: relative; flex: none; margin-left: 7px; font: inherit; }
+.fr-root .fr-view-menu > summary {
+  list-style: none; display: flex; align-items: center; justify-content: center;
+  min-height: 34px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--fr-line);
+  font-size: 12px; color: var(--fr-ink2); cursor: pointer; white-space: nowrap;
+}
+.fr-root .fr-view-menu > summary::-webkit-details-marker { display: none; }
+.fr-root .fr-view-menu > summary::after { content: '▾'; margin-left: 7px; font-size: 10px; opacity: .7; }
+.fr-root .fr-view-menu[open] > summary { border-color: var(--fr-action); color: var(--fr-title); }
+.fr-root .fr-view-menu-body {
+  position: absolute; right: 0; top: calc(100% + 8px); width: min(300px, calc(100vw - 24px));
+  display: flex; flex-direction: column; align-items: stretch; gap: 12px;
+  padding: 16px; border-radius: 12px; border: 1px solid var(--fr-line);
+  color: var(--fr-ink); background: var(--fr-panel); box-shadow: 0 20px 45px rgba(0, 0, 0, .22);
+  z-index: 80; line-height: 1.5;
+}
+.fr-root .fr-view-menu-body > * { margin: 0 !important; }
+.fr-root .fr-view-menu-body .fr-bar-accessories { display: flex; flex-wrap: wrap; gap: 8px; width: auto; }
+.fr-root .fr-view-menu-body .fr-bar-accessories:empty { display: none; }
+.fr-root .fr-view-menu-body .fr-reading-choice { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.fr-root .fr-view-menu-body .fr-panel-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.fr-root .fr-view-menu-body .fr-panel-toggle { flex: 1 1 auto; }
+
+/* The floating "Report a bug" button sits at the bottom-right of every signed-in
+   page; keep the MAIA footer line clear of it. */
+.fr-root .fr-foot { padding-bottom: 46px; box-sizing: content-box; }
+.fr-root .p4r1-develop-prefs-link { margin-left: 12px; }
+
+/* Field QA repair: the Work chooser is keyboard accessible and reaches the
+   existing Home chooser through the same unsaved-writing navigation guards. */
+.fr-root .fr-bar .fr-workpick { font: inherit; text-align: left; cursor: pointer; }
+.fr-root .fr-bar .fr-workpick > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fr-root .fr-bar .fr-workpick:focus-visible { outline: 2px solid var(--fr-action); outline-offset: 3px; }
+.fr-root .fr-bar .fr-workpick:disabled { cursor: default; }
+
+/* At phone width, give Room, Preferences, View and the Work chooser their own
+   space instead of hiding choices or forcing the header past the viewport. */
+@media (max-width: 600px) {
+  .fr-root .fr-shell .fr-bar {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 10px; height: auto; min-height: 0; padding: 10px 12px;
+  }
+  .fr-root .fr-shell .fr-brand { grid-column: 1; min-width: 0; margin: 0; }
+  .fr-root .fr-shell .fr-bar .fr-nav { display: none; }
+  .fr-root .fr-shell .fr-room-switcher { grid-column: 2; display: inline-flex; margin: 0; min-width: 0; }
+  .fr-root .fr-shell .fr-writer-preferences { grid-column: 1; min-width: 0; margin: 0; }
+  .fr-root .fr-shell .fr-view-menu { grid-column: 2; min-width: 0; margin: 0; }
+  .fr-root .fr-shell .fr-bar .fr-workpick {
+    grid-column: 1 / -1; display: flex; width: 100%; max-width: none;
+    margin: 0; min-width: 0; box-sizing: border-box;
+  }
+  .fr-root .fr-shell .fr-bar-spacer { display: none; }
+  .fr-root .fr-shell .fr-writer-preference-panel {
+    left: 0; right: auto; width: min(350px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px); box-sizing: border-box;
+  }
+  .fr-root .fr-shell .fr-view-menu-body {
+    left: auto; right: 0; width: min(350px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px); box-sizing: border-box;
+  }
+  .fr-root .fr-shell .fr-view-menu-body .fr-bar-accessories {
+    max-width: none; overflow: visible;
+  }
+}

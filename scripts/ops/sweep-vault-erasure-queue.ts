@@ -37,6 +37,10 @@
 
 import { sweepVaultErasureQueue } from '../../lib/manuscript/source/eraseManuscript';
 import { query, closePool } from '../../lib/db/postgres';
+import {
+ safeVaultAttemptCountR105,storedVaultErasureErrnoR105,
+ vaultErasureErrnoR105,
+} from '../../lib/manuscript/source/vaultErasureSafeLogR105';
 
 const quiet = process.argv.includes('--quiet');
 const say = (s: string) => {
@@ -59,16 +63,15 @@ async function main() {
   say(`  destroyed ${destroyed} · ${remaining} still owed`);
 
   if (remaining > 0) {
-    /* Name what is stuck. An obligation that keeps failing is an operator
-       problem — a permission, a mount, a vault root — and it must be visible
-       rather than retried forever in the dark. */
-    const stuck = await query<{ artifact_ref: string; attempts: number; last_error: string | null }>(
-      `SELECT artifact_ref, attempts, last_error FROM vault_erasure_queue
+    /* Queue paths must remain available to the eraser, but never to logs.
+       Report only bounded counts and sanitized errno categories. */
+    const stuck = await query<{ attempts: number; last_error: string | null }>(
+      `SELECT attempts, last_error FROM vault_erasure_queue
         ORDER BY attempts DESC, queued_at ASC LIMIT 10`,
     );
     for (const row of stuck.rows) {
       console.error(
-        `  STILL OWED  ${row.artifact_ref}  attempts=${row.attempts}  ${row.last_error ?? ''}`,
+        `  STILL OWED attempts=${safeVaultAttemptCountR105(row.attempts)} errno=${storedVaultErasureErrnoR105(row.last_error)}`,
       );
     }
   }
@@ -81,7 +84,7 @@ main()
     process.exit(code);
   })
   .catch(async (err) => {
-    console.error('vault erasure sweep failed:', err);
+    console.error('vault erasure sweep failed (errno='+vaultErasureErrnoR105(err)+')');
     await closePool().catch(() => {});
     process.exit(1);
   });

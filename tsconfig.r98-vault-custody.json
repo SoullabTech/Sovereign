@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "plugins": [],
+    "types": ["node", "jest"]
+  },
+  "files": [
+    "lib/storage/fileVault.ts",
+    "lib/storage/__tests__/fileVaultConfinement.test.ts",
+    "lib/storage/__tests__/destroyVaultBytes.test.ts",
+    "lib/storage/__tests__/durableFileVault.test.ts",
+    "lib/storage/__tests__/r98DurableVaultBoundary.test.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}

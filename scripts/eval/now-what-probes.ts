@@ -40,6 +40,7 @@ import {
   type Db,
   type EvalMember,
 } from './lib/evalMember';
+import { requireDatabaseUrl } from '../../lib/db/databaseUrl';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const HARNESS_REPO_ROOT = resolve(SCRIPT_DIR, '..', '..');
@@ -65,10 +66,7 @@ function parseCli(argv: string[]): Cli {
     port: 3111,
     baseUrl: null,
     scenario: null,
-    databaseUrl:
-      process.env.EVAL_DATABASE_URL ||
-      process.env.DATABASE_URL ||
-      'postgresql://soullab@localhost:5432/maia_consciousness',
+    databaseUrl: process.env.EVAL_DATABASE_URL || process.env.DATABASE_URL || '',
     report: null,
     keepMember: false,
     allowHosts: [],
@@ -90,6 +88,7 @@ function parseCli(argv: string[]): Cli {
     else if (a === '--allow-host') cli.allowHosts.push(next());
     else throw new Error(`unknown flag: ${a}`);
   }
+  cli.databaseUrl = requireDatabaseUrl(cli.databaseUrl);
   return cli;
 }
 
@@ -937,11 +936,19 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-async function startServer(appRoot: string, port: number, scenario: Scenario): Promise<ManagedServer> {
-  const env: Record<string, string | undefined> = { ...process.env };
-  // Mirror the repo's own dev script (`env -u DATABASE_URL next dev`): the
-  // dev server resolves its DB locally, not through a baked DATABASE_URL.
-  delete env.DATABASE_URL;
+async function startServer(
+  appRoot: string,
+  port: number,
+  scenario: Scenario,
+  databaseUrl: string,
+): Promise<ManagedServer> {
+  const env: Record<string, string | undefined> = {
+    ...process.env,
+    DATABASE_URL: databaseUrl,
+  };
+  // The managed server must use the same explicit synthetic database authority
+  // that the harness verified. It may not rediscover a local database through
+  // dotenv or node-postgres defaults.
   // Unset semantics must be REAL even when the operator's .env files define the
   // var: next dev re-reads dotenv files, but actual process env takes precedence
   // (@next/env never overrides an existing var). An empty string is falsy at
@@ -1224,7 +1231,7 @@ async function main(): Promise<void> {
       let baseUrl = cli.baseUrl as string;
       try {
         if (!externalMode) {
-          server = await startServer(cli.appRoot, cli.port, scenario);
+          server = await startServer(cli.appRoot, cli.port, scenario, cli.databaseUrl);
           baseUrl = `http://localhost:${cli.port}`;
           console.log(`${DIM}server ready on ${baseUrl}${RESET}`);
         }

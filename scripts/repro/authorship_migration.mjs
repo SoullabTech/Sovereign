@@ -14,8 +14,9 @@
 //
 // Run:  node scripts/repro/authorship_migration.mjs
 import pg from 'pg';
+import { requireDatabaseUrl } from '../lib/explicit-database-url.mjs';
 
-const db = new pg.Client({ connectionString: 'postgresql://soullab@localhost:5432/maia_consciousness' });
+const db = new pg.Client({ connectionString: requireDatabaseUrl(process.env.DATABASE_URL) });
 
 const createShare = (s) => {
   const total = s.kept + s.revised + s.created;

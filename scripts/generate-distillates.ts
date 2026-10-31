@@ -13,7 +13,7 @@
  * - Key quotes with significance
  *
  * Usage:
- *   DATABASE_URL="postgresql://soullab@localhost:5432/maia_consciousness" npx tsx scripts/generate-distillates.ts
+ *   DATABASE_URL="user@host:5432/database" npx tsx scripts/generate-distillates.ts
  *
  * Options:
  *   --dry-run       Show what would be processed
@@ -23,6 +23,7 @@
  */
 
 import pg from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 
 // Parse CLI args
 const args = process.argv.slice(2);
@@ -192,7 +193,7 @@ async function main() {
   console.log('');
 
   const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
+    connectionString: requireDatabaseUrl(process.env.DATABASE_URL),
   });
 
   try {

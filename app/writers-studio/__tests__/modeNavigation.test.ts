@@ -109,17 +109,18 @@ describe('the bar navigates exactly where a room exists', () => {
   it('neither mode composes the Studio chrome for itself', () => {
     /* Two headers that merely resemble each other is the thing this refactor
        exists to prevent, so no mode may grow its own. The shared shell now
-       separates Kelly’s World (/house) from Studio Home while preserving a
+       separates member-neutral Soullab Home (/home) from Studio Home while preserving a
        truthful visible return to the whole. */
     for (const mode of [['canvas', 'CanvasClient.tsx'], ['develop', 'DevelopRoom.tsx']] as const) {
       const body = src(...mode);
-      expect(body).not.toContain('Return to Kelly’s World');
+      expect(body).not.toContain('Return to Soullab Home');
       expect(body).not.toContain('Return to Writer’s Studio Home');
     }
     const shell = src('studio', 'WriterStudioShell.tsx');
-    expect(shell).toContain('Return to Kelly’s World');
-    expect(shell).toContain('href="/house"');
-    expect(shell).not.toContain('href="/home"');
+    expect(shell).toContain('Return to Soullab Home');
+    expect(shell).not.toContain('Return to Kelly’s World');
+    expect(shell).toContain('href="/home"');
+    expect(shell).not.toContain('href="/house"');
     expect(shell).toContain('Return to Writer’s Studio Home');
     expect(shell).toContain('href="/writers-studio"');
   });

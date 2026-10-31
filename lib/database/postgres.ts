@@ -2,30 +2,14 @@
 // PostgreSQL connection pool for MAIA learning system
 
 import { Pool } from 'pg';
+import { requireDatabaseUrl } from '@/lib/db/databaseUrl';
 
 // Singleton connection pool
 let pool: Pool | null = null;
 
 function createPool(): Pool {
-  // Use DATABASE_URL if available, otherwise individual connection parameters
-  if (process.env.DATABASE_URL) {
-    return new Pool({
-      connectionString: process.env.DATABASE_URL,
-      // Connection pool settings
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-    });
-  }
-
   return new Pool({
-    host: process.env.POSTGRES_HOST || 'localhost',
-    port: parseInt(process.env.POSTGRES_PORT || '5432'),
-    database: process.env.POSTGRES_DATABASE || 'maia_consciousness',
-    user: process.env.POSTGRES_USER || 'soullab',
-    password: process.env.POSTGRES_PASSWORD,
-
-    // Connection pool settings
+    connectionString: requireDatabaseUrl(process.env.DATABASE_URL),
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,

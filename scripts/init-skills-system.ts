@@ -11,8 +11,9 @@
 
 import { syncSkillsRegistry, loadSkillMetas, loadSkillDefinition } from '../lib/skills/skillsRuntime';
 import { Pool } from 'pg';
+import { requireDatabaseUrl } from '../lib/db/databaseUrl';
 
-const DATABASE_URL = process.env.DATABASE_URL || '';
+const DATABASE_URL = requireDatabaseUrl(process.env.DATABASE_URL);
 
 async function main() {
   console.log('🚀 Initializing Skills System...\n');

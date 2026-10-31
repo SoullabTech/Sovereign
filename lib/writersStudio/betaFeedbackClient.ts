@@ -4,7 +4,7 @@ import type { BetaFeedbackSignal, BetaOrientationContext } from './betaFeedback'
 export async function sendBetaFeedback(input: {
   manuscriptId?: string;
   signal: BetaFeedbackSignal;
-  studioMode?: 'home' | 'write' | 'develop' | 'review';
+  studioMode?: 'home' | 'write' | 'develop' | 'review' | 'publish' | 'listen';
   orientationContext: BetaOrientationContext;
   note?: string;
 }): Promise<{ ok: true } | { ok: false; refusal: string }> {

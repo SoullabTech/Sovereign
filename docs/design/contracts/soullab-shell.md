@@ -1,3 +1,4 @@
+---
 room: Soullab Shell
 human_activity: inhabiting any Soullab room within one coherent visual and platform field
 
@@ -5,6 +6,13 @@ surfaces:
   - app/layout.tsx
 
 change_class: structural
+# 2026-10-31: the opening `---` was missing, so the gate never read this
+# contract. It was restored during the production-lineage reconciliation.
+structural_rationale: >-
+  The current change to app/layout.tsx is production's b27c92d69. It skips the
+  global audio unlock inside the Session Room, so the shell does not touch
+  that room's own media lifecycle. On this branch the file is byte-identical
+  to production 9856e27f7. It adds no navigation, layout or room content.
 principles:
   - SOULLAB_PLATFORM_IDENTITY_CANON_2026-09-28 — Soullab remains the platform while rooms remain distinct
   - INHABITABLE_ARCHITECTURE_STANDARD — the shared shell frames a room without becoming the room

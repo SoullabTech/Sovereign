@@ -12,6 +12,8 @@ import { hashIdentifier } from './passwordUtils';
 
 export interface RateLimitResult {
   allowed: boolean;
+  /** Effective number of attempts this verdict permits inside the window. */
+  limit?: number;
   remainingAttempts: number;
   blockedUntil: Date | null;
   retryAfterSeconds: number | null;
@@ -26,6 +28,18 @@ export interface RateLimitResult {
 
 const MAX_ATTEMPTS = 5;
 const WINDOW_MINUTES = 15;
+
+export interface RateLimitOptions {
+  /** Number of attempts that should be ALLOWED inside the window. */
+  maxAttempts?: number;
+}
+
+function allowedAttemptLimit(options?: RateLimitOptions): number {
+  const requested = options?.maxAttempts;
+  return Number.isInteger(requested) && requested! > 0 && requested! <= 10_000
+    ? requested!
+    : MAX_ATTEMPTS;
+}
 
 
 /**
@@ -109,7 +123,7 @@ function bump(bucket: EmergencyBucket, now: number, max: number): boolean {
  * Decide an attempt using only in-process state. Called ONLY when the durable
  * limiter failed.
  */
-function emergencyCheck(key: string): RateLimitResult {
+function emergencyCheck(key: string, maxAttempts: number): RateLimitResult {
   const now = Date.now();
 
   let bucket = emergencyBuckets.get(key);
@@ -142,6 +156,7 @@ function emergencyCheck(key: string): RateLimitResult {
             Math.ceil((emergencyGlobal.windowStart + EMERGENCY_WINDOW_MS - now) / 1000)
           ),
           degraded: true,
+          limit: maxAttempts,
         };
       }
       return {
@@ -150,6 +165,7 @@ function emergencyCheck(key: string): RateLimitResult {
         blockedUntil: null,
         retryAfterSeconds: null,
         degraded: true,
+        limit: maxAttempts,
       };
     }
 
@@ -158,7 +174,7 @@ function emergencyCheck(key: string): RateLimitResult {
   }
 
   const globalOk = bump(emergencyGlobal, now, EMERGENCY_GLOBAL_MAX);
-  const identifierOk = bump(bucket, now, EMERGENCY_PER_IDENTIFIER_MAX);
+  const identifierOk = bump(bucket, now, maxAttempts);
   const allowed = globalOk && identifierOk;
 
   if (!allowed) {
@@ -177,15 +193,17 @@ function emergencyCheck(key: string): RateLimitResult {
       blockedUntil: new Date(now + retryAfterSeconds * 1000),
       retryAfterSeconds,
       degraded: true,
+      limit: maxAttempts,
     };
   }
 
   return {
     allowed: true,
-    remainingAttempts: Math.max(0, EMERGENCY_PER_IDENTIFIER_MAX - bucket.count),
+    remainingAttempts: Math.max(0, maxAttempts - bucket.count),
     blockedUntil: null,
     retryAfterSeconds: null,
     degraded: true,
+    limit: maxAttempts,
   };
 }
 
@@ -213,8 +231,14 @@ export function __resetEmergencyCeilingForTests(): void {
 export async function checkRateLimit(
   identifier: string,
   identifierType: 'ip' | 'email' | 'member_id',
-  endpoint: string
+  endpoint: string,
+  options?: RateLimitOptions
 ): Promise<RateLimitResult> {
+  const maxAttempts = allowedAttemptLimit(options);
+  // Explicit opt-in only. Every old caller retains the old SQL threshold.
+  const explicitlyConfigured = Number.isInteger(options?.maxAttempts)
+    && (options?.maxAttempts ?? 0) > 0 && (options?.maxAttempts ?? 0) <= 10_000;
+  const durableThreshold = explicitlyConfigured ? maxAttempts + 1 : MAX_ATTEMPTS;
   // Hash the identifier for privacy (except member_id which is already a UUID)
   const hashedIdentifier = identifierType === 'member_id'
     ? identifier
@@ -224,7 +248,10 @@ export async function checkRateLimit(
     // Use the database function for atomic check-and-update
     const result = await query(
       `SELECT check_rate_limit($1, $2, $3, $4, $5) as allowed`,
-      [hashedIdentifier, identifierType, endpoint, MAX_ATTEMPTS, WINDOW_MINUTES]
+      // The database function increments first and blocks when attempts >= its
+      // threshold. Passing maxAttempts + 1 makes the public contract literal:
+      // maxAttempts=5 means attempts 1..5 are allowed and attempt 6 blocks.
+      [hashedIdentifier, identifierType, endpoint, durableThreshold, WINDOW_MINUTES]
     );
 
     const allowed = result.rows[0]?.allowed ?? true;
@@ -249,7 +276,8 @@ export async function checkRateLimit(
         allowed: false,
         remainingAttempts: 0,
         blockedUntil,
-        retryAfterSeconds
+        retryAfterSeconds,
+        limit: maxAttempts
       };
     }
 
@@ -264,9 +292,10 @@ export async function checkRateLimit(
 
     return {
       allowed: true,
-      remainingAttempts: Math.max(0, MAX_ATTEMPTS - attempts),
+      remainingAttempts: Math.max(0, maxAttempts - attempts),
       blockedUntil: null,
-      retryAfterSeconds: null
+      retryAfterSeconds: null,
+      limit: maxAttempts
     };
 
   } catch (error) {
@@ -278,7 +307,7 @@ export async function checkRateLimit(
       `[RateLimiter] DEGRADED endpoint=${endpoint} type=${identifierType} — durable limiter unavailable, applying emergency ceiling:`,
       error
     );
-    return emergencyCheck(`${identifierType}:${hashedIdentifier}:${endpoint}`);
+    return emergencyCheck(`${identifierType}:${hashedIdentifier}:${endpoint}`, maxAttempts);
   }
 }
 
@@ -331,7 +360,7 @@ export function getClientIP(request: Request): string {
  */
 export function buildRateLimitHeaders(result: RateLimitResult): Record<string, string> {
   const headers: Record<string, string> = {
-    'X-RateLimit-Limit': MAX_ATTEMPTS.toString(),
+    'X-RateLimit-Limit': String(result.limit ?? MAX_ATTEMPTS),
     'X-RateLimit-Remaining': result.remainingAttempts.toString(),
   };
 

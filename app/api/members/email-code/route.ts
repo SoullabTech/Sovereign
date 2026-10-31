@@ -1,300 +1,209 @@
-// Production requires force-dynamic for database access
 export const dynamic = 'force-dynamic';
 
-/**
- * Email One-Time Code — request
- *
- * POST /api/members/email-code  { email }  → emails a 6-digit code
- *
- * Why codes over magic links (MAIA decision 2026-06-04): one-time codes avoid
- * link mangling, mobile deep-link breakage, wrong-browser/session handoff, and
- * email-scanner pre-opening. The member stays on the page and types 6 digits.
- *
- * DESIGN
- * - Works for both existing members and new signups. The RESPONSE is identical
- *   either way: `isExistingMember` is computed for the email body and for
- *   server-side telemetry, and never crosses the wire to a caller who has not
- *   yet proved they own the address.
- * - Reuses the magic_link_tokens table (adds a `code` column, self-healing) so
- *   /api/members/register-email's "recently verified email" check keeps working.
- * - 10-minute expiry, attempt-capped on verify, rate-limited on request.
- * - Graceful degradation if the table/columns are missing.
- *
- * Verify lives at POST /api/members/email-code/verify.
- */
+/** AUTH-RETURN-01 — request one email authentication code. */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
-import { randomBytes, randomInt } from 'crypto';
+import { transaction } from '@/lib/db/postgres';
 import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
+import {
+  beginEmailChallenge,
+  EmailCodeError,
+  settleEmailChallengeAccepted,
+  settleEmailChallengeFailure,
+} from '@/lib/auth/emailCodeService';
+import { requireSameOriginAuthMutation, AuthOriginError } from '@/lib/auth/returnDestination';
+import { checkRateLimit, getClientIP, buildRateLimitHeaders } from '@/lib/auth/rateLimiter';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { redactEmails } from '@/lib/privacy/redactEmails';
-import {
-  checkRateLimit,
-  getClientIP,
-  buildRateLimitHeaders,
-} from '@/lib/auth/rateLimiter';
-import { trackOnboarding } from '@/lib/onboarding/telemetry';
 
 const ENDPOINT = '/api/members/email-code';
+// Shared networks (homes, schools, clinics, offices) must not make one person's
+// successful sign-ins consume another person's entire allowance. Keep a
+// durable IP abuse ceiling while enforcing the tighter limit per email.
+const IP_MAX_ATTEMPTS = 20;
+const NO_STORE = { 'Cache-Control': 'private, no-store' };
 
-function generateToken(): string {
-  return randomBytes(32).toString('hex');
+function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
+  return NextResponse.json(body, { status, headers: { ...NO_STORE, ...headers } });
 }
 
-// 6-digit numeric code, cryptographically random, zero-padded.
-function generateCode(): string {
-  return String(randomInt(0, 1_000_000)).padStart(6, '0');
-}
-
-async function safeQuery(sql: string, params: unknown[] = []): Promise<{ rows: Record<string, unknown>[]; error?: string }> {
-  try {
-    const result = await query(sql, params);
-    return { rows: result.rows };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    if (message.includes('does not exist') || message.includes('column')) {
-      console.warn(`[EMAIL-CODE] Query skipped (missing table/column): ${message}`);
-      return { rows: [], error: message };
-    }
-    throw error;
-  }
-}
-
-// Ensure the table and the code/attempts columns exist (self-healing, matches
-// the magic-link route's on-the-fly create pattern).
-async function ensureSchema(): Promise<void> {
-  await query(`
-    CREATE TABLE IF NOT EXISTS magic_link_tokens (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      email VARCHAR(255) NOT NULL,
-      member_id UUID REFERENCES members(id) ON DELETE CASCADE,
-      token VARCHAR(64) NOT NULL UNIQUE,
-      expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-      used BOOLEAN DEFAULT FALSE,
-      used_at TIMESTAMP WITH TIME ZONE,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    )
-  `).catch(() => {});
-  await query(`ALTER TABLE magic_link_tokens ADD COLUMN IF NOT EXISTS code VARCHAR(6)`).catch(() => {});
-  await query(`ALTER TABLE magic_link_tokens ADD COLUMN IF NOT EXISTS attempts INTEGER DEFAULT 0`).catch(() => {});
-  // Older deployments may predate used_at; heal it so the magic-link route (which
-  // records it) and any audit queries stay consistent. OTP burn does not rely on it.
-  await query(`ALTER TABLE magic_link_tokens ADD COLUMN IF NOT EXISTS used_at TIMESTAMP WITH TIME ZONE`).catch(() => {});
+function validEmail(value: unknown): value is string {
+  return typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
 export async function POST(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD === '1') {
-    return NextResponse.json({ error: 'Not available in app build' }, { status: 503 });
+    return json({ error: 'Not available in app build' }, 503);
+  }
+
+  try {
+    requireSameOriginAuthMutation(request);
+  } catch (error) {
+    if (error instanceof AuthOriginError) {
+      return json({ error: 'Request origin refused', reason: error.code }, 403);
+    }
+    throw error;
   }
 
   const clientIP = getClientIP(request);
-
-  // Rate limit: a few code requests per window per IP.
-  const rateLimitResult = await checkRateLimit(clientIP, 'ip', ENDPOINT);
-  if (!rateLimitResult.allowed) {
-    const headers = buildRateLimitHeaders(rateLimitResult);
-    return NextResponse.json(
+  const ipLimit = await checkRateLimit(clientIP, 'ip', ENDPOINT, { maxAttempts: IP_MAX_ATTEMPTS });
+  if (!ipLimit.allowed) {
+    return json(
       { error: 'Too many requests. Please wait a moment and try again.' },
-      { status: 429, headers }
+      429,
+      buildRateLimitHeaders(ipLimit),
     );
   }
 
   try {
-    const { email } = await request.json();
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
-      return NextResponse.json({ error: 'A valid email is required.' }, { status: 400 });
+    const body = await request.json();
+    if (!validEmail(body?.email)) {
+      return json({ error: 'A valid email is required.' }, 400);
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = body.email.trim().toLowerCase();
+    const emailLimit = await checkRateLimit(normalizedEmail, 'email', ENDPOINT, { maxAttempts: 5 });
+    if (!emailLimit.allowed) {
+      return json(
+        { error: 'Too many requests. Please wait a moment and try again.' },
+        429,
+        buildRateLimitHeaders(emailLimit),
+      );
+    }
 
-    await ensureSchema();
-
-    // Look up member for personalization + new-vs-existing framing.
-    const memberResult = await safeQuery(
-      'SELECT id, name FROM members WHERE LOWER(email) = $1',
-      [normalizedEmail]
-    );
-    const member = memberResult.rows[0] || null;
-    const memberId = (member?.id as string) || null;
-    const memberName = (member?.name as string) || 'Beautiful Soul';
-    const isExistingMember = !!member;
-
-    // ── No beta gate ───────────────────────────────────────────────────────
-    // Removed 2026-08-24 (Kelly ruling): signup is open and unconditional.
-    // Anyone who enters a valid email gets a code. There is no allowlist check,
-    // no waitlist capture, and no waitlist response — an eligible person is
-    // either authenticated or shown a real, actionable authentication error.
-    // They are never silently diverted into a beta waitlist.
-    //
-    // The beta_allowlist / beta_waitlist TABLES ARE PRESERVED (migrations
-    // 20260707000001 / 20260707000002) so previously stranded requests remain
-    // recoverable. They are no longer read or written by this route.
-    // Re-gating is deliberately not a config switch: restoring a private beta
-    // requires a reviewed code change, not an env var.
-
-    const code = generateCode();
-    const token = generateToken();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    // Invalidate any outstanding codes for this email.
-    await safeQuery(
-      'UPDATE magic_link_tokens SET used = true WHERE email = $1 AND used = false',
-      [normalizedEmail]
+    const requestKey = request.headers.get('x-soullab-auth-request') ?? '';
+    const started = await transaction((client) =>
+      beginEmailChallenge(client, { email: body.email, requestKey }),
     );
 
-    const inserted = await query(
-      `INSERT INTO magic_link_tokens (email, member_id, token, code, expires_at, attempts)
-       VALUES ($1, $2, $3, $4, $5, 0)
-       RETURNING id`,
-      [normalizedEmail, memberId, token, code, expiresAt]
-    );
-    const codeRowId = (inserted.rows[0]?.id as string) || null;
+    if (!started.created) {
+      switch (started.challenge.status) {
+        case 'accepted':
+          return json({ success: true, reused: true });
+        case 'pending':
+        case 'ambiguous':
+          return json(
+            {
+              error: 'The delivery state of this request is unknown. Start a new request before sending again.',
+              reason: 'delivery_state_unknown',
+              retryable: false,
+            },
+            409,
+          );
+        default:
+          return json(
+            {
+              error: 'This authentication request is no longer active. Start a new request.',
+              reason: 'request_key_consumed',
+              retryable: false,
+            },
+            409,
+          );
+      }
+    }
 
-    // Send the code by email.
-    //
-    // Through the CENTRAL helper, not a local Resend client. `emails.send()`
-    // RESOLVES on a provider rejection — it does not throw — so the previous
-    // `await`-inside-try/catch could never observe a refusal, and the catch
-    // below fired only on transport faults. On 2026-08-24 that turned a
-    // Resend `429 monthly_quota_exceeded` into six consecutive
-    // "[EMAIL-CODE] Code sent" log lines for a real person who received
-    // nothing and could not create an account. lib/email/sendEmail.ts was
-    // written to close exactly this bug class; this route simply was not
-    // using it.
+    const { challenge, code } = started;
+    const greeting = challenge.memberName || 'Beautiful Soul';
     const sendResult = await sendEmail({
       purpose: 'auth:email-code',
       triggerType: 'route',
-      triggerRef: '/api/members/email-code',
+      triggerRef: ENDPOINT,
+      correlationId: challenge.id,
+      idempotencyKey: `AUTH_CODE:${challenge.id}`,
       from: SENDERS.noreply,
-      to: normalizedEmail,
+      to: challenge.email,
       subject: `Your Soullab code: ${code}`,
+      text:
+        `Hello ${greeting},\n\nYour Soullab code is: ${code}\n\n` +
+        'It expires in 10 minutes. If you did not request it, you can ignore this message.\n\n' +
+        'With presence,\nThe Soullab Team',
       html: `
-          <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px;">
-            <div style="text-align: center; margin-bottom: 28px;">
-              <img src="https://soullab.life/Soullablogo.png" alt="Soullab" width="140" style="max-width: 140px;" />
-            </div>
-            <p style="color: #2D3748; font-size: 16px; line-height: 1.6; margin: 0 0 12px;">Hello ${memberName},</p>
-            <p style="color: #2D3748; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
-              Enter this code to ${isExistingMember ? 'sign in' : 'continue'}:
-            </p>
-            <div style="text-align: center; margin: 28px 0;">
-              <div style="display: inline-block; font-size: 38px; font-weight: 700; letter-spacing: 10px; color: #1A2F24; background: #F2F5F3; border-radius: 12px; padding: 18px 28px;">
-                ${code}
-              </div>
-            </div>
-            <p style="color: #718096; font-size: 14px; line-height: 1.6; margin: 0 0 8px;">
-              This code expires in 10 minutes. If you didn't request it, you can safely ignore this email.
-            </p>
-            <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; margin-top: 28px; text-align: center;">
-              <p style="color: #718096; font-size: 14px; margin: 0;">With presence,<br><strong style="color: #1A2F24;">The Soullab Team</strong></p>
-            </div>
-          </div>
-        `,
-      text: `Hello ${memberName},\n\nYour Soullab code is: ${code}\n\nEnter it to ${isExistingMember ? 'sign in' : 'continue'}. This code expires in 10 minutes.\n\nIf you didn't request it, you can safely ignore this email.\n\nWith presence,\nThe Soullab Team`,
+        <div style="font-family: Inter,-apple-system,BlinkMacSystemFont,sans-serif;max-width:520px;margin:0 auto;padding:40px 20px">
+          <p style="font-size:16px;line-height:1.6">Hello ${greeting},</p>
+          <p style="font-size:16px;line-height:1.6">Enter this code to continue:</p>
+          <div style="text-align:center;font-size:38px;font-weight:700;letter-spacing:10px;padding:22px">${code}</div>
+          <p style="font-size:14px;line-height:1.6">It expires in 10 minutes. If you did not request it, you can ignore this message.</p>
+        </div>`,
     });
 
-    // The provider REFUSED. Nothing below this point may describe the code as
-    // sent: no magic_link_sent, no "Code sent" line, no 200. The stored code is
-    // invalidated immediately rather than left live until the next request —
-    // see the UPDATE below for why it is marked used and not deleted.
     if (!sendResult.success) {
-      trackOnboarding({
-        event: 'magic_link_send_failed',
-        email: normalizedEmail,
-        path: 'POST /api/members/email-code',
-        metadata: {
-          isExistingMember,
-          channel: 'code',
-          status: sendResult.status,
-          providerCode: sendResult.providerCode ?? null,
-          failureKind: sendResult.failureKind ?? 'unclassified',
-          retryable: sendResult.retryable === true,
-        },
-      });
-
-      // The code exists in the database but is in nobody's inbox. INVALIDATE it
-      // (used = true) rather than delete it: a credential nobody received must
-      // not remain a usable outstanding credential, and the row is also the
-      // only record that this person tried — which is how the 2026-08-24
-      // incident was reconstructed at all. Marking, not deleting, keeps both.
-      if (codeRowId) {
-        await safeQuery('UPDATE magic_link_tokens SET used = true WHERE id = $1', [codeRowId]);
-      }
-      console.error(
-        `[EMAIL-CODE] Provider REFUSED the send for member=${memberRef(memberId)} — status=${sendResult.status} failureKind=${sendResult.failureKind ?? 'unclassified'} providerCode=${sendResult.providerCode ?? 'unnamed'} retryable=${sendResult.retryable === true} error=${redactEmails(sendResult.error) ?? 'none'}`
+      await transaction((client) =>
+        settleEmailChallengeFailure(client, {
+          challengeId: challenge.id,
+          ambiguous: sendResult.failureKind === 'exception',
+          provider: sendResult.provider,
+        }),
       );
-
-      // WHAT WE TELL THE PERSON IS GOVERNED BY `retryable`, NOT BY TONE.
-      //
-      // On 2026-08-24 a quota refusal was reported as a retryable error and one
-      // person made six attempts across two days, none of which could ever have
-      // worked. Softening the wording while still saying "try again in a few
-      // minutes" would rebuild that loop in kinder language. So a refusal we
-      // cannot retry our way out of routes the person to a human instead.
-      //
-      // `ourFault` decides whose problem it is; `retryable` decides whether a
-      // retry is honest advice. Everything unattributable is ours and is not
-      // retryable (see FAILURE_POLICY in lib/email/sendEmail.ts).
-      //
-      // `reason` is a stable machine-readable field for the signup UI and
-      // telemetry. Neither the provider's wording nor our internal failure
-      // taxonomy is leaked to the member.
+      console.error(
+        `[EMAIL-CODE] SMTP refused challenge=${challenge.id} member=${memberRef(challenge.memberId)} ` +
+        `kind=${sendResult.failureKind ?? 'unclassified'} retryable=${sendResult.retryable === true} ` +
+        `error=${redactEmails(sendResult.error) ?? 'none'}`,
+      );
       if (!sendResult.ourFault) {
-        return NextResponse.json(
+        return json(
           {
             error: "We couldn't send a code to that address. Please check it and try again.",
             reason: 'email_address_rejected',
             retryable: false,
           },
-          { status: 400 }
+          400,
         );
       }
-
-      return NextResponse.json(
+      return json(
         {
           error: sendResult.retryable
-            ? "We couldn't send your code — that's a problem on our side, not yours. Please try again in a few minutes."
-            : "We can't send codes right now. That's a problem on our side, not yours, and retrying won't help. Please contact support@soullab.life and we'll get you in.",
-          reason: 'email_provider_refused',
-          retryable: sendResult.retryable === true,
+            ? "We couldn't send your code. Please try again in a few minutes."
+            : "We can't send codes right now. Please contact support@soullab.life.",
+          reason: sendResult.failureKind === 'exception'
+            ? 'delivery_state_unknown'
+            : 'email_provider_refused',
+          retryable: sendResult.retryable === true && sendResult.failureKind !== 'exception',
         },
-        { status: 502 }
+        502,
       );
     }
 
-    trackOnboarding({ event: 'magic_link_sent', email: normalizedEmail, path: 'POST /api/members/email-code', metadata: { isExistingMember, channel: 'code' } });
-    // NO RAW ADDRESS ON THE SUCCESS PATH.
-    //
-    // The refusal path at the top of this block was redacted in #1074; the
-    // success path — which is the path almost every send actually takes — was
-    // still interpolating the member's real email address into container
-    // stdout, where `docker logs` makes it readable to anyone with host access.
-    // A redacted failure log beside a raw success log is not a privacy boundary.
-    //
-    // `memberRef()` is pseudonymous and correlatable, NOT anonymous (see
-    // lib/privacy/memberRef.ts): it gives operators one stable token to follow a
-    // member through a log window, and it is still member-linked data. For an
-    // address with no member row yet it renders `anonymous`; the address itself
-    // remains recorded in `magic_link_tokens` and `onboarding_events`, which is
-    // where an identified record belongs.
-    //
-    // `sendResult.id` is deliberately KEPT. It is provider-issued, not
-    // member-derived, and it is the only way to distinguish "provider accepted
-    // and issued a message ID" from "provider accepted but returned nothing".
-    console.log(
-      `[EMAIL-CODE] Code sent for member=${memberRef(memberId)} (existing: ${isExistingMember}, id: ${sendResult.id ?? 'none'})`
-    );
+    if (!sendResult.id || !sendResult.provider) {
+      await transaction((client) =>
+        settleEmailChallengeFailure(client, {
+          challengeId: challenge.id, ambiguous: true, provider: sendResult.provider,
+        }),
+      );
+      return json(
+        { error: 'Delivery could not be verified. Start a new request.', reason: 'delivery_state_unknown' },
+        503,
+      );
+    }
 
-    // NO `isExistingMember` IN THE RESPONSE. Returning it told any anonymous
-    // caller whether an address has a Soullab account BEFORE that caller had
-    // proved they own the address — account enumeration, in the route whose own
-    // header promised there was none. Existing-vs-new is resolved after the
-    // code is verified, at POST /api/members/email-code/verify, where ownership
-    // has been proved.
-    return NextResponse.json({ success: true });
+    try {
+      await transaction((client) =>
+        settleEmailChallengeAccepted(client, {
+          challengeId: challenge.id,
+          provider: sendResult.provider!,
+          providerMessageId: sendResult.id!,
+        }),
+      );
+    } catch (error) {
+      // SMTP may have accepted the message while durable settlement failed. Do
+      // not resend this request key and do not invalidate the older accepted code.
+      console.error(`[EMAIL-CODE] Delivery settlement unavailable challenge=${challenge.id}`);
+      return json(
+        { error: 'Delivery could not be confirmed. Start a new request.', reason: 'delivery_state_unknown' },
+        503,
+      );
+    }
+
+    console.log(
+      `[EMAIL-CODE] SMTP accepted challenge=${challenge.id} member=${memberRef(challenge.memberId)} ` +
+      `provider=${sendResult.provider} message=${sendResult.id}`,
+    );
+    return json({ success: true });
   } catch (error) {
-    console.error('[EMAIL-CODE] Request error:', error);
-    return NextResponse.json({ error: 'Could not send the code. Please try again.' }, { status: 500 });
+    if (error instanceof EmailCodeError) {
+      const status = error.code === 'AUTH_CODE_REQUEST_KEY_REQUIRED' ? 400 : 503;
+      return json({ error: error.message, reason: error.code }, status);
+    }
+    console.error('[EMAIL-CODE] Request failed without exposing recipient data');
+    return json({ error: 'Could not send the code. Please try again.' }, 500);
   }
 }

@@ -43,10 +43,11 @@ function classifyDispatch(err: unknown): DispatchObservation {
     if (err instanceof Anthropic.APIError && typeof (err as { status?: unknown }).status === 'number') {
       return 'response_observed';
     }
-    /* Connection refused, DNS failure, TLS failure — no response came back.
-       The unconstructable-client case lands here too: it throws before
-       `toAnthropicParams` has even built a body. */
-    if (err instanceof Anthropic.APIConnectionError) return 'no_response_observed';
+    /* An APIConnectionError only establishes that the SDK got no usable
+       HTTP response. A peer can accept the entire request and then reset the
+       connection before replying. Absence of a response cannot prove that
+       no writer text crossed the boundary. Preserve delivery uncertainty. */
+    if (err instanceof Anthropic.APIConnectionError) return 'unknown';
     return 'unknown';
   } catch {
     /* ⛔ If the SDK's shape is not what we expect, the honest answer is that we
@@ -109,6 +110,35 @@ function toBlocks(content: readonly unknown[]): StructuredBlock[] {
   return out;
 }
 
+/** A complete provider response was observed, but its accounting fields are
+ * not trustworthy enough to persist. Refuse with a locally minted, content-free
+ * response-observed fact. Never stringify malformed values or invoke their
+ * coercion hooks. */
+function readProviderUsage(message: unknown): {
+  inputTokens: number; outputTokens: number;
+} {
+  let usage: unknown;
+  let input: unknown;
+  let output: unknown;
+  try {
+    usage = message !== null && typeof message === 'object'
+      ? (message as { usage?: unknown }).usage
+      : undefined;
+    if (usage === null || typeof usage !== 'object') {
+      throw new Error('invalid_usage_shape');
+    }
+    input = (usage as { input_tokens?: unknown }).input_tokens;
+    output = (usage as { output_tokens?: unknown }).output_tokens;
+  } catch {
+    throw new StructuredDispatchError('response_observed', { status: 200 });
+  }
+  if (typeof input !== 'number' || !Number.isSafeInteger(input) || input < 0
+    || typeof output !== 'number' || !Number.isSafeInteger(output) || output < 0) {
+    throw new StructuredDispatchError('response_observed', { status: 200 });
+  }
+  return { inputTokens: input, outputTokens: output };
+}
+
 /* ⚠ MODULE SCOPE, DELIBERATELY. `executeOnce` is a sibling of the factory, not
    a closure inside it, so the provenance block cannot read a binding held in the
    factory. Hoisting one constant is the honest fix; re-nesting the function to
@@ -133,6 +163,10 @@ export function anthropicStructuredProvider(
       try {
         return await executeOnce(opts, req);
       } catch (err) {
+        /* A response-validation refusal is already a locally minted delivery
+           observation. Re-wrapping it would erase response_observed and turn a
+           confirmed HTTP response into an ambiguous failure. */
+        if (err instanceof StructuredDispatchError) throw err;
         /* ⛔ RE-THROWN, NOT SWALLOWED. The router still decides what a failure
            means; this adds one fact and changes no control flow. */
         throw new StructuredDispatchError(classifyDispatch(err), err);
@@ -146,6 +180,9 @@ async function executeOnce(
 ): Promise<StructuredResult> {
   const client = opts.client ?? new Anthropic();
   const params = toAnthropicParams(req);
+  // Class A draft only: zero SDK retry fan-out on this one structured request.
+  // Per-request options must override even an injected SDK client's defaults.
+  const singleAttemptOptions = { maxRetries: 0 } as const;
   const t0 = Date.now();
 
   /* THE REQUIREMENT IS NEUTRAL; THE MECHANISM IS THIS ADAPTER'S CHOICE.
@@ -155,16 +192,13 @@ async function executeOnce(
      simply not having the timeout. Consumed whole either way, so the
      neutral result is identical. */
   const message = req.execution?.completion === 'long-running'
-    ? await (client.messages.stream(params as never)).finalMessage()
-    : await client.messages.create(params as never) as Anthropic.Message;
+    ? await (client.messages.stream(params as never, singleAttemptOptions)).finalMessage()
+    : await client.messages.create(params as never, singleAttemptOptions) as Anthropic.Message;
 
   return {
     content: toBlocks(message.content as readonly unknown[]),
     stopReason: (message.stop_reason as string | null) ?? null,
-    usage: {
-      inputTokens: message.usage?.input_tokens ?? 0,
-      outputTokens: message.usage?.output_tokens ?? 0,
-    },
+    usage: readProviderUsage(message),
     provenance: {
       provider,
       /* THE MODEL REQUESTED AND SENT. Taken from the request that went up the

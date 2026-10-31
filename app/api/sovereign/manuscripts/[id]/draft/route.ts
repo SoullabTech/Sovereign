@@ -431,7 +431,13 @@ export async function PUT(request: NextRequest, ctx: { params: Promise<{ id: str
     }
 
     const hash = payloadHash('save', { content, checkpoint: checkpoint === true, note: trimmedNote });
-    const draftId = current.rows[0].id;
+    if (checkpoint === true) {
+      const response = await saveLegacyCheckpointAtomic({
+        manuscriptId: id, memberId, content,
+        note: trimmedNote, hash, guard,
+      });
+      return NextResponse.json(response as object);
+    }
 
     /* `version` is bigint, and node-postgres returns bigint as a STRING to
        avoid silent precision loss past 2^53. precheck compares it with !==
@@ -489,14 +495,6 @@ export async function PUT(request: NextRequest, ctx: { params: Promise<{ id: str
     }
     const row = updated.rows[0];
 
-    if (checkpoint === true) {
-      await query(
-        `INSERT INTO working_draft_revisions (draft_id, revision_number, content, saved_by, note)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [draftId, row.revision_count, content, memberId, trimmedNote]
-      );
-    }
-
     // Reply with the stored record itself, so a first response and its replay
     // are byte-identical rather than merely equivalent.
     return NextResponse.json(row.last_idempotency_response as object);
@@ -506,6 +504,108 @@ export async function PUT(request: NextRequest, ctx: { params: Promise<{ id: str
     console.error('[manuscripts/draft] save failed', error);
     return NextResponse.json({ error: 'Failed to save draft' }, { status: 500 });
   }
+}
+
+
+/**
+ * LAUNCH-P0 (ISOLATED CANDIDATE): The legacy historical checkpoint must commit
+ * authored draft text, its immutable revision, AND the replay receipt together.
+ * Normal non-checkpoint autosave and section-native saves remain independent.
+ *
+ * Requires separately qualified current Source/Sanctuary/consent authorization
+ * before any protected production integration. This patch is NOT release-ready.
+ */
+async function saveLegacyCheckpointAtomic(args: {
+  manuscriptId: string;
+  memberId: string;
+  content: string;
+  note: string | null;
+  hash: string;
+  guard: { idempotencyKey: string; baseRevisionId: number };
+}): Promise<unknown> {
+  const { manuscriptId, memberId, content, note, hash, guard } = args;
+  return transaction(async (tx) => {
+    const current = await tx.query<DraftGuardRow & {
+      id: string;
+      section_addressable_at: string | null;
+    }>(
+      `SELECT id, version, section_addressable_at,
+              last_idempotency_key, last_idempotency_op,
+              last_idempotency_payload_hash, last_idempotency_response
+         FROM manuscript_working_drafts
+        WHERE manuscript_id = $1 AND member_id = $2
+        FOR UPDATE`,
+      [manuscriptId, memberId]
+    );
+    const draft = current.rows[0];
+    if (!draft) throw new DraftHttp(404, { error: 'Not found' });
+    if (draft.section_addressable_at !== null) {
+      throw new DraftHttp(409, { refusal: 'representation_changed' });
+    }
+    const guardRow = { ...draft, version: normalizeVersion(draft.version) };
+    const decision = precheck(guardRow, 'save', guard.idempotencyKey, hash, guard.baseRevisionId);
+    if (decision.kind === 'replay') {
+      /* Existing poisoned idempotency receipts must NEVER be presented as
+         success without the exact member-owned immutable historical record. */
+      const receipt = decision.response as Record<string, unknown> | null;
+      const revisionCount = receipt?.revisionCount;
+      if (!receipt || receipt.checkpointed !== true
+          || typeof revisionCount !== 'number'
+          || !Number.isSafeInteger(revisionCount) || revisionCount < 1) {
+        throw new DraftHttp(409, { refusal: 'checkpoint_history_unverified' });
+      }
+      const history = await tx.query<{ content: string; saved_by: string }>(
+        `SELECT content, saved_by FROM working_draft_revisions
+          WHERE draft_id = $1 AND revision_number = $2`,
+        [draft.id, revisionCount]
+      );
+      if (history.rows.length !== 1 || history.rows[0].content !== content
+          || history.rows[0].saved_by !== memberId) {
+        throw new DraftHttp(409, { refusal: 'checkpoint_history_unverified' });
+      }
+      throw new DraftHttp(200, decision.response);
+    }
+    if (decision.kind === 'conflict') {
+      throw new DraftHttp(409, conflictBody(decision.reason, decision.currentRevisionId));
+    }
+
+    const advanced = await tx.query<{
+      revision_count: number;
+      last_idempotency_response: unknown;
+    }>(
+      `UPDATE manuscript_working_drafts
+          SET content = $3,
+              version = version + 1,
+              revision_count = revision_count + 1,
+              updated_at = now(),
+              last_idempotency_key = $5,
+              last_idempotency_op = 'save',
+              last_idempotency_payload_hash = $6,
+              last_idempotency_response = jsonb_build_object(
+                'revisionCount', revision_count + 1,
+                'revisionId', version + 1,
+                'updatedAt', now(),
+                'checkpointed', true
+              )
+        WHERE manuscript_id = $1 AND member_id = $2 AND version = $4
+      RETURNING revision_count, last_idempotency_response`,
+      [manuscriptId, memberId, content, guard.baseRevisionId, guard.idempotencyKey, hash]
+    );
+    if (advanced.rows.length !== 1) {
+      throw new DraftHttp(409, conflictBody('stale_base', guardRow.version));
+    }
+
+    const appended = await tx.query(
+      `INSERT INTO working_draft_revisions
+          (draft_id, revision_number, content, saved_by, note)
+        VALUES ($1, $2, $3, $4, $5)`,
+      [draft.id, advanced.rows[0].revision_count, content, memberId, note]
+    );
+    if (appended.rowCount !== 1) {
+      throw new Error('Checkpoint history insert did not append one revision');
+    }
+    return advanced.rows[0].last_idempotency_response;
+  });
 }
 
 /**
