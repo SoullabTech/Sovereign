@@ -4257,3 +4257,9 @@
 .p4r1-root .p4r1-develop-attach-list {list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;}
 .p4r1-root .p4r1-develop-attach-list button {width:100%;text-align:left;}
 .p4r1-root .p4r1-develop-attach-error {margin:12px 0 0;color:#f0b9a4;font-size:13px;}
+
+/* Develop: the short-section notice (PlaceStubNotice). */
+.p4r1-root .p4r1-develop-stub {margin:12px 0 4px;padding:14px 16px;border:1px solid var(--fr-line,#8885);border-radius:12px;max-width:60ch;}
+.p4r1-root .p4r1-develop-stub p {margin:0 0 10px;line-height:1.65;font-size:15px;}
+.p4r1-root .p4r1-develop-stub-actions {display:flex;flex-wrap:wrap;gap:10px;}
+.p4r1-root .p4r1-develop-stub button {font:inherit;font-size:14px;min-height:44px;padding:10px 16px;border-radius:9px;border:1px solid var(--fr-line,#8885);background:transparent;color:inherit;cursor:pointer;}

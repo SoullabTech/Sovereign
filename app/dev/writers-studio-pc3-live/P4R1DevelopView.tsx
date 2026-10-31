@@ -34,6 +34,8 @@ import {
 } from '@/lib/writersStudio/sourceVerification';
 import P4R1WriterUnderstanding from './P4R1WriterUnderstanding';
 import { DevelopAddToWork } from './DevelopAddToWork';
+import { PlaceStubNotice } from './PlaceStubNotice';
+import { findLongerSibling } from './stubSibling';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import {
   DEFAULT_WORKING_STYLE,
@@ -1651,6 +1653,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       ? previous : { scope: workConversationScope, open: false, starter: '' });
   }, [workConversationScope]);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
+  const [stubDismissedFor, setStubDismissedFor] = useState<string | null>(null);
 
   const navigateMode: P4R1DevelopViewProps['onMode'] = (mode) => {
     if (requestConversationDeparture()) props.onMode(mode);
@@ -1879,6 +1882,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     : props.scope.kind === 'section' || props.scope.kind === 'chapter'
       ? props.scope.label
       : props.workTitle || 'your Work';
+  // Asked, never assumed: a short section sharing its name with a much longer one is probably that chapter's notes.
+  const stubSibling = hasExplicitPlace && railSelectionId ? findLongerSibling(props.sections, railSelectionId) : null;
   const focusedQuestions: readonly DevelopIntentKey[] = (
     hasExplicitPlace
       ? ['chapter-role', 'feels-off', 'voice']
@@ -1965,6 +1970,13 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 ? 'We can stay with these pages. No need to choose an editorial method first.'
                 : 'You can start with a feeling or a question. You do not need to know the writing terminology.'}
             </p>
+            {stubSibling && stubDismissedFor !== stubSibling.selected.id ? (
+              <PlaceStubNotice
+                found={stubSibling}
+                onOpenLonger={() => selectManuscriptLocus(stubSibling.longer.id)}
+                onStay={() => setStubDismissedFor(stubSibling.selected.id)}
+              />
+            ) : null}
             <div className="p4r1-develop-one-action">
               <button
                 type="button"
