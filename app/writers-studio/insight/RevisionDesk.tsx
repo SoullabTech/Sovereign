@@ -12,6 +12,7 @@ import type { EditorialLatitude } from '@/lib/manuscript/editorialScope/contract
 import EditingLatitude from './EditingLatitude';
 import { editorialSegments } from '@/lib/writersStudio/editorialDiff';
 import { DEPTH_CHOICES, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
+import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
 import type { EligibleCarrySource } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 
 export interface MemberRevisionDraft {
@@ -243,7 +244,7 @@ export default function RevisionDesk({
       </div>}
       {!version && <div className="wsi-page-actions" aria-label="Explore before revising">
         {[
-          ['Help me understand', 'Teach me the craft principle this observation raises, using only the supplied passage and observation. First show me the exact words you noticed. Explain in plain language what they may do for a reader, why that may matter, and when the same choice could be intentional or effective. Distinguish evidence from interpretation. Do not test me, infer anything about my ability, or propose replacement wording yet. End by asking what I intended.'],
+          ['Help me understand', teachingTurnPrompt('observation')],
           ['Explain what I meant', 'What I want this passage to do is '],
           ['Explore another approach', 'Help me explore two possible approaches to this passage, including keeping it as it is. Explain what each could gain or lose in relation to my intention and voice. Ask me about my intention if you need it before recommending an approach. Do not rewrite yet.'],
         ].map(([label, question]) => <button type="button" key={label} disabled={blocked} onClick={() => {
@@ -434,7 +435,7 @@ export default function RevisionDesk({
           <p className="wsi-muted">Explore the craft, test the interpretation, and weigh what this version gains or loses.</p>
           <div className="wsi-bar">
             {[
-              ['Explain the craft', 'Explain the craft principle behind this suggestion using the supplied original and proposed wording. Show what changed in meaning versus style, and when this technique might not fit.'],
+              ['Explain the craft', teachingTurnPrompt('change', 'this suggestion, using the supplied original and proposed wording')],
               ['What could be lost?', 'What voice, ambiguity, rhythm, or meaning could be lost in this suggestion? Treat reader effects as hypotheses and identify what more context would be needed.'],
               ['Make the case for my original', 'Make the strongest case for keeping my original wording. What may it accomplish that this alternative does not? Do not assume that revision is improvement.'],
               ['Try another direction', 'Offer a different editorial direction that preserves my stated intention. Explain its tradeoffs before proposing wording; do not invent personal experience or sources.'],

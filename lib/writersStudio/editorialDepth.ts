@@ -184,6 +184,18 @@ export const EPISTEMIC_INTEGRITY_DIRECTIVE = [
 ].join(' ');
 
 /**
+ * Learning only, and placed last so it governs length (SEMANTIC-FIELD-01
+ * teaching plan, 2026-11-01). The editorial intelligence directive asks for
+ * gain/cost and a noticed–why–propose structure when MAIA recommends a move;
+ * a request to be taught recommends nothing, so that structure waits until
+ * the writer asks. ⛔ Guided and Direct are byte-identical to before.
+ */
+export const LEARNING_TEACHING_PRECEDENCE = [
+  'When I have asked you to teach me, you are not recommending a move: what a move may gain or cost, and laying out what you noticed, why it matters and what you would propose, wait until I ask for them.',
+  'In a teaching reply, keep to one idea in a few plain sentences and end with one short question that lets me choose where we go next. This governs the length of your reply.',
+].join(' ');
+
+/**
  * ⭐ The signals, composed. ⛔ Never collapsed into one dial.
  *
  * ⭐⭐ THE STANDARD THIS SERVES: *a response is not well-formed merely because
@@ -191,11 +203,13 @@ export const EPISTEMIC_INTEGRITY_DIRECTIVE = [
  * for the writer receiving it.*
  */
 export function editorialDirective(depth: EditorialDepth): string {
-  return [
+  const composed = [
     DEPTH_DIRECTIVE[depth],
     STYLE_RESPONSIVE_DIRECTIVE,
     ATTUNEMENT_DIRECTIVE,
     EDITORIAL_INTELLIGENCE_DIRECTIVE,
     EPISTEMIC_INTEGRITY_DIRECTIVE,
   ].join(' ');
+  return depth === 'learning' ? `${composed} ${LEARNING_TEACHING_PRECEDENCE}` : composed;
 }
+
