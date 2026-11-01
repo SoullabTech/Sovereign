@@ -1061,8 +1061,12 @@ export default function FlagshipWriteEditController() {
   }, []);
 
   const startNewEditorial = useCallback(async (stillCurrent: () => boolean): Promise<RebuildEditorialThread | null> => {
-    if (!focusId || !context || !work || workContext.kind !== 'work' || !scopedA2Relationship
+    if (!focusId || !context || !work || workContext.kind !== 'work'
       || workReentryRequired.current || !currentWorkGesture() || !stillCurrent()) return null;
+    if (!scopedA2Relationship) {
+      setEditorialFailure('Begin or continue a relationship with MAIA for this Work first. Nothing was sent.');
+      return null;
+    }
     if (!(await settleWriting()) || !currentWorkGesture() || !stillCurrent()) return null;
     const posture = readCurrentSanctuaryPosture();
     if (!stillCurrent() || !posture.resolved || posture.sanctuary) return null;

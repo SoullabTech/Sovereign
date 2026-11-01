@@ -37,6 +37,16 @@ export interface EditorialDancePanelProps {
   message: string | null;
   /** Informational, never a failure: e.g. an older conversation was left untouched. */
   notice?: string | null;
+  /** When present, passage work needs a MAIA relationship for this Work; the
+   * writer begins or continues one here. Absent means no such gate applies. */
+  maiaRelationship?: {
+    active: boolean;
+    busy: boolean;
+    choices: readonly { id: string; createdAt: string }[];
+    message: string | null;
+    onBegin: () => void;
+    onChoose: (relationshipId: string) => void;
+  } | null;
   undoMessage: string | null;
   sessionPosture: CurrentPostureRead;
   onChooseSessionPosture: (sanctuary: boolean) => void;
@@ -237,11 +247,17 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const [showDepth, setShowDepth] = useState<'none'|'why'|'teach'|'advanced'>('none');
   const [postureNudge, setPostureNudge] = useState(false);
   const postureRef = useRef<HTMLDivElement | null>(null);
+  const [relationshipNudge, setRelationshipNudge] = useState(false);
+  const relationshipRef = useRef<HTMLDivElement | null>(null);
+  const relationshipBlocks = Boolean(props.maiaRelationship && !props.maiaRelationship.active);
 
   const postureOpen = props.sessionPosture.resolved && !props.sessionPosture.sanctuary;
   useEffect(() => {
     if (postureOpen) setPostureNudge(false);
   }, [postureOpen]);
+  useEffect(() => {
+    if (!relationshipBlocks) setRelationshipNudge(false);
+  }, [relationshipBlocks]);
 
   const versions = props.thread?.versions ?? [];
   const maiaVersions = useMemo(() => latestMaiaVersions(props.thread), [props.thread]);
@@ -405,6 +421,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const sendOpenPrompt = () => {
     const q = startPrompt.trim();
     if (!q) return;
+    if (relationshipBlocks) {
+      setRelationshipNudge(true);
+      relationshipRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+      return;
+    }
     props.onSend(withOrigin([
       'I want to work with this exact passage.',
       'What I want help with:',
@@ -426,8 +447,47 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       postureRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
       return;
     }
+    // Beginning a relationship is the writer's own act; a card never does it.
+    if (relationshipBlocks) {
+      setRelationshipNudge(true);
+      relationshipRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+      return;
+    }
     act();
   };
+  const relationshipGate = relationshipBlocks && !postureBlocksEditorial && props.maiaRelationship ? (
+    <div
+      ref={relationshipRef}
+      className={relationshipNudge ? 'p4r1-dance-posture p4r1-dance-posture--nudge' : 'p4r1-dance-posture'}
+      role="group"
+      aria-label="Relationship with MAIA for this Work"
+      data-relationship-gate
+    >
+      <div>
+        <b>MAIA works on passages inside a relationship for this Work.</b>
+        <span>None is selected yet. Ordinary writing stays fully available without one.</span>
+        {relationshipNudge ? (
+          <span role="status" data-relationship-nudge>Begin or continue a relationship first. Nothing has been sent.</span>
+        ) : null}
+        {props.maiaRelationship.message ? <span role="status">{props.maiaRelationship.message}</span> : null}
+      </div>
+      <div className="p4r1-dance-posture-actions">
+        <button type="button" disabled={props.maiaRelationship.busy} onClick={props.maiaRelationship.onBegin}>
+          {props.maiaRelationship.busy ? 'Beginning…' : 'Begin relationship with MAIA'}
+        </button>
+        {props.maiaRelationship.choices.map((choice) => (
+          <button
+            key={choice.id}
+            type="button"
+            disabled={props.maiaRelationship!.busy}
+            onClick={() => props.maiaRelationship!.onChoose(choice.id)}
+          >
+            Continue · {new Date(choice.createdAt).toLocaleDateString()}
+          </button>
+        ))}
+      </div>
+    </div>
+  ) : null;
   const postureGate = postureBlocksEditorial ? (
     <div
       ref={postureRef}
@@ -556,6 +616,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <h3>What would help you here?</h3>
           <p>You can begin with the writing, the idea, the craft, or simply ask MAIA to help you look.</p>
           {postureGate}
+          {relationshipGate}
           {props.message ? <p className="p4r1-dance-status" role="status">{props.message}</p> : null}
           {entryActions}
           {openPrompt}

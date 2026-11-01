@@ -458,3 +458,35 @@ test('in Sanctuary a card still sends nothing and says how to continue', () => {
   expect(onSend).not.toHaveBeenCalled();
   expect(container.querySelector('[data-posture-nudge]')?.textContent).toContain('Switch to Ordinary');
 });
+
+test('without a MAIA relationship for the Work, cards point at beginning one and send nothing', () => {
+  const onSend = jest.fn();
+  const onBegin = jest.fn();
+  let props: any = {
+    manuscriptTitle: 'Threshold', currentText: 'Original words.', sectionBody: 'Original words.',
+    thread: null, version: null, lastMaiaTurn: null, appliedVersionId: null, busy: false,
+    message: null, undoMessage: null, sessionPosture: { resolved: true, sanctuary: false },
+    onChooseSessionPosture: jest.fn(), onSelectVersion: jest.fn(), onSend,
+    onSaveMember: jest.fn(async () => true), onApply: jest.fn(), onKeep: jest.fn(), onDepth: jest.fn(),
+    maiaRelationship: { active: false, busy: false, choices: [], message: null, onBegin, onChoose: jest.fn() },
+  };
+  const draw = () => act(() => root.render(React.createElement(EditorialDancePanel, props)));
+  draw();
+
+  expect(container.querySelector('[data-relationship-gate]')).not.toBeNull();
+  const first = container.querySelector('.p4r1-dance-start-actions button') as HTMLButtonElement;
+  act(() => first.click());
+  expect(onSend).not.toHaveBeenCalled();
+  expect(onBegin).not.toHaveBeenCalled();
+  expect(container.querySelector('[data-relationship-nudge]')?.textContent).toContain('Nothing has been sent');
+
+  const begin = Array.from(container.querySelectorAll('button')).find((b) => b.textContent === 'Begin relationship with MAIA')!;
+  act(() => begin.click());
+  expect(onBegin).toHaveBeenCalledTimes(1);
+
+  props = { ...props, maiaRelationship: { ...props.maiaRelationship, active: true } };
+  draw();
+  expect(container.querySelector('[data-relationship-gate]')).toBeNull();
+  act(() => (container.querySelector('.p4r1-dance-start-actions button') as HTMLButtonElement).click());
+  expect(onSend).toHaveBeenCalledTimes(1);
+});

@@ -653,7 +653,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     if (ok) setSelectedRevisionEdits(new Set());
   };
 
-  const contextualActions = selectionRect && props.held && !isolatedEditorial ? (
+  // Craftsman's Table has its own passage controls; the selection pill would
+  // float over MAIA's panel there with nothing selected.
+  const contextualActions = selectionRect && props.held && !isolatedEditorial && !craftVisible ? (
     <div
       className="p4r1-selection-affordance"
       style={{
@@ -934,6 +936,14 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         sessionPosture={props.sessionPosture}
         onChooseSessionPosture={props.onChooseSessionPosture}
         notice={props.editorialNotice}
+        maiaRelationship={props.work ? {
+          active: Boolean(props.maiaRelationship),
+          busy: props.maiaRelationshipBusy,
+          choices: props.maiaRelationshipChoices,
+          message: props.maiaRelationshipMessage,
+          onBegin: props.onBeginMaiaRelationship,
+          onChoose: props.onChooseMaiaRelationship,
+        } : null}
         message={props.editorialFailure ?? (props.adoptionOutcome && props.appliedVersionId === props.suggestedVersion?.id
           ? props.adoptionOutcome.kind === 'applied' ? null : 'The Work could not accept this revision. Nothing was changed.'
           : null)}
@@ -1460,6 +1470,14 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         sessionPosture={props.sessionPosture}
         onChooseSessionPosture={props.onChooseSessionPosture}
         notice={props.editorialNotice}
+        maiaRelationship={props.work ? {
+          active: Boolean(props.maiaRelationship),
+          busy: props.maiaRelationshipBusy,
+          choices: props.maiaRelationshipChoices,
+          message: props.maiaRelationshipMessage,
+          onBegin: props.onBeginMaiaRelationship,
+          onChoose: props.onChooseMaiaRelationship,
+        } : null}
         message={props.editorialFailure ?? (props.adoptionOutcome && props.appliedVersionId === props.suggestedVersion?.id
           ? props.adoptionOutcome.kind === 'applied' ? null : 'The Work could not accept this revision. Nothing was changed.'
           : null)}
