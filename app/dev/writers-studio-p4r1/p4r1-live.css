@@ -3409,7 +3409,7 @@
 .p4r1-root .p4r1-beta-feedback{
   position:fixed;
   left:14px;
-  bottom:14px;
+  bottom:56px;
   z-index:118;
   font-family:var(--fr-sans-stack,Inter,system-ui,sans-serif);
 }
@@ -3458,9 +3458,47 @@
 .p4r1-root .p4r1-beta-submit{margin-top:8px;border:1px solid var(--ws-gold-edge,#5A431C);border-radius:8px;background:var(--ws-ground-active,#342715);color:var(--ws-ink-primary,#F3EDE4);padding:8px 10px;font:650 10.5px var(--fr-sans-stack,Inter,system-ui,sans-serif);cursor:pointer}
 .p4r1-root .p4r1-beta-submit:disabled{opacity:.42;cursor:default}
 @media(max-width:720px){
-  .p4r1-root .p4r1-beta-feedback{left:10px;bottom:10px}
+  .p4r1-root .p4r1-beta-feedback{left:10px;bottom:52px}
+  .p4r1-root .p4r1-beta-journey{left:10px;bottom:10px}
+  .p4r1-root .p4r1-journey-panel{width:min(380px,calc(100vw - 20px))}
   .p4r1-root .p4r1-beta-panel{width:min(320px,calc(100vw - 20px));bottom:40px}
 }
+
+/* SEMANTIC-FIELD-01 — tester journey field. Shares the beta membrane's look
+   (--ws-* atmosphere variables) and sits beneath the beta note. */
+.p4r1-root .p4r1-beta-journey{
+  position:fixed;
+  left:14px;
+  bottom:14px;
+  z-index:118;
+  font-family:var(--fr-sans-stack,Inter,system-ui,sans-serif);
+}
+.p4r1-root .p4r1-journey-panel{width:min(420px,calc(100vw - 28px));max-height:min(78vh,720px);overflow-y:auto}
+.p4r1-root .p4r1-journey-prompt{padding:12px 0;border-top:1px solid var(--ws-rule,#4A4238)}
+.p4r1-root .p4r1-journey-question{margin:0 0 8px;color:var(--ws-ink-primary,#F3EDE4);font:600 12.5px/1.45 var(--fr-sans-stack,Inter,system-ui,sans-serif)}
+.p4r1-root .p4r1-journey-choices{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.p4r1-root .p4r1-journey-choices button,.p4r1-root .p4r1-journey-actions button,.p4r1-root .p4r1-journey-founder-toggle{
+  border:1px solid var(--ws-rule,#4A4238);border-radius:999px;background:transparent;
+  color:var(--ws-ink-secondary,#CFC5B6);padding:5px 10px;font:600 10.5px var(--fr-sans-stack,Inter,system-ui,sans-serif);cursor:pointer
+}
+.p4r1-root .p4r1-journey-choices button[aria-pressed="true"]{background:var(--ws-ground-active,#342715);color:var(--ws-ink-primary,#F3EDE4);border-color:var(--ws-gold-edge,#5A431C)}
+.p4r1-root .p4r1-journey-form textarea{
+  width:100%;box-sizing:border-box;border:1px solid var(--ws-rule,#4A4238);border-radius:8px;
+  background:var(--ws-ground,#17120C);color:var(--ws-ink-primary,#F3EDE4);padding:8px;font:12px/1.5 var(--fr-sans-stack,Inter,system-ui,sans-serif)
+}
+.p4r1-root .p4r1-journey-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.p4r1-root .p4r1-journey-actions .p4r1-journey-primary,.p4r1-root .p4r1-journey-share .p4r1-journey-primary{
+  border:1px solid var(--ws-gold-edge,#5A431C);border-radius:8px;background:var(--ws-ground-active,#342715);
+  color:var(--ws-ink-primary,#F3EDE4);padding:6px 10px;font:650 10.5px var(--fr-sans-stack,Inter,system-ui,sans-serif);cursor:pointer
+}
+.p4r1-root .p4r1-journey-actions button:disabled,.p4r1-root .p4r1-journey-share button:disabled{opacity:.42;cursor:default}
+.p4r1-root .p4r1-journey-answer p{margin:4px 0 0;color:var(--ws-ink-secondary,#CFC5B6);font:12px/1.5 var(--fr-sans-stack,Inter,system-ui,sans-serif);white-space:pre-wrap}
+.p4r1-root .p4r1-journey-answer b{color:var(--ws-ink-primary,#F3EDE4);font:650 11px var(--fr-sans-stack,Inter,system-ui,sans-serif)}
+.p4r1-root .p4r1-journey-answer small,.p4r1-root .p4r1-journey-prompt>small,.p4r1-root .p4r1-journey-note,.p4r1-root .p4r1-journey-share>span{
+  display:block;margin-top:6px;color:var(--ws-ink-muted,#9A8F80);font:10.5px/1.4 var(--fr-sans-stack,Inter,system-ui,sans-serif)
+}
+.p4r1-root .p4r1-journey-share{margin-top:8px}
+.p4r1-root .p4r1-journey-founder-toggle{margin:0 0 6px}
 
 /* HOUSE-STUDIO-CIRCULATION-01R1 · H1-3 — arriving through a Work.
    The chooser is a plain list in declaration order; nothing is pre-selected.
