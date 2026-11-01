@@ -71,29 +71,95 @@ The reviewer must independently establish or reject each of the following:
    `house_member_preferences` during constraint replacement) is acceptable for the observed
    table sizes below, or is recorded as a finding.
 
-## Reader rollback (revision 2, after the first review returned REVISE)
+## Reader rollback (revision 3)
 
-The first review (session `0d88896e-3dce-485f-b1b4-6804d3bca8fe`, verdict `REVISE`) found
-that rollback is lawful for the schema but not unconditionally for data. Once the target
-reader stores `pro-studio` in `house_member_preferences.center_ids` or `shortcut_ids`, the
-exact old reader's `parseHousePreferences` throws on that row. This plan therefore states
-rollback as conditional, and fixes the procedure before any reader rollback to
-`d49dbc98d…`:
+History, kept: revision 1's review (session `0d88896e-…`) returned `REVISE` because rolling
+back to `d49dbc98d…` is lawful for the schema but not unconditionally for data. Revision 2
+added a check and repair for `pro-studio`; its review (session `a549010d-…`) returned
+`REVISE` because the check matched one id only, an emptied Center would silently show no
+places, and the procedure had no enforced order. Revision 3 replaces that procedure.
 
-1. Check:
-   `SELECT count(*) FROM house_member_preferences WHERE 'pro-studio' = ANY(center_ids) OR 'pro-studio' = ANY(shortcut_ids);`
-2. If the count is above 0, repair in one transaction before swapping the old reader in:
-   `UPDATE house_member_preferences SET center_ids = array_remove(center_ids, 'pro-studio'), shortcut_ids = array_remove(shortcut_ids, 'pro-studio') WHERE 'pro-studio' = ANY(center_ids) OR 'pro-studio' = ANY(shortcut_ids);`
-   This removes only the Pro Studio placement; the member's other places are kept. The
-   reviewer establishes whether a `center_ids` array left empty by this repair is valid
-   for the exact old reader and for the constraints, or records a finding.
-3. Re-run the check; it must return 0.
+**What the old reader rejects.** The exact old reader's `parseIds`
+(`lib/house/preferences.ts`) throws on a `center_ids` or `shortcut_ids` array that is longer
+than its limit (5 and 18), holds an id outside its 18-id catalog, or holds a duplicate. The
+check below tests exactly those rules, for every row however it was written.
 
-Stored `overview` readings are not repaired. Whether the exact old reader tolerates them is
-plan question 6; if it does not, the reviewer records that as a finding.
+The old reader's 18 ids:
+`writing, relationships, practices, community, studio, decisions, astrology, journal, dream,
+reflections, ideas, changes, wisdom, library, divination, living-field, co-lab, anchor`.
+
+**Check** (read-only; returns the number of rows the old reader would refuse):
+
+```sql
+WITH old AS (SELECT ARRAY['writing','relationships','practices','community','studio','decisions','astrology','journal','dream','reflections','ideas','changes','wisdom','library','divination','living-field','co-lab','anchor']::text[] AS ids)
+SELECT count(*) AS failing_rows
+FROM house_member_preferences p, old
+WHERE (p.center_ids IS NOT NULL AND (
+         cardinality(p.center_ids) > 5
+         OR NOT (p.center_ids <@ old.ids)
+         OR cardinality(p.center_ids) <> (SELECT count(DISTINCT e) FROM unnest(p.center_ids) e)))
+   OR cardinality(p.shortcut_ids) > 18
+   OR NOT (p.shortcut_ids <@ old.ids)
+   OR cardinality(p.shortcut_ids) <> (SELECT count(DISTINCT e) FROM unnest(p.shortcut_ids) e);
+```
+
+**Repair** (one transaction; only rows the check would count):
+
+```sql
+BEGIN;
+WITH old AS (SELECT ARRAY['writing','relationships','practices','community','studio','decisions','astrology','journal','dream','reflections','ideas','changes','wisdom','library','divination','living-field','co-lab','anchor']::text[] AS ids)
+UPDATE house_member_preferences p SET
+  center_ids = (SELECT CASE WHEN count(*) = 0 THEN NULL ELSE array_agg(e ORDER BY ord) END
+                  FROM (SELECT e, min(ord) AS ord FROM unnest(p.center_ids) WITH ORDINALITY u(e, ord)
+                        WHERE e = ANY(old.ids) GROUP BY e ORDER BY min(ord) LIMIT 5) s),
+  shortcut_ids = (SELECT coalesce(array_agg(e ORDER BY ord), '{}')
+                    FROM (SELECT e, min(ord) AS ord FROM unnest(p.shortcut_ids) WITH ORDINALITY u(e, ord)
+                          WHERE e = ANY(old.ids) GROUP BY e ORDER BY min(ord) LIMIT 18) s),
+  revision = p.revision + 1,
+  updated_at = NOW()
+FROM old
+WHERE (p.center_ids IS NOT NULL AND (
+         cardinality(p.center_ids) > 5
+         OR NOT (p.center_ids <@ old.ids)
+         OR cardinality(p.center_ids) <> (SELECT count(DISTINCT e) FROM unnest(p.center_ids) e)))
+   OR cardinality(p.shortcut_ids) > 18
+   OR NOT (p.shortcut_ids <@ old.ids)
+   OR cardinality(p.shortcut_ids) <> (SELECT count(DISTINCT e) FROM unnest(p.shortcut_ids) e);
+COMMIT;
+```
+
+The repair keeps the member's other places in their order, removes unknown ids and
+duplicates, and trims to the old limits. A Center left with no places becomes `NULL`, which
+the old reader reads as "use the House default", so the member sees the default Center
+rather than an empty one. It bumps `revision` and `updated_at` so a client holding the old
+revision can see the change. **A member's Pro Studio placement is lost on rollback**; that
+is the accepted cost of rolling the reader back.
+
+Witness (read-only, 2026-11-01, production): the check returned 0 rows. The repair's
+expressions were evaluated as a `SELECT` over synthetic values only (no table write): a
+Center of only `pro-studio` became `NULL`; `{writing, pro-studio, writing}` became
+`{writing}`; a 19-id shortcut list became the old 18; a `NULL` Center stayed `NULL`; an
+empty shortcut list stayed empty.
+
+**Order, mandatory for any reader rollback to `d49dbc98d…`** (operator act on minisforum):
+
+1. Stop the target reader so it cannot write House preferences:
+   `docker stop maia-sovereign`. Members see a short outage; that is accepted.
+2. Run the check. If it returns 0, go to step 4.
+3. Run the repair, then the check again; it must return 0.
+4. Roll the reader back: `scripts/deploy-production.sh rollback`.
+5. Once the old reader is live, run the check again; it must return 0. If it does not, stop
+   the old reader and repeat from step 3.
+
+`scripts/deploy-production.sh rollback` does not run these steps itself. This plan is the
+procedure, and the founder accepts that it is manual for this deploy. Making the rollback
+command enforce it is a separate deploy-script change, outside this review.
+
+Stored `overview` readings are not repaired. Whether every old-reader path that loads or
+displays them tolerates them is plan question 6; if any does not, the reviewer records it.
 
 Observed production sizes (read-only, 2026-11-01): `developmental_readings` 25 rows,
-`house_member_preferences` 3 rows, rows holding `pro-studio` 0.
+`house_member_preferences` 3 rows, rows the old reader would refuse 0.
 
 A verdict of `REVISE` or `BLOCKED` is lawful and must never be converted into approval to
 complete the deployment.
@@ -125,7 +191,17 @@ The independent reviewer must physically Read, at minimum:
   `app/api/sovereign/manuscripts/[id]/readings/[readingId]/route.ts`,
   `app/api/sovereign/manuscripts/[id]/attention-map/route.ts`,
   `lib/writersStudio/develop/liveLens.ts` and `lib/writersStudio/developClient.ts`
-  (where stored readings are loaded and displayed).
+  (where stored readings are loaded and displayed);
+- exact old-reader `app/writers-studio/develop/DevelopRoom.tsx`,
+  `app/writers-studio/full-redesign/DevelopRoom.tsx`,
+  `app/writers-studio/rebuild/RebuildStudioClient.tsx`,
+  `app/writers-studio/rebuild/liveReview.ts`,
+  `lib/manuscript/developmentalReading/assess.ts` and
+  `app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx` (further reading consumers);
+- target `lib/house/preferences.ts` (the target parser), and target
+  `app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx` and
+  `app/dev/writers-studio-pc3-live/P4R1ReviewController.tsx` (where the target requests an
+  `overview` reading).
 
 The old-reader paths live beneath `old-reader/<exact-old-reader-SHA>/...` in the
 compatibility review bundle. Search may scope discovery but does not witness coverage. If a
