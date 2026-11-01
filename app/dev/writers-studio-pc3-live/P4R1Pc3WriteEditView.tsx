@@ -1549,7 +1549,13 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       {isolatedRoom}
 
       {mounted && !canvas && !isolatedEditorial ? (
-        <>
+        /* These layers render outside the Shell, which is where the theme
+           variables live. Carry them here, as the selection affordance does,
+           or the popovers resolve var(--fr-panel) to transparent. */
+        <div
+          style={{ display: 'contents', ...appearanceVars(props.appearance) } as CSSProperties}
+          data-p4r1-manuscript-overlays
+        >
           {props.carriedInsight && !props.workspaceOpen ? (
             <ObservationManuscriptLayer
               insight={props.carriedInsight}
@@ -1578,7 +1584,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
           {contextualActions}
           {editorial}
-        </>
+        </div>
       ) : null}
     </>
   );
