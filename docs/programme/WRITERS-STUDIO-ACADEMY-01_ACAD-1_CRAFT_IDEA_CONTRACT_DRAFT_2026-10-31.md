@@ -151,3 +151,48 @@ ACAD-1 contract DRAFTED, uncommitted, untracked. Nothing built, no `lib/` or
 `app/` change. ACAD-2, ACAD-3, ACAD-4 not authorized. Cohort invitation not
 authorized. Door 2 line lifts not done. "Describes, not prescribes" for any
 curated content remains UNKNOWN pending beta-writer and founder witness.
+
+## 11. Founder rulings on the §8 open items (additive; §8 above is preserved)
+
+Recorded from the founder's message on 2026-11-01 accepting the recommendations
+put to them, with one change (item 4). Each ruling is the founder's act; nothing
+here was decided by Claude.
+
+| § 8 item | Ruling | Effect |
+|---|---|---|
+| 1. Location of the typed contract | **`lib/manuscript/`** | The eventual typed contract lives there. No file created by this record. |
+| 2. Admission bar | **Keep "at least one" independent beta-writer read**, plus founder ratification | A `prescribes` read from anyone still reopens the idea (§5). |
+| 3. Store shape | **Split** | Ideas: a static reviewed file in the repo. Review records: never in the repo, because they reference a writer's passage (member data); a consented store, designed at ACAD-4, not before. |
+| 4. Who may author | **The founder authors** | Not "founder authors or commissions". Claude drafts no craft idea unless asked, and no draft is admitted without review (§5). |
+| 5. Tier 2 admission measure | **Deferred** | Tier 2 sits behind Door 2, which is not built. |
+
+### Standing after this record
+Rulings recorded; the contract text in §§0-9 is unchanged. Not authorized and
+not done: ACAD-3 (content), ACAD-4 (wiring and the review store), the beta
+cohort invitation, the four Door 2 line lifts. No `lib/` or `app/` change.
+
+## 12. Correction to §1 (referent location), 2026-11-01
+
+**§1's first row is wrong about where the Teach-me acts live. The row is left as
+written above; this section supersedes it.**
+
+- §1 says the Learning facet "Teach me" acts are in
+  `app/writers-studio/flagship/flagshipTokens.ts`. That file defines only the
+  facets (`guided` · `learning` · `direct`), their copy and the forbidden
+  framings. It contains no Teach-me act.
+- The acts are in `app/dev/writers-studio-pc3-live/`:
+  `EditorialDancePanel.tsx` ("Teach me about the writing", "Teach me why",
+  "Teach me more"), `CraftsmansTableR1.tsx` ("Teach me") and
+  `IsolatedEditorialRoom.tsx` ("Craft depth"). `app/writers-studio/page.tsx`
+  imports from that directory, so the live Studio mounts them. Found by code
+  search at canonical `4a013c760`.
+- **Not yet witnessed:** a local walk on 2026-11-01 (Home, Write, Develop on
+  `ws-local-pg`) did not reach the Teach-me acts. They appear only after MAIA
+  marks a passage, which was not triggered. The facet selector was not visible
+  on the Develop screen, and the code gates it as absent until facet selection
+  has real authority, so whether a writer can reach Door 1 through the Learning
+  facet today is unconfirmed.
+
+Every statement in §§2-11 that depends on the acts' location, or on a writer
+being able to reach them, carries this caveat. Nothing built so far depends on
+it: ACAD-2 tests a contract double, not the acts.
