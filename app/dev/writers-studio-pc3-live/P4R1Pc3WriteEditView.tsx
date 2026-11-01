@@ -62,6 +62,7 @@ import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import type { A2RelationshipSummary, EligibleCarrySource } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 import type { CraftWorkingSaveDraft } from '@/lib/writersStudio/craftSaveContractR1';
+import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
 
 export type Pc3HeldPassage = {
   draftSectionId: string;
@@ -630,9 +631,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const teachRevisionEdit = (edit: RevisionEdit) => {
     props.onDepth('learning');
     props.onOpenWorkspace();
-    props.onSendEditorial(
-      `Teach me the writing technique involved in changing ${edit.from ? `"${edit.from.trim()}" to "${edit.to.trim()}"` : `by adding "${edit.to.trim()}"`}. Explain what the move does, what it may cost, and when my original would be the better choice. Do not propose new wording.`,
-    );
+    props.onSendEditorial(teachingTurnPrompt(
+      'change',
+      edit.from ? `changing "${edit.from.trim()}" to "${edit.to.trim()}"` : `adding "${edit.to.trim()}"`,
+    ));
   };
 
   const changeRevisionEdit = (edit: RevisionEdit) => {
@@ -729,6 +731,17 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             <span>Talk about the passage before changing anything.</span>
           </button>
 
+          {/* The implicit Academy's front door: one step from a selected passage
+              (SEMANTIC-FIELD-01 teaching plan, 2026-11-01). */}
+          <button type="button" role="menuitem" data-teach-me-entry onClick={() => {
+            setSelectionMenuOpen(false);
+            props.onDepth('learning');
+            props.onOpenWorkspace();
+            props.onSendEditorial(teachingTurnPrompt('passage'));
+          }}>
+            <b>Teach me about this</b>
+            <span>Learn the craft already at work here.</span>
+          </button>
 
           <button
             type="button"
@@ -738,7 +751,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             onClick={() => setMorePassageOptions((open) => !open)}
           >
             <b>{morePassageOptions ? 'Fewer ways' : 'More ways to work'}</b>
-            <span>Revision, learning, and deeper editorial reasoning, when you want them.</span>
+            <span>Revision and deeper editorial reasoning, when you want them.</span>
           </button>
           {morePassageOptions ? (
             <>
@@ -759,16 +772,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           }}>
             <b>Revise</b>
             <span>Ask MAIA for one useful editorial move.</span>
-          </button>
-
-          <button type="button" role="menuitem" onClick={() => {
-            setSelectionMenuOpen(false);
-            props.onDepth('learning');
-            props.onOpenWorkspace();
-            props.onSendEditorial('Teach me what is happening in this passage as writing. Use my own words as the example. Do not propose replacement wording unless I ask.');
-          }}>
-            <b>Teach me</b>
-            <span>Explain the craft already at work here.</span>
           </button>
 
           <button type="button" role="menuitem" onClick={() => {

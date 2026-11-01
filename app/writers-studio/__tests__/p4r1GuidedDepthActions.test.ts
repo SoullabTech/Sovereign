@@ -15,7 +15,7 @@ describe('P4R1 guided depth actions', () => {
     expect(develop).toContain('Help me understand');
     expect(develop).toContain('Go deeper');
     expect(develop).toContain('autoSendInitialQuestion={Boolean(dialoguePrompt)}');
-    expect(develop).toContain("setDialoguePrompt('Teach me the one writing or craft idea");
+    expect(develop).toContain("setDialoguePrompt(teachingTurnPrompt('observation'))");
     expect(develop).toContain("setDialoguePrompt('Go deeper on this observation");
   });
 
