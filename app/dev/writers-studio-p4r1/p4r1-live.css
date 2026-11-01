@@ -1833,6 +1833,13 @@
   border-radius:10px;
   background:color-mix(in srgb,var(--fr-action-soft) 56%,var(--fr-panel));
 }
+.p4r1-root .p4r1-dance-posture--nudge{
+  border-color:var(--fr-gold);
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--fr-gold) 35%,transparent);
+}
+.p4r1-root .p4r1-dance-posture [data-posture-nudge]{
+  color:var(--fr-gold);
+}
 .p4r1-root .p4r1-dance-posture>div:first-child{
   display:flex;
   flex-direction:column;

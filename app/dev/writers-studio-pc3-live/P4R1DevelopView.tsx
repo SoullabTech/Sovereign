@@ -3075,6 +3075,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               readingId={props.reading.id}
               observationKey={selectedObservation.key}
               about={selectedObservation.observation}
+              showAbout={false}
               superseded={selectedObservation.state === 'superseded'}
               initialQuestion={dialoguePrompt}
               autoSendInitialQuestion={Boolean(dialoguePrompt)}

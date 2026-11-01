@@ -289,6 +289,7 @@ test('empty editorial room offers examples and ideas as real MAIA acts', () => {
 
 
 test('empty editorial room requires an explicit live privacy posture before MAIA can act', () => {
+  const postureOnSend = jest.fn();
   const onChooseSessionPosture = jest.fn();
   act(() => root.render(React.createElement(EditorialDancePanel, {
     manuscriptTitle: 'Threshold',
@@ -304,7 +305,7 @@ test('empty editorial room requires an explicit live privacy posture before MAIA
     sessionPosture: { resolved: false, reason: 'no_live_settings' },
     onChooseSessionPosture,
     onSelectVersion: jest.fn(),
-    onSend: jest.fn(),
+    onSend: postureOnSend,
     onSaveMember: jest.fn(async () => true),
     onApply: jest.fn(),
     onUndo: jest.fn(),
@@ -315,7 +316,10 @@ test('empty editorial room requires an explicit live privacy posture before MAIA
   expect(container.textContent).toContain('Choose how this session should hold the exchange.');
   const examples = Array.from(container.querySelectorAll('button'))
     .find((button) => button.textContent?.includes('Show me examples')) as HTMLButtonElement;
-  expect(examples.disabled).toBe(true);
+  // The card answers the click by pointing at the posture; MAIA still cannot act.
+  act(() => examples.click());
+  expect(postureOnSend).not.toHaveBeenCalled();
+  expect(container.querySelector('[data-posture-nudge]')).not.toBeNull();
 
   const ordinary = Array.from(container.querySelectorAll('button'))
     .find((button) => button.textContent === 'Ordinary')!;
@@ -393,4 +397,64 @@ test('a MAIA response without a proposal stays visible and keeps exploration act
 
   act(() => followup('Show revision options').click());
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'allow', proposalRequested: true });
+});
+
+test('a card chosen before the privacy posture is answered points at the posture and sends nothing', () => {
+  const onSend = jest.fn();
+  const onChooseSessionPosture = jest.fn();
+  let props: any = {
+    manuscriptTitle: 'Threshold',
+    currentText: 'Original words.',
+    sectionBody: 'Before.\n\nOriginal words.\n\nAfter.',
+    thread: null,
+    version: null,
+    lastMaiaTurn: null,
+    appliedVersionId: null,
+    busy: false,
+    message: null,
+    undoMessage: null,
+    sessionPosture: { resolved: false, sanctuary: false },
+    onChooseSessionPosture,
+    onSelectVersion: jest.fn(),
+    onSend,
+    onSaveMember: jest.fn(async () => true),
+    onApply: jest.fn(),
+    onKeep: jest.fn(),
+    onDepth: jest.fn(),
+  };
+  const draw = () => act(() => root.render(React.createElement(EditorialDancePanel, props)));
+  draw();
+
+  const card = (title: string) => Array.from(container.querySelectorAll('.p4r1-dance-start-actions button'))
+    .find((b) => b.querySelector('b')?.textContent === title) as HTMLButtonElement;
+
+  expect(card('Discuss what’s happening').disabled).toBe(false);
+  expect(container.querySelector('[data-posture-nudge]')).toBeNull();
+
+  act(() => card('Discuss what’s happening').click());
+  expect(onSend).not.toHaveBeenCalled();
+  expect(onChooseSessionPosture).not.toHaveBeenCalled();
+  expect(container.querySelector('[data-posture-nudge]')?.textContent).toContain('Choose Ordinary or Sanctuary first');
+
+  props = { ...props, sessionPosture: { resolved: true, sanctuary: false } };
+  draw();
+  expect(container.querySelector('[data-posture-nudge]')).toBeNull();
+  act(() => card('Discuss what’s happening').click());
+  expect(onSend).toHaveBeenCalledTimes(1);
+});
+
+test('in Sanctuary a card still sends nothing and says how to continue', () => {
+  const onSend = jest.fn();
+  const props: any = {
+    manuscriptTitle: 'Threshold', currentText: 'Original words.', sectionBody: 'Original words.',
+    thread: null, version: null, lastMaiaTurn: null, appliedVersionId: null, busy: false,
+    message: null, undoMessage: null, sessionPosture: { resolved: true, sanctuary: true },
+    onChooseSessionPosture: jest.fn(), onSelectVersion: jest.fn(), onSend,
+    onSaveMember: jest.fn(async () => true), onApply: jest.fn(), onKeep: jest.fn(), onDepth: jest.fn(),
+  };
+  act(() => root.render(React.createElement(EditorialDancePanel, props)));
+  const first = container.querySelector('.p4r1-dance-start-actions button') as HTMLButtonElement;
+  act(() => first.click());
+  expect(onSend).not.toHaveBeenCalled();
+  expect(container.querySelector('[data-posture-nudge]')?.textContent).toContain('Switch to Ordinary');
 });

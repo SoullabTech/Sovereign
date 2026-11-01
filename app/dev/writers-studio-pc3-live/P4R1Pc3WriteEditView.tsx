@@ -657,7 +657,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       className="p4r1-selection-affordance"
       style={{
         ...appearanceVars(props.appearance),
-        left: Math.max(18, Math.min(selectionRect.right - 150, window.innerWidth - 220)),
+        left: Math.max(14, Math.min(selectionRect.right - 150, window.innerWidth - Math.min(310, window.innerWidth - 28) - 14)),
         top: Math.max(72, selectionRect.bottom + 12),
       } as CSSProperties}
       data-p4r1-selection-affordance

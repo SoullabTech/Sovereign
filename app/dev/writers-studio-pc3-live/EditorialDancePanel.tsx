@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   EDITORIAL_APPROACHES,
   approachNote,
@@ -233,6 +233,13 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const [localMessage, setLocalMessage] = useState<string | null>(null);
   const [showContext, setShowContext] = useState(false);
   const [showDepth, setShowDepth] = useState<'none'|'why'|'teach'|'advanced'>('none');
+  const [postureNudge, setPostureNudge] = useState(false);
+  const postureRef = useRef<HTMLDivElement | null>(null);
+
+  const postureOpen = props.sessionPosture.resolved && !props.sessionPosture.sanctuary;
+  useEffect(() => {
+    if (postureOpen) setPostureNudge(false);
+  }, [postureOpen]);
 
   const versions = props.thread?.versions ?? [];
   const maiaVersions = useMemo(() => latestMaiaVersions(props.thread), [props.thread]);
@@ -408,13 +415,32 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   };
 
   const postureBlocksEditorial = !props.sessionPosture.resolved || props.sessionPosture.sanctuary;
+  /* A card chosen before the posture is answered must answer the click: it
+     points the writer at the posture choice instead of silently doing nothing.
+     ⛔ It never chooses a posture and never sends anything. */
+  const startAct = (act: () => void) => {
+    if (postureBlocksEditorial) {
+      setPostureNudge(true);
+      postureRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+      return;
+    }
+    act();
+  };
   const postureGate = postureBlocksEditorial ? (
-    <div className="p4r1-dance-posture" role="group" aria-label="Choose privacy posture for this session">
+    <div
+      ref={postureRef}
+      className={postureNudge ? 'p4r1-dance-posture p4r1-dance-posture--nudge' : 'p4r1-dance-posture'}
+      role="group"
+      aria-label="Choose privacy posture for this session"
+    >
       {!props.sessionPosture.resolved ? (
         <>
           <div>
             <b>Choose how this session should hold the exchange.</b>
             <span>MAIA will not guess your privacy posture before opening an editorial relationship.</span>
+            {postureNudge ? (
+              <span role="status" data-posture-nudge>Choose Ordinary or Sanctuary first. Nothing has been sent.</span>
+            ) : null}
           </div>
           <div className="p4r1-dance-posture-actions">
             <button type="button" onClick={() => props.onChooseSessionPosture(false)}>Ordinary</button>
@@ -426,6 +452,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <div>
             <b>Sanctuary is on.</b>
             <span>Persistent editorial collaboration stays unavailable in Sanctuary. Your passage remains unchanged.</span>
+            {postureNudge ? (
+              <span role="status" data-posture-nudge>Switch to Ordinary to work with MAIA on this passage. Nothing has been sent.</span>
+            ) : null}
           </div>
           <div className="p4r1-dance-posture-actions">
             <button type="button" onClick={() => props.onChooseSessionPosture(false)}>Switch to Ordinary</button>
@@ -442,13 +471,13 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
         <div className="p4r1-dance-start-actions">
           <button
             type="button"
-            disabled={props.busy || postureBlocksEditorial}
-            onClick={() => begin(revisePassagePrompt(), undefined, { proposalPolicy: 'allow', proposalRequested: true })}
+            disabled={props.busy}
+            onClick={() => startAct(() => begin(revisePassagePrompt(), undefined, { proposalPolicy: 'allow', proposalRequested: true }))}
           >
             <b>Show edit options</b>
             <span>Let MAIA offer a revision direction and other ways this passage could move. Nothing changes until you apply one.</span>
           </button>
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(discussPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct(() => begin(discussPassagePrompt(), undefined, { proposalPolicy: 'reply_only' }))}>
             <b>Discuss what’s happening</b>
             <span>Stay with the passage and help me think about it before editing.</span>
           </button>
@@ -458,11 +487,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       <section>
         <header><b>Explore possibilities</b><span>Open the field without committing to a revision.</span></header>
         <div className="p4r1-dance-start-actions">
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(examplesPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct(() => begin(examplesPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' }))}>
             <b>Show me examples</b>
             <span>Illustrate possibilities without turning them into recommendations.</span>
           </button>
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(ideasPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct(() => begin(ideasPassagePrompt(), undefined, { proposalPolicy: 'reply_only' }))}>
             <b>Give me ideas</b>
             <span>Open several genuinely different directions I could explore.</span>
           </button>
@@ -472,11 +501,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       <section>
         <header><b>Learn from the passage</b><span>Open more craft depth only if you want it.</span></header>
         <div className="p4r1-dance-start-actions">
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(teachPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct(() => begin(teachPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' }))}>
             <b>Teach me about the writing</b>
             <span>Help me understand the craft already at work in my own words.</span>
           </button>
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(deeperPassagePrompt(), 'direct', { proposalPolicy: 'reply_only' })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct(() => begin(deeperPassagePrompt(), 'direct', { proposalPolicy: 'reply_only' }))}>
             <b>Go deeper</b>
             <span>Open the technical craft reasoning, evidence, tradeoffs, and uncertainty.</span>
           </button>
