@@ -1,4 +1,4 @@
-import { query } from '@/lib/db/postgres';
+import { query, queryWithExpectedRefusal } from '@/lib/db/postgres';
 import { deleteMessage, sendMessage } from '@/lib/team/ChannelService';
 import { isTeamMember } from '@/lib/team/teamMembership';
 import {
@@ -124,12 +124,16 @@ export async function addJourneyAnswer(
     manuscriptId = input.manuscriptId;
   }
 
-  const inserted = await query<{ id: string }>(
+  // Two revisions of the same version racing: the unique index admits one; the
+  // other is the ordinary "no longer current" refusal, not a server error.
+  const inserted = await queryWithExpectedRefusal<{ id: string }>(
     `INSERT INTO writer_studio_journey_answers (member_id, prompt_key, choice, answer, manuscript_id, supersedes)
      VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
     [memberId, valid.promptKey, valid.choice, valid.answer, manuscriptId, supersedes],
+    { fragment: 'writer_studio_journey_answers_supersedes_once', why: 'concurrent revision of the same version' },
   );
-  const r = await query<Row>(`${SELECT_ROWS} WHERE a.id = $1`, [inserted.rows[0]!.id]);
+  if (inserted.refused) return { ok: false, refusal: 'not_current' };
+  const r = await query<Row>(`${SELECT_ROWS} WHERE a.id = $1`, [inserted.result.rows[0]!.id]);
   return { ok: true, answer: toAnswer(r.rows[0]!) };
 }
 
@@ -223,12 +227,22 @@ export async function shareJourneyAnswer(memberId: string, answerId: string, kin
     undefined,
     kind === 'question' ? 'question' : 'build',
   );
-  await query(
+  // Record the share only if this answer is still unshared and current. A double
+  // submit (or a withdrawal in between) records nothing here, so the copy just
+  // posted is removed again: no Co-Lab message may exist that the answer does not own.
+  const recorded = await query(
     `UPDATE writer_studio_journey_answers
         SET colab_message_id = $3, colab_kind = $4, colab_shared_at = now()
-      WHERE id = $1 AND member_id = $2`,
+      WHERE id = $1 AND member_id = $2 AND colab_message_id IS NULL AND withdrawn_at IS NULL`,
     [answerId, memberId, message.id, kind],
-  );
+  ).catch(async (error) => {
+    await deleteMessage(colab.channelId, message.id, memberId, 'beta journey share was not recorded');
+    throw error;
+  });
+  if ((recorded.rowCount ?? 0) !== 1) {
+    await deleteMessage(colab.channelId, message.id, memberId, 'beta journey answer was already shared or withdrawn');
+    return { ok: false, refusal: 'already_shared' };
+  }
   const after = await query<Row>(`${SELECT_ROWS} WHERE a.id = $1`, [answerId]);
   return { ok: true, answer: toAnswer(after.rows[0]!) };
 }
