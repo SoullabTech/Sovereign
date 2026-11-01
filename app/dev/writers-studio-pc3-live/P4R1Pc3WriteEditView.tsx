@@ -162,6 +162,12 @@ export type P4R1Pc3WriteEditViewProps = {
   onRemoveCarrySource: () => void;
 };
 
+/* Below the selection, but never so low that the menu (trigger 38px + at
+   least 200px of items + 16px margin) would leave the window. */
+function selectionMenuTop(rect: DOMRect): number {
+  return Math.max(72, Math.min(rect.bottom + 12, window.innerHeight - 254));
+}
+
 function selectionInPc3Editor(): { sectionId: string; text: string; rect: DOMRect } | null {
   if (typeof window === 'undefined') return null;
 
@@ -661,7 +667,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       style={{
         ...appearanceVars(props.appearance),
         left: Math.max(14, Math.min(selectionRect.right - 150, window.innerWidth - Math.min(310, window.innerWidth - 28) - 14)),
-        top: Math.max(72, selectionRect.bottom + 12),
+        top: selectionMenuTop(selectionRect),
+        '--p4r1-menu-room': `${window.innerHeight - selectionMenuTop(selectionRect) - 54}px`,
       } as CSSProperties}
       data-p4r1-selection-affordance
       onMouseDown={(event) => event.preventDefault()}
@@ -1184,6 +1191,15 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const lineageReturnActive = Boolean(
     props.lineageReturnChapterId && props.lineageReturnCandidateId,
   );
+  /* Arrived from an observation whose evidence names THIS section, but none of
+     it verifies against the current text: the marking layer draws nothing, so
+     say why instead of landing the writer with no orientation at all. */
+  const insightEvidenceChanged = Boolean(
+    props.carriedInsight && !props.workspaceOpen && !isolatedEditorial
+    && props.carriedInsight.passages.some((passage) => passage.sectionId === props.focusId)
+    && !props.carriedInsight.passages.some((passage) =>
+      passage.sectionId === props.focusId && passage.verified && passage.range),
+  );
   const workSurface = (props.attentionReturnItemId || lineageReturnActive) && !canvas ? (
     <div
       className="p4r1-attention-write-return"
@@ -1202,6 +1218,22 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             <button type="button" onClick={() => navigateMode('develop')}>Return to lineage</button>
           </>
         )}
+      </div>
+      {baseWorkSurface}
+    </div>
+  ) : insightEvidenceChanged && !canvas ? (
+    <div className="p4r1-attention-write-return" data-insight-evidence-changed>
+      <div className="p4r1-attention-write-return-bar" role="status">
+        <span>
+          <b>From {props.carriedInsightReturnMode === 'review' ? 'Review' : 'Develop'} · {props.carriedInsight!.observation.phenomenonLabel}</b>
+          {' · '}this section has changed since MAIA read it, so her evidence can’t be marked here. Nothing was changed.
+        </span>
+        {props.carriedInsightReturnMode ? (
+          <button type="button" onClick={() => navigateMode(props.carriedInsightReturnMode!)}>
+            Return to {props.carriedInsightReturnMode === 'review' ? 'Review' : 'Develop'}
+          </button>
+        ) : null}
+        <button type="button" onClick={props.onDismissCarriedInsight}>Dismiss</button>
       </div>
       {baseWorkSurface}
     </div>

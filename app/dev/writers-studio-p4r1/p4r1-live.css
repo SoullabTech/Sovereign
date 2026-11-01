@@ -4872,7 +4872,7 @@
 .p4r1-root .p4r1-selection-menu > .p4r1-passage-more {border-top:1px solid var(--fr-line,#8885);margin-top:6px;padding-top:10px;}
 .p4r1-root .p4r1-selection-menu > .p4r1-passage-more b {font-size:12px;}
 .p4r1-root .p4r1-selection-menu > .p4r1-passage-more span {font-size:11px;}
-.p4r1-root .p4r1-selection-menu {max-width:min(330px,calc(100vw - 28px));max-height:min(68vh,580px);overflow-y:auto;}
+.p4r1-root .p4r1-selection-menu {max-width:min(330px,calc(100vw - 28px));max-height:min(68vh,580px,var(--p4r1-menu-room,580px));overflow-y:auto;}
 @media(max-width:700px) {
  .p4r1-root .p4r1-develop-focused {padding:18px 15px}
  .p4r1-root .p4r1-develop-three-questions {grid-template-columns:1fr}
