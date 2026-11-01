@@ -62,3 +62,22 @@ describe('C3 passage-grounded editorial intelligence', () => {
     });
   });
 });
+
+describe('Learning teaches as a conversation (founder direction 2026-11-01)', () => {
+  const learning = editorialDirective('learning');
+
+  it('asks for one idea per turn and a closing question the writer steers by', () => {
+    expect(learning).toContain('as a conversation, not a lesson');
+    expect(learning).toContain('end with one short question that lets me choose where we go next');
+  });
+
+  it('leaves why, cost and further ideas for the writer to ask for, not one turn', () => {
+    expect(learning).toContain('Leave why a writer might choose it, what it can cost, and any further ideas for me to ask about');
+    expect(learning).not.toContain('why a writer might choose it, and what it can cost.');
+  });
+
+  it('keeps the facet invariants: no more prose, no external standard', () => {
+    expect(learning).toContain('Do not write more of my prose than you would at any other depth.');
+    expect(learning).toContain('Do not prescribe what good writing is');
+  });
+});

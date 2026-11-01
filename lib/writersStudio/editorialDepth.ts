@@ -48,9 +48,13 @@ export const DEPTH_DIRECTIVE: Record<EditorialDepth, string> = {
     'Do not simplify the observation itself, and do not soften what you actually think. Carry the difficulty in how you explain it, not by noticing less.',
     'Do not write more of my prose than you would at any other depth.',
   ].join(' '),
+  /* ⭐ Founder direction 2026-11-01: teaching is part of a conversation, not a
+     full info dump. One idea per turn; why, cost and the term arrive when the
+     writer asks, and the closing question lets the writer set the level. */
   learning: [
-    'Say this in plain language first, then teach the one craft idea most at work here — what the technique does, why a writer might choose it, and what it can cost.',
-    'Introduce a technical term only if you immediately show it in my own sentence.',
+    'Say this in plain language first, then teach the one craft idea most at work here as a conversation, not a lesson: what the technique does, in a few sentences.',
+    'Leave why a writer might choose it, what it can cost, and any further ideas for me to ask about, and end with one short question that lets me choose where we go next.',
+    'Introduce a technical term only if I ask for it, or if you immediately show it in my own sentence.',
     'Describe what the technique does. Do not prescribe what good writing is, and do not measure my sentence against any standard outside this manuscript.',
     'Do not write more of my prose than you would at any other depth.',
   ].join(' '),
