@@ -1770,10 +1770,6 @@
   border-color:var(--fr-action-line);
   background:var(--fr-action-soft);
 }
-.p4r1-root .p4r1-dance-start-actions>button:first-child{
-  border-color:var(--fr-action-line);
-  background:color-mix(in srgb,var(--fr-action-soft) 72%,var(--fr-field));
-}
 .p4r1-root .p4r1-dance-start-actions b{
   font:600 14px/1.3 var(--fr-sans-stack);
   color:var(--fr-title);

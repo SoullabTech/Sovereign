@@ -1741,6 +1741,10 @@ export default function FlagshipWriteEditController() {
   const closeWorkspace = useCallback(() => {
     if (!currentWorkGesture() || editorialBusy || adoptionBusy || memberVersionBusy) return;
     setWorkspaceOpen(false);
+    /* Leaving the room un-names the conversation, or a reload reopens it. */
+    if (typeof window !== 'undefined') {
+      replacePlaceAddress(canvasWithoutEditorialThread(window.location.pathname, window.location.search));
+    }
   }, [editorialBusy, adoptionBusy, memberVersionBusy, workGestureEpoch]);
 
   const returnToStartingPassage = useCallback(() => {
@@ -1750,6 +1754,9 @@ export default function FlagshipWriteEditController() {
       || workReentryRequired.current) {
       workspaceReturn.current = null;
       setWorkspaceOpen(false);
+    if (typeof window !== 'undefined') {
+      replacePlaceAddress(canvasWithoutEditorialThread(window.location.pathname, window.location.search));
+    }
       return;
     }
     if (previous) {

@@ -1400,7 +1400,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       onMayRemoveParagraphs={props.onMayRemoveParagraphs}
       mayProposeImmediately={props.mayProposeImmediately}
       onMayProposeImmediately={props.onMayProposeImmediately}
-      onClose={() => setIsolatedEditorial(false)}
+      onClose={props.onCloseWorkspace}
     >
       {props.carriedInsight ? (
         <section className="p4r1-focus-origin" data-focus-origin>

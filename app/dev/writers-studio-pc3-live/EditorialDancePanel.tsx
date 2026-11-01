@@ -557,6 +557,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             ].join('\n\n'), undefined, { proposalPolicy: 'allow', proposalRequested: true })}>
               Show revision options
             </button>
+            <button type="button" disabled={props.busy} onClick={() => begin(discussPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
+              Discuss further
+            </button>
             <button type="button" disabled={props.busy} onClick={() => begin(examplesPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
               Show examples
             </button>
