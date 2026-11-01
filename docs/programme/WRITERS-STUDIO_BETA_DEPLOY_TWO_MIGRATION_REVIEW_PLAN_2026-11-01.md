@@ -64,99 +64,109 @@ The reviewer must independently establish or reject each of the following:
    the `pro-studio` catalog id only after the constraints admit them.
 6. Reader rollback to `d49dbc98d…` is lawful under the conditions in "Reader rollback"
    below: the schema needs no down-migration, and data the target reader writes is handled
-   by the stated check and repair. The reviewer establishes whether those conditions are
-   sufficient, including whether the exact old reader tolerates stored `overview` readings
-   in every path that loads or displays them.
+   by the guard and repair files, whose order the target's `rollback` command enforces. The
+   reviewer establishes whether those conditions are sufficient, including whether the
+   guard runs before any tag moves and refuses on failure, and whether the exact old reader
+   tolerates stored `overview` readings in every path that loads or displays them.
 7. DDL lock and constraint-validation risk (ACCESS EXCLUSIVE on `developmental_readings` and
    `house_member_preferences` during constraint replacement) is acceptable for the observed
    table sizes below, or is recorded as a finding.
 
-## Reader rollback (revision 3)
+## Reader rollback (revision 4)
 
 History, kept: revision 1's review (session `0d88896e-…`) returned `REVISE` because rolling
 back to `d49dbc98d…` is lawful for the schema but not unconditionally for data. Revision 2
 added a check and repair for `pro-studio`; its review (session `a549010d-…`) returned
 `REVISE` because the check matched one id only, an emptied Center would silently show no
-places, and the procedure had no enforced order. Revision 3 replaces that procedure.
+places, and the procedure had no enforced order. Revision 3 widened the check to every rule
+the old parser enforces and wrote the order down as a manual procedure; its review (session
+`943b6013-…`) returned `REVISE` on three findings: thirteen old-reader consumers of stored
+readings were not read (F1), the rollback command did not enforce the order and the deploy
+script's own recovery message pointed at a bare rollback (F2), and the repair rewrote a valid,
+explicitly empty Center to `NULL` when only the row's shortcuts failed (F3). Revision 4
+answers all three:
+
+- **F1**: the thirteen files are added to "Minimum physical Reads" below.
+- **F2**: `scripts/deploy-production.sh rollback` now enforces the order itself (below).
+- **F3**: the repair rewrites only the array that fails, so a valid empty Center is kept.
 
 **What the old reader rejects.** The exact old reader's `parseIds`
 (`lib/house/preferences.ts`) throws on a `center_ids` or `shortcut_ids` array that is longer
 than its limit (5 and 18), holds an id outside its 18-id catalog, or holds a duplicate. The
-check below tests exactly those rules, for every row however it was written.
+check tests exactly those rules, for every row however it was written.
 
 The old reader's 18 ids:
 `writing, relationships, practices, community, studio, decisions, astrology, journal, dream,
 reflections, ideas, changes, wisdom, library, divination, living-field, co-lab, anchor`.
 
-**Check** (read-only; returns the number of rows the old reader would refuse):
+**Check and repair, as files.** Both now live at the target, beside the deploy script, keyed
+by the full old-reader commit:
 
-```sql
-WITH old AS (SELECT ARRAY['writing','relationships','practices','community','studio','decisions','astrology','journal','dream','reflections','ideas','changes','wisdom','library','divination','living-field','co-lab','anchor']::text[] AS ids)
-SELECT count(*) AS failing_rows
-FROM house_member_preferences p, old
-WHERE (p.center_ids IS NOT NULL AND (
-         cardinality(p.center_ids) > 5
-         OR NOT (p.center_ids <@ old.ids)
-         OR cardinality(p.center_ids) <> (SELECT count(DISTINCT e) FROM unnest(p.center_ids) e)))
-   OR cardinality(p.shortcut_ids) > 18
-   OR NOT (p.shortcut_ids <@ old.ids)
-   OR cardinality(p.shortcut_ids) <> (SELECT count(DISTINCT e) FROM unnest(p.shortcut_ids) e);
-```
+- `scripts/rollback-guards/d49dbc98df5d448a05e13a7df21180c3bde304c6.sql`: the read-only
+  check. It prints one number, the count of rows the old reader would refuse.
+- `scripts/rollback-guards/d49dbc98df5d448a05e13a7df21180c3bde304c6.repair.sql`: the repair,
+  one transaction, touching only rows the check counts. In each such row it rewrites only
+  the array that fails: unknown ids and duplicates are removed, order is kept, and the array
+  is trimmed to the old limits. A Center that loses every place becomes `NULL` (the House
+  default), so the member sees the default Center rather than an empty one. A valid array,
+  including an explicitly empty Center `{}`, is left exactly as stored. It bumps `revision`
+  and `updated_at` so a client holding the old revision sees the change. **A member's Pro
+  Studio placement is lost on rollback**; that is the accepted cost of rolling the reader
+  back.
 
-**Repair** (one transaction; only rows the check would count):
+**The rollback command enforces the order.** In the target's `cmd_rollback`:
 
-```sql
-BEGIN;
-WITH old AS (SELECT ARRAY['writing','relationships','practices','community','studio','decisions','astrology','journal','dream','reflections','ideas','changes','wisdom','library','divination','living-field','co-lab','anchor']::text[] AS ids)
-UPDATE house_member_preferences p SET
-  center_ids = (SELECT CASE WHEN count(*) = 0 THEN NULL ELSE array_agg(e ORDER BY ord) END
-                  FROM (SELECT e, min(ord) AS ord FROM unnest(p.center_ids) WITH ORDINALITY u(e, ord)
-                        WHERE e = ANY(old.ids) GROUP BY e ORDER BY min(ord) LIMIT 5) s),
-  shortcut_ids = (SELECT coalesce(array_agg(e ORDER BY ord), '{}')
-                    FROM (SELECT e, min(ord) AS ord FROM unnest(p.shortcut_ids) WITH ORDINALITY u(e, ord)
-                          WHERE e = ANY(old.ids) GROUP BY e ORDER BY min(ord) LIMIT 18) s),
-  revision = p.revision + 1,
-  updated_at = NOW()
-FROM old
-WHERE (p.center_ids IS NOT NULL AND (
-         cardinality(p.center_ids) > 5
-         OR NOT (p.center_ids <@ old.ids)
-         OR cardinality(p.center_ids) <> (SELECT count(DISTINCT e) FROM unnest(p.center_ids) e)))
-   OR cardinality(p.shortcut_ids) > 18
-   OR NOT (p.shortcut_ids <@ old.ids)
-   OR cardinality(p.shortcut_ids) <> (SELECT count(DISTINCT e) FROM unnest(p.shortcut_ids) e);
-COMMIT;
-```
+1. It reads the commit of the image it is restoring (`maia-sovereign:previous`): the
+   `git.commit` label if present, otherwise the image's baked `GIT_COMMIT`. Production
+   images carry no `git.commit` label (read 2026-11-01), so the baked `GIT_COMMIT` (a short
+   SHA, `d49dbc98d`) is what resolves; it is matched as a prefix of the guard file's name.
+   After this deploy, `:previous` is the `d49dbc98d…` image (read 2026-11-01: it is the
+   live `:current` today, and the deploy moves `:current` to `:previous`).
+2. If a guard file exists for that commit, it stops `maia-sovereign` first, so the target
+   reader can write nothing more, then runs the check through
+   `docker exec -i maia-postgres psql … -v ON_ERROR_STOP=1 -At`.
+3. If the check prints anything other than `0`, or cannot run, it refuses: no image tag
+   moves, the target reader stays stopped, the old reader is not started, and it prints the
+   repair command to run before trying again. It never runs the repair itself.
+4. Otherwise it swaps the tags and recreates the reader as before, then runs the check again
+   once the old reader is healthy; anything other than `0` fails the rollback loudly.
 
-The repair keeps the member's other places in their order, removes unknown ids and
-duplicates, and trims to the old limits. A Center left with no places becomes `NULL`, which
-the old reader reads as "use the House default", so the member sees the default Center
-rather than an empty one. It bumps `revision` and `updated_at` so a client holding the old
-revision can see the change. **A member's Pro Studio placement is lost on rollback**; that
-is the accepted cost of rolling the reader back.
+A rollback to a commit with no guard file behaves exactly as before. The deploy script's two
+post-swap recovery messages now say that rollback runs this guard.
 
-Witness (read-only, 2026-11-01, production): the check returned 0 rows. The repair's
-expressions were evaluated as a `SELECT` over synthetic values only (no table write): a
-Center of only `pro-studio` became `NULL`; `{writing, pro-studio, writing}` became
-`{writing}`; a 19-id shortcut list became the old 18; a `NULL` Center stayed `NULL`; an
-empty shortcut list stayed empty.
+Members see a short outage between the stop and the old reader starting; that is accepted.
 
-**Order, mandatory for any reader rollback to `d49dbc98d…`** (operator act on minisforum):
+Witness (2026-11-01):
 
-1. Stop the target reader so it cannot write House preferences:
-   `docker stop maia-sovereign`. Members see a short outage; that is accepted.
-2. Run the check. If it returns 0, go to step 4.
-3. Run the repair, then the check again; it must return 0.
-4. Roll the reader back: `scripts/deploy-production.sh rollback`.
-5. Once the old reader is live, run the check again; it must return 0. If it does not, stop
-   the old reader and repeat from step 3.
-
-`scripts/deploy-production.sh rollback` does not run these steps itself. This plan is the
-procedure, and the founder accepts that it is manual for this deploy. Making the rollback
-command enforce it is a separate deploy-script change, outside this review.
+- Production, read-only (`default_transaction_read_only = on`): the guard file returned `0`.
+- Local disposable database: inside one transaction rolled back at the end, a temporary
+  table shadowing `house_member_preferences` held six rows. The guard counted 4. The repair
+  updated those 4, and the guard then returned 0. A Center of only `pro-studio` became
+  `NULL`. `{writing, pro-studio, writing}` became `{writing}`. A 19-id shortcut list became
+  the old 18. An explicitly empty Center `{}`, in a row failing only on shortcuts, stayed
+  `{}` (F3). A `NULL` Center stayed `NULL`. A valid row was not touched (`revision`
+  unchanged).
+- `scripts/verify-rollback-prod-alias-behavior.sh` (extended): passes against the target
+  script, which shows three things:
+  - with no guard, rollback behaves as before and does not touch Postgres;
+  - with a guard, the reader is stopped and then checked before any tag moves, and the check
+    re-runs after the swap;
+  - a failing or unreadable check moves no tag and leaves the old reader unstarted.
+  The test fails against the pre-revision script.
+- `npm run verify:deploy-provenance` 28/0, `verify:deploy-lock` 25/0,
+  `verify:deploy-tag-rollback-point` 5/0.
 
 Stored `overview` readings are not repaired. Whether every old-reader path that loads or
-displays them tolerates them is plan question 6; if any does not, the reviewer records it.
+displays them tolerates them is plan question 6; the reviewer reads every consumer listed
+below and records any that does not. The author's own pre-review reading (a claim for the
+reviewer to test, not evidence) is the following. Old-reader paths that validate the lens
+refuse an `overview` reading as a request-level refusal: chapter-reviews returns
+`reading_scope_mismatch` (409), and `realReview`'s payload guard returns false. The
+orientation and lineage routes ignore it, because they iterate the old lens list. The
+rebuild `ReviewChooser` labels it with its raw id. If that is right, the accepted rollback
+cost is that a member cannot open an `overview` reading in the old reader, and no path
+crashes or rewrites data. "Tolerates" in question 6 means exactly that: no crash, no
+corruption, no write; a visible refusal is acceptable.
 
 Observed production sizes (read-only, 2026-11-01): `developmental_readings` 25 rows,
 `house_member_preferences` 3 rows, rows the old reader would refuse 0.
@@ -198,6 +208,20 @@ The independent reviewer must physically Read, at minimum:
   `app/writers-studio/rebuild/liveReview.ts`,
   `lib/manuscript/developmentalReading/assess.ts` and
   `app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx` (further reading consumers);
+- exact old-reader consumers of stored readings named by revision 3's review (F1):
+  `app/api/sovereign/manuscripts/[id]/ask/route.ts`,
+  `lib/manuscript/ask/developmentalContext.ts`, `lib/manuscript/ask/threadStore.ts`,
+  `app/api/sovereign/manuscripts/[id]/review-discuss/route.ts`,
+  `app/api/sovereign/manuscripts/[id]/chapter-reviews/route.ts`,
+  `app/api/sovereign/manuscripts/[id]/developmental-orientation/route.ts`,
+  `app/api/sovereign/manuscripts/[id]/lineage-orientation/route.ts`,
+  `app/api/sovereign/manuscripts/[id]/lineage-chapter/route.ts`,
+  `lib/writersStudio/studio/realReview.ts`, `lib/writersStudio/studio/wholeReview.ts`,
+  `lib/writersStudio/studio/wholeManuscriptReview.ts`,
+  `app/writers-studio/rebuild/ReviewChooser.tsx` and
+  `app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx`;
+- target `scripts/rollback-guards/d49dbc98df5d448a05e13a7df21180c3bde304c6.sql` and
+  `.repair.sql`, and target `scripts/verify-rollback-prod-alias-behavior.sh`;
 - target `lib/house/preferences.ts` (the target parser), and target
   `app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx` and
   `app/dev/writers-studio-pc3-live/P4R1ReviewController.tsx` (where the target requests an

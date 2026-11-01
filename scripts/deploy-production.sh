@@ -767,7 +767,9 @@ cmd_deploy() {
         log_error "Post-swap provenance verification FAILED — the running container does not report the"
         log_error "authorized immutable commit $GIT_COMMIT. Migrations already succeeded pre-swap."
         log_error "The reviewed old reader was compatible with the resulting schema; restore the"
-        log_error "previous reader image if the candidate cannot be made live:"
+        log_error "previous reader image if the candidate cannot be made live (rollback stops the"
+        log_error "candidate and refuses to swap if scripts/rollback-guards/ finds rows the old reader"
+        log_error "cannot read; it prints the repair to run first):"
         log_error "  ./scripts/deploy-production.sh rollback"
         exit 1
     fi
@@ -849,7 +851,9 @@ cmd_update() {
         log_error "Post-swap provenance verification FAILED — the running container does not report the"
         log_error "authorized immutable commit $GIT_COMMIT. Migrations already succeeded pre-swap."
         log_error "The reviewed old reader was compatible with the resulting schema; restore the"
-        log_error "previous reader image if the candidate cannot be made live:"
+        log_error "previous reader image if the candidate cannot be made live (rollback stops the"
+        log_error "candidate and refuses to swap if scripts/rollback-guards/ finds rows the old reader"
+        log_error "cannot read; it prints the repair to run first):"
         log_error "  ./scripts/deploy-production.sh rollback"
         exit 1
     fi
@@ -989,6 +993,41 @@ cmd_smoke() {
 # ═══════════════════════════════════════════════════════════════════════════════
 # Two-command rollback: swap image tags, restart container
 # No rebuild required - just swap and go
+
+# Commit an image was built from: the git.commit label, else its baked GIT_COMMIT.
+rollback_image_commit() {
+    local image="$1" sha
+    sha="$(docker image inspect "$image" --format '{{index .Config.Labels "git.commit"}}' 2>/dev/null || true)"
+    if [ -z "$sha" ] || [ "$sha" = "<no value>" ]; then
+        sha="$(docker image inspect "$image" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null \
+            | sed -n 's/^GIT_COMMIT=//p' | head -1)"
+    fi
+    echo "${sha:-unknown}"
+}
+
+# Guard file for a commit: scripts/rollback-guards/<full sha>.sql, matched by prefix
+# (images carry short SHAs). Repair files (*.repair.sql) are never guards.
+rollback_guard_for() {
+    local sha="$1" f stem
+    [ "${#sha}" -ge 7 ] || return 0
+    case "$sha" in *[!0-9a-f]*) return 0 ;; esac
+    for f in "$SCRIPT_DIR"/rollback-guards/*.sql; do
+        [ -e "$f" ] || continue
+        case "$f" in *.repair.sql) continue ;; esac
+        stem="$(basename "$f" .sql)"
+        case "$stem" in "$sha"*) echo "$f"; return 0 ;; esac
+    done
+}
+
+# Runs a guard's read-only count; prints the number of rows the old reader would refuse.
+rollback_guard_count() {
+    local out
+    out="$(docker exec -i maia-postgres psql -U soullab -d maia_consciousness -v ON_ERROR_STOP=1 -At < "$1")" || return 1
+    out="$(printf '%s\n' "$out" | tail -1 | tr -d '[:space:]')"
+    case "$out" in ''|*[!0-9]*) return 1 ;; esac
+    echo "$out"
+}
+
 cmd_rollback() {
     acquire_deploy_lock "deploy-production.sh rollback" "maia-sovereign:previous (image tag swap; no commit is built)"
     log_info "Rolling back to previous deployment..."
@@ -1002,12 +1041,36 @@ cmd_rollback() {
         exit 1
     fi
 
-    # Get current and previous commit SHAs from labels
-    CURRENT_SHA=$(docker inspect --format='{{index .Config.Labels "git.commit"}}' maia-sovereign:current 2>/dev/null || echo "unknown")
-    PREVIOUS_SHA=$(docker inspect --format='{{index .Config.Labels "git.commit"}}' maia-sovereign:previous 2>/dev/null || echo "unknown")
+    # Get current and previous commit SHAs (label first, then the GIT_COMMIT baked into the image)
+    CURRENT_SHA=$(rollback_image_commit maia-sovereign:current)
+    PREVIOUS_SHA=$(rollback_image_commit maia-sovereign:previous)
 
     log_info "Current deployment: $CURRENT_SHA"
     log_info "Rolling back to: $PREVIOUS_SHA"
+
+    # Data guard: a newer schema may have admitted rows the previous reader cannot
+    # read. If a guard exists for the commit being restored, stop the current reader
+    # (so it writes no more such rows) and refuse to swap while any remain.
+    local guard_file
+    guard_file="$(rollback_guard_for "$PREVIOUS_SHA")"
+    if [ -n "$guard_file" ]; then
+        log_info "Rollback data guard for $PREVIOUS_SHA: $guard_file"
+        log_info "Stopping the current reader before checking stored data..."
+        docker stop maia-sovereign >/dev/null 2>&1 || true
+        local failing
+        if ! failing="$(rollback_guard_count "$guard_file")"; then
+            log_error "Rollback data guard could not run. Refusing to swap; the current reader is stopped."
+            exit 1
+        fi
+        if [ "$failing" != "0" ]; then
+            log_error "Rollback refused: $failing stored row(s) would break the reader at $PREVIOUS_SHA."
+            log_error "The current reader is stopped. Repair the rows, then run rollback again:"
+            log_error "  docker exec -i maia-postgres psql -U soullab -d maia_consciousness -v ON_ERROR_STOP=1 < ${guard_file%.sql}.repair.sql"
+            log_error "  ./scripts/deploy-production.sh rollback"
+            exit 1
+        fi
+        log_success "Rollback data guard: 0 rows the previous reader would refuse."
+    fi
 
     # Resolve image identities before moving any role tags.
     local current_id previous_id
@@ -1040,6 +1103,14 @@ cmd_rollback() {
     running_git="$(docker exec maia-sovereign printenv GIT_COMMIT 2>/dev/null || true)"
     if docker compose -f "$COMPOSE_FILE" ps | grep -q "healthy" \
        && [ "$running_id" = "$previous_id" ]; then
+        if [ -n "$guard_file" ]; then
+            local after
+            after="$(rollback_guard_count "$guard_file" || echo "error")"
+            if [ "$after" != "0" ]; then
+                log_error "Rollback swapped, but the data guard now reports: $after. Investigate before serving traffic."
+                exit 1
+            fi
+        fi
         log_success "Rollback complete! Now running: ${running_git:-$PREVIOUS_SHA}"
 
         # Move the former reader to :previous so an explicit roll-forward remains possible.
