@@ -119,11 +119,15 @@ describe('C3 canonical route compatibility', () => {
       .map((x)=>x.arguments[0]).filter((x):x is ts.ArrowFunction=>Boolean(x)&&ts.isArrowFunction(x));
     const url=effects.filter((x)=>x.body.getText(ast).includes('if (!requestedEditorialThread || !focusId || !currentLivingWorkScope) return;'));
     expect(url).toHaveLength(1);
-    expect(url[0].body.getText(ast)).toContain('if (scopedEditorialThread?.threadId === requestedEditorialThread) return;');
-    expect(url[0].body.getText(ast)).toContain('has not been verified for the current Living Work');
+    // With no verified conversation bound, the URL thread is refused in words;
+    // once one is bound, the effect only withdraws that same notice.
+    expect(url[0].body.getText(ast)).toContain('if (scopedEditorialThread) {');
+    expect(url[0].body.getText(ast)).toContain('current === UNVERIFIED_URL_THREAD ? null : current');
+    expect(url[0].body.getText(ast)).toContain('setEditorialFailure(UNVERIFIED_URL_THREAD);');
+    expect(write).toContain("const UNVERIFIED_URL_THREAD = 'This saved manuscript conversation has not been verified for the current Living Work.");
     const calls:string[]=[];
     const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node))calls.push(node.expression.getText(ast));ts.forEachChild(node,visit);};visit(url[0].body);
-    expect(calls).toEqual(['setEditorialFailure']);
+    expect(calls).toEqual(['setEditorialFailure','setEditorialFailure']);
     const returned=effects.filter((x)=>x.body.getText(ast).includes('const candidate = editorialReturnCandidate;'));
     expect(returned).toHaveLength(1);
     for(const guard of ['candidate.sectionId !== focusId','candidate.scope !== currentLivingWorkScope',
