@@ -182,6 +182,7 @@ export interface P4R1DevelopViewProps {
   preparing: boolean;
   commissioning: boolean;
   commissionError: string | null;
+  commissionNeedsCheckpoint: boolean;
   attentionMap: WholeManuscriptAttentionMap | null;
   attentionBusy: boolean;
   attentionError: string | null;
@@ -233,6 +234,7 @@ export interface P4R1DevelopViewProps {
   onReading: (readingId: string) => void;
   onScope: (scope: DevelopScopeChoice) => void;
   onCommission: () => void;
+  onCheckpointAndCommission: () => void;
   onReadChapter: () => void;
   onCheckpointAndReadChapter: () => void;
   onReadChapterInBook: () => void;
@@ -2999,6 +3001,22 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                     : `Read for ${activeField ? LABEL[activeField] : 'this question'}`}
                 </button>
               </div>
+              {props.commissionNeedsCheckpoint ? (
+                <div className="p4r1-chapter-read-snapshot" role="status">
+                  <p>
+                    This part of your Work has changed since its last reading snapshot. Save the
+                    current draft so MAIA reads exactly what is on the page now. Your words will not change.
+                  </p>
+                  <button
+                    type="button"
+                    className="p4r1-commission"
+                    disabled={props.commissioning}
+                    onClick={props.onCheckpointAndCommission}
+                  >
+                    {props.commissioning ? 'Saving the current draft…' : 'Save current draft & read'}
+                  </button>
+                </div>
+              ) : null}
               {props.commissionError ? <p className="p4r1-error" role="status">{props.commissionError}</p> : null}
             </div>
           </details>

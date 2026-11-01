@@ -81,28 +81,6 @@ export function Shell(props: ShellProps) {
   };
   const searchParams = useSearchParams();
   const currentPathname = usePathname();
-  const listeningRoute = currentPathname === '/writers-studio' && searchParams?.get('mode') === 'listen';
-  const publishingRoute = currentPathname === '/writers-studio' && searchParams?.get('publish') === '1';
-  const listenHref = currentPathname === '/writers-studio' && searchParams?.get('m')
-    ? '/writers-studio?' + (() => {
-        const next = new URLSearchParams(searchParams.toString());
-        next.set('mode', 'listen');
-        next.delete('publish');
-        return next.toString();
-      })()
-    : null;
-  const publishHref = currentPathname === '/writers-studio' && searchParams?.get('m')
-    ? '/writers-studio?' + (() => {
-        const next = new URLSearchParams(searchParams.toString());
-        next.set('mode', 'home');
-        next.set('publish', '1');
-        next.delete('developField');
-        next.delete('r');
-        next.delete('reviewRun');
-        next.delete('reviewFinding');
-        return next.toString();
-      })()
-    : null;
   const fromCabin = isCabinOrigin(searchParams);
   const oneRoom = props.manuscript === undefined && props.maia === undefined;
   const canvas = props.canvas === true;
@@ -271,24 +249,15 @@ export function Shell(props: ShellProps) {
                 key={m.id}
                 type="button"
                 className="fr-nav-item"
-                aria-current={m.id === mode && !listeningRoute && !publishingRoute ? 'page' : undefined}
+                aria-current={m.id === mode ? 'page' : undefined}
                 data-mode={m.id}
                 onClick={() => selectMode(m.id)}
               >
                 {m.label}
               </button>
             ))}
-            {listenHref ? listeningRoute
-              ? <span className="fr-nav-item" data-writers-listen-entry aria-current="page" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>Listen</span>
-              : <a className="fr-nav-item" href={listenHref} data-writers-listen-entry style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', whiteSpace: 'nowrap' }}>Listen</a>
-              : null}
-            {currentPathname === '/writers-studio'
-              ? publishHref
-                ? publishingRoute
-                  ? <span className="fr-nav-item" data-writers-publish-entry aria-current="page" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>Publish</span>
-                  : <a className="fr-nav-item" href={publishHref} data-writers-publish-entry style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', whiteSpace: 'nowrap' }}>Publish</a>
-                : <span className="fr-nav-item" data-writers-publish-entry aria-disabled="true" title="Open a Work to prepare it for publishing." style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap', opacity: 0.52, cursor: 'default' }}>Publish</span>
-              : null}
+            {/* One entry per room. Publish and Listen are rooms in PRIMARY_MODES;
+                the Home publishing panel stays reachable from the Home card. */}
           </nav>
           {/* All six rooms remain explicitly reachable at narrow widths. An
               invisible scroll rail had previously hidden Listen/Publish. */}

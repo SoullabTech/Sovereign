@@ -137,6 +137,7 @@ export default function P4R1DevelopController() {
   const [scope, setScope] = useState<DevelopScopeChoice>({ kind: 'whole' });
   const [commissioning, setCommissioning] = useState(false);
   const [commissionError, setCommissionError] = useState<string | null>(null);
+  const [commissionNeedsCheckpoint, setCommissionNeedsCheckpoint] = useState(false);
 
   const [attentionMap, setAttentionMap] = useState<WholeManuscriptAttentionMap | null>(null);
   const [attentionBusy, setAttentionBusy] = useState(false);
@@ -882,6 +883,7 @@ export default function P4R1DevelopController() {
     }
     setCommissioning(true);
     setCommissionError(null);
+    setCommissionNeedsCheckpoint(false);
     try {
       const result = await requestDevelopmentalReading(
         manuscriptId,
@@ -889,6 +891,12 @@ export default function P4R1DevelopController() {
         chosen,
       );
       if (!result.ok) {
+        // Same law as the chapter read: MAIA reads a saved draft, never a moving one.
+        // Saving it is the writer's act, so offer it rather than doing it silently.
+        if (result.stage === 'capture' && result.refusal === 'revision_not_current') {
+          setCommissionNeedsCheckpoint(true);
+          return;
+        }
         setCommissionError(
           result.refusal === 'ceiling_exceeded'
             ? 'That scope is larger than MAIA reads in one sitting. Choose a smaller range.'
@@ -916,6 +924,34 @@ export default function P4R1DevelopController() {
     loadThemes,
     updateQuery,
   ]);
+
+  const checkpointAndCommission = useCallback(async () => {
+    if (!context || commissioning) return;
+    setCommissioning(true);
+    setCommissionError(null);
+    const result = await checkpointServerDraft(apiFetch, context.manuscriptId, {
+      baseRevisionId: context.version,
+      idempotencyKey: newIdempotencyKey(),
+    });
+    if (result.kind !== 'ok' || result.revisionCount === null) {
+      setCommissioning(false);
+      setCommissionError(
+        result.kind === 'conflict'
+          ? 'The draft moved while MAIA was preparing to read it. Reload, then try again.'
+          : 'The current draft could not be saved for reading just now. Your writing is unchanged.',
+      );
+      return;
+    }
+    const revisionNumber = result.revisionCount;
+    setContext((previous) => previous ? {
+      ...previous,
+      version: result.revisionId ?? previous.version,
+      draftRevision: revisionNumber,
+    } : previous);
+    setCommissionNeedsCheckpoint(false);
+    setCommissioning(false);
+    await commission();
+  }, [context, commissioning, commission]);
 
   const onThemeMutation = useCallback(async (mutation: ThemeMutation) => {
     if (!manuscriptId || themeBusy) return;
@@ -1653,6 +1689,7 @@ export default function P4R1DevelopController() {
       preparing={preparing}
       commissioning={commissioning}
       commissionError={commissionError}
+      commissionNeedsCheckpoint={commissionNeedsCheckpoint}
       attentionMap={attentionMap}
       attentionBusy={attentionBusy}
       attentionError={attentionError}
@@ -1704,6 +1741,7 @@ export default function P4R1DevelopController() {
       onReading={onReading}
       onScope={setScope}
       onCommission={() => void commission()}
+      onCheckpointAndCommission={() => void checkpointAndCommission()}
       onReadChapter={() => void readCurrentChapter()}
       onCheckpointAndReadChapter={() => void checkpointCurrentChapterAndRead()}
       onReadChapterInBook={() => void readChapterInBook()}
