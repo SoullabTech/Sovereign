@@ -1068,6 +1068,8 @@ cmd_rollback() {
     # Data guard: a newer schema may have admitted rows the previous reader cannot
     # read. If a guard exists for the commit being restored, stop the current reader
     # (so it writes no more such rows) and refuse to swap while any remain.
+    # A guard covers only the commit it is named for. Rolling back to any other
+    # commit runs no data check: that rollback needs its own review and guard.
     local guard_file
     guard_file="$(rollback_guard_for "$PREVIOUS_SHA")"
     # Fail closed: if guards exist but the restored image's commit cannot be resolved,
@@ -1092,6 +1094,8 @@ cmd_rollback() {
         local failing
         if ! failing="$(rollback_guard_count "$guard_file")"; then
             log_error "Rollback data guard could not run. Refusing to swap; the current reader is stopped."
+            log_error "To keep the current release instead of rolling back, start it again (no tag has moved):"
+            log_error "  docker start maia-sovereign"
             exit 1
         fi
         if [ "$failing" != "0" ]; then
@@ -1099,9 +1103,13 @@ cmd_rollback() {
             log_error "The current reader is stopped. Repair the rows, then run rollback again:"
             log_error "  docker exec -i maia-postgres psql -U soullab -d maia_consciousness -v ON_ERROR_STOP=1 < ${guard_file%.sql}.repair.sql"
             log_error "  ./scripts/deploy-production.sh rollback"
+            log_error "Or, to keep the current release instead (no tag has moved):"
+            log_error "  docker start maia-sovereign"
             exit 1
         fi
         log_success "Rollback data guard: 0 rows the previous reader would refuse."
+    else
+        log_info "No rollback data guard is named for $PREVIOUS_SHA; no stored-data check runs."
     fi
 
     # Resolve image identities before moving any role tags.
