@@ -95,7 +95,7 @@ The reviewer must independently establish or reject each of the following:
    brief SHARE ROW EXCLUSIVE locks migration 3's foreign keys take on `members`,
    `member_manuscripts` and `team_messages`.
 
-## Reader rollback (revision 4)
+## Reader rollback (revision 6)
 
 History, kept: revision 1's review (session `0d88896e-…`) returned `REVISE` because rolling
 back to `d49dbc98d…` is lawful for the schema but not unconditionally for data. Revision 2
@@ -113,6 +113,22 @@ leaves this section's mechanism unchanged):
 - **F1**: the thirteen files are added to "Minimum physical Reads" below.
 - **F2**: `scripts/deploy-production.sh rollback` now enforces the order itself (below).
 - **F3**: the repair rewrites only the array that fails, so a valid empty Center is kept.
+
+Revision 5's review (session `0e7849ba-…`, target `7f86e1cef`) found all three migrations
+`COMPATIBLE` at every prefix and confirmed the guard behaves as described, and returned
+`REVISE` on five findings. Revision 6 answers them:
+
+- **F1 (medium)**: the account of stored `overview` readings was wrong in part (the old
+  Develop room shows one, and the old Ask writes conversation rows about one). It is
+  rewritten consumer by consumer below, with the visible cost named.
+- **F2 (medium)**: large old-reader files were only partly read. "Minimum physical Reads"
+  now requires them to be read to the end in chunks, and adds the consumers the review
+  could not reach.
+- **F3 (low)**: rollback now refuses, instead of skipping the guard, when guards exist but
+  the restored image's commit cannot be resolved (override: `ROLLBACK_UNKNOWN_COMMIT_ACK=1`).
+- **F4 (low)**: after `docker stop`, rollback confirms the reader is not running and refuses
+  before the check if it still is.
+- **F5 (low)**: the rollback test now also asserts the exact `psql` flags.
 
 **What the old reader rejects.** The exact old reader's `parseIds`
 (`lib/house/preferences.ts`) throws on a `center_ids` or `shortcut_ids` array that is longer
@@ -146,9 +162,12 @@ by the full old-reader commit:
    SHA, `d49dbc98d`) is what resolves; it is matched as a prefix of the guard file's name.
    After this deploy, `:previous` is the `d49dbc98d…` image (read 2026-11-01: it is the
    live `:current` today, and the deploy moves `:current` to `:previous`).
+   If guard files exist but neither source resolves to a hex SHA of at least 7 characters,
+   it refuses (no stop, no tag move) unless `ROLLBACK_UNKNOWN_COMMIT_ACK=1` is set (F3).
 2. If a guard file exists for that commit, it stops `maia-sovereign` first, so the target
-   reader can write nothing more, then runs the check through
-   `docker exec -i maia-postgres psql … -v ON_ERROR_STOP=1 -At`.
+   reader can write nothing more. If `docker inspect` still reports it running, it refuses
+   before the check (F4). Otherwise it runs the check through
+   `docker exec -i maia-postgres psql -U soullab -d maia_consciousness -v ON_ERROR_STOP=1 -At`.
 3. If the check prints anything other than `0`, or cannot run, it refuses: no image tag
    moves, the target reader stays stopped, the old reader is not started, and it prints the
    repair command to run before trying again. It never runs the repair itself.
@@ -175,22 +194,57 @@ Witness (2026-11-01):
   - with no guard, rollback behaves as before and does not touch Postgres;
   - with a guard, the reader is stopped and then checked before any tag moves, and the check
     re-runs after the swap;
-  - a failing or unreadable check moves no tag and leaves the old reader unstarted.
-  The test fails against the pre-revision script.
+  - a failing or unreadable check moves no tag and leaves the old reader unstarted;
+  - (revision 6) the check runs with the exact `psql` flags; a reader still running after
+    the stop is refused before the check; an unresolvable previous commit refuses while
+    guards exist, and proceeds only with `ROLLBACK_UNKNOWN_COMMIT_ACK=1`.
+  19 passes. The test fails against the revision-5 script.
 - `npm run verify:deploy-provenance` 28/0, `verify:deploy-lock` 25/0,
   `verify:deploy-tag-rollback-point` 5/0.
 
-Stored `overview` readings are not repaired. Whether every old-reader path that loads or
-displays them tolerates them is plan question 6; the reviewer reads every consumer listed
-below and records any that does not. The author's own pre-review reading (a claim for the
-reviewer to test, not evidence) is the following. Old-reader paths that validate the lens
-refuse an `overview` reading as a request-level refusal: chapter-reviews returns
-`reading_scope_mismatch` (409), and `realReview`'s payload guard returns false. The
-orientation and lineage routes ignore it, because they iterate the old lens list. The
-rebuild `ReviewChooser` labels it with its raw id. If that is right, the accepted rollback
-cost is that a member cannot open an `overview` reading in the old reader, and no path
-crashes or rewrites data. "Tolerates" in question 6 means exactly that: no crash, no
-corruption, no write; a visible refusal is acceptable.
+Stored `overview` readings are not repaired: they are the member's own frozen readings, and
+deleting or rewriting them to suit an older app is not lawful. Whether every old-reader path
+that loads or displays them tolerates them is plan question 6.
+
+**"Tolerates" (revision 6, corrected).** No crash, no corruption or rewrite of any stored
+reading, and no write the member did not invoke. A visible refusal, a raw or missing label,
+and wrong-but-harmless explanatory text are acceptable rollback costs. A conversation row the
+member creates by asking about a reading is a member-invoked write, not a change to the
+reading, and is acceptable.
+
+**Per consumer** (the author's reading of the old reader, a claim for the reviewer to test):
+
+- `app/writers-studio/develop/DevelopRoom.tsx`: lists every summary and selects the newest,
+  which may be an `overview` reading. `readingView()` (`lib/writersStudio/developPresentation.ts`)
+  sets `lensMeaning = LENS_MEANING['overview']`, which is `undefined`, so the reading's
+  meaning line reads "undefined." and the list's meaning suffix is empty (`?? ''`). The lens
+  name renders as "overview". The only per-lens lookups are string lookups; none dereferences
+  a property of the result, so nothing throws. **Accepted cost: wrong explanatory text.**
+- `app/api/sovereign/manuscripts/[id]/ask/route.ts`, `review-discuss/route.ts`,
+  `lib/manuscript/ask/*` (`developmentalContext.ts`, `developmentalAnchor.ts`,
+  `frozenDevelopmentalReading.ts`, `developmentalAskReader.ts`, `threadStore.ts`): none
+  validates the lens; the reader prompt names it as a string. Asking about an `overview`
+  observation works and writes the usual member-invoked conversation, authorization and
+  disclosure rows. The stored reading is not changed.
+- `readings/[readingId]/standings/route.ts`, `ObservationDialogue.tsx`, `InsightReadings.tsx`:
+  do not reference the lens.
+- `chapter-reviews/route.ts`: refuses a manifest naming an `overview` reading with
+  `reading_scope_mismatch` (409). The target never writes one: its chapter-review lenses are
+  the seven `REVIEW_DEVELOPMENTAL_LENSES` (all lenses except `overview` and `themes`), which
+  equal the old reader's seven (all except `themes`). So target-written manifests rehydrate
+  in the old reader (`lib/writersStudio/rebuild/chapterReview.ts` fetches by id and does not
+  count lenses).
+- `lib/writersStudio/studio/realReview.ts`: its payload guard returns false for `overview`
+  (unpresentable, a refusal). `wholeReview.ts` / `wholeManuscriptReview.ts`: iterate the old
+  lens order and never select an `overview` reading.
+- Orientation, lineage and attention-map routes: iterate the old lens list; an `overview` row
+  is ignored.
+- `app/writers-studio/rebuild/ReviewChooser.tsx`: labels it with its raw id.
+- `app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx` (old): `summaryLens()` keeps a
+  lens that is in `DEVELOP_FIELDS` (`P4R1DevelopView.tsx`), whose first entry is already
+  `'overview'`, and returns `null` for any other; no throw.
+
+No database constraint outside `developmental_readings` is keyed to the lens vocabulary.
 
 Observed production sizes (read-only, 2026-11-01): `developmental_readings` 25 rows,
 `house_member_preferences` 3 rows, rows the old reader would refuse 0.
@@ -200,7 +254,12 @@ complete the deployment.
 
 ## Minimum physical Reads
 
-The independent reviewer must physically Read, at minimum:
+The independent reviewer must physically Read, at minimum, every file below **to its last
+line**. A file too large for one Read is read in successive chunks (Read with `offset` and
+`limit`) until the end; a partly read file counts as unread (revision 5's F2). The large
+ones include old `app/writers-studio/develop/DevelopRoom.tsx`,
+`app/writers-studio/rebuild/RebuildStudioClient.tsx` and
+`app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx`.
 
 - this plan;
 - `MIGRATION_COMPATIBILITY_CONTEXT.json`;
@@ -244,6 +303,14 @@ The independent reviewer must physically Read, at minimum:
   `lib/writersStudio/studio/wholeManuscriptReview.ts`,
   `app/writers-studio/rebuild/ReviewChooser.tsx` and
   `app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx`;
+- exact old-reader consumers revision 5's review could not reach (F2):
+  `app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx` (old, in full),
+  `lib/writersStudio/rebuild/chapterReview.ts`, `lib/writersStudio/developPresentation.ts`,
+  `lib/manuscript/ask/developmentalAnchor.ts`, `lib/manuscript/ask/frozenDevelopmentalReading.ts`,
+  `lib/manuscript/ask/developmentalAskReader.ts`,
+  `app/api/sovereign/manuscripts/[id]/readings/[readingId]/standings/route.ts`,
+  `app/writers-studio/develop/ObservationDialogue.tsx` and
+  `app/writers-studio/insight/InsightReadings.tsx`;
 - target `scripts/rollback-guards/d49dbc98df5d448a05e13a7df21180c3bde304c6.sql` and
   `.repair.sql`, and target `scripts/verify-rollback-prod-alias-behavior.sh`;
 - target `lib/house/preferences.ts` (the target parser), and target
