@@ -57,7 +57,11 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 
 run_dependency_security_audit() {
-    local manifest="${MAIA_BUILD_CONTEXT:-$PROJECT_DIR}/package.json"
+    # Audit the TARGET, never the shared checkout: the audit must read the same
+    # lockfile the image is built from (2026-10-31 — it ran from $PROJECT_DIR and
+    # audited a stale checkout's lockfile instead of the immutable snapshot).
+    local audit_dir="${MAIA_BUILD_CONTEXT:-$PROJECT_DIR}"
+    local manifest="$audit_dir/package.json"
     local declared manager fix_hint
     local -a audit_cmd
 
@@ -76,7 +80,9 @@ run_dependency_security_audit() {
     case "$manager" in
         npm)
             command -v npm >/dev/null 2>&1 || { log_error "Declared package manager npm is unavailable — dependency audit cannot run."; return 1; }
-            audit_cmd=(npm audit --omit=dev --audit-level=moderate)
+            # Fails closed at moderate+; honours only live, dated entries in the
+            # snapshot's security/npm-audit-exceptions.json.
+            audit_cmd=(node "$audit_dir/scripts/deploy-audit-gate.mjs" "$audit_dir")
             fix_hint="npm audit fix"
             ;;
         pnpm)
@@ -90,7 +96,7 @@ run_dependency_security_audit() {
             ;;
     esac
 
-    if ! "${audit_cmd[@]}" 2>&1; then
+    if ! (cd "$audit_dir" && "${audit_cmd[@]}") 2>&1; then
         log_error "Dependency audit failed — moderate+ production vulnerabilities detected."
         log_error "Review and remediate deliberately; do not apply fixes blindly."
         log_error "Package-manager hint: $fix_hint"
