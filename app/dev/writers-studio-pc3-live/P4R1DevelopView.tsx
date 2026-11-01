@@ -3163,7 +3163,10 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             <div className="fr-say">
               <p>
                 {props.field === 'overview'
-                  ? 'Select a chapter or section at left and I’ll orient to it immediately, or tell me what you are trying to understand about the whole Work.'
+                  ? (railSelectionId && selectedRailSection) || props.scope.kind === 'section' || props.scope.kind === 'chapter'
+                    // A place is already chosen; don't ask the writer to choose one.
+                    ? `We can stay with ${contextLabel}, or you can tell me what you are trying to understand about the whole Work.`
+                    : 'Select a chapter or section at left and I’ll orient to it immediately, or tell me what you are trying to understand about the whole Work.'
                   : `We can stay with your question about ${LABEL[props.field].toLowerCase()} and use what I have already read before asking for anything new.`}
               </p>
             </div>
