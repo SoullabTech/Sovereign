@@ -581,6 +581,21 @@ it('D04b a discovered thread the server verifies for this Work is resumed, not d
   expect(legacyModule().openBoundEditorialPassage).not.toHaveBeenCalled();
   expect(mockViewProps.editorialNotice ?? null).toBeNull();
 });
+// Production 2026-11-01: the Work's context arrives after first render without
+// moving the gesture epoch, so a leave handler memoized without the scope kept
+// the first render's empty scope and Return silently did nothing.
+it('D04c Return and Choose a passage leave Focus when the Work arrived after first render', async () => {
+  await render();await React.act(async()=>{await settle(85)});
+  expect(mockViewProps.work?.id).toBe('fiction-work-A');
+  await React.act(async()=>{mockViewProps.onOpenWorkspace();await settle(10)});
+  expect(mockViewProps.workspaceOpen).toBe(true);
+  await React.act(async()=>{mockViewProps.onCloseWorkspace();await settle(10)});
+  expect(mockViewProps.workspaceOpen).toBe(false);
+  await React.act(async()=>{mockViewProps.onOpenWorkspace();await settle(10)});
+  expect(mockViewProps.workspaceOpen).toBe(true);
+  await React.act(async()=>{mockViewProps.onChoosePassage();await settle(10)});
+  expect(mockViewProps.workspaceOpen).toBe(false);
+});
 it('D05 explicitly requested new thread rejects a foreign manuscript response', async () => {
   await mountB();legacyModule().openBoundEditorialThread.mockResolvedValueOnce({ok:true,thread:{...mockThread,workId:'fiction-foreign-manuscript'}});
   await React.act(async()=>{mockViewProps.onSendEditorial('Fictional wrong manuscript response');await settle(100)});

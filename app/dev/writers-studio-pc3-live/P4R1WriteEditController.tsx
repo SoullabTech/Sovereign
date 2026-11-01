@@ -1768,7 +1768,9 @@ export default function FlagshipWriteEditController() {
     if (typeof window !== 'undefined') {
       replacePlaceAddress(canvasWithoutEditorialThread(window.location.pathname, window.location.search));
     }
-  }, [editorialBusy, adoptionBusy, memberVersionBusy, workGestureEpoch]);
+    // The guard reads the scope: initial Work discovery sets it without moving
+    // the epoch, so without this dep the first-render closure refused forever.
+  }, [editorialBusy, adoptionBusy, memberVersionBusy, currentLivingWorkScope, workGestureEpoch]);
 
   const returnToStartingPassage = useCallback(() => {
     if (!currentWorkGesture() || editorialBusy || adoptionBusy || memberVersionBusy) return;
@@ -1830,7 +1832,7 @@ export default function FlagshipWriteEditController() {
   const chooseOwnPassage = useCallback(() => {
     if (!currentContextGesture()) return;
     setWorkspaceOpen(false);
-  }, [workGestureEpoch]);
+  }, [currentLivingWorkScope, workGestureEpoch]);
 
   useEffect(() => {
     if (!context?.manuscriptId || !incomingReading || !incomingObservation) {
