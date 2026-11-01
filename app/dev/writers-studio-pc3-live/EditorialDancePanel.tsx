@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   EDITORIAL_APPROACHES,
   approachNote,
@@ -35,6 +35,18 @@ export interface EditorialDancePanelProps {
   appliedVersionId: string | null;
   busy: boolean;
   message: string | null;
+  /** Informational, never a failure: e.g. an older conversation was left untouched. */
+  notice?: string | null;
+  /** When present, passage work needs a MAIA relationship for this Work; the
+   * writer begins or continues one here. Absent means no such gate applies. */
+  maiaRelationship?: {
+    active: boolean;
+    busy: boolean;
+    choices: readonly { id: string; createdAt: string }[];
+    message: string | null;
+    onBegin: () => void;
+    onChoose: (relationshipId: string) => void;
+  } | null;
   undoMessage: string | null;
   sessionPosture: CurrentPostureRead;
   onChooseSessionPosture: (sanctuary: boolean) => void;
@@ -233,6 +245,19 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const [localMessage, setLocalMessage] = useState<string | null>(null);
   const [showContext, setShowContext] = useState(false);
   const [showDepth, setShowDepth] = useState<'none'|'why'|'teach'|'advanced'>('none');
+  const [postureNudge, setPostureNudge] = useState(false);
+  const postureRef = useRef<HTMLDivElement | null>(null);
+  const [relationshipNudge, setRelationshipNudge] = useState(false);
+  const relationshipRef = useRef<HTMLDivElement | null>(null);
+  const relationshipBlocks = Boolean(props.maiaRelationship && !props.maiaRelationship.active);
+
+  const postureOpen = props.sessionPosture.resolved && !props.sessionPosture.sanctuary;
+  useEffect(() => {
+    if (postureOpen) setPostureNudge(false);
+  }, [postureOpen]);
+  useEffect(() => {
+    if (!relationshipBlocks) setRelationshipNudge(false);
+  }, [relationshipBlocks]);
 
   const versions = props.thread?.versions ?? [];
   const maiaVersions = useMemo(() => latestMaiaVersions(props.thread), [props.thread]);
@@ -396,6 +421,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const sendOpenPrompt = () => {
     const q = startPrompt.trim();
     if (!q) return;
+    if (relationshipBlocks) {
+      setRelationshipNudge(true);
+      relationshipRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+      return;
+    }
     props.onSend(withOrigin([
       'I want to work with this exact passage.',
       'What I want help with:',
@@ -408,13 +438,71 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   };
 
   const postureBlocksEditorial = !props.sessionPosture.resolved || props.sessionPosture.sanctuary;
+  /* A card chosen before the posture is answered must answer the click: it
+     points the writer at the posture choice instead of silently doing nothing.
+     ⛔ It never chooses a posture and never sends anything. */
+  const startAct = (act: () => void) => {
+    if (postureBlocksEditorial) {
+      setPostureNudge(true);
+      postureRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+      return;
+    }
+    // Beginning a relationship is the writer's own act; a card never does it.
+    if (relationshipBlocks) {
+      setRelationshipNudge(true);
+      relationshipRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+      return;
+    }
+    act();
+  };
+  const relationshipGate = relationshipBlocks && !postureBlocksEditorial && props.maiaRelationship ? (
+    <div
+      ref={relationshipRef}
+      className={relationshipNudge ? 'p4r1-dance-posture p4r1-dance-posture--nudge' : 'p4r1-dance-posture'}
+      role="group"
+      aria-label="Relationship with MAIA for this Work"
+      data-relationship-gate
+    >
+      <div>
+        <b>MAIA works on passages inside a relationship for this Work.</b>
+        <span>None is selected yet. Ordinary writing stays fully available without one.</span>
+        {relationshipNudge ? (
+          <span role="status" data-relationship-nudge>Begin or continue a relationship first. Nothing has been sent.</span>
+        ) : null}
+        {props.maiaRelationship.message ? <span role="status">{props.maiaRelationship.message}</span> : null}
+      </div>
+      <div className="p4r1-dance-posture-actions">
+        <button type="button" disabled={props.maiaRelationship.busy} onClick={props.maiaRelationship.onBegin}>
+          {props.maiaRelationship.busy ? 'Beginning…' : 'Begin relationship with MAIA'}
+        </button>
+        {props.maiaRelationship.choices.map((choice) => (
+          <button
+            key={choice.id}
+            type="button"
+            disabled={props.maiaRelationship!.busy}
+            onClick={() => props.maiaRelationship!.onChoose(choice.id)}
+          >
+            Continue · {new Date(choice.createdAt).toLocaleDateString()}
+          </button>
+        ))}
+      </div>
+    </div>
+  ) : null;
   const postureGate = postureBlocksEditorial ? (
-    <div className="p4r1-dance-posture" role="group" aria-label="Choose privacy posture for this session">
+    <div
+      ref={postureRef}
+      className={postureNudge ? 'p4r1-dance-posture p4r1-dance-posture--nudge' : 'p4r1-dance-posture'}
+      role="group"
+      aria-label="Choose privacy posture for this session"
+    >
       {!props.sessionPosture.resolved ? (
         <>
           <div>
             <b>Choose how this session should hold the exchange.</b>
             <span>MAIA will not guess your privacy posture before opening an editorial relationship.</span>
+            {postureNudge ? (
+              <span role="status" data-posture-nudge>Choose Ordinary or Sanctuary first. Nothing has been sent.</span>
+            ) : null}
           </div>
           <div className="p4r1-dance-posture-actions">
             <button type="button" onClick={() => props.onChooseSessionPosture(false)}>Ordinary</button>
@@ -426,6 +514,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <div>
             <b>Sanctuary is on.</b>
             <span>Persistent editorial collaboration stays unavailable in Sanctuary. Your passage remains unchanged.</span>
+            {postureNudge ? (
+              <span role="status" data-posture-nudge>Switch to Ordinary to work with MAIA on this passage. Nothing has been sent.</span>
+            ) : null}
           </div>
           <div className="p4r1-dance-posture-actions">
             <button type="button" onClick={() => props.onChooseSessionPosture(false)}>Switch to Ordinary</button>
@@ -435,6 +526,10 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     </div>
   ) : null;
 
+  const noticeLine = props.notice
+    ? <p className="p4r1-dance-notice" role="note" data-editorial-notice>{props.notice}</p>
+    : null;
+
   const entryActions = (
     <div className="p4r1-dance-entry-groups" aria-label="Ways to work with this passage">
       <section>
@@ -442,13 +537,13 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
         <div className="p4r1-dance-start-actions">
           <button
             type="button"
-            disabled={props.busy || postureBlocksEditorial}
-            onClick={() => begin(revisePassagePrompt(), undefined, { proposalPolicy: 'allow', proposalRequested: true })}
+            disabled={props.busy}
+            onClick={() => startAct(() => begin(revisePassagePrompt(), undefined, { proposalPolicy: 'allow', proposalRequested: true }))}
           >
             <b>Show edit options</b>
             <span>Let MAIA offer a revision direction and other ways this passage could move. Nothing changes until you apply one.</span>
           </button>
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(discussPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct(() => begin(discussPassagePrompt(), undefined, { proposalPolicy: 'reply_only' }))}>
             <b>Discuss what’s happening</b>
             <span>Stay with the passage and help me think about it before editing.</span>
           </button>
@@ -458,11 +553,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       <section>
         <header><b>Explore possibilities</b><span>Open the field without committing to a revision.</span></header>
         <div className="p4r1-dance-start-actions">
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(examplesPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct(() => begin(examplesPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' }))}>
             <b>Show me examples</b>
             <span>Illustrate possibilities without turning them into recommendations.</span>
           </button>
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(ideasPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct(() => begin(ideasPassagePrompt(), undefined, { proposalPolicy: 'reply_only' }))}>
             <b>Give me ideas</b>
             <span>Open several genuinely different directions I could explore.</span>
           </button>
@@ -472,11 +567,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       <section>
         <header><b>Learn from the passage</b><span>Open more craft depth only if you want it.</span></header>
         <div className="p4r1-dance-start-actions">
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(teachPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct(() => begin(teachPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' }))}>
             <b>Teach me about the writing</b>
             <span>Help me understand the craft already at work in my own words.</span>
           </button>
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(deeperPassagePrompt(), 'direct', { proposalPolicy: 'reply_only' })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct(() => begin(deeperPassagePrompt(), 'direct', { proposalPolicy: 'reply_only' }))}>
             <b>Go deeper</b>
             <span>Open the technical craft reasoning, evidence, tradeoffs, and uncertainty.</span>
           </button>
@@ -521,9 +616,10 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <h3>What would help you here?</h3>
           <p>You can begin with the writing, the idea, the craft, or simply ask MAIA to help you look.</p>
           {postureGate}
+          {relationshipGate}
+          {props.message ? <p className="p4r1-dance-status" role="status">{props.message}</p> : null}
           {entryActions}
           {openPrompt}
-          {props.message ? <p className="p4r1-dance-status" role="status">{props.message}</p> : null}
         </div>
       </section>
     );
@@ -532,6 +628,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   if (!recommendation) {
     return (
       <section className="p4r1-dance p4r1-dance-explore" data-editorial-dance>
+        {noticeLine}
         <div className="p4r1-dance-response">
           <span className="p4r1-eyebrow">MAIA</span>
           <h3>{props.busy
@@ -557,6 +654,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             ].join('\n\n'), undefined, { proposalPolicy: 'allow', proposalRequested: true })}>
               Show revision options
             </button>
+            <button type="button" disabled={props.busy} onClick={() => begin(discussPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
+              Discuss further
+            </button>
             <button type="button" disabled={props.busy} onClick={() => begin(examplesPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
               Show examples
             </button>
@@ -578,6 +678,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
 
   return (
     <section className="p4r1-dance" data-editorial-dance>
+      {noticeLine}
       {props.showOriginal !== false ? (
         <div className="p4r1-dance-original">
           <div>

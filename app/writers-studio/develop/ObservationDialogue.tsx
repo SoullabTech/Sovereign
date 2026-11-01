@@ -108,13 +108,15 @@ function locationLine(l: CurrentLocation | null): string | null {
 
 export default function ObservationDialogue({
   manuscriptId, readingId, observationKey, about, superseded, onClose,
-  initialQuestion = '', autoSendInitialQuestion = false,
+  initialQuestion = '', autoSendInitialQuestion = false, showAbout = true,
 }: {
   manuscriptId: string;
   readingId: string;
   observationKey: string;
   /** What she noticed, in her words. Shown so the room is anchored to it. */
   about: string;
+  /** False when the host already shows `about` directly above this room. */
+  showAbout?: boolean;
   /** From the reading the room already rendered, so the warning precedes the first turn. */
   superseded: boolean;
   onClose: () => void;
@@ -299,10 +301,14 @@ export default function ObservationDialogue({
       className="mt-4 border rounded-sm p-4"
       style={{ borderColor: PRESS.ruleSoft }}
     >
-      <p className="text-[10.5px] tracking-[0.15em] uppercase opacity-45">talking about</p>
-      <p className="text-[13.5px] leading-relaxed opacity-80 mt-1" style={{ whiteSpace: 'pre-wrap' }}>
-        {about}
-      </p>
+      {showAbout ? (
+        <>
+          <p className="text-[10.5px] tracking-[0.15em] uppercase opacity-45">talking about</p>
+          <p className="text-[13.5px] leading-relaxed opacity-80 mt-1" style={{ whiteSpace: 'pre-wrap' }}>
+            {about}
+          </p>
+        </>
+      ) : null}
 
       {/* SAID ONCE, AT THE TOP. The writer needs to know before they speak. */}
       <p className="text-[12px] leading-relaxed opacity-55 mt-2" data-dialogue-bounds>

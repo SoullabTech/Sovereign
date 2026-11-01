@@ -23,7 +23,9 @@ describe('WRITERS-STUDIO-SMALL-BETA-01', () => {
 
   it('offers reorientation without auto-sending or changing the Work', () => {
     expect(conversation).toContain('Where are we?');
-    expect(conversation).toContain("setDraft([");
+    // The prompt is placed in the writer's draft, never sent on their behalf.
+    expect(conversation).toContain('const REORIENTATION_PROMPT = [');
+    expect(conversation).toContain('setDraft((current) => current.includes(REORIENTATION_PROMPT)');
     expect(conversation).toContain('Do not introduce a new interpretation yet.');
     expect(conversation).not.toContain("onClick={() => void send()} data-reorient-work");
   });
