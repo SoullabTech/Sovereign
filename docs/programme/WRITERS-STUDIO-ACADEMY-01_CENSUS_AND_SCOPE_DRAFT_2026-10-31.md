@@ -285,3 +285,80 @@ the suite is committed. Local ≠ committed.
 Lawful from here: implementation fails suite → repair the implementation.
 Forbidden: edit a frozen file to fit. New law lands at its own address.
 ACAD-3, ACAD-4, cohort invitation, Door 2 line lifts: NOT authorized.
+
+## 18. Standing under the 2026-11-01 Semantic Field ruling (record only)
+
+`WRITERS-STUDIO-SEMANTIC-FIELD-01_FOUNDER_RULING_MAIA_FIELD_2026-11-01.md` (founder ruling,
+on canonical) moves this draft's **learning scope** to `WRITERS-STUDIO-SEMANTIC-FIELD-01` and
+states that `ACADEMY-01` **does not open as a separate lane**. It also says this draft is
+preserved as census evidence, and that "an Academy product" is not authorized.
+
+Read together with §§10-17:
+
+- **Implicit Academy** (learning inside the writer's own Work, in conversation with MAIA,
+  including the Teach-me acts) belongs to SEMANTIC-FIELD-01.
+- **Explicit Academy** (a separate room, Door 2) is a design possibility only. It needs a
+  founder act to open.
+- The ACAD-1 contract (with its §11 rulings and §12 correction) and the frozen ACAD-2 suite
+  stand as **design inputs** to SEMANTIC-FIELD-01's learning work. They are not a separate
+  build. ACAD-3 and ACAD-4 are not next steps of an open lane.
+
+This section records the ruling's effect; it decides nothing new.
+
+## 19. §11.4 closed: Teach-me reachability walk (local, 2026-11-01)
+
+**Evidence class:** local runtime walk, not production.
+- **Code:** canonical `cf8ca0ccc` served by `next dev` on the Mac Studio, against the
+  disposable local database `ws-local-pg`.
+- **Account:** the local test member `kelly-local` on its fictional QA Work ("Window and
+  Rain", 23 words). No real account, no member data.
+- **Model call:** MAIA answered through the normal editorial-turn path.
+
+**Path a writer has to take** (each step clicked):
+
+1. Write, then select a passage. The only control offered is **"Work with passage"**.
+2. It opens a menu: Focus · Craftsman's Table · Discuss · **"More ways to work"**
+   ("Revision, learning, and deeper editorial reasoning").
+3. "More ways to work" expands to Revise · **"Teach me — Explain the craft already at work
+   here"** · Go deeper.
+4. "Teach me" does not teach. It opens the Passage Focus room ("What would help you here?"),
+   where **"Teach me about the writing"** appears again as a card under "Learn from the
+   passage".
+5. That card is refused until two gates are met, and each refusal is honest ("Nothing has
+   been sent"):
+   - the privacy posture (**Ordinary / Sanctuary**);
+   - **"Begin relationship with MAIA"** for this Work (one click).
+6. After both, "Teach me about the writing" sends one turn, and MAIA replies "Here's what
+   I'm seeing."
+
+**Result:**
+- **Reachable: yes.** It takes about six clicks and two gates before the first teaching
+  reply, and "Teach me" appears twice before it works.
+- **No MAIA observation is needed first.** That corrects the ACAD-1 §12 guess that the acts
+  appear only after MAIA marks a passage.
+- **Not reached in this walk:** "Teach me why" and "Teach me more" (follow-ups in
+  `EditorialDancePanel`), "Craft depth" (`IsolatedEditorialRoom`), and "Teach me" on a
+  Craftsman's Table change (`CraftsmansTableR1`).
+- The facet selector (Guided · Learning · Direct) did not appear anywhere on the path.
+
+**Against the ACAD-1 no-quality-claim rule (this one reply, read by the author, not a
+reviewer).** It describes technique without prescribing quality:
+- It names end-focus and shows it in the writer's own three sentences.
+- It names a second move: "a verb that belongs to a hand".
+- It states a cost ("end-focus is a finite resource").
+- It proposes no edit ("Not to change anything, just to see what you've already chosen").
+- It offers one further thought only if asked.
+- Evaluative phrases ("doing all the lifting", "earns its place") describe effects; none
+  states a general rule of good writing.
+
+**Limits:**
+- One passage and one model run.
+- Local, not production.
+- Judged by the author, not an independent reader.
+- Like the 2026-09-21 §X witness, it does not generalize to other passages or to any curated
+  content.
+
+**For SEMANTIC-FIELD-01** (an observation, not a proposal):
+- The teaching MAIA gives is already in the shape the contract asks for.
+- What stands between a writer and it is navigation: a label that hides "learn", the repeated
+  "Teach me", and two gates met only at the moment of asking.
