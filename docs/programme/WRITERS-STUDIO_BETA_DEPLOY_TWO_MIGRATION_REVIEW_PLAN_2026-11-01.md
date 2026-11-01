@@ -1,11 +1,13 @@
-# Writer's Studio beta deploy · Exact Two-Migration Review Plan (2026-11-01)
+# Writer's Studio beta deploy · Exact Three-Migration Review Plan (2026-11-01)
 
 ```
-PURPOSE:   Review-Custody plan for the two production-pending migrations carried by the
+PURPOSE:   Review-Custody plan for the three production-pending migrations carried by the
            founder-authorized deploy of canonical (founder, 2026-11-01: "Yes, after they
-           merge"; "Yes, run the review").
+           merge"; "Yes, run the review"; revision 5: "Yes, plan for three").
+FILENAME:  The file keeps its revision-1 name ("TWO_MIGRATION") so its custody path does
+           not move; the title and content govern.
 OLD READER: d49dbc98df5d448a05e13a7df21180c3bde304c6 (live production reader, read 2026-11-01)
-NOT:       Authority to deploy, to apply either migration, or to change production.
+NOT:       Authority to deploy, to apply any migration, or to change production.
            Custody states that a review is bound and still applies; it never states that a
            migration is correct.
 ```
@@ -23,19 +25,31 @@ invalidates applicability and requires a new review.
 ## Exact production-pending set
 
 A read-only comparison of production `schema_migrations.filename` with the target's
-migration files found exactly these two absent, in this order. The deploy lane rederives
-the pending set immediately before mutation.
+migration files (2026-11-01, against canonical `335774d53`) found exactly these three
+absent, in this order. The deploy lane rederives the pending set immediately before
+mutation.
 
 1. `database/migrations/20261002000002_writer_studio_chapter_overview_lens.sql`
    SHA-256 `d45c56cfc84089f758b477430e8912cd864a549c1129a34ab789d2a1f95afaba`
 2. `database/migrations/20261030000001_house_pro_studio_catalog.sql`
    SHA-256 `61f1d0744aeaccdd9ffd82baf67e65584534f07f5dfa37c1d0fd429803fa38c1`
+3. `database/migrations/20261101000001_writer_studio_journey.sql`
+   SHA-256 `0aabe7c9c592efdc8fed196ec76698a8baf0f07071d3b74ec5d300a8eaf8e827`
 
 Any addition, removal, reorder, byte movement, live-reader movement or target movement
 refuses this review.
 
-Migration 2 belongs to the House / Pro Studio lane (HOUSE-PRO-STUDIO-01). Its inclusion
-in this deploy is the founder's decision; this review assesses only its compatibility.
+Migration 2 belongs to the House / Pro Studio lane (HOUSE-PRO-STUDIO-01). Migration 3
+belongs to WRITERS-STUDIO-SEMANTIC-FIELD-01 (tester journey field, PR #2033), which merged
+to canonical after revision 4 was written; no canonical commit carries revision 4's
+rollback guard without it. Including both is the founder's decision; this review assesses
+only their compatibility.
+
+Production facts for migration 3 (read-only, 2026-11-01, PostgreSQL 16.13):
+`writer_studio_journey_answers` and `writer_studio_journey_answers_guard()` do not exist;
+`members.id`, `member_manuscripts.id` and `team_messages.id` are all `uuid`;
+`gen_random_uuid()` is available. Row counts: `members` 94, `member_manuscripts` 24,
+`team_messages` 1.
 
 ## Deployment ordering
 
@@ -57,20 +71,29 @@ The reviewer must independently establish or reject each of the following:
 3. Migration 2's replacement `house_member_preferences_center_ids_check` and
    `house_member_preferences_shortcut_ids_*` constraints admit every value the exact old
    reader can write and every value valid under the previous constraints.
-4. Both migrations are each one transaction with `SET LOCAL lock_timeout = '5s'`; a lock
-   timeout or any failure rolls the file back and leaves the schema at the prior
+3a. Migration 3 is purely additive: it creates `writer_studio_journey_answers`, its two
+   indexes, its guard function and trigger, and alters, drops or rewrites nothing that
+   exists. The exact old reader never reads or writes that table, so its presence (empty
+   or not) cannot change old-reader behaviour.
+4. All three migrations are each one transaction with `SET LOCAL lock_timeout = '5s'`; a
+   lock timeout or any failure rolls the file back and leaves the schema at the prior
    compatible prefix.
-5. The target reader is compatible with the final schema: it writes the `overview` lens and
-   the `pro-studio` catalog id only after the constraints admit them.
+5. The target reader is compatible with the final schema: it writes the `overview` lens,
+   the `pro-studio` catalog id and journey answers only after the migrations admit them,
+   and its journey writes satisfy the table's constraints and append-only trigger.
 6. Reader rollback to `d49dbc98d…` is lawful under the conditions in "Reader rollback"
    below: the schema needs no down-migration, and data the target reader writes is handled
    by the guard and repair files, whose order the target's `rollback` command enforces. The
    reviewer establishes whether those conditions are sufficient, including whether the
    guard runs before any tag moves and refuses on failure, and whether the exact old reader
-   tolerates stored `overview` readings in every path that loads or displays them.
-7. DDL lock and constraint-validation risk (ACCESS EXCLUSIVE on `developmental_readings` and
-   `house_member_preferences` during constraint replacement) is acceptable for the observed
-   table sizes below, or is recorded as a finding.
+   tolerates stored `overview` readings in every path that loads or displays them. Journey
+   answers written by the target reader stay in place on rollback, unread by the old
+   reader; they need no guard, and the reviewer establishes whether that is so.
+7. DDL lock and constraint-validation risk is acceptable for the observed table sizes, or
+   is recorded as a finding: ACCESS EXCLUSIVE on `developmental_readings` and
+   `house_member_preferences` during constraint replacement (migrations 1 and 2), and the
+   brief SHARE ROW EXCLUSIVE locks migration 3's foreign keys take on `members`,
+   `member_manuscripts` and `team_messages`.
 
 ## Reader rollback (revision 4)
 
@@ -84,7 +107,8 @@ the old parser enforces and wrote the order down as a manual procedure; its revi
 readings were not read (F1), the rollback command did not enforce the order and the deploy
 script's own recovery message pointed at a bare rollback (F2), and the repair rewrote a valid,
 explicitly empty Center to `NULL` when only the row's shortcuts failed (F3). Revision 4
-answers all three:
+answers all three (it was merged, never reviewed; revision 5 only adds migration 3 and
+leaves this section's mechanism unchanged):
 
 - **F1**: the thirteen files are added to "Minimum physical Reads" below.
 - **F2**: `scripts/deploy-production.sh rollback` now enforces the order itself (below).
@@ -180,7 +204,7 @@ The independent reviewer must physically Read, at minimum:
 
 - this plan;
 - `MIGRATION_COMPATIBILITY_CONTEXT.json`;
-- both pending migration files;
+- all three pending migration files;
 - `scripts/deploy-production.sh`;
 - `scripts/run-sql-migrations.sh`;
 - target `lib/manuscript/developmentalReading/store.ts`;
@@ -225,7 +249,10 @@ The independent reviewer must physically Read, at minimum:
 - target `lib/house/preferences.ts` (the target parser), and target
   `app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx` and
   `app/dev/writers-studio-pc3-live/P4R1ReviewController.tsx` (where the target requests an
-  `overview` reading).
+  `overview` reading);
+- target `lib/writersStudio/journeyServer.ts` (the only target code that writes
+  `writer_studio_journey_answers`) and target `scripts/verify-constitution-colab.ts`
+  (the post-deploy Co-Lab gate, which also checks that table).
 
 The old-reader paths live beneath `old-reader/<exact-old-reader-SHA>/...` in the
 compatibility review bundle. Search may scope discovery but does not witness coverage. If a
@@ -247,12 +274,12 @@ It must additionally carry `migration_compatibility` with:
 - verdict `COMPATIBLE` or `INCOMPATIBLE`;
 - exact full old-reader commit;
 - exact full target-reader commit;
-- the exact two ordered pending migration paths and SHA-256 values;
+- the exact three ordered pending migration paths and SHA-256 values;
 - physically witnessed old-reader evidence with repo path, SHA-256 and exact trace path;
 - non-empty rationale and explicit limitations;
 - `failure_prefix_compatibility.instrument = migration-prefix-compatibility/v1`;
-- verdict `ALL_PREFIXES_COMPATIBLE` only if prefixes 1 and 2 are each established;
-- exactly two prefix entries, each bound to its ending migration, with rationale and
+- verdict `ALL_PREFIXES_COMPATIBLE` only if prefixes 1, 2 and 3 are each established;
+- exactly three prefix entries, each bound to its ending migration, with rationale and
   explicit limitations.
 
 The production gate recomputes target migration hashes and old-reader evidence from git
@@ -260,6 +287,6 @@ objects. Self-reported hashes do not establish compatibility.
 
 ## Closing condition
 
-The plan closes when an independent, physically witnessed review of exactly these two
+The plan closes when an independent, physically witnessed review of exactly these three
 migrations is admitted against the exact target, or when the review returns `REVISE` or
 `BLOCKED` and the deploy is held.
