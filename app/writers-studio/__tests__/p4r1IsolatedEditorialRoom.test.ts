@@ -211,3 +211,19 @@ test.each(['large', 'larger', 'largest'])('Reset view preserves shared %s readin
   expect(window.localStorage.getItem('soullab.studio.reading-size.v1')).toBe(size);
   expect(latitude).not.toHaveBeenCalled();expect(paragraphs).not.toHaveBeenCalled();expect(proposals).not.toHaveBeenCalled();
 });
+
+test('Start a new conversation appears only while a conversation is open, and is the writer’s act', () => {
+  renderRoom();
+  const find = () => Array.from(container.querySelectorAll('button'))
+    .find((button) => button.textContent?.trim() === 'Start a new conversation');
+  expect(find()).toBeUndefined();
+
+  const onStartFresh = jest.fn();
+  renderRoom({ onStartFresh });
+  expect(find()).toBeTruthy();
+  act(() => find()!.click());
+  expect(onStartFresh).toHaveBeenCalledTimes(1);
+
+  renderRoom({ onStartFresh, busy: true });
+  expect(find()!.disabled).toBe(true);
+});
