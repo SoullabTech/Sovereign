@@ -255,6 +255,43 @@ async function main() {
   const unenc = await n(`SELECT COUNT(*)::int AS n FROM practitioner_client_notes WHERE content_enc IS NULL OR content_enc_meta IS NULL`);
   if (unenc === 0) pass('All client notes are stored encrypted'); else fail(`${unenc} client note(s) are missing ciphertext or encryption metadata`);
 
+  // ── 6. Writer's Studio beta journey → Beta Co-Lab ──
+  // SEMANTIC-FIELD-01: journey words reach Co-Lab only by the writer's own share,
+  // under their name, into the one configured Co-Lab; a withdrawn answer leaves it.
+  section('6. Beta journey shares stay with their author, in one Co-Lab');
+  const journeyTable = await n(`SELECT (to_regclass('public.writer_studio_journey_answers') IS NOT NULL)::int AS n`);
+  if (journeyTable === 0) {
+    info('Beta journey table not present yet — nothing can be shared', 'migration 20261101000001 not applied');
+  } else {
+    const wrongAuthor = await n(
+      `SELECT COUNT(*)::int AS n FROM writer_studio_journey_answers a
+         JOIN team_messages tm ON tm.id = a.colab_message_id
+        WHERE tm.sender_id <> a.member_id`);
+    if (wrongAuthor === 0) pass('Every shared journey item is posted under its own author');
+    else fail(`${wrongAuthor} shared journey item(s) are posted under someone else's name`);
+
+    const teams = await q<{ team_id: string | null }>(
+      `SELECT DISTINCT tc.team_id FROM writer_studio_journey_answers a
+         JOIN team_messages tm ON tm.id = a.colab_message_id
+         JOIN team_channels tc ON tc.id = tm.channel_id`);
+    const configured = process.env.WRITERS_STUDIO_JOURNEY_COLAB_CHANNEL_ID?.trim();
+    const configuredTeam = configured
+      ? (await q<{ team_id: string | null }>(`SELECT team_id FROM team_channels WHERE id = $1`, [configured]))[0]?.team_id ?? null
+      : null;
+    if (teams.some((t) => t.team_id === null)) fail('A shared journey item sits in a channel with no Co-Lab');
+    else if (teams.length > 1) fail(`Shared journey items appear in ${teams.length} different Co-Labs`);
+    else if (teams.length === 1 && configuredTeam && teams[0]!.team_id !== configuredTeam) {
+      fail('Shared journey items appear outside the configured Beta Co-Lab');
+    } else pass('Shared journey items appear in at most one Co-Lab', teams.length === 0 ? 'none shared yet' : undefined);
+
+    const withdrawnLive = await n(
+      `SELECT COUNT(*)::int AS n FROM writer_studio_journey_answers a
+         JOIN team_messages tm ON tm.id = a.colab_message_id AND tm.deleted_at IS NULL
+        WHERE a.withdrawn_at IS NOT NULL`);
+    if (withdrawnLive === 0) pass('No withdrawn journey answer is still visible in Co-Lab');
+    else fail(`${withdrawnLive} withdrawn journey answer(s) are still visible in Co-Lab`);
+  }
+
   const total = passed + failed + warned;
   console.log('\n╔══════════════════════════════════════════════════════════════╗');
   console.log(`║  Results: ${passed} passed · ${failed} failed · ${warned} warned (${total} total)`);
