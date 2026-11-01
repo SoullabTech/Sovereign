@@ -62,11 +62,38 @@ The reviewer must independently establish or reject each of the following:
    compatible prefix.
 5. The target reader is compatible with the final schema: it writes the `overview` lens and
    the `pro-studio` catalog id only after the constraints admit them.
-6. Reader rollback to `d49dbc98d…` remains lawful after migration 1 alone and after both;
-   no down-migration is required for reader rollback.
+6. Reader rollback to `d49dbc98d…` is lawful under the conditions in "Reader rollback"
+   below: the schema needs no down-migration, and data the target reader writes is handled
+   by the stated check and repair. The reviewer establishes whether those conditions are
+   sufficient, including whether the exact old reader tolerates stored `overview` readings
+   in every path that loads or displays them.
 7. DDL lock and constraint-validation risk (ACCESS EXCLUSIVE on `developmental_readings` and
-   `house_member_preferences` during constraint replacement) is acceptable, or is recorded
-   as a finding.
+   `house_member_preferences` during constraint replacement) is acceptable for the observed
+   table sizes below, or is recorded as a finding.
+
+## Reader rollback (revision 2, after the first review returned REVISE)
+
+The first review (session `0d88896e-3dce-485f-b1b4-6804d3bca8fe`, verdict `REVISE`) found
+that rollback is lawful for the schema but not unconditionally for data. Once the target
+reader stores `pro-studio` in `house_member_preferences.center_ids` or `shortcut_ids`, the
+exact old reader's `parseHousePreferences` throws on that row. This plan therefore states
+rollback as conditional, and fixes the procedure before any reader rollback to
+`d49dbc98d…`:
+
+1. Check:
+   `SELECT count(*) FROM house_member_preferences WHERE 'pro-studio' = ANY(center_ids) OR 'pro-studio' = ANY(shortcut_ids);`
+2. If the count is above 0, repair in one transaction before swapping the old reader in:
+   `UPDATE house_member_preferences SET center_ids = array_remove(center_ids, 'pro-studio'), shortcut_ids = array_remove(shortcut_ids, 'pro-studio') WHERE 'pro-studio' = ANY(center_ids) OR 'pro-studio' = ANY(shortcut_ids);`
+   This removes only the Pro Studio placement; the member's other places are kept. The
+   reviewer establishes whether a `center_ids` array left empty by this repair is valid
+   for the exact old reader and for the constraints, or records a finding.
+3. Re-run the check; it must return 0.
+
+Stored `overview` readings are not repaired. Whether the exact old reader tolerates them is
+plan question 6; if it does not, the reviewer records that as a finding.
+
+Observed production sizes (read-only, 2026-11-01): `developmental_readings` 25 rows,
+`house_member_preferences` 3 rows, rows holding `pro-studio` 0.
 
 A verdict of `REVISE` or `BLOCKED` is lawful and must never be converted into approval to
 complete the deployment.
@@ -91,7 +118,14 @@ The independent reviewer must physically Read, at minimum:
 - exact old-reader `database/migrations/20260926000002_writer_studio_work_themes.sql`
   (the previous lens constraint and observation trigger);
 - exact old-reader `database/migrations/20260927000001_house_dream_catalog.sql`
-  (the previous House constraints).
+  (the previous House constraints);
+- exact old-reader `lib/house/preferences.ts` and `app/api/house/preferences/route.ts`
+  (how stored House ids are parsed);
+- exact old-reader `app/api/sovereign/manuscripts/[id]/readings/route.ts`,
+  `app/api/sovereign/manuscripts/[id]/readings/[readingId]/route.ts`,
+  `app/api/sovereign/manuscripts/[id]/attention-map/route.ts`,
+  `lib/writersStudio/develop/liveLens.ts` and `lib/writersStudio/developClient.ts`
+  (where stored readings are loaded and displayed).
 
 The old-reader paths live beneath `old-reader/<exact-old-reader-SHA>/...` in the
 compatibility review bundle. Search may scope discovery but does not witness coverage. If a
