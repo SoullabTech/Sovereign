@@ -130,7 +130,9 @@ describe('Develop gestures preserve an unsent Work draft until departure is acce
 
   it('a cancelled focused-intent choice leaves the draft and intent unchanged', async () => {
     await openDraft(); departure.mockReturnValue(false);
-    await click('Something feels off');
+    // d49dbc98d made the first three starters Just exploring / What does MAIA
+    // think? / Help me see the shape; "Something feels off" is now behind the toggle.
+    await click('Just exploring');
     expect(departure).toHaveBeenCalledTimes(1);
     expect(props.onIntent).not.toHaveBeenCalled();
     expect(draft()?.value).toBe(draftText);
@@ -165,7 +167,8 @@ describe('Develop gestures preserve an unsent Work draft until departure is acce
       select.value = 'full'; select.dispatchEvent(new Event('change', { bubbles: true }));
     });
     departure.mockClear().mockReturnValue(false);
-    await click('Talk with MAIA', true);
+    // Full view no longer shows the locus "Talk with MAIA" card; use a Full-view starter.
+    await click('Talk about what exists so far');
     expect(departure).toHaveBeenCalledTimes(1);
     expect(draft()?.value).toBe(draftText);
   });

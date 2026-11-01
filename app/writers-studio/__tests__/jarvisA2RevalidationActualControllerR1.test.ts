@@ -550,12 +550,36 @@ it('D03 explicit legacy-thread selection cannot invent LivingWork provenance', a
   expect(mockViewProps.editorialThread).toBeNull();
   expect(mockViewProps.editorialFailure).toContain('independently verified');noLegacyThreadOperations();
 });
-it('D04 matching discovered prose cannot authorize historical-thread reuse', async () => {
+// Founder ruling 2026-11-01 supersedes the original D04 dead end: matching prose
+// still never authorizes reuse, but an unverified older thread no longer blocks
+// the passage — a new conversation opens in this Living Work beside it.
+it('D04 matching discovered prose cannot authorize historical-thread reuse; a new Work conversation opens instead', async () => {
   mockDiscoverLegacyThread=true;await mountB();
+  legacyModule().readBoundEditorialThread.mockResolvedValueOnce({ok:false,reason:'origin_unavailable'});
+  const fresh={...mockThread,threadId:'fiction-new-thread'};
+  legacyModule().openBoundEditorialThread.mockResolvedValueOnce({ok:true,thread:fresh});
+  legacyModule().openBoundEditorialPassage.mockResolvedValueOnce({ok:true,thread:fresh});
   await React.act(async()=>{mockViewProps.onSendEditorial('Fictional request with legacy history');await settle(100)});
   expect(legacyModule().discoverEditorialRelationships).toHaveBeenCalled();
-  expect(mockViewProps.editorialThread).toBeNull();
-  expect(mockViewProps.editorialFailure).toContain('no verified binding');noLegacyThreadOperations();
+  // The older thread is only ever checked against the server's origin record
+  // for THIS Work's relationship — never read or resumed on prose alone.
+  expect(legacyModule().readBoundEditorialThread).toHaveBeenCalledTimes(1);
+  expect(legacyModule().readBoundEditorialThread.mock.calls[0][0]).toBe('fiction-thread');
+  expect(legacyModule().readBoundEditorialThread.mock.calls[0][2]).toBe('fiction-relationship-b');
+  const opens = legacyModule().openBoundEditorialThread.mock.calls.length
+    + legacyModule().openBoundEditorialPassage.mock.calls.length;
+  expect(opens).toBe(1);
+  expect(mockViewProps.editorialThread?.threadId).toBe('fiction-new-thread');
+  expect(mockViewProps.editorialFailure).toBeNull();
+  expect(mockViewProps.editorialNotice).toContain('left untouched');
+});
+it('D04b a discovered thread the server verifies for this Work is resumed, not duplicated', async () => {
+  mockDiscoverLegacyThread=true;await mountB();
+  await React.act(async()=>{mockViewProps.onSendEditorial('Fictional request with verified history');await settle(100)});
+  expect(legacyModule().readBoundEditorialThread).toHaveBeenCalledWith('fiction-thread', expect.anything(), 'fiction-relationship-b');
+  expect(legacyModule().openBoundEditorialThread).not.toHaveBeenCalled();
+  expect(legacyModule().openBoundEditorialPassage).not.toHaveBeenCalled();
+  expect(mockViewProps.editorialNotice ?? null).toBeNull();
 });
 it('D05 explicitly requested new thread rejects a foreign manuscript response', async () => {
   await mountB();legacyModule().openBoundEditorialThread.mockResolvedValueOnce({ok:true,thread:{...mockThread,workId:'fiction-foreign-manuscript'}});
