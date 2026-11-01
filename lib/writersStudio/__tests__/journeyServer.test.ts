@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { query } from '@/lib/db/postgres';
+import { query, queryWithExpectedRefusal } from '@/lib/db/postgres';
 import { deleteMessage, sendMessage } from '@/lib/team/ChannelService';
 import { isTeamMember } from '@/lib/team/teamMembership';
 import {
@@ -12,11 +12,12 @@ import {
 } from '../journeyServer';
 import { JOURNEY_PROMPTS, colabMessageBody, validateAnswerInput } from '../journey';
 
-jest.mock('@/lib/db/postgres', () => ({ query: jest.fn() }));
+jest.mock('@/lib/db/postgres', () => ({ query: jest.fn(), queryWithExpectedRefusal: jest.fn() }));
 jest.mock('@/lib/team/ChannelService', () => ({ sendMessage: jest.fn(), deleteMessage: jest.fn() }));
 jest.mock('@/lib/team/teamMembership', () => ({ isTeamMember: jest.fn() }));
 
 const q = query as jest.Mock;
+const qRefusal = queryWithExpectedRefusal as jest.Mock;
 const send = sendMessage as jest.Mock;
 const del = deleteMessage as jest.Mock;
 const member = isTeamMember as jest.Mock;
@@ -35,6 +36,7 @@ const row = (over: Record<string, unknown> = {}) => ({
 beforeEach(() => {
   jest.clearAllMocks();
   q.mockReset();
+  qRefusal.mockReset();
   delete process.env.WRITERS_STUDIO_JOURNEY_COLAB_CHANNEL_ID;
 });
 
@@ -76,6 +78,14 @@ describe('the writer sees only their own answers', () => {
     q.mockResolvedValueOnce({ rows: [{ prompt_key: 'edit_felt_like_mine', withdrawn_at: null, superseded: true }] });
     expect(await addJourneyAnswer(ME, { promptKey: 'edit_felt_like_mine', answer: 'new', supersedes: ANSWER }))
       .toEqual({ ok: false, refusal: 'not_current' });
+  });
+
+  it('turns a concurrent revision of the same version into not_current, not a server error', async () => {
+    q.mockResolvedValueOnce({ rows: [{ prompt_key: 'edit_felt_like_mine', withdrawn_at: null, superseded: false }] });
+    qRefusal.mockResolvedValueOnce({ refused: true });
+    expect(await addJourneyAnswer(ME, { promptKey: 'edit_felt_like_mine', answer: 'new', supersedes: ANSWER }))
+      .toEqual({ ok: false, refusal: 'not_current' });
+    expect(qRefusal.mock.calls[0][2]).toMatchObject({ fragment: 'writer_studio_journey_answers_supersedes_once' });
   });
 });
 
@@ -132,7 +142,7 @@ describe('sharing to the Beta Co-Lab happens only by the writer’s explicit act
     process.env.WRITERS_STUDIO_JOURNEY_COLAB_CHANNEL_ID = CHANNEL;
     q.mockResolvedValueOnce({ rows: [{ team_id: TEAM, archived_at: null }] })
       .mockResolvedValueOnce({ rows: [{ prompt_key: 'stuck_learning_machine', answer: 'The relationship button was hidden.', withdrawn_at: null, colab_message_id: null, superseded: false }] })
-      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 })
       .mockResolvedValueOnce({ rows: [row({ prompt_key: 'stuck_learning_machine', colab_message_id: 'm9', colab_kind: 'problem', colab_shared_at: 'now', colab_live: true })] });
     member.mockResolvedValueOnce(true);
     send.mockResolvedValueOnce({ id: 'm9' });
@@ -140,7 +150,33 @@ describe('sharing to the Beta Co-Lab happens only by the writer’s explicit act
     const result = await shareJourneyAnswer(ME, ANSWER, 'problem');
     expect(send).toHaveBeenCalledWith(
       CHANNEL, ME, colabMessageBody('problem', 'stuck_learning_machine', 'The relationship button was hidden.'), undefined, 'build');
+    expect(q.mock.calls[2][0]).toContain('colab_message_id IS NULL AND withdrawn_at IS NULL');
     expect(result).toMatchObject({ ok: true, answer: { colabKind: 'problem', colabStillShared: true } });
+    expect(del).not.toHaveBeenCalled();
+  });
+
+  it('removes the copy it just posted when a double submit finds the answer already shared', async () => {
+    process.env.WRITERS_STUDIO_JOURNEY_COLAB_CHANNEL_ID = CHANNEL;
+    q.mockResolvedValueOnce({ rows: [{ team_id: TEAM, archived_at: null }] })
+      .mockResolvedValueOnce({ rows: [{ prompt_key: 'stuck_learning_machine', answer: 'x', withdrawn_at: null, colab_message_id: null, superseded: false }] })
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 });
+    member.mockResolvedValueOnce(true);
+    send.mockResolvedValueOnce({ id: 'm10' });
+
+    expect(await shareJourneyAnswer(ME, ANSWER, 'problem')).toEqual({ ok: false, refusal: 'already_shared' });
+    expect(del).toHaveBeenCalledWith(CHANNEL, 'm10', ME, expect.any(String));
+  });
+
+  it('removes the copy it just posted when recording the share fails', async () => {
+    process.env.WRITERS_STUDIO_JOURNEY_COLAB_CHANNEL_ID = CHANNEL;
+    q.mockResolvedValueOnce({ rows: [{ team_id: TEAM, archived_at: null }] })
+      .mockResolvedValueOnce({ rows: [{ prompt_key: 'stuck_learning_machine', answer: 'x', withdrawn_at: null, colab_message_id: null, superseded: false }] })
+      .mockRejectedValueOnce(new Error('a journey answer is shared to Co-Lab at most once'));
+    member.mockResolvedValueOnce(true);
+    send.mockResolvedValueOnce({ id: 'm11' });
+
+    await expect(shareJourneyAnswer(ME, ANSWER, 'problem')).rejects.toThrow('at most once');
+    expect(del).toHaveBeenCalledWith(CHANNEL, 'm11', ME, expect.any(String));
   });
 });
 
