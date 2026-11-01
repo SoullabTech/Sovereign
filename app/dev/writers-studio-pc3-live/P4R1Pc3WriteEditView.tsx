@@ -153,6 +153,7 @@ export type P4R1Pc3WriteEditViewProps = {
   onMayProposeImmediately: (v: boolean) => void;
   onReviseInsight: NonNullable<Parameters<typeof InsightReadings>[0]['onRevise']>;
   onChoosePassage: NonNullable<Parameters<typeof InsightReadings>[0]['onChoosePassage']>;
+  onStartFreshConversation?: () => void;
   onChooseRelationship: (threadId: string) => void;
   onBeginMaiaRelationship: () => void;
   onChooseMaiaRelationship: (relationshipId: string) => void;
@@ -1448,6 +1449,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       mayProposeImmediately={props.mayProposeImmediately}
       onMayProposeImmediately={props.onMayProposeImmediately}
       onClose={props.onCloseWorkspace}
+      onStartFresh={props.editorialThread ? props.onStartFreshConversation : undefined}
     >
       {props.carriedInsight ? (
         <section className="p4r1-focus-origin" data-focus-origin>

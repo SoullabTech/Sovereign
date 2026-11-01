@@ -622,6 +622,33 @@ it('D04e a stale address thread does not cover MAIA’s reply once a verified co
   expect(mockViewProps.lastMaiaEditorialTurn?.body).toBe('FICTIONAL_OLD_REPLY_D04e');
   expect(mockViewProps.editorialFailure ?? null).toBeNull();
 });
+// Writers Academy walk 2026-11-01: a passage kept resuming its old conversation
+// and the writer had no way to begin again.
+it('D04f Start a new conversation sets the old one aside and the next act opens a fresh one', async () => {
+  mockDiscoverLegacyThread=true;await mountB();
+  await React.act(async()=>{mockViewProps.onSendEditorial('Fictional request with verified history');await settle(100)});
+  await React.act(async()=>{mockResolveTurn({ok:true,thread:mockResponseThread('D04f'),producedVersionId:null,voice:null});await settle(40)});
+  expect(mockViewProps.editorialThread?.threadId).toBe('fiction-thread');
+  await React.act(async()=>{mockViewProps.onStartFreshConversation();await settle(10)});
+  expect(mockViewProps.editorialThread).toBeNull();
+  legacyModule().readBoundEditorialThread.mockClear();legacyModule().openBoundEditorialThread.mockClear();
+  legacyModule().openBoundEditorialThread.mockResolvedValueOnce({ok:true,thread:{...mockThread,threadId:'fiction-fresh-thread'}});
+  await React.act(async()=>{mockViewProps.onSendEditorial('Fictional request after starting fresh');await settle(100)});
+  expect(legacyModule().openBoundEditorialThread).toHaveBeenCalledTimes(1);
+  expect(legacyModule().readBoundEditorialThread).not.toHaveBeenCalledWith('fiction-thread', expect.anything(), expect.anything());
+});
+it('D04g reopening the place restores an old conversation only when it holds an undoable applied edit', async () => {
+  readA2().mockImplementation(async()=>({ok:true,relationship:{...validB().relationship,latestEditorialThreadId:'fiction-thread'}}));
+  await mountB();
+  expect(legacyModule().readBoundEditorialThread).toHaveBeenCalledWith('fiction-thread','section-a','fiction-relationship-b');
+  expect(mockViewProps.editorialThread).toBeNull();
+  await React.act(async()=>{root.unmount();});
+  host.remove();host=document.createElement('div');document.body.appendChild(host);root=createRoot(host);
+  mockThread.application={authorizationId:'fiction-auth',versionId:'fiction-version-a',resultingVersion:2,undone:false,canUndo:true};
+  mockThread.versions=[{id:'fiction-version-a',author:'maia',wording:original,supersedes:null,rationale:'Fixture'}];
+  await mountB();
+  expect(mockViewProps.editorialThread?.threadId).toBe('fiction-thread');
+});
 it('D05 explicitly requested new thread rejects a foreign manuscript response', async () => {
   await mountB();legacyModule().openBoundEditorialThread.mockResolvedValueOnce({ok:true,thread:{...mockThread,workId:'fiction-foreign-manuscript'}});
   await React.act(async()=>{mockViewProps.onSendEditorial('Fictional wrong manuscript response');await settle(100)});

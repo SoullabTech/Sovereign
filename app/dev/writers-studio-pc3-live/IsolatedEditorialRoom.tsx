@@ -45,6 +45,8 @@ type Props = {
   mayProposeImmediately: boolean;
   onMayProposeImmediately: (value: boolean) => void;
   onClose: () => void;
+  /** Present only while a conversation is open for this passage. */
+  onStartFresh?: () => void;
   children: ReactNode;
 };
 
@@ -141,6 +143,7 @@ export default function IsolatedEditorialRoom({
   mayProposeImmediately,
   onMayProposeImmediately,
   onClose,
+  onStartFresh,
   children,
 }: Props) {
   const [leftPercent, setLeftPercent] = useState(DEFAULT_PREFS.leftPercent);
@@ -493,6 +496,11 @@ export default function IsolatedEditorialRoom({
             </div>
           </details>
 
+          {onStartFresh ? (
+            <button type="button" disabled={busy} onClick={onStartFresh} title="The earlier conversation stays saved">
+              Start a new conversation
+            </button>
+          ) : null}
           <button type="button" disabled={busy} onClick={onClose}>Return to manuscript</button>
         </div>
       </header>
