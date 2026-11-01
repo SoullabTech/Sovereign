@@ -1,7 +1,8 @@
 # WRITERS-STUDIO-SEMANTIC-FIELD-01 — Tester journey field (design note)
 
 ```
-STATUS:     DESIGN NOTE for founder ruling. PROPOSED, not authorized.
+STATUS:     DESIGN RULED by the founder 2026-11-01 ("accept as drafted": §5 answers 1–5 as
+            recommended). Build is a separate founder act; nothing below is yet authorized to build.
 OWNER:      SEMANTIC-FIELD-01 — the member arm of the MAIA-field witness
             (founder ruling 2026-11-01; witness protocol of the same date).
 CANONICAL:  clean-main-no-secrets @ 853a21791 (census below cites that tree).
@@ -142,6 +143,14 @@ Review Custody like every other.
    view) — confirm, with an explicit line in the consent copy?
 5. **Co-Lab report-back (§3.7)**: shared items appear under the writer's name in the Beta Co-Lab
    (recommended, so the cohort can talk with each other), or anonymously?
+
+### Founder ruling, 2026-11-01 — accepted as drafted
+
+1. Placement: **inside Writer's Studio**.
+2. First wave: **the five experience questions in §3.1**, as written.
+3. Who sees answers: **the founder only**, for the beta.
+4. Attribution: **answers carry the writer's identity**, stated plainly in the consent copy.
+5. Co-Lab report-back: **shared items appear under the writer's name** in the Beta Co-Lab.
 
 ## 6. Not authorized by this note
 
