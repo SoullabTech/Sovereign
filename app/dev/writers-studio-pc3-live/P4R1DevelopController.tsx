@@ -1390,7 +1390,7 @@ export default function P4R1DevelopController() {
       const bundle = await runWholeManuscriptReview(
         context.manuscriptId,
         (done, total, lens) => setAttentionProgress(
-          done >= total ? 'Eight readings complete. Preparing edit suggestions…'
+          done >= total ? `${total} readings complete. Preparing edit suggestions…`
             : `Reading ${done + 1} of ${total}: ${lens}…`,
         ),
         {
