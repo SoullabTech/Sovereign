@@ -625,7 +625,19 @@ type ReadyReview = {
               <p className="p4r1-review-reread-boundary">
                 Nothing happens until you ask. Quick reread is not a full multi-lens Review and never changes your writing.
               </p>
-              {quickReviewNeedsCheckpoint ? (
+              {!reviewChapter ? (
+                /* Both rereads work on a member-confirmed chapter. Without one the
+                   buttons used to return silently; say so and offer Develop, which
+                   reads any section. */
+                <div className="p4r1-review-reread-boundary" role="status" data-review-no-chapter>
+                  <p>
+                    Review rereads one chapter at a time, and this Work has no confirmed chapters yet,
+                    so there is no chapter here for MAIA to reread. You can ask her to read any part
+                    of it in Develop.
+                  </p>
+                  <button type="button" onClick={() => goMode('develop')}>Read it in Develop</button>
+                </div>
+              ) : quickReviewNeedsCheckpoint ? (
                 <>
                   <p className="p4r1-review-reread-boundary">
                     This chapter has changed since its last saved reading state. Save the current draft so MAIA rereads exactly what is here now. Your words will not change.
@@ -660,6 +672,7 @@ type ReadyReview = {
                   </article>
                 </div>
               ) : null}
+              {reviewChapter ? (
               <details className="p4r1-review-deep">
                 <summary>Deep Review</summary>
                 <p className="p4r1-review-reread-boundary">
@@ -676,6 +689,7 @@ type ReadyReview = {
                 )}
                 {rereadError ? <p className="p4r1-error" role="status">{rereadError}</p> : null}
               </details>
+              ) : null}
             </section>
             <section className="fr-card p4r1-review-entry-card">
               <h3>Saved Reviews</h3>
