@@ -932,7 +932,13 @@ export default function FlagshipWriteEditController() {
   const holdPassage = useCallback((section: RebuildSection, start: number, end: number, text: string) => {
     if (!currentContextGesture()) return;
     const revisionNumber = writingRef.current?.currentRevisionId() ?? context?.version ?? 0;
-    if (section.draftSectionId !== focusId) clearEditorial();
+    // A conversation belongs to its own passage, not to the whole section: a
+    // different passage here must not show that conversation's replies.
+    const binding = editorialThread && section.draftSectionId === focusId
+      ? resolveEditorialReturnBinding(editorialThread, writingRef.current?.bodyOf(section.draftSectionId) ?? section.body)
+      : null;
+    if (section.draftSectionId !== focusId
+      || (editorialThread && (!binding || binding.start !== start || binding.end !== end))) clearEditorial();
     setFocusId(section.draftSectionId);
     setSelectedPassage({
       draftSectionId: section.draftSectionId,
@@ -950,7 +956,7 @@ export default function FlagshipWriteEditController() {
     if (typeof window !== 'undefined') {
       replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, section.draftSectionId));
     }
-  }, [context, focusId, clearEditorial, work, workContext.kind, workGestureEpoch]);
+  }, [context, focusId, clearEditorial, editorialThread, work, workContext.kind, workGestureEpoch]);
 
   const bindEditorialThread = useCallback((thread: RebuildEditorialThread): boolean => {
     // The server-owned thread must belong to the active manuscript as well as

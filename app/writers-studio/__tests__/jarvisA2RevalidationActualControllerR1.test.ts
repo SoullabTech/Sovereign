@@ -596,6 +596,20 @@ it('D04c Return and Choose a passage leave Focus when the Work arrived after fir
   await React.act(async()=>{mockViewProps.onChoosePassage();await settle(10)});
   expect(mockViewProps.workspaceOpen).toBe(false);
 });
+// Production 2026-11-01: a conversation about one paragraph stayed bound when the
+// writer held another passage in the same section, and its reply showed there.
+it('D04d holding a different passage in the same section unbinds that passage’s conversation', async () => {
+  mockDiscoverLegacyThread=true;await mountB();
+  await React.act(async()=>{mockViewProps.onSendEditorial('Fictional request with verified history');await settle(100)});
+  await React.act(async()=>{mockResolveTurn({ok:true,thread:mockResponseThread('D04d'),producedVersionId:null,voice:null});await settle(40)});
+  expect(mockViewProps.editorialThread?.threadId).toBe('fiction-thread');
+  // Its own passage again: the conversation stays.
+  await React.act(async()=>{mockViewProps.onHoldPassage(section,0,[...original].length,original);await settle(10)});
+  expect(mockViewProps.editorialThread?.threadId).toBe('fiction-thread');
+  // A different passage in the same section: it is no longer shown there.
+  await React.act(async()=>{mockViewProps.onHoldPassage(section,20,[...original].length,original.slice(20));await settle(10)});
+  expect(mockViewProps.editorialThread).toBeNull();
+});
 it('D05 explicitly requested new thread rejects a foreign manuscript response', async () => {
   await mountB();legacyModule().openBoundEditorialThread.mockResolvedValueOnce({ok:true,thread:{...mockThread,workId:'fiction-foreign-manuscript'}});
   await React.act(async()=>{mockViewProps.onSendEditorial('Fictional wrong manuscript response');await settle(100)});
