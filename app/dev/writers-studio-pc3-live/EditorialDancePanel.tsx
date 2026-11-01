@@ -15,6 +15,7 @@ import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionD
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { EDITORIAL_PACKET_LABELS } from '@/lib/writersStudio/editorialIntelligence';
+import { continueTeachingPrompt, teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
 import P4R1VoiceCapture from './P4R1VoiceCapture';
 
 export interface EditorialDancePanelProps {
@@ -200,29 +201,10 @@ function discussPassagePrompt(): string {
 }
 
 /* Founder direction 2026-11-01: teaching is a conversation, not an info dump,
-   and the level is the writer's to set. One idea per turn, then a question the
-   writer steers by; the term, the cost and further moves wait to be asked for. */
-const TEACHING_TURN_SHAPE = [
-  'Keep it to a few plain sentences about one idea, shown in my own words.',
-  'Do not add the technical term, what the move costs, or other moves unless I ask for them.',
-  'End with one short question that lets me choose where we go next — for example whether to say it more simply, look at why it works, or see what it costs.',
-  'Do not propose replacement wording unless I ask.',
-];
-
+   and the level is the writer's to set. The shape lives in
+   lib/writersStudio/teachingTurn.ts so every Teach me shares it. */
 function teachPassagePrompt(): string {
-  return [
-    'Teach me about the writing in this exact passage, as a conversation rather than a lesson.',
-    'Start with just one thing that is already working here and what it does.',
-    ...TEACHING_TURN_SHAPE,
-  ].join('\n\n');
-}
-
-function continueTeachingPrompt(): string {
-  return [
-    'Keep teaching from where we are in this conversation about this exact passage.',
-    'Take the next single step: what I asked for if I said, otherwise the next thing worth knowing here. Do not repeat what you have already explained.',
-    ...TEACHING_TURN_SHAPE,
-  ].join('\n\n');
+  return teachingTurnPrompt('passage');
 }
 
 function examplesPassagePrompt(): string {
@@ -928,12 +910,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           setShowDepth(opening ? 'teach' : 'none');
           if (opening) {
             props.onDepth('learning');
-            props.onSend([
-              'Teach me why this editorial direction works or does not work in this exact passage.',
-              'Explain one craft principle in plain language first, using my original wording and the current working direction as the example.',
-              'Distinguish evidence from interpretation. Tell me what the move may gain and what it could cost.',
-              'Do not propose replacement wording unless I ask.',
-            ].join('\n\n'));
+            props.onSend(teachingTurnPrompt('direction'));
           }
         }}>Teach me why</button>
         <button type="button" aria-pressed={showDepth === 'advanced'} onClick={() => {

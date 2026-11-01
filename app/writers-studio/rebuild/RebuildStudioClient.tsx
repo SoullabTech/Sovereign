@@ -47,6 +47,7 @@ import {
 } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
 import { canvasWithEditorialThread, canvasWithoutEditorialThread, CANVAS_EDITORIAL_THREAD_PARAM } from '../canvasIdentity';
 import { locationForSection, replacePlaceAddress, SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
+import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
 import {
   adoptBoundEditorialVersion, changedSpan, discoverEditorialRelationships, exactVersion,
   locateUniquePassage, openBoundEditorialPassage, openBoundEditorialThread,
@@ -1395,7 +1396,7 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
     }
     const ask = action === 'challenge'
       ? `Why did you change ${it}? Show me the words in my sentence that led you there, and make the strongest case for keeping mine. Do not propose new wording in this answer.`
-      : `What writing technique is at work in changing ${it}? Describe what it does for a reader, what it may cost, and when my original would be the better choice. Do not test me and do not propose new wording.`;
+      : teachingTurnPrompt('change', `changing ${it}`);
     void sendEditorial(ask);
   }, [sendEditorial]);
 

@@ -25,6 +25,7 @@ import { splitActiveParagraph, craftProseBlocks, craftProseBreaks, craftTypograp
 import type { WriteBlock } from '@/app/writers-studio/full-redesign/WriteRoom';
 import { craftTargetKey, type CraftTableSnapshot, type CraftTablePort, type CraftKeptSpan, type CraftCanvasReceipt } from '@/lib/writersStudio/craftFocusR1';
 import { locateUniquePresentationPassage } from '@/lib/writersStudio/rebuild/editorialCollaboration';
+import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
 
 export type CraftHeldPassage = {
   draftSectionId: string;
@@ -551,11 +552,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
       });
       return;
     }
-    props.onSend([
-      `Teach me the craft involved in ${subject}.${localWorking}`,
-      'Use my sentence as the example. Plain language first, then professional terminology if useful.',
-      'Do not propose new wording unless I ask.',
-    ].join('\n'), {
+    props.onSend([teachingTurnPrompt('change', subject), localWorking.trim()].join('\n\n'), {
       proposalPolicy: 'reply_only',
       displayText: 'Teach me what is happening in this change.',
     });
