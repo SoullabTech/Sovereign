@@ -100,6 +100,8 @@ type EditorialReturnCandidate = {
   readonly sectionId: string;
 };
 
+const UNVERIFIED_URL_THREAD = 'This saved manuscript conversation has not been verified for the current Living Work. Nothing was opened, sent, saved or applied.';
+
 export default function FlagshipWriteEditController() {
   const params = useSearchParams();
   const router = useRouter();
@@ -1055,8 +1057,14 @@ export default function FlagshipWriteEditController() {
     // The legacy editorial thread is bound to a manuscript, not a LivingWork.
     // A URL may name valid history but cannot authorize its relational context
     // in this Work. Hold until the backend can attest that exact relation.
-    if (scopedEditorialThread?.threadId === requestedEditorialThread) return;
-    setEditorialFailure('This saved manuscript conversation has not been verified for the current Living Work. Nothing was opened, sent, saved or applied.');
+    // Once a verified conversation is bound the URL's thread no longer decides
+    // anything: withdraw this notice rather than let it sit over MAIA's reply.
+    // (The address can also lag a bind, so a mismatch then is not a refusal.)
+    if (scopedEditorialThread) {
+      setEditorialFailure((current) => current === UNVERIFIED_URL_THREAD ? null : current);
+      return;
+    }
+    setEditorialFailure(UNVERIFIED_URL_THREAD);
   }, [requestedEditorialThread, focusId, currentLivingWorkScope, scopedEditorialThread?.threadId]);
 
   const chooseRelationship = useCallback((_threadId: string) => {
