@@ -610,6 +610,18 @@ it('D04d holding a different passage in the same section unbinds that passage’
   await React.act(async()=>{mockViewProps.onHoldPassage(section,20,[...original].length,original.slice(20));await settle(10)});
   expect(mockViewProps.editorialThread).toBeNull();
 });
+// Production 2026-11-01: an address still naming an older conversation kept the
+// "not verified … nothing was sent" notice over MAIA's reply after a verified
+// conversation was bound and the turn had been sent.
+it('D04e a stale address thread does not cover MAIA’s reply once a verified conversation is bound', async () => {
+  mockDeepLinkThreadId='fiction-old-url-thread';mockDiscoverLegacyThread=true;await mountB();
+  expect(mockViewProps.editorialFailure).toContain('has not been verified for the current Living Work');
+  await React.act(async()=>{mockViewProps.onSendEditorial('Fictional request with verified history');await settle(100)});
+  await React.act(async()=>{mockResolveTurn({ok:true,thread:mockResponseThread('D04e'),producedVersionId:null,voice:null});await settle(40)});
+  expect(mockViewProps.editorialThread?.threadId).toBe('fiction-thread');
+  expect(mockViewProps.lastMaiaEditorialTurn?.body).toBe('FICTIONAL_OLD_REPLY_D04e');
+  expect(mockViewProps.editorialFailure ?? null).toBeNull();
+});
 it('D05 explicitly requested new thread rejects a foreign manuscript response', async () => {
   await mountB();legacyModule().openBoundEditorialThread.mockResolvedValueOnce({ok:true,thread:{...mockThread,workId:'fiction-foreign-manuscript'}});
   await React.act(async()=>{mockViewProps.onSendEditorial('Fictional wrong manuscript response');await settle(100)});
