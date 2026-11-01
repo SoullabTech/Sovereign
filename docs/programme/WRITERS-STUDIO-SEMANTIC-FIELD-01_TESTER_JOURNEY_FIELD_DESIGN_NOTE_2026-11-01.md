@@ -97,6 +97,33 @@ more than once per wave.
 In-Studio first (a single quiet notice when a new wave is released). Personal outreach by the
 founder is fine. Email only once E1 is resolved and witnessed.
 
+### 3.7 Report-back to the Beta Co-Lab (founder addition, same day)
+
+*"This could be something that reports back to a Co-Lab problems, questions, and suggestions field."*
+
+The tester cohort already has a **Beta Co-Lab** (COLAB-BETA-01): one invite lands a tester in that exact
+Co-Lab, isolated from every other Co-Lab's material, with channels, member lists and MAIA-on-request
+reflection; its isolation boundary is gated by `scripts/verify-constitution-colab.ts` (33/0/0 in
+production). So the journey field does not need its own discussion surface — it can feed one that exists.
+
+- **A "Problems · Questions · Suggestions" field in the Beta Co-Lab**, one shared place where each item
+  is marked as a problem, a question or a suggestion, and the cohort and Soullab team can see it,
+  add "me too", and reply. Whether this is a dedicated channel or a structured view over one is a build
+  decision; it must use existing Co-Lab primitives, ⛔ not a second discussion system.
+- **The writer chooses, per answer**: *Keep it with the Soullab team* (default) or *Share with the Beta
+  Co-Lab* — and, when sharing, which kind it is. ⛔ Nothing moves into the Co-Lab without that
+  explicit act, and a shared item can be withdrawn by its author.
+- **One-way by default**: sharing copies the writer's chosen words and kind into the Co-Lab; replies
+  live in the Co-Lab. ⛔ Co-Lab members never see the writer's private journey, other answers, or any
+  Work context unless the writer included it in what they shared.
+- **Soullab closes the loop there**: when a problem is fixed or a suggestion is taken up, the team
+  answers in the same place, so testers see what their reports became.
+- **Isolation stays absolute**: only the Beta Co-Lab, never another Co-Lab; the Co-Lab release gate
+  must pass before this ships, and a check is added for "journey items never appear outside the Beta
+  Co-Lab".
+- ⛔ MAIA does not post, summarize or triage these items on her own; MAIA-on-request reflection
+  remains a member's explicit request, as Co-Lab already defines.
+
 ## 4. Data shape (sketch only — ⛔ not a migration)
 
 Additive and separate from B3's table, so B3's law and counts stay untouched:
@@ -113,8 +140,10 @@ Review Custody like every other.
 3. **Who sees answers**: founder only (recommended for the beta), or also named team members?
 4. **Attribution**: answers identified to the writer (needed to follow up, and for their own custody
    view) — confirm, with an explicit line in the consent copy?
+5. **Co-Lab report-back (§3.7)**: shared items appear under the writer's name in the Beta Co-Lab
+   (recommended, so the cohort can talk with each other), or anonymously?
 
 ## 6. Not authorized by this note
 
-Implementation · schema · routes · copy changes · contacting testers · any MAIA involvement in
+Implementation · schema · routes · copy changes · Co-Lab changes · contacting testers · any MAIA involvement in
 collecting feedback · telemetry of any kind.
