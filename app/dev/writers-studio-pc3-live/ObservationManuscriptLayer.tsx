@@ -131,6 +131,22 @@ export default function ObservationManuscriptLayer({
   const observation = insight.observation;
   const symbol = SYMBOL[observation.lens] ?? '✦';
 
+  /* The note must never cover the passage it is about. Keep it at the right
+     when it fits beside the passage; otherwise place it under the last line.
+     Width mirrors the CSS: min(320px, 100vw - 36px). */
+  const noteWidth = Math.min(320, window.innerWidth - 36);
+  const passageLeft = Math.min(...rects.map((rect) => rect.left));
+  const passageRight = Math.max(...rects.map((rect) => rect.left + rect.width));
+  const passageBottom = Math.max(...rects.map((rect) => rect.top + rect.height));
+  const fitsBeside = window.innerWidth - 20 - noteWidth >= passageRight + 12;
+  const notePlacement = fitsBeside
+    ? { right: 20, left: 'auto', top: Math.min(window.innerHeight - 300, Math.max(82, first.top - 16)) }
+    : {
+        right: 'auto',
+        left: Math.max(18, Math.min(passageLeft, window.innerWidth - noteWidth - 18)),
+        top: Math.min(window.innerHeight - 220, passageBottom + 12),
+      };
+
   return (
     <>
       <div className="p4r1-observation-ink" aria-hidden="true">
@@ -161,11 +177,7 @@ export default function ObservationManuscriptLayer({
       {open ? (
         <aside
           className="p4r1-observation-popover"
-          style={{
-            right: 20,
-            left: 'auto',
-            top: Math.min(window.innerHeight - 300, Math.max(82, first.top - 16)),
-          }}
+          style={notePlacement}
           data-observation-manuscript-layer
         >
           <header>

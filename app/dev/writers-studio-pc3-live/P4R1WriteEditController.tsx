@@ -1856,6 +1856,20 @@ export default function FlagshipWriteEditController() {
       return;
     }
 
+    /* Holding the passage is also one arrival act. holdPassage sets state and
+       records the return place, which gives this effect new dependencies; without
+       this guard "Show me in the manuscript" re-held the passage on every render,
+       an update loop that also wrote the return place thousands of times. */
+    const showKey = [
+      'show',
+      arrivalInsight.readingId,
+      arrivalInsight.observation.key,
+      section.draftSectionId,
+      range.start,
+      range.end,
+    ].join(':');
+    if (focusInsightConsumed.current === showKey) return;
+    focusInsightConsumed.current = showKey;
     holdPassage(section, range.start, range.end, exact);
   }, [arrivalInsight, context, requestedSection, incomingAction, holdPassage, openWorkspace]);
 
