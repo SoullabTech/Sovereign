@@ -279,6 +279,11 @@ test('empty editorial room offers examples and ideas as real MAIA acts', () => {
 
   act(() => button('Teach me about the writing').click());
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+  // Founder direction 2026-11-01: a conversation, not an info dump.
+  expect(onSend.mock.calls.at(-1)?.[0]).toContain('as a conversation rather than a lesson');
+  expect(onSend.mock.calls.at(-1)?.[0]).toContain('just one thing that is already working here');
+  expect(onSend.mock.calls.at(-1)?.[0]).toContain('End with one short question that lets me choose where we go next');
+  expect(onSend.mock.calls.at(-1)?.[0]).not.toMatch(/one or two craft moves/);
 
   act(() => button('Go deeper').click());
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
@@ -391,6 +396,9 @@ test('a MAIA response without a proposal stays visible and keeps exploration act
 
   act(() => followup('Teach me more').click());
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+  // It continues the conversation rather than restarting the lesson.
+  expect(onSend.mock.calls.at(-1)?.[0]).toContain('Keep teaching from where we are');
+  expect(onSend.mock.calls.at(-1)?.[0]).toContain('Do not repeat what you have already explained');
 
   act(() => followup('Go deeper').click());
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });

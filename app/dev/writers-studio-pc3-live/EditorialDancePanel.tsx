@@ -199,11 +199,29 @@ function discussPassagePrompt(): string {
   ].join('\n\n');
 }
 
+/* Founder direction 2026-11-01: teaching is a conversation, not an info dump,
+   and the level is the writer's to set. One idea per turn, then a question the
+   writer steers by; the term, the cost and further moves wait to be asked for. */
+const TEACHING_TURN_SHAPE = [
+  'Keep it to a few plain sentences about one idea, shown in my own words.',
+  'Do not add the technical term, what the move costs, or other moves unless I ask for them.',
+  'End with one short question that lets me choose where we go next — for example whether to say it more simply, look at why it works, or see what it costs.',
+  'Do not propose replacement wording unless I ask.',
+];
+
 function teachPassagePrompt(): string {
   return [
-    'Teach me about the writing in this exact passage.',
-    'Explain one or two craft moves that are already happening here, using my own words as examples.',
-    'Keep the explanation plain first. Do not propose replacement wording unless I ask.',
+    'Teach me about the writing in this exact passage, as a conversation rather than a lesson.',
+    'Start with just one thing that is already working here and what it does.',
+    ...TEACHING_TURN_SHAPE,
+  ].join('\n\n');
+}
+
+function continueTeachingPrompt(): string {
+  return [
+    'Keep teaching from where we are in this conversation about this exact passage.',
+    'Take the next single step: what I asked for if I said, otherwise the next thing worth knowing here. Do not repeat what you have already explained.',
+    ...TEACHING_TURN_SHAPE,
   ].join('\n\n');
 }
 
@@ -663,7 +681,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             <button type="button" disabled={props.busy} onClick={() => begin(ideasPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
               Give me ideas
             </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(teachPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
+            <button type="button" disabled={props.busy} onClick={() => begin(continueTeachingPrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
               Teach me more
             </button>
             <button type="button" disabled={props.busy} onClick={() => begin(deeperPassagePrompt(), 'direct', { proposalPolicy: 'reply_only' })}>
