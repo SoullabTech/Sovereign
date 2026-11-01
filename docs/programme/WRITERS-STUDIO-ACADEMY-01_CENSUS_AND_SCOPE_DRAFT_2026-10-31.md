@@ -362,3 +362,53 @@ reviewer).** It describes technique without prescribing quality:
 - The teaching MAIA gives is already in the shape the contract asks for.
 - What stands between a writer and it is navigation: a label that hides "learn", the repeated
   "Teach me", and two gates met only at the moment of asking.
+
+## 20. Founder direction, 2026-11-01: teaching should be a conversation, at the writer's level
+
+On reading MAIA's §19 reply, the founder said: *"this is great. but it would need to be
+adjusted to the level of the writer and maybe more importantly part of a conversation rather
+than a full info dump."*
+
+Recorded as a **design input for `WRITERS-STUDIO-SEMANTIC-FIELD-01`**, which owns the
+implicit Academy under the 2026-11-01 ruling (§18). Nothing is built or authorized by this
+record.
+
+### What causes the "info dump" (code-read at canonical)
+
+- "Teach me" (`teachPassagePrompt()` in
+  `app/dev/writers-studio-pc3-live/EditorialDancePanel.tsx`) asks MAIA to "explain one or two
+  craft moves that are already happening here".
+- It runs at the `learning` depth.
+- MAIA answered everything in one turn: two moves, a craft term, a cost, an experiment and an
+  offer.
+
+### "Level of the writer": how it may and may not be met
+
+- **May not:** MAIA judges a writer's level and adapts to it. `lib/writersStudio/editorialDepth.ts`
+  carries the ratified law (L6c): a depth "names what the writer wants of MAIA, never what
+  MAIA has concluded about the writer". Assigning or inferring one is MAIA grading the writer.
+- **May:** the writer chooses. The Guided, Learning and Direct depths already exist, member-
+  chosen and changeable without ceremony (L6d), with Guided as the same default for everyone.
+  The Semantic Field flow (`…_JARVIS_FLOW_2026-10-01.md`) also requires MAIA to follow cues
+  the writer gives mid-conversation ("say that more simply", "teach me the craft term", "go
+  deeper") without changing the underlying observation.
+- **Gap found in §19:** no depth or facet choice was offered anywhere on the path to "Teach
+  me".
+
+### Shape the direction points to (proposed, not ruled)
+
+1. One move per turn, in the writer's own words.
+2. Then a question that lets the writer steer, for example "Do you want the name for that,
+   or what it costs you?"
+3. The craft term, the cost, a second move or an experiment come only when the writer asks.
+   Depth is set turn by turn by the writer, not inferred.
+
+Every ratified invariant still holds: no prescription of quality, anchored in the passage, no
+proposed edit unless asked, and no more MAIA-written prose at any depth.
+
+### Not decided here
+
+- Changing the "Teach me" instruction, the learning directive, or where the depth choice is
+  offered. Each is a SEMANTIC-FIELD-01 implementation act and needs its own authorization.
+- Whether the change also applies to the other learning acts ("Teach me why", "Teach me
+  more", "Craft depth" and "Teach me" on the Craftsman's Table).
