@@ -62,6 +62,11 @@ docker() {
     fi
   fi
 
+  if [ "$1" = "inspect" ] && [ "$2" = "maia-sovereign" ] && [[ "$*" == *"State.Running"* ]]; then
+    printf '%s\n' "$STILL_RUNNING"
+    return 0
+  fi
+
   if [ "$1" = "inspect" ] && [ "$2" = "maia-sovereign" ]; then
     printf '%s\n' "$RUNNING_IMAGE"
     return 0
@@ -93,7 +98,8 @@ extract() {
   [ -n "$f" ] || fail "could not extract $1"
   eval "$f"
 }
-for fn in rollback_image_commit rollback_guard_for rollback_guard_count cmd_rollback; do
+for fn in rollback_image_commit rollback_guard_for rollback_commit_resolvable rollback_guards_exist \
+          rollback_guard_count cmd_rollback; do
   extract "$fn"
 done
 
@@ -101,6 +107,8 @@ reset() {
   : > "$LOG"
   RUNNING_IMAGE="sha256:new"
   RUNNING_GIT="newsha"
+  STILL_RUNNING="false"
+  unset ROLLBACK_UNKNOWN_COMMIT_ACK
   rm -f "$SCRIPT_DIR"/rollback-guards/*
 }
 
@@ -147,6 +155,10 @@ first_tag="$(grep -n '^tag ' "$LOG" | head -1 | cut -d: -f1)"
   && pass 'guard: check re-run after the swap' \
   || fail 'guard: post-swap recheck not observed'
 
+grep -Fq 'exec -i maia-postgres psql -U soullab -d maia_consciousness -v ON_ERROR_STOP=1 -At' "$LOG" \
+  && pass 'guard: check runs with ON_ERROR_STOP and unaligned output' \
+  || fail 'guard: psql invoked without the required flags'
+
 grep -Fq 'UPDATE' "$TMP/guard-stdin.sql" \
   && fail 'guard: rollback ran the repair itself' \
   || pass 'guard: only the read-only check reached Postgres'
@@ -186,5 +198,37 @@ printf 'BEGIN; UPDATE x; COMMIT;\n' > "$SCRIPT_DIR/rollback-guards/$FULL.repair.
 [ -z "$(rollback_guard_for d49dbc98d)" ] \
   && pass 'guard: .repair.sql alone is not a guard' \
   || fail 'guard: repair file matched as a guard'
+
+# ── 6. Reader still running after stop: refuse before checking ─────────────
+reset
+PREV_LABEL=""; PREV_ENV="d49dbc98d"
+printf 'SELECT 0;\n' > "$SCRIPT_DIR/rollback-guards/$FULL.sql"
+STILL_RUNNING="true"; GUARD_COUNTS=(0 0)
+if ( cmd_rollback ) >/dev/null 2>&1; then
+  fail 'guard: rollback proceeded while the current reader was still running'
+fi
+! grep -q '^tag ' "$LOG" && ! grep -q '^exec -i maia-postgres' "$LOG" \
+  && pass 'guard: a reader that did not stop refuses before the check; no tag moved' \
+  || fail 'guard: still-running reader was not refused cleanly'
+
+# ── 7. Guards exist but the previous commit cannot be resolved: fail closed ──
+reset
+PREV_LABEL=""; PREV_ENV=""
+printf 'SELECT 0;\n' > "$SCRIPT_DIR/rollback-guards/$FULL.sql"
+if ( cmd_rollback ) >/dev/null 2>&1; then
+  fail 'guard: unknown previous commit skipped the guard silently'
+fi
+grep -q '^tag ' "$LOG" \
+  && fail 'guard: a tag moved for an unresolvable previous commit' \
+  || pass 'guard: unresolvable previous commit refuses while guards exist'
+
+reset
+PREV_LABEL=""; PREV_ENV=""
+printf 'SELECT 0;\n' > "$SCRIPT_DIR/rollback-guards/$FULL.sql"
+ROLLBACK_UNKNOWN_COMMIT_ACK=1 cmd_rollback
+[ "$RUNNING_IMAGE" = "sha256:old" ] \
+  && pass 'guard: explicit acknowledgement lets an unresolvable rollback proceed' \
+  || fail 'guard: acknowledged rollback did not proceed'
+PREV_ENV="oldsha"
 
 printf 'ROLLBACK_PROD_ALIAS_BEHAVIOR=PASS\n'

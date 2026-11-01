@@ -1019,6 +1019,23 @@ rollback_guard_for() {
     done
 }
 
+# True when a commit value is a hex SHA long enough to match a guard file.
+rollback_commit_resolvable() {
+    [ "${#1}" -ge 7 ] || return 1
+    case "$1" in *[!0-9a-f]*) return 1 ;; esac
+}
+
+# True when at least one guard (not a repair file) is present.
+rollback_guards_exist() {
+    local f
+    for f in "$SCRIPT_DIR"/rollback-guards/*.sql; do
+        [ -e "$f" ] || continue
+        case "$f" in *.repair.sql) continue ;; esac
+        return 0
+    done
+    return 1
+}
+
 # Runs a guard's read-only count; prints the number of rows the old reader would refuse.
 rollback_guard_count() {
     local out
@@ -1053,10 +1070,25 @@ cmd_rollback() {
     # (so it writes no more such rows) and refuse to swap while any remain.
     local guard_file
     guard_file="$(rollback_guard_for "$PREVIOUS_SHA")"
+    # Fail closed: if guards exist but the restored image's commit cannot be resolved,
+    # no guard can be matched, so refuse rather than skip the check silently.
+    if [ -z "$guard_file" ] && ! rollback_commit_resolvable "$PREVIOUS_SHA" \
+       && rollback_guards_exist && [ "${ROLLBACK_UNKNOWN_COMMIT_ACK:-}" != "1" ]; then
+        log_error "Rollback refused: cannot resolve the commit of maia-sovereign:previous ('$PREVIOUS_SHA'),"
+        log_error "so no rollback data guard in scripts/rollback-guards/ can be matched to it."
+        log_error "Confirm by hand that the previous reader can read current data, then re-run with"
+        log_error "  ROLLBACK_UNKNOWN_COMMIT_ACK=1 ./scripts/deploy-production.sh rollback"
+        exit 1
+    fi
     if [ -n "$guard_file" ]; then
         log_info "Rollback data guard for $PREVIOUS_SHA: $guard_file"
         log_info "Stopping the current reader before checking stored data..."
         docker stop maia-sovereign >/dev/null 2>&1 || true
+        if [ "$(docker inspect maia-sovereign --format '{{.State.Running}}' 2>/dev/null || echo false)" = "true" ]; then
+            log_error "Rollback refused: maia-sovereign is still running after docker stop, so it could"
+            log_error "still write rows the previous reader cannot read. No tag has moved."
+            exit 1
+        fi
         local failing
         if ! failing="$(rollback_guard_count "$guard_file")"; then
             log_error "Rollback data guard could not run. Refusing to swap; the current reader is stopped."
