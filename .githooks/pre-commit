@@ -38,6 +38,10 @@ npm run check:no-supabase
 # Provider governance — no NEW OpenAI surfaces (docs/canon/PROVIDER_GOVERNANCE.md)
 npm run check:no-openai
 
+# Member-facing local models — modified weights (Heretic/abliterated) are dev-lane only
+# (founder ruling 2026-11-01; docs/programme/HERETIC_LOCAL_MODEL_CENSUS_DRAFT_2026-11-01.md §7)
+npm run check:member-facing-models
+
 # No direct @anthropic-ai/sdk imports outside allowlist — route via sovereignRouter.
 # (Green as of 2026-08-09: 1 approved, 1 operational, 55 grandfathered. ~2s.)
 npm run check:no-direct-anthropic
