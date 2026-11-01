@@ -72,7 +72,7 @@ export const LENS_MEANING: Readonly<Record<DevelopmentalLens, string>> = {
 };
 
 export const LENS_ORDER: readonly DevelopmentalLens[] =
-  ['development', 'structure', 'continuity', 'arc', 'themes', 'voice', 'coherence', 'reader'];
+  ['overview', 'development', 'structure', 'continuity', 'arc', 'themes', 'voice', 'coherence', 'reader'];
 
 export const phenomenonLabel = (p: DevelopmentalPhenomenon): string => PHENOMENON_LABEL[p];
 

@@ -45,7 +45,12 @@ describe('JARVIS source integration: old MAIA responses have no new-Work present
     expect(urlResume).not.toContain('readBoundEditorialThread(');
     expect(choice).not.toContain('readBoundEditorialThread(');
     expect(choice).not.toContain('bindEditorialThread(');
-    expect(discover).toContain('No previous thread was reused or modified.');
+    // Founder ruling 2026-11-01: a discovered thread is resumed only when the
+    // server verifies it against THIS Work's relationship; otherwise a new
+    // conversation opens beside it and the older one is left untouched.
+    expect(discover).toContain('readBoundEditorialThread(candidate.threadId, focusId, scopedA2Relationship.id)');
+    expect(discover).not.toContain('readBoundEditorialThread(candidate.threadId, focusId, null)');
+    expect(discover).toContain('It was left untouched; this is a new conversation.');
     const refresh = source.slice(
       source.indexOf('  const refreshContext = useCallback('),
       source.indexOf('  const applySuggested = useCallback('),

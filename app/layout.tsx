@@ -188,13 +188,6 @@ export default function RootLayout({
                 console.warn('⚠️ [GLOBAL] AudioContext error:', e);
               }
 
-              // Show confirmation
-              var toast = document.createElement('div');
-              toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:8px;z-index:99999;font-size:14px;';
-              toast.textContent = '🔊 Audio enabled';
-              document.body.appendChild(toast);
-              setTimeout(function(){ toast.remove(); }, 2000);
-
               // Remove listeners after first attempt
               document.removeEventListener('click', unlockAudio, true);
               document.removeEventListener('touchstart', unlockAudio, true);

@@ -39,6 +39,9 @@ export async function GET(request: NextRequest) {
   if (!sectionId) {
     return NextResponse.json({ error: 'sectionId is required' }, { status: 400 });
   }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sectionId)) {
+    return NextResponse.json({ error: 'sectionId must be a UUID' }, { status: 400 });
+  }
 
   const relationships = await editorialRelationshipsForSection(identity, sectionId);
   /* ⭐ Whole, and unranked. ⛔ No `mostRecent`, no `suggested`, no `default`. */

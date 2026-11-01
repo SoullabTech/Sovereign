@@ -55,7 +55,7 @@ describe('C11R2 resumable whole-manuscript review', () => {
       { revisionNumber: 12, sectionIds: ['s1', 's2'] },
     );
 
-    expect(result.readingIds).toHaveLength(8);
+    expect(result.readingIds).toHaveLength(LENS_ORDER.length);
     expect(mockCommission).not.toHaveBeenCalled();
   });
 
@@ -66,7 +66,11 @@ describe('C11R2 resumable whole-manuscript review', () => {
         frozenAt: '2026-09-20T00:00:00Z', observationCount: 0 }] as any,
     });
     mockFetch.mockResolvedValue({ ok: true, payload: payload('old', 'development', 11) } as any);
-    mockCommission.mockResolvedValue({ ok: false, refusal: 'stop', stage: 'read', attribution: 'system' } as any);
+    // overview now runs first; let it fail without stopping the run so the
+    // stale development reading is the one under test.
+    mockCommission.mockImplementation(async (_m: string, lens: string) => (lens === 'overview'
+      ? { ok: false, refusal: 'declined', stage: 'gate', attribution: 'member' }
+      : { ok: false, refusal: 'stop', stage: 'read', attribution: 'system' }) as any);
 
     await runWholeManuscriptReview(
       'm1',
