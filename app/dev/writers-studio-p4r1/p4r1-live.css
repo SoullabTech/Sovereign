@@ -1998,10 +1998,6 @@
 .p4r1-root .p4r1-dance-entry-groups .p4r1-dance-start-actions{
   margin-top:0;
 }
-.p4r1-root .p4r1-dance-entry-groups>section:first-child .p4r1-dance-start-actions>button:first-child{
-  border-color:var(--fr-action-line);
-  background:color-mix(in srgb,var(--fr-action-soft) 72%,var(--fr-field));
-}
 
 @media(max-width:760px){
   .p4r1-root .p4r1-dance-entry-groups>section>header{
