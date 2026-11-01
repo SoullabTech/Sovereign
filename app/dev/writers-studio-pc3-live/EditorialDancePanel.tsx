@@ -35,6 +35,8 @@ export interface EditorialDancePanelProps {
   appliedVersionId: string | null;
   busy: boolean;
   message: string | null;
+  /** Informational, never a failure: e.g. an older conversation was left untouched. */
+  notice?: string | null;
   undoMessage: string | null;
   sessionPosture: CurrentPostureRead;
   onChooseSessionPosture: (sanctuary: boolean) => void;
@@ -464,6 +466,10 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     </div>
   ) : null;
 
+  const noticeLine = props.notice
+    ? <p className="p4r1-dance-notice" role="note" data-editorial-notice>{props.notice}</p>
+    : null;
+
   const entryActions = (
     <div className="p4r1-dance-entry-groups" aria-label="Ways to work with this passage">
       <section>
@@ -550,9 +556,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <h3>What would help you here?</h3>
           <p>You can begin with the writing, the idea, the craft, or simply ask MAIA to help you look.</p>
           {postureGate}
+          {props.message ? <p className="p4r1-dance-status" role="status">{props.message}</p> : null}
           {entryActions}
           {openPrompt}
-          {props.message ? <p className="p4r1-dance-status" role="status">{props.message}</p> : null}
         </div>
       </section>
     );
@@ -561,6 +567,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   if (!recommendation) {
     return (
       <section className="p4r1-dance p4r1-dance-explore" data-editorial-dance>
+        {noticeLine}
         <div className="p4r1-dance-response">
           <span className="p4r1-eyebrow">MAIA</span>
           <h3>{props.busy
@@ -610,6 +617,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
 
   return (
     <section className="p4r1-dance" data-editorial-dance>
+      {noticeLine}
       {props.showOriginal !== false ? (
         <div className="p4r1-dance-original">
           <div>

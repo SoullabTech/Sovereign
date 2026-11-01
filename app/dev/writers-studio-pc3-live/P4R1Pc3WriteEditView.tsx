@@ -122,6 +122,7 @@ export type P4R1Pc3WriteEditViewProps = {
   adoptionBusy: boolean;
   memberVersionBusy: boolean;
   editorialFailure: string | null;
+  editorialNotice: string | null;
   adoptionOutcome: AdoptionWireOutcome | null;
   undoMessage: string | null;
   lastMaiaEditorialTurn: RebuildEditorialThread['turns'][number] | null;
@@ -932,6 +933,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         busy={busy}
         sessionPosture={props.sessionPosture}
         onChooseSessionPosture={props.onChooseSessionPosture}
+        notice={props.editorialNotice}
         message={props.editorialFailure ?? (props.adoptionOutcome && props.appliedVersionId === props.suggestedVersion?.id
           ? props.adoptionOutcome.kind === 'applied' ? null : 'The Work could not accept this revision. Nothing was changed.'
           : null)}
@@ -1457,6 +1459,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         busy={busy}
         sessionPosture={props.sessionPosture}
         onChooseSessionPosture={props.onChooseSessionPosture}
+        notice={props.editorialNotice}
         message={props.editorialFailure ?? (props.adoptionOutcome && props.appliedVersionId === props.suggestedVersion?.id
           ? props.adoptionOutcome.kind === 'applied' ? null : 'The Work could not accept this revision. Nothing was changed.'
           : null)}

@@ -1833,6 +1833,14 @@
   border-radius:10px;
   background:color-mix(in srgb,var(--fr-action-soft) 56%,var(--fr-panel));
 }
+.p4r1-root .p4r1-dance-notice{
+  margin:0 0 12px;
+  padding:9px 12px;
+  border:1px solid var(--fr-line-soft);
+  border-radius:8px;
+  color:var(--fr-muted);
+  font:12.5px/1.5 var(--fr-sans-stack);
+}
 .p4r1-root .p4r1-dance-posture--nudge{
   border-color:var(--fr-gold);
   box-shadow:0 0 0 2px color-mix(in srgb,var(--fr-gold) 35%,transparent);

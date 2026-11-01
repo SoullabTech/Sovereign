@@ -177,6 +177,7 @@ export default function FlagshipWriteEditController() {
   const [adoptionBusy, setAdoptionBusy] = useState(false);
   const [memberVersionBusy, setMemberVersionBusy] = useState(false);
   const [editorialFailure, setEditorialFailure] = useState<string | null>(null);
+  const [editorialNotice, setEditorialNotice] = useState<string | null>(null);
   const [adoptionOutcome, setAdoptionOutcome] = useState<AdoptionWireOutcome | null>(null);
   const [undoMessage, setUndoMessage] = useState<string | null>(null);
   const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
@@ -672,6 +673,7 @@ export default function FlagshipWriteEditController() {
       setUndoMessage(null);
       setVoiceNotice(null);
       setEditorialFailure(null);
+      setEditorialNotice(null);
       setEditorialBusy(false);
       setMemberVersionBusy(false);
       setAdoptionBusy(false);
@@ -904,6 +906,7 @@ export default function FlagshipWriteEditController() {
     setAppliedVersionId(null);
     setAdoptionOutcome(null);
     setEditorialFailure(null);
+    setEditorialNotice(null);
     setUndoMessage(null);
     setVoiceNotice(null);
   }, []);
@@ -1103,13 +1106,29 @@ export default function FlagshipWriteEditController() {
     }
 
     const matching = found.relationships.filter((relationship) => relationship.locusText === desired);
-    if (matching.length === 0) return startNewEditorial(stillCurrent);
-    // All discovered historical threads are manuscript-global under the
-    // current service contract. No result carries verified LivingWork
-    // provenance, even when an A2 relationship exists for this Work.
     setRelationshipChoices([]);
-    setEditorialFailure('This manuscript has prior editorial history, but the chosen Living Work has no verified binding to that conversation. No previous thread was reused or modified.');
-    return null;
+    if (matching.length === 0) return startNewEditorial(stillCurrent);
+
+    // Discovery is manuscript-global and carries no Living Work provenance, so
+    // a match is never resumed on its own say-so. The server's origin record
+    // decides: a thread opened under THIS Work's relationship verifies and is
+    // resumed; an older manuscript-global thread does not.
+    if (scopedA2Relationship) {
+      for (const candidate of matching) {
+        const out = await readBoundEditorialThread(candidate.threadId, focusId, scopedA2Relationship.id);
+        if (!stillCurrent()) return null;
+        if (out.ok && bindEditorialThread(out.thread)) return out.thread;
+      }
+    }
+
+    // Founder ruling 2026-11-01: an unverified older conversation must not
+    // block the passage. Open a new conversation in this Living Work beside
+    // it; the older one is neither read, reused nor modified.
+    const opened = await startNewEditorial(stillCurrent);
+    if (opened) {
+      setEditorialNotice('An earlier conversation about this passage exists from before this Work had its own MAIA context. It was left untouched; this is a new conversation.');
+    }
+    return opened;
   }, [focusId, focusSection, selectedPassage, editorialThread, scopedEditorialThread,
     scopedA2Relationship, work?.id, workContext.kind, startNewEditorial, bindEditorialThread,
     workGestureEpoch]);
@@ -2090,6 +2109,7 @@ export default function FlagshipWriteEditController() {
             editorialFailure={workReentryRequired.current
               ? 'This Living Work has its own MAIA context. Earlier manuscript conversations are not shared automatically.'
               : editorialFailure}
+            editorialNotice={scopedEditorialThread ? editorialNotice : null}
             adoptionOutcome={scopedEditorialThread ? adoptionOutcome : null}
             undoMessage={scopedEditorialThread ? undoMessage : null}
             lastMaiaEditorialTurn={lastMaiaEditorialTurn}
