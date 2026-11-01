@@ -353,7 +353,7 @@ test('Soullab Press is offered as an explicit optional human publishing pathway'
   expect(container.textContent).toContain('Only a separate agreement turns the possibility into a Soullab Press edition.');
 });
 
-test('Publish is visible in the beta top navigation and opens the existing Home publishing panel', () => {
+test('Publish is one room in the top navigation; the Home publishing panel stays on Home', () => {
   const home = fs.readFileSync(
     path.join(process.cwd(), 'app/dev/writers-studio-pc3-live/P4R1HomeView.tsx'),
     'utf8',
@@ -366,12 +366,21 @@ test('Publish is visible in the beta top navigation and opens the existing Home 
     path.join(process.cwd(), 'app/writers-studio/full-redesign/Shell.tsx'),
     'utf8',
   );
+  const types = fs.readFileSync(
+    path.join(process.cwd(), 'app/writers-studio/full-redesign/types.ts'),
+    'utf8',
+  );
 
+  // The nav renders exactly one entry per room, from PRIMARY_MODES.
+  expect(types).toContain("{ id: 'publish', label: 'Publish' }");
+  expect(types).toContain("{ id: 'listen', label: 'Listen' }");
+  expect(shell).not.toContain('data-writers-publish-entry');
+  expect(shell).not.toContain('data-writers-listen-entry');
+
+  // The Home publishing panel is unchanged and still reachable from Home.
   expect(home).toContain('Publish');
   expect(home).toContain('<P4R1ProducePanel');
   expect(home).toContain('produceInitially={props.publishRequested}');
   expect(controller).toContain("const publishRequested = params?.get('publish') === '1'");
-  expect(shell).toContain('data-writers-publish-entry');
-  expect(shell).toContain("next.set('publish', '1')");
   expect(home).not.toContain("onMode('produce')");
 });
