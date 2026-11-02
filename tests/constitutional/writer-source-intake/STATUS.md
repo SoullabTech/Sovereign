@@ -50,6 +50,14 @@ checks the PDFs under `tsx` because pdfjs cannot run in jest's sandbox.
   and the host's ambient `AWS_*` credentials were picked up by the SDK default chain. Three guards now prevent a repeat; see
   the INCIDENT note at the top of `observations.test.ts` and plan record section 10.1.
 
+## Hardening branch (code), added 2026-11-02
+
+Product-code candidates for plan decisions D1-D6 and D9 live on `claude/writer-source-intake-hardening`, which descends from this
+branch. They are tested and mutation-checked, **not merged, not deployed, no pull request**. The dynamic probes here gained S5a-S5e
+(the member removal door) and K1/K9 (KMS timeouts, replay fault); S1, S2 and S4 are now labelled as library-level because the
+ingest route refuses their inputs before custody. Record: `docs/programme/WRITER_SOURCE_INTAKE_HARDENING_BRANCH_2026-11-02.md`.
+Dynamic result there: **21 of 21 probes pass.** This file's own numbers above are from the docs branch and are not updated here.
+
 ## Not built yet
 
 1. `falsifiers-a.mjs`, `falsifiers-b.mjs`, `static-falsifiers.mjs`: the 18 executable static falsifiers (SF-01 … SF-19)

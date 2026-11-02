@@ -363,7 +363,7 @@ suite('Writer encrypted Source landing - dynamic observations (fake KMS, real Po
     expect(err.cause?.name).toBe('FictionalDbFault');
   });
 
-  it('S1 [C17,WSI-20] incomplete intents persist with ciphertext and are reached by no discard or Delete Work door', async () => {
+  it('S1 [C17,WSI-20] incomplete intents persist with ciphertext and are reached by no PRE-EXISTING discard or Delete Work door (the new member door is S5)', async () => {
     const pending = await beginEncryptedLanding(input('s1-pending', KEY(10)));
     const wInp = input('s1-writing', KEY(11));
     const w = await beginEncryptedLanding(wInp);
@@ -523,7 +523,7 @@ suite('Writer encrypted Source landing - dynamic observations (fake KMS, real Po
     });
   });
 
-  it('S2 [C16,WSI-11] empty extracted text lands and verifies ciphertext, then is refused, and the retry can never succeed', async () => {
+  it('S2 [C16,WSI-11] LIBRARY level: empty extracted text lands and verifies ciphertext, then is refused, and the retry can never succeed (the ingest route now refuses empty text before custody: intakeRefusals.test.ts)', async () => {
     const inp = input('s2-textless', KEY(13), { sourceText: '' });
     const first: any = await recordEncryptedArtifactArrival(inp).then(() => null, (e) => e);
     const row = await intentRow(KEY(13));
@@ -538,7 +538,7 @@ suite('Writer encrypted Source landing - dynamic observations (fake KMS, real Po
     expect(rows).toBe(1);
   });
 
-  it('S4 [WSI-10,WSI-11] extracted text containing a NUL byte lands ciphertext and is then refused by the database, stranding the intent', async () => {
+  it('S4 [WSI-10,WSI-11] LIBRARY level: extracted text containing a NUL byte lands ciphertext and is then refused by the database, stranding the intent (the ingest route now refuses NUL text before custody: intakeRefusals.test.ts)', async () => {
     const inp = input('s4-nul', KEY(17), { sourceText: `before\u0000after ${CANARY}` });
     const err: any = await recordEncryptedArtifactArrival(inp).then(() => null, (e) => e);
     const row = await intentRow(KEY(17));
