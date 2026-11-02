@@ -18,7 +18,7 @@ import { getMemberIdFromRequest, getMemberIdFromSessionToken } from '@/lib/auth/
 import { query } from '@/lib/db/postgres';
 import { calculateBirthChart, type BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { admitProCalculation, PRO_SUPPORTED_HOUSE_SYSTEMS } from '@/lib/astrology/proCalculationPolicy';
-import { founderPreviewEnabled, founderPreviewMemberAllowed } from '@/lib/astrology/founderOnlyPreviewAccess';
+import { proMemberAllowed, proPreviewEnabled } from '@/lib/astrology/proAccess';
 
 const RESPONSE_HEADERS = {
   'Cache-Control': 'private, no-store',
@@ -133,13 +133,14 @@ function bad(status: number, error: string) {
   return NextResponse.json({ error }, { status, headers: RESPONSE_HEADERS });
 }
 
-// FG01: explicit founder-only phase. A stale cohort flag or an existing
-// multi-member allowlist cannot admit anyone else in this phase.
+// One access decision (lib/astrology/proAccess.ts): the founder, plus audited
+// tester grants only in the 'tester-grant' phase. A stale cohort flag or a
+// multi-member allowlist never admits anyone.
 function previewEnabled(): boolean {
-  return founderPreviewEnabled(process.env);
+  return proPreviewEnabled(process.env);
 }
-function memberAllowed(memberId: string): boolean {
-  return founderPreviewMemberAllowed(memberId, process.env);
+function memberAllowed(memberId: string): Promise<boolean> {
+  return proMemberAllowed(memberId, process.env);
 }
 
 function dateString(input: unknown): string | null {
@@ -184,7 +185,7 @@ export async function GET(request: NextRequest) {
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return bad(401, 'session_required');
-    if (!memberAllowed(memberId)) return bad(403, 'preview_access_required');
+    if (!(await memberAllowed(memberId))) return bad(403, 'preview_access_required');
     const consent = await query<{ astrology_consent: Consent; astrology_birth_revision: string | null }>(
       'SELECT astrology_consent, astrology_birth_revision::text AS astrology_birth_revision FROM members WHERE id = $1 LIMIT 1', [memberId],
     );
@@ -199,7 +200,7 @@ export async function GET(request: NextRequest) {
     // while the consent query was in flight.
     if (await getMemberIdFromRequest(request) !== memberId)
       return bad(401, 'session_changed');
-    if (!previewEnabled() || !memberAllowed(memberId))
+    if (!previewEnabled() || !(await memberAllowed(memberId)))
       return bad(403, 'preview_access_required');
     return NextResponse.json({ memberId, verified: true, sourceRevision: currentRevision }, { headers: RESPONSE_HEADERS });
   } catch {
@@ -222,7 +223,7 @@ export async function POST(request: NextRequest) {
     return bad(503, 'session_verification_unavailable');
   }
   if (!memberId) return bad(401, 'session_required');
-  if (!memberAllowed(memberId)) return bad(403, 'preview_access_required');
+  if (!(await memberAllowed(memberId))) return bad(403, 'preview_access_required');
   if (!(await proChartWriteOriginAllowed(request, memberId)))
     return bad(403, 'cross_origin_request_refused');
 
@@ -264,7 +265,7 @@ export async function POST(request: NextRequest) {
     // replaced or invalidated while the calculation was in progress.
     const currentMemberId = await getMemberIdFromRequest(request);
     if (!currentMemberId || currentMemberId !== memberId) return bad(401, 'session_changed');
-    if (!previewEnabled() || !memberAllowed(memberId)) return bad(403, 'preview_access_required');
+    if (!previewEnabled() || !(await memberAllowed(memberId))) return bad(403, 'preview_access_required');
     // A private chart is valid only for the same *current* member-owned birth
     // source, not just for whichever profile happened to be read at start.
     // Reuse the identical SQL projection so canonical text values can be
@@ -297,7 +298,7 @@ export async function POST(request: NextRequest) {
     if (!finalMemberId || finalMemberId !== memberId) {
       return bad(401, 'session_changed');
     }
-    if (!previewEnabled() || !memberAllowed(memberId)) {
+    if (!previewEnabled() || !(await memberAllowed(memberId))) {
       return bad(403, 'preview_access_required');
     }
 
