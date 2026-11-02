@@ -139,3 +139,21 @@ The alternative is to split develop/review/MAIA now, which would need a per-acti
 - the plan name is RULING_REQUIRED;
 - implementation is not started;
 - production is unchanged.
+
+### 6.2 Founder ruling on the boundary (Kelly, 2026-11-02, in this session)
+
+**Ruling: ONE-WORK FREE.** The founder chose "Yes, one-Work Free" in answer to §6.1.
+
+- **Free** = the whole Writer's Studio as built today, on **one active Work**.
+- **Pro** = more than one active Work, plus each Pro-only capability *as it ships*. A Pro capability that doesn't exist yet (today: `listen`, `publish_preparation`, `advanced_academy`) is never offered or marketed as available.
+- In `planPolicy.ts` terms, this moves today's develop/review/MAIA surface into Free. The `advanced_*` / `expanded_maia` lines describe future capability, not a split of what exists.
+
+Implementation this now permits, each part landing as its own reviewed change:
+1. **One enforcement point.** A server-side active-Work-count check where a Work is created or activated, refusing a second active Work on Free, honestly and without losing data. Before building, it must be confirmed which object counts as an "active Work" (`living_works` vs manuscripts).
+2. **Admission of `plan: 'free'`** in `admissionServer.ts`. Built **dark** behind a server switch, so it lands without opening the door.
+3. **A plans surface** that Free members can actually reach. It replaces the dead `/writers-studio/plans` link and describes Pro with a request path, not a checkout.
+4. **Writer Pro tester grants.** An audited, revocable event log on the Astrology Pro pattern, replacing the `ops_contacts` jsonb flag as the Pro basis. The current roster migrates to grants, so nobody loses access.
+
+Still **not authorized**: opening the switch in production (a deploy act for the Writer's Studio walk session, after a witness) · payment · any change to the independent release holds.
+
+**Still RULING_REQUIRED:** the member-facing name of the paid plan. It is needed before step 3 shows any copy to members; steps 1, 2 and 4 don't need it.
