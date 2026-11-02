@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ObservationDialogue from '@/app/writers-studio/develop/ObservationDialogue';
 import type { CanvasInsight, InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
@@ -126,6 +126,17 @@ export default function ObservationManuscriptLayer({
     };
   }, [passage]);
 
+  /* The conversation opens below the note's actions, past the bottom of the
+     popover. Bring its start into view, or the writer's question seems to do
+     nothing (Academy 2c walk, F2). */
+  const dialogueRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!dialoguePrompt) return;
+    const frame = requestAnimationFrame(() =>
+      dialogueRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+    return () => cancelAnimationFrame(frame);
+  }, [dialoguePrompt]);
+
   if (!passage || rects.length === 0) return null;
 
   const first = rects[0]!;
@@ -208,7 +219,7 @@ export default function ObservationManuscriptLayer({
           </div>
 
           {dialoguePrompt ? (
-            <div className="p4r1-observation-marker-dialogue">
+            <div className="p4r1-observation-marker-dialogue" ref={dialogueRef}>
               <ObservationDialogue
                 key={`${observation.key}:${dialoguePrompt}`}
                 manuscriptId={insight.manuscriptId}
