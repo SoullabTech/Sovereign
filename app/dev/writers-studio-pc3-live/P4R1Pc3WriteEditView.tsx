@@ -63,6 +63,7 @@ import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import type { A2RelationshipSummary, EligibleCarrySource } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 import type { CraftWorkingSaveDraft } from '@/lib/writersStudio/craftSaveContractR1';
 import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
+import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
 
 export type Pc3HeldPassage = {
   draftSectionId: string;
@@ -141,6 +142,8 @@ export type P4R1Pc3WriteEditViewProps = {
     displayText?: string;
     /** The teaching button pressed (F1). The server owns the answer's shape. */
     teachingAnchor?: TeachingAnchor;
+    /** The free Ask box (Design 3C); the server owns the answer's shape. */
+    turnShape?: TurnShape;
   }) => void;
   /** Retire pending visible editorial result after an author STOP. */
   onStopEditorial: () => void;

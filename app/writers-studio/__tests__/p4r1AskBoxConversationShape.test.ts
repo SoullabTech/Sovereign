@@ -2,9 +2,8 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import EditorialDancePanel from '@/app/dev/writers-studio-pc3-live/EditorialDancePanel';
-import { CONVERSATION_TURN_SHAPE } from '@/lib/writersStudio/conversationTurn';
 
-/** Design 3C: what a typed question in Passage Focus actually sends. */
+/** Design 3C: what a typed question in Passage Focus actually sends: the writer's words only. */
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -30,20 +29,18 @@ function ask(text: string) {
   act(() => button.click());
 }
 
-test('a typed question goes with the writer’s words and the conversational shape', () => {
+test('a typed question sends only the writer’s words, with the conversational shape as a closed field', () => {
   const onSend = jest.fn();
   renderEmpty(onSend);
   ask('Give me everything you notice about the rhythm.');
   expect(onSend).toHaveBeenCalledTimes(1);
-  const sent: string = onSend.mock.calls[0][0];
-  expect(sent).toContain('Give me everything you notice about the rhythm.');
-  for (const line of CONVERSATION_TURN_SHAPE) expect(sent).toContain(line);
-  expect(sent).toContain('Do not change or apply anything unless I later choose a revision');
+  expect(onSend.mock.calls[0][0]).toBe('Give me everything you notice about the rhythm.');
+  expect(onSend.mock.calls[0][1]).toEqual({ turnShape: 'conversation' });
 });
 
 test('a card does not get the free-box shape', () => {
   const onSend = jest.fn();
   renderEmpty(onSend);
   act(() => Array.from(container.querySelectorAll('button')).find((b) => b.textContent?.includes('Give me ideas'))!.click());
-  expect(onSend.mock.calls.at(-1)?.[0]).not.toContain(CONVERSATION_TURN_SHAPE[0]);
+  expect(onSend.mock.calls.at(-1)?.[1]?.turnShape).toBeUndefined();
 });
