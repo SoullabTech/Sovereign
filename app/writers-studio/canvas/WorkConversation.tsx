@@ -232,6 +232,26 @@ function ScopedWorkConversation({
     if (t) setThread(t);
   }, [manuscriptId, work.id]);
 
+  /* ⭐ Design 2A (founder ruling 2026-11-02): the writer may set this
+     conversation aside and begin again, as in Passage Focus. Nothing is deleted:
+     the earlier thread stays on the server and is offered with the others next
+     time. `fresh` here is the writer's explicit act after a SUCCESSFUL lookup,
+     never a rounded failure, so the next question may lawfully open a thread.
+     The composer draft is the writer's and stays; an unsent correction belongs
+     to a turn of the old thread, so the control waits until it is sent or cleared.
+     It is not shown while a thread is still being adopted (threadId null). */
+  const canStartFresh = pending === null && !correctionBusy && correctionDraft.length === 0
+    && (threadId !== null || decision?.kind === 'choose');
+  const startFresh = () => {
+    if (!canStartFresh || inFlightRef.current) return;
+    setThreadId(null);
+    setThread(null);
+    setDecision({ kind: 'fresh' });
+    setRefusal(null);
+    setCorrectingTurn(null);
+    setCorrectionStatus(null);
+  };
+
   /* ⛔ `sectionId` IS NOT A DEPENDENCY. Discovery is about the Work. */
   useEffect(() => {
     let cancelled = false;
@@ -415,6 +435,23 @@ function ScopedWorkConversation({
         >
           <StudioText role="metadata" as="span">Where are we?</StudioText>
         </button>
+        {(threadId !== null || decision?.kind === 'choose') && (
+          <button
+            type="button"
+            onClick={startFresh}
+            disabled={!canStartFresh}
+            data-start-fresh-work-conversation="true"
+            title="Sets this conversation aside. It stays saved."
+            style={{
+              background: 'transparent', border: `1px solid ${RULE.soft}`,
+              borderRadius: RADIUS.sm, padding: `${SPACE.hairline}px ${SPACE.tight}px`,
+              cursor: canStartFresh ? 'pointer' : 'default', color: INK.secondary,
+              opacity: canStartFresh ? 1 : 0.5,
+            }}
+          >
+            <StudioText role="metadata" as="span">Start a new conversation</StudioText>
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setFocusMode((v) => !v)}
