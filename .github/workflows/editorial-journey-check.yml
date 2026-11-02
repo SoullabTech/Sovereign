@@ -1,0 +1,116 @@
+# EDITORIAL JOURNEY CHECK — the Writer's Studio editing journey must keep working
+# when OTHER lanes change the files it stands on.
+#
+# WHY THIS EXISTS (2026-11-02). The editorial disclosure repair was built against a
+# branch 1,184 commits behind canonical. By the time it merged, canonical had
+# independently (a) widened the same disclosure CHECK for review_discuss — a
+# migration that re-states the whole CHECK list DROPS every value it omits —
+# (b) made `detail` travel on every editorial refusal, and (c) added new blocks to
+# editorial cognition after the disclosure boundary. None of those lanes was wrong;
+# each simply could not see the others. This check is the thing that can.
+#
+# WHAT A GREEN RUN ESTABLISHES: the deterministic laws of the journey still hold
+#   · authorization precedes dispatch; an `attempted` receipt precedes the crossing
+#   · confirmation follows arrival (a provider that answered confirms; a timeout does not)
+#   · the receipt carries identities, never words
+#   · the TypeScript DisclosureBoundary union equals the SQL CHECK exactly, and the
+#     editorial migration states every value any earlier widening states
+#   · scope / voice / sequence laws, envelope admission, the editorial routes
+#
+# WHAT IT DOES NOT ESTABLISH — read before trusting it:
+#   · ⛔ that the provider works. This job holds NO Anthropic key, deliberately: a key in
+#     CI would be a standing external-processing authority. Run the live probe by hand:
+#         npx tsx scripts/witness/editorial-seam-diagnosis.ts
+#     (a dead key looked exactly like an editing bug on 2026-11-02 — HTTP 401, dispatch
+#     response_observed — and only the probe could tell them apart).
+#   · ⛔ that the journey is pleasant or that the writer's words are respected in the UI.
+#     That is the founder walk (docs/programme/WRITERS-STUDIO-RELEASE-EVIDENCE-01.md §6).
+#   · ⛔ that the migration is applied anywhere. A passing parity test says the files
+#     agree; it says nothing about any database.
+#
+# THE SEAM PIN IS RUN BUT NOT BLOCKING. `seamIsolation.test.ts` byte-pins the structured
+# seam to a governed baseline. Moving that baseline is a founder act, never a test
+# repair, so this workflow neither edits the pin nor hides it: it runs in its own step
+# with continue-on-error so a red pin is VISIBLE on every run without blocking unrelated
+# lanes. Promote it to blocking only when the baseline has been moved.
+#
+# Making this check REQUIRED on clean-main-no-secrets is a repository-settings act.
+
+name: Editorial Journey Check
+
+on:
+  pull_request:
+    branches: [clean-main-no-secrets, main]
+    paths:
+      - 'lib/disclosure/**'
+      - 'lib/ai/structured/**'
+      - 'lib/manuscript/editorialRuntime/**'
+      - 'lib/manuscript/editorialDiscourse/**'
+      - 'lib/manuscript/editorialScope/**'
+      - 'lib/writersStudio/__tests__/editorial*'
+      - 'app/api/writers-studio/editorial/**'
+      - 'lib/writers-studio/canonicalWriterTurn*'
+      - 'lib/maia/canonical-turn/**'
+      - 'database/migrations/**'
+      - 'jest.config.js'
+      - 'package.json'
+      - '.github/workflows/editorial-journey-check.yml'
+  push:
+    branches: [clean-main-no-secrets, main]
+    paths:
+      - 'lib/disclosure/**'
+      - 'lib/ai/structured/**'
+      - 'lib/manuscript/editorialRuntime/**'
+      - 'lib/manuscript/editorialDiscourse/**'
+      - 'lib/manuscript/editorialScope/**'
+      - 'lib/writersStudio/__tests__/editorial*'
+      - 'app/api/writers-studio/editorial/**'
+      - 'lib/writers-studio/canonicalWriterTurn*'
+      - 'lib/maia/canonical-turn/**'
+      - 'database/migrations/**'
+      - 'jest.config.js'
+      - 'package.json'
+      - '.github/workflows/editorial-journey-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: editorial-journey-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  journey-laws:
+    name: Editing journey laws hold
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: the seam pin resolves a baseline commit by SHA.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install (no lifecycle scripts)
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Journey laws (blocking)
+        run: >
+          npx jest --config jest.config.js
+          lib/disclosure
+          lib/ai/structured
+          lib/manuscript/editorialRuntime
+          lib/manuscript/editorialDiscourse
+          lib/manuscript/editorialScope
+          app/api/writers-studio/editorial
+          lib/writersStudio/__tests__/editorial
+          --testPathIgnorePatterns '/node_modules/' 'seamIsolation'
+
+      - name: Seam pin (visible, not blocking — moving the baseline is a founder act)
+        continue-on-error: true
+        run: >
+          npx jest --config jest.config.js
+          lib/ai/structured/__tests__/seamIsolation.test.ts
