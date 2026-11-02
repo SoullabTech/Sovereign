@@ -219,9 +219,13 @@ export const DELETE_WORK_COPY = {
   /** Shown beneath the action. The two hints are the whole distinction. */
   hint: 'Permanently deletes this Work and its writing.',
   /* Names the work, and names what deletion actually reaches. A member agreeing
-     to this should not later discover the original import outlived it. */
+     to this should not later discover the original import outlived it. It also
+     must not promise more than deletion can deliver: backups already taken are
+     not rewritten, so the copy says so instead of claiming nothing is kept
+     (D5; `permanentErasureCertified` is false for the same reason). */
   question: (title: string) => `Delete “${title}”?`,
   body:
     'This deletes the writing, its sections and drafts, and the original file it came '
-    + 'from. It cannot be undone and there is no archive — nothing is kept.',
+    + 'from. It cannot be undone and there is no archive. Private backups made before today '
+    + 'can still hold a copy until they are retired on their normal schedule.',
 } as const;

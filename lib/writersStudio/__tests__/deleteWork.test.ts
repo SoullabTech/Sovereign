@@ -139,9 +139,18 @@ describe('the confirmation tells the truth about reach', () => {
     expect(DELETE_WORK_COPY.question('The Long Field')).toContain('The Long Field');
   });
 
-  it('says the original file goes too, and that nothing is kept', () => {
+  it('says the original file goes too, and is honest that earlier backups can still hold a copy', () => {
     expect(DELETE_WORK_COPY.body).toContain('original file');
-    expect(DELETE_WORK_COPY.body).toContain('nothing is kept');
+    expect(DELETE_WORK_COPY.body).toContain('Private backups made before today');
+    expect(DELETE_WORK_COPY.body).toContain('retired on their normal schedule');
+  });
+
+  it('never claims that nothing is kept: backups are not rewritten and erasure is not certified', () => {
+    const all = Object.values(DELETE_WORK_COPY)
+      .map((v) => (typeof v === 'function' ? v('x') : String(v)))
+      .join(' ')
+      .toLowerCase();
+    expect(all).not.toMatch(/nothing is kept|nothing kept|nothing remains|completely erased|gone forever/);
   });
 
   it('promises no recovery it cannot honour', () => {
