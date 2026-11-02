@@ -5,6 +5,7 @@ surfaces:
   - app/home/page.tsx
   - app/house/page.tsx
   - app/house/DecisionAccessNotice.tsx
+  - app/house/WritersStudioAccessNotice.tsx
   - app/house/MaiaThresholdLink.tsx
   - app/house/PassingThrough.tsx
   - components/astrology/CurrentTransitsField.tsx

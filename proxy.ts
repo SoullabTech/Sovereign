@@ -20,6 +20,10 @@ import { canonicalStudioRoute } from './lib/writersStudio/canonicalStudioRoute';
 import { isTesterGatedAstrologyPage, memberIsAstrologyTester } from './lib/astrology/testerGate';
 import { writerStudioAdmissionForMember } from './lib/writersStudio/admissionServer';
 import { isWriterStudioRestrictedPath } from './lib/writersStudio/restrictedCorridor';
+import {
+  WRITER_STUDIO_INVITATION_REQUIRED_ACCESS,
+  WRITER_STUDIO_REFUSAL_PATH,
+} from './lib/writersStudio/invitationRefusal';
 
 // =============================================================================
 // AUTH EXTRACTION — SERVER-DERIVED, AUTHORITATIVE
@@ -685,10 +689,12 @@ export async function proxy(req: NextRequest) {
             { status: 403, headers: { 'Cache-Control': 'private, no-store' } },
           );
         }
+        // A signed-in member is told on their own House. The public doorway
+        // page ignored the refusal and routed back to the House Writing card.
         const invitation = req.nextUrl.clone();
-        invitation.pathname = '/explore/writers-studio';
+        invitation.pathname = WRITER_STUDIO_REFUSAL_PATH;
         invitation.search = '';
-        invitation.searchParams.set('access', 'invitation-required');
+        invitation.searchParams.set('access', WRITER_STUDIO_INVITATION_REQUIRED_ACCESS);
         invitation.searchParams.set('rid', rid);
         const response = NextResponse.redirect(invitation);
         response.headers.set('Cache-Control', 'private, no-store');

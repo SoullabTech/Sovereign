@@ -14,7 +14,7 @@ describe('Soullab home route authority', () => {
   });
 
   it('/house retains the same organism with House identity', () => {
-    expect(HOUSE).toContain('<HouseExperience current="house" />');
+    expect(HOUSE).toContain('<HouseExperience current="house" writersStudioRefused={');
   });
 
   it('Home opens the explicit MAIA encounter route, never bare /maia', () => {

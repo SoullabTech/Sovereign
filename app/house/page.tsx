@@ -18,6 +18,8 @@ import { canUseHouseStudioH1 } from '@/lib/access/houseStudioH1Access';
 import { houseWritingHref } from '@/app/writers-studio/h1Arrival';
 import { houseWriterStudioHref } from '@/lib/house/houseCabinContext';
 import { CurrentTransitsField } from '@/components/astrology/CurrentTransitsField';
+import { isWriterStudioInvitationRefusal } from '@/lib/writersStudio/invitationRefusal';
+import { WritersStudioAccessNotice } from './WritersStudioAccessNotice';
 
 async function memberForHouse() {
   if (process.env.MAIA_CABIN_MODE === 'offline') {
@@ -93,7 +95,10 @@ function cabinHousePreferences(memberId: string): HousePreferenceSnapshot {
 
 export const dynamic = 'force-dynamic';
 
-export async function HouseExperience({ current = 'house' }: { current?: 'home' | 'house' } = {}) {
+export async function HouseExperience({ current = 'house', writersStudioRefused = false }: {
+  current?: 'home' | 'house';
+  writersStudioRefused?: boolean;
+} = {}) {
   const member = await memberForHouse();
   if (!member) redirect('/signin');
   const firstName = member.name?.trim().split(/\s+/)[0] || 'there';
@@ -163,6 +168,7 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
           <span>Each space holds a different kind of attention. Open one to enter it.</span>
         </section>
 
+        <WritersStudioAccessNotice refused={writersStudioRefused} />
         <HouseCenter />
 
         <section className={styles.alive} aria-label="What's alive">
@@ -223,6 +229,8 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
     </HousePreferencesProvider>
   );
 }
-export default async function HousePage() {
-  return <HouseExperience current="house" />;
+type HousePageProps = { searchParams?: Promise<{ access?: string | string[] }> };
+export default async function HousePage({ searchParams }: HousePageProps) {
+  const p = (await searchParams) || {};
+  return <HouseExperience current="house" writersStudioRefused={isWriterStudioInvitationRefusal(p.access)} />;
 }
