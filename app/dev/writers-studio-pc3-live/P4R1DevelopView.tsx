@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
+import { teachingQuestion } from '@/lib/writersStudio/teachingTurn';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Shell, ChevronDown } from '@/app/writers-studio/full-redesign/Shell';
 import { STATE_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
@@ -2949,7 +2949,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 if (!requestConversationDeparture()) return;
                 setWorkTalking(false);
                 setSelectedObservationKey(key);
-                setDialoguePrompt(teachingTurnPrompt('observation'));
+                setDialoguePrompt(teachingQuestion('observation'));
                 setTalking(true);
               }}
               onDeepObservation={(key) => {
@@ -3098,6 +3098,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               superseded={selectedObservation.state === 'superseded'}
               initialQuestion={dialoguePrompt}
               autoSendInitialQuestion={Boolean(dialoguePrompt)}
+              {...(dialoguePrompt === teachingQuestion('observation') ? { teachingAnchor: 'observation' as const } : {})}
               onClose={() => {
                 setTalking(false);
                 setDialoguePrompt('');
@@ -3119,7 +3120,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 setTalking(true);
               }}>Talk with me about it</button>
               <button type="button" onClick={() => {
-                setDialoguePrompt(teachingTurnPrompt('observation'));
+                setDialoguePrompt(teachingQuestion('observation'));
                 setTalking(true);
               }}>Teach me what is happening</button>
             </div>

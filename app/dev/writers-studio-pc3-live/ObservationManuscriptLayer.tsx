@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ObservationDialogue from '@/app/writers-studio/develop/ObservationDialogue';
 import type { CanvasInsight, InsightPassage } from '@/lib/writersStudio/insightCanvas';
-import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
+import { teachingQuestion } from '@/lib/writersStudio/teachingTurn';
 
 type Rect = { left: number; top: number; width: number; height: number };
 
@@ -208,7 +208,7 @@ export default function ObservationManuscriptLayer({
             <button type="button" onClick={() => setDialoguePrompt('Help me understand this observation in plain language. Stay with what the evidence supports and show me why it matters in this passage.')}>
               Help me understand
             </button>
-            <button type="button" onClick={() => setDialoguePrompt(teachingTurnPrompt('observation'))}>
+            <button type="button" onClick={() => setDialoguePrompt(teachingQuestion('observation'))}>
               Teach me why
             </button>
             <button type="button" onClick={() => setDialoguePrompt('Go deeper on this observation. Use full editorial vocabulary, evidence, provenance, tradeoffs, and uncertainty. Keep every claim within what the evidence supports.')}>
@@ -228,6 +228,7 @@ export default function ObservationManuscriptLayer({
                 about={observation.observation}
                 superseded={observation.state === 'superseded'}
                 initialQuestion={dialoguePrompt}
+                {...(dialoguePrompt === teachingQuestion('observation') ? { teachingAnchor: 'observation' as const } : {})}
                 autoSendInitialQuestion
                 onClose={() => setDialoguePrompt(null)}
               />

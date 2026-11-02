@@ -15,7 +15,7 @@ import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionD
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { EDITORIAL_PACKET_LABELS } from '@/lib/writersStudio/editorialIntelligence';
-import { continueTeachingPrompt, teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
+import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import P4R1VoiceCapture from './P4R1VoiceCapture';
 
 /** A passage act the writer chose: plain data, so a held act runs with the
@@ -24,7 +24,7 @@ export interface PassageAct {
   label: string;
   prompt: string;
   depth?: EditorialDepth;
-  options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean };
+  options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor };
 }
 
 export interface EditorialDancePanelProps {
@@ -62,7 +62,7 @@ export interface EditorialDancePanelProps {
   onChooseSessionPosture: (sanctuary: boolean) => void;
 
   onSelectVersion: (id: string) => void;
-  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean }) => void;
+  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor }) => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   onApply: () => void;
   onUndo?: () => void;
@@ -217,7 +217,7 @@ function discussPassagePrompt(): string {
    and the level is the writer's to set. The shape lives in
    lib/writersStudio/teachingTurn.ts so every Teach me shares it. */
 function teachPassagePrompt(): string {
-  return teachingTurnPrompt('passage');
+  return teachingQuestion('passage');
 }
 
 function examplesPassagePrompt(): string {
@@ -428,7 +428,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const begin = (
     prompt: string,
     depth?: EditorialDepth,
-    options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean },
+    options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor },
   ) => {
     if (depth) props.onDepth(depth);
     props.onSend(withOrigin(prompt), options);
@@ -615,7 +615,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       <section>
         <header><b>Learn from the passage</b><span>Open more craft depth only if you want it.</span></header>
         <div className="p4r1-dance-start-actions">
-          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Teach me about the writing', prompt: teachPassagePrompt(), depth: 'learning', options: { proposalPolicy: 'reply_only' } })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Teach me about the writing', prompt: teachPassagePrompt(), depth: 'learning', options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' } })}>
             <b>Teach me about the writing</b>
             <span>Help me understand the craft already at work in my own words.</span>
           </button>
@@ -712,7 +712,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             <button type="button" disabled={props.busy} onClick={() => begin(ideasPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
               Give me ideas
             </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(continueTeachingPrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
+            <button type="button" disabled={props.busy} onClick={() => begin(teachingQuestion('continue'), 'learning', { proposalPolicy: 'reply_only', teachingAnchor: 'continue' })}>
               Teach me more
             </button>
             <button type="button" disabled={props.busy} onClick={() => begin(deeperPassagePrompt(), 'direct', { proposalPolicy: 'reply_only' })}>
@@ -959,7 +959,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           setShowDepth(opening ? 'teach' : 'none');
           if (opening) {
             props.onDepth('learning');
-            props.onSend(teachingTurnPrompt('direction'));
+            props.onSend(teachingQuestion('direction'), { teachingAnchor: 'direction' });
           }
         }}>Teach me why</button>
         <button type="button" aria-pressed={showDepth === 'advanced'} onClick={() => {

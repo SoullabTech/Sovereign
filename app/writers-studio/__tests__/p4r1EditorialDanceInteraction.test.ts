@@ -278,12 +278,11 @@ test('empty editorial room offers examples and ideas as real MAIA acts', () => {
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
 
   act(() => button('Teach me about the writing').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
-  // Founder direction 2026-11-01: a conversation, not an info dump.
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('as a conversation rather than a lesson');
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('just one thing that is already working here');
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('End with one short question that lets me choose where we go next');
-  expect(onSend.mock.calls.at(-1)?.[0]).not.toMatch(/one or two craft moves/);
+  // F1 (founder, 2026-11-02): the writer's turn is the button's words; the
+  // conversational teaching shape is added server-side from the anchor.
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', teachingAnchor: 'passage' });
+  expect(onSend.mock.calls.at(-1)?.[0]).toBe('Teach me about the writing in this passage.');
+  expect(onSend.mock.calls.at(-1)?.[0]).not.toContain('as a conversation rather than a lesson');
 
   act(() => button('Go deeper').click());
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
@@ -395,10 +394,10 @@ test('a MAIA response without a proposal stays visible and keeps exploration act
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
 
   act(() => followup('Teach me more').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
-  // It continues the conversation rather than restarting the lesson.
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('Keep teaching from where we are');
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('Do not repeat what you have already explained');
+  // It continues the conversation (the 'continue' shape, server-side), and the
+  // writer's turn is only the button's words (F1).
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', teachingAnchor: 'continue' });
+  expect(onSend.mock.calls.at(-1)?.[0]).toBe('Teach me more.');
 
   act(() => followup('Go deeper').click());
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
@@ -535,8 +534,8 @@ describe('an act chosen at a gate continues once the writer has answered (founde
     props = { ...props, maiaRelationship: { ...props.maiaRelationship, active: true } };
     draw();
     expect(props.onSend).toHaveBeenCalledTimes(1);
-    expect(props.onSend.mock.calls[0][0]).toContain('Teach me about the writing in this exact passage');
-    expect(props.onSend.mock.calls[0][1]).toEqual({ proposalPolicy: 'reply_only' });
+    expect(props.onSend.mock.calls[0][0]).toContain('Teach me about the writing in this passage');
+    expect(props.onSend.mock.calls[0][1]).toEqual({ proposalPolicy: 'reply_only', teachingAnchor: 'passage' });
     expect(props.onDepth).toHaveBeenCalledWith('learning');
     expect(held()).toBeNull();
 
