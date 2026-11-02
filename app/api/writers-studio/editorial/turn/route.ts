@@ -36,6 +36,7 @@ import {
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import { isTeachingAnchor, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
+import { isTurnShape, type TurnShape } from '@/lib/writersStudio/conversationTurn';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,7 +52,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  */
 const TOP_KEYS = [
   'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'responseDepth', 'relationshipId', 'carry',
-  'teachingAnchor',
+  'teachingAnchor', 'turnShape',
 ] as const;
 const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
@@ -79,6 +80,8 @@ type Parsed =
       responseDepth: EditorialDepth;
       /** Which teaching shape MAIA answers in (F1). ⛔ A closed value, never instruction text. */
       teachingAnchor: TeachingAnchor | null;
+      /** Design 3C: the free Ask box's conversational shape. ⛔ A closed value, never instruction text. */
+      turnShape: TurnShape | null;
     }
   | { ok: false; error: string };
 
@@ -164,6 +167,12 @@ function parseClosed(body: unknown): Parsed {
     return { ok: false, error: 'teachingAnchor must be passage, observation, change, direction, or continue' };
   }
   const teachingAnchor: TeachingAnchor | null = b.teachingAnchor === undefined ? null : b.teachingAnchor;
+  /* Design 3C: how a free-box answer is shaped is server-owned, like F1.
+     ⛔ An unknown shape is refused, never ignored. */
+  if (!(b.turnShape === undefined || isTurnShape(b.turnShape))) {
+    return { ok: false, error: 'turnShape must be conversation' };
+  }
+  const turnShape: TurnShape | null = b.turnShape === undefined ? null : b.turnShape;
   if (b.proposalPolicy !== undefined) {
     if (!(b.proposalPolicy === 'allow' || b.proposalPolicy === 'reply_only')) {
       return { ok: false, error: 'proposalPolicy must be allow or reply_only' };
@@ -214,6 +223,7 @@ function parseClosed(body: unknown): Parsed {
     proposalPolicy,
     responseDepth,
     teachingAnchor,
+    turnShape,
   };
 }
 
@@ -303,6 +313,7 @@ export async function POST(request: NextRequest) {
     proposalPolicy: parsed.proposalPolicy,
     responseDepth: parsed.responseDepth,
     ...(parsed.teachingAnchor ? { teachingAnchor: parsed.teachingAnchor } : {}),
+    ...(parsed.turnShape ? { turnShape: parsed.turnShape } : {}),
   });
 
   if (!turn.ok) {

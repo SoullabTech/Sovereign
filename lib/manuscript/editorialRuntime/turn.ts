@@ -55,6 +55,7 @@ import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/ca
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
 import { editorialDirective, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import { teachingTurnInstruction, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
+import { conversationTurnInstruction, type TurnShape } from '@/lib/writersStudio/conversationTurn';
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 import { relationalCraftSystemGuidance } from '@/lib/writersStudio/relationalCraftExchange';
 import {
@@ -142,6 +143,9 @@ export interface EditorialTurnInput {
   /** The teaching button the writer pressed (F1). Its shape is added here,
    *  server-side; the writer's turn holds only the button's words. */
   readonly teachingAnchor?: TeachingAnchor;
+  /** The free Ask box (Design 3C). Its shape is added here, server-side;
+   *  the writer's turn holds only what they typed or said. */
+  readonly turnShape?: TurnShape;
 }
 
 export type EditorialTurnRefusal =
@@ -415,6 +419,8 @@ export async function runEditorialTurn(
       // Server-owned teaching shape (F1): how to answer a Teach me, never a
       // sentence stored as the writer's.
       input.teachingAnchor ? teachingTurnInstruction(input.teachingAnchor) : '',
+      // Server-owned conversational shape for the free Ask box (Design 3C).
+      input.turnShape === 'conversation' ? conversationTurnInstruction() : '',
       // Server-owned map of the Studio's real controls (Design 1A), so "how do I"
       // gets the actual tool instead of a workaround. Names only; she presses nothing.
       studioGuideInstruction(),

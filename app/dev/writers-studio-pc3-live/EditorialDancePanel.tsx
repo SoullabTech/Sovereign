@@ -16,7 +16,7 @@ import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { EDITORIAL_PACKET_LABELS } from '@/lib/writersStudio/editorialIntelligence';
 import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
-import { CONVERSATION_TURN_SHAPE, conversationTurnPrompt } from '@/lib/writersStudio/conversationTurn';
+import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
 import P4R1VoiceCapture from './P4R1VoiceCapture';
 
 /** A passage act the writer chose: plain data, so a held act runs with the
@@ -63,7 +63,7 @@ export interface EditorialDancePanelProps {
   onChooseSessionPosture: (sanctuary: boolean) => void;
 
   onSelectVersion: (id: string) => void;
-  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor }) => void;
+  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; turnShape?: TurnShape }) => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   onApply: () => void;
   onUndo?: () => void;
@@ -443,16 +443,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       relationshipRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
       return;
     }
-    props.onSend(withOrigin([
-      'I want to work with this exact passage.',
-      'What I want help with:',
-      q,
-      '',
-      'Start by reflecting my intention in plain language. Work only from this passage and what I have explicitly asked.',
-      'Do not change or apply anything unless I later choose a revision and explicitly apply it.',
-      // Design 3C: a conversation by default, the full answer when the question asks for it.
-      ...CONVERSATION_TURN_SHAPE,
-    ].join('\n')));
+    // Design 3C: only the writer's words are their turn; the conversational
+    // shape is server-owned (turnShape), like a Teach-me's (F1).
+    props.onSend(withOrigin(q), { turnShape: 'conversation' });
     setStartPrompt('');
   };
 
@@ -654,7 +647,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
 
       <P4R1VoiceCapture
         disabled={props.busy || postureBlocksEditorial}
-        onAsk={(text) => props.onSend(withOrigin(conversationTurnPrompt(text)))}
+        onAsk={(text) => props.onSend(withOrigin(text), { turnShape: 'conversation' })}
       />
     </div>
   );
