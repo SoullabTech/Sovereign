@@ -147,3 +147,43 @@ Q4 is now DOES on both entries (Passage Focus and the Work conversation).
   (`display: none`); unchanged by 2A and the same for a first-ever conversation. Not repaired here.
 - In the browser pane, a synthetic select-all did not select the composer text, so the pre-filled prompt was
   replaced with the form tool. That's a quirk of the tooling, not something a writer would meet.
+
+## 7. Addendum — Design 3C live: the free Ask box (Q3 re-run)
+
+```
+EVIDENCE:   Production GIT_COMMIT da55740ae (cutover 2026-11-02 21:02:52Z, founder-authorized; carries #2069
+            Design 3C and #2073, which stores only the writer's words and sends the shape server-side as
+            `turnShape: 'conversation'`; also F1, F2 and #2066 original-file intake). Healthy, restarts 0,
+            KMS credential mount readable. Founder account, ~21:05Z–21:10Z. ⛔ Founder use is not member witness.
+```
+
+- **Q3**, Passage Focus → free Ask box, fresh conversation (thread `75fc42c0`), passage "Each of the
+  yogis, astonished, asked the same question…": *"Why does this paragraph feel flat?"*
+- **Stored writer turn** (production `ask_turns`, exact body): `Why does this paragraph feel flat?`.
+  It holds only the writer's words, with no "What I want help with" framing and no shape lines.
+- **Length:** 263 words (first run: 364).
+- **Shape:** it leads by reflecting what the writer seems to want, gives two observations and one
+  strength, and ends with a steering question. More conversational, but not reduced to one idea;
+  that's consistent with the ruling (short and steerable, not one idea).
+
+> You're asking why the yogis' outburst doesn't land with the heat you want — and I think it's partly that the paragraph is summarizing four voices into one.
+>
+> Here's the craft idea most at work: the opening line, "Each of the yogis, astonished, asked the same question," does the reporting for you. It tells us the reaction (astonished) and tells us they all said it, so by the time the actual speech arrives, the surprise has already been accounted for. What follows reads as a transcript of something we've been told about rather than something happening. The piece after this — "This is the first time I could get you four idiots in the same room" — is pure unframed speech, and it's funnier for it.
+>
+> The other thing I notice is the list in the middle: "practiced for decades... prayed, fasted, disciplined myself, refined my path." Four abstract verbs in a row, each weightless in the same way. Earlier you gave each yogi something concrete — white heat, hands, the precise edge of thought. Here they all collapse into a single generic ascetic. The grievance is stated rather than felt.
+>
+> What's live in it, though: "standing beside three men I can barely tolerate" is the best thing in the paragraph. It's specific, petty, and human, and it's the only line that sounds like a person rather than a yogi. And the "now you appear?" turn at the end has real snap.
+>
+> Which of those two is closer to what's bothering you — the frame before the speech, or the list inside it?
+
+Class: **DOES** (grounded and descriptive), now conversational with a steering close. A single sample, so
+it is ⛔ not evidence that every free-box answer is shorter. Breadth requests ("give me everything…") were
+not tested here.
+
+### Also observed on `da55740ae`
+
+- **Original-file import offered** (#2066): Home → Import writing accepts `.docx .pdf .epub .txt .md
+  .markdown`, "up to 25 MB", with no hold message. Nothing was uploaded, so KMS encryption itself is
+  ⛔ not witnessed.
+- Three log lines in the first 30 minutes, `Server Reference ID did not match the expected format.
+  Received "x"` (Next server-action handler). Container healthy; not attributed.

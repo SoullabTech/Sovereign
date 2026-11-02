@@ -168,3 +168,26 @@ taken after the merge.
 - **F4:** unreachable rebuild-Studio prompts. Cleanup belongs to the walk session's lane.
 - **CI tooling:** the TypeScript gate script ignores tsc's exit status and signal, so a
   crashed run reports "coverage lost" (seen on #2063). That belongs to the deploy and CI lane.
+
+## Production witness (added by the walk session, 2026-11-02)
+
+```
+EVIDENCE:   Production GIT_COMMIT da55740ae (cutover 21:02:52Z, founder-authorized; contains F1 3031eba2d,
+            F2 2a97f83f1, Design 3C #2069 and its server-shape follow-up #2073). printenv == Config.Env ==
+            asserted; healthy; restarts 0. Founder account. ⛔ Founder use is not member witness.
+```
+
+New `ask_turns` author rows since the cutover, founder's member only, read on production (exact bodies):
+
+| Thread | Path | Stored writer turn |
+|---|---|---|
+| `1b4a992f` | editorial turn · Write → Work with passage → **Teach me about this** | `Teach me about the writing in this passage.` |
+| `c58c8bd0` | developmental Ask · Develop → **Teach me what is happening** → ask | `Teach me the craft at work in what you noticed.` |
+
+Both are exactly the button's words; no instruction text was stored. **F1 production witness: PASS.**
+
+- The editorial Teach-me reply kept the teaching shape: one idea (the speech's rising-then-snapping
+  sentence lengths), shown in the writer's words, ending with a steering question.
+- The Develop turn stopped at the body-read permission ("Allow MAIA to read Section 175, 176 and
+  182…"). That consent is the writer's act and was not given in this witness, so MAIA's Develop reply
+  was not observed. The stored writer turn is the evidence for F1 on that path.
