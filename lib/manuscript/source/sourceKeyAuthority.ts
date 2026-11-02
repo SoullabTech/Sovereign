@@ -128,6 +128,24 @@ function kmsEncryptionContext(contextSha256: string): Record<string, string> {
   };
 }
 
+/**
+ * Explicit KMS timeouts (D9). Without them a stalled KMS call has no bound, and claimArrival makes that call while
+ * holding row locks on the arrival and the Work, so one slow response can pin database connections. The defaults keep a
+ * worst-case claim to roughly 3 attempts x (connect + response) rather than "forever". Both knobs are bounded and must
+ * be integers: a malformed value fails loudly at first use, like the region, instead of silently reverting to no limit.
+ */
+const KMS_CONNECT_TIMEOUT_DEFAULT_MS = 3_000;
+const KMS_REQUEST_TIMEOUT_DEFAULT_MS = 10_000;
+
+function boundedTimeoutMs(name: string, fallback: number, min: number, max: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') return fallback;
+  if (!/^\d{1,6}$/.test(raw)) throw new Error('writer_source_kms_timeout_invalid');
+  const value = Number(raw);
+  if (value < min || value > max) throw new Error('writer_source_kms_timeout_invalid');
+  return value;
+}
+
 function kmsClient(): KMSClient {
   if (kmsClientCache) return kmsClientCache;
   const region = process.env.WRITER_SOURCE_KMS_REGION
@@ -137,7 +155,18 @@ function kmsClient(): KMSClient {
     throw new Error('writer_source_kms_region_missing_or_invalid');
   }
   const factory = kmsClientFactory ?? ((config: KMSClientConfig) => new KMSClient(config));
-  kmsClientCache = factory({ region, maxAttempts: 3 });
+  kmsClientCache = factory({
+    region,
+    maxAttempts: 3,
+    requestHandler: {
+      connectionTimeout: boundedTimeoutMs('WRITER_SOURCE_KMS_CONNECT_TIMEOUT_MS', KMS_CONNECT_TIMEOUT_DEFAULT_MS, 250, 30_000),
+      requestTimeout: boundedTimeoutMs('WRITER_SOURCE_KMS_REQUEST_TIMEOUT_MS', KMS_REQUEST_TIMEOUT_DEFAULT_MS, 500, 60_000),
+      // MEASURED: in @smithy/node-http-handler as installed, requestTimeout ALONE only logs a warning and lets the call
+      // hang ("Init client requestHandler with throwOnRequestTimeout=true to turn this into an error"). Without this flag
+      // the timeout above looks configured and does nothing; a stalled KMS response would still pin the row locks.
+      throwOnRequestTimeout: true,
+    },
+  });
   return kmsClientCache;
 }
 
