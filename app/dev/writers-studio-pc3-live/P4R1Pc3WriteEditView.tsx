@@ -44,7 +44,7 @@ import { typesetManuscriptBody } from '@/app/writers-studio/full-redesign/manusc
 import { locateUniquePassage, type AdoptionWireOutcome, type RebuildEditorialRelationship, type RebuildEditorialThread } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
-import EditorialDancePanel from './EditorialDancePanel';
+import EditorialDancePanel, { type PassageAct } from './EditorialDancePanel';
 import IsolatedEditorialRoom from './IsolatedEditorialRoom';
 import P4R1FocusMaterials from './P4R1FocusMaterials';
 import P4R1BlankWritingArrival from './P4R1BlankWritingArrival';
@@ -277,6 +277,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [morePassageOptions, setMorePassageOptions] = useState(false);
   const [selectedRevisionEdits, setSelectedRevisionEdits] = useState<ReadonlySet<number>>(new Set());
   const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
+  const [requestedPassageAct, setRequestedPassageAct] = useState<(PassageAct & { key: number }) | null>(null);
   const [isolatedEditorial, setIsolatedEditorial] = useState(false);
   // Craftsman's Table is entered only by an author's explicit passage action.
   // Default Write and its already-authorized editorial room remain unchanged.
@@ -735,9 +736,24 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               (SEMANTIC-FIELD-01 teaching plan, 2026-11-01). */}
           <button type="button" role="menuitem" data-teach-me-entry onClick={() => {
             setSelectionMenuOpen(false);
-            props.onDepth('learning');
+            const gatesOpen = props.sessionPosture.resolved && !props.sessionPosture.sanctuary
+              && (!props.work || Boolean(props.maiaRelationship));
+            if (gatesOpen) {
+              props.onDepth('learning');
+              props.onOpenWorkspace();
+              props.onSendEditorial(teachingTurnPrompt('passage'), { proposalPolicy: 'reply_only' });
+              return;
+            }
+            // A gate is still open: the panel holds the request and continues it
+            // once the writer has answered (never under Sanctuary).
+            setRequestedPassageAct({
+              key: Date.now(),
+              label: 'Teach me about this',
+              prompt: teachingTurnPrompt('passage'),
+              depth: 'learning',
+              options: { proposalPolicy: 'reply_only' },
+            });
             props.onOpenWorkspace();
-            props.onSendEditorial(teachingTurnPrompt('passage'));
           }}>
             <b>Teach me about this</b>
             <span>Learn the craft already at work here.</span>
@@ -961,6 +977,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         undoMessage={visibleUndoMessage}
         onSelectVersion={props.onSelectVersion}
         onSend={props.onSendEditorial}
+        requestedAct={requestedPassageAct}
+        onRequestedActTaken={() => setRequestedPassageAct(null)}
         onSaveMember={props.onSaveMember}
         onApply={props.onApply}
         onUndo={props.onUndo}
@@ -1521,6 +1539,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         undoMessage={visibleUndoMessage}
         onSelectVersion={props.onSelectVersion}
         onSend={props.onSendEditorial}
+        requestedAct={requestedPassageAct}
+        onRequestedActTaken={() => setRequestedPassageAct(null)}
         onSaveMember={props.onSaveMember}
         onApply={props.onApply}
         onUndo={props.onUndo}
