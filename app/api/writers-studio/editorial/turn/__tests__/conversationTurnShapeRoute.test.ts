@@ -54,3 +54,11 @@ it('refuses an unknown shape before anything is stored', async () => {
   expect(persistAct).not.toHaveBeenCalled();
   expect(runTurn).not.toHaveBeenCalled();
 });
+
+it('refuses a teaching anchor and a turn shape together, before anything is stored', async () => {
+  const res = await POST(request({ ...base, turnShape: 'conversation', teachingAnchor: 'passage' }));
+  expect(res.status).toBe(400);
+  expect(await res.json()).toMatchObject({ error: 'teachingAnchor and turnShape are exclusive' });
+  expect(persistAct).not.toHaveBeenCalled();
+  expect(runTurn).not.toHaveBeenCalled();
+});

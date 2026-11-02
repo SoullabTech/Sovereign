@@ -173,6 +173,11 @@ function parseClosed(body: unknown): Parsed {
     return { ok: false, error: 'turnShape must be conversation' };
   }
   const turnShape: TurnShape | null = b.turnShape === undefined ? null : b.turnShape;
+  /* One shape per turn: a teaching answer and a free-box answer are different
+     instructions, and both landing in `system` would contradict each other. */
+  if (teachingAnchor && turnShape) {
+    return { ok: false, error: 'teachingAnchor and turnShape are exclusive' };
+  }
   if (b.proposalPolicy !== undefined) {
     if (!(b.proposalPolicy === 'allow' || b.proposalPolicy === 'reply_only')) {
       return { ok: false, error: 'proposalPolicy must be allow or reply_only' };
