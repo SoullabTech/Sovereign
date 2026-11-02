@@ -164,9 +164,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('❌ Invalid feedback data:', error.errors);
+      console.error('❌ Invalid feedback data:', error.issues);
       return NextResponse.json(
-        { error: 'Invalid feedback data', details: error.errors },
+        { error: 'Invalid feedback data', details: error.issues },
         { status: 400 }
       );
     }

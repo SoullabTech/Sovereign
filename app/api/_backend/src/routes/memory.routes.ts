@@ -16,7 +16,7 @@ const MemorySchema = z.object({
   element: z.string().optional(),
   sourceAgent: z.string().optional(),
   confidence: z.number().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 const UpdateSchema = z.object({

@@ -176,7 +176,7 @@ export const PractitionerThemeSchemaV1 = z.object({
         sessionFollowupSubject: z.string().max(120).default("Integration notes"),
         sessionFollowupBody: z.string().max(10_000).default(""),
       })
-      .default({}),
+      .prefault({}),
   }),
 
   // Feature visibility toggles (bounded by tier)

@@ -17,7 +17,7 @@ const MaiaTurnLogSchema = z.object({
   turnIndex: z.number().int().min(0).optional(), // Auto-increment if not provided
   userTurn: z.object({
     content: z.string().min(1),
-    meta: z.record(z.any()).default({})
+    meta: z.record(z.string(), z.any()).default({})
   }),
   maiaTurn: z.object({
     content: z.string().min(1),
@@ -31,7 +31,7 @@ const MaiaTurnLogSchema = z.object({
     element: z.enum(['fire', 'water', 'earth', 'air', 'aether']).optional(),
     facet: z.string().optional(),
     topicTags: z.array(z.string()).optional(),
-    meta: z.record(z.any()).default({})
+    meta: z.record(z.string(), z.any()).default({})
   })
 });
 
@@ -127,12 +127,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('❌ Invalid turn log payload:', error.errors);
+      console.error('❌ Invalid turn log payload:', error.issues);
       return NextResponse.json(
         {
           success: false,
           error: 'Invalid turn data',
-          details: error.errors
+          details: error.issues
         },
         { status: 400 }
       );

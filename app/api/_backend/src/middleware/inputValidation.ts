@@ -26,9 +26,7 @@ export const commonSchemas = {
 
   // Element validation
   element: z.enum(["fire", "water", "earth", "air", "aether"], {
-    errorMap: () => ({
-      message: "Element must be one of: fire, water, earth, air, aether",
-    }),
+    error: "Element must be one of: fire, water, earth, air, aether",
   }),
 
   // Email validation
@@ -69,7 +67,7 @@ export const commonSchemas = {
   symbols: z.array(z.string().min(1).max(50)).max(20, "Too many symbols"),
 
   // Metadata object
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 
   // Session ID
   sessionId: z.string().uuid("Invalid session ID format").optional(),
