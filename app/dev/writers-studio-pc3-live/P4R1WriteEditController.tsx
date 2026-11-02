@@ -1,5 +1,6 @@
 'use client';
 
+import type { TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
@@ -1231,7 +1232,7 @@ export default function FlagshipWriteEditController() {
 
   const sendEditorial = useCallback(async (
     requestText?: string,
-    options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean; displayText?: string },
+    options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean; displayText?: string; teachingAnchor?: TeachingAnchor },
   ) => {
     // displayText belongs to the local author-facing Craft presentation only.
     // It is neither a persistable author-turn field nor server authority.
@@ -1347,6 +1348,7 @@ export default function FlagshipWriteEditController() {
           // options. The client has no durable display-text custody contract.
           ...(options?.proposalPolicy ? { proposalPolicy: options.proposalPolicy } : {}),
           responseDepth: editorialDepth,
+          ...(options?.teachingAnchor ? { teachingAnchor: options.teachingAnchor } : {}),
           ...(a2Relationship ? { relationshipId: a2Relationship.id } : {}),
           ...(carry ? { carry } : {}),
         },

@@ -12,7 +12,7 @@ import type { CraftDialogueTurn, CraftSendOptions } from '@/lib/writersStudio/cr
 import { craftTargetKey, type CraftFocusTarget } from '@/lib/writersStudio/craftFocusR1';
 import { authorRelationalBoundary } from '@/lib/writersStudio/relationalCraftExchange';
 import { RELATIONAL_WRITING_INVITATIONS, composeRelationalCraftRequest, optionsForRelationalCraftPlan } from '@/lib/writersStudio/relationalCraftExchange';
-import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
+import { teachingQuestion } from '@/lib/writersStudio/teachingTurn';
 import {
   EDITORIAL_LATITUDES,
   LATITUDE_BANDS,
@@ -531,10 +531,9 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                   type="button"
                   disabled={props.busy}
                   onClick={() => send(
-                    teachingTurnPrompt('passage'),
+                    teachingQuestion('passage'),
                     'learning',
-                    { proposalPolicy: 'reply_only' },
-                    'Teach me what is happening here.',
+                    { proposalPolicy: 'reply_only', teachingAnchor: 'passage' },
                   )}
                 >
                   Teach me

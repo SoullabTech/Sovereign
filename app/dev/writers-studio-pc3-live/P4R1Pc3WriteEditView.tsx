@@ -62,7 +62,7 @@ import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import type { A2RelationshipSummary, EligibleCarrySource } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 import type { CraftWorkingSaveDraft } from '@/lib/writersStudio/craftSaveContractR1';
-import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
+import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 
 export type Pc3HeldPassage = {
   draftSectionId: string;
@@ -139,6 +139,8 @@ export type P4R1Pc3WriteEditViewProps = {
     proposalRequested?: boolean;
     /** Safe local presentation only; never a durable author turn or permission. */
     displayText?: string;
+    /** The teaching button pressed (F1). The server owns the answer's shape. */
+    teachingAnchor?: TeachingAnchor;
   }) => void;
   /** Retire pending visible editorial result after an author STOP. */
   onStopEditorial: () => void;
@@ -632,10 +634,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const teachRevisionEdit = (edit: RevisionEdit) => {
     props.onDepth('learning');
     props.onOpenWorkspace();
-    props.onSendEditorial(teachingTurnPrompt(
+    props.onSendEditorial(teachingQuestion(
       'change',
       edit.from ? `changing "${edit.from.trim()}" to "${edit.to.trim()}"` : `adding "${edit.to.trim()}"`,
-    ));
+    ), { teachingAnchor: 'change' });
   };
 
   const changeRevisionEdit = (edit: RevisionEdit) => {
@@ -741,7 +743,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             if (gatesOpen) {
               props.onDepth('learning');
               props.onOpenWorkspace();
-              props.onSendEditorial(teachingTurnPrompt('passage'), { proposalPolicy: 'reply_only' });
+              props.onSendEditorial(teachingQuestion('passage'), { proposalPolicy: 'reply_only', teachingAnchor: 'passage' });
               return;
             }
             // A gate is still open: the panel holds the request and continues it
@@ -749,9 +751,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             setRequestedPassageAct({
               key: Date.now(),
               label: 'Teach me about this',
-              prompt: teachingTurnPrompt('passage'),
+              prompt: teachingQuestion('passage'),
               depth: 'learning',
-              options: { proposalPolicy: 'reply_only' },
+              options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' },
             });
             props.onOpenWorkspace();
           }}>
@@ -1337,6 +1339,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       // internal; the controller must not confuse this with stored author
       // transcript custody or a server acknowledgement.
       ...(options?.displayText !== undefined ? { displayText: options.displayText } : {}),
+      ...(options?.teachingAnchor ? { teachingAnchor: options.teachingAnchor } : {}),
     });
   };
 

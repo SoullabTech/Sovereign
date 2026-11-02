@@ -1,4 +1,5 @@
 import type { RebuildEditorialThread } from './rebuild/editorialCollaboration';
+import type { TeachingAnchor } from './teachingTurn';
 
 export type CraftDialogueSpeaker = 'writer' | 'maia' | 'action';
 
@@ -8,6 +9,8 @@ export interface CraftSendOptions {
   /** What the writer should see in the Craft conversation, never prompt scaffolding. */
   readonly displayText?: string;
   readonly skipCanvasCommands?: boolean;
+  /** The teaching button pressed (F1). The server owns the answer's shape. */
+  readonly teachingAnchor?: TeachingAnchor;
   readonly suppressWriterEcho?: boolean;
 }
 

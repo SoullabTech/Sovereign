@@ -35,6 +35,7 @@ import {
 } from '@/lib/manuscript/editorialScope/contract';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
+import { isTeachingAnchor, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +51,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  */
 const TOP_KEYS = [
   'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'responseDepth', 'relationshipId', 'carry',
+  'teachingAnchor',
 ] as const;
 const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
@@ -75,6 +77,8 @@ type Parsed =
       /** Turn-local outcome vocabulary. ⛔ Defaults to allow. */
       proposalPolicy: ProposalPolicy;
       responseDepth: EditorialDepth;
+      /** Which teaching shape MAIA answers in (F1). ⛔ A closed value, never instruction text. */
+      teachingAnchor: TeachingAnchor | null;
     }
   | { ok: false; error: string };
 
@@ -153,6 +157,13 @@ function parseClosed(body: unknown): Parsed {
   if (!(['guided','learning','direct'] as readonly string[]).includes(responseDepth)) {
     return { ok: false, error: 'responseDepth must be guided, learning, or direct' };
   }
+  /* F1 (founder ruling 2026-11-02): how a teaching answer is shaped is server-
+     owned. The client names the anchor; the instruction never rides in the
+     writer's words. ⛔ An unknown anchor is refused, never ignored. */
+  if (!(b.teachingAnchor === undefined || isTeachingAnchor(b.teachingAnchor))) {
+    return { ok: false, error: 'teachingAnchor must be passage, observation, change, direction, or continue' };
+  }
+  const teachingAnchor: TeachingAnchor | null = b.teachingAnchor === undefined ? null : b.teachingAnchor;
   if (b.proposalPolicy !== undefined) {
     if (!(b.proposalPolicy === 'allow' || b.proposalPolicy === 'reply_only')) {
       return { ok: false, error: 'proposalPolicy must be allow or reply_only' };
@@ -202,6 +213,7 @@ function parseClosed(body: unknown): Parsed {
     mayProposeImmediately,
     proposalPolicy,
     responseDepth,
+    teachingAnchor,
   };
 }
 
@@ -290,6 +302,7 @@ export async function POST(request: NextRequest) {
     mayProposeImmediately: parsed.mayProposeImmediately,
     proposalPolicy: parsed.proposalPolicy,
     responseDepth: parsed.responseDepth,
+    ...(parsed.teachingAnchor ? { teachingAnchor: parsed.teachingAnchor } : {}),
   });
 
   if (!turn.ok) {
