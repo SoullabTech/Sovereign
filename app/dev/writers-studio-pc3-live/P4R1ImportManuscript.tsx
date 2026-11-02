@@ -8,6 +8,7 @@ import {
   sourceUploadAttempt,
   type SourceUploadAttempt,
 } from '@/lib/writersStudio/sourceUploadAttempt';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 
 const ACCEPT = '.docx,.pdf,.epub,.txt,.md,.markdown';
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
@@ -95,6 +96,21 @@ export default function P4R1ImportManuscript({
       return;
     }
 
+    // Sanctuary (D6): an upload saves an encrypted original and a plaintext extraction, so it is a content write. The
+    // posture is read at the moment of the act, never cached, and an unresolved posture is never read as "ordinary".
+    let posture: ReturnType<typeof readCurrentSanctuaryPosture> | null = null;
+    if (!localReview) {
+      posture = readCurrentSanctuaryPosture();
+      if (!posture.resolved) {
+        setError('Choose Ordinary or Sanctuary in Quick Settings first. Nothing has been sent.');
+        return;
+      }
+      if (posture.sanctuary) {
+        setError('Sanctuary is on. Original files are not saved during Sanctuary. Nothing has been sent.');
+        return;
+      }
+    }
+
     let uploadAttempt: SourceUploadAttempt | null = null;
     if (!localReview) {
       try {
@@ -120,13 +136,13 @@ export default function P4R1ImportManuscript({
       const response = await apiFetch(endpoint, {
         method: 'POST',
         body: form,
-        ...(uploadAttempt
-          ? { headers: { [SOURCE_UPLOAD_IDEMPOTENCY_HEADER]: uploadAttempt.idempotencyKey } }
+        ...(uploadAttempt && posture
+          ? { headers: { [SOURCE_UPLOAD_IDEMPOTENCY_HEADER]: uploadAttempt.idempotencyKey, 'x-maia-sanctuary': String(posture.resolved && posture.sanctuary) } }
           : {}),
       });
       const body = await response.json().catch(() => null) as Record<string, unknown> | null;
       if (!response.ok) {
-        if (response.status === 423) {
+        if (response.status === 423 && body?.code !== 'sanctuary_unavailable') {
           setError('Original-file import is still held for member accounts. Paste import remains available while custody and recovery acceptance are completed.');
         } else {
           setError(errorFrom(body, 'We could not read that file.'));

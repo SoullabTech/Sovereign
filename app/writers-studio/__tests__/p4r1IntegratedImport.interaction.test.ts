@@ -37,6 +37,7 @@ const button = (label: string) => {
 beforeEach(() => {
   mocked.mockReset();
   sessionStorage.clear();
+  window.localStorage.removeItem('maia_settings');
   originalRandomUuid = Object.getOwnPropertyDescriptor(globalThis.crypto, 'randomUUID');
   Object.defineProperty(globalThis.crypto, 'randomUUID', {
     configurable: true,
@@ -149,6 +150,8 @@ test('local review carries EPUB through source preview, author structure confirm
 });
 
 test('released production import reuses one upload identity after interruption and saves the returned Source arrival', async () => {
+  // D6: an upload is a content write, so the member's CURRENT posture must be resolved. A real session has one.
+  window.localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
   const onComplete = jest.fn();
   const uuid = '33333333-3333-4333-8333-333333333333';
   const randomUUID = (globalThis.crypto as unknown as { randomUUID: jest.Mock }).randomUUID;
@@ -209,7 +212,7 @@ test('released production import reuses one upload identity after interruption a
   expect(mocked.mock.calls[0][0]).toBe('/api/sovereign/manuscripts/ingest');
   expect(mocked.mock.calls[0][1]).toMatchObject({
     method: 'POST',
-    headers: { 'x-writer-upload-idempotency-key': uuid },
+    headers: { 'x-writer-upload-idempotency-key': uuid, 'x-maia-sanctuary': 'false' },
   });
 
   await select();
@@ -283,4 +286,55 @@ test('completed import consumes the threshold query while preserving local-revie
   const modeStart = controller.indexOf('const navigateMode = useCallback');
   const modeEnd = controller.indexOf('const onMode = useCallback', modeStart);
   expect(controller.slice(modeStart, modeEnd)).toContain("next.delete('import')");
+});
+describe('D6 — the Import room never sends an original while Sanctuary is on or the posture is unresolved', () => {
+  async function chooseFile() {
+    await act(async () => {
+      root.render(React.createElement(P4R1ImportManuscript, {
+        localReview: false,
+        sourceIntakeReleased: true,
+        onCancel: jest.fn(),
+        onComplete: jest.fn(),
+      }));
+    });
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['fictional-docx-package'], 'fictional-river.docx', {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      lastModified: 1_793_028_000_000,
+    });
+    Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })));
+    await settle();
+  }
+
+  test('Sanctuary on: nothing is sent and the member is told why', async () => {
+    window.localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: true }));
+    await chooseFile();
+    expect(mocked).not.toHaveBeenCalled();
+    expect(container.textContent).toContain('Sanctuary is on');
+    expect(container.textContent).toContain('Nothing has been sent');
+  });
+
+  test.each([
+    ['no live settings at all', null],
+    ['unreadable settings', '{not json'],
+    ['a non-boolean posture', JSON.stringify({ sanctuary: 'false' })],
+  ])('an unresolved posture (%s) is never read as ordinary: nothing is sent', async (_name, raw) => {
+    if (raw !== null) window.localStorage.setItem('maia_settings', raw);
+    await chooseFile();
+    expect(mocked).not.toHaveBeenCalled();
+    expect(container.textContent).toContain('Choose Ordinary or Sanctuary');
+  });
+
+  test('a server Sanctuary refusal is shown as such, not mislabelled as the generic hold', async () => {
+    window.localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
+    mocked.mockResolvedValueOnce(response(423, {
+      error: 'Sanctuary is on. Original files are not saved during Sanctuary.',
+      code: 'sanctuary_unavailable',
+    }));
+    await chooseFile();
+    expect(mocked).toHaveBeenCalledTimes(1);
+    expect(container.textContent).toContain('Original files are not saved during Sanctuary');
+    expect(container.textContent).not.toContain('still held for member accounts');
+  });
 });
