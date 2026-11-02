@@ -227,11 +227,14 @@ suite('Writer encrypted Source landing - dynamic observations (fake KMS, real Po
     await closePool();
   });
 
-  it('K1 [C04] the KMS client is built with ONLY region and maxAttempts 3', async () => {
+  it('K1 [C04,D9] the KMS client is built with region, maxAttempts 3 and EXPLICIT connect/request timeouts that throw', async () => {
     await recordEncryptedArtifactArrival(input('k1', KEY(1)));
-    observe('K1', ['WSI-32', 'WSI-03'], 'client config', { keys: Object.keys(kms.config as object).sort(), maxAttempts: (kms.config as any)?.maxAttempts });
-    expect(Object.keys(kms.config as object).sort()).toEqual(['maxAttempts', 'region']);
-    expect((kms.config as any).maxAttempts).toBe(3);
+    const cfg = kms.config as any;
+    observe('K1', ['WSI-32', 'WSI-03'], 'client config', { keys: Object.keys(cfg).sort(), maxAttempts: cfg?.maxAttempts, requestHandler: cfg?.requestHandler });
+    expect(Object.keys(cfg).sort()).toEqual(['maxAttempts', 'region', 'requestHandler']);
+    expect(cfg.maxAttempts).toBe(3);
+    // requestTimeout alone only LOGS a warning in the installed SDK; throwOnRequestTimeout is what makes it a bound.
+    expect(cfg.requestHandler).toEqual({ connectionTimeout: 3000, requestTimeout: 10000, throwOnRequestTimeout: true });
   });
 
   it('K2 [C20] one upload plus claim plus verify makes 1 GenerateDataKey and the expected Decrypt count', async () => {
@@ -334,6 +337,27 @@ suite('Writer encrypted Source landing - dynamic observations (fake KMS, real Po
     expect(String(clash.cause?.message)).toContain('idempotency_conflict');
     expect(other.landingIntentId).not.toBe(first.landingIntentId);
     expect(intents).toBe(2); // one per member, never merged
+  });
+
+  it('K9 [C12,D-await] a database error while replaying an already-recorded upload is wrapped, never leaked raw', async () => {
+    const inp = input('k9', KEY(18));
+    await recordEncryptedArtifactArrival(inp); // ARRIVAL_RECORDED
+    const pg = require('@/lib/db/postgres');
+    const real = pg.query;
+    const spy = jest.spyOn(pg, 'query').mockImplementation(((sql: string, params?: unknown[]) => {
+      if (typeof sql === 'string' && sql.includes('FROM manuscript_source_arrivals') && sql.includes('source_text_hash')) {
+        return Promise.reject(Object.assign(new Error('fictional database fault'), { name: 'FictionalDbFault' }));
+      }
+      return real(sql, params);
+    }) as any);
+    let err: any = null;
+    try { await recordEncryptedArtifactArrival(inp); } catch (e) { err = e; } finally { spy.mockRestore(); }
+    observe('K9', ['WSI-12'], 'replay database fault', { thrownName: err?.name, causeName: err?.cause?.name });
+    expect(err).not.toBeNull();
+    // Before the fix `return loadRecordedArrival(..)` inside the try skipped the catch, so the RAW fault escaped here and
+    // the route turned it into a generic 500 that said no manuscript was created although the arrival existed.
+    expect(err.name).toBe('SourceLandingIncompleteError');
+    expect(err.cause?.name).toBe('FictionalDbFault');
   });
 
   it('S1 [C17,WSI-20] incomplete intents persist with ciphertext and are reached by no discard or Delete Work door', async () => {
