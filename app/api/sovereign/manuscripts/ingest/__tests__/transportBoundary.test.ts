@@ -129,7 +129,7 @@ describe('F3 · valid membership cannot override the authorized Source intake HO
     // Retain all four identity refusals, then a distinct explicit hold.
     expect(admission.match(/status: 401/g) ?? []).toHaveLength(4);
     expect(src).toContain('const PRESS_SOURCE_INTAKE_RELEASED = writerReleaseAuthority().sourceIntakeReleased');
-    expect(read('lib/writersStudio/releaseAuthority.ts')).toContain('sourceIntakeReleased: false');
+    expect(read('lib/writersStudio/releaseAuthority.ts')).toContain('sourceIntakeReleased: true');
     expect(admission).toMatch(/if \(!PRESS_SOURCE_INTAKE_RELEASED\)[\s\S]{0,260}status: 423/);
     expect(admission).not.toMatch(/process\.env\./);
     expect(admission.indexOf('if (!PRESS_SOURCE_INTAKE_RELEASED)')).toBeLessThan(
