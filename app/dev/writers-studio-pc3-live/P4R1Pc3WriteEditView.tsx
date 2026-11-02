@@ -44,7 +44,7 @@ import { typesetManuscriptBody } from '@/app/writers-studio/full-redesign/manusc
 import { locateUniquePassage, type AdoptionWireOutcome, type RebuildEditorialRelationship, type RebuildEditorialThread } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
-import EditorialDancePanel from './EditorialDancePanel';
+import EditorialDancePanel, { type PassageAct } from './EditorialDancePanel';
 import IsolatedEditorialRoom from './IsolatedEditorialRoom';
 import P4R1FocusMaterials from './P4R1FocusMaterials';
 import P4R1BlankWritingArrival from './P4R1BlankWritingArrival';
@@ -62,6 +62,7 @@ import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import type { A2RelationshipSummary, EligibleCarrySource } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 import type { CraftWorkingSaveDraft } from '@/lib/writersStudio/craftSaveContractR1';
+import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
 
 export type Pc3HeldPassage = {
   draftSectionId: string;
@@ -152,6 +153,7 @@ export type P4R1Pc3WriteEditViewProps = {
   onMayProposeImmediately: (v: boolean) => void;
   onReviseInsight: NonNullable<Parameters<typeof InsightReadings>[0]['onRevise']>;
   onChoosePassage: NonNullable<Parameters<typeof InsightReadings>[0]['onChoosePassage']>;
+  onStartFreshConversation?: () => void;
   onChooseRelationship: (threadId: string) => void;
   onBeginMaiaRelationship: () => void;
   onChooseMaiaRelationship: (relationshipId: string) => void;
@@ -275,6 +277,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [morePassageOptions, setMorePassageOptions] = useState(false);
   const [selectedRevisionEdits, setSelectedRevisionEdits] = useState<ReadonlySet<number>>(new Set());
   const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
+  const [requestedPassageAct, setRequestedPassageAct] = useState<(PassageAct & { key: number }) | null>(null);
   const [isolatedEditorial, setIsolatedEditorial] = useState(false);
   // Craftsman's Table is entered only by an author's explicit passage action.
   // Default Write and its already-authorized editorial room remain unchanged.
@@ -629,9 +632,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const teachRevisionEdit = (edit: RevisionEdit) => {
     props.onDepth('learning');
     props.onOpenWorkspace();
-    props.onSendEditorial(
-      `Teach me the writing technique involved in changing ${edit.from ? `"${edit.from.trim()}" to "${edit.to.trim()}"` : `by adding "${edit.to.trim()}"`}. Explain what the move does, what it may cost, and when my original would be the better choice. Do not propose new wording.`,
-    );
+    props.onSendEditorial(teachingTurnPrompt(
+      'change',
+      edit.from ? `changing "${edit.from.trim()}" to "${edit.to.trim()}"` : `adding "${edit.to.trim()}"`,
+    ));
   };
 
   const changeRevisionEdit = (edit: RevisionEdit) => {
@@ -728,6 +732,32 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             <span>Talk about the passage before changing anything.</span>
           </button>
 
+          {/* The implicit Academy's front door: one step from a selected passage
+              (SEMANTIC-FIELD-01 teaching plan, 2026-11-01). */}
+          <button type="button" role="menuitem" data-teach-me-entry onClick={() => {
+            setSelectionMenuOpen(false);
+            const gatesOpen = props.sessionPosture.resolved && !props.sessionPosture.sanctuary
+              && (!props.work || Boolean(props.maiaRelationship));
+            if (gatesOpen) {
+              props.onDepth('learning');
+              props.onOpenWorkspace();
+              props.onSendEditorial(teachingTurnPrompt('passage'), { proposalPolicy: 'reply_only' });
+              return;
+            }
+            // A gate is still open: the panel holds the request and continues it
+            // once the writer has answered (never under Sanctuary).
+            setRequestedPassageAct({
+              key: Date.now(),
+              label: 'Teach me about this',
+              prompt: teachingTurnPrompt('passage'),
+              depth: 'learning',
+              options: { proposalPolicy: 'reply_only' },
+            });
+            props.onOpenWorkspace();
+          }}>
+            <b>Teach me about this</b>
+            <span>Learn the craft already at work here.</span>
+          </button>
 
           <button
             type="button"
@@ -737,7 +767,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             onClick={() => setMorePassageOptions((open) => !open)}
           >
             <b>{morePassageOptions ? 'Fewer ways' : 'More ways to work'}</b>
-            <span>Revision, learning, and deeper editorial reasoning, when you want them.</span>
+            <span>Revision and deeper editorial reasoning, when you want them.</span>
           </button>
           {morePassageOptions ? (
             <>
@@ -758,16 +788,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           }}>
             <b>Revise</b>
             <span>Ask MAIA for one useful editorial move.</span>
-          </button>
-
-          <button type="button" role="menuitem" onClick={() => {
-            setSelectionMenuOpen(false);
-            props.onDepth('learning');
-            props.onOpenWorkspace();
-            props.onSendEditorial('Teach me what is happening in this passage as writing. Use my own words as the example. Do not propose replacement wording unless I ask.');
-          }}>
-            <b>Teach me</b>
-            <span>Explain the craft already at work here.</span>
           </button>
 
           <button type="button" role="menuitem" onClick={() => {
@@ -957,6 +977,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         undoMessage={visibleUndoMessage}
         onSelectVersion={props.onSelectVersion}
         onSend={props.onSendEditorial}
+        requestedAct={requestedPassageAct}
+        onRequestedActTaken={() => setRequestedPassageAct(null)}
         onSaveMember={props.onSaveMember}
         onApply={props.onApply}
         onUndo={props.onUndo}
@@ -1445,6 +1467,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       mayProposeImmediately={props.mayProposeImmediately}
       onMayProposeImmediately={props.onMayProposeImmediately}
       onClose={props.onCloseWorkspace}
+      onStartFresh={props.editorialThread ? props.onStartFreshConversation : undefined}
     >
       {props.carriedInsight ? (
         <section className="p4r1-focus-origin" data-focus-origin>
@@ -1516,6 +1539,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         undoMessage={visibleUndoMessage}
         onSelectVersion={props.onSelectVersion}
         onSend={props.onSendEditorial}
+        requestedAct={requestedPassageAct}
+        onRequestedActTaken={() => setRequestedPassageAct(null)}
         onSaveMember={props.onSaveMember}
         onApply={props.onApply}
         onUndo={props.onUndo}

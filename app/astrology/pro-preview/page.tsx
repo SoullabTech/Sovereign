@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { getMemberIdFromSessionToken } from '@/lib/auth/getMemberFromRequest';
-import { founderPreviewEnabled, founderPreviewMemberAllowed } from '@/lib/astrology/founderOnlyPreviewAccess';
+import { proMemberAllowed, proPreviewEnabled } from '@/lib/astrology/proAccess';
 import ProAstrologyExperience from './ProAstrologyExperience';
 
 /**
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AstrologyProPreviewPage() {
-  if (!founderPreviewEnabled(process.env)) notFound();
+  if (!proPreviewEnabled(process.env)) notFound();
 
   // A signed-in account's identity is resolved by its server-issued,
   // unrevoked, unexpired session; never by the member-id claim cookie.
@@ -33,6 +33,6 @@ export default async function AstrologyProPreviewPage() {
   } catch {
     notFound();
   }
-  if (!founderPreviewMemberAllowed(memberId, process.env)) notFound();
+  if (!(await proMemberAllowed(memberId, process.env))) notFound();
   return <ProAstrologyExperience />;
 }

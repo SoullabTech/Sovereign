@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Shell, ChevronDown } from '@/app/writers-studio/full-redesign/Shell';
 import { STATE_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
@@ -2948,7 +2949,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 if (!requestConversationDeparture()) return;
                 setWorkTalking(false);
                 setSelectedObservationKey(key);
-                setDialoguePrompt('Teach me the one writing or craft idea most at work in this observation. Explain it in plain language first and show me in my own words. Do not suggest replacement wording unless I ask.');
+                setDialoguePrompt(teachingTurnPrompt('observation'));
                 setTalking(true);
               }}
               onDeepObservation={(key) => {
@@ -3118,7 +3119,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 setTalking(true);
               }}>Talk with me about it</button>
               <button type="button" onClick={() => {
-                setDialoguePrompt('Teach me the one craft idea most relevant to this observation. Begin in plain language, show it in my own writing, and keep the technical term optional.');
+                setDialoguePrompt(teachingTurnPrompt('observation'));
                 setTalking(true);
               }}>Teach me what is happening</button>
             </div>

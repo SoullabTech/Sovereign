@@ -17,7 +17,7 @@ import {
 
 export const revalidate = false;
 
-const ScoresSchema = z.record(z.number().int().min(1).max(5));
+const ScoresSchema = z.record(z.string(), z.number().int().min(1).max(5));
 
 const BodySchema = z.object({
   source_type: z.string().default("oracle_turn"),
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
+        { error: "Invalid request body", details: error.issues },
         { status: 400 }
       );
     }

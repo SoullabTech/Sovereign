@@ -46,7 +46,7 @@ describe('C2 editorial dance convergence', () => {
   });
 
   it('makes progressive craft depth real MAIA acts, not decorative toggles', () => {
-    expect(dance).toContain('Teach me why this editorial direction works or does not work in this exact passage.');
+    expect(dance).toContain("props.onSend(teachingTurnPrompt('direction'))");
     expect(dance).toContain('Go deeper on this editorial direction.');
     expect(dance).toContain('props.onSend([');
     expect(dance).toContain('props.lastMaiaTurn?.body');
@@ -59,7 +59,7 @@ describe('C2 editorial dance convergence', () => {
     expect(host).toContain('<b>Revise</b>');
     expect(host).toContain('<b>Discuss</b>');
     expect(host).toContain('Discuss what is happening in this exact passage with me before proposing any edits.');
-    expect(host).toContain('<b>Teach me</b>');
+    expect(host).toContain('<b>Teach me about this</b>');
     expect(host).toContain('<b>Go deeper</b>');
     expect(host).not.toContain('className="p4r1-locus-actions"');
   });

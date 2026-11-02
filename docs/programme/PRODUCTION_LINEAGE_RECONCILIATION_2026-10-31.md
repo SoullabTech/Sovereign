@@ -60,3 +60,15 @@ On canonical with this branch merged, production has applied every migration on 
 - `20261030000001_house_pro_studio_catalog`
 
 A deploy remains a separate founder act, run through `scripts/pre-deploy-gate.sh` and followed by a production witness.
+
+## 2026-11-01 — migration custody follow-up
+
+**Correction.** The exemption comments added on 2026-10-31 changed the bytes of five migrations production had already run. For `20261020000001_writer_editorial_thread_origins.sql`, the file no longer matched the checksum production recorded (`58a09c9b…`). Production's deploy-path runner does not compare checksums, so no deploy was affected. `scripts/apply-migrations.sh` does compare them, and would refuse that file on any database that already ran it.
+
+**Repair.**
+- **Restored.** The five files are byte-identical again to production runtime `9856e27f7`. `thread_origins` once more equals production's recorded checksum.
+- **Pinned exemption.** The lock-timeout law now honours `scripts/migration-lock-timeout-applied-in-production.json`. That file lists each migration production ran before it reached canonical, pinned by sha256. A file is exempt only while its bytes match the pin. Editing it brings it back under the law; this was checked by appending one line, which turned the check red.
+- **Sources committed.** Of the six sources in the custody gap above, five are now committed:
+  - `20261021000001_writer_r20_restore_refusal`, `20261021000002_writer_r20_editorial_erasure`, `20261022000001_writer_source_arrival_r20_refusal` and `20261022000002_writer_source_arrival_retention_index` came from the uncommitted copies in `~/mail-writer-live-overlay-20261022`. Each file's full sha256 equals the checksum production recorded, so these are provably the bytes that ran.
+  - `20260903000001_return_authority_fail_closed` came from `origin/fix/maia-p6-return-authority-canonical-r1-20261002`. Production applied it before checksums were recorded, so identity with what ran is **not provable**. It is committed as the best available source.
+- **Still missing.** `20261021140000_colab_clean_reboot_operator`. Production's recorded checksum is `3f38c2038e1a91dcabfb80befb2d744513a40f723a0050af68d860e9803a3ac8`, so any candidate copy can be proven or refused by hashing it.

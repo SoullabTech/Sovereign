@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import ObservationDialogue from '@/app/writers-studio/develop/ObservationDialogue';
 import type { CanvasInsight, InsightPassage } from '@/lib/writersStudio/insightCanvas';
+import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
 
 type Rect = { left: number; top: number; width: number; height: number };
 
@@ -196,7 +197,7 @@ export default function ObservationManuscriptLayer({
             <button type="button" onClick={() => setDialoguePrompt('Help me understand this observation in plain language. Stay with what the evidence supports and show me why it matters in this passage.')}>
               Help me understand
             </button>
-            <button type="button" onClick={() => setDialoguePrompt('Teach me the one writing or craft idea most at work here. Explain it in plain language first, then show me in my own words. Do not propose replacement wording unless I ask.')}>
+            <button type="button" onClick={() => setDialoguePrompt(teachingTurnPrompt('observation'))}>
               Teach me why
             </button>
             <button type="button" onClick={() => setDialoguePrompt('Go deeper on this observation. Use full editorial vocabulary, evidence, provenance, tradeoffs, and uncertainty. Keep every claim within what the evidence supports.')}>

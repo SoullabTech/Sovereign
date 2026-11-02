@@ -15,6 +15,7 @@ import {
   canvasWithoutEditorialThread,
   canvasWithRelationship,
   canvasWithoutRelationship,
+  CANVAS_EDITORIAL_THREAD_PARAM,
   editorialThreadIdFrom,
   relationshipIdFrom,
 } from '@/app/writers-studio/canvasIdentity';
@@ -102,6 +103,12 @@ type EditorialReturnCandidate = {
 
 const UNVERIFIED_URL_THREAD = 'This saved manuscript conversation has not been verified for the current Living Work. Nothing was opened, sent, saved or applied.';
 
+/** Search params can lag the Studio's own address rewrites; read the live one. */
+function addressStillNames(threadId: string): boolean {
+  if (typeof window === 'undefined') return true;
+  return new URLSearchParams(window.location.search).get(CANVAS_EDITORIAL_THREAD_PARAM) === threadId;
+}
+
 export default function FlagshipWriteEditController() {
   const params = useSearchParams();
   const router = useRouter();
@@ -156,6 +163,8 @@ export default function FlagshipWriteEditController() {
   const [a2RelationshipMessage, setA2RelationshipMessage] = useState<string | null>(null);
   const [editorialReturnCandidate, setEditorialReturnCandidate] = useState<EditorialReturnCandidate | null>(null);
   const editorialReturnPreparationRef = useRef<string | null>(null);
+  // One-shot [sectionId, passage] for which the writer asked to start fresh.
+  const freshConversationRef = useRef<string | null>(null);
   // A refusal notice is only safe to show under its originating Work scope,
   // even when no active A2 relationship remains in presentation state.
   const a2MessageScopeRef = useRef<string | null>(null);
@@ -1039,6 +1048,10 @@ export default function FlagshipWriteEditController() {
         }
         return;
       }
+      // Return exists to keep an applied edit undoable (f0b2a6001). Without
+      // one, reopening the place must not reopen the old conversation.
+      const app = out.thread.application;
+      if (!app || app.undone || !app.canUndo) return;
       bindEditorialThread(out.thread);
     });
 
@@ -1060,7 +1073,9 @@ export default function FlagshipWriteEditController() {
     // Once a verified conversation is bound the URL's thread no longer decides
     // anything: withdraw this notice rather than let it sit over MAIA's reply.
     // (The address can also lag a bind, so a mismatch then is not a refusal.)
-    if (scopedEditorialThread) {
+    // Nor is a thread the live address has already dropped: leaving one
+    // conversation must not flag the next passage as unverified.
+    if (scopedEditorialThread || !addressStillNames(requestedEditorialThread)) {
       setEditorialFailure((current) => current === UNVERIFIED_URL_THREAD ? null : current);
       return;
     }
@@ -1109,6 +1124,12 @@ export default function FlagshipWriteEditController() {
     if (!focusId || !focusSection || !work || workContext.kind !== 'work'
       || workReentryRequired.current || !currentWorkGesture() || !stillCurrent()) return null;
     const desired = selectedPassage?.draftSectionId === focusId ? selectedPassage.text : focusSection.body;
+
+    // The writer asked for a new conversation here: do not resume one.
+    if (freshConversationRef.current === JSON.stringify([focusId, desired])) {
+      freshConversationRef.current = null;
+      return startNewEditorial(stillCurrent);
+    }
 
     if (scopedEditorialThread?.targetSectionId === focusId
       && scopedEditorialThread.locusText === desired) {
@@ -1848,6 +1869,17 @@ export default function FlagshipWriteEditController() {
     setWorkspaceOpen(false);
   }, [currentLivingWorkScope, workGestureEpoch]);
 
+  /* The writer sets this passage's conversation aside. It stays saved and
+     untouched; the next act here opens a new one instead of resuming it. */
+  const startFreshConversation = useCallback(() => {
+    if (!currentWorkGesture() || !focusId || !focusSection
+      || editorialBusy || adoptionBusy || memberVersionBusy) return;
+    const desired = selectedPassage?.draftSectionId === focusId ? selectedPassage.text : focusSection.body;
+    freshConversationRef.current = JSON.stringify([focusId, desired]);
+    clearEditorial();
+  }, [focusId, focusSection, selectedPassage, editorialBusy, adoptionBusy, memberVersionBusy,
+    clearEditorial, currentLivingWorkScope, workGestureEpoch]);
+
   useEffect(() => {
     if (!context?.manuscriptId || !incomingReading || !incomingObservation) {
       setArrivalInsight(null);
@@ -2191,6 +2223,7 @@ export default function FlagshipWriteEditController() {
             onMayProposeImmediately={setMayProposeImmediately}
             onReviseInsight={reviseInsightPassage}
             onChoosePassage={chooseOwnPassage}
+            onStartFreshConversation={startFreshConversation}
             onChooseRelationship={(threadId) => void chooseRelationship(threadId)}
             onBeginMaiaRelationship={() => void beginA2Relationship()}
             onChooseMaiaRelationship={(relationshipId) => void chooseA2Relationship(relationshipId)}
