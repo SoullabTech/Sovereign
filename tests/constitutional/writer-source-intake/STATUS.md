@@ -33,12 +33,29 @@ is ignored (9 BLOCKERs depend on DECLARED_GAP obligations); `NOT_RUN` entries ar
 the canary rule guards only one paragraph of fixture prose; several self-test branches are not lethal.
 **Mitigation in force:** `dispositions.json` has `"ruled": false`, so no run can currently exceed `PROVISIONAL`.
 
+## Dynamic probes (added after the checkpoint)
+
+`dynamic/observations.test.ts` runs the REAL landing library against a real PostgreSQL 16 and a real vault, with the AWS
+SDK client replaced by a recording fake through the library's own seam. `dynamic/run-local-pg16.sh` provisions a local
+cluster (container-class hosts: needs root and the postgres server binaries; elsewhere point `DATABASE_URL` at any
+disposable loopback database). `dynamic/gen-fixtures.mjs` writes the fictional fixtures, `dynamic/parse-pdf-fixtures.mts`
+checks the PDFs under `tsx` because pdfjs cannot run in jest's sandbox.
+
+- **Result:** 15 of 15 probes pass, the PDF check 2 of 2. Measured values are in plan record section 10.
+- **Lethal:** four temporary mutations of the library (client option added, plaintext key logged, context field added,
+  row lock removed) were each killed by the intended probe, and the library was restored each time. The first mutation run
+  found probe L1 vacuous (its key list was wiped by a per-test reset); it now uses a cumulative list and an arming assertion.
+- **Ceiling:** fake KMS, stub schema, no HTTP route. Not evidence about real AWS.
+- **INCIDENT:** the first run reached real AWS KMS (rejected). The fake had been silently dropped by a cache-clear helper,
+  and the host's ambient `AWS_*` credentials were picked up by the SDK default chain. Three guards now prevent a repeat; see
+  the INCIDENT note at the top of `observations.test.ts` and plan record section 10.1.
+
 ## Not built yet
 
 1. `falsifiers-a.mjs`, `falsifiers-b.mjs`, `static-falsifiers.mjs`: the 18 executable static falsifiers (SF-01 … SF-19)
    that encode plan findings F1 to F13 with defeat candidates. **Their authors hit a usage limit; nothing was written.**
 2. `matrix.mjs`: the lethality matrix that runs everything against known-wrong inputs.
-3. Dynamic probes against a real Postgres 16 (stranded intents, textless file, KMS call counts, residue scan).
+3. Route-level dynamic probes (size/text caps, 25 MiB boundary, header sanitising): the route is held at module load; needs a flag-true harness image.
 4. Any run against real KMS. That needs the founder's AWS steps (plan §6, phases 0 and 2).
 
 ## Measured baselines taken in this lane (not in this directory)

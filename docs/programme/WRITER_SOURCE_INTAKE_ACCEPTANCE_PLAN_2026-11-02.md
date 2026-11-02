@@ -9,7 +9,9 @@ BRANCH:    claude/writer-source-intake-acceptance-plan (docs only; no PR opened)
 LANE:      runbook step 3 (acceptance run) in docs/programme/WRITER_SOURCE_KMS_RULING_AND_INTAKE_LIFT_RUNBOOK_2026-11-01.md
 EVIDENCE:  one read-only workflow, 75 agents, 0 errors: 7 subsystem readers, 3 independent acceptance
            designs, 1 synthesis, 46 skeptic checks (2 lenses x 23 claims), 1 completeness critic,
-           17 gap-fill drafters. Nothing was executed. No production, AWS or member data was touched.
+           17 gap-fill drafters. When this record was first written nothing had been executed. SEE SECTION 10: later
+           probe runs were executed, and section 10.1 records that the first of them unintentionally reached real AWS KMS
+           (rejected; no content, no resource). Production and member data were never touched.
 COMPANION: WRITER_SOURCE_INTAKE_ACCEPTANCE_PLAN_APPENDIX_2026-11-02.md (98 obligations, claim record)
 ```
 
@@ -157,3 +159,79 @@ The runbook answered these for KMS itself. What this lane adds:
 ## 9. Not authorized by this document
 
 Lifting either Caddy hold. Changing `releaseAuthority.ts`. Editing compose, Caddy, tests or any source file. Creating AWS resources or touching a credential. Admitting member originals or running anything against production. Opening a PR, merging, or deploying. Un-freezing `claude/happy-cannon-17pn9x`, which is untouched. Every item in §6 Phase 4 is a proposal, not an act.
+
+## 10. Addendum (2026-11-02, later): measured evidence, corrections, and an incident
+
+Sections 0 to 9 above were read from source. This addendum records what was then **run**. Everything here has a hard
+ceiling, stated first: **a recording fake stands in for AWS KMS** (through the library's own test seam), the schema is the
+witness script's hand-built stub plus three real migrations, and the HTTP route was not exercised because it is held at
+module load. Nothing below is evidence about real KMS, IAM, CloudTrail, latency or throttling. Probes:
+`tests/constitutional/writer-source-intake/dynamic/` (15 jest probes + a `tsx` PDF check). Run on canonical
+`c051385be80ad29c42ae40806bc3acf062f52cda` against a local PostgreSQL 16.
+
+### 10.1 Incident: the first run reached real AWS
+
+My first run of the probes **sent real requests to the AWS KMS regional endpoint**, contradicting this document's header
+and my earlier statements that this lane touches no AWS. Cause, two defects together:
+
+1. `clearSourceEnvelopeKeyCacheForTests()` also nulls the library's KMS client factory. My `reset()` called it, so the
+   fake was dropped after the first test and the library built a **real** `KMSClient`.
+2. This sandbox has `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in its environment. The SDK's default credential chain
+   used them to sign requests, which AWS rejected (`UnrecognizedClientException`, invalid token).
+
+What left the host: a small number of `GenerateDataKey` requests (every test that reached KMS, at most 3 attempts each)
+naming an all-zero fictional key ARN and the content-free context hash, signed with whatever credentials the sandbox
+holds. **No manuscript content, no member identifier, no resource created, no successful call.** I never read the
+credential values. Repaired in three layers (fake re-installed after every clear; ambient `AWS_*` and proxy variables
+removed and replaced by fictional values plus a dead loopback endpoint; every test asserts the fake received the traffic),
+and the repaired log contains no AWS-originated error. **Two findings for the real run come out of the accident:** the
+SDK default chain **does** pick up ambient `AWS_*` environment credentials (the FILL-6b hazard, now observed, not inferred),
+and a unit-test seam can be silently dropped by an unrelated helper, so the acceptance harness must prove its fake is the
+one in use (it now does). The founder may want to know that these calls originated from this sandbox.
+
+### 10.2 What the probes measured
+
+| Probe | Observed (fake KMS, stub schema, no route) | Plan claim |
+|---|---|---|
+| K1 | the client is built with **exactly** `region` and `maxAttempts: 3`, nothing else | C04 confirmed by measurement |
+| K2 | upload = **1** GenerateDataKey + **2** Decrypt; claim +1 Decrypt; each `verifyCustody` +1 | C20 confirmed; runbook step 6 "pair" is wrong |
+| K3 | every command's context has exactly `soullab:domain` and `soullab:context-sha256`; no member, work, filename or canary in any command | content-free by measurement |
+| K4 | denied GenerateDataKey: intent stays `PENDING_BYTES`, no file, a retry resumes the **same** intent; the thrown error is the generic `source_landing_incomplete` with the cause hidden | WSI-16 ok; WSI-37 gap confirmed |
+| K5 | KMS outage: `verifyCustody` returns `custodied:false, reason:'artifact_missing'`; `claimArrival` **resolves `false` (does not throw)**; the arrival stays unclaimed | refines C08/C18 (below) |
+| K6 | while Decrypt is in flight inside `claimArrival`, **both** the arrival row and the Work row are locked (`55P03`) | C19 confirmed |
+| K7 | two simultaneous same-key uploads: both succeed, **1** intent, **1** arrival, **1** GenerateDataKey | no wasted key call seen (one timing sample only) |
+| K8 | same key, different bytes: refused, wrapped as `source_landing_incomplete` with cause `source_landing_idempotency_conflict`; a second member may reuse the same key independently | C12 confirmed; cross-member reuse safe |
+| S1 | stranded intents in all three incomplete states survive; two ciphertext files remain; `inspectMemberIncompleteLandings` (no caller anywhere) sees all 3; `discardUnclaimedArrival` returns `not_found` for each; Delete Work of an unrelated Work queues 0 | C17 confirmed as behaviour |
+| S2 | empty extracted text: ciphertext written and verified, then refused; intent `BYTES_VERIFIED`; the identical retry is refused again | C16 confirmed |
+| **S4** | **extracted text containing a NUL byte: ciphertext written and verified, then the database refuses; intent `BYTES_VERIFIED`; 0 arrivals** | **NEW** |
+| S3 | Delete Work removes the claimed arrival and its file; an unclaimed arrival and its file survive | C07 confirmed |
+| R1 | vault holds ciphertext only (no canary, no plaintext data key, no ZIP magic); no plaintext data key anywhere in the database; **extracted text is plaintext in Postgres** | "encrypted" covers original bytes only |
+| L1 | across the whole run (17 keys covered, 9 log lines) no canary and no plaintext key was logged | covers library paths only, not the route |
+| P1 | 29 fixtures vs the real parser: **0 disagreements**; 4 are route-level only (413/400); the 2 PDFs verified separately under `tsx` (text-layer 1,044 chars; scanned 0 chars) | fixture expectations now verified, not inferred |
+
+### 10.3 Corrections and new findings
+
+- **C08/C18, refined.** Under a KMS outage `claimArrival` does not throw; it resolves `false`. In `POST /manuscripts` that is
+  the branch that logs **nothing** and returns 201 `legacy_interpreted_import`. So a transient KMS outage during Create Work
+  yields a Work whose original was never claimed, with no error log, under copy saying the original is held as Source.
+  (The earlier wording that the route "logs the raw error" applies to a throw, which the library did not produce here.)
+- **`verifyCustody` mislabels an outage** as `artifact_missing`. A reader sees "the original is gone" when KMS is merely
+  unreachable.
+- **NEW, F4b: NUL bytes strand an intent.** A UTF-16 text file (for example a Windows "Unicode" save) is decoded as UTF-8,
+  yields text containing NULs, passes the route's checks, lands ciphertext, and is then refused by Postgres, leaving a
+  `BYTES_VERIFIED` intent that no door can remove. Two fixtures (`text-utf16le.txt`, `text-with-nul.txt`) reproduce the parse
+  half. This is a realistic member input and joins empty-text as a reason the **textless-file refusal must run before
+  custody** (decision D3), and it needs a refusal for NUL, not only for emptiness.
+- **Cross-member key reuse is safe** (K8), closing a low-severity gap the critic named.
+- **The concurrent-loser spends a key call** (a reviewer's hypothesis): **not observed** in one run. Treat as unproven, not refuted.
+
+### 10.4 Measured baselines taken earlier in this lane
+
+6 hold-pinning and key-authority suites, 66 of 66 pass on canonical. The witness suite `encryptedLandingPg16.test.ts`:
+12 of 12 pass on a local PG16 (fake `local-test` provider, stub schema, R20 mocked). Library evidence only.
+
+### 10.5 What this does not change
+
+Sections 3 to 9 stand. No decision D1 to D11 has been answered. No hold was lifted and no source file was changed
+(the library was temporarily mutated four times to prove the probes lethal, and restored each time; `git status` clean).
+The instrument is still unfinished; see `tests/constitutional/writer-source-intake/STATUS.md`.
