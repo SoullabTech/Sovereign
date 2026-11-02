@@ -54,6 +54,7 @@ import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/wri
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
 import { editorialDirective, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
+import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 import { relationalCraftSystemGuidance } from '@/lib/writersStudio/relationalCraftExchange';
 import {
   admitEditorialToolEnvelope, EDITORIAL_TOOL_NAME, editorialToolSchemaForKinds,
@@ -407,6 +408,9 @@ export async function runEditorialTurn(
       // Both derive from the exact durable utterance and chosen depth only.
       // No new context, corpus, or identity crosses this instruction.
       editorialDirective(input.responseDepth ?? 'guided'),
+      // Server-owned map of the Studio's real controls (Design 1A), so "how do I"
+      // gets the actual tool instead of a workaround. Names only; she presses nothing.
+      studioGuideInstruction(),
       relationalCraftSystemGuidance(utterance),
       latitudeInstruction(scope),
       sequenceInstruction(gated),
