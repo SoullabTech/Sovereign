@@ -1,4 +1,3 @@
--- lock-timeout: exempt already applied in production before reaching canonical; SQL left unchanged so the file matches what ran (reconciled 2026-10-31)
 -- Writer Gate 2 — one-time retirement of pre-encryption Source arrivals.
 --
 -- This table records only content-free binding facts. The legacy vault path is
