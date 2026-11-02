@@ -1,4 +1,3 @@
--- lock-timeout: exempt already applied in production before reaching canonical; SQL left unchanged so the file matches what ran (reconciled 2026-10-31)
 -- LOCAL CANDIDATE: first-open editorial Work provenance. Not deployed.
 -- Apply only together with the qualified first-open constructor. Older writers
 -- cannot create new editorial threads after this migration; they fail closed.

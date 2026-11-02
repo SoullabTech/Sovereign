@@ -1,4 +1,3 @@
--- lock-timeout: exempt already applied in production before reaching canonical; SQL left unchanged so the file matches what ran (reconciled 2026-10-31)
 -- Writer full-feature beta F1/F2 — ciphertext-first Source landing.
 --
 -- This table is a pre-custody state machine. No row here, by itself, grants
