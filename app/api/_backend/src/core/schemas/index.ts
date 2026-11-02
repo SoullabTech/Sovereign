@@ -8,7 +8,7 @@ export const ChatRequest = z.object({
   text: z.string().min(1).max(4000),
   element: ElementEnum.optional(),
   sessionId: z.string().optional(),
-  context: z.record(z.any()).optional(),
+  context: z.record(z.string(), z.any()).optional(),
 });
 
 export const Tokens = z.object({

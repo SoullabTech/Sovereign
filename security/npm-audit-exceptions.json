@@ -1,12 +1,4 @@
 {
   "$comment": "Narrow, dated exceptions to the deploy dependency audit (scripts/deploy-audit-gate.mjs). Each entry names one advisory on one package, the reason, the founder decision that admitted it, and an expiry. An expired entry fails the gate; it never lapses silently into a pass.",
-  "exceptions": [
-    {
-      "advisory": "GHSA-mrhx-c7xc-m3w5",
-      "package": "zod",
-      "reason": "Production already runs zod 3.25.76 (runtime d49dbc98d), so deploying canonical adds no exposure. The fix requires zod >=4.6.6, a breaking major upgrade that needs its own migration and testing.",
-      "decision": "Founder, 2026-10-31: admit as a dated exception so the production-lineage reconciliation can deploy; track the zod 4 upgrade separately.",
-      "expires": "2026-11-14"
-    }
-  ]
+  "exceptions": []
 }

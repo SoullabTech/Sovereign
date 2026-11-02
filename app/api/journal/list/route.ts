@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     logger.error("Journal POST error:", err);
     return NextResponse.json({ 
       error: err.message,
-      details: err instanceof z.ZodError ? err.errors : undefined
+      details: err instanceof z.ZodError ? err.issues : undefined
     }, { status: 500 });
   }
 }

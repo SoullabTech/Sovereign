@@ -121,7 +121,7 @@ practitionerPortalRouter.post(
         return res.status(400).json({
           success: false,
           error: "Invalid client data",
-          details: validationResult.error.errors,
+          details: validationResult.error.issues,
         });
       }
 
@@ -385,7 +385,7 @@ practitionerPortalRouter.put(
         return res.status(400).json({
           success: false,
           error: "Invalid branding data",
-          details: validationResult.error.errors,
+          details: validationResult.error.issues,
         });
       }
 
