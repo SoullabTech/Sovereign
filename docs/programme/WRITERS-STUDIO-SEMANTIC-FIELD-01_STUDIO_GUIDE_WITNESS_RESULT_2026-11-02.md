@@ -109,6 +109,41 @@ Reply (stored and shown exactly as below, ending mid-sentence):
 
 ## 5. Standing
 
-Design 1A: **built, deployed (`5fb8dee0f`), and witnessed on the Studio-method questions in Passage Focus.**
+Design 1A: **built, deployed (`5fb8dee0f`), and witnessed on the Studio-method questions in Passage Focus.** (Design 2A followed; see §6.)
 Work-conversation evidence is confounded until Design 2A gives that conversation a fresh start. Next by the
 founder's order: 2A → 3C → 1B. ⛔ No member witness yet.
+
+## 6. Addendum — Design 2A live, Work-conversation Q4 re-run clean
+
+```
+EVIDENCE:   Production GIT_COMMIT a4dd6fc85 (cutover 2026-11-02 13:25Z, founder-authorized; carries #2061).
+            printenv == Config.Env == asserted; healthy; Co-Lab gate 32/0/0; 0 error lines after the swap.
+            Founder account, run ~13:27Z–13:32Z. ⛔ Founder use is not member witness.
+```
+
+- **Start a new conversation** appears in the Work conversation header beside "Where are we?" once a
+  conversation is open. Pressed on the resumed thread (`ffd2b452`, 14 turns): the transcript cleared, the
+  send mode became `open`, and the composer text stayed.
+- **Q4 asked in the new conversation** (thread `95da7017`, the first and only turn). The pre-filled
+  "Talk about this place" prompt was replaced in full before sending, so the question went alone.
+- **Closing and reopening** the Work conversation offered: "You have 2 conversations about this Work."
+  (11/2/2026 · 2 turns; 10/31/2026 · 14 turns), nothing preselected, send blocked until the writer picks,
+  and "Start a new conversation" offered beside the list. The earlier conversation stayed saved.
+
+### Q4 · Work conversation (fresh) · "What's the best way to work on this chapter here?" — reply verbatim
+
+> Honestly, the most useful first move isn't line work — it's getting the whole chapter in front of one reader. I only have this one section's text; everything else I have for Chapter 4 is headings. So "Read this chapter" on the Develop Overview tab would let me actually read Chapter 4 end to end and say what it's doing, without changing anything.
+>
+> One thing I can say from the headings alone: Chapter 4 runs from "The Elements of Wholeness" through "The Journey Forward," and within it you have "Integrating the Elements," "From the Four Comes the Way Forward," "The Story of the Four Yogis," and "The Four Paths, the Four Elements" in sequence — four consecutive sections all making the same turn. "Integrating the Elements" also appears earlier, in Chapter 3. That's a structural signal worth looking at with the prose in hand, not a verdict.
+>
+> If you'd rather stay close to the yogi story itself, select a stretch of it in Edit and use "Work with passage" — Craftsman's Table if you want to move words, Discuss if you want to think about the ending first. That last line, "That is the joke. And that is also the teaching," is the kind of sentence worth deciding about deliberately.
+
+Class: **DOES**. It names real controls with correct locations, no paste workaround, and the reply is complete.
+Q4 is now DOES on both entries (Passage Focus and the Work conversation).
+
+### Observations
+
+- The fresh empty-state line ("She has your Work in view…") is in the DOM but hidden by existing styling
+  (`display: none`); unchanged by 2A and the same for a first-ever conversation. Not repaired here.
+- In the browser pane, a synthetic select-all did not select the composer text, so the pre-filled prompt was
+  replaced with the form tool. That's a quirk of the tooling, not something a writer would meet.
