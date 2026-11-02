@@ -31,7 +31,7 @@ beforeEach(() => {
   (apiFetch as jest.Mock).mockImplementation(async (_url: string, init: RequestInit) => {
     const body = JSON.parse(String(init.body));
     return { ok: true, status: body.sections ? 201 : 200,
-      json: async () => body.sections ? { id: manuscriptId, workId } : { preview: sections, lossless: true } };
+      json: async () => body.sections ? { id: manuscriptId, workId, sourceCustody: 'source_custodied' } : { preview: sections, lossless: true } };
   });
 });
 
@@ -73,7 +73,7 @@ async function reachConfirmation(localReview: boolean, onComplete = jest.fn()) {
 it('makes the Work declaration visible and sends it only with the member’s final confirmation', async () => {
   const onComplete = await reachConfirmation(false);
   expect(host.textContent).toContain('This creates a new Work named “Window and Rain”');
-  expect(host.textContent).toContain('The original remains separately held as Source.');
+  expect(host.textContent).toContain('We keep your original separately as Source, and we will tell you if we cannot.');
   expect(apiFetch).toHaveBeenCalledTimes(1);
   const previewBody = JSON.parse((apiFetch as jest.Mock).mock.calls[0][1].body);
   expect(previewBody).toEqual({ title: 'Window and Rain', text });

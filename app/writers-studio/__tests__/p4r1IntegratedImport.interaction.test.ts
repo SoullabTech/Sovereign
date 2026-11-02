@@ -338,3 +338,71 @@ describe('D6 — the Import room never sends an original while Sanctuary is on o
     expect(container.textContent).not.toContain('still held for member accounts');
   });
 });
+
+describe('D4 — the member is told when the original could not be stored with the Work', () => {
+  const SAVED_ID = '55555555-5555-4555-8555-555555555555';
+  async function importUntilCreate(saveBody: Record<string, unknown>) {
+    window.localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
+    const onComplete = jest.fn();
+    mocked
+      .mockResolvedValueOnce(response(200, {
+        title: 'Fictional River', format: 'docx', warnings: [],
+        text: '# Opening\n\nThe fictional river moved under the bridge.',
+        sourceArrivalId: '44444444-4444-4444-8444-444444444444',
+      }))
+      .mockResolvedValueOnce(response(200, {
+        lossless: true,
+        preview: [{ position: 0, heading: 'Opening', body: 'The fictional river moved under the bridge.', headingDepth: 1, headingSignal: 'markdown' }],
+      }))
+      .mockResolvedValueOnce(response(201, { id: SAVED_ID, sectionCount: 1, ...saveBody }));
+    await act(async () => {
+      root.render(React.createElement(P4R1ImportManuscript, {
+        localReview: false, sourceIntakeReleased: true, onCancel: jest.fn(), onComplete,
+      }));
+    });
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['fictional-docx-package'], 'fictional-river.docx', {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', lastModified: 1_793_028_000_000,
+    });
+    Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })));
+    await settle();
+    await act(async () => button('Review structure').click());
+    await settle();
+    await act(async () => button('Create Work and open in Write').click());
+    await settle();
+    return onComplete;
+  }
+
+  test('original bound: the Work opens at once and no notice is shown', async () => {
+    const onComplete = await importUntilCreate({ sourceCustody: 'source_custodied' });
+    expect(onComplete).toHaveBeenCalledWith(SAVED_ID);
+    expect(container.querySelector('[data-custody-notice]')).toBeNull();
+  });
+
+  test.each([
+    ['legacy label', { sourceCustody: 'legacy_interpreted_import' }],
+    ['no label at all (never read as bound)', {}],
+  ])('original NOT bound (%s): the Work waits, the member is told plainly, and the same button then continues without a second import', async (_n, saveBody) => {
+    const onComplete = await importUntilCreate(saveBody);
+    expect(onComplete).not.toHaveBeenCalled();
+    const notice = container.querySelector('[data-custody-notice]');
+    expect(notice?.textContent).toContain('Your Work was saved with all of your words');
+    expect(notice?.textContent).toContain('no original is held for this Work');
+    expect(mocked).toHaveBeenCalledTimes(3);
+
+    await act(async () => button('Open saved writing').click());
+    await settle();
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onComplete).toHaveBeenCalledWith(SAVED_ID);
+    expect(mocked).toHaveBeenCalledTimes(3); // continuing never imports the manuscript a second time
+  });
+
+  test('the pre-save promise no longer claims the original WILL remain held', async () => {
+    window.localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
+    await importUntilCreate({ sourceCustody: 'source_custodied' });
+    const pre = fs.readFileSync(path.join(__dirname, '../../dev/writers-studio-pc3-live/P4R1ImportManuscript.tsx'), 'utf8');
+    expect(pre).not.toContain('The original remains separately held as Source');
+    expect(pre).toContain('we will tell you if we cannot');
+  });
+});

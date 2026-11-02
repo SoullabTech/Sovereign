@@ -58,6 +58,9 @@ export default function P4R1ImportManuscript({
   const uploadAttemptRef = useRef<SourceUploadAttempt | null>(null);
   const savedManuscriptIdRef = useRef<string | null>(null);
   const saveInFlightRef = useRef(false);
+  // D4: the server labels a Work whose original could not be bound. The member is told, once, before the Work opens.
+  const originalNotStoredRef = useRef(false);
+  const custodyNoticeShownRef = useRef(false);
   const [phase, setPhase] = useState<ImportPhase>('source');
   const [busy, setBusy] = useState<Busy>(null);
   const [dragging, setDragging] = useState(false);
@@ -67,6 +70,7 @@ export default function P4R1ImportManuscript({
   const [format, setFormat] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [custodyNotice, setCustodyNotice] = useState<string | null>(null);
   const [sourceArrivalId, setSourceArrivalId] = useState<string | null>(null);
   const [savedManuscriptId, setSavedManuscriptId] = useState<string | null>(null);
   const [sections, setSections] = useState<ImportSection[]>([]);
@@ -231,6 +235,8 @@ export default function P4R1ImportManuscript({
         // identity before opening it, so retrying navigation cannot import twice.
         savedManuscriptIdRef.current = id;
         setSavedManuscriptId(id);
+        // The server's own label is the only evidence the original was bound; anything else means it was not.
+        originalNotStoredRef.current = !localReview && body?.sourceCustody !== 'source_custodied';
       }
       if (localReview) {
         const held = writeLocalReviewManuscript({
@@ -242,6 +248,16 @@ export default function P4R1ImportManuscript({
         if (!held) {
           throw new Error('The temporary local manuscript could not be held for the next room. Nothing was persisted.');
         }
+      }
+      // The Work is saved and its words are safe, but if the original could not be stored with it the member must hear
+      // that BEFORE the Work opens, not discover it later. Shown once; the next press of the same button continues.
+      if (originalNotStoredRef.current && !custodyNoticeShownRef.current) {
+        custodyNoticeShownRef.current = true;
+        setCustodyNotice(
+          'Your Work was saved with all of your words. We could not store your original with it this time, '
+          + 'so no original is held for this Work. Choose Open saved writing when you are ready to continue.',
+        );
+        return;
       }
       // Keep confirmation disabled while the parent refreshes the exact Work
       // and manuscript and navigates away from this completed import.
@@ -477,6 +493,7 @@ export default function P4R1ImportManuscript({
           </div>
 
           {error ? <p className="p4r1-import-error" role="alert">{error}</p> : null}
+          {custodyNotice ? <p className="p4r1-import-error" role="alert" data-custody-notice>{custodyNotice}</p> : null}
           <footer className="p4r1-import-actions">
             <p>
               {savedManuscriptId
@@ -485,7 +502,7 @@ export default function P4R1ImportManuscript({
                   : 'Your writing and its Work were saved. Open this saved writing in Write to continue editing.'
                 : localReview
                 ? 'Open in Write creates a temporary fictional manuscript for this dedicated review window.'
-                : `This creates a new Work named “${title.trim()}” and saves the sections you confirm. The original remains separately held as Source. Nothing is read or rewritten by MAIA during import.`}
+                : `This creates a new Work named “${title.trim()}” and saves the sections you confirm. We keep your original separately as Source, and we will tell you if we cannot. Nothing is read or rewritten by MAIA during import.`}
             </p>
             <button type="button" className="p4r1-import-primary" disabled={busy !== null || !sections.length}
               onClick={() => void save()}>

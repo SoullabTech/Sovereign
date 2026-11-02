@@ -214,6 +214,20 @@ function classifyDepth(
   return { depth: d, signal: sig };
 }
 
+/**
+ * A Work whose original could not be bound is saved and labelled `legacy_interpreted_import`; the member is told by the
+ * client. Both ways the claim can fail now leave a content-free trace. Before this, a claim that RETURNED false (a KMS
+ * outage resolves false rather than throwing, measured) logged nothing at all.
+ */
+function noteUnboundCustody(memberId: string, manuscriptId: string, reason: 'claim_not_bound' | 'claim_threw', errorName?: string): void {
+  console.warn('[press/manuscripts] source custody not bound', {
+    memberRef: memberRef(memberId),
+    manuscriptId,
+    reason,
+    ...(errorName ? { errorName } : {}),
+  });
+}
+
 export async function POST(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
@@ -469,17 +483,23 @@ export async function POST(request: NextRequest) {
       if (typeof sourceArrivalId === 'string' && sourceArrivalId.length > 0) {
         if (await claimArrival(sourceArrivalId, manuscriptId, memberId)) {
           custody = 'source_custodied';
+        } else {
+          noteUnboundCustody(memberId, manuscriptId, 'claim_not_bound');
         }
       } else if (typeof confirmedText === 'string' && confirmedText.trim().length > 0) {
         const arrival = await recordSuppliedArrival({ memberId, sourceText: confirmedText });
         if (await claimArrival(arrival.id, manuscriptId, memberId)) {
           custody = 'source_custodied';
+        } else {
+          noteUnboundCustody(memberId, manuscriptId, 'claim_not_bound');
         }
       }
     } catch (err) {
       // Custody is additive: failing to record it must not lose the member's
       // manuscript, which is already saved. The label stays honest instead.
-      console.error('[press/manuscripts] source custody binding failed', err);
+      // Logged as a code and an error NAME only: the raw error object can carry
+      // document fragments or identifiers, and this record must stay content-free.
+      noteUnboundCustody(memberId, manuscriptId, 'claim_threw', err instanceof Error ? err.name : 'unknown');
     }
 
     // Log marker: counts and provenance only, never content.
