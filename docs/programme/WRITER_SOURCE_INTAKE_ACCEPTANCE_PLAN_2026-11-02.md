@@ -235,3 +235,28 @@ one in use (it now does). The founder may want to know that these calls originat
 Sections 3 to 9 stand. No decision D1 to D11 has been answered. No hold was lifted and no source file was changed
 (the library was temporarily mutated four times to prove the probes lethal, and restored each time; `git status` clean).
 The instrument is still unfinished; see `tests/constitutional/writer-source-intake/STATUS.md`.
+
+## 11. Decisions D1 to D11, taken by the session under founder delegation (2026-11-02)
+
+The founder said these are engineering and risk questions they are not the right person to answer, and asked the session to
+decide them. They are decided below. **These are session decisions, not founder rulings.** What stays with the founder is
+unchanged: every irreversible or outward act (AWS account steps, flipping the release manifest, removing the edge holds,
+any deploy, any member exposure) and the final go or no-go after testing. `dispositions.json` therefore keeps
+`"ruled": false` until the founder explicitly ratifies; until then no receipt can read `STEP4_READY`.
+
+| # | Decision taken |
+|---|---|
+| D1 | **Beta writers only at first.** Enforce the Writer roster server-side at the ingest endpoint (today only the page checks it) and add a rate limit. First trial with a small named group; widen later by a separate decision. |
+| D2 | **Yes.** Give the workbench and sources upload routes an in-code hold tied to the release manifest, so protection stops depending on an unversioned server rule. Keep the edge holds until that lands. |
+| D3 | **Launch blocker.** Refuse empty and NUL-containing extracted text before anything is stored. Ship an "unfinished uploads" list with discard, plus a bounded sweep. Nothing ships without a removal door for everything held for a member. |
+| D4 | **Refuse.** If the original cannot be claimed when a Work is created, creating the Work fails with a truthful message, the arrival stays unclaimed, and the member can retry or discard. No copy says "held as Source" unless that is verified. |
+| D5 | **Reword now.** Delete Work copy says what is true about backups. `permanentErasureCertified` stays false. |
+| D6 | **Refuse uploads while Sanctuary is on.** Canon invariant 6 is absolute (nothing from a Sanctuary session may be saved); an unresolved posture fails closed. |
+| D7 | **"Reopen" means:** the Work opens from its stored sections, and the original's custody is verified by decryption. "Get my original back" is a separate future feature and no copy promises it. |
+| D8 | **Yes, a throwaway twin key** with the production policy for every destructive test (disable, deny, deletion window, rotation). The production key is used only for the canary and the final witness. |
+| D9 | **Yes.** Add explicit connect and request timeouts to the KMS client, as its own small change before the flip. |
+| D10 | **First wave:** one key, one region (whichever the founder's AWS account already uses). KMS keys cannot be exported, so there is no escrow; this is mitigated by (a) a key policy that denies ScheduleKeyDeletion to everyone but the account root, and (b) backing up the vault and the database before launch. Alerts: an AWS-side alarm on DisableKey, ScheduleKeyDeletion and AccessDenied spikes, delivered by SMS through SNS, never through Resend. The founder performs the AWS actions; the session supplies step-by-step instructions. |
+| D11 | **First wave:** a long-lived key file, mode 0600, mounted on the `maia` service only and never in `.env.production`; manual rotation in a maintenance window. Revisit short-lived credentials later. |
+
+Still gated, needing a separate explicit go from the founder: product source changes for D1 to D4, D5, D6 and D9 (proposed
+as small changes on their own branch, not merged or deployed), and everything listed in the first paragraph above.
