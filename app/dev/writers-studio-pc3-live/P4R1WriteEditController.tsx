@@ -15,6 +15,7 @@ import {
   canvasWithoutEditorialThread,
   canvasWithRelationship,
   canvasWithoutRelationship,
+  CANVAS_EDITORIAL_THREAD_PARAM,
   editorialThreadIdFrom,
   relationshipIdFrom,
 } from '@/app/writers-studio/canvasIdentity';
@@ -101,6 +102,12 @@ type EditorialReturnCandidate = {
 };
 
 const UNVERIFIED_URL_THREAD = 'This saved manuscript conversation has not been verified for the current Living Work. Nothing was opened, sent, saved or applied.';
+
+/** Search params can lag the Studio's own address rewrites; read the live one. */
+function addressStillNames(threadId: string): boolean {
+  if (typeof window === 'undefined') return true;
+  return new URLSearchParams(window.location.search).get(CANVAS_EDITORIAL_THREAD_PARAM) === threadId;
+}
 
 export default function FlagshipWriteEditController() {
   const params = useSearchParams();
@@ -1066,7 +1073,9 @@ export default function FlagshipWriteEditController() {
     // Once a verified conversation is bound the URL's thread no longer decides
     // anything: withdraw this notice rather than let it sit over MAIA's reply.
     // (The address can also lag a bind, so a mismatch then is not a refusal.)
-    if (scopedEditorialThread) {
+    // Nor is a thread the live address has already dropped: leaving one
+    // conversation must not flag the next passage as unverified.
+    if (scopedEditorialThread || !addressStillNames(requestedEditorialThread)) {
       setEditorialFailure((current) => current === UNVERIFIED_URL_THREAD ? null : current);
       return;
     }
