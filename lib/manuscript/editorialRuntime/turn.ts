@@ -57,6 +57,7 @@ import { editorialDirective, type EditorialDepth } from '@/lib/writersStudio/edi
 import { teachingTurnInstruction, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { conversationTurnInstruction, type TurnShape } from '@/lib/writersStudio/conversationTurn';
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
+import { studioActionsInstruction } from '@/lib/writersStudio/studioActions';
 import { relationalCraftSystemGuidance } from '@/lib/writersStudio/relationalCraftExchange';
 import {
   admitEditorialToolEnvelope, EDITORIAL_TOOL_NAME, editorialToolSchemaForKinds,
@@ -424,6 +425,8 @@ export async function runEditorialTurn(
       // Server-owned map of the Studio's real controls (Design 1A), so "how do I"
       // gets the actual tool instead of a workaround. Names only; she presses nothing.
       studioGuideInstruction(),
+      // Design 1B: MAIA may offer one control as a marker; the writer clicks it.
+      studioActionsInstruction('passage-focus'),
       relationalCraftSystemGuidance(utterance),
       latitudeInstruction(scope),
       sequenceInstruction(gated),

@@ -38,6 +38,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { GROUND, INK, MAIA_ACCENT, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText, typeStyle } from '../studio/StudioType';
+import { stripStudioActions } from '@/lib/writersStudio/studioActions';
 
 export const EDITORIAL_PLACEHOLDER = 'Say what you are working on…';
 
@@ -418,7 +419,7 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
             <StudioText role="panelLabel" style={{ color: t.speaker === 'maia' ? MAIA_ACCENT.voice : INK.muted }}>
               {t.speaker === 'maia' ? 'MAIA' : 'You'}
             </StudioText>
-            <StudioText role="maiaReading" style={{ whiteSpace: 'pre-wrap' }}>{t.body}</StudioText>
+            <StudioText role="maiaReading" style={{ whiteSpace: 'pre-wrap' }}>{t.speaker === 'maia' ? stripStudioActions(t.body) : t.body}</StudioText>
 
             {/* ⭐⭐ THE ADJUNCT IS SHOWN BECAUSE A BINDING NAMES IT — ⛔ never
                 because the text reads like one. */}
