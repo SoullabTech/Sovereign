@@ -1,0 +1,12 @@
+{
+  "_comment": "Allowlist for scripts/check-member-facing-models.mjs. DRAFT 2026-11-01. Inclusion records models present in tracked member-facing config at the Heretic census; it is NOT a vetting or safety claim. Adding a name is a governed act. Modified weights (Heretic/abliterated) must never appear here.",
+  "models": [
+    { "name": "qwen2.5:7b", "source": "docker-compose.production.yml; LLMProvider.ts default; api/ready" },
+    { "name": "qwen2.5:14b-instruct", "source": "docker-compose.production.yml" },
+    { "name": "qwen3:32b", "source": "LLMProvider.ts OLLAMA_MODEL_DEEP default" },
+    { "name": "llama3.1:8b", "source": "lib/ai/localModelClient.ts:22 (found by the gate; not in the first census)" },
+    { "name": "llama3.2", "source": "LocalLLMIntegration.ts default" },
+    { "name": "deepseek-r1:8b", "source": "docker-compose.staging.yml" },
+    { "name": "nomic-embed-text", "source": "docker-compose.production.yml OLLAMA_EMBED_MODEL" }
+  ]
+}
