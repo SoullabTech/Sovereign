@@ -2065,6 +2065,30 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   );
   const [talking, setTalking] = useState(false);
   const [dialoguePrompt, setDialoguePrompt] = useState('');
+
+  /* Design 1B: arriving from a control MAIA offered (#read-this-chapter or
+     #editorial-pass). Only scrolls to the control, opening "More ways to
+     explore" for the pass; it never presses anything. Panels may load after
+     mount, so it looks a few times and then gives up quietly. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const target = window.location.hash.slice(1);
+    if (target !== 'read-this-chapter' && target !== 'editorial-pass') return;
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      tries += 1;
+      if (target === 'editorial-pass') {
+        const more = document.querySelector<HTMLDetailsElement>('details.p4r1-develop-more');
+        if (more) more.open = true;
+      }
+      const el = document.querySelector(target === 'editorial-pass' ? '[data-editorial-pass]' : '[data-chapter-review]');
+      if (el || tries >= 20) {
+        window.clearInterval(timer);
+        el?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+      }
+    }, 250);
+    return () => window.clearInterval(timer);
+  }, []);
   // No speculative Work-level MAIA request just because the room opened.
   // A member's Talk gesture creates the conversation, not navigation.
   const workConversationScope = JSON.stringify([props.work?.id ?? null, props.manuscriptId]);

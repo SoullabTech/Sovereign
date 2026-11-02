@@ -17,6 +17,7 @@ import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { EDITORIAL_PACKET_LABELS } from '@/lib/writersStudio/editorialIntelligence';
 import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
+import { parseStudioActions, type StudioActionId } from '@/lib/writersStudio/studioActions';
 import P4R1VoiceCapture from './P4R1VoiceCapture';
 
 /** A passage act the writer chose: plain data, so a held act runs with the
@@ -63,6 +64,8 @@ export interface EditorialDancePanelProps {
   onChooseSessionPosture: (sanctuary: boolean) => void;
 
   onSelectVersion: (id: string) => void;
+  /** Design 1B: the writer clicked a control MAIA offered. Navigation only. */
+  onStudioAction?: (id: StudioActionId) => void;
   onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; turnShape?: TurnShape }) => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   onApply: () => void;
@@ -289,7 +292,15 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const recommendation = props.version?.author === 'maia'
     ? props.version
     : [...maiaVersions].reverse()[0] ?? null;
-  const summarySource = props.lastMaiaTurn?.body ?? recommendation?.rationale ?? '';
+  // Design 1B: markers are never shown as text; at most one becomes a button.
+  const reply = props.lastMaiaTurn?.body ? parseStudioActions(props.lastMaiaTurn.body, 'passage-focus') : null;
+  const replyAction = reply?.action && props.onStudioAction ? (
+    <button type="button" className="p4r1-studio-action" data-studio-action={reply.action.id}
+      disabled={props.busy} onClick={() => props.onStudioAction?.(reply.action!.id)}>
+      {reply.action.label}
+    </button>
+  ) : null;
+  const summarySource = reply?.text ?? recommendation?.rationale ?? '';
   const summary = editorialSummary(summarySource);
   const hasStructuredSummary = Boolean(summary.preserve || summary.friction || summary.tryNext);
   const changeSummary = editorialSummary(props.version?.rationale ?? recommendation?.rationale ?? '');
@@ -683,8 +694,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
               : 'Here’s what I’m seeing.'}</h3>
           {props.message ? (
             <p className="p4r1-dance-status" role="status">{props.message}</p>
-          ) : props.lastMaiaTurn?.body ? (
-            <p>{props.lastMaiaTurn.body}</p>
+          ) : reply ? (
+            <>
+              <p>{reply.text}</p>
+              {replyAction}
+            </>
           ) : (
             <p>I’m staying with the passage and your question. Nothing has been revised or applied.</p>
           )}
@@ -743,10 +757,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             {summary.friction ? <div><b>{EDITORIAL_PACKET_LABELS.friction}</b><p>{summary.friction}</p></div> : null}
             {summary.tryNext ? <div><b>{EDITORIAL_PACKET_LABELS.possibility}</b><p>{summary.tryNext}</p></div> : null}
           </div>
-        ) : props.lastMaiaTurn?.body ? (
+        ) : reply ? (
           <div className="p4r1-dance-latest-response" data-editorial-latest-response>
             <b>MAIA’s latest response</b>
-            <p>{props.lastMaiaTurn.body}</p>
+            <p>{reply.text}</p>
+            {replyAction}
           </div>
         ) : (
           <h3>{firstUsefulSentence(summarySource || 'Here is one direction I would try.')}</h3>
@@ -984,7 +999,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <b>Teach me why</b>
           <p>{props.busy
             ? 'MAIA is working from this passage and your current direction…'
-            : props.lastMaiaTurn?.body ?? 'MAIA will explain the craft principle in plain language using your own words as the example.'}</p>
+            : reply?.text ?? 'MAIA will explain the craft principle in plain language using your own words as the example.'}</p>
         </div>
       ) : null}
       {showDepth === 'advanced' ? (
@@ -992,7 +1007,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <b>Advanced craft view</b>
           <p>{props.busy
             ? 'MAIA is going deeper into the editorial reasoning…'
-            : props.lastMaiaTurn?.body ?? 'Full craft vocabulary, meaning/style distinctions, evidence, tradeoffs, uncertainty, and provenance stay available here without changing authority.'}</p>
+            : reply?.text ?? 'Full craft vocabulary, meaning/style distinctions, evidence, tradeoffs, uncertainty, and provenance stay available here without changing authority.'}</p>
         </div>
       ) : null}
     </section>

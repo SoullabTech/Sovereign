@@ -2099,6 +2099,17 @@ export default function FlagshipWriteEditController() {
     router.push(`${pathname}${query ? `?${query}` : ''}`);
   }, [params, pathname, router]);
 
+  /* Design 1B: MAIA offered a Develop place and the writer clicked it. This only
+     navigates: Develop → Overview for the same Work, scrolled to the control.
+     Nothing is pressed there. */
+  const onStudioPlace = useCallback((place: 'develop-overview' | 'editorial-pass') => {
+    const next = new URLSearchParams(params?.toString() ?? '');
+    next.set('mode', 'develop');
+    for (const key of ['developField', 'r', 'attentionItem', 'insightReading', 'insightObservation', 'insightAction', 'reviewRun', 'reviewFinding']) next.delete(key);
+    const query = next.toString();
+    router.push(`${pathname}${query ? `?${query}` : ''}#${place === 'editorial-pass' ? 'editorial-pass' : 'read-this-chapter'}`);
+  }, [params, pathname, router]);
+
   if (phase !== 'ready' || !context) {
     return (
       <main className="fs-p4-opening">
@@ -2134,6 +2145,7 @@ export default function FlagshipWriteEditController() {
             onFocusSection={focusWritingSection}
             onHoldPassage={holdPassage}
             onMode={onMode}
+            onStudioPlace={onStudioPlace}
             workspaceOpen={workspaceOpen && !workReentryRequired.current}
             carriedInsight={workReentryRequired.current ? null : arrivalInsight}
             carriedInsightReturnMode={carriedInsightReturnMode}
