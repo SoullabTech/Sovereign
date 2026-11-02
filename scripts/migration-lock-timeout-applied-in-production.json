@@ -1,0 +1,50 @@
+{
+  "note": "Migrations that ran in production before they reached canonical, and that do not follow the lock-timeout law. Each is exempt only while its bytes match the pinned sha256 — the exact file production applied. Editing one makes it subject to the law again. Never add a migration here that has not already been applied in production. Recorded 2026-11-01 (production-lineage reconciliation).",
+  "files": [
+    {
+      "file": "20261020000001_writer_editorial_thread_origins.sql",
+      "sha256": "58a09c9b888d4601c2f7c7a83e7e8971537c4443d3ee13a71df2908aad6895e3",
+      "evidence": "sha256 equals schema_migrations.checksum recorded by production"
+    },
+    {
+      "file": "20261021000001_writer_r20_restore_refusal.sql",
+      "sha256": "26b38a1a500a04b34dc6e94daa8d4ab9f35cefc9f8b0f4735fdd4e5c52fb2e10",
+      "evidence": "sha256 equals schema_migrations.checksum recorded by production"
+    },
+    {
+      "file": "20261021000002_writer_r20_editorial_erasure.sql",
+      "sha256": "562db008cf535e829a3c6d2ac0b3995c9d746a9968e283ba7ba774e71118604a",
+      "evidence": "sha256 equals schema_migrations.checksum recorded by production"
+    },
+    {
+      "file": "20261022000001_writer_source_arrival_r20_refusal.sql",
+      "sha256": "7cb17b956cc231d2d6d2864dd4c43252042226b6be839367b4809f68c5f69a78",
+      "evidence": "sha256 equals schema_migrations.checksum recorded by production"
+    },
+    {
+      "file": "20261022000002_writer_source_arrival_retention_index.sql",
+      "sha256": "89b6e03b1e6a8f705039d7aa0a1d26f2da86f6551115e108734c90c4e8f8d101",
+      "evidence": "sha256 equals schema_migrations.checksum recorded by production"
+    },
+    {
+      "file": "20261025000001_r20_writer_editorial_constitutional_erasure.sql",
+      "sha256": "1e0198f2a25d67a5277abc26f3a42b848a8eaf45d4f72f1d0570fe884c3f95bb",
+      "evidence": "byte-identical to production runtime 9856e27f7 (production recorded no checksum)"
+    },
+    {
+      "file": "20261026000001_writer_source_encrypted_landing.sql",
+      "sha256": "4f6c716c6d5538f7430d9dc07da235fedd4d240b1cda340041029e50bebc8bff",
+      "evidence": "byte-identical to production runtime 9856e27f7 (production recorded no checksum)"
+    },
+    {
+      "file": "20261027000001_writer_source_legacy_retirement.sql",
+      "sha256": "0d14dc9ed3abadbaa03d9b557f3ad63a85205e6af104d4936b7db378f4ba13f8",
+      "evidence": "byte-identical to production runtime 9856e27f7 (production recorded no checksum)"
+    },
+    {
+      "file": "20261028000001_auth_return_01.sql",
+      "sha256": "ba4c8bebb922ab45fae8e20aa5319461d8263656d5e3e5956fd9bc8b67f41e3b",
+      "evidence": "byte-identical to production runtime 9856e27f7 (production recorded no checksum)"
+    }
+  ]
+}
