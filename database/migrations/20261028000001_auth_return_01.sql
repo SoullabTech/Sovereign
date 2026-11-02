@@ -1,4 +1,3 @@
--- lock-timeout: exempt already applied in production before reaching canonical; SQL left unchanged so the file matches what ran (reconciled 2026-10-31)
 BEGIN;
 
 -- AUTH-RETURN-01

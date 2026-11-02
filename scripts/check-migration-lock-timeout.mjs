@@ -24,8 +24,16 @@
  * Grandfathered: timestamped files before CUTOFF, and the frozen legacy list of
  * non-timestamped files. A NEW non-timestamped file is refused.
  *
+ * Applied in production: migrations that production ran before they reached
+ * canonical are listed with their sha256 in
+ * migration-lock-timeout-applied-in-production.json. One is exempt only while
+ * its bytes still match the pinned hash — an applied migration must stay
+ * byte-identical to what ran (the runner's checksum depends on it), so the law
+ * cannot be met by editing it, and an edit makes it subject to the law again.
+ *
  * Usage: node scripts/check-migration-lock-timeout.mjs [--dir database/migrations]
  */
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -102,6 +110,11 @@ function main() {
   const legacy = new Set(
     JSON.parse(fs.readFileSync(path.join(here, "migration-lock-timeout-legacy.json"), "utf8")).files,
   );
+  const appliedInProduction = new Map(
+    JSON.parse(
+      fs.readFileSync(path.join(here, "migration-lock-timeout-applied-in-production.json"), "utf8"),
+    ).files.map((e) => [e.file, e.sha256]),
+  );
   const failures = [];
   let checked = 0;
   for (const name of fs.readdirSync(dir).filter((f) => f.endsWith(".sql")).sort()) {
@@ -111,8 +124,11 @@ function main() {
       continue;
     }
     if (m[1] < CUTOFF) continue;
+    const raw = fs.readFileSync(path.join(dir, name));
+    const pinned = appliedInProduction.get(name);
+    if (pinned && crypto.createHash("sha256").update(raw).digest("hex") === pinned) continue;
     checked += 1;
-    const reason = checkMigration(fs.readFileSync(path.join(dir, name), "utf8"));
+    const reason = checkMigration(raw.toString("utf8"));
     if (reason) failures.push([name, reason]);
   }
   if (failures.length) {
