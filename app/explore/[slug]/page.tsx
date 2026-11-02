@@ -1,8 +1,10 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { PUBLIC_DOORWAYS, publicDoorwayForSlug } from '@/lib/launch/publicDoorwaysP0';
 import styles from '../explore.module.css';
+import { InvitationNotice } from './InvitationNotice';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -43,6 +45,7 @@ export default async function PublicDoorwayPage({ params }: Props) {
         <h1>{door.headline}</h1>
         <p className={styles.lead}>{door.introduction}</p>
       </section>
+      <Suspense fallback={null}><InvitationNotice slug={door.slug} /></Suspense>
       <section className={styles.infoGrid} aria-label={door.name + ' introduction'}>
         <div>
           <p className={styles.eyebrow}>{door.audience}</p>

@@ -70,3 +70,6 @@
   .footer { flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+
+.notice { margin: 0 0 26px; padding: 15px 19px; border: 1px solid rgba(232,187,140,.55); border-radius: 12px;
+          background: rgba(200,149,101,.1); color: #f1dcc4; line-height: 1.6; max-width: 940px; }
