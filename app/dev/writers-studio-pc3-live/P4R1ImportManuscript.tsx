@@ -9,6 +9,7 @@ import {
   type SourceUploadAttempt,
 } from '@/lib/writersStudio/sourceUploadAttempt';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
+import P4R1UnfinishedUploads from './P4R1UnfinishedUploads';
 
 const ACCEPT = '.docx,.pdf,.epub,.txt,.md,.markdown';
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
@@ -351,6 +352,8 @@ export default function P4R1ImportManuscript({
 
       {phase === 'source' ? (
         <section className="p4r1-import-source">
+          {/* D3: the member's door over what is held for them. Server sessions only: a local review retains nothing. */}
+          {!localReview ? <P4R1UnfinishedUploads /> : null}
           {fileIntakeAvailable ? (
             <>
               <div

@@ -5,6 +5,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 jest.mock('@/lib/http/apiBase', () => ({ apiFetch: jest.fn() }));
+// The unfinished-uploads list (D3) makes its own request on mount. These tests pin the import flow's exact request
+// sequence, so the list is stubbed here; it has its own suite (p4r1UnfinishedUploads.interaction.test.ts), which also pins that
+// the Import room mounts it for a server session and not for a local review.
+jest.mock('@/app/dev/writers-studio-pc3-live/P4R1UnfinishedUploads', () => ({ __esModule: true, default: () => null }));
 import { apiFetch } from '@/lib/http/apiBase';
 import P4R1ImportManuscript from '@/app/dev/writers-studio-pc3-live/P4R1ImportManuscript';
 import { readLocalReviewManuscript } from '@/lib/writersStudio/localReviewManuscript';
