@@ -124,7 +124,8 @@ jest.mock('@/app/writers-studio/canvasIdentity',()=>({
   canvasWithoutRelationship:()=>'/writers-studio',
   canvasWithEditorialThread:(_path,_search,id)=>'/writers-studio?thread='+id,
   canvasWithoutEditorialThread:()=>'/writers-studio',
-  editorialThreadIdFrom:()=>mockDeepLinkThreadId,relationshipIdFrom:()=>null
+  editorialThreadIdFrom:()=>mockDeepLinkThreadId,relationshipIdFrom:()=>null,
+  CANVAS_EDITORIAL_THREAD_PARAM:'editorialThread'
 }));
 jest.mock('@/app/writers-studio/rebuild/RebuildWritingBoundary',()=>({
   __esModule:true, default:({children})=>children(mockWriting)
@@ -233,7 +234,7 @@ describe('G3 reviewer independent: mounted actual controller deferred MAIA turn'
     require('@/lib/writersStudio/rebuild/editorialCollaboration').readBoundEditorialThread.mockImplementation(async()=>({ok:true,thread:mockThread}));
     mockApiCalls.length=0;mockThread.application=null;mockResolveTurn=null;mockViewProps=null;mockThread.turns=[];mockSendBound.mockReset();mockAdopt.mockReset();mockAdopt.mockResolvedValue({ok:true,outcome:{kind:'applied'}});
     mockSendBound.mockImplementation(()=>new Promise(resolve=>{mockResolveTurn=resolve;}));
-    window.localStorage.clear();
+    window.localStorage.clear();window.history.replaceState(null,'','/writers-studio');
     host=document.createElement('div');document.body.appendChild(host);root=createRoot(host);
   });
   afterEach(async()=>{
@@ -533,13 +534,13 @@ function noLegacyThreadOperations() {
   noProtectedOrAutomaticEffects();
 }
 it('D01 URL-only thread cannot read, open, send, save or apply history', async () => {
-  mockDeepLinkThreadId='fiction-thread';await render();await React.act(async()=>{await settle(85)});
+  mockDeepLinkThreadId='fiction-thread';window.history.replaceState(null,'','/writers-studio?editorialThread=fiction-thread');await render();await React.act(async()=>{await settle(85)});
   expect(mockViewProps.editorialThread).toBeNull();
   expect(mockViewProps.editorialFailure).toContain('has not been verified for the current Living Work');
   noLegacyThreadOperations();
 });
 it('D02 verified A2 relationship is not ownership of a URL-only manuscript thread', async () => {
-  mockDeepLinkThreadId='fiction-thread';await mountB();
+  mockDeepLinkThreadId='fiction-thread';window.history.replaceState(null,'','/writers-studio?editorialThread=fiction-thread');await mountB();
   expect(mockViewProps.maiaRelationship?.id).toBe('fiction-relationship-b');
   expect(mockViewProps.editorialThread).toBeNull();
   expect(mockViewProps.editorialFailure).toContain('Nothing was opened, sent, saved or applied');
@@ -614,7 +615,7 @@ it('D04d holding a different passage in the same section unbinds that passage’
 // "not verified … nothing was sent" notice over MAIA's reply after a verified
 // conversation was bound and the turn had been sent.
 it('D04e a stale address thread does not cover MAIA’s reply once a verified conversation is bound', async () => {
-  mockDeepLinkThreadId='fiction-old-url-thread';mockDiscoverLegacyThread=true;await mountB();
+  mockDeepLinkThreadId='fiction-old-url-thread';window.history.replaceState(null,'','/writers-studio?editorialThread=fiction-old-url-thread');mockDiscoverLegacyThread=true;await mountB();
   expect(mockViewProps.editorialFailure).toContain('has not been verified for the current Living Work');
   await React.act(async()=>{mockViewProps.onSendEditorial('Fictional request with verified history');await settle(100)});
   await React.act(async()=>{mockResolveTurn({ok:true,thread:mockResponseThread('D04e'),producedVersionId:null,voice:null});await settle(40)});
@@ -648,6 +649,15 @@ it('D04g reopening the place restores an old conversation only when it holds an 
   mockThread.versions=[{id:'fiction-version-a',author:'maia',wording:original,supersedes:null,rationale:'Fixture'}];
   await mountB();
   expect(mockViewProps.editorialThread?.threadId).toBe('fiction-thread');
+});
+// Production 2026-11-01 (9053eee20): after leaving one conversation, search params
+// still named its thread while the live address had dropped it, and Focus on the
+// next passage showed "not verified … nothing was sent" for a passage with none.
+it('D04h a thread the live address has already dropped raises no "not verified" notice', async () => {
+  mockDeepLinkThreadId='fiction-old-url-thread';
+  await mountB();
+  expect(mockViewProps.editorialThread).toBeNull();
+  expect(mockViewProps.editorialFailure ?? null).toBeNull();
 });
 it('D05 explicitly requested new thread rejects a foreign manuscript response', async () => {
   await mountB();legacyModule().openBoundEditorialThread.mockResolvedValueOnce({ok:true,thread:{...mockThread,workId:'fiction-foreign-manuscript'}});
