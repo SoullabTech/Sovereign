@@ -90,3 +90,52 @@ Implementation questions follow from that answer and don't need separate rulings
 - **Rename the commercial plan away from "Pro"** (for example *Writer Plus* or *Studio Plus*) before any member sees it, to avoid three meanings of Pro.
 
 ⛔ Until the founder rules: nothing is built and no access changes. The independently held operations (`WRITER_INDEPENDENT_RELEASE_HOLDS`: PDF/EPUB delivery, deletion-safe recovery, etc.) stay held whatever the plan decision.
+
+## 6. Founder ruling (Kelly, 2026-11-02, in this session)
+
+**Ruling: ADMIT FREE NOW.** The founder chose "Admit Free now" over "Stay invitation-only", in answer to the §5 question.
+
+- **AUTHORIZED** (direction): ordinary signed-in members will be admitted to Writer's Studio on the Free plan. This takes the §5 recommendation, including its preconditions:
+  - the Free/Pro boundary is enforced server-side before admission opens;
+  - Pro-only capabilities stay visible and reachable as descriptions, with a way to ask for Pro;
+  - Writer Pro testers become named, audited, revocable grants (the Astrology Pro pattern, scoped to Writer);
+  - payment stays out of scope;
+  - the commercial plan is renamed away from "Pro" before any member sees it.
+- **NOT AUTHORIZED by this ruling:**
+  - flipping admission in production. That is a deploy act and belongs to the Writer's Studio walk session, after the enforcement lands and is witnessed;
+  - any change to `WRITER_INDEPENDENT_RELEASE_HOLDS`;
+  - payment or checkout;
+  - a choice of the new plan name.
+- **Custody check** (canonical `afbbc65aa`):
+  - no preserve branch carries unmerged changes to `planPolicy` / `admissionServer` / `betaAccessServer` / `restrictedCorridor`;
+  - no earlier founder ruling on Writer Free/Pro was found in `docs/`;
+  - open PRs #2075 (refusal redirect) and #2076 (Design 1B) touch adjacent Studio code. Implementation must rebase over whichever lands first.
+
+### 6.1 What the ruling leaves open: the Free/Pro boundary has no referent
+
+`planPolicy.ts` names features: `basic_develop` vs `advanced_develop`, `basic_review` vs `advanced_review`, `basic_maia` vs `expanded_maia`. **Nothing in canonical defines which route or action is "basic" and which is "advanced".**
+
+- All 19 manuscript actions and all `api/writers-studio/**` routes are currently one undivided surface.
+- Three Pro-only lines have **no capability to gate at all**: `listen` and `publish_preparation` have no route, and `multiple_active_works` has no Work limit anywhere.
+- So two competent implementers would draw this line differently. It is a product definition, not an implementation detail.
+
+**Question owed (one, of principle):** what does Free include inside the Studio as it exists today?
+
+**Recommended ruling:**
+- **Free = the whole Studio as built today, on one active Work.**
+- **Pro = more than one active Work, plus each Pro-only capability as it ships.**
+
+Why this line:
+- It makes "free fully" literally true.
+- It needs exactly one enforcement point: a Work-count check at Work creation or activation.
+- It avoids splitting develop/review/MAIA routes along a line nobody has defined.
+- It means Pro is never marketed as a capability that doesn't exist yet. (`assertStudioMapHonest()` already applies that principle to navigation.)
+
+The alternative is to split develop/review/MAIA now, which would need a per-action table ratified first.
+
+**Standing:**
+- the ruling to admit Free is TAKEN;
+- the boundary definition (§6.1) is RULING_REQUIRED;
+- the plan name is RULING_REQUIRED;
+- implementation is not started;
+- production is unchanged.
