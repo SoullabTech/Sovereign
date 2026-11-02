@@ -29,7 +29,7 @@ jest.mock('@/lib/recovery/r20DeletionLedger', () => ({
   r20LedgerErrorCode: jest.fn(() => 'fictional_r20_error'),
 }));
 
-import { closePool, query } from '@/lib/db/postgres';
+import { closePool, query, transaction } from '@/lib/db/postgres';
 import {
   beginEncryptedLanding,
   inspectMemberIncompleteLandings,
@@ -43,6 +43,9 @@ import { clearSourceEnvelopeKeyCacheForTests } from '@/lib/manuscript/source/sou
 import { setSourceKmsClientFactoryForTests } from '@/lib/manuscript/source/sourceKeyAuthority';
 import { discardUnclaimedArrival } from '@/lib/manuscript/source/discardUnclaimedArrival';
 import { eraseManuscript } from '@/lib/manuscript/source/eraseManuscript';
+import { discardIncompleteLanding, listMemberUnfinishedUploads } from '@/lib/manuscript/source/discardIncompleteLanding';
+import { sealR20DeletionLedger } from '@/lib/recovery/r20DeletionLedger';
+import * as fileVault from '@/lib/storage/fileVault';
 import { parseUpload } from '@/lib/manuscript/ingest/parseUpload';
 
 const enabled = process.env.WS_SOURCE_INTAKE_DYNAMIC === 'fictional-only';
@@ -384,6 +387,140 @@ suite('Writer encrypted Source landing - dynamic observations (fake KMS, real Po
     expect(filesBefore).toBeGreaterThanOrEqual(2);
     expect(discards.every((d) => d.kind === 'not_found')).toBe(true);
     expect(inspected.length).toBe(3); // the door exists as a library function; nothing deployed calls it
+  });
+
+  describe('S5 [D3] the member can remove an unfinished upload', () => {
+    async function stage(label: string, key: number, upTo: 'pending' | 'writing' | 'verified', member = MEMBER_A) {
+      const inp = input(label, KEY(key), { memberId: member });
+      const intent = await beginEncryptedLanding(inp);
+      if (upTo === 'pending') return { intent, inp, prepared: null as any };
+      const prepared = await prepareEncryptedWrite({ memberId: member, intentId: intent.id, bytes: inp.bytes });
+      await writePreparedCiphertext(prepared);
+      if (upTo === 'verified') await markEncryptedBytesVerified(prepared.lease);
+      return { intent, inp, prepared };
+    }
+    /**
+     * Simulates the passage of the 10-minute write lease. A lease lapses with TIME, and a test cannot wait ten minutes, so
+     * the clock-bearing column is backdated directly. The guard trigger forbids every update of a BYTES_VERIFIED row except
+     * its single legal transition, so it is disabled for exactly this statement inside one transaction and restored in
+     * the same transaction (ALTER TABLE is transactional). This is a disposable test database; nothing in the library does
+     * this, and the library's own code paths are what the probes then exercise.
+     */
+    const expireLease = (id: string) => transaction(async (tx) => {
+      await tx.query('ALTER TABLE writer_source_landing_intents DISABLE TRIGGER writer_source_landing_guard_trigger');
+      await tx.query(
+        `UPDATE writer_source_landing_intents
+            SET lease_expires_at = clock_timestamp() - interval '1 second'
+          WHERE id = $1::uuid AND lease_token IS NOT NULL`, [id]);
+      await tx.query('ALTER TABLE writer_source_landing_intents ENABLE TRIGGER writer_source_landing_guard_trigger');
+    });
+    const rowCount = async (id: string) => (await query('SELECT 1 FROM writer_source_landing_intents WHERE id=$1::uuid', [id])).rowCount;
+    const tombstones = async (id: string) => (await query(`SELECT 1 FROM provenance_tombstones WHERE object_kind='writer_source_landing_intents' AND object_id=$1`, [id])).rowCount;
+    const queueRows = async () => (await query('SELECT 1 FROM vault_erasure_queue')).rowCount;
+
+    it('S5a removes an intent in each incomplete state: row and wrapped key gone, ciphertext destroyed, tombstoned, nothing owed', async () => {
+      const pending = await stage('s5a-pending', 20, 'pending');
+      const verified = await stage('s5a-verified', 21, 'verified');
+      const writing = await stage('s5a-writing', 22, 'writing');
+      await expireLease(verified.intent.id);  // a live lease is refused (S5b); a lapsed one is removable
+      await expireLease(writing.intent.id);
+      const filesBefore = (await vaultFiles()).length;
+      const outcomes = [];
+      for (const x of [pending, verified, writing]) outcomes.push(await discardIncompleteLanding(x.intent.id, MEMBER_A));
+      const after = { rows: [await rowCount(pending.intent.id), await rowCount(verified.intent.id), await rowCount(writing.intent.id)],
+        tombstoned: [await tombstones(pending.intent.id), await tombstones(verified.intent.id), await tombstones(writing.intent.id)],
+        files: (await vaultFiles()).length, queue: await queueRows() };
+      observe('S5a', ['WSI-20', 'WSI-21', 'FILL-1b'], 'unfinished upload removal', { outcomes: outcomes.map((o) => o.kind), bytesDestroyed: outcomes.map((o: any) => o.bytesDestroyed), filesBefore, after });
+      expect(outcomes.map((o) => o.kind)).toEqual(['discarded', 'discarded', 'discarded']);
+      expect(after.rows).toEqual([0, 0, 0]);       // the intent rows are gone, and the wrapped key lived in the row
+      expect(after.tombstoned).toEqual([1, 1, 1]); // an older snapshot cannot reintroduce them
+      expect(filesBefore).toBe(2);
+      expect(after.files).toBe(0);                 // the ciphertext is destroyed
+      expect(after.queue).toBe(0);                 // and no erasure is owed
+    });
+
+    it('S5b refuses under a live write lease, refuses a foreign member, refuses a recorded arrival, and is idempotent', async () => {
+      const live = await stage('s5b-live', 23, 'writing');
+      const mine = await stage('s5b-mine', 24, 'verified');
+      const recorded = await recordEncryptedArtifactArrival(input('s5b-recorded', KEY(25)));
+      const liveOutcome = await discardIncompleteLanding(live.intent.id, MEMBER_A);
+      const liveVerifiedOutcome = await discardIncompleteLanding(mine.intent.id, MEMBER_A); // verified, lease still live
+      await expireLease(mine.intent.id);
+      const foreign = await discardIncompleteLanding(mine.intent.id, MEMBER_B);
+      const recordedOutcome = await discardIncompleteLanding(recorded.landingIntentId, MEMBER_A);
+      const stillThere = [await rowCount(live.intent.id), await rowCount(mine.intent.id), await rowCount(recorded.landingIntentId)];
+      const first = await discardIncompleteLanding(mine.intent.id, MEMBER_A);
+      const second = await discardIncompleteLanding(mine.intent.id, MEMBER_A);
+      observe('S5b', ['WSI-20'], 'removal refusals', { liveLease: liveOutcome.kind, liveVerifiedLease: liveVerifiedOutcome.kind, foreignMember: foreign.kind, recordedArrival: recordedOutcome.kind, rowsUntouched: stillThere, first: first.kind, second: second.kind });
+      expect(liveOutcome.kind).toBe('in_progress');
+      expect(liveVerifiedOutcome.kind).toBe('in_progress'); // BYTES_VERIFIED keeps its write lease, so it is protected the same way
+      expect(foreign.kind).toBe('not_found');          // another member's upload is indistinguishable from absent
+      expect(recordedOutcome.kind).toBe('already_recorded');
+      expect(stillThere).toEqual([1, 1, 1]);           // none of the refusals deleted anything
+      expect(first.kind).toBe('discarded');
+      expect(second.kind).toBe('not_found');           // a second press is harmless
+    });
+
+    it('S5c keeps the obligation durable and does NOT claim success when the bytes cannot be destroyed or the ledger cannot be sealed', async () => {
+      const a = await stage('s5c-destroy-fails', 26, 'verified');
+      await expireLease(a.intent.id);
+      const destroy = jest.spyOn(fileVault, 'destroyVaultBytes').mockRejectedValueOnce(new Error('fictional disk fault'));
+      const failedDestroy = await discardIncompleteLanding(a.intent.id, MEMBER_A);
+      const owedAfterDestroy = { queue: await queueRows(), files: (await vaultFiles()).length, row: await rowCount(a.intent.id), tomb: await tombstones(a.intent.id) };
+      destroy.mockRestore();
+      await query('TRUNCATE vault_erasure_queue');
+      const b = await stage('s5c-seal-fails', 27, 'verified');
+      await expireLease(b.intent.id);
+      (sealR20DeletionLedger as jest.Mock).mockResolvedValueOnce({ sealed: false });
+      const failedSeal = await discardIncompleteLanding(b.intent.id, MEMBER_A);
+      const owedAfterSeal = { queue: await queueRows(), row: await rowCount(b.intent.id), tomb: await tombstones(b.intent.id) };
+      observe('S5c', ['WSI-28', 'WSI-29'], 'partial failure', { destroyFails: failedDestroy.kind, afterDestroyFails: owedAfterDestroy, sealFails: failedSeal.kind, afterSealFails: owedAfterSeal });
+      expect(failedDestroy.kind).toBe('erasure_pending');
+      expect(owedAfterDestroy).toEqual({ queue: 1, files: expect.any(Number), row: 0, tomb: 1 }); // record gone, bytes still owed
+      expect(owedAfterDestroy.files).toBeGreaterThanOrEqual(1);
+      expect(failedSeal.kind).toBe('erasure_pending');
+      expect(owedAfterSeal).toEqual({ queue: 1, row: 0, tomb: 1 });
+    });
+
+    it('S5e refuses, and changes nothing, when another record still references the same stored original', async () => {
+      // artifact_ref is not unique on arrivals, so this state is constructible (corruption or an operator mistake).
+      // Destroying those bytes would break the other record's custody, so the door must stop before touching anything.
+      const a = await stage('s5e-shared', 33, 'verified');
+      await expireLease(a.intent.id);
+      const ref = (await query<{ artifact_ref: string }>('SELECT artifact_ref FROM writer_source_landing_intents WHERE id=$1::uuid', [a.intent.id])).rows[0]!.artifact_ref;
+      await query(
+        `INSERT INTO manuscript_source_arrivals
+           (member_id, source_kind, artifact_ref, artifact_hash, artifact_size, original_filename, source_text,
+            source_text_hash, extraction_method, extractor_version)
+         VALUES ($1::uuid, 'artifact_extraction', $2, $3, 1, 'fictional-shared.txt', 'fictional', 'h', 'test', 'test')`,
+        [MEMBER_A, ref, 'f'.repeat(64)]);
+      const filesBefore = (await vaultFiles()).length;
+      let thrown: string | null = null;
+      try { await discardIncompleteLanding(a.intent.id, MEMBER_A); } catch (e) { thrown = (e as Error).message; }
+      const after = { row: await rowCount(a.intent.id), tomb: await tombstones(a.intent.id), queue: await queueRows(), files: (await vaultFiles()).length };
+      observe('S5e', ['WSI-20'], 'shared reference refusal', { thrown, filesBefore, after });
+      expect(thrown).toBe('shared original artifact reference');
+      expect(after).toEqual({ row: 1, tomb: 0, queue: 0, files: filesBefore }); // the whole transaction rolled back
+    });
+
+    it('S5d lists exactly what is held for the member and nothing else, with no content', async () => {
+      await stage('s5d-pending', 28, 'pending');
+      await stage('s5d-verified', 29, 'verified');
+      const unclaimed = await recordEncryptedArtifactArrival(input('s5d-unclaimed', KEY(30)));
+      const claimed = await recordEncryptedArtifactArrival(input('s5d-claimed', KEY(31)));
+      await claimArrival(claimed.id, MS_A, MEMBER_A);
+      await stage('s5d-other-member', 32, 'verified', MEMBER_B);
+      const mine = await listMemberUnfinishedUploads(MEMBER_A);
+      const json = JSON.stringify(mine);
+      observe('S5d', ['WSI-20', 'WSI-21'], 'unfinished list', { kinds: mine.map((m) => m.kind).sort(), unclaimedFilename: mine.find((m) => m.kind === 'unclaimed')?.filename ?? null });
+      expect(mine.map((m) => m.kind).sort()).toEqual(['incomplete', 'incomplete', 'unclaimed']);
+      expect(mine.find((m) => m.kind === 'unclaimed')?.id).toBe(unclaimed.id);
+      expect(mine.some((m) => m.id === claimed.id)).toBe(false);   // attached to a Work: not "unfinished"
+      expect(json.includes(CANARY)).toBe(false);                    // no extracted text
+      expect(json).not.toContain('manuscript-sources/');            // no object path
+      expect(json).not.toMatch(/wrapped|cipher|dek|key_id/i);       // no key material
+      expect((await listMemberUnfinishedUploads(MEMBER_B)).length).toBe(1);
+    });
   });
 
   it('S2 [C16,WSI-11] empty extracted text lands and verifies ciphertext, then is refused, and the retry can never succeed', async () => {
