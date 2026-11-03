@@ -170,10 +170,14 @@ export function preserveDocxStructure(
   mammothWarnings: readonly string[],
 ): StructuredDocxText {
   const root = parseDocument(html, { decodeEntities: true }) as unknown as HtmlNode;
-  // Images, embedded fields, and drawings need another document model rather
-  // than being silently omitted from the Working Draft.
-  if (find(root, 'img').length || find(root, 'object').length || find(root, 'svg').length) {
-    FAIL('embedded pictures or objects');
+  // Images, embedded objects, and drawings have no place in the Markdown
+  // Working Draft. They are NOT silently omitted: the exact original DOCX is
+  // kept encrypted and untouched, the Markup is removed here (mammoth inlines
+  // base64 data), and the author is told how many were left in the original.
+  const embeddedCount =
+    find(root, 'img').length + find(root, 'object').length + find(root, 'svg').length;
+  if (embeddedCount) {
+    markdown = markdown.replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/[ \t]+\n/g, '\n');
   }
   const tables = preserveTables(root, markdown);
   const notes = preserveFootnotes(root, tables.text);
@@ -181,6 +185,9 @@ export function preserveDocxStructure(
   const warnings = [
     'The editable draft is Markdown, not a Word page. The exact original DOCX is kept separately. Check title, subtitle, captions, typography, page layout, headers, and reference-manager fields against the original; these are not a verified Word-formatting roundtrip.',
   ];
+  if (embeddedCount) warnings.push(
+    `${embeddedCount} embedded picture(s) or object(s) are not carried into the editable draft. They remain in your original Word file, which is kept unchanged. Check where they belong against the original.`,
+  );
   if (tables.count) warnings.push(
     `${tables.count} Word table(s) are represented as Markdown row-and-column grids. Cell relationships are retained; native Word table formatting and export are not yet qualified.`,
   );
