@@ -114,7 +114,7 @@ Refuted (and why they are not fixed): `Retry-After: 900` against a 3600 s window
 default-run test (covered by the PG16 probes S6a-S6d); KMS timeout not bounding a stalled body after headers (the SDK's own limit; not introduced here); the D5 backup
 sentence shown only on the hint path (the confirmation is the main path); rate-limit counter written before the posture gate (identity-keyed counter only, no content).
 
-Each fix was mutation-checked: 10 server, 14 client, and 9 unit/PostgreSQL mutants, all killed. The check also caught **two vacuous tests of mine**: the first uppercase-UUID
+Each fix was mutation-checked: 10 server and 14 client mutants and 8 of 9 unit/PostgreSQL mutants were killed; the ninth survived because the code it changed was redundant, and that code was removed. (The commit message of that fix said "33 ... all killed"; that overstated it by the one redundant mutant, and this line is the correction.) The check also caught **two vacuous tests of mine**: the first uppercase-UUID
 route test used a digits-only id (which has no case, so a route that did not lowercase passed it), and one mutant (`.toLowerCase()` on an id that the database already
 returns lowercase) survived as redundant and was removed rather than excused. PostgreSQL 16 probes: **31 of 31** (new S5f, S5g).
 
