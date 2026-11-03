@@ -15,7 +15,6 @@ import {
   type CraftDecision,
   type CraftWorkingEdit,
 } from '@/lib/writersStudio/craftWorkingCopy';
-import { sameCraftKeptSpans } from '@/lib/writersStudio/craftSettledChoicesR1';
 import { professionalMarkFor } from '@/lib/writersStudio/craftProfessionalMarks';
 import type { CraftWorkingSaveDraft } from '@/lib/writersStudio/craftSaveContractR1';
 import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
@@ -326,9 +325,12 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
       && props.thread.locusText === original)));
   const pendingComposition = directEditing || customEditId !== null;
   // Legacy save persists wording only; per-word settled marks are session-only.
-  const choicesChanged = Boolean(props.onSaveWorking && !sameCraftKeptSpans([], kept));
-  const savedWorking = !pendingComposition && candidateVersion?.author === 'member' && candidateVersion.wording === workingText && !choicesChanged;
-  const canSave = !applied && canonicalAligned && Boolean(props.onSaveWorking || (props.thread && candidateVersion)) && (hasWriterChange || choicesChanged) && !savedWorking && !pendingComposition && !props.busy && !saving;
+  // Kept ("Stet") marks are session-only and are never sent to the server: the
+  // working text already reflects them, so they must not count as an unsaved
+  // change. Counting them blocked Save (the server refuses settled choices) and,
+  // through it, Apply.
+  const savedWorking = !pendingComposition && candidateVersion?.author === 'member' && candidateVersion.wording === workingText;
+  const canSave = !applied && canonicalAligned && Boolean(props.onSaveWorking || (props.thread && candidateVersion)) && hasWriterChange && !savedWorking && !pendingComposition && !props.busy && !saving;
   const canApply = !applied && savedWorking && candidateVersion?.id === props.version?.id && canonicalAligned && Boolean(props.thread && props.version) && !pendingComposition && !props.busy && !saving
     && props.version?.author === 'member' && props.version.wording === workingText;
 
@@ -491,7 +493,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     try {
       const ok = props.onSaveWorking ? await props.onSaveWorking({
         held: { ...props.held }, threadId: props.thread?.threadId ?? null,
-        supersedes: candidateVersion?.id ?? null, text: workingText, kept,
+        supersedes: candidateVersion?.id ?? null, text: workingText, kept: [],
       }) : await props.onSaveMember({
         threadId: props.thread!.threadId,
         sectionId: props.held.draftSectionId,
@@ -500,7 +502,9 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
         purpose: 'Writer-shaped Craft version',
       });
       announce({ ok, message: ok
-        ? 'Your working version is saved. Not applied to the manuscript.'
+        ? (kept.length > 0
+          ? 'Your working version is saved. Not applied to the manuscript. Your kept marks stay marked in this session; the saved version holds your wording.'
+          : 'Your working version is saved. Not applied to the manuscript.')
         : 'Your save could not be confirmed. Your wording and choices remain here.' });
     } catch {
       // A rejected connection or uncertain acknowledgment is not a saved version.
@@ -932,7 +936,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                 ) : null}
               </div>
             </details>
-            {!applied && (hasWriterChange || choicesChanged) ? (
+            {!applied && hasWriterChange ? (
               <button type="button" disabled={!canSave} onClick={() => void saveWorkingVersion()}>
                 {saving ? 'Saving…' : 'Save my version'}
               </button>
@@ -963,7 +967,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                       }
                     }}>
                     <strong>Where shall we work next?</strong>
-                    {!applied && !savedWorking && (hasWriterChange || choicesChanged || pendingComposition) ? (
+                    {!applied && !savedWorking && (hasWriterChange || pendingComposition) ? (
                       <p role="status" data-next-focus-draft-notice>
                         Your changes are not saved. Moving may discard this unsaved wording.
                         Save my version before leaving if that option is available.

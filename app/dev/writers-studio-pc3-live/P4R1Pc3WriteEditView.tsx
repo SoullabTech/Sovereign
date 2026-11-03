@@ -285,6 +285,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [morePassageOptions, setMorePassageOptions] = useState(false);
   const [selectedRevisionEdits, setSelectedRevisionEdits] = useState<ReadonlySet<number>>(new Set());
   const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
+  const [passageNotice, setPassageNotice] = useState<string | null>(null);
   const [requestedPassageAct, setRequestedPassageAct] = useState<(PassageAct & { key: number }) | null>(null);
   const [isolatedEditorial, setIsolatedEditorial] = useState(false);
   // Craftsman's Table is entered only by an author's explicit passage action.
@@ -705,6 +706,35 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     props.onStartFreshConversation?.();
   };
 
+  // Every passage action needs a Living Work. Without one the MAIA panel (where
+  // refusals are normally shown) is not on screen, so an action used to do
+  // nothing at all. Say why, here, where the writer just clicked.
+  const NO_WORK_NOTICE = 'MAIA works inside a Living Work. This manuscript is not in exactly one declared Work yet, so nothing was sent. Declare it as a Work (or choose one Work if several include it), then try again.';
+  const requireWork = (): boolean => {
+    if (props.work) { setPassageNotice(null); return true; }
+    setPassageNotice(NO_WORK_NOTICE);
+    return false;
+  };
+  const passageGatesOpen = () => props.sessionPosture.resolved && !props.sessionPosture.sanctuary
+    && Boolean(props.maiaRelationship);
+  // One path for every MAIA-backed passage act. If a gate (privacy posture, MAIA
+  // relationship) is still open the act is HELD and continues once the writer has
+  // answered it, never sent early and never dropped. Under Sanctuary it never runs.
+  const runPassageAct = (act: PassageAct, isolate = false) => {
+    if (!requireWork()) return;
+    setSelectionMenuOpen(false);
+    if (passageGatesOpen()) {
+      if (act.depth) props.onDepth(act.depth);
+      props.onOpenWorkspace();
+      if (isolate) setIsolatedEditorial(true);
+      props.onSendEditorial(act.prompt, act.options);
+      return;
+    }
+    setRequestedPassageAct({ key: Date.now(), ...act });
+    props.onOpenWorkspace();
+    if (isolate) setIsolatedEditorial(true);
+  };
+
   // Craftsman's Table has its own passage controls; the selection pill would
   // float over MAIA's panel there with nothing selected.
   const contextualActions = selectionRect && props.held && !isolatedEditorial && !craftVisible ? (
@@ -723,14 +753,16 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         type="button"
         className="p4r1-selection-trigger"
         aria-expanded={selectionMenuOpen}
-        onClick={() => setSelectionMenuOpen((open) => { if (!open) setMorePassageOptions(false); return !open; })}
+        onClick={() => setSelectionMenuOpen((open) => { if (!open) { setMorePassageOptions(false); setPassageNotice(null); } return !open; })}
       >
         Work with passage <span aria-hidden="true">›</span>
       </button>
 
       {selectionMenuOpen ? (
         <div className="p4r1-selection-menu" role="menu">
+          {passageNotice ? <p role="status" className="p4r1-selection-notice" style={{ margin: '6px 10px', fontSize: '0.85em', lineHeight: 1.4 }}>{passageNotice}</p> : null}
           <button type="button" role="menuitem" className="p4r1-selection-menu-primary" onClick={() => {
+            if (!requireWork()) return;
             setSelectionMenuOpen(false);
             props.onOpenWorkspace();
             setIsolatedEditorial(true);
@@ -740,6 +772,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           </button>
 
           <button type="button" role="menuitem" data-open-craftsmans-table onClick={() => {
+            if (!requireWork()) return;
             if (!requestConversationDeparture()) return;
             setSelectionMenuOpen(false);
             openCraftOnHeld();
@@ -748,42 +781,26 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             <span>Work on these exact words with visible changes and MAIA beside the writing.</span>
           </button>
 
-          <button type="button" role="menuitem" onClick={() => {
-            setSelectionMenuOpen(false);
-            props.onOpenWorkspace();
-            props.onSendEditorial([
+          <button type="button" role="menuitem" onClick={() => runPassageAct({
+            label: 'Discuss',
+            prompt: [
               'Discuss what is happening in this exact passage with me before proposing any edits.',
               'Reflect what you notice in plain language and ask me one useful question about what I am trying to do.',
               'Do not propose replacement wording unless I ask.',
-            ].join('\n\n'));
-          }}>
+            ].join('\n\n'),
+          })}>
             <b>Discuss</b>
             <span>Talk about the passage before changing anything.</span>
           </button>
 
           {/* The implicit Academy's front door: one step from a selected passage
               (SEMANTIC-FIELD-01 teaching plan, 2026-11-01). */}
-          <button type="button" role="menuitem" data-teach-me-entry onClick={() => {
-            setSelectionMenuOpen(false);
-            const gatesOpen = props.sessionPosture.resolved && !props.sessionPosture.sanctuary
-              && (!props.work || Boolean(props.maiaRelationship));
-            if (gatesOpen) {
-              props.onDepth('learning');
-              props.onOpenWorkspace();
-              props.onSendEditorial(teachingQuestion('passage'), { proposalPolicy: 'reply_only', teachingAnchor: 'passage' });
-              return;
-            }
-            // A gate is still open: the panel holds the request and continues it
-            // once the writer has answered (never under Sanctuary).
-            setRequestedPassageAct({
-              key: Date.now(),
-              label: 'Teach me about this',
-              prompt: teachingQuestion('passage'),
-              depth: 'learning',
-              options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' },
-            });
-            props.onOpenWorkspace();
-          }}>
+          <button type="button" role="menuitem" data-teach-me-entry onClick={() => runPassageAct({
+            label: 'Teach me about this',
+            prompt: teachingQuestion('passage'),
+            depth: 'learning',
+            options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' },
+          })}>
             <b>Teach me about this</b>
             <span>Learn the craft already at work here.</span>
           </button>
@@ -800,31 +817,28 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           </button>
           {morePassageOptions ? (
             <>
-          <button type="button" role="menuitem" onClick={() => {
-            setSelectionMenuOpen(false);
-            props.onOpenWorkspace();
-            setIsolatedEditorial(true);
-            props.onSendEditorial([
+          <button type="button" role="menuitem" onClick={() => runPassageAct({
+            label: 'Revise',
+            prompt: [
               'Help me revise this exact passage.',
               'Start with exactly these three short lines in plain language:',
-              '"What I’d preserve: …"',
-              '"Friction I notice: …" — support this from the exact words; do not grade or diagnose the writing.',
-              '"What I’d try: …" — name the editorial move and why you would try it.',
+              '"What I\u2019d preserve: \u2026"',
+              '"Friction I notice: \u2026" \u2014 support this from the exact words; do not grade or diagnose the writing.',
+              '"What I\u2019d try: \u2026" \u2014 name the editorial move and why you would try it.',
               'Then, if a revision is warranted, offer one possible revision. Preserve my voice, intention, subject, and intentional ambiguity.',
               'Begin the rationale with "Editorial purpose: <short descriptive direction>". Separate meaning changes from style changes, treat reader effects as hypotheses, and say what could be lost.',
               'Nothing is to be applied automatically.',
-            ].join('\n\n'));
-          }}>
+            ].join('\n\n'),
+          }, true)}>
             <b>Revise</b>
             <span>Ask MAIA for one useful editorial move.</span>
           </button>
 
-          <button type="button" role="menuitem" onClick={() => {
-            setSelectionMenuOpen(false);
-            props.onDepth('direct');
-            props.onOpenWorkspace();
-            props.onSendEditorial('Show me the editorial reasoning you can support from this exact passage. Distinguish evidence from interpretation. Do not propose replacement wording unless I ask.');
-          }}>
+          <button type="button" role="menuitem" onClick={() => runPassageAct({
+            label: 'Go deeper',
+            prompt: 'Show me the editorial reasoning you can support from this exact passage. Distinguish evidence from interpretation. Do not propose replacement wording unless I ask.',
+            depth: 'direct',
+          })}>
             <b>Go deeper</b>
             <span>Open the technical reasoning, evidence, and tradeoffs.</span>
           </button>
@@ -1200,6 +1214,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         setProseView(true);
       }}>Prose</button>
       <button type="button" aria-pressed={!proseView} onClick={() => setProseView(false)}>Edit</button>
+      {proseView ? <span className="p4r1-write-view-hint" style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: 10 }}>To work with a passage, press Edit and select the words.</span> : null}
     </div>
   ) : null;
 
@@ -1364,6 +1379,11 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       : null);
     props.onSendEditorial(text, {
       proposalPolicy: options?.proposalPolicy === 'reply_only' ? 'reply_only' : 'allow',
+      // The writer pressed a control that explicitly asks for wording ("Suggest
+      // an edit", "Try wording", "Another way"). That press is the visible act that
+      // releases the discuss-first gate for this one turn; dropping it left the
+      // button unable to produce an edit on a first request at the default latitude.
+      ...(options?.proposalRequested === true ? { proposalRequested: true } : {}),
       // Distinct author-authored display payload. The larger prompt remains
       // internal; the controller must not confuse this with stored author
       // transcript custody or a server acknowledgement.
