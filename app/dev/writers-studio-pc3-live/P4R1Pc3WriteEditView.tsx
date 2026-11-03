@@ -64,6 +64,7 @@ import type { A2RelationshipSummary, EligibleCarrySource } from '@/lib/writersSt
 import type { CraftWorkingSaveDraft } from '@/lib/writersStudio/craftSaveContractR1';
 import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
+import { passageActQuestion, type PassageAct as PassageActId } from '@/lib/writersStudio/passageActs';
 import type { StudioActionId } from '@/lib/writersStudio/studioActions';
 
 export type Pc3HeldPassage = {
@@ -145,6 +146,8 @@ export type P4R1Pc3WriteEditViewProps = {
     teachingAnchor?: TeachingAnchor;
     /** The free Ask box (Design 3C); the server owns the answer's shape. */
     turnShape?: TurnShape;
+    /** The card pressed (conversation-first Focus, step 1); the server owns its instruction. */
+    passageAct?: PassageActId;
   }) => void;
   /** Retire pending visible editorial result after an author STOP. */
   onStopEditorial: () => void;
@@ -752,11 +755,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           <button type="button" role="menuitem" onClick={() => {
             setSelectionMenuOpen(false);
             props.onOpenWorkspace();
-            props.onSendEditorial([
-              'Discuss what is happening in this exact passage with me before proposing any edits.',
-              'Reflect what you notice in plain language and ask me one useful question about what I am trying to do.',
-              'Do not propose replacement wording unless I ask.',
-            ].join('\n\n'));
+            // Step 1: only the writer's words are stored; the instruction is server-owned.
+            props.onSendEditorial(passageActQuestion('discuss'), { proposalPolicy: 'reply_only', passageAct: 'discuss' });
           }}>
             <b>Discuss</b>
             <span>Talk about the passage before changing anything.</span>
@@ -805,16 +805,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             setSelectionMenuOpen(false);
             props.onOpenWorkspace();
             setIsolatedEditorial(true);
-            props.onSendEditorial([
-              'Help me revise this exact passage.',
-              'Start with exactly these three short lines in plain language:',
-              '"What I’d preserve: …"',
-              '"Friction I notice: …" — support this from the exact words; do not grade or diagnose the writing.',
-              '"What I’d try: …" — name the editorial move and why you would try it.',
-              'Then, if a revision is warranted, offer one possible revision. Preserve my voice, intention, subject, and intentional ambiguity.',
-              'Begin the rationale with "Editorial purpose: <short descriptive direction>". Separate meaning changes from style changes, treat reader effects as hypotheses, and say what could be lost.',
-              'Nothing is to be applied automatically.',
-            ].join('\n\n'));
+            props.onSendEditorial(passageActQuestion('revise'), { proposalPolicy: 'allow', passageAct: 'revise' });
           }}>
             <b>Revise</b>
             <span>Ask MAIA for one useful editorial move.</span>
@@ -824,7 +815,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             setSelectionMenuOpen(false);
             props.onDepth('direct');
             props.onOpenWorkspace();
-            props.onSendEditorial('Show me the editorial reasoning you can support from this exact passage. Distinguish evidence from interpretation. Do not propose replacement wording unless I ask.');
+            props.onSendEditorial(passageActQuestion('deeper'), { proposalPolicy: 'reply_only', passageAct: 'deeper' });
           }}>
             <b>Go deeper</b>
             <span>Open the technical reasoning, evidence, and tradeoffs.</span>
