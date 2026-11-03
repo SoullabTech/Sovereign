@@ -162,3 +162,27 @@ separate founder act.
    **Use this · Adjust · Another**, with "why / what I protected / diff" behind **More**. "Use this" = one apply.
 4. **Fewer doors:** Discuss / Options / Teach as the starters; cards take the conversational shape.
 5. **Craftsman's Table folded into Focus** as its deeper mode.
+
+## 8. Steps 1 and 2 live (witness, 2026-11-03)
+
+```
+EVIDENCE:   Production GIT_COMMIT 374c472a9 (cutover 11:47:23Z, founder-authorized; carries #2085 step 1 and
+            #2087 step 2). printenv == Config.Env == asserted; healthy; restarts 0; 0 error lines after the swap.
+            Founder account, Elemental Alchemy, thread 18633ebb, 11:48–11:50Z. ⛔ Founder use is not member witness.
+```
+
+- **Card → conversation.** "Discuss what's happening" on "The four of them crowded in around a statue…".
+  Focus showed **You:** "Let's talk about what's happening in this passage." and then MAIA's reply in the Discuss
+  shape (observations, then one question). The instruction reached her server-side; it wasn't stored as the
+  writer's words.
+- **Reply in the box.** "It's there to protect the joke." The conversation then showed all four turns, oldest
+  first. While MAIA answered, the earlier turns stayed and "MAIA is with the passage…" showed.
+- **Deeper into written options.** "Show revision options" gave an option grounded in the conversation ("Keep
+  the guard, drop the aside"), with **"The conversation so far (6 turns)"** above it.
+- **Stored writer turns** (`ask_turns`, exact): `Let's talk about what's happening in this passage.` ·
+  `It's there to protect the joke.` · `Show me revision options, from what we've discussed.` No instruction text.
+
+**Steps 1 and 2: PASS.** Open, carried to the next steps:
+- The writer's just-sent message doesn't appear until MAIA's reply arrives (the thread is reread after the turn).
+  Showing it at once belongs with step 3's conversation work.
+- Written options still replace the reply area (the conversation is folded above them). That is step 3.
