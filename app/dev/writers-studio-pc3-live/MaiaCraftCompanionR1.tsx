@@ -293,7 +293,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                       {turn.speaker === 'writer' ? 'You' : turn.speaker === 'action' ? 'Canvas' : 'MAIA'}
                       {turn.key.startsWith('local-intent:') ? ' · Not confirmed' : null}
                     </span>
-                    <p>{stripStudioActions(turn.body)}</p>
+                    <p>{turn.speaker === 'writer' ? turn.body : stripStudioActions(turn.body)}</p>
                   </div>
                 ))}
               </div>
