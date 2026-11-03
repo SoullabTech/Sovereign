@@ -36,6 +36,18 @@
  *      is not an instrument.
  *   What is STILL inferred, not run: mammoth, pdf-parse, xmldom and the database. The
  *   `uncertain` flag marks the outcomes that hinge on them.
+ *   WHAT THE ANCHORS STILL CANNOT SEE (measured by a mutation sweep of 778 mechanical edits to the
+ *   anchored sources: 535 went unflagged before the extra region digests were added, 381 still do;
+ *   most of those 381 are in the code named below, the rest are digits inside comments. Read the
+ *   list, do not read the pins as total):
+ *   the auth / membership / idempotency-header flow in route.ts (a precondition, not a modelled
+ *   decision); the database state machine inside encryptedLanding.ts (idempotency conflict, writer
+ *   fencing, lease and verify failures: precondition 3 says the landing path is healthy); arrivals.ts
+ *   outside recordArtifactArrival; and logging, key handling and SQL text. Edits to the EXTENSION
+ *   helper, the EPUB text conversion, the EPUB package-resolution helpers, the release hold and all of
+ *   docxFidelity.ts ARE flagged, but only by a catch-all region digest ("re-read"), not by a fact.
+ *   The exact EPUB text-cap boundary is NOT witnessed by any fixture: it depends on the parser's text
+ *   conversion, which was read and not run, so only a wide-margin over-cap fixture exists.
  *
  * INDEPENDENT CORROBORATION IS NOT OPTIONAL. The self-test cross-checks zip validity
  * with `unzip`, PDF text with poppler and XML with xmllint. When one of those tools is
@@ -99,6 +111,12 @@ export const LIMITS = Object.freeze({
   EPUB_MAX_ENTRY_BYTES: 8 * 1024 * 1024,
   EPUB_MAX_TOTAL_BYTES: 64 * 1024 * 1024,
 });
+
+/**
+ * parseUpload.ts EPUB_MAX_TEXT_CHARS: a fourth EPUB guard, on the text the parser extracts (not the archive).
+ * Kept OUT of the exported LIMITS so that object's shape is unchanged for other modules.
+ */
+const EPUB_TEXT_CAP = 2_000_000;
 
 export const BOMB_EXPANDED_BYTES = 100 * 1024 * 1024; // 104857600
 export const STATUS_CLASSES = Object.freeze(['2xx', '4xx', '5xx']);
@@ -733,10 +751,21 @@ function xhtmlOf(title, blocksHtml) {
  * stored DEFLATED so the file stays small and chapter 1 keeps the canary raw-visible. The
  * parser's per-entry cap (EPUB_MAX_ENTRY_BYTES) applies to spine documents.
  */
-export function buildEpub(canary, { drm = false, extra = [], padChapterBytes = null } = {}) {
+export function buildEpub(canary, { drm = false, extra = [], padChapterBytes = null, bulkTextChars = null } = {}) {
   assertCanary(canary);
+  if (padChapterBytes !== null && bulkTextChars !== null) throw new RangeError('padChapterBytes and bulkTextChars both add chapter3; pick one');
   const p = prose(canary);
   const b = (s) => Buffer.from(s, 'utf8');
+  // A third spine document of ordinary ASCII paragraphs (single spaces, no inline markup, no canary) carrying about `bulkTextChars`
+  // characters of extractable text. Deliberately plain, so the parser's text equals the tag-stripped text plus block separators
+  // and no whitespace collapsing can shorten it. Deflated, so the file stays small on disk.
+  const bulkChapter = () => {
+    if (!Number.isInteger(bulkTextChars) || bulkTextChars < 1000) throw new RangeError('bulkTextChars must be an integer of at least 1000');
+    const sentence = 'The lantern keepers of Marrow Reach counted the tides in silence and wrote the numbers on slate. ';
+    const para = sentence.repeat(Math.ceil(1000 / sentence.length)).slice(0, 1000).replace(/ +$/, '');
+    const n = Math.ceil(bulkTextChars / para.length);
+    return xhtmlOf('Ledger', '<h2>Ledger</h2>' + `<p>${esc(para)}</p>`.repeat(n));
+  };
   const chapter = (c, withTitle) =>
     xhtmlOf(c.heading, `${withTitle ? `<h1>${esc(p.title)}</h1>` : ''}<h2>${esc(c.heading)}</h2>` + c.paragraphs.map((t) => `<p>${esc(t)}</p>`).join(''));
   const paddedChapter = () => {
@@ -748,7 +777,7 @@ export function buildEpub(canary, { drm = false, extra = [], padChapterBytes = n
     if (Buffer.byteLength(out) !== padChapterBytes) throw new Error('padded chapter is not the requested length');
     return out;
   };
-  const withPad = padChapterBytes !== null;
+  const withPad = padChapterBytes !== null || bulkTextChars !== null;
   const container =
     '<?xml version="1.0" encoding="UTF-8"?>\n<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">' +
     '<rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>';
@@ -777,7 +806,7 @@ export function buildEpub(canary, { drm = false, extra = [], padChapterBytes = n
     { name: 'OEBPS/nav.xhtml', data: b(nav), method: 'stored' },
     { name: 'OEBPS/chapter1.xhtml', data: b(chapter(p.chapters[0], true)), method: 'stored' },
     { name: 'OEBPS/chapter2.xhtml', data: b(chapter(p.chapters[1], false)), method: 'stored' },
-    ...(withPad ? [{ name: 'OEBPS/chapter3.xhtml', data: b(paddedChapter()), method: 'deflate' }] : []),
+    ...(withPad ? [{ name: 'OEBPS/chapter3.xhtml', data: b(bulkTextChars !== null ? bulkChapter() : paddedChapter()), method: 'deflate' }] : []),
     ...extra,
   ];
   return buildZip(entries);
@@ -1100,6 +1129,12 @@ function specs(canary, includeLarge) {
       build: () => buildEpub(canary, { padChapterBytes: LIMITS.EPUB_MAX_ENTRY_BYTES + 1 }).buffer,
       expectedParse: 'refuse', expectedStatusClass: '4xx', expectedStatus: 415, uncertain: false,
       note: 'The same package with that spine document one byte over: "One EPUB chapter is unexpectedly large" -> 415. The per-entry guard applies to the container, package document and spine documents only; padding entries are never read, so it does not apply to them.',
+    },
+    {
+      file: 'epub-text-over-cap.epub', kind: 'epub-text-over-cap', mime: MIME.epub, containsCanary: true,
+      build: () => buildEpub(canary, { bulkTextChars: Math.round(EPUB_TEXT_CAP * 1.15) }).buffer,
+      expectedParse: 'refuse', expectedStatusClass: '4xx', expectedStatus: 415, uncertain: true,
+      note: 'A valid EPUB whose third spine document holds about 2,300,000 characters of plain ASCII paragraphs (15 percent over EPUB_MAX_TEXT_CHARS, 2,000,000), about 20 KB on disk because it is deflated. This is a FOURTH EPUB guard, separate from the entry, total and per-document size guards: extractEpubText throws UnsupportedUploadError ("more than 2 MB of editable text") -> 415, whereas the same amount of text in a .txt reaches the route\'s own cap and gets 413. The refusal comes only after xmldom has parsed the 2.3 MB chapter, so the outcome is uncertain:true (it hinges on that library finishing). The margin is deliberately wide: the exact boundary (the parser\'s text is the blocks joined with blank lines, plus heading markers) was read from source, not run, so NO at-cap / over-cap pair is offered; the constant and the guard are pinned by the source anchors instead.',
     },
   ];
   if (includeLarge) {
@@ -1711,6 +1746,22 @@ export function factsFromSources({ route, parse, landing, release, arrivals, fid
   const recFn = blockOf(L, /export async function recordEncryptedArtifactArrival\(/);
   const arrFn = blockOf(A, /export async function recordArtifactArrival\(/);
 
+  // ---- regions the structural facts cannot see (found by a mutation sweep: these edits changed what the route does and no fact moved) ----
+  // The extension helper feeds detectFormat; the EPUB text conversion decides whether a text-bearing EPUB yields any text at all (200 versus
+  // the empty-extraction 503); the release hold is the precondition every expectation assumes; docxFidelity.ts holds the Word refusals.
+  const extFn = blockOf(P, /function extOf\(/);
+  const setDecl = (name) => (P ? new RegExp(`const ${name} = new Set\\(\\[[^\\]]*\\]\\);`).exec(P.flat)?.[0] ?? null : null);
+  const convParts = P ? [setDecl('EPUB_SKIP'), setDecl('EPUB_BLOCK'), blockOf(P, /function inlineText\(/), blockOf(P, /function cleanInline\(/), blockOf(P, /function directBlockChild\(/), blockOf(P, /function xhtmlToEditableText\(/)] : null;
+  const epubConversion = convParts && convParts.every((x) => typeof x === 'string') ? convParts.join('\n') : null;
+  // XML strictness and in-package path safety: they decide whether a well-formed EPUB parses at all (every EPUB fixture passes through them).
+  const resolveParts = P ? [blockOf(P, /function localName\(/), blockOf(P, /function elementsNamed\(/), blockOf(P, /function parseXml\(/), blockOf(P, /function decodedHref\(/), blockOf(P, /function safeEpubPath\(/)] : null;
+  const epubPackageResolution = resolveParts && resolveParts.every((x) => typeof x === 'string') ? resolveParts.join('\n') : null;
+  const holdConst = R ? /const PRESS_SOURCE_INTAKE_RELEASED = [^;]*;/.exec(R.flat)?.[0] ?? null : null;
+  const holdUse = R ? R.flat.indexOf('PRESS_SOURCE_INTAKE_RELEASED', R.flat.indexOf('PRESS_SOURCE_INTAKE_RELEASED') + 1) : -1; // the second mention is the guard
+  const holdFrom = holdUse >= 0 ? R.flat.lastIndexOf('if (', holdUse) : -1;
+  const holdTo = holdUse >= 0 ? R.flat.indexOf('const idempotencyKey', holdUse) : -1;
+  const releaseHold = holdConst && holdFrom >= 0 && holdTo > holdFrom ? `${holdConst}\n${R.flat.slice(holdFrom, holdTo)}` : null;
+
   return {
     // -- the original keys (names and meaning kept) --
     routeMaxFile: declaredNumber(R, 'MAX_FILE_BYTES'),
@@ -1722,6 +1773,7 @@ export function factsFromSources({ route, parse, landing, release, arrivals, fid
     epubEntries: declaredNumber(P, 'EPUB_MAX_ENTRIES'),
     epubEntryBytes: declaredNumber(P, 'EPUB_MAX_ENTRY_BYTES'),
     epubTotalBytes: declaredNumber(P, 'EPUB_MAX_TOTAL_BYTES'),
+    epubMaxTextChars: declaredNumber(P, 'EPUB_MAX_TEXT_CHARS'), // declared outside extractEpubText, so no region digest covers it
     // The docx branch of parseUpload returns (with a warning) on empty text and contains no `throw`. Stronger than the earlier
     // "the warning string exists somewhere in the file": a throw added beside an intact warning string is now caught.
     parseNeverThrowsOnEmptyDocx: Boolean(
@@ -1756,6 +1808,7 @@ export function factsFromSources({ route, parse, landing, release, arrivals, fid
     epubGuardEntries: Boolean(has(epubFn, 'if (entries.length > EPUB_MAX_ENTRIES) { throw new UnsupportedUploadError(')),
     epubGuardTotal: Boolean(has(epubFn, 'const knownTotal = entries.reduce((sum, entry) => sum + (zipUncompressedSize(entry) ?? 0), 0); if (knownTotal > EPUB_MAX_TOTAL_BYTES) { throw new UnsupportedUploadError(')),
     epubGuardEntryContainer: Boolean(has(readFn, 'if (size !== null && size > EPUB_MAX_ENTRY_BYTES) { throw new UnsupportedUploadError(`')),
+    epubGuardText: Boolean(has(epubFn, "if (documents.join('\\n\\n').length > EPUB_MAX_TEXT_CHARS) { throw new UnsupportedUploadError(")),
     epubGuardEntrySpine: Boolean(has(epubFn, "if (size !== null && size > EPUB_MAX_ENTRY_BYTES) { throw new UnsupportedUploadError('One EPUB chapter")),
     epubGuardDrm: Boolean(has(epubFn, 'if (spinePaths.includes(target) || /\\.(xhtml?|html?|opf|ncx|xml)$/i.test(target) || !knownFontObfuscation) { throw new UnsupportedUploadError(')),
     epubGuardMimetype: Boolean(has(epubFn, "if (declared && declared !== 'application/epub+zip') { throw new UnsupportedUploadError(")),
@@ -1798,6 +1851,11 @@ export function factsFromSources({ route, parse, landing, release, arrivals, fid
       'landing.commitHead': digest(commitHead),
       'landing.recordEncryptedArtifactArrival': digest(recFn),
       'arrivals.recordArtifactArrival': digest(arrFn),
+      'parse.extOf': digest(extFn),
+      'parse.epubTextConversion': digest(epubConversion),
+      'parse.epubPackageResolution': digest(epubPackageResolution),
+      'route.releaseHold': digest(releaseHold),
+      'docxFidelity.whole': digest(D ? D.flat : null),
     },
   };
 }
@@ -1852,6 +1910,15 @@ export const SOURCE_PINS = Object.freeze({
     'landing.commitHead': 'eda3ec15c19b1b6c',
     'landing.recordEncryptedArtifactArrival': 'efdf8cfaa22aae8c',
     'arrivals.recordArtifactArrival': 'dfa0cdd6c4401b88',
+    // Added at repair time, from the worktree at 33ee2599035d591e62c6c15b9ccd8821a15bc133 with the anchored files unmodified (git diff empty).
+    // They cover code that decides the route's behaviour but that no structural fact reads (a systematic mutation sweep found edits there
+    // that moved nothing): extOf, the EPUB text conversion (a text-bearing EPUB is 200 only if it yields text), the release hold (the
+    // precondition every expectation assumes) and the whole of docxFidelity.ts. They are catch-alls: a change says "re-read", not "wrong".
+    'parse.extOf': '41b170a6a9eb8bbc',
+    'parse.epubTextConversion': 'c37e9a19cb7475a0',
+    'parse.epubPackageResolution': '70ed618533ca3ca3',
+    'route.releaseHold': '500a55a4d61d61e9',
+    'docxFidelity.whole': '91af4eeb0f34622c',
   }),
 });
 
@@ -1871,12 +1938,13 @@ export function compareFactsToLimits(f) {
   if (f.epubEntries !== LIMITS.EPUB_MAX_ENTRIES) bad.push('EPUB_MAX_ENTRIES');
   if (f.epubEntryBytes !== LIMITS.EPUB_MAX_ENTRY_BYTES) bad.push('EPUB_MAX_ENTRY_BYTES');
   if (f.epubTotalBytes !== LIMITS.EPUB_MAX_TOTAL_BYTES) bad.push('EPUB_MAX_TOTAL_BYTES');
+  if (f.epubMaxTextChars !== EPUB_TEXT_CAP) bad.push('EPUB_MAX_TEXT_CHARS');
   for (const k of [
     'routeRefusesOverSize', 'routeRefusesTextOverCap', 'routeRefusesEmptyFile', 'routeMapsIncompleteTo503',
     'parseNeverThrowsOnEmptyDocx', 'landingRefusesEmptyText',
     'routeOrderParseCapCustody', 'routePassesExtractedTextToCustody', 'detectFormatFullyParsed', 'parseTextIsVerbatimUtf8',
     'pdfScannedIsWarningNotThrow', 'epubGuardEntries', 'epubGuardTotal', 'epubGuardEntryContainer', 'epubGuardEntrySpine',
-    'epubGuardDrm', 'epubGuardMimetype', 'epubLoadFailureIsUnsupported', 'epubInflatesBeforeTotalGuard', 'epubSizeReadFromJszipInternals',
+    'epubGuardText', 'epubGuardDrm', 'epubGuardMimetype', 'epubLoadFailureIsUnsupported', 'epubInflatesBeforeTotalGuard', 'epubSizeReadFromJszipInternals',
     'landingGateOverMax', 'landingWrapsEveryFailureAsIncomplete', 'landingWritesCiphertextBeforeTextGate', 'arrivalsDelegatesUnconditionally',
     'docxRefusesTableWithoutHeader', 'docxRefusesTableWithoutDataRows', 'docxRefusesEmbeddedObjects', 'sourceTextIsPostgresText',
   ]) {
@@ -1917,7 +1985,7 @@ const gtPlusOne = (v, cap) => v > cap + 1;
 
 /** The route's rules as read. A defeat candidate replaces ONE of these (see selfTest). */
 export const ROUTE_RULES = Object.freeze({
-  cmp: Object.freeze({ file: gt, text: gt, epubEntries: gt, epubTotal: gt, epubEntry: gt, landingFile: gt, landingText: gt }),
+  cmp: Object.freeze({ file: gt, text: gt, epubEntries: gt, epubTotal: gt, epubEntry: gt, epubText: gt, landingFile: gt, landingText: gt }),
   textUnits: (p) => p.units, // result.text.length: UTF-16 code units
   enforceFileCap: true,
   enforceTextCap: true,
@@ -1925,6 +1993,7 @@ export const ROUTE_RULES = Object.freeze({
   enforceEpubEntries: true,
   enforceEpubTotal: true,
   enforceEpubEntry: true,
+  enforceEpubText: true, // parseUpload's own cap on extracted EPUB text (EPUB_MAX_TEXT_CHARS): 415, not the route's 413
   enforceDrm: true,
   enforceUnsupportedDocx: true,
   docxEmptyThrows: false, // parseUpload returns empty text + a warning
@@ -1985,7 +2054,7 @@ function wtUnits(b) {
 }
 
 function epubModel(buf, z) {
-  const out = { problem: null, mimetypeBad: false, maxRead: 0, drm: false, hasText: () => false };
+  const out = { problem: null, mimetypeBad: false, maxRead: 0, drm: false, hasText: () => false, textUnits: () => 0 };
   const get = (n) => z.byName.get(n);
   const text = (e) => readEntry(buf, e).toString('utf8');
   const mt = get('mimetype');
@@ -2043,6 +2112,20 @@ function epubModel(buf, z) {
     const e = get(p);
     return Boolean(e) && text(e).replace(/<[^>]+>/g, ' ').trim().length > 0;
   }));
+  // A LOWER BOUND on the characters extractEpubText would produce: the text nodes of the spine documents with comments, tags and the
+  // parser's skipped elements (head, script, style, svg, nav, noscript) removed, entities decoded, whitespace runs collapsed, each
+  // document trimmed. It leaves out the blank lines the parser puts between blocks and the "## " heading markers, and it never counts
+  // anything the parser drops, so "lower bound > cap" PROVES the parser's text is over the cap, while "lower bound <= cap" proves nothing.
+  let textUnits = null; // memoised for the same reason as hasText
+  out.textUnits = () => (textUnits ??= spine.reduce((n, p) => {
+    const e = get(p);
+    if (!e) return n;
+    const body = text(e)
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/<(head|script|style|svg|nav|noscript)\b[\s\S]*?<\/\1\s*>/gi, '')
+      .replace(/<[^>]*>/g, '');
+    return n + decodeXmlEntities(body).replace(/\s+/g, ' ').trim().length;
+  }, 0));
   return out;
 }
 
@@ -2161,6 +2244,9 @@ export function deriveExpectation(m, F, R = ROUTE_RULES) {
     if (e.problem) return refuse(F.statusUnsupported, `package problem: ${e.problem}`, false);
     if (R.enforceEpubEntry && R.cmp.epubEntry(e.maxRead, F.epubEntryBytes)) return refuse(F.statusUnsupported, 'an entry the parser reads is over the per-entry cap', false);
     if (R.enforceDrm && e.drm) return refuse(F.statusUnsupported, 'encryption marker targets readable content', false);
+    // The parser's own text cap, applied to the TEXT it extracts. `textUnits()` is a lower bound, so a refusal here is certain on the
+    // cap; it is `uncertain` only when the document is large enough that the parse must finish first (a library behaviour).
+    if (R.enforceEpubText && R.cmp.epubText(e.textUnits(), F.epubMaxTextChars)) return refuse(F.statusUnsupported, 'EPUB extracted text over the parser cap', e.maxRead > LARGE_DOCUMENT_BYTES);
     p = { units: e.hasText() ? 1 : 0, nul: false, uncertain: e.maxRead > LARGE_DOCUMENT_BYTES };
   } else if (format === 'docx') {
     const z = m.zip();
@@ -2411,7 +2497,7 @@ export function selfTest(options = {}) {
         'text-astral-at-limit.txt', 'text-astral-over-limit.txt', 'text-utf8-bom.txt', 'text-utf16le.txt', 'text-with-nul.txt',
         'docx-table-no-header.docx', 'docx-embedded-image.docx',
         'epub-entries-at-cap.epub', 'epub-entries-over-cap.epub', 'epub-total-at-cap.epub', 'epub-total-over-cap.epub',
-        'epub-chapter-at-cap.epub', 'epub-chapter-over-cap.epub',
+        'epub-chapter-at-cap.epub', 'epub-chapter-over-cap.epub', 'epub-text-over-cap.epub',
       ].sort();
       const sameSet = JSON.stringify(listed) === JSON.stringify(names) && JSON.stringify(names) === JSON.stringify(wanted);
       const withStray = [...listed, 'stray.bin'].sort();
@@ -2424,7 +2510,7 @@ export function selfTest(options = {}) {
       const need = [
         'pdf-text-layer', 'pdf-scanned', 'epub', 'epub-drm', 'docx', 'docx-empty', 'zip-corrupt', 'zip-bomb-epub', 'zip-bomb-docx', 'markdown', 'text',
         'text-astral-at-limit', 'text-astral-over-limit', 'text-utf8-bom', 'text-utf16le', 'text-with-nul', 'docx-table-no-header', 'docx-embedded-image',
-        'epub-entries-at-cap', 'epub-entries-over-cap', 'epub-total-at-cap', 'epub-total-over-cap', 'epub-chapter-at-cap', 'epub-chapter-over-cap',
+        'epub-entries-at-cap', 'epub-entries-over-cap', 'epub-total-at-cap', 'epub-total-over-cap', 'epub-chapter-at-cap', 'epub-chapter-over-cap', 'epub-text-over-cap',
       ];
       const have = new Set(manifest.map((m) => m.kind));
       const missing = need.filter((k) => !have.has(k));
@@ -2593,9 +2679,11 @@ export function selfTest(options = {}) {
       };
       const rows = Object.entries(variants).map(([n, b]) => {
         const a = analyzePdf(b);
-        return { n, found: a.runs.join('').includes(canary), exact: a.exact, machinery: pdfHasTextMachinery(b), struct: checkPdfStructure(b).ok, legacy: legacyPdfTextRuns(b).join('').includes(canary) };
+        // `exported`: the EXPORTED pdfTextRuns (what other modules call) must agree with the analysis and find the canary, with no host tool involved
+        const exported = pdfTextRuns(b);
+        return { n, found: a.runs.join('').includes(canary), exported: JSON.stringify(exported) === JSON.stringify(a.runs) && exported.join('').includes(canary), exact: a.exact, machinery: pdfHasTextMachinery(b), struct: checkPdfStructure(b).ok, legacy: legacyPdfTextRuns(b).join('').includes(canary) };
       });
-      const allFound = rows.every((r) => r.found && r.exact && r.machinery && r.struct);
+      const allFound = rows.every((r) => r.found && r.exported && r.exact && r.machinery && r.struct);
       const legacyBlind = rows.filter((r) => r.legacy).map((r) => r.n); // which variants the OLD extractor could read
       const legacyMissesCompressed = !rows.find((r) => r.n === 'flate').legacy && !rows.find((r) => r.n === 'tj').legacy && !rows.find((r) => r.n === 'flateTj').legacy && rows.find((r) => r.n === 'plain').legacy;
       const hidden = Buffer.from(variants.flate.toString('latin1').replace('/Type /Font /Subtype /Type1 /BaseFont /Helvetica', '/Type /Other').replace('/Font << /F1 5 0 R >>', '/ProcSet [/PDF]'), 'latin1');
@@ -2644,7 +2732,18 @@ export function selfTest(options = {}) {
       const structure = ['epub-entries-at-cap.epub', 'epub-entries-over-cap.epub', 'epub-total-at-cap.epub', 'epub-total-over-cap.epub', 'epub-chapter-at-cap.epub', 'epub-chapter-over-cap.epub'].every((n) => checkEpubStructure(read(n)).ok);
       const rawVisible = ['epub-entries-at-cap.epub', 'epub-total-at-cap.epub', 'epub-chapter-at-cap.epub'].every((n) => read(n).includes(canary));
       const controls = count('epub-entries-at-cap.epub') !== count('epub-entries-over-cap.epub') && total('epub-total-at-cap.epub') !== total('epub-total-over-cap.epub') && ch3('epub-chapter-at-cap.epub').usize !== ch3('epub-chapter-over-cap.epub').usize;
-      return { ok: tblOk && imgOk && canaryInBoth && entriesOk && totalsOk && chapterOk && chapterXmlOk && structure && rawVisible && controls, detail: `table-docx(no tblHeader, 2 rows)=${tblOk} image-docx(png crc, blip, rel, content-type)=${imgOk} canary-in-both=${canaryInBoth} entries 2000/2001=${entriesOk} declared-total 64MiB/+1=${totalsOk} chapter3 8MiB/+1 deflated=${chapterOk} chapter3-xml+spine=${chapterXmlOk} epub-structure=${structure} canary-raw-visible=${rawVisible} off-by-one-controls-differ=${controls}` };
+      // The EPUB text-cap fixture: a deflated, well-formed, in-spine third chapter whose text is over the parser's cap by a wide margin,
+      // measured two ways that share no code for the bulk (the model's tag-stripping lower bound over the whole spine, and a plain sum over
+      // chapter 3's <p> elements plus chapters 1-2, which book.epub measures), against a control far below the cap. The canary is in chapter 1 only, so it stays raw-visible without touching the bulk text.
+      const textFx = read('epub-text-over-cap.epub');
+      const textXml = zipEntryText(textFx, 'OEBPS/chapter3.xhtml');
+      const modelUnits = measureUpload(textFx, 'epub-text-over-cap.epub', MIME.epub).zip().epub().textUnits();
+      const sumOfParagraphs = [...textXml.matchAll(/<p>([^<]*)<\/p>/g)].reduce((a, m) => a + m[1].length, 0) + 'Ledger'.length;
+      const controlUnits = measureUpload(read('book.epub'), 'book.epub', MIME.epub).zip().epub().textUnits();
+      const textFixtureOk = checkEpubStructure(textFx).ok && isWellFormedXml(textXml).ok && /idref="ch3"/.test(zipEntryText(textFx, 'OEBPS/content.opf'))
+        && ch3('epub-text-over-cap.epub').method === 8 && ch3('epub-text-over-cap.epub').usize < LIMITS.EPUB_MAX_ENTRY_BYTES && !textXml.includes(canary) && textFx.includes(canary)
+        && modelUnits === sumOfParagraphs + controlUnits && modelUnits > EPUB_TEXT_CAP * 1.1 && modelUnits < EPUB_TEXT_CAP * 1.5 && controlUnits < EPUB_TEXT_CAP / 10;
+      return { ok: tblOk && imgOk && canaryInBoth && entriesOk && totalsOk && chapterOk && chapterXmlOk && structure && rawVisible && controls && textFixtureOk, detail: `table-docx(no tblHeader, 2 rows)=${tblOk} image-docx(png crc, blip, rel, content-type)=${imgOk} canary-in-both=${canaryInBoth} entries 2000/2001=${entriesOk} declared-total 64MiB/+1=${totalsOk} chapter3 8MiB/+1 deflated=${chapterOk} chapter3-xml+spine=${chapterXmlOk} epub-structure=${structure} canary-raw-visible=${rawVisible} off-by-one-controls-differ=${controls} epub-text-fixture(chars=${modelUnits}, cap=${EPUB_TEXT_CAP}, model==independent-chapter3-sum+chapters1-2:${modelUnits === sumOfParagraphs + controlUnits}, control=${controlUnits})=${textFixtureOk}` };
     });
 
     /* -- canary placement ------------------------------------------------- */
@@ -2858,6 +2957,8 @@ export function selfTest(options = {}) {
         ['route: 503 becomes 500', M('route', '{ status: 503, headers', '{ status: 500, headers'), 'route statusIncomplete'],
         ['epub: total-size guard switched off', M('parse', 'if (knownTotal > EPUB_MAX_TOTAL_BYTES) {', 'if (false) {'), 'epubGuardTotal'],
         ['epub: entry-count guard switched off', M('parse', 'if (entries.length > EPUB_MAX_ENTRIES) {', 'if (false) {'), 'epubGuardEntries'],
+        ['epub: extracted-text cap constant raised (declared outside every digested region, so a digest cannot see it)', M('parse', 'const EPUB_MAX_TEXT_CHARS = 2_000_000;', 'const EPUB_MAX_TEXT_CHARS = 3_000_000;'), 'EPUB_MAX_TEXT_CHARS'],
+        ['epub: extracted-text guard switched off', M('parse', "if (documents.join('\\n\\n').length > EPUB_MAX_TEXT_CHARS) {", 'if (false) {'), 'epubGuardText'],
         ['epub: per-chapter size guard emptied', M('parse', "throw new UnsupportedUploadError('One EPUB chapter is unexpectedly large.');", 'void 0;'), 'epubGuardEntrySpine'],
         ['epub: DRM guard switched off', M('parse', 'if (spinePaths.includes(target)', 'if (false && spinePaths.includes(target)'), 'epubGuardDrm'],
         ['epub: CRC32 verification at load switched off (the note about inflation would become false)', M('parse', 'checkCRC32: true', 'checkCRC32: false'), 'epubInflatesBeforeTotalGuard'],
@@ -2876,6 +2977,22 @@ export function selfTest(options = {}) {
         if (found.length === 0) undetected.push(id);
         else if (!found.includes(expected)) wrongDetector.push(`${id} -> ${found.join('|')}`);
         else if (found.some((f) => !f.startsWith('region '))) structuralOnly++;
+      }
+      // Code that decides the route's behaviour but that no structural fact reads: a change must move the NAMED region digest (digest-only by design).
+      const digestCatalog = [
+        ['parse: extOf returns a truncated extension (feeds detectFormat)', M('parse', "return m ? m[1] : '';", "return m ? m[1].slice(0, 3) : '';"), 'region drift parse.extOf'],
+        ['parse: EPUB paragraphs stop contributing text (every text-bearing EPUB would become an empty extraction)', M('parse', "if (name === 'p') {", "if (name === 'p' && false) {"), 'region drift parse.epubTextConversion'],
+        ['parse: EPUB path safety refuses every in-package reference', M('parse', "if (!joined || joined === '..' ||", "if (true || !joined || joined === '..' ||"), 'region drift parse.epubPackageResolution'],
+        ['parse: EPUB XML errors are ignored (a malformed package would parse)', M('parse', 'errors.length > 0 || elementsNamed(document', 'false && errors.length > 0 || elementsNamed(document'), 'region drift parse.epubPackageResolution'],
+        ['parse: EPUB skip list gains p', M('parse', "'nav', 'noscript']);", "'nav', 'noscript', 'p']);"), 'region drift parse.epubTextConversion'],
+        ['route: release hold inverted', M('route', 'if (!PRESS_SOURCE_INTAKE_RELEASED) {', 'if (PRESS_SOURCE_INTAKE_RELEASED) {'), 'region drift route.releaseHold'],
+        ['route: release flag replaced by a constant true', M('route', 'const PRESS_SOURCE_INTAKE_RELEASED = writerReleaseAuthority().sourceIntakeReleased;', 'const PRESS_SOURCE_INTAKE_RELEASED = true;'), 'region drift route.releaseHold'],
+        ['fidelity: the uneven-rows rule inverted (no structural fact reads it)', M('fidelity', 'cellRows.some((row) => row.length !== width)', 'cellRows.some((row) => row.length === width)'), 'region drift docxFidelity.whole'],
+      ];
+      const digestMissed = [];
+      for (const [id, mut, expected] of digestCatalog) {
+        const found = compareFactsToLimits(factsFromSources({ ...sources, [mut.file]: mutate(sources[mut.file], mut.from, mut.to) }));
+        if (!found.includes(expected)) digestMissed.push(`${id} -> ${found.join('|') || 'nothing'}`);
       }
       // Controls: edits that must NOT be flagged, and one that only the catch-all digest sees.
       const commentOnly = compareFactsToLimits(factsFromSources({ ...sources, parse: mutate(sources.parse, 'if (knownTotal > EPUB_MAX_TOTAL_BYTES) {', 'if (knownTotal > EPUB_MAX_TOTAL_BYTES) { // reviewed: unchanged guard') }));
@@ -2901,8 +3018,8 @@ export function selfTest(options = {}) {
       const unclosedSql = compareFactsToLimits(factsFromSources({ ...sources, migration: `${sources.migration}\n/* never closed\n` }));
       const unclosedSqlCaught = unclosedSql.length === 1 && unclosedSql[0] === 'comment stripper left an unclosed construct in an anchored source';
       return {
-        ok: undetected.length === 0 && wrongDetector.length === 0 && benignQuiet && digestIsCatchAll && oldFooledByLimit && oldFooledByGate && newSeesLive && vacuous && structuralOnly === catalog.length && unclosedCaught && unclosedSqlCaught,
-        detail: `source-changes=${catalog.length} flagged-by-named-detector=${catalog.length - undetected.length - wrongDetector.length} (also-by-a-structural-detector-not-only-a-digest=${structuralOnly}) undetected=[${undetected.join('; ')}] wrong-detector=[${wrongDetector.join('; ')}]; comment-only+whitespace-only edits quiet=${benignQuiet}; message-only edit caught by digest alone=${digestIsCatchAll}; old raw-text extractor fooled by commented-out limit=${oldFooledByLimit} and gate=${oldFooledByGate}, new one sees the live code=${newSeesLive}; vacuous-mutation-refused=${vacuous}; unterminated-comment-in-ts=${unclosedCaught} in-sql=${unclosedSqlCaught} (flagged by the stripper's report alone, no digest moves)`,
+        ok: undetected.length === 0 && wrongDetector.length === 0 && benignQuiet && digestIsCatchAll && oldFooledByLimit && oldFooledByGate && newSeesLive && vacuous && structuralOnly === catalog.length && unclosedCaught && unclosedSqlCaught && digestMissed.length === 0,
+        detail: `source-changes=${catalog.length} flagged-by-named-detector=${catalog.length - undetected.length - wrongDetector.length} (also-by-a-structural-detector-not-only-a-digest=${structuralOnly}) undetected=[${undetected.join('; ')}] wrong-detector=[${wrongDetector.join('; ')}]; comment-only+whitespace-only edits quiet=${benignQuiet}; message-only edit caught by digest alone=${digestIsCatchAll}; old raw-text extractor fooled by commented-out limit=${oldFooledByLimit} and gate=${oldFooledByGate}, new one sees the live code=${newSeesLive}; vacuous-mutation-refused=${vacuous}; unterminated-comment-in-ts=${unclosedCaught} in-sql=${unclosedSqlCaught} (flagged by the stripper's report alone, no digest moves); digest-only-regions(code no fact reads)=${digestCatalog.length - digestMissed.length}/${digestCatalog.length} missed=[${digestMissed.join('; ')}]`,
       };
     });
 
@@ -2973,6 +3090,8 @@ export function selfTest(options = {}) {
         { name: 'EPUB entry-count guard removed', R: rules({ enforceEpubEntries: false }), must: ['epub-entries-over-cap.epub'] },
         { name: 'EPUB total-size guard removed', R: rules({ enforceEpubTotal: false }), must: ['epub-total-over-cap.epub', 'zip-bomb.epub'] },
         { name: 'EPUB per-document guard removed', R: rules({ enforceEpubEntry: false }), must: ['epub-chapter-over-cap.epub'] },
+        { name: 'EPUB extracted-text guard removed (the parser stops capping EPUB text)', R: rules({ enforceEpubText: false }), must: ['epub-text-over-cap.epub'] },
+        { name: 'EPUB extracted-text cap doubled', F: factsWith({ epubMaxTextChars: facts.epubMaxTextChars * 2 }), must: ['epub-text-over-cap.epub'] },
         { name: 'EPUB DRM guard removed', R: rules({ enforceDrm: false }), must: ['book-drm.epub'] },
         { name: 'unrepresentable Word structure no longer refused', R: rules({ enforceUnsupportedDocx: false }), must: ['docx-table-no-header.docx', 'docx-embedded-image.docx'] },
         { name: 'empty DOCX refused by the parser', R: rules({ docxEmptyThrows: true }), must: ['empty.docx'] },
@@ -3002,6 +3121,9 @@ export function selfTest(options = {}) {
         for (const d of deltas) perturb.push([`${key}${d > 0 ? '+' : ''}${d}`, { [key]: facts[key] + d }]);
       }
       for (const key of Object.keys(SOURCE_PINS.statuses)) perturb.push([`${key}+1`, { [key]: facts[key] + 1 }]);
+      // The EPUB text cap is pinned by a deliberately wide-margin fixture, so only a coarse perturbation moves a fixture; its exact
+      // value is pinned by the source anchors (EPUB_MAX_TEXT_CHARS), not by any fixture.
+      perturb.push(['epubMaxTextChars x2', { epubMaxTextChars: facts.epubMaxTextChars * 2 }]);
       const unpinned = perturb.filter(([, o]) => !largeManifest.some((e) => expectationMismatch(e, derive(e, { ...facts, ...o })).length > 0)).map(([n]) => n);
       return { ok: unpinned.length === 0 && perturb.length >= 15, detail: `perturbations=${perturb.length} not-pinned-by-any-fixture=${unpinned.length}${unpinned.length ? ' [' + unpinned.join(', ') + ']' : ''}` };
     });

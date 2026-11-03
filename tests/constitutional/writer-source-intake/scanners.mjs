@@ -12,6 +12,9 @@
  *
  * EXPORTS
  *   makeNeedles({ canary, originalBytes, keyBytes }, options?) -> NeedleSet
+ *       options: { encodings?, partial?, probeBytes?, siblings?: Uint8Array[], assertUnique?: boolean }  -- `siblings` are other
+ *       documents built from the SAME template (other uploads, other canaries); a probe window found verbatim in any of them is
+ *       template boilerplate and is never used. `assertUnique` declares the original template-free. See PROBES OF THE ORIGINAL.
  *   assertArmed(needles, opts?)         throws ArmingError when the set could not find a leak
  *   scanBuffer(buf, needles, opts?)     -> { bytesScanned, hits, hitsBySecret, vacuous, vacuousReason, verdict }
  *   scanText(text, needles, opts?)      -> { chars, ...same }
@@ -32,13 +35,39 @@
  *   ({ path, secret, encoding, count }) so the strict row shape other modules code against is unchanged.
  *
  * ENCODINGS CARRIED PER SECRET (labels, in priority order)
- *   raw, utf8, utf16le, utf16be, base64 (3 alignments), base64url (3 alignments), hex-lower, hex-upper,
- *   urlencoded (RFC 3986 and encodeURIComponent keep-sets x hex case x '+' for space), json-escaped
- *   (JSON.stringify, ensure_ascii \uXXXX lower/upper, '\/' form), plus the EXTRA label byte-array
- *   (JSON.stringify(Buffer) / Array#join decimals -- the most common accidental key leak in Node logs).
+ *   raw, utf8, utf16le, utf16be, base64 (3 alignments), base64url (3 alignments),
+ *   hex-lower / hex-upper (plain, colon-separated 'ab:cd', C-array '0xab,0xcd', escape '\xab\xcd'),
+ *   urlencoded (RFC 3986 and encodeURIComponent keep-sets x hex case x '+' for space, AND the percent-encoded base64
+ *   text of the secret: '+' -> %2B and '/' -> %2F, or only '+', in both hex cases, at all three base64 alignments),
+ *   json-escaped (JSON.stringify, ensure_ascii \uXXXX lower/upper, '\/' form), plus two EXTRA labels:
+ *   byte-array  decimals of the interior bytes: Buffer#toJSON and Array#join ('12,34,...'), AND the index-keyed object
+ *               JSON.stringify(Uint8Array) gives ('"1":12,"2":34,...', the shape the AWS SDK v3 hands back for a KMS
+ *               Plaintext, indices from 0 only). Scanned in the whitespace-stripped lane, so pretty-printed JSON
+ *               (JSON.stringify(x, null, 2)), 'a, b, c' and util.inspect(Uint8Array) are covered with no extra pattern.
+ *   case-folded the TEXT form of a secret lower-cased, upper-cased, capitalised, and word-capitalised (what a Postgres
+ *               tsvector, a search index or a slug leaves behind). Only for secrets that are valid text.
  *   base64 of a SUBSTRING depends on its offset mod 3, so each alignment is trimmed to the characters
  *   that depend only on the secret's own bytes (verified in selfTest against a differential oracle, not
  *   against this module's own trimming).
+ *
+ * PROBES OF THE ORIGINAL (why a window must be PROVABLY specific to this file)
+ *   The original is matched by 48-byte windows, not whole. A window that is template boilerplate (the XML wrapper of a
+ *   stored DOCX, a PDF page-tree, the EPUB container) occurs in EVERY upload built from the same template, so using it
+ *   reports an unrelated document as "the original leaked". Entropy does not cure that: a deflated DOCX part that is
+ *   identical in every upload is just as random-looking as a unique one (measured on this suite's own builders: 142 of 275
+ *   windows of a deflated DOCX are high-entropy AND present in every other upload; 275 windows, 5 other uploads). So a window is used only when
+ *     canary-anchored     it contains the upload's own canary plus 16 bytes of context each side, so it cannot occur in an
+ *                         upload with a different canary (needs the canary to be a verbatim substring of the original); or
+ *     unique-vs-siblings  the caller supplied `siblings` (other uploads from the SAME template, other canaries) and the
+ *                         window occurs in none of them. This is evidence RELATIVE to the siblings: compressed formats
+ *                         share windows between SOME uploads, so supply at least three; or
+ *     asserted-unique     the caller passed `assertUnique: true`, declaring that no byte of the original comes from a
+ *                         template (random, encrypted, a one-off file); then windows with >= 75% distinct bytes qualify.
+ *                         This is a declaration, not a proof, and it is visible in describe() as the window's `basis`.
+ *   Windows are taken from the head, the tail and four interior positions (the provable window nearest each target), so a
+ *   leak of only the first or last few KiB of a large original is also caught when provable bytes lie there. If NO window
+ *   qualifies, makeNeedles THROWS: an original with no provable probe would either flag unrelated documents or detect
+ *   nothing, and neither may pass silently.
  *
  * ALIASING (said once, so nobody guesses)
  *   Two encodings of the same secret that produce byte-identical patterns are ONE pattern; a hit is
@@ -66,12 +95,21 @@
  *   split by 64- or 76-column wrapping, so the selfTest wraps at 16/20/33 columns and proves the wrap really split it.
  *
  * NOT COVERED (honest list; none of these is detected, and no check here claims otherwise)
- *   - Layered encodings (base64 of UTF-16, gzip/deflate/zlib of a plaintext original, double base64).
+ *   - Layered encodings (base64 of UTF-16, gzip/deflate/zlib of a plaintext original, double base64), and case-folding
+ *     of any encoded form (an upper-cased base64 text is not recognised; only the TEXT form is case-folded).
  *     scanForMagic catches an UNCOMPRESSED PDF/ZIP container, not a gzip stream.
- *   - Hex dumps in xxd/hexdump layout (offset column and ASCII gutter interleaved); colon-separated hex.
+ *   - Hex dumps in xxd/hexdump layout (offset column and ASCII gutter interleaved) and dash-separated hex; hex bytes
+ *     separated by anything other than whitespace, ':' or the C-array / backslash-x forms above.
+ *   - A byte array printed with an index offset other than 0 (JSON.stringify of a Uint8Array that CONTAINS the key at a
+ *     non-zero position keys its elements by that position); a Buffer printed by util.inspect beyond Node's 50-byte
+ *     limit ('... N more bytes'); a typed array of 16/32-bit elements; decimal bytes with a separator other than ',' or
+ *     whitespace (';', '|'); byte values printed as signed (Int8Array) numbers.
+ *   - Percent-encoding of base64URL text (its alphabet needs none) and double percent-encoding ('%252B').
  *   - A secret split across two files, or across an fs boundary (sparse files, extended attributes, ADS).
  *   - Substrings of the canary/key shorter than the whole value (the whole value is the needle).
- *     The original is probed by up to four 48-byte interior windows, not byte-for-byte.
+ *     The original is probed by up to six 48-byte windows (head, tail, four interior), not byte-for-byte; a partial leak
+ *     that holds none of the windows is missed, and a stored-text original with neither siblings nor a canary inside it
+ *     cannot be armed at all (makeNeedles throws).
  *   - File names that are not valid UTF-8 are decoded lossily by readdir, cannot be reopened, and are reported as skipped
  *     (so the scan is VACUOUS, not CLEAN). A symlinked ROOT is resolved; symlinks below it are not followed by default.
  *   - Unreadable files (EACCES) are reported as skipped, but selfTest runs as whatever user runs it, so
@@ -88,6 +126,7 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import util from 'node:util';
+import zlib from 'node:zlib';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -99,20 +138,26 @@ export const REQUIRED_ENCODINGS = Object.freeze([
   'raw', 'utf8', 'utf16le', 'utf16be', 'base64', 'base64url',
   'hex-lower', 'hex-upper', 'urlencoded', 'json-escaped',
 ]);
-export const EXTRA_ENCODINGS = Object.freeze(['byte-array']);
+export const EXTRA_ENCODINGS = Object.freeze(['byte-array', 'case-folded']);
 export const ENCODING_ORDER = Object.freeze([...REQUIRED_ENCODINGS, ...EXTRA_ENCODINGS]);
 export const SECRET_NAMES = Object.freeze(['canary', 'original', 'key']);
 
 export const MIN_SECRET_BYTES = 12;
 export const MIN_PATTERN_BYTES = 8;
 export const DEFAULT_PROBE_BYTES = 48;
+/** `assertUnique` admits a window only when at least this fraction of its bytes are distinct (random 48B: ~91%, 0.004% below 75%; stored DOCX/PDF/EPUB text: <= 65%). */
+export const PROBE_MIN_DISTINCT_FRACTION = 0.75;
+const PROBE_MIN_DISTINCT_ANY = 8; // below this a window is padding, never evidence
+const PROBE_ANCHOR_CONTEXT = 16;
+const PROBE_INTERIOR_TARGETS = 4;
+const PROBE_MAX_CANDIDATES = 700;
 export const DEFAULT_MAX_FILE_BYTES = 64 * 1024 * 1024;
 export const DEFAULT_CHUNK_BYTES = 64 * 1024;
 const DEFAULT_MAX_ENTRIES = 200000;
 const DEFAULT_MAX_DEPTH = 64;
 
 /** Labels whose patterns are scanned in the whitespace-stripped lane (PEM / MIME wrapped text). */
-const TEXT_LANE_LABELS = new Set(['base64', 'base64url', 'hex-lower', 'hex-upper']);
+const TEXT_LANE_LABELS = new Set(['base64', 'base64url', 'hex-lower', 'hex-upper', 'byte-array']);
 
 export class ArmingError extends Error {
   constructor(message, problems = []) {
@@ -198,11 +243,56 @@ function jsonVariants(S) {
   return [...out].map((v) => Buffer.from(v, 'utf8'));
 }
 
-/** Interior elements only, delimited by commas, so "12,200" cannot match inside "112,200". */
+/**
+ * Interior elements only, delimited by commas, so "12,200" cannot match inside "112,200". The label is scanned in the
+ * whitespace-stripped lane, so ONE compact pattern also finds 'a, b, c', pretty-printed JSON and util.inspect output.
+ * Second form: JSON.stringify(Uint8Array) is an object keyed by index ({"0":12,"1":34,...}); the key's own indices start at 0,
+ * and the `"n":` prefix delimits every value on the left, so the first and last element are left out for the same reason.
+ */
 function byteArrayVariants(B) {
   if (B.length < 4) return [];
   const mid = Array.from(B.subarray(1, B.length - 1));
-  return [Buffer.from(',' + mid.join(',') + ','), Buffer.from(', ' + mid.join(', ') + ', ')];
+  return [
+    Buffer.from(',' + mid.join(',') + ','),
+    Buffer.from(mid.map((v, i) => `"${i + 1}":${v}`).join(',') + ','),
+  ];
+}
+
+/** Hex with a separator: 'ab:cd' (openssl, MAC), '0xab,0xcd' (C / Go initialiser), '\xab\xcd' (Python / JS / Go string escapes). */
+function hexSeparatedVariants(B, upper) {
+  const h = Array.from(B, (c) => { const x = c.toString(16).padStart(2, '0'); return upper ? x.toUpperCase() : x; });
+  return [
+    Buffer.from(h.join(':'), 'latin1'),
+    Buffer.from(h.map((x) => '0x' + x).join(','), 'latin1'),
+    Buffer.from(h.map((x) => '\\x' + x).join(''), 'latin1'),
+  ];
+}
+
+/**
+ * The percent-encoded form of the secret's base64 TEXT: '+' -> %2B and '/' -> %2F (encodeURIComponent, querystring, quote_plus),
+ * or only '+' (Python quote(): '/' is "safe"), in both hex cases. A region with neither '+' nor '/' is byte-identical to the
+ * plain base64 pattern and is left to it, so one leak is never reported under two labels.
+ */
+function urlEncodedBase64Variants(B) {
+  const out = [];
+  for (const k of [0, 1, 2]) {
+    const s = b64Region(B, k, false).toString('latin1');
+    if (!/[+/]/.test(s)) continue;
+    for (const lower of [false, true]) {
+      const pc = (ch) => { const h = ch.charCodeAt(0).toString(16).padStart(2, '0'); return '%' + (lower ? h : h.toUpperCase()); };
+      out.push(Buffer.from(s.replace(/\+/g, pc).replace(/\//g, pc), 'latin1'));
+      if (/\+/.test(s) && /\//.test(s)) out.push(Buffer.from(s.replace(/\+/g, pc), 'latin1'));
+    }
+  }
+  return out;
+}
+
+const capitalise = (w) => { const cp = Array.from(w); return cp.length === 0 ? w : cp[0].toUpperCase() + cp.slice(1).join('').toLowerCase(); };
+
+/** Lower / UPPER / Capitalised / Each-Word-Capitalised, for a secret that is text. Variants equal to the text itself alias 'raw'. */
+function caseFoldVariants(S, kind) {
+  if (kind !== 'text') return [];
+  return [S.toLowerCase(), S.toUpperCase(), capitalise(S), S.replace(/[\p{L}\p{N}]+/gu, capitalise)].map((v) => Buffer.from(v, 'utf8'));
 }
 
 /** @returns {{ encoding, pattern, align }[]} candidates for one label, before aliasing. */
@@ -215,11 +305,12 @@ function candidatesFor(label, g) {
     case 'utf16be': return [{ pattern: Buffer.from(S, 'utf16le').swap16(), align: null }];
     case 'base64': return [0, 1, 2].map((k) => ({ pattern: b64Region(B, k, false), align: k }));
     case 'base64url': return [0, 1, 2].map((k) => ({ pattern: b64Region(B, k, true), align: k }));
-    case 'hex-lower': return [{ pattern: Buffer.from(B.toString('hex'), 'latin1'), align: null }];
-    case 'hex-upper': return [{ pattern: Buffer.from(B.toString('hex').toUpperCase(), 'latin1'), align: null }];
-    case 'urlencoded': return urlVariants(B, S, kind).map((pattern) => ({ pattern, align: null }));
+    case 'hex-lower': return [Buffer.from(B.toString('hex'), 'latin1'), ...hexSeparatedVariants(B, false)].map((pattern) => ({ pattern, align: null }));
+    case 'hex-upper': return [Buffer.from(B.toString('hex').toUpperCase(), 'latin1'), ...hexSeparatedVariants(B, true)].map((pattern) => ({ pattern, align: null }));
+    case 'urlencoded': return [...urlVariants(B, S, kind), ...urlEncodedBase64Variants(B)].map((pattern) => ({ pattern, align: null }));
     case 'json-escaped': return jsonVariants(S).map((pattern) => ({ pattern, align: null }));
     case 'byte-array': return byteArrayVariants(B).map((pattern) => ({ pattern, align: null }));
+    case 'case-folded': return caseFoldVariants(S, kind).map((pattern) => ({ pattern, align: null }));
     default: throw new TypeError(`unknown encoding '${label}'`);
   }
 }
@@ -274,7 +365,7 @@ export class NeedleSet {
       secrets.push({
         name,
         kind: gs[0].kind,
-        groups: gs.map((g) => ({ id: g.group, bytes: g.B.length, ...(g.offset === undefined ? {} : { offset: g.offset }) })),
+        groups: gs.map((g) => ({ id: g.group, bytes: g.B.length, ...(g.offset === undefined ? {} : { offset: g.offset }), ...(g.basis === undefined ? {} : { basis: g.basis }) })),
       });
     }
     return {
@@ -334,32 +425,90 @@ function textForm(B, S) {
   return { S: B.toString('latin1'), kind: 'binary' };
 }
 
-function deriveProbes(B, probeBytes) {
+/**
+ * Choose the probe windows of the ORIGINAL. A window is used only if it is provably specific to this file (see the
+ * PROBES OF THE ORIGINAL section of the header): a canary anchor, absent from every sibling document, or (declared by the
+ * caller, no siblings) high-entropy. Returns [{ offset, bytes, basis }] sorted by offset; THROWS when nothing qualifies
+ * (content-free message).
+ *
+ * Positions: the head and the tail (the first provable window found scanning inward from each end) and
+ * PROBE_INTERIOR_TARGETS interior positions (the provable window nearest each). Windows never overlap each other.
+ * Work is bounded: at most PROBE_MAX_CANDIDATES candidate offsets are ever examined, whatever the file size.
+ */
+function deriveProbes(B, probeBytes, { siblings = [], anchor = null, assertUnique = false } = {}) {
   const n = B.length;
-  if (n <= probeBytes * 2) return [{ offset: 0, bytes: Buffer.from(B) }];
-  const k = Math.min(4, Math.floor(n / (2 * probeBytes)));
-  const out = [];
-  const seen = new Set();
-  for (let j = 0; j < k; j++) {
-    let off = Math.floor(((j + 0.5) * n) / k - probeBytes / 2);
-    off = Math.max(0, Math.min(n - probeBytes, off));
-    const w = B.subarray(off, off + probeBytes);
-    if (distinctBytes(w) < 4) continue;
-    const hx = w.toString('hex');
-    if (seen.has(hx)) continue;
-    seen.add(hx);
-    out.push({ offset: off, bytes: Buffer.from(w) });
+  const win = Math.min(probeBytes, n);
+  const minDistinct = Math.max(4, Math.ceil(PROBE_MIN_DISTINCT_FRACTION * win));
+  const picks = []; // { offset, length, basis }
+  const overlaps = (off, len) => picks.some((q) => off < q.offset + q.length && q.offset < off + len);
+  const inSibling = (w) => siblings.some((sb) => sb.includes(w));
+  const tally = { examined: 0, degenerate: 0, boilerplate: 0, lowEntropy: 0, unproven: 0 };
+
+  // canary-anchored: the canary (unique per upload) plus context, so it cannot occur in an upload with another canary
+  if (anchor && anchor.length > 0) {
+    let from = 0;
+    for (let found = 0; found < 2; found++) {
+      const at = B.indexOf(anchor, from);
+      if (at < 0) break;
+      const start = Math.max(0, at - PROBE_ANCHOR_CONTEXT);
+      const end = Math.min(n, at + anchor.length + PROBE_ANCHOR_CONTEXT);
+      const w = B.subarray(start, end);
+      if (!inSibling(w) && !overlaps(start, end - start)) picks.push({ offset: start, length: end - start, basis: 'canary-anchored' });
+      from = at + anchor.length;
+    }
   }
-  if (out.length === 0) throw new TypeError("makeNeedles: 'original' has no distinctive window to use as a probe");
-  return out;
+
+  const last = n - win;
+  const step = Math.max(Math.floor(win / 2), Math.ceil(last / PROBE_MAX_CANDIDATES), 1);
+  const cands = [];
+  for (let off = 0; off < last; off += step) cands.push(off);
+  cands.push(last);
+  const memo = new Map();
+  const judgeWindow = (off) => {
+    if (memo.has(off)) return memo.get(off);
+    const w = B.subarray(off, off + win);
+    const d = distinctBytes(w);
+    tally.examined += 1;
+    let basis = null;
+    if (d < PROBE_MIN_DISTINCT_ANY) tally.degenerate += 1;
+    else if (siblings.length > 0 && inSibling(w)) tally.boilerplate += 1; // occurs in another upload: template, whatever its entropy
+    else if (siblings.length > 0) basis = 'unique-vs-siblings'; // absent from every sibling: specific without needing entropy
+    else if (assertUnique && d >= minDistinct) basis = 'asserted-unique';
+    else if (assertUnique) tally.lowEntropy += 1;
+    else tally.unproven += 1; // no sibling, no declaration: nothing proves this window is not boilerplate
+    memo.set(off, basis);
+    return basis;
+  };
+  const nearestFirst = (target) => {
+    let lo = 0;
+    for (let i = 0; i < cands.length; i++) if (Math.abs(cands[i] - target) < Math.abs(cands[lo] - target)) lo = i;
+    const order = [lo];
+    for (let d = 1; d < cands.length; d++) { if (lo - d >= 0) order.push(lo - d); if (lo + d < cands.length) order.push(lo + d); }
+    return order.map((i) => cands[i]);
+  };
+  const targets = [0, last];
+  for (let j = 0; j < PROBE_INTERIOR_TARGETS; j++) targets.push(Math.floor(((j + 0.5) * last) / PROBE_INTERIOR_TARGETS));
+  for (const t of targets) {
+    for (const off of nearestFirst(t)) {
+      if (overlaps(off, win)) continue;
+      const basis = judgeWindow(off);
+      if (basis) { picks.push({ offset: off, length: win, basis }); break; }
+    }
+  }
+  if (picks.length === 0) {
+    throw new TypeError(`makeNeedles: 'original' has no probe window that is provably specific to it (${tally.examined} examined: ${tally.boilerplate} found in a sibling, ${tally.unproven} unproven because no sibling was given, ${tally.lowEntropy} low-entropy under assertUnique, ${tally.degenerate} degenerate). Pass options.siblings (other uploads built from the same template), or make the canary a verbatim substring of the original, or pass assertUnique: true if the original has no template`);
+  }
+  picks.sort((x, y) => x.offset - y.offset);
+  return picks.map((q) => ({ offset: q.offset, bytes: Buffer.from(B.subarray(q.offset, q.offset + q.length)), basis: q.basis }));
 }
 
 /**
- * Build the needle set. `originalBytes` is probed by interior windows (see deriveProbes), `keyBytes` and
- * `canary` are matched whole. Throws on a missing/short/degenerate secret instead of arming a set that
- * would match everywhere or nowhere.
+ * Build the needle set. `originalBytes` is probed by windows that are provably specific to it (see deriveProbes and the
+ * PROBES OF THE ORIGINAL header section), `keyBytes` and `canary` are matched whole. Throws on a missing/short/degenerate
+ * secret, or an original with no provable probe, instead of arming a set that would match everywhere or nowhere.
  *
- * options: { encodings?: string[] (default all), partial?: boolean (allow fewer than 3 secrets), probeBytes?: number }
+ * options: { encodings?: string[] (default all), partial?: boolean (allow fewer than 3 secrets), probeBytes?: number,
+ *            siblings?: Uint8Array[] (other uploads from the same template), assertUnique?: boolean (original has no template) }
  */
 export function makeNeedles(input, options = {}) {
   if (!input || typeof input !== 'object') throw new TypeError('makeNeedles: expected { canary, originalBytes, keyBytes }');
@@ -368,19 +517,26 @@ export function makeNeedles(input, options = {}) {
   if (labels.size === 0) throw new TypeError('makeNeedles: no encodings requested');
   for (const l of labels) if (!LABEL_INDEX.has(l)) throw new TypeError(`makeNeedles: unknown encoding '${l}'`);
   const probeBytes = options.probeBytes ?? DEFAULT_PROBE_BYTES;
+  if (options.siblings !== undefined && !Array.isArray(options.siblings)) throw new TypeError("makeNeedles: 'siblings' must be an array of Buffer / Uint8Array");
+  const siblings = (options.siblings ?? []).map((sb, i) => {
+    if (!(sb instanceof Uint8Array)) throw new TypeError(`makeNeedles: sibling ${i} must be a Buffer or Uint8Array`);
+    return Buffer.from(sb.buffer, sb.byteOffset, sb.byteLength); // a read-only VIEW: Uint8Array#includes does not search for a byte sequence
+  });
   const given = { canary: input.canary, original: input.originalBytes, key: input.keyBytes };
   const missing = SECRET_NAMES.filter((n) => given[n] === undefined || given[n] === null);
   if (missing.length === SECRET_NAMES.length) throw new TypeError('makeNeedles: no secrets given');
   if (missing.length > 0 && !partial) throw new TypeError(`makeNeedles: missing secret(s): ${missing.join(', ')}`);
 
   const groups = [];
+  let anchor = null; // the canary's bytes, processed before the original (SECRET_NAMES order)
   for (const name of SECRET_NAMES) {
     if (given[name] === undefined || given[name] === null) continue;
     const { B, S } = normaliseSecret(name, given[name]);
+    if (name === 'canary') anchor = B;
     if (name === 'original') {
-      deriveProbes(B, probeBytes).forEach((p, i) => {
+      deriveProbes(B, probeBytes, { siblings, anchor, assertUnique: options.assertUnique === true }).forEach((p, i) => {
         const tf = textForm(p.bytes, null);
-        groups.push({ secret: name, group: `p${i}`, B: p.bytes, S: tf.S, kind: tf.kind, offset: p.offset });
+        groups.push({ secret: name, group: `p${i}`, B: p.bytes, S: tf.S, kind: tf.kind, offset: p.offset, basis: p.basis });
       });
     } else {
       const tf = textForm(B, S);
@@ -657,7 +813,6 @@ function feedChunks(m, buf, chunkBytes) {
 
 export function scanBuffer(buf, needles, opts = {}) {
   if (!(buf instanceof Uint8Array)) throw new TypeError('scanBuffer: expected a Buffer or Uint8Array');
-  if (!Buffer.isBuffer(buf)) buf = Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength); // see Matcher.feed
   ensureArmed(needles, opts.arm); // scanBuffer
   const m = new Matcher(needles);
   feedChunks(m, buf, opts.chunkBytes);
@@ -1298,8 +1453,20 @@ function makeKit(groups) {
           core: g.oracle[url ? 'url' : 'std'][k],
         }));
       }
-      case 'hex-lower': return [{ tag: 'v', bytes: wrap(Buffer.from(Buffer.concat([rb(2), B, rb(2)]).toString('hex'), 'latin1')), core: Buffer.from(B.toString('hex'), 'latin1') }];
-      case 'hex-upper': return [{ tag: 'v', bytes: wrap(Buffer.from(Buffer.concat([rb(2), B, rb(2)]).toString('hex').toUpperCase(), 'latin1')), core: Buffer.from(B.toString('hex').toUpperCase(), 'latin1') }];
+      case 'hex-lower':
+      case 'hex-upper': {
+        const up = label === 'hex-upper';
+        const fmt = (b) => { const h = b.toString('hex'); return up ? h.toUpperCase() : h; };
+        const pairs = (b) => Array.from(b, (c) => fmt(Buffer.from([c])));
+        const emb = Buffer.concat([rb(2), B, rb(2)]);
+        // independent of hexSeparatedVariants: built from per-byte hex, not from the module's generator
+        return [
+          { tag: 'v', bytes: wrap(Buffer.from(fmt(emb), 'latin1')), core: Buffer.from(fmt(B), 'latin1') },
+          { tag: 'colon', bytes: wrap(Buffer.from(pairs(emb).join(':'), 'latin1')), core: Buffer.from(pairs(B).join(':'), 'latin1') },
+          { tag: 'c-array', bytes: wrap(Buffer.from('{ ' + pairs(emb).map((x) => '0x' + x).join(', ') + ' }', 'latin1')), core: Buffer.from(pairs(B).map((x) => '0x' + x).join(','), 'latin1') },
+          { tag: 'bs-x', bytes: wrap(Buffer.from('b"' + pairs(emb).map((x) => '\\x' + x).join('') + '"', 'latin1')), core: Buffer.from(pairs(B).map((x) => '\\x' + x).join(''), 'latin1') },
+        ];
+      }
       case 'urlencoded': {
         const uri = encodeURIComponent(S);
         const list = [
@@ -1308,7 +1475,21 @@ function makeKit(groups) {
           { tag: 'form', s: uri.replace(/%20/g, '+') },
         ];
         if (g.kind === 'binary') list.push({ tag: 'bytes', s: bytesPct(B) });
-        return list.map(({ tag, s }) => ({ tag, bytes: wrap(Buffer.from(`q=${s}&z=1`, 'latin1')), core: Buffer.from(s, 'latin1') }));
+        const out = list.map(({ tag, s }) => ({ tag, bytes: wrap(Buffer.from(`q=${s}&z=1`, 'latin1')), core: Buffer.from(s, 'latin1') }));
+        // the base64 TEXT of the secret, percent-encoded. Only where the trimmed region holds a '+' or '/' (otherwise the text is
+        // plain base64 and legitimately belongs to the base64 label, which is not what this variant is for).
+        for (const k of [0, 1, 2]) {
+          const region = g.oracle.std[k].toString('latin1');
+          const b64 = embedAt(B, k).toString('base64');
+          if (/[+/]/.test(region)) {
+            out.push({ tag: `b64k${k}`, bytes: wrap(Buffer.from(`q=${encodeURIComponent(b64)}&z=1`, 'latin1')), core: Buffer.from(encodeURIComponent(region), 'latin1') });
+            out.push({ tag: `b64k${k}-lower`, bytes: wrap(Buffer.from(`q=${lowerPct(encodeURIComponent(b64))}&z=1`, 'latin1')), core: Buffer.from(lowerPct(encodeURIComponent(region)), 'latin1') });
+          }
+          if (/\+/.test(region)) {
+            out.push({ tag: `b64k${k}-plus`, bytes: wrap(Buffer.from(`q=${b64.replace(/\+/g, '%2B')}&z=1`, 'latin1')), core: Buffer.from(region.replace(/\+/g, '%2B'), 'latin1') });
+          }
+        }
+        return out;
       }
       case 'json-escaped': {
         const base = JSON.stringify(S).slice(1, -1);
@@ -1322,12 +1503,30 @@ function makeKit(groups) {
       }
       case 'byte-array': {
         const arr = Array.from(B);
-        const compact = JSON.stringify(Buffer.concat([rb(2), B, rb(2)]));
-        const spaced = '[ ' + Array.from(Buffer.concat([rb(2), B, rb(2)])).join(', ') + ' ]';
+        const emb = Buffer.concat([rb(2), B, rb(2)]);
+        const wholeTyped = new Uint8Array(B); // JSON.stringify of a typed array keys elements by index, so the array must BE the secret
+        const mk = (tag, text) => ({ tag, bytes: wrap(Buffer.from(text, 'utf8')), core: Buffer.from(arr.join(','), 'latin1') });
         return [
-          { tag: 'compact', bytes: wrap(Buffer.from(compact, 'utf8')), core: Buffer.from(arr.join(','), 'latin1') },
-          { tag: 'spaced', bytes: wrap(Buffer.from(spaced, 'utf8')), core: Buffer.from(arr.join(', '), 'latin1') },
+          mk('compact', JSON.stringify(emb)),
+          mk('spaced', '[ ' + Array.from(emb).join(', ') + ' ]'),
+          mk('pretty', JSON.stringify(emb, null, 2)),
+          mk('inspect', util.inspect(new Uint8Array(emb), { maxArrayLength: null, breakLength: 60 })),
+          mk('indexed', JSON.stringify({ Plaintext: wholeTyped })),
+          mk('indexed-pretty', JSON.stringify({ Plaintext: wholeTyped }, null, 2)),
         ];
+      }
+      case 'case-folded': {
+        if (g.kind !== 'text') return [];
+        const capWord = (w) => { const cp = Array.from(w); return cp.length ? cp[0].toUpperCase() + cp.slice(1).join('').toLowerCase() : w; };
+        const forms = { lower: S.toLowerCase(), upper: S.toUpperCase(), title: capWord(S), words: S.replace(/[\p{L}\p{N}]+/gu, capWord) };
+        const seenForms = new Set([S]);
+        const out = [];
+        for (const [tag, f] of Object.entries(forms)) {
+          if (seenForms.has(f)) continue; // equal to the text itself (or to an earlier fold): that is the raw label's business
+          seenForms.add(f);
+          out.push({ tag, bytes: wrap(Buffer.from(f, 'utf8')), core: Buffer.from(f, 'utf8') });
+        }
+        return out;
       }
       default: throw new Error(`kit: no variants for ${label}`);
     }
@@ -1343,8 +1542,8 @@ function makeKit(groups) {
         case 'utf16be': return [Buffer.from(g.S, 'utf16le').swap16()];
         case 'base64': return g.oracle.std;
         case 'base64url': return g.oracle.url;
-        case 'hex-lower': return [Buffer.from(g.B.toString('hex'), 'latin1')];
-        case 'hex-upper': return [Buffer.from(g.B.toString('hex').toUpperCase(), 'latin1')];
+        case 'hex-lower':
+        case 'hex-upper': return variants(g, l).map((v) => v.core);
         case 'urlencoded': return [Buffer.from(encodeURIComponent(g.S), 'latin1')];
         case 'json-escaped': return [Buffer.from(JSON.stringify(g.S).slice(1, -1), 'utf8')];
         default: return [];
@@ -1430,6 +1629,7 @@ export function selfTest() {
   const checks = [];
   const unverified = [];
   const created = [];
+  const restoreModes = []; // paths chmod'ed to 000 by a check; restored before cleanup so rmSync can descend
   const add = (name, ok, detail = '') => { checks.push({ name, ok: Boolean(ok), detail: String(detail) }); };
   const run = (name, fn) => {
     try {
@@ -1455,8 +1655,11 @@ export function selfTest() {
     const originalBytes = genOriginal();
     const plainKey = Buffer.from(crypto.randomBytes(32).toString('base64').replace(/[^A-Za-z]/g, 'q').padEnd(32, 'z').slice(0, 32), 'latin1');
 
-    const N = makeNeedles({ canary: canarySpecial, originalBytes, keyBytes });
-    const Nt = makeNeedles({ canary: canaryTypical, originalBytes, keyBytes: plainKey });
+    // genOriginal() is a random body behind a short header: no template, so the caller DECLARES it template-free. (The header
+    // window is low-entropy and is refused; only the random body qualifies. The sibling and canary-anchor routes have their own checks, J1-J6.)
+    const UQ = { assertUnique: true };
+    const N = makeNeedles({ canary: canarySpecial, originalBytes, keyBytes }, UQ);
+    const Nt = makeNeedles({ canary: canaryTypical, originalBytes, keyBytes: plainKey }, UQ);
     const G = groupsOf(N);
     const Gt = groupsOf(Nt);
     const byKey = (gs) => ({ canary: gs.find((g) => g.secret === 'canary'), key: gs.find((g) => g.secret === 'key'), original: gs.filter((g) => g.secret === 'original') });
@@ -1469,34 +1672,51 @@ export function selfTest() {
     // Before the fix a key held in a plain Uint8Array read CLEAN: Uint8Array#indexOf matches one numeric element, not a
     // byte sequence. Every shape below must be caught, and a same-shaped negative must stay CLEAN (so the check is not
     // satisfied by a scanner that simply reports hits everywhere).
-    run('A0 scanBuffer finds a key inside a plain Uint8Array, a non-zero-offset Uint8Array view and a DataView-backed array, and stays CLEAN on a same-shaped negative', () => {
+    run('A0 scanBuffer treats a plain Uint8Array exactly like a Buffer: key, canary and the whole original, whole and chunked (5 / 4096), plus a non-zero-offset view; a same-shaped negative stays CLEAN', () => {
       const probeKey = crypto.randomBytes(32);
-      const NN = makeNeedles({ canary: `WSICANARY${crypto.randomBytes(12).toString('hex').toUpperCase()}`, originalBytes: genOriginal(), keyBytes: probeKey });
-      const asBuf = Buffer.concat([Buffer.alloc(100, 1), probeKey, Buffer.alloc(100, 2)]);
-      const plain = new Uint8Array(asBuf);
-      const ab = new ArrayBuffer(asBuf.length + 7);
-      new Uint8Array(ab).set(asBuf, 3);
-      const offsetView = new Uint8Array(ab, 3, asBuf.length);
-      const viaDataView = new Uint8Array(new DataView(ab, 3, asBuf.length).buffer, 3, asBuf.length);
-      const negative = new Uint8Array(crypto.randomBytes(asBuf.length + 40));
-      const shapes = [['Buffer', asBuf], ['plain Uint8Array', plain], ['offset view', offsetView], ['DataView-backed', viaDataView]];
-      const bad = shapes.filter(([, b]) => scanBuffer(b, NN).verdict !== 'HITS').map(([n]) => n);
-      const negVerdict = scanBuffer(negative, NN).verdict;
-      return { ok: bad.length === 0 && negVerdict === 'CLEAN', detail: `missed=[${bad.join(',')}] negative=${negVerdict}` };
+      const probeCanary = `WSICANARY${crypto.randomBytes(12).toString('hex').toUpperCase()}`;
+      const probeOriginal = genOriginal();
+      const NN = makeNeedles({ canary: probeCanary, originalBytes: probeOriginal, keyBytes: probeKey }, UQ);
+      const subjects = { key: probeKey, canary: Buffer.from(probeCanary), original: probeOriginal };
+      const bad = [];
+      let compared = 0;
+      for (const [name, secret] of Object.entries(subjects)) {
+        const asBuf = Buffer.concat([Buffer.alloc(100, 1), secret, Buffer.alloc(100, 2)]);
+        const ab = new ArrayBuffer(asBuf.length + 7);
+        new Uint8Array(ab).set(asBuf, 3);
+        const shapes = { 'plain Uint8Array': new Uint8Array(asBuf), 'offset view': new Uint8Array(ab, 3, asBuf.length) };
+        for (const chunkBytes of [undefined, 5, 4096]) {
+          const want = scanBuffer(asBuf, NN, { chunkBytes });
+          if (want.verdict !== 'HITS' || !want.hitsBySecret.some((h) => h.secret === name)) bad.push(`${name}/Buffer-control/${chunkBytes}`);
+          for (const [shape, view] of Object.entries(shapes)) {
+            compared += 1;
+            if (JSON.stringify(scanBuffer(view, NN, { chunkBytes })) !== JSON.stringify(want)) bad.push(`${name}/${shape}/${chunkBytes}`);
+          }
+        }
+      }
+      const negVerdict = scanBuffer(new Uint8Array(crypto.randomBytes(4096)), NN).verdict;
+      return { ok: bad.length === 0 && compared === 18 && negVerdict === 'CLEAN', detail: `typed-array results identical to Buffer results: ${compared - bad.length}/${compared}${bad.length ? ' differ=' + bad.slice(0, 4).join(',') : ''} negative=${negVerdict}` };
     });
 
     /* ---------------------------------------------------------------- A. needle construction */
     run('A1 needle set carries every required encoding for every secret and probe (incl. 3 base64 alignments)', () => {
       const I = _internals(N);
       const miss = [];
+      let foldedGroups = 0;
       for (const g of I.groups) {
         for (const enc of ENCODING_ORDER) {
           const es = I.entries.filter((e) => e.secret === g.secret && e.group === g.group && e.encoding === enc && e.status !== 'too-short');
+          // case-folding is only meaningful for a secret that is text: a random binary window has no letters to fold
+          if (enc === 'case-folded') {
+            if ((g.kind === 'text') !== (es.length > 0)) miss.push(`${g.secret}/${g.group}/${enc}(kind=${g.kind})`);
+            if (g.kind === 'text') foldedGroups += 1;
+            continue;
+          }
           if (es.length === 0) miss.push(`${g.secret}/${g.group}/${enc}`);
           if (enc === 'base64' || enc === 'base64url') for (const k of [0, 1, 2]) if (!es.some((e) => e.align === k)) miss.push(`${g.secret}/${g.group}/${enc}@${k}`);
         }
       }
-      return { ok: miss.length === 0 && I.groups.length >= 6, detail: `groups=${I.groups.length} patterns=${desc.patterns} aliases=${desc.aliases} missing=${miss.length}` };
+      return { ok: miss.length === 0 && I.groups.length >= 6 && foldedGroups >= 1, detail: `groups=${I.groups.length} text-groups=${foldedGroups} patterns=${desc.patterns} aliases=${desc.aliases} missing=${miss.length}${miss.length ? ' ' + miss.slice(0, 3).join(',') : ''}` };
     });
 
     run('A2 base64 / base64url alignment trimming equals an independent differential oracle', () => {
@@ -1521,22 +1741,30 @@ export function selfTest() {
       return { ok: !leaksIn(dump) && dump.includes('wsi-needles/1'), detail: `chars=${dump.length}` };
     });
 
-    run('A4 makeNeedles refuses missing, short, degenerate, mistyped and unknown-encoding input', () => {
+    run('A4 makeNeedles refuses missing, short, degenerate, mistyped and unknown-encoding input, each for its OWN reason', () => {
       const good = { canary: canaryTypical, originalBytes, keyBytes };
+      // every case carries UQ so that the probe rule (J-checks) cannot be the thing that throws: the message must name the intended defect
       const cases = {
-        'no-args': () => makeNeedles(),
-        'missing-key': () => makeNeedles({ canary: canaryTypical, originalBytes }),
-        'nothing': () => makeNeedles({}, { partial: true }),
-        'short-canary': () => makeNeedles({ ...good, canary: 'short' }),
-        'degenerate-key': () => makeNeedles({ ...good, keyBytes: Buffer.alloc(32, 7) }),
-        'wrong-type': () => makeNeedles({ ...good, keyBytes: 12345 }),
-        'unknown-encoding': () => makeNeedles(good, { encodings: ['rot13'] }),
-        'no-encodings': () => makeNeedles(good, { encodings: [] }),
-        'tiny-original': () => makeNeedles({ ...good, originalBytes: Buffer.from('tiny') }),
+        'no-args': [() => makeNeedles(), /expected \{ canary/],
+        'missing-key': [() => makeNeedles({ canary: canaryTypical, originalBytes }, UQ), /missing secret\(s\): key/],
+        'nothing': [() => makeNeedles({}, { partial: true }), /no secrets given/],
+        'short-canary': [() => makeNeedles({ ...good, canary: 'short' }, UQ), /'canary' is shorter than/],
+        'degenerate-key': [() => makeNeedles({ ...good, keyBytes: Buffer.alloc(32, 7) }, UQ), /'key' is degenerate/],
+        'wrong-type': [() => makeNeedles({ ...good, keyBytes: 12345 }, UQ), /'key' must be a string or Uint8Array/],
+        'unknown-encoding': [() => makeNeedles(good, { ...UQ, encodings: ['rot13'] }), /unknown encoding 'rot13'/],
+        'no-encodings': [() => makeNeedles(good, { ...UQ, encodings: [] }), /no encodings requested/],
+        'tiny-original': [() => makeNeedles({ ...good, originalBytes: Buffer.from('tiny') }, UQ), /'original' is shorter than/],
+        'siblings-not-array': [() => makeNeedles(good, { ...UQ, siblings: Buffer.alloc(8) }), /'siblings' must be an array/],
+        'sibling-not-bytes': [() => makeNeedles(good, { ...UQ, siblings: ['text'] }), /sibling 0 must be a Buffer or Uint8Array/],
       };
-      const survived = Object.entries(cases).filter(([, fn]) => !throwsKind(fn, TypeError)).map(([k]) => k);
+      const wrong = [];
+      for (const [k, [fn, re]] of Object.entries(cases)) {
+        let err = null;
+        try { fn(); } catch (e) { err = e; }
+        if (!(err instanceof TypeError) || !re.test(err.message)) wrong.push(`${k}${err ? '(' + String(err.message).slice(0, 40) + ')' : '(no throw)'}`);
+      }
       const partialOk = (() => { try { return makeNeedles({ canary: canaryTypical }, { partial: true }).describe().secrets.length === 1; } catch { return false; } })();
-      return { ok: survived.length === 0 && partialOk, detail: `cases=${Object.keys(cases).length} accepted-wrongly=${survived.join(',') || 'none'} partial-opt-in=${partialOk}` };
+      return { ok: wrong.length === 0 && partialOk, detail: `cases=${Object.keys(cases).length} refused-for-the-wrong-reason-or-accepted=${wrong.join(',') || 'none'} partial-opt-in=${partialOk}` };
     });
 
     /* ---------------------------------------------------------------- B. planted positives */
@@ -1653,6 +1881,29 @@ export function selfTest() {
       return { ok: bad.length === 0 && r.filesScanned === rels.length, detail: `files=${rels.length} missed=${bad.length} chunk=${DEFAULT_CHUNK_BYTES}` };
     });
 
+    run('B5b a secret straddling a read boundary is found when the NEXT read is also full-size (the carry must be a copy, not a view of the reused read buffer)', () => {
+      const d = mkTmp(created);
+      const CH = DEFAULT_CHUNK_BYTES;
+      const fill = (n) => Buffer.alloc(n, 0x7e); // no whitespace, no needle byte: keeps the whitespace-stripped lane on its no-copy path too
+      const cores = {
+        'canary raw': groupsN.canary.B,
+        'key base64 (text lane)': Buffer.from(Buffer.concat([kit.rb(3), groupsN.key.B, kit.rb(3)]).toString('base64'), 'latin1'),
+        'key hex (text lane)': Buffer.from(groupsN.key.B.toString('hex'), 'latin1'),
+      };
+      const want = { 'canary raw': 'canary', 'key base64 (text lane)': 'key', 'key hex (text lane)': 'key' };
+      const planted = [];
+      for (const [name, core] of Object.entries(cores)) {
+        for (const o of [1, Math.floor(core.length / 2), core.length - 1]) {
+          const rel = `b5b/${name.replace(/\W+/g, '-')}-${o}.bin`;
+          writeAt(d, rel, Buffer.concat([fill(CH - o), core, fill(2 * CH + 7)]));
+          planted.push({ rel, name, o });
+        }
+      }
+      const r = scanDirectory(d, N);
+      const bad = planted.filter((p) => { const rows = r.hitsBySecret.filter((h) => h.path === p.rel); return !(rows.length === 1 && rows[0].secret === want[p.name] && rows[0].count === 1); });
+      return { ok: bad.length === 0 && r.filesScanned === planted.length, detail: `files=${planted.length} missed=${bad.length}${bad.length ? ' ' + bad.slice(0, 3).map((p) => `${p.name}@${p.o}`).join(',') : ''} next-read-bytes=${CH}` };
+    });
+
     run('B6 every possible split point is found for raw, utf16le, hex, wrapped-free base64 and byte-array (chunk 64)', () => {
       const P = 64;
       const BASE = P * 4; // boundary at 256, comfortably past the longest core (JSON-ed Buffer ~ 150 bytes)
@@ -1726,7 +1977,7 @@ export function selfTest() {
 
     run('B11 a canary containing "/" is found in its JSON "\\/" form and its %2F URL form (the PHP / form-encoder shapes)', () => {
       const c = `WSI/slash/${crypto.randomBytes(9).toString('hex')}/end`;
-      const Ns = makeNeedles({ canary: c, originalBytes, keyBytes });
+      const Ns = makeNeedles({ canary: c, originalBytes, keyBytes }, UQ);
       const json = scanText(`{"p":"${c.replace(/\//g, '\\/')}"}`, Ns);
       const url = scanText(`GET /?c=${encodeURIComponent(c)}`, Ns);
       const plain = scanText(`x ${c} y`, Ns);
@@ -1753,7 +2004,7 @@ export function selfTest() {
       // Then the plain variant is a suffix of the '\/'-escaped one. A second '/' inside removes the overlap (control).
       const out = {};
       for (const [name, c] of [['single-lead-slash', `/${hexs}"q"`], ['multi-slash-control', `/lead/${hexs}"q"`]]) {
-        const Nx = makeNeedles({ canary: c, originalBytes, keyBytes });
+        const Nx = makeNeedles({ canary: c, originalBytes, keyBytes }, UQ);
         const fmt = (r) => r.hitsBySecret.map((h) => `${h.encoding}:${h.count}`).join('|');
         const escapedText = `{"p":${JSON.stringify(c).replace(/\//g, '\\/')}}`; // real JSON, '/' escaped the PHP way
         const esc = scanText(escapedText, Nx);
@@ -1901,18 +2152,65 @@ export function selfTest() {
       unverified.push('FIFO test D7: mkfifo not available');
     }
 
-    run('D8 entry budget and depth cap stop a runaway tree and mark coverage incomplete', () => {
+    run('D8 the entry budget stops a runaway tree and marks coverage incomplete (files WERE scanned, so VACUOUS must come from the budget, not from "no files")', () => {
       const d = mkTmp(created);
       for (let i = 0; i < 40; i++) writeAt(d, `many/f${String(i).padStart(2, '0')}.bin`, kit.noise(64));
       const a = scanDirectory(d, N, { maxEntries: 10 });
-      const deep = mkTmp(created);
-      writeAt(deep, 'l1/l2/l3/l4/leaf.bin', kit.noise(64));
-      const b = scanDirectory(deep, N, { maxDepth: 3 });
+      const roomy = scanDirectory(d, N);
       return {
-        ok: a.skipped.some((s) => s.reason === 'entry-budget') && a.verdict === 'VACUOUS' && b.skipped.some((s) => s.reason === 'too-deep') && b.verdict === 'VACUOUS',
-        detail: `budget=${a.verdict}/${a.vacuousReason} depth=${b.verdict}/${b.vacuousReason}`,
+        ok: a.skipped.some((s) => s.reason === 'entry-budget') && a.filesScanned > 0 && a.verdict === 'VACUOUS' && a.vacuousReason === 'incomplete-coverage' && a.complete === false && roomy.verdict === 'CLEAN',
+        detail: `budget=${a.verdict}/${a.vacuousReason} files-read=${a.filesScanned} same-tree-with-room=${roomy.verdict}`,
       };
     });
+
+    run('D8b a directory below the depth cap is skipped as too-deep and the scan is incomplete although a shallow file WAS read; with room the leak under it is found', () => {
+      const deep = mkTmp(created);
+      writeAt(deep, 'shallow-clean.bin', kit.noise(64));
+      writeAt(deep, 'l1/l2/l3/l4/leak.bin', Buffer.concat([kit.noise(8), groupsN.key.B, kit.noise(8)]));
+      const capped = scanDirectory(deep, N, { maxDepth: 3 });
+      const roomy = scanDirectory(deep, N, { maxDepth: 10 });
+      return {
+        ok: capped.filesScanned === 1 && capped.skipped.some((s) => s.reason === 'too-deep') && capped.verdict === 'VACUOUS' && capped.vacuousReason === 'incomplete-coverage' && capped.complete === false && roomy.verdict === 'HITS',
+        detail: `capped=${capped.verdict}/${capped.vacuousReason} files-read=${capped.filesScanned} skipped=${capped.skipped.map((s) => s.reason).join(',')} with-room=${roomy.verdict}`,
+      };
+    });
+
+    // An unreadable file or directory must make the scan incomplete. As root EACCES cannot be provoked, but the branch it takes
+    // (the open or readdir or lstat call throws) can: readdir lists a name with non-UTF-8 bytes lossily, and the lossy path does not exist.
+    const isRoot = Boolean(process.getuid && process.getuid() === 0);
+    const unreadableFixture = (kind) => {
+      const d = mkTmp(created);
+      writeAt(d, 'clean.bin', kit.noise(300));
+      const leak = Buffer.concat([kit.noise(5), groupsN.key.B, kit.noise(5)]);
+      const at = (...parts) => Buffer.concat([Buffer.from(d + path.sep), ...parts]);
+      const badName = Buffer.from([0xff, 0xfe, kind === 'file' ? 0x41 : 0x42]);
+      try {
+        if (kind === 'file') fs.writeFileSync(at(badName), leak);
+        else { fs.mkdirSync(at(badName)); fs.writeFileSync(at(badName, Buffer.from('/leak.bin')), leak); }
+        return { dir: d, how: 'a name readdir lists lossily and open/lstat cannot resolve' };
+      } catch { /* this filesystem refuses non-UTF-8 names */ }
+      if (!isRoot) {
+        if (kind === 'file') { const f = writeAt(d, 'noperm.bin', leak); fs.chmodSync(f, 0); restoreModes.push(f); }
+        else { const sub = path.join(d, 'noperm-dir'); writeAt(sub, 'leak.bin', leak); fs.chmodSync(sub, 0); restoreModes.push(sub); }
+        return { dir: d, how: 'chmod 000 (EACCES)' };
+      }
+      return { dir: d, how: null };
+    };
+    for (const kind of ['file', 'dir']) {
+      const fx = unreadableFixture(kind);
+      if (fx.how === null) { unverified.push(`D11 (unreadable ${kind}): this filesystem refuses non-UTF-8 names and the user is root, so no unreadable ${kind} could be made`); continue; }
+      run(`D11${kind === 'file' ? 'a' : 'b'} an unreadable ${kind} (${fx.how}) makes the scan incomplete with reason '${kind === 'file' ? 'unreadable' : 'unreadable-dir'}', never CLEAN; the same tree without it is CLEAN`, () => {
+        const want = kind === 'file' ? 'unreadable' : 'unreadable-dir';
+        const r = scanDirectory(fx.dir, N);
+        const clean = mkTmp(created);
+        writeAt(clean, 'clean.bin', kit.noise(300));
+        const control = scanDirectory(clean, N);
+        return {
+          ok: r.verdict === 'VACUOUS' && r.vacuousReason === 'incomplete-coverage' && r.complete === false && r.skipped.some((x) => x.reason === want) && r.filesScanned >= 1 && control.verdict === 'CLEAN',
+          detail: `verdict=${r.verdict}/${r.vacuousReason} complete=${r.complete} reasons=${r.skipped.map((x) => x.reason).join(',')} files-read=${r.filesScanned} control-without-it=${control.verdict}`,
+        };
+      });
+    }
 
     run('D9 a missing directory or a file path throws (never CLEAN, never VACUOUS-by-shrug); empty buffer and empty text are VACUOUS', () => {
       const d = mkTmp(created);
@@ -1940,7 +2238,7 @@ export function selfTest() {
     });
 
     run('E2 assertArmed THROWS for a utf8-only set (required encodings absent) and the scanners refuse to run with it', () => {
-      const weak = makeNeedles({ canary: canaryTypical, originalBytes, keyBytes }, { encodings: ['utf8'] });
+      const weak = makeNeedles({ canary: canaryTypical, originalBytes, keyBytes }, { ...UQ, encodings: ['utf8'] });
       const direct = throwsKind(() => assertArmed(weak), ArmingError);
       const viaDir = throwsKind(() => scanDirectory(mkTmp(created), weak), ArmingError);
       const viaBuf = throwsKind(() => scanBuffer(Buffer.from('x'.repeat(40)), weak), ArmingError);
@@ -2020,9 +2318,9 @@ export function selfTest() {
     run('F3 error messages are content-free too (ArmingError and TypeError text never carries a secret)', () => {
       const msgs = [];
       for (const fn of [
-        () => assertArmed(makeNeedles({ canary: canaryTypical, originalBytes, keyBytes }, { encodings: ['utf8'] })),
-        () => makeNeedles({ canary: canaryTypical, originalBytes, keyBytes: Buffer.alloc(32, 9) }),
-        () => makeNeedles({ canary: canarySpecial.slice(0, 5), originalBytes, keyBytes }),
+        () => assertArmed(makeNeedles({ canary: canaryTypical, originalBytes, keyBytes }, { ...UQ, encodings: ['utf8'] })),
+        () => makeNeedles({ canary: canaryTypical, originalBytes, keyBytes: Buffer.alloc(32, 9) }, UQ),
+        () => makeNeedles({ canary: canarySpecial.slice(0, 5), originalBytes, keyBytes }, UQ),
         () => scanBuffer('not a buffer', N),
       ]) { try { fn(); } catch (e) { msgs.push(e.message); } }
       return { ok: msgs.length === 4 && !leaksIn(msgs.join('\n')) && !msgs.join('\n').includes(canarySpecial.slice(0, 5)), detail: `messages=${msgs.length}` };
@@ -2083,6 +2381,23 @@ export function selfTest() {
       return { ok: bad === 0 && tried >= 15, detail: `splits=${tried} wrong=${bad}` };
     });
 
+    run('G3b a container header split across a read boundary is found when the NEXT read is also full-size (the magic matcher keeps a copy, not a view of the reused buffer)', () => {
+      const P = 2048;
+      const fill = (n) => Buffer.alloc(n, 0x7e);
+      let tried = 0;
+      let bad = 0;
+      for (const [name, head] of [['ZIP', zipHead], ['PDF', pdfHead]]) {
+        for (let c = 1; c < head.length; c++) {
+          const d = mkTmp(created);
+          writeAt(d, 'x.bin', Buffer.concat([fill(P - c), head, fill(P * 2 + 5)])); // the FIRST boundary: only the first read's carry can be a view of the reused buffer
+          const r = scanForMagic(d, { chunkBytes: P });
+          tried += 1;
+          if (!(r.hits.length === 1 && r.hits[0].magic === name && r.hits[0].count === 1 && r.hits[0].atStart === false)) bad += 1;
+        }
+      }
+      return { ok: bad === 0 && tried >= 15, detail: `splits=${tried} wrong=${bad} next-read-bytes=${P}` };
+    });
+
     run('G4 magic scan vacuity: empty directory VACUOUS, skipped-only VACUOUS, empty pattern list throws, CFB and RTF patterns work when opted in', () => {
       const empty = scanForMagic(mkTmp(created));
       const big = mkTmp(created);
@@ -2129,6 +2444,219 @@ export function selfTest() {
       return { ok: r.verdict === 'HITS' && r.hits.length === 1 && r.bytesScanned === big.length && ms < 60000, detail: `bytes=${big.length} elapsed=${ms}ms patterns=${desc.patterns}` };
     });
 
+    /* ---------------------------------------------------------------- J. probes of the original must be provably specific to it */
+    // Fictional template: every upload carries the same wrapper text and differs only in its canary (and, for the compressed
+    // kind, a random payload). This is the shape of this suite's DOCX / PDF / EPUB builders without importing them.
+    const tplXml = (n, tag) => Buffer.from(Array.from({ length: n }, (_, i) => `<w:p w:rsidR="${String(i).padStart(6, '0')}"><w:r><w:t>Template line ${i} of the ${tag} wrapper</w:t></w:r></w:p>`).join('\n'), 'utf8');
+    const T_HEAD = tplXml(30, 'head');
+    const T_TAIL = tplXml(30, 'tail');
+    const ZIPISH = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    const ZIPEND = Buffer.from([0x50, 0x4b, 0x05, 0x06]);
+    const newCanary = () => `WSICANARY${crypto.randomBytes(12).toString('hex').toUpperCase()}`;
+    const storedDoc = (canary, visible = true) => Buffer.concat([ZIPISH, T_HEAD, visible ? Buffer.from(`<w:t>${canary}</w:t>`) : Buffer.from(canary, 'utf16le'), T_TAIL, ZIPEND]);
+    const FLATE_BOILERPLATE = zlib.deflateRawSync(tplXml(240, 'compressed'));
+    const flateDoc = (canary) => Buffer.concat([ZIPISH, FLATE_BOILERPLATE, zlib.deflateRawSync(Buffer.concat([crypto.randomBytes(400), Buffer.from(canary, 'utf16le')])), ZIPEND]);
+    /** The PRE-REPAIR rule, reproduced only to prove each scenario really is a template: four interior windows, "at least 4 distinct bytes". */
+    const oldProbeWindows = (A) => {
+      const n = A.length;
+      const k = Math.min(4, Math.floor(n / 96));
+      const out = [];
+      for (let j = 0; j < k; j++) { const off = Math.max(0, Math.min(n - 48, Math.floor(((j + 0.5) * n) / k - 24))); out.push(A.subarray(off, off + 48)); }
+      return out;
+    };
+    const who = (r) => r.hitsBySecret.map((h) => h.secret).join('+') || 'none';
+    const probesOf = (needles) => _internals(needles).groups.filter((g) => g.secret === 'original');
+
+    run('J1 a stored-text original arms on its canary anchor alone; an unrelated upload from the same template is CLEAN, the original is HITS, a bare canary in a log is not "the original"; the pre-repair windows would all have flagged the unrelated upload', () => {
+      const cA = newCanary();
+      const A = storedDoc(cA);
+      const B = storedDoc(newCanary());
+      const oldShared = oldProbeWindows(A).filter((w) => B.includes(w)).length;
+      const NA = makeNeedles({ canary: cA, originalBytes: A, keyBytes }); // no options: only the canary anchor can qualify
+      const bases = [...new Set(probesOf(NA).map((g) => g.basis))].join();
+      const rB = scanBuffer(B, NA);
+      const rA = scanBuffer(A, NA);
+      const log = scanText(`upload ${cA} accepted`, NA);
+      const boilerplateOnly = scanBuffer(A.subarray(0, 1200), NA);
+      return {
+        ok: oldShared === 4 && bases === 'canary-anchored' && rB.verdict === 'CLEAN' && who(rA) === 'canary+original' && who(log) === 'canary' && boilerplateOnly.verdict === 'CLEAN',
+        detail: `old-windows-also-in-unrelated-upload=${oldShared}/4 bases=${bases} unrelated=${rB.verdict} original=${who(rA)} canary-in-log=${who(log)} boilerplate-fragment=${boilerplateOnly.verdict}`,
+      };
+    });
+
+    run('J2 an original whose canary is NOT visible in its bytes needs siblings: refused without them, armed with three, then an unseen upload is CLEAN, the original is HITS, a boilerplate-only fragment is CLEAN and a fragment holding the unique bytes is HITS', () => {
+      const cA = newCanary();
+      const A = storedDoc(cA, false);
+      const sibs = [1, 2, 3].map(() => storedDoc(newCanary(), false));
+      const C = storedDoc(newCanary(), false);
+      const oldShared = oldProbeWindows(A).filter((w) => C.includes(w)).length;
+      let refusal = '';
+      try { makeNeedles({ canary: cA, originalBytes: A, keyBytes }); } catch (e) { refusal = e.message; }
+      const NA = makeNeedles({ canary: cA, originalBytes: A, keyBytes }, { siblings: sibs });
+      const bases = [...new Set(probesOf(NA).map((g) => g.basis))].join();
+      const at = A.indexOf(Buffer.from(cA, 'utf16le'));
+      const rC = scanBuffer(C, NA);
+      const rA = scanBuffer(A, NA);
+      const boiler = scanBuffer(A.subarray(0, at - 300), NA);
+      const unique = scanBuffer(A.subarray(at - 60, at + 120), NA);
+      return {
+        ok: oldShared === 4 && /no probe window that is provably specific/.test(refusal) && bases === 'unique-vs-siblings' && rC.verdict === 'CLEAN' && who(rA).split('+').sort().join() === 'canary,original' && boiler.verdict === 'CLEAN' && who(unique).includes('original'),
+        detail: `old-windows-also-in-unseen-upload=${oldShared}/4 without-siblings=${refusal ? 'refused' : 'ARMED'} bases=${bases} unseen=${rC.verdict} original=${who(rA)} boilerplate-fragment=${boiler.verdict} unique-fragment=${who(unique)}`,
+      };
+    });
+
+    run('J3 entropy alone is NOT proof (a compressed template part is as random-looking as a unique one): under assertUnique a sibling upload IS misreported, with siblings it is not; the declaration is therefore explicit and visible', () => {
+      const cA = newCanary();
+      const A = flateDoc(cA);
+      const sibs = [1, 2, 3].map(() => flateDoc(newCanary()));
+      const D = flateDoc(newCanary());
+      let undeclared = '';
+      try { makeNeedles({ canary: cA, originalBytes: A, keyBytes }); } catch (e) { undeclared = e.message; } // high entropy, but neither siblings nor a declaration
+      const declared = makeNeedles({ canary: cA, originalBytes: A, keyBytes }, { assertUnique: true });
+      const misreported = who(scanBuffer(sibs[0], declared)).includes('original'); // the sharp edge, pinned: a false declaration is the caller's
+      const NA = makeNeedles({ canary: cA, originalBytes: A, keyBytes }, { siblings: sibs });
+      const rD = scanBuffer(D, NA);
+      const rA = scanBuffer(A, NA);
+      const boiler = scanBuffer(A.subarray(0, ZIPISH.length + FLATE_BOILERPLATE.length - 60), NA);
+      const declaredBases = [...new Set(probesOf(declared).map((g) => g.basis))].join();
+      return {
+        ok: /unproven because no sibling was given/.test(undeclared) && misreported && declaredBases === 'asserted-unique' && rD.verdict === 'CLEAN' && who(rA).includes('original') && boiler.verdict === 'CLEAN',
+        detail: `high-entropy-without-declaration=${undeclared ? 'refused' : 'ARMED'} assertUnique-misreports-a-sibling=${misreported} (basis ${declaredBases}) with-siblings: unseen=${rD.verdict} original=${who(rA)} compressed-boilerplate-fragment=${boiler.verdict}`,
+      };
+    });
+
+    run('J4 a leak of only the first or only the last 4 KiB of a large original is found (head and tail windows), an unrelated large file is CLEAN, and the pre-repair windows would have missed both', () => {
+      const big = Buffer.concat([Buffer.from('%PDF-1.7\n%fictional-large-fixture\n'), crypto.randomBytes(1024 * 1024), Buffer.from('\n%%EOF\n')]);
+      const NB = makeNeedles({ canary: newCanary(), originalBytes: big, keyBytes }, UQ);
+      const head = big.subarray(0, 4096);
+      const tail = big.subarray(big.length - 4096);
+      const oldWouldCatch = oldProbeWindows(big).some((w) => head.includes(w) || tail.includes(w));
+      const offs = probesOf(NB).map((g) => g.offset);
+      const unrelated = scanBuffer(Buffer.concat([Buffer.from('%PDF-1.7\n%fictional-large-fixture\n'), crypto.randomBytes(1024 * 1024)]), NB);
+      const rh = scanBuffer(head, NB);
+      const rt = scanBuffer(tail, NB);
+      return {
+        ok: !oldWouldCatch && rh.verdict === 'HITS' && who(rh) === 'original' && rt.verdict === 'HITS' && who(rt) === 'original' && unrelated.verdict === 'CLEAN' && offs.some((o) => o < 4096 - 48) && offs.some((o) => o > big.length - 4096),
+        detail: `old-windows-in-either-end=${oldWouldCatch} probes=${offs.length} first4KiB=${who(rh)} last4KiB=${who(rt)} unrelated=${unrelated.verdict}`,
+      };
+    });
+
+    run('J5 an original with no provable probe is REFUSED for its own reason (no siblings / low entropy / identical sibling), padding is never a probe, and the messages carry no content', () => {
+      const boring = Buffer.concat([ZIPISH, T_HEAD, T_TAIL]);
+      const kb = { canary: newCanary(), originalBytes: boring, keyBytes };
+      const msg = (fn) => { try { fn(); } catch (e) { return e instanceof TypeError ? e.message : `(${e.name})`; } return ''; };
+      const noSib = msg(() => makeNeedles(kb));
+      const lowEntropy = msg(() => makeNeedles(kb, UQ));
+      const identical = msg(() => makeNeedles(kb, { siblings: [boring] }));
+      // padding: a long run of zeros is absent from siblings that have none, so only the distinct-byte floor keeps it out of the probes
+      const cP = newCanary();
+      const padded = Buffer.concat([storedDoc(cP, false), Buffer.alloc(4096)]);
+      const NP = makeNeedles({ canary: cP, originalBytes: padded, keyBytes }, { siblings: [1, 2, 3].map(() => storedDoc(newCanary(), false)) });
+      const floor = Math.min(...probesOf(NP).map((g) => new Set(g.B).size));
+      const zeros = scanBuffer(Buffer.alloc(1 << 20), NP);
+      const joined = [noSib, lowEntropy, identical].join('\n');
+      return {
+        ok: /unproven because no sibling was given/.test(noSib) && /low-entropy under assertUnique/.test(lowEntropy) && /found in a sibling/.test(identical)
+          && floor >= 8 && zeros.verdict === 'CLEAN' && !joined.includes(boring.subarray(20, 60).toString('latin1')) && !joined.includes(boring.subarray(1000, 1040).toString('latin1')),
+        detail: `no-siblings=${/unproven/.test(noSib)} assertUnique-low-entropy=${/low-entropy/.test(lowEntropy)} identical-sibling=${/found in a sibling/.test(identical)} padded-original: min-distinct-bytes-per-probe=${floor} all-zero-1MiB=${zeros.verdict}`,
+      };
+    });
+
+    run('J6 describe() reports each probe\'s basis and offset (content-free), probes are sorted by offset and never overlap', () => {
+      const cA = newCanary();
+      const A = storedDoc(cA, false);
+      const NA = makeNeedles({ canary: cA, originalBytes: A, keyBytes }, { siblings: [1, 2, 3].map(() => storedDoc(newCanary(), false)) });
+      const gs = NA.describe().secrets.find((x) => x.name === 'original').groups;
+      const sorted = gs.every((g, i) => i === 0 || (g.offset >= gs[i - 1].offset + gs[i - 1].bytes));
+      const allowed = gs.every((g) => ['canary-anchored', 'unique-vs-siblings', 'asserted-unique'].includes(g.basis) && Number.isInteger(g.offset) && Number.isInteger(g.bytes));
+      const dump = JSON.stringify(NA);
+      return { ok: gs.length >= 2 && sorted && allowed && !dump.includes(T_HEAD.subarray(10, 50).toString('latin1')), detail: `probes=${gs.length} sorted-and-disjoint=${sorted} bases-valid=${allowed}` };
+    });
+
+    /* ---------------------------------------------------------------- K. realistic accidental-leak forms */
+    const flipBit = (b) => { const x = Buffer.from(b); x[17] ^= 0x01; return x; };
+    const leakForms = (k) => {
+      const hx = (c) => c.toString(16).padStart(2, '0');
+      return {
+        'JSON.stringify(Uint8Array) (KMS SDK v3 Plaintext)': JSON.stringify({ Plaintext: new Uint8Array(k), KeyId: 'x' }),
+        'JSON.stringify(Uint8Array, null, 2)': JSON.stringify({ Plaintext: new Uint8Array(k) }, null, 2),
+        'JSON.stringify(Buffer)': JSON.stringify({ k }),
+        'JSON.stringify(Buffer, null, 2)': JSON.stringify({ k }, null, 2),
+        'util.inspect(Uint8Array)': util.inspect(new Uint8Array(k)),
+        'util.inspect(Buffer)': util.inspect(k),
+        'String(Array.from(key))': String(Array.from(k)),
+        'URL with encodeURIComponent(base64)': `GET /v?k=${encodeURIComponent(k.toString('base64'))} 200`,
+        'URL with only + percent-encoded': `/v?k=${k.toString('base64').replace(/\+/g, '%2B')}`,
+        'hex with colons': Array.from(k, hx).join(':'),
+        'hex with colons, upper': Array.from(k, hx).join(':').toUpperCase(),
+        'hex as C array': `{ ${Array.from(k, (c) => '0x' + hx(c)).join(', ')} }`,
+        'hex as \\x escapes': Array.from(k, (c) => '\\x' + hx(c)).join(''),
+      };
+    };
+
+    run('K1 the key is found in every realistic accidental-leak form (12 random keys x 13 forms); the same forms built from a key differing by ONE BIT are CLEAN', () => {
+      const trials = 12;
+      const missed = new Map();
+      const falsePos = new Map();
+      let usedUrlLabel = 0;
+      let names = [];
+      for (let t = 0; t < trials; t++) {
+        const k = crypto.randomBytes(32);
+        const NN = makeNeedles({ canary: newCanary(), originalBytes, keyBytes: k }, UQ);
+        const forms = leakForms(k);
+        const controls = leakForms(flipBit(k));
+        names = Object.keys(forms);
+        for (const [name, text] of Object.entries(forms)) {
+          const r = scanText(text, NN);
+          if (!(r.verdict === 'HITS' && r.hitsBySecret.some((h) => h.secret === 'key'))) missed.set(name, (missed.get(name) || 0) + 1);
+          if (name.startsWith('URL with encodeURIComponent') && /[+/]/.test(b64Region(k, 0, false).toString('latin1')) && r.hitsBySecret.some((h) => h.secret === 'key' && h.encoding === 'urlencoded')) usedUrlLabel += 1;
+          if (scanText(controls[name], NN).verdict !== 'CLEAN') falsePos.set(name, (falsePos.get(name) || 0) + 1);
+        }
+      }
+      return {
+        ok: missed.size === 0 && falsePos.size === 0 && names.length === 13 && usedUrlLabel > 0,
+        detail: `forms=${names.length} trials=${trials} missed=[${[...missed].map(([n, c]) => `${n} x${c}`).join('; ') || 'none'}] one-bit-controls-flagged=[${[...falsePos].map(([n, c]) => `${n} x${c}`).join('; ') || 'none'}] percent-encoded-base64-label-seen=${usedUrlLabel}`,
+      };
+    });
+
+    run('K2 a case-folded canary (lower, UPPER, Capitalised, Each-Word-Capitalised) is found for a typical and a special canary; a one-character near-miss is CLEAN; a binary key gets no case-fold patterns', () => {
+      const capWord = (w) => { const cp = Array.from(w); return cp.length ? cp[0].toUpperCase() + cp.slice(1).join('').toLowerCase() : w; };
+      const bad = [];
+      let probed = 0;
+      for (const [name, c, NN] of [['typical', canaryTypical, Nt], ['special', canarySpecial, N]]) {
+        const folds = { lower: c.toLowerCase(), upper: c.toUpperCase(), title: capWord(c), words: c.replace(/[\p{L}\p{N}]+/gu, capWord) };
+        for (const [fold, text] of Object.entries(folds)) {
+          if (text === c) continue; // identical to the text: raw's business
+          probed += 1;
+          const r = scanText(`slug=${text}`, NN);
+          if (!(r.verdict === 'HITS' && r.hitsBySecret.some((h) => h.secret === 'canary' && h.encoding === 'case-folded'))) bad.push(`${name}/${fold}`);
+          const near = text.slice(0, -1) + (text.endsWith('Z') ? 'Y' : 'Z');
+          if (scanText(`slug=${near}`, NN).verdict !== 'CLEAN') bad.push(`${name}/${fold}/near-miss`);
+        }
+      }
+      const binaryKeyFolded = _internals(N).entries.filter((e) => e.secret === 'key' && e.encoding === 'case-folded').length;
+      return { ok: bad.length === 0 && probed >= 6 && binaryKeyFolded === 0, detail: `folds-probed=${probed} wrong=${bad.join(',') || 'none'} case-fold-patterns-for-binary-key=${binaryKeyFolded}` };
+    });
+
+    run('K3 the NOT COVERED list in the header is true: forms it names are really not detected (a positive control for each is), so it must shrink the day one is added', () => {
+      const k = crypto.randomBytes(32);
+      const NN = makeNeedles({ canary: newCanary(), originalBytes, keyBytes: k }, UQ);
+      const b64 = k.toString('base64');
+      const gaps = {
+        'typed array holding the key at index offset 3': [JSON.stringify(new Uint8Array([1, 2, 3, ...k, 4])), JSON.stringify({ Plaintext: new Uint8Array(k) })],
+        'dash-separated hex': [Array.from(k, (c) => c.toString(16).padStart(2, '0')).join('-'), Array.from(k, (c) => c.toString(16).padStart(2, '0')).join(':')],
+        'upper-cased base64 text': [b64.toUpperCase(), b64],
+        'double base64': [Buffer.from(b64).toString('base64'), b64],
+      };
+      const notDetected = [];
+      const controlMissed = [];
+      for (const [name, [gap, control]] of Object.entries(gaps)) {
+        if (scanText(gap, NN).verdict !== 'CLEAN') notDetected.push(name);
+        if (scanText(control, NN).verdict !== 'HITS') controlMissed.push(name);
+      }
+      return { ok: notDetected.length === 0 && controlMissed.length === 0, detail: `listed-gaps-now-detected=[${notDetected.join('; ') || 'none'}] controls-not-detected=[${controlMissed.join('; ') || 'none'}] (a non-empty first list means the header is stale)` };
+    });
+
     /* ---------------------------------------------------------------- I. KNOWN_WRONG lethality */
     const kwCtx = {
       groups: groupsN,
@@ -2173,10 +2701,11 @@ export function selfTest() {
     // setup failed (for example the primary needle set could not be armed): that is a FAILED selfTest, never a throw
     add('selfTest aborted before completing', false, `${e && e.name}: ${String(e && e.message).slice(0, 200)}`);
   } finally {
+    for (const m of restoreModes) { try { fs.chmodSync(m, 0o755); } catch { /* best effort */ } }
     for (const d of created) { try { fs.rmSync(d, { recursive: true, force: true }); } catch { /* best effort */ } }
   }
 
-  if (process.getuid && process.getuid() === 0) unverified.push('unreadable-file (EACCES) branch: running as root, permission denial cannot be provoked');
+  if (process.getuid && process.getuid() === 0) unverified.push('EACCES itself: running as root, so a permission denial cannot be provoked (the open-failure branch it takes is exercised by D11a/D11b through names the filesystem lists but cannot resolve)');
   unverified.push('read-time fs races (file replaced by a symlink or truncated between walk and open): O_NOFOLLOW + fstat guard present, not provoked');
   return { ok: checks.length > 0 && checks.every((c) => c.ok), checks, unverified };
 }
@@ -2193,7 +2722,7 @@ const MUTANTS = [
   { name: 'base64-align2-skip-too-short', find: 'const skip = [0, 2, 3][k];', replace: 'const skip = [0, 2, 2][k];', why: 'alignment-2 pattern includes a neighbour-dependent char' },
   { name: 'base64-tail-not-trimmed', find: 'if (rem !== 0) s = s.slice(0, -1);', replace: '', why: 'last char depends on the following byte' },
   { name: 'base64url-not-translated', find: "if (url) s = s.replace(/\\+/g, '-').replace(/\\//g, '_');", replace: '', why: 'url-safe forms never match' },
-  { name: 'hex-upper-is-lower', find: "return [{ pattern: Buffer.from(B.toString('hex').toUpperCase(), 'latin1'), align: null }];", replace: "return [{ pattern: Buffer.from(B.toString('hex'), 'latin1'), align: null }];", why: 'upper-case hex invisible' },
+  { name: 'hex-upper-is-lower', find: "[Buffer.from(B.toString('hex').toUpperCase(), 'latin1'), ...hexSeparatedVariants(B, true)]", replace: "[Buffer.from(B.toString('hex'), 'latin1'), ...hexSeparatedVariants(B, true)]", why: 'upper-case hex invisible' },
   { name: 'utf16be-not-swapped', find: "case 'utf16be': return [{ pattern: Buffer.from(S, 'utf16le').swap16(), align: null }];", replace: "case 'utf16be': return [{ pattern: Buffer.from(S, 'utf16le'), align: null }];", why: 'big-endian UTF-16 invisible' },
   { name: 'json-ascii-variants-dropped', find: 'for (const v of [base, asciiLower, asciiUpper]) {', replace: 'for (const v of [base]) {', why: 'ensure_ascii JSON invisible' },
   { name: 'whitespace-lane-off', find: 'const stripped = stripWs(chunk); // text-lane', replace: 'const stripped = chunk; // text-lane', why: 'wrapped base64 invisible' },
@@ -2211,6 +2740,26 @@ const MUTANTS = [
   { name: 'round-trip-proof-removed', find: "if (problems.length === 0 && I.groups.length > 0) {", replace: "if (false) {", why: 'corrupted patterns are accepted' },
   { name: 'original-count-summed', find: 'se.set(k2, Math.max(se.get(k2) || 0, c));', replace: 'se.set(k2, (se.get(k2) || 0) + c);', why: 'one copy of the original reports as many' },
   { name: 'alias-ignored-lane', find: "const key = `${lane}:${c.pattern.toString('hex')}`;", replace: "const key = `${lane}:${label}:${c.pattern.toString('hex')}`;", why: 'aliases double count' },
+  // --- reviewer round 2: typed arrays, probes of the original, accidental-leak forms, incomplete-coverage reasons, carry aliasing
+  { name: 'typed-array-not-normalised', find: 'if (!Buffer.isBuffer(chunk)) chunk = Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength);', replace: '', why: 'a key held in a plain Uint8Array reads CLEAN' },
+  { name: 'probe-siblings-ignored', find: 'else if (siblings.length > 0 && inSibling(w)) tally.boilerplate += 1; // occurs in another upload: template, whatever its entropy', replace: 'else if (false) tally.boilerplate += 1;', why: 'template boilerplate becomes a probe and flags unrelated uploads' },
+  { name: 'probe-unproven-accepted', find: 'else tally.unproven += 1; // no sibling, no declaration: nothing proves this window is not boilerplate', replace: "else basis = 'asserted-unique';", why: 'unprovable windows arm silently' },
+  { name: 'probe-entropy-is-proof', find: "else if (assertUnique && d >= minDistinct) basis = 'asserted-unique';", replace: "else if (d >= minDistinct) basis = 'asserted-unique';", why: 'compressed template parts count as unique without a declaration' },
+  { name: 'probe-head-tail-dropped', find: 'const targets = [0, last];', replace: 'const targets = [];', why: 'a leak of only the head or tail of a large original is missed' },
+  { name: 'probe-canary-anchor-dropped', find: 'if (anchor && anchor.length > 0) {', replace: 'if (false) {', why: 'a stored-text original cannot be armed from its canary' },
+  { name: 'probe-distinct-floor-dropped', find: 'if (d < PROBE_MIN_DISTINCT_ANY) tally.degenerate += 1;', replace: 'if (d < 1) tally.degenerate += 1;', why: 'padding becomes a probe and any sparse file flags as the original' },
+  { name: 'urlencoded-base64-dropped', find: "case 'urlencoded': return [...urlVariants(B, S, kind), ...urlEncodedBase64Variants(B)].map((pattern) => ({ pattern, align: null }));", replace: "case 'urlencoded': return urlVariants(B, S, kind).map((pattern) => ({ pattern, align: null }));", why: 'a key in a URL query string (percent-encoded base64) is invisible' },
+  { name: 'byte-array-index-form-dropped', find: '"${i + 1}":${v}', replace: '"${i + 1}"=${v}', why: 'JSON.stringify(Uint8Array) of a KMS Plaintext is invisible' },
+  { name: 'byte-array-text-lane-off', find: "'hex-lower', 'hex-upper', 'byte-array']);", replace: "'hex-lower', 'hex-upper']);", why: 'pretty-printed JSON and util.inspect output of a key are invisible' },
+  { name: 'case-fold-dropped', find: "case 'case-folded': return caseFoldVariants(S, kind).map((pattern) => ({ pattern, align: null }));", replace: "case 'case-folded': return [];", why: 'a lower-cased canary left by a search index is invisible' },
+  { name: 'hex-lower-separators-dropped', find: "[Buffer.from(B.toString('hex'), 'latin1'), ...hexSeparatedVariants(B, false)]", replace: "[Buffer.from(B.toString('hex'), 'latin1')]", why: 'colon / 0x / backslash-x lower-case hex of a key is invisible' },
+  { name: 'hex-upper-separators-dropped', find: "[Buffer.from(B.toString('hex').toUpperCase(), 'latin1'), ...hexSeparatedVariants(B, true)]", replace: "[Buffer.from(B.toString('hex').toUpperCase(), 'latin1')]", why: 'colon / 0x / backslash-x upper-case hex of a key is invisible' },
+  { name: 'unreadable-dir-not-incomplete', find: "'special', 'unreadable-dir', 'unreadable', 'oversize'", replace: "'special', 'unreadable', 'oversize'", why: 'a directory that could not be listed passes as clean' },
+  { name: 'unreadable-file-not-incomplete', find: "'special', 'unreadable-dir', 'unreadable', 'oversize'", replace: "'special', 'unreadable-dir', 'oversize'", why: 'a file that could not be read passes as clean' },
+  { name: 'too-deep-not-incomplete', find: "'oversize', 'too-deep', 'entry-budget',", replace: "'oversize', 'entry-budget',", why: 'a subtree beyond the depth cap passes as clean' },
+  { name: 'entry-budget-not-incomplete', find: "'oversize', 'too-deep', 'entry-budget',", replace: "'oversize', 'too-deep',", why: 'a tree cut short by the entry budget passes as clean' },
+  { name: 'carry-aliases-read-buffer', find: 'return keep > 0 ? Buffer.from(win.subarray(win.length - keep)) : Buffer.alloc(0);', replace: 'return keep > 0 ? win.subarray(win.length - keep) : Buffer.alloc(0);', why: 'the carried tail is overwritten by the next full-size read' },
+  { name: 'magic-carry-aliases-read-buffer', find: 'this.carry = keep > 0 ? Buffer.from(win.subarray(win.length - keep)) : Buffer.alloc(0);', replace: 'this.carry = keep > 0 ? win.subarray(win.length - keep) : Buffer.alloc(0);', why: 'a container header split across reads is lost when the next read is full-size' },
 ];
 // @@MUTANTS-END
 

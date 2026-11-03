@@ -88,6 +88,7 @@
 //  CADDYFILE
 //   * A `#` starts a comment only at the start of a token and outside "..." / `...` / `<<MARKER` bodies.
 
+import { createHash } from 'node:crypto';
 import { readFileSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
@@ -1844,6 +1845,598 @@ function fuzzJs(impl, programs, seed, frags = FRAGMENTS) {
   return { failures, firstFailure, keepMarkers, goneMarkers };
 }
 
+// ---- ground-truth program generators -------------------------------------------------------------------
+// These WRITE a program together with the exact characters that are comments, so the expectation holds by
+// construction and is derived from no stripper. A program is a list of pieces [text, isComment, ...]; the
+// expected output is the text with every comment character (except line terminators) turned into a space.
+// Everything is fictional and seeded (mulberry32), so a failure reproduces byte for byte.
+// NOT generated, because the stripper documents them as limits or because JavaScript itself rejects them:
+// a regex literal after `)` or `}`, JSX after `)` or `}`, comments inside a JSX CLOSING tag, type arguments on
+// elements. The generator stays inside the subset the heuristics are specified for.
+const GEN_LT = ['\n', '\r\n', '\r', '\u{2028}', '\u{2029}'];
+const GEN_WS = [' ', '  ', '\t', '\u{A0}', '\v', '\f', '\u{FEFF}', '\u{3000}'];
+const GEN_BLOCK = ['/* c */', '/**/', '/***/', '/** d */', '/* // */', '/* " \' ` */', '/* a\nb */', '/* ${x} */', '/* /* */', '/*\r\n*/', '/* \u{2028} */', '/* a / b */', '/*/ x */', '/* * / */'];
+const GEN_LINE = ['// c', '//', '// " \' `', '// /* open', '// */ stray', '/// three', '// ${x}', '//\\', '// c \\', '// a /b/ c', '//\t'];
+const GEN_IDENTS = ['a', 'z', 'A', 'Z', '_', '$', 'a0', 'z9', 'Zz', '$_', '_$', '\u{E9}', '\u{540D}', '\\u0061', 'a\\u{62}', 'x1', 'async', 'from', 'returnValue', 'inner', 'typeofx', 'doX', 'newer', 'voidy', 'awaited', 'elsewhere', 'yielded', 'defaulted', 'caseA', 'throwable', 'deleted', 'instanceofX', 'forEach', 'ofs', 'ink', '\u{3A9}', 'q9_'];
+const GEN_KW_PROPS = ['return', 'typeof', 'in', 'of', 'new', 'delete', 'void', 'throw', 'case', 'do', 'else', 'yield', 'await', 'default'];
+const GEN_NUMS = ['0', '9', '12', '1.5', '.5', '1.', '1e3', '1e-3', '1E+3', '0x1F', '0b101', '0o17', '1_000', '10n', '0.5', '5.e1'];
+const GEN_BIN = ['+', '-', '*', '%', '**', '==', '===', '!=', '!==', '<', '>', '<=', '>=', '&&', '||', '??', '&', '|', '^', '<<', '>>', '>>>'];
+const GEN_ASSIGN = ['=', '+=', '-=', '*=', '%=', '/=', '||=', '??=', '<<='];
+const GEN_JNAMES = ['div', 'A', 'a.b', 'A.B.C', 'svg:rect', 'x-y', '\u{E9}', '_a', '$b', 'h1'];
+const GEN_JATTRS = ['disabled', 'data-x', 'aria-label', 'xlink:href', '\u{E9}', 'a.b'];
+const GEN_JTEXT = ['hello', ' ', '//', '/* x */', "it's", '"q"', '`', 'http://h.test', '&amp;', '\n', '\\', '#', 'a // b', '-- x', '> y', '*/', '\r\n', ' / '];
+const GEN_COMMENT_BLANKER = /[^\n\r\u{2028}\u{2029}]/gu;
+
+// JS / TS / TSX. Returns { text, expected, cutOk, stats }; cutOk(k) says whether the PREFIX text.slice(0, k) has a
+// well-defined expectation (not inside a regex literal, not inside a JSX element -- where an unterminated attempt is
+// rolled back by design -- and not between the two characters of a comment opener).
+function genJsProgram(rnd, { jsx = false } = {}) {
+  const parts = []; // [text, isComment, isRegex, inJsx]
+  let inJsx = false;
+  const stats = { comments: 0, strings: 0, templates: 0, regexes: 0, elements: 0, casts: 0, divisions: 0 };
+  const pick = (a) => a[Math.floor(rnd() * a.length)];
+  const chance = (p) => rnd() < p;
+  const push = (s, c, isRegex = false) => {
+    if (s === '') return;
+    const prev = parts.length ? parts[parts.length - 1] : null;
+    // never let two adjacent pieces accidentally form `//` or `/*`
+    if (prev && !prev[1] && prev[0].endsWith('/') && (s[0] === '/' || s[0] === '*')) parts.push([' ', false, false, inJsx]);
+    parts.push([s, c, isRegex, inJsx]);
+    if (c) stats.comments++;
+  };
+  const code = (s) => push(s, false);
+  const cmt = (s) => push(s, true);
+  const nl = () => code(pick(GEN_LT));
+  const gap = (tight = false) => {
+    const r = rnd();
+    if (tight && r < 0.35) return;
+    if (r < 0.5) code(pick(GEN_WS));
+    else if (r < 0.62) code(' ');
+    else if (r < 0.72) nl();
+    else if (r < 0.88) {
+      code(' ');
+      cmt(pick(GEN_BLOCK));
+      if (chance(0.7)) code(' ');
+    } else {
+      code(' ');
+      cmt(pick(GEN_LINE));
+      nl();
+    }
+  };
+  const ident = () => pick(GEN_IDENTS);
+  const strBody = (q) => {
+    const segs = ['abc', ' ', '//', '/*', '*/', '#', '--', '`', q === '"' ? "'" : '"', '\\\\', '\\' + q, '\\n', '\\u0041', '${x}', '{', '}', '/', ' // c ', '\\\n', '\\\r\n', '\u{E9}'];
+    let s = '';
+    for (let k = rnd() * 4; k > 0; k--) s += pick(segs);
+    return s;
+  };
+  const str = () => {
+    const q = pick(["'", '"']);
+    code(q + strBody(q) + q);
+    stats.strings++;
+  };
+  const tmplText = () => {
+    const segs = ['abc', ' ', '//', '/*', '*/', '#', '--', "'", '"', '\\`', '\\\\', '\\${', '$', '{', '}', '\n', '\r\n', '/ ', ' // c '];
+    let s = '';
+    for (let k = rnd() * 4; k > 0; k--) s += pick(segs);
+    let out = '';
+    for (let k = 0; k < s.length; k++) {
+      if (s[k] === '\\') {
+        out += s[k] + (s[k + 1] ?? '');
+        k++;
+      } else if (s[k] === '$' && s[k + 1] === '{') {
+        out += '$ '; // a '$' followed by '{' would open a substitution nobody meant to write
+        k++;
+      } else out += s[k];
+    }
+    return out;
+  };
+  const tmpl = (depth) => {
+    stats.templates++;
+    code('`' + tmplText());
+    for (let k = rnd() * 3; k > 0; k--) {
+      code('${');
+      gap(true);
+      expr(depth + 1);
+      gap(true);
+      code('}' + tmplText());
+    }
+    code('`');
+  };
+  const regex = () => {
+    const bodies = ['abc', 'a\\/b', '\\/\\/', '[/]', '[/*]', '[\\]/]', 'a|\\/', '\\/*', '^\\s*#', '[^"\']+', 'x{2,3}', '(?:a|b)', '\\\\', '.', '[//]', '=', ' ', '\\u0041'];
+    const flags = ['', 'g', 'gi', 'm', 'u', 'y', 'dgimsuy'];
+    push('/' + pick(bodies) + (chance(0.3) ? pick(bodies) : '') + '/' + pick(flags), false, true);
+    stats.regexes++;
+  };
+
+  // ---- JSX (only when `jsx` is on; every piece inside an element is marked so no truncation lands in it) ----
+  const tagTrivia = () => {
+    const r = rnd();
+    if (r < 0.5) code(pick([' ', '\n', '\t', ' \n ']));
+    else if (r < 0.8) {
+      code(' ');
+      cmt(pick(GEN_BLOCK));
+      code(' ');
+    } else {
+      code(' ');
+      cmt(pick(GEN_LINE));
+      nl();
+    }
+  };
+  const jsxContainer = (depth) => {
+    code('{');
+    if (chance(0.25)) gap();
+    else {
+      gap(true);
+      expr(depth + 1);
+      gap(true);
+    }
+    code('}');
+  };
+  const jsxChildren = (depth) => {
+    for (let k = rnd() * 4; k > 0; k--) {
+      const r = rnd();
+      if (r < 0.45) code(pick(GEN_JTEXT));
+      else if (r < 0.7) jsxContainer(depth);
+      else if (depth < 3) jsxElement(depth + 1);
+      else code(pick(GEN_JTEXT));
+    }
+  };
+  const jsxAttr = (depth) => {
+    const r = rnd();
+    if (r < 0.2) code(pick(GEN_JATTRS));
+    else if (r < 0.5) {
+      const q = pick(['"', "'"]);
+      const body = pick(['v', '//cdn.test/x', '/* not a comment */', 'a{b}', '\\', 'a\nb', '>', '<', q === '"' ? "'" : '"', '']);
+      code(pick(GEN_JATTRS) + '=' + q + body + q);
+    } else if (r < 0.8) {
+      code(pick(GEN_JATTRS) + '=');
+      jsxContainer(depth);
+    } else if (r < 0.9) {
+      code('{...');
+      expr(depth + 1);
+      code('}');
+    } else if (depth < 3) {
+      code(pick(GEN_JATTRS) + '=');
+      jsxElement(depth + 1);
+    } else code(pick(GEN_JATTRS));
+  };
+  function jsxElement(depth) {
+    const was = inJsx;
+    inJsx = true;
+    stats.elements++;
+    if (chance(0.15)) {
+      code('<>');
+      jsxChildren(depth);
+      code('</>');
+    } else {
+      const name = pick(GEN_JNAMES);
+      code('<' + name);
+      for (let k = rnd() * 3; k > 0; k--) {
+        tagTrivia();
+        jsxAttr(depth);
+      }
+      if (chance(0.5)) tagTrivia();
+      if (chance(0.3)) {
+        code('/');
+        if (chance(0.3)) tagTrivia();
+        code('>');
+      } else {
+        code('>');
+        jsxChildren(depth);
+        code('</');
+        if (chance(0.3)) code(pick([' ', '\n', '\t']));
+        code(name);
+        if (chance(0.3)) code(pick([' ', '\n', '\t']));
+        code('>');
+      }
+    }
+    inJsx = was;
+  }
+
+  const primary = (depth, regexOk) => {
+    const r = rnd();
+    if (r < 0.2) code(ident());
+    else if (r < 0.3) code(pick(GEN_NUMS));
+    else if (r < 0.4) str();
+    else if (r < 0.46 && depth < 3) tmpl(depth);
+    else if (r < 0.54 && regexOk) {
+      regex();
+      return 'regex';
+    } else if (r < 0.62 && depth < 3) {
+      code('(');
+      gap(true);
+      expr(depth + 1);
+      gap(true);
+      code(')');
+    } else if (r < 0.68 && depth < 3) {
+      code('[');
+      gap(true);
+      expr(depth + 1);
+      if (chance(0.5)) {
+        gap(true);
+        code(',');
+        gap(true);
+        expr(depth + 1);
+      }
+      gap(true);
+      code(']');
+    } else if (r < 0.74 && depth < 3) {
+      code('{');
+      gap(true);
+      code(pick(['k', 'm', '"s"', "'t'", '[a]']) + ':');
+      gap();
+      expr(depth + 1);
+      gap(true);
+      code('}');
+    } else if (r < 0.8) {
+      code('this');
+      code('.');
+      code('#p');
+    } else if (r < 0.86 && depth < 3) {
+      code(ident());
+      code('(');
+      gap(true);
+      if (chance(0.7)) expr(depth + 1);
+      gap(true);
+      code(')');
+    } else if (r < 0.92 && jsx && regexOk && depth < 3) {
+      jsxElement(depth);
+      return 'jsx';
+    } else if (r < 0.96 && regexOk) {
+      // a TS cast `<T>x`: with JSX detection on it is tried as an element, fails, and must be rolled back
+      code('<' + pick(['T', 'string', 'Foo', 'any']) + '>');
+      code(ident());
+      stats.casts++;
+    } else {
+      code(ident());
+    }
+    return 'operand';
+  };
+  const postfix = (depth) => {
+    for (;;) {
+      const r = rnd();
+      if (r < 0.12) {
+        code('.');
+        code(chance(0.5) ? pick(GEN_KW_PROPS) : ident());
+      } else if (r < 0.16) {
+        code('?.');
+        code(pick(GEN_KW_PROPS));
+      } else if (r < 0.2 && depth < 3) {
+        code('[');
+        gap(true);
+        expr(depth + 1);
+        gap(true);
+        code(']');
+      } else if (r < 0.23) {
+        code(pick(['++', '--']));
+      } else break;
+    }
+  };
+  function expr(depth) {
+    if (chance(0.25)) {
+      code(pick(['!', '-', '+', '~', 'typeof ', 'void ', 'await ', 'delete ']));
+      if (chance(0.3)) gap();
+    }
+    const kind = primary(depth, true);
+    if (kind === 'jsx') return;
+    if (kind === 'regex') {
+      if (chance(0.5)) {
+        code('.test');
+        code('(');
+        code(ident());
+        code(')');
+      }
+    } else postfix(depth);
+    let n = Math.floor(rnd() * 3);
+    while (n-- > 0) {
+      gap();
+      if (chance(0.4)) {
+        code('/'); // division: the operand before it is complete
+        stats.divisions++;
+        gap(true);
+      } else {
+        code(pick(GEN_BIN));
+        gap();
+      }
+      const k2 = primary(depth, true);
+      if (k2 === 'jsx') return;
+      if (k2 !== 'regex') postfix(depth);
+    }
+    if (depth === 0 && chance(0.15)) {
+      gap();
+      code('?');
+      gap();
+      primary(depth + 1, true);
+      gap();
+      code(':');
+      gap();
+      primary(depth + 1, true);
+    }
+  }
+  const stmt = (depth) => {
+    const r = rnd();
+    if (r < 0.3) {
+      code(pick(['const ', 'let ', 'var ']) + ident() + ' ');
+      if (chance(0.3)) cmt(pick(GEN_BLOCK));
+      code('=');
+      gap();
+      expr(0);
+    } else if (r < 0.45) {
+      code(ident() + ' ' + pick(GEN_ASSIGN));
+      gap();
+      expr(0);
+    } else if (r < 0.6) {
+      code('return ');
+      expr(0);
+    } else if (r < 0.7) {
+      code(ident() + '(');
+      gap(true);
+      expr(0);
+      gap(true);
+      code(')');
+    } else if (r < 0.8 && depth < 2) {
+      code('if (');
+      gap(true);
+      expr(0);
+      gap(true);
+      code(') {');
+      nl();
+      stmt(depth + 1);
+      code(';');
+      gap();
+      code('} else {');
+      nl();
+      stmt(depth + 1);
+      code(';');
+      gap();
+      code('}');
+    } else if (r < 0.88 && depth < 2) {
+      code('for (const ' + ident() + ' of ');
+      expr(0);
+      code(') {');
+      gap();
+      stmt(depth + 1);
+      code(';');
+      gap();
+      code('}');
+    } else if (r < 0.94) {
+      code('case ');
+      regex();
+      code(':');
+    } else {
+      code('throw ');
+      expr(0);
+    }
+    code(';');
+  };
+  if (chance(0.1)) {
+    cmt('#!/usr/bin/env node');
+    nl();
+  }
+  const count = 1 + Math.floor(rnd() * 6);
+  for (let s = 0; s < count; s++) {
+    stmt(0);
+    if (s < count - 1 || chance(0.5)) {
+      if (chance(0.5)) {
+        code(' ');
+        cmt(chance(0.5) ? pick(GEN_LINE) : pick(GEN_BLOCK));
+      }
+      nl();
+    }
+  }
+  if (chance(0.3)) cmt(pick(GEN_LINE)); // a line comment at end of file, no terminator
+
+  let text = '';
+  let expected = '';
+  const bad = new Set();
+  let jsxStart = -1;
+  for (const [s, isC, isRegex, inEl] of parts) {
+    const at = text.length;
+    text += s;
+    expected += isC ? s.replace(GEN_COMMENT_BLANKER, ' ') : s;
+    if (isRegex) for (let k = at + 1; k < text.length; k++) bad.add(k);
+    if (isC && (s.startsWith('//') || s.startsWith('/*') || s.startsWith('#!'))) bad.add(at + 1);
+    if (inEl) {
+      if (jsxStart < 0) jsxStart = at;
+    } else if (jsxStart >= 0) {
+      for (let k = jsxStart + 1; k < at; k++) bad.add(k);
+      jsxStart = -1;
+    }
+  }
+  if (jsxStart >= 0) for (let k = jsxStart + 1; k < text.length; k++) bad.add(k);
+  return { text, expected, cutOk: (k) => !bad.has(k), stats };
+}
+
+// PostgreSQL flavoured SQL. Same contract (no cutOk). Dollar-quoted bodies are CODE to the stripper, so a body holds
+// comments, strings and nested dollar quotes (with a DIFFERENT tag from every enclosing one).
+function genSqlProgram(rnd) {
+  const parts = []; // [text, isComment]
+  const open = []; // dollar-quote tags currently open
+  const stats = { comments: 0, strings: 0, dollar: 0, eStrings: 0, nestedBlock: 0 };
+  const pick = (a) => a[Math.floor(rnd() * a.length)];
+  const chance = (p) => rnd() < p;
+  const push = (s, c) => {
+    if (s === '') return;
+    const prev = parts.length ? parts[parts.length - 1] : null;
+    if (prev && !prev[1] && ((prev[0].endsWith('-') && s[0] === '-') || (prev[0].endsWith('/') && s[0] === '*'))) parts.push([' ', false]);
+    parts.push([s, c]);
+    if (c) {
+      stats.comments++;
+      if (/\/\*.*\/\*/s.test(s)) stats.nestedBlock++;
+    }
+  };
+  const code = (s) => push(s, false);
+  const cmt = (s) => push(s, true);
+  const BLOCK = ['/* c */', '/**/', '/* -- x */', "/* ' */", '/* a\nb */', '/* /* n */ */', '/* /* a */ /* b */ */', '/* $$ */', '/* x /* y /* z */ */ */', '/* $a$ */'];
+  const LINE = ['-- c', '--', '-- /* x', "-- ' \"", '-- $$', '---', '-- */', '-- $a$'];
+  const TERMS = ['\n', '\r\n', '\r'];
+  const usable = (list) => list.filter((c) => !open.some((t) => c.includes(t)));
+  const gap = () => {
+    const r = rnd();
+    if (r < 0.5) code(pick([' ', '\t', '  ']));
+    else if (r < 0.65) code(pick(TERMS));
+    else if (r < 0.85) {
+      code(' ');
+      cmt(pick(usable(BLOCK)));
+      if (chance(0.6)) code(' ');
+    } else {
+      code(' ');
+      cmt(pick(usable(LINE)));
+      code(pick(TERMS));
+    }
+  };
+  const IDENTS = ['a', 'tbl', 'x$y', 'x$$y', '_t', 'e', 'E', 'ab$1', '\u{E9}', 'foo$bar$'];
+  const E_IDENTS = ['ae', 'xE', 'tableE', 'foo$e'];
+  const body = (esc) => {
+    const segs = esc ? ['abc', ' ', '--', '/*', '*/', '\\\\', "\\'", '\\n', "''", '$$'] : ['abc', ' ', '--', '/*', '*/', '\\', "''", '$$', '\n', '"'];
+    let s = '';
+    for (let k = rnd() * 4; k > 0; k--) s += pick(segs);
+    return s;
+  };
+  // inside a dollar-quoted body the FIRST occurrence of the tag closes it, even in the middle of what looks like an identifier
+  const idents = () => IDENTS.filter((i) => !open.some((t) => i.includes(t)));
+  const operand = (depth) => {
+    const r = rnd();
+    if (r < 0.2) code(pick(idents()));
+    else if (r < 0.3) code(pick(['1', '2.5', '1e3', '$1', '$2']));
+    else if (r < 0.45) {
+      code("'" + body(false) + "'");
+      stats.strings++;
+    } else if (r < 0.55) {
+      // an E'..' string: backslash escapes, and E is a prefix because a space precedes it
+      code(' ');
+      code(pick(['E', 'e']) + "'" + body(true) + "'");
+      stats.eStrings++;
+    } else if (r < 0.62) {
+      // the E follows an identifier character, so this is an ordinary string and the backslash is plain
+      code(pick(E_IDENTS) + "'" + body(false) + "\\'");
+      stats.strings++;
+    } else if (r < 0.72) code('"' + pick(['Q', 'a b', 'x""y', '--', '/*', 'e\nf']) + '"');
+    else if (r < 0.9 && depth < 2) {
+      const tag = pick(['$$', '$a$', '$body$', '$_x1$', '$\u{E9}$'].filter((t) => !open.includes(t)));
+      stats.dollar++;
+      code(tag);
+      open.push(tag);
+      for (let k = rnd() * 4; k > 0; k--) {
+        gap();
+        const q = rnd();
+        if (q < 0.4) operand(depth + 1);
+        else if (q < 0.6) code(pick(['select', 'begin', 'return', ';', ',']));
+        else code(pick(['x', 'y']));
+      }
+      if (chance(0.3)) {
+        // a line comment that runs up to its own closing tag on the same line
+        code(' ');
+        cmt(pick(['-- note ', '-- ', '--']));
+      }
+      open.pop();
+      code(tag);
+    } else code(pick(idents()));
+  };
+  const stmt = () => {
+    code(pick(['select ', 'insert into t values (', 'update t set a = ', 'create function f() as ']));
+    operand(0);
+    for (let k = rnd() * 3; k > 0; k--) {
+      gap();
+      code(pick(['+', '=', '||', '<>', '::', ',', '-', '/', '*']));
+      gap();
+      operand(0);
+    }
+    code(pick([';', ' ;']));
+  };
+  for (let s = 1 + Math.floor(rnd() * 5); s > 0; s--) {
+    stmt();
+    if (chance(0.5)) {
+      code(' ');
+      cmt(chance(0.5) ? pick(LINE) : pick(BLOCK));
+    }
+    code(pick(TERMS));
+  }
+  if (chance(0.3)) cmt(pick(LINE));
+  let text = '';
+  let expected = '';
+  for (const [s, isC] of parts) {
+    text += s;
+    expected += isC ? s.replace(GEN_COMMENT_BLANKER, ' ') : s;
+  }
+  return { text, expected, stats };
+}
+
+const GEN_JS_PROGRAMS = 700;
+const GEN_JS_CUT_PROGRAMS = 24;
+const GEN_SQL_PROGRAMS = 500;
+const firstDiff = (a, b) => {
+  let o = 0;
+  while (o < a.length && a[o] === b[o]) o++;
+  return o;
+};
+
+// ---- characterization digests ("token soup") -----------------------------------------------------------
+// The generators above say what a stripper must DO on well-formed programs. A digest says it has not CHANGED on
+// malformed ones: seeded pseudo-random concatenations of lexically significant tokens (unterminated strings,
+// stray closers, half-written heredocs, nested openers) are stripped and the exact output plus the exact issues
+// are hashed. The digest asserts no correctness -- it is a golden master over inputs nobody would write by hand --
+// so a deliberate behaviour change MUST re-pin it (the failing check prints the new value), and an accidental one
+// cannot hide. Pinned from the implementation as repaired; the correctness oracle is the generators.
+function soupDigest(fn, tokens, seed, count, maxLen) {
+  const rnd = mulberry32(seed);
+  const h = createHash('sha256');
+  let changed = 0;
+  let withIssues = 0;
+  for (let k = 0; k < count; k++) {
+    let s = '';
+    for (let j = 1 + Math.floor(rnd() * maxLen); j > 0; j--) s += tokens[Math.floor(rnd() * tokens.length)];
+    let r;
+    try {
+      r = fn(s);
+    } catch (e) {
+      h.update('threw ' + (e && e.name) + '\0');
+      continue;
+    }
+    h.update(r.text + '\0' + JSON.stringify(r.issues) + '\0');
+    if (r.text !== s) changed++;
+    if (r.issues.length) withIssues++;
+  }
+  return { digest: h.digest('hex'), changed, withIssues };
+}
+
+const SOUP = {
+  js: { seed: 4201, count: 9000, maxLen: 14, tokens: ['/', '//', '/*', '*/', "'", '"', '\x60', '${', '}', '{', '(', ')', '[', ']', '\\', '\n', '\r\n', ' ', 'a', 'z', 'return ', 'x', '1', '.5', '.', '...', '<', '>', '<a>', '</a>', '</', '/>', '=', '+', '++', '-', 'in ', '#', '!', '$', '\u{2028}', '\u{A0}', '#!', '?.'] },
+  sql: { seed: 4202, count: 7000, maxLen: 14, tokens: ["'", "''", '"', '""', '--', '-- c', '/*', '*/', '\n', '\r', ' ', '$$', '$a$', '$b$', '$1', 'E', 'e', 'a', ';', '\\', '(', ')', 'x$', '$', '/* /*'] },
+  sh: { seed: 4203, count: 7000, maxLen: 14, tokens: ["'", '"', '\x60', '$', '$(', '${', '$((', '))', '(', ')', '{', '}', '#', ' ', '\n', '\\', '\\\n', ';', '|', '&', '<', '<<', '<<-', '<<EOF', 'EOF', '>', 'a', "$'", '=', '\t', '\r\n', '!', ':', '\\\r\n', '<<"E"', "<<'E'", 'E'] },
+  yaml: { seed: 4204, count: 5000, maxLen: 14, tokens: ['#', ' ', '\n', '\r\n', ':', '- ', '|', '>', '|-', '>+', '|2', "'", '"', '\\', 'run', 'key', '!!str ', '&a ', '? ', '[', ']', '{', '}', ',', '\t', 'echo ', '# c', '"q"', "''", ': ', '  '] },
+  docker: { seed: 4205, count: 4000, maxLen: 14, tokens: ['#', ' ', '\n', '\r\n', 'RUN ', 'COPY ', 'ADD ', 'FROM ', '<<', '<<-', 'EOF', '"EOF"', "'EOF'", '\\', '\\\n', '# syntax=x', 'a', '\t', '\\\r\n'] },
+  dotenv: { seed: 4206, count: 4000, maxLen: 14, tokens: ['#', ' ', '\n', '\r\n', 'K=', 'export ', '"', "'", '\x60', '\\', 'v', '=', '\t'] },
+  caddy: { seed: 4207, count: 4000, maxLen: 14, tokens: ['#', ' ', '\n', '\r\n', '{', '}', '"', '\x60', '\\', '<<', 'EOF', 'EOF 200', 'a', '\t', "'", '<<EOF', 'x#'] },
+};
+const SOUP_PINNED = {
+  js: 'f9e2cba37dc3f1fabd2d1d00646e23a9ea39ee1579c20950a9554aff684d5598',
+  jsx: '42ca824bfe865cda8c9bae71e9f732b75065851fe5fcf9c026708cf1dff650ae',
+  sql: 'e820e74e8bedb4f603fbce9533837cd5053fa9090979f886b28d34cf2f365573',
+  sh: '4827a3d4efefe0e1934d0df4a6467aab917da524e88edb04318b966c0c063f98',
+  yaml: '068ef75873a3694868a025de1425dc83ca691c6e7b96b4250407fb682e203969',
+  docker: 'c5c4bd30008d6c0e62f72cf943b299d3447950e375e92879f5d984e498868655',
+  dotenv: '185b7a3ab21875be5b5fe1ce2e821ca62361b65763c9ff0e3d53b9e573511f95',
+  caddy: 'b12e8ce4dfac219c8fea913aa46d96cfb04714682c0218000ebfb5b948a03081',
+};
+const SOUP_RUN = {
+  js: (s) => stripCommentsDetailed(s, { jsx: false }),
+  jsx: (s) => stripCommentsDetailed(s, { jsx: true }),
+  sql: (s) => stripSqlCommentsDetailed(s),
+  sh: (s) => stripShellCommentsDetailed(s),
+  yaml: (s) => {
+    const a = stripYamlCommentsDetailed(s);
+    const b = stripYamlCommentsDetailed(s, { blockScalars: 'run' });
+    const c = stripYamlCommentsDetailed(s, { blockScalars: 'comments' });
+    return { text: a.text + '\x01' + b.text + '\x01' + c.text, issues: [...a.issues, ...b.issues, ...c.issues] };
+  },
+  docker: (s) => stripDockerfileCommentsDetailed(s),
+  dotenv: (s) => stripDotenvCommentsDetailed(s),
+  caddy: (s) => stripCaddyfileCommentsDetailed(s),
+};
+
 export function selfTest() {
   const checks = [];
   const add = (name, ok, detail = '') => checks.push({ name, ok: !!ok, detail: String(detail) });
@@ -2098,6 +2691,147 @@ export function selfTest() {
     const off = stripComments(src, { jsx: false });
     const on = stripComments(src);
     add('limits/jsx-off-reads-jsx-text-slashes-as-comment (documented limit)', !off.includes('const k = 1;') && on.includes('const k = 1;'), '');
+  }
+
+  // 9. Character classes. The lexical predicates are private, so they are checked against a specification written
+  //    here independently of the numeric ranges in the implementation, over EVERY code unit up to U+3100 (plus the
+  //    byte-order mark and U+FFFF). A boundary that is off by one cannot hide: nothing in a hand-written case list
+  //    happens to contain `Z`, `9` or `\x7f` in the right place.
+  {
+    const ASCII = (c) => c.charCodeAt(0) < 128;
+    const SPEC = {
+      isLineTerm: (c) => /^[\n\r\u{2028}\u{2029}]$/u.test(c),
+      isWs: (c) => /^\s$/.test(c),
+      isIdentStart: (c) => (ASCII(c) ? /^[A-Za-z_$\\#]$/.test(c) : !/^\s$/.test(c)),
+      isIdentPart: (c) => (ASCII(c) ? /^[A-Za-z0-9_$\\]$/.test(c) : !/^\s$/.test(c)),
+      isNumPart: (c) => (ASCII(c) ? /^[A-Za-z0-9_.]$/.test(c) : false),
+      isJsxNameStart: (c) => (ASCII(c) ? /^[A-Za-z_$]$/.test(c) : !/^\s$/.test(c)),
+      isJsxNameChar: (c) => (ASCII(c) ? /^[A-Za-z0-9_$\-.:]$/.test(c) : !/^\s$/.test(c)),
+    };
+    const IMPL = { isLineTerm, isWs, isIdentStart, isIdentPart, isNumPart, isJsxNameStart, isJsxNameChar };
+    const units = [];
+    for (let k = 0; k <= 0x3100; k++) units.push(String.fromCharCode(k));
+    units.push('\u{FEFF}', '\u{FFFF}');
+    const compare = (impls) => {
+      const bad = [];
+      for (const name of Object.keys(SPEC)) {
+        let wrong = 0;
+        let first = -1;
+        for (const c of units) {
+          if (Boolean(impls[name](c)) !== SPEC[name](c)) {
+            wrong++;
+            if (first < 0) first = c.charCodeAt(0);
+          }
+        }
+        if (wrong) bad.push(`${name}: ${wrong} code units differ (first U+${first.toString(16).toUpperCase().padStart(4, '0')})`);
+      }
+      return bad;
+    };
+    const bad = compare(IMPL);
+    add('classes/lexical-predicates-match-an-independent-specification (code units 0..0x3100)', bad.length === 0, bad.join('; '));
+    add('classes/jsx-name-start-of-nothing-is-false', isJsxNameStart(undefined) === false, '');
+    // the check must be able to fail: off-by-one and swapped-range predicates are rejected
+    const offByOne = { ...IMPL, isIdentStart: (c) => IMPL.isIdentStart(c) && c !== 'z', isNumPart: (c) => IMPL.isNumPart(c) || c === ':', isWs: (c) => IMPL.isWs(c) && c !== '\u{A0}', isLineTerm: (c) => IMPL.isLineTerm(c) || c === '\u{85}' };
+    const caught = compare(offByOne);
+    add('lethality/class-check-rejects-off-by-one-predicates', caught.length === 4, `caught ${caught.length} of 4`);
+  }
+
+  // 10. Ground truth, JavaScript / TypeScript / TSX: the generator knows which characters are comments.
+  {
+    const rnd = mulberry32(20261101);
+    const tot = { programs: 0, comments: 0, strings: 0, templates: 0, regexes: 0, elements: 0, casts: 0, divisions: 0, cuts: 0 };
+    let first = null;
+    for (let k = 0; k < GEN_JS_PROGRAMS && first === null; k++) {
+      const jsx = k % 2 === 1;
+      const g = genJsProgram(rnd, { jsx });
+      tot.programs++;
+      for (const key of Object.keys(g.stats)) tot[key] += g.stats[key];
+      // a program without JSX is also run with JSX detection ON: its `<T>x` casts are tried as elements and rolled back
+      for (const mode of jsx ? [true] : [false, true]) {
+        const got = stripCommentsDetailed(g.text, { jsx: mode });
+        if (got.text !== g.expected) first = `program #${k} (jsx ${mode}): output differs from the generator's comment mask at offset ${firstDiff(got.text, g.expected)}`;
+        else if (got.issues.length) first = `program #${k} (jsx ${mode}): ${got.issues.length} issue(s) on a well-formed program`;
+        if (first) break;
+      }
+      // truncation: every prefix of the first programs, cut only where the expectation is defined
+      if (first === null && k < GEN_JS_CUT_PROGRAMS) {
+        for (let c = 0; c <= g.text.length && first === null; c++) {
+          if (!g.cutOk(c)) continue;
+          tot.cuts++;
+          let out;
+          try {
+            out = stripCommentsDetailed(g.text.slice(0, c), { jsx }).text;
+          } catch (e) {
+            out = `threw ${e && e.name}`;
+          }
+          if (out !== g.expected.slice(0, c)) first = `program #${k} (jsx ${jsx}) cut at ${c}/${g.text.length}: prefix output differs from the comment mask`;
+        }
+      }
+    }
+    add(`generator/js-comment-mask-is-exact (${GEN_JS_PROGRAMS} programs, both JSX modes, every prefix of ${GEN_JS_CUT_PROGRAMS})`, first === null, first || '');
+    add(
+      'generator/js-is-not-vacuous',
+      tot.comments >= 3000 && tot.strings >= 600 && tot.templates >= 300 && tot.regexes >= 400 && tot.elements >= 250 && tot.casts >= 60 && tot.divisions >= 600 && tot.cuts >= 8000,
+      JSON.stringify(tot),
+    );
+    // the oracle can fail: strippers that are right on easy input but not on this one are rejected
+    const mismatch = (fn, n) => {
+      const r = mulberry32(20261101);
+      let bad = 0;
+      for (let k = 0; k < n; k++) {
+        const g = genJsProgram(r, { jsx: k % 2 === 1 });
+        if (fn(g.text).text !== g.expected) bad++;
+      }
+      return bad;
+    };
+    const n = 200;
+    add('lethality/js-generator-rejects-regex-line-deleter', mismatch(wrongRegexLine, n) > n * 0.8, `rejected ${mismatch(wrongRegexLine, n)}/${n}`);
+    add('lethality/js-generator-rejects-quote-aware-but-template-regex-jsx-blind-stripper', mismatch((s) => wrongStateful(s), n) > n * 0.8, `rejected ${mismatch((s) => wrongStateful(s), n)}/${n}`);
+    const jsxOff = (s) => stripCommentsDetailed(s, { jsx: false }); // the real stripper with JSX detection OFF, run on JSX programs
+    add('lethality/js-generator-rejects-jsx-detection-off-on-jsx-programs', mismatch(jsxOff, n) > 10, `rejected ${mismatch(jsxOff, n)}/${n}`);
+  }
+
+  // 10b. Ground truth, SQL.
+  {
+    const rnd = mulberry32(20261102);
+    const tot = { programs: 0, comments: 0, strings: 0, dollar: 0, eStrings: 0, nestedBlock: 0 };
+    let first = null;
+    for (let k = 0; k < GEN_SQL_PROGRAMS && first === null; k++) {
+      const g = genSqlProgram(rnd);
+      tot.programs++;
+      for (const key of Object.keys(g.stats)) tot[key] += g.stats[key];
+      const got = stripSqlCommentsDetailed(g.text);
+      if (got.text !== g.expected) first = `program #${k}: output differs from the generator's comment mask at offset ${firstDiff(got.text, g.expected)}`;
+      else if (got.issues.length) first = `program #${k}: ${got.issues.length} issue(s) on a well-formed program`;
+    }
+    add(`generator/sql-comment-mask-is-exact (${GEN_SQL_PROGRAMS} programs)`, first === null, first || '');
+    add('generator/sql-is-not-vacuous', tot.comments >= 1500 && tot.strings >= 300 && tot.dollar >= 200 && tot.eStrings >= 150 && tot.nestedBlock >= 100, JSON.stringify(tot));
+    const r = mulberry32(20261102);
+    let bad = 0;
+    for (let k = 0; k < 200; k++) {
+      const g = genSqlProgram(r);
+      if (wrongSql(g.text).text !== g.expected) bad++;
+    }
+    add('lethality/sql-generator-rejects-dash-and-slash-star-regex-stripper', bad > 150, `rejected ${bad}/200`);
+  }
+
+  // 11. Characterization digests over token soup (see soupDigest). A mismatch prints the new value.
+  {
+    const actual = {};
+    const stats = {};
+    for (const name of Object.keys(SOUP_RUN)) {
+      const cfg = SOUP[name === 'jsx' ? 'js' : name];
+      const r = soupDigest(SOUP_RUN[name], cfg.tokens, cfg.seed, cfg.count, cfg.maxLen);
+      actual[name] = r.digest;
+      stats[name] = r;
+      add(`digest/${name}-token-soup (${cfg.count} inputs)`, r.digest === SOUP_PINNED[name], r.digest === SOUP_PINNED[name] ? '' : `digest is now ${r.digest}`);
+    }
+    // the digest is not vacuous (most inputs are changed by stripping, many raise issues) and it can fail
+    const live = Object.entries(stats).filter(([k]) => k !== 'yaml').every(([, r]) => r.changed > 100);
+    add('digest/token-soup-exercises-the-strippers (inputs change, issues are raised)', live && stats.js.withIssues > 500 && stats.sh.withIssues > 300 && stats.sql.withIssues > 300, JSON.stringify(Object.fromEntries(Object.entries(stats).map(([k, r]) => [k, [r.changed, r.withIssues]]))));
+    const cfg = SOUP.js;
+    const wrong = soupDigest((s) => wrongStateful(s), cfg.tokens, cfg.seed, cfg.count, cfg.maxLen).digest;
+    add('lethality/digest-differs-for-a-different-stripper', wrong !== actual.js && wrong !== actual.jsx, '');
   }
 
   return { ok: checks.every((c) => c.ok), checks };

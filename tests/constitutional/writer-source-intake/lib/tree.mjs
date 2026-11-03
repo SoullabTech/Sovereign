@@ -188,16 +188,21 @@ export function stripKindFor(rel, raw) {
     case '.sh':
     case '.bash':
       return 'sh';
-    default:
-      break;
   }
   if (!NAMED_FAMILY_EXCLUDED_EXT.has(ext)) {
     if (base === 'dockerfile' || base.startsWith('dockerfile.') || base.endsWith('.dockerfile') || base === 'containerfile' || base.startsWith('containerfile.')) return 'dockerfile';
     if (base === 'caddyfile' || base.startsWith('caddyfile.') || base.endsWith('.caddyfile')) return 'caddyfile';
     if (base.startsWith('.env.') || base.endsWith('.env')) return 'dotenv';
   }
-  if (ext === '' && typeof raw === 'string' && SHEBANG_SH_RE.test(raw.slice(0, 200).split('\n', 1)[0])) return 'sh';
+  if (ext === '' && typeof raw === 'string' && SHEBANG_SH_RE.test(firstLine(raw))) return 'sh';
   return 'none';
+}
+
+// The WHOLE first line, however long: a cut at a fixed width could end an interpreter name and let `shx` pass for
+// `sh` (or hide a long interpreter path from the match altogether).
+function firstLine(raw) {
+  const nl = raw.indexOf('\n');
+  return nl === -1 ? raw : raw.slice(0, nl);
 }
 
 function runStripper(kind, raw) {
@@ -220,7 +225,7 @@ function runStripper(kind, raw) {
     case 'caddyfile':
       return stripCaddyfileCommentsDetailed(raw);
     default:
-      return { text: raw, issues: [] };
+      throw new Error(`runStripper: no stripper for kind ${JSON.stringify(kind)}`); // 'none' is answered before this is called
   }
 }
 
@@ -820,6 +825,26 @@ function makeGitFixture() {
   return { base, R, W, ND, BT, BB, c1, c2 };
 }
 
+// A small throw-away tree for one check: files, relative symlinks, optionally committed to a fresh repository.
+function makeMini(label, files, { git = false, links = {} } = {}) {
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), `wsi-${label}-`));
+  const R = path.join(base, 'repo');
+  fs.mkdirSync(R);
+  for (const [rel, content] of Object.entries(files)) {
+    const f = path.join(R, rel);
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    fs.writeFileSync(f, content);
+  }
+  for (const [rel, target] of Object.entries(links)) fs.symlinkSync(target, path.join(R, rel));
+  if (git) {
+    const g = (...args) => gitSync(R, base, args);
+    g('init', '-q');
+    g('add', '-A');
+    g('-c', 'commit.gpgsign=false', 'commit', '-q', '-m', 'm1');
+  }
+  return { base, R };
+}
+
 // ---- known-wrong controls (never exported; used only by the lethality checks) ---------------------
 
 // The tree as it was BEFORE the repair: a walker that lists symlinked files and a symlinked prefix's
@@ -986,6 +1011,9 @@ const KIND_TABLE = [
   ['tool', '#!/bin/ksh\n', 'none'],
   ['tool', '#!/usr/bin/env python3\n', 'none'],
   ['tool', '#!/bin/bashful\n', 'none'],
+  ['tool', '#!/' + 'd'.repeat(300) + '/sh\n', 'sh'], // a first line longer than any fixed cut still names its interpreter
+  ['tool', '#!/' + 'd'.repeat(194) + '/shx\n', 'none'], // `sh` ends exactly 200 characters in, but `x` follows it
+  ['tool', '#!/' + 'd'.repeat(194) + '/sh \n', 'sh'],
   ['tool', '\n#!/bin/sh\n', 'none'],
   ['tool.txt', '#!/bin/sh\n', 'none'],
   ['README.md', undefined, 'none'],
@@ -1024,6 +1052,7 @@ export function selfTest(opts = {}) {
     C[name] = fn;
     run(name, () => fn(real));
   };
+  const minis = [];
   let fx = null;
   let gx = null;
   let gxErr = null;
@@ -1774,6 +1803,151 @@ export function selfTest(opts = {}) {
       return quiet === 0 && asked === 1 && again === asked && prov === asked + 1 && prov2 === prov ? true : `gitCalls ${quiet} -> ${asked} -> ${again} -> ${prov} -> ${prov2}`;
     }));
 
+    // ---- behaviours an independent mutation sweep found NOTHING pinning ------------------------------------------
+    // (operator-generated mutants of the implementation: each check below fails against at least one of them; the
+    //  matching hand-written mutants are in MUTATIONS so the audit keeps proving it)
+    const mini = (label, files, o) => {
+      const m = makeMini(label, files, o);
+      minis.push(m.base);
+      return m;
+    };
+
+    run('git/directories-of-the-tracked-and-commit-sources-are-exactly-the-parents-of-members', needGit(() => {
+      // one-character directory names, a directory that is a prefix of a file name, and skipped names AT THE ROOT
+      const m = mini('dirs', { 'q/r.ts': 'r', 'q/s/t.ts': 't', 'ab/cd/ef.ts': 'e', 'x.ts': 'x', 'dist/top.js': 'd', 'node_modules/m/i.js': 'n', '.next/n.js': 'n', 'lib/node_modules/dep.js': 'p', 'lib/ok.ts': 'k' }, { git: true });
+      const bad = [];
+      for (const source of ['tracked', 'commit']) {
+        const t = createTree(m.R, {}, { source });
+        for (const d of ['q', 'q/s', 'ab', 'ab/cd', 'dist', 'lib']) if (t.isDir(d) !== true) bad.push(`${source}:isDir(${d}) is not true`);
+        for (const d of ['q/r.t', 'q/r', 'a', 'ab/c', 'ab/cd/e', 'ab/cd/ef.t', 'x', 'qq']) if (t.isDir(d) !== false) bad.push(`${source}:isDir(${d}) is not false`);
+        const l = sameList(t.list(''), ['ab/cd/ef.ts', 'lib/ok.ts', 'q/r.ts', 'q/s/t.ts', 'x.ts']);
+        if (l !== true) bad.push(`${source}:list ${l}`);
+        if (sameList(t.list('dist'), ['dist/top.js']) !== true) bad.push(`${source}:list(dist)`);
+        if (sameList(t.list('lib'), ['lib/ok.ts']) !== true) bad.push(`${source}:list(lib)`);
+      }
+      return bad.length === 0 ? true : bad.join(' ');
+    }));
+    run('disk/a-one-character-symlinked-directory-is-not-passed-through', () => {
+      const m = mini('link1', { 'real/f.ts': 'REAL' }, { links: { Z: 'real' } });
+      const t = createTree(m.R);
+      const bad = [];
+      if (t.read('Z/f.ts') !== null) bad.push('read');
+      if (t.exists('Z/f.ts') || t.isFile('Z/f.ts') || t.isDir('Z')) bad.push('exists');
+      if (t.list('Z').length !== 0 || t.list('').includes('Z/f.ts')) bad.push('list');
+      if (sameList(t.symlinks(''), ['Z']) !== true) bad.push('symlinks');
+      return bad.length === 0 ? true : bad.join(' ');
+    });
+    run('stats/a-fresh-tree-has-done-nothing', () => {
+      const s = JSON.stringify(createTree(fx).stats());
+      return s === '{"diskReads":0,"walks":0,"strips":0,"gitCalls":0}' ? true : s;
+    });
+    run('read/only-a-vanished-file-or-directory-reads-as-nothing--every-other-fs-error-is-thrown', () => {
+      // injected through the live fs object: a file that disappears between lstat and read is "nothing", EACCES / EIO are not
+      const target = path.join(fx, 'a/x.ts');
+      const dirTarget = path.join(fx, 'a');
+      const realRead = fs.readFileSync;
+      const realReaddir = fs.readdirSync;
+      const fail = (code) => Object.assign(new Error(`injected ${code}`), { code });
+      const bad = [];
+      try {
+        for (const [code, nothing] of [['ENOENT', true], ['ENOTDIR', true], ['EISDIR', true], ['EACCES', false], ['EIO', false]]) {
+          fs.readFileSync = (p, ...rest) => {
+            if (p === target) throw fail(code);
+            return realRead(p, ...rest);
+          };
+          let got;
+          let thrown = null;
+          try {
+            got = createTree(fx).read('a/x.ts');
+          } catch (e) {
+            thrown = e;
+          }
+          if (nothing ? thrown !== null || got !== null : thrown === null || thrown.code !== code) bad.push(`read:${code}`);
+        }
+        fs.readFileSync = realRead;
+        for (const [code, nothing] of [['ENOENT', true], ['ENOTDIR', true], ['EACCES', false], ['EIO', false]]) {
+          fs.readdirSync = (p, ...rest) => {
+            if (p === dirTarget) throw fail(code);
+            return realReaddir(p, ...rest);
+          };
+          let got;
+          let thrown = null;
+          try {
+            got = createTree(fx).list('a');
+          } catch (e) {
+            thrown = e;
+          }
+          if (nothing ? thrown !== null || got.length !== 0 : thrown === null || thrown.code !== code) bad.push(`walk:${code}`);
+        }
+      } finally {
+        fs.readFileSync = realRead;
+        fs.readdirSync = realReaddir;
+      }
+      return bad.length === 0 ? true : bad.join(' ');
+    });
+    run('list/overlay-entries-under-a-root-level-skipped-directory-are-skipped--unless-it-is-the-prefix', () => {
+      const t = createTree(fx, { 'dist/x.js': 'x', 'node_modules/y.js': 'y', '.next/z.js': 'z', 'ok/w.js': 'w', 'a/node_modules/new.ts': 'n' });
+      const root = t.list('');
+      const bad = [];
+      for (const p of ['dist/x.js', 'node_modules/y.js', '.next/z.js']) if (root.includes(p)) bad.push('root-lists:' + p);
+      if (!root.includes('ok/w.js')) bad.push('root-misses:ok/w.js');
+      if (sameList(t.list('dist'), ['dist/x.js']) !== true) bad.push('list(dist)');
+      if (!t.list('a/node_modules').includes('a/node_modules/new.ts')) bad.push('list(a/node_modules)');
+      if (t.list('a').includes('a/node_modules/new.ts')) bad.push('a-lists-node_modules');
+      return bad.length === 0 ? true : bad.join(' ');
+    });
+    run('list/a-named-pipe-is-not-a-member', () => {
+      const m = mini('fifo', { 'a.ts': 'A' });
+      const r = spawnSync('mkfifo', [path.join(m.R, 'pipe')]);
+      if (r.error || r.status !== 0) return `mkfifo unavailable (${r.error ? r.error.code : r.status}); the special-file rule cannot be verified`;
+      const t = createTree(m.R);
+      return sameList(t.list(''), ['a.ts']) === true && t.read('pipe') === null && !t.exists('pipe') && t.symlinks('').length === 0 ? true : `listed: ${JSON.stringify(t.list(''))}`;
+    });
+    run('exists/an-empty-directory-stays-a-directory-while-the-overlay-deletes-or-adds-elsewhere', () => {
+      const bad = [];
+      for (const [label, ov] of [['delete-elsewhere', { 'a2/other.ts': null }], ['add-elsewhere', { 'zz/new.ts': 'n' }], ['delete-deep', { 'a/b/y.tsx': null }]]) {
+        const t = createTree(fx, ov);
+        if (t.isDir('empty') !== true || t.exists('empty') !== true) bad.push(label);
+      }
+      return bad.length === 0 ? true : 'an empty on-disk directory vanished: ' + bad.join(',');
+    });
+    run('listNonEmpty/the-message-names-the-prefix-and-only-a-requested-ext', () => {
+      const t = createTree(fx);
+      const a = throwsOf(() => t.listNonEmpty('nope'));
+      const b = throwsOf(() => t.listNonEmpty('a', { ext: '.nothing' }));
+      return a && a.message === 'listNonEmpty: no files under "nope"' && b && b.message === 'listNonEmpty: no files under "a" with ext ".nothing"' ? true : `${a && a.message} | ${b && b.message}`;
+    });
+    run('replace/a-duck-typed-pattern-is-not-a-RegExp', () => {
+      const e = throwsOf(() => createTree(fx).replace('a/x.ts', { source: 'export', flags: '' }, 'EXPORT'));
+      return e instanceof TypeError && /string or RegExp/.test(e.message) ? true : `threw ${e && e.name}/${e && e.message}`;
+    });
+    run('code/the-router-refuses-a-kind-it-has-no-stripper-for', () => {
+      const a = throwsOf(() => runStripper('none', 'x'));
+      const b = throwsOf(() => runStripper('bogus', 'x'));
+      return a instanceof Error && b instanceof Error && /no stripper/.test(a.message) && /no stripper/.test(b.message) ? true : 'did not throw';
+    });
+    run('git/a-git-that-cannot-run-is-thrown-not-read-as-no-repository', needGit((g) => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wsi-nogit-'));
+      minis.push(dir);
+      fs.writeFileSync(path.join(dir, 'git'), '#!/bin/sh\nexit 0\n', { mode: 0o644 }); // present, but with no execute bit
+      const had = process.env.PATH;
+      process.env.PATH = dir;
+      try {
+        const bad = [];
+        const check = (label, fn) => {
+          const e = throwsOf(fn);
+          if (!e || e.code !== 'EACCES' || e.name === 'GitUnavailable') bad.push(`${label}:${e ? e.code || e.name : 'no error'}`);
+        };
+        check('tracked', () => createTree(g.R, {}, { source: 'tracked' }));
+        check('commit', () => createTree(g.R, {}, { source: 'commit' }));
+        check('provenance', () => createTree(g.R).provenance());
+        check('trackingState', () => createTree(g.R).trackingState('lib/a.ts'));
+        return bad.length === 0 ? true : bad.join(' ');
+      } finally {
+        process.env.PATH = had;
+      }
+    }));
+
     // ---- smoke against the real repository (read-only) --------------------------------------
     run('repo/the-suite-is-where-we-think-it-is', () => {
       const t = createTree(repoRoot);
@@ -1979,8 +2153,9 @@ export function selfTest(opts = {}) {
   } finally {
     if (fx) fs.rmSync(fx, { recursive: true, force: true });
     if (gx) fs.rmSync(gx.base, { recursive: true, force: true });
+    for (const d of minis) fs.rmSync(d, { recursive: true, force: true });
   }
-  add('fixture/temp-directories-removed', fx !== null && !fs.existsSync(fx) && (gx === null || !fs.existsSync(gx.base)), fx ? '' : 'no fixture');
+  add('fixture/temp-directories-removed', fx !== null && !fs.existsSync(fx) && (gx === null || !fs.existsSync(gx.base)) && minis.every((d) => !fs.existsSync(d)), fx ? `${minis.length} extra directories` : 'no fixture');
   return { ok: checks.every((c) => c.ok), checks };
 }
 
@@ -2254,6 +2429,29 @@ const MUTATIONS = [
   ['trackingState-index-check-dropped', "if (loadIndex(shared).files.has(p)) return 'tracked';", ''],
   ['trackingState-ignored-check-dropped', "if (r.status === 0) return 'ignored';", ''],
   ['trackingState-no-git-throws', "if (e instanceof GitUnavailable) return 'no-git';", ''],
+  // ---- found by an independent, operator-generated mutation sweep (not hand-picked) --------------------------
+  ["kind-shebang-cut-at-a-fixed-width", "SHEBANG_SH_RE.test(firstLine(raw))", "SHEBANG_SH_RE.test(raw.slice(0, 200).split('\\n', 1)[0])"],
+  ["kind-shebang-first-line-is-the-whole-text", "return nl === -1 ? raw : raw.slice(0, nl);", "return raw;"],
+  ["runStripper-unknown-kind-returns-raw", "throw new Error(`runStripper: no stripper for kind ${JSON.stringify(kind)}`);", "return { text: raw, issues: [] };"],
+  ["dirsOf-walks-past-the-root", "while (i > 0) {", "while (true) {"],
+  ["dirsOf-skips-one-character-directories", "while (i > 0) {", "while (i > 1) {"],
+  ["disk-ancestor-unchecked-for-one-character-names", "if (cut <= 0 || diskKind(shared, rel.slice(0, cut)) === 'dir') {", "if (cut <= 1 || diskKind(shared, rel.slice(0, cut)) === 'dir') {"],
+  ["stats-gitCalls-starts-nonzero", "stats: { diskReads: 0, walks: 0, strips: 0, gitCalls: 0 },", "stats: { diskReads: 0, walks: 0, strips: 0, gitCalls: 1 },"],
+  ["memberContent-swallows-every-error", "if (!(e && (e.code === 'ENOENT' || e.code === 'ENOTDIR' || e.code === 'EISDIR'))) throw e;", ""],
+  ["memberContent-vanished-file-is-undefined", "if (!(e && (e.code === 'ENOENT' || e.code === 'ENOTDIR' || e.code === 'EISDIR'))) throw e;\n    return null;", "if (!(e && (e.code === 'ENOENT' || e.code === 'ENOTDIR' || e.code === 'EISDIR'))) throw e;\n    return undefined;"],
+  ["memberContent-only-enoent-is-nothing", "(e.code === 'ENOENT' || e.code === 'ENOTDIR' || e.code === 'EISDIR')", "(e.code === 'ENOENT')"],
+  ["walk-swallows-every-error", "if (e && (e.code === 'ENOENT' || e.code === 'ENOTDIR')) return;\n        throw e;", "return;"],
+  ["walk-only-enoent-is-nothing", "if (e && (e.code === 'ENOENT' || e.code === 'ENOTDIR')) return;", "if (e && (e.code === 'ENOENT')) return;"],
+  ["walk-index-root-skip-off-by-one", "const skipped = (rel) => rel.slice(prefix === '' ? 0 : prefix.length + 1)", "const skipped = (rel) => rel.slice(prefix === '' ? 1 : prefix.length + 1)"],
+  ["list-overlay-segcount-of-the-root", "const segCount = p === '' ? 0 : p.split('/').length;", "const segCount = p === '' ? 1 : p.split('/').length;"],
+  ["list-overlay-segcount-ignores-the-prefix", "const segCount = p === '' ? 0 : p.split('/').length;", "const segCount = 0;"],
+  ["walk-lists-special-files", "} else if (ent.isFile()) files.push(childRel);", "} else files.push(childRel);"],
+  ["isDir-any-overlay-entry-is-a-deletion", "if (v === null && k.startsWith(p + '/')) {", "if (v === null || k.startsWith(p + '/')) {"],
+  ["listNonEmpty-message-always-names-an-ext", "${options && options.ext ? `", "${options || options.ext ? `"],
+  ["replace-accepts-a-duck-typed-pattern", "} else if (pattern instanceof RegExp) {", "} else if (true) {"],
+  ["git-spawn-error-not-looked-at", "if (r.error) {", "if (false) {"],
+  ["provenance-swallows-spawn-errors", "if (!(e instanceof GitUnavailable)) throw e;", ";"],
+  ["trackingState-swallows-spawn-errors", "if (e instanceof GitUnavailable) return 'no-git';\n      throw e;", "return 'no-git';"],
 ];
 
 export async function mutationAudit() {
