@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { parseStudioActions } from '@/lib/writersStudio/studioActions';
 import Link from 'next/link';
 import { GROUND, INK, MAIA_ACCENT, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText, typeStyle } from '../studio/StudioType';
@@ -155,6 +156,8 @@ export interface WorkConversationProps {
   sectionId: string | null;
   /** Optional member-facing starter held in the composer. Never auto-sent. */
   initialDraft?: string;
+  /** Design 1B: open a Develop place MAIA offered (navigation only). Absent → no such button. */
+  onStudioPlace?: (place: 'develop-overview' | 'editorial-pass') => void;
   onClose: () => void;
 }
 
@@ -170,7 +173,7 @@ export default function WorkConversation(props: WorkConversationProps) {
 }
 
 function ScopedWorkConversation({
-  work, manuscriptId, sectionId, initialDraft = '', onClose, identity,
+  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, identity,
 }: WorkConversationProps & { identity: ReturnType<typeof useMemberIdentity> }) {
   const { keeps } = useManuscriptKeeps(manuscriptId);
   const [showKeeps, setShowKeeps] = useState(false);
@@ -231,6 +234,26 @@ function ScopedWorkConversation({
     setThreadId(id);
     if (t) setThread(t);
   }, [manuscriptId, work.id]);
+
+  /* ⭐ Design 2A (founder ruling 2026-11-02): the writer may set this
+     conversation aside and begin again, as in Passage Focus. Nothing is deleted:
+     the earlier thread stays on the server and is offered with the others next
+     time. `fresh` here is the writer's explicit act after a SUCCESSFUL lookup,
+     never a rounded failure, so the next question may lawfully open a thread.
+     The composer draft is the writer's and stays; an unsent correction belongs
+     to a turn of the old thread, so the control waits until it is sent or cleared.
+     It is not shown while a thread is still being adopted (threadId null). */
+  const canStartFresh = pending === null && !correctionBusy && correctionDraft.length === 0
+    && (threadId !== null || decision?.kind === 'choose');
+  const startFresh = () => {
+    if (!canStartFresh || inFlightRef.current) return;
+    setThreadId(null);
+    setThread(null);
+    setDecision({ kind: 'fresh' });
+    setRefusal(null);
+    setCorrectingTurn(null);
+    setCorrectionStatus(null);
+  };
 
   /* ⛔ `sectionId` IS NOT A DEPENDENCY. Discovery is about the Work. */
   useEffect(() => {
@@ -381,6 +404,7 @@ function ScopedWorkConversation({
   }
 
   const turns = thread?.turns ?? [];
+  const latestMaiaIndex = [...turns].reverse().find((x) => x.speaker === 'maia')?.index ?? null;
 
   return (
     <div
@@ -415,6 +439,23 @@ function ScopedWorkConversation({
         >
           <StudioText role="metadata" as="span">Where are we?</StudioText>
         </button>
+        {(threadId !== null || decision?.kind === 'choose') && (
+          <button
+            type="button"
+            onClick={startFresh}
+            disabled={!canStartFresh}
+            data-start-fresh-work-conversation="true"
+            title="Sets this conversation aside. It stays saved."
+            style={{
+              background: 'transparent', border: `1px solid ${RULE.soft}`,
+              borderRadius: RADIUS.sm, padding: `${SPACE.hairline}px ${SPACE.tight}px`,
+              cursor: canStartFresh ? 'pointer' : 'default', color: INK.secondary,
+              opacity: canStartFresh ? 1 : 0.5,
+            }}
+          >
+            <StudioText role="metadata" as="span">Start a new conversation</StudioText>
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setFocusMode((v) => !v)}
@@ -510,8 +551,37 @@ function ScopedWorkConversation({
                 fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap',
               }}
             >
-              {t.body}
+              {t.speaker === 'maia' ? parseStudioActions(t.body, 'work-conversation').text : t.body}
             </StudioText>
+            {(() => {
+              /* Design 1B: only MAIA's latest reply may offer a control, and only
+                 one this room can honour. Clicking only takes the writer there. */
+              if (t.speaker !== 'maia' || t.index !== latestMaiaIndex) return null;
+              const offered = parseStudioActions(t.body, 'work-conversation').action;
+              if (!offered) return null;
+              const place = offered.id === 'develop-overview' || offered.id === 'editorial-pass' ? offered.id : null;
+              if (place && !onStudioPlace) return null;
+              const run = () => {
+                if (offered.id === 'new-conversation') { startFresh(); return; }
+                if (place && requestConversationDeparture()) onStudioPlace?.(place);
+              };
+              const enabled = offered.id === 'new-conversation' ? canStartFresh : pending === null;
+              return (
+                <button
+                  type="button"
+                  onClick={run}
+                  disabled={!enabled}
+                  data-studio-action={offered.id}
+                  style={{
+                    marginTop: SPACE.tight, background: 'transparent', border: `1px solid ${RULE.soft}`,
+                    borderRadius: RADIUS.sm, padding: `${SPACE.hairline}px ${SPACE.tight}px`,
+                    cursor: enabled ? 'pointer' : 'default', color: INK.secondary, opacity: enabled ? 1 : 0.5,
+                  }}
+                >
+                  <StudioText role="metadata" as="span">{offered.label}</StudioText>
+                </button>
+              );
+            })()}
             {t.speaker === 'maia' && threadId ? (
               <div style={{ marginTop: SPACE.tight }} data-maia-correction={t.index}>
                 {correctingTurn !== t.index ? (

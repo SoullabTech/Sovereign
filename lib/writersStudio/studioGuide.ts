@@ -39,7 +39,7 @@ export const STUDIO_CONTROLS: readonly StudioControl[] = [
   { label: 'Save my version', where: 'in Passage Focus and Craftsman\'s Table, once the writer has worked on the wording', does: 'saves the writer\'s own working version without changing the manuscript' },
   { label: 'Apply my version', where: 'beside Save my version', does: 'puts the writer\'s version into the manuscript; only the writer can do this' },
   { label: 'Undo', where: 'after a version has been applied', does: 'restores the passage as it was before applying' },
-  { label: 'Start a new conversation', where: 'in the Passage Focus header, while a conversation is open', does: 'sets the earlier conversation aside (it stays saved) so the next question starts fresh' },
+  { label: 'Start a new conversation', where: 'in the Passage Focus header and the Work conversation header, while a conversation is open', does: 'sets the earlier conversation aside (it stays saved) so the next question starts fresh' },
   { label: 'Return to manuscript', where: 'in the Passage Focus header', does: 'closes Passage Focus and goes back to the manuscript' },
   { label: 'Revision latitude', where: 'Preferences in the Passage Focus header', does: 'how far any revision MAIA proposes may go, from Light upward' },
   { label: 'Why this?', where: 'on a revision mark in the manuscript', does: 'MAIA explains why she suggested that change' },

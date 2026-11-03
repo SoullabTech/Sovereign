@@ -16,6 +16,7 @@ import { usePathname } from 'next/navigation';
 import { MAIA_WORLDS, MAIA_UTILITIES, getBoundaryFromPathname, getVisibleBoundaries } from '@/lib/navigation/maiaNav';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
 import { useSession } from '@/lib/hooks/useSession';
+import { useAstrologyTester } from '@/lib/hooks/useAstrologyTester';
 import type { MaiaWorldId, MaiaRailItemId, BoundaryId } from '@/lib/navigation/types';
 import { badgeDelay, fetchColabBadge, lastColabTotal } from '@/lib/navigation/colabBadge';
 
@@ -145,7 +146,8 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
   // Founder/practitioner can see operational rooms (Pro Studio, Book Studio, Circles, Lab Tools).
   // Conflated for v1 per Move 1 spec — no separate founder role yet on the client.
   const isFounder = isAdmin || isPractitioner;
-  const visibleBoundaries = getVisibleBoundaries(isFounder);
+  const isAstrologyTester = useAstrologyTester();
+  const visibleBoundaries = getVisibleBoundaries(isFounder, isAstrologyTester);
 
   // Derive active boundary from pathname if not explicitly provided
   const resolvedBoundary = activeBoundary ?? (pathname ? getBoundaryFromPathname(pathname) : null);
