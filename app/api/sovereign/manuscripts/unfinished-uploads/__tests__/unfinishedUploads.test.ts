@@ -161,6 +161,21 @@ describe('POST discard — routing and identity', () => {
     expect(incomplete).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['incomplete', incomplete],
+    ['unclaimed', unclaimed],
+  ] as const)('an UPPERCASE uuid is valid input but is handed to the %s door in the database\'s lowercase spelling (refusal markers are compared against that text)', async (kind, door) => {
+    (door as jest.Mock).mockResolvedValue({ kind: 'discarded', bytesDestroyed: true });
+    // A uuid made only of digits has no case, so it could not tell a lowercasing route from one that passes the id through.
+    const HEX = 'abcdefab-cdef-4abc-8def-abcdefabcdef';
+    expect(HEX.toUpperCase()).not.toBe(HEX);
+    const res = await POST(post({ id: HEX.toUpperCase(), kind }));
+    expect(res.status).toBe(200);
+    expect(door).toHaveBeenCalledTimes(1);
+    expect(door).toHaveBeenCalledWith(HEX, SESSION_MEMBER);
+    expect((door as jest.Mock).mock.calls[0][0]).not.toMatch(/[A-F]/);
+  });
+
   it('ignores any member identity supplied in the body or in headers', async () => {
     incomplete.mockResolvedValue({ kind: 'not_found' });
     await POST(post({ id: ID, kind: 'incomplete', memberId: OTHER_MEMBER, member_id: OTHER_MEMBER }, { 'x-member-id': OTHER_MEMBER }));

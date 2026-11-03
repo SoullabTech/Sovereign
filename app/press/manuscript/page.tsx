@@ -371,7 +371,18 @@ function PressManuscriptRoom() {
             : { confirmedText: draftText }),
         }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        // A refusal no retry can fix (the held original is gone, or a Work already holds it): drop the dead reference so the
+        // next press does not resend it, and say so plainly. A retryable refusal keeps the preview and the reference.
+        const refusal = await res.json().catch(() => null) as { code?: unknown; error?: unknown } | null;
+        if (refusal && (refusal.code === 'source_original_unavailable' || refusal.code === 'source_already_attached')) {
+          setSourceArrivalId(null);
+          setPreview(null); // back to the step where the member chooses or pastes again; the refusal is shown there
+          setWarnings([typeof refusal.error === 'string' ? refusal.error : 'The original is no longer held. Choose the file again to continue.']);
+          return;
+        }
+        throw new Error(`HTTP ${res.status}`);
+      }
       const data = await res.json();
       setPreview(null);
       setDraftText('');
@@ -408,7 +419,7 @@ function PressManuscriptRoom() {
     // "ordinary". The server requires this claim and refuses without it, so this caller must send it.
     const posture = readCurrentSanctuaryPosture();
     if (!posture.resolved) {
-      setWarnings(['Choose Ordinary or Sanctuary in Quick Settings first. Nothing has been sent.']);
+      setWarnings(['Your Sanctuary setting could not be read on this device, so nothing was sent. Open MAIA here once, then try again.']);
       return;
     }
     if (posture.sanctuary) {

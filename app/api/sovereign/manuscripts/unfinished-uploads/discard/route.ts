@@ -49,11 +49,14 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
   }
-  const id = (body as { id?: unknown } | null)?.id;
+  const rawId = (body as { id?: unknown } | null)?.id;
   const kind = (body as { kind?: unknown } | null)?.kind;
-  if (typeof id !== 'string' || !UUID_PATTERN.test(id) || (kind !== 'incomplete' && kind !== 'unclaimed')) {
+  if (typeof rawId !== 'string' || !UUID_PATTERN.test(rawId) || (kind !== 'incomplete' && kind !== 'unclaimed')) {
     return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
   }
+  // One spelling past this point. The pattern is case-insensitive (an uppercase UUID is a valid UUID), but everything
+  // downstream - lookups, refusal markers, the deletion ledger - is compared against the database's lowercase text.
+  const id = rawId.toLowerCase();
 
   try {
     if (kind === 'incomplete') {

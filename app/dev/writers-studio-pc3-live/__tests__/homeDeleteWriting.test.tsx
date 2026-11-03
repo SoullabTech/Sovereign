@@ -19,7 +19,7 @@ describe('deleting a writing from the Studio Home', () => {
     render();
     expect(container.textContent).toContain('Delete “ELEMENTAL ALCHEMY interior 217pp NEWCH10”?');
     expect(container.textContent).toContain('It cannot be undone and there is no archive');
-    expect(container.textContent).toContain('Private backups made before today');
+    expect(container.textContent).toContain('Private backups already taken');
     expect(container.textContent).not.toContain('nothing is kept');
   });
   it('offers "Delete permanently" and "Keep it", and the safe one is focused first', () => {

@@ -15,7 +15,7 @@
  * Exit 2: refused to run (bad arguments, or --apply without confirmation).
  */
 import { closePool } from '../../lib/db/postgres';
-import { sweepAbandonedLandings, SweepConfigError, SWEEP_DEFAULT_LIMIT, SWEEP_MIN_AGE_HOURS } from '../../lib/manuscript/source/sweepAbandonedLandings';
+import { sweepAbandonedLandings, SweepConfigError, SWEEP_DEFAULT_LIMIT, SWEEP_MAX_LIMIT, SWEEP_MIN_AGE_HOURS } from '../../lib/manuscript/source/sweepAbandonedLandings';
 
 export const CONFIRM_VALUE = 'delete-abandoned-uploads';
 
@@ -33,7 +33,9 @@ export function parseSweepArgs(argv: string[], env: Record<string, string | unde
     else return { ok: false, reason: `unknown argument ${arg.slice(0, 40)}` };
   }
   if (!Number.isInteger(olderThanHours) || olderThanHours < SWEEP_MIN_AGE_HOURS) return { ok: false, reason: `--older-than-hours must be an integer of at least ${SWEEP_MIN_AGE_HOURS}` };
-  if (!Number.isInteger(limit) || limit < 1) return { ok: false, reason: '--limit must be a positive integer' };
+  // The library refuses a limit above its ceiling; the script must refuse it too, BEFORE any connection, as the documented exit 2
+  // (a scheduler reads exit 1 as "a removal failed", which a bad argument is not).
+  if (!Number.isInteger(limit) || limit < 1 || limit > SWEEP_MAX_LIMIT) return { ok: false, reason: `--limit must be an integer from 1 to ${SWEEP_MAX_LIMIT}` };
   if (apply && env.WRITER_LANDING_SWEEP_CONFIRM !== CONFIRM_VALUE) {
     return { ok: false, reason: `--apply deletes member uploads and requires WRITER_LANDING_SWEEP_CONFIRM=${CONFIRM_VALUE}` };
   }

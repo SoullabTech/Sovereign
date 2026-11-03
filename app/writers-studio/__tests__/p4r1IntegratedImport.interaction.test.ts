@@ -8,7 +8,12 @@ jest.mock('@/lib/http/apiBase', () => ({ apiFetch: jest.fn() }));
 // The unfinished-uploads list (D3) makes its own request on mount. These tests pin the import flow's exact request
 // sequence, so the list is stubbed here; it has its own suite (p4r1UnfinishedUploads.interaction.test.ts), which also pins that
 // the Import room mounts it for a server session and not for a local review.
-jest.mock('@/app/dev/writers-studio-pc3-live/P4R1UnfinishedUploads', () => ({ __esModule: true, default: () => null }));
+// It records the props it is given, because what the Import room tells it (which original is still in use) is part of the contract.
+const mockUnfinishedProps: Array<Record<string, unknown>> = [];
+jest.mock('@/app/dev/writers-studio-pc3-live/P4R1UnfinishedUploads', () => ({
+  __esModule: true,
+  default: (props: Record<string, unknown>) => { mockUnfinishedProps.push(props); return null; },
+}));
 import { apiFetch } from '@/lib/http/apiBase';
 import P4R1ImportManuscript from '@/app/dev/writers-studio-pc3-live/P4R1ImportManuscript';
 import { readLocalReviewManuscript } from '@/lib/writersStudio/localReviewManuscript';
@@ -40,6 +45,7 @@ const button = (label: string) => {
 
 beforeEach(() => {
   mocked.mockReset();
+  mockUnfinishedProps.length = 0;
   sessionStorage.clear();
   window.localStorage.removeItem('maia_settings');
   originalRandomUuid = Object.getOwnPropertyDescriptor(globalThis.crypto, 'randomUUID');
@@ -327,7 +333,9 @@ describe('D6 — the Import room never sends an original while Sanctuary is on o
     if (raw !== null) window.localStorage.setItem('maia_settings', raw);
     await chooseFile();
     expect(mocked).not.toHaveBeenCalled();
-    expect(container.textContent).toContain('Choose Ordinary or Sanctuary');
+    expect(container.textContent).toContain('Your Sanctuary setting could not be read on this device');
+    expect(container.textContent).toContain('Open MAIA here once');
+    expect(container.textContent).not.toContain('Quick Settings'); // no such control exists on this screen to resolve it
   });
 
   test('a server Sanctuary refusal is shown as such, not mislabelled as the generic hold', async () => {
@@ -422,6 +430,57 @@ describe('D4 — the member is told when the original could not be stored with t
     expect(mocked).toHaveBeenCalledTimes(4); // a real second import attempt, not a continuation of a phantom save
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onComplete).toHaveBeenCalledWith(SAVED_ID);
+    // A RETRYABLE refusal keeps the held original: the retry binds the same one.
+    const [first, second] = [JSON.parse(mocked.mock.calls[2][1].body), JSON.parse(mocked.mock.calls[3][1].body)];
+    expect(first.sourceArrivalId).toBe('44444444-4444-4444-8444-444444444444');
+    expect(second.sourceArrivalId).toBe('44444444-4444-4444-8444-444444444444');
+  });
+
+  test.each([
+    ['source_original_unavailable', 'The original you uploaded is no longer available, so this Work was not saved. Nothing was changed. Choose the file again to continue.'],
+    ['source_already_attached', 'That original is already attached to a Work in your library, so a second Work was not created. Nothing new was saved.'],
+  ])('a PERMANENT refusal (%s): the dead reference is dropped, the member is returned to the source step with the sentence, and the next save never resends it', async (code, sentence) => {
+    const onComplete = await importUntilCreate({}, response(409, { error: sentence, code, retryable: false }));
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(sentence);
+    expect(container.querySelector('[data-custody-notice]')).toBeNull();
+    // Back on the source step: the structure step's own button is gone, the source step's is back.
+    expect(() => button('Create Work and open in Write')).toThrow();
+    expect(mocked).toHaveBeenCalledTimes(3);
+    expect(JSON.parse(mocked.mock.calls[2][1].body).sourceArrivalId).toBe('44444444-4444-4444-8444-444444444444');
+
+    // The member's words are still there; carrying on is a real new act that does not claim the dead original.
+    mocked
+      .mockResolvedValueOnce(response(200, {
+        lossless: true,
+        preview: [{ position: 0, heading: 'Opening', body: 'The fictional river moved under the bridge.', headingDepth: 1, headingSignal: 'markdown' }],
+      }))
+      .mockResolvedValueOnce(response(201, { id: SAVED_ID, sectionCount: 1, sourceCustody: 'source_custodied' }));
+    await act(async () => button('Review structure').click());
+    await settle();
+    await act(async () => button('Create Work and open in Write').click());
+    await settle();
+    expect(mocked).toHaveBeenCalledTimes(5);
+    const resent = JSON.parse(mocked.mock.calls[4][1].body);
+    expect(resent.sourceArrivalId).toBeUndefined();
+    expect(typeof resent.confirmedText).toBe('string');
+    expect(onComplete).toHaveBeenCalledWith(SAVED_ID);
+  });
+
+  test('a refusal that carries no recognised code is treated as retryable: the reference is kept (never dropped on a guess)', async () => {
+    await importUntilCreate({}, response(409, { error: 'Fictional unclassified refusal.' }));
+    mocked.mockResolvedValueOnce(response(201, { id: SAVED_ID, sectionCount: 1, sourceCustody: 'source_custodied' }));
+    await act(async () => button('Create Work and open in Write').click());
+    await settle();
+    expect(JSON.parse(mocked.mock.calls[3][1].body).sourceArrivalId).toBe('44444444-4444-4444-8444-444444444444');
+  });
+
+  test('the Import room tells the removal door which original it is still holding, so that one is never offered for deletion', async () => {
+    await importUntilCreate({ sourceCustody: 'source_custodied' });
+    const held = mockUnfinishedProps.map((p) => p.heldArrivalId ?? null);
+    expect(held[0]).toBeNull(); // before any upload there is nothing to protect
+    expect(held).toContain('44444444-4444-4444-8444-444444444444');
+    expect(mockUnfinishedProps.every((p) => Object.keys(p).every((k) => k === 'heldArrivalId'))).toBe(true);
   });
 
   test('the pre-save promise no longer claims the original WILL remain held', async () => {

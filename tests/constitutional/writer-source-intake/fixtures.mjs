@@ -1051,18 +1051,18 @@ function specs(canary, includeLarge) {
       expectedParse: 'accept', expectedStatusClass: '5xx', expectedStatus: 503, uncertain: true,
       note: 'Ordinary UTF-8 text with a single NUL byte after the title. parseUpload returns it verbatim (it never looks at content). Inferred, not run: Postgres text cannot hold a NUL, so the arrival INSERT is expected to fail after the ciphertext landed -> 503, the same family as scanned.pdf. The route performs no content validation before custody.',
     },
-    /* ---- docx: structures the custody law refuses (UnsupportedDocxStructureError -> 422, nothing enters Source custody) ---- */
+    /* ---- docx: structures that were once refused and are now brought in (canonical 8337a1ca and 89cffd7a, 2026-11-03) ---- */
     {
       file: 'docx-table-no-header.docx', kind: 'docx-table-no-header', mime: MIME.docx, containsCanary: true,
       build: () => buildDocxWithTable(canary).buffer,
-      expectedParse: 'refuse', expectedStatusClass: '4xx', expectedStatus: 422, uncertain: true,
-      note: 'A two-row table whose first row carries no w:tblHeader. mammoth renders its cells as <td>, and docxFidelity.preserveTables refuses with FAIL("a table without explicit header cells"): UnsupportedDocxStructureError -> 422, before any custody call. mammoth was not run, and whether it emits <td> or <th> for the first row of a table with no w:tblHeader is library behaviour the source does not settle. If it emitted <th>, the table would be PRESERVED as a Markdown grid and the outcome would be 2xx with a table warning.',
+      expectedParse: 'accept', expectedStatusClass: '2xx', expectedStatus: 200, uncertain: false,
+      note: 'A two-row table whose first row carries no w:tblHeader. MEASURED against the real parser on a tree that contains canonical 8337a1ca ("keep Word tables that cannot be gridded as plain text instead of refusing import"): it is brought in as text (outcome ok:text) and nothing is refused. Before that commit docxFidelity refused it (UnsupportedDocxStructureError -> 422, before any custody call); this entry recorded that refusal as an inference from source, and the measurement on 2026-11-03 showed the parser had changed underneath it.',
     },
     {
       file: 'docx-embedded-image.docx', kind: 'docx-embedded-image', mime: MIME.docx, containsCanary: true,
       build: () => buildDocxWithImage(canary).buffer,
-      expectedParse: 'refuse', expectedStatusClass: '4xx', expectedStatus: 422, uncertain: true,
-      note: 'A paragraph plus an inline picture (w:drawing -> a:blip -> word/media/image1.png, a 1x1 PNG). mammoth is expected to render an <img>, and docxFidelity.preserveDocxStructure refuses embedded pictures with FAIL("embedded pictures or objects") -> 422. Not run: if mammoth did not emit an <img> for this hand-written drawing the outcome would be 2xx with only the text.',
+      expectedParse: 'accept', expectedStatusClass: '2xx', expectedStatus: 200, uncertain: false,
+      note: 'A paragraph plus an inline picture (w:drawing -> a:blip -> word/media/image1.png, a 1x1 PNG). MEASURED against the real parser on a tree that contains canonical 89cffd7a ("import Word manuscripts with embedded pictures, keep original intact"): the text is brought in (outcome ok:text) and the picture is left in the original. Before that commit docxFidelity refused embedded pictures (FAIL "embedded pictures or objects" -> 422); this entry recorded that refusal as an inference from source.',
     },
     /* ---- epub: boundary pairs for the three parser guards (strict ">" in each) ---- */
     {

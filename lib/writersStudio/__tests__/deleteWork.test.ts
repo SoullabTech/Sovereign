@@ -142,7 +142,9 @@ describe('the confirmation tells the truth about reach', () => {
 
   it('says the original file goes too, and is honest that earlier backups can still hold a copy', () => {
     expect(DELETE_WORK_COPY.body).toContain('original file');
-    expect(DELETE_WORK_COPY.body).toContain('Private backups made before today');
+    expect(DELETE_WORK_COPY.body).toContain('Private backups already taken');
+    // The boundary is the moment of deletion, not midnight: the newest backup (taken earlier today) can hold the Work.
+    expect(DELETE_WORK_COPY.body).not.toMatch(/before today|made today|older than today/i);
     expect(DELETE_WORK_COPY.body).toContain('retired on their normal schedule');
   });
 

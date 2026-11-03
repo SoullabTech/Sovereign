@@ -21,9 +21,14 @@ describe('parseSweepArgs', () => {
   it('the confirmation alone does not turn a dry run into a deletion', () => {
     expect(parseSweepArgs([], { WRITER_LANDING_SWEEP_CONFIRM: CONFIRM_VALUE })).toMatchObject({ ok: true, apply: false });
   });
-  it.each([['--older-than-hours=23'], ['--older-than-hours=1'], ['--older-than-hours=abc'], ['--older-than-hours=24.5'], ['--limit=0'], ['--limit=-3'], ['--limit=x'], ['--bogus'], ['--apply=true']])(
+  it.each([['--older-than-hours=23'], ['--older-than-hours=1'], ['--older-than-hours=abc'], ['--older-than-hours=24.5'], ['--limit=0'], ['--limit=-3'], ['--limit=x'], ['--limit=501'], ['--limit=1e3'], ['--limit=100000'], ['--bogus'], ['--apply=true']])(
     'refuses %s', (arg) => { expect(parseSweepArgs([arg], {}).ok).toBe(false); },
   );
+  it('accepts the ceiling itself (500) and the floor (1): the bound is inclusive', () => {
+    expect(parseSweepArgs(['--limit=500'], {})).toMatchObject({ ok: true, limit: 500 });
+    expect(parseSweepArgs(['--limit=1'], {})).toMatchObject({ ok: true, limit: 1 });
+  });
+
   it('takes a longer age and a smaller limit', () => {
     expect(parseSweepArgs(['--older-than-hours=72', '--limit=5', '--quiet'], {})).toEqual({ ok: true, apply: false, olderThanHours: 72, limit: 5, quiet: true });
   });

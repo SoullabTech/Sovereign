@@ -32,6 +32,7 @@ PLAN:      docs/programme/WRITER_SOURCE_INTAKE_ACCEPTANCE_PLAN_2026-11-02.md (se
 | `41744030` | D4 (as decided) | The original's claim now runs **inside the transaction that creates the Work**. If it cannot bind, nothing is saved, the member is told so plainly and may retry (409 `source_custody_not_bound`, content-free log). No Work exists without its source, and no refused import leaves a half-saved Work. |
 | `06305637` | D3 (sweep) | `sweepAbandonedLandings` + `scripts/ops/sweep-abandoned-landings.ts`. **Designed, unwired, dry-run by default.** Deletes only incomplete upload intents older than a 24-hour floor with no live write lease, through the member door with its own authority record. Never touches a recorded arrival. Applying needs `--apply` and `WRITER_LANDING_SWEEP_CONFIRM=delete-abandoned-uploads`. |
 | `f328d22b` | D6 (second client) | The Press Manuscript Room (`app/press/manuscript/page.tsx`) is a second client of the ingest route and had not been taught the posture claim; once released it would have been refused 428 on every upload. Fixed, and a source-reading guard now requires every client of the route to read and send the posture. Found while trial-merging against current canonical. |
+| (this commit) | review fixes | The eight findings of section 3b. |
 
 ## 2. Evidence, with its limits
 
@@ -90,6 +91,40 @@ lane's act; this branch does not touch that file. Consequences of merging this b
   (plus the pre-existing `readings` route test). They belong to the release lane and are **not** altered here: the F7 tests assert a hold,
   and deciding what they should assert once intake is released is that lane's call. Anyone reading a red check on this merge should
   compare it against canonical before blaming this branch.
+
+## 3b. Independent adversarial review of this PR (2026-11-03), and what it changed
+
+After the PR was opened, six read-only reviewers (ingest route and clients; the D4 claim transaction; data deletion and the sweep; KMS and landing;
+holds and copy; cross-cutting privacy) each read the product-code diff, and a separate skeptic then tried to REFUTE every finding before it was
+believed. 19 agents, no write access, no database. **8 findings stood; 5 were refuted.** None was a blocker or high. All 8 were defects in this
+branch's own changes and are fixed in the commit that carries this section:
+
+| # | Sev. | Finding | Fix |
+|---|---|---|---|
+| 1 | medium | A save whose response was lost (first save committed) retried into a permanent 409 that said "Nothing was changed. You can try again." A Work from the first save existed. | The refusal is classified: `source_already_attached` (a Work of the member's already holds it) and `source_original_unavailable` (no unclaimed original held, or its bytes are gone) are **non-retryable** with true copy; only a thrown claim stays `retryable`. Both clients drop the dead reference and return to the source step. |
+| 3 | low | Every falsy claim was one retryable message, and the clients kept resending the dead id. | Same fix. A lookup that cannot establish the cause stays the retryable refusal: a cause that was not established is never presented as permanent. |
+| 5 | medium | The removal door listed the original the import in progress still held; removing it stranded the import behind the 409. | `P4R1UnfinishedUploads` takes `heldArrivalId`; the Import room passes the arrival it holds; that one is not offered. |
+| 4 | low | An uppercase UUID wrote the refusal marker under the caller's spelling, which no reader matches. | The route lowercases after validation; the library writes the id the database returned. |
+| 6 | low | `--limit` above 500 exited 1 (a failure) instead of 2 (a refusal). | The script enforces the library's ceiling before any connection. |
+| 2 | low | An unresolved posture told the member to use "Quick Settings", which is on neither upload screen. | Both clients now use the sentence the other Writer surfaces use ("...Open MAIA here once, then try again."); a guard forbids the phrase on any ingest client. |
+| 7, 8 | low | The Delete copy said backups "made before today" can hold a copy; the newest backup, taken earlier today, can. | "Private backups already taken". |
+
+Refuted (and why they are not fixed): `Retry-After: 900` against a 3600 s window (a hint, and a refused-late client is told again); paste-path atomicity without a
+default-run test (covered by the PG16 probes S6a-S6d); KMS timeout not bounding a stalled body after headers (the SDK's own limit; not introduced here); the D5 backup
+sentence shown only on the hint path (the confirmation is the main path); rate-limit counter written before the posture gate (identity-keyed counter only, no content).
+
+Each fix was mutation-checked: 10 server, 14 client, and 9 unit/PostgreSQL mutants, all killed. The check also caught **two vacuous tests of mine**: the first uppercase-UUID
+route test used a digits-only id (which has no case, so a route that did not lowercase passed it), and one mutant (`.toLowerCase()` on an id that the database already
+returns lowercase) survived as redundant and was removed rather than excused. PostgreSQL 16 probes: **31 of 31** (new S5f, S5g).
+
+**What this review is not.** It is a read-only pass by agents with a skeptic stage, not an audit and not a human review; a reviewer finding nothing in an area is not evidence the area is
+sound. It could not run anything that needs real KMS, AWS or a browser.
+
+**Instrument fixtures, re-measured.** Canonical changed the DOCX parser on 2026-11-03 (`8337a1ca`: tables that cannot be gridded are kept as text; `89cffd7a`: embedded pictures are
+brought in), so two fixture expectations in `tests/constitutional/writer-source-intake/fixtures.mjs` (`docx-table-no-header`, `docx-embedded-image`), recorded as "refused, inferred from source",
+were wrong; the dynamic probe P1 measured it and they now say "accepted". The fixtures module's own self-test was **already red before that edit** (37 of 39: source-anchor drift from canonical's DOCX
+change and from this branch's route changes) and is **39 minus 4 after it**: the module's independent model still carries the old source facts, so it now also disagrees with the re-measured
+entries. That model has not been re-pinned; it is the same requalification section 5a says the instrument owes before it is relied on. Nothing is wired to it.
 
 ## 4. Findings made while building
 

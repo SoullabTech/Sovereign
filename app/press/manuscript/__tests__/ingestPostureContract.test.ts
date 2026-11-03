@@ -67,6 +67,12 @@ describe('ingest route clients carry the Sanctuary posture', () => {
     }
   });
 
+  it('no client tells the member to use a control that is not on its screen when the posture is unresolved', () => {
+    for (const { rel, code } of all) {
+      expect({ rel, mentionsQuickSettings: /Quick Settings/.test(code) }).toEqual({ rel, mentionsQuickSettings: false });
+    }
+  });
+
   it('the press page reads the posture, and refuses on unresolved or Sanctuary, before it sends anything', () => {
     const page = all.find((c) => c.rel === 'app/press/manuscript/page.tsx');
     expect(page).toBeDefined();

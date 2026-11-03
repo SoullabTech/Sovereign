@@ -92,6 +92,10 @@ export async function discardIncompleteLanding(
       [intentId, memberId],
     );
     if (deleted.rows.length !== 1) throw new Error('incomplete_landing_changed_under_lock');
+    // The refusal marker must carry the id exactly as the database writes it (lowercase). Every reader compares against
+    // that text, so a marker built from a caller's spelling (an uppercase UUID) would never match and a restore would not
+    // be refused. The row the DELETE returned is the authority for what the id is.
+    const canonicalId = deleted.rows[0]?.id ?? intentId.toLowerCase();
 
     // A sovereignty deletion, not live-row cleanup: leave an exact refusal marker so an older SQL snapshot cannot
     // reintroduce this intent or the wrapped key it carried.
@@ -107,7 +111,7 @@ export async function discardIncompleteLanding(
       `INSERT INTO provenance_tombstones (manifest_id, object_kind, object_id)
        VALUES ($1::uuid, 'writer_source_landing_intents', $2)
        ON CONFLICT (object_kind, object_id) DO NOTHING`,
-      [manifestId, intentId],
+      [manifestId, canonicalId],
     );
 
     // PENDING_BYTES never published a file (WRITING_BYTES is set BEFORE the first byte is written), so there is

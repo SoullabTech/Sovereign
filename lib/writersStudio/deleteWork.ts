@@ -228,6 +228,6 @@ export const DELETE_WORK_COPY = {
   question: (title: string) => `Delete “${title}”?`,
   body:
     'This deletes the writing, its sections and drafts, and the original file it came '
-    + 'from. It cannot be undone and there is no archive. Private backups made before today '
+    + 'from. It cannot be undone and there is no archive. Private backups already taken '
     + 'can still hold a copy until they are retired on their normal schedule.',
 } as const;

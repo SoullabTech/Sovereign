@@ -11,11 +11,26 @@ import { NextRequest } from 'next/server';
 const MEMBER = '11111111-1111-4111-8111-111111111111';
 const CANARY = 'WSICANARYSERVERSIDE0123456789ABCDEF';
 
-const tx = { committed: 0, rolledBack: 0, writes: [] as string[] };
+const tx = {
+  committed: 0,
+  rolledBack: 0,
+  writes: [] as string[],
+  // What the member-bound lookup of the file arrival finds after a claim returned false.
+  arrivalRows: [] as Array<{ manuscript_id: string | null }>,
+  lookups: [] as unknown[][],
+  lookupSql: [] as string[],
+  lookupThrows: false,
+};
 jest.mock('@/lib/db/postgres', () => {
   const client = {
-    query: jest.fn(async (sql: string) => {
+    query: jest.fn(async (sql: string, params?: unknown[]) => {
       tx.writes.push(sql.trim().split(/\s+/).slice(0, 3).join(' '));
+      if (/SELECT manuscript_id FROM manuscript_source_arrivals/.test(sql)) {
+        tx.lookups.push(params ?? []);
+        tx.lookupSql.push(sql);
+        if (tx.lookupThrows) throw Object.assign(new Error('fictional lookup fault'), { name: 'FictionalLookupFault' });
+        return { rows: tx.arrivalRows };
+      }
       if (/INSERT INTO member_manuscripts|INSERT INTO manuscript_sections|INSERT INTO living_works|INSERT INTO living_work_expressions/.test(sql)) {
         return { rows: [{ id: 'row-fictional-1' }] };
       }
@@ -67,6 +82,10 @@ beforeEach(() => {
   tx.committed = 0;
   tx.rolledBack = 0;
   tx.writes = [];
+  tx.arrivalRows = [];
+  tx.lookups = [];
+  tx.lookupSql = [];
+  tx.lookupThrows = false;
   prepare.mockResolvedValue(null);
   supplied.mockResolvedValue({ id: 'supplied-arrival-1' });
   logged = [];
@@ -127,20 +146,63 @@ describe('bound', () => {
 describe('refused: the original could not be bound, so NOTHING is saved', () => {
   const body = async (res: Response) => res.json();
 
-  it('claim RETURNS false (the KMS-outage shape): 409, retryable, the whole transaction rolled back, a content-free trace', async () => {
+  it('claim RETURNS false and NO unclaimed original of the member is held under that id: 409, NOT retryable, rolled back, a content-free trace', async () => {
     claim.mockResolvedValue(false);
+    tx.arrivalRows = []; // removed, never existed, or someone else's: indistinguishable by design
     const res = await POST(req({ sourceArrivalId: FILE_ARRIVAL }));
     expect(res.status).toBe(409);
     const b = await body(res);
-    expect(b).toMatchObject({ code: 'source_custody_not_bound', retryable: true });
+    expect(b).toMatchObject({ code: 'source_original_unavailable', retryable: false });
+    expect(b.error).toContain('Choose the file again');
+    expect(b.error).not.toContain('You can try again'); // a retry of the same save can never work, so it is not offered
     expect(b.id).toBeUndefined(); // no manuscript id: none exists
     expect(b.sourceCustody).toBeUndefined();
     expect(tx.committed).toBe(0);
     expect(tx.rolledBack).toBe(1);
+    expect(tx.lookups).toEqual([[FILE_ARRIVAL, MEMBER]]); // the lookup is member-bound: it cannot reveal anyone else's arrival
+    expect(tx.lookupSql[0]).toMatch(/WHERE\s+id\s*=\s*\$1\s+AND\s+member_id\s*=\s*\$2/); // ... in the SQL itself, not just in the parameters
     const line = logged.find((l) => l.includes('custody not bound'));
     expect(line).toContain('claim_not_bound');
+    expect(line).toContain('original_unavailable');
     expect(line).not.toContain(MEMBER); // identified by memberRef, never the raw member id
     expect(logged.filter((l) => l.includes('manuscript saved'))).toEqual([]); // the success marker is never emitted
+  });
+
+  it('claim RETURNS false because the member\'s own Work already holds that original (a first save landed, its response was lost): 409 source_already_attached, NOT retryable, nothing new saved', async () => {
+    claim.mockResolvedValue(false);
+    tx.arrivalRows = [{ manuscript_id: 'row-fictional-first-save' }];
+    const res = await POST(req({ sourceArrivalId: FILE_ARRIVAL }));
+    expect(res.status).toBe(409);
+    const b = await body(res);
+    expect(b).toMatchObject({ code: 'source_already_attached', retryable: false });
+    expect(b.error).toContain('already attached to a Work in your library');
+    expect(b.error).not.toContain('was not saved'); // a Work from the first save exists; the copy must not say otherwise
+    expect(b.error).not.toContain('You can try again');
+    expect(b.id).toBeUndefined();
+    expect(tx.committed).toBe(0);
+    expect(tx.rolledBack).toBe(1); // the duplicate Work this attempt created is rolled back
+  });
+
+  it('claim RETURNS false while the arrival is still unclaimed (bytes or hash no longer verify): source_original_unavailable, NOT retryable', async () => {
+    claim.mockResolvedValue(false);
+    tx.arrivalRows = [{ manuscript_id: null }];
+    const res = await POST(req({ sourceArrivalId: FILE_ARRIVAL }));
+    expect(res.status).toBe(409);
+    expect(await body(res)).toMatchObject({ code: 'source_original_unavailable', retryable: false });
+    expect(tx.rolledBack).toBe(1);
+  });
+
+  it('the cause lookup itself fails: still refused and rolled back, and it stays the generic RETRYABLE refusal (a cause that was not established is never presented as permanent)', async () => {
+    claim.mockResolvedValue(false);
+    tx.lookupThrows = true;
+    const res = await POST(req({ sourceArrivalId: FILE_ARRIVAL }));
+    expect(res.status).toBe(409);
+    expect(await body(res)).toMatchObject({ code: 'source_custody_not_bound', retryable: true });
+    expect(tx.committed).toBe(0);
+    expect(tx.rolledBack).toBe(1);
+    const all = logged.join('\n');
+    expect(all).toContain('FictionalLookupFault');
+    expect(all).not.toContain('fictional lookup fault'); // the NAME, never the message
   });
 
   it('claim THROWS: 409 and rolled back, and the log carries the error NAME but never its message or content', async () => {
@@ -148,12 +210,29 @@ describe('refused: the original could not be bound, so NOTHING is saved', () => 
     claim.mockRejectedValue(err);
     const res = await POST(req({ sourceArrivalId: FILE_ARRIVAL }));
     expect(res.status).toBe(409);
+    expect(await body(res)).toMatchObject({ code: 'source_custody_not_bound', retryable: true }); // KMS/DB hiccup: a retry may work
     expect(tx.committed).toBe(0);
     expect(tx.rolledBack).toBe(1);
+    expect(tx.lookups).toEqual([]); // nothing to classify: the claim never returned
     const all = logged.join('\n');
     expect(all).toContain('claim_threw');
     expect(all).toContain('FictionalClaimError');
     expect(all).not.toContain(CANARY);
+  });
+
+  it('claim THROWS ENOENT (the held bytes are gone from the vault): permanent, source_original_unavailable, NOT retryable', async () => {
+    claim.mockRejectedValue(Object.assign(new Error('fictional vault miss'), { code: 'ENOENT', name: 'Error' }));
+    const res = await POST(req({ sourceArrivalId: FILE_ARRIVAL }));
+    expect(res.status).toBe(409);
+    expect(await body(res)).toMatchObject({ code: 'source_original_unavailable', retryable: false });
+    expect(tx.rolledBack).toBe(1);
+  });
+
+  it('ENOENT on a PASTED import is not an "original is gone" signal (there is no file): it stays the generic retryable refusal', async () => {
+    supplied.mockRejectedValue(Object.assign(new Error('fictional'), { code: 'ENOENT' }));
+    const res = await POST(req({ confirmedText: 'Fictional pasted text.' }));
+    expect(res.status).toBe(409);
+    expect(await body(res)).toMatchObject({ code: 'source_custody_not_bound', retryable: true });
   });
 
   it('reading the claim context fails BEFORE anything is written: 409, no transaction was even opened', async () => {
@@ -169,6 +248,8 @@ describe('refused: the original could not be bound, so NOTHING is saved', () => 
     claim.mockResolvedValue(false);
     const res = await POST(req({ confirmedText: 'Fictional pasted text.' }));
     expect(res.status).toBe(409);
+    expect(await body(res)).toMatchObject({ code: 'source_custody_not_bound', retryable: true }); // there is no file arrival to classify
+    expect(tx.lookups).toEqual([]);
     expect(supplied).toHaveBeenCalledTimes(1); // it ran inside the transaction ...
     expect(tx.rolledBack).toBe(1);             // ... which was rolled back, so it did not persist
     expect(tx.committed).toBe(0);

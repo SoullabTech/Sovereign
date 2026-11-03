@@ -263,6 +263,46 @@ describe('independence from the gates that control putting something in', () => 
   });
 });
 
+describe('the original an import in progress is still holding is not offered for removal', () => {
+  const rows = () => Array.from(container.querySelectorAll('[data-unfinished-uploads] li'));
+
+  it('hides the held unclaimed original and still lists everything else', async () => {
+    await mount(React.createElement(P4R1UnfinishedUploads, { heldArrivalId: UNCLAIMED.id }));
+    expect(rows()).toHaveLength(1);
+    expect(rows()[0]!.getAttribute('data-item-kind')).toBe('incomplete');
+    expect(container.textContent).not.toContain('fictional-draft.docx');
+  });
+
+  it('shows nothing at all when the held original is the only thing held (no card for it, no empty state)', async () => {
+    world.items = [UNCLAIMED];
+    await mount(React.createElement(P4R1UnfinishedUploads, { heldArrivalId: UNCLAIMED.id }));
+    expect(container.querySelector('[data-unfinished-uploads]')).toBeNull();
+    expect(container.textContent).toBe('');
+  });
+
+  it.each([
+    ['no prop', undefined],
+    ['null', null],
+  ])('with %s nothing is hidden', async (_n, held) => {
+    await mount(React.createElement(P4R1UnfinishedUploads, { heldArrivalId: held as string | null | undefined }));
+    expect(rows()).toHaveLength(2);
+  });
+
+  it('matches on the arrival id of an UNCLAIMED original only: an unfinished upload that happens to share the string stays listed', async () => {
+    await mount(React.createElement(P4R1UnfinishedUploads, { heldArrivalId: INCOMPLETE.id }));
+    expect(rows()).toHaveLength(2);
+  });
+
+  it('removing something else leaves the held original hidden', async () => {
+    await mount(React.createElement(P4R1UnfinishedUploads, { heldArrivalId: UNCLAIMED.id }));
+    await click(byLabel(`${COPY.remove} ${COPY.unlabeled}`));
+    await click(byText(COPY.confirm));
+    expect(posts()).toHaveLength(1);
+    expect(JSON.parse(posts()[0]![1].body)).toEqual({ id: INCOMPLETE.id, kind: 'incomplete' });
+    expect(container.textContent).not.toContain('fictional-draft.docx');
+  });
+});
+
 describe('where the Import room mounts it', () => {
   const noop = () => undefined;
   const room = (props: { localReview: boolean; sourceIntakeReleased: boolean }) =>

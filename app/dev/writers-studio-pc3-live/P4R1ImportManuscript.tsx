@@ -107,7 +107,7 @@ export default function P4R1ImportManuscript({
     if (!localReview) {
       posture = readCurrentSanctuaryPosture();
       if (!posture.resolved) {
-        setError('Choose Ordinary or Sanctuary in Quick Settings first. Nothing has been sent.');
+        setError('Your Sanctuary setting could not be read on this device, so nothing was sent. Open MAIA here once, then try again.');
         return;
       }
       if (posture.sanctuary) {
@@ -229,7 +229,19 @@ export default function P4R1ImportManuscript({
           }),
         });
         const body = await response.json().catch(() => null) as Record<string, unknown> | null;
-        if (!response.ok) throw new Error(errorFrom(body, 'The manuscript could not be opened.'));
+        if (!response.ok) {
+          // A refusal that no retry of this same save can fix (the held original is gone, or a Work already holds it) must not
+          // leave the dead reference in place: pressing the same button again would only resend it. Drop it and return to the
+          // source step so the member's next act is a real one. A retryable refusal keeps everything as it was.
+          const code = typeof body?.code === 'string' ? body.code : null;
+          if (code === 'source_original_unavailable' || code === 'source_already_attached') {
+            setSourceArrivalId(null);
+            setFilename(null);
+            setFormat(null);
+            setPhase('source');
+          }
+          throw new Error(errorFrom(body, 'The manuscript could not be opened.'));
+        }
         id = typeof body?.id === 'string' ? body.id : null;
         if (!id) throw new Error('The manuscript opened without an identity. Nothing further was changed.');
         // A confirmed save may outlive the router transition. Remember its
@@ -353,7 +365,7 @@ export default function P4R1ImportManuscript({
       {phase === 'source' ? (
         <section className="p4r1-import-source">
           {/* D3: the member's door over what is held for them. Server sessions only: a local review retains nothing. */}
-          {!localReview ? <P4R1UnfinishedUploads /> : null}
+          {!localReview ? <P4R1UnfinishedUploads heldArrivalId={sourceArrivalId} /> : null}
           {fileIntakeAvailable ? (
             <>
               <div

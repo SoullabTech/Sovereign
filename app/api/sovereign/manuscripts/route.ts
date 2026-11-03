@@ -24,7 +24,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query, transaction } from '@/lib/db/postgres';
+import { query, transaction, type TransactionClient } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   segment,
@@ -225,10 +225,21 @@ function classifyDepth(
  * arrival. The member keeps their writing on screen and can try again; a file-backed upload stays an unclaimed upload they can see
  * and remove. The message is a fixed code, never content, because the transaction helper logs it.
  */
+/**
+ * WHY a file-backed claim came back false. A retry of the same save can only ever succeed for a transient cause, so the three are
+ * told apart and the member is never offered a retry that cannot work:
+ *   - 'transient'            the claim threw, or no cause was established: a retry may succeed.
+ *   - 'already_attached'     this member's own Work already holds that original (a first save landed and its response was lost).
+ *   - 'original_unavailable' no unclaimed original of theirs is held under that reference (removed, never existed, or its bytes no
+ *                            longer verify). The lookup is member-bound, so it cannot reveal anyone else's data.
+ */
+type UnboundCause = 'transient' | 'already_attached' | 'original_unavailable';
+
 class CustodyNotBound extends Error {
   constructor(
     readonly reason: 'claim_not_bound' | 'claim_threw',
     readonly errorName?: string,
+    readonly unboundCause: UnboundCause = 'transient',
   ) {
     super(`source_custody_not_bound:${reason}`);
     this.name = 'CustodyNotBound';
@@ -241,11 +252,49 @@ const CUSTODY_REFUSAL = {
   retryable: true,
 } as const;
 
+const CUSTODY_ALREADY_ATTACHED = {
+  error: 'That original is already attached to a Work in your library, so a second Work was not created. Nothing new was saved.',
+  code: 'source_already_attached',
+  retryable: false,
+} as const;
+
+const CUSTODY_ORIGINAL_UNAVAILABLE = {
+  error: 'The original you uploaded is no longer available, so this Work was not saved. Nothing was changed. Choose the file again to continue.',
+  code: 'source_original_unavailable',
+  retryable: false,
+} as const;
+
+function custodyRefusalFor(cause: UnboundCause) {
+  if (cause === 'already_attached') return CUSTODY_ALREADY_ATTACHED;
+  if (cause === 'original_unavailable') return CUSTODY_ORIGINAL_UNAVAILABLE;
+  return CUSTODY_REFUSAL;
+}
+
+/** Why `claimArrivalWithClient` returned false for a file arrival. Member-bound read inside the transaction about to roll back. */
+async function classifyUnboundFileArrival(
+  client: TransactionClient,
+  arrivalId: string,
+  memberId: string,
+): Promise<UnboundCause> {
+  const row = await client.query<{ manuscript_id: string | null }>(
+    'SELECT manuscript_id FROM manuscript_source_arrivals WHERE id = $1 AND member_id = $2',
+    [arrivalId, memberId],
+  );
+  if (row.rows.length === 1 && row.rows[0]!.manuscript_id !== null) return 'already_attached';
+  return 'original_unavailable';
+}
+
 /** Content-free trace of a refused import: a pseudonymous reference, a reason code and an error NAME. Never a message. */
-function noteUnboundCustody(memberId: string, reason: 'claim_not_bound' | 'claim_threw', errorName?: string): void {
+function noteUnboundCustody(
+  memberId: string,
+  reason: 'claim_not_bound' | 'claim_threw',
+  errorName?: string,
+  cause: UnboundCause = 'transient',
+): void {
   console.warn('[press/manuscripts] import refused: source custody not bound', {
     memberRef: memberRef(memberId),
     reason,
+    cause,
     ...(errorName ? { errorName } : {}),
   });
 }
@@ -512,25 +561,29 @@ export async function POST(request: NextRequest) {
         let custody = 'legacy_interpreted_import';
         if (fileArrivalId || pastedSourceText) {
           let bound = false;
+          let cause: UnboundCause = 'transient';
           try {
             if (fileArrivalId) {
               bound = await claimArrivalWithClient(client, fileArrivalId, manuscriptId, memberId, claimContext);
+              if (!bound) cause = await classifyUnboundFileArrival(client, fileArrivalId, memberId);
             } else {
               const arrival = await recordSuppliedArrivalWithClient(client, { memberId, sourceText: pastedSourceText! });
               bound = await claimArrivalWithClient(client, arrival.id, manuscriptId, memberId, null);
             }
           } catch (err) {
-            throw new CustodyNotBound('claim_threw', err instanceof Error ? err.name : 'unknown');
+            // The held bytes are gone from the vault: no retry of this save can bring them back, so it is not "transient".
+            const gone = fileArrivalId !== null && (err as NodeJS.ErrnoException | null)?.code === 'ENOENT';
+            throw new CustodyNotBound('claim_threw', err instanceof Error ? err.name : 'unknown', gone ? 'original_unavailable' : 'transient');
           }
-          if (!bound) throw new CustodyNotBound('claim_not_bound');
+          if (!bound) throw new CustodyNotBound('claim_not_bound', undefined, cause);
           custody = 'source_custodied';
         }
         return { manuscriptId, workId, custody };
       });
     } catch (err) {
       if (err instanceof CustodyNotBound) {
-        noteUnboundCustody(memberId, err.reason, err.errorName);
-        return NextResponse.json(CUSTODY_REFUSAL, { status: 409 });
+        noteUnboundCustody(memberId, err.reason, err.errorName, err.unboundCause);
+        return NextResponse.json(custodyRefusalFor(err.unboundCause), { status: 409 });
       }
       throw err;
     }

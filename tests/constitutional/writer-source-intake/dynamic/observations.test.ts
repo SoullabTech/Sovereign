@@ -504,6 +504,33 @@ suite('Writer encrypted Source landing - dynamic observations (fake KMS, real Po
       expect(after).toEqual({ row: 1, tomb: 0, queue: 0, files: filesBefore }); // the whole transaction rolled back
     });
 
+    it('S5f writes the refusal marker under the database\'s own spelling of the id, even when the caller spelled it in uppercase', async () => {
+      const x = await stage('s5f-pending', 33, 'pending');
+      const upper = x.intent.id.toUpperCase();
+      const outcome = await discardIncompleteLanding(upper, MEMBER_A);
+      const lowerMarkers = await tombstones(x.intent.id);
+      const upperMarkers = (await query(`SELECT 1 FROM provenance_tombstones WHERE object_kind='writer_source_landing_intents' AND object_id=$1`, [upper])).rowCount;
+      observe('S5f', ['WSI-20'], 'removal marker spelling', { outcome: outcome.kind, lowerMarkers, upperMarkers });
+      expect(outcome.kind).toBe('discarded');
+      expect(upperMarkers).toBe(0);  // never the caller's spelling
+      expect(lowerMarkers).toBe(1);  // always the database's
+    });
+
+    it('S5g the same holds for an unclaimed original: both refusal markers are written in the database\'s spelling', async () => {
+      const arrival = await recordEncryptedArtifactArrival(input('s5g-unclaimed', KEY(34)));
+      const upper = arrival.id.toUpperCase();
+      const outcome = await discardUnclaimedArrival(upper, MEMBER_A);
+      const markers = await query<{ object_kind: string; object_id: string }>(
+        `SELECT object_kind, object_id FROM provenance_tombstones
+          WHERE object_kind IN ('manuscript_source_arrivals', 'writer_source_landing_intents')
+            AND lower(object_id) IN ($1, $2)`, [arrival.id.toLowerCase(), arrival.landingIntentId.toLowerCase()]);
+      const spellings = markers.rows.map((r) => r.object_id);
+      observe('S5g', ['WSI-20'], 'unclaimed removal marker spelling', { outcome: outcome.kind, markerKinds: markers.rows.map((r) => r.object_kind).sort() });
+      expect(outcome.kind).toBe('discarded');
+      expect(markers.rows.map((r) => r.object_kind).sort()).toEqual(['manuscript_source_arrivals', 'writer_source_landing_intents']);
+      expect(spellings.every((id) => id === id.toLowerCase())).toBe(true); // never the caller's uppercase spelling
+    });
+
     it('S5d lists exactly what is held for the member and nothing else, with no content', async () => {
       await stage('s5d-pending', 28, 'pending');
       await stage('s5d-verified', 29, 'verified');

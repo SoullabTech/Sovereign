@@ -66,8 +66,11 @@ function dayOf(iso: string): string | null {
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
-export default function P4R1UnfinishedUploads() {
-  const [items, setItems] = useState<Item[]>([]);
+export default function P4R1UnfinishedUploads({ heldArrivalId = null }: { heldArrivalId?: string | null } = {}) {
+  const [allItems, setItems] = useState<Item[]>([]);
+  // The original THIS screen is still holding for an import in progress is not "unfinished": offering to delete it would strand
+  // the import behind a save that can never bind. It is listed again if the member abandons the import and comes back.
+  const items = heldArrivalId ? allItems.filter((x) => !(x.kind === 'unclaimed' && x.id === heldArrivalId)) : allItems;
   const [load, setLoad] = useState<Load>('loading');
   const [confirming, setConfirming] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
