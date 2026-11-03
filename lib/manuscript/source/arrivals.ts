@@ -1,4 +1,4 @@
-import { query, transaction } from '@/lib/db/postgres';
+import { query, transaction, type TransactionClient } from '@/lib/db/postgres';
 import { readVaultBytes } from '@/lib/storage/fileVault';
 import {
   getEncryptedLandingForArrival,
@@ -83,11 +83,30 @@ export async function recordSuppliedArrival(params: {
   );
 }
 
+/**
+ * The same insert, run inside a transaction the CALLER owns, so that a rolled-back import takes the supplied arrival with it
+ * instead of leaving an orphan row of the member's pasted text that no screen lists and no door removes.
+ */
+export async function recordSuppliedArrivalWithClient(
+  tx: TransactionClient,
+  params: { memberId: string; sourceText: string },
+): Promise<StoredArrival> {
+  return insertArrival(
+    params.memberId,
+    buildArrival({ kind: MEMBER_SUPPLIED_TEXT, sourceText: params.sourceText }),
+    tx,
+  );
+}
+
 async function insertArrival(
   memberId: string,
   record: ReturnType<typeof buildArrival>,
+  tx?: TransactionClient,
 ): Promise<StoredArrival> {
-  const res = await query<{ id: string }>(
+  const run: (sql: string, params: unknown[]) => Promise<{ rows: Array<{ id: string }> }> = tx
+    ? (sql, params) => tx.query<{ id: string }>(sql, params as any[])
+    : (sql, params) => query<{ id: string }>(sql, params as any[]);
+  const res = await run(
     `INSERT INTO manuscript_source_arrivals
        (member_id, source_kind, artifact_ref, artifact_hash, artifact_size,
         original_filename, mime_type, source_text, source_text_hash,
@@ -135,10 +154,39 @@ export async function claimArrival(
   manuscriptId: string,
   memberId: string,
 ): Promise<boolean> {
-  // New arrivals are ciphertext-first and carry a DB-bound envelope. Existing
-  // pre-migration arrivals remain readable through the legacy plaintext path.
-  const encryptedLanding = await getEncryptedLandingForArrival(arrivalId, memberId);
-  return transaction(async (tx) => {
+  const context = await prepareArrivalClaim(arrivalId, memberId);
+  return transaction((tx) => claimArrivalWithClient(tx, arrivalId, manuscriptId, memberId, context));
+}
+
+/** What a claim needs that is read OUTSIDE its transaction: the arrival's encrypted-landing envelope, or null. */
+export type ArrivalClaimContext = Awaited<ReturnType<typeof getEncryptedLandingForArrival>>;
+
+/**
+ * Read the claim context for an arrival. New arrivals are ciphertext-first and carry a DB-bound envelope; existing
+ * pre-migration arrivals remain readable through the legacy plaintext path (context null).
+ */
+export async function prepareArrivalClaim(arrivalId: string, memberId: string): Promise<ArrivalClaimContext> {
+  return getEncryptedLandingForArrival(arrivalId, memberId);
+}
+
+/**
+ * The claim, run inside a transaction the CALLER owns.
+ *
+ * Exactly the checks and writes `claimArrival` has always made; the only difference is who commits. A caller that creates the
+ * destination in the same transaction (the import route) gets all-or-nothing: a `false` return, or a throw, means NOTHING was
+ * changed by the claim, and the caller decides to roll the whole transaction back. The destination row may be uncommitted: it is
+ * visible to this client, and the foreign key and the same-member check are evaluated against it.
+ *
+ * `false` is returned before any write, so it is safe to treat as "refuse and roll back".
+ */
+export async function claimArrivalWithClient(
+  tx: TransactionClient,
+  arrivalId: string,
+  manuscriptId: string,
+  memberId: string,
+  encryptedLanding: ArrivalClaimContext,
+): Promise<boolean> {
+  {
     const arrival = await tx.query<{
       source_kind: string;
       source_text: string;
@@ -199,7 +247,7 @@ export async function claimArrival(
       throw new Error('source_destination_changed_under_lock');
     }
     return true;
-  });
+  }
 }
 
 /**

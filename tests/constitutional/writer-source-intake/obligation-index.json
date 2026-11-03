@@ -1,0 +1,1566 @@
+{
+ "source": "wf_022c7198-7ea synthesized WSI-xx + critic FILL-xx",
+ "count": 98,
+ "obligations": [
+  {
+   "id": "WSI-01",
+   "title": "Test subject identity: real image, real provider, production-shaped schema",
+   "category": "setup-truth",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [],
+   "hasAmendment": true
+  },
+  {
+   "id": "WSI-02",
+   "title": "Key identity, region and alias binding",
+   "category": "key-config",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-01"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-03",
+   "title": "Credential identity: only the mounted least-privilege file works",
+   "category": "credentials",
+   "requiresRealKms": true,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-01"
+   ],
+   "hasAmendment": true
+  },
+  {
+   "id": "WSI-04",
+   "title": "IAM and key policy: least privilege shown by denials",
+   "category": "iam",
+   "requiresRealKms": true,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-03"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-05",
+   "title": "In-container KMS canary and config-ordering matrix",
+   "category": "preflight",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-03"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-06",
+   "title": "Every accepted format lands as ciphertext and decrypts byte-identical",
+   "category": "upload",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-01",
+    "WSI-05"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-07",
+   "title": "No plaintext original anywhere on the host",
+   "category": "confidentiality",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-06"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-08",
+   "title": "Per-file envelope and context binding enforced by real KMS; tamper refused",
+   "category": "confidentiality",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-06"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-09",
+   "title": "Size boundary: 25 MiB accepted, one byte over refused before any write",
+   "category": "upload",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-06"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-10",
+   "title": "Unreadable, protected or hostile files refused before custody",
+   "category": "upload",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-06"
+   ],
+   "hasAmendment": true
+  },
+  {
+   "id": "WSI-11",
+   "title": "Textless files are refused before custody (expected RED today)",
+   "category": "upload",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "none",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-06",
+    "WSI-20"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-12",
+   "title": "Retry and concurrency never mint a second envelope",
+   "category": "idempotency",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-06"
+   ],
+   "hasAmendment": true
+  },
+  {
+   "id": "WSI-13",
+   "title": "A key reused with different bytes is refused without a retry loop",
+   "category": "idempotency",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-12"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-14",
+   "title": "Two tabs uploading the same file are two acts that never touch each other",
+   "category": "idempotency",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-06",
+    "WSI-22"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-15",
+   "title": "Process kill at each landing boundary, plus the link/unlink wedge",
+   "category": "crash-recovery",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-12"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-16",
+   "title": "KMS and credential faults at upload fail closed, bounded and without false claims",
+   "category": "fault-handling",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-05",
+    "WSI-12"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-17",
+   "title": "Reopen, defined two ways, witnessed from a cold process",
+   "category": "reopen",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-22"
+   ],
+   "hasAmendment": true
+  },
+  {
+   "id": "WSI-18",
+   "title": "Reopen with KMS unavailable: unreadable, never lost, fully recoverable",
+   "category": "reopen",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-17"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-19",
+   "title": "Discard of an unclaimed arrival removes everything and needs no AWS",
+   "category": "discard",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-06"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-20",
+   "title": "Everything held for a member is removable (expected RED today)",
+   "category": "discard",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "none",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-15",
+    "WSI-19"
+   ],
+   "hasAmendment": true
+  },
+  {
+   "id": "WSI-21",
+   "title": "End-of-run census finds no stranded intent, arrival, pending file or hardlink",
+   "category": "census",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-15",
+    "WSI-16",
+    "WSI-20"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-22",
+   "title": "Claim then confirm sections: label, binding and screen agree",
+   "category": "claim",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-06"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-23",
+   "title": "Create Work double-click and lost response make one Work",
+   "category": "claim",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-22"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-24",
+   "title": "Claim failure is told truthfully and has a member door (expected RED on copy)",
+   "category": "claim",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "none",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-22",
+    "WSI-20"
+   ],
+   "hasAmendment": true
+  },
+  {
+   "id": "WSI-25",
+   "title": "Delete Work leaves nothing reachable for the Work and touches nothing else",
+   "category": "erasure",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-01",
+    "WSI-22"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-26",
+   "title": "Delete Work reaches every copy the member's own uploads created (expected RED today)",
+   "category": "erasure",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-20",
+    "WSI-25"
+   ],
+   "hasAmendment": true
+  },
+  {
+   "id": "WSI-27",
+   "title": "Every queue consumer sees the same vault",
+   "category": "erasure",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [],
+   "hasAmendment": true
+  },
+  {
+   "id": "WSI-28",
+   "title": "Delete answer reflects this member's obligations; the worker finishes erasure physically",
+   "category": "erasure",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-27"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-29",
+   "title": "Delete Work and discard succeed during a KMS outage and report custody honestly",
+   "category": "erasure",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-18",
+    "WSI-25"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-30",
+   "title": "After Delete Work every store is classified gone, residual-by-design or unknown",
+   "category": "erasure",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-25"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-31",
+   "title": "Restore matrix and backup resurrection are measured, not asserted",
+   "category": "backup-restore",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-25"
+   ],
+   "hasAmendment": true
+  },
+  {
+   "id": "WSI-32",
+   "title": "A hung KMS must not pin database locks or starve the pool",
+   "category": "availability",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-16"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-33",
+   "title": "Resource bounds: near-limit, concurrent and hostile uploads",
+   "category": "availability",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-16"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-34",
+   "title": "Credential rotation and key rotation or replacement are tested procedures",
+   "category": "rotation",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-03",
+    "WSI-17"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-35",
+   "title": "CloudTrail carries only the content-free context, from the intended principal",
+   "category": "cloudtrail",
+   "requiresRealKms": true,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-03",
+    "WSI-06"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-36",
+   "title": "KMS call ledger matches the code model; cost projected from measured counts",
+   "category": "kms-accounting",
+   "requiresRealKms": true,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-35"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-37",
+   "title": "Each injected fault yields a distinct, content-free cause (expected FAIL today)",
+   "category": "observability",
+   "requiresRealKms": true,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-16",
+    "WSI-18"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-38",
+   "title": "Logs and traces carry no content",
+   "category": "logging",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-10",
+    "WSI-16"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-39",
+   "title": "Every sentence the member sees is checked against live state",
+   "category": "honesty",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-11",
+    "WSI-13",
+    "WSI-16",
+    "WSI-24",
+    "WSI-28",
+    "WSI-30"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-40",
+   "title": "Held means held: same words on every door, no row, no file, no KMS event",
+   "category": "edge-release",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-41",
+   "title": "Edge holds, route order and parallel doors; reinstatement rehearsed",
+   "category": "edge-release",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-42",
+   "title": "Audience and abuse bound: who can store an original equals who was declared",
+   "category": "exposure",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-41"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-43",
+   "title": "Hold-pinning tests are requalified at the flip, not weakened",
+   "category": "release-gate",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-40"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-44",
+   "title": "A lane deploy preserves live-only wiring and held originals",
+   "category": "deploy-wiring",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-27",
+    "WSI-17"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-45",
+   "title": "Evidence packet holds no credentials, content or identifiers; receipts are per obligation",
+   "category": "evidence-hygiene",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-46",
+   "title": "The harness is proven lethal against known-wrong setups",
+   "category": "instrument",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-01",
+    "WSI-03",
+    "WSI-04",
+    "WSI-07",
+    "WSI-12",
+    "WSI-27",
+    "WSI-38"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "WSI-47",
+   "title": "Step 6 production witness: the lifecycle in miniature, contained and reversible",
+   "category": "production-witness",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-05",
+    "WSI-17",
+    "WSI-19",
+    "WSI-25",
+    "WSI-35",
+    "WSI-36",
+    "WSI-41",
+    "WSI-44",
+    "WSI-46"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-1a",
+   "title": "FILL-1a Expected-RED dispositions are predeclared and the step-4 verdict is computed, not typed",
+   "category": "release-decision",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-11",
+    "WSI-13",
+    "WSI-20",
+    "WSI-24",
+    "WSI-26",
+    "WSI-28",
+    "WSI-37",
+    "WSI-45",
+    "WSI-46"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-1b",
+   "title": "FILL-1b Declared residue is predicted, enumerated by an independent census, and doorless content defaults to BLOCK",
+   "category": "residue",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "FILL-1a",
+    "WSI-12",
+    "WSI-15",
+    "WSI-20",
+    "WSI-21",
+    "WSI-26"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-1c",
+   "title": "FILL-1c A declared gap is disclosed to the member and can be closed on request",
+   "category": "member-removal",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "FILL-1a",
+    "FILL-1b",
+    "WSI-19",
+    "WSI-25",
+    "WSI-29",
+    "WSI-39"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-2a",
+   "title": "FILL-2a Sanctuary scope of Writer originals is ruled, and the clients and copy match it (expected RED today)",
+   "category": "consent and posture",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": true,
+   "coveredToday": "none",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-01",
+    "WSI-39"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-2b",
+   "title": "FILL-2b A Sanctuary-on upload is refused before any read, write or KMS call; unresolved posture fails closed (R-IN; expected RED today)",
+   "category": "consent and posture",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "FILL-2a",
+    "WSI-01",
+    "WSI-12",
+    "WSI-36",
+    "WSI-40"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-2c",
+   "title": "FILL-2c Landing, claim and paste under a posture change: Sanctuary refuses new writes, never removal (R-IN; expected RED today)",
+   "category": "consent and posture",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "FILL-2a",
+    "FILL-2b",
+    "WSI-15",
+    "WSI-19",
+    "WSI-21",
+    "WSI-24",
+    "WSI-25"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-3a",
+   "title": "Choosing a file is a custody act: its footprint is declared before and measured after",
+   "category": "consent-timing",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-06",
+    "WSI-36"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-3b",
+   "title": "Every exit before Create Work leaves an unclaimed upload the member can see and remove",
+   "category": "consent-timing",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-19",
+    "WSI-20",
+    "WSI-21",
+    "FILL-3a"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-3c",
+   "title": "Pre-confirmation sentences are checked against live state in every state of the window",
+   "category": "consent-timing",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-39",
+    "WSI-24",
+    "FILL-3a"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-4a",
+   "title": "Production census of legacy plaintext Source: classified, content-free, taken from the right vault",
+   "category": "Legacy plaintext Source",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-01",
+    "WSI-45",
+    "WSI-46"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-4b",
+   "title": "Legacy retirement order and convergence with real KMS, at every boundary and beside every queue consumer",
+   "category": "Legacy plaintext Source",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "FILL-4a",
+    "WSI-05",
+    "WSI-12",
+    "WSI-27",
+    "WSI-36"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-4c",
+   "title": "No path claims or reads legacy plaintext Source; claimed legacy Works end custodied by ciphertext",
+   "category": "Legacy plaintext Source",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "FILL-4a",
+    "FILL-4b",
+    "WSI-07",
+    "WSI-24",
+    "WSI-31",
+    "WSI-43"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-5a",
+   "title": "The vault has a named backup and it captures a consistent pair (expected RED today)",
+   "category": "durability-recovery",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-01",
+    "WSI-06",
+    "WSI-07"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-5b",
+   "title": "Disk loss: a cold-host rebuild returns every original byte-identical, and the loss window is measured",
+   "category": "durability-recovery",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "FILL-5a",
+    "WSI-02",
+    "WSI-03",
+    "WSI-17",
+    "WSI-31"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-5c",
+   "title": "Partial loss and skew are detected per Work and never reported as custody held (expected RED today)",
+   "category": "durability-recovery",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "FILL-5a",
+    "FILL-5b",
+    "WSI-21",
+    "WSI-29",
+    "WSI-37",
+    "WSI-39"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-6a",
+   "title": "Live edge, compose chain, mounts and env are read from the running system",
+   "category": "Read-only production preflight",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-6b",
+   "title": "Host facts KMS and the vault depend on are measured on minisforum: egress, clock, uid, credential mount",
+   "category": "Read-only production preflight",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "FILL-6a"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-6c",
+   "title": "Residue channels are baselined before the run: container logs, Postgres logging, backups, replica",
+   "category": "Read-only production preflight",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "FILL-6a"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-7a",
+   "title": "Lift is narrowed to declared witness members on every door, with an end time",
+   "category": "exposure-window",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-40",
+    "WSI-41",
+    "WSI-42"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-7b",
+   "title": "Kill criteria are predeclared and a standing census detects a breach in the open window",
+   "category": "exposure-window",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "FILL-7a",
+    "WSI-21",
+    "WSI-35",
+    "WSI-36"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-7c",
+   "title": "Closing the window works with uploads in flight and accounts for every window item (expected RED today)",
+   "category": "exposure-window",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "FILL-7a",
+    "FILL-7b",
+    "WSI-15",
+    "WSI-19",
+    "WSI-41"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-8a",
+   "title": "Account closure with Source custody ends in a deliberate refusal or a complete erasure, never a bare 500 or a half state (expected RED today)",
+   "category": "Account closure",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-01",
+    "WSI-06",
+    "WSI-15",
+    "WSI-20"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-8b",
+   "title": "The closure answer the member reads and the doors they can use match the stores: no silence, no 'all associated data', a member door for every blocker (expected RED today)",
+   "category": "Account closure",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "FILL-8a",
+    "WSI-19",
+    "WSI-24",
+    "WSI-39"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-8c",
+   "title": "Erasure on account closure is physical, complete and refusal-marked, including with KMS unreachable",
+   "category": "Account closure",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "FILL-8a",
+    "FILL-8b",
+    "WSI-15",
+    "WSI-28",
+    "WSI-29",
+    "WSI-31",
+    "WSI-35"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-9a",
+   "title": "FILL-9a Member data export names every Writer store it includes or omits (expected RED today)",
+   "category": "Export and access",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "none",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-06",
+    "WSI-20",
+    "WSI-30"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-9b",
+   "title": "FILL-9b A held original is retrievable byte-identical, or every door says it is not (expected RED today)",
+   "category": "Export and access",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-06",
+    "WSI-17",
+    "WSI-25"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-9c",
+   "title": "FILL-9c Export under KMS fault and scale is never silently partial or fatal (expected RED on failure copy)",
+   "category": "Export and access",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-06",
+    "WSI-32",
+    "WSI-33",
+    "WSI-36",
+    "FILL-9b"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-10a",
+   "title": "FILL-10a Standing claims about hosting and third parties are reconciled with the KMS dependency",
+   "category": "disclosure-and-claims",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-10b",
+   "title": "FILL-10b What members are told about AWS visibility and key loss equals what the run measured",
+   "category": "disclosure-and-claims",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-17",
+    "WSI-18",
+    "WSI-35",
+    "WSI-36"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-10c",
+   "title": "FILL-10c The KMS dependency is a governed provider record and disclosure cannot disagree with release state",
+   "category": "disclosure-and-claims",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": true,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-40",
+    "WSI-43",
+    "FILL-10a"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-11a",
+   "title": "Only declared custody code reads the retained extraction (static scan plus statement census)",
+   "category": "purpose-limitation",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-01",
+    "WSI-06",
+    "WSI-17",
+    "WSI-22",
+    "WSI-25"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-11b",
+   "title": "No sink downstream of the arrival: model providers, memory, embeddings and indexes see nothing",
+   "category": "purpose-limitation",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "FILL-11a",
+    "WSI-06",
+    "WSI-22"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-11c",
+   "title": "Each retained field has a purpose, an exercising reader and an end; abandoned uploads do not outlive it silently",
+   "category": "purpose-limitation",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "FILL-11a",
+    "WSI-19",
+    "WSI-21",
+    "WSI-25"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-12a",
+   "title": "Every intake non-delivery state has a register line that matches measured delivery",
+   "category": "register / declared non-delivery",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-15",
+    "WSI-16",
+    "WSI-18",
+    "WSI-21",
+    "WSI-28",
+    "WSI-37",
+    "FILL-12b",
+    "FILL-12c"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-12b",
+   "title": "KMS and credential faults page a human through a channel independent of Resend",
+   "category": "alerting / KMS availability",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-05",
+    "WSI-16",
+    "WSI-18",
+    "WSI-37",
+    "WSI-38"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-12c",
+   "title": "Stranded intents and unreadable originals reach a human, not only a logged 503",
+   "category": "alerting / stranded state",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-15",
+    "WSI-21",
+    "WSI-37",
+    "FILL-12b"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-13a",
+   "title": "FILL-13a In-limit hostile files cannot stall the web process for other members, and parsing has an enforced time bound",
+   "category": "parser isolation",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-01"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-13b",
+   "title": "FILL-13b Parsing never fetches or reads what an uploaded file points to, and entity expansion is bounded",
+   "category": "parser isolation",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-01"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-13c",
+   "title": "FILL-13c The time bound admits real books, and a stopped parse is told truthfully and leaves nothing behind",
+   "category": "parser isolation",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "FILL-13a",
+    "WSI-01"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-14a",
+   "title": "FILL-14a A 25 MiB original passes the shipped edge: config identity, at-limit upload, member origins",
+   "category": "edge-transport",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-01",
+    "WSI-06",
+    "WSI-09",
+    "WSI-41"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-14b",
+   "title": "FILL-14b Oversize bodies through the edge: typed refusal, nothing buffered, nothing written (expected RED if live matches repo)",
+   "category": "edge-transport",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "FILL-14a",
+    "WSI-09",
+    "WSI-21",
+    "WSI-33",
+    "WSI-36"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-14c",
+   "title": "FILL-14c Upload time through the edge: slow, stalled and edge-cut uploads leave no false state and no false sentence",
+   "category": "edge-transport",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "FILL-14a",
+    "WSI-12",
+    "WSI-15",
+    "WSI-16",
+    "WSI-33",
+    "WSI-39"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-15a",
+   "title": "FILL-15a Every obligation declares its environment of evidence; a receipt measured elsewhere cannot discharge it",
+   "category": "Environment of evidence (own class: disposable, then production-read-only)",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-01",
+    "WSI-45",
+    "WSI-46"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-15b",
+   "title": "FILL-15b Host-bound evidence (uid, mount, egress, source IP, clock) is measured on minisforum, and the host is identified without trusting its labels",
+   "category": "Environment of evidence (own class: production-read-only)",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "FILL-15a",
+    "WSI-03",
+    "WSI-05",
+    "WSI-35",
+    "WSI-45"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-15c",
+   "title": "FILL-15c Production-class rows run only after their named preconditions hold; unmet ones are NOT_RUN, a disposable run never stands in, and the harness holds no production reach",
+   "category": "Environment of evidence (own class: disposable, then production-read-only)",
+   "requiresRealKms": false,
+   "requiresRealVault": false,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "FILL-15a",
+    "FILL-15b",
+    "WSI-03",
+    "WSI-05",
+    "WSI-44",
+    "WSI-46",
+    "WSI-47"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-16a",
+   "title": "FILL-16a Vault modes, owners and mounters measured on the live mount, not the image",
+   "category": "Vault custody",
+   "requiresRealKms": false,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-06",
+    "WSI-19"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-16b",
+   "title": "FILL-16b A second uid cannot delete, rename, replace or re-permission ciphertext",
+   "category": "Vault custody",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "none",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-06",
+    "WSI-17",
+    "FILL-16a"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-16c",
+   "title": "FILL-16c Ciphertext lost or unreadable outside the app is named by cause and told truthfully",
+   "category": "Vault custody",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": true,
+   "coveredToday": "partial",
+   "expectedRedToday": true,
+   "dependsOn": [
+    "WSI-17",
+    "WSI-28",
+    "WSI-37",
+    "FILL-16b"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-17a",
+   "title": "Plaintext data key is on no durable store, in any encoding, at any stage",
+   "category": "key-custody",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-01",
+    "WSI-02",
+    "WSI-06",
+    "WSI-15",
+    "WSI-17",
+    "WSI-19",
+    "WSI-25",
+    "WSI-31",
+    "WSI-46"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-17b",
+   "title": "Plaintext data key is in no log, error, trace or response, on success or fault",
+   "category": "log-hygiene",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-01",
+    "WSI-08",
+    "WSI-16",
+    "WSI-37",
+    "WSI-38",
+    "WSI-45",
+    "WSI-46",
+    "FILL-17a"
+   ],
+   "hasAmendment": false
+  },
+  {
+   "id": "FILL-17c",
+   "title": "Plaintext data key is neither cached nor retained after its operation",
+   "category": "key-custody",
+   "requiresRealKms": true,
+   "requiresRealVault": true,
+   "requiresBrowser": false,
+   "coveredToday": "partial",
+   "expectedRedToday": false,
+   "dependsOn": [
+    "WSI-03",
+    "WSI-04",
+    "WSI-16",
+    "WSI-17",
+    "WSI-18",
+    "WSI-36",
+    "WSI-46",
+    "FILL-17a"
+   ],
+   "hasAmendment": false
+  }
+ ]
+}

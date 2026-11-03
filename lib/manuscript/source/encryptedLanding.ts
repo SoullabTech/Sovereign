@@ -628,10 +628,10 @@ export async function recordEncryptedArtifactArrival(input: {
       idempotencyKey: input.idempotencyKey,
     });
     intentId = intent.id;
-    if (intent.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(intent);
+    if (intent.state === 'ARRIVAL_RECORDED') return await loadRecordedArrival(intent);
     if (intent.state === 'WRITING_BYTES') {
       intent = await renewExpiredWritingLease(intent);
-      if (intent.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(intent);
+      if (intent.state === 'ARRIVAL_RECORDED') return await loadRecordedArrival(intent);
     }
 
     let lease: LandingLease;
@@ -656,7 +656,7 @@ export async function recordEncryptedArtifactArrival(input: {
       const verified = await markEncryptedBytesVerified(lease);
       if (!verified.accepted) {
         intent = await reloadLanding(intent.id, input.memberId);
-        if (intent.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(intent);
+        if (intent.state === 'ARRIVAL_RECORDED') return await loadRecordedArrival(intent);
         if (intent.state !== 'BYTES_VERIFIED') {
           throw new Error('source_landing_verification_refused');
         }
@@ -664,7 +664,7 @@ export async function recordEncryptedArtifactArrival(input: {
         intent = await reloadLanding(intent.id, input.memberId);
       }
     }
-    if (intent.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(intent);
+    if (intent.state === 'ARRIVAL_RECORDED') return await loadRecordedArrival(intent);
     if (intent.state !== 'BYTES_VERIFIED') {
       throw new Error('source_landing_not_ready_for_arrival');
     }
@@ -681,7 +681,7 @@ export async function recordEncryptedArtifactArrival(input: {
       // A concurrent retry may have committed the same member-bound arrival.
       // Return it only after re-reading the intent's authoritative state.
       const final = await reloadLanding(intent.id, input.memberId);
-      if (final.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(final);
+      if (final.state === 'ARRIVAL_RECORDED') return await loadRecordedArrival(final);
       throw error;
     }
   } catch (error) {
@@ -716,10 +716,10 @@ export async function recordEncryptedLegacyReplacementArrival(input: {
       idempotencyKey: input.idempotencyKey,
     });
     intentId = intent.id;
-    if (intent.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(intent);
+    if (intent.state === 'ARRIVAL_RECORDED') return await loadRecordedArrival(intent);
     if (intent.state === 'WRITING_BYTES') {
       intent = await renewExpiredWritingLease(intent);
-      if (intent.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(intent);
+      if (intent.state === 'ARRIVAL_RECORDED') return await loadRecordedArrival(intent);
     }
 
     let lease: LandingLease;
@@ -744,7 +744,7 @@ export async function recordEncryptedLegacyReplacementArrival(input: {
       const verified = await markEncryptedBytesVerified(lease);
       if (!verified.accepted) {
         intent = await reloadLanding(intent.id, input.memberId);
-        if (intent.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(intent);
+        if (intent.state === 'ARRIVAL_RECORDED') return await loadRecordedArrival(intent);
         if (intent.state !== 'BYTES_VERIFIED') {
           throw new Error('source_landing_verification_refused');
         }
@@ -752,7 +752,7 @@ export async function recordEncryptedLegacyReplacementArrival(input: {
         intent = await reloadLanding(intent.id, input.memberId);
       }
     }
-    if (intent.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(intent);
+    if (intent.state === 'ARRIVAL_RECORDED') return await loadRecordedArrival(intent);
     if (intent.state !== 'BYTES_VERIFIED') {
       throw new Error('source_landing_not_ready_for_arrival');
     }
@@ -772,7 +772,7 @@ export async function recordEncryptedLegacyReplacementArrival(input: {
       });
     } catch (error) {
       const final = await reloadLanding(intent.id, input.memberId);
-      if (final.state === 'ARRIVAL_RECORDED') return loadRecordedArrival(final);
+      if (final.state === 'ARRIVAL_RECORDED') return await loadRecordedArrival(final);
       throw error;
     }
   } catch (error) {

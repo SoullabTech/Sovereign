@@ -1,0 +1,159 @@
+# WRITER-SOURCE-INTAKE-LIFT · H1 — Hardening before the acceptance run (lane record)
+
+```
+FLOW:      The founder's intake-lift runbook, docs/programme/WRITER_SOURCE_KMS_RULING_AND_INTAKE_LIFT_RUNBOOK_2026-11-01.md §4
+           (six ordered steps). Not a new flow: this lane answers the same governing question as that runbook
+           ("can original-file intake be lifted lawfully?"), so under JARVIS manual §20 it is a LANE inside it.
+LANE:      H1 — harden the paths the runbook's step 3 (acceptance run) and step 6 (production witness) will exercise:
+           upload, reopen, discard, Delete Work.
+SUBJECT:   PR #2088, branch claude/writer-source-intake-hardening, onto canonical clean-main-no-secrets.
+STANDING:  CODE CANDIDATE. Adjudicated PASS for merge-readiness as CODE (section 5). NOT merged at the time of writing. NOT deployed.
+           Merge is waiting on a person's approval (Class A) and CI on the final head.
+AUTHORITY: Founder, 2026-11-03: "yes" to making decisions D1-D6 and D9 on a separate branch; "1 yes 2 approved 3 merge"
+           (D4 as an atomic refusal; build the abandoned-upload sweep; merge). The founder then enabled auto-merge and twice used
+           "Update branch" on the PR. Interpretations I made are listed in section 7, not hidden.
+DOES NOT:  lift a hold · configure a key · touch AWS or a credential · edit Caddy or compose · change releaseAuthority.ts ·
+           deploy · run a migration · admit member data · un-freeze claude/happy-cannon-17pn9x · mark any disposition ruled.
+```
+
+## 1. Gate question
+
+Is the hardened intake path fit to enter canonical **as code**, so that the acceptance run (runbook step 3) and the production
+witness (step 6) are run against it rather than against the unhardened path?
+
+This gate does **not** ask whether intake may be lifted, whether the AWS configuration is right, or whether anyone may deploy.
+
+## 2. State recovery (manual §25), as of 2026-11-03
+
+- **Canonical:** `clean-main-no-secrets` at commit:`85750933` when last read. It moved repeatedly while this lane was open.
+- **Reconciliation:** every canonical merge was enumerated and compared by path against this lane's changes. Overlap occurred
+  once (`p4r1-live.css`, two sides appended independent rules; both kept). The founder's two "Update branch" merges
+  (commit:`0790da24`, commit:`7840f375`, merging canonical into the branch) brought in unrelated Writer's Studio UI work and did not overlap.
+  Decisive evidence was re-run on the reconciled tree (section 4).
+- **Concurrent lane on the same subject:** PR #2066 (commit:`25e911f8`), "release original-file intake in source authority",
+  set `sourceIntakeReleased: true` and was merged 2026-11-02. A companion change (commit:`80405a17`) mounts a KMS credential
+  file in the production compose file. That lane did not touch the files this lane changes.
+- **The branch policy:** `claude/*` branches are allowed (2026-10-01 ruling). The frozen branch `claude/happy-cannon-17pn9x`
+  is untouched at commit:`937bc77e`.
+
+## 3. Finding for the founder: step 4 crossed ahead of steps 1 to 3
+
+The runbook says each step needs the one before it. In canonical today:
+
+| Runbook step | State |
+|---|---|
+| 1. AWS key and IAM principal (founder only) | Not evidenced anywhere in the repository |
+| 2. `WRITER_SOURCE_*` configuration and credential file on minisforum, taken through a lane deploy | The compose mount is merged; the values were absent from `.env.production` when the runbook read production on 2026-11-01. Not re-read since |
+| 3. Acceptance run on fake data against a real key | Not run |
+| 4. Release in source (`sourceIntakeReleased: true`) | **Merged** (PR #2066) |
+| 5. Remove the two Caddy holds | Not evidenced; both were present on 2026-11-01 |
+| 6. Production witness | Not run |
+
+PR #2066's own description says: "Do not deploy this before the key configuration is in place", and that a deployed copy would show
+the file chooser and then fail with `writer_source_key_provider_missing` (or a Caddy 423). Merge is not deploy, so nothing is
+violated yet. But **merge to canonical is latent deploy authorization** (the 2026-09-07 finding): the next full deploy of canonical,
+for any reason, carries the flag. This lane does not decide that. It is docket item D-01.
+
+## 4. Evidence packet
+
+```
+subject            commit:`7840f375` (PR head after the founder's second "Update branch"); canonical commit:`85750933`
+scope              D1 roster + 20/h limit · D3 empty/NUL text refused before custody · D4 original claimed inside the Work-creation
+                   transaction · D6 posture required, Sanctuary refused (both clients) · D9 KMS timeouts and awaited replay · D5 Delete
+                   copy · D2 plaintext workbench upload held when the manifest releases intake · member removal door · abandoned-upload
+                   sweep (library + operator script, UNWIRED) · classification of a refused claim into retryable / permanent
+authority          see header
+pre-state          canonical with sourceIntakeReleased: true and none of the above guards on the released route
+instruments        jest (unit, route, DOM interaction); PostgreSQL 16 + real vault + FAKE KMS (31 probes); npm run typecheck gate;
+                   source-reading guards; mutation checks; two independent agent review passes with a refutation stage
+result             re-run on the reconciled tree commit:`7840f375`: typecheck 214 = baseline 214 (no regression) · the intake-related jest
+                   set (2,820 tests) fails exactly 6 suites / 10 tests, and canonical ALONE at commit:`85750933` fails the identical 6 suites /
+                   10 tests by name (transportBoundary F7 x3, export-certification fence, JARVIS unsent-composer custody, readings route,
+                   and two JARVIS source-reading tests, jarvisApplyCurrentPostureGuard and jarvisMemberSaveReceiptWiring, that PR #2089's
+                   Focus option card broke) · PG16 31 of 31 on the same code (commit:`06d031d5` onward) · CI 12 of 12 green on
+                   commit:`558b13d6`; every later head re-ran, and the final head's run is its own evidence
+counterexamples    37 mutants killed in this stage across the fixes (10 server, 14 client, 8 unit/PG, 5 re-review). One further mutant
+                   survived because the code it changed was redundant; the code was removed. Two tests of mine were found vacuous
+                   by surviving mutants and were repaired. The first-pass count in the hardening record read "all killed" for 33
+                   including that redundant one; this record corrects it
+independent review pass 1: 19 agents / 6 lenses -> 8 confirmed (2 medium, 6 low after the skeptic stage), 5 refuted, all 8 fixed. pass 2 on the fix commit:
+                   8 agents / 3 lenses -> 2 confirmed (both low after the skeptic stage), 3 refuted, both fixed. A skeptic tried to refute every finding
+post-state         PR open; CI re-running on each head; no human review yet
+```
+
+Detail, per-defect tables and the refuted findings: `docs/programme/WRITER_SOURCE_INTAKE_HARDENING_BRANCH_2026-11-02.md`.
+
+## 5. Adjudication
+
+**PASS (bounded): the candidate is fit to enter canonical as code.**
+
+*This proves:* the changed code paths behave as specified under the tests and probes listed, including the failure branches (a claim
+that cannot bind rolls back everything; a refusal says only what is true; removal markers use the database's spelling of an id; the
+sweep refuses what it must); no regression against canonical's own failing set (compared by test name on both trees); typecheck did not move.
+
+*This does not prove:* anything about **real AWS KMS** (every KMS result is a recording fake); anything in a **browser** (no manual
+run); that the rate limit holds **across processes** (it is in-process); that the sweep is safe on **production data** (it has never been
+run against any); that agents' review is **sufficient** (it is not a human review, and a reviewer finding nothing is not evidence of
+soundness); or **anything about production**. The acceptance instrument (twenty falsifiers, matrix) lives on the docs branch, is
+stale against canonical, and is not merged by this lane.
+
+*Opens:* nothing automatically. Merge needs the approval GitHub requires and the final head's CI. It does not open a deploy.
+
+## 6. Closure fields (manual §18), to be completed at merge
+
+```
+lane / gate        WRITER-SOURCE-INTAKE-LIFT / H1
+final evidence     section 4
+adjudication       PASS (bounded), section 5
+canonical SHA      (record at merge)
+what changed       the product files listed in PR #2088; the hardening record; this record
+untouched          releaseAuthority.ts · Caddyfile · compose · env · AWS · migrations · the frozen branch · the instrument (docs branch)
+now proved         section 5, "this proves"
+still unproved     section 5, "this does not prove"
+authority closed   deploy · key configuration · hold removal · member data · sweep scheduling · retention of recorded-unclaimed arrivals
+next exact act     founder rules D-01 and D-02; then runbook steps 1 to 3
+```
+
+## 7. Interpretations I made, stated
+
+- "approved" (the sweep) was read as: build the documented bounded sweep for abandoned incomplete upload intents. It is **unwired,
+  unscheduled and dry-run by default**. It does not touch a recorded arrival. The separate 24-hour policy for recorded-but-unclaimed arrivals,
+  documented in the retention-index migration, is **not applied**.
+- "merge" was read as: get the hardening branch into canonical through a pull request on green CI. I did not merge by hand. The
+  instrument on the docs branch is not part of it.
+- The posture claim is client-asserted (the server cannot see the member's Sanctuary setting). That matches every other posture
+  gate in the product, but it is a trust boundary, not an enforcement.
+
+## 8. Founder decision docket
+
+**D-01 · Deploy ordering with the flag already true (most consequential).** Canonical carries `sourceIntakeReleased: true`; production
+configuration for the key was absent on 2026-11-01. Options: (a) hold every deploy of canonical until runbook steps 1 and 2 exist;
+(b) deploy with the flag reverted until then; (c) accept a deploy where the member sees the file chooser and the upload fails with
+`writer_source_key_provider_missing`. Recommendation: (a), because any lane's next deploy otherwise ships (c) unannounced. Your earlier
+direction, "just deploy and we will meet it in the beta", may already answer this: please say whether it covers (c).
+
+**D-02 · Which image the acceptance run uses.** The step 3 run exercises upload, reopen, discard and Delete Work, which this lane
+changed. Recommendation: merge #2088 first and build the acceptance image from canonical after it.
+
+**D-03 · Approval of #2088.** It is Class A (consent, retention, deletion copy). It has had two agent review passes and no human review.
+Your approval is the one thing the checks cannot supply. If you want a human read first, the highest-value files are
+`app/api/sovereign/manuscripts/route.ts`, `lib/manuscript/source/discardIncompleteLanding.ts`, `lib/manuscript/source/sweepAbandonedLandings.ts`.
+
+**D-04 · Recorded-but-unclaimed arrivals.** Apply the 24-hour retention policy documented in the retention-index migration, or leave
+them until the member removes them. Deleting something already recorded as received is a larger decision than clearing a stalled upload.
+
+**D-05 · The sweep.** Who runs it, and how often. Until someone does, an abandoned upload stays until the member removes it.
+
+**D-06 · The workbench upload hold (D2).** On merge it becomes active in code for the plaintext workbench upload POST, a founder-facing tool.
+Confirm that is intended, or ask for the workbench store to be envelope-encrypted instead.
+
+**D-07 · Canonical's six red suites / ten tests** (transportBoundary F7 x3, export-certification fence, JARVIS unsent-composer custody,
+readings route, and, since PR #2089, jarvisApplyCurrentPostureGuard and jarvisMemberSaveReceiptWiring). All fail on canonical alone, by
+the same test names. The first four belong to the release lane, the last two to the Focus-card lane. CI does not run unit tests
+(`canonical-pr-quality.yml` says so), which is why they merge red. Assign them, or tell me to take them as a separate repair lane.
+
+## 9. Non-authorizations
+
+No deploy. No migration. No AWS resource, credential or key. No Caddy or compose edit. No change to `releaseAuthority.ts`.
+No member data. No scheduling or wiring of the sweep. The frozen branch is untouched. Nothing here is **LIVE**: this is a code candidate
+tested against a fake KMS.

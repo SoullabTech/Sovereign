@@ -276,7 +276,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       const ok = await props.onUseVersion({
         threadId: props.thread.threadId,
         sectionId: props.thread.targetSectionId,
-        supersedes: recommendation.id,
+        // The new version replaces whatever is latest in this conversation; after an
+        // Undo that is the writer's earlier save, not MAIA's option (else 409).
+        supersedes: props.thread.headVersionId ?? recommendation.id,
         text: recommendation.wording,
         purpose: purposeOf(recommendation, versions.findIndex((v) => v.id === recommendation.id)).slice(0, 80),
       });

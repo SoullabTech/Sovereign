@@ -22,6 +22,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireFounder } from '@/lib/founder/founderAuth';
+import { writerReleaseAuthority } from '@/lib/writersStudio/releaseAuthority';
+import { workbenchPlaintextStoreHeld } from '@/lib/workbench/plaintextStoreHold';
 import { query } from '@/lib/db/postgres';
 import { writeOriginal, writeReviewed, writeDraft, extFromName, deleteUpload } from '@/lib/workbench/storage';
 import { extractText } from '@/lib/workbench/extract/text';
@@ -70,6 +72,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
   const arrangerId = auth.memberId;
+
+  // Held in code the moment member Source intake is released, so lifting the edge rule cannot open a plaintext store.
+  // Evaluated after identity (a non-founder learns nothing from it) and before the body is read or anything is stored.
+  // See lib/workbench/plaintextStoreHold.ts.
+  if (workbenchPlaintextStoreHeld(writerReleaseAuthority())) {
+    return NextResponse.json(
+      {
+        error: 'Workbench uploads are unavailable while original files are held to the encrypted Source standard.',
+        code: 'workbench_plaintext_store_held',
+      },
+      { status: 423, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
 
   let form: FormData;
   try {
