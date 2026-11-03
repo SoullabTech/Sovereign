@@ -2,10 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { parseUpload } from '@/lib/manuscript/ingest/parseUpload';
-import {
-  preserveDocxStructure,
-  UnsupportedDocxStructureError,
-} from '@/lib/manuscript/ingest/docxFidelity';
+import { preserveDocxStructure } from '@/lib/manuscript/ingest/docxFidelity';
 import { segment } from '@/lib/manuscript/ingest/segment';
 import { detectOmission } from '@/lib/manuscript/source/omission';
 
@@ -56,19 +53,27 @@ describe('SP-02F: structural manuscript fidelity', () => {
     expect(result.warnings.some((w) => w.toLowerCase().includes('native word footnote'))).toBe(true);
   });
 
-  it('refuses a table whose header semantics would be invented', () => {
+  it('keeps a headerless table as plain text and says so, never inventing a header', () => {
     const html = '<table><tr><td>A</td><td>B</td></tr><tr><td>X</td><td>Y</td></tr></table>';
-    expect(() => preserveDocxStructure(flatTable, html, [])).toThrow(UnsupportedDocxStructureError);
+    const result = preserveDocxStructure(flatTable, html, []);
+    expect(result.text).toBe(flatTable);
+    expect(result.text).not.toContain('| --- |');
+    expect(result.fidelity.tables).toBe(0);
+    expect(result.warnings.join(' ')).toContain('1 Word table(s) could not be shown as a grid');
   });
 
-  it('refuses merged cells rather than forging Markdown row relationships', () => {
+  it('keeps merged-cell tables as plain text rather than forging row relationships', () => {
     const html = sampleTable.replace('<th>A</th>', '<th colspan="2">A</th>');
-    expect(() => preserveDocxStructure(flatTable, html, [])).toThrow(/merged table cells/);
+    const result = preserveDocxStructure(flatTable, html, []);
+    expect(result.text).toBe(flatTable);
+    expect(result.warnings.join(' ')).toContain('could not be shown as a grid');
   });
 
-  it('refuses ambiguous source matches rather than choosing a table location', () => {
-    expect(() => preserveDocxStructure(flatTable + '\n\n' + flatTable, sampleTable, []))
-      .toThrow(/ambiguous or missing table cell sequence/);
+  it('keeps ambiguous table text unchanged rather than choosing a location', () => {
+    const doubled = flatTable + '\n\n' + flatTable;
+    const result = preserveDocxStructure(doubled, sampleTable, []);
+    expect(result.text).toBe(doubled);
+    expect(result.warnings.join(' ')).toContain('could not be shown as a grid');
   });
 
   it('refuses changed quotation punctuation', () => {
