@@ -1,0 +1,35 @@
+name: Astrology Pro independent reference fixture
+
+# ASTRO-PRO-04 (#1893) step 3.1. Runs the independent CF-08 numerical fixture
+# against the Pro engine on every pull request and on canonical.
+# Pure computation: no database, network, providers, member data or secrets.
+
+on:
+  pull_request:
+  push:
+    branches: [clean-main-no-secrets]
+
+permissions:
+  contents: read
+
+jobs:
+  pro-fixture:
+    name: Pro engine matches independent reference (41 checks)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CI: 'true'
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install JavaScript dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run the independent Pro fixture
+        run: >
+          npx jest --config jest.config.js --runInBand
+          lib/astrology/__tests__/proIndependentSwissMethod.test.ts
+          --passWithNoTests=false

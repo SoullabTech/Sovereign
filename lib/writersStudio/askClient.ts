@@ -13,6 +13,7 @@
  * says — only asked about the one it already holds.
  */
 
+import type { TeachingAnchor } from './teachingTurn';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { AskAnchor } from '@/lib/manuscript/ask/anchor';
 import type { StalenessState } from '@/lib/manuscript/ask/staleness';
@@ -136,12 +137,15 @@ export async function askForBody(input: {
   threadId?: string;
   sectionId?: string;
   responseStyle?: ExplanationDepth;
+  /** The teaching button pressed (F1). The server owns the answer's shape. */
+  teachingAnchor?: TeachingAnchor;
 }): Promise<AskResult> {
   const raw = await rawPost(input.manuscriptId, {
     ...(input.threadId ? { threadId: input.threadId } : { anchor: input.anchor }),
     question: input.question,
     ...(input.sectionId ? { sectionId: input.sectionId } : {}),
     ...(input.responseStyle ? { responseStyle: input.responseStyle } : {}),
+    ...(input.teachingAnchor ? { teachingAnchor: input.teachingAnchor } : {}),
   });
   return { outcome: raw.outcome, ask: raw.ask };
 }
@@ -155,6 +159,7 @@ export async function authorizeSections(input: {
   question: string;
   threadId?: string;
   responseStyle?: ExplanationDepth;
+  teachingAnchor?: TeachingAnchor;
 }): Promise<AskResult> {
   const raw = await rawPost(input.manuscriptId, {
     ...authorizeRequest({
@@ -165,6 +170,7 @@ export async function authorizeSections(input: {
       threadId: input.threadId,
     }),
     ...(input.responseStyle ? { responseStyle: input.responseStyle } : {}),
+    ...(input.teachingAnchor ? { teachingAnchor: input.teachingAnchor } : {}),
   });
   return { outcome: raw.outcome, ask: raw.ask };
 }

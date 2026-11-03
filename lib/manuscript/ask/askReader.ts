@@ -29,6 +29,7 @@ import { formatWorkSituationForPrompt } from '@/lib/writersStudio/workSituation'
 import { constellationReferralPrompt } from '@/lib/constellation/referralPrompt';
 import { type StalenessState, isCurrent, mustNotAssertCurrent } from './staleness';
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
+import { studioActionsInstruction } from '@/lib/writersStudio/studioActions';
 
 export const ASKER_VERSION = 'ws2-05b-8b-02c-2';
 
@@ -352,7 +353,9 @@ export async function askMaia(
     ? [STANDING, '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
        '--- WHERE THEY ARE IN IT ---', workAnchorSays(ctx), '',
        '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness), '',
-       studioGuideInstruction()].join('\n')
+       studioGuideInstruction(), '',
+       // Design 1B: only the Work conversation shows take-me-there buttons.
+       studioActionsInstruction('work-conversation')].join('\n')
     : [STANDING, '', '--- THE READING YOU MADE ---', readingSays(ctx), '',
        '--- WHAT THEY ARE POINTING AT ---', anchorSays(ctx), '',
        '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness), '',

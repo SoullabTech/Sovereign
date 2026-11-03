@@ -76,8 +76,11 @@ function replaceSingle(text: string, before: string, after: string, what: string
 function preserveTables(html: HtmlNode, initial: string) {
   let result = initial;
   let rowTotal = 0;
+  let gridCount = 0;
+  let flattened = 0;
   const tables = find(html, 'table');
   for (const table of tables) {
+   try {
     if (find(table, 'table').length > 1) FAIL('a nested table');
     const rows = find(table, 'tr');
     if (rows.length < 2) FAIL('a table without a heading row and data rows');
@@ -117,8 +120,17 @@ function preserveTables(html: HtmlNode, initial: string) {
     ].join('\n');
     result = replaceSingle(result, originalFlattened, grid, 'table cell sequence');
     rowTotal += rows.length;
+    gridCount += 1;
+   } catch (error) {
+    // A table that cannot be drawn faithfully as a Markdown grid keeps its text
+    // exactly as extracted (nothing is dropped) and is disclosed as flattened;
+    // the original Word file is kept unchanged. `result` is only mutated at the
+    // end of a successful table, so a failure here leaves it untouched.
+    if (!(error instanceof UnsupportedDocxStructureError)) throw error;
+    flattened += 1;
+   }
   }
-  return { text: result, count: tables.length, rows: rowTotal };
+  return { text: result, count: gridCount, flattened, rows: rowTotal };
 }
 
 function preserveFootnotes(root: HtmlNode, initial: string) {
@@ -170,10 +182,14 @@ export function preserveDocxStructure(
   mammothWarnings: readonly string[],
 ): StructuredDocxText {
   const root = parseDocument(html, { decodeEntities: true }) as unknown as HtmlNode;
-  // Images, embedded fields, and drawings need another document model rather
-  // than being silently omitted from the Working Draft.
-  if (find(root, 'img').length || find(root, 'object').length || find(root, 'svg').length) {
-    FAIL('embedded pictures or objects');
+  // Images, embedded objects, and drawings have no place in the Markdown
+  // Working Draft. They are NOT silently omitted: the exact original DOCX is
+  // kept encrypted and untouched, the Markup is removed here (mammoth inlines
+  // base64 data), and the author is told how many were left in the original.
+  const embeddedCount =
+    find(root, 'img').length + find(root, 'object').length + find(root, 'svg').length;
+  if (embeddedCount) {
+    markdown = markdown.replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/[ \t]+\n/g, '\n');
   }
   const tables = preserveTables(root, markdown);
   const notes = preserveFootnotes(root, tables.text);
@@ -181,6 +197,12 @@ export function preserveDocxStructure(
   const warnings = [
     'The editable draft is Markdown, not a Word page. The exact original DOCX is kept separately. Check title, subtitle, captions, typography, page layout, headers, and reference-manager fields against the original; these are not a verified Word-formatting roundtrip.',
   ];
+  if (embeddedCount) warnings.push(
+    `${embeddedCount} embedded picture(s) or object(s) are not carried into the editable draft. They remain in your original Word file, which is kept unchanged. Check where they belong against the original.`,
+  );
+  if (tables.flattened) warnings.push(
+    `${tables.flattened} Word table(s) could not be shown as a grid and appear as plain paragraphs in the editable draft. Their text is kept; check the layout against your original Word file, which is unchanged.`,
+  );
   if (tables.count) warnings.push(
     `${tables.count} Word table(s) are represented as Markdown row-and-column grids. Cell relationships are retained; native Word table formatting and export are not yet qualified.`,
   );

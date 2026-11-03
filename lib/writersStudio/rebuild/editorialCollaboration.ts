@@ -1,3 +1,6 @@
+import type { TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
+import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
+import type { PassageAct } from '@/lib/writersStudio/passageActs';
 import { apiFetch } from '@/lib/http/apiBase';
 import { occurrences } from '@/lib/manuscript/exactText';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
@@ -218,6 +221,12 @@ export async function sendBoundEditorialTurn(
     relationshipId?: string;
     /** One explicitly selected prior MAIA editorial response from this relationship. */
     carry?: EditorialCarrySelection;
+    /** The teaching button pressed (F1); the server owns the answer's shape. */
+    teachingAnchor?: TeachingAnchor;
+    /** The free Ask box (Design 3C); the server owns the answer's shape. */
+    turnShape?: TurnShape;
+    /** The card pressed (conversation-first Focus, step 1); the server owns its instruction. */
+    passageAct?: PassageAct;
   } | string,
 ): Promise<EditorialTurnOutcome> {
   if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
@@ -225,6 +234,9 @@ export async function sendBoundEditorialTurn(
   const responseDepth = typeof options === 'string' ? undefined : options?.responseDepth;
   const relationshipId = typeof options === 'string' ? options : options?.relationshipId;
   const carry = typeof options === 'string' ? undefined : options?.carry;
+  const teachingAnchor = typeof options === 'string' ? undefined : options?.teachingAnchor;
+  const turnShape = typeof options === 'string' ? undefined : options?.turnShape;
+  const passageAct = typeof options === 'string' ? undefined : options?.passageAct;
   if (!relationshipId) return { ok: false, reason: 'scope_refused', detail: 'relationship_required' };
   try {
     const res = await apiFetch('/api/writers-studio/editorial/turn', {
@@ -238,6 +250,9 @@ export async function sendBoundEditorialTurn(
         ...(responseDepth ? { responseDepth } : {}),
         relationshipId,
         ...(carry ? { carry } : {}),
+        ...(teachingAnchor ? { teachingAnchor } : {}),
+        ...(turnShape ? { turnShape } : {}),
+        ...(passageAct ? { passageAct } : {}),
       }),
     });
     const body = await res.json().catch(() => null);

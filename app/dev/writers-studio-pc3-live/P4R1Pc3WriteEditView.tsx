@@ -62,7 +62,10 @@ import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import type { A2RelationshipSummary, EligibleCarrySource } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 import type { CraftWorkingSaveDraft } from '@/lib/writersStudio/craftSaveContractR1';
-import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
+import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
+import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
+import { passageActQuestion, type PassageAct as PassageActId } from '@/lib/writersStudio/passageActs';
+import type { StudioActionId } from '@/lib/writersStudio/studioActions';
 
 export type Pc3HeldPassage = {
   draftSectionId: string;
@@ -139,6 +142,12 @@ export type P4R1Pc3WriteEditViewProps = {
     proposalRequested?: boolean;
     /** Safe local presentation only; never a durable author turn or permission. */
     displayText?: string;
+    /** The teaching button pressed (F1). The server owns the answer's shape. */
+    teachingAnchor?: TeachingAnchor;
+    /** The free Ask box (Design 3C); the server owns the answer's shape. */
+    turnShape?: TurnShape;
+    /** The card pressed (conversation-first Focus, step 1); the server owns its instruction. */
+    passageAct?: PassageActId;
   }) => void;
   /** Retire pending visible editorial result after an author STOP. */
   onStopEditorial: () => void;
@@ -154,6 +163,8 @@ export type P4R1Pc3WriteEditViewProps = {
   onReviseInsight: NonNullable<Parameters<typeof InsightReadings>[0]['onRevise']>;
   onChoosePassage: NonNullable<Parameters<typeof InsightReadings>[0]['onChoosePassage']>;
   onStartFreshConversation?: () => void;
+  /** Design 1B: open a Develop place for this Work (navigation only). */
+  onStudioPlace?: (place: 'develop-overview' | 'editorial-pass') => void;
   onChooseRelationship: (threadId: string) => void;
   onBeginMaiaRelationship: () => void;
   onChooseMaiaRelationship: (relationshipId: string) => void;
@@ -632,10 +643,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const teachRevisionEdit = (edit: RevisionEdit) => {
     props.onDepth('learning');
     props.onOpenWorkspace();
-    props.onSendEditorial(teachingTurnPrompt(
+    props.onSendEditorial(teachingQuestion(
       'change',
       edit.from ? `changing "${edit.from.trim()}" to "${edit.to.trim()}"` : `adding "${edit.to.trim()}"`,
-    ));
+    ), { teachingAnchor: 'change' });
   };
 
   const changeRevisionEdit = (edit: RevisionEdit) => {
@@ -661,6 +672,40 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       purpose: 'Member-selected changes from MAIA proposal',
     });
     if (ok) setSelectedRevisionEdits(new Set());
+  };
+
+  // Craftsman's Table on the held passage, only if its words are still exactly
+  // the ones held. Shared by the passage menu and MAIA's offered control (1B).
+  const openCraftOnHeld = () => {
+    if (!props.held || !currentCraftScope) return;
+    const body = props.writing.bodyOf(props.held.draftSectionId);
+    const exact = Array.from(body).slice(props.held.start, props.held.end).join('');
+    if (exact !== props.held.text
+      || props.held.revisionNumber !== props.writing.currentRevisionId()) {
+      setCraftNotice('The passage changed. Select its current words again; nothing was applied.');
+      return;
+    }
+    setCraftNotice(null);
+    setCanvas(false);
+    setIsolatedEditorial(false);
+    setCraftOwnerScope(currentCraftScope);
+    setCraftOpen(true);
+    props.onOpenWorkspace();
+  };
+
+  /* Design 1B: a control MAIA offered and the writer clicked. Each one only
+     takes the writer somewhere; nothing is sent, read, saved or applied. */
+  const onStudioAction = (id: StudioActionId) => {
+    if (id === 'develop-overview' || id === 'editorial-pass') {
+      requestCraftDeparture('Switch Studio room', () => props.onStudioPlace?.(id));
+      return;
+    }
+    if (id === 'craftsmans-table') {
+      if (!requestConversationDeparture()) return;
+      openCraftOnHeld();
+      return;
+    }
+    props.onStartFreshConversation?.();
   };
 
   // Craftsman's Table has its own passage controls; the selection pill would
@@ -700,20 +745,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           <button type="button" role="menuitem" data-open-craftsmans-table onClick={() => {
             if (!requestConversationDeparture()) return;
             setSelectionMenuOpen(false);
-            if (!props.held || !currentCraftScope) return;
-            const body = props.writing.bodyOf(props.held.draftSectionId);
-            const exact = Array.from(body).slice(props.held.start, props.held.end).join('');
-            if (exact !== props.held.text
-              || props.held.revisionNumber !== props.writing.currentRevisionId()) {
-              setCraftNotice('The passage changed. Select its current words again; nothing was applied.');
-              return;
-            }
-            setCraftNotice(null);
-            setCanvas(false);
-            setIsolatedEditorial(false);
-            setCraftOwnerScope(currentCraftScope);
-            setCraftOpen(true);
-            props.onOpenWorkspace();
+            openCraftOnHeld();
           }}>
             <b>Craftsman's Table</b>
             <span>Work on these exact words with visible changes and MAIA beside the writing.</span>
@@ -722,11 +754,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           <button type="button" role="menuitem" onClick={() => {
             setSelectionMenuOpen(false);
             props.onOpenWorkspace();
-            props.onSendEditorial([
-              'Discuss what is happening in this exact passage with me before proposing any edits.',
-              'Reflect what you notice in plain language and ask me one useful question about what I am trying to do.',
-              'Do not propose replacement wording unless I ask.',
-            ].join('\n\n'));
+            // Step 1: only the writer's words are stored; the instruction is server-owned.
+            props.onSendEditorial(passageActQuestion('discuss'), { proposalPolicy: 'reply_only', passageAct: 'discuss' });
           }}>
             <b>Discuss</b>
             <span>Talk about the passage before changing anything.</span>
@@ -741,7 +770,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             if (gatesOpen) {
               props.onDepth('learning');
               props.onOpenWorkspace();
-              props.onSendEditorial(teachingTurnPrompt('passage'), { proposalPolicy: 'reply_only' });
+              props.onSendEditorial(teachingQuestion('passage'), { proposalPolicy: 'reply_only', teachingAnchor: 'passage' });
               return;
             }
             // A gate is still open: the panel holds the request and continues it
@@ -749,9 +778,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             setRequestedPassageAct({
               key: Date.now(),
               label: 'Teach me about this',
-              prompt: teachingTurnPrompt('passage'),
+              prompt: teachingQuestion('passage'),
               depth: 'learning',
-              options: { proposalPolicy: 'reply_only' },
+              options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' },
             });
             props.onOpenWorkspace();
           }}>
@@ -775,16 +804,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             setSelectionMenuOpen(false);
             props.onOpenWorkspace();
             setIsolatedEditorial(true);
-            props.onSendEditorial([
-              'Help me revise this exact passage.',
-              'Start with exactly these three short lines in plain language:',
-              '"What I’d preserve: …"',
-              '"Friction I notice: …" — support this from the exact words; do not grade or diagnose the writing.',
-              '"What I’d try: …" — name the editorial move and why you would try it.',
-              'Then, if a revision is warranted, offer one possible revision. Preserve my voice, intention, subject, and intentional ambiguity.',
-              'Begin the rationale with "Editorial purpose: <short descriptive direction>". Separate meaning changes from style changes, treat reader effects as hypotheses, and say what could be lost.',
-              'Nothing is to be applied automatically.',
-            ].join('\n\n'));
+            props.onSendEditorial(passageActQuestion('revise'), { proposalPolicy: 'allow', passageAct: 'revise' });
           }}>
             <b>Revise</b>
             <span>Ask MAIA for one useful editorial move.</span>
@@ -794,7 +814,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             setSelectionMenuOpen(false);
             props.onDepth('direct');
             props.onOpenWorkspace();
-            props.onSendEditorial('Show me the editorial reasoning you can support from this exact passage. Distinguish evidence from interpretation. Do not propose replacement wording unless I ask.');
+            props.onSendEditorial(passageActQuestion('deeper'), { proposalPolicy: 'reply_only', passageAct: 'deeper' });
           }}>
             <b>Go deeper</b>
             <span>Open the technical reasoning, evidence, and tradeoffs.</span>
@@ -927,6 +947,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         manuscriptId={props.context.manuscriptId}
         sectionId={props.focusId}
         initialDraft={workConversationStarter}
+        onStudioPlace={props.onStudioPlace}
         onClose={() => {
           setWorkConversationOpen(false);
           setWorkConversationStarter('');
@@ -952,6 +973,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       </header>
 
       <EditorialDancePanel
+        onStudioAction={onStudioAction}
         manuscriptTitle={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
         currentText={currentText}
         sectionBody={currentBody}
@@ -1337,6 +1359,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       // internal; the controller must not confuse this with stored author
       // transcript custody or a server acknowledgement.
       ...(options?.displayText !== undefined ? { displayText: options.displayText } : {}),
+      ...(options?.teachingAnchor ? { teachingAnchor: options.teachingAnchor } : {}),
     });
   };
 
@@ -1506,6 +1529,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       />
 
       <EditorialDancePanel
+        onStudioAction={onStudioAction}
         manuscriptTitle={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
         showOriginal={false}
         origin={props.carriedInsight && props.carriedInsightReturnMode ? {

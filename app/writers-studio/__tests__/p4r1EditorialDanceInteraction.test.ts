@@ -264,32 +264,31 @@ test('empty editorial room offers examples and ideas as real MAIA acts', () => {
 
   act(() => button('Show me examples').click());
   expect(onDepth).toHaveBeenCalledWith('learning');
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('clearly labeled illustrative examples');
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('examples, not recommendations');
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+  // Step 1 (conversation-first Focus): the writer's turn is the button's words; the card's
+  // instruction is added server-side from the closed passageAct field.
+  expect(onSend.mock.calls.at(-1)?.[0]).toBe('Show me examples of what could work here.');
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'examples' });
 
   act(() => button('Give me ideas').click());
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('several ideas for where this exact passage could go');
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('distinct creative directions');
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('Do not rank them');
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+  expect(onSend.mock.calls.at(-1)?.[0]).toBe('Give me ideas for where this passage could go.');
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'ideas' });
 
   act(() => button('Discuss what’s happening').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'discuss' });
 
   act(() => button('Teach me about the writing').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
-  // Founder direction 2026-11-01: a conversation, not an info dump.
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('as a conversation rather than a lesson');
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('just one thing that is already working here');
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('End with one short question that lets me choose where we go next');
-  expect(onSend.mock.calls.at(-1)?.[0]).not.toMatch(/one or two craft moves/);
+  // F1 (founder, 2026-11-02): the writer's turn is the button's words; the
+  // conversational teaching shape is added server-side from the anchor.
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', teachingAnchor: 'passage' });
+  expect(onSend.mock.calls.at(-1)?.[0]).toBe('Teach me about the writing in this passage.');
+  expect(onSend.mock.calls.at(-1)?.[0]).not.toContain('as a conversation rather than a lesson');
 
   act(() => button('Go deeper').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'deeper' });
 
   act(() => button('Show edit options').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'allow', proposalRequested: true });
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise' });
+  expect(onSend.mock.calls.at(-1)?.[0]).toBe('Show me edit options for this passage.');
 });
 
 
@@ -389,22 +388,23 @@ test('a MAIA response without a proposal stays visible and keeps exploration act
     Array.from(container.querySelectorAll('button')).find((button) => button.textContent === text)!;
 
   act(() => followup('Show examples').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'examples' });
 
   act(() => followup('Give me ideas').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'ideas' });
 
   act(() => followup('Teach me more').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
-  // It continues the conversation rather than restarting the lesson.
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('Keep teaching from where we are');
-  expect(onSend.mock.calls.at(-1)?.[0]).toContain('Do not repeat what you have already explained');
+  // It continues the conversation (the 'continue' shape, server-side), and the
+  // writer's turn is only the button's words (F1).
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', teachingAnchor: 'continue' });
+  expect(onSend.mock.calls.at(-1)?.[0]).toBe('Teach me more.');
 
   act(() => followup('Go deeper').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'deeper' });
 
   act(() => followup('Show revision options').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'allow', proposalRequested: true });
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise-after-talk' });
+  expect(onSend.mock.calls.at(-1)?.[0]).toBe('Show me revision options, from what we’ve discussed.');
 });
 
 test('a card chosen before the privacy posture is answered points at the posture and sends nothing', () => {
@@ -449,7 +449,7 @@ test('a card chosen before the privacy posture is answered points at the posture
   expect(container.querySelector('[data-posture-nudge]')).toBeNull();
   // The act the writer asked for continues once the posture is answered.
   expect(onSend).toHaveBeenCalledTimes(1);
-  expect(onSend.mock.calls[0][0]).toContain('Discuss what is happening in this exact passage');
+  expect(onSend.mock.calls[0][0]).toBe('Let’s talk about what’s happening in this passage.');
   act(() => card('Discuss what’s happening').click());
   expect(onSend).toHaveBeenCalledTimes(2);
 });
@@ -535,8 +535,8 @@ describe('an act chosen at a gate continues once the writer has answered (founde
     props = { ...props, maiaRelationship: { ...props.maiaRelationship, active: true } };
     draw();
     expect(props.onSend).toHaveBeenCalledTimes(1);
-    expect(props.onSend.mock.calls[0][0]).toContain('Teach me about the writing in this exact passage');
-    expect(props.onSend.mock.calls[0][1]).toEqual({ proposalPolicy: 'reply_only' });
+    expect(props.onSend.mock.calls[0][0]).toContain('Teach me about the writing in this passage');
+    expect(props.onSend.mock.calls[0][1]).toEqual({ proposalPolicy: 'reply_only', teachingAnchor: 'passage' });
     expect(props.onDepth).toHaveBeenCalledWith('learning');
     expect(held()).toBeNull();
 

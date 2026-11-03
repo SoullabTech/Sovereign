@@ -54,7 +54,11 @@ import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/wri
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
 import { editorialDirective, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
+import { teachingTurnInstruction, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
+import { conversationTurnInstruction, type TurnShape } from '@/lib/writersStudio/conversationTurn';
+import { passageActInstruction, type PassageAct } from '@/lib/writersStudio/passageActs';
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
+import { studioActionsInstruction } from '@/lib/writersStudio/studioActions';
 import { relationalCraftSystemGuidance } from '@/lib/writersStudio/relationalCraftExchange';
 import {
   admitEditorialToolEnvelope, EDITORIAL_TOOL_NAME, editorialToolSchemaForKinds,
@@ -138,6 +142,15 @@ export interface EditorialTurnInput {
   readonly proposalPolicy?: ProposalPolicy;
   /** Explicitly selected response register; NEVER inferred from the writer. */
   readonly responseDepth?: EditorialDepth;
+  /** The teaching button the writer pressed (F1). Its shape is added here,
+   *  server-side; the writer's turn holds only the button's words. */
+  readonly teachingAnchor?: TeachingAnchor;
+  /** The free Ask box (Design 3C). Its shape is added here, server-side;
+   *  the writer's turn holds only what they typed or said. */
+  readonly turnShape?: TurnShape;
+  /** The card the writer pressed (conversation-first Focus, step 1). Its instruction is
+   *  added here, server-side; the writer's turn holds only the button's words. */
+  readonly passageAct?: PassageAct;
 }
 
 export type EditorialTurnRefusal =
@@ -408,9 +421,18 @@ export async function runEditorialTurn(
       // Both derive from the exact durable utterance and chosen depth only.
       // No new context, corpus, or identity crosses this instruction.
       editorialDirective(input.responseDepth ?? 'guided'),
+      // Server-owned teaching shape (F1): how to answer a Teach me, never a
+      // sentence stored as the writer's.
+      input.teachingAnchor ? teachingTurnInstruction(input.teachingAnchor) : '',
+      // Server-owned conversational shape for the free Ask box (Design 3C).
+      input.turnShape === 'conversation' ? conversationTurnInstruction() : '',
+      // Server-owned instruction for the card the writer pressed (step 1).
+      input.passageAct ? passageActInstruction(input.passageAct) : '',
       // Server-owned map of the Studio's real controls (Design 1A), so "how do I"
       // gets the actual tool instead of a workaround. Names only; she presses nothing.
       studioGuideInstruction(),
+      // Design 1B: MAIA may offer one control as a marker; the writer clicks it.
+      studioActionsInstruction('passage-focus'),
       relationalCraftSystemGuidance(utterance),
       latitudeInstruction(scope),
       sequenceInstruction(gated),
