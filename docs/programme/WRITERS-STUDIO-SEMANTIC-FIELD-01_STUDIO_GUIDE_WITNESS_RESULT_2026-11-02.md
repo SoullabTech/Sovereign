@@ -187,3 +187,37 @@ not tested here.
   ⛔ not witnessed.
 - Three log lines in the first 30 minutes, `Server Reference ID did not match the expected format.
   Received "x"` (Next server-action handler). Container healthy; not attributed.
+
+## 8. Addendum — Design 1B live: MAIA offers a control, the writer clicks
+
+```
+EVIDENCE:   Production GIT_COMMIT f21fda83a (cutover 2026-11-03 00:29:54Z, founder-authorized; carries #2076).
+            printenv == Config.Env == asserted; healthy; restarts 0; 0 error lines in the 15 minutes after.
+            Founder account, ~00:31Z–00:34Z. ⛔ Founder use is not member witness.
+```
+
+- **Asked:** Passage Focus, fresh conversation (thread `de84892c`), passage "A storm descended without
+  warning…", free Ask box: *"How can I see what this whole chapter is doing?"*
+- **Reply (verbatim as shown):**
+
+> There's a control for exactly that. In Develop, on the Overview tab, "Read this chapter" has me read the whole chapter myself and say what it's doing, what's working, and where I'd focus. Nothing changes in your manuscript — it's reading, not editing.
+>
+> If you'd rather have it come to you place by place, Develop → More ways to explore → Edit with MAIA has "Start an editorial pass," where I read the current manuscript and bring the spots where an edit might help, in order. Also nothing applied.
+>
+> Which of those two is closer to what you want — the overall sense of the chapter, or the specific places?
+
+- **Offered control:** exactly one button, **Go to "Read this chapter"** (`develop-overview`). No
+  `[[studio:` text appeared anywhere on the page.
+- **Clicked:** the Studio moved to Develop → Overview for the same Work (`#read-this-chapter`), with "Let
+  MAIA read this chapter." in view. **Nothing was pressed:** no reading started.
+
+Class: **DOES**. She pointed to the right control in words and offered it as one click, and the click only
+navigated.
+
+### Not yet observed
+
+- The other three actions (`editorial-pass`, `craftsmans-table`, `new-conversation`) live, and any button in
+  the Work conversation. Covered by tests (#2076), but ⛔ not witnessed.
+- Whether MAIA avoids offering a button when none fits. One sample can't show that.
+- After the jump, the address keeps the Focus conversation's `editorialThread` and `s` parameters. Develop
+  ignores them here. Noted, not repaired.
