@@ -1411,6 +1411,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         </div>
       ) : null}
       <CraftsmansTableR1
+        editLatitude={props.editLatitude}
+        onEditLatitude={props.onLatitude}
         sections={props.context.sections}
         bodyOf={props.writing.bodyOf}
         held={props.held}

@@ -288,4 +288,15 @@ describe('JARVIS: canonical Write -> explicitly chosen Craftsman and MAIA', () =
     expect(onBegin).toHaveBeenCalledTimes(1);
     expect(onSend).not.toHaveBeenCalled();
   });
+
+  it('lets the writer choose how much MAIA may change, beside Suggest an edit', () => {
+    enterCraft();
+    const select = node.querySelector<HTMLSelectElement>('[data-craft-edit-strength] select');
+    expect(select).not.toBeNull();
+    const labels = Array.from(select!.options).map(o => o.textContent);
+    expect(labels[0]).toBe('Keep my words and structure');
+    expect(labels[4]).toBe('Rewrite fully if it helps');
+    expect(select!.value).toBe('1');
+    expect(onSend).not.toHaveBeenCalled();
+  });
 });
