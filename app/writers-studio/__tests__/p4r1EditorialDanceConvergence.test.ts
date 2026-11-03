@@ -46,7 +46,7 @@ describe('C2 editorial dance convergence', () => {
   });
 
   it('makes progressive craft depth real MAIA acts, not decorative toggles', () => {
-    expect(dance).toContain("props.onSend(teachingTurnPrompt('direction'))");
+    expect(dance).toContain("props.onSend(teachingQuestion('direction'), { teachingAnchor: 'direction' })");
     expect(dance).toContain('Go deeper on this editorial direction.');
     expect(dance).toContain('props.onSend([');
     expect(dance).toContain('props.lastMaiaTurn?.body');

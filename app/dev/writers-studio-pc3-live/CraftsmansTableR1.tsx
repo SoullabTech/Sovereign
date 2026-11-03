@@ -25,7 +25,7 @@ import { splitActiveParagraph, craftProseBlocks, craftProseBreaks, craftTypograp
 import type { WriteBlock } from '@/app/writers-studio/full-redesign/WriteRoom';
 import { craftTargetKey, type CraftTableSnapshot, type CraftTablePort, type CraftKeptSpan, type CraftCanvasReceipt } from '@/lib/writersStudio/craftFocusR1';
 import { locateUniquePresentationPassage } from '@/lib/writersStudio/rebuild/editorialCollaboration';
-import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
+import { teachingQuestion } from '@/lib/writersStudio/teachingTurn';
 
 export type CraftHeldPassage = {
   draftSectionId: string;
@@ -552,9 +552,11 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
       });
       return;
     }
-    props.onSend([teachingTurnPrompt('change', subject), localWorking.trim()].join('\n\n'), {
+    // F1: the writer's turn is the button's words only; the teaching shape is
+    // server-owned and MAIA already sees the change in this conversation.
+    props.onSend(teachingQuestion('change', subject), {
       proposalPolicy: 'reply_only',
-      displayText: 'Teach me what is happening in this change.',
+      teachingAnchor: 'change',
     });
   };
 

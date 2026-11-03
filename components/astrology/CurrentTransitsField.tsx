@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { apiUrl } from '@/lib/http/apiBase';
+import { useAstrologyTester } from '@/lib/hooks/useAstrologyTester';
 import styles from './current-transits-field.module.css';
 
 interface TransitPosition {
@@ -35,6 +36,7 @@ export function CurrentTransitsField({
   birthChart?: BirthChartLike | null;
   variant?: 'astrology' | 'house';
 }) {
+  const canOpenAstrology = useAstrologyTester();
   const [positions, setPositions] = useState<TransitPosition[]>([]);
   const [aspects, setAspects] = useState<TransitAspect[]>([]);
   const [calculatedAt, setCalculatedAt] = useState<string | null>(null);
@@ -143,9 +145,12 @@ export function CurrentTransitsField({
             <span>
               {calculatedAt ? `Calculated ${new Date(calculatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Current sky'}
             </span>
-            <Link href="/astrology">
-              {variant === 'house' ? 'Open Astrology →' : 'Explore the moment in your chart →'}
-            </Link>
+            {/* Free Astrology is testers-only (lib/astrology/testerGate.ts); no door for anyone else. */}
+            {canOpenAstrology ? (
+              <Link href="/astrology">
+                {variant === 'house' ? 'Open Astrology →' : 'Explore the moment in your chart →'}
+              </Link>
+            ) : null}
           </div>
         </>
       )}

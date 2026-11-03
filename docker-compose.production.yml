@@ -118,6 +118,9 @@ services:
       SMTP_HOST: "smtp.protonmail.ch"
       SMTP_USER: "noreply@soullab.life"
       SMTP_PASSWORD_FILE: "/run/secrets/smtp_password"
+      # Writer original-file intake: KMS data-key credential, a host file mounted read-only below (never an env value).
+      # WRITER_SOURCE_KEY_PROVIDER / _KMS_KEY_ARN / _KMS_REGION come from .env.production. See docs/programme/WRITER_SOURCE_KMS_RULING_AND_INTAKE_LIFT_RUNBOOK_2026-11-01.md
+      AWS_SHARED_CREDENTIALS_FILE: "/run/secrets/writer_source_aws_credentials"
       # GIT_COMMIT is deliberately NOT set here. The IMAGE owns build provenance:
       # Dockerfile bakes ENV GIT_COMMIT from the build arg the deploy lane stamps
       # from the asserted SHA, and the container inherits it. A runtime override
@@ -209,6 +212,13 @@ services:
       - type: bind
         source: /home/soullab/.config/soullab-mail/noreply.smtp-token
         target: /run/secrets/smtp_password
+        read_only: true
+        bind:
+          create_host_path: false
+      # Writer source KMS credential: host file, read-only, owned by uid 1000, mode 0600. Must exist on the host BEFORE this service is recreated.
+      - type: bind
+        source: /home/soullab/.config/soullab-writer/aws-credentials
+        target: /run/secrets/writer_source_aws_credentials
         read_only: true
         bind:
           create_host_path: false

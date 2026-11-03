@@ -65,7 +65,7 @@ describe('W3 — integrated import truth', () => {
   });
 
   it('does not loosen the production Source authority', () => {
-    expect(release).toContain('sourceIntakeReleased: false');
+    expect(release).toContain('sourceIntakeReleased: true');
     expect(ingest).toContain('writerReleaseAuthority().sourceIntakeReleased');
     expect(ingest).toContain('status: 423');
     expect(ingest).toContain('recordArtifactArrival');

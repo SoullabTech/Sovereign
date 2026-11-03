@@ -57,7 +57,7 @@ describe('Writer Studio editorial latitude experience', () => {
     expect(dance).toContain('MAIA’s latest response');
     expect(dance).toContain('data-editorial-latest-response');
     expect(dance).toContain("{ proposalPolicy: 'allow', proposalRequested: true }");
-    expect(controller).toContain('options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean; displayText?: string }');
+    expect(controller).toContain('options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean; displayText?: string; teachingAnchor?: TeachingAnchor; turnShape?: TurnShape }');
     expect(controller).toContain('onSendEditorial={(text, options) => void sendEditorial(text, options)}');
     expect(dance).toContain('{postureGate}');
     expect(dance).toContain('disabled={props.busy || postureBlocksEditorial}');

@@ -19,8 +19,8 @@ export interface WriterReleaseAuthority {
  * acceptance; old test evidence does not transfer automatically.
  */
 const AUTHORITY: WriterReleaseAuthority = Object.freeze({
-  manifestId: 'writer-full-beta-encrypted-source-f1-f2-review-hold-20261026',
-  sourceIntakeReleased: false,
+  manifestId: 'writer-full-beta-encrypted-source-intake-released-20261102',
+  sourceIntakeReleased: true,
   importFormats: Object.freeze(['docx', 'pdf', 'epub', 'text'] as const),
   exportsCertified: Object.freeze({ pdf: false, epub: false }),
   permanentErasureCertified: false,
