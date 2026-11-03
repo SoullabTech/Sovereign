@@ -5,6 +5,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 jest.mock('@/lib/http/apiBase', () => ({ apiFetch: jest.fn() }));
+// The unfinished-uploads list (D3) makes its own request on mount. These tests pin the import flow's exact request
+// sequence, so the list is stubbed here; it has its own suite (p4r1UnfinishedUploads.interaction.test.ts), which also pins that
+// the Import room mounts it for a server session and not for a local review.
+// It records the props it is given, because what the Import room tells it (which original is still in use) is part of the contract.
+const mockUnfinishedProps: Array<Record<string, unknown>> = [];
+jest.mock('@/app/dev/writers-studio-pc3-live/P4R1UnfinishedUploads', () => ({
+  __esModule: true,
+  default: (props: Record<string, unknown>) => { mockUnfinishedProps.push(props); return null; },
+}));
 import { apiFetch } from '@/lib/http/apiBase';
 import P4R1ImportManuscript from '@/app/dev/writers-studio-pc3-live/P4R1ImportManuscript';
 import { readLocalReviewManuscript } from '@/lib/writersStudio/localReviewManuscript';
@@ -36,7 +45,9 @@ const button = (label: string) => {
 
 beforeEach(() => {
   mocked.mockReset();
+  mockUnfinishedProps.length = 0;
   sessionStorage.clear();
+  window.localStorage.removeItem('maia_settings');
   originalRandomUuid = Object.getOwnPropertyDescriptor(globalThis.crypto, 'randomUUID');
   Object.defineProperty(globalThis.crypto, 'randomUUID', {
     configurable: true,
@@ -149,6 +160,8 @@ test('local review carries EPUB through source preview, author structure confirm
 });
 
 test('released production import reuses one upload identity after interruption and saves the returned Source arrival', async () => {
+  // D6: an upload is a content write, so the member's CURRENT posture must be resolved. A real session has one.
+  window.localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
   const onComplete = jest.fn();
   const uuid = '33333333-3333-4333-8333-333333333333';
   const randomUUID = (globalThis.crypto as unknown as { randomUUID: jest.Mock }).randomUUID;
@@ -209,7 +222,7 @@ test('released production import reuses one upload identity after interruption a
   expect(mocked.mock.calls[0][0]).toBe('/api/sovereign/manuscripts/ingest');
   expect(mocked.mock.calls[0][1]).toMatchObject({
     method: 'POST',
-    headers: { 'x-writer-upload-idempotency-key': uuid },
+    headers: { 'x-writer-upload-idempotency-key': uuid, 'x-maia-sanctuary': 'false' },
   });
 
   await select();
@@ -283,4 +296,270 @@ test('completed import consumes the threshold query while preserving local-revie
   const modeStart = controller.indexOf('const navigateMode = useCallback');
   const modeEnd = controller.indexOf('const onMode = useCallback', modeStart);
   expect(controller.slice(modeStart, modeEnd)).toContain("next.delete('import')");
+});
+describe('D6 — the Import room never sends an original while Sanctuary is on or the posture is unresolved', () => {
+  async function chooseFile() {
+    await act(async () => {
+      root.render(React.createElement(P4R1ImportManuscript, {
+        localReview: false,
+        sourceIntakeReleased: true,
+        onCancel: jest.fn(),
+        onComplete: jest.fn(),
+      }));
+    });
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['fictional-docx-package'], 'fictional-river.docx', {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      lastModified: 1_793_028_000_000,
+    });
+    Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })));
+    await settle();
+  }
+
+  test('Sanctuary on: nothing is sent and the member is told why', async () => {
+    window.localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: true }));
+    await chooseFile();
+    expect(mocked).not.toHaveBeenCalled();
+    expect(container.textContent).toContain('Sanctuary is on');
+    expect(container.textContent).toContain('Nothing has been sent');
+  });
+
+  test.each([
+    ['no live settings at all', null],
+    ['unreadable settings', '{not json'],
+    ['a non-boolean posture', JSON.stringify({ sanctuary: 'false' })],
+  ])('an unresolved posture (%s) is never read as ordinary: nothing is sent', async (_name, raw) => {
+    if (raw !== null) window.localStorage.setItem('maia_settings', raw);
+    await chooseFile();
+    expect(mocked).not.toHaveBeenCalled();
+    expect(container.textContent).toContain('Your Sanctuary setting could not be read on this device');
+    expect(container.textContent).toContain('Open MAIA here once');
+    expect(container.textContent).not.toContain('Quick Settings'); // no such control exists on this screen to resolve it
+  });
+
+  test('a server Sanctuary refusal is shown as such, not mislabelled as the generic hold', async () => {
+    window.localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
+    mocked.mockResolvedValueOnce(response(423, {
+      error: 'Sanctuary is on. Original files are not saved during Sanctuary.',
+      code: 'sanctuary_unavailable',
+    }));
+    await chooseFile();
+    expect(mocked).toHaveBeenCalledTimes(1);
+    expect(container.textContent).toContain('Original files are not saved during Sanctuary');
+    expect(container.textContent).not.toContain('still held for member accounts');
+  });
+});
+
+describe('D4 — the member is told when the original could not be stored with the Work', () => {
+  const SAVED_ID = '55555555-5555-4555-8555-555555555555';
+  async function importUntilCreate(saveBody: Record<string, unknown>, saveResponse?: ReturnType<typeof response>) {
+    window.localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
+    const onComplete = jest.fn();
+    mocked
+      .mockResolvedValueOnce(response(200, {
+        title: 'Fictional River', format: 'docx', warnings: [],
+        text: '# Opening\n\nThe fictional river moved under the bridge.',
+        sourceArrivalId: '44444444-4444-4444-8444-444444444444',
+      }))
+      .mockResolvedValueOnce(response(200, {
+        lossless: true,
+        preview: [{ position: 0, heading: 'Opening', body: 'The fictional river moved under the bridge.', headingDepth: 1, headingSignal: 'markdown' }],
+      }))
+      .mockResolvedValueOnce(saveResponse ?? response(201, { id: SAVED_ID, sectionCount: 1, ...saveBody }));
+    await act(async () => {
+      root.render(React.createElement(P4R1ImportManuscript, {
+        localReview: false, sourceIntakeReleased: true, onCancel: jest.fn(), onComplete,
+      }));
+    });
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['fictional-docx-package'], 'fictional-river.docx', {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', lastModified: 1_793_028_000_000,
+    });
+    Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })));
+    await settle();
+    await act(async () => button('Review structure').click());
+    await settle();
+    await act(async () => button('Create Work and open in Write').click());
+    await settle();
+    return onComplete;
+  }
+
+  test('original bound: the Work opens at once and no notice is shown', async () => {
+    const onComplete = await importUntilCreate({ sourceCustody: 'source_custodied' });
+    expect(onComplete).toHaveBeenCalledWith(SAVED_ID);
+    expect(container.querySelector('[data-custody-notice]')).toBeNull();
+  });
+
+  test.each([
+    ['legacy label', { sourceCustody: 'legacy_interpreted_import' }],
+    ['no label at all (never read as bound)', {}],
+  ])('original NOT bound (%s): the Work waits, the member is told plainly, and the same button then continues without a second import', async (_n, saveBody) => {
+    const onComplete = await importUntilCreate(saveBody);
+    expect(onComplete).not.toHaveBeenCalled();
+    const notice = container.querySelector('[data-custody-notice]');
+    expect(notice?.textContent).toContain('Your Work was saved with all of your words');
+    expect(notice?.textContent).toContain('no original is held for this Work');
+    expect(mocked).toHaveBeenCalledTimes(3);
+
+    await act(async () => button('Open saved writing').click());
+    await settle();
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onComplete).toHaveBeenCalledWith(SAVED_ID);
+    expect(mocked).toHaveBeenCalledTimes(3); // continuing never imports the manuscript a second time
+  });
+
+  test('the server REFUSES (409, nothing saved): the Work does not open, the member sees the sentence, nothing is remembered as saved, and pressing again retries and then opens', async () => {
+    const refusal = {
+      error: 'Your writing was not saved, because it could not be stored together with its source. Nothing was changed. You can try again.',
+      code: 'source_custody_not_bound',
+      retryable: true,
+    };
+    const onComplete = await importUntilCreate({}, response(409, refusal));
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('Nothing was changed');
+    expect(container.querySelector('[data-custody-notice]')).toBeNull(); // not the "saved without its original" notice: nothing was saved
+    expect(mocked).toHaveBeenCalledTimes(3);
+    const again = button('Create Work and open in Write');
+    expect(again.disabled).toBe(false); // the member is not stranded
+
+    mocked.mockResolvedValueOnce(response(201, { id: SAVED_ID, sectionCount: 1, sourceCustody: 'source_custodied' }));
+    await act(async () => again.click());
+    await settle();
+    expect(mocked).toHaveBeenCalledTimes(4); // a real second import attempt, not a continuation of a phantom save
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onComplete).toHaveBeenCalledWith(SAVED_ID);
+    // A RETRYABLE refusal keeps the held original: the retry binds the same one.
+    const [first, second] = [JSON.parse(mocked.mock.calls[2][1].body), JSON.parse(mocked.mock.calls[3][1].body)];
+    expect(first.sourceArrivalId).toBe('44444444-4444-4444-8444-444444444444');
+    expect(second.sourceArrivalId).toBe('44444444-4444-4444-8444-444444444444');
+  });
+
+  test.each([
+    ['source_original_unavailable', 'The original you uploaded is no longer available, so this Work was not saved. Nothing was changed. Choose the file again to continue.'],
+    ['source_already_attached', 'That original is already attached to a Work in your library, so a second Work was not created. Nothing new was saved.'],
+  ])('a PERMANENT refusal (%s): the dead reference is dropped, the member is returned to the source step with the sentence, and the next save never resends it', async (code, sentence) => {
+    const onComplete = await importUntilCreate({}, response(409, { error: sentence, code, retryable: false }));
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(sentence);
+    expect(container.querySelector('[data-custody-notice]')).toBeNull();
+    // Back on the source step: the structure step's own button is gone, the source step's is back.
+    expect(() => button('Create Work and open in Write')).toThrow();
+    expect(mocked).toHaveBeenCalledTimes(3);
+    expect(JSON.parse(mocked.mock.calls[2][1].body).sourceArrivalId).toBe('44444444-4444-4444-8444-444444444444');
+
+    // The member's words are still there; carrying on is a real new act that does not claim the dead original.
+    mocked
+      .mockResolvedValueOnce(response(200, {
+        lossless: true,
+        preview: [{ position: 0, heading: 'Opening', body: 'The fictional river moved under the bridge.', headingDepth: 1, headingSignal: 'markdown' }],
+      }))
+      .mockResolvedValueOnce(response(201, { id: SAVED_ID, sectionCount: 1, sourceCustody: 'source_custodied' }));
+    await act(async () => button('Review structure').click());
+    await settle();
+    await act(async () => button('Create Work and open in Write').click());
+    await settle();
+    expect(mocked).toHaveBeenCalledTimes(5);
+    const resent = JSON.parse(mocked.mock.calls[4][1].body);
+    expect(resent.sourceArrivalId).toBeUndefined();
+    expect(typeof resent.confirmedText).toBe('string');
+    expect(onComplete).toHaveBeenCalledWith(SAVED_ID);
+  });
+
+  test.each([
+    ['source_original_unavailable', true],
+    ['source_already_attached', false],
+  ])('after %s, choosing the SAME file again %s', async (code, mintsNewUpload) => {
+    const HEADER = 'x-writer-upload-idempotency-key';
+    await importUntilCreate({}, response(409, { error: 'Fictional permanent refusal.', code, retryable: false }));
+    const firstKey = mocked.mock.calls[0][1].headers[HEADER];
+    expect(firstKey).toBe('33333333-3333-4333-8333-333333333333');
+
+    // A fresh identity is available to be minted; whether it is USED is the question.
+    (globalThis.crypto as unknown as { randomUUID: jest.Mock }).randomUUID.mockReturnValue('66666666-6666-4666-8666-666666666666');
+    mocked.mockResolvedValueOnce(response(200, {
+      title: 'Fictional River', format: 'docx', warnings: [],
+      text: '# Opening\n\nThe fictional river moved under the bridge.',
+      sourceArrivalId: '77777777-7777-4777-8777-777777777777',
+    }));
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const same = new File(['fictional-docx-package'], 'fictional-river.docx', {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', lastModified: 1_793_028_000_000,
+    });
+    Object.defineProperty(input, 'files', { configurable: true, value: [same] });
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })));
+    await settle();
+
+    expect(mocked).toHaveBeenCalledTimes(4);
+    const secondKey = mocked.mock.calls[3][1].headers[HEADER];
+    if (mintsNewUpload) {
+      // The spent identity would be handed the same dead arrival again; the advice "choose the file again" must start over.
+      expect(secondKey).toBe('66666666-6666-4666-8666-666666666666');
+    } else {
+      // The first save landed: a second copy of the same original is not made.
+      expect(secondKey).toBe(firstKey);
+    }
+  });
+
+  test('a permanent refusal also closes any open cut list, as "Back to source" does', async () => {
+    window.localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
+    mocked
+      .mockResolvedValueOnce(response(200, {
+        title: 'Fictional River', format: 'docx', warnings: [],
+        text: '# Opening\n\nLine one.\nLine two.\nLine three.',
+        sourceArrivalId: '44444444-4444-4444-8444-444444444444',
+      }))
+      .mockResolvedValueOnce(response(200, {
+        lossless: true,
+        preview: [{ position: 0, heading: 'Opening', body: 'Line one.\nLine two.\nLine three.', headingDepth: 1, headingSignal: 'markdown' }],
+      }))
+      .mockResolvedValueOnce(response(409, { error: 'Fictional permanent refusal.', code: 'source_original_unavailable', retryable: false }));
+    await act(async () => {
+      root.render(React.createElement(P4R1ImportManuscript, { localReview: false, sourceIntakeReleased: true, onCancel: jest.fn(), onComplete: jest.fn() }));
+    });
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(input, 'files', { configurable: true, value: [new File(['x'], 'fictional-river.docx', { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', lastModified: 1 })] });
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })));
+    await settle();
+    await act(async () => button('Review structure').click());
+    await settle();
+    await act(async () => button('Add cut').click());
+    expect(container.textContent).toContain('Close cuts'); // the cut list is open
+    await act(async () => button('Create Work and open in Write').click());
+    await settle();
+    // Back on the source step; return to structure and the cut list must NOT still be open on the old index.
+    mocked.mockResolvedValueOnce(response(200, {
+      lossless: true,
+      preview: [{ position: 0, heading: 'Opening', body: 'Line one.\nLine two.\nLine three.', headingDepth: 1, headingSignal: 'markdown' }],
+    }));
+    await act(async () => button('Review structure').click());
+    await settle();
+    expect(container.textContent).not.toContain('Close cuts');
+    expect(container.textContent).toContain('Add cut');
+  });
+
+  test('a refusal that carries no recognised code is treated as retryable: the reference is kept (never dropped on a guess)', async () => {
+    await importUntilCreate({}, response(409, { error: 'Fictional unclassified refusal.' }));
+    mocked.mockResolvedValueOnce(response(201, { id: SAVED_ID, sectionCount: 1, sourceCustody: 'source_custodied' }));
+    await act(async () => button('Create Work and open in Write').click());
+    await settle();
+    expect(JSON.parse(mocked.mock.calls[3][1].body).sourceArrivalId).toBe('44444444-4444-4444-8444-444444444444');
+  });
+
+  test('the Import room tells the removal door which original it is still holding, so that one is never offered for deletion', async () => {
+    await importUntilCreate({ sourceCustody: 'source_custodied' });
+    const held = mockUnfinishedProps.map((p) => p.heldArrivalId ?? null);
+    expect(held[0]).toBeNull(); // before any upload there is nothing to protect
+    expect(held).toContain('44444444-4444-4444-8444-444444444444');
+    expect(mockUnfinishedProps.every((p) => Object.keys(p).every((k) => k === 'heldArrivalId'))).toBe(true);
+  });
+
+  test('the pre-save promise no longer claims the original WILL remain held', async () => {
+    window.localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
+    await importUntilCreate({ sourceCustody: 'source_custodied' });
+    const pre = fs.readFileSync(path.join(__dirname, '../../dev/writers-studio-pc3-live/P4R1ImportManuscript.tsx'), 'utf8');
+    expect(pre).not.toContain('The original remains separately held as Source');
+    expect(pre).toContain('we will tell you if we cannot');
+  });
 });

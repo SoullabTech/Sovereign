@@ -15,11 +15,12 @@ beforeEach(() => { props.onConfirm.mockReset(); props.onCancel.mockReset(); cont
 afterEach(() => { act(() => root.unmount()); container.remove(); });
 
 describe('deleting a writing from the Studio Home', () => {
-  it('names the writing and says plainly that it is permanent and nothing is kept', () => {
+  it('names the writing and says plainly that it is permanent, with no archive, and that earlier backups retire on schedule', () => {
     render();
     expect(container.textContent).toContain('Delete “ELEMENTAL ALCHEMY interior 217pp NEWCH10”?');
     expect(container.textContent).toContain('It cannot be undone and there is no archive');
-    expect(container.textContent).toContain('nothing is kept');
+    expect(container.textContent).toContain('Private backups already taken');
+    expect(container.textContent).not.toContain('nothing is kept');
   });
   it('offers "Delete permanently" and "Keep it", and the safe one is focused first', () => {
     render();

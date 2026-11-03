@@ -68,7 +68,9 @@ export async function discardUnclaimedArrival(
     const manifestId = manifest.rows[0]?.id;
     if (!manifestId) throw new Error('unclaimed_discard_manifest_not_created');
     const kinds = ['manuscript_source_arrivals'];
-    const ids = [arrivalId];
+    // The refusal markers are compared against the database's own spelling of a uuid, not the caller's: take the id the
+    // DELETE returned (landing.rows is read from the database the same way).
+    const ids = [deleted.rows[0]?.id ?? arrivalId.toLowerCase()];
     if (landingIntentId) {
       kinds.push('writer_source_landing_intents');
       ids.push(landingIntentId);
