@@ -26,14 +26,21 @@
 //                    dispositions.json is unruled. A discriminating control proves the same input CAN reach STEP4_READY
 //                    once ruled, so the refusal is attributable to the missing ruling and not to a malformed input.
 //   B audits         (--full) strip, tree, scanners --mutation-audit: every mutant killed.
-//   F sweep          (--sweep) seeded source mutants of fixtures, receipt, falsifiers-a, falsifiers-b: a mutant that
-//                    leaves the module's selfTest green is a SURVIVOR. Survivors are never hidden; one is allowed only if
-//                    matrix-survivors.json classifies it with a stated reason (an equivalent mutant, for example).
+//   F sweep          (--sweep) source mutants of fixtures, receipt, falsifiers-a, falsifiers-b: a mutant that leaves the
+//                    module's selfTest green is a SURVIVOR. The sample is STABLE UNDER EDITS: candidates are ranked by a hash
+//                    of (seed, module, operator, original line text), so fixing one weakness does not reshuffle which mutants
+//                    are tested. Survivors are never hidden. Each is one of:
+//                      classified   in matrix-survivors.json "classified", with a reason of at least 20 characters (an
+//                                   equivalent mutant: no input or state can make it behave differently);
+//                      OPEN         in matrix-survivors.json "open": a known weakness, neither fixed nor equivalent. It does
+//                                   not fail the step (so a regression is visible) but it can never let the matrix read
+//                                   PASS_COMPLETE, and the step prints its kill rate;
+//                      unclassified anywhere else: the step FAILS.
 //
 // WHAT THE VERDICT MEANS
-//   PASS_COMPLETE  every step ran and passed.
-//   PASS_PARTIAL   nothing failed but at least one step did not run. The line names which; a step that did not run is
-//                  never counted as passed.
+//   PASS_COMPLETE  every step ran and passed, and no OPEN gap is recorded.
+//   PASS_PARTIAL   nothing failed but at least one step did not run, or carries an OPEN gap. The line names which; a step
+//                  that did not run, or an OPEN gap, is never counted as passed.
 //   FAIL           at least one step failed. Exit status 1.
 //
 // WHAT THIS CANNOT ESTABLISH
@@ -382,15 +389,18 @@ export function candidates(src) {
   return { ok: true, list };
 }
 
-function lcg(seed) { let s = seed >>> 0; return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; }
-function shuffle(arr, rnd) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
 
 function loadClassified() {
   const p = path.join(HERE, 'matrix-survivors.json');
-  if (!fs.existsSync(p)) return new Map();
+  const empty = { classified: new Map(), open: new Map() };
+  if (!fs.existsSync(p)) return empty;
   const j = JSON.parse(fs.readFileSync(p, 'utf8'));
-  return new Map((j.classified || []).filter((e) => e.fingerprint && e.reason && String(e.reason).trim().length >= 20).map((e) => [e.fingerprint, e]));
+  const long = (t) => String(t || '').trim().length >= 20;
+  return {
+    classified: new Map((j.classified || []).filter((e) => e.fingerprint && long(e.reason)).map((e) => [e.fingerprint, e])),
+    open: new Map((j.open || []).filter((e) => e.fingerprint && long(e.note)).map((e) => [e.fingerprint, e])),
+  };
 }
 
 async function sweepModule(mod, classified) {
@@ -404,9 +414,19 @@ async function sweepModule(mod, classified) {
   const base = await run(ctlName);
   if (base.code !== 0) return { mod: mod.name, error: `control (unmutated copy under a temporary name) failed with exit ${base.code}: the temporary file perturbs the module, so a sweep would be invalid` };
   const timeout = Math.max(120_000, base.ms * 6);
-  const rnd = lcg(SEED ^ parseInt(sha(mod.name).slice(0, 8), 16));
-  const pool = shuffle(cand.list.slice(), rnd);
-  const lineOf = (idx) => src.slice(0, idx).split('\n').length;
+  const lines = src.split('\n');
+  const lineStarts = [0];
+  for (let i = 0; i < src.length; i++) if (src[i] === '\n') lineStarts.push(i + 1);
+  const lineOf = (idx) => { let lo = 0; let hi = lineStarts.length - 1; while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (lineStarts[mid] <= idx) lo = mid; else hi = mid - 1; } return lo + 1; };
+  // Stable sampling: rank by a hash of (seed, fingerprint, occurrence), so an edit elsewhere never changes which mutants are tested.
+  const withFp = cand.list.map((c) => {
+    const line = lineOf(c.at);
+    const original = lines[line - 1].trim();
+    return { ...c, line, original, fingerprint: sha(`${mod.name}|${c.op}|${original}`) };
+  });
+  const occ = new Map();
+  for (const c of withFp) { c.k = occ.get(c.fingerprint) ?? 0; occ.set(c.fingerprint, c.k + 1); c.rank = sha(`${SEED}|${c.fingerprint}|${c.k}`); }
+  const pool = withFp.sort((a, b) => (a.rank < b.rank ? -1 : a.rank > b.rank ? 1 : 0));
   const killed = [];
   const survivors = [];
   let tried = 0;
@@ -420,11 +440,8 @@ async function sweepModule(mod, classified) {
     tried++;
     const r = await run(name, [], timeout);
     fs.unlinkSync(path.join(HERE, name));
-    const line = lineOf(c.at);
-    const original = src.split('\n')[line - 1].trim();
-    const fingerprint = sha(`${mod.name}|${c.op}|${original}`);
-    if (r.code !== 0) killed.push({ line, op: c.op, by: r.timedOut ? 'timeout' : `exit ${r.code}` });
-    else survivors.push({ line, op: c.op, fingerprint, classified: classified.get(fingerprint) || null });
+    if (r.code !== 0) killed.push({ line: c.line, op: c.op, by: r.timedOut ? 'timeout' : `exit ${r.code}` });
+    else survivors.push({ line: c.line, op: c.op, fingerprint: c.fingerprint, k: c.k, classified: classified.classified.get(c.fingerprint) || null, open: classified.open.get(c.fingerprint) || null });
   }
   try { fs.unlinkSync(path.join(HERE, ctlName)); } catch { /* best effort */ }
   return { mod: mod.name, tried, killed, survivors, available: cand.list.length };
@@ -438,6 +455,7 @@ async function stepSweep() {
   const errors = results.filter((r) => r.error);
   const lines = [];
   let unclassified = 0;
+  let open = 0;
   let totalKilled = 0;
   let totalTried = 0;
   let totalClassified = 0;
@@ -445,13 +463,17 @@ async function stepSweep() {
     if (r.error) { lines.push(`${r.mod}: ${r.error}`); continue; }
     totalKilled += r.killed.length;
     totalTried += r.tried;
-    const surv = r.survivors.filter((s) => !s.classified);
-    totalClassified += r.survivors.length - surv.length;
-    unclassified += surv.length;
-    lines.push(`${r.mod}: ${r.killed.length}/${r.tried} killed of ${r.available} available mutants${r.survivors.length ? `; survivors: ${r.survivors.map((s) => `L${s.line} ${s.op} [${s.fingerprint}]${s.classified ? ' (classified)' : ''}`).join(', ')}` : ''}`);
+    const bad = r.survivors.filter((x) => !x.classified && !x.open);
+    open += r.survivors.filter((x) => !x.classified && x.open).length;
+    totalClassified += r.survivors.filter((x) => x.classified).length;
+    unclassified += bad.length;
+    const tag = (x) => (x.classified ? ' (classified)' : x.open ? ' (open)' : ' (UNCLASSIFIED)');
+    lines.push(`${r.mod}: ${r.killed.length}/${r.tried} killed of ${r.available} available${r.survivors.length ? `; survivors: ${r.survivors.map((x) => `L${x.line} ${x.op} [${x.fingerprint}${x.k ? `:${x.k}` : ''}]${tag(x)}`).join(', ')}` : ''}`);
   }
-  const detail = `seed ${SEED}, up to ${SWEEP_N} per module -- ${totalKilled}/${totalTried} killed, ${totalClassified} survivor(s) classified, ${unclassified} UNCLASSIFIED. ${lines.join(' | ')}`;
+  const rate = totalTried ? `${((100 * totalKilled) / totalTried).toFixed(1)}%` : 'n/a';
+  const detail = `seed ${SEED}, stable sample of up to ${SWEEP_N} per module -- ${totalKilled}/${totalTried} killed (${rate}); survivors: ${totalClassified} classified, ${open} OPEN, ${unclassified} UNCLASSIFIED. ${lines.join(' | ')}`;
   if (errors.length || unclassified > 0) record('F sweep', 'FAIL', detail);
+  else if (open > 0) record('F sweep', 'OPEN', detail);
   else record('F sweep', 'PASS', detail);
 }
 
@@ -511,8 +533,11 @@ async function main() {
   }
   const failed = steps.filter((s) => s.status === 'FAIL');
   const skipped = steps.filter((s) => s.status === 'SKIPPED');
-  const verdict = failed.length ? 'FAIL' : skipped.length ? 'PASS_PARTIAL' : 'PASS_COMPLETE';
-  console.log(`\nMATRIX ${verdict}: ${steps.length - skipped.length - failed.length} passed, ${failed.length} failed, ${skipped.length} not run${skipped.length ? ` (${skipped.map((s) => s.id).join('; ')})` : ''}`);
+  const openSteps = steps.filter((s) => s.status === 'OPEN');
+  const passed = steps.filter((s) => s.status === 'PASS');
+  const verdict = failed.length ? 'FAIL' : skipped.length || openSteps.length ? 'PASS_PARTIAL' : 'PASS_COMPLETE';
+  const why = [...skipped.map((s) => `${s.id}: not run`), ...openSteps.map((s) => `${s.id}: OPEN gaps`)];
+  console.log(`\nMATRIX ${verdict}: ${passed.length} passed, ${failed.length} failed, ${openSteps.length} open, ${skipped.length} not run${why.length ? ` (${why.join('; ')})` : ''}`);
   process.exit(failed.length ? 1 : 0);
 }
 

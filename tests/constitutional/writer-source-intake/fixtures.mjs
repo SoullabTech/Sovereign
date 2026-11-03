@@ -2505,12 +2505,22 @@ export function selfTest(options = {}) {
       const garbageCaught = throws(() => readZip(crypto.randomBytes(512))) && throws(() => readZip(Buffer.alloc(0)));
       const lying = Buffer.from(z.buffer); // central directory under-declares the expanded size: a bomb that lies about itself
       const centralSig = Buffer.from([0x50, 0x4b, 0x01, 0x02]);
-      const firstCentral = lying.indexOf(centralSig, z.cdOffset);
-      const secondCentral = lying.indexOf(centralSig, firstCentral + 4);
-      if (firstCentral < 0 || secondCentral < 0) throw new Error('could not locate central headers for the understated-size control');
+      const locateCentral = (buf, from) => {
+        const firstCentral = buf.indexOf(centralSig, from);
+        const secondCentral = buf.indexOf(centralSig, firstCentral + 4);
+        if (firstCentral < 0 || secondCentral < 0) throw new Error('could not locate central headers for the understated-size control');
+        return { firstCentral, secondCentral };
+      };
+      const { secondCentral } = locateCentral(lying, z.cdOffset);
       lying.writeUInt32LE(10, secondCentral + 24);
       const lieCaught = throws(() => readEntry(lying, readZip(lying).entries[1]));
-      return { ok: roundTrip && tamperCaught && garbageCaught && lieCaught, detail: `round-trip=${roundTrip} crc-tamper-caught=${tamperCaught} garbage-caught=${garbageCaught} understated-size-caught=${lieCaught}` };
+      // The locator is the guard that keeps this control honest: it must refuse BOTH shortfalls. A single-entry archive has a first central header and
+      // no second (the planted lie would land on the wrong bytes); a search that starts past the directory finds no first header although a second
+      // one is still reachable from offset 3. A guard that refused only when BOTH are missing passes the real two-entry archive and neither of these.
+      const oneEntry = buildZip([{ name: 'a.txt', data: Buffer.from('alpha'), method: 'stored' }]);
+      const locatorRefusals = [throws(() => locateCentral(oneEntry.buffer, oneEntry.cdOffset)), throws(() => locateCentral(z.buffer, z.buffer.length))];
+      const lieControlSound = [lieCaught, ...locatorRefusals].every(Boolean);
+      return { ok: roundTrip && tamperCaught && garbageCaught && lieControlSound, detail: `round-trip=${roundTrip} crc-tamper-caught=${tamperCaught} garbage-caught=${garbageCaught} understated-size-caught=${lieCaught} control-locator-refuses-missing-second=${locatorRefusals[0]} missing-first=${locatorRefusals[1]}` };
     });
 
     run('isWellFormedXml accepts valid and rejects broken input', () => {
@@ -2590,7 +2600,9 @@ export function selfTest(options = {}) {
       return { ok: allOk && caught, detail: `files-verified=${manifest.length} all-match=${allOk} one-extra-byte-caught=${caught}` };
     });
 
-    run('manifest shape and honesty: fields typed, basis never "verified", classes consistent', () => {
+    // The honesty check is a function of the manifest it is given (the parameter shadows the generated one), so the SAME lines can be run on the real
+    // manifest and on a re-ordered copy: a check that has only ever seen one ordering cannot tell "the first matching entry" from "any matching entry".
+    const manifestHonesty = (manifest) => {
       const keys = ['name', 'path', 'kind', 'bytes', 'sha256', 'containsCanary', 'expectedParse', 'expectedStatusClass', 'basis', 'note'];
       const shapeOk = (m) => keys.every((k) => k in m) && typeof m.bytes === 'number' && /^[0-9a-f]{64}$/.test(m.sha256) && ['accept', 'refuse'].includes(m.expectedParse) && STATUS_CLASSES.includes(m.expectedStatusClass) && ['inferred-from-source', 'verified'].includes(m.basis) && m.note.length > 20 && typeof m.uncertain === 'boolean' && Number.isInteger(m.expectedStatus);
       const honest = (m) => m.basis === 'inferred-from-source';
@@ -2603,9 +2615,37 @@ export function selfTest(options = {}) {
       const certain5xx = { ...acceptEntry, expectedStatusClass: '5xx', expectedStatus: 503, uncertain: false };
       const wrongClass = { ...acceptEntry, expectedStatus: 413 };
       const controls = !honest(lie) && !consistent(incoherent) && !consistent(certain5xx) && !classMatchesStatus(wrongClass);
+      // shapeOk is a conjunction of nine conditions that every real entry satisfies, so on real entries alone nothing shows that it is a CONJUNCTION:
+      // one entry that violates exactly one condition each must be refused.
+      const base = manifest[0];
+      const { name: _dropped, ...withoutName } = base;
+      const shapeFaults = [
+        withoutName, // a required key missing
+        { ...base, bytes: String(base.bytes) }, // not a number
+        { ...base, sha256: 'abc' }, // not a 64-hex digest
+        { ...base, expectedParse: 'maybe' },
+        { ...base, expectedStatusClass: '9xx' },
+        { ...base, basis: 'guess' },
+        { ...base, note: 'too short' },
+        { ...base, uncertain: 'no' }, // not a boolean
+        { ...base, expectedStatus: 200.5 }, // not an integer
+      ];
+      const shapeControls = [shapeOk(base) === true, ...shapeFaults.map((f) => !shapeOk(f))].every(Boolean); // the unfaulted base passes, each single fault does not
+      // The control entries above are built from an accepted-and-2xx entry: the selection must really return one (a decoy that is accepted but
+      // 5xx, placed first, must not be taken for it).
+      const acceptPicked = [acceptEntry?.expectedParse, acceptEntry?.expectedStatusClass].join('/') === 'accept/2xx';
+      const allControls = [controls, shapeControls, acceptPicked].every(Boolean);
       const fiveXx = manifest.filter((m) => m.expectedStatusClass === '5xx');
       // Which fixtures are 5xx is NOT pinned by a name list here: it is derived (see the model check) from the source facts and the bytes.
-      return { ok: good && controls && fiveXx.length > 0 && fiveXx.every((m) => m.uncertain), detail: `entries=${manifest.length} all-valid=${good} overclaim/incoherence/certain-5xx/class-vs-status controls caught=${controls} 5xx-entries=${fiveXx.length} (all uncertain)` };
+      return { ok: good && allControls && fiveXx.length > 0 && fiveXx.every((m) => m.uncertain), detail: `entries=${manifest.length} all-valid=${good} overclaim/incoherence/certain-5xx/class-vs-status controls caught=${controls} one-condition-at-a-time shape faults refused=${shapeControls} (${shapeFaults.length}) control-entry-is-accepted+2xx=${acceptPicked} 5xx-entries=${fiveXx.length} (all uncertain)` };
+    };
+    run('manifest shape and honesty: fields typed, basis never "verified", classes consistent', () => {
+      const real = manifestHonesty(manifest);
+      // The same check on a copy whose FIRST entry is a valid accepted-but-5xx (uncertain) decoy: it must still hold, which it does only if the entry the controls
+      // are built from is selected by BOTH of its conditions.
+      const decoy = { ...manifest[0], name: 'decoy-accepted-5xx.bin', expectedParse: 'accept', expectedStatusClass: '5xx', expectedStatus: 503, uncertain: true };
+      const reordered = manifestHonesty([decoy, ...manifest]);
+      return { ok: [real.ok, reordered.ok].every(Boolean), detail: `${real.detail}; decoy-first copy (${reordered.detail.split(' ')[0]}) holds=${reordered.ok}` };
     });
 
     /* -- zips ------------------------------------------------------------- */
@@ -2644,14 +2684,25 @@ export function selfTest(options = {}) {
     const byName = (n) => manifest.find((m) => m.name === n);
     const read = (n) => fs.readFileSync(byName(n).path);
 
-    run('DOCX structure valid; canary in w:t text for docx and deflated docx; broken package rejected', () => {
+    // The check reads its files through `read` and takes the "broken package" control as a switch, so the SAME lines can be run on deliberately faulted
+    // inputs below: a verdict that has only ever been computed from all-true operands cannot show that it is a conjunction.
+    const docxStructureCheck = (read, validPackageAsBroken) => {
       const ok1 = checkDocxStructure(read('manuscript.docx')).ok;
       const ok2 = checkDocxStructure(read('manuscript-deflated.docx')).ok;
       const t1 = docxBodyText(read('manuscript.docx')).includes(canary);
       const t2 = docxBodyText(read('manuscript-deflated.docx')).includes(canary);
-      const broken = buildZip([{ name: 'word/document.xml', data: Buffer.from('<w:document><w:body></w:document>'), method: 'stored' }]).buffer;
+      const broken = validPackageAsBroken ? read('manuscript.docx') : buildZip([{ name: 'word/document.xml', data: Buffer.from('<w:document><w:body></w:document>'), method: 'stored' }]).buffer;
       const brokenRejected = !checkDocxStructure(broken).ok;
       return { ok: ok1 && ok2 && t1 && t2 && brokenRejected, detail: `structure stored=${ok1} deflated=${ok2} canary-in-text stored=${t1} deflated=${t2} broken-package-rejected=${brokenRejected}` };
+    };
+    run('DOCX structure valid; canary in w:t text for docx and deflated docx; broken package rejected', () => {
+      const real = docxStructureCheck(read, false);
+      // Three single-fault runs, each of which must be refused: a valid package with no canary stands in for the stored file, then for the deflated
+      // one, and the "broken package" control is replaced by a package that is not broken.
+      const emptyFor = (target) => (n) => (n === target ? read('empty.docx') : read(n));
+      const faultRuns = [docxStructureCheck(emptyFor('manuscript.docx'), false), docxStructureCheck(emptyFor('manuscript-deflated.docx'), false), docxStructureCheck(read, true)];
+      const faultsRefused = faultRuns.every((r) => !r.ok);
+      return { ok: [real.ok, faultsRefused].every(Boolean), detail: `${real.detail} single-fault-runs-refused(canary absent from stored / from deflated / broken-package control accepts a valid package)=${faultsRefused}` };
     });
 
     run('empty DOCX is valid yet carries no extractable text and no canary anywhere; extractor sees planted text', () => {
@@ -2665,7 +2716,9 @@ export function selfTest(options = {}) {
       return { ok: valid && text === '' && !anywhere && extractorLive, detail: `valid=${valid} w:t-text-length=${text.length} canary-in-any-entry=${anywhere} extractor-detects-planted-text=${extractorLive}` };
     });
 
-    run('DOCX verifiers see a canary that docxBodyText cannot: comments, footnotes, headers, field codes, deleted text (deflated too)', () => {
+    // A function of the canary it must NOT find (`canary`) and of the needle and options for the "unread entry is reported" probe, so the same lines run
+    // below on two deliberately faulted inputs; with only the real inputs every operand of the verdict is true and nothing shows it is a conjunction.
+    const docxHiddenPartsCheck = (canary, skipNeedle, skipOptions) => {
       const body = documentXmlOf([{ text: 'a plain body with nothing to find' }]);
       const part = (root, inner) => `${XML_DECL}<w:${root} xmlns:w="${W_NS}">${inner}</w:${root}>`;
       const run1 = (t) => `<w:p><w:r><w:t xml:space="preserve">${t}</w:t></w:r></w:p>`;
@@ -2687,10 +2740,19 @@ export function selfTest(options = {}) {
       const fieldFound = docxTextParts(field).parts.filter((p) => p.text.includes(otherCanary)).map((p) => p.part);
       const fieldOk = JSON.stringify(fieldFound) === JSON.stringify(['word/document.xml']);
       const noFalsePositive = zipEntriesContaining(multi, canary).found.length === 0;
-      const skipped = zipEntriesContaining(multi, otherCanary, { maxEntry: 8 });
+      const skipped = zipEntriesContaining(multi, skipNeedle, skipOptions);
       const skipSurfaced = skipped.found.length === 0 && skipped.skipped > 0; // an unread entry is reported, never silently "clean"
       const emptyNeedleRejected = throws(() => zipEntriesContaining(multi, ''));
       return { ok: bodyBlind && rawBlind && partsOk && textPartsOk && fieldOk && noFalsePositive && skipSurfaced && emptyNeedleRejected, detail: `docxBodyText-blind-to-them=${bodyBlind} raw-bytes-blind(deflated)=${rawBlind} zipEntriesContaining-finds-3-parts=${partsOk} docxTextParts-finds-3-parts=${textPartsOk} instrText+delText-found-in-document=${fieldOk} other-canary-not-found=${noFalsePositive} unread-entries-reported-not-hidden=${skipSurfaced} empty-needle-rejected=${emptyNeedleRejected}` };
+    };
+    run('DOCX verifiers see a canary that docxBodyText cannot: comments, footnotes, headers, field codes, deleted text (deflated too)', () => {
+      const real = docxHiddenPartsCheck(canary, otherCanary, { maxEntry: 8 });
+      // Fault 1: the canary that must be absent is the one that IS planted, so "no false positive" is the only operand that can fail.
+      // Fault 2: nothing is skipped and nothing is found (a clean scan), which must not read as "an unread entry was reported".
+      const plantedAsAbsent = docxHiddenPartsCheck(otherCanary, otherCanary, { maxEntry: 8 });
+      const cleanScan = docxHiddenPartsCheck(canary, canary, {});
+      const faultsRefused = [plantedAsAbsent, cleanScan].every((r) => !r.ok);
+      return { ok: [real.ok, faultsRefused].every(Boolean), detail: `${real.detail} single-fault-runs-refused(planted canary named as the absent one / clean scan taken for a skipped one)=${faultsRefused}` };
     });
 
     /* -- epub ------------------------------------------------------------- */
@@ -2732,14 +2794,17 @@ export function selfTest(options = {}) {
       return { ok: sTxt && sScan && hasCanary && contiguous && scannedEmpty && textHasMachinery && xrefCaught && plantedDetected, detail: `xref text=${sTxt} scanned=${sScan} canary-in-Tj=${hasCanary} canary-contiguous=${contiguous} scanned-no-text(exact analysis)=${scannedEmpty} text-pdf-has-machinery=${textHasMachinery} xref-tamper-caught=${xrefCaught} planted-text-detected=${plantedDetected}` };
     });
 
-    run('PDF verifiers are sound on compressed and array-form text, and say so when they cannot be sure (the old ones were blind to both)', () => {
+    // `plainRowFrom` names the variant whose bytes stand in for the row labelled "plain" (undefined: the real plain one). It exists so the SAME lines can be
+    // run with the one control that the old extractor cannot read being a control it CAN read; on the real inputs every claim below is true.
+    const pdfVariantCheck = (plainRowFrom) => {
       const variants = {
         plain: buildTextPdf(canary),
         flate: buildTextPdf(canary, { flate: true }),
         tj: buildTextPdf(canary, { tjArrays: true }),
         flateTj: buildTextPdf(canary, { flate: true, tjArrays: true }),
       };
-      const rows = Object.entries(variants).map(([n, b]) => {
+      const rowVariants = plainRowFrom === undefined ? variants : { ...variants, plain: variants[plainRowFrom] };
+      const rows = Object.entries(rowVariants).map(([n, b]) => {
         const a = analyzePdf(b);
         // `exported`: the EXPORTED pdfTextRuns (what other modules call) must agree with the analysis and find the canary, with no host tool involved
         const exported = pdfTextRuns(b);
@@ -2764,16 +2829,18 @@ export function selfTest(options = {}) {
       const otherOpaque = !type0.exact && type0.opaqueFontEncoding && !toUni.exact && toUni.opaqueFontEncoding;
       const plainNotOpaque = rows.every((r) => !analyzePdf(variants[r.n]).opaqueFontEncoding) && !scanned.opaqueFontEncoding; // no false positive on the generated PDFs
       return { ok: allFound && legacyMissesCompressed && hiddenSeen && unsureHonest && scannedPositive && remapHonest && otherOpaque && plainNotOpaque, detail: `flate/tj/flate+tj/plain: canary-found+exact+machinery=${allFound} old-extractor-read-only=[${legacyBlind.join(',')}] machinery-in-compressed-stream-seen(old: not)=${hiddenSeen} unknown-filter-not-reported-exact=${unsureHonest} scanned-empty-is-exact=${scannedPositive} code-remapping-font-not-exact(old rule said exact: ${oldExactRule(remapped)})=${remapHonest} type0+ToUnicode-not-exact=${otherOpaque} generated-pdfs-not-flagged=${plainNotOpaque}` };
+    };
+    run('PDF verifiers are sound on compressed and array-form text, and say so when they cannot be sure (the old ones were blind to both)', () => {
+      const real = pdfVariantCheck(undefined);
+      // Single fault: the "plain" row is really the compressed variant. Every other claim stays true, and the claim that the old extractor reads only the
+      // plain one is the only one that can fail.
+      const plainRowCompressed = pdfVariantCheck('flate');
+      return { ok: [real.ok, !plainRowCompressed.ok].every(Boolean), detail: `${real.detail} single-fault-run-refused(the row named plain is the compressed variant)=${!plainRowCompressed.ok}` };
     });
 
     /* -- new fixtures: structure ------------------------------------------ */
-    run('table/image DOCX and the EPUB boundary fixtures have exactly the structure their notes claim', () => {
-      const tbl = read('docx-table-no-header.docx');
-      const img = read('docx-embedded-image.docx');
-      const tblXml = zipEntryText(tbl, 'word/document.xml');
-      const tblOk = checkDocxStructure(tbl).ok && tblXml.includes('<w:tbl>') && !tblXml.includes('tblHeader') && (tblXml.match(/<w:tr>/g) ?? []).length === 2;
-      const zi = readZip(img);
-      const png = zi.byName.get('word/media/image1.png') ? readEntry(img, zi.byName.get('word/media/image1.png')) : Buffer.alloc(0);
+    // The PNG chunk walk, moved verbatim into a function so it can be run on damaged PNGs as well as the real one.
+    const pngChunksValid = (png) => {
       const pngSig = png.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
       let chunksOk = pngSig;
       for (let p = 8; chunksOk && p < png.length; ) {
@@ -2781,6 +2848,18 @@ export function selfTest(options = {}) {
         chunksOk = p + 12 + len <= png.length && png.readUInt32BE(p + 8 + len) === crc32(png.subarray(p + 4, p + 8 + len));
         p += 12 + len;
       }
+      return chunksOk;
+    };
+    // The check is a function of the reader, so the SAME lines run below on inputs with exactly one fixture swapped for another: on the real files every
+    // operand of the two long verdicts is true, which cannot show that either verdict is a conjunction.
+    const boundaryFixturesCheck = (read) => {
+      const tbl = read('docx-table-no-header.docx');
+      const img = read('docx-embedded-image.docx');
+      const tblXml = zipEntryText(tbl, 'word/document.xml');
+      const tblOk = checkDocxStructure(tbl).ok && tblXml.includes('<w:tbl>') && !tblXml.includes('tblHeader') && (tblXml.match(/<w:tr>/g) ?? []).length === 2;
+      const zi = readZip(img);
+      const png = zi.byName.get('word/media/image1.png') ? readEntry(img, zi.byName.get('word/media/image1.png')) : Buffer.alloc(0);
+      const chunksOk = pngChunksValid(png);
       const imgXml = zipEntryText(img, 'word/document.xml');
       const imgOk = checkDocxStructure(img).ok && chunksOk && /<a:blip r:embed="rId2"\/>/.test(imgXml) && /Id="rId2"[^>]*Target="media\/image1\.png"/.test(zipEntryText(img, 'word/_rels/document.xml.rels')) && zipEntryText(img, '[Content_Types].xml').includes('Extension="png"');
       const canaryInBoth = docxBodyText(tbl).includes(canary) && docxBodyText(img).includes(canary);
@@ -2806,6 +2885,35 @@ export function selfTest(options = {}) {
         && ch3('epub-text-over-cap.epub').method === 8 && ch3('epub-text-over-cap.epub').usize < LIMITS.EPUB_MAX_ENTRY_BYTES && !textXml.includes(canary) && textFx.includes(canary)
         && modelUnits === sumOfParagraphs + controlUnits && modelUnits > EPUB_TEXT_CAP * 1.1 && modelUnits < EPUB_TEXT_CAP * 1.5 && controlUnits < EPUB_TEXT_CAP / 10;
       return { ok: tblOk && imgOk && canaryInBoth && entriesOk && totalsOk && chapterOk && chapterXmlOk && structure && rawVisible && controls && textFixtureOk, detail: `table-docx(no tblHeader, 2 rows)=${tblOk} image-docx(png crc, blip, rel, content-type)=${imgOk} canary-in-both=${canaryInBoth} entries 2000/2001=${entriesOk} declared-total 64MiB/+1=${totalsOk} chapter3 8MiB/+1 deflated=${chapterOk} chapter3-xml+spine=${chapterXmlOk} epub-structure=${structure} canary-raw-visible=${rawVisible} off-by-one-controls-differ=${controls} epub-text-fixture(chars=${modelUnits}, cap=${EPUB_TEXT_CAP}, model==independent-chapter3-sum+chapters1-2:${modelUnits === sumOfParagraphs + controlUnits}, control=${controlUnits})=${textFixtureOk}` };
+    };
+    run('table/image DOCX and the EPUB boundary fixtures have exactly the structure their notes claim', () => {
+      const real = boundaryFixturesCheck(read);
+      const swapped = (from, to) => (n) => (n === from ? read(to) : read(n));
+      // Fault 1: the over-cap entry-count fixture is replaced by the at-cap one (the pair no longer differs). Fault 2: the table DOCX is replaced by the
+      // image DOCX (no table, no 2 rows; the canary is still in the body). Fault 3: the plain book is replaced by the DRM variant (one entry more; the
+      // only claim that notices is the plain book's entry count). Faults 2 and 3 each leave every other claim true; each fault must be refused.
+      const pairCollapsed = boundaryFixturesCheck(swapped('epub-entries-over-cap.epub', 'epub-entries-at-cap.epub'));
+      const tableMissing = boundaryFixturesCheck(swapped('docx-table-no-header.docx', 'docx-embedded-image.docx'));
+      const bookEntryCountWrong = boundaryFixturesCheck(swapped('book.epub', 'book-drm.epub')); // the DRM variant has one entry more than the plain book
+      // The PNG walk on damaged PNGs: a wrong chunk CRC (the length still fits) and a PNG cut inside its last chunk (the length no longer fits).
+      const png = (() => {
+        const zi = readZip(read('docx-embedded-image.docx'));
+        return readEntry(read('docx-embedded-image.docx'), zi.byName.get('word/media/image1.png'));
+      })();
+      const badCrc = Buffer.from(png);
+      badCrc[29] ^= 0xff; // the last byte of the IHDR chunk's CRC (8 signature + 4 length + 4 type + 13 data + 4 crc)
+      const cutPng = png.subarray(0, png.length - 5);
+      const cutVerdict = (() => {
+        try {
+          return pngChunksValid(cutPng);
+        } catch {
+          return 'threw'; // a walk that reads past the end of a short PNG does not refuse it, it falls over
+        }
+      })();
+      const cutRefused = cutVerdict === false;
+      const pngControls = [pngChunksValid(png), !pngChunksValid(badCrc), cutRefused];
+      const faultsRefused = [!pairCollapsed.ok, !tableMissing.ok, !bookEntryCountWrong.ok, ...pngControls].every(Boolean);
+      return { ok: [real.ok, faultsRefused].every(Boolean), detail: `${real.detail} fault-runs-refused(over-cap pair collapsed=${!pairCollapsed.ok} table docx missing=${!tableMissing.ok} plain book entry count wrong=${!bookEntryCountWrong.ok} png wrong-crc/truncated refused=${pngControls.slice(1).every(Boolean)})` };
     });
 
     /* -- canary placement ------------------------------------------------- */
@@ -2834,14 +2942,25 @@ export function selfTest(options = {}) {
       return { ok: bad.length === 0 && deflatedBlind && utf16Blind && storedVisible && wrongCanaryMisses, detail: `violations=${bad.length}${bad.length ? ' [' + bad.join(',') + ']' : ''} deflated-docx-blind-to-raw-scan=${deflatedBlind} utf16-text-blind-to-raw-scan=${utf16Blind} stored-formats-raw-visible=${storedVisible} other-canary-not-found=${wrongCanaryMisses}` };
     });
 
-    run('corrupt zip: still raw-visible canary, no end-of-central-directory, intact original reads fine', () => {
-      const c = read('corrupt-truncated.docx');
-      const intact = buildDocx(canary).buffer;
+    // A function of the two buffers it judges, so the SAME lines run below on inputs that each violate exactly one of the four claims.
+    const corruptZipCheck = (c, intact) => {
       const noEocd = throws(() => readZip(c)) && c.indexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06])) === -1;
       const shorter = c.length < intact.length;
       const rawVisible = c.includes(canary);
       const intactOk = !throws(() => readZip(intact));
       return { ok: noEocd && shorter && rawVisible && intactOk, detail: `eocd-absent+reader-rejects=${noEocd} shorter-than-intact=${shorter} canary-raw-visible=${rawVisible} intact-original-accepted=${intactOk}` };
+    };
+    run('corrupt zip: still raw-visible canary, no end-of-central-directory, intact original reads fine', () => {
+      const c = read('corrupt-truncated.docx');
+      const intact = buildDocx(canary).buffer;
+      const real = corruptZipCheck(c, intact);
+      const withEocd = buildZip([{ name: 'word/document.xml', data: Buffer.from(canary), method: 'stored' }]).buffer; // a readable archive, canary raw-visible, shorter than intact
+      const unreadableLonger = Buffer.concat([c, Buffer.alloc(16)]); // longer than c, still no end-of-central-directory
+      const canaryErased = Buffer.from(c.toString('latin1').split(canary).join('x'.repeat(canary.length)), 'latin1'); // same bytes and length, canary gone
+      const tinyReadable = buildZip([{ name: 'a', data: Buffer.from('a'), method: 'stored' }]).buffer; // readable but shorter than the corrupt file
+      const faultRuns = [corruptZipCheck(withEocd, intact), corruptZipCheck(c, unreadableLonger), corruptZipCheck(canaryErased, intact), corruptZipCheck(c, tinyReadable)];
+      const faultsRefused = faultRuns.every((r) => !r.ok);
+      return { ok: [real.ok, faultsRefused].every(Boolean), detail: `${real.detail} single-fault-runs-refused(has an EOCD / intact unreadable / canary absent / corrupt not shorter)=${faultsRefused}` };
     });
 
     /* -- bombs ------------------------------------------------------------ */
@@ -3148,6 +3267,10 @@ export function selfTest(options = {}) {
       const bySourceEdit = anchorRuns.map((r) => r.found);
       const undemonstrated = undemonstratedDetectors(universe, [...bySourceEdit, comparatorLevel]);
       const onlyComparatorLevel = comparatorLevel.filter((d) => !bySourceEdit.flat().includes(d));
+      // The header and the detail line both say that exactly ONE detector is demonstrated at the comparator level only, and name it (the stripper's own report).
+      // That figure is reported evidence about what no source edit exercises, so it is asserted, not merely printed: a wrong split would misstate which detectors
+      // have a realistic source change behind them.
+      const comparatorOnlyAccounting = JSON.stringify(onlyComparatorLevel) === JSON.stringify(['comment stripper does not report unclosed constructs']);
       // Controls: this computation must be able to say "no" -- with no runs everything is undemonstrated, and with the runs that fire one
       // chosen detector removed exactly that detector is reported.
       const target = 'epubGuardMimetype';
@@ -3155,12 +3278,13 @@ export function selfTest(options = {}) {
       const droppedDetected = dropped.length === 1 && dropped[0] === target;
       const emptyDetected = undemonstratedDetectors(universe, []).length === universe.length;
       const vacuousRefused = throws(() => applyMut(F('route', (t) => t), sources)); // an edit that changes nothing must not count as a kill
+      const refusedAndAccounted = [vacuousRefused, comparatorOnlyAccounting].every(Boolean);
       // The derived universe must span every KIND of detector (numeric, boolean fact, status, pinned list, region digest, the two release-flag cases, the stripper), or a branch of the comparator could escape the coverage requirement unseen.
       const kinds = ['route MAX_FILE_BYTES', 'EPUB_MAX_TOTAL_BYTES', 'epubGuardDrm', 'route statusIncomplete', 'pinned list extRules', 'region drift parse.extOf', 'release flag value', 'release flag not found', 'comment stripper does not report unclosed constructs'];
       const nameOfUnknown = kinds.every((k) => universe.includes(k));
       return {
-        ok: undemonstrated.length === 0 && universe.length >= 60 && droppedDetected && emptyDetected && vacuousRefused && nameOfUnknown,
-        detail: `detectors=${universe.length} edits-run=${anchorRuns.length} demonstrated=${universe.length - undemonstrated.length} (by a source edit: ${universe.length - undemonstrated.length - onlyComparatorLevel.length}, comparator-level only: ${onlyComparatorLevel.length}) undemonstrated=${undemonstrated.length}${undemonstrated.length ? ' [' + undemonstrated.join(' | ') + ']' : ''}; control: removing the runs that fire "${target}" reports exactly it=${droppedDetected}, no runs reports all=${emptyDetected}, vacuous edit refused=${vacuousRefused}, universe spans every detector kind=${nameOfUnknown}`,
+        ok: undemonstrated.length === 0 && universe.length >= 60 && droppedDetected && emptyDetected && refusedAndAccounted && nameOfUnknown,
+        detail: `detectors=${universe.length} edits-run=${anchorRuns.length} demonstrated=${universe.length - undemonstrated.length} (by a source edit: ${universe.length - undemonstrated.length - onlyComparatorLevel.length}, comparator-level only: ${onlyComparatorLevel.length}=${comparatorOnlyAccounting ? 'the stripper report, as documented' : 'NOT the documented one'}) undemonstrated=${undemonstrated.length}${undemonstrated.length ? ' [' + undemonstrated.join(' | ') + ']' : ''}; control: removing the runs that fire "${target}" reports exactly it=${droppedDetected}, no runs reports all=${emptyDetected}, vacuous edit refused=${vacuousRefused}, universe spans every detector kind=${nameOfUnknown}`,
       };
     });
 
@@ -3392,7 +3516,20 @@ export function selfTest(options = {}) {
         fs.rmSync(probe, { recursive: true, force: true });
       }
     })();
-    add('temp directories removed; cleanup refuses a directory it did not create', removed && refusesOutside, `removed=${created.length}/${created.length} all-gone=${removed} refuses-unrelated-dir=${refusesOutside}`);
+    // The guard has two location clauses joined by OR: directly under the temp root, or beneath it. A guard that demanded both would pass every case
+    // above (all of them are direct children) and silently refuse a nested directory; and the right name OUTSIDE the temp root must be refused.
+    const nestedAccepted = (() => {
+      const outer = fs.mkdtempSync(path.join(os.tmpdir(), 'keepme-nest-'));
+      try {
+        const inner = fs.mkdtempSync(path.join(outer, 'wsi-fixtures-'));
+        return [safeRemove(inner) === true, !fs.existsSync(inner), fs.existsSync(outer)].every(Boolean); // accepted, gone, and the parent left alone
+      } finally {
+        fs.rmSync(outer, { recursive: true, force: true });
+      }
+    })();
+    const outsideRefused = safeRemove(path.join(path.parse(process.cwd()).root, 'wsi-fixtures-never-created')) === false; // a path that does not exist: nothing can be lost if this were wrongly accepted
+    const guardBehaviour = [refusesOutside, nestedAccepted, outsideRefused].every(Boolean);
+    add('temp directories removed; cleanup refuses a directory it did not create', removed && guardBehaviour, `removed=${created.length}/${created.length} all-gone=${removed} refuses-unrelated-dir=${refusesOutside} accepts-nested-under-tmp=${nestedAccepted} refuses-right-name-outside-tmp=${outsideRefused}`);
   }
 
   return { ok: checks.every((c) => c.ok), checks, corroboration: { ...corroboration, waived: [...waived] } };

@@ -1932,6 +1932,11 @@ const sf13Reverify = ({ dbImport = "import { transaction } from '@/lib/db/postgr
   `${dbImport}\nimport { recoverEncryptedLandingBytes } from './encryptedLanding';\n\nexport async function reverifyLanding(row: never): Promise<number> {\n  ${open}\n    await tx.query('SELECT 1 FOR UPDATE');\n    return (await recoverEncryptedLandingBytes(row)).length;\n${close}\n}\n`;
 const sf13ManualBegin = "import { getClient } from '@/lib/db/postgres';\nimport { recoverEncryptedLandingBytes } from './encryptedLanding';\n\nexport async function reverifyLanding(row: never): Promise<number> {\n  const client = await getClient();\n  await client.query('BEGIN');\n  await client.query('SELECT 1 FOR UPDATE');\n  const n = (await recoverEncryptedLandingBytes(row)).length;\n  await client.query('COMMIT');\n  return n;\n}\n";
 
+/** A caller outside the library that imports ONLY a library module and takes its connection as a parameter: its transaction is a hand-written BEGIN ... COMMIT. */
+const sf13LibraryOnlyCaller = "import { recoverEncryptedLandingBytes } from '@/lib/manuscript/source/encryptedLanding';\n\nexport async function reverifyLanding(client: { query: (sql: string) => Promise<unknown> }, row: never): Promise<number> {\n  await client.query('BEGIN');\n  await client.query('SELECT 1 FOR UPDATE');\n  const n = (await recoverEncryptedLandingBytes(row)).length;\n  await client.query('COMMIT');\n  return n;\n}\n";
+/** The same call names in a file that imports no library module at all (a package only) and merely mentions a library file name: selection is by import, never by a name, so it is not scanned. */
+const sf13NameOnlyBystander = "import { transaction } from '@/lib/db/postgres';\n\n// unrelated to encryptedLanding\nasync function recoverEncryptedLandingBytes(row: never): Promise<number> {\n  return row ? 1 : 0;\n}\n\nexport async function tally(row: never): Promise<number> {\n  return transaction(async (tx) => {\n    await tx.query('SELECT 1 FOR UPDATE');\n    return recoverEncryptedLandingBytes(row);\n  });\n}\n";
+
 const SF13 = {
   id: 'SF-13',
   title: 'No KMS Decrypt inside the claim transaction',
@@ -1978,6 +1983,9 @@ const SF13 = {
       (t) => decryptBeforeTransaction(t).add(`${SOURCE_DIR}/reverifyProbe.ts`, sf13Reverify()), 'reverifyProbe.ts'),
     defeat('WRONG FIX: the claim is repaired but a caller OUTSIDE the library decrypts inside a transaction', 'fix', 'RED',
       (t) => decryptBeforeTransaction(t).add('lib/manuscript/other/reverifyElsewhere.ts', sf13Reverify().replace("from './encryptedLanding'", "from '@/lib/manuscript/source/encryptedLanding'")), 'reverifyElsewhere.ts'),
+    // the selection-by-import rule must pull in a caller whose ONLY import is a library module (every other outside defeat also imports the database module, which is no library file)
+    defeat('WRONG FIX: the claim is repaired but a caller OUTSIDE the library whose only import is a library module decrypts between a hand-written BEGIN and COMMIT', 'fix', 'RED',
+      (t) => decryptBeforeTransaction(t).add('lib/manuscript/other/reverifyClientOnly.ts', sf13LibraryOnlyCaller), 'reverifyClientOnly.ts'),
   ],
   decoys: [
     defeat('DECOY: the call is named in a comment and in a string inside the transaction (it is still the real call that counts)', 'fix', 'RED',
@@ -3172,6 +3180,11 @@ const SF16B = {
       (t) => awsForMaia()(t).replace('Dockerfile', 'USER node\nEXPOSE 3000', `ENV ${CRED_VAR}=/home/node/.aws/credentials\nUSER node\nEXPOSE 3000`), 'credential-source variable'),
     defeat('WRONG FIX: maia gets the channel but the media worker also reads an AWS credential env_file', 'fix', 'RED',
       (t) => awsForMaia()(t).replace(COMPOSE_PROD, '    env_file:\n      - .env.production\n\n    environment:\n      NODE_ENV: production\n      MEDIA_STORAGE_PATH', '    env_file:\n      - .env.production\n      - .env.aws\n\n    environment:\n      NODE_ENV: production\n      MEDIA_STORAGE_PATH'), 'reads env_file .env.aws'),
+    // every other Dockerfile defeat edits the root Dockerfile (context '.'); a build context in a subdirectory must be joined to its Dockerfile path, or that file is never read
+    defeat('WRONG FIX: maia gets the channel but the image is built from a subdirectory context whose own Dockerfile copies a credential file', 'fix', 'RED',
+      (t) => awsForMaia()(t)
+        .replace(COMPOSE_PROD, '  context: ${MAIA_BUILD_CONTEXT:-.}\n  dockerfile: Dockerfile\n', '  context: ./docker/web\n  dockerfile: Dockerfile\n')
+        .add('docker/web/Dockerfile', 'FROM scratch\nCOPY .aws/credentials /home/node/.aws/credentials\n'), 'docker/web/Dockerfile:'),
   ],
   decoys: [
     defeat('DECOY: a comment above the SMTP bind that mentions the AWS credential changes nothing', 'fix', 'RED', (t) => t.replace(COMPOSE_PROD, SMTP_ENV, `      # AWS credential: mount it exactly like the SMTP token\n${SMTP_ENV}`), 'is not set'),
@@ -3740,7 +3753,12 @@ function tryApply(d, tree) {
   }
 }
 
-const hasLine = (r, prefix, frag) => r.evidence.some((l) => l.startsWith(prefix) && (!frag || l.includes(frag)));
+/** Calls so far: lets a self-test line that joins two hasLine tests with && show that BOTH ran (an && mistyped as || stops after the first true one). */
+let hasLineCalls = 0;
+const hasLine = (r, prefix, frag) => {
+  hasLineCalls++;
+  return r.evidence.some((l) => l.startsWith(prefix) && (!frag || l.includes(frag)));
+};
 
 /** A throw-away git repository: tracked files committed, untracked files left alone. */
 function makeRepo(label, tracked, untracked = {}) {
@@ -3851,34 +3869,56 @@ export function selfTest() {
     const yaml = "x-m: &m\n  type: bind\n  source: /h/f\n  target: /t/f\n  read_only: true\nx-e: &e\n  K1: v1\nservices:\n  one:\n    environment:\n      <<: *e\n      K2: v2\n    volumes:\n      - *m\n      - named:/data\n  two:\n    volumes:\n    - /host/path:/c:ro\n    command: [\"a\", \"b c\"]\n";
     const m = composeModel(yaml);
     const one = m.services.get('one');
-    const two = m.services.get('two');
+    // the second service reports what is read from it, so the check below can show the && chain reached its LAST operand (an && mistyped as || stops at the first true one)
+    const twoReads = [];
+    const two = new Proxy(m.services.get('two'), { get: (target, key, receiver) => { twoReads.push(String(key)); return Reflect.get(target, key, receiver); } });
     add('machinery: the YAML reader resolves an alias in a sequence, a merge key into a map, a same-indent sequence and a flow list',
       m.ok && m.issues.length === 0 && one.env.get('K1') === 'v1' && one.env.get('K2') === 'v2' && one.mounts[0].source === '/h/f' && one.mounts[0].readOnly === true && one.mounts[1].kind === 'volume' && two.mounts[0].readOnly === true && two.command === 'a b c', JSON.stringify([m.issues, one?.env && [...one.env], one?.mounts]));
+    add('machinery: the YAML-reader assertion above evaluated every operand, down to the command of the second service (its last), so its && chain did not stop at the first true operand', twoReads.includes('command'), twoReads.join());
     const off = parseYaml(yaml, { resolveAliases: false });
     add('machinery: the alias assertions FAIL when aliases are not resolved (lethal control)', off.value.services.one.volumes[0].alias === 'm' && !off.value.services.one.volumes[0].source);
     const interp = composeModel("services:\n  s:\n    volumes:\n      - ${DATA_DIR:-./data}:/app/data\n      - 'q:/q'\n").services.get('s');
     add('machinery: a colon inside ${...} does not split a volume entry', interp.mounts[0].target === '/app/data' && interp.mounts[0].kind === 'bind' && interp.mounts[1].target === '/q');
     const broken = composeModel('services:\n  s:\n    command: "never closed\n');
     add('machinery: an unterminated quote is reported, not guessed', broken.issues.length > 0);
+    // each escape of a double-quoted scalar on its own, so a branch that answers for another escape names itself
+    const escapes = [['\\t', '\t'], ['\\n', '\n'], ['\\r', '\r'], ['\\0', '\0'], ['\\"', '"'], ['\\\\', '\\'], ['\\/', '/'], ['\\x41', 'A'], ['\\u0042', 'B']];
+    const escapeWrong = escapes.filter(([src, want]) => parseYaml(`k: "a${src}b"\n`).value.k !== `a${want}b`).map(([src]) => src);
+    add('machinery: a double-quoted scalar decodes each supported escape (tab, newline, return, nul, quote, backslash, slash, hex, unicode) to its own character', escapeWrong.length === 0, escapeWrong.join(' '));
+    // a flow map with a quoted key: read as a key, and when the quote never closes reported (not thrown, not guessed)
+    const tryYaml = (s) => { try { const r = parseYaml(s); return JSON.stringify([r.issues, r.value]); } catch (e) { return `threw ${e.name}`; } };
+    add('machinery: a flow map reads double- and single-quoted keys', tryYaml("x: { \"a\": b, 'c': d }\n") === '[[],{"x":{"a":"b","c":"d"}}]', tryYaml("x: { \"a\": b, 'c': d }\n"));
+    add('machinery: a flow map whose double-quoted key never closes is an unterminated-flow issue, not an exception', tryYaml('x: { "a: b }\n') === '[[{"kind":"unterminated-flow","line":1}],{"x":{}}]', tryYaml('x: { "a: b }\n'));
+    add('machinery: a flow map whose single-quoted key never closes is an unterminated-flow issue, not an exception', tryYaml("x: { 'a: b }\n") === '[[{"kind":"unterminated-flow","line":1}],{"x":{}}]', tryYaml("x: { 'a: b }\n"));
+    // a long-syntax mount names its type; an empty type names nothing, so the kind is inferred from the source exactly as for a mount with no type
+    const mountKind = (type, source) => composeModel(`services:\n  s:\n    volumes:\n      - type: ${type}\n        source: ${source}\n        target: /t\n`).services.get('s').mounts[0].kind;
+    const kinds = [mountKind('""', '/h/f'), mountKind('""', 'named'), mountKind('volume', '/h/f'), mountKind('bind', 'named')].join();
+    add('machinery: an empty mount type is inferred from the source (host path = bind, name = volume) and an explicit type wins over the source', kinds === 'bind,volume,volume,bind', kinds);
   }
   {
     const svc = (mounts) => ({ mounts: mounts.map((m) => ({ kind: 'volume', readOnly: false, createHostPath: null, ...m })), env: new Map(), envFiles: [], command: '', entrypoint: '', image: '' });
     const model = (a, b) => ({ services: new Map([['web', svc(a)], ['worker', svc(b)]]) });
     const run = [{ name: 'web', via: 'the web app process' }, { name: 'worker', via: 'script s' }];
-    const v = (a, b) => vaultParity(model(a, b), run, '/v');
+    let vCalls = 0;
+    const v = (a, b) => { vCalls++; return vaultParity(model(a, b), run, '/v'); };
     const V = { source: 'vault_data', target: '/v' };
     add('machinery: vaultParity is satisfied by the same volume at the same path', v([V], [V]).bad.length === 0 && v([V], [V]).ok.length === 1);
+    const vCallsBefore = vCalls;
     add('machinery: vaultParity fails a service with no mount, a different volume, a read-only mount, and accepts an ancestor mount of the same volume',
       v([V], []).bad.length === 1 && v([V], [{ source: 'other', target: '/v' }]).bad.length === 1 && v([V], [{ ...V, readOnly: true }]).bad.length === 1 && v([{ source: 'vault_data', target: '/' }], [{ source: 'vault_data', target: '/' }]).bad.length === 0);
+    add('machinery: the vaultParity assertion above ran all four of its cases (no mount, different volume, read-only mount, ancestor mount), so its && chain did not stop at the first true one', vCalls - vCallsBefore === 4, `${vCalls - vCallsBefore} of 4`);
     add('machinery: vaultParity never fails a single runner (it has nothing to be in parity with) and reports it as a state', vaultParity(model([V], []), [run[0]], '/v').bad.length === 0 && vaultParity(model([], []), [run[1]], '/v').state.length === 1);
     add('machinery: a checker that only asks whether ANY service mounts the vault would pass the case vaultParity fails (lethal control)', [V].length > 0 && v([V], []).bad.length === 1);
   }
   {
     const ok = { env: new Map([[CRED_VAR, '/run/secrets/c']]), mounts: [{ kind: 'bind', source: '/h/f', target: '/run/secrets/c', readOnly: true, createHostPath: 'false' }], envFiles: [] };
-    const probe = (patch) => credentialChannel({ ...ok, ...patch }).problems.length;
+    let probeCalls = 0;
+    const probe = (patch) => { probeCalls++; return credentialChannel({ ...ok, ...patch }).problems.length; };
     add('machinery: credentialChannel accepts a read-only host-file bind with create_host_path false', probe({}) === 0);
+    const probeCallsBefore = probeCalls;
     add('machinery: credentialChannel rejects a missing variable, a missing mount, a writable mount, a named volume and a directory-creating mount',
       probe({ env: new Map() }) >= 1 && probe({ mounts: [] }) === 1 && probe({ mounts: [{ ...ok.mounts[0], readOnly: false }] }) === 1 && probe({ mounts: [{ ...ok.mounts[0], kind: 'volume', source: 'v' }] }) >= 1 && probe({ mounts: [{ ...ok.mounts[0], createHostPath: null }] }) === 1);
+    add('machinery: the credentialChannel assertion above ran all five of its cases (missing variable, missing mount, writable mount, named volume, directory-creating mount), so its && chain did not stop at the first true one', probeCalls - probeCallsBefore === 5, `${probeCalls - probeCallsBefore} of 5`);
     add('machinery: credentialChannel reports a static key in the environment', credentialChannel({ ...ok, env: new Map([['AWS_SECRET_ACCESS_KEY', 'x']]) }).staticVars.length === 1);
   }
   {
@@ -3980,6 +4020,13 @@ foo(1);
     add('SF-13 machinery: the older functionsIn registry misses the concise arrows, methods and property values (lethal control)', ['a', 'c', 'm', 'p', 's'].every((n) => !oldNames.includes(n)), oldNames.join(','));
     const grown = growBearing([{ bl }], ['foo']);
     add('SF-13 machinery: growBearing makes a function bearing in every shape, and stops a concise body at its line end', want.every((n) => grown.has(n)) && !grown.has('e') && !grown.has('z'), [...grown].join(','));
+    // where a concise arrow body ends: at a ; or , of its own depth, at an unmatched closer, at an ASI line break; never at a ; or , inside brackets
+    const ends = [conciseEnd('f(a, b) + 1; g', 0), conciseEnd('x + 1; y', 0), conciseEnd('x + 1, y', 0), conciseEnd('f(x)) tail', 0), conciseEnd('f(x)\nnext', 0), conciseEnd('[a, b].length; z', 0)].join();
+    add('SF-13 machinery: conciseEnd stops at a depth-0 semicolon or comma, an unmatched closer or an ASI line break and reads through the commas inside brackets', ends === '11,5,5,4,4,13', ends);
+    const conciseSrc = lexCode('const h = (r) => outer(1, foo(r));\nconst i = (r) => outer(1, 2); const j = (s) => foo(s);\n').bl;
+    const conciseGrown = growBearing([{ bl: conciseSrc }], ['foo']);
+    const conciseSeen = ['h', 'i', 'j'].map((n) => conciseGrown.has(n)).join();
+    add('SF-13 machinery: a bearing call after a comma inside the arguments is still inside the concise body (h), and a body ends at its own semicolon so the next declaration on the line is not part of it (i)', conciseSeen === 'true,false,true', conciseSeen);
     const withAlias = lexCode("import { foo as g1 } from './x';\nconst g2 = foo;\nconst h = () => g1(1);\nconst k = () => g2(2);\n").bl;
     add('SF-13 machinery: a renamed import and a const alias are the same function (x as y, const y = x)', aliasesInBl(withAlias, 'foo').sort().join() === 'g1,g2' && ['h', 'k'].every((n) => growBearing([{ bl: withAlias }], ['foo']).has(n)));
     const txSrc = "transaction<number>(async (tx) => 1);\ninTx(async (tx) => 2);\nimport { transaction as inTx } from 'x';\nawait c.query('BEGIN');\nawait c.query('COMMIT');\n";
@@ -4150,6 +4197,7 @@ foo(1);
   }
 
   // ---------- 3. every defeat and decoy flips (or holds) as declared, for its named reason ----------
+  const oneTestOnly = [];
   for (const F of FALSIFIERS_B) {
     for (const d of [...F.defeats, ...(F.decoys ?? []).map((x) => ({ ...x, decoy: true }))]) {
       const a = tryApply(d, tree);
@@ -4163,12 +4211,16 @@ foo(1);
       if (d.expect === 'RED') {
         add(`${F.id} dies for its named reason, not by making a file unreadable: ${d.name}`, !hasLine(r, 'INCONCLUSIVE:') && (!d.diesBecause || r.evidence.some((l) => l.includes(d.diesBecause))), `wanted "${d.diesBecause ?? ''}" in: ${r.evidence.filter((l) => l.startsWith('VIOLATION:')).join(' | ').slice(0, 200)}`);
       } else {
+        const hasLineBefore = hasLineCalls;
         add(`${F.id} leaves no VIOLATION or INCONCLUSIVE line: ${d.name}`, !hasLine(r, 'VIOLATION:') && !hasLine(r, 'INCONCLUSIVE:'), r.evidence.filter((l) => l.startsWith('VIOLATION:') || l.startsWith('INCONCLUSIVE:')).join(' | ').slice(0, 200));
+        if (hasLineCalls - hasLineBefore !== 2) oneTestOnly.push(`${F.id} ${d.name}`);
       }
       add(`${F.id} evidence is content-free: ${d.name}`, r.evidence.every((l) => TOKEN_FREE.test(l)));
       add(`${F.id} changed the tree (it is not a vacuous mutation): ${d.name}`, a.tree.touched().length > 0);
     }
   }
+  // the 'leaves no VIOLATION or INCONCLUSIVE line' assertion joins two tests with &&; if it ever stopped after the first, an INCONCLUSIVE line would pass as a clean hold
+  add('every defeat or decoy that must leave the law holding ran BOTH the VIOLATION test and the INCONCLUSIVE test (the && did not stop after the first)', oneTestOnly.length === 0, oneTestOnly.slice(0, 3).join(' | ').slice(0, 200));
 
   // ---------- 4. fail-closed paths and extra lethality ----------
   const scratch = [];
@@ -4200,6 +4252,10 @@ foo(1);
         .add('lib/copy/deleteWorkCopy.ts', "export const DELETE_WORK_COPY = { body: 'This deletes the writing. Nothing is kept.', hint: 'Permanently deletes it.' } as const;\n")
         .replace(FIXTURE_REL, FIXTURE_HINT, "hint: 'Deletes this Work and its writing.' },")));
     add('SF-17 a manifest with no literal permanentErasureCertified is INCONCLUSIVE', incon(SF17, tree.replace(RELEASE_AUTHORITY, 'permanentErasureCertified: false,', 'permanentErasureCertified: computed(),')));
+    // the manifest is read and fine, but a claim-bearing copy file cannot be closed: the scan is INCONCLUSIVE and then says nothing else, so no ok:, state:, VIOLATION: or context: line of a half-read tree can sit next to it
+    const halfRead = runCheck(SF17, tree.add('lib/writersStudio/halfReadCopy.ts', "export const T = 'Nothing is kept.';\n/* never closed\n"));
+    const halfKinds = `${halfRead.ok}|${halfRead.threw ?? ''}|${halfRead.evidence.map((l) => l.split(':')[0]).join()}`;
+    add('SF-17 an inconclusive scan (a claim file the stripper cannot close) reports only INCONCLUSIVE lines: no ok:, state:, VIOLATION: or context: line beside it', halfKinds === 'false||INCONCLUSIVE', halfKinds);
     add('SF-18 an empty declared set is INCONCLUSIVE', !sf18Check(tree, {}).ok && hasLine(sf18Check(tree, {}), 'INCONCLUSIVE:'));
     add('SF-19 a key authority without selectedProvider is INCONCLUSIVE', incon(SF19, tree.replace(KEY_AUTHORITY, 'function selectedProvider(', 'function chooseProvider(')));
   }
@@ -4217,6 +4273,9 @@ foo(1);
     add('SF-12 a client configuration that spreads another object is INCONCLUSIVE, since a requestHandler may arrive through it', incon(SF12, tree.replace(KEY_AUTHORITY, KMS_CALL, '  kmsClientCache = factory({ region, maxAttempts: 3, ...baseConfig });')));
     add('SF-12 a second client built from a call result in another file is INCONCLUSIVE', incon(SF12, withConfig(tree, '    requestHandler: { connectionTimeout: 3_000, requestTimeout: 10_000 },').add(`${SOURCE_DIR}/kmsOther.ts`, "import { KMSClient } from '@aws-sdk/client-kms';\nexport const other = (region: string) => new KMSClient(buildConfig(region));\n")));
     add('SF-13 a library file the literal scanner cannot close is INCONCLUSIVE rather than skipped', incon(SF13, tree.add(`${SOURCE_DIR}/broken.ts`, "export const x = 'never closed;\nexport const y = 1;\n")));
+    // selection by import, both directions: the defeat 'whose only import is a library module' proves such a caller IS scanned; this proves a caller with no library import is NOT, whatever its functions are called
+    const bystander = sf13Check(decryptBeforeTransaction(tree).add('lib/manuscript/other/tallyBystander.ts', sf13NameOnlyBystander));
+    add('SF-13 a file that imports no library module and only mentions a library file name is not scanned, however its own functions are named (selection by import, never by name)', bystander.ok, bystander.evidence.filter((l) => l.startsWith('VIOLATION:')).join(' | ').slice(0, 200));
   }
   {
     // a stale defeat must raise instead of silently doing nothing, or a defeat could pass by changing nothing

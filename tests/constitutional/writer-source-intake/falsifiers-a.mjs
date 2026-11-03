@@ -4521,6 +4521,9 @@ function verdict(r) {
   return r.ok ? 'GREEN' : 'RED';
 }
 
+/** An evidence line that states a finding: a violation, or a file the check could not establish. A FIX must leave neither. One definition, so the machinery section can pin it. */
+const isFindingLine = (l) => l.startsWith('VIOLATION:') || l.startsWith('INCONCLUSIVE:');
+
 function runCheck(falsifier, tree) {
   try {
     const r = falsifier.check(tree);
@@ -4708,7 +4711,7 @@ export function selfTest({ root = ROOT } = {}) {
       if (d.expect === 'RED') {
         add(`${F.id} defeat dies for its named reason, not by making a file unreadable: ${d.name}`, !r.evidence.some((l) => l.startsWith('INCONCLUSIVE:')) && (!d.diesBecause || r.evidence.some((l) => l.includes(d.diesBecause))), `wanted "${d.diesBecause ?? ''}" in: ${r.evidence.filter((l) => l.startsWith('VIOLATION:')).join(' | ').slice(0, 220)}`);
       } else {
-        add(`${F.id} fix leaves no VIOLATION or INCONCLUSIVE line: ${d.name}`, !r.evidence.some((l) => l.startsWith('VIOLATION:') || l.startsWith('INCONCLUSIVE:')), r.evidence.filter((l) => l.startsWith('VIOLATION:') || l.startsWith('INCONCLUSIVE:')).join(' | ').slice(0, 220));
+        add(`${F.id} fix leaves no VIOLATION or INCONCLUSIVE line: ${d.name}`, !r.evidence.some(isFindingLine), r.evidence.filter(isFindingLine).join(' | ').slice(0, 220));
       }
       add(`${F.id} defeat evidence is content-free: ${d.name}`, r.evidence.every((l) => TOKEN_FREE.test(l)));
       add(`${F.id} defeat changed the tree (it is not a vacuous mutation): ${d.name}`, a.tree.touched().length > 0);
@@ -4838,7 +4841,9 @@ export function selfTest({ root = ROOT } = {}) {
     const hz = hazard.apply(tree);
     const hf = sourceFacts(hz, WORKBENCH_ROUTE);
     const hH = resolveHandler(hf, 'POST').H;
-    add('repair: the SAME hazard gate is a hold in the opposite world (manifest held), so the polarity of the world is what separates them', creditedGate(hz, hf, hH, releaseWorld(false)).gate !== null && creditedGate(hz, hf, hH, releaseWorld(true)).gate === null);
+    // two independent assertions, one per world: a single `a && b` here could not tell "both hold" from "either holds"
+    add('repair: the SAME hazard gate IS a hold in the opposite world (manifest held), where it refuses', creditedGate(hz, hf, hH, releaseWorld(false)).gate !== null);
+    add('repair: the SAME hazard gate is NOT a hold once the manifest releases intake, so the polarity of the world is what separates them', creditedGate(hz, hf, hH, releaseWorld(true)).gate === null);
   }
   {
     // (SF-04) a gate on the result variable: the old check accepted an inverted one
@@ -4936,6 +4941,61 @@ export function selfTest({ root = ROOT } = {}) {
     add('repair: successBypassBefore sees an explicit 2xx early return', successBypassBefore({ bl: two }, H, two.lastIndexOf('return')) >= 0);
     const hh = (src) => { const bl = blankLiterals(src).text; const Hh = functionRange(bl, 'POST'); return hardHold({ bl, code: src }, Hh); };
     add('repair: hardHold does not credit a 423 that an earlier succeeding return can skip', hh("export async function POST(r) { if (r.x) return NextResponse.json({}, { status: 200 }); return NextResponse.json({}, { status: 423 }); }") === null && hh("export async function POST(r) { return NextResponse.json({}, { status: 423 }); }") !== null);
+  }
+
+  // ---------- 6. the instrument's own bookkeeping, pinned in BOTH directions (each verdict is a vector, so no operand can hide behind another) ----------
+  {
+    // (finding lines) the predicate behind "a fix leaves no VIOLATION or INCONCLUSIVE line" accepts exactly those two prefixes
+    const lines = ['VIOLATION: a', 'INCONCLUSIVE: a', 'ok: a', '', 'see VIOLATION: a', 'violation: a'];
+    const got = lines.map((l) => isFindingLine(l));
+    add('machinery: a finding line is exactly one that STARTS with VIOLATION: or INCONCLUSIVE: (a fix is not judged by a vacuous predicate)', JSON.stringify(got) === JSON.stringify([true, true, false, false, false, false]), got.join(','));
+  }
+  {
+    // (runCheck) a check that answers in the wrong shape, or throws, is RED and INCONCLUSIVE: never a pass, never dropped
+    const runs = (result) => runCheck({ check: () => result }, tree);
+    const shape = (r) => JSON.stringify([r.ok, r.threw, r.evidence.length, r.evidence.map((l) => isFindingLine(l))]);
+    const wrongShapes = ['null', '{}', '{"ok":true}', '{"evidence":[]}', '{"ok":"yes","evidence":[]}', '{"ok":true,"evidence":"ok: a"}', '{"ok":1,"evidence":["ok: a"]}'];
+    const got = [shape(runs(undefined)), ...wrongShapes.map((s) => shape(runs(JSON.parse(s))))];
+    add('machinery: runCheck turns every malformed check result (no result, no ok, non-boolean ok, non-array evidence) into RED + INCONCLUSIVE + threw "malformed"', got.every((g) => g === JSON.stringify([false, 'malformed', 1, [true]])), got.join(' | '));
+    const wellFormed = JSON.parse('{"ok":true,"evidence":["ok: a"]}');
+    add('machinery: runCheck hands a well-formed result back untouched (the same object, not a copy and not a verdict of its own)', runs(wellFormed) === wellFormed);
+    const thrown = runCheck({ check: () => { throw new TypeError('x'); } }, tree);
+    add('machinery: runCheck turns a throwing check into RED + INCONCLUSIVE that names the error type', JSON.stringify([thrown.ok, thrown.threw, thrown.evidence]) === JSON.stringify([false, 'TypeError: x', ['INCONCLUSIVE: check threw TypeError']]));
+  }
+  {
+    // (isMutable) a name changed by ++ or -- is no constant, whatever else is true of it; a different name, a property or a longer name is not that name
+    const mutOf = (src, name) => isMutable({ rel: 'x.ts', code: src, bl: src, kind: 'ts' }, name);
+    const probes = [
+      ['let n = 0; n++;', 'n'], ['let n = 0; ++n;', 'n'], ['let n = 0; n--;', 'n'], ['let n = 0; --n;', 'n'], ['let n = 0; n = 1;', 'n'], ['let n = 0; n += 1;', 'n'],
+      ['let n = 0; let m = 1; m++;', 'n'], ['let n = 0; o.n++;', 'n'], ['let n = 0; nn++;', 'n'], ['let n = 0; ++o.n;', 'n'], ['const n = 0;', 'n'],
+    ];
+    const got = probes.map(([src, name]) => mutOf(src, name));
+    add('machinery: isMutable sees n++, ++n, n--, --n, n = and n += as changes, and does not see another name, a property, a longer name or a bare declaration', JSON.stringify(got) === JSON.stringify([true, true, true, true, true, true, false, false, false, false, false]), got.join(','));
+    const evN = (src) => {
+      const v = ev(parseSrc('n'), { tree: null, f: { rel: 'x.ts', code: src, bl: src, kind: 'ts' }, world: null, params: null, depth: 0, seen: new Set(), stack: [], steps: { n: 0 } });
+      return isU(v) ? 'U' : v;
+    };
+    const via = [evN('let n = 1; n++;'), evN('let n = 1; --n;'), evN('const n = 1;')];
+    add('machinery: the engine will not read a declaration through a name that is incremented or decremented (UNKNOWN), and still reads an untouched one', JSON.stringify(via) === JSON.stringify(['U', 'U', 1]), JSON.stringify(via));
+  }
+  {
+    // (evId across files) an imported constant is followed only into a module this engine could read as code to its end
+    const ROUTE = 'app/api/__probe_import/route.ts';
+    const DIR = 'lib/__probe_import';
+    const seeded = tree
+      .add(`${DIR}/clean.ts`, 'export const HELD = true;\n')
+      .add(`${DIR}/unclosed.ts`, 'export const HELD = true;\n/* never closed\n')
+      .add(`${DIR}/notes.txt`, 'const HELD = true;\n')
+      .add(`${DIR}/empty.ts`, '')
+      .add(`${DIR}/reassigned.ts`, 'export let HELD = true;\nHELD = false;\n');
+    const follow = (spec) => {
+      const tr = seeded.add(ROUTE, `import { HELD } from '${spec}';\nexport async function POST() {}\n`);
+      const v = ev(parseSrc('HELD'), { tree: tr, f: sourceFacts(tr, ROUTE), world: null, params: null, depth: 0, seen: new Set(), stack: [], steps: { n: 0 } });
+      return isU(v) ? 'U' : v;
+    };
+    const kinds = seeded.codeKind(`${DIR}/notes.txt`);
+    const got = ['clean', 'unclosed', 'notes.txt', 'empty', 'reassigned', 'absent'].map((m) => follow(`@/${DIR}/${m}`));
+    add('machinery: a constant imported from a clean module is followed; one from a module with an unclosed comment, a file with no code kind, an empty module, a reassigned binding or a missing file is UNKNOWN', JSON.stringify(got) === JSON.stringify([true, 'U', 'U', 'U', 'U', 'U']), `${got.join(',')} kind=${kinds}`);
   }
 
   return { ok: checks.every((c) => c.ok), checks };

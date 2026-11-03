@@ -20,11 +20,11 @@ right.** The columns below say what was added to that: a mutation audit, an adve
 |---|---|---|---|
 | `lib/strip.mjs` comment strippers (TS/JS, SQL, YAML, shell, Dockerfile, dotenv, Caddyfile) | PASS 264 | own audit: **177 of 177** mutants killed | done, repaired. 180 further generated mutants are *believed* equivalent, not proven. |
 | `lib/tree.mjs` immutable overlay tree | PASS 140 | own audit: **243 of 243** killed | done, repaired. `code()` still returns RAW text for kinds with no stripper; use `codeStrict()` or check `codeKind()`. |
-| `fixtures.mjs` fictional manuscripts (29 files) | PASS 41 (needs `unzip`, poppler, `xmllint`; fails closed without them unless waived) | seeded sweep: see section 3 | done, repaired. **Every expectation is still `inferred-from-source`**; see section 4. |
+| `fixtures.mjs` fictional manuscripts (29 files + manifest) | PASS 41 (needs `unzip`, poppler, `xmllint`; fails closed without them unless waived) | stable sweep: see section 3 | done, repaired. Expectations are `inferred-from-source` in the manifest, but 26 of 30 are now MEASURED against the real parser; see section 4. |
 | `scanners.mjs` content-free residue scanners | PASS 78 | own audit: **48 of 48** killed | done, repaired. Compressed originals armed from siblings can still misreport about 1% of unseen same-template uploads. |
-| `receipt.mjs` per-obligation receipt + independent validator | PASS 179 | seeded sweep: see section 3 | done, repaired (sealed ruling, table digest, evidence rules). A runner that lies consistently still yields a valid receipt. |
-| `falsifiers-a.mjs` SF-01 to SF-09 | PASS 643 (81 defeats, 89 decoys) | seeded sweep: see section 3 | done, repaired. |
-| `falsifiers-b.mjs` SF-10 to SF-19 | PASS 1017 (160 defeats, 26 decoys) | seeded sweep: see section 3 | done, repaired. |
+| `receipt.mjs` per-obligation receipt + independent validator | PASS 184 | stable sweep: see section 3 | done, repaired (sealed ruling, table digest, evidence rules). A runner that lies consistently still yields a valid receipt. |
+| `falsifiers-a.mjs` SF-01 to SF-09 | PASS 651 | stable sweep: see section 3 | done, repaired. |
+| `falsifiers-b.mjs` SF-10 to SF-19 | PASS 1038 | stable sweep: see section 3 | done, repaired. |
 | `matrix.mjs` the lethality matrix (this directory) | its steps are proven to FAIL on injected faults | n/a | not reviewed |
 
 ## 2. The twenty falsifiers, measured on two real trees
@@ -72,18 +72,31 @@ is never counted as passed.
   and carries no information. The index was not rewritten; the matrix enforces only the direction that can contradict (a GREEN
   falsifier may not cite an expected-RED obligation) and reports the rest.
 - Shipped audits (step B): strip 177/177, tree 243/243, scanners 48/48 mutants killed. **PASS.**
-- **Sweep (step F): FAIL, and that is the honest result.** Seed 20261102, 24 seeded source mutants per module for the four modules with no
-  audit of their own: **60 of 96 killed, 36 survived** (fixtures 11/24, receipt 19/24, falsifiers-a 18/24, falsifiers-b 12/24). A survivor
-  means the module's own self-test still exits 0 after a change to its logic. Many sit in the self-test code itself, where an
-  inverted operator means a check that cannot fail. Each is either an equivalent mutant (needs a stated reason, recorded in
-  `matrix-survivors.json`) or a gap that a new check must close; none has been classified yet. The first one probed
-  (`fixtures.mjs`, the EPUB entry-count boundary) is a computed boolean that does not decide the outcome. Triage tool:
-  `node matrix.mjs --probe=MODULE:FINGERPRINT`.
+- **Sweep (step F): the instrument is about 70 to 75% mutation-tight in the four modules without their own audit, and the rest is OPEN.**
+  - First run (seed 20261102, 24 per module, 96 mutants): **60 killed, 36 survived** (62.5%).
+  - Those 36 were triaged by four agents and independently re-checked by four verifiers; I then re-verified the result myself. **35 were real gaps,
+    now closed by strengthening the modules' own checks** (no check removed or loosened: all 37 changed lines were read; they are refactors into
+    functions or one `a && b` split into two assertions). **1 was equivalent** (`ifPrefix` loop bound, argued three ways). Re-probed by fingerprint:
+    33 KILLED directly, 2 KILLED via their rewritten successor lines, 1 SURVIVES as expected.
+  - It did **not** converge. A fresh sample at the same seed killed 65 of 96 (67.7%); the stable-sample baseline kills **70 of 96 (72.9%)** with
+    **26 survivors**. Each module has 1,100 to 1,300 candidate mutants and about a third survive, so fixing sampled survivors one by one is
+    whack-a-mole. This is the measured limit of the self-tests, not 36 isolated holes.
+  - So the sweep was changed from "zero unclassified" to a **regression guard**: the sample is ranked by a hash of the mutant's own text
+    (stable under unrelated edits), the verified-equivalent mutant is `classified`, the 26 baseline survivors are recorded as `open` (untriaged,
+    neither fixed nor equivalent) in `matrix-survivors.json`, and the step is OPEN. A new unclassified survivor in the sample FAILS the step
+    (proven: removing one entry turns it red). **The matrix therefore reads `PASS_PARTIAL` and can never read `PASS_COMPLETE` while any gap is OPEN.**
+  - What this means for trust: the falsifier VERDICTS were verified independently against the repository (section 2). The modules' SELF-TESTS are
+    roughly two-thirds mutation-tight; do not read a green self-test as proof its module is right.
+- Shipped audits (step B, run with `--full`): strip 177/177, tree 243/243, scanners 48/48 mutants killed. **PASS** (those three modules were not
+  changed by the triage).
 
 ## 4. What is still inferred, not measured
 
-- **Fixture expectations.** The repaired fixture table (29 files) has not been checked against the real `parseUpload`. The earlier
-  16-file generation was (dynamic probe P1, 2 PDFs under `tsx`). Re-running probe P1 on the repaired set is queued, not done.
+- **Fixture expectations: 26 of 30 measured, 4 inferred.** Probe P1 runs the real canonical `parseUpload` against the repaired 30-file set: 24 agree
+  under jest, the 2 PDFs agree under `tsx` (text-layer 200, scanned yields empty text so 503 after custody), **0 disagree**, including the
+  entries the harness had flagged `uncertain`. Four are route-level only and stay inferred: `zip-bomb.docx`, `empty-file.txt`,
+  `text-over-limit.txt`, `text-astral-over-limit.txt` (they depend on the route's caps and custody, not on parsing). Measured on a local
+  PostgreSQL 16 with a fake KMS and canonical's parser, not on the live route.
 - No run against real KMS, a real vault host, or the live Caddy configuration. Every KMS result so far is a recording fake.
 - The EPUB total-size guard cannot be shown to bound work (jszip inflates every entry before it runs); a fixture can only show the refusal.
 - Static falsifiers read text. A hold written as a ternary or `&&` statement, a pin written without a marker, a callee reached by

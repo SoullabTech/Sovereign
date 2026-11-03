@@ -1438,6 +1438,18 @@ function plainPassWithGap(receipt) {
 
 const suiteGapCount = () => Object.values(loadSuiteData().dispositions.dispositions).filter((d) => d.disposition === 'DECLARED_GAP').length;
 
+/**
+ * The lie behind `unmetDependencyInvented`: record a prerequisite on a PASS entry that has none. It is a function (not inline in the
+ * construction) so selfTest can aim it at a receipt whose FIRST entry is not a clean PASS: on the shipped tables entry 0 is a clean PASS, so
+ * a pick of "PASS or no unmet dependency" and a pick of "PASS and no unmet dependency" coincide there and only such a receipt tells them apart.
+ * Returns the entry it altered.
+ */
+function inventUnmetDependency(r) {
+  const e = entryOf(r, (x) => x.verdict === 'PASS' && x.unmetDependencies.length === 0, 'a clean PASS');
+  e.unmetDependencies = [r.entries.find((x) => x.id !== e.id).id];
+  return e;
+}
+
 export const WRONG_RECEIPTS = Object.freeze([
   wrong(
     'legacyExitCode',
@@ -2324,8 +2336,7 @@ export const WRONG_RECEIPTS = Object.freeze([
     () => {
       const f = fresh();
       f.receipt = lieAbout(f.receipt, (r) => {
-        const e = entryOf(r, (x) => x.verdict === 'PASS' && x.unmetDependencies.length === 0, 'a clean PASS');
-        e.unmetDependencies = [r.entries.find((x) => x.id !== e.id).id];
+        inventUnmetDependency(r);
       });
       return f;
     },
@@ -2663,6 +2674,49 @@ export function selfTest() {
     if (!suite.index.obligations.some((o) => o.requiresRealKms)) problems.push('no requiresRealKms obligation');
     if (!suite.index.obligations.some((o) => !o.requiresRealKms)) problems.push('every obligation requires real KMS');
     return problems.length ? fail(problems.join('; ')) : pass(`${ids.length} obligations; ${dispositions.filter((d) => d === 'BLOCKER').length} BLOCKER, ${dispositions.filter((d) => d === 'DECLARED_GAP').length} DECLARED_GAP; ruled=${suite.dispositions.ruled}`);
+  });
+
+  /* ---- 0. the check harness itself: the detail it records is what a failure report is made of ---- */
+  check('harness: check() records the detail a check supplies, a fixed fallback when it supplies none, and passes only on a strict true or {ok: true}', () => {
+    const FALLBACK = 'returned a falsy result';
+    // [label, what the check function returns or does, expected ok, expected detail]
+    const planted = [
+      ['pass with a detail', () => pass('PLANTED-DETAIL-A'), true, 'PLANTED-DETAIL-A'],
+      ['fail with a detail', () => fail('PLANTED-DETAIL-B'), false, 'PLANTED-DETAIL-B'],
+      ['bare true', () => true, true, 'ok'],
+      ['bare false', () => false, false, FALLBACK],
+      ['null', () => null, false, FALLBACK],
+      ['ok object with no detail', () => ({ ok: true }), true, 'ok'],
+      ['not-ok object with no detail', () => ({ ok: false }), false, FALLBACK],
+      ['truthy but not true', () => 1, false, FALLBACK],
+      ['ok that is truthy but not true', () => ({ ok: 1, detail: 'PLANTED-DETAIL-C' }), false, 'PLANTED-DETAIL-C'],
+      [
+        'throws',
+        () => {
+          throw new RangeError('planted-boom');
+        },
+        false,
+        'threw RangeError: planted-boom',
+      ],
+    ];
+    // check() pushes onto `checks` itself, so the planted calls are taken back out in `finally`: a planted failure must never count as a result.
+    const mark = checks.length;
+    let recorded;
+    try {
+      for (const [label, fn] of planted) check(`planted: ${label}`, fn);
+    } finally {
+      recorded = checks.splice(mark);
+    }
+    const bad = [];
+    if (recorded.length !== planted.length) bad.push(`${recorded.length} planted results recorded, expected ${planted.length}`);
+    planted.forEach(([label, , ok, detail], i) => {
+      const got = recorded[i];
+      if (!got) return;
+      if (got.name !== `planted: ${label}`) bad.push(`planted "${label}" was recorded under another name`);
+      if (got.ok !== ok) bad.push(`planted "${label}" recorded ok=${got.ok}, expected ${ok}`);
+      if (got.detail !== detail) bad.push(`planted "${label}" recorded a detail other than ${detail === FALLBACK ? 'the fixed fail fallback' : detail === 'ok' ? 'the fixed pass fallback' : 'the one it supplied'}`);
+    });
+    return bad.length ? fail(bad.join('; ')) : pass(`${recorded.length} planted outcomes (supplied detail, both fallbacks, null, strictness of ok, a throw) recorded exactly and then taken back out`);
   });
 
   /* ---- 1. the scrub: each rule fires on a runtime-built planted positive and stays quiet on look-alikes ---- */
@@ -3064,6 +3118,10 @@ export function selfTest() {
       header: { suite: 'writer-source-intake', kind: measured ? MEASURED_HEADER_KIND : 'synthetic' },
     });
   const blockerIds = (s) => s.index.obligations.filter((o) => s.dispositions.dispositions[o.id].disposition === 'BLOCKER').map((o) => o.id);
+  // The entry-count assertion of the conforming-run check below, as a function so a planted receipt can be put through it (see the check after).
+  const entryCountAssertion = (r, s, bad) => {
+    if (r.counts.entries !== s.index.obligations.length || r.entries.length !== r.expectedEntries) bad.push('entry count differs from the index');
+  };
 
   check('conforming synthetic run, ruled=false: accepted by the validator and PROVISIONAL (computed from entries)', () => {
     const s = ctxOf((x) => {
@@ -3076,11 +3134,33 @@ export function selfTest() {
     const bad = [];
     if (!v.ok) bad.push(`validator refused: ${v.problems[0]}`);
     if (r.verdict !== 'PROVISIONAL') bad.push(`verdict ${r.verdict}`);
-    if (r.counts.entries !== s.index.obligations.length || r.entries.length !== r.expectedEntries) bad.push('entry count differs from the index');
+    entryCountAssertion(r, s, bad);
     if (r.counts.blocking !== 0) bad.push('a conforming run has blocking entries');
     if (blockersCounted !== expected) bad.push('byDisposition.BLOCKER differs from the table');
     if (r.counts.byVerdict.PASS < expected) bad.push('fewer PASS entries than BLOCKERs');
     return bad.length ? fail(bad.join('; ')) : pass(`PROVISIONAL, ${r.counts.byVerdict.PASS} PASS of ${r.counts.entries}, blocking 0`);
+  });
+
+  check('conforming-run entry-count assertion: quiet on the honest receipt, and fires when EITHER half of the disagreement is planted alone (counts.entries vs the index, entries.length vs expectedEntries)', () => {
+    // On a conforming run both halves are false at once, so the assertion above can never show whether it fires on one half alone. These receipts disagree in exactly one place.
+    const s = ctxOf((x) => {
+      x.dispositions.ruled = false;
+    });
+    const honest = build(s);
+    const firedOn = (mut) => {
+      const r = clone(honest);
+      mut(r);
+      const bad = [];
+      entryCountAssertion(r, s, bad);
+      return bad.length;
+    };
+    const out = [];
+    if (firedOn(() => {}) !== 0) out.push('fired on the honest receipt');
+    if (firedOn((r) => { r.counts.entries += 1; }) !== 1) out.push('did not fire when only counts.entries disagreed with the index');
+    if (firedOn((r) => { r.expectedEntries += 1; }) !== 1) out.push('did not fire when only expectedEntries disagreed with entries.length');
+    if (firedOn((r) => { r.entries.pop(); }) !== 1) out.push('did not fire when only entries.length disagreed with expectedEntries (an entry dropped, counts untouched)');
+    if (firedOn((r) => { r.counts.entries += 1; r.expectedEntries += 1; }) !== 1) out.push('did not fire exactly once when both halves disagreed');
+    return out.length ? fail(out.join('; ')) : pass('quiet on the honest receipt; fires on each half alone and on both together');
   });
 
   check('flipping ruled to true in a copy gives STEP4_READY only when sealed, measured, no blocker is open, gap records are complete and every prerequisite passed', () => {
@@ -3343,7 +3423,9 @@ export function selfTest() {
     }
     for (const [label, edit] of [['ruled flipped', (x) => { x.dispositions.ruled = !x.dispositions.ruled; }], ['basis edited', (x) => { x.dispositions.basis = 'edited'; }], ['ruling added', (x) => { x.dispositions.ruling = { ref: 'ANY-RULING' }; }]]) {
       const x = loadSuiteData();
+      const beforeEdit = JSON.stringify(x);
       edit(x);
+      if (JSON.stringify(x) === beforeEdit) bad.push(`${label}: the edit changed nothing, so "no digest moved" would prove nothing`);
       if (JSON.stringify(computeTableDigest(x.index, x.dispositions)) !== JSON.stringify(d0)) bad.push(`${label}: moved a digest (it must not: the ruling cannot hash itself)`);
     }
     if (!throwsWith(() => computeTableDigest({ obligations: [() => 1] }, { dispositions: {} }), ReceiptInputError, 'BAD_DISPOSITIONS').ok) bad.push('non-JSON data was digested');
@@ -3512,6 +3594,14 @@ export function selfTest() {
     return bad.length ? fail(bad.join('; ')) : pass('depth 39/40 and 38/39 boundaries, 9 non-plain values refused, undefined handled as in JSON');
   });
 
+  // The assertion of the 'problem messages' check below that a recorded verdict is named beside the re-derived one, as a function so planted validator
+  // output can be put through it (see the check after). The first parameter deliberately shadows the module's validateReceipt: the real call passes the real one.
+  // "The problem list has a message carrying this code AND this text", with the producer of the list passed in so planted lists can be put through it.
+  const namesProblem = (validate, r, f, code, text) => validate(r, f).problems.some((m) => m.startsWith(code) && m.includes(text));
+  const verdictPairAssertion = (validateReceipt, r3, f, e3, bad) => {
+    if (!validateReceipt(r3, f).problems.some((m) => m.startsWith('ENTRY_VERDICT_MISMATCH') && m.includes(`${e3.id}: recorded INVALID_EVIDENCE, re-derived PASS`))) bad.push('a recorded verdict was not named beside the re-derived one');
+  };
+
   check('problem messages: vocabulary values and ids are named only in their allowed shape, and a leaking entry is labelled by its obligation id, never by a non-conforming id', () => {
     const f = fresh({ measured: true });
     const base = clone(f.receipt);
@@ -3519,7 +3609,7 @@ export function selfTest() {
     const someBlocker = (r) => r.entries.find((x) => x.disposition === 'BLOCKER' && x.verdict === 'PASS');
     const r1 = clone(base);
     someBlocker(r1).disposition = 'DECLARED_GAP';
-    if (!validateReceipt(r1, f).problems.some((m) => m.startsWith('DISPOSITION_MISMATCH') && m.includes('receipt says DECLARED_GAP'))) bad.push('a valid-but-wrong disposition was not named');
+    if (!namesProblem(validateReceipt, r1, f, 'DISPOSITION_MISMATCH', 'receipt says DECLARED_GAP')) bad.push('a valid-but-wrong disposition was not named');
     const r2 = clone(base);
     someBlocker(r2).disposition = 'MAYBE-BLOCKER';
     const m2 = validateReceipt(r2, f).problems.filter((m) => m.startsWith('DISPOSITION_MISMATCH'));
@@ -3527,7 +3617,7 @@ export function selfTest() {
     const r3 = clone(base);
     const e3 = someBlocker(r3);
     e3.verdict = 'INVALID_EVIDENCE';
-    if (!validateReceipt(r3, f).problems.some((m) => m.startsWith('ENTRY_VERDICT_MISMATCH') && m.includes(`${e3.id}: recorded INVALID_EVIDENCE, re-derived PASS`))) bad.push('a recorded verdict was not named beside the re-derived one');
+    verdictPairAssertion(validateReceipt, r3, f, e3, bad);
     const r4 = clone(base);
     const e4 = r4.entries[3];
     e4.evidence = [{ kind: 'k', ref: 'r', summary: crypto.randomUUID() }];
@@ -3542,7 +3632,7 @@ export function selfTest() {
     r6.entries = { 0: r6.entries[0] };
     const v6 = validateReceipt(r6, f);
     if (v6.ok || v6.codes.includes('VALIDATOR_EXCEPTION')) bad.push(`entries as an object was not diagnosed (${v6.codes})`);
-    const says = (r, code, text) => validateReceipt(r, f).problems.some((m) => m.startsWith(code) && m.includes(text));
+    const says = (r, code, text) => namesProblem(validateReceipt, r, f, code, text);
     const r7 = clone(base);
     r7.expectedEntries = 5;
     const r8 = clone(base);
@@ -3566,6 +3656,39 @@ export function selfTest() {
     if (!says(r10, 'COUNTS_MISMATCH', `counts.entries: recorded 3, re-derived ${base.entries.length}`)) bad.push('a numeric count mismatch was not named');
     if (!says(r11, 'COUNTS_MISMATCH', 'counts.entries: recorded <absent or non-number>') || JSON.stringify(validateReceipt(r11, f)).includes(stray)) bad.push('a non-numeric count was echoed');
     return bad.length ? fail(bad.join('; ')) : pass('11 message and label properties hold');
+  });
+
+  check('problem messages: the verdict-naming assertion needs the ENTRY_VERDICT_MISMATCH code AND the id-and-pair text in ONE message (planted validator output)', () => {
+    // The real validator can only ever hand the assertion a message that has both, so each half is planted alone here, through a stand-in validator.
+    const id = 'T-9';
+    const fired = (problems) => {
+      const bad = [];
+      verdictPairAssertion(() => ({ problems }), null, null, { id }, bad);
+      return bad.length;
+    };
+    const pairText = `${id}: recorded INVALID_EVIDENCE, re-derived PASS`;
+    const out = [];
+    if (fired([`ENTRY_VERDICT_MISMATCH ${pairText}`]) !== 0) out.push('fired on a message that has the code and the pair text');
+    if (fired(['COUNTS_MISMATCH counts.entries: recorded 3', `ENTRY_VERDICT_MISMATCH ${pairText}`]) !== 0) out.push('fired although one message among several had both halves');
+    if (fired([`ENTRY_VERDICT_MISMATCH T-8: recorded INVALID_EVIDENCE, re-derived PASS`]) !== 1) out.push('accepted the right code naming another entry');
+    if (fired([`ENTRY_VERDICT_MISMATCH ${id}: recorded PASS, re-derived PASS`]) !== 1) out.push('accepted the right code and id with a different recorded verdict');
+    if (fired([`DISPOSITION_MISMATCH ${pairText}`]) !== 1) out.push('accepted the right pair text under another code');
+    if (fired([`ENTRY_VERDICT_MISMATCH T-8: recorded PASS, re-derived PASS`, `DISPOSITION_MISMATCH ${pairText}`]) !== 1) out.push('accepted the code in one message and the pair text in another');
+    if (fired([]) !== 1) out.push('accepted no problems at all');
+    return out.length ? fail(out.join('; ')) : pass('quiet on a message with both halves; fires on the code alone, the pair text alone, the halves split across messages, and an empty list');
+  });
+
+  check('problem messages: namesProblem needs the code AND the text in ONE message (planted validator output)', () => {
+    const named = (problems) => namesProblem(() => ({ problems }), null, null, 'PLANTED_CODE', 'planted text');
+    const out = [];
+    if (named(['PLANTED_CODE x: planted text y']) !== true) out.push('missed a message carrying the code and the text');
+    if (named(['OTHER_CODE x', 'PLANTED_CODE x: planted text y']) !== true) out.push('missed the matching message among several');
+    if (named(['PLANTED_CODE x: some other text']) !== false) out.push('accepted the code without the text');
+    if (named(['OTHER_CODE x: planted text y']) !== false) out.push('accepted the text under another code');
+    if (named(['PLANTED_CODE x: some other text', 'OTHER_CODE x: planted text y']) !== false) out.push('accepted the code in one message and the text in another');
+    if (named(['planted text before PLANTED_CODE']) !== false) out.push('accepted the code that is not at the start of the message');
+    if (named([]) !== false) out.push('accepted an empty problem list');
+    return out.length ? fail(out.join('; ')) : pass('true only for one message with the code at its start and the text inside; false for each half alone, split halves, a mid-message code and no problems');
   });
 
   check('evidence counting survives malformed lies: bad items are not counted and never throw; a PASS with no evidence is not synthetic-only', () => {
@@ -3964,6 +4087,25 @@ export function selfTest() {
       : fail(`ok=${res.ok} codes=${res.codes} echoed=${blob.includes(canary) || blob.includes(uuid)}`);
   });
 
+  check('wrong-receipt helper: the invented prerequisite lands on a PASS entry that had none, even when an earlier entry is a non-PASS with none', () => {
+    // With the first BLOCKER unrun, entry 0 is BLOCKING_NOT_RUN with no unmet dependency and entry 1 is a PASS that now HAS one: a pick of
+    // "PASS or no unmet dependency" would take entry 0, a pick of "PASS and no unmet dependency" must skip both.
+    const f = fresh({ runFor: ({ blockers }) => ({ skip: [blockers[0]] }) });
+    const first = f.receipt.entries[0];
+    const out = [];
+    if (first.verdict === 'PASS' || first.unmetDependencies.length !== 0) out.push('the scenario does not put a non-PASS entry with no unmet dependency first, so it could not tell the picks apart');
+    const r = clone(f.receipt);
+    const picked = inventUnmetDependency(r);
+    const changed = Array.from(r.entries, (_, i) => i).filter((i) => r.entries[i].unmetDependencies.length !== f.receipt.entries[i].unmetDependencies.length);
+    if (changed.length !== 1) out.push(`${changed.length} entries had their unmet dependencies altered, expected exactly 1`);
+    else {
+      const was = f.receipt.entries[changed[0]];
+      if (was.verdict !== 'PASS' || was.unmetDependencies.length !== 0) out.push(`the lie landed on an entry that was ${was.verdict} with ${was.unmetDependencies.length} unmet dependencies, not a clean PASS`);
+      if (r.entries[changed[0]].id !== picked.id) out.push('the entry the helper returned is not the entry that changed');
+    }
+    return out.length ? fail(out.join('; ')) : pass('with entry 0 unrun the invented prerequisite still lands on exactly one entry, a PASS that had none');
+  });
+
   /* ---- 6. property test: random honest runs validate; random single-field lies are refused ---- */
   check('property: 64 random runs over random tables build, validate, and re-derive the same verdict; every sampled single-field lie is refused', () => {
     const rng = mulberry32(0x5eed1234);
@@ -3974,6 +4116,7 @@ export function selfTest() {
     const verdictsSeen = new Set();
     const overallSeen = new Set();
     const lieKindsSeen = new Set();
+    const lieKindsDefined = new Set();
 
     for (let iter = 0; iter < 64; iter++) {
       const mode = ['noisy', 'clean', 'clean', 'ready'][iter % 4];
@@ -4063,6 +4206,7 @@ export function selfTest() {
         ['leak planted in header', (r) => { r.header.h = `${DEFAULT_CANARY_PREFIX}${hex8U()}`; }],
         ['fixture prose planted in header', (r) => { r.header.h = 'Corwin Ashgrove lit the lamp'; }],
       ];
+      for (const [label] of mutations) lieKindsDefined.add(label);
       // Nine of the lie kinds per run, drawn without replacement; over the runs every kind is drawn many times (checked below).
       const drawn = [...mutations];
       for (let i = drawn.length - 1; i > 0; i--) {
@@ -4087,6 +4231,9 @@ export function selfTest() {
     if (verdictsSeen.size !== ENTRY_VERDICTS.length) problems.push(`random runs exercised ${verdictsSeen.size} of ${ENTRY_VERDICTS.length} entry verdicts`);
     if (overallSeen.size !== OVERALL_VERDICTS.length) problems.push(`random runs produced only ${[...overallSeen].sort()} of the overall verdicts`);
     if (lieKindsSeen.size < 20) problems.push(`only ${lieKindsSeen.size} kinds of lie were ever exercised`);
+    // A lie that changes nothing is skipped above, so a lie kind that has gone inert would otherwise drop out silently: every defined kind must have been exercised at least once.
+    const neverExercised = [...lieKindsDefined].filter((label) => !lieKindsSeen.has(label));
+    if (neverExercised.length > 0) problems.push(`${neverExercised.length} of ${lieKindsDefined.size} defined lie kinds were never exercised (${neverExercised.join(', ')})`);
     return problems.length ? fail(`${problems.length} problem(s): ${problems.slice(0, 3).join(' | ')}`) : pass(`${built} honest receipts accepted, ${lies} single-field lies of ${lieKindsSeen.size} kinds refused; entry verdicts seen ${verdictsSeen.size}/${ENTRY_VERDICTS.length}; overall ${[...overallSeen].sort().join('/')}`);
   });
 

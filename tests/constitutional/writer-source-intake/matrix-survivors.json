@@ -1,0 +1,195 @@
+{
+ "_readme": "Survivors of the matrix mutation sweep. 'classified' = an EQUIVALENT mutant: no input or state can make it behave differently; needs a reason of at least 20 characters containing the argument. 'open' = a known weakness, neither fixed nor equivalent; it does not fail the sweep (so a regression is visible) but it keeps the matrix at PASS_PARTIAL. A fingerprint is sha256(module|operator|original line text) truncated to 16 hex, so it survives unrelated edits and dies with the line it names.",
+ "classified": [
+  {
+   "module": "falsifiers-a",
+   "fingerprint": "14baebde2f5a2c2c",
+   "op": ">=->>",
+   "reason": "ifPrefix loop bound `w >= 0` vs `w > 0`: the two differ only when every character before the `(` is whitespace. The real code then slices an empty string and the mutant slices one whitespace character; neither can match the identifier regex, so both return null, and `w` is not read afterwards. When bl[0] is not whitespace both loops stop in the identical state. Argued independently by the triage agent (4M exhaustive and 5M random inputs, 0 differences), a verifier, and by hand."
+  }
+ ],
+ "open": [
+  {
+   "module": "fixtures",
+   "fingerprint": "af78bc3d83439807",
+   "op": "&&->||",
+   "sampledAtLine": 2733,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "fixtures",
+   "fingerprint": "3262b39b93a5e602",
+   "op": "&&->||",
+   "sampledAtLine": 2501,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "fixtures",
+   "fingerprint": "6a5db7d9f08f893d",
+   "op": "&&->||",
+   "sampledAtLine": 3000,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "fixtures",
+   "fingerprint": "93b93830bca1a67f",
+   "op": "&&->||",
+   "sampledAtLine": 2671,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "fixtures",
+   "fingerprint": "affbfed7fc8785a0",
+   "op": "&&->||",
+   "sampledAtLine": 3065,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "fixtures",
+   "fingerprint": "9bcc5e9213ea58ed",
+   "op": "&&->||",
+   "sampledAtLine": 2826,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "fixtures",
+   "fingerprint": "58c21d07631729ae",
+   "op": "||->&&",
+   "sampledAtLine": 935,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "receipt",
+   "fingerprint": "fd60e10c7de017e0",
+   "op": "&&->||",
+   "sampledAtLine": 3093,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "receipt",
+   "fingerprint": "275b0c85a0111d73",
+   "op": "delete !",
+   "sampledAtLine": 2429,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-a",
+   "fingerprint": "1bd38a61ca8eba7f",
+   "op": "&&->||",
+   "sampledAtLine": 1330,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-a",
+   "fingerprint": "48d823d2a73d4871",
+   "op": "||->&&",
+   "sampledAtLine": 2580,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-a",
+   "fingerprint": "ec04edade2aa6def",
+   "op": "&&->||",
+   "sampledAtLine": 1022,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-a",
+   "fingerprint": "7b3d6c9dd68cebab",
+   "op": "||->&&",
+   "sampledAtLine": 1169,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-a",
+   "fingerprint": "ced11d4145154878",
+   "op": "===->!==",
+   "sampledAtLine": 1664,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-a",
+   "fingerprint": "35ac951b36c4230b",
+   "op": "||->&&",
+   "sampledAtLine": 915,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-a",
+   "fingerprint": "58d6dd67a7fb8aad",
+   "op": "||->&&",
+   "sampledAtLine": 1273,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-a",
+   "fingerprint": "f2cf61b2995ab5ad",
+   "op": "&&->||",
+   "sampledAtLine": 1033,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-a",
+   "fingerprint": "3aa38a22627f3328",
+   "op": "===->!==",
+   "sampledAtLine": 1123,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-a",
+   "fingerprint": "ad7b61d4001e9737",
+   "op": "||->&&",
+   "sampledAtLine": 1447,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-a",
+   "fingerprint": "77d04ed9ad009aaf",
+   "op": "&&->||",
+   "sampledAtLine": 1664,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-a",
+   "fingerprint": "15a2887d416101c5",
+   "op": "||->&&",
+   "sampledAtLine": 2682,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-b",
+   "fingerprint": "c7330ed6dfc031eb",
+   "op": "&&->||",
+   "sampledAtLine": 4119,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-b",
+   "fingerprint": "3b77cfa3eae40d5d",
+   "op": "delete !",
+   "sampledAtLine": 1819,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-b",
+   "fingerprint": "442abdd58d9b5253",
+   "op": "&&->||",
+   "sampledAtLine": 2658,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-b",
+   "fingerprint": "f615fd673e18ac06",
+   "op": "||->&&",
+   "sampledAtLine": 3085,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  },
+  {
+   "module": "falsifiers-b",
+   "fingerprint": "9e7821e328269e5f",
+   "op": "&&->||",
+   "sampledAtLine": 4118,
+   "note": "Found by the 2026-11-03 baseline sweep (seed 20261102, N=24, stable sample). Not triaged: neither fixed nor shown equivalent. A weakness in the module's own checks until a person classifies it."
+  }
+ ]
+}
