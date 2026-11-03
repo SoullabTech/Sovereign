@@ -34,7 +34,12 @@ import {
   type HeadingSignal,
 } from '@/lib/manuscript/ingest/segment';
 import { memberRef } from '@/lib/privacy/memberRef';
-import { claimArrival, recordSuppliedArrival } from '@/lib/manuscript/source/arrivals';
+import {
+  claimArrivalWithClient,
+  prepareArrivalClaim,
+  recordSuppliedArrivalWithClient,
+  type ArrivalClaimContext,
+} from '@/lib/manuscript/source/arrivals';
 import { detectOmission, omissionMarker } from '@/lib/manuscript/source/omission';
 import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
@@ -215,14 +220,31 @@ function classifyDepth(
 }
 
 /**
- * A Work whose original could not be bound is saved and labelled `legacy_interpreted_import`; the member is told by the
- * client. Both ways the claim can fail now leave a content-free trace. Before this, a claim that RETURNED false (a KMS
- * outage resolves false rather than throwing, measured) logged nothing at all.
+ * D4 - the original is claimed INSIDE the transaction that creates the Work. If it cannot be bound, this is thrown, the whole
+ * transaction rolls back, and nothing is saved: no Work, no sections, no declaration, and (for a pasted import) no orphan supplied
+ * arrival. The member keeps their writing on screen and can try again; a file-backed upload stays an unclaimed upload they can see
+ * and remove. The message is a fixed code, never content, because the transaction helper logs it.
  */
-function noteUnboundCustody(memberId: string, manuscriptId: string, reason: 'claim_not_bound' | 'claim_threw', errorName?: string): void {
-  console.warn('[press/manuscripts] source custody not bound', {
+class CustodyNotBound extends Error {
+  constructor(
+    readonly reason: 'claim_not_bound' | 'claim_threw',
+    readonly errorName?: string,
+  ) {
+    super(`source_custody_not_bound:${reason}`);
+    this.name = 'CustodyNotBound';
+  }
+}
+
+const CUSTODY_REFUSAL = {
+  error: 'Your writing was not saved, because it could not be stored together with its source. Nothing was changed. You can try again.',
+  code: 'source_custody_not_bound',
+  retryable: true,
+} as const;
+
+/** Content-free trace of a refused import: a pseudonymous reference, a reason code and an error NAME. Never a message. */
+function noteUnboundCustody(memberId: string, reason: 'claim_not_bound' | 'claim_threw', errorName?: string): void {
+  console.warn('[press/manuscripts] import refused: source custody not bound', {
     memberRef: memberRef(memberId),
-    manuscriptId,
     reason,
     ...(errorName ? { errorName } : {}),
   });
@@ -420,87 +442,99 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'no non-empty sections' }, { status: 400 });
     }
 
-    // The member's explicit import confirmation may also declare a new Work.
-    // Keep that declaration and its exact manuscript together: a failed
-    // section, Work, or expression write must never leave a partial import.
-    const created = await transaction(async (client) => {
-      const ms = await client.query<{ id: string }>(
-        `INSERT INTO member_manuscripts (member_id, title) VALUES ($1, $2) RETURNING id`,
-        [memberId, title.trim()],
-      );
-      if (ms.rows.length !== 1) throw new Error('import_manuscript_unconfirmed');
-      const manuscriptId = ms.rows[0]!.id;
-      for (const s of clean) {
-        const inserted = await client.query<{ id: string }>(
-          `INSERT INTO manuscript_sections (manuscript_id, position, heading, body, heading_depth, heading_signal)
-           VALUES ($1, $2, $3, $4, $5, $6)
-           RETURNING id`,
-          [manuscriptId, s.position, s.heading, s.body, s.headingDepth ?? null, s.headingSignal ?? null],
-        );
-        if (inserted.rows.length !== 1) throw new Error('import_section_unconfirmed');
-      }
-
-      let workId: string | null = null;
-      if (createWork === true) {
-        const work = await client.query<{ id: string }>(
-          `INSERT INTO living_works (member_id, title)
-           VALUES ($1, $2) RETURNING id`,
-          [memberId, title.trim()],
-        );
-        if (work.rows.length !== 1) throw new Error('import_work_unconfirmed');
-        workId = work.rows[0]!.id;
-        const declaration = await client.query<{ id: string }>(
-          `INSERT INTO living_work_expressions
-             (living_work_id, expression_type, expression_id, declared_by)
-           VALUES ($1, 'manuscript', $2, $3)
-           RETURNING id`,
-          [workId, manuscriptId, memberId],
-        );
-        if (declaration.rows.length !== 1) throw new Error('import_work_declaration_unconfirmed');
-      }
-      return { manuscriptId, workId };
-    });
-    const { manuscriptId, workId } = created;
-
-    /* WS-01 — bind the manuscript to its arrival.
+    /* WS-01 / D4 - what is to be bound to the new manuscript, decided BEFORE anything is written.
      *
      * Two paths, and the difference between them is provenance, not plumbing:
      *
-     *   a file-backed import already has an arrival, taken into custody at
-     *   ingest before the member could edit anything. It is claimed here.
+     *   a file-backed import already has an arrival, taken into custody at ingest before the member could edit
+     *   anything. It is claimed in the transaction below.
      *
-     *   a pasted or typed import has no artifact and must never be given one.
-     *   Its authoritative source is the exact text the member supplied at THIS
-     *   act — the confirmation — which is why it is recorded now rather than
-     *   captured earlier from a textarea the member had not finished with.
+     *   a pasted or typed import has no artifact and must never be given one. Its authoritative source is the exact
+     *   text the member supplied at THIS act - the confirmation - which is why it is recorded now, in the same
+     *   transaction, rather than captured earlier from a textarea the member had not finished with.
      *
-     * A manuscript whose arrival cannot be bound stays labelled
-     * `legacy_interpreted_import` by the column default. It is not failed and
-     * not deleted — the member's words are saved either way — but neither is it
-     * allowed to claim a custody it does not have. */
-    let custody = 'legacy_interpreted_import';
-    try {
-      if (typeof sourceArrivalId === 'string' && sourceArrivalId.length > 0) {
-        if (await claimArrival(sourceArrivalId, manuscriptId, memberId)) {
-          custody = 'source_custodied';
-        } else {
-          noteUnboundCustody(memberId, manuscriptId, 'claim_not_bound');
-        }
-      } else if (typeof confirmedText === 'string' && confirmedText.trim().length > 0) {
-        const arrival = await recordSuppliedArrival({ memberId, sourceText: confirmedText });
-        if (await claimArrival(arrival.id, manuscriptId, memberId)) {
-          custody = 'source_custodied';
-        } else {
-          noteUnboundCustody(memberId, manuscriptId, 'claim_not_bound');
-        }
+     * Neither path may leave a manuscript claiming a custody it does not have, and neither may lose the member's
+     * words. Both are met by making the binding part of the same all-or-nothing act as the save. */
+    const fileArrivalId = typeof sourceArrivalId === 'string' && sourceArrivalId.length > 0 ? sourceArrivalId : null;
+    // A file arrival wins when both are present: the transaction below tries the file path first and only otherwise records the paste.
+    const pastedSourceText = typeof confirmedText === 'string' && confirmedText.trim().length > 0 ? confirmedText : null;
+    let claimContext: ArrivalClaimContext = null;
+    if (fileArrivalId) {
+      try {
+        claimContext = await prepareArrivalClaim(fileArrivalId, memberId);
+      } catch (err) {
+        noteUnboundCustody(memberId, 'claim_threw', err instanceof Error ? err.name : 'unknown');
+        return NextResponse.json(CUSTODY_REFUSAL, { status: 409 });
       }
-    } catch (err) {
-      // Custody is additive: failing to record it must not lose the member's
-      // manuscript, which is already saved. The label stays honest instead.
-      // Logged as a code and an error NAME only: the raw error object can carry
-      // document fragments or identifiers, and this record must stay content-free.
-      noteUnboundCustody(memberId, manuscriptId, 'claim_threw', err instanceof Error ? err.name : 'unknown');
     }
+
+    // The member's explicit import confirmation may also declare a new Work.
+    // Keep that declaration, its exact manuscript AND the binding of its original
+    // together: a failed section, Work, expression or claim write must never
+    // leave a partial import.
+    let created: { manuscriptId: string; workId: string | null; custody: string };
+    try {
+      created = await transaction(async (client) => {
+        const ms = await client.query<{ id: string }>(
+          `INSERT INTO member_manuscripts (member_id, title) VALUES ($1, $2) RETURNING id`,
+          [memberId, title.trim()],
+        );
+        if (ms.rows.length !== 1) throw new Error('import_manuscript_unconfirmed');
+        const manuscriptId = ms.rows[0]!.id;
+        for (const s of clean) {
+          const inserted = await client.query<{ id: string }>(
+            `INSERT INTO manuscript_sections (manuscript_id, position, heading, body, heading_depth, heading_signal)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING id`,
+            [manuscriptId, s.position, s.heading, s.body, s.headingDepth ?? null, s.headingSignal ?? null],
+          );
+          if (inserted.rows.length !== 1) throw new Error('import_section_unconfirmed');
+        }
+
+        let workId: string | null = null;
+        if (createWork === true) {
+          const work = await client.query<{ id: string }>(
+            `INSERT INTO living_works (member_id, title)
+             VALUES ($1, $2) RETURNING id`,
+            [memberId, title.trim()],
+          );
+          if (work.rows.length !== 1) throw new Error('import_work_unconfirmed');
+          workId = work.rows[0]!.id;
+          const declaration = await client.query<{ id: string }>(
+            `INSERT INTO living_work_expressions
+               (living_work_id, expression_type, expression_id, declared_by)
+             VALUES ($1, 'manuscript', $2, $3)
+             RETURNING id`,
+            [workId, manuscriptId, memberId],
+          );
+          if (declaration.rows.length !== 1) throw new Error('import_work_declaration_unconfirmed');
+        }
+        let custody = 'legacy_interpreted_import';
+        if (fileArrivalId || pastedSourceText) {
+          let bound = false;
+          try {
+            if (fileArrivalId) {
+              bound = await claimArrivalWithClient(client, fileArrivalId, manuscriptId, memberId, claimContext);
+            } else {
+              const arrival = await recordSuppliedArrivalWithClient(client, { memberId, sourceText: pastedSourceText! });
+              bound = await claimArrivalWithClient(client, arrival.id, manuscriptId, memberId, null);
+            }
+          } catch (err) {
+            throw new CustodyNotBound('claim_threw', err instanceof Error ? err.name : 'unknown');
+          }
+          if (!bound) throw new CustodyNotBound('claim_not_bound');
+          custody = 'source_custodied';
+        }
+        return { manuscriptId, workId, custody };
+      });
+    } catch (err) {
+      if (err instanceof CustodyNotBound) {
+        noteUnboundCustody(memberId, err.reason, err.errorName);
+        return NextResponse.json(CUSTODY_REFUSAL, { status: 409 });
+      }
+      throw err;
+    }
+    const { manuscriptId, workId, custody } = created;
 
     // Log marker: counts and provenance only, never content.
     console.log(

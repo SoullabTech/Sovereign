@@ -345,7 +345,7 @@ describe('D6 — the Import room never sends an original while Sanctuary is on o
 
 describe('D4 — the member is told when the original could not be stored with the Work', () => {
   const SAVED_ID = '55555555-5555-4555-8555-555555555555';
-  async function importUntilCreate(saveBody: Record<string, unknown>) {
+  async function importUntilCreate(saveBody: Record<string, unknown>, saveResponse?: ReturnType<typeof response>) {
     window.localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
     const onComplete = jest.fn();
     mocked
@@ -358,7 +358,7 @@ describe('D4 — the member is told when the original could not be stored with t
         lossless: true,
         preview: [{ position: 0, heading: 'Opening', body: 'The fictional river moved under the bridge.', headingDepth: 1, headingSignal: 'markdown' }],
       }))
-      .mockResolvedValueOnce(response(201, { id: SAVED_ID, sectionCount: 1, ...saveBody }));
+      .mockResolvedValueOnce(saveResponse ?? response(201, { id: SAVED_ID, sectionCount: 1, ...saveBody }));
     await act(async () => {
       root.render(React.createElement(P4R1ImportManuscript, {
         localReview: false, sourceIntakeReleased: true, onCancel: jest.fn(), onComplete,
@@ -400,6 +400,28 @@ describe('D4 — the member is told when the original could not be stored with t
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onComplete).toHaveBeenCalledWith(SAVED_ID);
     expect(mocked).toHaveBeenCalledTimes(3); // continuing never imports the manuscript a second time
+  });
+
+  test('the server REFUSES (409, nothing saved): the Work does not open, the member sees the sentence, nothing is remembered as saved, and pressing again retries and then opens', async () => {
+    const refusal = {
+      error: 'Your writing was not saved, because it could not be stored together with its source. Nothing was changed. You can try again.',
+      code: 'source_custody_not_bound',
+      retryable: true,
+    };
+    const onComplete = await importUntilCreate({}, response(409, refusal));
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('Nothing was changed');
+    expect(container.querySelector('[data-custody-notice]')).toBeNull(); // not the "saved without its original" notice: nothing was saved
+    expect(mocked).toHaveBeenCalledTimes(3);
+    const again = button('Create Work and open in Write');
+    expect(again.disabled).toBe(false); // the member is not stranded
+
+    mocked.mockResolvedValueOnce(response(201, { id: SAVED_ID, sectionCount: 1, sourceCustody: 'source_custodied' }));
+    await act(async () => again.click());
+    await settle();
+    expect(mocked).toHaveBeenCalledTimes(4); // a real second import attempt, not a continuation of a phantom save
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onComplete).toHaveBeenCalledWith(SAVED_ID);
   });
 
   test('the pre-save promise no longer claims the original WILL remain held', async () => {

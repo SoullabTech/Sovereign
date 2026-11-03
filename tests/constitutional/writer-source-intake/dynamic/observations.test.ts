@@ -38,7 +38,7 @@ import {
   recordEncryptedArtifactArrival,
   writePreparedCiphertext,
 } from '@/lib/manuscript/source/encryptedLanding';
-import { claimArrival, verifyCustody } from '@/lib/manuscript/source/arrivals';
+import { claimArrival, claimArrivalWithClient, prepareArrivalClaim, recordSuppliedArrivalWithClient, verifyCustody } from '@/lib/manuscript/source/arrivals';
 import { clearSourceEnvelopeKeyCacheForTests } from '@/lib/manuscript/source/sourceEnvelope';
 import { setSourceKmsClientFactoryForTests } from '@/lib/manuscript/source/sourceKeyAuthority';
 import { discardUnclaimedArrival } from '@/lib/manuscript/source/discardUnclaimedArrival';
@@ -520,6 +520,93 @@ suite('Writer encrypted Source landing - dynamic observations (fake KMS, real Po
       expect(json).not.toContain('manuscript-sources/');            // no object path
       expect(json).not.toMatch(/wrapped|cipher|dek|key_id/i);       // no key material
       expect((await listMemberUnfinishedUploads(MEMBER_B)).length).toBe(1);
+    });
+  });
+
+  describe('S6 [D4] the original is claimed inside the transaction that creates the Work', () => {
+    // The shape the import route now has: create the Work, claim the original, and let ANY failure roll everything back.
+    const importAttempt = async (arrivalId: string, title: string, opts: { failAfterClaim?: boolean } = {}) => {
+      const ctx = await prepareArrivalClaim(arrivalId, MEMBER_A);
+      return transaction(async (tx) => {
+        const ms = await tx.query<{ id: string }>('INSERT INTO member_manuscripts (member_id, title) VALUES ($1::uuid, $2) RETURNING id', [MEMBER_A, title]);
+        const id = ms.rows[0]!.id;
+        const bound = await claimArrivalWithClient(tx, arrivalId, id, MEMBER_A, ctx);
+        if (!bound) throw new Error('custody_not_bound');
+        if (opts.failAfterClaim) throw new Error('a_later_statement_failed');
+        return id;
+      }).then((id) => ({ committed: true as const, id }), (e: Error) => ({ committed: false as const, error: e.message }));
+    };
+    const stateOf = async (arrivalId: string, title: string) => ({
+      arrivalOwner: await (async () => {
+        const row = (await query<{ manuscript_id: string | null }>('SELECT manuscript_id FROM manuscript_source_arrivals WHERE id=$1::uuid', [arrivalId])).rows[0];
+        return row ? row.manuscript_id : 'ABSENT'; // null = the arrival exists and is UNCLAIMED; 'ABSENT' = the row is gone
+      })(),
+      workRows: (await query<{ n: number }>('SELECT count(*)::int n FROM member_manuscripts WHERE title=$1', [title])).rows[0]!.n,
+    });
+
+    it('S6a commits Work and binding together, and labels the Work source_custodied', async () => {
+      const a = await recordEncryptedArtifactArrival(input('s6a', KEY(40)));
+      const r = await importAttempt(a.id, 'S6 Work a');
+      const st = await stateOf(a.id, 'S6 Work a');
+      const label = r.committed ? (await query<{ source_custody: string }>('SELECT source_custody FROM member_manuscripts WHERE id=$1::uuid', [r.id])).rows[0]?.source_custody : null;
+      observe('S6a', ['WSI-24', 'FILL-3c'], 'atomic import commit', { committed: r.committed, ...st, label });
+      expect(r.committed).toBe(true);
+      expect(st.arrivalOwner).toBe((r as any).id);
+      expect(st.workRows).toBe(1);
+      expect(label).toBe('source_custodied');
+    });
+
+    it('S6b a KMS outage refuses the import: no Work row, the arrival stays unclaimed and removable, and a retry after recovery succeeds', async () => {
+      const a = await recordEncryptedArtifactArrival(input('s6b', KEY(41)));
+      kms.mode.DecryptCommand = 'outage';
+      const refused = await importAttempt(a.id, 'S6 Work b');
+      const afterRefusal = await stateOf(a.id, 'S6 Work b');
+      const listed = (await listMemberUnfinishedUploads(MEMBER_A)).some((u) => u.id === a.id && u.kind === 'unclaimed');
+      kms.mode.DecryptCommand = 'ok';
+      const retry = await importAttempt(a.id, 'S6 Work b');
+      const afterRetry = await stateOf(a.id, 'S6 Work b');
+      observe('S6b', ['WSI-18', 'WSI-24', 'FILL-3b'], 'refusal then retry', { refused, afterRefusal, stillListedAsRemovable: listed, retryCommitted: retry.committed, afterRetry });
+      expect(refused.committed).toBe(false);
+      expect(afterRefusal).toEqual({ arrivalOwner: null, workRows: 0 }); // nothing saved, nothing claimed
+      expect(listed).toBe(true);                                         // the member can still see and remove it
+      expect(retry.committed).toBe(true);                                // and nothing was spent by the refusal
+      expect(afterRetry.workRows).toBe(1);
+    });
+
+    it('S6c a failure AFTER a successful claim rolls the claim back with the Work (the binding is not left behind)', async () => {
+      const a = await recordEncryptedArtifactArrival(input('s6c', KEY(42)));
+      const r = await importAttempt(a.id, 'S6 Work c', { failAfterClaim: true });
+      const st = await stateOf(a.id, 'S6 Work c');
+      observe('S6c', ['WSI-24'], 'rollback after claim', { committed: r.committed, ...st });
+      expect(r.committed).toBe(false);
+      expect(st).toEqual({ arrivalOwner: null, workRows: 0 });
+    });
+  });
+
+  describe('S6d [D4] a pasted import records its supplied arrival inside the same transaction', () => {
+    const pastedImport = async (title: string, text: string, opts: { failAfterClaim?: boolean } = {}) =>
+      transaction(async (tx) => {
+        const ms = await tx.query<{ id: string }>('INSERT INTO member_manuscripts (member_id, title) VALUES ($1::uuid, $2) RETURNING id', [MEMBER_A, title]);
+        const id = ms.rows[0]!.id;
+        const arrival = await recordSuppliedArrivalWithClient(tx, { memberId: MEMBER_A, sourceText: text });
+        const bound = await claimArrivalWithClient(tx, arrival.id, id, MEMBER_A, null);
+        if (!bound) throw new Error('custody_not_bound');
+        if (opts.failAfterClaim) throw new Error('a_later_statement_failed');
+        return id;
+      }).then((id) => ({ committed: true as const, id }), (e: Error) => ({ committed: false as const, error: e.message }));
+    const suppliedRows = async (text: string) =>
+      (await query<{ n: number; claimed: number }>(`SELECT count(*)::int n, count(manuscript_id)::int claimed FROM manuscript_source_arrivals WHERE source_kind='member_supplied_text' AND source_text=$1`, [text])).rows[0]!;
+
+    it('S6d commits the supplied arrival bound to its Work, and a rollback leaves NO orphan row of the pasted text', async () => {
+      const ok = await pastedImport('S6d Work ok', 'S6d pasted text that commits');
+      const okRows = await suppliedRows('S6d pasted text that commits');
+      const failed = await pastedImport('S6d Work failed', 'S6d pasted text that rolls back', { failAfterClaim: true });
+      const failedRows = await suppliedRows('S6d pasted text that rolls back');
+      observe('S6d', ['WSI-24', 'FILL-3b'], 'pasted import atomicity', { committed: ok.committed, okRows, rolledBack: !failed.committed, failedRows });
+      expect(ok.committed).toBe(true);
+      expect(okRows).toEqual({ n: 1, claimed: 1 });      // recorded and bound, together
+      expect(failed.committed).toBe(false);
+      expect(failedRows).toEqual({ n: 0, claimed: 0 });  // no orphan: no screen lists a supplied arrival and no door removes it
     });
   });
 
