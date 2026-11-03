@@ -403,6 +403,19 @@ function PressManuscriptRoom() {
       ]);
       return;
     }
+    // Sanctuary (D6): an upload saves an encrypted original and a plaintext extraction, so it is a content write.
+    // The posture is read at the moment of the act, never cached, and an unresolved posture is never read as
+    // "ordinary". The server requires this claim and refuses without it, so this caller must send it.
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved) {
+      setWarnings(['Choose Ordinary or Sanctuary in Quick Settings first. Nothing has been sent.']);
+      return;
+    }
+    if (posture.sanctuary) {
+      setWarnings(['Sanctuary is on. Original files are not saved during Sanctuary. Nothing has been sent.']);
+      return;
+    }
+
     let uploadAttempt: SourceUploadAttempt;
     try {
       uploadAttempt = sourceUploadAttempt(
@@ -435,7 +448,7 @@ function PressManuscriptRoom() {
       const res = await apiFetch('/api/sovereign/manuscripts/ingest', {
         method: 'POST',
         body: form,
-        headers: { [SOURCE_UPLOAD_IDEMPOTENCY_HEADER]: uploadAttempt.idempotencyKey },
+        headers: { [SOURCE_UPLOAD_IDEMPOTENCY_HEADER]: uploadAttempt.idempotencyKey, 'x-maia-sanctuary': 'false' },
       });
       if (res.status === 401) {
         setUnauthorized(true);
