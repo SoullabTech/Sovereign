@@ -1700,6 +1700,27 @@ const CASES = [
   { name: 'caddy/unterminated-heredoc-reported', kind: 'caddy', input: 'respond <<HTML\n# KEEP_C7 never closed\n', survive: ['# KEEP_C7 never closed'], issues: ['unterminated-heredoc'] },
   { name: 'caddy/documented-absence-does-not-match', kind: 'caddy', input: '# never proxies to FORBIDDEN_TOKEN\nexample.test {\n}\n', survive: ['example.test {'], counts: [['FORBIDDEN_TOKEN', 0]] },
   { name: 'caddy/forbidden-token-in-real-directive-still-matches', kind: 'caddy', input: 'reverse_proxy FORBIDDEN_TOKEN:80 # FORBIDDEN_TOKEN\n', counts: [['FORBIDDEN_TOKEN', 1]] },
+  // ---------------------------------------------------------------- found by an independent operator-mutation sweep
+  // (each of these changed the output of real or generated input while every earlier case still passed)
+  { name: "js/jsx-stray-less-than-in-children-is-rolled-back", kind: "js", input: "const y = <a>\n  x < 2 // CMT_J97\n</a>;\nconst k = 7;\n", survive: ["const k = 7;"], vanish: ["CMT_J97"] },
+  { name: "sql/top-level-comment-naming-null-is-blanked-to-its-end", kind: "sql", input: "SELECT 1; -- value may be null CMT_S60\nSELECT 2;\n", survive: ["SELECT 1;","SELECT 2;"], vanish: ["CMT_S60"], noIssues: true },
+  { name: "sql/escape-string-prefix-at-the-very-start", kind: "sql", input: "E'a\\'b -- KEEP_S61'; -- CMT_S61\nSELECT 61;", survive: ["-- KEEP_S61'","SELECT 61;"], vanish: ["CMT_S61"] },
+  { name: "sql/identifier-ending-in-e-before-a-quote-is-not-an-escape-string", kind: "sql", input: "xe'a\\'; -- CMT_S62\nSELECT 62;", survive: ["xe'a\\'","SELECT 62;"], vanish: ["CMT_S62"], noIssues: true },
+  { name: "sh/backtick-substitution-closes-inside-a-double-quoted-string", kind: "sh", input: "echo \"`date`\" # CMT_H60\necho KEEP_H60\n", survive: ["\"`date`\"","echo KEEP_H60"], vanish: ["CMT_H60"], noIssues: true },
+  { name: "sh/plain-heredoc-terminator-must-start-in-column-zero", kind: "sh", input: "cat <<EOS\n\tEOS\n# KEEP_H61 still the body\nEOS\n# CMT_H61\necho done\n", survive: ["# KEEP_H61 still the body","echo done"], vanish: ["CMT_H61"], noIssues: true },
+  { name: "sh/heredoc-double-quoted-delimiter", kind: "sh", input: "cat <<\"EOS\"\n# KEEP_H62\nEOS\n# CMT_H62\necho y\n", survive: ["# KEEP_H62","echo y"], vanish: ["CMT_H62"], noIssues: true },
+  { name: "sh/heredoc-delimiter-quoted-in-pieces", kind: "sh", input: "cat <<E\"O\"'S'\n# KEEP_H63\nEOS\n# CMT_H63\necho y\n", survive: ["# KEEP_H63","echo y"], vanish: ["CMT_H63"], noIssues: true },
+  { name: "sh/heredoc-backslash-escaped-delimiter", kind: "sh", input: "cat <<\\EOS\n# KEEP_H64\nEOS\n# CMT_H64\necho y\n", survive: ["# KEEP_H64","echo y"], vanish: ["CMT_H64"], noIssues: true },
+  { name: "sh/heredoc-delimiter-with-an-escaped-quote-in-double-quotes", kind: "sh", input: "cat <<\"E\\\"S\"\n# KEEP_H65\nE\"S\n# CMT_H65\necho y\n", survive: ["# KEEP_H65","echo y"], vanish: ["CMT_H65"], noIssues: true },
+  { name: "caddy/heredoc-terminator-followed-by-a-tab", kind: "caddy", input: "respond <<HTML\n  # KEEP_C10\nHTML\t200\n# CMT_C10\nnext\n", survive: ["# KEEP_C10","next"], vanish: ["CMT_C10"], noIssues: true },
+  { name: "caddy/escape-pair-then-escaped-quote-inside-a-string", kind: "caddy", input: "respond \"a\\y\\\"z\" # CMT_C11\nnext\n", survive: ["\"a\\y\\\"z\"","next"], vanish: ["CMT_C11"], noIssues: true },
+  { name: "yaml/escaped-backslash-then-the-closing-quote", kind: "yaml", input: "k: \"a\\\\\" # CMT_Y60\nz: 1\n", survive: ["k: \"a\\\\\"","z: 1"], vanish: ["CMT_Y60"], noIssues: true },
+  { name: "yaml/quote-after-an-indented-sequence-dash-opens-a-string", kind: "yaml", input: "items:\n  - 'a # KEEP_Y61' # CMT_Y61\n", survive: ["'a # KEEP_Y61'"], vanish: ["CMT_Y61"], noIssues: true },
+  { name: "yaml/quote-glued-to-a-dash-does-not-open-a-string", kind: "yaml", input: "k: a-'x # CMT_Y62'\nz: 1\n", survive: ["k: a-'x","z: 1"], vanish: ["CMT_Y62"], noIssues: true },
+  { name: "yaml/quote-after-a-glued-dash-and-a-space-does-not-open-a-string", kind: "yaml", input: "k: a- 'x # CMT_Y63'\nz: 1\n", survive: ["k: a- 'x","z: 1"], vanish: ["CMT_Y63"], noIssues: true },
+  { name: "yaml/quote-after-a-tab-and-a-sequence-dash-opens-a-string", kind: "yaml", input: "\t- 'a # KEEP_Y64' # CMT_Y64\n", survive: ["'a # KEEP_Y64'"], vanish: ["CMT_Y64"], noIssues: true },
+  { name: "yaml/doubled-single-quote-then-the-closing-quote", kind: "yaml", input: "k: 'a''' # CMT_Y65\nz: 1\n", survive: ["k: 'a'''","z: 1"], vanish: ["CMT_Y65"], noIssues: true },
+  { name: "js/jsx-failed-outer-attempt-restores-what-a-succeeded-inner-one-blanked", kind: "js", input: "const r = a <b> c \"{ <i>{ /* KEEP_J101 */ }</i> }\";\nconst k = 9; // CMT_J101\n", survive: ["/* KEEP_J101 */","const k = 9;"], vanish: ["CMT_J101"], noIssues: true },
 ];
 
 // ---- KNOWN-WRONG controls (never exported, used only by the lethality checks) ----------------
@@ -2437,6 +2458,39 @@ const SOUP_RUN = {
   caddy: (s) => stripCaddyfileCommentsDetailed(s),
 };
 
+// A second, LONGER golden master per stripper (strings of up to 26 tokens, other seeds). An independent operator-mutation sweep
+// (every comparison / bound / increment / statement of the implementation, ~2100 mutants) left a few survivors that change the output
+// of malformed input only (a regex flag run that spells a keyword, a stray '<' or '/' inside a JSX tag, '))' after a command-form
+// arithmetic) -- inputs with no ground truth, so no case can say what is right. This pins what the stripper DOES with them: it asserts
+// no correctness, and a deliberate behaviour change re-pins it (the failing check prints the new value).
+// Each entry is [seed, maxLen, count]; the digest of a kind chains the digests of its runs.
+const SOUP_LONG = {
+  js: [[910029, 26, 6000]],
+  jsx: [[910027, 26, 6000]],
+  sql: [[910027, 26, 6000]],
+  sh: [[910015, 14, 6000], [910028, 26, 6000]],
+  yaml: [[910028, 26, 4000]],
+  docker: [[910027, 26, 4000]],
+  dotenv: [[910027, 26, 3000]],
+  caddy: [[910027, 26, 3000]],
+};
+const SOUP_LONG_PINNED = {
+  js: '3c9bfaa55d3d3b009c9a270694a39d9cb6648866e56fed79b11a9bd22b4f8753',
+  jsx: 'c3f12f99393197c42393150ed31b1b1b648451385acafe5e57e6642fc597c443',
+  sql: '42fcc2e8d82b22e9b8e527c408a26a0b5abdad2edce46e8c6530f50f3a2452fc',
+  sh: '60764ce0fa75ccf1c6eadbb58f267b91b61936e4b93f1926829656d56e9355ea',
+  yaml: '1b2348e12226165b8295b7a595380787942d870c09236d0461a4d1c94d05000e',
+  docker: 'a4e81359db69cfc92b151dd47e21b31f325cd8eab52cf7446b235a3aedbaa8f0',
+  dotenv: '20a27a3a2b51106a0f10e3fae6d856bd7809018d78c56c82ca0715170d9387e4',
+  caddy: 'de5fe3fb0fa4842f63654aae9852f510d3b6d86ebb9bd22f56c69e84478224cb',
+};
+function soupLongDigest(name) {
+  const cfg = SOUP[name === 'jsx' ? 'js' : name];
+  const h = createHash('sha256');
+  for (const [seed, maxLen, count] of SOUP_LONG[name]) h.update(soupDigest(SOUP_RUN[name], cfg.tokens, seed, count, maxLen).digest);
+  return h.digest('hex');
+}
+
 export function selfTest() {
   const checks = [];
   const add = (name, ok, detail = '') => checks.push({ name, ok: !!ok, detail: String(detail) });
@@ -2507,6 +2561,9 @@ export function selfTest() {
       ['js', stripCommentsDetailed(many(150, () => "'x\n")).issues.length],
       ['sql', stripSqlCommentsDetailed(many(150, (k) => `$t${k}$ `)).issues.length],
       ['sh', stripShellCommentsDetailed('cat ' + many(150, (k) => `<<H${k} `) + '\n').issues.length],
+      // YAML merges the issues of every `run:` body into ONE list: two bodies of 60 (120 available) can only reach 100 through
+      // the YAML-level cap, since neither body alone gets near the shell stripper's own cap
+      ['yaml', stripYamlCommentsDetailed('a:\n  run: |\n    cat ' + many(60, (k) => `<<H${k} `) + '\nb:\n  run: |\n    cat ' + many(60, (k) => `<<H${k} `) + '\n', { blockScalars: 'run' }).issues.length],
     ];
     add('issues/lists-are-capped-at-100 (and the inputs really produce more)', caps.every(([, c]) => c === 100), JSON.stringify(caps));
   }
@@ -2826,6 +2883,11 @@ export function selfTest() {
       stats[name] = r;
       add(`digest/${name}-token-soup (${cfg.count} inputs)`, r.digest === SOUP_PINNED[name], r.digest === SOUP_PINNED[name] ? '' : `digest is now ${r.digest}`);
     }
+    // the same, over longer strings and other seeds (see SOUP_LONG)
+    for (const name of Object.keys(SOUP_LONG)) {
+      const d = soupLongDigest(name);
+      add(`digest/${name}-long-token-soup (${SOUP_LONG[name].reduce((t, r) => t + r[2], 0)} inputs)`, d === SOUP_LONG_PINNED[name], d === SOUP_LONG_PINNED[name] ? '' : `digest is now ${d}`);
+    }
     // the digest is not vacuous (most inputs are changed by stripping, many raise issues) and it can fail
     const live = Object.entries(stats).filter(([k]) => k !== 'yaml').every(([, r]) => r.changed > 100);
     add('digest/token-soup-exercises-the-strippers (inputs change, issues are raised)', live && stats.js.withIssues > 500 && stats.sh.withIssues > 300 && stats.sql.withIssues > 300, JSON.stringify(Object.fromEntries(Object.entries(stats).map(([k, r]) => [k, [r.changed, r.withIssues]]))));
@@ -2845,6 +2907,19 @@ export function selfTest() {
 // MUST fail; a mutant that survives means some behaviour is asserted by no case, and the repair
 // is to strengthen the SUITE, never to weaken the mutant. A mutation whose `from` text is missing
 // or ambiguous is reported as BAD-MUTATION (the audit then fails) instead of being skipped.
+// WHAT THE LIST BELOW DOES NOT CLAIM. These mutants are hand-written: they show the checks catch THESE faults, nothing more. A second,
+// independent measurement was taken with generated mutants (every comparison, bound, increment, constant and statement of the
+// implementation: 2131 of them, each run against the self-test as it then stood). 208 survived. Each survivor was then run against
+// every .ts/.tsx/.js/.mjs/.sql/.sh/.yml/Dockerfile/.env/Caddyfile in the repository (9,897 files, 89 MB), against fresh-seed token
+// soup (all eight strippers, strings of up to 26 tokens) and against freshly generated JS and SQL programs, comparing its output with
+// the real implementation's. The 28 that changed any output are pinned by the cases and entries added for them ('found by an independent
+// operator-mutation sweep' in CASES, the matching names below) and by the SOUP_LONG golden masters. The other 180 changed NO output on
+// any of it and are BELIEVED equivalent (not proven): loop bounds where src[n] is undefined ('<' vs '<='), clamps ('b > n'), the line
+// number search ('<' vs '<=': a construct never opens on a newline), speculation-journal bookkeeping (more journal entries, a journal that
+// is not truncated, a depth counter that never returns to 0, a rollback loop that also visits gaps: all restore text that was never
+// blanked), memoisation, Array.join treating undefined as '', and two branches that are redundant for VALID JavaScript (the '.5' number
+// branch; the regex-flag loop, whose only effect is on flag runs that spell a keyword -- pinned for invalid input by SOUP_LONG.js/jsx).
+// A claim of 'lethal' here means: lethal to every mutant above and to every one of the 2131 whose effect is observable on the inputs listed.
 const L = (...lines) => lines.join('\n');
 const MUTATIONS = [
   ['template-literal-blind', L("      if (c === '\x60') {", '        scanTemplate();'), L("      if (c === '\\u0000') {", '        scanTemplate();')],
@@ -2999,7 +3074,29 @@ const MUTATIONS = [
   ["sql-quoted-identifier-doubled-quote-ignored", "if (src[i + 1] === '\"') {", "if (false) {"],
   ["yaml-run-body-issue-line-offset", "line: x.line + block.firstLine - 1", "line: x.line"],
   ["yaml-run-body-issues-dropped", "for (const x of r.issues) if (issues.length < 100) issues.push({ kind: x.kind, line: x.line + block.firstLine - 1 });", ""],
-  ["yaml-run-body-first-line-off-by-one", "firstLine: p / 2 + 2", "firstLine: p / 2 + 1"],
+  ["yaml-run-body-issues-uncapped", "for (const x of r.issues) if (issues.length < 100) issues.push({ kind: x.kind, line: x.line + block.firstLine - 1 });", "for (const x of r.issues) issues.push({ kind: x.kind, line: x.line + block.firstLine - 1 });"],
+  ["yaml-run-body-issues-cap-off-by-one", "for (const x of r.issues) if (issues.length < 100) issues.push({ kind: x.kind, line: x.line + block.firstLine - 1 });", "for (const x of r.issues) if (issues.length < 101) issues.push({ kind: x.kind, line: x.line + block.firstLine - 1 });"],
+  ["sql-comment-null-guard-removed", "if (closer !== null) {\n          const k = src.indexOf(closer, i);", "if (true) {\n          const k = src.indexOf(closer, i);"],
+  ["sql-estring-prefix-at-start-ignored", "const esc = i > 0 && (", "const esc = i > 1 && ("],
+  ["sql-estring-after-identifier-char", "(i < 2 || !sqlIdentChar(src[i - 2]))", "(i <= 2 || !sqlIdentChar(src[i - 2]))"],
+  ["sql-estring-boundary-looks-one-char-short", "(i < 2 || !sqlIdentChar(src[i - 2]))", "(i < 1 || !sqlIdentChar(src[i - 2]))"],
+  ["sh-backtick-in-double-quotes-skips-a-char", "if (!scanCode('tick')) note('unterminated-backtick', s);\n        continue;\n      }\n      i++;\n    }\n    note('unterminated-string', start);", "if (!scanCode('tick')) note('unterminated-backtick', s);\n      }\n      i++;\n    }\n    note('unterminated-string', start);"],
+  ["sh-plain-heredoc-allows-a-tab-terminator", "let dash = false;\n    if (src[j] === '-') {", "let dash = true;\n    if (src[j] === '-') {"],
+  ["sh-heredoc-double-quoted-word-lost", "word += src[j];\n          j++;\n        }\n        j++;\n        continue;", "word -= src[j];\n          j++;\n        }\n        j++;\n        continue;"],
+  ["sh-heredoc-double-quoted-escape-kept", "if (src[j] === '\\\\' && j + 1 < n) j++;\n          word += src[j];", "word += src[j];"],
+  ["sh-heredoc-backslash-delimiter-char-dropped", "if (j + 1 < n) word += src[j + 1];\n        j += 2;", "j += 2;"],
+  ["sh-heredoc-backslash-delimiter-takes-the-wrong-char", "if (j + 1 < n) word += src[j + 1];", "if (j + 1 < n) word += src[j + 2];"],
+  ["caddy-heredoc-tab-terminator-lost", "|| line.startsWith(marker + '\\t')) break;", "|| line.startsWith(marker - '\\t')) break;"],
+  ["caddy-string-escape-falls-through", "if (src[i] === '\\\\') {\n          i += 2;\n          continue;\n        }\n        if (src[i] === '\"') {\n          i++;\n          closed = true;", "if (src[i] === '\\\\') {\n          i += 2;\n        }\n        if (src[i] === '\"') {\n          i++;\n          closed = true;"],
+  ["yaml-double-quote-escape-skips-three", "if (c === '\\\\') {\n          j += 2;\n          continue;\n        }\n        if (c === '\"') quote = '';", "if (c === '\\\\') {\n          j += 3;\n          continue;\n        }\n        if (c === '\"') quote = '';"],
+  ["yaml-dash-quote-looks-ahead-not-behind", "(k === 0 || line[k - 1] === ' ' || line[k - 1] === '\\t')", "(k === 0 || line[k + 1] === ' ' || line[k - 1] === '\\t')"],
+  ["yaml-dash-quote-needs-the-dash-at-column-zero-only", "(k === 0 || line[k - 1] === ' ' || line[k - 1] === '\\t')", "(k === 0)"],
+  ["jsx-nameless-element-accepted", "name = readJsxName();\n      if (name === '') return false;", "name = readJsxName();\n      if (name === '') return true;"],
+  ["yaml-dash-quote-tab-before-the-dash-ignored", "|| line[k - 1] === '\\t');", "|| false);"],
+  ["yaml-dash-quote-tab-looks-ahead-not-behind", "|| line[k - 1] === '\\t');", "|| line[k + 1] === '\\t');"],
+  ["yaml-dash-quote-space-looks-ahead-only-when-glued", "line[k - 1] === ' ' ||", "line[k + 1] === ' ' ||"],
+  ["yaml-doubled-single-quote-skips-three", "if (line[j + 1] === \"'\") {\n            j += 2;", "if (line[j + 1] === \"'\") {\n            j += 3;"],
+  ["yaml-run-body-first-line-off-by-one","firstLine: p / 2 + 2", "firstLine: p / 2 + 1"],
   ["yaml-block-scalar-undetected", "block = { parentIndent, shell: mode === 'comments' || (mode === 'run' && keyName === 'run'), held: [], firstLine: p / 2 + 2 };", "block = null;"],
   ["yaml-run-body-not-flushed-at-eof", "  flushBlock();\n  return { text: outParts.join(''), issues };", "  return { text: outParts.join(''), issues };"],
 ];

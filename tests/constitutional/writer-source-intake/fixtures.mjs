@@ -38,7 +38,9 @@
  *   `uncertain` flag marks the outcomes that hinge on them.
  *   WHAT THE ANCHORS STILL CANNOT SEE (measured by a mutation sweep of 778 mechanical edits to the
  *   anchored sources: 535 went unflagged before the extra region digests were added, 381 still do;
- *   most of those 381 are in the code named below, the rest are digits inside comments. Read the
+ *   most of those 381 are in the code named below, the rest are digits inside comments. Those
+ *   figures come from an earlier ad-hoc sweep whose script is NOT part of this suite and which was
+ *   not re-run when this note was last edited: read them as an order of magnitude. Read the
  *   list, do not read the pins as total):
  *   the auth / membership / idempotency-header flow in route.ts (a precondition, not a modelled
  *   decision); the database state machine inside encryptedLanding.ts (idempotency conflict, writer
@@ -49,11 +51,23 @@
  *   The exact EPUB text-cap boundary is NOT witnessed by any fixture: it depends on the parser's text
  *   conversion, which was read and not run, so only a wide-margin over-cap fixture exists.
  *
+ * EVERY DETECTOR IS SHOWN LETHAL. `compareFactsToLimits` has one named detector per fact, pinned
+ * list and region. The self-test derives that universe mechanically (so a detector added later
+ * joins it by itself) and requires each one to be fired by at least one realistic edit of the
+ * anchored sources, with controls proving that this coverage check can itself fail. A detector
+ * that nothing has ever made fire is unproven, not green. One detector (the stripper's own
+ * report) is demonstrated at the comparator level only, because its fact comes from the
+ * stripper's exports, which no edit of the anchored sources can remove.
+ *
  * INDEPENDENT CORROBORATION IS NOT OPTIONAL. The self-test cross-checks zip validity
  * with `unzip`, PDF text with poppler and XML with xmllint. When one of those tools is
  * absent the matching check FAILS (UNCORROBORATED) unless the caller explicitly waives
  * it (selfTest({ allowUncorroborated: [...] }) or WSI_ALLOW_UNCORROBORATED=unzip,poppler,
  * xmllint|all). A waiver is printed and returned in `corroboration`; it is never silent.
+ * The wiring is itself tested: a check runs the three corroboration checks with every tool
+ * simulated absent (the `simulateAbsent` test seam) and requires them to fail, to pass only as
+ * recorded waivers when waived, and to leave unwaived tools failing. A check that ignored its
+ * verdict would otherwise be invisible on any host that has all three tools installed.
  *
  * DEFINITIONS (so no consumer has to guess)
  *   containsCanary      the canary was written into the fixture's BODY content.
@@ -852,8 +866,9 @@ export function buildEpubOfDeclaredTotal(canary, target) {
  *         It does NOT bound the work: parseUpload loads the archive with
  *         JSZip.loadAsync(buffer, { checkCRC32: true, ... }), and jszip's load.js
  *         inflates every entry at load to verify its CRC32 -- BEFORE the guard line runs
- *         (probed on jszip 3.10.1: ~1 ms with checkCRC32 off, ~630 ms on for this file;
- *         the repo pins 3.10.2). So this fixture shows the refusal, never that the guard
+ *         (probed on jszip 3.10.1: ~1 ms with checkCRC32 off, ~630 ms on for this file; the
+ *         repo pins 3.10.2, and lib/load.js, where the CRC pass lives, is byte-identical in
+ *         the two versions: diffed, not assumed). So this fixture shows the refusal, never that the guard
  *         limits inflation; the resource cost of the CRC pass is real and unbounded by
  *         the guard. The same probe settles that jszip exposes `_data.uncompressedSize`
  *         on every entry, so the guard reads real sizes here (the source's `?? 0`
@@ -1005,7 +1020,7 @@ function specs(canary, includeLarge) {
       file: 'zip-bomb.epub', kind: 'zip-bomb-epub', mime: MIME.epub, containsCanary: true,
       build: () => buildBombEpub(canary).buffer,
       expectedParse: 'refuse', expectedStatusClass: '4xx', expectedStatus: 415, uncertain: false,
-      note: 'Valid EPUB package (its chapter text carries the canary) plus a 100 MiB NUL padding entry outside the spine (deflated to about 100 KB). Package otherwise parses, so the declared-size guard (EPUB_MAX_TOTAL_BYTES, 64 MiB) is what refuses it with 415. It does NOT run before inflation: parseUpload loads the archive with JSZip.loadAsync(checkCRC32: true), and jszip inflates every entry at load to verify its CRC32, so the full 100 MiB is inflated first (probed on jszip 3.10.1: ~1 ms with the option off, ~630 ms on). This fixture therefore shows the refusal outcome only; it cannot show that the guard bounds the work. jszip does expose entry._data.uncompressedSize on every entry (probed), so the guard reads real sizes here; the source falls back to 0 if it ever did not, which would fail open.',
+      note: 'Valid EPUB package (its chapter text carries the canary) plus a 100 MiB NUL padding entry outside the spine (deflated to about 100 KB). Package otherwise parses, so the declared-size guard (EPUB_MAX_TOTAL_BYTES, 64 MiB) is what refuses it with 415. It does NOT run before inflation: parseUpload loads the archive with JSZip.loadAsync(checkCRC32: true), and jszip inflates every entry at load to verify its CRC32, so the full 100 MiB is inflated first (probed on jszip 3.10.1: ~1 ms with the option off, ~630 ms on; the repo pins 3.10.2 and the library file that does this, lib/load.js, is byte-identical in the two versions). This fixture therefore shows the refusal outcome only; it cannot show that the guard bounds the work. jszip does expose entry._data.uncompressedSize on every entry (probed), so the guard reads real sizes here; the source falls back to 0 if it ever did not, which would fail open.',
     },
     {
       file: 'zip-bomb.docx', kind: 'zip-bomb-docx', mime: MIME.docx, containsCanary: false,
@@ -1275,7 +1290,12 @@ export function docxTextParts(zipBuf, { maxEntry = SMALL_ENTRY } = {}) {
   return { parts, skipped };
 }
 
-/** Text of the spine documents, tags stripped. Reads container -> OPF -> spine. */
+/**
+ * Text of the spine documents, tags stripped. Reads container -> OPF -> spine. Like docxBodyText
+ * this is the reading order only: a canary in the package metadata or in any entry outside the
+ * spine (a navigation document that is not an itemref included) is invisible to it. Use
+ * `zipEntriesContaining` for "anywhere".
+ */
 export function epubBodyText(zipBuf) {
   const z = readZip(zipBuf);
   const container = zipEntryText(zipBuf, 'META-INF/container.xml');
@@ -1574,7 +1594,16 @@ export function checkDocxStructure(zipBuf) {
   return { ok: problems.length === 0, problems };
 }
 
-/** Decoded body text for kinds this module can decode; null when it cannot (corrupt, bombs). */
+/**
+ * Decoded body text for kinds this module can decode; null when it cannot (corrupt, bombs).
+ * It is the BODY only. For a DOCX that is word/document.xml's w:t runs, for an EPUB the spine
+ * documents, for a PDF the strings pdfTextRuns finds. A canary missing from this text is NOT
+ * evidence it is absent from the file: comments, footnotes, headers, field codes, the
+ * navigation document and package metadata are not read, and a PDF is only fully read when
+ * `analyzePdf(buf).exact`. To establish "nowhere in the file" use `zipEntriesContaining`
+ * (every decoded entry), `docxTextParts` and `analyzePdf`, and treat `skipped > 0` or
+ * `exact === false` as "not exhaustive".
+ */
 export function decodedBodyText(kind, buf) {
   if (kind === 'pdf-text-layer' || kind === 'pdf-scanned') return pdfTextRuns(buf).join('\n');
   if (/^docx(-|$)/.test(kind)) return docxBodyText(buf); // main body only: see the docxBodyText doc
@@ -1868,6 +1897,10 @@ export function factsFromSources({ route, parse, landing, release, arrivals, fid
  * read from changed: re-read it, re-derive the expectations, then re-pin" and nothing more.
  */
 export const SOURCE_PINS = Object.freeze({
+  // EXPECTATION_PRECONDITIONS[0] states this value ("... sourceIntakeReleased is false, so the route answers 423").
+  // The day the hold is lifted that sentence becomes false and the 'release flag value' detector fires: re-read the
+  // preconditions (the expectations assume a RELEASED route either way), then re-pin.
+  sourceIntakeReleased: false,
   statuses: Object.freeze({
     statusEmptyFile: 400, statusOverSize: 413, statusUnsupported: 415, statusUnsupportedDocx: 422,
     statusGenericParse: 422, statusTextOverCap: 413, statusIncomplete: 503,
@@ -1956,6 +1989,7 @@ export function compareFactsToLimits(f) {
     if (!sameJson(f[k], SOURCE_PINS[k])) bad.push(`pinned list ${k}`);
   }
   if (f.sourceIntakeReleased === null) bad.push('release flag not found');
+  else if (f.sourceIntakeReleased !== SOURCE_PINS.sourceIntakeReleased) bad.push('release flag value');
   if (f.stripperReportsIssues !== true) bad.push('comment stripper does not report unclosed constructs');
   if (f.stripUnclosedConstructs !== 0) bad.push('comment stripper left an unclosed construct in an anchored source');
   for (const [name, pin] of Object.entries(SOURCE_PINS.regionDigests)) {
@@ -2378,10 +2412,29 @@ const FIELD_DOMAIN = Object.freeze({
   uncertain: [true, false],
 });
 
+/**
+ * Every detector name compareFactsToLimits can emit, derived MECHANICALLY by feeding it an empty and an all-null facts
+ * object (so a detector added later joins the universe without anyone listing it). 'region missing X' is the same
+ * detector as 'region drift X' seen from the other side; a source edit can only make the second fire.
+ */
+function detectorUniverse(goodFacts) {
+  const nulls = Object.fromEntries(Object.keys(goodFacts).map((k) => [k, null]));
+  const all = [...compareFactsToLimits({}), ...compareFactsToLimits(nulls)].map((n) => n.replace(/^region missing /, 'region drift '));
+  return [...new Set(all)].sort();
+}
+
+/** Detectors in `universe` that none of the `runs` (each an array of fired detector names) ever fired. */
+function undemonstratedDetectors(universe, runs) {
+  const fired = new Set(runs.flat());
+  return universe.filter((d) => !fired.has(d));
+}
+
 export function selfTest(options = {}) {
   const checks = [];
+  const only = options._corroborationOnly === true; // internal: lets the wiring check run just the three corroboration checks
   const add = (name, ok, detail = '') => checks.push({ name, ok: Boolean(ok), detail: redact(detail) });
   const run = (name, fn) => {
+    if (only && !name.startsWith('corroboration (')) return;
     try {
       const r = fn();
       add(name, r.ok, r.detail ?? '');
@@ -2402,6 +2455,10 @@ export function selfTest(options = {}) {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
   const absent = new Set(parseToolList(options.simulateAbsent)); // test seam: pretend a tool is not installed
   const waived = new Set(parseToolList(options.allowUncorroborated ?? process.env.WSI_ALLOW_UNCORROBORATED));
+  if (only && CORROBORATING_TOOLS.some((t) => !absent.has(t))) {
+    // The corroboration checks read the generated manifest once a tool is present; this mode skips generation.
+    throw new RangeError('_corroborationOnly needs simulateAbsent for every corroborating tool');
+  }
   const tool = {
     unzip: unzipAvailable() && !absent.has('unzip'),
     poppler: commandPresent('pdftotext', ['-v']) && commandPresent('pdfinfo', ['-v']) && !absent.has('poppler'),
@@ -2648,7 +2705,12 @@ export function selfTest(options = {}) {
       const brokenRejected = !checkEpubStructure(Buffer.from(brokenSpine, 'latin1')).ok;
       const notFirst = buildZip([{ name: 'x', data: Buffer.from('x'), method: 'stored' }, { name: 'mimetype', data: Buffer.from('application/epub+zip'), method: 'stored' }]).buffer;
       const orderCaught = !checkEpubStructure(notFirst).ok;
-      return { ok: e1.ok && e2.ok && hasEnc('book-drm.epub') && !hasEnc('book.epub') && targetsSpine && t && brokenRejected && orderCaught, detail: `book=${e1.ok} drm=${e2.ok} encryption.xml drm-only=${hasEnc('book-drm.epub') && !hasEnc('book.epub')} cipher-ref-hits-spine-doc=${targetsSpine} canary-in-chapter-text=${t} broken-spine-rejected=${brokenRejected} mimetype-order-caught=${orderCaught}` };
+      // epubBodyText is the reading order only (its doc says so): a canary in a DEFLATED entry outside the spine is invisible to it and to a raw
+      // scan, and is found only by zipEntriesContaining, which is what a leak scanner must use to claim "nowhere".
+      const hiddenEpub = buildEpub(canary, { extra: [{ name: 'OEBPS/notes/hidden.xhtml', data: Buffer.from(xhtmlOf('Notes', `<p>${otherCanary}</p>`), 'utf8'), method: 'deflate' }] }).buffer;
+      const spineBlind = !epubBodyText(hiddenEpub).includes(otherCanary) && !hiddenEpub.includes(otherCanary);
+      const anywhereFinds = JSON.stringify(zipEntriesContaining(hiddenEpub, otherCanary).found) === JSON.stringify(['OEBPS/notes/hidden.xhtml']) && JSON.stringify(zipEntriesContaining(hiddenEpub, canary).found) === JSON.stringify(['OEBPS/chapter1.xhtml']); // and the ordinary canary is in exactly the one chapter that carries it
+      return { ok: e1.ok && e2.ok && hasEnc('book-drm.epub') && !hasEnc('book.epub') && targetsSpine && t && brokenRejected && orderCaught && spineBlind && anywhereFinds, detail: `book=${e1.ok} drm=${e2.ok} encryption.xml drm-only=${hasEnc('book-drm.epub') && !hasEnc('book.epub')} cipher-ref-hits-spine-doc=${targetsSpine} canary-in-chapter-text=${t} broken-spine-rejected=${brokenRejected} mimetype-order-caught=${orderCaught} out-of-spine-canary-invisible-to-epubBodyText-and-raw-scan=${spineBlind} zipEntriesContaining-finds-it=${anywhereFinds}` };
     });
 
     /* -- pdf -------------------------------------------------------------- */
@@ -2942,9 +3004,28 @@ export function selfTest(options = {}) {
       return { ok: bad.length === 0 && nulls.length === 0, detail: `drift-from-fixture-assumptions=${bad.length}${bad.length ? ' [' + bad.join(' | ') + ']' : ''} unresolved-facts=${nulls.length}${nulls.length ? ' [' + nulls.join(',') + ']' : ''} facts=${Object.keys(facts).length} regions-pinned=${Object.keys(SOURCE_PINS.regionDigests).length} sourceIntakeReleased-at-this-source=${facts.sourceIntakeReleased}` };
     });
 
+    // Realistic edits of the anchored sources, shared by the next two checks. `anchorRuns` is filled by the first (the
+    // detectors each edit fired) and read by the second, which asks whether every detector has ever been made to fire.
+    const anchorRuns = [];
+    const M = (file, from, to) => ({ file, from, to });
+    const A = (file, append) => ({ file, append });
+    const F = (file, fn) => ({ file, fn });
+    // An edit scoped to ONE exported function by name: two sibling functions in encryptedLanding.ts share near-identical text.
+    const inFn = (name, from, to) => (t) => {
+      const i = t.indexOf(`export async function ${name}(`);
+      const j = i < 0 ? -1 : t.indexOf(from, i);
+      const end = i < 0 ? -1 : t.indexOf('\nexport async function ', i + 10);
+      if (j < 0 || (end >= 0 && j > end)) throw new Error(`edit target not inside ${name}`);
+      return t.slice(0, j) + to + t.slice(j + from.length);
+    };
+    const applyMut = (mut, src) => {
+      const next = mut.fn ? mut.fn(src[mut.file]) : mut.append !== undefined ? src[mut.file] + mut.append : mutate(src[mut.file], mut.from, mut.to);
+      if (next === src[mut.file]) throw new Error('vacuous edit'); // an edit that changed nothing proves nothing
+      return { ...src, [mut.file]: next };
+    };
+
     run('source anchors are lethal: every realistic source change is flagged by its NAMED detector; comment/whitespace edits are not; commented-out code does not count as live', () => {
       if (missingSources.length) return { ok: false, detail: 'source files not found' };
-      const M = (file, from, to) => ({ file, from, to });
       const catalog = [
         // [id, mutation, detector that must fire]
         ['gate: refuse empty extraction before custody (the obvious repair of the routed defect)', M('route', 'if (result.text.length > MAX_TEXT_CHARS) {', "if (result.text.length === 0) {\n      return NextResponse.json({ error: 'x' }, { status: 422 });\n    }\n    if (result.text.length > MAX_TEXT_CHARS) {"), 'pinned list routeStatusesParse'],
@@ -2967,13 +3048,45 @@ export function selfTest(options = {}) {
         ['landing: empty-text gate commented out (block comment)', M('landing', 'input.sourceText.length === 0 ||', '/* input.sourceText.length === 0 || */'), 'landingRefusesEmptyText'],
         ['route: MAX_FILE_BYTES raised, old line left in a comment above it', M('route', 'const MAX_FILE_BYTES = 25 * 1024 * 1024;', '// was: const MAX_FILE_BYTES = 25 * 1024 * 1024;\nconst MAX_FILE_BYTES = 50 * 1024 * 1024;'), 'route MAX_FILE_BYTES'],
         ['arrivals: an early empty-text gate is added before delegation', M('arrivals', "if (params.extractor === 'supplied') {", "if (params.sourceText.length === 0) {\n    throw new Error('empty');\n  }\n  if (params.extractor === 'supplied') {"), 'arrivalsDelegatesUnconditionally'],
+        // ---- one realistic edit per remaining detector (the coverage check below requires every detector to have been fired) ----
+        ['landing: MAX_FILE_BYTES raised', M('landing', 'const MAX_FILE_BYTES = 25 * 1024 * 1024;', 'const MAX_FILE_BYTES = 26 * 1024 * 1024;'), 'landing MAX_FILE_BYTES'],
+        ['route: MAX_TEXT_CHARS raised by one', M('route', 'const MAX_TEXT_CHARS = 2_000_000;', 'const MAX_TEXT_CHARS = 2_000_001;'), 'route MAX_TEXT_CHARS'],
+        ['landing: text cap raised by one', M('landing', 'input.sourceText.length > 2_000_000', 'input.sourceText.length > 2_000_001'), 'landing max text'],
+        ['route: empty-file status 400 becomes 422', M('route', "{ error: 'File is empty' }, { status: 400 }", "{ error: 'File is empty' }, { status: 422 }"), 'route statusEmptyFile'],
+        ['route: unsupported-format status 415 becomes 400', M('route', 'return NextResponse.json({ error: err.message }, { status: 415 });', 'return NextResponse.json({ error: err.message }, { status: 400 });'), 'route statusUnsupported'],
+        ['route: unrepresentable-Word status 422 becomes 415', M('route', 'nothing enters Source custody.\n        return NextResponse.json({ error: err.message }, { status: 422 });', 'nothing enters Source custody.\n        return NextResponse.json({ error: err.message }, { status: 415 });'), 'route statusUnsupportedDocx'],
+        ['route: generic parse failure status 422 becomes 400', M('route', "or .md.' },\n        { status: 422 },", "or .md.' },\n        { status: 400 },"), 'route statusGenericParse'],
+        ['parse: the text path strips NUL bytes (the cheapest repair of the 503 family)', M('parse', "return { text: buffer.toString('utf-8'), warnings: [], format };", "return { text: buffer.toString('utf-8').replace(/\\u0000/g, ''), warnings: [], format };"), 'parseTextIsVerbatimUtf8'],
+        ['route: the file NAME is passed to custody instead of the extracted text', M('route', 'sourceText: result.text,', 'sourceText: file.name,'), 'routePassesExtractedTextToCustody'],
+        ['route: custody runs BEFORE the text cap', M('route', "    if (result.text.length > MAX_TEXT_CHARS) {\n      return NextResponse.json({ error: 'Manuscript too large (2MB of text max)' }, { status: 413 });\n    }", "    await recordArtifactArrival({ memberId, bytes: buffer, originalFilename: file.name, mimeType: null, sourceText: result.text, extractor: result.format, idempotencyKey });\n    if (result.text.length > MAX_TEXT_CHARS) {\n      return NextResponse.json({ error: 'Manuscript too large (2MB of text max)' }, { status: 413 });\n    }"), 'routeOrderParseCapCustody'],
+        ['detectFormat: a new rule in a shape the rule parser does not read', M('parse', "if (ext === 'txt' || ext === 'md' || ext === 'markdown') return 'text';", "if (ext === 'txt' || ext === 'md' || ext === 'markdown') return 'text';\n  if (/^rtf$/.test(ext)) return 'text';"), 'detectFormatFullyParsed'],
+        ['detectFormat: the MIME fallback narrows to text/x-*', M('parse', "m.startsWith('text/')", "m.startsWith('text/x-')"), 'pinned list mimeRules'],
+        ['epub: mimetype guard switched off', M('parse', "if (declared && declared !== 'application/epub+zip') {", 'if (false) {'), 'epubGuardMimetype'],
+        ['epub: a load failure is rethrown raw (422 instead of 415)', M('parse', "} catch {\n    throw new UnsupportedUploadError('This EPUB is not a readable EPUB package.');", "} catch (e) {\n    throw e;"), 'epubLoadFailureIsUnsupported'],
+        ['epub: entry size read from the compressed size', M('parse', '_data?.uncompressedSize', '_data?.compressedSize'), 'epubSizeReadFromJszipInternals'],
+        ['epub: container/package size guard switched off', M('parse', "if (size !== null && size > EPUB_MAX_ENTRY_BYTES) {\n    throw new UnsupportedUploadError(`This EPUB's ${label} is unexpectedly large.`);", "if (false) {\n    throw new UnsupportedUploadError(`This EPUB's ${label} is unexpectedly large.`);"), 'epubGuardEntryContainer'],
+        ['epub: EPUB_MAX_ENTRIES raised', M('parse', 'const EPUB_MAX_ENTRIES = 2_000;', 'const EPUB_MAX_ENTRIES = 3_000;'), 'EPUB_MAX_ENTRIES'],
+        ['epub: EPUB_MAX_ENTRY_BYTES raised', M('parse', 'const EPUB_MAX_ENTRY_BYTES = 8 * 1024 * 1024;', 'const EPUB_MAX_ENTRY_BYTES = 16 * 1024 * 1024;'), 'EPUB_MAX_ENTRY_BYTES'],
+        ['epub: EPUB_MAX_TOTAL_BYTES raised', M('parse', 'const EPUB_MAX_TOTAL_BYTES = 64 * 1024 * 1024;', 'const EPUB_MAX_TOTAL_BYTES = 128 * 1024 * 1024;'), 'EPUB_MAX_TOTAL_BYTES'],
+        ['landing: a failure inside the landing is no longer wrapped as incomplete', F('landing', inFn('recordEncryptedArtifactArrival', "throw new SourceLandingIncompleteError('source_landing_incomplete', intentId, error);", 'throw error;')), 'landingWrapsEveryFailureAsIncomplete'],
+        ['landing: the ciphertext write is commented out of the happy path', F('landing', inFn('recordEncryptedArtifactArrival', '      await writePreparedCiphertext(prepared);', '      // await writePreparedCiphertext(prepared);')), 'landingWritesCiphertextBeforeTextGate'],
+        ['route: a new refusal status in the pre-body region', M('route', "return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });\n  }\n  try {", "return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });\n  }\n  if (request.method !== 'POST') {\n    return NextResponse.json({ error: 'x' }, { status: 405 });\n  }\n  try {"), 'pinned list routeStatusesEarly'],
+        ['route: the custody-failure status 500 becomes 502', M('route', "No manuscript was created.' },\n        { status: 500,", "No manuscript was created.' },\n        { status: 502,"), 'pinned list routeStatusesCustody'],
+        ['route: the outer catch status 500 becomes 502', M('route', "{ error: 'Failed to read file' }, { status: 500 }", "{ error: 'Failed to read file' }, { status: 502 }"), 'pinned list routeStatusesTail'],
+        ['fidelity: the table-header rule is switched off', M('fidelity', "cell.name !== 'th')) {", "cell.name !== 'th') && false) {"), 'docxRefusesTableWithoutHeader'],
+        ['fidelity: the data-rows rule is removed', M('fidelity', "if (rows.length < 2) FAIL('a table without a heading row and data rows');", ''), 'docxRefusesTableWithoutDataRows'],
+        ['fidelity: embedded pictures and objects are allowed', M('fidelity', "if (find(root, 'img').length || find(root, 'object').length || find(root, 'svg').length) {", 'if (false) {'), 'docxRefusesEmbeddedObjects'],
+        ['migration: source_text becomes bytea (a NUL would then be storable)', M('migration', 'source_text text NOT NULL', 'source_text bytea NOT NULL'), 'sourceTextIsPostgresText'],
+        ['release: the hold is lifted (flag true; EXPECTATION_PRECONDITIONS[0] would then be false)', M('release', 'sourceIntakeReleased: false,', 'sourceIntakeReleased: true,'), 'release flag value'],
+        ['release: the flag property is renamed', M('release', 'sourceIntakeReleased: false,', 'sourceIntakeReleasedFlag: false,'), 'release flag not found'],
+        ['route: an unterminated block comment is appended (the stripper can no longer be trusted on this file)', A('route', '\n/* never closed\n'), 'comment stripper left an unclosed construct in an anchored source'],
       ];
       const undetected = [];
       const wrongDetector = [];
       let structuralOnly = 0;
       for (const [id, mut, expected] of catalog) {
-        const src = { ...sources, [mut.file]: mutate(sources[mut.file], mut.from, mut.to) };
-        const found = compareFactsToLimits(factsFromSources(src));
+        const found = compareFactsToLimits(factsFromSources(applyMut(mut, sources)));
+        anchorRuns.push({ id, expected, found });
         if (found.length === 0) undetected.push(id);
         else if (!found.includes(expected)) wrongDetector.push(`${id} -> ${found.join('|')}`);
         else if (found.some((f) => !f.startsWith('region '))) structuralOnly++;
@@ -2988,12 +3101,15 @@ export function selfTest(options = {}) {
         ['route: release hold inverted', M('route', 'if (!PRESS_SOURCE_INTAKE_RELEASED) {', 'if (PRESS_SOURCE_INTAKE_RELEASED) {'), 'region drift route.releaseHold'],
         ['route: release flag replaced by a constant true', M('route', 'const PRESS_SOURCE_INTAKE_RELEASED = writerReleaseAuthority().sourceIntakeReleased;', 'const PRESS_SOURCE_INTAKE_RELEASED = true;'), 'region drift route.releaseHold'],
         ['fidelity: the uneven-rows rule inverted (no structural fact reads it)', M('fidelity', 'cellRows.some((row) => row.length !== width)', 'cellRows.some((row) => row.length === width)'), 'region drift docxFidelity.whole'],
+        ['parse: the DOCX structural witness (the HTML conversion) is withheld from the fidelity pass, so no table or picture could ever be refused', M('parse', "    html.value ?? '',\n    messages,", "    '',\n    messages,"), 'region drift parse.extractDocxMarkdown'],
       ];
       const digestMissed = [];
       for (const [id, mut, expected] of digestCatalog) {
-        const found = compareFactsToLimits(factsFromSources({ ...sources, [mut.file]: mutate(sources[mut.file], mut.from, mut.to) }));
+        const found = compareFactsToLimits(factsFromSources(applyMut(mut, sources)));
+        anchorRuns.push({ id, expected, found });
         if (!found.includes(expected)) digestMissed.push(`${id} -> ${found.join('|') || 'nothing'}`);
       }
+      anchorRuns.complete = true; // set only if every edit above was applied and measured
       // Controls: edits that must NOT be flagged, and one that only the catch-all digest sees.
       const commentOnly = compareFactsToLimits(factsFromSources({ ...sources, parse: mutate(sources.parse, 'if (knownTotal > EPUB_MAX_TOTAL_BYTES) {', 'if (knownTotal > EPUB_MAX_TOTAL_BYTES) { // reviewed: unchanged guard') }));
       const whitespaceOnly = compareFactsToLimits(factsFromSources({ ...sources, parse: mutate(sources.parse, 'if (knownTotal > EPUB_MAX_TOTAL_BYTES) {', 'if (knownTotal    >   EPUB_MAX_TOTAL_BYTES)   {') }));
@@ -3020,6 +3136,31 @@ export function selfTest(options = {}) {
       return {
         ok: undetected.length === 0 && wrongDetector.length === 0 && benignQuiet && digestIsCatchAll && oldFooledByLimit && oldFooledByGate && newSeesLive && vacuous && structuralOnly === catalog.length && unclosedCaught && unclosedSqlCaught && digestMissed.length === 0,
         detail: `source-changes=${catalog.length} flagged-by-named-detector=${catalog.length - undetected.length - wrongDetector.length} (also-by-a-structural-detector-not-only-a-digest=${structuralOnly}) undetected=[${undetected.join('; ')}] wrong-detector=[${wrongDetector.join('; ')}]; comment-only+whitespace-only edits quiet=${benignQuiet}; message-only edit caught by digest alone=${digestIsCatchAll}; old raw-text extractor fooled by commented-out limit=${oldFooledByLimit} and gate=${oldFooledByGate}, new one sees the live code=${newSeesLive}; vacuous-mutation-refused=${vacuous}; unterminated-comment-in-ts=${unclosedCaught} in-sql=${unclosedSqlCaught} (flagged by the stripper's report alone, no digest moves); digest-only-regions(code no fact reads)=${digestCatalog.length - digestMissed.length}/${digestCatalog.length} missed=[${digestMissed.join('; ')}]`,
+      };
+    });
+
+    run('every detector of the source-anchor comparator is demonstrated lethal by at least one realistic source change (the detector universe is derived mechanically; a detector nothing has ever made fire is unproven, not green)', () => {
+      if (missingSources.length || !facts) return { ok: false, detail: 'source facts unavailable' };
+      if (anchorRuns.complete !== true) return { ok: false, detail: 'the source-edit runs did not complete: see the "source anchors are lethal" check' };
+      const universe = detectorUniverse(facts);
+      // Comparator-level only: the stripper-report fact is derived from the stripper's own exports, which no edit of an anchored source can remove.
+      const comparatorLevel = compareFactsToLimits({ ...facts, stripperReportsIssues: false });
+      const bySourceEdit = anchorRuns.map((r) => r.found);
+      const undemonstrated = undemonstratedDetectors(universe, [...bySourceEdit, comparatorLevel]);
+      const onlyComparatorLevel = comparatorLevel.filter((d) => !bySourceEdit.flat().includes(d));
+      // Controls: this computation must be able to say "no" -- with no runs everything is undemonstrated, and with the runs that fire one
+      // chosen detector removed exactly that detector is reported.
+      const target = 'epubGuardMimetype';
+      const dropped = undemonstratedDetectors(universe, [...anchorRuns.filter((r) => !r.found.includes(target)).map((r) => r.found), comparatorLevel]);
+      const droppedDetected = dropped.length === 1 && dropped[0] === target;
+      const emptyDetected = undemonstratedDetectors(universe, []).length === universe.length;
+      const vacuousRefused = throws(() => applyMut(F('route', (t) => t), sources)); // an edit that changes nothing must not count as a kill
+      // The derived universe must span every KIND of detector (numeric, boolean fact, status, pinned list, region digest, the two release-flag cases, the stripper), or a branch of the comparator could escape the coverage requirement unseen.
+      const kinds = ['route MAX_FILE_BYTES', 'EPUB_MAX_TOTAL_BYTES', 'epubGuardDrm', 'route statusIncomplete', 'pinned list extRules', 'region drift parse.extOf', 'release flag value', 'release flag not found', 'comment stripper does not report unclosed constructs'];
+      const nameOfUnknown = kinds.every((k) => universe.includes(k));
+      return {
+        ok: undemonstrated.length === 0 && universe.length >= 60 && droppedDetected && emptyDetected && vacuousRefused && nameOfUnknown,
+        detail: `detectors=${universe.length} edits-run=${anchorRuns.length} demonstrated=${universe.length - undemonstrated.length} (by a source edit: ${universe.length - undemonstrated.length - onlyComparatorLevel.length}, comparator-level only: ${onlyComparatorLevel.length}) undemonstrated=${undemonstrated.length}${undemonstrated.length ? ' [' + undemonstrated.join(' | ') + ']' : ''}; control: removing the runs that fire "${target}" reports exactly it=${droppedDetected}, no runs reports all=${emptyDetected}, vacuous edit refused=${vacuousRefused}, universe spans every detector kind=${nameOfUnknown}`,
       };
     });
 
@@ -3208,6 +3349,26 @@ export function selfTest(options = {}) {
       }
       const controlRejected = spawnSync('xmllint', ['--noout', '-'], { input: '<a><b></a>' }).status !== 0;
       return { ok: n >= 30 && bad === 0 && controlRejected, detail: `xmllint parts=${n} not-well-formed=${bad} broken-xml-rejected=${controlRejected}` };
+    });
+
+    // The truth table above tests corroborationVerdict; THIS tests that the three checks above actually obey it. On a host that has
+    // every tool the absent branch never runs, so a check that ignored its verdict (returned ok:true when its tool is missing, the
+    // original defect) would stay green everywhere except a bare machine. Each nested run executes only the three corroboration
+    // checks, with every tool simulated absent.
+    run('corroboration wiring: with every tool absent the three checks FAIL; a waiver turns exactly the waived ones into recorded waivers; nothing else changes (a check that ignores its verdict fails this, on any host)', () => {
+      const nested = (waive) => selfTest({ simulateAbsent: 'all', allowUncorroborated: waive, _corroborationOnly: true });
+      const nameOf = { unzip: 'corroboration (unzip)', poppler: 'corroboration (poppler)', xmllint: 'corroboration (xmllint)' };
+      const okOf = (r, t) => r.checks.find((c) => c.name.startsWith(nameOf[t]))?.ok;
+      const present = (r) => r.checks.filter((c) => c.name.startsWith('corroboration (')).length;
+      const none = nested([]);
+      const one = nested(['unzip']);
+      const all = nested(['all']);
+      const failsClosed = present(none) === 3 && CORROBORATING_TOOLS.every((t) => okOf(none, t) === false && none.corroboration[t] === 'absent') && none.ok === false && none.corroboration.waived.length === 0;
+      const partial = present(one) === 3 && okOf(one, 'unzip') === true && okOf(one, 'poppler') === false && okOf(one, 'xmllint') === false && one.corroboration.unzip === 'waived' && one.corroboration.poppler === 'absent' && JSON.stringify(one.corroboration.waived) === '["unzip"]';
+      const waivedAll = present(all) === 3 && CORROBORATING_TOOLS.every((t) => okOf(all, t) === true && all.corroboration[t] === 'waived') && all.ok === true && all.corroboration.waived.length === 3;
+      const detailsSayWhich = none.checks.filter((c) => c.name.startsWith('corroboration (')).every((c) => /UNCORROBORATED/.test(c.detail)) && all.checks.filter((c) => c.name.startsWith('corroboration (')).every((c) => /WAIVED/.test(c.detail));
+      const modeGuarded = throws(() => selfTest({ simulateAbsent: 'unzip', _corroborationOnly: true })); // the skip-generation mode refuses to run with a tool "present"
+      return { ok: failsClosed && partial && waivedAll && detailsSayWhich && modeGuarded, detail: `all-absent-unwaived: checks fail + state absent + run not ok=${failsClosed}; only unzip waived: unzip ok as recorded waiver, poppler+xmllint still fail=${partial}; all waived: ok + three recorded waivers=${waivedAll}; details name UNCORROBORATED / WAIVED=${detailsSayWhich}; skip-generation mode refuses a present tool=${modeGuarded}` };
     });
 
     /* -- output is content-free ------------------------------------------ */

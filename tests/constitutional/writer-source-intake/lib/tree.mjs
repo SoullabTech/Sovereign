@@ -97,7 +97,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { stripCommentsDetailed, stripSqlCommentsDetailed, stripYamlCommentsDetailed, stripShellCommentsDetailed, stripDockerfileCommentsDetailed, stripDotenvCommentsDetailed, stripCaddyfileCommentsDetailed } from './strip.mjs';
 
@@ -703,6 +703,12 @@ export function createTree(root, overlay = {}, options = {}) {
 // empty issues list passed off as a clean parse, untracked files in scope, a `.git` file in the listing,
 // a symlink counted twice, an edit stored under an un-normalised key ...) and MUST fail there; a check
 // that passes on a broken tree proves nothing. mutationAudit() does the same to the implementation.
+
+// Runs in a throwaway `node -e` child (CommonJS): opens the named pipe for writing and closes it again, over and over, so every reader
+// that opens the pipe gets an immediate EOF. It exits by itself after 30 s, so an orphan (parent killed first) cannot linger.
+const SERVE_FIFO_JS =
+  "const fs = require('node:fs'); const p = process.argv[1]; setTimeout(() => process.exit(0), 30000);" +
+  "const again = () => fs.open(p, 'w', (e, fd) => { if (e) setTimeout(again, 50); else fs.close(fd, again); }); again();";
 
 function throwsOf(fn) {
   try {
@@ -1885,6 +1891,40 @@ export function selfTest(opts = {}) {
       }
       return bad.length === 0 ? true : bad.join(' ');
     });
+    run('disk/only-a-vanished-path-is-nothing--every-other-lstat-error-is-thrown', () => {
+      // lstat is the one call every membership question goes through, so what it is allowed to swallow decides what the Tree can
+      // silently hide. Injected through the live fs object, like the read / readdir check above: a path that vanished (ENOENT) or
+      // whose ancestor stopped being a directory (ENOTDIR, a race) is "not a member"; EACCES / EIO / ENAMETOOLONG are failures.
+      const target = path.join(fx, 'a/x.ts');
+      const dirTarget = path.join(fx, 'a');
+      const realLstat = fs.lstatSync;
+      const fail = (code) => Object.assign(new Error(`injected ${code}`), { code });
+      const bad = [];
+      try {
+        for (const [code, nothing] of [['ENOENT', true], ['ENOTDIR', true], ['EACCES', false], ['EIO', false], ['ENAMETOOLONG', false]]) {
+          for (const [what, victim, ask] of [
+            ['file', target, (t) => t.read('a/x.ts') === null && t.isFile('a/x.ts') === false],
+            ['dir', dirTarget, (t) => t.isDir('a') === false],
+          ]) {
+            fs.lstatSync = (q, ...rest) => {
+              if (q === victim) throw fail(code);
+              return realLstat(q, ...rest);
+            };
+            let answered = null;
+            let thrown = null;
+            try {
+              answered = ask(createTree(fx));
+            } catch (e) {
+              thrown = e;
+            }
+            if (nothing ? thrown !== null || answered !== true : thrown === null || thrown.code !== code) bad.push(`${what}:${code}`);
+          }
+        }
+      } finally {
+        fs.lstatSync = realLstat;
+      }
+      return bad.length === 0 ? true : bad.join(' ');
+    });
     run('list/overlay-entries-under-a-root-level-skipped-directory-are-skipped--unless-it-is-the-prefix', () => {
       const t = createTree(fx, { 'dist/x.js': 'x', 'node_modules/y.js': 'y', '.next/z.js': 'z', 'ok/w.js': 'w', 'a/node_modules/new.ts': 'n' });
       const root = t.list('');
@@ -1898,10 +1938,24 @@ export function selfTest(opts = {}) {
     });
     run('list/a-named-pipe-is-not-a-member', () => {
       const m = mini('fifo', { 'a.ts': 'A' });
-      const r = spawnSync('mkfifo', [path.join(m.R, 'pipe')]);
+      const fifo = path.join(m.R, 'pipe');
+      const r = spawnSync('mkfifo', [fifo]);
       if (r.error || r.status !== 0) return `mkfifo unavailable (${r.error ? r.error.code : r.status}); the special-file rule cannot be verified`;
-      const t = createTree(m.R);
-      return sameList(t.list(''), ['a.ts']) === true && t.read('pipe') === null && !t.exists('pipe') && t.symlinks('').length === 0 ? true : `listed: ${JSON.stringify(t.list(''))}`;
+      // A WRONG Tree (one that treats the pipe as a file) would call open(2) on it, which blocks FOREVER because nothing ever opens the
+      // other end: the check -- and a mutation audit running it -- would hang instead of failing. So a throwaway writer process serves
+      // opens for at most 30 s: a wrong Tree reads an empty string (and fails below); the right one never opens the pipe at all.
+      const server = spawn(process.execPath, ['-e', SERVE_FIFO_JS, fifo], { stdio: 'ignore' });
+      try {
+        const t = createTree(m.R);
+        const bad = [];
+        if (sameList(t.list(''), ['a.ts']) !== true) bad.push('list');
+        if (t.read('pipe') !== null) bad.push('read');
+        if (t.isFile('pipe') || t.exists('pipe')) bad.push('exists');
+        if (t.symlinks('').length !== 0) bad.push('symlinks');
+        return bad.length === 0 ? true : `a named pipe is treated as a member: ${bad.join(' ')}`;
+      } finally {
+        server.kill('SIGKILL');
+      }
     });
     run('exists/an-empty-directory-stays-a-directory-while-the-overlay-deletes-or-adds-elsewhere', () => {
       const bad = [];
@@ -2320,7 +2374,7 @@ const MUTATIONS = [
   ['kind-shebang-disabled', "if (ext === '' && typeof raw === 'string' && SHEBANG_SH_RE.test(", "if (false && ext === '' && typeof raw === 'string' && SHEBANG_SH_RE.test("],
   ['kind-shebang-honoured-with-an-extension', "if (ext === '' && typeof raw === 'string' && SHEBANG_SH_RE.test(", "if (typeof raw === 'string' && SHEBANG_SH_RE.test("],
   ['kind-shebang-needs-no-string', "if (ext === '' && typeof raw === 'string' && SHEBANG_SH_RE.test(", "if (ext === '' && SHEBANG_SH_RE.test("],
-  ['kind-shebang-whole-text-not-first-line', ".split('\\n', 1)[0])) return 'sh';", ')) return \'sh\';'],
+  ['kind-shebang-whole-text-not-first-line', 'SHEBANG_SH_RE.test(firstLine(raw))', 'SHEBANG_SH_RE.test(raw)'],
   ['kind-shebang-zsh-accepted', '(?:sh|bash|dash|ash)(?=', '(?:sh|bash|zsh|ksh|dash|ash)(?='],
   ['kind-shebang-env-unsupported', '(?:env[ \\t]+(?:-\\S+[ \\t]+)*)?', ''],
   ['kind-shebang-env-flags-unsupported', '(?:env[ \\t]+(?:-\\S+[ \\t]+)*)?', '(?:env[ \\t]+)?'],
@@ -2371,7 +2425,9 @@ const MUTATIONS = [
   // ---- the disk: symlinks, `.git`, errors ---------------------------------------------------------
   ['disk-error-swallowed', "if (!(e && (e.code === 'ENOENT' || e.code === 'ENOTDIR'))) throw e;\n      }\n    }\n  }\n  shared.kinds.set(rel, kind);", ';\n      }\n    }\n  }\n  shared.kinds.set(rel, kind);'],
   ['disk-follows-symlinks', 'const st = fs.lstatSync(path.join(shared.root, rel));', 'const st = fs.statSync(path.join(shared.root, rel));'],
-  ['disk-ancestors-unchecked', "if (cut <= 0 || diskKind(shared, rel.slice(0, cut)) === 'dir') {", 'if (true) {'],
+  ['disk-enotdir-is-a-failure', "if (!(e && (e.code === 'ENOENT' || e.code === 'ENOTDIR'))) throw e;\n      }\n    }\n  }\n  shared.kinds.set(rel, kind);", "if (!(e && (e.code === 'ENOENT'))) throw e;\n      }\n    }\n  }\n  shared.kinds.set(rel, kind);"],
+  ['disk-enoent-is-a-failure', "if (!(e && (e.code === 'ENOENT' || e.code === 'ENOTDIR'))) throw e;\n      }\n    }\n  }\n  shared.kinds.set(rel, kind);", "if (!(e && (e.code === 'ENOTDIR'))) throw e;\n      }\n    }\n  }\n  shared.kinds.set(rel, kind);"],
+  ['disk-ancestors-unchecked',"if (cut <= 0 || diskKind(shared, rel.slice(0, cut)) === 'dir') {", 'if (true) {'],
   ['disk-dot-git-readable', 'if (!hasGitSegment(rel)) {', 'if (true) {'],
   ['disk-dot-git-only-at-the-end', "const hasGitSegment = (p) => p.split('/').includes('.git');", "const hasGitSegment = (p) => p === '.git' || p.endsWith('/.git');"],
   ['disk-dot-git-only-at-the-root', "const hasGitSegment = (p) => p.split('/').includes('.git');", "const hasGitSegment = (p) => p === '.git' || p.startsWith('.git/');"],

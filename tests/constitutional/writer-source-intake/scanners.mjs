@@ -12,7 +12,7 @@
  *
  * EXPORTS
  *   makeNeedles({ canary, originalBytes, keyBytes }, options?) -> NeedleSet
- *       options: { encodings?, partial?, probeBytes?, siblings?: Uint8Array[], assertUnique?: boolean }  -- `siblings` are other
+ *       options: { encodings?, partial?, probeBytes?, siblings?: Uint8Array[], assertUnique?: boolean, siblingWorkBudget?: number }  -- `siblings` are other
  *       documents built from the SAME template (other uploads, other canaries); a probe window found verbatim in any of them is
  *       template boilerplate and is never used. `assertUnique` declares the original template-free. See PROBES OF THE ORIGINAL.
  *   assertArmed(needles, opts?)         throws ArmingError when the set could not find a leak
@@ -58,9 +58,16 @@
  *   windows of a deflated DOCX are high-entropy AND present in every other upload; 275 windows, 5 other uploads). So a window is used only when
  *     canary-anchored     it contains the upload's own canary plus 16 bytes of context each side, so it cannot occur in an
  *                         upload with a different canary (needs the canary to be a verbatim substring of the original); or
- *     unique-vs-siblings  the caller supplied `siblings` (other uploads from the SAME template, other canaries) and the
- *                         window occurs in none of them. This is evidence RELATIVE to the siblings: compressed formats
- *                         share windows between SOME uploads, so supply at least three; or
+ *     unique-vs-siblings  the caller supplied `siblings` (other uploads from the SAME template, other canaries) and NO
+ *                         16-byte block of the window (blocks every 4 bytes) occurs in any of them. Testing the WHOLE window is
+ *                         not enough: in a ZIP the central directory carries the same entry names and the same CRCs of the
+ *                         unchanged template parts in every upload and differs only in a few size / offset fields, so a window
+ *                         there is absent from every sibling as a whole while most of it is template; measured on this
+ *                         suite's own deflated DOCX, that region produced 32 of 32 misreports that remained after the
+ *                         whole-window rule (J7 reproduces the mechanism deterministically). This is evidence RELATIVE to the
+ *                         siblings, and for a COMPRESSED container it stays probabilistic: an unseen upload can reproduce a
+ *                         window of compressed bytes that none of the siblings has (see NOT COVERED). The comparison is bounded
+ *                         by `siblingWorkBudget` (bytes compared; default 4e9): windows not judged within it are never used; or
  *     asserted-unique     the caller passed `assertUnique: true`, declaring that no byte of the original comes from a
  *                         template (random, encrypted, a one-off file); then windows with >= 75% distinct bytes qualify.
  *                         This is a declaration, not a proof, and it is visible in describe() as the window's `basis`.
@@ -105,6 +112,15 @@
  *     limit ('... N more bytes'); a typed array of 16/32-bit elements; decimal bytes with a separator other than ',' or
  *     whitespace (';', '|'); byte values printed as signed (Int8Array) numbers.
  *   - Percent-encoding of base64URL text (its alphabet needs none) and double percent-encoding ('%252B').
+ *   - Any other alphabet (base32, base58, ...); a LOSSY decode (Buffer#toString() of a binary key, which replaces invalid
+ *     bytes with U+FFFD and cannot be reversed); a MIXED printable / escaped repr (Python bytes repr, Go %q: part of the
+ *     bytes appear as characters, part as '\xNN'); only the all-escaped '\xNN' form and the latin1-string form are covered.
+ *   - A leak of the ORIGINAL when it is a COMPRESSED container (deflated DOCX, Flate PDF) armed from siblings: a window of
+ *     compressed bytes is not template by construction, so an unseen upload can reproduce one that no sibling has. Measured
+ *     with this suite's own builders (300 unseen uploads per cell, three and six siblings): deflated DOCX 3 and 2 misreported,
+ *     Flate text PDF 0 and 1, stored DOCX 0 and 0, EPUB 0 and 0. Going from three to six siblings did not reduce it, so a
+ *     single 'original' hit on such a container is an indication to corroborate (the canary, or a second probe), not proof.
+ *     A leak of the whole file hits every probe; the canary-anchored basis has no such residual.
  *   - A secret split across two files, or across an fs boundary (sparse files, extended attributes, ADS).
  *   - Substrings of the canary/key shorter than the whole value (the whole value is the needle).
  *     The original is probed by up to six 48-byte windows (head, tail, four interior), not byte-for-byte; a partial leak
@@ -112,8 +128,9 @@
  *     cannot be armed at all (makeNeedles throws).
  *   - File names that are not valid UTF-8 are decoded lossily by readdir, cannot be reopened, and are reported as skipped
  *     (so the scan is VACUOUS, not CLEAN). A symlinked ROOT is resolved; symlinks below it are not followed by default.
- *   - Unreadable files (EACCES) are reported as skipped, but selfTest runs as whatever user runs it, so
- *     that branch is only exercised when not root (see `unverified`).
+ *   - Unreadable files (EACCES) are reported as skipped. A permission denial itself can only be provoked when not root, but
+ *     the branch it takes (open / readdir / lstat throws) is pinned for root too, through names readdir lists and the
+ *     filesystem cannot resolve (D11a, D11b; see `unverified` for the one case that stays unexercised).
  *
  * MAGIC FALSE-POSITIVE NOTE
  *   A vault holds ciphertext, so a bare 4-byte 'PK\x03\x04' occurs by chance every ~4 GiB. scanForMagic
@@ -151,6 +168,17 @@ const PROBE_MIN_DISTINCT_ANY = 8; // below this a window is padding, never evide
 const PROBE_ANCHOR_CONTEXT = 16;
 const PROBE_INTERIOR_TARGETS = 4;
 const PROBE_MAX_CANDIDATES = 700;
+/**
+ * A window that shares ANY run of PROBE_SHARED_RUN bytes with a sibling is template, even when the WHOLE window occurs in
+ * none of them: in a ZIP the central directory holds the same entry names and the same CRCs of the unchanged template parts in
+ * every upload and differs only in a few size / offset fields, so a window there is "absent from every sibling" while most of
+ * it is shared. Candidate runs start every PROBE_SHARED_STRIDE bytes, so every shared run of PROBE_SHARED_RUN + STRIDE - 1
+ * (19) bytes or more is found, whatever its alignment inside the window.
+ */
+const PROBE_SHARED_RUN = 16;
+const PROBE_SHARED_STRIDE = 4;
+/** Bytes compared against siblings while choosing probes (blocks x sibling bytes per window judged). Bounds a large, mostly-template original. */
+const DEFAULT_SIBLING_WORK_BUDGET = 4e9;
 export const DEFAULT_MAX_FILE_BYTES = 64 * 1024 * 1024;
 export const DEFAULT_CHUNK_BYTES = 64 * 1024;
 const DEFAULT_MAX_ENTRIES = 200000;
@@ -435,14 +463,28 @@ function textForm(B, S) {
  * PROBE_INTERIOR_TARGETS interior positions (the provable window nearest each). Windows never overlap each other.
  * Work is bounded: at most PROBE_MAX_CANDIDATES candidate offsets are ever examined, whatever the file size.
  */
-function deriveProbes(B, probeBytes, { siblings = [], anchor = null, assertUnique = false } = {}) {
+function deriveProbes(B, probeBytes, { siblings = [], anchor = null, assertUnique = false, workBudget = DEFAULT_SIBLING_WORK_BUDGET } = {}) {
   const n = B.length;
   const win = Math.min(probeBytes, n);
   const minDistinct = Math.max(4, Math.ceil(PROBE_MIN_DISTINCT_FRACTION * win));
   const picks = []; // { offset, length, basis }
   const overlaps = (off, len) => picks.some((q) => off < q.offset + q.length && q.offset < off + len);
   const inSibling = (w) => siblings.some((sb) => sb.includes(w));
-  const tally = { examined: 0, degenerate: 0, boilerplate: 0, lowEntropy: 0, unproven: 0 };
+  const tally = { examined: 0, degenerate: 0, boilerplate: 0, lowEntropy: 0, unproven: 0, budget: 0 };
+  // 'shared' | 'unique' | 'budget'. The WHOLE window being absent from the siblings is not evidence of specificity (see
+  // PROBE_SHARED_RUN); a window is unique only when no PROBE_SHARED_RUN-byte block of it occurs in any sibling.
+  const sibBytes = siblings.reduce((s, sb) => s + sb.length, 0);
+  let work = 0;
+  const vsSiblings = (w) => {
+    const run = Math.min(PROBE_SHARED_RUN, w.length);
+    const starts = [];
+    for (let o = 0; o + run <= w.length; o += PROBE_SHARED_STRIDE) starts.push(o);
+    if (starts[starts.length - 1] !== w.length - run) starts.push(w.length - run); // the last block ends flush with the window
+    work += starts.length * sibBytes;
+    if (work > workBudget) return 'budget';
+    for (const sb of siblings) for (const o of starts) if (sb.includes(w.subarray(o, o + run))) return 'shared';
+    return 'unique';
+  };
 
   // canary-anchored: the canary (unique per upload) plus context, so it cannot occur in an upload with another canary
   if (anchor && anchor.length > 0) {
@@ -471,8 +513,12 @@ function deriveProbes(B, probeBytes, { siblings = [], anchor = null, assertUniqu
     tally.examined += 1;
     let basis = null;
     if (d < PROBE_MIN_DISTINCT_ANY) tally.degenerate += 1;
-    else if (siblings.length > 0 && inSibling(w)) tally.boilerplate += 1; // occurs in another upload: template, whatever its entropy
-    else if (siblings.length > 0) basis = 'unique-vs-siblings'; // absent from every sibling: specific without needing entropy
+    else if (siblings.length > 0) {
+      const v = vsSiblings(w);
+      if (v === 'budget') tally.budget += 1; // not judged: an unjudged window is never used
+      else if (v === 'shared') tally.boilerplate += 1; // template: a run of >= PROBE_SHARED_RUN bytes occurs in another upload, whatever its entropy
+      else basis = 'unique-vs-siblings'; // no block of it occurs in any sibling: specific without needing entropy
+    }
     else if (assertUnique && d >= minDistinct) basis = 'asserted-unique';
     else if (assertUnique) tally.lowEntropy += 1;
     else tally.unproven += 1; // no sibling, no declaration: nothing proves this window is not boilerplate
@@ -496,7 +542,7 @@ function deriveProbes(B, probeBytes, { siblings = [], anchor = null, assertUniqu
     }
   }
   if (picks.length === 0) {
-    throw new TypeError(`makeNeedles: 'original' has no probe window that is provably specific to it (${tally.examined} examined: ${tally.boilerplate} found in a sibling, ${tally.unproven} unproven because no sibling was given, ${tally.lowEntropy} low-entropy under assertUnique, ${tally.degenerate} degenerate). Pass options.siblings (other uploads built from the same template), or make the canary a verbatim substring of the original, or pass assertUnique: true if the original has no template`);
+    throw new TypeError(`makeNeedles: 'original' has no probe window that is provably specific to it (${tally.examined} examined: ${tally.boilerplate} share bytes with a sibling, ${tally.unproven} unproven because no sibling was given, ${tally.lowEntropy} low-entropy under assertUnique, ${tally.degenerate} degenerate${tally.budget > 0 ? `, ${tally.budget} not judged because the sibling comparison budget was spent (use fewer or smaller siblings, or assertUnique)` : ''}). Pass options.siblings (other uploads built from the same template), or make the canary a verbatim substring of the original, or pass assertUnique: true if the original has no template`);
   }
   picks.sort((x, y) => x.offset - y.offset);
   return picks.map((q) => ({ offset: q.offset, bytes: Buffer.from(B.subarray(q.offset, q.offset + q.length)), basis: q.basis }));
@@ -508,7 +554,8 @@ function deriveProbes(B, probeBytes, { siblings = [], anchor = null, assertUniqu
  * secret, or an original with no provable probe, instead of arming a set that would match everywhere or nowhere.
  *
  * options: { encodings?: string[] (default all), partial?: boolean (allow fewer than 3 secrets), probeBytes?: number,
- *            siblings?: Uint8Array[] (other uploads from the same template), assertUnique?: boolean (original has no template) }
+ *            siblings?: Uint8Array[] (other uploads from the same template), assertUnique?: boolean (original has no template),
+ *            siblingWorkBudget?: number (bytes compared against siblings while choosing probes; default 4e9) }
  */
 export function makeNeedles(input, options = {}) {
   if (!input || typeof input !== 'object') throw new TypeError('makeNeedles: expected { canary, originalBytes, keyBytes }');
@@ -517,6 +564,8 @@ export function makeNeedles(input, options = {}) {
   if (labels.size === 0) throw new TypeError('makeNeedles: no encodings requested');
   for (const l of labels) if (!LABEL_INDEX.has(l)) throw new TypeError(`makeNeedles: unknown encoding '${l}'`);
   const probeBytes = options.probeBytes ?? DEFAULT_PROBE_BYTES;
+  const siblingWorkBudget = options.siblingWorkBudget ?? DEFAULT_SIBLING_WORK_BUDGET;
+  if (typeof siblingWorkBudget !== 'number' || !(siblingWorkBudget > 0)) throw new TypeError("makeNeedles: 'siblingWorkBudget' must be a positive number");
   if (options.siblings !== undefined && !Array.isArray(options.siblings)) throw new TypeError("makeNeedles: 'siblings' must be an array of Buffer / Uint8Array");
   const siblings = (options.siblings ?? []).map((sb, i) => {
     if (!(sb instanceof Uint8Array)) throw new TypeError(`makeNeedles: sibling ${i} must be a Buffer or Uint8Array`);
@@ -534,7 +583,7 @@ export function makeNeedles(input, options = {}) {
     const { B, S } = normaliseSecret(name, given[name]);
     if (name === 'canary') anchor = B;
     if (name === 'original') {
-      deriveProbes(B, probeBytes, { siblings, anchor, assertUnique: options.assertUnique === true }).forEach((p, i) => {
+      deriveProbes(B, probeBytes, { siblings, anchor, assertUnique: options.assertUnique === true, workBudget: siblingWorkBudget }).forEach((p, i) => {
         const tf = textForm(p.bytes, null);
         groups.push({ secret: name, group: `p${i}`, B: p.bytes, S: tf.S, kind: tf.kind, offset: p.offset, basis: p.basis });
       });
@@ -2556,21 +2605,86 @@ export function selfTest() {
       const zeros = scanBuffer(Buffer.alloc(1 << 20), NP);
       const joined = [noSib, lowEntropy, identical].join('\n');
       return {
-        ok: /unproven because no sibling was given/.test(noSib) && /low-entropy under assertUnique/.test(lowEntropy) && /found in a sibling/.test(identical)
+        ok: /unproven because no sibling was given/.test(noSib) && /low-entropy under assertUnique/.test(lowEntropy) && /share bytes with a sibling/.test(identical)
           && floor >= 8 && zeros.verdict === 'CLEAN' && !joined.includes(boring.subarray(20, 60).toString('latin1')) && !joined.includes(boring.subarray(1000, 1040).toString('latin1')),
-        detail: `no-siblings=${/unproven/.test(noSib)} assertUnique-low-entropy=${/low-entropy/.test(lowEntropy)} identical-sibling=${/found in a sibling/.test(identical)} padded-original: min-distinct-bytes-per-probe=${floor} all-zero-1MiB=${zeros.verdict}`,
+        detail: `no-siblings=${/unproven/.test(noSib)} assertUnique-low-entropy=${/low-entropy/.test(lowEntropy)} identical-sibling=${/share bytes with a sibling/.test(identical)} padded-original: min-distinct-bytes-per-probe=${floor} all-zero-1MiB=${zeros.verdict}`,
       };
     });
 
     run('J6 describe() reports each probe\'s basis and offset (content-free), probes are sorted by offset and never overlap', () => {
+      // Two unique regions (the UTF-16 canary and a random payload): with a single probe "sorted and disjoint" would be vacuously true.
       const cA = newCanary();
-      const A = storedDoc(cA, false);
-      const NA = makeNeedles({ canary: cA, originalBytes: A, keyBytes }, { siblings: [1, 2, 3].map(() => storedDoc(newCanary(), false)) });
+      const withPayload = (c) => Buffer.concat([storedDoc(c, false), crypto.randomBytes(600)]);
+      const A = withPayload(cA);
+      const NA = makeNeedles({ canary: cA, originalBytes: A, keyBytes }, { siblings: [1, 2, 3].map(() => withPayload(newCanary())) });
       const gs = NA.describe().secrets.find((x) => x.name === 'original').groups;
       const sorted = gs.every((g, i) => i === 0 || (g.offset >= gs[i - 1].offset + gs[i - 1].bytes));
       const allowed = gs.every((g) => ['canary-anchored', 'unique-vs-siblings', 'asserted-unique'].includes(g.basis) && Number.isInteger(g.offset) && Number.isInteger(g.bytes));
       const dump = JSON.stringify(NA);
       return { ok: gs.length >= 2 && sorted && allowed && !dump.includes(T_HEAD.subarray(10, 50).toString('latin1')), detail: `probes=${gs.length} sorted-and-disjoint=${sorted} bases-valid=${allowed}` };
+    });
+
+    // A ZIP-like container: a unique payload, then a "central directory" of records, each a 34-byte entry NAME (identical in every
+    // upload built from the template) plus a 6-byte field (a size / offset, which differs between uploads). Measured on this suite's
+    // own deflated DOCX: every misreport that remained after the whole-window rule came from this region (32 of 32).
+    const CD_NAMES = ['[Content_Types].xml', '_rels/.rels', 'word/document.xml', 'word/_rels/document.xml.rels', 'word/styles.xml', 'word/settings.xml', 'docProps/core.xml', 'docProps/app.xml']
+      .map((n) => Buffer.from(n.padEnd(34, '.'), 'latin1'));
+    const cdTail = (fields) => Buffer.concat(CD_NAMES.flatMap((nm, i) => [nm, fields[i]]));
+    const freshFields = () => CD_NAMES.map(() => crypto.randomBytes(6));
+    const zipLike = (payload, tail) => Buffer.concat([ZIPISH, payload, tail]);
+
+    run('J7 template records whose varying fields COINCIDE with the original but not with the siblings are never probes: an unseen upload sharing those fields is CLEAN, the original and a payload fragment are HITS; the whole-window rule WOULD have used them', () => {
+      const fieldsA = freshFields();
+      const tailA = cdTail(fieldsA);
+      const A = zipLike(crypto.randomBytes(900), tailA);
+      const sibs = [1, 2, 3].map(() => zipLike(crypto.randomBytes(900), cdTail(freshFields())));
+      const U = zipLike(crypto.randomBytes(900), tailA); // an unrelated upload: other payload, the SAME size / offset fields as the original
+      const NA = makeNeedles({ canary: newCanary(), originalBytes: A, keyBytes }, { siblings: sibs });
+      const gs = probesOf(NA);
+      const tailStart = A.length - tailA.length;
+      const inTail = gs.filter((g) => g.offset >= tailStart).length;
+      // the scenario is real only if the pre-repair rule (whole window absent from every sibling) accepts tail windows that U also holds
+      let oldAccepts = 0;
+      for (let off = tailStart; off + 48 <= A.length; off += 24) {
+        const w = A.subarray(off, off + 48);
+        if (!sibs.some((sb) => sb.includes(w)) && U.includes(w)) oldAccepts += 1;
+      }
+      const rU = scanBuffer(U, NA);
+      const rA = scanBuffer(A, NA);
+      const frag = scanBuffer(A.subarray(Math.max(0, gs[0].offset - 5), gs[0].offset + 53), NA); // never a negative start: subarray would count from the end
+      const tailOnly = scanBuffer(tailA, NA);
+      return {
+        ok: gs.length >= 2 && inTail === 0 && oldAccepts >= 5 && rU.verdict === 'CLEAN' && who(rA).includes('original') && who(frag).includes('original') && tailOnly.verdict === 'CLEAN',
+        detail: `probes=${gs.length} probes-inside-the-template-tail=${inTail} tail-windows-the-whole-window-rule-would-accept=${oldAccepts} unseen-upload-with-the-same-fields=${rU.verdict} original=${who(rA)} payload-fragment=${who(frag)} tail-alone=${tailOnly.verdict}`,
+      };
+    });
+
+    run('J8 the sibling comparison is bounded and the bound is checked: a tiny siblingWorkBudget makes arming refuse (content-free, says why), the default arms the same input, assertUnique does no sibling work, and a non-positive or non-numeric budget is rejected', () => {
+      const A = zipLike(crypto.randomBytes(900), cdTail(freshFields()));
+      const sibs = [1, 2, 3].map(() => zipLike(crypto.randomBytes(900), cdTail(freshFields())));
+      const kb = { canary: newCanary(), originalBytes: A, keyBytes };
+      const msg = (fn) => { try { fn(); } catch (e) { return e instanceof TypeError ? e.message : `(${e.name})`; } return ''; };
+      const tiny = msg(() => makeNeedles(kb, { siblings: sibs, siblingWorkBudget: 1 }));
+      const dflt = msg(() => makeNeedles(kb, { siblings: sibs }));
+      const declared = msg(() => makeNeedles(kb, { assertUnique: true, siblingWorkBudget: 1 })); // no siblings: nothing to bound
+      const bad = [0, -5, NaN, '4e9', {}].filter((b) => !/'siblingWorkBudget' must be a positive number/.test(msg(() => makeNeedles(kb, { siblings: sibs, siblingWorkBudget: b })))).length;
+      return {
+        ok: /comparison budget was spent/.test(tiny) && /no probe window that is provably specific/.test(tiny) && dflt === '' && declared === '' && bad === 0 && !tiny.includes(A.subarray(20, 60).toString('latin1')),
+        detail: `tiny-budget=${tiny ? 'refused-naming-the-budget' : 'ARMED'} default-budget=${dflt ? 'REFUSED' : 'armed'} assertUnique-under-tiny-budget=${declared ? 'REFUSED' : 'armed'} invalid-budgets-accepted=${bad}`,
+      };
+    });
+
+    run('J9 a 16-byte run shared with the siblings that touches only the LAST bytes of a window whose length is not a multiple of the stride still marks it template (probeBytes 50: the final block must end flush with the window); the same window with unshared tail bytes arms', () => {
+      // 50 bytes = 34 unique + 16 shared. Blocks start at 0, 4, ... 32, so [32,48) is the last stride-aligned block and the shared
+      // run [34,50) is wholly inside NO stride-aligned block; only the flush block [34,50) finds it.
+      const mk = (tail) => Buffer.concat([crypto.randomBytes(34), tail]);
+      const S16 = crypto.randomBytes(16);
+      const A = mk(S16);
+      const kb = { canary: newCanary(), originalBytes: A, keyBytes };
+      const msg = (fn) => { try { fn(); } catch (e) { return e instanceof TypeError ? e.message : `(${e.name})`; } return ''; };
+      const shared = msg(() => makeNeedles(kb, { probeBytes: 50, siblings: [1, 2, 3].map(() => mk(S16)) }));
+      const control = msg(() => makeNeedles(kb, { probeBytes: 50, siblings: [1, 2, 3].map(() => mk(crypto.randomBytes(16))) }));
+      return { ok: /share bytes with a sibling/.test(shared) && control === '', detail: `tail-shared-with-siblings=${shared ? 'refused-as-template' : 'ARMED'} tail-not-shared=${control ? 'REFUSED' : 'armed'}` };
     });
 
     /* ---------------------------------------------------------------- K. realistic accidental-leak forms */
@@ -2639,14 +2753,24 @@ export function selfTest() {
     });
 
     run('K3 the NOT COVERED list in the header is true: forms it names are really not detected (a positive control for each is), so it must shrink the day one is added', () => {
-      const k = crypto.randomBytes(32);
+      let k;
+      do { k = crypto.randomBytes(32); } while (isUtf8RoundTrip(k) || !k.some((c) => c >= 0x80)); // a binary key with a byte >= 0x80, so the lossy and signed gaps below are real gaps
       const NN = makeNeedles({ canary: newCanary(), originalBytes, keyBytes: k }, UQ);
       const b64 = k.toString('base64');
+      const hexPairs = Array.from(k, (c) => c.toString(16).padStart(2, '0'));
+      const base32 = (() => { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; const bits = Array.from(k, (c) => c.toString(2).padStart(8, '0')).join(''); let o = ''; for (let i = 0; i < bits.length; i += 5) o += A[parseInt(bits.slice(i, i + 5).padEnd(5, '0'), 2)]; return o; })();
+      // Python's bytes repr: printable bytes as themselves, the rest as \xNN. Needs at least one printable byte or it IS the all-escaped form.
+      const pyRepr = "b'" + Array.from(k, (c) => ((c >= 0x20 && c < 0x7f && c !== 0x27 && c !== 0x5c) ? String.fromCharCode(c) : '\\x' + c.toString(16).padStart(2, '0'))).join('') + "'";
       const gaps = {
         'typed array holding the key at index offset 3': [JSON.stringify(new Uint8Array([1, 2, 3, ...k, 4])), JSON.stringify({ Plaintext: new Uint8Array(k) })],
-        'dash-separated hex': [Array.from(k, (c) => c.toString(16).padStart(2, '0')).join('-'), Array.from(k, (c) => c.toString(16).padStart(2, '0')).join(':')],
+        'dash-separated hex': [hexPairs.join('-'), hexPairs.join(':')],
         'upper-cased base64 text': [b64.toUpperCase(), b64],
         'double base64': [Buffer.from(b64).toString('base64'), b64],
+        'base32 text': [base32, b64],
+        'lossy utf8 decode of a binary key (Buffer#toString())': [k.toString(), k.toString('latin1')],
+        'mixed printable / \\xNN repr (Python bytes repr)': [pyRepr, hexPairs.map((x) => '\\x' + x).join('')],
+        'decimal bytes joined by semicolons': [Array.from(k).join(';'), Array.from(k).join(',')],
+        'signed (Int8Array) decimals': [Array.from(new Int8Array(k)).join(','), Array.from(k).join(',')],
       };
       const notDetected = [];
       const controlMissed = [];
@@ -2742,7 +2866,13 @@ const MUTANTS = [
   { name: 'alias-ignored-lane', find: "const key = `${lane}:${c.pattern.toString('hex')}`;", replace: "const key = `${lane}:${label}:${c.pattern.toString('hex')}`;", why: 'aliases double count' },
   // --- reviewer round 2: typed arrays, probes of the original, accidental-leak forms, incomplete-coverage reasons, carry aliasing
   { name: 'typed-array-not-normalised', find: 'if (!Buffer.isBuffer(chunk)) chunk = Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength);', replace: '', why: 'a key held in a plain Uint8Array reads CLEAN' },
-  { name: 'probe-siblings-ignored', find: 'else if (siblings.length > 0 && inSibling(w)) tally.boilerplate += 1; // occurs in another upload: template, whatever its entropy', replace: 'else if (false) tally.boilerplate += 1;', why: 'template boilerplate becomes a probe and flags unrelated uploads' },
+  { name: 'probe-siblings-ignored', find: "else if (v === 'shared') tally.boilerplate += 1;", replace: 'else if (false) tally.boilerplate += 1;', why: 'template boilerplate becomes a probe and flags unrelated uploads' },
+  // --- reviewer round 3: a window is template when a RUN of it occurs in a sibling (ZIP central directory), and that comparison is bounded
+  { name: 'probe-sibling-whole-window-only', find: "for (const sb of siblings) for (const o of starts) if (sb.includes(w.subarray(o, o + run))) return 'shared';", replace: "for (const sb of siblings) if (sb.includes(w)) return 'shared';", why: 'a window of shared entry names with varying size / offset fields is "absent from every sibling" and flags unrelated uploads' },
+  { name: 'probe-sibling-run-too-long', find: 'const PROBE_SHARED_RUN = 16;', replace: 'const PROBE_SHARED_RUN = 40;', why: 'a template window split by a varying field shares no 40-byte run and is used as a probe' },
+  { name: 'probe-sibling-last-block-dropped', find: 'if (starts[starts.length - 1] !== w.length - run) starts.push(w.length - run); // the last block ends flush with the window', replace: '', why: 'a shared run that ends at the window edge is missed when the window length is not a multiple of the stride' },
+  { name: 'probe-sibling-work-budget-removed', find: "if (work > workBudget) return 'budget';", replace: '', why: 'arming against large siblings is unbounded' },
+  { name: 'probe-sibling-budget-not-validated', find: "if (typeof siblingWorkBudget !== 'number' || !(siblingWorkBudget > 0)) throw new TypeError(\"makeNeedles: 'siblingWorkBudget' must be a positive number\");", replace: '', why: 'a zero, negative or NaN budget silently disables or breaks the bound' },
   { name: 'probe-unproven-accepted', find: 'else tally.unproven += 1; // no sibling, no declaration: nothing proves this window is not boilerplate', replace: "else basis = 'asserted-unique';", why: 'unprovable windows arm silently' },
   { name: 'probe-entropy-is-proof', find: "else if (assertUnique && d >= minDistinct) basis = 'asserted-unique';", replace: "else if (d >= minDistinct) basis = 'asserted-unique';", why: 'compressed template parts count as unique without a declaration' },
   { name: 'probe-head-tail-dropped', find: 'const targets = [0, last];', replace: 'const targets = [];', why: 'a leak of only the head or tail of a large original is missed' },
