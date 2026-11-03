@@ -238,6 +238,12 @@ export default function P4R1ImportManuscript({
             setSourceArrivalId(null);
             setFilename(null);
             setFormat(null);
+            setSplitOpen(null);
+            // "Choose the file again" must be a NEW upload. The upload identity is stable per file on purpose (an interrupted
+            // upload resumes), so re-choosing the same file would land on the same intent and be handed the same dead
+            // arrival. When the original is unavailable that identity is spent; when it is already attached, the first save
+            // landed and the identity is kept as it was.
+            if (code === 'source_original_unavailable') uploadAttemptRef.current = null;
             setPhase('source');
           }
           throw new Error(errorFrom(body, 'The manuscript could not be opened.'));

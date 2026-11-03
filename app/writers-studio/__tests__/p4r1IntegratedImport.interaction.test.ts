@@ -467,6 +467,78 @@ describe('D4 — the member is told when the original could not be stored with t
     expect(onComplete).toHaveBeenCalledWith(SAVED_ID);
   });
 
+  test.each([
+    ['source_original_unavailable', true],
+    ['source_already_attached', false],
+  ])('after %s, choosing the SAME file again %s', async (code, mintsNewUpload) => {
+    const HEADER = 'x-writer-upload-idempotency-key';
+    await importUntilCreate({}, response(409, { error: 'Fictional permanent refusal.', code, retryable: false }));
+    const firstKey = mocked.mock.calls[0][1].headers[HEADER];
+    expect(firstKey).toBe('33333333-3333-4333-8333-333333333333');
+
+    // A fresh identity is available to be minted; whether it is USED is the question.
+    (globalThis.crypto as unknown as { randomUUID: jest.Mock }).randomUUID.mockReturnValue('66666666-6666-4666-8666-666666666666');
+    mocked.mockResolvedValueOnce(response(200, {
+      title: 'Fictional River', format: 'docx', warnings: [],
+      text: '# Opening\n\nThe fictional river moved under the bridge.',
+      sourceArrivalId: '77777777-7777-4777-8777-777777777777',
+    }));
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const same = new File(['fictional-docx-package'], 'fictional-river.docx', {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', lastModified: 1_793_028_000_000,
+    });
+    Object.defineProperty(input, 'files', { configurable: true, value: [same] });
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })));
+    await settle();
+
+    expect(mocked).toHaveBeenCalledTimes(4);
+    const secondKey = mocked.mock.calls[3][1].headers[HEADER];
+    if (mintsNewUpload) {
+      // The spent identity would be handed the same dead arrival again; the advice "choose the file again" must start over.
+      expect(secondKey).toBe('66666666-6666-4666-8666-666666666666');
+    } else {
+      // The first save landed: a second copy of the same original is not made.
+      expect(secondKey).toBe(firstKey);
+    }
+  });
+
+  test('a permanent refusal also closes any open cut list, as "Back to source" does', async () => {
+    window.localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
+    mocked
+      .mockResolvedValueOnce(response(200, {
+        title: 'Fictional River', format: 'docx', warnings: [],
+        text: '# Opening\n\nLine one.\nLine two.\nLine three.',
+        sourceArrivalId: '44444444-4444-4444-8444-444444444444',
+      }))
+      .mockResolvedValueOnce(response(200, {
+        lossless: true,
+        preview: [{ position: 0, heading: 'Opening', body: 'Line one.\nLine two.\nLine three.', headingDepth: 1, headingSignal: 'markdown' }],
+      }))
+      .mockResolvedValueOnce(response(409, { error: 'Fictional permanent refusal.', code: 'source_original_unavailable', retryable: false }));
+    await act(async () => {
+      root.render(React.createElement(P4R1ImportManuscript, { localReview: false, sourceIntakeReleased: true, onCancel: jest.fn(), onComplete: jest.fn() }));
+    });
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(input, 'files', { configurable: true, value: [new File(['x'], 'fictional-river.docx', { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', lastModified: 1 })] });
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })));
+    await settle();
+    await act(async () => button('Review structure').click());
+    await settle();
+    await act(async () => button('Add cut').click());
+    expect(container.textContent).toContain('Close cuts'); // the cut list is open
+    await act(async () => button('Create Work and open in Write').click());
+    await settle();
+    // Back on the source step; return to structure and the cut list must NOT still be open on the old index.
+    mocked.mockResolvedValueOnce(response(200, {
+      lossless: true,
+      preview: [{ position: 0, heading: 'Opening', body: 'Line one.\nLine two.\nLine three.', headingDepth: 1, headingSignal: 'markdown' }],
+    }));
+    await act(async () => button('Review structure').click());
+    await settle();
+    expect(container.textContent).not.toContain('Close cuts');
+    expect(container.textContent).toContain('Add cut');
+  });
+
   test('a refusal that carries no recognised code is treated as retryable: the reference is kept (never dropped on a guess)', async () => {
     await importUntilCreate({}, response(409, { error: 'Fictional unclassified refusal.' }));
     mocked.mockResolvedValueOnce(response(201, { id: SAVED_ID, sectionCount: 1, sourceCustody: 'source_custodied' }));

@@ -377,6 +377,8 @@ function PressManuscriptRoom() {
         const refusal = await res.json().catch(() => null) as { code?: unknown; error?: unknown } | null;
         if (refusal && (refusal.code === 'source_original_unavailable' || refusal.code === 'source_already_attached')) {
           setSourceArrivalId(null);
+          // Choosing the file again must be a NEW upload, not a replay of the spent identity (see the Import room).
+          if (refusal.code === 'source_original_unavailable') uploadAttemptRef.current = null;
           setPreview(null); // back to the step where the member chooses or pastes again; the refusal is shown there
           setWarnings([typeof refusal.error === 'string' ? refusal.error : 'The original is no longer held. Choose the file again to continue.']);
           return;

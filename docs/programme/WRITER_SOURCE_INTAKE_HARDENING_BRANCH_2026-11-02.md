@@ -32,7 +32,8 @@ PLAN:      docs/programme/WRITER_SOURCE_INTAKE_ACCEPTANCE_PLAN_2026-11-02.md (se
 | `41744030` | D4 (as decided) | The original's claim now runs **inside the transaction that creates the Work**. If it cannot bind, nothing is saved, the member is told so plainly and may retry (409 `source_custody_not_bound`, content-free log). No Work exists without its source, and no refused import leaves a half-saved Work. |
 | `06305637` | D3 (sweep) | `sweepAbandonedLandings` + `scripts/ops/sweep-abandoned-landings.ts`. **Designed, unwired, dry-run by default.** Deletes only incomplete upload intents older than a 24-hour floor with no live write lease, through the member door with its own authority record. Never touches a recorded arrival. Applying needs `--apply` and `WRITER_LANDING_SWEEP_CONFIRM=delete-abandoned-uploads`. |
 | `f328d22b` | D6 (second client) | The Press Manuscript Room (`app/press/manuscript/page.tsx`) is a second client of the ingest route and had not been taught the posture claim; once released it would have been refused 428 on every upload. Fixed, and a source-reading guard now requires every client of the route to read and send the posture. Found while trial-merging against current canonical. |
-| (this commit) | review fixes | The eight findings of section 3b. |
+| `06d031d5` | review fixes | The eight findings of section 3b. |
+| (next commit) | re-review fixes | The two findings of the second pass in section 3b. |
 
 ## 2. Evidence, with its limits
 
@@ -116,6 +117,14 @@ sentence shown only on the hint path (the confirmation is the main path); rate-l
 Each fix was mutation-checked: 10 server, 14 client, and 9 unit/PostgreSQL mutants, all killed. The check also caught **two vacuous tests of mine**: the first uppercase-UUID
 route test used a digits-only id (which has no case, so a route that did not lowercase passed it), and one mutant (`.toLowerCase()` on an id that the database already
 returns lowercase) survived as redundant and was removed rather than excused. PostgreSQL 16 probes: **31 of 31** (new S5f, S5g).
+
+**Second pass, on the fixes themselves.** A fresh three-lens review of only the fix commit (8 agents; server classification, clients and the removal door, the smaller fixes and
+this record) confirmed **two** further defects in the fixes and refuted three. Both are fixed in the next commit: (a) after `source_original_unavailable` the clients kept the
+per-file upload identity, so "Choose the file again" re-chose the same file onto the same intent and was handed the same spent arrival whenever its row still existed; the clients now
+discard the identity for that code only (for `source_already_attached` the first save landed, and making a second copy of the original would be worse); (b) the Import room's permanent
+refusal did not close an open cut list as "Back to source" does. Five more mutants, all killed, including the same-file-again test for both codes. Refuted: permanent crypto failures
+classified as transient (they throw, and a retry may be the right advice for a key-service fault); a re-uploaded original still listed in the door (pre-existing; the fix narrows it);
+and stale fixture notes (STATUS.md was already out of date before this fix).
 
 **What this review is not.** It is a read-only pass by agents with a skeptic stage, not an audit and not a human review; a reviewer finding nothing in an area is not evidence the area is
 sound. It could not run anything that needs real KMS, AWS or a browser.

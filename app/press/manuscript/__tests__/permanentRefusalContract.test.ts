@@ -46,6 +46,15 @@ describe('Press Manuscript Room: a permanent custody refusal is not retried with
     expect(out).toBeGreaterThan(Math.max(drop, leave, say)); // all three happen BEFORE the early return
   });
 
+  it("for source_original_unavailable ONLY, it also discards the spent upload identity so choosing the file again is a new upload", () => {
+    const at = body.indexOf("refusal.code === 'source_original_unavailable'");
+    const block = body.slice(at, body.indexOf('throw new Error(`HTTP ${res.status}`)', at));
+    // exactly one reset, conditioned on the unavailable code, and it happens before the early return
+    expect(block.split('uploadAttemptRef.current = null').length - 1).toBe(1);
+    expect(block).toMatch(/if \(refusal\.code === 'source_original_unavailable'\) uploadAttemptRef\.current = null;/);
+    expect(block.indexOf('uploadAttemptRef.current = null')).toBeLessThan(block.indexOf('return;'));
+  });
+
   it('any other failure still throws (retryable) and does not drop the reference first', () => {
     const throwAt = body.indexOf('throw new Error(`HTTP ${res.status}`)');
     const dropAt = body.indexOf('setSourceArrivalId(null)');
