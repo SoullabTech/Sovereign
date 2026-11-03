@@ -47,6 +47,7 @@
  * one of those is safe to act on.
  */
 
+import type { TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   askForBody, authorizeSections, loadThread, threadsOn, type AskThreadView,
@@ -108,7 +109,7 @@ function locationLine(l: CurrentLocation | null): string | null {
 
 export default function ObservationDialogue({
   manuscriptId, readingId, observationKey, about, superseded, onClose,
-  initialQuestion = '', autoSendInitialQuestion = false, showAbout = true,
+  initialQuestion = '', autoSendInitialQuestion = false, showAbout = true, teachingAnchor,
 }: {
   manuscriptId: string;
   readingId: string;
@@ -125,6 +126,9 @@ export default function ObservationDialogue({
    * Sending still waits for thread-resume discovery so duplicate threads cannot
    * be created during the adopting window. */
   autoSendInitialQuestion?: boolean;
+  /** When initialQuestion is a Teach me button's words (F1): the server adds
+   *  the teaching shape. It applies only while the writer sends those words. */
+  teachingAnchor?: TeachingAnchor;
 }) {
   const [thread, setThread] = useState<AskThreadView | null>(null);
   /* HELD SEPARATELY FROM `thread`. A failed answer still has a threadId — the
@@ -143,6 +147,7 @@ export default function ObservationDialogue({
   const machine = useRef<MachineState>(machineInitial);
   const [authView, setAuthView] = useState<MachineState>(machineInitial);
   const pausedQuestion = useRef('');
+  const pausedTeachingAnchor = useRef<TeachingAnchor | undefined>(undefined);
 
   const mintActId = useCallback(() => `act-${crypto.randomUUID()}`, []);
   const advance = useCallback((event: Parameters<typeof machineStep>[1]) => {
@@ -188,6 +193,7 @@ export default function ObservationDialogue({
     if (!q || busy || mode.kind === 'blocked') return;
     setBusy(true);
     setRefusal(null);
+    const anchorForQ = teachingAnchor && q === initialQuestion.trim() ? teachingAnchor : undefined;
 
     const { outcome, ask: r } = await askForBody({
       manuscriptId,
@@ -196,10 +202,12 @@ export default function ObservationDialogue({
         ? { threadId: mode.threadId }
         : { anchor: { on: 'observation' as const, readingId, observationKey } }),
       responseStyle: readWorkingStyle().explanation,
+      ...(anchorForQ ? { teachingAnchor: anchorForQ } : {}),
     });
 
     if (outcome) {
       pausedQuestion.current = q;
+      pausedTeachingAnchor.current = anchorForQ;
       advance({ type: 'served', outcome });
       if (r.threadId) setThreadId(r.threadId);
       if (r.location) setLocation(r.location);
@@ -218,7 +226,7 @@ export default function ObservationDialogue({
       if (r.threadId) setThreadId(r.threadId);
     }
     setBusy(false);
-  }, [draft, busy, mode, manuscriptId, readingId, observationKey, advance]);
+  }, [draft, busy, mode, manuscriptId, readingId, observationKey, advance, teachingAnchor, initialQuestion]);
 
   const authorize = useCallback(async () => {
     const effect = advance({ type: 'press' });
@@ -234,6 +242,7 @@ export default function ObservationDialogue({
       question: pausedQuestion.current,
       threadId: threadId ?? undefined,
       responseStyle: readWorkingStyle().explanation,
+      ...(pausedTeachingAnchor.current ? { teachingAnchor: pausedTeachingAnchor.current } : {}),
     });
 
     if (!outcome && !r.ok && r.refusal === 'unreachable') {

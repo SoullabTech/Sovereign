@@ -1966,6 +1966,20 @@
   background:color-mix(in srgb,var(--fr-action-soft) 74%,var(--fr-field));
   color:var(--fr-title);
 }
+/* Design 1B: a control MAIA offered at the end of her reply. */
+.p4r1-root .p4r1-studio-action{
+  display:inline-block;
+  margin:4px 0 10px;
+  border:1px solid var(--fr-action-line);
+  border-radius:999px;
+  background:var(--fr-field);
+  color:var(--fr-action);
+  padding:7px 12px;
+  font:600 11px var(--fr-sans-stack);
+  cursor:pointer;
+}
+.p4r1-root .p4r1-studio-action:hover{ background:var(--fr-action-soft); }
+.p4r1-root .p4r1-studio-action:disabled{ opacity:.5; cursor:default; }
 
 
 /* Focus-room entry hierarchy: guidance, not a flat toolbox. */
