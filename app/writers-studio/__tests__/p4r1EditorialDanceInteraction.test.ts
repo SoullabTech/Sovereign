@@ -234,7 +234,7 @@ test('near-duplicate stored MAIA versions are not presented as separate creative
 });
 
 
-test('empty editorial room offers examples and ideas as real MAIA acts', () => {
+test('empty editorial room offers three starters as real MAIA acts (step 4)', () => {
   const onSend = jest.fn();
   const onDepth = jest.fn();
   act(() => root.render(React.createElement(EditorialDancePanel, {
@@ -262,16 +262,13 @@ test('empty editorial room offers examples and ideas as real MAIA acts', () => {
   const button = (text: string) =>
     Array.from(container.querySelectorAll('button')).find((b) => b.textContent?.includes(text))!;
 
-  act(() => button('Show me examples').click());
-  expect(onDepth).toHaveBeenCalledWith('learning');
-  // Step 1 (conversation-first Focus): the writer's turn is the button's words; the card's
-  // instruction is added server-side from the closed passageAct field.
-  expect(onSend.mock.calls.at(-1)?.[0]).toBe('Show me examples of what could work here.');
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'examples' });
-
-  act(() => button('Give me ideas').click());
-  expect(onSend.mock.calls.at(-1)?.[0]).toBe('Give me ideas for where this passage could go.');
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'ideas' });
+  // Step 4 (fewer doors): exactly three starters; examples, ideas and a deeper look are asked for in the box.
+  const starters = Array.from(container.querySelectorAll('.p4r1-dance-start-actions > button')).map((b) => b.querySelector('b')?.textContent);
+  expect(starters).toEqual(['Discuss what’s happening', 'Show edit options', 'Teach me about the writing']);
+  expect(container.textContent).not.toContain('Show me examples');
+  expect(container.textContent).not.toContain('Give me ideas');
+  expect(container.querySelector('textarea[aria-label="What do you want to do with this passage?"]')!.getAttribute('placeholder'))
+    .toContain('examples, ideas, a deeper look, or to teach you more');
 
   act(() => button('Discuss what’s happening').click());
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'discuss' });
@@ -282,9 +279,6 @@ test('empty editorial room offers examples and ideas as real MAIA acts', () => {
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', teachingAnchor: 'passage' });
   expect(onSend.mock.calls.at(-1)?.[0]).toBe('Teach me about the writing in this passage.');
   expect(onSend.mock.calls.at(-1)?.[0]).not.toContain('as a conversation rather than a lesson');
-
-  act(() => button('Go deeper').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'deeper' });
 
   act(() => button('Show edit options').click());
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise' });
@@ -319,7 +313,7 @@ test('empty editorial room requires an explicit live privacy posture before MAIA
 
   expect(container.textContent).toContain('Choose how this session should hold the exchange.');
   const examples = Array.from(container.querySelectorAll('button'))
-    .find((button) => button.textContent?.includes('Show me examples')) as HTMLButtonElement;
+    .find((button) => button.textContent?.includes('Discuss what’s happening')) as HTMLButtonElement;
   // The card answers the click by pointing at the posture; MAIA still cannot act.
   act(() => examples.click());
   expect(postureOnSend).not.toHaveBeenCalled();
@@ -378,29 +372,20 @@ test('a MAIA response without a proposal stays visible and keeps exploration act
   expect(container.querySelector('.p4r1-dance-response')?.textContent)
     .toContain('The passage turns from explanation toward image.');
   expect(container.textContent).toContain('Continue from here');
-  expect(container.textContent).toContain('Show examples');
-  expect(container.textContent).toContain('Give me ideas');
-  expect(container.textContent).toContain('Show revision options');
+  // Step 4: the follow-up row is Show revision options and Teach me more; the rest is said in the box.
+  const row = Array.from(container.querySelectorAll('.p4r1-dance-followup-actions > button')).map((b) => b.textContent);
+  expect(row).toEqual(['Show revision options', 'Teach me more']);
   expect(container.querySelector('.p4r1-dance-start-actions')).toBeNull();
   expect(container.textContent).not.toContain('Apply my version');
 
   const followup = (text: string) =>
     Array.from(container.querySelectorAll('button')).find((button) => button.textContent === text)!;
 
-  act(() => followup('Show examples').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'examples' });
-
-  act(() => followup('Give me ideas').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'ideas' });
-
   act(() => followup('Teach me more').click());
   // It continues the conversation (the 'continue' shape, server-side), and the
   // writer's turn is only the button's words (F1).
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', teachingAnchor: 'continue' });
   expect(onSend.mock.calls.at(-1)?.[0]).toBe('Teach me more.');
-
-  act(() => followup('Go deeper').click());
-  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only', passageAct: 'deeper' });
 
   act(() => followup('Show revision options').click());
   expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise-after-talk' });
