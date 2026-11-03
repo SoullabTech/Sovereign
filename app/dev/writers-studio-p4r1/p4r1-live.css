@@ -5120,3 +5120,40 @@
   font:600 11px var(--fr-sans-stack);
   color:var(--fr-ink2);
 }
+
+/* Conversation-first Focus, step 3: MAIA's option as one compact card. */
+.p4r1-root .p4r1-option-card{
+  margin:4px 0 12px;
+  padding:14px 16px;
+  border:1px solid var(--fr-action-line);
+  border-radius:14px;
+  background:var(--fr-field);
+}
+.p4r1-root .p4r1-option-card h4{ margin:4px 0 10px; color:var(--fr-title); }
+.p4r1-root .p4r1-option-in-context{ margin:0 0 12px; line-height:1.7; white-space:pre-wrap; }
+.p4r1-root .p4r1-option-in-context .p4r1-option-around{ color:var(--fr-ink3, var(--fr-ink2)); opacity:.7; }
+.p4r1-root .p4r1-option-in-context del{ color:var(--fr-ink2); text-decoration-color:var(--fr-action); }
+.p4r1-root .p4r1-option-in-context ins{ text-decoration:none; background:var(--fr-action-soft); color:var(--fr-title); }
+.p4r1-root .p4r1-option-actions{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.p4r1-root .p4r1-option-actions > button{
+  border:1px solid var(--fr-line);
+  border-radius:999px;
+  background:var(--fr-field);
+  color:var(--fr-ink2);
+  padding:7px 14px;
+  font:600 12px var(--fr-sans-stack);
+  cursor:pointer;
+}
+.p4r1-root .p4r1-option-actions > button.p4r1-dance-primary{
+  border-color:var(--fr-action-line);
+  background:var(--fr-action-soft);
+  color:var(--fr-title);
+}
+.p4r1-root .p4r1-option-actions > button:disabled{ opacity:.5; cursor:default; }
+.p4r1-root .p4r1-option-more{ margin:0 0 12px; }
+.p4r1-root .p4r1-option-more > summary{
+  cursor:pointer;
+  font:600 11px var(--fr-sans-stack);
+  color:var(--fr-ink2);
+  margin-bottom:10px;
+}
