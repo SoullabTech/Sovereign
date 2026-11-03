@@ -186,3 +186,42 @@ EVIDENCE:   Production GIT_COMMIT 374c472a9 (cutover 11:47:23Z, founder-authoriz
 - The writer's just-sent message doesn't appear until MAIA's reply arrives (the thread is reread after the turn).
   Showing it at once belongs with step 3's conversation work.
 - Written options still replace the reply area (the conversation is folded above them). That is step 3.
+
+## 9. Step 3 live, a defect found and fixed (witness, 2026-11-03)
+
+```
+EVIDENCE:   Production 857509331 (step 3, #2089; cutover 13:14:57Z), then 88fc9cc78 (fix #2090 + #2088;
+            cutover 15:05:09Z). Both founder-authorized; printenv == Config.Env == asserted; healthy; 0 errors.
+            Text-changing acts on the test Work "Title Tesst" only. Founder account. ⛔ Not member witness.
+```
+
+**On 857509331 (step 3):**
+- Pressing a card showed the writer's words at once ("Show me edit options for this passage.") while MAIA
+  answered. ✅
+- The option arrived as one card in the conversation: "Lighten the join", the passage in context with the
+  changes marked, and **Use this · Adjust · Another**. ✅
+- **Use this applied the change in one press** (authorization `c2c48589`, version 6). ✅
+- ❌ **Defect:** Focus then fell back to its empty room. The conversation and its Undo disappeared (the address
+  lost `editorialThread`), even though the server still held the change as undoable. **Attributed** with a
+  live request/address logger: the View re-holds the passage on every `selectionchange`. "Use this" is a button,
+  so the writer's selection stays live, and the apply rewrote the passage. The re-hold then didn't match the
+  conversation's old passage text, and `holdPassage` called `clearEditorial()`. It reproduced only with a live
+  selection.
+- ❌ **Second defect:** after an Undo, "Use this" on the same option was refused (409). It superseded MAIA's
+  option instead of the conversation's latest version (the writer's earlier save).
+- A page reload restored Undo, and Undo worked, so no change was stranded.
+
+**Fixed in #2090** (`reholdClearsConversation`: a re-hold keeps the conversation while a save/apply is in
+flight or when it holds exactly the applied wording; a different passage still clears it. "Use this" supersedes
+the latest version).
+
+**On 88fc9cc78 (witness of the fix), the exact failing condition:**
+- Undo of the leftover change → "That application was undone. The original passage is restored." ✅
+- Passage selected again (live selection), then **Use this** → applied (authorization `ccd5857e`, version 10,
+  undoable), and the card kept **"Applied to the manuscript · Undo this change"** with the conversation in
+  place for the next 12 seconds observed. ✅ This was also "Use this" after an Undo, previously refused. ✅
+- **Undo** → restored, conversation kept; server shows it undone at 15:06:42. The test Work is clean. ✅
+
+**Step 3: PASS** after #2090. Open, small:
+- The Focus "Your passage" panel kept showing the old text after "Use this" applied. Display only; the stored
+  manuscript changed and Undo restored it.
