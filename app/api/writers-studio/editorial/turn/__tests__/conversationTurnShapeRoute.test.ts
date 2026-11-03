@@ -62,3 +62,26 @@ it('refuses a teaching anchor and a turn shape together, before anything is stor
   expect(persistAct).not.toHaveBeenCalled();
   expect(runTurn).not.toHaveBeenCalled();
 });
+
+describe('passageAct (conversation-first Focus, step 1)', () => {
+  it('passes the card to the runtime and stores only the writer’s words', async () => {
+    await POST(request({ ...base, act: { act: 'discourse', text: 'Let’s talk about what’s happening in this passage.', refersTo: null }, passageAct: 'discuss' }));
+    expect(runTurn).toHaveBeenCalledWith(expect.objectContaining({ passageAct: 'discuss' }));
+    expect(JSON.stringify(persistAct.mock.calls[0])).not.toContain('before proposing any edits');
+  });
+
+  it('refuses an unknown card before anything is stored', async () => {
+    const res = await POST(request({ ...base, passageAct: 'rewrite-everything' }));
+    expect(res.status).toBe(400);
+    expect(persistAct).not.toHaveBeenCalled();
+  });
+
+  it('refuses a card together with a teaching anchor or a turn shape', async () => {
+    for (const extra of [{ teachingAnchor: 'passage' }, { turnShape: 'conversation' }]) {
+      persistAct.mockClear();
+      const res = await POST(request({ ...base, passageAct: 'discuss', ...extra }));
+      expect(res.status).toBe(400);
+      expect(persistAct).not.toHaveBeenCalled();
+    }
+  });
+});

@@ -56,6 +56,7 @@ import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeB
 import { editorialDirective, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import { teachingTurnInstruction, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { conversationTurnInstruction, type TurnShape } from '@/lib/writersStudio/conversationTurn';
+import { passageActInstruction, type PassageAct } from '@/lib/writersStudio/passageActs';
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 import { studioActionsInstruction } from '@/lib/writersStudio/studioActions';
 import { relationalCraftSystemGuidance } from '@/lib/writersStudio/relationalCraftExchange';
@@ -147,6 +148,9 @@ export interface EditorialTurnInput {
   /** The free Ask box (Design 3C). Its shape is added here, server-side;
    *  the writer's turn holds only what they typed or said. */
   readonly turnShape?: TurnShape;
+  /** The card the writer pressed (conversation-first Focus, step 1). Its instruction is
+   *  added here, server-side; the writer's turn holds only the button's words. */
+  readonly passageAct?: PassageAct;
 }
 
 export type EditorialTurnRefusal =
@@ -422,6 +426,8 @@ export async function runEditorialTurn(
       input.teachingAnchor ? teachingTurnInstruction(input.teachingAnchor) : '',
       // Server-owned conversational shape for the free Ask box (Design 3C).
       input.turnShape === 'conversation' ? conversationTurnInstruction() : '',
+      // Server-owned instruction for the card the writer pressed (step 1).
+      input.passageAct ? passageActInstruction(input.passageAct) : '',
       // Server-owned map of the Studio's real controls (Design 1A), so "how do I"
       // gets the actual tool instead of a workaround. Names only; she presses nothing.
       studioGuideInstruction(),
