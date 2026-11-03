@@ -15,7 +15,9 @@ import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionD
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { EDITORIAL_PACKET_LABELS } from '@/lib/writersStudio/editorialIntelligence';
-import { continueTeachingPrompt, teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
+import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
+import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
+import { parseStudioActions, type StudioActionId } from '@/lib/writersStudio/studioActions';
 import P4R1VoiceCapture from './P4R1VoiceCapture';
 
 /** A passage act the writer chose: plain data, so a held act runs with the
@@ -24,7 +26,7 @@ export interface PassageAct {
   label: string;
   prompt: string;
   depth?: EditorialDepth;
-  options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean };
+  options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor };
 }
 
 export interface EditorialDancePanelProps {
@@ -62,7 +64,9 @@ export interface EditorialDancePanelProps {
   onChooseSessionPosture: (sanctuary: boolean) => void;
 
   onSelectVersion: (id: string) => void;
-  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean }) => void;
+  /** Design 1B: the writer clicked a control MAIA offered. Navigation only. */
+  onStudioAction?: (id: StudioActionId) => void;
+  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; turnShape?: TurnShape }) => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   onApply: () => void;
   onUndo?: () => void;
@@ -217,7 +221,7 @@ function discussPassagePrompt(): string {
    and the level is the writer's to set. The shape lives in
    lib/writersStudio/teachingTurn.ts so every Teach me shares it. */
 function teachPassagePrompt(): string {
-  return teachingTurnPrompt('passage');
+  return teachingQuestion('passage');
 }
 
 function examplesPassagePrompt(): string {
@@ -288,7 +292,15 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const recommendation = props.version?.author === 'maia'
     ? props.version
     : [...maiaVersions].reverse()[0] ?? null;
-  const summarySource = props.lastMaiaTurn?.body ?? recommendation?.rationale ?? '';
+  // Design 1B: markers are never shown as text; at most one becomes a button.
+  const reply = props.lastMaiaTurn?.body ? parseStudioActions(props.lastMaiaTurn.body, 'passage-focus') : null;
+  const replyAction = reply?.action && props.onStudioAction ? (
+    <button type="button" className="p4r1-studio-action" data-studio-action={reply.action.id}
+      disabled={props.busy} onClick={() => props.onStudioAction?.(reply.action!.id)}>
+      {reply.action.label}
+    </button>
+  ) : null;
+  const summarySource = reply?.text ?? recommendation?.rationale ?? '';
   const summary = editorialSummary(summarySource);
   const hasStructuredSummary = Boolean(summary.preserve || summary.friction || summary.tryNext);
   const changeSummary = editorialSummary(props.version?.rationale ?? recommendation?.rationale ?? '');
@@ -428,7 +440,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const begin = (
     prompt: string,
     depth?: EditorialDepth,
-    options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean },
+    options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor },
   ) => {
     if (depth) props.onDepth(depth);
     props.onSend(withOrigin(prompt), options);
@@ -442,14 +454,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       relationshipRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
       return;
     }
-    props.onSend(withOrigin([
-      'I want to work with this exact passage.',
-      'What I want help with:',
-      q,
-      '',
-      'Start by reflecting my intention in plain language. Work only from this passage and what I have explicitly asked.',
-      'Do not change or apply anything unless I later choose a revision and explicitly apply it.',
-    ].join('\n')));
+    // Design 3C: only the writer's words are their turn; the conversational
+    // shape is server-owned (turnShape), like a Teach-me's (F1).
+    props.onSend(withOrigin(q), { turnShape: 'conversation' });
     setStartPrompt('');
   };
 
@@ -615,7 +622,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       <section>
         <header><b>Learn from the passage</b><span>Open more craft depth only if you want it.</span></header>
         <div className="p4r1-dance-start-actions">
-          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Teach me about the writing', prompt: teachPassagePrompt(), depth: 'learning', options: { proposalPolicy: 'reply_only' } })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Teach me about the writing', prompt: teachPassagePrompt(), depth: 'learning', options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' } })}>
             <b>Teach me about the writing</b>
             <span>Help me understand the craft already at work in my own words.</span>
           </button>
@@ -651,7 +658,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
 
       <P4R1VoiceCapture
         disabled={props.busy || postureBlocksEditorial}
-        onAsk={(text) => props.onSend(withOrigin(text))}
+        onAsk={(text) => props.onSend(withOrigin(text), { turnShape: 'conversation' })}
       />
     </div>
   );
@@ -687,8 +694,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
               : 'Here’s what I’m seeing.'}</h3>
           {props.message ? (
             <p className="p4r1-dance-status" role="status">{props.message}</p>
-          ) : props.lastMaiaTurn?.body ? (
-            <p>{props.lastMaiaTurn.body}</p>
+          ) : reply ? (
+            <>
+              <p>{reply.text}</p>
+              {replyAction}
+            </>
           ) : (
             <p>I’m staying with the passage and your question. Nothing has been revised or applied.</p>
           )}
@@ -712,7 +722,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             <button type="button" disabled={props.busy} onClick={() => begin(ideasPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
               Give me ideas
             </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(continueTeachingPrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
+            <button type="button" disabled={props.busy} onClick={() => begin(teachingQuestion('continue'), 'learning', { proposalPolicy: 'reply_only', teachingAnchor: 'continue' })}>
               Teach me more
             </button>
             <button type="button" disabled={props.busy} onClick={() => begin(deeperPassagePrompt(), 'direct', { proposalPolicy: 'reply_only' })}>
@@ -747,10 +757,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             {summary.friction ? <div><b>{EDITORIAL_PACKET_LABELS.friction}</b><p>{summary.friction}</p></div> : null}
             {summary.tryNext ? <div><b>{EDITORIAL_PACKET_LABELS.possibility}</b><p>{summary.tryNext}</p></div> : null}
           </div>
-        ) : props.lastMaiaTurn?.body ? (
+        ) : reply ? (
           <div className="p4r1-dance-latest-response" data-editorial-latest-response>
             <b>MAIA’s latest response</b>
-            <p>{props.lastMaiaTurn.body}</p>
+            <p>{reply.text}</p>
+            {replyAction}
           </div>
         ) : (
           <h3>{firstUsefulSentence(summarySource || 'Here is one direction I would try.')}</h3>
@@ -959,7 +970,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           setShowDepth(opening ? 'teach' : 'none');
           if (opening) {
             props.onDepth('learning');
-            props.onSend(teachingTurnPrompt('direction'));
+            props.onSend(teachingQuestion('direction'), { teachingAnchor: 'direction' });
           }
         }}>Teach me why</button>
         <button type="button" aria-pressed={showDepth === 'advanced'} onClick={() => {
@@ -988,7 +999,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <b>Teach me why</b>
           <p>{props.busy
             ? 'MAIA is working from this passage and your current direction…'
-            : props.lastMaiaTurn?.body ?? 'MAIA will explain the craft principle in plain language using your own words as the example.'}</p>
+            : reply?.text ?? 'MAIA will explain the craft principle in plain language using your own words as the example.'}</p>
         </div>
       ) : null}
       {showDepth === 'advanced' ? (
@@ -996,7 +1007,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <b>Advanced craft view</b>
           <p>{props.busy
             ? 'MAIA is going deeper into the editorial reasoning…'
-            : props.lastMaiaTurn?.body ?? 'Full craft vocabulary, meaning/style distinctions, evidence, tradeoffs, uncertainty, and provenance stay available here without changing authority.'}</p>
+            : reply?.text ?? 'Full craft vocabulary, meaning/style distinctions, evidence, tradeoffs, uncertainty, and provenance stay available here without changing authority.'}</p>
         </div>
       ) : null}
     </section>

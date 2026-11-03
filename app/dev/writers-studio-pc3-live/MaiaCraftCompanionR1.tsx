@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { stripStudioActions } from '@/lib/writersStudio/studioActions';
 import type {
   RebuildEditorialThread,
   RebuildEditorialVersion,
@@ -12,7 +13,7 @@ import type { CraftDialogueTurn, CraftSendOptions } from '@/lib/writersStudio/cr
 import { craftTargetKey, type CraftFocusTarget } from '@/lib/writersStudio/craftFocusR1';
 import { authorRelationalBoundary } from '@/lib/writersStudio/relationalCraftExchange';
 import { RELATIONAL_WRITING_INVITATIONS, composeRelationalCraftRequest, optionsForRelationalCraftPlan } from '@/lib/writersStudio/relationalCraftExchange';
-import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
+import { teachingQuestion } from '@/lib/writersStudio/teachingTurn';
 import {
   EDITORIAL_LATITUDES,
   LATITUDE_BANDS,
@@ -292,7 +293,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                       {turn.speaker === 'writer' ? 'You' : turn.speaker === 'action' ? 'Canvas' : 'MAIA'}
                       {turn.key.startsWith('local-intent:') ? ' · Not confirmed' : null}
                     </span>
-                    <p>{turn.body}</p>
+                    <p>{stripStudioActions(turn.body)}</p>
                   </div>
                 ))}
               </div>
@@ -300,7 +301,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
               <div className="p4r1-maia-craft-r1-transcript">
                 <div className="p4r1-maia-craft-r1-turn" data-speaker="maia">
                   <span>MAIA</span>
-                  <p>{props.lastMaiaTurn.body}</p>
+                  <p>{stripStudioActions(props.lastMaiaTurn.body)}</p>
                 </div>
               </div>
             ) : props.version?.author === 'maia' ? (
@@ -531,10 +532,9 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                   type="button"
                   disabled={props.busy}
                   onClick={() => send(
-                    teachingTurnPrompt('passage'),
+                    teachingQuestion('passage'),
                     'learning',
-                    { proposalPolicy: 'reply_only' },
-                    'Teach me what is happening here.',
+                    { proposalPolicy: 'reply_only', teachingAnchor: 'passage' },
                   )}
                 >
                   Teach me

@@ -42,6 +42,7 @@
  * crossed, and the claim it accounts for was won long before it.
  */
 
+import { isTeachingAnchor, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { checkAnchor, type AskAnchor, type AnchorRefusal } from '@/lib/manuscript/ask/anchor';
@@ -261,6 +262,13 @@ export async function POST(
   }
   const body = raw as Record<string, unknown>;
   const responseStyle = isExplanationDepth(body.responseStyle) ? body.responseStyle : undefined;
+  /* F1 (founder ruling 2026-11-02): a Teach me names its anchor; the teaching
+     shape is server-owned and never rides in the writer's question.
+     ⛔ An unknown anchor is refused, never ignored. */
+  if (!(body.teachingAnchor === undefined || isTeachingAnchor(body.teachingAnchor))) {
+    return NextResponse.json({ refusal: 'malformed', detail: 'teachingAnchor' }, { status: 400 });
+  }
+  const teachingAnchor: TeachingAnchor | undefined = body.teachingAnchor;
 
   const question = typeof body.question === 'string' ? body.question.trim() : '';
   if (!question) return NextResponse.json({ refusal: 'malformed', detail: 'question' }, { status: 400 });
@@ -321,6 +329,7 @@ export async function POST(
       requestId: randomUUID(),
       posture: TurnPosture.resolve(body),
       responseStyle,
+      teachingAnchor,
     });
   }
 
@@ -663,10 +672,11 @@ async function developmentalTurn(input: {
   requestId: string;
   posture: TurnPosture;
   responseStyle?: ExplanationDepth;
+  teachingAnchor?: TeachingAnchor;
 }) {
   const {
     manuscriptId, memberId, anchor, existing, question,
-    authorizes, pendingAskRef, requestId, posture, responseStyle,
+    authorizes, pendingAskRef, requestId, posture, responseStyle, teachingAnchor,
   } = input;
 
   const reading = await loadFrozenDevelopmentalReading(manuscriptId, anchor.readingId, memberId);
@@ -762,7 +772,7 @@ async function developmentalTurn(input: {
   /* ── ACT 1 · no body required. The existing path, and it NEVER loads prose. */
   if (!bodyReq.required && !pendingAskRef) {
     return answerFrom(ctxWithoutBody, {
-      liveThreadId, memberId, staleness, history, question, crossed: [], responseStyle,
+      liveThreadId, memberId, staleness, history, question, crossed: [], responseStyle, teachingAnchor,
     });
   }
 
@@ -907,7 +917,7 @@ async function developmentalTurn(input: {
   }
 
   return answerFrom(ctx, {
-    liveThreadId, memberId, staleness, history, question, crossed, pendingAskRef, responseStyle,
+    liveThreadId, memberId, staleness, history, question, crossed, pendingAskRef, responseStyle, teachingAnchor,
   });
 }
 
@@ -956,10 +966,12 @@ async function answerFrom(
     history: { speaker: 'author' | 'maia'; body: string }[]; question: string;
     crossed: readonly string[]; pendingAskRef?: string;
     responseStyle?: ExplanationDepth;
+    teachingAnchor?: TeachingAnchor;
   },
 ) {
   const outcome = await askMaiaDevelopmental(ctx, o.history, o.question, {
     responseStyle: o.responseStyle,
+    teachingAnchor: o.teachingAnchor,
   });
 
   if (!outcome.ok) {

@@ -16,7 +16,8 @@ import { readIdentity, isDevelopmentalIdentity } from '../threadStore';
 import {
   assembleDevelopmentalContext, developmentalStaleness, hasUnverifiableEvidence,
 } from '../developmentalContext';
-import { __systemForTest } from '../developmentalAskReader';
+import { __systemForTest, developmentalAskPromptHash } from '../developmentalAskReader';
+import { TEACHING_TURN_SHAPE, teachingTurnInstruction } from '@/lib/writersStudio/teachingTurn';
 import { evidenceAtRev1, liveDraft, S, TEXTS } from '../../development/__tests__/fixture';
 import { freezeReadState } from '../../development/readState';
 import { partitionFromSections } from '@/lib/manuscript/draftSections';
@@ -426,5 +427,28 @@ describe('Writer explanation register', () => {
     expect(expert).toContain('A lantern is introduced in the first movement and returns in the fourth.');
     expect(plain).toContain('Keep the substance, evidence, uncertainty, and limits exactly the same.');
     expect(expert).toContain('Keep the substance, evidence, uncertainty, and limits exactly the same.');
+  });
+});
+
+describe('F1 · a Teach me is shaped server-side, never in the writer’s question', () => {
+  const ctx = assembleDevelopmentalContext({
+    reading: readingOf(), observation: readingOf().observations[0],
+    revisionContent: revision.content, now: liveNow,
+  });
+
+  it('adds the teaching shape to the system prompt when the writer pressed Teach me', () => {
+    const system = __systemForTest(ctx, undefined, 'observation');
+    expect(system).toContain(teachingTurnInstruction('observation'));
+    for (const line of TEACHING_TURN_SHAPE) expect(system).toContain(line);
+  });
+
+  it('defeat candidate: an ordinary question carries no teaching shape', () => {
+    const system = __systemForTest(ctx);
+    for (const line of TEACHING_TURN_SHAPE) expect(system).not.toContain(line);
+  });
+
+  it('the prompt hash names the teaching shape it was answered under', () => {
+    expect(developmentalAskPromptHash(undefined, 'observation')).not.toBe(developmentalAskPromptHash());
+    expect(developmentalAskPromptHash(undefined, 'observation')).toBe(developmentalAskPromptHash(undefined, 'observation'));
   });
 });
