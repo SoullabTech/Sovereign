@@ -44,6 +44,7 @@ import { setSourceKmsClientFactoryForTests } from '@/lib/manuscript/source/sourc
 import { discardUnclaimedArrival } from '@/lib/manuscript/source/discardUnclaimedArrival';
 import { eraseManuscript } from '@/lib/manuscript/source/eraseManuscript';
 import { discardIncompleteLanding, listMemberUnfinishedUploads } from '@/lib/manuscript/source/discardIncompleteLanding';
+import { sweepAbandonedLandings } from '@/lib/manuscript/source/sweepAbandonedLandings';
 import { sealR20DeletionLedger } from '@/lib/recovery/r20DeletionLedger';
 import * as fileVault from '@/lib/storage/fileVault';
 import { parseUpload } from '@/lib/manuscript/ingest/parseUpload';
@@ -607,6 +608,112 @@ suite('Writer encrypted Source landing - dynamic observations (fake KMS, real Po
       expect(okRows).toEqual({ n: 1, claimed: 1 });      // recorded and bound, together
       expect(failed.committed).toBe(false);
       expect(failedRows).toEqual({ n: 0, claimed: 0 });  // no orphan: no screen lists a supplied arrival and no door removes it
+    });
+  });
+
+  describe('S7 [sweep] the abandoned-upload retention sweep removes only what it is approved to remove', () => {
+    async function stage7(label: string, key: number, upTo: 'pending' | 'writing' | 'verified', member = MEMBER_A) {
+      const inp = input(label, KEY(key), { memberId: member });
+      const intent = await beginEncryptedLanding(inp);
+      if (upTo === 'pending') return intent;
+      const prepared = await prepareEncryptedWrite({ memberId: member, intentId: intent.id, bytes: inp.bytes });
+      await writePreparedCiphertext(prepared);
+      if (upTo === 'verified') await markEncryptedBytesVerified(prepared.lease);
+      return intent;
+    }
+    /** Simulates elapsed time: created_at is immutable by trigger, so (in this disposable database only) the trigger is off for one statement. */
+    const age = (id: string, hours: number, lapseLease: boolean) => transaction(async (tx) => {
+      await tx.query('ALTER TABLE writer_source_landing_intents DISABLE TRIGGER writer_source_landing_guard_trigger');
+      await tx.query(
+        `UPDATE writer_source_landing_intents
+            SET created_at = clock_timestamp() - make_interval(hours => $2::int),
+                lease_expires_at = CASE WHEN $3::boolean AND lease_token IS NOT NULL THEN clock_timestamp() - interval '1 second' ELSE lease_expires_at END
+          WHERE id = $1::uuid`, [id, hours, lapseLease]);
+      await tx.query('ALTER TABLE writer_source_landing_intents ENABLE TRIGGER writer_source_landing_guard_trigger');
+    });
+    const present = async (id: string) => (await query('SELECT 1 FROM writer_source_landing_intents WHERE id=$1::uuid', [id])).rowCount === 1;
+    const manifestFor = async (id: string) => (await query<{ reason_class: string; authorized_by: string }>(
+      `SELECT m.reason_class, m.authorized_by FROM provenance_tombstones t JOIN deletion_manifests m ON m.id = t.manifest_id
+        WHERE t.object_kind='writer_source_landing_intents' AND t.object_id=$1`, [id])).rows;
+    const queueRows = async () => (await query('SELECT 1 FROM vault_erasure_queue')).rowCount;
+
+    async function world() {
+      const oldPending = await stage7('s7-pending', 50, 'pending');
+      const oldWriting = await stage7('s7-writing', 51, 'writing');
+      const oldVerified = await stage7('s7-verified', 52, 'verified', MEMBER_B);
+      const young = await stage7('s7-young', 53, 'verified');           // abandoned but only 23 hours old
+      const liveLease = await stage7('s7-live', 54, 'writing');          // old, but another request may be mid-write
+      const recorded = await recordEncryptedArtifactArrival(input('s7-recorded', KEY(55))); // a recorded, unclaimed upload, however old
+      await age(oldPending.id, 100, true);
+      await age(oldWriting.id, 60, true);
+      await age(oldVerified.id, 30, true);
+      await age(young.id, 23, true);
+      await age(liveLease.id, 200, false);
+      await age(recorded.landingIntentId, 500, true);
+      return { oldPending, oldWriting, oldVerified, young, liveLease, recorded };
+    }
+
+    it('S7a a dry run lists exactly the approved candidates and deletes NOTHING', async () => {
+      const w = await world();
+      const filesBefore = (await vaultFiles()).length;
+      const report = await sweepAbandonedLandings({});
+      const after = { rows: [w.oldPending, w.oldWriting, w.oldVerified, w.young, w.liveLease].map((x) => x.id), files: (await vaultFiles()).length, queue: await queueRows() };
+      observe('S7a', ['WSI-20', 'WSI-21'], 'sweep dry run', { mode: report.mode, considered: report.considered, byState: report.byState, filesBefore, filesAfter: after.files });
+      expect(report.mode).toBe('dry_run');
+      expect(report.candidates.map((c) => c.intentId).sort()).toEqual([w.oldPending.id, w.oldWriting.id, w.oldVerified.id].sort());
+      expect(report.candidates.map((c) => c.intentId)).not.toContain(w.young.id);       // too young
+      expect(report.candidates.map((c) => c.intentId)).not.toContain(w.liveLease.id);   // lease still live
+      expect(report.candidates.map((c) => c.intentId)).not.toContain(w.recorded.landingIntentId); // recorded: never selected
+      for (const id of after.rows) expect(await present(id)).toBe(true);
+      expect(after.files).toBe(filesBefore);
+      expect(after.queue).toBe(0);
+    });
+
+    it('S7b applying removes the three approved intents, records them as the SWEEP (not a member request), and leaves everything else', async () => {
+      const w = await world();
+      const filesBefore = (await vaultFiles()).length;
+      const report = await sweepAbandonedLandings({ apply: true });
+      const gone = [w.oldPending, w.oldWriting, w.oldVerified];
+      const kept = [w.young, w.liveLease];
+      const manifests = await Promise.all(gone.map((g) => manifestFor(g.id)));
+      const recordedStill = (await query<{ manuscript_id: string | null }>('SELECT manuscript_id FROM manuscript_source_arrivals WHERE id=$1::uuid', [w.recorded.id])).rows[0];
+      observe('S7b', ['WSI-20', 'WSI-21', 'WSI-28'], 'sweep applied', { outcomes: report.outcomes, filesBefore, filesAfter: (await vaultFiles()).length, manifestClasses: manifests.map((m) => m.map((x) => x.reason_class)) });
+      expect(report.outcomes).toMatchObject({ discarded: 3, failed: 0, erasure_pending: 0, in_progress: 0 });
+      for (const g of gone) expect(await present(g.id)).toBe(false);
+      for (const k of kept) expect(await present(k.id)).toBe(true);
+      expect(await present(w.recorded.landingIntentId)).toBe(true);     // the recorded upload's intent
+      expect(recordedStill?.manuscript_id).toBeNull();                   // and its arrival: present, unclaimed, untouched
+      expect((await vaultFiles()).length).toBe(filesBefore - 2);         // the two intents that had bytes lost their ciphertext; the rest remain
+      expect(await queueRows()).toBe(0);                                 // nothing is owed
+      for (const m of manifests) {
+        expect(m).toHaveLength(1);
+        expect(m[0]!.reason_class).toBe('governance');                   // NEVER member_deletion: no member asked
+        expect(m[0]!.authorized_by).toBe('founder-ruling-2026-11-03:abandoned-landing-retention-sweep');
+      }
+    });
+
+    it('S7c is bounded by its limit, oldest first, and a second pass finds nothing left to do', async () => {
+      const w = await world();
+      const first = await sweepAbandonedLandings({ apply: true, limit: 1 });
+      const oldestGone = !(await present(w.oldPending.id));            // the 100-hour-old one
+      const othersStill = (await Promise.all([w.oldWriting, w.oldVerified].map((x) => present(x.id)))).every(Boolean);
+      const rest = await sweepAbandonedLandings({ apply: true });
+      const again = await sweepAbandonedLandings({ apply: true });
+      observe('S7c', ['WSI-20'], 'bounded and idempotent', { firstConsidered: first.considered, restConsidered: rest.considered, againConsidered: again.considered });
+      expect(first.considered).toBe(1);
+      expect(oldestGone).toBe(true);
+      expect(othersStill).toBe(true);
+      expect(rest.outcomes.discarded).toBe(2);
+      expect(again.considered).toBe(0);
+    });
+
+    it('S7d the member-removal door still records a MEMBER request as member_deletion (the two authorities stay distinct)', async () => {
+      const mine = await stage7('s7-mine', 56, 'pending');
+      await discardIncompleteLanding(mine.id, MEMBER_A);
+      const m = await manifestFor(mine.id);
+      expect(m).toHaveLength(1);
+      expect(m[0]!.reason_class).toBe('member_deletion');
+      expect(m[0]!.authorized_by).toBe('verified-member-self-service');
     });
   });
 

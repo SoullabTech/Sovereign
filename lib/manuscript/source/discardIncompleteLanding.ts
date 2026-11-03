@@ -32,6 +32,28 @@ import { query, transaction } from '@/lib/db/postgres';
 import { r20LedgerErrorCode, sealR20DeletionLedger } from '@/lib/recovery/r20DeletionLedger';
 import { destroyVaultBytes } from '@/lib/storage/fileVault';
 
+/**
+ * WHO is removing the intent, which decides how the deletion is recorded. A member's own request and the retention sweep are
+ * different acts and must never be recorded as one another: a sweep that wrote `member_deletion` would assert that a member asked.
+ * `governance` is the closest class the manifest vocabulary has and needs no migration; the independent R20 ledger seals every
+ * manifest and tombstone regardless of class, so the restore protection is the same. The sweep's authority is the founder's
+ * ruling on 2026-11-03 approving a bounded 24-hour retention sweep for abandoned uploads.
+ */
+export type DiscardAuthority = 'member' | 'retention_sweep';
+
+const AUTHORITY_RECORD = {
+  member: {
+    reasonClass: 'member_deletion',
+    authorizedBy: 'verified-member-self-service',
+    note: 'Unfinished Writer upload discarded by verified member request',
+  },
+  retention_sweep: {
+    reasonClass: 'governance',
+    authorizedBy: 'founder-ruling-2026-11-03:abandoned-landing-retention-sweep',
+    note: 'Abandoned Writer upload that never reached a recorded arrival, removed by the bounded retention sweep',
+  },
+} as const satisfies Record<DiscardAuthority, { reasonClass: string; authorizedBy: string; note: string }>;
+
 export type DiscardIncompleteOutcome =
   | { kind: 'discarded'; bytesDestroyed: boolean }
   | { kind: 'not_found' }
@@ -42,7 +64,9 @@ export type DiscardIncompleteOutcome =
 export async function discardIncompleteLanding(
   intentId: string,
   memberId: string,
+  options: { authority?: DiscardAuthority } = {},
 ): Promise<DiscardIncompleteOutcome> {
+  const record = AUTHORITY_RECORD[options.authority ?? 'member'];
   const locked = await transaction(async (tx) => {
     const found = await tx.query<{
       state: string;
@@ -73,9 +97,9 @@ export async function discardIncompleteLanding(
     // reintroduce this intent or the wrapped key it carried.
     const manifest = await tx.query<{ id: string }>(
       `INSERT INTO deletion_manifests (reason_class, authorized_by, executed_at, note)
-       VALUES ('member_deletion', 'verified-member-self-service', now(),
-               'Unfinished Writer upload discarded by verified member request')
+       VALUES ($1, $2, now(), $3)
        RETURNING id`,
+      [record.reasonClass, record.authorizedBy, record.note],
     );
     const manifestId = manifest.rows[0]?.id;
     if (!manifestId) throw new Error('incomplete_discard_manifest_not_created');
