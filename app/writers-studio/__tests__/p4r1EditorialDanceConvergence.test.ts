@@ -46,7 +46,7 @@ describe('C2 editorial dance convergence', () => {
   });
 
   it('makes progressive craft depth real MAIA acts, not decorative toggles', () => {
-    expect(dance).toContain("props.onSend(teachingTurnPrompt('direction'))");
+    expect(dance).toContain("props.onSend(teachingQuestion('direction'), { teachingAnchor: 'direction' })");
     expect(dance).toContain('Go deeper on this editorial direction.');
     expect(dance).toContain('props.onSend([');
     expect(dance).toContain('props.lastMaiaTurn?.body');
@@ -58,7 +58,8 @@ describe('C2 editorial dance convergence', () => {
     expect(host).toContain('<b>Focus</b>');
     expect(host).toContain('<b>Revise</b>');
     expect(host).toContain('<b>Discuss</b>');
-    expect(host).toContain('Discuss what is happening in this exact passage with me before proposing any edits.');
+    // Step 1: the menu's Discuss stores only its words; the instruction is server-owned.
+    expect(host).toContain("onSendEditorial(passageActQuestion('discuss'), { proposalPolicy: 'reply_only', passageAct: 'discuss' })");
     expect(host).toContain('<b>Teach me about this</b>');
     expect(host).toContain('<b>Go deeper</b>');
     expect(host).not.toContain('className="p4r1-locus-actions"');

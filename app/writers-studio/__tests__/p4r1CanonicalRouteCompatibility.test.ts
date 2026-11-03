@@ -121,13 +121,16 @@ describe('C3 canonical route compatibility', () => {
     expect(url).toHaveLength(1);
     // With no verified conversation bound, the URL thread is refused in words;
     // once one is bound, the effect only withdraws that same notice.
-    expect(url[0].body.getText(ast)).toContain('if (scopedEditorialThread) {');
+    expect(url[0].body.getText(ast)).toContain('if (scopedEditorialThread || !addressStillNames(requestedEditorialThread)) {');
     expect(url[0].body.getText(ast)).toContain('current === UNVERIFIED_URL_THREAD ? null : current');
     expect(url[0].body.getText(ast)).toContain('setEditorialFailure(UNVERIFIED_URL_THREAD);');
     expect(write).toContain("const UNVERIFIED_URL_THREAD = 'This saved manuscript conversation has not been verified for the current Living Work.");
     const calls:string[]=[];
     const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node))calls.push(node.expression.getText(ast));ts.forEachChild(node,visit);};visit(url[0].body);
-    expect(calls).toEqual(['setEditorialFailure','setEditorialFailure']);
+    // Beyond the notice itself, the effect may only read the live address.
+    expect(calls).toEqual(['addressStillNames','setEditorialFailure','setEditorialFailure']);
+    expect(write).toContain('function addressStillNames(threadId: string): boolean {');
+    expect(write).toContain('return new URLSearchParams(window.location.search).get(CANVAS_EDITORIAL_THREAD_PARAM) === threadId;');
     const returned=effects.filter((x)=>x.body.getText(ast).includes('const candidate = editorialReturnCandidate;'));
     expect(returned).toHaveLength(1);
     for(const guard of ['candidate.sectionId !== focusId','candidate.scope !== currentLivingWorkScope',

@@ -11,12 +11,13 @@ const config = {
   // on several branches (see .gitignore). An absolute path makes that impossible.
   cacheDirectory: path.join(os.tmpdir(), 'maia-jest-cache'),
   roots: ['<rootDir>'],
-  // The one .tsx suite below is named here on purpose: a blanket .tsx pattern would pull in every component test in the
-  // repo, none of which this config was set up for. Naming it keeps `npm test` honest about a suite that otherwise never ran.
+  // The .tsx suites below are named here on purpose: a blanket .tsx pattern would pull in every component test in the
+  // repo, none of which this config was set up for. Naming them keeps `npm test` honest about suites that otherwise never ran.
   testMatch: [
     '**/__tests__/**/*.test.ts',
     '**/?(*.)+(spec|test).ts',
     '**/app/dev/writers-studio-pc3-live/__tests__/developAddToWork.test.tsx',
+    '**/app/writers-studio/__tests__/observationMarkerDialogueInView.interaction.test.tsx',
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',

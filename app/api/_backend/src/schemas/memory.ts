@@ -5,7 +5,7 @@ export const memoryCreateSchema = z.object({
   content: z.string().min(1, "Content is required"),
   type: z.enum(["dream", "insight", "ritual", "journal"]),
   symbols: z.array(z.string()).optional().default([]),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export const memoryQuerySchema = z.object({

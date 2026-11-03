@@ -222,7 +222,7 @@ export type ListProjects = z.infer<typeof ListProjectsSchema>;
 
 export const CreateExportSchema = z.object({
   exportType: z.enum(EXPORT_TYPES),
-  formatOptions: z.record(z.unknown()).default({}),
+  formatOptions: z.record(z.string(), z.unknown()).default({}),
 }).strict();
 
 export type CreateExport = z.infer<typeof CreateExportSchema>;

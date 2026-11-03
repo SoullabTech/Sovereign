@@ -29,12 +29,14 @@
  * reading.
  */
 
+import { teachingTurnInstruction, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { createHash } from 'crypto';
 import { runStructured } from '../../ai/structured/router';
 import type { StructuredBlock, StructuredMessage } from '../../ai/structured/types';
 import type { DevelopmentalAskContext, EvidenceView } from './developmentalContext';
 import { labelsFor, type AuthorFacingLabels } from './developmentalLabels';
 import { editorialDirective } from '@/lib/writersStudio/editorialDepth';
+import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 import { explanationInstruction, type ExplanationDepth } from '@/lib/writersStudio/workingStyle';
 
 export const DEVELOPMENTAL_ASKER_VERSION = 'ws2-07e-02';
@@ -71,7 +73,9 @@ RELATIONAL DELIVERY
 ${editorialDirective('guided')}
 Talk with the writer, not at them. Let the observation become a living question between you. Prefer concrete phrases such as "I notice...", "what seems to be happening here...", and "what do you make of that?" over report language such as "structural scaffolding", "operative recurrence", "positional asymmetry", or other taxonomy unless the writer explicitly asks for the technical vocabulary.
 
-Do not use headings, bullets or lists. Write to them in prose. Be brief: a few sentences unless they asked for more.`;
+Do not use headings, bullets or lists. Write to them in prose. Be brief: a few sentences unless they asked for more.
+
+${studioGuideInstruction()}`;
 
 const SUPERSEDED_STANDING = `THIS OBSERVATION WAS MADE AGAINST AN EARLIER STATE OF THE WORK
 What you noticed then rested on material that has since changed. The conversation is still worth having — it is about what you saw and what they make of it — but it is historical, and they must not be left thinking otherwise.
@@ -82,9 +86,10 @@ You may discuss what you noticed then, why that pattern was visible in that evid
 
 You may NOT claim that the observation still describes the Work, that you have checked what is true now, or that current text confirms or refutes it. You have not seen the current text.`;
 
-export function developmentalAskPromptHash(responseStyle?: ExplanationDepth): string {
+export function developmentalAskPromptHash(responseStyle?: ExplanationDepth, teachingAnchor?: TeachingAnchor): string {
   const style = responseStyle ? `\n${explanationInstruction(responseStyle)}` : '';
-  return createHash('sha256').update(`${STANDING}\n${SUPERSEDED_STANDING}${style}`).digest('hex');
+  const teaching = teachingAnchor ? `\n${teachingTurnInstruction(teachingAnchor)}` : '';
+  return createHash('sha256').update(`${STANDING}\n${SUPERSEDED_STANDING}${style}${teaching}`).digest('hex');
 }
 
 export interface DevelopmentalAskProvenance {
@@ -183,6 +188,8 @@ export interface DevelopmentalAskOptions {
   model?: string;
   maxTokens?: number;
   responseStyle?: ExplanationDepth;
+  /** The teaching button pressed (F1). Server-owned shape; never the question. */
+  teachingAnchor?: TeachingAnchor;
 }
 
 /**
@@ -198,7 +205,7 @@ export async function askMaiaDevelopmental(
   opts: DevelopmentalAskOptions = {},
 ): Promise<DevelopmentalAskOutcome> {
   const model = opts.model ?? DEFAULT_MODEL;
-  const system = systemFor(ctx, opts.responseStyle);
+  const system = systemFor(ctx, opts.responseStyle, opts.teachingAnchor);
 
   const messages: StructuredMessage[] = [
     ...history.map((t) => ({
@@ -223,7 +230,7 @@ export async function askMaiaDevelopmental(
       provenance: {
         provider: 'anthropic',
         model,
-        promptHash: developmentalAskPromptHash(opts.responseStyle),
+        promptHash: developmentalAskPromptHash(opts.responseStyle, opts.teachingAnchor),
         askerVersion: DEVELOPMENTAL_ASKER_VERSION,
         answeredAt: new Date().toISOString(),
       },
@@ -242,7 +249,11 @@ export async function askMaiaDevelopmental(
  * could pass a test that never saw it. The test entry point below now returns
  * exactly what is sent.
  */
-function systemFor(ctx: DevelopmentalAskContext, responseStyle?: ExplanationDepth): string {
+function systemFor(
+  ctx: DevelopmentalAskContext,
+  responseStyle?: ExplanationDepth,
+  teachingAnchor?: TeachingAnchor,
+): string {
   const labels = labelsFor(ctx.readState);
   return [
     STANDING, '',
@@ -250,6 +261,13 @@ function systemFor(ctx: DevelopmentalAskContext, responseStyle?: ExplanationDept
       '--- HOW TO SPEAK WITH THIS WRITER ---',
       explanationInstruction(responseStyle),
       'Keep the substance, evidence, uncertainty, and limits exactly the same. Change only the explanatory register.',
+      '',
+    ] : []),
+    // F1: the writer pressed a teaching button. How to answer is server-owned,
+    // never a sentence stored as the writer's.
+    ...(teachingAnchor ? [
+      '--- THE WRITER ASKED TO BE TAUGHT ---',
+      teachingTurnInstruction(teachingAnchor),
       '',
     ] : []),
     '--- THE OBSERVATION THEY ARE ASKING ABOUT ---', observationSays(ctx), '',
