@@ -25,6 +25,7 @@ PLAN:      docs/programme/WRITER_SOURCE_INTAKE_ACCEPTANCE_PLAN_2026-11-02.md (se
 | `fc9aad14` | D3 (routes) | `GET /api/sovereign/manuscripts/unfinished-uploads`, `POST .../discard`. |
 | `5f856eae` | D3 (screen) | Import room lists what is held and offers a two-step Remove. |
 | `0d87ff7c` | D2 | Workbench upload POST held in code once the manifest releases member intake; sources POST hold pinned. |
+| `27c6550a` | D5 (completed) | The one-line hint beneath Delete (live copy and the design fixture that mirrors it) no longer says "Permanently". Found by running falsifier SF-17 against this branch; the first D5 pass reworded only the confirmation body. |
 
 ## 2. Evidence, with its limits
 
@@ -77,9 +78,27 @@ Not done: the three AWS steps and key policy (plan phases 0 and 2) · reading th
 `sourceIntakeReleased` · removing either Caddy hold · deploy · opening this branch as a pull request · the D3 sweep policy · the D4
 design choice above · ratifying `dispositions.json` (still `"ruled": false`).
 
-Not done in this lane: the executable falsifier suites A/B and `matrix.mjs` on the docs branch (their authors hit a usage limit and
-nothing was written), and the open reviewer defects in `receipt.mjs`, `fixtures.mjs`, `scanners.mjs`. `STEP4_READY` from `receipt.mjs`
-is still not to be trusted.
+Built since this record was first written, on the docs branch `claude/writer-source-intake-acceptance-plan` (head `d6c327a71da6c4470765cad125c4e85303c70c89`): 20 static
+falsifiers, a rebuilt receipt, a lethality matrix and a STATUS file. They are not frozen, not wired, and authorize nothing. See that branch's
+`tests/constitutional/writer-source-intake/STATUS.md` for what is measured and what is not.
+
+## 5a. This branch measured against those falsifiers
+
+Run on this branch's tree, 14 of the 20 are GREEN (docs tree: 8). Six flipped from RED as intended: SF-02 (D2), SF-04 (D1), SF-05 (D3), SF-08 (D6),
+SF-11 (await), SF-12 (D9); SF-09 (D4) and SF-17 (D5) also read GREEN. Findings that came out of the cross-check:
+
+- **SF-17 found an incomplete fix of mine** (the Delete hint), now fixed in `27c6550a`.
+- **SF-09 stayed RED at first because the falsifier could not follow a value stored in a ref**, not because of a gap; the falsifier was extended, with a
+  fix case that fails against the old recogniser and three decoys that fail against two over-permissive ones.
+- **Six stay RED and are not this branch's to close:** SF-10 (the retention sweep is not built, and the law also names a function this branch bypasses),
+  SF-13 (KMS Decrypt inside the claim transaction), SF-15 and SF-16b (infrastructure), plus **SF-03 and SF-18, which go RED correctly because this
+  branch moves what they inventory.**
+- **Owed by whoever merges this branch, in the same change:** update the suite's declared inventory for `app/api/book-studio/workbench/uploads/route.ts`
+  (SF-03: it is now release-gated, no longer plaintext-founder-only) and its declared hold-pinning test set (SF-18: three new tests pin held state).
+  Neither is a defect in this branch; they are the instrument noticing the code moved.
+
+Open reviewer defects remain in `receipt.mjs`'s documented limits (a runner that lies consistently still yields a valid receipt) and the self-tests of the harness
+are about two-thirds mutation-tight (70 of 96 sampled mutants killed); both are stated in the STATUS file.
 
 ## 6. Reproduce
 
