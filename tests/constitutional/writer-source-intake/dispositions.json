@@ -1,0 +1,438 @@
+{
+ "ruled": false,
+ "basis": "PROPOSED_BY_SESSION - recommendation only; needs a founder ruling (plan record section 4, decisions D3 D10). While ruled is false the receipt verdict can never be STEP4_READY.",
+ "dispositions": {
+  "WSI-01": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-02": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-03": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-04": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-05": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-06": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-07": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-08": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-09": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-10": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-11": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-12": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-13": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-14": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-15": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-16": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-17": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-18": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-19": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-20": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-21": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-22": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-23": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-24": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-25": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-26": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-27": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-28": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-29": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-30": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-31": {
+   "disposition": "DECLARED_GAP",
+   "gap": {
+    "owner": null,
+    "memberFacingSentence": null,
+    "closureCondition": null,
+    "registerLine": null
+   }
+  },
+  "WSI-32": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-33": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-34": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-35": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-36": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-37": {
+   "disposition": "DECLARED_GAP",
+   "gap": {
+    "owner": null,
+    "memberFacingSentence": null,
+    "closureCondition": null,
+    "registerLine": null
+   }
+  },
+  "WSI-38": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-39": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-40": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-41": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-42": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-43": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-44": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-45": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-46": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "WSI-47": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-1a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-1b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-1c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-2a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-2b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-2c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-3a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-3b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-3c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-4a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-4b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-4c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-5a": {
+   "disposition": "DECLARED_GAP",
+   "gap": {
+    "owner": null,
+    "memberFacingSentence": null,
+    "closureCondition": null,
+    "registerLine": null
+   }
+  },
+  "FILL-5b": {
+   "disposition": "DECLARED_GAP",
+   "gap": {
+    "owner": null,
+    "memberFacingSentence": null,
+    "closureCondition": null,
+    "registerLine": null
+   }
+  },
+  "FILL-5c": {
+   "disposition": "DECLARED_GAP",
+   "gap": {
+    "owner": null,
+    "memberFacingSentence": null,
+    "closureCondition": null,
+    "registerLine": null
+   }
+  },
+  "FILL-6a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-6b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-6c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-7a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-7b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-7c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-8a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-8b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-8c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-9a": {
+   "disposition": "DECLARED_GAP",
+   "gap": {
+    "owner": null,
+    "memberFacingSentence": null,
+    "closureCondition": null,
+    "registerLine": null
+   }
+  },
+  "FILL-9b": {
+   "disposition": "DECLARED_GAP",
+   "gap": {
+    "owner": null,
+    "memberFacingSentence": null,
+    "closureCondition": null,
+    "registerLine": null
+   }
+  },
+  "FILL-9c": {
+   "disposition": "DECLARED_GAP",
+   "gap": {
+    "owner": null,
+    "memberFacingSentence": null,
+    "closureCondition": null,
+    "registerLine": null
+   }
+  },
+  "FILL-10a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-10b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-10c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-11a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-11b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-11c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-12a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-12b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-12c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-13a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-13b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-13c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-14a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-14b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-14c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-15a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-15b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-15c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-16a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-16b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-16c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-17a": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-17b": {
+   "disposition": "BLOCKER",
+   "gap": null
+  },
+  "FILL-17c": {
+   "disposition": "BLOCKER",
+   "gap": null
+  }
+ }
+}

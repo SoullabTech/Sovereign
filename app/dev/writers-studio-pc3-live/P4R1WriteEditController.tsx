@@ -3,6 +3,7 @@
 import type { TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
 import type { PassageAct } from '@/lib/writersStudio/passageActs';
+import { reholdClearsConversation } from '@/lib/writersStudio/heldPassageContinuity';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
@@ -953,8 +954,21 @@ export default function FlagshipWriteEditController() {
     const binding = editorialThread && section.draftSectionId === focusId
       ? resolveEditorialReturnBinding(editorialThread, writingRef.current?.bodyOf(section.draftSectionId) ?? section.body)
       : null;
-    if (section.draftSectionId !== focusId
-      || (editorialThread && (!binding || binding.start !== start || binding.end !== end))) clearEditorial();
+    // A re-hold of the same passage rewritten by the writer's own apply keeps the
+    // conversation and its Undo; a different passage still clears it.
+    const appliedWording = editorialThread && appliedVersionId
+      ? exactVersion(editorialThread, appliedVersionId)?.wording ?? null
+      : null;
+    if (reholdClearsConversation({
+      sameSection: section.draftSectionId === focusId,
+      hasThread: Boolean(editorialThread),
+      binding,
+      start,
+      end,
+      actInFlight: adoptionBusy || memberVersionBusy,
+      appliedWording,
+      heldText: text,
+    })) clearEditorial();
     setFocusId(section.draftSectionId);
     setSelectedPassage({
       draftSectionId: section.draftSectionId,
@@ -972,7 +986,7 @@ export default function FlagshipWriteEditController() {
     if (typeof window !== 'undefined') {
       replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, section.draftSectionId));
     }
-  }, [context, focusId, clearEditorial, editorialThread, work, workContext.kind, workGestureEpoch]);
+  }, [context, focusId, clearEditorial, editorialThread, appliedVersionId, adoptionBusy, memberVersionBusy, work, workContext.kind, workGestureEpoch]);
 
   const bindEditorialThread = useCallback((thread: RebuildEditorialThread): boolean => {
     // The server-owned thread must belong to the active manuscript as well as
