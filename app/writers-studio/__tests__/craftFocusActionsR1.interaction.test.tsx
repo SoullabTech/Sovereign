@@ -48,6 +48,7 @@ jest.mock('@/app/dev/writers-studio-pc3-live/RevisionManuscriptLayer', () => ({
   __esModule: true, default: () => null,
 }));
 
+const onBegin = jest.fn();
 const original = 'The old red boat rests near the quiet river.';
 const second = 'The next fictional passage waits beyond the bridge.';
 const manuscript = original + '\n\n' + second;
@@ -187,7 +188,7 @@ describe('JARVIS: canonical Write -> explicitly chosen Craftsman and MAIA', () =
       onKeep: jest.fn(), onLatitude: jest.fn(), onMayRemoveParagraphs: jest.fn(),
       onMayProposeImmediately: jest.fn(), onReviseInsight: jest.fn(),
       onChoosePassage: jest.fn(), onChooseRelationship: jest.fn(),
-      onBeginMaiaRelationship: jest.fn(), onChooseMaiaRelationship: jest.fn(),
+      onBeginMaiaRelationship: onBegin, onChooseMaiaRelationship: jest.fn(),
       onLeaveMaiaRelationship: jest.fn(), onOpenCarryChooser: jest.fn(),
       onCloseCarryChooser: jest.fn(), onSelectCarrySource: jest.fn(),
       onRemoveCarrySource: jest.fn(),
@@ -273,5 +274,18 @@ describe('JARVIS: canonical Write -> explicitly chosen Craftsman and MAIA', () =
     enterCraft();
     expect(node.textContent).toContain('What would you like to change or look at in this passage?');
     expect(node.textContent).not.toContain('bring alive');
+  });
+
+  it('offers a plain way to begin with MAIA when no relationship exists yet', () => {
+    onBegin.mockClear();
+    enterCraft();
+    const invite = node.querySelector('[data-craft-begin-with-maia]');
+    expect(invite).not.toBeNull();
+    expect(invite!.textContent).toContain("MAIA isn't sitting with this book yet");
+    const b = Array.from(invite!.querySelectorAll('button')).find(x => x.textContent === 'Begin with MAIA');
+    expect(b).toBeDefined();
+    act(() => b!.click());
+    expect(onBegin).toHaveBeenCalledTimes(1);
+    expect(onSend).not.toHaveBeenCalled();
   });
 });

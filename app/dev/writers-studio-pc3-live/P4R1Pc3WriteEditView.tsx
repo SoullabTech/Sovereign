@@ -1394,6 +1394,15 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         <button type="button" disabled={busy} onClick={exitCraft}>Back to Focus</button>
       </div>
       {craftNotice || props.editorialFailure ? <p role="status" className="p4r1-craft-notice">{craftNotice ?? props.editorialFailure}</p> : null}
+      {props.work && !props.maiaRelationship && props.maiaRelationshipPhase === 'ready' ? (
+        <div className="p4r1-craft-notice" role="group" aria-label="Begin with MAIA" data-craft-begin-with-maia>
+          <p>MAIA isn't sitting with this book yet. Start a conversation about it and MAIA can talk this passage through with you and suggest edits. You can keep writing here either way.</p>
+          <button type="button" disabled={busy || props.maiaRelationshipBusy} onClick={props.onBeginMaiaRelationship}>
+            {props.maiaRelationshipBusy ? 'Starting…' : 'Begin with MAIA'}
+          </button>
+          {props.maiaRelationshipMessage ? <p role="status">{props.maiaRelationshipMessage}</p> : null}
+        </div>
+      ) : null}
       {craftDiscardOffer ? (
         <div className="p4r1-craft-discard-confirm" role="group" aria-label="Confirm leaving unsaved Craft work" data-craft-discard-confirm>
           <p><b>{craftDiscardOffer}</b> would discard any unsaved working copy, unsent MAIA wording, or session-only marks for this passage.</p>
