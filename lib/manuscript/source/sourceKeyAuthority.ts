@@ -67,6 +67,28 @@ function selectedProvider(): SourceKeyProvider {
   throw new Error('writer_source_key_provider_missing');
 }
 
+/**
+ * Is a key provider CONFIGURED for this process? An upload cannot begin without one, so the ingest route asks BEFORE it
+ * creates anything.
+ *
+ * What this reads: only the non-secret settings (`WRITER_SOURCE_KEY_PROVIDER`, `WRITER_SOURCE_KMS_KEY_ARN`, and the
+ * region). It never reads a credential, never calls AWS, and returns a boolean, so it cannot leak a value or hang.
+ * What it does NOT prove: that the key exists, the credentials are valid or the network is reachable. Only a real call
+ * proves that. It is a precondition check, not a health check.
+ *
+ * It RELEASES nothing. Release is the source-bound manifest alone (`releaseAuthority.ts`, which no environment variable
+ * may change). This can only make a released route refuse more, never admit more: `released AND configured`.
+ */
+export function writerSourceKeyProviderConfigured(): boolean {
+  const provider = process.env.WRITER_SOURCE_KEY_PROVIDER;
+  if (provider === 'local-test') return process.env.NODE_ENV === 'test';
+  if (provider !== 'aws-kms') return false;
+  const arn = process.env.WRITER_SOURCE_KMS_KEY_ARN;
+  if (!arn || arn.length > 2048 || /[\u0000-\u001f\u007f]/.test(arn)) return false;
+  const region = process.env.WRITER_SOURCE_KMS_REGION ?? process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION;
+  return !!region && /^[a-z]{2}(?:-gov)?-[a-z]+-\d$/.test(region);
+}
+
 function parseLocalKey(value: string, label: string): Buffer {
   const key = decodeBase64(value, KEY_BYTES, label);
   return key;
