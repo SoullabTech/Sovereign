@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ObservationDialogue from '@/app/writers-studio/develop/ObservationDialogue';
 import type { CanvasInsight, InsightPassage } from '@/lib/writersStudio/insightCanvas';
-import { teachingTurnPrompt } from '@/lib/writersStudio/teachingTurn';
+import { teachingQuestion } from '@/lib/writersStudio/teachingTurn';
 
 type Rect = { left: number; top: number; width: number; height: number };
 
@@ -126,6 +126,17 @@ export default function ObservationManuscriptLayer({
     };
   }, [passage]);
 
+  /* The conversation opens below the note's actions, past the bottom of the
+     popover. Bring its start into view, or the writer's question seems to do
+     nothing (Academy 2c walk, F2). */
+  const dialogueRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!dialoguePrompt) return;
+    const frame = requestAnimationFrame(() =>
+      dialogueRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+    return () => cancelAnimationFrame(frame);
+  }, [dialoguePrompt]);
+
   if (!passage || rects.length === 0) return null;
 
   const first = rects[0]!;
@@ -197,7 +208,7 @@ export default function ObservationManuscriptLayer({
             <button type="button" onClick={() => setDialoguePrompt('Help me understand this observation in plain language. Stay with what the evidence supports and show me why it matters in this passage.')}>
               Help me understand
             </button>
-            <button type="button" onClick={() => setDialoguePrompt(teachingTurnPrompt('observation'))}>
+            <button type="button" onClick={() => setDialoguePrompt(teachingQuestion('observation'))}>
               Teach me why
             </button>
             <button type="button" onClick={() => setDialoguePrompt('Go deeper on this observation. Use full editorial vocabulary, evidence, provenance, tradeoffs, and uncertainty. Keep every claim within what the evidence supports.')}>
@@ -208,7 +219,7 @@ export default function ObservationManuscriptLayer({
           </div>
 
           {dialoguePrompt ? (
-            <div className="p4r1-observation-marker-dialogue">
+            <div className="p4r1-observation-marker-dialogue" ref={dialogueRef}>
               <ObservationDialogue
                 key={`${observation.key}:${dialoguePrompt}`}
                 manuscriptId={insight.manuscriptId}
@@ -217,6 +228,7 @@ export default function ObservationManuscriptLayer({
                 about={observation.observation}
                 superseded={observation.state === 'superseded'}
                 initialQuestion={dialoguePrompt}
+                {...(dialoguePrompt === teachingQuestion('observation') ? { teachingAnchor: 'observation' as const } : {})}
                 autoSendInitialQuestion
                 onClose={() => setDialoguePrompt(null)}
               />

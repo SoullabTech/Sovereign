@@ -1,5 +1,8 @@
 'use client';
 
+import type { TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
+import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
+import type { PassageAct } from '@/lib/writersStudio/passageActs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
@@ -1231,7 +1234,7 @@ export default function FlagshipWriteEditController() {
 
   const sendEditorial = useCallback(async (
     requestText?: string,
-    options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean; displayText?: string },
+    options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean; displayText?: string; teachingAnchor?: TeachingAnchor; turnShape?: TurnShape; passageAct?: PassageAct },
   ) => {
     // displayText belongs to the local author-facing Craft presentation only.
     // It is neither a persistable author-turn field nor server authority.
@@ -1347,6 +1350,9 @@ export default function FlagshipWriteEditController() {
           // options. The client has no durable display-text custody contract.
           ...(options?.proposalPolicy ? { proposalPolicy: options.proposalPolicy } : {}),
           responseDepth: editorialDepth,
+          ...(options?.teachingAnchor ? { teachingAnchor: options.teachingAnchor } : {}),
+          ...(options?.turnShape ? { turnShape: options.turnShape } : {}),
+          ...(options?.passageAct ? { passageAct: options.passageAct } : {}),
           ...(a2Relationship ? { relationshipId: a2Relationship.id } : {}),
           ...(carry ? { carry } : {}),
         },
@@ -2095,6 +2101,17 @@ export default function FlagshipWriteEditController() {
     router.push(`${pathname}${query ? `?${query}` : ''}`);
   }, [params, pathname, router]);
 
+  /* Design 1B: MAIA offered a Develop place and the writer clicked it. This only
+     navigates: Develop → Overview for the same Work, scrolled to the control.
+     Nothing is pressed there. */
+  const onStudioPlace = useCallback((place: 'develop-overview' | 'editorial-pass') => {
+    const next = new URLSearchParams(params?.toString() ?? '');
+    next.set('mode', 'develop');
+    for (const key of ['developField', 'r', 'attentionItem', 'insightReading', 'insightObservation', 'insightAction', 'reviewRun', 'reviewFinding']) next.delete(key);
+    const query = next.toString();
+    router.push(`${pathname}${query ? `?${query}` : ''}#${place === 'editorial-pass' ? 'editorial-pass' : 'read-this-chapter'}`);
+  }, [params, pathname, router]);
+
   if (phase !== 'ready' || !context) {
     return (
       <main className="fs-p4-opening">
@@ -2130,6 +2147,7 @@ export default function FlagshipWriteEditController() {
             onFocusSection={focusWritingSection}
             onHoldPassage={holdPassage}
             onMode={onMode}
+            onStudioPlace={onStudioPlace}
             workspaceOpen={workspaceOpen && !workReentryRequired.current}
             carriedInsight={workReentryRequired.current ? null : arrivalInsight}
             carriedInsightReturnMode={carriedInsightReturnMode}

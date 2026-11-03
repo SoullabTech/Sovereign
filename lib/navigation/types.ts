@@ -65,9 +65,11 @@ export interface MaiaRailItem {
    * Visibility audience for the rail icon.
    * 'all' (default) — visible to every authenticated member.
    * 'founder' — visible only to founder/practitioner (admin || practitioner role).
+   * 'tester' — visible only to members whose members.tester flag is true, matching the
+   *   Free Astrology proxy gate (lib/astrology/testerGate.ts). Founder status alone does not admit.
    * Audience controls rail visibility only; server-side route auth is enforced separately.
    */
-  audience?: 'all' | 'founder';
+  audience?: 'all' | 'founder' | 'tester';
   /**
    * Ontological group for future section rendering.
    * 'life' — dimensions of the Personal Field (becoming)

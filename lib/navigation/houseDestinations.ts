@@ -55,7 +55,11 @@ export type NativePolicy = 'native' | 'web';
 /** Existing member sheets the House can open (no new surfaces). */
 export type HouseSheetId = 'changes';
 
-export type HouseAudience = 'all' | 'founder';
+/**
+ * 'tester' follows members.tester, matching the Free Astrology proxy gate
+ * (lib/astrology/testerGate.ts). Founder status alone does not admit.
+ */
+export type HouseAudience = 'all' | 'founder' | 'tester';
 
 export type HouseGroup = 'center' | 'life' | 'work' | 'rooms' | 'utility';
 
@@ -369,7 +373,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     tooltip: 'Your cosmic spiral',
     kind: 'route',
     route: '/astrology',
-    audience: 'all',
+    audience: 'tester', // Free Astrology is open to testers only; the proxy 404s everyone else
     // Was nativePolicy:'web' — a conservative first pass that has gone stale.
     // /astrology is not in capacitor-patch-routes.sh's exclusions and the static
     // export emits astrology.html into the native bundle, so the route is
@@ -483,9 +487,11 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
 
 // --- Selection & classification helpers ---------------------------------
 
-/** Audience filter. Founder-only destinations are hidden from non-founders. */
-export function getHouseDestinations(isFounder: boolean): HouseDestination[] {
-  return HOUSE_DESTINATIONS.filter((d) => d.audience !== 'founder' || isFounder);
+/** Audience filter. Founder-only destinations are hidden from non-founders; tester-only from non-testers. */
+export function getHouseDestinations(isFounder: boolean, isTester = false): HouseDestination[] {
+  return HOUSE_DESTINATIONS.filter((d) =>
+    d.audience === 'founder' ? isFounder : d.audience === 'tester' ? isTester : true,
+  );
 }
 
 /**

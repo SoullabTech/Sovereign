@@ -149,6 +149,8 @@ export const ASTROLOGY_RAIL_ITEM: MaiaRailItem = {
   classification: 'studio',
   tooltip: 'Your personal birth chart and current sky',
   isBoundaryTransition: true,
+  // Free Astrology is open to testers only; the proxy 404s everyone else.
+  audience: 'tester',
 };
 
 export const LABTOOLS_RAIL_ITEM: MaiaRailItem = {
@@ -340,13 +342,15 @@ export function getBoundaryFromPathname(pathname: string): BoundaryId | null {
 
 /**
  * Filter MAIA_BOUNDARIES by member visibility audience.
- * Founder-only items are hidden from non-founders.
+ * Founder-only items are hidden from non-founders; tester-only items from non-testers.
  *
  * Note: this controls rail icon visibility only. Server-side route auth
  * is enforced separately via requireFounder() in each gated layout.
  */
-export function getVisibleBoundaries(isFounder: boolean): MaiaRailItem[] {
-  return MAIA_BOUNDARIES.filter((b) => b.audience !== 'founder' || isFounder);
+export function getVisibleBoundaries(isFounder: boolean, isTester = false): MaiaRailItem[] {
+  return MAIA_BOUNDARIES.filter((b) =>
+    b.audience === 'founder' ? isFounder : b.audience === 'tester' ? isTester : true,
+  );
 }
 
 /** Get a world config by ID */

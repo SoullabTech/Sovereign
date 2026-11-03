@@ -20,7 +20,7 @@ describe('full-feature beta encrypted Source upload contract', () => {
     const multipart = route.indexOf('await request.formData()');
     const custody = route.indexOf('await recordArtifactArrival');
 
-    expect(releaseAuthority).toContain('sourceIntakeReleased: false');
+    expect(releaseAuthority).toContain('sourceIntakeReleased: true');
     expect(route).toContain('writerReleaseAuthority().sourceIntakeReleased');
     expect(route).toContain('status: 423');
     for (const position of [hold, idempotency, multipart, custody]) {

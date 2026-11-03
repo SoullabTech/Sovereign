@@ -884,6 +884,13 @@
 .p4r1-root .p4r1-dance-status{
   margin:10px 0 0;font:11.5px/1.45 var(--fr-sans-stack);color:var(--fr-muted)
 }
+.p4r1-root .p4r1-dance-held{
+  margin:10px 0 0;font:11.5px/1.45 var(--fr-sans-stack);color:var(--fr-title)
+}
+.p4r1-root .p4r1-dance-held button{
+  margin-left:4px;padding:0;border:0;background:none;font:inherit;color:var(--fr-muted);
+  text-decoration:underline;cursor:pointer
+}
 .p4r1-root .p4r1-dance-applied{
   display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;
   padding-top:10px;border-top:1px solid var(--fr-line-soft)
@@ -1959,6 +1966,20 @@
   background:color-mix(in srgb,var(--fr-action-soft) 74%,var(--fr-field));
   color:var(--fr-title);
 }
+/* Design 1B: a control MAIA offered at the end of her reply. */
+.p4r1-root .p4r1-studio-action{
+  display:inline-block;
+  margin:4px 0 10px;
+  border:1px solid var(--fr-action-line);
+  border-radius:999px;
+  background:var(--fr-field);
+  color:var(--fr-action);
+  padding:7px 12px;
+  font:600 11px var(--fr-sans-stack);
+  cursor:pointer;
+}
+.p4r1-root .p4r1-studio-action:hover{ background:var(--fr-action-soft); }
+.p4r1-root .p4r1-studio-action:disabled{ opacity:.5; cursor:default; }
 
 
 /* Focus-room entry hierarchy: guidance, not a flat toolbox. */
@@ -5059,3 +5080,43 @@
 .p4r1-root .p4r1-import-unfinished-confirm button:first-child{border-color:#d98a7a;color:#f3c1b5}
 .p4r1-root .p4r1-import-unfinished-note{margin:10px 0 0}
 .p4r1-root .p4r1-import-unfinished-error{color:#f3c1b5}
+/* Conversation-first Focus, step 2: the conversation, oldest first. */
+.p4r1-root .p4r1-focus-conversation{
+  list-style:none;
+  margin:8px 0 12px;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.p4r1-root .p4r1-focus-conversation > li > b{
+  display:block;
+  margin-bottom:4px;
+  font:600 10px var(--fr-sans-stack);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--fr-ink3, var(--fr-ink2));
+}
+.p4r1-root .p4r1-focus-conversation > li > p,
+.p4r1-root .p4r1-focus-conversation details > p{
+  margin:0;
+  white-space:pre-wrap;
+}
+.p4r1-root .p4r1-focus-conversation > li.is-writer{
+  align-self:flex-end;
+  max-width:85%;
+  padding:8px 12px;
+  border:1px solid var(--fr-line);
+  border-radius:12px;
+  background:var(--fr-field);
+  color:var(--fr-ink2);
+}
+.p4r1-root .p4r1-focus-conversation > li.is-maia > p{ color:var(--fr-title); line-height:1.65; }
+.p4r1-root .p4r1-focus-conversation details summary{ cursor:pointer; }
+.p4r1-root .p4r1-focus-conversation details summary span{ color:var(--fr-action); font:600 11px var(--fr-sans-stack); }
+.p4r1-root .p4r1-focus-conversation-fold{ margin:0 0 12px; }
+.p4r1-root .p4r1-focus-conversation-fold > summary{
+  cursor:pointer;
+  font:600 11px var(--fr-sans-stack);
+  color:var(--fr-ink2);
+}
