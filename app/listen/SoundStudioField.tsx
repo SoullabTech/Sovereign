@@ -11,6 +11,7 @@ import {
   SOUND_STUDIO_DOORS,
   SOUND_STUDIO_WORKS,
   formatExperienceTime,
+  reviewMediaSequence,
   soundPassageAt,
   soundProgress,
 } from '@/lib/listening/soundStudioExperience';
@@ -332,6 +333,22 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
                   disabled={!transportReady && boundaryStatus !== 'checking'}>
                   {`▶  Begin ${selected.title}`}
                 </button>
+                {selected.manifest && reviewMediaSequence(selected.manifest)?.length === 1 && snapshot && snapshot.kind !== 'none' && snapshot.playback === 'playing' && (
+                  <button type="button" className={styles.ghost} data-sound-studio-add-layer="true"
+                    aria-label={`Add ${selected.title} as a layer beside what is playing`}
+                    disabled={!transport?.volumeAdjustable}
+                    title={transport?.volumeAdjustable ? undefined : 'This device sets one level for all sound, so layers cannot be balanced here.'}
+                    onClick={async () => {
+                      const manifest = selected.manifest;
+                      if (!manifest || !transport) return;
+                      const result = await transport.addLayer(manifest);
+                      setMessage(result.added
+                        ? `${selected.title} is playing as a layer. Adjust it under More in the player.`
+                        : result.notice || 'That layer could not be added.');
+                    }}>
+                    Add as layer
+                  </button>
+                )}
               </div>
             ) : (
               <p className={styles.immersiveHeld} aria-live="polite">

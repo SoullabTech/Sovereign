@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { FocusSession } from '@/lib/listening/focusFieldSession';
 import { formatExperienceTime, soundProgress } from '@/lib/listening/soundStudioExperience';
 import type { ListeningSnapshot } from './PersistentListeningProvider';
+import type { MixerLayer } from '@/lib/listening/layerMixer';
 import styles from './persistentListeningDock.module.css';
 
 type Props = {
@@ -19,6 +20,14 @@ type Props = {
   onResumeMusic: () => void;
   onStopMusic: () => void;
   onVolume: (volume: number) => void;
+  mainLevel?: number;
+  onMainLevel?: (level: number) => void;
+  layers?: MixerLayer[];
+  layerNotice?: string;
+  onLayerLevel?: (id: string, level: number) => void;
+  onLayerMuted?: (id: string, muted: boolean) => void;
+  onLayerLoop?: (id: string, loop: boolean) => void;
+  onLayerRemove?: (id: string) => void;
   onLooping: (enabled: boolean) => void;
   onCompanionMode?: (enabled: boolean) => void;
   volumeAdjustable?: boolean;
@@ -41,7 +50,9 @@ const FADE_STEPS = 24;
 
 export default function PersistentListeningDock({
   snapshot, volume, looping, loopAvailable, displayed, focusSession, focusRemainingLabel,
-  onPauseMusic, onResumeMusic, onStopMusic, onVolume, onLooping, onCompanionMode, volumeAdjustable = true, focusSoundLabel = null, onPlayFocusSound,
+  onPauseMusic, onResumeMusic, onStopMusic, onVolume,
+  mainLevel = 100, onMainLevel, layers = [], layerNotice = '', onLayerLevel, onLayerMuted, onLayerLoop, onLayerRemove,
+  onLooping, onCompanionMode, volumeAdjustable = true, focusSoundLabel = null, onPlayFocusSound,
   onPauseFocus, onResumeFocus, onStopFocus,
 }: Props) {
   const [mixOpen, setMixOpen] = useState(false);
@@ -237,7 +248,7 @@ export default function PersistentListeningDock({
         )}
         {audioDisplayed && (
           <button type="button" className={styles.stop}
-            onClick={stopNow} aria-label="Stop and clear persistent music">Stop</button>
+            onClick={stopNow} aria-label="Stop and clear persistent music">{layers.length > 0 ? 'Stop all' : 'Stop'}</button>
         )}
         {audioDisplayed && (
           <button type="button" className={styles.mixToggle}
@@ -326,6 +337,56 @@ export default function PersistentListeningDock({
             </p>
           )}
 
+          <div className={styles.layerMixer} data-listen-layer-mixer="true" role="group" aria-label="Layers">
+            <div className={styles.sleepHead}>
+              <strong>Mix</strong>
+              <span>{layers.length
+                ? `${layers.length} layer${layers.length === 1 ? '' : 's'} beside the main sound · Stop all ends every one.`
+                : 'Add a layer from any field with Add as layer. Layers pause when MAIA speaks and never restart on their own.'}</span>
+            </div>
+            {volumeAdjustable ? (
+              <>
+                <label className={styles.mixVolume}>
+                  <span>{snapshot.title || 'Main sound'} <output>{Math.round(mainLevel)}%</output></span>
+                  <input aria-label="Main sound level" type="range" min="0" max="100"
+                    value={mainLevel} onChange={event => onMainLevel?.(Number(event.target.value))}/>
+                </label>
+                {layers.map(layer => (
+                  <div key={layer.id} className={styles.layerRow} data-listen-layer={layer.id}>
+                    <label className={styles.mixVolume}>
+                      <span>{layer.title} <output>{layer.muted ? 'Muted' : `${Math.round(layer.level)}%`}</output>
+                        {layer.playback === 'error' ? ' · could not play' : layer.playback === 'paused' ? ' · paused' : ''}</span>
+                      <input aria-label={`${layer.title} layer level`} type="range" min="0" max="100"
+                        value={layer.level} onChange={event => onLayerLevel?.(layer.id, Number(event.target.value))}/>
+                    </label>
+                    <div className={styles.presets}>
+                      <button type="button" className={styles.preset} aria-pressed={layer.muted}
+                        aria-label={`${layer.muted ? 'Unmute' : 'Mute'} ${layer.title} layer`}
+                        onClick={() => onLayerMuted?.(layer.id, !layer.muted)}>
+                        <strong>{layer.muted ? 'Unmute' : 'Mute'}</strong>
+                      </button>
+                      {layer.loopAvailable && (
+                        <button type="button" className={styles.preset} aria-pressed={layer.loop}
+                          aria-label={`${layer.loop ? 'Stop looping' : 'Loop'} ${layer.title} layer`}
+                          onClick={() => onLayerLoop?.(layer.id, !layer.loop)}>
+                          <strong>{layer.loop ? 'Loop on' : 'Loop'}</strong>
+                        </button>
+                      )}
+                      <button type="button" className={styles.preset}
+                        aria-label={`Remove ${layer.title} layer`}
+                        onClick={() => onLayerRemove?.(layer.id)}>
+                        <strong>Remove</strong>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : layers.length > 0 ? (
+              <p className={styles.mixBoundary}>This device sets one level for all sound, so separate layer levels are not available here.</p>
+            ) : null}
+            {layerNotice && <p role="status" className={styles.mixBoundary}>{layerNotice}</p>}
+          </div>
+
           <div className={styles.sleepTimer} data-listen-sleep-timer="true" role="group" aria-label="Sleep timer">
             <div className={styles.sleepHead}>
               <strong>Sleep timer</strong>
@@ -334,7 +395,7 @@ export default function PersistentListeningDock({
                 : 'Until I Stop — nothing ends this field but you.'}</span>
             </div>
             <div className={styles.presets}>
-              {[15, 30, 60, 90].map(minutes => (
+              {[15, 30, 60, 90, 120].map(minutes => (
                 <button key={minutes} type="button" className={styles.preset}
                   data-listen-sleep-minutes={minutes}
                   aria-pressed={sleep?.label === `${minutes} minutes`}

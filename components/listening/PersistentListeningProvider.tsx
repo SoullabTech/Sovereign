@@ -24,6 +24,7 @@ import {
 } from '@/lib/listening/receptiveField';
 import type { ReceptiveControls, ReceptiveFieldRecipe } from '@/lib/listening/receptiveField';
 import { isMaiaSpeechActive } from '@/lib/listening/maiaSpeechFocus';
+import { browserLayerAudio, createLayerMixer, type AddLayerResult, type LayerMixer, type MixerLayer } from '@/lib/listening/layerMixer';
 import {
   acquireAudioOutput, AUDIO_OUTPUT_TAB_NONCE, SOULLAB_AUDIO_PREFLIGHT_VERSION,
 } from '@/lib/listening/audioOutputLock';
@@ -103,6 +104,18 @@ export type ListeningTransport = {
   snapshot: ListeningSnapshot;
   volume: number;
   setVolume: (volume: number) => void;
+  /** The main source's own level (0–100), relative to the master volume. */
+  mainLevel: number;
+  setMainLevel: (level: number) => void;
+  /** Extra private-review recordings the member added beside the main source. */
+  layers: MixerLayer[];
+  layerNotice: string;
+  /** Resolves with the plain-language outcome, so the caller never reads stale state. */
+  addLayer: (manifest: SoundExperienceManifest) => Promise<{ added: boolean; notice: string }>;
+  setLayerLevel: (id: string, level: number) => void;
+  setLayerMuted: (id: string, muted: boolean) => void;
+  setLayerLoop: (id: string, loop: boolean) => void;
+  removeLayer: (id: string) => void;
   looping: boolean;
   loopAvailable: boolean;
   setLooping: (enabled: boolean) => void;
@@ -320,6 +333,17 @@ export function PersistentListeningProvider({
   const reviewContinuationCycles = useRef(0);
   const segmentTransitioning = useRef(false);
   const volumeRef = useRef(45);
+  const [mainLevel, saveMainLevel] = useState(100);
+  const mainLevelRef = useRef(100);
+  const [layers, setLayers] = useState<MixerLayer[]>([]);
+  const [layerNotice, setLayerNotice] = useState('');
+  const mixer = useRef<LayerMixer | null>(null);
+  const getMixer = useCallback((): LayerMixer => {
+    if (!mixer.current) {
+      mixer.current = createLayerMixer(browserLayerAudio, setLayers, volumeRef.current);
+    }
+    return mixer.current;
+  }, []);
   const epoch = useRef(0);
   // Stable within this one member-bound provider instance, never serialized or shared.
   const listeningInstance = useRef<object>({}).current;
@@ -410,6 +434,7 @@ export function PersistentListeningProvider({
       void sketch.current.context.suspend().catch(() => undefined);
     }
     media.current?.pause();
+    mixer.current?.pauseAll();
     releaseOutput();
     setSnapshot(old => old.playback === 'playing'
       ? {
@@ -425,6 +450,10 @@ export function PersistentListeningProvider({
 
   const stopAll = useCallback(() => {
     ++epoch.current;
+    mixer.current?.stopAll();
+    setLayerNotice('');
+    mainLevelRef.current = 100;
+    saveMainLevel(100);
     media.current?.pause();
     if (media.current) {
       media.current.loop = false;
@@ -590,6 +619,7 @@ export function PersistentListeningProvider({
         focusChannel.current = null;
       }
       mountedMedia?.pause();
+      mixer.current?.stopAll();
       releaseOutput();
       if (sketch.current) { endSketch(sketch.current); sketch.current = null; }
       if (blobURL.current) { URL.revokeObjectURL(blobURL.current); blobURL.current = null; }
@@ -654,17 +684,31 @@ export function PersistentListeningProvider({
     return () => window.clearInterval(interval);
   }, [snapshot.kind, snapshot.playback, experienceElapsed, releaseOutput]);
 
+  // The main source plays at master × its own level; each layer plays at master × its level.
+  const mainVolume01 = useCallback(
+    () => (volumeRef.current / 100) * (mainLevelRef.current / 100), []);
+  const applyMainVolume = useCallback(() => {
+    const next = (volumeRef.current / 100) * (mainLevelRef.current / 100);
+    if (sketch.current) {
+      const { context, master } = sketch.current;
+      master.gain.setTargetAtTime(Math.max(0.0001, next * 0.027),
+        context.currentTime, 0.06);
+    }
+    if (media.current) media.current.volume = next;
+  }, []);
   const setVolume = useCallback((value: number) => {
     const next = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
     volumeRef.current = next;
     saveVolume(next);
-    if (sketch.current) {
-      const { context, master } = sketch.current;
-      master.gain.setTargetAtTime(Math.max(0.0001, next / 100 * 0.027),
-        context.currentTime, 0.06);
-    }
-    if (media.current) media.current.volume = next / 100;
-  }, []);
+    applyMainVolume();
+    mixer.current?.setMaster(next);
+  }, [applyMainVolume]);
+  const setMainLevel = useCallback((value: number) => {
+    const next = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
+    mainLevelRef.current = next;
+    saveMainLevel(next);
+    applyMainVolume();
+  }, [applyMainVolume]);
 
   const setLooping = useCallback((enabled: boolean) => {
     const permitted = kind.current === 'local-file' ||
@@ -734,13 +778,13 @@ export function PersistentListeningProvider({
     if (soundscape) {
       if (!(active?.soundscape && active.soundscape.update(soundscape))) {
         if (active) endSketch(active);
-        active = newSoundscapeSketch(soundscape, volumeRef.current / 100);
+        active = newSoundscapeSketch(soundscape, mainVolume01());
         sketch.current = active;
       }
     } else if (!active || active.soundscape || active.mood !== mood ||
       JSON.stringify(active.frequencies) !== JSON.stringify(frequencies)) {
       if (active) endSketch(active);
-      active = newSketch(mood, frequencies, volumeRef.current / 100,shapeRef.current);
+      active = newSketch(mood, frequencies, mainVolume01(),shapeRef.current);
       sketch.current = active;
     } else {
       applyReceptiveShape(active,shapeRef.current);
@@ -855,7 +899,7 @@ export function PersistentListeningProvider({
       });
     }
     try {
-      audio.volume = volumeRef.current / 100;
+      audio.volume = mainVolume01();
       await audio.play();
       if (generation !== epoch.current || kind.current !== 'review-media' ||
           reviewManifest.current?.manifestId !== manifest.manifestId || isMaiaSpeechActive()) {
@@ -1149,8 +1193,48 @@ export function PersistentListeningProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liveSoundscapeKey]);
 
+  const LAYER_REFUSALS: Record<Extract<AddLayerResult, { ok: false }>['reason'], string> = {
+    'no-edition': 'This sound has no accepted private-review recording to layer.',
+    sequence: 'This experience plays as a timed sequence, so it cannot be layered. Play it as the main sound.',
+    duplicate: 'That recording is already a layer.',
+    full: 'Three layers are already added. Remove one to add another.',
+  };
+  // A layer rides on the one exclusive output lease: it can only be added while the main
+  // sound is playing, and it pauses or stops whenever that lease ends.
+  const addLayer = useCallback(async (
+    manifest: SoundExperienceManifest,
+  ): Promise<{ added: boolean; notice: string }> => {
+    const refuse = (notice: string) => { setLayerNotice(notice); return { added: false, notice }; };
+    if (kind.current === 'none' || !outputLease.current) {
+      return refuse('Start a main sound first, then add a layer beside it.');
+    }
+    if (refuseDuringMaiaSpeech()) return { added: false, notice: 'MAIA is speaking.' };
+    const mix = getMixer();
+    mix.setMaster(volumeRef.current);
+    const result = mix.add(manifest);
+    if (!result.ok) return refuse(LAYER_REFUSALS[result.reason]);
+    const started = await mix.start(result.id);
+    if (!started) return refuse('This browser could not play that layer.');
+    setLayerNotice('');
+    return { added: true, notice: '' };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getMixer, refuseDuringMaiaSpeech]);
+  const setLayerLevel = useCallback((id: string, level: number) => mixer.current?.setLevel(id, level), []);
+  const setLayerMuted = useCallback((id: string, muted: boolean) => mixer.current?.setMuted(id, muted), []);
+  const setLayerLoop = useCallback((id: string, loop: boolean) => mixer.current?.setLoop(id, loop), []);
+  const removeLayer = useCallback((id: string) => { mixer.current?.remove(id); setLayerNotice(''); }, []);
+  // After the member resumes the main sound, layers they had running resume with it.
+  const resumeLayers = useCallback(() => {
+    if (!outputLease.current) return;
+    for (const layer of mixer.current?.list() ?? []) {
+      if (layer.playback === 'paused') void mixer.current?.start(layer.id);
+    }
+  }, []);
+
   const transport: ListeningTransport = {
-    snapshot, volume, setVolume, looping, loopAvailable, setLooping, shape, setShape,
+    snapshot, volume, setVolume, mainLevel, setMainLevel,
+    layers, layerNotice, addLayer, setLayerLevel, setLayerMuted, setLayerLoop, removeLayer,
+    looping, loopAvailable, setLooping, shape, setShape,
     fields, keepField, dropField, replaceFields,
     playSketch, playExperienceMedia, selectLocalFile, playLocalFile,
     pause, stopMusic: stopAll, listeningInstance, removeLocalFile,
@@ -1170,21 +1254,25 @@ export function PersistentListeningProvider({
   const focusDisplayed = Boolean(focusSession && !isFocusSessionTerminal(focusSession));
   const displayed = audioDisplayed || focusDisplayed;
   const resumeMusic = () => {
-    if (snapshot.kind === 'local-file') { void playLocalFile(); return; }
+    const main = resumeMain();
+    if (main) void main.then(ok => { if (ok) resumeLayers(); });
+  };
+  const resumeMain = (): Promise<boolean> | null => {
+    if (snapshot.kind === 'local-file') return playLocalFile();
     if (snapshot.kind === 'review-media' && reviewManifest.current) {
-      void playExperienceMedia(reviewManifest.current); return;
+      return playExperienceMedia(reviewManifest.current);
     }
     if (snapshot.kind === 'sketch' && sketch.current?.soundscape) {
-      void playSketch('focus', [110, 164.81, 220], undefined, focusSoundscapeSpec(liveSoundscapeInput));
-      return;
+      return playSketch('focus', [110, 164.81, 220], undefined, focusSoundscapeSpec(liveSoundscapeInput));
     }
     if (snapshot.kind === 'sketch') {
-      void playSketch(
+      return playSketch(
         snapshot.mood || 'drift',
         sketch.current?.frequencies || [98,146.83,196],
         experience.current?.definition,
       );
     }
+    return null;
   };
   const [companionMode, setCompanionMode] = useState(false);
   usePlatformAudioSession(snapshot, companionMode, {
@@ -1212,6 +1300,14 @@ export function PersistentListeningProvider({
       onResumeMusic={resumeMusic}
       onStopMusic={stopAll}
       onVolume={setVolume}
+      mainLevel={mainLevel}
+      onMainLevel={setMainLevel}
+      layers={layers}
+      layerNotice={layerNotice}
+      onLayerLevel={setLayerLevel}
+      onLayerMuted={setLayerMuted}
+      onLayerLoop={setLayerLoop}
+      onLayerRemove={removeLayer}
       onLooping={setLooping}
       onCompanionMode={setCompanionMode}
       volumeAdjustable={volumeAdjustable}
