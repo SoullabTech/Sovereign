@@ -138,3 +138,27 @@ version, so "Apply my version" is offered there after an Undo in Focus.
 1. Adopt §5 as the target shape for Passage Focus?
 2. Craftsman's Table: fold into Focus as its "deeper" mode, or keep it as a separate room?
 3. "Use this" as a single apply (with the in-context view inside the card), replacing Save → Read in context → Apply?
+
+## 7. Founder ruling (2026-11-03, in session): §5 ADOPTED
+
+The founder adopted the conversation-first Focus shape in §5, answering §6.1. Read as including its two
+bundled choices:
+- **§6.3:** "Use this" is a single apply (in-context view inside the option card, one press, Undo beside it),
+  replacing Save → Read in context → Apply. Applying stays the writer's own act.
+- **§6.2:** Craftsman's Table becomes Focus's **deeper mode**, not a separate room. Retiring it was not chosen.
+
+This is design adoption. Each step below is built and reviewed in its own PR, with tests, and deployed by a
+separate founder act.
+
+### Build order (dependency first)
+
+1. **Card acts become server-owned (F1 extended).** Discuss, Show edit options / Show revision options, Show me
+   examples, Give me ideas and Go deeper still send composed instructions as the writer's own words
+   (`EditorialDancePanel.tsx`). Before Focus can show the conversation, each card must send only its button's
+   words plus a closed field, with the instruction added server-side. Teach-me already does this (#2071); the
+   free box does with `turnShape` (#2073). Teach wording stays the implicit-Academy session's.
+2. **Focus shows the conversation:** writer and MAIA turns, newest last, one composer; cards only as starters.
+3. **Option card inside the conversation:** the changed passage with marks, one line of purpose,
+   **Use this · Adjust · Another**, with "why / what I protected / diff" behind **More**. "Use this" = one apply.
+4. **Fewer doors:** Discuss / Options / Teach as the starters; cards take the conversational shape.
+5. **Craftsman's Table folded into Focus** as its deeper mode.
