@@ -1,0 +1,106 @@
+{
+  "work_unit_id": "rgr-07-w2-feasibility-and-implementation-lock-20261103",
+  "programme": "RELATIONAL-GEOMETRY-REASONING",
+  "gate": "RGR-07",
+  "hypothesis": "H-MO1 \u2014 HIGHER-ORDER MOTIF TRANSFER",
+  "title": "TRIAD-01 pre-materialization feasibility + confirmatory implementation lock (RGR-05/RGR-06 analogue)",
+  "governing_law": [
+    "docs/programme/RGR-07_H-MO1_CANDIDATE_CHARTER_2026-09-23.md",
+    "docs/programme/RGR-07_MOTIF_BENCHMARK_CONSTITUTION_2026-11-03.md",
+    "docs/programme/RGR-07_PREREGISTRATION_LOCK_2026-11-03.md"
+  ],
+  "parent_work_unit": "rgr-07-motif-benchmark-constitution-20261103",
+  "base_ref": "TO BE PINNED AT AUTHORIZATION (canonical tip at that time)",
+  "objective": "(A) Prove or falsify pre-materialization feasibility of RGR-MO1-TRIAD-01 under the frozen constitution with a deterministic generator validator that materializes no split: codebook disjointness and capacity, named-stream derivation, cell balance, exact V_S/V_P paired identity, severance constructibility, re-rendering twin constructibility. (B) Freeze and implement the confirmatory machinery exactly as locked (F_S1, F_S2, F_G G1-G3, hypergraph F_R depth 1-3, F_R-oracle as diagnostic only, views, metrics, C_break, S_perturb, hierarchical bootstrap, permutation control, adjudicator truth table) verified only on hand-authored NON-benchmark fixtures with a member count different from six, plus an independent verifier. (C) Record whether the owed independent adversarial review of the constitution has been performed; this packet does not perform it.",
+  "founder_acts": {
+    "work_unit_authorization": "PENDING \u2014 DRAFT; W2 authorization is a separate founder act"
+  },
+  "state": {
+    "lifecycle_state": "DRAFT",
+    "disposition": "open",
+    "guard": "OPEN"
+  },
+  "authority": {
+    "benchmark_materialization": false,
+    "benchmark_model_training": false,
+    "benchmark_performance_inspection": false,
+    "dataset_generation": false,
+    "deployment": false,
+    "elemental_operator_formalization": false,
+    "external_ai_inference": false,
+    "maia_change": false,
+    "member_data_access": false,
+    "model_provider_api": false,
+    "natural_conversation_access": false,
+    "production_read": false,
+    "production_write": false,
+    "public_package_registry_read": true,
+    "replication_execution": false,
+    "repository_read": true,
+    "repository_write": "isolated_worktree_only",
+    "test_execution": "hand-authored non-benchmark fixtures only"
+  },
+  "allowed_paths": [
+    "docs/programme/RGR-07_W2_FEASIBILITY_AND_IMPLEMENTATION_LOCK_*.md",
+    "docs/programme/RGR-07_WORK_UNIT_W2_DRAFT_2026-11-03.json",
+    "docs/programme/evidence/RGR-07/RGR07_FEASIBILITY_RESULT.json",
+    "docs/programme/evidence/RGR-07/RGR07_IMPLEMENTATION_CONFORMANCE.json",
+    "docs/programme/evidence/RGR-07/RGR07_INDEPENDENT_VERIFIER.json",
+    "docs/programme/evidence/RGR-07/RGR07_RUNTIME_LOCK.json",
+    "scripts/research/rgr/rgr07_feasibility.py",
+    "scripts/research/rgr/rgr07_confirmatory.py",
+    "scripts/research/rgr/rgr07_independent_verifier.py",
+    "scripts/research/rgr/requirements-rgr07.txt",
+    "CLAUDE.md"
+  ],
+  "forbidden_paths": [
+    "app",
+    "lib",
+    "database",
+    "components",
+    "jarvis-desktop",
+    "tests"
+  ],
+  "acceptance_conditions": [
+    "Feasibility validator proves every frozen split is constructible with disjoint codebooks and exact cell balance, or returns FEASIBILITY_FAIL with the first violated constraint named.",
+    "Exact V_S and V_P paired identity is enforced by construction in the generator contract and tested on a non-benchmark fixture.",
+    "Comparator classes, views, metrics, bootstrap, permutation control and adjudicator are implemented exactly as locked; no hidden privileged input path for F_R; F_R-oracle cannot be selected as confirmatory.",
+    "Independent verifier returns PASS on the hand-authored fixtures.",
+    "Implementation and environment digests recorded; runtime pinned.",
+    "Benchmark examples, pairs, codebooks and dataset files materialized remain zero; no benchmark training, performance inspection, TEST or REPLICATION.",
+    "Status of the independent adversarial review of the constitution is recorded truthfully (performed with provenance, or NOT PERFORMED)."
+  ],
+  "stop_conditions": [
+    "Any frozen RGR-07 constitution or lock value must change (new benchmark version, not an edit).",
+    "Any benchmark example or split data becomes necessary.",
+    "Any model performance on benchmark data must be inspected.",
+    "Any external inference or provider call becomes necessary.",
+    "Any path outside allowed_paths is required.",
+    "Any MAIA, production, schema, migration or deployment mutation becomes necessary."
+  ],
+  "materialization_boundary": {
+    "benchmark_examples_materialized": 0,
+    "benchmark_pairs_materialized": 0,
+    "codebooks_generated": 0,
+    "dataset_files_written": 0,
+    "benchmark_model_training_executed": false,
+    "benchmark_performance_inspected": false,
+    "provider_calls": 0,
+    "test_executed": false,
+    "replication_executed": false
+  },
+  "successor_authority": {
+    "benchmark_materialization": "NOT_AUTHORIZED",
+    "benchmark_model_training": "NOT_AUTHORIZED",
+    "test_execution": "NOT_AUTHORIZED",
+    "replication_execution": "NOT_AUTHORIZED",
+    "human_legibility_witness": "NOT_AUTHORIZED",
+    "natural_data_gate": "NOT_AUTHORIZED",
+    "merge": "NOT_AUTHORIZED",
+    "deployment": "NOT_AUTHORIZED"
+  },
+  "notes": [
+    "Runtime precedent: Python 3.11 / PyTorch 2.8 / NumPy 2.3, CPU-only (RGR-06 \u00a712); the lock is re-recorded for RGR-07 at authorization.",
+    "The constitution's independent adversarial review (RGR-04 \u00a7XXXIV pattern) needs its own founder act under the ratified development-provider canon; it is tracked here, not performed here."
+  ]
+}

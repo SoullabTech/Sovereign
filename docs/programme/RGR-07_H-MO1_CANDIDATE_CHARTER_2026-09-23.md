@@ -5,7 +5,7 @@
 **Hypothesis:** H-MO1 — HIGHER-ORDER MOTIF TRANSFER
 **Date:** 2026-09-23
 **Class:** C — documentary charter; opened as a gate by founder act
-**Status:** ⭐ **GATE OPENED (founder act 2026-11-03)** · charter = governing law of RGR-07 · first Work Unit W2-AUTHORIZED and EVIDENCE_READY (benchmark `RGR-MO1-TRIAD-01` frozen design) · ⛔ NOT MATERIALIZED · ⛔ NOT REVIEWED · adjudication PENDING
+**Status:** ⭐ **GATE OPENED (founder act 2026-11-03)** · charter = governing law of RGR-07 · first Work Unit ACCEPTED AND CLOSED (founder, 2026-11-03) · benchmark `RGR-MO1-TRIAD-01` frozen · successor packet DRAFTED, ⛔ not authorized · ⛔ NOT MATERIALIZED · ⛔ NOT REVIEWED
 **Canonical tip at drafting:** `3f63ca65` (`origin/clean-main-no-secrets`, 2026-09-23)
 **Canonical tip at opening:** `f21fda83a15a6ddb0c5af429895dc1c7e0f9c7af` (`origin/clean-main-no-secrets`, 2026-11-03)
 **Upstream:** RGR-00 … RGR-06 (RGR-06 §14: any next gate requires a separately authorized Work Unit)
@@ -89,6 +89,15 @@ packet executed as a documentary attempt and now stands `EVIDENCE_READY`:
 `evidence/RGR-07/H0A_PROVENANCE_ADMISSION.json` (11 results NOT_ADMITTED, no
 artifacts supplied). Independent review NOT PERFORMED; founder adjudication
 PENDING; zero fixtures, models or provider calls.
+
+*Update, same day:* founder adjudication *"accepted"* — the packet is
+ACCEPTED_AND_CLOSED. An in-session probe (18/18) confirmed the composition
+table's marginal law, the view audits and every frozen count; it is a
+scratchpad check, not a committed instrument. Successor packet
+`RGR-07_WORK_UNIT_W2_DRAFT_2026-11-03.json` (feasibility validator +
+confirmatory implementation lock, the RGR-05/06 analogue) is DRAFTED and
+awaits its own founder act. Independent review of the constitution remains
+NOT PERFORMED and owed.
 
 ---
 

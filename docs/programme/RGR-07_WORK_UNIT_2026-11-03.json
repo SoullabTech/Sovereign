@@ -20,9 +20,9 @@
     }
   },
   "state": {
-    "lifecycle_state": "EVIDENCE_READY",
-    "disposition": "open",
-    "guard": "OPEN"
+    "lifecycle_state": "CLOSED",
+    "disposition": "closed",
+    "guard": "CLOSED"
   },
   "authority": {
     "benchmark_materialization": false,
@@ -134,11 +134,68 @@
     "elemental_audit": "PASS \u2014 no forbidden term in any identifier block of the constitution or lock (mechanical scan recorded in session; the scan is not a committed instrument)",
     "independent_review": "NOT_PERFORMED \u2014 no external inference authorized by this packet; owed before any materialization gate",
     "h0a": "11 results NOT_ADMITTED (RESEARCHER_REPORTED); no artifacts supplied; admission additive",
-    "founder_adjudication": "PENDING"
+    "founder_adjudication": "PENDING",
+    "in_session_constitution_probe": {
+      "status": "PASS (18/18 checks, 0 failures)",
+      "what": "exhaustive enumeration of the 16-cell (sigma, o) composition table and the frozen counts; materializes no fixture, code or record",
+      "checks": [
+        "P(y)=1/2",
+        "P(y|sigma)=1/2 for all 8 sigma",
+        "P(y|o)=1/2 both",
+        "P(y|class)=1/2 both",
+        "P(y|any single in-triad config)=1/2",
+        "P(y|any two in-triad configs)=1/2",
+        "P(y|class,o) in {0,1}",
+        "class balanced 4/4",
+        "class invariant under all 6 member permutations",
+        "o-flip flips y for every sigma",
+        "full vector = 731",
+        "C(16,8)=12870 >= 4x256 codes",
+        "validation schedule 8x188+8x187=3000",
+        "splits sum 27000",
+        "750x16=12000",
+        "375x16=6000",
+        "C(6,3)=20 triads",
+        "C(6,2)=15 pairs, 12 distractors"
+      ],
+      "caveat": "scratchpad probe run in session; NOT a committed instrument; the founder's run of a committed verifier at a later gate is the evidence of record"
+    }
   },
   "acceptance_self_report": {
     "note": "self-report by the builder; it is not verification (RGR-00 Section XVII: builder is not verifier)",
     "conditions_1_to_9": "addressed in constitution Sections III-XVIII",
     "condition_10": "recorded as NOT PERFORMED, as the condition permits"
+  },
+  "founder_adjudication": {
+    "date": "2026-11-03",
+    "act": "\"accepted\"",
+    "status": "ACCEPTED_AND_CLOSED",
+    "accepted_candidate_sha": "9823cd241",
+    "accepted_artifact_sha256": {
+      "constitution": "fed93df4a6108d55e46d060c8c1c8df0157f569a3b73b3079bce6811c3929339",
+      "preregistration_lock": "4c21b7c78968d4fa305e7826f7ce259ee175f8965ef3eaea6e48764a77ecd86a",
+      "h0a_admission": "0711431f7112b48937326848336272c5b035dc670b28c0ef595ef01d21b134b9",
+      "charter": "6fb44a9a50e41825bd62adecd4bcb339b95ba834158c679149a41162a3985474"
+    },
+    "accepted_materialization_boundary": {
+      "benchmark_examples_materialized": 0,
+      "benchmark_pairs_materialized": 0,
+      "dataset_files_written": 0,
+      "benchmark_model_training_executed": false,
+      "benchmark_performance_inspected": false,
+      "provider_calls": 0,
+      "test_executed": false,
+      "replication_executed": false
+    },
+    "accepted_gaps": [
+      "independent adversarial review NOT PERFORMED (owed before any materialization gate)",
+      "H0a: 11 results NOT_ADMITTED, no artifacts supplied"
+    ],
+    "lifecycle_transition": [
+      "EVIDENCE_READY",
+      "ADJUDICATED",
+      "CLOSED"
+    ],
+    "successor_authority": "NOT_AUTHORIZED \u2014 a successor packet is drafted at docs/programme/RGR-07_WORK_UNIT_W2_DRAFT_2026-11-03.json and awaits a separate founder act"
   }
 }
