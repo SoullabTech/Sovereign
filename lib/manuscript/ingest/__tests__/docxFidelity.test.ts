@@ -87,9 +87,17 @@ describe('SP-02F: structural manuscript fidelity', () => {
     )).toThrow(/missing, duplicate, or unlinked Word footnote/);
   });
 
-  it('refuses embedded pictures until a rich document model exists', () => {
-    expect(() => preserveDocxStructure('Description', '<p>Description</p><img src="pic.png">', []))
-      .toThrow(/embedded pictures or objects/);
+  it('imports text around embedded pictures, strips image data, and says so plainly', () => {
+    const result = preserveDocxStructure(
+      'Description\n\n![](data:image/png;base64,AAAA)\n\nAfter',
+      '<p>Description</p><p><img src="data:image/png;base64,AAAA"></p><p>After</p>',
+      [],
+    );
+    expect(result.text).not.toContain('base64');
+    expect(result.text).toContain('Description');
+    expect(result.text).toContain('After');
+    expect(result.warnings.join(' ')).toContain('1 embedded picture(s)');
+    expect(result.warnings.join(' ')).toContain('original Word file');
   });
 
   it('surfaces style degradation and explicit author review for a simple Word draft', () => {
