@@ -116,3 +116,10 @@ test('controller: Use this saves the writer’s version, then applies that exact
   expect(body).toContain('await applyVersionById(savedId);');
   expect(src).toContain('onUseVersion={useVersionNow}');
 });
+
+test('after an Undo, Use this replaces the latest version (the writer’s earlier save), not MAIA’s option', async () => {
+  const member = { id: 'm1', author: 'member' as const, wording: 'A cleaner turn.', supersedes: 'v1', rationale: null };
+  const p = render({ thread: { ...thread, versions: [maiaVersion, member], headVersionId: 'm1' } });
+  await act(async () => { btn('[data-option-use]').click(); await Promise.resolve(); });
+  expect(p.onUseVersion.mock.calls[0][0]).toMatchObject({ supersedes: 'm1', text: 'A cleaner turn.' });
+});
