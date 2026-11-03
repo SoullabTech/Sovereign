@@ -19,6 +19,7 @@
  * data, no persistence, no inference; opening the House is a member act.
  */
 
+import { useAstrologyTester } from '@/lib/hooks/useAstrologyTester';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -119,7 +120,8 @@ export function MaiaHouseSheet({
   const go = (d: HouseDestination) => dispatchHouseDestination(d, ctx());
 
   // --- resolve what to render, honestly, for this platform --------------
-  const dests = getHouseDestinations(isFounder);
+  const isAstrologyTester = useAstrologyTester();
+  const dests = getHouseDestinations(isFounder, isAstrologyTester);
   const center = dests.find((d) => d.id === 'maia');
   const settings = dests.find((d) => d.id === 'settings');
   const worlds = [

@@ -58,6 +58,7 @@ import { NostrMessagingSection } from '@/components/nostr/NostrMessagingSection'
 import PatternLedger from '@/components/consciousness/PatternLedger';
 import RecurringThemesCard from '@/components/consciousness/RecurringThemesCard';
 import { MemoryConsentSection } from '@/components/settings/MemoryConsentSection';
+import { useAstrologyTester } from '@/lib/hooks/useAstrologyTester';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -174,6 +175,8 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; practit
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function AccountSettings() {
+  // Free Astrology is testers-only (lib/astrology/testerGate.ts); hide its links from everyone else.
+  const canOpenAstrology = useAstrologyTester();
   const [activeSection, setActiveSection] = useState<SettingsSection | null>(null);
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [memberSettings, setMemberSettings] = useState<MemberSettings | null>(null);
@@ -1198,6 +1201,7 @@ export function AccountSettings() {
             <p className="text-xs text-stone-400">
               MAIA can now reference your natal chart and current transits in conversations.
             </p>
+            {canOpenAstrology && (
             <motion.button
               onClick={() => window.location.href = '/astrology'}
               className="mt-3 text-xs text-amber-400 hover:text-amber-300 transition-colors"
@@ -1205,6 +1209,7 @@ export function AccountSettings() {
             >
               View Full Chart →
             </motion.button>
+            )}
           </div>
         )}
 
@@ -1372,6 +1377,7 @@ export function AccountSettings() {
                   )}
                 </div>
                 <div className="flex gap-3 mt-3">
+                  {canOpenAstrology && (
                   <motion.button
                     onClick={() => window.location.href = '/astrology'}
                     className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
@@ -1379,6 +1385,7 @@ export function AccountSettings() {
                   >
                     View Full Chart →
                   </motion.button>
+                  )}
                 </div>
               </div>
             )}
