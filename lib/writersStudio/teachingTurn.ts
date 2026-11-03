@@ -22,6 +22,8 @@
  * ⛔ Teaching never proposes replacement wording unless the writer asks.
  */
 
+import { CONVERSATION_TURN_SHAPE } from './conversationTurn';
+
 export type TeachingAnchor = 'passage' | 'observation' | 'change' | 'direction' | 'continue';
 
 export const TEACHING_ANCHORS: readonly TeachingAnchor[] = [
@@ -48,11 +50,20 @@ export function teachingQuestion(anchor: TeachingAnchor, subject?: string): stri
   }
 }
 
+/** The one rule a teaching turn shares with every Studio conversation (Design
+ *  3C): end with a question the writer steers by. Taken from the shared shape,
+ *  so the two cannot drift apart (roadmap 2a). */
+function conversationClosingLine(): string {
+  const line = CONVERSATION_TURN_SHAPE.find((l) => l.startsWith('End with one short question'));
+  if (!line) throw new Error('CONVERSATION_TURN_SHAPE lost its closing-question line');
+  return line;
+}
+
 /** How MAIA keeps a teaching turn: server-owned, never the writer's turn. */
 export const TEACHING_TURN_SHAPE: readonly string[] = [
   'Keep it to a few plain sentences about one idea, shown in my own words.',
   'Do not add the technical term, what the move costs, other moves, or an exercise unless I ask for them.',
-  'End with one short question that lets me choose where we go next — for example whether to say it more simply, look at why it works, or see what it costs.',
+  `${conversationClosingLine().replace(/\.$/, '')} — for example whether to say it more simply, look at why it works, or see what it costs.`,
   'Do not propose replacement wording unless I ask.',
   'Do not test me or say anything about my ability.',
 ];

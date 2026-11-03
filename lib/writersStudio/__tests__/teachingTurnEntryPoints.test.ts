@@ -17,6 +17,7 @@ import {
   teachingQuestion,
   teachingTurnInstruction,
 } from '../teachingTurn';
+import { CONVERSATION_TURN_SHAPE } from '../conversationTurn';
 
 /**
  * SEMANTIC-FIELD-01 teaching plan (2026-11-01) and the F1 ruling (founder,
@@ -191,5 +192,21 @@ describe('Learning teaching governs length; Guided and Direct are unchanged', ()
   it('leaves Guided and Direct byte-identical', () => {
     expect(editorialDirective('guided')).toBe(before('guided'));
     expect(editorialDirective('direct')).toBe(before('direct'));
+  });
+});
+
+describe('the teaching shape builds on the shared conversation shape (roadmap 2a)', () => {
+  const shared = CONVERSATION_TURN_SHAPE.find((l) => l.startsWith('End with one short question'));
+
+  it('the shared shape still has its closing-question line', () => {
+    expect(shared).toBeDefined();
+  });
+
+  it('teaching’s closing line is the shared line plus its examples, so the two cannot drift', () => {
+    const teachingClosing = TEACHING_TURN_SHAPE.find((l) => l.startsWith('End with one short question'));
+    expect(teachingClosing?.startsWith(shared!.replace(/\.$/, ''))).toBe(true);
+    expect(teachingClosing).toBe(
+      'End with one short question that lets me choose where we go next — for example whether to say it more simply, look at why it works, or see what it costs.',
+    );
   });
 });
