@@ -155,6 +155,10 @@ export type P4R1Pc3WriteEditViewProps = {
   onApply: () => void;
   onUndo?: () => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
+  /** Step 3: "Use this" saves MAIA's wording as the writer's version and applies it. */
+  onUseVersion?: (draft: MemberRevisionDraft) => Promise<boolean>;
+  /** Step 3: the writer's just-sent words while MAIA answers (display only). */
+  pendingEditorialText?: string | null;
   onSaveWorking: (draft: CraftWorkingSaveDraft) => Promise<boolean>;
   onKeep: () => void;
   onLatitude: (v: EditorialLatitude) => void;
@@ -990,6 +994,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
       <EditorialDancePanel
         onStudioAction={onStudioAction}
+        onUseVersion={props.onUseVersion}
+        pendingQuestion={props.pendingEditorialText ?? null}
         manuscriptTitle={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
         currentText={currentText}
         sectionBody={currentBody}
@@ -1552,6 +1558,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
       <EditorialDancePanel
         onStudioAction={onStudioAction}
+        onUseVersion={props.onUseVersion}
+        pendingQuestion={props.pendingEditorialText ?? null}
         manuscriptTitle={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
         showOriginal={false}
         origin={props.carriedInsight && props.carriedInsightReturnMode ? {

@@ -73,6 +73,10 @@ export interface EditorialDancePanelProps {
   onApply: () => void;
   onUndo?: () => void;
   onKeep: () => void;
+  /** Conversation-first step 3: save MAIA's option as the writer's version and apply it, in one act. */
+  onUseVersion?: (draft: MemberRevisionDraft) => Promise<boolean>;
+  /** Conversation-first step 3: the writer's just-sent words while MAIA answers. */
+  pendingQuestion?: string | null;
   onDepth: (depth: EditorialDepth) => void;
   /** An act the writer asked for from outside the panel (the Write menu's
    *  "Teach me about this"). It goes through the same gates as a card. */
@@ -103,6 +107,14 @@ function distinctMaiaVersions(thread: RebuildEditorialThread | null): RebuildEdi
   }
 
   return out.reverse();
+}
+
+/** Step 3: about a sentence of the surrounding text on each side of the option. */
+function aroundBefore(text: string): string {
+  return (text.length > 140 ? '…' : '') + text.slice(-140);
+}
+function aroundAfter(text: string): string {
+  return text.slice(0, 140) + (text.length > 140 ? '…' : '');
 }
 
 function purposeOf(version: RebuildEditorialVersion, index: number): string {
@@ -208,6 +220,10 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const [localMessage, setLocalMessage] = useState<string | null>(null);
   const [showContext, setShowContext] = useState(false);
   const [showDepth, setShowDepth] = useState<'none'|'why'|'teach'|'advanced'>('none');
+  // Step 3: the option card's "More" fold and its one-press apply.
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [using, setUsing] = useState(false);
+  const workingRef = useRef<HTMLTextAreaElement | null>(null);
   const [postureNudge, setPostureNudge] = useState(false);
   const postureRef = useRef<HTMLDivElement | null>(null);
   const [relationshipNudge, setRelationshipNudge] = useState(false);
@@ -248,6 +264,35 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   ) : null;
   const summarySource = reply?.text ?? recommendation?.rationale ?? '';
   const conversation = props.thread?.turns ?? [];
+  // Step 3: MAIA's latest turn is shown as the option card, not repeated above it.
+  const optionApplied = Boolean(props.appliedVersionId && props.onUndo);
+  /* Step 3: "Use this" is one act. The writer's version is MAIA's wording, saved by
+     this press, then applied; the controller keeps every gate and read-back. */
+  const useThis = async () => {
+    if (!props.onUseVersion || !props.thread?.targetSectionId || !recommendation || using) return;
+    setUsing(true);
+    setLocalMessage(null);
+    try {
+      const ok = await props.onUseVersion({
+        threadId: props.thread.threadId,
+        sectionId: props.thread.targetSectionId,
+        supersedes: recommendation.id,
+        text: recommendation.wording,
+        purpose: purposeOf(recommendation, versions.findIndex((v) => v.id === recommendation.id)).slice(0, 80),
+      });
+      if (!ok) setLocalMessage('That could not be applied just now. Your manuscript is unchanged.');
+    } finally {
+      setUsing(false);
+    }
+  };
+  // "Adjust" opens the writer's own working version, under More.
+  const adjustOwn = () => {
+    setMoreOpen(true);
+    setTimeout(() => workingRef.current?.focus(), 0);
+  };
+  const conversationBeforeOption = conversation.length > 0 && conversation[conversation.length - 1]!.speaker === 'maia'
+    ? conversation.slice(0, -1)
+    : conversation;
   const summary = editorialSummary(summarySource);
   const hasStructuredSummary = Boolean(summary.preserve || summary.friction || summary.tryNext);
   const changeSummary = editorialSummary(props.version?.rationale ?? recommendation?.rationale ?? '');
@@ -633,11 +678,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       <section className="p4r1-dance p4r1-dance-explore" data-editorial-dance>
         {noticeLine}
         <div className="p4r1-dance-response">
-          {conversation.length > 0 ? (
+          {conversation.length > 0 || props.pendingQuestion ? (
             <>
               {/* Step 2: the whole conversation, oldest first; MAIA's latest turn last. */}
               <span className="p4r1-eyebrow">Your conversation</span>
-              <FocusConversation turns={conversation} latestAction={props.busy || props.message ? null : replyAction} />
+              <FocusConversation turns={conversation} pending={props.pendingQuestion} latestAction={props.busy || props.message ? null : replyAction} />
               {props.busy ? <p className="p4r1-dance-status" role="status">MAIA is with the passage…</p> : null}
               {props.message ? <p className="p4r1-dance-status" role="status">{props.message}</p> : null}
             </>
@@ -705,14 +750,70 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
         </div>
       ) : null}
 
-      {conversation.length > 0 ? (
-        /* Step 2: the conversation stays reachable while written options are shown.
-           Step 3 puts the option inside the conversation instead. */
-        <details className="p4r1-focus-conversation-fold" data-focus-conversation-fold>
-          <summary>The conversation so far ({conversation.length} {conversation.length === 1 ? 'turn' : 'turns'})</summary>
-          <FocusConversation turns={conversation} />
-        </details>
+      {conversationBeforeOption.length > 0 || props.pendingQuestion ? (
+        /* Step 3: the conversation stays on screen; MAIA's option is its latest turn. */
+        <div className="p4r1-dance-response" data-option-conversation>
+          <span className="p4r1-eyebrow">Your conversation</span>
+          <FocusConversation turns={conversationBeforeOption} pending={props.pendingQuestion} />
+        </div>
       ) : null}
+
+      <section className="p4r1-option-card" data-option-card aria-label="MAIA’s option">
+        <span className="p4r1-eyebrow">MAIA’s option</span>
+        <h4>{purposeOf(recommendation, versions.findIndex((v) => v.id === recommendation.id))}</h4>
+        <p className="p4r1-option-in-context" data-option-in-context>
+          {context?.before ? <span className="p4r1-option-around">{aroundBefore(context.before)}</span> : null}
+          {changedWords.map((part, index) => part.kind === 'remove'
+            ? <del key={index}>{part.text}</del>
+            : part.kind === 'add'
+              ? <ins key={index}>{part.text}</ins>
+              : <span key={index}>{part.text}</span>)}
+          {context?.after ? <span className="p4r1-option-around">{aroundAfter(context.after)}</span> : null}
+        </p>
+        <div className="p4r1-option-actions">
+          {optionApplied ? (
+            <>
+              <span>Applied to the manuscript.</span>
+              <button type="button" disabled={props.busy} onClick={props.onUndo}>Undo this change</button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="p4r1-dance-primary"
+                data-option-use
+                disabled={props.busy || using || !props.onUseVersion || postureBlocksEditorial}
+                onClick={() => void useThis()}
+              >
+                {using ? 'Applying…' : 'Use this'}
+              </button>
+              <button type="button" data-option-adjust disabled={props.busy} onClick={adjustOwn}>Adjust</button>
+              <button
+                type="button"
+                data-option-another
+                disabled={props.busy || postureBlocksEditorial}
+                onClick={() => adjustProposal('Show me one genuinely different option for this same passage. Do not rank it against the current one.')}
+              >
+                Another
+              </button>
+            </>
+          )}
+        </div>
+        {(localMessage || props.message || props.undoMessage) ? (
+          <p className="p4r1-dance-status" role="status">
+            {localMessage ?? props.message}{props.undoMessage ? ' ' + props.undoMessage : ''}
+          </p>
+        ) : null}
+        {replyAction}
+      </section>
+
+      <details
+        className="p4r1-option-more"
+        data-option-more
+        open={moreOpen}
+        onToggle={(event) => setMoreOpen((event.currentTarget as HTMLDetailsElement).open)}
+      >
+        <summary>More: why, other options, shape it yourself</summary>
 
       <div className="p4r1-dance-maia">
         <span className="p4r1-eyebrow">MAIA</span>
@@ -726,7 +827,6 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <div className="p4r1-dance-latest-response" data-editorial-latest-response>
             <b>MAIA’s latest response</b>
             <p>{reply.text}</p>
-            {replyAction}
           </div>
         ) : (
           <h3>{firstUsefulSentence(summarySource || 'Here is one direction I would try.')}</h3>
@@ -836,6 +936,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <h4>{selectedLabel}</h4>
         </div>
         <textarea
+          ref={workingRef}
           value={workingText}
           disabled={props.busy || saving}
           onChange={(event) => {
@@ -913,18 +1014,6 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           </div>
         ) : null}
 
-        {(localMessage || props.message || props.undoMessage) ? (
-          <p className="p4r1-dance-status" role="status">
-            {localMessage ?? props.message}{props.undoMessage ? ' ' + props.undoMessage : ''}
-          </p>
-        ) : null}
-
-        {props.appliedVersionId && props.onUndo ? (
-          <div className="p4r1-dance-applied">
-            <span>Applied to the manuscript.</span>
-            <button type="button" disabled={props.busy} onClick={props.onUndo}>Undo this change</button>
-          </div>
-        ) : null}
       </div>
 
       <div className="p4r1-dance-depth">
@@ -975,6 +1064,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             : reply?.text ?? 'Full craft vocabulary, meaning/style distinctions, evidence, tradeoffs, uncertainty, and provenance stay available here without changing authority.'}</p>
         </div>
       ) : null}
+      </details>
     </section>
   );
 }
