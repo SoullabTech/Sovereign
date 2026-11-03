@@ -268,7 +268,7 @@ describe('Write view dead ends', () => {
     openMenu();
     clickButton('Discuss');
     expect(onSend).toHaveBeenCalledTimes(1);
-    expect(String(onSend.mock.calls[0][0])).toContain('Discuss what is happening');
+    expect(onSend.mock.calls[0][1]).toMatchObject({ passageAct: 'discuss', proposalPolicy: 'reply_only' });
   });
 
   it('Revise sends exactly once when every gate is open', () => {
@@ -277,7 +277,7 @@ describe('Write view dead ends', () => {
     clickButton('More ways to work');
     clickButton('Revise');
     expect(onSend).toHaveBeenCalledTimes(1);
-    expect(String(onSend.mock.calls[0][0])).toContain('Help me revise this exact passage');
+    expect(onSend.mock.calls[0][1]).toMatchObject({ passageAct: 'revise', proposalPolicy: 'allow', proposalRequested: true });
   });
 
   it('Go deeper sends exactly once when every gate is open', () => {
@@ -286,6 +286,6 @@ describe('Write view dead ends', () => {
     clickButton('More ways to work');
     clickButton('Go deeper');
     expect(onSend).toHaveBeenCalledTimes(1);
-    expect(String(onSend.mock.calls[0][0])).toContain('editorial reasoning');
+    expect(onSend.mock.calls[0][1]).toMatchObject({ passageAct: 'deeper', proposalPolicy: 'reply_only' });
   });
 });

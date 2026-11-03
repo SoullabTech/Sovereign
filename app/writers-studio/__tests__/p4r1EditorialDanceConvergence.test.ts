@@ -58,7 +58,9 @@ describe('C2 editorial dance convergence', () => {
     expect(host).toContain('<b>Focus</b>');
     expect(host).toContain('<b>Revise</b>');
     expect(host).toContain('<b>Discuss</b>');
-    expect(host).toContain('Discuss what is happening in this exact passage with me before proposing any edits.');
+    // Step 1: the menu's Discuss stores only its words; the instruction is server-owned.
+    expect(host).toContain("prompt: passageActQuestion('discuss'),");
+    expect(host).toContain("options: { proposalPolicy: 'reply_only', passageAct: 'discuss' }");
     expect(host).toContain('<b>Teach me about this</b>');
     expect(host).toContain('<b>Go deeper</b>');
     expect(host).not.toContain('className="p4r1-locus-actions"');
