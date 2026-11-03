@@ -5063,3 +5063,44 @@
 .p4r1-root .p4r1-home-delete-error {margin:12px 0 0;color:#f0b9a4;font-size:13px;}
 .p4r1-root .p4r1-home-delete-open {opacity:.75;}
 .p4r1-root .p4r1-home-delete-open:hover {opacity:1;}
+
+/* Conversation-first Focus, step 2: the conversation, oldest first. */
+.p4r1-root .p4r1-focus-conversation{
+  list-style:none;
+  margin:8px 0 12px;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.p4r1-root .p4r1-focus-conversation > li > b{
+  display:block;
+  margin-bottom:4px;
+  font:600 10px var(--fr-sans-stack);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--fr-ink3, var(--fr-ink2));
+}
+.p4r1-root .p4r1-focus-conversation > li > p,
+.p4r1-root .p4r1-focus-conversation details > p{
+  margin:0;
+  white-space:pre-wrap;
+}
+.p4r1-root .p4r1-focus-conversation > li.is-writer{
+  align-self:flex-end;
+  max-width:85%;
+  padding:8px 12px;
+  border:1px solid var(--fr-line);
+  border-radius:12px;
+  background:var(--fr-field);
+  color:var(--fr-ink2);
+}
+.p4r1-root .p4r1-focus-conversation > li.is-maia > p{ color:var(--fr-title); line-height:1.65; }
+.p4r1-root .p4r1-focus-conversation details summary{ cursor:pointer; }
+.p4r1-root .p4r1-focus-conversation details summary span{ color:var(--fr-action); font:600 11px var(--fr-sans-stack); }
+.p4r1-root .p4r1-focus-conversation-fold{ margin:0 0 12px; }
+.p4r1-root .p4r1-focus-conversation-fold > summary{
+  cursor:pointer;
+  font:600 11px var(--fr-sans-stack);
+  color:var(--fr-ink2);
+}
