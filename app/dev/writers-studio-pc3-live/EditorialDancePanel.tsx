@@ -19,6 +19,7 @@ import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teach
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
 import { passageActQuestion, type PassageAct as PassageActId } from '@/lib/writersStudio/passageActs';
 import { parseStudioActions, type StudioActionId } from '@/lib/writersStudio/studioActions';
+import FocusConversation from './FocusConversation';
 import P4R1VoiceCapture from './P4R1VoiceCapture';
 
 /** A passage act the writer chose: plain data, so a held act runs with the
@@ -246,6 +247,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     </button>
   ) : null;
   const summarySource = reply?.text ?? recommendation?.rationale ?? '';
+  const conversation = props.thread?.turns ?? [];
   const summary = editorialSummary(summarySource);
   const hasStructuredSummary = Boolean(summary.preserve || summary.friction || summary.tryNext);
   const changeSummary = editorialSummary(props.version?.rationale ?? recommendation?.rationale ?? '');
@@ -631,21 +633,33 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       <section className="p4r1-dance p4r1-dance-explore" data-editorial-dance>
         {noticeLine}
         <div className="p4r1-dance-response">
-          <span className="p4r1-eyebrow">MAIA</span>
-          <h3>{props.busy
-            ? 'MAIA is with the passage…'
-            : props.message
-              ? 'That turn could not be completed.'
-              : 'Here’s what I’m seeing.'}</h3>
-          {props.message ? (
-            <p className="p4r1-dance-status" role="status">{props.message}</p>
-          ) : reply ? (
+          {conversation.length > 0 ? (
             <>
-              <p>{reply.text}</p>
-              {replyAction}
+              {/* Step 2: the whole conversation, oldest first; MAIA's latest turn last. */}
+              <span className="p4r1-eyebrow">Your conversation</span>
+              <FocusConversation turns={conversation} latestAction={props.busy || props.message ? null : replyAction} />
+              {props.busy ? <p className="p4r1-dance-status" role="status">MAIA is with the passage…</p> : null}
+              {props.message ? <p className="p4r1-dance-status" role="status">{props.message}</p> : null}
             </>
           ) : (
-            <p>I’m staying with the passage and your question. Nothing has been revised or applied.</p>
+            <>
+              <span className="p4r1-eyebrow">MAIA</span>
+              <h3>{props.busy
+                ? 'MAIA is with the passage…'
+                : props.message
+                  ? 'That turn could not be completed.'
+                  : 'Here’s what I’m seeing.'}</h3>
+              {props.message ? (
+                <p className="p4r1-dance-status" role="status">{props.message}</p>
+              ) : reply ? (
+                <>
+                  <p>{reply.text}</p>
+                  {replyAction}
+                </>
+              ) : (
+                <p>I’m staying with the passage and your question. Nothing has been revised or applied.</p>
+              )}
+            </>
           )}
         </div>
 
@@ -689,6 +703,15 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <button type="button" disabled={props.busy} onClick={props.onKeep}>Keep mine</button>
           <p>{props.currentText}</p>
         </div>
+      ) : null}
+
+      {conversation.length > 0 ? (
+        /* Step 2: the conversation stays reachable while written options are shown.
+           Step 3 puts the option inside the conversation instead. */
+        <details className="p4r1-focus-conversation-fold" data-focus-conversation-fold>
+          <summary>The conversation so far ({conversation.length} {conversation.length === 1 ? 'turn' : 'turns'})</summary>
+          <FocusConversation turns={conversation} />
+        </details>
       ) : null}
 
       <div className="p4r1-dance-maia">
