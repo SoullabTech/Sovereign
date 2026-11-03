@@ -8,6 +8,8 @@ import {
   sourceUploadAttempt,
   type SourceUploadAttempt,
 } from '@/lib/writersStudio/sourceUploadAttempt';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
+import P4R1UnfinishedUploads from './P4R1UnfinishedUploads';
 
 const ACCEPT = '.docx,.pdf,.epub,.txt,.md,.markdown';
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
@@ -57,6 +59,9 @@ export default function P4R1ImportManuscript({
   const uploadAttemptRef = useRef<SourceUploadAttempt | null>(null);
   const savedManuscriptIdRef = useRef<string | null>(null);
   const saveInFlightRef = useRef(false);
+  // D4: the server labels a Work whose original could not be bound. The member is told, once, before the Work opens.
+  const originalNotStoredRef = useRef(false);
+  const custodyNoticeShownRef = useRef(false);
   const [phase, setPhase] = useState<ImportPhase>('source');
   const [busy, setBusy] = useState<Busy>(null);
   const [dragging, setDragging] = useState(false);
@@ -66,6 +71,7 @@ export default function P4R1ImportManuscript({
   const [format, setFormat] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [custodyNotice, setCustodyNotice] = useState<string | null>(null);
   const [sourceArrivalId, setSourceArrivalId] = useState<string | null>(null);
   const [savedManuscriptId, setSavedManuscriptId] = useState<string | null>(null);
   const [sections, setSections] = useState<ImportSection[]>([]);
@@ -95,6 +101,21 @@ export default function P4R1ImportManuscript({
       return;
     }
 
+    // Sanctuary (D6): an upload saves an encrypted original and a plaintext extraction, so it is a content write. The
+    // posture is read at the moment of the act, never cached, and an unresolved posture is never read as "ordinary".
+    let posture: ReturnType<typeof readCurrentSanctuaryPosture> | null = null;
+    if (!localReview) {
+      posture = readCurrentSanctuaryPosture();
+      if (!posture.resolved) {
+        setError('Your Sanctuary setting could not be read on this device, so nothing was sent. Open MAIA here once, then try again.');
+        return;
+      }
+      if (posture.sanctuary) {
+        setError('Sanctuary is on. Original files are not saved during Sanctuary. Nothing has been sent.');
+        return;
+      }
+    }
+
     let uploadAttempt: SourceUploadAttempt | null = null;
     if (!localReview) {
       try {
@@ -120,13 +141,13 @@ export default function P4R1ImportManuscript({
       const response = await apiFetch(endpoint, {
         method: 'POST',
         body: form,
-        ...(uploadAttempt
-          ? { headers: { [SOURCE_UPLOAD_IDEMPOTENCY_HEADER]: uploadAttempt.idempotencyKey } }
+        ...(uploadAttempt && posture
+          ? { headers: { [SOURCE_UPLOAD_IDEMPOTENCY_HEADER]: uploadAttempt.idempotencyKey, 'x-maia-sanctuary': String(posture.resolved && posture.sanctuary) } }
           : {}),
       });
       const body = await response.json().catch(() => null) as Record<string, unknown> | null;
       if (!response.ok) {
-        if (response.status === 423) {
+        if (response.status === 423 && body?.code !== 'sanctuary_unavailable') {
           setError('Original-file import is still held for member accounts. Paste import remains available while custody and recovery acceptance are completed.');
         } else {
           setError(errorFrom(body, 'We could not read that file.'));
@@ -208,13 +229,33 @@ export default function P4R1ImportManuscript({
           }),
         });
         const body = await response.json().catch(() => null) as Record<string, unknown> | null;
-        if (!response.ok) throw new Error(errorFrom(body, 'The manuscript could not be opened.'));
+        if (!response.ok) {
+          // A refusal that no retry of this same save can fix (the held original is gone, or a Work already holds it) must not
+          // leave the dead reference in place: pressing the same button again would only resend it. Drop it and return to the
+          // source step so the member's next act is a real one. A retryable refusal keeps everything as it was.
+          const code = typeof body?.code === 'string' ? body.code : null;
+          if (code === 'source_original_unavailable' || code === 'source_already_attached') {
+            setSourceArrivalId(null);
+            setFilename(null);
+            setFormat(null);
+            setSplitOpen(null);
+            // "Choose the file again" must be a NEW upload. The upload identity is stable per file on purpose (an interrupted
+            // upload resumes), so re-choosing the same file would land on the same intent and be handed the same dead
+            // arrival. When the original is unavailable that identity is spent; when it is already attached, the first save
+            // landed and the identity is kept as it was.
+            if (code === 'source_original_unavailable') uploadAttemptRef.current = null;
+            setPhase('source');
+          }
+          throw new Error(errorFrom(body, 'The manuscript could not be opened.'));
+        }
         id = typeof body?.id === 'string' ? body.id : null;
         if (!id) throw new Error('The manuscript opened without an identity. Nothing further was changed.');
         // A confirmed save may outlive the router transition. Remember its
         // identity before opening it, so retrying navigation cannot import twice.
         savedManuscriptIdRef.current = id;
         setSavedManuscriptId(id);
+        // The server's own label is the only evidence the original was bound; anything else means it was not.
+        originalNotStoredRef.current = !localReview && body?.sourceCustody !== 'source_custodied';
       }
       if (localReview) {
         const held = writeLocalReviewManuscript({
@@ -226,6 +267,16 @@ export default function P4R1ImportManuscript({
         if (!held) {
           throw new Error('The temporary local manuscript could not be held for the next room. Nothing was persisted.');
         }
+      }
+      // The Work is saved and its words are safe, but if the original could not be stored with it the member must hear
+      // that BEFORE the Work opens, not discover it later. Shown once; the next press of the same button continues.
+      if (originalNotStoredRef.current && !custodyNoticeShownRef.current) {
+        custodyNoticeShownRef.current = true;
+        setCustodyNotice(
+          'Your Work was saved with all of your words. We could not store your original with it this time, '
+          + 'so no original is held for this Work. Choose Open saved writing when you are ready to continue.',
+        );
+        return;
       }
       // Keep confirmation disabled while the parent refreshes the exact Work
       // and manuscript and navigates away from this completed import.
@@ -319,6 +370,8 @@ export default function P4R1ImportManuscript({
 
       {phase === 'source' ? (
         <section className="p4r1-import-source">
+          {/* D3: the member's door over what is held for them. Server sessions only: a local review retains nothing. */}
+          {!localReview ? <P4R1UnfinishedUploads heldArrivalId={sourceArrivalId} /> : null}
           {fileIntakeAvailable ? (
             <>
               <div
@@ -461,6 +514,7 @@ export default function P4R1ImportManuscript({
           </div>
 
           {error ? <p className="p4r1-import-error" role="alert">{error}</p> : null}
+          {custodyNotice ? <p className="p4r1-import-error" role="alert" data-custody-notice>{custodyNotice}</p> : null}
           <footer className="p4r1-import-actions">
             <p>
               {savedManuscriptId
@@ -469,7 +523,7 @@ export default function P4R1ImportManuscript({
                   : 'Your writing and its Work were saved. Open this saved writing in Write to continue editing.'
                 : localReview
                 ? 'Open in Write creates a temporary fictional manuscript for this dedicated review window.'
-                : `This creates a new Work named “${title.trim()}” and saves the sections you confirm. The original remains separately held as Source. Nothing is read or rewritten by MAIA during import.`}
+                : `This creates a new Work named “${title.trim()}” and saves the sections you confirm. We keep your original separately as Source, and we will tell you if we cannot. Nothing is read or rewritten by MAIA during import.`}
             </p>
             <button type="button" className="p4r1-import-primary" disabled={busy !== null || !sections.length}
               onClick={() => void save()}>

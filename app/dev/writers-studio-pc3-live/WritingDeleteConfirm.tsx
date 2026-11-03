@@ -5,7 +5,7 @@ import { DELETE_WORK_COPY } from '@/lib/writersStudio/deleteWork';
 /**
  * The confirmation that REPLACES a writing card (a destructive question floating over a still-clickable card is one the
  * author can walk past by accident). It names the writing and says exactly what deletion reaches, in the product's own
- * words (WS-DELETE-01): permanent, no archive, nothing kept. A failure is stated as a failure, never as success.
+ * words (WS-DELETE-01): permanent, no archive, and honest that earlier backups retire on their own schedule. A failure is stated as a failure, never as success.
  */
 export function WritingDeleteConfirm({ title, busy, error, onConfirm, onCancel }: {
   title: string;

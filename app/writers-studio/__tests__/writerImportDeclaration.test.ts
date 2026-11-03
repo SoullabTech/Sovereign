@@ -7,6 +7,10 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { writeLocalReviewManuscript } from '@/lib/writersStudio/localReviewManuscript';
 
 jest.mock('@/lib/http/apiBase', () => ({ apiFetch: jest.fn() }));
+// The unfinished-uploads list (D3) makes its own request on mount. These tests pin the import flow's exact request
+// sequence, so the list is stubbed here; it has its own suite (p4r1UnfinishedUploads.interaction.test.ts), which also pins that
+// the Import room mounts it for a server session and not for a local review.
+jest.mock('@/app/dev/writers-studio-pc3-live/P4R1UnfinishedUploads', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/lib/writersStudio/localReviewManuscript', () => ({ writeLocalReviewManuscript: jest.fn() }));
 
 const manuscriptId = '22222222-2222-4222-8222-222222222222';
@@ -31,7 +35,7 @@ beforeEach(() => {
   (apiFetch as jest.Mock).mockImplementation(async (_url: string, init: RequestInit) => {
     const body = JSON.parse(String(init.body));
     return { ok: true, status: body.sections ? 201 : 200,
-      json: async () => body.sections ? { id: manuscriptId, workId } : { preview: sections, lossless: true } };
+      json: async () => body.sections ? { id: manuscriptId, workId, sourceCustody: 'source_custodied' } : { preview: sections, lossless: true } };
   });
 });
 
@@ -73,7 +77,7 @@ async function reachConfirmation(localReview: boolean, onComplete = jest.fn()) {
 it('makes the Work declaration visible and sends it only with the member’s final confirmation', async () => {
   const onComplete = await reachConfirmation(false);
   expect(host.textContent).toContain('This creates a new Work named “Window and Rain”');
-  expect(host.textContent).toContain('The original remains separately held as Source.');
+  expect(host.textContent).toContain('We keep your original separately as Source, and we will tell you if we cannot.');
   expect(apiFetch).toHaveBeenCalledTimes(1);
   const previewBody = JSON.parse((apiFetch as jest.Mock).mock.calls[0][1].body);
   expect(previewBody).toEqual({ title: 'Window and Rain', text });

@@ -7,6 +7,7 @@
  * is exercised in lib/storage/__tests__/destroyVaultBytes.test.ts.
  */
 import { deleteWork, deletionRefusalCopy, removeWork, DELETE_WORK_COPY, REMOVE_WORK_COPY } from '../deleteWork';
+import { REMOVE_OR_DELETE } from '@/app/writers-studio/full-redesign/fixtures';
 
 const gone = () => new Response(JSON.stringify({ removed: true }), { status: 200 });
 const notFound = () => new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
@@ -139,9 +140,20 @@ describe('the confirmation tells the truth about reach', () => {
     expect(DELETE_WORK_COPY.question('The Long Field')).toContain('The Long Field');
   });
 
-  it('says the original file goes too, and that nothing is kept', () => {
+  it('says the original file goes too, and is honest that earlier backups can still hold a copy', () => {
     expect(DELETE_WORK_COPY.body).toContain('original file');
-    expect(DELETE_WORK_COPY.body).toContain('nothing is kept');
+    expect(DELETE_WORK_COPY.body).toContain('Private backups already taken');
+    // The boundary is the moment of deletion, not midnight: the newest backup (taken earlier today) can hold the Work.
+    expect(DELETE_WORK_COPY.body).not.toMatch(/before today|made today|older than today/i);
+    expect(DELETE_WORK_COPY.body).toContain('retired on their normal schedule');
+  });
+
+  it('never claims that nothing is kept: backups are not rewritten and erasure is not certified', () => {
+    const all = Object.values(DELETE_WORK_COPY)
+      .map((v) => (typeof v === 'function' ? v('x') : String(v)))
+      .join(' ')
+      .toLowerCase();
+    expect(all).not.toMatch(/nothing is kept|nothing kept|nothing remains|completely erased|gone forever/);
   });
 
   it('promises no recovery it cannot honour', () => {
@@ -227,12 +239,27 @@ describe('the destructive act is unchanged — WS-DELETE-01 stands', () => {
 describe('the two acts cannot be mistaken for one another', () => {
   it('each says what happens to the writing, and they say opposite things', () => {
     expect(REMOVE_WORK_COPY.hint).toBe('Keeps your writing in Your Writings.');
-    expect(DELETE_WORK_COPY.hint).toBe('Permanently deletes this Work and its writing.');
+    expect(DELETE_WORK_COPY.hint).toBe('Deletes this Work and its writing. This cannot be undone.');
     /* Neither label may drift into the other's word. "Remove" that says Delete,
        or "Delete" that says Remove, is the confusion this ruling resolved. */
     expect(REMOVE_WORK_COPY.action).toBe('Remove Work');
     expect(REMOVE_WORK_COPY.action.toLowerCase()).not.toContain('delete');
     expect(DELETE_WORK_COPY.action).toContain('Delete');
+  });
+
+  it('the line beneath the Delete action does not claim permanence it cannot qualify (D5; permanentErasureCertified is false)', () => {
+    /* The confirmation body can say that earlier backups retire on their own schedule; this one-line hint cannot. So the
+       hint must not say "permanently" at all, and the qualified statement lives in the body the member reads before
+       confirming. */
+    expect(DELETE_WORK_COPY.hint.toLowerCase()).not.toContain('permanent');
+    expect(DELETE_WORK_COPY.body).toContain('backups');
+  });
+
+  it('the design fixture that claims to mirror the live acts cannot drift from them', () => {
+    expect(REMOVE_OR_DELETE.remove.action).toBe(REMOVE_WORK_COPY.action);
+    expect(REMOVE_OR_DELETE.remove.hint).toBe(REMOVE_WORK_COPY.hint);
+    expect(REMOVE_OR_DELETE.delete.action).toBe(DELETE_WORK_COPY.action);
+    expect(REMOVE_OR_DELETE.delete.hint).toBe(DELETE_WORK_COPY.hint);
   });
 
   it('removal copy never promises reversibility, and never invents a lifecycle state', () => {

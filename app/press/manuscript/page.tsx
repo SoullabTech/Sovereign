@@ -371,7 +371,20 @@ function PressManuscriptRoom() {
             : { confirmedText: draftText }),
         }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        // A refusal no retry can fix (the held original is gone, or a Work already holds it): drop the dead reference so the
+        // next press does not resend it, and say so plainly. A retryable refusal keeps the preview and the reference.
+        const refusal = await res.json().catch(() => null) as { code?: unknown; error?: unknown } | null;
+        if (refusal && (refusal.code === 'source_original_unavailable' || refusal.code === 'source_already_attached')) {
+          setSourceArrivalId(null);
+          // Choosing the file again must be a NEW upload, not a replay of the spent identity (see the Import room).
+          if (refusal.code === 'source_original_unavailable') uploadAttemptRef.current = null;
+          setPreview(null); // back to the step where the member chooses or pastes again; the refusal is shown there
+          setWarnings([typeof refusal.error === 'string' ? refusal.error : 'The original is no longer held. Choose the file again to continue.']);
+          return;
+        }
+        throw new Error(`HTTP ${res.status}`);
+      }
       const data = await res.json();
       setPreview(null);
       setDraftText('');
@@ -403,6 +416,19 @@ function PressManuscriptRoom() {
       ]);
       return;
     }
+    // Sanctuary (D6): an upload saves an encrypted original and a plaintext extraction, so it is a content write.
+    // The posture is read at the moment of the act, never cached, and an unresolved posture is never read as
+    // "ordinary". The server requires this claim and refuses without it, so this caller must send it.
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved) {
+      setWarnings(['Your Sanctuary setting could not be read on this device, so nothing was sent. Open MAIA here once, then try again.']);
+      return;
+    }
+    if (posture.sanctuary) {
+      setWarnings(['Sanctuary is on. Original files are not saved during Sanctuary. Nothing has been sent.']);
+      return;
+    }
+
     let uploadAttempt: SourceUploadAttempt;
     try {
       uploadAttempt = sourceUploadAttempt(
@@ -435,7 +461,7 @@ function PressManuscriptRoom() {
       const res = await apiFetch('/api/sovereign/manuscripts/ingest', {
         method: 'POST',
         body: form,
-        headers: { [SOURCE_UPLOAD_IDEMPOTENCY_HEADER]: uploadAttempt.idempotencyKey },
+        headers: { [SOURCE_UPLOAD_IDEMPOTENCY_HEADER]: uploadAttempt.idempotencyKey, 'x-maia-sanctuary': 'false' },
       });
       if (res.status === 401) {
         setUnauthorized(true);
