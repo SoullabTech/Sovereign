@@ -175,7 +175,8 @@ export type P4R1Pc3WriteEditViewProps = {
 /* Below the selection, but never so low that the menu (trigger 38px + at
    least 200px of items + 16px margin) would leave the window. */
 function selectionMenuTop(rect: DOMRect): number {
-  return Math.max(72, Math.min(rect.bottom + 12, window.innerHeight - 254));
+  /* Leave room for the whole menu (Focus, Craftsman's Table, Discuss, more). */
+  return Math.max(72, Math.min(rect.bottom + 12, window.innerHeight - 420));
 }
 
 function selectionInPc3Editor(): { sectionId: string; text: string; rect: DOMRect } | null {
@@ -1363,9 +1364,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     }
     // The existing service supports allow/reply_only, not "require".
     // A requested suggestion is permitted but never assumed to exist.
-    setCraftNotice(options?.proposalPolicy === 'require'
-      ? 'A bounded suggestion was requested. MAIA may decline; nothing is applied automatically.'
-      : null);
+    // Never claim the request went out: the controller may refuse it (for
+    // example, no MAIA relationship for this Work yet) and says so itself.
+    setCraftNotice(null);
     props.onSendEditorial(text, {
       proposalPolicy: options?.proposalPolicy === 'reply_only' ? 'reply_only' : 'allow',
       // Distinct author-authored display payload. The larger prompt remains
@@ -1392,7 +1393,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         <span>Craft is a working copy, not a manuscript change.</span>
         <button type="button" disabled={busy} onClick={exitCraft}>Back to Focus</button>
       </div>
-      {craftNotice ? <p role="status" className="p4r1-craft-notice">{craftNotice}</p> : null}
+      {craftNotice || props.editorialFailure ? <p role="status" className="p4r1-craft-notice">{craftNotice ?? props.editorialFailure}</p> : null}
       {craftDiscardOffer ? (
         <div className="p4r1-craft-discard-confirm" role="group" aria-label="Confirm leaving unsaved Craft work" data-craft-discard-confirm>
           <p><b>{craftDiscardOffer}</b> would discard any unsaved working copy, unsent MAIA wording, or session-only marks for this passage.</p>

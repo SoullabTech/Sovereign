@@ -262,4 +262,16 @@ describe('JARVIS: canonical Write -> explicitly chosen Craftsman and MAIA', () =
     expect(onSend).not.toHaveBeenCalled();
     expect(onApply).not.toHaveBeenCalled();
   });
+
+  it('does not claim a suggestion was requested before the controller accepts it', () => {
+    enterCraft();
+    act(() => focusButton('Suggest an edit')!.click());
+    expect(node.textContent).not.toContain('A bounded suggestion was requested');
+  });
+
+  it('asks the writer a plain question', () => {
+    enterCraft();
+    expect(node.textContent).toContain('What would you like to change or look at in this passage?');
+    expect(node.textContent).not.toContain('bring alive');
+  });
 });
