@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useAstrologyTester } from '@/lib/hooks/useAstrologyTester';
 import { ArrowRight, Activity, Compass, Fingerprint, Users, NotebookPen } from 'lucide-react';
 
 type PatternModule = {
@@ -48,6 +49,9 @@ const MODULES: PatternModule[] = [
 ];
 
 export default function PatternsPage() {
+  // Free Astrology is testers-only (lib/astrology/testerGate.ts); hide its modules from everyone else.
+  const canOpenAstrology = useAstrologyTester();
+  const modules = MODULES.filter((m) => canOpenAstrology || !m.href.startsWith('/astrology'));
   return (
     <main className="min-h-[calc(100vh-64px)] px-4 py-10">
       <div className="mx-auto w-full max-w-5xl">
@@ -63,7 +67,7 @@ export default function PatternsPage() {
         </header>
 
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {MODULES.map((m) => {
+          {modules.map((m) => {
             const Icon = m.icon;
             return (
               <Link

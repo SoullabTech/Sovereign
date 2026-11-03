@@ -43,6 +43,7 @@ import {
   Droplets
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { useAstrologyTester } from '@/lib/hooks/useAstrologyTester';
 
 type ScribeChair = 'solo' | 'witness' | 'practitioner';
 
@@ -69,6 +70,8 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
   hasScribeSession,
   scribeChair,
 }) => {
+  // Free Astrology is testers-only (lib/astrology/testerGate.ts); hide its link from everyone else.
+  const canOpenAstrology = useAstrologyTester();
   const menuSections = [
     {
       title: 'ELDER COUNCIL',
@@ -489,7 +492,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
 
                     {/* Section Items */}
                     <div className="space-y-2">
-                      {section.items.map((item, itemIdx) => {
+                      {section.items.filter((item) => canOpenAstrology || item.label !== 'Cosmic Blueprint').map((item, itemIdx) => {
                         // Special handling for language selector
                         if ((item as any).isLanguageSelector) {
                           return (
