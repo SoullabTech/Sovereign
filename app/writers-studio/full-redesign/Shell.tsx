@@ -234,10 +234,12 @@ export function Shell(props: ShellProps) {
     >
       {canvas ? null : (
         <header className="fr-bar" data-region="topbar">
-          <div className="fr-brand">
+          {/* The mark is the door back to Soullab Home, as in every other Studio
+              shell. The "Home" tab below is the Studio's own home room. */}
+          <a className="fr-brand" href="/home" aria-label="Return to Soullab Home" title="Soullab Home">
             <SoullabMark />
             <span>Soullab</span>
-          </div>
+          </a>
           <nav className="fr-nav" aria-label="Studio">
             {fromCabin ? (
               <a href={cabinReturnPath()} className="fr-nav-item" aria-label="Return to Cabin">

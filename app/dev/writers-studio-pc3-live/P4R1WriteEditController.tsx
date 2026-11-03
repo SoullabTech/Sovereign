@@ -186,6 +186,8 @@ export default function FlagshipWriteEditController() {
   const [editorialDraft, setEditorialDraft] = useState('');
   const [editorialDepth, setEditorialDepth] = useState<EditorialDepth>(DEFAULT_EDITORIAL_DEPTH);
   const [suggestedVersionId, setSuggestedVersionId] = useState<string | null>(null);
+  // Step 3: the writer's just-sent words, shown at once while MAIA answers.
+  const [pendingEditorialText, setPendingEditorialText] = useState<string | null>(null);
   const [appliedVersionId, setAppliedVersionId] = useState<string | null>(null);
   const [editorialBusy, setEditorialBusy] = useState(false);
   const [adoptionBusy, setAdoptionBusy] = useState(false);
@@ -1301,6 +1303,7 @@ export default function FlagshipWriteEditController() {
       && !unsettled(writingRef.current);
 
     setEditorialBusy(true);
+    setPendingEditorialText(text);
     setEditorialFailure(null);
     setAdoptionOutcome(null);
     setVoiceNotice(null);
@@ -1470,8 +1473,8 @@ export default function FlagshipWriteEditController() {
     return body;
   }, [context]);
 
-  const applySuggested = useCallback(async () => {
-    if (!focusId || !scopedEditorialThread || !scopedA2Relationship || !suggestedVersion || adoptionBusy
+  const applyVersionById = useCallback(async (versionId: string) => {
+    if (!focusId || !scopedEditorialThread || !scopedA2Relationship || !versionId || adoptionBusy
       || workReentryRequired.current || !currentWorkGesture()) return;
     // Client defense in depth ONLY. The adoption endpoint still needs a
     // separately authorized server-side current-posture/consent enforcement.
@@ -1502,7 +1505,7 @@ export default function FlagshipWriteEditController() {
       const result = await adoptBoundEditorialVersion(
         scopedEditorialThread.threadId,
         focusId,
-        suggestedVersion.id,
+        versionId,
         scopedA2Relationship.id,
       );
       if (memberSaveScopeRef.current !== scopeAtGesture
@@ -1518,7 +1521,7 @@ export default function FlagshipWriteEditController() {
 
       setAdoptionOutcome(result.outcome);
       if (result.outcome.kind === 'applied') {
-        setAppliedVersionId(suggestedVersion.id);
+        setAppliedVersionId(versionId);
         const fresh = await refreshContext();
         if (fresh) {
           const section = fresh.sections.find((candidate) => candidate.draftSectionId === focusId);
@@ -1537,7 +1540,6 @@ export default function FlagshipWriteEditController() {
   }, [
     focusId,
     editorialThread,
-    suggestedVersion,
     adoptionBusy,
     scopedEditorialThread,
     scopedA2Relationship,
@@ -1545,6 +1547,9 @@ export default function FlagshipWriteEditController() {
     refreshContext,
     workGestureEpoch,
   ]);
+  const applySuggested = useCallback(async () => {
+    if (suggestedVersion) await applyVersionById(suggestedVersion.id);
+  }, [suggestedVersion, applyVersionById]);
 
   const undoSuggested = useCallback(async () => {
     const application = scopedEditorialThread?.application;
@@ -1709,13 +1714,15 @@ export default function FlagshipWriteEditController() {
   }, [memberVersionBusy, focusId, context, work, workContext.kind, scopedA2Relationship,
     workGestureEpoch]);
 
-  const saveMemberRevision = useCallback(async (draft: MemberRevisionDraft): Promise<boolean> => {
+  // Returns the verified new version id, or null. `saveMemberRevision` is the
+  // boolean form the panels already use; "Use this" needs the id to apply it.
+  const saveMemberRevisionForId = useCallback(async (draft: MemberRevisionDraft): Promise<string | null> => {
     if (memberVersionBusy || !scopedEditorialThread || !scopedA2Relationship || !focusId || !context || !work
-      || workReentryRequired.current || !currentWorkGesture()) return false;
+      || workReentryRequired.current || !currentWorkGesture()) return null;
     if (draft.threadId !== scopedEditorialThread.threadId || draft.sectionId !== focusId
       || scopedEditorialThread.workId !== context.manuscriptId) {
       setEditorialFailure('The current Work or revision conversation could not be verified. Your words remain here; nothing was applied.');
-      return false;
+      return null;
     }
     // This client-side posture check prevents accidental gestures, but does
     // NOT repair the older version endpoint's missing server-side posture gate.
@@ -1723,7 +1730,7 @@ export default function FlagshipWriteEditController() {
     const atGesture = readCurrentSanctuaryPosture();
     if (!atGesture.resolved || atGesture.sanctuary) {
       setEditorialFailure('Persistent editorial Save is unavailable in Sanctuary or before you choose Ordinary. Nothing was saved or applied.');
-      return false;
+      return null;
     }
     const scopeAtGesture = memberSaveScopeRef.current;
     const locusAtGesture = scopedEditorialThread.locusText;
@@ -1745,23 +1752,23 @@ export default function FlagshipWriteEditController() {
         }),
       });
       const body = await response.json().catch(() => null);
-      if (!currentWorkGesture() || workReentryRequired.current) return false;
+      if (!currentWorkGesture() || workReentryRequired.current) return null;
       if (!response.ok) {
         setEditorialFailure(response.status === 409
           ? 'This conversation gained another version. Your wording is retained here; nothing was applied.'
           : 'Your revision could not be confirmed. Your wording is still held here; nothing was applied.');
-        return false;
+        return null;
       }
       // A successful POST acknowledgment is not the readback of the author's
       // exact version. Never assume a missing or mismatched receipt succeeded.
       if (typeof body?.versionId !== 'string' || body.supersedes !== draft.supersedes) {
         setEditorialFailure('The Save acknowledgment could not be verified. Your wording remains here; nothing was applied.');
-        return false;
+        return null;
       }
       const reread = await readBoundEditorialThread(draft.threadId, draft.sectionId, scopedA2Relationship.id);
       if (!reread.ok) {
         setEditorialFailure('The saved version could not be read back. Your wording remains here; nothing was applied.');
-        return false;
+        return null;
       }
       const exact = confirmsExactMemberSaveReadback(reread.thread, {
         threadId: draft.threadId,
@@ -1777,19 +1784,34 @@ export default function FlagshipWriteEditController() {
         || !stillOrdinary.resolved || stillOrdinary.sanctuary
         || !currentWorkGesture()) {
         setEditorialFailure('The saved version could not be verified against this Work and session. Your wording remains here; nothing was applied.');
-        return false;
+        return null;
       }
       setEditorialThread(reread.thread);
       setSuggestedVersionId(body.versionId);
-      return true;
+      return body.versionId as string;
     } catch {
       setEditorialFailure('The save could not be confirmed. Your wording is still held here.');
-      return false;
+      return null;
     } finally {
       if (currentWorkGesture()) setMemberVersionBusy(false);
     }
   }, [memberVersionBusy, scopedEditorialThread, scopedA2Relationship, focusId, context, work,
     workGestureEpoch]);
+  const saveMemberRevision = useCallback(
+    async (draft: MemberRevisionDraft): Promise<boolean> => (await saveMemberRevisionForId(draft)) !== null,
+    [saveMemberRevisionForId],
+  );
+
+  /* Conversation-first Focus step 3 (founder adoption 2026-11-03): "Use this" is one
+     act. It saves MAIA's wording as the writer's own version (the version applied is
+     always the writer's) and applies that exact version, without waiting for a
+     re-render in between. Each half keeps all of its own gates and read-backs. */
+  const useVersionNow = useCallback(async (draft: MemberRevisionDraft): Promise<boolean> => {
+    const savedId = await saveMemberRevisionForId(draft);
+    if (!savedId) return false;
+    await applyVersionById(savedId);
+    return true;
+  }, [saveMemberRevisionForId, applyVersionById]);
   const openWorkspace = useCallback((insight?: { readingId: string; key: string }) => {
     if (!currentWorkGesture() || workReentryRequired.current) return;
     if (!workspaceOpen) {
@@ -2201,6 +2223,7 @@ export default function FlagshipWriteEditController() {
             adoptionOutcome={scopedEditorialThread ? adoptionOutcome : null}
             undoMessage={scopedEditorialThread ? undoMessage : null}
             lastMaiaEditorialTurn={lastMaiaEditorialTurn}
+            pendingEditorialText={editorialBusy ? pendingEditorialText : null}
             onOpenWorkspace={openWorkspace}
             onDismissCarriedInsight={() => {
               if (!currentContextGesture()) return;
@@ -2232,6 +2255,7 @@ export default function FlagshipWriteEditController() {
             // application. It must never use a stale Work A authorization.
             onUndo={() => void undoSuggested()}
             onSaveMember={saveMemberRevision}
+            onUseVersion={useVersionNow}
             onSaveWorking={saveWorkingRevision}
             onKeep={() => {
               if (!scopedEditorialThread || workReentryRequired.current
