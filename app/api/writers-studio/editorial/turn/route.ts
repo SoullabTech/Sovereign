@@ -35,6 +35,8 @@ import {
 } from '@/lib/manuscript/editorialScope/contract';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
+import { isTeachingAnchor, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
+import { isTurnShape, type TurnShape } from '@/lib/writersStudio/conversationTurn';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +52,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  */
 const TOP_KEYS = [
   'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'responseDepth', 'relationshipId', 'carry',
+  'teachingAnchor', 'turnShape',
 ] as const;
 const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
@@ -75,6 +78,10 @@ type Parsed =
       /** Turn-local outcome vocabulary. ⛔ Defaults to allow. */
       proposalPolicy: ProposalPolicy;
       responseDepth: EditorialDepth;
+      /** Which teaching shape MAIA answers in (F1). ⛔ A closed value, never instruction text. */
+      teachingAnchor: TeachingAnchor | null;
+      /** Design 3C: the free Ask box's conversational shape. ⛔ A closed value, never instruction text. */
+      turnShape: TurnShape | null;
     }
   | { ok: false; error: string };
 
@@ -153,6 +160,24 @@ function parseClosed(body: unknown): Parsed {
   if (!(['guided','learning','direct'] as readonly string[]).includes(responseDepth)) {
     return { ok: false, error: 'responseDepth must be guided, learning, or direct' };
   }
+  /* F1 (founder ruling 2026-11-02): how a teaching answer is shaped is server-
+     owned. The client names the anchor; the instruction never rides in the
+     writer's words. ⛔ An unknown anchor is refused, never ignored. */
+  if (!(b.teachingAnchor === undefined || isTeachingAnchor(b.teachingAnchor))) {
+    return { ok: false, error: 'teachingAnchor must be passage, observation, change, direction, or continue' };
+  }
+  const teachingAnchor: TeachingAnchor | null = b.teachingAnchor === undefined ? null : b.teachingAnchor;
+  /* Design 3C: how a free-box answer is shaped is server-owned, like F1.
+     ⛔ An unknown shape is refused, never ignored. */
+  if (!(b.turnShape === undefined || isTurnShape(b.turnShape))) {
+    return { ok: false, error: 'turnShape must be conversation' };
+  }
+  const turnShape: TurnShape | null = b.turnShape === undefined ? null : b.turnShape;
+  /* One shape per turn: a teaching answer and a free-box answer are different
+     instructions, and both landing in `system` would contradict each other. */
+  if (teachingAnchor && turnShape) {
+    return { ok: false, error: 'teachingAnchor and turnShape are exclusive' };
+  }
   if (b.proposalPolicy !== undefined) {
     if (!(b.proposalPolicy === 'allow' || b.proposalPolicy === 'reply_only')) {
       return { ok: false, error: 'proposalPolicy must be allow or reply_only' };
@@ -202,6 +227,8 @@ function parseClosed(body: unknown): Parsed {
     mayProposeImmediately,
     proposalPolicy,
     responseDepth,
+    teachingAnchor,
+    turnShape,
   };
 }
 
@@ -290,6 +317,8 @@ export async function POST(request: NextRequest) {
     mayProposeImmediately: parsed.mayProposeImmediately,
     proposalPolicy: parsed.proposalPolicy,
     responseDepth: parsed.responseDepth,
+    ...(parsed.teachingAnchor ? { teachingAnchor: parsed.teachingAnchor } : {}),
+    ...(parsed.turnShape ? { turnShape: parsed.turnShape } : {}),
   });
 
   if (!turn.ok) {
