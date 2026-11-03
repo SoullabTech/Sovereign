@@ -1,0 +1,28 @@
+{
+  "record": "H0A_PROVENANCE_ADMISSION",
+  "work_unit_id": "rgr-07-motif-benchmark-constitution-20261103",
+  "date": "2026-11-03",
+  "law": "RGR-07 charter Section 19: admit only what survives, at its actual provenance class; a fresh run under capture is a new result, never recovery.",
+  "artifacts_supplied_by_founder": [],
+  "repository_search": {
+    "performed": "2026-09-23 and 2026-11-03",
+    "scope": "all remote refs; identifiers H1, H1b, H1c, H2b, H3j, H4a, H5a, H5b, H6a, H6b, H6c, COLLECTIVE_SYNERGY, FACILITATIVE_RESONANCE, PASSED_EXACT, EXACT_QUOTE, Silver Cedar",
+    "result": "no fixture, prompt, model identifier, temperature, run log or score found for any H-series result"
+  },
+  "admissions": [
+    {"result": "H1",  "claim": "typed relations + standing + claim identity 5/5 vs similarity 3/5", "status": "NOT_ADMITTED", "provenance_class": "RESEARCHER_REPORTED"},
+    {"result": "H1b", "claim": "relation discovery 8/8 relation-present; opaque-reference falsifier", "status": "NOT_ADMITTED", "provenance_class": "RESEARCHER_REPORTED"},
+    {"result": "H1c", "claim": "antecedent gate: false references 2 to 0, true references 6/6", "status": "NOT_ADMITTED", "provenance_class": "RESEARCHER_REPORTED"},
+    {"result": "H2b", "claim": "differentiated channels 76/76 atoms, 34/34 tensions, 0 forced resolutions", "status": "NOT_ADMITTED", "provenance_class": "RESEARCHER_REPORTED", "note": "Elemental; outside RGR-07 scope regardless of admission (RGR-04 closure)"},
+    {"result": "H3j", "claim": "parallel extractors 12/12 merged geometry, 0 false positives", "status": "NOT_ADMITTED", "provenance_class": "RESEARCHER_REPORTED"},
+    {"result": "H5a", "claim": "temporal order 12/12; unordered abstention 10/10", "status": "NOT_ADMITTED", "provenance_class": "RESEARCHER_REPORTED"},
+    {"result": "H5b", "claim": "recurrence vs sameness 7/7 vs 2/7", "status": "NOT_ADMITTED", "provenance_class": "RESEARCHER_REPORTED"},
+    {"result": "H4a", "claim": "higher-order collisions 4/4 vs 0/4; acquisition 12/12", "status": "NOT_ADMITTED", "provenance_class": "RESEARCHER_REPORTED"},
+    {"result": "H6a", "claim": "neutral aspect-inspired operators 12/12", "status": "NOT_ADMITTED", "provenance_class": "RESEARCHER_REPORTED", "note": "aspect-inspired; outside RGR-07 scope regardless of admission"},
+    {"result": "H6b", "claim": "convergence/divergence 12/12 + 12/12", "status": "NOT_ADMITTED", "provenance_class": "RESEARCHER_REPORTED", "note": "aspect-inspired; outside RGR-07 scope regardless of admission"},
+    {"result": "H6c", "claim": "operator-specific tolerance 4/4 vs global 3/4", "status": "NOT_ADMITTED", "provenance_class": "RESEARCHER_REPORTED", "note": "aspect-inspired; outside RGR-07 scope regardless of admission"}
+  ],
+  "admission_is_additive": true,
+  "how_to_admit_later": "Supply, per result: the exact prompts, model identifier and version, decoding parameters, fixtures, raw outputs and scoring script, with digests. Each is then admitted at the class its provenance supports. Absent any of these the result stays RESEARCHER_REPORTED.",
+  "consequence_for_rgr_07": "TRIAD-01 depends on no H-series result. The H3j vocabulary and the H4a construction are used as design inputs, which requires no admission."
+}

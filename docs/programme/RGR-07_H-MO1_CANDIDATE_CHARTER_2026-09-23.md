@@ -5,7 +5,7 @@
 **Hypothesis:** H-MO1 — HIGHER-ORDER MOTIF TRANSFER
 **Date:** 2026-09-23
 **Class:** C — documentary charter; opened as a gate by founder act
-**Status:** ⭐ **GATE OPENED (founder act 2026-11-03)** · charter = governing law of RGR-07 · ⛔ first Work Unit DRAFTED, W2 authorization owed · ⛔ NO EXECUTION
+**Status:** ⭐ **GATE OPENED (founder act 2026-11-03)** · charter = governing law of RGR-07 · first Work Unit W2-AUTHORIZED and EVIDENCE_READY (benchmark `RGR-MO1-TRIAD-01` frozen design) · ⛔ NOT MATERIALIZED · ⛔ NOT REVIEWED · adjudication PENDING
 **Canonical tip at drafting:** `3f63ca65` (`origin/clean-main-no-secrets`, 2026-09-23)
 **Canonical tip at opening:** `f21fda83a15a6ddb0c5af429895dc1c7e0f9c7af` (`origin/clean-main-no-secrets`, 2026-11-03)
 **Upstream:** RGR-00 … RGR-06 (RGR-06 §14: any next gate requires a separately authorized Work Unit)
@@ -81,6 +81,14 @@ materializes   0 fixtures · 0 examples · 0 pairs · 0 models · 0 provider cal
 
 Lifecycle: `DRAFT` until a founder act authorizes this packet (W2). The packet
 is at `docs/programme/RGR-07_WORK_UNIT_2026-11-03.json`.
+
+*Update, same day:* W2 authorization given (*"authorized"*, 2026-11-03). The
+packet executed as a documentary attempt and now stands `EVIDENCE_READY`:
+`RGR-07_MOTIF_BENCHMARK_CONSTITUTION_2026-11-03.md` ·
+`RGR-07_PREREGISTRATION_LOCK_2026-11-03.md` ·
+`evidence/RGR-07/H0A_PROVENANCE_ADMISSION.json` (11 results NOT_ADMITTED, no
+artifacts supplied). Independent review NOT PERFORMED; founder adjudication
+PENDING; zero fixtures, models or provider calls.
 
 ---
 

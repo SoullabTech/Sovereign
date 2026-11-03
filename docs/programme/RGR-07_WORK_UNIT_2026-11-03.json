@@ -2,22 +2,25 @@
   "work_unit_id": "rgr-07-motif-benchmark-constitution-20261103",
   "programme": "RELATIONAL-GEOMETRY-REASONING",
   "gate": "RGR-07",
-  "hypothesis": "H-MO1 — HIGHER-ORDER MOTIF TRANSFER",
+  "hypothesis": "H-MO1 \u2014 HIGHER-ORDER MOTIF TRANSFER",
   "title": "H-MO1 Motif Benchmark Constitution (preregistration lock)",
   "governing_law": "docs/programme/RGR-07_H-MO1_CANDIDATE_CHARTER_2026-09-23.md",
   "parent_work_unit": "rgr-06-confirmatory-implementation-lock-20260919",
   "base_ref": "f21fda83a15a6ddb0c5af429895dc1c7e0f9c7af",
-  "objective": "Freeze every value the RGR-07 charter deliberately left open — r_pair class partition, group-span template classes, composition table f, split sizes and surface codebooks, delta_min, kappa_min, legibility discrimination floor and witness agreement rule, comparator and budget policy, and the Section 12 invalidation thresholds — as a preregistration lock before any fixture exists. Separately (H0a): admit whatever H1–H6 artifacts the founder supplies, each at its provenance class; absent artifacts, nothing is admitted.",
+  "objective": "Freeze every value the RGR-07 charter deliberately left open \u2014 r_pair class partition, group-span template classes, composition table f, split sizes and surface codebooks, delta_min, kappa_min, legibility discrimination floor and witness agreement rule, comparator and budget policy, and the Section 12 invalidation thresholds \u2014 as a preregistration lock before any fixture exists. Separately (H0a): admit whatever H1\u2013H6 artifacts the founder supplies, each at its provenance class; absent artifacts, nothing is admitted.",
   "founder_acts": {
     "gate_opened": {
       "date": "2026-11-03",
-      "act": "\"yes open\" — opens RGR-07; adopts the charter as governing law",
+      "act": "\"yes open\" \u2014 opens RGR-07; adopts the charter as governing law",
       "scope_of_act": "gate opening only; not W2 authorization of this packet"
     },
-    "work_unit_authorization": "PENDING — W2 authorization of this exact packet is a separate founder act (RGR-00 Section XVII: routing is not authority)"
+    "work_unit_authorization": {
+      "date": "2026-11-03",
+      "act": "\"authorized\" \u2014 W2 authorization of this packet as drafted"
+    }
   },
   "state": {
-    "lifecycle_state": "DRAFT",
+    "lifecycle_state": "EVIDENCE_READY",
     "disposition": "open",
     "guard": "OPEN"
   },
@@ -50,7 +53,13 @@
     "CLAUDE.md"
   ],
   "forbidden_paths": [
-    "app", "lib", "database", "components", "jarvis-desktop", "scripts", "tests"
+    "app",
+    "lib",
+    "database",
+    "components",
+    "jarvis-desktop",
+    "scripts",
+    "tests"
   ],
   "acceptance_conditions": [
     "Every value named in the objective is frozen with a stated rationale and no fixture, example, pair, model or provider call exists.",
@@ -60,12 +69,12 @@
     "Legibility is forced-choice discrimination against wrong-model translations with a preregistered floor; no automated result may report it passed.",
     "Support levels are MOTIF-STRUCTURAL / MOTIF-NATURAL on the evidence axis and REPRESENTATIONAL-NECESSITY on a separate axis.",
     "Every Section 12 invalidation condition carries a numeric threshold or an explicit reason it is categorical.",
-    "H0a records, per H1–H6 result, either the admitted artifact set with digests and provenance class, or NOT_ADMITTED (researcher-reported).",
+    "H0a records, per H1\u2013H6 result, either the admitted artifact set with digests and provenance class, or NOT_ADMITTED (researcher-reported).",
     "No Elemental, aspect-derived, Spiralogic or alchemical label appears in any target, latent rule identifier, template class or generator taxonomy (RGR-03 Section 19 audit).",
     "Independent adversarial review of the constitution is recorded with provenance (RGR-04 Section XXXIV pattern) or is explicitly recorded as not yet performed."
   ],
   "stop_conditions": [
-    "Any inherited RGR-00 … RGR-06 law or frozen artifact must change.",
+    "Any inherited RGR-00 \u2026 RGR-06 law or frozen artifact must change.",
     "Any repository path outside allowed_paths is required.",
     "Any fixture, example, pair, split file, model, training run, provider call or external inference becomes necessary.",
     "Any member conversation, member data, Sanctuary content or production read becomes necessary.",
@@ -96,7 +105,40 @@
   "preserved_lineage": {
     "charter_drafted_at_canonical": "3f63ca65",
     "charter_first_commit_on_branch": "405a17cdb (claude/funny-wozniak-vs3okx, merged forward as an ancestor; content re-based onto canonical f21fda83a, history preserved)",
-    "rgr06_standing": "CLOSED · no benchmark evidence · H-RT1 UNESTABLISHED",
+    "rgr06_standing": "CLOSED \u00b7 no benchmark evidence \u00b7 H-RT1 UNESTABLISHED",
     "gate_number_note": "RGR-00 Section XXV reserved RGR-07 for a cross-domain transfer study; re-assigned by the 2026-11-03 founder act (third re-assignment after RGR-05 and RGR-06)"
+  },
+  "execution": {
+    "attempts": [
+      {
+        "attempt_id": "rgr07-constitution-01",
+        "attempt_kind": "documentary",
+        "date": "2026-11-03",
+        "produced": [
+          "docs/programme/RGR-07_MOTIF_BENCHMARK_CONSTITUTION_2026-11-03.md",
+          "docs/programme/RGR-07_PREREGISTRATION_LOCK_2026-11-03.md",
+          "docs/programme/evidence/RGR-07/H0A_PROVENANCE_ADMISSION.json"
+        ],
+        "materialization": "none",
+        "provider_calls": 0
+      }
+    ]
+  },
+  "evidence": {
+    "artifact_sha256": {
+      "constitution": "fed93df4a6108d55e46d060c8c1c8df0157f569a3b73b3079bce6811c3929339",
+      "preregistration_lock": "4c21b7c78968d4fa305e7826f7ce259ee175f8965ef3eaea6e48764a77ecd86a",
+      "h0a_admission": "0711431f7112b48937326848336272c5b035dc670b28c0ef595ef01d21b134b9",
+      "charter": "6fb44a9a50e41825bd62adecd4bcb339b95ba834158c679149a41162a3985474"
+    },
+    "elemental_audit": "PASS \u2014 no forbidden term in any identifier block of the constitution or lock (mechanical scan recorded in session; the scan is not a committed instrument)",
+    "independent_review": "NOT_PERFORMED \u2014 no external inference authorized by this packet; owed before any materialization gate",
+    "h0a": "11 results NOT_ADMITTED (RESEARCHER_REPORTED); no artifacts supplied; admission additive",
+    "founder_adjudication": "PENDING"
+  },
+  "acceptance_self_report": {
+    "note": "self-report by the builder; it is not verification (RGR-00 Section XVII: builder is not verifier)",
+    "conditions_1_to_9": "addressed in constitution Sections III-XVIII",
+    "condition_10": "recorded as NOT PERFORMED, as the condition permits"
   }
 }
