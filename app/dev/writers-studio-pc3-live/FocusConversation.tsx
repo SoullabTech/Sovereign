@@ -26,8 +26,13 @@ export default function FocusConversation(props: {
   turns: readonly FocusTurn[];
   /** The control MAIA offered on her latest turn, already rendered by the panel. */
   latestAction?: ReactNode;
+  /** Step 3: the writer's just-sent words, shown at once while MAIA answers. */
+  pending?: string | null;
 }) {
   const latestMaia = [...props.turns].reverse().find((t) => t.speaker === 'maia')?.turnIndex ?? null;
+  const lastAuthor = [...props.turns].reverse().find((t) => t.speaker === 'author')?.body ?? null;
+  // Once the thread holds the sent turn, the pending line would only repeat it.
+  const pending = props.pending && props.pending !== lastAuthor ? props.pending : null;
   return (
     <ol className="p4r1-focus-conversation" data-focus-conversation aria-label="Your conversation with MAIA about this passage">
       {props.turns.map((t) => {
@@ -49,6 +54,12 @@ export default function FocusConversation(props: {
           </li>
         );
       })}
+      {pending ? (
+        <li data-turn-speaker="author" data-pending-turn className="is-writer is-pending">
+          <b>You</b>
+          <p>{pending}</p>
+        </li>
+      ) : null}
     </ol>
   );
 }
