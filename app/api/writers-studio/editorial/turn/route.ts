@@ -37,6 +37,7 @@ import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import { isTeachingAnchor, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { isTurnShape, type TurnShape } from '@/lib/writersStudio/conversationTurn';
+import { isPassageAct, type PassageAct } from '@/lib/writersStudio/passageActs';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,7 +53,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  */
 const TOP_KEYS = [
   'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'responseDepth', 'relationshipId', 'carry',
-  'teachingAnchor', 'turnShape',
+  'teachingAnchor', 'turnShape', 'passageAct',
 ] as const;
 const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
@@ -82,6 +83,8 @@ type Parsed =
       teachingAnchor: TeachingAnchor | null;
       /** Design 3C: the free Ask box's conversational shape. ⛔ A closed value, never instruction text. */
       turnShape: TurnShape | null;
+      /** Conversation-first Focus step 1: which card the writer pressed. ⛔ A closed value, never instruction text. */
+      passageAct: PassageAct | null;
     }
   | { ok: false; error: string };
 
@@ -178,6 +181,15 @@ function parseClosed(body: unknown): Parsed {
   if (teachingAnchor && turnShape) {
     return { ok: false, error: 'teachingAnchor and turnShape are exclusive' };
   }
+  /* Step 1 of the conversation-first Focus: a card's instruction is server-owned, as
+     for Teach me (F1). ⛔ Unknown acts are refused; one shape per turn. */
+  if (!(b.passageAct === undefined || isPassageAct(b.passageAct))) {
+    return { ok: false, error: 'passageAct is not a known card' };
+  }
+  const passageAct: PassageAct | null = b.passageAct === undefined ? null : b.passageAct;
+  if (passageAct && (teachingAnchor || turnShape)) {
+    return { ok: false, error: 'passageAct, teachingAnchor and turnShape are exclusive' };
+  }
   if (b.proposalPolicy !== undefined) {
     if (!(b.proposalPolicy === 'allow' || b.proposalPolicy === 'reply_only')) {
       return { ok: false, error: 'proposalPolicy must be allow or reply_only' };
@@ -229,6 +241,7 @@ function parseClosed(body: unknown): Parsed {
     responseDepth,
     teachingAnchor,
     turnShape,
+    passageAct,
   };
 }
 
@@ -319,6 +332,7 @@ export async function POST(request: NextRequest) {
     responseDepth: parsed.responseDepth,
     ...(parsed.teachingAnchor ? { teachingAnchor: parsed.teachingAnchor } : {}),
     ...(parsed.turnShape ? { turnShape: parsed.turnShape } : {}),
+    ...(parsed.passageAct ? { passageAct: parsed.passageAct } : {}),
   });
 
   if (!turn.ok) {

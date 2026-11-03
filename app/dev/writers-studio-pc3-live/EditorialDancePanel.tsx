@@ -17,7 +17,9 @@ import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { EDITORIAL_PACKET_LABELS } from '@/lib/writersStudio/editorialIntelligence';
 import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
+import { passageActQuestion, type PassageAct as PassageActId } from '@/lib/writersStudio/passageActs';
 import { parseStudioActions, type StudioActionId } from '@/lib/writersStudio/studioActions';
+import FocusConversation from './FocusConversation';
 import P4R1VoiceCapture from './P4R1VoiceCapture';
 
 /** A passage act the writer chose: plain data, so a held act runs with the
@@ -26,7 +28,7 @@ export interface PassageAct {
   label: string;
   prompt: string;
   depth?: EditorialDepth;
-  options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor };
+  options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; passageAct?: PassageActId };
 }
 
 export interface EditorialDancePanelProps {
@@ -66,7 +68,7 @@ export interface EditorialDancePanelProps {
   onSelectVersion: (id: string) => void;
   /** Design 1B: the writer clicked a control MAIA offered. Navigation only. */
   onStudioAction?: (id: StudioActionId) => void;
-  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; turnShape?: TurnShape }) => void;
+  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; turnShape?: TurnShape; passageAct?: PassageActId }) => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   onApply: () => void;
   onUndo?: () => void;
@@ -191,64 +193,8 @@ function editorialSummary(text: string): EditorialSummary {
   };
 }
 
-function revisePassagePrompt(): string {
-  return [
-    'Help me revise this exact passage.',
-    'Start with exactly these three short lines in plain language:',
-    `"${EDITORIAL_PACKET_LABELS.preserve}: …"`,
-    `"${EDITORIAL_PACKET_LABELS.friction}: …" — support this from the exact words; do not grade or diagnose the writing.`,
-    `"${EDITORIAL_PACKET_LABELS.possibility}: …" — name the editorial move and why you would try it.`,
-    'Then offer one concrete possible revision of this exact passage. I have already asked for edit options, so do not ask whether I want a revision and do not defer the proposal to a later turn. Preserve my voice, intention, subject, and intentional ambiguity.',
-    'After the revision, add exactly these four short lines:',
-    '"What changed: …"',
-    '"Why: …"',
-    '"Reader effect: …" — treat this as a hypothesis, never a fact about actual readers.',
-    '"What I protected: …"',
-    'Keep the explanation concrete and tied to the exact words. Separate meaning changes from style changes and say what could be lost.',
-    'Nothing is to be applied automatically.',
-  ].join('\n\n');
-}
-
-function discussPassagePrompt(): string {
-  return [
-    'Discuss what is happening in this exact passage with me before proposing any edits.',
-    'Reflect what you notice in plain language and ask me one useful question about what I am trying to do.',
-    'Do not propose replacement wording unless I ask.',
-  ].join('\n\n');
-}
-
-/* Founder direction 2026-11-01: teaching is a conversation, not an info dump,
-   and the level is the writer's to set. The shape lives in
-   lib/writersStudio/teachingTurn.ts so every Teach me shares it. */
 function teachPassagePrompt(): string {
   return teachingQuestion('passage');
-}
-
-function examplesPassagePrompt(): string {
-  return [
-    'Show me examples of how a craft move could work in this exact passage.',
-    'Give me two or three clearly labeled illustrative examples.',
-    'Treat them as examples, not recommendations, and explain briefly what each example demonstrates.',
-    'Do not apply or save any example automatically.',
-  ].join('\n\n');
-}
-
-function ideasPassagePrompt(): string {
-  return [
-    'Give me several ideas for where this exact passage could go.',
-    'Offer distinct creative directions rather than near-duplicate rewrites.',
-    'Describe the intention of each direction in one human sentence before showing any wording.',
-    'Do not rank them and do not apply anything automatically.',
-  ].join('\n\n');
-}
-
-function deeperPassagePrompt(): string {
-  return [
-    'Go deeper on this exact passage.',
-    'Use full craft and editorial vocabulary, but keep every claim tied to the words on the page.',
-    'Separate meaning from style, evidence from interpretation, and reader-effect hypotheses from facts.',
-    'Do not propose replacement wording unless I ask.',
-  ].join('\n\n');
 }
 
 export default function EditorialDancePanel(props: EditorialDancePanelProps) {
@@ -301,6 +247,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     </button>
   ) : null;
   const summarySource = reply?.text ?? recommendation?.rationale ?? '';
+  const conversation = props.thread?.turns ?? [];
   const summary = editorialSummary(summarySource);
   const hasStructuredSummary = Boolean(summary.preserve || summary.friction || summary.tryNext);
   const changeSummary = editorialSummary(props.version?.rationale ?? recommendation?.rationale ?? '');
@@ -440,7 +387,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const begin = (
     prompt: string,
     depth?: EditorialDepth,
-    options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor },
+    options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; passageAct?: PassageActId },
   ) => {
     if (depth) props.onDepth(depth);
     props.onSend(withOrigin(prompt), options);
@@ -593,12 +540,12 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <button
             type="button"
             disabled={props.busy}
-            onClick={() => startAct({ label: 'Show edit options', prompt: revisePassagePrompt(), options: { proposalPolicy: 'allow', proposalRequested: true } })}
+            onClick={() => startAct({ label: 'Show edit options', prompt: passageActQuestion('revise'), options: { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise' } })}
           >
             <b>Show edit options</b>
             <span>Let MAIA offer a revision direction and other ways this passage could move. Nothing changes until you apply one.</span>
           </button>
-          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Discuss what’s happening', prompt: discussPassagePrompt(), options: { proposalPolicy: 'reply_only' } })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Discuss what’s happening', prompt: passageActQuestion('discuss'), options: { proposalPolicy: 'reply_only', passageAct: 'discuss' } })}>
             <b>Discuss what’s happening</b>
             <span>Stay with the passage and help me think about it before editing.</span>
           </button>
@@ -608,11 +555,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       <section>
         <header><b>Explore possibilities</b><span>Open the field without committing to a revision.</span></header>
         <div className="p4r1-dance-start-actions">
-          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Show me examples', prompt: examplesPassagePrompt(), depth: 'learning', options: { proposalPolicy: 'reply_only' } })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Show me examples', prompt: passageActQuestion('examples'), depth: 'learning', options: { proposalPolicy: 'reply_only', passageAct: 'examples' } })}>
             <b>Show me examples</b>
             <span>Illustrate possibilities without turning them into recommendations.</span>
           </button>
-          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Give me ideas', prompt: ideasPassagePrompt(), options: { proposalPolicy: 'reply_only' } })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Give me ideas', prompt: passageActQuestion('ideas'), options: { proposalPolicy: 'reply_only', passageAct: 'ideas' } })}>
             <b>Give me ideas</b>
             <span>Open several genuinely different directions I could explore.</span>
           </button>
@@ -626,7 +573,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             <b>Teach me about the writing</b>
             <span>Help me understand the craft already at work in my own words.</span>
           </button>
-          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Go deeper', prompt: deeperPassagePrompt(), depth: 'direct', options: { proposalPolicy: 'reply_only' } })}>
+          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Go deeper', prompt: passageActQuestion('deeper'), depth: 'direct', options: { proposalPolicy: 'reply_only', passageAct: 'deeper' } })}>
             <b>Go deeper</b>
             <span>Open the technical craft reasoning, evidence, tradeoffs, and uncertainty.</span>
           </button>
@@ -686,46 +633,55 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       <section className="p4r1-dance p4r1-dance-explore" data-editorial-dance>
         {noticeLine}
         <div className="p4r1-dance-response">
-          <span className="p4r1-eyebrow">MAIA</span>
-          <h3>{props.busy
-            ? 'MAIA is with the passage…'
-            : props.message
-              ? 'That turn could not be completed.'
-              : 'Here’s what I’m seeing.'}</h3>
-          {props.message ? (
-            <p className="p4r1-dance-status" role="status">{props.message}</p>
-          ) : reply ? (
+          {conversation.length > 0 ? (
             <>
-              <p>{reply.text}</p>
-              {replyAction}
+              {/* Step 2: the whole conversation, oldest first; MAIA's latest turn last. */}
+              <span className="p4r1-eyebrow">Your conversation</span>
+              <FocusConversation turns={conversation} latestAction={props.busy || props.message ? null : replyAction} />
+              {props.busy ? <p className="p4r1-dance-status" role="status">MAIA is with the passage…</p> : null}
+              {props.message ? <p className="p4r1-dance-status" role="status">{props.message}</p> : null}
             </>
           ) : (
-            <p>I’m staying with the passage and your question. Nothing has been revised or applied.</p>
+            <>
+              <span className="p4r1-eyebrow">MAIA</span>
+              <h3>{props.busy
+                ? 'MAIA is with the passage…'
+                : props.message
+                  ? 'That turn could not be completed.'
+                  : 'Here’s what I’m seeing.'}</h3>
+              {props.message ? (
+                <p className="p4r1-dance-status" role="status">{props.message}</p>
+              ) : reply ? (
+                <>
+                  <p>{reply.text}</p>
+                  {replyAction}
+                </>
+              ) : (
+                <p>I’m staying with the passage and your question. Nothing has been revised or applied.</p>
+              )}
+            </>
           )}
         </div>
 
         <div className="p4r1-dance-continue">
           <span className="p4r1-eyebrow">Continue from here</span>
           <div className="p4r1-dance-followup-actions">
-            <button type="button" disabled={props.busy} onClick={() => begin([
-              'Based on what we just discussed, help me revise this exact passage.',
-              revisePassagePrompt(),
-            ].join('\n\n'), undefined, { proposalPolicy: 'allow', proposalRequested: true })}>
+            <button type="button" disabled={props.busy} onClick={() => begin(passageActQuestion('revise-after-talk'), undefined, { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise-after-talk' })}>
               Show revision options
             </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(discussPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
+            <button type="button" disabled={props.busy} onClick={() => begin(passageActQuestion('discuss'), undefined, { proposalPolicy: 'reply_only', passageAct: 'discuss' })}>
               Discuss further
             </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(examplesPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
+            <button type="button" disabled={props.busy} onClick={() => begin(passageActQuestion('examples'), 'learning', { proposalPolicy: 'reply_only', passageAct: 'examples' })}>
               Show examples
             </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(ideasPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
+            <button type="button" disabled={props.busy} onClick={() => begin(passageActQuestion('ideas'), undefined, { proposalPolicy: 'reply_only', passageAct: 'ideas' })}>
               Give me ideas
             </button>
             <button type="button" disabled={props.busy} onClick={() => begin(teachingQuestion('continue'), 'learning', { proposalPolicy: 'reply_only', teachingAnchor: 'continue' })}>
               Teach me more
             </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(deeperPassagePrompt(), 'direct', { proposalPolicy: 'reply_only' })}>
+            <button type="button" disabled={props.busy} onClick={() => begin(passageActQuestion('deeper'), 'direct', { proposalPolicy: 'reply_only', passageAct: 'deeper' })}>
               Go deeper
             </button>
           </div>
@@ -747,6 +703,15 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           <button type="button" disabled={props.busy} onClick={props.onKeep}>Keep mine</button>
           <p>{props.currentText}</p>
         </div>
+      ) : null}
+
+      {conversation.length > 0 ? (
+        /* Step 2: the conversation stays reachable while written options are shown.
+           Step 3 puts the option inside the conversation instead. */
+        <details className="p4r1-focus-conversation-fold" data-focus-conversation-fold>
+          <summary>The conversation so far ({conversation.length} {conversation.length === 1 ? 'turn' : 'turns'})</summary>
+          <FocusConversation turns={conversation} />
+        </details>
       ) : null}
 
       <div className="p4r1-dance-maia">

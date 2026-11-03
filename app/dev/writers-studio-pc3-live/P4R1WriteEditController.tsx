@@ -2,6 +2,7 @@
 
 import type { TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
+import type { PassageAct } from '@/lib/writersStudio/passageActs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
@@ -1233,7 +1234,7 @@ export default function FlagshipWriteEditController() {
 
   const sendEditorial = useCallback(async (
     requestText?: string,
-    options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean; displayText?: string; teachingAnchor?: TeachingAnchor; turnShape?: TurnShape },
+    options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean; displayText?: string; teachingAnchor?: TeachingAnchor; turnShape?: TurnShape; passageAct?: PassageAct },
   ) => {
     // displayText belongs to the local author-facing Craft presentation only.
     // It is neither a persistable author-turn field nor server authority.
@@ -1351,6 +1352,7 @@ export default function FlagshipWriteEditController() {
           responseDepth: editorialDepth,
           ...(options?.teachingAnchor ? { teachingAnchor: options.teachingAnchor } : {}),
           ...(options?.turnShape ? { turnShape: options.turnShape } : {}),
+          ...(options?.passageAct ? { passageAct: options.passageAct } : {}),
           ...(a2Relationship ? { relationshipId: a2Relationship.id } : {}),
           ...(carry ? { carry } : {}),
         },
