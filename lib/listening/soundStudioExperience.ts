@@ -185,6 +185,8 @@ export type SoundStudioWork = SoundExperiencePlayback & {
   fieldLabel?: string;
   immersiveQuestion?: string;
   qualityStatement?: string;
+  /** Plain-language line shown to members in place of the engineering qualityStatement. */
+  memberNote?: string;
   durationLabel?: string;
 };
 
@@ -225,17 +227,18 @@ export const OPEN_GROUND: SoundStudioWork = {
   subtitle: OPEN_GROUND_EXPERIENCE_MANIFEST.subtitle,
   durationMs: OPEN_GROUND_EXPERIENCE_MANIFEST.durationMs,
   state: 'review',
-  kind: 'Original procedural composition · exact reviewed media edition',
+  kind: 'An original composition',
   description: 'A low foundation, slowly changing overtones and a quiet field of air. Nothing to achieve; enough time to notice what becomes perceptible.',
   mood: 'drift',
   frequencies: [72, 144, 216],
-  qualities: ['A4 = 432 Hz reference', 'AAC review edition', '24-bit master preserved', 'Six minutes'],
+  qualities: ['A4 = 432 Hz reference', 'Original composition', 'Six minutes'],
   primaryDoor: 'experience',
   passages: OPEN_GROUND_EXPERIENCE_MANIFEST.passages,
   manifest: OPEN_GROUND_EXPERIENCE_MANIFEST,
   fieldLabel: 'FIELD 01 · MUSIC ONLY · PRIVATE REVIEW',
   immersiveQuestion: 'What can a sustained tonal world reveal when we give it time, subtle internal movement and a carefully composed return?',
   qualityStatement: 'EXACT REVIEWED AAC EDITION · 24-BIT MASTER PRESERVED · EXISTING PERSISTENT PLAYER · NO BIOMETRICS · NO HIDDEN ANALYSIS',
+  memberNote: 'An original composition, offered here for private review. No biometrics and no hidden analysis.',
 };
 
 export const NIGHT_GROUND_EXTENDED_NIGHT: SoundStudioWork = {
@@ -245,7 +248,7 @@ export const NIGHT_GROUND_EXTENDED_NIGHT: SoundStudioWork = {
   durationMs: NIGHT_GROUND_EXTENDED_NIGHT_EXPERIENCE_MANIFEST.durationMs,
   durationLabel: '109 min, then until Stop',
   state: 'review',
-  kind: 'Dream Field extended-night meditation · core-only continuation',
+  kind: 'A night field with one spoken threshold, then music until you stop',
   description: 'Nicole opens the field once. Arrival and descent play once; after the first 109 minutes only the continuous music core repeats until you Stop.',
   mood: 'rest',
   frequencies: [72, 144, 216],
@@ -256,6 +259,7 @@ export const NIGHT_GROUND_EXTENDED_NIGHT: SoundStudioWork = {
   fieldLabel: 'DREAM FIELD 01 · EXTENDED NIGHT · PRIVATE REVIEW',
   immersiveQuestion: 'What becomes possible when guidance opens the threshold once, then only the continuous night field remains?',
   qualityStatement: 'EXACT NICOLE FIRST-NIGHT SEQUENCE · FINAL MUSIC CORE CONTINUES UNTIL STOP · VOICE NEVER REPEATS · RELEASE HOLD',
+  memberNote: 'Nicole speaks once at the start. After the first 109 minutes only the music continues, until you stop. Her voice never repeats.',
 };
 
 export const NIGHT_GROUND_NICOLE_FIRST_NIGHT: SoundStudioWork = {
@@ -264,7 +268,7 @@ export const NIGHT_GROUND_NICOLE_FIRST_NIGHT: SoundStudioWork = {
   subtitle: NIGHT_GROUND_NICOLE_FIRST_NIGHT_EXPERIENCE_MANIFEST.subtitle,
   durationMs: NIGHT_GROUND_NICOLE_FIRST_NIGHT_EXPERIENCE_MANIFEST.durationMs,
   state: 'review',
-  kind: 'Dream Field first-night meditation · two-part exact review sequence',
+  kind: 'A night field with one spoken threshold, then a finite night',
   description: 'Nicole appears only in the opening. After twelve minutes the voice is gone and the same Night Ground field continues through the night without returning to guidance.',
   mood: 'rest',
   frequencies: [72, 144, 216],
@@ -275,6 +279,7 @@ export const NIGHT_GROUND_NICOLE_FIRST_NIGHT: SoundStudioWork = {
   fieldLabel: 'DREAM FIELD 01 · NICOLE FIRST NIGHT · PRIVATE REVIEW',
   immersiveQuestion: 'What changes when guidance appears only long enough to open the threshold, then disappears for the rest of the night field?',
   qualityStatement: 'EXACT 109-MINUTE PRIVATE REVIEW · NICOLE ONCE · TWO CONTIGUOUS AAC SEGMENTS · ORIGINAL 48 KHZ NIGHT GROUND SOURCE PRESERVED · RELEASE HOLD',
+  memberNote: 'Nicole speaks once, then the music holds the rest of the 109 minutes.',
 };
 
 export const NIGHT_GROUND_MUSIC_ONLY: SoundStudioWork = {
@@ -283,7 +288,7 @@ export const NIGHT_GROUND_MUSIC_ONLY: SoundStudioWork = {
   subtitle: NIGHT_GROUND_MUSIC_ONLY_EXPERIENCE_MANIFEST.subtitle,
   durationMs: NIGHT_GROUND_MUSIC_ONLY_EXPERIENCE_MANIFEST.durationMs,
   state: 'review',
-  kind: 'Dream Field music-only night · the original composition, no voice',
+  kind: 'A night field of music alone, without voice',
   description: 'The whole night as composed, with no voice at any point. Arrival and descent play once, then the continuous field carries the rest of the 109 minutes. It does not repeat.',
   mood: 'rest',
   frequencies: [72, 144, 216],
@@ -294,6 +299,7 @@ export const NIGHT_GROUND_MUSIC_ONLY: SoundStudioWork = {
   fieldLabel: 'DREAM FIELD 01 · MUSIC ONLY · PRIVATE REVIEW',
   immersiveQuestion: 'What is the night when nothing is said, and only the field remains?',
   qualityStatement: 'ORIGINAL VOICE-FREE COMPOSITION · TWO CONTIGUOUS AAC SEGMENTS · 48 KHZ MASTER PRESERVED · RELEASE HOLD',
+  memberNote: 'The original composition with no voice, for the whole 109 minutes.',
 };
 
 export const NIGHT_GROUND: SoundStudioWork = {
@@ -302,7 +308,7 @@ export const NIGHT_GROUND: SoundStudioWork = {
   subtitle: NIGHT_GROUND_EXPERIENCE_MANIFEST.subtitle,
   durationMs: NIGHT_GROUND_EXPERIENCE_MANIFEST.durationMs,
   state: 'review',
-  kind: 'Dream Field guided arrival · exact reviewed media edition',
+  kind: 'A short guided threshold into the night',
   description: 'A sparse guided entrance into Night Ground. Bella speaks five quiet cues, then leaves the field without hidden suggestion or automatic continuation.',
   mood: 'rest',
   frequencies: [72, 144, 216],
@@ -313,6 +319,7 @@ export const NIGHT_GROUND: SoundStudioWork = {
   fieldLabel: 'DREAM FIELD 01 · GUIDED ARRIVAL · PRIVATE REVIEW',
   immersiveQuestion: 'What changes when a voice offers only enough orientation to let the night field become self-sustaining?',
   qualityStatement: 'EXACT GUIDED AAC EDITION · 24-BIT MASTER PRESERVED · BELLA / KOKORO · NO HIDDEN SUGGESTION · LOOP HELD',
+  memberNote: 'A 12-minute threshold guided by Bella. Nothing is hidden beneath the words, and it does not loop.',
 };
 
 export const SOUND_STUDIO_WORKS: readonly SoundStudioWork[] = [

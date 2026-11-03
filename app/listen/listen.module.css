@@ -166,3 +166,16 @@
 /* A quieter screen: fewer ornaments, no motion; controls and Stop are untouched */
 :global(body[data-quiet-ui]) .studioAtmosphere,:global(body[data-quiet-ui]) .orb,:global(body[data-quiet-ui]) .immersiveVisual,:global(body[data-quiet-ui]) .studioWorkOrb{display:none}
 :global(body[data-quiet-ui]) *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+
+.srOnly{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skipLink{position:absolute;left:12px;top:-60px;z-index:200;padding:10px 16px;border-radius:999px;background:#f6e8ce;color:#172125;font-weight:700;text-decoration:none}.skipLink:focus{top:12px}
+.shell :is(button,a,summary,[tabindex]):focus-visible{outline:2px solid #eed2a0;outline-offset:3px;border-radius:6px}
+.main:focus{outline:none}
+.studioWorkNote{margin:10px 0 0;font-size:12px;letter-spacing:.02em;color:var(--amber);opacity:.9}
+.quality{letter-spacing:0}
+/* Mobile: the bottom tab bar is fixed, so lift the global MAIA and bug-report controls above it and stack them
+   rather than letting either sit on the tabs or on each other. */
+@media(max-width:700px){
+  :global(body):has([data-studio-tab-bar="true"]) :global(.fixed.bottom-5.right-5){bottom:calc(3.75rem + env(safe-area-inset-bottom) + .5rem)}
+  :global(body):has([data-studio-tab-bar="true"]) :global(.fixed.bottom-4.right-4){bottom:calc(3.75rem + env(safe-area-inset-bottom) + 3.4rem)}
+}
