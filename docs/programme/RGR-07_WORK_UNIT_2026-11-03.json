@@ -1,0 +1,102 @@
+{
+  "work_unit_id": "rgr-07-motif-benchmark-constitution-20261103",
+  "programme": "RELATIONAL-GEOMETRY-REASONING",
+  "gate": "RGR-07",
+  "hypothesis": "H-MO1 — HIGHER-ORDER MOTIF TRANSFER",
+  "title": "H-MO1 Motif Benchmark Constitution (preregistration lock)",
+  "governing_law": "docs/programme/RGR-07_H-MO1_CANDIDATE_CHARTER_2026-09-23.md",
+  "parent_work_unit": "rgr-06-confirmatory-implementation-lock-20260919",
+  "base_ref": "f21fda83a15a6ddb0c5af429895dc1c7e0f9c7af",
+  "objective": "Freeze every value the RGR-07 charter deliberately left open — r_pair class partition, group-span template classes, composition table f, split sizes and surface codebooks, delta_min, kappa_min, legibility discrimination floor and witness agreement rule, comparator and budget policy, and the Section 12 invalidation thresholds — as a preregistration lock before any fixture exists. Separately (H0a): admit whatever H1–H6 artifacts the founder supplies, each at its provenance class; absent artifacts, nothing is admitted.",
+  "founder_acts": {
+    "gate_opened": {
+      "date": "2026-11-03",
+      "act": "\"yes open\" — opens RGR-07; adopts the charter as governing law",
+      "scope_of_act": "gate opening only; not W2 authorization of this packet"
+    },
+    "work_unit_authorization": "PENDING — W2 authorization of this exact packet is a separate founder act (RGR-00 Section XVII: routing is not authority)"
+  },
+  "state": {
+    "lifecycle_state": "DRAFT",
+    "disposition": "open",
+    "guard": "OPEN"
+  },
+  "authority": {
+    "benchmark_materialization": false,
+    "benchmark_model_training": false,
+    "benchmark_performance_inspection": false,
+    "dataset_generation": false,
+    "deployment": false,
+    "elemental_operator_formalization": false,
+    "external_ai_inference": false,
+    "maia_change": false,
+    "member_data_access": false,
+    "model_provider_api": false,
+    "natural_conversation_access": false,
+    "production_read": false,
+    "production_write": false,
+    "public_package_registry_read": false,
+    "replication_execution": false,
+    "repository_read": true,
+    "repository_write": "isolated_worktree_only",
+    "test_execution": false
+  },
+  "allowed_paths": [
+    "docs/programme/RGR-07_H-MO1_CANDIDATE_CHARTER_2026-09-23.md",
+    "docs/programme/RGR-07_WORK_UNIT_2026-11-03.json",
+    "docs/programme/RGR-07_MOTIF_BENCHMARK_CONSTITUTION_*.md",
+    "docs/programme/RGR-07_PREREGISTRATION_LOCK_*.md",
+    "docs/programme/evidence/RGR-07/H0A_PROVENANCE_ADMISSION.json",
+    "CLAUDE.md"
+  ],
+  "forbidden_paths": [
+    "app", "lib", "database", "components", "jarvis-desktop", "scripts", "tests"
+  ],
+  "acceptance_conditions": [
+    "Every value named in the objective is frozen with a stated rationale and no fixture, example, pair, model or provider call exists.",
+    "The composition table f satisfies charter Section 7: y balanced; P(y|s), P(y|r_pair), P(y|r_group) each uninformative by factorial construction.",
+    "The relation-preserving / relation-breaking conjunction is inherited from RGR-03 Section 1 by reference, not paraphrased.",
+    "F_G and F_R are defined over a byte-identical observable set O; the extractor is counted inside F_R's budget; F_R-oracle is marked diagnostic-only.",
+    "Legibility is forced-choice discrimination against wrong-model translations with a preregistered floor; no automated result may report it passed.",
+    "Support levels are MOTIF-STRUCTURAL / MOTIF-NATURAL on the evidence axis and REPRESENTATIONAL-NECESSITY on a separate axis.",
+    "Every Section 12 invalidation condition carries a numeric threshold or an explicit reason it is categorical.",
+    "H0a records, per H1–H6 result, either the admitted artifact set with digests and provenance class, or NOT_ADMITTED (researcher-reported).",
+    "No Elemental, aspect-derived, Spiralogic or alchemical label appears in any target, latent rule identifier, template class or generator taxonomy (RGR-03 Section 19 audit).",
+    "Independent adversarial review of the constitution is recorded with provenance (RGR-04 Section XXXIV pattern) or is explicitly recorded as not yet performed."
+  ],
+  "stop_conditions": [
+    "Any inherited RGR-00 … RGR-06 law or frozen artifact must change.",
+    "Any repository path outside allowed_paths is required.",
+    "Any fixture, example, pair, split file, model, training run, provider call or external inference becomes necessary.",
+    "Any member conversation, member data, Sanctuary content or production read becomes necessary.",
+    "Any Elemental or aspect-derived operator must be named to proceed.",
+    "A frozen value cannot be set without inspecting benchmark performance (would be post hoc).",
+    "The founder re-numbers the gate (charter Section 0.1): rename and re-issue this packet rather than edit it in place."
+  ],
+  "materialization_boundary": {
+    "benchmark_examples_materialized": 0,
+    "benchmark_pairs_materialized": 0,
+    "dataset_files_written": 0,
+    "benchmark_model_training_executed": false,
+    "benchmark_performance_inspected": false,
+    "provider_calls": 0,
+    "test_executed": false,
+    "replication_executed": false
+  },
+  "successor_authority": {
+    "fixture_generator_implementation": "NOT_AUTHORIZED",
+    "benchmark_materialization": "NOT_AUTHORIZED",
+    "benchmark_model_training": "NOT_AUTHORIZED",
+    "human_legibility_witness": "NOT_AUTHORIZED",
+    "natural_data_gate": "NOT_AUTHORIZED",
+    "elemental_operator_programme": "CLOSED (RGR-04); separate programme prefix required",
+    "merge": "NOT_AUTHORIZED",
+    "deployment": "NOT_AUTHORIZED"
+  },
+  "preserved_lineage": {
+    "charter_drafted_at_canonical": "3f63ca65",
+    "charter_first_commit_on_branch": "405a17cdb (claude/funny-wozniak-vs3okx, merged forward as an ancestor; content re-based onto canonical f21fda83a, history preserved)",
+    "rgr06_standing": "CLOSED · no benchmark evidence · H-RT1 UNESTABLISHED",
+    "gate_number_note": "RGR-00 Section XXV reserved RGR-07 for a cross-domain transfer study; re-assigned by the 2026-11-03 founder act (third re-assignment after RGR-05 and RGR-06)"
+  }
+}
