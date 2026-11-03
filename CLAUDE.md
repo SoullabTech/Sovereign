@@ -177,6 +177,7 @@ This project is governed by the **[MAIA Oath](./docs/canon/MAIA_OATH.md)**. Any 
 - **No managed hosting platforms** (Vercel, Netlify, Heroku) — we control deployment
 - **No managed databases** (Supabase, PlanetScale, Neon) — PostgreSQL is self-hosted
 - **No CDN/proxy middlemen** (Cloudflare) doing MITM on traffic
+- **NOT Gmail** — Soullab mail is never sent or drafted through Gmail (or the Gmail connector)
 
 ### What we DO use
 - **Production host**: **minisforum** (LAN IP must be verified live; `192.168.4.38` was observed 2026-10-17, not guaranteed now), accessed via `ssh soullab@minisforum` after verifying host identity. Running Docker + **Caddy** (auto TLS via Let's Encrypt).
@@ -185,6 +186,7 @@ This project is governed by the **[MAIA Oath](./docs/canon/MAIA_OATH.md)**. Any 
 - **Reverse proxy**: **Caddy** in Docker container (`maia-caddy`) on minisforum.
 - **Database**: Self-hosted PostgreSQL in Docker (`maia-postgres`) on minisforum.
 - **Containers**: Docker and docker-compose.
+- **Email: WE USE PROTON.** Kelly's and Soullab's correspondence goes through **Proton Mail** (from `kelly@soullab.life`), never Gmail. App auth email uses managed Proton SMTP (`smtp.protonmail.ch`, `noreply@soullab.life`). On the Mac Studio, sessions use the local `proton-mail` MCP server (user scope; source `~/.claude/mcp/proton-mail/`), which talks only to Proton Mail Bridge on 127.0.0.1: `search` · `read` · `list_folders` · `create_draft` · `send` (draft uid + `confirmed: true`). Send only on Kelly's explicit go-ahead for that specific message. If the tools are absent, Bridge may not be running; otherwise compose in the Proton Mail app or hand Kelly the text.
 
 ### Production Stack (on minisforum)
 All services run in Docker on **minisforum**:
