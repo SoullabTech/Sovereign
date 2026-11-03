@@ -1238,8 +1238,12 @@ export default function FlagshipWriteEditController() {
     // displayText belongs to the local author-facing Craft presentation only.
     // It is neither a persistable author-turn field nor server authority.
     const text = (requestText ?? editorialDraft).trim();
-    if (!focusId || !context || !work || !text || editorialBusy
-      || !currentWorkGesture()) return;
+    if (!text || editorialBusy) return;
+    if (!focusId || !context || !work || !currentWorkGesture()) {
+      // A refusal the writer cannot see reads as a dead button.
+      setEditorialFailure('MAIA cannot read this passage yet: the Work is not confirmed for this session. Nothing was sent and your writing is untouched. Re-select the passage, or reopen the Work.');
+      return;
+    }
     // A current or formerly current A2 that failed a fresh check is not an
     // invitation to silently fall through to manuscript-global legacy send.
     if (currentLivingWorkScope && (

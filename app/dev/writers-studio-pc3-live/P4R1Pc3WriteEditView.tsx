@@ -1352,7 +1352,11 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       setCraftNotice('You paused MAIA revisions in this passage. Resume them explicitly before making another request. Your words remain untouched.');
       return;
     }
-    if (!craftVisible || !craftTarget || !props.workspaceOpen || busy || !text?.trim()) return;
+    if (busy || !text?.trim()) return;
+    if (!craftVisible || !craftTarget || !props.workspaceOpen) {
+      setCraftNotice('This passage is no longer held at the Craftsman\'s Table. Select it again. Nothing was sent.');
+      return;
+    }
     if (!props.sessionPosture.resolved || props.sessionPosture.sanctuary) {
       setCraftNotice('Choose an available Ordinary editorial session first. No request was sent.');
       return;
