@@ -7,6 +7,7 @@ describe("Writer's Studio continuity with Soullab Home", () => {
   const home = read('app/writers-studio/HomeView.tsx');
   const shell = read('app/writers-studio/studio/WriterStudioShell.tsx');
   const flagship = read('app/writers-studio/flagship/StudioChrome.tsx');
+  const fullRedesign = read('app/writers-studio/full-redesign/Shell.tsx');
 
   it('Studio Home always offers a quiet return to Soullab Home', () => {
     expect(home).toContain('href="/home"');
@@ -25,5 +26,13 @@ describe("Writer's Studio continuity with Soullab Home", () => {
 
   it('flagship manuscript rail uses its existing mark as the Soullab Home door', () => {
     expect(flagship).toContain('<a className="fs-mark" href="/home" aria-label="Return to Soullab Home" />');
+  });
+
+  it('full-redesign top bar uses its Soullab mark as the Soullab Home door', () => {
+    expect(fullRedesign).toContain('<a className="fr-brand" href="/home" aria-label="Return to Soullab Home"');
+    // The mark must not be inert text: before 2026-11-02 it was a plain <div>.
+    expect(fullRedesign).not.toContain('<div className="fr-brand">');
+    // The Studio's own Home room stays a separate tab.
+    expect(fullRedesign).not.toContain('href="/house"');
   });
 });
