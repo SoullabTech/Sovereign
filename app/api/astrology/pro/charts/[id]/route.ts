@@ -16,20 +16,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { calculateBirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { admitProCalculation, PRO_SUPPORTED_HOUSE_SYSTEMS } from '@/lib/astrology/proCalculationPolicy';
 import { calculateDeclinations } from '@/lib/astrology/proDeclinations';
+import { calculateChartPoints } from '@/lib/astrology/proChartPoints';
 import { deleteSavedChart, isSavedChartId, readSavedChartBirth, savedChartExists } from '@/lib/astrology/proSavedCharts';
 import { PRO_RESPONSE_HEADERS, proError, proOwnerStillCurrent, resolveProOwner } from '@/lib/astrology/proRouteAccess';
 
 type Params = { params: Promise<{ id: string }> };
 
-function requestedHouseSystem(request: NextRequest): 'porphyry' | 'whole-sign' | 'equal' | null {
+function requestedHouseSystem(request: NextRequest): 'porphyry' | 'whole-sign' | 'equal' | 'placidus' | 'koch' | null {
   try {
     const params = new URL(request.url).searchParams;
     const names = Array.from(params.keys());
     if (names.length === 0) return 'porphyry';
     if (names.length !== 1 || names[0] !== 'houseSystem') return null;
     const selected = params.get('houseSystem');
-    return selected && PRO_SUPPORTED_HOUSE_SYSTEMS.includes(selected as 'porphyry' | 'whole-sign' | 'equal')
-      ? selected as 'porphyry' | 'whole-sign' | 'equal' : null;
+    return selected && PRO_SUPPORTED_HOUSE_SYSTEMS.includes(selected as 'porphyry' | 'whole-sign' | 'equal' | 'placidus' | 'koch')
+      ? selected as 'porphyry' | 'whole-sign' | 'equal' | 'placidus' | 'koch' : null;
   } catch { return null; }
 }
 
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       data: chart,
       // Sun, Moon and planets only; approximate minor bodies are excluded.
       declinations: calculateDeclinations(admission.verifiedUtc),
+      points: calculateChartPoints(admission.verifiedUtc, birth.location.lat, birth.location.lng),
       calculationQuality: {
         profile: 'strict-core',
         method: admission.actualHouseSystem,
