@@ -358,10 +358,10 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                 <small data-author-keep-active>Keeping your chosen original wording in this working copy: “{keptExactPhrase}”.</small>
               ) : null}
             </section>
-            <p className="p4r1-maia-craft-intention">What are you trying to bring alive in these words?</p>
+            <p className="p4r1-maia-craft-intention">What would you like to change or look at in this passage?</p>
             <details className="p4r1-maia-craft-starters" data-relational-writing-invitations>
-              <summary>Help me find a way to ask</summary>
-              <p>One possibility. Use your own words, or change this completely.</p>
+              <summary>Show me an example</summary>
+              <p>An example you can use or rewrite.</p>
               <blockquote>{RELATIONAL_WRITING_INVITATIONS[invitationIndex].example}</blockquote>
               <div>
                 <button type="button" disabled={props.busy} onClick={() =>
@@ -382,7 +382,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
               value={draft}
               disabled={props.busy}
               rows={5}
-              placeholder="What do you want the writing to do?"
+              placeholder="For example: tighten this, or make the tone warmer."
               aria-label="Talk with MAIA about the writing"
               onChange={(event) => {
                 setDraft(event.target.value);
