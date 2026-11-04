@@ -47,6 +47,14 @@ type Props = {
   onClose: () => void;
   /** Present only while a conversation is open for this passage. */
   onStartFresh?: () => void;
+  /** Conversation-first step 5b (from Craftsman's Table): move to the next paragraph. */
+  onNextPassage?: () => void;
+  nextPassageLabel?: string | null;
+  /** Ask MAIA which passage to work on next (sends only the writer's words). */
+  onAskWhereNext?: () => void;
+  /** Pause MAIA's revisions for this passage: she keeps talking, offers no new wording. */
+  revisionsPaused?: boolean;
+  onPauseRevisions?: (paused: boolean) => void;
   children: ReactNode;
 };
 
@@ -144,6 +152,11 @@ export default function IsolatedEditorialRoom({
   onMayProposeImmediately,
   onClose,
   onStartFresh,
+  onNextPassage,
+  nextPassageLabel,
+  onAskWhereNext,
+  revisionsPaused,
+  onPauseRevisions,
   children,
 }: Props) {
   const [leftPercent, setLeftPercent] = useState(DEFAULT_PREFS.leftPercent);
@@ -434,6 +447,17 @@ export default function IsolatedEditorialRoom({
                   />
                   <span><b>Allow paragraph-removal proposals</b><small>Separate permission; never implied by the slider.</small></span>
                 </label>
+                {onPauseRevisions ? (
+                  <label className="p4r1-working-style-check" data-pause-revisions>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(revisionsPaused)}
+                      disabled={busy}
+                      onChange={(event) => onPauseRevisions(event.target.checked)}
+                    />
+                    <span><b>Pause MAIA’s revisions</b><small>For this passage: MAIA keeps talking but offers no new wording until you resume.</small></span>
+                  </label>
+                ) : null}
                 {editingLatitude === 1 ? (
                   <label className="p4r1-working-style-check">
                     <input
@@ -496,6 +520,25 @@ export default function IsolatedEditorialRoom({
             </div>
           </details>
 
+          {onNextPassage || onAskWhereNext ? (
+            <details className="p4r1-isolated-menu" data-next-passage-menu>
+              <summary>Next passage</summary>
+              <div className="p4r1-isolated-menu-card">
+                {onNextPassage ? (
+                  <button type="button" disabled={busy} onClick={onNextPassage}>
+                    <b>Go to the next passage</b>
+                    <span>{nextPassageLabel ?? 'The next paragraph'}. Nothing here is saved or applied by moving.</span>
+                  </button>
+                ) : null}
+                {onAskWhereNext ? (
+                  <button type="button" disabled={busy} onClick={onAskWhereNext}>
+                    <b>Ask MAIA where next</b>
+                    <span>She suggests; you choose where to work.</span>
+                  </button>
+                ) : null}
+              </div>
+            </details>
+          ) : null}
           {onStartFresh ? (
             <button type="button" disabled={busy} onClick={onStartFresh} title="The earlier conversation stays saved">
               Start a new conversation

@@ -7,7 +7,8 @@ import { STUDIO_ACTIONS, parseStudioActions, stripStudioActions, studioActionsIn
 
 describe('the closed allowlist', () => {
   it('is exactly the approved v1 set, with no "go to section"', () => {
-    expect(STUDIO_ACTIONS.map((a) => a.id).sort()).toEqual(['craftsmans-table', 'develop-overview', 'editorial-pass', 'new-conversation']);
+    // Step 5b: Craftsman's Table lives inside Focus (Adjust), so it is no longer a place to go.
+    expect(STUDIO_ACTIONS.map((a) => a.id).sort()).toEqual(['develop-overview', 'editorial-pass', 'new-conversation']);
     expect(JSON.stringify(STUDIO_ACTIONS)).not.toMatch(/section-|go-to-section/);
   });
 
