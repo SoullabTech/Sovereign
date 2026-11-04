@@ -24,6 +24,9 @@ interface Props {
   /** Optional outer ring (e.g. transits) drawn outside the zodiac band. */
   outerBodies?: readonly TransitBody[];
   outerLabel?: string;
+  /** Optional second outer ring, for a triwheel. */
+  outerBodies2?: readonly TransitBody[];
+  outerLabel2?: string;
 }
 
 const OUTER_RADIUS = 352;
@@ -53,9 +56,13 @@ export function CelestialChartWheel({
   maxAspectOrb = null,
   outerBodies,
   outerLabel = 'Outer ring',
+  outerBodies2,
+  outerLabel2 = 'Second ring',
 }: Props) {
   const outerMarkers = useMemo(() => outerBodies?.length ? layoutOuter(outerBodies) : [], [outerBodies]);
+  const outerMarkers2 = useMemo(() => outerBodies2?.length ? layoutOuter(outerBodies2) : [], [outerBodies2]);
   const hasOuter = outerMarkers.length > 0;
+  const hasOuter2 = hasOuter && outerMarkers2.length > 0;
   const ascendant = toEclipticLongitude(chart.ascendant.sign, chart.ascendant.degree);
   const bodies = useMemo(() => chartBodies(chart), [chart]);
   const bodyMap = useMemo(() => new Map(bodies.map((body) => [body.name, body])), [bodies]);
@@ -82,7 +89,7 @@ export function CelestialChartWheel({
     <div className={styles.wheelFrame}>
       <svg
         className={styles.wheelSvg}
-        viewBox={hasOuter ? '-60 -60 820 820' : '0 0 700 700'}
+        viewBox={hasOuter2 ? '-110 -110 920 920' : hasOuter ? '-60 -60 820 820' : '0 0 700 700'}
         role="group"
         aria-label="Interactive natal chart. Select a planet to explore its calculated position and relationships."
       >
@@ -222,6 +229,28 @@ export function CelestialChartWheel({
                   <text x={glyph.x} y={glyph.y} textAnchor="middle" dominantBaseline="central"
                     fontSize="20" fill="#9fd0d8">
                     <title>{outerLabel + ': ' + body.name + ' · ' + body.position.sign + ' ' +
+                      body.position.degree.toFixed(2) + '°' + (body.position.motionStatus === 'retrograde' ? ' ℞' : '')}</title>
+                    {body.glyph}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        )}
+
+        {hasOuter2 && (
+          <g aria-label={outerLabel2}>
+            <circle cx={center} cy={center} r="424" fill="none" stroke="#c3a7d8" strokeWidth="1" opacity=".35" />
+            {outerMarkers2.map(({ body, display }) => {
+              const tickIn = radialPoint(body.longitude, ascendant, 376);
+              const tickOut = radialPoint(body.longitude, ascendant, 386);
+              const glyph = radialPoint(display, ascendant, 400);
+              return (
+                <g key={body.name}>
+                  <line x1={tickIn.x} y1={tickIn.y} x2={tickOut.x} y2={tickOut.y} stroke="#c3a7d8" strokeWidth="2" />
+                  <text x={glyph.x} y={glyph.y} textAnchor="middle" dominantBaseline="central"
+                    fontSize="20" fill="#c3a7d8">
+                    <title>{outerLabel2 + ': ' + body.name + ' · ' + body.position.sign + ' ' +
                       body.position.degree.toFixed(2) + '°' + (body.position.motionStatus === 'retrograde' ? ' ℞' : '')}</title>
                     {body.glyph}
                   </text>

@@ -32,4 +32,7 @@ jobs:
         run: >
           npx jest --config jest.config.js --runInBand
           lib/astrology/__tests__/proIndependentSwissMethod.test.ts
+          lib/astrology/__tests__/proIndependentSwissQuadrant.test.ts
           --passWithNoTests=false
+      # The job name above is kept unchanged so any required-check rule that
+      # names it keeps matching; the Placidus/Koch fixture adds 13 checks.
