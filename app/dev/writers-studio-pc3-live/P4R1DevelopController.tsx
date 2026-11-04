@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
+import ContinuousDraftWayIn from '@/app/writers-studio/ContinuousDraftWayIn';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork } from '@/app/writers-studio/workContext';
 import { resolveSituatedWorkContext, studioHomeReturnSearch } from '@/app/writers-studio/situatedWork';
@@ -119,6 +120,7 @@ export default function P4R1DevelopController() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [wayInId, setWayInId] = useState<string | null>(null);
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
   const [declaring, setDeclaring] = useState(false);
   const [declareError, setDeclareError] = useState<string | null>(null);
@@ -192,6 +194,7 @@ export default function P4R1DevelopController() {
     }
     setPhase('loading');
     setMessage(null);
+    setWayInId(null);
     try {
       const response = await apiFetch(
         '/api/writers-studio/rebuild/context?manuscriptId=' + encodeURIComponent(manuscriptId),
@@ -205,6 +208,7 @@ export default function P4R1DevelopController() {
       if (body.state !== 'section_aware') {
         setPhase('error');
         setMessage('This manuscript is not section-addressable yet. Develop will not guess at its structure.');
+        setWayInId(manuscriptId);
         return;
       }
       setContext(body);
@@ -1655,7 +1659,8 @@ export default function P4R1DevelopController() {
         <div style={{ padding: 32 }}>
           {phase === 'loading' ? 'Opening Develop…' : null}
           {phase === 'unauthorized' ? 'Sign in to open Develop.' : null}
-          {phase === 'error' ? (message ?? 'Develop could not be opened.') : null}
+          {phase === 'error' && wayInId ? <ContinuousDraftWayIn manuscriptId={wayInId} room="Develop" /> : null}
+          {phase === 'error' && !wayInId ? (message ?? 'Develop could not be opened.') : null}
         </div>
       </main>
     );

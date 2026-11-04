@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
+import ContinuousDraftWayIn from '@/app/writers-studio/ContinuousDraftWayIn';
 import { readCurrentSanctuaryPosture, type CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork } from '@/app/writers-studio/workContext';
@@ -141,6 +142,8 @@ export default function FlagshipWriteEditController() {
 
   const [phase, setPhase] = useState<Phase>('loading');
   const [message, setMessage] = useState<string | null>(null);
+  /* The manuscript the section-aware room refused for want of sections: the member is shown a way in, never a wall. */
+  const [wayInId, setWayInId] = useState<string | null>(null);
   const [context, setContext] = useState<ContextReady | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [selectedPassage, setSelectedPassage] = useState<Pc3HeldPassage | null>(null);
@@ -258,6 +261,7 @@ export default function FlagshipWriteEditController() {
   const load = useCallback(async () => {
     setPhase('loading');
     setMessage(null);
+    setWayInId(null);
     try {
       let manuscriptId = requested;
       if (!manuscriptId) {
@@ -306,6 +310,7 @@ export default function FlagshipWriteEditController() {
       if (body.state !== 'section_aware') {
         setPhase('error');
         setMessage('This manuscript is not section-addressable yet. The Studio will not guess at its structure.');
+        setWayInId(manuscriptId);
         return;
       }
       setContext(body);
@@ -2161,7 +2166,8 @@ export default function FlagshipWriteEditController() {
       <main className="fs-p4-opening">
         {phase === 'loading' ? 'Opening Writer’s Studio…' : null}
         {phase === 'unauthorized' ? 'Sign in to open your Writer’s Studio.' : null}
-        {phase === 'error' ? (message ?? 'The Studio could not be opened.') : null}
+        {phase === 'error' && wayInId ? <ContinuousDraftWayIn manuscriptId={wayInId} room="Write" /> : null}
+        {phase === 'error' && !wayInId ? (message ?? 'The Studio could not be opened.') : null}
       </main>
     );
   }

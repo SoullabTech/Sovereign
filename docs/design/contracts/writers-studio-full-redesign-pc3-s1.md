@@ -17,6 +17,11 @@ surfaces:
   - app/dev/writers-studio-pc3-live/P4R1ProofView.tsx
   - app/dev/writers-studio-p4r1/p4r1-live.css
   - app/api/sovereign/manuscripts/[id]/render/route.ts
+  # 2026-11-04 — the way-in shown when Write, Develop or Review refuse a draft
+  # that has no section identity. Links only (the Canvas for the exact manuscript,
+  # and back to the Studio); it converts nothing and writes nothing, so it adds no
+  # authority. Its witness is owed: it has been rendered in a unit test, not walked.
+  - app/writers-studio/ContinuousDraftWayIn.tsx
 
 change_class: experiential
 
