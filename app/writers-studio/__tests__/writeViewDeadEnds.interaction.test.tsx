@@ -94,7 +94,7 @@ const fictionalWork = {
 
 
 type Overrides = Partial<{
-  work: unknown; maiaRelationship: unknown; sessionPosture: { resolved: boolean; sanctuary: boolean };
+  work: unknown; maiaRelationship: unknown; sessionPosture: { resolved: boolean; sanctuary: boolean }; onMode: unknown;
 }>;
 
 describe('Write view dead ends', () => {
@@ -144,7 +144,7 @@ describe('Write view dead ends', () => {
       onHoldPassage: (s: typeof section, start: number, end: number, text: string) => setHeld({
         draftSectionId: s.draftSectionId, start, end, text, revisionNumber: 1,
       }),
-      onMode: jest.fn(), workspaceOpen,
+      onMode: (overrides.onMode as never) ?? jest.fn(), workspaceOpen,
       carriedInsight: null, carriedInsightReturnMode: null, attentionReturnItemId: null,
       lineageReturnChapterId: null, lineageReturnCandidateId: null, workspaceInsight: null,
       editorialThread: { ...thread }, relationshipChoices: [],
@@ -202,28 +202,13 @@ describe('Write view dead ends', () => {
     clickButton('Work with passage');
   }
 
-  it('"Suggest an edit" tells the server the writer asked for wording', () => {
-    mount();
-    openMenu();
-    clickButton("Craftsman's Table");
-    clickButton('Suggest an edit');
-    expect(onSend).toHaveBeenCalledTimes(1);
-    expect(onSend.mock.calls[0][1]).toEqual(expect.objectContaining({
-      proposalPolicy: 'allow', proposalRequested: true,
-    }));
-  });
-
-  it('a control that did not ask for wording does not release the discuss-first gate', () => {
-    mount();
-    openMenu();
-    clickButton("Craftsman's Table");
-    clickButton('Next focus');
-    clickButton('Ask MAIA');
-    expect(onSend.mock.calls[0][1]).toEqual({ proposalPolicy: 'reply_only' });
-  });
+  // The Craftsman's Table menu entry (and its in-table "Suggest an edit") was
+  // folded into Focus and retired in #2093/#2095, so the two cases that drove it
+  // are gone with it. "Show edit options" in Focus carries proposalRequested
+  // itself (EditorialDancePanel), and Revise below pins the same flag.
 
   it.each([
-    ['Focus'], ['Discuss'], ['Teach me about this'], ["Craftsman's Table"],
+    ['Focus'], ['Discuss'], ['Teach me about this'],
   ])('%s with no Living Work says why instead of doing nothing', (label) => {
     mount({ work: null });
     openMenu();
@@ -232,6 +217,18 @@ describe('Write view dead ends', () => {
     expect(onSend).not.toHaveBeenCalled();
     // The menu stays open so the writer can read the reason.
     expect(node.querySelector('.p4r1-selection-menu')).not.toBeNull();
+  });
+
+  it('the no-Living-Work reason carries an action that goes to Home, where a Work is declared', () => {
+    const onMode = jest.fn();
+    mount({ work: null, onMode });
+    openMenu();
+    clickButton('Focus');
+    const go = node.querySelector('[data-open-home-to-declare]') as HTMLButtonElement | null;
+    expect(go).not.toBeNull();
+    expect(onSend).not.toHaveBeenCalled();
+    act(() => go!.click());
+    expect(onMode).toHaveBeenCalledWith('home');
   });
 
   it('Revise and Go deeper with no Living Work also explain themselves', () => {

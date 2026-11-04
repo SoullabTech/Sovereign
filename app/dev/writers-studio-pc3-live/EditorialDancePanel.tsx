@@ -522,16 +522,16 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       data-relationship-gate
     >
       <div>
-        <b>MAIA works on passages inside a relationship for this Work.</b>
-        <span>None is selected yet. Ordinary writing stays fully available without one.</span>
+        <b>I haven’t read this book with you yet.</b>
+        <span>Start with me and I can talk this passage through and suggest edits. Your writing stays fully yours either way.</span>
         {relationshipNudge ? (
-          <span role="status" data-relationship-nudge>Begin or continue a relationship first. Nothing has been sent.</span>
+          <span role="status" data-relationship-nudge>Start with me first, and I’ll pick this up. Nothing has been sent.</span>
         ) : null}
         {props.maiaRelationship.message ? <span role="status">{props.maiaRelationship.message}</span> : null}
       </div>
       <div className="p4r1-dance-posture-actions">
         <button type="button" disabled={props.maiaRelationship.busy} onClick={props.maiaRelationship.onBegin}>
-          {props.maiaRelationship.busy ? 'Beginning…' : 'Begin relationship with MAIA'}
+          {props.maiaRelationship.busy ? 'Starting…' : 'Start with MAIA'}
         </button>
         {props.maiaRelationship.choices.map((choice) => (
           <button
@@ -556,10 +556,10 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       {!props.sessionPosture.resolved ? (
         <>
           <div>
-            <b>Choose how this session should hold the exchange.</b>
-            <span>MAIA will not guess your privacy posture before opening an editorial relationship.</span>
+            <b>How would you like me to hold this conversation?</b>
+            <span>I won’t guess. Ordinary can be remembered; Sanctuary is never saved.</span>
             {postureNudge ? (
-              <span role="status" data-posture-nudge>Choose Ordinary or Sanctuary first. Nothing has been sent.</span>
+              <span role="status" data-posture-nudge>Choose Ordinary or Sanctuary first, and I’ll continue. Nothing has been sent.</span>
             ) : null}
           </div>
           <div className="p4r1-dance-posture-actions">
@@ -570,10 +570,10 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       ) : (
         <>
           <div>
-            <b>Sanctuary is on.</b>
-            <span>Persistent editorial collaboration stays unavailable in Sanctuary. Your passage remains unchanged.</span>
+            <b>Sanctuary is on, so I’m not working on passages.</b>
+            <span>Nothing here is saved. Switch to Ordinary when you want me to look at this one. Your passage is unchanged.</span>
             {postureNudge ? (
-              <span role="status" data-posture-nudge>Switch to Ordinary to work with MAIA on this passage. Nothing has been sent.</span>
+              <span role="status" data-posture-nudge>Switch to Ordinary and I’ll work on this passage. Nothing has been sent.</span>
             ) : null}
           </div>
           <div className="p4r1-dance-posture-actions">

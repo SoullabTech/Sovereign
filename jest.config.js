@@ -19,8 +19,8 @@ const config = {
     '**/app/dev/writers-studio-pc3-live/__tests__/developAddToWork.test.tsx',
     '**/app/writers-studio/__tests__/observationMarkerDialogueInView.interaction.test.tsx',
     '**/app/writers-studio/__tests__/writeViewDeadEnds.interaction.test.tsx',
+    '**/app/writers-studio/__tests__/jarvisA2RevalidationActualControllerR1.test.ts',
     '**/app/writers-studio/__tests__/writeViewDeadEndSweep.interaction.test.tsx',
-    '**/app/writers-studio/__tests__/jarvisActualWriteCraftEntryR1.interaction.test.tsx',
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',

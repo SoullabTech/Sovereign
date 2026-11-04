@@ -113,7 +113,7 @@ const POSTURES: Array<[string, { resolved: boolean; sanctuary: boolean }]> = [
 ];
 const RELATIONSHIPS: Array<[string, unknown]> = [['no relationship', null], ['relationship begun', { id: 'rel-1' }]];
 const ACTIONS: Array<{ label: string; more?: boolean }> = [
-  { label: 'Focus' }, { label: "Craftsman's Table" }, { label: 'Discuss' },
+  { label: 'Focus' }, { label: 'Discuss' },
   { label: 'Teach me about this' }, { label: 'Revise', more: true }, { label: 'Go deeper', more: true },
 ];
 

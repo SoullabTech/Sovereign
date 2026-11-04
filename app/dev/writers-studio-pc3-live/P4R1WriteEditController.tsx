@@ -557,6 +557,10 @@ export default function FlagshipWriteEditController() {
       if (!targetId) {
         setA2Relationship(null);
         setA2RelationshipPhase('ready');
+        // "Nothing begun yet" is a settled answer for THIS Work, not an absent
+        // one. Without this the view receives 'idle', never offers Begin with
+        // MAIA, and Suggest an edit refuses with no way forward.
+        a2MessageScopeRef.current = scopeAtRead;
         return;
       }
 
