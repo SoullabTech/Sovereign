@@ -322,9 +322,35 @@ function calculatePorphyryHouses(
   return cusps;
 }
 
-// Calculate Placidus houses (time-based semi-arcs)
-// NOTE: True Placidus requires complex iterative solving and can distort at extreme latitudes
-// For Spiralogic, Porphyry is recommended as the steadier middle path
+// Quadrant-house helpers shared by Placidus and Koch. Same ecliptic model as
+// the Ascendant and MC above, so the angles agree across house systems.
+const DEG = Math.PI / 180;
+const norm360 = (x: number) => ((x % 360) + 360) % 360;
+function eclipticLongitudeFromRA(ra: number, obliquity: number): number {
+  return norm360(Math.atan2(Math.sin(ra * DEG), Math.cos(ra * DEG) * Math.cos(obliquity * DEG)) / DEG);
+}
+function declinationOfLongitude(longitude: number, obliquity: number): number {
+  return Math.asin(Math.sin(obliquity * DEG) * Math.sin(longitude * DEG)) / DEG;
+}
+/** Diurnal semi-arc in degrees; throws where the point never rises or sets. */
+function diurnalSemiArc(declination: number, lat: number): number {
+  const c = -Math.tan(lat * DEG) * Math.tan(declination * DEG);
+  if (c < -1 || c > 1) throw new Error('HOUSE_GEOMETRY_UNAVAILABLE');
+  return Math.acos(c) / DEG;
+}
+function fillOpposites(cusps: number[]): number[] {
+  cusps[3] = norm360(cusps[9] + 180);
+  cusps[6] = norm360(cusps[0] + 180);
+  cusps[4] = norm360(cusps[10] + 180);
+  cusps[5] = norm360(cusps[11] + 180);
+  cusps[7] = norm360(cusps[1] + 180);
+  cusps[8] = norm360(cusps[2] + 180);
+  return cusps;
+}
+
+// Placidus: each intermediate cusp is the ecliptic point that has travelled
+// one or two thirds of its own semi-arc. Solved by fixed-point iteration on
+// right ascension. Verified against Swiss Ephemeris 2.10.03 (houses_ex 'P').
 function calculatePlacidusHouses(
   lat: number,
   lng: number,
@@ -332,8 +358,51 @@ function calculatePlacidusHouses(
   ascendant: number,
   obliquity: number
 ): number[] {
-  // For now, fall back to Porphyry until true Placidus is implemented
-  return calculatePorphyryHouses(lat, lng, time, ascendant, obliquity);
+  const ramc = norm360((Astronomy.SiderealTime(time) + lng / 15) * 15);
+  const solve = (fraction: number, belowHorizon: boolean): number => {
+    let ra = belowHorizon ? ramc + 180 - 90 * fraction : ramc + 90 * fraction;
+    for (let i = 0; i < 60; i++) {
+      const semiArc = diurnalSemiArc(declinationOfLongitude(eclipticLongitudeFromRA(ra, obliquity), obliquity), lat);
+      const next = belowHorizon ? ramc + 180 - fraction * (180 - semiArc) : ramc + fraction * semiArc;
+      if (Math.abs(next - ra) < 1e-9) { ra = next; break; }
+      ra = next;
+    }
+    return eclipticLongitudeFromRA(ra, obliquity);
+  };
+  const cusps = new Array<number>(12);
+  cusps[0] = ascendant;
+  cusps[9] = calculateAstronomicalMidheaven(time, lng, obliquity);
+  cusps[10] = solve(1 / 3, false);
+  cusps[11] = solve(2 / 3, false);
+  cusps[1] = solve(2 / 3, true);
+  cusps[2] = solve(1 / 3, true);
+  return fillOpposites(cusps);
+}
+
+// Koch (birthplace): trisect the diurnal semi-arc D of the MC degree in time
+// and take the Ascendant at each shifted sidereal time. Cusps 11/12 at
+// RAMC − 2D/3 and RAMC − D/3; cusps 2/3 at RAMC + D/3 and RAMC + 2D/3.
+// Verified against Swiss Ephemeris 2.10.03 (houses_ex 'K').
+function calculateKochHouses(
+  lat: number,
+  lng: number,
+  time: Astronomy.AstroTime,
+  ascendant: number,
+  obliquity: number
+): number[] {
+  const lst = Astronomy.SiderealTime(time) + lng / 15;
+  const ramc = norm360(lst * 15);
+  const mc = calculateAstronomicalMidheaven(time, lng, obliquity);
+  const semiArc = diurnalSemiArc(declinationOfLongitude(mc, obliquity), lat);
+  const ascAt = (ramcDegrees: number) => calculateAscendant(ramcDegrees / 15, lat, obliquity);
+  const cusps = new Array<number>(12);
+  cusps[0] = ascendant;
+  cusps[9] = mc;
+  cusps[10] = ascAt(ramc - (2 * semiArc) / 3);
+  cusps[11] = ascAt(ramc - semiArc / 3);
+  cusps[1] = ascAt(ramc + semiArc / 3);
+  cusps[2] = ascAt(ramc + (2 * semiArc) / 3);
+  return fillOpposites(cusps);
 }
 
 // Calculate house cusps based on selected system
@@ -369,15 +438,10 @@ function calculateHouseCusps(
         return calculatePorphyryHouses(lat, lng, time, ascendant, obliquity);
 
       case 'placidus':
-        if (strictCore) throw new Error('HOUSE_METHOD_NOT_IMPLEMENTED');
         return calculatePlacidusHouses(lat, lng, time, ascendant, obliquity);
 
       case 'koch':
-        // TODO: Implement Koch calculations. Legacy callers retain historical
-        // approximate Porphyry fallback; strict-core cannot substitute it.
-        if (strictCore) throw new Error('HOUSE_METHOD_NOT_IMPLEMENTED');
-        console.warn('Koch is not implemented; using Porphyry legacy approximation');
-        return calculatePorphyryHouses(lat, lng, time, ascendant, obliquity);
+        return calculateKochHouses(lat, lng, time, ascendant, obliquity);
 
       default:
         if (strictCore) throw new Error('HOUSE_METHOD_UNRECOGNIZED');

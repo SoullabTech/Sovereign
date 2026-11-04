@@ -18,6 +18,8 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { calculateBirthChart, type BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { admitProCalculation, PRO_SUPPORTED_HOUSE_SYSTEMS } from '@/lib/astrology/proCalculationPolicy';
+import { calculateDeclinations } from '@/lib/astrology/proDeclinations';
+import { calculateChartPoints } from '@/lib/astrology/proChartPoints';
 import { proMemberAllowed, proPreviewEnabled } from '@/lib/astrology/proAccess';
 import { proChartWriteOriginAllowed } from '@/lib/astrology/proRequestGuard';
 
@@ -73,7 +75,7 @@ function wallClock(input: unknown): string | null {
   const match = value.match(/^(\d{2}:\d{2})(?::00(?:\.0+)?)?$/);
   return match ? match[1] : null;
 }
-function requestedHouseSystem(request: NextRequest): 'porphyry' | 'whole-sign' | 'equal' | null {
+function requestedHouseSystem(request: NextRequest): 'porphyry' | 'whole-sign' | 'equal' | 'placidus' | 'koch' | null {
   // House method is the only accepted client choice. A default/no-query POST
   // remains Porphyry; no birth record, identity, or chart object comes from the browser.
   try {
@@ -82,8 +84,8 @@ function requestedHouseSystem(request: NextRequest): 'porphyry' | 'whole-sign' |
     if (names.length === 0) return 'porphyry';
     if (names.length !== 1 || names[0] !== 'houseSystem') return null;
     const selected = params.get('houseSystem');
-    return selected && PRO_SUPPORTED_HOUSE_SYSTEMS.includes(selected as 'porphyry' | 'whole-sign' | 'equal')
-      ? selected as 'porphyry' | 'whole-sign' | 'equal' : null;
+    return selected && PRO_SUPPORTED_HOUSE_SYSTEMS.includes(selected as 'porphyry' | 'whole-sign' | 'equal' | 'placidus' | 'koch')
+      ? selected as 'porphyry' | 'whole-sign' | 'equal' | 'placidus' | 'koch' : null;
   } catch { return null; }
 }
 function coords(row: OwnBirthRow): { lat: number; lng: number } | null {
@@ -228,6 +230,9 @@ export async function POST(request: NextRequest) {
       memberId: finalMemberId,
       sourceRevision,
       data: chart,
+      // Sun, Moon and planets only; approximate minor bodies are excluded.
+      declinations: calculateDeclinations(admission.verifiedUtc),
+      points: calculateChartPoints(admission.verifiedUtc, location.lat, location.lng),
       calculationQuality: {
         profile: 'strict-core',
         method: admission.actualHouseSystem,
