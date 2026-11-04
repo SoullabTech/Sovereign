@@ -286,6 +286,15 @@ function noProtectedOrAutomaticEffects() {
   expect(mockApiCalls.filter(x=>x.method!=='GET')).toEqual([]);
 }
 
+it('E01 a Work with no MAIA relationship yet tells the view it is ready to begin one (the Begin with MAIA door must be reachable)',async()=>{
+  mockWorkKey='A';mockEnableBRelationship=false;
+  await render();await React.act(async()=>{await settle(85)});
+  expect(mockViewProps.maiaRelationship).toBeNull();
+  // Before the fix this read 'idle', so the view never offered Begin with MAIA
+  // and Suggest an edit refused with no way forward.
+  expect(mockViewProps.maiaRelationshipPhase).toBe('ready');
+});
+
 it('C01 current matching detail can restore B without a send or mutation',async()=>{
   await mountB();
   expect(mockViewProps.maiaRelationship?.id).toBe('fiction-relationship-b');

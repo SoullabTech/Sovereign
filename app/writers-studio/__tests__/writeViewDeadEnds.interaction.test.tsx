@@ -202,28 +202,13 @@ describe('Write view dead ends', () => {
     clickButton('Work with passage');
   }
 
-  it('"Suggest an edit" tells the server the writer asked for wording', () => {
-    mount();
-    openMenu();
-    clickButton("Craftsman's Table");
-    clickButton('Suggest an edit');
-    expect(onSend).toHaveBeenCalledTimes(1);
-    expect(onSend.mock.calls[0][1]).toEqual(expect.objectContaining({
-      proposalPolicy: 'allow', proposalRequested: true,
-    }));
-  });
-
-  it('a control that did not ask for wording does not release the discuss-first gate', () => {
-    mount();
-    openMenu();
-    clickButton("Craftsman's Table");
-    clickButton('Next focus');
-    clickButton('Ask MAIA');
-    expect(onSend.mock.calls[0][1]).toEqual({ proposalPolicy: 'reply_only' });
-  });
+  // The Craftsman's Table menu entry (and its in-table "Suggest an edit") was
+  // folded into Focus and retired in #2093/#2095, so the two cases that drove it
+  // are gone with it. "Show edit options" in Focus carries proposalRequested
+  // itself (EditorialDancePanel), and Revise below pins the same flag.
 
   it.each([
-    ['Focus'], ['Discuss'], ['Teach me about this'], ["Craftsman's Table"],
+    ['Focus'], ['Discuss'], ['Teach me about this'],
   ])('%s with no Living Work says why instead of doing nothing', (label) => {
     mount({ work: null });
     openMenu();
