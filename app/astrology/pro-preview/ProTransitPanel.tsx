@@ -8,6 +8,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { aspectReading } from '@/lib/astrology/proTraditionText';
 import type { WheelBody } from '@/lib/astrology/proChartGeometry';
 import { transitBodies, transitToNatalAspects, type TransitBody } from '@/lib/astrology/proTransits';
 import styles from './pro-transit-panel.module.css';
@@ -170,6 +171,7 @@ export default function ProTransitPanel({
                   <span className={styles.type}>{a.type}</span>
                   <span>natal {a.natal}</span>
                   <span className={styles.orb}>{a.orb.toFixed(2)}°</span>
+                  <small className={styles.tradition}>{aspectReading('transiting ' + a.transit, 'natal ' + a.natal, a.type)}</small>
                 </li>
               ))}
             </ul>
