@@ -977,6 +977,35 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     </div>
   ) : null;
 
+  /* Conversation-first step 5 (founder adoption 2026-11-03): Craftsman's Table's
+     change-by-change mode lives inside Focus, opened by Adjust on the option card.
+     Same component and the same save/apply props; its sends go into this conversation. */
+  const focusDeeper = props.held && props.editorialThread ? (
+    <CraftsmansTableR1
+      compact
+      sections={props.context.sections}
+      bodyOf={props.writing.bodyOf}
+      held={props.held}
+      thread={props.editorialThread}
+      version={props.suggestedVersion ?? null}
+      busy={busy}
+      onSend={(text, options) => {
+        if (!text?.trim() || busy) return;
+        props.onSendEditorial(text, {
+          proposalPolicy: options?.proposalPolicy === 'reply_only' ? 'reply_only' : 'allow',
+          ...(options?.proposalRequested ? { proposalRequested: true } : {}),
+          ...(options?.teachingAnchor ? { teachingAnchor: options.teachingAnchor } : {}),
+          ...(options?.passageAct ? { passageAct: options.passageAct } : {}),
+        });
+      }}
+      onSaveMember={props.onSaveMember}
+      onSaveWorking={props.onSaveWorking}
+      onApply={props.onApply}
+      appliedVersionId={props.appliedVersionId}
+      onUndo={props.onUndo}
+    />
+  ) : undefined;
+
   const editorial = props.workspaceOpen && !isolatedEditorial && !props.held ? (
     <div className="p4r1-context-card p4r1-editorial" data-p4r1-editorial>
       <header className="p4r1-context-head">
@@ -996,6 +1025,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       <EditorialDancePanel
         onStudioAction={onStudioAction}
         onUseVersion={props.onUseVersion}
+        deeper={focusDeeper}
         pendingQuestion={props.pendingEditorialText ?? null}
         manuscriptTitle={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
         currentText={currentText}
@@ -1393,6 +1423,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       // transcript custody or a server acknowledgement.
       ...(options?.displayText !== undefined ? { displayText: options.displayText } : {}),
       ...(options?.teachingAnchor ? { teachingAnchor: options.teachingAnchor } : {}),
+      ...(options?.passageAct ? { passageAct: options.passageAct } : {}),
     });
   };
 
@@ -1575,6 +1606,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       <EditorialDancePanel
         onStudioAction={onStudioAction}
         onUseVersion={props.onUseVersion}
+        deeper={focusDeeper}
         pendingQuestion={props.pendingEditorialText ?? null}
         manuscriptTitle={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
         showOriginal={false}

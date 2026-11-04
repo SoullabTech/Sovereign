@@ -25,6 +25,7 @@ import type { WriteBlock } from '@/app/writers-studio/full-redesign/WriteRoom';
 import { craftTargetKey, type CraftTableSnapshot, type CraftTablePort, type CraftKeptSpan, type CraftCanvasReceipt } from '@/lib/writersStudio/craftFocusR1';
 import { locateUniquePresentationPassage } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import { teachingQuestion } from '@/lib/writersStudio/teachingTurn';
+import { passageActQuestion } from '@/lib/writersStudio/passageActs';
 
 export type CraftHeldPassage = {
   draftSectionId: string;
@@ -44,6 +45,10 @@ const STRENGTH_CHOICES: ReadonlyArray<{ value: 1 | 2 | 3 | 4 | 5; label: string 
 ];
 
 export type CraftsmansTableR1Props = {
+  /** Conversation-first step 5: shown inside Passage Focus as its change-by-change mode.
+   *  Keeps the safeguard line, the per-change choices, Write here, Save and Apply;
+   *  hides the view and notation toggles, Suggest/Discuss (Focus has them) and Compose. */
+  compact?: boolean;
   /** How much MAIA may change in one suggestion (1 keeps the writer's words). */
   editLatitude?: 1 | 2 | 3 | 4 | 5;
   onEditLatitude?: (value: 1 | 2 | 3 | 4 | 5) => void;
@@ -533,12 +538,6 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     edit: CraftWorkingEdit,
     kind: 'another' | 'why' | 'teach',
   ) => {
-    const localWorking = manualText !== null
-      ? ' This mark is part of the writer’s own current working copy.'
-      : decisionFor(decisions, edit.id).mode === 'proposal'
-        ? ' The writer currently has this proposed move in the working copy.'
-        : ' The writer is currently keeping the original here.';
-
     const subject = !edit.from
       ? `the insertion "${edit.to.trim()}"`
       : !edit.to
@@ -546,25 +545,18 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
         : `the change from "${edit.from.trim()}" to "${edit.to.trim()}"`;
 
     if (kind === 'another') {
-      props.onSend([
-        `Show me one genuinely different way to handle ${subject}.${localWorking}`,
-        'Stay inside this exact local edit. Preserve my intention, voice, cadence, imagery, worldview, and intentional ambiguity.',
-        'Do not broaden the rewrite. Return one bounded alternative and explain its tradeoff briefly.',
-      ].join('\n'), {
+      // Step 5: only the writer's words are stored; the instruction is server-owned.
+      props.onSend(passageActQuestion('change-another', subject), {
         proposalPolicy: 'allow',
         proposalRequested: true,
-        displayText: 'Show me another way for this change.',
+        passageAct: 'change-another',
       });
       return;
     }
     if (kind === 'why') {
-      props.onSend([
-        `Explain ${subject}.${localWorking}`,
-        'Use evidence from my exact words. Tell me what the move may gain and what it could cost.',
-        'Make the strongest case for my original too. Do not propose new wording in this answer.',
-      ].join('\n'), {
+      props.onSend(passageActQuestion('change-why', subject), {
         proposalPolicy: 'reply_only',
-        displayText: 'Why this change?',
+        passageAct: 'change-why',
       });
       return;
     }
@@ -607,6 +599,11 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
 
   return (
     <section className="p4r1-craft-r1" data-craftsmans-table-r1>
+      {props.compact ? (
+        <header className="p4r1-craft-r1-bar is-compact">
+          <small>Bracket: focused passage. Red strikeouts and blue inserts: proposed edits. Apply remains your choice.</small>
+        </header>
+      ) : (
       <header className="p4r1-craft-r1-bar">
         <div>
           <span className="p4r1-eyebrow">Write · Craftsman's Table</span>
@@ -634,6 +631,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
           </details>
         </div>
       </header>
+      )}
       {props.focusTools}
       {kept.length > 0 ? <div className="p4r1-craft-kept" data-craft-settled-choices>
         {kept.map(k => <span key={`${k.start}:${k.end}`}>Kept: {k.text.trim() || 'spacing'}
@@ -815,6 +813,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                           </label>
                         ) : null}
                         <div role="group" aria-label="Work with the focused passage">
+                          {props.compact ? null : (<>
                           <button type="button" disabled={props.busy || !canonicalAligned} onClick={() => props.onSend([
                             'Use our carried conversation and the writer-owned current working copy.',
                             'Show one small, useful edit to this exact focused passage directly in the marked copy.',
@@ -824,6 +823,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                             'Discuss this exact focused passage in light of our conversation. What is it doing, and what is the most useful question to consider? Do not draft or change any wording.',
                             { proposalPolicy: 'reply_only', displayText: 'Discuss this focused passage without changing the wording.' },
                           )}>Discuss</button>
+                          </>)}
                           <button type="button" disabled={applied || props.busy || !canonicalAligned} onClick={() => beginDirectComposition(workingText, candidateVersion?.id ?? null)}>Write here</button>
                         </div>
                       </div>
@@ -944,7 +944,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
             {newerMaiaAlternative ? ' MAIA has also offered a newer alternative; your wording has not been replaced.' : ''}
           </span>
           <div className="p4r1-craft-r1-footer-actions">
-            <details className="p4r1-craft-r1-compose-menu" hidden={applied}>
+            <details className="p4r1-craft-r1-compose-menu" hidden={applied || props.compact}>
               <summary>Compose</summary>
               <div>
                 <button type="button" onClick={() => beginDirectComposition(original, props.version?.id ?? null)}>

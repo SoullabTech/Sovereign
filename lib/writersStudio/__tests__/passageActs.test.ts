@@ -74,3 +74,12 @@ describe('wiring', () => {
     expect(read('lib/writersStudio/rebuild/editorialCollaboration.ts')).toContain('...(passageAct ? { passageAct } : {})');
   });
 });
+
+describe('per-change acts (step 5)', () => {
+  it('name the change in the writer’s words; the instruction stays server-side', () => {
+    expect(passageActQuestion('change-why', 'the deletion "x"')).toBe('Why the deletion "x"?');
+    expect(passageActQuestion('change-another', 'the deletion "x"')).toBe('Show me another way to handle the deletion "x".');
+    expect(passageActInstruction('change-another')).toContain('Stay inside this exact local edit');
+    expect(passageActInstruction('change-why')).toContain('Make the strongest case for my original too');
+  });
+});

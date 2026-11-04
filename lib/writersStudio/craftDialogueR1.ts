@@ -1,5 +1,6 @@
 import type { RebuildEditorialThread } from './rebuild/editorialCollaboration';
 import type { TeachingAnchor } from './teachingTurn';
+import type { PassageAct } from './passageActs';
 
 export type CraftDialogueSpeaker = 'writer' | 'maia' | 'action';
 
@@ -11,6 +12,8 @@ export interface CraftSendOptions {
   readonly skipCanvasCommands?: boolean;
   /** The teaching button pressed (F1). The server owns the answer's shape. */
   readonly teachingAnchor?: TeachingAnchor;
+  /** A server-owned card act (conversation-first steps 1 and 5). */
+  readonly passageAct?: PassageAct;
   readonly suppressWriterEcho?: boolean;
 }
 
