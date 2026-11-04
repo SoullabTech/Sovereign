@@ -60,7 +60,8 @@ import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { EditorialLatitude } from '@/lib/manuscript/editorialScope/contract';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
-import type { A2RelationshipSummary, EligibleCarrySource } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
+import { focusPassageShown } from '@/lib/writersStudio/heldPassageContinuity';
+import { resolveEditorialReturnBinding, type A2RelationshipSummary, type EligibleCarrySource } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 import type { CraftWorkingSaveDraft } from '@/lib/writersStudio/craftSaveContractR1';
 import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
@@ -560,6 +561,15 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const currentText = props.held?.draftSectionId === props.focusId
     ? props.held.text
     : currentBody;
+  /* Focus's "Your passage" panel shows the passage as it stands. After the writer's own
+     apply rewrites it, the held text is the old wording; the conversation's live
+     application locates the new words (Undo puts the held text back in place). */
+  const heldStillLive = props.held?.draftSectionId === props.focusId
+    && Array.from(currentBody).slice(props.held.start, props.held.end).join('') === props.held.text;
+  const appliedPassage = !heldStillLive && props.editorialThread
+    ? resolveEditorialReturnBinding(props.editorialThread, currentBody)
+    : null;
+  const passageShown = focusPassageShown({ currentText, heldStillLive, binding: appliedPassage });
 
   const focusRealEditor = () => {
     setBlankArrivalDismissed(true);
@@ -1554,7 +1564,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     <IsolatedEditorialRoom
       appearance={props.appearance}
       title={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'Selected passage'}
-      currentText={currentText}
+      currentText={passageShown}
       sectionBody={currentBody}
       busy={busy}
       editingLatitude={props.editLatitude}
