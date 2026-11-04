@@ -101,6 +101,36 @@ describe('JARVIS MAIA unsent message custody — actual component, inert service
     expect(currentText()).toBe(literal); // still edit-ready
   });
 
+  it('shows the writer\'s own words exactly as typed even when they contain text shaped like a Studio marker (only MAIA-authored markers are stripped)', () => {
+    show();
+    const literal = 'A fictional note: [[studio:develop-overview]] stays mine.  ';
+    type(literal);
+    click('Work it through');
+    const visible = node.querySelector<HTMLElement>('.p4r1-maia-craft-r1-transcript [data-speaker="writer"]');
+    expect(visible?.querySelector('p')?.textContent).toBe(literal);
+    expect(send.mock.calls[0]?.[0]).toBe(literal);
+  });
+
+  it('strips a Studio marker from a MAIA turn: the writer never sees the raw marker (Design 1B), in the transcript and in the last-reply view', () => {
+    const marked = { key: 'maia:fiction-thread:0', speaker: 'maia' as const, body: 'FICTIONAL MAIA REPLY [[studio:develop-overview]]' };
+    show({ dialogue: [marked] });
+    const turn = node.querySelector<HTMLElement>('.p4r1-maia-craft-r1-transcript [data-speaker="maia"] p');
+    expect(turn?.textContent).toBe('FICTIONAL MAIA REPLY');
+    expect(node.textContent).not.toContain('[[studio:');
+
+    show({ dialogue: [], lastMaiaTurn: { ...marked, body: 'FICTIONAL LAST REPLY [[studio:develop-overview]]' } as MaiaCraftCompanionR1Props['lastMaiaTurn'] });
+    expect(node.textContent).toContain('FICTIONAL LAST REPLY');
+    expect(node.textContent).not.toContain('[[studio:');
+  });
+
+  it('only the WRITER is exempt: a Canvas (action) turn still has its Studio markers stripped, so no speaker class but the writer can show a raw marker', () => {
+    const action = { key: 'action:1', speaker: 'action' as const, body: 'Canvas note [[studio:develop-overview]]' };
+    show({ dialogue: [action] });
+    const turn = node.querySelector<HTMLElement>('.p4r1-maia-craft-r1-transcript [data-speaker="action"] p');
+    expect(turn?.textContent).toBe('Canvas note');
+    expect(node.textContent).not.toContain('[[studio:');
+  });
+
   it('orders actual MAIA replies around a local unconfirmed You attempt without echoing stored scaffolding', () => {
     const before = { key: 'maia:fiction-thread:0', speaker: 'maia' as const, body: 'FICTIONAL EARLIER MAIA REPLY' };
     const after = { key: 'maia:fiction-thread:2', speaker: 'maia' as const, body: 'FICTIONAL LATER MAIA REPLY' };
