@@ -503,6 +503,7 @@ export async function POST(request: NextRequest) {
       text: result.text,
       warnings: result.warnings,
       fidelity: result.fidelity ?? null,
+      paragraphsReconstructed: result.paragraphsReconstructed === true,
       title: titleFromFilename(file.name),
       format: result.format,
       sourceArrivalId,
