@@ -105,6 +105,27 @@ export default function ListenRoom() {
     document.body.setAttribute('data-studio-tabbar', '1');
     return () => document.body.removeAttribute('data-studio-tabbar');
   }, []);
+  // A view change that removes the focused control (e.g. "Browse all fields") would drop keyboard focus to the
+  // page body; bring it to the content region instead. A focused tab-bar button persists, so it keeps focus.
+  const firstView = useRef(true);
+  useEffect(() => {
+    if (firstView.current) { firstView.current = false; return; }
+    const region = document.getElementById('sound-studio-content');
+    const active = document.activeElement;
+    if (region && (!active || active === document.body || !document.body.contains(active))) region.focus({ preventScroll: true });
+  }, [view]);
+  // While the shared player is showing, the global MAIA and bug-report controls sit above it; this tells the
+  // stylesheet how tall it currently is (0 when it is hidden).
+  const dockPlayback = persistent?.snapshot.playback;
+  useEffect(() => {
+    const dock = document.querySelector<HTMLElement>('[data-listen10-persistent-dock="true"]');
+    const set = () => document.body.style.setProperty('--listen-dock-h', dock && dock.getClientRects().length > 0 ? `${dock.offsetHeight}px` : '0px');
+    set();
+    if (!dock || typeof ResizeObserver === 'undefined') return () => document.body.style.removeProperty('--listen-dock-h');
+    const observer = new ResizeObserver(set);
+    observer.observe(dock);
+    return () => { observer.disconnect(); document.body.style.removeProperty('--listen-dock-h'); };
+  }, [dockPlayback]);
   const memberAudioRef = useRef<HTMLAudioElement>(null);
   const player = journeys[mood];
   const isPlaying = persistent
