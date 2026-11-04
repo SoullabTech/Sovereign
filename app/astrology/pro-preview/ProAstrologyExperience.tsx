@@ -23,6 +23,7 @@ import ProSavedCharts, { type SavedChartSummary } from './ProSavedCharts';
 import ProTransitPanel from './ProTransitPanel';
 import ProAspectGrid from './ProAspectGrid';
 import ProComparePanel from './ProComparePanel';
+import ProDerivedPanel from './ProDerivedPanel';
 import type { Declination } from '@/lib/astrology/proDeclinations';
 import type { TransitBody } from '@/lib/astrology/proTransits';
 import styles from './astrology-pro-preview.module.css';
@@ -101,7 +102,7 @@ export default function ProAstrologyExperience() {
   // Sky at a member-chosen moment. Not private: it carries no birth data.
   // One outer ring at a time: transits or a compared chart. Not private on its
   // own; a compared chart is fetched through the same owner-only routes.
-  const [outer, setOuter] = useState<{ kind: 'transits' | 'compare'; bodies: TransitBody[]; label: string } | null>(null);
+  const [outer, setOuter] = useState<{ kind: 'transits' | 'compare' | 'derived'; bodies: TransitBody[]; label: string } | null>(null);
   const transits = outer?.kind === 'transits' ? outer.bodies : [];
   const [declinations, setDeclinations] = useState<Declination[] | null>(null);
   const [privateViewVerified, setPrivateViewVerified] = useState(false);
@@ -528,6 +529,9 @@ export default function ProAstrologyExperience() {
                   currentSubjectId={savedSubject ? savedSubject.id : 'own'} houseSystem={houseSystem}
                   natalBodies={bodies} outer={outer?.kind === 'compare' ? outer.bodies : []}
                   onOuter={(next, label) => setOuter(next.length && label ? { kind: 'compare', bodies: next, label } : null)} />
+                <ProDerivedPanel subjectId={savedSubject ? savedSubject.id : 'own'}
+                  chartLabel={savedSubject ? savedSubject.label : 'my chart'} houseSystem={houseSystem}
+                  onOuter={(next, label) => setOuter(next.length && label ? { kind: 'derived', bodies: next, label } : null)} />
                 <ProAspectGrid chart={privateChart} declinations={declinations} onSelectBody={selectBody} />
                 <p id="pro-orb-filter-description" className={styles.sourceLabel} role="note">
                   The orb setting filters existing reported aspects for display; it does not
