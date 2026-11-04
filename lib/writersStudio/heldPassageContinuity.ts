@@ -37,3 +37,21 @@ export function reholdClearsConversation(input: ReholdInput): boolean {
   if (input.appliedWording !== null && input.heldText === input.appliedWording) return false;
   return true;
 }
+
+/**
+ * What Focus's "Your passage" panel shows. After the writer's own apply rewrites the
+ * passage, the held text is the old wording while the manuscript holds the new; the
+ * conversation's live application (located uniquely in the section) names the words as
+ * they stand. Otherwise the held text is shown, as before.
+ */
+export function focusPassageShown(input: {
+  /** The held passage, or the section body when nothing is held here. */
+  currentText: string;
+  /** The held text is still in the manuscript at its held range. */
+  heldStillLive: boolean;
+  /** The conversation's return binding in the live section, if any. */
+  binding: { source: 'original_locus' | 'active_application'; text: string } | null;
+}): string {
+  if (input.heldStillLive) return input.currentText;
+  return input.binding?.source === 'active_application' ? input.binding.text : input.currentText;
+}

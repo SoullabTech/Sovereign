@@ -44,3 +44,24 @@ test('another section always clears, even mid-act', () => {
 test('with no conversation there is nothing to clear on the same section', () => {
   expect(reholdClearsConversation({ ...base, hasThread: false })).toBe(false);
 });
+
+import { focusPassageShown } from '../heldPassageContinuity';
+
+describe('focusPassageShown — Focus "Your passage" after the writer applies a version', () => {
+  it('shows the applied wording once the held text is no longer in the manuscript', () => {
+    expect(focusPassageShown({
+      currentText: 'Old words.', heldStillLive: false,
+      binding: { source: 'active_application', text: 'New words.' },
+    })).toBe('New words.');
+  });
+  it('keeps the held text while it is still in place', () => {
+    expect(focusPassageShown({
+      currentText: 'Old words.', heldStillLive: true,
+      binding: { source: 'active_application', text: 'New words.' },
+    })).toBe('Old words.');
+  });
+  it('keeps the held text when the binding is the original passage, or there is none', () => {
+    expect(focusPassageShown({ currentText: 'Old words.', heldStillLive: false, binding: { source: 'original_locus', text: 'Old words.' } })).toBe('Old words.');
+    expect(focusPassageShown({ currentText: 'Old words.', heldStillLive: false, binding: null })).toBe('Old words.');
+  });
+});
