@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { calculateBirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { admitProCalculation, PRO_SUPPORTED_HOUSE_SYSTEMS } from '@/lib/astrology/proCalculationPolicy';
 import { calculateDeclinations } from '@/lib/astrology/proDeclinations';
+import { calculateChartPoints } from '@/lib/astrology/proChartPoints';
 import {
   RETURN_BODIES, findReturn, geocentricLongitude, secondaryProgressionInstant, utcParts, type ReturnBody,
 } from '@/lib/astrology/proDerivedMoments';
@@ -23,7 +24,7 @@ import { loadSubjectBirth } from '@/lib/astrology/proSubjectBirth';
 import { transitMomentInRange } from '@/lib/astrology/proTransits';
 import { PRO_RESPONSE_HEADERS, proError, proOwnerStillCurrent, resolveProOwner } from '@/lib/astrology/proRouteAccess';
 
-type HouseSystem = 'porphyry' | 'whole-sign' | 'equal';
+type HouseSystem = 'porphyry' | 'whole-sign' | 'equal' | 'placidus' | 'koch';
 
 function requestedHouseSystem(request: NextRequest): HouseSystem | null {
   try {
@@ -98,6 +99,7 @@ export async function POST(request: NextRequest) {
       instant: new Date(derived.verifiedUtc).toISOString(),
       data: chart,
       declinations: calculateDeclinations(derived.verifiedUtc),
+      points: calculateChartPoints(derived.verifiedUtc, subject.birth.location.lat, subject.birth.location.lng),
       method: kind === 'progressed'
         ? 'secondary progression (day for a year), cast at the birth place for the progressed instant'
         : 'exact geocentric return of the body to its natal longitude, cast at the birth place',

@@ -10,6 +10,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { aspectReading } from '@/lib/astrology/proTraditionText';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { hasValidChartGeometry, type WheelBody } from '@/lib/astrology/proChartGeometry';
 import { chartAsOuterRing, compositeChart, crossAspects } from '@/lib/astrology/proComparison';
@@ -134,6 +135,7 @@ export default function ProComparePanel({
                   <span className={styles.type}>{c.type}</span>
                   <span>{other.label} {c.outer}</span>
                   <span className={styles.orb}>{c.orb.toFixed(2)}°</span>
+                  <small className={styles.tradition}>{aspectReading(chartLabel + '’s ' + c.inner, other.label + '’s ' + c.outer, c.type)}</small>
                 </li>
               ))}
             </ul>
