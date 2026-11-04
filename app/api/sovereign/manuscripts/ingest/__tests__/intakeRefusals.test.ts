@@ -6,8 +6,8 @@
  * refusal is that it happens BEFORE anything is stored: the assertions on `parseUpload` and `recordArtifactArrival` are
  * the substance.
  *
- * Gate order exercised here: identity, hold (released here), audience, rate limit, posture, idempotency header, body,
- * parse, text refusal, custody.
+ * Gate order exercised here: identity, hold (released here), audience, rate limit, posture, key-provider configuration,
+ * idempotency header, body, parse, text refusal, custody.
  */
 import { NextRequest } from 'next/server';
 
@@ -68,8 +68,13 @@ function request(headers: Record<string, string | null> = {}): NextRequest {
   return new NextRequest('http://localhost/api/sovereign/manuscripts/ingest', { method: 'POST', headers: h, body: form });
 }
 
+const envRef = process.env as Record<string, string | undefined>;
+let savedProvider: string | undefined;
 beforeEach(() => {
   jest.clearAllMocks();
+  // The route refuses before storing anything when no key provider is configured; these tests drive it as a configured process.
+  savedProvider = envRef.WRITER_SOURCE_KEY_PROVIDER;
+  envRef.WRITER_SOURCE_KEY_PROVIDER = 'local-test';
   memberSeq += 1;
   actAs(`aaaaaaaa-aaaa-4aaa-8aaa-${String(memberSeq).padStart(12, '0')}`);
   beta.mockResolvedValue({ eligible: true, basis: 'active_beta_tester' });
@@ -79,7 +84,10 @@ beforeEach(() => {
   jest.spyOn(console, 'error').mockImplementation(() => undefined);
   jest.spyOn(console, 'warn').mockImplementation(() => undefined);
 });
-afterEach(() => jest.restoreAllMocks());
+afterEach(() => {
+  jest.restoreAllMocks();
+  if (savedProvider === undefined) delete envRef.WRITER_SOURCE_KEY_PROVIDER; else envRef.WRITER_SOURCE_KEY_PROVIDER = savedProvider;
+});
 
 it('sanity: an eligible member with explicit ordinary posture and readable text is accepted and its original is recorded', async () => {
   const res = await POST(request());
@@ -87,6 +95,70 @@ it('sanity: an eligible member with explicit ordinary posture and readable text 
   const body = await res.json();
   expect(body.sourceArrivalId).toBe('arrival-fictional-1');
   expect(record).toHaveBeenCalledTimes(1);
+});
+
+describe('D-01 — a released route with no key provider configured refuses honestly, before creating anything', () => {
+  const unconfigure = () => { delete envRef.WRITER_SOURCE_KEY_PROVIDER; };
+
+  it('answers 503 source_intake_not_configured, NOT retryable, with a true sentence; reads no body, parses nothing, stores nothing', async () => {
+    unconfigure();
+    const res = await POST(request());
+    expect(res.status).toBe(503);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    const body = await res.json();
+    expect(body).toMatchObject({ code: 'source_intake_not_configured', retryable: false });
+    expect(body.error).toContain('Nothing was sent or saved');
+    expect(body.error).toContain('paste your writing');
+    expect(body.error).not.toMatch(/retry|try again/i); // a retry of this can never work, so it is not offered
+    expect(parse).not.toHaveBeenCalled();
+    expect(record).not.toHaveBeenCalled(); // no landing intent, no stranded row
+  });
+
+  it.each([
+    ['the provider is unknown', 'gcp-kms'],
+    ['aws-kms is named but the key ARN and region are not', 'aws-kms'],
+  ])('also refuses when %s', async (_n, provider) => {
+    envRef.WRITER_SOURCE_KEY_PROVIDER = provider;
+    const keep = [envRef.WRITER_SOURCE_KMS_KEY_ARN, envRef.WRITER_SOURCE_KMS_REGION, envRef.AWS_REGION, envRef.AWS_DEFAULT_REGION];
+    delete envRef.WRITER_SOURCE_KMS_KEY_ARN; delete envRef.WRITER_SOURCE_KMS_REGION; delete envRef.AWS_REGION; delete envRef.AWS_DEFAULT_REGION;
+    try {
+      const res = await POST(request());
+      expect(res.status).toBe(503);
+      expect(record).not.toHaveBeenCalled();
+    } finally {
+      const names = ['WRITER_SOURCE_KMS_KEY_ARN', 'WRITER_SOURCE_KMS_REGION', 'AWS_REGION', 'AWS_DEFAULT_REGION'];
+      names.forEach((n, i) => { if (keep[i] === undefined) delete envRef[n]; else envRef[n] = keep[i]; });
+    }
+  });
+
+  it('tells a member nothing about the configuration until they have passed the audience gate: a non-roster member still gets 403', async () => {
+    unconfigure();
+    beta.mockResolvedValue({ eligible: false, basis: 'not_in_pilot' });
+    const res = await POST(request());
+    expect(res.status).toBe(403);
+    expect((await res.json()).code).toBeUndefined();
+  });
+
+  it('is checked AFTER posture: a Sanctuary request is refused as Sanctuary, and a missing posture claim as 428, whatever the configuration', async () => {
+    unconfigure();
+    const sanctuary = await POST(request({ 'x-maia-sanctuary': 'true' }));
+    expect(sanctuary.status).toBe(423);
+    expect((await sanctuary.json()).code).toBe('sanctuary_unavailable');
+    const missing = await POST(request({ 'x-maia-sanctuary': null }));
+    expect(missing.status).toBe(428);
+  });
+
+  it('is checked BEFORE the body: an unconfigured process refuses a request that has no retry identifier with the configuration answer', async () => {
+    unconfigure();
+    const res = await POST(request({ [SOURCE_UPLOAD_IDEMPOTENCY_HEADER]: null }));
+    expect(res.status).toBe(503);
+  });
+
+  it('a configured process is unaffected: the same request is accepted and recorded', async () => {
+    const res = await POST(request());
+    expect(res.status).toBe(200);
+    expect(record).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('D1 — audience', () => {
