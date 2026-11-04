@@ -11,6 +11,7 @@ import {
   SIGN_GLYPHS, SIGNS, ASPECT_COLOR, chartBodies,
   normalizeLongitude, radialPoint, toEclipticLongitude, selectedRelationships, layoutChartMarkers,
 } from '@/lib/astrology/proChartGeometry';
+import type { TransitBody } from '@/lib/astrology/proTransits';
 import styles from './astrology-pro-preview.module.css';
 
 interface Props {
@@ -20,6 +21,25 @@ interface Props {
   showAspects: boolean;
   showHouseLines: boolean;
   maxAspectOrb?: number | null;
+  /** Optional outer ring (e.g. transits) drawn outside the zodiac band. */
+  outerBodies?: readonly TransitBody[];
+  outerLabel?: string;
+}
+
+const OUTER_RADIUS = 352;
+const OUTER_MIN_SPACING = 8; // degrees between outer glyphs at this radius
+
+/** Spreads outer glyphs so none overlap; true positions stay marked by ticks. */
+function layoutOuter(bodies: readonly TransitBody[]) {
+  const ordered = [...bodies].sort((a, b) => a.longitude - b.longitude);
+  const placed: Array<{ body: TransitBody; display: number }> = [];
+  for (const body of ordered) {
+    const prior = placed[placed.length - 1];
+    const display = prior && body.longitude - prior.display < OUTER_MIN_SPACING
+      ? prior.display + OUTER_MIN_SPACING : body.longitude;
+    placed.push({ body, display });
+  }
+  return placed;
 }
 
 const center = 350;
@@ -31,7 +51,11 @@ export function CelestialChartWheel({
   showAspects,
   showHouseLines,
   maxAspectOrb = null,
+  outerBodies,
+  outerLabel = 'Outer ring',
 }: Props) {
+  const outerMarkers = useMemo(() => outerBodies?.length ? layoutOuter(outerBodies) : [], [outerBodies]);
+  const hasOuter = outerMarkers.length > 0;
   const ascendant = toEclipticLongitude(chart.ascendant.sign, chart.ascendant.degree);
   const bodies = useMemo(() => chartBodies(chart), [chart]);
   const bodyMap = useMemo(() => new Map(bodies.map((body) => [body.name, body])), [bodies]);
@@ -58,7 +82,7 @@ export function CelestialChartWheel({
     <div className={styles.wheelFrame}>
       <svg
         className={styles.wheelSvg}
-        viewBox="0 0 700 700"
+        viewBox={hasOuter ? '-60 -60 820 820' : '0 0 700 700'}
         role="group"
         aria-label="Interactive natal chart. Select a planet to explore its calculated position and relationships."
       >
@@ -183,6 +207,29 @@ export function CelestialChartWheel({
             </g>
           );
         })}
+
+        {hasOuter && (
+          <g aria-label={outerLabel}>
+            <circle cx={center} cy={center} r="330" fill="none" stroke="#8fa9b6" strokeWidth="1" opacity=".55" />
+            <circle cx={center} cy={center} r="376" fill="none" stroke="#8fa9b6" strokeWidth="1" opacity=".35" />
+            {outerMarkers.map(({ body, display }) => {
+              const tickIn = radialPoint(body.longitude, ascendant, 318);
+              const tickOut = radialPoint(body.longitude, ascendant, 332);
+              const glyph = radialPoint(display, ascendant, OUTER_RADIUS);
+              return (
+                <g key={body.name}>
+                  <line x1={tickIn.x} y1={tickIn.y} x2={tickOut.x} y2={tickOut.y} stroke="#9fd0d8" strokeWidth="2" />
+                  <text x={glyph.x} y={glyph.y} textAnchor="middle" dominantBaseline="central"
+                    fontSize="20" fill="#9fd0d8">
+                    <title>{outerLabel + ': ' + body.name + ' · ' + body.position.sign + ' ' +
+                      body.position.degree.toFixed(2) + '°' + (body.position.motionStatus === 'retrograde' ? ' ℞' : '')}</title>
+                    {body.glyph}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        )}
 
         <circle cx={center} cy={center} r="111" fill="#0b1c2d" stroke="#627989" strokeWidth="1.5" opacity=".94" />
         <text x={center} y="323" textAnchor="middle" fontSize="11" fill="#cbb88f" letterSpacing="3">SOULLAB</text>

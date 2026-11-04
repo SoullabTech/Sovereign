@@ -20,6 +20,8 @@ import ProResearchWorkbench from './ProResearchWorkbench';
 import ProStudyWorkbench from './ProStudyWorkbench';
 import ProRelationshipsWorkbench from './ProRelationshipsWorkbench';
 import ProSavedCharts, { type SavedChartSummary } from './ProSavedCharts';
+import ProTransitPanel from './ProTransitPanel';
+import type { TransitBody } from '@/lib/astrology/proTransits';
 import styles from './astrology-pro-preview.module.css';
 
 type ChartStatus = 'idle' | 'loading' | 'ready' | 'signed-out' | 'consent-required' | 'incomplete' | 'unavailable';
@@ -93,6 +95,8 @@ export default function ProAstrologyExperience() {
   const [sourceRevision, setSourceRevision] = useState<string | null>(null);
   // null = the member's own chart; otherwise a saved chart for another person.
   const [savedSubject, setSavedSubject] = useState<{ id: string; label: string } | null>(null);
+  // Sky at a member-chosen moment. Not private: it carries no birth data.
+  const [transits, setTransits] = useState<TransitBody[]>([]);
   const [privateViewVerified, setPrivateViewVerified] = useState(false);
   const privateVerificationEpoch = useRef(0);
   const [chartError, setChartError] = useState<string | null>(null);
@@ -507,7 +511,9 @@ export default function ProAstrologyExperience() {
               <>
                 <CelestialChartWheel chart={privateChart} focusedBody={focusedBody} onFocusBody={selectBody}
                   showAspects={showAspects} showHouseLines={showHouseLines}
-                  maxAspectOrb={maxAspectOrb} />
+                  maxAspectOrb={maxAspectOrb} outerBodies={transits} outerLabel="Transits" />
+                <ProTransitPanel natalBodies={bodies} transits={transits}
+                  onTransits={(next) => setTransits(next)} />
                 <p id="pro-orb-filter-description" className={styles.sourceLabel} role="note">
                   The orb setting filters existing reported aspects for display; it does not
                   recalculate their accuracy or determine applying/separating phase.
