@@ -1,5 +1,26 @@
 # WRITER-SOURCE-INTAKE-LIFT · H1 — Hardening before the acceptance run (lane record)
 
+## 0. Lane preamble (manual §27) — ADDED RETROSPECTIVELY, 2026-11-04
+
+Manual §27 requires this preamble **before any action**. It was not written then. H1 was built and merged (commit:`8a93b5d4`) first; the founder's
+"make sure if needed we are doing a Jarvis flow" is what led to this record, and the follow-up work (sections 10 and 11, PR #2107) was started
+without a preamble of its own. Adding it now changes no evidence and no standing. It exposes the authority the lane already carried, and it
+records the order of events as it was rather than as the manual prescribes.
+
+```
+Class:                 A (consent, retention and deletion copy on the original-file intake path; needs a person's approval)
+Governing authority:   Founder 2026-11-03: "yes" to decisions D1-D6 and D9 on a separate branch; "1 yes 2 approved 3 merge";
+                       "yes" to combining the follow-ups into one PR. Runbook WRITER_SOURCE_KMS_RULING_AND_INTAKE_LIFT_RUNBOOK_2026-11-01.md
+                       section 4, steps 3 and 6. Manual section 20 (a lane inside an existing flow, not a new flow).
+Current gate:          H1 follow-ups: harden and verify the paths the acceptance run (step 3) and production witness (step 6) will exercise.
+                       One gate. The acceptance run and the witness are separate gates and are not opened here.
+Evidence subject:      PR #2107 at its head when merged (CI is evidence about that exact head), onto canonical clean-main-no-secrets.
+                       H1 itself: PR #2088, merged as commit:`8a93b5d4`. Neither says anything about production.
+Stop boundary:         This lane may not deploy, configure or touch an AWS key or credential, edit Caddy or compose, change
+                       releaseAuthority.ts, admit member data, schedule or wire the sweep, rule a disposition, or un-freeze
+                       claude/happy-cannon-17pn9x. It does not merge around a missing approval.
+```
+
 ```
 FLOW:      The founder's intake-lift runbook, docs/programme/WRITER_SOURCE_KMS_RULING_AND_INTAKE_LIFT_RUNBOOK_2026-11-01.md §4
            (six ordered steps). Not a new flow: this lane answers the same governing question as that runbook
