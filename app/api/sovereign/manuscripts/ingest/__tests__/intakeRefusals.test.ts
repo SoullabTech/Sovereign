@@ -107,7 +107,7 @@ describe('D-01 — a released route with no key provider configured refuses hone
     expect(res.headers.get('cache-control')).toBe('no-store');
     const body = await res.json();
     expect(body).toMatchObject({ code: 'source_intake_not_configured', retryable: false });
-    expect(body.error).toContain('Nothing was sent or saved');
+    expect(body.error).toContain('Nothing was saved');
     expect(body.error).toContain('paste your writing');
     expect(body.error).not.toMatch(/retry|try again/i); // a retry of this can never work, so it is not offered
     expect(parse).not.toHaveBeenCalled();

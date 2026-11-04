@@ -306,7 +306,7 @@ export async function POST(request: NextRequest) {
     const postureClaim = request.headers.get(POSTURE_HEADER);
     if (postureClaim !== 'true' && postureClaim !== 'false') {
       return NextResponse.json(
-        { error: 'Choose Ordinary or Sanctuary first. Nothing has been sent.', code: 'posture_required' },
+        { error: 'Choose Ordinary or Sanctuary first. Nothing was saved.', code: 'posture_required' },
         { status: 428, headers: { 'Cache-Control': 'no-store' } },
       );
     }
@@ -326,7 +326,7 @@ export async function POST(request: NextRequest) {
       console.warn('[press/manuscripts/ingest] refused: source key provider not configured', { memberRef: memberRef(memberId) });
       return NextResponse.json(
         {
-          error: 'Original-file import is not available yet. Nothing was sent or saved. You can still paste your writing.',
+          error: 'Original-file import is not available yet. Nothing was saved. You can still paste your writing.',
           code: 'source_intake_not_configured',
           retryable: false,
         },

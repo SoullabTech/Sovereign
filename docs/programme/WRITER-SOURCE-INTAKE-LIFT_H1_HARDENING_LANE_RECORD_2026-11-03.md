@@ -9,7 +9,8 @@ LANE:      H1 — harden the paths the runbook's step 3 (acceptance run) and ste
 SUBJECT:   PR #2088, branch claude/writer-source-intake-hardening, onto canonical clean-main-no-secrets.
 STANDING:  MERGED to canonical as commit:`8a93b5d4` (2026-11-03 14:26 UTC). Adjudicated PASS for merge-readiness as CODE (section 5). NOT DEPLOYED.
            ⚠️ Section 3 and docket D-01 were written on a wrong premise and are CORRECTED in section 10; read section 10 first.
-           Merge is waiting on a person's approval (Class A) and CI on the final head.
+           Merged after a person's approval and CI on its head; the follow-ups (suite repair, fail-closed gate, closure notes) travel in one
+           separate Class A PR (section 10). The Caddy edge holds' current state is unevidenced; the last dated reading (2026-11-01) showed both present.
 AUTHORITY: Founder, 2026-11-03: "yes" to making decisions D1-D6 and D9 on a separate branch; "1 yes 2 approved 3 merge"
            (D4 as an atomic refusal; build the abandoned-upload sweep; merge). The founder then enabled auto-merge and twice used
            "Update branch" on the PR. Interpretations I made are listed in section 7, not hidden.
