@@ -1,0 +1,30 @@
+/* Global rules for the Sound Studio room. They target elements outside the room's own markup (the shared player,
+   the MAIA and bug-report controls, <body>), so they cannot live in listen.module.css: CSS Modules pure mode
+   rejects any selector without a local class. Selectors are unchanged from where they were. */
+
+/* One player, never two control sets: fold the shared dock while the field already carries them */
+body[data-sound-immersive-active] [data-listen10-persistent-dock="true"] > label,
+body[data-sound-immersive-active] [data-listen10-persistent-dock="true"] > span[role="status"],
+body[data-sound-immersive-active] [data-listen10-persistent-dock="true"] > a:nth-of-type(2),
+body[data-sound-immersive-active] [data-listen10-persistent-dock="true"] > [data-listen62-passage]{display:none}
+body[data-sound-immersive-active="night"] [data-listen10-persistent-dock="true"]{filter:brightness(.62) saturate(.7)}
+
+/* The shared player sits above the phone tab bar while this room is open. */
+@media(max-width:700px){
+  body[data-studio-tabbar] [data-listen10-persistent-dock="true"]{bottom:calc(56px + env(safe-area-inset-bottom))}
+}
+
+/* Later than the rule above on purpose: same specificity, so this is the night dimming that applies. */
+body[data-sound-immersive-active="night"] [data-listen10-persistent-dock="true"]{filter:brightness(.82) saturate(.8)}
+
+/* A quieter screen: fewer ornaments, no motion; controls and Stop are untouched */
+body[data-quiet-ui] *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+
+/* Mobile: the bottom tab bar is fixed, so lift the global MAIA and bug-report controls above it and stack them
+   rather than letting either sit on the tabs or on each other. The MAIA control sets its own inline offset for the
+   player (without the tab bar), so this rule needs !important to account for both. --listen-dock-h is the shared
+   player's measured height, set by ListenRoom (0 while the player is hidden). */
+@media(max-width:700px){
+  body:has([data-studio-tab-bar="true"]) .fixed.bottom-5.right-5{bottom:calc(3.75rem + env(safe-area-inset-bottom) + .5rem + var(--listen-dock-h,0px))!important}
+  body:has([data-studio-tab-bar="true"]) .fixed.bottom-4.right-4{bottom:calc(3.75rem + env(safe-area-inset-bottom) + 3.4rem + var(--listen-dock-h,0px))}
+}
