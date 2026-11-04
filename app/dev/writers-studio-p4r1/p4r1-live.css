@@ -5063,6 +5063,8 @@
 .p4r1-root .p4r1-home-delete-error {margin:12px 0 0;color:#f0b9a4;font-size:13px;}
 .p4r1-root .p4r1-home-delete-open {opacity:.75;}
 .p4r1-root .p4r1-home-delete-open:hover {opacity:1;}
+.p4r1-root .p4r1-craft-r1-strength{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 8px;font-size:13px;}
+.p4r1-root .p4r1-craft-r1-strength select{max-width:100%;min-height:36px;border-radius:9px;padding:4px 8px;background:inherit;color:inherit;border:1px solid currentColor;}
 
 /* D3 — what is held for the member and not part of a Work, with its removal door */
 .p4r1-root .p4r1-import-unfinished{margin:0 0 18px;padding:16px 18px;border:1px solid var(--fr-line-soft);border-radius:12px;background:var(--fr-panel)}
