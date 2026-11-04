@@ -18,6 +18,7 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { calculateBirthChart, type BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { admitProCalculation, PRO_SUPPORTED_HOUSE_SYSTEMS } from '@/lib/astrology/proCalculationPolicy';
+import { calculateDeclinations } from '@/lib/astrology/proDeclinations';
 import { proMemberAllowed, proPreviewEnabled } from '@/lib/astrology/proAccess';
 import { proChartWriteOriginAllowed } from '@/lib/astrology/proRequestGuard';
 
@@ -228,6 +229,8 @@ export async function POST(request: NextRequest) {
       memberId: finalMemberId,
       sourceRevision,
       data: chart,
+      // Sun, Moon and planets only; approximate minor bodies are excluded.
+      declinations: calculateDeclinations(admission.verifiedUtc),
       calculationQuality: {
         profile: 'strict-core',
         method: admission.actualHouseSystem,

@@ -21,6 +21,8 @@ import ProStudyWorkbench from './ProStudyWorkbench';
 import ProRelationshipsWorkbench from './ProRelationshipsWorkbench';
 import ProSavedCharts, { type SavedChartSummary } from './ProSavedCharts';
 import ProTransitPanel from './ProTransitPanel';
+import ProAspectGrid from './ProAspectGrid';
+import type { Declination } from '@/lib/astrology/proDeclinations';
 import type { TransitBody } from '@/lib/astrology/proTransits';
 import styles from './astrology-pro-preview.module.css';
 
@@ -97,6 +99,7 @@ export default function ProAstrologyExperience() {
   const [savedSubject, setSavedSubject] = useState<{ id: string; label: string } | null>(null);
   // Sky at a member-chosen moment. Not private: it carries no birth data.
   const [transits, setTransits] = useState<TransitBody[]>([]);
+  const [declinations, setDeclinations] = useState<Declination[] | null>(null);
   const [privateViewVerified, setPrivateViewVerified] = useState(false);
   const privateVerificationEpoch = useRef(0);
   const [chartError, setChartError] = useState<string | null>(null);
@@ -293,6 +296,7 @@ export default function ProAstrologyExperience() {
       setMemberId(result.memberId);
       setCalculationQuality(result.calculationQuality || null);
       setChart(result.data);
+      setDeclinations(Array.isArray(result.declinations) ? result.declinations : null);
       setPrivateViewVerified(document.visibilityState === 'visible');
       setFocusedBody('Sun');
       setChartStatus('ready');
@@ -354,6 +358,7 @@ export default function ProAstrologyExperience() {
       setMemberId(result.memberId);
       setCalculationQuality(result.calculationQuality || null);
       setChart(result.data);
+      setDeclinations(Array.isArray(result.declinations) ? result.declinations : null);
       setPrivateViewVerified(document.visibilityState === 'visible');
       setFocusedBody('Sun');
       setChartStatus('ready');
@@ -514,6 +519,7 @@ export default function ProAstrologyExperience() {
                   maxAspectOrb={maxAspectOrb} outerBodies={transits} outerLabel="Transits" />
                 <ProTransitPanel natalBodies={bodies} transits={transits}
                   onTransits={(next) => setTransits(next)} />
+                <ProAspectGrid chart={privateChart} declinations={declinations} onSelectBody={selectBody} />
                 <p id="pro-orb-filter-description" className={styles.sourceLabel} role="note">
                   The orb setting filters existing reported aspects for display; it does not
                   recalculate their accuracy or determine applying/separating phase.

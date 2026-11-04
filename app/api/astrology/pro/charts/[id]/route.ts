@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateBirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { admitProCalculation, PRO_SUPPORTED_HOUSE_SYSTEMS } from '@/lib/astrology/proCalculationPolicy';
+import { calculateDeclinations } from '@/lib/astrology/proDeclinations';
 import { deleteSavedChart, isSavedChartId, readSavedChartBirth, savedChartExists } from '@/lib/astrology/proSavedCharts';
 import { PRO_RESPONSE_HEADERS, proError, proOwnerStillCurrent, resolveProOwner } from '@/lib/astrology/proRouteAccess';
 
@@ -73,6 +74,8 @@ export async function POST(request: NextRequest, { params }: Params) {
       memberId: owner.memberId,
       chartId: id,
       data: chart,
+      // Sun, Moon and planets only; approximate minor bodies are excluded.
+      declinations: calculateDeclinations(admission.verifiedUtc),
       calculationQuality: {
         profile: 'strict-core',
         method: admission.actualHouseSystem,
