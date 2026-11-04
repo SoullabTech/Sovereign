@@ -24,7 +24,7 @@ import { loadSubjectBirth } from '@/lib/astrology/proSubjectBirth';
 import { transitMomentInRange } from '@/lib/astrology/proTransits';
 import { PRO_RESPONSE_HEADERS, proError, proOwnerStillCurrent, resolveProOwner } from '@/lib/astrology/proRouteAccess';
 
-type HouseSystem = 'porphyry' | 'whole-sign' | 'equal';
+type HouseSystem = 'porphyry' | 'whole-sign' | 'equal' | 'placidus' | 'koch';
 
 function requestedHouseSystem(request: NextRequest): HouseSystem | null {
   try {
