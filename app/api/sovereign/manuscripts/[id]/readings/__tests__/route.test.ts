@@ -137,8 +137,23 @@ describe('POST /readings — one member gesture, one lens', () => {
       mockCommission.mockResolvedValueOnce({ outcome: 'refused', stage, refusal, detail: 'd' });
       const res = await POST(post({ lens: 'arc' }), ctx);
       expect(`${stage}/${refusal} → ${res.status}`).toBe(`${stage}/${refusal} → ${status}`);
-      expect(await res.json()).toEqual({ refusal, stage, detail: 'd' });
+      /* WS-DEVELOP-REFUSAL-TRUTH-OBS-01 · R-1 (3c7ce921). A refusal now carries two
+         orthogonal cause axes. This commission supplies no cause, so both are honestly
+         `unknown` — never `complete`. `toEqual` still pins the EXACT key set, so a reading
+         cannot ride along on a refusal. */
+      expect(await res.json()).toEqual({ refusal, stage, detail: 'd', completion: 'unknown', attribution: 'unknown' });
     }
+  });
+
+  it('a refusal that carries a cause hands both axes to the surface exactly as the commission gave them', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    answerSql({ owns: true, sections: ['a'], units: 0 });
+    const cause = { completion: 'truncated', attribution: 'system', stopReason: 'max_tokens',
+      inputTokens: 1, outputTokens: 2, readerVersion: 'v', promptHash: 'h' };
+    mockCommission.mockResolvedValueOnce({ outcome: 'refused', stage: 'read', refusal: 'malformed_output', detail: 'd', cause });
+    const res = await POST(post({ lens: 'arc' }), ctx);
+    expect(res.status).toBe(422);
+    expect(await res.json()).toEqual({ refusal: 'malformed_output', stage: 'read', detail: 'd', completion: 'truncated', attribution: 'system' });
   });
 });
 
