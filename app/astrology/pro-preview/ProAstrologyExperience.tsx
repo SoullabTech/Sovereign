@@ -22,6 +22,7 @@ import ProRelationshipsWorkbench from './ProRelationshipsWorkbench';
 import ProSavedCharts, { type SavedChartSummary } from './ProSavedCharts';
 import ProTransitPanel from './ProTransitPanel';
 import ProAspectGrid from './ProAspectGrid';
+import ProComparePanel from './ProComparePanel';
 import type { Declination } from '@/lib/astrology/proDeclinations';
 import type { TransitBody } from '@/lib/astrology/proTransits';
 import styles from './astrology-pro-preview.module.css';
@@ -98,7 +99,10 @@ export default function ProAstrologyExperience() {
   // null = the member's own chart; otherwise a saved chart for another person.
   const [savedSubject, setSavedSubject] = useState<{ id: string; label: string } | null>(null);
   // Sky at a member-chosen moment. Not private: it carries no birth data.
-  const [transits, setTransits] = useState<TransitBody[]>([]);
+  // One outer ring at a time: transits or a compared chart. Not private on its
+  // own; a compared chart is fetched through the same owner-only routes.
+  const [outer, setOuter] = useState<{ kind: 'transits' | 'compare'; bodies: TransitBody[]; label: string } | null>(null);
+  const transits = outer?.kind === 'transits' ? outer.bodies : [];
   const [declinations, setDeclinations] = useState<Declination[] | null>(null);
   const [privateViewVerified, setPrivateViewVerified] = useState(false);
   const privateVerificationEpoch = useRef(0);
@@ -158,6 +162,7 @@ export default function ProAstrologyExperience() {
     setMemberId(null);
     setSourceRevision(null);
     setSavedSubject(null);
+    setOuter(null);
     setMemberNotes({});
     setCalculationQuality(null);
     setDraft(null);
@@ -516,9 +521,13 @@ export default function ProAstrologyExperience() {
               <>
                 <CelestialChartWheel chart={privateChart} focusedBody={focusedBody} onFocusBody={selectBody}
                   showAspects={showAspects} showHouseLines={showHouseLines}
-                  maxAspectOrb={maxAspectOrb} outerBodies={transits} outerLabel="Transits" />
+                  maxAspectOrb={maxAspectOrb} outerBodies={outer?.bodies} outerLabel={outer?.label} />
                 <ProTransitPanel natalBodies={bodies} transits={transits}
-                  onTransits={(next) => setTransits(next)} />
+                  onTransits={(next) => setOuter(next.length ? { kind: 'transits', bodies: next, label: 'Transits' } : null)} />
+                <ProComparePanel chart={privateChart} chartLabel={savedSubject ? savedSubject.label : 'my chart'}
+                  currentSubjectId={savedSubject ? savedSubject.id : 'own'} houseSystem={houseSystem}
+                  natalBodies={bodies} outer={outer?.kind === 'compare' ? outer.bodies : []}
+                  onOuter={(next, label) => setOuter(next.length && label ? { kind: 'compare', bodies: next, label } : null)} />
                 <ProAspectGrid chart={privateChart} declinations={declinations} onSelectBody={selectBody} />
                 <p id="pro-orb-filter-description" className={styles.sourceLabel} role="note">
                   The orb setting filters existing reported aspects for display; it does not
