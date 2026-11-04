@@ -19,6 +19,7 @@ import { CelestialChartWheel } from './CelestialChartWheel';
 import ProResearchWorkbench from './ProResearchWorkbench';
 import ProStudyWorkbench from './ProStudyWorkbench';
 import ProRelationshipsWorkbench from './ProRelationshipsWorkbench';
+import ProSavedCharts, { type SavedChartSummary } from './ProSavedCharts';
 import styles from './astrology-pro-preview.module.css';
 
 type ChartStatus = 'idle' | 'loading' | 'ready' | 'signed-out' | 'consent-required' | 'incomplete' | 'unavailable';
@@ -90,6 +91,8 @@ export default function ProAstrologyExperience() {
   const [chart, setChart] = useState<BirthChart | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
   const [sourceRevision, setSourceRevision] = useState<string | null>(null);
+  // null = the member's own chart; otherwise a saved chart for another person.
+  const [savedSubject, setSavedSubject] = useState<{ id: string; label: string } | null>(null);
   const [privateViewVerified, setPrivateViewVerified] = useState(false);
   const privateVerificationEpoch = useRef(0);
   const [chartError, setChartError] = useState<string | null>(null);
@@ -147,6 +150,7 @@ export default function ProAstrologyExperience() {
     setChart(null);
     setMemberId(null);
     setSourceRevision(null);
+    setSavedSubject(null);
     setMemberNotes({});
     setCalculationQuality(null);
     setDraft(null);
@@ -168,7 +172,12 @@ export default function ProAstrologyExperience() {
       const requestEpoch = ++privateVerificationEpoch.current;
       setPrivateViewVerified(false);
       try {
-        const reply = await apiFetch('/api/astrology/pro/my-chart', {
+        // A saved chart re-verifies that it still exists for this member; the
+        // member's own chart re-verifies its birth-data revision.
+        const savedId = sourceRevision.startsWith('saved:') ? sourceRevision.slice(6) : null;
+        const reply = await apiFetch(savedId
+          ? '/api/astrology/pro/charts/' + encodeURIComponent(savedId)
+          : '/api/astrology/pro/my-chart', {
           method: 'GET', cache: 'no-store',
         });
         if (!active || requestEpoch !== privateVerificationEpoch.current) return;
@@ -184,7 +193,7 @@ export default function ProAstrologyExperience() {
           closePrivateChart('signed-out');
           return;
         }
-        if (result.sourceRevision !== sourceRevision) {
+        if (savedId ? result.chartId !== savedId : result.sourceRevision !== sourceRevision) {
           closePrivateChart('unavailable');
           setChartError('Your saved birth details changed. The older chart was closed; reopen your chart to calculate the current version.');
           return;
@@ -238,6 +247,7 @@ export default function ProAstrologyExperience() {
     setDraft(null);
     setMemberId(null);
     setSourceRevision(null);
+    setSavedSubject(null);
     try {
       // The server loads ONLY the authenticated member's opted-in chart data.
       // No birth record, personal time, location or claimed member ID is sent
@@ -289,6 +299,68 @@ export default function ProAstrologyExperience() {
     }
   }
 
+  async function loadSavedChart(saved: SavedChartSummary) {
+    if (chartStatus === 'loading') return;
+    const epoch = ++chartRequestEpoch.current;
+    pendingShareEpoch.current += 1;
+    setChartError(null);
+    setChartStatus('loading');
+    setPrivateViewVerified(false);
+    setChart(null);
+    setMemberNotes({});
+    setCalculationQuality(null);
+    setDraft(null);
+    setMemberId(null);
+    setSourceRevision(null);
+    setSavedSubject(null);
+    try {
+      // Only the chart id travels; the server reads the stored birth details
+      // for the verified owner and recalculates.
+      const reply = await apiFetch('/api/astrology/pro/charts/' + encodeURIComponent(saved.id) +
+        '?houseSystem=' + encodeURIComponent(houseSystem), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: '{}', cache: 'no-store',
+      });
+      if (epoch !== chartRequestEpoch.current) return;
+      if (!reply.ok) {
+        const failure = await reply.json().catch(() => ({}));
+        if (epoch !== chartRequestEpoch.current) return;
+        if (reply.status === 401) setChartStatus('signed-out');
+        else {
+          setChartStatus('unavailable');
+          setChartError(reply.status === 404
+            ? 'That saved chart no longer exists.'
+            : reply.status === 422
+              ? 'This chart’s birth details cannot be calculated exactly. Delete it and enter the details again.'
+              : failure.error === 'cross_origin_request_refused'
+                ? 'The chart request was refused. Reload the page and try again.'
+                : 'The chart is unavailable right now. Please try again.');
+        }
+        return;
+      }
+      const result = await reply.json();
+      if (epoch !== chartRequestEpoch.current) return;
+      if (!hasValidChartGeometry(result?.data) ||
+          typeof result.memberId !== 'string' || !result.memberId ||
+          result.chartId !== saved.id) {
+        throw new Error('chart_geometry_or_identity_unverified');
+      }
+      setSavedSubject({ id: saved.id, label: saved.label });
+      setSourceRevision('saved:' + saved.id);
+      setMemberId(result.memberId);
+      setCalculationQuality(result.calculationQuality || null);
+      setChart(result.data);
+      setPrivateViewVerified(document.visibilityState === 'visible');
+      setFocusedBody('Sun');
+      setChartStatus('ready');
+      document.getElementById('the-chart')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch {
+      if (epoch !== chartRequestEpoch.current) return;
+      setChartError('The chart is unavailable right now. Please try again.');
+      setChartStatus('unavailable');
+    }
+  }
+
   const privateChart = privateViewVerified ? chart : null;
   const bodies = useMemo(() => privateChart ? chartBodies(privateChart) : [], [privateChart]);
   const selected = bodies.find((body) => body.name === focusedBody) || bodies[0] || null;
@@ -334,6 +406,7 @@ export default function ProAstrologyExperience() {
         <nav className={styles.navigation} aria-label="Pro Astrology work areas">
           <a className={styles.navCurrent} href="#the-chart">Natal</a>
           <a href="#current-sky">Transits</a>
+          <a href="#saved-charts">Saved charts</a>
           <a href="#relationships">Relationships · own-chart</a>
           <a href="#research">Research</a>
           <a href="#study">Study</a>
@@ -399,7 +472,7 @@ export default function ProAstrologyExperience() {
             <div className={styles.sectionHeading}>
               <div>
                 <span className={styles.eyebrow}>THE CHART WORKBENCH</span>
-                <h2 id="chart-room-title">Your celestial instrument</h2>
+                <h2 id="chart-room-title">{savedSubject ? savedSubject.label : 'Your celestial instrument'}</h2>
               </div>
               {privateChart && (
                 <div className={styles.viewControls} aria-label="Chart layers">
@@ -425,7 +498,7 @@ export default function ProAstrologyExperience() {
                       <option value="8">8°</option>
                     </select>
                   </label>
-                  <button onClick={() => closePrivateChart()}>Close my chart</button>
+                  <button onClick={() => closePrivateChart()}>{savedSubject ? 'Close chart' : 'Close my chart'}</button>
                 </div>
               )}
             </div>
@@ -554,7 +627,7 @@ export default function ProAstrologyExperience() {
                   )}
                 </div>
 
-                {(
+                {!savedSubject && (
                   <div className={styles.maiaInvite}>
                     <div className={styles.maiaMark}><Sparkles size={19} aria-hidden="true" /></div>
                     <div>
@@ -590,6 +663,13 @@ export default function ProAstrologyExperience() {
           </aside>
         </section>
 
+        <ProSavedCharts
+          openChartId={savedSubject?.id ?? null}
+          opening={chartStatus === 'loading'}
+          onOpen={(saved) => void loadSavedChart(saved)}
+          onDeleted={(chartId) => { if (savedSubject?.id === chartId) closePrivateChart(); }}
+        />
+
         <section className={styles.openPaths} aria-labelledby="paths-title">
           <div className={styles.pathsIntro}>
             <span className={styles.eyebrow}>YOUR MAP. MANY PATHS.</span>
@@ -598,7 +678,7 @@ export default function ProAstrologyExperience() {
           </div>
           <div className={styles.pathsGrid}>
             <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
-              <ProRelationshipsWorkbench chart={privateChart} />
+              <ProRelationshipsWorkbench chart={savedSubject ? null : privateChart} />
             </div>
             <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
               <ProResearchWorkbench chart={privateChart} />

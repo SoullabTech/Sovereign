@@ -639,6 +639,8 @@ export const ACCESS_RULES: AccessRule[] = [
   // by default pending an independent release decision.
   { exact: '/astrology/pro-preview', minTier: 'free', notes: 'Founder-only Pro workstation preview; server page checks enabled feature and verified founder session' },
   { exact: '/api/astrology/pro/my-chart', minTier: 'free', notes: 'Founder-only Pro owned chart API; handler rechecks founder allowlist, member session and astrology consent' },
+  { exact: '/api/astrology/pro/charts', minTier: 'free', notes: 'Pro saved charts for other people; owner from verified session, Pro access rechecked in handler' },
+  { regex: /^\/api\/astrology\/pro\/charts\/[0-9a-f-]{36}$/i, minTier: 'free', notes: 'One Pro saved chart (verify, calculate, delete); owner-only, Pro access rechecked in handler' },
 
   // Member API — contribution is participation, open to all
   { regex: /^\/api\/commons\/contributions\/[^/]+$/, minTier: 'free', notes: 'Contribution detail — depth' },
