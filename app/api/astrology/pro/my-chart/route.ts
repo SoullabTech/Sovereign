@@ -14,100 +14,20 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getMemberIdFromRequest, getMemberIdFromSessionToken } from '@/lib/auth/getMemberFromRequest';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { calculateBirthChart, type BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { admitProCalculation, PRO_SUPPORTED_HOUSE_SYSTEMS } from '@/lib/astrology/proCalculationPolicy';
+import { calculateDeclinations } from '@/lib/astrology/proDeclinations';
+import { calculateChartPoints } from '@/lib/astrology/proChartPoints';
 import { proMemberAllowed, proPreviewEnabled } from '@/lib/astrology/proAccess';
+import { proChartWriteOriginAllowed } from '@/lib/astrology/proRequestGuard';
 
 const RESPONSE_HEADERS = {
   'Cache-Control': 'private, no-store',
   'X-Content-Type-Options': 'nosniff',
 } as const;
 
-
-/**
- * R9 review-only: tie a private chart POST to an exact approved target origin
- * independently of member identity, rather than comparing browser Origin to
- * an internal Next.js reverse-proxy URL. Host and forwarding headers do NOT
- * prove a request travelled through Caddy; verified auth_sessions is the
- * separate membership authority. The shared ingress must still be reviewed.
- */
-const APPROVED_PRO_WEB_ORIGINS = new Set([
-  'https://soullab.life',
-  'https://maia.soullab.life',
-]);
-
-function expectedProWebOrigin(request: NextRequest): string | null {
-  try {
-    const target = new URL(request.url);
-    const host = request.headers.get('host');
-    const forwardedProto = request.headers.get('x-forwarded-proto');
-    const localDev = process.env.NODE_ENV === 'development' &&
-      target.protocol === 'http:' &&
-      (target.hostname === 'localhost' || target.hostname === '127.0.0.1') &&
-      (!host || host === target.host);
-    if (forwardedProto !== null && forwardedProto !== 'https' &&
-        !(localDev && forwardedProto === 'http')) return null;
-
-    if (host) {
-      const exactPublicTarget = 'https://' + host;
-      if (APPROVED_PRO_WEB_ORIGINS.has(exactPublicTarget)) {
-        if (APPROVED_PRO_WEB_ORIGINS.has(target.origin) &&
-            target.origin !== exactPublicTarget) return null;
-        return exactPublicTarget;
-      }
-    } else if (APPROVED_PRO_WEB_ORIGINS.has(target.origin)) {
-      return target.origin;
-    }
-
-    if (process.env.NODE_ENV === 'development' &&
-        target.protocol === 'http:' &&
-        (target.hostname === 'localhost' || target.hostname === '127.0.0.1') &&
-        (!host || host === target.host) &&
-        (forwardedProto === null || forwardedProto === 'http')) {
-      return target.origin;
-    }
-  } catch {
-    // A malformed request target is never a source of origin authority.
-  }
-  return null;
-}
-
-async function proChartWriteOriginAllowed(request: NextRequest, memberId: string): Promise<boolean> {
-  const site = request.headers.get('sec-fetch-site');
-  if (site === 'cross-site') return false;
-  const expected = expectedProWebOrigin(request);
-  if (!expected) return false;
-
-  const origin = request.headers.get('origin');
-  if (origin !== null) {
-    try {
-      // Do not accept paths, case variants or opaque origins as exact Origin.
-      return origin === expected && new URL(origin).origin === expected;
-    } catch { return false; }
-  }
-
-  // Browsers may omit Origin for a same-origin request. Identity is still
-  // resolved from a server-issued session, never from this metadata.
-  if (site === 'same-origin') return true;
-
-  // Native Capacitor may attach BOTH an auth cookie and header bearer.
-  // An originless write requires a bearer verified independently through
-  // the existing SQL auth_sessions authority for the SAME member.
-  const headerToken = request.headers.get('x-session-token');
-  if (typeof headerToken !== 'string' || headerToken.trim() === '') return false;
-  const cookie = request.headers.get('cookie') || '';
-  const hasSessionCookie = /(?:^|;)\s*maia_session\s*=/.test(cookie);
-  if (!hasSessionCookie) return true; // Primary auth resolver verified this token.
-  try {
-    const headerMemberId = await getMemberIdFromSessionToken(headerToken);
-    return headerMemberId !== null && headerMemberId === memberId;
-  } catch {
-    // Failure of the additional session lookup fails closed without logging.
-    return false;
-  }
-}
 
 type Consent = 'opted_in' | 'declined' | 'unknown' | null;
 
@@ -155,7 +75,7 @@ function wallClock(input: unknown): string | null {
   const match = value.match(/^(\d{2}:\d{2})(?::00(?:\.0+)?)?$/);
   return match ? match[1] : null;
 }
-function requestedHouseSystem(request: NextRequest): 'porphyry' | 'whole-sign' | 'equal' | null {
+function requestedHouseSystem(request: NextRequest): 'porphyry' | 'whole-sign' | 'equal' | 'placidus' | 'koch' | null {
   // House method is the only accepted client choice. A default/no-query POST
   // remains Porphyry; no birth record, identity, or chart object comes from the browser.
   try {
@@ -164,8 +84,8 @@ function requestedHouseSystem(request: NextRequest): 'porphyry' | 'whole-sign' |
     if (names.length === 0) return 'porphyry';
     if (names.length !== 1 || names[0] !== 'houseSystem') return null;
     const selected = params.get('houseSystem');
-    return selected && PRO_SUPPORTED_HOUSE_SYSTEMS.includes(selected as 'porphyry' | 'whole-sign' | 'equal')
-      ? selected as 'porphyry' | 'whole-sign' | 'equal' : null;
+    return selected && PRO_SUPPORTED_HOUSE_SYSTEMS.includes(selected as 'porphyry' | 'whole-sign' | 'equal' | 'placidus' | 'koch')
+      ? selected as 'porphyry' | 'whole-sign' | 'equal' | 'placidus' | 'koch' : null;
   } catch { return null; }
 }
 function coords(row: OwnBirthRow): { lat: number; lng: number } | null {
@@ -310,6 +230,9 @@ export async function POST(request: NextRequest) {
       memberId: finalMemberId,
       sourceRevision,
       data: chart,
+      // Sun, Moon and planets only; approximate minor bodies are excluded.
+      declinations: calculateDeclinations(admission.verifiedUtc),
+      points: calculateChartPoints(admission.verifiedUtc, location.lat, location.lng),
       calculationQuality: {
         profile: 'strict-core',
         method: admission.actualHouseSystem,
