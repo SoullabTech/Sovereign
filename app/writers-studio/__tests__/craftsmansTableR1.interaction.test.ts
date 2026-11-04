@@ -128,6 +128,31 @@ describe('Craftsman Table R1 real component interactions', () => {
     expect(props.onApply).not.toHaveBeenCalled();
   });
 
+  it('lets a writer who kept one mark still Save and Apply; kept marks are never sent to the server', async () => {
+    // Regression: a Keep mine click used to count as an unsaved change and was
+    // sent with Save, which the server refuses, so neither Save nor Apply worked.
+    const onSaveWorking = jest.fn(async () => true);
+    await render({ onSaveWorking });
+    const marks = () => [...host.querySelectorAll<HTMLElement>('ins[data-edit-id]')];
+    expect(marks().length).toBeGreaterThan(1);
+    await act(async () => { marks()[0].click(); });
+    await click('Use this');
+    await act(async () => { marks()[marks().length - 1].click(); });
+    await click('Keep mine');
+    expect(host.textContent).toContain('Kept:');
+    const hybrid = current;
+    expect(hybrid).not.toBe(original);
+    await click('Save my version');
+    expect(onSaveWorking).toHaveBeenCalledTimes(1);
+    expect(onSaveWorking).toHaveBeenCalledWith(expect.objectContaining({ text: hybrid, kept: [] }));
+    expect(host.textContent).toContain('kept marks stay marked in this session');
+    await render({ onSaveWorking, version: version('saved-hybrid', hybrid, 'member') });
+    expect(current).toBe(hybrid);
+    expect(button('Apply my version').disabled).toBe(false);
+    await click('Apply my version');
+    expect(props.onApply).toHaveBeenCalledTimes(1);
+  });
+
   it('previews an intentional empty working copy without restoring the original', async () => {
     await click('Write from mine');
     await type('');
