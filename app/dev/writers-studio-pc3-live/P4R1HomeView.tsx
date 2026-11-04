@@ -413,6 +413,25 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
           />
           {unclaimedWriting}
           {creationControls}
+          {/* Returning to one Work must never hide the writer's others: an
+              import placed in another Work was saved yet invisible on Home. */}
+          {props.works.some((item) => item.id !== props.returnWork!.id) ? (
+            <section className="fr-home-region" aria-label="Your other Works" data-home-other-works>
+              <p className="fr-home-eyebrow">Your other Works</p>
+              <div className="fr-home-shelf">
+                {props.works.filter((item) => item.id !== props.returnWork!.id).map((item) => (
+                  <WorkShelfCard
+                    key={item.id}
+                    work={item}
+                    manuscripts={props.manuscripts}
+                    onOpen={props.onOpen}
+                    onStartWriting={props.onStartWriting}
+                    busy={props.busy}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : null}
           {recentHistory.length > 0 ? (
             <section className="fr-home-region p4r1-home-history">
               <p className="fr-home-eyebrow">History</p>
