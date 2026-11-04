@@ -269,6 +269,14 @@ export default function P4R1HomeController() {
     throw new Error(outcome.message);
   }, [refresh]);
 
+  // A Work is deleted with its manuscript in ONE server-side erase (WS-DELETE-01); a Work with no manuscript is withdrawn.
+  const onDeleteWork = useCallback(async (workId: string, manuscriptId: string | null) => {
+    const outcome = await deleteWork({ workId, manuscriptId }, (url, init) => apiFetch(url, init));
+    if (outcome.ok) { await refresh().catch(() => undefined); return; }
+    if (outcome.removed) { await refresh().catch(() => undefined); throw new DeletionUnconfirmed(outcome.message); }
+    throw new Error(outcome.message);
+  }, [refresh]);
+
   const onAddToWork = useCallback(async (manuscriptId: string, workId: string) => {
     if (busy) return;
     setBusy(true);
@@ -384,6 +392,7 @@ export default function P4R1HomeController() {
       onMakeWork={(manuscriptId, title) => void onMakeWork(manuscriptId, title)}
       onAddToWork={(manuscriptId, workId) => void onAddToWork(manuscriptId, workId)}
       onDeleteWriting={onDeleteWriting}
+      onDeleteWork={onDeleteWork}
       onStartWriting={(workId) => void onStartWriting(workId)}
       onImport={openImport}
       onSources={() => router.push('/writers-studio/sources')}
