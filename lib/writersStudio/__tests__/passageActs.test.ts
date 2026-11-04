@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { PASSAGE_ACTS, isPassageAct, passageActInstruction, passageActQuestion } from '../passageActs';
 import { EDITORIAL_PACKET_LABELS } from '../editorialIntelligence';
+import { CONVERSATION_TURN_SHAPE } from '../conversationTurn';
 
 /** Conversation-first Focus, step 1: a card stores only its words; the instruction is server-owned. */
 
@@ -19,6 +20,11 @@ describe('the writer’s words', () => {
 });
 
 describe('the server instruction', () => {
+  it('the Discuss card answers in the conversational shape (step 4)', () => {
+    for (const line of CONVERSATION_TURN_SHAPE) expect(passageActInstruction('discuss')).toContain(line);
+    expect(passageActInstruction('revise')).not.toContain(CONVERSATION_TURN_SHAPE[0]);
+  });
+
   it('keeps the revise packet labels the panel parses', () => {
     for (const act of ['revise', 'revise-after-talk'] as const) {
       const t = passageActInstruction(act);
@@ -46,10 +52,13 @@ describe('wiring', () => {
   });
 
   it('every card and follow-up sends the closed field with its own words', () => {
-    for (const act of PASSAGE_ACTS) {
+    // Step 4 (fewer doors): Focus starts with Discuss and Show edit options (plus Teach), and
+    // continues with Show revision options; examples, ideas and deeper are asked for in the box.
+    for (const act of ['discuss', 'revise', 'revise-after-talk'] as const) {
       expect(panel).toContain(`passageActQuestion('${act}')`);
       expect(panel).toContain(`passageAct: '${act}'`);
     }
+    for (const act of ['examples', 'ideas', 'deeper'] as const) expect(panel).not.toContain(`passageAct: '${act}'`);
     for (const act of ['discuss', 'revise', 'deeper'] as const) {
       expect(view).toContain(`onSendEditorial(passageActQuestion('${act}')`);
     }
