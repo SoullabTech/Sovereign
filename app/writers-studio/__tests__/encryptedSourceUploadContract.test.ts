@@ -21,6 +21,8 @@ describe('full-feature beta encrypted Source upload contract', () => {
     const custody = route.indexOf('await recordArtifactArrival');
 
     expect(releaseAuthority).toContain('sourceIntakeReleased: true');
+    // The release is a named act: changing the manifest id is changing what was released, and must be reviewed as such.
+    expect(releaseAuthority).toContain("manifestId: 'writer-full-beta-encrypted-source-intake-released-20261102'");
     expect(route).toContain('writerReleaseAuthority().sourceIntakeReleased');
     expect(route).toContain('status: 423');
     for (const position of [hold, idempotency, multipart, custody]) {
