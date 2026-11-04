@@ -24,6 +24,8 @@ import ProTransitPanel from './ProTransitPanel';
 import ProAspectGrid from './ProAspectGrid';
 import ProComparePanel from './ProComparePanel';
 import ProDerivedPanel from './ProDerivedPanel';
+import ProChartViews from './ProChartViews';
+import type { ChartPoints } from '@/lib/astrology/proChartPoints';
 import type { Declination } from '@/lib/astrology/proDeclinations';
 import type { TransitBody } from '@/lib/astrology/proTransits';
 import styles from './astrology-pro-preview.module.css';
@@ -100,11 +102,20 @@ export default function ProAstrologyExperience() {
   // null = the member's own chart; otherwise a saved chart for another person.
   const [savedSubject, setSavedSubject] = useState<{ id: string; label: string } | null>(null);
   // Sky at a member-chosen moment. Not private: it carries no birth data.
-  // One outer ring at a time: transits or a compared chart. Not private on its
-  // own; a compared chart is fetched through the same owner-only routes.
-  const [outer, setOuter] = useState<{ kind: 'transits' | 'compare' | 'derived'; bodies: TransitBody[]; label: string } | null>(null);
-  const transits = outer?.kind === 'transits' ? outer.bodies : [];
+  // Up to two outer rings (biwheel / triwheel), one per source. A compared or
+  // derived chart is fetched through the same owner-only routes.
+  type RingKind = 'transits' | 'compare' | 'derived';
+  const [rings, setRings] = useState<Array<{ kind: RingKind; bodies: TransitBody[]; label: string }>>([]);
+  const ringOf = (kind: RingKind) => rings.find((r) => r.kind === kind)?.bodies ?? [];
+  const transits = ringOf('transits');
+  function setRing(kind: RingKind, bodies: TransitBody[], label: string | null) {
+    setRings((current) => {
+      const others = current.filter((r) => r.kind !== kind);
+      return bodies.length && label ? [...others, { kind, bodies, label }].slice(-2) : others;
+    });
+  }
   const [declinations, setDeclinations] = useState<Declination[] | null>(null);
+  const [chartPoints, setChartPoints] = useState<ChartPoints | null>(null);
   const [privateViewVerified, setPrivateViewVerified] = useState(false);
   const privateVerificationEpoch = useRef(0);
   const [chartError, setChartError] = useState<string | null>(null);
@@ -163,7 +174,7 @@ export default function ProAstrologyExperience() {
     setMemberId(null);
     setSourceRevision(null);
     setSavedSubject(null);
-    setOuter(null);
+    setRings([]);
     setMemberNotes({});
     setCalculationQuality(null);
     setDraft(null);
@@ -303,6 +314,7 @@ export default function ProAstrologyExperience() {
       setCalculationQuality(result.calculationQuality || null);
       setChart(result.data);
       setDeclinations(Array.isArray(result.declinations) ? result.declinations : null);
+      setChartPoints(result.points && typeof result.points === 'object' ? result.points : null);
       setPrivateViewVerified(document.visibilityState === 'visible');
       setFocusedBody('Sun');
       setChartStatus('ready');
@@ -365,6 +377,7 @@ export default function ProAstrologyExperience() {
       setCalculationQuality(result.calculationQuality || null);
       setChart(result.data);
       setDeclinations(Array.isArray(result.declinations) ? result.declinations : null);
+      setChartPoints(result.points && typeof result.points === 'object' ? result.points : null);
       setPrivateViewVerified(document.visibilityState === 'visible');
       setFocusedBody('Sun');
       setChartStatus('ready');
@@ -522,17 +535,19 @@ export default function ProAstrologyExperience() {
               <>
                 <CelestialChartWheel chart={privateChart} focusedBody={focusedBody} onFocusBody={selectBody}
                   showAspects={showAspects} showHouseLines={showHouseLines}
-                  maxAspectOrb={maxAspectOrb} outerBodies={outer?.bodies} outerLabel={outer?.label} />
+                  maxAspectOrb={maxAspectOrb} outerBodies={rings[0]?.bodies} outerLabel={rings[0]?.label}
+                  outerBodies2={rings[1]?.bodies} outerLabel2={rings[1]?.label} />
                 <ProTransitPanel natalBodies={bodies} transits={transits}
-                  onTransits={(next) => setOuter(next.length ? { kind: 'transits', bodies: next, label: 'Transits' } : null)} />
+                  onTransits={(next) => setRing('transits', next, 'Transits')} />
                 <ProComparePanel chart={privateChart} chartLabel={savedSubject ? savedSubject.label : 'my chart'}
                   currentSubjectId={savedSubject ? savedSubject.id : 'own'} houseSystem={houseSystem}
-                  natalBodies={bodies} outer={outer?.kind === 'compare' ? outer.bodies : []}
-                  onOuter={(next, label) => setOuter(next.length && label ? { kind: 'compare', bodies: next, label } : null)} />
+                  natalBodies={bodies} outer={ringOf('compare')}
+                  onOuter={(next, label) => setRing('compare', next, label)} />
                 <ProDerivedPanel subjectId={savedSubject ? savedSubject.id : 'own'}
                   chartLabel={savedSubject ? savedSubject.label : 'my chart'} houseSystem={houseSystem}
-                  onOuter={(next, label) => setOuter(next.length && label ? { kind: 'derived', bodies: next, label } : null)} />
+                  onOuter={(next, label) => setRing('derived', next, label)} />
                 <ProAspectGrid chart={privateChart} declinations={declinations} onSelectBody={selectBody} />
+                <ProChartViews chart={privateChart} points={chartPoints} />
                 <p id="pro-orb-filter-description" className={styles.sourceLabel} role="note">
                   The orb setting filters existing reported aspects for display; it does not
                   recalculate their accuracy or determine applying/separating phase.
