@@ -41,6 +41,7 @@ test('a typed question sends only the writer’s words, with the conversational 
 test('a card does not get the free-box shape', () => {
   const onSend = jest.fn();
   renderEmpty(onSend);
-  act(() => Array.from(container.querySelectorAll('button')).find((b) => b.textContent?.includes('Give me ideas'))!.click());
+  act(() => Array.from(container.querySelectorAll('button')).find((b) => b.textContent?.includes('Discuss what’s happening'))!.click());
   expect(onSend.mock.calls.at(-1)?.[1]?.turnShape).toBeUndefined();
+  expect(onSend.mock.calls.at(-1)?.[1]?.passageAct).toBe('discuss');
 });
