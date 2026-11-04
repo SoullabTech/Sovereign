@@ -195,10 +195,11 @@ At the first of them the witness recorded: the Import control "accepts `.docx .p
 #2050). **No migration. No change to the compose file, Caddyfile, deploy scripts or Dockerfile. No change to the release authority.** (The earlier inventory in the
 conversation used the 2026-11-01 runtime commit:`3dd8dd287` as its baseline and was wrong for that reason.)
 
-**Revised D-01: deploy the hardened canonical?** Recommendation: yes, through the immutable-SHA lane, after the read-only configuration check above. Two
-candidates are ready and unmerged, both on branches with no PR: `claude/writer-source-intake-unconfigured-failclosed` (commit:`9f38d4f7`, makes a released route with
+**Revised D-01: deploy the hardened canonical?** Recommendation: yes, through the immutable-SHA lane, after the read-only configuration check above. Both
+candidates ship in one follow-ups PR with this record (branch `claude/writer-source-intake-lift-h1-followups`): the fail-closed check (commit:`9f38d4f7`, makes a released route with
 no key provider refuse honestly before storing anything, which turns a false "retry the same file" into a true sentence if the configuration is absent) and
-`claude/canonical-red-suites-repair` (commit:`95c68e49`, section 11).
+the suite repair (commit:`95c68e49`, section 11). Integrating them needed one more change: the repaired F7 tests run the released route through to a 200, so they now run as a
+configured process (they set `WRITER_SOURCE_KEY_PROVIDER=local-test`); the gate itself is pinned in `intakeRefusals.test.ts`.
 
 ## 11. Canonical's six red suites, triaged
 
@@ -211,7 +212,7 @@ Read-only triage by four agents with a skeptic re-deriving each verdict, then ve
 | readings route x1 | a refusal now carries `completion` and `attribution` (PR #1268, September); the test pinned the old keys | stale; red since September, unnoticed because CI does not run unit tests |
 | jarvisMaiaUnsentComposerCustodyR1 x1 | PR #2076 stripped Studio markers from the writer's own "You" bubble | **real defect**, a fidelity one: the writer's words were shown trimmed and with typed marker-shaped text removed. Not a privacy leak (the sent text was unchanged). Fixed in code; only the writer is exempt |
 
-The repair is commit:`95c68e49` on `claude/canonical-red-suites-repair` (unmerged, no PR): 82 tests across the seven related files pass; 20 mutants killed; the
+The repair is commit:`95c68e49` (it ships in the follow-ups PR): 82 tests across the seven related files pass; 20 mutants killed; the
 wide run has 3,026 passing and none failing, the only failing suites being the seven `listen`/`publish` suites that fail to load in this environment and are untouched.
 The composer defect is live in production if the Craft companion is reachable there (not established).
 

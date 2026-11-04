@@ -367,13 +367,22 @@ describe('F7 · behavioural — what the handler can still see when it reads the
     return { rows: [] };
   };
 
+  // The released route refuses, before reading the body, when no key provider is configured (it cannot store anything without one).
+  // These tests drive it past that gate, so they run as a configured process; the gate itself is pinned in intakeRefusals.test.ts.
+  const envRef = process.env as Record<string, string | undefined>;
+  let savedProvider: string | undefined;
   beforeEach(() => {
     jest.clearAllMocks();
+    savedProvider = envRef.WRITER_SOURCE_KEY_PROVIDER;
+    envRef.WRITER_SOURCE_KEY_PROVIDER = 'local-test';
     onRoster = true;
     query.mockImplementation(answer);
     cookies.mockResolvedValue({ get: () => undefined });
     parseUpload.mockResolvedValue({ text: 'hello', warnings: [], format: 'md' });
     recordArtifactArrival.mockResolvedValue({ id: 'arrival-1' });
+  });
+  afterEach(() => {
+    if (savedProvider === undefined) delete envRef.WRITER_SOURCE_KEY_PROVIDER; else envRef.WRITER_SOURCE_KEY_PROVIDER = savedProvider;
   });
 
   /**
