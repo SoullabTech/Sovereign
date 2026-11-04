@@ -174,8 +174,9 @@
 .studioWorkNote{margin:10px 0 0;font-size:12px;letter-spacing:.02em;color:var(--amber);opacity:.9}
 .quality{letter-spacing:0}
 /* Mobile: the bottom tab bar is fixed, so lift the global MAIA and bug-report controls above it and stack them
-   rather than letting either sit on the tabs or on each other. */
+   rather than letting either sit on the tabs or on each other. The MAIA control sets its own inline offset for the
+   player (without the tab bar), so this rule needs !important to account for both. */
 @media(max-width:700px){
-  :global(body):has([data-studio-tab-bar="true"]) :global(.fixed.bottom-5.right-5){bottom:calc(3.75rem + env(safe-area-inset-bottom) + .5rem)}
-  :global(body):has([data-studio-tab-bar="true"]) :global(.fixed.bottom-4.right-4){bottom:calc(3.75rem + env(safe-area-inset-bottom) + 3.4rem)}
+  :global(body):has([data-studio-tab-bar="true"]) :global(.fixed.bottom-5.right-5){bottom:calc(3.75rem + env(safe-area-inset-bottom) + .5rem + var(--listen-dock-h,0px))!important}
+  :global(body):has([data-studio-tab-bar="true"]) :global(.fixed.bottom-4.right-4){bottom:calc(3.75rem + env(safe-area-inset-bottom) + 3.4rem + var(--listen-dock-h,0px))}
 }
