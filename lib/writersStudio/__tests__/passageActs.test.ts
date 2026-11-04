@@ -60,7 +60,11 @@ describe('wiring', () => {
     }
     for (const act of ['examples', 'ideas', 'deeper'] as const) expect(panel).not.toContain(`passageAct: '${act}'`);
     for (const act of ['discuss', 'revise', 'deeper'] as const) {
-      expect(view).toContain(`onSendEditorial(passageActQuestion('${act}')`);
+      // The menu routes through runPassageAct (held while gates are open), which
+      // sends act.prompt/act.options; the writer's words and the closed field are
+      // both declared at the menu item.
+      expect(view).toContain(`prompt: passageActQuestion('${act}'),`);
+      expect(view).toContain(`passageAct: '${act}'`);
     }
   });
 
