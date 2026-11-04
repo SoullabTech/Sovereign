@@ -108,7 +108,10 @@ describe('every Teach me sends only the button’s words (F1)', () => {
         "teachingQuestion('continue'), 'learning', { proposalPolicy: 'reply_only', teachingAnchor: 'continue' }",
       ]],
       ['app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx', [
-        "teachingQuestion('passage'), { proposalPolicy: 'reply_only', teachingAnchor: 'passage' }",
+        // The passage menu now sends every act through one hold-or-send helper
+        // (2026-11-03 dead-end fix). The law is unchanged: the prompt is exactly the
+        // button's question and the act names its anchor.
+        "prompt: teachingQuestion('passage'),",
         "options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' }",
         "{ teachingAnchor: 'change' }",
       ]],
