@@ -143,10 +143,12 @@ describe('CF08 independent Swiss/Moshier full-chart numerical discrepancy detect
    // >1 degree. Method disclosure is materially important, not mere vocabulary.
    expect(delta(calculated,c.bodies.trueNode)).toBeGreaterThan(1.0);
  });
- it('strict-core explicitly declines the unsupported Placidus and Koch mathematical methods',()=>{
+ it('strict-core admits Placidus and Koch only now that Swiss references exist (proIndependentSwissQuadrant.test.ts), and still refuses unknown methods',()=>{
   for(const houseSystem of ['placidus','koch']){
-    const admission=admitProCalculation({...fixtures[1].input,houseSystem});
-    expect(admission).toEqual({ok:false,error:'HOUSE_SYSTEM_UNSUPPORTED'});
+    expect(admitProCalculation({...fixtures[1].input,houseSystem}).ok).toBe(true);
+  }
+  for(const houseSystem of ['regiomontanus','campanus']){
+    expect(admitProCalculation({...fixtures[1].input,houseSystem})).toEqual({ok:false,error:'HOUSE_SYSTEM_UNSUPPORTED'});
   }
  });
  it('2026 New York spring gap and autumn fold fail closed',()=>{
