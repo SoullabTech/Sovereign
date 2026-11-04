@@ -26,7 +26,7 @@ export type ProAdmission =
   | { ok: false; error: ProCalculationError };
 
 export const PRO_SUPPORTED_HOUSE_SYSTEMS: ReadonlyArray<HouseSystem> =
-  Object.freeze(['whole-sign', 'equal', 'porphyry']);
+  Object.freeze(['whole-sign', 'equal', 'porphyry', 'placidus', 'koch']);
 export const PRO_MAX_TESTED_LATITUDE = 66;
 
 function utcMilliseconds(year: number, month: number, day: number, hours: number, minutes: number): number {
