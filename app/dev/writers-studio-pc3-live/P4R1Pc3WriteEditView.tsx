@@ -65,6 +65,7 @@ import type { CraftWorkingSaveDraft } from '@/lib/writersStudio/craftSaveContrac
 import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
 import { passageActQuestion, type PassageAct as PassageActId } from '@/lib/writersStudio/passageActs';
+import { pausedSendOptions } from '@/lib/writersStudio/revisionPause';
 import type { StudioActionId } from '@/lib/writersStudio/studioActions';
 
 export type Pc3HeldPassage = {
@@ -297,6 +298,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   // Craftsman's Table is entered only by an author's explicit passage action.
   // Default Write and its already-authorized editorial room remain unchanged.
   const [craftOpen, setCraftOpen] = useState(false);
+  // Step 5b: which held passage has MAIA's revisions paused (per passage, presentation only).
+  const [pausedPassageKey, setPausedPassageKey] = useState<string | null>(null);
   // Presentation custody is scoped to the Work/manuscript in which the
   // writer explicitly opened Craft. It is NOT a substitute for server auth.
   const [craftOwnerScope, setCraftOwnerScope] = useState<string | null>(null);
@@ -678,35 +681,12 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     if (ok) setSelectedRevisionEdits(new Set());
   };
 
-  // Craftsman's Table on the held passage, only if its words are still exactly
-  // the ones held. Shared by the passage menu and MAIA's offered control (1B).
-  const openCraftOnHeld = () => {
-    if (!props.held || !currentCraftScope) return;
-    const body = props.writing.bodyOf(props.held.draftSectionId);
-    const exact = Array.from(body).slice(props.held.start, props.held.end).join('');
-    if (exact !== props.held.text
-      || props.held.revisionNumber !== props.writing.currentRevisionId()) {
-      setCraftNotice('The passage changed. Select its current words again; nothing was applied.');
-      return;
-    }
-    setCraftNotice(null);
-    setCanvas(false);
-    setIsolatedEditorial(false);
-    setCraftOwnerScope(currentCraftScope);
-    setCraftOpen(true);
-    props.onOpenWorkspace();
-  };
 
   /* Design 1B: a control MAIA offered and the writer clicked. Each one only
      takes the writer somewhere; nothing is sent, read, saved or applied. */
   const onStudioAction = (id: StudioActionId) => {
     if (id === 'develop-overview' || id === 'editorial-pass') {
       requestCraftDeparture('Switch Studio room', () => props.onStudioPlace?.(id));
-      return;
-    }
-    if (id === 'craftsmans-table') {
-      if (!requestConversationDeparture()) return;
-      openCraftOnHeld();
       return;
     }
     props.onStartFreshConversation?.();
@@ -746,15 +726,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             <span>Open the passage in the dedicated editorial room.</span>
           </button>
 
-          <button type="button" role="menuitem" data-open-craftsmans-table onClick={() => {
-            if (!requestConversationDeparture()) return;
-            setSelectionMenuOpen(false);
-            openCraftOnHeld();
-          }}>
-            <b>Craftsman's Table</b>
-            <span>Work on these exact words with visible changes and MAIA beside the writing.</span>
-          </button>
-
+          {/* Step 5b: Craftsman's Table now lives inside Focus (Adjust on MAIA's option). */}
           <button type="button" role="menuitem" onClick={() => {
             setSelectionMenuOpen(false);
             props.onOpenWorkspace();
@@ -960,6 +932,63 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     </div>
   ) : null;
 
+  const craftRevision = props.writing.currentRevisionId();
+  const craftSection = props.held
+    ? props.context.sections.find(section => section.draftSectionId === props.held!.draftSectionId) ?? null
+    : null;
+  const craftBody = props.held ? props.writing.bodyOf(props.held.draftSectionId) : '';
+  const craftAligned = Boolean(props.held && craftSection && craftSection.editable
+    && props.held.draftSectionId === props.focusId
+    && craftRevision === props.held.revisionNumber
+    && Array.from(craftBody).slice(props.held.start, props.held.end).join('') === props.held.text);
+  const craftTarget: CraftFocusTarget | null = craftAligned && props.held && craftSection ? {
+    sectionId: props.held.draftSectionId,
+    start: props.held.start,
+    end: props.held.end,
+    text: props.held.text,
+    revisionNumber: props.held.revisionNumber,
+    label: craftParagraphLabel(props.held.text),
+    sectionLabel: craftSection.heading || 'Untitled section',
+    source: 'writer',
+  } : null;
+  const craftThread = craftTarget && props.editorialThread
+    && props.editorialThread.targetSectionId === craftTarget.sectionId
+    && props.editorialThread.locusText === craftTarget.text
+    ? props.editorialThread : null;
+  const craftVersion = craftThread && props.suggestedVersion
+    && craftThread.versions.some(version => version.id === props.suggestedVersion?.id)
+    ? props.suggestedVersion : null;
+  const craftTargets = craftTarget
+    ? paragraphTargets(props.context.sections, props.writing.bodyOf, craftRevision)
+    : [];
+  const nextCraft = adjacentCraftTarget(craftTargets, craftTarget, 'next');
+
+  /* Conversation-first step 5b: pausing MAIA's revisions is per passage. While paused,
+     every Focus request asks for a reply only (no new wording); talking continues. */
+  const heldKey = props.held
+    ? JSON.stringify([props.held.draftSectionId, props.held.start, props.held.end, props.held.text])
+    : null;
+  const revisionsPaused = heldKey !== null && pausedPassageKey === heldKey;
+  const focusSend: P4R1Pc3WriteEditViewProps['onSendEditorial'] = (text, options) => {
+    props.onSendEditorial(text, pausedSendOptions(options, revisionsPaused));
+  };
+  // Step 5b: the next paragraph, from Craftsman's Table's own passage logic. Moving
+  // opens that passage's own conversation; nothing is saved or applied by moving.
+  const focusNextPassage = nextCraft && props.workspaceOpen ? () => {
+    if (busy || !targetStillMatches(nextCraft, props.writing.bodyOf(nextCraft.sectionId), craftRevision)) return;
+    const section = props.context.sections.find((s) => s.draftSectionId === nextCraft.sectionId);
+    if (!section?.editable || !requestConversationDeparture()) return;
+    if (nextCraft.sectionId !== props.focusId) {
+      props.writing.goToSection(nextCraft.sectionId);
+      props.onFocusSection(nextCraft.sectionId);
+    }
+    props.onHoldPassage(section, nextCraft.start, nextCraft.end, nextCraft.text);
+  } : undefined;
+  const focusAskWhereNext = props.held ? () => {
+    if (busy) return;
+    focusSend(passageActQuestion('where-next'), { proposalPolicy: 'reply_only', passageAct: 'where-next' });
+  } : undefined;
+
   /* Conversation-first step 5 (founder adoption 2026-11-03): Craftsman's Table's
      change-by-change mode lives inside Focus, opened by Adjust on the option card.
      Same component and the same save/apply props; its sends go into this conversation. */
@@ -974,7 +1003,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       busy={busy}
       onSend={(text, options) => {
         if (!text?.trim() || busy) return;
-        props.onSendEditorial(text, {
+        focusSend(text, {
           proposalPolicy: options?.proposalPolicy === 'reply_only' ? 'reply_only' : 'allow',
           ...(options?.proposalRequested ? { proposalRequested: true } : {}),
           ...(options?.teachingAnchor ? { teachingAnchor: options.teachingAnchor } : {}),
@@ -1009,6 +1038,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         onStudioAction={onStudioAction}
         onUseVersion={props.onUseVersion}
         deeper={focusDeeper}
+        revisionsPaused={revisionsPaused}
         pendingQuestion={props.pendingEditorialText ?? null}
         manuscriptTitle={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
         currentText={currentText}
@@ -1034,7 +1064,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           : null)}
         undoMessage={visibleUndoMessage}
         onSelectVersion={props.onSelectVersion}
-        onSend={props.onSendEditorial}
+        onSend={focusSend}
         requestedAct={requestedPassageAct}
         onRequestedActTaken={() => setRequestedPassageAct(null)}
         onSaveMember={props.onSaveMember}
@@ -1321,36 +1351,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   /* An explicitly chosen Craft session gets its own passage-bound manuscript
      workbench. No Source, version or member identity is inferred from a URL. */
-  const craftRevision = props.writing.currentRevisionId();
-  const craftSection = props.held
-    ? props.context.sections.find(section => section.draftSectionId === props.held!.draftSectionId) ?? null
-    : null;
-  const craftBody = props.held ? props.writing.bodyOf(props.held.draftSectionId) : '';
-  const craftAligned = Boolean(props.held && craftSection && craftSection.editable
-    && props.held.draftSectionId === props.focusId
-    && craftRevision === props.held.revisionNumber
-    && Array.from(craftBody).slice(props.held.start, props.held.end).join('') === props.held.text);
-  const craftTarget: CraftFocusTarget | null = craftAligned && props.held && craftSection ? {
-    sectionId: props.held.draftSectionId,
-    start: props.held.start,
-    end: props.held.end,
-    text: props.held.text,
-    revisionNumber: props.held.revisionNumber,
-    label: craftParagraphLabel(props.held.text),
-    sectionLabel: craftSection.heading || 'Untitled section',
-    source: 'writer',
-  } : null;
-  const craftThread = craftTarget && props.editorialThread
-    && props.editorialThread.targetSectionId === craftTarget.sectionId
-    && props.editorialThread.locusText === craftTarget.text
-    ? props.editorialThread : null;
-  const craftVersion = craftThread && props.suggestedVersion
-    && craftThread.versions.some(version => version.id === props.suggestedVersion?.id)
-    ? props.suggestedVersion : null;
-  const craftTargets = craftTarget
-    ? paragraphTargets(props.context.sections, props.writing.bodyOf, craftRevision)
-    : [];
-  const nextCraft = adjacentCraftTarget(craftTargets, craftTarget, 'next');
   const craftDialogue = craftThread
     ? craftThread.turns.flatMap(turn => {
         const mapped = craftMaiaDialogueTurn(craftThread.threadId, turn);
@@ -1528,6 +1528,11 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       onMayProposeImmediately={props.onMayProposeImmediately}
       onClose={props.onCloseWorkspace}
       onStartFresh={props.editorialThread ? props.onStartFreshConversation : undefined}
+      onNextPassage={focusNextPassage}
+      nextPassageLabel={nextCraft?.label ?? null}
+      onAskWhereNext={focusAskWhereNext}
+      revisionsPaused={revisionsPaused}
+      onPauseRevisions={heldKey ? (paused) => setPausedPassageKey(paused ? heldKey : null) : undefined}
     >
       {props.carriedInsight ? (
         <section className="p4r1-focus-origin" data-focus-origin>
@@ -1569,6 +1574,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         onStudioAction={onStudioAction}
         onUseVersion={props.onUseVersion}
         deeper={focusDeeper}
+        revisionsPaused={revisionsPaused}
         pendingQuestion={props.pendingEditorialText ?? null}
         manuscriptTitle={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
         showOriginal={false}
@@ -1602,7 +1608,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           : null)}
         undoMessage={visibleUndoMessage}
         onSelectVersion={props.onSelectVersion}
-        onSend={props.onSendEditorial}
+        onSend={focusSend}
         requestedAct={requestedPassageAct}
         onRequestedActTaken={() => setRequestedPassageAct(null)}
         onSaveMember={props.onSaveMember}

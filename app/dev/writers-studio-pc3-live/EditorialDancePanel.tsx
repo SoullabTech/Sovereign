@@ -79,6 +79,8 @@ export interface EditorialDancePanelProps {
   pendingQuestion?: string | null;
   /** Conversation-first step 5: the change-by-change mode (Craftsman's Table, compact), opened by Adjust. */
   deeper?: ReactNode;
+  /** Step 5b: the writer paused MAIA's revisions for this passage (she keeps talking). */
+  revisionsPaused?: boolean;
   onDepth: (depth: EditorialDepth) => void;
   /** An act the writer asked for from outside the panel (the Write menu's
    *  "Teach me about this"). It goes through the same gates as a card. */
@@ -110,6 +112,8 @@ function distinctMaiaVersions(thread: RebuildEditorialThread | null): RebuildEdi
 
   return out.reverse();
 }
+
+const PAUSED_NOTE = 'You paused MAIA’s revisions for this passage. She keeps talking; resume in Preferences for new wording.';
 
 /** Step 3: about a sentence of the surrounding text on each side of the option. */
 function aroundBefore(text: string): string {
@@ -597,7 +601,8 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           </button>
           <button
             type="button"
-            disabled={props.busy}
+            disabled={props.busy || props.revisionsPaused}
+            title={props.revisionsPaused ? PAUSED_NOTE : undefined}
             onClick={() => startAct({ label: 'Show edit options', prompt: passageActQuestion('revise'), options: { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise' } })}
           >
             <b>Show edit options</b>
@@ -695,8 +700,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
 
         <div className="p4r1-dance-continue">
           <span className="p4r1-eyebrow">Continue from here</span>
+          {props.revisionsPaused ? <p className="p4r1-dance-status" data-revisions-paused>{PAUSED_NOTE}</p> : null}
           <div className="p4r1-dance-followup-actions">
-            <button type="button" disabled={props.busy} onClick={() => begin(passageActQuestion('revise-after-talk'), undefined, { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise-after-talk' })}>
+            <button type="button" disabled={props.busy || props.revisionsPaused} title={props.revisionsPaused ? PAUSED_NOTE : undefined} onClick={() => begin(passageActQuestion('revise-after-talk'), undefined, { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise-after-talk' })}>
               Show revision options
             </button>
             <button type="button" disabled={props.busy} onClick={() => begin(teachingQuestion('continue'), 'learning', { proposalPolicy: 'reply_only', teachingAnchor: 'continue' })}>
@@ -764,7 +770,8 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
               <button
                 type="button"
                 data-option-another
-                disabled={props.busy || postureBlocksEditorial}
+                disabled={props.busy || postureBlocksEditorial || props.revisionsPaused}
+                title={props.revisionsPaused ? PAUSED_NOTE : undefined}
                 onClick={() => adjustProposal('Show me one genuinely different option for this same passage. Do not rank it against the current one.')}
               >
                 Another
