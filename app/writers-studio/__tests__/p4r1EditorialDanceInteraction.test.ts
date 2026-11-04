@@ -311,7 +311,7 @@ test('empty editorial room requires an explicit live privacy posture before MAIA
     onDepth: jest.fn(),
   } as any)));
 
-  expect(container.textContent).toContain('Choose how this session should hold the exchange.');
+  expect(container.textContent).toContain('How would you like me to hold this conversation?');
   const examples = Array.from(container.querySelectorAll('button'))
     .find((button) => button.textContent?.includes('Discuss what’s happening')) as HTMLButtonElement;
   // The card answers the click by pointing at the posture; MAIA still cannot act.
@@ -476,7 +476,7 @@ test('without a MAIA relationship for the Work, cards point at beginning one and
   expect(onBegin).not.toHaveBeenCalled();
   expect(container.querySelector('[data-relationship-nudge]')?.textContent).toContain('Nothing has been sent');
 
-  const begin = Array.from(container.querySelectorAll('button')).find((b) => b.textContent === 'Begin relationship with MAIA')!;
+  const begin = Array.from(container.querySelectorAll('button')).find((b) => b.textContent === 'Start with MAIA')!;
   act(() => begin.click());
   expect(onBegin).toHaveBeenCalledTimes(1);
 

@@ -758,7 +758,16 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
       {selectionMenuOpen ? (
         <div className="p4r1-selection-menu" role="menu">
-          {passageNotice ? <p role="status" className="p4r1-selection-notice" style={{ margin: '6px 10px', fontSize: '0.85em', lineHeight: 1.4 }}>{passageNotice}</p> : null}
+          {passageNotice ? (
+            <div role="status" className="p4r1-selection-notice" style={{ margin: '6px 10px', fontSize: '0.85em', lineHeight: 1.4 }}>
+              <p style={{ margin: 0 }}>{passageNotice}</p>
+              {passageNotice === NO_WORK_NOTICE ? (
+                <button type="button" data-open-home-to-declare onClick={() => { setSelectionMenuOpen(false); props.onMode('home'); }}>
+                  Open Home to declare this Work
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           <button type="button" role="menuitem" className="p4r1-selection-menu-primary" onClick={() => {
             if (!requireWork()) return;
             setSelectionMenuOpen(false);

@@ -94,7 +94,7 @@ const fictionalWork = {
 
 
 type Overrides = Partial<{
-  work: unknown; maiaRelationship: unknown; sessionPosture: { resolved: boolean; sanctuary: boolean };
+  work: unknown; maiaRelationship: unknown; sessionPosture: { resolved: boolean; sanctuary: boolean }; onMode: unknown;
 }>;
 
 describe('Write view dead ends', () => {
@@ -144,7 +144,7 @@ describe('Write view dead ends', () => {
       onHoldPassage: (s: typeof section, start: number, end: number, text: string) => setHeld({
         draftSectionId: s.draftSectionId, start, end, text, revisionNumber: 1,
       }),
-      onMode: jest.fn(), workspaceOpen,
+      onMode: (overrides.onMode as never) ?? jest.fn(), workspaceOpen,
       carriedInsight: null, carriedInsightReturnMode: null, attentionReturnItemId: null,
       lineageReturnChapterId: null, lineageReturnCandidateId: null, workspaceInsight: null,
       editorialThread: { ...thread }, relationshipChoices: [],
@@ -217,6 +217,18 @@ describe('Write view dead ends', () => {
     expect(onSend).not.toHaveBeenCalled();
     // The menu stays open so the writer can read the reason.
     expect(node.querySelector('.p4r1-selection-menu')).not.toBeNull();
+  });
+
+  it('the no-Living-Work reason carries an action that goes to Home, where a Work is declared', () => {
+    const onMode = jest.fn();
+    mount({ work: null, onMode });
+    openMenu();
+    clickButton('Focus');
+    const go = node.querySelector('[data-open-home-to-declare]') as HTMLButtonElement | null;
+    expect(go).not.toBeNull();
+    expect(onSend).not.toHaveBeenCalled();
+    act(() => go!.click());
+    expect(onMode).toHaveBeenCalledWith('home');
   });
 
   it('Revise and Go deeper with no Living Work also explain themselves', () => {
