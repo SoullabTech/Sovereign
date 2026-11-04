@@ -1117,7 +1117,7 @@ export default function FlagshipWriteEditController() {
     if (!focusId || !context || !work || workContext.kind !== 'work'
       || workReentryRequired.current || !currentWorkGesture() || !stillCurrent()) return null;
     if (!scopedA2Relationship) {
-      setEditorialFailure('Begin or continue a relationship with MAIA for this Work first. Nothing was sent.');
+      setEditorialFailure('MAIA isn\'t sitting with this book yet. Begin a conversation with MAIA about it, then ask again. Nothing was sent.');
       return null;
     }
     if (!(await settleWriting()) || !currentWorkGesture() || !stillCurrent()) return null;
@@ -1260,8 +1260,12 @@ export default function FlagshipWriteEditController() {
     // displayText belongs to the local author-facing Craft presentation only.
     // It is neither a persistable author-turn field nor server authority.
     const text = (requestText ?? editorialDraft).trim();
-    if (!focusId || !context || !work || !text || editorialBusy
-      || !currentWorkGesture()) return;
+    if (!text || editorialBusy) return;
+    if (!focusId || !context || !work || !currentWorkGesture()) {
+      // A refusal the writer cannot see reads as a dead button.
+      setEditorialFailure('MAIA can\'t see this passage just now. Select it again, or reopen the book, and then ask. Nothing was sent and your writing is untouched.');
+      return;
+    }
     // A current or formerly current A2 that failed a fresh check is not an
     // invitation to silently fall through to manuscript-global legacy send.
     if (currentLivingWorkScope && (
