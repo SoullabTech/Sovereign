@@ -17,6 +17,7 @@
  */
 
 import { EDITORIAL_PACKET_LABELS } from '@/lib/writersStudio/editorialIntelligence';
+import { CONVERSATION_TURN_SHAPE } from '@/lib/writersStudio/conversationTurn';
 
 export type PassageAct = 'discuss' | 'revise' | 'revise-after-talk' | 'examples' | 'ideas' | 'deeper';
 
@@ -60,6 +61,8 @@ function body(act: PassageAct): readonly string[] {
       'Discuss what is happening in this exact passage with me before proposing any edits.',
       'Reflect what you notice in plain language and ask me one useful question about what I am trying to do.',
       'Do not propose replacement wording unless I ask.',
+      // Step 4: the Discuss card answers in the same conversational shape as the free box.
+      ...CONVERSATION_TURN_SHAPE,
     ];
     case 'revise': return REVISE;
     case 'revise-after-talk': return ['Based on what we just discussed, help me revise this exact passage.', ...REVISE];
