@@ -503,6 +503,27 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
               </div>
             </section>
           ) : null}
+          {/* The rest of the writer's Works. arrivalFor() puts every Work beyond
+              the three most recently written (and every Work with no authored
+              writing yet, such as an import) in `shelf`; this layout rendered
+              none of it, so a saved import was invisible on Home. */}
+          {props.arrival.shelf.length > 0 ? (
+            <section className="fr-home-region" aria-label="Your other Works" data-home-shelf>
+              <p className="fr-home-eyebrow">Your other Works</p>
+              <div className="fr-home-shelf">
+                {props.arrival.shelf.map((item) => (
+                  <WorkShelfCard
+                    key={item.id}
+                    work={item}
+                    manuscripts={props.manuscripts}
+                    onOpen={props.onOpen}
+                    onStartWriting={props.onStartWriting}
+                    busy={props.busy}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : null}
           {recentHistory.length > 0 ? (
             <section className="fr-home-region p4r1-home-history">
               <p className="fr-home-eyebrow">History</p>
