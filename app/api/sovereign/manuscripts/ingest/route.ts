@@ -7,7 +7,8 @@ export const maxDuration = 120; // large .docx/.pdf extraction can take a moment
 /**
  * Soullab Press — Manuscript upload ingest (DOCX / PDF / TXT / MD → text).
  *
- * POST (multipart/form-data, field `file`) → { text, warnings, title, sourceArrivalId }
+ * POST (multipart/form-data, field `file`; optional `importAgain=true`) → { text, warnings, title, sourceArrivalId }
+ *   or, when the member already holds this exact file, { outcome: 'already_imported', existing } with nothing stored.
  *
  * The extracted text flows back into the member's own hands: it lands in the
  * upload textarea, the member reviews it, then proceeds through the existing
@@ -45,6 +46,8 @@ import { parseUpload, UnsupportedUploadError, UnsupportedDocxStructureError } fr
 import { memberRef } from '@/lib/privacy/memberRef';
 import { titleFromFilename } from '@/lib/manuscript/ingest/titleSuggestion';
 import { recordArtifactArrival } from '@/lib/manuscript/source/arrivals';
+import { hashBytes, hashText } from '@/lib/manuscript/source/custody';
+import { checkDuplicateImport } from '@/lib/manuscript/source/duplicateImport';
 import { SourceLandingIncompleteError } from '@/lib/manuscript/source/encryptedLanding';
 import { SOURCE_UPLOAD_IDEMPOTENCY_HEADER } from '@/lib/writersStudio/sourceUploadAttempt';
 import { writerReleaseAuthority } from '@/lib/writersStudio/releaseAuthority';
@@ -440,6 +443,37 @@ export async function POST(request: NextRequest) {
           code: 'unstorable_characters',
         },
         { status: 422, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+
+    // ── 4c. ALREADY HELD? (a question, never a decision) ────────────────────────────────────────────────────
+    // If this member CURRENTLY holds a manuscript imported from the byte-identical file (or identical extracted text), do not
+    // take a second arrival into custody and do not let a second manuscript and Work follow. Answer instead, writing nothing, and
+    // let the member choose: open what they have, or send the same file again with the explicit `importAgain` act. Matching uses
+    // hashes already stored on the member's arrivals; a manuscript they deleted is gone from the join and never matches.
+    const importAgain = form.get('importAgain') === 'true';
+    const duplicate = await checkDuplicateImport({
+      memberId,
+      bytesHash: hashBytes(buffer),
+      textHash: hashText(result.text),
+      importAgain,
+    });
+    if (duplicate.outcome === 'already_imported') {
+      console.log(
+        `[MAIA/press] manuscript ingest already held { memberRef: ${memberRef(memberId)}, matchedOn: ${duplicate.matchedOn} }`,
+      );
+      return NextResponse.json(
+        {
+          outcome: 'already_imported',
+          matchedOn: duplicate.matchedOn,
+          existing: {
+            manuscriptId: duplicate.existing.manuscriptId,
+            workId: duplicate.existing.workId,
+            title: duplicate.existing.title,
+          },
+          // Deliberately no text, no arrival id: nothing was taken into custody, so nothing is offered to claim.
+        },
+        { status: 200, headers: { 'Cache-Control': 'no-store' } },
       );
     }
 
