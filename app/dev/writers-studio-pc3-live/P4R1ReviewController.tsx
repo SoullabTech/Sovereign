@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
+import ContinuousDraftWayIn from '@/app/writers-studio/ContinuousDraftWayIn';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
 import {
   LiveMaiaReview, LiveReviewChapter, LiveReviewRail,
@@ -78,6 +79,7 @@ type ReadyReview = {
   const [context, setContext] = useState<ContextReady | null>(null);
   const [review, setReview] = useState<ReadyReview | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [wayInId, setWayInId] = useState<string | null>(null);
   const [filter, setFilter] = useState('All');
   const [tab, setTab] = useState('Overview');
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(requestedFindingId);
@@ -160,6 +162,7 @@ type ReadyReview = {
       setPhase('loading');
       setReview(null);
       setMessage(null);
+      setWayInId(null);
       setDiscussion(null);
       setWorkTalking(false);
       discussGen.current += 1;
@@ -182,6 +185,7 @@ type ReadyReview = {
         if (body.state !== 'section_aware') {
           setPhase('error');
           setMessage('This manuscript is not section-addressable yet. Review will not guess at its structure.');
+          setWayInId(manuscriptId);
           return;
         }
         setContext(body);
@@ -778,7 +782,9 @@ type ReadyReview = {
             : message ?? 'Review could not be opened.';
     return (
       <main className="fr-root" data-pc3-review-phase={phase}>
-        <div style={{ padding: 32 }}>{copy}</div>
+        <div style={{ padding: 32 }}>
+          {phase === 'error' && wayInId ? <ContinuousDraftWayIn manuscriptId={wayInId} room="Review" /> : copy}
+        </div>
       </main>
     );
   }  const selectedFinding = data.findings.find((finding) =>
