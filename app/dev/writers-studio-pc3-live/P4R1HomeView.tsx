@@ -159,18 +159,51 @@ function WorkAnchor({ work, manuscripts, activity, onOpen, onStartWriting, busy,
   );
 }
 
-function WorkShelfCard({ work, manuscripts, onOpen, onStartWriting, busy }: {
+function WorkShelfCard({ work, manuscripts, onOpen, onStartWriting, busy, onDeleteWork }: {
   work: LivingWork;
   manuscripts: readonly CurrentManuscript[];
   onOpen: (manuscriptId: string) => void;
   onStartWriting: (workId: string) => void;
   busy: boolean;
+  /** Permanently deletes this Work and its one manuscript (WS-DELETE-01). Rejects with a member-facing message. */
+  onDeleteWork: (workId: string, manuscriptId: string | null) => Promise<void>;
 }) {
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const choices = manuscriptsForWork(work, manuscripts);
   const manuscript = choices.length === 1 ? choices[0] : null;
   const facts = workFacts(work, manuscripts);
   const title = work.title?.trim() || 'Untitled Work';
   const hasManuscriptExpression = work.expressions.some((expression) => expression.expressionType === 'manuscript');
+  /* One manuscript, or none: the delete is unambiguous. A Work with several manuscripts is never deleted from here — which of
+     them would go is the member's choice, and that choice lives inside the Work. */
+  const canDelete = choices.length <= 1 && manuscriptIdsOf(work).length <= 1;
+  if (confirming) {
+    return (
+      <article className="fr-home-workcard p4r1-home-workcard" data-deleting-confirmation style={{ display: 'block' }}>
+        <WritingDeleteConfirm
+          title={title}
+          busy={deleting}
+          error={deleteError}
+          onCancel={() => { if (!deleting) { setConfirming(false); setDeleteError(null); } }}
+          onConfirm={async () => {
+            setDeleting(true);
+            setDeleteError(null);
+            try {
+              await onDeleteWork(work.id, manuscript?.id ?? manuscriptIdsOf(work)[0] ?? null);
+              setConfirming(false);
+            } catch (err) {
+              if (err instanceof DeletionUnconfirmed) setConfirming(false);
+              else setDeleteError(err instanceof Error ? err.message : 'That work could not be deleted just now. Nothing was removed. Please try again.');
+            } finally {
+              setDeleting(false);
+            }
+          }}
+        />
+      </article>
+    );
+  }
   return (
     <article className="fr-home-workcard p4r1-home-workcard">
       <LiveWorkVisual workId={work.id} title={title} />
@@ -199,6 +232,9 @@ function WorkShelfCard({ work, manuscripts, onOpen, onStartWriting, busy }: {
             </button>
             <span>Blank page. Materials stay where they are.</span>
           </div>
+        ) : null}
+        {canDelete ? (
+          <button type="button" className="fr-home-quiet p4r1-home-delete-open" onClick={() => { setDeleteError(null); setConfirming(true); }}>Delete</button>
         ) : null}
       </div>
     </article>
@@ -284,6 +320,8 @@ export interface P4R1HomeViewProps {
   onAddToWork: (manuscriptId: string, workId: string) => void;
   /** Permanently deletes one writing through the product's own erase (WS-DELETE-01). Rejects with a member-facing message. */
   onDeleteWriting: (manuscriptId: string) => Promise<void>;
+  /** Permanently deletes one Work with its manuscript through the same governed erase. */
+  onDeleteWork: (workId: string, manuscriptId: string | null) => Promise<void>;
   onStartWriting: (workId: string) => void;
   onImport: () => void;
   onSources: () => void;
@@ -442,6 +480,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
                     manuscripts={props.manuscripts}
                     onOpen={props.onOpen}
                     onStartWriting={props.onStartWriting}
+                    onDeleteWork={props.onDeleteWork}
                     busy={props.busy}
                   />
                 ))}
@@ -508,6 +547,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   manuscripts={props.manuscripts}
   onOpen={props.onOpen}
   onStartWriting={props.onStartWriting}
+  onDeleteWork={props.onDeleteWork}
   busy={props.busy}
 />
                 ))}
@@ -529,6 +569,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
                     manuscripts={props.manuscripts}
                     onOpen={props.onOpen}
                     onStartWriting={props.onStartWriting}
+                    onDeleteWork={props.onDeleteWork}
                     busy={props.busy}
                   />
                 ))}
@@ -567,6 +608,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   manuscripts={props.manuscripts}
   onOpen={props.onOpen}
   onStartWriting={props.onStartWriting}
+  onDeleteWork={props.onDeleteWork}
   busy={props.busy}
 />)}
               </div>
@@ -589,6 +631,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   manuscripts={props.manuscripts}
   onOpen={props.onOpen}
   onStartWriting={props.onStartWriting}
+  onDeleteWork={props.onDeleteWork}
   busy={props.busy}
 />)}
             </div>
