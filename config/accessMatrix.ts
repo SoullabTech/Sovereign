@@ -642,6 +642,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/astrology/pro/charts', minTier: 'free', notes: 'Pro saved charts for other people; owner from verified session, Pro access rechecked in handler' },
   { exact: '/api/astrology/pro/derived', minTier: 'free', notes: 'Pro progressed and return charts; owner-only subject, birth read server-side, Pro access rechecked in handler' },
   { exact: '/api/astrology/pro/ephemeris', minTier: 'free', notes: 'Pro sampled planetary longitudes for a date range; no birth or member data; Pro access rechecked in handler' },
+  { exact: '/api/astrology/pro/place', minTier: 'free', notes: 'Pro astro map and relocated chart; owner-only subject, birth read server-side, Pro access rechecked in handler' },
   { exact: '/api/astrology/pro/sky', minTier: 'free', notes: 'Pro sky at a chosen moment; no birth or member data; Pro access rechecked in handler' },
   { regex: /^\/api\/astrology\/pro\/charts\/[0-9a-f-]{36}$/i, minTier: 'free', notes: 'One Pro saved chart (verify, calculate, delete); owner-only, Pro access rechecked in handler' },
 
