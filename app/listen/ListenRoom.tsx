@@ -19,6 +19,7 @@ import type { StudioView } from './SoundStudioNow';
 import FocusFieldDesk from '@/components/listening/FocusFieldDesk';
 import type { MemberCollection, TrackReference } from '@/lib/listening/portableCollections';
 import styles from './listen.module.css';
+import './listenGlobal.css';
 
 type Mood = 'focus' | 'create' | 'drift' | 'rest';
 const journeys: Record<Mood, { label: string; title: string; subtitle: string; description: string; gradient: string; frequencies: number[] }> = {
