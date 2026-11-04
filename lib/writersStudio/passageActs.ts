@@ -19,17 +19,23 @@
 import { EDITORIAL_PACKET_LABELS } from '@/lib/writersStudio/editorialIntelligence';
 import { CONVERSATION_TURN_SHAPE } from '@/lib/writersStudio/conversationTurn';
 
-export type PassageAct = 'discuss' | 'revise' | 'revise-after-talk' | 'examples' | 'ideas' | 'deeper';
+export type PassageAct = 'discuss' | 'revise' | 'revise-after-talk' | 'examples' | 'ideas' | 'deeper'
+  | 'change-another' | 'change-why';
 
-export const PASSAGE_ACTS: readonly PassageAct[] = ['discuss', 'revise', 'revise-after-talk', 'examples', 'ideas', 'deeper'];
+export const PASSAGE_ACTS: readonly PassageAct[] = [
+  'discuss', 'revise', 'revise-after-talk', 'examples', 'ideas', 'deeper', 'change-another', 'change-why',
+];
 
 export function isPassageAct(value: unknown): value is PassageAct {
   return typeof value === 'string' && (PASSAGE_ACTS as readonly string[]).includes(value);
 }
 
-/** The writer's words for each act: the writer's turn, as stored. */
-export function passageActQuestion(act: PassageAct): string {
+/** The writer's words for each act: the writer's turn, as stored. `subject` names one
+ *  marked change (step 5, change by change), e.g. `the change from "a" to "b"`. */
+export function passageActQuestion(act: PassageAct, subject?: string): string {
   switch (act) {
+    case 'change-another': return `Show me another way to handle ${subject ?? 'this change'}.`;
+    case 'change-why': return `Why ${subject ?? 'this change'}?`;
     case 'discuss': return 'Let’s talk about what’s happening in this passage.';
     case 'revise': return 'Show me edit options for this passage.';
     case 'revise-after-talk': return 'Show me revision options, from what we’ve discussed.';
@@ -57,6 +63,18 @@ const REVISE: readonly string[] = [
 
 function body(act: PassageAct): readonly string[] {
   switch (act) {
+    // Step 5: one marked change, named in the writer's words. Moved from the
+    // Craftsman's Table prompts, not reworded.
+    case 'change-another': return [
+      'Show me one genuinely different way to handle the change I named.',
+      'Stay inside this exact local edit. Preserve my intention, voice, cadence, imagery, worldview, and intentional ambiguity.',
+      'Do not broaden the rewrite. Return one bounded alternative and explain its tradeoff briefly.',
+    ];
+    case 'change-why': return [
+      'Explain the change I named.',
+      'Use evidence from my exact words. Tell me what the move may gain and what it could cost.',
+      'Make the strongest case for my original too. Do not propose new wording in this answer.',
+    ];
     case 'discuss': return [
       'Discuss what is happening in this exact passage with me before proposing any edits.',
       'Reflect what you notice in plain language and ask me one useful question about what I am trying to do.',

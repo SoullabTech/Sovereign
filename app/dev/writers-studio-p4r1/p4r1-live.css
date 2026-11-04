@@ -5157,3 +5157,12 @@
   color:var(--fr-ink2);
   margin-bottom:10px;
 }
+
+/* Conversation-first Focus, step 5: Craftsman's Table's change-by-change mode inside the option card. */
+.p4r1-root .p4r1-option-deeper{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid var(--fr-line);
+}
+.p4r1-root .p4r1-craft-r1-bar.is-compact{ padding:0 0 8px; }
+.p4r1-root .p4r1-craft-r1-bar.is-compact small{ color:var(--fr-ink2); }
