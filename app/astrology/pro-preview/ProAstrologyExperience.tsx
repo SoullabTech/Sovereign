@@ -34,7 +34,7 @@ import styles from './astrology-pro-preview.module.css';
 
 type ChartStatus = 'idle' | 'loading' | 'ready' | 'signed-out' | 'consent-required' | 'incomplete' | 'unavailable';
 type ViewingMode = 'facts' | 'questions' | 'meaning';
-type ProHouseSystem = 'porphyry' | 'whole-sign' | 'equal';
+type ProHouseSystem = 'porphyry' | 'whole-sign' | 'equal' | 'placidus' | 'koch';
 type SkyPosition = { planet: string; sign: string; degree: number; retrograde?: boolean; motionStatus?: 'direct' | 'retrograde' | 'stationary-uncertain' | 'not-evaluated' };
 type SkyStatus = 'loading' | 'ready' | 'unavailable';
 
@@ -465,6 +465,8 @@ export default function ProAstrologyExperience() {
                 <option value="porphyry">Porphyry</option>
                 <option value="whole-sign">Whole Sign</option>
                 <option value="equal">Equal</option>
+                <option value="placidus">Placidus</option>
+                <option value="koch">Koch</option>
               </select>
             </label>
             <a href="#the-chart">Natal wheel</a>
@@ -580,7 +582,7 @@ export default function ProAstrologyExperience() {
                 <div className={styles.emptyWheelCircle} aria-hidden="true"><div className={styles.emptyWheelInner}>✧</div></div>
                 <div className={styles.emptyChartInvitation}>
                   <span className={styles.eyebrow}>YOUR CHART IS YOURS</span>
-                  <h3>Natal chart workspace · {houseSystem === 'whole-sign' ? 'Whole Sign' : houseSystem === 'equal' ? 'Equal' : 'Porphyry'}</h3>
+                  <h3>Natal chart workspace · {({ 'whole-sign': 'Whole Sign', equal: 'Equal', porphyry: 'Porphyry', placidus: 'Placidus', koch: 'Koch' } as const)[houseSystem]}</h3>
                   <p>When you choose to open it, we’ll read the birth details held by your signed-in account and calculate the chart. Nothing is inferred from another person's browser data.</p>
                   <button className={styles.primaryAction} onClick={loadMyChart} disabled={chartStatus === 'loading'}>
                     {chartStatus === 'loading' ? 'Opening your chart…' : 'Open my chart'} <ChevronRight size={18} aria-hidden="true" />
