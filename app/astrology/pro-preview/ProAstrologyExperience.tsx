@@ -27,6 +27,7 @@ import ProDerivedPanel from './ProDerivedPanel';
 import ProChartViews from './ProChartViews';
 import ProEphemerisPanel from './ProEphemerisPanel';
 import ProAstroMapPanel from './ProAstroMapPanel';
+import ProTraditionReport from './ProTraditionReport';
 import type { ChartPoints } from '@/lib/astrology/proChartPoints';
 import type { Declination } from '@/lib/astrology/proDeclinations';
 import type { TransitBody } from '@/lib/astrology/proTransits';
@@ -553,6 +554,8 @@ export default function ProAstrologyExperience() {
                 <ProAspectGrid chart={privateChart} declinations={declinations} onSelectBody={selectBody} />
                 <ProChartViews chart={privateChart} points={chartPoints} />
                 <ProEphemerisPanel natalBodies={bodies} />
+                <ProTraditionReport chart={privateChart} chartLabel={savedSubject ? savedSubject.label : 'my chart'}
+                  questions={INQUIRY} />
                 <ProAstroMapPanel subjectId={savedSubject ? savedSubject.id : 'own'}
                   chartLabel={savedSubject ? savedSubject.label : 'my chart'} houseSystem={houseSystem} />
                 <p id="pro-orb-filter-description" className={styles.sourceLabel} role="note">
