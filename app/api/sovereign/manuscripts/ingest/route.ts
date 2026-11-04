@@ -48,11 +48,29 @@ import { recordArtifactArrival } from '@/lib/manuscript/source/arrivals';
 import { SourceLandingIncompleteError } from '@/lib/manuscript/source/encryptedLanding';
 import { SOURCE_UPLOAD_IDEMPOTENCY_HEADER } from '@/lib/writersStudio/sourceUploadAttempt';
 import { writerReleaseAuthority } from '@/lib/writersStudio/releaseAuthority';
+import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
+import { createRateLimiter } from '@/lib/http/rateLimit';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 
 // P0 private original manuscript/EPUB intake remains held by the exact server
 // release manifest. No environment variable, browser flag or request header can
 // lift it. Changing the manifest requires a newly admitted and requalified image.
 const PRESS_SOURCE_INTAKE_RELEASED = writerReleaseAuthority().sourceIntakeReleased;
+
+/**
+ * Posture header (D6). Sanctuary canon is absolute: nothing from a Sanctuary session may be saved. An upload lands an
+ * encrypted original AND a plaintext extraction, so it is a content write and follows the same convention as the other
+ * Writer content routes: the client states its CURRENT posture explicitly, Sanctuary is refused, and a missing or
+ * malformed posture fails closed (it is never read as "ordinary").
+ */
+const POSTURE_HEADER = 'x-maia-sanctuary';
+
+/**
+ * Per-member upload budget (D1). In-memory and per-process, which matches the single production container; a retry of the
+ * same file counts, so the budget is deliberately generous for a real author and tight for a script.
+ */
+const UPLOADS_PER_HOUR = 20;
+const uploadLimited = createRateLimiter(UPLOADS_PER_HOUR, 60 * 60 * 1000);
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB — generous for a full book file
 const MAX_TEXT_CHARS = 2_000_000; // mirrors the save path's cap in ../route.ts
@@ -264,6 +282,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ── 3a. AUDIENCE (D1) ──────────────────────────────────────────────────
+    // The page that hosts the Import room is roster-gated, but this endpoint is excluded from the proxy and from the
+    // Writer corridor, so on its own it would admit ANY signed-in member the moment the release flips. It asks the same
+    // question the page asks, through the same predicate, so the two cannot drift.
+    const access = await writersStudioBetaAccess(memberId);
+    if (!access.eligible) {
+      return NextResponse.json(
+        { error: 'Original manuscript intake is not available to your account during this beta.' },
+        { status: 403, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+    if (uploadLimited(memberId, Date.now())) {
+      return NextResponse.json(
+        { error: 'Too many uploads in the last hour. Please wait a little and try again.' },
+        { status: 429, headers: { 'Cache-Control': 'no-store', 'Retry-After': '900' } },
+      );
+    }
+
+    // ── 3b. POSTURE (D6) ───────────────────────────────────────────────────
+    // Before the body is read, so a Sanctuary upload never reaches a parser, a vault or a database.
+    const postureClaim = request.headers.get(POSTURE_HEADER);
+    if (postureClaim !== 'true' && postureClaim !== 'false') {
+      return NextResponse.json(
+        { error: 'Choose Ordinary or Sanctuary first. Nothing has been sent.', code: 'posture_required' },
+        { status: 428, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+    if (TurnPosture.resolve({ sanctuary: postureClaim === 'true' }).sanctuary) {
+      return NextResponse.json(
+        { error: 'Sanctuary is on. Original files are not saved during Sanctuary.', code: 'sanctuary_unavailable' },
+        { status: 423, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+
     // Every released upload carries a caller-stable UUID. A retry with the same
     // UUID must resolve to the same member-bound landing intent; a different
     // original under that UUID is refused. The hold above remains first so no
@@ -363,6 +415,32 @@ export async function POST(request: NextRequest) {
 
     if (result.text.length > MAX_TEXT_CHARS) {
       return NextResponse.json({ error: 'Manuscript too large (2MB of text max)' }, { status: 413 });
+    }
+
+    // ── 4b. REFUSE WHAT CANNOT BE STORED, BEFORE ANYTHING IS STORED (D3) ───────────────────────────────────────
+    // Measured against the real library: empty or NUL-containing extracted text used to pass every check above, land
+    // an encrypted original in the vault, and only then be refused (empty text by commit, NUL by the database). The
+    // member saw a retryable "did not finish" that could never succeed, and an encrypted file and a wrapped key stayed
+    // behind with no door able to remove them. Refusing here costs nothing and leaves nothing behind.
+    if (result.text.trim().length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            'We could not find any readable text in that file. A scanned PDF needs a text layer, or upload the original Word or text file.',
+          code: 'no_readable_text',
+        },
+        { status: 422, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+    if (result.text.includes('\u0000')) {
+      return NextResponse.json(
+        {
+          error:
+            'That file contains characters we cannot store. A text file saved as "Unicode" (UTF-16) is a common cause; save it as UTF-8 and try again.',
+          code: 'unstorable_characters',
+        },
+        { status: 422, headers: { 'Cache-Control': 'no-store' } },
+      );
     }
 
     // Log marker: counts only, never content.

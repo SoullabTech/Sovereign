@@ -387,7 +387,7 @@ export const HOME_COPY = {
 /** Remove vs delete — exact copy of the live Studio's two acts (lib/writersStudio/deleteWork.ts), never blurred. */
 export const REMOVE_OR_DELETE = {
   remove: { action: 'Remove Work', hint: 'Keeps your writing in Your Writings.' },
-  delete: { action: 'Delete Work and writing', hint: 'Permanently deletes this Work and its writing.' },
+  delete: { action: 'Delete Work and writing', hint: 'Deletes this Work and its writing. This cannot be undone.' },
 } as const;
 
 // ── Imagery (cropped from the founder originals; see header) ────────────────

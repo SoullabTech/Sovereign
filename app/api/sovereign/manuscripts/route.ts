@@ -24,7 +24,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query, transaction } from '@/lib/db/postgres';
+import { query, transaction, type TransactionClient } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   segment,
@@ -34,7 +34,12 @@ import {
   type HeadingSignal,
 } from '@/lib/manuscript/ingest/segment';
 import { memberRef } from '@/lib/privacy/memberRef';
-import { claimArrival, recordSuppliedArrival } from '@/lib/manuscript/source/arrivals';
+import {
+  claimArrivalWithClient,
+  prepareArrivalClaim,
+  recordSuppliedArrivalWithClient,
+  type ArrivalClaimContext,
+} from '@/lib/manuscript/source/arrivals';
 import { detectOmission, omissionMarker } from '@/lib/manuscript/source/omission';
 import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
@@ -212,6 +217,86 @@ function classifyDepth(
   if (d !== null && (sig === null || sig === 'caps')) return { depth: null, signal: sig };
   if (d === null && (sig === 'markdown' || sig === 'chapter')) return { depth: null, signal: null };
   return { depth: d, signal: sig };
+}
+
+/**
+ * D4 - the original is claimed INSIDE the transaction that creates the Work. If it cannot be bound, this is thrown, the whole
+ * transaction rolls back, and nothing is saved: no Work, no sections, no declaration, and (for a pasted import) no orphan supplied
+ * arrival. The member keeps their writing on screen and can try again; a file-backed upload stays an unclaimed upload they can see
+ * and remove. The message is a fixed code, never content, because the transaction helper logs it.
+ */
+/**
+ * WHY a file-backed claim came back false. A retry of the same save can only ever succeed for a transient cause, so the three are
+ * told apart and the member is never offered a retry that cannot work:
+ *   - 'transient'            the claim threw, or no cause was established: a retry may succeed.
+ *   - 'already_attached'     this member's own Work already holds that original (a first save landed and its response was lost).
+ *   - 'original_unavailable' no unclaimed original of theirs is held under that reference (removed, never existed, or its bytes no
+ *                            longer verify). The lookup is member-bound, so it cannot reveal anyone else's data.
+ */
+type UnboundCause = 'transient' | 'already_attached' | 'original_unavailable';
+
+class CustodyNotBound extends Error {
+  constructor(
+    readonly reason: 'claim_not_bound' | 'claim_threw',
+    readonly errorName?: string,
+    readonly unboundCause: UnboundCause = 'transient',
+  ) {
+    super(`source_custody_not_bound:${reason}`);
+    this.name = 'CustodyNotBound';
+  }
+}
+
+const CUSTODY_REFUSAL = {
+  error: 'Your writing was not saved, because it could not be stored together with its source. Nothing was changed. You can try again.',
+  code: 'source_custody_not_bound',
+  retryable: true,
+} as const;
+
+const CUSTODY_ALREADY_ATTACHED = {
+  error: 'That original is already attached to a Work in your library, so a second Work was not created. Nothing new was saved.',
+  code: 'source_already_attached',
+  retryable: false,
+} as const;
+
+const CUSTODY_ORIGINAL_UNAVAILABLE = {
+  error: 'The original you uploaded is no longer available, so this Work was not saved. Nothing was changed. Choose the file again to continue.',
+  code: 'source_original_unavailable',
+  retryable: false,
+} as const;
+
+function custodyRefusalFor(cause: UnboundCause) {
+  if (cause === 'already_attached') return CUSTODY_ALREADY_ATTACHED;
+  if (cause === 'original_unavailable') return CUSTODY_ORIGINAL_UNAVAILABLE;
+  return CUSTODY_REFUSAL;
+}
+
+/** Why `claimArrivalWithClient` returned false for a file arrival. Member-bound read inside the transaction about to roll back. */
+async function classifyUnboundFileArrival(
+  client: TransactionClient,
+  arrivalId: string,
+  memberId: string,
+): Promise<UnboundCause> {
+  const row = await client.query<{ manuscript_id: string | null }>(
+    'SELECT manuscript_id FROM manuscript_source_arrivals WHERE id = $1 AND member_id = $2',
+    [arrivalId, memberId],
+  );
+  if (row.rows.length === 1 && row.rows[0]!.manuscript_id !== null) return 'already_attached';
+  return 'original_unavailable';
+}
+
+/** Content-free trace of a refused import: a pseudonymous reference, a reason code and an error NAME. Never a message. */
+function noteUnboundCustody(
+  memberId: string,
+  reason: 'claim_not_bound' | 'claim_threw',
+  errorName?: string,
+  cause: UnboundCause = 'transient',
+): void {
+  console.warn('[press/manuscripts] import refused: source custody not bound', {
+    memberRef: memberRef(memberId),
+    reason,
+    cause,
+    ...(errorName ? { errorName } : {}),
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -406,81 +491,103 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'no non-empty sections' }, { status: 400 });
     }
 
-    // The member's explicit import confirmation may also declare a new Work.
-    // Keep that declaration and its exact manuscript together: a failed
-    // section, Work, or expression write must never leave a partial import.
-    const created = await transaction(async (client) => {
-      const ms = await client.query<{ id: string }>(
-        `INSERT INTO member_manuscripts (member_id, title) VALUES ($1, $2) RETURNING id`,
-        [memberId, title.trim()],
-      );
-      if (ms.rows.length !== 1) throw new Error('import_manuscript_unconfirmed');
-      const manuscriptId = ms.rows[0]!.id;
-      for (const s of clean) {
-        const inserted = await client.query<{ id: string }>(
-          `INSERT INTO manuscript_sections (manuscript_id, position, heading, body, heading_depth, heading_signal)
-           VALUES ($1, $2, $3, $4, $5, $6)
-           RETURNING id`,
-          [manuscriptId, s.position, s.heading, s.body, s.headingDepth ?? null, s.headingSignal ?? null],
-        );
-        if (inserted.rows.length !== 1) throw new Error('import_section_unconfirmed');
-      }
-
-      let workId: string | null = null;
-      if (createWork === true) {
-        const work = await client.query<{ id: string }>(
-          `INSERT INTO living_works (member_id, title)
-           VALUES ($1, $2) RETURNING id`,
-          [memberId, title.trim()],
-        );
-        if (work.rows.length !== 1) throw new Error('import_work_unconfirmed');
-        workId = work.rows[0]!.id;
-        const declaration = await client.query<{ id: string }>(
-          `INSERT INTO living_work_expressions
-             (living_work_id, expression_type, expression_id, declared_by)
-           VALUES ($1, 'manuscript', $2, $3)
-           RETURNING id`,
-          [workId, manuscriptId, memberId],
-        );
-        if (declaration.rows.length !== 1) throw new Error('import_work_declaration_unconfirmed');
-      }
-      return { manuscriptId, workId };
-    });
-    const { manuscriptId, workId } = created;
-
-    /* WS-01 — bind the manuscript to its arrival.
+    /* WS-01 / D4 - what is to be bound to the new manuscript, decided BEFORE anything is written.
      *
      * Two paths, and the difference between them is provenance, not plumbing:
      *
-     *   a file-backed import already has an arrival, taken into custody at
-     *   ingest before the member could edit anything. It is claimed here.
+     *   a file-backed import already has an arrival, taken into custody at ingest before the member could edit
+     *   anything. It is claimed in the transaction below.
      *
-     *   a pasted or typed import has no artifact and must never be given one.
-     *   Its authoritative source is the exact text the member supplied at THIS
-     *   act — the confirmation — which is why it is recorded now rather than
-     *   captured earlier from a textarea the member had not finished with.
+     *   a pasted or typed import has no artifact and must never be given one. Its authoritative source is the exact
+     *   text the member supplied at THIS act - the confirmation - which is why it is recorded now, in the same
+     *   transaction, rather than captured earlier from a textarea the member had not finished with.
      *
-     * A manuscript whose arrival cannot be bound stays labelled
-     * `legacy_interpreted_import` by the column default. It is not failed and
-     * not deleted — the member's words are saved either way — but neither is it
-     * allowed to claim a custody it does not have. */
-    let custody = 'legacy_interpreted_import';
-    try {
-      if (typeof sourceArrivalId === 'string' && sourceArrivalId.length > 0) {
-        if (await claimArrival(sourceArrivalId, manuscriptId, memberId)) {
-          custody = 'source_custodied';
-        }
-      } else if (typeof confirmedText === 'string' && confirmedText.trim().length > 0) {
-        const arrival = await recordSuppliedArrival({ memberId, sourceText: confirmedText });
-        if (await claimArrival(arrival.id, manuscriptId, memberId)) {
-          custody = 'source_custodied';
-        }
+     * Neither path may leave a manuscript claiming a custody it does not have, and neither may lose the member's
+     * words. Both are met by making the binding part of the same all-or-nothing act as the save. */
+    const fileArrivalId = typeof sourceArrivalId === 'string' && sourceArrivalId.length > 0 ? sourceArrivalId : null;
+    // A file arrival wins when both are present: the transaction below tries the file path first and only otherwise records the paste.
+    const pastedSourceText = typeof confirmedText === 'string' && confirmedText.trim().length > 0 ? confirmedText : null;
+    let claimContext: ArrivalClaimContext = null;
+    if (fileArrivalId) {
+      try {
+        claimContext = await prepareArrivalClaim(fileArrivalId, memberId);
+      } catch (err) {
+        noteUnboundCustody(memberId, 'claim_threw', err instanceof Error ? err.name : 'unknown');
+        return NextResponse.json(CUSTODY_REFUSAL, { status: 409 });
       }
-    } catch (err) {
-      // Custody is additive: failing to record it must not lose the member's
-      // manuscript, which is already saved. The label stays honest instead.
-      console.error('[press/manuscripts] source custody binding failed', err);
     }
+
+    // The member's explicit import confirmation may also declare a new Work.
+    // Keep that declaration, its exact manuscript AND the binding of its original
+    // together: a failed section, Work, expression or claim write must never
+    // leave a partial import.
+    let created: { manuscriptId: string; workId: string | null; custody: string };
+    try {
+      created = await transaction(async (client) => {
+        const ms = await client.query<{ id: string }>(
+          `INSERT INTO member_manuscripts (member_id, title) VALUES ($1, $2) RETURNING id`,
+          [memberId, title.trim()],
+        );
+        if (ms.rows.length !== 1) throw new Error('import_manuscript_unconfirmed');
+        const manuscriptId = ms.rows[0]!.id;
+        for (const s of clean) {
+          const inserted = await client.query<{ id: string }>(
+            `INSERT INTO manuscript_sections (manuscript_id, position, heading, body, heading_depth, heading_signal)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING id`,
+            [manuscriptId, s.position, s.heading, s.body, s.headingDepth ?? null, s.headingSignal ?? null],
+          );
+          if (inserted.rows.length !== 1) throw new Error('import_section_unconfirmed');
+        }
+
+        let workId: string | null = null;
+        if (createWork === true) {
+          const work = await client.query<{ id: string }>(
+            `INSERT INTO living_works (member_id, title)
+             VALUES ($1, $2) RETURNING id`,
+            [memberId, title.trim()],
+          );
+          if (work.rows.length !== 1) throw new Error('import_work_unconfirmed');
+          workId = work.rows[0]!.id;
+          const declaration = await client.query<{ id: string }>(
+            `INSERT INTO living_work_expressions
+               (living_work_id, expression_type, expression_id, declared_by)
+             VALUES ($1, 'manuscript', $2, $3)
+             RETURNING id`,
+            [workId, manuscriptId, memberId],
+          );
+          if (declaration.rows.length !== 1) throw new Error('import_work_declaration_unconfirmed');
+        }
+        let custody = 'legacy_interpreted_import';
+        if (fileArrivalId || pastedSourceText) {
+          let bound = false;
+          let cause: UnboundCause = 'transient';
+          try {
+            if (fileArrivalId) {
+              bound = await claimArrivalWithClient(client, fileArrivalId, manuscriptId, memberId, claimContext);
+              if (!bound) cause = await classifyUnboundFileArrival(client, fileArrivalId, memberId);
+            } else {
+              const arrival = await recordSuppliedArrivalWithClient(client, { memberId, sourceText: pastedSourceText! });
+              bound = await claimArrivalWithClient(client, arrival.id, manuscriptId, memberId, null);
+            }
+          } catch (err) {
+            // The held bytes are gone from the vault: no retry of this save can bring them back, so it is not "transient".
+            const gone = fileArrivalId !== null && (err as NodeJS.ErrnoException | null)?.code === 'ENOENT';
+            throw new CustodyNotBound('claim_threw', err instanceof Error ? err.name : 'unknown', gone ? 'original_unavailable' : 'transient');
+          }
+          if (!bound) throw new CustodyNotBound('claim_not_bound', undefined, cause);
+          custody = 'source_custodied';
+        }
+        return { manuscriptId, workId, custody };
+      });
+    } catch (err) {
+      if (err instanceof CustodyNotBound) {
+        noteUnboundCustody(memberId, err.reason, err.errorName, err.unboundCause);
+        return NextResponse.json(custodyRefusalFor(err.unboundCause), { status: 409 });
+      }
+      throw err;
+    }
+    const { manuscriptId, workId, custody } = created;
 
     // Log marker: counts and provenance only, never content.
     console.log(

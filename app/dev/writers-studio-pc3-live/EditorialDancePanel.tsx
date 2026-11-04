@@ -276,7 +276,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       const ok = await props.onUseVersion({
         threadId: props.thread.threadId,
         sectionId: props.thread.targetSectionId,
-        supersedes: recommendation.id,
+        // The new version replaces whatever is latest in this conversation; after an
+        // Undo that is the writer's earlier save, not MAIA's option (else 409).
+        supersedes: props.thread.headVersionId ?? recommendation.id,
         text: recommendation.wording,
         purpose: purposeOf(recommendation, versions.findIndex((v) => v.id === recommendation.id)).slice(0, 80),
       });
@@ -577,11 +579,17 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     ? <p className="p4r1-dance-notice" role="note" data-editorial-notice>{props.notice}</p>
     : null;
 
+  /* Conversation-first step 4 (founder adoption 2026-11-03): three starters.
+     Examples, ideas and a deeper look are things the writer can simply ask for in
+     the box below; MAIA answers in the conversational shape. */
   const entryActions = (
-    <div className="p4r1-dance-entry-groups" aria-label="Ways to work with this passage">
+    <div className="p4r1-dance-entry-groups" aria-label="Ways to start with this passage">
       <section>
-        <header><b>Work on the words</b><span>Stay close to this passage.</span></header>
         <div className="p4r1-dance-start-actions">
+          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Discuss what’s happening', prompt: passageActQuestion('discuss'), options: { proposalPolicy: 'reply_only', passageAct: 'discuss' } })}>
+            <b>Discuss what’s happening</b>
+            <span>Talk it through with MAIA before changing anything.</span>
+          </button>
           <button
             type="button"
             disabled={props.busy}
@@ -590,37 +598,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             <b>Show edit options</b>
             <span>Let MAIA offer a revision direction and other ways this passage could move. Nothing changes until you apply one.</span>
           </button>
-          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Discuss what’s happening', prompt: passageActQuestion('discuss'), options: { proposalPolicy: 'reply_only', passageAct: 'discuss' } })}>
-            <b>Discuss what’s happening</b>
-            <span>Stay with the passage and help me think about it before editing.</span>
-          </button>
-        </div>
-      </section>
-
-      <section>
-        <header><b>Explore possibilities</b><span>Open the field without committing to a revision.</span></header>
-        <div className="p4r1-dance-start-actions">
-          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Show me examples', prompt: passageActQuestion('examples'), depth: 'learning', options: { proposalPolicy: 'reply_only', passageAct: 'examples' } })}>
-            <b>Show me examples</b>
-            <span>Illustrate possibilities without turning them into recommendations.</span>
-          </button>
-          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Give me ideas', prompt: passageActQuestion('ideas'), options: { proposalPolicy: 'reply_only', passageAct: 'ideas' } })}>
-            <b>Give me ideas</b>
-            <span>Open several genuinely different directions I could explore.</span>
-          </button>
-        </div>
-      </section>
-
-      <section>
-        <header><b>Learn from the passage</b><span>Open more craft depth only if you want it.</span></header>
-        <div className="p4r1-dance-start-actions">
           <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Teach me about the writing', prompt: teachPassagePrompt(), depth: 'learning', options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' } })}>
             <b>Teach me about the writing</b>
             <span>Help me understand the craft already at work in my own words.</span>
-          </button>
-          <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Go deeper', prompt: passageActQuestion('deeper'), depth: 'direct', options: { proposalPolicy: 'reply_only', passageAct: 'deeper' } })}>
-            <b>Go deeper</b>
-            <span>Open the technical craft reasoning, evidence, tradeoffs, and uncertainty.</span>
           </button>
         </div>
       </section>
@@ -640,7 +620,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
               sendOpenPrompt();
             }
           }}
-          placeholder="What do you want to do with this passage?"
+          placeholder="Ask about this passage: examples, ideas, a deeper look, or to teach you more…"
           aria-label="What do you want to do with this passage?"
         />
         <button type="button" disabled={props.busy || postureBlocksEditorial || !startPrompt.trim()} onClick={sendOpenPrompt}>
@@ -714,20 +694,8 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             <button type="button" disabled={props.busy} onClick={() => begin(passageActQuestion('revise-after-talk'), undefined, { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise-after-talk' })}>
               Show revision options
             </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(passageActQuestion('discuss'), undefined, { proposalPolicy: 'reply_only', passageAct: 'discuss' })}>
-              Discuss further
-            </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(passageActQuestion('examples'), 'learning', { proposalPolicy: 'reply_only', passageAct: 'examples' })}>
-              Show examples
-            </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(passageActQuestion('ideas'), undefined, { proposalPolicy: 'reply_only', passageAct: 'ideas' })}>
-              Give me ideas
-            </button>
             <button type="button" disabled={props.busy} onClick={() => begin(teachingQuestion('continue'), 'learning', { proposalPolicy: 'reply_only', teachingAnchor: 'continue' })}>
               Teach me more
-            </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(passageActQuestion('deeper'), 'direct', { proposalPolicy: 'reply_only', passageAct: 'deeper' })}>
-              Go deeper
             </button>
           </div>
           {openPrompt}
