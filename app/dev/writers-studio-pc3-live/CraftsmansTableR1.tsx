@@ -34,7 +34,19 @@ export type CraftHeldPassage = {
   revisionNumber: number;
 };
 
+/** Plain names for the five editing latitudes (lib/manuscript/editorialScope). */
+const STRENGTH_CHOICES: ReadonlyArray<{ value: 1 | 2 | 3 | 4 | 5; label: string }> = [
+  { value: 1, label: 'Keep my words and structure' },
+  { value: 2, label: 'Recast a sentence or two' },
+  { value: 3, label: 'Rework the passage' },
+  { value: 4, label: 'Reshape it, keep my material' },
+  { value: 5, label: 'Rewrite fully if it helps' },
+];
+
 export type CraftsmansTableR1Props = {
+  /** How much MAIA may change in one suggestion (1 keeps the writer's words). */
+  editLatitude?: 1 | 2 | 3 | 4 | 5;
+  onEditLatitude?: (value: 1 | 2 | 3 | 4 | 5) => void;
   sections: readonly RebuildSection[];
   bodyOf: (sectionId: string) => string;
   held: CraftHeldPassage | null;
@@ -790,6 +802,18 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                           ? 'Edit marks show proposed or chosen wording. Nothing is applied.'
                           : hasWriterChange ? 'Your working copy. Not applied to the manuscript.'
                           : 'Passage selected · no proposed edits yet.'}</span>
+                        {props.onEditLatitude && props.editLatitude ? (
+                          <label className="p4r1-craft-r1-strength" data-craft-edit-strength>
+                            <span>How much may MAIA change?</span>
+                            <select
+                              value={props.editLatitude}
+                              disabled={props.busy}
+                              onChange={(event) => props.onEditLatitude?.(Number(event.target.value) as 1 | 2 | 3 | 4 | 5)}
+                            >
+                              {STRENGTH_CHOICES.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
+                            </select>
+                          </label>
+                        ) : null}
                         <div role="group" aria-label="Work with the focused passage">
                           <button type="button" disabled={props.busy || !canonicalAligned} onClick={() => props.onSend([
                             'Use our carried conversation and the writer-owned current working copy.',
