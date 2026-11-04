@@ -37,7 +37,7 @@
       "path": null,
       "mimeType": "audio/mp4",
       "codecLabel": "Original 48 kHz First Night mobile source preserved outside Git serving",
-      "sha256": "9fa8ee35914a351d9aca055c51f66618d557940805ed5968b37465af601891a6",
+      "sha256": "9fa8ee35914a351d9aca055c51f66618d557940805ed76d97d94a86bc46fa7b1",
       "sizeBytes": 186864924,
       "sampleRateHz": 48000,
       "channels": 2,
