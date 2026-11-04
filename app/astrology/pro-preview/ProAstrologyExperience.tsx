@@ -25,6 +25,7 @@ import ProAspectGrid from './ProAspectGrid';
 import ProComparePanel from './ProComparePanel';
 import ProDerivedPanel from './ProDerivedPanel';
 import ProChartViews from './ProChartViews';
+import ProEphemerisPanel from './ProEphemerisPanel';
 import type { ChartPoints } from '@/lib/astrology/proChartPoints';
 import type { Declination } from '@/lib/astrology/proDeclinations';
 import type { TransitBody } from '@/lib/astrology/proTransits';
@@ -548,6 +549,7 @@ export default function ProAstrologyExperience() {
                   onOuter={(next, label) => setRing('derived', next, label)} />
                 <ProAspectGrid chart={privateChart} declinations={declinations} onSelectBody={selectBody} />
                 <ProChartViews chart={privateChart} points={chartPoints} />
+                <ProEphemerisPanel natalBodies={bodies} />
                 <p id="pro-orb-filter-description" className={styles.sourceLabel} role="note">
                   The orb setting filters existing reported aspects for display; it does not
                   recalculate their accuracy or determine applying/separating phase.
