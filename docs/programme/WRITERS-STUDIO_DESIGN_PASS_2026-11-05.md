@@ -162,3 +162,33 @@ no duplicates; the markers are stripped from every surface that shows her words.
 don't get them. **Witnessed locally:** "Make this quieter" → MAIA asked which kind, offering *Drop
 the label · Keep it, lower it · The whole sentence* → clicking *Drop the label* returned the edit,
 marked in red and green, with *Use it · Change it · Talk about it*.
+
+## 10. Develop walk (local, 2026-11-05) — findings
+
+The opening screen ("Explore your Work") is already much plainer than this morning's audit. The
+friction is in what follows.
+
+| # | Moment | What a writer meets |
+|---|---|---|
+| V1 | "What does MAIA think?" | Three blocks saying the same thing ("I don't have a saved reading…", "NOT READ YET · MAIA hasn't read this Work for Development yet", "You can choose exactly what she reads below"), and the only action is a small link at the bottom. |
+| V2 | Choosing what she reads | "Opening this field never reads more of your Work", then Current section / Whole Work / Choose a range, then **Read for Development**. |
+| V3 | A further gate | "This part of your Work has changed since its last reading snapshot. Save the current draft…" with **Save current draft & read**. Four clicks and three explanations before MAIA reads anything. |
+| V4 | ⭐ The result | **MAIA's specific observation is hidden** behind "See the saved reading in full", while the card shows a generic template ("Something may still be open… MAIA noticed something introduced here"), which never says *what*. Her actual words name the three explanations and the unextended "most frightening". |
+| V5 | Around it | About 10 actions under one observation (Stay with this in Write · Show me in the manuscript · Talk with MAIA · Help me understand · Go deeper · Previous · See another · See the evidence and limits · Read somewhere else · See the saved reading), plus "MAIA read 1 of 1 section in full · Read 11/5/2026 · Current", and the right panel repeats the same offers (Explain it plainly · Talk with me about it · Teach me what is happening). |
+| V6 | Reassurance by denial | "Nothing is read automatically", "Nothing is read or changed until you choose it", "never reads more of your Work", repeated on most screens. |
+
+### Proposed Develop design (same principles as the Conversation Stage)
+
+1. **She asks once, in one message, with buttons.** "I haven't read Section 1 yet. Shall I read
+   it now?" → **Read Section 1** · **Read the whole Work** (· *a range…* under More). The button
+   saves and reads in one press (her words: "your writing won't change"). The writer's consent is
+   the press; no separate gates.
+2. **Her real words come first.** Each observation is shown as MAIA speaking her own specific
+   observation, quoting the words she means. The category ("Unresolved thread") becomes a small
+   label; the template sentence goes.
+3. **One next step, as a conversation.** Under each observation: answer choices where they fit
+   (e.g. *It's open on purpose* · *I mean to come back to it*) and **Talk about this passage**,
+   which opens the Conversation Stage on the cited words with her observation as the first turn
+   (flow-review step 5; Develop leads to editing). "See another" stays. Evidence and limits,
+   saved readings, dates and coverage move under **More**.
+4. **Say it once.** One quiet line about consent where it matters, not on every screen.
