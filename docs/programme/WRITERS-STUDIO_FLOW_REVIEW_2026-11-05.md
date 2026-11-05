@@ -16,6 +16,12 @@ The founder asked for a full review, not a half measure.
 - The design record.
 - The founder's screenshots.
 
+## Founder principle (2026-11-05, in session)
+
+> **Powerful edits are made through a conversation about the writer's work.** Make it interactive and human-centred. We are countering the overwhelm of technical copy and of rigid, non-interactive responses.
+
+This governs both **the screens** (the Conversation Stage below) and **MAIA's own replies**. Today every edit reply uses a fixed eight-part form ("What I'd preserve / Friction I notice / What I'd try / What changed / Why / Reader effect / What I protected / What could be lost"). The form is built by the `REVISE` instruction in `lib/writersStudio/passageActs.ts` and the rationale labels. It should become one short human turn: what she noticed, what she'd try, and a question back. The full reasoning stays one tap away ("Why?"). Teach-me prompts and `CONVERSATION_TURN_SHAPE`'s closing line remain untouched unless the founder rules otherwise.
+
 ## Verdict
 
 **The redesign exists and was ruled. It was never built.** The governing design is
@@ -93,7 +99,12 @@ The Conversation Stage is the frame. Everything else goes inside it.
 5. **Develop leads into the conversation.** Each observation gets "Talk about this passage with MAIA", which opens the stage on the cited passage with her point as the first turn. Develop's own dialogue gains the same exit.
 6. **Develop, question first, in plain language.** Machinery (lenses, counts, coverage, lineage) goes behind "More". The ~110 strings are rewritten in MAIA's relational voice; headings are used, never ordinals.
 7. **One door per act.** Selection → the conversation. Discuss, Teach and edit options become things you say in it. The menu's duplicate doors and the separate Craftsman room fold into "Change it" (needs a founder ruling on what stays).
-8. **Close the remaining dead ends** in the same lane (audit list).
+8. **MAIA replies as a person, not a form.**
+   - An edit reply is a short turn: what she noticed, what she'd try, and a question.
+   - The proposed wording arrives as its own turn with Use it · Change it · Talk about it · Undo.
+   - The eight-label packet moves behind "Why?".
+   - Authorship rules are unchanged: she proposes, the writer decides.
+9. **Close the remaining dead ends** in the same lane (audit list).
 
 Each step is test-first with a defeat candidate (TESTING-01 §0). It is walked locally as a new tester on the isolated database, and **the founder tests locally before anything deploys.**
 
