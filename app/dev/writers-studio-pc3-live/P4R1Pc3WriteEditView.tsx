@@ -7,8 +7,8 @@ import { WRITE_COPY } from '@/app/writers-studio/full-redesign/fixtures';
 import { WRITE_GEOMETRY, appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
 
 export const UNDO_RESTORED_MESSAGES = {
-  complete: 'That application was undone. The original passage is restored.',
-  historyPending: 'The original passage is restored. Its editorial history could not be refreshed just now.',
+  complete: 'Undone. Your own wording is back.',
+  historyPending: 'Undone. Your own wording is back, but I couldn’t refresh our conversation just now.',
 } as const;
 
 export function undoMessageForVisibleDraft(
@@ -1105,6 +1105,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       </header>
 
       <EditorialDancePanel
+        stage
+        earlierThread={props.earlierEditorialThread ?? null}
         onStudioAction={onStudioAction}
         onUseVersion={props.onUseVersion}
         deeper={focusDeeper}

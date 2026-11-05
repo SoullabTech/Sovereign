@@ -1352,6 +1352,8 @@ export default function FlagshipWriteEditController() {
     setPendingEditorialText(text);
     setEditorialFailure(null);
     setAdoptionOutcome(null);
+    // An Undo note is news only until the writer speaks again.
+    setUndoMessage(null);
     setVoiceNotice(null);
 
     try {

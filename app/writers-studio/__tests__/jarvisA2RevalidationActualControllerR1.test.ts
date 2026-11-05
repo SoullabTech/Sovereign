@@ -206,7 +206,7 @@ jest.mock('@/lib/writersStudio/rebuild/returnStateClient',()=>({
   clearRelationshipReturnClient:jest.fn(async()=>{})
 }));
 jest.mock('@/app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView',()=>({
-  UNDO_RESTORED_MESSAGES: {complete: 'That application was undone. The original passage is restored.', historyPending: 'The original passage is restored. Its editorial history could not be refreshed just now.'},
+  UNDO_RESTORED_MESSAGES: {complete: 'Undone. Your own wording is back.', historyPending: 'Undone. Your own wording is back, but I couldn’t refresh our conversation just now.'},
   P4R1Pc3WriteEditView:(props)=>{
     mockViewProps=props;
     return React.createElement('main',{'data-testid':'fictional-controller-view'},
@@ -728,7 +728,7 @@ it('U01 Undo publishes restored wording only after the protected context is acce
     authoritativeSections:[{id:'section-a',body:original,editable:true}]});
   expect(mockViewProps.context.version).toBe(3);
   expect(mockWritingBody).toBe(original);
-  expect(mockViewProps.undoMessage).toContain('original passage is restored');
+  expect(mockViewProps.undoMessage).toContain('Your own wording is back');
 });
 
 it('U02 unsettled member writing blocks Undo before an HTTP mutation is sent',async()=>{
@@ -750,7 +750,7 @@ it('U03 a refused local reconciliation never claims visible restoration after th
   expect(mockViewProps.context.version).toBe(2);
   expect(mockViewProps.undoMessage).toContain('Undo was saved on the server');
   expect(mockViewProps.undoMessage).toContain('local writing has been preserved');
-  expect(mockViewProps.undoMessage).not.toContain('original passage is restored');
+  expect(mockViewProps.undoMessage).not.toContain('Your own wording is back');
 });
 
 it('U04 a changed writing-session identity invalidates the pending Undo publication',async()=>{
@@ -791,7 +791,7 @@ it('U06 unreadable post-Undo context keeps the local text and reports the confir
   expect(mockReconcile).not.toHaveBeenCalled();
   expect(mockWritingBody).toBe(appliedWords);
   expect(mockViewProps.undoMessage).toContain('Undo was saved on the server');
-  expect(mockViewProps.undoMessage).not.toContain('original passage is restored');
+  expect(mockViewProps.undoMessage).not.toContain('Your own wording is back');
 });
 
 it('U07 a history read failure after reconciliation does not misreport the already restored local text',async()=>{
@@ -801,8 +801,8 @@ it('U07 a history read failure after reconciliation does not misreport the alrea
   await React.act(async()=>{mockViewProps.onUndo();await settle(80)});
   expect(mockWritingBody).toBe(original);
   expect(mockViewProps.context.version).toBe(3);
-  expect(mockViewProps.undoMessage).toContain('original passage is restored');
-  expect(mockViewProps.undoMessage).toContain('history could not be refreshed');
+  expect(mockViewProps.undoMessage).toContain('Your own wording is back');
+  expect(mockViewProps.undoMessage).toContain('couldn’t refresh our conversation');
   expect(mockViewProps.undoMessage).not.toContain('current text could not be read');
   expect(mockViewProps.adoptionBusy).toBe(false);
 });
