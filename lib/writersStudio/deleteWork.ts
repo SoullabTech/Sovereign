@@ -42,8 +42,10 @@ export type DeleteOutcome =
   | { readonly ok: true }
   /** Nothing was removed, or not all of it was. The message is member-facing.
    *  `removed: true` means the server committed the removal (the writing is gone) but could not yet CONFIRM the whole custody
-   *  ending, so the caller must stop showing the writing AND still show the message: both are true. */
-  | { readonly ok: false; readonly message: string; readonly removed?: boolean; readonly refusal?: string };
+   *  ending, so the caller must stop showing the writing AND still show the message: both are true.
+   *  `unknown: true` means we could not learn what the server did (no answer, an unreadable answer, or a server error that does
+   *  not say). The caller must re-read what is true before telling the member anything, and the message says it does not know. */
+  | { readonly ok: false; readonly message: string; readonly removed?: boolean; readonly refusal?: string; readonly unknown?: boolean };
 
 /** The server committed the removal but could not yet confirm every part of ending custody. The message is member-facing. */
 export class DeletionUnconfirmed extends Error {
@@ -63,8 +65,18 @@ export interface DeleteTarget {
   readonly manuscriptId: string | null;
 }
 
+/* A refusal or a client-side rejection: the server did not act, so "nothing was removed" is TRUE. */
 const GENERIC =
   'That work could not be deleted just now. Nothing was removed — please try again.';
+
+/* We could not tell what happened (no answer, an unreadable answer, or a server error that does not say): it may or may not have
+   gone through, so nothing is promised either way. The page is re-read before this is shown, so what Home then displays is true. */
+const UNKNOWN_DELETE =
+  'We could not confirm whether that work was deleted. Home now shows what is current, so check it before you try again.';
+
+/* 401: the server refused before doing anything, so nothing was deleted, and the way forward is to sign in. */
+const SESSION_ENDED_DELETE =
+  'Your session has ended, so nothing was deleted. Sign in again, then try again.';
 
 type Fetcher = (url: string, init: RequestInit) => Promise<Response>;
 
@@ -89,7 +101,8 @@ export async function deleteWork(
   try {
     res = await fetcher(url, { method: 'DELETE' });
   } catch {
-    return { ok: false, message: GENERIC };
+    // The request may have reached the server before the connection failed: we do not know.
+    return { ok: false, message: UNKNOWN_DELETE, unknown: true };
   }
 
   /* 404 on the WRITING means it is already gone: another device, or a request that succeeded while the response was lost. Absence
@@ -98,50 +111,33 @@ export async function deleteWork(
      (404) and continues", so a Work card follows through and withdraws the declaration. */
   if (res.status === 404 && workId && manuscriptId) {
     const withdrawn = await removeWork(workId, fetcher);
-    return withdrawn.ok ? { ok: true } : { ok: false, message: GENERIC };
+    if (withdrawn.ok) return { ok: true };
+    return withdrawn.unknown ? { ok: false, message: UNKNOWN_DELETE, unknown: true } : { ok: false, message: GENERIC };
   }
   if (res.ok || res.status === 404) return { ok: true };
+  if (res.status === 401) return { ok: false, message: SESSION_ENDED_DELETE };
 
-  const refusal = await deletionRefusal(res);
-  return {
-    ok: false,
-    message: refusal.message,
-    ...(refusal.removed ? { removed: true } : {}),
-    ...(refusal.classification ? { refusal: refusal.classification } : {}),
-  };
-}
-
-async function deletionRefusal(res: Response): Promise<{ message: string; removed: boolean; classification: string | null }> {
-  try {
-    const body = (await res.json()) as { error?: unknown; refusal?: unknown; removed?: unknown };
-    return {
-      message: refusalMessageFrom(body),
-      removed: body?.removed === true,
-      classification: typeof body?.refusal === 'string' ? body.refusal : null,
-    };
-  } catch {
-    return { message: GENERIC, removed: false, classification: null };
+  const body = await readBody(res);
+  const refusal = typeof body?.refusal === 'string' ? body.refusal : null;
+  const removed = body?.removed === true;
+  if (removed) {
+    return { ok: false, message: deletionRefusalCopy(refusal ?? 'custody_incomplete'), removed: true, ...(refusal ? { refusal } : {}) };
   }
+  if (refusal) return { ok: false, message: deletionRefusalCopy(refusal), refusal };
+  // A server error that does not say what it did (it may have rolled back, or it may have committed and failed afterwards):
+  // never "nothing was removed". Other 4xx are rejections before any act.
+  if (res.status >= 500) return { ok: false, message: UNKNOWN_DELETE, unknown: true };
+  return { ok: false, message: GENERIC };
 }
 
-/** The same rules as ever: a `refusal` is a classification mapped to copy; an `error` string is already member-directed. */
-function refusalMessageFrom(body: { error?: unknown; refusal?: unknown } | null | undefined): string {
-  if (typeof body?.refusal === 'string') return deletionRefusalCopy(body.refusal);
-  if (typeof body?.error === 'string' && body.error.trim().length > 0) return body.error;
-  return GENERIC;
-}
-
-async function deletionRefusalMessage(res: Response): Promise<string> {
+/** The server's body, or null when there is none or it is not JSON. A raw `error` string is NEVER shown to the member: these
+ *  routes' error strings are technical ("Unauthorized", "Failed to remove manuscript"), not member-directed sentences. */
+async function readBody(res: Response): Promise<{ refusal?: unknown; removed?: unknown } | null> {
   try {
-    const body = (await res.json()) as { error?: unknown; refusal?: unknown };
-    /* A `refusal` is a CLASSIFICATION, never display text — the same boundary
-       conversionRefusalCopy() draws. `error` values from these routes are already
-       member-directed sentences. */
-    if (typeof body?.refusal === 'string') return deletionRefusalCopy(body.refusal);
-    if (typeof body?.error === 'string' && body.error.trim().length > 0) return body.error;
-    return GENERIC;
+    const body = (await res.json()) as unknown;
+    return body && typeof body === 'object' ? (body as { refusal?: unknown; removed?: unknown }) : null;
   } catch {
-    return GENERIC;
+    return null;
   }
 }
 
@@ -165,11 +161,13 @@ export function deletionRefusalCopy(refusal: string): string {
       return 'That Work has changed since this page loaded. It may have been removed on another '
         + 'device. Nothing was deleted. Home now shows what is current.';
 
-    /* We could not finish ending custody. Never reported as done. */
+    /* The rows are gone, but not everything behind them could be confirmed destroyed. "Custody incomplete" has more than one cause
+       (the original file, or our own recovery record of the deletion), so the sentence names both and promises nothing the
+       code does not do: it says we will not call it gone until we can. */
     case 'custody_incomplete':
-      return 'This work was removed from your studio, but we could not confirm the '
-        + 'original file was destroyed, so we are not going to tell you it is gone. '
-        + 'This one is ours to finish — nothing of yours is being kept on purpose.';
+      return 'This work was removed from your studio, but we could not confirm that everything behind it '
+        + 'has been destroyed: the original file, if there was one, and our own record of the deletion. '
+        + 'Until we can, we are not going to tell you it is gone.';
 
     default:
       return GENERIC;
@@ -198,6 +196,13 @@ export function deletionRefusalCopy(refusal: string): string {
  * promise a reversibility nothing implements, nor Withdraw, which would make a
  * lifecycle state out of a word no one ruled. It says Remove, and the
  * confirmation says exactly what survives.
+ *
+ * CORRECTION (R-SHARED review, 2026-11-05): the census claim above, that every foreign key into `living_works` cascades only
+ * to link rows, was true on 2026-09-08 and is NOT true now. Migrations of 2026-09-25 to 2026-09-29 added Work-level conversations
+ * (`ask_threads.living_work_id`), what the writer told MAIA (`living_work_writer_understanding`), corrections, editorial
+ * relationship and return rows, all ON DELETE CASCADE from the Work row. Removing a Work therefore ends those too. The writing
+ * is still untouched. The copy below says what goes; `REMOVE_WORK_COPY` (used only by the older, unmounted HomeView) predates that
+ * and under-describes it.
  */
 export async function removeWork(
   workId: string,
@@ -209,14 +214,22 @@ export async function removeWork(
        Work's own image bytes. It is already container-only; this is its door. */
     res = await fetcher(`/api/sovereign/living-works/${workId}`, { method: 'DELETE' });
   } catch {
-    return { ok: false, message: REMOVE_GENERIC };
+    return { ok: false, message: REMOVE_UNKNOWN, unknown: true };
   }
   if (res.ok || res.status === 404) return { ok: true };
+  if (res.status === 401) return { ok: false, message: REMOVE_SESSION_ENDED };
+  if (res.status >= 500) return { ok: false, message: REMOVE_UNKNOWN, unknown: true };
   return { ok: false, message: REMOVE_GENERIC };
 }
 
+/* A rejection before any act: nothing changed. */
 const REMOVE_GENERIC =
   'That work could not be removed just now. Nothing changed — your writing is untouched.';
+/* We could not learn what the server did: say so, and never "nothing changed". */
+const REMOVE_UNKNOWN =
+  'We could not confirm whether that work was removed. Home now shows what is current, so check it before you try again.';
+const REMOVE_SESSION_ENDED =
+  'Your session has ended, so nothing changed. Sign in again, then try again.';
 
 /**
  * Copy for removal. Separate constant from `DELETE_WORK_COPY` so the two acts
@@ -238,29 +251,87 @@ export const REMOVE_WORK_COPY = {
   hint: 'Keeps your writing in Your Writings.',
 } as const;
 
+/* What goes when a Work row is removed: every table that cascades from it (see the R-SHARED lane record, section 6). Kept in one
+   place so the two removal bodies cannot drift apart. Conversations about the WRITING itself are not here: they belong to the
+   manuscript, not to the Work. */
+const WHAT_GOES_WITH_A_WORK =
+  'its conversations with MAIA, what you told MAIA about it, your corrections, where you left off, its list of materials and its image';
+const NO_UNDO_AND_BACKUPS =
+  'It cannot be undone, and private backups already taken can still hold a copy until they are retired on their normal schedule.';
+
 /**
  * The way out of a shared-writing refusal. Delete was refused because another of the member's Works also holds the writing, so
  * the only act on offer is the container-only one: remove THIS Work and leave the writing where it still lives. The body says
- * what goes (the Work and what was built around it: every table that cascades from the Work row) and what stays, so the member
- * does not have to infer it. It never says "nothing is deleted": the Work's own conversations and image are.
+ * what goes and what stays, so the member does not have to infer it. It never says "nothing is deleted": the Work's own
+ * conversations and corrections are.
  */
 export const REMOVE_SHARED_WORK_COPY = {
   question: (title: string) => `Remove “${title}” and keep the writing?`,
   body:
     'This writing is also in another of your Works, so it cannot be deleted from here without taking it from there. '
-    + 'You can remove this Work instead. That removes the Work and what you built inside it: its conversations with MAIA, '
-    + 'what you told MAIA about it, your corrections, where you left off, its list of materials and its image. '
-    + 'It cannot be undone, and private backups already taken can still hold a copy until they are retired on their normal '
-    + 'schedule. The writing, and your conversations about the writing itself, stay in your other Work.',
+    + `You can remove this Work instead. That removes the Work and what you built inside it: ${WHAT_GOES_WITH_A_WORK}. `
+    + `${NO_UNDO_AND_BACKUPS} The writing, and your conversations about the writing itself, stay in your other Work.`,
   confirm: 'Remove this Work',
   working: 'Removing…',
   /* Not "Keep it": under a question that says "keep the writing" that reads as an answer, not as cancel. */
   cancel: 'Don’t remove',
 } as const;
 
+/**
+ * A Work that holds more than one writing has no Delete: which writing would go is the member's choice, and there is no control
+ * for that choice on the card. The act on offer is the container-only one, and it deletes none of the writings.
+ */
+export const REMOVE_MANY_WORK_COPY = {
+  question: (title: string) => `Remove “${title}”?`,
+  body:
+    'This Work holds more than one writing, so it cannot be deleted from here without choosing which writing to delete. '
+    + `You can remove the Work instead. That removes the Work and what you built inside it: ${WHAT_GOES_WITH_A_WORK}. `
+    + `${NO_UNDO_AND_BACKUPS} None of the writings is deleted: each stays in any other Work that holds it, or under “Writing not yet in a Work”.`,
+  confirm: 'Remove this Work',
+  working: 'Removing…',
+  cancel: 'Don’t remove',
+} as const;
+
 /** Said on the page after a Work was removed and its writing kept, so the member is told what happened and not left to infer it. */
-export const removedWorkNotice = (title: string): string =>
-  `“${title}” was removed. The writing is still in your other Work.`;
+export const removedWorkNotice = (title: string, why: 'shared' | 'many' = 'shared'): string =>
+  why === 'many'
+    ? `“${title}” was removed. Its writings were not deleted: they stay in any other Work that holds them, or under “Writing not yet in a Work”.`
+    : `“${title}” was removed. The writing is still in your other Work.`;
+
+/** What a Work card's Delete is, so its confirmation can say what is true of THIS Work and no more. */
+export type WorkDeleteKind =
+  | 'writing'            // one writing and nothing else: the writing and the Work go
+  | 'writing-keeps-work' // one writing plus other parts: the writing goes, the Work stays with what else it holds
+  | 'empty'              // no writing: only the Work (the declaration) goes
+  | 'many';              // several writings: no Delete, only Remove
+
+export function deleteConfirmCopy(kind: Exclude<WorkDeleteKind, 'many'>, title: string): { readonly question: string; readonly body: string } {
+  switch (kind) {
+    case 'writing':
+      return {
+        question: DELETE_WORK_COPY.question(title),
+        body:
+          'This deletes the Work and its writing: its sections and drafts, and the original file it came from, if there is one. '
+          + `It also removes what you built inside the Work: ${WHAT_GOES_WITH_A_WORK}. `
+          + 'It cannot be undone and there is no archive. Private backups already taken can still hold a copy until they are retired on their normal schedule.',
+      };
+    case 'writing-keeps-work':
+      return {
+        question: `Delete the writing in “${title}”?`,
+        body:
+          'This deletes the writing in this Work: its sections and drafts, the original file it came from, if there is one, and your '
+          + 'conversations with MAIA about the writing. The Work itself stays, with what else it holds. '
+          + 'It cannot be undone and there is no archive. Private backups already taken can still hold a copy until they are retired on their normal schedule.',
+      };
+    case 'empty':
+      return {
+        question: DELETE_WORK_COPY.question(title),
+        body:
+          'This Work has no writing in it. Deleting it removes the Work and what you built inside it: '
+          + `${WHAT_GOES_WITH_A_WORK}. ${NO_UNDO_AND_BACKUPS}`,
+      };
+  }
+}
 
 /** Copy for the confirmation step. Kept beside the act so the two cannot drift. */
 export const DELETE_WORK_COPY = {
@@ -283,3 +354,29 @@ export const DELETE_WORK_COPY = {
     + 'from. It cannot be undone and there is no archive. Private backups already taken '
     + 'can still hold a copy until they are retired on their normal schedule.',
 } as const;
+
+
+/* ── The act, as the page runs it ─────────────────────────────────────────────────────────────────────────────────────────────
+   One place that maps what the server said to what the page does, so it is tested at runtime and not only by reading source.
+   `refresh` re-reads Home. It is awaited BEFORE the member is told anything about an outcome that changes what is true. */
+type Refresh = () => Promise<unknown>;
+const quietly = (refresh: Refresh) => refresh().catch(() => undefined);
+
+export async function runDeleteWork(target: DeleteTarget, fetcher: Fetcher, refresh: Refresh): Promise<void> {
+  const outcome = await deleteWork(target, fetcher);
+  if (outcome.ok) { await quietly(refresh); return; }
+  // Removed, but not yet confirmed destroyed: stop listing it AND still say so.
+  if (outcome.removed) { await quietly(refresh); throw new DeletionUnconfirmed(outcome.message); }
+  // Shared writing: nothing was deleted and Delete cannot succeed from this card. The card offers the other act.
+  if (outcome.refusal === 'declared_in_other_works') throw new DeletionSharedMaterial(outcome.message);
+  // A stale card, or an outcome we could not learn: make the page true first, then say so.
+  if (outcome.refusal === 'work_no_longer_holds_it' || outcome.unknown) { await quietly(refresh); throw new Error(outcome.message); }
+  throw new Error(outcome.message);
+}
+
+export async function runRemoveWork(workId: string, fetcher: Fetcher, refresh: Refresh): Promise<void> {
+  const outcome = await removeWork(workId, fetcher);
+  if (outcome.ok) { await quietly(refresh); return; }
+  if (outcome.unknown) await quietly(refresh);
+  throw new Error(outcome.message);
+}

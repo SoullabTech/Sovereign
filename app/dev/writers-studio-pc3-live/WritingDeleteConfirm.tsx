@@ -7,17 +7,20 @@ import { DELETE_WORK_COPY } from '@/lib/writersStudio/deleteWork';
  * author can walk past by accident). It names the writing and says exactly what deletion reaches, in the product's own
  * words (WS-DELETE-01): permanent, no archive, and honest that earlier backups retire on their own schedule. A failure is stated as a failure, never as success.
  */
-export function WritingDeleteConfirm({ title, busy, error, onConfirm, onCancel }: {
+export function WritingDeleteConfirm({ title, busy, error, onConfirm, onCancel, question, body }: {
   title: string;
+  /** What this deletion actually reaches, when it is not a loose writing (a Work card says what is true of THAT Work). */
+  question?: string;
+  body?: string;
   busy: boolean;
   error: string | null;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
   return (
-    <div className="p4r1-home-delete" role="alertdialog" aria-label={DELETE_WORK_COPY.question(title)}>
-      <h3>{DELETE_WORK_COPY.question(title)}</h3>
-      <p>{DELETE_WORK_COPY.body}</p>
+    <div className="p4r1-home-delete" role="alertdialog" aria-label={question ?? DELETE_WORK_COPY.question(title)}>
+      <h3>{question ?? DELETE_WORK_COPY.question(title)}</h3>
+      <p>{body ?? DELETE_WORK_COPY.body}</p>
       <div className="p4r1-home-delete-actions">
         <button type="button" className="p4r1-home-delete-confirm" disabled={busy} onClick={onConfirm}>
           {busy ? DELETE_WORK_COPY.working : DELETE_WORK_COPY.confirm}

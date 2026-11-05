@@ -113,13 +113,42 @@ describe('a refusal destroys nothing', () => {
     expect(out.message).toContain('not going to tell you it is gone');
   });
 
-  it('reports a transport failure without claiming anything was removed', async () => {
+  it('a transport failure is UNKNOWN: it may have reached the server, so it never says nothing was removed', async () => {
     const out = await deleteWork({ workId: 'w-1', manuscriptId: 'm-1' }, async () => {
       throw new Error('offline');
     });
-    expect(out.ok).toBe(false);
+    expect(out).toMatchObject({ ok: false, unknown: true });
     if (out.ok) return;
-    expect(out.message).toContain('Nothing was removed');
+    expect(out.message).toContain('could not confirm whether');
+    expect(out.message).not.toContain('Nothing was removed');
+  });
+
+  it('a server error that does not say what it did is UNKNOWN too (it may have committed and failed afterwards)', async () => {
+    const out = await deleteWork({ workId: 'w-1', manuscriptId: 'm-1' }, async () => new Response(JSON.stringify({ error: 'Failed to remove manuscript' }), { status: 500 }));
+    expect(out).toMatchObject({ ok: false, unknown: true });
+    expect((out as any).message).not.toContain('Failed to remove manuscript');
+    expect((out as any).message).not.toContain('Nothing was removed');
+  });
+
+  it('a 4xx rejection is a rejection BEFORE any act, so "nothing was removed" is true there', async () => {
+    const out = await deleteWork({ workId: 'w-1', manuscriptId: 'm-1' }, async () => new Response(JSON.stringify({ error: 'Bad request' }), { status: 400 }));
+    expect(out).toMatchObject({ ok: false });
+    expect((out as any).unknown).toBeUndefined();
+    expect((out as any).message).toContain('Nothing was removed');
+  });
+
+  it('401 says the session ended and nothing was deleted, in words, and never shows the server\'s raw string', async () => {
+    const out = await deleteWork({ workId: 'w-1', manuscriptId: 'm-1' }, async () => new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }));
+    expect(out).toMatchObject({ ok: false });
+    expect((out as any).message).toContain('session has ended');
+    expect((out as any).message).toContain('nothing was deleted');
+    expect((out as any).message).not.toContain('Unauthorized');
+  });
+
+  it('an unreadable error body is unknown on a 5xx and a plain rejection on a 4xx', async () => {
+    const bad = (status: number) => async () => ({ ok: false, status, json: async () => { throw new Error('not json'); } }) as unknown as Response;
+    expect(await deleteWork({ workId: 'w-1', manuscriptId: 'm-1' }, bad(502))).toMatchObject({ ok: false, unknown: true });
+    expect(await deleteWork({ workId: 'w-1', manuscriptId: 'm-1' }, bad(422))).toMatchObject({ ok: false });
   });
 });
 
@@ -230,16 +259,24 @@ describe('Remove Work reaches the container and nothing else', () => {
     await expect(removeWork('w-1', fetcher(404))).resolves.toEqual({ ok: true });
   });
 
-  it('never reports success it did not get, and says what is still true', async () => {
-    const out = await removeWork('w-1', fetcher(500));
+  it('never reports success it did not get; a rejection before any act says what is still true', async () => {
+    const out = await removeWork('w-1', fetcher(400));
     expect(out.ok).toBe(false);
     expect(out.ok === false && out.message).toContain('your writing is untouched');
+    expect(out.ok === false && out.message).toContain('Nothing changed');
   });
 
-  it('reports a transport failure without claiming anything was removed', async () => {
-    const out = await removeWork('w-1', () => Promise.reject(new Error('offline')));
-    expect(out.ok).toBe(false);
-    expect(out.ok === false && out.message).toContain('Nothing changed');
+  it('a server error or a transport failure is UNKNOWN: it never says nothing changed', async () => {
+    for (const out of [await removeWork('w-1', fetcher(500)), await removeWork('w-1', () => Promise.reject(new Error('offline')))]) {
+      expect(out).toMatchObject({ ok: false, unknown: true });
+      expect((out as any).message).toContain('could not confirm whether');
+      expect((out as any).message).not.toContain('Nothing changed');
+    }
+  });
+
+  it('401 says the session ended, not "Nothing changed" and not a raw server word', async () => {
+    const out = await removeWork('w-1', fetcher(401));
+    expect((out as any).message).toContain('session has ended');
   });
 });
 

@@ -23,7 +23,7 @@ import {
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival, withoutStudioWork } from '@/app/writers-studio/h1Arrival';
 import { useWriterReleaseCapabilities } from '@/lib/writersStudio/useWriterReleaseCapabilities';
-import { deleteWork, removeWork, DeletionSharedMaterial, DeletionUnconfirmed } from '@/lib/writersStudio/deleteWork';
+import { runDeleteWork, runRemoveWork } from '@/lib/writersStudio/deleteWork';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -260,35 +260,26 @@ export default function P4R1HomeController() {
 
   // The author's own permanent deletion of one writing, through the product's governed erase. No optimistic success: the list is
   // re-read only after the server says it is gone (including "removed, custody not yet confirmed"), and a refusal reaches the
-  // card in the author's own language.
-  const onDeleteWriting = useCallback(async (manuscriptId: string) => {
-    const outcome = await deleteWork({ workId: null, manuscriptId }, (url, init) => apiFetch(url, init));
-    if (outcome.ok) { await refresh().catch(() => undefined); return; }
-    // Removed but not yet confirmed: the writing is gone, so stop listing it, and still tell the author what we could not confirm.
-    if (outcome.removed) { await refresh().catch(() => undefined); throw new DeletionUnconfirmed(outcome.message); }
-    throw new Error(outcome.message);
-  }, [refresh]);
+  // card in the author's own language. What the server said is mapped to what the page does in runDeleteWork (lib/writersStudio/
+  // deleteWork.ts), where it is tested at runtime.
+  const onDeleteWriting = useCallback(
+    (manuscriptId: string) => runDeleteWork({ workId: null, manuscriptId }, (url, init) => apiFetch(url, init), refresh),
+    [refresh],
+  );
 
-  // A Work is deleted with its manuscript in ONE server-side erase (WS-DELETE-01); a Work with no manuscript is withdrawn.
-  const onDeleteWork = useCallback(async (workId: string, manuscriptId: string | null) => {
-    const outcome = await deleteWork({ workId, manuscriptId }, (url, init) => apiFetch(url, init));
-    if (outcome.ok) { await refresh().catch(() => undefined); return; }
-    if (outcome.removed) { await refresh().catch(() => undefined); throw new DeletionUnconfirmed(outcome.message); }
-    // Shared writing: nothing was deleted, and Delete can never succeed from this card. The card offers the other act.
-    if (outcome.refusal === 'declared_in_other_works') throw new DeletionSharedMaterial(outcome.message);
-    // The card was stale (the Work was removed elsewhere, or a moment ago): nothing was deleted, and the page is made current BEFORE
-    // the member is told so, so the message is true when they read it.
-    if (outcome.refusal === 'work_no_longer_holds_it') { await refresh().catch(() => undefined); throw new Error(outcome.message); }
-    throw new Error(outcome.message);
-  }, [refresh]);
+  // A Work is deleted with its manuscript in ONE server-side erase (WS-DELETE-01); a Work with no manuscript is withdrawn. The
+  // request names the Work, so a stale card is refused server-side.
+  const onDeleteWork = useCallback(
+    (workId: string, manuscriptId: string | null) => runDeleteWork({ workId, manuscriptId }, (url, init) => apiFetch(url, init), refresh),
+    [refresh],
+  );
 
-  // The container-only act: remove one Work, leave its writing where another Work still holds it. Never reached except from the
-  // shared-writing refusal above, where the member is told exactly what goes and what stays.
-  const onRemoveWork = useCallback(async (workId: string) => {
-    const outcome = await removeWork(workId, (url, init) => apiFetch(url, init));
-    if (outcome.ok) { await refresh().catch(() => undefined); return; }
-    throw new Error(outcome.message);
-  }, [refresh]);
+  // The container-only act: remove one Work, leave its writing(s) where they are. Offered only from the shared-writing refusal and
+  // for a Work that holds several writings, where the member is told exactly what goes and what stays.
+  const onRemoveWork = useCallback(
+    (workId: string) => runRemoveWork(workId, (url, init) => apiFetch(url, init), refresh),
+    [refresh],
+  );
 
   const onAddToWork = useCallback(async (manuscriptId: string, workId: string) => {
     if (busy) return;

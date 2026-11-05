@@ -26,11 +26,18 @@ import {
   DELETE_WORK_COPY,
   DeletionSharedMaterial,
   DeletionUnconfirmed,
+  REMOVE_MANY_WORK_COPY,
   REMOVE_SHARED_WORK_COPY,
+  deleteConfirmCopy,
   deleteWork,
   deletionRefusalCopy,
   removeWork,
+  removedWorkNotice,
+  runDeleteWork,
+  runRemoveWork,
 } from '@/lib/writersStudio/deleteWork';
+import { WorkRemoveConfirm } from '@/app/dev/writers-studio-pc3-live/WorkRemoveConfirm';
+import { workDeleteKind } from '@/app/dev/writers-studio-pc3-live/useWorkDeleteDoor';
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -69,6 +76,9 @@ let host: HTMLDivElement;
 let root: Root;
 beforeEach(() => {
   jest.clearAllMocks();
+  // clearAllMocks keeps implementations: a rejection set by one test would leak into the next.
+  onDeleteWork.mockReset();
+  onRemoveWork.mockReset();
   host = document.createElement('div');
   document.body.appendChild(host);
   root = createRoot(host);
@@ -129,18 +139,19 @@ describe('the writing is shared with another Work (409 declared_in_other_works)'
     expect(onDeleteWork).toHaveBeenCalledTimes(1);
   });
 
-  it('after the removal the member is told what happened on the page, and the card, if the list could not be re-read, offers no Delete door', async () => {
+  it('after the removal the member is told what happened on the page, and the card, if the list could not be re-read, offers no door', async () => {
     onRemoveWork.mockResolvedValue(undefined);
     await pressDeleteAndConfirm();
     await click(REMOVE_SHARED_WORK_COPY.confirm);
     // Props are unchanged here: this is the failed-refresh case, where the removed Work's card is still on screen.
     const card = host.querySelector('[data-removed]');
     expect(card).not.toBeNull();
-    expect(card!.textContent).toContain('“Fictional Work A” was removed. The writing is still in your other Work.');
+    expect(card!.textContent).toBe('“Fictional Work A” was removed.');
     expect(card!.querySelector('button')).toBeNull();
+    // What is still true of the writing is said once, on the page, where it survives the card.
     const notice = host.querySelector('[data-delete-notice]');
     expect(notice?.getAttribute('role')).toBe('status');
-    expect(notice?.textContent).toContain('was removed');
+    expect(notice?.textContent).toContain(removedWorkNotice('Fictional Work A', 'shared'));
     expect(host.querySelectorAll('[data-delete-notice]')).toHaveLength(1);
   });
 
@@ -226,8 +237,18 @@ describe('the server removed the Work but could not confirm the original was des
     onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE));
     await pressDeleteAndConfirm();
     act(() => root.render(React.createElement(P4R1HomeView, { ...baseProps, works: [workB] } as any)));
-    expect(host.textContent).not.toContain('Fictional Work A');
+    // The removed Work has no card any more; only the page notice (which names it) remains.
+    const cards = Array.from(host.querySelectorAll('.p4r1-home-workcard h3')).map((h) => h.textContent);
+    expect(cards).toEqual(['Fictional Work B']);
+    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('“Fictional Work A”');
     expect(host.textContent).toContain('we are not going to tell you it is gone');
+  });
+
+  it('the Work card itself says only that it was removed from the studio, until the list is re-read', async () => {
+    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE));
+    await pressDeleteAndConfirm();
+    expect(host.querySelector('[data-removed]')?.textContent).toBe('“Fictional Work A” was removed from your studio.');
+    expect(host.querySelector('[data-removed] button')).toBeNull();
   });
 
   it('it survives the LAST Work being deleted: the welcome screen the member lands on carries the notice', async () => {
@@ -326,10 +347,15 @@ describe('the stale-card guard and the vanished-writing follow-through (deleteWo
     expect(calls).toEqual(['DELETE /api/sovereign/manuscripts/ms-1?workId=work-1', 'DELETE /api/sovereign/living-works/work-1']);
   });
 
-  it('if that withdrawal fails, the member is told so and the Work is not reported as gone', async () => {
-    const out = await deleteWork({ workId: 'work-1', manuscriptId: 'ms-1' }, async (url) => (url.includes('/manuscripts/') ? fake(404) : fake(500)));
-    expect(out).toMatchObject({ ok: false });
-    expect((out as any).message).toContain('Nothing was removed');
+  it('if that withdrawal is REFUSED the member is told nothing was removed; if its outcome is unknown they are told that instead', async () => {
+    const refused = await deleteWork({ workId: 'work-1', manuscriptId: 'ms-1' }, async (url) => (url.includes('/manuscripts/') ? fake(404) : fake(400)));
+    expect(refused).toMatchObject({ ok: false });
+    expect((refused as any).unknown).toBeUndefined();
+    expect((refused as any).message).toContain('Nothing was removed');
+    const unknown = await deleteWork({ workId: 'work-1', manuscriptId: 'ms-1' }, async (url) => (url.includes('/manuscripts/') ? fake(404) : fake(500)));
+    expect(unknown).toMatchObject({ ok: false, unknown: true });
+    expect((unknown as any).message).not.toContain('Nothing was removed');
+    expect((unknown as any).message).toContain('could not confirm');
   });
 
   it('a 404 on loose writing (no Work) is still just "already gone": one request, no follow-through', async () => {
@@ -363,31 +389,353 @@ describe('the removal act itself', () => {
   });
 });
 
+
+describe('the removal act, when the server does not simply say yes', () => {
+  it('a server error that does not say what it did is UNKNOWN: it never claims "nothing changed"', async () => {
+    const out = await removeWork('w', async () => fake(500));
+    expect(out).toMatchObject({ ok: false, unknown: true });
+    expect((out as any).message).toContain('could not confirm');
+    expect((out as any).message).not.toContain('Nothing changed');
+  });
+  it('no answer at all is UNKNOWN too', async () => {
+    const out = await removeWork('w', async () => { throw new Error('network'); });
+    expect(out).toMatchObject({ ok: false, unknown: true });
+  });
+  it('a rejection before any act (4xx) says nothing changed and the writing is untouched', async () => {
+    const out = await removeWork('w', async () => fake(400));
+    expect(out).toMatchObject({ ok: false });
+    expect((out as any).unknown).toBeUndefined();
+    expect((out as any).message).toContain('Nothing changed');
+  });
+  it('an ended session says so and what to do, not "try again"', async () => {
+    const out = await removeWork('w', async () => fake(401));
+    expect((out as any).message).toContain('Sign in again');
+  });
+  it('a Work already gone (404) is done', async () => {
+    expect(await removeWork('w', async () => fake(404))).toEqual({ ok: true });
+  });
+});
+
+describe('what deleteWork tells the member when it cannot learn what happened', () => {
+  it('a 5xx with no classification is UNKNOWN, not "nothing was removed"', async () => {
+    const out = await deleteWork({ workId: 'w', manuscriptId: 'm' }, async () => fake(500, { error: 'Failed to remove manuscript' }));
+    expect(out).toMatchObject({ ok: false, unknown: true });
+    expect((out as any).message).not.toContain('Nothing was removed');
+  });
+  it('a transport failure is UNKNOWN: the request may have reached the server', async () => {
+    const out = await deleteWork({ workId: 'w', manuscriptId: 'm' }, async () => { throw new Error('network'); });
+    expect(out).toMatchObject({ ok: false, unknown: true });
+  });
+  it('a 4xx rejection is a plain rejection: nothing was removed', async () => {
+    const out = await deleteWork({ workId: 'w', manuscriptId: 'm' }, async () => fake(400, { error: 'Bad request' }));
+    expect((out as any).unknown).toBeUndefined();
+    expect((out as any).message).toContain('Nothing was removed');
+  });
+  it('an ended session (401) names the session, not a retry', async () => {
+    const out = await deleteWork({ workId: 'w', manuscriptId: 'm' }, async () => fake(401, { error: 'Unauthorized' }));
+    expect((out as any).message).toContain('Sign in again');
+    expect((out as any).message).not.toContain('Unauthorized');
+  });
+  it('a raw server error string is never shown to the member', async () => {
+    const out = await deleteWork({ workId: 'w', manuscriptId: 'm' }, async () => fake(422, { error: 'SQLSTATE 23503 constraint violation' }));
+    expect((out as any).message).not.toMatch(/SQLSTATE|constraint/);
+  });
+  it('the custody sentence names both things that may be unconfirmed (the file and our own deletion record) and promises nothing more', () => {
+    const text = deletionRefusalCopy('custody_incomplete');
+    expect(text).toContain('the original file');
+    expect(text).toContain('our own record of the deletion');
+    expect(text).toContain('we are not going to tell you it is gone');
+    expect(text).not.toMatch(/nothing of yours is being kept|will be destroyed|within \d+/i);
+  });
+});
+
+describe('the page-level act (runDeleteWork / runRemoveWork): what the page does with what the server said', () => {
+  const trace: string[] = [];
+  const refresh = jest.fn(async () => { trace.push('refresh'); });
+  const failingRefresh = jest.fn(async () => { trace.push('refresh'); throw new Error('list could not be re-read'); });
+  const settle = async (p: Promise<void>) => { try { await p; trace.push('resolved'); return null; } catch (e) { trace.push('rejected'); return e as Error; } };
+  beforeEach(() => { trace.length = 0; refresh.mockClear(); failingRefresh.mockClear(); });
+  const target = { workId: 'w', manuscriptId: 'm' };
+
+  it('success: the list is re-read, then the act resolves', async () => {
+    expect(await settle(runDeleteWork(target, async () => fake(200), refresh))).toBeNull();
+    expect(trace).toEqual(['refresh', 'resolved']);
+  });
+  it('success is still success when the re-read itself fails (the server said it is gone)', async () => {
+    expect(await settle(runDeleteWork(target, async () => fake(200), failingRefresh))).toBeNull();
+    expect(trace).toEqual(['refresh', 'resolved']);
+  });
+  it('removed but unconfirmed: the list is re-read BEFORE the member is told, and the error is the custody one', async () => {
+    const err = await settle(runDeleteWork(target, async () => fake(500, { removed: true, refusal: 'custody_incomplete' }), refresh));
+    expect(trace).toEqual(['refresh', 'rejected']);
+    expect(err).toBeInstanceOf(DeletionUnconfirmed);
+    expect(err!.message).toContain('we are not going to tell you it is gone');
+  });
+  it('removed but unconfirmed, and the re-read fails too: the member is still told', async () => {
+    const err = await settle(runDeleteWork(target, async () => fake(500, { removed: true, refusal: 'custody_incomplete' }), failingRefresh));
+    expect(err).toBeInstanceOf(DeletionUnconfirmed);
+  });
+  it('shared writing: ONLY this refusal becomes the shared-writing error, and nothing is re-read (nothing changed)', async () => {
+    const err = await settle(runDeleteWork(target, async () => fake(409, { refusal: 'declared_in_other_works', works: 2 }), refresh));
+    expect(err).toBeInstanceOf(DeletionSharedMaterial);
+    expect(refresh).not.toHaveBeenCalled();
+  });
+  it('a stale card: the page is made true FIRST, then the member is told; it is neither the shared nor the custody error', async () => {
+    const err = await settle(runDeleteWork(target, async () => fake(409, { refusal: 'work_no_longer_holds_it' }), refresh));
+    expect(trace).toEqual(['refresh', 'rejected']);
+    expect(err).not.toBeInstanceOf(DeletionSharedMaterial);
+    expect(err).not.toBeInstanceOf(DeletionUnconfirmed);
+    expect(err!.message).toContain('Nothing was deleted');
+  });
+  it('an outcome we could not learn (5xx / no answer): the page is re-read first, and the message does not claim "nothing was removed"', async () => {
+    for (const fetcher of [async () => fake(500), async () => { throw new Error('network'); }]) {
+      trace.length = 0;
+      const err = await settle(runDeleteWork(target, fetcher, refresh));
+      expect(trace).toEqual(['refresh', 'rejected']);
+      expect(err!.message).not.toContain('Nothing was removed');
+    }
+  });
+  it('a rejection before any act (4xx, 401): nothing is re-read, and the message is the plain one', async () => {
+    const err400 = await settle(runDeleteWork(target, async () => fake(400), refresh));
+    const err401 = await settle(runDeleteWork(target, async () => fake(401), refresh));
+    expect(refresh).not.toHaveBeenCalled();
+    expect(err400!.message).toContain('Nothing was removed');
+    expect(err401!.message).toContain('Sign in again');
+  });
+  it('removal: success re-reads then resolves; it asks the Work route only', async () => {
+    const calls: string[] = [];
+    expect(await settle(runRemoveWork('w', async (url, init) => { calls.push(`${init.method} ${url}`); return fake(200); }, refresh))).toBeNull();
+    expect(trace).toEqual(['refresh', 'resolved']);
+    expect(calls).toEqual(['DELETE /api/sovereign/living-works/w']);
+  });
+  it('removal: an unknown outcome re-reads first and then says so; a plain rejection re-reads nothing', async () => {
+    const unknown = await settle(runRemoveWork('w', async () => fake(500), refresh));
+    expect(trace).toEqual(['refresh', 'rejected']);
+    expect(unknown!.message).toContain('could not confirm');
+    trace.length = 0; refresh.mockClear();
+    const plain = await settle(runRemoveWork('w', async () => fake(400), refresh));
+    expect(refresh).not.toHaveBeenCalled();
+    expect(plain!.message).toContain('Nothing changed');
+  });
+});
+
+describe('what a Work\'s door is, from what it holds (workDeleteKind)', () => {
+  const ms = (id: string) => ({ ...sharedManuscript, id });
+  const ex = (id: string, type = 'manuscript') => ({ expressionType: type, expressionId: id, declaredAt: '2026-10-01T00:00:00Z' });
+  const work = (expressions: any[]) => ({ ...makeWork('w', 'W'), expressions }) as any;
+  it('one writing and nothing else', () => {
+    expect(workDeleteKind(work([ex('a')]), [ms('a')] as any)).toEqual({ kind: 'writing', manuscriptId: 'a' });
+  });
+  it('one writing plus another part: the writing goes and the Work stays', () => {
+    expect(workDeleteKind(work([ex('a'), ex('x', 'visual')]), [ms('a')] as any)).toEqual({ kind: 'writing-keeps-work', manuscriptId: 'a' });
+  });
+  it('no writing at all: only the Work goes', () => {
+    expect(workDeleteKind(work([]), [] as any)).toEqual({ kind: 'empty', manuscriptId: null });
+    expect(workDeleteKind(work([ex('x', 'visual')]), [] as any)).toEqual({ kind: 'empty', manuscriptId: null });
+  });
+  it('several writings: no Delete exists (which writing would go is the member\'s choice), so the door is Remove', () => {
+    expect(workDeleteKind(work([ex('a'), ex('b')]), [ms('a'), ms('b')] as any)).toEqual({ kind: 'many', manuscriptId: null });
+  });
+  it('several writings declared even when only one is on screen: still Remove, never a guess at which one', () => {
+    expect(workDeleteKind(work([ex('a'), ex('b')]), [ms('a')] as any)).toEqual({ kind: 'many', manuscriptId: null });
+  });
+  it('a writing the list does not show (declared, but not read back) still names itself, so Delete can reach the server\'s 404 follow-through', () => {
+    expect(workDeleteKind(work([ex('gone')]), [] as any)).toEqual({ kind: 'writing', manuscriptId: 'gone' });
+  });
+});
+
+describe('each Delete confirmation says what is true of THIS Work and no more', () => {
+  const ex = (id: string, type = 'manuscript') => ({ expressionType: type, expressionId: id, declaredAt: '2026-10-01T00:00:00Z' });
+  const renderWith = (works: any[], manuscripts: any[], extra: Record<string, unknown> = {}) =>
+    act(() => root.render(React.createElement(P4R1HomeView, { ...baseProps, works, manuscripts, ...extra } as any)));
+  const openDelete = async () => { await act(async () => { (host.querySelector('button.p4r1-home-delete-open') as HTMLButtonElement).click(); }); };
+
+  it('writing + Work: says both go, and what is built inside the Work goes too; irreversible; backups qualified', async () => {
+    await openDelete();
+    const dialog = host.querySelector('[data-deleting-confirmation]')!;
+    expect(dialog.textContent).toContain('Delete “Fictional Work A”?');
+    expect(dialog.textContent).toContain('deletes the Work and its writing');
+    expect(dialog.textContent).toContain('conversations with MAIA');
+    expect(dialog.textContent).toContain('It cannot be undone and there is no archive');
+    expect(dialog.textContent).toContain('private backups already taken'.replace('private', 'Private'));
+  });
+  it('writing in a Work that holds more: says the Work stays, and that conversations about the writing go', async () => {
+    const mixed = { ...workA, expressions: [expression, ex('fictional-note', 'visual')] };
+    renderWith([mixed, workB], [sharedManuscript]);
+    await openDelete();
+    const text = host.querySelector('[data-deleting-confirmation]')!.textContent!;
+    expect(text).toContain('Delete the writing in “Fictional Work A”?');
+    expect(text).toContain('The Work itself stays');
+    expect(text).toContain('conversations with MAIA about the writing');
+    onDeleteWork.mockResolvedValue(undefined);
+    await click(DELETE_WORK_COPY.confirm);
+    expect(onDeleteWork).toHaveBeenCalledWith('fictional-work-a', 'fictional-shared-manuscript');
+    expect(host.querySelector('[data-removed]')?.textContent).toBe('The writing in “Fictional Work A” was deleted.');
+  });
+  it('a Work with no writing: says only the Work goes, and sends no manuscript id', async () => {
+    const empty = { ...workA, expressions: [] };
+    renderWith([empty, workB], [sharedManuscript]);
+    await openDelete();
+    expect(host.querySelector('[data-deleting-confirmation]')!.textContent).toContain('This Work has no writing in it');
+    onDeleteWork.mockResolvedValue(undefined);
+    await click(DELETE_WORK_COPY.confirm);
+    expect(onDeleteWork).toHaveBeenCalledWith('fictional-work-a', null);
+    expect(host.querySelector('[data-removed]')?.textContent).toBe('“Fictional Work A” was deleted.');
+  });
+  it('the three bodies never claim "nothing is kept" and each carries the same irreversibility sentence', () => {
+    for (const kind of ['writing', 'writing-keeps-work', 'empty'] as const) {
+      const { body } = deleteConfirmCopy(kind, 'T');
+      expect(body).not.toMatch(/nothing is kept/i);
+      expect(body).toContain('cannot be undone');
+      expect(body).toMatch(/private backups already taken/i);
+    }
+  });
+});
+
+describe('a Work that holds several writings has no Delete, only Remove', () => {
+  const m1 = { ...sharedManuscript, id: 'fictional-many-1', title: 'Many One' };
+  const m2 = { ...sharedManuscript, id: 'fictional-many-2', title: 'Many Two' };
+  const ex = (id: string) => ({ expressionType: 'manuscript', expressionId: id, declaredAt: '2026-10-01T00:00:00Z' });
+  const workMany = { ...makeWork('fictional-work-many', 'Fictional Work Many'), expressions: [ex('fictional-many-1'), ex('fictional-many-2')] };
+  beforeEach(() => {
+    act(() => root.render(React.createElement(P4R1HomeView, { ...baseProps, works: [workMany], manuscripts: [m1, m2] } as any)));
+  });
+
+  it('the door says Remove, not Delete (Delete would have to choose which writing goes)', () => {
+    const door = host.querySelector('button.p4r1-home-delete-open');
+    expect(door?.textContent).toBe('Remove');
+    expect(byText('Delete')).toBeUndefined();
+  });
+  it('its confirmation says none of the writings is deleted, what does go, and that it cannot be undone', async () => {
+    await act(async () => { (host.querySelector('button.p4r1-home-delete-open') as HTMLButtonElement).click(); });
+    const dialog = host.querySelector('[data-many-writings]');
+    expect(dialog).not.toBeNull();
+    const text = dialog!.textContent!;
+    expect(text).toContain('Remove “Fictional Work Many”?');
+    expect(text).toContain('None of the writings is deleted');
+    expect(text).toContain('conversations with MAIA');
+    expect(text).toContain('It cannot be undone');
+    expect(text).not.toContain(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-shared-writing]')).toBeNull();
+  });
+  it('confirming removes the Work through onRemoveWork and never calls Delete', async () => {
+    onRemoveWork.mockResolvedValue(undefined);
+    await act(async () => { (host.querySelector('button.p4r1-home-delete-open') as HTMLButtonElement).click(); });
+    await click(REMOVE_MANY_WORK_COPY.confirm);
+    expect(onRemoveWork).toHaveBeenCalledWith('fictional-work-many');
+    expect(onDeleteWork).not.toHaveBeenCalled();
+    expect(host.querySelector('[data-removed]')?.textContent).toBe('“Fictional Work Many” was removed.');
+    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain(removedWorkNotice('Fictional Work Many', 'many'));
+  });
+  it('the notice for this removal says the writings were NOT deleted and where they are', () => {
+    const text = removedWorkNotice('X', 'many');
+    expect(text).toContain('were not deleted');
+    expect(text).toContain('Writing not yet in a Work');
+  });
+  it('Don\'t remove goes back to the card and calls nothing', async () => {
+    await act(async () => { (host.querySelector('button.p4r1-home-delete-open') as HTMLButtonElement).click(); });
+    await click(REMOVE_MANY_WORK_COPY.cancel);
+    expect(host.querySelector('[data-many-writings]')).toBeNull();
+    expect(onRemoveWork).not.toHaveBeenCalled();
+    expect(host.querySelector('button.p4r1-home-delete-open')?.textContent).toBe('Remove');
+  });
+  it('a failed removal stays in the dialog and says what is known', async () => {
+    onRemoveWork.mockRejectedValue(new Error('We could not confirm whether that work was removed. Home now shows what is current, so check it before you try again.'));
+    await act(async () => { (host.querySelector('button.p4r1-home-delete-open') as HTMLButtonElement).click(); });
+    await click(REMOVE_MANY_WORK_COPY.confirm);
+    expect(host.querySelector('[data-many-writings] [role="alert"]')?.textContent).toContain('could not confirm');
+    expect(host.querySelector('[data-removed]')).toBeNull();
+  });
+});
+
+describe('the hero Work has the same door as every other Work', () => {
+  const anchorDoor = () => host.querySelector('.p4r1-home-anchor button.p4r1-home-delete-open') as HTMLButtonElement | null;
+  const renderReturning = (extra: Record<string, unknown> = {}) =>
+    act(() => root.render(React.createElement(P4R1HomeView, { ...baseProps, returnWork: workA, ...extra } as any)));
+
+  it('returning to one Work: the anchor offers Delete, and the question replaces the anchor', async () => {
+    renderReturning();
+    expect(anchorDoor()?.textContent).toBe('Delete');
+    await act(async () => { anchorDoor()!.click(); });
+    const dialog = host.querySelector('.p4r1-home-anchor[data-deleting-confirmation]');
+    expect(dialog?.textContent).toContain('Delete “Fictional Work A”?');
+    expect(host.querySelector('.p4r1-home-anchor h1')).toBeNull();
+  });
+  it('shared writing on the hero Work offers the same removal, and removing it is reported on the page and on the anchor', async () => {
+    renderReturning();
+    onDeleteWork.mockRejectedValue(new DeletionSharedMaterial(SHARED_REFUSAL));
+    onRemoveWork.mockResolvedValue(undefined);
+    await act(async () => { anchorDoor()!.click(); });
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('.p4r1-home-anchor[data-shared-writing]')).not.toBeNull();
+    await click(REMOVE_SHARED_WORK_COPY.confirm);
+    expect(onRemoveWork).toHaveBeenCalledWith('fictional-work-a');
+    expect(host.querySelector('.p4r1-home-anchor[data-removed]')?.textContent).toBe('“Fictional Work A” was removed.');
+    expect(host.querySelectorAll('[data-delete-notice]')).toHaveLength(1);
+  });
+  it('the custody notice from the hero Work survives the anchor unmounting', async () => {
+    renderReturning();
+    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE));
+    await act(async () => { anchorDoor()!.click(); });
+    await click(DELETE_WORK_COPY.confirm);
+    act(() => root.render(React.createElement(P4R1HomeView, { ...baseProps, works: [workB], manuscripts: [], returnWork: null, arrival: { ...orient, kind: 'begin' } } as any)));
+    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('we are not going to tell you it is gone');
+  });
+  it('the continue layout\'s hero Work has the door too', () => {
+    act(() => root.render(React.createElement(P4R1HomeView, { ...baseProps, arrival: { ...orient, kind: 'continue', resume: workA, alsoWritten: [], shelf: [workB] } } as any)));
+    expect(anchorDoor()?.textContent).toBe('Delete');
+  });
+  it('a hero Work that holds several writings offers Remove', () => {
+    const m1 = { ...sharedManuscript, id: 'fictional-many-1' };
+    const m2 = { ...sharedManuscript, id: 'fictional-many-2' };
+    const ex = (id: string) => ({ expressionType: 'manuscript', expressionId: id, declaredAt: '2026-10-01T00:00:00Z' });
+    const many = { ...makeWork('fictional-work-many', 'Fictional Work Many'), expressions: [ex('fictional-many-1'), ex('fictional-many-2')] };
+    act(() => root.render(React.createElement(P4R1HomeView, { ...baseProps, works: [many], manuscripts: [m1, m2], returnWork: many } as any)));
+    expect(anchorDoor()?.textContent).toBe('Remove');
+  });
+});
+
+describe('the removal confirmation, on its own', () => {
+  const renderConfirm = (props: Partial<React.ComponentProps<typeof WorkRemoveConfirm>> = {}) => {
+    const onConfirm = jest.fn(); const onCancel = jest.fn();
+    act(() => root.render(React.createElement(WorkRemoveConfirm, { title: 'T', busy: false, error: null, onConfirm, onCancel, ...props })));
+    return { onConfirm, onCancel };
+  };
+  it('while removing, both buttons are inert and the confirm button says it is working', () => {
+    renderConfirm({ busy: true });
+    expect(byText(REMOVE_SHARED_WORK_COPY.working)?.disabled).toBe(true);
+    expect(byText(REMOVE_SHARED_WORK_COPY.cancel)?.disabled).toBe(true);
+  });
+  it('shows an error as an alert and keeps both buttons live', () => {
+    renderConfirm({ error: 'Nothing changed.' });
+    expect(host.querySelector('[role="alert"]')?.textContent).toBe('Nothing changed.');
+    expect(byText(REMOVE_SHARED_WORK_COPY.confirm)?.disabled).toBe(false);
+  });
+  it('confirm and cancel each call exactly their own handler', async () => {
+    const { onConfirm, onCancel } = renderConfirm();
+    await click(REMOVE_SHARED_WORK_COPY.confirm);
+    expect(onConfirm).toHaveBeenCalledTimes(1); expect(onCancel).not.toHaveBeenCalled();
+    await click(REMOVE_SHARED_WORK_COPY.cancel);
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+  it('takes its words from the copy it is given', () => {
+    renderConfirm({ copy: REMOVE_MANY_WORK_COPY });
+    expect(host.textContent).toContain('Remove “T”?');
+    expect(host.textContent).toContain('None of the writings is deleted');
+  });
+});
+
 describe('controller wiring (source-reading; comments stripped)', () => {
   const strip = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1');
   const controller = strip(readFileSync(join(__dirname, '..', 'P4R1HomeController.tsx'), 'utf8'));
-  const onDeleteWork = controller.slice(controller.indexOf('const onDeleteWork'), controller.indexOf('const onRemoveWork'));
-  const onRemoveWork = controller.slice(controller.indexOf('const onRemoveWork'), controller.indexOf('const onAddToWork'));
-
-  it('maps ONLY the shared-writing refusal to the shared-writing error', () => {
-    expect(onDeleteWork).toMatch(/outcome\.refusal\s*===\s*'declared_in_other_works'\)\s*throw new DeletionSharedMaterial\(/);
-    expect(onDeleteWork.match(/DeletionSharedMaterial/g)).toHaveLength(1);
+  it('Work Delete and Remove are the run functions, with the page\'s own fetcher and re-read', () => {
+    expect(controller).toMatch(/runDeleteWork\(\{ workId, manuscriptId \}, \(url, init\) => apiFetch\(url, init\), refresh\)/);
+    expect(controller).toMatch(/runRemoveWork\(workId, \(url, init\) => apiFetch\(url, init\), refresh\)/);
   });
-  it('still reports a committed-but-unconfirmed removal before anything else', () => {
-    expect(onDeleteWork.indexOf('outcome.removed')).toBeGreaterThan(-1);
-    expect(onDeleteWork.indexOf('outcome.removed')).toBeLessThan(onDeleteWork.indexOf('declared_in_other_works'));
-  });
-  it('removal goes through removeWork with the Work id and never touches the manuscript erase route', () => {
-    expect(onRemoveWork).toMatch(/removeWork\(workId,/);
-    expect(onRemoveWork).not.toMatch(/manuscripts/);
-    expect(onRemoveWork).not.toMatch(/deleteWork\(/);
-  });
-  it('a stale-card refusal refreshes the page BEFORE the member is told, so the message is true when read', () => {
-    const at = onDeleteWork.indexOf("outcome.refusal === 'work_no_longer_holds_it'");
-    expect(at).toBeGreaterThan(-1);
-    const branch = onDeleteWork.slice(at, at + 220);
-    expect(branch.indexOf('refresh()')).toBeGreaterThan(-1);
-    expect(branch.indexOf('refresh()')).toBeLessThan(branch.indexOf('throw new Error'));
+  it('the controller itself never names the manuscript erase route and holds no outcome-mapping of its own', () => {
+    expect(controller).not.toMatch(/api\/sovereign\/manuscripts/);
+    expect(controller).not.toMatch(/outcome\.(refusal|removed|unknown)/);
+    expect(controller).not.toMatch(/DeletionSharedMaterial|DeletionUnconfirmed/);
   });
   it('hands onRemoveWork to the Home view', () => {
     expect(controller).toMatch(/onRemoveWork=\{onRemoveWork\}/);
