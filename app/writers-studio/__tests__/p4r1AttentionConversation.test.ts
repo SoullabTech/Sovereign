@@ -25,7 +25,9 @@ describe('C13 Attention Map developmental conversation', () => {
   it('places synthesis in the existing editable Work composer', () => {
     expect(view).toContain('initialDraft={attentionConversationDraft}');
     expect(view).toContain('What remains uncertain:');
-    expect(view).toContain('Do not suggest edits unless I ask.');
+    /* Q2 (2026-11-05): "no edits unless asked" is server-owned now. */
+    expect(view).not.toContain('Do not suggest edits unless I ask.');
+    expect(require('node:fs').readFileSync(require('node:path').join(process.cwd(), 'lib/manuscript/ask/askReader.ts'), 'utf8')).toContain('Do not suggest edits unless they ask for them.');
     expect(conversation).toContain('useState(initialDraft)');
   });
   it('does not create a second conversation mechanism or auto-send the draft', () => {

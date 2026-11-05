@@ -4,6 +4,7 @@ import type { TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
 import type { PassageAct } from '@/lib/writersStudio/passageActs';
 import { reholdClearsConversation } from '@/lib/writersStudio/heldPassageContinuity';
+import { studioPlaceHref, type StudioPlace } from '@/lib/writersStudio/studioActions';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
@@ -2153,12 +2154,8 @@ export default function FlagshipWriteEditController() {
   /* Design 1B: MAIA offered a Develop place and the writer clicked it. This only
      navigates: Develop → Overview for the same Work, scrolled to the control.
      Nothing is pressed there. */
-  const onStudioPlace = useCallback((place: 'develop-overview' | 'editorial-pass') => {
-    const next = new URLSearchParams(params?.toString() ?? '');
-    next.set('mode', 'develop');
-    for (const key of ['developField', 'r', 'attentionItem', 'insightReading', 'insightObservation', 'insightAction', 'reviewRun', 'reviewFinding']) next.delete(key);
-    const query = next.toString();
-    router.push(`${pathname}${query ? `?${query}` : ''}#${place === 'editorial-pass' ? 'editorial-pass' : 'read-this-chapter'}`);
+  const onStudioPlace = useCallback((place: StudioPlace) => {
+    router.push(studioPlaceHref(pathname, params?.toString() ?? '', place));
   }, [params, pathname, router]);
 
   if (phase !== 'ready' || !context) {
