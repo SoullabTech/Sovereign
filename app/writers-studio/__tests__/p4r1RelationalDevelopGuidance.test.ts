@@ -106,10 +106,13 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(develop).toContain('Meet it as a reader');
   });
 
-  it('foregrounds a human invitation while keeping the frozen reading available', () => {
+  // Design pass (founder go-ahead 2026-11-05): MAIA's own observation now comes FIRST, in her
+  // voice; the template lead and "See the saved reading in full" fold are superseded.
+  it('foregrounds MAIA’s own observation, with a plain label and one next step', () => {
     expect(develop).toContain('Something is returning here');
-    expect(develop).toContain('See the saved reading in full');
-    expect(develop).toContain('You do not have to decide what this means alone');
+    expect(develop).toContain('<p>{observation.observation}</p>');
+    expect(develop).not.toContain('See the saved reading in full');
+    expect(develop).toContain('Talk about this passage');
     expect(develop).toContain('Explain it plainly');
     expect(develop).toContain('Talk with me about it');
   });

@@ -199,16 +199,61 @@ describe('Write view dead ends', () => {
   }
   function openMenu() {
     selectExactPassage();
-    clickButton('Work with passage');
+    clickButton('Talk with MAIA');
+  }
+  function askInOwnWords(words: string) {
+    const input = node.querySelector<HTMLInputElement>('[data-passage-ask] input')!;
+    expect(input).not.toBeNull();
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, words);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    act(() => { input.form!.requestSubmit(); });
   }
 
-  // The Craftsman's Table menu entry (and its in-table "Suggest an edit") was
-  // folded into Focus and retired in #2093/#2095, so the two cases that drove it
-  // are gone with it. "Show edit options" in Focus carries proposalRequested
-  // itself (EditorialDancePanel), and Revise below pins the same flag.
+  // Doors ruling (founder, 2026-11-05): ONE door. The five-entry menu (Focus, Craftsman's
+  // Table, Discuss, Teach me about this, More ways to work) retired; the writer says what
+  // they want, or picks one of three plain choices. Every rule below is the same law the
+  // old entries carried, now pinned on the door that replaced them.
+
+  it('the door is one box and three plain choices, nothing more', () => {
+    mount();
+    openMenu();
+    const menu = node.querySelector('.p4r1-selection-menu')!;
+    expect(menu.querySelector('[data-passage-ask] input')).not.toBeNull();
+    expect(Array.from(menu.querySelectorAll('button')).map((b) => b.textContent?.trim()))
+      .toEqual(['What’s happening here?', 'Show me an edit', 'Teach me the craft']);
+  });
+
+  it('the writer’s own words go to MAIA exactly as typed, as a conversation turn', () => {
+    mount();
+    openMenu();
+    askInOwnWords('Cut the last clause and see if it still lands.');
+    expect(onSend).toHaveBeenCalledTimes(1);
+    expect(onSend.mock.calls[0][0]).toBe('Cut the last clause and see if it still lands.');
+    expect(onSend.mock.calls[0][1]).toMatchObject({ turnShape: 'conversation' });
+  });
+
+  it('typing in the box keeps the door open even though the manuscript selection is gone', () => {
+    // Local walk 2026-11-05: focusing the box dropped the text selection and the door vanished.
+    mount();
+    openMenu();
+    const input = node.querySelector<HTMLInputElement>('[data-passage-ask] input')!;
+    act(() => { input.focus(); window.getSelection()!.removeAllRanges(); document.dispatchEvent(new Event('selectionchange')); });
+    expect(node.querySelector('[data-passage-ask] input')).not.toBeNull();
+    askInOwnWords('Make it quieter.');
+    expect(onSend).toHaveBeenCalledTimes(1);
+  });
+
+  it('an empty box sends nothing', () => {
+    mount();
+    openMenu();
+    askInOwnWords('   ');
+    expect(onSend).not.toHaveBeenCalled();
+  });
 
   it.each([
-    ['Focus'], ['Discuss'], ['Teach me about this'],
+    ['What’s happening here?'], ['Show me an edit'], ['Teach me the craft'],
   ])('%s with no Living Work says why instead of doing nothing', (label) => {
     mount({ work: null });
     openMenu();
@@ -219,11 +264,19 @@ describe('Write view dead ends', () => {
     expect(node.querySelector('.p4r1-selection-menu')).not.toBeNull();
   });
 
+  it('own words with no Living Work also say why', () => {
+    mount({ work: null });
+    openMenu();
+    askInOwnWords('Make it quieter.');
+    expect(node.querySelector('.p4r1-selection-notice')?.textContent).toContain('Living Work');
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
   it('the no-Living-Work reason carries an action that goes to Home, where a Work is declared', () => {
     const onMode = jest.fn();
     mount({ work: null, onMode });
     openMenu();
-    clickButton('Focus');
+    clickButton('What’s happening here?');
     const go = node.querySelector('[data-open-home-to-declare]') as HTMLButtonElement | null;
     expect(go).not.toBeNull();
     expect(onSend).not.toHaveBeenCalled();
@@ -231,19 +284,8 @@ describe('Write view dead ends', () => {
     expect(onMode).toHaveBeenCalledWith('home');
   });
 
-  it('Revise and Go deeper with no Living Work also explain themselves', () => {
-    mount({ work: null });
-    openMenu();
-    clickButton('More ways to work');
-    clickButton('Revise');
-    expect(node.querySelector('.p4r1-selection-notice')?.textContent).toContain('Living Work');
-    clickButton('Go deeper');
-    expect(node.querySelector('.p4r1-selection-notice')?.textContent).toContain('Living Work');
-    expect(onSend).not.toHaveBeenCalled();
-  });
-
   it.each([
-    ['Discuss'], ['Teach me about this'],
+    ['What’s happening here?'], ['Teach me the craft'],
   ])('%s is HELD, not dropped or sent early, while the MAIA relationship is not begun', (label) => {
     mount({ maiaRelationship: null });
     openMenu();
@@ -252,37 +294,27 @@ describe('Write view dead ends', () => {
     expect(node.querySelector('[data-fiction-dance]')?.getAttribute('data-held-act')).toBe(label);
   });
 
-  it('Discuss is HELD while the privacy posture is unanswered', () => {
+  it('own words are HELD while the privacy posture is unanswered', () => {
     mount({ sessionPosture: { resolved: false, sanctuary: false } });
     openMenu();
-    clickButton('Discuss');
+    askInOwnWords('Make it quieter.');
     expect(onSend).not.toHaveBeenCalled();
-    expect(node.querySelector('[data-fiction-dance]')?.getAttribute('data-held-act')).toBe('Discuss');
+    expect(node.querySelector('[data-fiction-dance]')?.getAttribute('data-held-act')).toBe('Make it quieter.');
   });
 
-  it('Discuss sends exactly once when every gate is open', () => {
+  it('What’s happening here? sends exactly once when every gate is open', () => {
     mount();
     openMenu();
-    clickButton('Discuss');
+    clickButton('What’s happening here?');
     expect(onSend).toHaveBeenCalledTimes(1);
     expect(onSend.mock.calls[0][1]).toMatchObject({ passageAct: 'discuss', proposalPolicy: 'reply_only' });
   });
 
-  it('Revise sends exactly once when every gate is open', () => {
+  it('Show me an edit sends exactly once when every gate is open, asking for wording', () => {
     mount();
     openMenu();
-    clickButton('More ways to work');
-    clickButton('Revise');
+    clickButton('Show me an edit');
     expect(onSend).toHaveBeenCalledTimes(1);
     expect(onSend.mock.calls[0][1]).toMatchObject({ passageAct: 'revise', proposalPolicy: 'allow', proposalRequested: true });
-  });
-
-  it('Go deeper sends exactly once when every gate is open', () => {
-    mount();
-    openMenu();
-    clickButton('More ways to work');
-    clickButton('Go deeper');
-    expect(onSend).toHaveBeenCalledTimes(1);
-    expect(onSend.mock.calls[0][1]).toMatchObject({ passageAct: 'deeper', proposalPolicy: 'reply_only' });
   });
 });

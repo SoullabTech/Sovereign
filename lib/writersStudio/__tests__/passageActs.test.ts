@@ -59,7 +59,9 @@ describe('wiring', () => {
       expect(panel).toContain(`passageAct: '${act}'`);
     }
     for (const act of ['examples', 'ideas', 'deeper'] as const) expect(panel).not.toContain(`passageAct: '${act}'`);
-    for (const act of ['discuss', 'revise', 'deeper'] as const) {
+    // Doors ruling (founder 2026-11-05): Go deeper is asked for through MAIA, not a menu item.
+    expect(view).not.toContain("passageAct: 'deeper'");
+    for (const act of ['discuss', 'revise'] as const) {
       // The menu routes through runPassageAct (held while gates are open), which
       // sends act.prompt/act.options; the writer's words and the closed field are
       // both declared at the menu item.

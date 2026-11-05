@@ -572,8 +572,13 @@ export async function proxy(req: NextRequest) {
           url.searchParams.set('rid', rid);
           return NextResponse.redirect(url);
         }
+        // The writer returns to the exact place (path + query), carried whole in
+        // `next` — never left as loose params the sign-in page ignores. Sign-in
+        // still validates it as same-origin (normalizeReturnDestination).
+        const returnTo = pathname + (req.nextUrl.search || '');
         url.pathname = '/signin';
-        url.searchParams.set('next', pathname);
+        url.search = '';
+        url.searchParams.set('next', returnTo);
         url.searchParams.set('reason', 'no_session_cookie');
         url.searchParams.set('rid', rid);
         return NextResponse.redirect(url);

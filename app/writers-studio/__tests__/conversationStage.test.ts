@@ -119,3 +119,64 @@ test('controller: a conversation held after Use this is never pulled back over t
   expect(src).toContain('setHeldApplicationThread(previous);');
   expect(src).toContain(': heldApplicationThread ?? scopedEditorialThread;');
 });
+
+test('an edit turn reads as MAIA speaking, never label-stripped fragments', () => {
+  // Local walk 2026-11-05: the turn read "cutting 'which was' and letting…".
+  const fragTurns = [turns[0]!, { ...turns[1]!, body: 'What I’d preserve: the list.\nFriction I notice: "which was" is the softest phrase in the sentence.\nWhat I’d try: cutting "which was" so the verdict lands bare.' }];
+  render({ thread: { ...thread, turns: fragTurns }, lastMaiaTurn: fragTurns[1] });
+  const said = q('[data-stage-option="v1"]')!.closest('li')!.querySelector('p')!.textContent!;
+  expect(said).toContain('I notice "which was" is the softest phrase');
+  expect(said).toContain('I’d try cutting "which was"');
+  expect(said).not.toMatch(/^cutting/m);
+});
+
+test('the change is visible in the text and named before the buttons', () => {
+  render();
+  const option = q('[data-stage-option="v1"]')!;
+  expect(option.querySelector('[data-stage-change-count]')!.textContent).toMatch(/change/);
+  expect(option.querySelectorAll('ins').length + option.querySelectorAll('del').length).toBeGreaterThan(0);
+  const css = fs.readFileSync(path.join(process.cwd(), 'app/dev/writers-studio-p4r1/p4r1-live.css'), 'utf8');
+  const del = css.match(/\.ws-stage-option-words del\{[^}]*\}/)![0];
+  expect(del).toMatch(/background/);   // a deletion is marked, not merely greyed
+  expect(del).not.toMatch(/var\(--fr-muted\)/);
+});
+
+test('under MAIA’s latest reply the writer can ask for shorter or more, and the choice is remembered', () => {
+  window.localStorage.removeItem('ws.replyLength');
+  const replyOnly = [turns[0]!, { turnIndex: 1, speaker: 'maia', body: 'A long answer.', at: 't1', adjunct: null }];
+  const p = render({ thread: { ...thread, turns: replyOnly, versions: [], headVersionId: null }, version: null, lastMaiaTurn: replyOnly[1] });
+  const [shorter, more] = Array.from(q('[data-stage-length]')!.querySelectorAll('button'));
+  act(() => shorter!.click());
+  expect(p.onSend).toHaveBeenLastCalledWith('Shorter, please', { turnShape: 'conversation' });
+  expect(window.localStorage.getItem('ws.replyLength')).toBe('shorter');
+  act(() => more!.click());
+  expect(p.onSend).toHaveBeenLastCalledWith('Say more', { turnShape: 'conversation' });
+  expect(window.localStorage.getItem('ws.replyLength')).toBe('fuller');
+});
+
+test('nothing is remembered until the writer chooses, and no buttons while she is still answering', () => {
+  window.localStorage.removeItem('ws.replyLength');
+  render({ busy: true });
+  expect(q('[data-stage-length]')).toBeNull();
+  expect(window.localStorage.getItem('ws.replyLength')).toBeNull();
+});
+
+test('MAIA’s closed question can be answered in one click, sending exactly the button’s words', () => {
+  const asked = [turns[0]!, { turnIndex: 1, speaker: 'maia', body: 'Which is closer?\n[[answer: Drop the label]]\n[[answer: Soften it]]', at: 't1', adjunct: null }];
+  const p = render({ thread: { ...thread, turns: asked, versions: [], headVersionId: null }, version: null, lastMaiaTurn: asked[1] });
+  const shown = q('[data-stage-thread] [data-turn-speaker="maia"]')!.textContent!;
+  expect(shown).not.toContain('[[answer');
+  const buttons = Array.from(q('[data-stage-answers]')!.querySelectorAll('button'));
+  expect(buttons.map((b) => b.textContent)).toEqual(['Drop the label', 'Soften it']);
+  act(() => buttons[1]!.click());
+  expect(p.onSend).toHaveBeenLastCalledWith('Soften it', { turnShape: 'conversation' });
+});
+
+test('no answer buttons while MAIA is answering, or under an earlier turn', () => {
+  const asked = [{ turnIndex: 0, speaker: 'maia', body: 'Which?\n[[answer: A]]', at: 't0', adjunct: null }, turns[0]!];
+  render({ thread: { ...thread, turns: asked, versions: [], headVersionId: null }, version: null, lastMaiaTurn: asked[0] });
+  expect(q('[data-stage-answers]')).toBeNull();
+  const latest = [turns[0]!, { turnIndex: 1, speaker: 'maia', body: 'Which?\n[[answer: A]]', at: 't1', adjunct: null }];
+  render({ busy: true, thread: { ...thread, turns: latest, versions: [], headVersionId: null }, version: null, lastMaiaTurn: latest[1] });
+  expect(q('[data-stage-answers]')).toBeNull();
+});
