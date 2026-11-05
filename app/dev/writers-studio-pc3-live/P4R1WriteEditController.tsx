@@ -179,6 +179,9 @@ export default function FlagshipWriteEditController() {
   type ConversationAnswer = { kind: 'thread'; thread: RebuildEditorialThread } | { kind: 'new' } | { kind: 'cancel' };
   const choiceResolverRef = useRef<((answer: ConversationAnswer) => void) | null>(null);
   const cancelConversationChoice = () => { choiceResolverRef.current?.({ kind: 'cancel' }); choiceResolverRef.current = null; };
+  // Leaving Write (another room, or unmount) cancels a waiting question; nothing is sent.
+  useEffect(() => () => { choiceResolverRef.current?.({ kind: 'cancel' }); choiceResolverRef.current = null; }, []);
+  useEffect(() => { if (!workspaceOpen) cancelConversationChoice(); }, [workspaceOpen]);
   const [a2Relationship, setA2Relationship] = useState<A2RelationshipSummary | null>(null);
   const [a2RelationshipChoices, setA2RelationshipChoices] = useState<readonly A2RelationshipSummary[]>([]);
   const [a2RelationshipPhase, setA2RelationshipPhase] = useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
@@ -2024,7 +2027,10 @@ export default function FlagshipWriteEditController() {
     currentLivingWorkScope, workGestureEpoch]);
 
   const closeWorkspace = useCallback(() => {
-    if (!currentWorkGesture() || editorialBusy || adoptionBusy || memberVersionBusy) return;
+    const awaitingChoice = conversationChoices.length > 1;
+    if (!currentWorkGesture() || (editorialBusy && !awaitingChoice) || adoptionBusy || memberVersionBusy) return;
+    // Leaving while MAIA asks which conversation cancels that question; nothing is sent.
+    if (awaitingChoice) { cancelConversationChoice(); setConversationChoices([]); }
     setWorkspaceOpen(false);
     /* Leaving the room un-names the conversation, or a reload reopens it. */
     if (typeof window !== 'undefined') {
@@ -2032,7 +2038,7 @@ export default function FlagshipWriteEditController() {
     }
     // The guard reads the scope: initial Work discovery sets it without moving
     // the epoch, so without this dep the first-render closure refused forever.
-  }, [editorialBusy, adoptionBusy, memberVersionBusy, currentLivingWorkScope, workGestureEpoch]);
+  }, [editorialBusy, adoptionBusy, memberVersionBusy, currentLivingWorkScope, workGestureEpoch, conversationChoices.length]);
 
   const returnToStartingPassage = useCallback(() => {
     if (!currentWorkGesture() || editorialBusy || adoptionBusy || memberVersionBusy) return;

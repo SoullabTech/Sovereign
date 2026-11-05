@@ -996,7 +996,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
         ) : null}
 
         <footer className="ws-stage-composer" data-stage-composer>
-          {!turns.some((t) => t.speaker === 'author') && !props.pendingQuestion ? (
+          {/* No starters while MAIA is asking a question of her own (privacy, relationship,
+              which conversation): answer that first. */}
+          {!turns.some((t) => t.speaker === 'author') && !props.pendingQuestion && !gatesOpen ? (
             <div className="ws-stage-chips" data-stage-chips>
               <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Talk about what’s happening', prompt: passageActQuestion('discuss'), options: { proposalPolicy: 'reply_only', passageAct: 'discuss' } })}>Talk about what’s happening</button>
               <button type="button" disabled={props.busy || props.revisionsPaused} onClick={() => startAct({ label: 'Show me an edit', prompt: passageActQuestion('revise'), options: { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise' } })}>Show me an edit</button>

@@ -5319,3 +5319,16 @@
 .p4r1-root .p4r1-isolated-more-card > button{ order:2; text-align:left; }
 .p4r1-root .p4r1-isolated-more-card > details:not([data-next-passage-menu]){ order:3; }
 .p4r1-root .p4r1-isolated-more-card details > .p4r1-isolated-menu-card{ position:static; margin-top:6px; box-shadow:none; }
+
+/* Develop design pass: MAIA's own observation first, in her voice. */
+.p4r1-root .p4r1-discovery-said{ margin:10px 0 14px; padding:14px 16px; border-left:3px solid rgba(232,190,120,.7);
+  background:rgba(232,190,120,.06); border-radius:0 10px 10px 0; }
+.p4r1-root .p4r1-discovery-said p{ margin:6px 0 0; font-size:16px; line-height:1.6; }
+.p4r1-root .p4r1-discovery-more-actions{ display:flex; flex-wrap:wrap; gap:8px; margin:6px 0 12px; }
+
+/* Develop: MAIA asks once to read, with the button right there. */
+.p4r1-root .p4r1-intent-ask{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:12px; }
+.p4r1-root .p4r1-intent-ask > p{ flex-basis:100%; margin:0; font-size:15px; line-height:1.55; }
+.p4r1-root .p4r1-intent-ask .p4r1-intent-other{ background:transparent; border:1px solid rgba(255,255,255,.16); color:inherit;
+  border-radius:999px; padding:7px 14px; font-size:13px; cursor:pointer; }
+.p4r1-root .p4r1-intent-ask .p4r1-intent-other:hover{ border-color:rgba(232,190,120,.5); }

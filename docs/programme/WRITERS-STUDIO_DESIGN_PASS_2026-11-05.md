@@ -192,3 +192,30 @@ friction is in what follows.
    (flow-review step 5; Develop leads to editing). "See another" stays. Evidence and limits,
    saved readings, dates and coverage move under **More**.
 4. **Say it once.** One quiet line about consent where it matters, not on every screen.
+
+### Develop — built (founder: "Yes, build it", 2026-11-05) ✅
+
+1. **She asks once.** When nothing is read yet: "I haven't read Section 1 yet. Shall I read it
+   now? Your writing won't change." → **Read Section 1 now** · *Choose what she reads*. The
+   duplicate "Not read yet" card is hidden while she asks. If the draft changed, the same place
+   says "You've changed this since I last saw it. Shall I save what's on the page and read that?"
+   → **Save and read**. Saving stays the writer's own press (controller rule), and that prompt no
+   longer hides inside a folded panel.
+2. **Her words first.** The observation card shows MAIA's own observation in her voice, with
+   the plain label above it ("Something may still be open · 1 of 3"). The template lead and "See
+   the saved reading in full" are gone.
+3. **One next step.** **Talk about this passage** (opens the conversation on that paragraph with
+   her observation pinned above) · **Show me in the manuscript** · **See another**. Talk here,
+   Help me understand, Go deeper, Previous, evidence and limits, and the reading date sit under
+   **More**. The right panel no longer repeats the template.
+4. **Said once.** "Opening this field never reads more of your Work" and the snapshot sentence
+   are gone; "Nothing is read automatically." stays once. The explicit-read law is now tested
+   directly (reading starts only from a press).
+
+**Found and fixed on the way:** (a) the conversation's starter buttons overlapped MAIA's "which
+conversation" question; they are hidden while she asks. (b) ⚠️ While she waited for that answer,
+**Back to the page and Return to Develop were disabled** (the waiting request counted as busy).
+Waiting no longer counts as busy, and leaving cancels the question cleanly (also on closing and
+unmount). **Witnessed locally:** observation → Talk about this passage → conversation with her
+observation pinned → Return to Develop works → Help me see the shape → **Read Section 1 now** →
+one press → her specific observation shown first.

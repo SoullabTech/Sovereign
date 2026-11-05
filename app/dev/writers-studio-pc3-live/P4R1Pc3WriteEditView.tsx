@@ -569,7 +569,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     return <main className="fr-root"><div style={{ padding: 32 }}>This manuscript has no editable place to open.</div></main>;
   }
 
-  const busy = props.editorialBusy || props.adoptionBusy || props.memberVersionBusy;
+  /* While MAIA waits for the writer to choose which conversation, nothing is being worked
+     on: the writer must be free to leave (which cancels the waiting request). */
+  const awaitingConversationChoice = (props.conversationChoices?.length ?? 0) > 1;
+  const busy = (props.editorialBusy && !awaitingConversationChoice) || props.adoptionBusy || props.memberVersionBusy;
   const currentBody = props.focusId ? props.writing.bodyOf(props.focusId) : '';
   const visibleUndoMessage = undoMessageForVisibleDraft(props.undoMessage, writeReadback, props.focusId, currentBody);
   const currentText = props.held?.draftSectionId === props.focusId

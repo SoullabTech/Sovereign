@@ -34,3 +34,13 @@ test('a refused request tells the writer plainly; server detail never reaches th
   expect(src).not.toContain('setEditorialFailure(outcome.detail');
   expect(src).toContain("setEditorialFailure('MAIA couldn’t answer that just now. Nothing was changed. Please try again.');");
 });
+
+test('while MAIA asks which conversation, the writer can still leave, and leaving cancels the question', () => {
+  // Local walk 2026-11-05: Back to the page and Return to Develop were disabled while she waited.
+  const view = fs.readFileSync(path.join(process.cwd(), 'app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx'), 'utf8');
+  expect(view).toContain('const busy = (props.editorialBusy && !awaitingConversationChoice) ||');
+  const close = src.slice(src.indexOf('const closeWorkspace = useCallback'), src.indexOf('const returnToStartingPassage = useCallback'));
+  expect(close).toContain('(editorialBusy && !awaitingChoice)');
+  expect(close).toContain('if (awaitingChoice) { cancelConversationChoice(); setConversationChoices([]); }');
+  expect(src).toContain('useEffect(() => { if (!workspaceOpen) cancelConversationChoice(); }, [workspaceOpen]);');
+});
