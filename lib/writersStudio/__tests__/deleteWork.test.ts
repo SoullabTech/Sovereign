@@ -34,7 +34,10 @@ describe('the act reaches the existing route, by id', () => {
 
     expect(out).toEqual({ ok: true });
     expect(calls).toHaveLength(1);
-    expect(calls[0][0]).toBe('/api/sovereign/manuscripts/m-1');
+    // The path is the manuscripts route, by manuscript id. The query only NAMES the Work the card belongs to, so the server can
+    // refuse a stale card; it adds no second act (R-SHARED).
+    expect(calls[0][0].split('?')[0]).toBe('/api/sovereign/manuscripts/m-1');
+    expect(calls[0][0]).toBe('/api/sovereign/manuscripts/m-1?workId=w-1');
     expect(calls[0][1].method).toBe('DELETE');
     expect(calls.some((c) => c[0].includes('living-works'))).toBe(false);
   });
@@ -78,7 +81,7 @@ describe('a refusal destroys nothing', () => {
 
     expect(out.ok).toBe(false);
     expect(calls).toHaveLength(1);
-    expect(calls[0][0]).toBe('/api/sovereign/manuscripts/m-1');
+    expect(calls[0][0].split('?')[0]).toBe('/api/sovereign/manuscripts/m-1');
     expect(calls.some((c) => c[0].includes('living-works'))).toBe(false);
   });
 
@@ -90,7 +93,7 @@ describe('a refusal destroys nothing', () => {
     );
 
     if (out.ok) throw new Error('expected a refusal');
-    expect(out.message).toContain('another work');
+    expect(out.message).toContain('another of your Works');
     expect(out.message).toContain('Nothing was deleted');
     expect(out.message).not.toContain('declared_in_other_works');
     expect(out.message).not.toContain('409');
@@ -122,15 +125,31 @@ describe('a refusal destroys nothing', () => {
 
 describe('a member cannot delete what is not theirs', () => {
   /* The route answers 404 rather than 403 for another member's id, so it never
-     confirms that the id exists. Nothing of another member's is touched, and the
-     act sends exactly one request regardless. */
-  it('sends one member-scoped request and treats the 404 as already gone', async () => {
+     confirms that the id exists. Nothing of another member's is touched. Loose
+     writing sends exactly one request. A Work card that gets a 404 on the WRITING
+     follows through to withdraw its own declaration (the ruling's retry path), a
+     second member-scoped request that names only the Work id, never the manuscript. */
+  it('loose writing: sends one member-scoped request and treats the 404 as already gone', async () => {
+    const { calls, fetcher } = recorder(notFound);
+
+    const out = await deleteWork({ workId: null, manuscriptId: 'not-mine' }, fetcher);
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0][0]).toBe('/api/sovereign/manuscripts/not-mine');
+    expect(out).toEqual({ ok: true });
+  });
+
+  it('a Work card: a 404 on the writing follows through to the Work route, by the Work id only', async () => {
     const { calls, fetcher } = recorder(notFound);
 
     const out = await deleteWork({ workId: 'someone-elses', manuscriptId: 'not-mine' }, fetcher);
 
-    expect(calls).toHaveLength(1);
-    expect(calls[0][0]).toBe('/api/sovereign/manuscripts/not-mine');
+    expect(calls.map((c) => c[0])).toEqual([
+      '/api/sovereign/manuscripts/not-mine?workId=someone-elses',
+      '/api/sovereign/living-works/someone-elses',
+    ]);
+    // Both routes are member-scoped in their predicates (probed against PostgreSQL 16: OR-4), so another member's ids reach nothing.
+    expect(calls.every((c) => c[1].method === 'DELETE')).toBe(true);
     expect(out).toEqual({ ok: true });
   });
 });
@@ -232,7 +251,8 @@ describe('the destructive act is unchanged — WS-DELETE-01 stands', () => {
       (url) => { seen.push(url); return Promise.resolve(new Response(null, { status: 200 })); },
     );
     expect(out).toEqual({ ok: true });
-    expect(seen).toEqual(['/api/sovereign/manuscripts/m-1']);
+    // Still ONE request, still the manuscripts route. The query names the Work so a stale card is refused server-side.
+    expect(seen).toEqual(['/api/sovereign/manuscripts/m-1?workId=w-1']);
   });
 });
 
