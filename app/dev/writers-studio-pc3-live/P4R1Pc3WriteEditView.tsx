@@ -155,6 +155,9 @@ export type P4R1Pc3WriteEditViewProps = {
   }) => void;
   /** Retire pending visible editorial result after an author STOP. */
   onStopEditorial: () => void;
+  /** R2 "MAIA opens": ask MAIA to speak first in a new conversation. The controller owns the laws. */
+  onOpenWithMaia?: () => void;
+  openingFailure?: string | null;
   onSelectVersion: (id: string) => void;
   onApply: () => void;
   onUndo?: () => void;
@@ -1666,6 +1669,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
       <EditorialDancePanel
         stage
+        autoOpenWithMaia
+        onOpenWithMaia={props.onOpenWithMaia}
+        openingFailure={props.openingFailure ?? null}
         earlierThread={props.earlierEditorialThread ?? null}
         onBackToPage={props.onCloseWorkspace}
         onStudioAction={onStudioAction}

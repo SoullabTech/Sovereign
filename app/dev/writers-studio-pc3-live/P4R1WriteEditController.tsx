@@ -34,6 +34,7 @@ import {
   discoverEditorialRelationships,
   exactVersion,
   openBoundEditorialPassage,
+  openEditorialConversation,
   openBoundEditorialThread,
   readBoundEditorialThread,
   sendBoundEditorialTurn,
@@ -1492,6 +1493,89 @@ export default function FlagshipWriteEditController() {
     workGestureEpoch,
   ]);
 
+  /**
+   * R2 "MAIA opens" (O1(a)). Fired ONLY by the writer's deliberate gesture (entering the
+   * conversation room on a passage), never by selection or mount. Resolves the thread the
+   * way `sendEditorial` does, and asks MAIA to speak first ONLY when the thread has no
+   * turns. One opening per thread: a ref remembers every thread already opened here.
+   */
+  const openedThreadsRef = useRef<Set<string>>(new Set());
+  const openingInFlightRef = useRef(false);
+  const [openingFailure, setOpeningFailure] = useState<string | null>(null);
+  const openWithMaia = useCallback(async () => {
+    if (openingInFlightRef.current || editorialBusy) return;
+    if (!focusId || !context || !work || !currentWorkGesture() || !scopedA2Relationship) return;
+    if (workReentryRequired.current || (editorialThread && !scopedEditorialThread)) return;
+    const writing = writingRef.current;
+    const body = writing?.bodyOf(focusId);
+    const revision = writing?.currentRevisionId();
+    if (!writing || typeof body !== 'string' || !Number.isSafeInteger(revision)
+      || writing.hasUnsavedWork()
+      || ['dirty', 'saving', 'conflict', 'error'].includes(writing.statusOf(focusId))) return;
+    const posture0 = readCurrentSanctuaryPosture();
+    if (!posture0.resolved || posture0.sanctuary) return;
+
+    const scopeAtGesture = editorialActScopeRef.current;
+    const generation = ++editorialActGenerationRef.current;
+    const sameVisibleRequest = () => editorialActScopeRef.current === scopeAtGesture
+      && editorialActGenerationRef.current === generation;
+    const stillCurrent = () => sameVisibleRequest()
+      && currentWorkGesture()
+      && writingRef.current !== null
+      && writingRef.current.bodyOf(focusId) === body
+      && writingRef.current.currentRevisionId() === revision
+      && !writingRef.current.hasUnsavedWork();
+
+    openingInFlightRef.current = true;
+    setEditorialBusy(true);
+    setOpeningFailure(null);
+    setEditorialFailure(null);
+    try {
+      const thread = await resolveEditorialForAct(stillCurrent);
+      if (!thread || !stillCurrent()) return;
+      const desired = selectedPassage?.draftSectionId === focusId
+        ? selectedPassage.text : focusSection?.body ?? '';
+      if (thread.workId !== context.manuscriptId
+        || thread.targetSectionId !== focusId || thread.locusText !== desired) return;
+      // A conversation that already has turns is resumed, never opened a second time.
+      if (thread.turns.length !== 0 || openedThreadsRef.current.has(thread.threadId)) return;
+      const posture = readCurrentSanctuaryPosture();
+      if (!stillCurrent() || !posture.resolved || posture.sanctuary) return;
+      openedThreadsRef.current.add(thread.threadId);
+      const outcome = await openEditorialConversation(
+        thread.threadId, focusId, posture, scopedA2Relationship.id,
+        { scope: { latitude: editLatitude, mayRemoveParagraphs }, responseDepth: editorialDepth },
+      );
+      if (!stillCurrent()) return;
+      const after = readCurrentSanctuaryPosture();
+      if (!after.resolved || after.sanctuary) return;
+      if (!outcome.ok) {
+        setOpeningFailure(outcome.reason === 'sanctuary_unavailable'
+          ? 'MAIA doesn’t open conversations in Sanctuary. Nothing was sent.'
+          : outcome.reason === 'accountability_unresolved'
+            ? 'MAIA may have received the passage, but Soullab could not confirm the record, so her words were withheld.'
+            : 'MAIA couldn’t start this conversation just now. Nothing was changed.');
+        // Allow an explicit Try again for a failure that wrote nothing.
+        if (outcome.reason !== 'accountability_unresolved') openedThreadsRef.current.delete(thread.threadId);
+        return;
+      }
+      if (!mayPublishEditorialResponse({
+        scope: scopeAtGesture, generation, threadId: thread.threadId,
+        workId: context.manuscriptId, sectionId: focusId,
+      }, {
+        scope: editorialActScopeRef.current,
+        generation: editorialActGenerationRef.current,
+        posture: after,
+      }, outcome.thread)) return;
+      setEditorialThread(outcome.thread);
+    } finally {
+      openingInFlightRef.current = false;
+      if (sameVisibleRequest()) setEditorialBusy(false);
+    }
+  }, [focusId, context, work, focusSection, selectedPassage, editorialBusy, editorialThread,
+    scopedEditorialThread, scopedA2Relationship, resolveEditorialForAct, editLatitude,
+    mayRemoveParagraphs, editorialDepth, workGestureEpoch]);
+
   // An explicit author STOP immediately retires this browser's current
   // editorial response generation. Existing HTTP work may already have
   // reached the server, but may not be presented against the current Work
@@ -2297,6 +2381,8 @@ export default function FlagshipWriteEditController() {
             onInstruction={(text) => { if (currentContextGesture()) setEditorialDraft(text); }}
             onSendEditorial={(text, options) => void sendEditorial(text, options)}
             onStopEditorial={stopEditorialForAuthor}
+            onOpenWithMaia={() => void openWithMaia()}
+            openingFailure={openingFailure}
             onSelectVersion={(id) => {
               if (!scopedEditorialThread || workReentryRequired.current
                 || !currentWorkGesture()) return;
