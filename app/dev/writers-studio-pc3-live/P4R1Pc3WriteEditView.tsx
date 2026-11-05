@@ -1083,7 +1083,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           <strong>{passagePlaceLabel(
             props.context.sections.find((s) => s.draftSectionId === props.focusId),
             currentBody,
-            props.held?.draftSectionId === props.focusId ? props.held : null,
+            null,
           )}</strong>
         </div>
         <div>
