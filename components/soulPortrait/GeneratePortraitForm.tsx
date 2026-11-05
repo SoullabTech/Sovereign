@@ -74,6 +74,40 @@ export function GeneratePortraitForm() {
   const [people, setPeople] = useState<{ id: string; name: string }[]>([]);
   const [subjectPersonId, setSubjectPersonId] = useState<string>('');
 
+  // Portrait begun from a Pro Astrology chart (?proChart=mine | <saved chart id>).
+  // The URL names the chart only; the server reads its birth details and draws
+  // the chart with the Pro calculator. `proChartLabel` is display only.
+  const [proChart, setProChart] = useState<string | null>(null);
+  const [proChartLabel, setProChartLabel] = useState<string | null>(null);
+  useEffect(() => {
+    const source = new URLSearchParams(window.location.search).get('proChart');
+    if (!source) return;
+    if (source === 'mine') {
+      setProChart('mine');
+      setProChartLabel('Your own chart');
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/astrology/pro/charts', { credentials: 'include', cache: 'no-store' });
+        const data = await res.json().catch(() => ({}));
+        const match = Array.isArray(data?.charts) ? data.charts.find((c: any) => c?.id === source) : null;
+        if (cancelled) return;
+        if (!match) {
+          setError('That Pro chart could not be found. Enter the birth details below instead.');
+          return;
+        }
+        setProChart(source);
+        setProChartLabel(`${match.label} · ${match.birthDate} · ${match.birthTime}${match.placeLabel ? ` · ${match.placeLabel}` : ''}`);
+        setF((prev) => ({ ...prev, name: prev.name || String(match.label ?? ''), place: prev.place || String(match.placeLabel ?? '') }));
+      } catch {
+        if (!cancelled) setError('That Pro chart could not be loaded. Enter the birth details below instead.');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // Birthplace lookup state
   const [geoBusy, setGeoBusy] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
@@ -176,16 +210,18 @@ export function GeneratePortraitForm() {
   // Name every unmet requirement — the button is never silently disabled.
   const missing: string[] = [];
   if (!f.name.trim()) missing.push('name');
-  if (!f.date) missing.push('birth date');
-  if (!f.time) missing.push('birth time');
-  if (latParsed === null) missing.push(latInvalid ? 'a valid latitude' : 'latitude');
-  if (lngParsed === null) missing.push(lngInvalid ? 'a valid longitude' : 'longitude');
-  if (!f.timezone.trim()) missing.push('timezone');
+  if (!proChart) {
+    if (!f.date) missing.push('birth date');
+    if (!f.time) missing.push('birth time');
+    if (latParsed === null) missing.push(latInvalid ? 'a valid latitude' : 'latitude');
+    if (lngParsed === null) missing.push(lngInvalid ? 'a valid longitude' : 'longitude');
+    if (!f.timezone.trim()) missing.push('timezone');
+  }
   if (transitBlocksGenerate) missing.push('a readable transit report (or clear the Year Ahead field)');
   const ready = missing.length === 0;
 
   async function generate() {
-    if (latParsed === null || lngParsed === null) return;
+    if (!proChart && (latParsed === null || lngParsed === null)) return;
     setBusy(true);
     setError(null);
     try {
@@ -202,11 +238,15 @@ export function GeneratePortraitForm() {
           isMinor: f.isMinor,
           transitReport: transitReport.trim() || undefined,
           birthPlace: f.place.trim() || undefined,
-          birthData: {
-            date: f.date,
-            time: f.time,
-            location: { lat: latParsed, lng: lngParsed, timezone: f.timezone.trim() },
-          },
+          ...(proChart
+            ? { proChartSource: proChart }
+            : {
+                birthData: {
+                  date: f.date,
+                  time: f.time,
+                  location: { lat: latParsed, lng: lngParsed, timezone: f.timezone.trim() },
+                },
+              }),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -285,6 +325,14 @@ export function GeneratePortraitForm() {
             <Hint tone="ok">{PORTRAIT_THEMES[f.theme].description} You can regenerate with a different theme later.</Hint>
           </Field>
         </Row>
+        {proChart ? (
+          <Row>
+            <Field label="Chart (from Pro Astrology)">
+              <div style={{ ...inp, background: '#f1efe8' }}>{proChartLabel}</div>
+              <Hint tone="ok">Drawn with the Pro Astrology calculator, the same chart you were reading in Pro.</Hint>
+            </Field>
+          </Row>
+        ) : (<>
         <Row>
           <Field label="Birth date"><input style={inp} type="date" value={f.date} onChange={(e) => set('date', e.target.value)} /></Field>
           <Field label="Birth time (24h)"><input style={inp} type="time" value={f.time} onChange={(e) => set('time', e.target.value)} /></Field>
@@ -340,6 +388,7 @@ export function GeneratePortraitForm() {
             <input style={inp} value={f.timezone} onChange={(e) => set('timezone', e.target.value)} placeholder="America/New_York" />
           </Field>
         </Row>
+        </>)}
         <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, color: '#4A5568', margin: '4px 0 20px' }}>
           <input type="checkbox" checked={f.isMinor} onChange={(e) => set('isMinor', e.target.checked)} /> Subject is a minor
         </label>

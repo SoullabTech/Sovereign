@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus, Trash2, ChevronRight, Search } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import styles from './pro-saved-charts.module.css';
+import ProSoulPortraitAction from './ProSoulPortraitAction';
 
 export interface SavedChartSummary {
   id: string;
@@ -261,6 +262,7 @@ export default function ProSavedCharts({
                     <button onClick={() => onOpen(chart)} disabled={opening}>
                       {chart.id === openChartId ? 'Open' : 'Open chart'} <ChevronRight size={15} aria-hidden="true" />
                     </button>
+                    <ProSoulPortraitAction source={chart.id} whose={`${chart.label}’s`} />
                     <button onClick={() => setConfirmDelete(chart.id)} aria-label={`Delete ${chart.label}`}>
                       <Trash2 size={15} aria-hidden="true" />
                     </button>

@@ -32,3 +32,5 @@
 .list li span { color: #9fb2b9; font-size: .85rem; overflow-wrap: anywhere; }
 .itemActions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .danger { border-color: #d98a7a !important; color: #f3c1b6 !important; }
+.portraitConfirm { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .85rem; color: #d8cbb3; max-width: 32rem; }
+.portraitConfirm a { color: #f3e6cd; border: 1px solid #e0c495; border-radius: 8px; padding: 4px 10px; text-decoration: none; }

@@ -18,6 +18,8 @@ import { createDraftPortrait } from '@/lib/soulPortrait/portraitStore';
 import { subjectIsInColab } from '@/lib/soulPortrait/subjectScope';
 import { resolveCurrentTeamId, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
 import { cookies } from 'next/headers';
+import { proMemberAllowed, proPreviewEnabled } from '@/lib/astrology/proAccess';
+import { isProChartSource, loadProChartBirth } from '@/lib/soulPortrait/proChartSource';
 import { PORTRAIT_THEMES, type PortraitMode, type PortraitThemeKey } from '@/lib/soulPortrait/schema';
 
 const MODES: PortraitMode[] = ['self', 'parent-child', 'gift', 'legacy'];
@@ -54,12 +56,35 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'transit report too large (300KB max)' }, { status: 400 });
   }
 
+  // A portrait begun from a Pro chart names the chart, not its birth details:
+  // the server reads them (lib/soulPortrait/proChartSource.ts).
+  const proChartSource = body?.proChartSource;
+  if (proChartSource !== undefined && !isProChartSource(proChartSource)) {
+    return NextResponse.json({ error: 'unknown Pro chart' }, { status: 400 });
+  }
+
   if (!name) return NextResponse.json({ error: 'name is required' }, { status: 400 });
-  if (!bd?.date || !bd?.time || typeof bd?.location?.lat !== 'number' || typeof bd?.location?.lng !== 'number' || !bd?.location?.timezone) {
+  if (proChartSource === undefined && (!bd?.date || !bd?.time || typeof bd?.location?.lat !== 'number' || typeof bd?.location?.lng !== 'number' || !bd?.location?.timezone)) {
     return NextResponse.json(
       { error: 'birthData requires date (YYYY-MM-DD), time (HH:MM), and location {lat, lng, timezone}' },
       { status: 400 },
     );
+  }
+
+  // Optional Pro calculator: only for a member who holds Pro Astrology access,
+  // so the portrait describes the same chart they were reading in Pro.
+  const calculator: 'standard' | 'pro' =
+    body?.calculator === 'pro' || proChartSource !== undefined ? 'pro' : 'standard';
+  if (calculator === 'pro' && !(proPreviewEnabled(process.env) && await proMemberAllowed(memberId, process.env))) {
+    return NextResponse.json({ error: 'Pro Astrology access required' }, { status: 403 });
+  }
+  let birthData = proChartSource === undefined
+    ? { date: bd.date, time: bd.time, location: bd.location }
+    : null;
+  if (proChartSource !== undefined) {
+    const loaded = await loadProChartBirth(memberId, proChartSource);
+    if (!loaded.ok) return NextResponse.json({ error: loaded.error }, { status: loaded.status });
+    birthData = loaded.birthData;
   }
 
   // Optional subject linkage to a studio_people client. REFUSAL: a practitioner may only
@@ -81,12 +106,13 @@ export async function POST(request: NextRequest) {
       slug: slugify(name),
       mode,
       theme,
-      birthData: { date: bd.date, time: bd.time, location: bd.location },
+      birthData: birthData!,
       birthPlace: body?.birthPlace ? String(body.birthPlace) : undefined,
       age: typeof body?.age === 'number' ? body.age : undefined,
       pronouns: body?.pronouns ? String(body.pronouns) : undefined,
       isMinor: body?.isMinor === true,
       transitReport,
+      calculator,
     });
 
     const stored = await createDraftPortrait({
