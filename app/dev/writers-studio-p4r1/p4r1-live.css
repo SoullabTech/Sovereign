@@ -5283,3 +5283,11 @@
   .p4r1-root .ws-stage-turn{ max-width:100%; }
   .p4r1-root .ws-stage-passage > p{ font-size:16px; }
 }
+
+/* Doors ruling 2026-11-05: one door — the writer's own words, or three plain choices. */
+.p4r1-selection-menu .p4r1-selection-ask{ margin:4px 4px 2px; }
+.p4r1-selection-menu .p4r1-selection-ask input{ width:100%; box-sizing:border-box; padding:10px 12px; border-radius:10px;
+  border:1px solid rgba(232,190,120,.45); background:rgba(0,0,0,.25); color:inherit; font:inherit; font-size:15px; }
+.p4r1-selection-menu .p4r1-selection-ask input:focus{ outline:2px solid rgba(232,190,120,.7); outline-offset:1px; }
+.p4r1-selection-menu .p4r1-selection-or{ margin:8px 12px 2px; font-size:12px; color:var(--fr-muted); }
+.p4r1-selection-menu [data-passage-choice]{ font-size:14px; }

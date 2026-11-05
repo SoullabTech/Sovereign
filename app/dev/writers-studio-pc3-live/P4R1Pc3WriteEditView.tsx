@@ -297,7 +297,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [maiaRelationshipChooserOpen, setMaiaRelationshipChooserOpen] = useState(false);
   const [blankArrivalDismissed, setBlankArrivalDismissed] = useState(false);
   const [selectionRect, setSelectionRect] = useState<DOMRect | null>(null);
-  const [morePassageOptions, setMorePassageOptions] = useState(false);
+  const [passageAsk, setPassageAsk] = useState('');
   const [selectedRevisionEdits, setSelectedRevisionEdits] = useState<ReadonlySet<number>>(new Set());
   const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
   const [passageNotice, setPassageNotice] = useState<string | null>(null);
@@ -534,6 +534,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   useEffect(() => {
     const inspect = () => {
+      // Typing to MAIA in the door moves focus out of the manuscript, which drops the
+      // browser's text selection. The passage is already held; the door must stay open.
+      if (typeof document !== 'undefined'
+        && document.activeElement?.closest?.('[data-p4r1-selection-affordance]')) return;
       const picked = selectionInPc3Editor();
       if (!picked) {
         setSelectionRect(null);
@@ -780,9 +784,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         type="button"
         className="p4r1-selection-trigger"
         aria-expanded={selectionMenuOpen}
-        onClick={() => setSelectionMenuOpen((open) => { if (!open) { setMorePassageOptions(false); setPassageNotice(null); } return !open; })}
+        onClick={() => setSelectionMenuOpen((open) => { if (!open) { setPassageAsk(''); setPassageNotice(null); } return !open; })}
       >
-        Work with passage <span aria-hidden="true">›</span>
+        Talk with MAIA <span aria-hidden="true">›</span>
       </button>
 
       {selectionMenuOpen ? (
@@ -797,79 +801,54 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               ) : null}
             </div>
           ) : null}
-          <button type="button" role="menuitem" className="p4r1-selection-menu-primary" onClick={() => {
-            if (!requireWork()) return;
-            setSelectionMenuOpen(false);
-            props.onOpenWorkspace();
-            setIsolatedEditorial(true);
-          }}>
-            <b>Focus</b>
-            <span>Open the passage in the dedicated editorial room.</span>
-          </button>
-
-          <button type="button" role="menuitem" data-open-craftsmans-table onClick={() => {
-            if (!requireWork()) return;
-            if (!requestConversationDeparture()) return;
-            setSelectionMenuOpen(false);
-            openCraftOnHeld();
-          }}>
-            <b>Craftsman's Table</b>
-            <span>Work on these exact words with visible changes and MAIA beside the writing.</span>
-          </button>
-
-          <button type="button" role="menuitem" onClick={() => runPassageAct({
-            label: 'Discuss',
+          {/* Doors ruling (founder, 2026-11-05): ONE door. A writer who knows what they want
+              says it in their own words; one who doesn't picks a plain choice and MAIA offers
+              options. Every path opens the same conversation. Kept small on purpose:
+              overwhelm is easy to reach. */}
+          <form
+            className="p4r1-selection-ask"
+            data-passage-ask
+            onSubmit={(event) => {
+              event.preventDefault();
+              const words = passageAsk.trim();
+              if (!words) return;
+              setPassageAsk('');
+              runPassageAct({ label: words, prompt: words, options: { turnShape: 'conversation' } }, true);
+            }}
+          >
+            <input
+              aria-label="Tell MAIA what you want"
+              placeholder="Tell MAIA what you want…"
+              value={passageAsk}
+              onChange={(event) => setPassageAsk(event.target.value)}
+              autoFocus
+            />
+          </form>
+          <p className="p4r1-selection-or">or let MAIA offer</p>
+          <button type="button" role="menuitem" data-passage-choice="discuss" onClick={() => runPassageAct({
+            label: 'What’s happening here?',
             prompt: passageActQuestion('discuss'),
             options: { proposalPolicy: 'reply_only', passageAct: 'discuss' },
-          })}>
-            <b>Discuss</b>
-            <span>Talk about the passage before changing anything.</span>
+          }, true)}>
+            What’s happening here?
           </button>
-
-          {/* The implicit Academy's front door: one step from a selected passage
-              (SEMANTIC-FIELD-01 teaching plan, 2026-11-01). */}
-          <button type="button" role="menuitem" data-teach-me-entry onClick={() => runPassageAct({
-            label: 'Teach me about this',
-            prompt: teachingQuestion('passage'),
-            depth: 'learning',
-            options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' },
-          })}>
-            <b>Teach me about this</b>
-            <span>Learn the craft already at work here.</span>
-          </button>
-
-          <button
-            type="button"
-            role="menuitem"
-            className="p4r1-passage-more"
-            aria-expanded={morePassageOptions}
-            onClick={() => setMorePassageOptions((open) => !open)}
-          >
-            <b>{morePassageOptions ? 'Fewer ways' : 'More ways to work'}</b>
-            <span>Revision and deeper editorial reasoning, when you want them.</span>
-          </button>
-          {morePassageOptions ? (
-            <>
-          <button type="button" role="menuitem" onClick={() => runPassageAct({
-            label: 'Revise',
+          <button type="button" role="menuitem" data-passage-choice="revise" onClick={() => runPassageAct({
+            label: 'Show me an edit',
             prompt: passageActQuestion('revise'),
             options: { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise' },
           }, true)}>
-            <b>Revise</b>
-            <span>Ask MAIA for one useful editorial move.</span>
+            Show me an edit
           </button>
-
-          <button type="button" role="menuitem" onClick={() => runPassageAct({
-            label: 'Go deeper',
-            prompt: passageActQuestion('deeper'),
-            depth: 'direct',
-            options: { proposalPolicy: 'reply_only', passageAct: 'deeper' },
-          })}>
-            <b>Go deeper</b>
-            <span>Open the technical reasoning, evidence, and tradeoffs.</span>
+          {/* The implicit Academy's front door: one step from a selected passage
+              (SEMANTIC-FIELD-01 teaching plan, 2026-11-01). */}
+          <button type="button" role="menuitem" data-passage-choice="teach" data-teach-me-entry onClick={() => runPassageAct({
+            label: 'Teach me the craft',
+            prompt: teachingQuestion('passage'),
+            depth: 'learning',
+            options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' },
+          }, true)}>
+            Teach me the craft
           </button>
-            </>
-          ) : null}
         </div>
       ) : null}
     </div>

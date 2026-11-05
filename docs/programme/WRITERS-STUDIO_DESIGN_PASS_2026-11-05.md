@@ -24,6 +24,9 @@ stands; this pass adds what a new walk found and makes the design concrete.
 | W8 | Write | Nothing says MAIA is here. Her only door is selecting text and finding the small "Work with passage" pill. | D1 |
 | W9 | Sign-in from a link | The link back after sign-in keeps only `/writers-studio`, so the writer lands on Home, not their passage. | D7 |
 | W11 | Coming back to Focus | Reopened the **older** conversation on the passage, not the new one MAIA had just opened. Resuming picks the first match, not the most recent. | D7 (resume the latest) |
+| W12 | The new door | Opening it moved focus into MAIA's box, which dropped the text selection, and the door vanished with it. | **Fixed** with regression test (killed without the fix) |
+| W13 | MAIA's reply to the writer's own words | Thoughtful, but ~300 words before her question, and it names a technical setting ("your latitude here is set to small changes only"). | D3b |
+| W14 | Studio links locally | `/writers-studio` loads signed in, but any Studio address with a passage in it bounces to sign-in (`no_session_cookie`), while the House sees the session. Possibly why the founder couldn't sign in locally. | **Open**, next to investigate |
 | W10 | Local browser pane | Every full page load signed the walker out (`no_session_cookie`). Not reproduced in the founder's own browser, so possibly pane-specific. | **Unconfirmed**, held |
 
 Develop could not be walked in this pane (W10). Its findings stand from this morning's production
@@ -85,17 +88,30 @@ coming back to a passage resumes the conversation the writer was last in (W11).
 1. ✅ W1: honest opening (`62c6ade97`).
 2. ✅ D2 visible change + D3a her voice in edit turns (this pass).
 3. D4 header and quiet top bar.
-4. D1 one door (after the Doors ruling).
+4. ✅ D1 one door (Doors ruling taken; built).
 5. D3b short replies (`REVISE` shape).
 6. D5 Develop: question first, plain language, path into the stage.
 7. D7 place survives sign-in.
 
 Each step is test-first with a defeat candidate, and walked locally.
 
-## 5. Rulings owed
+## 5. Founder ruling — Doors (2026-11-05, in session) ✅
 
-- **Doors:** of Focus, Craftsman's Table, Discuss, Teach me and More ways to work, which survive as
-  separate entries once the conversation carries them? Recommendation: none. One "Talk with MAIA"
-  door with three intents; Craftsman's Table becomes "Change it".
+> "Yes, we want this level of interaction. If they know what they want technically they can ask
+> for it through MAIA; otherwise they work with MAIA to be offered options."
+> "Overwhelm is easy to reach for most of our members."
+> "The simpler we make it via MAIA the better it is for them, because they still have the
+> complexity but MAIA helps moderate it."
+
+**Law taken from it:** nothing is removed from the writer, but complexity is reached *through
+MAIA*, never through a menu. Selecting text offers one door, **Talk with MAIA**: a box for the
+writer's own words, plus *What's happening here?* · *Show me an edit* · *Teach me the craft*. Every
+path opens the same conversation. Craftsman's Table, Revise and Go deeper are no longer menu
+entries; they are reached by asking, or as "Change it" on her option. The 2026-11-04 ruling that
+made Craftsman's Table a door again is **superseded in part** (its test is kept and marked).
+Built on this branch.
+
+## 6. Rulings owed
+
 - **Reply length:** default about 100 words with "Say more"? Recommendation: yes, for edit and
   discuss turns; Teach-me exempt.
