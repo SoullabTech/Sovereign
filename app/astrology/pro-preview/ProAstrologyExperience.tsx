@@ -590,6 +590,7 @@ export default function ProAstrologyExperience() {
                   <button className={styles.primaryAction} onClick={loadMyChart} disabled={chartStatus === 'loading'}>
                     {chartStatus === 'loading' ? 'Opening your chart…' : 'Open my chart'} <ChevronRight size={18} aria-hidden="true" />
                   </button>
+                  <p><Link href="/account/settings">Edit my birth details</Link></p>
                   {chartStatus === 'signed-out' && <p role="status">Your member session needs verification. Please sign in again before opening your chart. <Link href="/signin">Sign in</Link></p>}
                   {chartStatus === 'consent-required' && <p role="status">Astrology access is not opted in for this account. Review your Astrology consent settings before opening your chart.</p>}
                    {chartStatus === 'incomplete' && <p role="status">{chartError || 'Your exact birth date, time, timezone or location needs clarification before strict-core calculation.'} <Link href="/astrology">Review chart details</Link>.</p>}

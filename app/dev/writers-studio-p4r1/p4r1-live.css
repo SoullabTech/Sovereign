@@ -1739,8 +1739,10 @@
   border-color:var(--fr-action-line);
 }
 
-/* Old multi-button ribbon no longer participates in presentation. */
-.p4r1-root .p4r1-locus-actions{
+/* Old multi-button ribbon no longer participates in presentation.
+   The Develop section panel reuses the class for its relational actions
+   ("Talk with MAIA" and the lenses); those must stay visible. */
+.p4r1-root .p4r1-locus-actions:not(.p4r1-locus-actions--relational){
   display:none!important;
 }
 
@@ -3711,6 +3713,9 @@
 .p4r1-root .p4r1-locus-actions--relational button{
   border:1px solid var(--fr-line);border-radius:8px;background:var(--fr-field);color:var(--fr-title)
 }
+.p4r1-root .p4r1-locus-actions--relational::before{content:none;display:none}
+.p4r1-root .p4r1-locus-actions--relational button:nth-of-type(2){background:var(--fr-field);color:var(--fr-title)}
+.p4r1-root .p4r1-locus-actions--relational .p4r1-talk{background:var(--fr-held);border-color:var(--fr-action-line)}
 
 /* Theme-safe text: no native/button black may leak into the night surfaces. */
 .p4r1-root .p4r1-developmental-options button,

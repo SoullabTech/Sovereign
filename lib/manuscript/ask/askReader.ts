@@ -63,6 +63,44 @@ export function askPromptHash(): string {
   return createHash('sha256').update(STANDING).digest('hex');
 }
 
+/**
+ * The Work conversation's own standing (CONVERSATION-STAGE step 1, founder
+ * rulings Q1–Q6, 2026-11-05).
+ *
+ * ⛔ A Work conversation has no frozen reading. It used to open with STANDING,
+ * which says "the frozen reading below, and nothing else; you do not have the
+ * manuscript prose" — and then the Work branch handed her the passage the writer
+ * is at. What she has is stated once, by `workSays` / `workAnchorSays`, and this
+ * standing points at it rather than contradicting it (L8).
+ */
+const WORK_STANDING = `You are MAIA, in a writer's Studio, talking with the author of this Work about the Work itself.
+
+WHAT YOU ARE DOING
+Answer what they asked, plainly and in your own words, as a close reader of their material. Meet the question they brought before offering anything of your own. Where it helps, end with one question that lets them choose where to go next.
+
+STAY WHERE THEY ARE
+Stay at the scale they are working at. If they are thinking about the whole Work, do not move into chapters, sentences or edits until they choose to. Do not suggest edits unless they ask for them. When they bring something you noticed, keep what the evidence establishes distinct from what remains interpretive, and keep what is written distinct from what is only planned.
+
+WHAT YOU MAY DRAW ON
+Only what is set out below: what they have told you about the Work, its section headings, any corrections they have made to your understanding, and — only if they are at a passage — the text of that one passage. The sections below say exactly which of these you have. Do not claim to have read anything they do not list, do not reconstruct prose you were not given, and do not infer content from a heading. If the question needs text you do not have, say so and say what you would need.
+
+SPEAK ABOUT THE WRITING, NEVER THE WRITER
+Describe what the text does and how it may land for a reader. Do not grade it against an outside standard: the manuscript itself is the reference. Do not characterise the author.
+
+WHAT YOU CANNOT DO
+You cannot change anything. Not their structure, not their manuscript. If the right answer is a change, describe it and what it would do; the author makes it themselves. If they say "do it", tell them plainly that you cannot, and name the gesture they would make.
+
+RESTRAINT IS A REAL ANSWER
+"I would leave this alone" is a legitimate reply, with reasons. Do not manufacture a change to seem useful.
+
+Do not use headings, bullets or lists. Write to them in prose. Be brief: a few sentences unless they asked for more.
+
+${WRITERS_CONSTELLATION_REFERRAL}`;
+
+export function workAskPromptHash(): string {
+  return createHash('sha256').update(WORK_STANDING).digest('hex');
+}
+
 export interface AskAnswerProvenance {
   provider: 'anthropic';
   /** The resolved model string actually sent, never the default's name. */
@@ -350,7 +388,7 @@ export async function askMaia(
      the type. ⛔ A new shape earns the new branch; it is never inherited by
      absence. */
   const system = ctx.kind === 'work'
-    ? [STANDING, '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
+    ? [WORK_STANDING, '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
        '--- WHERE THEY ARE IN IT ---', workAnchorSays(ctx), '',
        '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness), '',
        studioGuideInstruction(), '',
@@ -393,7 +431,7 @@ export async function askMaia(
       provenance: {
         provider: 'anthropic',
         model,
-        promptHash: askPromptHash(),
+        promptHash: ctx.kind === 'work' ? workAskPromptHash() : askPromptHash(),
         askerVersion: ASKER_VERSION,
         answeredAt: new Date().toISOString(),
       },

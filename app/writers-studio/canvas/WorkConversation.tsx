@@ -535,8 +535,11 @@ function ScopedWorkConversation({
 
         {decision?.kind === 'fresh' && turns.length === 0 && pending === null && (
           <StudioText role="metadata" style={{ opacity: 0.7, maxWidth: '34ch' }} data-discovery="fresh">
-            She has your Work in view. She has not been given its text —
-            {keeps.length > 0
+            {/* L8 — the same facts the prompt gives her (askReader workSays). */}
+            {sectionId
+              ? 'She can read the section you are in, and only that one. She sees the other sections by heading.'
+              : 'She has your Work in view by its headings. She has not been given its text —'}
+            {sectionId ? null : keeps.length > 0
               ? ' bring a Keep if you want her to read a passage.'
               : ' a Keep is how you would hand her one.'}
           </StudioText>
