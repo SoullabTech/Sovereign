@@ -28,7 +28,7 @@ export interface PassageAct {
   label: string;
   prompt: string;
   depth?: EditorialDepth;
-  options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; passageAct?: PassageActId };
+  options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; passageAct?: PassageActId; turnShape?: TurnShape };
 }
 
 export interface EditorialDancePanelProps {
@@ -86,6 +86,13 @@ export interface EditorialDancePanelProps {
    *  "Teach me about this"). It goes through the same gates as a card. */
   requestedAct?: (PassageAct & { key: number }) | null;
   onRequestedActTaken?: () => void;
+  /** Conversation Stage (founder R1, 2026-11-04): one wide conversation, the
+   *  passage pinned above, options as turns. Replaces the Focus layout. */
+  stage?: boolean;
+  /** The conversation that still holds an undoable edit after Use this. */
+  earlierThread?: RebuildEditorialThread | null;
+  /** Back to the page, the passage in place. */
+  onBackToPage?: () => void;
 }
 
 function latestMaiaVersions(thread: RebuildEditorialThread | null): RebuildEditorialVersion[] {
@@ -231,6 +238,15 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const [using, setUsing] = useState(false);
   const [deeperOpen, setDeeperOpen] = useState(false);
   const workingRef = useRef<HTMLTextAreaElement | null>(null);
+  const stageComposerRef = useRef<HTMLTextAreaElement | null>(null);
+  const stageEndRef = useRef<HTMLDivElement | null>(null);
+  const [stageChangeFor, setStageChangeFor] = useState<string | null>(null);
+  const [stageWhyFor, setStageWhyFor] = useState<number | null>(null);
+  const [stageUsing, setStageUsing] = useState<string | null>(null);
+  useEffect(() => {
+    // The newest turn, or MAIA thinking, stays in view at the bottom of the stage.
+    if (props.stage) stageEndRef.current?.scrollIntoView?.({ block: 'end', behavior: 'smooth' });
+  }, [props.stage, props.thread?.turns.length, props.pendingQuestion, props.busy]);
   const [postureNudge, setPostureNudge] = useState(false);
   const postureRef = useRef<HTMLDivElement | null>(null);
   const [relationshipNudge, setRelationshipNudge] = useState(false);
@@ -301,7 +317,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     setMoreOpen(true);
     setTimeout(() => workingRef.current?.focus(), 0);
   };
-  const conversationBeforeOption = conversation.length > 0 && conversation[conversation.length - 1]!.speaker === 'maia'
+  // Only the turn that produced the option is folded into the card. A reply-only
+  // turn after it (Discuss, Teach) stays in the conversation, or it would vanish.
+  const lastTurn = conversation[conversation.length - 1];
+  const lastTurnIsReplyOnly = lastTurn?.speaker === 'maia' && lastTurn.adjunct === null;
+  const conversationBeforeOption = lastTurn?.speaker === 'maia' && !lastTurnIsReplyOnly
     ? conversation.slice(0, -1)
     : conversation;
   const summary = editorialSummary(summarySource);
@@ -645,7 +665,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     </div>
   );
 
-  if (!props.thread) {
+  if (!props.thread && !props.stage) {
     return (
       <section className="p4r1-dance p4r1-dance-start" data-editorial-dance>
         <div className="p4r1-dance-empty">
@@ -659,6 +679,217 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           {entryActions}
           {openPrompt}
         </div>
+      </section>
+    );
+  }
+
+  /* ── Conversation Stage ────────────────────────────────────────────────
+     One wide conversation about the writer's work. The passage stays pinned
+     above it; MAIA's options arrive as turns the writer can use, change, talk
+     about or undo; gates are MAIA speaking, with their buttons; the box to
+     answer her is always at the bottom. Every act below is the same act the
+     Focus layout used: nothing here sends, saves or applies on its own. */
+  if (props.stage) {
+    const turns = props.thread?.turns ?? [];
+    const versionById = new Map(versions.map((v) => [v.id, v] as const));
+    const application = props.thread?.application;
+    const appliedWording = application && !application.undone
+      ? versionById.get(application.versionId)?.wording ?? null : null;
+    const earlier = props.earlierThread ?? null;
+    const earlierApp = earlier?.application;
+    const earlierUndoable = Boolean(earlierApp && !earlierApp.undone && earlierApp.canUndo && props.onUndo);
+    const lastAuthor = [...turns].reverse().find((t) => t.speaker === 'author')?.body ?? null;
+    const pending = props.pendingQuestion && props.pendingQuestion !== lastAuthor ? props.pendingQuestion : null;
+    const gatesOpen = Boolean(postureGate || relationshipGate);
+
+    const useVersion = async (version: RebuildEditorialVersion) => {
+      if (!props.onUseVersion || !props.thread?.targetSectionId || stageUsing) return;
+      setStageUsing(version.id);
+      setLocalMessage(null);
+      try {
+        const ok = await props.onUseVersion({
+          threadId: props.thread.threadId,
+          sectionId: props.thread.targetSectionId,
+          supersedes: props.thread.headVersionId ?? version.id,
+          text: version.wording,
+          purpose: purposeOf(version, versions.findIndex((v) => v.id === version.id)).slice(0, 80),
+        });
+        if (!ok) setLocalMessage('That couldn’t be applied just now. Your passage is unchanged.');
+      } finally {
+        setStageUsing(null);
+      }
+    };
+    // Change it: only the writer's words are stored; the server adds how to answer.
+    const changeVersion = (act: 'option-lighter' | 'option-keep-mine' | 'option-another') => {
+      setStageChangeFor(null);
+      props.onSend(passageActQuestion(act), { proposalPolicy: 'allow', proposalRequested: true, passageAct: act });
+    };
+    const talkAbout = () => {
+      stageComposerRef.current?.focus();
+      stageComposerRef.current?.setAttribute('placeholder', 'What do you think of this option?');
+    };
+    const sendStage = () => {
+      const q = startPrompt.trim();
+      if (!q || props.busy) return;
+      if (postureBlocksEditorial || relationshipBlocks) {
+        setHeldAct({ label: q.length > 40 ? q.slice(0, 40) + '…' : q, prompt: q, options: { turnShape: 'conversation' } });
+        if (postureBlocksEditorial) setPostureNudge(true); else setRelationshipNudge(true);
+        setStartPrompt('');
+        return;
+      }
+      props.onSend(withOrigin(q), { turnShape: 'conversation' });
+      setStartPrompt('');
+    };
+
+    const renderTurn = (t: (typeof turns)[number], keyPrefix = '') => {
+      if (t.speaker === 'author') {
+        return (
+          <li key={keyPrefix + t.turnIndex} className="ws-stage-turn is-writer" data-turn-speaker="author">
+            <p>{t.body.length > 400 ? t.body.slice(0, 160).trimEnd() + '…' : t.body}</p>
+          </li>
+        );
+      }
+      const parsed = parseStudioActions(t.body, 'passage-focus');
+      const adj = (t as { adjunct?: { kind: string; id: string } | null }).adjunct;
+      const version = adj?.kind === 'version' ? versionById.get(adj.id) ?? null : null;
+      const said = editorialSummary(parsed.text);
+      // A reply that arrives as an eight-part form is shown as a person speaking:
+      // what she noticed and what she'd try. The whole reasoning is one tap away.
+      const human = said.preserve || said.friction || said.tryNext
+        ? [said.friction, said.tryNext].filter(Boolean).join('\n\n') || firstUsefulSentence(parsed.text)
+        : parsed.text;
+      const isForm = human !== parsed.text;
+      const applied = Boolean(version && appliedWording !== null && appliedWording === version.wording);
+      return (
+        <li key={keyPrefix + t.turnIndex} className="ws-stage-turn is-maia" data-turn-speaker="maia">
+          <p>{human}</p>
+          {isForm ? (
+            <button type="button" className="ws-stage-why" onClick={() => setStageWhyFor(stageWhyFor === t.turnIndex ? null : t.turnIndex)}>
+              {stageWhyFor === t.turnIndex ? 'Less' : 'Why?'}
+            </button>
+          ) : null}
+          {isForm && stageWhyFor === t.turnIndex ? <p className="ws-stage-why-full">{parsed.text}</p> : null}
+          {version && !keyPrefix ? (
+            <div className="ws-stage-option" data-stage-option={version.id}>
+              <p className="ws-stage-option-words">
+                {wordDiff(props.thread?.locusText ?? props.currentText, version.wording).map((part, i) => part.kind === 'remove'
+                  ? <del key={i}>{part.text}</del>
+                  : part.kind === 'add' ? <ins key={i}>{part.text}</ins> : <span key={i}>{part.text}</span>)}
+              </p>
+              {applied ? (
+                <div className="ws-stage-option-actions">
+                  <span>You used this.</span>
+                  {props.onUndo && application?.canUndo ? <button type="button" disabled={props.busy} onClick={props.onUndo}>Undo</button> : null}
+                </div>
+              ) : (
+                <div className="ws-stage-option-actions">
+                  <button type="button" className="is-primary" data-stage-use
+                    disabled={props.busy || Boolean(stageUsing) || !props.onUseVersion || postureBlocksEditorial}
+                    onClick={() => void useVersion(version)}>{stageUsing === version.id ? 'Using…' : 'Use it'}</button>
+                  <button type="button" data-stage-change disabled={props.busy || props.revisionsPaused}
+                    title={props.revisionsPaused ? PAUSED_NOTE : undefined}
+                    onClick={() => setStageChangeFor(stageChangeFor === version.id ? null : version.id)}>Change it</button>
+                  <button type="button" data-stage-talk disabled={props.busy} onClick={talkAbout}>Talk about it</button>
+                </div>
+              )}
+              {stageChangeFor === version.id ? (
+                <div className="ws-stage-change" data-stage-change-choices>
+                  <button type="button" onClick={() => changeVersion('option-lighter')}>Lighter</button>
+                  <button type="button" onClick={() => changeVersion('option-keep-mine')}>Keep more of mine</button>
+                  <button type="button" onClick={() => changeVersion('option-another')}>Another way</button>
+                  {props.deeper ? <button type="button" onClick={() => { setStageChangeFor(null); setDeeperOpen(true); }}>Change it myself</button> : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          {t.turnIndex === props.lastMaiaTurn?.turnIndex && !keyPrefix ? replyAction : null}
+        </li>
+      );
+    };
+
+    return (
+      <section className="ws-stage" data-conversation-stage>
+        <header className="ws-stage-passage" data-stage-passage>
+          <div className="ws-stage-passage-head">
+            <span>The passage we’re working on</span>
+            {props.onBackToPage ? <button type="button" onClick={props.onBackToPage}>Back to the page</button> : null}
+          </div>
+          <p>{props.currentText}</p>
+        </header>
+
+        <ol className="ws-stage-thread" data-stage-thread aria-label="Your conversation with MAIA about this passage">
+          {noticeLine ? <li className="ws-stage-turn is-note">{noticeLine}</li> : null}
+          {earlier && earlier.turns.length > 0 ? (
+            <li className="ws-stage-earlier" data-stage-earlier>
+              <details>
+                <summary>Earlier, about the previous wording</summary>
+                <ol>{earlier.turns.map((t) => renderTurn(t, 'earlier-'))}</ol>
+              </details>
+              {earlierUndoable ? (
+                <p className="ws-stage-earlier-undo">You used MAIA’s wording here. <button type="button" disabled={props.busy} onClick={props.onUndo}>Undo</button></p>
+              ) : null}
+            </li>
+          ) : null}
+
+          {gatesOpen ? (
+            <li className="ws-stage-turn is-maia is-gate" data-turn-speaker="maia" data-stage-gate>
+              {postureGate}
+              {relationshipGate}
+              {heldNotice}
+            </li>
+          ) : null}
+
+          {turns.length === 0 && !gatesOpen ? (
+            <li className="ws-stage-turn is-maia" data-turn-speaker="maia" data-stage-opening>
+              <p>I’m here with this passage. We can talk about what’s happening in it, I can show you an edit, or we can look at the craft already at work. What would you like?</p>
+            </li>
+          ) : null}
+
+          {turns.map((t) => renderTurn(t))}
+
+          {pending ? (
+            <li className="ws-stage-turn is-writer is-pending" data-turn-speaker="author" data-pending-turn><p>{pending}</p></li>
+          ) : null}
+          {props.busy ? <li className="ws-stage-turn is-maia is-thinking" aria-live="polite">MAIA is reading…</li> : null}
+          {(localMessage || props.message || props.undoMessage) ? (
+            <li className="ws-stage-turn is-maia is-status" role="status">
+              <p>{localMessage ?? props.message}{props.undoMessage ? ' ' + props.undoMessage : ''}</p>
+            </li>
+          ) : null}
+        </ol>
+        <div ref={stageEndRef} />
+
+        {props.deeper && deeperOpen ? (
+          <div className="ws-stage-deeper" data-option-deeper aria-label="Change it myself">
+            <button type="button" onClick={() => setDeeperOpen(false)}>Done</button>
+            {props.deeper}
+          </div>
+        ) : null}
+
+        <footer className="ws-stage-composer" data-stage-composer>
+          {turns.length === 0 ? (
+            <div className="ws-stage-chips">
+              <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Talk about what’s happening', prompt: passageActQuestion('discuss'), options: { proposalPolicy: 'reply_only', passageAct: 'discuss' } })}>Talk about what’s happening</button>
+              <button type="button" disabled={props.busy || props.revisionsPaused} onClick={() => startAct({ label: 'Show me an edit', prompt: passageActQuestion('revise'), options: { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise' } })}>Show me an edit</button>
+              <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Teach me the craft here', prompt: teachPassagePrompt(), depth: 'learning', options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' } })}>Teach me the craft here</button>
+            </div>
+          ) : null}
+          <div className="ws-stage-ask">
+            <textarea
+              ref={stageComposerRef}
+              value={startPrompt}
+              disabled={props.busy}
+              rows={2}
+              onChange={(event) => setStartPrompt(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendStage(); }
+              }}
+              placeholder="Ask MAIA about this passage…"
+              aria-label="Ask MAIA about this passage"
+            />
+            <button type="button" className="is-primary" disabled={props.busy || !startPrompt.trim()} onClick={sendStage}>Send</button>
+          </div>
+        </footer>
       </section>
     );
   }
@@ -738,7 +969,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       ) : null}
 
       <section className="p4r1-option-card" data-option-card aria-label="MAIA’s option">
-        <span className="p4r1-eyebrow">MAIA’s option</span>
+        <span className="p4r1-eyebrow">{lastTurnIsReplyOnly ? 'MAIA’s earlier option' : 'MAIA’s option'}</span>
         <h4>{purposeOf(recommendation, versions.findIndex((v) => v.id === recommendation.id))}</h4>
         <p className="p4r1-option-in-context" data-option-in-context>
           {context?.before ? <span className="p4r1-option-around">{aroundBefore(context.before)}</span> : null}
@@ -791,6 +1022,10 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           </div>
         ) : null}
       </section>
+
+      {/* The writer can always answer MAIA here; without it, an option left no
+          place to ask for anything else (production walk, 2026-11-05). */}
+      <div className="p4r1-option-reply" data-option-reply>{openPrompt}</div>
 
       <details
         className="p4r1-option-more"
