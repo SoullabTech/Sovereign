@@ -1118,9 +1118,13 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
     const midheaven = longitudeToZodiac(midheavenLongitude);
 
     // Calculate aspects, including bodies to the Ascendant and Midheaven
+    // Aspects name the nodes as the chart does ('North Node'), and leave out the
+    // North–South Node pair, which is an exact opposition by definition.
+    const { NorthNode, SouthNode, ...aspectLongitudes } = planetLongitudes;
     const aspects = calculateAspects({
-      ...planetLongitudes, Ascendant: ascendantLongitude, Midheaven: midheavenLongitude,
-    });
+      ...aspectLongitudes, 'North Node': NorthNode, 'South Node': SouthNode,
+      Ascendant: ascendantLongitude, Midheaven: midheavenLongitude,
+    }).filter((a) => !(a.planet1.endsWith(' Node') && a.planet2.endsWith(' Node')));
 
     return {
       sun,

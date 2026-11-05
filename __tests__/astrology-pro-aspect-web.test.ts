@@ -74,4 +74,16 @@ describe('Pro wheel aspect web', () => {
     expect(grid).toContain('title="Midheaven"');
     expect(grid).toMatch(/Ascendant (conjunction|opposition|trine|square|sextile|quincunx|semisextile|semisquare|sesquiquadrate|quintile|biquintile) /);
   });
+
+  // Founder walk 2026-11-05: the side panel read 'Sun sextile NorthNode', and
+  // node aspects never reached the wheel or grid, which name it 'North Node'.
+  it('names the nodes as the chart does, without the always-exact node pair', async () => {
+    const { chart, html } = await render(true);
+    const names = chart.aspects.flatMap((a) => [a.planet1, a.planet2]);
+    expect(names.some((n) => n === 'NorthNode' || n === 'SouthNode')).toBe(false);
+    expect(chart.aspects.some((a) => a.planet1.endsWith(' Node') && a.planet2.endsWith(' Node'))).toBe(false);
+    const nodeAspect = chart.aspects.find((a) => a.planet1 === 'North Node' || a.planet2 === 'North Node');
+    if (nodeAspect) expect(html).toContain(`data-aspect="${nodeAspect.planet1}-${nodeAspect.type}-${nodeAspect.planet2}"`);
+  });
 });
+
