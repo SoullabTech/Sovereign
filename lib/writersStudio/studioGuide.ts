@@ -23,7 +23,8 @@ export type StudioControl = {
 export const STUDIO_CONTROLS: readonly StudioControl[] = [
   { label: 'Prose', where: 'top right of the manuscript in Write', does: 'shows the manuscript as reading text' },
   { label: 'Edit', where: 'beside Prose, top right of the manuscript in Write', does: 'makes the text editable; selecting words here brings up Work with passage' },
-  { label: 'Work with passage', where: 'appears beside words the writer selects in Edit', does: 'opens the passage menu: Focus, Discuss, Teach me about this, More ways to work' },
+  { label: 'Work with passage', where: 'appears beside words the writer selects in Edit', does: 'opens the passage menu: Focus, Craftsman\'s Table, Discuss, Teach me about this, More ways to work' },
+  { label: 'Craftsman\'s Table', where: 'in the Work with passage menu', does: 'works on the selected words with visible changes and MAIA beside the writing' },
   { label: 'Teach me about this', where: 'in the Work with passage menu', does: 'MAIA teaches one craft idea already at work in the selected words, then lets the writer steer' },
   { label: 'More ways to work', where: 'in the Work with passage menu', does: 'revision and deeper editorial reasoning for the selected words' },
   { label: 'Use this', where: 'on MAIA\'s option card in Passage Focus', does: 'applies that option in one press (it becomes the writer\'s own version); Undo is right there' },
@@ -38,7 +39,7 @@ export const STUDIO_CONTROLS: readonly StudioControl[] = [
   { label: 'Speak', where: 'below the Ask MAIA box in Passage Focus', does: 'say the question aloud; the transcript stays until the writer chooses what to do with it' },
   { label: 'Show revision options', where: 'in the row that follows MAIA\'s reply in Passage Focus', does: 'asks MAIA for possible revisions of the passage' },
   { label: 'Teach me more', where: 'in the row that follows MAIA\'s reply in Passage Focus', does: 'continues the teaching from where the conversation is' },
-  { label: 'Save my version', where: 'in Passage Focus (under More, or after Adjust), once the writer has worked on the wording', does: 'saves the writer\'s own working version without changing the manuscript' },
+  { label: 'Save my version', where: 'in Passage Focus (under More, or after Adjust) and Craftsman\'s Table, once the writer has worked on the wording', does: 'saves the writer\'s own working version without changing the manuscript' },
   { label: 'Apply my version', where: 'beside Save my version', does: 'puts the writer\'s version into the manuscript; only the writer can do this' },
   { label: 'Undo', where: 'after a version has been applied', does: 'restores the passage as it was before applying' },
   { label: 'Start a new conversation', where: 'in the Passage Focus header and the Work conversation header, while a conversation is open', does: 'sets the earlier conversation aside (it stays saved) so the next question starts fresh' },

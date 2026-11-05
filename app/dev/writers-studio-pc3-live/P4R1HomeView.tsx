@@ -20,6 +20,7 @@ import type { StudioAct } from '@/app/writers-studio/studioHistory';
 import { sentenceFor } from '@/app/writers-studio/studioHistory';
 import P4R1WorkMaterialsSummary from './P4R1WorkMaterialsSummary';
 import { WritingDeleteConfirm } from './WritingDeleteConfirm';
+import { P4R1HistoryContainer } from './P4R1HistoryPage';
 import { DeletionUnconfirmed } from '@/lib/writersStudio/deleteWork';
 import P4R1ProducePanel from './P4R1ProducePanel';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
@@ -158,18 +159,51 @@ function WorkAnchor({ work, manuscripts, activity, onOpen, onStartWriting, busy,
   );
 }
 
-function WorkShelfCard({ work, manuscripts, onOpen, onStartWriting, busy }: {
+function WorkShelfCard({ work, manuscripts, onOpen, onStartWriting, busy, onDeleteWork }: {
   work: LivingWork;
   manuscripts: readonly CurrentManuscript[];
   onOpen: (manuscriptId: string) => void;
   onStartWriting: (workId: string) => void;
   busy: boolean;
+  /** Permanently deletes this Work and its one manuscript (WS-DELETE-01). Rejects with a member-facing message. */
+  onDeleteWork: (workId: string, manuscriptId: string | null) => Promise<void>;
 }) {
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const choices = manuscriptsForWork(work, manuscripts);
   const manuscript = choices.length === 1 ? choices[0] : null;
   const facts = workFacts(work, manuscripts);
   const title = work.title?.trim() || 'Untitled Work';
   const hasManuscriptExpression = work.expressions.some((expression) => expression.expressionType === 'manuscript');
+  /* One manuscript, or none: the delete is unambiguous. A Work with several manuscripts is never deleted from here — which of
+     them would go is the member's choice, and that choice lives inside the Work. */
+  const canDelete = choices.length <= 1 && manuscriptIdsOf(work).length <= 1;
+  if (confirming) {
+    return (
+      <article className="fr-home-workcard p4r1-home-workcard" data-deleting-confirmation style={{ display: 'block' }}>
+        <WritingDeleteConfirm
+          title={title}
+          busy={deleting}
+          error={deleteError}
+          onCancel={() => { if (!deleting) { setConfirming(false); setDeleteError(null); } }}
+          onConfirm={async () => {
+            setDeleting(true);
+            setDeleteError(null);
+            try {
+              await onDeleteWork(work.id, manuscript?.id ?? manuscriptIdsOf(work)[0] ?? null);
+              setConfirming(false);
+            } catch (err) {
+              if (err instanceof DeletionUnconfirmed) setConfirming(false);
+              else setDeleteError(err instanceof Error ? err.message : 'That work could not be deleted just now. Nothing was removed. Please try again.');
+            } finally {
+              setDeleting(false);
+            }
+          }}
+        />
+      </article>
+    );
+  }
   return (
     <article className="fr-home-workcard p4r1-home-workcard">
       <LiveWorkVisual workId={work.id} title={title} />
@@ -198,6 +232,9 @@ function WorkShelfCard({ work, manuscripts, onOpen, onStartWriting, busy }: {
             </button>
             <span>Blank page. Materials stay where they are.</span>
           </div>
+        ) : null}
+        {canDelete ? (
+          <button type="button" className="fr-home-quiet p4r1-home-delete-open" onClick={() => { setDeleteError(null); setConfirming(true); }}>Delete</button>
         ) : null}
       </div>
     </article>
@@ -283,6 +320,8 @@ export interface P4R1HomeViewProps {
   onAddToWork: (manuscriptId: string, workId: string) => void;
   /** Permanently deletes one writing through the product's own erase (WS-DELETE-01). Rejects with a member-facing message. */
   onDeleteWriting: (manuscriptId: string) => Promise<void>;
+  /** Permanently deletes one Work with its manuscript through the same governed erase. */
+  onDeleteWork: (workId: string, manuscriptId: string | null) => Promise<void>;
   onStartWriting: (workId: string) => void;
   onImport: () => void;
   onSources: () => void;
@@ -290,6 +329,8 @@ export interface P4R1HomeViewProps {
 
 export default function P4R1HomeView(props: P4R1HomeViewProps) {
   const [beginning, setBeginning] = useState(false);
+  // The full History view lives inside Home, so Back is this view's own state: nothing Home was showing is reset.
+  const [viewingHistory, setViewingHistory] = useState(false);
   const [title, setTitle] = useState('');
   // Only one deletion question is ever open: a confirmation the author has lost track of has stopped confirming anything.
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
@@ -332,6 +373,19 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
     ? manuscriptsInOrder(props.pendingMode.manuscriptIds, props.manuscripts)
     : [];
   const recentHistory = props.historyActs.slice(0, 4).map(sentenceFor).filter((x): x is string => Boolean(x));
+
+  // History stays a short, plain list on Home; the full record (up to the route's maximum, deletable where the writing is
+  // still held) is one gesture away. The control is present even when the short list is empty, so a member is never left
+  // without a way in.
+  const historySection = (
+    <section className="fr-home-region p4r1-home-history">
+      <p className="fr-home-eyebrow">History</p>
+      {recentHistory.length > 0 ? <ol>{recentHistory.map((line, i) => <li key={i}>{line}</li>)}</ol> : null}
+      <button type="button" className="fr-home-quiet p4r1-home-history-all" onClick={() => setViewingHistory(true)}>
+        See all history
+      </button>
+    </section>
+  );
 
   const creationControls = (
     <section className="p4r1-home-create" aria-label="Start or bring writing">
@@ -426,18 +480,14 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
                     manuscripts={props.manuscripts}
                     onOpen={props.onOpen}
                     onStartWriting={props.onStartWriting}
+                    onDeleteWork={props.onDeleteWork}
                     busy={props.busy}
                   />
                 ))}
               </div>
             </section>
           ) : null}
-          {recentHistory.length > 0 ? (
-            <section className="fr-home-region p4r1-home-history">
-              <p className="fr-home-eyebrow">History</p>
-              <ol>{recentHistory.map((line, i) => <li key={i}>{line}</li>)}</ol>
-            </section>
-          ) : null}
+          {historySection}
         </div>
       </div>
     );
@@ -497,18 +547,36 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   manuscripts={props.manuscripts}
   onOpen={props.onOpen}
   onStartWriting={props.onStartWriting}
+  onDeleteWork={props.onDeleteWork}
   busy={props.busy}
 />
                 ))}
               </div>
             </section>
           ) : null}
-          {recentHistory.length > 0 ? (
-            <section className="fr-home-region p4r1-home-history">
-              <p className="fr-home-eyebrow">History</p>
-              <ol>{recentHistory.map((line, i) => <li key={i}>{line}</li>)}</ol>
+          {/* The rest of the writer's Works. arrivalFor() puts every Work beyond
+              the three most recently written (and every Work with no authored
+              writing yet, such as an import) in `shelf`; this layout rendered
+              none of it, so a saved import was invisible on Home. */}
+          {props.arrival.shelf.length > 0 ? (
+            <section className="fr-home-region" aria-label="Your other Works" data-home-shelf>
+              <p className="fr-home-eyebrow">Your other Works</p>
+              <div className="fr-home-shelf">
+                {props.arrival.shelf.map((item) => (
+                  <WorkShelfCard
+                    key={item.id}
+                    work={item}
+                    manuscripts={props.manuscripts}
+                    onOpen={props.onOpen}
+                    onStartWriting={props.onStartWriting}
+                    onDeleteWork={props.onDeleteWork}
+                    busy={props.busy}
+                  />
+                ))}
+              </div>
             </section>
           ) : null}
+          {historySection}
         </div>
       </div>
     );
@@ -540,11 +608,13 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   manuscripts={props.manuscripts}
   onOpen={props.onOpen}
   onStartWriting={props.onStartWriting}
+  onDeleteWork={props.onDeleteWork}
   busy={props.busy}
 />)}
               </div>
             </section>
           ) : null}
+          {historySection}
         </div>
       </div>
     );
@@ -561,11 +631,13 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   manuscripts={props.manuscripts}
   onOpen={props.onOpen}
   onStartWriting={props.onStartWriting}
+  onDeleteWork={props.onDeleteWork}
   busy={props.busy}
 />)}
             </div>
           </section>
           {creationControls}
+          {historySection}
         </div>
       </div>
     );
@@ -581,6 +653,27 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
           {creationControls}
         </div>
       </div>
+    );
+  }
+
+  if (viewingHistory) {
+    return (
+      <Shell
+        mode="home"
+        appearance={props.appearance}
+        geometry={HOME_GEOMETRY}
+        memberInitial=""
+        onSelectMode={(mode) => { if (mode === 'home') setViewingHistory(false); else props.onMode(mode); }}
+        work={
+          <P4R1HistoryContainer
+            manuscripts={props.manuscripts}
+            works={props.works}
+            onOpen={(id) => props.onOpen(id)}
+            onDeleteWriting={props.onDeleteWriting}
+            onBack={() => setViewingHistory(false)}
+          />
+        }
+      />
     );
   }
 
