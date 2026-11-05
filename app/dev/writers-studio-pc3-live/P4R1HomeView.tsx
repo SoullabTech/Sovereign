@@ -20,6 +20,7 @@ import type { StudioAct } from '@/app/writers-studio/studioHistory';
 import { sentenceFor } from '@/app/writers-studio/studioHistory';
 import P4R1WorkMaterialsSummary from './P4R1WorkMaterialsSummary';
 import { WritingDeleteConfirm } from './WritingDeleteConfirm';
+import { P4R1HistoryContainer } from './P4R1HistoryPage';
 import { DeletionUnconfirmed } from '@/lib/writersStudio/deleteWork';
 import P4R1ProducePanel from './P4R1ProducePanel';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
@@ -328,6 +329,8 @@ export interface P4R1HomeViewProps {
 
 export default function P4R1HomeView(props: P4R1HomeViewProps) {
   const [beginning, setBeginning] = useState(false);
+  // The full History view lives inside Home, so Back is this view's own state: nothing Home was showing is reset.
+  const [viewingHistory, setViewingHistory] = useState(false);
   const [title, setTitle] = useState('');
   // Only one deletion question is ever open: a confirmation the author has lost track of has stopped confirming anything.
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
@@ -370,6 +373,19 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
     ? manuscriptsInOrder(props.pendingMode.manuscriptIds, props.manuscripts)
     : [];
   const recentHistory = props.historyActs.slice(0, 4).map(sentenceFor).filter((x): x is string => Boolean(x));
+
+  // History stays a short, plain list on Home; the full record (up to the route's maximum, deletable where the writing is
+  // still held) is one gesture away. The control is present even when the short list is empty, so a member is never left
+  // without a way in.
+  const historySection = (
+    <section className="fr-home-region p4r1-home-history">
+      <p className="fr-home-eyebrow">History</p>
+      {recentHistory.length > 0 ? <ol>{recentHistory.map((line, i) => <li key={i}>{line}</li>)}</ol> : null}
+      <button type="button" className="fr-home-quiet p4r1-home-history-all" onClick={() => setViewingHistory(true)}>
+        See all history
+      </button>
+    </section>
+  );
 
   const creationControls = (
     <section className="p4r1-home-create" aria-label="Start or bring writing">
@@ -471,12 +487,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
               </div>
             </section>
           ) : null}
-          {recentHistory.length > 0 ? (
-            <section className="fr-home-region p4r1-home-history">
-              <p className="fr-home-eyebrow">History</p>
-              <ol>{recentHistory.map((line, i) => <li key={i}>{line}</li>)}</ol>
-            </section>
-          ) : null}
+          {historySection}
         </div>
       </div>
     );
@@ -565,12 +576,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
               </div>
             </section>
           ) : null}
-          {recentHistory.length > 0 ? (
-            <section className="fr-home-region p4r1-home-history">
-              <p className="fr-home-eyebrow">History</p>
-              <ol>{recentHistory.map((line, i) => <li key={i}>{line}</li>)}</ol>
-            </section>
-          ) : null}
+          {historySection}
         </div>
       </div>
     );
@@ -608,6 +614,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
               </div>
             </section>
           ) : null}
+          {historySection}
         </div>
       </div>
     );
@@ -630,6 +637,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             </div>
           </section>
           {creationControls}
+          {historySection}
         </div>
       </div>
     );
@@ -645,6 +653,27 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
           {creationControls}
         </div>
       </div>
+    );
+  }
+
+  if (viewingHistory) {
+    return (
+      <Shell
+        mode="home"
+        appearance={props.appearance}
+        geometry={HOME_GEOMETRY}
+        memberInitial=""
+        onSelectMode={(mode) => { if (mode === 'home') setViewingHistory(false); else props.onMode(mode); }}
+        work={
+          <P4R1HistoryContainer
+            manuscripts={props.manuscripts}
+            works={props.works}
+            onOpen={(id) => props.onOpen(id)}
+            onDeleteWriting={props.onDeleteWriting}
+            onBack={() => setViewingHistory(false)}
+          />
+        }
+      />
     );
   }
 
