@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
 import type { CurrentManuscript } from '@/app/writers-studio/useCurrentManuscript';
 import { manuscriptIdsOf, manuscriptsForWork } from '@/app/writers-studio/homeState';
@@ -8,8 +8,8 @@ import {
   DeletionSharedMaterial,
   DeletionUnconfirmed,
   REMOVE_MANY_WORK_COPY,
-  REMOVE_SHARED_WORK_COPY,
   deleteConfirmCopy,
+  removeSharedWorkCopy,
   removedWorkNotice,
   type WorkDeleteKind,
 } from '@/lib/writersStudio/deleteWork';
@@ -36,6 +36,21 @@ export function workDeleteKind(
   };
 }
 
+/**
+ * What deleting THIS writing reaches, for the places that delete a writing without a Work card (loose writing on Home, History).
+ * The same erase runs, so the same truth applies: a Work that held only this writing goes with it.
+ */
+export function writingDeleteKindFor(
+  manuscriptId: string,
+  works: readonly LivingWork[],
+): 'loose' | 'writing' | 'writing-keeps-work' {
+  const holders = works.filter((work) => manuscriptIdsOf(work).includes(manuscriptId));
+  if (holders.length === 0) return 'loose';
+  return holders.every((work) => manuscriptIdsOf(work).length === 1 && work.expressions.every((e) => e.expressionType === 'manuscript'))
+    ? 'writing'
+    : 'writing-keeps-work';
+}
+
 export type WorkDoorDialog = 'delete' | 'remove-shared' | 'remove-many';
 
 export interface WorkDeleteDoor {
@@ -54,6 +69,9 @@ export interface WorkDeleteDoor {
  *   Delete  ->  (shared writing) the removal question, re-derived from the Works on screen on every render
  *           ->  (unconfirmed custody) a page notice, because this card is about to unmount
  *   Remove  ->  a "removed" card, and a page notice, until the list is re-read
+ *
+ * A MESSAGE THE MEMBER HAS NOT YET SEEN is never lost with the card: whatever the dialog is showing as an error, if the card
+ * unmounts while it is still showing (the re-read removed the Work: the act had in fact gone through), it is handed to the page.
  */
 export function useWorkDeleteDoor(args: {
   work: LivingWork;
@@ -61,7 +79,7 @@ export function useWorkDeleteDoor(args: {
   manuscripts: readonly CurrentManuscript[];
   /** Every Work Home last read. Whether the writing is STILL shared is derived from this, never trusted from the 409. */
   allWorks: readonly LivingWork[];
-  onDeleteWork: (workId: string, manuscriptId: string | null) => Promise<void>;
+  onDeleteWork: (workId: string, manuscriptId: string | null, options?: { readonly workStays?: boolean }) => Promise<void>;
   onRemoveWork: (workId: string) => Promise<void>;
   /** The card unmounts once the list is re-read, so a message the member must still see lives with the page. */
   onDeletionNotice: (message: string, urgent?: boolean) => void;
@@ -70,19 +88,31 @@ export function useWorkDeleteDoor(args: {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [sharedWith, setSharedWith] = useState<string | null>(null);
+  const [shared, setShared] = useState<{ readonly manuscriptId: string; readonly message: string } | null>(null);
   const [removing, setRemoving] = useState(false);
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [settled, setSettled] = useState<string | null>(null);
 
+  // A message the dialog is showing and the member has not dismissed. If the card unmounts with one on show, the page keeps it.
+  const unseen = useRef<string | null>(null);
+  const handOver = useRef(onDeletionNotice);
+  useEffect(() => { handOver.current = onDeletionNotice; });
+  useEffect(() => () => {
+    if (unseen.current) handOver.current(unseen.current, false);
+  }, []);
+
   const { kind, manuscriptId } = workDeleteKind(work, manuscripts);
-  const stillShared = sharedWith !== null
-    && allWorks.some((other) => other.id !== work.id && manuscriptIdsOf(other).includes(sharedWith));
+  // How many OTHER Works hold the writing the 409 named, as this page last read them.
+  const othersHolding = shared === null
+    ? 0
+    : allWorks.filter((other) => other.id !== work.id && manuscriptIdsOf(other).includes(shared.manuscriptId)).length;
+  const stillShared = othersHolding > 0;
   const removalMode: 'shared' | 'many' | null = kind === 'many' ? 'many' : (stillShared ? 'shared' : null);
 
   const cancel = () => {
+    unseen.current = null;
     setConfirming(false);
-    setSharedWith(null);
+    setShared(null);
     setDeleteError(null);
     setRemoveError(null);
   };
@@ -94,21 +124,32 @@ export function useWorkDeleteDoor(args: {
     dialog = (
       <WorkRemoveConfirm
         title={title}
-        copy={removalMode === 'many' ? REMOVE_MANY_WORK_COPY : REMOVE_SHARED_WORK_COPY}
+        copy={removalMode === 'many' ? REMOVE_MANY_WORK_COPY : removeSharedWorkCopy(othersHolding)}
         busy={removing}
         error={removeError}
         onCancel={() => { if (!removing) cancel(); }}
         onConfirm={async () => {
           setRemoving(true);
           setRemoveError(null);
+          unseen.current = null;
           try {
             await onRemoveWork(work.id);
             setSettled(`“${title}” was removed.`);
             setConfirming(false);
-            setSharedWith(null);
+            setShared(null);
             onDeletionNotice(removedWorkNotice(title, removalMode), false);
           } catch (err) {
-            setRemoveError(err instanceof Error ? err.message : 'That work could not be removed just now. Nothing changed. Please try again.');
+            if (err instanceof DeletionUnconfirmed) {
+              // The Work row is gone but something it owned is not yet confirmed destroyed: say so on the page, where it survives the card.
+              setSettled(`“${title}” was removed from your studio.`);
+              setConfirming(false);
+              setShared(null);
+              onDeletionNotice(`“${title}”: ${err.message}`);
+            } else {
+              const message = err instanceof Error ? err.message : 'That work could not be removed just now. Nothing changed. Please try again.';
+              unseen.current = message;
+              setRemoveError(message);
+            }
           } finally {
             setRemoving(false);
           }
@@ -118,21 +159,31 @@ export function useWorkDeleteDoor(args: {
   } else if (confirming && kind !== 'many') {
     dialogKind = 'delete';
     const words = deleteConfirmCopy(kind, title);
+    // The server said the writing is shared but this page cannot see the other Work (it was declared after the page loaded). The
+    // server's answer is the authority at that moment: the card says so instead of doing nothing.
+    const shownError = deleteError ?? (shared !== null ? shared.message : null);
     dialog = (
       <WritingDeleteConfirm
         title={title}
         question={words.question}
         body={words.body}
         busy={deleting}
-        error={deleteError}
+        error={shownError}
         onCancel={() => { if (!deleting) cancel(); }}
         onConfirm={async () => {
           setDeleting(true);
           setDeleteError(null);
+          setShared(null);
+          unseen.current = null;
           try {
-            await onDeleteWork(work.id, manuscriptId);
-            setSettled(kind === 'writing-keeps-work' ? `The writing in “${title}” was deleted.` : `“${title}” was deleted.`);
+            await onDeleteWork(work.id, manuscriptId, { workStays: kind === 'writing-keeps-work' });
             setConfirming(false);
+            if (kind === 'writing-keeps-work') {
+              // The Work stays: its card must keep its other parts and its door, so no "deleted" card replaces it. The page says it.
+              onDeletionNotice(`The writing in “${title}” was deleted. The Work stays, with what else it holds.`, false);
+            } else {
+              setSettled(`“${title}” was deleted.`);
+            }
           } catch (err) {
             if (err instanceof DeletionUnconfirmed) {
               // The Work is gone from the list, so this card is about to unmount: say what could not be confirmed on the page.
@@ -140,9 +191,11 @@ export function useWorkDeleteDoor(args: {
               setConfirming(false);
               onDeletionNotice(`“${title}”: ${err.message}`);
             } else if (err instanceof DeletionSharedMaterial && manuscriptId) {
-              setSharedWith(manuscriptId);
+              setShared({ manuscriptId, message: err.message });
             } else {
-              setDeleteError(err instanceof Error ? err.message : 'That work could not be deleted just now. Nothing was removed. Please try again.');
+              const message = err instanceof Error ? err.message : 'That work could not be deleted just now. Nothing was removed. Please try again.';
+              unseen.current = message;
+              setDeleteError(message);
             }
           } finally {
             setDeleting(false);
@@ -156,7 +209,7 @@ export function useWorkDeleteDoor(args: {
     <button
       type="button"
       className="fr-home-quiet p4r1-home-delete-open"
-      onClick={() => { setDeleteError(null); setRemoveError(null); setConfirming(true); }}
+      onClick={() => { unseen.current = null; setDeleteError(null); setRemoveError(null); setShared(null); setConfirming(true); }}
     >
       {kind === 'many' ? 'Remove' : 'Delete'}
     </button>

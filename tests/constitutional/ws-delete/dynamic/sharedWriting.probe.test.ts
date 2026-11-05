@@ -102,6 +102,8 @@ suite('WS-DELETE-01 R-SHARED physical probes (real PostgreSQL 16, real routes, f
   beforeAll(async () => {
     const url = process.env.DATABASE_URL ?? '';
     if (!/@(127\.0\.0\.1|localhost)[:/]/.test(url)) throw new Error('refusing: the probe database must be loopback');
+    // These probes TRUNCATE members CASCADE: only the throwaway database the runner creates may be touched.
+    if (!/\/ws_delete_fictional(\?|$)/.test(url)) throw new Error('refusing: the probe database must be the disposable ws_delete_fictional database');
   });
   beforeEach(async () => {
     await reset();
@@ -235,6 +237,18 @@ suite('WS-DELETE-01 R-SHARED physical probes (real PostgreSQL 16, real routes, f
     it('ST-4 while both Works still hold the writing the refusal is still the shared one (the guard does not pre-empt it)', async () => {
       const out = await delManuscript(MS_SHARED, W_A);
       expect(out).toEqual({ status: 409, body: { refusal: 'declared_in_other_works', works: 2 } });
+    });
+
+    it('ST-8 three Works hold the writing and one is removed: Delete from the REMOVED Work\'s stale card gets the stale-card refusal, not the shared one (the guard is evaluated first)', async () => {
+      const W_C = 'c1000000-0000-4000-8000-0000000000c1';
+      await query('INSERT INTO living_works(id, member_id) VALUES ($1, $2)', [W_C, MEMBER_A]);
+      await query(`INSERT INTO living_work_expressions(living_work_id, expression_type, expression_id) VALUES ($1, 'manuscript', $2)`, [W_C, MS_SHARED]);
+      await delWork(W_A);
+      const out = await delManuscript(MS_SHARED, W_A);
+      expect(out).toEqual({ status: 409, body: { refusal: 'work_no_longer_holds_it' } });
+      expect(await manuscriptExists(MS_SHARED)).toBe(true);
+      expect(await workExists(W_B)).toBe(true);
+      expect(await workExists(W_C)).toBe(true);
     });
 
     it('ST-5 a Work id that is not this member\'s, or does not exist, is refused exactly like a stale one (no existence leak) and nothing changes', async () => {

@@ -17,6 +17,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
 import { Client } from 'pg';
+import { existsSync, mkdtempSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 (globalThis as any).__probeMember = null as string | null;
 (globalThis as any).__sealMode = 'sealed' as 'sealed' | 'throws';
@@ -40,6 +43,7 @@ jest.mock('@/lib/recovery/r20DeletionLedger', () => ({
 
 import { DELETE as deleteManuscriptRoute } from '@/app/api/sovereign/manuscripts/[id]/route';
 import { DELETE as deleteWorkRoute } from '@/app/api/sovereign/living-works/[id]/route';
+import { DELETE as deleteExpressionRoute } from '@/app/api/sovereign/living-works/[id]/expressions/route';
 import { closePool, query } from '@/lib/db/postgres';
 import { DeletionSharedMaterial, DeletionUnconfirmed, runDeleteWork, runRemoveWork } from '@/lib/writersStudio/deleteWork';
 
@@ -61,6 +65,12 @@ const W_EMPTY = 'd0000000-0000-4000-8000-00000000000d';
 const W_MANY = 'e0000000-0000-4000-8000-00000000000e';
 const W_GHOST = 'f0000000-0000-4000-8000-00000000000f';
 const ADVISORY_KEY = 'soullab:r20:recovery-capture';
+/** The comment at the head of the statement that takes the Work rows first (eraseManuscript.ts); a backend waiting in it is waiting on a Work row. */
+const LOCK_WORKS_FIRST = 'ws-delete:lock-works-first';
+const W_IMG = '99999999-0000-4000-8000-0000000000a1';
+const W_STUCK = '99999999-0000-4000-8000-0000000000a2';
+const W_STAY = '99999999-0000-4000-8000-0000000000a3';
+const MS_GHOST2 = 'dddddddd-dddd-4ddd-8ddd-ddddddddddd2';        // a second gone writing, declared by a Work that holds something else too
 
 const asMember = (id: string | null) => { (globalThis as any).__probeMember = id; };
 const sealMode = (mode: 'sealed' | 'throws') => { (globalThis as any).__sealMode = mode; };
@@ -68,7 +78,7 @@ const count = async (sql: string, params: unknown[] = []) => Number((await query
 const manuscriptExists = (id: string) => count('member_manuscripts WHERE id = $1', [id]).then((n) => n === 1);
 const workExists = (id: string) => count('living_works WHERE id = $1', [id]).then((n) => n === 1);
 /** Declarations naming a writing that no longer exists, EXCLUDING the one Work this file seeds as already dangling (W_GHOST). */
-const dangling = () => count(`living_work_expressions e WHERE e.expression_type = 'manuscript' AND e.expression_id <> $1 AND NOT EXISTS (SELECT 1 FROM member_manuscripts m WHERE m.id = e.expression_id)`, [MS_GHOST]);
+const dangling = () => count(`living_work_expressions e WHERE e.expression_type = 'manuscript' AND e.expression_id NOT IN ($1, $2) AND NOT EXISTS (SELECT 1 FROM member_manuscripts m WHERE m.id = e.expression_id)`, [MS_GHOST, MS_GHOST2]);
 const danglingGhost = () => count(`living_work_expressions e WHERE e.expression_type = 'manuscript' AND e.expression_id = $1 AND NOT EXISTS (SELECT 1 FROM member_manuscripts m WHERE m.id = e.expression_id)`, [MS_GHOST]);
 
 /** The client's fetcher, pointed at the real route handlers. Every request it makes is recorded. */
@@ -79,7 +89,11 @@ const serverFetcher = async (url: string, init: RequestInit): Promise<Response> 
   if (manuscript) {
     return deleteManuscriptRoute(new NextRequest(`http://localhost${url}`, { method: init.method }), { params: Promise.resolve({ id: manuscript[1]! }) }) as Promise<Response>;
   }
-  const work = url.match(/^\/api\/sovereign\/living-works\/([^/?]+)/);
+  const expression = url.match(/^\/api\/sovereign\/living-works\/([^/?]+)\/expressions\?/);
+  if (expression) {
+    return deleteExpressionRoute(new NextRequest(`http://localhost${url}`, { method: init.method }), { params: Promise.resolve({ id: expression[1]! }) }) as Promise<Response>;
+  }
+  const work = url.match(/^\/api\/sovereign\/living-works\/([^/?]+)$/);
   if (work) {
     return deleteWorkRoute(new NextRequest(`http://localhost${url}`, { method: init.method }), { params: Promise.resolve({ id: work[1]! }) }) as Promise<Response>;
   }
@@ -98,12 +112,14 @@ async function reset() {
   for (const [id, title] of [[MS_SHARED, 'The Shared Fictional Writing'], [MS_SOLO, 'A Solo Fictional Writing'], [MS_M1, 'Many One'], [MS_M2, 'Many Two']]) {
     await query('INSERT INTO member_manuscripts(id, member_id, title) VALUES ($1, $2, $3)', [id, MEMBER_A, title]);
   }
-  for (const id of [W_A, W_B, W_SOLO, W_EMPTY, W_MANY, W_GHOST]) await query('INSERT INTO living_works(id, member_id) VALUES ($1, $2)', [id, MEMBER_A]);
+  for (const id of [W_A, W_B, W_SOLO, W_EMPTY, W_MANY, W_GHOST, W_IMG, W_STUCK, W_STAY]) await query('INSERT INTO living_works(id, member_id) VALUES ($1, $2)', [id, MEMBER_A]);
   const declare = (w: string, m: string) => query(`INSERT INTO living_work_expressions(living_work_id, expression_type, expression_id) VALUES ($1, 'manuscript', $2)`, [w, m]);
   await declare(W_A, MS_SHARED); await declare(W_B, MS_SHARED);
   await declare(W_SOLO, MS_SOLO);
   await declare(W_MANY, MS_M1); await declare(W_MANY, MS_M2);
   await declare(W_GHOST, MS_GHOST);
+  await declare(W_STAY, MS_GHOST2);
+  await query(`INSERT INTO living_work_expressions(living_work_id, expression_type, expression_id) VALUES ($1, 'material', $2)`, [W_STAY, 'f0000000-0000-4000-8000-0000000000f2']);
   asMember(MEMBER_A);
   sealMode('sealed');
   calls.length = 0;
@@ -131,6 +147,21 @@ async function waitForLockWait(needle: string): Promise<void> {
   throw new Error(`no backend ever waited on a lock in a statement containing: ${needle}`);
 }
 
+
+/** A vault-relative path the sweep can never destroy (a symlinked parent is refused), so its queue row stays owed. */
+const stuckPath = (name: string) => {
+  const root = process.env.FILE_STORAGE_PATH;
+  if (!root) throw new Error('FILE_STORAGE_PATH must point at the disposable vault');
+  const link = join(root, 'stuck-link');
+  if (!existsSync(link)) symlinkSync(mkdtempSync(join(tmpdir(), 'ws-stuck-target-')), link);
+  return `stuck-link/${name}`;
+};
+const queueRow = (artifactRef: string) => query(`INSERT INTO vault_erasure_queue(artifact_ref) VALUES ($1)`, [artifactRef]);
+const addVisual = (workId: string, storagePath: string) => query(
+  `INSERT INTO living_work_visuals(living_work_id, member_id, kind, storage_path, mime_type, byte_size) VALUES ($1, $2, 'cover', $3, 'image/png', 10)`,
+  [workId, MEMBER_A, storagePath],
+);
+
 let errSpy: jest.SpiedFunction<typeof console.error>;
 let logSpy: jest.SpiedFunction<typeof console.log>;
 
@@ -138,6 +169,11 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
   beforeAll(async () => {
     const url = process.env.DATABASE_URL ?? '';
     if (!/@(127\.0\.0\.1|localhost)[:/]/.test(url)) throw new Error('refusing: the probe database must be loopback');
+    // These probes TRUNCATE members CASCADE: only the throwaway database the runner creates may be touched.
+    if (!/\/ws_delete_fictional(\?|$)/.test(url)) throw new Error('refusing: the probe database must be the disposable ws_delete_fictional database');
+    // The witness stub schema gives living_work_expressions three columns; the real table also has `id` (and `declared_by`), which the
+    // expression-level DELETE route returns. Add it to the DISPOSABLE stub so that route can run; nothing else here reads it.
+    await query(`ALTER TABLE living_work_expressions ADD COLUMN IF NOT EXISTS id uuid NOT NULL DEFAULT gen_random_uuid()`);
   });
   beforeEach(async () => {
     await reset();
@@ -151,7 +187,7 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
     it('CE-1 shared writing: Delete is refused and offers the other act; Remove keeps the writing; Delete from the last Work then ends it', async () => {
       const first = await settle(runDeleteWork({ workId: W_A, manuscriptId: MS_SHARED }, serverFetcher, refresh));
       expect(first).toBeInstanceOf(DeletionSharedMaterial);
-      expect(trace).toEqual(['rejected']);                      // nothing changed, so nothing is re-read
+      expect(trace).toEqual(['refresh', 'rejected']);           // the server knows an other Work this page may not: re-read, then ask
       expect(await manuscriptExists(MS_SHARED)).toBe(true);
       expect(await workExists(W_A)).toBe(true);
       expect(await workExists(W_B)).toBe(true);
@@ -217,6 +253,18 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       expect(await danglingGhost()).toBe(0);
     });
 
+    it('CE-5b a Work that was to STAY (it holds something else too) and whose writing is already gone: only the dangling declaration is withdrawn, the Work and its other part survive', async () => {
+      const err = await settle(runDeleteWork({ workId: W_STAY, manuscriptId: MS_GHOST2, workStays: true }, serverFetcher, refresh));
+      expect(err).toBeNull();
+      expect(calls).toEqual([
+        `DELETE /api/sovereign/manuscripts/${MS_GHOST2}?workId=${W_STAY}`,
+        `DELETE /api/sovereign/living-works/${W_STAY}/expressions?expressionType=manuscript&expressionId=${MS_GHOST2}`,
+      ]);
+      expect(await workExists(W_STAY)).toBe(true);
+      expect(await count(`living_work_expressions WHERE living_work_id = $1 AND expression_type = 'manuscript'`, [W_STAY])).toBe(0);
+      expect(await count(`living_work_expressions WHERE living_work_id = $1 AND expression_type = 'material'`, [W_STAY])).toBe(1);
+    });
+
     it('CE-6 a Work with several writings: Remove ends the Work and deletes NONE of the writings (the sentence the confirmation says)', async () => {
       expect(await settle(runRemoveWork(W_MANY, serverFetcher, refresh))).toBeNull();
       expect(await workExists(W_MANY)).toBe(false);
@@ -248,7 +296,7 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       const removal = await holder((c) => c.query('DELETE FROM living_works WHERE id = $1', [W_A]).then(() => undefined));
       try {
         const pending = serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}`, { method: 'DELETE' });
-        await waitForLockWait('FOR UPDATE OF e, w');
+        await waitForLockWait(LOCK_WORKS_FIRST);
         await removal.query('COMMIT');
         const res = await pending;
         expect(res.status).toBe(200);
@@ -264,7 +312,7 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       const removal = await holder((c) => c.query('DELETE FROM living_works WHERE id = $1', [W_A]).then(() => undefined));
       try {
         const pending = serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}`, { method: 'DELETE' });
-        await waitForLockWait('FOR UPDATE OF e, w');
+        await waitForLockWait(LOCK_WORKS_FIRST);
         await removal.query('ROLLBACK');
         const res = await pending;
         expect(res.status).toBe(409);
@@ -279,7 +327,7 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       const removal = await holder((c) => c.query('DELETE FROM living_works WHERE id = $1', [W_A]).then(() => undefined));
       try {
         const pending = serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}?workId=${W_A}`, { method: 'DELETE' });
-        await waitForLockWait('FOR UPDATE OF e, w');
+        await waitForLockWait(LOCK_WORKS_FIRST);
         await removal.query('COMMIT');
         const res = await pending;
         expect(res.status).toBe(409);
@@ -307,7 +355,7 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       expect(await dangling()).toBe(0);
     });
 
-    it('DR-5 two Deletes of the same writing from its only Work, at the same moment: exactly one erases it, the other is told it is gone (404 is "done"), and nothing is left half-way', async () => {
+    it('DR-5 two Deletes of the same writing from its only Work, at the same moment: exactly one erases it and the other is told it is already gone (404, which the client reads as done), and nothing is left half-way', async () => {
       await runRemoveWork(W_A, serverFetcher, refresh);
       const capture = await holder((c) => c.query(`SELECT pg_advisory_xact_lock(hashtextextended('${ADVISORY_KEY}', 0))`).then(() => undefined));
       try {
@@ -316,7 +364,7 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
         await waitForLockWait('pg_advisory_xact_lock');
         await capture.query('COMMIT');
         const [a, b] = await Promise.all([one, two]);
-        expect([a.status, b.status].sort()).toEqual([200, 409]);   // the loser finds the Work no longer holds it
+        expect([a.status, b.status].sort()).toEqual([200, 404]);   // the loser finds the writing already gone
       } finally { await capture.end().catch(() => undefined); }
       expect(await manuscriptExists(MS_SHARED)).toBe(false);
       expect(await workExists(W_B)).toBe(false);
@@ -325,11 +373,99 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
     });
   });
 
+  describe('the same Work and writing, two requests at once: no deadlock, whichever order', () => {
+    it('DL-1 a Delete queued behind a removal that holds the Work row takes the Work row BEFORE any expression row, so the removal can finish its own cascade (no 40P01, no 500)', async () => {
+      // The holder plays a Remove in flight: it holds the Work row and has not yet reached that Work\'s expression rows.
+      const removal = await holder((c) => c.query('SELECT id FROM living_works WHERE id = $1 FOR UPDATE', [W_A]).then(() => undefined));
+      let removalError: unknown = null;
+      try {
+        const pending = serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}`, { method: 'DELETE' });
+        await waitForLockWait(LOCK_WORKS_FIRST);
+        try {
+          await removal.query('DELETE FROM living_work_expressions WHERE living_work_id = $1', [W_A]);
+          await removal.query('DELETE FROM living_works WHERE id = $1', [W_A]);
+          await removal.query('COMMIT');
+        } catch (e) { removalError = e; }
+        const res = await pending;
+        expect(removalError).toBeNull();
+        expect(res.status).toBe(200);
+        expect(await res.json()).toEqual({ removed: true });
+      } finally { await removal.end().catch(() => undefined); }
+      expect(await manuscriptExists(MS_SHARED)).toBe(false);
+      expect(await dangling()).toBe(0);
+    });
+
+    it('DL-2 400 simultaneous Delete/Remove pairs: no request ever answers 5xx (the pairs that used to deadlock about 1 in 80)', async () => {
+      let fiveHundreds = 0;
+      for (let i = 0; i < 400; i += 1) {
+        await reset();
+        const [d, r] = await Promise.all([
+          serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}`, { method: 'DELETE' }),
+          serverFetcher(`/api/sovereign/living-works/${W_A}`, { method: 'DELETE' }),
+        ]);
+        if (d.status >= 500 || r.status >= 500) fiveHundreds += 1;
+      }
+      expect(fiveHundreds).toBe(0);
+    });
+  });
+
+  describe('custody is about THIS deletion\'s own obligations', () => {
+    it('FQ-1 another member\'s stuck queue row does not make this Delete read as unconfirmed', async () => {
+      await queueRow(stuckPath('someone-elses-original.bin'));
+      const res = await serverFetcher(`/api/sovereign/manuscripts/${MS_SOLO}?workId=${W_SOLO}`, { method: 'DELETE' });
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ removed: true });
+      expect(await count('vault_erasure_queue')).toBe(1);           // the foreign row is still owed, and still not this member\'s concern
+      expect(await manuscriptExists(MS_SOLO)).toBe(false);
+    });
+
+    it('FQ-2 a backlog of 120 stuck rows ahead of it does not starve this Work\'s image or turn its removal into an alarm', async () => {
+      for (let i = 0; i < 120; i += 1) await queueRow(stuckPath(`backlog-${i}.bin`));
+      await addVisual(W_IMG, 'work-visuals/own-image-absent.png');       // an absent path is destroyed by the sweep (idempotent)
+      const res = await serverFetcher(`/api/sovereign/living-works/${W_IMG}`, { method: 'DELETE' });
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ withdrawn: W_IMG });
+      expect(await count('vault_erasure_queue')).toBe(120);               // only the foreign rows remain
+    });
+
+    it('WI-1 a removed Work whose OWN image cannot be destroyed is not reported as plain success: 500, removed:true, image_bytes_owed; the row is gone and the bytes stay queued', async () => {
+      await addVisual(W_STUCK, stuckPath('own-image.png'));
+      const res = await serverFetcher(`/api/sovereign/living-works/${W_STUCK}`, { method: 'DELETE' });
+      expect(res.status).toBe(500);
+      expect(await res.json()).toEqual({ removed: true, refusal: 'image_bytes_owed' });
+      expect(await workExists(W_STUCK)).toBe(false);
+      expect(await count('vault_erasure_queue')).toBe(1);
+    });
+
+    it('WI-2 the client turns that into the unconfirmed notice, re-reads the page first, and the Work is gone', async () => {
+      await addVisual(W_STUCK, stuckPath('own-image.png'));
+      const err = await settle(runRemoveWork(W_STUCK, serverFetcher, refresh));
+      expect(err).toBeInstanceOf(DeletionUnconfirmed);
+      expect(trace).toEqual(['refresh', 'rejected']);
+      expect(err!.message).toContain('image');
+      expect(err!.message).toContain('we are not going to tell you it is gone');
+      expect(await workExists(W_STUCK)).toBe(false);
+    });
+  });
+
+  describe('a repeat Delete, and the order of the two refusals', () => {
+    it('GONE-1 Delete again from the same Work card after the writing has gone: 404 (done), not a stale-card refusal', async () => {
+      expect((await serverFetcher(`/api/sovereign/manuscripts/${MS_SOLO}?workId=${W_SOLO}`, { method: 'DELETE' })).status).toBe(200);
+      const again = await serverFetcher(`/api/sovereign/manuscripts/${MS_SOLO}?workId=${W_SOLO}`, { method: 'DELETE' });
+      expect(again.status).toBe(404);
+    });
+
+    it('GONE-2 through the client a repeat Delete is simply done, with no scary message', async () => {
+      await runDeleteWork({ workId: W_SOLO, manuscriptId: MS_SOLO }, serverFetcher, refresh);
+      trace.length = 0;
+      expect(await settle(runDeleteWork({ workId: W_SOLO, manuscriptId: MS_SOLO }, serverFetcher, refresh))).toBeNull();
+    });
+  });
+
   describe('another member', () => {
-    it('CE-9 cannot reach this member\'s Work or writing through the client\'s functions: the server answers as it does for a stale card (no existence leak), the member is told nothing was deleted, and nothing changes', async () => {
+    it('CE-9 cannot reach this member\'s Work or writing through the client\'s functions: both routes answer 404 (no existence leak), which the client reads as "already gone", and nothing changes', async () => {
       asMember(MEMBER_B);
-      const err = await settle(runDeleteWork({ workId: W_SOLO, manuscriptId: MS_SOLO }, serverFetcher, refresh));
-      expect(err!.message).toContain('Nothing was deleted');
+      expect(await settle(runDeleteWork({ workId: W_SOLO, manuscriptId: MS_SOLO }, serverFetcher, refresh))).toBeNull();
       expect(await manuscriptExists(MS_SOLO)).toBe(true);
       expect(await workExists(W_SOLO)).toBe(true);
       expect(await count('deletion_manifests')).toBe(0);

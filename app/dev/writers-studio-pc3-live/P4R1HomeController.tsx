@@ -94,8 +94,10 @@ export default function P4R1HomeController() {
     return manuscriptId;
   }, [post]);
 
+  // Resolves false when either list could not be read: the delete flow must not tell the member the page is current then.
   const refresh = useCallback(async () => {
-    await Promise.all([reloadWorks(), reloadManuscripts()]);
+    const read = await Promise.all([reloadWorks(), reloadManuscripts()]);
+    return read.every(Boolean);
   }, [reloadWorks, reloadManuscripts]);
 
   const open = useCallback((manuscriptId: string, sectionId?: string, newImport = false) => {
@@ -270,7 +272,8 @@ export default function P4R1HomeController() {
   // A Work is deleted with its manuscript in ONE server-side erase (WS-DELETE-01); a Work with no manuscript is withdrawn. The
   // request names the Work, so a stale card is refused server-side.
   const onDeleteWork = useCallback(
-    (workId: string, manuscriptId: string | null) => runDeleteWork({ workId, manuscriptId }, (url, init) => apiFetch(url, init), refresh),
+    (workId: string, manuscriptId: string | null, options?: { readonly workStays?: boolean }) =>
+      runDeleteWork({ workId, manuscriptId, ...(options?.workStays ? { workStays: true } : {}) }, (url, init) => apiFetch(url, init), refresh),
     [refresh],
   );
 

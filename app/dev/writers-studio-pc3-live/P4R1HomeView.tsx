@@ -20,9 +20,9 @@ import type { StudioAct } from '@/app/writers-studio/studioHistory';
 import { sentenceFor } from '@/app/writers-studio/studioHistory';
 import P4R1WorkMaterialsSummary from './P4R1WorkMaterialsSummary';
 import { WritingDeleteConfirm } from './WritingDeleteConfirm';
-import { useWorkDeleteDoor } from './useWorkDeleteDoor';
+import { useWorkDeleteDoor, writingDeleteKindFor } from './useWorkDeleteDoor';
 import { P4R1HistoryContainer } from './P4R1HistoryPage';
-import { DeletionUnconfirmed } from '@/lib/writersStudio/deleteWork';
+import { DeletionUnconfirmed, deleteConfirmCopy } from '@/lib/writersStudio/deleteWork';
 import P4R1ProducePanel from './P4R1ProducePanel';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 
@@ -75,7 +75,7 @@ function WorkAnchor({ work, allWorks, manuscripts, activity, onOpen, onStartWrit
   work: LivingWork;
   /** Every Work the member has: the hero Work is a Work like any other, with the same way to delete or remove it. */
   allWorks: readonly LivingWork[];
-  onDeleteWork: (workId: string, manuscriptId: string | null) => Promise<void>;
+  onDeleteWork: (workId: string, manuscriptId: string | null, options?: { readonly workStays?: boolean }) => Promise<void>;
   onRemoveWork: (workId: string) => Promise<void>;
   onDeletionNotice: (message: string, urgent?: boolean) => void;
   manuscripts: readonly CurrentManuscript[];
@@ -196,7 +196,7 @@ function WorkShelfCard({ work, allWorks, manuscripts, onOpen, onStartWriting, bu
   onStartWriting: (workId: string) => void;
   busy: boolean;
   /** Permanently deletes this Work and its one manuscript (WS-DELETE-01). Rejects with a member-facing message. */
-  onDeleteWork: (workId: string, manuscriptId: string | null) => Promise<void>;
+  onDeleteWork: (workId: string, manuscriptId: string | null, options?: { readonly workStays?: boolean }) => Promise<void>;
   /** Removes this Work only, leaving its writing(s) where they are. Offered after a shared-writing refusal, and for a Work with several writings. */
   onRemoveWork: (workId: string) => Promise<void>;
   /** The card is unmounted once the server has removed the Work, so a message the member must still see lives with the page, not here. */
@@ -276,10 +276,14 @@ function WritingCard({ manuscript, works, onOpen, onMakeWork, onAddToWork, onAsk
   const [choosing, setChoosing] = useState(false);
   const extent = homeWritingExtent(manuscript);
   if (deletion.confirming) {
+    const writingTitle = manuscript.title?.trim() || 'Untitled writing';
+    const words = deleteConfirmCopy(writingDeleteKindFor(manuscript.id, works), writingTitle);
     return (
       <article className="fr-home-writing p4r1-home-writing" data-kind="writing" data-deleting-confirmation style={{ display: 'block' }}>
         <WritingDeleteConfirm
-          title={manuscript.title?.trim() || 'Untitled writing'}
+          title={writingTitle}
+          question={words.question}
+          body={words.body}
           busy={deletion.busy}
           error={deletion.error}
           onConfirm={deletion.onConfirm}
@@ -344,7 +348,7 @@ export interface P4R1HomeViewProps {
   /** Permanently deletes one writing through the product's own erase (WS-DELETE-01). Rejects with a member-facing message. */
   onDeleteWriting: (manuscriptId: string) => Promise<void>;
   /** Permanently deletes one Work with its manuscript through the same governed erase. */
-  onDeleteWork: (workId: string, manuscriptId: string | null) => Promise<void>;
+  onDeleteWork: (workId: string, manuscriptId: string | null, options?: { readonly workStays?: boolean }) => Promise<void>;
   /** Removes one Work and keeps its writing, offered only when Delete was refused because another Work holds the same writing. */
   onRemoveWork: (workId: string) => Promise<void>;
   onStartWriting: (workId: string) => void;
@@ -361,14 +365,19 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  // Removed, but the server could not yet confirm the whole custody ending: the writing is no longer listed, and this says so.
-  const [deleteNotice, setDeleteNotice] = useState<string | null>(null);
-  // A custody message is urgent (announced at once); a plain confirmation that a Work was removed is not.
-  const [noticeUrgent, setNoticeUrgent] = useState(true);
-  const showNotice = (message: string, urgent = true) => { setDeleteNotice(message); setNoticeUrgent(urgent); };
-  // The card the member pressed is gone by the time this is shown, and the page may be long: bring the message into view.
-  const noticeRef = useRef<HTMLParagraphElement | null>(null);
-  useEffect(() => { if (deleteNotice) noticeRef.current?.scrollIntoView?.({ block: 'nearest' }); }, [deleteNotice]);
+  // What the page has to tell the member about a deletion, in the order it happened. A card that was removed is gone once the list
+  // is re-read, so what it had to say lives here, and a LATER notice can never replace an earlier one the member has not dismissed
+  // (a plain "was removed" must not erase an unacknowledged custody alert).
+  const [notices, setNotices] = useState<ReadonlyArray<{ readonly id: number; readonly message: string; readonly urgent: boolean }>>([]);
+  const nextNoticeId = useRef(0);
+  const showNotice = (message: string, urgent = true) => {
+    nextNoticeId.current += 1;
+    const id = nextNoticeId.current;
+    setNotices((current) => [...current, { id, message, urgent }]);
+  };
+  // The card the member pressed is gone by the time this is shown, and the page may be long: bring the newest message into view.
+  const noticeRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => { if (notices.length > 0) noticeRef.current?.scrollIntoView?.({ block: 'nearest' }); }, [notices.length]);
   const deletionFor = (manuscriptId: string) => ({
     confirming: confirmingDelete === manuscriptId,
     busy: deletingId === manuscriptId,
@@ -400,12 +409,15 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   );
   const unclaimed = props.manuscripts.filter((m) => !claimed.has(m.id));
   // ONE element, rendered once at the top of whichever layout the page falls into (including the welcome screen a member lands on
-  // after deleting their last Work). A card that has been removed is gone once the list is re-read, so what it had to say lives
-  // here, with the page, and survives every layout change.
-  const deleteNoticeEl = deleteNotice ? (
-    <p ref={noticeRef} role={noticeUrgent ? 'alert' : 'status'} className="p4r1-home-delete-notice" data-delete-notice>
-      {deleteNotice} <button type="button" onClick={() => setDeleteNotice(null)}>Dismiss</button>
-    </p>
+  // after deleting their last Work). A custody message is an alert (announced at once); a plain confirmation is a status.
+  const deleteNoticeEl = notices.length > 0 ? (
+    <div ref={noticeRef} data-delete-notices>
+      {notices.map((notice) => (
+        <p key={notice.id} role={notice.urgent ? 'alert' : 'status'} className="p4r1-home-delete-notice" data-delete-notice>
+          {notice.message} <button type="button" onClick={() => setNotices((current) => current.filter((n) => n.id !== notice.id))}>Dismiss</button>
+        </p>
+      ))}
+    </div>
   ) : null;
   // The mode-bar chooser keeps the order it was given (declaration order), never recency.
   const pendingManuscripts = props.pendingMode
@@ -492,6 +504,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
         <div className="fr-home-field" data-field="room">
           {deleteNoticeEl}
           <WorkAnchor
+            key={props.returnWork.id}
             work={props.returnWork}
             manuscripts={props.manuscripts}
             activity={props.returnActivity}
@@ -571,6 +584,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
         <div className="fr-home-field" data-field="room">
           {deleteNoticeEl}
           <WorkAnchor
+            key={props.arrival.resume.id}
             work={props.arrival.resume}
             manuscripts={props.manuscripts}
             activity={props.resumeActivity}

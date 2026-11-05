@@ -65,16 +65,18 @@ export function useLivingWorks() {
   const [phase, setPhase] = useState<LivingWorksPhase>('loading');
   const [works, setWorks] = useState<LivingWork[]>([]);
 
-  const load = useCallback(async () => {
+  /** Re-reads the list. Resolves true only when the list was read; false when it could not be (the old list is kept, the phase says
+   *  why). Callers that told the member "this page now shows what is current" must use the answer. */
+  const load = useCallback(async (): Promise<boolean> => {
     try {
       const res = await apiFetch('/api/sovereign/living-works', { method: 'GET' });
       if (res.status === 401) {
         setPhase('unauthorized');
-        return;
+        return false;
       }
       if (!res.ok) {
         setPhase('error');
-        return;
+        return false;
       }
       const data = await res.json();
       const list: LivingWork[] = Array.isArray(data.works) ? data.works : [];
@@ -89,9 +91,11 @@ export function useLivingWorks() {
         }))
       );
       setPhase('ready');
+      return true;
     } catch {
       // A failure to read is not an absence of works. Say only what is true.
       setPhase('error');
+      return false;
     }
   }, []);
 

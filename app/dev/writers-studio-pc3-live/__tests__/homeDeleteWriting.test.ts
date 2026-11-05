@@ -78,8 +78,8 @@ describe('wiring', () => {
     expect(view).toContain('confirming: confirmingDelete === manuscriptId');
   });
   it('the controller deletes through the governed run function (tested at runtime in homeWorkDeleteSharedAndCustody), and the view handles an unconfirmed removal', () => {
-    expect(controller).toContain('runDeleteWork({ workId: null, manuscriptId }');
-    expect(controller).toContain('refresh)');
+    // The WHOLE call, so dropping the re-read (or the page's own fetcher) fails here and not only a substring of it.
+    expect(controller).toContain('(manuscriptId: string) => runDeleteWork({ workId: null, manuscriptId }, (url, init) => apiFetch(url, init), refresh)');
     expect(view).toContain('err instanceof DeletionUnconfirmed');
   });
 });

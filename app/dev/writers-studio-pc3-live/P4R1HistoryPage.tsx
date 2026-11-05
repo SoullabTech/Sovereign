@@ -7,8 +7,9 @@ import { historyActionFor } from '@/app/writers-studio/historyActions';
 import { useStudioHistory, type StudioHistoryPhase } from '@/app/writers-studio/useStudioHistory';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
 import type { CurrentManuscript } from '@/app/writers-studio/useCurrentManuscript';
-import { DeletionUnconfirmed } from '@/lib/writersStudio/deleteWork';
+import { DeletionUnconfirmed, deleteConfirmCopy } from '@/lib/writersStudio/deleteWork';
 import { WritingDeleteConfirm } from './WritingDeleteConfirm';
+import { writingDeleteKindFor } from './useWorkDeleteDoor';
 
 /** The route's own ceiling (MAX_LIMIT in /api/sovereign/studio/history). */
 export const FULL_HISTORY_LIMIT = 300;
@@ -84,10 +85,14 @@ export function P4R1HistoryPage(props: P4R1HistoryPageProps) {
             const action = historyActionFor(act, props.manuscripts, props.works);
             const second = beneath(act);
             if (action.kind === 'open_delete' && confirming === action.manuscriptId) {
+              // Say what THIS deletion reaches: a Work that held only this writing goes with it.
+              const words = deleteConfirmCopy(writingDeleteKindFor(action.manuscriptId, props.works), action.title);
               return (
                 <li key={act.id} className="p4r1-history-act" data-deleting-confirmation>
                   <WritingDeleteConfirm
                     title={action.title}
+                    question={words.question}
+                    body={words.body}
                     busy={busyId === action.manuscriptId}
                     error={error}
                     onConfirm={() => void confirmDelete(action.manuscriptId)}
@@ -118,6 +123,11 @@ export function P4R1HistoryPage(props: P4R1HistoryPageProps) {
                     ) : null}
                   </div>
                 ) : null}
+                {action.kind === 'open' && action.why === 'shared' ? (
+                  <span className="p4r1-history-act-beneath">
+                    This writing is in {action.sharedBy} of your Works, so it cannot be deleted from here. On Home, remove the Works you do not want to keep it in, then delete it.
+                  </span>
+                ) : null}
               </li>
             );
           })}
@@ -134,7 +144,7 @@ export function P4R1HistoryPage(props: P4R1HistoryPageProps) {
         </div>
         <h2 className="p4r1-history-title">History</h2>
         {notice ? (
-          <div className="p4r1-home-delete-notice" role="status">
+          <div className="p4r1-home-delete-notice" role="alert">
             {notice}
             <button type="button" onClick={() => setNotice(null)}>Dismiss</button>
           </div>

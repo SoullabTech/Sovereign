@@ -51,7 +51,39 @@ describe('full History view', () => {
     const p = base(); p.onDeleteWriting = jest.fn().mockRejectedValue(new DeletionUnconfirmed('could not confirm the original file')); render(p);
     act(() => btns('Delete')[0].click());
     await act(async () => btns('Delete permanently')[0].click());
-    expect(container.querySelector('[role="status"]')?.textContent).toContain('could not confirm');
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('could not confirm');
+  });
+  it('a writing held by TWO Works has no Delete (it could only be refused) and says where the way forward is', () => {
+    const p = base();
+    render({
+      ...p,
+      acts: [A('1', 'sh')] as any,
+      manuscripts: [{ id: 'sh', title: 'Held Twice' }] as any,
+      works: [
+        { id: 'w1', expressions: [{ expressionType: 'manuscript', expressionId: 'sh' }] },
+        { id: 'w2', expressions: [{ expressionType: 'manuscript', expressionId: 'sh' }] },
+      ] as any,
+    });
+    expect(btns('Delete')).toHaveLength(0);
+    expect(btns('Open writing')).toHaveLength(1);
+    expect(container.textContent).toContain('This writing is in 2 of your Works, so it cannot be deleted from here');
+    expect(container.textContent).toContain('On Home');
+  });
+  it('the confirmation says what THIS deletion reaches: a Work that holds only this writing goes with it', () => {
+    const p = base();
+    render({
+      ...p,
+      acts: [A('1', 'solo'), A('2', 'free')] as any,
+      manuscripts: [{ id: 'solo', title: 'Solo' }, { id: 'free', title: 'Free' }] as any,
+      works: [{ id: 'w', expressions: [{ expressionType: 'manuscript', expressionId: 'solo' }] }] as any,
+    });
+    act(() => btns('Delete')[0].click());
+    expect(container.textContent).toContain('This deletes the Work and its writing');
+    expect(container.textContent).toContain('what you built inside the Work');
+    act(() => btns('Keep it')[0].click());
+    act(() => btns('Delete')[1].click());
+    expect(container.textContent).toContain('This deletes the writing:');
+    expect(container.textContent).not.toContain('what you built inside the Work');
   });
   it('has honest empty, error and signed-out states', () => {
     const p = base();

@@ -1,5 +1,6 @@
 'use client';
 
+import { useId } from 'react';
 import { REMOVE_SHARED_WORK_COPY } from '@/lib/writersStudio/deleteWork';
 
 /** The words of a removal confirmation: the two bodies (shared writing, several writings) share this shape. */
@@ -27,10 +28,12 @@ export function WorkRemoveConfirm({ title, busy, error, onConfirm, onCancel, cop
   onCancel: () => void;
   copy?: RemoveCopy;
 }) {
+  // The body is what states what goes and what stays: a screen-reader user hears it with the dialog, not only the question.
+  const bodyId = useId();
   return (
-    <div className="p4r1-home-delete" role="alertdialog" aria-label={copy.question(title)} data-removing-shared-work>
+    <div className="p4r1-home-delete" role="alertdialog" aria-label={copy.question(title)} aria-describedby={bodyId} data-removing-shared-work>
       <h3>{copy.question(title)}</h3>
-      <p>{copy.body}</p>
+      <p id={bodyId}>{copy.body}</p>
       <div className="p4r1-home-delete-actions">
         <button type="button" className="p4r1-home-delete-confirm" disabled={busy} onClick={onConfirm}>
           {busy ? copy.working : copy.confirm}

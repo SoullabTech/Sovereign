@@ -29,6 +29,26 @@ type Reference = { readonly table: string; readonly onDelete: string; readonly f
 /** SQL with comments and identifier quotes removed, so an example in a comment or "public"."name" cannot change the answer. */
 const clean = (sql: string) => sql.replace(/\/\*[\s\S]*?\*\//g, '').replace(/--[^\n]*/g, '').replace(/"/g, '');
 
+/** The text of ONE column or constraint definition after `REFERENCES living_works(...)`: up to the first comma, semicolon or closing
+ *  parenthesis at the same depth. A window of the next N characters would read the NEXT column's `ON DELETE CASCADE` as this one's. */
+function clauseAfterReference(sql: string, afterOpenParen: number): string {
+  let depth = 1;
+  let i = afterOpenParen;
+  for (; i < sql.length && depth > 0; i += 1) {
+    if (sql[i] === '(') depth += 1;
+    else if (sql[i] === ')') depth -= 1;
+  }
+  const start = i;                        // just after the column list's closing parenthesis
+  depth = 0;
+  for (; i < sql.length; i += 1) {
+    const ch = sql[i];
+    if (ch === '(') depth += 1;
+    else if (ch === ')') { if (depth === 0) break; depth -= 1; }
+    else if ((ch === ',' || ch === ';') && depth === 0) break;
+  }
+  return sql.slice(start, i);
+}
+
 function referencesToLivingWorks(): Reference[] {
   const found: Reference[] = [];
   for (const file of files) {
@@ -40,12 +60,34 @@ function referencesToLivingWorks(): Reference[] {
     for (let m = ref.exec(sql); m; m = ref.exec(sql)) {
       const table = [...owners].reverse().find((o) => o.at < m!.index)?.name;
       if (!table) throw new Error(`could not find the table that owns a reference to living_works in ${file}`);
-      const tail = sql.slice(m.index, m.index + 220);
-      const onDelete = /ON DELETE\s+(CASCADE|SET NULL|SET DEFAULT|RESTRICT|NO ACTION)/i.exec(tail)?.[1]?.toUpperCase() ?? 'NO ACTION';
+      const clause = clauseAfterReference(sql, m.index + m[0].length);
+      // A missing ON DELETE is NO ACTION: it would BLOCK the removal of a Work, and must be seen as such.
+      const onDelete = /ON DELETE\s+(CASCADE|SET NULL|SET DEFAULT|RESTRICT|NO ACTION)/i.exec(clause)?.[1]?.toUpperCase() ?? 'NO ACTION';
       found.push({ table, onDelete, file: file.slice(repo.length + 1) });
     }
   }
   return found;
+}
+
+/** Tables that carry a `living_work_id` column WITHOUT a foreign key to living_works: nothing cascades to them, so a Work's removal
+ *  leaves their rows behind. Each must be a conscious decision recorded below. */
+function tablesCarryingAWorkIdWithoutAForeignKey(withKey: ReadonlySet<string>): string[] {
+  const names = new Set<string>();
+  for (const file of files) {
+    const sql = clean(readFileSync(file, 'utf8'));
+    const create = /CREATE TABLE(?: IF NOT EXISTS)?\s+(?:public\.)?([a-z_0-9]+)\s*\(/gi;
+    for (let m = create.exec(sql); m; m = create.exec(sql)) {
+      let depth = 1;
+      let i = m.index + m[0].length;
+      for (; i < sql.length && depth > 0; i += 1) {
+        if (sql[i] === '(') depth += 1;
+        else if (sql[i] === ')') depth -= 1;
+      }
+      const body = sql.slice(m.index + m[0].length, i);
+      if (/(^|[\s,(])living_work_id\s+[a-z]/i.test(body) && !withKey.has(m[1]!.toLowerCase())) names.add(m[1]!.toLowerCase());
+    }
+  }
+  return [...names].sort();
 }
 
 /**
@@ -68,8 +110,33 @@ const KNOWN: Record<string, { readonly phrase: string | null; readonly what: str
   studio_companion_turns: { phrase: 'conversations with MAIA', what: 'legacy Studio companion turns; no live writer in this tree' },
 };
 
+/**
+ * Tables that carry a `living_work_id` with NO foreign key: removing the Work does NOT remove their rows. They are listed so that
+ * a NEW one cannot appear unnoticed, and so the removal copy never claims more than this. Both are content-free ORIGIN records of
+ * editorial conversations, retained on purpose ("No FK: withdrawal/redeclaration must remain possible without rewriting retained
+ * origin", migration 20261020000001) and bound to the writing\'s proposal chain, so they go when the WRITING is erased, not when
+ * a Work is removed. This is also why the removal copy does not promise where conversations about the writing live afterwards.
+ */
+const KEEPS_ROWS_AFTER_WORK_REMOVAL: Record<string, string> = {
+  writer_editorial_chain_origins: 'content-free origin of an editorial proposal chain; retained by design; erased with the writing',
+  writer_editorial_thread_origins: 'content-free origin of an editorial thread; retained by design; erased with the writing',
+};
+
 describe('what Remove says goes matches what the database removes with a Work', () => {
   const refs = referencesToLivingWorks();
+
+  it('NO foreign key is invisible to the parser: every REFERENCES living_works found is read to the end of its own clause', () => {
+    // Defeat of the old reader: a reference with no ON DELETE followed, within 220 characters, by another column\'s CASCADE.
+    const sql = clean('living_work_id UUID NOT NULL REFERENCES living_works(id),\n  other_id UUID REFERENCES other(id) ON DELETE CASCADE');
+    expect(/ON DELETE/.test(clauseAfterReference(sql, sql.indexOf('(') + 1))).toBe(false);
+    const composite = clean('FOREIGN KEY (living_work_id, member_id)\n REFERENCES living_works(id, member_id)\n ON UPDATE RESTRICT ON DELETE CASCADE\n);');
+    expect(clauseAfterReference(composite, composite.indexOf('REFERENCES living_works(') + 'REFERENCES living_works('.length)).toMatch(/ON DELETE CASCADE/);
+  });
+
+  it('tables that carry a living_work_id WITHOUT a foreign key are each a recorded decision (a new one forces a look at the removal copy)', () => {
+    const withKey = new Set(refs.map((r) => r.table));
+    expect(tablesCarryingAWorkIdWithoutAForeignKey(withKey)).toEqual(Object.keys(KEEPS_ROWS_AFTER_WORK_REMOVAL).sort());
+  });
 
   it('finds the references at all (the guard is not vacuous)', () => {
     expect(refs.length).toBeGreaterThanOrEqual(12);
