@@ -5332,3 +5332,17 @@
 .p4r1-root .p4r1-intent-ask .p4r1-intent-other{ background:transparent; border:1px solid rgba(255,255,255,.16); color:inherit;
   border-radius:999px; padding:7px 14px; font-size:13px; cursor:pointer; }
 .p4r1-root .p4r1-intent-ask .p4r1-intent-other:hover{ border-color:rgba(232,190,120,.5); }
+
+/* Phones (founder screenshot 2026-11-05): the floating Prose / Edit switch and its hint
+   covered the chapter title. On narrow screens it takes its own row above the page. */
+@media(max-width:760px){
+  .p4r1-root .p4r1-prose-host{display:flex;flex-direction:column}
+  .p4r1-root .p4r1-write-view-switch{
+    position:static;align-self:stretch;flex-wrap:wrap;align-items:center;
+    margin:10px 12px 0;border-radius:16px
+  }
+  .p4r1-root .p4r1-write-view-switch .p4r1-write-view-hint{
+    flex-basis:100%;margin:4px 8px 2px!important;line-height:1.4
+  }
+  .p4r1-root .p4r1-prose-host .p4r1-prose-view{flex:1;min-height:0;padding-top:20px}
+}
