@@ -7,8 +7,8 @@ import { WRITE_COPY } from '@/app/writers-studio/full-redesign/fixtures';
 import { WRITE_GEOMETRY, appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
 
 export const UNDO_RESTORED_MESSAGES = {
-  complete: 'That application was undone. The original passage is restored.',
-  historyPending: 'The original passage is restored. Its editorial history could not be refreshed just now.',
+  complete: 'Undone. Your own wording is back.',
+  historyPending: 'Undone. Your own wording is back, but I couldn’t refresh our conversation just now.',
 } as const;
 
 export function undoMessageForVisibleDraft(
@@ -105,6 +105,8 @@ export type P4R1Pc3WriteEditViewProps = {
   lineageReturnCandidateId: string | null;
   workspaceInsight: { readingId: string; key: string } | null;
   editorialThread: RebuildEditorialThread | null;
+  /** Conversation Stage: the conversation still holding an undoable edit after Use this. */
+  earlierEditorialThread?: RebuildEditorialThread | null;
   relationshipChoices: readonly RebuildEditorialRelationship[];
   maiaRelationship: A2RelationshipSummary | null;
   maiaRelationshipChoices: readonly A2RelationshipSummary[];
@@ -1103,6 +1105,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       </header>
 
       <EditorialDancePanel
+        stage
+        earlierThread={props.earlierEditorialThread ?? null}
         onStudioAction={onStudioAction}
         onUseVersion={props.onUseVersion}
         deeper={focusDeeper}
@@ -1615,6 +1619,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       onMayRemoveParagraphs={props.onMayRemoveParagraphs}
       mayProposeImmediately={props.mayProposeImmediately}
       onMayProposeImmediately={props.onMayProposeImmediately}
+      stage
       onClose={props.onCloseWorkspace}
       onStartFresh={props.editorialThread ? props.onStartFreshConversation : undefined}
       onNextPassage={focusNextPassage}
@@ -1660,6 +1665,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       />
 
       <EditorialDancePanel
+        stage
+        earlierThread={props.earlierEditorialThread ?? null}
+        onBackToPage={props.onCloseWorkspace}
         onStudioAction={onStudioAction}
         onUseVersion={props.onUseVersion}
         deeper={focusDeeper}

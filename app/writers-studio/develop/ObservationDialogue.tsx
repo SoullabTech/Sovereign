@@ -333,17 +333,6 @@ export default function ObservationDialogue({
         then, and has not reread the work.
       </p>
 
-      {authView.outcome ? (
-        <BodyAuthorizationPanel
-          outcome={authView.outcome}
-          selectedSectionIds={authView.selectedSectionIds}
-          busy={authView.phase === 'authorizing' || busy}
-          onToggleSection={toggleSection}
-          onAuthorize={() => void authorize()}
-          onDecline={decline}
-        />
-      ) : null}
-
       {line && (
         <p className="text-[12px] leading-relaxed opacity-70 mt-2"
           style={{ color: PRESS.accent }} data-dialogue-location>
@@ -413,6 +402,19 @@ export default function ObservationDialogue({
           {REFUSAL_SAYS[refusal] ?? `That did not go through (${refusal}).`}
         </p>
       )}
+
+      {/* Beside the question that needs it, not above the whole conversation:
+          drawn at the top, a writer at the composer saw no answer at all. */}
+      {authView.outcome ? (
+        <BodyAuthorizationPanel
+          outcome={authView.outcome}
+          selectedSectionIds={authView.selectedSectionIds}
+          busy={authView.phase === 'authorizing' || busy}
+          onToggleSection={toggleSection}
+          onAuthorize={() => void authorize()}
+          onDecline={decline}
+        />
+      ) : null}
 
       {/* The composer exists only where speaking is a lawful next act. Both
           other states say why instead of offering a disabled box to type into.
