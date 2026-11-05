@@ -23,7 +23,7 @@ import {
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival, withoutStudioWork } from '@/app/writers-studio/h1Arrival';
 import { useWriterReleaseCapabilities } from '@/lib/writersStudio/useWriterReleaseCapabilities';
-import { deleteWork, DeletionUnconfirmed } from '@/lib/writersStudio/deleteWork';
+import { deleteWork, removeWork, DeletionSharedMaterial, DeletionUnconfirmed } from '@/lib/writersStudio/deleteWork';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -274,6 +274,16 @@ export default function P4R1HomeController() {
     const outcome = await deleteWork({ workId, manuscriptId }, (url, init) => apiFetch(url, init));
     if (outcome.ok) { await refresh().catch(() => undefined); return; }
     if (outcome.removed) { await refresh().catch(() => undefined); throw new DeletionUnconfirmed(outcome.message); }
+    // Shared writing: nothing was deleted, and Delete can never succeed from this card. The card offers the other act.
+    if (outcome.refusal === 'declared_in_other_works') throw new DeletionSharedMaterial(outcome.message);
+    throw new Error(outcome.message);
+  }, [refresh]);
+
+  // The container-only act: remove one Work, leave its writing where another Work still holds it. Never reached except from the
+  // shared-writing refusal above, where the member is told exactly what goes and what stays.
+  const onRemoveWork = useCallback(async (workId: string) => {
+    const outcome = await removeWork(workId, (url, init) => apiFetch(url, init));
+    if (outcome.ok) { await refresh().catch(() => undefined); return; }
     throw new Error(outcome.message);
   }, [refresh]);
 
@@ -393,6 +403,7 @@ export default function P4R1HomeController() {
       onAddToWork={(manuscriptId, workId) => void onAddToWork(manuscriptId, workId)}
       onDeleteWriting={onDeleteWriting}
       onDeleteWork={onDeleteWork}
+      onRemoveWork={onRemoveWork}
       onStartWriting={(workId) => void onStartWriting(workId)}
       onImport={openImport}
       onSources={() => router.push('/writers-studio/sources')}

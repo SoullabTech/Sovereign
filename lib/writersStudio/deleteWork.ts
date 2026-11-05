@@ -43,11 +43,17 @@ export type DeleteOutcome =
   /** Nothing was removed, or not all of it was. The message is member-facing.
    *  `removed: true` means the server committed the removal (the writing is gone) but could not yet CONFIRM the whole custody
    *  ending, so the caller must stop showing the writing AND still show the message: both are true. */
-  | { readonly ok: false; readonly message: string; readonly removed?: boolean };
+  | { readonly ok: false; readonly message: string; readonly removed?: boolean; readonly refusal?: string };
 
 /** The server committed the removal but could not yet confirm every part of ending custody. The message is member-facing. */
 export class DeletionUnconfirmed extends Error {
   constructor(message: string) { super(message); this.name = 'DeletionUnconfirmed'; }
+}
+
+/** The writing is also declared by another of the member's Works, so the server refused to erase it (nothing was deleted).
+ *  The member's way forward is to remove THIS Work and keep the writing where it still lives. The message is member-facing. */
+export class DeletionSharedMaterial extends Error {
+  constructor(message: string) { super(message); this.name = 'DeletionSharedMaterial'; }
 }
 
 export interface DeleteTarget {
@@ -89,15 +95,24 @@ export async function deleteWork(
   if (res.ok || res.status === 404) return { ok: true };
 
   const refusal = await deletionRefusal(res);
-  return { ok: false, message: refusal.message, ...(refusal.removed ? { removed: true } : {}) };
+  return {
+    ok: false,
+    message: refusal.message,
+    ...(refusal.removed ? { removed: true } : {}),
+    ...(refusal.classification ? { refusal: refusal.classification } : {}),
+  };
 }
 
-async function deletionRefusal(res: Response): Promise<{ message: string; removed: boolean }> {
+async function deletionRefusal(res: Response): Promise<{ message: string; removed: boolean; classification: string | null }> {
   try {
     const body = (await res.json()) as { error?: unknown; refusal?: unknown; removed?: unknown };
-    return { message: refusalMessageFrom(body), removed: body?.removed === true };
+    return {
+      message: refusalMessageFrom(body),
+      removed: body?.removed === true,
+      classification: typeof body?.refusal === 'string' ? body.refusal : null,
+    };
   } catch {
-    return { message: GENERIC, removed: false };
+    return { message: GENERIC, removed: false, classification: null };
   }
 }
 
@@ -208,6 +223,23 @@ export const REMOVE_WORK_COPY = {
     + 'Writings, and you can delete it there if you ever want to.',
   /** Shown beneath the action, so the choice is legible before it is made. */
   hint: 'Keeps your writing in Your Writings.',
+} as const;
+
+/**
+ * The way out of a shared-writing refusal. Delete was refused because another of the member's Works also holds the writing, so
+ * the only act on offer is the container-only one: remove THIS Work and leave the writing where it still lives. The body says
+ * what goes (the Work and what was built around it: every table that cascades from the Work row) and what stays, so the member
+ * does not have to infer it. It never says "nothing is deleted": the Work's own conversations and image are.
+ */
+export const REMOVE_SHARED_WORK_COPY = {
+  question: (title: string) => `Remove “${title}” and keep the writing?`,
+  body:
+    'This writing is also in another of your Works, so it cannot be deleted from here without taking it from there. '
+    + 'You can remove this Work instead. That removes the Work and what was built around it: your conversations with MAIA '
+    + 'about it, what MAIA understood, its list of materials and its image. The writing stays in your other Work, untouched.',
+  confirm: 'Remove this Work',
+  working: 'Removing…',
+  cancel: 'Keep it',
 } as const;
 
 /** Copy for the confirmation step. Kept beside the act so the two cannot drift. */
