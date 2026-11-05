@@ -79,11 +79,14 @@ describe('paused Focus panel', () => {
 });
 
 describe('Craftsman’s Table is a door again (founder, 2026-11-04) and Where next is server-owned', () => {
-  it('the passage menu opens Craftsman’s Table on the held words; MAIA can offer it in Focus only', () => {
+  // ⚠️ SUPERSEDED IN PART by the Doors ruling (founder, 2026-11-05): the selection menu no
+  // longer carries a Craftsman's Table entry (one door: own words or three choices). The
+  // Table stays reachable through MAIA, as "Change it" in the conversation and as her offer.
+  it('Craftsman’s Table is reached through MAIA, not as its own selection-menu door', () => {
     const view = read('app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx');
-    expect(view).toContain('data-open-craftsmans-table');
+    expect(view).not.toContain('data-open-craftsmans-table');
     expect(view).toContain("if (id === 'craftsmans-table')");
-    expect(view.match(/openCraftOnHeld\(\)/g)?.length).toBe(2);
+    expect(view.match(/openCraftOnHeld\(\)/g)?.length).toBe(1);
     expect(read('lib/writersStudio/studioActions.ts')).toContain("id: 'craftsmans-table'");
     expect(read('lib/writersStudio/studioGuide.ts')).toContain("label: 'Craftsman\\'s Table'");
   });

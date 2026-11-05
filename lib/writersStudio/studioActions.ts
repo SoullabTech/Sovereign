@@ -13,6 +13,8 @@
  * waits for section ids MAIA is given and cannot invent.
  */
 
+import { stripAnswerChoices } from '@/lib/writersStudio/answerChoices';
+
 export type StudioActionId = 'develop-overview' | 'editorial-pass' | 'craftsmans-table' | 'new-conversation';
 export type StudioActionSurface = 'passage-focus' | 'work-conversation';
 
@@ -44,7 +46,8 @@ export type ParsedReply = {
 /** Strip every `[[studio:…]]` marker; keep the first one this surface allows. */
 export function parseStudioActions(body: string, surface: StudioActionSurface): ParsedReply {
   let action: StudioAction | null = null;
-  const text = body.replace(MARKER, (_m, raw: string) => {
+  // Answer-choice markers are never shown as text anywhere (answerChoices.ts).
+  const text = stripAnswerChoices(body).replace(MARKER, (_m, raw: string) => {
     const found = STUDIO_ACTIONS.find((a) => a.id === raw.trim());
     if (!action && found && found.surfaces.includes(surface)) action = found;
     return '';
@@ -54,7 +57,7 @@ export function parseStudioActions(body: string, surface: StudioActionSurface): 
 
 /** Strip markers only, for surfaces that show replies but offer no buttons. */
 export function stripStudioActions(body: string): string {
-  return body.replace(MARKER, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  return stripAnswerChoices(body).replace(MARKER, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 /** The two Develop places a button can take the writer to. */

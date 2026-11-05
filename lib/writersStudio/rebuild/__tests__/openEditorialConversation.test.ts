@@ -52,3 +52,25 @@ describe('openEditorialConversation', () => {
     expect(await openEditorialConversation(id, section, ordinary, rel)).toMatchObject({ ok: false, reason: 'turn_refused', detail: 'opening_thread_not_new' });
   });
 });
+
+describe('the writer’s length choice travels with the request', () => {
+  const store = new Map<string, string>();
+  beforeAll(() => {
+    (globalThis as any).window = { localStorage: {
+      getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => { store.set(k, v); },
+      removeItem: (k: string) => { store.delete(k); } } };
+  });
+  afterAll(() => { delete (globalThis as any).window; });
+  afterEach(() => store.clear());
+  it('is absent until the writer chooses, then sent as the closed value', async () => {
+    mocked.mockResolvedValue(response(200, accepted()));
+    mocked.mockResolvedValueOnce(response(200, accepted())).mockResolvedValueOnce(response(200, thread([maia()])));
+    await openEditorialConversation(id, section, ordinary, rel);
+    expect(JSON.parse(mocked.mock.calls[0][1].body).replyLength).toBeUndefined();
+    window.localStorage.setItem('ws.replyLength', 'shorter');
+    mocked.mockClear();
+    mocked.mockResolvedValueOnce(response(200, accepted())).mockResolvedValueOnce(response(200, thread([maia()], 'th-2')));
+    await openEditorialConversation('th-2', section, ordinary, rel);
+    expect(JSON.parse(mocked.mock.calls[0][1].body).replyLength).toBe('shorter');
+  });
+});
