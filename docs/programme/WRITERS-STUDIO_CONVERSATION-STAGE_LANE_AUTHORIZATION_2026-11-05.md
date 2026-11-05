@@ -27,7 +27,7 @@ conversation.
 - **Steps that need no further ruling:**
   - **Step 1.** Make MAIA honest about what she has. The Work conversation gets its own standing instruction in place of the frozen-reading one in `lib/manuscript/ask/askReader.ts`, and the screen states the same facts as the prompt (L8).
   - **Step 2.** Pass "take me there" (`onStudioPlace`, Design 1B) into Develop and Review.
-- **Steps 3–7 sit inside this lane but wait for their own rulings.** These are Q2 (= O1, how a MAIA-first opening is recorded), Q3 (canonical proposal words), Q4 (default register), Q5 (renaming the view menu) and Q6 (which doors stay).
+- **Steps 3–7 sit inside this lane and were authorized by the same-session rulings Q2–Q6 below.** The rulings are Q2 (= O1, how a MAIA-first opening is recorded), Q3 (canonical proposal words), Q4 (default register), Q5 (renaming the view menu) and Q6 (which doors stay).
 
 ## Conditions carried into every step
 
@@ -42,4 +42,19 @@ conversation.
 - any schema change;
 - the Elemental arrival or the Work Compass;
 - the whole-book letter's design;
-- Q2–Q6 by inference.
+- anything beyond the rulings recorded here.
+
+## Rulings Q2–Q6 (founder, same session, 2026-11-05)
+
+Each was answered with the recommended option.
+
+| # | Question | Ruling |
+| --- | --- | --- |
+| Q2 (= O1) | How is the writer's side recorded when MAIA opens? | **A typed event** ("opened a conversation on this passage"), never words the writer did not say. This extends F1: no composed Studio text is stored as the writer's turn, in Develop or anywhere. |
+| Q3 | Canonical proposal words? | **Use it · Change it · Talk about it · Undo** (charter L6b), everywhere. "Another" and "Keep mine" become things the writer can say. |
+| Q4 | MAIA's default register at a place? | **Reader.** What she noticed as she read, plus one question; suggestions come when asked, with "Show edit options" one tap away. |
+| Q5 | Rename Develop's Focused / Guided / Full menu? | **Yes.** It becomes a plain density control (e.g. Less / More / Everything), so "Guided" names only the facet. Whether facets get a visible selector stays open. |
+| Q6 | Which doors stay? | **One starter each** for Discuss, Teach and Options, beside the composer. Duplicates are removed, and Craftsman's Table folds into "Change it". |
+
+With Q1–Q6 ruled, steps 1–7 of the plan are authorized for build. Each still lands as its own PR,
+test-first, walked locally and by the founder before deploy, with no schema change.
