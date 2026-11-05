@@ -13,7 +13,7 @@
  * waits for section ids MAIA is given and cannot invent.
  */
 
-export type StudioActionId = 'develop-overview' | 'editorial-pass' | 'new-conversation';
+export type StudioActionId = 'develop-overview' | 'editorial-pass' | 'craftsmans-table' | 'new-conversation';
 export type StudioActionSurface = 'passage-focus' | 'work-conversation';
 
 export type StudioAction = {
@@ -28,6 +28,7 @@ export type StudioAction = {
 export const STUDIO_ACTIONS: readonly StudioAction[] = [
   { id: 'develop-overview', label: 'Go to “Read this chapter”', does: 'opens Develop → Overview, where the writer can press "Read this chapter"', surfaces: ['passage-focus', 'work-conversation'] },
   { id: 'editorial-pass', label: 'Go to “Start an editorial pass”', does: 'opens Develop → More ways to explore → Edit with MAIA, where the writer can press "Start an editorial pass"', surfaces: ['passage-focus', 'work-conversation'] },
+  { id: 'craftsmans-table', label: 'Open Craftsman’s Table here', does: 'opens Craftsman\'s Table on the passage already in Focus', surfaces: ['passage-focus'] },
   { id: 'new-conversation', label: 'Start a new conversation', does: 'sets this conversation aside (it stays saved) so the next question starts fresh', surfaces: ['passage-focus', 'work-conversation'] },
 ];
 
