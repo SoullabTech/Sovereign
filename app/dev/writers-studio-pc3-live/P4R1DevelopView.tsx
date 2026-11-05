@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { GUIDED_STARTERS, OBSERVATION_STARTERS, placeStarter, type ObservationStarter } from '@/lib/writersStudio/developStarters';
 import Link from 'next/link';
 import { teachingQuestion } from '@/lib/writersStudio/teachingTurn';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -2053,6 +2054,13 @@ function AttentionMapPanel({
   );
 }
 
+/** The depth an observation button asks for, carried as responseStyle rather than as words (Q2). */
+function starterStyle(prompt: string) {
+  const key = (Object.keys(OBSERVATION_STARTERS) as ObservationStarter[])
+    .find((k) => OBSERVATION_STARTERS[k].words === prompt);
+  return key ? OBSERVATION_STARTERS[key].responseStyle : undefined;
+}
+
 export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const livePathname = usePathname() ?? '/dev/writers-studio-p4r1';
   const liveSearchParams = useSearchParams();
@@ -2237,11 +2245,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const handleGuidedMove = (move: WriterNextMove) => {
     switch (move) {
       case 'whole-work-conversation':
-        beginWholeConversation([
-          'I want to begin with the whole Work before we move into details.',
-          'Help me see the book as a book: its overall movement, what is alive, what may be unresolved, and what developmental process seems to be happening.',
-          'Stay at the whole-Work scale until I choose to go closer.',
-        ].join('\n'));
+        beginWholeConversation(GUIDED_STARTERS['whole-work-conversation']);
         return;
       case 'see-attention-map':
         document.querySelector('.p4r1-attention-map')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2261,22 +2265,16 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         props.onField('development');
         return;
       case 'map-written-and-planned':
-        beginWholeConversation([
-          'Help me map what is actually written, what is still planned, and what remains open.',
-          'Keep those states visibly distinct. Do not treat planned material as manuscript evidence.',
-        ].join('\n'));
+        beginWholeConversation(GUIDED_STARTERS['map-written-and-planned']);
         return;
       case 'clarify-central-question':
-        beginWholeConversation('Help me stay with the central question of this Work before we decide structure or prose.');
+        beginWholeConversation(GUIDED_STARTERS['clarify-central-question']);
         return;
       case 'sketch-possible-structure':
-        beginWholeConversation([
-          'Help me explore possible shapes for this Work.',
-          'Treat every structure as a possibility, not as something already authored or decided.',
-        ].join('\n'));
+        beginWholeConversation(GUIDED_STARTERS['sketch-possible-structure']);
         return;
       case 'stay-at-this-scale':
-        beginWholeConversation('I want to stay at the current scale and keep thinking before we move closer.');
+        beginWholeConversation(GUIDED_STARTERS['stay-at-this-scale']);
         return;
       case 'descend-one-scale':
         navigateMode('write');
@@ -2303,7 +2301,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       '',
       `This synthesis rests on ${item.evidence.length} frozen observation${item.evidence.length === 1 ? '' : 's'} across: ${lenses.join(', ')}.`,
       '',
-      'Help me think this through. Start by distinguishing what the evidence establishes from what remains interpretive. Do not suggest edits unless I ask.',
+      'Help me think this through: what the evidence establishes, and what remains interpretive.',
     ].join('\n'));
     props.onDiscussAttentionItem(item);
     setTalking(false);
@@ -2334,7 +2332,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         selectedMovement.questionForWriter,
       ] : []),
       '',
-      'Help me distinguish what the manuscript establishes, what the bibliography only suggests, and what would require source verification. Do not insert citations or rewrite prose unless I explicitly ask.',
+      'Help me distinguish what the manuscript establishes, what the bibliography only suggests, and what would need source verification.',
     ].join('\n'));
     props.onSelectLineageCandidate(props.chapterLineage.chapterRootId, candidate.id);
     setTalking(false);
@@ -2443,11 +2441,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               <button
                 type="button"
                 className="p4r1-talk p4r1-develop-primary"
-                onClick={() => beginWholeConversation(
-                  hasExplicitPlace
-                    ? `I want to talk about “${contextLabel}”. Stay with this exact chapter or section and ask me one useful question before proposing changes.`
-                    : 'I want to talk about my Work before choosing a method or making changes. Start by asking me one useful question.',
-                )}
+                onClick={() => beginWholeConversation(placeStarter(hasExplicitPlace ? contextLabel : null))}
                 disabled={!props.work}
               >
                 Talk with MAIA about this
@@ -2522,11 +2516,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 <button
                   type="button"
                   className="p4r1-talk"
-                  onClick={() => beginWholeConversation([
-                    `I selected “${selectedRailLabel}” in Develop.`,
-                    'Stay with this exact chapter or section.',
-                    'Help me understand what it is doing, what may be alive or unresolved here, and ask me one useful question before suggesting changes.',
-                  ].join('\n\n'))}
+                  onClick={() => beginWholeConversation(placeStarter(selectedRailLabel))}
                 >
                   Talk with MAIA
                 </button>
@@ -2695,7 +2685,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                                   '',
                                   `Question to hold: ${movement.questionForWriter}`,
                                   '',
-                                  'Help me think about this at the whole-Work scale. Do not move into chapters or edits until I choose to.',
+                                  'Help me think about this at the whole-Work scale.',
                                 ].join('\n'))}
                               >
                                 Talk this through
@@ -2903,11 +2893,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 Choosing it did not trigger a new reading. If you want MAIA to read it for {LABEL[activeField].toLowerCase()}, ask directly here.
               </p>
               <div className="p4r1-selected-place-actions">
-                <button type="button" onClick={() => beginWholeConversation([
-                  `I’m in “${selectedRailLabel}”.`,
-                  `I’m looking at it through ${LABEL[activeField].toLowerCase()}, but I want to begin conversationally.`,
-                  'Help me understand what I am seeing before you turn it into an analysis. Ask me one useful question first.',
-                ].join('\n\n'))}>Talk with MAIA first</button>
+                <button type="button" onClick={() => beginWholeConversation(placeStarter(selectedRailLabel))}>Talk with MAIA first</button>
                 <button
                   type="button"
                   className="p4r1-commission"
@@ -2980,7 +2966,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 if (!requestConversationDeparture()) return;
                 setWorkTalking(false);
                 setSelectedObservationKey(key);
-                setDialoguePrompt('Go deeper on this observation. Use the full editorial vocabulary, evidence, provenance, tradeoffs, and uncertainty. Keep the claim exactly within what the evidence supports. Do not propose replacement wording unless I ask.');
+                setDialoguePrompt(OBSERVATION_STARTERS.deeper.words);
                 setTalking(true);
               }}
               onGoToObservation={(...args) => { if (requestConversationDeparture()) props.onGoToObservation(...args); }}
@@ -3122,6 +3108,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               superseded={selectedObservation.state === 'superseded'}
               initialQuestion={dialoguePrompt}
               autoSendInitialQuestion={Boolean(dialoguePrompt)}
+              initialResponseStyle={starterStyle(dialoguePrompt)}
               {...(dialoguePrompt === teachingQuestion('observation') ? { teachingAnchor: 'observation' as const } : {})}
               onClose={() => {
                 setTalking(false);
@@ -3136,11 +3123,11 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             <p>{friendlyObservation(selectedObservation.phenomenonLabel).lead}</p>
             <div className="p4r1-observation-ready-actions">
               <button type="button" onClick={() => {
-                setDialoguePrompt('Put this observation into ordinary language for me. Start with what you actually noticed in my writing, why it may matter here, and one question that would help me decide what I think. No technical editorial vocabulary unless I ask for it.');
+                setDialoguePrompt(OBSERVATION_STARTERS.plain.words);
                 setTalking(true);
               }}>Explain it plainly</button>
               <button type="button" onClick={() => {
-                setDialoguePrompt('Stay with this observation with me. Do not turn it into a verdict or a repair task. Help me understand what you saw and ask me what I make of it.');
+                setDialoguePrompt(OBSERVATION_STARTERS.talk.words);
                 setTalking(true);
               }}>Talk with me about it</button>
               <button type="button" onClick={() => {
@@ -3185,11 +3172,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               <button
                 type="button"
                 className="p4r1-talk"
-                onClick={() => beginWholeConversation([
-                  `I selected “${selectedRailLabel}” in Develop.`,
-                  'Stay with this exact place. Help me understand what it is doing before we analyze or change anything.',
-                  'Begin by asking me what I am noticing or wondering here.',
-                ].join('\n\n'))}
+                onClick={() => beginWholeConversation(placeStarter(selectedRailLabel))}
               >
                 Talk with MAIA
               </button>
