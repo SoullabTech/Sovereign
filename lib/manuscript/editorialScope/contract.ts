@@ -407,6 +407,11 @@ export function latitudeInstruction(declared: EditorialScopeDeclaration): string
       + 'answers what they asked. If what you want to do exceeds this latitude, say that in your '
       + 'reply instead of proposing it — a proposal beyond the latitude is refused and the writer '
       + 'sees nothing.',
+    /* Design pass 2026-11-05: the writer heard "within this latitude". Name the setting the
+       way the screen does, in plain words. */
+    'If you mention this setting to the writer, say it in plain words — for example "you\'ve '
+      + 'asked me to keep changes small" — and, if it is stopping what they want, that they can '
+      + 'change Edit strength in Preferences. Never say "latitude", "band", or a percentage.',
     /* ⭐ The vocabulary clause, added when the voice measurement landed. ⛔ Still
        courtesy: `measureVoiceIntrusion` counts what comes back either way. */
     'Write in THEIR vocabulary. Every word you introduce that they have not used nearby is '

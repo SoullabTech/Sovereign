@@ -20,10 +20,10 @@ stands; this pass adds what a new walk found and makes the design concrete.
 | W4 | The proposed change | **You can't see the change.** A deletion is muted grey with a faint strike on a dark ground; the only edit ("the") is near-invisible. | Fix D2 (small) |
 | W5 | MAIA's replies | Warm and specific, the right voice, but long (250–350 words each). The answer to "show me an edit" is an essay before the edit. | D3b (prompt shape; Teach-me untouched) |
 | W6 | Focus header | Says "Selected passage", not where you are. Five controls sit above the conversation (Tools, Preferences, Next passage, Start a new conversation, Return to manuscript). | D4 |
-| W7 | Home | "Welcome back to Local Walk." greets the Work's title as if it were the writer; "Your last exact writing place is available." | D5 (copy) |
+| W7 | Home | "Your last exact writing place is available." is machine phrasing. ⚠️ *Corrected:* "Welcome back to Local Walk." greets the writer back **to their book** and reads fine; it only looked odd because the test Work and test member are both named "Local". | **Fixed**: "Pick up where you left off." / "Open it and carry on." |
 | W8 | Write | Nothing says MAIA is here. Her only door is selecting text and finding the small "Work with passage" pill. | D1 |
 | W9 | Sign-in from a link | The link back after sign-in keeps only `/writers-studio`, so the writer lands on Home, not their passage. | **Fixed** in `proxy.ts`: the whole address travels in `next`; witnessed on the local server and in the browser (sign-in returned to Develop on the Work) |
-| W11 | Coming back to Focus | Reopened the **older** conversation on the passage, not the new one MAIA had just opened. Resuming picks the first match, not the most recent. | D7 (resume the latest) |
+| W11 | Coming back to Focus | Reopened the **older** conversation on the passage, not the new one MAIA had just opened. Resuming silently picks the first match. | ⛔ **Stopped**: `lib/manuscript/editorialRuntime/relationships.ts` rules that auto-picking "most recent" is itself a defect; several conversations per passage are lawful and **the writer decides**. The lawful repair is a small chooser ("continue the latest, or an earlier one?"); ruling owed |
 | W12 | The new door | Opening it moved focus into MAIA's box, which dropped the text selection, and the door vanished with it. | **Fixed** with regression test (killed without the fix) |
 | W13 | MAIA's reply to the writer's own words | Thoughtful, but ~300 words before her question, and it names a technical setting ("your latitude here is set to small changes only"). | D3b |
 | W14 | Studio links locally | Some full page loads bounced to sign-in with `invalid_session` and no member cookie (the signed-out shape). | **Not reproduced** after investigation: a fresh token opens deep links (server-side and in-browser), no session was revoked, and no code signs out in the background. Held open as unexplained, not fixed. ⭐ The founder's "can't log in to my account locally" has a plain cause: the local database holds only the local test member (by design, no production members are copied), so the founder's own account does not exist locally. |
@@ -130,4 +130,4 @@ technical word; plain wording is next.
 
 ## 7. Rulings owed
 
-- None open from this pass.
+- **Several conversations on one passage:** when a passage has more than one conversation, show a small chooser ("Continue our latest conversation, or an earlier one?") instead of silently picking one. Recommendation: yes, with the latest listed first and nothing chosen for the writer.
