@@ -22,11 +22,11 @@ stands; this pass adds what a new walk found and makes the design concrete.
 | W6 | Focus header | Says "Selected passage", not where you are. Five controls sit above the conversation (Tools, Preferences, Next passage, Start a new conversation, Return to manuscript). | D4 |
 | W7 | Home | "Welcome back to Local Walk." greets the Work's title as if it were the writer; "Your last exact writing place is available." | D5 (copy) |
 | W8 | Write | Nothing says MAIA is here. Her only door is selecting text and finding the small "Work with passage" pill. | D1 |
-| W9 | Sign-in from a link | The link back after sign-in keeps only `/writers-studio`, so the writer lands on Home, not their passage. | D7 |
+| W9 | Sign-in from a link | The link back after sign-in keeps only `/writers-studio`, so the writer lands on Home, not their passage. | **Fixed** in `proxy.ts`: the whole address travels in `next`; witnessed on the local server and in the browser (sign-in returned to Develop on the Work) |
 | W11 | Coming back to Focus | Reopened the **older** conversation on the passage, not the new one MAIA had just opened. Resuming picks the first match, not the most recent. | D7 (resume the latest) |
 | W12 | The new door | Opening it moved focus into MAIA's box, which dropped the text selection, and the door vanished with it. | **Fixed** with regression test (killed without the fix) |
 | W13 | MAIA's reply to the writer's own words | Thoughtful, but ~300 words before her question, and it names a technical setting ("your latitude here is set to small changes only"). | D3b |
-| W14 | Studio links locally | `/writers-studio` loads signed in, but any Studio address with a passage in it bounces to sign-in (`no_session_cookie`), while the House sees the session. Possibly why the founder couldn't sign in locally. | **Open**, next to investigate |
+| W14 | Studio links locally | Some full page loads bounced to sign-in with `invalid_session` and no member cookie (the signed-out shape). | **Not reproduced** after investigation: a fresh token opens deep links (server-side and in-browser), no session was revoked, and no code signs out in the background. Held open as unexplained, not fixed. ⭐ The founder's "can't log in to my account locally" has a plain cause: the local database holds only the local test member (by design, no production members are copied), so the founder's own account does not exist locally. |
 | W10 | Local browser pane | Every full page load signed the walker out (`no_session_cookie`). Not reproduced in the founder's own browser, so possibly pane-specific. | **Unconfirmed**, held |
 
 Develop could not be walked in this pane (W10). Its findings stand from this morning's production
