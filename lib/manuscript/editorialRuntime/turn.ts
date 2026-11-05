@@ -57,6 +57,7 @@ import { editorialDirective, type EditorialDepth } from '@/lib/writersStudio/edi
 import { teachingTurnInstruction, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { conversationTurnInstruction, type TurnShape } from '@/lib/writersStudio/conversationTurn';
 import { passageActInstruction, type PassageAct } from '@/lib/writersStudio/passageActs';
+import { OPENING_STAND_IN, conversationOpeningInstruction, type OpeningGesture } from '@/lib/writersStudio/conversationOpening';
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 import { studioActionsInstruction } from '@/lib/writersStudio/studioActions';
 import { relationalCraftSystemGuidance } from '@/lib/writersStudio/relationalCraftExchange';
@@ -151,6 +152,12 @@ export interface EditorialTurnInput {
   /** The card the writer pressed (conversation-first Focus, step 1). Its instruction is
    *  added here, server-side; the writer's turn holds only the button's words. */
   readonly passageAct?: PassageAct;
+  /**
+   * R2: MAIA speaks first. The writer's gesture is a typed event, never a turn: there is
+   * NO author row to read, `currentTurnIndex` must be 0, and the outcome is forced to
+   * reply_only whatever the caller sent.
+   */
+  readonly opening?: { readonly gesture: OpeningGesture };
 }
 
 export type EditorialTurnRefusal =
@@ -248,16 +255,27 @@ export async function runEditorialTurn(
   const { threadId, currentTurnIndex } = input;
 
   /* 1 ⭐⭐ THE DURABLE TURN IS THE UTTERANCE. */
-  const t = await query<{ body: string }>(
-    `SELECT body FROM ask_turns tu
-       JOIN ask_threads th ON th.id = tu.thread_id
-      WHERE tu.thread_id = $1 AND tu.turn_index = $2
-        AND tu.speaker = 'author' AND th.member_id = $3`,
-    [threadId, currentTurnIndex, memberId]);
-  if (t.rows.length === 0) return { ok: false, reason: 'current_turn_not_found' };
-  const utterance = t.rows[0]!.body;
+  let utterance: string;
+  if (input.opening) {
+    /* R2 / O1(a): no writer words exist. ⛔ Nothing is read from ask_turns and nothing
+       stands in as the writer's speech in storage; this bracketed line is model input only. */
+    if (currentTurnIndex !== 0) return { ok: false, reason: 'current_turn_not_found' };
+    /* An opening is recorded in relationship custody or not at all. */
+    if (input.relationshipId === undefined) return { ok: false, reason: 'relationship_scope_unmeasured' };
+    utterance = OPENING_STAND_IN;
+  } else {
+    const t = await query<{ body: string }>(
+      `SELECT body FROM ask_turns tu
+         JOIN ask_threads th ON th.id = tu.thread_id
+        WHERE tu.thread_id = $1 AND tu.turn_index = $2
+          AND tu.speaker = 'author' AND th.member_id = $3`,
+      [threadId, currentTurnIndex, memberId]);
+    if (t.rows.length === 0) return { ok: false, reason: 'current_turn_not_found' };
 
-  /* 2 · assemble */
+    /* 2 · assemble */
+    utterance = t.rows[0]!.body;
+  }
+
   const assembly = await assembleEditorialCognition({
     memberId, threadId, currentTurnIndex,
     declaredAct: input.declaredAct, currentDirectionId: input.currentDirectionId,
@@ -370,7 +388,7 @@ export async function runEditorialTurn(
      resolutions could disagree, and the one that governs must be the one she
      was told about. */
   const scope: EditorialScopeDeclaration = input.scope ?? DEFAULT_SCOPE_DECLARATION;
-  const proposalPolicy: ProposalPolicy = input.proposalPolicy ?? 'allow';
+  const proposalPolicy: ProposalPolicy = input.opening ? 'reply_only' : (input.proposalPolicy ?? 'allow');
 
   /* ⭐⭐ THE SEQUENCE GATE (founder ruling, 2026-09-20): at latitude 1, and only
      there, MAIA discusses before offering wording — unless the writer has
@@ -428,6 +446,8 @@ export async function runEditorialTurn(
       input.turnShape === 'conversation' ? conversationTurnInstruction() : '',
       // Server-owned instruction for the card the writer pressed (step 1).
       input.passageAct ? passageActInstruction(input.passageAct) : '',
+      // R2: the opening's shape is server-owned too.
+      input.opening ? conversationOpeningInstruction() : '',
       // Server-owned map of the Studio's real controls (Design 1A), so "how do I"
       // gets the actual tool instead of a workaround. Names only; she presses nothing.
       studioGuideInstruction(),
@@ -623,11 +643,17 @@ export async function runEditorialTurn(
   const persisted = await persistMaiaEditorialOutcome({
     memberId, invocation, outcome: admission.outcome,
     ...(input.relationshipId !== undefined
-      ? { relationshipAdmission: {
-          relationshipId: input.relationshipId,
-          memberTurnIndex: input.currentTurnIndex,
-          manuscriptLocusScope: assembly.locusScopeKind!,
-        } }
+      ? { relationshipAdmission: input.opening
+          ? {
+              relationshipId: input.relationshipId,
+              manuscriptLocusScope: assembly.locusScopeKind!,
+              opening: { gesture: input.opening.gesture },
+            }
+          : {
+              relationshipId: input.relationshipId,
+              memberTurnIndex: input.currentTurnIndex,
+              manuscriptLocusScope: assembly.locusScopeKind!,
+            } }
       : {}),
     /* ⭐ ALL THREE FACTS, and `model` keeps its governed meaning:
        requested and SENT. ⛔ It is not redefined to mean "what answered" — that
@@ -640,6 +666,7 @@ export async function runEditorialTurn(
       latencyMs: structured.result.provenance.latencyMs,
       usage: structured.result.usage,
       runtime: 'ws-editorial-runtime-01/er-r4',
+      ...(input.opening ? { opening: { gesture: input.opening.gesture } } : {}),
     },
   });
   if (!persisted.ok) return { ok: false, reason: persisted.reason, detail: persisted.detail };

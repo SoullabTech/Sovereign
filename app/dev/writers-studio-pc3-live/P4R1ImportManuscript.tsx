@@ -72,6 +72,9 @@ export default function P4R1ImportManuscript({
   const [warnings, setWarnings] = useState<string[]>([]);
   const [paragraphsReconstructed, setParagraphsReconstructed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A new writer may never have opened MAIA, so no Sanctuary choice exists yet. The import asks for it here, as the
+  // writer's own explicit choice, rather than sending them somewhere else. The held file is retried only on Ordinary.
+  const [postureAskFor, setPostureAskFor] = useState<File | null>(null);
   const [custodyNotice, setCustodyNotice] = useState<string | null>(null);
   const [sourceArrivalId, setSourceArrivalId] = useState<string | null>(null);
   const [savedManuscriptId, setSavedManuscriptId] = useState<string | null>(null);
@@ -109,6 +112,10 @@ export default function P4R1ImportManuscript({
     if (!localReview) {
       posture = readCurrentSanctuaryPosture();
       if (!posture.resolved) {
+        if (posture.reason === 'no_live_settings') {
+          setPostureAskFor(file);
+          return;
+        }
         setError('Your Sanctuary setting could not be read on this device, so nothing was sent. Open MAIA here once, then try again.');
         return;
       }
@@ -173,6 +180,26 @@ export default function P4R1ImportManuscript({
     } finally {
       setBusy(null);
     }
+  };
+
+  const choosePosture = (sanctuary: boolean) => {
+    const file = postureAskFor;
+    setPostureAskFor(null);
+    if (typeof window === 'undefined') return;
+    try {
+      // Only reached when no live settings exist, so nothing else in the record is overwritten.
+      if (window.localStorage.getItem('maia_settings') !== null) {
+        setError('Your Sanctuary setting changed while you were choosing. Nothing was sent. Choose the file again.');
+        return;
+      }
+      const next = { sanctuary };
+      window.localStorage.setItem('maia_settings', JSON.stringify(next));
+      window.dispatchEvent(new CustomEvent('maia-settings-changed', { detail: next }));
+    } catch {
+      setError('Your choice could not be saved on this device, so nothing was sent.');
+      return;
+    }
+    if (file) void readFile(file);
   };
 
   const previewStructure = async () => {
@@ -442,6 +469,15 @@ export default function P4R1ImportManuscript({
           {warnings.length ? (
             <div className="p4r1-import-notices" role="note">
               {warnings.map((warning, index) => <p key={index}>{warning}</p>)}
+            </div>
+          ) : null}
+          {postureAskFor ? (
+            <div className="p4r1-import-notices" role="group" aria-label="How should this session be held?" data-import-posture-ask>
+              <p>Before I take in “{postureAskFor.name}”: should this session be ordinary, so your manuscript is kept, or Sanctuary, so nothing is kept?</p>
+              <p>
+                <button type="button" className="p4r1-import-primary" onClick={() => choosePosture(false)}>Ordinary — keep my manuscript</button>{' '}
+                <button type="button" className="p4r1-import-back" onClick={() => choosePosture(true)}>Sanctuary — keep nothing</button>
+              </p>
             </div>
           ) : null}
           {error ? <p className="p4r1-import-error" role="alert">{error}</p> : null}

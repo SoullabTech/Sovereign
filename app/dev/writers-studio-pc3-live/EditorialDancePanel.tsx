@@ -89,6 +89,13 @@ export interface EditorialDancePanelProps {
   /** Conversation Stage (founder R1, 2026-11-04): one wide conversation, the
    *  passage pinned above, options as turns. Replaces the Focus layout. */
   stage?: boolean;
+  /** R2 "MAIA opens": set ONLY where the conversation was entered by the writer's deliberate
+   *  gesture (the passage room). Never set from selection or a side panel. */
+  autoOpenWithMaia?: boolean;
+  /** Ask MAIA to speak first. The controller owns every law; this only asks. */
+  onOpenWithMaia?: () => void;
+  /** Plain, writer-facing text when the opening failed (nothing was sent or recorded). */
+  openingFailure?: string | null;
   /** The conversation that still holds an undoable edit after Use this. */
   earlierThread?: RebuildEditorialThread | null;
   /** Back to the page, the passage in place. */
@@ -527,6 +534,20 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     // Each request is taken once, identified by its key.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.requestedAct?.key]);
+  /* R2: MAIA opens. A ref makes this fire at most ONCE per mounted conversation, whatever
+     re-renders happen; it waits for both gates and for a quiet, empty thread. A failure
+     never re-fires on its own — the writer's "Try again" is the only second attempt. */
+  const openAskedRef = useRef(false);
+  const openingWanted = Boolean(props.stage && props.autoOpenWithMaia && props.onOpenWithMaia);
+  const threadIsEmpty = (props.thread?.turns.length ?? 0) === 0;
+  useEffect(() => {
+    if (!openingWanted || openAskedRef.current) return;
+    if (postureBlocksEditorial || relationshipBlocks || props.busy || !threadIsEmpty) return;
+    if (props.openingFailure || heldAct || props.requestedAct || props.pendingQuestion) return;
+    openAskedRef.current = true;
+    props.onOpenWithMaia?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openingWanted, postureBlocksEditorial, relationshipBlocks, props.busy, threadIsEmpty, props.openingFailure, heldAct, props.requestedAct, props.pendingQuestion]);
   const heldNotice = heldAct ? (
     <p className="p4r1-dance-held" role="status" data-held-act>
       When you’ve answered, I’ll continue with “{heldAct.label}”.{' '}
@@ -839,9 +860,18 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             </li>
           ) : null}
 
-          {turns.length === 0 && !gatesOpen ? (
+          {turns.length === 0 && !gatesOpen && openingWanted && !props.openingFailure && !props.busy ? (
+            <li className="ws-stage-turn is-maia is-thinking" aria-live="polite" data-stage-opening-pending>MAIA is reading…</li>
+          ) : null}
+
+          {turns.length === 0 && !gatesOpen && !(openingWanted && !props.openingFailure) ? (
             <li className="ws-stage-turn is-maia" data-turn-speaker="maia" data-stage-opening>
+              {props.openingFailure ? <p data-stage-opening-failure>{props.openingFailure}</p> : null}
               <p>I’m here with this passage. We can talk about what’s happening in it, I can show you an edit, or we can look at the craft already at work. What would you like?</p>
+              {props.openingFailure && props.onOpenWithMaia ? (
+                <button type="button" data-stage-opening-retry disabled={props.busy}
+                  onClick={() => { openAskedRef.current = true; props.onOpenWithMaia?.(); }}>Try again</button>
+              ) : null}
             </li>
           ) : null}
 
@@ -867,8 +897,8 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
         ) : null}
 
         <footer className="ws-stage-composer" data-stage-composer>
-          {turns.length === 0 ? (
-            <div className="ws-stage-chips">
+          {!turns.some((t) => t.speaker === 'author') && !props.pendingQuestion ? (
+            <div className="ws-stage-chips" data-stage-chips>
               <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Talk about what’s happening', prompt: passageActQuestion('discuss'), options: { proposalPolicy: 'reply_only', passageAct: 'discuss' } })}>Talk about what’s happening</button>
               <button type="button" disabled={props.busy || props.revisionsPaused} onClick={() => startAct({ label: 'Show me an edit', prompt: passageActQuestion('revise'), options: { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise' } })}>Show me an edit</button>
               <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Teach me the craft here', prompt: teachPassagePrompt(), depth: 'learning', options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' } })}>Teach me the craft here</button>
