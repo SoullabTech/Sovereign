@@ -30,6 +30,8 @@ LANE:      H1 — harden the paths the runbook's step 3 (acceptance run) and ste
 SUBJECT:   PR #2088, branch claude/writer-source-intake-hardening, onto canonical clean-main-no-secrets.
 STANDING:  MERGED to canonical as commit:`8a93b5d4` (2026-11-03 14:26 UTC). Adjudicated PASS for merge-readiness as CODE (section 5). NOT DEPLOYED.
            ⚠️ Section 3 and docket D-01 were written on a wrong premise and are CORRECTED in section 10; read section 10 first.
+           ⚠️ Section 10's production baseline was ALSO wrong (2026-11-05): the repository records two later cutovers, and the second one carries
+           this lane's hardening. Read section 12 before acting on section 10's inventory or on D-01.
            Merged after a person's approval and CI on its head; the follow-ups (suite repair, fail-closed gate, closure notes) travel in one
            separate Class A PR (section 10). The Caddy edge holds' current state is unevidenced; the last dated reading (2026-11-01) showed both present.
 AUTHORITY: Founder, 2026-11-03: "yes" to making decisions D1-D6 and D9 on a separate branch; "1 yes 2 approved 3 merge"
@@ -129,6 +131,7 @@ lane / gate        WRITER-SOURCE-INTAKE-LIFT / H1
 final evidence     section 4
 adjudication       PASS (bounded), section 5
 canonical SHA      commit:`8a93b5d4` (merge of PR #2088; final PR head commit:`18d23c6c`)
+                   follow-ups, PR #2107: commit:`f10bb264` (head commit:`36c54112`), merged 2026-11-04 22:50 UTC with the head pinned
 what changed       the product files listed in PR #2088; the hardening record; this record
 untouched          releaseAuthority.ts · Caddyfile · compose · env · AWS · migrations · the frozen branch · the instrument (docs branch)
 now proved         section 5, "this proves"
@@ -196,12 +199,16 @@ released flag. That was wrong, and I had not looked. The repository's own produc
 |---|---|
 | commit:`da55740ae` | 2026-11-02 21:02:52 (carries PR #2066 original-file intake) |
 | commit:`f21fda83a` | 2026-11-03 00:29:54 |
-| commit:`374c472a9` | 2026-11-03 11:47:23 (latest witnessed) |
+| commit:`374c472a9` | 2026-11-03 11:47:23 (latest witnessed WHEN THIS TABLE WAS WRITTEN; superseded, see the two rows below and section 12) |
+| commit:`857509331` | 2026-11-03 13:14:57 (added 2026-11-05 from the case study section 9; carries #2089) |
+| commit:`88fc9cc78` | 2026-11-03 15:05:09 (same source; carries #2090 and #2088, this lane's hardening) |
 
 At the first of them the witness recorded: the Import control "accepts `.docx .pdf .epub .txt .md .markdown`, up to 25 MB, with no hold message";
 "KMS credential mount readable"; and "Nothing was uploaded, so KMS encryption itself is not witnessed".
 
 **What that changes.**
+- ⚠️ **SUPERSEDED by section 12 (2026-11-05).** The next three bullets and the inventory paragraph after them rest on a baseline that was not the latest
+  recorded cutover. The original text is kept below unedited, as the history of what I believed.
 - The hardening (this lane) is **not** in the running production build, which predates the merge. Until a deploy, production's ingest route has none of: the
   roster gate (the Import page is roster-gated but the API route is excluded from the proxy), the rate limit, the posture requirement, the
   all-or-nothing custody claim, the removal door.
@@ -212,7 +219,7 @@ At the first of them the witness recorded: the Import control "accepts `.docx .p
   (no output means none is set), and
   `docker exec maia-postgres psql -U soullab maia_consciousness -c "SELECT state, count(*) FROM writer_source_landing_intents GROUP BY 1"` for what has landed.
 
-**Pending-deploy inventory, recomputed against the right baseline** (production commit:`374c472a9`; canonical commit:`88fc9cc7`; 68 commits, 8 first-parent merges): PR #2090
+**[SUPERSEDED by section 12: wrong baseline again.]** **Pending-deploy inventory, recomputed against the right baseline** (production commit:`374c472a9`; canonical commit:`88fc9cc7`; 68 commits, 8 first-parent merges): PR #2090
 (Use this keeps Undo), PR #2088 (this lane), PR #2089 (the Focus option card), PR #2080 (Soullab Home link), and four documentation merges (#2062, #2070, #2083,
 #2050). **No migration. No change to the compose file, Caddyfile, deploy scripts or Dockerfile. No change to the release authority.** (The earlier inventory in the
 conversation used the 2026-11-01 runtime commit:`3dd8dd287` as its baseline and was wrong for that reason.)
@@ -245,3 +252,19 @@ gesture does), and the server adoption route has no posture handling. The main W
 **D-08 · The canvas EditorialConversation adoption has no Sanctuary guard.** Decide whether that surface is live; if it is, it needs the same guard as the main Apply path (a small,
 tested client change).
 
+## 12. Second correction, and the pending-deploy inventory (2026-11-05)
+
+Section 10 said the hardening was not in the running production build and named `374c472a9` as the latest witnessed cutover. Both statements were wrong.
+The case study that section 10 itself cites (`WRITERS-STUDIO-SEMANTIC-FIELD-01_FUNCTION_CASE_STUDY_2026-11-03.md`) records, in its section 9 (added by PR #2091
+after the snapshot I read), two later founder-authorized cutovers: commit:`857509331` (2026-11-03 13:14:57Z, carries #2089) and commit:`88fc9cc78`
+(2026-11-03 15:05:09Z, "fix #2090 + #2088"). commit:`8a93b5d4` (#2088, this lane) is an ancestor of commit:`88fc9cc78`. So, per the repository's own records, **the
+hardening has been in the last recorded production build since 2026-11-03 15:05Z**. What is not in it is #2107 (the fail-closed configuration gate and the suite
+repairs) and thirteen other merges. This is the second wrong production premise from this lane; the cause both times was relying on a snapshot instead of
+re-reading the latest record before asserting production state.
+
+**What it changes.** D-01 ("deploy the hardened canonical, urgency higher") is withdrawn: a deploy of commit:`f10bb264` does not switch the hardening on. The
+production questions that matter are configuration ones (are the key variables set, is the R20 ledger provisioned) and the Delete and Studio changes that are
+new in the delta. The full inventory, with skeptic verdicts, the founder's read-only checks and the corrected recommendation, is in
+`WRITER-SOURCE-INTAKE-LIFT_H1_PENDING_DEPLOY_INVENTORY_2026-11-05.md`.
+
+**Still unknown to this lane:** production's current commit (anything after 2026-11-03 15:05:09Z is unrecorded in the repository), and every environment value.
