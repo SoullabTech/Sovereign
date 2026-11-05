@@ -143,8 +143,6 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
           <h2>Many paths. A deeper you.</h2>
         </div>
 
-        <CurrentTransitsField variant="house" />
-
         <aside className={styles.presence} aria-label="House presence">
           <blockquote>Not a place<br />to escape life,<br />but a way to meet it<br />more fully.</blockquote>
           <div className={styles.maiaPresence}>
@@ -156,6 +154,10 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
           <HousePassingThrough quote={passingQuote} />
           <p className={styles.whole}>Different places.<br />A more whole you.</p>
         </aside>
+
+        {/* Founder direction 2026-11-05: MAIA comes before the sky wherever the page stacks
+            (phones, tablets, the iPhone app). On wide screens MAIA keeps her own column. */}
+        <CurrentTransitsField variant="house" />
 
         <section className={styles.centerIntro} aria-labelledby="home-spaces-title">
           <p>YOUR SPACES</p>

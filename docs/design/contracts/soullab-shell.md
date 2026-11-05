@@ -4,6 +4,7 @@ human_activity: inhabiting any Soullab room within one coherent visual and platf
 
 surfaces:
   - app/layout.tsx
+  - components/BetaBanner.tsx
 
 change_class: structural
 # 2026-10-31: the opening `---` was missing, so the gate never read this
@@ -13,6 +14,11 @@ structural_rationale: >-
   global audio unlock inside the Session Room, so the shell does not touch
   that room's own media lifecycle. On this branch the file is byte-identical
   to production 9856e27f7. It adds no navigation, layout or room content.
+  2026-11-05: components/BetaBanner.tsx (the shell's floating BETA note, mounted in
+  app/layout.tsx) joins this contract. On phones it moved from the top-right corner,
+  where it covered the Room picker and House links (founder iPhone screenshots), to the
+  bottom centre; md and wider keep the top-right corner. Same text, same non-interactive
+  note; placement only.
 principles:
   - SOULLAB_PLATFORM_IDENTITY_CANON_2026-09-28 — Soullab remains the platform while rooms remain distinct
   - INHABITABLE_ARCHITECTURE_STANDARD — the shared shell frames a room without becoming the room
