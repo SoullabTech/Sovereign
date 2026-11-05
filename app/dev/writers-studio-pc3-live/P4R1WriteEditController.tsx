@@ -157,6 +157,13 @@ export default function FlagshipWriteEditController() {
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
   const [arrivalInsight, setArrivalInsight] = useState<CanvasInsight | null>(null);
   const [editorialThread, setEditorialThread] = useState<RebuildEditorialThread | null>(null);
+  /* Conversation Stage: after Use this the passage's words are new, so the next
+     question opens a new conversation (the server reasons on a frozen locus).
+     The conversation that holds the still-undoable edit is kept here, so the
+     new one can be shown without losing Undo, and is never pulled back over it. */
+  const [heldApplicationThread, setHeldApplicationThread] = useState<RebuildEditorialThread | null>(null);
+  const editorialThreadRef = useRef<RebuildEditorialThread | null>(null);
+  editorialThreadRef.current = editorialThread;
   // A manuscript may be used by multiple Living Works. A manuscript-owned
   // server thread alone does not authorize reusing Work A's relational dialog
   // in Work B. This is a provisional fail-closed presentation/gesture fence,
@@ -390,6 +397,7 @@ export default function FlagshipWriteEditController() {
   useEffect(() => {
     if (!workReentryRequired.current) return;
     setEditorialThread(null);
+    setHeldApplicationThread(null);
     setEditorialLivingWorkId(null);
     setEditorialDraft('');
     setSelectedPassage(null);
@@ -682,6 +690,7 @@ export default function FlagshipWriteEditController() {
     if (workReentryRequired.current) {
       // Clear all former Work context before lifting the presentation fence.
       setEditorialThread(null);
+      setHeldApplicationThread(null);
       setEditorialLivingWorkId(null);
       setEditorialDraft('');
       setSelectedPassage(null);
@@ -916,6 +925,7 @@ export default function FlagshipWriteEditController() {
 
   const clearEditorial = useCallback(() => {
     setEditorialThread(null);
+    setHeldApplicationThread(null);
     setEditorialLivingWorkId(null);
     if (typeof window !== 'undefined') {
       // A same-address replaceState can trigger App Router reconciliation after
@@ -1028,6 +1038,15 @@ export default function FlagshipWriteEditController() {
     // An editor-local tag protects presentation of an explicitly bound thread.
     // It is NOT server proof that this transcript belongs to LivingWork.id.
     setEditorialLivingWorkId(work.id);
+    const previous = editorialThreadRef.current;
+    const previousApp = previous?.application;
+    if (previous && previous.threadId !== thread.threadId
+      && previous.targetSectionId === thread.targetSectionId
+      && previousApp && !previousApp.undone && previousApp.canUndo) {
+      setHeldApplicationThread(previous);
+    } else if (thread.application && !thread.application.undone) {
+      setHeldApplicationThread(null);
+    }
     setEditorialThread(thread);
     if (typeof window !== 'undefined') {
       window.history.replaceState(
@@ -1054,7 +1073,10 @@ export default function FlagshipWriteEditController() {
       || candidate.scope !== currentLivingWorkScope
       || scopedA2Relationship?.id !== candidate.relationshipId
       || workReentryRequired.current
-      || scopedEditorialThread?.threadId === candidate.threadId) return;
+      || scopedEditorialThread?.threadId === candidate.threadId
+      // Already held beside a newer conversation: re-binding it would hide
+      // MAIA's latest answer (production walk, 2026-11-05).
+      || heldApplicationThread?.threadId === candidate.threadId) return;
 
     const scopeAtRead = currentLivingWorkScope;
     const generationAtRead = a2AsyncGenerationRef.current;
@@ -1091,6 +1113,7 @@ export default function FlagshipWriteEditController() {
     focusId,
     scopedA2Relationship?.id,
     scopedEditorialThread?.threadId,
+    heldApplicationThread?.threadId,
   ]);
 
   useEffect(() => {
@@ -1575,7 +1598,12 @@ export default function FlagshipWriteEditController() {
   }, [suggestedVersion, applyVersionById]);
 
   const undoSuggested = useCallback(async () => {
-    const application = scopedEditorialThread?.application;
+    const ownApp = scopedEditorialThread?.application;
+    // The edit may live in the conversation held aside after Use this.
+    const undoThread = ownApp && !ownApp.undone && ownApp.canUndo
+      ? scopedEditorialThread
+      : heldApplicationThread ?? scopedEditorialThread;
+    const application = undoThread?.application;
     if (!focusId || !application?.canUndo || !scopedA2Relationship || adoptionBusy || workReentryRequired.current
       || !currentWorkGesture()) return;
     const scopeAtGesture = memberSaveScopeRef.current;
@@ -1631,7 +1659,10 @@ export default function FlagshipWriteEditController() {
         setUndoMessage('That application could not be undone just now. Nothing else was changed.');
       }
 
-      if (scopedEditorialThread) {
+      if (undoThread && undoThread === heldApplicationThread) {
+        // The held conversation's edit is undone; nothing is left to hold.
+        if (serverUndone && sameRequest()) setHeldApplicationThread(null);
+      } else if (scopedEditorialThread) {
         const reread = await readBoundEditorialThread(scopedEditorialThread.threadId, focusId, scopedA2Relationship.id);
         if (reread.ok && sameRequest()) setEditorialThread(reread.thread);
       }
@@ -1646,7 +1677,7 @@ export default function FlagshipWriteEditController() {
       // still owns its busy state. The existing Work epoch fences newer Works.
       if (currentWorkGesture()) setAdoptionBusy(false);
     }
-  }, [editorialThread, scopedEditorialThread, scopedA2Relationship, adoptionBusy, refreshContext, focusId,
+  }, [editorialThread, scopedEditorialThread, heldApplicationThread, scopedA2Relationship, adoptionBusy, refreshContext, focusId,
     workGestureEpoch]);
 
   const saveWorkingRevision = useCallback(async (draft: CraftWorkingSaveDraft): Promise<boolean> => {
@@ -2206,6 +2237,7 @@ export default function FlagshipWriteEditController() {
             lineageReturnCandidateId={lineageReturnCandidateId}
             workspaceInsight={workReentryRequired.current ? null : workspaceInsight}
             editorialThread={scopedEditorialThread}
+            earlierEditorialThread={heldApplicationThread}
             relationshipChoices={!workReentryRequired.current ? relationshipChoices : []}
             maiaRelationship={scopedA2Relationship}
             maiaRelationshipChoices={scopedA2Relationship ? a2RelationshipChoices : []}

@@ -105,6 +105,8 @@ export type P4R1Pc3WriteEditViewProps = {
   lineageReturnCandidateId: string | null;
   workspaceInsight: { readingId: string; key: string } | null;
   editorialThread: RebuildEditorialThread | null;
+  /** Conversation Stage: the conversation still holding an undoable edit after Use this. */
+  earlierEditorialThread?: RebuildEditorialThread | null;
   relationshipChoices: readonly RebuildEditorialRelationship[];
   maiaRelationship: A2RelationshipSummary | null;
   maiaRelationshipChoices: readonly A2RelationshipSummary[];
@@ -1615,6 +1617,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       onMayRemoveParagraphs={props.onMayRemoveParagraphs}
       mayProposeImmediately={props.mayProposeImmediately}
       onMayProposeImmediately={props.onMayProposeImmediately}
+      stage
       onClose={props.onCloseWorkspace}
       onStartFresh={props.editorialThread ? props.onStartFreshConversation : undefined}
       onNextPassage={focusNextPassage}
@@ -1660,6 +1663,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       />
 
       <EditorialDancePanel
+        stage
+        earlierThread={props.earlierEditorialThread ?? null}
+        onBackToPage={props.onCloseWorkspace}
         onStudioAction={onStudioAction}
         onUseVersion={props.onUseVersion}
         deeper={focusDeeper}
