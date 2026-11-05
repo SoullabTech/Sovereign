@@ -73,7 +73,8 @@ test('Change it offers directions; choosing one asks MAIA for a new option, neve
   const lighter = Array.from(q('[data-stage-change-choices]')!.querySelectorAll('button')).find((b) => b.textContent === 'Lighter')!;
   act(() => lighter.click());
   expect(p.onSend).toHaveBeenCalledTimes(1);
-  expect(p.onSend.mock.calls[0][1]).toMatchObject({ proposalPolicy: 'allow', proposalRequested: true });
+  // Only the writer's words are stored; the act key carries how MAIA answers.
+  expect(p.onSend).toHaveBeenCalledWith('Make it lighter.', { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'option-lighter' });
   expect(p.onUseVersion).not.toHaveBeenCalled();
 });
 

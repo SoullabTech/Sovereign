@@ -20,10 +20,13 @@ import { EDITORIAL_PACKET_LABELS } from '@/lib/writersStudio/editorialIntelligen
 import { CONVERSATION_TURN_SHAPE } from '@/lib/writersStudio/conversationTurn';
 
 export type PassageAct = 'discuss' | 'revise' | 'revise-after-talk' | 'examples' | 'ideas' | 'deeper'
-  | 'change-another' | 'change-why' | 'where-next';
+  | 'change-another' | 'change-why' | 'where-next'
+  // Conversation Stage: "Change it" on an option MAIA offered in this conversation.
+  | 'option-lighter' | 'option-keep-mine' | 'option-another';
 
 export const PASSAGE_ACTS: readonly PassageAct[] = [
   'discuss', 'revise', 'revise-after-talk', 'examples', 'ideas', 'deeper', 'change-another', 'change-why', 'where-next',
+  'option-lighter', 'option-keep-mine', 'option-another',
 ];
 
 export function isPassageAct(value: unknown): value is PassageAct {
@@ -37,6 +40,9 @@ export function passageActQuestion(act: PassageAct, subject?: string): string {
     case 'change-another': return `Show me another way to handle ${subject ?? 'this change'}.`;
     case 'change-why': return `Why ${subject ?? 'this change'}?`;
     case 'where-next': return 'Which passage should I work on next?';
+    case 'option-lighter': return 'Make it lighter.';
+    case 'option-keep-mine': return 'Keep more of my wording.';
+    case 'option-another': return 'Show me another way.';
     case 'discuss': return 'Let’s talk about what’s happening in this passage.';
     case 'revise': return 'Show me edit options for this passage.';
     case 'revise-after-talk': return 'Show me revision options, from what we’ve discussed.';
@@ -76,6 +82,24 @@ function body(act: PassageAct): readonly string[] {
       'Which one or two exact passages should I consider next?',
       'Use only the text already authorized in this conversation. If that is insufficient, ask me to choose.',
       'Do not move focus or propose a revision.',
+    ];
+    case 'option-lighter': return [
+      'Make your most recent proposal lighter: restore more of my original wording and change only what is necessary.',
+    'Work from your most recent proposed wording in this conversation and my original passage. Do not broaden the edit or move to a different place.',
+    'Return at most one new proposal, and say in a sentence or two what is different about it. If no meaningful change in that direction is possible, say so instead of proposing.',
+    'Nothing is to be applied automatically.',
+    ];
+    case 'option-keep-mine': return [
+      'Keep more of my original wording and cadence while keeping the useful gain of your most recent proposal.',
+    'Work from your most recent proposed wording in this conversation and my original passage. Do not broaden the edit or move to a different place.',
+    'Return at most one new proposal, and say in a sentence or two what is different about it. If no meaningful change in that direction is possible, say so instead of proposing.',
+    'Nothing is to be applied automatically.',
+    ];
+    case 'option-another': return [
+      'Show me one genuinely different option for this same passage. Do not rank it against your most recent proposal.',
+    'Work from your most recent proposed wording in this conversation and my original passage. Do not broaden the edit or move to a different place.',
+    'Return at most one new proposal, and say in a sentence or two what is different about it. If no meaningful change in that direction is possible, say so instead of proposing.',
+    'Nothing is to be applied automatically.',
     ];
     case 'change-why': return [
       'Explain the change I named.',

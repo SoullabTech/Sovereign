@@ -719,16 +719,10 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
         setStageUsing(null);
       }
     };
-    const changeVersion = (version: RebuildEditorialVersion, instruction: string) => {
+    // Change it: only the writer's words are stored; the server adds how to answer.
+    const changeVersion = (act: 'option-lighter' | 'option-keep-mine' | 'option-another') => {
       setStageChangeFor(null);
-      props.onSend([
-        instruction,
-        'Original passage:', props.currentText, '',
-        'Currently selected proposal:', version.wording, '',
-        'Work from these exact two texts. Do not silently broaden the edit or substitute a different locus.',
-        'Return at most one new proposal. Preserve my voice, intention, subject, and intentional ambiguity.',
-        'If no meaningful change in that direction is possible, reply without a new proposal and say why.',
-      ].join('\n'), { proposalPolicy: 'allow', proposalRequested: true });
+      props.onSend(passageActQuestion(act), { proposalPolicy: 'allow', proposalRequested: true, passageAct: act });
     };
     const talkAbout = () => {
       stageComposerRef.current?.focus();
@@ -800,9 +794,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
               )}
               {stageChangeFor === version.id ? (
                 <div className="ws-stage-change" data-stage-change-choices>
-                  <button type="button" onClick={() => changeVersion(version, 'Make this revision lighter. Restore more of my original wording and change only what is necessary.')}>Lighter</button>
-                  <button type="button" onClick={() => changeVersion(version, 'Keep more of my original wording and cadence while preserving the useful editorial gain.')}>Keep more of mine</button>
-                  <button type="button" onClick={() => changeVersion(version, 'Show me one genuinely different option for this same passage. Do not rank it against the current one.')}>Another way</button>
+                  <button type="button" onClick={() => changeVersion('option-lighter')}>Lighter</button>
+                  <button type="button" onClick={() => changeVersion('option-keep-mine')}>Keep more of mine</button>
+                  <button type="button" onClick={() => changeVersion('option-another')}>Another way</button>
                   {props.deeper ? <button type="button" onClick={() => { setStageChangeFor(null); setDeeperOpen(true); }}>Change it myself</button> : null}
                 </div>
               ) : null}
