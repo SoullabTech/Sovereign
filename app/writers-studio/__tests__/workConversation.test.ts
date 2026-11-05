@@ -315,6 +315,13 @@ describe('a Keep is the member handing her a passage', () => {
   it('says plainly that she has not been given the text', () => {
     expect(surface).toContain('She has not been given its text');
   });
+
+  it('says she can read the section the writer is in, when there is one (L8)', () => {
+    /* The prompt gives her that one section's text (askReader workSays); the
+       screen must not tell the writer otherwise. */
+    expect(surface).toContain('She can read the section you are in, and only that one.');
+    expect(surface).toMatch(/sectionId\s*\?\s*'She can read the section you are in/);
+  });
 });
 
 describe('Open in MAIA is a choice, not the default', () => {
