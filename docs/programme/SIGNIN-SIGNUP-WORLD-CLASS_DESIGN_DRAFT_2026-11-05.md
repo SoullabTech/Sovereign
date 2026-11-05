@@ -1,6 +1,6 @@
 # Sign-in and sign-up: a design draft (DRAFT, 5 Nov 2026)
 
-**Status:** design draft for founder ruling. Nothing here is authorized, built or deployed. It sits in the auth/mail lane
+**Status:** design draft. **Section 6 principle RULED YES by the founder, 5 Nov 2026** (a member can recover without email, via passkeys and recovery codes, with the owner link as the human backstop). The ruling authorizes the principle only; every phase below still needs its own approval. Nothing here is authorized, built or deployed. It sits in the auth/mail lane
 (AUTH-RETURN-01, MAIL-*); it is not a new lane and opens none.
 **Occasion:** a beta tester (Cece) was locked out on 2 Nov. Cause: forgotten password with no working recovery.
 
@@ -47,7 +47,7 @@ The member did nothing wrong; the system had a single point of failure and no pa
 | 5 | Passkey at sign-up, passkey prompt at sign-in | WebAuthn already present (12 holders) | Raise passkey adoption from 12 of 94. |
 | 6 | One-field front door consolidation | 2, 5 | Last, once routes are healthy; UI change, design-canon gate applies. |
 
-## 6. Decision owed (one question of principle)
+## 6. Decision (RULED YES, 5 Nov 2026)
 **Should a member be able to recover their own access without email?** Recommended ruling: **yes, via recovery codes and passkeys (phases 4 and 5),
 with the owner link as the human backstop.** This is the one choice that decides whether a future mail outage can lock anyone out again.
 
