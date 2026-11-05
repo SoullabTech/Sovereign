@@ -520,9 +520,9 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
                     onOpen={props.onOpen}
                     onStartWriting={props.onStartWriting}
                     onDeleteWork={props.onDeleteWork}
-  onRemoveWork={props.onRemoveWork}
-  onDeletionNotice={showNotice}
-  allWorks={props.works}
+                    onRemoveWork={props.onRemoveWork}
+                    onDeletionNotice={showNotice}
+                    allWorks={props.works}
                     busy={props.busy}
                   />
                 ))}
@@ -590,17 +590,17 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
               <div className="fr-home-shelf">
                 {props.arrival.alsoWritten.map((item) => (
                   <WorkShelfCard
-  key={item.id}
-  work={item}
-  manuscripts={props.manuscripts}
-  onOpen={props.onOpen}
-  onStartWriting={props.onStartWriting}
-  onDeleteWork={props.onDeleteWork}
-  onRemoveWork={props.onRemoveWork}
-  onDeletionNotice={showNotice}
-  allWorks={props.works}
-  busy={props.busy}
-/>
+                    key={item.id}
+                    work={item}
+                    manuscripts={props.manuscripts}
+                    onOpen={props.onOpen}
+                    onStartWriting={props.onStartWriting}
+                    onDeleteWork={props.onDeleteWork}
+                    onRemoveWork={props.onRemoveWork}
+                    onDeletionNotice={showNotice}
+                    allWorks={props.works}
+                    busy={props.busy}
+                  />
                 ))}
               </div>
             </section>
@@ -621,9 +621,9 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
                     onOpen={props.onOpen}
                     onStartWriting={props.onStartWriting}
                     onDeleteWork={props.onDeleteWork}
-  onRemoveWork={props.onRemoveWork}
-  onDeletionNotice={showNotice}
-  allWorks={props.works}
+                    onRemoveWork={props.onRemoveWork}
+                    onDeletionNotice={showNotice}
+                    allWorks={props.works}
                     busy={props.busy}
                   />
                 ))}
@@ -652,18 +652,20 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             <section className="fr-home-region">
               <p className="fr-home-eyebrow">Your Works</p>
               <div className="fr-home-shelf">
-                {props.works.map((item) => <WorkShelfCard
-  key={item.id}
-  work={item}
-  manuscripts={props.manuscripts}
-  onOpen={props.onOpen}
-  onStartWriting={props.onStartWriting}
-  onDeleteWork={props.onDeleteWork}
-  onRemoveWork={props.onRemoveWork}
-  onDeletionNotice={showNotice}
-  allWorks={props.works}
-  busy={props.busy}
-/>)}
+                {props.works.map((item) => (
+                  <WorkShelfCard
+                    key={item.id}
+                    work={item}
+                    manuscripts={props.manuscripts}
+                    onOpen={props.onOpen}
+                    onStartWriting={props.onStartWriting}
+                    onDeleteWork={props.onDeleteWork}
+                    onRemoveWork={props.onRemoveWork}
+                    onDeletionNotice={showNotice}
+                    allWorks={props.works}
+                    busy={props.busy}
+                  />
+                ))}
               </div>
             </section>
           ) : null}
@@ -679,18 +681,20 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
           <section className="fr-home-region">
             <p className="fr-home-eyebrow">Your Works</p>
             <div className="fr-home-shelf fr-home-shelf-4">
-              {props.works.map((item) => <WorkShelfCard
-  key={item.id}
-  work={item}
-  manuscripts={props.manuscripts}
-  onOpen={props.onOpen}
-  onStartWriting={props.onStartWriting}
-  onDeleteWork={props.onDeleteWork}
-  onRemoveWork={props.onRemoveWork}
-  onDeletionNotice={showNotice}
-  allWorks={props.works}
-  busy={props.busy}
-/>)}
+              {props.works.map((item) => (
+                <WorkShelfCard
+                  key={item.id}
+                  work={item}
+                  manuscripts={props.manuscripts}
+                  onOpen={props.onOpen}
+                  onStartWriting={props.onStartWriting}
+                  onDeleteWork={props.onDeleteWork}
+                  onRemoveWork={props.onRemoveWork}
+                  onDeletionNotice={showNotice}
+                  allWorks={props.works}
+                  busy={props.busy}
+                />
+              ))}
             </div>
           </section>
           {creationControls}

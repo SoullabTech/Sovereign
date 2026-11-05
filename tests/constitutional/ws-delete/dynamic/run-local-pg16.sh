@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Runs the WS-DELETE-01 R-SHARED physical probes against a LOCAL PostgreSQL 16 cluster provisioned just for this run.
+# Runs the WS-DELETE-01 R-SHARED physical probes (server behaviour, then the client's own functions against the real routes and
+# deterministic lock-held interleavings) against a LOCAL PostgreSQL 16 cluster provisioned just for this run.
 # Fictional data only; loopback only; no AWS, no network.
 #
 # Two ways to run it:
@@ -34,7 +35,7 @@ set +e
 NO_PROXY='*' DATABASE_URL="postgresql://fictional@127.0.0.1:${PORT}/ws_delete_fictional" \
 FILE_STORAGE_PATH="$VAULT" NODE_ENV=test WS_DELETE_DYNAMIC=fictional-only \
 ./node_modules/.bin/jest --config jest.config.js --ci --runInBand --verbose --coverage=false \
-  tests/constitutional/ws-delete/dynamic/sharedWriting.probe.test.ts > "$OUT/jest.log" 2>&1
+  tests/constitutional/ws-delete/dynamic/sharedWriting.probe.test.ts tests/constitutional/ws-delete/dynamic/clientAndRace.probe.test.ts > "$OUT/jest.log" 2>&1
 RC=$?
 echo "jest exit=$RC ; log=$OUT/jest.log"
 exit $RC
