@@ -16,7 +16,7 @@ export const STUDY_LESSONS = [
     id: 'houses', title: 'Houses and conventions', level: 'Methods',
     concept: 'Different house divisions partition the local sky differently. A chart may also report a 5° pre-angular-cusp convention distinct from strict geometric membership.',
     observation: 'Compare the reported and geometric house fields for any selected point.',
-    boundary: 'This preview does not certify Placidus or Koch. Do not treat a changed house label as a changed planetary position.',
+    boundary: 'Placidus and Koch are checked against Swiss Ephemeris reference values, and quadrant houses are calculated only between 66° N and 66° S. Do not treat a changed house label as a changed planetary position.',
   },
   {
     id: 'aspects', title: 'Aspects and orbs', level: 'Geometry',
