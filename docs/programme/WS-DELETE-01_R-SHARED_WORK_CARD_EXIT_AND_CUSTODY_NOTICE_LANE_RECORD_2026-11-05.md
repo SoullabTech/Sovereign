@@ -10,6 +10,8 @@ Governing authority:   WS-DELETE-01 founder ruling 2026-09-07 (docs/programme/WS
                        lib/writersStudio/deleteWork.ts: "Remove Work, keep writing" is a DIFFERENT act, never a softening of Delete, and its label may not outrun
                        the act. Founder production report 2026-11-05 (browser console and screenshot) and the instruction "If we need to Jarvis flow then do it".
                        That instruction authorizes building and evidencing a candidate. It does NOT authorize a PR, a merge or a deploy.
+                       FOUNDER HOLD, 2026-11-05, after the candidate existed: "dont deploy! we test it locally first." Deploy is closed. Local testing by the
+                       founder precedes any PR. Nothing in this lane has been pushed to a deploy path, and none ever is by this lane.
 Current gate:          One gate: when the live Home Work card's Delete is refused because the writing is shared, or succeeds but custody is unconfirmed, does the
                        member get a true sentence and a lawful way forward, without the refusal rule or the erase mechanism changing?
 Evidence subject:      local commit e6ce0aa9 on branch claude/ws-delete-shared-and-custody-notice-20261105, base canonical commit:`dcdffad2`. Evidence about code under jsdom
