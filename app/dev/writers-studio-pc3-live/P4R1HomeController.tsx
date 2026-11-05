@@ -276,6 +276,9 @@ export default function P4R1HomeController() {
     if (outcome.removed) { await refresh().catch(() => undefined); throw new DeletionUnconfirmed(outcome.message); }
     // Shared writing: nothing was deleted, and Delete can never succeed from this card. The card offers the other act.
     if (outcome.refusal === 'declared_in_other_works') throw new DeletionSharedMaterial(outcome.message);
+    // The card was stale (the Work was removed elsewhere, or a moment ago): nothing was deleted, and the page is made current BEFORE
+    // the member is told so, so the message is true when they read it.
+    if (outcome.refusal === 'work_no_longer_holds_it') { await refresh().catch(() => undefined); throw new Error(outcome.message); }
     throw new Error(outcome.message);
   }, [refresh]);
 

@@ -62,8 +62,8 @@ const W_TWO = 'e0000000-0000-4000-8000-00000000000e';
 const asMember = (id: string | null) => { (globalThis as any).__probeMember = id; };
 const sealMode = (mode: 'sealed' | 'throws') => { (globalThis as any).__sealMode = mode; };
 const request = (path: string) => new NextRequest(`http://localhost${path}`, { method: 'DELETE' });
-const delManuscript = async (id: string) => {
-  const res = await deleteManuscriptRoute(request(`/api/sovereign/manuscripts/${id}`), { params: Promise.resolve({ id }) });
+const delManuscript = async (id: string, viaWork?: string) => {
+  const res = await deleteManuscriptRoute(request(`/api/sovereign/manuscripts/${id}${viaWork === undefined ? '' : `?workId=${viaWork}`}`), { params: Promise.resolve({ id }) });
   return { status: res.status, body: await res.json().catch(() => null) as any };
 };
 const delWork = async (id: string) => {
@@ -201,6 +201,61 @@ suite('WS-DELETE-01 R-SHARED physical probes (real PostgreSQL 16, real routes, f
       }
       // The observed mix is part of the record, whatever it is.
       console.warn('[probe SH-8 outcomes]', JSON.stringify(Object.fromEntries(outcomes)));
+    });
+  });
+
+  describe('a stale card (the Work the member pressed Delete on no longer holds the writing)', () => {
+    it('ST-1 after Work A is removed, Delete from the STALE card of A is refused and touches nothing: the writing and Work B survive', async () => {
+      await delWork(W_A);
+      const out = await delManuscript(MS_SHARED, W_A);
+      expect(out).toEqual({ status: 409, body: { refusal: 'work_no_longer_holds_it' } });
+      expect(await manuscriptExists(MS_SHARED)).toBe(true);
+      expect(await workExists(W_B)).toBe(true);
+      expect(await declares(W_B, MS_SHARED)).toBe(true);
+      expect(await count('deletion_manifests')).toBe(0);
+      expect(await count('provenance_tombstones')).toBe(0);
+    });
+
+    it('ST-2 the SAME request without the guard erases the other Work and the writing (this is the harm the guard closes)', async () => {
+      await delWork(W_A);
+      const out = await delManuscript(MS_SHARED);
+      expect(out.status).toBe(200);
+      expect(await manuscriptExists(MS_SHARED)).toBe(false);
+      expect(await workExists(W_B)).toBe(false);
+    });
+
+    it('ST-3 Delete from the card of the sole remaining claimant goes through', async () => {
+      await delWork(W_A);
+      const out = await delManuscript(MS_SHARED, W_B);
+      expect(out).toEqual({ status: 200, body: { removed: true } });
+      expect(await manuscriptExists(MS_SHARED)).toBe(false);
+      expect(await workExists(W_B)).toBe(false);
+    });
+
+    it('ST-4 while both Works still hold the writing the refusal is still the shared one (the guard does not pre-empt it)', async () => {
+      const out = await delManuscript(MS_SHARED, W_A);
+      expect(out).toEqual({ status: 409, body: { refusal: 'declared_in_other_works', works: 2 } });
+    });
+
+    it('ST-5 a Work id that is not this member\'s, or does not exist, is refused exactly like a stale one (no existence leak) and nothing changes', async () => {
+      const stranger = '99999999-9999-4999-8999-999999999999';
+      const a = await delManuscript(MS_SOLO, stranger);
+      const b = await delManuscript(MS_SOLO, W_B);
+      expect(a).toEqual({ status: 409, body: { refusal: 'work_no_longer_holds_it' } });
+      expect(b).toEqual(a);
+      expect(await manuscriptExists(MS_SOLO)).toBe(true);
+      expect(await workExists(W_SOLO)).toBe(true);
+    });
+
+    it('ST-6 a malformed Work id is refused 400 rather than silently ignored (ignoring it would turn a guarded delete into an unguarded one)', async () => {
+      const out = await delManuscript(MS_SOLO, 'not-a-uuid');
+      expect(out.status).toBe(400);
+      expect(await manuscriptExists(MS_SOLO)).toBe(true);
+    });
+
+    it('ST-7 an uppercase Work id is the same Work (UUIDs are case-insensitive)', async () => {
+      const out = await delManuscript(MS_SOLO, W_SOLO.toUpperCase());
+      expect(out).toEqual({ status: 200, body: { removed: true } });
     });
   });
 

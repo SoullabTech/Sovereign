@@ -68,7 +68,10 @@ export type EraseOutcome =
   /** Rows are gone. `sweptAll` is false while vault or recovery-ledger custody is still owed. */
   | { readonly ok: true; readonly artifactsQueued: number; readonly sweptAll: boolean; readonly recoverySealed: boolean }
   | { readonly ok: false; readonly refusal: 'not_found' }
-  | { readonly ok: false; readonly refusal: 'declared_in_other_works'; readonly works: number };
+  | { readonly ok: false; readonly refusal: 'declared_in_other_works'; readonly works: number }
+  /** The caller named the Work it was acting from, and that Work no longer holds this writing (removed on another device, or earlier
+   *  in this one). Refused before anything is touched, so a stale card can never reach the writing of a Work the member did not pick. */
+  | { readonly ok: false; readonly refusal: 'work_no_longer_holds_it' };
 
 /**
  * Ends custody of one manuscript and any declaration that exists only to name it.
@@ -80,6 +83,7 @@ export type EraseOutcome =
 export async function eraseManuscript(
   manuscriptId: string,
   memberId: string,
+  options: { readonly viaWorkId?: string } = {},
 ): Promise<EraseOutcome> {
   const result = await transaction(async (tx) => {
     /* A coherent R20 backup holds the same advisory key while it seals the
@@ -103,6 +107,13 @@ export async function eraseManuscript(
         FOR UPDATE OF e, w`,
       [manuscriptId, memberId],
     );
+    /* The member pressed Delete on a particular Work's card. If that Work no longer holds this writing, the card is stale: the
+       count below would now see only some OTHER Work as the sole claimant and erase its writing and the Work itself. The act the
+       member confirmed was about the Work on their screen, so it is refused here, inside the same transaction, before anything
+       is deleted. Callers that name no Work (loose writing, the History page) are unchanged. */
+    if (options.viaWorkId !== undefined && !claims.rows.some((row) => row.living_work_id === options.viaWorkId)) {
+      return { ok: false as const, refusal: 'work_no_longer_holds_it' as const };
+    }
     if (claims.rows.length > 1) {
       return { ok: false as const, refusal: 'declared_in_other_works' as const, works: claims.rows.length };
     }

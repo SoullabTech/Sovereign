@@ -76,8 +76,10 @@ export async function deleteWork(
 
   /* Material and declaration are erased together, server-side. A Work with no
      manuscript has nothing to erase — only a declaration to withdraw. */
+  /* When the card is a Work's, the request names that Work. The server refuses if it no longer holds the writing, so a stale card
+     (the Work was removed on another device, or a moment ago) can never reach the writing of a Work the member did not pick. */
   const url = manuscriptId
-    ? `/api/sovereign/manuscripts/${manuscriptId}`
+    ? `/api/sovereign/manuscripts/${manuscriptId}${workId ? `?workId=${encodeURIComponent(workId)}` : ''}`
     : workId
       ? `/api/sovereign/living-works/${workId}`
       : null;
@@ -90,8 +92,14 @@ export async function deleteWork(
     return { ok: false, message: GENERIC };
   }
 
-  /* 404 means it is already gone — another device, or a request that succeeded
-     while the response was lost. Absence is the outcome we were seeking. */
+  /* 404 on the WRITING means it is already gone: another device, or a request that succeeded while the response was lost. Absence
+     of the writing is the outcome sought, but a Work that still names it would render as an ordinary, openable, empty Work: the
+     detached state this ruling forbids by name. The ruling's own retry path says the retry "finds the manuscript already gone
+     (404) and continues", so a Work card follows through and withdraws the declaration. */
+  if (res.status === 404 && workId && manuscriptId) {
+    const withdrawn = await removeWork(workId, fetcher);
+    return withdrawn.ok ? { ok: true } : { ok: false, message: GENERIC };
+  }
   if (res.ok || res.status === 404) return { ok: true };
 
   const refusal = await deletionRefusal(res);
@@ -148,9 +156,14 @@ export function deletionRefusalCopy(refusal: string): string {
     /* Shared material. Theirs to resolve — we must not choose which work loses
        the writing, and we must not pretend the obstacle is technical. */
     case 'declared_in_other_works':
-      return 'This writing also belongs to another work, so deleting it here would '
-        + 'remove it from there too. Nothing was deleted. Remove it from the other '
-        + 'work first, then delete it here.';
+      return 'This writing is also in another of your Works, so it cannot be deleted from here '
+        + 'without taking it from there. Nothing was deleted. On Home, press Delete on one of '
+        + 'those Works and choose “Remove this Work”, then delete the writing.';
+
+    /* The Work the member pressed Delete on no longer holds this writing. The page is refreshed before this is shown. */
+    case 'work_no_longer_holds_it':
+      return 'That Work has changed since this page loaded. It may have been removed on another '
+        + 'device. Nothing was deleted. Home now shows what is current.';
 
     /* We could not finish ending custody. Never reported as done. */
     case 'custody_incomplete':
@@ -235,12 +248,19 @@ export const REMOVE_SHARED_WORK_COPY = {
   question: (title: string) => `Remove “${title}” and keep the writing?`,
   body:
     'This writing is also in another of your Works, so it cannot be deleted from here without taking it from there. '
-    + 'You can remove this Work instead. That removes the Work and what was built around it: your conversations with MAIA '
-    + 'about it, what MAIA understood, its list of materials and its image. The writing stays in your other Work, untouched.',
+    + 'You can remove this Work instead. That removes the Work and what you built inside it: its conversations with MAIA, '
+    + 'what you told MAIA about it, your corrections, where you left off, its list of materials and its image. '
+    + 'It cannot be undone, and private backups already taken can still hold a copy until they are retired on their normal '
+    + 'schedule. The writing, and your conversations about the writing itself, stay in your other Work.',
   confirm: 'Remove this Work',
   working: 'Removing…',
-  cancel: 'Keep it',
+  /* Not "Keep it": under a question that says "keep the writing" that reads as an answer, not as cancel. */
+  cancel: 'Don’t remove',
 } as const;
+
+/** Said on the page after a Work was removed and its writing kept, so the member is told what happened and not left to infer it. */
+export const removedWorkNotice = (title: string): string =>
+  `“${title}” was removed. The writing is still in your other Work.`;
 
 /** Copy for the confirmation step. Kept beside the act so the two cannot drift. */
 export const DELETE_WORK_COPY = {
