@@ -1,0 +1,25 @@
+.panel { border: 1px solid rgba(159, 208, 216, .3); border-radius: 14px; padding: 16px 18px; margin: 16px 0; background: rgba(6, 20, 31, .6); color: #e3e9ea; }
+.controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 12px; }
+.controls h3 { margin: 0 12px 4px 0; font-family: Georgia, serif; font-weight: 400; font-size: 1.35rem; color: #9fd0d8; }
+.controls label { display: grid; gap: 4px; font-size: .8rem; color: #b5c6cc; }
+.controls select { background: rgba(4, 14, 22, .85); color: #eef3f3; border: 1px solid rgba(159, 208, 216, .4); border-radius: 8px; padding: 8px 10px; }
+.controls button { border: 1px solid #7fb3bc; background: rgba(127, 179, 188, .14); color: #dff0f2; border-radius: 8px; padding: 8px 12px; }
+.controls button:disabled { opacity: .55; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; }
+.tabs button { background: transparent; border-color: rgba(159, 208, 216, .35); }
+.tabs .tabOn { background: rgba(127, 179, 188, .32); border-color: #9fd0d8; }
+.summary { margin: 14px 0 8px; font-size: .92rem; }
+.headline { margin: 14px 0 8px; font-family: Georgia, serif; font-size: 1.3rem; color: #eef3f3; }
+.muted { color: #9fb2b9; font-size: .95rem; }
+.cap { text-transform: capitalize; }
+.num { font-variant-numeric: tabular-nums; text-align: right; }
+.table { width: 100%; border-collapse: collapse; font-size: .86rem; display: block; overflow-x: auto; }
+.table th, .table td { padding: 6px 8px; border-bottom: 1px solid rgba(159, 208, 216, .14); text-align: left; white-space: nowrap; }
+.table th { color: #9fd0d8; font-weight: 500; }
+.cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 14px; }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 8px 0; font-size: .9rem; }
+.facts dt { color: #9fd0d8; }
+.facts dd { margin: 0; }
+.note { color: #9fb2b9; font-size: .82rem; margin: 12px 0 0; line-height: 1.45; }
+.alert { color: #f4daac; margin: 10px 0 0; }
+@media (max-width: 560px) { .facts { grid-template-columns: 1fr; } .facts dd { margin-bottom: 6px; } }
