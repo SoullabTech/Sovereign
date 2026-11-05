@@ -115,7 +115,7 @@ export function parseReturnEditorialEpisode(raw: unknown): ReturnEpisodeParse {
       if (episode.continuationAuthorized !== false) return { ok: false };
       continue;
     }
-    if (episode.childKind !== 'EDITORIAL_TURN'
+    if ((episode.childKind !== 'EDITORIAL_TURN' && episode.childKind !== 'EDITORIAL_OPENING')
       || episode.continuationAuthorized !== true
       || episode.authorityClass !== 'EDITORIAL_CHAIN'
       || typeof episode.threadId !== 'string'

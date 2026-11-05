@@ -24,6 +24,7 @@ import ProTransitPanel from './ProTransitPanel';
 import ProAspectGrid from './ProAspectGrid';
 import ProComparePanel from './ProComparePanel';
 import ProDerivedPanel from './ProDerivedPanel';
+import ProSystemsPanel from './ProSystemsPanel';
 import ProChartViews from './ProChartViews';
 import ProEphemerisPanel from './ProEphemerisPanel';
 import ProAstroMapPanel from './ProAstroMapPanel';
@@ -558,6 +559,8 @@ export default function ProAstrologyExperience() {
                   questions={INQUIRY} />
                 <ProAstroMapPanel subjectId={savedSubject ? savedSubject.id : 'own'}
                   chartLabel={savedSubject ? savedSubject.label : 'my chart'} houseSystem={houseSystem} />
+                <ProSystemsPanel subjectId={savedSubject ? savedSubject.id : 'own'}
+                  chartLabel={savedSubject ? savedSubject.label : 'my chart'} />
                 <p id="pro-orb-filter-description" className={styles.sourceLabel} role="note">
                   The orb setting filters existing reported aspects for display; it does not
                   recalculate their accuracy or determine applying/separating phase.

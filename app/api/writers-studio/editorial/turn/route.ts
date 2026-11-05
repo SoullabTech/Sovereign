@@ -38,6 +38,8 @@ import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import { isTeachingAnchor, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { isTurnShape, type TurnShape } from '@/lib/writersStudio/conversationTurn';
 import { isPassageAct, type PassageAct } from '@/lib/writersStudio/passageActs';
+import { OPENING_GESTURE } from '@/lib/writersStudio/conversationOpening';
+import { query } from '@/lib/db/postgres';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,7 +55,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  */
 const TOP_KEYS = [
   'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'responseDepth', 'relationshipId', 'carry',
-  'teachingAnchor', 'turnShape', 'passageAct',
+  'teachingAnchor', 'turnShape', 'passageAct', 'opening',
 ] as const;
 const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
@@ -69,7 +71,10 @@ const SCOPE_KEYS = ['latitude', 'mayRemoveParagraphs', 'mayProposeImmediately'] 
 type Parsed =
   | {
       ok: true; threadId: string;
-      act: { act: MemberActKind; text: string; refersTo: string | null };
+      /** ⛔ null ONLY for an opening: MAIA speaks first and the writer has said nothing. */
+      act: { act: MemberActKind; text: string; refersTo: string | null } | null;
+      /** R2 / O1(a): the writer's deliberate gesture, recorded as a typed event, never as words. */
+      opening: boolean;
       sanctuary: boolean;
       scope: EditorialScopeDeclaration;
       relationshipId: string;
@@ -109,6 +114,44 @@ function parseClosed(body: unknown): Parsed {
   }
   if (typeof b.relationshipId !== 'string' || b.relationshipId.length === 0) {
     return { ok: false, error: 'relationship_required' };
+  }
+
+  /* R2 "MAIA opens": an exclusive request shape. No act, no card, no shape, no carry. */
+  if (b.opening !== undefined) {
+    if (b.opening !== true) return { ok: false, error: 'opening must be true' };
+    const clash = (['act', 'passageAct', 'teachingAnchor', 'turnShape', 'carry'] as const)
+      .filter((k) => b[k] !== undefined);
+    if (clash.length) return { ok: false, error: `opening is exclusive with: ${clash.join(', ')}` };
+    if (!(b.proposalPolicy === undefined || b.proposalPolicy === 'reply_only')) {
+      return { ok: false, error: 'an opening is reply_only' };
+    }
+    let openScope: EditorialScopeDeclaration = DEFAULT_SCOPE_DECLARATION;
+    if (b.scope !== undefined) {
+      if (typeof b.scope !== 'object' || b.scope === null || Array.isArray(b.scope)) {
+        return { ok: false, error: 'scope must be an object' };
+      }
+      const so = b.scope as Record<string, unknown>;
+      const stray = Object.keys(so).filter((k) => !(SCOPE_KEYS as readonly string[]).includes(k));
+      if (stray.length) return { ok: false, error: `unknown scope field(s): ${stray.join(', ')}` };
+      if (so.latitude !== undefined && !isEditorialLatitude(so.latitude)) {
+        return { ok: false, error: 'scope.latitude must be an integer 1 through 5' };
+      }
+      openScope = {
+        latitude: so.latitude === undefined ? DEFAULT_SCOPE_DECLARATION.latitude : so.latitude,
+        mayRemoveParagraphs: so.mayRemoveParagraphs === true,
+      };
+    }
+    const depth: EditorialDepth = b.responseDepth === undefined ? 'guided' : b.responseDepth as EditorialDepth;
+    if (!(['guided', 'learning', 'direct'] as readonly string[]).includes(depth)) {
+      return { ok: false, error: 'responseDepth must be guided, learning, or direct' };
+    }
+    return {
+      ok: true, threadId: b.threadId, act: null, opening: true,
+      sanctuary: TurnPosture.resolve(b).sanctuary,
+      scope: openScope, relationshipId: b.relationshipId, carry: null,
+      mayProposeImmediately: false, proposalPolicy: 'reply_only', responseDepth: depth,
+      teachingAnchor: null, turnShape: null, passageAct: null,
+    };
   }
 
   let carry: { kind: 'prior_maia_editorial_turn'; sourceEpisodeSequence: number } | null = null;
@@ -230,6 +273,7 @@ function parseClosed(body: unknown): Parsed {
     threadId: b.threadId,
     /* ⛔ The member's text is carried EXACTLY. No trim, no normalisation. */
     act: { act: ao.act as MemberActKind, text: ao.text, refersTo: ao.refersTo ?? null },
+    opening: false,
     /* ⭐ Validated as a boolean above; minted from the WHOLE body so a
        contradictory nested affirmative still fails closed to Sanctuary. */
     sanctuary: TurnPosture.resolve(b).sanctuary,
@@ -307,7 +351,62 @@ export async function POST(request: NextRequest) {
     resolvedCarry = carry.carry;
   }
 
-  const act = await persistMemberEditorialAct({ memberId, threadId: parsed.threadId, act: parsed.act });
+  if (parsed.opening) {
+    /* R2: a deliberate gesture, once per opened conversation. ⛔ ANY existing turn
+       refuses, before any model call — nothing here may add a second opening. */
+    const owned = await query<{ turns: string }>(
+      `SELECT (SELECT count(*) FROM ask_turns WHERE thread_id = th.id)::text AS turns
+         FROM ask_threads th WHERE th.id = $1 AND th.member_id = $2`,
+      [parsed.threadId, memberId]);
+    if (owned.rows.length === 0) {
+      return NextResponse.json({ error: 'thread_not_found', persisted: false }, { status: 404 });
+    }
+    if (Number(owned.rows[0]!.turns) !== 0) {
+      return NextResponse.json({ error: 'opening_thread_not_new', persisted: false }, { status: 409 });
+    }
+    const opened = await runEditorialTurn({
+      identity,
+      threadId: parsed.threadId,
+      relationshipId: parsed.relationshipId,
+      currentTurnIndex: 0,
+      declaredAct: 'discourse',
+      currentDirectionId: null,
+      exchangeId: randomUUID(),
+      sanctuary: false,
+      scope: parsed.scope,
+      mayProposeImmediately: false,
+      proposalPolicy: 'reply_only',
+      responseDepth: parsed.responseDepth,
+      opening: { gesture: OPENING_GESTURE },
+    });
+    if (!opened.ok) {
+      const refusedByLaw = opened.reason === 'disclosure_unavailable'
+        || opened.reason === 'relationship_refused' || opened.reason === 'proposal_policy_reply_only'
+        || opened.reason === 'sequence_discussion_first' || opened.reason === 'relationship_scope_unmeasured';
+      if (!refusedByLaw) {
+        console.error('[editorial/turn] opening refused', {
+          reason: opened.reason, dispatch: opened.dispatch ?? 'not_applicable', threadId: parsed.threadId,
+        });
+      }
+      return NextResponse.json({
+        threadId: parsed.threadId, persisted: false, opening: true, error: opened.reason,
+        ...(opened.dispatch ? { dispatch: opened.dispatch } : {}),
+      }, { status: refusedByLaw ? 409 : opened.reason === 'disclosure_confirmation_unresolved' ? 500 : 502 });
+    }
+    return NextResponse.json({
+      threadId: parsed.threadId,
+      opening: true,
+      memberTurnIndex: null,
+      persisted: true,
+      maiaTurnIndex: opened.persisted.turnIndex,
+      response: opened.persisted.reply,
+      direction: null,
+      version: null,
+      voice: null,
+    });
+  }
+
+  const act = await persistMemberEditorialAct({ memberId, threadId: parsed.threadId, act: parsed.act! });
   if (!act.ok) {
     const status = act.reason === 'thread_not_found' ? 404 : 400;
     return NextResponse.json({ error: act.reason }, { status });
@@ -320,7 +419,7 @@ export async function POST(request: NextRequest) {
     relationshipId: parsed.relationshipId,
     ...(resolvedCarry ? { carry: resolvedCarry } : {}),
     currentTurnIndex: act.turnIndex,
-    declaredAct: parsed.act.act,
+    declaredAct: parsed.act!.act,
     currentDirectionId: act.direction?.id ?? null,
     /* ⭐ Server-minted act identity. ⛔ Never supplied by the client. */
     exchangeId: randomUUID(),
