@@ -1,4 +1,7 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+const mockQuery = jest.fn<(...args: unknown[]) => Promise<{ rows: unknown[] }>>();
+jest.mock('@/lib/db/postgres', () => ({ query: (...args: unknown[]) => mockQuery(...args) }));
+
 import { notifyMailTransportDown, resetMailTransportAlertThrottle } from '../mailTransportAlert.server';
 
 const ENV_KEYS = [
@@ -13,6 +16,7 @@ describe('mail transport down alert', () => {
   beforeEach(() => {
     for (const k of ENV_KEYS) { saved[k] = process.env[k]; delete process.env[k]; }
     resetMailTransportAlertThrottle();
+    mockQuery.mockReset().mockResolvedValue({ rows: [] });
     fetchMock = jest.fn(async () => ({ ok: true, json: async () => ({ error_code: null }) }));
     (globalThis as unknown as { fetch: unknown }).fetch = fetchMock;
     jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -68,5 +72,35 @@ describe('mail transport down alert', () => {
     const r = await notifyMailTransportDown(alert, 1);
     expect(r.delivered).toBe(false);
     expect(r.sms).toBe('failed');
+  });
+
+  it('posts to the private #ops-alerts channel as MAIA when it exists, with no @mention', async () => {
+    mockQuery.mockReset()
+      .mockResolvedValueOnce({ rows: [{ id: 'chan-1', created_by: 'owner-1' }] })
+      .mockResolvedValueOnce({ rows: [] });
+    const r = await notifyMailTransportDown(alert, 1);
+    expect(r.channel).toBe('sent');
+    expect(r.delivered).toBe(true);
+    const insert = mockQuery.mock.calls[1] as unknown[];
+    expect(String(insert[0])).toContain("'maia'");
+    const params = insert[1] as string[];
+    expect(params[0]).toBe('chan-1');
+    expect(params[2]).toContain('EMAIL TRANSPORT DOWN');
+    expect(params[2]).not.toContain('@');
+  });
+
+  it('is not_configured, and says so, when #ops-alerts does not exist', async () => {
+    const r = await notifyMailTransportDown(alert, 1);
+    expect(r.channel).toBe('not_configured');
+    expect(r.delivered).toBe(false);
+  });
+
+  it('a channel failure never throws and does not block the other paths', async () => {
+    configureSms();
+    mockQuery.mockReset().mockRejectedValue(new Error('db down'));
+    const r = await notifyMailTransportDown(alert, 1);
+    expect(r.channel).toBe('failed');
+    expect(r.sms).toBe('sent');
+    expect(r.delivered).toBe(true);
   });
 });
