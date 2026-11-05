@@ -46,6 +46,7 @@ import { memberRef } from '@/lib/privacy/memberRef';
 import { titleFromFilename } from '@/lib/manuscript/ingest/titleSuggestion';
 import { recordArtifactArrival } from '@/lib/manuscript/source/arrivals';
 import { SourceLandingIncompleteError } from '@/lib/manuscript/source/encryptedLanding';
+import { writerSourceKeyProviderConfigured } from '@/lib/manuscript/source/sourceKeyAuthority';
 import { SOURCE_UPLOAD_IDEMPOTENCY_HEADER } from '@/lib/writersStudio/sourceUploadAttempt';
 import { writerReleaseAuthority } from '@/lib/writersStudio/releaseAuthority';
 import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
@@ -305,7 +306,7 @@ export async function POST(request: NextRequest) {
     const postureClaim = request.headers.get(POSTURE_HEADER);
     if (postureClaim !== 'true' && postureClaim !== 'false') {
       return NextResponse.json(
-        { error: 'Choose Ordinary or Sanctuary first. Nothing has been sent.', code: 'posture_required' },
+        { error: 'Choose Ordinary or Sanctuary first. Nothing was saved.', code: 'posture_required' },
         { status: 428, headers: { 'Cache-Control': 'no-store' } },
       );
     }
@@ -313,6 +314,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Sanctuary is on. Original files are not saved during Sanctuary.', code: 'sanctuary_unavailable' },
         { status: 423, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+
+    // ── 3c. CONFIGURATION ──────────────────────────────────────────────────
+    // Released is not the same as possible. Without a key provider every upload fails inside custody and, worse, each
+    // attempt would leave a stranded landing intent and invite "retry the same file", which can never work. Refuse
+    // here, before the body is read and before anything is created, with a sentence that is true. This only ever makes the
+    // route refuse MORE: release is still the source-bound manifest alone, and no setting can release anything.
+    if (!writerSourceKeyProviderConfigured()) {
+      console.warn('[press/manuscripts/ingest] refused: source key provider not configured', { memberRef: memberRef(memberId) });
+      return NextResponse.json(
+        {
+          error: 'Original-file import is not available yet. Nothing was saved. You can still paste your writing.',
+          code: 'source_intake_not_configured',
+          retryable: false,
+        },
+        { status: 503, headers: { 'Cache-Control': 'no-store' } },
       );
     }
 

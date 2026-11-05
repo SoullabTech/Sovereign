@@ -28,7 +28,9 @@ describe('DEVELOPMENTAL-FIELD-01 orientation', () => {
   });
 
   it('whole-work conversation explicitly refuses silent descent', () => {
-    expect(source).toContain('Stay at the whole-Work scale until I choose to go closer.');
+    /* Q2 (2026-11-05): the rule lives in MAIA's Work-conversation standing, not
+       in words placed in the writer's mouth. */
+    expect(require('node:fs').readFileSync(require('node:path').join(process.cwd(), 'lib/manuscript/ask/askReader.ts'), 'utf8')).toContain('If they are thinking about the whole Work, do not move into chapters, sentences or edits until they choose to.');
     expect(source).toContain('initialDraft={attentionConversationDraft}');
   });
 

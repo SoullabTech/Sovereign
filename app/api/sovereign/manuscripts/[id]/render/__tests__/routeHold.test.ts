@@ -12,7 +12,8 @@ jest.mock('@/lib/manuscript/render/renderMemberBook', () => ({
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { renderMemberBook } from '@/lib/manuscript/render/renderMemberBook';
-import { writerReleaseAuthority } from '@/lib/writersStudio/releaseAuthority';
+import { writerExportCertified, writerReleaseAuthority } from '@/lib/writersStudio/releaseAuthority';
+import { isMemberBookExportReleased } from '@/lib/manuscript/render/memberBookExportRelease';
 import { GET, POST } from '../route';
 
 const mockAuth = getMemberIdFromRequest as jest.Mock;
@@ -58,11 +59,17 @@ beforeEach(() => {
 
 describe('production-default Writer export certification fence', () => {
   it('is source-owned and default-deny for both PDF and EPUB', () => {
+    // The export and erasure fences only. Source intake is a different capability and
+    // was released on purpose (25e911f8, PR #2066); its clauses are pinned where it is
+    // enforced: transportBoundary F3/F7, encryptedSourceUploadContract, p4r1ImportHoldHonesty.
     expect(writerReleaseAuthority()).toMatchObject({
-      sourceIntakeReleased: false,
       exportsCertified: { pdf: false, epub: false },
       permanentErasureCertified: false,
     });
+    // The route's two independent hard-off layers, each default-deny on its own.
+    expect(isMemberBookExportReleased()).toBe(false);
+    expect(writerExportCertified('pdf')).toBe(false);
+    expect(writerExportCertified('epub')).toBe(false);
   });
 
   it.each(['pdf', 'epub'] as const)('returns 423 for an owned current %s request before rendering or provenance', async (format) => {

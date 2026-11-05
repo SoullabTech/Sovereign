@@ -1,5 +1,26 @@
 # WRITER-SOURCE-INTAKE-LIFT · H1 — Hardening before the acceptance run (lane record)
 
+## 0. Lane preamble (manual §27) — ADDED RETROSPECTIVELY, 2026-11-04
+
+Manual §27 requires this preamble **before any action**. It was not written then. H1 was built and merged (commit:`8a93b5d4`) first; the founder's
+"make sure if needed we are doing a Jarvis flow" is what led to this record, and the follow-up work (sections 10 and 11, PR #2107) was started
+without a preamble of its own. Adding it now changes no evidence and no standing. It exposes the authority the lane already carried, and it
+records the order of events as it was rather than as the manual prescribes.
+
+```
+Class:                 A (consent, retention and deletion copy on the original-file intake path; needs a person's approval)
+Governing authority:   Founder 2026-11-03: "yes" to decisions D1-D6 and D9 on a separate branch; "1 yes 2 approved 3 merge";
+                       "yes" to combining the follow-ups into one PR. Runbook WRITER_SOURCE_KMS_RULING_AND_INTAKE_LIFT_RUNBOOK_2026-11-01.md
+                       section 4, steps 3 and 6. Manual section 20 (a lane inside an existing flow, not a new flow).
+Current gate:          H1 follow-ups: harden and verify the paths the acceptance run (step 3) and production witness (step 6) will exercise.
+                       One gate. The acceptance run and the witness are separate gates and are not opened here.
+Evidence subject:      PR #2107 at its head when merged (CI is evidence about that exact head), onto canonical clean-main-no-secrets.
+                       H1 itself: PR #2088, merged as commit:`8a93b5d4`. Neither says anything about production.
+Stop boundary:         This lane may not deploy, configure or touch an AWS key or credential, edit Caddy or compose, change
+                       releaseAuthority.ts, admit member data, schedule or wire the sweep, rule a disposition, or un-freeze
+                       claude/happy-cannon-17pn9x. It does not merge around a missing approval.
+```
+
 ```
 FLOW:      The founder's intake-lift runbook, docs/programme/WRITER_SOURCE_KMS_RULING_AND_INTAKE_LIFT_RUNBOOK_2026-11-01.md §4
            (six ordered steps). Not a new flow: this lane answers the same governing question as that runbook
@@ -7,8 +28,12 @@ FLOW:      The founder's intake-lift runbook, docs/programme/WRITER_SOURCE_KMS_R
 LANE:      H1 — harden the paths the runbook's step 3 (acceptance run) and step 6 (production witness) will exercise:
            upload, reopen, discard, Delete Work.
 SUBJECT:   PR #2088, branch claude/writer-source-intake-hardening, onto canonical clean-main-no-secrets.
-STANDING:  CODE CANDIDATE. Adjudicated PASS for merge-readiness as CODE (section 5). NOT merged at the time of writing. NOT deployed.
-           Merge is waiting on a person's approval (Class A) and CI on the final head.
+STANDING:  MERGED to canonical as commit:`8a93b5d4` (2026-11-03 14:26 UTC). Adjudicated PASS for merge-readiness as CODE (section 5). NOT DEPLOYED.
+           ⚠️ Section 3 and docket D-01 were written on a wrong premise and are CORRECTED in section 10; read section 10 first.
+           ⚠️ Section 10's production baseline was ALSO wrong (2026-11-05): the repository records two later cutovers, and the second one carries
+           this lane's hardening. Read section 12 before acting on section 10's inventory or on D-01.
+           Merged after a person's approval and CI on its head; the follow-ups (suite repair, fail-closed gate, closure notes) travel in one
+           separate Class A PR (section 10). The Caddy edge holds' current state is unevidenced; the last dated reading (2026-11-01) showed both present.
 AUTHORITY: Founder, 2026-11-03: "yes" to making decisions D1-D6 and D9 on a separate branch; "1 yes 2 approved 3 merge"
            (D4 as an atomic refusal; build the abandoned-upload sweep; merge). The founder then enabled auto-merge and twice used
            "Update branch" on the PR. Interpretations I made are listed in section 7, not hidden.
@@ -36,7 +61,7 @@ This gate does **not** ask whether intake may be lifted, whether the AWS configu
 - **The branch policy:** `claude/*` branches are allowed (2026-10-01 ruling). The frozen branch `claude/happy-cannon-17pn9x`
   is untouched at commit:`937bc77e`.
 
-## 3. Finding for the founder: step 4 crossed ahead of steps 1 to 3
+## 3. Finding for the founder: step 4 crossed ahead of steps 1 to 3 (SUPERSEDED IN PART by section 10)
 
 The runbook says each step needs the one before it. In canonical today:
 
@@ -105,7 +130,8 @@ stale against canonical, and is not merged by this lane.
 lane / gate        WRITER-SOURCE-INTAKE-LIFT / H1
 final evidence     section 4
 adjudication       PASS (bounded), section 5
-canonical SHA      (record at merge)
+canonical SHA      commit:`8a93b5d4` (merge of PR #2088; final PR head commit:`18d23c6c`)
+                   follow-ups, PR #2107: commit:`f10bb264` (head commit:`36c54112`), merged 2026-11-04 22:50 UTC with the head pinned
 what changed       the product files listed in PR #2088; the hardening record; this record
 untouched          releaseAuthority.ts · Caddyfile · compose · env · AWS · migrations · the frozen branch · the instrument (docs branch)
 now proved         section 5, "this proves"
@@ -126,7 +152,7 @@ next exact act     founder rules D-01 and D-02; then runbook steps 1 to 3
 
 ## 8. Founder decision docket
 
-**D-01 · Deploy ordering with the flag already true (most consequential).** Canonical carries `sourceIntakeReleased: true`; production
+**D-01 · (REFRAMED in section 10: production already runs the flag; the question is now deploying the hardened canonical.) Original text, kept: Deploy ordering with the flag already true (most consequential).** Canonical carries `sourceIntakeReleased: true`; production
 configuration for the key was absent on 2026-11-01. Options: (a) hold every deploy of canonical until runbook steps 1 and 2 exist;
 (b) deploy with the flag reverted until then; (c) accept a deploy where the member sees the file chooser and the upload fails with
 `writer_source_key_provider_missing`. Recommendation: (a), because any lane's next deploy otherwise ships (c) unannounced. Your earlier
@@ -157,3 +183,88 @@ the same test names. The first four belong to the release lane, the last two to 
 No deploy. No migration. No AWS resource, credential or key. No Caddy or compose edit. No change to `releaseAuthority.ts`.
 No member data. No scheduling or wiring of the sweep. The frozen branch is untouched. Nothing here is **LIVE**: this is a code candidate
 tested against a fake KMS.
+
+## 10. Closure, and a correction to this record (written after the merge)
+
+**Merge.** PR #2088 merged into `clean-main-no-secrets` as commit:`8a93b5d4` on 2026-11-03 at 14:26:12 UTC, by the founder's account; the PR head at
+merge was commit:`18d23c6c`. The GitHub review list showed no review at the last read. Nothing is deployed from this lane.
+
+**Correction: production already runs `sourceIntakeReleased: true`.** Sections 3 and 8 (D-01) assumed the next deploy would be the first to carry the
+released flag. That was wrong, and I had not looked. The repository's own production witnesses
+(`WRITERS-STUDIO-SEMANTIC-FIELD-01_STUDIO_GUIDE_WITNESS_RESULT_2026-11-02.md` sections 7 and 8, and
+`WRITERS-STUDIO-SEMANTIC-FIELD-01_FUNCTION_CASE_STUDY_2026-11-03.md`) record three founder-authorized cutovers, each of which contains the flag flip
+(commit:`25e911f8` is an ancestor of all three):
+
+| Runtime | Cutover (UTC) |
+|---|---|
+| commit:`da55740ae` | 2026-11-02 21:02:52 (carries PR #2066 original-file intake) |
+| commit:`f21fda83a` | 2026-11-03 00:29:54 |
+| commit:`374c472a9` | 2026-11-03 11:47:23 (latest witnessed WHEN THIS TABLE WAS WRITTEN; superseded, see the two rows below and section 12) |
+| commit:`857509331` | 2026-11-03 13:14:57 (added 2026-11-05 from the case study section 9; carries #2089) |
+| commit:`88fc9cc78` | 2026-11-03 15:05:09 (same source; carries #2090 and #2088, this lane's hardening) |
+
+At the first of them the witness recorded: the Import control "accepts `.docx .pdf .epub .txt .md .markdown`, up to 25 MB, with no hold message";
+"KMS credential mount readable"; and "Nothing was uploaded, so KMS encryption itself is not witnessed".
+
+**What that changes.**
+- ⚠️ **SUPERSEDED by section 12 (2026-11-05).** The next three bullets and the inventory paragraph after them rest on a baseline that was not the latest
+  recorded cutover. The original text is kept below unedited, as the history of what I believed.
+- The hardening (this lane) is **not** in the running production build, which predates the merge. Until a deploy, production's ingest route has none of: the
+  roster gate (the Import page is roster-gated but the API route is excluded from the proxy), the rate limit, the posture requirement, the
+  all-or-nothing custody claim, the removal door.
+- So D-01 is not "hold deploys". It is: **deploy the hardened canonical**, and the urgency is higher than this record said.
+- Not established by any record I have: whether `WRITER_SOURCE_KEY_PROVIDER`, `WRITER_SOURCE_KMS_KEY_ARN` and a region are set in the production
+  environment, whether the AWS key and IAM principal exist, and whether any original has been uploaded in production. Names only, no values, from minisforum:
+  `docker exec maia-sovereign sh -c 'env | grep -E "^(WRITER_SOURCE_KEY_PROVIDER|WRITER_SOURCE_KMS_KEY_ARN|WRITER_SOURCE_KMS_REGION|AWS_SHARED_CREDENTIALS_FILE)=" | sed "s/=.*/=<set>/"'`
+  (no output means none is set), and
+  `docker exec maia-postgres psql -U soullab maia_consciousness -c "SELECT state, count(*) FROM writer_source_landing_intents GROUP BY 1"` for what has landed.
+
+**[SUPERSEDED by section 12: wrong baseline again.]** **Pending-deploy inventory, recomputed against the right baseline** (production commit:`374c472a9`; canonical commit:`88fc9cc7`; 68 commits, 8 first-parent merges): PR #2090
+(Use this keeps Undo), PR #2088 (this lane), PR #2089 (the Focus option card), PR #2080 (Soullab Home link), and four documentation merges (#2062, #2070, #2083,
+#2050). **No migration. No change to the compose file, Caddyfile, deploy scripts or Dockerfile. No change to the release authority.** (The earlier inventory in the
+conversation used the 2026-11-01 runtime commit:`3dd8dd287` as its baseline and was wrong for that reason.)
+
+**Revised D-01: deploy the hardened canonical?** Recommendation: yes, through the immutable-SHA lane, after the read-only configuration check above. Both
+candidates ship in one follow-ups PR with this record (branch `claude/writer-source-intake-lift-h1-followups`): the fail-closed check (commit:`9f38d4f7`, makes a released route with
+no key provider refuse honestly before storing anything, which turns a false "retry the same file" into a true sentence if the configuration is absent) and
+the suite repair (commit:`95c68e49`, section 11). Integrating them needed one more change: the repaired F7 tests run the released route through to a 200, so they now run as a
+configured process (they set `WRITER_SOURCE_KEY_PROVIDER=local-test`); the gate itself is pinned in `intakeRefusals.test.ts`.
+
+## 11. Canonical's six red suites, triaged
+
+Read-only triage by four agents with a skeptic re-deriving each verdict, then verified. **Nine of the ten failing tests were stale; one was a real defect.**
+
+| Tests | Cause | Verdict |
+|---|---|---|
+| transportBoundary F7 x3, routeHold export fence | PR #2066 released intake; the tests still expected the 423 hold | stale; rewritten to pin the released route's true boundaries |
+| jarvisApplyCurrentPostureGuard x3, jarvisMemberSaveReceiptWiring x1 | PR #2089 moved the posture-checked Apply and Save bodies; the tests sliced the old function boundaries | stale; **the Sanctuary posture checks are intact** (read at the gesture, again after the settle await, before the only adoption call), tests re-anchored and strengthened |
+| readings route x1 | a refusal now carries `completion` and `attribution` (PR #1268, September); the test pinned the old keys | stale; red since September, unnoticed because CI does not run unit tests |
+| jarvisMaiaUnsentComposerCustodyR1 x1 | PR #2076 stripped Studio markers from the writer's own "You" bubble | **real defect**, a fidelity one: the writer's words were shown trimmed and with typed marker-shaped text removed. Not a privacy leak (the sent text was unchanged). Fixed in code; only the writer is exempt |
+
+The repair is commit:`95c68e49` (it ships in the follow-ups PR): 82 tests across the seven related files pass; 20 mutants killed; the
+wide run has 3,026 passing and none failing, the only failing suites being the seven `listen`/`publish` suites that fail to load in this environment and are untouched.
+The composer defect is live in production if the Craft companion is reachable there (not established).
+
+**One finding, not fixed here:** `app/writers-studio/canvas/EditorialConversation.tsx` `adopt()` posts to the adoption endpoint without reading the member's posture (its own send
+gesture does), and the server adoption route has no posture handling. The main Writer's Studio Apply path is guarded; this canvas surface is reachable only when
+`WRITERS_STUDIO_EDITORIAL_ENABLED=1`, which I cannot read from here. Class A. Docket D-08.
+
+**D-08 · The canvas EditorialConversation adoption has no Sanctuary guard.** Decide whether that surface is live; if it is, it needs the same guard as the main Apply path (a small,
+tested client change).
+
+## 12. Second correction, and the pending-deploy inventory (2026-11-05)
+
+Section 10 said the hardening was not in the running production build and named `374c472a9` as the latest witnessed cutover. Both statements were wrong.
+The case study that section 10 itself cites (`WRITERS-STUDIO-SEMANTIC-FIELD-01_FUNCTION_CASE_STUDY_2026-11-03.md`) records, in its section 9 (added by PR #2091
+after the snapshot I read), two later founder-authorized cutovers: commit:`857509331` (2026-11-03 13:14:57Z, carries #2089) and commit:`88fc9cc78`
+(2026-11-03 15:05:09Z, "fix #2090 + #2088"). commit:`8a93b5d4` (#2088, this lane) is an ancestor of commit:`88fc9cc78`. So, per the repository's own records, **the
+hardening has been in the last recorded production build since 2026-11-03 15:05Z**. What is not in it is #2107 (the fail-closed configuration gate and the suite
+repairs) and thirteen other merges. This is the second wrong production premise from this lane; the cause both times was relying on a snapshot instead of
+re-reading the latest record before asserting production state.
+
+**What it changes.** D-01 ("deploy the hardened canonical, urgency higher") is withdrawn: a deploy of commit:`f10bb264` does not switch the hardening on. The
+production questions that matter are configuration ones (are the key variables set, is the R20 ledger provisioned) and the Delete and Studio changes that are
+new in the delta. The full inventory, with skeptic verdicts, the founder's read-only checks and the corrected recommendation, is in
+`WRITER-SOURCE-INTAKE-LIFT_H1_PENDING_DEPLOY_INVENTORY_2026-11-05.md`.
+
+**Still unknown to this lane:** production's current commit (anything after 2026-11-03 15:05:09Z is unrecorded in the repository), and every environment value.
