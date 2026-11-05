@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { chooseReplyLength } from '@/lib/writersStudio/replyLengthPreference';
+import { parseAnswerChoices } from '@/lib/writersStudio/answerChoices';
 import {
   EDITORIAL_APPROACHES,
   approachNote,
@@ -832,6 +833,8 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       setStartPrompt('');
     };
 
+    const latestTurn = turns.at(-1);
+    const answerChoices = latestTurn?.speaker === 'maia' ? parseAnswerChoices(latestTurn.body).choices : [];
     const renderTurn = (t: (typeof turns)[number], keyPrefix = '') => {
       if (t.speaker === 'author') {
         return (
@@ -897,6 +900,14 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             </div>
           ) : null}
           {t.turnIndex === props.lastMaiaTurn?.turnIndex && !keyPrefix ? replyAction : null}
+          {/* Answer choices (founder 2026-11-05): one click sends exactly the button's words. */}
+          {!keyPrefix && t === turns.at(-1) && !props.busy && !gatesOpen && answerChoices.length > 0 ? (
+            <div className="ws-stage-answers" data-stage-answers>
+              {answerChoices.map((choice) => (
+                <button key={choice} type="button" onClick={() => props.onSend(choice, { turnShape: 'conversation' })}>{choice}</button>
+              ))}
+            </div>
+          ) : null}
         </li>
       );
     };

@@ -5306,3 +5306,9 @@
 .p4r1-root .ws-stage-choose-list button{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%;
   text-align:left; white-space:normal; padding:8px 12px; border-radius:10px; }
 .p4r1-root .ws-stage-choose-list button span{ font-size:13px; color:var(--fr-muted); overflow-wrap:anywhere; }
+
+/* Answer choices: MAIA's closed question, answerable in one click. */
+.p4r1-root .ws-stage-answers{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.p4r1-root .ws-stage-answers button{ font-size:14px; padding:7px 14px; border-radius:999px; cursor:pointer;
+  border:1px solid rgba(232,190,120,.55); background:rgba(232,190,120,.08); color:inherit; }
+.p4r1-root .ws-stage-answers button:hover{ background:rgba(232,190,120,.18); }

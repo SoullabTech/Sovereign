@@ -150,3 +150,15 @@ the in-flight wait; (3) a refused request showed the server's raw error to the w
 (4) Local only: the dev server had served a stale copy of the turn route and refused
 `replyLength`; a restart cleared it. **Witnessed locally:** ask → chooser → earlier
 conversation → MAIA answered there.
+
+## 9. Founder direction — answer choices (2026-11-05) ✅
+
+> "Yes that would be good." (Answering MAIA's closed questions in one click.)
+
+**Built:** when MAIA ends a reply with a question that has two or three clear answers, she may
+add them as short buttons under her latest reply. A click sends **exactly the button's words** as
+the writer's reply; typing something else is always possible. At most three answers, each short,
+no duplicates; the markers are stripped from every surface that shows her words. Teaching turns
+don't get them. **Witnessed locally:** "Make this quieter" → MAIA asked which kind, offering *Drop
+the label · Keep it, lower it · The whole sentence* → clicking *Drop the label* returned the edit,
+marked in red and green, with *Use it · Change it · Talk about it*.

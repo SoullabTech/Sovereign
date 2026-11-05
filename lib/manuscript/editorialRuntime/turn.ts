@@ -40,6 +40,7 @@
  *   strike-through over their own words for them to police.
  */
 
+import { answerChoicesInstruction } from '@/lib/writersStudio/answerChoices';
 import { randomUUID } from 'node:crypto';
 import { query } from '@/lib/db/postgres';
 import { runStructured } from '@/lib/ai/structured/router';
@@ -458,6 +459,8 @@ export async function runEditorialTurn(
       studioGuideInstruction(),
       // Design 1B: MAIA may offer one control as a marker; the writer clicks it.
       studioActionsInstruction('passage-focus'),
+      // Founder 2026-11-05: a closed question may carry two or three one-click answers.
+      input.teachingAnchor ? '' : answerChoicesInstruction(),
       relationalCraftSystemGuidance(utterance),
       latitudeInstruction(scope),
       sequenceInstruction(gated),
