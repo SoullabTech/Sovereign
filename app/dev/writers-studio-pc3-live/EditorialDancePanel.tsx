@@ -141,6 +141,28 @@ function purposeOf(version: RebuildEditorialVersion, index: number): string {
   return alternativeLabel(version, index).replace(/ · v\d+$/, '');
 }
 
+/** Her two packet parts, spoken: "I notice …" then "I'd try …". The labels are gone on the
+ *  stage, so the clauses must carry the voice themselves, never stand as fragments. */
+function spokenEdit(friction: string | null, tryNext: string | null): string {
+  const lead = (lead: string, text: string | null) => {
+    if (!text) return null;
+    const t = text.trim();
+    if (/^(I|I’|I'|My|We)\b/.test(t)) return t;
+    return lead + ' ' + t.charAt(0).toLowerCase() + t.slice(1);
+  };
+  return [lead('I notice', friction), lead('I’d try', tryNext)].filter(Boolean).join('\n\n');
+}
+
+function changeCount(parts: ReadonlyArray<{ kind: string }>): string {
+  let n = 0; let inChange = false;
+  for (const p of parts) {
+    const changed = p.kind !== 'same';
+    if (changed && !inChange) n += 1;
+    inChange = changed;
+  }
+  return n === 0 ? 'No change' : n === 1 ? 'One change' : n + ' changes';
+}
+
 function firstUsefulSentence(text: string): string {
   const trimmed = text.trim();
   if (!trimmed) return '';
@@ -787,7 +809,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       // A reply that arrives as an eight-part form is shown as a person speaking:
       // what she noticed and what she'd try. The whole reasoning is one tap away.
       const human = said.preserve || said.friction || said.tryNext
-        ? [said.friction, said.tryNext].filter(Boolean).join('\n\n') || firstUsefulSentence(parsed.text)
+        ? spokenEdit(said.friction, said.tryNext) || firstUsefulSentence(parsed.text)
         : parsed.text;
       const isForm = human !== parsed.text;
       const applied = Boolean(version && appliedWording !== null && appliedWording === version.wording);
@@ -802,6 +824,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           {isForm && stageWhyFor === t.turnIndex ? <p className="ws-stage-why-full">{parsed.text}</p> : null}
           {version && !keyPrefix ? (
             <div className="ws-stage-option" data-stage-option={version.id}>
+              <p className="ws-stage-option-count" data-stage-change-count>
+                {changeCount(wordDiff(props.thread?.locusText ?? props.currentText, version.wording))} to your words
+              </p>
               <p className="ws-stage-option-words">
                 {wordDiff(props.thread?.locusText ?? props.currentText, version.wording).map((part, i) => part.kind === 'remove'
                   ? <del key={i}>{part.text}</del>

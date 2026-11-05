@@ -119,3 +119,24 @@ test('controller: a conversation held after Use this is never pulled back over t
   expect(src).toContain('setHeldApplicationThread(previous);');
   expect(src).toContain(': heldApplicationThread ?? scopedEditorialThread;');
 });
+
+test('an edit turn reads as MAIA speaking, never label-stripped fragments', () => {
+  // Local walk 2026-11-05: the turn read "cutting 'which was' and letting…".
+  const fragTurns = [turns[0]!, { ...turns[1]!, body: 'What I’d preserve: the list.\nFriction I notice: "which was" is the softest phrase in the sentence.\nWhat I’d try: cutting "which was" so the verdict lands bare.' }];
+  render({ thread: { ...thread, turns: fragTurns }, lastMaiaTurn: fragTurns[1] });
+  const said = q('[data-stage-option="v1"]')!.closest('li')!.querySelector('p')!.textContent!;
+  expect(said).toContain('I notice "which was" is the softest phrase');
+  expect(said).toContain('I’d try cutting "which was"');
+  expect(said).not.toMatch(/^cutting/m);
+});
+
+test('the change is visible in the text and named before the buttons', () => {
+  render();
+  const option = q('[data-stage-option="v1"]')!;
+  expect(option.querySelector('[data-stage-change-count]')!.textContent).toMatch(/change/);
+  expect(option.querySelectorAll('ins').length + option.querySelectorAll('del').length).toBeGreaterThan(0);
+  const css = fs.readFileSync(path.join(process.cwd(), 'app/dev/writers-studio-p4r1/p4r1-live.css'), 'utf8');
+  const del = css.match(/\.ws-stage-option-words del\{[^}]*\}/)![0];
+  expect(del).toMatch(/background/);   // a deletion is marked, not merely greyed
+  expect(del).not.toMatch(/var\(--fr-muted\)/);
+});
