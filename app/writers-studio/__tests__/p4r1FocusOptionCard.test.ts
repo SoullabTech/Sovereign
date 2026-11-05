@@ -145,3 +145,18 @@ test('the turn that produced the option is still folded into the card', () => {
   expect(Array.from(conv.children).map((li) => li.getAttribute('data-turn-speaker'))).toEqual(['author', 'maia', 'author']);
   expect(card().querySelector('.p4r1-eyebrow')!.textContent).toBe('MAIA’s option');
 });
+
+test('with an option on screen the writer can still type to MAIA, and it sends their words', () => {
+  // Production walk 2026-11-05: once an option appeared there was no box to answer in.
+  const p = render();
+  const box = container.querySelector<HTMLTextAreaElement>('[data-option-reply] textarea')!;
+  expect(box).not.toBeNull();
+  act(() => {
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(box, 'Keep the rhythm of the last line.');
+    box.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  const ask = Array.from(container.querySelectorAll<HTMLButtonElement>('[data-option-reply] button')).find((b) => b.textContent === 'Ask MAIA')!;
+  act(() => ask.click());
+  expect(p.onSend).toHaveBeenCalledTimes(1);
+  expect(p.onSend.mock.calls[0][0]).toContain('Keep the rhythm of the last line.');
+});

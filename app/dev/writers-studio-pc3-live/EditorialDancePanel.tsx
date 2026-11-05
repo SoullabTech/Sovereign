@@ -796,6 +796,10 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
         ) : null}
       </section>
 
+      {/* The writer can always answer MAIA here; without it, an option left no
+          place to ask for anything else (production walk, 2026-11-05). */}
+      <div className="p4r1-option-reply" data-option-reply>{openPrompt}</div>
+
       <details
         className="p4r1-option-more"
         data-option-more
