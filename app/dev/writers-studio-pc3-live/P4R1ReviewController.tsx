@@ -36,6 +36,7 @@ import { relationshipIdFrom } from '@/app/writers-studio/canvasIdentity';
 import { readA2Relationship, type A2RelationshipSummary } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 import { readRelationshipReturnClient } from '@/lib/writersStudio/rebuild/returnStateClient';
 import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
+import { studioPlaceHref, type StudioPlace } from '@/lib/writersStudio/studioActions';
 import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
 import P4R1ProofView from './P4R1ProofView';
 
@@ -85,6 +86,10 @@ type ReadyReview = {
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(requestedFindingId);
   const [discussion, setDiscussion] = useState<ReviewDiscussionState | null>(null);
   const [workTalking, setWorkTalking] = useState(false);
+  /* Design 1B: MAIA offered a Develop place and the writer clicked it. Navigation only. */
+  const onStudioPlace = useCallback((place: StudioPlace) => {
+    router.push(studioPlaceHref(pathname, params?.toString() ?? '', place));
+  }, [params, pathname, router]);
   const [availableRuns, setAvailableRuns] = useState<ChapterReviewManifest[]>([]);
   const [availableRootId, setAvailableRootId] = useState<string | null>(null);
   const [quickReview, setQuickReview] = useState<WholeManuscriptAttentionMap | null>(null);
@@ -747,6 +752,7 @@ type ReadyReview = {
                   manuscriptId={context.manuscriptId}
                   sectionId={availableRootId}
                   onClose={() => setWorkTalking(false)}
+                  onStudioPlace={onStudioPlace}
                 />
               </div>
             </div>
@@ -831,6 +837,7 @@ type ReadyReview = {
                 manuscriptId={context.manuscriptId}
                 sectionId={selectedFinding?.sectionId ?? review.rootId}
                 onClose={() => setWorkTalking(false)}
+                onStudioPlace={onStudioPlace}
               />
             </div>
           </div>

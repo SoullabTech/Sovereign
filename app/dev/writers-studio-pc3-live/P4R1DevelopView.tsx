@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { STUDIO_PLACE_HASH, type StudioPlace } from '@/lib/writersStudio/studioActions';
 import Link from 'next/link';
 import { teachingQuestion } from '@/lib/writersStudio/teachingTurn';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -2053,6 +2054,28 @@ function AttentionMapPanel({
   );
 }
 
+/**
+ * Design 1B: scroll to a Develop control, opening "More ways to explore" for the
+ * editorial pass. It never presses anything. Panels may load after a change of
+ * field, so it looks a few times and then gives up quietly. Returns a cancel.
+ */
+function revealStudioPlace(target: string): () => void {
+  let tries = 0;
+  const timer = window.setInterval(() => {
+    tries += 1;
+    if (target === 'editorial-pass') {
+      const more = document.querySelector<HTMLDetailsElement>('details.p4r1-develop-more');
+      if (more) more.open = true;
+    }
+    const el = document.querySelector(target === 'editorial-pass' ? '[data-editorial-pass]' : '[data-chapter-review]');
+    if (el || tries >= 20) {
+      window.clearInterval(timer);
+      el?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+    }
+  }, 250);
+  return () => window.clearInterval(timer);
+}
+
 export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const livePathname = usePathname() ?? '/dev/writers-studio-p4r1';
   const liveSearchParams = useSearchParams();
@@ -2067,28 +2090,23 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const [dialoguePrompt, setDialoguePrompt] = useState('');
 
   /* Design 1B: arriving from a control MAIA offered (#read-this-chapter or
-     #editorial-pass). Only scrolls to the control, opening "More ways to
-     explore" for the pass; it never presses anything. Panels may load after
-     mount, so it looks a few times and then gives up quietly. */
+     #editorial-pass). Only scrolls to the control; it never presses anything. */
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const target = window.location.hash.slice(1);
     if (target !== 'read-this-chapter' && target !== 'editorial-pass') return;
-    let tries = 0;
-    const timer = window.setInterval(() => {
-      tries += 1;
-      if (target === 'editorial-pass') {
-        const more = document.querySelector<HTMLDetailsElement>('details.p4r1-develop-more');
-        if (more) more.open = true;
-      }
-      const el = document.querySelector(target === 'editorial-pass' ? '[data-editorial-pass]' : '[data-chapter-review]');
-      if (el || tries >= 20) {
-        window.clearInterval(timer);
-        el?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
-      }
-    }, 250);
-    return () => window.clearInterval(timer);
+    return revealStudioPlace(target);
   }, []);
+  /* Design 1B inside Develop: MAIA's button in this room's Work conversation.
+     Back to Overview, then reveal the control; the conversation stays open. */
+  const stopReveal = useRef<(() => void) | null>(null);
+  useEffect(() => () => stopReveal.current?.(), []);
+  const { onField } = props;
+  const onStudioPlace = useCallback((place: StudioPlace) => {
+    onField('overview');
+    stopReveal.current?.();
+    stopReveal.current = revealStudioPlace(STUDIO_PLACE_HASH[place]);
+  }, [onField]);
   // No speculative Work-level MAIA request just because the room opened.
   // A member's Talk gesture creates the conversation, not navigation.
   const workConversationScope = JSON.stringify([props.work?.id ?? null, props.manuscriptId]);
@@ -3165,6 +3183,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               manuscriptId={props.manuscriptId}
               sectionId={props.currentSectionId}
               initialDraft={attentionConversationDraft}
+              onStudioPlace={onStudioPlace}
               onClose={() => {
                 setAttentionConversationDraft('');
                 setWorkTalking(false);
