@@ -301,7 +301,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     setMoreOpen(true);
     setTimeout(() => workingRef.current?.focus(), 0);
   };
-  const conversationBeforeOption = conversation.length > 0 && conversation[conversation.length - 1]!.speaker === 'maia'
+  // Only the turn that produced the option is folded into the card. A reply-only
+  // turn after it (Discuss, Teach) stays in the conversation, or it would vanish.
+  const lastTurn = conversation[conversation.length - 1];
+  const lastTurnIsReplyOnly = lastTurn?.speaker === 'maia' && lastTurn.adjunct === null;
+  const conversationBeforeOption = lastTurn?.speaker === 'maia' && !lastTurnIsReplyOnly
     ? conversation.slice(0, -1)
     : conversation;
   const summary = editorialSummary(summarySource);
@@ -738,7 +742,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       ) : null}
 
       <section className="p4r1-option-card" data-option-card aria-label="MAIA’s option">
-        <span className="p4r1-eyebrow">MAIA’s option</span>
+        <span className="p4r1-eyebrow">{lastTurnIsReplyOnly ? 'MAIA’s earlier option' : 'MAIA’s option'}</span>
         <h4>{purposeOf(recommendation, versions.findIndex((v) => v.id === recommendation.id))}</h4>
         <p className="p4r1-option-in-context" data-option-in-context>
           {context?.before ? <span className="p4r1-option-around">{aroundBefore(context.before)}</span> : null}

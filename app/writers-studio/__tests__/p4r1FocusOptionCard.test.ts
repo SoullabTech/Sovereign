@@ -123,3 +123,25 @@ test('after an Undo, Use this replaces the latest version (the writer’s earlie
   await act(async () => { btn('[data-option-use]').click(); await Promise.resolve(); });
   expect(p.onUseVersion.mock.calls[0][0]).toMatchObject({ supersedes: 'm1', text: 'A cleaner turn.' });
 });
+
+test('a reply-only turn after the option stays in the conversation; the card says it is earlier', () => {
+  // Seen on production 2026-11-05: Discuss after an option showed no reply at all.
+  const withAdjunct = [
+    ...turns.slice(0, 3),
+    { ...turns[3]!, adjunct: { kind: 'version', id: 'v1' } },
+    { turnIndex: 4, speaker: 'author', body: 'Let’s talk about what’s happening in this passage.', at: 't4' },
+    { turnIndex: 5, speaker: 'maia', body: 'The two sentences disagree about their subject.', at: 't5', adjunct: null },
+  ];
+  render({ thread: { ...thread, turns: withAdjunct }, lastMaiaTurn: withAdjunct[5] });
+  const conv = container.querySelector('[data-option-conversation] [data-focus-conversation]')!;
+  expect(conv.textContent).toContain('The two sentences disagree about their subject.');
+  expect(card().querySelector('.p4r1-eyebrow')!.textContent).toBe('MAIA’s earlier option');
+});
+
+test('the turn that produced the option is still folded into the card', () => {
+  const withAdjunct = [...turns.slice(0, 3), { ...turns[3]!, adjunct: { kind: 'version', id: 'v1' } }];
+  render({ thread: { ...thread, turns: withAdjunct }, lastMaiaTurn: withAdjunct[3] });
+  const conv = container.querySelector('[data-option-conversation] [data-focus-conversation]')!;
+  expect(Array.from(conv.children).map((li) => li.getAttribute('data-turn-speaker'))).toEqual(['author', 'maia', 'author']);
+  expect(card().querySelector('.p4r1-eyebrow')!.textContent).toBe('MAIA’s option');
+});

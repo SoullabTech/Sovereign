@@ -42,6 +42,8 @@ export interface RebuildEditorialThread {
     speaker: 'author' | 'maia';
     body: string;
     at: string;
+    /** Server-sent: the option this MAIA turn produced, or null for a reply-only turn. */
+    adjunct?: { kind: string; id: string } | null;
   }[];
   versions: readonly RebuildEditorialVersion[];
   headVersionId: string | null;
