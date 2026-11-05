@@ -189,6 +189,6 @@ describe('WS-EDITORIAL-SCOPE-01 · the law', () => {
 
 test('MAIA names the edit setting in the writer’s words, never as "latitude" (design pass 2026-11-05)', () => {
   const text = latitudeInstruction(DEFAULT_SCOPE_DECLARATION);
-  expect(text).toContain('Edit strength in Preferences');
+  expect(text).toContain('Edit strength under More, then Preferences');
   expect(text).toContain('Never say "latitude"');
 });

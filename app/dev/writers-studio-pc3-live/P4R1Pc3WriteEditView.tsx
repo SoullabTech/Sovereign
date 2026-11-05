@@ -41,6 +41,7 @@ import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { typesetManuscriptBody } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
+import { passagePlaceLabel } from '@/lib/writersStudio/passagePlace';
 import { locateUniquePassage, type AdoptionWireOutcome, type RebuildEditorialRelationship, type RebuildEditorialThread } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
@@ -1588,7 +1589,11 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const isolatedRoom = props.workspaceOpen && isolatedEditorial && !craftVisible && !craftScopeChanged ? (
     <IsolatedEditorialRoom
       appearance={props.appearance}
-      title={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'Selected passage'}
+      title={passagePlaceLabel(
+        props.context.sections.find((s) => s.draftSectionId === props.focusId),
+        currentBody,
+        props.held?.draftSectionId === props.focusId ? props.held : null,
+      )}
       currentText={passageShown}
       sectionBody={currentBody}
       busy={busy}

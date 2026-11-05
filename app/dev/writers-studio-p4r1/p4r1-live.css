@@ -5312,3 +5312,10 @@
 .p4r1-root .ws-stage-answers button{ font-size:14px; padding:7px 14px; border-radius:999px; cursor:pointer;
   border:1px solid rgba(232,190,120,.55); background:rgba(232,190,120,.08); color:inherit; }
 .p4r1-root .ws-stage-answers button:hover{ background:rgba(232,190,120,.18); }
+
+/* Design pass D4: the conversation's quiet top bar — everyday moves first in More ⋯. */
+.p4r1-root .p4r1-isolated-more-card{ display:flex; flex-direction:column; gap:4px; min-width:240px; }
+.p4r1-root .p4r1-isolated-more-card > [data-next-passage-menu]{ order:1; }
+.p4r1-root .p4r1-isolated-more-card > button{ order:2; text-align:left; }
+.p4r1-root .p4r1-isolated-more-card > details:not([data-next-passage-menu]){ order:3; }
+.p4r1-root .p4r1-isolated-more-card details > .p4r1-isolated-menu-card{ position:static; margin-top:6px; box-shadow:none; }

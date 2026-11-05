@@ -352,6 +352,9 @@ export default function IsolatedEditorialRoom({
           </details>
           )}
 
+          {(() => {
+            const menus = (
+              <>
           <details className="p4r1-isolated-menu">
             <summary>Tools</summary>
             <div className="p4r1-isolated-menu-card p4r1-isolated-tool-list">
@@ -554,7 +557,18 @@ export default function IsolatedEditorialRoom({
               Start a new conversation
             </button>
           ) : null}
-          <button type="button" disabled={busy} onClick={onClose}>Return to manuscript</button>
+              </>
+            );
+            /* Design pass D4 (2026-11-05): during a conversation the top bar is quiet —
+               "Back to the page" plus one "More" menu for everything else. */
+            return stage ? (
+              <details className="p4r1-isolated-menu p4r1-isolated-more" data-stage-more>
+                <summary aria-label="More options">More ⋯</summary>
+                <div className="p4r1-isolated-menu-card p4r1-isolated-more-card">{menus}</div>
+              </details>
+            ) : menus;
+          })()}
+          <button type="button" disabled={busy} onClick={onClose} data-stage-back>{stage ? 'Back to the page' : 'Return to manuscript'}</button>
         </div>
       </header>
 

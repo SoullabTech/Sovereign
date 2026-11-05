@@ -87,7 +87,7 @@ coming back to a passage resumes the conversation the writer was last in (W11).
 
 1. ✅ W1: honest opening (`62c6ade97`).
 2. ✅ D2 visible change + D3a her voice in edit turns (this pass).
-3. D4 header and quiet top bar.
+3. ✅ D4 header and quiet top bar (built: "Section 1 · paragraph 1"; **More ⋯** + **Back to the page**).
 4. ✅ D1 one door (Doors ruling taken; built).
 5. ✅ D3b responsive length (founder ruling; built).
 6. D5 Develop: question first, plain language, path into the stage.
