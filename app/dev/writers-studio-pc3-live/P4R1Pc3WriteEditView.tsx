@@ -1080,7 +1080,11 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       <header className="p4r1-context-head">
         <div>
           <span>In relation to this passage</span>
-          <strong>{props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'Selected passage'}</strong>
+          <strong>{passagePlaceLabel(
+            props.context.sections.find((s) => s.draftSectionId === props.focusId),
+            currentBody,
+            props.held?.draftSectionId === props.focusId ? props.held : null,
+          )}</strong>
         </div>
         <div>
           <button type="button" disabled={busy} onClick={() => setIsolatedEditorial(true)}>Isolate passage</button>
