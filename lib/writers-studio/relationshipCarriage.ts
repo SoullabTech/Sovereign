@@ -243,7 +243,7 @@ export async function resolvePriorMaiaEditorialCarry(input: {
   );
   if (episode.rows.length !== 1) return { ok: false, reason: 'source_episode_not_found' };
   const source = episode.rows[0]!;
-  if (source.child_kind !== 'EDITORIAL_TURN') return { ok: false, reason: 'source_kind_not_editorial' };
+  if (source.child_kind !== 'EDITORIAL_TURN' && source.child_kind !== 'EDITORIAL_OPENING') return { ok: false, reason: 'source_kind_not_editorial' };
   if (
     source.temporal_posture !== 'CURRENT_FROZEN_LOCUS'
     || source.manuscript_scope_requested === null
@@ -393,7 +393,7 @@ export async function listEligiblePriorMaiaEditorialCarrySources(input: {
         AND t.turn_index = e.editorial_maia_turn_index
         AND t.speaker = 'maia'
       WHERE e.relationship_id = $1
-        AND e.child_kind = 'EDITORIAL_TURN'
+        AND e.child_kind IN ('EDITORIAL_TURN', 'EDITORIAL_OPENING')
         AND e.temporal_posture = 'CURRENT_FROZEN_LOCUS'
         AND e.manuscript_scope_requested IN ('passage', 'section')
         AND e.manuscript_scope_executed = e.manuscript_scope_requested

@@ -40,6 +40,7 @@ import { openAttempt, settleAttempt, stateForFailure } from './ledger';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { redactEmails } from '@/lib/privacy/redactEmails';
 import { reserveManagedAuthSend } from './senderCapacity';
+import { notifyMailTransportDown } from '@/lib/ops/mailTransportAlert.server';
 
 // ============================================================================
 // VERIFIED SENDERS
@@ -381,6 +382,19 @@ function logSend(
     console.error(
       `[MAIA/email] TRANSPORT_DOWN kind=${result.failureKind} providerCode=${result.providerCode ?? 'unnamed'} purpose=${purpose} — email delivery is failing for ALL recipients. Check the provider account.`
     );
+    // Log lines reach no one. Page a human over a non-email path; never awaited,
+    // never allowed to change the send's outcome.
+    // `.catch` is load-bearing: a rejection nobody handles crashes the Node
+    // process, which would turn a paging fault into a full outage.
+    Promise.resolve()
+      .then(() =>
+        notifyMailTransportDown({
+          kind: result.failureKind as string,
+          providerCode: result.providerCode,
+          purpose,
+        }),
+      )
+      .catch(() => {});
   }
 }
 

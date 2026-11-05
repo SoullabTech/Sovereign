@@ -42,6 +42,8 @@ export interface RebuildEditorialThread {
     speaker: 'author' | 'maia';
     body: string;
     at: string;
+    /** Server-sent: the option this MAIA turn produced, or null for a reply-only turn. */
+    adjunct?: { kind: string; id: string } | null;
   }[];
   versions: readonly RebuildEditorialVersion[];
   headVersionId: string | null;
@@ -369,6 +371,81 @@ export async function sendBoundEditorialTurn(
     }
     return { ok: true, thread: reread.thread, producedVersionId, voice,
       memberTurnIndex, maiaTurnIndex };
+  } catch {
+    return { ok: false, reason: 'unavailable' };
+  }
+}
+
+/**
+ * R2 "MAIA opens" (O1(a)). The writer's deliberate gesture asks MAIA to speak first on a
+ * passage. ⛔ There is NO writer turn: the reply is matched by `maiaTurnIndex` only, and
+ * the reread must show exactly one MAIA turn with that body and NO author turn.
+ */
+export async function openEditorialConversation(
+  threadId: string,
+  visibleDraftSectionId: string,
+  /** The member's CURRENT posture, read at the gesture. Required. */
+  posture: CurrentPostureRead,
+  relationshipId: string,
+  options?: {
+    scope?: { latitude: number; mayRemoveParagraphs: boolean };
+    responseDepth?: EditorialDepth;
+  },
+): Promise<EditorialTurnOutcome> {
+  if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
+  if (posture.sanctuary) return { ok: false, reason: 'sanctuary_unavailable' };
+  if (!relationshipId) return { ok: false, reason: 'scope_refused', detail: 'relationship_required' };
+  try {
+    const res = await apiFetch('/api/writers-studio/editorial/turn', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        threadId, opening: true, sanctuary: posture.sanctuary, relationshipId,
+        ...(options?.scope ? { scope: options.scope } : {}),
+        ...(options?.responseDepth ? { responseDepth: options.responseDepth } : {}),
+      }),
+    });
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      if (res.status === 409 && body?.error === 'sanctuary_unavailable') {
+        return { ok: false, reason: 'sanctuary_unavailable' };
+      }
+      if (res.status === 500 && body?.error === 'disclosure_confirmation_unresolved') {
+        return {
+          ok: false, reason: 'accountability_unresolved',
+          detail: 'MAIA may have received the passage, but Soullab could not confirm the disclosure record. The response was withheld and this will not be retried automatically.',
+        };
+      }
+      return {
+        ok: false,
+        reason: res.status === 404 ? 'unavailable' : 'turn_refused',
+        detail: typeof body?.error === 'string' ? body.error : undefined,
+      };
+    }
+    const maiaTurnIndex = Number.isSafeInteger(body?.maiaTurnIndex) && body.maiaTurnIndex >= 0
+      ? body.maiaTurnIndex as number : null;
+    const reread = await readBoundEditorialThread(threadId, visibleDraftSectionId, relationshipId);
+    if (!reread.ok) return reread;
+    const stored = reread.thread.turns;
+    const maiaTurns = Array.isArray(stored) && maiaTurnIndex !== null
+      ? stored.filter(turn => turn.turnIndex === maiaTurnIndex && turn.speaker === 'maia')
+      : [];
+    const anyWriterTurn = Array.isArray(stored) && stored.some(turn => turn.speaker === 'author');
+    if (body?.threadId !== threadId
+      || reread.thread.threadId !== threadId
+      || maiaTurnIndex === null
+      || typeof body?.response !== 'string'
+      || anyWriterTurn
+      || maiaTurns.length !== 1 || maiaTurns[0]?.body !== body.response) {
+      return {
+        ok: false, reason: 'unreadable',
+        detail: 'The opening could not be matched to an exact persisted MAIA turn.',
+      };
+    }
+    /* No writer turn exists, so there is no member index. The union keeps its shape
+       with a typed sentinel: -1 means "no writer turn", never a position. */
+    return { ok: true, thread: reread.thread, producedVersionId: null, voice: null,
+      memberTurnIndex: -1, maiaTurnIndex };
   } catch {
     return { ok: false, reason: 'unavailable' };
   }
