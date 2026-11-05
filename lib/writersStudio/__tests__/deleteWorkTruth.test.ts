@@ -6,6 +6,7 @@
  * follow-through after "the writing is already gone" may only withdraw what the member confirmed.
  */
 import {
+  reReadAll,
   DeletionSharedMaterial,
   DeletionUnconfirmed,
   deleteWork,
@@ -58,6 +59,26 @@ describe('"Home now shows what is current" is said only when the re-read worked'
   it('a successful act does not depend on the re-read: the server said it is gone', async () => {
     await expect(runDeleteWork({ workId: WORK, manuscriptId: MS }, async () => fake(200), async () => false)).resolves.toBeUndefined();
     await expect(runRemoveWork(WORK, async () => fake(200), async () => { throw new Error('offline'); })).resolves.toBeUndefined();
+  });
+});
+
+describe('the page re-read (reReadAll) is "worked" only when EVERY list was read', () => {
+  it('all lists read: true', async () => {
+    expect(await reReadAll([async () => true, async () => true])).toBe(true);
+  });
+  it('one list could not be read (false): false, and the other is still read', async () => {
+    const other = jest.fn(async () => true);
+    expect(await reReadAll([async () => false, other])).toBe(false);
+    expect(other).toHaveBeenCalledTimes(1);
+  });
+  it('one list throws: false, never a rejection that would hide a committed delete', async () => {
+    await expect(reReadAll([async () => { throw new Error('offline'); }, async () => true])).resolves.toBe(false);
+  });
+  it('a loader that resolves with anything but true does not count as read', async () => {
+    expect(await reReadAll([async () => undefined as unknown as boolean])).toBe(false);
+  });
+  it('no lists: nothing failed', async () => {
+    expect(await reReadAll([])).toBe(true);
   });
 });
 

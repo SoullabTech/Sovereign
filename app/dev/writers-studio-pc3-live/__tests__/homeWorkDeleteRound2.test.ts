@@ -186,6 +186,37 @@ describe('a message that has not been seen is not lost with its card', () => {
   });
 });
 
+describe('a message from an earlier failed attempt is not handed to the page after a later attempt succeeded', () => {
+  it('Remove: failed once, retried and succeeded, then the card goes: the page carries only the removal notice', async () => {
+    onDeleteWork.mockRejectedValue(new DeletionSharedMaterial(SHARED_REFUSAL));
+    onRemoveWork
+      .mockRejectedValueOnce(new Error('We could not confirm whether that work was removed. Home now shows what is current, so check it before you try again.'))
+      .mockResolvedValueOnce(undefined);
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);
+    await click(REMOVE_SHARED_WORK_COPY.confirm);          // fails: the dialog shows the message
+    expect(host.querySelector('[data-shared-writing] [role="alert"]')?.textContent).toContain('could not confirm');
+    await click(REMOVE_SHARED_WORK_COPY.confirm);          // succeeds
+    render({ works: [workB] });                            // the card is gone
+    const messages = Array.from(host.querySelectorAll('[data-delete-notice]')).map((n) => n.textContent ?? '');
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toContain('was removed');
+    expect(messages[0]).not.toContain('could not confirm');
+  });
+
+  it('Delete: failed once, retried and succeeded, then the card goes: no stale message on the page', async () => {
+    onDeleteWork
+      .mockRejectedValueOnce(new Error(UNKNOWN))
+      .mockResolvedValueOnce(undefined);
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);                 // fails
+    expect(host.querySelector('[data-deleting-confirmation] [role="alert"]')?.textContent).toContain('could not confirm');
+    await click(DELETE_WORK_COPY.confirm);                 // succeeds
+    render({ works: [workB] });
+    expect(host.querySelector('[data-delete-notice]')).toBeNull();
+  });
+});
+
 describe('notices stack: a later one never erases an earlier one the member has not dismissed', () => {
   it('a custody alert survives a later plain "was removed"', async () => {
     onDeleteWork

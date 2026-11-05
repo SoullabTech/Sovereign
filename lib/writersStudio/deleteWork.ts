@@ -450,6 +450,12 @@ type Refresh = () => Promise<unknown>;
 const refreshed = async (refresh: Refresh): Promise<boolean> => {
   try { return (await refresh()) !== false; } catch { return false; }
 };
+/** Re-read every list Home depends on. True only when ALL of them were read: a list that could not be read (it reports false or throws)
+ *  makes the whole re-read "did not work", so the page never tells the member it is current when part of it is not. */
+export async function reReadAll(loads: ReadonlyArray<() => Promise<boolean>>): Promise<boolean> {
+  const read = await Promise.all(loads.map(async (load) => { try { return (await load()) === true; } catch { return false; } }));
+  return read.every(Boolean);
+}
 const HOME_CURRENT = 'Home now shows what is current.';
 const HOME_CURRENT_CHECK = 'Home now shows what is current, so check it before you try again.';
 const HOME_NOT_RELOADED = 'We could not reload Home either, so reload this page and check before you try again.';

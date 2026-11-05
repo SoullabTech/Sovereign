@@ -109,10 +109,10 @@ export function useWorkDeleteDoor(args: {
   const stillShared = othersHolding > 0;
   const removalMode: 'shared' | 'many' | null = kind === 'many' ? 'many' : (stillShared ? 'shared' : null);
 
+  // Leaving a question clears what it was showing. (What the NEXT question starts from is reset where it is opened, below.)
   const cancel = () => {
     unseen.current = null;
     setConfirming(false);
-    setShared(null);
     setDeleteError(null);
     setRemoveError(null);
   };

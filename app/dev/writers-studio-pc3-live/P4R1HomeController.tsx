@@ -23,7 +23,7 @@ import {
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival, withoutStudioWork } from '@/app/writers-studio/h1Arrival';
 import { useWriterReleaseCapabilities } from '@/lib/writersStudio/useWriterReleaseCapabilities';
-import { runDeleteWork, runRemoveWork } from '@/lib/writersStudio/deleteWork';
+import { reReadAll, runDeleteWork, runRemoveWork } from '@/lib/writersStudio/deleteWork';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -95,10 +95,7 @@ export default function P4R1HomeController() {
   }, [post]);
 
   // Resolves false when either list could not be read: the delete flow must not tell the member the page is current then.
-  const refresh = useCallback(async () => {
-    const read = await Promise.all([reloadWorks(), reloadManuscripts()]);
-    return read.every(Boolean);
-  }, [reloadWorks, reloadManuscripts]);
+  const refresh = useCallback(() => reReadAll([reloadWorks, reloadManuscripts]), [reloadWorks, reloadManuscripts]);
 
   const open = useCallback((manuscriptId: string, sectionId?: string, newImport = false) => {
     const search = params?.toString() ?? '';

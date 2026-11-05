@@ -746,6 +746,9 @@ describe('controller wiring (source-reading; comments stripped)', () => {
     expect(controller).not.toMatch(/outcome\.(refusal|removed|unknown)/);
     expect(controller).not.toMatch(/DeletionSharedMaterial|DeletionUnconfirmed/);
   });
+  it('the re-read the delete flow uses covers BOTH lists and reports whether it worked', () => {
+    expect(controller).toMatch(/const refresh = useCallback\(\(\) => reReadAll\(\[reloadWorks, reloadManuscripts\]\), \[reloadWorks, reloadManuscripts\]\)/);
+  });
   it('hands onRemoveWork to the Home view', () => {
     expect(controller).toMatch(/onRemoveWork=\{onRemoveWork\}/);
   });
