@@ -172,6 +172,13 @@ export default function FlagshipWriteEditController() {
   // not a product decision that all manuscript history is Work-local.
   const [editorialLivingWorkId, setEditorialLivingWorkId] = useState<string | null>(null);
   const [relationshipChoices, setRelationshipChoices] = useState<readonly RebuildEditorialRelationship[]>([]);
+  /** Several of this Work's conversations on the passage: the writer chooses (2026-11-05). */
+  const [conversationChoices, setConversationChoices] = useState<readonly RebuildEditorialThread[]>([]);
+  /** While the writer is asked which conversation, the request that asked waits here for
+   *  their answer, in flight, with every check from its original gesture intact. */
+  type ConversationAnswer = { kind: 'thread'; thread: RebuildEditorialThread } | { kind: 'new' } | { kind: 'cancel' };
+  const choiceResolverRef = useRef<((answer: ConversationAnswer) => void) | null>(null);
+  const cancelConversationChoice = () => { choiceResolverRef.current?.({ kind: 'cancel' }); choiceResolverRef.current = null; };
   const [a2Relationship, setA2Relationship] = useState<A2RelationshipSummary | null>(null);
   const [a2RelationshipChoices, setA2RelationshipChoices] = useState<readonly A2RelationshipSummary[]>([]);
   const [a2RelationshipPhase, setA2RelationshipPhase] = useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
@@ -409,6 +416,8 @@ export default function FlagshipWriteEditController() {
     setSuggestedVersionId(null);
     setAppliedVersionId(null);
     setRelationshipChoices([]);
+    setConversationChoices([]);
+    cancelConversationChoice();
     setA2Relationship(null);
     setA2RelationshipChoices([]);
     setA2RelationshipPhase('idle');
@@ -702,6 +711,7 @@ export default function FlagshipWriteEditController() {
       setSuggestedVersionId(null);
       setAppliedVersionId(null);
       setRelationshipChoices([]);
+    setConversationChoices([]);
       setCarryPostureAvailable(false);
       setSelectedCarrySource(null);
       carryChooserGen.current += 1;
@@ -927,6 +937,8 @@ export default function FlagshipWriteEditController() {
 
   const clearEditorial = useCallback(() => {
     setEditorialThread(null);
+    setConversationChoices([]);
+    cancelConversationChoice();
     setHeldApplicationThread(null);
     setEditorialLivingWorkId(null);
     if (typeof window !== 'undefined') {
@@ -940,6 +952,7 @@ export default function FlagshipWriteEditController() {
       ));
     }
     setRelationshipChoices([]);
+    setConversationChoices([]);
     setSuggestedVersionId(null);
     setAppliedVersionId(null);
     setAdoptionOutcome(null);
@@ -1064,6 +1077,7 @@ export default function FlagshipWriteEditController() {
     setSuggestedVersionId(thread.headVersionId);
     setAppliedVersionId(thread.application && !thread.application.undone ? thread.application.versionId : null);
     setRelationshipChoices([]);
+    setConversationChoices([]);
     setEditorialFailure(null);
     return true;
   }, [focusId, focusSection, context?.version, context?.manuscriptId, work?.id,
@@ -1135,6 +1149,15 @@ export default function FlagshipWriteEditController() {
     setEditorialFailure(UNVERIFIED_URL_THREAD);
   }, [requestedEditorialThread, focusId, currentLivingWorkScope, scopedEditorialThread?.threadId]);
 
+  const chooseConversation = useCallback((threadId: string) => {
+    const chosen = conversationChoices.find((t) => t.threadId === threadId);
+    if (!chosen || !choiceResolverRef.current) return;
+    choiceResolverRef.current({ kind: 'thread', thread: chosen });
+  }, [conversationChoices]);
+  const startNewFromChoice = useCallback(() => {
+    choiceResolverRef.current?.({ kind: 'new' });
+  }, []);
+
   const chooseRelationship = useCallback((_threadId: string) => {
     // Even explicit selection of an older manuscript thread is not an
     // independently verified LivingWork-specific grant. Do not interpret a
@@ -1199,6 +1222,7 @@ export default function FlagshipWriteEditController() {
 
     const matching = found.relationships.filter((relationship) => relationship.locusText === desired);
     setRelationshipChoices([]);
+    setConversationChoices([]);
     if (matching.length === 0) return startNewEditorial(stillCurrent);
 
     // Discovery is manuscript-global and carries no Living Work provenance, so
@@ -1206,10 +1230,29 @@ export default function FlagshipWriteEditController() {
     // decides: a thread opened under THIS Work's relationship verifies and is
     // resumed; an older manuscript-global thread does not.
     if (scopedA2Relationship) {
+      /* Founder ruling 2026-11-05 (chooser): several conversations on one passage are
+         lawful and THE WRITER DECIDES which to continue (relationships.ts: auto-picking
+         "most recent" is itself a defect). Verify every one that belongs to this Work;
+         one → continue it; several → ask, latest first, nothing chosen for the writer. */
+      const verified: RebuildEditorialThread[] = [];
       for (const candidate of matching) {
         const out = await readBoundEditorialThread(candidate.threadId, focusId, scopedA2Relationship.id);
         if (!stillCurrent()) return null;
-        if (out.ok && bindEditorialThread(out.thread)) return out.thread;
+        if (out.ok) verified.push(out.thread);
+      }
+      if (verified.length === 1) {
+        return bindEditorialThread(verified[0]!) ? verified[0]! : null;
+      }
+      if (verified.length > 1) {
+        const byLatest = (t: RebuildEditorialThread) => t.turns.at(-1)?.at ?? '';
+        cancelConversationChoice();
+        setConversationChoices([...verified].sort((x, y) => byLatest(y).localeCompare(byLatest(x))));
+        const answer = await new Promise<ConversationAnswer>((resolve) => { choiceResolverRef.current = resolve; });
+        choiceResolverRef.current = null;
+        setConversationChoices([]);
+        if (answer.kind === 'cancel' || !stillCurrent()) return null;
+        if (answer.kind === 'new') return startNewEditorial(stillCurrent);
+        return bindEditorialThread(answer.thread) ? answer.thread : null;
       }
     }
 
@@ -1449,8 +1492,10 @@ export default function FlagshipWriteEditController() {
         } else if (outcome.reason === 'accountability_unresolved') {
           setEditorialFailure('MAIA may have received the passage, but Soullab could not confirm the disclosure record. The response was withheld. Nothing was applied, and this request will not be retried automatically.');
         } else {
-          setEditorialFailure(outcome.detail
-            ?? 'MAIA could not complete that editorial turn. Nothing was changed.');
+          // Server detail is for developers, never the writer (design pass 2026-11-05: a raw
+          // "unknown field(s) … carry no standing here" reached the screen).
+          if (outcome.detail) console.warn('[editorial/turn] refused:', outcome.detail);
+          setEditorialFailure('MAIA couldn’t answer that just now. Nothing was changed. Please try again.');
         }
         return;
       }
@@ -1492,6 +1537,7 @@ export default function FlagshipWriteEditController() {
     selectedCarrySource,
     workGestureEpoch,
   ]);
+
 
   /**
    * R2 "MAIA opens" (O1(a)). Fired ONLY by the writer's deliberate gesture (entering the
@@ -2330,6 +2376,9 @@ export default function FlagshipWriteEditController() {
             editorialThread={scopedEditorialThread}
             earlierEditorialThread={heldApplicationThread}
             relationshipChoices={!workReentryRequired.current ? relationshipChoices : []}
+            conversationChoices={!workReentryRequired.current ? conversationChoices : []}
+            onChooseConversation={chooseConversation}
+            onStartNewFromChoice={startNewFromChoice}
             maiaRelationship={scopedA2Relationship}
             maiaRelationshipChoices={scopedA2Relationship ? a2RelationshipChoices : []}
             maiaRelationshipPhase={currentLivingWorkScope

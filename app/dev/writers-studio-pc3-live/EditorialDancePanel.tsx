@@ -95,6 +95,12 @@ export interface EditorialDancePanelProps {
   autoOpenWithMaia?: boolean;
   /** Ask MAIA to speak first. The controller owns every law; this only asks. */
   onOpenWithMaia?: () => void | Promise<boolean>;
+  /** Founder ruling 2026-11-05: several of this Work's conversations on the passage, latest
+   *  first. The writer chooses which to continue (or starts a new one); nothing is chosen
+   *  for them, and anything they already asked is held until they do. */
+  conversationChoices?: readonly RebuildEditorialThread[];
+  onChooseConversation?: (threadId: string) => void;
+  onStartNewConversation?: () => void;
   /** Plain, writer-facing text when the opening failed (nothing was sent or recorded). */
   openingFailure?: string | null;
   /** The conversation that still holds an undoable edit after Use this. */
@@ -514,6 +520,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   };
 
   const postureBlocksEditorial = !props.sessionPosture.resolved || props.sessionPosture.sanctuary;
+  const choiceBlocks = !props.thread && (props.conversationChoices?.length ?? 0) > 1;
   /* A card chosen before the posture is answered must answer the click: it
      points the writer at the posture choice instead of silently doing nothing,
      and holds the act so it continues once the writer has answered.
@@ -534,17 +541,18 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       relationshipRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
       return;
     }
+    if (choiceBlocks) { setHeldAct(act); return; }
     setHeldAct(null);
     runAct(act);
   };
   useEffect(() => {
-    if (!heldAct || postureBlocksEditorial || relationshipBlocks || props.busy) return;
+    if (!heldAct || postureBlocksEditorial || relationshipBlocks || choiceBlocks || props.busy) return;
     const act = heldAct;
     setHeldAct(null);
     runAct(act);
     // runAct reads current props; the held act itself is plain data.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heldAct, postureBlocksEditorial, relationshipBlocks, props.busy]);
+  }, [heldAct, postureBlocksEditorial, relationshipBlocks, choiceBlocks, props.busy]);
   useEffect(() => {
     if (!props.requestedAct) return;
     const { key: _key, ...act } = props.requestedAct;
@@ -575,12 +583,12 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   }, [conversationKey]);
   useEffect(() => {
     if (!openingWanted || openAskedRef.current) return;
-    if (postureBlocksEditorial || relationshipBlocks || props.busy || !threadIsEmpty) return;
+    if (postureBlocksEditorial || relationshipBlocks || choiceBlocks || props.busy || !threadIsEmpty) return;
     if (props.openingFailure || heldAct || props.requestedAct || props.pendingQuestion) return;
     openAskedRef.current = true;
     void Promise.resolve(props.onOpenWithMaia?.()).then((sent) => { if (sent === false) setOpeningDeclined(true); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationKey, openingWanted, postureBlocksEditorial, relationshipBlocks, props.busy, threadIsEmpty, props.openingFailure, heldAct, props.requestedAct, props.pendingQuestion]);
+  }, [conversationKey, openingWanted, postureBlocksEditorial, relationshipBlocks, choiceBlocks, props.busy, threadIsEmpty, props.openingFailure, heldAct, props.requestedAct, props.pendingQuestion]);
   const heldNotice = heldAct ? (
     <p className="p4r1-dance-held" role="status" data-held-act>
       When you’ve answered, I’ll continue with “{heldAct.label}”.{' '}
@@ -617,6 +625,35 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             Continue · {new Date(choice.createdAt).toLocaleDateString()}
           </button>
         ))}
+      </div>
+    </div>
+  ) : null;
+  const whenSpoke = (t: RebuildEditorialThread) => {
+    const at = t.turns.at(-1)?.at;
+    if (!at) return 'not started';
+    const d = new Date(at);
+    return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  };
+  const howBegan = (t: RebuildEditorialThread) => {
+    const first = t.turns.find((x) => x.speaker === 'author')?.body ?? t.turns[0]?.body ?? '';
+    const line = first.replace(/\s+/g, ' ').trim();
+    return line.length > 70 ? line.slice(0, 70).trimEnd() + '…' : line;
+  };
+  const conversationGate = choiceBlocks && !postureBlocksEditorial && !relationshipBlocks ? (
+    <div className="p4r1-dance-posture ws-stage-choose" role="group" aria-label="Which conversation to continue" data-conversation-chooser>
+      <div><b>We’ve talked about this passage before.</b>
+        <span>Shall we continue our latest conversation, or an earlier one?</span></div>
+      <div className="p4r1-dance-posture-actions ws-stage-choose-list">
+        {(props.conversationChoices ?? []).map((t, i) => (
+          <button key={t.threadId} type="button" data-conversation-choice={t.threadId}
+            onClick={() => props.onChooseConversation?.(t.threadId)}>
+            <b>{i === 0 ? 'Our latest' : 'Earlier'} · {whenSpoke(t)}</b>
+            {howBegan(t) ? <span>“{howBegan(t)}”</span> : null}
+          </button>
+        ))}
+        {props.onStartNewConversation ? (
+          <button type="button" data-conversation-new onClick={() => props.onStartNewConversation?.()}>Start a new one</button>
+        ) : null}
       </div>
     </div>
   ) : null;
@@ -754,7 +791,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     const earlierUndoable = Boolean(earlierApp && !earlierApp.undone && earlierApp.canUndo && props.onUndo);
     const lastAuthor = [...turns].reverse().find((t) => t.speaker === 'author')?.body ?? null;
     const pending = props.pendingQuestion && props.pendingQuestion !== lastAuthor ? props.pendingQuestion : null;
-    const gatesOpen = Boolean(postureGate || relationshipGate);
+    const gatesOpen = Boolean(postureGate || relationshipGate || conversationGate);
 
     const useVersion = async (version: RebuildEditorialVersion) => {
       if (!props.onUseVersion || !props.thread?.targetSectionId || stageUsing) return;
@@ -785,9 +822,9 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     const sendStage = () => {
       const q = startPrompt.trim();
       if (!q || props.busy) return;
-      if (postureBlocksEditorial || relationshipBlocks) {
+      if (postureBlocksEditorial || relationshipBlocks || choiceBlocks) {
         setHeldAct({ label: q.length > 40 ? q.slice(0, 40) + '…' : q, prompt: q, options: { turnShape: 'conversation' } });
-        if (postureBlocksEditorial) setPostureNudge(true); else setRelationshipNudge(true);
+        if (postureBlocksEditorial) setPostureNudge(true); else if (relationshipBlocks) setRelationshipNudge(true);
         setStartPrompt('');
         return;
       }
@@ -892,6 +929,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             <li className="ws-stage-turn is-maia is-gate" data-turn-speaker="maia" data-stage-gate>
               {postureGate}
               {relationshipGate}
+              {conversationGate}
               {heldNotice}
             </li>
           ) : null}
@@ -930,7 +968,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           {pending ? (
             <li className="ws-stage-turn is-writer is-pending" data-turn-speaker="author" data-pending-turn><p>{pending}</p></li>
           ) : null}
-          {props.busy ? <li className="ws-stage-turn is-maia is-thinking" aria-live="polite">MAIA is reading…</li> : null}
+          {props.busy && !choiceBlocks ? <li className="ws-stage-turn is-maia is-thinking" aria-live="polite">MAIA is reading…</li> : null}
           {(localMessage || props.message || props.undoMessage) ? (
             <li className="ws-stage-turn is-maia is-status" role="status">
               <p>{localMessage ?? props.message}{props.undoMessage ? ' ' + props.undoMessage : ''}</p>

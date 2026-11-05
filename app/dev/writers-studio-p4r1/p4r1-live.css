@@ -5297,3 +5297,12 @@
 .p4r1-root .ws-stage-length button{ font-size:12px; padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.14);
   background:transparent; color:var(--fr-muted); cursor:pointer; }
 .p4r1-root .ws-stage-length button:hover{ color:inherit; border-color:rgba(232,190,120,.5); }
+
+/* Several conversations on one passage (founder ruling 2026-11-05): the question, then
+   the choices stacked, each showing when and how it began. */
+.p4r1-root .ws-stage-choose{ display:flex; flex-direction:column; align-items:stretch; gap:10px; }
+.p4r1-root .ws-stage-choose > div:first-child{ display:flex; flex-direction:column; gap:2px; }
+.p4r1-root .ws-stage-choose-list{ display:flex; flex-direction:column; align-items:stretch; gap:6px; flex-wrap:nowrap; }
+.p4r1-root .ws-stage-choose-list button{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%;
+  text-align:left; white-space:normal; padding:8px 12px; border-radius:10px; }
+.p4r1-root .ws-stage-choose-list button span{ font-size:13px; color:var(--fr-muted); overflow-wrap:anywhere; }

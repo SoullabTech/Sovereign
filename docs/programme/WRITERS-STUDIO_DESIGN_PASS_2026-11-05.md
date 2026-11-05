@@ -130,4 +130,23 @@ technical word; plain wording is next.
 
 ## 7. Rulings owed
 
-- **Several conversations on one passage:** when a passage has more than one conversation, show a small chooser ("Continue our latest conversation, or an earlier one?") instead of silently picking one. Recommendation: yes, with the latest listed first and nothing chosen for the writer.
+- None open from this pass.
+
+## 8. Founder ruling — several conversations on one passage (2026-11-05) ✅
+
+> "Yes, add the chooser."
+
+**Built:** when a passage has more than one conversation in this Work, MAIA asks in the
+conversation: *"We've talked about this passage before. Shall we continue our latest
+conversation, or an earlier one?"* Each option shows when and how it began, latest first, plus
+**Start a new one**. ⛔ Nothing is chosen for the writer, and older conversations that can't be
+verified as this Work's stay untouched. What the writer already asked **waits in flight** for
+their answer, with every check from its original gesture intact, then continues into the chosen
+(or new) conversation. Moving away cancels it, so it is never sent somewhere else.
+**Found on the way, and fixed:** (1) the first version dropped the writer's request while asking;
+(2) a hand-off version re-ran the safety checks and could drop it silently, so it was replaced by
+the in-flight wait; (3) a refused request showed the server's raw error to the writer. It now says
+"MAIA couldn't answer that just now. Nothing was changed. Please try again."
+(4) Local only: the dev server had served a stale copy of the turn route and refused
+`replyLength`; a restart cleared it. **Witnessed locally:** ask → chooser → earlier
+conversation → MAIA answered there.

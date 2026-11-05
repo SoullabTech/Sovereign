@@ -108,6 +108,10 @@ export type P4R1Pc3WriteEditViewProps = {
   /** Conversation Stage: the conversation still holding an undoable edit after Use this. */
   earlierEditorialThread?: RebuildEditorialThread | null;
   relationshipChoices: readonly RebuildEditorialRelationship[];
+  /** Several of this Work's conversations on the passage; the writer chooses (2026-11-05). */
+  conversationChoices?: readonly RebuildEditorialThread[];
+  onChooseConversation?: (threadId: string) => void;
+  onStartNewFromChoice?: () => void;
   maiaRelationship: A2RelationshipSummary | null;
   maiaRelationshipChoices: readonly A2RelationshipSummary[];
   maiaRelationshipPhase: 'idle' | 'loading' | 'ready' | 'unavailable';
@@ -1088,6 +1092,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
       <EditorialDancePanel
         stage
+        conversationChoices={props.conversationChoices ?? []}
+        onChooseConversation={props.onChooseConversation}
+        onStartNewConversation={props.onStartNewFromChoice}
         earlierThread={props.earlierEditorialThread ?? null}
         onStudioAction={onStudioAction}
         onUseVersion={props.onUseVersion}
@@ -1192,16 +1199,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         </details>
       ) : null}
 
-      {props.relationshipChoices.length > 1 ? (
-        <div className="p4r1-relationships" aria-label="Choose revision conversation">
-          {props.relationshipChoices.map((choice, index) => (
-            <button key={choice.threadId} type="button" disabled={props.editorialBusy}
-              onClick={() => props.onChooseRelationship(choice.threadId)}>
-              Conversation {index + 1} · {choice.turnCount} turns
-            </button>
-          ))}
-        </div>
-      ) : null}
     </div>
   ) : null;
 
@@ -1648,6 +1645,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
       <EditorialDancePanel
         stage
+        conversationChoices={props.conversationChoices ?? []}
+        onChooseConversation={props.onChooseConversation}
+        onStartNewConversation={props.onStartNewFromChoice}
         autoOpenWithMaia
         onOpenWithMaia={props.onOpenWithMaia}
         openingFailure={props.openingFailure ?? null}
