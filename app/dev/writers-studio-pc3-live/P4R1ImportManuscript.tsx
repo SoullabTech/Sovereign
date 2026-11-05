@@ -70,6 +70,7 @@ export default function P4R1ImportManuscript({
   const [filename, setFilename] = useState<string | null>(null);
   const [format, setFormat] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [paragraphsReconstructed, setParagraphsReconstructed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [custodyNotice, setCustodyNotice] = useState<string | null>(null);
   const [sourceArrivalId, setSourceArrivalId] = useState<string | null>(null);
@@ -90,6 +91,7 @@ export default function P4R1ImportManuscript({
     }
     setError(null);
     setWarnings([]);
+    setParagraphsReconstructed(false);
     setSourceArrivalId(null);
     setFilename(file.name);
     if (file.size === 0) {
@@ -157,6 +159,7 @@ export default function P4R1ImportManuscript({
       const extracted = typeof body?.text === 'string' ? body.text : '';
       setText(extracted);
       setFormat(typeof body?.format === 'string' ? body.format : null);
+      setParagraphsReconstructed(body?.paragraphsReconstructed === true);
       setWarnings(Array.isArray(body?.warnings)
         ? body!.warnings.filter((item): item is string => typeof item === 'string')
         : []);
@@ -431,6 +434,11 @@ export default function P4R1ImportManuscript({
             <small>{textStats.characters.toLocaleString()} characters · {textStats.words.toLocaleString()} words</small>
           </label>
 
+          {paragraphsReconstructed ? (
+            <div className="p4r1-import-notices" role="note">
+              <p>Paragraphs were reconstructed from the PDF layout. Your words are unchanged.</p>
+            </div>
+          ) : null}
           {warnings.length ? (
             <div className="p4r1-import-notices" role="note">
               {warnings.map((warning, index) => <p key={index}>{warning}</p>)}
