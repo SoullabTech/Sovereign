@@ -12,8 +12,8 @@ import SharedChartView from './SharedChartView';
  * Readable without an account by whoever holds the link. It 404s unless the
  * link is live (not turned off, chart not deleted), Pro is enabled and the
  * owner still holds Pro access. The chart is recalculated from the saved birth
- * details on each view; nothing about the viewer is recorded. View-only: no
- * MAIA and no notes. The client can follow transits; the Elemental Alchemy
+ * details on each view; nothing about the viewer is recorded. View-only, with
+ * no notes; MAIA appears only where the astrologer turned Ask MAIA on. The client can follow transits; the Elemental Alchemy
  * overview appears only where the astrologer chose to include it. Unlisted, noindex, and no referrer, so
  * the link does not leak through outbound clicks.
  */
@@ -43,6 +43,7 @@ export default async function SharedChartPage({ params }: { params: Promise<{ to
       token={token}
       label={shared.label}
       includeElemental={shared.includeElemental}
+      askMaia={shared.includeAskMaia ? { offeredBy: shared.askMaiaOfferedBy } : null}
       birth={{ date: shared.date, time: shared.time, place: shared.placeLabel }}
     />
   );

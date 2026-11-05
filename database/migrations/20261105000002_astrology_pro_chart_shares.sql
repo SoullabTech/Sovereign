@@ -7,6 +7,10 @@
 -- Deleting the saved chart or the owner removes its links. At most one live
 -- link per chart. No viewer data is recorded. include_elemental is the owner's
 -- choice to also show the Elemental Alchemy overview (off unless chosen).
+-- include_ask_maia lets the client ask MAIA about this chart (off unless
+-- chosen); ask_maia_offered_by is the astrologer or practice named as offering
+-- it; ask_maia_questions counts questions asked, against a per-link limit.
+-- No question or answer is ever stored.
 BEGIN;
 SET LOCAL lock_timeout = '5s';
 
@@ -17,6 +21,9 @@ CREATE TABLE IF NOT EXISTS astrology_pro_chart_shares (
   saved_chart_id uuid NOT NULL REFERENCES astrology_pro_saved_charts(id) ON DELETE CASCADE,
   consent_attested_at timestamptz NOT NULL,
   include_elemental boolean NOT NULL DEFAULT false,
+  include_ask_maia boolean NOT NULL DEFAULT false,
+  ask_maia_offered_by text NULL CHECK (ask_maia_offered_by IS NULL OR char_length(btrim(ask_maia_offered_by)) BETWEEN 1 AND 80),
+  ask_maia_questions integer NOT NULL DEFAULT 0 CHECK (ask_maia_questions >= 0),
   created_at timestamptz NOT NULL DEFAULT now(),
   revoked_at timestamptz NULL
 );

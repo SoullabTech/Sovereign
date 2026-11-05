@@ -41,3 +41,5 @@
 .shareRow { flex-basis: 100%; border-top: 1px solid rgba(205, 187, 151, .16); padding-top: 12px; }
 .shareRow .shareBox { max-width: none; width: 100%; }
 .shareRow .shareBox input[readonly] { max-width: 40rem; }
+.offeredBy { display: grid; gap: 4px; }
+.offeredBy input { max-width: 24rem; background: rgba(16, 38, 58, .9); color: #f3e6cd; border: 1px solid rgba(224, 196, 149, .5); border-radius: 6px; padding: 6px 8px; font: inherit; }

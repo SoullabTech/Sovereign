@@ -118,7 +118,7 @@ describe('Pro chart share links', () => {
     expect((await res.json()).share.includeElemental).toBe(true);
     const [text, values] = sql.mock.calls[0] as [string, unknown[]];
     expect(text).toContain('revoked_at IS NULL');
-    expect(values).toEqual([A, CHART, true]);
+    expect(values).toEqual([A, CHART, true, false, null]);
   });
 
   it('gives a client the sky only through a live link', async () => {

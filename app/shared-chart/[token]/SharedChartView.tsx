@@ -16,6 +16,7 @@ import ProTransitPanel from '@/app/astrology/pro-preview/ProTransitPanel';
 import ProElementalOverview from '@/app/astrology/pro-preview/ProElementalOverview';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
 import type { TransitBody } from '@/lib/astrology/proTransits';
+import SharedAskMaia from './SharedAskMaia';
 import styles from './shared-chart.module.css';
 
 function deg(value: number): string {
@@ -26,11 +27,13 @@ function deg(value: number): string {
 
 const MAJOR = new Set(['conjunction', 'sextile', 'square', 'trine', 'opposition']);
 
-export default function SharedChartView({ chart, token, label, includeElemental, birth }: {
+export default function SharedChartView({ chart, token, label, includeElemental, askMaia, birth }: {
   chart: BirthChart;
   token: string;
   label: string;
   includeElemental: boolean;
+  /** Present only where the astrologer turned Ask MAIA on for this link. */
+  askMaia: { offeredBy: string | null } | null;
   birth: { date: string; time: string; place: string | null };
 }) {
   const [focused, setFocused] = useState('Sun');
@@ -79,6 +82,10 @@ export default function SharedChartView({ chart, token, label, includeElemental,
           )}
         </aside>
       </section>
+
+      {askMaia && (
+        <SharedAskMaia token={token} firstName={label.trim().split(/\s+/)[0] || 'there'} offeredBy={askMaia.offeredBy} />
+      )}
 
       <section className={styles.positions} aria-label="Transits">
         <ProTransitPanel natalBodies={bodies} transits={transits} skyUrl={skyUrl}
