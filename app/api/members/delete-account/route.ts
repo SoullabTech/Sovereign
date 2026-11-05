@@ -130,6 +130,8 @@ const GOVERNED_CONTENT: ReadonlyArray<{ table: string; column: string; label: st
   // Retention may be shared by decision. It may not be shared by accident.
   // (docs/programme/FOCUS-DISCLOSURE-RECEIPT_CONTRACT_2026-09-09.md §5)
   { table: 'context_disclosure_receipts', column: 'member_id', label: 'records of when your context was shown to MAIA' },
+  // Devices registered for notifications (token only; never message content).
+  { table: 'member_push_devices', column: 'member_id', label: 'devices you registered for notifications' },
 ];
 
 /**
