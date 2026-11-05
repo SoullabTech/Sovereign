@@ -696,7 +696,31 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   /* Design 1B: a control MAIA offered and the writer clicked. Each one only
      takes the writer somewhere; nothing is sent, read, saved or applied. */
+  // Craftsman's Table on the held passage, only if its words are still exactly
+  // the ones held. Shared by the passage menu and MAIA's offered control (1B).
+  const openCraftOnHeld = () => {
+    if (!props.held || !currentCraftScope) return;
+    const body = props.writing.bodyOf(props.held.draftSectionId);
+    const exact = Array.from(body).slice(props.held.start, props.held.end).join('');
+    if (exact !== props.held.text
+      || props.held.revisionNumber !== props.writing.currentRevisionId()) {
+      setCraftNotice('The passage changed. Select its current words again; nothing was applied.');
+      return;
+    }
+    setCraftNotice(null);
+    setCanvas(false);
+    setIsolatedEditorial(false);
+    setCraftOwnerScope(currentCraftScope);
+    setCraftOpen(true);
+    props.onOpenWorkspace();
+  };
+
   const onStudioAction = (id: StudioActionId) => {
+    if (id === 'craftsmans-table') {
+      if (!requestConversationDeparture()) return;
+      openCraftOnHeld();
+      return;
+    }
     if (id === 'develop-overview' || id === 'editorial-pass') {
       requestCraftDeparture('Switch Studio room', () => props.onStudioPlace?.(id));
       return;
@@ -778,7 +802,16 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             <span>Open the passage in the dedicated editorial room.</span>
           </button>
 
-          {/* Step 5b: Craftsman's Table now lives inside Focus (Adjust on MAIA's option). */}
+          <button type="button" role="menuitem" data-open-craftsmans-table onClick={() => {
+            if (!requireWork()) return;
+            if (!requestConversationDeparture()) return;
+            setSelectionMenuOpen(false);
+            openCraftOnHeld();
+          }}>
+            <b>Craftsman's Table</b>
+            <span>Work on these exact words with visible changes and MAIA beside the writing.</span>
+          </button>
+
           <button type="button" role="menuitem" onClick={() => runPassageAct({
             label: 'Discuss',
             prompt: passageActQuestion('discuss'),

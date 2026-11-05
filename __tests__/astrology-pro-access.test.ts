@@ -53,7 +53,7 @@ describe('Astrology Pro access', () => {
   });
 
   it('every Pro entry point uses the single access decision', () => {
-    for (const file of ['app/astrology/pro-preview/page.tsx', 'app/api/astrology/pro/my-chart/route.ts']) {
+    for (const file of ['app/astrology/pro-preview/page.tsx', 'app/api/astrology/pro/my-chart/route.ts', 'lib/astrology/proRouteAccess.ts']) {
       const src = readFileSync(path.join(__dirname, '..', file), 'utf8');
       expect(src).toContain("from '@/lib/astrology/proAccess'");
       expect(src).not.toMatch(/founderPreview(Enabled|MemberAllowed)\(/);
