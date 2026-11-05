@@ -12,7 +12,7 @@ import { Plus, Trash2, ChevronRight, Search } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import styles from './pro-saved-charts.module.css';
 import ProSoulPortraitAction from './ProSoulPortraitAction';
-import ProChartShareAction from './ProChartShareAction';
+import ProChartSharePanel from './ProChartShareAction';
 
 export interface SavedChartSummary {
   id: string;
@@ -72,6 +72,7 @@ export default function ProSavedCharts({
   const [searching, setSearching] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [sharing, setSharing] = useState<string | null>(null);
   const zones = useMemo(timezoneList, []);
 
   async function refresh() {
@@ -178,7 +179,7 @@ export default function ProSavedCharts({
         <div>
           <span className={styles.eyebrow}>CHARTS FOR OTHER PEOPLE</span>
           <h2 id="saved-charts-title">Saved charts</h2>
-          <p>Make a chart from anyone’s birth details and keep it here. Only you can see your saved charts. They are not shared with MAIA.</p>
+          <p>Make a chart from anyone’s birth details and keep it here. Only you can see your saved charts. MAIA reads one only when you start a Soul Portrait from it, and a client sees theirs only if you share a link.</p>
         </div>
         {!formOpen && (
           <button className={styles.primary} onClick={() => { setFormOpen(true); setMessage(null); }}>
@@ -263,7 +264,8 @@ export default function ProSavedCharts({
                     <button onClick={() => onOpen(chart)} disabled={opening}>
                       {chart.id === openChartId ? 'Open' : 'Open chart'} <ChevronRight size={15} aria-hidden="true" />
                     </button>
-                    <ProChartShareAction chartId={chart.id} label={chart.label} />
+                    <button onClick={() => setSharing(sharing === chart.id ? null : chart.id)}
+                      aria-expanded={sharing === chart.id}>Share link</button>
                     <ProSoulPortraitAction source={chart.id} whose={`${chart.label}’s`} />
                     <button onClick={() => setConfirmDelete(chart.id)} aria-label={`Delete ${chart.label}`}>
                       <Trash2 size={15} aria-hidden="true" />
@@ -271,6 +273,11 @@ export default function ProSavedCharts({
                   </>
                 )}
               </div>
+              {sharing === chart.id && (
+                <div className={styles.shareRow}>
+                  <ProChartSharePanel chartId={chart.id} label={chart.label} onClose={() => setSharing(null)} />
+                </div>
+              )}
             </li>
           ))}
         </ul>

@@ -24,9 +24,11 @@ function formatDeclination(value: number): string {
 }
 
 export default function ProAspectGrid({
-  chart, declinations, onSelectBody,
+  chart, declinations, onSelectBody, showDeclinations = true,
 }: {
   chart: BirthChart;
+  /** False where declinations are never available, such as a shared client chart. */
+  showDeclinations?: boolean;
   declinations: readonly Declination[] | null;
   onSelectBody: (name: string) => void;
 }) {
@@ -50,10 +52,12 @@ export default function ProAspectGrid({
   return (
     <section className={styles.panel} aria-labelledby="pro-grid-title">
       <div className={styles.head}>
-        <h3 id="pro-grid-title">Aspect grid &amp; declinations</h3>
+        <h3 id="pro-grid-title">{showDeclinations ? <>Aspect grid &amp; declinations</> : "Aspect grid"}</h3>
         <div role="tablist" className={styles.tabs}>
           <button role="tab" aria-selected={tab === 'grid'} onClick={() => setTab('grid')}>Aspect grid</button>
-          <button role="tab" aria-selected={tab === 'declinations'} onClick={() => setTab('declinations')}>Declinations</button>
+          {showDeclinations && (
+            <button role="tab" aria-selected={tab === 'declinations'} onClick={() => setTab('declinations')}>Declinations</button>
+          )}
         </div>
       </div>
 

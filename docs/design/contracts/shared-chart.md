@@ -1,6 +1,6 @@
 ---
 room: Shared chart — a client's chart by private link
-human_activity: A client looking at their own natal chart, sent to them privately by their astrologer, without needing an account.
+human_activity: A client looking at their own natal chart and its transits, sent to them privately by their astrologer, without needing an account — with the Elemental Alchemy overview when the astrologer chooses to include it.
 surfaces:
   - app/shared-chart/**
 change_class: experiential
@@ -15,7 +15,7 @@ shared_with_house: the same chart wheel, aspect grid and calculated facts as Pro
 distinct_to_room: a single, finished page for one person and one chart — no member sidebar, no MAIA, no notes, no controls that change anything. It lives outside the member astrology layout on purpose, so a client never meets member navigation.
 screenshot_desktop: docs/design/contracts/screenshots/shared-chart-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/shared-chart-mobile.png
-experience_verification: 2026-11-05 local walk on localhost:3017. In Pro Saved charts, "Share link" asked for the consent confirmation ("… agreed to have their chart shared by link"), then showed the link with Copy, View and Turn off. Opened signed out (a fresh browser with no cookies) at 1280 and 390 wide, the page drew the whole aspect web (60 lines for the fictional "Example Client" chart), the side panel and positions table, with no member rail; robots noindex and referrer no-referrer were present. An unknown link showed no chart. Screenshots use a fictional chart. Not the founder's experiential acceptance.
+experience_verification: 2026-11-05 second walk — transits always on (Show transits / Now / step / play, read through the link's own sky lookup, which refuses a turned-off link) and the Elemental Alchemy overview (elemental balance, the four Spiralogic pathways from the canonical house mapping, and the existing SacredHouseWheel in its Spiralogic layout) shown only when the owner ticks 'Include the Elemental Alchemy overview'; both confirmed signed out at 1280 and 390 wide with no page errors (screenshots shared-chart-elemental-*.png). First walk: 2026-11-05 local walk on localhost:3017. In Pro Saved charts, "Share link" asked for the consent confirmation ("… agreed to have their chart shared by link"), then showed the link with Copy, View and Turn off. Opened signed out (a fresh browser with no cookies) at 1280 and 390 wide, the page drew the whole aspect web (60 lines for the fictional "Example Client" chart), the side panel and positions table, with no member rail; robots noindex and referrer no-referrer were present. An unknown link showed no chart. Screenshots use a fictional chart. Not the founder's experiential acceptance.
 ---
 
 # Shared chart — Experience Contract
@@ -37,6 +37,7 @@ they do changes or saves anything.
 |---|---|---|
 | Look at a planet | tap the planet, or its name under Positions | the chart is the interface |
 | Simplify the wheel | "Aspects" · "Houses" | the same words the astrologer uses in Pro |
+| Follow the sky | "Show transits" · "Now" · step and play | the same transit panel as Pro, read through the link |
 
 ## Forbidden here
 
@@ -44,6 +45,7 @@ they do changes or saves anything.
 - sign-up prompts, banners, or anything implying the chart is incomplete without an account
 - member navigation
 - recording who viewed the page
+- the Elemental Alchemy overview unless the astrologer chose it for this link
 
 ## The two brand tests
 

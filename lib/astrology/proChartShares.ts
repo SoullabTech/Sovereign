@@ -17,6 +17,8 @@ export interface ChartShare {
   id: string;
   token: string;
   createdAt: string;
+  /** The owner chose to include the Elemental Alchemy overview. */
+  includeElemental: boolean;
 }
 
 export interface SharedChartBirth {
@@ -26,6 +28,7 @@ export interface SharedChartBirth {
   date: string;
   time: string;
   location: { lat: number; lng: number; timezone: string };
+  includeElemental: boolean;
 }
 
 export function isShareToken(value: unknown): value is string {
@@ -40,17 +43,20 @@ function newToken(): string {
   return randomBytes(32).toString('base64url');
 }
 
-interface ShareRow { id: string; token: string; created_at: string }
+interface ShareRow { id: string; token: string; created_at: string; include_elemental: boolean }
 
 function toShare(row: ShareRow): ChartShare {
-  return { id: row.id, token: row.token, createdAt: new Date(row.created_at).toISOString() };
+  return {
+    id: row.id, token: row.token, createdAt: new Date(row.created_at).toISOString(),
+    includeElemental: row.include_elemental === true,
+  };
 }
 
 /** The live link for one of the owner's saved charts, if any. */
 export async function readLiveShare(ownerMemberId: string, chartId: string): Promise<ChartShare | null> {
   if (!isSavedChartId(chartId)) return null;
   const result = await query<ShareRow>(
-    `SELECT id, token, created_at FROM astrology_pro_chart_shares
+    `SELECT id, token, created_at, include_elemental FROM astrology_pro_chart_shares
      WHERE owner_member_id = $1 AND saved_chart_id = $2 AND revoked_at IS NULL LIMIT 1`,
     [ownerMemberId, chartId],
   );
@@ -61,18 +67,34 @@ export async function readLiveShare(ownerMemberId: string, chartId: string): Pro
  * Makes the live link for an owner's saved chart, or returns the one already
  * live. Returns null when the chart is not the owner's.
  */
-export async function createShare(ownerMemberId: string, chartId: string): Promise<ChartShare | null> {
+export async function createShare(
+  ownerMemberId: string, chartId: string, includeElemental = false,
+): Promise<ChartShare | null> {
   if (!isSavedChartId(chartId)) return null;
   const result = await query<ShareRow>(
-    `INSERT INTO astrology_pro_chart_shares (token, owner_member_id, saved_chart_id, consent_attested_at)
-     SELECT $1, $2, c.id, now() FROM astrology_pro_saved_charts c
+    `INSERT INTO astrology_pro_chart_shares (token, owner_member_id, saved_chart_id, consent_attested_at, include_elemental)
+     SELECT $1, $2, c.id, now(), $4 FROM astrology_pro_saved_charts c
      WHERE c.id = $3 AND c.owner_member_id = $2
      ON CONFLICT (saved_chart_id) WHERE revoked_at IS NULL DO NOTHING
-     RETURNING id, token, created_at`,
-    [newToken(), ownerMemberId, chartId],
+     RETURNING id, token, created_at, include_elemental`,
+    [newToken(), ownerMemberId, chartId, includeElemental],
   );
   if (result.rows[0]) return toShare(result.rows[0]);
   return readLiveShare(ownerMemberId, chartId);
+}
+
+/** Changes what a live link shows. Returns the link, or null if none is live. */
+export async function setShareElemental(
+  ownerMemberId: string, chartId: string, includeElemental: boolean,
+): Promise<ChartShare | null> {
+  if (!isSavedChartId(chartId)) return null;
+  const result = await query<ShareRow>(
+    `UPDATE astrology_pro_chart_shares SET include_elemental = $3
+     WHERE owner_member_id = $1 AND saved_chart_id = $2 AND revoked_at IS NULL
+     RETURNING id, token, created_at, include_elemental`,
+    [ownerMemberId, chartId, includeElemental],
+  );
+  return result.rows[0] ? toShare(result.rows[0]) : null;
 }
 
 /** Turns off the live link for an owner's saved chart. True if one was live. */
@@ -95,6 +117,7 @@ interface SharedRow {
   latitude: number | string;
   longitude: number | string;
   timezone: string;
+  include_elemental: boolean;
 }
 
 /** The saved chart behind a live link; null for an unknown or turned-off link. */
@@ -102,7 +125,7 @@ export async function readSharedChartBirth(token: string): Promise<SharedChartBi
   if (!isShareToken(token)) return null;
   const result = await query<SharedRow>(
     `SELECT s.owner_member_id, c.label, c.place_label, c.birth_date::text AS birth_date,
-            c.birth_time::text AS birth_time, c.latitude, c.longitude, c.timezone
+            c.birth_time::text AS birth_time, c.latitude, c.longitude, c.timezone, s.include_elemental
      FROM astrology_pro_chart_shares s
      JOIN astrology_pro_saved_charts c ON c.id = s.saved_chart_id AND c.owner_member_id = s.owner_member_id
      WHERE s.token = $1 AND s.revoked_at IS NULL LIMIT 1`,
@@ -117,5 +140,6 @@ export async function readSharedChartBirth(token: string): Promise<SharedChartBi
     date: row.birth_date,
     time: row.birth_time.slice(0, 5),
     location: { lat: Number(row.latitude), lng: Number(row.longitude), timezone: row.timezone },
+    includeElemental: row.include_elemental === true,
   };
 }

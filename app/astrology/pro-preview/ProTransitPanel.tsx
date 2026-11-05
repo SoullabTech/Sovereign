@@ -33,9 +33,15 @@ function shiftMoment(value: string, unit: StepUnit, n: number): string {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
+function proSkyUrl(isoInstant: string): string {
+  return '/api/astrology/pro/sky?at=' + encodeURIComponent(isoInstant);
+}
+
 export default function ProTransitPanel({
-  natalBodies, transits, onTransits, showNowRequest = 0,
+  natalBodies, transits, onTransits, showNowRequest = 0, skyUrl = proSkyUrl,
 }: {
+  /** Where to read the sky; a shared chart reads it through its own link. */
+  skyUrl?: (isoInstant: string) => string;
   natalBodies: readonly WheelBody[];
   transits: readonly TransitBody[];
   /** Increments when a "Transits" link asks for the sky now against this chart. */
@@ -66,7 +72,7 @@ export default function ProTransitPanel({
     busy.current = true;
     setStatus('loading');
     try {
-      const reply = await apiFetch('/api/astrology/pro/sky?at=' + encodeURIComponent(at.toISOString()), {
+      const reply = await apiFetch(skyUrl(at.toISOString()), {
         method: 'GET', cache: 'no-store',
       });
       if (!reply.ok) throw new Error('sky_unavailable');

@@ -25,3 +25,6 @@
 .colophon { margin-top: 32px; color: #9fb0b8; font-size: .88rem; }
 .colophon a { color: #e0c495; }
 @media (max-width: 800px) { .instrument { grid-template-columns: 1fr; } }
+.elementalWheel { margin-top: 20px; background: #0f1f30; border: 1px solid rgba(224, 196, 149, .25); border-radius: 16px; padding: 22px; }
+.elementalWheel h3 { font-family: Georgia, serif; color: #f3e6cd; margin: 0 0 4px; }
+.elementalWheel p { color: #b9ad97; margin: 0 0 14px; font-size: .92rem; }

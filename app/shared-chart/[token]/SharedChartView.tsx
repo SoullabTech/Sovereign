@@ -2,8 +2,9 @@
 
 /**
  * View-only chart for a client (ASTRO-PRO-CHART-SHARE-01). The client may
- * tap a planet and turn aspects and house lines on or off; nothing changes
- * and nothing is saved. Calculated facts only, never a reading.
+ * tap a planet, turn aspects and house lines on or off, and follow transits;
+ * nothing changes and nothing is saved. The Elemental Alchemy overview shows
+ * only where the astrologer chose to include it.
  */
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -11,6 +12,10 @@ import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { chartBodies, selectedRelationships } from '@/lib/astrology/proChartGeometry';
 import { CelestialChartWheel } from '@/app/astrology/pro-preview/CelestialChartWheel';
 import ProAspectGrid from '@/app/astrology/pro-preview/ProAspectGrid';
+import ProTransitPanel from '@/app/astrology/pro-preview/ProTransitPanel';
+import ProElementalOverview from '@/app/astrology/pro-preview/ProElementalOverview';
+import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
+import type { TransitBody } from '@/lib/astrology/proTransits';
 import styles from './shared-chart.module.css';
 
 function deg(value: number): string {
@@ -19,14 +24,20 @@ function deg(value: number): string {
   return `${d}°${String(m === 60 ? 59 : m).padStart(2, '0')}′`;
 }
 
-export default function SharedChartView({ chart, label, birth }: {
+const MAJOR = new Set(['conjunction', 'sextile', 'square', 'trine', 'opposition']);
+
+export default function SharedChartView({ chart, token, label, includeElemental, birth }: {
   chart: BirthChart;
+  token: string;
   label: string;
+  includeElemental: boolean;
   birth: { date: string; time: string; place: string | null };
 }) {
   const [focused, setFocused] = useState('Sun');
   const [showAspects, setShowAspects] = useState(true);
   const [showHouseLines, setShowHouseLines] = useState(true);
+  const [transits, setTransits] = useState<TransitBody[]>([]);
+  const skyUrl = (at: string) => `/api/shared-chart/${encodeURIComponent(token)}/sky?at=${encodeURIComponent(at)}`;
   const bodies = useMemo(() => chartBodies(chart), [chart]);
   const body = bodies.find((b) => b.name === focused);
   const relationships = useMemo(() => selectedRelationships(chart, focused), [chart, focused]);
@@ -46,7 +57,8 @@ export default function SharedChartView({ chart, label, birth }: {
             <button aria-pressed={showHouseLines} onClick={() => setShowHouseLines((v) => !v)}>Houses</button>
           </div>
           <CelestialChartWheel chart={chart} focusedBody={focused} onFocusBody={setFocused}
-            showAspects={showAspects} showHouseLines={showHouseLines} maxAspectOrb={null} />
+            showAspects={showAspects} showHouseLines={showHouseLines} maxAspectOrb={null}
+            outerBodies={transits.length ? transits : undefined} outerLabel="Transits" />
         </div>
         <aside className={styles.side} aria-live="polite">
           {body && (
@@ -68,6 +80,11 @@ export default function SharedChartView({ chart, label, birth }: {
         </aside>
       </section>
 
+      <section className={styles.positions} aria-label="Transits">
+        <ProTransitPanel natalBodies={bodies} transits={transits} skyUrl={skyUrl}
+          onTransits={(next) => setTransits(next)} />
+      </section>
+
       <section className={styles.positions} aria-label="Positions">
         <h2>Positions</h2>
         <table>
@@ -86,11 +103,30 @@ export default function SharedChartView({ chart, label, birth }: {
       </section>
 
       <div className={styles.positions}>
-        <ProAspectGrid chart={chart} declinations={null} onSelectBody={setFocused} />
+        <ProAspectGrid chart={chart} declinations={null} onSelectBody={setFocused} showDeclinations={false} />
       </div>
 
+      {includeElemental && (
+        <div className={styles.positions}>
+          <ProElementalOverview chart={chart} />
+          <div className={styles.elementalWheel}>
+            <h3>The chart on the Spiralogic wheel</h3>
+            <p>The same planets, with the houses arranged by element: Fire, Water, Earth and Air.</p>
+            <SacredHouseWheel
+              planets={bodies.map((b) => ({ name: b.name, sign: b.position.sign, house: b.position.house, degree: b.position.degree }))}
+              aspects={(chart.aspects || []).filter((a) => MAJOR.has(a.type)) as never}
+              missionLayerSettings={{ showEmerging: false, showActive: false, showCompleted: false, showUrgent: false, showArchetypal: false, showTransits: false }}
+              isDayMode={false}
+              layoutMode="spiralogic"
+              showAspects
+              className="max-h-[560px]"
+            />
+          </div>
+        </div>
+      )}
+
       <footer className={styles.colophon}>
-        <p>A calculated chart, not a reading: positions and aspects only, porphyry houses. It was shared with you privately and can be turned off by the person who shared it.</p>
+        <p>A calculated chart, not a reading: positions, aspects and transits, porphyry houses{includeElemental ? ', with the Elemental Alchemy overview your astrologer chose to include' : ''}. It was shared with you privately and can be turned off by the person who shared it.</p>
         <p>Calculated in <Link href="/">Soullab</Link>.</p>
       </footer>
     </main>

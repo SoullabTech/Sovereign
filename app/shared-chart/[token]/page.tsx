@@ -13,7 +13,8 @@ import SharedChartView from './SharedChartView';
  * link is live (not turned off, chart not deleted), Pro is enabled and the
  * owner still holds Pro access. The chart is recalculated from the saved birth
  * details on each view; nothing about the viewer is recorded. View-only: no
- * MAIA, no notes, no interpretation. Unlisted, noindex, and no referrer, so
+ * MAIA and no notes. The client can follow transits; the Elemental Alchemy
+ * overview appears only where the astrologer chose to include it. Unlisted, noindex, and no referrer, so
  * the link does not leak through outbound clicks.
  */
 export const dynamic = 'force-dynamic';
@@ -39,7 +40,9 @@ export default async function SharedChartPage({ params }: { params: Promise<{ to
   return (
     <SharedChartView
       chart={chart}
+      token={token}
       label={shared.label}
+      includeElemental={shared.includeElemental}
       birth={{ date: shared.date, time: shared.time, place: shared.placeLabel }}
     />
   );

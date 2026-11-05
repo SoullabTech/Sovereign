@@ -5,7 +5,8 @@
 -- saved chart's birth details on the server and draws a view-only chart.
 -- Turning a link off sets revoked_at, and the link stops working at once.
 -- Deleting the saved chart or the owner removes its links. At most one live
--- link per chart. No viewer data is recorded.
+-- link per chart. No viewer data is recorded. include_elemental is the owner's
+-- choice to also show the Elemental Alchemy overview (off unless chosen).
 BEGIN;
 SET LOCAL lock_timeout = '5s';
 
@@ -15,6 +16,7 @@ CREATE TABLE IF NOT EXISTS astrology_pro_chart_shares (
   owner_member_id uuid NOT NULL REFERENCES members(id) ON DELETE CASCADE,
   saved_chart_id uuid NOT NULL REFERENCES astrology_pro_saved_charts(id) ON DELETE CASCADE,
   consent_attested_at timestamptz NOT NULL,
+  include_elemental boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   revoked_at timestamptz NULL
 );
