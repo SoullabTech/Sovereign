@@ -47,7 +47,9 @@ describe('P4R1 unified PC3/V10 Writer Studio host', () => {
   it('keeps developmental reading explicit rather than navigation-triggered', () => {
     expect(develop).toContain('onCommission');
     expect(develop).toContain('Nothing is read automatically.');
-    expect(develop).toContain('Opening this field never reads more of your Work.');
+    // Design pass 2026-11-05: the law, not the sentence — reading starts only from a press.
+    expect(develop).toContain('onClick={props.onCommission}');
+    expect(develop).not.toMatch(/useEffect\([^]*?props\.onCommission\(\)/);
   });
 
   it('mounts durable observation conversation rather than a static MAIA card only', () => {

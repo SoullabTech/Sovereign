@@ -51,7 +51,7 @@ describe('C3 Develop → Focus continuity', () => {
       return {items:buttons(tree),onWorkWithObservation,onGoToObservation};
     };
     const exact=make({'fiction-observation':'orientation-section'},{'fiction-observation':'exact-section'});
-    const write=exact.items.find(b=>b.props.children==='Stay with this in Write');
+    const write=exact.items.find(b=>b.props.children==='Talk about this passage');
     const locate=exact.items.find(b=>b.props.children==='Show me in the manuscript');
     expect(write).toBeDefined();expect(locate).toBeDefined();
     expect(exact.onWorkWithObservation).not.toHaveBeenCalled();expect(exact.onGoToObservation).not.toHaveBeenCalled();
@@ -59,10 +59,12 @@ describe('C3 Develop → Focus continuity', () => {
     expect(exact.onWorkWithObservation).toHaveBeenCalledWith('fiction-reading','fiction-observation','exact-section');
     expect(exact.onGoToObservation).toHaveBeenCalledWith('fiction-reading','fiction-observation','orientation-section');
     const orientation=make({'fiction-observation':'orientation-section'},{});
-    expect(orientation.items.some(b=>b.props.children==='Stay with this in Write')).toBe(false);
+    expect(orientation.items.some(b=>b.props.children==='Talk about this passage')).toBe(false);
     expect(orientation.items.some(b=>b.props.children==='Show me in the manuscript')).toBe(true);
     const absent=make({},{});
-    expect(absent.items.some(b=>['Stay with this in Write','Show me in the manuscript'].includes(b.props.children))).toBe(false);
+    expect(absent.items.some(b=>['Talk about this passage','Show me in the manuscript'].includes(b.props.children))).toBe(false);
+    // Design pass 2026-11-05: with no exact passage, the one next step is to talk here instead.
+    expect(absent.items.some(b=>b.props.children==='Talk with MAIA about this')).toBe(true);
   });
 
   it('carries the exact Develop observation into Write with an explicit focus action', () => {

@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { adminFetch, storeAdminPassword } from '@/lib/admin/adminFetch';
 import WritersPilotPanel from './WritersPilotPanel';
+import EmailHealthBanner from './EmailHealthBanner';
 
 type BugSource = 'member' | 'claude' | 'system';
 type BugSeverity = 'low' | 'normal' | 'high' | 'critical';
@@ -238,6 +239,8 @@ export default function MonitorFieldPage() {
             <span className="font-mono text-maia-ink-100">#bugs</span> Co-lab channel is attention.
           </p>
         </header>
+
+        <EmailHealthBanner />
 
         {/* Tabs */}
         <nav className="flex flex-wrap gap-1 border-b border-maia-ink-40/15">

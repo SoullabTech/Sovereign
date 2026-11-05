@@ -41,6 +41,7 @@ import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { typesetManuscriptBody } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
+import { passagePlaceLabel } from '@/lib/writersStudio/passagePlace';
 import { locateUniquePassage, type AdoptionWireOutcome, type RebuildEditorialRelationship, type RebuildEditorialThread } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
@@ -108,6 +109,10 @@ export type P4R1Pc3WriteEditViewProps = {
   /** Conversation Stage: the conversation still holding an undoable edit after Use this. */
   earlierEditorialThread?: RebuildEditorialThread | null;
   relationshipChoices: readonly RebuildEditorialRelationship[];
+  /** Several of this Work's conversations on the passage; the writer chooses (2026-11-05). */
+  conversationChoices?: readonly RebuildEditorialThread[];
+  onChooseConversation?: (threadId: string) => void;
+  onStartNewFromChoice?: () => void;
   maiaRelationship: A2RelationshipSummary | null;
   maiaRelationshipChoices: readonly A2RelationshipSummary[];
   maiaRelationshipPhase: 'idle' | 'loading' | 'ready' | 'unavailable';
@@ -156,7 +161,7 @@ export type P4R1Pc3WriteEditViewProps = {
   /** Retire pending visible editorial result after an author STOP. */
   onStopEditorial: () => void;
   /** R2 "MAIA opens": ask MAIA to speak first in a new conversation. The controller owns the laws. */
-  onOpenWithMaia?: () => void;
+  onOpenWithMaia?: () => void | Promise<boolean>;
   openingFailure?: string | null;
   onSelectVersion: (id: string) => void;
   onApply: () => void;
@@ -297,7 +302,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [maiaRelationshipChooserOpen, setMaiaRelationshipChooserOpen] = useState(false);
   const [blankArrivalDismissed, setBlankArrivalDismissed] = useState(false);
   const [selectionRect, setSelectionRect] = useState<DOMRect | null>(null);
-  const [morePassageOptions, setMorePassageOptions] = useState(false);
+  const [passageAsk, setPassageAsk] = useState('');
   const [selectedRevisionEdits, setSelectedRevisionEdits] = useState<ReadonlySet<number>>(new Set());
   const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
   const [passageNotice, setPassageNotice] = useState<string | null>(null);
@@ -534,6 +539,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   useEffect(() => {
     const inspect = () => {
+      // Typing to MAIA in the door moves focus out of the manuscript, which drops the
+      // browser's text selection. The passage is already held; the door must stay open.
+      if (typeof document !== 'undefined'
+        && document.activeElement?.closest?.('[data-p4r1-selection-affordance]')) return;
       const picked = selectionInPc3Editor();
       if (!picked) {
         setSelectionRect(null);
@@ -560,7 +569,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     return <main className="fr-root"><div style={{ padding: 32 }}>This manuscript has no editable place to open.</div></main>;
   }
 
-  const busy = props.editorialBusy || props.adoptionBusy || props.memberVersionBusy;
+  /* While MAIA waits for the writer to choose which conversation, nothing is being worked
+     on: the writer must be free to leave (which cancels the waiting request). */
+  const awaitingConversationChoice = (props.conversationChoices?.length ?? 0) > 1;
+  const busy = (props.editorialBusy && !awaitingConversationChoice) || props.adoptionBusy || props.memberVersionBusy;
   const currentBody = props.focusId ? props.writing.bodyOf(props.focusId) : '';
   const visibleUndoMessage = undoMessageForVisibleDraft(props.undoMessage, writeReadback, props.focusId, currentBody);
   const currentText = props.held?.draftSectionId === props.focusId
@@ -780,9 +792,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         type="button"
         className="p4r1-selection-trigger"
         aria-expanded={selectionMenuOpen}
-        onClick={() => setSelectionMenuOpen((open) => { if (!open) { setMorePassageOptions(false); setPassageNotice(null); } return !open; })}
+        onClick={() => setSelectionMenuOpen((open) => { if (!open) { setPassageAsk(''); setPassageNotice(null); } return !open; })}
       >
-        Work with passage <span aria-hidden="true">›</span>
+        Talk with MAIA <span aria-hidden="true">›</span>
       </button>
 
       {selectionMenuOpen ? (
@@ -797,79 +809,54 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               ) : null}
             </div>
           ) : null}
-          <button type="button" role="menuitem" className="p4r1-selection-menu-primary" onClick={() => {
-            if (!requireWork()) return;
-            setSelectionMenuOpen(false);
-            props.onOpenWorkspace();
-            setIsolatedEditorial(true);
-          }}>
-            <b>Focus</b>
-            <span>Open the passage in the dedicated editorial room.</span>
-          </button>
-
-          <button type="button" role="menuitem" data-open-craftsmans-table onClick={() => {
-            if (!requireWork()) return;
-            if (!requestConversationDeparture()) return;
-            setSelectionMenuOpen(false);
-            openCraftOnHeld();
-          }}>
-            <b>Craftsman's Table</b>
-            <span>Work on these exact words with visible changes and MAIA beside the writing.</span>
-          </button>
-
-          <button type="button" role="menuitem" onClick={() => runPassageAct({
-            label: 'Discuss',
+          {/* Doors ruling (founder, 2026-11-05): ONE door. A writer who knows what they want
+              says it in their own words; one who doesn't picks a plain choice and MAIA offers
+              options. Every path opens the same conversation. Kept small on purpose:
+              overwhelm is easy to reach. */}
+          <form
+            className="p4r1-selection-ask"
+            data-passage-ask
+            onSubmit={(event) => {
+              event.preventDefault();
+              const words = passageAsk.trim();
+              if (!words) return;
+              setPassageAsk('');
+              runPassageAct({ label: words, prompt: words, options: { turnShape: 'conversation' } }, true);
+            }}
+          >
+            <input
+              aria-label="Tell MAIA what you want"
+              placeholder="Tell MAIA what you want…"
+              value={passageAsk}
+              onChange={(event) => setPassageAsk(event.target.value)}
+              autoFocus
+            />
+          </form>
+          <p className="p4r1-selection-or">or let MAIA offer</p>
+          <button type="button" role="menuitem" data-passage-choice="discuss" onClick={() => runPassageAct({
+            label: 'What’s happening here?',
             prompt: passageActQuestion('discuss'),
             options: { proposalPolicy: 'reply_only', passageAct: 'discuss' },
-          })}>
-            <b>Discuss</b>
-            <span>Talk about the passage before changing anything.</span>
+          }, true)}>
+            What’s happening here?
           </button>
-
-          {/* The implicit Academy's front door: one step from a selected passage
-              (SEMANTIC-FIELD-01 teaching plan, 2026-11-01). */}
-          <button type="button" role="menuitem" data-teach-me-entry onClick={() => runPassageAct({
-            label: 'Teach me about this',
-            prompt: teachingQuestion('passage'),
-            depth: 'learning',
-            options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' },
-          })}>
-            <b>Teach me about this</b>
-            <span>Learn the craft already at work here.</span>
-          </button>
-
-          <button
-            type="button"
-            role="menuitem"
-            className="p4r1-passage-more"
-            aria-expanded={morePassageOptions}
-            onClick={() => setMorePassageOptions((open) => !open)}
-          >
-            <b>{morePassageOptions ? 'Fewer ways' : 'More ways to work'}</b>
-            <span>Revision and deeper editorial reasoning, when you want them.</span>
-          </button>
-          {morePassageOptions ? (
-            <>
-          <button type="button" role="menuitem" onClick={() => runPassageAct({
-            label: 'Revise',
+          <button type="button" role="menuitem" data-passage-choice="revise" onClick={() => runPassageAct({
+            label: 'Show me an edit',
             prompt: passageActQuestion('revise'),
             options: { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise' },
           }, true)}>
-            <b>Revise</b>
-            <span>Ask MAIA for one useful editorial move.</span>
+            Show me an edit
           </button>
-
-          <button type="button" role="menuitem" onClick={() => runPassageAct({
-            label: 'Go deeper',
-            prompt: passageActQuestion('deeper'),
-            depth: 'direct',
-            options: { proposalPolicy: 'reply_only', passageAct: 'deeper' },
-          })}>
-            <b>Go deeper</b>
-            <span>Open the technical reasoning, evidence, and tradeoffs.</span>
+          {/* The implicit Academy's front door: one step from a selected passage
+              (SEMANTIC-FIELD-01 teaching plan, 2026-11-01). */}
+          <button type="button" role="menuitem" data-passage-choice="teach" data-teach-me-entry onClick={() => runPassageAct({
+            label: 'Teach me the craft',
+            prompt: teachingQuestion('passage'),
+            depth: 'learning',
+            options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' },
+          }, true)}>
+            Teach me the craft
           </button>
-            </>
-          ) : null}
         </div>
       ) : null}
     </div>
@@ -1096,7 +1083,11 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       <header className="p4r1-context-head">
         <div>
           <span>In relation to this passage</span>
-          <strong>{props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'Selected passage'}</strong>
+          <strong>{passagePlaceLabel(
+            props.context.sections.find((s) => s.draftSectionId === props.focusId),
+            currentBody,
+            null,
+          )}</strong>
         </div>
         <div>
           <button type="button" disabled={busy} onClick={() => setIsolatedEditorial(true)}>Isolate passage</button>
@@ -1109,6 +1100,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
       <EditorialDancePanel
         stage
+        conversationChoices={props.conversationChoices ?? []}
+        onChooseConversation={props.onChooseConversation}
+        onStartNewConversation={props.onStartNewFromChoice}
         earlierThread={props.earlierEditorialThread ?? null}
         onStudioAction={onStudioAction}
         onUseVersion={props.onUseVersion}
@@ -1213,16 +1207,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         </details>
       ) : null}
 
-      {props.relationshipChoices.length > 1 ? (
-        <div className="p4r1-relationships" aria-label="Choose revision conversation">
-          {props.relationshipChoices.map((choice, index) => (
-            <button key={choice.threadId} type="button" disabled={props.editorialBusy}
-              onClick={() => props.onChooseRelationship(choice.threadId)}>
-              Conversation {index + 1} · {choice.turnCount} turns
-            </button>
-          ))}
-        </div>
-      ) : null}
     </div>
   ) : null;
 
@@ -1612,7 +1596,11 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const isolatedRoom = props.workspaceOpen && isolatedEditorial && !craftVisible && !craftScopeChanged ? (
     <IsolatedEditorialRoom
       appearance={props.appearance}
-      title={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'Selected passage'}
+      title={passagePlaceLabel(
+        props.context.sections.find((s) => s.draftSectionId === props.focusId),
+        currentBody,
+        props.held?.draftSectionId === props.focusId ? props.held : null,
+      )}
       currentText={passageShown}
       sectionBody={currentBody}
       busy={busy}
@@ -1669,6 +1657,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
       <EditorialDancePanel
         stage
+        conversationChoices={props.conversationChoices ?? []}
+        onChooseConversation={props.onChooseConversation}
+        onStartNewConversation={props.onStartNewFromChoice}
         autoOpenWithMaia
         onOpenWithMaia={props.onOpenWithMaia}
         openingFailure={props.openingFailure ?? null}

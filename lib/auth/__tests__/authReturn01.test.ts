@@ -312,3 +312,31 @@ describe('AUTH-RETURN-01 return and request-origin authority', () => {
       .toThrow('Authentication request origin was refused');
   });
 });
+
+describe('signing in returns the writer to the exact place they were (design pass W9, 2026-11-05)', () => {
+  const previousMode = process.env.ACCESS_CONTROL_MODE;
+  beforeEach(() => {
+    process.env.ACCESS_CONTROL_MODE = 'strict';
+    authority.mockReset().mockResolvedValue(anonymous);
+  });
+  afterEach(() => {
+    if (previousMode === undefined) delete process.env.ACCESS_CONTROL_MODE;
+    else process.env.ACCESS_CONTROL_MODE = previousMode;
+  });
+
+  it('the sign-in redirect carries the whole address in next, and nothing else rides along loose', async () => {
+    const place = '/writers-studio?mode=write&m=fiction-ms&s=fiction-section';
+    const response = await proxy(request(place, 'GET'));
+    const location = new URL(response.headers.get('location')!);
+    expect(location.pathname).toBe('/signin');
+    expect(location.searchParams.get('next')).toBe(place);
+    expect(location.searchParams.get('mode')).toBeNull();
+    expect(location.searchParams.get('m')).toBeNull();
+    expect(normalizeReturnDestination(location.searchParams.get('next'))).toBe(place);
+  });
+
+  it('a plain address still returns to itself', async () => {
+    const response = await proxy(request('/writers-studio', 'GET'));
+    expect(new URL(response.headers.get('location')!).searchParams.get('next')).toBe('/writers-studio');
+  });
+});
