@@ -57,6 +57,28 @@ export function stripStudioActions(body: string): string {
   return body.replace(MARKER, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
+/** The two Develop places a button can take the writer to. */
+export type StudioPlace = 'develop-overview' | 'editorial-pass';
+
+/** The hash Develop reads on arrival to reveal the control (it never presses it). */
+export const STUDIO_PLACE_HASH: Readonly<Record<StudioPlace, string>> = {
+  'develop-overview': 'read-this-chapter',
+  'editorial-pass': 'editorial-pass',
+};
+
+/** Room state that belongs to where the writer was, not to Develop → Overview. */
+const LEAVING_PARAMS = ['developField', 'r', 'attentionItem', 'insightReading', 'insightObservation',
+  'insightAction', 'reviewRun', 'reviewFinding'];
+
+/** Design 1B: the address of a Develop place, from any room, for the same Work. Navigation only. */
+export function studioPlaceHref(pathname: string, search: string, place: StudioPlace): string {
+  const next = new URLSearchParams(search);
+  next.set('mode', 'develop');
+  for (const key of LEAVING_PARAMS) next.delete(key);
+  const query = next.toString();
+  return `${pathname}${query ? `?${query}` : ''}#${STUDIO_PLACE_HASH[place]}`;
+}
+
 /** What MAIA is told about offering a control, on surfaces that show the button. */
 export function studioActionsInstruction(surface: StudioActionSurface): string {
   const allowed = STUDIO_ACTIONS.filter((a) => a.surfaces.includes(surface));
