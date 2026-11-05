@@ -58,9 +58,14 @@ export function toEclipticLongitude(sign: string, degree: number): number | null
   return index * 30 + degree;
 }
 
-/** Ascendant is placed at the left horizon; longitude increases anticlockwise. */
+/**
+ * Traditional orientation: the Ascendant sits at the left horizon (9 o'clock)
+ * and zodiacal longitude increases anticlockwise, so house 1 lies just below
+ * the Ascendant, the IC is at the bottom, the Descendant at the right and the
+ * MC at the top. Returned in mathematical degrees (0 = east, anticlockwise).
+ */
 export function longitudeToAngle(longitude: number, ascendantLongitude: number): number {
-  return 180 - normalizeLongitude(longitude - ascendantLongitude);
+  return normalizeLongitude(180 + normalizeLongitude(longitude - ascendantLongitude));
 }
 
 export function radialPoint(
