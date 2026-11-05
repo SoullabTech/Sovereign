@@ -98,6 +98,8 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
     enteredFor.current = selectedID;
     const calm = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     detailRef.current.scrollIntoView({ block: 'start', behavior: calm ? 'auto' : 'smooth' });
+    // Move keyboard and screen-reader focus to the opened field so entering it is announced, not just scrolled to.
+    document.getElementById(`${selectedID}-title`)?.focus({ preventScroll: true });
   }, [immersive, selectedID]);
 
   const quietTimer = useRef<number | null>(null);
@@ -243,6 +245,11 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
               <div className={styles.studioWorkQualities}>
                 {work.qualities.map(quality => <small key={quality}>{quality}</small>)}
               </div>
+              {!work.manifest && (
+                <p className={styles.studioWorkNote} data-sound-studio-study-status="true">
+                  Listening study — audio not yet available
+                </p>
+              )}
               <button type="button" className={styles.studioWorkAction}
                 onClick={() => {
                   setSelectedID(work.id);
@@ -276,7 +283,7 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
               <button type="button" onClick={() => setImmersive(false)} aria-label={`Close ${selected.title} experience`}>Close</button>
             </div>
             <span className={styles.smallcaps}>{isNight ? 'A long-form night field' : selected.kind}</span>
-            <h3 id={`${selected.id}-title`}>{selected.title}</h3>
+            <h3 id={`${selected.id}-title`} tabIndex={-1}>{selected.title}</h3>
             <p className={styles.immersiveInvitation}>
               {isNight
                 ? 'Nicole opens the threshold once. The music continues without further guidance.'
@@ -359,9 +366,7 @@ export default function SoundStudioField({ initialWorkId }: Props = {}) {
                     </li>
                   ))}
                 </ol>
-                <p className={styles.quality}>
-                  {selected.qualityStatement ?? 'EXACT REVIEW MEDIA · EXISTING PERSISTENT PLAYER · RELEASE HOLD'}
-                </p>
+                {selected.memberNote && <p className={styles.quality}>{selected.memberNote}</p>}
               </div>
             </details>
           </div>
