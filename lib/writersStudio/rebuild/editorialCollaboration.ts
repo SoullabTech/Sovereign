@@ -2,6 +2,7 @@ import type { TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
 import type { PassageAct } from '@/lib/writersStudio/passageActs';
 import { apiFetch } from '@/lib/http/apiBase';
+import { replyLengthField } from '@/lib/writersStudio/replyLengthPreference';
 import { occurrences } from '@/lib/manuscript/exactText';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
@@ -255,6 +256,7 @@ export async function sendBoundEditorialTurn(
         ...(teachingAnchor ? { teachingAnchor } : {}),
         ...(turnShape ? { turnShape } : {}),
         ...(passageAct ? { passageAct } : {}),
+        ...replyLengthField(),
       }),
     });
     const body = await res.json().catch(() => null);
@@ -403,6 +405,7 @@ export async function openEditorialConversation(
         threadId, opening: true, sanctuary: posture.sanctuary, relationshipId,
         ...(options?.scope ? { scope: options.scope } : {}),
         ...(options?.responseDepth ? { responseDepth: options.responseDepth } : {}),
+        ...replyLengthField(),
       }),
     });
     const body = await res.json().catch(() => null);

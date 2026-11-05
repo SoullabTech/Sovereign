@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { chooseReplyLength } from '@/lib/writersStudio/replyLengthPreference';
 import {
   EDITORIAL_APPROACHES,
   approachNote,
@@ -911,6 +912,20 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           ) : null}
 
           {turns.map((t) => renderTurn(t))}
+
+          {/* Responsive length (founder 2026-11-05: "some want more and some need less").
+              The writer steers; the choice is remembered because they made it. The words
+              stored are exactly what the button says. */}
+          {turns.at(-1)?.speaker === 'maia' && !props.busy && !pending ? (
+            <li className="ws-stage-length" data-stage-length>
+              <button type="button" onClick={() => { chooseReplyLength('shorter'); props.onSend('Shorter, please', { turnShape: 'conversation' }); }}>
+                Shorter, please
+              </button>
+              <button type="button" onClick={() => { chooseReplyLength('fuller'); props.onSend('Say more', { turnShape: 'conversation' }); }}>
+                Say more
+              </button>
+            </li>
+          ) : null}
 
           {pending ? (
             <li className="ws-stage-turn is-writer is-pending" data-turn-speaker="author" data-pending-turn><p>{pending}</p></li>

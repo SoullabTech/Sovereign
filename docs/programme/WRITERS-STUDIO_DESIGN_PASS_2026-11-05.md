@@ -89,7 +89,7 @@ coming back to a passage resumes the conversation the writer was last in (W11).
 2. ✅ D2 visible change + D3a her voice in edit turns (this pass).
 3. D4 header and quiet top bar.
 4. ✅ D1 one door (Doors ruling taken; built).
-5. D3b short replies (`REVISE` shape).
+5. ✅ D3b responsive length (founder ruling; built).
 6. D5 Develop: question first, plain language, path into the stage.
 7. D7 place survives sign-in.
 
@@ -111,7 +111,23 @@ entries; they are reached by asking, or as "Change it" on her option. The 2026-1
 made Craftsman's Table a door again is **superseded in part** (its test is kept and marked).
 Built on this branch.
 
-## 6. Rulings owed
+## 6. Founder ruling — responsive length (2026-11-05, in session) ✅
 
-- **Reply length:** default about 100 words with "Say more"? Recommendation: yes, for edit and
-  discuss turns; Teach-me exempt.
+> "Make the responses responsive to the writer and their situation. Some want more and some
+> need less."
+
+**Built:** (1) MAIA fits each reply's length to the request in front of her: a short or practical
+ask gets a short answer, a searching question gets more room, and she doesn't restate the
+passage or mention settings unless one decides what she can do. Judged from the request, ⛔ never
+from an impression of the writer (Guided and Direct; Learning keeps its own one-idea rule, and
+the depth texts stay byte-identical). (2) Under her latest reply: **Shorter, please** · **Say
+more**. Pressing one sends exactly those words and remembers the choice on this device, because
+the writer made it; the choice is composed last, so it outranks every default shape. ⛔ Nothing
+is inferred or stored about the writer otherwise.
+**Witnessed locally:** after "Shorter, please", MAIA answered in 54 words instead of about 300.
+Still owed: she said "within this latitude". The settings note (`latitudeInstruction`) uses a
+technical word; plain wording is next.
+
+## 7. Rulings owed
+
+- None open from this pass.

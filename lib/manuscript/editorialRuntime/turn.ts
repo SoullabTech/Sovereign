@@ -53,7 +53,7 @@ import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
-import { editorialDirective, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
+import { editorialDirective, type EditorialDepth, replyLengthInstruction, responsiveLengthDirective, type ReplyLength } from '@/lib/writersStudio/editorialDepth';
 import { teachingTurnInstruction, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { conversationTurnInstruction, type TurnShape } from '@/lib/writersStudio/conversationTurn';
 import { passageActInstruction, type PassageAct } from '@/lib/writersStudio/passageActs';
@@ -143,6 +143,8 @@ export interface EditorialTurnInput {
   readonly proposalPolicy?: ProposalPolicy;
   /** Explicitly selected response register; NEVER inferred from the writer. */
   readonly responseDepth?: EditorialDepth;
+  /** The writer's own length choice (Shorter / Say more). ⛔ A closed value, never text. */
+  readonly replyLength?: ReplyLength;
   /** The teaching button the writer pressed (F1). Its shape is added here,
    *  server-side; the writer's turn holds only the button's words. */
   readonly teachingAnchor?: TeachingAnchor;
@@ -439,6 +441,9 @@ export async function runEditorialTurn(
       // Both derive from the exact durable utterance and chosen depth only.
       // No new context, corpus, or identity crosses this instruction.
       editorialDirective(input.responseDepth ?? 'guided'),
+      // Founder 2026-11-05: length follows the request in front of her (not Learning,
+      // which keeps its own one-idea rule).
+      responsiveLengthDirective(input.responseDepth ?? 'guided'),
       // Server-owned teaching shape (F1): how to answer a Teach me, never a
       // sentence stored as the writer's.
       input.teachingAnchor ? teachingTurnInstruction(input.teachingAnchor) : '',
@@ -457,6 +462,8 @@ export async function runEditorialTurn(
       latitudeInstruction(scope),
       sequenceInstruction(gated),
       proposalPolicyInstruction(proposalPolicy),
+      // Last, so the writer's own length choice outranks every default shape.
+      input.replyLength ? replyLengthInstruction(input.replyLength) : '',
     ].filter(Boolean).join('\n\n'),
     messages: [{ role: 'user', content: utterance }],
     maxTokens: MAX_TOKENS,

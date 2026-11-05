@@ -140,3 +140,23 @@ test('the change is visible in the text and named before the buttons', () => {
   expect(del).toMatch(/background/);   // a deletion is marked, not merely greyed
   expect(del).not.toMatch(/var\(--fr-muted\)/);
 });
+
+test('under MAIA’s latest reply the writer can ask for shorter or more, and the choice is remembered', () => {
+  window.localStorage.removeItem('ws.replyLength');
+  const replyOnly = [turns[0]!, { turnIndex: 1, speaker: 'maia', body: 'A long answer.', at: 't1', adjunct: null }];
+  const p = render({ thread: { ...thread, turns: replyOnly, versions: [], headVersionId: null }, version: null, lastMaiaTurn: replyOnly[1] });
+  const [shorter, more] = Array.from(q('[data-stage-length]')!.querySelectorAll('button'));
+  act(() => shorter!.click());
+  expect(p.onSend).toHaveBeenLastCalledWith('Shorter, please', { turnShape: 'conversation' });
+  expect(window.localStorage.getItem('ws.replyLength')).toBe('shorter');
+  act(() => more!.click());
+  expect(p.onSend).toHaveBeenLastCalledWith('Say more', { turnShape: 'conversation' });
+  expect(window.localStorage.getItem('ws.replyLength')).toBe('fuller');
+});
+
+test('nothing is remembered until the writer chooses, and no buttons while she is still answering', () => {
+  window.localStorage.removeItem('ws.replyLength');
+  render({ busy: true });
+  expect(q('[data-stage-length]')).toBeNull();
+  expect(window.localStorage.getItem('ws.replyLength')).toBeNull();
+});
