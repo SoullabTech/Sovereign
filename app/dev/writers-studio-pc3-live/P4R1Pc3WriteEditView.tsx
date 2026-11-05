@@ -156,7 +156,7 @@ export type P4R1Pc3WriteEditViewProps = {
   /** Retire pending visible editorial result after an author STOP. */
   onStopEditorial: () => void;
   /** R2 "MAIA opens": ask MAIA to speak first in a new conversation. The controller owns the laws. */
-  onOpenWithMaia?: () => void;
+  onOpenWithMaia?: () => void | Promise<boolean>;
   openingFailure?: string | null;
   onSelectVersion: (id: string) => void;
   onApply: () => void;

@@ -93,7 +93,7 @@ export interface EditorialDancePanelProps {
    *  gesture (the passage room). Never set from selection or a side panel. */
   autoOpenWithMaia?: boolean;
   /** Ask MAIA to speak first. The controller owns every law; this only asks. */
-  onOpenWithMaia?: () => void;
+  onOpenWithMaia?: () => void | Promise<boolean>;
   /** Plain, writer-facing text when the opening failed (nothing was sent or recorded). */
   openingFailure?: string | null;
   /** The conversation that still holds an undoable edit after Use this. */
@@ -540,14 +540,24 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const openAskedRef = useRef(false);
   const openingWanted = Boolean(props.stage && props.autoOpenWithMaia && props.onOpenWithMaia);
   const threadIsEmpty = (props.thread?.turns.length ?? 0) === 0;
+  /* The controller declined to open (nothing was sent): show MAIA's plain greeting, never a
+     "reading" state that no request stands behind. */
+  const [openingDeclined, setOpeningDeclined] = useState(false);
+  /* A different conversation (a fresh one, or the real one arriving after load) earns its
+     own chance to open; the controller still refuses a thread it has already opened. */
+  const conversationKey = props.thread?.threadId ?? null;
+  useEffect(() => {
+    openAskedRef.current = false;
+    setOpeningDeclined(false);
+  }, [conversationKey]);
   useEffect(() => {
     if (!openingWanted || openAskedRef.current) return;
     if (postureBlocksEditorial || relationshipBlocks || props.busy || !threadIsEmpty) return;
     if (props.openingFailure || heldAct || props.requestedAct || props.pendingQuestion) return;
     openAskedRef.current = true;
-    props.onOpenWithMaia?.();
+    void Promise.resolve(props.onOpenWithMaia?.()).then((sent) => { if (sent === false) setOpeningDeclined(true); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openingWanted, postureBlocksEditorial, relationshipBlocks, props.busy, threadIsEmpty, props.openingFailure, heldAct, props.requestedAct, props.pendingQuestion]);
+  }, [conversationKey, openingWanted, postureBlocksEditorial, relationshipBlocks, props.busy, threadIsEmpty, props.openingFailure, heldAct, props.requestedAct, props.pendingQuestion]);
   const heldNotice = heldAct ? (
     <p className="p4r1-dance-held" role="status" data-held-act>
       When you’ve answered, I’ll continue with “{heldAct.label}”.{' '}
@@ -860,11 +870,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             </li>
           ) : null}
 
-          {turns.length === 0 && !gatesOpen && openingWanted && !props.openingFailure && !props.busy ? (
+          {turns.length === 0 && !gatesOpen && openingWanted && !openingDeclined && !props.openingFailure && !props.busy ? (
             <li className="ws-stage-turn is-maia is-thinking" aria-live="polite" data-stage-opening-pending>MAIA is reading…</li>
           ) : null}
 
-          {turns.length === 0 && !gatesOpen && !(openingWanted && !props.openingFailure) ? (
+          {turns.length === 0 && !gatesOpen && !(openingWanted && !openingDeclined && !props.openingFailure) ? (
             <li className="ws-stage-turn is-maia" data-turn-speaker="maia" data-stage-opening>
               {props.openingFailure ? <p data-stage-opening-failure>{props.openingFailure}</p> : null}
               <p>I’m here with this passage. We can talk about what’s happening in it, I can show you an edit, or we can look at the craft already at work. What would you like?</p>

@@ -97,3 +97,25 @@ test('a MAIA turn with no writer turn before it renders, and the three starting 
   expect(Array.from(q('[data-stage-chips]')!.querySelectorAll('button')).map((b) => b.textContent))
     .toEqual(['Talk about what’s happening', 'Show me an edit', 'Teach me the craft here']);
 });
+
+test('nothing sent means no "MAIA is reading": a declined opening shows her greeting instead', async () => {
+  // Local walk 2026-11-05: the opening returned without sending, and "MAIA is reading…" stayed forever.
+  const p = render({ autoOpenWithMaia: true, onOpenWithMaia: jest.fn(async () => false) });
+  await act(async () => { await Promise.resolve(); });
+  expect(p.onOpenWithMaia).toHaveBeenCalledTimes(1);
+  expect(q('[data-stage-opening-pending]')).toBeNull();
+  expect(q('[data-stage-opening]')!.textContent).toContain('I’m here with this passage');
+});
+
+test('a new conversation gets its own opening after the earlier one was declined', async () => {
+  // Local walk 2026-11-05: Focus mounted before the old thread loaded, the opening was declined,
+  // and "Start a new conversation" then never opened. Defeat candidate: a once-per-mount guard.
+  const open = jest.fn(async () => false);
+  render({ autoOpenWithMaia: true, onOpenWithMaia: open, thread: null });
+  await act(async () => { await Promise.resolve(); });
+  render({ autoOpenWithMaia: true, onOpenWithMaia: open, thread: { ...emptyThread, threadId: 'old', turns: [openingTurn] } });
+  render({ autoOpenWithMaia: true, onOpenWithMaia: open, thread: null });
+  expect(open).toHaveBeenCalledTimes(2);
+  render({ autoOpenWithMaia: true, onOpenWithMaia: open, thread: { ...emptyThread, threadId: 'fresh' } });
+  expect(open).toHaveBeenCalledTimes(3);
+});

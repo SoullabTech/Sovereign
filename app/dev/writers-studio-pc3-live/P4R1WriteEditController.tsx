@@ -1502,18 +1502,25 @@ export default function FlagshipWriteEditController() {
   const openedThreadsRef = useRef<Set<string>>(new Set());
   const openingInFlightRef = useRef(false);
   const [openingFailure, setOpeningFailure] = useState<string | null>(null);
-  const openWithMaia = useCallback(async () => {
-    if (openingInFlightRef.current || editorialBusy) return;
-    if (!focusId || !context || !work || !currentWorkGesture() || !scopedA2Relationship) return;
-    if (workReentryRequired.current || (editorialThread && !scopedEditorialThread)) return;
+  /** Resolves true once a request was sent (its outcome is then on screen), false when the
+   *  opening was not attempted, so the conversation never claims MAIA is reading when nothing
+   *  was sent. */
+  const openWithMaia = useCallback(async (): Promise<boolean> => {
+    const notOpened = (why: string) => {
+      if (process.env.NODE_ENV !== 'production') console.info('[ws-opening] not opened:', why);
+      return false;
+    };
+    if (openingInFlightRef.current || editorialBusy) return notOpened('busy');
+    if (!focusId || !context || !work || !currentWorkGesture() || !scopedA2Relationship) return notOpened('no work or relationship');
+    if (workReentryRequired.current || (editorialThread && !scopedEditorialThread)) return notOpened('thread out of scope');
     const writing = writingRef.current;
     const body = writing?.bodyOf(focusId);
     const revision = writing?.currentRevisionId();
     if (!writing || typeof body !== 'string' || !Number.isSafeInteger(revision)
       || writing.hasUnsavedWork()
-      || ['dirty', 'saving', 'conflict', 'error'].includes(writing.statusOf(focusId))) return;
+      || ['dirty', 'saving', 'conflict', 'error'].includes(writing.statusOf(focusId))) return notOpened('writing not saved');
     const posture0 = readCurrentSanctuaryPosture();
-    if (!posture0.resolved || posture0.sanctuary) return;
+    if (!posture0.resolved || posture0.sanctuary) return notOpened('posture');
 
     const scopeAtGesture = editorialActScopeRef.current;
     const generation = ++editorialActGenerationRef.current;
@@ -1532,23 +1539,23 @@ export default function FlagshipWriteEditController() {
     setEditorialFailure(null);
     try {
       const thread = await resolveEditorialForAct(stillCurrent);
-      if (!thread || !stillCurrent()) return;
+      if (!thread || !stillCurrent()) return notOpened('no thread');
       const desired = selectedPassage?.draftSectionId === focusId
         ? selectedPassage.text : focusSection?.body ?? '';
       if (thread.workId !== context.manuscriptId
-        || thread.targetSectionId !== focusId || thread.locusText !== desired) return;
+        || thread.targetSectionId !== focusId || thread.locusText !== desired) return notOpened('thread is for another passage');
       // A conversation that already has turns is resumed, never opened a second time.
-      if (thread.turns.length !== 0 || openedThreadsRef.current.has(thread.threadId)) return;
+      if (thread.turns.length !== 0 || openedThreadsRef.current.has(thread.threadId)) return notOpened('thread already has turns');
       const posture = readCurrentSanctuaryPosture();
-      if (!stillCurrent() || !posture.resolved || posture.sanctuary) return;
+      if (!stillCurrent() || !posture.resolved || posture.sanctuary) return notOpened('changed before sending');
       openedThreadsRef.current.add(thread.threadId);
       const outcome = await openEditorialConversation(
         thread.threadId, focusId, posture, scopedA2Relationship.id,
         { scope: { latitude: editLatitude, mayRemoveParagraphs }, responseDepth: editorialDepth },
       );
-      if (!stillCurrent()) return;
+      if (!stillCurrent()) return true;
       const after = readCurrentSanctuaryPosture();
-      if (!after.resolved || after.sanctuary) return;
+      if (!after.resolved || after.sanctuary) return true;
       if (!outcome.ok) {
         setOpeningFailure(outcome.reason === 'sanctuary_unavailable'
           ? 'MAIA doesn’t open conversations in Sanctuary. Nothing was sent.'
@@ -1557,7 +1564,7 @@ export default function FlagshipWriteEditController() {
             : 'MAIA couldn’t start this conversation just now. Nothing was changed.');
         // Allow an explicit Try again for a failure that wrote nothing.
         if (outcome.reason !== 'accountability_unresolved') openedThreadsRef.current.delete(thread.threadId);
-        return;
+        return true;
       }
       if (!mayPublishEditorialResponse({
         scope: scopeAtGesture, generation, threadId: thread.threadId,
@@ -1566,8 +1573,9 @@ export default function FlagshipWriteEditController() {
         scope: editorialActScopeRef.current,
         generation: editorialActGenerationRef.current,
         posture: after,
-      }, outcome.thread)) return;
+      }, outcome.thread)) return true;
       setEditorialThread(outcome.thread);
+      return true;
     } finally {
       openingInFlightRef.current = false;
       if (sameVisibleRequest()) setEditorialBusy(false);
@@ -2381,7 +2389,7 @@ export default function FlagshipWriteEditController() {
             onInstruction={(text) => { if (currentContextGesture()) setEditorialDraft(text); }}
             onSendEditorial={(text, options) => void sendEditorial(text, options)}
             onStopEditorial={stopEditorialForAuthor}
-            onOpenWithMaia={() => void openWithMaia()}
+            onOpenWithMaia={openWithMaia}
             openingFailure={openingFailure}
             onSelectVersion={(id) => {
               if (!scopedEditorialThread || workReentryRequired.current
