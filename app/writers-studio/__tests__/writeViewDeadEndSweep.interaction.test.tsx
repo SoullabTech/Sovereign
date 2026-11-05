@@ -112,9 +112,10 @@ const POSTURES: Array<[string, { resolved: boolean; sanctuary: boolean }]> = [
   ['Sanctuary', { resolved: true, sanctuary: true }],
 ];
 const RELATIONSHIPS: Array<[string, unknown]> = [['no relationship', null], ['relationship begun', { id: 'rel-1' }]];
-const ACTIONS: Array<{ label: string; more?: boolean }> = [
-  { label: 'Focus' }, { label: 'Discuss' },
-  { label: 'Teach me about this' }, { label: 'Revise', more: true }, { label: 'Go deeper', more: true },
+// Doors ruling (founder, 2026-11-05): one door — the writer's own words, or three plain choices.
+const ACTIONS: Array<{ label: string; typed?: boolean }> = [
+  { label: 'Own words', typed: true }, { label: 'What’s happening here?' },
+  { label: 'Show me an edit' }, { label: 'Teach me the craft' },
 ];
 
 describe('Write view dead-end sweep', () => {
@@ -212,6 +213,15 @@ describe('Write view dead-end sweep', () => {
     expect(button).toBeDefined();
     act(() => button!.click());
   }
+  function ask(words: string) {
+    const input = node.querySelector<HTMLInputElement>('[data-passage-ask] input')!;
+    expect(input).not.toBeNull();
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, words);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    act(() => { input.form!.requestSubmit(); });
+  }
   function visibleOutcome(): string {
     if (onSend.mock.calls.length > 0) return 'sent';
     if (node.querySelector('[data-held-act]')?.getAttribute('data-held-act')) return 'held';
@@ -224,13 +234,13 @@ describe('Write view dead-end sweep', () => {
   describe.each(WORKS)('%s', (_w, work) => {
     describe.each(POSTURES)('%s', (_p, sessionPosture) => {
       describe.each(RELATIONSHIPS)('%s', (_r, maiaRelationship) => {
-        it.each(ACTIONS)('$label is never silent', ({ label, more }) => {
+        it.each(ACTIONS)('$label is never silent', ({ label, typed }) => {
           overrides = { work, sessionPosture, maiaRelationship };
           act(() => root.render(<Fixture />));
           select();
-          click('Work with passage');
-          if (more) click('More ways to work');
-          click(label);
+          click('Talk with MAIA');
+          if (typed) ask('Cut the last clause.');
+          else click(label);
           expect(visibleOutcome()).not.toBe('SILENT');
         });
       });

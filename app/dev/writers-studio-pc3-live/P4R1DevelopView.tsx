@@ -152,6 +152,13 @@ function friendlyObservation(phenomenonLabel: string | null | undefined) {
   };
 }
 
+/** The scope in a writer's words, for "Read … now". */
+function scopeName(scope: DevelopScopeChoice): string {
+  if (scope.kind === 'whole') return 'the whole Work';
+  if (scope.kind === 'range') return `sections ${scope.fromIndex + 1}–${scope.toIndex + 1}`;
+  return scope.label;
+}
+
 export type DevelopScopeChoice =
   | { kind: 'whole' }
   | { kind: 'section'; sectionId: string; label: string }
@@ -593,47 +600,23 @@ function ReadingField({
   const sectionId = targets[observation.key];
   const workSectionId = workTargets[observation.key];
 
+  /* Design pass (founder go-ahead 2026-11-05): MAIA's own observation comes first, in her
+     voice; one next step leads into the conversation; the rest waits under More. */
+  const friendly = friendlyObservation(observation.phenomenonLabel);
+  const hasMore = observations.length > 1;
   return (
     <div className="p4r1-reading-field">
-      <div className="p4r1-reading-meta">
-        <span>{reading.coverage.sentence}</span>
-        <span>Read {new Date(reading.frozenAt).toLocaleDateString()}</span>
-        <span>{reading.stateLabel}</span>
-      </div>
-
-      <section className="p4r1-discovery">
+      <section className="p4r1-discovery" data-develop-observation={observation.key}>
         <div className="p4r1-discovery-top">
-          <div>
-            <span className="p4r1-eyebrow">One thing MAIA noticed</span>
-            <span className="p4r1-discovery-count">
-              {selectedIndex + 1} of {observations.length}
-            </span>
-          </div>
-          <span className="p4r1-discovery-kind">
-            {observation.phenomenonLabel ?? LABEL[field]}
-          </span>
+          <span className="p4r1-discovery-kind" data-develop-observation-kind>{friendly.title}</span>
+          {hasMore ? (
+            <span className="p4r1-discovery-count">{selectedIndex + 1} of {observations.length}</span>
+          ) : null}
         </div>
 
-        {(() => {
-          const friendly = friendlyObservation(observation.phenomenonLabel);
-          return (
-            <div className="p4r1-discovery-human">
-              <h4>{friendly.title}</h4>
-              <p>{friendly.lead}</p>
-              <details>
-                <summary>See the saved reading in full</summary>
-                <blockquote>{observation.observation}</blockquote>
-              </details>
-            </div>
-          );
-        })()}
-
-        <div className="p4r1-discovery-plain">
-          <b>You do not have to decide what this means alone</b>
-          <p>
-            MAIA can put the reading into ordinary language, show you the exact places she was responding to,
-            and stay with the question while you decide whether anything here matters for your Work.
-          </p>
+        <div className="p4r1-discovery-said" data-develop-observation-said>
+          <span className="p4r1-eyebrow">MAIA</span>
+          <p>{observation.observation}</p>
         </div>
 
         <div className="p4r1-discovery-actions">
@@ -641,64 +624,61 @@ function ReadingField({
             <button
               type="button"
               className="p4r1-discovery-primary"
+              data-develop-talk-passage
               onClick={() => onWorkWithObservation(reading.id, observation.key, workSectionId)}
             >
-              Stay with this in Write
+              Talk about this passage
             </button>
-          ) : null}
+          ) : (
+            <button type="button" className="p4r1-discovery-primary" onClick={() => onTalkObservation(observation.key)}>
+              Talk with MAIA about this
+            </button>
+          )}
           {sectionId ? (
-            <button
-              type="button"
-              onClick={() => onGoToObservation(reading.id, observation.key, sectionId)}
-            >
+            <button type="button" onClick={() => onGoToObservation(reading.id, observation.key, sectionId)}>
               Show me in the manuscript
             </button>
           ) : null}
-          <button type="button" onClick={() => onTalkObservation(observation.key)}>
-            Talk with MAIA
-          </button>
-          <button type="button" onClick={() => onTeachObservation(observation.key)}>
-            Help me understand
-          </button>
-          <button type="button" onClick={() => onDeepObservation(observation.key)}>
-            Go deeper
-          </button>
-        </div>
-
-        {observations.length > 1 ? (
-          <div className="p4r1-discovery-nav">
+          {hasMore && selectedIndex < observations.length - 1 ? (
             <button
               type="button"
-              disabled={selectedIndex === 0}
-              onClick={() => onSelectObservation(observations[Math.max(0, selectedIndex - 1)]!.key)}
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              disabled={selectedIndex >= observations.length - 1}
-              onClick={() => onSelectObservation(observations[Math.min(observations.length - 1, selectedIndex + 1)]!.key)}
+              data-develop-see-another
+              onClick={() => onSelectObservation(observations[selectedIndex + 1]!.key)}
             >
               See another
             </button>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
 
-        <details className="p4r1-discovery-detail">
-          <summary>See the evidence and limits</summary>
+        <details className="p4r1-discovery-detail" data-develop-observation-more>
+          <summary>More</summary>
           <div>
+            <div className="p4r1-discovery-more-actions">
+              {workSectionId ? (
+                <button type="button" onClick={() => onTalkObservation(observation.key)}>Talk about it here</button>
+              ) : null}
+              <button type="button" onClick={() => onTeachObservation(observation.key)}>Help me understand</button>
+              <button type="button" onClick={() => onDeepObservation(observation.key)}>Go deeper</button>
+              {hasMore && selectedIndex > 0 ? (
+                <button type="button" onClick={() => onSelectObservation(observations[selectedIndex - 1]!.key)}>Previous</button>
+              ) : null}
+            </div>
             <h5>What this rests on</h5>
             {observation.evidence.map((evidence) => <p key={evidence}>{evidence}</p>)}
             <h5>What this does not establish</h5>
             {observation.limits.map((limit) => (
               <p key={limit.name}><b>{limit.name}</b> — {limit.meaning}</p>
             ))}
+            <p className="p4r1-reading-meta">
+              {reading.coverage.sentence} · Read {new Date(reading.frozenAt).toLocaleDateString()} · {reading.stateLabel}
+            </p>
           </div>
         </details>
       </section>
     </div>
   );
 }
+
 
 function ThemeField({ payload, busy, error, onMutation, onTalkCandidate }: {
   payload: LiveThemesPayload | null | undefined;
@@ -2177,6 +2157,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     (observation) => observation.key === selectedObservationKey,
   ) ?? null;
 
+  const newReadingRef = useRef<HTMLDetailsElement | null>(null);
   const selectedRailSection = props.sections.find(
     (section) => section.draftSectionId === railSelectionId,
   ) ?? null;
@@ -2891,9 +2872,32 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                   Show me what you already noticed
                 </button>
               ) : !props.summariesLoading ? (
-                <p className="p4r1-intent-no-read">
-                  I don’t have a saved reading for this question yet. You can choose exactly what I may read below.
-                </p>
+                /* Design pass (founder go-ahead 2026-11-05): MAIA asks once, with the button.
+                   Saving a changed draft stays the writer's own press (see the controller). */
+                <div className="p4r1-intent-ask" data-develop-read-ask>
+                  {props.commissionNeedsCheckpoint ? (
+                    <>
+                      <p>You’ve changed this since I last saw it. Shall I save what’s on the page and read that? Your words won’t change.</p>
+                      <button type="button" className="p4r1-intent-next" data-develop-save-and-read
+                        disabled={props.commissioning} onClick={props.onCheckpointAndCommission}>
+                        {props.commissioning ? 'MAIA is reading…' : 'Save and read'}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <p>I haven’t read {scopeName(props.scope)} yet. Shall I read it now? Your writing won’t change.</p>
+                      <button type="button" className="p4r1-intent-next" data-develop-read-now
+                        disabled={props.commissioning || props.prep?.kind !== 'ready'} onClick={props.onCommission}>
+                        {props.commissioning ? 'MAIA is reading…' : `Read ${scopeName(props.scope)} now`}
+                      </button>
+                    </>
+                  )}
+                  <button type="button" className="p4r1-intent-other" data-develop-choose-scope
+                    onClick={() => { const d = newReadingRef.current; if (d) { d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }}>
+                    Choose what she reads
+                  </button>
+                  {props.commissionError ? <p className="p4r1-error" role="status">{props.commissionError}</p> : null}
+                </div>
               ) : null}
             </section>
           ) : null}
@@ -2992,7 +2996,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               targets={props.observationTargets}
               workTargets={props.observationWorkTargets}
             />
-          ) : activeField ? (
+          ) : activeField && !(activeIntent && !props.summariesLoading && !latestForField(activeField, props.summaries)) ? (
+            /* When MAIA is already asking to read (above), a second "not read yet" card is noise. */
             <FieldContinue
               field={activeField}
               summaries={props.summaries}
@@ -3001,16 +3006,14 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             />
           ) : null}
 
-          <details className="p4r1-new-reading">
+          <details className="p4r1-new-reading" ref={newReadingRef}>
             <summary>
-              {activeField && latestForField(activeField, props.summaries)
-                ? 'Read somewhere else'
-                : `Read this Work for ${activeField ? LABEL[activeField] : 'this question'}`}
+              {/* Design pass 2026-11-05: MAIA's own question above is the way in; this is the
+                  quieter "somewhere else" for a different scope. */}
+              Read somewhere else
             </summary>
             <div className="p4r1-new-reading-body">
-              <p>
-                Choose what MAIA may read. Opening this field never reads more of your Work.
-              </p>
+              <p>Choose what MAIA reads.</p>
               <div className="p4r1-develop-command">
                 <ScopeChooser
                   scope={props.scope}
@@ -3032,17 +3035,14 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               </div>
               {props.commissionNeedsCheckpoint ? (
                 <div className="p4r1-chapter-read-snapshot" role="status">
-                  <p>
-                    This part of your Work has changed since its last reading snapshot. Save the
-                    current draft so MAIA reads exactly what is on the page now. Your words will not change.
-                  </p>
+                  <p>You’ve changed this since I last saw it. Shall I save what’s on the page and read that? Your words won’t change.</p>
                   <button
                     type="button"
                     className="p4r1-commission"
                     disabled={props.commissioning}
                     onClick={props.onCheckpointAndCommission}
                   >
-                    {props.commissioning ? 'Saving the current draft…' : 'Save current draft & read'}
+                    {props.commissioning ? 'MAIA is reading…' : 'Save and read'}
                   </button>
                 </div>
               ) : null}
@@ -3137,8 +3137,9 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         ) : !workTalking && selectedObservation && props.reading ? (
           <div className="p4r1-observation-maia-ready">
             <span className="p4r1-eyebrow">I’m here with this</span>
-            <h3>{friendlyObservation(selectedObservation.phenomenonLabel).title}</h3>
-            <p>{friendlyObservation(selectedObservation.phenomenonLabel).lead}</p>
+            {/* Design pass 2026-11-05: her observation is in the middle already; here she
+                simply offers to talk, once. */}
+            <p>Shall we talk about what I noticed? Pick a way in, or say it in your own words.</p>
             <div className="p4r1-observation-ready-actions">
               <button type="button" onClick={() => {
                 setDialoguePrompt(OBSERVATION_STARTERS.plain.words);
@@ -3153,10 +3154,6 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 setTalking(true);
               }}>Teach me what is happening</button>
             </div>
-            <details>
-              <summary>See the saved reading and evidence</summary>
-              <p>{selectedObservation.observation}</p>
-            </details>
           </div>
         ) : props.work && workTalking ? (
           <div className="p4r1-work-conversation">
