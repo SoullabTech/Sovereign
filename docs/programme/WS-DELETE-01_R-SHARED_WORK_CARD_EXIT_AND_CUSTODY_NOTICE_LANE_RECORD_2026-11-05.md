@@ -149,9 +149,9 @@ the browser Network tab response body of the failing DELETE (`removed:true` or n
 
 ### 5.1 Testing it locally (the founder's hold)
 
-1. Get the branch: the lane has not pushed. Patch files and a git bundle are in the scratchpad (path in the closing report); or ask for the branch to be pushed (no PR).
-2. Run the app against a local database as usual. **Without R20 configured every delete will end in the custody alert (mode R1). That is the notice working, not a failure.** To see a clean success
-   locally, point the three variables at throwaway files, make the key file hold 32 bytes (`head -c 32 /dev/urandom > <key file>`; it must exist), and set `R20_LEDGER_ALLOW_INITIALIZE=true`.
+1. Get the branch: it was pushed on the founder's ask (2026-11-06, branch only, no PR). Use a separate `git worktree add` so a working checkout with uncommitted changes is not disturbed; copy the gitignored env files in by absolute path. Patch files and a git bundle remain in the scratchpad.
+2. Run the app against a local database that has **every migration this tree carries applied** (section 6.6: a database 28 migrations behind answered "could not confirm", not the custody alert). **Without R20 configured every delete will end in the custody alert (mode R1). That is the notice working, not a failure.** To see a clean success
+   locally, point the three variables at throwaway files, make the key file hold 32 bytes (`head -c 32 /dev/urandom > <key file>`, or 64 hex characters; it must exist), and set `R20_LEDGER_ALLOW_INITIALIZE=true`. The Studio is invitation-only (section 6.6): the test member needs a roster row.
 3. Click through, in this order: (a) two Works sharing one writing → Delete on one → the removal question → Remove → the writing and the other Work remain; (b) Delete on the other → the writing and
    the Work go; (c) a Work with several writings shows **Remove**, not Delete; (d) the Work you land on (the large one) has the same door; (e) a Work with one writing and a second part
    → Delete says the Work stays, and its card does not turn into "was deleted"; (f) delete your last Work → the welcome screen carries any notice; (g) History: a writing held by two Works shows no Delete
@@ -341,8 +341,45 @@ Refuted by the skeptics (not acted on): client-1, client-2, cabin-2, breakit-run
 
 ```
 Adjudication         PASS as code, not as a release: the candidate is fit to enter canonical, subject to the founder's local test, the ratification of X1–X8 (6.4 Q1), and the founder's PR and merge acts. All 207 defeat candidates are killed in one full run on the committed tree; 59 PostgreSQL probes pass; the typecheck gate shows no regression; seven independent review rounds are closed (rounds 6 and 7 found no locking or erase defect, and round 7 only low findings, all closed). This is NOT a statement that the founder's production 500 is fixed (section 5): it is a statement that the member is now told the truth about it, and that the dead end and the deadlock are gone.
-What this lane did not establish   production's configuration (which R mode occurred); a real browser; real R20/KMS; real vault bytes; the full production schema
+What this lane did not establish   production's configuration (which R mode occurred); a real browser beyond one founder run in Safari on a migrated copy (section 6.6); real R20/KMS; real vault bytes; the full production schema
                      (the probes use a stub schema plus four real migrations; the Work-level tables are covered by the static drift guard, not by a physical cascade)
-Holds in force       no deploy · no PR · no merge · no push without the founder's explicit ask · dispositions.json unchanged · frozen branch untouched
+Holds in force       no deploy · no PR · no merge · no push without the founder's explicit ask (the branch was pushed on that ask, 2026-11-06) · dispositions.json unchanged ("ruled": false) · frozen branch untouched
 Residual risk        the open findings in 6.3; the questions in 6.4
 ```
+
+### 6.6 Local verification on the founder's Mac (2026-11-06)
+
+**Setting.** A `git worktree` of the pushed branch (head `c1513b7d2`); `npm ci`; `next dev`; Safari; Homebrew PostgreSQL 17.7. Database `maia_consciousness` first, then a copy `ws_delete_test` (section 6.6.2). Member: the demo account `demo.practitioner` with a throwaway password set for the test. Fictional test Works named "DELETE TEST A/B/C/D". No production system was touched and nothing was deployed. The local database holds accounts beyond fixtures (79 members, 39 of them test fixtures), so the copy `ws_delete_test` was made from a database that may hold real people's rows; every action in the run was scoped to the demo member.
+
+**6.6.1 What ran, and what it showed**
+
+| Evidence | Result |
+|---|---|
+| Nine jest suites (section 4 list) on the founder's machine | 264 tests pass. jest reads path arguments as regular expressions, so a path containing `[id]` needs `--runTestsByPath` or it silently matches nothing (8 of 9 ran at first) |
+| Server, real routes, signed in (curl): delete the shared writing through one of its two Works | `409 {"refusal":"declared_in_other_works","works":2}`. Nothing was deleted |
+| Server: delete the writing of a throwaway one-writing Work | `200 {"removed":true,"workRemoved":true}`; `ledger.json` and `high-water.json` were created next to the key |
+| Screen: Delete on a Work whose writing a second Work holds | First dialog "Delete “…”?" with the list of what goes with a Work → **Delete permanently** → the dialog became **"Remove “…” and keep the writing?"** (copy of `removeSharedWorkCopy(1)`: "This writing is also in another of your Works…") with **Remove this Work** / **Don’t remove** |
+| Screen: Remove this Work | Notice "“DELETE TEST A” was removed. The writing itself was not deleted." The Work card went; the other Work still listed its 2 manuscripts |
+| Database after that | writing 1 · removed Work 0 · the other Work still declares the writing 1 |
+| Screen: Delete on a one-writing Work (C) | The card went and no custody notice appeared (screenshot). **A database confirmation of this row had not been returned when this record was written** |
+
+**6.6.2 Environment findings (none is a defect of this branch)**
+
+1. **The local database was 28 migrations behind this tree.** The first delete returned a bare 500 and the page said "We could not confirm whether that work was deleted. Home now shows what is current, so check it before you try again." The database was unchanged (rolled back). The server log: `function r20_erase_writer_editorial_history(uuid, uuid, uuid) does not exist` (created by `20261021000002` and `20261025000001`); `writer_source_landing_intents` (`20261026000001`) was also absent. The unexpected-database-error path therefore behaved as designed: no claim of success, no claim of failure, state unchanged, Home re-read.
+   Remedy used: a copy of the database (`pg_dump` from the PostgreSQL 17 tools; a version 14 `pg_dump` refuses a 17.7 server), then the pending migrations applied to the copy only, in order, each file stopping at its first error. 26 applied. Two were refused: `20260926000002_writer_studio_work_themes` (adds a CHECK of eight lens names; the data holds 36 `overview` rows, a ninth lens added later by `20261002000002`, so the old migration cannot be replayed over later data) and `20260926000003_writer_studio_theme_occurrences` (depends on the first). Neither is on the delete path: nothing in the delete code, the R20 function or the later migrations references them. Not retried.
+2. **The Studio is invitation-only in this tree.** `writersStudioBetaAccess`: `admin_role` founder or cto, or an active `beta_tester` contact with `metadata.writers_studio_beta = true`. A signed-in member without it is redirected to the public doorway `/explore/writers-studio?access=invitation-required` (a generic per-product doorway page with the shared "All doorways" and "Sign in" header). For the test a roster row was added in the local database only; no code was touched.
+3. **Without R20 settings every writing delete ends in `custody_incomplete`** (`R20_LEDGER_FILE_MISSING` is caught, `recoverySealed = false`). That is the expected custody path and the shape of the production symptom. The production configuration remains unread.
+4. **How the shared state is reached.** Home's "Add to a Work" appears only for a writing that is in no Work, so Home's buttons cannot put one writing in a second Work. The declaration route (`POST /api/sovereign/living-works/:id/expressions`) accepts a second Work (the schema deliberately leaves exclusivity unruled), which is how the test state was built. How the state arose in production was not investigated.
+5. **Observation (design, not a defect).** The first dialog describes deleting the Work's writing even when that writing is shared; the page learns "shared" only from the server's 409. Nothing is destroyed on that path. A pre-warning in the first dialog is a possible later refinement and a product decision.
+
+**6.6.3 Not exercised in this run.** Section 5.1 (c) to (i); the custody notice on screen (the key file was moved aside and restored twice with no delete between, so the failure was never induced); the notice surviving "Back to Home" from History in a browser; real KMS; production.
+
+**6.6.4 Incidents during the run (recorded, not hidden).** (a) An instruction of mine copied the main checkout's `.env` over an existing `~/.env` in the founder's home folder; the original was not saved (recoverable from Time Machine if it mattered). (b) The test member's password hash was replaced without saving the old one (local database only). Neither touched the repository, production or another member.
+
+**6.6.5 Recommendations on 6.4 (recommendations only: the founder has not ruled, and `dispositions.json` stays `"ruled": false`).**
+
+1. X1–X8: ratify.
+2. Tombstone and recovery-capture lock for Remove and X8: a separate lane, after this one merges.
+3. Retained content-free editorial origin records after Remove: accept for now; revisit together with question 2.
+4. A durable custody message: yes eventually, as its own decision (it needs a persisted status the client can read; today the notice is client state).
+5. New, from 6.6.2 item 5: whether the first dialog should warn that a writing is shared. Product decision, not a safety one.
