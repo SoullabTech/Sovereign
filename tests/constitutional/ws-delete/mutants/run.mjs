@@ -52,6 +52,10 @@ const JEST_TESTS = [
   'deleteWorkParam.test.ts',
   'deleteRoute.test.ts',
   'eraseManuscriptGuard.test.ts',
+  // WS-DELETE-01 follow-up (Remove / X8 deletion record, corrected Remove copy): the two suites written for it. Without them in this
+  // closed list no jest candidate could be killed by them, and the source-law and copy-law candidates below would all look alive.
+  'lib/manuscript/source/__tests__/workDeletionRecord.test.ts',
+  'lib/writersStudio/__tests__/removeCopyConversations.test.ts',
 ];
 const PG_RUN = 'tests/constitutional/ws-delete/dynamic/run-local-pg16.sh';
 const HISTORY = `${HOME}/P4R1HistoryPage.tsx`;
@@ -62,6 +66,83 @@ const LOAD_MS = 'app/writers-studio/useCurrentManuscript.ts';
 const LOAD_HISTORY = 'app/writers-studio/useStudioHistory.ts';
 const NOTICES = `${HOME}/useNoticeStack.tsx`;
 const HISTORY_ROUTE = 'app/api/sovereign/studio/history/route.ts';
+const HELPER = 'lib/manuscript/source/workDeletionRecord.ts';
+
+/* ── building blocks for the follow-up candidates (RR / XR / HX / CX at the end of MUTANTS) ───────────────────────────────────────────
+   `L` joins lines so a multi-line anchor can be written without escaping the template literals the SQL lives in.
+   `twin` emits one candidate as a jest (hermetic) kind and as a physical PostgreSQL twin (`<id>p`): the same wrong code, judged by the
+   other instrument. The jest kind is what runs in every ordinary test run; the twin is what shows the database actually refusing it. */
+const L = (...lines) => lines.join('\n');
+const twin = (id, file, anchor, replacement, why, opts, jestWhy = why) => [
+  [id, 'jest', file, anchor, replacement, jestWhy, ...(opts ? [opts] : [])],
+  [`${id}p`, 'pg', file, anchor, replacement, `${why} [physical twin of ${id}]`, ...(opts ? [opts] : [])],
+];
+/** A record written WITHOUT the shared helper: the wrong spelling a caller that did not call writeWorkDeletionRecord might produce. */
+const inlineRecord = ({ indent, idExpr, note, reason = 'member_deletion', by = 'verified-member-self-service', kind = 'living_works', tombstone = true }) => {
+  const lines = [
+    'const inlineManifest = await tx.query<{ id: string }>(',
+    `  \`INSERT INTO deletion_manifests (reason_class, authorized_by, executed_at, note) VALUES ('${reason}', '${by}', now(), $1) RETURNING id\`,`,
+    `  ['${note}'],`,
+    ');',
+  ];
+  if (tombstone) {
+    lines.push(
+      'await tx.query(',
+      `  \`INSERT INTO provenance_tombstones (manifest_id, object_kind, object_id) VALUES ($1::uuid, '${kind}', $2) ON CONFLICT (object_kind, object_id) DO NOTHING\`,`,
+      `  [inlineManifest.rows[0].id, ${idExpr}],`,
+      ');',
+    );
+  }
+  return lines.map((l) => ' '.repeat(indent) + l).join('\n');
+};
+// The Remove route (WORK_ROUTE) as it now reads, in the pieces the Remove candidates cut at.
+const RM_NOTE = 'Writer Work removed by verified member request';
+const RM_LOCK = '      await takeRecoveryCaptureLock(tx);';
+const RM_OWNED = L(
+  '      const owned = await tx.query<{ id: string }>(',
+  '        `SELECT id FROM living_works WHERE id = $1 AND member_id = $2 FOR UPDATE`,',
+  '        [id, memberId],',
+  '      );',
+  '      if (owned.rows.length === 0) return null;',
+);
+const RM_VISUAL = L(
+  '      const visual = await tx.query<{ storage_path: string }>(',
+  '        `SELECT storage_path FROM living_work_visuals WHERE living_work_id = $1 AND member_id = $2 FOR UPDATE`,',
+  '        [id, memberId],',
+  '      );',
+);
+const RM_DELETE = L(
+  '      const gone = await tx.query<{ id: string }>(',
+  '        `DELETE FROM living_works WHERE id = $1 AND member_id = $2 RETURNING id`,',
+  '        [id, memberId],',
+  '      );',
+);
+const RM_GONE_GUARD = '      if (gone.rows.length === 0) return null;';
+const RM_RECORD_COMMENT = L(
+  '      /* The record of the removal, written only now that THIS statement really deleted the row (a lost race writes nothing), with the',
+  '         id the DELETE returned and not the one from the URL. Same transaction: if it cannot be written the Work is not removed. */',
+);
+const RM_CALL = `      await writeWorkDeletionRecord(tx, gone.rows[0].id, '${RM_NOTE}');`;
+const RM_TAIL = L(
+  '      const path = visual.rows[0]?.storage_path;',
+  '      let queueId: string | null = null;',
+  '      if (path) {',
+  '        const queued = await tx.query<{ id: string }>(',
+  '          `INSERT INTO vault_erasure_queue (artifact_ref) VALUES ($1) RETURNING id`,',
+  '          [path],',
+  '        );',
+  '        queueId = queued.rows[0]?.id ?? null;',
+  '      }',
+  '      return { id: gone.rows[0].id, queueId };',
+  '    });',
+  '',
+  '    if (!removed) {',
+  "      return NextResponse.json({ error: 'Not found' }, { status: 404 });",
+  '    }',
+);
+// X8 (ERASE), the call inside the viaWorkId branch.
+const X8_NOTE = 'Writer Work ended after its writing was already gone, by verified member request';
+const X8_CALL = `          await writeWorkDeletionRecord(tx, cleaned.workRemovedId, '${X8_NOTE}');`;
 
 /* [id, kind, file, anchor (must occur exactly once, or `nth` of several), replacement, the error it embodies, { nth }?]
    kind: 'jest' (hermetic, jsdom) or 'pg' (needs the local PostgreSQL 16 harness). A '(textual guard)' mutant is caught only by a test that
@@ -231,13 +312,22 @@ const MUTANTS = [
   ['J12', 'jest', ERASE, 'image: result.imageQueueIds.some((id) => stillQueued.has(id)),', 'image: false,', 'an image still owed is not reported'],
   ['J13', 'jest', ERASE, 'sweptAll: !owed.originalFile && !owed.image && recoverySealed,', 'sweptAll: !owed.originalFile && recoverySealed,', 'an owed image does not stop the answer reading as complete'],
   ['J14', 'jest', ERASE, 'sweptAll: !owed.originalFile && !owed.image && recoverySealed,', 'sweptAll: !owed.image && recoverySealed,', 'an owed original file does not stop the answer reading as complete'],
-  ['J15', 'jest', ERASE, 'let recoverySealed = result.declarationOnly;', 'let recoverySealed = false;', 'the cleanup of a dangling declaration reads as an unsealed deletion record'],
-  ['J16', 'jest', ERASE, 'if (!result.declarationOnly) {\n    try {', 'if (true as boolean) {\n    try {', 'the cleanup of a dangling declaration seals a deletion record nothing needed'],
+  // J15 / J16 / S19 (and XR5 below) encode the DECLARED, deliberate non-action of the WS-DELETE-01 follow-up, not the older "X8 writes
+  // no record" law (which the follow-up deliberately changed: X8 now writes a manifest and a living_works tombstone when a Work goes).
+  // The law they still defend is narrower: X8 does NOT seal the independent R20 ledger and keeps `recoverySealed = declarationOnly`,
+  // because production has no R20_* variable on the app container, so a seal would turn today's success into `custody_incomplete`.
+  // The anchors are unchanged; only the stated reason was rewritten, so the text no longer claims "nothing needed" sealing.
+  ['J15', 'jest', ERASE, 'let recoverySealed = result.declarationOnly;', 'let recoverySealed = false;', 'the X8 cleanup (which now writes a Work record it deliberately does not seal) reads as an unsealed deletion record, turning a success into custody_incomplete (declared non-action)'],
+  ['J16', 'jest', ERASE, 'if (!result.declarationOnly) {\n    try {', 'if (true as boolean) {\n    try {', 'the X8 cleanup calls the R20 seal that the follow-up deliberately does not call (declared non-action; also seals when no Work went)'],
   ['J17', 'jest', ERASE, 'await sweepVaultErasureQueue(100, ownIds);', 'await sweepVaultErasureQueue(100);', 'a backlog of other rows starves this deletion\'s own obligations'],
   ['J18', 'jest', ERASE, 'WHERE living_work_id = $1 AND member_id = $2 FOR UPDATE`,\n    [workId, memberId],', 'WHERE living_work_id = $1 AND member_id = $2`,\n    [workId, memberId],', '(textual guard) the Work\'s image is read without a lock before the Work goes'],
   ['J26', 'jest', HISTORY_ROUTE, "if (process.env.MAIA_CABIN_MODE === 'offline') {", 'if (false as boolean) {', 'the offline cabin\'s History answers 401, so every re-read that includes History reports that it could not read'],
   ['J22', 'jest', ROUTE, 'return NextResponse.json({ removed: true, workRemoved: outcome.workRemoved });', 'return NextResponse.json({ removed: true });', 'the success answer does not say whether the Work went, so the page must guess'],
-  ['J23', 'jest', WORK_ROUTE, "      const owned = await tx.query<{ id: string }>(\n        `SELECT id FROM living_works WHERE id = $1 AND member_id = $2 FOR UPDATE`,\n        [id, memberId],\n      );\n      if (owned.rows.length === 0) return null;\n", '', 'Remove takes the image row before the Work row (the order that deadlocks with a Delete of the Work\'s writing)'],
+  // J23 / S21: the Work-row lookup is still the cut, but since the follow-up the recovery-capture advisory lock is taken FIRST, so a
+  // Remove and a Delete can no longer deadlock on row locks (the key serialises them). What the candidate embodies is now: the image row
+  // before the Work row, which still cycles against any transaction that holds the Work row WITHOUT the key. The hermetic LOCK ORDER
+  // test and the physical probe DL-3b (a rival that holds the Work row) are the instruments; DL-1/DL-2/DL-3 no longer are.
+  ['J23', 'jest', WORK_ROUTE, "      const owned = await tx.query<{ id: string }>(\n        `SELECT id FROM living_works WHERE id = $1 AND member_id = $2 FOR UPDATE`,\n        [id, memberId],\n      );\n      if (owned.rows.length === 0) return null;\n", '', 'Remove takes the image row before the Work row (the order that deadlocks with any transaction that holds the Work row without the recovery-capture key)'],
   ['J24', 'jest', ERASE, 'workRemoved: declaration.workRemovedId !== undefined };', 'workRemoved: claims.rows.length > 0 };', 'a delete of a live writing says the Work went whenever a Work declared it, even if it stays'],
   ['J25', 'jest', ERASE, 'workRemoved: cleaned.workRemovedId !== undefined }', 'workRemoved: true }', 'the cleanup of a vanished writing says the Work went even when it stays'],
   ['J19', 'jest', ROUTE, "unconfirmed: { originalFile: outcome.owed.originalFile, image: outcome.owed.image, deletionRecord: !outcome.recoverySealed },", 'unconfirmed: { originalFile: true, image: true, deletionRecord: true },', 'the route says everything is owed whatever is'],
@@ -253,7 +343,9 @@ const MUTANTS = [
   // ── the copy against the database (removalCopyDrift.test.ts)
   ['D1', 'jest', MIG_CORRECTIONS, 'living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE CASCADE,', 'living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE RESTRICT,', '(static guard: reads the migrations) a table starts blocking the removal of a Work (it would fail or leave a detached row)'],
   ['D2', 'jest', MIG_UNDERSTANDING, 'CREATE TABLE IF NOT EXISTS living_work_writer_understanding (', 'CREATE TABLE IF NOT EXISTS living_work_fictional_new_child (living_work_id UUID REFERENCES living_works(id) ON DELETE CASCADE);\nCREATE TABLE IF NOT EXISTS living_work_writer_understanding (', '(static guard: reads the migrations) a new table starts cascading from a Work and the removal copy is not updated'],
-  ['D3', 'jest', LIB, 'its conversations with MAIA, what you told MAIA about it, your corrections, where you left off,', 'its conversations with MAIA, what you told MAIA about it, your corrections,', 'the removal copy stops naming something that does go'],
+  // D3 is anchored on WHAT_GOES_WITH_A_WORK, which since the follow-up is the DELETE goes-list only; the REMOVE goes-list is its own
+  // constant (WHAT_GOES_WITH_A_REMOVED_WORK) and has the matching candidate CX8 below.
+  ['D3', 'jest', LIB, 'its conversations with MAIA, what you told MAIA about it, your corrections, where you left off,', 'its conversations with MAIA, what you told MAIA about it, your corrections,', 'the Delete copy stops naming something that does go'],
   ['D4', 'jest', MIG_CORRECTIONS, 'living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE CASCADE,', 'living_work_id UUID NOT NULL REFERENCES living_works(id),', '(static guard: reads the migrations) a foreign key with no ON DELETE (it blocks the Work\'s removal) hides behind a neighbouring column\'s CASCADE'],
   ['D5', 'jest', MIG_UNDERSTANDING, 'CREATE TABLE IF NOT EXISTS living_work_writer_understanding (', 'CREATE TABLE IF NOT EXISTS living_work_fictional_orphan (living_work_id UUID NOT NULL);\nCREATE TABLE IF NOT EXISTS living_work_writer_understanding (', '(static guard: reads the migrations) a new table carries a Work id with no foreign key, so a Work\'s removal leaves its rows behind unnoticed'],
   // ── the server (needs the local PostgreSQL 16 harness)
@@ -275,11 +367,90 @@ const MUTANTS = [
   ['S16', 'pg', ERASE, '\n        AND NOT EXISTS (\n          SELECT 1 FROM living_work_expressions e WHERE e.living_work_id = w.id\n        )', '', 'a Work that holds something else is removed with its dangling declaration'],
   ['S17', 'pg', ERASE, "          AND w.member_id = $2\n        FOR UPDATE OF e`,", "          AND $2::uuid IS NOT NULL\n        FOR UPDATE OF e`,", 'a member can clean up the declaration of another member\'s Work through a gone writing'],
   ['S18', 'pg', ERASE, 'originalFile: result.originalQueueIds.some((id) => stillQueued.has(id)),', 'originalFile: false,', 'an original file still owed is not reported'],
-  ['S19', 'pg', ERASE, 'let recoverySealed = result.declarationOnly;', 'let recoverySealed = false;', 'the cleanup of a dangling declaration reads as an unsealed deletion record'],
-  ['S21', 'pg', WORK_ROUTE, "      const owned = await tx.query<{ id: string }>(\n        `SELECT id FROM living_works WHERE id = $1 AND member_id = $2 FOR UPDATE`,\n        [id, memberId],\n      );\n      if (owned.rows.length === 0) return null;\n", '', 'Remove takes the image row before the Work row, and a Delete of the Work\'s writing deadlocks with it (a 500 for an act that did not happen)'],
+  // (S19: same declared non-action as J15 above; physical instrument.)
+  ['S19', 'pg', ERASE, 'let recoverySealed = result.declarationOnly;', 'let recoverySealed = false;', 'the X8 cleanup (which now writes a Work record it deliberately does not seal) reads as an unsealed deletion record, turning a success into custody_incomplete (declared non-action)'],
+  ['S21', 'pg', WORK_ROUTE, "      const owned = await tx.query<{ id: string }>(\n        `SELECT id FROM living_works WHERE id = $1 AND member_id = $2 FOR UPDATE`,\n        [id, memberId],\n      );\n      if (owned.rows.length === 0) return null;\n", '', 'Remove takes the image row before the Work row, and a transaction that holds the Work row without the recovery-capture key (probe DL-3b) deadlocks with it (a 500 for an act that did not happen); against a real Delete the key now serialises the two'],
   ['S22', 'pg', ERASE, 'workRemoved: declaration.workRemovedId !== undefined };', 'workRemoved: claims.rows.length > 0 };', 'a delete of a live writing says the Work went whenever a Work declared it, even if it stays'],
   ['S23', 'pg', ROUTE, 'return NextResponse.json({ removed: true, workRemoved: outcome.workRemoved });', 'return NextResponse.json({ removed: true });', 'the success answer does not say whether the Work went'],
   ['S20', 'pg', ROUTE, "unconfirmed: { originalFile: outcome.owed.originalFile, image: outcome.owed.image, deletionRecord: !outcome.recoverySealed },", 'unconfirmed: { originalFile: true, image: true, deletionRecord: true },', 'the route says everything is owed whatever is'],
+
+  // ══ WS-DELETE-01 follow-up (2026-11-06): the deletion record of Remove and X8, the recovery-capture lock first, and the corrected Remove copy ══
+  // Each entry is a plausible WRONG version of one decision of the new behaviour. `<id>` is judged by the hermetic suites; `<id>p` (the
+  // physical twin) by the PostgreSQL probes. A '(textual guard)' entry is caught only by a test that reads source text.
+  // ── Remove (WORK_ROUTE): the record
+  ...twin('RR1', WORK_ROUTE, L(RM_CALL, '', RM_TAIL), L(RM_TAIL, `    await writeWorkDeletionRecord({ query } as never, removed.id, '${RM_NOTE}');`), 'Remove writes its manifest and tombstone AFTER the transaction has committed, through the module-level query: a record that fails leaves the Work gone with no record, and the record is not atomic with the deletion'),
+  ...twin('RR2', WORK_ROUTE, L(RM_LOCK, RM_OWNED), L(RM_OWNED, RM_LOCK), 'Remove takes the recovery-capture lock AFTER the Work-row FOR UPDATE (a cycle with a Delete, and no lock at all for an id that is not this member\'s)'),
+  ...twin('RR3', WORK_ROUTE, `${RM_LOCK}\n`, '', 'Remove does not take the recovery-capture lock at all, so it can delete a Work in the middle of a coherent backup capture'),
+  ...twin('RR4', WORK_ROUTE, `${RM_LOCK}\n`, "      await tx.query(`SELECT pg_advisory_xact_lock(hashtextextended('soullab:r20:recovery-capture ', 0))`);\n", 'Remove spells its own lock with a mistyped key (a trailing space), so it takes a lock nothing else takes and waits for no backup'),
+  ...twin('RR5', WORK_ROUTE, `${RM_CALL}\n`, `${inlineRecord({ indent: 6, idExpr: 'gone.rows[0].id', note: RM_NOTE, kind: 'living_work' })}\n`, 'Remove tombstones the kind "living_work" (a typo) instead of "living_works", so a governed restore never recognises the Work'),
+  ...twin('RR6', WORK_ROUTE, "await writeWorkDeletionRecord(tx, gone.rows[0].id, 'Writer Work removed", "await writeWorkDeletionRecord(tx, id, 'Writer Work removed", 'Remove tombstones the id from the URL instead of the id the DELETE returned (a different spelling of the same uuid never matches the database\'s own)'),
+  ...twin('RR7', WORK_ROUTE, `${RM_CALL}\n`, `${inlineRecord({ indent: 6, idExpr: 'gone.rows[0].id', note: RM_NOTE, reason: 'governance' })}\n`, 'Remove records the removal under the wrong reason class (governance, not a member\'s own deletion)'),
+  ...twin('RR7b', WORK_ROUTE, `${RM_CALL}\n`, `${inlineRecord({ indent: 6, idExpr: 'gone.rows[0].id', note: RM_NOTE, by: 'founder' })}\n`, 'Remove records the removal as authorized by someone other than the verified member'),
+  ...twin('RR8', WORK_ROUTE, `${RM_CALL}\n`, `${inlineRecord({ indent: 6, idExpr: 'gone.rows[0].id', note: RM_NOTE, tombstone: false })}\n`, 'Remove writes a manifest and no tombstone, so the record names nothing and a governed restore brings the Work back'),
+  ...twin('RR9', WORK_ROUTE, L(RM_LOCK, RM_OWNED, RM_VISUAL, RM_DELETE, RM_GONE_GUARD, '', RM_RECORD_COMMENT, RM_CALL), L(RM_LOCK, `      await writeWorkDeletionRecord(tx, id, '${RM_NOTE}');`, RM_OWNED, RM_VISUAL, RM_DELETE, RM_GONE_GUARD), 'Remove writes the record BEFORE it has checked that the Work is this member\'s, so any member (or none) can tombstone any Work id'),
+  ...twin('RR10', WORK_ROUTE, L(RM_GONE_GUARD, '', RM_RECORD_COMMENT, RM_CALL), L(`      await writeWorkDeletionRecord(tx, gone.rows[0]?.id ?? id, '${RM_NOTE}');`, RM_GONE_GUARD), 'Remove writes the record BEFORE it checks that its own DELETE removed a row, so a lost race (another request removed the Work first) writes a record for a deletion this request did not do (against a real database that branch is unreachable by timing alone, because the lookup holds the Work row FOR UPDATE; the twin RR10p is killed only by the fault-injection probe ROLL-3, which makes the DELETE remove nothing)'),
+  ...twin('RR11', WORK_ROUTE, L(RM_DELETE, RM_GONE_GUARD, '', RM_RECORD_COMMENT, RM_CALL), L(
+    '      const kept = await tx.query<{ expression_id: string }>(',
+    "        `SELECT expression_id FROM living_work_expressions WHERE living_work_id = $1 AND expression_type = 'manuscript'`,",
+    '        [id],',
+    '      );',
+    RM_DELETE,
+    RM_GONE_GUARD,
+    `      const manifestId = await writeWorkDeletionRecord(tx, gone.rows[0].id, '${RM_NOTE}');`,
+    '      for (const row of kept.rows) {',
+    '        await tx.query(',
+    "          `INSERT INTO provenance_tombstones (manifest_id, object_kind, object_id) VALUES ($1::uuid, 'member_manuscripts', $2) ON CONFLICT (object_kind, object_id) DO NOTHING`,",
+    '          [manifestId, row.expression_id],',
+    '        );',
+    '      }',
+  ), 'Remove copies the Delete flow and tombstones the writings the Work held, although Remove keeps every one of them', undefined, 'Remove copies the Delete flow and tombstones the writings the Work held, although Remove keeps every one of them (hermetically it dies on the scripted client, which admits only the known statement shapes, and on the no-member_manuscripts source law; the behavioural kill is RR11p)'),
+  // RR11b has no physical twin on purpose: the PG harness stubs r20_erase_writer_editorial_history as a no-op (the real one erases a
+  // MANUSCRIPT's editorial history and needs a manuscript tombstone), so no probe could see the call. The hermetic kill is real but narrow.
+  ['RR11b', 'jest', WORK_ROUTE, L(RM_DELETE, RM_GONE_GUARD, '', RM_RECORD_COMMENT, RM_CALL), L(
+    '      const kept = await tx.query<{ expression_id: string }>(',
+    "        `SELECT expression_id FROM living_work_expressions WHERE living_work_id = $1 AND expression_type = 'manuscript'`,",
+    '        [id],',
+    '      );',
+    RM_DELETE,
+    RM_GONE_GUARD,
+    `      const manifestId = await writeWorkDeletionRecord(tx, gone.rows[0].id, '${RM_NOTE}');`,
+    '      for (const row of kept.rows) {',
+    '        await tx.query(`SELECT r20_erase_writer_editorial_history($1::uuid, $2::uuid, $3::uuid)`, [manifestId, memberId, row.expression_id]);',
+    '      }',
+  ), '(textual guard) Remove calls the editorial-history erasure for the writings the Work held, although Remove keeps every writing and its editorial history (hermetically it dies on the scripted client, which admits only the known statement shapes, and on the no-r20_erase_writer_editorial_history source law)'],
+  ...twin('RR12', WORK_ROUTE, '    if (removed.queueId) {\n      await sweepVaultErasureQueue(100, [removed.queueId]);', "    await (await import('@/lib/recovery/r20DeletionLedger')).sealR20DeletionLedger();\n    if (removed.queueId) {\n      await sweepVaultErasureQueue(100, [removed.queueId]);", 'Remove seals the independent R20 ledger (a member-visible outcome decision the follow-up declares NOT taken: with no R20_* variable on the app it would turn today\'s success into custody_incomplete)'),
+  // ── X8 (ERASE, the viaWorkId branch only): the record
+  ...twin('XR1', ERASE, `${X8_CALL}\n`, `${inlineRecord({ indent: 10, idExpr: 'cleaned.workRemovedId', note: X8_NOTE, tombstone: false })}\n`, 'X8 writes a manifest and no tombstone for the Work it ended'),
+  ...twin('XR2', ERASE, "await writeWorkDeletionRecord(tx, cleaned.workRemovedId, 'Writer Work ended", "await writeWorkDeletionRecord(tx, manuscriptId, 'Writer Work ended", 'X8 tombstones the (already gone) writing\'s id as if it were the Work\'s'),
+  ...twin('XR2b', ERASE, `${X8_CALL}\n`, `${inlineRecord({ indent: 10, idExpr: 'cleaned.workRemovedId', note: X8_NOTE, kind: 'member_manuscripts' })}\n`, 'X8 tombstones the Work id under the kind of a writing, so the Work is never recognised'),
+  ...twin('XR3', ERASE, L('        if (cleaned.workRemovedId !== undefined) {', "          await writeWorkDeletionRecord(tx, cleaned.workRemovedId, 'Writer Work ended"), L('        if (true as boolean) {', "          await writeWorkDeletionRecord(tx, cleaned.workRemovedId ?? options.viaWorkId!, 'Writer Work ended"), 'X8 records a Work that STAYED (it still holds something else): a tombstone for a Work that still exists'),
+  ...twin('XR4', ERASE, `${X8_CALL}\n`, `          await writeWorkDeletionRecord({ query } as never, cleaned.workRemovedId, '${X8_NOTE}');\n`, 'X8 writes its record through the module-level query (its own connection), outside the Work\'s transaction: the record can commit although the deletion rolls back'),
+  ...twin('XR5', ERASE, L('  let recoverySealed = result.declarationOnly;', '  if (!result.declarationOnly) {'), L('  let recoverySealed = result.declarationOnly && !result.workRemoved;', '  if (!result.declarationOnly || result.workRemoved) {'), 'X8 seals the R20 ledger for the Work it removed (the declared non-action is that it does not: with no R20_* variable on the app that turns a success into custody_incomplete)'),
+  ...twin('XR6', ERASE, `${X8_CALL}\n`, `${inlineRecord({ indent: 10, idExpr: 'cleaned.workRemovedId', note: X8_NOTE, reason: 'governance' })}\n`, 'X8 records the Work\'s end under a different reason class from every other member deletion'),
+  ...twin('XR7', ERASE, `await writeWorkDeletionRecord(tx, cleaned.workRemovedId, '${X8_NOTE}');`, `await writeWorkDeletionRecord(tx, cleaned.workRemovedId, '${RM_NOTE}');`, 'X8 writes the note of a Remove, so the record cannot tell the two paths apart'),
+  ...twin('XR8', ERASE, `${X8_CALL}\n`, L(`          const x8ManifestId = await writeWorkDeletionRecord(tx, cleaned.workRemovedId, '${X8_NOTE}');`, "          await tx.query(`INSERT INTO provenance_tombstones (manifest_id, object_kind, object_id) VALUES ($1::uuid, 'member_manuscripts', $2) ON CONFLICT (object_kind, object_id) DO NOTHING`, [x8ManifestId, manuscriptId]);\n"), 'X8 also tombstones the writing, as the Delete flow does, although no writing was erased here'),
+  // ── the helper (HELPER): what both paths share
+  ...twin('HX1', HELPER, '  await tx.query(RECOVERY_CAPTURE_LOCK_SQL);\n', '', 'takeRecoveryCaptureLock does nothing, so Remove takes no lock although its source calls the helper'),
+  ...twin('HX2', HELPER, "VALUES ($1::uuid, 'living_works', $2)", "VALUES ($1::uuid, 'member_manuscripts', $2)", 'the helper tombstones a Work under the kind of a writing'),
+  ...twin('HX3', HELPER, "hashtextextended('soullab:r20:recovery-capture', 0)", "hashtextextended('soullab:r20:recovery-capturr', 0)", 'the helper\'s lock key is mistyped, so Remove waits for no backup and takes a lock nothing else takes'),
+  ...twin('HX4', HELPER, "VALUES ('member_deletion', 'verified-member-self-service', now(), $1)", "VALUES ('governance', 'verified-member-self-service', now(), $1)", 'the helper records the deletion under the wrong reason class'),
+  ...twin('HX5', HELPER, "VALUES ('member_deletion', 'verified-member-self-service', now(), $1)", "VALUES ('member_deletion', 'founder', now(), $1)", 'the helper records the deletion as authorized by someone other than the verified member'),
+  ...twin('HX6', HELPER, "VALUES ('member_deletion', 'verified-member-self-service', now(), $1)", "VALUES ('member_deletion', 'verified-member-self-service', NULL, $1)", 'the helper records a deletion with no execution time', undefined, '(textual guard) the helper records a deletion with no execution time (the hermetic kill is the drift guard that compares the helper\'s manifest text with eraseManuscript.ts; the behavioural kill is HX6p)'),
+  ...twin('HX7', HELPER, L('  await tx.query(', '    `INSERT INTO provenance_tombstones (manifest_id, object_kind, object_id)', "     VALUES ($1::uuid, 'living_works', $2)", '     ON CONFLICT (object_kind, object_id) DO NOTHING`,', '    [manifestId, removedWorkId],', '  );', ''), '', 'the helper writes a manifest and never a tombstone'),
+  ['HX8', 'jest', HELPER, '\n     ON CONFLICT (object_kind, object_id) DO NOTHING`,', '`,', '(textual guard) the helper\'s tombstone insert loses its ON CONFLICT clause, so recording a Work whose id is already tombstoned throws and aborts the removal (no probe records one id twice)'],
+  ['HX9', 'jest', HELPER, "  const manifestId = manifest.rows[0]?.id;\n  if (!manifestId) throw new Error('r20_manifest_not_created');\n", '  const manifestId = manifest.rows[0]?.id;\n', 'the helper writes a tombstone for a manifest that was never created (undefined id) instead of throwing'],
+  // ── the corrected Remove copy (LIB)
+  ['CX1', 'jest', LIB, ' ${CONVERSATIONS_STAY_WITH_THE_WRITING}`,', '`,', 'the single-writing Remove dialog no longer says where the conversations about the writing stay and what ends them'],
+  ['CX2', 'jest', LIB, ' ${CONVERSATIONS_STAY_WITH_THE_WRITINGS}`,', '`,', 'the several-writings Remove dialog no longer says where the conversations about the writings stay and what ends them'],
+  ['CX3', 'jest', LIB, 'they stay with the writing, and deleting the writing deletes them.', 'they stay with the writing.', 'the single-writing retention sentence has no exit: it says the conversations stay and not what ends them'],
+  ['CX3b', 'jest', LIB, 'they stay with the writings, and deleting a writing deletes its conversations.', 'they stay with the writings.', 'the several-writings retention sentence has no exit'],
+  ['CX4', 'jest', LIB, "const WHAT_GOES_WITH_A_REMOVED_WORK =\n  'what you told MAIA about it,", "const WHAT_GOES_WITH_A_REMOVED_WORK =\n  'its conversations with MAIA, what you told MAIA about it,", 'the Remove goes-list is restored to say "its conversations with MAIA" go with the Work (mostly false: the conversations about a writing stay)'],
+  ['CX5', 'jest', LIB, 'they stay with the writing, and deleting the writing deletes them.', 'they stay with the writing, and cannot be opened again from here; deleting the writing deletes them.', 'the retention sentence makes a blanket claim that the conversations cannot be opened (false: Develop and any other Work holding the writing still can)'],
+  ['CX5b', 'jest', LIB, 'they stay with the writings, and deleting a writing deletes its conversations.', 'they stay with the writings, and nothing is left of them in the Studio; deleting a writing deletes its conversations.', 'the plural retention sentence claims that nothing is left (a blanket emptiness claim)'],
+  ['CX6', 'jest', LIB, 'Your conversations with MAIA about that writing are not part of the Work', 'Your conversations with MAIA and Save receipts about that writing are not part of the Work', 'the Remove copy says Save receipts stay with the writing (they do not: they cascade away with the Work\'s editorial relationship record)'],
+  ['CX7', 'jest', LIB, ' ${CONVERSATIONS_STAY_WITH_THE_WRITING}`,', ' ${CONVERSATIONS_STAY_WITH_THE_WRITINGS}`,', 'the single-writing Remove dialog carries the plural sentence ("those writings")'],
+  ['CX8', 'jest', LIB, "const WHAT_GOES_WITH_A_REMOVED_WORK =\n  'what you told MAIA about it, your corrections, where you left off,", "const WHAT_GOES_WITH_A_REMOVED_WORK =\n  'what you told MAIA about it, your corrections,", 'the Remove goes-list stops naming something that does go (the counterpart of D3, which now covers the Delete list only)'],
+  ['CX9', 'jest', LIB, ', and any conversation you had with MAIA about it while it held no writing\';', '\';', 'the Remove goes-list drops the conversations that DO belong to the Work row (opened while the Work held no writing), which do go'],
 ];
 
 const args = process.argv.slice(2);
@@ -401,7 +572,9 @@ for (const [id, kind, file, anchor, replacement, why, opts] of selected) {
     else if (!summary.test(text) || failed.length === 0) verdict = 'UNPROVEN';  // non-zero exit, but no TEST was seen to fail (a hook error alone does not count)
     else verdict = 'KILLED';
     if (verdict !== 'KILLED') bad += 1;
-    rows.push([verdict, id, why, failed.slice(0, 2).map((l) => l.slice(0, 120))]);
+    // How many failing test names to print per candidate: 2 by default; MUTANT_SHOW_FAILED=n (or `all`) prints more, to read the whole kill.
+    const shown = process.env.MUTANT_SHOW_FAILED === 'all' ? failed.length : Number(process.env.MUTANT_SHOW_FAILED ?? 2) || 2;
+    rows.push([verdict, id, why, failed.slice(0, shown).map((l) => l.slice(0, 160))]);
   } finally {
     renameSync(bak, path);
     backups.delete(path);

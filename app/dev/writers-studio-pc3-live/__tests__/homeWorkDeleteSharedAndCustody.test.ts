@@ -110,13 +110,26 @@ describe('the writing is shared with another Work (409 declared_in_other_works)'
     const text = card!.textContent ?? '';
     expect(text).toContain('Remove “Fictional Work A” and keep the writing?');
     // What goes, in the product's words, matching what cascades from the Work row (see the lane record's list).
-    for (const goes of ['conversations with MAIA', 'what you told MAIA about it', 'your corrections', 'where you left off', 'list of materials', 'its image']) {
-      expect(text).toContain(goes);
+    // LAW CHANGED DELIBERATELY (post-merge census, 2026-11-06): this loop used to include 'conversations with MAIA', and the goes-list
+    // said "its conversations with MAIA". That was mostly false for a Work that holds a writing: conversations about a writing belong
+    // to the manuscript and stay. The goes-list now names only the conversation that belongs to the Work row itself.
+    const goesList = text.slice(text.indexOf('what you built inside it:'), text.indexOf('It cannot be undone'));
+    expect(goesList.length).toBeGreaterThan('what you built inside it:'.length);
+    for (const goes of ['what you told MAIA about it', 'your corrections', 'where you left off', 'list of materials', 'its image', 'any conversation you had with MAIA about it while it held no writing']) {
+      expect(goesList).toContain(goes);
     }
+    expect(goesList).not.toContain('its conversations with MAIA');
+    expect(goesList).not.toContain('conversations with MAIA about');
     // What does NOT go: the writing and the conversations about the writing itself (they belong to the manuscript, not to the Work).
     expect(text).toContain('The writing itself is not deleted: it stays in your other Work');
-    // It does not promise where conversations about the writing live: that depends on rows that go with the Work being removed.
-    expect(text).not.toContain('conversations about the writing');
+    // LAW CHANGED DELIBERATELY (same follow-up): this used to assert that the dialog did NOT contain 'conversations about the writing',
+    // with a comment that the copy made no promise about where conversations live. It now says where they live and what ends them:
+    // after the stays-sentence, never inside the goes-list, and with no claim about whether anything can still open them.
+    expect(text).toContain('Your conversations with MAIA about that writing are not part of the Work, so removing the Work does not remove them: they stay with the writing, and deleting the writing deletes them.');
+    expect(text.indexOf('Your conversations with MAIA about that writing')).toBeGreaterThan(text.indexOf('The writing itself is not deleted'));
+    // The dialog's body paragraph ENDS with it (the card's own text goes on with the buttons).
+    expect(card!.querySelector('p')!.textContent!.endsWith('deleting the writing deletes them.')).toBe(true);
+    expect(text).not.toMatch(/cannot be opened|unreachable|no longer (be )?(opened|reached)|nothing (is|will be) (left|kept)/i);
     // Irreversible, with the same backup qualifier Delete carries.
     expect(text).toContain('It cannot be undone');
     expect(text).toContain('private backups already taken can still hold a copy');
@@ -636,7 +649,12 @@ describe('a Work that holds several writings has no Delete, only Remove', () => 
     const text = dialog!.textContent!;
     expect(text).toContain('Remove “Fictional Work Many”?');
     expect(text).toContain('None of the writings is deleted');
-    expect(text).toContain('conversations with MAIA');
+    // LAW CHANGED DELIBERATELY (post-merge census, 2026-11-06): the goes-list no longer says "its conversations with MAIA"; the
+    // plural retention-and-exit sentence ends the dialog, after what stays.
+    expect(text).not.toContain('its conversations with MAIA');
+    expect(text).toContain('any conversation you had with MAIA about it while it held no writing');
+    expect(text).toContain('Your conversations with MAIA about those writings are not part of the Work, so removing the Work does not remove them: they stay with the writings, and deleting a writing deletes its conversations.');
+    expect(dialog!.querySelector('p')!.textContent!.endsWith('deleting a writing deletes its conversations.')).toBe(true);
     expect(text).toContain('It cannot be undone');
     expect(text).not.toContain(DELETE_WORK_COPY.confirm);
     expect(host.querySelector('[data-shared-writing]')).toBeNull();
