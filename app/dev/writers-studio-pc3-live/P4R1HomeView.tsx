@@ -20,9 +20,9 @@ import type { StudioAct } from '@/app/writers-studio/studioHistory';
 import { sentenceFor } from '@/app/writers-studio/studioHistory';
 import P4R1WorkMaterialsSummary from './P4R1WorkMaterialsSummary';
 import { WritingDeleteConfirm } from './WritingDeleteConfirm';
-import { useWorkDeleteDoor, writingDeleteKindFor } from './useWorkDeleteDoor';
+import { INITIAL_DOOR, useWorkDeleteDoor, writingDeleteKindFor, type DoorState } from './useWorkDeleteDoor';
 import { P4R1HistoryContainer } from './P4R1HistoryPage';
-import { DeletionUnconfirmed, deleteConfirmCopy } from '@/lib/writersStudio/deleteWork';
+import { DeletionNotice, DeletionSharedMaterial, DeletionUnconfirmed, deleteConfirmCopy, type ActResult } from '@/lib/writersStudio/deleteWork';
 import P4R1ProducePanel from './P4R1ProducePanel';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 
@@ -71,13 +71,15 @@ function LiveWorkVisual({ workId, title }: { workId: string; title: string }) {
   return <img className="p4r1-home-work-image" src={visual.src} alt={`${title} — the image this Work carries`} />;
 }
 
-function WorkAnchor({ work, allWorks, manuscripts, activity, onOpen, onStartWriting, busy, produceInitially = false, onDeleteWork, onRemoveWork, onDeletionNotice }: {
+function WorkAnchor({ work, allWorks, manuscripts, activity, onOpen, onStartWriting, busy, produceInitially = false, onDeleteWork, onRemoveWork, onDeletionNotice, doorFor }: {
   work: LivingWork;
   /** Every Work the member has: the hero Work is a Work like any other, with the same way to delete or remove it. */
   allWorks: readonly LivingWork[];
-  onDeleteWork: (workId: string, manuscriptId: string | null, options?: { readonly workStays?: boolean }) => Promise<void>;
-  onRemoveWork: (workId: string) => Promise<void>;
+  onDeleteWork: (workId: string, manuscriptId: string | null) => Promise<ActResult | void>;
+  onRemoveWork: (workId: string) => Promise<ActResult | void>;
   onDeletionNotice: (message: string, urgent?: boolean) => void;
+  /** This Work's delete/remove state lives in the page (keyed by Work id), so a re-read that moves the Work between cards loses nothing. */
+  doorFor: (workId: string) => { readonly state: DoorState; readonly update: (patch: Partial<DoorState>) => void };
   manuscripts: readonly CurrentManuscript[];
   activity: SectionActivity | null;
   onOpen: (manuscriptId: string, sectionId?: string) => void;
@@ -96,7 +98,7 @@ function WorkAnchor({ work, allWorks, manuscripts, activity, onOpen, onStartWrit
   const title = work.title?.trim() || 'Untitled Work';
   const sectionId = activity?.kind === 'distinct' ? activity.sectionId : undefined;
   const hasManuscriptExpression = work.expressions.some((expression) => expression.expressionType === 'manuscript');
-  const del = useWorkDeleteDoor({ work, title, manuscripts, allWorks, onDeleteWork, onRemoveWork, onDeletionNotice });
+  const del = useWorkDeleteDoor({ work, title, manuscripts, allWorks, ...doorFor(work.id), onDeleteWork, onRemoveWork, onDeletionNotice });
   if (del.settled) {
     return (
       <section className="fr-home-anchor fr-home-return p4r1-home-anchor" data-field="anchor" data-removed>
@@ -187,7 +189,7 @@ function WorkAnchor({ work, allWorks, manuscripts, activity, onOpen, onStartWrit
   );
 }
 
-function WorkShelfCard({ work, allWorks, manuscripts, onOpen, onStartWriting, busy, onDeleteWork, onRemoveWork, onDeletionNotice }: {
+function WorkShelfCard({ work, allWorks, manuscripts, onOpen, onStartWriting, busy, onDeleteWork, onRemoveWork, onDeletionNotice, doorFor }: {
   work: LivingWork;
   /** Every Work the member has, as Home last read them. Whether the writing is STILL shared is derived from this on every render. */
   allWorks: readonly LivingWork[];
@@ -196,18 +198,19 @@ function WorkShelfCard({ work, allWorks, manuscripts, onOpen, onStartWriting, bu
   onStartWriting: (workId: string) => void;
   busy: boolean;
   /** Permanently deletes this Work and its one manuscript (WS-DELETE-01). Rejects with a member-facing message. */
-  onDeleteWork: (workId: string, manuscriptId: string | null, options?: { readonly workStays?: boolean }) => Promise<void>;
+  onDeleteWork: (workId: string, manuscriptId: string | null) => Promise<ActResult | void>;
   /** Removes this Work only, leaving its writing(s) where they are. Offered after a shared-writing refusal, and for a Work with several writings. */
-  onRemoveWork: (workId: string) => Promise<void>;
+  onRemoveWork: (workId: string) => Promise<ActResult | void>;
   /** The card is unmounted once the server has removed the Work, so a message the member must still see lives with the page, not here. */
   onDeletionNotice: (message: string, urgent?: boolean) => void;
+  doorFor: (workId: string) => { readonly state: DoorState; readonly update: (patch: Partial<DoorState>) => void };
 }) {
   const choices = manuscriptsForWork(work, manuscripts);
   const manuscript = choices.length === 1 ? choices[0] : null;
   const facts = workFacts(work, manuscripts);
   const title = work.title?.trim() || 'Untitled Work';
   const hasManuscriptExpression = work.expressions.some((expression) => expression.expressionType === 'manuscript');
-  const del = useWorkDeleteDoor({ work, title, manuscripts, allWorks, onDeleteWork, onRemoveWork, onDeletionNotice });
+  const del = useWorkDeleteDoor({ work, title, manuscripts, allWorks, ...doorFor(work.id), onDeleteWork, onRemoveWork, onDeletionNotice });
   // The server removed this Work. Until the list is re-read (or if that read fails) the card says so and offers no door.
   if (del.settled) {
     return (
@@ -346,11 +349,11 @@ export interface P4R1HomeViewProps {
   onMakeWork: (manuscriptId: string, title: string | null) => void;
   onAddToWork: (manuscriptId: string, workId: string) => void;
   /** Permanently deletes one writing through the product's own erase (WS-DELETE-01). Rejects with a member-facing message. */
-  onDeleteWriting: (manuscriptId: string) => Promise<void>;
+  onDeleteWriting: (manuscriptId: string) => Promise<ActResult | void>;
   /** Permanently deletes one Work with its manuscript through the same governed erase. */
-  onDeleteWork: (workId: string, manuscriptId: string | null, options?: { readonly workStays?: boolean }) => Promise<void>;
+  onDeleteWork: (workId: string, manuscriptId: string | null) => Promise<ActResult | void>;
   /** Removes one Work and keeps its writing, offered only when Delete was refused because another Work holds the same writing. */
-  onRemoveWork: (workId: string) => Promise<void>;
+  onRemoveWork: (workId: string) => Promise<ActResult | void>;
   onStartWriting: (workId: string) => void;
   onImport: () => void;
   onSources: () => void;
@@ -368,6 +371,12 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   // What the page has to tell the member about a deletion, in the order it happened. A card that was removed is gone once the list
   // is re-read, so what it had to say lives here, and a LATER notice can never replace an earlier one the member has not dismissed
   // (a plain "was removed" must not erase an unacknowledged custody alert).
+  // Every Work's delete/remove state, by Work id (see DoorState).
+  const [doors, setDoors] = useState<Readonly<Record<string, DoorState>>>({});
+  const doorFor = (workId: string) => ({
+    state: doors[workId] ?? INITIAL_DOOR,
+    update: (patch: Partial<DoorState>) => setDoors((current) => ({ ...current, [workId]: { ...(current[workId] ?? INITIAL_DOOR), ...patch } })),
+  });
   const [notices, setNotices] = useState<ReadonlyArray<{ readonly id: number; readonly message: string; readonly urgent: boolean }>>([]);
   const nextNoticeId = useRef(0);
   const showNotice = (message: string, urgent = true) => {
@@ -387,13 +396,22 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
       if (deletingId) return;
       setDeletingId(manuscriptId);
       setDeleteError(null);
+      const writing = props.manuscripts.find((m) => m.id === manuscriptId)?.title?.trim() || 'Untitled writing';
       try {
-        await props.onDeleteWriting(manuscriptId);
+        const result = await props.onDeleteWriting(manuscriptId);
         setConfirmingDelete(null);
+        if (result && !result.refreshed) showNotice(`“${writing}” was deleted. We could not reload Home, so reload this page to see what is current.`, false);
       } catch (err) {
+        // The card this question lives in may be gone by now (the re-read the act ran removed the writing from the loose list, or
+        // moved it into a Work), so anything the member must still hear goes to the page, not to a dialog that may no longer exist.
         if (err instanceof DeletionUnconfirmed) {
           setConfirmingDelete(null);
-          showNotice(err.message);
+          showNotice(`“${writing}”: ${err.message}`);
+          return;
+        }
+        if (err instanceof DeletionNotice || err instanceof DeletionSharedMaterial) {
+          setConfirmingDelete(null);
+          showNotice(`“${writing}”: ${err.message}`, false);
           return;
         }
         setDeleteError(err instanceof Error ? err.message : 'That writing could not be deleted just now. Nothing was removed. Please try again.');
@@ -516,6 +534,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             onDeleteWork={props.onDeleteWork}
             onRemoveWork={props.onRemoveWork}
             onDeletionNotice={showNotice}
+            doorFor={doorFor}
           />
           {unclaimedWriting}
           {creationControls}
@@ -535,6 +554,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
                     onDeleteWork={props.onDeleteWork}
                     onRemoveWork={props.onRemoveWork}
                     onDeletionNotice={showNotice}
+                    doorFor={doorFor}
                     allWorks={props.works}
                     busy={props.busy}
                   />
@@ -595,6 +615,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             onDeleteWork={props.onDeleteWork}
             onRemoveWork={props.onRemoveWork}
             onDeletionNotice={showNotice}
+            doorFor={doorFor}
           />
           {unclaimedWriting}
           {creationControls}
@@ -612,6 +633,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
                     onDeleteWork={props.onDeleteWork}
                     onRemoveWork={props.onRemoveWork}
                     onDeletionNotice={showNotice}
+                    doorFor={doorFor}
                     allWorks={props.works}
                     busy={props.busy}
                   />
@@ -637,6 +659,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
                     onDeleteWork={props.onDeleteWork}
                     onRemoveWork={props.onRemoveWork}
                     onDeletionNotice={showNotice}
+                    doorFor={doorFor}
                     allWorks={props.works}
                     busy={props.busy}
                   />
@@ -676,6 +699,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
                     onDeleteWork={props.onDeleteWork}
                     onRemoveWork={props.onRemoveWork}
                     onDeletionNotice={showNotice}
+                    doorFor={doorFor}
                     allWorks={props.works}
                     busy={props.busy}
                   />
@@ -705,6 +729,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
                   onDeleteWork={props.onDeleteWork}
                   onRemoveWork={props.onRemoveWork}
                   onDeletionNotice={showNotice}
+                  doorFor={doorFor}
                   allWorks={props.works}
                   busy={props.busy}
                 />

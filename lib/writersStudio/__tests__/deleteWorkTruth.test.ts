@@ -7,6 +7,7 @@
  */
 import {
   reReadAll,
+  DeletionNotice,
   DeletionSharedMaterial,
   DeletionUnconfirmed,
   deleteWork,
@@ -56,9 +57,11 @@ describe('"Home now shows what is current" is said only when the re-read worked'
     expect((failed as Error).message).not.toContain('Home now shows what is current');
   });
 
-  it('a successful act does not depend on the re-read: the server said it is gone', async () => {
-    await expect(runDeleteWork({ workId: WORK, manuscriptId: MS }, async () => fake(200), async () => false)).resolves.toBeUndefined();
-    await expect(runRemoveWork(WORK, async () => fake(200), async () => { throw new Error('offline'); })).resolves.toBeUndefined();
+  it('a successful act does not depend on the re-read: the server said it is gone, and the result says whether the page is current', async () => {
+    await expect(runDeleteWork({ workId: WORK, manuscriptId: MS }, async () => fake(200), async () => false)).resolves.toEqual({ refreshed: false });
+    await expect(runRemoveWork(WORK, async () => fake(200), async () => { throw new Error('offline'); })).resolves.toEqual({ refreshed: false });
+    await expect(runDeleteWork({ workId: WORK, manuscriptId: MS }, async () => fake(200), async () => true)).resolves.toEqual({ refreshed: true });
+    await expect(runDeleteWork({ workId: WORK, manuscriptId: MS }, async () => fake(200), async () => undefined)).resolves.toEqual({ refreshed: true });
   });
 });
 
@@ -122,59 +125,115 @@ describe('refusal codes the client does not know', () => {
   });
 });
 
-describe('the follow-through after "the writing is already gone" withdraws only what the member confirmed', () => {
+describe('the retry after "the writing is already gone" is finished by the server, not guessed by the client', () => {
   const calls: string[] = [];
-  const record = (handler: (url: string) => Response) => async (url: string, init: RequestInit) => { calls.push(`${init.method} ${url}`); return handler(url); };
+  const record = (status: number, body: unknown = {}) => async (url: string, init: RequestInit) => { calls.push(`${init.method} ${url}`); return fake(status, body); };
   beforeEach(() => { calls.length = 0; });
 
-  it('the Work was to go: the whole Work is withdrawn', async () => {
-    const out = await deleteWork({ workId: WORK, manuscriptId: MS }, record((url) => (url.includes('/manuscripts/') ? fake(404) : fake(200))));
+  it('a 404 from a Work card is done, in ONE request: no second request exists to remove a Work the member did not confirm', async () => {
+    const out = await deleteWork({ workId: WORK, manuscriptId: MS }, record(404));
     expect(out).toEqual({ ok: true });
-    expect(calls).toEqual([`DELETE /api/sovereign/manuscripts/${MS}?workId=${WORK}`, `DELETE /api/sovereign/living-works/${WORK}`]);
+    expect(calls).toEqual([`DELETE /api/sovereign/manuscripts/${MS}?workId=${WORK}`]);
   });
 
-  it('the Work was to STAY: only the dangling declaration is withdrawn, never the Work', async () => {
-    const out = await deleteWork({ workId: WORK, manuscriptId: MS, workStays: true }, record((url) => (url.includes('/manuscripts/') ? fake(404) : fake(200))));
-    expect(out).toEqual({ ok: true });
-    expect(calls).toEqual([
-      `DELETE /api/sovereign/manuscripts/${MS}?workId=${WORK}`,
-      `DELETE /api/sovereign/living-works/${WORK}/expressions?expressionType=manuscript&expressionId=${MS}`,
-    ]);
-    expect(calls.some((c) => c === `DELETE /api/sovereign/living-works/${WORK}`)).toBe(false);
+  it('through runDeleteWork it re-reads and resolves', async () => {
+    const trace: string[] = [];
+    await runDeleteWork({ workId: WORK, manuscriptId: MS }, record(404), async () => { trace.push('refresh'); });
+    expect(trace).toEqual(['refresh']);
+    expect(calls).toHaveLength(1);
   });
+});
 
-  it('a declaration that is already gone (404) is done', async () => {
-    const out = await deleteWork({ workId: WORK, manuscriptId: MS, workStays: true }, record(() => fake(404)));
-    expect(out).toEqual({ ok: true });
+describe('the outcomes the page must be told about ON THE PAGE are a DeletionNotice, thrown after the re-read', () => {
+  const order: string[] = [];
+  const refresh = async () => { order.push('refresh'); };
+  beforeEach(() => { order.length = 0; });
+
+  it('a stale card', async () => {
+    const err = await runDeleteWork({ workId: WORK, manuscriptId: MS }, async () => fake(409, { refusal: 'work_no_longer_holds_it' }), refresh).catch((e: Error) => { order.push('thrown'); return e; });
+    expect(err).toBeInstanceOf(DeletionNotice);
+    expect(order).toEqual(['refresh', 'thrown']);
   });
-
-  it('a failed follow-through keeps its own truth: sign-in sentence for 401, unknown for 5xx, plain for 4xx, and always asks for a re-read', async () => {
-    for (const workStays of [false, true]) {
-      const session = await deleteWork({ workId: WORK, manuscriptId: MS, workStays }, record((url) => (url.includes('/manuscripts/') ? fake(404) : fake(401))));
-      expect(session).toMatchObject({ ok: false, sessionEnded: true, stale: true });
-      expect((session as { message: string }).message).toContain('Sign in again');
-      const down = await deleteWork({ workId: WORK, manuscriptId: MS, workStays }, record((url) => (url.includes('/manuscripts/') ? fake(404) : fake(500))));
-      expect(down).toMatchObject({ ok: false, unknown: true, stale: true });
-      const refused = await deleteWork({ workId: WORK, manuscriptId: MS, workStays }, record((url) => (url.includes('/manuscripts/') ? fake(404) : fake(400))));
-      expect(refused).toMatchObject({ ok: false, stale: true });
-      expect((refused as { unknown?: boolean }).unknown).toBeUndefined();
+  it('an outcome we could not learn (Delete and Remove)', async () => {
+    const del = await runDeleteWork({ workId: WORK, manuscriptId: MS }, async () => fake(500), refresh).catch((e: Error) => e);
+    const rem = await runRemoveWork(WORK, async () => fake(500), refresh).catch((e: Error) => e);
+    expect(del).toBeInstanceOf(DeletionNotice);
+    expect(rem).toBeInstanceOf(DeletionNotice);
+  });
+  it('a plain rejection (400, 401) is NOT a page notice: nothing happened, nothing was re-read, and the card keeps its dialog', async () => {
+    for (const status of [400, 401]) {
+      order.length = 0;
+      const err = await runDeleteWork({ workId: WORK, manuscriptId: MS }, async () => fake(status), refresh).catch((e: Error) => e);
+      expect(err).not.toBeInstanceOf(DeletionNotice);
+      expect(order).toEqual([]);
     }
   });
-
-  it('through runDeleteWork a failed follow-through re-reads the page first (the 404 already proved it out of date)', async () => {
-    const trace: string[] = [];
-    const err = await runDeleteWork(
-      { workId: WORK, manuscriptId: MS },
-      record((url) => (url.includes('/manuscripts/') ? fake(404) : fake(400))),
-      async () => { trace.push('refresh'); },
-    ).catch((e: Error) => { trace.push('rejected'); return e; });
-    expect(trace).toEqual(['refresh', 'rejected']);
-    expect((err as Error).message).toContain('Nothing was removed');
+  it('a shared-writing refusal and a committed-but-unconfirmed removal keep their own classes', async () => {
+    const shared = await runDeleteWork({ workId: WORK, manuscriptId: MS }, async () => fake(409, { refusal: 'declared_in_other_works' }), refresh).catch((e: Error) => e);
+    const owed = await runDeleteWork({ workId: WORK, manuscriptId: MS }, async () => fake(500, { removed: true, refusal: 'custody_incomplete' }), refresh).catch((e: Error) => e);
+    expect(shared).toBeInstanceOf(DeletionSharedMaterial);
+    expect(owed).toBeInstanceOf(DeletionUnconfirmed);
+    expect(owed).not.toBeInstanceOf(DeletionNotice);
   });
+});
 
-  it('a follow-through that commits but cannot confirm (owed image) is an unconfirmed removal', async () => {
-    const out = await deleteWork({ workId: WORK, manuscriptId: MS }, record((url) => (url.includes('/manuscripts/') ? fake(404) : fake(500, { removed: true, refusal: 'image_bytes_owed' }))));
-    expect(out).toMatchObject({ ok: false, removed: true, stale: true });
+describe('the custody sentence names exactly what the server says is unconfirmed, with its own verb, about the right subject', () => {
+  const owed = async (body: unknown, target: { workId: string | null; manuscriptId: string }) =>
+    (await deleteWork(target, async () => fake(500, body)) as { message: string; removed?: boolean; unconfirmed?: unknown });
+
+  it('only the original file', async () => {
+    const out = await owed({ removed: true, refusal: 'custody_incomplete', unconfirmed: { originalFile: true, image: false, deletionRecord: false }, workRemoved: true }, { workId: WORK, manuscriptId: MS });
+    expect(out.message).toContain('could not confirm that its original file has been destroyed.');
+    expect(out.message).not.toMatch(/two things|record of the deletion|image/);
+  });
+  it('only the independent record of the deletion: it is SEALED, never "destroyed"', async () => {
+    const out = await owed({ removed: true, refusal: 'custody_incomplete', unconfirmed: { originalFile: false, image: false, deletionRecord: true }, workRemoved: true }, { workId: WORK, manuscriptId: MS });
+    expect(out.message).toContain('could not confirm that our independent record of the deletion has been sealed.');
+    expect(out.message).not.toMatch(/original file|image|destroyed/);
+  });
+  it('only the Work\'s image', async () => {
+    const out = await owed({ removed: true, refusal: 'custody_incomplete', unconfirmed: { originalFile: false, image: true, deletionRecord: false }, workRemoved: true }, { workId: WORK, manuscriptId: MS });
+    expect(out.message).toContain('could not confirm that its image has been destroyed.');
+  });
+  it('two and three things are listed, each with its verb', async () => {
+    const two = await owed({ removed: true, refusal: 'custody_incomplete', unconfirmed: { originalFile: true, image: false, deletionRecord: true }, workRemoved: true }, { workId: WORK, manuscriptId: MS });
+    expect(two.message).toContain('two things: that its original file has been destroyed, and that our independent record of the deletion has been sealed.');
+    const three = await owed({ removed: true, refusal: 'custody_incomplete', unconfirmed: { originalFile: true, image: true, deletionRecord: true }, workRemoved: true }, { workId: WORK, manuscriptId: MS });
+    expect(three.message).toContain('three things: that its original file has been destroyed, that its image has been destroyed, and that our independent record of the deletion has been sealed.');
+  });
+  it('when the server did not say which, it names the two that can be owed after a writing\'s deletion', async () => {
+    const out = await owed({ removed: true, refusal: 'custody_incomplete' }, { workId: WORK, manuscriptId: MS });
+    expect(out.message).toContain('its original file, if there was one, has been destroyed');
+    expect(out.message).toContain('our independent record of the deletion has been sealed');
+  });
+  it('the subject: a Work card whose Work went says "work … removed"; a Work that STAYS (workRemoved false) and loose writing say "writing … deleted"', async () => {
+    const goes = await owed({ removed: true, refusal: 'custody_incomplete', workRemoved: true }, { workId: WORK, manuscriptId: MS });
+    expect(goes.message).toMatch(/^This work was removed from your studio, but/);
+    const stays = await owed({ removed: true, refusal: 'custody_incomplete', workRemoved: false }, { workId: WORK, manuscriptId: MS });
+    expect(stays.message).toMatch(/^This writing was deleted from your studio, but/);
+    const loose = await owed({ removed: true, refusal: 'custody_incomplete' }, { workId: null, manuscriptId: MS });
+    expect(loose.message).toMatch(/^This writing was deleted from your studio, but/);
+  });
+  it('the flags are carried on the outcome', async () => {
+    const out = await owed({ removed: true, refusal: 'custody_incomplete', unconfirmed: { originalFile: true } }, { workId: WORK, manuscriptId: MS });
+    expect(out.unconfirmed).toEqual({ originalFile: true, image: false, deletionRecord: false });
+  });
+  it('the Work route\'s owed-image answer is told about the IMAGE, from deleteWork (a no-writing Work) and from removeWork, with or without a code', async () => {
+    const viaDelete = await deleteWork({ workId: WORK, manuscriptId: null }, async () => fake(500, { removed: true, refusal: 'image_bytes_owed', unconfirmed: { image: true } }));
+    expect((viaDelete as { message: string }).message).toContain('its image');
+    expect((viaDelete as { message: string }).message).not.toContain('original file');
+    const viaRemove = await removeWork(WORK, async () => fake(500, { removed: true, refusal: 'image_bytes_owed' }));
+    expect(viaRemove).toMatchObject({ ok: false, removed: true, unconfirmed: { image: true } });
+    expect((viaRemove as { message: string }).message).toContain('its image');
+    const noCode = await removeWork(WORK, async () => fake(500, { removed: true }));
+    expect((noCode as { message: string }).message).toContain('its image');
+  });
+  it('an owed-image CODE with no flags (an older server) is still told about the IMAGE on the writing route, never as the generic pair', async () => {
+    const out = await deleteWork({ workId: WORK, manuscriptId: MS }, async () => fake(500, { removed: true, refusal: 'image_bytes_owed' }));
+    const message = (out as { message: string }).message;
+    expect(message).toContain('its image has been destroyed');
+    expect(message).not.toContain('original file');
+    expect(message).not.toContain('independent record');
   });
 });
 

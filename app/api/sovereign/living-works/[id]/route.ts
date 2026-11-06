@@ -310,7 +310,7 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
        founder for Work visuals on 2026-09-07. */
     const removed = await transaction(async (tx) => {
       const visual = await tx.query<{ storage_path: string }>(
-        `SELECT storage_path FROM living_work_visuals WHERE living_work_id = $1 AND member_id = $2`,
+        `SELECT storage_path FROM living_work_visuals WHERE living_work_id = $1 AND member_id = $2 FOR UPDATE`,
         [id, memberId],
       );
       const gone = await tx.query<{ id: string }>(
@@ -343,7 +343,7 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
       );
       if (stillOwed.rows.length > 0) {
         console.error('[living-works] Work removed; its image bytes are still owed destruction');
-        return NextResponse.json({ removed: true, refusal: 'image_bytes_owed' }, { status: 500 });
+        return NextResponse.json({ removed: true, refusal: 'image_bytes_owed', unconfirmed: { image: true } }, { status: 500 });
       }
     }
     return NextResponse.json({ withdrawn: removed.id });

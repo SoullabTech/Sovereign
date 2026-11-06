@@ -49,6 +49,20 @@ function clauseAfterReference(sql: string, afterOpenParen: number): string {
   return sql.slice(start, i);
 }
 
+/** The clause of a reference written with NO column list: from just after the table name to the first comma, semicolon or closing
+ *  parenthesis at the same depth (the same end as clauseAfterReference). */
+function clauseAfterName(sql: string, from: number): string {
+  let depth = 0;
+  let i = from;
+  for (; i < sql.length; i += 1) {
+    const ch = sql[i];
+    if (ch === '(') depth += 1;
+    else if (ch === ')') { if (depth === 0) break; depth -= 1; }
+    else if ((ch === ',' || ch === ';') && depth === 0) break;
+  }
+  return sql.slice(from, i);
+}
+
 function referencesToLivingWorks(): Reference[] {
   const found: Reference[] = [];
   for (const file of files) {
@@ -56,11 +70,13 @@ function referencesToLivingWorks(): Reference[] {
     const owner = /(?:CREATE TABLE(?: IF NOT EXISTS)?|ALTER TABLE(?: ONLY| IF EXISTS)*)\s+(?:public\.)?([a-z_0-9]+)/gi;
     const owners: Array<{ at: number; name: string }> = [];
     for (let m = owner.exec(sql); m; m = owner.exec(sql)) owners.push({ at: m.index, name: m[1]!.toLowerCase() });
-    const ref = /REFERENCES\s+(?:public\.)?living_works\s*\(/gi;
+    // `REFERENCES living_works(id)` AND the legal short form `REFERENCES living_works` (no column list: it points at the primary key).
+    // `\b(?!_)` keeps `living_works_something_else` from matching.
+    const ref = /REFERENCES\s+(?:public\.)?living_works\b(?!_)\s*(\()?/gi;
     for (let m = ref.exec(sql); m; m = ref.exec(sql)) {
       const table = [...owners].reverse().find((o) => o.at < m!.index)?.name;
       if (!table) throw new Error(`could not find the table that owns a reference to living_works in ${file}`);
-      const clause = clauseAfterReference(sql, m.index + m[0].length);
+      const clause = m[1] ? clauseAfterReference(sql, m.index + m[0].length) : clauseAfterName(sql, m.index + m[0].length);
       // A missing ON DELETE is NO ACTION: it would BLOCK the removal of a Work, and must be seen as such.
       const onDelete = /ON DELETE\s+(CASCADE|SET NULL|SET DEFAULT|RESTRICT|NO ACTION)/i.exec(clause)?.[1]?.toUpperCase() ?? 'NO ACTION';
       found.push({ table, onDelete, file: file.slice(repo.length + 1) });
@@ -85,6 +101,14 @@ function tablesCarryingAWorkIdWithoutAForeignKey(withKey: ReadonlySet<string>): 
       }
       const body = sql.slice(m.index + m[0].length, i);
       if (/(^|[\s,(])living_work_id\s+[a-z]/i.test(body) && !withKey.has(m[1]!.toLowerCase())) names.add(m[1]!.toLowerCase());
+    }
+  }
+  // A column added to an existing table is the same hazard written a different way.
+  for (const file of files) {
+    const sql = clean(readFileSync(file, 'utf8'));
+    const alter = /ALTER TABLE(?: ONLY| IF EXISTS)*\s+(?:public\.)?([a-z_0-9]+)\s+([^;]*?);/gi;
+    for (let m = alter.exec(sql); m; m = alter.exec(sql)) {
+      if (/ADD COLUMN(?: IF NOT EXISTS)?\s+living_work_id\s+[a-z]/i.test(m[2]!) && !withKey.has(m[1]!.toLowerCase())) names.add(m[1]!.toLowerCase());
     }
   }
   return [...names].sort();
@@ -133,6 +157,15 @@ describe('what Remove says goes matches what the database removes with a Work', 
     expect(clauseAfterReference(composite, composite.indexOf('REFERENCES living_works(') + 'REFERENCES living_works('.length)).toMatch(/ON DELETE CASCADE/);
   });
 
+  it('the short form REFERENCES living_works (no column list) is seen, with its own ON DELETE and not its neighbour\'s', () => {
+    const noAction = clean('living_work_id UUID NOT NULL REFERENCES living_works,\n  other_id UUID REFERENCES other(id) ON DELETE CASCADE');
+    const at = noAction.indexOf('REFERENCES living_works') + 'REFERENCES living_works'.length;
+    expect(/ON DELETE/.test(clauseAfterName(noAction, at))).toBe(false);
+    const cascading = clean('living_work_id UUID NOT NULL REFERENCES public.living_works ON DELETE CASCADE,\n  x int');
+    const at2 = cascading.indexOf('REFERENCES public.living_works') + 'REFERENCES public.living_works'.length;
+    expect(clauseAfterName(cascading, at2)).toMatch(/ON DELETE CASCADE/);
+  });
+
   it('tables that carry a living_work_id WITHOUT a foreign key are each a recorded decision (a new one forces a look at the removal copy)', () => {
     const withKey = new Set(refs.map((r) => r.table));
     expect(tablesCarryingAWorkIdWithoutAForeignKey(withKey)).toEqual(Object.keys(KEEPS_ROWS_AFTER_WORK_REMOVAL).sort());
@@ -172,5 +205,10 @@ describe('what Remove says goes matches what the database removes with a Work', 
     expect(text).toContain('The Work itself stays');
     expect(text).not.toContain('what you told MAIA about it');
     expect(text).not.toContain('your corrections');
+    // The same act asked from the writing (History, the loose list) leaves the Work standing too.
+    const fromWriting = deleteConfirmCopy('writing-from-work', 'T').body;
+    expect(fromWriting).toContain('The Work it is in stays');
+    expect(fromWriting).not.toContain('what you told MAIA about it');
+    expect(fromWriting).not.toContain('your corrections');
   });
 });

@@ -246,8 +246,15 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
        a success that would make the promise false. The queue guarantees we can
        finish; it does not entitle us to say we already did. */
     if (!outcome.sweptAll) {
+      /* `unconfirmed` says WHICH of this deletion's obligations is not yet confirmed, so the sentence the member reads names exactly
+         those and no others: the original file, the Work's image, the independent record of the deletion. */
       return NextResponse.json(
-        { removed: true, refusal: 'custody_incomplete' },
+        {
+          removed: true,
+          refusal: 'custody_incomplete',
+          unconfirmed: { originalFile: outcome.owed.originalFile, image: outcome.owed.image, deletionRecord: !outcome.recoverySealed },
+          workRemoved: outcome.workRemoved,
+        },
         { status: 500 },
       );
     }

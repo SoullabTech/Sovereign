@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { StudioAct } from '@/app/writers-studio/studioHistory';
 import { beneath, byDay, sentenceFor } from '@/app/writers-studio/studioHistory';
 import { historyActionFor } from '@/app/writers-studio/historyActions';
 import { useStudioHistory, type StudioHistoryPhase } from '@/app/writers-studio/useStudioHistory';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
 import type { CurrentManuscript } from '@/app/writers-studio/useCurrentManuscript';
-import { DeletionUnconfirmed, deleteConfirmCopy } from '@/lib/writersStudio/deleteWork';
+import { DeletionNotice, DeletionSharedMaterial, DeletionUnconfirmed, deleteConfirmCopy, type ActResult } from '@/lib/writersStudio/deleteWork';
 import { WritingDeleteConfirm } from './WritingDeleteConfirm';
 import { writingDeleteKindFor } from './useWorkDeleteDoor';
 
@@ -21,7 +21,7 @@ export interface P4R1HistoryPageProps {
   works: readonly LivingWork[];
   onOpen: (manuscriptId: string) => void;
   /** The same governed erase Home uses. Rejects with a member-facing message; resolves only when the server said ok. */
-  onDeleteWriting: (manuscriptId: string) => Promise<void>;
+  onDeleteWriting: (manuscriptId: string) => Promise<ActResult | void>;
   onRetry: () => void;
   onBack: () => void;
 }
@@ -38,22 +38,35 @@ export function P4R1HistoryPage(props: P4R1HistoryPageProps) {
   const [confirming, setConfirming] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  // Page notices, in order, each naming its writing: a second never replaces a first the member has not dismissed.
+  const [notices, setNotices] = useState<ReadonlyArray<{ readonly id: number; readonly message: string; readonly urgent: boolean }>>([]);
+  const nextNoticeId = useRef(0);
+  const notify = (message: string, urgent: boolean) => {
+    nextNoticeId.current += 1;
+    const id = nextNoticeId.current;
+    setNotices((current) => [...current, { id, message, urgent }]);
+  };
 
   const lines = props.acts.filter((a) => sentenceFor(a) !== null);
   const days = byDay(lines as StudioAct[]);
 
-  const confirmDelete = async (manuscriptId: string) => {
+  const confirmDelete = async (manuscriptId: string, writing: string) => {
     if (busyId) return;
     setBusyId(manuscriptId);
     setError(null);
     try {
-      await props.onDeleteWriting(manuscriptId);
+      const result = await props.onDeleteWriting(manuscriptId);
       setConfirming(null);
+      if (result && !result.refreshed) notify(`“${writing}” was deleted. We could not reload this page, so reload it to see what is current.`, false);
     } catch (err) {
+      // The line this question lives on may be gone by now (the re-read the act ran removed the writing, or put it into a Work),
+      // so anything the member must still hear goes to the page, not to a dialog that may no longer exist.
       if (err instanceof DeletionUnconfirmed) {
         setConfirming(null);
-        setNotice(err.message);
+        notify(`“${writing}”: ${err.message}`, true);
+      } else if (err instanceof DeletionNotice || err instanceof DeletionSharedMaterial) {
+        setConfirming(null);
+        notify(`“${writing}”: ${err.message}`, false);
       } else {
         setError(err instanceof Error ? err.message : 'That writing could not be deleted just now. Nothing was removed. Please try again.');
       }
@@ -95,7 +108,7 @@ export function P4R1HistoryPage(props: P4R1HistoryPageProps) {
                     body={words.body}
                     busy={busyId === action.manuscriptId}
                     error={error}
-                    onConfirm={() => void confirmDelete(action.manuscriptId)}
+                    onConfirm={() => void confirmDelete(action.manuscriptId, action.title)}
                     onCancel={() => { if (!busyId) { setConfirming(null); setError(null); } }}
                   />
                 </li>
@@ -125,7 +138,12 @@ export function P4R1HistoryPage(props: P4R1HistoryPageProps) {
                 ) : null}
                 {action.kind === 'open' && action.why === 'shared' ? (
                   <span className="p4r1-history-act-beneath">
-                    This writing is in {action.sharedBy} of your Works, so it cannot be deleted from here. On Home, remove the Works you do not want to keep it in, then delete it.
+                    This writing is in {action.sharedBy} of your Works, so it cannot be deleted from here. On Home, press Delete on one of those Works and, when asked, choose “Remove this Work”. Repeat until one Work holds it, then delete it.
+                  </span>
+                ) : null}
+                {action.kind === 'open' && action.why === 'several-writings' ? (
+                  <span className="p4r1-history-act-beneath">
+                    This writing is in a Work that holds more than one writing, so it cannot be deleted from here. Open it and take it out of that Work first, then delete it.
                   </span>
                 ) : null}
               </li>
@@ -143,12 +161,12 @@ export function P4R1HistoryPage(props: P4R1HistoryPageProps) {
           <button type="button" className="fr-home-quiet" onClick={props.onBack}>← Back to Home</button>
         </div>
         <h2 className="p4r1-history-title">History</h2>
-        {notice ? (
-          <div className="p4r1-home-delete-notice" role="alert">
-            {notice}
-            <button type="button" onClick={() => setNotice(null)}>Dismiss</button>
+        {notices.map((notice) => (
+          <div key={notice.id} className="p4r1-home-delete-notice" role={notice.urgent ? 'alert' : 'status'}>
+            {notice.message}
+            <button type="button" onClick={() => setNotices((current) => current.filter((n) => n.id !== notice.id))}>Dismiss</button>
           </div>
-        ) : null}
+        ))}
         {body}
       </div>
     </div>
@@ -157,7 +175,7 @@ export function P4R1HistoryPage(props: P4R1HistoryPageProps) {
 
 /** Reads up to the route's maximum and reloads after a deletion, so the page shows what the server now holds. */
 export function P4R1HistoryContainer(props: Omit<P4R1HistoryPageProps, 'phase' | 'acts' | 'onRetry' | 'onDeleteWriting'> & {
-  onDeleteWriting: (manuscriptId: string) => Promise<void>;
+  onDeleteWriting: (manuscriptId: string) => Promise<ActResult | void>;
 }) {
   const { phase, acts, reload } = useStudioHistory(FULL_HISTORY_LIMIT);
   return (
@@ -168,7 +186,7 @@ export function P4R1HistoryContainer(props: Omit<P4R1HistoryPageProps, 'phase' |
       onRetry={() => void reload()}
       onDeleteWriting={async (id) => {
         try {
-          await props.onDeleteWriting(id);
+          return await props.onDeleteWriting(id);
         } finally {
           // Removed-but-unconfirmed also throws; the list must still be re-read.
           await reload();

@@ -17,6 +17,7 @@ jest.mock('@/app/dev/writers-studio-pc3-live/P4R1ProducePanel', () => ({ __esMod
 import P4R1HomeView from '@/app/dev/writers-studio-pc3-live/P4R1HomeView';
 import {
   DELETE_WORK_COPY,
+  DeletionNotice,
   DeletionSharedMaterial,
   DeletionUnconfirmed,
   REMOVE_SHARED_WORK_COPY,
@@ -126,6 +127,19 @@ describe('the server says the writing is shared, but this page cannot see the ot
     expect(host.querySelector('[data-deleting-confirmation] [role="alert"]')?.textContent).toContain('Nothing was deleted');
   });
 
+  it('pressing Delete again clears the earlier verdict while the new attempt is in flight (a verdict about the last attempt is not shown beside the next)', async () => {
+    render({ works: [workA] });
+    onDeleteWork.mockRejectedValueOnce(new DeletionSharedMaterial(SHARED_REFUSAL));
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-deleting-confirmation] [role="alert"]')?.textContent).toContain('Nothing was deleted');
+    let finish: (value?: unknown) => void = () => undefined;
+    onDeleteWork.mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-deleting-confirmation] [role="alert"]')).toBeNull();     // the attempt is in flight: no old verdict beside it
+    await act(async () => { finish(undefined); });
+  });
+
   it('once the re-read brings the other Work in, the same card turns into the removal question', async () => {
     render({ works: [workA] });
     onDeleteWork.mockRejectedValue(new DeletionSharedMaterial(SHARED_REFUSAL));
@@ -155,65 +169,141 @@ describe('the sentence about where the writing stays matches how many other Work
   });
 });
 
-describe('a message that has not been seen is not lost with its card', () => {
-  it('an unknown outcome whose re-read then removes the Work: the card unmounts and the page keeps the message', async () => {
-    onDeleteWork.mockRejectedValue(new Error(UNKNOWN));
+describe('a message about an outcome the page was re-read for is carried by the PAGE, in the real event order', () => {
+  // In production the re-read (which can remove this card) happens BEFORE the act throws. These mocks do the same: they re-render the
+  // page without the Work, and only then throw.
+  const reReadThenThrow = (props: Record<string, unknown>, error: Error) => async () => { render(props); throw error; };
+
+  it('an unknown Delete outcome whose re-read shows the Work gone: the card is gone before the throw, and the page still has the message', async () => {
+    onDeleteWork.mockImplementation(reReadThenThrow({ works: [workB] }, new DeletionNotice(UNKNOWN)));
     await pressDoor('Fictional Work A');
     await click(DELETE_WORK_COPY.confirm);
-    expect(host.querySelector('[data-deleting-confirmation] [role="alert"]')?.textContent).toContain('could not confirm');
-    render({ works: [workB] });               // the re-read showed the delete had in fact gone through
     expect(Array.from(host.querySelectorAll('.p4r1-home-workcard h3')).map((h) => h.textContent)).toEqual(['Fictional Work B']);
-    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('could not confirm');
+    const notice = host.querySelector('[data-delete-notice]');
+    expect(notice?.textContent).toContain('“Fictional Work A”: We could not confirm');
+    expect(notice?.getAttribute('role')).toBe('status');
   });
 
-  it('a message the member dismissed (Keep it) is not resurrected when the card later goes', async () => {
-    onDeleteWork.mockRejectedValue(new Error(UNKNOWN));
+  it('the same when the re-read shows the Work STILL there: the dialog closes and the page says to check (one place, no duplicate)', async () => {
+    onDeleteWork.mockRejectedValue(new DeletionNotice(UNKNOWN));
     await pressDoor('Fictional Work A');
     await click(DELETE_WORK_COPY.confirm);
-    await click(DELETE_WORK_COPY.cancel);
-    render({ works: [workB] });
-    expect(host.querySelector('[data-delete-notice]')).toBeNull();
+    expect(host.querySelector('[data-deleting-confirmation]')).toBeNull();
+    expect(host.querySelectorAll('[data-delete-notice]')).toHaveLength(1);
+    expect(doorOf('Fictional Work A')).toBeTruthy();
   });
 
-  it('the same for a removal that fails in an unknown way', async () => {
+  it('a stale-card refusal is a page notice too (the Work it names may be the one the re-read just removed)', async () => {
+    onDeleteWork.mockImplementation(reReadThenThrow({ works: [workB] }, new DeletionNotice('That Work has changed since this page loaded. It may have been removed on another device. Nothing was deleted. Home now shows what is current.')));
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('Nothing was deleted');
+  });
+
+  it('Remove: an unknown outcome whose re-read removes the card', async () => {
     onDeleteWork.mockRejectedValue(new DeletionSharedMaterial(SHARED_REFUSAL));
-    onRemoveWork.mockRejectedValue(new Error('We could not confirm whether that work was removed. Home now shows what is current, so check it before you try again.'));
+    onRemoveWork.mockImplementation(reReadThenThrow({ works: [workB] }, new DeletionNotice('We could not confirm whether that work was removed. Home now shows what is current, so check it before you try again.')));
     await pressDoor('Fictional Work A');
     await click(DELETE_WORK_COPY.confirm);
     await click(REMOVE_SHARED_WORK_COPY.confirm);
-    render({ works: [workB] });
     expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('could not confirm whether that work was removed');
+  });
+
+  it('a PLAIN rejection (nothing happened, nothing re-read) stays in the dialog and is not copied to the page', async () => {
+    onDeleteWork.mockRejectedValue(new Error('That work could not be deleted just now. Nothing was removed — please try again.'));
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-deleting-confirmation] [role="alert"]')?.textContent).toContain('Nothing was removed');
+    expect(host.querySelector('[data-delete-notice]')).toBeNull();
   });
 });
 
-describe('a message from an earlier failed attempt is not handed to the page after a later attempt succeeded', () => {
-  it('Remove: failed once, retried and succeeded, then the card goes: the page carries only the removal notice', async () => {
+describe('a failed attempt followed by a successful one leaves only the success on the page', () => {
+  it('Remove: failed once (plain), retried and succeeded', async () => {
     onDeleteWork.mockRejectedValue(new DeletionSharedMaterial(SHARED_REFUSAL));
-    onRemoveWork
-      .mockRejectedValueOnce(new Error('We could not confirm whether that work was removed. Home now shows what is current, so check it before you try again.'))
-      .mockResolvedValueOnce(undefined);
+    onRemoveWork.mockRejectedValueOnce(new Error('That work could not be removed just now. Nothing changed. Please try again.')).mockResolvedValueOnce(undefined);
     await pressDoor('Fictional Work A');
     await click(DELETE_WORK_COPY.confirm);
-    await click(REMOVE_SHARED_WORK_COPY.confirm);          // fails: the dialog shows the message
-    expect(host.querySelector('[data-shared-writing] [role="alert"]')?.textContent).toContain('could not confirm');
-    await click(REMOVE_SHARED_WORK_COPY.confirm);          // succeeds
-    render({ works: [workB] });                            // the card is gone
+    await click(REMOVE_SHARED_WORK_COPY.confirm);
+    expect(host.querySelector('[data-shared-writing] [role="alert"]')?.textContent).toContain('Nothing changed');
+    await click(REMOVE_SHARED_WORK_COPY.confirm);
+    render({ works: [workB] });
     const messages = Array.from(host.querySelectorAll('[data-delete-notice]')).map((n) => n.textContent ?? '');
     expect(messages).toHaveLength(1);
     expect(messages[0]).toContain('was removed');
-    expect(messages[0]).not.toContain('could not confirm');
   });
-
-  it('Delete: failed once, retried and succeeded, then the card goes: no stale message on the page', async () => {
-    onDeleteWork
-      .mockRejectedValueOnce(new Error(UNKNOWN))
-      .mockResolvedValueOnce(undefined);
+  it('Delete: failed once (plain), retried and succeeded', async () => {
+    onDeleteWork.mockRejectedValueOnce(new Error('That work could not be deleted just now. Nothing was removed — please try again.')).mockResolvedValueOnce(undefined);
     await pressDoor('Fictional Work A');
-    await click(DELETE_WORK_COPY.confirm);                 // fails
-    expect(host.querySelector('[data-deleting-confirmation] [role="alert"]')?.textContent).toContain('could not confirm');
-    await click(DELETE_WORK_COPY.confirm);                 // succeeds
+    await click(DELETE_WORK_COPY.confirm);
+    await click(DELETE_WORK_COPY.confirm);
     render({ works: [workB] });
     expect(host.querySelector('[data-delete-notice]')).toBeNull();
+  });
+});
+
+describe('a Work\'s open question belongs to the Work, not to the card that happens to show it', () => {
+  it('the 409 turns into the removal question even though the re-read moved the Work from the shelf to the hero slot', async () => {
+    onDeleteWork.mockImplementation(async () => {
+      render({ returnWork: workA });                       // the re-read changed which component shows Work A
+      throw new DeletionSharedMaterial(SHARED_REFUSAL);
+    });
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('.p4r1-home-anchor[data-shared-writing]')).not.toBeNull();
+    expect(host.textContent).toContain('Remove “Fictional Work A” and keep the writing?');
+  });
+  it('an open Delete question survives the same move', async () => {
+    await pressDoor('Fictional Work A');
+    render({ returnWork: workA });
+    expect(host.querySelector('.p4r1-home-anchor[data-deleting-confirmation]')).not.toBeNull();
+  });
+  it('and it does not follow the hero slot to a DIFFERENT Work', async () => {
+    render({ returnWork: workA });
+    await pressDoor('Fictional Work A');
+    render({ returnWork: workB, works: [workB] });
+    expect(host.querySelector('.p4r1-home-anchor[data-deleting-confirmation]')).toBeNull();
+    expect(host.querySelector('.p4r1-home-anchor h2')?.textContent).toBe('Fictional Work B');
+  });
+});
+
+describe('a re-read that did not work is said to the member, never hidden', () => {
+  it('Delete of a Work that goes: the card says it was deleted and the page says to reload', async () => {
+    onDeleteWork.mockResolvedValue({ refreshed: false });
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-removed]')?.textContent).toBe('“Fictional Work A” was deleted.');
+    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('reload this page');
+  });
+  it('a re-read that worked adds nothing', async () => {
+    onDeleteWork.mockResolvedValue({ refreshed: true });
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-delete-notice]')).toBeNull();
+  });
+  it('Remove', async () => {
+    onDeleteWork.mockRejectedValue(new DeletionSharedMaterial(SHARED_REFUSAL));
+    onRemoveWork.mockResolvedValue({ refreshed: false });
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);
+    await click(REMOVE_SHARED_WORK_COPY.confirm);
+    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('reload this page');
+  });
+});
+
+describe('custody unconfirmed after deleting only the writing of a Work that STAYS', () => {
+  const mixed = { ...workA, expressions: [expression('fictional-shared-manuscript'), { expressionType: 'visual', expressionId: 'v', declaredAt: '2026-10-01T00:00:00Z' }] };
+  it('the Work\'s card is NOT replaced by a "removed" ghost; the page carries an alert naming the writing', async () => {
+    render({ works: [mixed, workB] });
+    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed('This writing was deleted from your studio, but we could not confirm that its original file has been destroyed. Until we can, we are not going to tell you it is gone.'));
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-removed]')).toBeNull();
+    expect(doorOf('Fictional Work A')).toBeTruthy();
+    const notice = host.querySelector('[data-delete-notice]');
+    expect(notice?.getAttribute('role')).toBe('alert');
+    expect(notice?.textContent).toContain('This writing was deleted from your studio');
+    expect(notice?.textContent).not.toContain('was removed from your studio');
   });
 });
 
@@ -279,6 +369,21 @@ describe('the hero Work\'s state belongs to that Work, not to the slot', () => {
     expect(host.querySelector('.p4r1-home-anchor[data-deleting-confirmation]')).not.toBeNull();
     render({ returnWork: workB, works: [workB] });
     expect(host.querySelector('.p4r1-home-anchor[data-deleting-confirmation]')).toBeNull();
+  });
+  it('what a card remembers on its own (its open Publish panel) does not follow the slot to a different Work', async () => {
+    render({ returnWork: workA, works: [workA, workB] });
+    await click('Publish');
+    expect(byText('Publish')!.getAttribute('aria-expanded')).toBe('true');
+    render({ returnWork: workB, works: [workA, workB] });          // the re-read hands the slot to Work B
+    expect(byText('Publish')!.getAttribute('aria-expanded')).toBe('false');
+  });
+  it('and the same in the continue layout', async () => {
+    const continueWith = (resume: unknown) => ({ arrival: { ...orient, kind: 'continue', resume, alsoWritten: [], shelf: [] }, works: [workA, workB] });
+    render(continueWith(workA));
+    await click('Publish');
+    expect(byText('Publish')!.getAttribute('aria-expanded')).toBe('true');
+    render(continueWith(workB));
+    expect(byText('Publish')!.getAttribute('aria-expanded')).toBe('false');
   });
   it('the continue layout is keyed the same way', async () => {
     render({ arrival: { ...orient, kind: 'continue', resume: workA, alsoWritten: [], shelf: [workB] }, works: [workA, workB] });
@@ -355,6 +460,39 @@ describe('loose writing (no Work) uses the same truth, and its delete is covered
     expect(host.querySelector('[data-deleting-confirmation]')).toBeNull();
     expect(host.querySelector('[data-delete-notice]')?.getAttribute('role')).toBe('alert');
     expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('we are not going to tell you it is gone');
+  });
+
+  it('removed but unconfirmed names the writing on the page', async () => {
+    render(looseOnly);
+    onDeleteWriting.mockRejectedValue(new DeletionUnconfirmed(CUSTODY));
+    await openLoose();
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('“A Loose Fictional Draft”: ');
+  });
+
+  it('an outcome the page was re-read for reaches the page even though the re-read removed the writing\'s card first', async () => {
+    render(looseOnly);
+    onDeleteWriting.mockImplementation(async () => { render({ works: [], manuscripts: [] }); throw new DeletionNotice(UNKNOWN); });
+    await openLoose();
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-kind="writing"]')).toBeNull();
+    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('“A Loose Fictional Draft”: We could not confirm');
+  });
+
+  it('a shared-writing refusal (the writing was meanwhile placed in two Works) is carried by the page, not lost with the loose card', async () => {
+    render(looseOnly);
+    onDeleteWriting.mockImplementation(async () => { render({ works: [makeWork('w1', 'W1', ['fictional-loose-manuscript']), makeWork('w2', 'W2', ['fictional-loose-manuscript'])], manuscripts: [loose] }); throw new DeletionSharedMaterial(SHARED_REFUSAL); });
+    await openLoose();
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('Nothing was deleted');
+  });
+
+  it('a re-read that did not work is said', async () => {
+    render(looseOnly);
+    onDeleteWriting.mockResolvedValue({ refreshed: false });
+    await openLoose();
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('reload this page');
   });
 
   it('any other failure stays in the dialog as an error', async () => {

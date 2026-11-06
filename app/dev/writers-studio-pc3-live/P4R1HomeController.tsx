@@ -269,8 +269,7 @@ export default function P4R1HomeController() {
   // A Work is deleted with its manuscript in ONE server-side erase (WS-DELETE-01); a Work with no manuscript is withdrawn. The
   // request names the Work, so a stale card is refused server-side.
   const onDeleteWork = useCallback(
-    (workId: string, manuscriptId: string | null, options?: { readonly workStays?: boolean }) =>
-      runDeleteWork({ workId, manuscriptId, ...(options?.workStays ? { workStays: true } : {}) }, (url, init) => apiFetch(url, init), refresh),
+    (workId: string, manuscriptId: string | null) => runDeleteWork({ workId, manuscriptId }, (url, init) => apiFetch(url, init), refresh),
     [refresh],
   );
 

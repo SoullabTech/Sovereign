@@ -173,8 +173,10 @@ describe('the writing is shared with another Work (409 declared_in_other_works)'
     // Work B is removed elsewhere; Home re-reads and Work A now holds the writing alone.
     act(() => root.render(React.createElement(P4R1HomeView, { ...baseProps, works: [workA] } as any)));
     expect(host.querySelector('[data-shared-writing]')).toBeNull();
-    expect(host.textContent).not.toContain('also in another of your Works');
+    // The page no longer sees another Work, so it does not claim one is there: it says only what the server said, time-neutrally.
+    expect(host.textContent).not.toContain('Remove “Fictional Work A” and keep the writing?');
     expect(host.querySelector('[data-deleting-confirmation]')?.textContent).toContain(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-deleting-confirmation] [role="alert"]')?.textContent).toContain('If you have just removed that Work, press Delete again');
   });
 
   it('two cards each opened to the removal question: once the first Work is removed the second is no longer asked about a shared writing', async () => {
@@ -331,7 +333,7 @@ describe('how deleteWork classifies what the server said', () => {
   });
 });
 
-describe('the stale-card guard and the vanished-writing follow-through (deleteWork)', () => {
+describe('the stale-card guard and the vanished writing (deleteWork)', () => {
   it('a Work card names the Work it was pressed on; loose writing names none', async () => {
     const urls: string[] = [];
     await deleteWork({ workId: 'work-1', manuscriptId: 'ms-1' }, async (url) => { urls.push(url); return fake(200); });
@@ -339,25 +341,11 @@ describe('the stale-card guard and the vanished-writing follow-through (deleteWo
     expect(urls).toEqual(['/api/sovereign/manuscripts/ms-1?workId=work-1', '/api/sovereign/manuscripts/ms-2']);
   });
 
-  it('a 404 on the WRITING from a Work card follows through and withdraws that Work, so no empty Work is left behind', async () => {
+  it('a 404 on the WRITING from a Work card is done: ONE request (the server finishes a dangling declaration in its own transaction)', async () => {
     const calls: string[] = [];
-    const out = await deleteWork({ workId: 'work-1', manuscriptId: 'ms-1' }, async (url, init) => {
-      calls.push(`${init.method} ${url}`);
-      return url.includes('/manuscripts/') ? fake(404) : fake(200, { withdrawn: 'work-1' });
-    });
+    const out = await deleteWork({ workId: 'work-1', manuscriptId: 'ms-1' }, async (url, init) => { calls.push(`${init.method} ${url}`); return fake(404); });
     expect(out).toEqual({ ok: true });
-    expect(calls).toEqual(['DELETE /api/sovereign/manuscripts/ms-1?workId=work-1', 'DELETE /api/sovereign/living-works/work-1']);
-  });
-
-  it('if that withdrawal is REFUSED the member is told nothing was removed; if its outcome is unknown they are told that instead', async () => {
-    const refused = await deleteWork({ workId: 'work-1', manuscriptId: 'ms-1' }, async (url) => (url.includes('/manuscripts/') ? fake(404) : fake(400)));
-    expect(refused).toMatchObject({ ok: false });
-    expect((refused as any).unknown).toBeUndefined();
-    expect((refused as any).message).toContain('Nothing was removed');
-    const unknown = await deleteWork({ workId: 'work-1', manuscriptId: 'ms-1' }, async (url) => (url.includes('/manuscripts/') ? fake(404) : fake(500)));
-    expect(unknown).toMatchObject({ ok: false, unknown: true });
-    expect((unknown as any).message).not.toContain('Nothing was removed');
-    expect((unknown as any).message).toContain('could not confirm');
+    expect(calls).toEqual(['DELETE /api/sovereign/manuscripts/ms-1?workId=work-1']);
   });
 
   it('a 404 on loose writing (no Work) is still just "already gone": one request, no follow-through', async () => {
@@ -574,11 +562,10 @@ describe('each Delete confirmation says what is true of THIS Work and no more', 
     expect(text).toContain('conversations with MAIA about the writing');
     onDeleteWork.mockResolvedValue(undefined);
     await click(DELETE_WORK_COPY.confirm);
-    // The member was told the Work stays, so the server is told too: a vanished writing must not cost them the Work.
-    expect(onDeleteWork).toHaveBeenCalledWith('fictional-work-a', 'fictional-shared-manuscript', { workStays: true });
+    expect(onDeleteWork).toHaveBeenCalledWith('fictional-work-a', 'fictional-shared-manuscript');
     // And the Work\'s own card is NOT replaced by a ghost: it stays, and the page says what happened.
     expect(host.querySelector('[data-removed]')).toBeNull();
-    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('The writing in “Fictional Work A” was deleted. The Work stays');
+    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('The writing in “Fictional Work A” was deleted. The Work stays if it still holds anything else.');
   });
   it('a Work with no writing: says only the Work goes, and sends no manuscript id', async () => {
     const empty = { ...workA, expressions: [] };
@@ -587,8 +574,16 @@ describe('each Delete confirmation says what is true of THIS Work and no more', 
     expect(host.querySelector('[data-deleting-confirmation]')!.textContent).toContain('This Work has no writing in it');
     onDeleteWork.mockResolvedValue(undefined);
     await click(DELETE_WORK_COPY.confirm);
-    expect(onDeleteWork).toHaveBeenCalledWith('fictional-work-a', null, { workStays: false });
+    expect(onDeleteWork).toHaveBeenCalledWith('fictional-work-a', null);
     expect(host.querySelector('[data-removed]')?.textContent).toBe('“Fictional Work A” was deleted.');
+  });
+  it('the same act asked from the WRITING (History, loose list) says the Work it is in stays, and does not claim the Work-level things go', () => {
+    const { body } = deleteConfirmCopy('writing-from-work', 'T');
+    expect(body).toContain('The Work it is in stays, with what else it holds');
+    expect(body).toContain('cannot be undone');
+    expect(body).toMatch(/private backups already taken/i);
+    expect(body).not.toContain('what you told MAIA about it');
+    expect(body).not.toContain('your corrections');
   });
   it('the three bodies never claim "nothing is kept" and each carries the same irreversibility sentence', () => {
     for (const kind of ['writing', 'writing-keeps-work', 'empty'] as const) {
@@ -737,14 +732,9 @@ describe('the removal confirmation, on its own', () => {
 describe('controller wiring (source-reading; comments stripped)', () => {
   const strip = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1');
   const controller = strip(readFileSync(join(__dirname, '..', 'P4R1HomeController.tsx'), 'utf8'));
-  it('Work Delete and Remove are the run functions, with the page\'s own fetcher and re-read, and the Work-stays intent is passed on', () => {
-    expect(controller).toMatch(/runDeleteWork\(\{ workId, manuscriptId, \.\.\.\(options\?\.workStays \? \{ workStays: true \} : \{\}\) \}, \(url, init\) => apiFetch\(url, init\), refresh\)/);
+  it('Work Delete and Remove are the run functions, with the page\'s own fetcher and re-read', () => {
+    expect(controller).toMatch(/runDeleteWork\(\{ workId, manuscriptId \}, \(url, init\) => apiFetch\(url, init\), refresh\)/);
     expect(controller).toMatch(/runRemoveWork\(workId, \(url, init\) => apiFetch\(url, init\), refresh\)/);
-  });
-  it('the controller itself never names the manuscript erase route and holds no outcome-mapping of its own', () => {
-    expect(controller).not.toMatch(/api\/sovereign\/manuscripts/);
-    expect(controller).not.toMatch(/outcome\.(refusal|removed|unknown)/);
-    expect(controller).not.toMatch(/DeletionSharedMaterial|DeletionUnconfirmed/);
   });
   it('the re-read the delete flow uses covers BOTH lists and reports whether it worked', () => {
     expect(controller).toMatch(/const refresh = useCallback\(\(\) => reReadAll\(\[reloadWorks, reloadManuscripts\]\), \[reloadWorks, reloadManuscripts\]\)/);

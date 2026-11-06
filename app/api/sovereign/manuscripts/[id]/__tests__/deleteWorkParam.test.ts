@@ -29,7 +29,7 @@ const del = async (query = '') => {
 beforeEach(() => {
   jest.clearAllMocks();
   member.mockResolvedValue(MEMBER);
-  erase.mockResolvedValue({ ok: true, artifactsQueued: 0, sweptAll: true, recoverySealed: true });
+  erase.mockResolvedValue({ ok: true, artifactsQueued: 0, sweptAll: true, recoverySealed: true, owed: { originalFile: false, image: false }, workRemoved: false });
   jest.spyOn(console, 'log').mockImplementation(() => undefined);
   jest.spyOn(console, 'error').mockImplementation(() => undefined);
 });
@@ -79,9 +79,20 @@ describe('every outcome, with the exact status and body the client reads', () =>
   it('removed and everything confirmed: 200', async () => {
     expect(await del()).toEqual({ status: 200, body: { removed: true } });
   });
-  it('removed but custody not confirmed: 500 with removed:true and the custody refusal, so the client re-reads and says so', async () => {
-    erase.mockResolvedValue({ ok: true, artifactsQueued: 1, sweptAll: false, recoverySealed: false });
-    expect(await del()).toEqual({ status: 500, body: { removed: true, refusal: 'custody_incomplete' } });
+  it('removed but custody not confirmed: 500 with removed:true, the custody refusal, and WHICH obligations are unconfirmed (so the sentence names only those)', async () => {
+    erase.mockResolvedValue({ ok: true, artifactsQueued: 1, sweptAll: false, recoverySealed: false, owed: { originalFile: true, image: false }, workRemoved: true });
+    expect(await del()).toEqual({
+      status: 500,
+      body: { removed: true, refusal: 'custody_incomplete', unconfirmed: { originalFile: true, image: false, deletionRecord: true }, workRemoved: true },
+    });
+  });
+  it('only the deletion record unconfirmed (the seal failed, the bytes are gone)', async () => {
+    erase.mockResolvedValue({ ok: true, artifactsQueued: 1, sweptAll: false, recoverySealed: false, owed: { originalFile: false, image: false }, workRemoved: false });
+    expect((await del()).body).toMatchObject({ unconfirmed: { originalFile: false, image: false, deletionRecord: true }, workRemoved: false });
+  });
+  it('only the Work\'s image unconfirmed', async () => {
+    erase.mockResolvedValue({ ok: true, artifactsQueued: 0, sweptAll: false, recoverySealed: true, owed: { originalFile: false, image: true }, workRemoved: true });
+    expect((await del()).body).toMatchObject({ unconfirmed: { originalFile: false, image: true, deletionRecord: false } });
   });
   it('an exception: a BARE 500 that does not claim the Work was removed', async () => {
     erase.mockRejectedValue(new Error('boom'));

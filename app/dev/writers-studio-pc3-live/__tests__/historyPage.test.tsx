@@ -2,7 +2,7 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { P4R1HistoryPage, type P4R1HistoryPageProps } from '../P4R1HistoryPage';
-import { DeletionUnconfirmed } from '@/lib/writersStudio/deleteWork';
+import { DeletionNotice, DeletionSharedMaterial, DeletionUnconfirmed } from '@/lib/writersStudio/deleteWork';
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 let root: Root, container: HTMLDivElement;
@@ -53,6 +53,48 @@ describe('full History view', () => {
     await act(async () => btns('Delete permanently')[0].click());
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('could not confirm');
   });
+  it('removed-but-unconfirmed names the writing, and a SECOND one does not replace the first', async () => {
+    const p = base();
+    p.acts = [A('1', 'm1'), A('4', 'm4')] as any;
+    p.manuscripts = [{ id: 'm1', title: 'Book' }, { id: 'm4', title: 'Second' }] as any;
+    p.works = [] as any;
+    p.onDeleteWriting = jest.fn().mockRejectedValue(new DeletionUnconfirmed('custody message'));
+    render(p);
+    act(() => btns('Delete')[0].click());
+    await act(async () => btns('Delete permanently')[0].click());
+    act(() => btns('Delete')[1].click());                      // the second writing's line
+    await act(async () => btns('Delete permanently')[0].click());
+    const alerts = Array.from(container.querySelectorAll('.p4r1-home-delete-notice')).map((n) => n.textContent ?? '');
+    expect(alerts).toHaveLength(2);
+    expect(alerts[0]).toContain('“Book”: custody message');
+    expect(alerts[1]).toContain('“Second”: custody message');
+  });
+  it('an outcome the page was re-read for (or a refusal after a re-read) is a status notice naming the writing, and closes the question', async () => {
+    for (const error of [new DeletionNotice('We could not confirm whether that work was deleted.'), new DeletionSharedMaterial('Nothing was deleted.')]) {
+      const p = base();
+      p.onDeleteWriting = jest.fn().mockRejectedValue(error);
+      render(p);
+      act(() => btns('Delete')[0].click());
+      await act(async () => btns('Delete permanently')[0].click());
+      expect(container.querySelector('[data-deleting-confirmation]')).toBeNull();
+      const note = container.querySelector('.p4r1-home-delete-notice');
+      expect(note?.getAttribute('role')).toBe('status');
+      expect(note?.textContent).toContain('“Book”: ');
+    }
+  });
+  it('a re-read that did not work is said', async () => {
+    const p = base();
+    p.onDeleteWriting = jest.fn().mockResolvedValue({ refreshed: false });
+    render(p);
+    act(() => btns('Delete')[0].click());
+    await act(async () => btns('Delete permanently')[0].click());
+    expect(container.querySelector('.p4r1-home-delete-notice')?.textContent).toContain('reload it');
+  });
+  it('a writing in a Work that holds several says why it cannot be deleted here, and where to go', () => {
+    render(base());      // m2 sits in a Work with m3
+    expect(container.textContent).toContain('This writing is in a Work that holds more than one writing');
+    expect(container.textContent).toContain('take it out of that Work first');
+  });
   it('a writing held by TWO Works has no Delete (it could only be refused) and says where the way forward is', () => {
     const p = base();
     render({
@@ -67,7 +109,7 @@ describe('full History view', () => {
     expect(btns('Delete')).toHaveLength(0);
     expect(btns('Open writing')).toHaveLength(1);
     expect(container.textContent).toContain('This writing is in 2 of your Works, so it cannot be deleted from here');
-    expect(container.textContent).toContain('On Home');
+    expect(container.textContent).toContain('On Home, press Delete on one of those Works');
   });
   it('the confirmation says what THIS deletion reaches: a Work that holds only this writing goes with it', () => {
     const p = base();

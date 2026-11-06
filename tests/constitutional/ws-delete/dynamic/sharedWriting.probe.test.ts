@@ -314,11 +314,11 @@ suite('WS-DELETE-01 R-SHARED physical probes (real PostgreSQL 16, real routes, f
   });
 
   describe('the two different 500s, with the exact signature each leaves', () => {
-    it('F-1 custody NOT confirmed (the recovery seal throws): rows ARE gone, status 500, body {removed:true, refusal:custody_incomplete}, and the "manuscript erased ... sweptAll: false" line is logged', async () => {
+    it('F-1 custody NOT confirmed (the recovery seal throws): rows ARE gone, status 500, body {removed:true, refusal:custody_incomplete, unconfirmed:{deletionRecord:true}, workRemoved}, and the "manuscript erased ... sweptAll: false" line is logged', async () => {
       sealMode('throws');
       const out = await delManuscript(MS_SOLO);
       expect(out.status).toBe(500);
-      expect(out.body).toEqual({ removed: true, refusal: 'custody_incomplete' });
+      expect(out.body).toEqual({ removed: true, refusal: 'custody_incomplete', unconfirmed: { originalFile: false, image: false, deletionRecord: true }, workRemoved: true });
       expect(await manuscriptExists(MS_SOLO)).toBe(false);
       expect(await workExists(W_SOLO)).toBe(false);
       expect(lines(logSpy).some((l) => l.includes('manuscript erased') && l.includes('sweptAll: false'))).toBe(true);

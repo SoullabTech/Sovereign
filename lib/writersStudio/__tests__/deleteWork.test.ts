@@ -155,9 +155,9 @@ describe('a refusal destroys nothing', () => {
 describe('a member cannot delete what is not theirs', () => {
   /* The route answers 404 rather than 403 for another member's id, so it never
      confirms that the id exists. Nothing of another member's is touched. Loose
-     writing sends exactly one request. A Work card that gets a 404 on the WRITING
-     follows through to withdraw its own declaration (the ruling's retry path), a
-     second member-scoped request that names only the Work id, never the manuscript. */
+     writing sends exactly one request, and so does a Work card: the server finishes
+     the ruling's retry ("finds the manuscript already gone (404) and continues") in
+     the same transaction, so no second request exists for the client to get wrong. */
   it('loose writing: sends one member-scoped request and treats the 404 as already gone', async () => {
     const { calls, fetcher } = recorder(notFound);
 
@@ -168,16 +168,12 @@ describe('a member cannot delete what is not theirs', () => {
     expect(out).toEqual({ ok: true });
   });
 
-  it('a Work card: a 404 on the writing follows through to the Work route, by the Work id only', async () => {
+  it('a Work card: a 404 on the writing is done, in ONE request that names the Work (the server finishes any dangling declaration)', async () => {
     const { calls, fetcher } = recorder(notFound);
 
     const out = await deleteWork({ workId: 'someone-elses', manuscriptId: 'not-mine' }, fetcher);
 
-    expect(calls.map((c) => c[0])).toEqual([
-      '/api/sovereign/manuscripts/not-mine?workId=someone-elses',
-      '/api/sovereign/living-works/someone-elses',
-    ]);
-    // Both routes are member-scoped in their predicates (probed against PostgreSQL 16: OR-4), so another member's ids reach nothing.
+    expect(calls.map((c) => c[0])).toEqual(['/api/sovereign/manuscripts/not-mine?workId=someone-elses']);
     expect(calls.every((c) => c[1].method === 'DELETE')).toBe(true);
     expect(out).toEqual({ ok: true });
   });
