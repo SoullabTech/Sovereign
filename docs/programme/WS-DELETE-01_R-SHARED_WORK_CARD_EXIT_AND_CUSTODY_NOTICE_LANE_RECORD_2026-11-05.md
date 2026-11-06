@@ -361,7 +361,7 @@ Residual risk        the open findings in 6.3; the questions in 6.4
 | Screen: Delete on a Work whose writing a second Work holds | First dialog "Delete “…”?" with the list of what goes with a Work → **Delete permanently** → the dialog became **"Remove “…” and keep the writing?"** (copy of `removeSharedWorkCopy(1)`: "This writing is also in another of your Works…") with **Remove this Work** / **Don’t remove** |
 | Screen: Remove this Work | Notice "“DELETE TEST A” was removed. The writing itself was not deleted." The Work card went; the other Work still listed its 2 manuscripts |
 | Database after that | writing 1 · removed Work 0 · the other Work still declares the writing 1 |
-| Screen: Delete on a one-writing Work (C) | The card went and no custody notice appeared (screenshot). **A database confirmation of this row had not been returned when this record was written** |
+| Screen and database: Delete on a one-writing Work (C) | The card went and no custody notice appeared (screenshot). Afterwards the founder's query read writing 0 and Work 0, and the server log held no `DELETE error` and no `R20 recovery` line. (This row was completed after the record was first pushed.) |
 
 **6.6.2 Environment findings (none is a defect of this branch)**
 
