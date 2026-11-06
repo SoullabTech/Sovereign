@@ -671,9 +671,12 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   const whyRevisionEdit = (edit: RevisionEdit) => {
     props.onOpenWorkspace();
-    props.onSendEditorial(
-      `Why did you change ${edit.from ? `"${edit.from.trim()}" to "${edit.to.trim()}"` : `by adding "${edit.to.trim()}"`}? Show me the evidence in my sentence and make the strongest case for keeping mine. Do not propose new wording in this answer.`,
-    );
+    // F1: only the writer's words are stored; how MAIA answers is the server-owned
+    // change-why act, the same one Craftsman's Table's "Why?" sends.
+    props.onSendEditorial(passageActQuestion(
+      'change-why',
+      edit.from ? `the change from "${edit.from.trim()}" to "${edit.to.trim()}"` : `adding "${edit.to.trim()}"`,
+    ), { proposalPolicy: 'reply_only', passageAct: 'change-why' });
   };
 
   const teachRevisionEdit = (edit: RevisionEdit) => {
