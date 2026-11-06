@@ -109,3 +109,10 @@
 .inlineArrange{padding:0;border:0;background:none;color:#e8be78;font:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .inlineArrange:disabled{opacity:.5;cursor:default}
 @media(max-width:700px){.directoryList{grid-template-columns:1fr}}
+/* Phones and iPads (founder walk 2026-11-06): the corner Arrange my House sat faded on the bright
+   backdrop. On the House home the full button beside Here · Now replaces it; elsewhere it gets a
+   legible pill. */
+@media(max-width:1200px){
+  .arrange{padding:6px 12px;border:1px solid rgba(232,190,120,.45);border-radius:8px;background:rgba(13,10,8,.78);color:#f1e3c8;font-size:13px}
+  .arrangeWide{display:none}
+}
