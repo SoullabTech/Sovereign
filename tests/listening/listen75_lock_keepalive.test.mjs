@@ -27,3 +27,15 @@ test('the element is private and carries no state handlers', () => {
   const block = src.slice(src.indexOf('function silentKeepAlive'), src.indexOf('const recordedCache'));
   assert.ok(!/onplay|onpause|onended|addEventListener/i.test(block));
 });
+
+test('a start superseded while el.play() is pending never claims focus or reports playing', () => {
+  const afterPlay = src.indexOf('await el.play()', play);
+  const claim = src.indexOf('claimFocus();', afterPlay);
+  assert.ok(afterPlay > 0 && claim > afterPlay);
+  const between = src.slice(afterPlay, claim);
+  assert.match(between, /generation !== epoch\.current/);
+  assert.match(between, /kind\.current !== 'sketch'/);
+  assert.match(between, /isMaiaSpeechActive\(\)/);
+  assert.match(between, /el\.pause\(\)/);
+  assert.match(between, /releaseOutput\(\)/);
+});

@@ -67,7 +67,7 @@ test('Night Ground is a distinct manifest-bound guided Dream Field experience', 
   assert.equal(manifest.permissions.looping, false);
   assert.match(model, /NIGHT_GROUND_EXPERIENCE_MANIFEST\.experienceId/);
   assert.match(field, /work\.manifest \? 'Enter experience' : 'View study'/);
-  assert.match(field, /selected\.qualityStatement/);
+  assert.match(field, /selected\.memberNote/);
 });
 
 test('new field reuses provider and creates no second audio engine', () => {

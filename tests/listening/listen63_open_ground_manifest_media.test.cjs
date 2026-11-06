@@ -98,7 +98,7 @@ test('Sound Studio uses the manifest and exact-media path', () => {
 test('exact media reuses one persistent HTML audio element and existing output lease', () => {
   const provider = read('components/listening/PersistentListeningProvider.tsx');
   assert.equal((provider.match(/<audio ref=\{media\}/g) || []).length, 1);
-  assert.equal((provider.match(/new Audio\(/g) || []).length, 0);
+  assert.equal((provider.match(/new Audio\(/g) || []).length, 1); // the private lock-screen keepalive; contract in listen78
   assert.match(provider, /acquireAudioOutput\('listening-music'\)/);
   assert.match(provider, /const playExperienceMedia/);
   assert.match(provider, /kind\.current = 'review-media'/);

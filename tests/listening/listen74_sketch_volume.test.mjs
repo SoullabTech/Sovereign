@@ -16,5 +16,7 @@ test('LISTEN-74 on a phone the open panel keeps its Pause / Stop / Less row pinn
   assert.match(css, /\.dock\[data-dock-expanded="true"\] \.controls\{position:sticky;top:0/);
 });
 test('LISTEN-74 the open panel is capped so its top row cannot end up under the status bar', () => {
-  assert.match(css, /\.dock\[data-dock-expanded="true"\]\{max-height:calc\(100dvh - 56px - env\(safe-area-inset-bottom\) - env\(safe-area-inset-top\) - 76px\)\}/);
+  const m = css.match(/\.dock\[data-dock-expanded="true"\]\{max-height:calc\(100dvh - 56px - env\(safe-area-inset-bottom\) - env\(safe-area-inset-top\) - (\d+)px\)\}/);
+  assert.ok(m, 'expanded cap missing');
+  assert.ok(Number(m[1]) >= 76, 'cap must reserve at least the status-bar clearance'); // 108 since the floating controls need room (listen78)
 });

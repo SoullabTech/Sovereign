@@ -13,6 +13,7 @@ import type { SoundscapeHandle } from '@/lib/listening/soundscapeEngine';
 import type { FocusSoundId } from '@/lib/listening/focusSoundChoices';
 import type { FocusTimeDisplay } from '@/lib/listening/focusTimeDisplay';
 import PersistentListeningDock from './PersistentListeningDock';
+import { usePlatformAudioSession } from './usePlatformAudioSession';
 // Compatibility contract: PersistentListeningDock renders data-focus-field-dock="true"
 // from this one member-bound provider; extraction did not create a second owner.
 import { validateLocalAudio } from '@/lib/listening/localAudio';
@@ -828,6 +829,15 @@ export function PersistentListeningProvider({
           // The element would not carry it: stay on the direct output rather than go silent.
           try { active.out.disconnect(); active.out.connect(active.context.destination); } catch { /* closed */ }
         }
+        // Stop, Pause, MAIA speaking or a newer start can land while `el.play()` is pending; the same check as
+        // before the wait, so a superseded attempt never claims focus or reports "playing".
+        if (generation !== epoch.current || kind.current !== 'sketch' || isMaiaSpeechActive()) {
+          try { el.pause(); } catch { /* element gone */ }
+          void active.context.suspend().catch(() => undefined);
+          releaseOutput();
+          if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
+          return false;
+        }
       }
       claimFocus();
       const activeExperience = experience.current;
@@ -1264,6 +1274,12 @@ export function PersistentListeningProvider({
       );
     }
   };
+  const [companionMode, setCompanionMode] = useState(false);
+  usePlatformAudioSession(snapshot, companionMode, {
+    onPause: pause,
+    onResume: resumeMusic,
+    onStop: stopAll,
+  });
   return <Context.Provider value={transport}>
     {children}
     <PersistentListeningDock
@@ -1285,6 +1301,7 @@ export function PersistentListeningProvider({
       onStopMusic={stopAll}
       onVolume={setVolume}
       onLooping={setLooping}
+      onCompanionMode={setCompanionMode}
       // The page cannot set the level of a media file on some phones, but it always sets the level of a sound it
       // generates itself (the soundscape's master gain), so that control is offered whenever such a sound is playing.
       volumeAdjustable={volumeAdjustable || snapshot.kind === 'sketch'}

@@ -19,6 +19,7 @@ import type { StudioView } from './SoundStudioNow';
 import FocusFieldDesk from '@/components/listening/FocusFieldDesk';
 import type { MemberCollection, TrackReference } from '@/lib/listening/portableCollections';
 import styles from './listen.module.css';
+import './listenGlobal.css';
 
 type Mood = 'focus' | 'create' | 'drift' | 'rest';
 const journeys: Record<Mood, { label: string; title: string; subtitle: string; description: string; gradient: string; frequencies: number[] }> = {
@@ -105,6 +106,27 @@ export default function ListenRoom() {
     document.body.setAttribute('data-studio-tabbar', '1');
     return () => document.body.removeAttribute('data-studio-tabbar');
   }, []);
+  // A view change that removes the focused control (e.g. "Browse all fields") would drop keyboard focus to the
+  // page body; bring it to the content region instead. A focused tab-bar button persists, so it keeps focus.
+  const firstView = useRef(true);
+  useEffect(() => {
+    if (firstView.current) { firstView.current = false; return; }
+    const region = document.getElementById('sound-studio-content');
+    const active = document.activeElement;
+    if (region && (!active || active === document.body || !document.body.contains(active))) region.focus({ preventScroll: true });
+  }, [view]);
+  // While the shared player is showing, the global MAIA and bug-report controls sit above it; this tells the
+  // stylesheet how tall it currently is (0 when it is hidden).
+  const dockPlayback = persistent?.snapshot.playback;
+  useEffect(() => {
+    const dock = document.querySelector<HTMLElement>('[data-listen10-persistent-dock="true"]');
+    const set = () => document.body.style.setProperty('--listen-dock-h', dock && dock.getClientRects().length > 0 ? `${dock.offsetHeight}px` : '0px');
+    set();
+    if (!dock || typeof ResizeObserver === 'undefined') return () => document.body.style.removeProperty('--listen-dock-h');
+    const observer = new ResizeObserver(set);
+    observer.observe(dock);
+    return () => { observer.disconnect(); document.body.style.removeProperty('--listen-dock-h'); };
+  }, [dockPlayback]);
   const memberAudioRef = useRef<HTMLAudioElement>(null);
   const player = journeys[mood];
   const isPlaying = persistent
@@ -220,6 +242,8 @@ export default function ListenRoom() {
   const activeSection: StudioView = view === 'focus' ? 'now' : view;
   const goHash = (href: string) => go(href === '#focus-field' ? 'focus' : 'fields');
   return <main className={styles.shell} data-studio-view={view}>
+    <a href="#sound-studio-content" className={styles.skipLink}>Skip to content</a>
+    {view!=='lab' && <h1 className={styles.srOnly}>Soullab Sound Studio</h1>}
     <aside className={styles.rail} aria-label="Listening Room navigation">
       <div className={styles.brand}><span className={styles.sunmark} aria-hidden="true">◒</span><div><span className={styles.wordmark}>SOULLAB</span><span className={styles.descriptor}>SOUND STUDIO</span></div><Link href="/home" className={styles.mobileHomeLink} aria-label="Return to Soullab Home">Home</Link></div>
       <div className={styles.navTitle}>Sound Studio</div>
@@ -230,7 +254,7 @@ export default function ListenRoom() {
         : <Link key={item.href} href={item.href}>{item.title}<span aria-hidden="true">↗</span></Link>)}</nav>
       <div className={styles.railFoot}>For the life you live.<br/>For the world we make.</div>
     </aside>
-    <div className={styles.main}>
+    <div className={styles.main} id="sound-studio-content" tabIndex={-1}>
       <div className={styles.topline}><span>SOULLAB / SOUND STUDIO</span><span className={styles.review}>REVIEW BUILD · NOT PUBLIC</span></div>
       {view==='now' && <SoundStudioNow onNavigate={go} />}
       {view==='focus' && <div className={styles.body}><button type="button" className={styles.backLink} onClick={()=>go('now')}>← Now</button><FocusAdhdSupport /><FocusSoundPicker /><FocusFieldDesk /></div>}
@@ -305,6 +329,6 @@ export default function ListenRoom() {
       </>}
       {!persistent && standalone && <div className={styles.bottomPlayer} role="region" aria-label="Listening controls"><div><span className={styles.playerTitle}>{player.title}</span><span className={styles.playerSub}>Original sound sketch · browser synthesis</span></div><button className={styles.roundControl} type="button" onClick={()=>void toggle()} aria-label={isPlaying?'Pause original sound sketch':'Play original sound sketch'}>{isPlaying?'Ⅱ':'▶'}</button><label htmlFor="listen-volume" className={styles.volumeLabel}>Volume <input id="listen-volume" type="range" min="0" max="100" value={volume} onChange={e=>changeVolume(Number(e.target.value))}/></label><span className={styles.status} role="status" aria-live="polite">{shownStatus}</span></div>}
     </div>
-    <nav className={styles.tabBar} aria-label="Sound Studio sections">{sections.map(item=><button type="button" key={item.view} className={activeSection===item.view?styles.tabActive:styles.tab} aria-current={activeSection===item.view?'page':undefined} data-studio-tab={item.view} onClick={()=>go(item.view)}><span aria-hidden="true">{item.glyph}</span>{item.label}</button>)}</nav>
+    <nav className={styles.tabBar} data-studio-tab-bar="true" aria-label="Sound Studio sections">{sections.map(item=><button type="button" key={item.view} className={activeSection===item.view?styles.tabActive:styles.tab} aria-current={activeSection===item.view?'page':undefined} data-studio-tab={item.view} onClick={()=>go(item.view)}><span aria-hidden="true">{item.glyph}</span>{item.label}</button>)}</nav>
   </main>;
 }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { FocusSession } from '@/lib/listening/focusFieldSession';
 import { formatExperienceTime, soundProgress } from '@/lib/listening/soundStudioExperience';
+import { COMPANION_MIXING_AVAILABLE } from '@/lib/listening/platformAudioPolicy';
 import type { ListeningSnapshot } from './PersistentListeningProvider';
 import styles from './persistentListeningDock.module.css';
 
@@ -20,6 +21,7 @@ type Props = {
   onStopMusic: () => void;
   onVolume: (volume: number) => void;
   onLooping: (enabled: boolean) => void;
+  onCompanionMode?: (enabled: boolean) => void;
   volumeAdjustable?: boolean;
   focusSoundLabel?: string | null;
   onPlayFocusSound?: () => void;
@@ -40,7 +42,7 @@ const FADE_STEPS = 24;
 
 export default function PersistentListeningDock({
   snapshot, volume, looping, loopAvailable, displayed, focusSession, focusRemainingLabel,
-  onPauseMusic, onResumeMusic, onStopMusic, onVolume, onLooping, volumeAdjustable = true, focusSoundLabel = null, onPlayFocusSound,
+  onPauseMusic, onResumeMusic, onStopMusic, onVolume, onLooping, onCompanionMode, volumeAdjustable = true, focusSoundLabel = null, onPlayFocusSound,
   onPauseFocus, onResumeFocus, onStopFocus,
 }: Props) {
   const [mixOpen, setMixOpen] = useState(false);
@@ -143,6 +145,7 @@ export default function PersistentListeningDock({
   const toggleCompanionMode = () => {
     const next = !companionMode;
     setCompanionMode(next);
+    onCompanionMode?.(next);
     setMixOpen(true);
     if (next && (volume === 0 || volume > 28)) setFieldVolume(22);
   };
@@ -267,11 +270,13 @@ export default function PersistentListeningDock({
               <strong>Soullab field</strong>
               <span>Other music stays in its original app. These controls change only Soullab.</span>
             </div>
-            <button type="button" className={styles.companionSwitch}
-              data-listen-companion-enable="true" aria-pressed={companionMode}
-              onClick={toggleCompanionMode}>
-              {companionMode ? 'Companion mode on' : 'Play alongside another app'}
-            </button>
+            {COMPANION_MIXING_AVAILABLE && (
+              <button type="button" className={styles.companionSwitch}
+                data-listen-companion-enable="true" aria-pressed={companionMode}
+                onClick={toggleCompanionMode}>
+                {companionMode ? 'Companion mode on' : 'Play alongside another app'}
+              </button>
+            )}
           </div>
 
           {volumeAdjustable ? (

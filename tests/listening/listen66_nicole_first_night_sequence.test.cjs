@@ -62,5 +62,5 @@ test('persistent player advances internally but preserves interruption and termi
   assert.match(provider,/MAIA is speaking; resume only when you choose/);
   assert.match(provider,/reviewSequence\.current = \[\]/);
   assert.equal((provider.match(/<audio ref=\{media\}/g)||[]).length,1);
-  assert.equal((provider.match(/new Audio\(/g)||[]).length,0);
+  assert.equal((provider.match(/new Audio\(/g) || []).length, 1); // the private lock-screen keepalive; contract in listen78
 });
