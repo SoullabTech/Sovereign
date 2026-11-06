@@ -80,6 +80,9 @@ export default function P4R1ImportManuscript({
   const [savedManuscriptId, setSavedManuscriptId] = useState<string | null>(null);
   const [sections, setSections] = useState<ImportSection[]>([]);
   const [splitOpen, setSplitOpen] = useState<number | null>(null);
+  // The member already holds an import of this exact file. A question put to them, never a decision made for them.
+  const [alreadyHeld, setAlreadyHeld] = useState<{ manuscriptId: string; title: string | null } | null>(null);
+  const heldFileRef = useRef<File | null>(null);
 
   const textStats = useMemo(() => {
     const words = text.trim() ? text.trim().split(/\s+/).length : 0;
@@ -87,7 +90,7 @@ export default function P4R1ImportManuscript({
   }, [text]);
   const fileIntakeAvailable = localReview || sourceIntakeReleased;
 
-  const readFile = async (file: File) => {
+  const readFile = async (file: File, options: { importAgain?: boolean } = {}) => {
     if (!fileIntakeAvailable) {
       setError('Original-file import is not released on this Writer image. Nothing was sent.');
       return;
@@ -96,6 +99,8 @@ export default function P4R1ImportManuscript({
     setWarnings([]);
     setParagraphsReconstructed(false);
     setSourceArrivalId(null);
+    setAlreadyHeld(null);
+    heldFileRef.current = null;
     setFilename(file.name);
     if (file.size === 0) {
       setError('That file is empty.');
@@ -144,6 +149,8 @@ export default function P4R1ImportManuscript({
     try {
       const form = new FormData();
       form.append('file', file);
+      // An explicit member act: "Import again anyway". Never sent by default.
+      if (options.importAgain && !localReview) form.append('importAgain', 'true');
       const endpoint = localReview
         ? '/api/writers-studio/local-review/import'
         : '/api/sovereign/manuscripts/ingest';
@@ -162,6 +169,17 @@ export default function P4R1ImportManuscript({
           setError(errorFrom(body, 'We could not read that file.'));
         }
         return;
+      }
+      if (body?.outcome === 'already_imported') {
+        const existing = (body.existing ?? null) as { manuscriptId?: unknown; title?: unknown } | null;
+        if (existing && typeof existing.manuscriptId === 'string') {
+          // Nothing was stored and no text came back. Keep the file in memory only so "Import again anyway" can resend it.
+          heldFileRef.current = file;
+          setAlreadyHeld({ manuscriptId: existing.manuscriptId, title: typeof existing.title === 'string' ? existing.title : null });
+          setText('');
+          setFormat(null);
+          return;
+        }
       }
       const extracted = typeof body?.text === 'string' ? body.text : '';
       setText(extracted);
@@ -432,6 +450,26 @@ export default function P4R1ImportManuscript({
                 </button>
               </div>
 
+              {alreadyHeld ? (
+                <div className="p4r1-import-notices" role="alert" data-already-imported>
+                  <p>
+                    <b>You already brought this in.</b>
+                    {alreadyHeld.title ? ` It is in your library as “${alreadyHeld.title}”.` : ' It is in your library.'}
+                    {' '}Nothing new was saved.
+                  </p>
+                  <p>
+                    <button type="button" disabled={busy !== null}
+                      onClick={() => { void Promise.resolve(onComplete(alreadyHeld.manuscriptId)).catch(() => setError('That writing could not be opened. Try again from your library.')); }}>
+                      Open
+                    </button>
+                    {' '}
+                    <button type="button" disabled={busy !== null || !heldFileRef.current}
+                      onClick={() => { const f = heldFileRef.current; if (f) void readFile(f, { importAgain: true }); }}>
+                      Import again anyway
+                    </button>
+                  </p>
+                </div>
+              ) : null}
               {filename ? (
                 <div className="p4r1-import-file" role="status">
                   <span>{filename}</span>
