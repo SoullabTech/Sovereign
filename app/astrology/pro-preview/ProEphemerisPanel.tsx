@@ -5,6 +5,7 @@
  * open chart. Only a date range is sent; natal positions stay in the page.
  */
 import { useMemo, useState } from 'react';
+import { usePanelState } from './panelMemory';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { WheelBody } from '@/lib/astrology/proChartGeometry';
 import { SERIES_BODIES, transitHits, type EphemerisSeries, type SeriesBody } from '@/lib/astrology/proEphemerisSeries';
@@ -27,11 +28,11 @@ function todayInput(): string {
 }
 
 export default function ProEphemerisPanel({ natalBodies }: { natalBodies: readonly WheelBody[] }) {
-  const [start, setStart] = useState(todayInput);
-  const [months, setMonths] = useState(12);
-  const [modulus, setModulus] = useState<360 | 90 | 45 | 30>(360);
+  const [start, setStart] = usePanelState('ephemeris.start', todayInput);
+  const [months, setMonths] = usePanelState('ephemeris.months', 12);
+  const [modulus, setModulus] = usePanelState<360 | 90 | 45 | 30>('ephemeris.modulus', 360);
   const [hidden, setHidden] = useState<Set<SeriesBody>>(new Set(['Moon']));
-  const [series, setSeries] = useState<EphemerisSeries | null>(null);
+  const [series, setSeries] = usePanelState<EphemerisSeries | null>('ephemeris.series', null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
 
   async function load() {

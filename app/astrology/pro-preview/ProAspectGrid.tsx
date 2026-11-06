@@ -5,7 +5,8 @@
  * Shows only aspects the calculator reported and declinations the server
  * calculated; nothing is inferred or interpreted here.
  */
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { usePanelState } from './panelMemory';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { chartBodies, ASPECT_COLOR, ANGLE_DEFINITIONS } from '@/lib/astrology/proChartGeometry';
 import { declinationPairs, type Declination } from '@/lib/astrology/proDeclinations';
@@ -32,7 +33,7 @@ export default function ProAspectGrid({
   declinations: readonly Declination[] | null;
   onSelectBody: (name: string) => void;
 }) {
-  const [tab, setTab] = useState<'grid' | 'declinations'>('grid');
+  const [tab, setTab] = usePanelState<'grid' | 'declinations'>('aspectgrid.tab', 'grid');
   // Bodies, then the Ascendant and Midheaven as the last two rows.
   const bodies = useMemo(() => [
     ...chartBodies(chart).map((body) => ({ name: body.name as string, glyph: body.glyph, angle: false })),
