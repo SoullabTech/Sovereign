@@ -9,7 +9,8 @@
  * issues (`password_reset_tokens`, consumed by PUT /api/members/reset-password),
  * and returns the link for the owner to hand over out of band (text, in person).
  *
- * AUTHORITY: owners only (founder, cto). Never a lower admin role.
+ * AUTHORITY: owners only (founder, cto), as a NAMED signed-in session. Never a lower
+ * admin role, and never the shared admin password (it identifies no one).
  * THE MEMBER CHOOSES THEIR OWN PASSWORD. This route never sets or sees one, which
  * is why it replaces the secret-gated /api/admin/reset-member-password stopgap.
  * The token is a bearer credential until used: it is returned once, sent
@@ -34,6 +35,18 @@ const noStore = { 'Cache-Control': 'no-store' };
 export async function POST(req: NextRequest) {
   const auth = await checkAdminAuth(req, OWNER_ROLES);
   if (!auth.authed) return adminUnauthorized();
+
+  // A reset link plus the member choosing a password is a way into that member's
+  // account, so the issuer must be a NAMED person. The shared admin password is
+  // accepted as founder by checkAdminAuth and identifies nobody: it would leave
+  // the audit row with no actor and make a leaked password a master key to every
+  // member account. Refused here, however privileged it is elsewhere.
+  if (auth.via !== 'member' || !auth.memberId) {
+    return NextResponse.json(
+      { error: 'A signed-in founder or cto session is required; the shared admin password is not accepted for this action' },
+      { status: 403, headers: noStore },
+    );
+  }
 
   let body: { memberId?: unknown; email?: unknown; username?: unknown };
   try {
@@ -88,7 +101,7 @@ export async function POST(req: NextRequest) {
       {
         action: 'admin_reset_link_issued',
         memberId: member.id,
-        actorId: auth.memberId ?? null,
+        actorId: auth.memberId,
         result: 'success',
         metadata: { via: auth.via, ttlHours: RESET_LINK_TTL_HOURS },
       },
