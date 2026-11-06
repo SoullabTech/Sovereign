@@ -38,15 +38,16 @@ is not recorded is the failure this record exists to prevent.
 
 | # | Crossing | What it changes | What it does NOT change |
 |---|---|---|---|
-| X1 | `eraseManuscript(…, {viaWorkId})`: a new refusal `work_no_longer_holds_it`, checked inside the transaction before anything is deleted, and `not_found` (done) when the writing is already gone | Strictly narrows: a request that names a Work which no longer holds the writing is refused instead of acting on whichever Work is left | The shared-writing refusal (`claims.rows.length > 1` → 409) is byte-for-byte unchanged; requests that name no Work (loose writing, History) behave as before |
+| X1 | `eraseManuscript(…, {viaWorkId})`: a new refusal `work_no_longer_holds_it`, checked inside the transaction before anything is deleted | Strictly narrows: a request that names a Work which no longer holds the writing is refused instead of acting on whichever Work is left | The shared-writing refusal (`claims.rows.length > 1` → 409) is unchanged **for a writing that exists**; requests that name no Work (loose writing, History) behave as before for a writing that exists. (For a writing that is already gone the answer is now `not_found`, or the X8 cleanup, before any count of holders: a shared refusal about a writing that does not exist would be untrue.) |
 | X2 | `DELETE /api/sovereign/manuscripts/[id]` reads `?workId=`; a malformed value is 400; the 409 body carries `refusal` (and `works` only for the shared refusal) | An API contract addition owned by the WS-DELETE-01 ruling | Authentication, member scoping, status codes of every existing outcome |
-| X3 | Lock order in `eraseManuscript`: the Work rows are locked before the expression rows | Removes a measured ~1-in-80 PostgreSQL deadlock between Delete and Remove (a 500 for an act that did not happen) | What is read, what is deleted, the advisory lock, the order of the deletes |
+| X3 | Lock order: in `eraseManuscript` the Work rows are locked before the expression rows, and in the Work route (Remove) the Work row is locked before the Work's image row and before the delete | Removes two measured PostgreSQL deadlocks between Delete and Remove (a 500 for an act that did not happen): ~1 in 80 on the expression rows, and, for a Work with an image, a cycle the first version of the image-row lock introduced and the fifth review found (probes DL-1, DL-2, DL-3) | What is read, what is deleted, the advisory lock, the order of the deletes |
 | X4 | Custody (`sweptAll`) is decided from THIS deletion's own queue rows, and the sweep works through them first | Another member's stuck queue row (or a backlog over 100) no longer turns this member's Delete into a custody alarm | What is queued, what is destroyed, the R20 seal condition |
 | X5 | `DELETE /api/sovereign/living-works/[id]`: if the removed Work's own image bytes are still owed, the answer is 500 `{removed:true, refusal:'image_bytes_owed'}` instead of plain success | The Work route stops reporting "finished" about bytes it has only queued | What the route deletes; the queue; the sweep |
 | X6 | Delete's own confirmation copy is now per state (loose writing, writing + Work, writing in a Work that stays, a Work with no writing), and the custody sentences name each unconfirmed thing with its own verb | The confirmation says what the erase actually reaches | What Delete erases |
+| X7 | The manuscripts route's answers now say whether the Work went (`workRemoved`, on the 200 and on the 500), and the 500 `custody_incomplete` body says WHICH of this deletion's own obligations is unconfirmed (`unconfirmed:{originalFile, image, deletionRecord}`); the same for the Work route's `image_bytes_owed` | The sentence the member reads names exactly what is owed and nothing else; before, it always named two things whatever had failed | Whether `sweptAll` is true: it is still true only when nothing of this deletion's own is owed |
+| X8 | When the writing is ALREADY GONE and the Work the card named still declares it (a declaration that outlived its writing: the detached state the ruling forbids by name), the SERVER ends that declaration inside the same transaction (and the Work with it only if it then declares nothing; a Work that holds anything else stays). It never touches a Work the request did not name, a Work that does not declare the gone writing, or another member's Work | Replaces a client-side second request (which could remove a Work that had changed since the member confirmed) with one server act that cannot | The erase of a LIVE writing; the shared-writing refusal for a writing that exists; a request that names no Work still answers 404 for a gone writing. **It writes no deletion manifest and no tombstone for a Work it ends** (the same as Remove, and unlike a Work that goes with a LIVE writing, which is tombstoned): see 6.3 and 6.4 Q2 |
 
-**Returned upward, not decided here:** X1 and X2 change the API contract of the ratified erase; X6 changes ratified copy. The lane's position is that all of them are narrowing or truth-restoring and
-should be ratified; the founder's ratification is requested in section 6.4.
+**Returned upward, not decided here:** X1, X2 and X7 change the API contract of the ratified erase; X6 changes ratified copy; **X8 adds a destructive path** (a request that used to answer 404 now ends a declaration and, if the Work then declares nothing, the Work itself, without a tombstone). The lane's position is that X1–X7 are narrowing or truth-restoring and that X8 is the same act the member confirmed, finished where it cannot go wrong; all eight are put to the founder in section 6.4.
 
 ## 1. Charter (manual §27 template)
 
@@ -77,8 +78,8 @@ For two Works that hold one writing, and for a delete the server committed but c
 - The founder's console and screenshot: DELETE `eff1f605…` 409 twice; DELETE `21d05bdf…` 500 followed at once by GET living-works and GET manuscripts.
 
 ### Required falsifier (weaker candidates that must fail)
-Every decision in the changed code has a defeat candidate: the plausible, wrong, smaller version of it. They live in `tests/constitutional/ws-delete/mutants/run.mjs` (run it with `--list`),
-not in this prose, so the claim "all killed" is reproducible. The named ones from the charter: reword the copy only; offer removal through the manuscript erase route; classify every failure as
+Each decision the independent reviews called out has at least one defeat candidate: the plausible, wrong, smaller version of it. They live in `tests/constitutional/ws-delete/mutants/run.mjs` (run it with `--list`),
+not in this prose, so the claim "all killed" is reproducible. **This is not a claim that every decision in the changed code has one**: each review round has found decisions that had none, and each such gap was closed by adding the candidate and the test (the history is in section 6). Candidates marked `(textual guard)` are caught only by a test that reads source text; they guard a structure, they do not prove behaviour. The named ones from the charter: reword the copy only; offer removal through the manuscript erase route; classify every failure as
 shared; keep the message inside the card; render the notice twice; leave the dialog open; claim "nothing is deleted" in the removal copy.
 
 ### Exit
@@ -97,31 +98,31 @@ sentence in the copy, or any path by which the writing is erased or orphaned.
 
 | Area | Files |
 |---|---|
-| Server | `lib/manuscript/source/eraseManuscript.ts` (X1, X3, X4), `app/api/sovereign/manuscripts/[id]/route.ts` (X2), `app/api/sovereign/living-works/[id]/route.ts` (X5, comments) |
-| Client command | `lib/writersStudio/deleteWork.ts` (`deleteWork`, `removeWork`, `runDeleteWork`, `runRemoveWork`, every member-facing sentence), `app/writers-studio/useLivingWorks.ts` and `useCurrentManuscript.ts` (a re-read now reports whether it worked) |
-| Home | `app/dev/writers-studio-pc3-live/P4R1HomeController.tsx`, `P4R1HomeView.tsx`, `useWorkDeleteDoor.tsx` (new: one door for the hero Work and every shelf card), `WorkRemoveConfirm.tsx` (new), `WritingDeleteConfirm.tsx` |
+| Server | `lib/manuscript/source/eraseManuscript.ts` (X1, X3, X4, X7, X8), `app/api/sovereign/manuscripts/[id]/route.ts` (X2, X7), `app/api/sovereign/living-works/[id]/route.ts` (X5, X7, comments) |
+| Client command | `lib/writersStudio/deleteWork.ts` (`deleteWork`, `removeWork`, `runDeleteWork`, `runRemoveWork`, `reReadAll`, every member-facing sentence; ONE request per act, a 404 is done), `app/writers-studio/useLivingWorks.ts` and `useCurrentManuscript.ts` (a re-read now reports whether it worked) |
+| Home | `app/dev/writers-studio-pc3-live/P4R1HomeController.tsx` (the re-read covers Works, writings and Home's own short History), `P4R1HomeView.tsx` (the page holds every Work's door state, keyed by Work id), `useNoticeStack.tsx` (new: the stack of notices, shared with History), `useWorkDeleteDoor.tsx` (new: one door for the hero Work and every shelf card), `WorkRemoveConfirm.tsx` (new), `WritingDeleteConfirm.tsx` |
 | History | `app/writers-studio/historyActions.ts`, `app/dev/writers-studio-pc3-live/P4R1HistoryPage.tsx` |
-| Tests (default `npx jest`) | `homeWorkDeleteSharedAndCustody.test.ts`, `homeWorkDeleteRound2.test.ts`, `homeDeleteWriting.test.ts` (renamed from `.tsx`, which jest never matched), `historyPage.test.tsx`, `historyActions.test.ts`, `deleteWork.test.ts`, `deleteWorkTruth.test.ts`, `removalCopyDrift.test.ts`, `deleteWorkParam.test.ts` (route contract), `eraseManuscriptGuard.test.ts` (refusal order and lock order) |
+| Tests (default `npx jest`) | `homeWorkDeleteSharedAndCustody.test.ts`, `homeWorkDeleteRound2.test.ts` (the real event order of a re-read that unmounts the card), `homeDeleteWriting.test.ts` (renamed from `.tsx`, which jest never matched), `historyPage.test.tsx`, `historyContainerAndNotices.test.ts` (the container that re-reads, and notices that outlive the History view), `historyActions.test.ts`, `deleteWork.test.ts`, `deleteWorkTruth.test.ts`, `removalCopyDrift.test.ts`, `listReloadReports.test.ts`, `deleteWorkParam.test.ts` (manuscripts route contract), `living-works/[id]/__tests__/deleteRoute.test.ts` (Work route contract), `eraseManuscriptGuard.test.ts` (refusal order, lock order, the gone-writing cleanup, custody arithmetic in both directions) |
 | Physical probes (need root + postgres binaries) | `tests/constitutional/ws-delete/dynamic/sharedWriting.probe.test.ts`, `clientAndRace.probe.test.ts`, run by `run-local-pg16.sh` |
-| Defeat candidates | `tests/constitutional/ws-delete/mutants/run.mjs` |
+| Defeat candidates | `tests/constitutional/ws-delete/mutants/run.mjs` (`--list`, `--check`, `--jest-only`, `--pg-only`, by id) |
 
 Commits (all local): `e6ce0aa94` initial fix · `038cabfbe` lane record opened · `dd99d8c1c` founder hold · `e7d39b3ca` PG16 probes · `8c284f9e4` first review fixes · `a6f1f6778` contract tests ·
-`5d218365d` second audit fixes · `f15a09c20` runner, probes, drift guard · `7041ac507` final independent review fixes.
+`5d218365d` second audit fixes · `f15a09c20` runner, probes, drift guard · `7041ac507` final independent review fixes · `f91723936` the three survivors of the first full run · `4ffc14da0` the fixes for the fourth review (and the six survivors of its full run) · `8b91799d4` the fixes for the fifth review.
 
 ## 4. Evidence packet
 
 ```
-subject          local branch above, HEAD 7041ac507 plus the closing record commit
+subject          local branch above, code HEAD 8b91799d4 plus the closing record commit
 scope            the member-facing Work-card Delete surface and the three server files in the amendment; no schema, no migration, no deploy
 instruments      jest (jsdom mounts of the real Home view, hermetic route and erase tests, runtime tests of the page-level act, a static drift guard over every migration);
                  a disposable loopback PostgreSQL 16 running the REAL route handlers with the client's own functions pointed at them, including interleavings held by a
                  second connection's lock (no sleeps) and a 400-pair deadlock sweep; the repository typecheck gate; a committed defeat-candidate runner
-results          {{TESTS}}
-                 PostgreSQL 16 probes: {{PROBES}}
-                 defeat candidates: {{MUTANTS}}
+results          jest: 3237 passed, 92 skipped (the PostgreSQL probes skip without their harness) across the surface above; 8 suites fail to LOAD on canonical and failed identically before this lane (listen/* x6, publish/kdpCoverGeometry, living-works/[id]/expressions)
+                 PostgreSQL 16 probes: 59 passed in 2 suites (loopback cluster, fictional rows, stub schema plus four real migrations)
+                 defeat candidates: 198 (175 jest, 23 PostgreSQL), 198 killed on the committed tree in one run; each kill is a parsed failing test (timeouts, hook errors and compile errors do not count); 6 are labelled (textual guard)
                  wide regression (app/writers-studio, app/dev, lib/writersStudio, lib/manuscript/source, the manuscripts and living-works routes): {{WIDE}}
-                 typecheck gate: {{TYPECHECK}}
-independent review   three rounds (section 6.1)
+                 typecheck gate: 214 errors against a baseline of 214, no regression (npm run typecheck)
+independent review   four rounds (section 6.1)
 post-state       local commits only. Not pushed. No PR.
 ```
 
@@ -136,11 +137,12 @@ own queued bytes are not destroyed OR the R20 recovery seal could not be written
 
 | Mode | Cause | Operator signature (container log) | Note |
 |---|---|---|---|
-| R1 | The R20 ledger is not configured. `sealR20DeletionLedger()` throws unless `R20_LEDGER_FILE`, `R20_HIGH_WATER_FILE` and `R20_LEDGER_KEY_FILE` are set to absolute paths (`lib/recovery/r20DeletionLedger.ts:264-266`), and, once set, unless the ledger and high-water files exist or `R20_LEDGER_ALLOW_INITIALIZE=true` | `[MAIA/press] R20 recovery seal still owed { code: R20_LEDGER_FILE_MISSING }` (or `…HIGH_WATER…`, `…KEY_FILE…`) | **The most likely.** The pending-deploy inventory (L3) already found the three names in no tracked compose or env template. In this mode EVERY delete ends in the alert |
-| R2 | This deletion's own original-file bytes could not be destroyed (permissions, read-only mount, a symlinked or hard-linked path the vault refuses) | `[MAIA/press] vault erasure still owed (errno=EACCES)` with `artifactsQueued: N`, no `R20 recovery seal still owed` line | Only for a writing that had an original file |
-| R3 | **Before this review only:** any OTHER row stuck in the shared erasure queue (another member's, or an old one) | `vault erasure still owed` with `artifactsQueued: 0` | Fixed by X4: this no longer raises the alert, though the log line remains for an operator |
+| R1 | The R20 ledger is not configured. `sealR20DeletionLedger()` throws unless `R20_LEDGER_FILE`, `R20_HIGH_WATER_FILE` and `R20_LEDGER_KEY_FILE` are set to absolute paths (`lib/recovery/r20DeletionLedger.ts:264-266`), and, once set, unless the key file EXISTS and holds 32 bytes (raw, 64 hex characters or base64; otherwise `R20_LEDGER_KEY_UNAVAILABLE` / `R20_LEDGER_KEY_INVALID`) and the ledger and high-water files exist or `R20_LEDGER_ALLOW_INITIALIZE=true` | `[MAIA/press] R20 recovery seal still owed { code: R20_LEDGER_FILE_MISSING }` (or `…HIGH_WATER…`, `…KEY_FILE_MISSING`, `…KEY_UNAVAILABLE`, `…KEY_INVALID`) | **The most likely.** The pending-deploy inventory (L3) already found the three names in no tracked compose or env template. In this mode EVERY delete ends in the alert; the body says `unconfirmed:{deletionRecord:true}` and the member is told only that |
+| R2 | This deletion's own original-file bytes could not be destroyed (permissions, read-only mount, a symlinked or hard-linked path the vault refuses) | `[MAIA/press] vault erasure still owed (errno=EACCES)` with `artifactsQueued: N`, no `R20 recovery seal still owed` line | Only for a writing that had an original file. The body says `unconfirmed:{originalFile:true}` (probe SB-1) |
+| R3 | **Before this review only:** any OTHER row stuck in the shared erasure queue (another member's, or an old one) | `vault erasure still owed` with `artifactsQueued: 0` | Fixed by X4: this no longer raises the alert, though the log line remains for an operator (probes FQ-1, SB-4, SB-5) |
+| R4 | Removing a Work (the Work route, or a Delete that takes its Work with it): the Work's own image bytes are owed | `[living-works] Work removed; its image bytes are still owed destruction`, or the manuscript route's `vault erasure still owed` | The body says `unconfirmed:{image:true}`; the member is told about the image, not the original file (probe WI-1) |
 
-A bare 500 `{error:'Failed to remove manuscript'}` is a different thing: the erase transaction threw and rolled back, **nothing was deleted** (probe F-2).
+A bare 500 `{error:'Failed to remove manuscript'}` is a different thing, and it is **not** proof that nothing was deleted: it is what an exception inside the erase transaction produces (rolled back, nothing deleted: probe F-2) and also what an exception AFTER the commit would produce (the sweep or the custody read failing). The client therefore treats it as "we could not confirm", re-reads Home, and never says "nothing was removed" about it.
 
 **Read-only checks for the founder** (names and counts only; never print values): `docker exec maia-sovereign env | grep -E '^R20_' | sed 's/=.*/=<set>/'` · `docker logs maia-sovereign --since 6h 2>&1 | grep -E "manuscript erased|DELETE error|Transaction rolled back|R20 recovery seal still owed|vault erasure still owed"` ·
 the browser Network tab response body of the failing DELETE (`removed:true` or not) · `docker exec maia-postgres psql -U soullab maia_consciousness -c "SELECT count(*), max(attempts) FROM vault_erasure_queue"`.
@@ -150,11 +152,11 @@ the browser Network tab response body of the failing DELETE (`removed:true` or n
 
 1. Get the branch: the lane has not pushed. Patch files and a git bundle are in the scratchpad (path in the closing report); or ask for the branch to be pushed (no PR).
 2. Run the app against a local database as usual. **Without R20 configured every delete will end in the custody alert (mode R1). That is the notice working, not a failure.** To see a clean success
-   locally, point the three variables at throwaway files and set `R20_LEDGER_ALLOW_INITIALIZE=true`.
+   locally, point the three variables at throwaway files, make the key file hold 32 bytes (`head -c 32 /dev/urandom > <key file>`; it must exist), and set `R20_LEDGER_ALLOW_INITIALIZE=true`.
 3. Click through, in this order: (a) two Works sharing one writing → Delete on one → the removal question → Remove → the writing and the other Work remain; (b) Delete on the other → the writing and
    the Work go; (c) a Work with several writings shows **Remove**, not Delete; (d) the Work you land on (the large one) has the same door; (e) a Work with one writing and a second part
    → Delete says the Work stays, and its card does not turn into "was deleted"; (f) delete your last Work → the welcome screen carries any notice; (g) History: a writing held by two Works shows no Delete
-   and says where to go; (h) with two browser tabs, remove a Work in one and press Delete on its stale card in the other → "That Work has changed…", and the other Work's writing survives.
+   and says where to go; (h) with two browser tabs, remove a Work in one and press Delete on its stale card in the other → "That Work has changed…", and the other Work's writing survives; (i) History: delete a writing so that custody is unconfirmed (R20 not configured), then press Back to Home → the alert is still there.
 4. The physical probes: `WS_DELETE_OUT=<dir> tests/constitutional/ws-delete/dynamic/run-local-pg16.sh` on a host with postgres binaries (root), or provision a disposable loopback database named
    `ws_delete_fictional` and follow the header of that script. The probes refuse any other database.
 
@@ -167,7 +169,9 @@ the browser Network tab response body of the failing DELETE (`removed:true` or n
 | 1 | candidate `e6ce0aa94` | four read-only lenses, a skeptic on every medium-or-higher finding (workflow `wf_d3c1a42a-60d`) | findings folded into `8c284f9e4` |
 | 2 | head `e7d39b3ca` | state-matrix, copy-truth, test-strength and record-truth lenses, three skeptics per finding, 39 agents (`wf_14e193a2-5c7`) | findings folded into `5d218365d` |
 | 3 | head `f15a09c20` | server, client, UI, copy, tests and governance lenses plus a completeness critic; **three skeptics per finding** (execute / trace / ruling); 160 agents (`wf_b1b8e77a-57e`) | 51 findings reported, **48 stood, 3 refuted**; all folded into `7041ac507` or recorded below |
-| 4 | the delta `f15a09c20..HEAD` | {{DELTA}} | {{DELTAR}} |
+| 4 | the delta `f15a09c20..f91723936` | six read-only lenses (server, client, UI, copy, tests, break-it), three skeptics per finding (execute / trace / ruling); 103 agents | 32 findings reported, **29 stood, 3 refuted**; all folded into `4ffc14da0` |
+| 5 | the delta `f91723936..4ffc14da0` | seven read-only lenses (server, client, door and page, History and loose writing, tests and instruments, record and copy truth, break-it), three skeptics per finding; 118 agents | 37 findings reported, **27 stood, 10 refuted**; all folded into `8b91799d4` (6.2c). One of them was a defect round 4's own fix had introduced (a lock-order cycle, reproduced on PostgreSQL 16) |
+| 6 | the delta `4ffc14da0..8b91799d4` | {{R6}} | {{R6RESULT}} |
 
 ### 6.2 Disposition of round 3 (each of the 48 that stood)
 
@@ -178,7 +182,7 @@ the browser Network tab response body of the failing DELETE (`removed:true` or n
 | CL-3, UI-4, GOV-3 a message dropped when the re-read removes the card (unknown outcome) | FIXED: a message the member has not seen is handed to the page when its card unmounts |
 | CL-4, C7 History / loose-writing confirmations omitted that the Work goes too | FIXED: both say what that deletion reaches, per state |
 | CL-5, F1 custody decided from the whole shared queue | FIXED (X4) with probes FQ-1/FQ-2 |
-| CL-6, CL-7, C9, GOV-2 unknown refusal codes; failed follow-through; the 404 follow-through removed a Work that was to stay | FIXED: unknown codes never read "nothing was removed"; a Work that stays loses only the dangling declaration (probe CE-5b); a failed follow-through re-reads and keeps its own truth |
+| CL-6, CL-7, C9, GOV-2 unknown refusal codes; failed follow-through; the 404 follow-through removed a Work that was to stay | FIXED: a 5xx that does not say what it did never reads "nothing was removed" (a 4xx is a rejection before any act, including one with a code the client does not know); a Work that stays loses only the dangling declaration (probe CE-5b); a failed follow-through re-reads and keeps its own truth |
 | C1, UI-1 hero Work state followed the slot | FIXED: keyed by Work |
 | C2, UI-2 deleting a Work's writing replaced the surviving Work with a ghost | FIXED: a page notice instead |
 | C4 "stays in your other Work" asserted from a stale read; singular for many | FIXED: the notice asserts only what removal guarantees; the dialog is count-aware |
@@ -207,14 +211,85 @@ the browser Network tab response body of the failing DELETE (`removed:true` or n
 
 Refuted by the skeptics (not acted on): C8 (the Remove question silently turns into the Delete question), C12 (a known-false older copy is exported), GOV-5 (commit trailer vs the commit hook).
 
+### 6.2b Disposition of round 4 (each of the 29 that stood)
+
+The round found that two of round 3's own answers were wrong in the real event order, and that the cleanup of a vanished writing was done on the wrong side of the wire. The fixes changed the design in
+two places, so they are described first.
+
+- **One request, and the server finishes what it can finish.** The client used to send a second request when the first said the writing was gone. That second request could remove a Work that had
+  changed since the member confirmed (SRV-1). `deleteWork` now sends one request and a 404 is done. The one case that needed a second step, a Work still declaring a writing that is already gone, is now
+  done by the server inside the same transaction, for the named Work only (X8).
+- **No hand-over from an unmounting card.** Round 3 let a card pass an unseen message to the page as it unmounted. In the real order the re-read runs BEFORE the error reaches the card, so the card is already
+  gone (CD-1, UI-D1, BR-1). The message now travels as its own error class (`DeletionNotice`) and goes to the page directly; every Work's door state lives in the page, keyed by Work id, so a re-read that
+  re-mounts a card cannot reset what the member was looking at (UI-D2).
+
+| Finding(s) | Disposition |
+|---|---|
+| SRV-1 a stale-card 404 made the client remove a Work that had changed | FIXED by construction: there is no second request. X8 + probes CE-5, CE-5b, CE-5c, CE-5d, CE-5e; candidates J9, J7, S15, S16, S17 |
+| SRV-2, T-1 custody was unpinned in the under-reporting direction | FIXED: hermetic arithmetic tests in both directions (own original, own image, foreign rows, backlog first) and probes SB-1..SB-5; candidates J11–J14, J17, S10, S18, S19 |
+| SRV-3 a shared writing that is already gone still got the shared refusal | FIXED: the writing-held check comes first |
+| SRV-4 the Work's image path was read without a lock | FIXED in both routes (`FOR UPDATE`); not testable on a single connection, so the candidates J18 and W4 are labelled **textual guards** |
+| CD-1, UI-D1, BR-1 the unseen-message hand-over fails in the real event order | FIXED: `DeletionNotice`; the real event order is the test (`homeWorkDeleteRound2.test.ts`); candidates H14a/b, L12a–c |
+| UI-D2, UI-D5 a stale 409 is a silent no-op when the re-read reorders Home; the stale sentence lingers | FIXED: door state held by the page; the fallback sentence is shown only while the server's answer is the newest word (V18, V19, H17, H21, H23) |
+| CD-2, UI-D3 loose-writing and History deletions had no hand-over | FIXED: every outcome goes to the page; candidates V15–V17 |
+| CD-3 refused-as-shared on a loose writing lost its explanation | FIXED: a status notice naming the writing |
+| CD-4 "the Work stays" asserted without evidence | FIXED: no follow-through can make it false any more, and the sentence no longer asserts it outright: "The Work stays if it still holds anything else." (true in every case, including a second device removing the other parts in the same moment) |
+| CD-5, UI-D4 a failed re-read after a successful Delete left a live card beside "was deleted" | FIXED: `{refreshed:false}` reaches the page and the notice tells the member to reload (H19, H20, V17) |
+| copy-1, T-3, BR-2 deleting the writing of a Work that stays, with custody unconfirmed, ghosted the surviving Work as "removed" | FIXED: that kind never settles into a "removed" card (H15, H12) |
+| copy-2 the custody sentence always named two things | FIXED (X7); candidates L3, L24, L18, L18b, L23 |
+| copy-3 History named the writing as the Work | FIXED: a kind of its own (`writing-from-work`) with the right subject (L29, Y3) |
+| copy-4 the drift guard missed `REFERENCES living_works` with no column list | FIXED in the parser; a test pins it |
+| copy-6 History told the member to "remove" a Work that Home calls Delete | FIXED: the sentence names the choice the dialog offers |
+| T-2 the loaders' boolean was unpinned | FIXED: `listReloadReports.test.ts`; candidates LD1–LD6 |
+| T-4 the runner accepted timeouts and hook errors as kills; DL-2 was load-sensitive | FIXED: a timeout or a hook-only failure is its own verdict, never a kill; DL-2 stops at the first 5xx, fails past a deadline, and asserts all 400 pairs ran |
+| T-5 J8 is behaviourally equivalent and was labelled as if it were behaviour | FIXED: relabelled **textual guard** (J6, J8, J18, W4) |
+| T-6 the runner could not be stopped cleanly or run off the container host | FIXED: asynchronous child, signals restore the files, an explicit PG-harness availability check (exit 3, not a false kill) |
+| UI-D6 History's notices did not stack and named no writing | FIXED |
+| UI-D7 History computed a reason it never rendered | FIXED: both reasons render, with tests |
+| SRV-4 (pre-existing) see above | |
+
+Refuted by the skeptics (not acted on): CD-6 (the 404 follow-through question dissolved with the follow-through itself), CD-7, copy-5.
+
+### 6.2c Disposition of round 5 (each of the 27 that stood)
+
+Round 5 reviewed the round-4 fixes and found that one of them was itself a defect, and that the page still guessed in one place. Both are closed in the design, not in a test.
+
+- **The image-row lock inverted the lock order (found, reproduced on PostgreSQL 16, and mine).** Round 4 added `FOR UPDATE` to the Work's image row in both routes (SRV-4). In the Work route the image row was read, and so locked, BEFORE the Work row; the erase locks the Work row first. For any Work that has an image, a Delete of its writing and a Remove of the Work could deadlock (40P01, one of them a 500 for an act that did not happen). The probes had not seen it because the pair they drove (DL-2) had no Work with an image. Remove now locks the Work row first. DL-1 and DL-2 now give the Work an image, and DL-3 holds a Delete part-way (it holds the Work row, waiting at the writing's source arrival) and sends the Remove, so the old order cannot pass.
+- **The server says what became of the Work; the page does not guess.** Round 4 still chose between "this card becomes a *deleted* card" and "the Work stays" from the card's own picture of the Work (kind `writing` vs `writing-keeps-work`). A card with a stale picture could turn a Work the server kept into a permanent "was deleted" card, hiding a live Work from Home. The manuscripts route now answers `{removed, workRemoved}` on the 200 as well as on the 500; the client carries it (`ActResult`, `DeletionUnconfirmed.workRemoved`); the door settles into a "deleted"/"removed" card only on `workRemoved: true`, says "The Work stays" only on `workRemoved: false`, and says only "that writing was already gone" when the server did not say (a 404). The card's picture still decides the wording of the question BEFORE the act, which is the member's to confirm.
+
+| Finding(s) | Disposition |
+|---|---|
+| server-lock-order-inversion-remove-vs-delete, record-x3-lockorder-visual, breakit-1 | FIXED as above. Probes DL-1, DL-2 (image on half the pairs), DL-3; hermetic LOCK ORDER test; candidates S21, J23 (J23 labelled a textual guard) |
+| client-1, page-1, record-ghost-card-stale-kind, breakit-2 (a Work the server kept becomes a permanent ghost) | FIXED as above. Probes KEEP-1/2/3; door tests for stays, goes, unsaid, and custody-unconfirmed with each; candidates H15, H24, H25, L34–L36, J22, S23 |
+| client-3, page-2, history-refresh-flag-dropped-on-committed-and-shared-outcomes, record-cd5-fixed-partial, breakit-4 (a failed re-read was dropped on the committed-but-unconfirmed and shared paths) | FIXED: both messages end with the reload line when the re-read failed; tests for Delete, Remove and shared; candidates L37, L39, L40 |
+| page-3 (the controller-owns-no-outcome-mapping guard was deleted) | FIXED: the three assertions are back; candidate C6 injects a mapping |
+| history-error-body-says-nothing-changed-after-delete | FIXED: the text no longer claims nothing changed; a History that could not be re-read after an act reports it (HY1, HY5) |
+| history-several-writings-sentence-points-at-a-control-that-is-not-there | FIXED: it names the door that exists (Remove on Home) and what Remove takes (HY6) |
+| history-notices-lost-when-leaving-history-or-mid-flight | FIXED: History's notices live in Home's stack; Back to Home keeps them; an outcome that arrives after Back is delivered (tests; HY4) |
+| history-shared-and-notice-test-second-case-cannot-fail | FIXED: one fresh page per case |
+| history-notice-appears-off-screen-in-a-long-history | FIXED: one stack, one scroll-into-view, both views (V13, test) |
+| history-home-recent-history-not-in-the-re-read | FIXED: Home's short History is part of the re-read (`useStudioHistory` reports whether it read); candidates C5b, LD7–LD9 |
+| tests-1 (the History container had no test) | FIXED: `historyContainerAndNotices.test.ts`; candidates HY1–HY3 |
+| tests-2 (`workRemoved` for a live writing whose Work stays was unpinned) | FIXED: hermetic cases (with and without custody) and probes KEEP-1/2; candidates J24, S22 |
+| tests-5 (`writingDeleteKindFor` untested) | FIXED: unit tests; candidates WK1, WK2 |
+| tests-6 (the custody sentence's subject for a Work with no writing) | FIXED: the opening sentence is asserted for the Work route and for a body that does not say; candidates L33, L43 |
+| tests-9 (the claim that every decision has a candidate; an unpinned reload sentence) | FIXED: the claim is reworded (section 1); the reload sentence of the Work-stays notice has its test |
+| record-ratification-omits-x7-x8 | FIXED: 6.4 Q1 and the "Returned upward" paragraph cover X1–X8; X8 is named as a destructive path |
+| record-x1-x8-unchanged-claim-false | FIXED: X1 and X8 now say what SRV-3 changed |
+| record-stale-comments-and-claims | FIXED: four comments/titles and the CL-6 line corrected |
+
+Refuted by the skeptics (not acted on, except where noted): server-cleanup-removes-work-without-tombstone (the point is recorded as an open question, 6.3 and 6.4 Q2, not as a defect), client-2, history-loose-delete-destroys-unseen-work and breakit-3 (see the loose-writing line in 6.3), history-one-delete-opens-a-dialog-on-every-act-of-that-writing, tests-3, tests-4, tests-7 (the runner now refuses an empty selection anyway), tests-8, record-5-1-r20-existing-files.
+
 ### 6.3 Open findings, with what each needs
 
 | Finding | Why it is open | Owner / next |
 |---|---|---|
-| F3 A declaration added to a Work while a Delete of that writing is in flight can leave the Work naming a gone writing | In the declaration route (`living-works/[id]/expressions`), not the delete surface; its own test file cannot load on canonical (a `server-only` import). The consequence is now recoverable: Delete on that Work answers 404 and the follow-through withdraws the dangling declaration. Low | The declaration route's lane; a `FOR SHARE` on the manuscript row inside one transaction is the shape of the fix; a probe is sketched in the round-3 result |
+| F3 A declaration added to a Work while a Delete of that writing is in flight can leave the Work naming a gone writing | In the declaration route (`living-works/[id]/expressions`), not the delete surface; its own test file cannot load on canonical (a `server-only` import). The consequence is now recoverable: a Delete from that Work finds the writing gone and the server ends the dangling declaration in the same transaction (X8, probe CE-5). Low | The declaration route's lane; a `FOR SHARE` on the manuscript row inside one transaction is the shape of the fix; a probe is sketched in the round-3 result |
 | F4 The offline-cabin branch of the manuscripts route ignores `workId` and the shared refusal | `MAIA_CABIN_MODE=offline` is not exercised by any test here | The cabin lane |
 | UI-7 A page notice is component state; it is lost if the member leaves Home | Surviving a navigation needs persisted or server-held custody state, a product decision. The server obligation (the queue) is unaffected | Founder |
 | Retry after a lost response reports plain success and loses the custody caveat | Same root: no persisted custody status the client can read | Founder |
+| X8 (the server ends a Work whose declaration outlived its writing) and Remove both delete a Work row without a tombstone, while a Work that goes with a LIVE writing is tombstoned | Whether the R20 contract ("wholly before or wholly after a recovery point", and a tombstone so a restored backup cannot bring the object back) covers container removal is an unruled question; the two paths are consistent with each other and inconsistent with the third | Founder (6.4 Q2) |
+| Delete from a loose-writing line or History names no Work, so if the page's list of Works is stale the Work that holds only that writing goes with it although the dialog may not have said so | The dialog says so whenever the page knows (`writingDeleteKindFor`); a Work declared elsewhere moments ago is not known to it. The act is the ruling's (a Work that held only the writing goes with it) and the member confirmed deleting the writing | Accepted |
 | Remove takes no `soullab:r20:recovery-capture` lock and writes no tombstone | Whether the R20 "wholly before or wholly after a recovery point" contract covers container removal is an unruled question. A restore from a pre-Remove backup would bring the Work back with its conversations | Founder |
 | Editorial conversation history after Remove | The origin records and the conversations bound to the writing's proposal chain are retained by design (migration 20261020000001) and are reachable only through the Work they were opened from; the copy therefore no longer promises where they live. Whether "retained but unreachable" is acceptable after a member's Remove is a ruling | Founder |
 | Second-level cascades are not scanned by the drift guard | They follow their parents; a new first-level parent is what the guard catches | Accepted |
@@ -227,8 +302,8 @@ Refuted by the skeptics (not acted on): C8 (the Remove question silently turns i
 
 ### 6.4 Questions returned upward (the lane does not decide these)
 
-1. Ratify X1–X6 (section 0). They narrow or restore truth; they are crossings of the original stop boundary.
-2. Should container removal (Remove) take the R20 recovery-capture lock and write a deletion record?
+1. Ratify X1–X8 (section 0). X1–X7 narrow or restore truth; X8 is a destructive path added to the erase (the server ends a declaration that outlived its writing, and the Work with it only if it then declares nothing); all are crossings of the original stop boundary.
+2. Should container removal (Remove, and the Work ended by X8) take the R20 recovery-capture lock and write a deletion record (a tombstone for the Work row)?
 3. Is "editorial conversation history retained but unreachable after Remove" acceptable, or must Remove refuse a Work that has any?
 4. Should a custody-unconfirmed message be durable (survive navigation and reload)?
 
