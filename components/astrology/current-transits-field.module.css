@@ -36,3 +36,9 @@
   .field[data-variant='house']{padding:17px}
   .footer{align-items:flex-start;flex-direction:column}
 }
+
+/* variant="line": one quiet row for the House on phones/iPad (2026-11-05). */
+.line { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 4px; border-bottom: 1px solid rgba(225, 193, 147, .14); color: #efe6d6; text-decoration: none; }
+.lineLabel { font: 16px/1.3 Georgia, serif; white-space: nowrap; }
+.lineSummary { flex: 1 1 auto; min-width: 0; color: #a99a83; font: 13px/1.3 Arial, sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lineChevron { color: #e8be78; font-size: 18px; }
