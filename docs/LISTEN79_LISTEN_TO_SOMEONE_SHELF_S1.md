@@ -1,6 +1,6 @@
 # LISTEN-79 — "Listen to someone": performer shelf, slice 1 (web, no database, empty catalog)
 
-**Status:** review candidate · slice 1 of 5 · **production HOLD** · behind the existing `SOULLAB_LISTEN_REVIEW_ENABLED` flag (unchanged, off)
+**Status:** review candidate · slice 1 of 5 (two commits: logic and tests, then UI with its contract) · **production HOLD** · behind the existing `SOULLAB_LISTEN_REVIEW_ENABLED` flag (unchanged, off)
 **Stacked on:** `feature/listen-native-audio-session-20261030` @ `f970d347b` (= `fix/listen-1999-reconcile-20261106`; the #1999 work, merged within the stack, **not** on `clean-main-no-secrets`)
 **Owner lane:** LISTEN-01 #1979 · supporting authority AUDIO-PLATFORM-01 #1984. No second owner, lane or release train is created: this is a reviewable child branch (`feature/listen-performer-shelf-20261106`) whose PR, if opened, targets the stack — **never** `clean-main-no-secrets`.
 **Founder direction:** 2026-11-06 — build resumed; **no performer is contacted or invited until the feature has been beta-tested safely.** Design notes and decisions live in the founder's untracked drafts (`docs/programme/LISTEN-01_*_DRAFT_2026-11-06.md` in the main checkout); this record covers only what this branch changes.
@@ -17,6 +17,7 @@
 | `components/listening/PerformerShelf.tsx` + `.module.css` | The "Listen to someone" section, the card (credit, Soullab's words, "In their own words" for Tier 2, "Where to find more of their work"), and the **non-interactive "In preparation" row** shown while nothing is approved. |
 | `app/listen/SoundStudioNow.tsx` (+1 line, +1 type member) | The row on the Now view; `StudioView` gains `'people'`. |
 | `app/listen/ListenRoom.tsx` (+2 lines, +1 import) | Renders the shelf for `view==='people'`; `'people'` maps to the Now tab so **the mobile tab bar is unchanged (still five)**. |
+| `docs/design/contracts/sound-studio-listen-to-someone.md` + 4 screenshots | The Experience Contract the design-canon pre-commit gate requires for the three member-facing files. It states plainly what was and was not verified: a **static render** of the real room components in headless Chrome (desktop and 390px mobile emulation) — **not** a walk through the authenticated `/listen`. Two screenshots show the shipped state (only the "In preparation" row); two show **fictional fixtures** that do not ship. |
 | `tests/listening/listen79…81` | Gate + policy with lethality matrices; source guards; jsdom behaviour witness. |
 
 ## What it deliberately does not do

@@ -17,6 +17,7 @@ import FocusSoundPicker from './FocusSoundPicker';
 import FocusAdhdSupport from './FocusAdhdSupport';
 import type { StudioView } from './SoundStudioNow';
 import FocusFieldDesk from '@/components/listening/FocusFieldDesk';
+import PerformerShelf from '@/components/listening/PerformerShelf';
 import type { MemberCollection, TrackReference } from '@/lib/listening/portableCollections';
 import styles from './listen.module.css';
 import './listenGlobal.css';
@@ -239,7 +240,7 @@ export default function ListenRoom() {
     { view: 'studio', label: 'Studio', glyph: '◇' },
     { view: 'lab', label: 'Lab', glyph: '△' },
   ];
-  const activeSection: StudioView = view === 'focus' ? 'now' : view;
+  const activeSection: StudioView = view === 'focus' || view === 'people' ? 'now' : view;
   const goHash = (href: string) => go(href === '#focus-field' ? 'focus' : 'fields');
   return <main className={styles.shell} data-studio-view={view}>
     <a href="#sound-studio-content" className={styles.skipLink}>Skip to content</a>
@@ -258,6 +259,7 @@ export default function ListenRoom() {
       <div className={styles.topline}><span>SOULLAB / SOUND STUDIO</span><span className={styles.review}>REVIEW BUILD · NOT PUBLIC</span></div>
       {view==='now' && <SoundStudioNow onNavigate={go} />}
       {view==='focus' && <div className={styles.body}><button type="button" className={styles.backLink} onClick={()=>go('now')}>← Now</button><FocusAdhdSupport /><FocusSoundPicker /><FocusFieldDesk /></div>}
+      {view==='people' && <div className={styles.body}><button type="button" className={styles.backLink} onClick={()=>go('now')}>← Now</button><PerformerShelf /></div>}
       {view==='fields' && <SoundStudioField key={fieldKey} initialWorkId={fieldWork} />}
       {view==='shelf' && <div className={styles.body}>
         <section aria-labelledby="shelf-title" className={styles.shelfHead}><span className={styles.smallcaps}>SOUND SHELF</span><h2 id="shelf-title">What you keep, and how.</h2><p className={styles.muted}>Your collections, private notes, local files and backup. Nothing here is analyzed, and nothing leaves your device unless you export it.</p></section>

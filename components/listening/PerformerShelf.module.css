@@ -1,7 +1,9 @@
-/* LISTEN-01 · "Listen to someone". Inherits the room's colour; no animation, so nothing to reduce. */
+/* LISTEN-01 · "Listen to someone". Inherits the room's field and ink; no animation, so nothing to reduce.
+   Type and the gold signal mirror the room's own rules (listen.module.css: .smallcaps #d0b785 / .24em;
+   Georgia serif headings at weight 400; warm #f3dfbd titles) so it reads as one room, not a new widget. */
 .section { display: grid; gap: 1.25rem; max-width: 46rem; }
-.eyebrow { font-size: 0.72rem; letter-spacing: 0.14em; opacity: 0.7; }
-.title { margin: 0.2rem 0 0.4rem; font-weight: 500; }
+.eyebrow { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: #d0b785; }
+.title { margin: 0.35rem 0 0.5rem; font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size: clamp(28px, 4vw, 40px); line-height: 1.1; letter-spacing: -0.02em; color: #f3dfbd; }
 .lede { margin: 0; opacity: 0.82; line-height: 1.55; }
 .cards { display: grid; gap: 1rem; }
 .card {
@@ -9,11 +11,12 @@
   border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
   background: color-mix(in srgb, currentColor 5%, transparent);
 }
-.name { margin: 0; font-size: 1.05rem; font-weight: 600; }
+.name { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 400; color: #f3dfbd; }
 .words { margin: 0; line-height: 1.55; }
 .own { margin: 0; padding-left: 0.8rem; border-left: 2px solid color-mix(in srgb, currentColor 30%, transparent); }
-.own figcaption { font-size: 0.74rem; letter-spacing: 0.1em; opacity: 0.7; text-transform: uppercase; }
+.own figcaption { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: #d0b785; }
 .own blockquote { margin: 0.3rem 0 0; line-height: 1.55; }
+.links { margin-top: 0.35rem; }
 .links h4 { margin: 0 0 0.3rem; font-size: 0.8rem; font-weight: 500; opacity: 0.75; }
 .links ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
 .links a { color: inherit; text-underline-offset: 0.2em; }
@@ -31,12 +34,13 @@
   border: 1px dashed color-mix(in srgb, currentColor 28%, transparent);
   background: color-mix(in srgb, currentColor 4%, transparent);
 }
-.inPrep h3 { margin: 0; font-size: 1rem; font-weight: 500; }
-.inPrep strong { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.75; font-weight: 500; }
+.inPrep h3 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 400; color: #f3dfbd; }
+.inPrep strong { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: #d0b785; font-weight: 400; }
 .inPrep p { margin: 0.2rem 0 0; opacity: 0.85; line-height: 1.5; }
 .openRow {
   display: grid; gap: 0.15rem; text-align: left; padding: 0.9rem 1.1rem; margin-top: 1rem; border-radius: 0.9rem; cursor: pointer;
   border: 1px solid color-mix(in srgb, currentColor 22%, transparent); background: color-mix(in srgb, currentColor 5%, transparent);
   color: inherit; font: inherit;
 }
+.openRow strong { font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 400; color: #f3dfbd; }
 .openRow span { opacity: 0.8; font-size: 0.9rem; }
