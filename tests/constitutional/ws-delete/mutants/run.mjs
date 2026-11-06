@@ -119,6 +119,7 @@ const MUTANTS = [
   ['L40', 'jest', LIB, 'throw new DeletionSharedMaterial(withReload(outcome.message, fresh), fresh)', 'throw new DeletionSharedMaterial(outcome.message)', 'a shared refusal whose re-read failed does not tell the member to reload'],
   ['L41', 'jest', LIB, 'if (res.ok || res.status === 404) return { ok: true, workRemoved: true };', 'if (res.ok || res.status === 404) return { ok: true };', 'a successful Remove does not say the Work is gone'],
   ['L42', 'jest', LIB, '...(outcome.workRemoved !== undefined ? { workRemoved: outcome.workRemoved } : {}),', '', 'the server\'s word on the Work is dropped before it reaches the page'],
+  ['L46', 'jest', LIB, '      ...(outcome.alreadyGone ? { alreadyGone: true } : {}),\n', '', 'the page is never told the writing was already gone (the 404 is lost between the command and the page)'],
   ['L44', 'jest', LIB, ': { ok: true, alreadyGone: true };', ': { ok: true };', 'a 404 (the writing was already gone) is indistinguishable from a 200 that did not say, so the page cannot word them differently'],
   ['L45', 'jest', LIB, 'throw new DeletionSharedMaterial(withReload(outcome.message, fresh), fresh)', 'throw new DeletionSharedMaterial(withReload(outcome.message, fresh), true)', 'a shared refusal does not say its re-read failed, so a Work card that cannot see the other Work cannot say why'],
   ['L43', 'jest', LIB, '(viaWorkRoute ? true : undefined)', 'undefined', 'the Work route\'s owed-image answer does not say the Work is gone'],
@@ -148,7 +149,8 @@ const MUTANTS = [
   ['H27', 'jest', DOOR, '...(err.reloaded ? {} : { reloadFailed: true })', '', 'the door forgets that the re-read failed after a shared refusal'],
   ['H28', 'jest', DOOR, '(shared.reloadFailed ? `${SHARED_BUT_NOT_SHOWN} ${RELOAD_HOME_LINE}` : SHARED_BUT_NOT_SHOWN)', 'SHARED_BUT_NOT_SHOWN', 'a shared refusal whose re-read failed does not tell the Work card\'s member to reload'],
   ['H29', 'jest', DOOR, '} else if (result?.alreadyGone) {', '} else if (true as boolean) {', 'a Delete that deleted the writing but did not say whether the Work went is told as "already gone"'],
-  ['H26', 'jest', DOOR, "${result?.refreshed ? ' Home now shows what is current.' : reload}", "${' Home now shows what is current.'}", 'an "already gone" notice says Home is current although the re-read failed'],
+  ['H26', 'jest', DOOR, "that writing was already gone.${result.refreshed ? ' Home now shows what is current.' : reload}", "that writing was already gone. Home now shows what is current.", 'an \"already gone\" notice says Home is current although the re-read failed'],
+  ['H30', 'jest', DOOR, "was deleted.${result?.refreshed ? ' Home now shows what is current.' : reload}", "was deleted. Home now shows what is current.", 'a notice for a deletion whose Work fate is unsaid says Home is current although the re-read failed'],
   ['H17', 'jest', DOOR, 'const shownError = state.deleteError ?? (shared !== null ? (shared.reloadFailed ? `${SHARED_BUT_NOT_SHOWN} ${RELOAD_HOME_LINE}` : SHARED_BUT_NOT_SHOWN) : null);', 'const shownError = state.deleteError;', 'a 409 the page cannot explain is a silent no-op'],
   ['H18', 'jest', DOOR, ': removeSharedWorkCopy(othersHolding)', ': removeSharedWorkCopy(1)', 'the removal sentence says "your other Work" when several Works hold the writing'],
   ['H19', 'jest', DOOR, "(result && !result.refreshed ? RELOAD_LINE : '')", "''", 'a Remove whose re-read failed does not tell the member to reload'],
@@ -242,16 +244,16 @@ const MUTANTS = [
   ['J20', 'jest', ROUTE, 'workRemoved: outcome.workRemoved,', 'workRemoved: true,', 'the route says the Work went when only its writing did'],
   ['J21', 'jest', ROUTE, 'if (!outcome.sweptAll) {', 'if (false as boolean) {', 'an unconfirmed custody is answered as plain success'],
   ['W1', 'jest', WORK_ROUTE, 'if (stillOwed.rows.length > 0) {', 'if (false as boolean) {', 'a removed Work whose image bytes are still owed is reported as plain success'],
-  ['W2', 'jest', WORK_ROUTE, 'SELECT id FROM vault_erasure_queue WHERE id = $1`,', 'SELECT id FROM vault_erasure_queue`,', 'any queued row, anyone\'s, makes a Work removal read as unconfirmed'],
+  ['W2', 'jest', WORK_ROUTE, 'SELECT id FROM vault_erasure_queue WHERE id = $1`,', 'SELECT id FROM vault_erasure_queue`,', '(textual guard) any queued row, anyone\'s, makes a Work removal read as unconfirmed'],
   ['W3', 'jest', WORK_ROUTE, 'await sweepVaultErasureQueue(100, [removed.queueId]);', 'await sweepVaultErasureQueue(100, []);', 'a Work\'s own image waits behind a backlog of other rows'],
   ['W4', 'jest', WORK_ROUTE, 'WHERE living_work_id = $1 AND member_id = $2 FOR UPDATE`,\n        [id, memberId],', 'WHERE living_work_id = $1 AND member_id = $2`,\n        [id, memberId],', '(textual guard) the Work\'s image is read without a lock before the Work goes'],
   ['W5', 'jest', WORK_ROUTE, 'VALUES ($1) RETURNING id`,', 'VALUES ($1)`,', 'the Work\'s queue row cannot be named, so the sweep cannot take it first'],
-  ['W6', 'jest', WORK_ROUTE, '`DELETE FROM living_works WHERE id = $1 AND member_id = $2 RETURNING id`,', '`DELETE FROM living_works WHERE id = $1 RETURNING id`,', 'a member can remove another member\'s Work by its id'],
+  ['W6', 'jest', WORK_ROUTE, '`DELETE FROM living_works WHERE id = $1 AND member_id = $2 RETURNING id`,', '`DELETE FROM living_works WHERE id = $1 RETURNING id`,', '(textual guard) a member can remove another member\'s Work by its id'],
   ['W7', 'jest', WORK_ROUTE, "refusal: 'image_bytes_owed', unconfirmed: { image: true } }", "refusal: 'image_bytes_owed' }", 'the image-owed answer does not say what is owed'],
   // ── the copy against the database (removalCopyDrift.test.ts)
   ['D1', 'jest', MIG_CORRECTIONS, 'living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE CASCADE,', 'living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE RESTRICT,', '(static guard: reads the migrations) a table starts blocking the removal of a Work (it would fail or leave a detached row)'],
   ['D2', 'jest', MIG_UNDERSTANDING, 'CREATE TABLE IF NOT EXISTS living_work_writer_understanding (', 'CREATE TABLE IF NOT EXISTS living_work_fictional_new_child (living_work_id UUID REFERENCES living_works(id) ON DELETE CASCADE);\nCREATE TABLE IF NOT EXISTS living_work_writer_understanding (', '(static guard: reads the migrations) a new table starts cascading from a Work and the removal copy is not updated'],
-  ['D3', 'jest', LIB, 'its conversations with MAIA, what you told MAIA about it, your corrections, where you left off,', 'its conversations with MAIA, what you told MAIA about it, your corrections,', '(static guard: reads the migrations) the removal copy stops naming something that does go'],
+  ['D3', 'jest', LIB, 'its conversations with MAIA, what you told MAIA about it, your corrections, where you left off,', 'its conversations with MAIA, what you told MAIA about it, your corrections,', 'the removal copy stops naming something that does go'],
   ['D4', 'jest', MIG_CORRECTIONS, 'living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE CASCADE,', 'living_work_id UUID NOT NULL REFERENCES living_works(id),', '(static guard: reads the migrations) a foreign key with no ON DELETE (it blocks the Work\'s removal) hides behind a neighbouring column\'s CASCADE'],
   ['D5', 'jest', MIG_UNDERSTANDING, 'CREATE TABLE IF NOT EXISTS living_work_writer_understanding (', 'CREATE TABLE IF NOT EXISTS living_work_fictional_orphan (living_work_id UUID NOT NULL);\nCREATE TABLE IF NOT EXISTS living_work_writer_understanding (', '(static guard: reads the migrations) a new table carries a Work id with no foreign key, so a Work\'s removal leaves its rows behind unnoticed'],
   // ── the server (needs the local PostgreSQL 16 harness)
@@ -365,8 +367,8 @@ const run = async (kind) => {
 const HOOK = /\b(before|after)(All|Each)\b|\bhook\b/i;
 const failingLines = (text) => text.split('\n').map((l) => l.trim()).filter((l) => l.startsWith('✕') || /^● .* › /.test(l));
 const failingTests = (text) => failingLines(text).filter((l) => !HOOK.test(l));
-// A candidate that breaks the SQL (a parameter-count error fails EVERY request) is a broken build, not a kill by the behaviour it names.
-const COMPILE = /SyntaxError|Test suite failed to run|Cannot find module|error TS\d+|bind message supplies/;
+// A candidate that breaks the SQL (a parameter-count or parameter-type error, or a syntax error, fails EVERY request) is a broken build, not a kill by the behaviour it names.
+const COMPILE = /SyntaxError|Test suite failed to run|Cannot find module|error TS\d+|bind message supplies|could not determine data type of parameter|syntax error at or near/;
 
 // BASELINE: the unmutated suite must be green, or "killed" would only mean "red". Each harness kind that will be used is run once.
 for (const kind of [...new Set(selected.map((m) => m[1]))]) {
