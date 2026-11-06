@@ -9,7 +9,6 @@
  * tradition decides it by the year's polarity and the person's sex, which a
  * saved chart does not record.
  */
-import { useState } from 'react';
 import type { FourPillars, LuckPillar, Pillar } from '@/lib/astrology/proFourPillars';
 import styles from './pro-four-pillars.module.css';
 
@@ -58,15 +57,18 @@ function LuckRow({ pillars }: { pillars: LuckPillar[] }) {
           <span className={`${styles.luckChars} ${ELEMENT_CLASS[l.stem.element] ?? ''}`} lang="zh">{l.stem.hanzi}{l.branch.hanzi}</span>
           <span className={styles.pinyin}>{l.stem.pinyin} {l.branch.pinyin}</span>
           <small>{l.tenGod.english}</small>
-          <small className={styles.luckYear}>from {l.fromYear}</small>
+          <small className={styles.luckYear}>from about {l.fromYear}</small>
         </li>
       ))}
     </ol>
   );
 }
 
-export default function ProFourPillars({ fp }: { fp: FourPillars }) {
-  const [direction, setDirection] = useState<'forward' | 'backward' | null>(null);
+export type LuckDirectionChoice = 'forward' | 'backward' | null;
+
+export default function ProFourPillars({ fp, direction, onDirection }: {
+  fp: FourPillars; direction: LuckDirectionChoice; onDirection: (d: LuckDirectionChoice) => void;
+}) {
   const [year, month, day, hour] = fp.pillars;
   const luck = direction ? fp.luck[direction] : null;
   return (
@@ -93,7 +95,7 @@ export default function ProFourPillars({ fp }: { fp: FourPillars }) {
       <div className={styles.direction} role="radiogroup" aria-label="Luck pillar direction">
         {(['forward', 'backward'] as const).map((d) => (
           <label key={d}>
-            <input type="radio" name="luck-direction" checked={direction === d} onChange={() => setDirection(d)} />
+            <input type="radio" name="luck-direction" checked={direction === d} onChange={() => onDirection(d)} />
             {d === 'forward' ? 'Forward' : 'Backward'}
             <small>
               {' '}from age {fp.luck[d].startAge.years}
