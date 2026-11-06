@@ -321,7 +321,7 @@ Refuted by the skeptics (not acted on): client-1, client-2, cabin-2, breakit-run
 | X8 (the server ends a Work whose declaration outlived its writing) and Remove both delete a Work row without a tombstone, while a Work that goes with a LIVE writing is tombstoned | Whether the R20 contract ("wholly before or wholly after a recovery point", and a tombstone so a restored backup cannot bring the object back) covers container removal is an unruled question; the two paths are consistent with each other and inconsistent with the third | Founder (6.4 Q2) |
 | Delete from a loose-writing line or History names no Work, so if the page's list of Works is stale the Work that holds only that writing goes with it although the dialog may not have said so | The dialog says so whenever the page knows (`writingDeleteKindFor`); a Work declared elsewhere moments ago is not known to it. The act is the ruling's (a Work that held only the writing goes with it) and the member confirmed deleting the writing | Accepted |
 | Remove takes no `soullab:r20:recovery-capture` lock and writes no tombstone | Whether the R20 "wholly before or wholly after a recovery point" contract covers container removal is an unruled question. A restore from a pre-Remove backup would bring the Work back with its conversations | Founder |
-| Editorial conversation history after Remove | The origin records and the conversations bound to the writing's proposal chain are retained by design (migration 20261020000001) and are reachable only through the Work they were opened from; the copy therefore no longer promises where they live. Whether "retained but unreachable" is acceptable after a member's Remove is a ruling | Founder |
+| Editorial conversation history after Remove | The origin records and Save receipts are content-free, but the conversations bound to the writing's proposal chain are not: `memberAct.ts` appends the member's act text as an `ask_turns` author turn, and the member's wording lives in `proposal_versions`. All of it is retained by design (migration 20261020000001: the threads are bound to the manuscript and the chain with `living_work_id` NULL, and the origin tables carry `living_work_id` with no foreign key to `living_works`, so Remove cascades into none of it), and is reachable only through the Work it was opened from (`lockCurrentEditorialOriginWithClient` requires that Work, its declaration and its relationship). The copy therefore no longer promises where it lives. Whether "retained, including the member's own words, but unreachable by the Work path" is acceptable after a member's Remove is a ruling (6.7 choice B) | Founder |
 | Second-level cascades are not scanned by the drift guard | They follow their parents; a new first-level parent is what the guard catches | Accepted |
 | Legacy `developmental_reviews`, `studio_companion_turns` cascade from a Work and have no live writer in this tree | Production row counts unknown | Accepted; listed in the guard |
 | CI runs no unit test (repo-wide) | A policy decision; these tests protect only when someone runs them | Founder |
@@ -334,7 +334,7 @@ Refuted by the skeptics (not acted on): client-1, client-2, cabin-2, breakit-run
 
 1. Ratify X1–X8 (section 0). X1–X7 narrow or restore truth; X8 is a destructive path added to the erase (the server ends a declaration that outlived its writing, and the Work with it only if it then declares nothing); all are crossings of the original stop boundary.
 2. Should container removal take the R20 recovery-capture lock and write a deletion record? Remove: a lock and a tombstone for the Work row. The Work ended by X8: a tombstone for the Work row (it already runs inside the erase transaction).
-3. Is "editorial conversation history retained but unreachable after Remove" acceptable, or must Remove refuse a Work that has any?
+3. Is "editorial conversation history retained but unreachable after Remove" acceptable, or must Remove refuse a Work that has any? (The retained history can contain the member's own words: see the 6.3 row and 6.7 choice B.)
 4. Should a custody-unconfirmed message be durable (survive navigation and reload)?
 
 ### 6.5 Adjudication and closure fields (manual §18, §30)
@@ -379,7 +379,40 @@ Residual risk        the open findings in 6.3; the questions in 6.4
 **6.6.5 Recommendations on 6.4 (recommendations only: the founder has not ruled, and `dispositions.json` stays `"ruled": false`).**
 
 1. X1–X8: ratify.
-2. Tombstone and recovery-capture lock for Remove and X8: a separate lane, after this one merges.
-3. Retained content-free editorial origin records after Remove: accept for now; revisit together with question 2.
+2. **Withdrawn, 2026-11-06 (see 6.7 choice A).** This item recommended "tombstone and recovery-capture lock for Remove and X8: a separate lane, after this one merges". Two corrections, each verified in source. First, it grouped two different paths: Remove takes neither the recovery-capture lock nor a deletion record, while X8 already runs under the lock (`eraseManuscript.ts`, taken before X8 returns) and lacks only the Work deletion record. Second, deferral does not account for Works removed before the later lane lands: a record cannot be created retroactively for a removal that wrote none.
+3. **Withdrawn, 2026-11-06 (see 6.7 choice B).** This item recommended accepting "retained content-free editorial origin records". That was wrong for part of what is retained: the origin records and Save receipts are content-free, but the conversation turns and the proposal wording can hold the member's own words (6.3 row).
 4. A durable custody message: yes eventually, as its own decision (it needs a persisted status the client can read; today the notice is client state).
 5. New, from 6.6.2 item 5: whether the first dialog should warn that a writing is shared. Product decision, not a safety one.
+
+### 6.7 Concrete choices for the founder (none decided here)
+
+Prepared 2026-11-06 after an external review of PR #2162; each factual point was checked against source before it was used. Nothing in this section changes behaviour. Each choice is a deletion, recovery, retention or consent decision, and the founder's alone. The recommendations are the lane's reading, not a ruling; `dispositions.json` stays `"ruled": false`.
+
+What each path does today (`eraseManuscript.ts`; the Remove handler in `app/api/sovereign/living-works/[id]/route.ts`):
+
+| Path | Recovery-capture lock | Deletion manifest | Work tombstone |
+|---|---|---|---|
+| Delete a live writing (and its now-empty Work) | yes | yes | yes |
+| X8: end a declaration whose writing is already gone | yes (taken first) | no | no |
+| Remove this Work, keep its writing | no | no | no |
+
+**Choice A: recovery accounting for Work removal** (Remove: lock and record; X8: record).
+- **A1, before merge.** Remove takes the recovery-capture lock and writes a Work deletion record in the same transaction; X8 writes the Work record. *Consequence:* closes the restore exposure for every Work removed after the release carrying this code. It widens the change into the recovery contract (what a Work record is, what a restore does with it) and needs its own tests and review.
+- **A2, after merge, separate lane.** *Consequence:* every Work removed, or ended by X8, between merge and that lane has no deletion record, and a later lane cannot create one for a removal that wrote none. A restore from a pre-removal backup would bring such a Work back with its conversations. The PR itself deploys nothing, so A2 is safest only with an explicit hold on deploying until the lane lands.
+- **A3, withdraw the exit from this PR.** Keep the shared-writing refusal and take Remove out until A1 lands. *Consequence:* the shared-writing dead end returns for any member who holds a shared writing.
+- *Lane reading:* A2 as framed is not recommended. Between A1 and A3 the cost is a larger change versus the dead end; the choice is the founder's.
+
+**Choice B: retained editorial history after Remove.** What stays: origin records and Save receipts (content-free), plus the conversation turns and proposal wording, which can contain the member's own words (6.3 row). It stays attached to a writing the member still holds and is unreachable through the removed Work; deleting the writing itself runs the R20 editorial-history erase (`eraseManuscript.ts`).
+- **B1, accept as is, with the Remove dialog's copy corrected to say so.** *Consequence:* the member's own editorial text remains in storage, unseen by the Work path, until the writing is deleted. The dialog today promises removal of "its conversations with MAIA", which this does not do for the editorial ones.
+- **B2, Remove also erases the Work's editorial conversations (not the writing).** *Consequence:* matches the dialog's promise, but it is a new destructive erase path that needs an R20 contract extension and tests, and it cannot be undone.
+- **B3, Remove refuses while retained editorial history exists on a shared writing.** *Consequence:* the dead end returns for some members, who would have to delete the writing everywhere.
+- Not offered: re-homing the conversations to the other Work. The origin records are immutable by design.
+- *Lane reading:* B1 with corrected copy is the smallest honest step; B2 and B3 are policy choices.
+
+**Choice C: the custody message.** C1, keep a notice that is lost on leaving Home (today). C2, persist it for the browser session only. C3, hold a custody status on the server that the client can read (a schema change). *Consequence of C1:* a member who leaves Home loses the notice, and a retry after a lost response reports plain success without the custody caveat; the erasure queue is unaffected either way.
+
+**Choice D: X1–X8.** D1, ratify all. D2, ratify X1–X7 and hold X8. *Consequence of D2:* a Work whose declaration outlived its writing would answer `not_found` and its card would remain until another path ends it. D3, treat this PR as review only and ratify later.
+
+### 6.8 Integration with the current base (2026-11-06)
+
+Base `clean-main-no-secrets` at `a556601b6`; this branch is 163 commits behind it. A trial merge in a scratch worktree (not pushed, removed afterwards) merged automatically with no conflicts. One file changed on both sides, `app/dev/writers-studio-pc3-live/P4R1HomeView.tsx`, by base commit `98c03041f` (a Home copy change). The package files did not move. On the merged tree the nine delete suites pass (264 tests). Across the wider Writer's Studio suites, nine suites fail: the eight known load failures plus `lib/writersStudio/__tests__/manuscriptImportWork.test.ts` (4 of 18), which fails identically on the base alone and passes on this branch alone. It is a base-side failure, not caused or fixed here. The merge has not been pushed: integration is to be coordinated with the other lanes, by merge and never by rebase, and the resulting candidate re-verified.
