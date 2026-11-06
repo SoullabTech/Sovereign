@@ -23,7 +23,7 @@ import {
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival, withoutStudioWork } from '@/app/writers-studio/h1Arrival';
 import { useWriterReleaseCapabilities } from '@/lib/writersStudio/useWriterReleaseCapabilities';
-import { deleteWork, DeletionUnconfirmed } from '@/lib/writersStudio/deleteWork';
+import { reReadAll, runDeleteWork, runRemoveWork } from '@/lib/writersStudio/deleteWork';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -47,7 +47,7 @@ export default function P4R1HomeController() {
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
   const { phase: manuscriptPhase, manuscripts, reload: reloadManuscripts } = useCurrentManuscript();
   const { lines: markedLines } = useMarkedLines();
-  const { acts: historyActs } = useStudioHistory();
+  const { acts: historyActs, reload: reloadHistory } = useStudioHistory();
 
   const arrival = useMemo(() => arrivalFor(works, manuscripts), [works, manuscripts]);
   const resumeManuscriptId = arrival.resume ? manuscriptIdOf(arrival.resume) : null;
@@ -94,9 +94,8 @@ export default function P4R1HomeController() {
     return manuscriptId;
   }, [post]);
 
-  const refresh = useCallback(async () => {
-    await Promise.all([reloadWorks(), reloadManuscripts()]);
-  }, [reloadWorks, reloadManuscripts]);
+  // Resolves false when either list could not be read: the delete flow must not tell the member the page is current then.
+  const refresh = useCallback(() => reReadAll([reloadWorks, reloadManuscripts, reloadHistory]), [reloadWorks, reloadManuscripts, reloadHistory]);
 
   const open = useCallback((manuscriptId: string, sectionId?: string, newImport = false) => {
     const search = params?.toString() ?? '';
@@ -258,24 +257,29 @@ export default function P4R1HomeController() {
     }
   }, [busy, post, declare, refresh]);
 
-  // The author's own permanent deletion of one writing, through the product's governed erase. No optimistic success: the list is
-  // re-read only after the server says it is gone (including "removed, custody not yet confirmed"), and a refusal reaches the
-  // card in the author's own language.
-  const onDeleteWriting = useCallback(async (manuscriptId: string) => {
-    const outcome = await deleteWork({ workId: null, manuscriptId }, (url, init) => apiFetch(url, init));
-    if (outcome.ok) { await refresh().catch(() => undefined); return; }
-    // Removed but not yet confirmed: the writing is gone, so stop listing it, and still tell the author what we could not confirm.
-    if (outcome.removed) { await refresh().catch(() => undefined); throw new DeletionUnconfirmed(outcome.message); }
-    throw new Error(outcome.message);
-  }, [refresh]);
+  // The author's own permanent deletion of one writing, through the product's governed erase. No optimistic success: the member is
+  // told only what the server said. The page is re-read BEFORE any outcome is reported (a delete, "removed, custody not yet
+  // confirmed", a refusal, an outcome that could not be learned), and the outcome goes to the PAGE, not to the card that asked,
+  // because that re-read may already have removed the card. What the server said is mapped to what the page does in runDeleteWork
+  // (lib/writersStudio/deleteWork.ts), where it is tested at runtime.
+  const onDeleteWriting = useCallback(
+    (manuscriptId: string) => runDeleteWork({ workId: null, manuscriptId }, (url, init) => apiFetch(url, init), refresh),
+    [refresh],
+  );
 
-  // A Work is deleted with its manuscript in ONE server-side erase (WS-DELETE-01); a Work with no manuscript is withdrawn.
-  const onDeleteWork = useCallback(async (workId: string, manuscriptId: string | null) => {
-    const outcome = await deleteWork({ workId, manuscriptId }, (url, init) => apiFetch(url, init));
-    if (outcome.ok) { await refresh().catch(() => undefined); return; }
-    if (outcome.removed) { await refresh().catch(() => undefined); throw new DeletionUnconfirmed(outcome.message); }
-    throw new Error(outcome.message);
-  }, [refresh]);
+  // A Work is deleted with its manuscript in ONE server-side erase (WS-DELETE-01); a Work with no manuscript is withdrawn. The
+  // request names the Work, so a stale card is refused server-side.
+  const onDeleteWork = useCallback(
+    (workId: string, manuscriptId: string | null) => runDeleteWork({ workId, manuscriptId }, (url, init) => apiFetch(url, init), refresh),
+    [refresh],
+  );
+
+  // The container-only act: remove one Work, leave its writing(s) where they are. Offered only from the shared-writing refusal and
+  // for a Work that holds several writings, where the member is told exactly what goes and what stays.
+  const onRemoveWork = useCallback(
+    (workId: string) => runRemoveWork(workId, (url, init) => apiFetch(url, init), refresh),
+    [refresh],
+  );
 
   const onAddToWork = useCallback(async (manuscriptId: string, workId: string) => {
     if (busy) return;
@@ -393,6 +397,7 @@ export default function P4R1HomeController() {
       onAddToWork={(manuscriptId, workId) => void onAddToWork(manuscriptId, workId)}
       onDeleteWriting={onDeleteWriting}
       onDeleteWork={onDeleteWork}
+      onRemoveWork={onRemoveWork}
       onStartWriting={(workId) => void onStartWriting(workId)}
       onImport={openImport}
       onSources={() => router.push('/writers-studio/sources')}
