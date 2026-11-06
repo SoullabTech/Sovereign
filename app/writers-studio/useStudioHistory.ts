@@ -20,7 +20,8 @@ export function useStudioHistory(limit?: number) {
   const [phase, setPhase] = useState<StudioHistoryPhase>('loading');
   const [acts, setActs] = useState<StudioAct[]>([]);
 
-  const load = useCallback(async () => {
+  /** Resolves true only when the list was read (see useLivingWorks.load). */
+  const load = useCallback(async (): Promise<boolean> => {
     try {
       const res = await apiFetch(
         limit ? `/api/sovereign/studio/history?limit=${limit}` : '/api/sovereign/studio/history',
@@ -28,17 +29,19 @@ export function useStudioHistory(limit?: number) {
       );
       if (res.status === 401) {
         setPhase('unauthorized');
-        return;
+        return false;
       }
       if (!res.ok) {
         setPhase('error');
-        return;
+        return false;
       }
       const data = await res.json();
       setActs(Array.isArray(data.acts) ? data.acts : []);
       setPhase('ready');
+      return true;
     } catch {
       setPhase('error');
+      return false;
     }
   }, [limit]);
 

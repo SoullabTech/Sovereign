@@ -56,16 +56,17 @@ export function useCurrentManuscript() {
   const [manuscripts, setManuscripts] = useState<CurrentManuscript[]>([]);
   const [count, setCount] = useState(0);
 
-  const load = useCallback(async () => {
+  /** Re-reads the list. Resolves true only when the list was read (see useLivingWorks.load). */
+  const load = useCallback(async (): Promise<boolean> => {
     try {
       const res = await apiFetch('/api/sovereign/manuscripts', { method: 'GET' });
       if (res.status === 401) {
         setPhase('unauthorized');
-        return;
+        return false;
       }
       if (!res.ok) {
         setPhase('error');
-        return;
+        return false;
       }
       const data = await res.json();
       const list: CurrentManuscript[] = Array.isArray(data.manuscripts) ? data.manuscripts : [];
@@ -75,9 +76,11 @@ export function useCurrentManuscript() {
       // work, the rest as themselves — so the whole read is kept, not just [0].
       setManuscripts(list);
       setPhase(list.length > 0 ? 'ready' : 'none');
+      return true;
     } catch {
       // A network failure is not an empty Studio. Say so.
       setPhase('error');
+      return false;
     }
   }, []);
 
