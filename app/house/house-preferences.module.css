@@ -95,3 +95,24 @@
 @media(max-width:700px){.directoryHead{grid-template-columns:1fr;gap:20px}.directoryGrid{grid-template-columns:1fr}.directoryGroup>header{display:block}.directoryGroup header p{margin-top:5px}}
 
 .saveHold{margin:12px 0;color:#e4c59a;font:12px/1.55 Arial,sans-serif}
+/* All places page (HOUSE-MOBILE-01 D4): plain rows, one tap opens. */
+.directoryHead h1{margin:0 0 8px;color:#eadfce;font:300 clamp(30px,2.5vw,42px)/1.06 'House Crimson',Georgia,serif}
+.directoryList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px}
+.placeRow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:58px;padding:8px 0;border-bottom:1px solid rgba(217,187,142,.12);color:#efe6d8;text-decoration:none}
+.placeRow:hover strong,.placeRow:focus-visible strong{color:#f6d8a4}
+.placeRow .catalogMark{width:24px;height:24px}
+.placeRowText{display:flex;flex-direction:column;gap:2px;min-width:0}
+.placeRowText strong{font:400 18px/1.25 'House Crimson',Georgia,serif}
+.placeRowText small{color:#a99a83;font:12px/1.35 Arial,sans-serif}
+.placeRowChevron{color:#e8be78;font-size:18px}
+.directoryNote{margin:30px 0 0;color:#a99a83;font:13px/1.5 Arial,sans-serif}
+.inlineArrange{padding:0;border:0;background:none;color:#e8be78;font:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.inlineArrange:disabled{opacity:.5;cursor:default}
+@media(max-width:700px){.directoryList{grid-template-columns:1fr}}
+/* Phones and iPads (founder walk 2026-11-06): the corner Arrange my House sat faded on the bright
+   backdrop. On the House home the full button beside Here · Now replaces it; elsewhere it gets a
+   legible pill. */
+@media(max-width:1200px){
+  .arrange{padding:6px 12px;border:1px solid rgba(232,190,120,.45);border-radius:8px;background:rgba(13,10,8,.78);color:#f1e3c8;font-size:13px}
+  .arrangeWide{display:none}
+}

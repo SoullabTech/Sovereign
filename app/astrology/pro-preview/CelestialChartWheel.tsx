@@ -6,10 +6,10 @@
  * We display a verification caveat until astronomy acceptance tests pass.
  */
 import { useMemo } from 'react';
-import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
+import { MAJOR_ASPECTS, type BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import {
-  SIGN_GLYPHS, SIGNS, ASPECT_COLOR, chartBodies,
-  normalizeLongitude, radialPoint, toEclipticLongitude, selectedRelationships, layoutChartMarkers,
+  SIGN_GLYPHS, SIGNS, ASPECT_COLOR, chartBodies, aspectEndpointLongitudes,
+  normalizeLongitude, radialPoint, toEclipticLongitude, layoutChartMarkers,
 } from '@/lib/astrology/proChartGeometry';
 import type { TransitBody } from '@/lib/astrology/proTransits';
 import styles from './astrology-pro-preview.module.css';
@@ -33,6 +33,10 @@ const OUTER_RADIUS = 352;
 const OUTER_MIN_SPACING = 8; // degrees between outer glyphs at this radius
 
 /** Spreads outer glyphs so none overlap; true positions stay marked by ticks. */
+function isFocused(aspect: { planet1: string; planet2: string }, name: string): boolean {
+  return aspect.planet1 === name || aspect.planet2 === name;
+}
+
 function layoutOuter(bodies: readonly TransitBody[]) {
   const ordered = [...bodies].sort((a, b) => a.longitude - b.longitude);
   const placed: Array<{ body: TransitBody; display: number }> = [];
@@ -66,14 +70,16 @@ export function CelestialChartWheel({
   const ascendant = toEclipticLongitude(chart.ascendant.sign, chart.ascendant.degree);
   const bodies = useMemo(() => chartBodies(chart), [chart]);
   const bodyMap = useMemo(() => new Map(bodies.map((body) => [body.name, body])), [bodies]);
+  const endpoints = useMemo(() => aspectEndpointLongitudes(chart), [chart]);
+  // The whole aspect web, as in a professional chart, including aspects to the
+  // Ascendant and Midheaven; the focused body's aspects are drawn on top and stronger.
   const aspects = useMemo(
-    () => selectedRelationships(chart, focusedBody).filter(
+    () => (chart.aspects || []).filter(
       (aspect) => Number.isFinite(aspect.orb) && aspect.orb >= 0 &&
         (maxAspectOrb === null || aspect.orb <= maxAspectOrb) &&
-        bodyMap.has(aspect.planet1 as typeof bodies[number]['name']) &&
-        bodyMap.has(aspect.planet2 as typeof bodies[number]['name']),
-    ),
-    [chart, focusedBody, bodyMap, maxAspectOrb],
+        endpoints.has(aspect.planet1) && endpoints.has(aspect.planet2),
+    ).sort((x, y) => Number(isFocused(x, focusedBody)) - Number(isFocused(y, focusedBody))),
+    [chart, focusedBody, endpoints, maxAspectOrb],
   );
 
   const visualMarkers = useMemo(() =>
@@ -150,16 +156,21 @@ export function CelestialChartWheel({
         })}
 
         {showAspects && aspects.map((aspect, index) => {
-          const a = bodyMap.get(aspect.planet1 as typeof bodies[number]['name']);
-          const b = bodyMap.get(aspect.planet2 as typeof bodies[number]['name']);
-          if (!a || !b) return null;
-          const start = radialPoint(a.longitude, ascendant, 156);
-          const end = radialPoint(b.longitude, ascendant, 156);
+          const a = endpoints.get(aspect.planet1);
+          const b = endpoints.get(aspect.planet2);
+          if (a === undefined || b === undefined) return null;
+          const start = radialPoint(a, ascendant, 156);
+          const end = radialPoint(b, ascendant, 156);
+          const focused = isFocused(aspect, focusedBody);
+          const minor = !MAJOR_ASPECTS.has(aspect.type);
           return (
             <line key={index}
               x1={start.x} y1={start.y} x2={end.x} y2={end.y}
               stroke={ASPECT_COLOR[aspect.type] || '#a8b6be'}
-              strokeWidth="1.7" opacity=".85"
+              strokeDasharray={minor ? '4 3' : undefined}
+              strokeWidth={focused ? 2 : minor ? 0.8 : 1.1} opacity={focused ? 0.95 : 0.5}
+              data-aspect={aspect.planet1 + '-' + aspect.type + '-' + aspect.planet2}
+              data-focused={focused || undefined}
             />
           );
         })}
@@ -260,10 +271,16 @@ export function CelestialChartWheel({
           </g>
         )}
 
-        <circle cx={center} cy={center} r="111" fill="#0b1c2d" stroke="#627989" strokeWidth="1.5" opacity=".94" />
-        <text x={center} y="323" textAnchor="middle" fontSize="11" fill="#cbb88f" letterSpacing="3">SOULLAB</text>
-        <text x={center} y="359" textAnchor="middle" fontSize="30" fontFamily="Georgia,serif" fill="#f2e7d5">Your chart</text>
-        <text x={center} y="388" textAnchor="middle" fontSize="12" fill="#a7b5be">Not a verdict</text>
+        {/* The centre label would cover aspect lines that cross the middle,
+            so it shows only when aspects are hidden. */}
+        {!showAspects && (
+          <g data-centre-label>
+            <circle cx={center} cy={center} r="111" fill="#0b1c2d" stroke="#627989" strokeWidth="1.5" opacity=".94" />
+            <text x={center} y="323" textAnchor="middle" fontSize="11" fill="#cbb88f" letterSpacing="3">SOULLAB</text>
+            <text x={center} y="359" textAnchor="middle" fontSize="30" fontFamily="Georgia,serif" fill="#f2e7d5">Your chart</text>
+            <text x={center} y="388" textAnchor="middle" fontSize="12" fill="#a7b5be">Not a verdict</text>
+          </g>
+        )}
       </svg>
       <p className={styles.wheelCaption}>
         Anchor dots and aspect lines mark calculated longitudes; glyphs can move slightly to avoid overlap. Independent astronomical precision verification remains pending.

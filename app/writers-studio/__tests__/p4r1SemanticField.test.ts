@@ -27,7 +27,8 @@ describe('Semantic Field R1A · writer-paced intelligence', () => {
   });
 
   it('carries explanation style into anchored dialogue without changing evidence', () => {
-    expect(dialogue).toContain('responseStyle: readWorkingStyle().explanation');
+    /* The writer's style is the default; a Develop button may ask for its own depth (Q2). */
+    expect(dialogue).toContain('? initialResponseStyle : readWorkingStyle().explanation');
     expect(reader).toContain('Keep the substance, evidence, uncertainty, and limits exactly the same.');
     expect(explanationInstruction('plain')).toContain('everyday language');
     expect(explanationInstruction('expert')).toContain('professional editorial terminology');

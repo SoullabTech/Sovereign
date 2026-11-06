@@ -40,6 +40,7 @@ import {
   recordSuppliedArrivalWithClient,
   type ArrivalClaimContext,
 } from '@/lib/manuscript/source/arrivals';
+import { findRecentIdenticalImport, sectionsDigest } from '@/lib/manuscript/source/duplicateImport';
 import { detectOmission, omissionMarker } from '@/lib/manuscript/source/omission';
 import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
@@ -521,9 +522,23 @@ export async function POST(request: NextRequest) {
     // Keep that declaration, its exact manuscript AND the binding of its original
     // together: a failed section, Work, expression or claim write must never
     // leave a partial import.
-    let created: { manuscriptId: string; workId: string | null; custody: string };
+    let created: { manuscriptId: string; workId: string | null; custody: string; repeated?: boolean };
     try {
       created = await transaction(async (client) => {
+        /* DOUBLE-SUBMIT GUARD. Serialise this member's saves, then recognise the same save arriving twice within moments (a double
+         * click, a retried request): identical title, identical confirmed sections, same Work declaration, created seconds ago.
+         * The repeat is answered with the manuscript that just landed. Nothing is written, nothing is merged, nothing is deleted;
+         * a deliberate second import comes later than the window and is untouched by it. */
+        await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`manuscript-import:${memberId}`]);
+        const recent = await findRecentIdenticalImport(client, {
+          memberId,
+          title: title.trim(),
+          digest: sectionsDigest(clean),
+          wantsWork: createWork === true,
+        });
+        if (recent) {
+          return { manuscriptId: recent.manuscriptId, workId: recent.workId, custody: recent.sourceCustody, repeated: true };
+        }
         const ms = await client.query<{ id: string }>(
           `INSERT INTO member_manuscripts (member_id, title) VALUES ($1, $2) RETURNING id`,
           [memberId, title.trim()],
@@ -587,7 +602,14 @@ export async function POST(request: NextRequest) {
       }
       throw err;
     }
-    const { manuscriptId, workId, custody } = created;
+    const { manuscriptId, workId, custody, repeated } = created;
+    if (repeated) {
+      console.log(`[MAIA/press] manuscript save repeated within window { memberRef: ${memberRef(memberId)} }`);
+      return NextResponse.json(
+        { id: manuscriptId, ...(workId ? { workId } : {}), sectionCount: clean.length, sourceCustody: custody, duplicateSubmit: true },
+        { status: 200 },
+      );
+    }
 
     // Log marker: counts and provenance only, never content.
     console.log(

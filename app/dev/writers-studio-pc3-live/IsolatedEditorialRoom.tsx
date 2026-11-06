@@ -56,6 +56,8 @@ type Props = {
   revisionsPaused?: boolean;
   onPauseRevisions?: (paused: boolean) => void;
   children: ReactNode;
+  /** Conversation Stage: one wide conversation; the panel pins the passage itself. */
+  stage?: boolean;
 };
 
 const MIN_LEFT = 34;
@@ -158,6 +160,7 @@ export default function IsolatedEditorialRoom({
   revisionsPaused,
   onPauseRevisions,
   children,
+  stage = false,
 }: Props) {
   const [leftPercent, setLeftPercent] = useState(DEFAULT_PREFS.leftPercent);
   const [layout, setLayout] = useState<FocusLayout>(DEFAULT_PREFS.layout);
@@ -297,6 +300,7 @@ export default function IsolatedEditorialRoom({
       style={appearanceVars(appearance) as CSSProperties}
       data-appearance={appearance}
       data-isolated-editorial
+      data-stage={stage ? 'true' : undefined}
       data-layout={layout}
       data-reading-size={readingSize}
       data-line-spacing={lineSpacing}
@@ -309,17 +313,22 @@ export default function IsolatedEditorialRoom({
     >
       <header className="p4r1-isolated-topbar">
         <div>
-          <span className="p4r1-eyebrow">Passage focus</span>
+          <span className="p4r1-eyebrow">{stage ? 'Talking with MAIA' : 'Passage focus'}</span>
           <strong>{title}</strong>
         </div>
         <div className="p4r1-isolated-controls">
+          {stage ? null : (
           <span className="p4r1-isolated-balance">
             {layout === 'custom' ? 'Custom · ' : ''}{Math.round(leftPercent)} / {100 - Math.round(leftPercent)}
           </span>
+          )}
+          {stage ? null : (
           <span className="p4r1-isolated-latitude-status" title={LATITUDE_BANDS[editingLatitude].description}>
             Edit · {EDIT_STRENGTH_LABEL[editingLatitude]}
           </span>
+          )}
 
+          {stage ? null : (
           <details className="p4r1-isolated-menu">
             <summary>Layout</summary>
             <div className="p4r1-isolated-menu-card">
@@ -341,7 +350,11 @@ export default function IsolatedEditorialRoom({
               ))}
             </div>
           </details>
+          )}
 
+          {(() => {
+            const menus = (
+              <>
           <details className="p4r1-isolated-menu">
             <summary>Tools</summary>
             <div className="p4r1-isolated-menu-card p4r1-isolated-tool-list">
@@ -544,10 +557,24 @@ export default function IsolatedEditorialRoom({
               Start a new conversation
             </button>
           ) : null}
-          <button type="button" disabled={busy} onClick={onClose}>Return to manuscript</button>
+              </>
+            );
+            /* Design pass D4 (2026-11-05): during a conversation the top bar is quiet —
+               "Back to the page" plus one "More" menu for everything else. */
+            return stage ? (
+              <details className="p4r1-isolated-menu p4r1-isolated-more" data-stage-more>
+                <summary aria-label="More options">More ⋯</summary>
+                <div className="p4r1-isolated-menu-card p4r1-isolated-more-card">{menus}</div>
+              </details>
+            ) : menus;
+          })()}
+          <button type="button" disabled={busy} onClick={onClose} data-stage-back>{stage ? 'Back to the page' : 'Return to manuscript'}</button>
         </div>
       </header>
 
+      {stage ? (
+        <div className="p4r1-isolated-stage" data-isolated-stage>{children}</div>
+      ) : (
       <div
         ref={shellRef}
         className="p4r1-isolated-split"
@@ -587,6 +614,7 @@ export default function IsolatedEditorialRoom({
           </div>
         </aside>
       </div>
+      )}
     </section>
   );
 }

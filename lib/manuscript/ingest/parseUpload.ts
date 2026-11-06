@@ -21,6 +21,13 @@ import mammoth from 'mammoth';
 import JSZip from 'jszip';
 import { DOMParser } from '@xmldom/xmldom';
 import { preserveDocxStructure, type DocxFidelity } from './docxFidelity';
+import {
+  itemsToLines,
+  reconstructParagraphs,
+  sameNonWhitespace,
+  type PositionedItem,
+  type PositionedLine,
+} from './pdfParagraphs';
 export { UnsupportedDocxStructureError } from './docxFidelity';
 
 export type UploadFormat = 'docx' | 'pdf' | 'epub' | 'text';
@@ -31,6 +38,8 @@ export interface ParseUploadResult {
   /** Non-fatal notices for the member (e.g. a scanned PDF with no text). */
   warnings: string[];
   format: UploadFormat;
+  /** PDF only: paragraph breaks were restored from layout (whitespace only). */
+  paragraphsReconstructed?: boolean;
   /** Human-reviewable fidelity report, for Word uploads only. */
   fidelity?: DocxFidelity;
 }
@@ -107,9 +116,61 @@ async function extractDocxMarkdown(buffer: Buffer) {
   );
 }
 
+/**
+ * Positional pass over the same pdf.js document pdf-parse already loaded.
+ * pdf-parse v2's public API returns flat text only, so the per-item
+ * transform/width/height are read through its (private) `load()`. Any failure
+ * — missing method, API drift, odd PDF — returns null and the caller keeps the
+ * flat text: never worse than before.
+ */
+async function positionedPdfLines(parser: unknown): Promise<PositionedLine[][] | null> {
+  try {
+    const doc = await (parser as { load: () => Promise<PdfJsDoc> }).load();
+    const pages: PositionedLine[][] = [];
+    for (let i = 1; i <= doc.numPages; i += 1) {
+      const page = await doc.getPage(i);
+      const viewport = page.getViewport({ scale: 1 });
+      const content = await page.getTextContent({
+        includeMarkedContent: false,
+        disableNormalization: false,
+      });
+      const items: PositionedItem[] = [];
+      for (const it of content.items) {
+        if (!('str' in it) || !it.transform) continue;
+        const [x, y] = viewport.convertToViewportPoint(it.transform[4], it.transform[5]);
+        items.push({ str: it.str ?? '', x, y, width: it.width, height: it.height, hasEOL: it.hasEOL });
+      }
+      pages.push(itemsToLines(items));
+      page.cleanup?.();
+    }
+    return pages;
+  } catch {
+    return null;
+  }
+}
+
+interface PdfJsDoc {
+  numPages: number;
+  getPage: (n: number) => Promise<{
+    getViewport: (o: { scale: number }) => {
+      convertToViewportPoint: (x: number, y: number) => [number, number];
+    };
+    getTextContent: (o: object) => Promise<{
+      items: Array<{
+        str?: string;
+        transform?: number[];
+        width: number;
+        height: number;
+        hasEOL?: boolean;
+      }>;
+    }>;
+    cleanup?: () => void;
+  }>;
+}
+
 async function extractPdfText(
   buffer: Buffer,
-): Promise<{ text: string; warnings: string[] }> {
+): Promise<{ text: string; warnings: string[]; paragraphsReconstructed: boolean }> {
   // pdf-parse v2 is dynamically imported (its ESM/CJS shim trips the RSC
   // bundler on static import — see lib/workbench/extract/pdf.ts).
   const { PDFParse } = await import('pdf-parse');
@@ -161,7 +222,20 @@ async function extractPdfText(
        This is the doctrine at the top of this file applied to a case where it
        had quietly lapsed: the author's words, unchanged — and nothing added. */
     const result = await parser.getText({ pageJoiner: '' });
-    const text = result.text ?? '';
+    const flat = result.text ?? '';
+    /* PDF-PARAGRAPHS — restore paragraph breaks from layout, WHITESPACE ONLY.
+       Accepted only if removing all whitespace yields exactly the flat text's
+       characters in the same order; otherwise the flat text stands. */
+    let text = flat;
+    let paragraphsReconstructed = false;
+    const lines = await positionedPdfLines(parser);
+    if (lines) {
+      const rebuilt = reconstructParagraphs(lines);
+      if (rebuilt && sameNonWhitespace(rebuilt, flat)) {
+        text = rebuilt;
+        paragraphsReconstructed = true;
+      }
+    }
     const pageCount = result.pages?.length ?? 0;
     const avgPerPage = pageCount > 0 ? text.trim().length / pageCount : 0;
     const warnings: string[] = [];
@@ -174,7 +248,7 @@ async function extractPdfText(
         'This PDF looks like scanned images — we can read text from typed PDFs, but not from scans yet. If you have the original Word (.docx) or a text version, that will bring your words in.',
       );
     }
-    return { text, warnings };
+    return { text, warnings, paragraphsReconstructed };
   } finally {
     await parser.destroy().catch(() => undefined);
   }
@@ -509,8 +583,8 @@ export async function parseUpload(
   }
 
   if (format === 'pdf') {
-    const { text, warnings } = await extractPdfText(buffer);
-    return { text, warnings, format };
+    const { text, warnings, paragraphsReconstructed } = await extractPdfText(buffer);
+    return { text, warnings, format, ...(paragraphsReconstructed ? { paragraphsReconstructed } : {}) };
   }
 
   if (format === 'epub') {

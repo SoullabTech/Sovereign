@@ -70,12 +70,19 @@ export default function P4R1ImportManuscript({
   const [filename, setFilename] = useState<string | null>(null);
   const [format, setFormat] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [paragraphsReconstructed, setParagraphsReconstructed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A new writer may never have opened MAIA, so no Sanctuary choice exists yet. The import asks for it here, as the
+  // writer's own explicit choice, rather than sending them somewhere else. The held file is retried only on Ordinary.
+  const [postureAskFor, setPostureAskFor] = useState<File | null>(null);
   const [custodyNotice, setCustodyNotice] = useState<string | null>(null);
   const [sourceArrivalId, setSourceArrivalId] = useState<string | null>(null);
   const [savedManuscriptId, setSavedManuscriptId] = useState<string | null>(null);
   const [sections, setSections] = useState<ImportSection[]>([]);
   const [splitOpen, setSplitOpen] = useState<number | null>(null);
+  // The member already holds an import of this exact file. A question put to them, never a decision made for them.
+  const [alreadyHeld, setAlreadyHeld] = useState<{ manuscriptId: string; title: string | null } | null>(null);
+  const heldFileRef = useRef<File | null>(null);
 
   const textStats = useMemo(() => {
     const words = text.trim() ? text.trim().split(/\s+/).length : 0;
@@ -83,14 +90,17 @@ export default function P4R1ImportManuscript({
   }, [text]);
   const fileIntakeAvailable = localReview || sourceIntakeReleased;
 
-  const readFile = async (file: File) => {
+  const readFile = async (file: File, options: { importAgain?: boolean } = {}) => {
     if (!fileIntakeAvailable) {
       setError('Original-file import is not released on this Writer image. Nothing was sent.');
       return;
     }
     setError(null);
     setWarnings([]);
+    setParagraphsReconstructed(false);
     setSourceArrivalId(null);
+    setAlreadyHeld(null);
+    heldFileRef.current = null;
     setFilename(file.name);
     if (file.size === 0) {
       setError('That file is empty.');
@@ -107,6 +117,10 @@ export default function P4R1ImportManuscript({
     if (!localReview) {
       posture = readCurrentSanctuaryPosture();
       if (!posture.resolved) {
+        if (posture.reason === 'no_live_settings') {
+          setPostureAskFor(file);
+          return;
+        }
         setError('Your Sanctuary setting could not be read on this device, so nothing was sent. Open MAIA here once, then try again.');
         return;
       }
@@ -135,6 +149,8 @@ export default function P4R1ImportManuscript({
     try {
       const form = new FormData();
       form.append('file', file);
+      // An explicit member act: "Import again anyway". Never sent by default.
+      if (options.importAgain && !localReview) form.append('importAgain', 'true');
       const endpoint = localReview
         ? '/api/writers-studio/local-review/import'
         : '/api/sovereign/manuscripts/ingest';
@@ -154,9 +170,21 @@ export default function P4R1ImportManuscript({
         }
         return;
       }
+      if (body?.outcome === 'already_imported') {
+        const existing = (body.existing ?? null) as { manuscriptId?: unknown; title?: unknown } | null;
+        if (existing && typeof existing.manuscriptId === 'string') {
+          // Nothing was stored and no text came back. Keep the file in memory only so "Import again anyway" can resend it.
+          heldFileRef.current = file;
+          setAlreadyHeld({ manuscriptId: existing.manuscriptId, title: typeof existing.title === 'string' ? existing.title : null });
+          setText('');
+          setFormat(null);
+          return;
+        }
+      }
       const extracted = typeof body?.text === 'string' ? body.text : '';
       setText(extracted);
       setFormat(typeof body?.format === 'string' ? body.format : null);
+      setParagraphsReconstructed(body?.paragraphsReconstructed === true);
       setWarnings(Array.isArray(body?.warnings)
         ? body!.warnings.filter((item): item is string => typeof item === 'string')
         : []);
@@ -170,6 +198,26 @@ export default function P4R1ImportManuscript({
     } finally {
       setBusy(null);
     }
+  };
+
+  const choosePosture = (sanctuary: boolean) => {
+    const file = postureAskFor;
+    setPostureAskFor(null);
+    if (typeof window === 'undefined') return;
+    try {
+      // Only reached when no live settings exist, so nothing else in the record is overwritten.
+      if (window.localStorage.getItem('maia_settings') !== null) {
+        setError('Your Sanctuary setting changed while you were choosing. Nothing was sent. Choose the file again.');
+        return;
+      }
+      const next = { sanctuary };
+      window.localStorage.setItem('maia_settings', JSON.stringify(next));
+      window.dispatchEvent(new CustomEvent('maia-settings-changed', { detail: next }));
+    } catch {
+      setError('Your choice could not be saved on this device, so nothing was sent.');
+      return;
+    }
+    if (file) void readFile(file);
   };
 
   const previewStructure = async () => {
@@ -402,6 +450,26 @@ export default function P4R1ImportManuscript({
                 </button>
               </div>
 
+              {alreadyHeld ? (
+                <div className="p4r1-import-notices" role="alert" data-already-imported>
+                  <p>
+                    <b>You already brought this in.</b>
+                    {alreadyHeld.title ? ` It is in your library as “${alreadyHeld.title}”.` : ' It is in your library.'}
+                    {' '}Nothing new was saved.
+                  </p>
+                  <p>
+                    <button type="button" disabled={busy !== null}
+                      onClick={() => { void Promise.resolve(onComplete(alreadyHeld.manuscriptId)).catch(() => setError('That writing could not be opened. Try again from your library.')); }}>
+                      Open
+                    </button>
+                    {' '}
+                    <button type="button" disabled={busy !== null || !heldFileRef.current}
+                      onClick={() => { const f = heldFileRef.current; if (f) void readFile(f, { importAgain: true }); }}>
+                      Import again anyway
+                    </button>
+                  </p>
+                </div>
+              ) : null}
               {filename ? (
                 <div className="p4r1-import-file" role="status">
                   <span>{filename}</span>
@@ -431,9 +499,23 @@ export default function P4R1ImportManuscript({
             <small>{textStats.characters.toLocaleString()} characters · {textStats.words.toLocaleString()} words</small>
           </label>
 
+          {paragraphsReconstructed ? (
+            <div className="p4r1-import-notices" role="note">
+              <p>Paragraphs were reconstructed from the PDF layout. Your words are unchanged.</p>
+            </div>
+          ) : null}
           {warnings.length ? (
             <div className="p4r1-import-notices" role="note">
               {warnings.map((warning, index) => <p key={index}>{warning}</p>)}
+            </div>
+          ) : null}
+          {postureAskFor ? (
+            <div className="p4r1-import-notices" role="group" aria-label="How should this session be held?" data-import-posture-ask>
+              <p>Before I take in “{postureAskFor.name}”: should this session be ordinary, so your manuscript is kept, or Sanctuary, so nothing is kept?</p>
+              <p>
+                <button type="button" className="p4r1-import-primary" onClick={() => choosePosture(false)}>Ordinary — keep my manuscript</button>{' '}
+                <button type="button" className="p4r1-import-back" onClick={() => choosePosture(true)}>Sanctuary — keep nothing</button>
+              </p>
             </div>
           ) : null}
           {error ? <p className="p4r1-import-error" role="alert">{error}</p> : null}

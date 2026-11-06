@@ -45,7 +45,29 @@ export const ASPECT_COLOR: Record<string, string> = {
   trine: '#8faacb',
   opposition: '#d7baa1',
   quincunx: '#a6abb7',
+  semisextile: '#9fb7a4',
+  semisquare: '#c99a8c',
+  sesquiquadrate: '#c99a8c',
+  quintile: '#b9a5cf',
+  biquintile: '#b9a5cf',
 };
+
+/** Chart angles that take part in aspects alongside the bodies. */
+export const ANGLE_DEFINITIONS = [
+  ['ascendant', 'Ascendant', 'AC'],
+  ['midheaven', 'Midheaven', 'MC'],
+] as const;
+
+/** Longitude of every aspect endpoint: each plotted body plus the two angles. */
+export function aspectEndpointLongitudes(chart: BirthChart): Map<string, number> {
+  const map = new Map<string, number>(chartBodies(chart).map((body) => [body.name, body.longitude]));
+  for (const [key, name] of ANGLE_DEFINITIONS) {
+    const angle = chart[key];
+    const longitude = angle ? toEclipticLongitude(angle.sign, angle.degree) : null;
+    if (longitude !== null) map.set(name, longitude);
+  }
+  return map;
+}
 
 export function normalizeLongitude(value: number): number {
   return ((value % 360) + 360) % 360;
@@ -58,9 +80,14 @@ export function toEclipticLongitude(sign: string, degree: number): number | null
   return index * 30 + degree;
 }
 
-/** Ascendant is placed at the left horizon; longitude increases anticlockwise. */
+/**
+ * Traditional orientation: the Ascendant sits at the left horizon (9 o'clock)
+ * and zodiacal longitude increases anticlockwise, so house 1 lies just below
+ * the Ascendant, the IC is at the bottom, the Descendant at the right and the
+ * MC at the top. Returned in mathematical degrees (0 = east, anticlockwise).
+ */
 export function longitudeToAngle(longitude: number, ascendantLongitude: number): number {
-  return 180 - normalizeLongitude(longitude - ascendantLongitude);
+  return normalizeLongitude(180 + normalizeLongitude(longitude - ascendantLongitude));
 }
 
 export function radialPoint(

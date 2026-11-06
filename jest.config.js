@@ -18,6 +18,7 @@ const config = {
     '**/?(*.)+(spec|test).ts',
     '**/app/dev/writers-studio-pc3-live/__tests__/developAddToWork.test.tsx',
     '**/app/dev/writers-studio-pc3-live/__tests__/historyPage.test.tsx',
+    '**/app/astrology/pro-preview/__tests__/systemsWorkState.test.tsx',
     '**/app/writers-studio/__tests__/observationMarkerDialogueInView.interaction.test.tsx',
     '**/app/writers-studio/__tests__/writeViewDeadEnds.interaction.test.tsx',
     '**/app/writers-studio/__tests__/jarvisA2RevalidationActualControllerR1.test.ts',

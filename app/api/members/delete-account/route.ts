@@ -36,6 +36,10 @@ const OPTIONAL_CLEANUP: ReadonlyArray<{ table: string; column: string }> = [
   { table: 'developmental_memories', column: 'user_id' },
   { table: 'google_calendar_credentials', column: 'user_id' },
   { table: 'memory_links', column: 'user_id' },
+  // Registered notification devices: a device token only, never message content, and it
+  // belongs to the member alone, so it is REMOVED with the account. It is not governed
+  // content to refuse over (that list is content this route cannot remove).
+  { table: 'member_push_devices', column: 'member_id' },
 ];
 
 /**

@@ -1,0 +1,35 @@
+.wrap { margin-top: 14px; }
+.title { margin: 18px 0 6px; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: #9fd0d8; }
+.dayMaster { margin: 0 0 10px; font-size: .95rem; }
+.dayMaster strong { font-size: 1.15rem; margin-right: 2px; }
+.muted { color: #9fb2b9; }
+.pillars { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.column { display: grid; gap: 6px; align-content: start; padding: 10px 8px; border: 1px solid rgba(159, 208, 216, .2); border-radius: 10px; background: rgba(4, 14, 22, .55); text-align: center; }
+.columnName { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: #9fb2b9; }
+.tenGod { min-height: 2.4em; font-size: .78rem; color: #cfe2e5; }
+.character { display: grid; gap: 1px; padding: 6px 2px; border-radius: 8px; background: rgba(159, 208, 216, .06); }
+.hanzi { font-size: 1.9rem; line-height: 1.1; }
+.pinyin { font-size: .78rem; color: #cfe2e5; }
+.element { font-size: .7rem; color: #9fb2b9; }
+.hidden { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: .74rem; text-align: left; }
+.hidden li { padding: 2px 4px; border-radius: 4px; background: rgba(159, 208, 216, .05); }
+.hidden small { color: #9fb2b9; }
+.elements, .note { margin: 10px 0 0; font-size: .82rem; color: #b5c6cc; line-height: 1.45; }
+.direction { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 8px 0; font-size: .88rem; }
+.direction label { display: flex; align-items: center; gap: 6px; }
+.direction small { color: #9fb2b9; }
+.luck { list-style: none; margin: 6px 0 0; padding: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
+.luck li { display: grid; gap: 2px; padding: 8px 4px; border: 1px solid rgba(159, 208, 216, .18); border-radius: 8px; text-align: center; font-size: .74rem; }
+.luckAge { color: #9fb2b9; }
+.luckChars { font-size: 1.25rem; }
+.luckYear { color: #9fb2b9; }
+/* Element tints, drawn from the astrology rooms' palette. */
+.wood .hanzi, .wood.luckChars, li.wood span { color: #9cc79a; }
+.fire .hanzi, .fire.luckChars, li.fire span { color: #e7a794; }
+.earth .hanzi, .earth.luckChars, li.earth span { color: #dfbd84; }
+.metal .hanzi, .metal.luckChars, li.metal span { color: #d9dde2; }
+.water .hanzi, .water.luckChars, li.water span { color: #8faacb; }
+@media (max-width: 700px) {
+  .hanzi { font-size: 1.5rem; }
+  .luck { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}

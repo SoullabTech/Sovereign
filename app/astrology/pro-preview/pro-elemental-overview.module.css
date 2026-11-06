@@ -1,0 +1,30 @@
+.panel { margin-top: 24px; background: #0f1f30; border: 1px solid rgba(224, 196, 149, .25); border-radius: 16px; padding: 22px; color: #e8dcc4; }
+.eyebrow { font-size: .72rem; letter-spacing: .16em; color: #d6b77d; }
+.panel h2 { font-family: Georgia, serif; color: #f3e6cd; margin: 6px 0 4px; }
+.panel h3 { font-family: Georgia, serif; color: #f3e6cd; margin: 24px 0 2px; }
+.lead { color: #b9ad97; margin: 0 0 14px; font-size: .92rem; }
+.fire { --el: #f0a066; }
+.water { --el: #7fb0e6; }
+.earth { --el: #74c79c; }
+.air { --el: #b6a3e6; }
+.balance { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.balanceHead { display: flex; justify-content: space-between; color: var(--el); }
+.bar { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, .08); margin: 6px 0; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--el); border-radius: 999px; }
+.balance small { color: #9fb0b8; font-size: .8rem; }
+.modes { color: #d8cbb3; margin: 14px 0 0; font-size: .9rem; }
+.modes span { color: #8f9ea5; }
+.pathways { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.pathway { border-top: 2px solid var(--el); padding-top: 10px; }
+.pathway h4 { margin: 0 0 8px; color: var(--el); font-size: 1rem; }
+.pathway h4 span { display: block; color: #8f9ea5; font-size: .78rem; font-weight: 400; }
+.pathway ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pathway li { border: 1px solid rgba(224, 196, 149, .12); border-radius: 10px; padding: 9px 10px; font-size: .86rem; display: grid; gap: 3px; opacity: .7; }
+.pathway li[data-occupied] { opacity: 1; border-color: var(--el); background: rgba(255, 255, 255, .03); }
+.stationHead { display: flex; justify-content: space-between; gap: 8px; }
+.stationHead b { font-size: .8rem; color: #f3e6cd; }
+.stationHead span { color: var(--el); }
+.pathway small { color: #9fb0b8; }
+.pathway .who { color: #e8dcc4; }
+@media (max-width: 900px) { .balance, .pathways { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .balance, .pathways { grid-template-columns: 1fr; } }

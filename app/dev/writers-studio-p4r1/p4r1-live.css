@@ -1739,8 +1739,10 @@
   border-color:var(--fr-action-line);
 }
 
-/* Old multi-button ribbon no longer participates in presentation. */
-.p4r1-root .p4r1-locus-actions{
+/* Old multi-button ribbon no longer participates in presentation.
+   The Develop section panel reuses the class for its relational actions
+   ("Talk with MAIA" and the lenses); those must stay visible. */
+.p4r1-root .p4r1-locus-actions:not(.p4r1-locus-actions--relational){
   display:none!important;
 }
 
@@ -3711,6 +3713,9 @@
 .p4r1-root .p4r1-locus-actions--relational button{
   border:1px solid var(--fr-line);border-radius:8px;background:var(--fr-field);color:var(--fr-title)
 }
+.p4r1-root .p4r1-locus-actions--relational::before{content:none;display:none}
+.p4r1-root .p4r1-locus-actions--relational button:nth-of-type(2){background:var(--fr-field);color:var(--fr-title)}
+.p4r1-root .p4r1-locus-actions--relational .p4r1-talk{background:var(--fr-held);border-color:var(--fr-action-line)}
 
 /* Theme-safe text: no native/button black may leak into the night surfaces. */
 .p4r1-root .p4r1-developmental-options button,
@@ -5177,3 +5182,167 @@
 .p4r1-root .p4r1-history-act {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font:14px/1.5 var(--fr-sans-stack);color:var(--fr-ink2);}
 .p4r1-root .p4r1-history-act-text {display:flex;flex-direction:column;min-width:0;}
 .p4r1-root .p4r1-history-act-beneath {font-size:12.5px;opacity:.75;}
+
+/* ── Conversation Stage (founder R1, 2026-11-04; built 2026-11-05) ───────── */
+.p4r1-root .p4r1-isolated-stage{
+  /* The room is window-height; the conversation is the part that scrolls. */
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+.p4r1-root .p4r1-isolated-stage > .ws-stage{
+  max-width:820px;
+  margin:0 auto;
+  padding:0 16px 0;
+  box-sizing:border-box;
+}
+.p4r1-root .ws-stage{ display:flex; flex-direction:column; gap:16px; }
+.p4r1-root .ws-stage-passage{
+  position:sticky; top:0; z-index:2;
+  padding:16px 18px;
+  border:1px solid var(--fr-action-line);
+  border-radius:12px;
+  /* Solid, so the conversation never shows through the pinned passage. */
+  background:linear-gradient(var(--fr-action-soft), var(--fr-action-soft)), var(--fr-panel);
+}
+.p4r1-root .ws-stage-passage-head{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; }
+.p4r1-root .ws-stage-passage-head span{ font:600 11px var(--fr-sans-stack); letter-spacing:.08em; text-transform:uppercase; color:var(--fr-ink2); }
+.p4r1-root .ws-stage-passage-head button{ background:none; border:0; color:var(--fr-action); font:600 13px var(--fr-sans-stack); cursor:pointer; }
+.p4r1-root .ws-stage-passage > p{ margin:0; font:400 18px/1.65 var(--fr-serif-stack); color:var(--fr-title); white-space:pre-wrap; }
+.p4r1-root .ws-stage-thread{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px; }
+.p4r1-root .ws-stage-turn{ max-width:88%; }
+.p4r1-root .ws-stage-turn > p{ margin:0; white-space:pre-wrap; line-height:1.65; }
+.p4r1-root .ws-stage-turn.is-maia{
+  align-self:flex-start;
+  padding:12px 16px;
+  border:1px solid var(--fr-line);
+  border-radius:4px 14px 14px 14px;
+  background:var(--fr-panel);
+  color:var(--fr-title);
+}
+.p4r1-root .ws-stage-turn.is-maia::before{
+  content:'MAIA'; display:block; margin-bottom:6px;
+  font:600 10px var(--fr-sans-stack); letter-spacing:.1em; color:var(--fr-action);
+}
+.p4r1-root .ws-stage-turn.is-writer{
+  align-self:flex-end;
+  padding:10px 14px;
+  border-radius:14px 4px 14px 14px;
+  background:var(--fr-field);
+  border:1px solid var(--fr-line-soft);
+  color:var(--fr-ink);
+}
+.p4r1-root .ws-stage-turn.is-pending{ opacity:.7; }
+.p4r1-root .ws-stage-turn.is-thinking{ color:var(--fr-muted); font-style:italic; }
+.p4r1-root .ws-stage-turn.is-gate .p4r1-dance-posture{ margin:0; border:0; padding:0; background:none; }
+.p4r1-root .ws-stage-turn.is-note{ align-self:center; max-width:100%; font-size:13px; color:var(--fr-muted); }
+.p4r1-root .ws-stage-why{ margin-top:8px; background:none; border:0; padding:0; color:var(--fr-action); font:600 12px var(--fr-sans-stack); cursor:pointer; }
+.p4r1-root .ws-stage-why-full{ margin-top:8px !important; font-size:14px; color:var(--fr-ink2); }
+.p4r1-root .ws-stage-option{ margin-top:12px; padding:12px 14px; border:1px solid var(--fr-action-line); border-radius:10px; background:var(--fr-panel-soft, var(--fr-field)); }
+.p4r1-root .ws-stage-option-words{ margin:0 0 10px; font:400 16px/1.65 var(--fr-serif-stack); white-space:pre-wrap; }
+.p4r1-root .ws-stage-option-words del{ color:#f0b8ae; background:rgba(192,103,91,.22); text-decoration:line-through; text-decoration-color:#e07a6c; text-decoration-thickness:2px; border-radius:3px; padding:0 2px; }
+.p4r1-root .ws-stage-option-words ins{ color:#d8f2e6; text-decoration:none; background:rgba(110,190,155,.28); border-radius:3px; padding:0 2px; box-shadow:inset 0 -2px 0 rgba(110,190,155,.75); }
+.p4r1-root .ws-stage-option-count{ margin:0 0 6px; font:600 11px/1.4 var(--fr-sans-stack, system-ui); letter-spacing:.06em; text-transform:uppercase; color:var(--fr-muted); }
+.p4r1-root .ws-stage-option-actions,
+.p4r1-root .ws-stage-change,
+.p4r1-root .ws-stage-chips{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.p4r1-root .ws-stage-change{ margin-top:10px; }
+.p4r1-root .ws-stage-option-actions button,
+.p4r1-root .ws-stage-change button,
+.p4r1-root .ws-stage-chips button,
+.p4r1-root .ws-stage-earlier-undo button,
+.p4r1-root .ws-stage-deeper > button{
+  padding:7px 14px; border-radius:999px;
+  border:1px solid var(--fr-line); background:transparent;
+  color:var(--fr-title); font:600 13px var(--fr-sans-stack); cursor:pointer;
+}
+.p4r1-root .ws-stage button.is-primary{ background:var(--fr-action); border-color:var(--fr-action); color:var(--fr-panel); }
+.p4r1-root .ws-stage button:disabled{ opacity:.45; cursor:default; }
+.p4r1-root .ws-stage-earlier{ align-self:stretch; max-width:100%; font-size:14px; color:var(--fr-ink2); }
+.p4r1-root .ws-stage-earlier > details > summary{ cursor:pointer; font:600 12px var(--fr-sans-stack); color:var(--fr-ink2); }
+.p4r1-root .ws-stage-earlier ol{ list-style:none; padding:0; margin:10px 0 0; display:flex; flex-direction:column; gap:10px; opacity:.8; }
+.p4r1-root .ws-stage-earlier-undo{ margin:8px 0 0; }
+.p4r1-root .ws-stage-composer{
+  position:sticky; bottom:0; z-index:2;
+  display:flex; flex-direction:column; gap:10px;
+  padding:12px 0 4px;
+  background:linear-gradient(to bottom, transparent, var(--fr-panel) 30%);
+}
+.p4r1-root .ws-stage-ask{ display:flex; gap:10px; align-items:flex-end; }
+.p4r1-root .ws-stage-ask textarea{
+  flex:1; min-height:46px; max-height:180px; resize:vertical;
+  padding:12px 16px; border-radius:22px;
+  border:1px solid var(--fr-line); background:var(--fr-field); color:var(--fr-title);
+  font:400 15px/1.5 var(--fr-sans-stack);
+}
+.p4r1-root .ws-stage-ask > button{ height:46px; padding:0 20px; border-radius:23px; }
+.p4r1-root .ws-stage-deeper{ padding:12px; border:1px solid var(--fr-line); border-radius:12px; }
+@media (max-width: 600px){
+  .p4r1-root .p4r1-isolated-stage > .ws-stage{ padding:0 12px; }
+  .p4r1-root .ws-stage-turn{ max-width:100%; }
+  .p4r1-root .ws-stage-passage > p{ font-size:16px; }
+}
+
+/* Doors ruling 2026-11-05: one door — the writer's own words, or three plain choices. */
+.p4r1-selection-menu .p4r1-selection-ask{ margin:4px 4px 2px; }
+.p4r1-selection-menu .p4r1-selection-ask input{ width:100%; box-sizing:border-box; padding:10px 12px; border-radius:10px;
+  border:1px solid rgba(232,190,120,.45); background:rgba(0,0,0,.25); color:inherit; font:inherit; font-size:15px; }
+.p4r1-selection-menu .p4r1-selection-ask input:focus{ outline:2px solid rgba(232,190,120,.7); outline-offset:1px; }
+.p4r1-selection-menu .p4r1-selection-or{ margin:8px 12px 2px; font-size:12px; color:var(--fr-muted); }
+.p4r1-selection-menu [data-passage-choice]{ font-size:14px; }
+
+/* Responsive length: two quiet steering buttons under MAIA's latest reply. */
+.p4r1-root .ws-stage-length{ list-style:none; display:flex; gap:8px; margin:-4px 0 6px; padding:0; }
+.p4r1-root .ws-stage-length button{ font-size:12px; padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.14);
+  background:transparent; color:var(--fr-muted); cursor:pointer; }
+.p4r1-root .ws-stage-length button:hover{ color:inherit; border-color:rgba(232,190,120,.5); }
+
+/* Several conversations on one passage (founder ruling 2026-11-05): the question, then
+   the choices stacked, each showing when and how it began. */
+.p4r1-root .ws-stage-choose{ display:flex; flex-direction:column; align-items:stretch; gap:10px; }
+.p4r1-root .ws-stage-choose > div:first-child{ display:flex; flex-direction:column; gap:2px; }
+.p4r1-root .ws-stage-choose-list{ display:flex; flex-direction:column; align-items:stretch; gap:6px; flex-wrap:nowrap; }
+.p4r1-root .ws-stage-choose-list button{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%;
+  text-align:left; white-space:normal; padding:8px 12px; border-radius:10px; }
+.p4r1-root .ws-stage-choose-list button span{ font-size:13px; color:var(--fr-muted); overflow-wrap:anywhere; }
+
+/* Answer choices: MAIA's closed question, answerable in one click. */
+.p4r1-root .ws-stage-answers{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.p4r1-root .ws-stage-answers button{ font-size:14px; padding:7px 14px; border-radius:999px; cursor:pointer;
+  border:1px solid rgba(232,190,120,.55); background:rgba(232,190,120,.08); color:inherit; }
+.p4r1-root .ws-stage-answers button:hover{ background:rgba(232,190,120,.18); }
+
+/* Design pass D4: the conversation's quiet top bar — everyday moves first in More ⋯. */
+.p4r1-root .p4r1-isolated-more-card{ display:flex; flex-direction:column; gap:4px; min-width:240px; }
+.p4r1-root .p4r1-isolated-more-card > [data-next-passage-menu]{ order:1; }
+.p4r1-root .p4r1-isolated-more-card > button{ order:2; text-align:left; }
+.p4r1-root .p4r1-isolated-more-card > details:not([data-next-passage-menu]){ order:3; }
+.p4r1-root .p4r1-isolated-more-card details > .p4r1-isolated-menu-card{ position:static; margin-top:6px; box-shadow:none; }
+
+/* Develop design pass: MAIA's own observation first, in her voice. */
+.p4r1-root .p4r1-discovery-said{ margin:10px 0 14px; padding:14px 16px; border-left:3px solid rgba(232,190,120,.7);
+  background:rgba(232,190,120,.06); border-radius:0 10px 10px 0; }
+.p4r1-root .p4r1-discovery-said p{ margin:6px 0 0; font-size:16px; line-height:1.6; }
+.p4r1-root .p4r1-discovery-more-actions{ display:flex; flex-wrap:wrap; gap:8px; margin:6px 0 12px; }
+
+/* Develop: MAIA asks once to read, with the button right there. */
+.p4r1-root .p4r1-intent-ask{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:12px; }
+.p4r1-root .p4r1-intent-ask > p{ flex-basis:100%; margin:0; font-size:15px; line-height:1.55; }
+.p4r1-root .p4r1-intent-ask .p4r1-intent-other{ background:transparent; border:1px solid rgba(255,255,255,.16); color:inherit;
+  border-radius:999px; padding:7px 14px; font-size:13px; cursor:pointer; }
+.p4r1-root .p4r1-intent-ask .p4r1-intent-other:hover{ border-color:rgba(232,190,120,.5); }
+
+/* Phones (founder screenshot 2026-11-05): the floating Prose / Edit switch and its hint
+   covered the chapter title. On narrow screens it takes its own row above the page. */
+@media(max-width:760px){
+  .p4r1-root .p4r1-prose-host{display:flex;flex-direction:column}
+  .p4r1-root .p4r1-write-view-switch{
+    position:static;align-self:stretch;flex-wrap:wrap;align-items:center;
+    margin:10px 12px 0;border-radius:16px
+  }
+  .p4r1-root .p4r1-write-view-switch .p4r1-write-view-hint{
+    flex-basis:100%;margin:4px 8px 2px!important;line-height:1.4
+  }
+  .p4r1-root .p4r1-prose-host .p4r1-prose-view{flex:1;min-height:0;padding-top:20px}
+}

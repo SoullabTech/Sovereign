@@ -196,6 +196,37 @@ export const LEARNING_TEACHING_PRECEDENCE = [
 ].join(' ');
 
 /**
+ * ⭐ RESPONSIVE LENGTH (founder direction 2026-11-05): "make the responses responsive to the
+ * writer and their situation. Some want more and some need less." Overwhelm is easy to reach
+ * for most members, so brevity is the default when the request is small; the room grows only
+ * with the question. ⛔ Judged from THIS request, never from an impression of the writer.
+ */
+export const RESPONSIVE_LENGTH_DIRECTIVE = [
+  'Fit the length of your reply to what I just asked and how I asked it, not to a set form.',
+  'A short or practical request gets a short answer: a few sentences, and the wording itself if that is what I asked for. An open or searching question can take more room, but only as much as it needs.',
+  'When unsure, say the most useful thing briefly and let me ask for more.',
+  'Do not restate my passage back to me and do not pad. Do not mention the Studio\'s settings, limits or controls unless one of them decides what you can do for me right now, and then say it in one plain sentence.',
+  'Judge the length from this request alone, never from an impression of me.',
+].join(' ');
+
+/** Composed by the runtime beside `editorialDirective`, ⛔ not inside it: the depth texts stay
+ *  byte-identical, and a Learning turn keeps its own length rule (LEARNING_TEACHING_PRECEDENCE). */
+export function responsiveLengthDirective(depth: EditorialDepth): string {
+  return depth === 'learning' ? '' : RESPONSIVE_LENGTH_DIRECTIVE;
+}
+
+/** The writer's own choice (the "Shorter" / "Say more" buttons). ⛔ Never inferred. */
+export type ReplyLength = 'shorter' | 'fuller';
+export function isReplyLength(value: unknown): value is ReplyLength {
+  return value === 'shorter' || value === 'fuller';
+}
+export function replyLengthInstruction(choice: ReplyLength): string {
+  return choice === 'shorter'
+    ? 'I have asked you to keep your replies short: two to four sentences unless I ask for more. This governs the length of your reply.'
+    : 'I have asked for fuller replies: take the room to explain what you notice and what it rests on, still without padding. This governs the length of your reply.';
+}
+
+/**
  * ⭐ The signals, composed. ⛔ Never collapsed into one dial.
  *
  * ⭐⭐ THE STANDARD THIS SERVES: *a response is not well-formed merely because

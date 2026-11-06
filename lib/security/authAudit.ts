@@ -24,7 +24,10 @@ export type AuthAction =
   // it becomes a durable record of a registration that never happened.
   | 'webauthn_revoke'
   | 'webauthn_step_up'
-  | 'session_revoked';
+  | 'session_revoked'
+  // An owner issued a one-time reset link out of band (mail is down or the
+  // member has no address). The link itself is never recorded here.
+  | 'admin_reset_link_issued';
 
 export interface AuthAuditEntry {
   action: AuthAction;

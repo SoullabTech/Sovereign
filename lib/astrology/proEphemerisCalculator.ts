@@ -12,6 +12,7 @@
  */
 
 import * as Astronomy from 'astronomy-engine';
+import { ASPECT_DEFINITIONS } from './proAspectOrbs';
 
 export type HouseSystem = 'whole-sign' | 'equal' | 'porphyry' | 'placidus' | 'koch';
 
@@ -77,7 +78,8 @@ export interface BirthChart {
 export interface Aspect {
   planet1: string;
   planet2: string;
-  type: 'conjunction' | 'opposition' | 'trine' | 'square' | 'sextile' | 'quincunx';
+  type: 'conjunction' | 'opposition' | 'trine' | 'square' | 'sextile' | 'quincunx'
+    | 'semisextile' | 'semisquare' | 'sesquiquadrate' | 'quintile' | 'biquintile';
   orb: number;
   exact: boolean;
 }
@@ -655,26 +657,28 @@ function calculateVestaApprox(date: Date): number {
   return keplerianGeocentricLongitude(VESTA_ELEMENTS, date);
 }
 
-// Calculate aspects between planets
+/** The five Ptolemaic aspects; everything else is a minor aspect. */
+export const MAJOR_ASPECTS: ReadonlySet<Aspect['type']> = new Set([
+  'conjunction', 'opposition', 'trine', 'square', 'sextile',
+]);
+
+/** Angles take part in aspects to bodies, never to each other. */
+const ANGLE_NAMES = new Set(['Ascendant', 'Midheaven']);
+
+// Calculate aspects between planets (and the angles, when supplied)
 function calculateAspects(planets: Record<string, number>): Aspect[] {
   const aspects: Aspect[] = [];
   const planetNames = Object.keys(planets);
 
-  // Aspect definitions with orbs (degrees)
-  const aspectTypes = [
-    { type: 'conjunction' as const, angle: 0, orb: 8 },
-    { type: 'opposition' as const, angle: 180, orb: 8 },
-    { type: 'trine' as const, angle: 120, orb: 8 },
-    { type: 'square' as const, angle: 90, orb: 8 },
-    { type: 'sextile' as const, angle: 60, orb: 6 },
-    { type: 'quincunx' as const, angle: 150, orb: 3 },
-  ];
+  // Aspect definitions with orbs (degrees), shared with per-planet orbs
+  const aspectTypes = ASPECT_DEFINITIONS;
 
   // Check all planet pairs
   for (let i = 0; i < planetNames.length; i++) {
     for (let j = i + 1; j < planetNames.length; j++) {
       const planet1 = planetNames[i];
       const planet2 = planetNames[j];
+      if (ANGLE_NAMES.has(planet1) && ANGLE_NAMES.has(planet2)) continue;
       const lon1 = planets[planet1];
       const lon2 = planets[planet2];
 
@@ -1092,15 +1096,23 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
     const obliquity = 23.4393;
     const localSiderealHours = Astronomy.SiderealTime(time) +
       birthData.location.lng / 15;
-    const ascendant = longitudeToZodiac(calculateAscendant(
+    const ascendantLongitude = calculateAscendant(
       localSiderealHours, birthData.location.lat, obliquity,
-    ));
-    const midheaven = longitudeToZodiac(calculateAstronomicalMidheaven(
+    );
+    const midheavenLongitude = calculateAstronomicalMidheaven(
       time, birthData.location.lng, obliquity,
-    ));
+    );
+    const ascendant = longitudeToZodiac(ascendantLongitude);
+    const midheaven = longitudeToZodiac(midheavenLongitude);
 
-    // Calculate aspects
-    const aspects = calculateAspects(planetLongitudes);
+    // Calculate aspects, including bodies to the Ascendant and Midheaven
+    // Aspects name the nodes as the chart does ('North Node'), and leave out the
+    // North–South Node pair, which is an exact opposition by definition.
+    const { NorthNode, SouthNode, ...aspectLongitudes } = planetLongitudes;
+    const aspects = calculateAspects({
+      ...aspectLongitudes, 'North Node': NorthNode, 'South Node': SouthNode,
+      Ascendant: ascendantLongitude, Midheaven: midheavenLongitude,
+    }).filter((a) => !(a.planet1.endsWith(' Node') && a.planet2.endsWith(' Node')));
 
     return {
       sun,

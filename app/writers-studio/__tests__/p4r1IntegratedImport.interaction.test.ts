@@ -325,8 +325,32 @@ describe('D6 — the Import room never sends an original while Sanctuary is on o
     expect(container.textContent).toContain('Nothing has been sent');
   });
 
+  test('no choice made yet: the writer is asked here, nothing is sent until they choose', async () => {
+    await chooseFile();
+    expect(mocked).not.toHaveBeenCalled();
+    const ask = container.querySelector('[data-import-posture-ask]')!;
+    expect(ask).not.toBeNull();
+    expect(container.textContent).not.toContain('Open MAIA here once');
+    const sanct = Array.from(ask.querySelectorAll('button')).find((b) => b.textContent?.startsWith('Sanctuary'))!;
+    await act(async () => sanct.click());
+    await settle();
+    expect(JSON.parse(window.localStorage.getItem('maia_settings')!)).toEqual({ sanctuary: true });
+    expect(mocked).not.toHaveBeenCalled();
+    expect(container.textContent).toContain('Sanctuary is on');
+  });
+
+  test('choosing Ordinary records the writer’s choice and then reads the held file', async () => {
+    await chooseFile();
+    const ask = container.querySelector('[data-import-posture-ask]')!;
+    const ordinary = Array.from(ask.querySelectorAll('button')).find((b) => b.textContent?.startsWith('Ordinary'))!;
+    await act(async () => ordinary.click());
+    await settle();
+    expect(JSON.parse(window.localStorage.getItem('maia_settings')!)).toEqual({ sanctuary: false });
+    expect(mocked).toHaveBeenCalled();
+    expect(container.querySelector('[data-import-posture-ask]')).toBeNull();
+  });
+
   test.each([
-    ['no live settings at all', null],
     ['unreadable settings', '{not json'],
     ['a non-boolean posture', JSON.stringify({ sanctuary: 'false' })],
   ])('an unresolved posture (%s) is never read as ordinary: nothing is sent', async (_name, raw) => {

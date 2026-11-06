@@ -64,7 +64,7 @@ import {
   step as machineStep,
   type MachineState,
 } from '@/lib/writersStudio/bodyAuthorizationMachine';
-import { readWorkingStyle } from '@/lib/writersStudio/workingStyle';
+import { readWorkingStyle, type ExplanationDepth } from '@/lib/writersStudio/workingStyle';
 
 const REFUSAL_SAYS: Record<string, string> = {
   unreachable: 'MAIA could not be reached. Nothing was lost — your question is held here.',
@@ -110,6 +110,7 @@ function locationLine(l: CurrentLocation | null): string | null {
 export default function ObservationDialogue({
   manuscriptId, readingId, observationKey, about, superseded, onClose,
   initialQuestion = '', autoSendInitialQuestion = false, showAbout = true, teachingAnchor,
+  initialResponseStyle,
 }: {
   manuscriptId: string;
   readingId: string;
@@ -129,6 +130,9 @@ export default function ObservationDialogue({
   /** When initialQuestion is a Teach me button's words (F1): the server adds
    *  the teaching shape. It applies only while the writer sends those words. */
   teachingAnchor?: TeachingAnchor;
+  /** The depth a Develop button asked for (step 3, Q2): applies only while the
+   *  writer sends that button's words, like teachingAnchor. */
+  initialResponseStyle?: ExplanationDepth;
 }) {
   const [thread, setThread] = useState<AskThreadView | null>(null);
   /* HELD SEPARATELY FROM `thread`. A failed answer still has a threadId — the
@@ -148,6 +152,7 @@ export default function ObservationDialogue({
   const [authView, setAuthView] = useState<MachineState>(machineInitial);
   const pausedQuestion = useRef('');
   const pausedTeachingAnchor = useRef<TeachingAnchor | undefined>(undefined);
+  const pausedResponseStyle = useRef<ExplanationDepth | undefined>(undefined);
 
   const mintActId = useCallback(() => `act-${crypto.randomUUID()}`, []);
   const advance = useCallback((event: Parameters<typeof machineStep>[1]) => {
@@ -194,6 +199,8 @@ export default function ObservationDialogue({
     setBusy(true);
     setRefusal(null);
     const anchorForQ = teachingAnchor && q === initialQuestion.trim() ? teachingAnchor : undefined;
+    const styleForQ = q === initialQuestion.trim() && initialResponseStyle
+      ? initialResponseStyle : readWorkingStyle().explanation;
 
     const { outcome, ask: r } = await askForBody({
       manuscriptId,
@@ -201,13 +208,14 @@ export default function ObservationDialogue({
       ...(mode.kind === 'resume'
         ? { threadId: mode.threadId }
         : { anchor: { on: 'observation' as const, readingId, observationKey } }),
-      responseStyle: readWorkingStyle().explanation,
+      responseStyle: styleForQ,
       ...(anchorForQ ? { teachingAnchor: anchorForQ } : {}),
     });
 
     if (outcome) {
       pausedQuestion.current = q;
       pausedTeachingAnchor.current = anchorForQ;
+      pausedResponseStyle.current = styleForQ;
       advance({ type: 'served', outcome });
       if (r.threadId) setThreadId(r.threadId);
       if (r.location) setLocation(r.location);
@@ -226,7 +234,7 @@ export default function ObservationDialogue({
       if (r.threadId) setThreadId(r.threadId);
     }
     setBusy(false);
-  }, [draft, busy, mode, manuscriptId, readingId, observationKey, advance, teachingAnchor, initialQuestion]);
+  }, [draft, busy, mode, manuscriptId, readingId, observationKey, advance, teachingAnchor, initialQuestion, initialResponseStyle]);
 
   const authorize = useCallback(async () => {
     const effect = advance({ type: 'press' });
@@ -241,7 +249,7 @@ export default function ObservationDialogue({
       sectionIds: effect.sectionIds,
       question: pausedQuestion.current,
       threadId: threadId ?? undefined,
-      responseStyle: readWorkingStyle().explanation,
+      responseStyle: pausedResponseStyle.current ?? readWorkingStyle().explanation,
       ...(pausedTeachingAnchor.current ? { teachingAnchor: pausedTeachingAnchor.current } : {}),
     });
 
@@ -325,17 +333,6 @@ export default function ObservationDialogue({
         then, and has not reread the work.
       </p>
 
-      {authView.outcome ? (
-        <BodyAuthorizationPanel
-          outcome={authView.outcome}
-          selectedSectionIds={authView.selectedSectionIds}
-          busy={authView.phase === 'authorizing' || busy}
-          onToggleSection={toggleSection}
-          onAuthorize={() => void authorize()}
-          onDecline={decline}
-        />
-      ) : null}
-
       {line && (
         <p className="text-[12px] leading-relaxed opacity-70 mt-2"
           style={{ color: PRESS.accent }} data-dialogue-location>
@@ -405,6 +402,19 @@ export default function ObservationDialogue({
           {REFUSAL_SAYS[refusal] ?? `That did not go through (${refusal}).`}
         </p>
       )}
+
+      {/* Beside the question that needs it, not above the whole conversation:
+          drawn at the top, a writer at the composer saw no answer at all. */}
+      {authView.outcome ? (
+        <BodyAuthorizationPanel
+          outcome={authView.outcome}
+          selectedSectionIds={authView.selectedSectionIds}
+          busy={authView.phase === 'authorizing' || busy}
+          onToggleSection={toggleSection}
+          onAuthorize={() => void authorize()}
+          onDecline={decline}
+        />
+      ) : null}
 
       {/* The composer exists only where speaking is a lawful next act. Both
           other states say why instead of offering a disabled box to type into.

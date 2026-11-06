@@ -34,10 +34,14 @@ import {
   type EditorialScopeDeclaration,
 } from '@/lib/manuscript/editorialScope/contract';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
-import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
+import { isReplyLength, type EditorialDepth, type ReplyLength } from '@/lib/writersStudio/editorialDepth';
 import { isTeachingAnchor, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { isTurnShape, type TurnShape } from '@/lib/writersStudio/conversationTurn';
 import { isPassageAct, type PassageAct } from '@/lib/writersStudio/passageActs';
+import { isArrivalOriginRef, type ArrivalOrigin, type ArrivalOriginRef } from '@/lib/writersStudio/arrivalOrigin';
+import { resolveArrivalOrigin } from '@/lib/writersStudio/arrivalOriginServer';
+import { OPENING_GESTURE } from '@/lib/writersStudio/conversationOpening';
+import { query } from '@/lib/db/postgres';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,7 +57,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  */
 const TOP_KEYS = [
   'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'responseDepth', 'relationshipId', 'carry',
-  'teachingAnchor', 'turnShape', 'passageAct',
+  'teachingAnchor', 'turnShape', 'passageAct', 'opening', 'replyLength', 'origin',
 ] as const;
 const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
@@ -69,7 +73,10 @@ const SCOPE_KEYS = ['latitude', 'mayRemoveParagraphs', 'mayProposeImmediately'] 
 type Parsed =
   | {
       ok: true; threadId: string;
-      act: { act: MemberActKind; text: string; refersTo: string | null };
+      /** ⛔ null ONLY for an opening: MAIA speaks first and the writer has said nothing. */
+      act: { act: MemberActKind; text: string; refersTo: string | null } | null;
+      /** R2 / O1(a): the writer's deliberate gesture, recorded as a typed event, never as words. */
+      opening: boolean;
       sanctuary: boolean;
       scope: EditorialScopeDeclaration;
       relationshipId: string;
@@ -85,6 +92,10 @@ type Parsed =
       turnShape: TurnShape | null;
       /** Conversation-first Focus step 1: which card the writer pressed. ⛔ A closed value, never instruction text. */
       passageAct: PassageAct | null;
+      /** The writer's own length choice. ⛔ A closed value, never instruction text. */
+      replyLength: ReplyLength | null;
+      /** Where the writer arrived from (F1). ⛔ Identities only; the server loads the observation. */
+      origin: ArrivalOriginRef | null;
     }
   | { ok: false; error: string };
 
@@ -93,6 +104,10 @@ function parseClosed(body: unknown): Parsed {
     return { ok: false, error: 'a JSON object is required' };
   }
   const b = body as Record<string, unknown>;
+  if (!(b.replyLength === undefined || isReplyLength(b.replyLength))) {
+    return { ok: false, error: 'replyLength must be shorter or fuller' };
+  }
+  const replyLength: ReplyLength | null = b.replyLength === undefined ? null : b.replyLength;
   const strayTop = Object.keys(b).filter((k) => !(TOP_KEYS as readonly string[]).includes(k));
   if (strayTop.length) {
     return { ok: false, error: `unknown field(s): ${strayTop.join(', ')} — these are server facts and carry no standing here` };
@@ -109,6 +124,44 @@ function parseClosed(body: unknown): Parsed {
   }
   if (typeof b.relationshipId !== 'string' || b.relationshipId.length === 0) {
     return { ok: false, error: 'relationship_required' };
+  }
+
+  /* R2 "MAIA opens": an exclusive request shape. No act, no card, no shape, no carry. */
+  if (b.opening !== undefined) {
+    if (b.opening !== true) return { ok: false, error: 'opening must be true' };
+    const clash = (['act', 'passageAct', 'teachingAnchor', 'turnShape', 'carry', 'origin'] as const)
+      .filter((k) => b[k] !== undefined);
+    if (clash.length) return { ok: false, error: `opening is exclusive with: ${clash.join(', ')}` };
+    if (!(b.proposalPolicy === undefined || b.proposalPolicy === 'reply_only')) {
+      return { ok: false, error: 'an opening is reply_only' };
+    }
+    let openScope: EditorialScopeDeclaration = DEFAULT_SCOPE_DECLARATION;
+    if (b.scope !== undefined) {
+      if (typeof b.scope !== 'object' || b.scope === null || Array.isArray(b.scope)) {
+        return { ok: false, error: 'scope must be an object' };
+      }
+      const so = b.scope as Record<string, unknown>;
+      const stray = Object.keys(so).filter((k) => !(SCOPE_KEYS as readonly string[]).includes(k));
+      if (stray.length) return { ok: false, error: `unknown scope field(s): ${stray.join(', ')}` };
+      if (so.latitude !== undefined && !isEditorialLatitude(so.latitude)) {
+        return { ok: false, error: 'scope.latitude must be an integer 1 through 5' };
+      }
+      openScope = {
+        latitude: so.latitude === undefined ? DEFAULT_SCOPE_DECLARATION.latitude : so.latitude,
+        mayRemoveParagraphs: so.mayRemoveParagraphs === true,
+      };
+    }
+    const depth: EditorialDepth = b.responseDepth === undefined ? 'guided' : b.responseDepth as EditorialDepth;
+    if (!(['guided', 'learning', 'direct'] as readonly string[]).includes(depth)) {
+      return { ok: false, error: 'responseDepth must be guided, learning, or direct' };
+    }
+    return {
+      ok: true, threadId: b.threadId, act: null, opening: true,
+      sanctuary: TurnPosture.resolve(b).sanctuary,
+      scope: openScope, relationshipId: b.relationshipId, carry: null,
+      mayProposeImmediately: false, proposalPolicy: 'reply_only', responseDepth: depth,
+      teachingAnchor: null, turnShape: null, passageAct: null, replyLength, origin: null,
+    };
   }
 
   let carry: { kind: 'prior_maia_editorial_turn'; sourceEpisodeSequence: number } | null = null;
@@ -187,6 +240,10 @@ function parseClosed(body: unknown): Parsed {
     return { ok: false, error: 'passageAct is not a known card' };
   }
   const passageAct: PassageAct | null = b.passageAct === undefined ? null : b.passageAct;
+  if (!(b.origin === undefined || isArrivalOriginRef(b.origin))) {
+    return { ok: false, error: 'origin must be { source, readingId, observationKey }' };
+  }
+  const origin: ArrivalOriginRef | null = b.origin === undefined ? null : b.origin;
   if (passageAct && (teachingAnchor || turnShape)) {
     return { ok: false, error: 'passageAct, teachingAnchor and turnShape are exclusive' };
   }
@@ -230,6 +287,7 @@ function parseClosed(body: unknown): Parsed {
     threadId: b.threadId,
     /* ⛔ The member's text is carried EXACTLY. No trim, no normalisation. */
     act: { act: ao.act as MemberActKind, text: ao.text, refersTo: ao.refersTo ?? null },
+    opening: false,
     /* ⭐ Validated as a boolean above; minted from the WHOLE body so a
        contradictory nested affirmative still fails closed to Sanctuary. */
     sanctuary: TurnPosture.resolve(b).sanctuary,
@@ -242,6 +300,8 @@ function parseClosed(body: unknown): Parsed {
     teachingAnchor,
     turnShape,
     passageAct,
+    replyLength,
+    origin,
   };
 }
 
@@ -307,7 +367,72 @@ export async function POST(request: NextRequest) {
     resolvedCarry = carry.carry;
   }
 
-  const act = await persistMemberEditorialAct({ memberId, threadId: parsed.threadId, act: parsed.act });
+  if (parsed.opening) {
+    /* R2: a deliberate gesture, once per opened conversation. ⛔ ANY existing turn
+       refuses, before any model call — nothing here may add a second opening. */
+    const owned = await query<{ turns: string }>(
+      `SELECT (SELECT count(*) FROM ask_turns WHERE thread_id = th.id)::text AS turns
+         FROM ask_threads th WHERE th.id = $1 AND th.member_id = $2`,
+      [parsed.threadId, memberId]);
+    if (owned.rows.length === 0) {
+      return NextResponse.json({ error: 'thread_not_found', persisted: false }, { status: 404 });
+    }
+    if (Number(owned.rows[0]!.turns) !== 0) {
+      return NextResponse.json({ error: 'opening_thread_not_new', persisted: false }, { status: 409 });
+    }
+    const opened = await runEditorialTurn({
+      identity,
+      threadId: parsed.threadId,
+      relationshipId: parsed.relationshipId,
+      currentTurnIndex: 0,
+      declaredAct: 'discourse',
+      currentDirectionId: null,
+      exchangeId: randomUUID(),
+      sanctuary: false,
+      scope: parsed.scope,
+      mayProposeImmediately: false,
+      proposalPolicy: 'reply_only',
+      responseDepth: parsed.responseDepth,
+      ...(parsed.replyLength ? { replyLength: parsed.replyLength } : {}),
+      opening: { gesture: OPENING_GESTURE },
+    });
+    if (!opened.ok) {
+      const refusedByLaw = opened.reason === 'disclosure_unavailable'
+        || opened.reason === 'relationship_refused' || opened.reason === 'proposal_policy_reply_only'
+        || opened.reason === 'sequence_discussion_first' || opened.reason === 'relationship_scope_unmeasured';
+      if (!refusedByLaw) {
+        console.error('[editorial/turn] opening refused', {
+          reason: opened.reason, dispatch: opened.dispatch ?? 'not_applicable', threadId: parsed.threadId,
+        });
+      }
+      return NextResponse.json({
+        threadId: parsed.threadId, persisted: false, opening: true, error: opened.reason,
+        ...(opened.dispatch ? { dispatch: opened.dispatch } : {}),
+      }, { status: refusedByLaw ? 409 : opened.reason === 'disclosure_confirmation_unresolved' ? 500 : 502 });
+    }
+    return NextResponse.json({
+      threadId: parsed.threadId,
+      opening: true,
+      memberTurnIndex: null,
+      persisted: true,
+      maiaTurnIndex: opened.persisted.turnIndex,
+      response: opened.persisted.reply,
+      direction: null,
+      version: null,
+      voice: null,
+    });
+  }
+
+  /* F1: the arrival framing rests on the member's own frozen reading, resolved before
+     anything is written. ⛔ An unresolvable reference refuses; it is never sent on as text. */
+  let arrivalOrigin: ArrivalOrigin | undefined;
+  if (parsed.origin !== null) {
+    const resolved = await resolveArrivalOrigin({ memberId, threadId: parsed.threadId, ref: parsed.origin });
+    if (!resolved) return NextResponse.json({ error: 'origin_not_found', persisted: false }, { status: 404 });
+    arrivalOrigin = resolved;
+  }
+
+  const act = await persistMemberEditorialAct({ memberId, threadId: parsed.threadId, act: parsed.act! });
   if (!act.ok) {
     const status = act.reason === 'thread_not_found' ? 404 : 400;
     return NextResponse.json({ error: act.reason }, { status });
@@ -320,7 +445,7 @@ export async function POST(request: NextRequest) {
     relationshipId: parsed.relationshipId,
     ...(resolvedCarry ? { carry: resolvedCarry } : {}),
     currentTurnIndex: act.turnIndex,
-    declaredAct: parsed.act.act,
+    declaredAct: parsed.act!.act,
     currentDirectionId: act.direction?.id ?? null,
     /* ⭐ Server-minted act identity. ⛔ Never supplied by the client. */
     exchangeId: randomUUID(),
@@ -333,6 +458,8 @@ export async function POST(request: NextRequest) {
     ...(parsed.teachingAnchor ? { teachingAnchor: parsed.teachingAnchor } : {}),
     ...(parsed.turnShape ? { turnShape: parsed.turnShape } : {}),
     ...(parsed.passageAct ? { passageAct: parsed.passageAct } : {}),
+    ...(parsed.replyLength ? { replyLength: parsed.replyLength } : {}),
+    ...(arrivalOrigin ? { arrivalOrigin } : {}),
   });
 
   if (!turn.ok) {

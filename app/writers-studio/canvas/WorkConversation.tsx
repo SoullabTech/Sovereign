@@ -184,6 +184,8 @@ function ScopedWorkConversation({
   const [thread, setThread] = useState<AskThreadView | null>(null);
 
   const [draft, setDraft] = useState(initialDraft);
+  // The Studio's starter, as placed; never sent on its own.
+  const [starter] = useState(initialDraft);
   const [reorientationOffered, setReorientationOffered] = useState(false);
   const [presentationConfirmation, setPresentationConfirmation] = useState<SafePresentationProposal | null>(null);
   const [presentationNotice, setPresentationNotice] = useState<string | null>(null);
@@ -203,7 +205,10 @@ function ScopedWorkConversation({
   useEffect(() => {
     // Unsent text stays in the mounted conversation. Leaving is an explicit
     // discard; neither browser storage nor a server turn is created for it.
-    const hasUnsentText = draft.length > 0 || correctionDraft.length > 0 || pending !== null;
+    // A starter the Studio placed in the box is not the writer's text until they
+    // change it; counting it trapped every other button behind a discard prompt.
+    const writerDraft = draft.length > 0 && draft !== starter;
+    const hasUnsentText = writerDraft || correctionDraft.length > 0 || pending !== null;
     if (!hasUnsentText) return;
     const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
       event.preventDefault();
@@ -221,7 +226,7 @@ function ScopedWorkConversation({
       window.removeEventListener('beforeunload', warnBeforeLeaving);
       window.removeEventListener(CONVERSATION_DEPARTURE_EVENT, confirmDeparture);
     };
-  }, [draft, correctionDraft, pending]);
+  }, [draft, starter, correctionDraft, pending]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
@@ -530,8 +535,11 @@ function ScopedWorkConversation({
 
         {decision?.kind === 'fresh' && turns.length === 0 && pending === null && (
           <StudioText role="metadata" style={{ opacity: 0.7, maxWidth: '34ch' }} data-discovery="fresh">
-            She has your Work in view. She has not been given its text —
-            {keeps.length > 0
+            {/* L8 — the same facts the prompt gives her (askReader workSays). */}
+            {sectionId
+              ? 'She can read the section you are in, and only that one. She sees the other sections by heading.'
+              : 'She has your Work in view by its headings. She has not been given its text —'}
+            {sectionId ? null : keeps.length > 0
               ? ' bring a Keep if you want her to read a passage.'
               : ' a Keep is how you would hand her one.'}
           </StudioText>

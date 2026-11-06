@@ -126,9 +126,9 @@ function WorkAnchor({ work, allWorks, manuscripts, activity, onOpen, onStartWrit
         <p className="fr-home-eyebrow">{HOME_COPY.returnEyebrow}</p>
         <h1 className="fr-home-greeting">{HOME_COPY.returnWelcome(title)}</h1>
         {activity?.kind === 'distinct' ? (
-          <p className="fr-home-place">Your last exact writing place is available.</p>
+          <p className="fr-home-place" data-home-place="distinct">Pick up where you left off.</p>
         ) : (
-          <p className="fr-home-place">Open this Work without inventing a more precise return place.</p>
+          <p className="fr-home-place" data-home-place="work">Open it and carry on.</p>
         )}
       </header>
       <div className="fr-home-recognize p4r1-home-recognize">
