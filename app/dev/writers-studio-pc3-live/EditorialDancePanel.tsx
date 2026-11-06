@@ -20,6 +20,7 @@ import { EDITORIAL_PACKET_LABELS } from '@/lib/writersStudio/editorialIntelligen
 import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
 import { passageActQuestion, type PassageAct as PassageActId } from '@/lib/writersStudio/passageActs';
+import type { ArrivalOriginRef } from '@/lib/writersStudio/arrivalOrigin';
 import { parseStudioActions, type StudioActionId } from '@/lib/writersStudio/studioActions';
 import FocusConversation from './FocusConversation';
 import P4R1VoiceCapture from './P4R1VoiceCapture';
@@ -36,13 +37,9 @@ export interface PassageAct {
 export interface EditorialDancePanelProps {
   manuscriptTitle: string;
   showOriginal?: boolean;
-  origin?: {
-    source: 'develop' | 'review';
-    label: string;
-    state: string;
-    observation: string;
-    coverage: string;
-  } | null;
+  /** Where the writer arrived from (F1): identities only. The server loads the
+   *  observation from the member's own saved reading and frames it for MAIA. */
+  origin?: ArrivalOriginRef | null;
   currentText: string;
   sectionBody: string;
   thread: RebuildEditorialThread | null;
@@ -70,7 +67,7 @@ export interface EditorialDancePanelProps {
   onSelectVersion: (id: string) => void;
   /** Design 1B: the writer clicked a control MAIA offered. Navigation only. */
   onStudioAction?: (id: StudioActionId) => void;
-  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; turnShape?: TurnShape; passageAct?: PassageActId }) => void;
+  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; turnShape?: TurnShape; passageAct?: PassageActId; origin?: ArrivalOriginRef }) => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   onApply: () => void;
   onUndo?: () => void;
@@ -480,21 +477,12 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     }
   };
 
-  const withOrigin = (prompt: string): string => {
-    if (!props.origin || props.thread) return prompt;
-    const source = props.origin.source === 'review' ? 'Review finding' : 'developmental reading';
-    return [
-      `We arrived at this exact passage from a prior frozen ${source}.`,
-      `Observed then · ${props.origin.label} · ${props.origin.state}`,
-      props.origin.observation,
-      `Reading coverage: ${props.origin.coverage}`,
-      '',
-      'Treat that as attributed historical context, not a verdict and not an edit instruction.',
-      'Use the current passage as the authority for any new editorial claim. If the current words no longer support the prior observation, say so.',
-      'Do not silently convert the prior observation into a revision recommendation.',
-      '',
-      prompt,
-    ].join('\n');
+  // F1: the writer's turn is only their words. On the first turn after arriving from
+  // a Develop or Review observation, the reference travels as a closed field and the
+  // server frames the observation from the member's own saved reading.
+  const withOrigin = <T extends object>(options?: T): (T & { origin?: ArrivalOriginRef }) | undefined => {
+    if (!props.origin || props.thread) return options;
+    return { ...(options ?? {}), origin: props.origin } as T & { origin: ArrivalOriginRef };
   };
 
   const begin = (
@@ -503,7 +491,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; passageAct?: PassageActId },
   ) => {
     if (depth) props.onDepth(depth);
-    props.onSend(withOrigin(prompt), options);
+    props.onSend(prompt, withOrigin(options));
   };
 
   const sendOpenPrompt = () => {
@@ -516,7 +504,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     }
     // Design 3C: only the writer's words are their turn; the conversational
     // shape is server-owned (turnShape), like a Teach-me's (F1).
-    props.onSend(withOrigin(q), { turnShape: 'conversation' });
+    props.onSend(q, withOrigin({ turnShape: 'conversation' as const }));
     setStartPrompt('');
   };
 
@@ -752,7 +740,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
 
       <P4R1VoiceCapture
         disabled={props.busy || postureBlocksEditorial}
-        onAsk={(text) => props.onSend(withOrigin(text), { turnShape: 'conversation' })}
+        onAsk={(text) => props.onSend(text, withOrigin({ turnShape: 'conversation' as const }))}
       />
     </div>
   );
@@ -829,7 +817,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
         setStartPrompt('');
         return;
       }
-      props.onSend(withOrigin(q), { turnShape: 'conversation' });
+      props.onSend(q, withOrigin({ turnShape: 'conversation' as const }));
       setStartPrompt('');
     };
 

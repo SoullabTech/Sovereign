@@ -46,8 +46,9 @@ describe('only the writer’s words are the writer’s turn (F1 applied to the A
   const panel = read('app/dev/writers-studio-pc3-live/EditorialDancePanel.tsx');
 
   it('the typed and spoken questions send the words plus the closed field, no instruction text', () => {
-    expect(panel).toContain("props.onSend(withOrigin(q), { turnShape: 'conversation' })");
-    expect(panel).toContain("onAsk={(text) => props.onSend(withOrigin(text), { turnShape: 'conversation' })}");
+    // F1 arrival framing: withOrigin now adds only a closed reference to the options.
+    expect(panel).toContain("props.onSend(q, withOrigin({ turnShape: 'conversation' as const }))");
+    expect(panel).toContain("onAsk={(text) => props.onSend(text, withOrigin({ turnShape: 'conversation' as const }))}");
     expect(panel).not.toContain('CONVERSATION_TURN_SHAPE');
     expect(panel).not.toContain('What I want help with:');
   });

@@ -1,6 +1,7 @@
 import type { TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
 import type { PassageAct } from '@/lib/writersStudio/passageActs';
+import type { ArrivalOriginRef } from '@/lib/writersStudio/arrivalOrigin';
 import { apiFetch } from '@/lib/http/apiBase';
 import { replyLengthField } from '@/lib/writersStudio/replyLengthPreference';
 import { occurrences } from '@/lib/manuscript/exactText';
@@ -230,6 +231,8 @@ export async function sendBoundEditorialTurn(
     turnShape?: TurnShape;
     /** The card pressed (conversation-first Focus, step 1); the server owns its instruction. */
     passageAct?: PassageAct;
+    /** Where the writer arrived from (F1): identities only; the server loads the observation. */
+    origin?: ArrivalOriginRef;
   } | string,
 ): Promise<EditorialTurnOutcome> {
   if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
@@ -240,6 +243,7 @@ export async function sendBoundEditorialTurn(
   const teachingAnchor = typeof options === 'string' ? undefined : options?.teachingAnchor;
   const turnShape = typeof options === 'string' ? undefined : options?.turnShape;
   const passageAct = typeof options === 'string' ? undefined : options?.passageAct;
+  const origin = typeof options === 'string' ? undefined : options?.origin;
   if (!relationshipId) return { ok: false, reason: 'scope_refused', detail: 'relationship_required' };
   try {
     const res = await apiFetch('/api/writers-studio/editorial/turn', {
@@ -256,6 +260,7 @@ export async function sendBoundEditorialTurn(
         ...(teachingAnchor ? { teachingAnchor } : {}),
         ...(turnShape ? { turnShape } : {}),
         ...(passageAct ? { passageAct } : {}),
+        ...(origin ? { origin } : {}),
         ...replyLengthField(),
       }),
     });
