@@ -8,9 +8,10 @@ import {
   SOUND_STUDIO_WORKS,
   formatExperienceTime,
 } from '@/lib/listening/soundStudioExperience';
+import { PerformerNowEntry } from '@/components/listening/PerformerShelf';
 import styles from './listen.module.css';
 
-export type StudioView = 'now' | 'focus' | 'fields' | 'shelf' | 'studio' | 'lab';
+export type StudioView = 'now' | 'focus' | 'people' | 'fields' | 'shelf' | 'studio' | 'lab';
 export type StudioNavigate = (view: StudioView, workId?: string) => void;
 
 // SOUND-STUDIO-UIUX-02 · Now: the daily entrance. Two deliberate actions reach
@@ -63,6 +64,9 @@ export default function SoundStudioNow({ onNavigate }: { onNavigate: StudioNavig
           </button>
         ))}
       </div>
+
+      {/* LISTEN-01: non-interactive "In preparation" until a named signer has approved an entry. */}
+      <PerformerNowEntry onOpen={() => onNavigate('people')} />
 
       <div className={styles.nowMore}>
         <button type="button" onClick={() => onNavigate('fields')}>Browse all fields</button>
