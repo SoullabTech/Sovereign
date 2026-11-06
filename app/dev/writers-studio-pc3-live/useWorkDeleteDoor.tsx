@@ -65,8 +65,9 @@ export interface DoorState {
   readonly confirming: boolean;
   readonly deleting: boolean;
   readonly deleteError: string | null;
-  /** The server said the writing is shared (a 409), for a page that may not be able to see the other Work. */
-  readonly shared: { readonly manuscriptId: string } | null;
+  /** The server said the writing is shared (a 409), for a page that may not be able to see the other Work. `reloadFailed`: the re-read
+   *  that followed did not work, so the page may simply not have the other Work yet, and says so. */
+  readonly shared: { readonly manuscriptId: string; readonly reloadFailed?: boolean } | null;
   readonly removing: boolean;
   readonly removeError: string | null;
   /** The server removed this Work. Until the list is re-read (or if that read fails) the card says so and offers no door. */
@@ -101,8 +102,8 @@ const RELOAD_LINE = ` ${RELOAD_HOME_LINE}`;
  *   Remove  ->  a "removed" card, and a page notice, until the list is re-read
  *
  * A card is replaced by a "deleted" or "removed" card ONLY when the server said the Work went (`workRemoved`). A Delete the server
- * answered without saying (the writing was already gone) or answered "the Work stays" leaves the card to the re-read and tells the
- * member on the page.
+ * answered without saying (the writing was already gone, or an answer that does not carry the word) or answered "the Work stays"
+ * leaves the card to the re-read and tells the member on the page.
  */
 export function useWorkDeleteDoor(args: {
   work: LivingWork;
@@ -172,7 +173,7 @@ export function useWorkDeleteDoor(args: {
     const words = deleteConfirmCopy(kind, title);
     // The server said the writing is shared but this page cannot see the other Work (it was declared after the page loaded). The
     // server's answer is the authority at that moment: the card says so instead of doing nothing.
-    const shownError = state.deleteError ?? (shared !== null ? SHARED_BUT_NOT_SHOWN : null);
+    const shownError = state.deleteError ?? (shared !== null ? (shared.reloadFailed ? `${SHARED_BUT_NOT_SHOWN} ${RELOAD_HOME_LINE}` : SHARED_BUT_NOT_SHOWN) : null);
     dialog = (
       <WritingDeleteConfirm
         title={title}
@@ -196,9 +197,13 @@ export function useWorkDeleteDoor(args: {
             } else if (result?.workRemoved === false) {
               // The Work stays (it holds something else): its card keeps its door, so no "deleted" card replaces it. The page says it.
               onDeletionNotice(`The writing in “${title}” was deleted. The Work stays, with what else it holds.${reload}`, false);
+            } else if (result?.alreadyGone) {
+              // The writing was already gone before this act (the server answered 404) and said nothing about the Work: say only that.
+              onDeletionNotice(`“${title}”: that writing was already gone.${result.refreshed ? ' Home now shows what is current.' : reload}`, false);
             } else {
-              // The server did not say what became of the Work (the writing was already gone): say only that, and what Home now shows.
-              onDeletionNotice(`“${title}”: that writing was already gone.${result?.refreshed ? ' Home now shows what is current.' : reload}`, false);
+              // The writing was deleted by this act, but the server did not say whether the Work went (an answer without that word): say
+              // what is certain, and no more.
+              onDeletionNotice(`The writing in “${title}” was deleted.${result?.refreshed ? ' Home now shows what is current.' : reload}`, false);
             }
           } catch (err) {
             if (err instanceof DeletionUnconfirmed) {
@@ -210,7 +215,7 @@ export function useWorkDeleteDoor(args: {
               update({ confirming: false });
               onDeletionNotice(`“${title}”: ${err.message}`, false);
             } else if (err instanceof DeletionSharedMaterial && manuscriptId) {
-              update({ shared: { manuscriptId } });
+              update({ shared: { manuscriptId, ...(err.reloaded ? {} : { reloadFailed: true }) } });
             } else {
               update({ deleteError: err instanceof Error ? err.message : 'That work could not be deleted just now. Nothing was removed. Please try again.' });
             }

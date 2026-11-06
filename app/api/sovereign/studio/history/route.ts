@@ -45,6 +45,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
 /**
  * The exact note the draft-creation path writes on the system's own first
@@ -84,6 +85,22 @@ export async function GET(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
+
+  /* The offline cabin keeps no record of acts (its local store has none), so there is nothing to list. An empty list is the honest
+     answer; a 401 would make a member who is signed in to the cabin look signed out, and would make every re-read that includes History
+     (Home's, after a deletion) report that it could not read. */
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { issuedToken } = cabinMemberFromRequest(store, request);
+      const response = NextResponse.json({ acts: [] });
+      setCabinSessionCookie(response, issuedToken);
+      return response;
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -344,14 +344,14 @@ describe('the stale-card guard and the vanished writing (deleteWork)', () => {
   it('a 404 on the WRITING from a Work card is done: ONE request (the server finishes a dangling declaration in its own transaction)', async () => {
     const calls: string[] = [];
     const out = await deleteWork({ workId: 'work-1', manuscriptId: 'ms-1' }, async (url, init) => { calls.push(`${init.method} ${url}`); return fake(404); });
-    expect(out).toEqual({ ok: true });
+    expect(out).toEqual({ ok: true, alreadyGone: true });
     expect(calls).toEqual(['DELETE /api/sovereign/manuscripts/ms-1?workId=work-1']);
   });
 
   it('a 404 on loose writing (no Work) is still just "already gone": one request, no follow-through', async () => {
     const calls: string[] = [];
     const out = await deleteWork({ workId: null, manuscriptId: 'ms-1' }, async (url) => { calls.push(url); return fake(404); });
-    expect(out).toEqual({ ok: true });
+    expect(out).toEqual({ ok: true, alreadyGone: true });
     expect(calls).toHaveLength(1);
   });
 

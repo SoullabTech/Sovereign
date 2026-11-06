@@ -42,6 +42,8 @@ const JEST_TESTS = [
   `${HOME}/__tests__/homeDeleteWriting.test.ts`,
   `${HOME}/__tests__/historyPage.test.tsx`,
   `${HOME}/__tests__/historyContainerAndNotices.test.ts`,
+  `${HOME}/__tests__/homeHistoryNotices.test.ts`,
+  'cabinBranch.test.ts',
   'app/writers-studio/__tests__/historyActions.test.ts',
   'lib/writersStudio/__tests__/deleteWork.test.ts',
   'lib/writersStudio/__tests__/deleteWorkTruth.test.ts',
@@ -59,6 +61,7 @@ const LOAD_WORKS = 'app/writers-studio/useLivingWorks.ts';
 const LOAD_MS = 'app/writers-studio/useCurrentManuscript.ts';
 const LOAD_HISTORY = 'app/writers-studio/useStudioHistory.ts';
 const NOTICES = `${HOME}/useNoticeStack.tsx`;
+const HISTORY_ROUTE = 'app/api/sovereign/studio/history/route.ts';
 
 /* [id, kind, file, anchor (must occur exactly once, or `nth` of several), replacement, the error it embodies, { nth }?]
    kind: 'jest' (hermetic, jsdom) or 'pg' (needs the local PostgreSQL 16 harness). A '(textual guard)' mutant is caught only by a test that
@@ -66,7 +69,7 @@ const NOTICES = `${HOME}/useNoticeStack.tsx`;
 const MUTANTS = [
   // ── the command (lib/writersStudio/deleteWork.ts)
   ['L1', 'jest', LIB, '${workId ? `?workId=${encodeURIComponent(workId)}` : \'\'}', '', 'the Work card stops naming its Work, so a stale card can reach another Work\'s writing'],
-  ['L2', 'jest', LIB, '  if (res.status === 404) return viaWorkRoute ? { ok: true, workRemoved: true } : { ok: true };\n', '', 'a writing that is already gone (404) is reported as a failed delete'],
+  ['L2', 'jest', LIB, '  if (res.status === 404) return viaWorkRoute ? { ok: true, workRemoved: true } : { ok: true, alreadyGone: true };\n', '', 'a writing that is already gone (404) is reported as a failed delete'],
   ['L3', 'jest', LIB, '{ subject, ...(body.unconfirmed ? { unconfirmed: body.unconfirmed } : {}) }', '{ subject }', 'the obligations the server named are dropped, so every custody sentence names things that are not owed'],
   ['L4', 'jest', LIB, 'if (res.status >= 500) return { ok: false, message: UNKNOWN_DELETE, unknown: true };\n  return { ok: false, message: GENERIC };', 'if (res.status >= 500) return { ok: false, message: GENERIC };\n  return { ok: false, message: GENERIC };', 'a server error that does not say what it did is reported as "nothing was removed"'],
   ['L5', 'jest', LIB, '    // The request may have reached the server before the connection failed: we do not know.\n    return { ok: false, message: UNKNOWN_DELETE, unknown: true };', '    return { ok: false, message: GENERIC };', 'a dropped connection is reported as "nothing was removed"'],
@@ -98,7 +101,7 @@ const MUTANTS = [
   ['L22', 'jest', LIB, 'if (res.status >= 500) return { ok: false, message: UNKNOWN_DELETE, unknown: true };\n  return { ok: false, message: GENERIC };', 'if (res.status >= 500 && refusal === null) return { ok: false, message: UNKNOWN_DELETE, unknown: true };\n  return { ok: false, message: GENERIC };', 'a 5xx with a refusal code the client does not know is told as "nothing was removed"'],
   ['L23', 'jest', LIB, "return custodyCopy(context.subject ?? 'work', { image: true });", "return custodyCopy(context.subject ?? 'work', { originalFile: true });", 'an owed IMAGE is described as the original file'],
   ['L24', 'jest', LIB, 'const named = unconfirmed !== undefined && (unconfirmed.originalFile || unconfirmed.image || unconfirmed.deletionRecord);', 'const named = false;', 'the custody sentence ignores which obligations the server named and lists the generic pair'],
-  ['L25', 'jest', LIB, "const subject = workId && body.workRemoved !== false ? 'work' : 'writing';", "const subject = 'work';", 'a deletion that left the Work standing says "This work was removed"'],
+  ['L25', 'jest', LIB, "const subject = workId && (viaWorkRoute || body.workRemoved === true) ? 'work' : 'writing';", "const subject = 'work';", 'a deletion that left the Work standing says "This work was removed"'],
   ['L26', 'jest', LIB, "new Set(['custody_incomplete', 'image_bytes_owed'])", "new Set(['custody_incomplete'])", 'the image-owed code is not recognised as owed after a committed removal'],
   ['L27', 'jest', LIB, "deletionRefusalCopy('image_bytes_owed', { subject: 'work' }), removed: true,", "REMOVE_GENERIC, removed: true,", 'a removed Work whose image is owed is told in the words of an ordinary failure'],
   ['L28', 'jest', LIB, '  if (body?.removed === true) {\n    // The Work row is gone and something it owned', '  if (false as boolean) {\n    // The Work row is gone and something it owned', 'a removed Work whose image is owed is read as a plain failure'],
@@ -106,16 +109,18 @@ const MUTANTS = [
   ['L30', 'jest', LIB, 'The Work itself stays, with what else it holds.', '', 'the confirmation on a Work that keeps other parts does not say the Work stays'],
   ['L31', 'jest', LIB, 'Nothing was deleted. On Home, press Delete', 'On Home, press Delete', 'the shared-writing refusal does not say nothing was deleted'],
   ['L32', 'jest', LIB, "device. Nothing was deleted.'", "device.'", 'the stale-card refusal does not say nothing was deleted'],
-  ['L33', 'jest', LIB, "const subject = workId && body.workRemoved !== false ? 'work' : 'writing';", "const subject = workId && body.workRemoved === true ? 'work' : 'writing';", 'a Work card whose body does not say is told "This writing was deleted" (the Work route says nothing and always removes the Work)'],
+  ['L33', 'jest', LIB, "const subject = workId && (viaWorkRoute || body.workRemoved === true) ? 'work' : 'writing';", "const subject = workId && (viaWorkRoute || body.workRemoved !== false) ? 'work' : 'writing';", 'a body that does not say is told "This work was removed" (the Work is said to have gone only on evidence)'],
   ['L34', 'jest', LIB, 'if (viaWorkRoute) return { ok: true, workRemoved: true };', 'if (viaWorkRoute) return { ok: true };', 'the Work route\'s success does not say the Work is gone'],
   ['L35', 'jest', LIB, "return typeof said === 'boolean' ? { ok: true, workRemoved: said } : { ok: true };", 'return { ok: true, workRemoved: true };', 'the client assumes the Work went whatever the server said'],
-  ['L36', 'jest', LIB, 'if (res.status === 404) return viaWorkRoute ? { ok: true, workRemoved: true } : { ok: true };', 'if (res.status === 404) return { ok: true, workRemoved: true };', 'a writing already gone (404) is taken to mean its Work went too'],
+  ['L36', 'jest', LIB, 'if (res.status === 404) return viaWorkRoute ? { ok: true, workRemoved: true } : { ok: true, alreadyGone: true };', 'if (res.status === 404) return { ok: true, workRemoved: true };', 'a writing already gone (404) is taken to mean its Work went too'],
   ['L37', 'jest', LIB, 'throw new DeletionUnconfirmed(withReload(outcome.message, fresh), outcome.workRemoved)', 'throw new DeletionUnconfirmed(outcome.message, outcome.workRemoved)', 'an unconfirmed Delete whose re-read failed does not tell the member to reload'],
   ['L38', 'jest', LIB, 'throw new DeletionUnconfirmed(withReload(outcome.message, fresh), outcome.workRemoved)', 'throw new DeletionUnconfirmed(withReload(outcome.message, fresh))', 'an unconfirmed Delete drops the server\'s word on the Work'],
   ['L39', 'jest', LIB, 'throw new DeletionUnconfirmed(withReload(outcome.message, fresh), true)', 'throw new DeletionUnconfirmed(outcome.message, true)', 'an unconfirmed Remove whose re-read failed does not tell the member to reload'],
-  ['L40', 'jest', LIB, 'throw new DeletionSharedMaterial(withReload(outcome.message, fresh))', 'throw new DeletionSharedMaterial(outcome.message)', 'a shared refusal whose re-read failed does not tell the member to reload'],
+  ['L40', 'jest', LIB, 'throw new DeletionSharedMaterial(withReload(outcome.message, fresh), fresh)', 'throw new DeletionSharedMaterial(outcome.message)', 'a shared refusal whose re-read failed does not tell the member to reload'],
   ['L41', 'jest', LIB, 'if (res.ok || res.status === 404) return { ok: true, workRemoved: true };', 'if (res.ok || res.status === 404) return { ok: true };', 'a successful Remove does not say the Work is gone'],
   ['L42', 'jest', LIB, '...(outcome.workRemoved !== undefined ? { workRemoved: outcome.workRemoved } : {})', '', 'the server\'s word on the Work is dropped before it reaches the page'],
+  ['L44', 'jest', LIB, ': { ok: true, alreadyGone: true };', ': { ok: true };', 'a 404 (the writing was already gone) is indistinguishable from a 200 that did not say, so the page cannot word them differently'],
+  ['L45', 'jest', LIB, 'throw new DeletionSharedMaterial(withReload(outcome.message, fresh), fresh)', 'throw new DeletionSharedMaterial(withReload(outcome.message, fresh), true)', 'a shared refusal does not say its re-read failed, so a Work card that cannot see the other Work cannot say why'],
   ['L43', 'jest', LIB, '(viaWorkRoute ? true : undefined)', 'undefined', 'the Work route\'s owed-image answer does not say the Work is gone'],
   // ── the door (useWorkDeleteDoor.tsx)
   ['H1', 'jest', DOOR, ': allWorks.filter((other) => other.id !== work.id && manuscriptIdsOf(other).includes(shared.manuscriptId)).length;', ': 1;', 'the removal question is trusted from the 409 instead of re-derived from the Works on screen'],
@@ -140,12 +145,15 @@ const MUTANTS = [
   ['H16', 'jest', DOOR, 'onDeletionNotice(`The writing in “${title}” was deleted. The Work stays, with what else it holds.${reload}`, false);', '', 'deleting only the writing of a Work that stays says nothing on the page'],
   ['H24', 'jest', DOOR, 'err.workRemoved === true ? { settled: `“${title}” was removed from your studio.`, confirming: false } : { confirming: false }', '{ settled: `“${title}” was removed from your studio.`, confirming: false }', 'an unconfirmed Delete turns a Work the server KEPT into a "removed" card (the card\'s guess instead of the server\'s word)'],
   ['H25', 'jest', DOOR, 'if (result?.workRemoved === true) {', 'if (result?.workRemoved !== false) {', 'a Delete the server did not describe (the writing was already gone) turns the Work\'s card into a "deleted" card'],
+  ['H27', 'jest', DOOR, '...(err.reloaded ? {} : { reloadFailed: true })', '', 'the door forgets that the re-read failed after a shared refusal'],
+  ['H28', 'jest', DOOR, '(shared.reloadFailed ? `${SHARED_BUT_NOT_SHOWN} ${RELOAD_HOME_LINE}` : SHARED_BUT_NOT_SHOWN)', 'SHARED_BUT_NOT_SHOWN', 'a shared refusal whose re-read failed does not tell the Work card\'s member to reload'],
+  ['H29', 'jest', DOOR, '} else if (result?.alreadyGone) {', '} else if (true as boolean) {', 'a Delete that deleted the writing but did not say whether the Work went is told as "already gone"'],
   ['H26', 'jest', DOOR, "${result?.refreshed ? ' Home now shows what is current.' : reload}", "${' Home now shows what is current.'}", 'an "already gone" notice says Home is current although the re-read failed'],
-  ['H17', 'jest', DOOR, 'const shownError = state.deleteError ?? (shared !== null ? SHARED_BUT_NOT_SHOWN : null);', 'const shownError = state.deleteError;', 'a 409 the page cannot explain is a silent no-op'],
+  ['H17', 'jest', DOOR, 'const shownError = state.deleteError ?? (shared !== null ? (shared.reloadFailed ? `${SHARED_BUT_NOT_SHOWN} ${RELOAD_HOME_LINE}` : SHARED_BUT_NOT_SHOWN) : null);', 'const shownError = state.deleteError;', 'a 409 the page cannot explain is a silent no-op'],
   ['H18', 'jest', DOOR, ': removeSharedWorkCopy(othersHolding)', ': removeSharedWorkCopy(1)', 'the removal sentence says "your other Work" when several Works hold the writing'],
   ['H19', 'jest', DOOR, "(result && !result.refreshed ? RELOAD_LINE : '')", "''", 'a Remove whose re-read failed does not tell the member to reload'],
   ['H20', 'jest', DOOR, "const reload = result && !result.refreshed ? RELOAD_LINE : '';", "const reload = '';", 'a Delete whose re-read failed does not tell the member to reload'],
-  ['H21', 'jest', DOOR, 'update({ shared: { manuscriptId } });', '', 'a shared-writing refusal records nothing, so the removal question never opens'],
+  ['H21', 'jest', DOOR, 'update({ shared: { manuscriptId, ...(err.reloaded ? {} : { reloadFailed: true }) } });', '', 'a shared-writing refusal records nothing, so the removal question never opens'],
   ['H22', 'jest', DOOR, '} finally {\n            update({ deleting: false });', '} finally {', 'a Delete that failed leaves the dialog busy for good'],
   ['H22b', 'jest', DOOR, '} finally {\n            update({ removing: false });', '} finally {', 'a Remove that failed leaves the dialog busy for good'],
   ['H23', 'jest', DOOR, 'update({ deleting: true, deleteError: null, shared: null });', 'update({ deleting: true, deleteError: null });', 'a second Delete starts with the first one\'s shared-writing verdict still on screen'],
@@ -176,14 +184,14 @@ const MUTANTS = [
   ['A5', 'jest', VIEW, 'allWorks={props.works}', 'allWorks={[]}', 'the continue shelf cannot see the other Works', { nth: 5 }],
   ['A6', 'jest', VIEW, 'allWorks={props.works}', 'allWorks={[]}', 'the loose-writing layout\'s Works cannot see the other Works', { nth: 6 }],
   ['A7', 'jest', VIEW, 'allWorks={props.works}', 'allWorks={[]}', 'the many-Works layout cannot see the other Works', { nth: 7 }],
-  ['C1', 'jest', CTRL, 'runRemoveWork(workId, (url, init) => apiFetch(url, init), refresh)', 'runDeleteWork({ workId, manuscriptId: null }, (url, init) => apiFetch(url, init), refresh)', 'the controller\'s removal goes through Delete'],
-  ['C2', 'jest', CTRL, 'onRemoveWork={onRemoveWork}', '', 'the view is never handed the removal act'],
-  ['C3', 'jest', CTRL, 'runDeleteWork({ workId, manuscriptId }, ', 'runDeleteWork({ workId, manuscriptId: null }, ', 'the controller drops the writing a Work card named, so Delete withdraws the Work and leaves the writing'],
+  ['C1', 'jest', CTRL, 'runRemoveWork(workId, (url, init) => apiFetch(url, init), refresh)', 'runDeleteWork({ workId, manuscriptId: null }, (url, init) => apiFetch(url, init), refresh)', '(textual guard) the controller\'s removal goes through Delete'],
+  ['C2', 'jest', CTRL, 'onRemoveWork={onRemoveWork}', '', '(textual guard) the view is never handed the removal act'],
+  ['C3', 'jest', CTRL, 'runDeleteWork({ workId, manuscriptId }, ', 'runDeleteWork({ workId, manuscriptId: null }, ', '(textual guard) the controller drops the writing a Work card named, so Delete withdraws the Work and leaves the writing'],
   ['C4', 'jest', LIB, 'return read.every(Boolean);', 'return true;', 'the re-read reports success even when a list could not be read'],
   ['C4b', 'jest', LIB, "try { return (await load()) === true; } catch { return false; }", "return (await load()) === true;", 'a list that throws turns a committed delete into a rejection'],
-  ['C5', 'jest', CTRL, 'reReadAll([reloadWorks, reloadManuscripts, reloadHistory])', 'reReadAll([reloadWorks])', 'the re-read after a delete leaves the other lists stale'],
-  ['C5b', 'jest', CTRL, 'reReadAll([reloadWorks, reloadManuscripts, reloadHistory])', 'reReadAll([reloadWorks, reloadManuscripts])', 'Home\'s own History still names a deleted writing while the notice says Home shows what is current'],
-  ['C6', 'jest', CTRL, 'const refresh = useCallback(', 'const mapOutcome = (outcome: { refusal?: string }) => outcome.refusal;\n  const refresh = useCallback(', 'the controller starts mapping server outcomes itself instead of running the one place that maps them'],
+  ['C5', 'jest', CTRL, 'reReadAll([reloadWorks, reloadManuscripts, reloadHistory])', 'reReadAll([reloadWorks])', '(textual guard) the re-read after a delete leaves the other lists stale'],
+  ['C5b', 'jest', CTRL, 'reReadAll([reloadWorks, reloadManuscripts, reloadHistory])', 'reReadAll([reloadWorks, reloadManuscripts])', '(textual guard) Home\'s own History still names a deleted writing while the notice says Home shows what is current'],
+  ['C6', 'jest', CTRL, 'const refresh = useCallback(', 'const mapOutcome = (outcome: { refusal?: string }) => outcome.refusal;\n  const refresh = useCallback(', '(textual guard) the controller starts mapping server outcomes itself instead of running the one place that maps them'],
   ['WK1', 'jest', DOOR, "if (holders.length === 0) return 'loose';", "if (holders.length === 0) return 'writing';", 'a writing no Work holds is described as one whose Work goes with it'],
   ['WK2', 'jest', DOOR, 'return holders.every(', 'return holders.some(', 'a writing held by a Work that stays AND one that goes is described as only going'],
   ['LD1', 'jest', LOAD_WORKS, "setPhase('error');\n        return false;", "setPhase('error');\n        return true;", 'the Works list reports it was read when the server refused it'],
@@ -204,6 +212,7 @@ const MUTANTS = [
   ['HY5', 'jest', HISTORY, 'Your history could not be read just now. Try again to see what is current.', 'Your history could not be read just now. Nothing has changed.', 'a History that could not be re-read after a deletion says nothing has changed'],
   ['HY6', 'jest', HISTORY, 'On Home, press Remove on that Work: that removes the Work and what you built inside it, and deletes none of its writings. Then delete this writing.', 'Open it and take it out of that Work first, then delete it.', 'History points at a control that is not on the screen it sends the member to'],
   ['HY7', 'jest', HISTORY, '<NoticeList stack={stack} />', '', 'History shows none of its notices'],
+  ['HY8', 'jest', VIEW, '            noticeStack={noticeStack}\n', '', 'Home does not hand its notice stack to History, so an alert raised there is lost at Back to Home'],
   ['Y3', 'jest', HISTORY, 'const words = deleteConfirmCopy(writingDeleteKindFor(action.manuscriptId, props.works), action.title);', "const words = deleteConfirmCopy('loose', action.title);", 'History does not say that a Work holding only this writing goes with it'],
   // ── the hermetic server tests (no database)
   ['J1', 'jest', ROUTE, 'viaWork === null ? {} : { viaWorkId: viaWork.toLowerCase() }', '{}', 'the route drops the Work the card named'],
@@ -224,8 +233,9 @@ const MUTANTS = [
   ['J16', 'jest', ERASE, 'if (!result.declarationOnly) {\n    try {', 'if (true as boolean) {\n    try {', 'the cleanup of a dangling declaration seals a deletion record nothing needed'],
   ['J17', 'jest', ERASE, 'await sweepVaultErasureQueue(100, ownIds);', 'await sweepVaultErasureQueue(100);', 'a backlog of other rows starves this deletion\'s own obligations'],
   ['J18', 'jest', ERASE, 'WHERE living_work_id = $1 AND member_id = $2 FOR UPDATE`,\n    [workId, memberId],', 'WHERE living_work_id = $1 AND member_id = $2`,\n    [workId, memberId],', '(textual guard) the Work\'s image is read without a lock before the Work goes'],
+  ['J26', 'jest', HISTORY_ROUTE, "if (process.env.MAIA_CABIN_MODE === 'offline') {", 'if (false as boolean) {', 'the offline cabin\'s History answers 401, so every re-read that includes History reports that it could not read'],
   ['J22', 'jest', ROUTE, 'return NextResponse.json({ removed: true, workRemoved: outcome.workRemoved });', 'return NextResponse.json({ removed: true });', 'the success answer does not say whether the Work went, so the page must guess'],
-  ['J23', 'jest', WORK_ROUTE, "      const owned = await tx.query<{ id: string }>(\n        `SELECT id FROM living_works WHERE id = $1 AND member_id = $2 FOR UPDATE`,\n        [id, memberId],\n      );\n      if (owned.rows.length === 0) return null;\n", '', '(textual guard) Remove takes the image row before the Work row (the order that deadlocks with a Delete of the Work\'s writing)'],
+  ['J23', 'jest', WORK_ROUTE, "      const owned = await tx.query<{ id: string }>(\n        `SELECT id FROM living_works WHERE id = $1 AND member_id = $2 FOR UPDATE`,\n        [id, memberId],\n      );\n      if (owned.rows.length === 0) return null;\n", '', 'Remove takes the image row before the Work row (the order that deadlocks with a Delete of the Work\'s writing)'],
   ['J24', 'jest', ERASE, 'workRemoved: declaration.workRemovedId !== undefined };', 'workRemoved: claims.rows.length > 0 };', 'a delete of a live writing says the Work went whenever a Work declared it, even if it stays'],
   ['J25', 'jest', ERASE, 'workRemoved: cleaned.workRemovedId !== undefined }', 'workRemoved: true }', 'the cleanup of a vanished writing says the Work went even when it stays'],
   ['J19', 'jest', ROUTE, "unconfirmed: { originalFile: outcome.owed.originalFile, image: outcome.owed.image, deletionRecord: !outcome.recoverySealed },", 'unconfirmed: { originalFile: true, image: true, deletionRecord: true },', 'the route says everything is owed whatever is'],
@@ -239,11 +249,11 @@ const MUTANTS = [
   ['W6', 'jest', WORK_ROUTE, '`DELETE FROM living_works WHERE id = $1 AND member_id = $2 RETURNING id`,', '`DELETE FROM living_works WHERE id = $1 RETURNING id`,', 'a member can remove another member\'s Work by its id'],
   ['W7', 'jest', WORK_ROUTE, "refusal: 'image_bytes_owed', unconfirmed: { image: true } }", "refusal: 'image_bytes_owed' }", 'the image-owed answer does not say what is owed'],
   // ── the copy against the database (removalCopyDrift.test.ts)
-  ['D1', 'jest', MIG_CORRECTIONS, 'living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE CASCADE,', 'living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE RESTRICT,', 'a table starts blocking the removal of a Work (it would fail or leave a detached row)'],
-  ['D2', 'jest', MIG_UNDERSTANDING, 'CREATE TABLE IF NOT EXISTS living_work_writer_understanding (', 'CREATE TABLE IF NOT EXISTS living_work_fictional_new_child (living_work_id UUID REFERENCES living_works(id) ON DELETE CASCADE);\nCREATE TABLE IF NOT EXISTS living_work_writer_understanding (', 'a new table starts cascading from a Work and the removal copy is not updated'],
-  ['D3', 'jest', LIB, 'its conversations with MAIA, what you told MAIA about it, your corrections, where you left off,', 'its conversations with MAIA, what you told MAIA about it, your corrections,', 'the removal copy stops naming something that does go'],
-  ['D4', 'jest', MIG_CORRECTIONS, 'living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE CASCADE,', 'living_work_id UUID NOT NULL REFERENCES living_works(id),', 'a foreign key with no ON DELETE (it blocks the Work\'s removal) hides behind a neighbouring column\'s CASCADE'],
-  ['D5', 'jest', MIG_UNDERSTANDING, 'CREATE TABLE IF NOT EXISTS living_work_writer_understanding (', 'CREATE TABLE IF NOT EXISTS living_work_fictional_orphan (living_work_id UUID NOT NULL);\nCREATE TABLE IF NOT EXISTS living_work_writer_understanding (', 'a new table carries a Work id with no foreign key, so a Work\'s removal leaves its rows behind unnoticed'],
+  ['D1', 'jest', MIG_CORRECTIONS, 'living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE CASCADE,', 'living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE RESTRICT,', '(static guard: reads the migrations) a table starts blocking the removal of a Work (it would fail or leave a detached row)'],
+  ['D2', 'jest', MIG_UNDERSTANDING, 'CREATE TABLE IF NOT EXISTS living_work_writer_understanding (', 'CREATE TABLE IF NOT EXISTS living_work_fictional_new_child (living_work_id UUID REFERENCES living_works(id) ON DELETE CASCADE);\nCREATE TABLE IF NOT EXISTS living_work_writer_understanding (', '(static guard: reads the migrations) a new table starts cascading from a Work and the removal copy is not updated'],
+  ['D3', 'jest', LIB, 'its conversations with MAIA, what you told MAIA about it, your corrections, where you left off,', 'its conversations with MAIA, what you told MAIA about it, your corrections,', '(static guard: reads the migrations) the removal copy stops naming something that does go'],
+  ['D4', 'jest', MIG_CORRECTIONS, 'living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE CASCADE,', 'living_work_id UUID NOT NULL REFERENCES living_works(id),', '(static guard: reads the migrations) a foreign key with no ON DELETE (it blocks the Work\'s removal) hides behind a neighbouring column\'s CASCADE'],
+  ['D5', 'jest', MIG_UNDERSTANDING, 'CREATE TABLE IF NOT EXISTS living_work_writer_understanding (', 'CREATE TABLE IF NOT EXISTS living_work_fictional_orphan (living_work_id UUID NOT NULL);\nCREATE TABLE IF NOT EXISTS living_work_writer_understanding (', '(static guard: reads the migrations) a new table carries a Work id with no foreign key, so a Work\'s removal leaves its rows behind unnoticed'],
   // ── the server (needs the local PostgreSQL 16 harness)
   ['S1', 'pg', ERASE, 'if (options.viaWorkId !== undefined && !claims.rows.some((row) => row.living_work_id === options.viaWorkId)) {', 'if (false as boolean) {', 'a stale card can erase another Work\'s writing and the Work itself'],
   ['S2', 'pg', ROUTE, 'viaWork === null ? {} : { viaWorkId: viaWork.toLowerCase() }', '{}', 'the route drops the Work the card named'],
@@ -261,7 +271,7 @@ const MUTANTS = [
   ['S14', 'pg', WORK_ROUTE, 'await sweepVaultErasureQueue(100, [removed.queueId]);', 'await sweepVaultErasureQueue(100, []);', 'a Work\'s own image waits behind a backlog of other rows'],
   ['S15', 'pg', ERASE, 'if (options.viaWorkId !== undefined && claims.rows.some((row) => row.living_work_id === options.viaWorkId)) {', 'if (false as boolean) {', 'a declaration that outlived its writing is left behind (the detached state)'],
   ['S16', 'pg', ERASE, '\n        AND NOT EXISTS (\n          SELECT 1 FROM living_work_expressions e WHERE e.living_work_id = w.id\n        )', '', 'a Work that holds something else is removed with its dangling declaration'],
-  ['S17', 'pg', ERASE, "          AND w.member_id = $2\n        FOR UPDATE OF e`,", "        FOR UPDATE OF e`,", 'a member can clean up the declaration of another member\'s Work through a gone writing'],
+  ['S17', 'pg', ERASE, "          AND w.member_id = $2\n        FOR UPDATE OF e`,", "          AND $2::uuid IS NOT NULL\n        FOR UPDATE OF e`,", 'a member can clean up the declaration of another member\'s Work through a gone writing'],
   ['S18', 'pg', ERASE, 'originalFile: result.originalQueueIds.some((id) => stillQueued.has(id)),', 'originalFile: false,', 'an original file still owed is not reported'],
   ['S19', 'pg', ERASE, 'let recoverySealed = result.declarationOnly;', 'let recoverySealed = false;', 'the cleanup of a dangling declaration reads as an unsealed deletion record'],
   ['S21', 'pg', WORK_ROUTE, "      const owned = await tx.query<{ id: string }>(\n        `SELECT id FROM living_works WHERE id = $1 AND member_id = $2 FOR UPDATE`,\n        [id, memberId],\n      );\n      if (owned.rows.length === 0) return null;\n", '', 'Remove takes the image row before the Work row, and a Delete of the Work\'s writing deadlocks with it (a 500 for an act that did not happen)'],
@@ -355,7 +365,8 @@ const run = async (kind) => {
 const HOOK = /\b(before|after)(All|Each)\b|\bhook\b/i;
 const failingLines = (text) => text.split('\n').map((l) => l.trim()).filter((l) => l.startsWith('✕') || /^● .* › /.test(l));
 const failingTests = (text) => failingLines(text).filter((l) => !HOOK.test(l));
-const COMPILE = /SyntaxError|Test suite failed to run|Cannot find module|error TS\d+/;
+// A candidate that breaks the SQL (a parameter-count error fails EVERY request) is a broken build, not a kill by the behaviour it names.
+const COMPILE = /SyntaxError|Test suite failed to run|Cannot find module|error TS\d+|bind message supplies/;
 
 // BASELINE: the unmutated suite must be green, or "killed" would only mean "red". Each harness kind that will be used is run once.
 for (const kind of [...new Set(selected.map((m) => m[1]))]) {

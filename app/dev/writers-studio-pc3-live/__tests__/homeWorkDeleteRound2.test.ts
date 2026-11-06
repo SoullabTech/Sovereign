@@ -140,6 +140,23 @@ describe('the server says the writing is shared, but this page cannot see the ot
     await act(async () => { finish(undefined); });
   });
 
+  it('and when the re-read that followed FAILED, the card says so too (the page may simply not have the other Work yet)', async () => {
+    render({ works: [workA] });
+    onDeleteWork.mockRejectedValue(new DeletionSharedMaterial(SHARED_REFUSAL, false));
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);
+    const alert = host.querySelector('[data-deleting-confirmation] [role="alert"]')?.textContent ?? '';
+    expect(alert).toContain('Nothing was deleted');
+    expect(alert).toContain('reload this page');
+  });
+  it('and when the re-read worked, it adds nothing about reloading', async () => {
+    render({ works: [workA] });
+    onDeleteWork.mockRejectedValue(new DeletionSharedMaterial(SHARED_REFUSAL, true));
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-deleting-confirmation] [role="alert"]')?.textContent).not.toContain('reload this page');
+  });
+
   it('once the re-read brings the other Work in, the same card turns into the removal question', async () => {
     render({ works: [workA] });
     onDeleteWork.mockRejectedValue(new DeletionSharedMaterial(SHARED_REFUSAL));
@@ -423,9 +440,9 @@ describe('deleting a Work\'s writing when the Work stays', () => {
     await click(DELETE_WORK_COPY.confirm);
     expect(host.querySelector('[data-removed]')?.textContent).toBe('“Fictional Work A” was deleted.');
   });
-  it('a writing that was already gone (the server says nothing about the Work): no ghost, and the page says only that', async () => {
+  it('a writing that was already gone (the server answered 404): no ghost, and the page says only that', async () => {
     render({ works: [workA, workB] });
-    onDeleteWork.mockResolvedValue({ refreshed: true });
+    onDeleteWork.mockResolvedValue({ refreshed: true, alreadyGone: true });
     await pressDoor('Fictional Work A');
     await click(DELETE_WORK_COPY.confirm);
     expect(host.querySelector('[data-removed]')).toBeNull();
@@ -435,12 +452,27 @@ describe('deleting a Work\'s writing when the Work stays', () => {
   });
   it('the same, with a re-read that failed: it tells the member to reload and does not say Home is current', async () => {
     render({ works: [workA, workB] });
-    onDeleteWork.mockResolvedValue({ refreshed: false });
+    onDeleteWork.mockResolvedValue({ refreshed: false, alreadyGone: true });
     await pressDoor('Fictional Work A');
     await click(DELETE_WORK_COPY.confirm);
     const text = host.querySelector('[data-delete-notice]')?.textContent ?? '';
     expect(text).toContain('reload this page');
     expect(text).not.toContain('Home now shows what is current');
+  });
+  it('an answer that deleted the writing but did not say whether the Work went (an older server, the offline cabin) is NOT told as "already gone"', async () => {
+    render({ works: [workA, workB] });
+    onDeleteWork.mockResolvedValue({ refreshed: true });
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);
+    expect(host.querySelector('[data-removed]')).toBeNull();
+    const text = host.querySelector('[data-delete-notice]')?.textContent ?? '';
+    expect(text).toContain('The writing in “Fictional Work A” was deleted.');
+    expect(text).not.toContain('already gone');
+    onDeleteWork.mockResolvedValue({ refreshed: false });
+    await pressDoor('Fictional Work A');
+    await click(DELETE_WORK_COPY.confirm);
+    const second = Array.from(host.querySelectorAll('[data-delete-notice]')).map((n) => n.textContent ?? '');
+    expect(second.some((t) => t.includes('was deleted.') && t.includes('reload this page') && !t.includes('already gone'))).toBe(true);
   });
   it('the Work stays and the re-read failed: the notice still tells the member to reload', async () => {
     render({ works: [mixed, workB] });

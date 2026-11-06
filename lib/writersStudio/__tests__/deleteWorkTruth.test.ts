@@ -133,7 +133,7 @@ describe('the retry after "the writing is already gone" is finished by the serve
 
   it('a 404 from a Work card is done, in ONE request: no second request exists to remove a Work the member did not confirm', async () => {
     const out = await deleteWork({ workId: WORK, manuscriptId: MS }, record(404));
-    expect(out).toEqual({ ok: true });
+    expect(out).toEqual({ ok: true, alreadyGone: true });
     expect(calls).toEqual([`DELETE /api/sovereign/manuscripts/${MS}?workId=${WORK}`]);
   });
 
@@ -214,9 +214,11 @@ describe('the custody sentence names exactly what the server says is unconfirmed
     expect(stays.message).toMatch(/^This writing was deleted from your studio, but/);
     const loose = await owed({ removed: true, refusal: 'custody_incomplete' }, { workId: null, manuscriptId: MS });
     expect(loose.message).toMatch(/^This writing was deleted from your studio, but/);
-    // A body that does not say, on a Work card: the Work is taken to have gone (the route only reports it when it stayed).
+    // A body that does not say (a server older than this client), on a Work card: only what is certain is claimed. The WRITING was
+    // deleted in every removed:true answer; "the Work was removed" is said only on evidence.
     const unsaid = await owed({ removed: true, refusal: 'custody_incomplete' }, { workId: WORK, manuscriptId: MS });
-    expect(unsaid.message).toMatch(/^This work was removed from your studio, but/);
+    expect(unsaid.message).toMatch(/^This writing was deleted from your studio, but/);
+    expect(unsaid.message).not.toContain('This work was removed');
     // A card with no writing goes to the Work route, which has no workRemoved field and always removes the Work.
     const workRoute = await owed({ removed: true, refusal: 'image_bytes_owed', unconfirmed: { image: true } }, { workId: WORK, manuscriptId: null });
     expect(workRoute.message).toMatch(/^This work was removed from your studio, but/);
@@ -267,13 +269,15 @@ describe('what became of the Work is the SERVER\'s word, carried to the page and
     await expect(runDeleteWork({ workId: WORK, manuscriptId: MS }, ms({ removed: true, workRemoved: true }), async () => false)).resolves.toEqual({ refreshed: false, workRemoved: true });
   });
   it('an answer that does not say (an older server, a body that is not JSON, a flag that is not a boolean) leaves it unsaid, never defaulted to "the Work went"', async () => {
-    expect(await deleteWork({ workId: WORK, manuscriptId: MS }, ms({ removed: true }))).toEqual({ ok: true });
+    expect(await deleteWork({ workId: WORK, manuscriptId: MS }, ms({ removed: true }))).toEqual({ ok: true });         // unsaid, and NOT "already gone": this act deleted it
     expect(await deleteWork({ workId: WORK, manuscriptId: MS }, ms({ removed: true, workRemoved: 'yes' }))).toEqual({ ok: true });
     expect(await deleteWork({ workId: WORK, manuscriptId: MS }, async () => ({ ok: true, status: 200, json: async () => { throw new Error('not json'); } }) as unknown as Response)).toEqual({ ok: true });
   });
   it('a writing that is already gone (404 on the manuscripts route) says nothing about the Work', async () => {
-    expect(await deleteWork({ workId: WORK, manuscriptId: MS }, ms({ error: 'Not found' }, 404))).toEqual({ ok: true });
-    await expect(runDeleteWork({ workId: WORK, manuscriptId: MS }, ms({ error: 'Not found' }, 404), async () => true)).resolves.toEqual({ refreshed: true });
+    expect(await deleteWork({ workId: WORK, manuscriptId: MS }, ms({ error: 'Not found' }, 404))).toEqual({ ok: true, alreadyGone: true });
+    await expect(runDeleteWork({ workId: WORK, manuscriptId: MS }, ms({ error: 'Not found' }, 404), async () => true)).resolves.toEqual({ refreshed: true, alreadyGone: true });
+    // ...and a 200 that does not say whether the Work went is NOT "already gone": the writing was deleted by this act.
+    await expect(runDeleteWork({ workId: WORK, manuscriptId: MS }, ms({ removed: true }), async () => true)).resolves.toEqual({ refreshed: true });
   });
   it('the Work route always means the Work is gone: a no-writing Work\'s Delete, ok or already absent', async () => {
     expect(await deleteWork({ workId: WORK, manuscriptId: null }, ms({ withdrawn: WORK }))).toEqual({ ok: true, workRemoved: true });
@@ -323,5 +327,15 @@ describe('a re-read that did not work is said on EVERY path where the act happen
     expect(failed).toBeInstanceOf(DeletionSharedMaterial);
     expect((failed as Error).message.endsWith(RELOAD)).toBe(true);
     expect((ok as Error).message).not.toContain('reload this page');
+  });
+});
+
+describe('a shared refusal says whether the re-read that preceded it worked (so a page that cannot see the other Work can tell why)', () => {
+  const shared = async () => fake(409, { refusal: 'declared_in_other_works', works: 2 });
+  it('reloaded:true when the re-read worked, false when it did not', async () => {
+    const ok = await runDeleteWork({ workId: WORK, manuscriptId: MS }, shared, async () => true).catch((e: Error) => e);
+    const failed = await runDeleteWork({ workId: WORK, manuscriptId: MS }, shared, async () => false).catch((e: Error) => e);
+    expect((ok as DeletionSharedMaterial).reloaded).toBe(true);
+    expect((failed as DeletionSharedMaterial).reloaded).toBe(false);
   });
 });

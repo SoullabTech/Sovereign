@@ -338,7 +338,7 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       const goes = await runDeleteWork({ workId: W_SOLO, manuscriptId: MS_SOLO }, serverFetcher, refresh);
       expect(goes).toEqual({ refreshed: true, workRemoved: true });
       const gone = await runDeleteWork({ workId: W_SOLO, manuscriptId: MS_SOLO }, serverFetcher, refresh);      // again: the writing is gone, nothing is said about the Work
-      expect(gone).toEqual({ refreshed: true });
+      expect(gone).toEqual({ refreshed: true, alreadyGone: true });
     });
 
     it('CE-6 a Work with several writings: Remove ends the Work and deletes NONE of the writings (the sentence the confirmation says)', async () => {
@@ -451,13 +451,10 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
 
   describe('the same Work and writing, two requests at once: no deadlock, whichever order', () => {
     it('DL-1 a Delete queued behind a removal that holds the Work row takes the Work row BEFORE any expression row, so the removal can finish its own cascade (no 40P01, no 500)', async () => {
-      // The holder plays a Remove in flight, in the order the route takes: the Work row, then the Work\'s image row, and it has not yet
-      // reached that Work\'s expression rows. The Work HAS an image: the order of those two locks is the whole point.
-      await addVisual(W_A, 'work-visuals/dl1-image.png');
-      const removal = await holder(async (c) => {
-        await c.query('SELECT id FROM living_works WHERE id = $1 FOR UPDATE', [W_A]);
-        await c.query('SELECT storage_path FROM living_work_visuals WHERE living_work_id = $1 FOR UPDATE', [W_A]);
-      });
+      // The holder plays a Remove in flight: it holds the Work row and has not yet reached that Work\'s expression rows. (It is a hand-written
+      // holder, so it guards the ERASE\'s order, Work row before expression rows. The Remove ROUTE\'s own order, Work row before image
+      // row, is guarded by DL-3, by DL-2\'s sole-claimant pairs, by the hermetic LOCK ORDER test and by candidates S21 and J23.)
+      const removal = await holder((c) => c.query('SELECT id FROM living_works WHERE id = $1 FOR UPDATE', [W_A]).then(() => undefined));
       let removalError: unknown = null;
       try {
         const pending = serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}`, { method: 'DELETE' });
@@ -501,25 +498,32 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
     it('DL-2 400 simultaneous Delete/Remove pairs: no request ever answers 5xx (the pairs that used to deadlock about 1 in 80)', async () => {
       let fiveHundreds = 0;
       let pairs = 0;
-      let withImage = 0;
+      let imagePairs = 0;
       // Bounded: the first 5xx is the answer (no need to keep going), and a run that cannot finish 400 pairs inside the deadline FAILS
       // (it never passes on fewer pairs than it says).
       const deadline = Date.now() + 100_000;
       for (; pairs < 400 && fiveHundreds === 0; pairs += 1) {
         if (Date.now() > deadline) throw new Error(`DL-2 deadline exceeded after ${pairs} of 400 pairs`);
         await reset();
-        // Half of the pairs carry an image on the Work: the image row is a lock of its own, and the pairs that used to deadlock on it
-        // (a Remove taking the image row before the Work row) only exist for a Work that has one.
-        if (pairs % 2 === 0) { await addVisual(W_A, 'work-visuals/dl2-image.png'); withImage += 1; }
-        const [d, r] = await Promise.all([
-          serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}`, { method: 'DELETE' }),
-          serverFetcher(`/api/sovereign/living-works/${W_A}`, { method: 'DELETE' }),
-        ]);
+        let deletion: Promise<Response>;
+        if (pairs % 2 === 0) {
+          // Two Works hold the writing: a loose Delete reaches the shared refusal, a Remove of one Work races it (the expression-row cycle).
+          deletion = serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}`, { method: 'DELETE' });
+        } else {
+          // ONE Work holds the writing and that Work has an image: the Delete goes on to read the image row (removeDeclaration) while a
+          // Remove of the same Work takes its rows. Only this topology can reach the image-row cycle that an image-row-first Remove
+          // formed with the Delete (a 500 for an act that did not happen).
+          await query('DELETE FROM living_works WHERE id = $1', [W_B]);
+          await addVisual(W_A, 'work-visuals/dl2-image.png');
+          imagePairs += 1;
+          deletion = serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}?workId=${W_A}`, { method: 'DELETE' });
+        }
+        const [d, r] = await Promise.all([deletion, serverFetcher(`/api/sovereign/living-works/${W_A}`, { method: 'DELETE' })]);
         if (d.status >= 500 || r.status >= 500) fiveHundreds += 1;
       }
       expect(fiveHundreds).toBe(0);
       expect(pairs).toBe(400);
-      expect(withImage).toBe(200);
+      expect(imagePairs).toBe(200);
     });
   });
 

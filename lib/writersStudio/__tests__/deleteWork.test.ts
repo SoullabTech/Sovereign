@@ -165,7 +165,7 @@ describe('a member cannot delete what is not theirs', () => {
 
     expect(calls).toHaveLength(1);
     expect(calls[0][0]).toBe('/api/sovereign/manuscripts/not-mine');
-    expect(out).toEqual({ ok: true });
+    expect(out).toEqual({ ok: true, alreadyGone: true });
   });
 
   it('a Work card: a 404 on the writing is done, in ONE request that names the Work (the server finishes any dangling declaration)', async () => {
@@ -175,7 +175,7 @@ describe('a member cannot delete what is not theirs', () => {
 
     expect(calls.map((c) => c[0])).toEqual(['/api/sovereign/manuscripts/not-mine?workId=someone-elses']);
     expect(calls.every((c) => c[1].method === 'DELETE')).toBe(true);
-    expect(out).toEqual({ ok: true });
+    expect(out).toEqual({ ok: true, alreadyGone: true });
   });
 });
 

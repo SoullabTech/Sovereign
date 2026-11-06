@@ -47,7 +47,12 @@
 export type DeleteOutcome =
   /** The server said yes. `workRemoved` is its word on whether the Work went (the manuscripts route says; the Work route always removes
    *  the Work; a 404 says nothing about the Work), so the page never has to guess what became of the card it is showing. */
-  | { readonly ok: true; readonly workRemoved?: boolean }
+  | {
+      readonly ok: true;
+      readonly workRemoved?: boolean;
+      /** The manuscripts route answered 404: the writing was ALREADY gone before this act. (A 200 that does not say whether the Work went is NOT this.) */
+      readonly alreadyGone?: true;
+    }
   /** Nothing was removed, or not all of it was. The message is member-facing.
    *  `removed: true` means the server committed the removal (the writing is gone) but could not yet CONFIRM the whole custody
    *  ending, so the caller must stop showing the writing AND still show the message: both are true.
@@ -82,7 +87,9 @@ export class DeletionUnconfirmed extends Error {
 /** The writing is also declared by another of the member's Works, so the server refused to erase it (nothing was deleted).
  *  The member's way forward is to remove THIS Work and keep the writing where it still lives. The message is member-facing. */
 export class DeletionSharedMaterial extends Error {
-  constructor(message: string) { super(message); this.name = 'DeletionSharedMaterial'; }
+  /** Whether the re-read that preceded this error worked. When it did not, the page may not be able to see the other Work, and says so. */
+  readonly reloaded: boolean;
+  constructor(message: string, reloaded = true) { super(message); this.name = 'DeletionSharedMaterial'; this.reloaded = reloaded; }
 }
 
 /** An outcome the member must be told about ON THE PAGE, not in a dialog: the page was re-read before this was thrown, and that
@@ -151,7 +158,7 @@ export async function deleteWork(
   /* 404 means the writing is already gone: another device, or a request that succeeded while the response was lost. Absence is the
      outcome sought. (If a Work still declared it, the server has already finished that in the same transaction.) It says nothing
      about the Work, unless the Work route was asked: there, 404 means the Work is gone. */
-  if (res.status === 404) return viaWorkRoute ? { ok: true, workRemoved: true } : { ok: true };
+  if (res.status === 404) return viaWorkRoute ? { ok: true, workRemoved: true } : { ok: true, alreadyGone: true };
   if (res.status === 401) return { ok: false, message: SESSION_ENDED_DELETE };
 
   const body = await readBody(res);
@@ -161,7 +168,9 @@ export async function deleteWork(
     // removal: say what we can prove (the removal happened, custody is unconfirmed) and never "nothing was removed".
     const known = refusal !== null && OWED_AFTER_REMOVAL.has(refusal) ? refusal : 'custody_incomplete';
     // The subject of the sentence: the Work went (a Work card whose Work declared only this writing), or only the writing did.
-    const subject = workId && body.workRemoved !== false ? 'work' : 'writing';
+    // "This work was removed" asserts that the Work went: it is said only on evidence (the Work route, or the server's word). The writing
+    // was deleted in every one of these answers, so "This writing was deleted" is true whatever became of the Work.
+    const subject = workId && (viaWorkRoute || body.workRemoved === true) ? 'work' : 'writing';
     // Whether the Work went: the server's word where it gave one; the Work route (no writing on the card) always removes the Work.
     const workRemoved = typeof body.workRemoved === 'boolean' ? body.workRemoved : (viaWorkRoute ? true : undefined);
     return { ok: false, message: deletionRefusalCopy(known, { subject, ...(body.unconfirmed ? { unconfirmed: body.unconfirmed } : {}) }), removed: true, ...(workRemoved !== undefined ? { workRemoved } : {}), ...(refusal ? { refusal } : {}), ...(body.unconfirmed ? { unconfirmed: body.unconfirmed } : {}) };
@@ -501,8 +510,10 @@ const HOME_NOT_RELOADED = 'We could not reload Home either, so reload this page 
  *  still show what was just deleted, and the member must be told to reload. */
 export interface ActResult {
   readonly refreshed: boolean;
-  /** The server's word on whether the Work went (undefined when it did not say, e.g. the writing was already gone). */
+  /** The server's word on whether the Work went (undefined when it did not say). */
   readonly workRemoved?: boolean;
+  /** The writing was already gone before this act (the server answered 404). */
+  readonly alreadyGone?: boolean;
 }
 
 /** Said when a re-read after an act that DID happen could not be done: the page may still show what was just deleted. */
@@ -511,13 +522,19 @@ const withReload = (message: string, fresh: boolean): string => (fresh ? message
 
 export async function runDeleteWork(target: DeleteTarget, fetcher: Fetcher, refresh: Refresh): Promise<ActResult> {
   const outcome = await deleteWork(target, fetcher);
-  if (outcome.ok) return { refreshed: await refreshed(refresh), ...(outcome.workRemoved !== undefined ? { workRemoved: outcome.workRemoved } : {}) };
+  if (outcome.ok) {
+    return {
+      refreshed: await refreshed(refresh),
+      ...(outcome.workRemoved !== undefined ? { workRemoved: outcome.workRemoved } : {}),
+      ...(outcome.alreadyGone ? { alreadyGone: true } : {}),
+    };
+  }
   // Removed, but not yet confirmed: stop listing it AND still say so (and, if the list could not be re-read, say that too).
   if (outcome.removed) { const fresh = await refreshed(refresh); throw new DeletionUnconfirmed(withReload(outcome.message, fresh), outcome.workRemoved); }
   // Shared writing: nothing was deleted and Delete cannot succeed from this card. The server knows something this page may not
   // (the other Work), so the page is re-read before the card offers the other act; if the re-read shows nothing shared the card
   // still shows the server's sentence instead of doing nothing.
-  if (outcome.refusal === 'declared_in_other_works') { const fresh = await refreshed(refresh); throw new DeletionSharedMaterial(withReload(outcome.message, fresh)); }
+  if (outcome.refusal === 'declared_in_other_works') { const fresh = await refreshed(refresh); throw new DeletionSharedMaterial(withReload(outcome.message, fresh), fresh); }
   // A stale card: make the page true first, then say so. The re-read may remove the card that asked, so this goes to the PAGE.
   if (outcome.refusal === 'work_no_longer_holds_it') {
     const fresh = await refreshed(refresh);
