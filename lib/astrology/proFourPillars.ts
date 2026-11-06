@@ -249,6 +249,6 @@ export function calculateFourPillars(
       backward: luck(-1, (instant.getTime() - previousTerm.getTime()) / DAY_MS),
     },
     dayStart,
-    method: 'Year and month pillars turn at the solar terms (the year at Lichun, the Sun at 315°), calculated for the birth instant. The day pillar is the 60-day count of the local birth date; the hour pillar uses local clock time, not true solar time. Hidden stems and Ten Gods are the standard tables. Luck pillars begin after three days to the neighbouring solar term per year of age; ages are elapsed years.',
+    method: 'Year and month pillars turn at the solar terms (the year at Lichun, the Sun at 315°), calculated for the birth instant. The day pillar is the 60-day count of the local birth date; the hour pillar uses local clock time, not true solar time. Hidden stems and Ten Gods are the standard tables. Luck pillars begin after three days to the neighbouring solar term per year of age, rounded to the month; ages are elapsed years and the calendar year each begins is approximate.',
   };
 }

@@ -24,7 +24,7 @@ import ProTransitPanel from './ProTransitPanel';
 import ProAspectGrid from './ProAspectGrid';
 import ProComparePanel from './ProComparePanel';
 import ProDerivedPanel from './ProDerivedPanel';
-import ProSystemsPanel from './ProSystemsPanel';
+import ProSystemsPanel, { type SystemsWork } from './ProSystemsPanel';
 import ProChartViews from './ProChartViews';
 import ProEphemerisPanel from './ProEphemerisPanel';
 import ProAstroMapPanel from './ProAstroMapPanel';
@@ -136,6 +136,8 @@ export default function ProAstrologyExperience() {
   const [declinations, setDeclinations] = useState<Declination[] | null>(null);
   const [chartPoints, setChartPoints] = useState<ChartPoints | null>(null);
   const [privateViewVerified, setPrivateViewVerified] = useState(false);
+  // Working place in panels that unmount while access is re-checked; cleared with the chart.
+  const [systemsWork, setSystemsWork] = useState<SystemsWork | null>(null);
   const privateVerificationEpoch = useRef(0);
   const [chartError, setChartError] = useState<string | null>(null);
   const [skyStatus, setSkyStatus] = useState<SkyStatus>('loading');
@@ -198,6 +200,7 @@ export default function ProAstrologyExperience() {
     setMemberNotes({});
     setCalculationQuality(null);
     setDraft(null);
+    setSystemsWork(null);
     setChartStatus(reason);
   }
 
@@ -212,9 +215,10 @@ export default function ProAstrologyExperience() {
       privateVerificationEpoch.current += 1;
       setPrivateViewVerified(false);
     };
+    // A check while the chart is showing leaves it showing: only a failed check
+    // closes it. Blur and hidden tabs still mask it at once (above).
     const verify = async () => {
       const requestEpoch = ++privateVerificationEpoch.current;
-      setPrivateViewVerified(false);
       try {
         // A saved chart re-verifies that it still exists for this member; the
         // member's own chart re-verifies its birth-data revision.
@@ -579,7 +583,8 @@ export default function ProAstrologyExperience() {
                 <ProAstroMapPanel subjectId={savedSubject ? savedSubject.id : 'own'}
                   chartLabel={savedSubject ? savedSubject.label : 'my chart'} houseSystem={houseSystem} />
                 <ProSystemsPanel subjectId={savedSubject ? savedSubject.id : 'own'}
-                  chartLabel={savedSubject ? savedSubject.label : 'my chart'} />
+                  chartLabel={savedSubject ? savedSubject.label : 'my chart'}
+                  work={systemsWork} onWork={setSystemsWork} />
                 <p id="pro-orb-filter-description" className={styles.sourceLabel} role="note">
                   Orbs decide which aspects are found from the calculated positions; the max orb
                   setting then filters them for display. Neither determines applying/separating phase.
