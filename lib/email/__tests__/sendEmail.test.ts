@@ -35,6 +35,11 @@ jest.mock('../ledger', () => ({
   stateForFailure: (kind: string) => kind === 'exception' ? 'indeterminate' : 'refused',
 }));
 
+const mockNotifyDown = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+jest.mock('@/lib/ops/mailTransportAlert.server', () => ({
+  notifyMailTransportDown: (...args: unknown[]) => mockNotifyDown(...args),
+}));
+
 import { sendEmail, classifyProviderError } from '../sendEmail';
 import { SmtpProvider } from '../providers/SmtpProvider';
 import type { EmailProvider, ProviderSendResult } from '../providers/types';
@@ -127,6 +132,34 @@ describe('sendEmail — a resolved refusal is a failure, never a success', () =>
     refuse('monthly_quota_exceeded', 'Monthly quota exceeded.');
     await send();
     expect(errSpy.mock.calls.map((c) => String(c[0])).some((l) => l.includes('TRANSPORT_DOWN'))).toBe(true);
+  });
+
+  it('a transport-wide failure pages a human, content-free', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockNotifyDown.mockReset().mockResolvedValue({});
+    refuse('monthly_quota_exceeded', 'Monthly quota exceeded.');
+    await send();
+    expect(mockNotifyDown).toHaveBeenCalledTimes(1);
+    const arg = JSON.stringify(mockNotifyDown.mock.calls[0]);
+    expect(arg).toContain('quota_exceeded');
+    expect(arg).not.toMatch(/@/);
+  });
+
+  it('a per-recipient failure pages no one', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockNotifyDown.mockReset().mockResolvedValue({});
+    refuse('validation_error', 'Invalid `to` field.');
+    await send();
+    expect(mockNotifyDown).not.toHaveBeenCalled();
+  });
+
+  it('a paging failure cannot change the send outcome', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockNotifyDown.mockReset().mockRejectedValue(new Error('twilio down'));
+    refuse('monthly_quota_exceeded', 'Monthly quota exceeded.');
+    const r = await send();
+    expect(r.success).toBe(false);
+    expect(r.failureKind).toBe('quota_exceeded');
   });
 
   it('a per-recipient failure does NOT claim the whole transport is down', async () => {

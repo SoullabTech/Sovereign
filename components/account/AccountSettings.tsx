@@ -18,7 +18,7 @@ import { Capacitor } from '@capacitor/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Shield, Mic, Brain, Users, MessageSquare, Bell, Lock,
-  Link as LinkIcon, Download, Trash2, Check, ChevronRight, Eye, EyeOff,
+  Link as LinkIcon, Download, Trash2, Check, ChevronRight, Eye,
   Mail, Clock, Sparkles, AlertTriangle, ArrowLeft, BookOpen,
   Star, MapPin, Search, ExternalLink, Globe, History
 } from 'lucide-react';
@@ -197,7 +197,6 @@ export function AccountSettings() {
   const [projectsLoading, setProjectsLoading] = useState(false);
 
   // Password change state
-  const [showPasskey, setShowPasskey] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -1515,19 +1514,17 @@ export function AccountSettings() {
       {/* Passkey Display */}
       <div>
         <label className="text-sm text-stone-400 mb-2 block">Your Passkey</label>
-        <div className="flex items-center gap-2">
-          <div className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 font-mono text-sm">
-            {showPasskey ? profile?.passkey : '••••••••••••••••'}
-          </div>
-          <button
-            onClick={() => setShowPasskey(!showPasskey)}
-            className="p-3 bg-white/5 border border-white/10 rounded-xl text-stone-400 hover:text-stone-200 transition-colors"
-          >
-            {showPasskey ? <EyeOff size={20} /> : <Eye size={20} />}
-          </button>
+        <div
+          className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 font-mono text-sm"
+          data-testid="account-passkey"
+        >
+          {/* The server returns this already masked, on purpose: the full passkey
+              is never sent to the browser, so there is nothing to reveal. */}
+          {profile?.passkey || '••••••••••••••••'}
         </div>
         <p className="text-xs text-stone-400 mt-2">
-          Your passkey is used to recover your account. Keep it safe.
+          Your passkey is hidden for security and can’t be shown here. You don’t need it to sign in:
+          use your username and password, or ask for a sign-in code by email.
         </p>
       </div>
 

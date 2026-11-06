@@ -7,6 +7,8 @@ surfaces:
   - app/house/DecisionAccessNotice.tsx
   - app/house/MaiaThresholdLink.tsx
   - app/house/PassingThrough.tsx
+  - app/house/HouseRail.tsx
+  - app/house/places/page.tsx
   - components/astrology/CurrentTransitsField.tsx
 change_class: experiential
 principles:
@@ -55,3 +57,13 @@ CANONICAL-RECONCILIATION-01 changes only the Experience Contract registry and ev
 ## Current sky orientation
 
 The House may show a compact current-transits field as one expression of "what is alive now." It remains orientation, not interpretation: the field names calculated sky positions, uses weather-not-fate language, and returns the member to Astrology for any deeper chart-specific inquiry. The House does not infer natal effects or tell the member what the moment means.
+
+## Phones and iPads (HOUSE-MOBILE-01, founder ruling 2026-11-05)
+
+At 1200px and below the House is a short arrival, about two screens on an iPhone instead of
+eight: welcome, MAIA, the five chosen spaces as compact tiles, Here · Now folded beside
+Arrange my House, a Today pair (the sky in one line, what's alive in one line), one door to
+**All places** (`/house/places`), and Life compass with Grounds folded under "More of the
+House". The full sky panel and the catalogue stay on wide screens unchanged. All places is a
+plain list where one tap opens a place; choosing what appears in the center or in Here · Now
+happens only in Arrange my House. Record: `docs/programme/HOUSE-MOBILE-01_CENSUS_AND_PROPOSAL_2026-11-05.md`.

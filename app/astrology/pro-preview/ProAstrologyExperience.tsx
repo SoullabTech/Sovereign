@@ -24,6 +24,7 @@ import ProTransitPanel from './ProTransitPanel';
 import ProAspectGrid from './ProAspectGrid';
 import ProComparePanel from './ProComparePanel';
 import ProDerivedPanel from './ProDerivedPanel';
+import ProSystemsPanel from './ProSystemsPanel';
 import ProChartViews from './ProChartViews';
 import ProEphemerisPanel from './ProEphemerisPanel';
 import ProAstroMapPanel from './ProAstroMapPanel';
@@ -31,6 +32,7 @@ import ProTraditionReport from './ProTraditionReport';
 import type { ChartPoints } from '@/lib/astrology/proChartPoints';
 import type { Declination } from '@/lib/astrology/proDeclinations';
 import type { TransitBody } from '@/lib/astrology/proTransits';
+import ProSoulPortraitAction from './ProSoulPortraitAction';
 import styles from './astrology-pro-preview.module.css';
 
 type ChartStatus = 'idle' | 'loading' | 'ready' | 'signed-out' | 'consent-required' | 'incomplete' | 'unavailable';
@@ -108,6 +110,18 @@ export default function ProAstrologyExperience() {
   // Up to two outer rings (biwheel / triwheel), one per source. A compared or
   // derived chart is fetched through the same owner-only routes.
   type RingKind = 'transits' | 'compare' | 'derived';
+  // "Transits" links: with a chart open, jump to the transit panel and show the
+  // sky now against the chart; without one, go to where a chart is opened.
+  const [transitRequest, setTransitRequest] = useState(0);
+  function openTransits(event: { preventDefault: () => void }) {
+    event.preventDefault();
+    if (!privateChart) {
+      document.getElementById('the-chart')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    setTransitRequest((n) => n + 1);
+    document.getElementById('pro-transits')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   const [rings, setRings] = useState<Array<{ kind: RingKind; bodies: TransitBody[]; label: string }>>([]);
   const ringOf = (kind: RingKind) => rings.find((r) => r.kind === kind)?.bodies ?? [];
   const transits = ringOf('transits');
@@ -436,7 +450,7 @@ export default function ProAstrologyExperience() {
         </Link>
         <nav className={styles.navigation} aria-label="Pro Astrology work areas">
           <a className={styles.navCurrent} href="#the-chart">Natal</a>
-          <a href="#current-sky">Transits</a>
+          <a href="#pro-transits" onClick={openTransits}>Transits</a>
           <a href="#saved-charts">Saved charts</a>
           <a href="#relationships">Relationships · own-chart</a>
           <a href="#research">Research</a>
@@ -471,7 +485,7 @@ export default function ProAstrologyExperience() {
               </select>
             </label>
             <a href="#the-chart">Natal wheel</a>
-            <a href="#current-sky">Transits</a>
+            <a href="#pro-transits" onClick={openTransits}>Transits</a>
             <a href="#maia-mentor">MAIA Mentor · transfer held</a>
           </div>
         </section>
@@ -542,7 +556,7 @@ export default function ProAstrologyExperience() {
                   showAspects={showAspects} showHouseLines={showHouseLines}
                   maxAspectOrb={maxAspectOrb} outerBodies={rings[0]?.bodies} outerLabel={rings[0]?.label}
                   outerBodies2={rings[1]?.bodies} outerLabel2={rings[1]?.label} />
-                <ProTransitPanel natalBodies={bodies} transits={transits}
+                <ProTransitPanel natalBodies={bodies} transits={transits} showNowRequest={transitRequest}
                   onTransits={(next) => setRing('transits', next, 'Transits')} />
                 <ProComparePanel chart={privateChart} chartLabel={savedSubject ? savedSubject.label : 'my chart'}
                   currentSubjectId={savedSubject ? savedSubject.id : 'own'} houseSystem={houseSystem}
@@ -558,6 +572,8 @@ export default function ProAstrologyExperience() {
                   questions={INQUIRY} />
                 <ProAstroMapPanel subjectId={savedSubject ? savedSubject.id : 'own'}
                   chartLabel={savedSubject ? savedSubject.label : 'my chart'} houseSystem={houseSystem} />
+                <ProSystemsPanel subjectId={savedSubject ? savedSubject.id : 'own'}
+                  chartLabel={savedSubject ? savedSubject.label : 'my chart'} />
                 <p id="pro-orb-filter-description" className={styles.sourceLabel} role="note">
                   The orb setting filters existing reported aspects for display; it does not
                   recalculate their accuracy or determine applying/separating phase.
@@ -591,6 +607,7 @@ export default function ProAstrologyExperience() {
                     {chartStatus === 'loading' ? 'Opening your chart…' : 'Open my chart'} <ChevronRight size={18} aria-hidden="true" />
                   </button>
                   <p><Link href="/account/settings">Edit my birth details</Link></p>
+                  <p><ProSoulPortraitAction source="mine" whose="your" /></p>
                   {chartStatus === 'signed-out' && <p role="status">Your member session needs verification. Please sign in again before opening your chart. <Link href="/signin">Sign in</Link></p>}
                   {chartStatus === 'consent-required' && <p role="status">Astrology access is not opted in for this account. Review your Astrology consent settings before opening your chart.</p>}
                    {chartStatus === 'incomplete' && <p role="status">{chartError || 'Your exact birth date, time, timezone or location needs clarification before strict-core calculation.'} <Link href="/astrology">Review chart details</Link>.</p>}

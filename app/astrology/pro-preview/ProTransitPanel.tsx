@@ -33,11 +33,19 @@ function shiftMoment(value: string, unit: StepUnit, n: number): string {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
+function proSkyUrl(isoInstant: string): string {
+  return '/api/astrology/pro/sky?at=' + encodeURIComponent(isoInstant);
+}
+
 export default function ProTransitPanel({
-  natalBodies, transits, onTransits,
+  natalBodies, transits, onTransits, showNowRequest = 0, skyUrl = proSkyUrl,
 }: {
+  /** Where to read the sky; a shared chart reads it through its own link. */
+  skyUrl?: (isoInstant: string) => string;
   natalBodies: readonly WheelBody[];
   transits: readonly TransitBody[];
+  /** Increments when a "Transits" link asks for the sky now against this chart. */
+  showNowRequest?: number;
   onTransits: (bodies: TransitBody[], at: string | null) => void;
 }) {
   const [moment, setMoment] = useState(localNowInputValue);
@@ -64,7 +72,7 @@ export default function ProTransitPanel({
     busy.current = true;
     setStatus('loading');
     try {
-      const reply = await apiFetch('/api/astrology/pro/sky?at=' + encodeURIComponent(at.toISOString()), {
+      const reply = await apiFetch(skyUrl(at.toISOString()), {
         method: 'GET', cache: 'no-store',
       });
       if (!reply.ok) throw new Error('sky_unavailable');
@@ -107,8 +115,17 @@ export default function ProTransitPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live]);
 
+  // A "Transits" link: show the present sky, unless transits are already shown.
+  useEffect(() => {
+    if (!showNowRequest || transits.length > 0) return;
+    const now = localNowInputValue();
+    setMoment(now);
+    void show(now);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showNowRequest]);
+
   return (
-    <div className={styles.panel} aria-labelledby="pro-transits-title">
+    <div id="pro-transits" className={styles.panel} aria-labelledby="pro-transits-title">
       <div className={styles.controls}>
         <h3 id="pro-transits-title">Transits</h3>
         <label>

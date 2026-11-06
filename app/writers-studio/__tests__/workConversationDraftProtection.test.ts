@@ -91,7 +91,7 @@ it('Focus and an explicitly selected Keep preserve the authored draft and do not
   expect(mockAsk).not.toHaveBeenCalled();
 });
 it('cancelling panel close keeps the draft; an explicit discard can close it', async () => {
-  await mount('Do not lose this.');
+  await mount(); await type('Do not lose this.');
   const confirm = jest.spyOn(window, 'confirm').mockReturnValue(false);
   const close = host.querySelector<HTMLButtonElement>('[data-close-conversation]')!;
   await act(async () => close.click());
@@ -101,7 +101,7 @@ it('cancelling panel close keeps the draft; an explicit discard can close it', a
   expect(mockClose).toHaveBeenCalledTimes(1);
 });
 it('protects Studio departures and reload while text is unsent, and removes the guard when empty', async () => {
-  await mount('Still writing');
+  await mount(); await type('Still writing');
   const confirm = jest.spyOn(window, 'confirm').mockReturnValue(false);
   expect(requestConversationDeparture()).toBe(false);
   const unload = new Event('beforeunload', { cancelable: true });
@@ -110,8 +110,16 @@ it('protects Studio departures and reload while text is unsent, and removes the 
   expect(requestConversationDeparture()).toBe(true); expect(confirm).not.toHaveBeenCalled();
   expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(true);
 });
+it('a starter the Studio placed in the box never blocks leaving; once the writer changes it, it is theirs', async () => {
+  // Production 2026-11-05: "Talk with MAIA first" filled the box, then every other button asked to discard it.
+  await mount('I’m in “Finding Our Place”.');
+  const confirm = jest.spyOn(window, 'confirm').mockReturnValue(false);
+  expect(requestConversationDeparture()).toBe(true); expect(confirm).not.toHaveBeenCalled();
+  await type('I’m in “Finding Our Place”. And I want to cut it.');
+  expect(requestConversationDeparture()).toBe(false); expect(confirm).toHaveBeenCalled();
+});
 it('cancels Open in MAIA when the author keeps the unsent draft', async () => {
-  await mount('Keep this question here'); jest.spyOn(window, 'confirm').mockReturnValue(false);
+  await mount(); await type('Keep this question here'); jest.spyOn(window, 'confirm').mockReturnValue(false);
   const event = new MouseEvent('click', { bubbles: true, cancelable: true });
   await act(async () => host.querySelector('[data-open-in-maia]')!.dispatchEvent(event));
   expect(event.defaultPrevented).toBe(true); expect(input().value).toBe('Keep this question here');

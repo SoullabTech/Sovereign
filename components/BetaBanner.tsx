@@ -58,12 +58,12 @@ export function BetaBanner() {
   }
 
   return (
+    // On phones the top-right corner holds real controls (Room picker, House links), and a
+    // floating badge there covered them (founder screenshots, 2026-11-05). Phones get it at
+    // the bottom centre instead; wider screens keep the top-right corner.
     <div
-      className="pointer-events-none fixed right-0 top-0 z-30 flex justify-end"
-      style={{
-        paddingTop: "calc(env(safe-area-inset-top) + 6px)",
-        paddingRight: "calc(env(safe-area-inset-right) + 10px)",
-      }}
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center pb-[calc(env(safe-area-inset-bottom)+14px)] md:inset-x-auto md:bottom-auto md:right-0 md:top-0 md:justify-end md:pb-0 md:pr-[calc(env(safe-area-inset-right)+10px)] md:pt-[calc(env(safe-area-inset-top)+6px)]"
+      data-beta-badge
     >
       <div
         role="note"

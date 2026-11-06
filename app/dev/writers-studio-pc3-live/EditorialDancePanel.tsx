@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { chooseReplyLength } from '@/lib/writersStudio/replyLengthPreference';
+import { parseAnswerChoices } from '@/lib/writersStudio/answerChoices';
 import {
   EDITORIAL_APPROACHES,
   approachNote,
@@ -28,7 +30,7 @@ export interface PassageAct {
   label: string;
   prompt: string;
   depth?: EditorialDepth;
-  options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; passageAct?: PassageActId };
+  options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean; teachingAnchor?: TeachingAnchor; passageAct?: PassageActId; turnShape?: TurnShape };
 }
 
 export interface EditorialDancePanelProps {
@@ -86,6 +88,26 @@ export interface EditorialDancePanelProps {
    *  "Teach me about this"). It goes through the same gates as a card. */
   requestedAct?: (PassageAct & { key: number }) | null;
   onRequestedActTaken?: () => void;
+  /** Conversation Stage (founder R1, 2026-11-04): one wide conversation, the
+   *  passage pinned above, options as turns. Replaces the Focus layout. */
+  stage?: boolean;
+  /** R2 "MAIA opens": set ONLY where the conversation was entered by the writer's deliberate
+   *  gesture (the passage room). Never set from selection or a side panel. */
+  autoOpenWithMaia?: boolean;
+  /** Ask MAIA to speak first. The controller owns every law; this only asks. */
+  onOpenWithMaia?: () => void | Promise<boolean>;
+  /** Founder ruling 2026-11-05: several of this Work's conversations on the passage, latest
+   *  first. The writer chooses which to continue (or starts a new one); nothing is chosen
+   *  for them, and anything they already asked is held until they do. */
+  conversationChoices?: readonly RebuildEditorialThread[];
+  onChooseConversation?: (threadId: string) => void;
+  onStartNewConversation?: () => void;
+  /** Plain, writer-facing text when the opening failed (nothing was sent or recorded). */
+  openingFailure?: string | null;
+  /** The conversation that still holds an undoable edit after Use this. */
+  earlierThread?: RebuildEditorialThread | null;
+  /** Back to the page, the passage in place. */
+  onBackToPage?: () => void;
 }
 
 function latestMaiaVersions(thread: RebuildEditorialThread | null): RebuildEditorialVersion[] {
@@ -125,6 +147,28 @@ function aroundAfter(text: string): string {
 
 function purposeOf(version: RebuildEditorialVersion, index: number): string {
   return alternativeLabel(version, index).replace(/ · v\d+$/, '');
+}
+
+/** Her two packet parts, spoken: "I notice …" then "I'd try …". The labels are gone on the
+ *  stage, so the clauses must carry the voice themselves, never stand as fragments. */
+function spokenEdit(friction: string | null, tryNext: string | null): string {
+  const lead = (lead: string, text: string | null) => {
+    if (!text) return null;
+    const t = text.trim();
+    if (/^(I|I’|I'|My|We)\b/.test(t)) return t;
+    return lead + ' ' + t.charAt(0).toLowerCase() + t.slice(1);
+  };
+  return [lead('I notice', friction), lead('I’d try', tryNext)].filter(Boolean).join('\n\n');
+}
+
+function changeCount(parts: ReadonlyArray<{ kind: string }>): string {
+  let n = 0; let inChange = false;
+  for (const p of parts) {
+    const changed = p.kind !== 'same';
+    if (changed && !inChange) n += 1;
+    inChange = changed;
+  }
+  return n === 0 ? 'No change' : n === 1 ? 'One change' : n + ' changes';
 }
 
 function firstUsefulSentence(text: string): string {
@@ -231,6 +275,15 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const [using, setUsing] = useState(false);
   const [deeperOpen, setDeeperOpen] = useState(false);
   const workingRef = useRef<HTMLTextAreaElement | null>(null);
+  const stageComposerRef = useRef<HTMLTextAreaElement | null>(null);
+  const stageEndRef = useRef<HTMLDivElement | null>(null);
+  const [stageChangeFor, setStageChangeFor] = useState<string | null>(null);
+  const [stageWhyFor, setStageWhyFor] = useState<number | null>(null);
+  const [stageUsing, setStageUsing] = useState<string | null>(null);
+  useEffect(() => {
+    // The newest turn, or MAIA thinking, stays in view at the bottom of the stage.
+    if (props.stage) stageEndRef.current?.scrollIntoView?.({ block: 'end', behavior: 'smooth' });
+  }, [props.stage, props.thread?.turns.length, props.pendingQuestion, props.busy]);
   const [postureNudge, setPostureNudge] = useState(false);
   const postureRef = useRef<HTMLDivElement | null>(null);
   const [relationshipNudge, setRelationshipNudge] = useState(false);
@@ -301,7 +354,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     setMoreOpen(true);
     setTimeout(() => workingRef.current?.focus(), 0);
   };
-  const conversationBeforeOption = conversation.length > 0 && conversation[conversation.length - 1]!.speaker === 'maia'
+  // Only the turn that produced the option is folded into the card. A reply-only
+  // turn after it (Discuss, Teach) stays in the conversation, or it would vanish.
+  const lastTurn = conversation[conversation.length - 1];
+  const lastTurnIsReplyOnly = lastTurn?.speaker === 'maia' && lastTurn.adjunct === null;
+  const conversationBeforeOption = lastTurn?.speaker === 'maia' && !lastTurnIsReplyOnly
     ? conversation.slice(0, -1)
     : conversation;
   const summary = editorialSummary(summarySource);
@@ -464,6 +521,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   };
 
   const postureBlocksEditorial = !props.sessionPosture.resolved || props.sessionPosture.sanctuary;
+  const choiceBlocks = !props.thread && (props.conversationChoices?.length ?? 0) > 1;
   /* A card chosen before the posture is answered must answer the click: it
      points the writer at the posture choice instead of silently doing nothing,
      and holds the act so it continues once the writer has answered.
@@ -484,17 +542,18 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       relationshipRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
       return;
     }
+    if (choiceBlocks) { setHeldAct(act); return; }
     setHeldAct(null);
     runAct(act);
   };
   useEffect(() => {
-    if (!heldAct || postureBlocksEditorial || relationshipBlocks || props.busy) return;
+    if (!heldAct || postureBlocksEditorial || relationshipBlocks || choiceBlocks || props.busy) return;
     const act = heldAct;
     setHeldAct(null);
     runAct(act);
     // runAct reads current props; the held act itself is plain data.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heldAct, postureBlocksEditorial, relationshipBlocks, props.busy]);
+  }, [heldAct, postureBlocksEditorial, relationshipBlocks, choiceBlocks, props.busy]);
   useEffect(() => {
     if (!props.requestedAct) return;
     const { key: _key, ...act } = props.requestedAct;
@@ -507,6 +566,30 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     // Each request is taken once, identified by its key.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.requestedAct?.key]);
+  /* R2: MAIA opens. A ref makes this fire at most ONCE per mounted conversation, whatever
+     re-renders happen; it waits for both gates and for a quiet, empty thread. A failure
+     never re-fires on its own — the writer's "Try again" is the only second attempt. */
+  const openAskedRef = useRef(false);
+  const openingWanted = Boolean(props.stage && props.autoOpenWithMaia && props.onOpenWithMaia);
+  const threadIsEmpty = (props.thread?.turns.length ?? 0) === 0;
+  /* The controller declined to open (nothing was sent): show MAIA's plain greeting, never a
+     "reading" state that no request stands behind. */
+  const [openingDeclined, setOpeningDeclined] = useState(false);
+  /* A different conversation (a fresh one, or the real one arriving after load) earns its
+     own chance to open; the controller still refuses a thread it has already opened. */
+  const conversationKey = props.thread?.threadId ?? null;
+  useEffect(() => {
+    openAskedRef.current = false;
+    setOpeningDeclined(false);
+  }, [conversationKey]);
+  useEffect(() => {
+    if (!openingWanted || openAskedRef.current) return;
+    if (postureBlocksEditorial || relationshipBlocks || choiceBlocks || props.busy || !threadIsEmpty) return;
+    if (props.openingFailure || heldAct || props.requestedAct || props.pendingQuestion) return;
+    openAskedRef.current = true;
+    void Promise.resolve(props.onOpenWithMaia?.()).then((sent) => { if (sent === false) setOpeningDeclined(true); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationKey, openingWanted, postureBlocksEditorial, relationshipBlocks, choiceBlocks, props.busy, threadIsEmpty, props.openingFailure, heldAct, props.requestedAct, props.pendingQuestion]);
   const heldNotice = heldAct ? (
     <p className="p4r1-dance-held" role="status" data-held-act>
       When you’ve answered, I’ll continue with “{heldAct.label}”.{' '}
@@ -543,6 +626,35 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             Continue · {new Date(choice.createdAt).toLocaleDateString()}
           </button>
         ))}
+      </div>
+    </div>
+  ) : null;
+  const whenSpoke = (t: RebuildEditorialThread) => {
+    const at = t.turns.at(-1)?.at;
+    if (!at) return 'not started';
+    const d = new Date(at);
+    return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  };
+  const howBegan = (t: RebuildEditorialThread) => {
+    const first = t.turns.find((x) => x.speaker === 'author')?.body ?? t.turns[0]?.body ?? '';
+    const line = first.replace(/\s+/g, ' ').trim();
+    return line.length > 70 ? line.slice(0, 70).trimEnd() + '…' : line;
+  };
+  const conversationGate = choiceBlocks && !postureBlocksEditorial && !relationshipBlocks ? (
+    <div className="p4r1-dance-posture ws-stage-choose" role="group" aria-label="Which conversation to continue" data-conversation-chooser>
+      <div><b>We’ve talked about this passage before.</b>
+        <span>Shall we continue our latest conversation, or an earlier one?</span></div>
+      <div className="p4r1-dance-posture-actions ws-stage-choose-list">
+        {(props.conversationChoices ?? []).map((t, i) => (
+          <button key={t.threadId} type="button" data-conversation-choice={t.threadId}
+            onClick={() => props.onChooseConversation?.(t.threadId)}>
+            <b>{i === 0 ? 'Our latest' : 'Earlier'} · {whenSpoke(t)}</b>
+            {howBegan(t) ? <span>“{howBegan(t)}”</span> : null}
+          </button>
+        ))}
+        {props.onStartNewConversation ? (
+          <button type="button" data-conversation-new onClick={() => props.onStartNewConversation?.()}>Start a new one</button>
+        ) : null}
       </div>
     </div>
   ) : null;
@@ -645,7 +757,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     </div>
   );
 
-  if (!props.thread) {
+  if (!props.thread && !props.stage) {
     return (
       <section className="p4r1-dance p4r1-dance-start" data-editorial-dance>
         <div className="p4r1-dance-empty">
@@ -659,6 +771,256 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           {entryActions}
           {openPrompt}
         </div>
+      </section>
+    );
+  }
+
+  /* ── Conversation Stage ────────────────────────────────────────────────
+     One wide conversation about the writer's work. The passage stays pinned
+     above it; MAIA's options arrive as turns the writer can use, change, talk
+     about or undo; gates are MAIA speaking, with their buttons; the box to
+     answer her is always at the bottom. Every act below is the same act the
+     Focus layout used: nothing here sends, saves or applies on its own. */
+  if (props.stage) {
+    const turns = props.thread?.turns ?? [];
+    const versionById = new Map(versions.map((v) => [v.id, v] as const));
+    const application = props.thread?.application;
+    const appliedWording = application && !application.undone
+      ? versionById.get(application.versionId)?.wording ?? null : null;
+    const earlier = props.earlierThread ?? null;
+    const earlierApp = earlier?.application;
+    const earlierUndoable = Boolean(earlierApp && !earlierApp.undone && earlierApp.canUndo && props.onUndo);
+    const lastAuthor = [...turns].reverse().find((t) => t.speaker === 'author')?.body ?? null;
+    const pending = props.pendingQuestion && props.pendingQuestion !== lastAuthor ? props.pendingQuestion : null;
+    const gatesOpen = Boolean(postureGate || relationshipGate || conversationGate);
+
+    const useVersion = async (version: RebuildEditorialVersion) => {
+      if (!props.onUseVersion || !props.thread?.targetSectionId || stageUsing) return;
+      setStageUsing(version.id);
+      setLocalMessage(null);
+      try {
+        const ok = await props.onUseVersion({
+          threadId: props.thread.threadId,
+          sectionId: props.thread.targetSectionId,
+          supersedes: props.thread.headVersionId ?? version.id,
+          text: version.wording,
+          purpose: purposeOf(version, versions.findIndex((v) => v.id === version.id)).slice(0, 80),
+        });
+        if (!ok) setLocalMessage('That couldn’t be applied just now. Your passage is unchanged.');
+      } finally {
+        setStageUsing(null);
+      }
+    };
+    // Change it: only the writer's words are stored; the server adds how to answer.
+    const changeVersion = (act: 'option-lighter' | 'option-keep-mine' | 'option-another') => {
+      setStageChangeFor(null);
+      props.onSend(passageActQuestion(act), { proposalPolicy: 'allow', proposalRequested: true, passageAct: act });
+    };
+    const talkAbout = () => {
+      stageComposerRef.current?.focus();
+      stageComposerRef.current?.setAttribute('placeholder', 'What do you think of this option?');
+    };
+    const sendStage = () => {
+      const q = startPrompt.trim();
+      if (!q || props.busy) return;
+      if (postureBlocksEditorial || relationshipBlocks || choiceBlocks) {
+        setHeldAct({ label: q.length > 40 ? q.slice(0, 40) + '…' : q, prompt: q, options: { turnShape: 'conversation' } });
+        if (postureBlocksEditorial) setPostureNudge(true); else if (relationshipBlocks) setRelationshipNudge(true);
+        setStartPrompt('');
+        return;
+      }
+      props.onSend(withOrigin(q), { turnShape: 'conversation' });
+      setStartPrompt('');
+    };
+
+    const latestTurn = turns.at(-1);
+    const answerChoices = latestTurn?.speaker === 'maia' ? parseAnswerChoices(latestTurn.body).choices : [];
+    const renderTurn = (t: (typeof turns)[number], keyPrefix = '') => {
+      if (t.speaker === 'author') {
+        return (
+          <li key={keyPrefix + t.turnIndex} className="ws-stage-turn is-writer" data-turn-speaker="author">
+            <p>{t.body.length > 400 ? t.body.slice(0, 160).trimEnd() + '…' : t.body}</p>
+          </li>
+        );
+      }
+      const parsed = parseStudioActions(t.body, 'passage-focus');
+      const adj = (t as { adjunct?: { kind: string; id: string } | null }).adjunct;
+      const version = adj?.kind === 'version' ? versionById.get(adj.id) ?? null : null;
+      const said = editorialSummary(parsed.text);
+      // A reply that arrives as an eight-part form is shown as a person speaking:
+      // what she noticed and what she'd try. The whole reasoning is one tap away.
+      const human = said.preserve || said.friction || said.tryNext
+        ? spokenEdit(said.friction, said.tryNext) || firstUsefulSentence(parsed.text)
+        : parsed.text;
+      const isForm = human !== parsed.text;
+      const applied = Boolean(version && appliedWording !== null && appliedWording === version.wording);
+      return (
+        <li key={keyPrefix + t.turnIndex} className="ws-stage-turn is-maia" data-turn-speaker="maia">
+          <p>{human}</p>
+          {isForm ? (
+            <button type="button" className="ws-stage-why" onClick={() => setStageWhyFor(stageWhyFor === t.turnIndex ? null : t.turnIndex)}>
+              {stageWhyFor === t.turnIndex ? 'Less' : 'Why?'}
+            </button>
+          ) : null}
+          {isForm && stageWhyFor === t.turnIndex ? <p className="ws-stage-why-full">{parsed.text}</p> : null}
+          {version && !keyPrefix ? (
+            <div className="ws-stage-option" data-stage-option={version.id}>
+              <p className="ws-stage-option-count" data-stage-change-count>
+                {changeCount(wordDiff(props.thread?.locusText ?? props.currentText, version.wording))} to your words
+              </p>
+              <p className="ws-stage-option-words">
+                {wordDiff(props.thread?.locusText ?? props.currentText, version.wording).map((part, i) => part.kind === 'remove'
+                  ? <del key={i}>{part.text}</del>
+                  : part.kind === 'add' ? <ins key={i}>{part.text}</ins> : <span key={i}>{part.text}</span>)}
+              </p>
+              {applied ? (
+                <div className="ws-stage-option-actions">
+                  <span>You used this.</span>
+                  {props.onUndo && application?.canUndo ? <button type="button" disabled={props.busy} onClick={props.onUndo}>Undo</button> : null}
+                </div>
+              ) : (
+                <div className="ws-stage-option-actions">
+                  <button type="button" className="is-primary" data-stage-use
+                    disabled={props.busy || Boolean(stageUsing) || !props.onUseVersion || postureBlocksEditorial}
+                    onClick={() => void useVersion(version)}>{stageUsing === version.id ? 'Using…' : 'Use it'}</button>
+                  <button type="button" data-stage-change disabled={props.busy || props.revisionsPaused}
+                    title={props.revisionsPaused ? PAUSED_NOTE : undefined}
+                    onClick={() => setStageChangeFor(stageChangeFor === version.id ? null : version.id)}>Change it</button>
+                  <button type="button" data-stage-talk disabled={props.busy} onClick={talkAbout}>Talk about it</button>
+                </div>
+              )}
+              {stageChangeFor === version.id ? (
+                <div className="ws-stage-change" data-stage-change-choices>
+                  <button type="button" onClick={() => changeVersion('option-lighter')}>Lighter</button>
+                  <button type="button" onClick={() => changeVersion('option-keep-mine')}>Keep more of mine</button>
+                  <button type="button" onClick={() => changeVersion('option-another')}>Another way</button>
+                  {props.deeper ? <button type="button" onClick={() => { setStageChangeFor(null); setDeeperOpen(true); }}>Change it myself</button> : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          {t.turnIndex === props.lastMaiaTurn?.turnIndex && !keyPrefix ? replyAction : null}
+          {/* Answer choices (founder 2026-11-05): one click sends exactly the button's words. */}
+          {!keyPrefix && t === turns.at(-1) && !props.busy && !gatesOpen && answerChoices.length > 0 ? (
+            <div className="ws-stage-answers" data-stage-answers>
+              {answerChoices.map((choice) => (
+                <button key={choice} type="button" onClick={() => props.onSend(choice, { turnShape: 'conversation' })}>{choice}</button>
+              ))}
+            </div>
+          ) : null}
+        </li>
+      );
+    };
+
+    return (
+      <section className="ws-stage" data-conversation-stage>
+        <header className="ws-stage-passage" data-stage-passage>
+          <div className="ws-stage-passage-head">
+            <span>The passage we’re working on</span>
+            {props.onBackToPage ? <button type="button" onClick={props.onBackToPage}>Back to the page</button> : null}
+          </div>
+          <p>{props.currentText}</p>
+        </header>
+
+        <ol className="ws-stage-thread" data-stage-thread aria-label="Your conversation with MAIA about this passage">
+          {noticeLine ? <li className="ws-stage-turn is-note">{noticeLine}</li> : null}
+          {earlier && earlier.turns.length > 0 ? (
+            <li className="ws-stage-earlier" data-stage-earlier>
+              <details>
+                <summary>Earlier, about the previous wording</summary>
+                <ol>{earlier.turns.map((t) => renderTurn(t, 'earlier-'))}</ol>
+              </details>
+              {earlierUndoable ? (
+                <p className="ws-stage-earlier-undo">You used MAIA’s wording here. <button type="button" disabled={props.busy} onClick={props.onUndo}>Undo</button></p>
+              ) : null}
+            </li>
+          ) : null}
+
+          {gatesOpen ? (
+            <li className="ws-stage-turn is-maia is-gate" data-turn-speaker="maia" data-stage-gate>
+              {postureGate}
+              {relationshipGate}
+              {conversationGate}
+              {heldNotice}
+            </li>
+          ) : null}
+
+          {turns.length === 0 && !gatesOpen && openingWanted && !openingDeclined && !props.openingFailure && !props.busy ? (
+            <li className="ws-stage-turn is-maia is-thinking" aria-live="polite" data-stage-opening-pending>MAIA is reading…</li>
+          ) : null}
+
+          {turns.length === 0 && !gatesOpen && !(openingWanted && !openingDeclined && !props.openingFailure) ? (
+            <li className="ws-stage-turn is-maia" data-turn-speaker="maia" data-stage-opening>
+              {props.openingFailure ? <p data-stage-opening-failure>{props.openingFailure}</p> : null}
+              <p>I’m here with this passage. We can talk about what’s happening in it, I can show you an edit, or we can look at the craft already at work. What would you like?</p>
+              {props.openingFailure && props.onOpenWithMaia ? (
+                <button type="button" data-stage-opening-retry disabled={props.busy}
+                  onClick={() => { openAskedRef.current = true; props.onOpenWithMaia?.(); }}>Try again</button>
+              ) : null}
+            </li>
+          ) : null}
+
+          {turns.map((t) => renderTurn(t))}
+
+          {/* Responsive length (founder 2026-11-05: "some want more and some need less").
+              The writer steers; the choice is remembered because they made it. The words
+              stored are exactly what the button says. */}
+          {turns.at(-1)?.speaker === 'maia' && !props.busy && !pending ? (
+            <li className="ws-stage-length" data-stage-length>
+              <button type="button" onClick={() => { chooseReplyLength('shorter'); props.onSend('Shorter, please', { turnShape: 'conversation' }); }}>
+                Shorter, please
+              </button>
+              <button type="button" onClick={() => { chooseReplyLength('fuller'); props.onSend('Say more', { turnShape: 'conversation' }); }}>
+                Say more
+              </button>
+            </li>
+          ) : null}
+
+          {pending ? (
+            <li className="ws-stage-turn is-writer is-pending" data-turn-speaker="author" data-pending-turn><p>{pending}</p></li>
+          ) : null}
+          {props.busy && !choiceBlocks ? <li className="ws-stage-turn is-maia is-thinking" aria-live="polite">MAIA is reading…</li> : null}
+          {(localMessage || props.message || props.undoMessage) ? (
+            <li className="ws-stage-turn is-maia is-status" role="status">
+              <p>{localMessage ?? props.message}{props.undoMessage ? ' ' + props.undoMessage : ''}</p>
+            </li>
+          ) : null}
+        </ol>
+        <div ref={stageEndRef} />
+
+        {props.deeper && deeperOpen ? (
+          <div className="ws-stage-deeper" data-option-deeper aria-label="Change it myself">
+            <button type="button" onClick={() => setDeeperOpen(false)}>Done</button>
+            {props.deeper}
+          </div>
+        ) : null}
+
+        <footer className="ws-stage-composer" data-stage-composer>
+          {/* No starters while MAIA is asking a question of her own (privacy, relationship,
+              which conversation): answer that first. */}
+          {!turns.some((t) => t.speaker === 'author') && !props.pendingQuestion && !gatesOpen ? (
+            <div className="ws-stage-chips" data-stage-chips>
+              <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Talk about what’s happening', prompt: passageActQuestion('discuss'), options: { proposalPolicy: 'reply_only', passageAct: 'discuss' } })}>Talk about what’s happening</button>
+              <button type="button" disabled={props.busy || props.revisionsPaused} onClick={() => startAct({ label: 'Show me an edit', prompt: passageActQuestion('revise'), options: { proposalPolicy: 'allow', proposalRequested: true, passageAct: 'revise' } })}>Show me an edit</button>
+              <button type="button" disabled={props.busy} onClick={() => startAct({ label: 'Teach me the craft here', prompt: teachPassagePrompt(), depth: 'learning', options: { proposalPolicy: 'reply_only', teachingAnchor: 'passage' } })}>Teach me the craft here</button>
+            </div>
+          ) : null}
+          <div className="ws-stage-ask">
+            <textarea
+              ref={stageComposerRef}
+              value={startPrompt}
+              disabled={props.busy}
+              rows={2}
+              onChange={(event) => setStartPrompt(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendStage(); }
+              }}
+              placeholder="Ask MAIA about this passage…"
+              aria-label="Ask MAIA about this passage"
+            />
+            <button type="button" className="is-primary" disabled={props.busy || !startPrompt.trim()} onClick={sendStage}>Send</button>
+          </div>
+        </footer>
       </section>
     );
   }
@@ -738,7 +1100,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       ) : null}
 
       <section className="p4r1-option-card" data-option-card aria-label="MAIA’s option">
-        <span className="p4r1-eyebrow">MAIA’s option</span>
+        <span className="p4r1-eyebrow">{lastTurnIsReplyOnly ? 'MAIA’s earlier option' : 'MAIA’s option'}</span>
         <h4>{purposeOf(recommendation, versions.findIndex((v) => v.id === recommendation.id))}</h4>
         <p className="p4r1-option-in-context" data-option-in-context>
           {context?.before ? <span className="p4r1-option-around">{aroundBefore(context.before)}</span> : null}
@@ -791,6 +1153,10 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           </div>
         ) : null}
       </section>
+
+      {/* The writer can always answer MAIA here; without it, an option left no
+          place to ask for anything else (production walk, 2026-11-05). */}
+      <div className="p4r1-option-reply" data-option-reply>{openPrompt}</div>
 
       <details
         className="p4r1-option-more"

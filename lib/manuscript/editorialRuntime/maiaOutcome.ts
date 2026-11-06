@@ -34,7 +34,8 @@ import { UNMEASURED } from '../ask/staleness';
 import { createMaiaDirectionWithExecutor } from '../editorialWorkspace/store';
 import { appendAuthoredVersionWithExecutor } from '../proposalChain/store';
 import {
-  appendEditorialEpisodeWithClient, prepareRelationshipForAppendWithClient,
+  appendEditorialEpisodeWithClient, appendEditorialOpeningEpisodeWithClient,
+  prepareRelationshipForAppendWithClient,
   RelationshipCustodyRefused, type ManuscriptLocusScope,
 } from '@/lib/writers-studio/relationshipCustody';
 import type {
@@ -62,6 +63,13 @@ export interface MaiaOutcomeInput {
     readonly relationshipId: string;
     readonly memberTurnIndex: number;
     readonly manuscriptLocusScope: ManuscriptLocusScope;
+    readonly opening?: undefined;
+  } | {
+    /** MAIA-first opening: the writer side is a typed gesture. ⛔ No member turn index exists. */
+    readonly relationshipId: string;
+    readonly manuscriptLocusScope: ManuscriptLocusScope;
+    readonly opening: { readonly gesture: string };
+    readonly memberTurnIndex?: undefined;
   };
 }
 
@@ -128,6 +136,32 @@ async function bind(
      'versionId' in to ? to.versionId : null]);
 }
 
+async function admitEpisode(
+  tx: TransactionClient,
+  prepared: Awaited<ReturnType<typeof prepareRelationshipForAppendWithClient>>,
+  admission: NonNullable<MaiaOutcomeInput['relationshipAdmission']>,
+  invocation: EditorialInvocation,
+  maiaTurnIndex: number,
+): Promise<void> {
+  if (admission.opening) {
+    await appendEditorialOpeningEpisodeWithClient(tx, prepared, {
+      threadId: invocation.threadId,
+      proposalChainId: invocation.chainId,
+      maiaTurnIndex,
+      gesture: admission.opening.gesture,
+      manuscriptLocusScope: admission.manuscriptLocusScope,
+    });
+    return;
+  }
+  await appendEditorialEpisodeWithClient(tx, prepared, {
+    threadId: invocation.threadId,
+    proposalChainId: invocation.chainId,
+    memberTurnIndex: admission.memberTurnIndex,
+    maiaTurnIndex,
+    manuscriptLocusScope: admission.manuscriptLocusScope,
+  });
+}
+
 export async function persistMaiaEditorialOutcome(
   input: MaiaOutcomeInput,
 ): Promise<MaiaOutcomeResult> {
@@ -135,6 +169,12 @@ export async function persistMaiaEditorialOutcome(
   try {
     return await transaction(async (tx) => {
       await proveInvocation(tx, invocation, memberId);
+
+      /* R2: an opening is an observation and a question. ⛔ A proposal or direction is
+         never persisted from one, whatever the caller's policy said. */
+      if (input.relationshipAdmission?.opening && outcome.kind !== 'reply_only') {
+        throw new OutcomeRefused('relationship_refused', 'opening_must_be_reply_only');
+      }
 
       const preparedRelationship = input.relationshipAdmission
         ? await prepareRelationshipForAppendWithClient(tx, {
@@ -152,13 +192,7 @@ export async function persistMaiaEditorialOutcome(
       /* ⭐ THE ONLY THING CONSULTED IS `outcome.kind`. */
       if (outcome.kind === 'reply_only') {
         if (preparedRelationship && input.relationshipAdmission) {
-          await appendEditorialEpisodeWithClient(tx, preparedRelationship, {
-            threadId: invocation.threadId,
-            proposalChainId: invocation.chainId,
-            memberTurnIndex: input.relationshipAdmission.memberTurnIndex,
-            maiaTurnIndex: turnIndex,
-            manuscriptLocusScope: input.relationshipAdmission.manuscriptLocusScope,
-          });
+          await admitEpisode(tx, preparedRelationship, input.relationshipAdmission, invocation, turnIndex);
         }
         return { ok: true as const, turnIndex, reply: outcome.reply, direction: null, version: null };
       }
@@ -173,13 +207,7 @@ export async function persistMaiaEditorialOutcome(
         if (!d.ok) throw new OutcomeRefused('direction_refused', d.reason);
         await bind(tx, invocation, turnIndex, { directionId: d.direction.id });
         if (preparedRelationship && input.relationshipAdmission) {
-          await appendEditorialEpisodeWithClient(tx, preparedRelationship, {
-            threadId: invocation.threadId,
-            proposalChainId: invocation.chainId,
-            memberTurnIndex: input.relationshipAdmission.memberTurnIndex,
-            maiaTurnIndex: turnIndex,
-            manuscriptLocusScope: input.relationshipAdmission.manuscriptLocusScope,
-          });
+          await admitEpisode(tx, preparedRelationship, input.relationshipAdmission, invocation, turnIndex);
         }
         return { ok: true as const, turnIndex, reply: outcome.reply, direction: d.direction, version: null };
       }
@@ -201,13 +229,7 @@ export async function persistMaiaEditorialOutcome(
       }
       await bind(tx, invocation, turnIndex, { versionId: a.version.id });
       if (preparedRelationship && input.relationshipAdmission) {
-        await appendEditorialEpisodeWithClient(tx, preparedRelationship, {
-          threadId: invocation.threadId,
-          proposalChainId: invocation.chainId,
-          memberTurnIndex: input.relationshipAdmission.memberTurnIndex,
-          maiaTurnIndex: turnIndex,
-          manuscriptLocusScope: input.relationshipAdmission.manuscriptLocusScope,
-        });
+        await admitEpisode(tx, preparedRelationship, input.relationshipAdmission, invocation, turnIndex);
       }
       return { ok: true as const, turnIndex, reply: outcome.reply, direction: null, version: a.version };
     });
