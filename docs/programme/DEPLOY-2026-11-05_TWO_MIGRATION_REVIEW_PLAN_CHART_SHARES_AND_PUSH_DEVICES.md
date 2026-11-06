@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-05
 **Status:** BOUNDED INDEPENDENT REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF
-**Live old reader at plan freeze:** `956051b5a7116280dfb14e6df5ddb0822e5b57f3` (running in `maia-sovereign`, read 2026-11-05)
+**Live old reader:** supplied externally by the harness through the bundle's `MIGRATION_COMPATIBILITY_CONTEXT.json`. It is deliberately **not** embedded in this plan: other sessions deploy while a review runs, and a plan that names a live release goes stale the moment one does (it happened twice on 2026-11-05, `956051b5a` then `6b0000e54`). The reviewer must establish the exact old reader from the bundle, and the deploy lane re-witnesses it immediately before mutation.
 **Founder authorization:** "Yes, full deploy" (2026-11-05) for the merged tip carrying PR #2143, PR #2146, PR #2140 and PR #2145; the first deploy attempt was refused by this gate, and this plan is the lawful route through it.
 
 ## Exact target relation
