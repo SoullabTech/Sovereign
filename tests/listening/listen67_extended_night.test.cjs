@@ -50,7 +50,7 @@ test('persistent player counts core repeats without resetting the experience or 
   assert.match(provider,/guidance will not repeat/);
   assert.match(provider,/reviewContinuationCycles\.current = 0/);
   assert.equal((provider.match(/<audio ref=\{media\}/g)||[]).length,1);
-  assert.equal((provider.match(/new Audio\(/g)||[]).length,0);
+  assert.equal((provider.match(/new Audio\(/g) || []).length, 1); // the private lock-screen keepalive; contract in listen76
 });
 
 test('dock names Until Stop and preserves direct Stop plus interruption law',()=>{
