@@ -134,6 +134,13 @@ describe('Per-planet orbs', () => {
     expect(planetPairs(aspectsWithOrbs(chart, { Sun: 9 }))).toEqual(['Sun|Moon|conjunction']);
   });
 
+  it('shows the engine\'s own orb for an aspect it reported, when the pair is decided again', () => {
+    // Live walk 2026-11-06: widening the Sun showed Sun–Moon at 0.69° where the engine said 0.68°.
+    const reported = { planet1: 'Sun', planet2: 'Moon', type: 'square' as const, orb: 0.684, exact: true };
+    const chart = { ...placed({ sun: 10, moon: 100.69 }), aspects: [reported] } as BirthChart;
+    expect(aspectsWithOrbs(chart, { Sun: 12 })).toContainEqual(reported);
+  });
+
   it('keeps only known points and aspects with an orb in range', () => {
     expect(cleanOrbSettings({
       points: { Sun: 10.3, Moon: 20, Lilith: 5, Mars: '6', Venus: 8, Saturn: 0.2 },

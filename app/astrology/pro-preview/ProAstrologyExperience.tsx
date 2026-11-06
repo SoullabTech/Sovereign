@@ -231,7 +231,9 @@ export default function ProAstrologyExperience() {
         if (!active || requestEpoch !== privateVerificationEpoch.current) return;
         if (!reply.ok) {
           closePrivateChart(reply.status === 401 ? 'signed-out' : 'unavailable');
-          if (reply.status !== 401)
+          if (savedId && reply.status === 404)
+            setChartError('This chart is no longer in your saved charts, so it was closed.');
+          else if (reply.status !== 401)
             setChartError('Chart access could not be verified. Reopen it when your account is available.');
           return;
         }

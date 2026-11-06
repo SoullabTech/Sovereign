@@ -144,17 +144,19 @@ export function aspectsWithOrbs(chart: BirthChart, settings: OrbSettings): Aspec
       let separation = normalizeLongitude(longitudes.get(b)! - longitudes.get(a)!);
       if (separation > 180) separation = 360 - separation;
       const scale = pairOrb(s, a, b) / DEFAULT_POINT_ORB;
+      const reportedBy = (type: AspectType) => engine.find((x) => x.type === type &&
+        ((x.planet1 === a && x.planet2 === b) || (x.planet1 === b && x.planet2 === a)));
       for (const def of ASPECT_DEFINITIONS) {
         const limit = aspectOrb(s, def.type) * scale;
         if (limit === def.orb) {
-          const reported = engine.find((x) => x.type === def.type &&
-            ((x.planet1 === a && x.planet2 === b) || (x.planet1 === b && x.planet2 === a)));
+          const reported = reportedBy(def.type);
           if (reported) found.push(reported);
           continue;
         }
         const orb = Math.abs(separation - def.angle);
         if (orb <= limit) {
-          found.push({ planet1: a, planet2: b, type: def.type, orb: Number(orb.toFixed(2)), exact: orb < 1 });
+          // Where the engine also reported this aspect, show its orb, from unrounded positions.
+          found.push(reportedBy(def.type) ?? { planet1: a, planet2: b, type: def.type, orb: Number(orb.toFixed(2)), exact: orb < 1 });
         }
       }
     }
