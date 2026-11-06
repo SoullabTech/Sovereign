@@ -829,6 +829,15 @@ export function PersistentListeningProvider({
           // The element would not carry it: stay on the direct output rather than go silent.
           try { active.out.disconnect(); active.out.connect(active.context.destination); } catch { /* closed */ }
         }
+        // Stop, Pause, MAIA speaking or a newer start can land while `el.play()` is pending; the same check as
+        // before the wait, so a superseded attempt never claims focus or reports "playing".
+        if (generation !== epoch.current || kind.current !== 'sketch' || isMaiaSpeechActive()) {
+          try { el.pause(); } catch { /* element gone */ }
+          void active.context.suspend().catch(() => undefined);
+          releaseOutput();
+          if (isMaiaSpeechActive()) refuseDuringMaiaSpeech();
+          return false;
+        }
       }
       claimFocus();
       const activeExperience = experience.current;
