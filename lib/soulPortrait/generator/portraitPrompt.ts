@@ -15,6 +15,10 @@
  */
 
 import type { BirthChart } from '@/lib/astrology/ephemerisCalculator';
+import type { BirthChart as ProBirthChart } from '@/lib/astrology/proEphemerisCalculator';
+
+/** Aspects the portrait reads. Minor aspects (Pro calculator) are left to the practitioner. */
+const PORTRAIT_ASPECTS = new Set(['conjunction', 'opposition', 'trine', 'square', 'sextile', 'quincunx']);
 
 const KEY_BODIES: Array<{ key: keyof BirthChart; label: string }> = [
   { key: 'sun', label: 'Sun' },
@@ -29,16 +33,16 @@ const KEY_BODIES: Array<{ key: keyof BirthChart; label: string }> = [
 ];
 
 /** A compact, factual placements list for the model to read from — DATA, not a reading. */
-export function chartSummaryText(chart: BirthChart): string {
+export function chartSummaryText(chart: BirthChart | ProBirthChart): string {
   const lines: string[] = [];
   lines.push(`Ascendant: ${chart.ascendant.sign} · Midheaven: ${chart.midheaven.sign}`);
   for (const { key, label } of KEY_BODIES) {
-    const p = chart[key] as { sign: string; house: number; retrograde: boolean };
+    const p = (chart as BirthChart)[key] as { sign: string; house: number; retrograde: boolean };
     if (!p) continue;
     lines.push(`${label}: ${p.sign}, house ${p.house}${p.retrograde ? ' (retrograde)' : ''}`);
   }
   const majors = (chart.aspects || [])
-    .filter((a) => a.exact || a.orb <= 4)
+    .filter((a) => PORTRAIT_ASPECTS.has(a.type) && (a.exact || a.orb <= 4))
     .slice(0, 8)
     .map((a) => `${a.planet1} ${a.type} ${a.planet2}`);
   if (majors.length) lines.push(`Notable aspects: ${majors.join('; ')}`);
