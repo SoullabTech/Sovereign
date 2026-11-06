@@ -12,6 +12,7 @@
  */
 
 import * as Astronomy from 'astronomy-engine';
+import { ASPECT_DEFINITIONS } from './proAspectOrbs';
 
 export type HouseSystem = 'whole-sign' | 'equal' | 'porphyry' | 'placidus' | 'koch';
 
@@ -669,21 +670,8 @@ function calculateAspects(planets: Record<string, number>): Aspect[] {
   const aspects: Aspect[] = [];
   const planetNames = Object.keys(planets);
 
-  // Aspect definitions with orbs (degrees)
-  const aspectTypes = [
-    { type: 'conjunction' as const, angle: 0, orb: 8 },
-    { type: 'opposition' as const, angle: 180, orb: 8 },
-    { type: 'trine' as const, angle: 120, orb: 8 },
-    { type: 'square' as const, angle: 90, orb: 8 },
-    { type: 'sextile' as const, angle: 60, orb: 6 },
-    { type: 'quincunx' as const, angle: 150, orb: 3 },
-    // Minor aspects, with tight orbs so none overlaps a major one.
-    { type: 'semisextile' as const, angle: 30, orb: 2 },
-    { type: 'semisquare' as const, angle: 45, orb: 2 },
-    { type: 'sesquiquadrate' as const, angle: 135, orb: 2 },
-    { type: 'quintile' as const, angle: 72, orb: 2 },
-    { type: 'biquintile' as const, angle: 144, orb: 2 },
-  ];
+  // Aspect definitions with orbs (degrees), shared with per-planet orbs
+  const aspectTypes = ASPECT_DEFINITIONS;
 
   // Check all planet pairs
   for (let i = 0; i < planetNames.length; i++) {
