@@ -309,10 +309,12 @@ export function HousePreferencesProvider({ initial, children }: { initial: House
   </Context.Provider>;
 }
 
-export function HouseMemberControls({ name }: { name: string }) {
+/** `arrange="wide"`: the House home on phones and iPads already has a full Arrange my House
+ *  button beside Here · Now, so the small corner one shows on wide screens only. */
+export function HouseMemberControls({ name, arrange = 'always' }: { name: string; arrange?: 'always' | 'wide' }) {
   const { active, open, message } = useHousePreferences();
   return <span className={`${house.member} ${styles.member}`}><span>{name}</span>
-    <button type="button" className={styles.arrange} disabled={!active} onClick={() => open()}>Arrange my House</button>
+    <button type="button" className={`${styles.arrange}${arrange === 'wide' ? ` ${styles.arrangeWide}` : ''}`} disabled={!active} onClick={() => open()}>Arrange my House</button>
     {message && <span className={styles.notice} role="status">{message}{!active && <> <Link href="/house">Reload House</Link></>}</span>}
   </span>;
 }

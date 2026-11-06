@@ -50,7 +50,7 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
         </div>
         <header className={styles.topline}>
           <span>A SPACE TO REFLECT, CREATE, EXPLORE AND RETURN</span>
-          <HouseMemberControls name={firstName} />
+          <HouseMemberControls name={firstName} arrange="wide" />
         </header>
 
         <div className={styles.welcome}>

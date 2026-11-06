@@ -432,3 +432,11 @@
   .world:last-child { grid-column: auto; }
   .goLive.goLiveNarrow { flex-direction: row; align-items: center; justify-content: space-between; }
 }
+/* Founder walk on iPhone (2026-11-06): keep the last lines clear of the floating BETA and MAIA
+   pills, and keep "Go live →" on one line. */
+@media (max-width: 1200px) {
+  .field { padding-bottom: 128px; }
+  .goLive.goLiveNarrow { align-items: center; gap: 16px; }
+  .goLive.goLiveNarrow span { flex: 1 1 auto; min-width: 0; }
+  .goLive.goLiveNarrow a { flex: 0 0 auto; white-space: nowrap; font-size: 22px; }
+}
