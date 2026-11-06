@@ -2,7 +2,10 @@
 // microphone. It builds into any BaseAudioContext, so the same graph renders live (the one persistent player)
 // and offline (for measurement). Nothing starts a context; the caller does, after the member's own Play.
 import { soundscapeNeedsRebuild } from './focusSoundscape';
-import type { SoundscapeSpec, TickSpec } from './focusSoundscape';
+import type { RecordedLayerId, SoundscapeSpec, TickSpec } from './focusSoundscape';
+
+/** Loads one recorded loop. Returns null when it is unavailable; the soundscape then plays without it. */
+export type RecordedLoader = (id: RecordedLayerId) => Promise<AudioBuffer | null>;
 
 export type SoundscapeHandle = {
   context: BaseAudioContext;
@@ -36,7 +39,7 @@ function noiseBuffer(context: BaseAudioContext, seconds = 2): AudioBuffer {
 }
 
 export function buildSoundscape(
-  context: BaseAudioContext, destination: AudioNode, initial: SoundscapeSpec, level: number,
+  context: BaseAudioContext, destination: AudioNode, initial: SoundscapeSpec, level: number, loadRecorded?: RecordedLoader,
 ): SoundscapeHandle {
   let spec = initial;
   const t0 = context.currentTime;
@@ -109,6 +112,36 @@ export function buildSoundscape(
     extras.push(source, sweep);
   }
 
+  // Recorded nature layers: looped real recordings that follow the spec's mix. Everything goes through the master,
+  // so the member's volume and the fade-in apply to them exactly as to the synthesized sound.
+  const layers = new Map<string, { gain: GainNode; source: AudioBufferSourceNode | null; loading: boolean }>();
+  let disposed = false;
+  const applyRecorded = (mix: SoundscapeSpec['recorded']) => {
+    if (!loadRecorded) return;
+    const wanted = mix ?? {};
+    for (const id of Object.keys(wanted) as RecordedLayerId[]) {
+      if (!layers.has(id)) {
+        const gain = context.createGain(); gain.gain.value = 0; gain.connect(master);
+        layers.set(id, { gain, source: null, loading: false });
+      }
+    }
+    layers.forEach((layer, id) => {
+      const target = ((wanted as Record<string, number | undefined>)[id] ?? 0) / SCALE;
+      layer.gain.gain.setTargetAtTime(target, context.currentTime, 2.5);
+      if (target > 0 && !layer.source && !layer.loading) {
+        layer.loading = true;
+        void loadRecorded(id as RecordedLayerId).then(buffer => {
+          if (!buffer || disposed) return;
+          const source = context.createBufferSource();
+          source.buffer = buffer; source.loop = true;
+          source.connect(layer.gain); source.start(context.currentTime);
+          layer.source = source; extras.push(source);
+        }).catch(() => { /* a missing recording leaves the rest of the sound unchanged */ });
+      }
+    });
+  };
+  applyRecorded(spec.recorded);
+
   // Events (clicks, plucks, soft blips) are deterministic: a fixed pattern, never random.
   let nextTick = t0 + 1.5;
   let tickIndex = 0;
@@ -171,10 +204,12 @@ export function buildSoundscape(
         gently(noiseGain.gain, next.noise.gain); gently(noiseBand.frequency, next.noise.bandHz);
         gently(noiseBand.Q, next.noise.q); gently(sweepDepth.gain, next.noise.bandHz * 0.4);
       }
+      applyRecorded(next.recorded);
       return true;
     },
     scheduleTicks,
     dispose() {
+      disposed = true;
       if (timer !== null) clearInterval(timer);
       for (const node of [...oscillators, movement, drift, ...extras]) { try { node.stop(); } catch { /* already stopped */ } }
     },

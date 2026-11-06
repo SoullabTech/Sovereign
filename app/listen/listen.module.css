@@ -162,7 +162,7 @@
 .skipLink{position:absolute;left:12px;top:-60px;z-index:200;padding:10px 16px;border-radius:999px;background:#f6e8ce;color:#172125;font-weight:700;text-decoration:none}.skipLink:focus{top:12px}
 .shell :is(button,a,summary,[tabindex]):focus-visible{outline:2px solid #eed2a0;outline-offset:3px;border-radius:6px}
 .main:focus{outline:none}
-.studioWorkNote{margin:10px 0 0;font-size:12px;letter-spacing:.02em;color:var(--amber);opacity:.9}
 .quality{letter-spacing:0}
 /* The global MAIA and bug-report controls, the shared player and the quiet-screen rule have no local class, so
    CSS Modules (pure mode) rejects them here; they live in listenGlobal.css. */
+.studioWorkNote{margin:12px 0 0;padding:10px 12px;border-left:2px solid #e1c28c;background:rgba(225,194,140,.08);color:#e6d8bf;font-size:13px;line-height:1.5}
