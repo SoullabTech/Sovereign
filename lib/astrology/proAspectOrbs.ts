@@ -120,9 +120,13 @@ export const ORB_PRESETS: ReadonlyArray<{ id: string; label: string; settings: O
 
 /**
  * The chart's aspects under these orbs. With nothing changed the engine's own
- * aspects are returned untouched. Otherwise aspects among the plotted points
- * and angles are recalculated from their positions; the engine's aspects to any
- * other body are kept as reported.
+ * aspects are returned untouched. Otherwise, for each pair of plotted points
+ * and each aspect, the engine's decision stands wherever that tolerance is
+ * unchanged; only a changed tolerance is decided again, from the chart's
+ * positions. (The engine decides from unrounded positions and the chart
+ * carries them to 0.01°, so re-deciding an unchanged tolerance could flip a
+ * pair sitting on the boundary.) The engine's aspects to any other body are
+ * kept as reported.
  */
 export function aspectsWithOrbs(chart: BirthChart, settings: OrbSettings): Aspect[] {
   const engine = chart.aspects || [];
@@ -141,8 +145,15 @@ export function aspectsWithOrbs(chart: BirthChart, settings: OrbSettings): Aspec
       if (separation > 180) separation = 360 - separation;
       const scale = pairOrb(s, a, b) / DEFAULT_POINT_ORB;
       for (const def of ASPECT_DEFINITIONS) {
+        const limit = aspectOrb(s, def.type) * scale;
+        if (limit === def.orb) {
+          const reported = engine.find((x) => x.type === def.type &&
+            ((x.planet1 === a && x.planet2 === b) || (x.planet1 === b && x.planet2 === a)));
+          if (reported) found.push(reported);
+          continue;
+        }
         const orb = Math.abs(separation - def.angle);
-        if (orb <= aspectOrb(s, def.type) * scale) {
+        if (orb <= limit) {
           found.push({ planet1: a, planet2: b, type: def.type, orb: Number(orb.toFixed(2)), exact: orb < 1 });
         }
       }

@@ -6,7 +6,7 @@
  */
 import { calculateBirthChart, type BirthChart } from '../lib/astrology/proEphemerisCalculator';
 import {
-  ORB_PRESETS, aspectsWithOrbs as withSettings, cleanOrbSettings, withOrbSettings, type OrbSettings,
+  ASPECT_DEFINITIONS, ORB_PRESETS, aspectsWithOrbs as withSettings, cleanOrbSettings, withOrbSettings, type OrbSettings,
 } from '../lib/astrology/proAspectOrbs';
 
 /** Point orbs only, the larger-of-two rule, unless a test says otherwise. */
@@ -20,8 +20,26 @@ function at(longitude: number) {
   return { sign: SIGNS[Math.floor(longitude / 30)], degree: longitude % 30, house: 1, retrograde: false };
 }
 
-/** A made-up chart: only the bodies given are placed; the engine reported no aspects. */
+const NAMES: Record<string, string> = { sun: 'Sun', moon: 'Moon', venus: 'Venus', mars: 'Mars', saturn: 'Saturn', pluto: 'Pluto' };
+
+/** A made-up chart: only the bodies given are placed; the engine's aspects among them at its default orbs. */
 function chartWith(bodies: Record<string, number>): BirthChart {
+  const keys = Object.keys(bodies);
+  const aspects = [];
+  for (let i = 0; i < keys.length; i++) {
+    for (let j = i + 1; j < keys.length; j++) {
+      let separation = Math.abs(bodies[keys[j]] - bodies[keys[i]]) % 360;
+      if (separation > 180) separation = 360 - separation;
+      for (const def of ASPECT_DEFINITIONS) {
+        const orb = Math.abs(separation - def.angle);
+        if (orb <= def.orb) aspects.push({ planet1: NAMES[keys[i]], planet2: NAMES[keys[j]], type: def.type, orb, exact: orb < 1 });
+      }
+    }
+  }
+  return { ...placed(bodies), aspects } as BirthChart;
+}
+
+function placed(bodies: Record<string, number>): BirthChart {
   const chart: Record<string, unknown> = {
     ascendant: { sign: 'Libra', degree: 15 }, midheaven: { sign: 'Cancer', degree: 15 },
     houses: Array.from({ length: 12 }, (_, i) => i * 30), aspects: [],
@@ -101,6 +119,19 @@ describe('Per-planet orbs', () => {
     const sextile = chartWith({ mars: 0, saturn: 67 }); // sextile, 7° from exact
     expect(planetPairs(aspectsWithOrbs(sextile, {}))).toEqual([]);
     expect(planetPairs(aspectsWithOrbs(sextile, {}, { aspects: { sextile: 7 } }))).toEqual(['Mars|Saturn|sextile']);
+  });
+
+  it('keeps the engine\'s decision on a boundary pair whose tolerance did not change', () => {
+    // The engine saw 10.001° and 18.004° (8.003° apart: no conjunction); the chart
+    // carries 10.00° and 18.00°, exactly 8° apart. Changing Pluto must not add it.
+    const chart = { ...placed({ sun: 10, moon: 18, pluto: 200 }), aspects: [] } as BirthChart;
+    expect(planetPairs(aspectsWithOrbs(chart, { Pluto: 3 }))).toEqual([]);
+    // A reported engine aspect on an unchanged pair stays, with the engine's own orb.
+    const reported = { planet1: 'Sun', planet2: 'Moon', type: 'conjunction' as const, orb: 7.99, exact: false };
+    const withEngine = { ...chart, aspects: [reported] };
+    expect(aspectsWithOrbs(withEngine, { Pluto: 3 })).toContainEqual(reported);
+    // Once the pair's own tolerance changes, it is decided again from the chart's positions.
+    expect(planetPairs(aspectsWithOrbs(chart, { Sun: 9 }))).toEqual(['Sun|Moon|conjunction']);
   });
 
   it('keeps only known points and aspects with an orb in range', () => {
