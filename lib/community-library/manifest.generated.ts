@@ -2695,7 +2695,7 @@ This manifesto is our stake in the ground.
 
 ### Contact & Collaboration
 
-- **Website**: [soullab.org](https://soullab.org)
+- **Website**: [soullab.life](https://soullab.life)
 - **Research Partnerships**: Open and encouraged
 - **Developer Community**: Coming soon
 - **Manifesto Updates**: Living document, updated as we learn
@@ -2780,7 +2780,7 @@ We're here to accompany your Opus."*
 - Open to neuroscience/EEG validation partners
 
 **Contact for Technical Collaboration:**
-See soullab.org for current opportunities
+See soullab.life for current opportunities
 
 ---
 
