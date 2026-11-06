@@ -76,6 +76,15 @@ export function remoteCommandAction(
   return playing ? 'pause' : 'resume';
 }
 
+/**
+ * "Play alongside another app" is withheld until sound can mix with other apps AND keep playing with the
+ * screen locked. Measured on device (LISTEN-01, 6 Nov 2026): the native session's mixWithOthers does not govern
+ * audio the web view plays, so another app starting still stops the sound, and a web-level `ambient` session
+ * mixes but is silenced whenever the app leaves the foreground. A control that does not do what it says is not
+ * offered. Restoring it needs audio played natively (separate lane, founder ruling).
+ */
+export const COMPANION_MIXING_AVAILABLE = false;
+
 /** Companion mode is the only reason the native session may mix with other apps. */
 export function sessionOptionsFor(companion: boolean): { mixWithOthers: boolean } {
   return { mixWithOthers: companion };

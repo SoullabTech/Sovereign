@@ -65,3 +65,12 @@ test('the expanded dock leaves room above it for the MAIA and bug-report control
   assert.ok(m, 'expanded max-height rule missing');
   assert.ok(Number(m[1]) >= 100, 'reserved space too small for two stacked floating controls');
 });
+
+test('"Play alongside another app" is not offered while it cannot mix and keep playing in the background', () => {
+  const dock = readFileSync(new URL('../../components/listening/PersistentListeningDock.tsx', import.meta.url), 'utf8');
+  const policy = readFileSync(new URL('../../lib/listening/platformAudioPolicy.ts', import.meta.url), 'utf8');
+  assert.match(policy, /export const COMPANION_MIXING_AVAILABLE = false;/);
+  const sw = dock.indexOf('data-listen-companion-enable');
+  assert.ok(sw > 0);
+  assert.match(dock.slice(Math.max(0, sw - 200), sw), /COMPANION_MIXING_AVAILABLE && \(/);
+});

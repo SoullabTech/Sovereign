@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { FocusSession } from '@/lib/listening/focusFieldSession';
 import { formatExperienceTime, soundProgress } from '@/lib/listening/soundStudioExperience';
+import { COMPANION_MIXING_AVAILABLE } from '@/lib/listening/platformAudioPolicy';
 import type { ListeningSnapshot } from './PersistentListeningProvider';
 import styles from './persistentListeningDock.module.css';
 
@@ -269,11 +270,13 @@ export default function PersistentListeningDock({
               <strong>Soullab field</strong>
               <span>Other music stays in its original app. These controls change only Soullab.</span>
             </div>
-            <button type="button" className={styles.companionSwitch}
-              data-listen-companion-enable="true" aria-pressed={companionMode}
-              onClick={toggleCompanionMode}>
-              {companionMode ? 'Companion mode on' : 'Play alongside another app'}
-            </button>
+            {COMPANION_MIXING_AVAILABLE && (
+              <button type="button" className={styles.companionSwitch}
+                data-listen-companion-enable="true" aria-pressed={companionMode}
+                onClick={toggleCompanionMode}>
+                {companionMode ? 'Companion mode on' : 'Play alongside another app'}
+              </button>
+            )}
           </div>
 
           {volumeAdjustable ? (
