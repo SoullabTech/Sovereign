@@ -646,6 +646,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/astrology/pro/place', minTier: 'free', notes: 'Pro astro map and relocated chart; owner-only subject, birth read server-side, Pro access rechecked in handler' },
   { exact: '/api/astrology/pro/sky', minTier: 'free', notes: 'Pro sky at a chosen moment; no birth or member data; Pro access rechecked in handler' },
   { regex: /^\/api\/astrology\/pro\/charts\/[0-9a-f-]{36}$/i, minTier: 'free', notes: 'One Pro saved chart (verify, calculate, delete); owner-only, Pro access rechecked in handler' },
+  { regex: /^\/api\/astrology\/pro\/charts\/[0-9a-f-]{36}\/share$/i, minTier: 'free', notes: 'Private client link for one Pro saved chart (read, make, turn off); owner-only, Pro access rechecked in handler' },
+  { regex: /^\/api\/shared-chart\/[A-Za-z0-9_-]{43}\/ask$/, public: true, notes: 'Ask MAIA about a shared chart; only when the owner turned it on for the link; per-link allowance; nothing stored' },
+  { regex: /^\/api\/shared-chart\/[A-Za-z0-9_-]{43}\/sky$/, public: true, notes: 'Sky positions for a client viewing a shared chart; works only while the link is live; no birth or viewer data' },
+  { regex: /^\/shared-chart\/[A-Za-z0-9_-]{43}$/, public: true, notes: 'View-only client chart by private link; no account; page checks the link is live and Pro is enabled; noindex' },
 
   // Member API — contribution is participation, open to all
   { regex: /^\/api\/commons\/contributions\/[^/]+$/, minTier: 'free', notes: 'Contribution detail — depth' },

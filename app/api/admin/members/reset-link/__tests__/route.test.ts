@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
 
 const ADMIN_PW = 'reset-link-admin-secret';
+const OWNER_ID = 'a0a0a0a0-1111-4222-8333-b4b4b4b4b4b4';
 const MEMBER = '877cd939-12b7-428c-96f9-dc4b9ce798c6';
 
 type QueryResult = { rows: any[] };
@@ -13,7 +14,18 @@ jest.mock('@/lib/db/postgres', () => ({
   default: { query: (sql: string, params?: unknown[]) => mockQuery(sql, params) },
 }));
 
+const mockAuth = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+jest.mock('@/lib/admin/adminAuth', () => {
+  const actual = jest.requireActual('@/lib/admin/adminAuth') as Record<string, unknown>;
+  return { ...actual, checkAdminAuth: (...args: unknown[]) => mockAuth(...args) };
+});
+
 import { POST } from '../route';
+
+const asOwner = (role: 'founder' | 'cto' = 'founder') =>
+  mockAuth.mockResolvedValue({ authed: true, via: 'member', role, memberId: OWNER_ID });
+const asSharedPassword = () => mockAuth.mockResolvedValue({ authed: true, via: 'password', role: 'founder' });
+const asNobody = () => mockAuth.mockResolvedValue({ authed: false, via: null });
 
 function req(body: unknown, admin?: string): NextRequest {
   return new NextRequest('http://localhost/api/admin/members/reset-link', {
@@ -27,6 +39,8 @@ const wrote = (frag: string) => mockQuery.mock.calls.some(([s]) => String(s).inc
 beforeEach(() => {
   process.env.LABTOOLS_ADMIN_PASSWORD = ADMIN_PW;
   mockQuery.mockReset();
+  mockAuth.mockReset();
+  asOwner();
   mockQuery.mockImplementation(async (sql) => {
     if (sql.includes('FROM members WHERE')) return { rows: [{ id: MEMBER, name: 'Cece Campbell', username: 'cece' }] };
     return { rows: [] };
@@ -35,9 +49,35 @@ beforeEach(() => {
 
 describe('POST /api/admin/members/reset-link', () => {
   it('fails closed without owner authority and writes no token', async () => {
+    asNobody();
     const res = await POST(req({ memberId: MEMBER }));
     expect(res.status).toBe(401);
     expect(wrote('password_reset_tokens')).toBe(false);
+  });
+
+  it('asks the auth check for owner roles only', async () => {
+    await POST(req({ memberId: MEMBER }, ADMIN_PW));
+    expect(mockAuth.mock.calls[0][1]).toEqual(['founder', 'cto']);
+  });
+
+  it('REFUSES the shared admin password: it names no one, so no link is issued', async () => {
+    asSharedPassword();
+    const res = await POST(req({ memberId: MEMBER }, ADMIN_PW));
+    expect(res.status).toBe(403);
+    expect(wrote('password_reset_tokens')).toBe(false);
+    expect(wrote('INSERT INTO audit_logs')).toBe(false);
+    expect(JSON.stringify(await res.json())).toContain('signed-in');
+  });
+
+  it('accepts a named cto session as well as a founder', async () => {
+    asOwner('cto');
+    expect((await POST(req({ memberId: MEMBER }, ADMIN_PW))).status).toBe(200);
+  });
+
+  it('records the named owner as the actor in the audit row', async () => {
+    await POST(req({ memberId: MEMBER }, ADMIN_PW));
+    const audit = mockQuery.mock.calls.find(([s]) => String(s).includes('INSERT INTO audit_logs'));
+    expect(JSON.stringify(audit![1])).toContain(OWNER_ID);
   });
 
   it('requires exactly one identifier', async () => {
