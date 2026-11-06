@@ -112,14 +112,14 @@ Commits (all local): `e6ce0aa94` initial fix · `038cabfbe` lane record opened �
 ## 4. Evidence packet
 
 ```
-subject          local branch above, code HEAD {{HEAD}} plus the closing record commit
+subject          local branch above, code HEAD 4997939c9 plus the closing record commit
 scope            the member-facing Work-card Delete surface and the three server files in the amendment; no schema, no migration, no deploy
 instruments      jest (jsdom mounts of the real Home view, hermetic route and erase tests, runtime tests of the page-level act, a static drift guard over every migration);
                  a disposable loopback PostgreSQL 16 running the REAL route handlers with the client's own functions pointed at them, including interleavings held by a
                  second connection's lock (no sleeps) and a 400-pair deadlock sweep; the repository typecheck gate; a committed defeat-candidate runner
 results          jest: 3258 passed, 92 skipped (the PostgreSQL probes skip without their harness) across the surface above; 8 suites fail to LOAD on canonical and failed identically before this lane (listen/* x6, publish/kdpCoverGeometry, living-works/[id]/expressions)
                  PostgreSQL 16 probes: 59 passed in 2 suites (including DL-3, the deterministic Delete/Remove lock-order interleaving, and 200 sole-claimant Delete/Remove pairs with an image) (loopback cluster, fictional rows, stub schema plus four real migrations)
-                 defeat candidates: 207 (184 jest, 23 PostgreSQL), all killed on the final tree ({{FINALRUN}}); each kill is a parsed failing test (timeouts, hook errors, compile errors, and SQL parameter-count, parameter-type or syntax errors do not count); 17 are labelled (textual guard) or (static guard) because only a test that reads source text, SQL text or migrations kills them
+                 defeat candidates: 207 (184 jest, 23 PostgreSQL), all killed on the committed tree in one full run (207 of 207, both baselines green first; before that, two earlier full runs each left a candidate the hardened runner refused to count as a kill and that was then repaired: L42 as COMPILE-ERROR, and a run whose PostgreSQL baseline went red because the disk was full); each kill is a parsed failing test (timeouts, hook errors, compile errors, and SQL parameter-count, parameter-type or syntax errors do not count); 17 are labelled (textual guard) or (static guard) because only a test that reads source text, SQL text or migrations kills them
                  typecheck gate: 214 errors against a baseline of 214, no regression (npm run typecheck)
 independent review   six rounds (section 6.1)
 post-state       local commits only. Not pushed. No PR.
@@ -340,7 +340,7 @@ Refuted by the skeptics (not acted on): client-1, client-2, cabin-2, breakit-run
 ### 6.5 Adjudication and closure fields (manual §18, §30)
 
 ```
-Adjudication         {{ADJ}}
+Adjudication         PASS as code, not as a release: the candidate is fit to enter canonical, subject to the founder's local test, the ratification of X1–X8 (6.4 Q1), and the founder's PR and merge acts. All 207 defeat candidates are killed in one full run on the committed tree; 59 PostgreSQL probes pass; the typecheck gate shows no regression; seven independent review rounds are closed (rounds 6 and 7 found no locking or erase defect, and round 7 only low findings, all closed). This is NOT a statement that the founder's production 500 is fixed (section 5): it is a statement that the member is now told the truth about it, and that the dead end and the deadlock are gone.
 What this lane did not establish   production's configuration (which R mode occurred); a real browser; real R20/KMS; real vault bytes; the full production schema
                      (the probes use a stub schema plus four real migrations; the Work-level tables are covered by the static drift guard, not by a physical cascade)
 Holds in force       no deploy · no PR · no merge · no push without the founder's explicit ask · dispositions.json unchanged · frozen branch untouched
