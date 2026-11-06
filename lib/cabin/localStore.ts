@@ -50,6 +50,13 @@ export type CabinManuscript = {
   createdAt: string;
 };
 
+/** What `CabinLocalStore.eraseManuscript` observably did. Refusals changed nothing. */
+export type CabinEraseOutcome =
+  | { readonly ok: true; readonly workRemoved: boolean }
+  | { readonly ok: false; readonly refusal: 'not_found' }
+  | { readonly ok: false; readonly refusal: 'work_no_longer_holds_it' }
+  | { readonly ok: false; readonly refusal: 'declared_in_other_works'; readonly works: number };
+
 export type CabinMemoryItem = {
   id: string;
   memberId: string;
@@ -746,6 +753,10 @@ export class CabinLocalStore {
     }));
   }
 
+  /**
+   * Removes ONLY the writing (its sections cascade). It does not end any Work's declaration of it, so on its own
+   * it leaves a Work naming a gone writing. Member-facing deletion must go through `eraseManuscript` below.
+   */
   deleteManuscript(memberId: string, manuscriptId: string): boolean {
     if (!this.getMember(memberId)) throw new Error('CABIN_MEMBER_NOT_FOUND');
 
@@ -754,6 +765,93 @@ export class CabinLocalStore {
       .run(manuscriptId, memberId);
 
     return Number(result.changes) === 1;
+  }
+
+  /**
+   * WS-DELETE-01 — erase a writing AND end the declaration that names it, as one cabin transaction.
+   *
+   * `deleteManuscript` above removes only the writing. `living_work_expressions.expression_id` has no foreign
+   * key to `member_manuscripts` (a Work's expressions are open by design), so a Work that declared the writing
+   * kept naming it after it was gone: the detached state the founder ruling forbids. This is the cabin's
+   * counterpart to `lib/manuscript/source/eraseManuscript.ts`, and it answers the same questions in the same
+   * order. The cabin has no vault bytes and no R20 ledger, so there is no custody step to add.
+   *
+   * `workId` is the Work the member's card named. When it is given it must still declare the writing, or the
+   * card is stale and NOTHING is changed. When it is absent, the one Work that declares the writing (if any) is
+   * the one whose declaration ends, so the call can never leave a Work naming a gone writing; if several Works
+   * declare it there is no card to follow and the answer is the shared-writing refusal.
+   *
+   * `BEGIN IMMEDIATE` takes the write lock before the first read, so the declarations the refusals are decided
+   * from cannot change between the check and the deletes. Every refusal returns before any write.
+   */
+  eraseManuscript(
+    memberId: string,
+    manuscriptId: string,
+    workId: string | null = null,
+  ): CabinEraseOutcome {
+    if (!this.getMember(memberId)) throw new Error('CABIN_MEMBER_NOT_FOUND');
+
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const outcome = this.eraseManuscriptInTransaction(memberId, manuscriptId, workId);
+      this.db.exec(outcome.ok ? 'COMMIT' : 'ROLLBACK');
+      return outcome;
+    } catch (error) {
+      try {
+        this.db.exec('ROLLBACK');
+      } catch {
+        /* A failed COMMIT may already have ended the transaction; the original error is the one worth raising. */
+      }
+      throw error;
+    }
+  }
+
+  private eraseManuscriptInTransaction(
+    memberId: string,
+    manuscriptId: string,
+    workId: string | null,
+  ): CabinEraseOutcome {
+    if (!this.getManuscript(memberId, manuscriptId)) {
+      return { ok: false, refusal: 'not_found' };
+    }
+
+    const declaring = (
+      this.db
+        .prepare("SELECT e.living_work_id AS id FROM living_work_expressions e JOIN living_works w ON w.id = e.living_work_id WHERE e.expression_type = 'manuscript' AND e.expression_id = ? AND w.member_id = ?")
+        .all(manuscriptId, memberId) as Record<string, unknown>[]
+    ).map((row) => String(row.id));
+
+    /* A stale card is decided before sharing: the card's Work is the member's question, and "it no longer holds
+       this writing" is a truer answer than "other Works do" when the named Work is not among them. */
+    if (workId !== null && !declaring.includes(workId)) {
+      return { ok: false, refusal: 'work_no_longer_holds_it' };
+    }
+    if (declaring.length > 1) {
+      return { ok: false, refusal: 'declared_in_other_works', works: declaring.length };
+    }
+
+    const endsWork = workId ?? declaring[0] ?? null;
+
+    const removed = this.db
+      .prepare('DELETE FROM member_manuscripts WHERE id = ? AND member_id = ?')
+      .run(manuscriptId, memberId);
+    if (Number(removed.changes) !== 1) return { ok: false, refusal: 'not_found' };
+
+    let workRemoved = false;
+    if (endsWork !== null) {
+      this.db
+        .prepare("DELETE FROM living_work_expressions WHERE living_work_id = ? AND expression_type = 'manuscript' AND expression_id = ?")
+        .run(endsWork, manuscriptId);
+
+      /* A Work that now declares nothing has no referent left and would read as an ordinary, openable, empty
+         Work. One that still declares other things keeps them and loses only the expression that died. */
+      const gone = this.db
+        .prepare('DELETE FROM living_works WHERE id = ? AND member_id = ? AND NOT EXISTS (SELECT 1 FROM living_work_expressions e WHERE e.living_work_id = living_works.id)')
+        .run(endsWork, memberId);
+      workRemoved = Number(gone.changes) === 1;
+    }
+
+    return { ok: true, workRemoved };
   }
 
   addManuscriptSections(
