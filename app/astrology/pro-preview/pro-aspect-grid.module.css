@@ -11,6 +11,7 @@
 .grid td small { font-size: .6rem; color: #9fb2b9; margin-top: 2px; }
 .grid th { padding: 0 0 0 4px; text-align: left; }
 .grid th button { width: 34px; height: 34px; border: 1px solid rgba(224, 196, 149, .5); border-radius: 6px; background: rgba(16, 38, 58, .9); color: #e8d7b5; font-size: 1.05rem; }
+.grid th .angle { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px dashed rgba(224, 196, 149, .45); border-radius: 6px; color: #e8d7b5; font-size: .78rem; letter-spacing: .04em; }
 .note { color: #9fb2b9; font-size: .82rem; margin: 10px 0 0; }
 .decl { border-collapse: collapse; margin-top: 12px; width: 100%; max-width: 460px; }
 .decl th, .decl td { text-align: left; padding: 5px 8px; border-bottom: 1px solid rgba(160, 175, 186, .18); font-size: .9rem; }

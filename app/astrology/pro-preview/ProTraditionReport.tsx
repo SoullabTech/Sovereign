@@ -8,7 +8,7 @@
  * meaning stays first.
  */
 import { useMemo, useState } from 'react';
-import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
+import { MAJOR_ASPECTS, type BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { chartBodies } from '@/lib/astrology/proChartGeometry';
 import {
   TRADITION_NOTICE, angleReading, aspectReading, ordinal, placementReading,
@@ -25,7 +25,7 @@ export default function ProTraditionReport({
   const [open, setOpen] = useState(false);
   const bodies = useMemo(() => chartBodies(chart), [chart]);
   const aspects = useMemo(
-    () => (chart.aspects || []).filter((a) => Number.isFinite(a.orb) && a.orb <= 4 && a.type !== 'quincunx')
+    () => (chart.aspects || []).filter((a) => Number.isFinite(a.orb) && a.orb <= 4 && MAJOR_ASPECTS.has(a.type))
       .sort((a, b) => a.orb - b.orb).slice(0, 15),
     [chart],
   );
