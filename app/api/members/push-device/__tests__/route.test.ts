@@ -11,7 +11,7 @@ const TOKEN = 'AB'.repeat(32);
 const req = (body: unknown) => ({ json: async () => body }) as never;
 
 describe('push device registration', () => {
-  beforeEach(() => { mockQuery.mockReset().mockResolvedValue({ rows: [] }); mockMember.mockReset(); });
+  beforeEach(() => { mockQuery.mockReset().mockResolvedValue({ rows: [{ id: 'device-1' }] }); mockMember.mockReset(); });
 
   it('requires a session', async () => {
     mockMember.mockResolvedValue(null);
@@ -52,5 +52,22 @@ describe('push device registration', () => {
     const res = await POST(req({ token: TOKEN, environment: 'production' }));
     expect(res.status).toBe(500);
     expect(JSON.stringify(await res.json())).not.toContain('secret');
+  });
+
+  it('refuses to take over a token that is active under another member', async () => {
+    mockMember.mockResolvedValue('member-b');
+    mockQuery.mockResolvedValue({ rows: [] }); // the guarded upsert touched no row
+    const res = await POST(req({ token: TOKEN, environment: 'production' }));
+    expect(res.status).toBe(409);
+    expect((await res.json()).code).toBe('DEVICE_REGISTERED_ELSEWHERE');
+  });
+
+  it('the takeover guard lives inside the upsert, not in a prior read', async () => {
+    mockMember.mockResolvedValue('member-a');
+    await POST(req({ token: TOKEN, environment: 'production' }));
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+    const sql = String(mockQuery.mock.calls[0][0]);
+    expect(sql).toMatch(/DO UPDATE SET[\s\S]*WHERE member_push_devices\.member_id = EXCLUDED\.member_id\s+OR member_push_devices\.revoked_at IS NOT NULL/);
+    expect(sql).toContain('RETURNING id');
   });
 });
