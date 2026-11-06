@@ -191,3 +191,67 @@ Both are exactly the button's words; no instruction text was stored. **F1 produc
 - The Develop turn stopped at the body-read permission ("Allow MAIA to read Section 175, 176 and
   182…"). That consent is the writer's act and was not given in this witness, so MAIA's Develop reply
   was not observed. The stored writer turn is the evidence for F1 on that path.
+
+## Open findings revisited (2026-11-06)
+
+The 2026-11-02 open findings above are kept as written. This records where each stands on
+canonical `a556601b6`.
+
+| Finding | State | Evidence |
+|---|---|---|
+| Discuss | Closed by the walk session | `passageAct: 'discuss'` (conversation-first Focus, step 1); the instruction is in `lib/writersStudio/passageActs.ts` |
+| Craftsman's Table `localWorking` | Closed by removal | Removed in `cf93f25e4` (step 5a). The in-Focus *Why?* and *Another way* send `change-why` / `change-another` |
+| "Why this?" on a revision mark | Closed by this change | `whyRevisionEdit` sends `passageActQuestion('change-why', …)` with `passageAct: 'change-why'`; guarded by `lib/writersStudio/__tests__/f1RemainingSends.test.ts` (fails against the previous code) |
+| `withOrigin` arrival framing | Closed by this change (founder ruling 2026-11-06: B) | See below |
+
+### `withOrigin`: the decision
+
+When the writer arrives at a passage from a Develop or Review observation, the panel puts a
+framing block in front of the writer's first words: the observation's label, state, text and
+coverage, plus three instructions (treat it as history, not a verdict; the current passage is the
+authority; do not turn it into a revision recommendation). All of it is stored as the writer's
+turn.
+
+The three instructions can move server-side like every other F1 change. The observation itself
+is data, and two competent implementations differ on where it comes from:
+
+- **A. Client sends it as a closed field.** The panel sends `origin: { source, label, state,
+  observation, coverage }`; the server renders the framing. Small. The observation text still
+  comes from the browser.
+- **B. Server resolves it from the frozen record (recommended).** The panel sends only
+  `origin: { source, readingId, observationKey }`; the server loads the observation from the
+  member's own frozen reading and renders the framing. The prior observation then rests on the
+  record, not on text the browser supplied. Larger: Develop and Review readings need a
+  server-side read path with member ownership checked.
+
+**Ruling (founder, 2026-11-06): B, "from the saved reading".** Implemented:
+
+- The panel sends `origin: { source, readingId, observationKey }` on the first turn after
+  arriving, as a closed field (`isArrivalOriginRef`: exactly those three keys, a UUID and an
+  `o<n>` key). Any observation text in the field refuses with 400.
+- The route resolves it before the writer's act is stored (`resolveArrivalOrigin`): the
+  thread's Work for this member, then `loadReading(readingId, memberId)`, which must belong to
+  that same Work. Anything unresolvable refuses with 404 `origin_not_found`, nothing stored.
+- The runtime adds `arrivalOriginInstruction` to the system prompt. The lines are moved from
+  `withOrigin`, not reworded, under a header saying they came from the saved reading.
+- The writer's stored turn is only their words.
+- Guarded by `lib/writersStudio/__tests__/arrivalOrigin.test.ts` and
+  `app/api/writers-studio/editorial/turn/__tests__/arrivalOriginRoute.test.ts`, including a
+  reading of a different Work not resolving. Four older guards that pinned the old wording now
+  assert the same law at its new place.
+- Not walked in a browser. The label, state, observation and coverage are computed by the same
+  `readingView` the arrival panel uses, against the Work as it is when the turn is sent.
+
+### New findings, same class (not changed here)
+
+- **Craft companion (`MaiaCraftCompanionR1.tsx`).** Nine buttons (Discuss, Try wording,
+  Examples, Ideas, Lighter, Keep more of mine, Another option, Why this?, Go deeper) send
+  composed instructions with a `displayText` that is presentation only, so the stored writer turn
+  is the instruction. Its reach after step 5b removed the Craftsman's Table entries is not
+  established here.
+- **`sendCraft` in `P4R1Pc3WriteEditView.tsx`.** The craft view's "Ask MAIA where next" prompts
+  duplicate `where-next` as composed text.
+- **`changeRevisionEdit` ("Change it" on a revision mark)** sends a first-person composed request
+  ("I want a different direction for …").
+- **Rebuild Studio `challenge`** (`RebuildStudioClient.tsx`): belongs to F4 in the walk
+  session's lane.

@@ -179,6 +179,6 @@ test('voice capture is present in the Focus free-prompt seam, not a separate Stu
   );
   expect(dance).toContain('<P4R1VoiceCapture');
   // Design 3C follow-up (#2073): a spoken question stores only its words, with the conversational shape server-side.
-  expect(dance).toContain("onAsk={(text) => props.onSend(withOrigin(text), { turnShape: 'conversation' })}");
+  expect(dance).toContain("onAsk={(text) => props.onSend(text, withOrigin({ turnShape: 'conversation' as const }))}");
   expect(dance).not.toContain("mode='voice'");
 });
