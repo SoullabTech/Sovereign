@@ -1,10 +1,17 @@
 /**
- * ASTRO-PRO-ORBS-01 — an orb for each planet. With every point at the default
- * the engine's aspects stand untouched; a changed orb affects only the pairs
- * that include that point; a pair uses the larger orb of its two points.
+ * ASTRO-PRO-ORBS-01 — the astrologer's orbs. With nothing changed the engine's
+ * aspects stand untouched; a changed point orb affects only that point's
+ * pairs; a pair uses the larger or the average of its two point orbs; each
+ * aspect's own orb can be changed.
  */
 import { calculateBirthChart, type BirthChart } from '../lib/astrology/proEphemerisCalculator';
-import { aspectsWithOrbs, cleanPointOrbs, withPointOrbs } from '../lib/astrology/proAspectOrbs';
+import {
+  ORB_PRESETS, aspectsWithOrbs as withSettings, cleanOrbSettings, withOrbSettings, type OrbSettings,
+} from '../lib/astrology/proAspectOrbs';
+
+/** Point orbs only, the larger-of-two rule, unless a test says otherwise. */
+const aspectsWithOrbs = (chart: BirthChart, points: OrbSettings['points'], more: Partial<OrbSettings> = {}) =>
+  withSettings(chart, { points, aspects: {}, pairRule: 'larger', ...more });
 
 const SIGNS = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
   'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
@@ -36,8 +43,11 @@ describe('Per-planet orbs', () => {
       date: '1990-06-15', time: '14:30',
       location: { lat: 40.7128, lng: -74.006, timezone: 'America/New_York' }, houseSystem: 'porphyry',
     });
-    expect(withPointOrbs(chart, {})).toBe(chart);
-    expect(withPointOrbs(chart, { Sun: 8, Moon: 8 })).toBe(chart);
+    const none = { points: {}, aspects: {}, pairRule: 'larger' as const };
+    expect(withOrbSettings(chart, none)).toBe(chart);
+    expect(withOrbSettings(chart, { ...none, points: { Sun: 8, Moon: 8 }, aspects: { sextile: 6 } })).toBe(chart);
+    expect(withOrbSettings(chart, { ...none, pairRule: 'average' })).toBe(chart);
+    expect(withOrbSettings(chart, ORB_PRESETS.find((p) => p.id === 'engine')!.settings)).toBe(chart);
   });
 
   it('changes only the pairs that include the changed point', async () => {
@@ -73,9 +83,32 @@ describe('Per-planet orbs', () => {
     expect(planetPairs(aspectsWithOrbs(chart, { Sun: 12 }))).toEqual(['Sun|Venus|semisextile']);
   });
 
-  it('keeps only known points with an orb in range', () => {
-    expect(cleanPointOrbs({ Sun: 10.3, Moon: 20, Lilith: 5, Mars: '6', Venus: 8, Saturn: 0.5 }))
-      .toEqual({ Sun: 10.5 });
-    expect(cleanPointOrbs(null)).toEqual({});
+  it('averages the two point orbs when the astrologer chooses moieties', () => {
+    const chart = chartWith({ sun: 0, moon: 10 }); // a 10° conjunction
+    expect(planetPairs(aspectsWithOrbs(chart, { Sun: 12, Moon: 6 }, { pairRule: 'average' }))).toEqual([]); // 9°
+    expect(planetPairs(aspectsWithOrbs(chart, { Sun: 14, Moon: 6 }, { pairRule: 'average' })))
+      .toEqual(['Sun|Moon|conjunction']); // 10°
+    // Under moieties narrowing one point tightens its aspects to an unchanged point.
+    const square = chartWith({ mars: 0, saturn: 95 }); // 5° from exact
+    expect(planetPairs(aspectsWithOrbs(square, { Mars: 1 }, { pairRule: 'average' }))).toEqual([]); // 4.5°
+    expect(planetPairs(aspectsWithOrbs(square, { Mars: 1 }))).toEqual(['Mars|Saturn|square']); // larger: 8°
+  });
+
+  it('uses each aspect\'s own orb', () => {
+    const chart = chartWith({ mars: 0, saturn: 95 }); // square, 5° from exact
+    expect(planetPairs(aspectsWithOrbs(chart, {}, { aspects: { square: 4 } }))).toEqual([]);
+    expect(planetPairs(aspectsWithOrbs(chart, {}, { aspects: { square: 4, trine: 10 } }))).toEqual([]);
+    const sextile = chartWith({ mars: 0, saturn: 67 }); // sextile, 7° from exact
+    expect(planetPairs(aspectsWithOrbs(sextile, {}))).toEqual([]);
+    expect(planetPairs(aspectsWithOrbs(sextile, {}, { aspects: { sextile: 7 } }))).toEqual(['Mars|Saturn|sextile']);
+  });
+
+  it('keeps only known points and aspects with an orb in range', () => {
+    expect(cleanOrbSettings({
+      points: { Sun: 10.3, Moon: 20, Lilith: 5, Mars: '6', Venus: 8, Saturn: 0.2 },
+      aspects: { square: 6, sextile: 6, trine: 99, wobble: 3 },
+      pairRule: 'whatever',
+    })).toEqual({ points: { Sun: 10.5 }, aspects: { square: 6 }, pairRule: 'larger' });
+    expect(cleanOrbSettings(null)).toEqual({ points: {}, aspects: {}, pairRule: 'larger' });
   });
 });

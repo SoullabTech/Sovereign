@@ -29,8 +29,8 @@ import ProChartViews from './ProChartViews';
 import ProEphemerisPanel from './ProEphemerisPanel';
 import ProAstroMapPanel from './ProAstroMapPanel';
 import ProTraditionReport from './ProTraditionReport';
-import ProOrbSettings, { useSavedPointOrbs } from './ProOrbSettings';
-import { withPointOrbs } from '@/lib/astrology/proAspectOrbs';
+import ProOrbSettings, { useSavedOrbSettings } from './ProOrbSettings';
+import { withOrbSettings } from '@/lib/astrology/proAspectOrbs';
 import type { ChartPoints } from '@/lib/astrology/proChartPoints';
 import type { Declination } from '@/lib/astrology/proDeclinations';
 import type { TransitBody } from '@/lib/astrology/proTransits';
@@ -146,7 +146,7 @@ export default function ProAstrologyExperience() {
   const [showAspects, setShowAspects] = useState(true);
   const [aspectOrbFilter, setAspectOrbFilter] = useState<'all' | '1' | '3' | '5' | '8'>('all');
   const maxAspectOrb = aspectOrbFilter === 'all' ? null : Number(aspectOrbFilter);
-  const [pointOrbs, setPointOrbs] = useSavedPointOrbs();
+  const [orbSettings, setOrbSettings] = useSavedOrbSettings();
   const [showHouseLines, setShowHouseLines] = useState(true);
   const [houseSystem, setHouseSystem] = useState<ProHouseSystem>('porphyry');
   // Each planet keeps its own unsaved draft; switching focus never attaches another planet's words.
@@ -411,7 +411,7 @@ export default function ProAstrologyExperience() {
 
   const privateChart = privateViewVerified ? chart : null;
   // The same chart with its aspects found under the astrologer's orbs.
-  const orbChart = useMemo(() => privateChart ? withPointOrbs(privateChart, pointOrbs) : null, [privateChart, pointOrbs]);
+  const orbChart = useMemo(() => privateChart ? withOrbSettings(privateChart, orbSettings) : null, [privateChart, orbSettings]);
   const bodies = useMemo(() => privateChart ? chartBodies(privateChart) : [], [privateChart]);
   const selected = bodies.find((body) => body.name === focusedBody) || bodies[0] || null;
   const relationships = useMemo(
@@ -550,7 +550,7 @@ export default function ProAstrologyExperience() {
                       <option value="8">8°</option>
                     </select>
                   </label>
-                  <ProOrbSettings orbs={pointOrbs} onChange={setPointOrbs} />
+                  <ProOrbSettings settings={orbSettings} onChange={setOrbSettings} />
                   <button onClick={() => closePrivateChart()}>{savedSubject ? 'Close chart' : 'Close my chart'}</button>
                 </div>
               )}

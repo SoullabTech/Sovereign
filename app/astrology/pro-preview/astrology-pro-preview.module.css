@@ -372,6 +372,13 @@
 .orbSettingsGrid label{display:grid;grid-template-columns:1fr 64px 10px;align-items:center;gap:6px}
 .orbSettingsGrid input{font:inherit;width:100%;padding:5px 6px;border:1px solid rgba(211,177,119,.35);border-radius:4px;color:#f3e8d5;background:#17202b}
 .orbSettingsGrid input:focus-visible{outline:2px solid #e6c998;outline-offset:2px}
+.orbSettingsPanel{max-height:min(70vh,640px);overflow-y:auto}
+.orbSettingsPanel h4{margin:14px 0 4px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:#e6c998}
+.orbPresets{display:flex;flex-wrap:wrap;gap:6px}
+.orbPresets button{margin-top:0!important}
+.orbPairRule{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px}
+.orbPairRule select{font:inherit;padding:5px 8px;border:1px solid rgba(211,177,119,.35);border-radius:4px;color:#f3e8d5;background:#17202b;max-width:100%}
+.orbSettingsNote{margin:12px 0 0!important;font-size:.76rem}
 .orbSettingsPanel button{margin-top:12px;font:inherit;padding:7px 12px;border:1px solid rgba(211,177,119,.45);border-radius:5px;color:#f3e8d5;background:transparent;cursor:pointer}
 @media(max-width:700px){.orbSettings{width:100%}.orbSettingsPanel{position:static;width:100%;margin-top:6px}.orbSettingsGrid{grid-template-columns:1fr}}
 @media(max-width:700px){.orbFilterControl{width:100%;justify-content:space-between}.orbFilterControl select{min-width:0;max-width:65%;width:56%}}
