@@ -202,7 +202,7 @@ canonical `a556601b6`.
 | Discuss | Closed by the walk session | `passageAct: 'discuss'` (conversation-first Focus, step 1); the instruction is in `lib/writersStudio/passageActs.ts` |
 | Craftsman's Table `localWorking` | Closed by removal | Removed in `cf93f25e4` (step 5a). The in-Focus *Why?* and *Another way* send `change-why` / `change-another` |
 | "Why this?" on a revision mark | Closed by this change | `whyRevisionEdit` sends `passageActQuestion('change-why', …)` with `passageAct: 'change-why'`; guarded by `lib/writersStudio/__tests__/f1RemainingSends.test.ts` (fails against the previous code) |
-| `withOrigin` arrival framing | **Open, founder decision** | Not changed. See below |
+| `withOrigin` arrival framing | Closed by this change (founder ruling 2026-11-06: B) | See below |
 
 ### `withOrigin`: the decision
 
@@ -223,6 +223,24 @@ is data, and two competent implementations differ on where it comes from:
   member's own frozen reading and renders the framing. The prior observation then rests on the
   record, not on text the browser supplied. Larger: Develop and Review readings need a
   server-side read path with member ownership checked.
+
+**Ruling (founder, 2026-11-06): B, "from the saved reading".** Implemented:
+
+- The panel sends `origin: { source, readingId, observationKey }` on the first turn after
+  arriving, as a closed field (`isArrivalOriginRef`: exactly those three keys, a UUID and an
+  `o<n>` key). Any observation text in the field refuses with 400.
+- The route resolves it before the writer's act is stored (`resolveArrivalOrigin`): the
+  thread's Work for this member, then `loadReading(readingId, memberId)`, which must belong to
+  that same Work. Anything unresolvable refuses with 404 `origin_not_found`, nothing stored.
+- The runtime adds `arrivalOriginInstruction` to the system prompt. The lines are moved from
+  `withOrigin`, not reworded, under a header saying they came from the saved reading.
+- The writer's stored turn is only their words.
+- Guarded by `lib/writersStudio/__tests__/arrivalOrigin.test.ts` and
+  `app/api/writers-studio/editorial/turn/__tests__/arrivalOriginRoute.test.ts`, including a
+  reading of a different Work not resolving. Four older guards that pinned the old wording now
+  assert the same law at its new place.
+- Not walked in a browser. The label, state, observation and coverage are computed by the same
+  `readingView` the arrival panel uses, against the Work as it is when the turn is sent.
 
 ### New findings, same class (not changed here)
 

@@ -137,11 +137,15 @@ describe('C3 Develop → Focus continuity', () => {
 
   it('carries the frozen observation into the first editorial act only as attributed context', () => {
     expect(writeView).toContain('origin={props.carriedInsight && props.carriedInsightReturnMode ? {');
-    expect(writeView).toContain('observation: props.carriedInsight.observation.observation');
-    expect(dance).toContain('We arrived at this exact passage from a prior frozen');
-    expect(dance).toContain('Treat that as attributed historical context, not a verdict and not an edit instruction.');
-    expect(dance).toContain('Use the current passage as the authority for any new editorial claim.');
-    expect(dance).toContain('Do not silently convert the prior observation into a revision recommendation.');
-    expect(dance).toContain('if (!props.origin || props.thread) return prompt;');
+    // F1 (2026-11-06): the client sends identities only; the server loads the observation
+    // from the member's own saved reading and frames it. Same law, server-owned.
+    expect(writeView).toContain('readingId: props.carriedInsight.readingId,');
+    expect(writeView).toContain('observationKey: props.carriedInsight.observation.key,');
+    const framing = fs.readFileSync(path.join(process.cwd(), 'lib/writersStudio/arrivalOrigin.ts'), 'utf8');
+    expect(framing).toContain('We arrived at this exact passage from a prior frozen');
+    expect(framing).toContain('Treat that as attributed historical context, not a verdict and not an edit instruction.');
+    expect(framing).toContain('Use the current passage as the authority for any new editorial claim.');
+    expect(framing).toContain('Do not silently convert the prior observation into a revision recommendation.');
+    expect(dance).toContain('if (!props.origin || props.thread) return options;');
   });
 });
