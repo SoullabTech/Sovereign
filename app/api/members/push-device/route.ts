@@ -39,16 +39,27 @@ export async function POST(request: NextRequest) {
     }
     if (!APP_ID.test(appId)) return json({ error: 'A valid app id is required' }, 400);
 
-    // A token names one physical device. If the device changes hands, the
-    // registration follows the member who is signed in now.
-    await query(
+    // A token names one physical device. A registration that is ACTIVE under another
+    // member is never taken over: the guard sits inside the upsert, so there is no read
+    // to race. A device changes hands lawfully only after the previous holder removed it
+    // (sign-out) or Apple declared the token dead, which both leave it revoked.
+    const result = await query<{ id: string }>(
       `INSERT INTO member_push_devices (member_id, platform, environment, token, app_id)
        VALUES ($1, 'ios', $2, $3, $4)
        ON CONFLICT (platform, environment, token)
        DO UPDATE SET member_id = EXCLUDED.member_id, app_id = EXCLUDED.app_id,
-                     last_seen_at = now(), revoked_at = NULL, revoked_reason = NULL`,
+                     last_seen_at = now(), revoked_at = NULL, revoked_reason = NULL
+        WHERE member_push_devices.member_id = EXCLUDED.member_id
+           OR member_push_devices.revoked_at IS NOT NULL
+       RETURNING id`,
       [memberId, environment, token.toLowerCase(), appId],
     );
+    if (result.rows.length === 0) {
+      return json(
+        { error: 'This device is registered to another member. Sign out there first.', code: 'DEVICE_REGISTERED_ELSEWHERE' },
+        409,
+      );
+    }
     return json({ success: true });
   } catch (error) {
     console.error('[PUSH-DEVICE] register failed');
