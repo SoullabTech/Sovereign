@@ -58,6 +58,7 @@ import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { eraseManuscript } from '@/lib/manuscript/source/eraseManuscript';
+import { isUuid } from '@/lib/studio/continuityKind';
 import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -194,15 +195,33 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
   const { id } = await ctx.params;
 
   if (process.env.MAIA_CABIN_MODE === 'offline') {
+    /* The cabin answers the same contract as the web path below, from one cabin-store transaction: the writing,
+       the declaration that names it, and the Work only if it then declares nothing. It has no vault bytes and no
+       R20 ledger, so there is no custody step. `workId` names the card the member pressed Delete on. Validated
+       BEFORE the store is opened, so a malformed one touches nothing. Absent is lawful (the one Work that
+       declares the writing is the one whose declaration ends); present-but-malformed, empty or repeated is not. */
+    const workIds = request.nextUrl.searchParams.getAll('workId');
+    if (workIds.length > 1 || (workIds.length === 1 && !isUuid(workIds[0]))) {
+      return NextResponse.json({ error: 'Invalid workId' }, { status: 400 });
+    }
+    const workId = workIds[0] ?? null;
+
     const store = cabinStore();
     try {
       const { member, issuedToken } = cabinMemberFromRequest(store, request);
-      if (!store.deleteManuscript(member.id, id)) {
-        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      const reply = (body: Record<string, unknown>, status = 200) => {
+        const response = NextResponse.json(body, { status });
+        setCabinSessionCookie(response, issuedToken);
+        return response;
+      };
+
+      const outcome = store.eraseManuscript(member.id, id, workId);
+      if (outcome.ok) return reply({ removed: true, workRemoved: outcome.workRemoved });
+      if (outcome.refusal === 'not_found') return reply({ error: 'Not found' }, 404);
+      if (outcome.refusal === 'declared_in_other_works') {
+        return reply({ refusal: outcome.refusal, works: outcome.works }, 409);
       }
-      const response = NextResponse.json({ removed: true });
-      setCabinSessionCookie(response, issuedToken);
-      return response;
+      return reply({ refusal: outcome.refusal }, 409);
     } finally {
       store.close();
     }
