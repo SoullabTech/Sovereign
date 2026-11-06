@@ -330,6 +330,23 @@ export function HouseCenter() {
   </section>;
 }
 
+/** Phones and iPads (founder direction 2026-11-05): Here · Now sits below the five chosen
+ *  spaces, folded so it doesn't overwhelm, beside a clear "Arrange my House". The rail
+ *  version (wide screens) is unchanged; CSS shows exactly one of the two. */
+export function HouseQuickAccessStacked() {
+  const { active, open } = useHousePreferences();
+  const places = active ? visibleHouseShortcuts(active.preferences, active.eligibleIds) : [];
+  return <section className={house.quickStacked} aria-label="Here · Now" data-house-here-now-stacked>
+    <div className={house.quickStackedHead}>
+      <details className={house.quickStackedFold}>
+        <summary><span>HERE · NOW</span><small>{places.length} {places.length === 1 ? 'place' : 'places'}</small></summary>
+        <HouseQuickAccess />
+      </details>
+      <button type="button" className={house.quickStackedArrange} disabled={!active} onClick={() => open()}>Arrange my House</button>
+    </div>
+  </section>;
+}
+
 export function HouseQuickAccess() {
   const { active } = useHousePreferences();
   return <div className={house.quick}><p>HERE · NOW</p>
@@ -343,7 +360,9 @@ export function HouseQuickAccess() {
   </div>;
 }
 
-export function HouseDirectory() {
+/** `list` (All places page, founder ruling HOUSE-MOBILE-01 D4): plain rows, one tap opens.
+ *  Showing a place in the center or in Here · Now happens in Arrange my House. */
+export function HouseDirectory({ variant = 'full' }: { variant?: 'full' | 'list' } = {}) {
   const { active, open } = useHousePreferences();
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
@@ -352,8 +371,8 @@ export function HouseDirectory() {
     .some(value => value.toLowerCase().includes(q))), [q]);
   return <section className={styles.directory} aria-label="All places">
     <div className={styles.directoryHead}>
-      <div><p className={styles.marker}>ALL PLACES</p><h3>Find what you came for.</h3>
-        <p>Plain access to the House. The deeper architecture remains underneath.</p></div>
+      <div><p className={styles.marker}>ALL PLACES</p>{variant === 'list' ? <h1>Find what you came for.</h1> : <h3>Find what you came for.</h3>}
+        {variant === 'full' && <p>Plain access to the House. The deeper architecture remains underneath.</p>}</div>
       <label className={styles.search}>Find a tool or space
         <input type="search" value={query} onChange={event => setQuery(event.target.value)}
           placeholder="Decisions, journal, astrology…" /></label>
@@ -363,7 +382,16 @@ export function HouseDirectory() {
       if (!items.length) return null;
       return <div className={styles.directoryGroup} key={group.id}>
         <header><h4>{group.label}</h4><p>{group.line}</p></header>
-        <div className={styles.directoryGrid}>{items.map(place => {
+        {variant === 'list' ? <div className={styles.directoryList}>{items.map(place => {
+          const available = eligible.has(place.id);
+          return <Link className={styles.placeRow} key={place.id} data-place={place.id}
+            href={available ? place.href : '/studio'}>
+            <span className={styles.catalogMark} data-tone={place.tone} aria-hidden="true">{place.mark}</span>
+            <span className={styles.placeRowText}><strong>{place.label}</strong>
+              <small>{available ? place.purpose : 'Set up Studio to open this'}</small></span>
+            <span className={styles.placeRowChevron} aria-hidden="true">›</span>
+          </Link>;
+        })}</div> : <div className={styles.directoryGrid}>{items.map(place => {
           const available = eligible.has(place.id);
           const inCenter = !!active?.preferences.center.includes(place.id);
           const inQuick = !!active?.preferences.shortcuts.includes(place.id);
@@ -376,10 +404,12 @@ export function HouseDirectory() {
               {available && <button type="button" onClick={() => open({placeId:place.id,target:'quick'})}>{inQuick ? 'In Here · Now' : 'Add to Here · Now'}</button>}
             </div>
           </article>;
-        })}</div>
+        })}</div>}
       </div>;
     })}
     {!matches.length && <p className={styles.noMatch}>No House place matches that search.</p>}
+    {variant === 'list' && <p className={styles.directoryNote}>Showing a place in your spaces or in Here · Now happens
+      in <button type="button" className={styles.inlineArrange} disabled={!active} onClick={() => open()}>Arrange my House</button>, so this list stays simple to scan.</p>}
   </section>;
 }
 

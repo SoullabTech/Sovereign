@@ -34,7 +34,8 @@ export function CurrentTransitsField({
   variant = 'astrology',
 }: {
   birthChart?: BirthChartLike | null;
-  variant?: 'astrology' | 'house';
+  /** 'line' (House on phones/iPad, 2026-11-05): one quiet row, the full sky lives in Astrology. */
+  variant?: 'astrology' | 'house' | 'line';
 }) {
   const canOpenAstrology = useAstrologyTester();
   const [positions, setPositions] = useState<TransitPosition[]>([]);
@@ -92,6 +93,22 @@ export function CurrentTransitsField({
     () => aspects.filter((aspect) => aspect.orb <= 3).slice(0, 4),
     [aspects],
   );
+
+  if (variant === 'line') {
+    const summary = state === 'ready'
+      ? sky.slice(0, 2).map((t) => `${t.planet} in ${t.sign}`).join(' · ')
+      : state === 'loading' ? 'Calculating…' : 'Not available just now';
+    const body = (
+      <>
+        <span className={styles.lineLabel}>The sky now</span>
+        <span className={styles.lineSummary}>{summary}</span>
+        {canOpenAstrology ? <span className={styles.lineChevron} aria-hidden="true">›</span> : null}
+      </>
+    );
+    return canOpenAstrology
+      ? <Link href="/astrology" className={styles.line} aria-label={`The sky now: ${summary}. Open Astrology`}>{body}</Link>
+      : <div className={styles.line} aria-label={`The sky now: ${summary}`}>{body}</div>;
+  }
 
   return (
     <section
