@@ -58,3 +58,10 @@ test('both start paths re-check that they are still current after the element fi
   assert.match(between, /isMaiaSpeechActive\(\)/);
   assert.match(between, /el\.pause\(\)/);
 });
+
+test('the expanded dock leaves room above it for the MAIA and bug-report controls at phone width', () => {
+  const css = readFileSync(new URL('../../components/listening/persistentListeningDock.module.css', import.meta.url), 'utf8');
+  const m = css.match(/\.dock\[data-dock-expanded="true"\]\{max-height:calc\(100dvh - 56px[^}]*- (\d+)px\)\}/);
+  assert.ok(m, 'expanded max-height rule missing');
+  assert.ok(Number(m[1]) >= 100, 'reserved space too small for two stacked floating controls');
+});

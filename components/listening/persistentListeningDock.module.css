@@ -20,4 +20,4 @@
 @media(max-width:600px){.dock[data-dock-expanded="true"]{overscroll-behavior:contain}.dock[data-dock-expanded="true"] .identity,.dock[data-dock-expanded="true"] .controls{position:sticky;top:0;z-index:3;background:#0a1a20;padding-top:9px;align-self:start}}
 /* The open panel sits above the 56 px tab bar; cap its height so its top row stays below the status bar and
    notch (plus a margin for any host banner) instead of ending up under them. */
-@media(max-width:600px){.dock[data-dock-expanded="true"]{max-height:calc(100dvh - 56px - env(safe-area-inset-bottom) - env(safe-area-inset-top) - 76px)}}
+@media(max-width:600px){.dock[data-dock-expanded="true"]{max-height:calc(100dvh - 56px - env(safe-area-inset-bottom) - env(safe-area-inset-top) - 108px)}}

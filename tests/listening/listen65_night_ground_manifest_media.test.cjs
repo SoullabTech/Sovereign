@@ -103,5 +103,5 @@ test('Sound Studio exposes Night Ground through the same manifest player', () =>
   assert.match(field, /playExperienceMedia\(selected\.manifest\)/);
   assert.match(field, /selected\.manifest/);
   assert.equal((provider.match(/<audio ref=\{media\}/g) || []).length, 1);
-  assert.equal((provider.match(/new Audio\(/g) || []).length, 1); // the private lock-screen keepalive; contract in listen76
+  assert.equal((provider.match(/new Audio\(/g) || []).length, 1); // the private lock-screen keepalive; contract in listen78
 });
