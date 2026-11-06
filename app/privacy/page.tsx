@@ -240,6 +240,13 @@ export default function PrivacyPolicyPage() {
               reminders, session confirmations, and scheduling updates related to your booked sessions.
             </p>
             <p className="text-[14px] leading-relaxed text-white/70">
+              Soullab also sends short operational notifications by SMS to its owner and a small number
+              of staff, for example an alert when the platform&apos;s email or uptime fails, or a notice
+              that a member has submitted in-app feedback, which includes the member&apos;s first name
+              and a short preview of what they wrote. These go only to numbers those people supplied for
+              this purpose. They are never marketing and never go to the general public.
+            </p>
+            <p className="text-[14px] leading-relaxed text-white/70">
               <strong className="text-white">Message frequency</strong> varies based on your session bookings.
               Message and data rates may apply. You can opt out at any time by replying{' '}
               <strong className="text-white">STOP</strong> to any message. Reply{' '}

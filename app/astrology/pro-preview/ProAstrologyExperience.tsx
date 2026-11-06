@@ -29,6 +29,8 @@ import ProChartViews from './ProChartViews';
 import ProEphemerisPanel from './ProEphemerisPanel';
 import ProAstroMapPanel from './ProAstroMapPanel';
 import ProTraditionReport from './ProTraditionReport';
+import ProOrbSettings, { useSavedOrbSettings } from './ProOrbSettings';
+import { withOrbSettings } from '@/lib/astrology/proAspectOrbs';
 import type { ChartPoints } from '@/lib/astrology/proChartPoints';
 import type { Declination } from '@/lib/astrology/proDeclinations';
 import type { TransitBody } from '@/lib/astrology/proTransits';
@@ -146,6 +148,7 @@ export default function ProAstrologyExperience() {
   const [showAspects, setShowAspects] = useState(true);
   const [aspectOrbFilter, setAspectOrbFilter] = useState<'all' | '1' | '3' | '5' | '8'>('all');
   const maxAspectOrb = aspectOrbFilter === 'all' ? null : Number(aspectOrbFilter);
+  const [orbSettings, setOrbSettings] = useSavedOrbSettings();
   const [showHouseLines, setShowHouseLines] = useState(true);
   const [houseSystem, setHouseSystem] = useState<ProHouseSystem>('porphyry');
   // Each planet keeps its own unsaved draft; switching focus never attaches another planet's words.
@@ -411,14 +414,16 @@ export default function ProAstrologyExperience() {
   }
 
   const privateChart = privateViewVerified ? chart : null;
+  // The same chart with its aspects found under the astrologer's orbs.
+  const orbChart = useMemo(() => privateChart ? withOrbSettings(privateChart, orbSettings) : null, [privateChart, orbSettings]);
   const bodies = useMemo(() => privateChart ? chartBodies(privateChart) : [], [privateChart]);
   const selected = bodies.find((body) => body.name === focusedBody) || bodies[0] || null;
   const relationships = useMemo(
-    () => privateChart && selected ? selectedRelationships(privateChart, selected.name).filter(
+    () => orbChart && selected ? selectedRelationships(orbChart, selected.name).filter(
       (aspect) => Number.isFinite(aspect.orb) && aspect.orb >= 0 &&
         (maxAspectOrb === null || aspect.orb <= maxAspectOrb),
     ) : [],
-    [privateChart, selected, maxAspectOrb],
+    [orbChart, selected, maxAspectOrb],
   );
   const geometricHouse = privateChart && selected
     ? geometricHouseFromCusps(selected.longitude, privateChart.houses) : null;
@@ -437,7 +442,7 @@ export default function ProAstrologyExperience() {
   function preparePrivateDraft() {
     if (!privateChart || !selected || !memberId) return;
     pendingShareEpoch.current += 1;
-    setDraft(prepareMemberHandoff(privateChart, selected, memberNotes[selected.name] || ''));
+    setDraft(prepareMemberHandoff(orbChart ?? privateChart, selected, memberNotes[selected.name] || ''));
   }
 
   // R4G legacy bypass closure: the previous GET consent check was not an
@@ -549,6 +554,7 @@ export default function ProAstrologyExperience() {
                       <option value="8">8°</option>
                     </select>
                   </label>
+                  <ProOrbSettings settings={orbSettings} onChange={setOrbSettings} />
                   <button onClick={() => closePrivateChart()}>{savedSubject ? 'Close chart' : 'Close my chart'}</button>
                 </div>
               )}
@@ -556,7 +562,7 @@ export default function ProAstrologyExperience() {
 
             {privateChart ? (
               <>
-                <CelestialChartWheel chart={privateChart} focusedBody={focusedBody} onFocusBody={selectBody}
+                <CelestialChartWheel chart={orbChart ?? privateChart} focusedBody={focusedBody} onFocusBody={selectBody}
                   showAspects={showAspects} showHouseLines={showHouseLines}
                   maxAspectOrb={maxAspectOrb} outerBodies={rings[0]?.bodies} outerLabel={rings[0]?.label}
                   outerBodies2={rings[1]?.bodies} outerLabel2={rings[1]?.label} />
@@ -569,10 +575,10 @@ export default function ProAstrologyExperience() {
                 <ProDerivedPanel subjectId={savedSubject ? savedSubject.id : 'own'}
                   chartLabel={savedSubject ? savedSubject.label : 'my chart'} houseSystem={houseSystem}
                   onOuter={(next, label) => setRing('derived', next, label)} />
-                <ProAspectGrid chart={privateChart} declinations={declinations} onSelectBody={selectBody} />
+                <ProAspectGrid chart={orbChart ?? privateChart} declinations={declinations} onSelectBody={selectBody} />
                 <ProChartViews chart={privateChart} points={chartPoints} />
                 <ProEphemerisPanel natalBodies={bodies} />
-                <ProTraditionReport chart={privateChart} chartLabel={savedSubject ? savedSubject.label : 'my chart'}
+                <ProTraditionReport chart={orbChart ?? privateChart} chartLabel={savedSubject ? savedSubject.label : 'my chart'}
                   questions={INQUIRY} />
                 <ProAstroMapPanel subjectId={savedSubject ? savedSubject.id : 'own'}
                   chartLabel={savedSubject ? savedSubject.label : 'my chart'} houseSystem={houseSystem} />
@@ -580,8 +586,8 @@ export default function ProAstrologyExperience() {
                   chartLabel={savedSubject ? savedSubject.label : 'my chart'}
                   work={systemsWork} onWork={setSystemsWork} />
                 <p id="pro-orb-filter-description" className={styles.sourceLabel} role="note">
-                  The orb setting filters existing reported aspects for display; it does not
-                  recalculate their accuracy or determine applying/separating phase.
+                  Orbs decide which aspects are found from the calculated positions; the max orb
+                  setting then filters them for display. Neither determines applying/separating phase.
                   Unverified aspect values are excluded from the diagram.
                 </p>
                 <div className={styles.planetIndex} aria-label="Planet selector">
