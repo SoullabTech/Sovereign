@@ -1,6 +1,6 @@
 /**
- * The two list loaders say whether a re-read WORKED. The delete flow tells the member "Home now shows what is current" only when both
- * did; a loader that always answered true would make that sentence false exactly when a list could not be read.
+ * The list loaders (Works, writings, History) say whether a re-read WORKED. The delete flow tells the member "Home now shows what is current" only when both
+ * did (Home's own short History is one of the lists); a loader that always answered true would make that sentence false exactly when a list could not be read.
  *
  * @jest-environment jsdom
  */
@@ -11,6 +11,7 @@ jest.mock('@/lib/http/apiBase', () => ({ apiFetch: jest.fn() }));
 import { apiFetch } from '@/lib/http/apiBase';
 import { useLivingWorks } from '../useLivingWorks';
 import { useCurrentManuscript } from '../useCurrentManuscript';
+import { useStudioHistory } from '../useStudioHistory';
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 const fetchMock = apiFetch as unknown as jest.Mock;
@@ -31,6 +32,7 @@ const mount = async <T,>(useIt: () => T): Promise<{ current: T }> => {
 const loaders: Array<[string, () => { reload: () => Promise<boolean> }, string]> = [
   ['useLivingWorks', () => useLivingWorks(), 'works'],
   ['useCurrentManuscript', () => useCurrentManuscript(), 'manuscripts'],
+  ['useStudioHistory', () => useStudioHistory(), 'acts'],
 ];
 for (const [name, useIt, key] of loaders) {
   describe(`${name}.reload reports whether the list was read`, () => {

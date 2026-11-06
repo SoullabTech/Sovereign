@@ -76,8 +76,12 @@ describe('every outcome, with the exact status and body the client reads', () =>
     erase.mockResolvedValue({ ok: false, refusal: 'not_found' });
     expect(await del(`?workId=${WORK}`)).toEqual({ status: 404, body: { error: 'Not found' } });
   });
-  it('removed and everything confirmed: 200', async () => {
-    expect(await del()).toEqual({ status: 200, body: { removed: true } });
+  it('removed and everything confirmed, the Work STAYS: 200 and the server says the Work did not go', async () => {
+    expect(await del()).toEqual({ status: 200, body: { removed: true, workRemoved: false } });
+  });
+  it('removed and everything confirmed, the Work went with it: 200 and the server says so (the page never guesses this)', async () => {
+    erase.mockResolvedValue({ ok: true, artifactsQueued: 0, sweptAll: true, recoverySealed: true, owed: { originalFile: false, image: false }, workRemoved: true });
+    expect(await del()).toEqual({ status: 200, body: { removed: true, workRemoved: true } });
   });
   it('removed but custody not confirmed: 500 with removed:true, the custody refusal, and WHICH obligations are unconfirmed (so the sentence names only those)', async () => {
     erase.mockResolvedValue({ ok: true, artifactsQueued: 1, sweptAll: false, recoverySealed: false, owed: { originalFile: true, image: false }, workRemoved: true });

@@ -148,7 +148,7 @@ suite('WS-DELETE-01 R-SHARED physical probes (real PostgreSQL 16, real routes, f
     it('SH-4 after the removal, Delete from the other Work goes through and ends the writing and that Work, with its erasure record', async () => {
       await delWork(W_A);
       const out = await delManuscript(MS_SHARED);
-      expect(out).toEqual({ status: 200, body: { removed: true } });
+      expect(out).toEqual({ status: 200, body: { removed: true, workRemoved: true } });
       expect(await manuscriptExists(MS_SHARED)).toBe(false);
       expect(await workExists(W_B)).toBe(false);
       expect(await dangling()).toBe(0);
@@ -170,7 +170,7 @@ suite('WS-DELETE-01 R-SHARED physical probes (real PostgreSQL 16, real routes, f
       expect(await manuscriptExists(MS_SHARED)).toBe(true);
       expect(await count(`living_work_expressions WHERE expression_id = $1`, [MS_SHARED])).toBe(0);
       const out = await delManuscript(MS_SHARED);
-      expect(out).toEqual({ status: 200, body: { removed: true } });
+      expect(out).toEqual({ status: 200, body: { removed: true, workRemoved: false } });
       expect(await manuscriptExists(MS_SHARED)).toBe(false);
     });
 
@@ -229,7 +229,7 @@ suite('WS-DELETE-01 R-SHARED physical probes (real PostgreSQL 16, real routes, f
     it('ST-3 Delete from the card of the sole remaining claimant goes through', async () => {
       await delWork(W_A);
       const out = await delManuscript(MS_SHARED, W_B);
-      expect(out).toEqual({ status: 200, body: { removed: true } });
+      expect(out).toEqual({ status: 200, body: { removed: true, workRemoved: true } });
       expect(await manuscriptExists(MS_SHARED)).toBe(false);
       expect(await workExists(W_B)).toBe(false);
     });
@@ -269,14 +269,14 @@ suite('WS-DELETE-01 R-SHARED physical probes (real PostgreSQL 16, real routes, f
 
     it('ST-7 an uppercase Work id is the same Work (UUIDs are case-insensitive)', async () => {
       const out = await delManuscript(MS_SOLO, W_SOLO.toUpperCase());
-      expect(out).toEqual({ status: 200, body: { removed: true } });
+      expect(out).toEqual({ status: 200, body: { removed: true, workRemoved: true } });
     });
   });
 
   describe('the ordinary cases the new step must not disturb', () => {
     it('OR-1 an unshared Work: Delete ends the writing and the Work, and records the erasure', async () => {
       const out = await delManuscript(MS_SOLO);
-      expect(out).toEqual({ status: 200, body: { removed: true } });
+      expect(out).toEqual({ status: 200, body: { removed: true, workRemoved: true } });
       expect(await manuscriptExists(MS_SOLO)).toBe(false);
       expect(await workExists(W_SOLO)).toBe(false);
       expect(await count('deletion_manifests')).toBe(1);
@@ -291,7 +291,7 @@ suite('WS-DELETE-01 R-SHARED physical probes (real PostgreSQL 16, real routes, f
 
     it('OR-3 a Work that names the writing AND something else loses only the expression that died, and survives', async () => {
       const out = await delManuscript(MS_TWO);
-      expect(out).toEqual({ status: 200, body: { removed: true } });
+      expect(out).toEqual({ status: 200, body: { removed: true, workRemoved: false } });
       expect(await manuscriptExists(MS_TWO)).toBe(false);
       expect(await workExists(W_TWO)).toBe(true);
       expect(await count(`living_work_expressions WHERE living_work_id = $1`, [W_TWO])).toBe(1);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import type { StudioAct } from '@/app/writers-studio/studioHistory';
 import { beneath, byDay, sentenceFor } from '@/app/writers-studio/studioHistory';
 import { historyActionFor } from '@/app/writers-studio/historyActions';
@@ -10,6 +10,7 @@ import type { CurrentManuscript } from '@/app/writers-studio/useCurrentManuscrip
 import { DeletionNotice, DeletionSharedMaterial, DeletionUnconfirmed, deleteConfirmCopy, type ActResult } from '@/lib/writersStudio/deleteWork';
 import { WritingDeleteConfirm } from './WritingDeleteConfirm';
 import { writingDeleteKindFor } from './useWorkDeleteDoor';
+import { NoticeList, useNoticeStack, type NoticeStack } from './useNoticeStack';
 
 /** The route's own ceiling (MAX_LIMIT in /api/sovereign/studio/history). */
 export const FULL_HISTORY_LIMIT = 300;
@@ -24,6 +25,8 @@ export interface P4R1HistoryPageProps {
   onDeleteWriting: (manuscriptId: string) => Promise<ActResult | void>;
   onRetry: () => void;
   onBack: () => void;
+  /** The page's notices, when the page lives inside Home (its stack outlives this view, so Back to Home loses nothing). Standalone, the page keeps its own. */
+  noticeStack?: NoticeStack;
 }
 
 /**
@@ -39,13 +42,9 @@ export function P4R1HistoryPage(props: P4R1HistoryPageProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Page notices, in order, each naming its writing: a second never replaces a first the member has not dismissed.
-  const [notices, setNotices] = useState<ReadonlyArray<{ readonly id: number; readonly message: string; readonly urgent: boolean }>>([]);
-  const nextNoticeId = useRef(0);
-  const notify = (message: string, urgent: boolean) => {
-    nextNoticeId.current += 1;
-    const id = nextNoticeId.current;
-    setNotices((current) => [...current, { id, message, urgent }]);
-  };
+  const ownStack = useNoticeStack();
+  const stack = props.noticeStack ?? ownStack;
+  const notify = stack.notify;
 
   const lines = props.acts.filter((a) => sentenceFor(a) !== null);
   const days = byDay(lines as StudioAct[]);
@@ -83,7 +82,7 @@ export function P4R1HistoryPage(props: P4R1HistoryPageProps) {
   } else if (props.phase === 'error') {
     body = (
       <p className="fr-home-facts" role="alert">
-        Your history could not be read just now. Nothing has changed.{' '}
+        Your history could not be read just now. Try again to see what is current.{' '}
         <button type="button" className="fr-home-quiet" onClick={props.onRetry}>Try again</button>
       </p>
     );
@@ -143,7 +142,7 @@ export function P4R1HistoryPage(props: P4R1HistoryPageProps) {
                 ) : null}
                 {action.kind === 'open' && action.why === 'several-writings' ? (
                   <span className="p4r1-history-act-beneath">
-                    This writing is in a Work that holds more than one writing, so it cannot be deleted from here. Open it and take it out of that Work first, then delete it.
+                    This writing is in a Work that holds more than one writing, so it cannot be deleted from here. On Home, press Remove on that Work: that removes the Work and what you built inside it, and deletes none of its writings. Then delete this writing.
                   </span>
                 ) : null}
               </li>
@@ -161,12 +160,7 @@ export function P4R1HistoryPage(props: P4R1HistoryPageProps) {
           <button type="button" className="fr-home-quiet" onClick={props.onBack}>← Back to Home</button>
         </div>
         <h2 className="p4r1-history-title">History</h2>
-        {notices.map((notice) => (
-          <div key={notice.id} className="p4r1-home-delete-notice" role={notice.urgent ? 'alert' : 'status'}>
-            {notice.message}
-            <button type="button" onClick={() => setNotices((current) => current.filter((n) => n.id !== notice.id))}>Dismiss</button>
-          </div>
-        ))}
+        <NoticeList stack={stack} />
         {body}
       </div>
     </div>
@@ -185,12 +179,17 @@ export function P4R1HistoryContainer(props: Omit<P4R1HistoryPageProps, 'phase' |
       acts={acts}
       onRetry={() => void reload()}
       onDeleteWriting={async (id) => {
+        let result: ActResult | void;
         try {
-          return await props.onDeleteWriting(id);
-        } finally {
+          result = await props.onDeleteWriting(id);
+        } catch (err) {
           // Removed-but-unconfirmed also throws; the list must still be re-read.
           await reload();
+          throw err;
         }
+        const read = await reload();
+        // This page's own list is part of what "reloaded" means: when it could not be read, the page may still list the writing.
+        return result && !read ? { ...result, refreshed: false } : result;
       }}
     />
   );

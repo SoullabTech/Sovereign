@@ -309,6 +309,15 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
        *unreferenced but retained* state WS-DELETE-01 forbids, restated by the
        founder for Work visuals on 2026-09-07. */
     const removed = await transaction(async (tx) => {
+      /* LOCK ORDER. eraseManuscript takes the Work row first and the image row afterwards, so this takes them in the SAME order. Taking
+         the image row first (the read below is FOR UPDATE) and the Work row second formed a real cycle with a Delete of the Work's
+         writing: PostgreSQL broke it by aborting one of the two with a 500 for an act that did not happen. A row that is not this
+         member's, or is already gone, ends here (404) without touching anything else. */
+      const owned = await tx.query<{ id: string }>(
+        `SELECT id FROM living_works WHERE id = $1 AND member_id = $2 FOR UPDATE`,
+        [id, memberId],
+      );
+      if (owned.rows.length === 0) return null;
       const visual = await tx.query<{ storage_path: string }>(
         `SELECT storage_path FROM living_work_visuals WHERE living_work_id = $1 AND member_id = $2 FOR UPDATE`,
         [id, memberId],

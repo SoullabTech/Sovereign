@@ -70,6 +70,8 @@ const LOCK_WORKS_FIRST = 'ws-delete:lock-works-first';
 const W_IMG = '99999999-0000-4000-8000-0000000000a1';
 const W_STUCK = '99999999-0000-4000-8000-0000000000a2';
 const W_STAY = '99999999-0000-4000-8000-0000000000a3';
+const W_KEEP = '99999999-0000-4000-8000-0000000000a4';             // holds a LIVE writing and a second part
+const MS_KEEP = 'cccccccc-cccc-4ccc-8ccc-cccccccccc03';
 const MS_GHOST2 = 'dddddddd-dddd-4ddd-8ddd-ddddddddddd2';        // a second gone writing, declared by a Work that holds something else too
 
 const asMember = (id: string | null) => { (globalThis as any).__probeMember = id; };
@@ -109,16 +111,18 @@ const settle = async (p: Promise<void>): Promise<Error | null> => {
 async function reset() {
   await query('TRUNCATE members, deletion_manifests, provenance_tombstones, vault_erasure_queue CASCADE');
   await query('INSERT INTO members(id) VALUES ($1), ($2)', [MEMBER_A, MEMBER_B]);
-  for (const [id, title] of [[MS_SHARED, 'The Shared Fictional Writing'], [MS_SOLO, 'A Solo Fictional Writing'], [MS_M1, 'Many One'], [MS_M2, 'Many Two']]) {
+  for (const [id, title] of [[MS_SHARED, 'The Shared Fictional Writing'], [MS_SOLO, 'A Solo Fictional Writing'], [MS_M1, 'Many One'], [MS_M2, 'Many Two'], [MS_KEEP, 'A Fictional Writing In A Work That Stays']]) {
     await query('INSERT INTO member_manuscripts(id, member_id, title) VALUES ($1, $2, $3)', [id, MEMBER_A, title]);
   }
-  for (const id of [W_A, W_B, W_SOLO, W_EMPTY, W_MANY, W_GHOST, W_IMG, W_STUCK, W_STAY]) await query('INSERT INTO living_works(id, member_id) VALUES ($1, $2)', [id, MEMBER_A]);
+  for (const id of [W_A, W_B, W_SOLO, W_EMPTY, W_MANY, W_GHOST, W_IMG, W_STUCK, W_STAY, W_KEEP]) await query('INSERT INTO living_works(id, member_id) VALUES ($1, $2)', [id, MEMBER_A]);
   const declare = (w: string, m: string) => query(`INSERT INTO living_work_expressions(living_work_id, expression_type, expression_id) VALUES ($1, 'manuscript', $2)`, [w, m]);
   await declare(W_A, MS_SHARED); await declare(W_B, MS_SHARED);
   await declare(W_SOLO, MS_SOLO);
   await declare(W_MANY, MS_M1); await declare(W_MANY, MS_M2);
   await declare(W_GHOST, MS_GHOST);
   await declare(W_STAY, MS_GHOST2);
+  await declare(W_KEEP, MS_KEEP);
+  await query(`INSERT INTO living_work_expressions(living_work_id, expression_type, expression_id) VALUES ($1, 'material', $2)`, [W_KEEP, 'f0000000-0000-4000-8000-0000000000f3']);
   await query(`INSERT INTO living_work_expressions(living_work_id, expression_type, expression_id) VALUES ($1, 'material', $2)`, [W_STAY, 'f0000000-0000-4000-8000-0000000000f2']);
   asMember(MEMBER_A);
   sealMode('sealed');
@@ -161,6 +165,12 @@ const addStuckOriginal = (manuscriptId: string, name: string) => query(
   `INSERT INTO manuscript_source_arrivals(member_id, manuscript_id, source_kind, artifact_ref, artifact_hash, artifact_size, original_filename, source_text, source_text_hash, extraction_method, extractor_version)
    VALUES ($1, $2, 'artifact_extraction', $3, 'fictional-hash', 10, 'fictional.docx', 'fictional source text', 'fictional-text-hash', 'fictional', '1')`,
   [MEMBER_A, manuscriptId, stuckPath(name)],
+);
+/** An artifact-backed arrival whose original the sweep CAN destroy (an absent path is destroyed idempotently). */
+const addDestroyableOriginal = (manuscriptId: string, name: string) => query(
+  `INSERT INTO manuscript_source_arrivals(member_id, manuscript_id, source_kind, artifact_ref, artifact_hash, artifact_size, original_filename, source_text, source_text_hash, extraction_method, extractor_version)
+   VALUES ($1, $2, 'artifact_extraction', $3, 'fictional-hash', 10, 'fictional.docx', 'fictional source text', 'fictional-text-hash', 'fictional', '1')`,
+  [MEMBER_A, manuscriptId, `manuscript-sources/${name}`],
 );
 const queueRow = (artifactRef: string) => query(`INSERT INTO vault_erasure_queue(artifact_ref) VALUES ($1)`, [artifactRef]);
 const addVisual = (workId: string, storagePath: string) => query(
@@ -280,7 +290,7 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
     it('CE-5c the cleanup is the SERVER\'s answer, not a guess: the route says removed:true for a gone writing only when its declaration existed; a repeat of the same Delete is a plain 404 (done)', async () => {
       const first = await serverFetcher(`/api/sovereign/manuscripts/${MS_GHOST}?workId=${W_GHOST}`, { method: 'DELETE' });
       expect(first.status).toBe(200);
-      expect(await first.json()).toEqual({ removed: true });
+      expect(await first.json()).toEqual({ removed: true, workRemoved: true });
       const again = await serverFetcher(`/api/sovereign/manuscripts/${MS_GHOST}?workId=${W_GHOST}`, { method: 'DELETE' });
       expect(again.status).toBe(404);
     });
@@ -299,6 +309,36 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       expect(await workExists(W_GHOST)).toBe(true);
       expect(await danglingGhost()).toBe(1);
       expect(await workExists(W_SOLO)).toBe(true);
+    });
+
+    it('KEEP-1 a LIVE writing in a Work that holds a second part: the writing goes, the Work STAYS with its other part, and the server says so (workRemoved:false)', async () => {
+      const res = await serverFetcher(`/api/sovereign/manuscripts/${MS_KEEP}?workId=${W_KEEP}`, { method: 'DELETE' });
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ removed: true, workRemoved: false });
+      expect(await manuscriptExists(MS_KEEP)).toBe(false);
+      expect(await workExists(W_KEEP)).toBe(true);
+      expect(await count(`living_work_expressions WHERE living_work_id = $1 AND expression_type = 'manuscript'`, [W_KEEP])).toBe(0);
+      expect(await count(`living_work_expressions WHERE living_work_id = $1 AND expression_type = 'material'`, [W_KEEP])).toBe(1);
+      expect(await count(`provenance_tombstones WHERE object_kind = 'living_works' AND object_id = $1`, [W_KEEP])).toBe(0);   // the Work did not go: no tombstone for it
+    });
+
+    it('KEEP-2 the same, with custody NOT confirmed (the seal throws): 500 says the Work STAYS, and through the client that is DeletionUnconfirmed with workRemoved:false', async () => {
+      sealMode('throws');
+      const err = await settle(runDeleteWork({ workId: W_KEEP, manuscriptId: MS_KEEP }, serverFetcher, refresh));
+      expect(err).toBeInstanceOf(DeletionUnconfirmed);
+      expect((err as DeletionUnconfirmed).workRemoved).toBe(false);
+      expect(err!.message).toMatch(/^This writing was deleted from your studio, but/);         // the Work was NOT removed: the sentence must not say so
+      expect(await workExists(W_KEEP)).toBe(true);
+      expect(await manuscriptExists(MS_KEEP)).toBe(false);
+    });
+
+    it('KEEP-3 through the client, a Work that stays reports workRemoved:false, and one that goes reports true', async () => {
+      const stays = await runDeleteWork({ workId: W_KEEP, manuscriptId: MS_KEEP }, serverFetcher, refresh);
+      expect(stays).toEqual({ refreshed: true, workRemoved: false });
+      const goes = await runDeleteWork({ workId: W_SOLO, manuscriptId: MS_SOLO }, serverFetcher, refresh);
+      expect(goes).toEqual({ refreshed: true, workRemoved: true });
+      const gone = await runDeleteWork({ workId: W_SOLO, manuscriptId: MS_SOLO }, serverFetcher, refresh);      // again: the writing is gone, nothing is said about the Work
+      expect(gone).toEqual({ refreshed: true });
     });
 
     it('CE-6 a Work with several writings: Remove ends the Work and deletes NONE of the writings (the sentence the confirmation says)', async () => {
@@ -336,7 +376,7 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
         await removal.query('COMMIT');
         const res = await pending;
         expect(res.status).toBe(200);
-        expect(await res.json()).toEqual({ removed: true });
+        expect(await res.json()).toEqual({ removed: true, workRemoved: true });
       } finally { await removal.end().catch(() => undefined); }
       expect(await manuscriptExists(MS_SHARED)).toBe(false);
       expect(await workExists(W_A)).toBe(false);
@@ -384,7 +424,7 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
         await capture.query('COMMIT');
         const res = await deletion;
         expect(res.status).toBe(200);
-        expect(await res.json()).toEqual({ removed: true });
+        expect(await res.json()).toEqual({ removed: true, workRemoved: true });
       } finally { await capture.end().catch(() => undefined); }
       expect(await manuscriptExists(MS_SHARED)).toBe(false);
       expect(await workExists(W_B)).toBe(false);
@@ -411,8 +451,13 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
 
   describe('the same Work and writing, two requests at once: no deadlock, whichever order', () => {
     it('DL-1 a Delete queued behind a removal that holds the Work row takes the Work row BEFORE any expression row, so the removal can finish its own cascade (no 40P01, no 500)', async () => {
-      // The holder plays a Remove in flight: it holds the Work row and has not yet reached that Work\'s expression rows.
-      const removal = await holder((c) => c.query('SELECT id FROM living_works WHERE id = $1 FOR UPDATE', [W_A]).then(() => undefined));
+      // The holder plays a Remove in flight, in the order the route takes: the Work row, then the Work\'s image row, and it has not yet
+      // reached that Work\'s expression rows. The Work HAS an image: the order of those two locks is the whole point.
+      await addVisual(W_A, 'work-visuals/dl1-image.png');
+      const removal = await holder(async (c) => {
+        await c.query('SELECT id FROM living_works WHERE id = $1 FOR UPDATE', [W_A]);
+        await c.query('SELECT storage_path FROM living_work_visuals WHERE living_work_id = $1 FOR UPDATE', [W_A]);
+      });
       let removalError: unknown = null;
       try {
         const pending = serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}`, { method: 'DELETE' });
@@ -425,21 +470,47 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
         const res = await pending;
         expect(removalError).toBeNull();
         expect(res.status).toBe(200);
-        expect(await res.json()).toEqual({ removed: true });
+        expect(await res.json()).toEqual({ removed: true, workRemoved: true });
       } finally { await removal.end().catch(() => undefined); }
       expect(await manuscriptExists(MS_SHARED)).toBe(false);
       expect(await dangling()).toBe(0);
     });
 
+    it('DL-3 a Delete that holds the Work row while a Remove of the same Work arrives: the Remove waits for the WORK row (not the image row), so the pair cannot deadlock; the Delete finishes and the Remove finds the Work gone', async () => {
+      await addVisual(W_SOLO, 'work-visuals/dl3-image.png');
+      await addDestroyableOriginal(MS_SOLO, 'dl3-original.bin');
+      // Hold the Delete part-way: it will have taken the Work row, and wait at the writing\'s source arrival.
+      const gate = await holder((c) => c.query('SELECT id FROM manuscript_source_arrivals WHERE manuscript_id = $1 FOR UPDATE', [MS_SOLO]).then(() => undefined));
+      try {
+        const deletion = serverFetcher(`/api/sovereign/manuscripts/${MS_SOLO}?workId=${W_SOLO}`, { method: 'DELETE' });
+        await waitForLockWait('manuscript_source_arrivals');
+        // The Remove arrives now. In the old order it read (and locked) the image row first and then waited for the Work row, which the
+        // Delete holds while it needs that image row: a cycle PostgreSQL broke with a 500.
+        const removal = serverFetcher(`/api/sovereign/living-works/${W_SOLO}`, { method: 'DELETE' });
+        await waitForLockWait('FROM living_works');
+        await gate.query('COMMIT');
+        const [d, r] = await Promise.all([deletion, removal]);
+        expect(d.status).toBe(200);
+        expect(await d.json()).toEqual({ removed: true, workRemoved: true });
+        expect(r.status).toBe(404);                                   // the Work was already gone when its lock was granted
+      } finally { await gate.end().catch(() => undefined); }
+      expect(await manuscriptExists(MS_SOLO)).toBe(false);
+      expect(await workExists(W_SOLO)).toBe(false);
+    });
+
     it('DL-2 400 simultaneous Delete/Remove pairs: no request ever answers 5xx (the pairs that used to deadlock about 1 in 80)', async () => {
       let fiveHundreds = 0;
       let pairs = 0;
+      let withImage = 0;
       // Bounded: the first 5xx is the answer (no need to keep going), and a run that cannot finish 400 pairs inside the deadline FAILS
       // (it never passes on fewer pairs than it says).
       const deadline = Date.now() + 100_000;
       for (; pairs < 400 && fiveHundreds === 0; pairs += 1) {
         if (Date.now() > deadline) throw new Error(`DL-2 deadline exceeded after ${pairs} of 400 pairs`);
         await reset();
+        // Half of the pairs carry an image on the Work: the image row is a lock of its own, and the pairs that used to deadlock on it
+        // (a Remove taking the image row before the Work row) only exist for a Work that has one.
+        if (pairs % 2 === 0) { await addVisual(W_A, 'work-visuals/dl2-image.png'); withImage += 1; }
         const [d, r] = await Promise.all([
           serverFetcher(`/api/sovereign/manuscripts/${MS_SHARED}`, { method: 'DELETE' }),
           serverFetcher(`/api/sovereign/living-works/${W_A}`, { method: 'DELETE' }),
@@ -448,6 +519,7 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       }
       expect(fiveHundreds).toBe(0);
       expect(pairs).toBe(400);
+      expect(withImage).toBe(200);
     });
   });
 
@@ -456,7 +528,7 @@ suite('WS-DELETE-01 R-SHARED: the client\'s real functions against the real rout
       await queueRow(stuckPath('someone-elses-original.bin'));
       const res = await serverFetcher(`/api/sovereign/manuscripts/${MS_SOLO}?workId=${W_SOLO}`, { method: 'DELETE' });
       expect(res.status).toBe(200);
-      expect(await res.json()).toEqual({ removed: true });
+      expect(await res.json()).toEqual({ removed: true, workRemoved: true });
       expect(await count('vault_erasure_queue')).toBe(1);           // the foreign row is still owed, and still not this member\'s concern
       expect(await manuscriptExists(MS_SOLO)).toBe(false);
     });

@@ -234,6 +234,23 @@ describe('custody is about THIS deletion\'s own obligations, in both directions'
     const asked = (query as jest.Mock).mock.calls.find(([sql]) => String(sql).includes('WHERE id = ANY'))!;
     expect((asked[1][0] as string[]).length).toBe(2);
   });
+  it('workRemoved is the SERVER\'s word on whether the Work went: a live writing whose Work declares something else too leaves the Work standing, and says so', async () => {
+    install(world({ workHoldsMore: true, visualPath: null }));
+    const out = await eraseManuscript(MS, MEMBER, { viaWorkId: W_A });
+    expect(out).toMatchObject({ ok: true, workRemoved: false, sweptAll: true });
+    // The Work stays, so its image is NOT queued for destruction: it is still on display.
+    const imageQueue = seen.filter((q) => q.sql.includes('INSERT INTO vault_erasure_queue') && q.params[0] === OWN_IMAGE);
+    expect(imageQueue).toHaveLength(0);
+  });
+  it('and the same Work-stays answer is given when custody is NOT confirmed (the case that decides which sentence the member reads)', async () => {
+    stuck.add(OWN_FILE);
+    install(world({ workHoldsMore: true, visualPath: null }));
+    expect(await eraseManuscript(MS, MEMBER, { viaWorkId: W_A })).toMatchObject({ sweptAll: false, workRemoved: false, owed: { originalFile: true, image: false } });
+  });
+  it('a Work that held only this writing goes with it, and the answer says so', async () => {
+    install(world({ visualPath: null }));
+    expect(await eraseManuscript(MS, MEMBER, { viaWorkId: W_A })).toMatchObject({ ok: true, workRemoved: true });
+  });
   it('a loose writing with no original file and no Work owes nothing and needs only the seal', async () => {
     install({ claims: [], writingHeld: true });
     const out = await eraseManuscript(MS, MEMBER);

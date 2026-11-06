@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
 import { HOME_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import { HOME_COPY, REMOVE_OR_DELETE } from '@/app/writers-studio/full-redesign/fixtures';
@@ -22,6 +22,7 @@ import P4R1WorkMaterialsSummary from './P4R1WorkMaterialsSummary';
 import { WritingDeleteConfirm } from './WritingDeleteConfirm';
 import { INITIAL_DOOR, useWorkDeleteDoor, writingDeleteKindFor, type DoorState } from './useWorkDeleteDoor';
 import { P4R1HistoryContainer } from './P4R1HistoryPage';
+import { NoticeList, useNoticeStack } from './useNoticeStack';
 import { DeletionNotice, DeletionSharedMaterial, DeletionUnconfirmed, deleteConfirmCopy, type ActResult } from '@/lib/writersStudio/deleteWork';
 import P4R1ProducePanel from './P4R1ProducePanel';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
@@ -377,16 +378,9 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
     state: doors[workId] ?? INITIAL_DOOR,
     update: (patch: Partial<DoorState>) => setDoors((current) => ({ ...current, [workId]: { ...(current[workId] ?? INITIAL_DOOR), ...patch } })),
   });
-  const [notices, setNotices] = useState<ReadonlyArray<{ readonly id: number; readonly message: string; readonly urgent: boolean }>>([]);
-  const nextNoticeId = useRef(0);
-  const showNotice = (message: string, urgent = true) => {
-    nextNoticeId.current += 1;
-    const id = nextNoticeId.current;
-    setNotices((current) => [...current, { id, message, urgent }]);
-  };
-  // The card the member pressed is gone by the time this is shown, and the page may be long: bring the newest message into view.
-  const noticeRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => { if (notices.length > 0) noticeRef.current?.scrollIntoView?.({ block: 'nearest' }); }, [notices.length]);
+  // The stack is shared with History (which is a view inside Home), so a message raised there is still here when the member goes back.
+  const noticeStack = useNoticeStack();
+  const showNotice = noticeStack.notify;
   const deletionFor = (manuscriptId: string) => ({
     confirming: confirmingDelete === manuscriptId,
     busy: deletingId === manuscriptId,
@@ -428,15 +422,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   const unclaimed = props.manuscripts.filter((m) => !claimed.has(m.id));
   // ONE element, rendered once at the top of whichever layout the page falls into (including the welcome screen a member lands on
   // after deleting their last Work). A custody message is an alert (announced at once); a plain confirmation is a status.
-  const deleteNoticeEl = notices.length > 0 ? (
-    <div ref={noticeRef} data-delete-notices>
-      {notices.map((notice) => (
-        <p key={notice.id} role={notice.urgent ? 'alert' : 'status'} className="p4r1-home-delete-notice" data-delete-notice>
-          {notice.message} <button type="button" onClick={() => setNotices((current) => current.filter((n) => n.id !== notice.id))}>Dismiss</button>
-        </p>
-      ))}
-    </div>
-  ) : null;
+  const deleteNoticeEl = noticeStack.notices.length > 0 ? <NoticeList stack={noticeStack} /> : null;
   // The mode-bar chooser keeps the order it was given (declaration order), never recency.
   const pendingManuscripts = props.pendingMode
     ? manuscriptsInOrder(props.pendingMode.manuscriptIds, props.manuscripts)
@@ -770,6 +756,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             works={props.works}
             onOpen={(id) => props.onOpen(id)}
             onDeleteWriting={props.onDeleteWriting}
+            noticeStack={noticeStack}
             onBack={() => setViewingHistory(false)}
           />
         }

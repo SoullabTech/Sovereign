@@ -242,7 +242,7 @@ describe('Remove Work reaches the container and nothing else', () => {
 
   it('calls the living-works route, and NEVER the manuscripts route', async () => {
     const out = await removeWork('w-1', fetcher(200));
-    expect(out).toEqual({ ok: true });
+    expect(out).toEqual({ ok: true, workRemoved: true });
     expect(calls).toEqual([{ url: '/api/sovereign/living-works/w-1', method: 'DELETE' }]);
     /* The whole ruling, in one assertion: nothing in this path can reach the
        writing, so "your writing stays in Your Writings" is structural. */
@@ -252,7 +252,7 @@ describe('Remove Work reaches the container and nothing else', () => {
   it('treats an already-absent Work as removed', async () => {
     /* Another device, or a response that was lost after the server acted.
        Absence is the outcome that was being sought. */
-    await expect(removeWork('w-1', fetcher(404))).resolves.toEqual({ ok: true });
+    await expect(removeWork('w-1', fetcher(404))).resolves.toEqual({ ok: true, workRemoved: true });
   });
 
   it('never reports success it did not get; a rejection before any act says what is still true', async () => {

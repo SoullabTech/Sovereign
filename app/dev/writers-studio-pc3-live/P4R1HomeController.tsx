@@ -47,7 +47,7 @@ export default function P4R1HomeController() {
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
   const { phase: manuscriptPhase, manuscripts, reload: reloadManuscripts } = useCurrentManuscript();
   const { lines: markedLines } = useMarkedLines();
-  const { acts: historyActs } = useStudioHistory();
+  const { acts: historyActs, reload: reloadHistory } = useStudioHistory();
 
   const arrival = useMemo(() => arrivalFor(works, manuscripts), [works, manuscripts]);
   const resumeManuscriptId = arrival.resume ? manuscriptIdOf(arrival.resume) : null;
@@ -95,7 +95,7 @@ export default function P4R1HomeController() {
   }, [post]);
 
   // Resolves false when either list could not be read: the delete flow must not tell the member the page is current then.
-  const refresh = useCallback(() => reReadAll([reloadWorks, reloadManuscripts]), [reloadWorks, reloadManuscripts]);
+  const refresh = useCallback(() => reReadAll([reloadWorks, reloadManuscripts, reloadHistory]), [reloadWorks, reloadManuscripts, reloadHistory]);
 
   const open = useCallback((manuscriptId: string, sectionId?: string, newImport = false) => {
     const search = params?.toString() ?? '';
@@ -257,10 +257,11 @@ export default function P4R1HomeController() {
     }
   }, [busy, post, declare, refresh]);
 
-  // The author's own permanent deletion of one writing, through the product's governed erase. No optimistic success: the list is
-  // re-read only after the server says it is gone (including "removed, custody not yet confirmed"), and a refusal reaches the
-  // card in the author's own language. What the server said is mapped to what the page does in runDeleteWork (lib/writersStudio/
-  // deleteWork.ts), where it is tested at runtime.
+  // The author's own permanent deletion of one writing, through the product's governed erase. No optimistic success: the member is
+  // told only what the server said. The page is re-read BEFORE any outcome is reported (a delete, "removed, custody not yet
+  // confirmed", a refusal, an outcome that could not be learned), and the outcome goes to the PAGE, not to the card that asked,
+  // because that re-read may already have removed the card. What the server said is mapped to what the page does in runDeleteWork
+  // (lib/writersStudio/deleteWork.ts), where it is tested at runtime.
   const onDeleteWriting = useCallback(
     (manuscriptId: string) => runDeleteWork({ workId: null, manuscriptId }, (url, init) => apiFetch(url, init), refresh),
     [refresh],

@@ -37,6 +37,7 @@ function scriptTx(opts: { visual?: string | null; workRow?: boolean }) {
   const client = {
     query: jest.fn(async (sql: string, params: unknown[] = []) => {
       statements.push({ sql, params });
+      if (/^\s*SELECT id FROM living_works/i.test(sql)) return { rows: opts.workRow === false ? [] : [{ id: WORK }] };
       if (/FROM living_work_visuals/i.test(sql)) return { rows: opts.visual ? [{ storage_path: opts.visual }] : [] };
       if (/DELETE FROM living_works/i.test(sql)) return { rows: opts.workRow === false ? [] : [{ id: WORK }] };
       if (/INSERT INTO vault_erasure_queue/i.test(sql)) return { rows: [{ id: QUEUE }] };
@@ -69,17 +70,33 @@ describe('Remove this Work', () => {
     expect(tx).not.toHaveBeenCalled();
   });
 
-  it('a Work that is not this member\'s (or is already gone): 404, which the client reads as done, and nothing is queued or swept', async () => {
+  it('a Work that is not this member\'s (or is already gone): 404, which the client reads as done, and nothing else is read, deleted, queued or swept', async () => {
     const statements = scriptTx({ workRow: false });
     const out = await del();
     expect(out.status).toBe(404);
-    expect(statements.some((s) => /INSERT INTO vault_erasure_queue/i.test(s.sql))).toBe(false);
+    expect(statements).toHaveLength(1);                                   // the Work lock, then nothing
+    expect(statements[0]!.sql).toMatch(/SELECT id FROM living_works/i);
     expect(sweep).not.toHaveBeenCalled();
+  });
+
+  it('LOCK ORDER: the Work row is locked FIRST (as eraseManuscript does), then the image row, then the delete: the opposite order deadlocks with a Delete of the Work\'s writing', async () => {
+    const statements = scriptTx({ visual: 'work-visuals/own.png' });
+    await del();
+    const at = (re: RegExp) => statements.findIndex((s) => re.test(s.sql));
+    const workLock = at(/^\s*SELECT id FROM living_works/i);
+    const imageRead = at(/FROM living_work_visuals/i);
+    const deletion = at(/DELETE FROM living_works/i);
+    expect(workLock).toBe(0);
+    expect(statements[workLock]!.sql).toMatch(/FOR UPDATE\s*$/);
+    expect(workLock).toBeLessThan(imageRead);
+    expect(imageRead).toBeLessThan(deletion);
+    expect(statements[workLock]!.params).toEqual([WORK, MEMBER]);
   });
 
   it('the delete is scoped to the member in the same statement (a member cannot remove another member\'s Work by id)', async () => {
     const statements = scriptTx({});
     await del();
+    expect(statements.find((s) => /^\s*SELECT id FROM living_works/i.test(s.sql))!.params).toEqual([WORK, MEMBER]);
     const deletion = statements.find((s) => /DELETE FROM living_works/i.test(s.sql))!;
     expect(deletion.sql).toMatch(/member_id\s*=\s*\$2/);
     expect(deletion.params).toEqual([WORK, MEMBER]);

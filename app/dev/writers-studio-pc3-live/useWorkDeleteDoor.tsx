@@ -9,6 +9,7 @@ import {
   DeletionSharedMaterial,
   DeletionUnconfirmed,
   REMOVE_MANY_WORK_COPY,
+  RELOAD_HOME_LINE,
   deleteConfirmCopy,
   removeSharedWorkCopy,
   removedWorkNotice,
@@ -89,7 +90,7 @@ export interface WorkDeleteDoor {
   readonly door: ReactNode;
 }
 
-const RELOAD_LINE = ' We could not reload Home, so reload this page to see what is current.';
+const RELOAD_LINE = ` ${RELOAD_HOME_LINE}`;
 
 /**
  * The delete/remove door of ONE Work, shared by the shelf card and the hero Work so every Work on Home has the same way in and
@@ -98,6 +99,10 @@ const RELOAD_LINE = ' We could not reload Home, so reload this page to see what 
  *           ->  (unconfirmed custody) a page notice, because this card is about to unmount
  *           ->  (an outcome the page was re-read for) a page notice, because that re-read may have removed this card
  *   Remove  ->  a "removed" card, and a page notice, until the list is re-read
+ *
+ * A card is replaced by a "deleted" or "removed" card ONLY when the server said the Work went (`workRemoved`). A Delete the server
+ * answered without saying (the writing was already gone) or answered "the Work stays" leaves the card to the re-read and tells the
+ * member on the page.
  */
 export function useWorkDeleteDoor(args: {
   work: LivingWork;
@@ -182,20 +187,24 @@ export function useWorkDeleteDoor(args: {
             const result = await onDeleteWork(work.id, manuscriptId);
             const reload = result && !result.refreshed ? RELOAD_LINE : '';
             update({ confirming: false });
-            if (kind === 'writing-keeps-work') {
-              // The Work stays (it holds other parts): its card keeps them and its door, so no "deleted" card replaces it. The page says it, and
-              // only as far as is certain: if those parts went in the same moment (another device), the server removed the Work with its
-              // last declaration and the re-read has already taken the card away.
-              onDeletionNotice(`The writing in “${title}” was deleted. The Work stays if it still holds anything else.${reload}`, false);
-            } else {
+            // What became of the Work is the SERVER's word (`workRemoved`), never a guess from what this card last showed: a card whose
+            // picture was stale must not be turned into a "deleted" card for a Work the server kept.
+            if (result?.workRemoved === true) {
+              // The Work went with its writing. If the re-read worked this card is already gone; if it did not, the card says so.
               update({ settled: `“${title}” was deleted.` });
               if (reload) onDeletionNotice(`“${title}” was deleted.${reload}`, false);
+            } else if (result?.workRemoved === false) {
+              // The Work stays (it holds something else): its card keeps its door, so no "deleted" card replaces it. The page says it.
+              onDeletionNotice(`The writing in “${title}” was deleted. The Work stays, with what else it holds.${reload}`, false);
+            } else {
+              // The server did not say what became of the Work (the writing was already gone): say only that, and what Home now shows.
+              onDeletionNotice(`“${title}”: that writing was already gone.${result?.refreshed ? ' Home now shows what is current.' : reload}`, false);
             }
           } catch (err) {
             if (err instanceof DeletionUnconfirmed) {
-              // The writing is gone and its custody is unconfirmed. If the Work stays, its card stays (the page was re-read); if the
-              // Work went too, this card is about to unmount: either way the page carries the message.
-              update(kind === 'writing-keeps-work' ? { confirming: false } : { settled: `“${title}” was removed from your studio.`, confirming: false });
+              // The writing is gone and its custody is unconfirmed. Whether this card goes is the server's word: if the Work went too,
+              // the card says so (and is about to unmount); if the Work stays, its card stays. Either way the page carries the message.
+              update(err.workRemoved === true ? { settled: `“${title}” was removed from your studio.`, confirming: false } : { confirming: false });
               onDeletionNotice(`“${title}”: ${err.message}`);
             } else if (err instanceof DeletionNotice) {
               update({ confirming: false });

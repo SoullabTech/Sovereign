@@ -69,18 +69,21 @@ describe('full History view', () => {
     expect(alerts[0]).toContain('“Book”: custody message');
     expect(alerts[1]).toContain('“Second”: custody message');
   });
-  it('an outcome the page was re-read for (or a refusal after a re-read) is a status notice naming the writing, and closes the question', async () => {
-    for (const error of [new DeletionNotice('We could not confirm whether that work was deleted.'), new DeletionSharedMaterial('Nothing was deleted.')]) {
-      const p = base();
-      p.onDeleteWriting = jest.fn().mockRejectedValue(error);
-      render(p);
-      act(() => btns('Delete')[0].click());
-      await act(async () => btns('Delete permanently')[0].click());
-      expect(container.querySelector('[data-deleting-confirmation]')).toBeNull();
-      const note = container.querySelector('.p4r1-home-delete-notice');
-      expect(note?.getAttribute('role')).toBe('status');
-      expect(note?.textContent).toContain('“Book”: ');
-    }
+  it.each([
+    ['an unknown outcome the page was re-read for', () => new DeletionNotice('We could not confirm whether that work was deleted.'), 'We could not confirm whether that work was deleted.'],
+    ['a refusal as shared', () => new DeletionSharedMaterial('This writing is also in another of your Works. Nothing was deleted.'), 'Nothing was deleted.'],
+  ])('%s is a status notice naming the writing, and closes the question (each case on a fresh page)', async (_name, make, text) => {
+    const p = base();
+    p.onDeleteWriting = jest.fn().mockRejectedValue(make());
+    render(p);
+    act(() => btns('Delete')[0].click());
+    await act(async () => btns('Delete permanently')[0].click());
+    expect(container.querySelector('[data-deleting-confirmation]')).toBeNull();
+    const notes = container.querySelectorAll('.p4r1-home-delete-notice');
+    expect(notes).toHaveLength(1);
+    expect(notes[0]!.getAttribute('role')).toBe('status');
+    expect(notes[0]!.textContent).toContain('“Book”: ');
+    expect(notes[0]!.textContent).toContain(text);
   });
   it('a re-read that did not work is said', async () => {
     const p = base();
@@ -93,7 +96,8 @@ describe('full History view', () => {
   it('a writing in a Work that holds several says why it cannot be deleted here, and where to go', () => {
     render(base());      // m2 sits in a Work with m3
     expect(container.textContent).toContain('This writing is in a Work that holds more than one writing');
-    expect(container.textContent).toContain('take it out of that Work first');
+    expect(container.textContent).toContain('On Home, press Remove on that Work');
+    expect(container.textContent).toContain('deletes none of its writings');
   });
   it('a writing held by TWO Works has no Delete (it could only be refused) and says where the way forward is', () => {
     const p = base();
@@ -131,6 +135,7 @@ describe('full History view', () => {
     const p = base();
     render({ ...p, acts: [] }); expect(container.textContent).toContain('Nothing has been recorded yet');
     render({ ...p, phase: 'error' }); expect(container.textContent).toContain('could not be read');
+    expect(container.textContent).not.toContain('Nothing has changed');   // after an act that may have gone through, that would not be true
     act(() => btns('Try again')[0].click()); expect(p.onRetry).toHaveBeenCalled();
     render({ ...p, phase: 'unauthorized' }); expect(container.textContent).toContain('Sign in');
   });

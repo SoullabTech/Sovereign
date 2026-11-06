@@ -258,7 +258,9 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
         { status: 500 },
       );
     }
-    return NextResponse.json({ removed: true });
+    /* `workRemoved` is the SERVER's word on whether the Work the writing was declared in went with it (it did only if it declared
+       nothing else). The page never guesses this from what it last read. */
+    return NextResponse.json({ removed: true, workRemoved: outcome.workRemoved });
   } catch (err) {
     console.error('[press/manuscripts/:id] DELETE error:', err);
     return NextResponse.json({ error: 'Failed to remove manuscript' }, { status: 500 });

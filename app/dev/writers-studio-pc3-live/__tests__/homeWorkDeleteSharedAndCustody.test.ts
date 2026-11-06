@@ -37,7 +37,7 @@ import {
   runRemoveWork,
 } from '@/lib/writersStudio/deleteWork';
 import { WorkRemoveConfirm } from '@/app/dev/writers-studio-pc3-live/WorkRemoveConfirm';
-import { workDeleteKind } from '@/app/dev/writers-studio-pc3-live/useWorkDeleteDoor';
+import { workDeleteKind, writingDeleteKindFor } from '@/app/dev/writers-studio-pc3-live/useWorkDeleteDoor';
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -224,7 +224,7 @@ describe('the writing is shared with another Work (409 declared_in_other_works)'
 
 describe('the server removed the Work but could not confirm the original was destroyed (500 custody_incomplete)', () => {
   it('shows what could not be confirmed on the page, even though the card has finished with its dialog', async () => {
-    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE));
+    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE, true));
     await pressDeleteAndConfirm();
     expect(host.textContent).toContain('we are not going to tell you it is gone');
     expect(host.querySelector('[data-deleting-confirmation]')).toBeNull();
@@ -232,13 +232,13 @@ describe('the server removed the Work but could not confirm the original was des
   });
 
   it('the notice is an ALERT (announced when it appears), unlike the plain confirmation of a removal', async () => {
-    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE));
+    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE, true));
     await pressDeleteAndConfirm();
     expect(host.querySelector('[data-delete-notice]')?.getAttribute('role')).toBe('alert');
   });
 
   it('it survives the card: once the list is re-read without the removed Work, the notice is still on the page', async () => {
-    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE));
+    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE, true));
     await pressDeleteAndConfirm();
     act(() => root.render(React.createElement(P4R1HomeView, { ...baseProps, works: [workB] } as any)));
     // The removed Work has no card any more; only the page notice (which names it) remains.
@@ -249,7 +249,7 @@ describe('the server removed the Work but could not confirm the original was des
   });
 
   it('the Work card itself says only that it was removed from the studio, until the list is re-read', async () => {
-    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE));
+    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE, true));
     await pressDeleteAndConfirm();
     expect(host.querySelector('[data-removed]')?.textContent).toBe('“Fictional Work A” was removed from your studio.');
     expect(host.querySelector('[data-removed] button')).toBeNull();
@@ -257,7 +257,7 @@ describe('the server removed the Work but could not confirm the original was des
 
   it('it survives the LAST Work being deleted: the welcome screen the member lands on carries the notice', async () => {
     act(() => root.render(React.createElement(P4R1HomeView, { ...baseProps, works: [workA], manuscripts: [sharedManuscript] } as any)));
-    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE));
+    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE, true));
     await pressDeleteAndConfirm();
     act(() => root.render(React.createElement(P4R1HomeView, { ...baseProps, works: [], manuscripts: [], arrival: { ...orient, kind: 'begin' } } as any)));
     expect(host.querySelector('.fr-home-begin')).not.toBeNull();
@@ -265,7 +265,7 @@ describe('the server removed the Work but could not confirm the original was des
   });
 
   it('the notice can be dismissed', async () => {
-    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE));
+    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE, true));
     await pressDeleteAndConfirm();
     await click('Dismiss');
     expect(host.textContent).not.toContain('we are not going to tell you it is gone');
@@ -285,7 +285,7 @@ describe('the custody notice reaches the page in every Home layout that shows Wo
   ];
   for (const [name, extra] of layouts) {
     it(`${name}`, async () => {
-      onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE));
+      onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE, true));
       act(() => root.render(React.createElement(P4R1HomeView, { ...baseProps, ...extra } as any)));
       // The Work card with a Delete door: the first Delete on the page that belongs to a Work shelf card.
       const open = Array.from(host.querySelectorAll('.p4r1-home-workcard button.p4r1-home-delete-open'))[0] as HTMLButtonElement;
@@ -374,7 +374,7 @@ describe('the removal act itself', () => {
   it('sends ONE request to the Work route and never to the manuscript erase route', async () => {
     const calls: string[] = [];
     const out = await removeWork('fictional-work-a', async (url, init) => { calls.push(`${init.method} ${url}`); return fake(200, { withdrawn: 'fictional-work-a' }); });
-    expect(out).toEqual({ ok: true });
+    expect(out).toEqual({ ok: true, workRemoved: true });
     expect(calls).toEqual(['DELETE /api/sovereign/living-works/fictional-work-a']);
   });
 });
@@ -402,7 +402,7 @@ describe('the removal act, when the server does not simply say yes', () => {
     expect((out as any).message).toContain('Sign in again');
   });
   it('a Work already gone (404) is done', async () => {
-    expect(await removeWork('w', async () => fake(404))).toEqual({ ok: true });
+    expect(await removeWork('w', async () => fake(404))).toEqual({ ok: true, workRemoved: true });
   });
 });
 
@@ -512,6 +512,26 @@ describe('the page-level act (runDeleteWork / runRemoveWork): what the page does
   });
 });
 
+describe('what deleting THIS writing reaches, asked from the writing (writingDeleteKindFor)', () => {
+  const ex = (id: string, type = 'manuscript') => ({ expressionType: type, expressionId: id, declaredAt: '2026-10-01T00:00:00Z' });
+  const work = (id: string, expressions: any[]) => ({ ...makeWork(id, id), expressions }) as any;
+  it('no Work holds it: loose', () => {
+    expect(writingDeleteKindFor('a', [])).toBe('loose');
+    expect(writingDeleteKindFor('a', [work('w', [ex('b')])])).toBe('loose');
+  });
+  it('one Work holds only this writing: the Work goes with it', () => {
+    expect(writingDeleteKindFor('a', [work('w', [ex('a')])])).toBe('writing');
+  });
+  it('the Work holds another part too, or another writing: the Work stays', () => {
+    expect(writingDeleteKindFor('a', [work('w', [ex('a'), ex('x', 'visual')])])).toBe('writing-from-work');
+    expect(writingDeleteKindFor('a', [work('w', [ex('a'), ex('b')])])).toBe('writing-from-work');
+  });
+  it('several Works hold it: the strongest claim is not made (it is "from a Work that stays" for every holder that holds more)', () => {
+    expect(writingDeleteKindFor('a', [work('w1', [ex('a')]), work('w2', [ex('a'), ex('b')])])).toBe('writing-from-work');
+    expect(writingDeleteKindFor('a', [work('w1', [ex('a')]), work('w2', [ex('a')])])).toBe('writing');
+  });
+});
+
 describe('what a Work\'s door is, from what it holds (workDeleteKind)', () => {
   const ms = (id: string) => ({ ...sharedManuscript, id });
   const ex = (id: string, type = 'manuscript') => ({ expressionType: type, expressionId: id, declaredAt: '2026-10-01T00:00:00Z' });
@@ -532,7 +552,7 @@ describe('what a Work\'s door is, from what it holds (workDeleteKind)', () => {
   it('several writings declared even when only one is on screen: still Remove, never a guess at which one', () => {
     expect(workDeleteKind(work([ex('a'), ex('b')]), [ms('a')] as any)).toEqual({ kind: 'many', manuscriptId: null });
   });
-  it('a writing the list does not show (declared, but not read back) still names itself, so Delete can reach the server\'s 404 follow-through', () => {
+  it('a writing the list does not show (declared, but not read back) still names itself, so Delete reaches the server, which finishes a declaration that outlived its writing', () => {
     expect(workDeleteKind(work([ex('gone')]), [] as any)).toEqual({ kind: 'writing', manuscriptId: 'gone' });
   });
 });
@@ -560,19 +580,19 @@ describe('each Delete confirmation says what is true of THIS Work and no more', 
     expect(text).toContain('Delete the writing in “Fictional Work A”?');
     expect(text).toContain('The Work itself stays');
     expect(text).toContain('conversations with MAIA about the writing');
-    onDeleteWork.mockResolvedValue(undefined);
+    onDeleteWork.mockResolvedValue({ refreshed: true, workRemoved: false });          // the server says the Work stays
     await click(DELETE_WORK_COPY.confirm);
     expect(onDeleteWork).toHaveBeenCalledWith('fictional-work-a', 'fictional-shared-manuscript');
     // And the Work\'s own card is NOT replaced by a ghost: it stays, and the page says what happened.
     expect(host.querySelector('[data-removed]')).toBeNull();
-    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('The writing in “Fictional Work A” was deleted. The Work stays if it still holds anything else.');
+    expect(host.querySelector('[data-delete-notice]')?.textContent).toContain('The writing in “Fictional Work A” was deleted. The Work stays, with what else it holds.');
   });
   it('a Work with no writing: says only the Work goes, and sends no manuscript id', async () => {
     const empty = { ...workA, expressions: [] };
     renderWith([empty, workB], [sharedManuscript]);
     await openDelete();
     expect(host.querySelector('[data-deleting-confirmation]')!.textContent).toContain('This Work has no writing in it');
-    onDeleteWork.mockResolvedValue(undefined);
+    onDeleteWork.mockResolvedValue({ refreshed: true, workRemoved: true });
     await click(DELETE_WORK_COPY.confirm);
     expect(onDeleteWork).toHaveBeenCalledWith('fictional-work-a', null);
     expect(host.querySelector('[data-removed]')?.textContent).toBe('“Fictional Work A” was deleted.');
@@ -679,7 +699,7 @@ describe('the hero Work has the same door as every other Work', () => {
   });
   it('the custody notice from the hero Work survives the anchor unmounting', async () => {
     renderReturning();
-    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE));
+    onDeleteWork.mockRejectedValue(new DeletionUnconfirmed(CUSTODY_MESSAGE, true));
     await act(async () => { anchorDoor()!.click(); });
     await click(DELETE_WORK_COPY.confirm);
     act(() => root.render(React.createElement(P4R1HomeView, { ...baseProps, works: [workB], manuscripts: [], returnWork: null, arrival: { ...orient, kind: 'begin' } } as any)));
@@ -736,10 +756,15 @@ describe('controller wiring (source-reading; comments stripped)', () => {
     expect(controller).toMatch(/runDeleteWork\(\{ workId, manuscriptId \}, \(url, init\) => apiFetch\(url, init\), refresh\)/);
     expect(controller).toMatch(/runRemoveWork\(workId, \(url, init\) => apiFetch\(url, init\), refresh\)/);
   });
-  it('the re-read the delete flow uses covers BOTH lists and reports whether it worked', () => {
-    expect(controller).toMatch(/const refresh = useCallback\(\(\) => reReadAll\(\[reloadWorks, reloadManuscripts\]\), \[reloadWorks, reloadManuscripts\]\)/);
+  it('the re-read the delete flow uses covers EVERY list Home shows (Works, writings, its short History) and reports whether it worked', () => {
+    expect(controller).toMatch(/const refresh = useCallback\(\(\) => reReadAll\(\[reloadWorks, reloadManuscripts, reloadHistory\]\), \[reloadWorks, reloadManuscripts, reloadHistory\]\)/);
   });
   it('hands onRemoveWork to the Home view', () => {
     expect(controller).toMatch(/onRemoveWork=\{onRemoveWork\}/);
+  });
+  it('the controller itself never names the manuscript erase route and holds no outcome-mapping of its own (that lives in runDeleteWork, where it is tested at runtime)', () => {
+    expect(controller).not.toMatch(/api\/sovereign\/manuscripts/);
+    expect(controller).not.toMatch(/outcome\.(refusal|removed|unknown)/);
+    expect(controller).not.toMatch(/DeletionSharedMaterial|DeletionUnconfirmed|DeletionNotice/);
   });
 });
