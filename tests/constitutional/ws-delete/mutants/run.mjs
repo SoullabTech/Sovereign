@@ -118,7 +118,7 @@ const MUTANTS = [
   ['L39', 'jest', LIB, 'throw new DeletionUnconfirmed(withReload(outcome.message, fresh), true)', 'throw new DeletionUnconfirmed(outcome.message, true)', 'an unconfirmed Remove whose re-read failed does not tell the member to reload'],
   ['L40', 'jest', LIB, 'throw new DeletionSharedMaterial(withReload(outcome.message, fresh), fresh)', 'throw new DeletionSharedMaterial(outcome.message)', 'a shared refusal whose re-read failed does not tell the member to reload'],
   ['L41', 'jest', LIB, 'if (res.ok || res.status === 404) return { ok: true, workRemoved: true };', 'if (res.ok || res.status === 404) return { ok: true };', 'a successful Remove does not say the Work is gone'],
-  ['L42', 'jest', LIB, '...(outcome.workRemoved !== undefined ? { workRemoved: outcome.workRemoved } : {})', '', 'the server\'s word on the Work is dropped before it reaches the page'],
+  ['L42', 'jest', LIB, '...(outcome.workRemoved !== undefined ? { workRemoved: outcome.workRemoved } : {}),', '', 'the server\'s word on the Work is dropped before it reaches the page'],
   ['L44', 'jest', LIB, ': { ok: true, alreadyGone: true };', ': { ok: true };', 'a 404 (the writing was already gone) is indistinguishable from a 200 that did not say, so the page cannot word them differently'],
   ['L45', 'jest', LIB, 'throw new DeletionSharedMaterial(withReload(outcome.message, fresh), fresh)', 'throw new DeletionSharedMaterial(withReload(outcome.message, fresh), true)', 'a shared refusal does not say its re-read failed, so a Work card that cannot see the other Work cannot say why'],
   ['L43', 'jest', LIB, '(viaWorkRoute ? true : undefined)', 'undefined', 'the Work route\'s owed-image answer does not say the Work is gone'],
