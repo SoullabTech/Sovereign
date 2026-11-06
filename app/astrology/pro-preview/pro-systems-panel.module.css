@@ -23,3 +23,4 @@
 .note { color: #9fb2b9; font-size: .82rem; margin: 12px 0 0; line-height: 1.45; }
 .alert { color: #f4daac; margin: 10px 0 0; }
 @media (max-width: 560px) { .facts { grid-template-columns: 1fr; } .facts dd { margin-bottom: 6px; } }
+.subhead { margin: 22px 0 4px; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: #9fd0d8; }

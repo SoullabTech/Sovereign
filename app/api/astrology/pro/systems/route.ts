@@ -2,7 +2,8 @@
  * ASTRO-PRO-SYSTEMS-01 — Vedic, Chinese and Mayan views of a Pro chart.
  *
  * POST /api/astrology/pro/systems
- * body: { subject: 'own' | <saved chart id>, ayanamsa?: 'lahiri' | 'true_chitra' | 'krishnamurti' }
+ * body: { subject: 'own' | <saved chart id>, ayanamsa?: 'lahiri' | 'true_chitra' | 'krishnamurti',
+ *         dayStart?: 'midnight' | 'zi-hour' }
  *
  * Birth details are read on the server for the verified owner only and are
  * never returned. The calculation is the Free Astrology calculators', shared.
@@ -28,11 +29,13 @@ export async function POST(request: NextRequest) {
   } catch {
     return proError(400, 'invalid_request');
   }
-  if (Object.keys(input).some((key) => !['subject', 'ayanamsa'].includes(key))) {
+  if (Object.keys(input).some((key) => !['subject', 'ayanamsa', 'dayStart'].includes(key))) {
     return proError(400, 'unexpected_field');
   }
   const ayanamsa = input.ayanamsa ?? 'lahiri';
   if (!PRO_SYSTEMS_AYANAMSAS.includes(ayanamsa as AyanamsaType)) return proError(400, 'ayanamsa_unsupported');
+  const dayStart = input.dayStart ?? 'midnight';
+  if (dayStart !== 'midnight' && dayStart !== 'zi-hour') return proError(400, 'day_start_unsupported');
 
   try {
     const subject = await loadSubjectBirth(owner.memberId, input.subject);
@@ -40,7 +43,7 @@ export async function POST(request: NextRequest) {
     const natal = admitProCalculation({ ...subject.birth, houseSystem: 'whole-sign' });
     if (!natal.ok) return proError(422, natal.error);
 
-    const systems = await calculateProOtherSystems(subject.birth, natal.verifiedUtc, ayanamsa as AyanamsaType);
+    const systems = await calculateProOtherSystems(subject.birth, natal.verifiedUtc, ayanamsa as AyanamsaType, dayStart);
 
     if (!(await proOwnerStillCurrent(request, owner.memberId))) return proError(401, 'session_changed');
     const recheck = await loadSubjectBirth(owner.memberId, input.subject);

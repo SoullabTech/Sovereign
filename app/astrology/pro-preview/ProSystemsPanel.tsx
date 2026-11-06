@@ -3,13 +3,17 @@
 /**
  * ASTRO-PRO-SYSTEMS-01 — the open chart in the other systems Free Astrology
  * already calculates: Vedic (sidereal, nakshatras, Vimshottari dasha),
- * Chinese (year sign) and Mayan (Dreamspell Tzolk'in and Haab).
- * Only the subject ("own" or a saved chart id) and the ayanamsa travel;
+ * Chinese (Four Pillars, luck pillars and year sign) and Mayan (Dreamspell
+ * Tzolk'in and Haab).
+ * Only the subject ("own" or a saved chart id), the ayanamsa and the day-start
+ * convention travel;
  * birth details stay on the server.
  */
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { ProOtherSystems } from '@/lib/astrology/proOtherSystems';
+import type { DayStart } from '@/lib/astrology/proFourPillars';
+import ProFourPillars from './ProFourPillars';
 import NakshatraCard from '@/components/astrology/NakshatraCard';
 import DashaTimeline from '@/components/astrology/DashaTimeline';
 import styles from './pro-systems-panel.module.css';
@@ -37,19 +41,20 @@ const fmtDeg = (d: number) => {
 export default function ProSystemsPanel({ subjectId, chartLabel }: { subjectId: string; chartLabel: string }) {
   const [tab, setTab] = useState<SystemTab>('vedic');
   const [ayanamsa, setAyanamsa] = useState<Ayanamsa>('lahiri');
+  const [dayStart, setDayStart] = useState<DayStart>('midnight');
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ProOtherSystems | null>(null);
 
   useEffect(() => { setData(null); setError(null); }, [subjectId]);
 
-  async function calculate(nextAyanamsa: Ayanamsa = ayanamsa) {
+  async function calculate(nextAyanamsa: Ayanamsa = ayanamsa, nextDayStart: DayStart = dayStart) {
     setStatus('loading');
     setError(null);
     try {
       const reply = await apiFetch('/api/astrology/pro/systems', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
-        body: JSON.stringify({ subject: subjectId, ayanamsa: nextAyanamsa }),
+        body: JSON.stringify({ subject: subjectId, ayanamsa: nextAyanamsa, dayStart: nextDayStart }),
       });
       const body = await reply.json().catch(() => ({}));
       if (!reply.ok || !body?.data?.vedic) {
@@ -86,6 +91,19 @@ export default function ProSystemsPanel({ subjectId, chartLabel }: { subjectId: 
               if (data) void calculate(next);
             }}>
               {AYANAMSAS.map(([value, text]) => <option key={value} value={value}>{text}</option>)}
+            </select>
+          </label>
+        )}
+        {tab === 'chinese' && (
+          <label>
+            Day begins at
+            <select value={dayStart} onChange={(e) => {
+              const next = e.target.value as DayStart;
+              setDayStart(next);
+              if (data) void calculate(ayanamsa, next);
+            }}>
+              <option value="midnight">Midnight</option>
+              <option value="zi-hour">23:00, the Zi hour</option>
             </select>
           </label>
         )}
@@ -140,6 +158,8 @@ function VedicView({ v }: { v: ProOtherSystems['vedic'] }) {
 function ChineseView({ c }: { c: ProOtherSystems['chinese'] }) {
   return (
     <div role="tabpanel" aria-label="Chinese">
+      <ProFourPillars fp={c.fourPillars} />
+      <h4 className={styles.subhead}>Year sign</h4>
       <p className={styles.headline}>
         <span aria-hidden="true">{c.symbol}</span> {c.yinYang === 'yang' ? 'Yang' : 'Yin'}{' '}
         <span className={styles.cap}>{c.element}</span> {c.animal}{' '}
