@@ -7,7 +7,8 @@
  * ends with the reflective question Pro already uses, so the reader's own
  * meaning stays first.
  */
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { usePanelState } from './panelMemory';
 import { MAJOR_ASPECTS, type BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { chartBodies } from '@/lib/astrology/proChartGeometry';
 import {
@@ -22,7 +23,7 @@ export default function ProTraditionReport({
   chartLabel: string;
   questions: Record<string, string>;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = usePanelState('traditionreport.open', false);
   const bodies = useMemo(() => chartBodies(chart), [chart]);
   const aspects = useMemo(
     () => (chart.aspects || []).filter((a) => Number.isFinite(a.orb) && a.orb <= 4 && MAJOR_ASPECTS.has(a.type))

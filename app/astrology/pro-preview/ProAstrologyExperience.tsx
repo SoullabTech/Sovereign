@@ -25,6 +25,7 @@ import ProAspectGrid from './ProAspectGrid';
 import ProComparePanel from './ProComparePanel';
 import ProDerivedPanel from './ProDerivedPanel';
 import ProSystemsPanel, { type SystemsWork } from './ProSystemsPanel';
+import { PanelMemoryProvider } from './panelMemory';
 import ProChartViews from './ProChartViews';
 import ProEphemerisPanel from './ProEphemerisPanel';
 import ProAstroMapPanel from './ProAstroMapPanel';
@@ -452,7 +453,11 @@ export default function ProAstrologyExperience() {
   // A future approved transfer must be bound to the receiving server route.
 
 
+  // Panels keep their place for this member, chart revision and house system only.
+  const panelScope = memberId && sourceRevision ? `${memberId}|${sourceRevision}|${houseSystem}` : null;
+
   return (
+    <PanelMemoryProvider scope={panelScope}>
     <main className={styles.studio} id="astrology-pro-preview">
       <header className={styles.topbar}>
         <Link href="/astrology" className={styles.brand} aria-label="Return to Soullab Astrology">
@@ -776,5 +781,6 @@ export default function ProAstrologyExperience() {
         </footer>
       </div>
     </main>
+    </PanelMemoryProvider>
   );
 }

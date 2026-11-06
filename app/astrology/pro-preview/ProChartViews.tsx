@@ -5,7 +5,8 @@
  * open chart. Pure transforms of the calculated chart plus the Vertex and
  * ayanamsa the server returned; nothing is sent anywhere.
  */
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { usePanelState } from './panelMemory';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { SIGNS, normalizeLongitude } from '@/lib/astrology/proChartGeometry';
 import type { ChartPoints } from '@/lib/astrology/proChartPoints';
@@ -23,9 +24,9 @@ function format(longitude: number): string {
 }
 
 export default function ProChartViews({ chart, points }: { chart: BirthChart; points: ChartPoints | null }) {
-  const [view, setView] = useState<'points' | 'sidereal' | 'harmonic'>('points');
-  const [harmonic, setHarmonic] = useState(5);
-  const [focus, setFocus] = useState('Sun');
+  const [view, setView] = usePanelState<'points' | 'sidereal' | 'harmonic'>('chartviews.view', 'points');
+  const [harmonic, setHarmonic] = usePanelState('chartviews.harmonic', 5);
+  const [focus, setFocus] = usePanelState('chartviews.focus', 'Sun');
 
   const chartLots = useMemo(() => lots(chart), [chart]);
   const sidereal = useMemo(

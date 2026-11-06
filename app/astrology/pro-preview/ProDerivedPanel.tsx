@@ -6,6 +6,7 @@
  * the kind, the date and the body travel; birth details stay on the server.
  */
 import { useEffect, useState } from 'react';
+import { usePanelState } from './panelMemory';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { hasValidChartGeometry } from '@/lib/astrology/proChartGeometry';
@@ -48,14 +49,23 @@ export default function ProDerivedPanel({
   houseSystem: string;
   onOuter: (bodies: TransitBody[], label: string | null) => void;
 }) {
-  const [choice, setChoice] = useState<Choice>('progressed');
-  const [date, setDate] = useState(today);
+  const [choice, setChoice] = usePanelState<Choice>('derived.choice', 'progressed');
+  const [date, setDate] = usePanelState('derived.date', today);
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ chart: BirthChart; instant: string; label: string; method: string } | null>(null);
-  const [focus, setFocus] = useState('Sun');
+  const [result, setResult] = usePanelState<{ chart: BirthChart; instant: string; label: string; method: string } | null>('derived.result', null);
+  const [focus, setFocus] = usePanelState('derived.focus', 'Sun');
 
-  useEffect(() => { setResult(null); setError(null); }, [subjectId, houseSystem]);
+  // Clear on a change of chart or house system, not when the panel remounts for the same one.
+  const [shownFor, setShownFor] = usePanelState('derived.for', subjectId + '|' + houseSystem);
+  useEffect(() => {
+    const key = subjectId + '|' + houseSystem;
+    if (key === shownFor) return;
+    setShownFor(key);
+    setResult(null);
+    setError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjectId, houseSystem]);
 
   async function calculate() {
     setStatus('loading');
