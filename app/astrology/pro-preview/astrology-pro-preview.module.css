@@ -362,4 +362,16 @@
 .orbFilterControl{display:flex;align-items:center;gap:8px;font-size:.81rem;color:#e9d8b9}
 .orbFilterControl select{font:inherit;min-width:120px;padding:8px 10px;border:1px solid rgba(211,177,119,.45);border-radius:5px;color:#f3e8d5;background:#17202b}
 .orbFilterControl select:focus-visible{outline:2px solid #e6c998;outline-offset:3px}
+.orbSettings{position:relative;font-size:.81rem;color:#e9d8b9}
+.orbSettings summary{cursor:pointer;list-style:none;padding:8px 12px;border:1px solid rgba(211,177,119,.45);border-radius:5px;background:#17202b;color:#f3e8d5}
+.orbSettings summary::-webkit-details-marker{display:none}
+.orbSettings summary:focus-visible{outline:2px solid #e6c998;outline-offset:3px}
+.orbSettingsPanel{position:absolute;right:0;top:calc(100% + 6px);z-index:20;width:min(420px,calc(100vw - 32px));padding:14px;border:1px solid rgba(211,177,119,.45);border-radius:8px;background:#121a24;box-shadow:0 12px 32px rgba(0,0,0,.45)}
+.orbSettingsPanel p{margin:0 0 12px;line-height:1.45;color:#cdbf9f}
+.orbSettingsGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px}
+.orbSettingsGrid label{display:grid;grid-template-columns:1fr 64px 10px;align-items:center;gap:6px}
+.orbSettingsGrid input{font:inherit;width:100%;padding:5px 6px;border:1px solid rgba(211,177,119,.35);border-radius:4px;color:#f3e8d5;background:#17202b}
+.orbSettingsGrid input:focus-visible{outline:2px solid #e6c998;outline-offset:2px}
+.orbSettingsPanel button{margin-top:12px;font:inherit;padding:7px 12px;border:1px solid rgba(211,177,119,.45);border-radius:5px;color:#f3e8d5;background:transparent;cursor:pointer}
+@media(max-width:700px){.orbSettings{width:100%}.orbSettingsPanel{position:static;width:100%;margin-top:6px}.orbSettingsGrid{grid-template-columns:1fr}}
 @media(max-width:700px){.orbFilterControl{width:100%;justify-content:space-between}.orbFilterControl select{min-width:0;max-width:65%;width:56%}}
