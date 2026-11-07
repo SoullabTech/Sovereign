@@ -57,3 +57,5 @@
 .shareRow .shareBox input[readonly] { max-width: 40rem; }
 .offeredBy { display: grid; gap: 4px; }
 .offeredBy input { max-width: 24rem; background: rgba(16, 38, 58, .9); color: #f3e6cd; border: 1px solid rgba(224, 196, 149, .5); border-radius: 6px; padding: 6px 8px; font: inherit; }
+.timeReading { display: block; margin-top: 4px; font-size: .78rem; color: #9fb2b9; }
+input[aria-invalid="true"] + .timeReading { color: #f4daac; }
