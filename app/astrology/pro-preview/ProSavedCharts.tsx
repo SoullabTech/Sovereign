@@ -180,7 +180,7 @@ export default function ProSavedCharts({
         <div>
           <span className={styles.eyebrow}>CHARTS FOR OTHER PEOPLE</span>
           <h2 id="saved-charts-title">Saved charts</h2>
-          <p>Make a chart from anyone’s birth details and keep it here. Only you can see your saved charts. MAIA reads one only when you start a Soul Portrait from it, and a client sees theirs only if you share a link.</p>
+          <p>Make a chart from anyone’s birth details and keep it here. Only you can see your saved charts. MAIA reads one only when you ask MAIA about it or start a Soul Portrait from it, and a client sees theirs only if you share a link.</p>
         </div>
         {!formOpen && (
           <button className={styles.primary} onClick={() => { setFormOpen(true); setMessage(null); }}>

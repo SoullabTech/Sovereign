@@ -151,7 +151,8 @@ export default function ProSystemsPanel({ subjectId, chartLabel, work, onWork }:
       {error && <p role="alert" className={styles.alert}>{error}</p>}
       {w.data && w.tab === 'vedic' && <VedicView v={w.data.vedic} />}
       {w.data && w.tab === 'chinese' && (
-        <ChineseView c={w.data.chinese} direction={w.luckDirection} onDirection={(d) => update({ luckDirection: d })} />
+        <ChineseView c={w.data.chinese} direction={w.luckDirection} onDirection={(d) => update({ luckDirection: d })}
+          ask={{ subject: subjectId, readsWhose: `${chartLabel === 'my chart' ? 'your' : chartLabel + '’s'} chart` }} />
       )}
       {w.data && w.tab === 'mayan' && <MayanView m={w.data.mayan} />}
     </div>
@@ -192,12 +193,13 @@ function VedicView({ v }: { v: ProOtherSystems['vedic'] }) {
   );
 }
 
-function ChineseView({ c, direction, onDirection }: {
+function ChineseView({ c, direction, onDirection, ask }: {
+  ask: { subject: string; readsWhose: string };
   c: ProOtherSystems['chinese']; direction: LuckDirectionChoice; onDirection: (d: LuckDirectionChoice) => void;
 }) {
   return (
     <div role="tabpanel" aria-label="Chinese">
-      <ProFourPillars fp={c.fourPillars} direction={direction} onDirection={onDirection} />
+      <ProFourPillars fp={c.fourPillars} direction={direction} onDirection={onDirection} ask={ask} />
       <h4 className={styles.subhead}>Year sign</h4>
       <p className={styles.headline}>
         <span aria-hidden="true">{c.symbol}</span> {c.yinYang === 'yang' ? 'Yang' : 'Yin'}{' '}

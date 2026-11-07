@@ -10,6 +10,7 @@
  * saved chart does not record.
  */
 import type { FourPillars, LuckDirection, Pillar } from '@/lib/astrology/proFourPillars';
+import ProAskMaiaPanel from './ProAskMaiaPanel';
 import styles from './pro-four-pillars.module.css';
 
 const ELEMENT_CLASS: Record<string, string> = {
@@ -128,8 +129,10 @@ function LuckTimeline({ luck, fp }: { luck: LuckDirection; fp: FourPillars }) {
 
 export type LuckDirectionChoice = 'forward' | 'backward' | null;
 
-export default function ProFourPillars({ fp, direction, onDirection }: {
+export default function ProFourPillars({ fp, direction, onDirection, ask }: {
   fp: FourPillars; direction: LuckDirectionChoice; onDirection: (d: LuckDirectionChoice) => void;
+  /** Ask MAIA about these pillars. */
+  ask?: { subject: string; readsWhose: string };
 }) {
   const [year, month, day, hour] = fp.pillars;
   const luck = direction ? fp.luck[direction] : null;
@@ -170,6 +173,10 @@ export default function ProFourPillars({ fp, direction, onDirection }: {
         </div>
       </div>
       {luck && <LuckTimeline luck={luck} fp={fp} />}
+      {ask && (
+        <ProAskMaiaPanel subjectLabel="the Four Pillars" readsWhose={ask.readsWhose}
+          request={{ section: 'four-pillars', subject: ask.subject, dayStart: fp.dayStart, direction }} />
+      )}
       <p className={styles.note}>Method: {fp.method}</p>
     </section>
   );
