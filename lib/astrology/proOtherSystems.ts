@@ -16,6 +16,7 @@ import {
   getChineseElement, getChineseZodiacAnimal, getSexagenaryPosition, getYinYang,
 } from './chineseAstrology';
 import { calculateCompleteMayanProfile } from './mayanAstrology';
+import { traditionalMaya, type TraditionalMaya } from './proTraditionalMaya';
 import { calculateFourPillars, type DayStart, type FourPillars } from './proFourPillars';
 import type {
   AyanamsaType, GrahaName, NakshatraInfo, VimshottariDashaProfile,
@@ -63,6 +64,9 @@ export interface ProOtherSystems {
     method: string;
   };
   mayan: {
+    /** The traditional day count (K'iche' / Yucatec), Haab and Long Count. */
+    traditional: TraditionalMaya;
+    /** The rest is the Dreamspell count, a modern system, labelled as such. */
     galacticSignature: string;
     daySign: { name: string; glyph: string; archetype: string; meaning: string };
     tone: { number: number; name: string; meaning: string };
@@ -170,6 +174,7 @@ export async function calculateProOtherSystems(
       method: 'Year sign from the Free Chinese calculator, counted by Gregorian birth year. Births before Chinese New Year (late January to mid February) may belong to the previous year’s sign.',
     },
     mayan: {
+      traditional: traditionalMaya(birth.date),
       galacticSignature: mayan.tzolkin.galacticSignature,
       daySign: {
         name: mayan.tzolkin.daySign.name,
