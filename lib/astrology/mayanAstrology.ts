@@ -525,40 +525,67 @@ export const GALACTIC_TONES: Record<GalacticTone, GalacticToneInfo> = {
 };
 
 /**
+ * Dreamspell (José Argüelles) Kin of 26 July 1987 — the Dreamspell new year.
+ * Cross-checked against 21 Dec 2012 = Kin 207 (Blue Crystal Hand).
+ * (An earlier version treated this epoch as position 0 and counted Feb 29,
+ * which put every date 30 Kin off; 3 Sep 2003 read Kin 163 instead of 193.)
+ */
+const DREAMSPELL_EPOCH_UTC = Date.UTC(1987, 6, 26);
+const DREAMSPELL_EPOCH_KIN = 34;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function isLeapYear(y: number): boolean {
+  return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+}
+
+/**
+ * Dreamspell Kin 1-260 for a calendar date. Counts the UTC calendar date,
+ * and skips 29 February (it shares the Kin of 28 February).
+ */
+export function dreamspellKin(date: Date): number {
+  let y = date.getUTCFullYear();
+  let m = date.getUTCMonth();
+  let d = date.getUTCDate();
+  if (m === 1 && d === 29) d = 28;
+  const target = Date.UTC(y, m, d);
+  let days = Math.round((target - DREAMSPELL_EPOCH_UTC) / MS_PER_DAY);
+  const lo = Math.min(target, DREAMSPELL_EPOCH_UTC);
+  const hi = Math.max(target, DREAMSPELL_EPOCH_UTC);
+  let leapDays = 0;
+  for (let yr = new Date(lo).getUTCFullYear(); yr <= new Date(hi).getUTCFullYear(); yr++) {
+    if (!isLeapYear(yr)) continue;
+    const feb29 = Date.UTC(yr, 1, 29);
+    if (feb29 > lo && feb29 <= hi) leapDays++;
+  }
+  days += days >= 0 ? -leapDays : leapDays;
+  return ((((DREAMSPELL_EPOCH_KIN - 1 + days) % 260) + 260) % 260) + 1;
+}
+
+/**
  * Calculate Mayan birth sign from Gregorian date
- * Uses correlation: July 26, 1987 = 1 Imix (Dreamspell/Jose Arguelles correlation)
+ * Dreamspell count: 26 July 1987 = Kin 34 (see dreamspellKin).
  */
 export function calculateMayanBirthSign(birthDate: Date): MayanBirthSign {
-  // Dreamspell epoch: July 26, 1987 = 0 Imix 0
-  const dreamspellEpoch = new Date('1987-07-26');
-  const daysSinceEpoch = Math.floor(
-    (birthDate.getTime() - dreamspellEpoch.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const kin = dreamspellKin(birthDate); // 1-260
+  const kinIndex = kin - 1; // 0-259
 
-  // Calculate position in 260-day cycle
-  const tzolkinNumber = ((daysSinceEpoch % 260) + 260) % 260; // Handle negative numbers
-  const tzolkinDay = tzolkinNumber === 0 ? 260 : tzolkinNumber;
-
-  // Calculate tone (1-13)
-  const toneNumber = ((tzolkinNumber % 13) + 1) as GalacticTone;
-  if (toneNumber === 0) toneNumber as GalacticTone;
-
-  // Calculate day sign (0-19 maps to signs)
-  const daySignIndex = tzolkinNumber % 20;
+  // Tone cycles 1-13; day sign cycles through the 20 signs from Imix.
+  const toneNumber = ((kinIndex % 13) + 1) as GalacticTone;
   const daySignKeys = Object.keys(MAYAN_DAY_SIGNS) as MayanDaySign[];
-  const daySignKey = daySignKeys[daySignIndex];
+  const daySignKey = daySignKeys[kinIndex % 20];
 
   const daySign = MAYAN_DAY_SIGNS[daySignKey];
   const tone = GALACTIC_TONES[toneNumber];
 
-  // Calculate wavespell (groups of 13 days)
-  const wavespellNumber = Math.floor(tzolkinNumber / 13) + 1;
-  const wavespellSign = daySignKeys[((wavespellNumber - 1) % 20)];
+  // Wavespell = the 13-Kin group; named for the sign of its first Kin
+  // (tone 1), which is Kin 13 * (wavespell - 1) + 1.
+  const wavespellIndex = Math.floor(kinIndex / 13); // 0-19
+  const wavespellSign = daySignKeys[(wavespellIndex * 13) % 20];
 
   return {
     daySign,
     tone,
-    tzolkinNumber: tzolkinDay,
+    tzolkinNumber: kin,
     wavespell: `${MAYAN_DAY_SIGNS[wavespellSign].name} Wavespell`,
     galacticSignature: `${tone.name} ${daySign.name}`,
   };
