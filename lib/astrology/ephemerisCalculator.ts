@@ -12,6 +12,7 @@
  * - Dane Rudhyar (The Astrology of Personality)
  */
 
+import { placidusCusps, kochCusps, HOUSE_GEOMETRY_UNAVAILABLE } from './quadrantHouses';
 import { INCLUDE_UNVERIFIED_ASTEROIDS } from './unverifiedBodies';
 import * as Astronomy from 'astronomy-engine';
 
@@ -45,6 +46,8 @@ export interface PlanetPosition {
 }
 
 export interface BirthChart {
+  /** The house system actually used (Placidus/Koch fall back to Porphyry where they do not exist). */
+  houseSystemApplied?: HouseSystem;
   sun: PlanetPosition;
   moon: PlanetPosition;
   mercury: PlanetPosition;
@@ -332,26 +335,13 @@ function calculatePorphyryHouses(
 }
 
 // Calculate Placidus houses (time-based semi-arcs)
-// NOTE: True Placidus requires complex iterative solving and can distort at extreme latitudes
-// For Spiralogic, Porphyry is recommended as the steadier middle path
-function calculatePlacidusHouses(
-  lat: number,
-  lng: number,
-  time: Astronomy.AstroTime,
-  ascendant: number,
-  obliquity: number
-): number[] {
-  // For now, fall back to Porphyry until true Placidus is implemented
-  return calculatePorphyryHouses(lat, lng, time, ascendant, obliquity);
-}
-
 // Calculate house cusps based on selected system
 function calculateHouseCusps(
   date: Date,
   lat: number,
   lng: number,
   system: HouseSystem = 'whole-sign'
-): number[] {
+): { cusps: number[]; applied: HouseSystem } {
   const time = Astronomy.MakeTime(date);
 
   try {
@@ -364,28 +354,36 @@ function calculateHouseCusps(
 
     // Calculate ascendant
     const ascendant = calculateAscendant(localSiderealTime, lat, obliquity);
+    const ramc = ((localSiderealTime * 15) % 360 + 360) % 360;
 
     // Generate cusps based on system
     switch (system) {
       case 'whole-sign':
-        return calculateWholeSignHouses(ascendant);
+        return { cusps: calculateWholeSignHouses(ascendant), applied: 'whole-sign' };
 
       case 'equal':
-        return calculateEqualHouses(ascendant);
+        return { cusps: calculateEqualHouses(ascendant), applied: 'equal' };
 
       case 'porphyry':
-        return calculatePorphyryHouses(lat, lng, time, ascendant, obliquity);
+        return { cusps: calculatePorphyryHouses(lat, lng, time, ascendant, obliquity), applied: 'porphyry' };
 
       case 'placidus':
-        return calculatePlacidusHouses(lat, lng, time, ascendant, obliquity);
-
       case 'koch':
-        // TODO: Implement Koch calculations
-        // For now, fall back to Porphyry houses
-        return calculatePorphyryHouses(lat, lng, time, ascendant, obliquity);
+        try {
+          const cusps = system === 'placidus'
+            ? placidusCusps(ramc, lat, obliquity, ascendant)
+            : kochCusps(ramc, lat, obliquity, ascendant, (r) => calculateAscendant(r / 15, lat, obliquity));
+          return { cusps, applied: system };
+        } catch (error) {
+          // No quadrant system exists here (polar latitudes): Porphyry, and say so.
+          if (error instanceof Error && error.message === HOUSE_GEOMETRY_UNAVAILABLE) {
+            return { cusps: calculatePorphyryHouses(lat, lng, time, ascendant, obliquity), applied: 'porphyry' };
+          }
+          throw error;
+        }
 
       default:
-        return calculateWholeSignHouses(ascendant);
+        return { cusps: calculateWholeSignHouses(ascendant), applied: 'whole-sign' };
     }
   } catch (error) {
     // Return equal house cusps as fallback
@@ -393,7 +391,7 @@ function calculateHouseCusps(
     for (let i = 0; i < 12; i++) {
       fallbackCusps.push((i * 30) % 360);
     }
-    return fallbackCusps;
+    return { cusps: fallbackCusps, applied: 'equal' };
   }
 }
 
@@ -807,7 +805,7 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
     // Calculate house cusps using selected system (default to Porphyry - best for Spiralogic)
     // Porphyry gives the "breathing" asymmetry without Placidus distortion
     const houseSystem = birthData.houseSystem || 'porphyry';
-    const houseCusps = calculateHouseCusps(
+    const { cusps: houseCusps, applied: houseSystemApplied } = calculateHouseCusps(
       birthDate,
       birthData.location.lat,
       birthData.location.lng,
@@ -1054,6 +1052,7 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
       pallas,
       juno,
       vesta,
+      houseSystemApplied,
       ascendant,
       midheaven,
       houses: houseCusps,
