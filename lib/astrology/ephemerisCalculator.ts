@@ -42,7 +42,9 @@ export interface PlanetPosition {
   sign: string;
   degree: number;
   house: number;
+  /** Observed from Earth. False does not prove direct motion where motionStatus says otherwise. */
   retrograde: boolean;
+  motionStatus?: PlanetMotionStatus;
 }
 
 export interface BirthChart {
@@ -234,27 +236,6 @@ export function classifyApparentMotion(
   }
 }
 
-// Check if a planet is retrograde
-function isRetrograde(body: Astronomy.Body, date: Date): boolean {
-  try {
-    const time = Astronomy.MakeTime(date);
-    const position1 = Astronomy.HelioVector(body, time);
-
-    // Check position 1 day later
-    const laterDate = new Date(date);
-    laterDate.setDate(laterDate.getDate() + 1);
-    const laterTime = Astronomy.MakeTime(laterDate);
-    const position2 = Astronomy.HelioVector(body, laterTime);
-
-    // If ecliptic longitude decreased, planet is retrograde
-    const lon1 = Astronomy.EclipticLongitude(body, time);
-    const lon2 = Astronomy.EclipticLongitude(body, laterTime);
-
-    return lon2 < lon1;
-  } catch (error) {
-    return false;
-  }
-}
 
 // Calculate Whole Sign houses (ancient system - each house = one whole sign)
 function calculateWholeSignHouses(ascendantDegree: number): number[] {
@@ -926,49 +907,49 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
     const mercury = {
       ...longitudeToZodiac(planetLongitudes.Mercury),
       house: calculateHouse(planetLongitudes.Mercury, houseCusps),
-      retrograde: isRetrograde(Astronomy.Body.Mercury, birthDate)
+      ...classifyApparentMotion(Astronomy.Body.Mercury, birthDate)
     };
 
     const venus = {
       ...longitudeToZodiac(planetLongitudes.Venus),
       house: calculateHouse(planetLongitudes.Venus, houseCusps),
-      retrograde: isRetrograde(Astronomy.Body.Venus, birthDate)
+      ...classifyApparentMotion(Astronomy.Body.Venus, birthDate)
     };
 
     const mars = {
       ...longitudeToZodiac(planetLongitudes.Mars),
       house: calculateHouse(planetLongitudes.Mars, houseCusps),
-      retrograde: isRetrograde(Astronomy.Body.Mars, birthDate)
+      ...classifyApparentMotion(Astronomy.Body.Mars, birthDate)
     };
 
     const jupiter = {
       ...longitudeToZodiac(planetLongitudes.Jupiter),
       house: calculateHouse(planetLongitudes.Jupiter, houseCusps),
-      retrograde: isRetrograde(Astronomy.Body.Jupiter, birthDate)
+      ...classifyApparentMotion(Astronomy.Body.Jupiter, birthDate)
     };
 
     const saturn = {
       ...longitudeToZodiac(planetLongitudes.Saturn),
       house: calculateHouse(planetLongitudes.Saturn, houseCusps),
-      retrograde: isRetrograde(Astronomy.Body.Saturn, birthDate)
+      ...classifyApparentMotion(Astronomy.Body.Saturn, birthDate)
     };
 
     const uranus = {
       ...longitudeToZodiac(planetLongitudes.Uranus),
       house: calculateHouse(planetLongitudes.Uranus, houseCusps),
-      retrograde: isRetrograde(Astronomy.Body.Uranus, birthDate)
+      ...classifyApparentMotion(Astronomy.Body.Uranus, birthDate)
     };
 
     const neptune = {
       ...longitudeToZodiac(planetLongitudes.Neptune),
       house: calculateHouse(planetLongitudes.Neptune, houseCusps),
-      retrograde: isRetrograde(Astronomy.Body.Neptune, birthDate)
+      ...classifyApparentMotion(Astronomy.Body.Neptune, birthDate)
     };
 
     const pluto = {
       ...longitudeToZodiac(planetLongitudes.Pluto),
       house: calculateHouse(planetLongitudes.Pluto, houseCusps),
-      retrograde: isRetrograde(Astronomy.Body.Pluto, birthDate)
+      ...classifyApparentMotion(Astronomy.Body.Pluto, birthDate)
     };
 
     const northNode = {
@@ -1090,7 +1071,7 @@ export async function calculateTransits(date: Date): Promise<Record<string, Plan
     transits[bodyName.toLowerCase()] = {
       ...longitudeToZodiac(lon),
       house: calculateHouse(lon, houseCusps),
-      retrograde: isRetrograde(body, date)
+      ...classifyApparentMotion(body, date)
     };
   }
 
