@@ -219,7 +219,7 @@ function formatPlanetPosition(planet: string, pos: PlanetPosition, includeHouse:
  */
 function formatAspect(aspect: AspectPattern): string {
   const orb = aspect.orb < 1 ? '(exact)' : `(${aspect.orb.toFixed(1)}° orb)`;
-  const applying = aspect.applying ? 'applying' : 'separating';
+  const applying = aspect.applying === null ? 'phase not established' : aspect.applying ? 'applying' : 'separating';
   return `Transit ${aspect.transitPlanet} ${aspect.aspectType} natal ${aspect.natalPlanet} ${orb} - ${applying}`;
 }
 
