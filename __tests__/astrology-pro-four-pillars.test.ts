@@ -113,4 +113,21 @@ describe('Four Pillars', () => {
     const { elements } = at('1990-06-15T18:30:00Z');
     expect(Object.values(elements).reduce((a, b) => a + b, 0)).toBe(8);
   });
+
+  it('gives the annual pillars and where the person is now', () => {
+    const chart = calculateFourPillars(new Date('1990-06-15T18:30:00Z'), '1990-06-15', '14:30', 'midnight',
+      new Date('2026-11-07T12:00:00Z'));
+    const year = (y: number) => chart.annual.find((a) => a.year === y)!;
+    expect(name(year(2024))).toBe('甲辰'); // Year of the Dragon
+    expect(name(year(2026))).toBe('丙午'); // Year of the Horse
+    expect(chart.annual[0].year).toBe(1990);
+    expect(chart.annual).toHaveLength(101);
+    expect(year(2026).tenGod.hanzi).toBe(tenGod(chart.dayMaster.index, year(2026).stem.index).hanzi);
+    expect(chart.ageNow).toBeCloseTo(36.4, 1);
+    expect(chart.now).toEqual({ calendarYear: 2026, solarYear: 2026 });
+    // Before Lichun the solar year is still the previous one.
+    const january = calculateFourPillars(new Date('1990-06-15T18:30:00Z'), '1990-06-15', '14:30', 'midnight',
+      new Date('2026-01-20T12:00:00Z'));
+    expect(january.now).toEqual({ calendarYear: 2026, solarYear: 2025 });
+  });
 });
