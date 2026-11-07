@@ -11,6 +11,7 @@
  * - Dane Rudhyar (The Astrology of Personality)
  */
 
+import { INCLUDE_UNVERIFIED_ASTEROIDS } from './unverifiedBodies';
 import * as Astronomy from 'astronomy-engine';
 
 export type HouseSystem = 'whole-sign' | 'equal' | 'porphyry' | 'placidus' | 'koch';
@@ -65,9 +66,9 @@ export interface BirthChart {
   // Asteroids - Feminine Archetypes
   lilith: PlanetPosition;   // Black Moon Lilith - Primal Feminine
   ceres: PlanetPosition;    // Nurturing, Grief, Motherhood
-  pallas: PlanetPosition;   // Wisdom, Strategy, Creative Intelligence
-  juno: PlanetPosition;     // Partnership, Commitment, Sacred Union
-  vesta: PlanetPosition;    // Devotion, Sacred Work, Inner Flame
+  pallas?: PlanetPosition;   // Wisdom, Strategy, Creative Intelligence
+  juno?: PlanetPosition;     // Partnership, Commitment, Sacred Union
+  vesta?: PlanetPosition;    // Devotion, Sacred Work, Inner Flame
   ascendant: { sign: string; degree: number };
   midheaven: { sign: string; degree: number };
   houses: number[]; // 12 house cusps in degrees
@@ -963,16 +964,19 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
     planetLongitudes.Ceres = ceresLon;
 
     // Pallas - Wisdom, Strategy, Creative Intelligence
-    const pallasLon = calculatePallasApprox(birthDate);
-    planetLongitudes.Pallas = pallasLon;
+    if (INCLUDE_UNVERIFIED_ASTEROIDS) {
+      planetLongitudes.Pallas = calculatePallasApprox(birthDate);
+    }
 
     // Juno - Partnership, Commitment, Sacred Union
-    const junoLon = calculateJunoApprox(birthDate);
-    planetLongitudes.Juno = junoLon;
+    if (INCLUDE_UNVERIFIED_ASTEROIDS) {
+      planetLongitudes.Juno = calculateJunoApprox(birthDate);
+    }
 
     // Vesta - Devotion, Sacred Work, Inner Flame
-    const vestaLon = calculateVestaApprox(birthDate);
-    planetLongitudes.Vesta = vestaLon;
+    if (INCLUDE_UNVERIFIED_ASTEROIDS) {
+      planetLongitudes.Vesta = calculateVestaApprox(birthDate);
+    }
 
     // The calculated longitude vector is never written to server logs.
 
@@ -1068,23 +1072,29 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
       retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
     };
 
-    const pallas = {
-      ...longitudeToZodiac(planetLongitudes.Pallas),
-      house: calculateHouse(planetLongitudes.Pallas, houseCusps),
-      retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
-    };
+    const pallas = INCLUDE_UNVERIFIED_ASTEROIDS
+      ? {
+          ...longitudeToZodiac(planetLongitudes.Pallas),
+          house: calculateHouse(planetLongitudes.Pallas, houseCusps),
+          retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
+        }
+      : undefined;
 
-    const juno = {
-      ...longitudeToZodiac(planetLongitudes.Juno),
-      house: calculateHouse(planetLongitudes.Juno, houseCusps),
-      retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
-    };
+    const juno = INCLUDE_UNVERIFIED_ASTEROIDS
+      ? {
+          ...longitudeToZodiac(planetLongitudes.Juno),
+          house: calculateHouse(planetLongitudes.Juno, houseCusps),
+          retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
+        }
+      : undefined;
 
-    const vesta = {
-      ...longitudeToZodiac(planetLongitudes.Vesta),
-      house: calculateHouse(planetLongitudes.Vesta, houseCusps),
-      retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
-    };
+    const vesta = INCLUDE_UNVERIFIED_ASTEROIDS
+      ? {
+          ...longitudeToZodiac(planetLongitudes.Vesta),
+          house: calculateHouse(planetLongitudes.Vesta, houseCusps),
+          retrograde: false, motionStatus: 'not-evaluated' as const // minor-body motion not verified
+        }
+      : undefined;
 
     // Report horizon and meridian angles independently of the chosen house
     // cusps. Whole Sign house 1 begins at 0 degrees of the rising sign, not
