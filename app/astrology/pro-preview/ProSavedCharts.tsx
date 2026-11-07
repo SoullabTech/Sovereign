@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus, Trash2, ChevronRight, Search } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import styles from './pro-saved-charts.module.css';
-import ProSoulPortraitAction from './ProSoulPortraitAction';
+import ProSoulPortraitPanel from './ProSoulPortraitPanel';
 import ProChartSharePanel from './ProChartShareAction';
 
 export interface SavedChartSummary {
@@ -73,6 +73,7 @@ export default function ProSavedCharts({
   const [message, setMessage] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [sharing, setSharing] = useState<string | null>(null);
+  const [portrait, setPortrait] = useState<string | null>(null);
   const zones = useMemo(timezoneList, []);
 
   async function refresh() {
@@ -266,13 +267,21 @@ export default function ProSavedCharts({
                     </button>
                     <button onClick={() => setSharing(sharing === chart.id ? null : chart.id)}
                       aria-expanded={sharing === chart.id}>Share link</button>
-                    <ProSoulPortraitAction source={chart.id} whose={`${chart.label}’s`} />
+                    <button onClick={() => setPortrait(portrait === chart.id ? null : chart.id)}
+                      aria-expanded={portrait === chart.id}>Soul Portrait</button>
                     <button onClick={() => setConfirmDelete(chart.id)} aria-label={`Delete ${chart.label}`}>
                       <Trash2 size={15} aria-hidden="true" />
                     </button>
                   </>
                 )}
               </div>
+              {portrait === chart.id && (
+                <div className={styles.shareRow}>
+                  <ProSoulPortraitPanel source={chart.id} label={chart.label}
+                    chartLine={`${chart.label} · ${chart.birthDate} · ${chart.birthTime}${chart.placeLabel ? ` · ${chart.placeLabel}` : ''}`}
+                    birthDate={chart.birthDate} onClose={() => setPortrait(null)} />
+                </div>
+              )}
               {sharing === chart.id && (
                 <div className={styles.shareRow}>
                   <ProChartSharePanel chartId={chart.id} label={chart.label} onClose={() => setSharing(null)} />

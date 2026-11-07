@@ -35,7 +35,7 @@ import { withOrbSettings } from '@/lib/astrology/proAspectOrbs';
 import type { ChartPoints } from '@/lib/astrology/proChartPoints';
 import type { Declination } from '@/lib/astrology/proDeclinations';
 import type { TransitBody } from '@/lib/astrology/proTransits';
-import ProSoulPortraitAction from './ProSoulPortraitAction';
+import ProSoulPortraitPanel from './ProSoulPortraitPanel';
 import styles from './astrology-pro-preview.module.css';
 
 type ChartStatus = 'idle' | 'loading' | 'ready' | 'signed-out' | 'consent-required' | 'incomplete' | 'unavailable';
@@ -108,7 +108,9 @@ export default function ProAstrologyExperience() {
   const [memberId, setMemberId] = useState<string | null>(null);
   const [sourceRevision, setSourceRevision] = useState<string | null>(null);
   // null = the member's own chart; otherwise a saved chart for another person.
-  const [savedSubject, setSavedSubject] = useState<{ id: string; label: string } | null>(null);
+  const [savedSubject, setSavedSubject] = useState<SavedChartSummary | null>(null);
+  // The Soul Portrait panel, opened from the empty-chart box or the open chart's toolbar.
+  const [portraitOpen, setPortraitOpen] = useState(false);
   // Sky at a member-chosen moment. Not private: it carries no birth data.
   // Up to two outer rings (biwheel / triwheel), one per source. A compared or
   // derived chart is fetched through the same owner-only routes.
@@ -202,6 +204,7 @@ export default function ProAstrologyExperience() {
     setCalculationQuality(null);
     setDraft(null);
     setSystemsWork(null);
+    setPortraitOpen(false);
     setChartStatus(reason);
   }
 
@@ -398,7 +401,7 @@ export default function ProAstrologyExperience() {
           result.chartId !== saved.id) {
         throw new Error('chart_geometry_or_identity_unverified');
       }
-      setSavedSubject({ id: saved.id, label: saved.label });
+      setSavedSubject(saved);
       setSourceRevision('saved:' + saved.id);
       setMemberId(result.memberId);
       setCalculationQuality(result.calculationQuality || null);
@@ -562,6 +565,7 @@ export default function ProAstrologyExperience() {
                     </select>
                   </label>
                   <ProOrbSettings settings={orbSettings} onChange={setOrbSettings} />
+                  <button onClick={() => setPortraitOpen((o) => !o)} aria-expanded={portraitOpen}>Soul Portrait</button>
                   <button onClick={() => closePrivateChart()}>{savedSubject ? 'Close chart' : 'Close my chart'}</button>
                 </div>
               )}
@@ -569,6 +573,14 @@ export default function ProAstrologyExperience() {
 
             {privateChart ? (
               <>
+                {portraitOpen && (
+                  <ProSoulPortraitPanel source={savedSubject ? savedSubject.id : 'mine'}
+                    label={savedSubject ? savedSubject.label : ''}
+                    chartLine={savedSubject
+                      ? `${savedSubject.label} · ${savedSubject.birthDate} · ${savedSubject.birthTime}${savedSubject.placeLabel ? ` · ${savedSubject.placeLabel}` : ''}`
+                      : "Your own chart, from your account's birth details"}
+                    birthDate={savedSubject?.birthDate} onClose={() => setPortraitOpen(false)} />
+                )}
                 <CelestialChartWheel chart={orbChart ?? privateChart} focusedBody={focusedBody} onFocusBody={selectBody}
                   showAspects={showAspects} showHouseLines={showHouseLines}
                   maxAspectOrb={maxAspectOrb} outerBodies={rings[0]?.bodies} outerLabel={rings[0]?.label}
@@ -625,7 +637,9 @@ export default function ProAstrologyExperience() {
                     {chartStatus === 'loading' ? 'Opening your chart…' : 'Open my chart'} <ChevronRight size={18} aria-hidden="true" />
                   </button>
                   <p><Link href="/account/settings">Edit my birth details</Link></p>
-                  <p><ProSoulPortraitAction source="mine" whose="your" /></p>
+                  {portraitOpen
+                    ? <ProSoulPortraitPanel source="mine" label="" chartLine="Your own chart, from your account's birth details" onClose={() => setPortraitOpen(false)} />
+                    : <p><button type="button" onClick={() => setPortraitOpen(true)}>Soul Portrait</button></p>}
                   {chartStatus === 'signed-out' && <p role="status">Your member session needs verification. Please sign in again before opening your chart. <Link href="/signin">Sign in</Link></p>}
                   {chartStatus === 'consent-required' && <p role="status">Astrology access is not opted in for this account. Review your Astrology consent settings before opening your chart.</p>}
                    {chartStatus === 'incomplete' && <p role="status">{chartError || 'Your exact birth date, time, timezone or location needs clarification before strict-core calculation.'} <Link href="/astrology">Review chart details</Link>.</p>}
