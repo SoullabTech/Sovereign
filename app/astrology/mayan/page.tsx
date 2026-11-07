@@ -357,6 +357,11 @@ export default function MayanAstrologyPage() {
               <div className="text-4xl mb-2">{haab.month.glyph}</div>
               <h4 className="text-2xl font-bold text-emerald-100">{haab.fullDate}</h4>
               <p className="text-emerald-400/80">{haab.month.meaning}</p>
+              <p className="text-emerald-400/60 text-xs mt-3">
+                Traditional count (GMT 584283): {profile.traditional.tzolkin.text}
+                {' '}({profile.traditional.tzolkin.kiche} in K’iche’) · Long Count {profile.traditional.longCount}.
+                The galactic signature above is the modern Dreamspell count, a different system.
+              </p>
               {haab.isWayeb && (
                 <div className="mt-3 bg-red-900/30 border border-red-500/30 rounded-lg px-4 py-2">
                   <p className="text-red-300 text-sm">Wayeb - The Nameless Days</p>

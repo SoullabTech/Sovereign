@@ -1,3 +1,4 @@
+import { chineseYearForDate } from './chineseNewYear';
 /**
  * Chinese Astrology System
  *
@@ -827,11 +828,10 @@ function mapToSpiralogicElement(chineseElement: string): { element: 'fire' | 'wa
  * Calculate complete Chinese astrology profile
  */
 export function calculateChineseBirthProfile(birthDate: Date): ChineseBirthProfile {
-  const year = birthDate.getFullYear();
-
-  // Adjust for Chinese New Year (simplified - assumes Jan 1 start)
-  // In a full implementation, you'd calculate exact Chinese New Year dates
-  const adjustedYear = year;
+  // The Chinese year turns at Chinese New Year, not 1 January.
+  const adjustedYear = chineseYearForDate(
+    birthDate.getFullYear(), birthDate.getMonth() + 1, birthDate.getDate(),
+  ).chineseYear;
 
   const animal = getChineseZodiacAnimal(adjustedYear);
   const element = getChineseElement(adjustedYear);

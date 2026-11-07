@@ -1,3 +1,4 @@
+import { traditionalMayaDate, type TraditionalMayaDate } from './mayanTraditional';
 // @ts-nocheck
 /**
  * MAYAN ASTROLOGY LIBRARY
@@ -163,6 +164,8 @@ export interface PathOfLife {
 export interface CompleteMayanProfile {
   tzolkin: MayanBirthSign;
   haab: HaabDate;
+  /** Traditional GMT count for the same date — a different system from the Dreamspell tzolkin. */
+  traditional: TraditionalMayaDate;
   pathOfLife: PathOfLife;
   cardinalDirection: CardinalDirectionInfo;
   lifeCycleInsight: string;
@@ -616,43 +619,23 @@ export function synthesizeMayanWestern(
 }
 
 /**
- * Calculate Haab date from Gregorian date
- * The Haab is a 365-day solar calendar with 18 months of 20 days + 5 Wayeb days
- * Correlation: July 26, 1987 = 0 Pop (New Year in Dreamspell)
+ * Haab date (traditional 365-day solar count, GMT 584283) for a civil date.
+ * The Dreamspell has no Haab; an earlier version counted from the Dreamspell
+ * epoch as "0 Pop", which is not a Maya date (3 Sep 2003 read 3 Sip, correct
+ * is 11 Mol).
  */
 export function calculateHaabDate(date: Date): HaabDate {
-  // Haab epoch aligned with Dreamspell: July 26, 1987 = 0 Pop
-  const haabEpoch = new Date('1987-07-26');
-  const daysSinceEpoch = Math.floor(
-    (date.getTime() - haabEpoch.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  // Position in 365-day Haab cycle
-  const haabPosition = ((daysSinceEpoch % 365) + 365) % 365;
-
-  // First 360 days are 18 months of 20 days each
-  if (haabPosition < 360) {
-    const monthIndex = Math.floor(haabPosition / 20);
-    const dayInMonth = haabPosition % 20;
-    const month = HAAB_MONTHS[monthIndex];
-
+  const t = traditionalMayaDate(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
+  const { day, month } = t.haab;
+  if (month === 'Wayeb') {
+    const wayebDay = day + 1; // 1-5 as before
     return {
-      day: dayInMonth,
-      month,
-      isWayeb: false,
-      fullDate: `${dayInMonth} ${month.name}`,
-    };
-  } else {
-    // Last 5 days are Wayeb (unlucky days)
-    const wayebDay = haabPosition - 359; // 1-5
-    return {
-      day: wayebDay,
-      month: { number: 19, name: 'Wayeb', meaning: 'Nameless Days', glyph: '⚠️' },
-      isWayeb: true,
-      wayebDay,
-      fullDate: `Wayeb ${wayebDay}`,
+      day, month: { number: 19, name: 'Wayeb', meaning: 'Nameless Days', glyph: '⚠️' },
+      isWayeb: true, wayebDay, fullDate: `Wayeb ${wayebDay}`,
     };
   }
+  const monthInfo = HAAB_MONTHS.find(m => m.name === month || (month === 'Zotz' && m.name === 'Sotz'))!;
+  return { day, month: monthInfo, isWayeb: false, fullDate: `${day} ${monthInfo.name}` };
 }
 
 /**
@@ -740,9 +723,14 @@ export function calculateCompleteMayanProfile(birthDate: Date): CompleteMayanPro
   const cardinalDirection = getCardinalDirection(daySignKey);
   const lifeCycleInsight = generateLifeCycleInsight(birthDate, pathOfLife);
 
+  const traditional = traditionalMayaDate(
+    birthDate.getUTCFullYear(), birthDate.getUTCMonth() + 1, birthDate.getUTCDate(),
+  );
+
   return {
     tzolkin,
     haab,
+    traditional,
     pathOfLife,
     cardinalDirection,
     lifeCycleInsight,
