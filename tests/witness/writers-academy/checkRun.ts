@@ -13,6 +13,9 @@ type Turn = { thread: string; turn: number; speaker: string; body: string };
 const THREADS: Record<string, { id: string; text: string }> = {
   'c4796ac6-59b7-4b7f-b8c1-753558103944': PASSAGE_A,
   '505278df-ae18-4332-b3f6-b696a79ecb83': PASSAGE_B,
+  // Re-run after TEXT_ACCURACY_DIRECTIVE (runs/2026-11-07-local-turns-after-fix.json).
+  '68ec0ba6-9429-4bb0-8630-5f97f5ca06df': PASSAGE_A,
+  '2b39d150-01e4-48ae-9381-2622c177f9e1': PASSAGE_B,
 };
 
 const turns = JSON.parse(fs.readFileSync(process.argv[2]!, 'utf8')) as Turn[];
