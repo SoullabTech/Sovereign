@@ -1,15 +1,19 @@
-import { sendEmail } from './sendEmail';
+import { sendEmail, SENDERS } from './sendEmail';
 
 /**
- * Sender for beta invitations.
+ * Sender for beta invitations: the verified `soullab.life` identity in SENDERS.
  *
- * NOTE — deliberately left on `soullab.org`, the address this sender has always
- * used, rather than silently moved to the `soullab.life` identity in SENDERS.
- * If `soullab.org` is not a verified domain on the provider account these sends
- * fail as `provider_config` — which is now VISIBLE rather than swallowed. That
- * is a deliverability decision for an operator, not a drive-by edit.
+ * History: this was deliberately left on the old .org domain, the address it had always
+ * used, pending an operator decision on deliverability. On 2026-11-06 the founder stated
+ * that the old .org domain is no longer owned by Soullab (it now serves a parked page), so
+ * mail claiming it is not Soullab's to send and any reply to it would reach someone else.
+ * The decision is made: the sender is the `soullab.life` identity.
+ *
+ * Note: production's managed SMTP boundary currently refuses `invite:*` purposes, so this
+ * path does not send today; this change only keeps the code from naming a domain we do not
+ * own.
  */
-const BETA_INVITE_SENDER = 'Kelly @ Soullab <kelly@soullab.org>';
+const BETA_INVITE_SENDER = SENDERS.kelly;
 
 /** Ceiling on one batch. Exceeding it truncates loudly — never silently. */
 const MAX_INVITES_PER_BATCH = 100;

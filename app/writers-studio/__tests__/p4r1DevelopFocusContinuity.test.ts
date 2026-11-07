@@ -51,7 +51,7 @@ describe('C3 Develop → Focus continuity', () => {
       return {items:buttons(tree),onWorkWithObservation,onGoToObservation};
     };
     const exact=make({'fiction-observation':'orientation-section'},{'fiction-observation':'exact-section'});
-    const write=exact.items.find(b=>b.props.children==='Stay with this in Write');
+    const write=exact.items.find(b=>b.props.children==='Talk about this passage');
     const locate=exact.items.find(b=>b.props.children==='Show me in the manuscript');
     expect(write).toBeDefined();expect(locate).toBeDefined();
     expect(exact.onWorkWithObservation).not.toHaveBeenCalled();expect(exact.onGoToObservation).not.toHaveBeenCalled();
@@ -59,10 +59,12 @@ describe('C3 Develop → Focus continuity', () => {
     expect(exact.onWorkWithObservation).toHaveBeenCalledWith('fiction-reading','fiction-observation','exact-section');
     expect(exact.onGoToObservation).toHaveBeenCalledWith('fiction-reading','fiction-observation','orientation-section');
     const orientation=make({'fiction-observation':'orientation-section'},{});
-    expect(orientation.items.some(b=>b.props.children==='Stay with this in Write')).toBe(false);
+    expect(orientation.items.some(b=>b.props.children==='Talk about this passage')).toBe(false);
     expect(orientation.items.some(b=>b.props.children==='Show me in the manuscript')).toBe(true);
     const absent=make({},{});
-    expect(absent.items.some(b=>['Stay with this in Write','Show me in the manuscript'].includes(b.props.children))).toBe(false);
+    expect(absent.items.some(b=>['Talk about this passage','Show me in the manuscript'].includes(b.props.children))).toBe(false);
+    // Design pass 2026-11-05: with no exact passage, the one next step is to talk here instead.
+    expect(absent.items.some(b=>b.props.children==='Talk with MAIA about this')).toBe(true);
   });
 
   it('carries the exact Develop observation into Write with an explicit focus action', () => {
@@ -135,11 +137,15 @@ describe('C3 Develop → Focus continuity', () => {
 
   it('carries the frozen observation into the first editorial act only as attributed context', () => {
     expect(writeView).toContain('origin={props.carriedInsight && props.carriedInsightReturnMode ? {');
-    expect(writeView).toContain('observation: props.carriedInsight.observation.observation');
-    expect(dance).toContain('We arrived at this exact passage from a prior frozen');
-    expect(dance).toContain('Treat that as attributed historical context, not a verdict and not an edit instruction.');
-    expect(dance).toContain('Use the current passage as the authority for any new editorial claim.');
-    expect(dance).toContain('Do not silently convert the prior observation into a revision recommendation.');
-    expect(dance).toContain('if (!props.origin || props.thread) return prompt;');
+    // F1 (2026-11-06): the client sends identities only; the server loads the observation
+    // from the member's own saved reading and frames it. Same law, server-owned.
+    expect(writeView).toContain('readingId: props.carriedInsight.readingId,');
+    expect(writeView).toContain('observationKey: props.carriedInsight.observation.key,');
+    const framing = fs.readFileSync(path.join(process.cwd(), 'lib/writersStudio/arrivalOrigin.ts'), 'utf8');
+    expect(framing).toContain('We arrived at this exact passage from a prior frozen');
+    expect(framing).toContain('Treat that as attributed historical context, not a verdict and not an edit instruction.');
+    expect(framing).toContain('Use the current passage as the authority for any new editorial claim.');
+    expect(framing).toContain('Do not silently convert the prior observation into a revision recommendation.');
+    expect(dance).toContain('if (!props.origin || props.thread) return options;');
   });
 });

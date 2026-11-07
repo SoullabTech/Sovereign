@@ -9,6 +9,7 @@
  * chart; only its id (or "own") is sent.
  */
 import { useEffect, useMemo, useState } from 'react';
+import { usePanelState } from './panelMemory';
 import { apiFetch } from '@/lib/http/apiBase';
 import { aspectReading } from '@/lib/astrology/proTraditionText';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
@@ -33,12 +34,12 @@ export default function ProComparePanel({
   onOuter: (bodies: TransitBody[], label: string | null) => void;
 }) {
   const [options, setOptions] = useState<Option[]>([]);
-  const [choice, setChoice] = useState('');
-  const [mode, setMode] = useState<'biwheel' | 'composite'>('biwheel');
-  const [other, setOther] = useState<{ id: string; label: string; chart: BirthChart } | null>(null);
+  const [choice, setChoice] = usePanelState('compare.choice', '');
+  const [mode, setMode] = usePanelState<'biwheel' | 'composite'>('compare.mode', 'biwheel');
+  const [other, setOther] = usePanelState<{ id: string; label: string; chart: BirthChart } | null>('compare.other', null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
-  const [orb, setOrb] = useState(3);
-  const [focus, setFocus] = useState('Sun');
+  const [orb, setOrb] = usePanelState('compare.orb', 3);
+  const [focus, setFocus] = usePanelState('compare.focus', 'Sun');
 
   useEffect(() => {
     let active = true;
@@ -55,7 +56,14 @@ export default function ProComparePanel({
   }, [currentSubjectId]);
 
   // A different primary chart or house system invalidates the comparison.
-  useEffect(() => { setOther(null); }, [chart, houseSystem]);
+  // Clear on a change of chart or house system, not when the panel remounts for the same one.
+  const [shownFor, setShownFor] = usePanelState<[BirthChart, string]>('compare.for', [chart, houseSystem]);
+  useEffect(() => {
+    if (shownFor[0] === chart && shownFor[1] === houseSystem) return;
+    setShownFor([chart, houseSystem]);
+    setOther(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chart, houseSystem]);
 
   async function compare() {
     const option = options.find((o) => o.id === choice);

@@ -40,6 +40,7 @@
  *   strike-through over their own words for them to police.
  */
 
+import { answerChoicesInstruction } from '@/lib/writersStudio/answerChoices';
 import { randomUUID } from 'node:crypto';
 import { query } from '@/lib/db/postgres';
 import { runStructured } from '@/lib/ai/structured/router';
@@ -53,10 +54,11 @@ import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
-import { editorialDirective, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
+import { editorialDirective, type EditorialDepth, replyLengthInstruction, responsiveLengthDirective, type ReplyLength } from '@/lib/writersStudio/editorialDepth';
 import { teachingTurnInstruction, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { conversationTurnInstruction, type TurnShape } from '@/lib/writersStudio/conversationTurn';
 import { passageActInstruction, type PassageAct } from '@/lib/writersStudio/passageActs';
+import { arrivalOriginInstruction, type ArrivalOrigin } from '@/lib/writersStudio/arrivalOrigin';
 import { OPENING_STAND_IN, conversationOpeningInstruction, type OpeningGesture } from '@/lib/writersStudio/conversationOpening';
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 import { studioActionsInstruction } from '@/lib/writersStudio/studioActions';
@@ -143,6 +145,8 @@ export interface EditorialTurnInput {
   readonly proposalPolicy?: ProposalPolicy;
   /** Explicitly selected response register; NEVER inferred from the writer. */
   readonly responseDepth?: EditorialDepth;
+  /** The writer's own length choice (Shorter / Say more). ⛔ A closed value, never text. */
+  readonly replyLength?: ReplyLength;
   /** The teaching button the writer pressed (F1). Its shape is added here,
    *  server-side; the writer's turn holds only the button's words. */
   readonly teachingAnchor?: TeachingAnchor;
@@ -152,6 +156,9 @@ export interface EditorialTurnInput {
   /** The card the writer pressed (conversation-first Focus, step 1). Its instruction is
    *  added here, server-side; the writer's turn holds only the button's words. */
   readonly passageAct?: PassageAct;
+  /** Where the writer arrived from (F1), resolved by the route from the member's own
+   *  frozen reading. Its framing is added here; ⛔ never stored as the writer's turn. */
+  readonly arrivalOrigin?: ArrivalOrigin;
   /**
    * R2: MAIA speaks first. The writer's gesture is a typed event, never a turn: there is
    * NO author row to read, `currentTurnIndex` must be 0, and the outcome is forced to
@@ -439,6 +446,9 @@ export async function runEditorialTurn(
       // Both derive from the exact durable utterance and chosen depth only.
       // No new context, corpus, or identity crosses this instruction.
       editorialDirective(input.responseDepth ?? 'guided'),
+      // Founder 2026-11-05: length follows the request in front of her (not Learning,
+      // which keeps its own one-idea rule).
+      responsiveLengthDirective(input.responseDepth ?? 'guided'),
       // Server-owned teaching shape (F1): how to answer a Teach me, never a
       // sentence stored as the writer's.
       input.teachingAnchor ? teachingTurnInstruction(input.teachingAnchor) : '',
@@ -446,6 +456,8 @@ export async function runEditorialTurn(
       input.turnShape === 'conversation' ? conversationTurnInstruction() : '',
       // Server-owned instruction for the card the writer pressed (step 1).
       input.passageAct ? passageActInstruction(input.passageAct) : '',
+      // Server-owned arrival framing (F1), from the member's own saved reading.
+      input.arrivalOrigin ? arrivalOriginInstruction(input.arrivalOrigin) : '',
       // R2: the opening's shape is server-owned too.
       input.opening ? conversationOpeningInstruction() : '',
       // Server-owned map of the Studio's real controls (Design 1A), so "how do I"
@@ -453,10 +465,14 @@ export async function runEditorialTurn(
       studioGuideInstruction(),
       // Design 1B: MAIA may offer one control as a marker; the writer clicks it.
       studioActionsInstruction('passage-focus'),
+      // Founder 2026-11-05: a closed question may carry two or three one-click answers.
+      input.teachingAnchor ? '' : answerChoicesInstruction(),
       relationalCraftSystemGuidance(utterance),
       latitudeInstruction(scope),
       sequenceInstruction(gated),
       proposalPolicyInstruction(proposalPolicy),
+      // Last, so the writer's own length choice outranks every default shape.
+      input.replyLength ? replyLengthInstruction(input.replyLength) : '',
     ].filter(Boolean).join('\n\n'),
     messages: [{ role: 'user', content: utterance }],
     maxTokens: MAX_TOKENS,

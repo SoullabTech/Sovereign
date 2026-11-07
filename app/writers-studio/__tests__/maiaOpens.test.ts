@@ -97,3 +97,62 @@ test('a MAIA turn with no writer turn before it renders, and the three starting 
   expect(Array.from(q('[data-stage-chips]')!.querySelectorAll('button')).map((b) => b.textContent))
     .toEqual(['Talk about what’s happening', 'Show me an edit', 'Teach me the craft here']);
 });
+
+test('nothing sent means no "MAIA is reading": a declined opening shows her greeting instead', async () => {
+  // Local walk 2026-11-05: the opening returned without sending, and "MAIA is reading…" stayed forever.
+  const p = render({ autoOpenWithMaia: true, onOpenWithMaia: jest.fn(async () => false) });
+  await act(async () => { await Promise.resolve(); });
+  expect(p.onOpenWithMaia).toHaveBeenCalledTimes(1);
+  expect(q('[data-stage-opening-pending]')).toBeNull();
+  expect(q('[data-stage-opening]')!.textContent).toContain('I’m here with this passage');
+});
+
+test('a new conversation gets its own opening after the earlier one was declined', async () => {
+  // Local walk 2026-11-05: Focus mounted before the old thread loaded, the opening was declined,
+  // and "Start a new conversation" then never opened. Defeat candidate: a once-per-mount guard.
+  const open = jest.fn(async () => false);
+  render({ autoOpenWithMaia: true, onOpenWithMaia: open, thread: null });
+  await act(async () => { await Promise.resolve(); });
+  render({ autoOpenWithMaia: true, onOpenWithMaia: open, thread: { ...emptyThread, threadId: 'old', turns: [openingTurn] } });
+  render({ autoOpenWithMaia: true, onOpenWithMaia: open, thread: null });
+  expect(open).toHaveBeenCalledTimes(2);
+  render({ autoOpenWithMaia: true, onOpenWithMaia: open, thread: { ...emptyThread, threadId: 'fresh' } });
+  expect(open).toHaveBeenCalledTimes(3);
+});
+
+describe('several conversations on one passage: the writer chooses (founder ruling 2026-11-05)', () => {
+  const at = (iso: string) => ({ turnIndex: 0, speaker: 'author', body: 'Is the ending too loud?', at: iso, adjunct: null });
+  const latest = { ...emptyThread, threadId: 'latest', turns: [at('2026-11-05T12:00:00Z')] };
+  const earlier = { ...emptyThread, threadId: 'earlier', turns: [{ ...at('2026-11-01T12:00:00Z'), body: 'What is this paragraph doing?' }] };
+
+  it('asks which to continue, latest first, with a way to start a new one; MAIA does not open meanwhile', () => {
+    const p = render({ autoOpenWithMaia: true, thread: null, conversationChoices: [latest, earlier],
+      onChooseConversation: jest.fn(), onStartNewConversation: jest.fn() });
+    const chooser = q('[data-conversation-chooser]')!;
+    expect(chooser.textContent).toContain('continue our latest conversation, or an earlier one');
+    const labels = Array.from(chooser.querySelectorAll('[data-conversation-choice] b')).map((b) => b.textContent);
+    expect(labels[0]).toMatch(/^Our latest/);
+    expect(labels[1]).toMatch(/^Earlier/);
+    expect(chooser.textContent).toContain('What is this paragraph doing?');
+    expect(p.onOpenWithMaia).not.toHaveBeenCalled();
+    act(() => q('[data-conversation-choice="earlier"]')!.click());
+    expect(p.onChooseConversation).toHaveBeenCalledWith('earlier');
+    act(() => q('[data-conversation-new]')!.click());
+    expect(p.onStartNewConversation).toHaveBeenCalled();
+  });
+
+  it('what the writer asked while choosing is held, then sent once they choose', () => {
+    const p = render({ thread: null, conversationChoices: [latest, earlier], onChooseConversation: jest.fn(),
+      requestedAct: { key: 1, label: 'Make it quieter.', prompt: 'Make it quieter.', options: { turnShape: 'conversation' } } });
+    expect(p.onSend).not.toHaveBeenCalled();
+    expect(q('[data-held-act]')).not.toBeNull();
+    render({ ...p, thread: earlier, conversationChoices: [] });
+    expect(p.onSend).toHaveBeenCalledTimes(1);
+    expect(p.onSend.mock.calls[0][0]).toBe('Make it quieter.');
+  });
+
+  it('with one conversation (or none) there is nothing to choose', () => {
+    render({ thread: null, conversationChoices: [latest] });
+    expect(q('[data-conversation-chooser]')).toBeNull();
+  });
+});

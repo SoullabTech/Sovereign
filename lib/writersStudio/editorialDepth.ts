@@ -176,11 +176,24 @@ export const ATTUNEMENT_DIRECTIVE = [
  * never mean preserving an epistemic mistake as fact, and the guard therefore
  * cannot live only at the depth where the inflation began — it has to hold at
  * the depth that inherits it.
+ *
+ * ⭐ The same holds for the writer's own claims about their text (accuracy
+ * witness, 2026-11-07): asked "So the sentences get shorter as they go?" of a
+ * passage whose third sentence is longest, MAIA said yes and invented the word
+ * counts to fit. A claim about the words on the page is checked against the
+ * passage, whoever makes it, and a quotation is exact or it is not a quotation.
  */
+export const TEXT_ACCURACY_DIRECTIVE = [
+  'When I say something checkable about my own passage (how long its sentences are, their order, what repeats, who speaks, what it says), check it against the passage before you agree or build on it; if the passage shows otherwise, say plainly what it shows.',
+  'Do the same for your own claims: before saying which sentence is longest, how many words something has, or in what order things come, check the passage, and never state a count or order you have not checked.',
+  'Quote my words exactly as they stand in the passage, or describe them without quotation marks.',
+].join(' ');
+
 export const EPISTEMIC_INTEGRITY_DIRECTIVE = [
   'Treat nothing said earlier in this conversation as established merely because it was said confidently or said by you.',
   'If an earlier turn stated an interpretation as a fact, do not carry it forward as one: say what the supplied evidence actually establishes, and mark the rest as a possible reading.',
   'Changing how deeply you explain never changes how certain a claim is entitled to be.',
+  TEXT_ACCURACY_DIRECTIVE,
 ].join(' ');
 
 /**
@@ -194,6 +207,37 @@ export const LEARNING_TEACHING_PRECEDENCE = [
   'When I have asked you to teach me, you are not recommending a move: what a move may gain or cost, and laying out what you noticed, why it matters and what you would propose, wait until I ask for them.',
   'In a teaching reply, keep to one idea in a few plain sentences and end with one short question that lets me choose where we go next. This governs the length of your reply.',
 ].join(' ');
+
+/**
+ * ⭐ RESPONSIVE LENGTH (founder direction 2026-11-05): "make the responses responsive to the
+ * writer and their situation. Some want more and some need less." Overwhelm is easy to reach
+ * for most members, so brevity is the default when the request is small; the room grows only
+ * with the question. ⛔ Judged from THIS request, never from an impression of the writer.
+ */
+export const RESPONSIVE_LENGTH_DIRECTIVE = [
+  'Fit the length of your reply to what I just asked and how I asked it, not to a set form.',
+  'A short or practical request gets a short answer: a few sentences, and the wording itself if that is what I asked for. An open or searching question can take more room, but only as much as it needs.',
+  'When unsure, say the most useful thing briefly and let me ask for more.',
+  'Do not restate my passage back to me and do not pad. Do not mention the Studio\'s settings, limits or controls unless one of them decides what you can do for me right now, and then say it in one plain sentence.',
+  'Judge the length from this request alone, never from an impression of me.',
+].join(' ');
+
+/** Composed by the runtime beside `editorialDirective`, ⛔ not inside it: the depth texts stay
+ *  byte-identical, and a Learning turn keeps its own length rule (LEARNING_TEACHING_PRECEDENCE). */
+export function responsiveLengthDirective(depth: EditorialDepth): string {
+  return depth === 'learning' ? '' : RESPONSIVE_LENGTH_DIRECTIVE;
+}
+
+/** The writer's own choice (the "Shorter" / "Say more" buttons). ⛔ Never inferred. */
+export type ReplyLength = 'shorter' | 'fuller';
+export function isReplyLength(value: unknown): value is ReplyLength {
+  return value === 'shorter' || value === 'fuller';
+}
+export function replyLengthInstruction(choice: ReplyLength): string {
+  return choice === 'shorter'
+    ? 'I have asked you to keep your replies short: two to four sentences unless I ask for more. This governs the length of your reply.'
+    : 'I have asked for fuller replies: take the room to explain what you notice and what it rests on, still without padding. This governs the length of your reply.';
+}
 
 /**
  * ⭐ The signals, composed. ⛔ Never collapsed into one dial.

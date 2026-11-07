@@ -39,6 +39,10 @@ jest.mock('@/lib/manuscript/source/arrivals', () => ({
   recordArtifactArrival: jest.fn(async () => ({ id: 'arrival-fictional-1' })),
 }));
 
+jest.mock('@/lib/manuscript/source/duplicateImport', () => ({
+  checkDuplicateImport: jest.fn(async () => ({ outcome: 'proceed' })),
+}));
+
 import { POST } from '../route';
 import { SOURCE_UPLOAD_IDEMPOTENCY_HEADER } from '@/lib/writersStudio/sourceUploadAttempt';
 import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';

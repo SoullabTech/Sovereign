@@ -5,14 +5,16 @@
  * Shows only aspects the calculator reported and declinations the server
  * calculated; nothing is inferred or interpreted here.
  */
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { usePanelState } from './panelMemory';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
-import { chartBodies, ASPECT_COLOR } from '@/lib/astrology/proChartGeometry';
+import { chartBodies, ASPECT_COLOR, ANGLE_DEFINITIONS } from '@/lib/astrology/proChartGeometry';
 import { declinationPairs, type Declination } from '@/lib/astrology/proDeclinations';
 import styles from './pro-aspect-grid.module.css';
 
 const ASPECT_GLYPH: Record<string, string> = {
   conjunction: '☌', opposition: '☍', trine: '△', square: '□', sextile: '⚹', quincunx: '⚻',
+  semisextile: '⚺', semisquare: '∠', sesquiquadrate: '⚼', quintile: 'Q', biquintile: 'bQ',
 };
 
 function formatDeclination(value: number): string {
@@ -23,14 +25,20 @@ function formatDeclination(value: number): string {
 }
 
 export default function ProAspectGrid({
-  chart, declinations, onSelectBody,
+  chart, declinations, onSelectBody, showDeclinations = true,
 }: {
   chart: BirthChart;
+  /** False where declinations are never available, such as a shared client chart. */
+  showDeclinations?: boolean;
   declinations: readonly Declination[] | null;
   onSelectBody: (name: string) => void;
 }) {
-  const [tab, setTab] = useState<'grid' | 'declinations'>('grid');
-  const bodies = useMemo(() => chartBodies(chart), [chart]);
+  const [tab, setTab] = usePanelState<'grid' | 'declinations'>('aspectgrid.tab', 'grid');
+  // Bodies, then the Ascendant and Midheaven as the last two rows.
+  const bodies = useMemo(() => [
+    ...chartBodies(chart).map((body) => ({ name: body.name as string, glyph: body.glyph, angle: false })),
+    ...ANGLE_DEFINITIONS.filter(([key]) => chart[key]).map(([, name, glyph]) => ({ name, glyph, angle: true })),
+  ], [chart]);
   const byPair = useMemo(() => {
     const map = new Map<string, BirthChart['aspects'][number]>();
     for (const aspect of chart.aspects || []) {
@@ -45,10 +53,12 @@ export default function ProAspectGrid({
   return (
     <section className={styles.panel} aria-labelledby="pro-grid-title">
       <div className={styles.head}>
-        <h3 id="pro-grid-title">Aspect grid &amp; declinations</h3>
+        <h3 id="pro-grid-title">{showDeclinations ? <>Aspect grid &amp; declinations</> : "Aspect grid"}</h3>
         <div role="tablist" className={styles.tabs}>
           <button role="tab" aria-selected={tab === 'grid'} onClick={() => setTab('grid')}>Aspect grid</button>
-          <button role="tab" aria-selected={tab === 'declinations'} onClick={() => setTab('declinations')}>Declinations</button>
+          {showDeclinations && (
+            <button role="tab" aria-selected={tab === 'declinations'} onClick={() => setTab('declinations')}>Declinations</button>
+          )}
         </div>
       </div>
 
@@ -73,7 +83,9 @@ export default function ProAspectGrid({
                     );
                   })}
                   <th scope="row">
-                    <button onClick={() => onSelectBody(row.name)} title={`Select ${row.name}`}>{row.glyph}</button>
+                    {row.angle
+                      ? <span className={styles.angle} title={row.name}>{row.glyph}</span>
+                      : <button onClick={() => onSelectBody(row.name)} title={`Select ${row.name}`}>{row.glyph}</button>}
                   </th>
                 </tr>
               ))}

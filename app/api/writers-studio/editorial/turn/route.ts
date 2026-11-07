@@ -34,10 +34,12 @@ import {
   type EditorialScopeDeclaration,
 } from '@/lib/manuscript/editorialScope/contract';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
-import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
+import { isReplyLength, type EditorialDepth, type ReplyLength } from '@/lib/writersStudio/editorialDepth';
 import { isTeachingAnchor, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { isTurnShape, type TurnShape } from '@/lib/writersStudio/conversationTurn';
 import { isPassageAct, type PassageAct } from '@/lib/writersStudio/passageActs';
+import { isArrivalOriginRef, type ArrivalOrigin, type ArrivalOriginRef } from '@/lib/writersStudio/arrivalOrigin';
+import { resolveArrivalOrigin } from '@/lib/writersStudio/arrivalOriginServer';
 import { OPENING_GESTURE } from '@/lib/writersStudio/conversationOpening';
 import { query } from '@/lib/db/postgres';
 
@@ -55,7 +57,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  */
 const TOP_KEYS = [
   'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'responseDepth', 'relationshipId', 'carry',
-  'teachingAnchor', 'turnShape', 'passageAct', 'opening',
+  'teachingAnchor', 'turnShape', 'passageAct', 'opening', 'replyLength', 'origin',
 ] as const;
 const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
@@ -90,6 +92,10 @@ type Parsed =
       turnShape: TurnShape | null;
       /** Conversation-first Focus step 1: which card the writer pressed. ⛔ A closed value, never instruction text. */
       passageAct: PassageAct | null;
+      /** The writer's own length choice. ⛔ A closed value, never instruction text. */
+      replyLength: ReplyLength | null;
+      /** Where the writer arrived from (F1). ⛔ Identities only; the server loads the observation. */
+      origin: ArrivalOriginRef | null;
     }
   | { ok: false; error: string };
 
@@ -98,6 +104,10 @@ function parseClosed(body: unknown): Parsed {
     return { ok: false, error: 'a JSON object is required' };
   }
   const b = body as Record<string, unknown>;
+  if (!(b.replyLength === undefined || isReplyLength(b.replyLength))) {
+    return { ok: false, error: 'replyLength must be shorter or fuller' };
+  }
+  const replyLength: ReplyLength | null = b.replyLength === undefined ? null : b.replyLength;
   const strayTop = Object.keys(b).filter((k) => !(TOP_KEYS as readonly string[]).includes(k));
   if (strayTop.length) {
     return { ok: false, error: `unknown field(s): ${strayTop.join(', ')} — these are server facts and carry no standing here` };
@@ -119,7 +129,7 @@ function parseClosed(body: unknown): Parsed {
   /* R2 "MAIA opens": an exclusive request shape. No act, no card, no shape, no carry. */
   if (b.opening !== undefined) {
     if (b.opening !== true) return { ok: false, error: 'opening must be true' };
-    const clash = (['act', 'passageAct', 'teachingAnchor', 'turnShape', 'carry'] as const)
+    const clash = (['act', 'passageAct', 'teachingAnchor', 'turnShape', 'carry', 'origin'] as const)
       .filter((k) => b[k] !== undefined);
     if (clash.length) return { ok: false, error: `opening is exclusive with: ${clash.join(', ')}` };
     if (!(b.proposalPolicy === undefined || b.proposalPolicy === 'reply_only')) {
@@ -150,7 +160,7 @@ function parseClosed(body: unknown): Parsed {
       sanctuary: TurnPosture.resolve(b).sanctuary,
       scope: openScope, relationshipId: b.relationshipId, carry: null,
       mayProposeImmediately: false, proposalPolicy: 'reply_only', responseDepth: depth,
-      teachingAnchor: null, turnShape: null, passageAct: null,
+      teachingAnchor: null, turnShape: null, passageAct: null, replyLength, origin: null,
     };
   }
 
@@ -230,6 +240,10 @@ function parseClosed(body: unknown): Parsed {
     return { ok: false, error: 'passageAct is not a known card' };
   }
   const passageAct: PassageAct | null = b.passageAct === undefined ? null : b.passageAct;
+  if (!(b.origin === undefined || isArrivalOriginRef(b.origin))) {
+    return { ok: false, error: 'origin must be { source, readingId, observationKey }' };
+  }
+  const origin: ArrivalOriginRef | null = b.origin === undefined ? null : b.origin;
   if (passageAct && (teachingAnchor || turnShape)) {
     return { ok: false, error: 'passageAct, teachingAnchor and turnShape are exclusive' };
   }
@@ -286,6 +300,8 @@ function parseClosed(body: unknown): Parsed {
     teachingAnchor,
     turnShape,
     passageAct,
+    replyLength,
+    origin,
   };
 }
 
@@ -377,6 +393,7 @@ export async function POST(request: NextRequest) {
       mayProposeImmediately: false,
       proposalPolicy: 'reply_only',
       responseDepth: parsed.responseDepth,
+      ...(parsed.replyLength ? { replyLength: parsed.replyLength } : {}),
       opening: { gesture: OPENING_GESTURE },
     });
     if (!opened.ok) {
@@ -406,6 +423,15 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  /* F1: the arrival framing rests on the member's own frozen reading, resolved before
+     anything is written. ⛔ An unresolvable reference refuses; it is never sent on as text. */
+  let arrivalOrigin: ArrivalOrigin | undefined;
+  if (parsed.origin !== null) {
+    const resolved = await resolveArrivalOrigin({ memberId, threadId: parsed.threadId, ref: parsed.origin });
+    if (!resolved) return NextResponse.json({ error: 'origin_not_found', persisted: false }, { status: 404 });
+    arrivalOrigin = resolved;
+  }
+
   const act = await persistMemberEditorialAct({ memberId, threadId: parsed.threadId, act: parsed.act! });
   if (!act.ok) {
     const status = act.reason === 'thread_not_found' ? 404 : 400;
@@ -432,6 +458,8 @@ export async function POST(request: NextRequest) {
     ...(parsed.teachingAnchor ? { teachingAnchor: parsed.teachingAnchor } : {}),
     ...(parsed.turnShape ? { turnShape: parsed.turnShape } : {}),
     ...(parsed.passageAct ? { passageAct: parsed.passageAct } : {}),
+    ...(parsed.replyLength ? { replyLength: parsed.replyLength } : {}),
+    ...(arrivalOrigin ? { arrivalOrigin } : {}),
   });
 
   if (!turn.ok) {

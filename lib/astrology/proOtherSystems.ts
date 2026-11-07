@@ -17,6 +17,7 @@ import {
 } from './chineseAstrology';
 import { calculateCompleteMayanProfile } from './mayanAstrology';
 import { chineseYearForIsoDate } from './chineseNewYear';
+import { calculateFourPillars, type DayStart, type FourPillars } from './proFourPillars';
 import type {
   AyanamsaType, GrahaName, NakshatraInfo, VimshottariDashaProfile,
 } from './types/vedic';
@@ -59,6 +60,7 @@ export interface ProOtherSystems {
     characteristics: string[];
     compatibility: string[];
     incompatible: string[];
+    fourPillars: FourPillars;
     method: string;
   };
   mayan: {
@@ -103,7 +105,7 @@ function dashaProfileToDay(d: VimshottariDashaProfile): VimshottariDashaProfile 
  * @param verifiedUtc the birth instant already admitted by `admitProCalculation`
  */
 export async function calculateProOtherSystems(
-  birth: SavedChartBirth, verifiedUtc: string, ayanamsa: AyanamsaType,
+  birth: SavedChartBirth, verifiedUtc: string, ayanamsa: AyanamsaType, dayStart: DayStart = 'midnight',
 ): Promise<ProOtherSystems> {
   const instant = new Date(verifiedUtc);
   const iso = instant.toISOString();
@@ -167,6 +169,7 @@ export async function calculateProOtherSystems(
       characteristics: animal.characteristics,
       compatibility: animal.compatibility,
       incompatible: animal.incompatible,
+      fourPillars: calculateFourPillars(instant, birth.date, birth.time.slice(0, 5), dayStart),
       method: 'Year sign from the Free Chinese calculator. The year turns at Chinese New Year (China Standard Time, 1900–2100 table from astronomical new moons and the December solstice), so a January or early-February birth can belong to the previous year’s sign. The calendar date is used, not the birth hour.',
     },
     mayan: {

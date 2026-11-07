@@ -9,6 +9,7 @@
  */
 
 import { calculateBirthChart, type BirthData } from '@/lib/astrology/ephemerisCalculator';
+import { calculateBirthChart as calculateProBirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import {
   ARCHETYPE_CATALOG,
@@ -46,6 +47,13 @@ export interface GeneratePortraitInput {
    * never prompted. All Year Ahead prose is written fresh.
    */
   transitReport?: string;
+  /**
+   * Which chart engine reads the birth data. 'pro' = the Pro Astrology
+   * calculator, so a portrait begun from a Pro chart describes the same chart
+   * the practitioner was looking at (founder ruling 2026-11-05). Omitted →
+   * the standard calculator, unchanged for every existing caller.
+   */
+  calculator?: 'standard' | 'pro';
 }
 
 const ELEMENT_KEYS: ElementKey[] = ['fire', 'water', 'earth', 'air', 'aether'];
@@ -163,7 +171,9 @@ export interface GenerationProvenance {
 export async function generateSoulPortrait(
   input: GeneratePortraitInput,
 ): Promise<{ portrait: SoulPortrait; provenance: GenerationProvenance }> {
-  const chart = await calculateBirthChart(input.birthData);
+  const chart = input.calculator === 'pro'
+    ? await calculateProBirthChart(input.birthData)
+    : await calculateBirthChart(input.birthData);
   const summary = chartSummaryText(chart);
 
   // Parse the transit report FIRST (cheap, no model call) so an unusable report
