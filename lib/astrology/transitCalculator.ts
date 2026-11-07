@@ -59,12 +59,18 @@ export interface AspectPattern {
   // Aspect details
   aspectType: AspectType;
   orb: number; // How many degrees off exact
-  applying: boolean; // Getting closer (true) or separating (false)
-  exactDate: Date; // When aspect becomes exact
+  /**
+   * Orb closing (true), opening (false), or null when the phase is not
+   * established: an exact aspect, or a body stationary at this moment.
+   * Derived from the body's actual motion, never assumed.
+   */
+  applying: boolean | null;
+  /** Not computed. A date here would have to come from solving the crossing, so it is null rather than invented. */
+  exactDate: Date | null;
 
-  // Timeline
-  activeFrom: Date; // When aspect enters orb
-  activeTo: Date; // When aspect leaves orb
+  // Timeline (not computed; see exactDate)
+  activeFrom: Date | null;
+  activeTo: Date | null;
 }
 
 export interface WeatherCondition {
@@ -100,6 +106,11 @@ export interface WeatherCondition {
  * Calculate current planetary positions (transits)
  */
 export async function calculateCurrentTransits(date: Date = new Date()): Promise<TransitPositions> {
+  return transitPositionsAt(date);
+}
+
+/** Synchronous geocentric ecliptic longitudes of the ten planets at an instant. */
+export function transitPositionsAt(date: Date): TransitPositions {
   const time = Astronomy.MakeTime(date);
 
   // Calculate geocentric positions for all planets
@@ -154,6 +165,45 @@ const ASPECT_DEFINITIONS = [
   { type: 'quincunx' as AspectType, angle: 150, orb: 3 },
 ];
 
+const PLANET_KEY: Record<PlanetName, keyof TransitPositions> = {
+  Sun: 'sun', Moon: 'moon', Mercury: 'mercury', Venus: 'venus', Mars: 'mars',
+  Jupiter: 'jupiter', Saturn: 'saturn', Uranus: 'uranus', Neptune: 'neptune', Pluto: 'pluto',
+};
+/** Ten minutes: long enough for slow bodies to move measurably, short enough for the Moon to stay near-linear. */
+const PHASE_STEP_MS = 10 * 60 * 1000;
+const laterCache = new Map<number, TransitPositions>();
+
+function laterTransitLongitude(planet: PlanetName, date: Date, fallback: number): number {
+  const key = date.getTime();
+  let later = laterCache.get(key);
+  if (!later) {
+    later = transitPositionsAt(new Date(key + PHASE_STEP_MS));
+    if (laterCache.size > 50) laterCache.clear();
+    laterCache.set(key, later);
+  }
+  const lon = later[PLANET_KEY[planet]];
+  return typeof lon === 'number' ? lon : fallback;
+}
+
+function orbOf(natalLon: number, transitLon: number, angle: number): number {
+  const separation = Math.abs(((transitLon - natalLon + 540) % 360) - 180);
+  return Math.abs(separation - angle);
+}
+
+/**
+ * Whether the orb to an exact aspect is closing. Null when the change is below
+ * numerical resolution (the aspect is exact, or the body is stationary).
+ */
+export function isApplying(
+  natalLon: number, transitLon: number, laterTransitLon: number, angle: number,
+): boolean | null {
+  const now = orbOf(natalLon, transitLon, angle);
+  const later = orbOf(natalLon, laterTransitLon, angle);
+  const change = later - now;
+  if (Math.abs(change) < 1e-7) return null;
+  return change < 0;
+}
+
 /**
  * Find all aspects between current transits and natal chart
  */
@@ -203,14 +253,14 @@ export function findTransitAspects(
       // Calculate separation
       let separation = Math.abs(transitLon - natalLon);
       if (separation > 180) separation = 360 - separation;
+      const laterLon = laterTransitLongitude(transitName, transits.date, transitLon);
 
       // Check each aspect type
       for (const aspectDef of ASPECT_DEFINITIONS) {
         const orbDiff = Math.abs(separation - aspectDef.angle);
 
         if (orbDiff <= aspectDef.orb) {
-          // Calculate exact date (simplified - would need velocity for precision)
-          const exactDate = new Date(transits.date);
+          const applying = isApplying(natalLon, transitLon, laterLon, aspectDef.angle);
 
           aspects.push({
             transitPlanet: transitName,
@@ -220,10 +270,10 @@ export function findTransitAspects(
             natalHouse: natalData.house,
             aspectType: aspectDef.type,
             orb: orbDiff,
-            applying: true, // TODO: Calculate based on planetary velocities
-            exactDate,
-            activeFrom: new Date(transits.date.getTime() - (aspectDef.orb * 24 * 60 * 60 * 1000)),
-            activeTo: new Date(transits.date.getTime() + (aspectDef.orb * 24 * 60 * 60 * 1000)),
+            applying,
+            exactDate: null,
+            activeFrom: null,
+            activeTo: null,
           });
         }
       }

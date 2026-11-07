@@ -19,6 +19,7 @@ import {
   getSexagenaryPosition,
   getElementHolisticProfile
 } from '@/lib/astrology/chineseAstrology';
+import { chineseYearForIsoDate } from '@/lib/astrology/chineseNewYear';
 import DaYunTimeline from '@/components/astrology/DaYunTimeline';
 import type { Gender } from '@/lib/astrology/types/daYun';
 
@@ -78,7 +79,6 @@ export default function ChineseAstrologyPage() {
     ++generationEpochRef.current;
     didAutoLoad.current=false;
     setReading(null);
-    setDaYunProfile(null);
     setBirthDate('');
     setBirthYear('');
     setBirthTime('');
@@ -117,7 +117,7 @@ export default function ChineseAstrologyPage() {
     setTimeout(() => {
       if(request!==generationEpochRef.current)return;
       const date = new Date(birthDate);
-      const year = date.getFullYear();
+      const year = chineseYearForIsoDate(birthDate).chineseYear;
       const zodiacAnimal = getChineseZodiacAnimal(year);
       const element = getChineseElement(year);
       const yinYang = getYinYang(year);
@@ -286,7 +286,6 @@ export default function ChineseAstrologyPage() {
                         ++generationEpochRef.current;
                         didAutoLoad.current=false;
                         setReading(null);
-                        setDaYunProfile(null);
                         setBirthDate(e.target.value);
                         if (e.target.value) {
                           setBirthYear(e.target.value.split('-')[0]);
@@ -345,7 +344,6 @@ export default function ChineseAstrologyPage() {
                         ++generationEpochRef.current;
                         didAutoLoad.current=false;
                         setReading(null);
-                        setDaYunProfile(null);
                         setBirthDate(e.target.value);
                         // Also update birthYear for profile view sync
                         if (e.target.value) {

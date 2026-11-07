@@ -16,6 +16,7 @@ import {
   getChineseElement, getChineseZodiacAnimal, getSexagenaryPosition, getYinYang,
 } from './chineseAstrology';
 import { calculateCompleteMayanProfile } from './mayanAstrology';
+import { chineseYearForIsoDate } from './chineseNewYear';
 import { calculateFourPillars, type DayStart, type FourPillars } from './proFourPillars';
 import type {
   AyanamsaType, GrahaName, NakshatraInfo, VimshottariDashaProfile,
@@ -69,6 +70,7 @@ export interface ProOtherSystems {
     tzolkinNumber: number;
     wavespell: string;
     haab: string;
+    traditional: { tzolkin: string; kiche: string; haab: string; longCount: string; correlation: number };
     direction: string;
     pathOfLife: Array<{ stage: 'youth' | 'adulthood' | 'future'; signature: string }>;
     method: string;
@@ -121,7 +123,8 @@ export async function calculateProOtherSystems(
   const dasha = calculateVimshottariDasha(instant, moon.longitude);
 
   // Chinese and Mayan count the local civil birth date, as the Free pages do.
-  const year = Number(birth.date.slice(0, 4));
+  // The Chinese year turns at Chinese New Year, not 1 January.
+  const year = chineseYearForIsoDate(birth.date).chineseYear;
   const animal = getChineseZodiacAnimal(year);
   const element = getChineseElement(year);
   const mayan = calculateCompleteMayanProfile(new Date(birth.date + 'T12:00:00.000Z'));
@@ -167,7 +170,7 @@ export async function calculateProOtherSystems(
       compatibility: animal.compatibility,
       incompatible: animal.incompatible,
       fourPillars: calculateFourPillars(instant, birth.date, birth.time.slice(0, 5), dayStart),
-      method: 'Year sign from the Free Chinese calculator, counted by Gregorian birth year. Births before Chinese New Year (late January to mid February) may belong to the previous year’s sign.',
+      method: 'Year sign from the Free Chinese calculator. The year turns at Chinese New Year (China Standard Time, 1900–2100 table from astronomical new moons and the December solstice), so a January or early-February birth can belong to the previous year’s sign. The calendar date is used, not the birth hour.',
     },
     mayan: {
       galacticSignature: mayan.tzolkin.galacticSignature,
@@ -185,11 +188,18 @@ export async function calculateProOtherSystems(
       tzolkinNumber: mayan.tzolkin.tzolkinNumber,
       wavespell: mayan.tzolkin.wavespell,
       haab: mayan.haab.fullDate,
+      traditional: {
+        tzolkin: mayan.traditional.tzolkin.text,
+        kiche: mayan.traditional.tzolkin.kiche,
+        haab: mayan.traditional.haab.text,
+        longCount: mayan.traditional.longCount,
+        correlation: mayan.traditional.correlation,
+      },
       direction: mayan.cardinalDirection.direction,
       pathOfLife: (['youth', 'adulthood', 'future'] as const).map((stage) => ({
         stage, signature: mayan.pathOfLife[stage].galacticSignature,
       })),
-      method: 'Tzolk’in and Haab from the Free Mayan calculator, Dreamspell count (26 July 1987 epoch). This is not the traditional K’iche’ day count.',
+      method: 'Galactic signature, Kin and wavespell use the modern Dreamspell count (26 July 1987 = Kin 34, 29 February skipped). Haab and the traditional date use the Goodman–Martínez–Thompson correlation (584283). The Dreamspell is not the traditional Maya or K’iche’ day count.',
     },
   };
 }

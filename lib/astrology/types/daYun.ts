@@ -113,6 +113,8 @@ export interface DaYunProfile {
 
   /** Age when first Da Yun begins (typically 1-10) */
   daYunStartAge: number;
+  /** Unrounded start age in years (three days of birth-to-term distance per year). */
+  daYunStartAgeExact: number;
 
   /** All calculated luck periods (typically 8-12 decades) */
   periods: DaYunPeriod[];

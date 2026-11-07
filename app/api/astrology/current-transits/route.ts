@@ -11,6 +11,7 @@
 
 export const dynamic = 'force-dynamic';
 
+import { INCLUDE_UNVERIFIED_ASTEROIDS } from '@/lib/astrology/unverifiedBodies';
 import { NextRequest, NextResponse } from 'next/server';
 import * as Astronomy from 'astronomy-engine';
 import { classifyApparentMotion, type PlanetMotionStatus } from '@/lib/astrology/ephemerisCalculator';
@@ -343,8 +344,8 @@ function calculateTransitPositions(date: Date): Transit[] {
     console.error('[Transits] CERES_CALCULATION_FAILED');
   }
 
-  // Pallas
-  try {
+  // Pallas — withheld: elements unverified (see lib/astrology/unverifiedBodies.ts)
+  if (INCLUDE_UNVERIFIED_ASTEROIDS) try {
     const pallasLon = calculatePallasApprox(date);
     const { sign, degree } = longitudeToZodiac(pallasLon);
     transits.push({
@@ -359,8 +360,8 @@ function calculateTransitPositions(date: Date): Transit[] {
     console.error('[Transits] PALLAS_CALCULATION_FAILED');
   }
 
-  // Juno
-  try {
+  // Juno — withheld: elements unverified (see lib/astrology/unverifiedBodies.ts)
+  if (INCLUDE_UNVERIFIED_ASTEROIDS) try {
     const junoLon = calculateJunoApprox(date);
     const { sign, degree } = longitudeToZodiac(junoLon);
     transits.push({
@@ -375,8 +376,8 @@ function calculateTransitPositions(date: Date): Transit[] {
     console.error('[Transits] JUNO_CALCULATION_FAILED');
   }
 
-  // Vesta
-  try {
+  // Vesta — withheld: elements unverified (see lib/astrology/unverifiedBodies.ts)
+  if (INCLUDE_UNVERIFIED_ASTEROIDS) try {
     const vestaLon = calculateVestaApprox(date);
     const { sign, degree } = longitudeToZodiac(vestaLon);
     transits.push({
