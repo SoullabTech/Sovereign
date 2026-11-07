@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { addMinutes } from "date-fns";
+import { fourPillarIndices } from "@/lib/astrology/fourPillarsCore";
 
 export type Element = "Wood" | "Fire" | "Earth" | "Metal" | "Water";
 
@@ -120,15 +120,9 @@ export function generateFourPillars(
   birth: Date,
   tzOffsetMinutes = 0,
 ): FourPillarsProfile {
-  const local = addMinutes(birth, tzOffsetMinutes);
-  const y = local.getUTCFullYear();
-  const m = local.getUTCMonth() + 1;
-  const d = local.getUTCDate();
-  const h = local.getUTCHours();
-
-  // Simplified calculations - real implementation should use Chinese Solar calendar
-  const yearStemIndex = (y - 4) % 10;
-  const yearBranchIndex = (y - 4) % 12;
+  // Pillars come from astronomy (exact solar terms) and the sexagenary day
+  // count; see lib/astrology/fourPillarsCore.ts for the conventions.
+  const idx = fourPillarIndices(birth, tzOffsetMinutes);
 
   const pillar = (stemIdx: number, branchIdx: number): StemBranch => ({
     stem: STEMS[stemIdx],
@@ -137,25 +131,11 @@ export function generateFourPillars(
     yinYang: STEM_YY[stemIdx] as "Yin" | "Yang",
   });
 
-  // Calculate each pillar
-  const year = pillar(yearStemIndex, yearBranchIndex);
+  const year = pillar(idx.year.stem, idx.year.branch);
+  const month = pillar(idx.month.stem, idx.month.branch);
+  const day = pillar(idx.day.stem, idx.day.branch);
+  const hour = pillar(idx.hour.stem, idx.hour.branch);
 
-  // Month pillar (simplified - should use solar terms)
-  const month = pillar((yearStemIndex + m) % 10, (yearBranchIndex + m) % 12);
-
-  // Day pillar (simplified - should use proper Julian day calculation)
-  // Use positiveMod to handle pre-1970 birth dates where dayNumber is negative
-  // (JS % operator returns negative results for negative operands)
-  const dayNumber = Math.floor(local.getTime() / 86400000);
-  const positiveMod = (n: number, m: number) => ((n % m) + m) % m;
-  const day = pillar(positiveMod(dayNumber + 40, 10), positiveMod(dayNumber + 16, 12));
-
-  // Hour pillar (based on Chinese double-hour system)
-  const hourBranchIndex = Math.floor((h + 1) / 2) % 12;
-  const hourStemIndex = (yearStemIndex * 2 + hourBranchIndex) % 10;
-  const hour = pillar(hourStemIndex, hourBranchIndex);
-
-  // Count elements
   const tally: Record<Element, number> = {
     Wood: 0,
     Fire: 0,

@@ -11,6 +11,7 @@
  * - Luck pillars: Derived from month pillar, progressing through the 60 Jia Zi cycle
  */
 
+import { daYunStartAgeExact as daYunStartAgeExactFor } from './fourPillarsCore';
 import {
   DaYunProfile,
   DaYunPeriod,
@@ -224,47 +225,6 @@ function determineCycleDirection(gender: Gender, yearStemYinYang: YinYang): Cycl
 }
 
 /**
- * Calculate Da Yun start age based on distance to solar term
- * Simplified calculation: days to next/previous term divided by 3
- */
-function calculateStartAge(birthDate: Date, cycleDirection: CycleDirection): number {
-  const month = birthDate.getMonth() + 1;
-  const day = birthDate.getDate();
-
-  // Find the relevant solar term
-  const currentTermIndex = SOLAR_TERMS.findIndex(t => t.month === month);
-  const currentTerm = SOLAR_TERMS[currentTermIndex];
-  const nextTerm = SOLAR_TERMS[(currentTermIndex + 1) % 12];
-  const prevTerm = SOLAR_TERMS[(currentTermIndex + 11) % 12];
-
-  let daysDifference: number;
-
-  if (cycleDirection === 'forward') {
-    // Count days to next solar term
-    if (day < currentTerm.approximateDay) {
-      daysDifference = currentTerm.approximateDay - day;
-    } else {
-      // Days remaining in month + days to next term
-      const daysInMonth = new Date(birthDate.getFullYear(), month, 0).getDate();
-      daysDifference = (daysInMonth - day) + nextTerm.approximateDay;
-    }
-  } else {
-    // Count days from previous solar term
-    if (day >= currentTerm.approximateDay) {
-      daysDifference = day - currentTerm.approximateDay;
-    } else {
-      daysDifference = day + (30 - prevTerm.approximateDay);
-    }
-  }
-
-  // Divide by 3 to get start age (traditional formula)
-  const startAge = Math.round(daysDifference / 3);
-
-  // Clamp between 1 and 10
-  return Math.max(1, Math.min(10, startAge));
-}
-
-/**
  * Progress through the 60 Jia Zi cycle
  */
 function getNextStemBranch(
@@ -397,7 +357,11 @@ export function calculateDaYun(
   const cycleDirection = determineCycleDirection(gender, yearStemInfo.yinYang);
 
   // Calculate start age
-  const daYunStartAge = calculateStartAge(birthDate, cycleDirection);
+  // Exact start age: days to the next (forward) or from the previous (backward)
+  // Jie solar term, three days per year. Rounded to whole years for the period
+  // ranges; the exact value is kept for display.
+  const daYunStartAgeExact = daYunStartAgeExactFor(birthDate, cycleDirection);
+  const daYunStartAge = Math.min(10, Math.max(0, Math.round(daYunStartAgeExact)));
 
   // Get day master element for harmony calculations
   const dayMasterElement = fourPillars.day.element;
@@ -488,6 +452,7 @@ export function calculateDaYun(
     fourPillars,
     cycleDirection,
     daYunStartAge,
+    daYunStartAgeExact,
     periods,
     currentPeriod,
     previousPeriod,
