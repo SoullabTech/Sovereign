@@ -52,3 +52,39 @@ Existing astrology tests (`astrology-pro-*.test.ts`) check structure, access rul
 ## Not examined
 
 Aspects/orbs, decans, ashtakavarga, gochara, synastry, life-cycle returns, Western house-system output beyond Owen's chart, any member-visible wording around these.
+
+---
+
+## Addendum — later the same day (2026-11-07): what was done and what stands
+
+**Fixed and committed** (each with a reference test whose expected values come from outside the code under test; all on `feature/astro-pro-systems-20261105`, unpushed):
+
+| Commit | Fix | Evidence |
+|---|---|---|
+| `98f6ac85c` | Dreamspell Kin epoch (Kin 34, not 0), 29 Feb skipped, wavespell sign | 26 Jul 1987 = Kin 34; 21 Dec 2012 = Kin 207; 3 Sep 2003 = Kin 193 |
+| `bd520201f` | Chinese year turns at Chinese New Year (1900–2100 table); traditional Tzolk'in / Haab / Long Count (GMT 584283) | 30 of 30 recalled published New Year dates; 3 Sep 2003 = 13 Akbal, 11 Mol, 12.19.10.10.3 |
+| `c597e5be0` | Pallas, Juno, Vesta withheld (`INCLUDE_UNVERIFIED_ASTEROIDS = false`) | SELF-DECLARED "20–60° off" |
+| `2d9684b55` | Free Placidus and Koch are real; visible Porphyry fallback at polar latitudes (`houseSystemApplied`) | independent Placidus/Koch at 3 places, within 0.003° |
+| `ce4bed8ef` | Transit applying/separating from real motion; no invented exact dates | Sun and retrograde Saturn cases |
+| `f8620b775` | Four Pillars and Da Yun from exact solar terms | 2000-01-01 and Mao Zedong's published chart |
+| `3dd0128b1` | Free chart retrograde flags (were always false) | 112 of 112 states vs independent apparent motion; positions within 0.02° (Jupiter/Saturn 0.15°) |
+| `a6722e51a` | Ayanamsa from definitions (Lahiri, Krishnamurti, True Chitra), with nutation | 1956 CRC value; J2000 23°51'11"; KP gap 5'48" |
+| `a4ac224c3` | Free Chinese page crashed on an undeclared `setDaYunProfile` (pre-existing on this branch) | browser: 10 Feb 2015 now Wood Horse (2014) |
+| `b569c55d8` | Black Moon Lilith was the perigee, 180° off | 60 real apogees: Moon 3° from corrected point, 177° from old |
+
+**Checked and found sound:** Sun, Moon, Ascendant and MC (Owen's chart); mean node (rate and epoch; named `calculateTrueNode` but is the mean node); aspect geometry (separation folding, orb from exact angle).
+
+**Still open — founder decisions or unverified:**
+
+1. **Dreamspell "path of life"** — Youth/Future are Dreamspell Kin ±180 days, which is exactly nine day-sign cycles, so the sign matches the birth sign except across a skipped 29 February; text such as "moving from Space toward Space" results. Not a traditional K'iche' calculation. Relabel, replace or remove?
+2. **Four Pillars day boundary** — implemented as 00:00 local with 23:00–24:00 as late Zi of the same day; many schools change the day at 23:00. No true solar time.
+3. **"Provisional approximation" wording** (Vedic page, Pro note, zodiac toggle) — left unchanged; evidence is stronger but loosening member-facing claim wording is a founder act under the claim-state canon.
+4. **Decan table (`decanSystem.ts`)** — rulers follow the Chaldean order for 34 of 36 decans. Aries 3rd lists Jupiter (Chaldean: Venus) and Scorpio 3rd lists Moon (Chaldean: Venus); both match the triplicity system instead, so the table mixes systems. The Aries 3rd entry also carries text apparently pasted from a Scorpio decan ("phoenix" gifts, a November ritual date). Interpretive content: needs authorship, not a calculation fix.
+5. **Chiron and Ceres** — Keplerian, anchored to single epochs; not independently verified.
+6. **Pallas / Juno / Vesta** — withheld until JPL elements are sourced and checked.
+7. **Exact transit dates and active windows** — unavailable (`null`), not computed.
+8. **MAIA list route** — infers gender from pronouns by regex for Da Yun and parses time zones as whole hours (+5:30 loses its minutes). Not changed.
+9. **Stored Bazi profiles** — any saved earlier were computed with the old Four Pillars; where they are stored was not checked.
+10. **Not examined:** gochara, ashtakavarga, synastry, life-cycle returns, the Pro chart panel and Free chart page in a browser.
+
+**Evidence limits:** no Swiss Ephemeris or JPL data file was available here; reference values are independent offline implementations (JPL approximate-element tables, Meeus series, definitional ayanamsa) and recalled published values. A cross-check against real Swiss Ephemeris output remains worthwhile.
