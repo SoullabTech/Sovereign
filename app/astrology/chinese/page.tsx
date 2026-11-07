@@ -79,7 +79,6 @@ export default function ChineseAstrologyPage() {
     ++generationEpochRef.current;
     didAutoLoad.current=false;
     setReading(null);
-    setDaYunProfile(null);
     setBirthDate('');
     setBirthYear('');
     setBirthTime('');
@@ -287,7 +286,6 @@ export default function ChineseAstrologyPage() {
                         ++generationEpochRef.current;
                         didAutoLoad.current=false;
                         setReading(null);
-                        setDaYunProfile(null);
                         setBirthDate(e.target.value);
                         if (e.target.value) {
                           setBirthYear(e.target.value.split('-')[0]);
@@ -346,7 +344,6 @@ export default function ChineseAstrologyPage() {
                         ++generationEpochRef.current;
                         didAutoLoad.current=false;
                         setReading(null);
-                        setDaYunProfile(null);
                         setBirthDate(e.target.value);
                         // Also update birthYear for profile view sync
                         if (e.target.value) {
