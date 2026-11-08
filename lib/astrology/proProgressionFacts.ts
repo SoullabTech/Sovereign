@@ -77,7 +77,8 @@ export function progressedFacts(m: ProgressedMoment): string {
   const date = m.at.toISOString().slice(0, 10);
   const positions = chartBodies(m.chart)
     .filter((b) => ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars'].includes(b.name))
-    .map((b) => `${b.name} ${b.position.sign} ${deg(b.position.degree)} (house ${b.position.house})`);
+    // Houses here are the progressed chart's own, not the natal houses.
+    .map((b) => `${b.name} ${b.position.sign} ${deg(b.position.degree)} (progressed-chart house ${b.position.house})`);
   const list = (cs: CrossAspect[]) => cs.slice(0, 16).map((c) => `${c.inner} ${c.type} natal ${c.outer} (${c.orb.toFixed(1)}°)`).join('; ') || 'none within 1°';
   return [
     `Secondary progressions for ${date}: ${positions.join(', ')}; progressed Ascendant ${m.chart.ascendant.sign} ${deg(m.chart.ascendant.degree)}, MC ${m.chart.midheaven.sign} ${deg(m.chart.midheaven.degree)}`,

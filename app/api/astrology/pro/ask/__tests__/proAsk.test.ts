@@ -56,6 +56,7 @@ describe('Ask MAIA inside Pro', () => {
     expect((await res.json()).answer).toBe('The composite Sun…');
     const call = generateSimple.mock.calls[0][0];
     expect(call.messages).toEqual([{ role: 'user', content: 'What is this bond about?' }]);
+    expect(call.forceClaude).toBe(true);
     expect(call.systemPrompt).toContain('Composite chart (midpoints');
     expect(call.systemPrompt).toContain('Sun:');
     for (const secret of ['1985', '2010', '09:40', '16:05', '40.71', '-118.24', 'America/Los_Angeles']) {
@@ -88,6 +89,7 @@ describe('Ask MAIA inside Pro', () => {
     });
     const call = generateSimple.mock.calls[0][0];
     expect(call.tier).toBe('deep');
+    expect(call.forceClaude).toBe(true);
     expect(call.maxTokens).toBeGreaterThan(600);
     const prompt = call.systemPrompt as string;
     for (const part of ['Natal chart', 'Transits on 2026-06-21', 'Chinese Four Pillars', 'Birth, traditional Maya count', 'Chosen date, traditional Maya count',
@@ -117,6 +119,7 @@ describe('Ask MAIA inside Pro', () => {
     const [single, period] = generateSimple.mock.calls.map((c) => c[0].systemPrompt as string);
     expect(single).toContain('Secondary progressions for 2026-06-21');
     expect(single).toContain('Solar arc');
+    expect(single).toContain('progressed-chart house');
     expect(single).not.toContain('from 2024-06');
     expect(period).toContain('from 2024-06 to 2026-06');
   }, 30_000);
