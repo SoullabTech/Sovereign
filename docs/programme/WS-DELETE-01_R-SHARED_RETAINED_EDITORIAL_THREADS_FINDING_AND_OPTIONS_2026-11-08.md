@@ -1,6 +1,6 @@
 # WS-DELETE-01 · R-SHARED — Retained editorial threads after Remove: what the four routes do, and the options
 
-**Status: MEASURED · OPTIONS FOR THE FOUNDER · NOTHING CHANGED.** This record answers the finding raised and not closed in the lane record, section 6.9.1 ("A separate founder finding, raised and not closed here"; that section exists on the branch `claude/ws-delete-followup-custody-20261106` until PR [#2169](https://github.com/SoullabTech/Sovereign/pull/2169) merges, so this is a separate file rather than an edit to a file that #2169 also edits). No route, library, migration, compose, env or key file was changed. No deploy. Fictional data only.
+**Status: MEASURED · DECIDED (founder, 2026-11-08: option b-narrow, undo left open, copy clause yes, option c design-only with the migration held) · IMPLEMENTED ON A BRANCH FOR A DRAFT PULL REQUEST (section 8) · NOT MERGED · NOT DEPLOYED.** Sections 1 to 7 are the measurement and the options as they stood before the decision; they are kept as written, with the two facts that changed marked in place. This record answers the finding raised and not closed in the lane record, section 6.9.1 ("A separate founder finding, raised and not closed here"). PR [#2169](https://github.com/SoullabTech/Sovereign/pull/2169) merged on 2026-11-08 17:58 UTC, so that section is now on the base. No migration, compose, env or key file was changed. No deploy. Fictional data only.
 
 Evidence classes (the register's): **EXECUTED** = run in this lane on a fictional PostgreSQL 16; **SOURCE** = read in code at the commit named; **REPORTED** = said, not located. Base: `clean-main-no-secrets` at `0446c5c0` (the working tree this ran on); re-run on the head of #2169 (`836ab1e1`) with the same result, see section 3.
 
@@ -101,10 +101,44 @@ Rulings still needed (the readout answers the former question 1; nothing below h
 
 The commit the production container ran at the flag readout; whether any production member holds a retained editing thread whose Work was removed (nothing was counted); browser behaviour of any surface; the Save-working path and ask POST with an editorial thread id (section 3); the legacy-chain question of 6.9.5 (chains left by writings deleted before the R20 erase function existed).
 
-PR [#2169](https://github.com/SoullabTech/Sovereign/pull/2169) is, as of 2026-11-08, open, **not draft** and unmerged (head `836ab1e1`). The task description called it a draft.
+PR [#2169](https://github.com/SoullabTech/Sovereign/pull/2169) was, when sections 1 to 7 were written, open, **not draft** and unmerged (head `836ab1e1`); **it merged the same day, 17:58 UTC.**
 
 ## 7. Reproduce
 
 ```bash
 bash tests/constitutional/ws-delete/dynamic/run-retained-editorial-pg16.sh   # as root; PostgreSQL 16 binaries at /usr/lib/postgresql/16/bin
+```
+
+## 8. Decision and implementation (2026-11-08)
+
+**Decision (founder, relayed in the session).** (a) recorded as the floor; **(b-narrow)** now; **undo not gated**; **the copy clause of 6.9.5(e): yes**; **(c): authorize design and testing first, hold the migration pending review.** Production readouts, founder-run, read-only, names and counts only, 2026-11-08: `WRITERS_STUDIO_EDITORIAL_ENABLED` is **on**; `writer_editorial_thread_origins` rows whose relationship is gone: **0 threads, 0 members** (the origin table exists in production). So the gap is closed before the first member reaches it. It is prevention, not repair of a case that exists. REPORTED, not reproduced here; the container's commit was not read.
+
+**What was built** (branch `claude/relaxed-hamilton-hoxzy6`, draft pull request; two commits so the copy can be split off):
+- `lib/writers-studio/orphanedEditorialOrigin.ts` — the one definition: the thread has an origin row **and** the relationship that row names no longer exists. The list embeds its SQL; adoption asks the function.
+- **Adoption** refuses such a thread **before act 1** with `relationship_refusal` / `origin_unavailable`, HTTP **409** (the code the thread, open and version paths already use). No permission row is minted. The body stays two keys.
+- **Relationships list** omits such a thread. Live threads and threads with no origin row are returned whole as before.
+- **Undo, and the ask route's `?thread=` read, are unchanged** (declared; RT-4 and RT-2).
+- **Copy** (separate commit): each Remove dialog now ends with *"The conversations you worked through passage by passage are among them, and no Work will offer them again."* It says what the Studio offers, never what can be reached.
+
+**Evidence (EXECUTED here).**
+- PostgreSQL 16 probe: **20 of 20** (`retainedEditorial.probe.test.ts`, was 16). RT-3 and RT-3b now assert 409, no authorization row, the writing byte-identical; RT-3c a live origin still applies; RT-3d the refusal precedes the legacy-locus guard (non-vacuous: the same adoption answers `legacy_locus` on a live origin); RT-9 older origin-less threads untouched; RT-10 the declared gap.
+- Hermetic: `orphanedOriginGate.test.ts` (16) and `originUnavailable.test.ts` (4). The lane's 19 hermetic suites: **492 of 492**. The original delete PG harness: **77 of 77**. `npm run typecheck`: no regressions.
+- **Defeat candidates: 26 of 26 killed**, each on the test written for it (OG1 to OG14 in `tests/constitutional/ws-delete/mutants/run.mjs`, with a `p` twin where a database can see it; CX10 to CX12 for the clause). Two candidate-hygiene corrections found on the way: OG4's first replacement changed operator precedence and was killed partly for the wrong reason (rewritten so it embodies one error); a probe, RT-3d, first passed vacuously because a headingless section can never be legacy (rebuilt, and made to prove the legacy guard fires first). **No candidate for "gate on the Work row instead of the relationship"**: the relationship is deleted by cascade from the Work, so no observable behaviour tells them apart (irreducible).
+
+**Stated limits.**
+- A **pre-check, not the mutation boundary**: a Remove committing between the check and the write lets one adoption through. Not a safety defect here (the owner's explicit gesture on their own writing); moving it inside `executeAuthorization` changes a function other callers share.
+- **The declared gap (RT-10, ruling R5 owed).** A Work that still exists but **withdrew the writing's declaration** (the expressions route deletes that row and nothing else) keeps its relationship, so the thread is not orphaned by this definition although the gated paths refuse it: the list still offers it and adoption still applies. Widening the definition to "relationship **or** declaration gone" is a small change to the one definition and would flip RT-10; it was not made because the approved predicate was the relationship only.
+- The ask route's `?thread=` read stays open on purpose: it is the member's only sight of what is retained until (c) gives them a door.
+- Not exercised: Save-working; any browser surface; `POST …/ask` with an editorial thread id.
+- **Pre-existing, not mine, found on the way:** (1) `run.mjs --check` fails on the base for J3 and S3: the manuscripts DELETE route now has a second `viaWork` block (the offline-cabin branch), so those two anchors match twice; (2) `lib/writers-studio/__tests__/relationshipCarry.test.ts` and `relationshipCarrySources.test.ts` fail 7 of 7 with and without this change.
+
+**(c) design.** Not started in this change. The constraint it must design around is in section 4: deleting editorial history while the writing lives needs a new database deletion authority, because the only one today requires a member-deletion tombstone that names the chain's manuscript.
+
+**Rulings still owed:** **R5** widen the orphan definition to include a withdrawn declaration? (recommended: yes, as its own small change, once someone has looked at the withdraw flow's intent.) **R6** when does (c) get its design record, and who reviews the migration?
+
+## 9. Reproduce (as built)
+
+```bash
+bash tests/constitutional/ws-delete/dynamic/run-retained-editorial-pg16.sh                       # 20 probes; as root, PG16 binaries
+node tests/constitutional/ws-delete/mutants/run.mjs OG1 OG1p OG2 OG2p OG3 OG3p OG4p OG5 OG5p OG7 OG7p OG8 OG8p OG9 OG9p OG10 OG10p OG11 OG12 OG13 OG14 OG14p CX10 CX10b CX11 CX12
 ```
