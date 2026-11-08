@@ -29,17 +29,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { refuseDeclaration } from '@/lib/livingWork/domain';
+import { declareManuscriptExpression } from '@/lib/livingWork/declareManuscriptExpression';
 import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
 /** The one expression type the Studio can currently hold. */
 const DECLARABLE_TYPES = ['manuscript'] as const;
-
-interface ExpressionRow {
-  id: string;
-  expression_type: string;
-  expression_id: string;
-  declared_at: string;
-}
 
 export async function POST(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
@@ -137,28 +131,25 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       return NextResponse.json({ error: refusal }, { status: 400 });
     }
 
-    const manuscript = await query<{ id: string }>(
-      `SELECT id FROM member_manuscripts WHERE id = $1 AND member_id = $2`,
-      [expressionId, memberId]
-    );
-    if (manuscript.rows.length === 0) {
+    // The manuscript check and the insert are ONE transaction that also holds the
+    // writing: a Delete of it cannot commit between them, and cannot run on a
+    // stale read of who declares it. `living_work_expressions` has no foreign key
+    // to the manuscript, so a gap here is a Work naming a writing that is gone —
+    // the detached state WS-DELETE-01 forbids. See declareManuscriptExpression.
+    const outcome = await declareManuscriptExpression({
+      livingWorkId,
+      manuscriptId: expressionId,
+      memberId,
+    });
+    if (outcome.kind === 'not_found') {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
-
     // Declaring twice is not an error — the member is saying something already
     // true. The unique constraint absorbs it; the response says which happened.
-    const inserted = await query<ExpressionRow>(
-      `INSERT INTO living_work_expressions
-         (living_work_id, expression_type, expression_id, declared_by)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (living_work_id, expression_type, expression_id) DO NOTHING
-       RETURNING id, expression_type, expression_id, declared_at`,
-      [livingWorkId, expressionType, expressionId, memberId]
-    );
-    if (inserted.rows.length === 0) {
+    if (outcome.kind === 'already_declared') {
       return NextResponse.json({ alreadyDeclared: true }, { status: 200 });
     }
-    const r = inserted.rows[0];
+    const r = outcome.expression;
     return NextResponse.json(
       {
         expression: {
