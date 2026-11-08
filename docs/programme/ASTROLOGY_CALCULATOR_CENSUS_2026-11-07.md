@@ -88,3 +88,23 @@ Aspects/orbs, decans, ashtakavarga, gochara, synastry, life-cycle returns, Weste
 10. **Not examined:** gochara, ashtakavarga, synastry, life-cycle returns, the Pro chart panel and Free chart page in a browser.
 
 **Evidence limits:** no Swiss Ephemeris or JPL data file was available here; reference values are independent offline implementations (JPL approximate-element tables, Meeus series, definitional ayanamsa) and recalled published values. A cross-check against real Swiss Ephemeris output remains worthwhile.
+
+---
+
+## Addendum — 2026-11-08: Pro rooms, and a correction
+
+**Built (stacked PRs, each Class C, each with an external-reference test):** #2184 Chinese room (pillars and year sign, zodiac reading, Da Yun with direction) · #2185 Vedic room (profile, dasha, planets) · #2186 Mayan room (traditional count, path of life, galactic signature, today's energy).
+
+**Correction to an earlier hand-off note.** The Free chart page's wheel and transits were listed as "not yet in Pro". That was wrong. Pro already has `CelestialChartWheel`, `ProTransitPanel`, `ProEphemerisPanel`, `ProAspectGrid`, sidereal and harmonic views (`ProChartViews`). Nothing to port there.
+
+**What the Free chart page has that Pro does not (READ, by file search):**
+
+| Free-page feature | In Pro? | Note |
+|---|---|---|
+| `SacredHouseWheel` (3,470 lines, Spiralogic house meanings, aspect synthesis text) | No | Interpretive content; Pro's stated posture is that claims about astrological effects are not established. Porting is a product decision, not a calculation fix. |
+| Lunar nodes "evolutionary lens" text | No (node positions only) | Interpretive. |
+| "What do you recognize here?" reflection capture | No | Member-meaning feature; has consent and storage implications. |
+| Archetype descriptions per sign/planet | Partly (`ProSystemsPanel`) | |
+| Alien patterns | No | |
+
+**Ask MAIA.** `proAskMaia.ts` exists only for astrologer-shared links, off by default per link, with the ruled limits (chart-only context, nothing remembered, crisis message). A member-facing Ask MAIA inside Pro is not covered by that ruling, and the Pro preview states that MAIA chart transmission is disabled. Not built; needs a founder ruling on what MAIA may see and whether anything is kept.
