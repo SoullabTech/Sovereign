@@ -39,7 +39,9 @@ ramHeadroomPass: false
 
 ⚠️ **What this does NOT establish**, keeping the reviewer's boundary: that this Mac cannot run the workload · how much memory the resident model actually occupies · what the request additionally allocates. **A residency- and platform-unaware admission rule, measured refusing — not a demonstrated inability to execute.**
 
-⛔ **Not repaired here.** `evaluateLocalCapacity` serves every E1 local act; the fix (`free_count` vs available memory on Darwin, and residency awareness) belongs to the E1 local-capacity lane.
+⛔ **Not repaired here.** `evaluateLocalCapacity` serves every E1 local act; the fix (`free_count` vs available memory on Darwin, and residency awareness) belongs to a lane owning that module.
+
+⚠️ **CORRECTED IN PLACE (2026-11-08):** this section originally said the finding was *routed to the E1 local-capacity lane*. **No such lane exists, and no record anywhere references `e1-local-capacity`** — the module is runtime code able to refuse a founder-authorized act, with no charter, falsifiers or owning record. The finding was therefore routed to an addressee that does not exist. Registered as **D2** in `docs/ops/NON_DELIVERY_REGISTER.md` under its rule 1 (*a state written only in a lane record does not count as declared*). ⭐ *Routing is not delivery, and naming a lane does not create one.*
 
 ## 4 · E3 standing
 
