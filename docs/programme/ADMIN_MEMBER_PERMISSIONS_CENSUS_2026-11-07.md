@@ -7,8 +7,8 @@ Branch `feature/admin-member-permissions-20261107` from `clean-main-no-secrets` 
 
 | # | Permission | Lives in | Opens | Who may change today |
 |---|---|---|---|---|
-| 1 | Tier | `members.tier` (code uses `free`/`pro`; migrations also admit `personal`, `subscriber`, `vip` in different eras) | 30 `minTier:'pro'` routes in `config/accessMatrix.ts` | Stripe/billing paths; no admin UI |
-| 2 | Roles | `members.roles text[]` | `rolesAnyOf` in `config/accessMatrix.ts`; `/admin` = role `admin` + tier pro; `beta_tester` bypasses tier gates on mobile | No admin UI found |
+| 1 | Tier | `members.tier` (code uses `free`/`pro`; migrations also admit `personal`, `subscriber`, `vip` in different eras) | 30 `minTier:'pro'` routes in `config/accessMatrix.ts` — ⚠️ tier failures are currently waived in `proxy.ts` (development), so tier opens nothing today | Stripe/billing paths; no admin UI |
+| 2 | Roles | `members.roles text[]` | `rolesAnyOf` in `config/accessMatrix.ts`; `/admin` = role `admin` (its `minTier: 'pro'` is currently waived: `proxy.ts` skips tier failures during development but still enforces roles); `beta_tester` bypasses tier gates on mobile | No admin UI found |
 | 3 | Admin level | `members.admin_role` | `checkAdminAuth` (`lib/admin/adminAuth.ts`) | founder/cto via `/api/admin/members/admin-role` |
 | 4 | Writer's Studio | `ops_contacts` beta_tester/active + `metadata.writers_studio_beta` (+ founder/cto admin levels) | Writer's Studio pilot (`lib/writersStudio/betaAccessServer.ts`) | Founder pipeline / hand SQL |
 

@@ -33,7 +33,7 @@ const TIER_OPTIONS = [
 ];
 
 const ROLE_LABELS: Record<string, string> = {
-  admin: 'Admin (opens /admin with Pro)',
+  admin: 'Admin (opens /admin)',
   steward: 'Steward',
   curator: 'Curator',
   practitioner: 'Practitioner',
@@ -276,9 +276,11 @@ export default function MemberPermissionsSection() {
 
       <div className="space-y-1 rounded-lg border border-slate-800 bg-slate-900/30 px-4 py-3 text-xs text-slate-400">
         <p>
-          <span className="text-slate-300">Tier</span> opens Pro pages. <span className="text-slate-300">Roles</span>{' '}
-          open role-gated pages (/admin needs the Admin role <em>and</em> Pro tier).{' '}
-          <span className="text-slate-300">Admin level</span> opens admin tools; it does not grant Pro or roles.
+          <span className="text-slate-300">Tier</span> is recorded on the member, but commercial tier checks are
+          currently waived during development, so changing it may not change what they can open.{' '}
+          <span className="text-slate-300">Roles</span> are still enforced: role-gated pages need the role (/admin
+          needs the Admin role; its Pro-tier requirement is among the waived checks).{' '}
+          <span className="text-slate-300">Admin level</span> opens admin tools; it does not grant tier or roles.
         </p>
         <p>
           Read-only items are changed elsewhere: the Field Lab tester flag belongs to the member, and the env lists
