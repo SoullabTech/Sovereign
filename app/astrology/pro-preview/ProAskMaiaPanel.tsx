@@ -43,6 +43,8 @@ export default function ProAskMaiaPanel({ request, readsWhose, subjectLabel }: {
   const [open, setOpen] = usePanelState(`${key}.open`, false);
   const [question, setQuestion] = usePanelState(`${key}.draft`, '');
   const [exchanges, setExchanges] = usePanelState<Array<{ q: string; a: string; safety?: boolean }>>(`${key}.log`, []);
+  // Natal only: transits on a date the astrologer chooses (an event, an anniversary).
+  const [onDate, setOnDate] = usePanelState(`${key}.date`, '');
   const [status, setStatus] = useState<'idle' | 'asking'>('idle');
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +56,11 @@ export default function ProAskMaiaPanel({ request, readsWhose, subjectLabel }: {
     try {
       const reply = await apiFetch('/api/astrology/pro/ask', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
-        body: JSON.stringify({ ...request, question: q }),
+        body: JSON.stringify({
+          ...request,
+          ...(request.section === 'natal' && onDate ? { at: `${onDate}T12:00:00` } : {}),
+          question: q,
+        }),
       });
       const body = await reply.json().catch(() => ({}));
       if (!reply.ok || typeof body?.answer !== 'string') {
@@ -87,6 +93,18 @@ export default function ProAskMaiaPanel({ request, readsWhose, subjectLabel }: {
         MAIA will read {readsWhose} to answer: only the calculated facts of this section, not names or birth
         details. Nothing is kept. MAIA is an AI, not the astrologer.
       </p>
+      {request.section === 'natal' && (
+        <label className={styles.dateField}>
+          Include transits on (optional)
+          <input type="date" value={onDate} onChange={(e) => setOnDate(e.target.value)} />
+          {onDate && <button type="button" onClick={() => setOnDate('')}>Remove date</button>}
+        </label>
+      )}
+      {request.section === 'transits' && request.at && (
+        <p className={styles.note}>
+          MAIA reads the sky on {new Date(request.at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}, the moment shown above. Change it above to ask about another date.
+        </p>
+      )}
       {exchanges.map((e, i) => (
         <div key={i} className={styles.exchange}>
           <p className={styles.q}>{e.q}</p>
