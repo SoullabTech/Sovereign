@@ -174,7 +174,8 @@ async function settledOrParked(t: Tracked<unknown>, statement: RegExp, label: st
 function classify(w: Waiting): string {
   if (w.wait_event === 'advisory') return 'advisory-lock';
   if (/^\s*DELETE FROM member_manuscripts/.test(w.query)) return 'delete-manuscript-row';
-  if (/FOR UPDATE OF e, w/.test(w.query)) return 'claims-row-locks';
+  if (/ws-delete:lock-works-first/.test(w.query)) return 'works-first-row-locks';
+  if (/FOR UPDATE OF e\b/.test(w.query)) return 'claims-row-locks';
   if (/^\s*INSERT INTO living_work_expressions/.test(w.query)) return 'insert-declaration';
   return `other:${w.query.slice(0, 40)}`;
 }
@@ -223,6 +224,12 @@ const rowLocksOnly: DeclareImpl = async ({ livingWorkId, manuscriptId, memberId 
   });
 
 /* ── schedules ────────────────────────────────────────────────────────── */
+
+/** What a completed erase answers on the current base: custody confirmed, nothing owed, and whether the Work went with it. */
+const erased = (workRemoved: boolean) => ({
+  ok: true, artifactsQueued: 0, sweptAll: true, recoverySealed: true,
+  owed: { originalFile: false, image: false }, workRemoved,
+});
 
 interface Run {
   readonly ids: Ids;
@@ -291,14 +298,14 @@ async function scheduleB(impl: DeclareImpl): Promise<Run> {
   );
 
   const e = track(eraseManuscript(ids.manuscript, ids.member));
-  const erasePhase = await settledOrParked(e, /FOR UPDATE OF e, w/, 'erase parked inside its claims read');
+  const erasePhase = await settledOrParked(e, /FOR UPDATE OF e\b/, 'erase parked inside its claims read');
   expect(erasePhase).toBe('claims-row-locks');
 
   const d = track(impl({ livingWorkId: ids.workB, manuscriptId: ids.manuscript, memberId: ids.member }));
   // The erase is still parked on its claims statement, so "any waiter" would be attributed to the wrong actor.
   // Exclude it explicitly: only a waiter that is NOT the erase's claims read can be the declaration.
   const declarePhase = await settledOrParked(
-    d, /^(?![\s\S]*FOR UPDATE OF e, w)/, 'declaration either finishes or is observed waiting',
+    d, /^(?![\s\S]*FOR UPDATE OF e\b)/, 'declaration either finishes or is observed waiting',
   );
 
   await release(h);
@@ -345,7 +352,7 @@ suite('WS-DELETE-01 · declaring a writing vs. erasing it (real PostgreSQL 16)',
       const r = await scheduleA(real, false);
       expect(r.erasePhase).toBe('advisory-lock');
       expect(r.declare).toBe('declared');
-      expect(r.erase).toEqual({ ok: true, artifactsQueued: 0, sweptAll: true, recoverySealed: true });
+      expect(r.erase).toEqual(erased(true));
       // Serialised AFTER the declaration: the Work existed only to name this writing, so it goes with it.
       expect(await dangling(r.ids.manuscript)).toBe(0);
       expect(await manuscriptExists(r.ids.manuscript)).toBe(false);
@@ -365,7 +372,7 @@ suite('WS-DELETE-01 · declaring a writing vs. erasing it (real PostgreSQL 16)',
     it('B · the Delete is mid-flight (claims read, not yet deleted) when a declaration arrives → the declaration waits, then is told Not found', async () => {
       const r = await scheduleB(real);
       expect(r.declarePhase).toBe('advisory-lock');
-      expect(r.erase).toEqual({ ok: true, artifactsQueued: 0, sweptAll: true, recoverySealed: true });
+      expect(r.erase).toEqual(erased(true));
       expect(r.declare).toBe('not_found');
       expect(await dangling(r.ids.manuscript)).toBe(0);
       expect(await declarationsOf(r.ids.manuscript)).toBe(0);
@@ -378,7 +385,7 @@ suite('WS-DELETE-01 · declaring a writing vs. erasing it (real PostgreSQL 16)',
       const r = await scheduleA(upper, false);
       expect(r.erasePhase).toBe('advisory-lock');
       expect(r.declare).toBe('declared');
-      expect(r.erase).toEqual({ ok: true, artifactsQueued: 0, sweptAll: true, recoverySealed: true });
+      expect(r.erase).toEqual(erased(true));
       expect(await dangling(r.ids.manuscript)).toBe(0);
     });
 
@@ -396,27 +403,33 @@ suite('WS-DELETE-01 · declaring a writing vs. erasing it (real PostgreSQL 16)',
       await until('the owner\'s Delete settles while the stranger holds its own key', async () => e.settled || null, 10_000);
       await release(h);
       expect(e.error).toBeUndefined();
-      expect(e.value).toEqual({ ok: true, artifactsQueued: 0, sweptAll: true, recoverySealed: true });
+      expect(e.value).toEqual(erased(true));
     });
 
-    it('lock order · a transaction holding a Work row and then asking for the manuscript row (threadOrigin\'s walk) does not deadlock with the Delete', async () => {
-      // threadOrigin: living_works FOR SHARE → member_manuscripts FOR SHARE. A Delete that locked the
-      // manuscript FIRST would cycle with this; the advisory lock adds no row-lock edge, so it cannot.
+    it('lock order · threadOrigin\'s whole walk (Work → manuscript → expression, all FOR SHARE) does not deadlock with the Delete', async () => {
+      // threadOrigin: living_works → member_manuscripts → living_work_expressions, each FOR SHARE. Two cycles are ruled out here:
+      //  - an erase that locked the MANUSCRIPT row first (the advisory lock adds no row-lock edge, so it cannot);
+      //  - an erase that locked the EXPRESSION row before the Work row (the pre-existing cycle upstream closed by taking the Work
+      //    rows first), which this walk would still hit if my advisory lock had reordered anything.
       const ids = await seed(['A']);
       const walker = await holder();
       await walker.query(`SET LOCAL lock_timeout = '5s'`);
       await walker.query(`SELECT id FROM living_works WHERE id = $1 AND member_id = $2 FOR SHARE`, [ids.workA, ids.member]);
 
       const e = track(eraseManuscript(ids.manuscript, ids.member));
-      expect(await settledOrParked(e, /FOR UPDATE OF e, w/, 'erase parked behind the walker on the Work row')).toBe('claims-row-locks');
+      expect(await settledOrParked(e, /ws-delete:lock-works-first/, 'erase parked behind the walker on the Work row')).toBe('works-first-row-locks');
 
-      // The walker's next step must NOT wait: the erase has taken no lock on the manuscript row.
+      // The walker's next two steps must NOT wait: the erase holds nothing but advisory locks while it waits for the Work row.
       await walker.query(`SELECT id FROM member_manuscripts WHERE id = $1 AND member_id = $2 FOR SHARE`, [ids.manuscript, ids.member]);
+      await walker.query(
+        `SELECT id FROM living_work_expressions WHERE living_work_id = $1 AND expression_type = 'manuscript' AND expression_id = $2 FOR SHARE`,
+        [ids.workA, ids.manuscript],
+      );
       await walker.query('COMMIT');
 
       await until('erase settles', async () => e.settled || null);
       expect(e.error).toBeUndefined();
-      expect(e.value).toEqual({ ok: true, artifactsQueued: 0, sweptAll: true, recoverySealed: true });
+      expect(e.value).toEqual(erased(true));
       expect(await dangling(ids.manuscript)).toBe(0);
     });
 
@@ -466,22 +479,30 @@ suite('WS-DELETE-01 · declaring a writing vs. erasing it (real PostgreSQL 16)',
   });
 
   describe('observation (recorded, not a requirement)', () => {
-    it('what a second Delete does with a declaration that already names an erased writing', async () => {
+    it('what a Delete does with a declaration that already names an erased writing: from nowhere, and from the Work\'s own card', async () => {
       const ids = await seed();
       const gone = randomUUID();
-      await admin.query(
-        `INSERT INTO living_work_expressions (living_work_id, expression_type, expression_id, declared_by)
-         VALUES ($1, 'manuscript', $2, $3)`,
-        [ids.workA, gone, ids.member],
-      );
-      const outcome = await eraseManuscript(gone, ids.member);
+      for (const work of [ids.workA, ids.workB]) {
+        await admin.query(
+          `INSERT INTO living_work_expressions (living_work_id, expression_type, expression_id, declared_by)
+           VALUES ($1, 'manuscript', $2, $3)`,
+          [work, gone, ids.member],
+        );
+      }
+      const fromNowhere = await eraseManuscript(gone, ids.member);
+      const afterNowhere = { declarations: await declarationsOf(gone) };
+      const fromCard = await eraseManuscript(gone, ids.member, { viaWorkId: ids.workA });
       observations['redelete-of-an-already-detached-declaration'] = {
-        outcome,
-        declarationStillPresent: (await declarationsOf(gone)) === 1,
-        workStillPresent: (await admin.query(`SELECT 1 FROM living_works WHERE id = $1`, [ids.workA])).rows.length === 1,
+        fromNowhere, afterNowhere,
+        fromTheNamedWorksCard: fromCard,
+        afterCard: {
+          declarations: await declarationsOf(gone),
+          namedWorkStillPresent: (await admin.query(`SELECT 1 FROM living_works WHERE id = $1`, [ids.workA])).rows.length === 1,
+          otherWorkStillPresent: (await admin.query(`SELECT 1 FROM living_works WHERE id = $1`, [ids.workB])).rows.length === 1,
+        },
       };
       // Recorded only. No assertion on the outcome: this documents present behaviour so that a claim about it can be checked.
-      expect(outcome).toBeDefined();
+      expect(fromCard).toBeDefined();
     });
   });
 });
