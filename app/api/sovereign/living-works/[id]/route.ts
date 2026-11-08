@@ -24,7 +24,9 @@ export const dynamic = 'force-dynamic';
  *     to anything, so it cannot lose anything when the work goes.
  *   - EVERYTHING that references the Work row with ON DELETE CASCADE goes with
  *     it: the declarations of membership (`living_work_expressions`), and since
- *     September 2026 also the Work's own conversations (`ask_threads`), what the
+ *     September 2026 also the conversations that belong to the Work row itself
+ *     (`ask_threads.living_work_id`; a conversation about a WRITING belongs to the
+ *     manuscript, carries no Work id, and stays), what the
  *     writer told MAIA about it (`living_work_writer_understanding`), the
  *     writer's corrections, the Work's materials and their considerations, its
  *     editorial relationship record and where the writer last returned, and its
@@ -41,11 +43,18 @@ export const dynamic = 'force-dynamic';
  *     (500 {removed:true, refusal:'image_bytes_owed'}) instead of reporting a
  *     plain success: the row is gone, the bytes are queued, and the member is
  *     not told it is finished until it is.
+ *   - The removal is RECORDED, in the same transaction: the recovery-capture
+ *     advisory lock first, then the Work row, and once the row is really gone a
+ *     `member_deletion` manifest and a `living_works` tombstone
+ *     (lib/manuscript/source/workDeletionRecord.ts). Without the tombstone a
+ *     governed restore from a backup taken before the removal would bring the
+ *     Work back. The independent R20 ledger is NOT sealed here (see that module).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db/postgres';
 import { sweepVaultErasureQueue } from '@/lib/manuscript/source/eraseManuscript';
+import { takeRecoveryCaptureLock, writeWorkDeletionRecord } from '@/lib/manuscript/source/workDeletionRecord';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { refuseTitle } from '@/lib/livingWork/domain';
 import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
@@ -309,10 +318,15 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
        *unreferenced but retained* state WS-DELETE-01 forbids, restated by the
        founder for Work visuals on 2026-09-07. */
     const removed = await transaction(async (tx) => {
-      /* LOCK ORDER. eraseManuscript takes the Work row first and the image row afterwards, so this takes them in the SAME order. Taking
-         the image row first (the read below is FOR UPDATE) and the Work row second formed a real cycle with a Delete of the Work's
-         writing: PostgreSQL broke it by aborting one of the two with a 500 for an act that did not happen. A row that is not this
-         member's, or is already gone, ends here (404) without touching anything else. */
+      /* LOCK ORDER. eraseManuscript takes the recovery-capture advisory lock FIRST, then the Work row, then the image row afterwards, so
+         this takes all three in the SAME order. Taking the Work row before the advisory lock, or the image row (the read below is FOR
+         UPDATE) before the Work row, forms a real cycle with a Delete of the Work's writing: PostgreSQL breaks it by aborting one of the
+         two with a 500 for an act that did not happen. The advisory lock is unconditional (it is taken even for an id that is not this
+         member's), because a lock taken only after finding the row would come after a row lock on that path. It also means a Remove
+         waits, with no timeout, while anything else holds the key: a writing Delete holds it for its whole transaction, and eraseManuscript.ts
+         documents a coherent R20 backup as a holder too (no such backup caller is in this tree). A row that is not this member's, or is
+         already gone, ends at the next statement (404) without writing anything. */
+      await takeRecoveryCaptureLock(tx);
       const owned = await tx.query<{ id: string }>(
         `SELECT id FROM living_works WHERE id = $1 AND member_id = $2 FOR UPDATE`,
         [id, memberId],
@@ -327,6 +341,10 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
         [id, memberId],
       );
       if (gone.rows.length === 0) return null;
+
+      /* The record of the removal, written only now that THIS statement really deleted the row (a lost race writes nothing), with the
+         id the DELETE returned and not the one from the URL. Same transaction: if it cannot be written the Work is not removed. */
+      await writeWorkDeletionRecord(tx, gone.rows[0].id, 'Writer Work removed by verified member request');
 
       const path = visual.rows[0]?.storage_path;
       let queueId: string | null = null;
