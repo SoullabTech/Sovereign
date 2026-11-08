@@ -1,0 +1,51 @@
+import { REFERENCE, activeGrant, empty, type ReaderFactory } from './contract';
+
+export interface Candidate { id: string; named: string; classifiedCollateral: Record<string, string>; build: ReaderFactory }
+const ref = REFERENCE();
+
+export const CANDIDATES: readonly Candidate[] = [
+  { id: 'DC-1-passage-only-scope-ignored', named: 'T1-follow-up-gets-saved-chapter-with-scope',
+    classifiedCollateral: {
+      'T2-consecutive-asks-keep-access': 'Ignoring scope fails every read law that needs text.', 'T3-recovered-thread-restores-text': 'same',
+      'T4a-current-revision-not-stale': 'same', 'T4b-moved-text-is-acknowledged': 'same', 'T5b-revocation-effective-mid-thread': 'Its first-ask precondition needs text.',
+      'T9a-every-crossing-receipted-with-scope-event': 'No reads means no receipts to check.' },
+    build: () => () => empty() },
+  { id: 'DC-2-scope-consumed-after-first-ask (S3 shape)', named: 'T2-consecutive-asks-keep-access',
+    classifiedCollateral: { 'T5b-revocation-effective-mid-thread': 'Its first-ask-then-later structure trips single-use too.' },
+    build: () => { let used = false; return (w, a) => { if (used) return empty(); const o = ref(w, a); if (o.supplied.length) used = true; return o; }; } },
+  { id: 'DC-3-context-rebuilt-from-history-only', named: 'T3-recovered-thread-restores-text', classifiedCollateral: {},
+    build: () => (w, a) => (a.via === 'recovered' ? empty() : ref(w, a)) },
+  { id: 'DC-4-stale-cached-revision', named: 'T4a-current-revision-not-stale',
+    classifiedCollateral: { 'T4b-moved-text-is-acknowledged': 'Serving the old revision means no move is ever detected.' },
+    build: () => (w, a) => { const o = ref(w, a); const q = a.priorQuotedRev ?? {}; o.supplied = o.supplied.map((s) => q[s.sectionId] ? { ...s, rev: q[s.sectionId]! } : s); o.movedNotes = []; return o; } },
+  { id: 'DC-5-revision-unchecked', named: 'T4b-moved-text-is-acknowledged', classifiedCollateral: {},
+    build: () => (w, a) => ({ ...ref(w, a), movedNotes: [] }) },
+  { id: 'DC-6-revocation-checked-only-at-thread-open', named: 'T5b-revocation-effective-mid-thread',
+    classifiedCollateral: {},
+    build: () => { const open = new Map<string, boolean>(); return (w, a) => { if (!open.has(a.thread)) open.set(a.thread, !!activeGrant(w, a.member));
+      return open.get(a.thread) ? ref({ ...w, events: w.events.filter((e) => e.kind === 'grant') }, a) : empty(); }; } },
+  { id: 'DC-7-revoke-ignored-entirely', named: 'T5a-revoked-gives-no-body',
+    classifiedCollateral: { 'T5b-revocation-effective-mid-thread': 'A reader that never honours revocation also fails mid-thread.' },
+    build: () => (w, a) => ref({ ...w, events: w.events.filter((e) => e.kind === 'grant') }, a) },
+  { id: 'DC-8-scope-keyed-by-work-without-member', named: 'T6-no-scope-crosses-members', classifiedCollateral: {},
+    build: () => (w, a) => ref({ ...w, events: w.events.map((e) => ({ ...e, member: a.member })) }, a) },
+  { id: 'DC-9-scope-honoured-in-sanctuary', named: 'T7-sanctuary-suspends-scope', classifiedCollateral: {},
+    build: () => (w, a) => ref({ ...w, mode: 'ordinary' }, a) },
+  { id: 'DC-10-body-read-with-no-receipt', named: 'T9a-every-crossing-receipted-with-scope-event', classifiedCollateral: {},
+    build: () => (w, a) => ({ ...ref(w, a), receipts: [] }) },
+  { id: 'DC-11-receipt-without-scope-event-identity', named: 'T9a-every-crossing-receipted-with-scope-event', classifiedCollateral: {},
+    build: () => (w, a) => { const o = ref(w, a); o.receipts = o.receipts.map((r) => ({ ...r, scopeEventId: '' })); return o; } },
+  { id: 'DC-12-scope-inferred-from-prior-reading', named: 'T10-scope-never-inferred', classifiedCollateral: {},
+    build: () => (w, a) => ref(w.priorReadingExists ? { ...w, events: [{ kind: 'grant', id: 'inferred', member: a.member, work: w.work, level: 'work' }] } : w, a) },
+  { id: 'DC-13-default-grant-for-everyone', named: 'T9b-no-scope-no-body-no-receipt',
+    classifiedCollateral: { 'T10-scope-never-inferred': 'A default grant is inference by construction.', 'T5a-revoked-gives-no-body': 'A default grant also overrides revocation.',
+      'T5b-revocation-effective-mid-thread': 'Same: a default grant outranks every revoke.',
+      'T6-no-scope-crosses-members': 'A default grant is issued to every member, so it crosses members.',
+      'T9a-every-crossing-receipted-with-scope-event': 'Its receipts carry the default event, not the member-declared grant the law expects.',
+      'T10b-chapter-scope-bounds-reading': 'A default whole-work grant overrides any chapter bound.' },
+    build: () => (w, a) => ref({ ...w, events: [{ kind: 'grant', id: 'default', member: a.member, work: w.work, level: 'work' }] }, a) },
+  { id: 'DC-14-chapter-level-ignored', named: 'T10b-chapter-scope-bounds-reading', classifiedCollateral: {},
+    build: () => (w, a) => ref({ ...w, events: w.events.map((e) => (e.kind === 'grant' ? { ...e, level: 'work' as const } : e)) }, a) },
+  { id: 'DC-15-read-counted-as-coverage', named: 'T11-conversational-read-is-not-coverage', classifiedCollateral: {},
+    build: () => (w, a) => { const o = ref(w, a); o.coverageDischarged = o.supplied.length > 0; return o; } },
+];
