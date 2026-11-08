@@ -202,7 +202,9 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   // Otherwise the arrival intent decides. A returning member opens on password;
   // someone joining opens on email.
   const [phase, setPhase] = useState<Phase>(
-    usernameParam ? 'password' : mode === 'signin' ? 'password' : 'email'
+    searchParams?.get('method') === 'code'
+      ? 'email'
+      : usernameParam ? 'password' : mode === 'signin' ? 'password' : 'email'
   );
   const [email, setEmail] = useState(emailParam);
   const [code, setCode] = useState('');
@@ -732,14 +734,11 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                     disabled={isLoading}
                     className="block w-full text-left text-amber-300/90 hover:text-amber-200 transition-colors disabled:opacity-50"
                   >
-                    Email me a sign-in code
+                    Forgot your password? Email me a sign-in code
                   </button>
-                  <a
-                    href="/reset-password"
-                    className="block text-amber-300/90 hover:text-amber-200 transition-colors"
-                  >
-                    Reset my password
-                  </a>
+                  <p className="text-xs text-slate-400">
+                    The code signs you in without a password.
+                  </p>
                   <a
                     href="mailto:support@soullab.life?subject=I%20can%E2%80%99t%20get%20into%20Soullab"
                     className="block text-amber-300/90 hover:text-amber-200 transition-colors"

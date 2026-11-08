@@ -3,15 +3,13 @@ export const dynamic = 'force-dynamic'
 
 /**
  * Password Reset Flow
- * POST /api/members/reset-password - Request reset (sends email)
- * PUT /api/members/reset-password - Confirm reset (changes password)
+ * POST /api/members/reset-password - RETIRED: sends nothing (see handler)
+ * PUT /api/members/reset-password - Confirm a founder-issued reset link
+ * GET /api/members/reset-password?token= - Validate a reset link
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { randomBytes } from 'crypto';
-import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
-import { memberRef } from '@/lib/privacy/memberRef';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import {
   checkRateLimit,
@@ -21,14 +19,19 @@ import {
 
 const ENDPOINT = '/api/members/reset-password';
 
-// Generate secure token
-function generateToken(): string {
-  return randomBytes(32).toString('hex');
-}
-
 /**
- * POST - Request password reset
- * Sends email with reset link
+ * POST - Former "request a reset link" door. RETIRED.
+ *
+ * The managed mail boundary admits only the sign-in code (`auth:email-code`),
+ * so this route could never deliver a reset link; for a real member it
+ * minted a token, failed the send, and answered 502, which also told the
+ * caller that the address belongs to a member. Self-serve recovery is now the
+ * email sign-in code (/signin?method=code).
+ *
+ * This handler therefore does nothing: it reads no member, writes no token,
+ * sends no mail, logs no address, and answers the same for every input.
+ * Founder-issued reset links (admin reset-link route) still land on
+ * /reset-password?token= and are confirmed by PUT below.
  */
 export async function POST(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD === '1') {
@@ -36,179 +39,20 @@ export async function POST(request: NextRequest) {
   }
 
   const clientIP = getClientIP(request);
-
-  // Rate limit: 3 reset requests per 15 minutes per IP
   const rateLimitResult = await checkRateLimit(clientIP, 'ip', ENDPOINT);
   if (!rateLimitResult.allowed) {
     const headers = buildRateLimitHeaders(rateLimitResult);
     return NextResponse.json(
-      { error: 'Too many reset requests. Please try again later.' },
+      { error: 'Too many requests. Please try again later.' },
       { status: 429, headers }
     );
   }
 
-  try {
-    const { email } = await request.json();
-
-    if (!email) {
-      return NextResponse.json({ error: 'Email required' }, { status: 400 });
-    }
-
-    // Find member by email (case-insensitive)
-    const result = await query(
-      'SELECT id, name, username FROM members WHERE LOWER(email) = LOWER($1)',
-      [email]
-    );
-
-    // Always return success to prevent email enumeration
-    if (result.rows.length === 0) {
-      return NextResponse.json({
-        success: true,
-        message: 'If an account exists with this email, a password reset link has been sent.'
-      });
-    }
-
-    const member = result.rows[0];
-
-    // Generate token with 1 hour expiration
-    const token = generateToken();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-
-    // Invalidate any existing tokens for this member
-    await query(
-      'UPDATE password_reset_tokens SET used = true WHERE member_id = $1 AND used = false',
-      [member.id]
-    );
-
-    // Store new token
-    await query(
-      'INSERT INTO password_reset_tokens (member_id, token, expires_at) VALUES ($1, $2, $3)',
-      [member.id, token, expiresAt]
-    );
-
-    // Build reset link - works for both web and app
-    const resetLink = `https://soullab.life/reset-password?token=${token}`;
-
-    // Send reset email
-    const delivery = await sendEmail({
-      purpose: 'auth:password-reset',
-      from: SENDERS.noreply,
-        to: email,
-        subject: 'Reset Your Soullab Password',
-        html: `
-          <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-            <div style="text-align: center; margin-bottom: 32px;">
-              <img src="https://soullab.life/Soullablogo.png" alt="Soullab" width="150" style="max-width: 150px;" />
-            </div>
-
-            <h1 style="color: #1A2F24; font-size: 24px; text-align: center; margin-bottom: 24px;">
-              Reset Your Password
-            </h1>
-
-            <p style="color: #2D3748; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-              Hello ${member.name || 'Beautiful Soul'},
-            </p>
-
-            <p style="color: #2D3748; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-              You requested to reset your password. Click the button below to set a new password:
-            </p>
-
-            <div style="text-align: center; margin: 32px 0;">
-              <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #1A2F24, #2C5530); color: #FFFFFF; font-size: 16px; font-weight: 600; padding: 14px 32px; border-radius: 8px; text-decoration: none;">
-                Reset Password
-              </a>
-            </div>
-
-            <p style="color: #718096; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
-              This link expires in 1 hour. If you didn't request this, you can safely ignore this email.
-            </p>
-
-            <p style="color: #718096; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
-              Or copy this link: <br>
-              <a href="${resetLink}" style="color: #2C5530; word-break: break-all;">${resetLink}</a>
-            </p>
-
-            <div style="border-top: 1px solid #e2e8f0; padding-top: 24px; margin-top: 32px; text-align: center;">
-              <p style="color: #718096; font-size: 14px; margin: 0;">
-                With presence,<br>
-                <strong style="color: #1A2F24;">The Soullab Team</strong>
-              </p>
-            </div>
-          </div>
-        `,
-        text: `
-Reset Your Soullab Password
-
-Hello ${member.name || 'Beautiful Soul'},
-
-You requested to reset your password. Visit this link to set a new password:
-
-${resetLink}
-
-This link expires in 1 hour. If you didn't request this, you can safely ignore this email.
-
-With presence,
-The Soullab Team
-        `.trim()
-      });
-
-    // Resend RESOLVES with { data, error } when the provider rejects a send — it
-    // does not throw — so an `await` in a bare try/catch reported success for
-    // mail that never left (2026-08-24 quota incident). `sendEmail` reads that
-    // result and never throws, so this is a value to be read, not an exception
-    // that may be ignored.
-    //
-    // The provider's own name is logged as its own field: "quota exhausted" and
-    // "domain not verified" are indistinguishable once flattened into a
-    // sentence, and they need opposite responses from an operator.
-    //
-    // NO EMAIL ADDRESS IN THE LOG LINE. Correlation during an outage is
-    // genuine — you need to know whose send failed — but a raw address is not
-    // how to get it. memberRef() is the sanctioned derivation
-    // (lib/privacy/memberRef.ts); a truncated id would not be.
-    if (!delivery.success) {
-      console.error(
-        `[MEMBERS] Provider REFUSED the send for member=${memberRef(member.id)} — status=${delivery.status} failureKind=${delivery.failureKind ?? 'unclassified'} providerCode=${delivery.providerCode ?? 'unnamed'} retryable=${delivery.retryable === true} error=${delivery.error ?? 'none'}`
-      );
-
-      // `retryable` governs the advice, not tone. Telling someone to retry a
-      // refusal that cannot succeed is the loop this lane exists to remove.
-      if (!delivery.ourFault) {
-        return NextResponse.json(
-          {
-            error: "We couldn't send to that address. Please check it and try again.",
-            reason: 'email_address_rejected',
-            retryable: false,
-          },
-          { status: 400 }
-        );
-      }
-
-      return NextResponse.json(
-        {
-          error: delivery.retryable
-            ? "Failed to send reset email. That's a problem on our side, not yours. Please try again in a few minutes."
-            : "Failed to send reset email. That's a problem on our side, not yours, and retrying won't help. Please contact support@soullab.life and we'll get you in.",
-          reason: 'email_provider_refused',
-          retryable: delivery.retryable === true,
-        },
-        { status: 502 }
-      );
-    }
-
-    console.log('[MEMBERS] Password reset email sent to:', email, 'resendId:', delivery.id ?? 'none');
-
-    return NextResponse.json({
-      success: true,
-      message: 'If an account exists with this email, a password reset link has been sent.'
-    });
-  } catch (error) {
-    console.error('[MEMBERS] Reset request error:', error);
-    return NextResponse.json(
-      { error: 'Failed to process reset request' },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({
+    success: true,
+    message: 'Password reset links are no longer emailed. Use "Email me a sign-in code" on the sign-in page.',
+    signInPath: '/signin?method=code',
+  });
 }
 
 /**
