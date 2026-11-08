@@ -55,6 +55,8 @@ import { canonicalFingerprint } from '@/lib/manuscript/structure/canonicalFinger
 import { askMaia, type StandingRead } from '@/lib/manuscript/ask/askReader';
 import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests, recordTurnReads } from '@/lib/disclosure/workReadScopeRead';
 import { selectSections, movedSince } from '@/lib/manuscript/ask/workReadScope';
+import { checkQuoteFidelity, NO_TEXT_ANSWER, CORRECTION_NOTE } from '@/lib/manuscript/ask/quoteFidelity';
+import { formatWorkSituationForPrompt } from '@/lib/writersStudio/workSituation';
 import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
 import {
   openThread, appendTurn, appendTurnWithClient, loadThread, threadsOnAnchor,
@@ -672,11 +674,29 @@ async function workTurn(input: {
     }
   }
 
-  const outcome = await askMaia(
-    { kind: 'work', anchor, facts: built.facts, staleness, standingRead },
-    historyFor(priorTurns.map((t) => ({ speaker: t.speaker, body: t.body })), question),
-    question,
-  );
+  const workHistory = historyFor(priorTurns.map((t) => ({ speaker: t.speaker, body: t.body })), question);
+  const workCtx = { kind: 'work' as const, anchor, facts: built.facts, staleness, standingRead };
+  let outcome = await askMaia(workCtx, workHistory, question);
+  /* ⭐ A2 · MECHANICAL QUOTE FIDELITY. A quotation must occur in text she was actually given this turn or in the
+     conversation's own words. Regenerate ONCE with a correction; if still ungrounded, a plain "I can't point to that
+     wording" answer replaces it. ⛔ Checks that a quote EXISTS, not that her claim about it is true. */
+  if (outcome.ok) {
+    const sources = [
+      question, ...workHistory.map((h) => h.body),
+      built.facts.locus?.body ?? '', built.facts.writerUnderstanding, built.facts.writerCorrections,
+      formatWorkSituationForPrompt(built.facts.work) ?? '',
+      ...built.facts.sections.map((x) => x.heading ?? ''),
+      ...(standingRead?.sections.map((x) => x.body) ?? []),
+    ];
+    const first = checkQuoteFidelity(outcome.answer, sources);
+    if (!first.ok) {
+      const again = await askMaia(workCtx, workHistory, question,
+        { correction: CORRECTION_NOTE.replace('QUOTES', first.ungrounded.map((q) => `"${q}"`).join(' ; ')) });
+      outcome = again.ok && checkQuoteFidelity(again.answer, sources).ok
+        ? again
+        : { ...outcome, answer: NO_TEXT_ANSWER };
+    }
+  }
   if (outcome.ok) {
     /* The crossing happened when the reader was called; confirm it. A failed call
        leaves the receipts `attempted`, which is the truthful state. */

@@ -403,6 +403,8 @@ export interface AskOptions {
      to name. */
   model?: string;
   maxTokens?: number;
+  /** A2: appended to the system prompt on the single regeneration after an ungrounded quote. */
+  correction?: string;
 }
 
 /**
@@ -442,7 +444,8 @@ export async function askMaia(
        ...(history.length > 0 ? [HISTORY_GROUNDING, ''] : []),
        studioGuideInstruction(), '',
        // Design 1B: only the Work conversation shows take-me-there buttons.
-       studioActionsInstruction('work-conversation')].join('\n')
+       studioActionsInstruction('work-conversation'),
+       ...(opts.correction ? ['', opts.correction] : [])].join('\n')
     : [STANDING, '', '--- THE READING YOU MADE ---', readingSays(ctx), '',
        '--- WHAT THEY ARE POINTING AT ---', anchorSays(ctx), '',
        '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness), '',
