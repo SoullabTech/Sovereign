@@ -85,12 +85,15 @@ evidence it is sound. Severities are the skeptic-adjusted ones.
 | L3 | medium | The member removal door commits the row delete, key loss, tombstone and erasure-queue entry in one transaction, then seals the R20 deletion ledger. `R20_LEDGER_FILE`, `R20_HIGH_WATER_FILE` and `R20_LEDGER_KEY_FILE` appear in no tracked compose or env template (checked by grep). If they are unset in production, every removal answers 202 "Removal started" and never confirms. The wording is honest; the removal still never completes. | #2088 |
 | L4 | low | Intended consequences of D1-D6: non-roster members see the Import file chooser on `/press/manuscript` and then get 403; the founder-only plaintext workbench upload returns 423; pasted-text import is now atomic and fails closed; a browser tab opened before the cutover gets 428 until reloaded. | #2088 |
 
+Finding L3, condition observed (REPORTED) 2026-11-06: a founder-run read-only readout found no `R20_*` variable on the running app container, so L3's condition holds; the finding stands, and its consequence is still from code reading. See WS-DELETE-01 lane record 6.9.2.
+
 ## 5. What the founder can check on minisforum (read-only, names only, no values)
 
 1. The running commit, which decides whether this baseline is right: `docker exec maia-sovereign printenv GIT_COMMIT` (expect `88fc9cc78` unless a later cutover happened).
 2. Environment names, values masked:
    `docker exec maia-sovereign sh -c 'env | grep -E "^(WRITER_SOURCE_[A-Z_]+|AWS_SHARED_CREDENTIALS_FILE|R20_[A-Z_]+|WRITERS_STUDIO_EDITORIAL_ENABLED|PRESS_SOURCE_INTAKE_RELEASED)=" | sed "s/=.*/=<set>/"'`
    (an absent name means unset).
+   Check run (REPORTED) 2026-11-06: the founder-run read-only readout found no `R20_*` variable on the running app container; see WS-DELETE-01 lane record 6.9.2.
 3. Whether the newest schema the code relies on is applied (six rows expected):
    `docker exec maia-postgres psql -U soullab maia_consciousness -Atc "SELECT filename FROM schema_migrations WHERE filename IN ('20261026000001_writer_source_encrypted_landing.sql','20260907000001_vault_erasure_queue.sql','20260904000001_developmental_readings.sql','20260901000001_ask_threads.sql','20260906000001_manuscript_section_heading_depth.sql','20261101000002_astro_pro_tester_grants.sql') ORDER BY 1"`
 4. What has landed: `docker exec maia-postgres psql -U soullab maia_consciousness -c "SELECT state, count(*) FROM writer_source_landing_intents GROUP BY 1"`.
