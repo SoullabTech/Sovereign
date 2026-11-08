@@ -75,10 +75,40 @@ describe('Ask MAIA inside Pro', () => {
 
   it('adds transits to the natal reading only for a chosen date', async () => {
     await ask({ section: 'natal', subject: 'first', question: 'What stands out?' });
-    await ask({ section: 'natal', subject: 'first', at: '2026-02-03T12:00:00', question: 'What was happening then?' });
+    await ask({ section: 'natal', subject: 'first', at: '2026-06-21T12:00:00', question: 'What was happening then?' });
     const [plain, dated] = generateSimple.mock.calls.map((c) => c[0].systemPrompt as string);
     expect(plain).not.toContain('Transits on');
-    expect(dated).toContain('Transits on 2026-02-03');
+    expect(dated).toContain('Transits on 2026-06-21');
+  });
+
+  it('writes a deep reading from the natal chart, Four Pillars, Maya and a chosen date, with life notes as context only', async () => {
+    await ask({
+      section: 'deep', subject: 'first', at: '2026-06-21T12:00:00', include: ['four-pillars', 'maya'], direction: 'forward',
+      lifeContext: 'A teacher who loved the sea.', question: 'Write a full reading.',
+    });
+    const call = generateSimple.mock.calls[0][0];
+    expect(call.tier).toBe('deep');
+    expect(call.maxTokens).toBeGreaterThan(600);
+    const prompt = call.systemPrompt as string;
+    for (const part of ['Natal chart', 'Transits on 2026-06-21', 'Chinese Four Pillars', 'Birth, traditional Maya count', 'Chosen date, traditional Maya count',
+      'WHAT THE ASTROLOGER KNOWS OF THEIR LIFE', 'A teacher who loved the sea.', 'Never say or imply that the chart caused']) {
+      expect(prompt).toContain(part);
+    }
+    for (const secret of ['1985', '09:40', '40.71']) expect(prompt).not.toContain(secret);
+  });
+
+  it('does not refuse a deep reading because the life notes speak of a death, but opens with where to turn', async () => {
+    const res = await ask({ section: 'deep', subject: 'first', lifeContext: 'He died of an overdose last year.', question: 'Write a full reading.' });
+    const { answer } = await res.json();
+    expect(generateSimple).toHaveBeenCalledTimes(1);
+    expect(answer.startsWith('If anyone in this story is at risk right now')).toBe(true);
+    expect(answer).toContain('The composite Sun…');
+  });
+
+  it('keeps life notes to the deep reading, and refuses unknown parts', async () => {
+    expect((await ask({ section: 'natal', subject: 'first', lifeContext: 'x', question: 'x' })).status).toBe(400);
+    expect((await ask({ section: 'deep', subject: 'first', include: ['tarot'], question: 'x' })).status).toBe(400);
+    expect((await ask({ section: 'deep', subject: 'first', lifeContext: 'x'.repeat(3001), question: 'x' })).status).toBe(400);
   });
 
   it('gives the Four Pillars and the chosen luck direction', async () => {

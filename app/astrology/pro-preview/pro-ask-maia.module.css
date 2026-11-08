@@ -14,3 +14,8 @@
 .dateField { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .82rem; color: #d8cbb3; }
 .dateField input { font: inherit; padding: 5px 8px; border: 1px solid rgba(223, 189, 132, .35); border-radius: 6px; color: #f3e6cd; background: #121a24; }
 .dateField button { font: inherit; font-size: .8rem; color: #f3e6cd; background: transparent; border: 1px solid rgba(223, 189, 132, .4); border-radius: 6px; padding: 3px 8px; cursor: pointer; }
+.deepOptions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-size: .84rem; color: #d8cbb3; }
+.inline { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.block { display: grid; gap: 4px; font-size: .84rem; color: #d8cbb3; }
+.block input { font: inherit; padding: 7px 10px; border: 1px solid rgba(223, 189, 132, .35); border-radius: 8px; color: #f3e6cd; background: #121a24; }
+.reading { white-space: pre-wrap; line-height: 1.6; padding: 12px 14px; border-top: 1px solid rgba(223, 189, 132, .2); color: #ede4d3; }

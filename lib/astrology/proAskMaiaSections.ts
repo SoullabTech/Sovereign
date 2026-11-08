@@ -17,8 +17,9 @@ import { detectAllPatterns, type Aspect as PatternAspect } from './aspectPattern
 import type { CrossAspect } from './proComparison';
 import type { TransitAspect } from './proTransits';
 import type { FourPillars, LuckDirection } from './proFourPillars';
+import type { TraditionalMaya } from './proTraditionalMaya';
 
-export const PRO_ASK_SECTIONS = ['natal', 'transits', 'biwheel', 'composite', 'four-pillars'] as const;
+export const PRO_ASK_SECTIONS = ['natal', 'transits', 'biwheel', 'composite', 'four-pillars', 'deep'] as const;
 export type ProAskSection = typeof PRO_ASK_SECTIONS[number];
 
 export function isProAskSection(value: unknown): value is ProAskSection {
@@ -108,7 +109,44 @@ const SECTION_FOCUS: Record<ProAskSection, string> = {
   biwheel: 'the relationship between the two charts below (synastry), read through the contacts between them',
   composite: 'the composite chart below, made from the midpoints of two people\'s charts: it describes the relationship as its own entity',
   'four-pillars': 'the Chinese Four Pillars (BaZi) chart below',
+  deep: 'a full reading of one person, drawing together everything below',
 };
+
+export function mayaFacts(t: TraditionalMaya, label: string): string {
+  return `${label}, traditional Maya count (GMT ${t.correlation}): ${t.number} ${t.kiche} (Yucatec ${t.number} ${t.yucatec}), Haab ${t.haab.day} ${t.haab.month}, Long Count ${t.longCount}`;
+}
+
+/** Longest life context the astrologer may give a deep reading. */
+export const LIFE_CONTEXT_MAX = 3000;
+
+/**
+ * The deep reading: a longer, organised reading of one person that draws the
+ * sections together, with what the astrologer knows of their life as context
+ * — never as something the chart caused, predicted or explains.
+ */
+export function proDeepSystemPrompt(facts: string, lifeContext: string | null): string {
+  return `You are MAIA, an AI companion in Soullab, writing a full reading for a professional astrologer about one person. You are MAIA, not the astrologer and not a person.
+
+HOW YOU WRITE:
+- Organise the reading with short section titles, each on its own line, then plain paragraphs. No markdown symbols, no bullet lists. About 800 to 1,200 words.
+- Begin with the chart's central structure (its named patterns and tightest aspects), then the life themes it offers language for, then any dated transits, then the other systems given, then an integrated view.
+- The chart is symbolic: it offers language for patterns and tensions, never causes, diagnoses or fates. Use only the facts below; if something is not there, say so.
+- Do not predict events, deaths, illness, accidents, pregnancies, legal or money outcomes, or their timing, and do not read past events as having been foretold. Do not give medical, psychological, legal or financial advice.
+- For the traditional Maya count, give the dates but do not assign traditional meanings: those belong to living daykeepers. Do not use the Dreamspell system.
+- Where it would help the astrologer, name what would deepen the work (for example progressions over a period, or consulting a living daykeeper).${lifeContext ? `
+- The astrologer has shared what they know of this person's life, below. Use it as context, with care. Never say or imply that the chart caused, predicted or explains any illness, addiction, injury or death; at most, say the chart offers a language for themes the person lived with. If the person has died, write with tenderness and without speculation about how or why.` : ''}
+- Refer to the person as "the person" or by the role the astrologer uses; do not ask for names or birth details.
+
+──────── THE FACTS ────────
+${facts}${lifeContext ? `
+
+──────── WHAT THE ASTROLOGER KNOWS OF THEIR LIFE (from the astrologer, not from the chart) ────────
+${lifeContext}` : ''}`;
+}
+
+/** Opens a deep reading whose life context mentions risk, without refusing the reading. */
+export const PRO_DEEP_CONTEXT_NOTE =
+  'If anyone in this story is at risk right now, please reach a person who can help: your local emergency number, or in the US call or text 988. The reading follows.';
 
 /** The system prompt for MAIA speaking with the astrologer about one section. */
 export function proAskSystemPrompt(section: ProAskSection, facts: string): string {
