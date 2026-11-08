@@ -176,11 +176,24 @@ export const ATTUNEMENT_DIRECTIVE = [
  * never mean preserving an epistemic mistake as fact, and the guard therefore
  * cannot live only at the depth where the inflation began — it has to hold at
  * the depth that inherits it.
+ *
+ * ⭐ The same holds for the writer's own claims about their text (accuracy
+ * witness, 2026-11-07): asked "So the sentences get shorter as they go?" of a
+ * passage whose third sentence is longest, MAIA said yes and invented the word
+ * counts to fit. A claim about the words on the page is checked against the
+ * passage, whoever makes it, and a quotation is exact or it is not a quotation.
  */
+export const TEXT_ACCURACY_DIRECTIVE = [
+  'When I say something checkable about my own passage (how long its sentences are, their order, what repeats, who speaks, what it says), check it against the passage before you agree or build on it; if the passage shows otherwise, say plainly what it shows.',
+  'Do the same for your own claims: before saying which sentence is longest, how many words something has, or in what order things come, check the passage, and never state a count or order you have not checked.',
+  'Quote my words exactly as they stand in the passage, or describe them without quotation marks.',
+].join(' ');
+
 export const EPISTEMIC_INTEGRITY_DIRECTIVE = [
   'Treat nothing said earlier in this conversation as established merely because it was said confidently or said by you.',
   'If an earlier turn stated an interpretation as a fact, do not carry it forward as one: say what the supplied evidence actually establishes, and mark the rest as a possible reading.',
   'Changing how deeply you explain never changes how certain a claim is entitled to be.',
+  TEXT_ACCURACY_DIRECTIVE,
 ].join(' ');
 
 /**

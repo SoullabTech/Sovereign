@@ -16,7 +16,6 @@ function ResetPasswordContent() {
   const token = searchParams.get('token');
 
   const [mode, setMode] = useState<'loading' | 'request' | 'reset' | 'success' | 'error'>('loading');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [memberName, setMemberName] = useState('');
@@ -50,31 +49,6 @@ function ResetPasswordContent() {
     }
   };
 
-  const handleRequestReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch(apiUrl('/api/members/reset-password'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.toLowerCase() }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setMode('success');
-      } else {
-        setError(data.error || 'Failed to send reset email');
-      }
-    } catch {
-      setError('Unable to process request. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,7 +118,7 @@ function ResetPasswordContent() {
             }}
             className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
           >
-            Request New Reset Link
+            Get a sign-in code instead
           </button>
         </div>
       );
@@ -162,7 +136,7 @@ function ResetPasswordContent() {
           <p className="text-teal-700/80 text-sm text-center">
             {token
               ? 'Your password has been updated. You can now sign in.'
-              : 'If an account exists with this email, we\'ve sent a reset link.'}
+              : 'Your password has been updated.'}
           </p>
           <button
             onClick={() => router.push('/signin')}
@@ -175,58 +149,33 @@ function ResetPasswordContent() {
     }
 
     if (mode === 'request') {
+      // No token: the member is not holding a founder-issued link. Self-serve
+      // recovery is the email sign-in code, which works without a password.
       return (
         <div className="space-y-6">
           <div className="flex justify-center">
             <Mail className="w-10 h-10 text-teal-600" />
           </div>
           <h2 className="text-xl font-semibold text-teal-900 text-center tracking-tight">
-            Reset Your Password
+            Forgot your password?
           </h2>
           <p className="text-teal-700/80 text-sm text-center">
-            Enter your email and we'll send you a reset link.
+            You don&apos;t need it. We&apos;ll email you a sign-in code instead, and it signs you in without a password.
           </p>
-
-          <form onSubmit={handleRequestReset} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-teal-800 mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
-                placeholder="your@email.com"
-                required
-              />
-            </div>
-
-            {error && (
-              <div className="text-red-700/80 text-sm bg-red-100/30 rounded-lg p-3 border border-red-200/40">
-                {error}
-              </div>
-            )}
-
-            <motion.button
-              type="submit"
-              disabled={isSubmitting || !email.trim()}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Sending...' : 'Send Reset Link'}
-            </motion.button>
-
-            <button
-              type="button"
-              onClick={() => router.push('/signin')}
-              className="w-full text-sm font-medium text-teal-700/70 hover:text-teal-800 transition"
-            >
-              Back to Sign In
-            </button>
-          </form>
+          <button
+            type="button"
+            onClick={() => router.push('/signin?method=code')}
+            className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
+          >
+            Email me a sign-in code
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/signin')}
+            className="w-full text-sm font-medium text-teal-700/70 hover:text-teal-800 transition"
+          >
+            Back to Sign In
+          </button>
         </div>
       );
     }
