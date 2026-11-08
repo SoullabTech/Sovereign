@@ -45,7 +45,27 @@ const UID = process.getuid();
 const IS_ROOT = UID === 0;
 const FOREIGN_UID = 40001; // fictional: no such user is needed to own a file
 const DROP_UID = 40002; // fictional
-const NEEDS_ROOT = IS_ROOT ? false : "needs root to create another uid's files or to drop to another uid";
+// uid 0 is not always a root that can give files away or drop to another uid: in a single-uid user namespace (a rootless
+// container, which a CI job can be) chown to a foreign uid and a uid switch fail with EINVAL. So the cases that need those two
+// capabilities probe for them instead of assuming them from the uid, and skip, by name, when they are missing. Expectations that
+// depend only on root bypassing permission bits keep using IS_ROOT, which a user-namespace root also does.
+function probeRootCapability() {
+  if (!IS_ROOT) return false;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "r20-cap-"));
+  try {
+    const f = path.join(dir, "probe");
+    fs.writeFileSync(f, "");
+    fs.chownSync(f, FOREIGN_UID, DROP_UID);
+    const dropped = spawnSync("true", [], { uid: DROP_UID, gid: DROP_UID });
+    return !dropped.error && dropped.status === 0;
+  } catch {
+    return false;
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+const ROOT_CAPABLE = probeRootCapability();
+const NEEDS_ROOT = ROOT_CAPABLE ? false : "needs a root that can chown to another uid and drop to it, to create another uid's files or to run as another uid";
 
 const REQUIRED = [
   "ledger_dir_same_as_high_water_dir",
@@ -363,7 +383,7 @@ const ownerMismatch = String(UID + 1);
 // Objects owned by uid X and gid Y with X != Y, so that "the owner's uid" and "the owner's gid" are different numbers. As root
 // they are given away with chown. An ordinary user cannot chown, but files it creates carry its own uid and gid, which differ
 // on most real accounts (a CI runner is typically uid 1001, gid 127); where they do not, the case is skipped, by name.
-const SPLIT = IS_ROOT ? { uid: FOREIGN_UID, gid: DROP_UID, chown: true } : { uid: UID, gid: process.getegid(), chown: false };
+const SPLIT = ROOT_CAPABLE ? { uid: FOREIGN_UID, gid: DROP_UID, chown: true } : { uid: UID, gid: process.getegid(), chown: false };
 const NEEDS_SPLIT = SPLIT.uid !== SPLIT.gid ? false : "needs root, or an invoking uid that differs from its own gid";
 function giveSplitOwner(fx) {
   writePair(fx);
@@ -954,9 +974,9 @@ test("an internal error is reported as UNKNOWN with exit 3, never as a pass and 
 // As root the files can be given to uid 1000, so the default is observed directly: owner checks true, the probe UNKNOWN
 // (the invoker is not 1000). As an ordinary uid-1000 user the same fixture simply passes. Any other ordinary user cannot make
 // a fixture that 1000 owns, and the test says so rather than pretending.
-test("the default expected uid is exactly 1000 (observed through ownership, not through the text of the script)", { skip: IS_ROOT || UID === 1000 ? false : "needs root, or to be uid 1000" }, () =>
+test("the default expected uid is exactly 1000 (observed through ownership, not through the text of the script)", { skip: ROOT_CAPABLE || UID === 1000 ? false : "needs a root that can chown, or to be uid 1000" }, () =>
   withFixture((fx) => {
-    if (IS_ROOT) for (const p of [fx.dir, fx.key]) fs.chownSync(p, 1000, 1000);
+    if (ROOT_CAPABLE) for (const p of [fx.dir, fx.key]) fs.chownSync(p, 1000, 1000);
     const p = runFx(fx, ["--ledger", fx.ledger, "--high-water", fx.hw, "--key-file", fx.key]);
     assertCase(p, IS_ROOT ? { dir_probe_write: "UNKNOWN" } : {}, { pair: "both_absent", keyForm: "hex64" }, "default expected uid");
     const other = runFx(fx, std(fx, { expectUid: "1001" }));
@@ -1457,8 +1477,11 @@ test("advisory lines follow a docker-data-root-shaped location (textually and af
 });
 
 // ------------------------------------- key classifier vs the module's own ----
-// A transcription of keyBytes() in lib/recovery/r20DeletionLedger.ts, from `raw` onwards. The drift guard below pins the
-// transcribed lines to the module source, so a change to the accepted forms fails this suite until the script is updated.
+// A transcription of keyBytes() in lib/recovery/r20DeletionLedger.ts, from `raw` onwards. The drift guard below checks that
+// 17 whole lines of the module still occur in it, so an EDIT to one of those lines fails this suite until the script is
+// updated. It does NOT see a rule added or removed elsewhere in the module (a new rejection, a new accepted form, a dropped
+// check in requiredPath): the differential compares the script with this hand transcription, never with the module. Lane
+// record 6.12 lists that as a known limit; closing it means running the differential against the module's own keyBytes.
 const moduleKey = (raw) => {
   const text = raw.toString("utf8").trim();
   let key;
@@ -1475,7 +1498,7 @@ const moduleForm = (raw) => {
   return "raw32";
 };
 
-test("drift guard: the module still has exactly the key and file handling this preflight mirrors", () => {
+test("drift guard: the 17 module lines this preflight mirrors are still present verbatim (a rule added elsewhere is not seen)", () => {
   const src = fs.readFileSync(MODULE_SRC, "latin1"); // the file contains a NUL byte; read it as bytes
   for (const line of [
     "const text = raw.toString('utf8').trim();",

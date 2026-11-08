@@ -3,7 +3,9 @@
 ```
 STATUS:    Candidate document, on branch claude/ops-r20-host-preflight-20261108. Nothing in
            it has been run on the host. It establishes no host fact.
-STANDING:  R20 is NOT configured on the app. Register line C1
+STANDING:  R20 was reported NOT configured on the app container (REPORTED: founder readout of
+           2026-11-06, names only; not re-read since; .env.production is not in the repository,
+           so its contents are not established). Register line C1
            (docs/ops/NON_DELIVERY_REGISTER.md) stays OPEN. This runbook, and the preflight
            script it names, configure and deploy nothing and change nothing that persists
            (the script's one write is a probe file it creates and removes, step 4).
@@ -191,12 +193,20 @@ If the earlier override or a mount shows an R20 directory, read the override on 
 yourself (it names the real paths; do not paste it anywhere) and, for that directory only:
 
 ```
+id -u                                              # your uid
 stat -c '%F %a %u' <candidate-dir>                 # type, mode, owner uid
+if test -r <candidate-dir> && test -x <candidate-dir>; then echo readable; else echo UNREADABLE-STOP; fi
 ls -1A <candidate-dir> | wc -l                     # number of entries
 test -e <candidate-ledger-file>     && echo ledger-present     || echo ledger-absent
 test -e <candidate-high-water-file> && echo high-water-present || echo high-water-absent
 stat -c '%F %a %u' <candidate-key-file>            # type, mode, owner uid (never the content)
 ```
+
+**A directory you cannot search shows every file in it as absent.** If any line above printed
+`Permission denied` or `UNREADABLE-STOP`, or the directory's owner uid is not yours, or a parent
+directory of any path is not searchable by you, then "absent" and `0` mean *unknown*, not *none*.
+Read the directory as its owner or as root (a read, not a write), or treat it as the last row of
+the table below. Do not go on to step 2 on an unreadable reading.
 
 Record: the R20 names found (or none); the compose file names; whether a candidate directory
 exists; its entry count; ledger present or absent; high-water present or absent; key present or
@@ -209,6 +219,7 @@ read-only readout of 2026-11-06 found no `R20_` variable names on `maia-sovereig
 | No R20 directory, no ledger, no high-water, no key | The clean host this runbook assumes | Continue at step 1 |
 | A directory or a key exists; neither ledger nor high-water | Provenance of that directory and key unknown | Do not reuse silently. Tell the founder. A new directory and a new key (steps 1 to 3) are lawful; leave the old ones untouched |
 | Exactly one of ledger and high-water exists | The seal will throw `R20_HIGH_WATER_MISSING` (ledger only) or `R20_LEDGER_MISSING` (high-water only) whatever the flag, and the module has no repair path | Stop. Founder decision. Do not delete the one that exists and do not create the one that is missing |
+| `Permission denied`, `UNREADABLE-STOP`, an owner uid that is not yours, or a parent you cannot search | Contents unknown, not absent: a pair may exist that you cannot see | Stop. Read it as the owner or as root first, then use the rows above. Treat it as the last row until then |
 | Both exist | The first seal takes the verify path, `R20_LEDGER_ALLOW_INITIALIZE` does nothing, and the key must be the one that sealed them, or every seal gives `R20_LEDGER_HMAC_INVALID` | Stop. Steps 1 to 3 do not apply. Founder decision on which pair and which key are current. Do not overwrite or remove a found pair to make the clean-host steps apply |
 
 **Step 1. Choose a location.** The authority directory and the key must be on a location that
@@ -256,15 +267,27 @@ the host uid that container uid 1000 maps to; stop and take it to the founder ra
 If the mapping is the identity and you are the host user with uid 1000:
 
 ```
-umask 077
-mkdir -p -m 0700 <authority-dir>            # -m applies to the final directory only
-stat -c '%F %a %u:%g' <authority-dir>       # expect: directory, 700, 1000:<gid>
+if test -e <authority-dir> || test -L <authority-dir>; then
+  echo "EXISTS: stop and go back to step 0's table."     # nothing was created or changed
+else
+  umask 077
+  mkdir -m 0700 <authority-dir>             # refuses an existing path; the parent must already exist
+  stat -c '%F %a %u:%g' <authority-dir>     # expect: directory, 700, 1000:<gid>
+fi
 ```
 
-If you must act as root, use `install -d -m 0700 -o <uid> -g <gid> <authority-dir>` with the
-uid from above. Every ancestor of the directory must also let that uid in (search permission),
-or the preflight in step 4 cannot reach it; the container itself sees only the mounted
-directory. If the directory already exists, list it first (`ls -la <authority-dir>`): a symlink, or any entry at the ledger or high-water name, means stop and go back to step 0's table. The preflight reads a symlink that leads nowhere as absent (it mirrors the module's existence test), so it cannot be relied on to tell you. Do **not** create the ledger or the high-water file, now or later: an empty or
+If you must act as root, run the same test first and, only when it does not print `EXISTS`, use
+`install -d -m 0700 -o <uid> -g <gid> <authority-dir>` in place of `mkdir`, with the uid from
+above (`install -d` on a path that already exists would change its owner and mode). Every
+ancestor of the directory must also let that uid in (search permission), or the preflight in
+step 4 cannot reach it and its pair-state line is then not to be trusted (it reads files it cannot
+see as absent; the result is still FAIL, because the directory check is false); the container
+itself sees only the mounted directory. If the test prints `EXISTS`, list the directory as its
+owner or as root (`ls -la <authority-dir>`; a `Permission denied` is *unreadable*, not *empty*):
+a symlink, or any entry at the ledger or high-water name, means stop and go back to step 0's
+table. The preflight reads a symlink that leads nowhere as absent (it mirrors the module's
+existence test), so it cannot be relied on to tell you. Do **not** create the ledger or the
+high-water file, now or later: an empty or
 garbage file in their place sends the first seal down the verify path and fails with
 `R20_LEDGER_MISSING_INVALID` or `R20_HIGH_WATER_MISSING_INVALID`, and one file without the other
 fails as the table in step 0 shows.
@@ -274,16 +297,33 @@ the authority directory). It is generated on the machine that will hold it so th
 passes through a chat, a session, a clipboard or another machine's disk.
 
 ```
-umask 077
-if test -e <key-file> || test -L <key-file>; then
-  echo "REFUSED: the key file already exists. Stop."     # a literal; nothing was created or changed
-else
-  ( set -C; openssl rand -hex 32 > <key-file> ) && chmod 0600 <key-file> && echo "created"
-fi                                          # set -C (noclobber) makes the redirect fail rather than overwrite; the key goes only into the file
+(
+  umask 077
+  if test -e <key-file> || test -L <key-file>; then
+    echo "REFUSED: the key file already exists. Stop."          # a literal; nothing was created or changed
+  elif ! command -v openssl >/dev/null 2>&1; then
+    echo "STOP: openssl is not installed. Nothing was created."
+  else
+    tmp="$(mktemp <key-dir>/.r20-key-new.XXXXXX)" &&
+      openssl rand -hex 32 > "$tmp" &&
+      ln "$tmp" <key-file> &&
+      echo "created"
+    rm -f "$tmp"                            # the temporary name goes whether or not the link was made
+  fi
+)
 ```
 
+`<key-dir>` is the directory that will hold the key file (it must already exist and be writable
+by you, and be on the same filesystem as the key file, which it is when it is that directory).
+The key is written to a new private temporary name and then hard-linked to the key path. `ln`
+without `-f` refuses an existing path, a dangling symlink included, so the existence test and the
+write are one step and no empty or half-written file is ever left at the key path if `openssl`
+fails. `mktemp` creates the temporary file with mode 0600, and the link shares that mode.
+
 Only if that printed `created`, check the file (these three print modes, a count and a literal,
-never the key):
+never the key). If you did step 2 as root and are not the container user's host uid, make the key
+that uid's: `chown <uid>:<gid> <key-file>`, then read the owner uid from the first line below;
+a key owned by root with mode 0600 cannot be read by the container user:
 
 ```
 stat -c '%F %a %u' <key-file>               # expect: regular file, 600, the uid from step 2
@@ -291,13 +331,15 @@ wc -c < <key-file>                          # expect: 65 (64 hex characters and 
 grep -Eqx '[0-9a-f]{64}' <key-file> && echo hex64-ok     # prints only the literal
 ```
 
-The command refuses to overwrite because an existing key may be the only thing that can verify a
-sealed pair, and there is no rotation path (step 8), so a clobbered key cannot be recovered. If it
-printed `REFUSED`, or the redirect failed, stop: the file is a step 0 finding. Go back to step 0's
-table (a key that exists is its second row, or its third or fourth if a ledger or high-water
-file exists too), do not overwrite, move or delete the file, and take it to the founder. A new
-key at a path that does not exist is lawful only on the second row, which leaves the old key
-untouched.
+The block refuses to overwrite because an existing key may be the only thing that can verify a
+sealed pair, and there is no rotation path (step 8), so a clobbered key cannot be recovered.
+If it printed `REFUSED`, stop: the file is a step 0 finding. Go back to step 0's table (a key
+that exists is its second row, or its third or fourth if a ledger or high-water file exists
+too), do not overwrite, move or delete the file, and take it to the founder. A new key at a path
+that does not exist is lawful only on the second row, which leaves the old key untouched. If it
+printed `STOP`, or an error and no `created`, fix the cause (install `openssl`, or make
+`<key-dir>` exist and be writable) and run the block again: this step leaves nothing at the key
+path unless it printed `created`.
 
 The hex form is chosen because the module trims surrounding whitespace before it matches it
 (line 99), so the newline `openssl` adds is harmless. **A raw key file must not carry a
@@ -372,7 +414,7 @@ meet (`ledger_pair_state` is one of `both_absent`, `both_present`, `one_present`
 | `ledger_pair_state both_present` | A ledger and a high-water file already exist at those names. The pair counts as consistent, so a PASS can accompany it | Stop. Step 0's "Both exist" row: founder decision; steps 1 to 3 do not apply |
 | `ledger_pair_state one_present` | Exactly one of the two exists; the seal would throw whatever the flag | Stop. Step 0's "Exactly one" row. Do not delete the one that exists and do not create the missing one |
 | `ledger_pair_state wrong_kind` | A path at one of the two names exists but is not a plain regular file: a directory, a symlink, a FIFO or a socket. The script scores it as a failed check. The module's existence test would count it as present and its read would then fail; a symlink would be replaced, not written through, by the module's rename | Stop. Not in step 0's table: founder decision. Do not remove it |
-| `ledger_pair_state UNKNOWN` | Absence could not be told from presence, for example a directory the invoking uid cannot search | Stop. Fix the way you ran it (the uid, search permission on every ancestor) and rerun |
+| `ledger_pair_state UNKNOWN` | Absence could not be told from presence, for example a directory the invoking uid cannot search. The script tests only that directory itself: if a PARENT of it is not searchable by you, `ledger_pair_state` can read `both_absent` for a pair that exists, while `dir_exists` and `key_exists` read `false` and the result is FAIL, never PASS. Treat any such combination as unknown, not as a clean host | Stop. Fix the way you ran it (the uid, search permission on every ancestor) and rerun |
 | `key_form` other than `hex64` | Step 3 makes `hex64`. `base64_43` and `raw32` are forms the module also accepts, but then this is not the file step 3 made; `invalid` is a form the module rejects; `UNKNOWN` was not determined | Stop. If the key was there before step 3, step 0's table; otherwise find out why before going on |
 | An advisory line reads `true` | The directory or the key lies under the Docker data root, which step 1 excludes | Stop. Choose another location (step 1) and rerun |
 | Any `<check_id>` line reads `false` or `UNKNOWN` | The result is FAIL or UNKNOWN | Stop. Fix the host, or the way you ran it, and rerun |
