@@ -187,6 +187,8 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
   }
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
@@ -231,14 +233,24 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const outcome = await eraseManuscript(id, memberId);
+    /* The Work the member pressed Delete on, when the caller says so (the Work card does; loose writing and History do not).
+       A malformed value is the caller's mistake and is refused rather than silently ignored: ignoring it would turn a guarded
+       delete into an unguarded one. */
+    const viaWork = request.nextUrl.searchParams.get('workId');
+    if (viaWork !== null && !UUID_RE.test(viaWork)) {
+      return NextResponse.json({ error: 'Bad request' }, { status: 400 });
+    }
+
+    const outcome = await eraseManuscript(id, memberId, viaWork === null ? {} : { viaWorkId: viaWork.toLowerCase() });
 
     if (!outcome.ok) {
       if (outcome.refusal === 'not_found') {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
       return NextResponse.json(
-        { refusal: outcome.refusal, works: outcome.works },
+        outcome.refusal === 'declared_in_other_works'
+          ? { refusal: outcome.refusal, works: outcome.works }
+          : { refusal: outcome.refusal },
         { status: 409 },
       );
     }
@@ -253,12 +265,21 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
        a success that would make the promise false. The queue guarantees we can
        finish; it does not entitle us to say we already did. */
     if (!outcome.sweptAll) {
+      /* `unconfirmed` says WHICH of this deletion's obligations is not yet confirmed, so the sentence the member reads names exactly
+         those and no others: the original file, the Work's image, the independent record of the deletion. */
       return NextResponse.json(
-        { removed: true, refusal: 'custody_incomplete' },
+        {
+          removed: true,
+          refusal: 'custody_incomplete',
+          unconfirmed: { originalFile: outcome.owed.originalFile, image: outcome.owed.image, deletionRecord: !outcome.recoverySealed },
+          workRemoved: outcome.workRemoved,
+        },
         { status: 500 },
       );
     }
-    return NextResponse.json({ removed: true });
+    /* `workRemoved` is the SERVER's word on whether the Work the writing was declared in went with it (it did only if it declared
+       nothing else). The page never guesses this from what it last read. */
+    return NextResponse.json({ removed: true, workRemoved: outcome.workRemoved });
   } catch (err) {
     console.error('[press/manuscripts/:id] DELETE error:', err);
     return NextResponse.json({ error: 'Failed to remove manuscript' }, { status: 500 });

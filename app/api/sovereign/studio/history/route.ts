@@ -45,6 +45,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
 /**
  * The exact note the draft-creation path writes on the system's own first
@@ -84,13 +85,44 @@ export async function GET(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
+
+  const asked = Number(request.nextUrl.searchParams.get('limit'));
+  const limit =
+    Number.isFinite(asked) && asked > 0 ? Math.min(Math.floor(asked), MAX_LIMIT) : DEFAULT_LIMIT;
+
+  /* The offline cabin has no source custody, revisions or keeps, so only two kinds of act can be established there, and only those are
+     listed: a Work begun and something declared in a Work, from the cabin's own tables. Everything else simply never
+     appears in the cabin. (A 401 here would make a member who is signed in to the cabin look signed out, and would make every re-read
+     that includes History, Home's after a deletion, report that it could not read.) Same shape and meaning as the web query below. */
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { member, issuedToken } = cabinMemberFromRequest(store, request);
+      const manuscriptTitles = new Map(store.listManuscripts(member.id).map((m) => [m.id, m.title]));
+      const acts: Array<{ id: string; kind: StudioActKind; at: string; workTitle: string | null; manuscriptTitle: string | null; manuscriptId: string | null; detail: string | null; note: null }> = [];
+      for (const work of store.listWorks(member.id)) {
+        acts.push({ id: work.id, kind: 'work_begun', at: work.createdAt, workTitle: work.title, manuscriptTitle: null, manuscriptId: null, detail: null, note: null });
+        for (const e of work.expressions) {
+          if (e.declaredBy !== member.id) continue;
+          acts.push({
+            id: e.id, kind: 'expression_declared', at: e.declaredAt, workTitle: work.title,
+            manuscriptTitle: e.expressionType === 'manuscript' ? (manuscriptTitles.get(e.expressionId) ?? null) : null,
+            manuscriptId: e.expressionId, detail: e.expressionType, note: null,
+          });
+        }
+      }
+      acts.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
+      const response = NextResponse.json({ acts: acts.slice(0, limit) });
+      setCabinSessionCookie(response, issuedToken);
+      return response;
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const asked = Number(request.nextUrl.searchParams.get('limit'));
-    const limit =
-      Number.isFinite(asked) && asked > 0 ? Math.min(Math.floor(asked), MAX_LIMIT) : DEFAULT_LIMIT;
 
     const result = await query<ActRow>(
       `

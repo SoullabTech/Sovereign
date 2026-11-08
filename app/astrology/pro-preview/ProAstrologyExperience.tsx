@@ -24,15 +24,18 @@ import ProTransitPanel from './ProTransitPanel';
 import ProAspectGrid from './ProAspectGrid';
 import ProComparePanel from './ProComparePanel';
 import ProDerivedPanel from './ProDerivedPanel';
-import ProSystemsPanel from './ProSystemsPanel';
+import ProSystemsPanel, { type SystemsWork } from './ProSystemsPanel';
+import { PanelMemoryProvider } from './panelMemory';
 import ProChartViews from './ProChartViews';
 import ProEphemerisPanel from './ProEphemerisPanel';
 import ProAstroMapPanel from './ProAstroMapPanel';
 import ProTraditionReport from './ProTraditionReport';
+import ProOrbSettings, { useSavedOrbSettings } from './ProOrbSettings';
+import { withOrbSettings } from '@/lib/astrology/proAspectOrbs';
 import type { ChartPoints } from '@/lib/astrology/proChartPoints';
 import type { Declination } from '@/lib/astrology/proDeclinations';
 import type { TransitBody } from '@/lib/astrology/proTransits';
-import ProSoulPortraitAction from './ProSoulPortraitAction';
+import ProSoulPortraitPanel from './ProSoulPortraitPanel';
 import styles from './astrology-pro-preview.module.css';
 
 type ChartStatus = 'idle' | 'loading' | 'ready' | 'signed-out' | 'consent-required' | 'incomplete' | 'unavailable';
@@ -105,7 +108,9 @@ export default function ProAstrologyExperience() {
   const [memberId, setMemberId] = useState<string | null>(null);
   const [sourceRevision, setSourceRevision] = useState<string | null>(null);
   // null = the member's own chart; otherwise a saved chart for another person.
-  const [savedSubject, setSavedSubject] = useState<{ id: string; label: string } | null>(null);
+  const [savedSubject, setSavedSubject] = useState<SavedChartSummary | null>(null);
+  // The Soul Portrait panel, opened from the empty-chart box or the open chart's toolbar.
+  const [portraitOpen, setPortraitOpen] = useState(false);
   // Sky at a member-chosen moment. Not private: it carries no birth data.
   // Up to two outer rings (biwheel / triwheel), one per source. A compared or
   // derived chart is fetched through the same owner-only routes.
@@ -134,6 +139,8 @@ export default function ProAstrologyExperience() {
   const [declinations, setDeclinations] = useState<Declination[] | null>(null);
   const [chartPoints, setChartPoints] = useState<ChartPoints | null>(null);
   const [privateViewVerified, setPrivateViewVerified] = useState(false);
+  // Working place in panels that unmount while access is re-checked; cleared with the chart.
+  const [systemsWork, setSystemsWork] = useState<SystemsWork | null>(null);
   const privateVerificationEpoch = useRef(0);
   const [chartError, setChartError] = useState<string | null>(null);
   const [skyStatus, setSkyStatus] = useState<SkyStatus>('loading');
@@ -144,6 +151,7 @@ export default function ProAstrologyExperience() {
   const [showAspects, setShowAspects] = useState(true);
   const [aspectOrbFilter, setAspectOrbFilter] = useState<'all' | '1' | '3' | '5' | '8'>('all');
   const maxAspectOrb = aspectOrbFilter === 'all' ? null : Number(aspectOrbFilter);
+  const [orbSettings, setOrbSettings] = useSavedOrbSettings();
   const [showHouseLines, setShowHouseLines] = useState(true);
   const [houseSystem, setHouseSystem] = useState<ProHouseSystem>('porphyry');
   // Each planet keeps its own unsaved draft; switching focus never attaches another planet's words.
@@ -195,6 +203,8 @@ export default function ProAstrologyExperience() {
     setMemberNotes({});
     setCalculationQuality(null);
     setDraft(null);
+    setSystemsWork(null);
+    setPortraitOpen(false);
     setChartStatus(reason);
   }
 
@@ -209,9 +219,10 @@ export default function ProAstrologyExperience() {
       privateVerificationEpoch.current += 1;
       setPrivateViewVerified(false);
     };
+    // A check while the chart is showing leaves it showing: only a failed check
+    // closes it. Blur and hidden tabs still mask it at once (above).
     const verify = async () => {
       const requestEpoch = ++privateVerificationEpoch.current;
-      setPrivateViewVerified(false);
       try {
         // A saved chart re-verifies that it still exists for this member; the
         // member's own chart re-verifies its birth-data revision.
@@ -224,7 +235,9 @@ export default function ProAstrologyExperience() {
         if (!active || requestEpoch !== privateVerificationEpoch.current) return;
         if (!reply.ok) {
           closePrivateChart(reply.status === 401 ? 'signed-out' : 'unavailable');
-          if (reply.status !== 401)
+          if (savedId && reply.status === 404)
+            setChartError('This chart is no longer in your saved charts, so it was closed.');
+          else if (reply.status !== 401)
             setChartError('Chart access could not be verified. Reopen it when your account is available.');
           return;
         }
@@ -388,7 +401,7 @@ export default function ProAstrologyExperience() {
           result.chartId !== saved.id) {
         throw new Error('chart_geometry_or_identity_unverified');
       }
-      setSavedSubject({ id: saved.id, label: saved.label });
+      setSavedSubject(saved);
       setSourceRevision('saved:' + saved.id);
       setMemberId(result.memberId);
       setCalculationQuality(result.calculationQuality || null);
@@ -407,14 +420,16 @@ export default function ProAstrologyExperience() {
   }
 
   const privateChart = privateViewVerified ? chart : null;
+  // The same chart with its aspects found under the astrologer's orbs.
+  const orbChart = useMemo(() => privateChart ? withOrbSettings(privateChart, orbSettings) : null, [privateChart, orbSettings]);
   const bodies = useMemo(() => privateChart ? chartBodies(privateChart) : [], [privateChart]);
   const selected = bodies.find((body) => body.name === focusedBody) || bodies[0] || null;
   const relationships = useMemo(
-    () => privateChart && selected ? selectedRelationships(privateChart, selected.name).filter(
+    () => orbChart && selected ? selectedRelationships(orbChart, selected.name).filter(
       (aspect) => Number.isFinite(aspect.orb) && aspect.orb >= 0 &&
         (maxAspectOrb === null || aspect.orb <= maxAspectOrb),
     ) : [],
-    [privateChart, selected, maxAspectOrb],
+    [orbChart, selected, maxAspectOrb],
   );
   const geometricHouse = privateChart && selected
     ? geometricHouseFromCusps(selected.longitude, privateChart.houses) : null;
@@ -433,7 +448,7 @@ export default function ProAstrologyExperience() {
   function preparePrivateDraft() {
     if (!privateChart || !selected || !memberId) return;
     pendingShareEpoch.current += 1;
-    setDraft(prepareMemberHandoff(privateChart, selected, memberNotes[selected.name] || ''));
+    setDraft(prepareMemberHandoff(orbChart ?? privateChart, selected, memberNotes[selected.name] || ''));
   }
 
   // R4G legacy bypass closure: the previous GET consent check was not an
@@ -441,7 +456,11 @@ export default function ProAstrologyExperience() {
   // A future approved transfer must be bound to the receiving server route.
 
 
+  // Panels keep their place for this member, chart revision and house system only.
+  const panelScope = memberId && sourceRevision ? `${memberId}|${sourceRevision}|${houseSystem}` : null;
+
   return (
+    <PanelMemoryProvider scope={panelScope}>
     <main className={styles.studio} id="astrology-pro-preview">
       <header className={styles.topbar}>
         <Link href="/astrology" className={styles.brand} aria-label="Return to Soullab Astrology">
@@ -545,6 +564,8 @@ export default function ProAstrologyExperience() {
                       <option value="8">8°</option>
                     </select>
                   </label>
+                  <ProOrbSettings settings={orbSettings} onChange={setOrbSettings} />
+                  <button onClick={() => setPortraitOpen((o) => !o)} aria-expanded={portraitOpen}>Soul Portrait</button>
                   <button onClick={() => closePrivateChart()}>{savedSubject ? 'Close chart' : 'Close my chart'}</button>
                 </div>
               )}
@@ -552,7 +573,15 @@ export default function ProAstrologyExperience() {
 
             {privateChart ? (
               <>
-                <CelestialChartWheel chart={privateChart} focusedBody={focusedBody} onFocusBody={selectBody}
+                {portraitOpen && (
+                  <ProSoulPortraitPanel source={savedSubject ? savedSubject.id : 'mine'}
+                    label={savedSubject ? savedSubject.label : ''}
+                    chartLine={savedSubject
+                      ? `${savedSubject.label} · ${savedSubject.birthDate} · ${savedSubject.birthTime}${savedSubject.placeLabel ? ` · ${savedSubject.placeLabel}` : ''}`
+                      : "Your own chart, from your account's birth details"}
+                    birthDate={savedSubject?.birthDate} onClose={() => setPortraitOpen(false)} />
+                )}
+                <CelestialChartWheel chart={orbChart ?? privateChart} focusedBody={focusedBody} onFocusBody={selectBody}
                   showAspects={showAspects} showHouseLines={showHouseLines}
                   maxAspectOrb={maxAspectOrb} outerBodies={rings[0]?.bodies} outerLabel={rings[0]?.label}
                   outerBodies2={rings[1]?.bodies} outerLabel2={rings[1]?.label} />
@@ -565,18 +594,19 @@ export default function ProAstrologyExperience() {
                 <ProDerivedPanel subjectId={savedSubject ? savedSubject.id : 'own'}
                   chartLabel={savedSubject ? savedSubject.label : 'my chart'} houseSystem={houseSystem}
                   onOuter={(next, label) => setRing('derived', next, label)} />
-                <ProAspectGrid chart={privateChart} declinations={declinations} onSelectBody={selectBody} />
+                <ProAspectGrid chart={orbChart ?? privateChart} declinations={declinations} onSelectBody={selectBody} />
                 <ProChartViews chart={privateChart} points={chartPoints} />
                 <ProEphemerisPanel natalBodies={bodies} />
-                <ProTraditionReport chart={privateChart} chartLabel={savedSubject ? savedSubject.label : 'my chart'}
+                <ProTraditionReport chart={orbChart ?? privateChart} chartLabel={savedSubject ? savedSubject.label : 'my chart'}
                   questions={INQUIRY} />
                 <ProAstroMapPanel subjectId={savedSubject ? savedSubject.id : 'own'}
                   chartLabel={savedSubject ? savedSubject.label : 'my chart'} houseSystem={houseSystem} />
                 <ProSystemsPanel subjectId={savedSubject ? savedSubject.id : 'own'}
-                  chartLabel={savedSubject ? savedSubject.label : 'my chart'} />
+                  chartLabel={savedSubject ? savedSubject.label : 'my chart'}
+                  work={systemsWork} onWork={setSystemsWork} />
                 <p id="pro-orb-filter-description" className={styles.sourceLabel} role="note">
-                  The orb setting filters existing reported aspects for display; it does not
-                  recalculate their accuracy or determine applying/separating phase.
+                  Orbs decide which aspects are found from the calculated positions; the max orb
+                  setting then filters them for display. Neither determines applying/separating phase.
                   Unverified aspect values are excluded from the diagram.
                 </p>
                 <div className={styles.planetIndex} aria-label="Planet selector">
@@ -607,7 +637,9 @@ export default function ProAstrologyExperience() {
                     {chartStatus === 'loading' ? 'Opening your chart…' : 'Open my chart'} <ChevronRight size={18} aria-hidden="true" />
                   </button>
                   <p><Link href="/account/settings">Edit my birth details</Link></p>
-                  <p><ProSoulPortraitAction source="mine" whose="your" /></p>
+                  {portraitOpen
+                    ? <ProSoulPortraitPanel source="mine" label="" chartLine="Your own chart, from your account's birth details" onClose={() => setPortraitOpen(false)} />
+                    : <p><button type="button" onClick={() => setPortraitOpen(true)}>Soul Portrait</button></p>}
                   {chartStatus === 'signed-out' && <p role="status">Your member session needs verification. Please sign in again before opening your chart. <Link href="/signin">Sign in</Link></p>}
                   {chartStatus === 'consent-required' && <p role="status">Astrology access is not opted in for this account. Review your Astrology consent settings before opening your chart.</p>}
                    {chartStatus === 'incomplete' && <p role="status">{chartError || 'Your exact birth date, time, timezone or location needs clarification before strict-core calculation.'} <Link href="/astrology">Review chart details</Link>.</p>}
@@ -763,5 +795,6 @@ export default function ProAstrologyExperience() {
         </footer>
       </div>
     </main>
+    </PanelMemoryProvider>
   );
 }

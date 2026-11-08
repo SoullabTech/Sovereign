@@ -43,6 +43,10 @@ const EXCLUDED_WORDS = new Set([
   'new', 'old', 'young', 'sorry', 'afraid', 'ready', 'done', 'finished',
 ]);
 
+// Words that can never be (part of) a name. Pronouns were missing, so a two-word capture such
+// as "when you" or "me now" passed.
+const PRONOUNS = new Set(['i', 'me', 'we', 'us', 'you', 'your', 'yours', 'he', 'she', 'it', 'they', 'them', 'this', 'that']);
+
 export interface NameChangeResult {
   detected: boolean;
   newName?: string;
@@ -61,8 +65,12 @@ export function detectNameChangeIntent(message: string): { detected: boolean; ne
     if (match && match[1]) {
       const potentialName = match[1].trim();
 
-      // Skip if it's in the excluded list
-      if (EXCLUDED_WORDS.has(potentialName.toLowerCase())) {
+      // Skip if it's in the excluded list. Check EVERY word of the capture, not only the whole
+      // string: the first patterns capture up to two words, and "call me when you're ready"
+      // yields "when you", which is not in the list as a whole phrase but starts with an
+      // excluded word. That renamed a member to "When you" (2026-11-02).
+      const words = potentialName.toLowerCase().split(/\s+/);
+      if (words.some((word) => EXCLUDED_WORDS.has(word) || PRONOUNS.has(word))) {
         continue;
       }
 

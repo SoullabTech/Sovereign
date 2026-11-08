@@ -58,6 +58,7 @@ import { editorialDirective, type EditorialDepth, replyLengthInstruction, respon
 import { teachingTurnInstruction, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import { conversationTurnInstruction, type TurnShape } from '@/lib/writersStudio/conversationTurn';
 import { passageActInstruction, type PassageAct } from '@/lib/writersStudio/passageActs';
+import { arrivalOriginInstruction, type ArrivalOrigin } from '@/lib/writersStudio/arrivalOrigin';
 import { OPENING_STAND_IN, conversationOpeningInstruction, type OpeningGesture } from '@/lib/writersStudio/conversationOpening';
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 import { studioActionsInstruction } from '@/lib/writersStudio/studioActions';
@@ -155,6 +156,9 @@ export interface EditorialTurnInput {
   /** The card the writer pressed (conversation-first Focus, step 1). Its instruction is
    *  added here, server-side; the writer's turn holds only the button's words. */
   readonly passageAct?: PassageAct;
+  /** Where the writer arrived from (F1), resolved by the route from the member's own
+   *  frozen reading. Its framing is added here; ⛔ never stored as the writer's turn. */
+  readonly arrivalOrigin?: ArrivalOrigin;
   /**
    * R2: MAIA speaks first. The writer's gesture is a typed event, never a turn: there is
    * NO author row to read, `currentTurnIndex` must be 0, and the outcome is forced to
@@ -452,6 +456,8 @@ export async function runEditorialTurn(
       input.turnShape === 'conversation' ? conversationTurnInstruction() : '',
       // Server-owned instruction for the card the writer pressed (step 1).
       input.passageAct ? passageActInstruction(input.passageAct) : '',
+      // Server-owned arrival framing (F1), from the member's own saved reading.
+      input.arrivalOrigin ? arrivalOriginInstruction(input.arrivalOrigin) : '',
       // R2: the opening's shape is server-owned too.
       input.opening ? conversationOpeningInstruction() : '',
       // Server-owned map of the Studio's real controls (Design 1A), so "how do I"

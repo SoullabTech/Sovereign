@@ -9,6 +9,7 @@
  * are sent.
  */
 import { useMemo, useState } from 'react';
+import { usePanelState } from './panelMemory';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { hasValidChartGeometry } from '@/lib/astrology/proChartGeometry';
@@ -45,12 +46,12 @@ const y = (lat: number) => ((90 - lat) / 180) * H;
 export default function ProAstroMapPanel({ subjectId, chartLabel, houseSystem }: {
   subjectId: string; chartLabel: string; houseSystem: string;
 }) {
-  const [map, setMap] = useState<AstroMapInput | null>(null);
+  const [map, setMap] = usePanelState<AstroMapInput | null>('astromap.map', null);
   const [hidden, setHidden] = useState<Set<MapBody>>(new Set());
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
-  const [relocated, setRelocated] = useState<{ chart: BirthChart; lat: number; lng: number; label: string } | null>(null);
-  const [focus, setFocus] = useState('Sun');
-  const [query, setQuery] = useState('');
+  const [relocated, setRelocated] = usePanelState<{ chart: BirthChart; lat: number; lng: number; label: string } | null>('astromap.relocated', null);
+  const [focus, setFocus] = usePanelState('astromap.focus', 'Sun');
+  const [query, setQuery] = usePanelState('astromap.query', '');
 
   const lines = useMemo(() => map ? astroMapLines(map) : [], [map]);
 

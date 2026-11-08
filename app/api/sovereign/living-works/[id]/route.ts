@@ -15,22 +15,32 @@ export const dynamic = 'force-dynamic';
  *
  * WITHDRAWAL — exact semantics, because the word could mean several things:
  *
- *   It removes the DECLARATION. It does not delete, complete, archive, or
- *   finish anything.
+ *   It removes the WORK, and with it everything that hangs from the Work row.
+ *   It does not delete the member's writing, and it is not an archive.
  *
- *   - Expressions are never touched. Manuscripts, drafts, revisions, sources
- *     and keeps are untouched by construction: nothing here writes to them,
- *     and `member_manuscripts` has no foreign key to a Living Work. A
- *     manuscript does not know it belonged to anything, so it cannot lose
- *     anything when the work goes.
- *   - `living_work_expressions` rows cascade. Those rows ARE declarations of
- *     membership, not the members themselves. Removing the work removes the
- *     statements "this belongs to that" — which is exactly what withdrawing a
- *     declaration means — and removes nothing that was declared.
- *   - It is reversible by a member act: the member may declare again. This
- *     route does NOT soft-delete, because a `withdrawn_at` column would be a
- *     status, and status is excluded from this ontology. The consequence is
- *     honest and stated in the UI: the name is not kept.
+ *   - Manuscripts, drafts, revisions, sources and keeps are untouched by
+ *     construction: nothing here writes to them, and `member_manuscripts` has
+ *     no foreign key to a Living Work. A manuscript does not know it belonged
+ *     to anything, so it cannot lose anything when the work goes.
+ *   - EVERYTHING that references the Work row with ON DELETE CASCADE goes with
+ *     it: the declarations of membership (`living_work_expressions`), and since
+ *     September 2026 also the Work's own conversations (`ask_threads`), what the
+ *     writer told MAIA about it (`living_work_writer_understanding`), the
+ *     writer's corrections, the Work's materials and their considerations, its
+ *     editorial relationship record and where the writer last returned, and its
+ *     image (the row cascades; the BYTES are queued below and destroyed by the
+ *     sweep). The authoritative list is lib/writersStudio/__tests__/
+ *     removalCopyDrift.test.ts, which fails when a table is added without the
+ *     member-facing copy being revisited.
+ *   - It cannot be undone. The member may declare a new Work, but the name, the
+ *     conversations and the corrections of this one are not kept. This route
+ *     does NOT soft-delete, because a `withdrawn_at` column would be a status,
+ *     and status is excluded from this ontology.
+ *   - The image bytes are the one part that is not transactional. If they are
+ *     not yet destroyed when the response is written, the response says so
+ *     (500 {removed:true, refusal:'image_bytes_owed'}) instead of reporting a
+ *     plain success: the row is gone, the bytes are queued, and the member is
+ *     not told it is finished until it is.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -299,8 +309,17 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
        *unreferenced but retained* state WS-DELETE-01 forbids, restated by the
        founder for Work visuals on 2026-09-07. */
     const removed = await transaction(async (tx) => {
+      /* LOCK ORDER. eraseManuscript takes the Work row first and the image row afterwards, so this takes them in the SAME order. Taking
+         the image row first (the read below is FOR UPDATE) and the Work row second formed a real cycle with a Delete of the Work's
+         writing: PostgreSQL broke it by aborting one of the two with a 500 for an act that did not happen. A row that is not this
+         member's, or is already gone, ends here (404) without touching anything else. */
+      const owned = await tx.query<{ id: string }>(
+        `SELECT id FROM living_works WHERE id = $1 AND member_id = $2 FOR UPDATE`,
+        [id, memberId],
+      );
+      if (owned.rows.length === 0) return null;
       const visual = await tx.query<{ storage_path: string }>(
-        `SELECT storage_path FROM living_work_visuals WHERE living_work_id = $1 AND member_id = $2`,
+        `SELECT storage_path FROM living_work_visuals WHERE living_work_id = $1 AND member_id = $2 FOR UPDATE`,
         [id, memberId],
       );
       const gone = await tx.query<{ id: string }>(
@@ -310,16 +329,32 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
       if (gone.rows.length === 0) return null;
 
       const path = visual.rows[0]?.storage_path;
+      let queueId: string | null = null;
       if (path) {
-        await tx.query(`INSERT INTO vault_erasure_queue (artifact_ref) VALUES ($1)`, [path]);
+        const queued = await tx.query<{ id: string }>(
+          `INSERT INTO vault_erasure_queue (artifact_ref) VALUES ($1) RETURNING id`,
+          [path],
+        );
+        queueId = queued.rows[0]?.id ?? null;
       }
-      return { id: gone.rows[0].id, hadVisual: Boolean(path) };
+      return { id: gone.rows[0].id, queueId };
     });
 
     if (!removed) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
-    if (removed.hadVisual) await sweepVaultErasureQueue();
+    if (removed.queueId) {
+      await sweepVaultErasureQueue(100, [removed.queueId]);
+      /* Only THIS Work's image decides the answer: the queue is shared, and someone else's stuck row is not this member's. */
+      const stillOwed = await query<{ id: string }>(
+        `SELECT id FROM vault_erasure_queue WHERE id = $1`,
+        [removed.queueId],
+      );
+      if (stillOwed.rows.length > 0) {
+        console.error('[living-works] Work removed; its image bytes are still owed destruction');
+        return NextResponse.json({ removed: true, refusal: 'image_bytes_owed', unconfirmed: { image: true } }, { status: 500 });
+      }
+    }
     return NextResponse.json({ withdrawn: removed.id });
   } catch (error) {
     console.error('[living-works] withdraw failed', error);
