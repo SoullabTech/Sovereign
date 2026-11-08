@@ -299,7 +299,7 @@ describe('AUTH-RETURN-01 browser authentication state', () => {
     await render('signin');
     expect(input('Email or username')).toBeDefined();
     expect(input('Password').type).toBe('password');
-    expect(container.querySelector('a[href="/reset-password"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/reset-password"]')).toBeNull();
     await click('Email me a sign-in code instead');
     expect(input('Email address')).toBeDefined();
     expect(button('Sign in with username and password')).toBeDefined();

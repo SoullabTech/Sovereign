@@ -7,6 +7,7 @@ surfaces:
   - components/landing/**
   - components/auth/UnifiedAuth.tsx
   - components/auth/SignInCard.tsx
+  - app/reset-password/page.tsx
   - app/onboarding/page.tsx
   - app/faq/page.tsx
   - app/resume/page.tsx
