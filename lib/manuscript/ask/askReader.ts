@@ -73,6 +73,15 @@ export function askPromptHash(): string {
  * is at. What she has is stated once, by `workSays` / `workAnchorSays`, and this
  * standing points at it rather than contradicting it (L8).
  */
+/* WS-WORK-CONTINUITY Part A1 — earlier turns are replayed as words only; the
+   passage they rested on is NOT replayed. Conditional on history existing, and
+   deliberately silent about whether a passage WAS supplied (the database
+   cannot know). Grants no permission to treat history as text she has read. */
+const HISTORY_GROUNDING = [
+  '--- EARLIER IN THIS CONVERSATION ---',
+  'Your earlier turns may rest on passages that are no longer in front of you: the text they were about is not supplied now, only your own words. Do not conclude that you invented an earlier statement merely because you cannot see its source. Say what you can no longer see, and offer to read it again.',
+].join('\n');
+
 const WORK_STANDING = `You are MAIA, in a writer's Studio, talking with the author of this Work about the Work itself.
 
 WHAT YOU ARE DOING
@@ -391,6 +400,7 @@ export async function askMaia(
     ? [WORK_STANDING, '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
        '--- WHERE THEY ARE IN IT ---', workAnchorSays(ctx), '',
        '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness), '',
+       ...(history.length > 0 ? [HISTORY_GROUNDING, ''] : []),
        studioGuideInstruction(), '',
        // Design 1B: only the Work conversation shows take-me-there buttons.
        studioActionsInstruction('work-conversation')].join('\n')
