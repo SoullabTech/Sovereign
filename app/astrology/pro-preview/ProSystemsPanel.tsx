@@ -14,8 +14,8 @@ import { apiFetch } from '@/lib/http/apiBase';
 import type { ProOtherSystems } from '@/lib/astrology/proOtherSystems';
 import type { DayStart } from '@/lib/astrology/proFourPillars';
 import ProFourPillars, { type LuckDirectionChoice } from './ProFourPillars';
-import NakshatraCard from '@/components/astrology/NakshatraCard';
 import ChineseReadingView from '@/components/astrology/ChineseReadingView';
+import { VedicProfilePanel, VedicPlanetsPanel } from '@/components/astrology/VedicRoomViews';
 import { DaYunTimelineView } from '@/components/astrology/DaYunTimeline';
 import { rehydrateDaYunProfile } from '@/lib/astrology/daYunProfileView';
 import DashaTimeline from '@/components/astrology/DashaTimeline';
@@ -161,35 +161,70 @@ export default function ProSystemsPanel({ subjectId, chartLabel, work, onWork }:
   );
 }
 
+type VedicRoom = 'profile' | 'dasha' | 'planets';
+const VEDIC_ROOMS: Array<[VedicRoom, string]> = [['profile', 'Profile'], ['dasha', 'Dasha'], ['planets', 'Planets']];
+
+/**
+ * The Vedic room: the profile (Moon, Sun and ascendant signs, birth nakshatra,
+ * current dasha, Spiralogic integration), the full Vimshottari dasha timeline,
+ * and the planets, each the same experience the Free Vedic page offers,
+ * computed on the server so no birth detail reaches the browser. The precise
+ * table of graha positions stays under Planets.
+ */
 function VedicView({ v }: { v: ProOtherSystems['vedic'] }) {
+  const [room, setRoom] = useState<VedicRoom>('profile');
+  const profile = { ...v.profile, dasha: v.dasha, birthNakshatra: v.birthNakshatra };
   return (
     <div role="tabpanel" aria-label="Vedic">
       <p className={styles.summary}>
         Lagna <strong>{v.lagna.rashi} {fmtDeg(v.lagna.degree)}</strong> ({v.lagna.nakshatra}) ·
         Ayanamsa {v.ayanamsaLabel} {v.ayanamsaValue.toFixed(2)}°
       </p>
-      <table className={styles.table}>
-        <thead>
-          <tr><th>Graha</th><th>Rashi</th><th>Degree</th><th>Nakshatra</th><th>Pada</th><th>House</th><th>Dignity</th></tr>
-        </thead>
-        <tbody>
-          {v.grahas.map((g) => (
-            <tr key={g.graha}>
-              <td>{g.graha}{g.retrograde ? ' ℞' : ''}</td>
-              <td>{g.rashi}</td>
-              <td className={styles.num}>{fmtDeg(g.degree)}</td>
-              <td>{g.nakshatra}</td>
-              <td className={styles.num}>{g.pada}</td>
-              <td className={styles.num}>{g.house}</td>
-              <td className={styles.cap}>{g.dignity}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className={styles.cards}>
-        <NakshatraCard nakshatra={v.birthNakshatra} pada={v.moonPada} showSpiralogic={false} />
-        <DashaTimeline profile={v.dasha} />
+      <div role="tablist" aria-label="Vedic astrology rooms" className={styles.rooms}>
+        {VEDIC_ROOMS.map(([value, text]) => (
+          <button key={value} role="tab" aria-selected={room === value}
+            className={room === value ? styles.tabOn : undefined} onClick={() => setRoom(value)}>
+            {text}
+          </button>
+        ))}
       </div>
+
+      {room === 'profile' && (
+        <div role="tabpanel" aria-label="Vedic profile">
+          <VedicProfilePanel profile={profile} onViewDasha={() => setRoom('dasha')} />
+        </div>
+      )}
+
+      {room === 'dasha' && (
+        <div role="tabpanel" aria-label="Vimshottari dasha">
+          <DashaTimeline profile={v.dasha} />
+        </div>
+      )}
+
+      {room === 'planets' && (
+        <div role="tabpanel" aria-label="Planets">
+          <VedicPlanetsPanel chart={v.profile.chart} />
+          <h4 className={styles.subhead}>Positions to the arcminute</h4>
+          <table className={styles.table}>
+            <thead>
+              <tr><th>Graha</th><th>Rashi</th><th>Degree</th><th>Nakshatra</th><th>Pada</th><th>House</th><th>Dignity</th></tr>
+            </thead>
+            <tbody>
+              {v.grahas.map((g) => (
+                <tr key={g.graha}>
+                  <td>{g.graha}{g.retrograde ? ' ℞' : ''}</td>
+                  <td>{g.rashi}</td>
+                  <td className={styles.num}>{fmtDeg(g.degree)}</td>
+                  <td>{g.nakshatra}</td>
+                  <td className={styles.num}>{g.pada}</td>
+                  <td className={styles.num}>{g.house}</td>
+                  <td className={styles.cap}>{g.dignity}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       <p className={styles.note}>Method: {v.method}</p>
     </div>
   );
