@@ -111,6 +111,21 @@ describe('Ask MAIA inside Pro', () => {
     expect((await ask({ section: 'deep', subject: 'first', lifeContext: 'x'.repeat(3001), question: 'x' })).status).toBe(400);
   });
 
+  it('reads progressions and solar arcs at a date, and over a period when given', async () => {
+    await ask({ section: 'progressed', subject: 'first', at: '2026-06-21T12:00:00', question: 'What is moving?' });
+    await ask({ section: 'progressed', subject: 'first', at: '2026-06-21T12:00:00', from: '2024-06-21T12:00:00', question: 'And over two years?' });
+    const [single, period] = generateSimple.mock.calls.map((c) => c[0].systemPrompt as string);
+    expect(single).toContain('Secondary progressions for 2026-06-21');
+    expect(single).toContain('Solar arc');
+    expect(single).not.toContain('from 2024-06');
+    expect(period).toContain('from 2024-06 to 2026-06');
+  }, 30_000);
+
+  it('refuses a period that runs backwards or longer than ten years', async () => {
+    expect((await ask({ section: 'progressed', subject: 'first', at: '2026-01-01', from: '2027-01-01', question: 'x' })).status).toBe(400);
+    expect((await ask({ section: 'progressed', subject: 'first', at: '2026-01-01', from: '2010-01-01', question: 'x' })).status).toBe(400);
+  });
+
   it('gives the Four Pillars and the chosen luck direction', async () => {
     await ask({ section: 'four-pillars', subject: 'first', direction: 'forward', question: 'Where is he now?' });
     const prompt = generateSimple.mock.calls[0][0].systemPrompt as string;
