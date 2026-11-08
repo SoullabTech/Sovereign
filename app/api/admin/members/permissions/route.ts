@@ -134,9 +134,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: outcome.error }, { status: outcome.status });
     }
 
-    console.log(
-      `[admin/members/permissions] ${change.permission} changed for ${memberId} by ${owner.actorId}`,
-    );
+    // No identifiers in logs: the audit_logs row carries who and whom.
+    console.log(`[admin/members/permissions] ${change.permission} changed (audited)`);
     return NextResponse.json({ ok: true, memberId, change, before: outcome.before, after: outcome.after });
   } catch (err) {
     console.error('[admin/members/permissions] write error:', err);
