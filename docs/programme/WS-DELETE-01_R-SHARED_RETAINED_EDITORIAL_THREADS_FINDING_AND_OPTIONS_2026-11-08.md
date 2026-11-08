@@ -15,7 +15,7 @@ A member's Work is removed through the real `DELETE /api/sovereign/living-works/
 | `GET /api/writers-studio/editorial/relationships` | member + section id | **200**, lists the retained thread with the **frozen passage text** (`locusText`), `turnCount`, `versionCount`, dates. No relationship or Work id in the answer | The list needs no Work and is not filtered by one |
 | `GET /api/sovereign/manuscripts/[id]/ask?thread=` | member (+ manuscript ownership) + thread id | **200**, the **whole thread**, including the member's own act text as an author turn and MAIA's reply. Byte-identical to the answer before the Remove | Nothing about the Work enters this answer, before or after |
 
-**Flag off** (`WRITERS_STUDIO_EDITORIAL_ENABLED` not `1`): adoption, undo and relationships answer **404 with an empty body** and write nothing. The ask route has **no flag** and answers 200 regardless. Production's value of the flag was not read (lane record 6.9.5); it decides how much of this is live (section 5, question 1).
+**Flag off** (`WRITERS_STUDIO_EDITORIAL_ENABLED` not `1`): adoption, undo and relationships answer **404 with an empty body** and write nothing. The ask route has **no flag** and answers 200 regardless. Production's value was unread when the lane record was written (6.9.5); the founder-run readout of 2026-11-08 found it **on** (section 5), so the table above is the production-relevant case, subject to the running build containing these routes (its commit was not read).
 
 **Controls — the gated paths, same removed Work:**
 
@@ -86,20 +86,20 @@ Two variants. They differ in cost and in who they strand.
 ## 5. Recommendation, sequencing, and what is needed
 
 1. **Floor, now, no code:** (a) plus the copy clause (6.9.5(e)). It makes the dialog true about the class of history that has no door.
-2. **Before the editorial flag is on for members:** (b-narrow), adoption and the list only, undo open. It closes the consistency gap at small cost and cannot strand anyone.
+2. **Next, because the flag is on:** (b-narrow), adoption and the list only, undo open. It closes the consistency gap at small cost and cannot strand anyone.
 3. **Its own lane:** (c), starting with c1 and an explicit ruling on c2's migration. (b) does not substitute for it, and it raises its urgency.
 
-**One question decides the urgency:** is `WRITERS_STUDIO_EDITORIAL_ENABLED` on in production? If off, three of the four routes are dormant, the remaining one is an owner-only read by id, and (a) with the copy clause is a sound resting place while (c) is scoped. If on, (b-narrow) should not wait. A read-only check that prints only on/off, not the value:
+**Production readout (REPORTED, founder-run, read-only, 2026-11-08): `WRITERS_STUDIO_EDITORIAL_ENABLED` is ON on `maia-sovereign`.** The command printed only on/off, no value. This is the case the earlier draft of this section called "if on": the flag is not holding the three flagged routes dormant, so **(b-narrow) should not wait on (c)**. Two things the readout does not establish: the commit the running container holds (so whether the container's build contains all four routes as read here was not checked), and whether any production member holds a retained editing thread whose Work was removed (nothing was counted). The check, for the record:
 
 ```bash
 ssh soullab@minisforum 'docker exec maia-sovereign sh -c '\''test "$WRITERS_STUDIO_EDITORIAL_ENABLED" = 1 && echo on || echo off'\'''
 ```
 
-Rulings needed: **R1** (a), (b-narrow), (b-strict) or (c)? **R2** is undo gated (recommended: no)? **R3** the copy clause of 6.9.5(e)? **R4** is a (c) lane, including the c2 migration, authorized?
+Rulings still needed (the readout answers the former question 1; nothing below has been decided): **R1** (a), (b-narrow), (b-strict) or (c)? **R2** is undo gated (recommended: no)? **R3** the copy clause of 6.9.5(e)? **R4** is a (c) lane, including the c2 migration, authorized?
 
 ## 6. Not established
 
-Production's flag value; whether any production member holds a retained editing thread whose Work was removed (nothing was counted); browser behaviour of any surface; the Save-working path and ask POST with an editorial thread id (section 3); the legacy-chain question of 6.9.5 (chains left by writings deleted before the R20 erase function existed).
+The commit the production container ran at the flag readout; whether any production member holds a retained editing thread whose Work was removed (nothing was counted); browser behaviour of any surface; the Save-working path and ask POST with an editorial thread id (section 3); the legacy-chain question of 6.9.5 (chains left by writings deleted before the R20 erase function existed).
 
 PR [#2169](https://github.com/SoullabTech/Sovereign/pull/2169) is, as of 2026-11-08, open, **not draft** and unmerged (head `836ab1e1`). The task description called it a draft.
 
