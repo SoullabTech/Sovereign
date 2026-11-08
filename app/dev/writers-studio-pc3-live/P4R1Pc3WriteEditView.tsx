@@ -67,6 +67,7 @@ import type { CraftWorkingSaveDraft } from '@/lib/writersStudio/craftSaveContrac
 import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import type { TurnShape } from '@/lib/writersStudio/conversationTurn';
 import { passageActQuestion, type PassageAct as PassageActId } from '@/lib/writersStudio/passageActs';
+import type { ArrivalOriginRef } from '@/lib/writersStudio/arrivalOrigin';
 import { pausedSendOptions } from '@/lib/writersStudio/revisionPause';
 import type { StudioActionId } from '@/lib/writersStudio/studioActions';
 
@@ -157,6 +158,8 @@ export type P4R1Pc3WriteEditViewProps = {
     turnShape?: TurnShape;
     /** The card pressed (conversation-first Focus, step 1); the server owns its instruction. */
     passageAct?: PassageActId;
+    /** Where the writer arrived from (F1): identities only; the server loads the observation. */
+    origin?: ArrivalOriginRef;
   }) => void;
   /** Retire pending visible editorial result after an author STOP. */
   onStopEditorial: () => void;
@@ -671,9 +674,12 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   const whyRevisionEdit = (edit: RevisionEdit) => {
     props.onOpenWorkspace();
-    props.onSendEditorial(
-      `Why did you change ${edit.from ? `"${edit.from.trim()}" to "${edit.to.trim()}"` : `by adding "${edit.to.trim()}"`}? Show me the evidence in my sentence and make the strongest case for keeping mine. Do not propose new wording in this answer.`,
-    );
+    // F1: only the writer's words are stored; how MAIA answers is the server-owned
+    // change-why act, the same one Craftsman's Table's "Why?" sends.
+    props.onSendEditorial(passageActQuestion(
+      'change-why',
+      edit.from ? `the change from "${edit.from.trim()}" to "${edit.to.trim()}"` : `adding "${edit.to.trim()}"`,
+    ), { proposalPolicy: 'reply_only', passageAct: 'change-why' });
   };
 
   const teachRevisionEdit = (edit: RevisionEdit) => {
@@ -1674,10 +1680,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         showOriginal={false}
         origin={props.carriedInsight && props.carriedInsightReturnMode ? {
           source: props.carriedInsightReturnMode,
-          label: props.carriedInsight.observation.phenomenonLabel ?? 'Observation',
-          state: props.carriedInsight.observation.stateLabel,
-          observation: props.carriedInsight.observation.observation,
-          coverage: props.carriedInsight.coverage,
+          readingId: props.carriedInsight.readingId,
+          observationKey: props.carriedInsight.observation.key,
         } : null}
         currentText={currentText}
         sectionBody={currentBody}

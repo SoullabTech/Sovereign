@@ -22,6 +22,19 @@ describe('what a History line may do', () => {
   it('offers open only (no delete) when a Work holds more than one manuscript', () => {
     expect(historyActionFor(act({ manuscriptId: 'm1' }), [ms('m1'), ms('m2')], [work('w', ['m1', 'm2'])]).kind).toBe('open');
   });
+  it('offers open only, saying why, when a Work holds more than one manuscript', () => {
+    const a = historyActionFor(act({ manuscriptId: 'm1' }), [ms('m1'), ms('m2')], [work('w', ['m1', 'm2'])]);
+    expect(a).toMatchObject({ kind: 'open', why: 'several-writings' });
+  });
+  it('offers open only, saying why, when TWO Works hold the writing: the server would refuse a Delete, so none is offered', () => {
+    const a = historyActionFor(act({ manuscriptId: 'm1' }), [ms('m1')], [work('a', ['m1']), work('b', ['m1'])]);
+    expect(a).toMatchObject({ kind: 'open', why: 'shared', sharedBy: 2 });
+    const three = historyActionFor(act({ manuscriptId: 'm1' }), [ms('m1')], [work('a', ['m1']), work('b', ['m1']), work('c', ['m1'])]);
+    expect(three).toMatchObject({ kind: 'open', why: 'shared', sharedBy: 3 });
+  });
+  it('a Work that holds a different writing does not count as holding this one', () => {
+    expect(historyActionFor(act({ manuscriptId: 'm1' }), [ms('m1')], [work('a', ['m1']), work('b', ['m9'])]).kind).toBe('open_delete');
+  });
   it('names the held title, falling back to the recorded one', () => {
     const a = historyActionFor(act({ manuscriptId: 'm1', manuscriptTitle: 'Recorded' }), [ms('m1', '  ')], []);
     expect(a.kind === 'none' ? '' : a.title).toBe('Recorded');

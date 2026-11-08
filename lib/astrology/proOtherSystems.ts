@@ -16,6 +16,8 @@ import {
   getChineseElement, getChineseZodiacAnimal, getSexagenaryPosition, getYinYang,
 } from './chineseAstrology';
 import { calculateCompleteMayanProfile } from './mayanAstrology';
+import { traditionalMaya, type TraditionalMaya } from './proTraditionalMaya';
+import { calculateFourPillars, type DayStart, type FourPillars } from './proFourPillars';
 import type {
   AyanamsaType, GrahaName, NakshatraInfo, VimshottariDashaProfile,
 } from './types/vedic';
@@ -58,9 +60,13 @@ export interface ProOtherSystems {
     characteristics: string[];
     compatibility: string[];
     incompatible: string[];
+    fourPillars: FourPillars;
     method: string;
   };
   mayan: {
+    /** The traditional day count (K'iche' / Yucatec), Haab and Long Count. */
+    traditional: TraditionalMaya;
+    /** The rest is the Dreamspell count, a modern system, labelled as such. */
     galacticSignature: string;
     daySign: { name: string; glyph: string; archetype: string; meaning: string };
     tone: { number: number; name: string; meaning: string };
@@ -101,7 +107,7 @@ function dashaProfileToDay(d: VimshottariDashaProfile): VimshottariDashaProfile 
  * @param verifiedUtc the birth instant already admitted by `admitProCalculation`
  */
 export async function calculateProOtherSystems(
-  birth: SavedChartBirth, verifiedUtc: string, ayanamsa: AyanamsaType,
+  birth: SavedChartBirth, verifiedUtc: string, ayanamsa: AyanamsaType, dayStart: DayStart = 'midnight',
 ): Promise<ProOtherSystems> {
   const instant = new Date(verifiedUtc);
   const iso = instant.toISOString();
@@ -164,9 +170,11 @@ export async function calculateProOtherSystems(
       characteristics: animal.characteristics,
       compatibility: animal.compatibility,
       incompatible: animal.incompatible,
+      fourPillars: calculateFourPillars(instant, birth.date, birth.time.slice(0, 5), dayStart),
       method: 'Year sign from the Free Chinese calculator, counted by Gregorian birth year. Births before Chinese New Year (late January to mid February) may belong to the previous year’s sign.',
     },
     mayan: {
+      traditional: traditionalMaya(birth.date),
       galacticSignature: mayan.tzolkin.galacticSignature,
       daySign: {
         name: mayan.tzolkin.daySign.name,

@@ -66,10 +66,23 @@ import { holdManuscriptDeclarationExclusive } from './manuscriptDeclarationLock'
 import { r20LedgerErrorCode, sealR20DeletionLedger } from '@/lib/recovery/r20DeletionLedger';
 
 export type EraseOutcome =
-  /** Rows are gone. `sweptAll` is false while vault or recovery-ledger custody is still owed. */
-  | { readonly ok: true; readonly artifactsQueued: number; readonly sweptAll: boolean; readonly recoverySealed: boolean }
+  /** Rows are gone. `sweptAll` is false while THIS deletion's vault bytes or its recovery-ledger seal are still owed (other members'
+   *  queue rows never make it false). */
+  | {
+      readonly ok: true;
+      readonly artifactsQueued: number;
+      readonly sweptAll: boolean;
+      readonly recoverySealed: boolean;
+      /** Which of THIS deletion's own byte obligations are still owed: the member's original file, and the Work's image. */
+      readonly owed: { readonly originalFile: boolean; readonly image: boolean };
+      /** The Work the card named went too (it declared nothing else). False for loose writing and for a Work that stays. */
+      readonly workRemoved: boolean;
+    }
   | { readonly ok: false; readonly refusal: 'not_found' }
-  | { readonly ok: false; readonly refusal: 'declared_in_other_works'; readonly works: number };
+  | { readonly ok: false; readonly refusal: 'declared_in_other_works'; readonly works: number }
+  /** The caller named the Work it was acting from, and that Work no longer holds this writing (removed on another device, or earlier
+   *  in this one). Refused before anything is touched, so a stale card can never reach the writing of a Work the member did not pick. */
+  | { readonly ok: false; readonly refusal: 'work_no_longer_holds_it' };
 
 /**
  * Ends custody of one manuscript and any declaration that exists only to name it.
@@ -81,6 +94,7 @@ export type EraseOutcome =
 export async function eraseManuscript(
   manuscriptId: string,
   memberId: string,
+  options: { readonly viaWorkId?: string } = {},
 ): Promise<EraseOutcome> {
   const result = await transaction(async (tx) => {
     /* A coherent R20 backup holds the same advisory key while it seals the
@@ -107,7 +121,25 @@ export async function eraseManuscript(
 
     /* Shared material is never erased out from under a Work the member did not
        delete. Inside the transaction, so the answer cannot go stale between the
-       check and the deletes. */
+       check and the deletes.
+
+       LOCK ORDER. Removing a Work (DELETE FROM living_works) locks the Work row and then cascades into its expression rows. This
+       reads the same rows, so it takes them in the SAME order: the Work rows first, then the expression rows. Locking the expression
+       row first (one combined FOR UPDATE OF e, w) formed a real cycle with a concurrent removal, which PostgreSQL broke by aborting
+       one of the two with a 500 (about 1 in 80 simultaneous attempts, measured). The marker comment below is what the probes wait on. */
+    await tx.query(
+      `/* ws-delete:lock-works-first */
+       SELECT w.id
+         FROM living_works w
+        WHERE w.member_id = $2
+          AND w.id IN (
+            SELECT e.living_work_id FROM living_work_expressions e
+             WHERE e.expression_type = 'manuscript' AND e.expression_id = $1
+          )
+        ORDER BY w.id
+        FOR UPDATE`,
+      [manuscriptId, memberId],
+    );
     const claims = await tx.query<{ living_work_id: string }>(
       `SELECT e.living_work_id
          FROM living_work_expressions e
@@ -115,9 +147,35 @@ export async function eraseManuscript(
         WHERE e.expression_type = 'manuscript'
           AND e.expression_id = $1
           AND w.member_id = $2
-        FOR UPDATE OF e, w`,
+        FOR UPDATE OF e`,
       [manuscriptId, memberId],
     );
+    /* THE WRITING ITSELF, first. If it is already gone (the member deleted it a moment ago from another tab, or this is a repeat of a
+       request whose answer was lost) there is nothing left to protect and nothing to refuse: the ruling's retry "finds the manuscript
+       already gone (404) and continues". "Continues" is done HERE, in the same transaction, so no client has to guess what to remove
+       next:
+         - the Work the card named still declares the gone writing (a declaration that outlived its writing: the detached state the
+           ruling forbids by name) -> that declaration goes, and the Work goes with it if it declared nothing else. A Work that holds
+           something else stays. Exactly what a Delete from that card means when the writing was alive.
+         - otherwise (the named Work no longer declares it, or no Work was named) -> not found, which the caller reads as done. */
+    const held = await tx.query<{ id: string }>(
+      `SELECT id FROM member_manuscripts WHERE id = $1 AND member_id = $2`,
+      [manuscriptId, memberId],
+    );
+    if (held.rows.length === 0) {
+      if (options.viaWorkId !== undefined && claims.rows.some((row) => row.living_work_id === options.viaWorkId)) {
+        const cleaned = await removeDeclaration(tx, options.viaWorkId, manuscriptId, memberId);
+        return { ok: true as const, refs: [] as string[], originalQueueIds: [] as string[], imageQueueIds: [...cleaned.queueIds], declarationOnly: true, workRemoved: cleaned.workRemovedId !== undefined };
+      }
+      return { ok: false as const, refusal: 'not_found' as const };
+    }
+    /* The member pressed Delete on a particular Work's card. If that Work no longer holds this writing, the card is stale: the
+       count below would now see only some OTHER Work as the sole claimant and erase its writing and the Work itself. The act the
+       member confirmed was about the Work on their screen, so it is refused here, inside the same transaction, before anything
+       is deleted. Callers that name no Work (loose writing, the History page) are unchanged. */
+    if (options.viaWorkId !== undefined && !claims.rows.some((row) => row.living_work_id === options.viaWorkId)) {
+      return { ok: false as const, refusal: 'work_no_longer_holds_it' as const };
+    }
     if (claims.rows.length > 1) {
       return { ok: false as const, refusal: 'declared_in_other_works' as const, works: claims.rows.length };
     }
@@ -200,35 +258,55 @@ export async function eraseManuscript(
     const refs = arrivals.rows
       .map((row) => row.artifact_ref)
       .filter((ref): ref is string => typeof ref === 'string' && ref.length > 0);
+    const originalQueueIds: string[] = [];
     if (refs.length > 0) {
-      await tx.query(
+      const queued = await tx.query<{ id: string }>(
         `INSERT INTO vault_erasure_queue (artifact_ref)
-         SELECT unnest($1::text[])`,
+         SELECT unnest($1::text[])
+         RETURNING id`,
         [refs],
       );
+      originalQueueIds.push(...queued.rows.map((row) => row.id));
     }
-    return { ok: true as const, refs };
+    return { ok: true as const, refs, originalQueueIds, imageQueueIds: [...declaration.queueIds], declarationOnly: false, workRemoved: declaration.workRemovedId !== undefined };
   });
 
   if (!result.ok) return result;
 
   /* Past this point the member's Work is gone in every sense they can observe.
      What remains is ours to finish, and the queue guarantees we can. */
-  const swept = await sweepVaultErasureQueue();
-  let recoverySealed = false;
-  try {
-    recoverySealed = (await sealR20DeletionLedger()).sealed;
-  } catch (error) {
-    /* The member is not given a completed-custody answer when the independent
-       refusal ledger cannot be sealed. Log only a bounded structural code: key
-       paths and ledger locations belong to the recovery boundary. */
-    console.error('[MAIA/press] R20 recovery seal still owed', { code: r20LedgerErrorCode(error) });
+  const ownIds = [...result.originalQueueIds, ...result.imageQueueIds];
+  await sweepVaultErasureQueue(100, ownIds);
+  /* Custody is about THIS deletion's own obligations. The queue is shared by every member, so a row that someone else left behind,
+     or one a concurrent deletion has just written, is an operator's concern and must not make this member's deletion read as
+     unconfirmed. (The sweep above still works through the whole queue, this deletion's rows first.) The two kinds are kept apart
+     because the member is told which one is owed: the original file, or the Work's image. */
+  const stillQueued = new Set<string>(ownIds.length === 0
+    ? []
+    : (await query<{ id: string }>(`SELECT id FROM vault_erasure_queue WHERE id = ANY($1::uuid[])`, [ownIds])).rows.map((row) => row.id));
+  const owed = {
+    originalFile: result.originalQueueIds.some((id) => stillQueued.has(id)),
+    image: result.imageQueueIds.some((id) => stillQueued.has(id)),
+  };
+  /* A cleanup of a dangling declaration deleted no writing, so there is no writing-deletion record to seal. */
+  let recoverySealed = result.declarationOnly;
+  if (!result.declarationOnly) {
+    try {
+      recoverySealed = (await sealR20DeletionLedger()).sealed;
+    } catch (error) {
+      /* The member is not given a completed-custody answer when the independent
+         refusal ledger cannot be sealed. Log only a bounded structural code: key
+         paths and ledger locations belong to the recovery boundary. */
+      console.error('[MAIA/press] R20 recovery seal still owed', { code: r20LedgerErrorCode(error) });
+    }
   }
   return {
     ok: true,
     artifactsQueued: result.refs.length,
-    sweptAll: swept.remaining === 0 && recoverySealed,
+    sweptAll: !owed.originalFile && !owed.image && recoverySealed,
     recoverySealed,
+    owed,
+    workRemoved: result.workRemoved,
   };
 }
 
@@ -242,8 +320,8 @@ async function removeDeclaration(
   workId: string | undefined,
   manuscriptId: string,
   memberId: string,
-): Promise<{ readonly workRemovedId?: string }> {
-  if (!workId) return {};
+): Promise<{ readonly workRemovedId?: string; readonly queueIds: readonly string[] }> {
+  if (!workId) return { queueIds: [] };
 
   await tx.query(
     `DELETE FROM living_work_expressions
@@ -258,7 +336,7 @@ async function removeDeclaration(
      and the founder restated it for Work visuals on 2026-09-07: a database
      cascade alone is not enough if the blob survives elsewhere. */
   const visual = await tx.query<{ storage_path: string }>(
-    `SELECT storage_path FROM living_work_visuals WHERE living_work_id = $1 AND member_id = $2`,
+    `SELECT storage_path FROM living_work_visuals WHERE living_work_id = $1 AND member_id = $2 FOR UPDATE`,
     [workId, memberId],
   );
 
@@ -279,10 +357,12 @@ async function removeDeclaration(
      still has other expressions keeps its image, and owing destruction of bytes
      a live Work is still displaying would be worse than not owing it at all. */
   const path = visual.rows[0]?.storage_path;
+  const queueIds: string[] = [];
   if (workGone.rows.length > 0 && path) {
-    await tx.query(`INSERT INTO vault_erasure_queue (artifact_ref) VALUES ($1)`, [path]);
+    const queued = await tx.query<{ id: string }>(`INSERT INTO vault_erasure_queue (artifact_ref) VALUES ($1) RETURNING id`, [path]);
+    queueIds.push(...queued.rows.map((row) => row.id));
   }
-  return workGone.rows[0]?.id ? { workRemovedId: workGone.rows[0].id } : {};
+  return workGone.rows[0]?.id ? { workRemovedId: workGone.rows[0].id, queueIds } : { queueIds };
 }
 
 /**
@@ -294,10 +374,13 @@ async function removeDeclaration(
  */
 export async function sweepVaultErasureQueue(
   limit = 100,
+  /** Rows to work through before the rest (the caller's own obligations), so a large backlog cannot starve them. */
+  first: readonly string[] = [],
 ): Promise<{ destroyed: number; remaining: number }> {
   const owed = await query<{ id: string; artifact_ref: string }>(
-    `SELECT id, artifact_ref FROM vault_erasure_queue ORDER BY queued_at ASC LIMIT $1`,
-    [limit],
+    `SELECT id, artifact_ref FROM vault_erasure_queue
+      ORDER BY (id = ANY($2::uuid[])) DESC, queued_at ASC LIMIT $1`,
+    [limit, first],
   );
 
   let destroyed = 0;

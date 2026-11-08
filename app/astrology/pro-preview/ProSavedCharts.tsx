@@ -11,7 +11,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus, Trash2, ChevronRight, Search } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import styles from './pro-saved-charts.module.css';
-import ProSoulPortraitAction from './ProSoulPortraitAction';
+import ProSoulPortraitPanel from './ProSoulPortraitPanel';
+import { parseBirthTime, twelveHour } from '@/lib/astrology/birthTimeInput';
 import ProChartSharePanel from './ProChartShareAction';
 
 export interface SavedChartSummary {
@@ -63,6 +64,7 @@ export default function ProSavedCharts({
   const [label, setLabel] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [birthTime, setBirthTime] = useState('');
+  const parsedTime = parseBirthTime(birthTime);
   const [placeQuery, setPlaceQuery] = useState('');
   const [places, setPlaces] = useState<PlaceOption[]>([]);
   const [place, setPlace] = useState<PlaceOption | null>(null);
@@ -73,6 +75,7 @@ export default function ProSavedCharts({
   const [message, setMessage] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [sharing, setSharing] = useState<string | null>(null);
+  const [portrait, setPortrait] = useState<string | null>(null);
   const zones = useMemo(timezoneList, []);
 
   async function refresh() {
@@ -130,13 +133,14 @@ export default function ProSavedCharts({
   async function save() {
     if (saving) return;
     if (!place) { setMessage(ERRORS.INVALID_COORDINATES); return; }
+    if (!parsedTime) { setMessage('Enter the birth time like 14:43 or 2:43 pm.'); return; }
     setSaving(true);
     setMessage(null);
     try {
       const reply = await apiFetch('/api/astrology/pro/charts', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
         body: JSON.stringify({
-          label, birthDate, birthTime,
+          label, birthDate, birthTime: parsedTime,
           latitude: place.lat, longitude: place.lng,
           timezone: timezone.trim(), placeLabel: place.name.slice(0, 160),
           permissionAttested: permission,
@@ -198,7 +202,15 @@ export default function ProSavedCharts({
               <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required />
             </label>
             <label>Birth time (local)
-              <input type="time" value={birthTime} onChange={(e) => setBirthTime(e.target.value)} required />
+              {/* Typed, not the browser's time picker: Safari's refuses a time until its AM/PM part is set. */}
+              <input value={birthTime} onChange={(e) => setBirthTime(e.target.value)} required
+                inputMode="text" autoComplete="off" placeholder="14:43 or 2:43 pm"
+                aria-invalid={birthTime.trim() !== '' && parsedTime === null} aria-describedby="pro-birth-time-reading" />
+              <small id="pro-birth-time-reading" className={styles.timeReading}>
+                {birthTime.trim() === '' ? '24-hour or am/pm'
+                  : parsedTime ? `Reads as ${parsedTime} (${twelveHour(parsedTime)})`
+                  : 'Enter a time like 14:43 or 2:43 pm'}
+              </small>
             </label>
           </div>
           <label>Birthplace
@@ -266,13 +278,21 @@ export default function ProSavedCharts({
                     </button>
                     <button onClick={() => setSharing(sharing === chart.id ? null : chart.id)}
                       aria-expanded={sharing === chart.id}>Share link</button>
-                    <ProSoulPortraitAction source={chart.id} whose={`${chart.label}’s`} />
+                    <button onClick={() => setPortrait(portrait === chart.id ? null : chart.id)}
+                      aria-expanded={portrait === chart.id}>Soul Portrait</button>
                     <button onClick={() => setConfirmDelete(chart.id)} aria-label={`Delete ${chart.label}`}>
                       <Trash2 size={15} aria-hidden="true" />
                     </button>
                   </>
                 )}
               </div>
+              {portrait === chart.id && (
+                <div className={styles.shareRow}>
+                  <ProSoulPortraitPanel source={chart.id} label={chart.label}
+                    chartLine={`${chart.label} · ${chart.birthDate} · ${chart.birthTime}${chart.placeLabel ? ` · ${chart.placeLabel}` : ''}`}
+                    birthDate={chart.birthDate} onClose={() => setPortrait(null)} />
+                </div>
+              )}
               {sharing === chart.id && (
                 <div className={styles.shareRow}>
                   <ProChartSharePanel chartId={chart.id} label={chart.label} onClose={() => setSharing(null)} />

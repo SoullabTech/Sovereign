@@ -34,7 +34,10 @@ describe('the act reaches the existing route, by id', () => {
 
     expect(out).toEqual({ ok: true });
     expect(calls).toHaveLength(1);
-    expect(calls[0][0]).toBe('/api/sovereign/manuscripts/m-1');
+    // The path is the manuscripts route, by manuscript id. The query only NAMES the Work the card belongs to, so the server can
+    // refuse a stale card; it adds no second act (R-SHARED).
+    expect(calls[0][0].split('?')[0]).toBe('/api/sovereign/manuscripts/m-1');
+    expect(calls[0][0]).toBe('/api/sovereign/manuscripts/m-1?workId=w-1');
     expect(calls[0][1].method).toBe('DELETE');
     expect(calls.some((c) => c[0].includes('living-works'))).toBe(false);
   });
@@ -78,7 +81,7 @@ describe('a refusal destroys nothing', () => {
 
     expect(out.ok).toBe(false);
     expect(calls).toHaveLength(1);
-    expect(calls[0][0]).toBe('/api/sovereign/manuscripts/m-1');
+    expect(calls[0][0].split('?')[0]).toBe('/api/sovereign/manuscripts/m-1');
     expect(calls.some((c) => c[0].includes('living-works'))).toBe(false);
   });
 
@@ -90,7 +93,7 @@ describe('a refusal destroys nothing', () => {
     );
 
     if (out.ok) throw new Error('expected a refusal');
-    expect(out.message).toContain('another work');
+    expect(out.message).toContain('another of your Works');
     expect(out.message).toContain('Nothing was deleted');
     expect(out.message).not.toContain('declared_in_other_works');
     expect(out.message).not.toContain('409');
@@ -110,28 +113,69 @@ describe('a refusal destroys nothing', () => {
     expect(out.message).toContain('not going to tell you it is gone');
   });
 
-  it('reports a transport failure without claiming anything was removed', async () => {
+  it('a transport failure is UNKNOWN: it may have reached the server, so it never says nothing was removed', async () => {
     const out = await deleteWork({ workId: 'w-1', manuscriptId: 'm-1' }, async () => {
       throw new Error('offline');
     });
-    expect(out.ok).toBe(false);
+    expect(out).toMatchObject({ ok: false, unknown: true });
     if (out.ok) return;
-    expect(out.message).toContain('Nothing was removed');
+    expect(out.message).toContain('could not confirm whether');
+    expect(out.message).not.toContain('Nothing was removed');
+  });
+
+  it('a server error that does not say what it did is UNKNOWN too (it may have committed and failed afterwards)', async () => {
+    const out = await deleteWork({ workId: 'w-1', manuscriptId: 'm-1' }, async () => new Response(JSON.stringify({ error: 'Failed to remove manuscript' }), { status: 500 }));
+    expect(out).toMatchObject({ ok: false, unknown: true });
+    expect((out as any).message).not.toContain('Failed to remove manuscript');
+    expect((out as any).message).not.toContain('Nothing was removed');
+  });
+
+  it('a 4xx rejection is a rejection BEFORE any act, so "nothing was removed" is true there', async () => {
+    const out = await deleteWork({ workId: 'w-1', manuscriptId: 'm-1' }, async () => new Response(JSON.stringify({ error: 'Bad request' }), { status: 400 }));
+    expect(out).toMatchObject({ ok: false });
+    expect((out as any).unknown).toBeUndefined();
+    expect((out as any).message).toContain('Nothing was removed');
+  });
+
+  it('401 says the session ended and nothing was deleted, in words, and never shows the server\'s raw string', async () => {
+    const out = await deleteWork({ workId: 'w-1', manuscriptId: 'm-1' }, async () => new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }));
+    expect(out).toMatchObject({ ok: false });
+    expect((out as any).message).toContain('session has ended');
+    expect((out as any).message).toContain('nothing was deleted');
+    expect((out as any).message).not.toContain('Unauthorized');
+  });
+
+  it('an unreadable error body is unknown on a 5xx and a plain rejection on a 4xx', async () => {
+    const bad = (status: number) => async () => ({ ok: false, status, json: async () => { throw new Error('not json'); } }) as unknown as Response;
+    expect(await deleteWork({ workId: 'w-1', manuscriptId: 'm-1' }, bad(502))).toMatchObject({ ok: false, unknown: true });
+    expect(await deleteWork({ workId: 'w-1', manuscriptId: 'm-1' }, bad(422))).toMatchObject({ ok: false });
   });
 });
 
 describe('a member cannot delete what is not theirs', () => {
   /* The route answers 404 rather than 403 for another member's id, so it never
-     confirms that the id exists. Nothing of another member's is touched, and the
-     act sends exactly one request regardless. */
-  it('sends one member-scoped request and treats the 404 as already gone', async () => {
+     confirms that the id exists. Nothing of another member's is touched. Loose
+     writing sends exactly one request, and so does a Work card: the server finishes
+     the ruling's retry ("finds the manuscript already gone (404) and continues") in
+     the same transaction, so no second request exists for the client to get wrong. */
+  it('loose writing: sends one member-scoped request and treats the 404 as already gone', async () => {
+    const { calls, fetcher } = recorder(notFound);
+
+    const out = await deleteWork({ workId: null, manuscriptId: 'not-mine' }, fetcher);
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0][0]).toBe('/api/sovereign/manuscripts/not-mine');
+    expect(out).toEqual({ ok: true, alreadyGone: true });
+  });
+
+  it('a Work card: a 404 on the writing is done, in ONE request that names the Work (the server finishes any dangling declaration)', async () => {
     const { calls, fetcher } = recorder(notFound);
 
     const out = await deleteWork({ workId: 'someone-elses', manuscriptId: 'not-mine' }, fetcher);
 
-    expect(calls).toHaveLength(1);
-    expect(calls[0][0]).toBe('/api/sovereign/manuscripts/not-mine');
-    expect(out).toEqual({ ok: true });
+    expect(calls.map((c) => c[0])).toEqual(['/api/sovereign/manuscripts/not-mine?workId=someone-elses']);
+    expect(calls.every((c) => c[1].method === 'DELETE')).toBe(true);
+    expect(out).toEqual({ ok: true, alreadyGone: true });
   });
 });
 
@@ -198,7 +242,7 @@ describe('Remove Work reaches the container and nothing else', () => {
 
   it('calls the living-works route, and NEVER the manuscripts route', async () => {
     const out = await removeWork('w-1', fetcher(200));
-    expect(out).toEqual({ ok: true });
+    expect(out).toEqual({ ok: true, workRemoved: true });
     expect(calls).toEqual([{ url: '/api/sovereign/living-works/w-1', method: 'DELETE' }]);
     /* The whole ruling, in one assertion: nothing in this path can reach the
        writing, so "your writing stays in Your Writings" is structural. */
@@ -208,19 +252,27 @@ describe('Remove Work reaches the container and nothing else', () => {
   it('treats an already-absent Work as removed', async () => {
     /* Another device, or a response that was lost after the server acted.
        Absence is the outcome that was being sought. */
-    await expect(removeWork('w-1', fetcher(404))).resolves.toEqual({ ok: true });
+    await expect(removeWork('w-1', fetcher(404))).resolves.toEqual({ ok: true, workRemoved: true });
   });
 
-  it('never reports success it did not get, and says what is still true', async () => {
-    const out = await removeWork('w-1', fetcher(500));
+  it('never reports success it did not get; a rejection before any act says what is still true', async () => {
+    const out = await removeWork('w-1', fetcher(400));
     expect(out.ok).toBe(false);
     expect(out.ok === false && out.message).toContain('your writing is untouched');
+    expect(out.ok === false && out.message).toContain('Nothing changed');
   });
 
-  it('reports a transport failure without claiming anything was removed', async () => {
-    const out = await removeWork('w-1', () => Promise.reject(new Error('offline')));
-    expect(out.ok).toBe(false);
-    expect(out.ok === false && out.message).toContain('Nothing changed');
+  it('a server error or a transport failure is UNKNOWN: it never says nothing changed', async () => {
+    for (const out of [await removeWork('w-1', fetcher(500)), await removeWork('w-1', () => Promise.reject(new Error('offline')))]) {
+      expect(out).toMatchObject({ ok: false, unknown: true });
+      expect((out as any).message).toContain('could not confirm whether');
+      expect((out as any).message).not.toContain('Nothing changed');
+    }
+  });
+
+  it('401 says the session ended, not "Nothing changed" and not a raw server word', async () => {
+    const out = await removeWork('w-1', fetcher(401));
+    expect((out as any).message).toContain('session has ended');
   });
 });
 
@@ -232,7 +284,8 @@ describe('the destructive act is unchanged — WS-DELETE-01 stands', () => {
       (url) => { seen.push(url); return Promise.resolve(new Response(null, { status: 200 })); },
     );
     expect(out).toEqual({ ok: true });
-    expect(seen).toEqual(['/api/sovereign/manuscripts/m-1']);
+    // Still ONE request, still the manuscripts route. The query names the Work so a stale card is refused server-side.
+    expect(seen).toEqual(['/api/sovereign/manuscripts/m-1?workId=w-1']);
   });
 });
 

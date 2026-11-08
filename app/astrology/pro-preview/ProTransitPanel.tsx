@@ -7,6 +7,7 @@
  * Aspects are measured here and listed as geometry, without interpretation.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { usePanelState } from './panelMemory';
 import { apiFetch } from '@/lib/http/apiBase';
 import { aspectReading } from '@/lib/astrology/proTraditionText';
 import type { WheelBody } from '@/lib/astrology/proChartGeometry';
@@ -48,13 +49,13 @@ export default function ProTransitPanel({
   showNowRequest?: number;
   onTransits: (bodies: TransitBody[], at: string | null) => void;
 }) {
-  const [moment, setMoment] = useState(localNowInputValue);
+  const [moment, setMoment] = usePanelState('transit.moment', localNowInputValue);
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
-  const [shownAt, setShownAt] = useState<string | null>(null);
-  const [orb, setOrb] = useState(3);
-  const [unit, setUnit] = useState<StepUnit>('day');
+  const [shownAt, setShownAt] = usePanelState<string | null>('transit.shownAt', null);
+  const [orb, setOrb] = usePanelState('transit.orb', 3);
+  const [unit, setUnit] = usePanelState<StepUnit>('transit.unit', 'day');
   const [playing, setPlaying] = useState<0 | 1 | -1>(0);
-  const [live, setLive] = useState(false);
+  const [live, setLive] = usePanelState('transit.live', false);
   const momentRef = useRef(moment);
   momentRef.current = moment;
   const busy = useRef(false);

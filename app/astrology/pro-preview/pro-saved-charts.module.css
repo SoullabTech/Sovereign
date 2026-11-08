@@ -32,8 +32,22 @@
 .list li span { color: #9fb2b9; font-size: .85rem; overflow-wrap: anywhere; }
 .itemActions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .danger { border-color: #d98a7a !important; color: #f3c1b6 !important; }
-.portraitConfirm { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .85rem; color: #d8cbb3; max-width: 32rem; }
-.portraitConfirm a { color: #f3e6cd; border: 1px solid #e0c495; border-radius: 8px; padding: 4px 10px; text-decoration: none; }
+/* Soul Portrait, written from a Pro chart without leaving Pro. */
+.portraitPanel { display: grid; gap: 10px; max-width: 40rem; padding: 12px 14px; border: 1px solid rgba(224, 196, 149, .35); border-radius: 10px; background: rgba(23, 32, 43, .7); color: #e9dfcc; font-size: .88rem; text-align: left; }
+.portraitPanel p { margin: 0; }
+.portraitChart span { color: #c9b48d; font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; margin-right: 6px; }
+.portraitFields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+.portraitFields label { display: grid; gap: 4px; font-size: .8rem; color: #d8cbb3; }
+.portraitFields input, .portraitFields select, .portraitYear textarea { font: inherit; padding: 7px 9px; border: 1px solid rgba(224, 196, 149, .35); border-radius: 6px; color: #f3e6cd; background: #121a24; }
+.portraitFields input[aria-invalid="true"] { border-color: #e7a794; }
+.portraitCheck { display: flex; align-items: center; gap: 6px; }
+.portraitYear summary { cursor: pointer; color: #e0c495; }
+.portraitYear { display: grid; gap: 6px; }
+.portraitYear textarea { width: 100%; box-sizing: border-box; margin-top: 6px; }
+.portraitActions { display: flex; flex-wrap: wrap; gap: 8px; }
+.portraitActions a, .portraitActions button { font: inherit; color: #f3e6cd; background: transparent; border: 1px solid #e0c495; border-radius: 8px; padding: 6px 12px; text-decoration: none; cursor: pointer; }
+.portraitActions button:disabled { opacity: .55; cursor: default; }
+@media (max-width: 700px) { .portraitFields { grid-template-columns: 1fr; } }
 .shareBox { display: inline-flex; flex-direction: column; gap: 8px; font-size: .85rem; color: #d8cbb3; max-width: 32rem; }
 .shareBox > span { display: inline-flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .shareBox input[readonly] { width: 100%; min-width: 16rem; background: rgba(16, 38, 58, .9); color: #f3e6cd; border: 1px solid rgba(224, 196, 149, .5); border-radius: 6px; padding: 6px 8px; font-size: .8rem; }
@@ -43,3 +57,5 @@
 .shareRow .shareBox input[readonly] { max-width: 40rem; }
 .offeredBy { display: grid; gap: 4px; }
 .offeredBy input { max-width: 24rem; background: rgba(16, 38, 58, .9); color: #f3e6cd; border: 1px solid rgba(224, 196, 149, .5); border-radius: 6px; padding: 6px 8px; font: inherit; }
+.timeReading { display: block; margin-top: 4px; font-size: .78rem; color: #9fb2b9; }
+input[aria-invalid="true"] + .timeReading { color: #f4daac; }
