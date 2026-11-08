@@ -37,6 +37,12 @@ interface World {
   visualPath?: string | null;
   /** After removing the named expression, does the Work still declare something else? */
   workHoldsMore?: boolean;
+  /** The id the Work DELETE ... RETURNING hands back (default: the id it was asked to delete). */
+  returnedWorkId?: string;
+  /** The deletion manifest cannot be written. */
+  failManifest?: boolean;
+  /** The tombstone cannot be written. */
+  failTombstone?: boolean;
 }
 const seen: Array<{ sql: string; params: unknown[] }> = [];
 
@@ -54,9 +60,15 @@ function install(world: World) {
       if (sql.includes('DELETE FROM member_manuscripts')) return { rows: [{ id: MS }] };
       if (sql.includes('DELETE FROM living_work_expressions')) return { rows: [] };
       if (sql.includes('SELECT storage_path FROM living_work_visuals')) return { rows: world.visualPath ? [{ storage_path: world.visualPath }] : [] };
-      if (sql.includes('DELETE FROM living_works')) return { rows: world.workHoldsMore ? [] : [{ id: params[0] }] };
-      if (sql.includes('INSERT INTO deletion_manifests')) return { rows: [{ id: 'manifest-1' }] };
-      if (sql.includes('INSERT INTO provenance_tombstones')) return { rows: [] };
+      if (sql.includes('DELETE FROM living_works')) return { rows: world.workHoldsMore ? [] : [{ id: world.returnedWorkId ?? params[0] }] };
+      if (sql.includes('INSERT INTO deletion_manifests')) {
+        if (world.failManifest) throw new Error('fictional manifest failure');
+        return { rows: [{ id: 'manifest-1' }] };
+      }
+      if (sql.includes('INSERT INTO provenance_tombstones')) {
+        if (world.failTombstone) throw new Error('fictional tombstone failure');
+        return { rows: [] };
+      }
       if (sql.includes('r20_erase_writer_editorial_history')) return { rows: [] };
       if (sql.includes('INSERT INTO vault_erasure_queue')) {
         const refs = sql.includes('unnest') ? (params[0] as string[]) : [params[0] as string];
@@ -159,20 +171,84 @@ describe('the writing is ALREADY GONE: the retry "finds it gone and continues", 
     const out = await eraseManuscript(MS, MEMBER);
     expect(out).toEqual({ ok: false, refusal: 'not_found' });
   });
-  it('the named Work still declares the gone writing and declares nothing else: the declaration AND the Work go; no writing is deleted, no deletion record is sealed', async () => {
+  it('the named Work still declares the gone writing and declares nothing else: the declaration AND the Work go, and the Work\'s removal is RECORDED (one manifest, one living_works tombstone, on the transaction client); no writing is deleted and no ledger is sealed', async () => {
     install({ claims: [W_A], writingHeld: false });
     const out = await eraseManuscript(MS, MEMBER, { viaWorkId: W_A });
     expect(out).toMatchObject({ ok: true, artifactsQueued: 0, sweptAll: true, recoverySealed: true, workRemoved: true, owed: { originalFile: false, image: false } });
     expect(seen.some((q) => q.sql.includes('DELETE FROM living_work_expressions') && q.params.includes(W_A))).toBe(true);
     expect(seen.some((q) => q.sql.includes('DELETE FROM living_works'))).toBe(true);
     expect(seen.some((q) => q.sql.includes('DELETE FROM member_manuscripts'))).toBe(false);
-    expect(seen.some((q) => q.sql.includes('provenance_tombstones') || q.sql.includes('deletion_manifests'))).toBe(false);
+    // The record: exactly one manifest and exactly one tombstone, for the Work and only the Work.
+    const manifests = seen.filter((q) => q.sql.includes('INSERT INTO deletion_manifests'));
+    const tombstones = seen.filter((q) => q.sql.includes('INSERT INTO provenance_tombstones'));
+    expect(manifests).toHaveLength(1);
+    expect(tombstones).toHaveLength(1);
+    expect(manifests[0]!.sql).toContain(`'member_deletion'`);
+    expect(manifests[0]!.sql).toContain(`'verified-member-self-service'`);
+    expect(manifests[0]!.params).toEqual(['Writer Work ended after its writing was already gone, by verified member request']);
+    expect(tombstones[0]!.sql).toContain(`'living_works'`);
+    expect(tombstones[0]!.params).toEqual(['manifest-1', W_A]);
+    // Nothing about the WRITING is recorded or erased: no writing was erased here.
+    expect(seen.some((q) => q.sql.includes('member_manuscripts') && q.sql.includes('INSERT'))).toBe(false);
+    expect(seen.some((q) => q.sql.includes('r20_erase_writer_editorial_history'))).toBe(false);
+    // On the TRANSACTION client, never on the module-level query (which would commit outside the transaction).
+    expect((query as jest.Mock).mock.calls.some(([sql]) => /deletion_manifests|provenance_tombstones/.test(String(sql)))).toBe(false);
+    // The independent ledger is not sealed on this path (declared state; see workDeletionRecord.ts), and the outcome still reads sealed.
     expect(sealR20DeletionLedger).not.toHaveBeenCalled();
   });
-  it('the named Work declares something else too: only the dangling declaration goes, the Work STAYS', async () => {
+  it('the record is written AFTER the Work\'s own delete (only once the row is really gone), manifest before tombstone, inside the one transaction', async () => {
+    install({ claims: [W_A], writingHeld: false, visualPath: OWN_IMAGE });
+    await eraseManuscript(MS, MEMBER, { viaWorkId: W_A });
+    const at = (needle: string) => seen.findIndex((q) => q.sql.includes(needle));
+    expect(at('DELETE FROM living_works')).toBeGreaterThan(-1);
+    expect(at('INSERT INTO deletion_manifests')).toBeGreaterThan(at('DELETE FROM living_works'));
+    expect(at('INSERT INTO provenance_tombstones')).toBeGreaterThan(at('INSERT INTO deletion_manifests'));
+    expect(transaction).toHaveBeenCalledTimes(1);
+  });
+  it('the tombstone names the id the Work DELETE RETURNED, not the id the caller passed in', async () => {
+    const RETURNED = 'd0000000-0000-4000-8000-00000000000d';
+    install({ claims: [W_A], writingHeld: false, returnedWorkId: RETURNED });
+    await eraseManuscript(MS, MEMBER, { viaWorkId: W_A });
+    const tomb = seen.find((q) => q.sql.includes('INSERT INTO provenance_tombstones'))!;
+    expect(tomb.params).toEqual(['manifest-1', RETURNED]);
+    expect(tomb.params).not.toContain(W_A);
+  });
+  it('a manifest that cannot be written makes the whole call fail (the transaction callback throws, so the Work\'s delete and its queue row roll back with it): nothing is swept, nothing is sealed, nothing is destroyed', async () => {
+    // The scripted transaction cannot roll back, so this proves the failure PROPAGATES out of the transaction and that nothing after
+    // the transaction runs; that the database undoes the delete is the transaction\'s own contract (and probe CE-5b territory).
+    install({ claims: [W_A], writingHeld: false, visualPath: OWN_IMAGE, failManifest: true });
+    await expect(eraseManuscript(MS, MEMBER, { viaWorkId: W_A })).rejects.toThrow('fictional manifest failure');
+    expect(seen.some((q) => q.sql.includes('INSERT INTO provenance_tombstones'))).toBe(false);
+    expect(query as jest.Mock).not.toHaveBeenCalled();
+    expect(sealR20DeletionLedger).not.toHaveBeenCalled();
+    expect(destroyed).toEqual([]);
+  });
+  it('a tombstone that cannot be written makes the whole call fail the same way: no sweep, no seal, nothing destroyed', async () => {
+    install({ claims: [W_A], writingHeld: false, visualPath: OWN_IMAGE, failTombstone: true });
+    await expect(eraseManuscript(MS, MEMBER, { viaWorkId: W_A })).rejects.toThrow('fictional tombstone failure');
+    expect(query as jest.Mock).not.toHaveBeenCalled();
+    expect(sealR20DeletionLedger).not.toHaveBeenCalled();
+    expect(destroyed).toEqual([]);
+  });
+  it('the named Work declares something else too: only the dangling declaration goes, the Work STAYS, and NO manifest, tombstone or seal is written (no Work was deleted)', async () => {
     install({ claims: [W_A], writingHeld: false, workHoldsMore: true });
     const out = await eraseManuscript(MS, MEMBER, { viaWorkId: W_A });
     expect(out).toMatchObject({ ok: true, workRemoved: false });
+    expect(seen.some((q) => q.sql.includes('deletion_manifests') || q.sql.includes('provenance_tombstones'))).toBe(false);
+    expect(sealR20DeletionLedger).not.toHaveBeenCalled();
+  });
+  it('the normal Delete (the writing is alive) is untouched by the follow-up: still exactly ONE manifest, its own note, the Work folded into the same tombstone batch, and the ledger sealed once', async () => {
+    install({ claims: [W_A], writingHeld: true });
+    const out = await eraseManuscript(MS, MEMBER, { viaWorkId: W_A });
+    expect(out).toMatchObject({ ok: true, workRemoved: true, recoverySealed: true });
+    const manifests = seen.filter((q) => q.sql.includes('INSERT INTO deletion_manifests'));
+    expect(manifests).toHaveLength(1);
+    expect(manifests[0]!.sql).toContain('Writer manuscript custody ended by verified member request');
+    const tombstones = seen.filter((q) => q.sql.includes('INSERT INTO provenance_tombstones'));
+    expect(tombstones).toHaveLength(1);
+    expect(tombstones[0]!.sql).toContain('unnest');
+    expect(tombstones[0]!.params).toEqual(['manifest-1', ['member_manuscripts', 'living_works'], [MS, W_A]]);
+    expect(sealR20DeletionLedger).toHaveBeenCalledTimes(1);
   });
   it('(textual guard) the Work is deleted only WHERE it declares nothing else, and only the named member\'s (the behaviour itself is proved by probe CE-5b)', async () => {
     install({ claims: [W_A], writingHeld: false, workHoldsMore: true });

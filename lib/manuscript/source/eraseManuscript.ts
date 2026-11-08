@@ -64,6 +64,7 @@ import { destroyVaultBytes } from '@/lib/storage/fileVault';
 import { vaultErasureErrnoR105 } from './vaultErasureSafeLogR105';
 import { holdManuscriptDeclarationExclusive } from './manuscriptDeclarationLock';
 import { r20LedgerErrorCode, sealR20DeletionLedger } from '@/lib/recovery/r20DeletionLedger';
+import { writeWorkDeletionRecord } from './workDeletionRecord';
 
 export type EraseOutcome =
   /** Rows are gone. `sweptAll` is false while THIS deletion's vault bytes or its recovery-ledger seal are still owed (other members'
@@ -72,6 +73,10 @@ export type EraseOutcome =
       readonly ok: true;
       readonly artifactsQueued: number;
       readonly sweptAll: boolean;
+      /** True when no WRITING-deletion seal is owed by this call: the seal succeeded, or this call erased no writing (the X8 cleanup of a
+       *  declaration whose writing was already gone) and none was attempted. It does NOT mean the independent ledger holds every
+       *  record this call wrote: an X8 call that removed a Work wrote a Work record (manifest + `living_works` tombstone) that is
+       *  database-only until a later successful seal mirrors it (workDeletionRecord.ts; register line C4). `sweptAll` inherits this. */
       readonly recoverySealed: boolean;
       /** Which of THIS deletion's own byte obligations are still owed: the member's original file, and the Work's image. */
       readonly owed: { readonly originalFile: boolean; readonly image: boolean };
@@ -165,6 +170,13 @@ export async function eraseManuscript(
     if (held.rows.length === 0) {
       if (options.viaWorkId !== undefined && claims.rows.some((row) => row.living_work_id === options.viaWorkId)) {
         const cleaned = await removeDeclaration(tx, options.viaWorkId, manuscriptId, memberId);
+        /* A Work that really went here is recorded like any other deleted Work, in this same transaction (the recovery-capture lock is
+           already held, and the Work row was locked above, so the order is the one Remove takes too). A Work that stays wrote no
+           deletion and gets no record. The writing is not tombstoned and no editorial history is erased: no writing was erased here.
+           The independent ledger is not sealed on this path; see lib/manuscript/source/workDeletionRecord.ts for why. */
+        if (cleaned.workRemovedId !== undefined) {
+          await writeWorkDeletionRecord(tx, cleaned.workRemovedId, 'Writer Work ended after its writing was already gone, by verified member request');
+        }
         return { ok: true as const, refs: [] as string[], originalQueueIds: [] as string[], imageQueueIds: [...cleaned.queueIds], declarationOnly: true, workRemoved: cleaned.workRemovedId !== undefined };
       }
       return { ok: false as const, refusal: 'not_found' as const };
@@ -288,7 +300,9 @@ export async function eraseManuscript(
     originalFile: result.originalQueueIds.some((id) => stillQueued.has(id)),
     image: result.imageQueueIds.some((id) => stillQueued.has(id)),
   };
-  /* A cleanup of a dangling declaration deleted no writing, so there is no writing-deletion record to seal. */
+  /* A cleanup of a dangling declaration deleted no writing, so there is no writing-deletion record to seal. (If it removed a Work
+     it wrote a Work record in the transaction above; sealing that is deliberately not done here, and is the open decision recorded in
+     workDeletionRecord.ts.) */
   let recoverySealed = result.declarationOnly;
   if (!result.declarationOnly) {
     try {
