@@ -98,13 +98,12 @@ describe('LIVE (Class A) — the real askMaia against the laws', () => {
     }
   });
 
-  // EXPECTED RED until Part A1 is implemented. it.failing flips to a failure when the law starts holding,
-  // forcing this line to be converted to an ordinary `it`. Do NOT weaken the law to make it pass.
-  it.failing('A1a holds with history replayed (NOT YET IMPLEMENTED)', async () => {
+  // Part A1 implemented: converted from it.failing, as the suite required.
+  it('A1a holds with history replayed', async () => {
     const system = await liveSystem(true, true);
     expect(failed({ system, hasHistory: true, hasLocus: true })).not.toContain('A1a-earlier-turns-may-rest-on-absent-text');
   });
-  it.failing('A1b holds with history replayed (NOT YET IMPLEMENTED)', async () => {
+  it('A1b holds with history replayed', async () => {
     const system = await liveSystem(true, true);
     expect(failed({ system, hasHistory: true, hasLocus: true })).not.toContain('A1b-absence-is-not-fabrication');
   });
