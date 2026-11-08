@@ -76,13 +76,8 @@ export function cycleIndex(stem: number, branch: number): number {
   return mod(6 * stem - 5 * branch, 60);
 }
 
-/** Julian Day Number of a Gregorian calendar date. */
-export function julianDayNumber(year: number, month: number, day: number): number {
-  const a = Math.floor((14 - month) / 12);
-  const y = year + 4800 - a;
-  const m = month + 12 * a - 3;
-  return day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
-}
+export { julianDayNumber } from './julianDay';
+import { julianDayNumber } from './julianDay';
 
 /** The day pillar's 60-cycle index for a local civil date. */
 export function dayCycleIndex(year: number, month: number, day: number): number {
