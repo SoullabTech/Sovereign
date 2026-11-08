@@ -53,6 +53,7 @@ import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import type { StructuredRequest } from '@/lib/ai/structured/types';
 import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers-studio/canonicalWriterTurn';
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
+import { decisionContextForManuscript } from '@/lib/writersStudio/decisionRecord';
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
 import { editorialDirective, type EditorialDepth, replyLengthInstruction, responsiveLengthDirective, type ReplyLength } from '@/lib/writersStudio/editorialDepth';
@@ -367,10 +368,11 @@ export async function runEditorialTurn(
   }
 
 
-  const declaredWriterContext = await writerUnderstandingContextForManuscript(
-    memberId,
-    assembly.manuscriptId,
-  );
+  /* ⭐ WS-DECISION-CONTINUITY — the writer's settled decisions, via the ONE shared read; Sanctuary reads nothing. */
+  const declaredWriterContext = [
+    await writerUnderstandingContextForManuscript(memberId, assembly.manuscriptId),
+    input.sanctuary ? '' : await decisionContextForManuscript(memberId, assembly.manuscriptId),
+  ].filter(Boolean).join("\n\n");
   const intentionBlocks: CandidateBlock[] = declaredWriterContext
     ? [{
         producerId: 'member.writer_intention',

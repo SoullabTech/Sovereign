@@ -20,6 +20,7 @@ jest.mock('@/lib/disclosure/disclosureBoundary', () => ({
 jest.mock('@/lib/disclosure/contextDisclosureReceipt', () => ({ confirmDisclosureCrossed: (...a: unknown[]) => fakeConfirm(...a) }));
 jest.mock('@/lib/maia/teaching/TeachingRuntimeBridge', () => ({ buildTeachingRuntimeBridge: () => ({ active: false }) }));
 jest.mock('@/lib/writersStudio/writerUnderstandingServer', () => ({ writerUnderstandingContextForManuscript: () => Promise.resolve(null) }));
+jest.mock('@/lib/writersStudio/decisionRecord', () => ({ decisionContextForManuscript: () => Promise.resolve('') }));
 jest.mock('@/lib/writers-studio/canonicalWriterTurn', () => ({
   constructEditorialWriterTurn: () => ({ fictional: 'canonical-turn' }),
   renderEditorialTurn: () => ({ systemPrompt: 'canonical system prompt' }),

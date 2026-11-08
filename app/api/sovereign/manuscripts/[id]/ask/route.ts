@@ -55,6 +55,7 @@ import { canonicalFingerprint } from '@/lib/manuscript/structure/canonicalFinger
 import { askMaia, type StandingRead } from '@/lib/manuscript/ask/askReader';
 import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests, recordTurnReads } from '@/lib/disclosure/workReadScopeRead';
 import { selectSections, movedSince, MAX_READ_SECTIONS } from '@/lib/manuscript/ask/workReadScope';
+import { decisionContextForWork } from '@/lib/writersStudio/decisionRecord';
 import { checkQuoteFidelity, NO_TEXT_ANSWER, CORRECTION_NOTE } from '@/lib/manuscript/ask/quoteFidelity';
 import { formatWorkSituationForPrompt } from '@/lib/writersStudio/workSituation';
 import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
@@ -684,8 +685,14 @@ async function workTurn(input: {
     }
   }
 
+  /* ⭐ WS-DECISION-CONTINUITY — what the writer has settled, in their own words, via the ONE shared read. Sanctuary or an unstated
+     posture reads nothing. Rides the existing declared-context channel so MAIA treats it as the writer's, never as a fact about the text. */
+  const decisionsText = (posture.sanctuary || !postureKnown) ? '' : await decisionContextForWork(memberId, built.facts.work.id);
+  const factsWithDecisions = decisionsText
+    ? { ...built.facts, writerUnderstanding: [built.facts.writerUnderstanding, decisionsText].filter(Boolean).join('\n\n') }
+    : built.facts;
   const workHistory = historyFor(priorTurns.map((t) => ({ speaker: t.speaker, body: t.body })), question);
-  const workCtx = { kind: 'work' as const, anchor, facts: built.facts, staleness, standingRead };
+  const workCtx = { kind: 'work' as const, anchor, facts: factsWithDecisions, staleness, standingRead };
   let outcome = await askMaia(workCtx, workHistory, question);
   /* ⭐ A2 · MECHANICAL QUOTE FIDELITY. A quotation must occur in text she was actually given this turn or in the
      conversation's own words. Regenerate ONCE with a correction; if still ungrounded, a plain "I can't point to that
@@ -693,7 +700,7 @@ async function workTurn(input: {
   if (outcome.ok) {
     const sources = [
       question, ...workHistory.map((h) => h.body),
-      built.facts.locus?.body ?? '', built.facts.writerUnderstanding, built.facts.writerCorrections,
+      built.facts.locus?.body ?? '', factsWithDecisions.writerUnderstanding, built.facts.writerCorrections,
       formatWorkSituationForPrompt(built.facts.work) ?? '',
       ...built.facts.sections.map((x) => x.heading ?? ''),
       ...(standingRead?.sections.map((x) => x.body) ?? []),

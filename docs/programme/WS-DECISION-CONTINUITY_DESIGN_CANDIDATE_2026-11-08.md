@@ -51,3 +51,18 @@ migration is authorized by this ruling alone.)
 Suite authored BEFORE any implementation: `tests/constitutional/ws-decision-continuity/` — 13 laws (L1a…L7b), 14 defeat candidates (DC-1…DC-14), reference double,
 matrix 16/16: the reference satisfies every law, each candidate dies on its named law with only classified collateral, every law is a candidate's target.
 The reference is a TEST DOUBLE, not an implementation and never a seed. Not frozen (a founder act).
+
+
+## BUILT (founder: "Yes, build it", 2026-11-08) — candidate, NOT applied, NOT merged
+- Migration `20261108000002_writer_decision_events.sql` (candidate; append-only; withdraw must target the same member and Work, enforced by trigger; no direct delete or truncate; cascades with the Work).
+- `lib/writersStudio/decisionRecord.ts` (pure + the ONE shared read) and `decisionRecordWrite.ts` (writer gestures only, kept out of the Ask route's graph).
+- Gesture API `app/api/sovereign/living-works/[id]/decisions` (GET list, POST settle/withdraw; a settle must state `sanctuary:false`).
+- Readers wired: the Work conversation (Ask route, via the declared-context channel, posture stated and not Sanctuary) and the passage desk (editorial turn, not Sanctuary).
+- Writer-visible control: `SettledDecisions.tsx` in the Work conversation (their own words, Withdraw, Keep this).
+- Evidence: laws suite 16/16 (test double); disposable-database witness + real Ask route walk 4/4; earlier route walk still 9/9; unit and typecheck clean; no new failures vs the pre-existing set.
+## NOT done / NOT established
+- Develop observation standing and passage-desk gestures ("Keep mine", declined proposal) do NOT yet write to this record; today a decision is created only by the writer's note here or via the API. The shared READ exists; the other rooms' WRITES are the next crossing.
+- L5 (version-bound, stale flagged): the schema carries `version_ref`, but no writer sets it yet and the reader does not compute staleness. Not claimed.
+- The living-work-only conversation (no manuscript) route does not read the record.
+- The passage desk's reading is wired but not witnessed against a real or scripted editorial turn end to end.
+- Suite not frozen (founder act). No browser walk of the new control. Migration not applied anywhere real.
