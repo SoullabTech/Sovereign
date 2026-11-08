@@ -467,6 +467,11 @@ const MUTANTS = [
   ['CX7', 'jest', LIB, ' ${CONVERSATIONS_STAY_WITH_THE_WRITING}`,', ' ${CONVERSATIONS_STAY_WITH_THE_WRITINGS}`,', 'the single-writing Remove dialog carries the plural sentence ("those writings")'],
   ['CX8', 'jest', LIB, "const WHAT_GOES_WITH_A_REMOVED_WORK =\n  'what you told MAIA about it, your corrections, where you left off,", "const WHAT_GOES_WITH_A_REMOVED_WORK =\n  'what you told MAIA about it, your corrections,", 'the Remove goes-list stops naming something that does go (the counterpart of D3, which now covers the Delete list only)'],
   ['CX9', 'jest', LIB, ', and any conversation you had with MAIA about it while it held no writing\';', '\';', 'the Remove goes-list drops the conversations that DO belong to the Work row (opened while the Work held no writing), which do go'],
+  // ── the editing-conversations clause (LIB), ruling 2026-11-08, lane record 6.9.5(e)
+  ['CX10', 'jest', LIB, "they stay with the writing, and deleting the writing deletes them. '\n  + EDITING_CONVERSATIONS_NOT_OFFERED;", "they stay with the writing, and deleting the writing deletes them.';", 'the single-writing Remove dialog drops the clause, so it says nothing about the passage-by-passage conversations that no Work will offer again'],
+  ['CX10b', 'jest', LIB, "deleting a writing deletes its conversations. '\n  + EDITING_CONVERSATIONS_NOT_OFFERED;", "deleting a writing deletes its conversations.';", 'the several-writings Remove dialog drops the clause'],
+  ['CX11', 'jest', LIB, "and no Work will offer them again.'", "and they can no longer be opened.'", 'the clause turns into a claim about reach ("can no longer be opened"), which is false: the ask route still reads a thread by id for its owner'],
+  ['CX12', 'jest', LIB, "and no Work will offer them again.'", "and no Work will offer them again, and nothing is left of them in the Studio.'", 'the clause grows a claim about what is left, which is false: the history stays, with the member\'s own words, until the writing is deleted'],
 
   // ══ WS-DELETE-01 retained editorial threads (2026-11-08): the orphaned-origin gate (founder-chosen option b-narrow) ══
   // Each entry is a plausible WRONG version of one decision of the gate. `<id>` is judged by the two hermetic suites ('jestog'), `<id>p`

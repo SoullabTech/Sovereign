@@ -29,27 +29,33 @@ const IRREVERSIBLE = 'It cannot be undone, and private backups already taken can
 
 const STAYS_SINGULAR = 'Your conversations with MAIA about that writing are not part of the Work, so removing the Work does not remove them: they stay with the writing, and deleting the writing deletes them.';
 const STAYS_PLURAL = 'Your conversations with MAIA about those writings are not part of the Work, so removing the Work does not remove them: they stay with the writings, and deleting a writing deletes its conversations.';
+// The clause added by the founder's ruling of 2026-11-08 (lane record 6.9.5(e)): it follows the retention sentence, in both bodies.
+// It says what the Studio SHOWS ("offer"), never what can be reached, so the claims list at the end of this file still holds.
+const EDITING_CLAUSE = 'The conversations you worked through passage by passage are among them, and no Work will offer them again.';
 
 const SHARED_WITH_ONE =
   'This writing is also in another of your Works, so it cannot be deleted from here without taking it from there. '
   + 'You can remove this Work instead. That removes the Work and what you built inside it: what you told MAIA about it, your corrections, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing. '
   + 'It cannot be undone, and private backups already taken can still hold a copy until they are retired on their normal schedule. '
   + 'The writing itself is not deleted: it stays in your other Work. '
-  + 'Your conversations with MAIA about that writing are not part of the Work, so removing the Work does not remove them: they stay with the writing, and deleting the writing deletes them.';
+  + 'Your conversations with MAIA about that writing are not part of the Work, so removing the Work does not remove them: they stay with the writing, and deleting the writing deletes them. '
+  + EDITING_CLAUSE;
 
 const sharedWithMany = (n: number) =>
   `This writing is also in ${n} of your other Works, so it cannot be deleted from here without taking it from there. `
   + 'You can remove this Work instead. That removes the Work and what you built inside it: what you told MAIA about it, your corrections, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing. '
   + 'It cannot be undone, and private backups already taken can still hold a copy until they are retired on their normal schedule. '
   + 'The writing itself is not deleted: it stays in the other Works that hold it. '
-  + 'Your conversations with MAIA about that writing are not part of the Work, so removing the Work does not remove them: they stay with the writing, and deleting the writing deletes them.';
+  + 'Your conversations with MAIA about that writing are not part of the Work, so removing the Work does not remove them: they stay with the writing, and deleting the writing deletes them. '
+  + EDITING_CLAUSE;
 
 const MANY_WRITINGS =
   'This Work holds more than one writing, so it cannot be deleted from here without choosing which writing to delete. '
   + 'You can remove the Work instead. That removes the Work and what you built inside it: what you told MAIA about it, your corrections, where you left off, its list of materials, its image, and any conversation you had with MAIA about it while it held no writing. '
   + 'It cannot be undone, and private backups already taken can still hold a copy until they are retired on their normal schedule. '
   + 'None of the writings is deleted: each stays in any other Work that holds it, or with your other writing that is not in a Work. '
-  + 'Your conversations with MAIA about those writings are not part of the Work, so removing the Work does not remove them: they stay with the writings, and deleting a writing deletes its conversations.';
+  + 'Your conversations with MAIA about those writings are not part of the Work, so removing the Work does not remove them: they stay with the writings, and deleting a writing deletes its conversations. '
+  + EDITING_CLAUSE;
 
 const DELETE_WITH_WRITING =
   'This deletes the Work and its writing: the sections and drafts, the original file it came from, if there is one, and your conversations with MAIA about the writing. '
@@ -91,7 +97,7 @@ describe('the Remove bodies, word for word', () => {
 describe('the closing sentence: where the conversations about the writing live, and what ends them', () => {
   it('every Remove body ENDS with it: the singular one for a shared writing (one, two or five other Works), the plural one for several writings', () => {
     for (const { label, body, plural } of removeBodies()) {
-      expect({ label, endsWith: body.endsWith(plural ? STAYS_PLURAL : STAYS_SINGULAR) }).toEqual({ label, endsWith: true });
+      expect({ label, endsWith: body.endsWith(`${plural ? STAYS_PLURAL : STAYS_SINGULAR} ${EDITING_CLAUSE}`) }).toEqual({ label, endsWith: true });
     }
   });
   it('the singular body never carries the plural sentence, and the plural body never the singular (a Work with one writing says "that writing")', () => {
@@ -126,6 +132,29 @@ describe('the closing sentence: where the conversations about the writing live, 
       'Your conversations with MAIA about those writings are not part of the Work, so removing the Work does not remove them',
       'they stay with the writings, and deleting a writing deletes its conversations',
     ]);
+  });
+});
+
+describe('the editing-conversations clause (ruling 2026-11-08, lane record 6.9.5(e))', () => {
+  it('is in every Remove body exactly once, directly after the retention sentence, and is the last thing the dialog says', () => {
+    for (const { label, body, plural } of removeBodies()) {
+      const sentence = plural ? STAYS_PLURAL : STAYS_SINGULAR;
+      expect({ label, count: body.split(EDITING_CLAUSE).length - 1 }).toEqual({ label, count: 1 });
+      expect({ label, directlyAfter: body.includes(`${sentence} ${EDITING_CLAUSE}`) && body.endsWith(EDITING_CLAUSE) }).toEqual({ label, directlyAfter: true });
+    }
+  });
+  it('says two things and only two: that the passage-by-passage conversations are among those that stay, and that no Work will offer them again', () => {
+    expect(EDITING_CLAUSE.split(/[.,]/).map((part) => part.trim()).filter(Boolean)).toEqual([
+      'The conversations you worked through passage by passage are among them',
+      'and no Work will offer them again',
+    ]);
+  });
+  it('speaks of what the Studio OFFERS, never of what can be reached: the word is "offer", and none of "open", "reach", "access" or "see" appears in it', () => {
+    expect(EDITING_CLAUSE).toContain('offer');
+    expect(/\b(open|opened|reach|reached|access|accessible|see|seen|find|found)\b/i.test(EDITING_CLAUSE)).toBe(false);
+  });
+  it('is not in a Delete body (there the writing goes too, so there is nothing to keep)', () => {
+    for (const kind of ['writing', 'empty'] as const) expect(deleteConfirmCopy(kind, 'T').body.includes(EDITING_CLAUSE)).toBe(false);
   });
 });
 

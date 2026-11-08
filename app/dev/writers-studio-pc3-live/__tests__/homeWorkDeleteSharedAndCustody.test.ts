@@ -128,7 +128,9 @@ describe('the writing is shared with another Work (409 declared_in_other_works)'
     expect(text).toContain('Your conversations with MAIA about that writing are not part of the Work, so removing the Work does not remove them: they stay with the writing, and deleting the writing deletes them.');
     expect(text.indexOf('Your conversations with MAIA about that writing')).toBeGreaterThan(text.indexOf('The writing itself is not deleted'));
     // The dialog's body paragraph ENDS with it (the card's own text goes on with the buttons).
-    expect(card!.querySelector('p')!.textContent!.endsWith('deleting the writing deletes them.')).toBe(true);
+    // LAW CHANGED DELIBERATELY (2026-11-08, lane record 6.9.5(e)): the paragraph now ENDS with the editing-conversations clause, which
+    // follows the retention sentence and says what the Studio offers, never what can be reached.
+    expect(card!.querySelector('p')!.textContent!.endsWith('deleting the writing deletes them. The conversations you worked through passage by passage are among them, and no Work will offer them again.')).toBe(true);
     expect(text).not.toMatch(/cannot be opened|unreachable|no longer (be )?(opened|reached)|nothing (is|will be) (left|kept)/i);
     // Irreversible, with the same backup qualifier Delete carries.
     expect(text).toContain('It cannot be undone');
@@ -654,7 +656,7 @@ describe('a Work that holds several writings has no Delete, only Remove', () => 
     expect(text).not.toContain('its conversations with MAIA');
     expect(text).toContain('any conversation you had with MAIA about it while it held no writing');
     expect(text).toContain('Your conversations with MAIA about those writings are not part of the Work, so removing the Work does not remove them: they stay with the writings, and deleting a writing deletes its conversations.');
-    expect(dialog!.querySelector('p')!.textContent!.endsWith('deleting a writing deletes its conversations.')).toBe(true);
+    expect(dialog!.querySelector('p')!.textContent!.endsWith('deleting a writing deletes its conversations. The conversations you worked through passage by passage are among them, and no Work will offer them again.')).toBe(true);
     expect(text).toContain('It cannot be undone');
     expect(text).not.toContain(DELETE_WORK_COPY.confirm);
     expect(host.querySelector('[data-shared-writing]')).toBeNull();
