@@ -16,6 +16,7 @@ jest.mock('@/components/astrology/NakshatraCard', () => () => null);
 jest.mock('@/components/astrology/DashaTimeline', () => () => null);
 jest.mock('../pro-systems-panel.module.css', () => ({}), { virtual: true });
 jest.mock('../pro-four-pillars.module.css', () => ({}), { virtual: true });
+jest.mock('../pro-ask-maia.module.css', () => ({}), { virtual: true });
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
