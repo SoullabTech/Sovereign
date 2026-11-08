@@ -22,7 +22,7 @@ d('Work reading scope · physical witness', () => {
   };
   const mintAs = async (extra: Record<string, unknown>) => {
     const req = randomUUID();
-    await query(`INSERT INTO runtime_consent_state(request_id, member_id) VALUES ($1,$2)`, [req, A]);
+    await query(`INSERT INTO runtime_consent_state(request_id, posture) VALUES ($1,'normal')`, [req]);
     return mintDisclosureAttempt({
       disclosureId: randomUUID(), memberId: A, requestRef: req,
       boundary: 'writers_studio.work_conversation->maia_cognition', sourceClass: 'work',
@@ -32,8 +32,10 @@ d('Work reading scope · physical witness', () => {
   };
 
   beforeAll(async () => {
-    A = (await query<{ id: string }>(`INSERT INTO members(name) VALUES ('A') RETURNING id`)).rows[0].id;
-    B = (await query<{ id: string }>(`INSERT INTO members(name) VALUES ('B') RETURNING id`)).rows[0].id;
+    const mk = async (n: string) => (await query<{ id: string }>(
+      `INSERT INTO members(passkey,username,password_hash,name) VALUES ($1,$1,'x',$1) RETURNING id`,
+      [`${n}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`])).rows[0].id;
+    A = await mk('scopeA'); B = await mk('scopeB');
     workA = (await query<{ id: string }>(`INSERT INTO living_works(member_id,title) VALUES ($1,'Fictional A') RETURNING id`, [A])).rows[0].id;
     workB = (await query<{ id: string }>(`INSERT INTO living_works(member_id,title) VALUES ($1,'Fictional B') RETURNING id`, [B])).rows[0].id;
     ms = (await query<{ id: string }>(`INSERT INTO member_manuscripts(member_id) VALUES ($1) RETURNING id`, [A])).rows[0].id;
