@@ -379,10 +379,22 @@ const WHAT_GOES_WITH_A_REMOVED_WORK =
    that Work is removed no Work offers it again, but it is kept and is deleted with the writing. That last point is a statement about
    what Write mode offers, not about what no route accepts (some routes take a retained thread's id; lane record 6.9.1). A blanket
    "cannot be opened" would be false, which is why none is made. */
+/**
+ * The editing (passage-by-passage) conversations are among those that stay, and they are the one kind no Work offers again once the
+ * Work they were opened under is removed (founder ruling 2026-11-08, lane record 6.9.5(e)). The sentence says what the Studio SHOWS
+ * ("offer"), not what can be reached: it makes no claim that anything cannot be opened, which would be false (the ask route still
+ * reads a thread by id, for its owner) and which `removeCopyConversations.test.ts` forbids. It is true because the relationships
+ * list omits a thread whose relationship is gone and the open, read, turn and version paths refuse it (probes RT-1, RT-7, RT-C1 to
+ * RT-C4 in tests/constitutional/ws-delete/dynamic/retainedEditorial.probe.test.ts).
+ */
+const EDITING_CONVERSATIONS_NOT_OFFERED =
+  'The conversations you worked through passage by passage are among them, and no Work will offer them again.';
 const CONVERSATIONS_STAY_WITH_THE_WRITING =
-  'Your conversations with MAIA about that writing are not part of the Work, so removing the Work does not remove them: they stay with the writing, and deleting the writing deletes them.';
+  'Your conversations with MAIA about that writing are not part of the Work, so removing the Work does not remove them: they stay with the writing, and deleting the writing deletes them. '
+  + EDITING_CONVERSATIONS_NOT_OFFERED;
 const CONVERSATIONS_STAY_WITH_THE_WRITINGS =
-  'Your conversations with MAIA about those writings are not part of the Work, so removing the Work does not remove them: they stay with the writings, and deleting a writing deletes its conversations.';
+  'Your conversations with MAIA about those writings are not part of the Work, so removing the Work does not remove them: they stay with the writings, and deleting a writing deletes its conversations. '
+  + EDITING_CONVERSATIONS_NOT_OFFERED;
 const NO_UNDO_AND_BACKUPS =
   'It cannot be undone, and private backups already taken can still hold a copy until they are retired on their normal schedule.';
 

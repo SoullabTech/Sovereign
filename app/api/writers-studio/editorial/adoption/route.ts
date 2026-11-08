@@ -25,6 +25,11 @@
  *                          ⚠️ the named version would alter a detected source
  *                          quotation; refused WHOLE before authorization, so
  *                          ⛔ nothing was authorized and ⛔ nothing applied
+ *     409 origin_unavailable
+ *                          ⚠️ the conversation's Work was removed (its origin names a
+ *                          relationship that no longer exists); refused before any
+ *                          permission exists, so ⛔ nothing was authorized and
+ *                          ⛔ nothing applied
  *     404 / 400            the relationship or the named version is unreadable
  *
  * The body carries `kind` in every case, and a client that read only the code
@@ -69,7 +74,10 @@ function statusFor(outcome: AdoptionOutcome): number {
        applied, and ⛔ no part of it was applied either. */
     case 'protected_quotation': return 409;
     case 'relationship_refusal':
-      return outcome.reason === 'not_editorial' ? 400 : 404;
+      /* ⭐ `origin_unavailable` is the SAME code the thread read, the thread open and the version route use for the same fact: the
+         Work this conversation was opened under is gone. A state of the relationship, not an unknown id. */
+      return outcome.reason === 'not_editorial' ? 400
+        : outcome.reason === 'origin_unavailable' ? 409 : 404;
   }
 }
 
