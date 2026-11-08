@@ -58,7 +58,6 @@ jest.mock('@/lib/auth/passwordUtils', () => ({ hashPassword: jest.fn(async () =>
 import { NextRequest } from 'next/server';
 import { POST as magicLinkPOST } from '../magic-link/route';
 import { POST as recoverPOST } from '../recover/route';
-import { POST as resetPasswordPOST } from '../reset-password/route';
 
 const req = (url: string, body: Record<string, unknown>) =>
   new NextRequest(`http://localhost${url}`, {
@@ -67,7 +66,7 @@ const req = (url: string, body: Record<string, unknown>) =>
     headers: { 'Content-Type': 'application/json' },
   });
 
-// A member must EXIST for recover/reset-password to reach their send at all —
+// A member must EXIST for recover to reach their send at all —
 // both return early with a deliberately non-committal response otherwise, so a
 // test against an unknown address would pass without ever touching Resend.
 const MEMBER = { id: 'm-1', username: 'someone', name: 'Someone', email: 'someone@example.com', passkey: 'SOULLAB-X' };
@@ -75,7 +74,6 @@ const MEMBER = { id: 'm-1', username: 'someone', name: 'Someone', email: 'someon
 const ROUTES = [
   { name: 'magic-link',     post: magicLinkPOST,     url: '/api/members/magic-link',     body: { email: MEMBER.email } },
   { name: 'recover',        post: recoverPOST,       url: '/api/members/recover',        body: { email: MEMBER.email } },
-  { name: 'reset-password', post: resetPasswordPOST, url: '/api/members/reset-password', body: { email: MEMBER.email } },
 ] as const;
 
 const refuse = (name: string, message: string) =>
@@ -182,7 +180,9 @@ describe('all four account-access routes — no discarded send result remains', 
     expect(src).not.toMatch(/new\s+Resend\(/);
   });
 
-  it.each(AUTH_SENDERS)('%s sends through the central helper and gates on the result', (name) => {
+  // reset-password is excluded on purpose: its POST is retired and sends nothing
+  // (proved by reset-password-retired-post.test.ts), so there is no send to gate.
+  it.each(AUTH_SENDERS.filter((n) => n !== 'reset-password'))('%s sends through the central helper and gates on the result', (name) => {
     const src = fs.readFileSync(path.join(ROOT, name, 'route.ts'), 'utf8');
     expect(src).toMatch(/await sendEmail\(/);
     // Gating on `.success` — not merely receiving the result and ignoring it.
