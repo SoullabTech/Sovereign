@@ -75,10 +75,10 @@ describe('Ask MAIA inside Pro', () => {
 
   it('adds transits to the natal reading only for a chosen date', async () => {
     await ask({ section: 'natal', subject: 'first', question: 'What stands out?' });
-    await ask({ section: 'natal', subject: 'first', at: '2026-02-03T12:00:00', question: 'What was happening then?' });
+    await ask({ section: 'natal', subject: 'first', at: '2026-06-21T12:00:00', question: 'What was happening then?' });
     const [plain, dated] = generateSimple.mock.calls.map((c) => c[0].systemPrompt as string);
     expect(plain).not.toContain('Transits on');
-    expect(dated).toContain('Transits on 2026-02-03');
+    expect(dated).toContain('Transits on 2026-06-21');
   });
 
   it('gives the Four Pillars and the chosen luck direction', async () => {
