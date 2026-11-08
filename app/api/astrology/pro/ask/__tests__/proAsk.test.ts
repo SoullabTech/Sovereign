@@ -1,0 +1,112 @@
+/**
+ * Ask MAIA from inside Pro (founder request 2026-11-07). MAIA gets the
+ * section's calculated facts only — never a name or birth details; a crisis
+ * question gets the fixed reply without asking MAIA; nothing of the question
+ * is logged.
+ */
+import { NextRequest } from 'next/server';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
+import { loadSubjectBirth } from '@/lib/astrology/proSubjectBirth';
+import { PRO_ASK_SAFETY_REPLY } from '@/lib/astrology/proAskMaiaSections';
+import { POST } from '../route';
+
+jest.mock('@/lib/consciousness/LLMProvider', () => ({ getLLMProvider: jest.fn() }));
+jest.mock('@/lib/astrology/proSubjectBirth', () => ({ loadSubjectBirth: jest.fn() }));
+jest.mock('@/lib/astrology/proRouteAccess', () => {
+  const { NextResponse } = jest.requireActual('next/server');
+  const headers = { 'Cache-Control': 'private, no-store' };
+  return {
+    PRO_RESPONSE_HEADERS: headers,
+    proError: (status: number, error: string) => NextResponse.json({ error }, { status, headers }),
+    // A different member per test, so the per-member rate limit does not carry over.
+    resolveProOwner: jest.fn(async () => ({ ok: true, memberId: `member-${(globalThis as any).__testMember}` })),
+    proOwnerStillCurrent: jest.fn(async () => true),
+  };
+});
+jest.mock('@/lib/comms/SafetyService', () => ({
+  analyzeSafetyCues: (text: string) => ({ severity: /want to die|kill myself/i.test(text) ? 'crisis' : null }),
+}));
+
+const generateSimple = jest.fn();
+const births: Record<string, unknown> = {
+  first: { date: '1970-07-11', time: '05:13', location: { lat: 42.52, lng: -70.9, timezone: 'America/New_York' } },
+  second: { date: '2003-09-03', time: '08:15', location: { lat: 41.31, lng: -72.92, timezone: 'America/New_York' } },
+};
+
+function ask(body: Record<string, unknown>) {
+  return POST(new NextRequest('http://localhost/api/astrology/pro/ask', {
+    method: 'POST', body: JSON.stringify(body), headers: { 'content-type': 'application/json' },
+  }));
+}
+
+let testMember = 0;
+beforeEach(() => {
+  (globalThis as any).__testMember = ++testMember;
+  generateSimple.mockReset().mockResolvedValue({ text: 'The composite Sun…' });
+  jest.mocked(getLLMProvider).mockReturnValue({ generateSimple } as never);
+  jest.mocked(loadSubjectBirth).mockReset().mockImplementation(async (_m, subject) =>
+    births[subject as string] ? { ok: true, birth: births[subject as string] as never, revision: 'saved:' + subject } : { ok: false, status: 404, error: 'saved_chart_not_found' });
+});
+
+describe('Ask MAIA inside Pro', () => {
+  it('asks about the composite from both charts\' facts, with no names or birth details', async () => {
+    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const res = await ask({ section: 'composite', subject: 'first', other: 'second', question: 'What is this bond about?' });
+    expect(res.status).toBe(200);
+    expect((await res.json()).answer).toBe('The composite Sun…');
+    const call = generateSimple.mock.calls[0][0];
+    expect(call.messages).toEqual([{ role: 'user', content: 'What is this bond about?' }]);
+    expect(call.systemPrompt).toContain('Composite chart (midpoints');
+    expect(call.systemPrompt).toContain('Sun:');
+    for (const secret of ['1970', '2003', '05:13', '08:15', '42.52', '-72.92', 'America/New_York']) {
+      expect(call.systemPrompt).not.toContain(secret);
+    }
+    expect(log.mock.calls.flat().join(' ')).not.toContain('bond');
+    log.mockRestore();
+  });
+
+  it('reads the contacts between two charts for the biwheel', async () => {
+    await ask({ section: 'biwheel', subject: 'first', other: 'second', question: 'How do they meet?' });
+    const prompt = generateSimple.mock.calls[0][0].systemPrompt as string;
+    expect(prompt).toContain('First chart:');
+    expect(prompt).toContain('Second chart:');
+    expect(prompt).toContain('Contacts between the charts');
+  });
+
+  it('gives the Four Pillars and the chosen luck direction', async () => {
+    await ask({ section: 'four-pillars', subject: 'first', direction: 'forward', question: 'Where is he now?' });
+    const prompt = generateSimple.mock.calls[0][0].systemPrompt as string;
+    expect(prompt).toContain('Day Master:');
+    expect(prompt).toContain('Luck pillars counted forward');
+  });
+
+  it('answers a crisis question with the fixed reply and never asks MAIA', async () => {
+    const res = await ask({ section: 'natal', subject: 'first', question: 'I want to die' });
+    expect((await res.json()).answer).toBe(PRO_ASK_SAFETY_REPLY);
+    expect(generateSimple).not.toHaveBeenCalled();
+    expect(loadSubjectBirth).not.toHaveBeenCalled();
+  });
+
+  it('catches concern about a client in the third person, which the shared check misses', async () => {
+    for (const question of ['He says he wants to die', 'She talked about ending her life', 'Is he suicidal?', 'worried she will hurt herself']) {
+      const res = await ask({ section: 'natal', subject: 'first', question });
+      expect((await res.json()).answer).toBe(PRO_ASK_SAFETY_REPLY);
+    }
+    expect(generateSimple).not.toHaveBeenCalled();
+  });
+
+  it('does not mistake ordinary chart language for concern', async () => {
+    for (const question of ['What does Pluto in the 8th say about death and rebirth themes?', 'How does his Mars square Saturn play out?']) {
+      await ask({ section: 'natal', subject: 'first', question });
+    }
+    expect(generateSimple).toHaveBeenCalledTimes(2);
+  });
+
+  it('refuses a two-chart question without the second chart, and unknown sections or fields', async () => {
+    expect((await ask({ section: 'composite', subject: 'first', question: 'x' })).status).toBe(400);
+    expect((await ask({ section: 'tarot', subject: 'first', question: 'x' })).status).toBe(400);
+    expect((await ask({ section: 'natal', subject: 'first', question: 'x', name: 'Tim' })).status).toBe(400);
+    expect((await ask({ section: 'natal', subject: 'gone', question: 'x' })).status).toBe(404);
+    expect(generateSimple).not.toHaveBeenCalled();
+  });
+});

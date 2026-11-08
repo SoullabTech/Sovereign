@@ -1,0 +1,125 @@
+/**
+ * Ask MAIA from inside Pro, about the section the astrologer is working in
+ * (founder request 2026-11-07: "an Ask MAIA for each of these sections").
+ *
+ * Rules, as recommended and adopted for the astrologer's own workspace:
+ * MAIA reads a saved chart only when the astrologer asks, and the panel says
+ * whose charts first · MAIA receives the section's calculated facts only —
+ * never a name, birth date, time or place; people are "the first chart" and
+ * "the second chart" · nothing is stored or logged but the fact of an answer ·
+ * a question showing crisis or serious distress gets a fixed reply and MAIA is
+ * not asked · the client never sees any of it.
+ */
+import type { BirthChart } from './proEphemerisCalculator';
+import { MAJOR_ASPECTS } from './proEphemerisCalculator';
+import { chartBodies } from './proChartGeometry';
+import type { CrossAspect } from './proComparison';
+import type { TransitAspect } from './proTransits';
+import type { FourPillars, LuckDirection } from './proFourPillars';
+
+export const PRO_ASK_SECTIONS = ['natal', 'transits', 'biwheel', 'composite', 'four-pillars'] as const;
+export type ProAskSection = typeof PRO_ASK_SECTIONS[number];
+
+export function isProAskSection(value: unknown): value is ProAskSection {
+  return typeof value === 'string' && (PRO_ASK_SECTIONS as readonly string[]).includes(value);
+}
+
+function deg(value: number): string {
+  const d = Math.floor(value);
+  return `${d}°${String(Math.min(59, Math.round((value - d) * 60))).padStart(2, '0')}′`;
+}
+
+/** Positions, angles and close major aspects of one chart — data, not a reading. */
+export function chartFacts(chart: BirthChart, heading: string): string {
+  const lines = [`${heading}: Ascendant ${chart.ascendant.sign} ${deg(chart.ascendant.degree)} · Midheaven ${chart.midheaven.sign} ${deg(chart.midheaven.degree)}`];
+  for (const b of chartBodies(chart)) {
+    lines.push(`  ${b.name}: ${b.position.sign} ${deg(b.position.degree)}, house ${b.position.house}${b.position.retrograde ? ', retrograde' : ''}`);
+  }
+  const aspects = (chart.aspects || [])
+    .filter((a) => MAJOR_ASPECTS.has(a.type) && a.orb <= 5)
+    .sort((a, b) => a.orb - b.orb)
+    .slice(0, 24)
+    .map((a) => `${a.planet1} ${a.type} ${a.planet2} (${a.orb.toFixed(1)}°)`);
+  if (aspects.length) lines.push(`  Aspects: ${aspects.join('; ')}`);
+  return lines.join('\n');
+}
+
+export function transitFacts(aspects: readonly TransitAspect[], when: string): string {
+  const list = aspects.slice(0, 16).map((t) => `transiting ${t.transit} ${t.type} natal ${t.natal} (${t.orb.toFixed(1)}°)`);
+  return `Transits on ${when}: ${list.length ? list.join('; ') : 'none within 2°'}`;
+}
+
+export function contactFacts(contacts: readonly CrossAspect[]): string {
+  const list = contacts.slice(0, 24).map((c) => `first chart's ${c.inner} ${c.type} second chart's ${c.outer} (${c.orb.toFixed(1)}°)`);
+  return `Contacts between the charts: ${list.length ? list.join('; ') : 'none within 3°'}`;
+}
+
+export function fourPillarsFacts(fp: FourPillars, direction: 'forward' | 'backward' | null): string {
+  const lines: string[] = [];
+  lines.push(`Day Master: ${fp.dayMaster.pinyin} (${fp.dayMaster.hanzi}), ${fp.dayMaster.polarity} ${fp.dayMaster.element}`);
+  for (const p of fp.pillars) {
+    lines.push(`${p.name} pillar: ${p.stem.pinyin} ${p.branch.pinyin} (${p.stem.hanzi}${p.branch.hanzi}) — stem ${p.stem.polarity} ${p.stem.element}${p.stem.tenGod ? `, ${p.stem.tenGod.english}` : ''}; branch ${p.branch.animal}, ${p.branch.element}; hidden stems ${p.hidden.map((h) => `${h.pinyin} (${h.tenGod.english})`).join(', ')}`);
+  }
+  lines.push(`Elements among the eight characters: ${Object.entries(fp.elements).map(([e, n]) => `${e} ${n}`).join(', ')}`);
+  const thisYear = fp.annual.find((a) => a.year === fp.now.solarYear);
+  if (thisYear) lines.push(`This year's pillar: ${thisYear.stem.pinyin} ${thisYear.branch.pinyin} (${thisYear.tenGod.english})`);
+  if (direction) {
+    const luck: LuckDirection = fp.luck[direction];
+    const now = luck.pillars.find((l) => fp.ageNow >= l.fromAge && fp.ageNow < l.toAge);
+    lines.push(`Luck pillars counted ${direction}, beginning at age ${luck.startAge.years}: ${luck.pillars.map((l) => `${Math.floor(l.fromAge)}–${Math.floor(l.toAge)} ${l.stem.pinyin} ${l.branch.pinyin} (${l.tenGod.english})`).join('; ')}`);
+    lines.push(now
+      ? `Now: age ${Math.floor(fp.ageNow)}, in the luck pillar ${now.stem.pinyin} ${now.branch.pinyin} (${now.tenGod.english}).`
+      : `Now: age ${Math.floor(fp.ageNow)}, not within the luck pillars listed.`);
+  } else {
+    lines.push('The astrologer has not chosen a luck pillar direction; do not discuss the luck pillars.');
+  }
+  return lines.join('\n');
+}
+
+const SECTION_FOCUS: Record<ProAskSection, string> = {
+  natal: 'the natal chart below',
+  transits: 'the transits to the natal chart below',
+  biwheel: 'the relationship between the two charts below (synastry), read through the contacts between them',
+  composite: 'the composite chart below, made from the midpoints of two people\'s charts: it describes the relationship as its own entity',
+  'four-pillars': 'the Chinese Four Pillars (BaZi) chart below',
+};
+
+/** The system prompt for MAIA speaking with the astrologer about one section. */
+export function proAskSystemPrompt(section: ProAskSection, facts: string): string {
+  return `You are MAIA, an AI companion in Soullab, speaking with a professional astrologer in their own workspace. They are asking about ${SECTION_FOCUS[section]}. You are MAIA, not the astrologer and not a person.
+
+HOW YOU SPEAK:
+- Speak to the astrologer as a knowledgeable colleague: you may use astrological terms. Plain text only — no headings, bullet lists or markdown. Keep to a few short paragraphs (under about 250 words).
+- The chart is symbolic: patterns to work with, never a fate. Offer possibilities and hand meaning back to the astrologer and their client.
+- Use only the facts below. If something is not there, say you can't see it. The people are "the first chart" and "the second chart"; you do not know their names, and do not ask for them or for birth details.
+- Do not predict events, deaths, illness, accidents, pregnancies, legal or money outcomes, or their timing. Do not give medical, psychological, legal or financial advice.
+- If the question shows distress about a real person's safety, say you are not a crisis service and encourage reaching a person who can help.
+- Nothing is remembered between questions; each stands alone.
+
+──────── THE FACTS ────────
+${facts}`;
+}
+
+/** The fixed reply when a question shows crisis or serious distress. MAIA is not asked. */
+export const PRO_ASK_SAFETY_REPLY =
+  'This sounds like it may be about someone\'s safety, and that deserves a real person rather than a chart reading. I\'m an AI and not a crisis service. ' +
+  'If someone is in immediate danger, call your local emergency number. In the US you can call or text 988 (Suicide & Crisis Lifeline); elsewhere, findahelpline.com lists free, confidential lines.';
+
+/**
+ * An astrologer asks about a client, so concern arrives in the third person
+ * ("he wants to die", "talking about ending her life"), which the shared
+ * first-person safety check does not catch. These patterns add that.
+ */
+const THIRD_PERSON_CONCERN = [
+  /\b(wants?|wanted|wanting|trying|tried|tries|plans?|planning|planned|threaten(s|ed|ing)?|talk(s|ed|ing)? about)\s+to\s+(die|kill\s+\w+sel(f|ves)|end\s+(his|her|their)\s+(own\s+)?life)\b/i,
+  /\b(kill(s|ed|ing)?|hurt(s|ing)?|harm(s|ed|ing)?)\s+(him|her|them)sel(f|ves)\b/i,
+  /\bend(s|ed|ing)?\s+(his|her|their)\s+(own\s+)?life\b/i,
+  /\bsuicid(e|al)\b/i,
+  /\bself[-\s]?harm/i,
+  /\boverdos(e|ed|ing)\b/i,
+];
+
+export function thirdPersonConcern(question: string): boolean {
+  return THIRD_PERSON_CONCERN.some((p) => p.test(question));
+}
+
