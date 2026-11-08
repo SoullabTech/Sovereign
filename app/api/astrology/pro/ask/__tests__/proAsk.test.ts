@@ -29,8 +29,8 @@ jest.mock('@/lib/comms/SafetyService', () => ({
 
 const generateSimple = jest.fn();
 const births: Record<string, unknown> = {
-  first: { date: '1970-07-11', time: '05:13', location: { lat: 42.52, lng: -70.9, timezone: 'America/New_York' } },
-  second: { date: '2003-09-03', time: '08:15', location: { lat: 41.31, lng: -72.92, timezone: 'America/New_York' } },
+  first: { date: '1985-03-20', time: '09:40', location: { lat: 40.71, lng: -74.01, timezone: 'America/New_York' } },
+  second: { date: '2010-11-02', time: '16:05', location: { lat: 34.05, lng: -118.24, timezone: 'America/Los_Angeles' } },
 };
 
 function ask(body: Record<string, unknown>) {
@@ -58,7 +58,7 @@ describe('Ask MAIA inside Pro', () => {
     expect(call.messages).toEqual([{ role: 'user', content: 'What is this bond about?' }]);
     expect(call.systemPrompt).toContain('Composite chart (midpoints');
     expect(call.systemPrompt).toContain('Sun:');
-    for (const secret of ['1970', '2003', '05:13', '08:15', '42.52', '-72.92', 'America/New_York']) {
+    for (const secret of ['1985', '2010', '09:40', '16:05', '40.71', '-118.24', 'America/Los_Angeles']) {
       expect(call.systemPrompt).not.toContain(secret);
     }
     expect(log.mock.calls.flat().join(' ')).not.toContain('bond');
