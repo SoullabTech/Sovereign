@@ -1,4 +1,4 @@
-import { traditionalMayaDate, type TraditionalMayaDate } from './mayanTraditional';
+import { traditionalMaya, HAAB_MONTHS as TRADITIONAL_HAAB_MONTHS, type TraditionalMaya } from './proTraditionalMaya';
 // @ts-nocheck
 /**
  * MAYAN ASTROLOGY LIBRARY
@@ -165,7 +165,7 @@ export interface CompleteMayanProfile {
   tzolkin: MayanBirthSign;
   haab: HaabDate;
   /** Traditional GMT count for the same date — a different system from the Dreamspell tzolkin. */
-  traditional: TraditionalMayaDate;
+  traditional: TraditionalMaya;
   pathOfLife: PathOfLife;
   cardinalDirection: CardinalDirectionInfo;
   lifeCycleInsight: string;
@@ -625,17 +625,22 @@ export function synthesizeMayanWestern(
  * is 11 Mol).
  */
 export function calculateHaabDate(date: Date): HaabDate {
-  const t = traditionalMayaDate(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
-  const { day, month } = t.haab;
-  if (month === 'Wayeb') {
-    const wayebDay = day + 1; // 1-5 as before
+  const { haab } = traditionalMaya(civilDate(date));
+  const monthIndex = TRADITIONAL_HAAB_MONTHS.indexOf(haab.month as typeof TRADITIONAL_HAAB_MONTHS[number]);
+  if (monthIndex === 18) {
+    const wayebDay = haab.day + 1; // 1-5
     return {
-      day, month: { number: 19, name: 'Wayeb', meaning: 'Nameless Days', glyph: '⚠️' },
+      day: haab.day, month: { number: 19, name: 'Wayeb', meaning: 'Nameless Days', glyph: '⚠️' },
       isWayeb: true, wayebDay, fullDate: `Wayeb ${wayebDay}`,
     };
   }
-  const monthInfo = HAAB_MONTHS.find(m => m.name === month || (month === 'Zotz' && m.name === 'Sotz'))!;
-  return { day, month: monthInfo, isWayeb: false, fullDate: `${day} ${monthInfo.name}` };
+  const monthInfo = HAAB_MONTHS[monthIndex];
+  return { day: haab.day, month: monthInfo, isWayeb: false, fullDate: `${haab.day} ${monthInfo.name}` };
+}
+
+/** The UTC calendar date of an instant, YYYY-MM-DD. */
+function civilDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
 }
 
 /**
@@ -723,9 +728,7 @@ export function calculateCompleteMayanProfile(birthDate: Date): CompleteMayanPro
   const cardinalDirection = getCardinalDirection(daySignKey);
   const lifeCycleInsight = generateLifeCycleInsight(birthDate, pathOfLife);
 
-  const traditional = traditionalMayaDate(
-    birthDate.getUTCFullYear(), birthDate.getUTCMonth() + 1, birthDate.getUTCDate(),
-  );
+  const traditional = traditionalMaya(civilDate(birthDate));
 
   return {
     tzolkin,

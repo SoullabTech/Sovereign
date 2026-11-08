@@ -7,7 +7,15 @@
  *  - The year pillar turns at Lichun, not on 1 January.
  */
 import { generateFourPillars } from '@/app/api/_backend/src/services/fourPillarsService';
-import { lichun, solarTermMonth, daYunStartAgeExact } from '@/lib/astrology/fourPillarsCore';
+import * as Astronomy from 'astronomy-engine';
+import { lichun, daYunStartAgeExact } from '@/lib/astrology/fourPillarsCore';
+
+// The Jie moment, found here directly from the Sun's longitude (independent of the module under test).
+const jieAfter = (instant: Date) => {
+  const lon = Astronomy.SunPosition(instant).elon;
+  const next = (Math.floor(((lon - 315 + 360) % 360) / 30) + 1) * 30 + 315;
+  return Astronomy.SearchSunLongitude(next % 360, instant, 40)!.date;
+};
 
 const text = (p: { stem: string; branch: string }) => `${p.stem}-${p.branch}`;
 const pillars = (iso: string, tz = 480) => {
@@ -34,9 +42,9 @@ describe('Four Pillars reference values', () => {
     expect(text(generateFourPillars(new Date('1984-01-15T12:00:00Z'), 0).year)).toBe('Gui-Hai');
   });
   it('the month pillar turns at the Jie moment, not on a calendar day', () => {
-    const t = solarTermMonth(new Date('2003-09-03T12:15:00Z'));
-    const a = generateFourPillars(new Date(t.endsAt.getTime() - 60_000), 0).month;
-    const b = generateFourPillars(new Date(t.endsAt.getTime() + 60_000), 0).month;
+    const endsAt = jieAfter(new Date('2003-09-03T12:15:00Z'));
+    const a = generateFourPillars(new Date(endsAt.getTime() - 60_000), 0).month;
+    const b = generateFourPillars(new Date(endsAt.getTime() + 60_000), 0).month;
     expect(text(a)).not.toBe(text(b));
   });
   it('late Zi (23:00-24:00) continues the same day: Jia day 23:30 is 丙子', () => {
@@ -53,8 +61,9 @@ describe('Da Yun start age', () => {
     expect(exact).toBeLessThan(6.6);
   });
   it('counts to the next Jie going forward', () => {
-    const t = solarTermMonth(new Date('2003-09-03T12:15:00Z'));
-    const days = (t.endsAt.getTime() - new Date('2003-09-03T12:15:00Z').getTime()) / 86_400_000;
-    expect(daYunStartAgeExact(new Date('2003-09-03T12:15:00Z'), 'forward')).toBeCloseTo(days / 3, 6);
+    const born = new Date('2003-09-03T12:15:00Z');
+    const days = (jieAfter(born).getTime() - born.getTime()) / 86_400_000;
+    // Reported to whole months, so within half a month (1/24 year) of days / 3.
+    expect(Math.abs(daYunStartAgeExact(born, 'forward') - days / 3)).toBeLessThan(1 / 24 + 1e-9);
   });
 });

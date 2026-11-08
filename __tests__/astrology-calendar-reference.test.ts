@@ -3,7 +3,7 @@
  * published values, not outputs of the code under test.
  */
 import { chineseYearForDate, chineseYearForIsoDate, CHINESE_NEW_YEAR } from '@/lib/astrology/chineseNewYear';
-import { traditionalMayaDateFromIso } from '@/lib/astrology/mayanTraditional';
+import { traditionalMaya } from '@/lib/astrology/proTraditionalMaya';
 import { calculateHaabDate } from '@/lib/astrology/mayanAstrology';
 import { calculateChineseBirthProfile, getChineseZodiacAnimal } from '@/lib/astrology/chineseAstrology';
 
@@ -38,17 +38,17 @@ describe('Chinese New Year table', () => {
 
 describe('Traditional Maya count (GMT 584283)', () => {
   it('3 Sep 2003 = 13 Akbal, 11 Mol, 12.19.10.10.3', () => {
-    const t = traditionalMayaDateFromIso('2003-09-03');
-    expect(t.tzolkin.text).toBe('13 Akbal');
-    expect(t.tzolkin.kiche).toBe("Aq'ab'al");
-    expect(t.haab.text).toBe('11 Mol');
+    const t = traditionalMaya('2003-09-03');
+    expect(`${t.number} ${t.yucatec}`).toBe('13 Ak’b’al');
+    expect(t.kiche).toBe('Aq’ab’al');
+    expect(`${t.haab.day} ${t.haab.month}`).toBe('11 Mol');
     expect(t.longCount).toBe('12.19.10.10.3');
   });
   it('21 Dec 2012 = 13.0.0.0.0, 4 Ahau, 3 Kankin', () => {
-    const t = traditionalMayaDateFromIso('2012-12-21');
+    const t = traditionalMaya('2012-12-21');
     expect(t.longCount).toBe('13.0.0.0.0');
-    expect(t.tzolkin.text).toBe('4 Ahau');
-    expect(t.haab.text).toBe('3 Kankin');
+    expect(`${t.number} ${t.yucatec}`).toBe('4 Ajaw');
+    expect(`${t.haab.day} ${t.haab.month}`).toBe('3 K’ank’in');
   });
   it('the Haab used by the Free page is the traditional one', () => {
     expect(calculateHaabDate(new Date('2003-09-03T12:00:00.000Z')).fullDate).toBe('11 Mol');
