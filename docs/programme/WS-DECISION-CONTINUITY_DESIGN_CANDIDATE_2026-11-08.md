@@ -66,3 +66,15 @@ The reference is a TEST DOUBLE, not an implementation and never a seed. Not froz
 - The living-work-only conversation (no manuscript) route does not read the record.
 - The passage desk's reading is wired but not witnessed against a real or scripted editorial turn end to end.
 - Suite not frozen (founder act). No browser walk of the new control. Migration not applied anywhere real.
+
+
+## STOP — two gestures could not be wired without a ruling (2026-11-08)
+1. **Develop (observation standing) → MAIA.** A read adapter that put the writer's DISMISSED observations into the Work conversation was written and then REVERTED:
+   `lib/manuscript/standing/__tests__/standingOutsideCognition.test.ts` (D5, ratified) fails by design — *standing ──X──► MAIA cognition*, with
+   "permitting standing into a writer-initiated conversation requires a deliberate architectural change rather than one convenient import". The guard was NOT weakened.
+   **Question for a ruling:** may a writer's dismissal of an observation be carried to MAIA (Work conversation, passage desk) under the settled-decision ruling, and if so,
+   by which amendment to D5 (recommended: a named, narrow exception limited to `dismiss`, read through one module, with the guard's allowlist updated by that act)?
+2. **Passage desk "Keep mine" / decline.** Today it is LOCAL STATE ONLY (`P4R1WriteEditController` `onKeep` clears local state and shows "Current wording retained"); it writes nothing durable.
+   Recording it would make the system compose a sentence for the writer ("I kept my own wording…"), which is not their words. **Question for a ruling:** does a
+   "Keep mine" click settle anything? Recommended: no automatic decision; offer a one-line, writer-confirmed "Note that you have decided this?" after the click, recorded only on their yes.
+Until ruled, the shared record is fed only by what the writer writes (the Work conversation box and the API).
