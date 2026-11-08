@@ -13,6 +13,7 @@
 import type { BirthChart } from './proEphemerisCalculator';
 import { MAJOR_ASPECTS } from './proEphemerisCalculator';
 import { chartBodies } from './proChartGeometry';
+import { detectAllPatterns, type Aspect as PatternAspect } from './aspectPatternDetector';
 import type { CrossAspect } from './proComparison';
 import type { TransitAspect } from './proTransits';
 import type { FourPillars, LuckDirection } from './proFourPillars';
@@ -29,7 +30,30 @@ function deg(value: number): string {
   return `${d}°${String(Math.min(59, Math.round((value - d) * 60))).padStart(2, '0')}′`;
 }
 
-/** Positions, angles and close major aspects of one chart — data, not a reading. */
+const PATTERN_NAMES: Record<string, string> = {
+  'grand-trine': 'Grand trine', 't-square': 'T-square', 'grand-cross': 'Grand cross',
+  yod: 'Yod', stellium: 'Stellium', 'mystic-rectangle': 'Mystic rectangle',
+};
+const TEN_PLANETS = new Set(['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto']);
+const PATTERN_ASPECTS = new Set(['conjunction', 'sextile', 'square', 'trine', 'opposition', 'quincunx']);
+
+/** The named aspect patterns of a chart: which pattern, which planets, the focal one. Facts only. */
+export function chartPatterns(chart: BirthChart): string[] {
+  // The ten planets only: nodes and Chiron are conventionally left out of named patterns.
+  const planets = chartBodies(chart).filter((b) => TEN_PLANETS.has(b.name)).map((b) => ({
+    name: b.name, sign: b.position.sign, house: b.position.house, degree: b.position.degree, longitude: b.longitude,
+  }));
+  const names = new Set(planets.map((p) => p.name));
+  const aspects = (chart.aspects || []).filter((a) =>
+    PATTERN_ASPECTS.has(a.type) && names.has(a.planet1) && names.has(a.planet2)) as PatternAspect[];
+  return detectAllPatterns(aspects, planets).map((p) => {
+    const where = p.sign ? ` in ${p.sign}` : p.house ? ` in house ${p.house}` : '';
+    const focal = p.focalPlanet ? `, focal ${p.focalPlanet}` : '';
+    return `${PATTERN_NAMES[p.type] ?? p.type}${where}: ${p.planets.join(', ')}${focal}`;
+  });
+}
+
+/** Positions, angles, close major aspects and named patterns of one chart — data, not a reading. */
 export function chartFacts(chart: BirthChart, heading: string): string {
   const lines = [`${heading}: Ascendant ${chart.ascendant.sign} ${deg(chart.ascendant.degree)} · Midheaven ${chart.midheaven.sign} ${deg(chart.midheaven.degree)}`];
   for (const b of chartBodies(chart)) {
@@ -41,6 +65,8 @@ export function chartFacts(chart: BirthChart, heading: string): string {
     .slice(0, 24)
     .map((a) => `${a.planet1} ${a.type} ${a.planet2} (${a.orb.toFixed(1)}°)`);
   if (aspects.length) lines.push(`  Aspects: ${aspects.join('; ')}`);
+  const patterns = chartPatterns(chart);
+  if (patterns.length) lines.push(`  Patterns: ${patterns.join('; ')}`);
   return lines.join('\n');
 }
 
@@ -77,7 +103,7 @@ export function fourPillarsFacts(fp: FourPillars, direction: 'forward' | 'backwa
 }
 
 const SECTION_FOCUS: Record<ProAskSection, string> = {
-  natal: 'the natal chart below',
+  natal: 'the natal chart below (and, if given, the transits to it on a chosen date)',
   transits: 'the transits to the natal chart below',
   biwheel: 'the relationship between the two charts below (synastry), read through the contacts between them',
   composite: 'the composite chart below, made from the midpoints of two people\'s charts: it describes the relationship as its own entity',

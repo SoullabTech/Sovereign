@@ -101,7 +101,8 @@ export async function POST(request: NextRequest) {
     if (section === 'natal' || section === 'transits') {
       const sky = transitBodies(await calculateTransits(at));
       const transits = transitToNatalAspects(sky, chartBodies(first.chart), 2);
-      facts = section === 'natal'
+      // Natal includes transits only when the astrologer chose a date; Transits always does.
+      facts = section === 'natal' && input.at === undefined
         ? chartFacts(first.chart, 'Natal chart')
         : `${chartFacts(first.chart, 'Natal chart')}\n${transitFacts(transits, at.toISOString().slice(0, 10))}`;
     } else if (section === 'biwheel' && second?.ok) {

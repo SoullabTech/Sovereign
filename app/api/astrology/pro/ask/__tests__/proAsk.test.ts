@@ -73,6 +73,14 @@ describe('Ask MAIA inside Pro', () => {
     expect(prompt).toContain('Contacts between the charts');
   });
 
+  it('adds transits to the natal reading only for a chosen date', async () => {
+    await ask({ section: 'natal', subject: 'first', question: 'What stands out?' });
+    await ask({ section: 'natal', subject: 'first', at: '2026-02-03T12:00:00', question: 'What was happening then?' });
+    const [plain, dated] = generateSimple.mock.calls.map((c) => c[0].systemPrompt as string);
+    expect(plain).not.toContain('Transits on');
+    expect(dated).toContain('Transits on 2026-02-03');
+  });
+
   it('gives the Four Pillars and the chosen luck direction', async () => {
     await ask({ section: 'four-pillars', subject: 'first', direction: 'forward', question: 'Where is he now?' });
     const prompt = generateSimple.mock.calls[0][0].systemPrompt as string;
