@@ -6,6 +6,7 @@
  */
 import { useEffect, useState } from 'react';
 import { getReadScope, setReadScope, type ReadScope } from '@/lib/writersStudio/readScopeClient';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 
 export default function ReadScopeControl({ manuscriptId }: { manuscriptId: string }) {
   const [scope, setScope] = useState<ReadScope | undefined>(undefined);
@@ -16,6 +17,8 @@ export default function ReadScopeControl({ manuscriptId }: { manuscriptId: strin
     return () => { live = false; };
   }, [manuscriptId]);
   if (scope === undefined) return null;
+  /* The server reads only when the member's Sanctuary setting is known. Say so, rather than promise a read that will not happen. */
+  const postureKnown = typeof window !== 'undefined' && readCurrentSanctuaryPosture().resolved;
 
   const change = async (c: Parameters<typeof setReadScope>[1]) => {
     setBusy(true);
@@ -43,6 +46,11 @@ export default function ReadScopeControl({ manuscriptId }: { manuscriptId: strin
           <span>{scope.level === 'work'
             ? 'MAIA may read your saved work when your question needs it.'
             : 'MAIA may read the saved passage you are in.'} You can stop this any time.</span>
+          {!postureKnown ? (
+            <span data-read-scope-posture-note="true">
+              Your Sanctuary setting could not be read on this device, so for now MAIA is reading only the passage you are in. Open MAIA here once, then try again.
+            </span>
+          ) : null}
           <button type="button" disabled={busy} style={btn} onClick={() => change({ action: 'revoke' })}>Stop</button>
         </>
       )}

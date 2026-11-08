@@ -517,7 +517,7 @@ function ScopedWorkConversation({
         {decision?.kind === 'choose' && (
           <div data-discovery="choose" style={{ display: 'flex', flexDirection: 'column', gap: SPACE.snug }}>
             <StudioText role="maiaReading" style={{ color: INK.muted }}>
-              {`You have ${decision.threads.length} conversations about this Work.`}
+              {`You have ${decision.threads.length} conversations about this Work. Choose one to continue, or start a new one. Send waits until you do.`}
             </StudioText>
             {decision.threads.map((t) => (
               <button
