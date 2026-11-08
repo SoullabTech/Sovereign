@@ -183,3 +183,9 @@ export interface BranchInfo {
   zodiacAnimal: string;
   zodiacEmoji: string;
 }
+
+/**
+ * A Da Yun profile without the person's birth details (date, time, gender): all
+ * the timeline needs, and safe to send to a client that must never hold them.
+ */
+export type DaYunProfileView = Omit<DaYunProfile, 'birthDate' | 'birthTime' | 'gender'>;

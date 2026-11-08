@@ -8,6 +8,8 @@
 import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { calculateFourPillars } from '@/lib/astrology/proFourPillars';
+import { buildChineseReading } from '@/lib/astrology/chineseReading';
+import { daYunByDirection } from '@/lib/astrology/proDaYun';
 import { apiFetch } from '@/lib/http/apiBase';
 import ProSystemsPanel, { type SystemsWork } from '../ProSystemsPanel';
 
@@ -23,7 +25,11 @@ function systems(dayMasterDate: string) {
   const fourPillars = calculateFourPillars(new Date(dayMasterDate + 'T12:00:00Z'), dayMasterDate, '12:00');
   return {
     vedic: { grahas: [] }, mayan: { pathOfLife: [] },
-    chinese: { fourPillars, characteristics: [], compatibility: [], incompatible: [] },
+    chinese: {
+      fourPillars, characteristics: [], compatibility: [], incompatible: [],
+      reading: buildChineseReading(1990),
+      daYun: daYunByDirection(new Date(dayMasterDate + 'T12:00:00Z'), 0, '12:00'),
+    },
   };
 }
 
