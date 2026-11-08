@@ -21,10 +21,11 @@ import { chartBodies } from '@/lib/astrology/proChartGeometry';
 import { transitBodies, transitToNatalAspects } from '@/lib/astrology/proTransits';
 import { chartAsOuterRing, compositeChart, crossAspects } from '@/lib/astrology/proComparison';
 import { calculateFourPillars } from '@/lib/astrology/proFourPillars';
+import { traditionalMaya } from '@/lib/astrology/proTraditionalMaya';
 import { loadSubjectBirth } from '@/lib/astrology/proSubjectBirth';
 import { ASK_MAIA_MAX_QUESTION, plainAnswer } from '@/lib/astrology/proAskMaia';
 import {
-  PRO_ASK_SAFETY_REPLY, chartFacts, contactFacts, fourPillarsFacts, isProAskSection, proAskSystemPrompt, thirdPersonConcern,
+  LIFE_CONTEXT_MAX, PRO_ASK_SAFETY_REPLY, PRO_DEEP_CONTEXT_NOTE, chartFacts, mayaFacts, proDeepSystemPrompt, contactFacts, fourPillarsFacts, isProAskSection, proAskSystemPrompt, thirdPersonConcern,
   transitFacts,
 } from '@/lib/astrology/proAskMaiaSections';
 import { PRO_RESPONSE_HEADERS, proError, proOwnerStillCurrent, resolveProOwner } from '@/lib/astrology/proRouteAccess';
@@ -44,7 +45,8 @@ function allowed(memberId: string): boolean {
   return true;
 }
 
-const KEYS = ['section', 'subject', 'other', 'houseSystem', 'at', 'dayStart', 'direction', 'question'];
+const KEYS = ['section', 'subject', 'other', 'houseSystem', 'at', 'dayStart', 'direction', 'question', 'include', 'lifeContext'];
+const DEEP_PARTS = ['four-pillars', 'maya'];
 
 export async function POST(request: NextRequest) {
   const owner = await resolveProOwner(request, true);
@@ -69,6 +71,11 @@ export async function POST(request: NextRequest) {
   if (Number.isNaN(at.getTime())) return proError(400, 'invalid_moment');
   const dayStart = input.dayStart === 'zi-hour' ? 'zi-hour' : 'midnight';
   const direction = input.direction === 'forward' || input.direction === 'backward' ? input.direction : null;
+  const include = Array.isArray(input.include) ? input.include : [];
+  if (include.some((part) => !DEEP_PARTS.includes(part as string))) return proError(400, 'include_unsupported');
+  const lifeContext = typeof input.lifeContext === 'string' ? input.lifeContext.trim() : '';
+  if (input.lifeContext !== undefined && section !== 'deep') return proError(400, 'unexpected_field');
+  if (lifeContext.length > LIFE_CONTEXT_MAX) return proError(400, 'life_context_too_long');
   const twoCharts = section === 'biwheel' || section === 'composite';
   if (twoCharts && input.other === undefined) return proError(400, 'second_chart_required');
 
@@ -98,10 +105,26 @@ export async function POST(request: NextRequest) {
     if (second && !second.ok) return proError(second.status, second.error);
 
     let facts: string;
-    if (section === 'natal' || section === 'transits') {
+    if (section === 'deep') {
+      const parts = [chartFacts(first.chart, 'Natal chart')];
+      if (input.at !== undefined) {
+        const sky = transitBodies(await calculateTransits(at));
+        parts.push(transitFacts(transitToNatalAspects(sky, chartBodies(first.chart), 2), at.toISOString().slice(0, 10)));
+      }
+      if (include.includes('four-pillars')) {
+        const fp = calculateFourPillars(new Date(first.utc), first.birth.date, first.birth.time.slice(0, 5), dayStart);
+        parts.push(`Chinese Four Pillars:\n${fourPillarsFacts(fp, direction)}`);
+      }
+      if (include.includes('maya')) {
+        parts.push(mayaFacts(traditionalMaya(first.birth.date), 'Birth'));
+        if (input.at !== undefined) parts.push(mayaFacts(traditionalMaya(at.toISOString().slice(0, 10)), 'Chosen date'));
+      }
+      facts = parts.join('\n');
+    } else if (section === 'natal' || section === 'transits') {
       const sky = transitBodies(await calculateTransits(at));
       const transits = transitToNatalAspects(sky, chartBodies(first.chart), 2);
-      facts = section === 'natal'
+      // Natal includes transits only when the astrologer chose a date; Transits always does.
+      facts = section === 'natal' && input.at === undefined
         ? chartFacts(first.chart, 'Natal chart')
         : `${chartFacts(first.chart, 'Natal chart')}\n${transitFacts(transits, at.toISOString().slice(0, 10))}`;
     } else if (section === 'biwheel' && second?.ok) {
@@ -116,11 +139,12 @@ export async function POST(request: NextRequest) {
       facts = fourPillarsFacts(fp, direction);
     }
 
+    const deep = section === 'deep';
     const llm = await getLLMProvider().generateSimple({
-      tier: 'core',
-      systemPrompt: proAskSystemPrompt(section, facts),
+      tier: deep ? 'deep' : 'core',
+      systemPrompt: deep ? proDeepSystemPrompt(facts, lifeContext || null) : proAskSystemPrompt(section, facts),
       messages: [{ role: 'user', content: question }],
-      maxTokens: 600,
+      maxTokens: deep ? 2400 : 600,
       temperature: 0.6,
     });
     if (!(await proOwnerStillCurrent(request, owner.memberId))) return proError(401, 'session_changed');
@@ -128,7 +152,11 @@ export async function POST(request: NextRequest) {
     console.log('[astrology/pro/ask] answered');
     const answer = plainAnswer(llm.text || '');
     if (!answer) return proError(503, 'no_answer');
-    return NextResponse.json({ answer }, { headers: PRO_RESPONSE_HEADERS });
+    // A life story that mentions risk does not stop the reading; it opens with where to turn.
+    const contextConcern = deep && lifeContext && (thirdPersonConcern(lifeContext) ||
+      ['crisis', 'red'].includes(String(analyzeSafetyCues(lifeContext).severity)));
+    return NextResponse.json({ answer: contextConcern ? `${PRO_DEEP_CONTEXT_NOTE}\n\n${answer}` : answer },
+      { headers: PRO_RESPONSE_HEADERS });
   } catch {
     // Exception text may contain birth inputs; never log or return it.
     return proError(503, 'ask_unavailable');
