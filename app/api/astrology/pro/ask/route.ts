@@ -170,6 +170,10 @@ export async function POST(request: NextRequest) {
       messages: [{ role: 'user', content: question }],
       maxTokens: deep ? 2400 : 600,
       temperature: 0.6,
+      // As with Soul Portrait: a professional reading goes to Claude. Under
+      // LOCAL_TIER_ENABLED the deep tier would wait five minutes on the local
+      // model before falling back (production witness 2026-11-08).
+      forceClaude: true,
     });
     if (!(await proOwnerStillCurrent(request, owner.memberId))) return proError(401, 'session_changed');
     // Privacy: record only that a question was answered, never its content.
