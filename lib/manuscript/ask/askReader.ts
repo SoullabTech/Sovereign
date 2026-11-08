@@ -91,7 +91,7 @@ STAY WHERE THEY ARE
 Stay at the scale they are working at. If they are thinking about the whole Work, do not move into chapters, sentences or edits until they choose to. Do not suggest edits unless they ask for them. When they bring something you noticed, keep what the evidence establishes distinct from what remains interpretive, and keep what is written distinct from what is only planned.
 
 WHAT YOU MAY DRAW ON
-Only what is set out below: what they have told you about the Work, its section headings, any corrections they have made to your understanding, and — only if they are at a passage — the text of that one passage. The sections below say exactly which of these you have. Do not claim to have read anything they do not list, do not reconstruct prose you were not given, and do not infer content from a heading. If the question needs text you do not have, say so and say what you would need.
+Only what is set out below: what they have told you about the Work, its section headings, any corrections they have made to your understanding, and — only if they are at a passage — the text of that one passage, plus the saved text of any further sections the writer has given you standing permission to read (the sections below list exactly which, this turn). The sections below say exactly which of these you have. Do not claim to have read anything they do not list, do not reconstruct prose you were not given, and do not infer content from a heading. If the question needs text you do not have, say so and say what you would need.
 
 SPEAK ABOUT THE WRITING, NEVER THE WRITER
 Describe what the text does and how it may land for a reader. Do not grade it against an outside standard: the manuscript itself is the reference. Do not characterise the author.
@@ -178,6 +178,43 @@ export interface WorkContext {
   anchor: AskAnchor;
   facts: WorkContextFacts;
   staleness: StalenessState;
+  /**
+   * WS-WORK-CONTINUITY · saved text supplied under the member's standing reading
+   * scope. Absent when there is no active grant (or in Sanctuary). ⛔ Never part of
+   * `facts`: it is authority-bearing and arrives only through the receipted path.
+   */
+  standingRead?: StandingRead;
+}
+
+export interface StandingRead {
+  readonly level: 'chapter' | 'work';
+  readonly sections: readonly {
+    id: string; label: string | null; body: string;
+    /** The saved text differs from what you were given for it earlier in this conversation. */
+    movedSinceEarlier: boolean;
+  }[];
+  /** In scope for the question but not supplied this turn (budget). */
+  readonly notSupplied: readonly { id: string; label: string | null }[];
+}
+
+function standingReadSays(read: StandingRead): string {
+  const lines = [
+    'THE WRITER HAS GIVEN YOU STANDING PERMISSION TO READ THIS WORK'
+    + (read.level === 'work' ? '.' : ', ONE PASSAGE AT A TIME.'),
+    'The text below is the SAVED text of these sections, supplied this turn. It is what you can quote from now.',
+    'It is a conversational read, not an Editorial Reading: do not claim to have read the whole Work unless every section is listed here, and do not draw whole-work conclusions from a part.',
+  ];
+  for (const s of read.sections) {
+    lines.push('', `--- ${s.label ?? '(no heading)'} [${s.id}]${s.movedSinceEarlier
+      ? ' — THIS TEXT HAS CHANGED since you were last given it in this conversation; say so if you referred to it earlier'
+      : ''} ---`, s.body);
+  }
+  if (read.notSupplied.length > 0) {
+    lines.push('', 'In scope but NOT supplied this turn (too much text at once): '
+      + read.notSupplied.map((n) => n.label ?? '(no heading)').join('; ')
+      + '. Say so rather than guessing, and offer to read them next.');
+  }
+  return lines.join('\n');
 }
 
 export type AskContext = ProposalContext | WorkContext;
@@ -237,7 +274,9 @@ function workSays(ctx: WorkContext): string {
       'Do not reassert the superseded interpretation as though the correction never happened.',
     ].join('\n'));
   }
-  if (!locus) {
+  if (ctx.standingRead && ctx.standingRead.sections.length > 0) {
+    parts.push(standingReadSays(ctx.standingRead));
+  } else if (!locus) {
     parts.push('You have not been given the text of ANY section.');
   } else {
     parts.push(

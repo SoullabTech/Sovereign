@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import ReadScopeControl from './ReadScopeControl';
 import { parseStudioActions } from '@/lib/writersStudio/studioActions';
 import Link from 'next/link';
 import { GROUND, INK, MAIA_ACCENT, RADIUS, RULE, SPACE } from '../studioTheme';
@@ -417,6 +418,7 @@ function ScopedWorkConversation({
       data-maia-focus={focusMode ? 'true' : 'false'}
       style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}
     >
+      {manuscriptId ? <ReadScopeControl manuscriptId={manuscriptId} /> : null}
       {/* ── The Work this exchange is in, where the member can see it. ── */}
       <div
         data-studio-conversation="situated"

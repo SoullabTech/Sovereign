@@ -98,6 +98,7 @@ describe('the developmental Ask route writes conversation and authority — neve
     ask_authorization_consumptions: 'the first durable fact that a human acted, and its completion',
     runtime_consent_state: 'the consent state the crossing was evaluated against',
     context_disclosure_receipts: 'the accountability record of a crossing',
+    ask_turn_reads: 'which saved sections were supplied on which conversation turn (WS-WORK-CONTINUITY; conversation metadata, not the Work)',
   };
 
   /* ⛔ THE WORK. Named explicitly rather than left to the allowlist's silence, so

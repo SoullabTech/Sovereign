@@ -52,7 +52,10 @@ import {
 } from '@/lib/manuscript/ask/frozenReading';
 import { computeStaleness, frozenSideFor } from '@/lib/manuscript/ask/staleness';
 import { canonicalFingerprint } from '@/lib/manuscript/structure/canonicalFingerprint';
-import { askMaia } from '@/lib/manuscript/ask/askReader';
+import { askMaia, type StandingRead } from '@/lib/manuscript/ask/askReader';
+import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests, recordTurnReads } from '@/lib/disclosure/workReadScopeRead';
+import { selectSections, movedSince } from '@/lib/manuscript/ask/workReadScope';
+import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
 import {
   openThread, appendTurn, appendTurnWithClient, loadThread, threadsOnAnchor,
 } from '@/lib/manuscript/ask/threadStore';
@@ -401,7 +404,7 @@ export async function POST(
      ══════════════════════════════════════════════════════════════════════════ */
   if (check.anchor.on === 'work') {
     return workTurn({ manuscriptId: id, memberId, anchor: check.anchor, existing,
-                      question, sectionId: bodySectionId });
+                      question, sectionId: bodySectionId, posture: TurnPosture.resolve(body) });
   }
 
   if (!reading) {
@@ -561,8 +564,9 @@ async function workTurn(input: {
   existing: Awaited<ReturnType<typeof loadThread>>;
   question: string;
   sectionId: string | null;
+  posture: TurnPosture;
 }): Promise<NextResponse> {
-  const { manuscriptId, memberId, anchor, existing, question, sectionId } = input;
+  const { manuscriptId, memberId, anchor, existing, question, sectionId, posture } = input;
 
   /* ⛔ NO FABRICATED BASELINE, the same law the structure lane holds: a thread
      that cannot establish its BEFORE does not open. */
@@ -618,11 +622,66 @@ async function workTurn(input: {
     });
   }
 
+  /* ⭐⭐ WS-WORK-CONTINUITY · B — THE STANDING READING SCOPE.
+     The member declared, once and revocably, that MAIA may read this Work. It is
+     re-read from the events AT EVERY ASK, so revocation bites mid-thread and after
+     recovery. ⛔ Suspended in Sanctuary. ⛔ No grant ⇒ nothing below runs and the
+     conversation is exactly what it was. ⛔ Accountability stays per crossing: one
+     receipt per section, minted BEFORE any saved text is loaded; any refusal means
+     nothing beyond the current passage crosses (the conversation itself continues). */
+  let standingRead: StandingRead | undefined;
+  let supplied: Awaited<ReturnType<typeof loadSuppliedSections>> = [];
+  const mintedDisclosureIds: string[] = [];
+  const grant = posture.sanctuary ? null : await loadActiveGrant(memberId, built.facts.work.id);
+  if (grant && built.facts.manuscript) {
+    const sizes = await loadSectionSizes(manuscriptId, memberId);
+    const sel = selectSections({
+      level: grant.level, question, locusId: sectionId,
+      sections: built.facts.sections, sizes,
+    });
+    const requestId = randomUUID();
+    let allMinted = sel.ids.length > 0;
+    for (const sid of sel.ids) {
+      const b = await establishDisclosureBoundary({
+        requestId, posture, memberId, sessionId: liveThreadId,
+        disclosure: {
+          disclosureId: randomUUID(),
+          boundary: 'writers_studio.work_conversation->maia_cognition',
+          sourceClass: 'work',
+          participationBasis: 'standing_authorization',
+          sourceRef: manuscriptId,
+          scopeKind: 'section',
+          sectionRef: sid,
+          gesture: 'standing_read_scope',
+          scopeEventId: grant.id,
+        },
+      });
+      if (!mayCrossBoundary(b)) { allMinted = false; break; }
+      mintedDisclosureIds.push(b.disclosureId);
+    }
+    if (allMinted) {
+      supplied = await loadSuppliedSections(manuscriptId, memberId, sel.ids);
+      const earlier = existing ? await loadEarlierDigests(liveThreadId, memberId) : new Map<string, string>();
+      const moved = new Set(movedSince(earlier, new Map(supplied.map((x) => [x.id, x.digest]))));
+      const labelOf = (id: string) => built.facts.sections.find((x) => x.id === id)?.heading ?? null;
+      standingRead = {
+        level: grant.level,
+        sections: supplied.map((x) => ({ id: x.id, label: x.label, body: x.body, movedSinceEarlier: moved.has(x.id) })),
+        notSupplied: sel.overBudget.map((id) => ({ id, label: labelOf(id) })),
+      };
+    }
+  }
+
   const outcome = await askMaia(
-    { kind: 'work', anchor, facts: built.facts, staleness },
+    { kind: 'work', anchor, facts: built.facts, staleness, standingRead },
     historyFor(priorTurns.map((t) => ({ speaker: t.speaker, body: t.body })), question),
     question,
   );
+  if (outcome.ok) {
+    /* The crossing happened when the reader was called; confirm it. A failed call
+       leaves the receipts `attempted`, which is the truthful state. */
+    for (const d of mintedDisclosureIds) await confirmDisclosureCrossed(d);
+  }
   if (!outcome.ok) {
     /* The question is already recorded. A failed answer is reported as a
        failure, never rendered as one of hers. */
@@ -630,13 +689,16 @@ async function workTurn(input: {
       { status: 502 });
   }
 
-  await appendTurn({
+  const maiaIndex = await appendTurn({
     threadId: liveThreadId, memberId, speaker: 'maia', body: outcome.answer,
     staleness, answerProvenance: outcome.provenance,
   });
+  if (supplied.length > 0) await recordTurnReads(liveThreadId, memberId, maiaIndex, supplied);
 
   const thread = await loadThread(liveThreadId, memberId);
-  return NextResponse.json({ threadId: liveThreadId, thread, staleness });
+  /* ⭐ L8 · what she actually read stays visible: ids + headings only, never text. */
+  const read = supplied.map((x) => ({ sectionId: x.id, label: x.label }));
+  return NextResponse.json({ threadId: liveThreadId, thread, staleness, read });
 }
 
 /**
