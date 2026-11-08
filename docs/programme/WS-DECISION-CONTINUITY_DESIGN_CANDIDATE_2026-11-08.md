@@ -41,3 +41,13 @@ re-proposes a refused suggestion · decision inferred from unchanged text · dec
 
 ## What this document does not establish
 No runtime behaviour; not whether the editorial turn honours "preserve"; not whether any room shows settled decisions to the writer; no migration, store or route is proposed here.
+
+
+## UPDATE — founder ruling (2026-11-08): **"Yes, as recommended."**
+A settled decision binds MAIA to KNOW AND SAY that the writer settled it and not re-offer it unprompted; never to refuse to discuss it; never to treat it as a fact about
+the text. One member-visible, revocable record of the writer's own acts, shared by the Work conversation, the passage turn and Develop. (Recorded as given; no store, route or
+migration is authorized by this ruling alone.)
+
+Suite authored BEFORE any implementation: `tests/constitutional/ws-decision-continuity/` — 13 laws (L1a…L7b), 14 defeat candidates (DC-1…DC-14), reference double,
+matrix 16/16: the reference satisfies every law, each candidate dies on its named law with only classified collateral, every law is a candidate's target.
+The reference is a TEST DOUBLE, not an implementation and never a seed. Not frozen (a founder act).
