@@ -29,8 +29,8 @@ jest.mock('@/lib/comms/SafetyService', () => ({
 
 const generateSimple = jest.fn();
 const births: Record<string, unknown> = {
-  first: { date: '1970-07-11', time: '05:13', location: { lat: 42.52, lng: -70.9, timezone: 'America/New_York' } },
-  second: { date: '2003-09-03', time: '08:15', location: { lat: 41.31, lng: -72.92, timezone: 'America/New_York' } },
+  first: { date: '1985-03-20', time: '09:40', location: { lat: 40.71, lng: -74.01, timezone: 'America/New_York' } },
+  second: { date: '2010-11-02', time: '16:05', location: { lat: 34.05, lng: -118.24, timezone: 'America/Los_Angeles' } },
 };
 
 function ask(body: Record<string, unknown>) {
@@ -58,7 +58,7 @@ describe('Ask MAIA inside Pro', () => {
     expect(call.messages).toEqual([{ role: 'user', content: 'What is this bond about?' }]);
     expect(call.systemPrompt).toContain('Composite chart (midpoints');
     expect(call.systemPrompt).toContain('Sun:');
-    for (const secret of ['1970', '2003', '05:13', '08:15', '42.52', '-72.92', 'America/New_York']) {
+    for (const secret of ['1985', '2010', '09:40', '16:05', '40.71', '-118.24', 'America/Los_Angeles']) {
       expect(call.systemPrompt).not.toContain(secret);
     }
     expect(log.mock.calls.flat().join(' ')).not.toContain('bond');
@@ -71,6 +71,44 @@ describe('Ask MAIA inside Pro', () => {
     expect(prompt).toContain('First chart:');
     expect(prompt).toContain('Second chart:');
     expect(prompt).toContain('Contacts between the charts');
+  });
+
+  it('adds transits to the natal reading only for a chosen date', async () => {
+    await ask({ section: 'natal', subject: 'first', question: 'What stands out?' });
+    await ask({ section: 'natal', subject: 'first', at: '2026-06-21T12:00:00', question: 'What was happening then?' });
+    const [plain, dated] = generateSimple.mock.calls.map((c) => c[0].systemPrompt as string);
+    expect(plain).not.toContain('Transits on');
+    expect(dated).toContain('Transits on 2026-06-21');
+  });
+
+  it('writes a deep reading from the natal chart, Four Pillars, Maya and a chosen date, with life notes as context only', async () => {
+    await ask({
+      section: 'deep', subject: 'first', at: '2026-06-21T12:00:00', include: ['four-pillars', 'maya'], direction: 'forward',
+      lifeContext: 'A teacher who loved the sea.', question: 'Write a full reading.',
+    });
+    const call = generateSimple.mock.calls[0][0];
+    expect(call.tier).toBe('deep');
+    expect(call.maxTokens).toBeGreaterThan(600);
+    const prompt = call.systemPrompt as string;
+    for (const part of ['Natal chart', 'Transits on 2026-06-21', 'Chinese Four Pillars', 'Birth, traditional Maya count', 'Chosen date, traditional Maya count',
+      'WHAT THE ASTROLOGER KNOWS OF THEIR LIFE', 'A teacher who loved the sea.', 'Never say or imply that the chart caused']) {
+      expect(prompt).toContain(part);
+    }
+    for (const secret of ['1985', '09:40', '40.71']) expect(prompt).not.toContain(secret);
+  });
+
+  it('does not refuse a deep reading because the life notes speak of a death, but opens with where to turn', async () => {
+    const res = await ask({ section: 'deep', subject: 'first', lifeContext: 'He died of an overdose last year.', question: 'Write a full reading.' });
+    const { answer } = await res.json();
+    expect(generateSimple).toHaveBeenCalledTimes(1);
+    expect(answer.startsWith('If anyone in this story is at risk right now')).toBe(true);
+    expect(answer).toContain('The composite Sun…');
+  });
+
+  it('keeps life notes to the deep reading, and refuses unknown parts', async () => {
+    expect((await ask({ section: 'natal', subject: 'first', lifeContext: 'x', question: 'x' })).status).toBe(400);
+    expect((await ask({ section: 'deep', subject: 'first', include: ['tarot'], question: 'x' })).status).toBe(400);
+    expect((await ask({ section: 'deep', subject: 'first', lifeContext: 'x'.repeat(3001), question: 'x' })).status).toBe(400);
   });
 
   it('gives the Four Pillars and the chosen luck direction', async () => {
