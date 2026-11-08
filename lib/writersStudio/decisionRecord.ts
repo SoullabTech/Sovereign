@@ -6,6 +6,7 @@
  * ⛔ Every query is member-scoped in the SQL. Sanctuary: callers do not read or write (see `decisionContextFor`).
  */
 import { query } from '@/lib/db/postgres';
+import { loadDismissedObservations } from '@/lib/manuscript/standing/dismissedForConversation';
 
 export type DecisionRoom = 'work_conversation' | 'passage_desk' | 'develop';
 export type DecisionSubjectKind = 'note' | 'observation' | 'wording' | 'proposal';
@@ -51,18 +52,23 @@ export async function loadDecisionEvents(memberId: string, livingWorkId: string)
 }
 
 /** The ONE shared read. The text carries the writer's own words and how MAIA may use them; nothing about the manuscript. */
-export function decisionContextText(decisions: readonly ActiveDecision[]): string {
-  if (decisions.length === 0) return '';
+export function decisionContextText(decisions: readonly ActiveDecision[], dismissed: readonly string[] = []): string {
+  if (decisions.length === 0 && dismissed.length === 0) return '';
   return [
     'WHAT THE WRITER HAS SETTLED (their own words; they can withdraw any of these at any time):',
     ...decisions.map((d) => `  - ${d.saidIn}`),
+    ...(dismissed.length > 0
+      ? ['The writer also set aside these earlier observations of yours in Develop (your words, not theirs; setting aside does not mean they are false):',
+         ...dismissed.map((x) => `  - "${x}"`)]
+      : []),
     'Know that they settled these, and say so if it matters. Do not offer these again unprompted.',
     'If they ask to revisit one, discuss it freely. They are the writer’s decisions, not facts about the manuscript, and they are not a standard to judge the text against.',
   ].join('\n');
 }
 
-export async function decisionContextForWork(memberId: string, livingWorkId: string): Promise<string> {
-  return decisionContextText(activeDecisions(await loadDecisionEvents(memberId, livingWorkId)));
+export async function decisionContextForWork(memberId: string, livingWorkId: string, manuscriptId?: string | null): Promise<string> {
+  const dismissed = manuscriptId ? await loadDismissedObservations(memberId, manuscriptId) : [];
+  return decisionContextText(activeDecisions(await loadDecisionEvents(memberId, livingWorkId)), dismissed);
 }
 
 export async function decisionContextForManuscript(memberId: string, manuscriptId: string): Promise<string> {
@@ -71,7 +77,7 @@ export async function decisionContextForManuscript(memberId: string, manuscriptI
        JOIN member_manuscripts m ON m.id = e.expression_id
       WHERE e.expression_type = 'manuscript' AND e.expression_id = $1 AND m.member_id = $2 LIMIT 1`, [manuscriptId, memberId]);
   const workId = r.rows[0]?.living_work_id;
-  return workId ? decisionContextForWork(memberId, workId) : '';
+  return workId ? decisionContextForWork(memberId, workId, manuscriptId) : '';
 }
 
 export async function listActiveDecisions(memberId: string, livingWorkId: string): Promise<ActiveDecision[]> {

@@ -18,7 +18,7 @@ jest.mock('@/lib/ai/structured/router', () => ({
 const d = ON ? describe : describe.skip;
 
 d('decision record · physical witness + Ask route', () => {
-  let A = '', B = '', workA = '', workA2 = '', ms = '';
+  let A = '', B = '', workA = '', workA2 = '', ms = '', draftId = '';
   const rejects = async (sql: string, p: unknown[] = []) => { try { await query(sql, p); return false; } catch { return true; } };
   const mk = async (n: string) => (await query<{ id: string }>(`INSERT INTO members(passkey,username,password_hash,name) VALUES ($1,$1,'x',$1) RETURNING id`,
     [`${n}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`])).rows[0].id;
@@ -35,7 +35,7 @@ d('decision record · physical witness + Ask route', () => {
     workA2 = (await query<{ id: string }>(`INSERT INTO living_works(member_id,title) VALUES ($1,'Dec A2') RETURNING id`, [A])).rows[0].id;
     ms = (await query<{ id: string }>(`INSERT INTO member_manuscripts(member_id,title) VALUES ($1,'Dec A') RETURNING id`, [A])).rows[0].id;
     await query(`INSERT INTO living_work_expressions(living_work_id,expression_type,expression_id,declared_by) VALUES ($1,'manuscript',$2,$3)`, [workA, ms, A]);
-    const dr = (await query<{ id: string }>(`INSERT INTO manuscript_working_drafts(manuscript_id,member_id,content,base_source_hash) VALUES ($1,$2,'','h') RETURNING id`, [ms, A])).rows[0].id;
+    const dr = draftId = (await query<{ id: string }>(`INSERT INTO manuscript_working_drafts(manuscript_id,member_id,content,base_source_hash) VALUES ($1,$2,'','h') RETURNING id`, [ms, A])).rows[0].id;
     const src = (await query<{ id: string }>(`INSERT INTO manuscript_sections(manuscript_id,position,heading,body) VALUES ($1,1,'One','Body one.') RETURNING id`, [ms])).rows[0].id;
     await query(`INSERT INTO manuscript_draft_sections(draft_id,position,text,source_section_id) VALUES ($1,1,$2,$3)`, [dr, 'One\n\nBody one.', src]);
     await query(`UPDATE manuscript_working_drafts SET content=$2, section_addressable_at=NOW() WHERE id=$1`, [dr, 'One\n\nBody one.']);
@@ -80,6 +80,29 @@ d('decision record · physical witness + Ask route', () => {
     expect(systems.at(-1)).not.toContain('storm scene');
     await ask({ anchor: { on: 'work' }, question: 'Unstated?' });
     expect(systems.at(-1)).not.toContain('storm scene');
+  });
+
+  it('D5 narrow exception: a DISMISSED observation reaches MAIA as her own earlier words; keep and unresolved do not; Sanctuary reads nothing', async () => {
+    await query(`INSERT INTO working_draft_revisions(draft_id,revision_number,content,saved_by) VALUES ($1,1,'x',$2) ON CONFLICT DO NOTHING`, [draftId, A]);
+    const reading = (await query<{ id: string }>(
+      `INSERT INTO developmental_readings(manuscript_id,member_id,draft_id,revision_number,commissioned_lens,scope,read_state,coverage,input_fingerprint,outcome,observations,reader_provenance,classifier_provenance)
+       VALUES ($1,$2,$3,1,'structure','{}','{}','{}','fp','reading',$4::jsonb,'{}','{}') RETURNING id`,
+      [ms, A, draftId, JSON.stringify([
+        { key: 'o1', observation: 'The storm scene carries too much of the middle.' },
+        { key: 'o2', observation: 'The ending returns to the harbour image.' },
+        { key: 'o3', observation: 'The second chapter drifts from its argument.' }])])).rows[0].id;
+    const ev = (k: string, i: number, st: string) => query(
+      `INSERT INTO developmental_observation_standing_events(member_id,reading_id,observation_key,event_index,standing) VALUES ($1,$2,$3,$4,$5)`, [A, reading, k, i, st]);
+    await ev('o1', 0, 'dismiss'); await ev('o2', 0, 'keep'); await ev('o3', 0, 'dismiss'); await ev('o3', 1, 'unresolved');
+    systems.length = 0;
+    await ask({ anchor: { on: 'work' }, question: 'Where next?', sanctuary: false });
+    const sys = systems.at(-1) ?? '';
+    expect(sys).toContain('The storm scene carries too much of the middle.');
+    expect(sys).toContain('your words, not theirs');
+    expect(sys).not.toContain('The ending returns to the harbour image.');
+    expect(sys).not.toContain('The second chapter drifts');
+    await ask({ anchor: { on: 'work' }, question: 'Again?', sanctuary: true });
+    expect(systems.at(-1)).not.toContain('The storm scene carries');
   });
 });
 function randomId() { return '00000000-0000-4000-8000-000000000000'; }

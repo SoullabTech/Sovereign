@@ -78,3 +78,14 @@ The reference is a TEST DOUBLE, not an implementation and never a seed. Not froz
    Recording it would make the system compose a sentence for the writer ("I kept my own wording…"), which is not their words. **Question for a ruling:** does a
    "Keep mine" click settle anything? Recommended: no automatic decision; offer a one-line, writer-confirmed "Note that you have decided this?" after the click, recorded only on their yes.
 Until ruled, the shared record is fed only by what the writer writes (the Work conversation box and the API).
+
+
+## RULED + BUILT — D5 narrow exception (founder: "Yes, narrow exception", 2026-11-08)
+A writer's DISMISSAL of an observation now reaches the Work conversation and the passage desk, as MAIA's own earlier words that the writer set aside
+("setting aside does not mean false"). Narrowness is structural and enforced:
+- one module `lib/manuscript/standing/dismissedForConversation.ts`: read-only, selects only `dismiss` (not `keep`, not `unresolved`), imports no other standing module;
+- one importer: `lib/writersStudio/decisionRecord.ts`;
+- `standingOutsideCognition.test.ts` was AMENDED BY THIS ACT (not weakened): the exception is named, six new checks and four falsifiers hold it to its narrowness
+  (a doctored exception that selects all standings, writes, imports the store, or gains a second importer is each detected); every other D5/D6 check is unchanged; 46/46 pass.
+- Evidence: disposable database + the real Ask route: a dismissed observation reaches MAIA; `keep` and a later-`unresolved` do not; Sanctuary reads nothing (5/5; earlier walks still 9/9).
+STILL HELD: passage desk "Keep mine" (local-only today; ruling owed, see above). Standing writes are unchanged and remain with the member route.

@@ -25,6 +25,15 @@ import { join, dirname, resolve } from 'path';
 const ROOT = join(__dirname, '..', '..', '..', '..');
 const STANDING_DIR = join('lib', 'manuscript', 'standing');
 
+/**
+ * ⭐ FOUNDER-RULED NARROW EXCEPTION TO D5 (2026-11-08, "Yes, narrow exception").
+ * A writer's DISMISSAL of an observation may reach MAIA's conversations through exactly ONE module, imported by exactly ONE
+ * module. Every other standing module, and every other standing VALUE (keep, unresolved), remains unreachable. The exception
+ * is held to its narrowness by the checks in the 'D5 narrow exception' block below; this constant is not a precedent.
+ */
+const NARROW_EXCEPTION = join(STANDING_DIR, 'dismissedForConversation.ts');
+const NARROW_EXCEPTION_ONLY_IMPORTER = 'lib/writersStudio/decisionRecord.ts';
+
 /** The cognition roots named in design §9. Standing must be unreachable from every one. */
 const COGNITION_ROOTS = [
   'lib/manuscript/developmentalReader/read.ts',
@@ -100,7 +109,7 @@ function resolveSpec(fromRel: string, spec: string, read: Reader): string | null
   return null;
 }
 
-const reachesStanding = (rel: string): boolean => rel.startsWith(STANDING_DIR);
+const reachesStanding = (rel: string): boolean => rel.startsWith(STANDING_DIR) && rel !== NARROW_EXCEPTION;
 const isStore = (rel: string): boolean => rel === join(STANDING_DIR, 'store.ts');
 
 /** Every path from `root` that arrives at the standing modules, transitively. */
@@ -188,6 +197,41 @@ describe('D5 · standing never reaches MAIA cognition', () => {
     const doctored = `import { currentStanding } from '@/lib/manuscript/standing/store';\n${
       readFileSync(join(ROOT, via), 'utf8')}`;
     expect(pathsToStanding(root, overlayReader({ [via]: doctored })).length).toBeGreaterThan(0);
+  });
+});
+
+/** The exception is narrow iff: read-only, selects only `dismiss`, imports no other standing module. Pure, so it can be falsified. */
+function exceptionIsNarrow(code: string): { ok: boolean; why: string[] } {
+  const why: string[] = [];
+  if (/\b(INSERT\s+INTO|UPDATE|DELETE\s+FROM)\b/i.test(code)) why.push('writes');
+  if (!/standing\s*=\s*'dismiss'/.test(code)) why.push('does not select dismiss');
+  if (/'(keep|unresolved)'/.test(code)) why.push('names another standing value');
+  if (importsOf(code).some((sp) => sp.includes('standing/') || sp.startsWith('./'))) why.push('imports another standing module');
+  return { ok: why.length === 0, why };
+}
+
+describe('D5 narrow exception · only a dismissal, read-only, one door', () => {
+  it('the exception module is narrow', () => {
+    expect(exceptionIsNarrow(realReader(NARROW_EXCEPTION) ?? '')).toEqual({ ok: true, why: [] });
+  });
+  it('exactly one module imports it', () => {
+    const importers = directImporters(realReader, (t) => t === NARROW_EXCEPTION).filter((f) => !f.includes('__tests__'));
+    expect(importers).toEqual([NARROW_EXCEPTION_ONLY_IMPORTER]);
+  });
+  it('FALSIFIER · a doctored exception that selects every standing is NOT narrow', () => {
+    const doctored = (realReader(NARROW_EXCEPTION) ?? '').replace("s.standing = 'dismiss'", "s.standing IN ('dismiss','keep')");
+    expect(exceptionIsNarrow(doctored).ok).toBe(false);
+  });
+  it('FALSIFIER · a doctored exception that writes is NOT narrow', () => {
+    expect(exceptionIsNarrow(`${realReader(NARROW_EXCEPTION) ?? ''}\nconst x = "UPDATE foo SET a = 1";`).ok).toBe(false);
+  });
+  it('FALSIFIER · a doctored exception that imports the store is NOT narrow', () => {
+    expect(exceptionIsNarrow(`import { currentStandings } from '@/lib/manuscript/standing/store';\n${realReader(NARROW_EXCEPTION) ?? ''}`).ok).toBe(false);
+  });
+  it('FALSIFIER · a second importer is seen', () => {
+    const intruder = 'lib/maia/dismissedPeek.ts';
+    const read = overlayReader({ [intruder]: `import { loadDismissedObservations } from '@/lib/manuscript/standing/dismissedForConversation';` });
+    expect(directImporters(read, (t) => t === NARROW_EXCEPTION, [intruder])).toContain(intruder);
   });
 });
 
@@ -286,8 +330,8 @@ describe('D5/D6 · the standing table is nameable in exactly one runtime module'
     return files.filter((rel) => (read(rel) ?? '').includes(TABLE));
   }
 
-  it('no runtime module outside the store names the standing table', () => {
-    expect(runtimeFiles(realReader)).toEqual([join(STANDING_DIR, 'store.ts')]);
+  it('no runtime module outside the store and the one narrow exception names the standing table', () => {
+    expect(runtimeFiles(realReader).sort()).toEqual([join(STANDING_DIR, 'dismissedForConversation.ts'), join(STANDING_DIR, 'store.ts')].sort());
   });
 
   /* THE GATE, FALSIFIED — both directions, and neither imports the store. */

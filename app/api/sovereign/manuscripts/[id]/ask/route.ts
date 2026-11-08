@@ -687,7 +687,7 @@ async function workTurn(input: {
 
   /* ⭐ WS-DECISION-CONTINUITY — what the writer has settled, in their own words, via the ONE shared read. Sanctuary or an unstated
      posture reads nothing. Rides the existing declared-context channel so MAIA treats it as the writer's, never as a fact about the text. */
-  const decisionsText = (posture.sanctuary || !postureKnown) ? '' : await decisionContextForWork(memberId, built.facts.work.id);
+  const decisionsText = (posture.sanctuary || !postureKnown) ? '' : await decisionContextForWork(memberId, built.facts.work.id, manuscriptId);
   const factsWithDecisions = decisionsText
     ? { ...built.facts, writerUnderstanding: [built.facts.writerUnderstanding, decisionsText].filter(Boolean).join('\n\n') }
     : built.facts;
