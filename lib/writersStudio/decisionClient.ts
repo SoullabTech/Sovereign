@@ -11,11 +11,13 @@ export async function listDecisions(workId: string): Promise<SettledDecision[] |
   } catch { return undefined; }
 }
 
-export async function settleDecisionNote(workId: string, saidIn: string, sanctuary: boolean):
+export async function settleDecisionNote(workId: string, saidIn: string, sanctuary: boolean,
+  where: { room?: 'work_conversation' | 'passage_desk' | 'develop'; subjectKind?: 'note' | 'wording'; subjectRef?: string } = {}):
   Promise<{ ok: true } | { ok: false; refusal: string }> {
   try {
     const res = await apiFetch(url(workId), { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'settle', saidIn, room: 'work_conversation', subjectKind: 'note', sanctuary }) });
+      body: JSON.stringify({ action: 'settle', saidIn, room: where.room ?? 'work_conversation', subjectKind: where.subjectKind ?? 'note',
+        ...(where.subjectRef ? { subjectRef: where.subjectRef } : {}), sanctuary }) });
     if (res.ok) return { ok: true };
     const j = (await res.json().catch(() => ({}))) as { refusal?: string };
     return { ok: false, refusal: j.refusal ?? `http_${res.status}` };

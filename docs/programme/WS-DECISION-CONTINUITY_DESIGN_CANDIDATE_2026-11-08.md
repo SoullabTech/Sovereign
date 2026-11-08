@@ -89,3 +89,11 @@ A writer's DISMISSAL of an observation now reaches the Work conversation and the
   (a doctored exception that selects all standings, writes, imports the store, or gains a second importer is each detected); every other D5/D6 check is unchanged; 46/46 pass.
 - Evidence: disposable database + the real Ask route: a dismissed observation reaches MAIA; `keep` and a later-`unresolved` do not; Sanctuary reads nothing (5/5; earlier walks still 9/9).
 STILL HELD: passage desk "Keep mine" (local-only today; ruling owed, see above). Standing writes are unchanged and remain with the member route.
+
+
+## RULED + BUILT — "Keep mine" is writer-confirmed (founder: "Yes, writer-confirmed", 2026-11-08)
+"Keep mine" still records nothing by itself. After the click the passage desk offers "Note that you have decided this?" with a sentence the writer can read and change
+(prefilled: *I kept my own wording for "<passage>".*). Only **Note it** records, and what is recorded is exactly the words in the box (room `passage_desk`, kind `wording`, with
+the passage ref); **No thanks** records nothing; Sanctuary or an unreadable setting records nothing and says so.
+Evidence: 11 tests (5 static wiring laws + 6 interaction tests that press the real buttons) — NOT a browser run, and the full path (a real proposal → Keep mine → prompt → Note it →
+MAIA in the Work conversation) was NOT walked: reaching "Keep mine" needs a live proposal from a model. Version-binding (`version_ref`) remains unset by this gesture.

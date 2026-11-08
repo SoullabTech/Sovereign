@@ -14,6 +14,7 @@ surfaces:
   # manuscript as physical pages without turning page presentation into a new
   # reading, interpretation, or edit authority.
   - app/dev/writers-studio-pc3-live/P4R1ReviewController.tsx
+  - app/dev/writers-studio-pc3-live/KeepNotePrompt.tsx
   - app/dev/writers-studio-pc3-live/P4R1ProofView.tsx
   - app/dev/writers-studio-p4r1/p4r1-live.css
   - app/api/sovereign/manuscripts/[id]/render/route.ts

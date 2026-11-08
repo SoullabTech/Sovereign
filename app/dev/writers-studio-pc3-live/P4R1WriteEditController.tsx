@@ -27,6 +27,7 @@ import {
   relationshipIdFrom,
 } from '@/app/writers-studio/canvasIdentity';
 import RebuildWritingBoundary from '@/app/writers-studio/rebuild/RebuildWritingBoundary';
+import KeepNotePrompt from './KeepNotePrompt';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { locationForSection, replacePlaceAddress, resolveInitialSection, SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
@@ -149,6 +150,8 @@ export default function FlagshipWriteEditController() {
   const [wayInId, setWayInId] = useState<string | null>(null);
   const [context, setContext] = useState<ContextReady | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
+  /* WS-DECISION-CONTINUITY: after "Keep mine", offer (never assume) to note the decision. */
+  const [keepNoteFor, setKeepNoteFor] = useState<string | null>(null);
   const [selectedPassage, setSelectedPassage] = useState<Pc3HeldPassage | null>(null);
   const writingRef = useRef<SectionWriting | null>(null);
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
@@ -2349,6 +2352,15 @@ export default function FlagshipWriteEditController() {
   }
 
   return (
+    <>
+    {keepNoteFor && work ? (
+      <KeepNotePrompt
+        workId={work.id}
+        sectionId={keepNoteFor}
+        passageLabel={focusSection?.heading ?? null}
+        onDone={() => setKeepNoteFor(null)}
+      />
+    ) : null}
     <RebuildWritingBoundary
       key={`${context.manuscriptId}:p4r1-pc3`}
       manuscriptId={context.manuscriptId}
@@ -2469,6 +2481,7 @@ export default function FlagshipWriteEditController() {
               setSuggestedVersionId(null);
               setAdoptionOutcome(null);
               setEditorialFailure('Current wording retained. Your saved alternatives remain in the version list.');
+              if (focusId) setKeepNoteFor(focusId);
             }}
             onLatitude={setEditLatitude}
             onMayRemoveParagraphs={setMayRemoveParagraphs}
@@ -2488,5 +2501,6 @@ export default function FlagshipWriteEditController() {
         );
       }}
     </RebuildWritingBoundary>
+    </>
   );
 }
