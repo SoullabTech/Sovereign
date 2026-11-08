@@ -52,7 +52,7 @@ describe('standing reading scope · route wiring (static)', () => {
     expect(turn.indexOf('establishDisclosureBoundary(')).toBeLessThan(turn.indexOf('loadSuppliedSections('));
   });
   it('the grant is re-read at every Ask and Sanctuary suspends it', () => {
-    expect(turn).toMatch(/posture\.sanctuary \? null : await loadActiveGrant\(/);
+    expect(turn).toMatch(/posture\.sanctuary \|\| !postureKnown\) \? null : await loadActiveGrant\(/);
   });
   it('no scope, level or section list is taken from the request body', () => {
     expect(turn).not.toMatch(/body\.(scope|level|sections|authorizes)/);

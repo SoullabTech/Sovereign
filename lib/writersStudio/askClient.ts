@@ -91,6 +91,8 @@ export async function ask(input: {
    * the anchor of a resumed thread.
    */
   sectionId?: string;
+  /** The member's CURRENT Sanctuary posture, when it could be resolved. Omitted (never guessed) when it could not. */
+  sanctuary?: boolean;
 }): Promise<AskOutcome> {
   try {
     const res = await apiFetch(url(input.manuscriptId), {
@@ -102,6 +104,7 @@ export async function ask(input: {
           : { anchor: input.anchor }),
         question: input.question,
         ...(input.sectionId ? { sectionId: input.sectionId } : {}),
+        ...(typeof input.sanctuary === 'boolean' ? { sanctuary: input.sanctuary } : {}),
       }),
     });
     const json = await res.json().catch(() => ({} as Record<string, unknown>));

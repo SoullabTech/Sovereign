@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ReadScopeControl from './ReadScopeControl';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { parseStudioActions } from '@/lib/writersStudio/studioActions';
 import Link from 'next/link';
 import { GROUND, INK, MAIA_ACCENT, RADIUS, RULE, SPACE } from '../studioTheme';
@@ -363,6 +364,8 @@ function ScopedWorkConversation({
             question,
             ...(mode.kind === 'resume' ? { threadId: mode.threadId } : { anchor: WORK_ANCHOR }),
             ...(sectionId ? { sectionId } : {}),
+            /* The member's CURRENT posture, read at this gesture. Unresolved ⇒ omitted, and the server then withholds the standing read. */
+            ...(() => { const p = readCurrentSanctuaryPosture(); return p.resolved ? { sanctuary: p.sanctuary } : {}; })(),
           })
         : await askLivingWork({
             workId: work.id,

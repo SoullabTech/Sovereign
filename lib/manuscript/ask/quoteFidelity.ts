@@ -9,6 +9,7 @@
 export const QUOTE_FLOOR = 25;
 
 const norm = (s: string): string => s
+  .normalize('NFKC').replace(/[\u200B-\u200D\u2060\uFEFF]/g, '').replace(/[*_`~]/g, '')
   .replace(/[‘’‛]/g, "'").replace(/[“”‟]/g, '"')
   .replace(/[–—]/g, '-').replace(/…/g, '...')
   .replace(/\s+/g, ' ').trim().toLowerCase();
@@ -17,6 +18,9 @@ const norm = (s: string): string => s
 export function quotedSpans(answer: string): string[] {
   const out: string[] = [];
   for (const m of answer.matchAll(/["“]([^"“”]{1,2000})["”]/g)) out.push(m[1]);
+  for (const m of answer.matchAll(/«([^«»]{1,2000})»/g)) out.push(m[1]);
+  // block quotes: consecutive `>` lines are one quoted span
+  for (const m of answer.matchAll(/(?:^>[^\n]*(?:\n|$))+/gm)) out.push(m[0].replace(/^>\s?/gm, ''));
   return out;
 }
 

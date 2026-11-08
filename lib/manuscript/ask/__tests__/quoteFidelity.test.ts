@@ -31,3 +31,14 @@ describe('A2 · quote fidelity', () => {
     expect(quotedSpans('a "one" b “two” c')).toEqual(['one', 'two']);
   });
 });
+
+describe('A2 · hardening after independent review', () => {
+  it('checks guillemet and block-quote spans', () => {
+    expect(checkQuoteFidelity('«the tide retreated like a held breath at dawn»', ['x']).ok).toBe(false);
+    expect(checkQuoteFidelity('> the tide retreated like a held breath at dawn\n', ['x']).ok).toBe(false);
+  });
+  it('normalises fullwidth/zero-width characters and markdown emphasis in sources', () => {
+    expect(checkQuoteFidelity('"the salt on the rails caught the first light"',
+      ['the **salt** on the rails caught the first\u200B light']).ok).toBe(true);
+  });
+});

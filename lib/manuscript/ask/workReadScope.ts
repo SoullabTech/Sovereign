@@ -37,6 +37,8 @@ export interface SectionHeadLite { readonly id: string; readonly position: numbe
 
 /** Host-side ceiling on how much saved text one answer may carry. */
 export const READ_CHAR_BUDGET = 60_000;
+/** Host-side ceiling on sections (and so receipts) per Ask. */
+export const MAX_READ_SECTIONS = 40;
 
 const WHOLE_WORK = /\b(whole|entire|full)\s+(book|manuscript|work|draft)\b|\bthroughout\b|\bacross\s+(the\s+)?(book|manuscript|work|chapters)\b|\boverall\b|\bfrom the (start|beginning)\b/i;
 

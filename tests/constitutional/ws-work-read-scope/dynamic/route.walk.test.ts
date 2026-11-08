@@ -38,8 +38,11 @@ d('Work conversation · route walk (fictional manuscript)', () => {
   const post = async (member: string, body: Record<string, unknown>, id = ms) => {
     CURRENT_MEMBER = member;
     const { POST } = await import('@/app/api/sovereign/manuscripts/[id]/ask/route');
+    /* the real client states its posture on every Ask; tests state it too unless they are testing its absence */
+    const stated = 'sanctuary' in body || body.__unstated ? body : { ...body, sanctuary: false };
+    delete (stated as Record<string, unknown>).__unstated;
     const res = await POST(new NextRequest(`http://localhost/api/sovereign/manuscripts/${id}/ask`, {
-      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }),
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(stated) }),
       { params: Promise.resolve({ id }) });
     return { status: res.status, json: await res.json() as Record<string, any> };
   };
@@ -51,7 +54,7 @@ d('Work conversation · route walk (fictional manuscript)', () => {
     return res.status;
   };
   const receipts = async () => (await query<{ n: string }>(
-    `SELECT COUNT(*)::text n FROM context_disclosure_receipts WHERE boundary='writers_studio.work_conversation->maia_cognition'`)).rows[0].n;
+    `SELECT COUNT(*)::text n FROM context_disclosure_receipts WHERE boundary='writers_studio.work_conversation->maia_cognition' AND member_id=$1`, [A])).rows[0].n;
   const lastSystem = () => systems[systems.length - 1] ?? '';
 
   beforeAll(async () => {
@@ -96,7 +99,7 @@ d('Work conversation · route walk (fictional manuscript)', () => {
     expect(lastSystem()).toContain(S3);
     expect(lastSystem()).not.toContain(S2);                      // not asked about, not read
     expect(await receipts()).toBe('2');
-    const rec = await query(`SELECT scope_event_id, participation_basis, state, gesture FROM context_disclosure_receipts WHERE boundary='writers_studio.work_conversation->maia_cognition'`);
+    const rec = await query(`SELECT scope_event_id, participation_basis, state, gesture FROM context_disclosure_receipts WHERE boundary='writers_studio.work_conversation->maia_cognition' AND member_id=$1`, [A]);
     for (const row of rec.rows as any[]) {
       expect(row.participation_basis).toBe('standing_authorization');
       expect(row.scope_event_id).toBeTruthy(); expect(row.state).toBe('crossed'); expect(row.gesture).toBe('standing_read_scope');
@@ -134,6 +137,16 @@ d('Work conversation · route walk (fictional manuscript)', () => {
     const before = await receipts();
     script = () => 'In sanctuary.';
     await post(A, { threadId: thread, question: 'Read the whole book for me.', sectionId: sec[0], sanctuary: true });
+    expect(lastSystem()).not.toContain('STANDING PERMISSION');
+    expect(await receipts()).toBe(before);
+  });
+
+  it('W5b an Ask that does not state its Sanctuary posture fails closed: no standing read, conversation continues', async () => {
+    await scope(A, { action: 'grant', level: 'work' });
+    const before = await receipts();
+    script = () => 'Posture unstated.';
+    const r = await post(A, { threadId: thread, question: 'The whole book please.', sectionId: sec[0], __unstated: true });
+    expect(r.status).toBe(200);
     expect(lastSystem()).not.toContain('STANDING PERMISSION');
     expect(await receipts()).toBe(before);
   });

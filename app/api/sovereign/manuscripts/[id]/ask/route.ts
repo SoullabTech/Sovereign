@@ -54,7 +54,7 @@ import { computeStaleness, frozenSideFor } from '@/lib/manuscript/ask/staleness'
 import { canonicalFingerprint } from '@/lib/manuscript/structure/canonicalFingerprint';
 import { askMaia, type StandingRead } from '@/lib/manuscript/ask/askReader';
 import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests, recordTurnReads } from '@/lib/disclosure/workReadScopeRead';
-import { selectSections, movedSince } from '@/lib/manuscript/ask/workReadScope';
+import { selectSections, movedSince, MAX_READ_SECTIONS } from '@/lib/manuscript/ask/workReadScope';
 import { checkQuoteFidelity, NO_TEXT_ANSWER, CORRECTION_NOTE } from '@/lib/manuscript/ask/quoteFidelity';
 import { formatWorkSituationForPrompt } from '@/lib/writersStudio/workSituation';
 import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
@@ -406,7 +406,8 @@ export async function POST(
      ══════════════════════════════════════════════════════════════════════════ */
   if (check.anchor.on === 'work') {
     return workTurn({ manuscriptId: id, memberId, anchor: check.anchor, existing,
-                      question, sectionId: bodySectionId, posture: TurnPosture.resolve(body) });
+                      question, sectionId: bodySectionId, posture: TurnPosture.resolve(body),
+                      postureKnown: typeof (body as Record<string, unknown>).sanctuary === 'boolean' });
   }
 
   if (!reading) {
@@ -567,8 +568,10 @@ async function workTurn(input: {
   question: string;
   sectionId: string | null;
   posture: TurnPosture;
+  /** True only when the caller explicitly stated its Sanctuary posture. Unstated ⇒ the standing read fails closed. */
+  postureKnown: boolean;
 }): Promise<NextResponse> {
-  const { manuscriptId, memberId, anchor, existing, question, sectionId, posture } = input;
+  const { manuscriptId, memberId, anchor, existing, question, sectionId, posture, postureKnown } = input;
 
   /* ⛔ NO FABRICATED BASELINE, the same law the structure lane holds: a thread
      that cannot establish its BEFORE does not open. */
@@ -634,13 +637,18 @@ async function workTurn(input: {
   let standingRead: StandingRead | undefined;
   let supplied: Awaited<ReturnType<typeof loadSuppliedSections>> = [];
   const mintedDisclosureIds: string[] = [];
-  const grant = posture.sanctuary ? null : await loadActiveGrant(memberId, built.facts.work.id);
+  const grant = (posture.sanctuary || !postureKnown) ? null : await loadActiveGrant(memberId, built.facts.work.id);
   if (grant && built.facts.manuscript) {
     const sizes = await loadSectionSizes(manuscriptId, memberId);
-    const sel = selectSections({
+    const picked = selectSections({
       level: grant.level, question, locusId: sectionId,
       sections: built.facts.sections, sizes,
     });
+    /* Bound the number of receipts minted per Ask; the rest is reported as not supplied. */
+    const sel = {
+      ids: picked.ids.slice(0, MAX_READ_SECTIONS),
+      overBudget: [...picked.overBudget, ...picked.ids.slice(MAX_READ_SECTIONS)],
+    };
     const requestId = randomUUID();
     let allMinted = sel.ids.length > 0;
     for (const sid of sel.ids) {
@@ -661,6 +669,8 @@ async function workTurn(input: {
       if (!mayCrossBoundary(b)) { allMinted = false; break; }
       mintedDisclosureIds.push(b.disclosureId);
     }
+    /* Revocation can land between the first read of the grant and now: re-read AFTER minting and BEFORE any text loads. */
+    if (allMinted && (await loadActiveGrant(memberId, built.facts.work.id))?.id !== grant.id) allMinted = false;
     if (allMinted) {
       supplied = await loadSuppliedSections(manuscriptId, memberId, sel.ids);
       const earlier = existing ? await loadEarlierDigests(liveThreadId, memberId) : new Map<string, string>();
@@ -700,7 +710,12 @@ async function workTurn(input: {
   if (outcome.ok) {
     /* The crossing happened when the reader was called; confirm it. A failed call
        leaves the receipts `attempted`, which is the truthful state. */
-    for (const d of mintedDisclosureIds) await confirmDisclosureCrossed(d);
+    for (const d of mintedDisclosureIds) {
+      /* A failed confirmation leaves the receipt `attempted` ("a crossing may have occurred"), which is truthful; it is
+         surfaced loudly, never swallowed. */
+      try { if (!(await confirmDisclosureCrossed(d))) console.error('[WORK-READ] receipt left attempted', { n: mintedDisclosureIds.length }); }
+      catch { console.error('[WORK-READ] receipt confirmation threw'); }
+    }
   }
   if (!outcome.ok) {
     /* The question is already recorded. A failed answer is reported as a
