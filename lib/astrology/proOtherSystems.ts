@@ -17,6 +17,7 @@ import {
 } from './chineseAstrology';
 import { calculateCompleteMayanProfile } from './mayanAstrology';
 import { chineseYearForIsoDate } from './chineseNewYear';
+import { traditionalMaya, type TraditionalMaya } from './proTraditionalMaya';
 import { calculateFourPillars, type DayStart, type FourPillars } from './proFourPillars';
 import type {
   AyanamsaType, GrahaName, NakshatraInfo, VimshottariDashaProfile,
@@ -64,13 +65,15 @@ export interface ProOtherSystems {
     method: string;
   };
   mayan: {
+    /** The traditional day count (K'iche' / Yucatec), Haab and Long Count. */
+    traditional: TraditionalMaya;
+    /** The rest is the Dreamspell count, a modern system, labelled as such. */
     galacticSignature: string;
     daySign: { name: string; glyph: string; archetype: string; meaning: string };
     tone: { number: number; name: string; meaning: string };
     tzolkinNumber: number;
     wavespell: string;
     haab: string;
-    traditional: { tzolkin: string; kiche: string; haab: string; longCount: string; correlation: number };
     direction: string;
     pathOfLife: Array<{ stage: 'youth' | 'adulthood' | 'future'; signature: string }>;
     method: string;
@@ -173,6 +176,7 @@ export async function calculateProOtherSystems(
       method: 'Year sign from the Free Chinese calculator. The year turns at Chinese New Year (China Standard Time, 1900–2100 table from astronomical new moons and the December solstice), so a January or early-February birth can belong to the previous year’s sign. The calendar date is used, not the birth hour.',
     },
     mayan: {
+      traditional: traditionalMaya(birth.date),
       galacticSignature: mayan.tzolkin.galacticSignature,
       daySign: {
         name: mayan.tzolkin.daySign.name,
@@ -188,13 +192,6 @@ export async function calculateProOtherSystems(
       tzolkinNumber: mayan.tzolkin.tzolkinNumber,
       wavespell: mayan.tzolkin.wavespell,
       haab: mayan.haab.fullDate,
-      traditional: {
-        tzolkin: mayan.traditional.tzolkin.text,
-        kiche: mayan.traditional.tzolkin.kiche,
-        haab: mayan.traditional.haab.text,
-        longCount: mayan.traditional.longCount,
-        correlation: mayan.traditional.correlation,
-      },
       direction: mayan.cardinalDirection.direction,
       pathOfLife: (['youth', 'adulthood', 'future'] as const).map((stage) => ({
         stage, signature: mayan.pathOfLife[stage].galacticSignature,
