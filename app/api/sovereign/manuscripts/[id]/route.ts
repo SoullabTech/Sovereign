@@ -58,7 +58,6 @@ import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { eraseManuscript } from '@/lib/manuscript/source/eraseManuscript';
-import { isUuid } from '@/lib/studio/continuityKind';
 import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -199,14 +198,15 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
   if (process.env.MAIA_CABIN_MODE === 'offline') {
     /* The cabin answers the same contract as the web path below, from one cabin-store transaction: the writing,
        the declaration that names it, and the Work only if it then declares nothing. It has no vault bytes and no
-       R20 ledger, so there is no custody step. `workId` names the card the member pressed Delete on. Validated
-       BEFORE the store is opened, so a malformed one touches nothing. Absent is lawful (the one Work that
-       declares the writing is the one whose declaration ends); present-but-malformed, empty or repeated is not. */
-    const workIds = request.nextUrl.searchParams.getAll('workId');
-    if (workIds.length > 1 || (workIds.length === 1 && !isUuid(workIds[0]))) {
-      return NextResponse.json({ error: 'Invalid workId' }, { status: 400 });
+       R20 ledger, so there is no custody step. `workId` names the card the member pressed Delete on, read exactly
+       as the web path reads it (first value wins, case-insensitive, malformed refused), and validated BEFORE the
+       store is opened, so a malformed one touches nothing. Absent is lawful (the one Work that declares the
+       writing is the one whose declaration ends). */
+    const viaWork = request.nextUrl.searchParams.get('workId');
+    if (viaWork !== null && !UUID_RE.test(viaWork)) {
+      return NextResponse.json({ error: 'Bad request' }, { status: 400 });
     }
-    const workId = workIds[0] ?? null;
+    const workId = viaWork === null ? null : viaWork.toLowerCase();
 
     const store = cabinStore();
     try {

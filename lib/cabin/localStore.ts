@@ -776,10 +776,12 @@ export class CabinLocalStore {
    * counterpart to `lib/manuscript/source/eraseManuscript.ts`, and it answers the same questions in the same
    * order. The cabin has no vault bytes and no R20 ledger, so there is no custody step to add.
    *
-   * `workId` is the Work the member's card named. When it is given it must still declare the writing, or the
-   * card is stale and NOTHING is changed. When it is absent, the one Work that declares the writing (if any) is
-   * the one whose declaration ends, so the call can never leave a Work naming a gone writing; if several Works
-   * declare it there is no card to follow and the answer is the shared-writing refusal.
+   * `workId` is the Work the member's card named (already lower-cased by the caller). When it is given it must
+   * still declare the writing, or the card is stale and NOTHING is changed. When it is absent, the one Work that
+   * declares the writing (if any) is the one whose declaration ends, so the call can never leave a Work naming a
+   * gone writing; if several Works declare it there is no card to follow and the answer is the shared-writing
+   * refusal. If the writing is ALREADY gone, a named Work that still declares it has that declaration ended (and
+   * goes itself if it declares nothing else); anything else is `not_found`.
    *
    * `BEGIN IMMEDIATE` takes the write lock before the first read, so the declarations the refusals are decided
    * from cannot change between the check and the deletes. Every refusal returns before any write.
@@ -811,15 +813,26 @@ export class CabinLocalStore {
     manuscriptId: string,
     workId: string | null,
   ): CabinEraseOutcome {
-    if (!this.getManuscript(memberId, manuscriptId)) {
-      return { ok: false, refusal: 'not_found' };
-    }
-
+    /* Read first, and without requiring the writing to exist: a declaration can outlive its writing (the cabin's
+       old Delete removed only the writing), and that case is decided below. */
     const declaring = (
       this.db
         .prepare("SELECT e.living_work_id AS id FROM living_work_expressions e JOIN living_works w ON w.id = e.living_work_id WHERE e.expression_type = 'manuscript' AND e.expression_id = ? AND w.member_id = ?")
         .all(manuscriptId, memberId) as Record<string, unknown>[]
     ).map((row) => String(row.id));
+
+    if (!this.getManuscript(memberId, manuscriptId)) {
+      /* The writing is already gone (deleted a moment ago from another tab, a repeat whose answer was lost, or
+         deleted before declarations were ended with it). Nothing is left to protect and nothing to refuse. If the
+         Work the card named still declares it, that declaration is the detached state the ruling forbids by name,
+         so it goes now, and the Work with it if it declared nothing else: exactly what Delete from that card
+         means when the writing was alive. Otherwise (no Work named, or the named Work does not declare it) it is
+         not found, which the caller reads as done. A declaration is only ever ended for a Work the member named. */
+      if (workId !== null && declaring.includes(workId)) {
+        return { ok: true, workRemoved: this.endDeclaration(memberId, manuscriptId, workId) };
+      }
+      return { ok: false, refusal: 'not_found' };
+    }
 
     /* A stale card is decided before sharing: the card's Work is the member's question, and "it no longer holds
        this writing" is a truer answer than "other Works do" when the named Work is not among them. */
@@ -830,28 +843,29 @@ export class CabinLocalStore {
       return { ok: false, refusal: 'declared_in_other_works', works: declaring.length };
     }
 
-    const endsWork = workId ?? declaring[0] ?? null;
-
     const removed = this.db
       .prepare('DELETE FROM member_manuscripts WHERE id = ? AND member_id = ?')
       .run(manuscriptId, memberId);
     if (Number(removed.changes) !== 1) return { ok: false, refusal: 'not_found' };
 
-    let workRemoved = false;
-    if (endsWork !== null) {
-      this.db
-        .prepare("DELETE FROM living_work_expressions WHERE living_work_id = ? AND expression_type = 'manuscript' AND expression_id = ?")
-        .run(endsWork, manuscriptId);
+    const endsWork = workId ?? declaring[0] ?? null;
+    return { ok: true, workRemoved: endsWork === null ? false : this.endDeclaration(memberId, manuscriptId, endsWork) };
+  }
 
-      /* A Work that now declares nothing has no referent left and would read as an ordinary, openable, empty
-         Work. One that still declares other things keeps them and loses only the expression that died. */
-      const gone = this.db
-        .prepare('DELETE FROM living_works WHERE id = ? AND member_id = ? AND NOT EXISTS (SELECT 1 FROM living_work_expressions e WHERE e.living_work_id = living_works.id)')
-        .run(endsWork, memberId);
-      workRemoved = Number(gone.changes) === 1;
-    }
+  /**
+   * Ends one Work's declaration of one writing. A Work that now declares nothing has no referent left and would
+   * read as an ordinary, openable, empty Work, so it goes too; one that still declares other things keeps them and
+   * loses only the expression that died. Returns whether the Work went. Runs inside the caller's transaction.
+   */
+  private endDeclaration(memberId: string, manuscriptId: string, workId: string): boolean {
+    this.db
+      .prepare("DELETE FROM living_work_expressions WHERE living_work_id = ? AND expression_type = 'manuscript' AND expression_id = ?")
+      .run(workId, manuscriptId);
 
-    return { ok: true, workRemoved };
+    const gone = this.db
+      .prepare('DELETE FROM living_works WHERE id = ? AND member_id = ? AND NOT EXISTS (SELECT 1 FROM living_work_expressions e WHERE e.living_work_id = living_works.id)')
+      .run(workId, memberId);
+    return Number(gone.changes) === 1;
   }
 
   addManuscriptSections(

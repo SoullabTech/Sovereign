@@ -3,7 +3,9 @@
  *
  * The cabin must answer the same observable contract as the web path, from one cabin-store transaction:
  *
- *   malformed workId                          → 400, nothing touched
+ *   malformed workId                          → 400 { error: 'Bad request' }, nothing touched
+ *   the writing is already gone               → the named Work's dangling declaration ends (and the Work with it if
+ *                                               empty), else 404
  *   the named Work no longer declares it      → 409 { refusal: 'work_no_longer_holds_it' }
  *   more than one Work declares it            → 409 { refusal: 'declared_in_other_works', works: n }
  *   otherwise                                 → the writing goes, the named Work's declaration ends, the Work
@@ -275,13 +277,18 @@ describe('cabin DELETE · shared writing → 409 declared_in_other_works', () =>
   });
 });
 
-describe('cabin DELETE · malformed workId → 400, before the store is even opened', () => {
+describe('cabin DELETE · malformed workId → 400 { error: \'Bad request\' }, before the store is even opened', () => {
+  /* The same malformed set the web path's own test refuses: ignoring a bad value would turn a guarded delete into an
+     unguarded one. A repeated parameter uses the FIRST value, so a malformed first is refused even beside a valid one. */
   const cases: Array<[string, string]> = [
     ['not an identifier', '?workId=not-a-uuid'],
     ['empty', '?workId='],
+    ['whitespace', `?workId=${encodeURIComponent(' ')}`],
+    ['a path', `?workId=${encodeURIComponent('../../etc')}`],
     ['an injection attempt', `?workId=${encodeURIComponent("x' OR '1'='1")}`],
     ['a UUID with trailing junk', `?workId=${NOBODY}x`],
-    ['repeated', `?workId=${NOBODY}&workId=${NOBODY}`],
+    ['a truncated UUID', '?workId=a0000000-0000-4000-8000-00000000000'],
+    ['malformed first, valid second', `?workId=not-a-uuid&workId=${NOBODY}`],
   ];
 
   it.each(cases)('%s', async (_label, search) => {
@@ -289,12 +296,114 @@ describe('cabin DELETE · malformed workId → 400, before the store is even ope
     work('Fictional holder', [w]);
     const before = snapshot();
 
-    const { status } = await erase(w, search);
+    const { status, body } = await erase(w, search);
 
     expect(status).toBe(400);
+    expect(body).toEqual({ error: 'Bad request' });
     expect(openStore).not.toHaveBeenCalled();
     expect(setCookie).not.toHaveBeenCalled();
     expect(snapshot()).toEqual(before);
+  });
+});
+
+describe('cabin DELETE · workId is read exactly as the web path reads it', () => {
+  it('is case-insensitive: an upper-case UUID names the same Work (not a stale card)', async () => {
+    const w = writing('Fictional memoir');
+    const wk = work('Fictional memoir work', [w]);
+
+    const { status, body } = await erase(w, `?workId=${wk.toUpperCase()}`);
+
+    expect(status).toBe(200);
+    expect(body).toEqual({ removed: true, workRemoved: true });
+    expect(hasWork(wk)).toBe(false);
+  });
+
+  it('a repeated parameter uses the first value', async () => {
+    const w = writing('Fictional memoir');
+    const wk = work('Fictional memoir work', [w]);
+
+    const { status, body } = await erase(w, `?workId=${wk}&workId=not-a-uuid`);
+
+    expect(status).toBe(200);
+    expect(body).toEqual({ removed: true, workRemoved: true });
+  });
+});
+
+describe('cabin DELETE · the writing is ALREADY gone', () => {
+  /* A declaration can outlive its writing: the cabin's old Delete removed only the writing, and another tab or a repeat
+     whose answer was lost can get there first. `deleteManuscript` (writing only) stands in for all three. Nothing is
+     left to protect, so nothing is refused, and a declaration is only ever ended for the Work the member NAMED. */
+  it('the named Work still declares it: that declaration ends, and the Work goes with it when it declared nothing else', async () => {
+    const w = writing('Fictional memoir');
+    const wk = work('Fictional memoir work', [w]);
+    seed.deleteManuscript(member.id, w);
+    expect(detachedDeclarations()).toEqual([w]); // the forbidden state, present before the request
+
+    const { status, body } = await erase(w, `?workId=${wk}`);
+
+    expect(status).toBe(200);
+    expect(body).toEqual({ removed: true, workRemoved: true });
+    expect(hasWork(wk)).toBe(false);
+    expect(detachedDeclarations()).toEqual([]);
+  });
+
+  it('a Work that holds something else stays, losing only the dead declaration', async () => {
+    const dead = writing('Fictional draft to delete');
+    const kept = writing('Fictional draft to keep');
+    const wk = work('Fictional two-part work', [dead, kept]);
+    seed.deleteManuscript(member.id, dead);
+
+    const { status, body } = await erase(dead, `?workId=${wk}`);
+
+    expect(status).toBe(200);
+    expect(body).toEqual({ removed: true, workRemoved: false });
+    expect(hasWork(wk)).toBe(true);
+    expect(declarationsOf(wk)).toEqual([kept]);
+    expect(detachedDeclarations()).toEqual([]);
+  });
+
+  it('only the NAMED Work\'s declaration ends; another Work that still names the gone writing is left alone', async () => {
+    const w = writing('Fictional shared writing');
+    const named = work('Fictional named', [w]);
+    const other = work('Fictional other', [w]);
+    seed.deleteManuscript(member.id, w);
+
+    const { status, body } = await erase(w, `?workId=${named}`);
+
+    expect(status).toBe(200);
+    expect(body).toEqual({ removed: true, workRemoved: true });
+    expect(hasWork(named)).toBe(false);
+    expect(declarationsOf(other)).toEqual([w]); // not named, so not touched
+  });
+
+  it('no Work named → not found, and the dangling declaration is NOT cleaned on a guess', async () => {
+    const w = writing('Fictional memoir');
+    work('Fictional memoir work', [w]);
+    seed.deleteManuscript(member.id, w);
+    const before = snapshot();
+
+    expect((await erase(w)).status).toBe(404);
+    expect(snapshot()).toEqual(before);
+  });
+
+  it('the named Work does not declare it → not found, nothing changed', async () => {
+    const w = writing('Fictional memoir');
+    work('Fictional memoir work', [w]);
+    const bystander = work('Fictional bystander', []);
+    seed.deleteManuscript(member.id, w);
+    const before = snapshot();
+
+    expect((await erase(w, `?workId=${bystander}`)).status).toBe(404);
+    expect(snapshot()).toEqual(before);
+  });
+
+  it('is idempotent: the repeat of a request whose answer was lost reads as not found (done)', async () => {
+    const w = writing('Fictional memoir');
+    const wk = work('Fictional memoir work', [w]);
+    seed.deleteManuscript(member.id, w);
+
+    expect((await erase(w, `?workId=${wk}`)).status).toBe(200);
+    expect((await erase(w, `?workId=${wk}`)).status).toBe(404);
   });
 });
 
