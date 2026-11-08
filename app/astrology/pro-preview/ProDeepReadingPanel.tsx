@@ -25,6 +25,8 @@ export default function ProDeepReadingPanel({ subject, houseSystem, readsWhose }
   const [pillars, setPillars] = usePanelState(`${key}.pillars`, true);
   const [direction, setDirection] = usePanelState<'forward' | 'backward' | null>(`${key}.direction`, null);
   const [maya, setMaya] = usePanelState(`${key}.maya`, true);
+  const [progressions, setProgressions] = usePanelState(`${key}.progressions`, true);
+  const [since, setSince] = usePanelState(`${key}.since`, '');
   const [life, setLife] = usePanelState(`${key}.life`, '');
   const [focus, setFocus] = usePanelState(`${key}.focus`, 'Write a full reading.');
   const [reading, setReading] = usePanelState<string | null>(`${key}.reading`, null);
@@ -37,12 +39,13 @@ export default function ProDeepReadingPanel({ subject, houseSystem, readsWhose }
     setStatus('writing');
     setError(null);
     try {
-      const include = [...(pillars ? ['four-pillars'] : []), ...(maya ? ['maya'] : [])];
+      const include = [...(pillars ? ['four-pillars'] : []), ...(maya ? ['maya'] : []), ...(progressions ? ['progressions'] : [])];
       const reply = await apiFetch('/api/astrology/pro/ask', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
         body: JSON.stringify({
           section: 'deep', subject, houseSystem, include, question: focus.trim(),
           ...(onDate ? { at: `${onDate}T12:00:00` } : {}),
+          ...(progressions && since ? { from: `${since}T12:00:00` } : {}),
           ...(pillars && direction ? { direction } : {}),
           ...(life.trim() ? { lifeContext: life.trim() } : {}),
         }),
@@ -99,6 +102,12 @@ export default function ProDeepReadingPanel({ subject, houseSystem, readsWhose }
           </span>
         )}
         <label><input type="checkbox" checked={maya} onChange={(e) => setMaya(e.target.checked)} disabled={writing} /> Traditional Maya count</label>
+        <label><input type="checkbox" checked={progressions} onChange={(e) => setProgressions(e.target.checked)} disabled={writing} /> Progressions and solar arcs</label>
+        {progressions && (
+          <label className={styles.dateField}>over a period since (optional)
+            <input type="date" value={since} onChange={(e) => setSince(e.target.value)} disabled={writing} />
+          </label>
+        )}
       </div>
       <label className={styles.block}>What you know of their life (optional)
         <textarea value={life} onChange={(e) => setLife(e.target.value)} rows={4} maxLength={LIFE_CONTEXT_MAX} disabled={writing}

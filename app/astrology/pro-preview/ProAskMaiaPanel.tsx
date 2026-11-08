@@ -45,6 +45,8 @@ export default function ProAskMaiaPanel({ request, readsWhose, subjectLabel }: {
   const [exchanges, setExchanges] = usePanelState<Array<{ q: string; a: string; safety?: boolean }>>(`${key}.log`, []);
   // Natal only: transits on a date the astrologer chooses (an event, an anniversary).
   const [onDate, setOnDate] = usePanelState(`${key}.date`, '');
+  // Progressions only: a period to look across, from this date to the chosen one.
+  const [since, setSince] = usePanelState(`${key}.since`, '');
   const [status, setStatus] = useState<'idle' | 'asking'>('idle');
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +61,7 @@ export default function ProAskMaiaPanel({ request, readsWhose, subjectLabel }: {
         body: JSON.stringify({
           ...request,
           ...(request.section === 'natal' && onDate ? { at: `${onDate}T12:00:00` } : {}),
+          ...(request.section === 'progressed' && since ? { from: `${since}T12:00:00` } : {}),
           question: q,
         }),
       });
@@ -99,6 +102,16 @@ export default function ProAskMaiaPanel({ request, readsWhose, subjectLabel }: {
           <input type="date" value={onDate} onChange={(e) => setOnDate(e.target.value)} />
           {onDate && <button type="button" onClick={() => setOnDate('')}>Remove date</button>}
         </label>
+      )}
+      {request.section === 'progressed' && (
+        <>
+          <p className={styles.note}>MAIA reads the progressions and solar arcs for the date chosen above.</p>
+          <label className={styles.dateField}>
+            Look across a period since (optional, up to 10 years)
+            <input type="date" value={since} onChange={(e) => setSince(e.target.value)} />
+            {since && <button type="button" onClick={() => setSince('')}>Remove</button>}
+          </label>
+        </>
       )}
       {request.section === 'transits' && request.at && (
         <p className={styles.note}>
