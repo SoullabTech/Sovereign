@@ -43,7 +43,7 @@ export function chartPatterns(chart: BirthChart): string[] {
   const planets = chartBodies(chart).filter((b) => TEN_PLANETS.has(b.name)).map((b) => ({
     name: b.name, sign: b.position.sign, house: b.position.house, degree: b.position.degree, longitude: b.longitude,
   }));
-  const names = new Set(planets.map((p) => p.name));
+  const names = new Set<string>(planets.map((p) => p.name));
   const aspects = (chart.aspects || []).filter((a) =>
     PATTERN_ASPECTS.has(a.type) && names.has(a.planet1) && names.has(a.planet2)) as PatternAspect[];
   return detectAllPatterns(aspects, planets).map((p) => {
