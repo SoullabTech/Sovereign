@@ -12,6 +12,7 @@ surfaces:
   - app/astrology/synastry/page.tsx
   - app/astrology/synastry/saved/page.tsx
   - app/astrology/vedic/page.tsx
+  - app/astrology/pro-preview/ProHouseWheel.tsx
   - components/astrology/BirthDataForm.tsx
   - components/astrology/ChineseReadingView.tsx
   - components/astrology/DashaTimeline.tsx
