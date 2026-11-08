@@ -44,6 +44,7 @@ import { answerChoicesInstruction } from '@/lib/writersStudio/answerChoices';
 import { randomUUID } from 'node:crypto';
 import { query } from '@/lib/db/postgres';
 import { runStructured } from '@/lib/ai/structured/router';
+import { judgeEditorialQuotes, QUOTE_NOT_IN_TEXT_DETAIL } from './editorialQuoteGate';
 import type { DispatchObservation } from '@/lib/ai/structured/dispatch';
 import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
 import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
@@ -216,7 +217,12 @@ export type EditorialTurnRefusal =
    * BYTE-IDENTICAL, AT THE EXACT FROZEN PREDECESSOR THIS TURN WAS INVOKED
    * AGAINST (EA-NOOP-ADJUSTMENT-01). ⛔ Nothing was written.
    */
-  | NoopAdjustmentReason;
+  | NoopAdjustmentReason
+  /**
+   * ⭐ MAIA's reply put a long span in quotation marks that is not in the text she was given for this turn
+   * (WS-WORK-CONTINUITY A2). ⛔ Nothing was written; the whole turn is refused, never repaired.
+   */
+  | 'quote_not_in_text';
 
 export type EditorialTurnResult =
   | {
@@ -557,6 +563,11 @@ export async function runEditorialTurn(
 
   const admission = admitEditorialToolEnvelope(structured.result.content);
   if (!admission.ok) return { ok: false, reason: admission.reason };
+
+  /* 6-A2 ⭐ MECHANICAL QUOTE FIDELITY, before any other judgement of the content and before anything is written. */
+  if (!judgeEditorialQuotes(request, admission.outcome as never).ok) {
+    return { ok: false, reason: 'quote_not_in_text', detail: QUOTE_NOT_IN_TEXT_DETAIL };
+  }
 
   /* 6b ⭐⭐ THE SCOPE LAW — WS-EDITORIAL-SCOPE-01.
    *
