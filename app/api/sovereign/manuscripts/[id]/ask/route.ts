@@ -733,7 +733,9 @@ async function workTurn(input: {
   const locusMovedSinceEarlier = Boolean(existing && built.facts.locus
     && await (async () => { const was = (await loadEarlierLocusDigests(liveThreadId, memberId)).get(built.facts.locus!.sectionId);
       return was !== undefined && was !== digestOf(built.facts.locus!.body); })());
-  const workCtx = { kind: 'work' as const, anchor, facts: factsWithDecisions, staleness, standingRead, practiceOffer, carriedReadings, locusMovedSinceEarlier };
+  const workCtx = { kind: 'work' as const, anchor, facts: factsWithDecisions, staleness, standingRead, practiceOffer, carriedReadings, locusMovedSinceEarlier,
+    /* Walk 2026-11-09: in Sanctuary she suggested granting reading permission. She is now told she is in Sanctuary (and what it refuses). */
+    sanctuary: posture.sanctuary === true };
   let outcome = await askMaia(workCtx, workHistory, question);
   /* ⭐ A2 · MECHANICAL QUOTE FIDELITY. A quotation must occur in text she was actually given this turn or in the
      conversation's own words. Regenerate ONCE with a correction; if still ungrounded, a plain "I can't point to that

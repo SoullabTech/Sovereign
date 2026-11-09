@@ -83,6 +83,16 @@ const HISTORY_GROUNDING = [
   'Your earlier turns may rest on passages that are no longer in front of you: the text they were about is not supplied now, only your own words. Do not conclude that you invented an earlier statement merely because you cannot see its source. Say what you can no longer see, and offer to read it again.',
 ].join('\n');
 
+/** Sanctuary (founder rulings 2026-11-09): she may see the passage, but nothing is kept and permissions are suspended, so she offers nothing
+ *  that would persist or that Sanctuary refuses. */
+export const SANCTUARY_SAYS = [
+  'THIS EXCHANGE IS IN SANCTUARY. Nothing from it is kept: not the question, not your answer, not anything you notice.',
+  'The writer\'s standing reading permission, your earlier readings and their settled decisions are set aside for this exchange.',
+  'Do not suggest granting or changing reading permission, starting a reading of the Work, keeping or saving anything, making a plan,',
+  'or coming back to this later — Sanctuary refuses those, and offering them would ask the writer for something that cannot happen here.',
+  'If you need words you have not been given, say so plainly and invite the writer to share the lines they want to talk about.',
+].join('\n');
+
 const WORK_STANDING = `You are MAIA, in a writer's Studio, talking with the author of this Work about the Work itself.
 
 WHAT YOU ARE DOING
@@ -93,6 +103,9 @@ Stay at the scale they are working at. If they are thinking about the whole Work
 
 WHAT YOU MAY DRAW ON
 Only what is set out below: what they have told you about the Work, its section headings, any corrections they have made to your understanding, and — only if they are at a passage — the text of that one passage, plus the saved text of any further sections the writer has given you standing permission to read (the sections below list exactly which, this turn). The sections below say exactly which of these you have. Do not claim to have read anything they do not list, do not reconstruct prose you were not given, and do not infer content from a heading. If the question needs text you do not have, say so and say what you would need.
+
+THE TEXT CHANGES AS THEY WRITE
+The writer edits their passages between answers. If words you are said to have quoted earlier — or words in one of your earlier readings — are not in the text you have now, do not say you were mistaken or that you misquoted: you cannot see the earlier version, and the writer has most likely revised it since. Say the passage now reads differently, and work from what is there now.
 
 SPEAK ABOUT THE WRITING, NEVER THE WRITER
 Describe what the text does and how it may land for a reader. Do not grade it against an outside standard: the manuscript itself is the reference. Do not characterise the author.
@@ -200,6 +213,9 @@ export interface WorkContext {
   carriedReadings?: CarriedSet;
   /** The passage the writer is at has changed since she was given it earlier in this conversation. */
   locusMovedSinceEarlier?: boolean;
+  /** This exchange is in Sanctuary: nothing is kept, and the standing reading permission, carried readings and settled decisions are set
+   *  aside. She must not offer anything that would persist or that Sanctuary refuses (walk 2026-11-09: she suggested granting reading permission). */
+  sanctuary?: boolean;
 }
 
 export interface StandingRead {
@@ -332,7 +348,8 @@ function workSays(ctx: WorkContext): string {
       'Do not reassert the superseded interpretation as though the correction never happened.',
     ].join('\n'));
   }
-  if (ctx.practiceOffer) parts.push(ctx.practiceOffer);
+  if (ctx.sanctuary) parts.push(SANCTUARY_SAYS);
+  if (ctx.practiceOffer && !ctx.sanctuary) parts.push(ctx.practiceOffer);
   if (ctx.carriedReadings && ctx.carriedReadings.readings.length > 0) parts.push(carriedReadingsSays(ctx.carriedReadings));
   if (ctx.standingRead && ctx.standingRead.sections.length > 0) {
     parts.push(standingReadSays(ctx.standingRead));
@@ -502,9 +519,12 @@ export async function askMaia(
        '--- WHERE THEY ARE IN IT ---', workAnchorSays(ctx), '',
        '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness), '',
        ...(history.length > 0 ? [HISTORY_GROUNDING, ''] : []),
-       studioGuideInstruction(), '',
-       // Design 1B: only the Work conversation shows take-me-there buttons.
-       studioActionsInstruction('work-conversation'),
+       /* Not in Sanctuary: the guide sends writers to "Let MAIA read my saved work" and "Read this chapter", which Sanctuary refuses —
+          that is how she came to suggest granting reading permission there (walk 2026-11-09, defect 5). */
+       ...(ctx.sanctuary ? [] : [studioGuideInstruction(), '']),
+       // Design 1B: only the Work conversation shows take-me-there buttons. Not in Sanctuary: "Read this chapter" keeps observations,
+       // which Sanctuary refuses, so she is not told about the buttons at all there.
+       ...(ctx.sanctuary ? [] : [studioActionsInstruction('work-conversation')]),
        ...(opts.correction ? ['', opts.correction] : [])].join('\n')
     : [STANDING, '', '--- THE READING YOU MADE ---', readingSays(ctx), '',
        '--- WHAT THEY ARE POINTING AT ---', anchorSays(ctx), '',
