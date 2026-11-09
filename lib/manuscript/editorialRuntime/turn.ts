@@ -40,6 +40,7 @@
  *   strike-through over their own words for them to police.
  */
 
+import { KeepWitness } from '@/lib/sanctuary/studioPosture';
 import { answerChoicesInstruction } from '@/lib/writersStudio/answerChoices';
 import { randomUUID } from 'node:crypto';
 import { query } from '@/lib/db/postgres';
@@ -670,6 +671,7 @@ export async function runEditorialTurn(
 
   /* 7 · persist, with the provenance of the answer that ACTUALLY came back */
   const persisted = await persistMaiaEditorialOutcome({
+    keep: KeepWitness.fromDeclaration(input.sanctuary),
     memberId, invocation, outcome: admission.outcome,
     ...(input.relationshipId !== undefined
       ? { relationshipAdmission: input.opening

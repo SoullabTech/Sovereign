@@ -25,6 +25,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { KeepWitness } from '@/lib/sanctuary/studioPosture';
 import { persistMemberEditorialAct } from '@/lib/manuscript/editorialRuntime/memberAct';
 import { runEditorialTurn } from '@/lib/manuscript/editorialRuntime/turn';
 import { MEMBER_ACT_KINDS, type MemberActKind } from '@/lib/manuscript/editorialDiscourse/contract';
@@ -432,7 +433,7 @@ export async function POST(request: NextRequest) {
     arrivalOrigin = resolved;
   }
 
-  const act = await persistMemberEditorialAct({ memberId, threadId: parsed.threadId, act: parsed.act! });
+  const act = await persistMemberEditorialAct({ keep: KeepWitness.fromDeclaration(parsed.sanctuary), memberId, threadId: parsed.threadId, act: parsed.act! });
   if (!act.ok) {
     const status = act.reason === 'thread_not_found' ? 404 : 400;
     return NextResponse.json({ error: act.reason }, { status });

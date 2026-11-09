@@ -79,7 +79,7 @@ import { deriveSectionOrientations } from '@/lib/manuscript/development/frozenOr
 import { mintAct, claimAct, recordCompletionWithClient } from '@/lib/disclosure/authorizationAct';
 import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
 import { confirmDisclosureCrossedWithClient } from '@/lib/disclosure/contextDisclosureReceipt';
-import { resolveStudioPosture } from '@/lib/sanctuary/studioPosture';
+import { resolveStudioPosture, type KeepWitness } from '@/lib/sanctuary/studioPosture';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { transaction } from '@/lib/db/postgres';
 import { isExplanationDepth, type ExplanationDepth } from '@/lib/writersStudio/workingStyle';
@@ -343,6 +343,7 @@ export async function POST(
 
   if (effectiveAnchor.on === 'observation') {
     return developmentalTurn({
+      keep: studioPosture.witness,
       manuscriptId: id, memberId, anchor: effectiveAnchor, existing, question,
       authorizes, pendingAskRef,
       /* ⭐ ONE identity, minted at the boundary and carried through consent and
@@ -421,7 +422,7 @@ export async function POST(
      layer up from the prompt.
      ══════════════════════════════════════════════════════════════════════════ */
   if (check.anchor.on === 'work') {
-    return workTurn({ manuscriptId: id, memberId, anchor: check.anchor, existing,
+    return workTurn({ keep: studioPosture.witness, manuscriptId: id, memberId, anchor: check.anchor, existing,
                       question, sectionId: bodySectionId, posture: turnPosture, postureKnown: postureDeclared });
   }
 
@@ -476,7 +477,7 @@ export async function POST(
     frozenProposalId: frozenIdentity?.proposalId ?? null,
   });
 
-  const liveThreadId = existing ? existing.id : await openThread({
+  const liveThreadId = existing ? existing.id : await openThread({ keep: studioPosture.witness as KeepWitness,
     manuscriptId: id,
     memberId,
     anchor: check.anchor,
@@ -500,7 +501,7 @@ export async function POST(
   const priorTurns = existing?.turns ?? [];
   const retryingHeld = isHeldRetry(priorTurns, question);
   if (!retryingHeld) {
-    await appendTurn({
+    await appendTurn({ keep: studioPosture.witness as KeepWitness,
       threadId: liveThreadId, memberId, speaker: 'author', body: question, staleness,
     });
   }
@@ -531,7 +532,7 @@ export async function POST(
       { status: 502 });
   }
 
-  await appendTurn({
+  await appendTurn({ keep: studioPosture.witness as KeepWitness,
     threadId: liveThreadId, memberId, speaker: 'maia', body: outcome.answer,
     staleness, answerProvenance: outcome.provenance,
   });
@@ -576,6 +577,8 @@ export async function POST(
  * carries no section, and the thread's identity is untouched by where she is.
  */
 async function workTurn(input: {
+  /** Present only when an ordinary posture was declared; the store refuses any write without it. */
+  keep: KeepWitness | null;
   manuscriptId: string;
   memberId: string;
   anchor: AskAnchor;
@@ -587,6 +590,7 @@ async function workTurn(input: {
   postureKnown: boolean;
 }): Promise<NextResponse> {
   const { manuscriptId, memberId, anchor, existing, question, sectionId, posture, postureKnown } = input;
+  const keep = input.keep as KeepWitness;
 
   /* ⛔ NO FABRICATED BASELINE, the same law the structure lane holds: a thread
      that cannot establish its BEFORE does not open. */
@@ -633,7 +637,7 @@ async function workTurn(input: {
      edits, plans and decisions are untouched by this. ⛔ An UNDECLARED posture keeps nothing (founder ruling 2026-11-09): a client with no
      saved settings declares ordinary, so only a posture that exists but cannot be read lands here. */
   const storing = postureKnown && !posture.sanctuary;
-  const liveThreadId = existing ? existing.id : !storing ? '' : await openThread({
+  const liveThreadId = existing ? existing.id : !storing ? '' : await openThread({ keep,
     manuscriptId, memberId, anchor,
     /* ⛔ NULL, AND LAWFULLY SO. The column is nullable precisely for "a thread on
        a Work with no reading". */
@@ -645,7 +649,7 @@ async function workTurn(input: {
   const priorTurns = existing?.turns ?? [];
   const retryingHeld = isHeldRetry(priorTurns, question);
   if (!retryingHeld && storing) {
-    await appendTurn({
+    await appendTurn({ keep,
       threadId: liveThreadId, memberId, speaker: 'author', body: question, staleness,
     });
   }
@@ -777,7 +781,7 @@ async function workTurn(input: {
     });
   }
 
-  const maiaIndex = await appendTurn({
+  const maiaIndex = await appendTurn({ keep,
     threadId: liveThreadId, memberId, speaker: 'maia', body: outcome.answer,
     /* ⭐ PROVENANCE IS PART OF THE ANSWER. What she was supplied and which readings she was given are saved in THIS row, atomically
        with her words, and the row is immutable (ask_turns refuses UPDATE). If the row is not saved, neither is the answer: there is
@@ -818,6 +822,8 @@ async function workTurn(input: {
  * observation as current.
  */
 async function developmentalTurn(input: {
+  /** Present only when an ordinary posture was declared; the store refuses any write without it. */
+  keep: KeepWitness | null;
   manuscriptId: string;
   memberId: string;
   anchor: Extract<AskAnchor, { on: 'observation' }>;
@@ -836,6 +842,7 @@ async function developmentalTurn(input: {
     manuscriptId, memberId, anchor, existing, question,
     authorizes, pendingAskRef, requestId, posture, responseStyle, teachingAnchor,
   } = input;
+  const keep = input.keep as KeepWitness;
 
   const reading = await loadFrozenDevelopmentalReading(manuscriptId, anchor.readingId, memberId);
   const check = checkObservationAnchor(anchor, reading);
@@ -890,7 +897,7 @@ async function developmentalTurn(input: {
     canonicalNow === null ? { state: 'unmeasured' }
       : canonicalAtOpen === canonicalNow ? { state: 'unchanged' } : { state: 'changed' });
 
-  const liveThreadId = existing ? existing.id : await openThread({
+  const liveThreadId = existing ? existing.id : await openThread({ keep,
     manuscriptId,
     memberId,
     anchor: check.anchor,
@@ -920,7 +927,7 @@ async function developmentalTurn(input: {
      ⛔ It decides nothing constitutional: prose never gates authority here. */
   const priorTurns = existing?.turns ?? [];
   if (!isHeldRetry(priorTurns, question)) {
-    await appendTurn({
+    await appendTurn({ keep,
       threadId: liveThreadId, memberId, speaker: 'author', body: question, staleness,
     });
   }
@@ -930,6 +937,7 @@ async function developmentalTurn(input: {
   /* ── ACT 1 · no body required. The existing path, and it NEVER loads prose. */
   if (!bodyReq.required && !pendingAskRef) {
     return answerFrom(ctxWithoutBody, {
+      keep,
       liveThreadId, memberId, staleness, history, question, crossed: [], responseStyle, teachingAnchor,
     });
   }
@@ -1075,6 +1083,7 @@ async function developmentalTurn(input: {
   }
 
   return answerFrom(ctx, {
+    keep,
     liveThreadId, memberId, staleness, history, question, crossed, pendingAskRef, responseStyle, teachingAnchor,
   });
 }
@@ -1121,6 +1130,8 @@ async function answerFrom(
   ctx: ReturnType<typeof assembleDevelopmentalContext>,
   o: {
     liveThreadId: string; memberId: string; staleness: ReturnType<typeof developmentalStaleness>;
+    /** The ordinary-posture witness this developmental turn was admitted with; the store refuses without it. */
+    keep: KeepWitness;
     history: { speaker: 'author' | 'maia'; body: string }[]; question: string;
     crossed: readonly string[]; pendingAskRef?: string;
     responseStyle?: ExplanationDepth;
@@ -1142,7 +1153,7 @@ async function answerFrom(
 
   try {
     await transaction(async (client) => {
-      const turnIndex = await appendTurnWithClient(client, {
+      const turnIndex = await appendTurnWithClient(client, { keep: o.keep,
         threadId: o.liveThreadId, memberId: o.memberId, speaker: 'maia', body: outcome.answer,
         staleness: o.staleness, answerProvenance: outcome.provenance,
       });

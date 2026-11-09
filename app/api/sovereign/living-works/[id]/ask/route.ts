@@ -8,7 +8,7 @@
  * ⛔ Declared Source/Idea bodies do not cross here merely because they belong
  * to the Work. This ordinary conversation receives Work declarations + C14.
  */
-import { isPostureDeclaration, resolveStudioPosture } from '@/lib/sanctuary/studioPosture';
+import { isPostureDeclaration, resolveStudioPosture, type KeepWitness } from '@/lib/sanctuary/studioPosture';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
@@ -92,7 +92,10 @@ export async function POST(
   if (body.sanctuary !== undefined && !isPostureDeclaration(body.sanctuary)) {
     return NextResponse.json({ refusal: 'malformed', detail: 'sanctuary' }, { status: 400 });
   }
-  const storing = (await resolveStudioPosture(memberId, body)).keep;
+  const studioPosture = await resolveStudioPosture(memberId, body);
+  const storing = studioPosture.keep;
+  /* The store refuses any write without this witness; it exists only when storing is true. */
+  const keep = studioPosture.witness as KeepWitness;
 
   const requestedThreadId = typeof body.threadId === 'string' ? body.threadId : null;
   const existing = requestedThreadId
@@ -124,7 +127,7 @@ export async function POST(
     return NextResponse.json({ refusal: built.reason }, { status: 422 });
   }
 
-  const liveThreadId = existing?.id ?? (!storing ? '' : await openLivingWorkThread({
+  const liveThreadId = existing?.id ?? (!storing ? '' : await openLivingWorkThread({ keep: keep,
     livingWorkId: workId,
     memberId,
     canonicalAtOpen: currentFingerprint,
@@ -133,7 +136,7 @@ export async function POST(
 
   const priorTurns = existing?.turns ?? [];
   if (storing && !isHeldRetry(priorTurns, question)) {
-    await appendTurn({
+    await appendTurn({ keep: keep,
       threadId: liveThreadId,
       memberId,
       speaker: 'author',
@@ -173,7 +176,7 @@ export async function POST(
     });
   }
 
-  await appendTurn({
+  await appendTurn({ keep: keep,
     threadId: liveThreadId,
     memberId,
     speaker: 'maia',
