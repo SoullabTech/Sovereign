@@ -372,3 +372,16 @@ instruction as if the writer had typed it, which the F1 ruling retired elsewhere
 block is reachable in the live Studio was not verified. Recommended: route it through
 `passageActQuestion('where-next')` with `passageAct: 'where-next'`, like the other call site. That
 is a UI change on the shared Write view, so it needs its own act.
+
+### 11.2 The older call site routed (founder: "Yes, route it", 2026-11-09)
+
+`app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx`, `onAskMaia` in the craft-focus
+tools block, now sends `passageActQuestion('where-next')` with `passageAct: 'where-next'`. It used
+to send the old instruction text as if the writer had typed it.
+- Both call sites now store only the writer's words, and both get the G-5 instruction from the
+  server.
+- Guard (in `whereNextAct.test.ts`): no call site contains the instruction text, and this site
+  uses the act.
+- Gates: `app/writers-studio` + `app/dev` 1766/1766; typecheck 214 against a baseline of 214.
+- Not walked: whether this block is reachable in the live Studio is still unverified. The
+  behaviour behind it is the run-9 behaviour.

@@ -1550,7 +1550,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           nextLabel: nextCraft?.label ?? null,
           onContinue: () => nextCraft ? moveCraftFocus(nextCraft) : false,
           onChoose: () => setCraftPickerRequest(value => value + 1),
-          onAskMaia: () => sendCraft('Which one or two exact passages should I consider next? Use only the text already authorized in this conversation. If that is insufficient, ask me to choose. Do not move focus or propose a revision.', { proposalPolicy: 'reply_only' }),
+          // G-5 (founder: "Yes, route it", 2026-11-09): the writer's words, with the server-owned act.
+          onAskMaia: () => sendCraft(passageActQuestion('where-next'), { proposalPolicy: 'reply_only', passageAct: 'where-next' }),
         }}
       />
     </div>

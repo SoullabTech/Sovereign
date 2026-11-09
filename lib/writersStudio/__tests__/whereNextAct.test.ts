@@ -33,3 +33,17 @@ describe('Ask MAIA where next', () => {
     expect(text).not.toMatch(/\b(most important|priority|biggest|weakest|strongest|best)\b/i);
   });
 });
+
+describe('every "where next" call site uses the act (founder: "Yes, route it")', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require('node:fs') as typeof import('node:fs');
+  const view = fs.readFileSync(require('node:path').join(process.cwd(), 'app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx'), 'utf8');
+
+  it('no call site sends the instruction text as the writer\'s words', () => {
+    expect(view).not.toContain('Which one or two exact passages');
+  });
+
+  it('the craft-focus tools route through the act', () => {
+    expect(view).toContain("onAskMaia: () => sendCraft(passageActQuestion('where-next'), { proposalPolicy: 'reply_only', passageAct: 'where-next' })");
+  });
+});
