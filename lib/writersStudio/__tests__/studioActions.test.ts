@@ -11,7 +11,7 @@ describe('the closed allowlist', () => {
     // G4 (founder, 2026-11-09): read-chapter, Work conversation only, started by the writer's click.
     // Amendment 2 (founder, 2026-11-09, "Yes, amend it"): grant-reading, make-plan, note-settled, open-desk — Work conversation only.
     // Standing rule completion (founder, 2026-11-09): navigation offers so every Develop capability is askable; go-chapter takes an id, never a heading.
-    expect(STUDIO_ACTIONS.map((a) => a.id).sort()).toEqual(['close-conversation', 'craftsmans-table', 'develop-overview', 'editorial-pass', 'focus', 'go-chapter', 'grant-reading', 'make-plan', 'new-conversation', 'note-settled', 'open-desk', 'open-in-maia', 'read-chapter', 'show', 'show-keeps']);
+    expect(STUDIO_ACTIONS.map((a) => a.id).sort()).toEqual(['close-conversation', 'craftsmans-table', 'develop-overview', 'editorial-pass', 'focus', 'go-chapter', 'grant-reading', 'make-plan', 'new-conversation', 'note-settled', 'open-desk', 'open-in-maia', 'read-chapter', 'show', 'show-keeps', 'teach-me']);
     expect(JSON.stringify(STUDIO_ACTIONS)).not.toMatch(/section-|go-to-section/);
   });
 

@@ -463,3 +463,45 @@ per case):
 
 Not yet done: the Develop UI that sends the style and a Teach-me offer. That waits on the
 redesign session.
+
+### 13.1 G-3 UI: working style and a Teach-me offer in the Develop conversation
+
+Coordinated with the redesign session (Develop's owner), which said "Yes to both" and specified the
+amendment-2 pattern.
+
+**Changes.**
+- `studioActions.ts`: a new `teach-me` offer, for the work-conversation surface only. Its `does`
+  line says only the writer's click starts it. An instruction line tells MAIA to offer it when the
+  writer asks how or why something works or wants to understand the craft, and never as an
+  unasked lesson. It is not described to MAIA in Sanctuary, like every offer there.
+- `WorkConversation.tsx`:
+  - every question sends `responseStyle: readWorkingStyle().explanation`;
+  - the `teach-me` click sends `teachingQuestion('passage')` with `teachingAnchor: 'passage'`, and
+    neither sends nor clears the writer's draft;
+  - there is no button where there is no manuscript, because the Living Work route takes no anchor.
+- No visible control was added, so there is no `developAskable` mapping. The offer only appears
+  under MAIA's reply.
+
+**Tests.**
+- New: `workConversationTeachMe.test.ts`, 4/4 (offered, nothing sent until the click; the click
+  sends one teaching turn with the anchor and style; an ordinary question carries the style and no
+  anchor; no button without a manuscript).
+- Updated:
+  - `studioActions.test.ts` (allowlist);
+  - `workConversationDraftProtection.test.ts` (the pinned request body now includes
+    `responseStyle: 'guided'`; its law is unchanged).
+- Requested suites (developAskable, studioActions, workConversationActingOffers,
+  workConversationDraftProtection, developStage, workConversationHonestReading,
+  workConversationStudioActions): pass.
+- Wider run (`app/writers-studio`, `app/dev`, `lib/writersStudio`, `lib/manuscript/ask`): the only
+  failures are the suites already failing before this change (listen, publish,
+  manuscriptImportWork, askSourceCloseout).
+- Typecheck: 214 against a baseline of 214.
+
+**Real-model check** (harness :3111, fictional "The Long Harbour", Develop conversation):
+- The writer asked: "Why does the opening work? I want to understand the craft of it."
+- MAIA answered at sentence level ("This is at the level of how the sentences move, which is
+  where your question sits"), closed with a choice, and **offered "Teach me about this"**.
+- The click sent "Teach me about the writing in this passage." MAIA replied in the teaching shape:
+  one craft idea ("you let us see Marta's attention before we see Marta"), an exact quotation, and
+  "Would you like to look at why that lands, or at what it costs?"

@@ -33,6 +33,10 @@
  *                   words, the chapters she read). `go-chapter:<section id>` — moves to a chapter; ⛔ only an id she was given, checked
  *                   against the Work (the reason Design 1B left it out: headings are not unique). `show-keeps`, `open-in-maia`, `focus`,
  *                   `close-conversation` — the conversation's own controls.
+ *
+ * ⭐ G-3 (WS-CRAFT-CONVENTIONS-01, founder: "whatever is best practice", 2026-11-09): `teach-me` — MAIA may OFFER it on the Work
+ * conversation; ONLY the writer's click sends a teaching turn ("Teach me about the writing in this passage.", anchor `passage`).
+ * The teaching shape is server-owned (teachingTurn.ts). Not described to MAIA in Sanctuary, like every other offer there.
  */
 
 import { stripAnswerChoices } from '@/lib/writersStudio/answerChoices';
@@ -40,7 +44,7 @@ import { DEVELOPMENTAL_LENSES, type DevelopmentalLens } from '@/lib/manuscript/d
 
 export type StudioActionId = 'develop-overview' | 'editorial-pass' | 'craftsmans-table' | 'new-conversation' | 'read-chapter'
   | 'grant-reading' | 'make-plan' | 'note-settled' | 'open-desk'
-  | 'show' | 'go-chapter' | 'show-keeps' | 'open-in-maia' | 'focus' | 'close-conversation';
+  | 'show' | 'go-chapter' | 'show-keeps' | 'open-in-maia' | 'focus' | 'close-conversation' | 'teach-me';
 export const SHOW_PLACES = ['plan', 'kind', 'reading', 'settled', 'recurring', 'read'] as const;
 export type ShowPlace = typeof SHOW_PLACES[number];
 const SHOW_LABEL: Record<ShowPlace, string> = { plan: 'Show my plan', kind: 'Say what kind of book this is', reading: 'Show what MAIA can read', settled: 'Show what I have settled', recurring: 'Show words that recur', read: 'Show the chapters she read' };
@@ -71,6 +75,8 @@ export const STUDIO_ACTIONS: readonly StudioAction[] = [
   { id: 'open-in-maia', label: 'Continue in MAIA', does: 'takes the writer to MAIA outside the Studio with this Work', surfaces: ['work-conversation'] },
   { id: 'focus', label: 'Focus on our conversation', does: 'widens this conversation so the writer can concentrate on it', surfaces: ['work-conversation'] },
   { id: 'close-conversation', label: 'Back to your chapter', does: 'closes this conversation so the writer is back with their chapter', surfaces: ['work-conversation'] },
+  /* WS-CRAFT-CONVENTIONS-01 · G-3 (founder: "whatever is best practice", 2026-11-09): Teach me in the Work conversation. */
+  { id: 'teach-me', label: 'Teach me about this', does: 'when the writer clicks it, you teach one craft idea at work in the writing you are discussing, in their own words, then let them steer where it goes; only their click starts it, and you never begin a lesson yourself', surfaces: ['work-conversation'] },
   { id: 'new-conversation', label: 'Start a new conversation', does: 'sets this conversation aside (it stays saved) so the next question starts fresh', surfaces: ['passage-focus', 'work-conversation'] },
 ];
 
@@ -158,6 +164,7 @@ export function studioActionsInstruction(surface: StudioActionSurface): string {
       'Offer [[studio:note-settled]] when the writer states something they have decided about the book. The decision is in their words, never yours.',
       'Offer [[studio:open-desk]] when the writer wants to work on the exact passage you are discussing.',
       'Offer [[studio:show:…]] when the writer asks to see or change their plan, the book’s kind, what you may read (or to stop you reading), what they have settled (or to withdraw it), recurring words, or the chapters you read. For the book’s kind, the writer chooses; never suggest which.',
+      'Offer [[studio:teach-me]] when the writer asks how or why something in their writing works, or says they want to understand the craft, and you have answered what they asked. Never offer it as a lesson they did not ask for.',
       'Offer [[studio:go-chapter:ID]] when the writer asks to go to a chapter, using only an id from the section list. Offer [[studio:show-keeps]], [[studio:open-in-maia]], [[studio:focus]] or [[studio:close-conversation]] when the writer asks for exactly that.',
     ] : []),
   ].join('\n');

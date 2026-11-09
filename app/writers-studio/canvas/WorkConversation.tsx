@@ -29,6 +29,7 @@ import {
 import type { LivingWork } from '../useLivingWorks';
 import { createWriterCorrection } from '@/lib/writersStudio/writerCorrectionsClient';
 import { readWorkingStyle, writeWorkingStyle } from '@/lib/writersStudio/workingStyle';
+import { teachingQuestion, type TeachingAnchor } from '@/lib/writersStudio/teachingTurn';
 import {
   proposePresentationRequest, writeStudioPresentation,
   type SafePresentationProposal,
@@ -433,11 +434,13 @@ function ScopedWorkConversation({
     setCorrectionStatus('Correction kept. MAIA will receive this as the current working understanding for this Work.');
   };
 
-  const send = async () => {
-    const question = draft.trim();
+  /* G-3: `teach` is a pressed Teach me (the writer's click on MAIA's offer). Its words are the button's own; the writer's draft is
+     neither sent nor cleared. */
+  const send = async (teach?: TeachingAnchor) => {
+    const question = teach ? teachingQuestion(teach) : draft.trim();
     // Synchronous guard: two send events can fire before pending state renders.
     if (!question || pending !== null || inFlightRef.current) return;
-    const requestedPresentation = proposePresentationRequest(question, readWorkingStyle());
+    const requestedPresentation = teach ? null : proposePresentationRequest(question, readWorkingStyle());
     if (requestedPresentation) {
       setPresentationConfirmation(requestedPresentation);
       setPresentationNotice(null);
@@ -458,6 +461,9 @@ function ScopedWorkConversation({
             question,
             ...(mode.kind === 'resume' ? { threadId: mode.threadId } : { anchor: WORK_ANCHOR }),
             ...(sectionId ? { sectionId } : {}),
+            /* G-3: the writer's own working-style preference, as the observation dialogue sends it; and a pressed Teach me. */
+            responseStyle: readWorkingStyle().explanation,
+            ...(teach ? { teachingAnchor: teach } : {}),
             /* The member's CURRENT posture, read at this gesture. Unresolved ⇒ omitted, and the server then withholds the standing read. */
             ...declaredSanctuaryPosture(),
           })
@@ -473,7 +479,7 @@ function ScopedWorkConversation({
       if (r.ok) {
         // Text can be edited away and retyped identically. Compare edit
         // ownership, not string equality; read the live ref in the updater.
-        setDraft((current) => draftRevisionRef.current === submittedRevision ? '' : current);
+        if (!teach) setDraft((current) => draftRevisionRef.current === submittedRevision ? '' : current);
         if (r.sanctuary) {
           // Not kept: nothing was stored, so there is no thread to reload. Show the exchange here only.
           setSanctuaryTurns((list) => [...list, { question: r.sanctuary!.question, answer: r.sanctuary!.answer, after: thread?.turns.length ?? 0 }]);
@@ -710,7 +716,7 @@ function ScopedWorkConversation({
               if (ACTING.has(offered.id) && !onStudioAct) return null;   // a room that cannot honour it shows no button
               const chapterName = offered.id === 'go-chapter' && parsed.target ? chapterLabel?.(parsed.target) ?? null : null;
               if (offered.id === 'go-chapter' && !chapterName) return null;   // ⛔ an id not in this Work is no button
-              if ((offered.id === 'show-keeps' || offered.id === 'open-in-maia') && !manuscriptId) return null;
+              if ((offered.id === 'show-keeps' || offered.id === 'open-in-maia' || offered.id === 'teach-me') && !manuscriptId) return null;
               const mine = latestAuthorWords(thread?.turns ?? []);
               const run = () => {
                 if (offered.id === 'grant-reading') { void performAct({ id: 'grant-reading', level: parsed.level ?? 'chapter' }); return; }
@@ -724,6 +730,7 @@ function ScopedWorkConversation({
                 if (offered.id === 'close-conversation') { if (requestConversationDeparture()) onClose(); return; }
                 if (offered.id === 'open-in-maia') { if (manuscriptId && requestConversationDeparture()) window.location.assign(handoffToMaia('/maia', { workId: work.id, manuscriptId })); return; }
                 if (offered.id === 'new-conversation') { startFresh(); return; }
+                if (offered.id === 'teach-me') { void send('passage'); return; }
                 if (offered.id === 'read-chapter') { void startChapterReading(parsed.lens ?? 'overview'); return; }
                 if (place && requestConversationDeparture()) onStudioPlace?.(place);
               };

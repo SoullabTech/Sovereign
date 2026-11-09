@@ -130,7 +130,9 @@ it('retains the exact draft after a transport refusal instead of clearing it bef
   await mount(draft); await click('Send');
   expect(mockAsk).toHaveBeenCalledWith({ manuscriptId: 'fictional-manuscript', question: draft.trim(),
     // No saved settings on this device ⇒ the request says so, and the server uses the member's account default (founder ruling 2026-11-09).
-    anchor: { on: 'work' }, sectionId: 'section-a', sanctuary: 'no_live_settings' });
+    anchor: { on: 'work' }, sectionId: 'section-a', sanctuary: 'no_live_settings',
+    // G-3 (WS-CRAFT-CONVENTIONS-01): the writer's working style travels with every question (no saved style ⇒ the default).
+    responseStyle: 'guided' });
   expect(input().value).toBe(draft); expect(host.textContent).toContain('That didn’t reach her');
 });
 it('retains the draft if the server records a thread but cannot produce an answer', async () => {
