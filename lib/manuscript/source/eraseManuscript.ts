@@ -62,6 +62,7 @@
 import { transaction, query, type TransactionClient } from '@/lib/db/postgres';
 import { destroyVaultBytes } from '@/lib/storage/fileVault';
 import { vaultErasureErrnoR105 } from './vaultErasureSafeLogR105';
+import { holdManuscriptDeclarationExclusive } from './manuscriptDeclarationLock';
 import { r20LedgerErrorCode, sealR20DeletionLedger } from '@/lib/recovery/r20DeletionLedger';
 import { writeWorkDeletionRecord } from './workDeletionRecord';
 
@@ -108,6 +109,20 @@ export async function eraseManuscript(
     await tx.query(
       `SELECT pg_advisory_xact_lock(hashtextextended('soullab:r20:recovery-capture', 0))`,
     );
+
+    /* A declaration of this writing into a Work (POST …/expressions) holds the
+       same key shared for its whole transaction. Taking it exclusively HERE —
+       before `claims` is read, and before any row lock — means every declaration
+       that committed is visible to the read below, and every later one waits and
+       then finds the writing gone. Without it, a declaration committing between
+       `claims` and the DELETE below leaves a Work naming an erased writing, and
+       slips past the shared-writing refusal that `claims` exists to enforce.
+
+       Deliberately an advisory lock and not a lock on the manuscript row: the
+       row order everywhere else is Work → manuscript (this function's claims →
+       DELETE, and threadOrigin's FOR SHARE walk), and locking the manuscript
+       first would cycle with a transaction holding a Work and asking for it. */
+    await holdManuscriptDeclarationExclusive(tx, memberId, manuscriptId);
 
     /* Shared material is never erased out from under a Work the member did not
        delete. Inside the transaction, so the answer cannot go stale between the

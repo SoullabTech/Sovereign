@@ -56,8 +56,24 @@ const JEST_TESTS = [
   // closed list no jest candidate could be killed by them, and the source-law and copy-law candidates below would all look alive.
   'lib/manuscript/source/__tests__/workDeletionRecord.test.ts',
   'lib/writersStudio/__tests__/removeCopyConversations.test.ts',
+  // WS-DELETE-01 retained editorial threads (2026-11-08): the orphaned-origin gate's two hermetic suites (also run alone as kind 'jestog').
+  'lib/manuscript/editorialRuntime/__tests__/orphanedOriginGate.test.ts',
+  'app/api/writers-studio/editorial/adoption/__tests__/originUnavailable.test.ts',
 ];
 const PG_RUN = 'tests/constitutional/ws-delete/dynamic/run-local-pg16.sh';
+// The orphaned-origin gate has its own two kinds so its candidates run only its own suites: 'jestog' = its two hermetic suites,
+// 'pgog' = the retained-editorial PostgreSQL probe with its own runner.
+const OG_JEST = [
+  'lib/manuscript/editorialRuntime/__tests__/orphanedOriginGate.test.ts',
+  'app/api/writers-studio/editorial/adoption/__tests__/originUnavailable.test.ts',
+];
+const PG_RUN_OG = 'tests/constitutional/ws-delete/dynamic/run-retained-editorial-pg16.sh';
+const OG_ORPHAN = 'lib/writers-studio/orphanedEditorialOrigin.ts';
+const OG_ADOPT = 'lib/manuscript/editorialRuntime/adoption.ts';
+const OG_LIST = 'lib/manuscript/editorialRuntime/relationships.ts';
+const OG_ADOPT_ROUTE = 'app/api/writers-studio/editorial/adoption/route.ts';
+const OG_UNDO = 'lib/manuscript/editorialRuntime/recovery.ts';
+const OG_ASK = 'app/api/sovereign/manuscripts/[id]/ask/route.ts';
 const HISTORY = `${HOME}/P4R1HistoryPage.tsx`;
 const HISTORY_RULE = 'app/writers-studio/historyActions.ts';
 const WORK_ROUTE = 'app/api/sovereign/living-works/[id]/route.ts';
@@ -451,6 +467,40 @@ const MUTANTS = [
   ['CX7', 'jest', LIB, ' ${CONVERSATIONS_STAY_WITH_THE_WRITING}`,', ' ${CONVERSATIONS_STAY_WITH_THE_WRITINGS}`,', 'the single-writing Remove dialog carries the plural sentence ("those writings")'],
   ['CX8', 'jest', LIB, "const WHAT_GOES_WITH_A_REMOVED_WORK =\n  'what you told MAIA about it, your corrections, its plans, where you left off,", "const WHAT_GOES_WITH_A_REMOVED_WORK =\n  'what you told MAIA about it, your corrections, its plans,", 'the Remove goes-list stops naming something that does go (the counterpart of D3, which now covers the Delete list only)'],
   ['CX9', 'jest', LIB, ', and any conversation you had with MAIA about it while it held no writing\';', '\';', 'the Remove goes-list drops the conversations that DO belong to the Work row (opened while the Work held no writing), which do go'],
+  // ── the editing-conversations clause (LIB), ruling 2026-11-08, lane record 6.9.5(e)
+  ['CX10', 'jest', LIB, "they stay with the writing, and deleting the writing deletes them. '\n  + EDITING_CONVERSATIONS_NOT_OFFERED;", "they stay with the writing, and deleting the writing deletes them.';", 'the single-writing Remove dialog drops the clause, so it says nothing about the passage-by-passage conversations that no Work will offer again'],
+  ['CX10b', 'jest', LIB, "deleting a writing deletes its conversations. '\n  + EDITING_CONVERSATIONS_NOT_OFFERED;", "deleting a writing deletes its conversations.';", 'the several-writings Remove dialog drops the clause'],
+  ['CX11', 'jest', LIB, "and no Work will offer them again.'", "and they can no longer be opened.'", 'the clause turns into a claim about reach ("can no longer be opened"), which is false: the ask route still reads a thread by id for its owner'],
+  ['CX12', 'jest', LIB, "and no Work will offer them again.'", "and no Work will offer them again, and nothing is left of them in the Studio.'", 'the clause grows a claim about what is left, which is false: the history stays, with the member\'s own words, until the writing is deleted'],
+
+  // ══ WS-DELETE-01 retained editorial threads (2026-11-08): the orphaned-origin gate (founder-chosen option b-narrow) ══
+  // Each entry is a plausible WRONG version of one decision of the gate. `<id>` is judged by the two hermetic suites ('jestog'), `<id>p`
+  // by the retained-editorial PostgreSQL probe ('pgog'); an entry with only one half says why in its text. A '(textual guard)' entry is
+  // caught only by a test that reads source text. There is NO candidate for "gate on the Work row instead of the relationship" on
+  // purpose: the relationship is deleted by cascade from the Work, so no observable behaviour tells the two apart (irreducible).
+  ['OG1', 'jestog', OG_ADOPT, 'if (await threadOriginIsOrphaned(memberId, input.threadId)) {', 'if (false as boolean) {', 'adoption is not gated at all: a removed Work\'s retained version still changes the writing'],
+  ['OG1p', 'pgog', OG_ADOPT, 'if (await threadOriginIsOrphaned(memberId, input.threadId)) {', 'if (false as boolean) {', 'adoption is not gated at all: a removed Work\'s retained version still changes the writing'],
+  ['OG2', 'jestog', OG_ADOPT, 'if (await threadOriginIsOrphaned(memberId, input.threadId)) {', 'if ((await authorizeVersion(memberId, chainId, input.versionId), await threadOriginIsOrphaned(memberId, input.threadId))) {', 'adoption refuses AFTER minting the permission: a durable authorization exists for an act that was refused'],
+  ['OG2p', 'pgog', OG_ADOPT, 'if (await threadOriginIsOrphaned(memberId, input.threadId)) {', 'if ((await authorizeVersion(memberId, chainId, input.versionId), await threadOriginIsOrphaned(memberId, input.threadId))) {', 'adoption refuses AFTER minting the permission: a durable authorization exists for an act that was refused'],
+  ['OG3', 'jestog', OG_ADOPT_ROUTE, "outcome.reason === 'origin_unavailable' ? 409 : 404;", "outcome.reason === 'origin_unavailable' ? 404 : 404;", 'the route answers a removed Work as an unknown id (404) instead of the 409 the thread, version and open paths use'],
+  ['OG3p', 'pgog', OG_ADOPT_ROUTE, "outcome.reason === 'origin_unavailable' ? 409 : 404;", "outcome.reason === 'origin_unavailable' ? 404 : 404;", 'the route answers a removed Work as an unknown id (404) instead of the 409 the thread, version and open paths use'],
+  // OG4 has no hermetic twin: GATE-8's substring checks cannot see an extra OR branch; only a database can say what the predicate does to a thread that never had an origin.
+  ['OG4p', 'pgog', OG_ORPHAN, "  return `EXISTS (\n    SELECT 1 FROM writer_editorial_thread_origins o\n     WHERE o.thread_id = ${threadRef}\n       AND NOT EXISTS (\n         SELECT 1 FROM writer_editorial_relationships r\n          WHERE r.id = o.relationship_id AND r.member_id = o.member_id))`;", "  return `(NOT EXISTS (\n    SELECT 1 FROM writer_editorial_relationships r\n     WHERE r.id = (SELECT o.relationship_id FROM writer_editorial_thread_origins o WHERE o.thread_id = ${threadRef})))`;", 'a thread that never had an origin row reads as orphaned (its missing origin names no relationship that exists), so the gate refuses and the list hides older threads that the 2026-11-01 ruling and its notice protect'],
+  ['OG5', 'jestog', OG_ORPHAN, '       AND NOT EXISTS (\n         SELECT 1 FROM writer_editorial_relationships r\n          WHERE r.id = o.relationship_id AND r.member_id = o.member_id))`;', '       AND TRUE)`;', 'every thread that has an origin row counts as orphaned, so a LIVE conversation is refused and hidden too'],
+  ['OG5p', 'pgog', OG_ORPHAN, '       AND NOT EXISTS (\n         SELECT 1 FROM writer_editorial_relationships r\n          WHERE r.id = o.relationship_id AND r.member_id = o.member_id))`;', '       AND TRUE)`;', 'every thread that has an origin row counts as orphaned, so a LIVE conversation is refused and hidden too'],
+  ['OG7', 'jestog', OG_LIST, "        AND NOT ${orphanedOriginSql('th.id')}\n", '', 'the list still offers a removed Work\'s thread, with its frozen passage, to a surface that cannot open it'],
+  ['OG7p', 'pgog', OG_LIST, "        AND NOT ${orphanedOriginSql('th.id')}\n", '', 'the list still offers a removed Work\'s thread, with its frozen passage, to a surface that cannot open it'],
+  ['OG8', 'jestog', OG_LIST, "AND NOT ${orphanedOriginSql('th.id')}", "AND ${orphanedOriginSql('th.id')}", 'the list filter is inverted: only the removed Work\'s threads are offered'],
+  ['OG8p', 'pgog', OG_LIST, "AND NOT ${orphanedOriginSql('th.id')}", "AND ${orphanedOriginSql('th.id')}", 'the list filter is inverted: only the removed Work\'s threads are offered'],
+  ['OG9', 'jestog', OG_UNDO, 'export async function undoApplication(memberId: string, authorizationId: string): Promise<RecoveryOutcome> {\n  return transaction(async tx => {', "export async function undoApplication(memberId: string, authorizationId: string): Promise<RecoveryOutcome> {\n  return transaction(async tx => {\n    const og = await tx.query(`SELECT 1 FROM ask_threads th JOIN manuscript_revision_authorizations a ON a.proposal_chain_id = th.proposal_chain_id WHERE a.id = $1 AND ${(await import('@/lib/writers-studio/orphanedEditorialOrigin')).orphanedOriginSql('th.id')}`, [authorizationId]);\n    if (og.rows.length > 0) return { kind: 'refused', reason: 'unknown_application' };", '(textual guard) undo is gated too, which strips the only way back from an adoption the member made before the Remove'],
+  ['OG9p', 'pgog', OG_UNDO, 'export async function undoApplication(memberId: string, authorizationId: string): Promise<RecoveryOutcome> {\n  return transaction(async tx => {', "export async function undoApplication(memberId: string, authorizationId: string): Promise<RecoveryOutcome> {\n  return transaction(async tx => {\n    const og = await tx.query(`SELECT 1 FROM ask_threads th JOIN manuscript_revision_authorizations a ON a.proposal_chain_id = th.proposal_chain_id WHERE a.id = $1 AND ${(await import('@/lib/writers-studio/orphanedEditorialOrigin')).orphanedOriginSql('th.id')}`, [authorizationId]);\n    if (og.rows.length > 0) return { kind: 'refused', reason: 'unknown_application' };", 'undo is gated too, which strips the only way back from an adoption the member made before the Remove'],
+  ['OG10', 'jestog', OG_ASK, 'if (!t || t.manuscriptId !== id) {', "if (!t || t.manuscriptId !== id || (await (await import('@/lib/writers-studio/orphanedEditorialOrigin')).threadOriginIsOrphaned(memberId, threadId))) {", '(textual guard) the ask route\'s ?thread= read is gated, which removes the member\'s only sight of what is retained before option (c) gives them a door'],
+  ['OG10p', 'pgog', OG_ASK, 'if (!t || t.manuscriptId !== id) {', "if (!t || t.manuscriptId !== id || (await (await import('@/lib/writers-studio/orphanedEditorialOrigin')).threadOriginIsOrphaned(memberId, threadId))) {", 'the ask route\'s ?thread= read is gated, which removes the member\'s only sight of what is retained before option (c) gives them a door'],
+  ['OG11', 'jestog', OG_ADOPT_ROUTE, "const BODY_KEYS = ['threadId', 'versionId'] as const;", "const BODY_KEYS = ['threadId', 'versionId', 'relationshipId'] as const;", '(textual guard) the adoption body grows a relationshipId: the strict variant (b-strict) arrives through a contract change nobody chose'],
+  ['OG12', 'jestog', OG_ORPHAN, 'return r.rows.length === 1 && r.rows[0]!.orphaned === true;', 'return r.rows.length === 1 && r.rows[0]!.orphaned !== false;', 'an unanswered value (null) is read as an orphan, so a database that cannot answer refuses members'],
+  ['OG13', 'jestog', OG_ORPHAN, 'return r.rows.length === 1 && r.rows[0]!.orphaned === true;', 'return r.rows.length !== 1 || r.rows[0]!.orphaned === true;', 'a thread that is not the member\'s (no row) is read as an orphan'],
+  ['OG14', 'jestog', OG_ORPHAN, '    [memberId, threadId]);', '    [threadId, memberId]);', 'the member and the thread are swapped in the orphan question, so it asks about nobody and fails open'],
+  ['OG14p', 'pgog', OG_ORPHAN, '    [memberId, threadId]);', '    [threadId, memberId]);', 'the member and the thread are swapped in the orphan question, so it asks about nobody and fails open'],
 ];
 
 const args = process.argv.slice(2);
@@ -466,7 +516,7 @@ const unknownIds = ids.filter((id) => !MUTANTS.some((m) => m[0] === id));
 if (unknownIds.length) { console.error(`unknown mutant id(s): ${unknownIds.join(', ')}`); process.exit(2); }
 const duplicates = MUTANTS.map((m) => m[0]).filter((id, i, all) => all.indexOf(id) !== i);
 if (duplicates.length) { console.error(`duplicate mutant id(s): ${[...new Set(duplicates)].join(', ')}`); process.exit(2); }
-const selected = MUTANTS.filter(([id, kind]) => (ids.length ? ids.includes(id) : true) && !(jestOnly && kind !== 'jest') && !(pgOnly && kind !== 'pg'));
+const selected = MUTANTS.filter(([id, kind]) => (ids.length ? ids.includes(id) : true) && !(jestOnly && !kind.startsWith('jest')) && !(pgOnly && !kind.startsWith('pg')));
 if (selected.length === 0) { console.error('no mutant selected (the ids and kind filters match nothing); nothing was run'); process.exit(2); }
 
 /** Where is the `nth` (1-based) occurrence of `anchor`? -1 when there are fewer. For the default (no nth) the anchor must be UNIQUE. */
@@ -494,7 +544,7 @@ if (setupErrors) process.exit(2);
 if (checkOnly) { console.log(`${selected.length} anchors found.`); process.exit(0); }
 
 // The PostgreSQL harness needs root and the server binaries. Say so up front, instead of letting every pg mutant "die" for that reason.
-if (selected.some((m) => m[1] === 'pg')) {
+if (selected.some((m) => m[1].startsWith('pg'))) {
   const pgbin = process.env.PGBIN ?? '/usr/lib/postgresql/16/bin';
   const root = typeof process.getuid === 'function' && process.getuid() === 0;
   if (!root || !existsSync(join(pgbin, 'initdb')) || !existsSync(join(pgbin, 'pg_ctl'))) {
@@ -525,13 +575,13 @@ const exec = (cmd, cmdArgs, env, timeoutMs) => new Promise((done) => {
 });
 
 const run = async (kind) => {
-  if (kind === 'jest') {
-    const r = await exec('npx', ['jest', ...JEST_TESTS, '--silent', '--coverage=false'], process.env, 900000);
+  if (kind === 'jest' || kind === 'jestog') {
+    const r = await exec('npx', ['jest', ...(kind === 'jest' ? JEST_TESTS : OG_JEST), '--silent', '--coverage=false'], process.env, 900000);
     return { ...r, summary: /^Tests:\s/m };
   }
   const log = join(out, 'jest.log');
   rmSync(log, { force: true });                 // a log left by an earlier run must never be mistaken for this one
-  const r = await exec('bash', [PG_RUN], { ...process.env, WS_DELETE_OUT: out }, 900000);
+  const r = await exec('bash', [kind === 'pgog' ? PG_RUN_OG : PG_RUN], { ...process.env, WS_DELETE_OUT: out }, 900000);
   return { ...r, text: `${r.text}\n${existsSync(log) ? readFileSync(log, 'utf8') : ''}`, summary: /^Tests:\s/m };
 };
 /** A failing TEST, not a failing hook: a `beforeAll`/`afterAll` error (a harness problem) is not evidence that the mutant was caught. */

@@ -110,11 +110,21 @@ describe('the Work rows are locked before the expression rows (the order a Work\
   it('the advisory lock, then the Work rows FOR UPDATE, then the expression rows FOR UPDATE OF e only', async () => {
     install({ claims: [W_A, W_B], writingHeld: true });
     await eraseManuscript(MS, MEMBER);
-    expect(seen[0]!.sql).toContain('pg_advisory_xact_lock');
-    expect(seen[1]!.sql).toContain('ws-delete:lock-works-first');
-    expect(seen[1]!.sql).toMatch(/FROM living_works w[\s\S]*ORDER BY w\.id[\s\S]*FOR UPDATE\s*$/);
-    expect(seen[2]!.sql).toContain('FOR UPDATE OF e');
-    expect(seen[2]!.sql).not.toMatch(/FOR UPDATE OF e, w/);
+    // Statements are found by CONTENT, not by position, so the law is "Work rows before expression rows" and not "exactly
+    // two statements precede the Work rows". The erase takes two advisory locks (the R20 recovery key, then the per-writing
+    // declaration key that serialises it against POST …/expressions); what must hold is that EVERY advisory lock comes
+    // before ANY row lock, so an advisory wait can never be held while a row is.
+    const advisory = seen.map((q, i) => (q.sql.includes('pg_advisory_xact_lock') ? i : -1)).filter((i) => i >= 0);
+    const worksFirst = seen.findIndex((q) => q.sql.includes('ws-delete:lock-works-first'));
+    const expressionRows = seen.findIndex((q) => /FOR UPDATE OF e\b/.test(q.sql));
+    expect(advisory.length).toBeGreaterThanOrEqual(1);
+    expect(advisory[0]).toBe(0);
+    expect(worksFirst).toBeGreaterThan(-1);
+    expect(Math.max(...advisory)).toBeLessThan(worksFirst);
+    expect(worksFirst).toBeLessThan(expressionRows);
+    expect(seen[worksFirst]!.sql).toMatch(/FROM living_works w[\s\S]*ORDER BY w\.id[\s\S]*FOR UPDATE\s*$/);
+    expect(seen[expressionRows]!.sql).toContain('FOR UPDATE OF e');
+    expect(seen[expressionRows]!.sql).not.toMatch(/FOR UPDATE OF e, w/);
   });
   it('the writing\'s own visual row is locked when its path is read, so a replacement cannot slip between the read and the delete', async () => {
     install({ claims: [W_A], writingHeld: true, visualPath: OWN_IMAGE });

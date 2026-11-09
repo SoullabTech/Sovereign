@@ -19,7 +19,7 @@ import type { TransitAspect } from './proTransits';
 import type { FourPillars, LuckDirection } from './proFourPillars';
 import type { TraditionalMaya } from './proTraditionalMaya';
 
-export const PRO_ASK_SECTIONS = ['natal', 'transits', 'biwheel', 'composite', 'four-pillars', 'deep'] as const;
+export const PRO_ASK_SECTIONS = ['natal', 'transits', 'biwheel', 'composite', 'four-pillars', 'progressed', 'deep'] as const;
 export type ProAskSection = typeof PRO_ASK_SECTIONS[number];
 
 export function isProAskSection(value: unknown): value is ProAskSection {
@@ -109,6 +109,7 @@ const SECTION_FOCUS: Record<ProAskSection, string> = {
   biwheel: 'the relationship between the two charts below (synastry), read through the contacts between them',
   composite: 'the composite chart below, made from the midpoints of two people\'s charts: it describes the relationship as its own entity',
   'four-pillars': 'the Chinese Four Pillars (BaZi) chart below',
+  progressed: 'the secondary progressions and solar arcs below, against the natal chart',
   deep: 'a full reading of one person, drawing together everything below',
 };
 
@@ -129,7 +130,7 @@ export function proDeepSystemPrompt(facts: string, lifeContext: string | null): 
 
 HOW YOU WRITE:
 - Organise the reading with short section titles, each on its own line, then plain paragraphs. No markdown symbols, no bullet lists. About 800 to 1,200 words.
-- Begin with the chart's central structure (its named patterns and tightest aspects), then the life themes it offers language for, then any dated transits, then the other systems given, then an integrated view.
+- Begin with the chart's central structure (its named patterns and tightest aspects), then the life themes it offers language for, then any dated transits, progressions and solar arcs (over a period if given), then the other systems given, then an integrated view.
 - The chart is symbolic: it offers language for patterns and tensions, never causes, diagnoses or fates. Use only the facts below; if something is not there, say so.
 - Do not predict events, deaths, illness, accidents, pregnancies, legal or money outcomes, or their timing, and do not read past events as having been foretold. Do not give medical, psychological, legal or financial advice.
 - For the traditional Maya count, give the dates but do not assign traditional meanings: those belong to living daykeepers. Do not use the Dreamspell system.

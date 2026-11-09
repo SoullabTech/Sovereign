@@ -22,6 +22,8 @@ import { transitBodies, transitToNatalAspects } from '@/lib/astrology/proTransit
 import { chartAsOuterRing, compositeChart, crossAspects } from '@/lib/astrology/proComparison';
 import { calculateFourPillars } from '@/lib/astrology/proFourPillars';
 import { traditionalMaya } from '@/lib/astrology/proTraditionalMaya';
+import { PROGRESSION_MAX_YEARS, progressedFacts, progressedMoment, progressionsOverPeriod } from '@/lib/astrology/proProgressionFacts';
+import type { HouseSystem } from '@/lib/astrology/proEphemerisCalculator';
 import { loadSubjectBirth } from '@/lib/astrology/proSubjectBirth';
 import { ASK_MAIA_MAX_QUESTION, plainAnswer } from '@/lib/astrology/proAskMaia';
 import {
@@ -45,8 +47,8 @@ function allowed(memberId: string): boolean {
   return true;
 }
 
-const KEYS = ['section', 'subject', 'other', 'houseSystem', 'at', 'dayStart', 'direction', 'question', 'include', 'lifeContext'];
-const DEEP_PARTS = ['four-pillars', 'maya'];
+const KEYS = ['section', 'subject', 'other', 'houseSystem', 'at', 'from', 'dayStart', 'direction', 'question', 'include', 'lifeContext'];
+const DEEP_PARTS = ['four-pillars', 'maya', 'progressions'];
 
 export async function POST(request: NextRequest) {
   const owner = await resolveProOwner(request, true);
@@ -76,6 +78,12 @@ export async function POST(request: NextRequest) {
   const lifeContext = typeof input.lifeContext === 'string' ? input.lifeContext.trim() : '';
   if (input.lifeContext !== undefined && section !== 'deep') return proError(400, 'unexpected_field');
   if (lifeContext.length > LIFE_CONTEXT_MAX) return proError(400, 'life_context_too_long');
+  // A period for progressions: from a date to the chosen date, at most ten years.
+  const from = input.from === undefined ? null : new Date(String(input.from));
+  if (from && (Number.isNaN(from.getTime()) || from.getTime() >= at.getTime() ||
+      at.getTime() - from.getTime() > PROGRESSION_MAX_YEARS * 365.25 * 86_400_000)) {
+    return proError(400, 'invalid_period');
+  }
   const twoCharts = section === 'biwheel' || section === 'composite';
   if (twoCharts && input.other === undefined) return proError(400, 'second_chart_required');
 
@@ -104,8 +112,23 @@ export async function POST(request: NextRequest) {
     const second = twoCharts ? await chartOf(input.other) : null;
     if (second && !second.ok) return proError(second.status, second.error);
 
+    const place = { lat: first.birth.location.lat, lng: first.birth.location.lng };
+    const birthUtc = new Date(first.utc);
+    // Progressions and solar arcs at the chosen date, and over the period when one is given.
+    const progressionPart = async () => {
+      if (at.getTime() < birthUtc.getTime()) return 'Progressions: the chosen date is before birth.';
+      const lines = [progressedFacts(await progressedMoment(first.chart, birthUtc, at, place, houseSystem as HouseSystem))];
+      if (from) {
+        const start = new Date(Math.max(from.getTime(), birthUtc.getTime()));
+        lines.push(await progressionsOverPeriod(first.chart, birthUtc, start, at, place, houseSystem as HouseSystem));
+      }
+      return lines.join('\n');
+    };
+
     let facts: string;
-    if (section === 'deep') {
+    if (section === 'progressed') {
+      facts = `${chartFacts(first.chart, 'Natal chart')}\n${await progressionPart()}`;
+    } else if (section === 'deep') {
       const parts = [chartFacts(first.chart, 'Natal chart')];
       if (input.at !== undefined) {
         const sky = transitBodies(await calculateTransits(at));
@@ -115,6 +138,7 @@ export async function POST(request: NextRequest) {
         const fp = calculateFourPillars(new Date(first.utc), first.birth.date, first.birth.time.slice(0, 5), dayStart);
         parts.push(`Chinese Four Pillars:\n${fourPillarsFacts(fp, direction)}`);
       }
+      if (include.includes('progressions')) parts.push(await progressionPart());
       if (include.includes('maya')) {
         parts.push(mayaFacts(traditionalMaya(first.birth.date), 'Birth'));
         if (input.at !== undefined) parts.push(mayaFacts(traditionalMaya(at.toISOString().slice(0, 10)), 'Chosen date'));
@@ -146,6 +170,10 @@ export async function POST(request: NextRequest) {
       messages: [{ role: 'user', content: question }],
       maxTokens: deep ? 2400 : 600,
       temperature: 0.6,
+      // As with Soul Portrait: a professional reading goes to Claude. Under
+      // LOCAL_TIER_ENABLED the deep tier would wait five minutes on the local
+      // model before falling back (production witness 2026-11-08).
+      forceClaude: true,
     });
     if (!(await proOwnerStillCurrent(request, owner.memberId))) return proError(401, 'session_changed');
     // Privacy: record only that a question was answered, never its content.

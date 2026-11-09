@@ -371,7 +371,7 @@ describe('what Remove says goes matches what the database removes with a Work', 
     // conversations about a writing stay rests on reading the DDL (lane record 6.9.5), not on a physical probe. It is owed whenever
     // EITHER holds, so emptying the retained-table map cannot switch this check off while the sentence is still true.
     if (!retentionSentenceOwed(KEEPS_ROWS_AFTER_WORK_REMOVAL, askThreadsWritingBoundInvariant(files.map((file) => readFileSync(file, 'utf8'))))) return;
-    const shape = /not part of the Work, so removing the Work does not remove them: they stay with the writings?, and deleting (?:the|a) writing deletes (?:them|its conversations)\.$/;
+    const shape = /not part of the Work, so removing the Work does not remove them: they stay with the writings?, and deleting (?:the|a) writing deletes (?:them|its conversations)\. The conversations you worked through passage by passage are among them, and no Work will offer them again\.$/;   // + the 2026-11-08 clause (lane record 6.9.5(e))
     for (const body of [REMOVE_SHARED_WORK_COPY.body, removeSharedWorkCopy(2).body, REMOVE_MANY_WORK_COPY.body]) {
       expect(body).toMatch(shape);
       // After the goes-list and the irreversibility sentence, never inside the list.
