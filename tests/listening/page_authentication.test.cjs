@@ -12,7 +12,7 @@ const compiled = ts.transpileModule(fs.readFileSync(pagePath, 'utf8'), {
   compilerOptions:{module:ts.ModuleKind.CommonJS, jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022}
 }).outputText;
 
-function nativePage({enabled=false,member='invalid'}={}) {
+function nativePage({enabled=false,member='invalid',beta=true}={}) {
  const calls={auth:0,notFound:0,redirects:[]};
  const exports={};const module={exports};
  const mockRequire=name=>{
@@ -26,6 +26,7 @@ function nativePage({enabled=false,member='invalid'}={}) {
    if(member!=='valid') throw new Error('AUTH_REQUIRED');
    return 'fictional-member-only';
   }};
+  if(name==='@/lib/listening/listenBetaAccess') return {hasListenBetaAccess:()=>{calls.beta=(calls.beta||0)+1;return beta;}};
   if(name==='./ListenRoom')return {__esModule:true,default:()=>null};
   if(name==='react/jsx-runtime')return {jsx:component=>({renderedComponent:component.name||'default'})};
   throw new Error('Unexpected module '+name);
@@ -59,4 +60,15 @@ test('enabled, session database failed: no render and no false sign-in success',
  const r=nativePage({enabled:true,member:'db_error'});
  await assert.rejects(r.page(),/DATABASE_UNAVAILABLE/);
  assert.equal(r.calls.auth,1);assert.deepEqual(r.calls.redirects,[]);
+});
+test('named beta: a verified member outside the cohort gets the same 404, never the room',async()=>{
+ const r=nativePage({enabled:true,member:'valid',beta:false});
+ await assert.rejects(r.page(),/NEXT_HTTP_404/);
+ assert.equal(r.calls.auth,1);assert.equal(r.calls.beta,1);assert.equal(r.calls.notFound,1);
+ assert.deepEqual(r.calls.redirects,[]);
+});
+test('named beta: cohort is consulted only after the session is verified',async()=>{
+ const r=nativePage({enabled:true,member:'invalid',beta:true});
+ await assert.rejects(r.page(),/NEXT_REDIRECT/);
+ assert.equal(r.calls.beta||0,0);
 });

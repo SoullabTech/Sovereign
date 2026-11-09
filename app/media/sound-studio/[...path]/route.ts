@@ -3,14 +3,17 @@
 // Serves the review recordings that used to sit in public/. Order is the law:
 //   1. flag off            → 404 (as /listen does; nothing about the file is disclosed)
 //   2. no verified member  → 401
-//   3. not in the allowlist → 404
-//   4. file served with byte ranges, private and uncached
-// See lib/listening/soundStudioMediaGate.ts. Founder-only scoping is an open item before the flag is turned on.
+//   3. not a founder or named beta tester → 404 (same as flag off)
+//   4. not allowlisted, or not released to testers → 404
+//   5. file served with byte ranges, private and uncached
+// See lib/listening/soundStudioMediaGate.ts and lib/listening/listenBetaAccess.ts.
 import { createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 import { requireMemberId } from '@/lib/auth/session';
+import { hasListenBetaAccess, isListenFounder } from '@/lib/listening/listenBetaAccess';
 import {
+  mediaAllowedFor,
   parseByteRange,
   resolveSoundStudioMedia,
   soundStudioMediaEnabled,
@@ -31,13 +34,15 @@ function refuse(status: 401 | 404): Response {
 
 async function serve(request: Request, segments: string[], withBody: boolean): Promise<Response> {
   if (!soundStudioMediaEnabled(process.env)) return refuse(404);
+  let memberId: string;
   try {
-    await requireMemberId();
+    memberId = await requireMemberId();
   } catch {
     return refuse(401);
   }
+  if (!hasListenBetaAccess(memberId)) return refuse(404);
   const relative = resolveSoundStudioMedia(segments);
-  if (!relative) return refuse(404);
+  if (!relative || !mediaAllowedFor(segments, isListenFounder(memberId))) return refuse(404);
 
   const file = path.join(process.cwd(), relative);
   let size: number;

@@ -44,6 +44,43 @@ export function resolveSoundStudioMedia(segments: readonly string[]): string | n
   return `${SOUND_STUDIO_MEDIA_DIR}/${segments.join('/')}`;
 }
 
+// ── Named beta cohort (founder direction 2026-11-09) ────────────────────────────────────────────────
+// With the review flag on, Sound Studio opens ONLY to founders and the members named in
+// SOULLAB_LISTEN_BETA_MEMBER_IDS. Any other member gets the same 404 as when the flag is off.
+// Fails closed: an unset or empty list admits no tester (founders still pass).
+
+/** Comma-separated member ids → set. Blank entries are dropped. */
+export function parseMemberIdList(raw: string | undefined): ReadonlySet<string> {
+  return new Set((raw ?? '').split(',').map((s) => s.trim()).filter(Boolean));
+}
+
+export function listenBetaAllows(memberId: string, isFounder: boolean, betaIds: ReadonlySet<string>): boolean {
+  if (typeof memberId !== 'string' || memberId === '') return false;
+  return isFounder || betaIds.has(memberId);
+}
+
+/**
+ * Per-recording beta release. Founders may hear every admitted file (founder review); beta testers only
+ * the files listed here. Founder ruling 2026-11-09: all five released to the named beta. Every voice in them
+ * is synthetic (Kokoro "Nicole"/"Bella", authorized local rendering); no human performer is recorded.
+ * To withdraw one from testers, remove it here. (The UI does not yet hide a withdrawn work; its player
+ * would fail for testers, so withdrawing also needs a UI change.)
+ */
+export const SOUND_STUDIO_BETA_RELEASED: readonly string[] = Object.freeze([
+  '/media/sound-studio/night-ground/Night_Ground_01_Guided_Arrival_12min_v0.1.m4a',
+  '/media/sound-studio/night-ground/Night_Ground_01_Music_Only_Part1_49min_v0.1.m4a',
+  '/media/sound-studio/night-ground/Night_Ground_01_Nicole_First_Night_Part1_49min_v0.1.m4a',
+  '/media/sound-studio/night-ground/Night_Ground_01_Nicole_First_Night_Part2_60min_v0.1.m4a',
+  '/media/sound-studio/open-ground/Open_Ground_Drone01_6min_v1.m4a',
+]);
+const BETA_RELEASED = new Set(SOUND_STUDIO_BETA_RELEASED);
+
+/** May this listener receive this admitted file? Founders: any admitted file. Testers: released files only. */
+export function mediaAllowedFor(segments: readonly string[], isFounder: boolean): boolean {
+  if (resolveSoundStudioMedia(segments) === null) return false;
+  return isFounder || BETA_RELEASED.has(SOUND_STUDIO_MEDIA_URL_PREFIX + segments.join('/'));
+}
+
 export type ByteRange = { start: number; end: number };
 
 /**

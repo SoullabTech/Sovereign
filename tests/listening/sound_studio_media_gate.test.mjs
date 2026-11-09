@@ -7,7 +7,8 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
-  SOUND_STUDIO_ADMITTED_MEDIA, SOUND_STUDIO_MEDIA_DIR, parseByteRange, resolveSoundStudioMedia, soundStudioMediaEnabled,
+  SOUND_STUDIO_ADMITTED_MEDIA, SOUND_STUDIO_BETA_RELEASED, SOUND_STUDIO_MEDIA_DIR, listenBetaAllows, mediaAllowedFor,
+  parseByteRange, parseMemberIdList, resolveSoundStudioMedia, soundStudioMediaEnabled,
 } from '../../lib/listening/soundStudioMediaGate.ts';
 
 const root = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
@@ -80,13 +81,16 @@ test('byte ranges: single ranges served, invalid ones refused or ignored', () =>
   assert.equal(parseByteRange('bytes=-0', 100), 'unsatisfiable');
 });
 
-test('the route checks the flag, then the member session, then the allowlist, before touching the disk', () => {
+test('the route checks the flag, then the member session, then the beta cohort, then the allowlist, before touching the disk', () => {
   const route = code(read('app/media/sound-studio/[...path]/route.ts'));
   const flag = route.indexOf('soundStudioMediaEnabled(process.env)');
   const member = route.indexOf('await requireMemberId()');
+  const cohort = route.indexOf('if (!hasListenBetaAccess(memberId)) return refuse(404)');
   const allow = route.indexOf('resolveSoundStudioMedia(segments)');
+  const release = route.indexOf('mediaAllowedFor(segments, isListenFounder(memberId))');
   const disk = route.indexOf('fs.stat(');
-  assert.ok(flag > 0 && member > flag && allow > member && disk > allow, 'order: flag → member → allowlist → disk');
+  assert.ok(flag > 0 && member > flag && cohort > member && allow > cohort && release > allow && disk > release,
+    'order: flag → member → cohort → allowlist → release → disk');
   assert.match(route, /if \(!soundStudioMediaEnabled\(process\.env\)\) return refuse\(404\)/);
   assert.match(route, /'Cache-Control': 'private, no-store'/);
   assert.doesNotMatch(route, /['"]public['"]/);
@@ -102,4 +106,38 @@ test('deployment and platform wiring keep the audio private and web-only', () =>
   assert.match(read('lib/mobile/mobileAllowlist.ts'), /'\/media\/sound-studio\/'/);
   const dockerignore = fs.existsSync(path.join(root, '.dockerignore')) ? read('.dockerignore') : '';
   assert.doesNotMatch(dockerignore, /^\/?private-media\/?$/m, 'the image needs private-media');
+});
+
+test('named beta cohort: founders always pass, listed testers pass, everyone else and an empty list do not', () => {
+  const ids = parseMemberIdList(' a-1 , ,b-2,');
+  assert.deepEqual([...ids].sort(), ['a-1', 'b-2']);
+  assert.equal(parseMemberIdList(undefined).size, 0);
+  assert.equal(listenBetaAllows('a-1', false, ids), true);
+  assert.equal(listenBetaAllows('c-3', false, ids), false);
+  assert.equal(listenBetaAllows('c-3', true, ids), true);
+  assert.equal(listenBetaAllows('a-1', false, parseMemberIdList('')), false, 'unset list admits no tester');
+  assert.equal(listenBetaAllows('', true, ids), false);
+});
+
+test('per-recording release: testers hear only released files; founders hear every admitted file; nothing unlisted', () => {
+  for (const p of SOUND_STUDIO_BETA_RELEASED) assert.ok(SOUND_STUDIO_ADMITTED_MEDIA.includes(p), `${p} released but not admitted`);
+  const seg = p => p.replace('/media/sound-studio/', '').split('/');
+  for (const p of SOUND_STUDIO_ADMITTED_MEDIA) {
+    assert.equal(mediaAllowedFor(seg(p), true), true);
+    assert.equal(mediaAllowedFor(seg(p), false), SOUND_STUDIO_BETA_RELEASED.includes(p));
+  }
+  assert.equal(mediaAllowedFor(['..', 'package.json'], true), false);
+  assert.equal(mediaAllowedFor(['open-ground', 'unknown.m4a'], true), false);
+});
+
+test('the cohort module fails closed and is read only by the two Sound Studio doors', () => {
+  const mod = code(read('lib/listening/listenBetaAccess.ts'));
+  assert.match(mod, /parseMemberIdList\(process\.env\.SOULLAB_LISTEN_BETA_MEMBER_IDS\)/);
+  assert.doesNotMatch(mod, /getListenBetaCohortSize[\s\S]*return [^;]*LISTEN_BETA_MEMBER_IDS(?!\.size)/);
+  const users = execFileSync('git', ['grep', '-l', 'listenBetaAccess', '--', 'app', 'components', 'lib'], { cwd: root, encoding: 'utf8' })
+    .trim().split('\n').filter(f => f !== 'lib/listening/listenBetaAccess.ts').sort();
+  assert.deepEqual(users, ['app/listen/page.tsx', 'app/media/sound-studio/[...path]/route.ts']);
+  const page = code(read('app/listen/page.tsx'));
+  assert.ok(page.indexOf('requireMemberId()') < page.indexOf('hasListenBetaAccess(memberId)'), 'session before cohort');
+  assert.match(page, /if \(!hasListenBetaAccess\(memberId\)\) notFound\(\)/);
 });
