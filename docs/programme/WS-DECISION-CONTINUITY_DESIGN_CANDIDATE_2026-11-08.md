@@ -97,3 +97,12 @@ STILL HELD: passage desk "Keep mine" (local-only today; ruling owed, see above).
 the passage ref); **No thanks** records nothing; Sanctuary or an unreadable setting records nothing and says so.
 Evidence: 11 tests (5 static wiring laws + 6 interaction tests that press the real buttons) — NOT a browser run, and the full path (a real proposal → Keep mine → prompt → Note it →
 MAIA in the Work conversation) was NOT walked: reaching "Keep mine" needs a live proposal from a model. Version-binding (`version_ref`) remains unset by this gesture.
+
+## FREEZE TAKEN (founder: "Yes, freeze them", 2026-11-08)
+`tests/constitutional/ws-continuity-freeze/FREEZE.json` pins by git BLOB hash the laws, contracts and defeat candidates of all three suites
+(Part A honest reading · Part B standing reading scope · decision continuity): 8 files, freeze commit `7d9f3f37c`.
+Guard `npm run verify:ws-continuity-freeze` (`scripts/verify-ws-continuity-freeze.mjs`), PROVEN LETHAL BOTH WAYS in this session:
+intact → 0; a comment appended to a frozen law → 1; restored → 0; a frozen file deleted → 1; a defeat candidate renamed → 1; an empty manifest → 2.
+Lawful afterwards: implementation fails suite → repair the implementation. Additive law lives at its own address. Editing a frozen file needs a named founder act with evidence the law or instrument was wrong.
+NOT frozen on purpose: the runners (`matrix.test.ts`, the Part A grounding test), the physical witnesses (`dynamic/**`), and all implementation and migration candidates.
+The guard is not wired into CI (`ci:sovereignty`); that adds a cost to every lane and is a separate decision. Freezing authorizes no merge, migration or deploy.

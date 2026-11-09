@@ -1,0 +1,30 @@
+{
+  "instrument": "ws-continuity-freeze/v1",
+  "frozen_at": "2026-11-08",
+  "freeze_commit": "7d9f3f37cb1f4ee562bd45fe6d3a5a0f8c54574c",
+  "authority": "founder act, 2026-11-08 (\"Yes, freeze them\") \u2014 S3 Class-B precedent",
+  "suites": {
+    "ws-work-continuity": "Part A \u00b7 honest reading of replayed history (laws A1a\u2026A6, defeat candidates DC-1\u2026DC-8)",
+    "ws-work-read-scope": "Part B \u00b7 standing, revocable Work reading scope (laws T1\u2026T11, defeat candidates DC-1\u2026DC-15)",
+    "ws-decision-continuity": "settled-decision record (laws L1a\u2026L7b, defeat candidates DC-1\u2026DC-14)"
+  },
+  "law": "Implementation fails suite -> repair the implementation. Editing a frozen law, contract, or defeat candidate requires a formal, named founder act with evidence the LAW or the INSTRUMENT was wrong \u2014 never that an implementation was inconvenient.",
+  "additive_law_permitted": "New law may be ADDED at its own address with its own falsifiers and defeat candidates. Adding never edits a frozen file; a frozen file's blob hash is the mechanical test.",
+  "frozen": {
+    "tests/constitutional/ws-work-continuity/laws.ts": "fb1c51104273fdc693953bda1c1a32397a9a1aa5",
+    "tests/constitutional/ws-work-continuity/candidates.ts": "fae880ad1ec57449cffc8a7c0ebc1b4608ea46d2",
+    "tests/constitutional/ws-work-read-scope/contract.ts": "b0fd930f95dfe44dc353398912fbd61e218a2438",
+    "tests/constitutional/ws-work-read-scope/laws.ts": "8576c3b17dbc02f860fce18a61c38ab3c5211584",
+    "tests/constitutional/ws-work-read-scope/candidates.ts": "2f0f6e3fc09689452dfb675008658769e69e96d3",
+    "tests/constitutional/ws-decision-continuity/contract.ts": "06c82f87caf04e4dd909949bd4585951c22a1efa",
+    "tests/constitutional/ws-decision-continuity/laws.ts": "913d27782d60f096e8679ad238a3d46cfb24ed48",
+    "tests/constitutional/ws-decision-continuity/candidates.ts": "44c0fef2dcb25b83c03d62dbac3e5b285c826ea2"
+  },
+  "deliberately_not_frozen": {
+    "tests/constitutional/*/matrix.test.ts and lib/manuscript/ask/__tests__/workConversationHistoryGrounding.test.ts": "the runners; extending them to run additional laws does not weaken the law they run",
+    "tests/constitutional/*/dynamic/**, dynamic.probe.test.ts": "physical witnesses of an implementation, not the law",
+    "lib/**, app/**, database/migrations/**": "the implementation and migration candidates the suites judge"
+  },
+  "limits": "The reference doubles in the contract files are test doubles, never seeds. Freezing the suites does not authorize merging, applying the migrations, or deploying. A frozen law can be later found wrong; the path is a named founder act, not an edit.",
+  "note": "Blob hashes, not a commit diff: they survive history rewriting and say exactly which bytes are law."
+}
