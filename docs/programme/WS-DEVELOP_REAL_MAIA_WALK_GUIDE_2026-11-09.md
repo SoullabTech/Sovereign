@@ -1,6 +1,6 @@
 # Your walk with real MAIA — Develop (2026-11-09)
 
-Candidate: branch `feature/ws-work-continuity-part-a-suite`, merged with canonical (qualified at `13bd1263a`; this guide added after).
+Candidate: branch `feature/ws-work-continuity-part-a-suite` at product code `0c55564b8` (Sanctuary closure + G4 + D5; negative suite 8/8). Updated 2026-11-09 for G4 and the Sanctuary rules.
 Everything is local and fictional: a throwaway database on this Mac, three invented books, your own sign-in to the local copy only.
 ⛔ Nothing here touches production, your real manuscripts or real members. A good walk is evidence, not an act: it authorizes no merge, migration or deploy.
 
@@ -22,8 +22,9 @@ The fictional text goes to the model provider under your key. **Stop and erase e
 ## 1 · The novel — memory, plans, and the edit loop (about 20 minutes)
 | # | Do | Look for | Report if |
 |---|---|---|---|
-| 1 | Develop. Choose **Return**. Press **Read this chapter** | it shows what it is doing and how long it has taken; after 3 minutes it says it may still finish | it looks frozen, or claims a time it cannot know |
-| 2 | When it finishes, open the conversation and ask about something the reading named (an image, a moment) | she answers **from her reading**, says it was her reading of that revision, and does not send you back to "Read this chapter" | she says she has only headings, or sends you to the button you just pressed (the Nov 8 failure) |
+| 1 | Develop. Choose **Return**. In the conversation ask: *"Could you read this chapter for its arc?"* | MAIA **offers** a **Read this chapter** button; nothing starts until you click it. After the click it shows elapsed time; after 3 minutes it says it may still finish | a reading starts without your click, it looks frozen, or claims a time it cannot know |
+| 2 | When it says *"MAIA has read Return. Ask her what she noticed"*, ask about something the reading named | she answers **from her reading**, says it was her reading of that revision, and does not send you back to read again | she says she has only headings, or offers to read the chapter she just read |
+| 2b | Mark one of her observations **Dismiss** (Develop), then ask a whole-book question | she treats it as something she said that you set aside; she does **not** raise it again as current | the dismissed observation comes back as if it still stood |
 | 3 | Without granting reading, ask her to **quote** a line from Return | she says she has her reading, not the text, and offers **Let MAIA read my saved work** | she quotes words that are not in the chapter |
 | 4 | Grant **Let MAIA read my saved work**; ask the same | she quotes from the text itself | a quotation that is not in your book |
 | 5 | Edit one sentence of Return in Write; come back; ask about Return again | she says the chapter has **changed since she read it** | she treats her old reading as current |
@@ -34,6 +35,16 @@ The fictional text goes to the model provider under your key. **Stop and erase e
 | 10 | Return to the passage in Write → Talk with MAIA → **Undo**; back to Develop | "applied … and then undid it"; your words restored | lost or altered text |
 | 11 | Mark a step **Resolved** yourself; **Note something you have settled**; look at the plan | the plan says your decisions changed since it was made and will not open a passage until you make a fresh one | a plan that ignores what you settled |
 | 12 | Ask a new plan to **revisit** what you settled | she discusses it; your settled note is unchanged | your decision rewritten for you |
+
+## 1b · Sanctuary keeps nothing (about 5 minutes, novel)
+Turn **Sanctuary on** (`localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: true }))` in the browser console, reload).
+| # | Do | Look for | Report if |
+|---|---|---|---|
+| S1 | Ask MAIA something in the conversation | she answers; the exchange is marked **not kept**; after **Start a new conversation** it is gone | it is still there afterwards, or appears in a later ordinary conversation |
+| S2 | Try **Note something you have settled**, make a plan, correct MAIA, ask her to read the chapter | each says Sanctuary is on and nothing was kept; **your text stays in the box** | anything recorded, or your text lost |
+| S3 | Edit a sentence in Write and save | it saves normally — Sanctuary never blocks your own writing | the save refused |
+| S4 | Turn Sanctuary **off**, ask again | the next answer is kept, shown **after** the not-kept one, in time order | order scrambled, or the not-kept exchange now saved |
+| S5 | Remove the setting entirely (`localStorage.removeItem('maia_settings')`, reload) and ask | it follows your **account** default (ordinary unless your account default is Sanctuary) | behaviour that doesn't match your account setting |
 
 ## 2 · The nonfiction book — claims and evidence (about 10 minutes)
 | # | Do | Look for | Report if |
