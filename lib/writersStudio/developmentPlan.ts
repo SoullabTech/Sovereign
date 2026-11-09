@@ -91,3 +91,49 @@ export function locateAnchor(body: string, anchor: string): { ok: true; start: n
 /** Signals a mounted Write room that a new hand-off is waiting (the key alone serves a fresh mount). */
 export const PLAN_HANDOFF_EVENT = 'ws-plan-handoff';
 export const PLAN_HANDOFF_KEY = (manuscriptId: string): string => `ws-plan-step:${manuscriptId}`;
+
+/** Every way a plan-step hand-off can end. Only `hold` touches anything, and only the held passage and (if open) the step's status. */
+export type HandoffDecision =
+  | { kind: 'superseded' }
+  | { kind: 'refuse'; reason: 'no_plan' | 'no_step' | 'no_verdict' | 'unsaved' | 'changed' | 'unverified' | 'missing' | 'ambiguous'; focusSectionId: string | null }
+  | { kind: 'hold'; sectionId: string; start: number; end: number; text: string; markWorking: boolean };
+
+/**
+ * PURE. Decide a hand-off from facts only. Order matters and is the law:
+ * a newer hand-off wins · a missing server verdict refuses · unsaved text refuses (the server verified the SAVED chapter) ·
+ * a changed or unverified chapter refuses · the words must occur exactly once in the text being held.
+ */
+export function decideHandoff(i: {
+  seq: number; latestSeq: number;
+  view: { plan: { steps: readonly PlanStep[] } | null; staleStepIds: readonly string[]; unverifiedStepIds: readonly string[]; verdict: boolean } | undefined;
+  stepId: string;
+  sectionIds: readonly string[];
+  saveStateOf: (sectionId: string) => string | undefined;
+  bodyOf: (sectionId: string) => string;
+}): HandoffDecision {
+  if (i.seq !== i.latestSeq) return { kind: 'superseded' };
+  if (!i.view) return { kind: 'refuse', reason: 'no_plan', focusSectionId: null };
+  const step = i.view.plan?.steps.find((x) => x.id === i.stepId);
+  if (!step || !i.sectionIds.includes(step.chapterId)) return { kind: 'refuse', reason: 'no_step', focusSectionId: null };
+  const sid = step.chapterId;
+  if (!i.view.verdict) return { kind: 'refuse', reason: 'no_verdict', focusSectionId: sid };
+  const save = i.saveStateOf(sid);
+  if (save !== undefined && save !== 'clean') return { kind: 'refuse', reason: 'unsaved', focusSectionId: sid };
+  if (i.view.staleStepIds.includes(step.id)) return { kind: 'refuse', reason: 'changed', focusSectionId: sid };
+  if (i.view.unverifiedStepIds.includes(step.id)) return { kind: 'refuse', reason: 'unverified', focusSectionId: sid };
+  const found = locateAnchor(i.bodyOf(sid), step.anchor);
+  if (!found.ok) return { kind: 'refuse', reason: found.reason, focusSectionId: sid };
+  return { kind: 'hold', sectionId: sid, start: found.start, end: found.end, text: found.text, markWorking: step.status === 'open' };
+}
+
+/** What the writer is told on each refusal. Every one ends with: nothing was changed. */
+export const HANDOFF_REFUSAL_COPY: Record<Extract<HandoffDecision, { kind: 'refuse' }>['reason'], string> = {
+  no_plan: 'Your plan could not be loaded just now. Nothing was changed.',
+  no_step: 'That plan step could not be found in this Work. Nothing was changed.',
+  no_verdict: 'I could not confirm this step against your saved chapter just now. The chapter is open; select the passage you mean. Nothing was changed.',
+  unsaved: 'This chapter has changes that are not saved yet, so I cannot be sure the step still matches it. Let it save, then choose Work on this passage again. Nothing was changed.',
+  changed: 'This chapter has changed since the plan was made, so the step may no longer fit. The chapter is open; check it, then select the passage you mean or ask MAIA to look again. Nothing was changed.',
+  unverified: 'I cannot confirm this chapter is the one MAIA read for the plan. The chapter is open; check it, then select the passage you mean or ask MAIA to look again. Nothing was changed.',
+  missing: 'Those words are no longer in this chapter as they were. The chapter is open; select the passage you mean. Nothing was changed.',
+  ambiguous: 'Those words occur more than once in this chapter, so I have not chosen for you. Select the passage you mean. Nothing was changed.',
+};

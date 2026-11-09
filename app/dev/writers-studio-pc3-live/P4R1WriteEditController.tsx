@@ -80,8 +80,8 @@ import {
   readRelationshipReturnClient,
   writeRelationshipReturnClient,
 } from '@/lib/writersStudio/rebuild/returnStateClient';
-import { fetchPlan, linkStepClient } from '@/lib/writersStudio/planClient';
-import { locateAnchor, PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
+import { editPlanClient, fetchPlan, linkStepClient } from '@/lib/writersStudio/planClient';
+import { decideHandoff, HANDOFF_REFUSAL_COPY, PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
 import { P4R1Pc3WriteEditView, UNDO_RESTORED_MESSAGES, type Pc3HeldPassage } from './P4R1Pc3WriteEditView';
 
 interface ContextReady {
@@ -1038,6 +1038,7 @@ export default function FlagshipWriteEditController() {
      its authorization is offered to the plan, and the SERVER decides whether it belongs to the step. Never marks a step resolved. */
   const [planStepHere, setPlanStepHere] = useState<{ planId: string; stepId: string; sectionId: string } | null>(null);
   const offeredLinks = useRef(new Set<string>());
+  const handoffSeq = useRef(0);
   useEffect(() => { if (planStepHere && focusId && focusId !== planStepHere.sectionId) setPlanStepHere(null); }, [focusId, planStepHere]);
   useEffect(() => {
     const app = editorialThread?.application;
@@ -1049,40 +1050,53 @@ export default function FlagshipWriteEditController() {
   }, [editorialThread, planStepHere, context, focusId]);
 
   // Idempotent by construction: the id is removed as it is read, so a repeated hand-off is a NEW hand-off and a reload is not a second one.
+  // The listener is stable for the manuscript; everything that changes between renders is read through refs, so an unrelated
+  // re-render can never cancel a pending hand-off. Only the writer's LATEST hand-off may act (decideHandoff: superseded).
+  const handoffLive = useRef({ context, work, workKind: workContext.kind, holdPassage, focusWritingSection });
+  handoffLive.current = { context, work, workKind: workContext.kind, holdPassage, focusWritingSection };
+  const handoffManuscriptId = context?.manuscriptId ?? null;
   useEffect(() => {
-    if (!context || !work || workContext.kind !== 'work' || workReentryRequired.current) return;
-    let live = true;
+    if (!handoffManuscriptId) return;
+    let mounted = true;
     const consume = () => {
-    let stepId: string | null = null;
-    try { stepId = window.sessionStorage.getItem(PLAN_HANDOFF_KEY(context.manuscriptId)); } catch { /* none */ }
-    if (!stepId) return;
-    try { window.sessionStorage.removeItem(PLAN_HANDOFF_KEY(context.manuscriptId)); } catch { /* ignore */ }
-    void fetchPlan(context.manuscriptId).then((view) => {
-      if (!live) return;
-      if (!view) { setEditorialFailure('Your plan could not be loaded just now. Nothing was changed.'); return; }
-      const step = view.plan?.steps.find((x) => x.id === stepId);
-      const section = step ? context.sections.find((x) => x.draftSectionId === step.chapterId) : undefined;
-      if (!step || !section) { setEditorialFailure('That plan step could not be found in this Work. Nothing was changed.'); return; }
-      // A unique phrase is not evidence the proposal still fits: the chapter must be exactly what MAIA read (server verdict), else the writer revalidates.
-      if (view.staleStepIds.includes(step.id) || view.unverifiedStepIds.includes(step.id)) {
-        focusWritingSection(section.draftSectionId);
-        setEditorialFailure(view.staleStepIds.includes(step.id)
-          ? 'This chapter has changed since the plan was made, so the step may no longer fit. The chapter is open; check it, then select the passage you mean or ask MAIA to look again. Nothing was changed.'
-          : 'I cannot confirm this chapter is the one MAIA read for the plan. The chapter is open; check it, then select the passage you mean or ask MAIA to look again. Nothing was changed.');
-        return;
-      }
-      const found = locateAnchor(writingRef.current?.bodyOf(section.draftSectionId) ?? section.body, step.anchor);
-      if (found.ok) { holdPassage(section, found.start, found.end, found.text); setPlanStepHere({ planId: view.plan!.id, stepId: step.id, sectionId: section.draftSectionId }); return; }
-      focusWritingSection(section.draftSectionId);
-      setEditorialFailure(found.reason === 'ambiguous'
-        ? 'Those words occur more than once in this chapter, so I have not chosen for you. Select the passage you mean. Nothing was changed.'
-        : 'Those words are no longer in this chapter as they were. The chapter is open; select the passage you mean. Nothing was changed.');
-    });
+      const L = handoffLive.current;
+      if (!L.context || L.context.manuscriptId !== handoffManuscriptId || !L.work || L.workKind !== 'work' || workReentryRequired.current) return;
+      let stepId: string | null = null;
+      try { stepId = window.sessionStorage.getItem(PLAN_HANDOFF_KEY(handoffManuscriptId)); } catch { /* none */ }
+      if (!stepId) return;
+      try { window.sessionStorage.removeItem(PLAN_HANDOFF_KEY(handoffManuscriptId)); } catch { /* ignore */ }
+      const mine = ++handoffSeq.current;
+      const sid = stepId;
+      void fetchPlan(handoffManuscriptId).then((view) => {
+        if (!mounted) return;
+        const C = handoffLive.current;
+        if (!C.context || C.context.manuscriptId !== handoffManuscriptId) return;
+        const ctx = C.context;
+        const d = decideHandoff({
+          seq: mine, latestSeq: handoffSeq.current, view, stepId: sid,
+          sectionIds: ctx.sections.map((x) => x.draftSectionId),
+          saveStateOf: (id) => writingRef.current?.statusOf(id),
+          bodyOf: (id) => writingRef.current?.bodyOf(id) ?? ctx.sections.find((x) => x.draftSectionId === id)?.body ?? '',
+        });
+        if (d.kind === 'superseded') return;
+        if (d.kind === 'refuse') {
+          if (d.focusSectionId) C.focusWritingSection(d.focusSectionId);
+          setEditorialFailure(HANDOFF_REFUSAL_COPY[d.reason]);
+          return;
+        }
+        const section = ctx.sections.find((x) => x.draftSectionId === d.sectionId)!;
+        C.holdPassage(section, d.start, d.end, d.text);
+        setPlanStepHere({ planId: view!.plan!.id, stepId: sid, sectionId: d.sectionId });
+        // Only after the passage is actually held may an open step become 'working'. A refused hand-off leaves it as it was.
+        if (d.markWorking) void editPlanClient(handoffManuscriptId, view!.plan!.id, [{ id: sid, status: 'working' }]);
+      });
     };
     consume();
     window.addEventListener(PLAN_HANDOFF_EVENT, consume);
-    return () => { live = false; window.removeEventListener(PLAN_HANDOFF_EVENT, consume); };
-  }, [context, work, workContext.kind, holdPassage, focusWritingSection]);
+    return () => { mounted = false; window.removeEventListener(PLAN_HANDOFF_EVENT, consume); };
+  }, [handoffManuscriptId]);
+  // A Work that becomes ready AFTER the id was left (context/work load late) still receives it.
+  useEffect(() => { if (context && work && workContext.kind === 'work') { try { window.dispatchEvent(new Event(PLAN_HANDOFF_EVENT)); } catch { /* ignore */ } } }, [context, work, workContext.kind]);
 
   const bindEditorialThread = useCallback((thread: RebuildEditorialThread): boolean => {
     // The server-owned thread must belong to the active manuscript as well as

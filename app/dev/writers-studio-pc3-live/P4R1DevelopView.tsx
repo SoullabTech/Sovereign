@@ -2161,12 +2161,11 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     const plan = await editPlanClient(stageManuscriptId, id, edits);
     if (plan) setPlanView((v) => (v ? { ...v, plan } : v)); else setPlanNote('That could not be saved just now. Your plan is as it was.');
   };
-  /** A plan step -> the passage desk. Marks the step "working" (status only), leaves an id for Write, and goes there. Nothing is written to the manuscript. */
+  /** A plan step -> the passage desk. Leaves an id for Write and goes there. Changes nothing itself: no status, no manuscript. */
   const workOnStep = (stepId: string) => {
     if (!stageManuscriptId) return;
     try { window.sessionStorage.setItem(PLAN_HANDOFF_KEY(stageManuscriptId), stepId); } catch { /* without it Write opens the chapter only */ }
-    const st = planView?.plan?.steps.find((x) => x.id === stepId);
-    if (st && st.status === 'open') editPlan([{ id: stepId, status: 'working' }]);
+    // ⛔ No status change here: only a hand-off Write actually completes may mark the step 'working'.
     try { window.dispatchEvent(new Event(PLAN_HANDOFF_EVENT)); } catch { /* fresh mount reads the key */ }
     navigateMode('write');
   };

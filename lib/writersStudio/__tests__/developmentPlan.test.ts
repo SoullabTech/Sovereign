@@ -1,4 +1,4 @@
-import { stepStanding, locateAnchor, PLAN_HANDOFF_KEY, groundSteps, applyStepEdits, staleStepIds, MAX_STEPS, type PlanChapter, type PlanStep } from '../developmentPlan';
+import { decideHandoff, HANDOFF_REFUSAL_COPY, stepStanding, locateAnchor, PLAN_HANDOFF_KEY, groundSteps, applyStepEdits, staleStepIds, MAX_STEPS, type PlanChapter, type PlanStep } from '../developmentPlan';
 
 const chapters: PlanChapter[] = [
   { id: 'c2', heading: 'Salt', text: 'Marta left a light on in the hallway, as if someone might yet come home.' },
@@ -76,4 +76,51 @@ describe('the hand-off verdict is strict: a unique phrase is not evidence the pr
   it('changed when the chapter moved, even if the anchor phrase survived', () => { expect(stepStanding({ chapterId: 'c2' }, basis, new Map([['c2', 'BBB']]))).toBe('changed'); });
   it('unverified when there is no record of what she read', () => { expect(stepStanding({ chapterId: 'c7' }, basis, new Map([['c7', 'AAA']]))).toBe('unverified'); });
   it('unverified when the chapter cannot be read now', () => { expect(stepStanding({ chapterId: 'c2' }, basis, new Map())).toBe('unverified'); });
+});
+
+describe('the hand-off decision (review findings 1–4 on e410f9f06/c09b28986)', () => {
+  const st = (over: Partial<PlanStep> = {}): PlanStep => ({ id: 'a', chapterId: 'c7', anchor: 'no key', direction: 'd', why: '', status: 'open', ...over });
+  const body = 'She found the house. There was no key, and the hallway was dark.';
+  const base = (over: Record<string, unknown> = {}) => ({
+    seq: 1, latestSeq: 1, stepId: 'a', sectionIds: ['c2', 'c7'],
+    view: { plan: { steps: [st()] }, staleStepIds: [] as string[], unverifiedStepIds: [] as string[], verdict: true },
+    saveStateOf: () => 'clean', bodyOf: () => body, ...over,
+  });
+
+  it('holds the exact words, and only an OPEN step is marked working — and only on a successful hold', () => {
+    expect(decideHandoff(base() as any)).toEqual({ kind: 'hold', sectionId: 'c7', start: body.indexOf('no key'), end: body.indexOf('no key') + 6, text: 'no key', markWorking: true });
+    expect(decideHandoff(base({ view: { plan: { steps: [st({ status: 'done' })] }, staleStepIds: [], unverifiedStepIds: [], verdict: true } }) as any)).toMatchObject({ kind: 'hold', markWorking: false });
+  });
+  it('#1 every refusal changes no status (there is no markWorking on a refusal)', () => {
+    for (const d of [decideHandoff(base({ view: { plan: { steps: [st()] }, staleStepIds: ['a'], unverifiedStepIds: [], verdict: true } }) as any),
+      decideHandoff(base({ bodyOf: () => 'Everything moved.' }) as any)]) {
+      expect(d.kind).toBe('refuse'); expect('markWorking' in d).toBe(false);
+    }
+  });
+  it('#2 a missing server verdict refuses; it is never read as "nothing is stale"', () => {
+    expect(decideHandoff(base({ view: { plan: { steps: [st()] }, staleStepIds: [], unverifiedStepIds: [], verdict: false } }) as any)).toMatchObject({ kind: 'refuse', reason: 'no_verdict' });
+    expect(decideHandoff(base({ view: undefined }) as any)).toMatchObject({ kind: 'refuse', reason: 'no_plan' });
+  });
+  it('#3 unsaved, saving or conflicted text refuses: the server verified the saved chapter, not the buffer', () => {
+    for (const state of ['dirty', 'saving', 'conflict', 'error'])
+      expect(decideHandoff(base({ saveStateOf: () => state }) as any)).toMatchObject({ kind: 'refuse', reason: 'unsaved', focusSectionId: 'c7' });
+  });
+  it('#4 an older hand-off that resolves after a newer one is dropped, never applied', () => {
+    expect(decideHandoff(base({ seq: 1, latestSeq: 2 }) as any)).toEqual({ kind: 'superseded' });
+  });
+  it('changed and unverified chapters refuse; so do duplicated and missing words; and a step whose chapter is not in this Work', () => {
+    expect(decideHandoff(base({ view: { plan: { steps: [st()] }, staleStepIds: ['a'], unverifiedStepIds: [], verdict: true } }) as any)).toMatchObject({ reason: 'changed' });
+    expect(decideHandoff(base({ view: { plan: { steps: [st()] }, staleStepIds: [], unverifiedStepIds: ['a'], verdict: true } }) as any)).toMatchObject({ reason: 'unverified' });
+    expect(decideHandoff(base({ bodyOf: () => 'no key here, no key there' }) as any)).toMatchObject({ reason: 'ambiguous' });
+    expect(decideHandoff(base({ bodyOf: () => 'nothing like it' }) as any)).toMatchObject({ reason: 'missing' });
+    expect(decideHandoff(base({ sectionIds: ['c2'] }) as any)).toMatchObject({ reason: 'no_step', focusSectionId: null });
+    expect(decideHandoff(base({ stepId: 'zz' }) as any)).toMatchObject({ reason: 'no_step' });
+  });
+  it('the order of checks is the law: unsaved is reported before stale, and stale before the word search', () => {
+    expect(decideHandoff(base({ saveStateOf: () => 'dirty', view: { plan: { steps: [st()] }, staleStepIds: ['a'], unverifiedStepIds: [], verdict: true } }) as any)).toMatchObject({ reason: 'unsaved' });
+    expect(decideHandoff(base({ bodyOf: () => 'nothing', view: { plan: { steps: [st()] }, staleStepIds: ['a'], unverifiedStepIds: [], verdict: true } }) as any)).toMatchObject({ reason: 'changed' });
+  });
+  it('every refusal tells the writer that nothing was changed', () => {
+    for (const copy of Object.values(HANDOFF_REFUSAL_COPY)) expect(copy).toMatch(/Nothing was changed\.$/);
+  });
 });
