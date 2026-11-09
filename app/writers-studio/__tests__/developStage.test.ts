@@ -72,25 +72,17 @@ test('More leads back to the chapter', () => {
   expect(q('[data-develop-chapter]')!.hidden).toBe(false);
 });
 
-test('the shape of the book: one segment per chapter; choosing one moves there and nowhere else', () => {
-  const p = mount();
-  const seg = Array.from(host.querySelectorAll('[data-develop-ribbon] button'));
-  expect(seg.map((b) => b.textContent)).toEqual(['Harbour', 'Salt', 'Return']);
-  act(() => (seg[2] as HTMLElement).click());
-  expect(p.onSelect).toHaveBeenCalledWith('s3');
-});
-
-test('threads: counted words that recur; choosing one marks the chapters that carry it and the word in the text', () => {
-  mount();
-  const chip = Array.from(host.querySelectorAll('[data-develop-threads] button')).find((b) => b.textContent?.startsWith('key'))!;
-  expect(chip).toBeTruthy();
-  act(() => (chip as HTMLElement).click());
-  const marked = Array.from(q('[data-develop-chapter]')!.querySelectorAll('mark')).map((m) => m.textContent);
-  expect(marked).toEqual(['key']);
-  const seg = Array.from(host.querySelectorAll('[data-develop-ribbon] button')).map((b) => b.textContent);
-  expect(seg).toEqual(['● Harbour', 'Salt', '● Return']);
-  act(() => (chip as HTMLElement).click());                                              // toggles off
-  expect(q('[data-develop-chapter]')!.querySelectorAll('mark').length).toBe(0);
+test('founder (live, 2026-11-09): More shows no truncated chapter strip and no recurring-word counts', () => {
+  const many = Array.from({ length: 60 }, (_, i) => ({ draftSectionId: `c${i}`, heading: `Chapter heading number ${i + 1}`, body: `Chapter heading number ${i + 1}\n\nlife world fire nature life world fire nature.`, position: i }));
+  mount({ sections: many, currentId: 'c0' });
+  expect(q('[data-develop-more-panel]')).not.toBeNull();
+  expect(q('[data-develop-ribbon]')).toBeNull();                 // one tiny box per chapter, truncated to "S", "El" …
+  expect(q('[data-develop-threads]')).toBeNull();                // "Recurs across chapters: life 134, world 111 …"
+  expect(q('[data-develop-more-panel]')!.textContent).not.toMatch(/Recurs across chapters/);
+  // chapters are reached by their full names: the chapter control lists every one, untruncated
+  const opts = Array.from((q('[data-develop-chapter-select]') as HTMLSelectElement).options).map((o) => o.textContent);
+  expect(opts).toHaveLength(60);
+  expect(opts[53]).toBe('54 · Chapter heading number 54');
 });
 
 test('the chapters she read are shown in place from the writer’s own copy; “Go there” moves, “Read it here” expands', () => {

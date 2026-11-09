@@ -28,9 +28,9 @@
  *
  * ⭐ STANDING RULE COMPLETION (founder, 2026-11-09: everything on Develop askable through MAIA; see developAskable.ts). Navigation
  * offers, Design 1B's original "take me there" pattern — each opens the writer's own control, which they then use:
- *   `show:plan|kind|reading|settled|recurring|read` — opens Develop's More at that place (the plan's steps, the book's kind — chosen by
- *                   the writer, never guessed —, reading permission incl. stopping it, settled decisions incl. withdrawing, recurring
- *                   words, the chapters she read). `go-chapter:<section id>` — moves to a chapter; ⛔ only an id she was given, checked
+ *   `show:plan|kind|reading|settled|read` — opens Develop's More at that place (the plan's steps, the book's kind — chosen by
+ *                   the writer, never guessed —, reading permission incl. stopping it, settled decisions incl. withdrawing, the
+ *                   chapters she read; recurring-word counts were removed 2026-11-09 as noise). `go-chapter:<section id>` — moves to a chapter; ⛔ only an id she was given, checked
  *                   against the Work (the reason Design 1B left it out: headings are not unique). `show-keeps`, `open-in-maia`, `focus`,
  *                   `close-conversation` — the conversation's own controls.
  *
@@ -45,9 +45,9 @@ import { DEVELOPMENTAL_LENSES, type DevelopmentalLens } from '@/lib/manuscript/d
 export type StudioActionId = 'develop-overview' | 'editorial-pass' | 'craftsmans-table' | 'new-conversation' | 'read-chapter'
   | 'grant-reading' | 'make-plan' | 'note-settled' | 'open-desk'
   | 'show' | 'go-chapter' | 'show-keeps' | 'open-in-maia' | 'focus' | 'close-conversation' | 'teach-me';
-export const SHOW_PLACES = ['plan', 'kind', 'reading', 'settled', 'recurring', 'read'] as const;
+export const SHOW_PLACES = ['plan', 'kind', 'reading', 'settled', 'read'] as const;
 export type ShowPlace = typeof SHOW_PLACES[number];
-const SHOW_LABEL: Record<ShowPlace, string> = { plan: 'Show my plan', kind: 'Say what kind of book this is', reading: 'Show what MAIA can read', settled: 'Show what I have settled', recurring: 'Show words that recur', read: 'Show the chapters she read' };
+const SHOW_LABEL: Record<ShowPlace, string> = { plan: 'Show my plan', kind: 'Say what kind of book this is', reading: 'Show what MAIA can read', settled: 'Show what I have settled', read: 'Show the chapters she read' };
 export const showLabel = (p: ShowPlace): string => SHOW_LABEL[p];
 export type StudioActionSurface = 'passage-focus' | 'work-conversation';
 
@@ -69,7 +69,7 @@ export const STUDIO_ACTIONS: readonly StudioAction[] = [
   { id: 'make-plan', label: 'Make a plan from this', does: 'when the writer clicks it, you make a plan of grounded steps for the question they just asked; the plan is theirs to edit and never changes their writing. Only their click starts it', surfaces: ['work-conversation'] },
   { id: 'note-settled', label: 'Note this as settled', does: 'when the writer clicks it, a box opens with the writer\'s own latest words for them to edit and note as something they have settled about the book; nothing is recorded until they press Note it, and you never write the decision for them', surfaces: ['work-conversation'] },
   { id: 'open-desk', label: 'Open the passage desk', does: 'takes the writer to Write\'s passage desk on the passage you are discussing, where they can work on it; nothing changes until they decide there', surfaces: ['work-conversation'] },
-  { id: 'show', label: 'Show it', does: 'opens Develop’s More at one place for the writer to use: write :plan (their plan, to edit, resolve, set aside, delete or open a step at the desk), :kind (where THEY say what kind of book this is; never choose it for them), :reading (what you may read, and stopping it), :settled (what they have settled, and withdrawing it), :recurring (words that recur across chapters), or :read (the chapters you read, in place)', surfaces: ['work-conversation'] },
+  { id: 'show', label: 'Show it', does: 'opens Develop’s More at one place for the writer to use: write :plan (their plan, to edit, resolve, set aside, delete or open a step at the desk), :kind (where THEY say what kind of book this is; never choose it for them), :reading (what you may read, and stopping it), :settled (what they have settled, and withdrawing it), or :read (the chapters you read, in place)', surfaces: ['work-conversation'] },
   { id: 'go-chapter', label: 'Go to that chapter', does: 'moves the writer to a chapter; write the chapter’s id exactly as given in brackets in the section list, e.g. [[studio:go-chapter:abc123]]; never invent one', surfaces: ['work-conversation'] },
   { id: 'show-keeps', label: 'Show my Keeps', does: 'opens the writer’s kept passages beside this conversation, to offer one into it', surfaces: ['work-conversation'] },
   { id: 'open-in-maia', label: 'Continue in MAIA', does: 'takes the writer to MAIA outside the Studio with this Work', surfaces: ['work-conversation'] },
@@ -163,7 +163,7 @@ export function studioActionsInstruction(surface: StudioActionSurface): string {
       'Offer [[studio:make-plan]] when the writer asks for a plan, or asks how to get from here to what they want across several passages.',
       'Offer [[studio:note-settled]] when the writer states something they have decided about the book. The decision is in their words, never yours.',
       'Offer [[studio:open-desk]] when the writer wants to work on the exact passage you are discussing.',
-      'Offer [[studio:show:…]] when the writer asks to see or change their plan, the book’s kind, what you may read (or to stop you reading), what they have settled (or to withdraw it), recurring words, or the chapters you read. For the book’s kind, the writer chooses; never suggest which.',
+      'Offer [[studio:show:…]] when the writer asks to see or change their plan, the book’s kind, what you may read (or to stop you reading), what they have settled (or to withdraw it), or the chapters you read. For the book’s kind, the writer chooses; never suggest which.',
       'Offer [[studio:teach-me]] when the writer asks how or why something in their writing works, or says they want to understand the craft, and you have answered what they asked. Never offer it as a lesson they did not ask for.',
       'Offer [[studio:go-chapter:ID]] when the writer asks to go to a chapter, using only an id from the section list. Offer [[studio:show-keeps]], [[studio:open-in-maia]], [[studio:focus]] or [[studio:close-conversation]] when the writer asks for exactly that.',
     ] : []),
