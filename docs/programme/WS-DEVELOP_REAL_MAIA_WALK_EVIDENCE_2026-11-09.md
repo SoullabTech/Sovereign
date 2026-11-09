@@ -32,10 +32,11 @@ Founder ruling on #4 (does Sanctuary govern Writer's Studio conversation retenti
 
 ## Sanctuary — what is settled and what is not
 - **PASS:** in Sanctuary nothing of the Work conversation is stored (route test with failure-proof; real-model check: 0 rows). No reading permission, no carried readings, no settled decisions reach her in Sanctuary (route tests).
-- **UNKNOWN / for the founder to confirm (not redefined here):** what she may still *see* in Sanctuary — the passage the writer is at, the earlier ordinary turns of a conversation being continued, and the writer's own declared notes about the Work. The Sanctuary invariant governs what is kept; whether these in-the-moment inputs are also excluded is a ruling, not an implementation choice. Recommended: keep them (they are the writer's own material, used only in the moment), but it is your call.
+- **RULED (founder, 2026-11-09, "Yes, in the moment"):** in Sanctuary MAIA may still *see*, for that answer only, the passage the writer is at, the earlier ordinary turns of a conversation being continued, and the writer's own declared notes about the Work. Nothing from the Sanctuary exchange is kept. The standing reading permission, carried readings and settled decisions stay withheld in Sanctuary, as built.
 - **Not changed:** Write-room (passage desk) conversations under Sanctuary are a separate route; not examined in this walk.
 
 ## PASS / FAIL / UNKNOWN (this report)
 - PASS: G6 acceptance (persisted reading → later conversation, correct member/Work/revision/consent, provenance in the answer row) · isolation (non-secret metadata) · real plan · observation-field and plan-model fixes · Sanctuary stores nothing.
 - FAIL (open): MAIA self-blames when the passage changes between turns · the identity-protection note did not appear · no conversational way to commission a reading on the stage.
-- UNKNOWN: Sanctuary in-the-moment inputs (ruling) · Write-room Sanctuary behaviour · why the identity note did not appear.
+- UNKNOWN: Write-room Sanctuary behaviour · why the identity note did not appear.
+- RULED: Sanctuary in-the-moment inputs (founder, "Yes, in the moment").

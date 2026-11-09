@@ -617,8 +617,9 @@ async function workTurn(input: {
   /* ⭐ SANCTUARY STORES NOTHING (founder ruling 2026-11-09, "do what is best", applying the Sanctuary invariant: "No content retention —
      nothing from a Sanctuary session can be saved"). In Sanctuary the Work conversation is useful in the moment: no thread is created,
      neither the question nor the answer is written, and no read happens beyond the passage the writer is at. Earlier ordinary turns of an
-     existing conversation may still inform her (reading is not storing). The writer's manuscript, edits, plans and decisions are untouched by
-     this. ⛔ An unstated posture is ordinary: Sanctuary is an explicit opt-in. */
+     existing conversation may still inform her (reading is not storing; founder ruling 2026-11-09, "Yes, in the moment": the passage the
+     writer is at, earlier ordinary turns and the writer's declared notes may be seen in the moment, never kept). The writer's manuscript,
+     edits, plans and decisions are untouched by this. ⛔ An unstated posture is ordinary: Sanctuary is an explicit opt-in. */
   const storing = !posture.sanctuary;
   const liveThreadId = existing ? existing.id : !storing ? '' : await openThread({
     manuscriptId, memberId, anchor,
