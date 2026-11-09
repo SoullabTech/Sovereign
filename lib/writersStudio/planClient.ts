@@ -1,16 +1,16 @@
 import { apiFetch } from '@/lib/http/apiBase';
-import type { StoredPlan } from './developmentPlanStore';
+import type { StoredPlan, StepEvent } from './developmentPlanStore';
 import type { StepEdit } from './developmentPlan';
 
-export type PlanView = { plan: StoredPlan | null; staleStepIds: string[]; unverifiedStepIds: string[] };
+export type PlanView = { plan: StoredPlan | null; staleStepIds: string[]; unverifiedStepIds: string[]; events: Record<string, StepEvent> };
 const base = (m: string) => `/api/sovereign/manuscripts/${encodeURIComponent(m)}/plans`;
 
 export async function fetchPlan(manuscriptId: string): Promise<PlanView | undefined> {
   try {
     const res = await apiFetch(base(manuscriptId));
     if (!res.ok) return undefined;
-    const j = (await res.json()) as { plan: StoredPlan | null; staleStepIds?: string[]; unverifiedStepIds?: string[] };
-    return { plan: j.plan, staleStepIds: j.staleStepIds ?? [], unverifiedStepIds: j.unverifiedStepIds ?? [] };
+    const j = (await res.json()) as { plan: StoredPlan | null; staleStepIds?: string[]; unverifiedStepIds?: string[]; events?: Record<string, StepEvent> };
+    return { plan: j.plan, staleStepIds: j.staleStepIds ?? [], unverifiedStepIds: j.unverifiedStepIds ?? [], events: j.events ?? {} };
   } catch { return undefined; }
 }
 
@@ -20,7 +20,7 @@ export async function makePlanClient(manuscriptId: string, ask: string, sanctuar
     const res = await apiFetch(base(manuscriptId), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ask, sanctuary }) });
     const j = (await res.json().catch(() => ({}))) as { plan?: StoredPlan; staleStepIds?: string[]; read?: { sectionId: string; label: string | null }[]; dropped?: number; refusal?: string; detail?: string };
     if (!res.ok || !j.plan) return { ok: false, refusal: j.refusal ?? `http_${res.status}`, detail: j.detail };
-    return { ok: true, view: { plan: j.plan, staleStepIds: j.staleStepIds ?? [], unverifiedStepIds: [] }, read: j.read ?? [], dropped: j.dropped ?? 0 };
+    return { ok: true, view: { plan: j.plan, staleStepIds: j.staleStepIds ?? [], unverifiedStepIds: [], events: {} }, read: j.read ?? [], dropped: j.dropped ?? 0 };
   } catch { return { ok: false, refusal: 'unreachable' }; }
 }
 
@@ -30,4 +30,13 @@ export async function editPlanClient(manuscriptId: string, planId: string, edits
     if (!res.ok) return undefined;
     return ((await res.json()) as { plan: StoredPlan }).plan;
   } catch { return undefined; }
+}
+
+/** Tell the plan that a change applied in the desk came from this step. The server verifies it against the desk's records. */
+export async function linkStepClient(manuscriptId: string, planId: string, stepId: string, authorizationId: string): Promise<'linked' | 'already' | 'refused' | 'unreachable'> {
+  try {
+    const res = await apiFetch(`${base(manuscriptId)}/${encodeURIComponent(planId)}/links`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stepId, authorizationId }) });
+    const j = (await res.json().catch(() => ({}))) as { outcome?: 'linked' | 'already' | 'refused' };
+    return j.outcome ?? (res.ok ? 'linked' : 'refused');
+  } catch { return 'unreachable'; }
 }

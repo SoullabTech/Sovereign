@@ -143,3 +143,23 @@ test('M4b “Work on this passage” hands over the step id only; it changes not
   expect(p.onWorkOnStep).toHaveBeenCalledWith('a');
   expect(p.onEditPlan).not.toHaveBeenCalled();             // the stage itself edits nothing
 });
+
+test('M4c applied and resolved stay separate: an applied change is shown as an event, and the step is not called resolved', () => {
+  mount({ plan: { ...planOf([step('a', { status: 'working' })]), events: { a: { state: 'applied', at: '2026-11-09T10:00:00Z', applications: 1 } } } });
+  const el = q('[data-develop-plan-step="a"]')!;
+  expect(q('[data-develop-plan-event="applied"]')!.textContent).toMatch(/applied a change here in the passage desk/);
+  expect(el.textContent).toMatch(/Whether that resolves the step is yours to say/);
+  expect((el.querySelector('select') as HTMLSelectElement).value).toBe('working');
+});
+
+test('M4c an undone change reads as undone; a resolved step with no edit shows no event at all', () => {
+  mount({ plan: { ...planOf([step('a'), step('b', { status: 'done' })]), events: { a: { state: 'undone', at: '2026-11-09T10:00:00Z', applications: 1 } } } });
+  expect(q('[data-develop-plan-step="a"]')!.textContent).toMatch(/then undid it/);
+  expect(q('[data-develop-plan-step="b"] [data-develop-plan-event]')).toBeNull();
+  expect(Array.from((q('[data-develop-plan-step="b"] select') as HTMLSelectElement).options).find((o) => o.selected)!.textContent).toBe('Resolved');
+});
+
+test('M4c a step MAIA cannot verify says so', () => {
+  mount({ plan: { ...planOf([step('a')]), unverifiedStepIds: ['a'] } });
+  expect(q('[data-develop-plan-step="a"]')!.textContent).toMatch(/can’t confirm this chapter is the one MAIA read/);
+});

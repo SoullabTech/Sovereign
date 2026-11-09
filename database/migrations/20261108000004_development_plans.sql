@@ -62,8 +62,34 @@ DROP TRIGGER IF EXISTS development_plan_history_no_edit_trigger ON development_p
 CREATE TRIGGER development_plan_history_no_edit_trigger BEFORE UPDATE OR DELETE ON development_plan_history
   FOR EACH ROW EXECUTE FUNCTION development_plan_history_no_edit();
 
+
+-- ── Step ↔ desk link (M4c). A step NEVER stores "applied". It links to the desk's own authorization record, and
+--    applied / undone are read from manuscript_revision_authorizations + manuscript_application_recovery every time.
+--    The route inserts a link only when the authorization is the member's, accepted, on this plan's manuscript,
+--    on the step's own section, and accepted after the plan was made. One authorization links to at most one step.
+--    Append-only. Derivative of the desk's record, so it never blocks that record's governed erasure (CASCADE).
+CREATE TABLE IF NOT EXISTS development_plan_step_links (
+  authorization_id uuid PRIMARY KEY REFERENCES manuscript_revision_authorizations(id) ON DELETE CASCADE,
+  plan_id          uuid NOT NULL REFERENCES development_plans(id) ON DELETE CASCADE,
+  step_id          text NOT NULL CHECK (length(step_id) BETWEEN 1 AND 100),
+  member_id        uuid NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+  linked_at        timestamptz NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS development_plan_step_links_plan ON development_plan_step_links(plan_id, step_id);
+
+CREATE OR REPLACE FUNCTION development_plan_step_links_no_edit() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' AND (NOT EXISTS (SELECT 1 FROM development_plans WHERE id = OLD.plan_id)
+                           OR NOT EXISTS (SELECT 1 FROM manuscript_revision_authorizations WHERE id = OLD.authorization_id)) THEN RETURN OLD; END IF;
+  RAISE EXCEPTION '[PLAN] development_plan_step_links is append-only';
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS development_plan_step_links_no_edit_trigger ON development_plan_step_links;
+CREATE TRIGGER development_plan_step_links_no_edit_trigger BEFORE UPDATE OR DELETE ON development_plan_step_links
+  FOR EACH ROW EXECUTE FUNCTION development_plan_step_links_no_edit();
+
 COMMENT ON TABLE development_plans IS
 'The writer''s working plan for their Work: MAIA''s grounded steps, each anchored to an exact passage in the writer''s own text, edited by the writer. A plan never changes the manuscript; a step is opened in the existing passage desk.';
 
 COMMIT;
-DO $$ BEGIN RAISE NOTICE 'Migration 20261108000004: development_plans, development_plan_history'; END $$;
+DO $$ BEGIN RAISE NOTICE 'Migration 20261108000004: development_plans, development_plan_history, development_plan_step_links'; END $$;

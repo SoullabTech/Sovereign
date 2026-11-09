@@ -80,7 +80,7 @@ import {
   readRelationshipReturnClient,
   writeRelationshipReturnClient,
 } from '@/lib/writersStudio/rebuild/returnStateClient';
-import { fetchPlan } from '@/lib/writersStudio/planClient';
+import { fetchPlan, linkStepClient } from '@/lib/writersStudio/planClient';
 import { locateAnchor, PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
 import { P4R1Pc3WriteEditView, UNDO_RESTORED_MESSAGES, type Pc3HeldPassage } from './P4R1Pc3WriteEditView';
 
@@ -1034,6 +1034,20 @@ export default function FlagshipWriteEditController() {
 
   /* A plan step opened from Develop. Develop leaves only a step id; the words come from the writer's saved plan and are located in the text AS IT IS NOW.
      Exactly one match is held (the desk then does the rest: propose, Use it, Undo). Anything else opens the chapter and says so. Nothing is written here. */
+  /* The plan step that brought the writer to this passage. Only a pointer: when the desk records an apply on this section,
+     its authorization is offered to the plan, and the SERVER decides whether it belongs to the step. Never marks a step resolved. */
+  const [planStepHere, setPlanStepHere] = useState<{ planId: string; stepId: string; sectionId: string } | null>(null);
+  const offeredLinks = useRef(new Set<string>());
+  useEffect(() => { if (planStepHere && focusId && focusId !== planStepHere.sectionId) setPlanStepHere(null); }, [focusId, planStepHere]);
+  useEffect(() => {
+    const app = editorialThread?.application;
+    if (!planStepHere || !context || !app || app.undone || focusId !== planStepHere.sectionId) return;
+    const key = `${planStepHere.planId}:${planStepHere.stepId}:${app.authorizationId}`;
+    if (offeredLinks.current.has(key)) return;
+    offeredLinks.current.add(key);
+    void linkStepClient(context.manuscriptId, planStepHere.planId, planStepHere.stepId, app.authorizationId);
+  }, [editorialThread, planStepHere, context, focusId]);
+
   // Idempotent by construction: the id is removed as it is read, so a repeated hand-off is a NEW hand-off and a reload is not a second one.
   useEffect(() => {
     if (!context || !work || workContext.kind !== 'work' || workReentryRequired.current) return;
@@ -1058,7 +1072,7 @@ export default function FlagshipWriteEditController() {
         return;
       }
       const found = locateAnchor(writingRef.current?.bodyOf(section.draftSectionId) ?? section.body, step.anchor);
-      if (found.ok) { holdPassage(section, found.start, found.end, found.text); return; }
+      if (found.ok) { holdPassage(section, found.start, found.end, found.text); setPlanStepHere({ planId: view.plan!.id, stepId: step.id, sectionId: section.draftSectionId }); return; }
       focusWritingSection(section.draftSectionId);
       setEditorialFailure(found.reason === 'ambiguous'
         ? 'Those words occur more than once in this chapter, so I have not chosen for you. Select the passage you mean. Nothing was changed.'

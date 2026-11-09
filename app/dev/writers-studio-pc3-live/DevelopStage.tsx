@@ -18,7 +18,7 @@ import { useMemo, useState } from 'react';
 import { excerptOf, markTerm, recurringThreads } from '@/lib/writersStudio/recurringThreads';
 import { setWorkKindClient } from '@/lib/writersStudio/workKindClient';
 import type { WorkKind } from '@/lib/writersStudio/workKind';
-import type { StoredPlan } from '@/lib/writersStudio/developmentPlanStore';
+import type { StoredPlan, StepEvent } from '@/lib/writersStudio/developmentPlanStore';
 import { STEP_STATUS, type StepEdit, type StepStatus } from '@/lib/writersStudio/developmentPlan';
 
 export interface StageSection { draftSectionId: string; heading: string | null; body: string | null; position: number }
@@ -48,7 +48,7 @@ export function DevelopStage(props: {
   /** the chapters MAIA was handed for her last answer (ids + headings); their text is shown here from the writer's own copy, in place */
   lastRead: readonly { sectionId: string; label: string | null }[] | null;
   /** the writer's plan (MAIA's grounded steps, edited by the writer). A plan never changes the manuscript. */
-  plan: { plan: StoredPlan | null; staleStepIds: readonly string[] } | null;
+  plan: { plan: StoredPlan | null; staleStepIds: readonly string[]; unverifiedStepIds?: readonly string[]; events?: Readonly<Record<string, StepEvent>> } | null;
   planBusy: boolean;
   planNote: string | null;
   onMakePlan: (ask: string) => void;
@@ -170,7 +170,7 @@ export function DevelopStage(props: {
                       <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                         <select aria-label={`Status of step ${i + 1}`} value={st.status} onChange={(e) => props.onEditPlan([{ id: st.id, status: e.target.value as StepStatus }])}
                           style={{ font: 'inherit', fontSize: 12, background: 'none', color: 'inherit', border: hair, borderRadius: 6 }}>
-                          {STEP_STATUS.map((x) => <option key={x} value={x}>{x === 'open' ? 'To do' : x === 'working' ? 'Working on it' : x === 'done' ? 'Done' : 'Set aside'}</option>)}
+                          {STEP_STATUS.map((x) => <option key={x} value={x}>{x === 'open' ? 'To do' : x === 'working' ? 'Working on it' : x === 'done' ? 'Resolved' : 'Set aside'}</option>)}
                         </select>
                         <button type="button" onClick={() => props.onEditPlan([{ id: st.id, remove: true }])} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', fontSize: 12 }}>Remove</button>
                       </span>
@@ -183,6 +183,12 @@ export function DevelopStage(props: {
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4, fontSize: 12 }}>
                       {sec ? <button type="button" onClick={() => { props.onSelect(sec.draftSectionId); setFocusAnchor(st.anchor); }} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}>Go to the passage</button> : null}
                       {sec ? <button type="button" data-develop-plan-work={st.id} onClick={() => props.onWorkOnStep(st.id)} style={{ background: 'none', border: hair, borderRadius: 999, color: 'inherit', cursor: 'pointer', font: 'inherit', padding: '3px 12px' }}>Work on this passage</button> : null}
+                      {(() => { const ev = props.plan!.events?.[st.id]; if (!ev) return null;
+                        const when = new Date(ev.at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+                        return <span data-develop-plan-event={ev.state} style={{ opacity: .85 }}>{ev.state === 'applied'
+                          ? `You applied a change here in the passage desk (${when}).${st.status !== 'done' ? ' Whether that resolves the step is yours to say.' : ''}`
+                          : `You applied a change here and then undid it (${when}).`}</span>; })()}
+                      {!stale && props.plan!.unverifiedStepIds?.includes(st.id) ? <span role="status" style={{ opacity: .85 }}>I can’t confirm this chapter is the one MAIA read for the plan; check the step still fits.</span> : null}
                       {stale ? <span role="status" style={{ opacity: .85 }}>This chapter has changed since the plan was made; check the step still fits.</span> : null}
                     </div>
                   </li>
