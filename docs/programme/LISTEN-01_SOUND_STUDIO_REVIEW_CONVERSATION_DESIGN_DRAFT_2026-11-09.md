@@ -77,6 +77,35 @@ in front of her, and would blur what MAIA remembers. A distinct guide ("Sound St
 name, no access to MAIA memory, and a stated purpose keeps both roles honest. MAIA could later offer a *door* to the
 review ("Would you like to tell the Sound Studio team about this?") without conducting it.
 
+### Founder ruling on (1), 2026-11-09: hybrid ("both or hybrid")
+
+Both are present, in two distinct roles, joined by one bridge that only the reviewer can open:
+
+| | Review guide | MAIA |
+|---|---|---|
+| Role | Conducts the product review | The reviewer's own companion, unchanged |
+| Asks about | The work: craft, arc, purpose, the room | Whatever the person brings, including what the listening stirred |
+| Stores | Only reviewer-confirmed review lines, in `sound_studio_reviews` | Under MAIA's existing memory consent (Sanctuary applies) |
+| Sees | This conversation and the work's manifest | Never the review table |
+
+**The bridge (MAIA → review):** when a reviewer talks with MAIA about a Sound Studio work, MAIA may offer once,
+plainly: *"Would you like to pass any of this to the Sound Studio team?"* If the reviewer says yes, they see
+exactly which of their own sentences would cross, can edit or remove them, and confirm. Those lines then open a
+review with the guide, pre-filled and marked as from MAIA. Nothing crosses without that confirmation, nothing
+crosses in the other direction, and MAIA never asks product-research questions herself.
+
+**Laws carried by the hybrid:**
+1. MAIA never becomes a feedback-collection channel; she may only offer the door, and only once per conversation.
+2. A review is never written to MAIA's memory, and MAIA's memory is never read by the guide.
+3. Every line that crosses the bridge is shown to and confirmed by the reviewer first.
+4. Sanctuary sessions offer no bridge at all.
+5. Both voices are visibly named, so the reviewer always knows which one they are talking to.
+
+**Phasing:**
+- **Phase 1:** the review guide, storage, consent, confirm-before-save, and the founder panel. No change to MAIA.
+- **Phase 2:** the MAIA door. It touches MAIA's runtime, so it is held to the Deep-Intelligence gate and the
+  Sovereignty Invariant check, and needs its own review before building.
+
 ## 6. Not authorized by this draft
 
 Building any of it · a migration · storing reviewer words · any model call with reviewer content · any change to
