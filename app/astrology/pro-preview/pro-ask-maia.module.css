@@ -21,3 +21,21 @@
 .block { display: grid; gap: 4px; font-size: .84rem; color: #d8cbb3; }
 .block input { font: inherit; padding: 7px 10px; border: 1px solid rgba(223, 189, 132, .35); border-radius: 8px; color: #f3e6cd; background: #121a24; }
 .reading { white-space: pre-wrap; line-height: 1.6; padding: 12px 14px; border-top: 1px solid rgba(223, 189, 132, .2); color: #ede4d3; }
+
+/* The conversation stage in the cockpit */
+.options { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: .82rem; color: #d8cbb3; }
+.segment { display: inline-flex; border: 1px solid rgba(223, 189, 132, .45); border-radius: 7px; overflow: hidden; }
+.segment button { font: inherit; padding: 4px 11px; background: transparent; border: none; color: #b9b0a0; cursor: pointer; }
+.segment button[aria-pressed="true"] { background: #e2c48f; color: #14202d; }
+.check { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+.check input { accent-color: #e2c48f; width: 15px; height: 15px; }
+.personalNote { margin: 0; padding: 8px 11px; font-size: .8rem; line-height: 1.45; color: #e9dfcc; background: rgba(223, 189, 132, .09); border-left: 2px solid #e2c48f; }
+.thread { display: grid; gap: 14px; flex: 1 1 auto; align-content: start; min-height: 60px; }
+.thread .exchange { border-top: none; padding-top: 0; gap: 8px; }
+.thread .q { justify-self: end; max-width: 85%; padding: 8px 12px; border-radius: 12px 12px 2px 12px; background: rgba(223, 189, 132, .14); color: #f3e6cd; font-style: normal; }
+.thread .a { max-width: 100%; padding: 2px 2px 2px 14px; border-left: 2px solid rgba(223, 189, 132, .45); font-size: 1rem; line-height: 1.65; color: #ede4d3; }
+.provenance { margin: 0; padding-left: 14px; font-size: .76rem; color: #b9b0a0; }
+.waiting { padding: 0 0 0 14px; margin: 0; font-size: .86rem; color: #b9b0a0; font-style: italic; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chips button { font: inherit; font-size: .82rem; text-align: left; color: #e9dfcc; background: transparent; border: 1px solid rgba(223, 189, 132, .35); border-radius: 50px; padding: 5px 12px; cursor: pointer; }
+.chips button:hover { background: rgba(223, 189, 132, .1); border-color: rgba(223, 189, 132, .6); }

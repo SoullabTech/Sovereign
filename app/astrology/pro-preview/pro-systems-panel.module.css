@@ -28,3 +28,11 @@
 .alert { color: #f4daac; margin: 10px 0 0; }
 @media (max-width: 560px) { .facts { grid-template-columns: 1fr; } .facts dd { margin-bottom: 6px; } }
 .subhead { margin: 22px 0 4px; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: #9fd0d8; }
+
+/* The Da Yun timeline was laid out for a full page and picks its three-column
+   row from the window's width. Inside a tool panel it follows the panel's. */
+.daYun { container-type: inline-size; }
+@container (max-width: 760px) {
+  .daYun :global(.md\:grid-cols-3) { grid-template-columns: minmax(0, 1fr); }
+  .daYun :global(.hidden.md\:block) { display: none; }
+}

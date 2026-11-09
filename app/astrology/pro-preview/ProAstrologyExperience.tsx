@@ -18,7 +18,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   BookOpen, Bookmark, ChevronDown, ChevronRight, ChevronUp, CircleDot, Clock, Eye, EyeOff, FlaskConical, Globe2,
-  GraduationCap, Info, MapPin, Orbit, PanelRightOpen, Sparkles, Users, X, type LucideIcon,
+  GraduationCap, Info, MapPin, Orbit, Sparkles, Users, X, type LucideIcon,
 } from 'lucide-react';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { apiFetch, apiUrl } from '@/lib/http/apiBase';
@@ -35,7 +35,7 @@ import ProDerivedPanel from './ProDerivedPanel';
 import ProSystemsPanel, { type SystemsWork } from './ProSystemsPanel';
 import { PanelMemoryProvider } from './panelMemory';
 import { askKey } from './ProAskMaiaPanel';
-import ProMaiaDock from './ProMaiaDock';
+import ProMaiaStage, { maiaSubjectInHand } from './ProMaiaDock';
 import { MaiaDockProvider, useMaiaDock, useMaiaSubject } from './maiaDock';
 import type { ProAskSection, ProAskView } from '@/lib/astrology/proAskMaiaSections';
 import ProDeepReadingPanel from './ProDeepReadingPanel';
@@ -115,7 +115,7 @@ function typingTarget(target: EventTarget | null): boolean {
 }
 
 export default function ProAstrologyExperience() {
-  return <MaiaDockProvider><Cockpit /></MaiaDockProvider>;
+  return <MaiaDockProvider defaultOpen={false}><Cockpit /></MaiaDockProvider>;
 }
 
 function Cockpit() {
@@ -590,7 +590,7 @@ function Cockpit() {
     ] },
     { id: 'traditions', label: 'Traditions', icon: Globe2, tabs: [
       { id: 'systems', label: 'Vedic · Chinese · Mayan',
-        view: systemsTab === 'chinese' ? undefined : systemsTab, prefer: systemsTab === 'chinese' ? ['four-pillars'] : [],
+        prefer: [systemsTab === 'chinese' ? 'four-pillars' : systemsTab],
         render: () => <ProSystemsPanel subjectId={subjectId} chartLabel={chartLabel} work={systemsWork} onWork={setSystemsWork} /> },
     ] },
     { id: 'readings', label: 'Readings', icon: BookOpen, tabs: [
@@ -672,6 +672,7 @@ function Cockpit() {
   }, []);
 
   const dockOpen = !!dock?.open;
+  const inHand = dock ? maiaSubjectInHand(dock.subjects, dock.focusKey, leadTab?.prefer ?? []) : undefined;
 
   return (
     <PanelMemoryProvider scope={panelScope}>
@@ -728,11 +729,10 @@ function Cockpit() {
         </div>
 
         <span className={cockpit.flag}>Private preview</span>
-        {!dockOpen && (
-          <button type="button" className={cockpit.maiaToggle} onClick={() => dock?.setOpen(true)} title="Show MAIA (M)">
-            <PanelRightOpen size={16} aria-hidden="true" /> MAIA
-          </button>
-        )}
+        <button type="button" className={cockpit.maiaToggle} aria-pressed={dockOpen}
+          onClick={() => dock?.setOpen(!dockOpen)} title="Talk with MAIA, or return to the tools (M)">
+          <Sparkles size={16} aria-hidden="true" /> {dockOpen ? 'Tools' : 'Talk with MAIA'}
+        </button>
       </header>
 
       {methodOpen && privateChart && (
@@ -746,7 +746,7 @@ function Cockpit() {
         </section>
       )}
 
-      <div className={cockpit.body} data-dock={dockOpen ? 'open' : 'closed'}>
+      <div className={cockpit.body}>
         <nav className={cockpit.rail} aria-label="Tools">
           {tools.map((tool, index) => {
             const Icon = tool.icon;
@@ -828,7 +828,8 @@ function Cockpit() {
           )}
         </section>
 
-        <section className={cockpit.deck} aria-label="Open tools">
+        <div className={cockpit.work}>
+        <section className={cockpit.deck} aria-label="Open tools" hidden={dockOpen}>
           {openTools.length === 0 && (
             <p className={cockpit.deckEmpty}>No tools open. Choose one from the rail, or press 1–9.</p>
           )}
@@ -893,9 +894,21 @@ function Cockpit() {
           })}
         </section>
 
-        <ProMaiaDock chartOpen={!!privateChart}
+        {!dockOpen && (
+          <button type="button" className={cockpit.talkBar} onClick={() => dock?.setOpen(true)}>
+            <Sparkles size={17} aria-hidden="true" />
+            <span>
+              {privateChart
+                ? <>Talk with MAIA about <b>{inHand?.subjectLabel ?? 'this chart'}</b></>
+                : 'Talk with MAIA once a chart is open'}
+            </span>
+            <small>Ask · Mentor · in depth</small>
+          </button>
+        )}
+        <ProMaiaStage chartOpen={!!privateChart}
           whereLabel={leadTab ? (leadTab.label === leadTool?.label ? leadTab.label : `${leadTool?.label} · ${leadTab.label}`) : privateChart ? 'the chart wheel' : null}
           preferSections={leadTab?.prefer ?? []} />
+        </div>
       </div>
     </main>
     </PanelMemoryProvider>

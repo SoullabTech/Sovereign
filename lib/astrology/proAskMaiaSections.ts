@@ -19,8 +19,9 @@ import type { TransitAspect } from './proTransits';
 import type { FourPillars, LuckDirection } from './proFourPillars';
 import type { TraditionalMaya } from './proTraditionalMaya';
 import { declinationPairs, type Declination } from './proDeclinations';
+import type { ProOtherSystems } from './proOtherSystems';
 
-export const PRO_ASK_SECTIONS = ['natal', 'transits', 'biwheel', 'composite', 'four-pillars', 'progressed', 'deep'] as const;
+export const PRO_ASK_SECTIONS = ['natal', 'transits', 'biwheel', 'composite', 'four-pillars', 'progressed', 'vedic', 'mayan', 'deep'] as const;
 export type ProAskSection = typeof PRO_ASK_SECTIONS[number];
 
 export function isProAskSection(value: unknown): value is ProAskSection {
@@ -111,11 +112,52 @@ const SECTION_FOCUS: Record<ProAskSection, string> = {
   composite: 'the composite chart below, made from the midpoints of two people\'s charts: it describes the relationship as its own entity',
   'four-pillars': 'the Chinese Four Pillars (BaZi) chart below',
   progressed: 'the secondary progressions and solar arcs below, against the natal chart',
+  vedic: 'the Vedic (Jyotish, sidereal) chart below, with its nakshatras and Vimshottari dasha periods',
+  mayan: 'the Mayan calendar positions below: the traditional day count, and separately the modern Dreamspell signature with its three-stage path of life',
   deep: 'a full reading of one person, drawing together everything below',
 };
 
 export function mayaFacts(t: TraditionalMaya, label: string): string {
   return `${label}, traditional Maya count (GMT ${t.correlation}): ${t.number} ${t.kiche} (Yucatec ${t.number} ${t.yucatec}), Haab ${t.haab.day} ${t.haab.month}, Long Count ${t.longCount}`;
+}
+
+const day = (d: Date | string) => new Date(d).toISOString().slice(0, 10);
+
+/**
+ * The Vedic chart: lagna, grahas with nakshatra and dignity, and where the
+ * Vimshottari dasha stands now. Past period boundaries are left out: the first
+ * one is the birth date.
+ */
+export function vedicFacts(v: ProOtherSystems['vedic']): string {
+  const lines = [
+    `Vedic chart (sidereal, ${v.ayanamsaLabel} ayanamsa ${v.ayanamsaValue.toFixed(2)}°, whole-sign houses):`,
+    `Lagna: ${v.lagna.rashi} ${deg(v.lagna.degree)}, nakshatra ${v.lagna.nakshatra}`,
+    ...v.grahas.map((g) => `${g.graha}: ${g.rashi} ${deg(g.degree)}, house ${g.house}, nakshatra ${g.nakshatra} pada ${g.pada}${g.retrograde ? ', retrograde' : ''}${g.dignity && g.dignity !== 'neutral' ? `, ${g.dignity}` : ''}`),
+    `Birth nakshatra (Moon): ${v.birthNakshatra.name} pada ${v.moonPada}, ruled by ${v.birthNakshatra.ruler}`,
+    `Vimshottari dasha now: ${v.dasha.currentMahadasha.ruler} mahadasha until ${day(v.dasha.currentMahadasha.endDate)}` +
+      (v.dasha.currentAntardasha ? `, ${v.dasha.currentAntardasha.ruler} antardasha until ${day(v.dasha.currentAntardasha.endDate)}` : ''),
+  ];
+  if (v.dasha.nextMahadasha) lines.push(`Next mahadasha: ${v.dasha.nextMahadasha.ruler}, ${v.dasha.nextMahadasha.durationYears} years`);
+  return lines.join('\n');
+}
+
+/**
+ * The Mayan positions: the traditional count (dates only: its meanings belong
+ * to living daykeepers), and the modern Dreamspell signature with the three
+ * stages of its path of life.
+ */
+export function mayanFacts(m: ProOtherSystems['mayan']): string {
+  const stage = (name: 'youth' | 'adulthood' | 'future') => m.pathOfLife.find((p) => p.stage === name)?.signature ?? 'not calculated';
+  return [
+    mayaFacts(m.traditional, 'Birth'),
+    'Dreamspell count (a modern system, José Argüelles 1987; not the traditional day count and not used by Maya daykeepers):',
+    `Galactic signature: ${m.galacticSignature} (Kin ${m.tzolkinNumber} of 260, ${m.wavespell} wavespell)`,
+    `Day sign: ${m.daySign.name}, ${m.daySign.archetype}; ${m.daySign.meaning}`,
+    `Tone: ${m.tone.number} ${m.tone.name}; ${m.tone.meaning}`,
+    `Direction: ${m.direction}`,
+    `Path of life, three stages: youth ${stage('youth')}; adulthood ${stage('adulthood')}; future ${stage('future')}`,
+    ...(m.profile?.lifeCycleInsight ? [`Life cycle: ${m.profile.lifeCycleInsight}`] : []),
+  ].join('\n');
 }
 
 /** Longest life context the astrologer may give a deep reading. */
@@ -178,6 +220,10 @@ export function isProAskView(value: unknown): value is ProAskView {
 }
 
 export type ProAskMode = 'ask' | 'mentor';
+export type ProAskDepth = 'brief' | 'deep';
+/** Earlier turns of one visit the page may send back, and the longest answer among them. */
+export const PRO_ASK_HISTORY_MAX = 8;
+export const PRO_ASK_HISTORY_TURN_MAX = 12_000;
 
 /** Declinations and the parallels between them — data, not a reading. */
 export function declinationFacts(declinations: readonly Declination[]): string {
@@ -190,15 +236,32 @@ export function declinationFacts(declinations: readonly Declination[]): string {
 
 /** The system prompt for MAIA speaking with the astrologer about one section. */
 export function proAskSystemPrompt(section: ProAskSection, facts: string,
-  where: { mode?: ProAskMode; view?: ProAskView; point?: string } = {}): string {
+  where: {
+    mode?: ProAskMode; view?: ProAskView; point?: string; depth?: ProAskDepth;
+    /** Earlier turns of this visit are in the conversation. */
+    continuing?: boolean;
+    /** The astrologer's own chart, read with what they have kept with MAIA (may be empty). */
+    personal?: { kept: string };
+  } = {}): string {
+  const deep = where.depth === 'deep';
+  const length = deep
+    ? 'Go as deep as the question asks: several full paragraphs (up to about 700 words), moving from the chart\'s structure to what it opens.'
+    : 'Keep to a few short paragraphs (under about 250 words).';
   const view = where.view ? PRO_ASK_VIEWS[where.view] : null;
   const looking = view
     ? ` Right now they have ${view.phrase} open${where.point ? `, with ${where.point} selected` : ''}.${view.sees ? '' : ' You are not given that view\'s own figures: answer from the facts below and say plainly what you cannot see from here.'}`
     : where.point ? ` They have ${where.point} selected.` : '';
   const manner = where.mode === 'mentor'
     ? `- You are here as a mentor in the craft. Teach the technique the astrologer asks about: what it is, how it is calculated, how different schools read it and where they disagree, and what to look at first. Use the chart below only as a worked example, and say that it is an example. Do not give a reading of the person.
-- Speak as one practitioner teaching another. Plain text only — no headings, bullet lists or markdown. Keep to a few short paragraphs (under about 300 words).`
-    : '- Speak to the astrologer as a knowledgeable colleague: you may use astrological terms. Plain text only — no headings, bullet lists or markdown. Keep to a few short paragraphs (under about 250 words).';
+- Speak as one practitioner teaching another. Plain text only — no headings, bullet lists or markdown. ${deep ? length : 'Keep to a few short paragraphs (under about 300 words).'}`
+    : `- Speak to the astrologer as a knowledgeable colleague: you may use astrological terms. Plain text only — no headings, bullet lists or markdown. ${length}`;
+  const own = where.personal
+    ? `
+- This is the astrologer's own chart, and they have asked you to read it with what they have chosen to keep with you (below). Speak to them as "you". Relate the chart to what they have kept where the two genuinely meet, and say which is which: "your chart shows…" is the chart; "you once kept…" is their own words. Never say or imply the chart caused, predicted or explains anything in their life: it offers a language for it. Offer what you notice, then ask what they recognise; they are the author of the meaning. Do not recite their kept material back at length.${where.personal.kept ? '' : '\n- They have kept nothing with you that may be brought here, so say so in one sentence and read the chart on its own.'}`
+    : '';
+  const memory = where.continuing
+    ? '- The earlier questions and answers of this visit are in the conversation: build on them and do not repeat yourself. Nothing is kept after the visit.'
+    : '- Nothing is remembered between visits.';
   return `You are MAIA, an AI companion in Soullab, speaking with a professional astrologer in their own workspace. They are asking about ${SECTION_FOCUS[section]}.${looking} You are MAIA, not the astrologer and not a person.
 
 HOW YOU SPEAK:
@@ -206,11 +269,15 @@ ${manner}
 - The chart is symbolic: patterns to work with, never a fate. Offer possibilities and hand meaning back to the astrologer and their client.
 - Use only the facts below. If something is not there, say you can't see it. The people are "the first chart" and "the second chart"; you do not know their names, and do not ask for them or for birth details.
 - Do not predict events, deaths, illness, accidents, pregnancies, legal or money outcomes, or their timing. Do not give medical, psychological, legal or financial advice.
+- For the traditional Maya count, give the dates and explain how the count works, but do not assign meanings to its days: those belong to living daykeepers. The Dreamspell is a modern system: you may discuss its signature, tone and three-stage path of life, always naming it as Dreamspell and never as the traditional Maya count.
 - If the question shows distress about a real person's safety, say you are not a crisis service and encourage reaching a person who can help.
-- Nothing is remembered between questions; each stands alone.
+${memory}${own}
 
 ──────── THE FACTS ────────
-${facts}`;
+${facts}${where.personal?.kept ? `
+
+──────── WHAT THE ASTROLOGER HAS CHOSEN TO KEEP WITH YOU (their own words and marks, not from the chart) ────────
+${where.personal.kept}` : ''}`;
 }
 
 /** The fixed reply when a question shows crisis or serious distress. MAIA is not asked. */

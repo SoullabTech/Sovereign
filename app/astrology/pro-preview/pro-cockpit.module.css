@@ -50,15 +50,15 @@
 .skyBody small { color: var(--ink-soft); font-size: .7rem; margin-right: 3px; }
 .skyAt { color: var(--ink-soft); font-size: .7rem; }
 .flag { font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); border: 1px solid var(--line-soft); border-radius: 50px; padding: 3px 9px; white-space: nowrap; }
-.maiaToggle { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; background: rgba(226, 196, 143, .1); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; color: var(--brass); }
+.maiaToggle[aria-pressed="true"] { background: var(--brass); color: #14202d; }
+.maiaToggle { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; background: rgba(226, 196, 143, .1); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; color: var(--brass); }
 
 .method { flex: 0 0 auto; padding: 12px 18px; border-bottom: 1px solid var(--line); background: var(--panel); display: grid; gap: 6px; max-height: 40svh; overflow: auto; }
 .method p { margin: 0; font-size: .82rem; line-height: 1.5; color: var(--ink-soft); max-width: 110ch; }
 .method button { justify-self: start; }
 
 /* ── Body grid ──────────────────────────────────────────────── */
-.body { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 86px minmax(380px, 38fr) minmax(360px, 40fr) minmax(300px, 22fr); }
-.body[data-dock="closed"] { grid-template-columns: 86px minmax(380px, 44fr) minmax(360px, 56fr); }
+.body { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 86px minmax(380px, 42fr) minmax(400px, 58fr); }
 .body > * { min-height: 0; min-width: 0; }
 
 .rail { display: flex; flex-direction: column; gap: 2px; padding: 8px 6px; border-right: 1px solid var(--line); background: #0b1018; overflow-y: auto; }
@@ -86,7 +86,7 @@
 .emptyRing { width: 132px; height: 132px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 2rem; color: var(--brass); box-shadow: inset 0 0 0 14px rgba(226, 196, 143, .05); margin-bottom: 8px; }
 
 /* ── Tool deck ──────────────────────────────────────────────── */
-.deck { overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 10px; background: #0a0f16; }
+.deck { overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
 .deckEmpty, .needsChart { margin: 0; padding: 14px; font-size: .88rem; color: var(--ink-soft); }
 .tool { border: 1px solid var(--line-soft); border-radius: 10px; background: var(--panel); min-width: 0; }
 .toolLead { border-color: var(--line); }
@@ -107,27 +107,40 @@
 .subhead { margin: 16px 0 6px; font-size: .8rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
 .notes { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border-radius: 8px; background: #0b131d; color: var(--ink); border: 1px solid var(--line-soft); resize: vertical; }
 
-/* ── MAIA dock ──────────────────────────────────────────────── */
-.dock { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; border-left: 1px solid var(--line); background: linear-gradient(180deg, #131a17, #0e141d 40%); overflow-y: auto; font-size: .9rem; }
-.dockHead { display: flex; align-items: center; gap: 10px; }
-.dockTitle { display: inline-flex; align-items: center; gap: 7px; font-family: Georgia, serif; font-size: 1.1rem; color: var(--brass); }
-.segment { margin-left: auto; display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
-.segment button { font-size: .78rem; padding: 4px 11px; background: transparent; border: none; color: var(--ink-soft); }
+/* ── Working area: the tool deck, or the conversation with MAIA ─ */
+.work { display: flex; flex-direction: column; min-height: 0; min-width: 0; background: #0a0f16; }
+.work > .deck { flex: 1 1 auto; min-height: 0; }
+.deck[hidden] { display: none; }
+.talkBar { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; margin: 0 10px 10px; padding: 11px 14px; text-align: left; font-size: .92rem; color: var(--ink); background: linear-gradient(90deg, rgba(226, 196, 143, .13), rgba(226, 196, 143, .04)); border: 1px solid var(--line); border-radius: 10px; }
+.talkBar:hover { background: rgba(226, 196, 143, .16); }
+.talkBar svg { color: var(--brass); flex: 0 0 auto; }
+.talkBar span { flex: 1 1 auto; min-width: 0; }
+.talkBar b { font-weight: 600; color: var(--brass); }
+.talkBar small { color: var(--ink-soft); font-size: .74rem; white-space: nowrap; }
+/* The site's floating "Report a bug" button sits over the bottom-right corner. */
+.talkBar { padding-right: 150px; }
+.maiaColumn { padding-bottom: 64px; }
+
+.maia { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; background: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(226, 196, 143, .07), transparent 70%), #0b1119; }
+.maiaHead { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-bottom: 1px solid var(--line-soft); }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; background: transparent; border: 1px solid var(--line-soft); border-radius: 6px; padding: 5px 10px; color: var(--ink-soft); }
+.back:hover { border-color: var(--line); color: var(--ink); }
+.maiaTitle { display: inline-flex; align-items: center; gap: 8px; margin: 0 auto; font-family: Georgia, serif; font-size: 1.2rem; color: var(--brass); }
+.segment { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.segment button { font-size: .8rem; padding: 5px 13px; background: transparent; border: none; color: var(--ink-soft); }
 .segment button[aria-pressed="true"] { background: var(--brass); color: #14202d; }
-.dockAbout { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; font-size: .8rem; color: var(--ink-soft); }
-.dockAbout strong { color: var(--ink); font-weight: 600; }
-.dockAbout select { font: inherit; max-width: 100%; color: var(--ink); background: var(--panel-raised); border: 1px solid var(--line); border-radius: 6px; padding: 4px 7px; }
-.dockAbout button { font-size: .74rem; background: transparent; border: 1px solid var(--line-soft); border-radius: 6px; padding: 3px 8px; color: var(--ink-soft); }
-.dockWhere, .dockMode, .dockEmpty { margin: 0; font-size: .78rem; line-height: 1.45; color: var(--ink-soft); }
-.dockEmpty { padding-top: 8px; font-size: .88rem; }
-.dockBody { display: grid; gap: 10px; align-content: start; }
-.dockBody textarea { font: inherit; width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: #0b131d; resize: vertical; }
+.maiaColumn { flex: 1 1 auto; min-height: 0; overflow-y: auto; width: 100%; max-width: 820px; margin: 0 auto; padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 9px; }
+.maiaAbout { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; font-size: .86rem; color: var(--ink-soft); padding-bottom: 9px; border-bottom: 1px solid var(--line-soft); }
+.maiaAbout strong { color: var(--ink); font-family: Georgia, serif; font-weight: 400; font-size: 1.1rem; }
+.maiaAbout select { font: inherit; max-width: 100%; color: var(--ink); background: var(--panel-raised); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+.maiaWhere { font-size: .78rem; }
+.maiaMode, .maiaEmpty { margin: 0; font-size: .8rem; line-height: 1.45; color: var(--ink-soft); }
+.maiaEmpty { padding: 24px 18px; font-size: .92rem; text-align: center; }
+.maiaBody { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; font-size: .95rem; }
+.maiaBody textarea { font: inherit; width: 100%; box-sizing: border-box; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: #0b131d; resize: vertical; }
 
 /* ── Narrower screens: the regions stack and the page scrolls ─ */
 @media (max-width: 1240px) {
-  .body, .body[data-dock="closed"] { grid-template-columns: 86px minmax(340px, 1fr) minmax(340px, 1fr); }
-  .dock { grid-column: 2 / -1; border-left: none; border-top: 1px solid var(--line); max-height: 46svh; }
-  .body[data-dock="open"] { grid-template-rows: minmax(0, 1fr) auto; }
   .sky .skyBody:nth-child(n+5) { display: none; }
 }
 @media (max-width: 900px) {
@@ -137,11 +150,12 @@
   .identity h1 { max-width: 100%; }
   .sky { flex: 1 1 100%; padding-left: 0; overflow-x: auto; }
   .toolBody { overflow-x: auto; }
-  .body, .body[data-dock="closed"], .body[data-dock="open"] { display: block; }
+  .body { display: block; }
   .rail { flex-direction: row; position: sticky; top: 0; z-index: 5; border-right: none; border-bottom: 1px solid var(--line); overflow-x: auto; }
   .rail button { min-width: 68px; }
-  .stage, .deck, .dock { overflow: visible; border: none; max-height: none; }
-  .dock { border-top: 1px solid var(--line); }
+  .stage, .deck, .maiaColumn { overflow: visible; border: none; max-height: none; }
+  .work { display: block; }
+  .talkBar { width: calc(100% - 20px); position: sticky; bottom: 8px; z-index: 4; background: #1a1f24; }
   .toolHead { position: static; flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: no-preference) {

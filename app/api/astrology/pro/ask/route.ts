@@ -10,6 +10,18 @@
  * body of this chart) tell MAIA what the astrologer has open. Neither carries
  * free text into the prompt.
  *
+ * A conversation, not single questions: `history` carries the earlier turns of
+ * this visit from the page (nothing is stored here), `depth: 'deep'` asks for a
+ * fuller answer, and `include` widens a natal question to the other systems.
+ *
+ * `personal: true` (founder ruling 2026-11-09) lets MAIA read the astrologer's
+ * OWN chart alongside what they have chosen to keep with MAIA: their kept
+ * memory atoms, under each atom's own return consent. It is refused for a
+ * saved chart or a second chart: a client has not consented to their chart
+ * sitting beside the astrologer's memory. Memory flows into this answer only;
+ * no chart material is written to the conversation or to memory (the R4F
+ * concern, #1817, is the other direction and stays held).
+ *
  * Only chart ids travel; the server reads the verified owner's birth details,
  * recalculates the section and gives MAIA its facts — never a name, birth
  * date, time or place. Nothing is stored or logged but the fact of an answer.
@@ -29,16 +41,19 @@ import { transitBodies, transitToNatalAspects } from '@/lib/astrology/proTransit
 import { chartAsOuterRing, compositeChart, crossAspects } from '@/lib/astrology/proComparison';
 import { calculateFourPillars } from '@/lib/astrology/proFourPillars';
 import { traditionalMaya } from '@/lib/astrology/proTraditionalMaya';
+import { PRO_SYSTEMS_AYANAMSAS, calculateProOtherSystems } from '@/lib/astrology/proOtherSystems';
+import type { AyanamsaType } from '@/lib/astrology/types/vedic';
 import { PROGRESSION_MAX_YEARS, progressedFacts, progressedMoment, progressionsOverPeriod } from '@/lib/astrology/proProgressionFacts';
 import type { HouseSystem } from '@/lib/astrology/proEphemerisCalculator';
 import { loadSubjectBirth } from '@/lib/astrology/proSubjectBirth';
 import { ASK_MAIA_MAX_QUESTION, plainAnswer } from '@/lib/astrology/proAskMaia';
 import {
-  LIFE_CONTEXT_MAX, PRO_ASK_SAFETY_REPLY, PRO_DEEP_CONTEXT_NOTE, chartFacts, declinationFacts, isProAskView, mayaFacts, proDeepSystemPrompt, contactFacts, fourPillarsFacts, isProAskSection, proAskSystemPrompt, thirdPersonConcern,
+  LIFE_CONTEXT_MAX, PRO_ASK_SAFETY_REPLY, PRO_DEEP_CONTEXT_NOTE, chartFacts, declinationFacts, isProAskView, mayaFacts, proDeepSystemPrompt, contactFacts, fourPillarsFacts, isProAskSection, mayanFacts, proAskSystemPrompt, vedicFacts, PRO_ASK_HISTORY_MAX, PRO_ASK_HISTORY_TURN_MAX, thirdPersonConcern,
   transitFacts,
 } from '@/lib/astrology/proAskMaiaSections';
 import { PRO_RESPONSE_HEADERS, proError, proOwnerStillCurrent, resolveProOwner } from '@/lib/astrology/proRouteAccess';
 import type { SavedChartBirth } from '@/lib/astrology/proSavedCharts';
+import { formatAtomsForPrompt, loadMemberMemoryAtomsForPrompt } from '@/lib/maia/memoryAtomsLoader';
 
 // A short per-member limit (in memory) so a runaway loop cannot spend MAIA.
 const RATE_WINDOW_MS = 60_000;
@@ -54,7 +69,7 @@ function allowed(memberId: string): boolean {
   return true;
 }
 
-const KEYS = ['section', 'subject', 'other', 'houseSystem', 'at', 'from', 'dayStart', 'direction', 'question', 'include', 'lifeContext', 'mode', 'view', 'point'];
+const KEYS = ['section', 'subject', 'other', 'houseSystem', 'at', 'from', 'dayStart', 'direction', 'question', 'include', 'lifeContext', 'mode', 'view', 'point', 'personal', 'history', 'depth', 'ayanamsa'];
 const DEEP_PARTS = ['four-pillars', 'maya', 'progressions'];
 
 export async function POST(request: NextRequest) {
@@ -98,7 +113,27 @@ export async function POST(request: NextRequest) {
   const view = isProAskView(input.view) ? input.view : undefined;
   if (input.point !== undefined && typeof input.point !== 'string') return proError(400, 'point_unsupported');
   if ((mode === 'mentor' || view || input.point !== undefined) && section === 'deep') return proError(400, 'unexpected_field');
+  if (input.ayanamsa !== undefined && !PRO_SYSTEMS_AYANAMSAS.includes(input.ayanamsa as AyanamsaType)) return proError(400, 'ayanamsa_unsupported');
+  const ayanamsa = (input.ayanamsa ?? 'lahiri') as AyanamsaType;
+  if (input.depth !== undefined && input.depth !== 'brief' && input.depth !== 'deep') return proError(400, 'depth_unsupported');
+  const depth = input.depth === 'deep' ? 'deep' : 'brief';
+  // Earlier turns of this visit, from the page. Bounded; nothing is stored here.
+  const history: Array<{ q: string; a: string }> = [];
+  if (input.history !== undefined) {
+    if (!Array.isArray(input.history) || input.history.length > PRO_ASK_HISTORY_MAX || section === 'deep') return proError(400, 'history_unsupported');
+    for (const turn of input.history) {
+      const q = (turn as { q?: unknown })?.q;
+      const a = (turn as { a?: unknown })?.a;
+      if (typeof q !== 'string' || typeof a !== 'string' || !q.trim() || !a.trim() ||
+          q.length > ASK_MAIA_MAX_QUESTION || a.length > PRO_ASK_HISTORY_TURN_MAX) return proError(400, 'history_unsupported');
+      history.push({ q: q.trim(), a: a.trim() });
+    }
+  }
   const twoCharts = section === 'biwheel' || section === 'composite';
+  // What MAIA knows of the astrologer goes only with the astrologer's own chart.
+  if (input.personal !== undefined && typeof input.personal !== 'boolean') return proError(400, 'personal_unsupported');
+  const personal = input.personal === true;
+  if (personal && (input.subject !== 'own' || twoCharts || section === 'deep')) return proError(400, 'personal_own_chart_only');
   if (twoCharts && input.other === undefined) return proError(400, 'second_chart_required');
 
   if (!allowed(owner.memberId)) return proError(429, 'slow_down');
@@ -170,6 +205,16 @@ export async function POST(request: NextRequest) {
       facts = section === 'natal' && input.at === undefined
         ? chartFacts(first.chart, 'Natal chart')
         : `${chartFacts(first.chart, 'Natal chart')}\n${transitFacts(transits, at.toISOString().slice(0, 10))}`;
+      // A broad question may draw the other systems in, as the deep reading does.
+      if (include.includes('four-pillars')) {
+        const fp = calculateFourPillars(new Date(first.utc), first.birth.date, first.birth.time.slice(0, 5), dayStart);
+        facts += `\nChinese Four Pillars:\n${fourPillarsFacts(fp, direction)}`;
+      }
+      if (include.includes('progressions')) facts += `\n${await progressionPart()}`;
+      if (include.includes('maya')) facts += `\n${mayaFacts(traditionalMaya(first.birth.date), 'Birth')}`;
+    } else if (section === 'vedic' || section === 'mayan') {
+      const systems = await calculateProOtherSystems(first.birth, first.utc, ayanamsa, dayStart);
+      facts = section === 'vedic' ? vedicFacts(systems.vedic) : mayanFacts(systems.mayan);
     } else if (section === 'biwheel' && second?.ok) {
       const contacts = crossAspects(chartBodies(first.chart), chartAsOuterRing(second.chart), 3);
       facts = `${chartFacts(first.chart, 'First chart')}\n${chartFacts(second.chart, 'Second chart')}\n${contactFacts(contacts)}`;
@@ -186,12 +231,24 @@ export async function POST(request: NextRequest) {
     if (view === 'aspects') facts += `\n${declinationFacts(calculateDeclinations(first.utc))}`;
     if (view === 'mayan') facts += `\n${mayaFacts(traditionalMaya(first.birth.date), 'Birth')}`;
 
+    // What the astrologer has kept with MAIA, under each atom's own return consent.
+    let kept = '';
+    let keptCount = 0;
+    if (personal) {
+      const atoms = await loadMemberMemoryAtomsForPrompt(owner.memberId);
+      keptCount = atoms.length;
+      kept = formatAtomsForPrompt(atoms);
+    }
+
     const deep = section === 'deep';
     const llm = await getLLMProvider().generateSimple({
       tier: deep ? 'deep' : 'core',
-      systemPrompt: deep ? proDeepSystemPrompt(facts, lifeContext || null) : proAskSystemPrompt(section, facts, { mode, view, point }),
-      messages: [{ role: 'user', content: question }],
-      maxTokens: deep ? 2400 : mode === 'mentor' ? 750 : 600,
+      systemPrompt: deep ? proDeepSystemPrompt(facts, lifeContext || null) : proAskSystemPrompt(section, facts, { mode, view, point, depth, continuing: history.length > 0, personal: personal ? { kept } : undefined }),
+      messages: [
+        ...history.flatMap((turn) => [{ role: 'user' as const, content: turn.q }, { role: 'assistant' as const, content: turn.a }]),
+        { role: 'user', content: question },
+      ],
+      maxTokens: deep ? 2400 : depth === 'deep' ? 1600 : mode === 'mentor' ? 750 : 600,
       temperature: 0.6,
       // As with Soul Portrait: a professional reading goes to Claude. Under
       // LOCAL_TIER_ENABLED the deep tier would wait five minutes on the local
@@ -206,7 +263,7 @@ export async function POST(request: NextRequest) {
     // A life story that mentions risk does not stop the reading; it opens with where to turn.
     const contextConcern = deep && lifeContext && (thirdPersonConcern(lifeContext) ||
       ['crisis', 'red'].includes(String(analyzeSafetyCues(lifeContext).severity)));
-    return NextResponse.json({ answer: contextConcern ? `${PRO_DEEP_CONTEXT_NOTE}\n\n${answer}` : answer },
+    return NextResponse.json({ answer: contextConcern ? `${PRO_DEEP_CONTEXT_NOTE}\n\n${answer}` : answer, ...(personal ? { keptUsed: keptCount } : {}) },
       { headers: PRO_RESPONSE_HEADERS });
   } catch {
     // Exception text may contain birth inputs; never log or return it.
