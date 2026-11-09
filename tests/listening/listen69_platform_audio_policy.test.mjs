@@ -54,8 +54,14 @@ test('mixing with other apps is companion mode only', () => {
   assert.deepEqual(sessionOptionsFor(true), { mixWithOthers: true });
 });
 
-test('native plugin has no microphone, no player, no auto-resume, and reports no device names', () => {
-  const swift = code(read('ios/App/App/SoundFieldAudio.swift'));
+test('native plugin has no microphone, no player outside the ruled native mix, no auto-resume, and reports no device names', () => {
+  // Founder ruling 2026-11-06 (LISTEN-01): a second, native player is allowed for the recorded-sound mix under the
+  // single-source rule. Everything outside that one marked block keeps the original law (no player, no activation).
+  const rawSwift = read('ios/App/App/SoundFieldAudio.swift');
+  const mixStart = rawSwift.indexOf('// MARK: - Native mix');
+  const mixEnd = rawSwift.indexOf('// MARK: - Session');
+  assert.ok(mixStart > 0 && mixEnd > mixStart, 'the native mix block must stay one marked block');
+  const swift = code(rawSwift.slice(0, mixStart) + rawSwift.slice(mixEnd));
   assert.doesNotMatch(swift, /requestRecordPermission|AVAudioRecorder|AVAudioEngine|inputNode|playAndRecord|AVAudioPlayer|AVPlayer|SFSpeech/);
   assert.doesNotMatch(swift, /shouldResume|InterruptionOptionKey|\.play\(\)/);
   assert.doesNotMatch(swift, /portName|currentRoute|inputs|outputs/);

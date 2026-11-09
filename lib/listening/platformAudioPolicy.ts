@@ -89,3 +89,36 @@ export const COMPANION_MIXING_AVAILABLE = false;
 export function sessionOptionsFor(companion: boolean): { mixWithOthers: boolean } {
   return { mixWithOthers: companion };
 }
+
+// ── Native mix ("Play with your music") ─────────────────────────────────────────────────────────────
+// Ruled by the founder (LISTEN-01, 2026-11-06): the iOS app may hold a second, native player for recorded
+// sounds under a single-source rule. Proven on device: it mixes with another app, survives the lock
+// screen, and must STOP when an interruption begins (it restarted itself after Siri when nothing stopped it).
+
+/** Level 0…100 → −60 … +18 dB around the recording's own level (≈77 is the file's level). Mirrors the Swift. */
+export const MIX_GAIN_MIN_DB = -60;
+export const MIX_GAIN_MAX_DB = 18;
+export const MIX_DEFAULT_LEVEL = 80;
+export function mixGainDb(level: number): number {
+  const clamped = Number.isFinite(level) ? Math.max(0, Math.min(100, level)) : MIX_DEFAULT_LEVEL;
+  return MIX_GAIN_MIN_DB + ((MIX_GAIN_MAX_DB - MIX_GAIN_MIN_DB) * clamped) / 100;
+}
+
+export type SoundSource = 'none' | 'web' | 'native-mix';
+/** Single-source rule: exactly one Soullab sound at a time. Starting one source stops the other first. */
+export function singleSourceTransition(
+  current: SoundSource,
+  next: 'web' | 'native-mix',
+): { stopWeb: boolean; stopNative: boolean } {
+  return {
+    stopWeb: next === 'native-mix' && current === 'web',
+    stopNative: next === 'web' && current === 'native-mix',
+  };
+}
+
+export type NativeMixStopReason = 'interruption' | 'routeLoss' | 'stopped' | 'finished' | 'error' | 'replaced';
+/** However the native mix ended, the platform never restarts it; only the member's own Play does. */
+export function nativeMixMayRestart(_reason: NativeMixStopReason): false {
+  return false;
+}
+

@@ -13,6 +13,10 @@ import MediaPlayer
 ///   - Interruptions and route changes are REPORTED so the web player can pause. The end of an
 ///     interruption is reported as `ended` with no resume hint: Soullab never auto-resumes.
 ///   - Lock-screen Play/Pause/Stop are member gestures forwarded to the web player.
+///   - The native mix ("Play with your music", recorded sounds only) is a second player under the
+///     single-source rule: the page stops the web player before starting it. It starts only on a member
+///     Play, STOPS when an interruption begins or a route is lost, and is never restarted by the system.
+///     It plays only bundled recorded sounds and never reads another app's audio or metadata.
 ///   - No microphone: this file never requests record permission or uses an input.
 ///   - Now Playing carries title, passage and a clock only.
 @objc(SoundFieldAudio)
@@ -23,12 +27,114 @@ public class SoundFieldAudio: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "activate", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "deactivate", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setNowPlaying", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "clearNowPlaying", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "clearNowPlaying", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "mixStart", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "mixStop", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "mixSetLevel", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "mixStatus", returnType: CAPPluginReturnPromise)
     ]
 
     private let session = AVAudioSession.sharedInstance()
     private var observing = false
     private var remoteTargets: [Any] = []
+
+    // MARK: - Native mix ("Play with your music"): recorded sounds only, member-started, never auto-resumed
+    private var mixEngine: AVAudioEngine?
+    private var mixNode: AVAudioPlayerNode?
+    private var mixEQ: AVAudioUnitEQ?
+    private var mixFile: AVAudioFile?
+    private var mixLoop = true
+    private var mixActive = false
+    private var mixLevel: Double = 80
+    private var mixDuration: Double = 1
+
+    /// Level 0...100 maps to -60 ... +18 dB around the recording's own level (about 77 is the file level).
+    /// +18 dB keeps the shipped recordings' peaks below full scale. Must match platformAudioPolicy.mixGainDb.
+    private func mixGainDb(_ level: Double) -> Float { Float(-60.0 + 78.0 * max(0.0, min(100.0, level)) / 100.0) }
+
+    private func mixScheduleNext() {
+        guard let node = mixNode, let file = mixFile, mixActive else { return }
+        node.scheduleFile(file, at: nil, completionCallbackType: .dataPlayedBack) { [weak self] _ in
+            DispatchQueue.main.async {
+                guard let self = self, self.mixActive else { return }
+                if self.mixLoop { self.mixScheduleNext() } else { self.stopMix(reason: "finished") }
+            }
+        }
+    }
+
+    private func teardownMix() {
+        mixActive = false
+        mixNode?.stop()
+        mixEngine?.stop()
+        mixNode = nil; mixEngine = nil; mixEQ = nil; mixFile = nil
+    }
+
+    /// Every way the mix ends goes through here and is reported; nothing in this file starts it again.
+    private func stopMix(reason: String) {
+        guard mixActive || mixEngine != nil else { return }
+        teardownMix()
+        NSLog("[SoundFieldAudio] mix stopped reason=\(reason)")
+        notifyListeners("mixStopped", data: ["reason": reason])
+    }
+
+    @objc func mixStart(_ call: CAPPluginCall) {
+        guard let rel = call.getString("path"), rel.hasPrefix("public/media/"), !rel.contains("..") else {
+            call.reject("The native mix plays only bundled recorded sounds under public/media")
+            return
+        }
+        let level = call.getDouble("level") ?? 80
+        let url = URL(fileURLWithPath: Bundle.main.bundlePath).appendingPathComponent(rel)
+        do {
+            teardownMix()
+            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            try session.setActive(true, options: [])
+            let file = try AVAudioFile(forReading: url)
+            let engine = AVAudioEngine()
+            let node = AVAudioPlayerNode()
+            let eq = AVAudioUnitEQ(numberOfBands: 1)
+            eq.globalGain = mixGainDb(level)
+            engine.attach(node); engine.attach(eq)
+            engine.connect(node, to: eq, format: file.processingFormat)
+            engine.connect(eq, to: engine.mainMixerNode, format: file.processingFormat)
+            mixFile = file
+            mixLoop = call.getBool("loop") ?? true
+            mixLevel = level
+            mixDuration = max(1.0, Double(file.length) / file.processingFormat.sampleRate)
+            mixEngine = engine; mixNode = node; mixEQ = eq
+            mixActive = true
+            mixScheduleNext()
+            try engine.start()
+            node.play()
+            startObserving()
+            enableRemoteCommands()
+            NSLog("[SoundFieldAudio] mix started level=\(level) gainDb=\(mixGainDb(level)) otherAudio=\(session.isOtherAudioPlaying)")
+            call.resolve(["durationSeconds": mixDuration, "gainDb": Double(mixGainDb(level))])
+        } catch {
+            teardownMix()
+            NSLog("[SoundFieldAudio] mix error \(error)")
+            call.reject("The native mix could not start")
+        }
+    }
+
+    @objc func mixSetLevel(_ call: CAPPluginCall) {
+        mixLevel = call.getDouble("level") ?? mixLevel
+        mixEQ?.globalGain = mixGainDb(mixLevel)
+        call.resolve(["gainDb": Double(mixGainDb(mixLevel))])
+    }
+
+    @objc func mixStop(_ call: CAPPluginCall) {
+        stopMix(reason: "stopped")
+        call.resolve()
+    }
+
+    @objc func mixStatus(_ call: CAPPluginCall) {
+        var position = 0.0
+        if let n = mixNode, let nt = n.lastRenderTime, let pt = n.playerTime(forNodeTime: nt), pt.sampleRate > 0 {
+            position = (Double(pt.sampleTime) / pt.sampleRate).truncatingRemainder(dividingBy: mixDuration)
+        }
+        call.resolve(["active": mixActive, "positionSeconds": position, "durationSeconds": mixDuration,
+                      "level": mixLevel, "gainDb": Double(mixGainDb(mixLevel))])
+    }
 
     // MARK: - Session
 
@@ -54,6 +160,8 @@ public class SoundFieldAudio: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func deactivate(_ call: CAPPluginCall) {
+        // The web player going idle must not take the session from a native mix that is playing.
+        if mixActive { call.resolve(); return }
         NSLog("[SoundFieldAudio] deactivate")
         stopObserving()
         disableRemoteCommands()
@@ -160,6 +268,8 @@ public class SoundFieldAudio: CAPPlugin, CAPBridgedPlugin {
             }
         }
         NSLog("[SoundFieldAudio] interruption \(type == .began ? "began" : "ended") reason=\(reasonName) otherAudio=\(session.isOtherAudioPlaying) category=\(session.category.rawValue)")
+        // The system's resume hint is dropped; the mix stops when an interruption begins and waits for the member.
+        if type == .began { stopMix(reason: "interruption") }
         notifyListeners("interruption", data: ["phase": type == .began ? "began" : "ended"])
     }
 
@@ -174,6 +284,8 @@ public class SoundFieldAudio: CAPPlugin, CAPBridgedPlugin {
         default: name = "other"
         }
         NSLog("[SoundFieldAudio] routeChange \(name)")
+        // Losing a route (headphones off, Bluetooth gone) must never move the mix to the speaker.
+        if name == "oldDeviceUnavailable" { stopMix(reason: "routeLoss") }
         // Port types only; device names (for example a person's AirPods) are never reported.
         notifyListeners("routeChange", data: ["reason": name])
     }
