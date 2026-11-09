@@ -5,14 +5,18 @@ Everything is local and fictional: a throwaway database on this Mac, three inven
 ⛔ Nothing here touches production, your real manuscripts or real members. A good walk is evidence, not an act: it authorizes no merge, migration or deploy.
 
 ## 0 · Start it (about 2 minutes)
-From `/Users/soullab/worktrees/ws-work-continuity-part-a`, with your own key typed into this one command:
+From `/Users/soullab/worktrees/ws-work-continuity-part-a`. Type your key at a hidden prompt, so it never lands in the command line or your shell history:
 
 ```bash
-REAL_MODEL=1 ANTHROPIC_API_KEY=your-key-here scripts/witness/ws-continuity-walk.sh up
+cd /Users/soullab/worktrees/ws-work-continuity-part-a
+```
+
+```bash
+read -s "ANTHROPIC_API_KEY?Key: " && export ANTHROPIC_API_KEY && REAL_MODEL=1 scripts/witness/ws-continuity-walk.sh up
 ```
 
 It prints three Develop links: **novel** (*The Long Harbour*), **nonfiction** (*The Quiet Economy*), **helper** (*Holding the Room*, fictional case material).
-Sign in at the printed sign-in page: `bwriter` / `walkpass` (fictional, local only). In the browser console, once: `localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }))`, then reload.
+Sign in at the printed sign-in page: `bwriter` / `walkpass` (fictional, local only). Then, in the **browser's** developer console (Cmd+Option+J in Chrome, not the terminal), once: `localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }))`, then reload. The walk account is admitted to the invite-only Studio beta as a fictional beta tester in the throwaway database.
 The fictional text goes to the model provider under your key. **Stop and erase everything afterwards:** `scripts/witness/ws-continuity-walk.sh down` (it also frees about 5 GB of memory).
 
 ## 1 · The novel — memory, plans, and the edit loop (about 20 minutes)

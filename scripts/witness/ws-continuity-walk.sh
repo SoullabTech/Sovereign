@@ -18,7 +18,8 @@ P() { "$PSQL_BIN" -X -q -At -h 127.0.0.1 -p "$PGPORT" -U fictional "$@"; }
 
 down() {
   [ -f "$STATE/app.pid" ]  && kill "$(cat "$STATE/app.pid")"  2>/dev/null || true
-  pkill -f "next dev -p $APPPORT" 2>/dev/null || true
+  # Only processes this harness recorded itself (never a pattern match that could hit another project).
+  [ -f "$STATE/next.pid" ] && kill "$(cat "$STATE/next.pid")" 2>/dev/null || true
   [ -f "$STATE/stub.pid" ] && kill "$(cat "$STATE/stub.pid")" 2>/dev/null || true
   [ -d "$STATE/pg" ] && "$PGBIN/pg_ctl" -D "$STATE/pg" -m immediate stop >/dev/null 2>&1 || true
   case "$STATE" in /tmp/ws-continuity-walk*) rm -rf "$STATE";; esac
@@ -118,6 +119,9 @@ up() {
 
   PWHASH='$2b$12$OawyGAFeyQo9AaRCCWqkNuYi6brcwutNJ6Mn.vAdghF54eMiIn75O'   # bcrypt of the fictional password shown below
   MEMBER=$(P -d walk_fictional -c "INSERT INTO members(passkey,username,password_hash,name,onboarded,onboarding_step) VALUES ('walk-passkey','bwriter','$PWHASH','Fictional Writer',true,'complete') RETURNING id")
+  # Writer's Studio is invite-only during the beta (canonical). Admit the FICTIONAL walk account the least-privileged way:
+  # as an active beta tester marked for the Studio, in this throwaway database only. Never as a founder.
+  P -d walk_fictional -c "INSERT INTO ops_contacts (name, member_id, contact_type, pipeline_stage, metadata) VALUES ('Fictional Writer (walk)', '$MEMBER', 'beta_tester', 'active', '{\"writers_studio_beta\": true}'::jsonb)" >/dev/null
   cat > "$STATE/novel.json" <<'NOVELJSON'
 [{"h":"The Harbour","b":"The harbour woke slowly, and the salt on the rails caught the first light before anyone spoke. Marta stood at the end of the quay with her mother's key in her pocket, counting the boats that were not there."},
  {"h":"Salt","b":"Marta carried the nets uphill every morning, counting each knot as though it were a name she owed. Her hands learned the work before she did; by the third winter she no longer noticed the cold."},
@@ -168,6 +172,9 @@ HELPERJSON
     nohup npx next dev -p "$APPPORT" > "$STATE/app.log" 2>&1 &
   echo $! > "$STATE/app.pid"
   for i in $(seq 1 60); do grep -q "Ready in" "$STATE/app.log" 2>/dev/null && break; sleep 1; done
+  # Record the actual server process listening on our port, if it was started by our npm process.
+  LP=$(lsof -nP -t -iTCP:"$APPPORT" -sTCP:LISTEN 2>/dev/null | head -1)
+  if [ -n "$LP" ] && pgrep -P "$(cat "$STATE/app.pid")" >/dev/null 2>&1; then echo "$LP" > "$STATE/next.pid"; fi
   echo
   echo "────────────────────────────────────────────────────────────────────────────"
   echo " WALK HARNESS UP — $MODE"
