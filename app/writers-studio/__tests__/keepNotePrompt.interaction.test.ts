@@ -16,7 +16,7 @@ import KeepNotePrompt from '@/app/dev/writers-studio-pc3-live/KeepNotePrompt';
 
 let host: HTMLDivElement; let root: Root; const done = jest.fn();
 const mount = async () => { await act(async () => { root.render(React.createElement(KeepNotePrompt, { workId: 'W', sectionId: 'S', passageLabel: 'The Harbour', onDone: done })); }); };
-const btn = (t: string) => [...host.querySelectorAll('button')].find((b) => b.textContent === t)!;
+const btn = (t: string) => [...document.body.querySelectorAll('button')].find((b) => b.textContent === t)!;
 beforeEach(() => { host = document.createElement('div'); document.body.appendChild(host); root = createRoot(host); settle.mockClear(); done.mockClear(); posture = { resolved: true, sanctuary: false }; });
 afterEach(async () => { await act(async () => root.unmount()); host.remove(); });
 
@@ -24,12 +24,12 @@ describe('Keep mine · writer-confirmed note', () => {
   it('shows nothing recorded until the writer confirms; the sentence is prefilled and theirs to change', async () => {
     await mount();
     expect(settle).not.toHaveBeenCalled();
-    const ta = host.querySelector('textarea')!;
+    const ta = document.body.querySelector('textarea')!;
     expect(ta.value).toContain('The Harbour');
   });
   it('"Note it" records exactly the words in the box, as a passage-desk wording decision', async () => {
     await mount();
-    const ta = host.querySelector('textarea')! as HTMLTextAreaElement;
+    const ta = document.body.querySelector('textarea')! as HTMLTextAreaElement;
     const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!;
     await act(async () => { setter.call(ta, 'I am keeping this line as it is.'); ta.dispatchEvent(new Event('input', { bubbles: true })); });
     await act(async () => { btn('Note it').click(); });
@@ -46,18 +46,18 @@ describe('Keep mine · writer-confirmed note', () => {
     await mount();
     await act(async () => { btn('Note it').click(); });
     expect(settle).not.toHaveBeenCalled(); expect(done).not.toHaveBeenCalled();
-    expect(host.querySelector('[data-keep-note-refusal]')?.textContent).toContain('Sanctuary is on');
+    expect(document.body.querySelector('[data-keep-note-refusal]')?.textContent).toContain('Sanctuary is on');
   });
   it('an unreadable setting records nothing and says so', async () => {
     posture = { resolved: false };
     await mount();
     await act(async () => { btn('Note it').click(); });
     expect(settle).not.toHaveBeenCalled();
-    expect(host.querySelector('[data-keep-note-refusal]')?.textContent).toContain('could not be read');
+    expect(document.body.querySelector('[data-keep-note-refusal]')?.textContent).toContain('could not be read');
   });
   it('an empty sentence cannot be noted', async () => {
     await mount();
-    const ta = host.querySelector('textarea')! as HTMLTextAreaElement;
+    const ta = document.body.querySelector('textarea')! as HTMLTextAreaElement;
     const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!;
     await act(async () => { setter.call(ta, '   '); ta.dispatchEvent(new Event('input', { bubbles: true })); });
     expect((btn('Note it') as HTMLButtonElement).disabled).toBe(true);

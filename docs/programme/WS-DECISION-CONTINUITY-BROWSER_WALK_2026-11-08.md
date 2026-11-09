@@ -19,3 +19,14 @@ Not established: whether any member reaches the workspace layout in production.
 ## Not established
 The full path (Keep mine → prompt → Note it → MAIA honours it) was NOT walked, because step one does not exist on this surface. Component behaviour is covered by tests (not a browser).
 Shadow-schema note: re-applying `20261002000001` fails once rows with the newer boundary exist (it restates a four-value CHECK); the migration runner applies each file once in date order and `20261108000001` is later, so this is a re-run hazard, not a defect in order. Recorded, not repaired.
+
+---
+## UPDATE — "Keep mine" added to the live proposal card (founder: "Yes, add it") and the FULL PATH WALKED
+Change: `EditorialDancePanel` now offers **Keep mine** beside Use it · Change it · Talk about it (`data-stage-keep`; it calls only `onKeep`, never apply/send/save; absent once the option is used).
+The pinned button list in `conversationStage.test.ts` was updated by this act; two new tests hold the button to "says no, mutates nothing".
+Walk (real UI, local server, disposable DB, scripted model): proposal → **Keep mine** → the note prompt appeared → I rewrote the sentence in my own words → **Note it** →
+DB: `passage_desk | wording | I am keeping my opening line exactly as I wrote it.` (exactly the edited text; the click alone recorded nothing) → Develop room shows
+**"What you have settled (2)"** → an Ask in the Work conversation carried both decisions to the model request under "WHAT THE WRITER HAS SETTLED".
+DEFECT FOUND AND FIXED BY THE WALK: the prompt first rendered inside the Write room's clipped frame (`fr-capture-frame`) — present in the DOM, invisible. It now renders through a portal to the page.
+Remaining observations (not fixed): the note box's textarea is unstyled (white); in the Develop panel the settled list sits behind a cramped scroll area; a second identical scripted proposal produced
+"MAIA couldn't answer that just now" (probably the no-op-adjustment law refusing a repeated identical proposal — NOT verified); version-binding is still unset.

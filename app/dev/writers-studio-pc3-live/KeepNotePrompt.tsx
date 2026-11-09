@@ -6,6 +6,7 @@
  * records nothing. Sanctuary (or an unreadable setting) records nothing and says so.
  */
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { settleDecisionNote } from '@/lib/writersStudio/decisionClient';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 
@@ -30,9 +31,11 @@ export default function KeepNotePrompt({ workId, sectionId, passageLabel, onDone
     if (r.ok) onDone(); else setNote('That could not be recorded just now. Nothing was changed.');
   };
 
-  return (
+  /* A portal to the page: the Write room frames its content in a clipped container (`fr-capture-frame`), and a fixed element
+     inside it was rendered but never visible (found in the browser walk). */
+  const card = (
     <div role="group" aria-label="Note this decision" data-keep-note-prompt="true"
-      style={{ position: 'fixed', left: 16, bottom: 16, maxWidth: 380, zIndex: 50, padding: 12, borderRadius: 8,
+      style={{ position: 'fixed', left: 16, bottom: 16, maxWidth: 380, zIndex: 2147483000, padding: 12, borderRadius: 8,
         background: 'var(--surface, #1b1816)', color: 'var(--ink, #f2ede6)', border: '1px solid currentColor', fontSize: 13 }}>
       <p style={{ margin: '0 0 6px' }}>Note that you have decided this? MAIA will remember you settled it and will not offer it again unless you ask.</p>
       <textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={1000} rows={2}
@@ -44,4 +47,5 @@ export default function KeepNotePrompt({ workId, sectionId, passageLabel, onDone
       {note ? <p data-keep-note-refusal="true" style={{ margin: '6px 0 0' }}>{note}</p> : null}
     </div>
   );
+  return typeof document === 'undefined' ? card : createPortal(card, document.body);
 }
