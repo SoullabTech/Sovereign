@@ -24,6 +24,19 @@ export interface CarriedReading {
   /** The chapters this reading read in full, and whether each has changed since (null = cannot tell). */
   readonly chapters: readonly { id: string; label: string | null; changedSince: boolean | null }[];
   readonly observations: readonly { text: string; doesNotEstablish: readonly string[] }[];
+  /** How many observations the reading holds (only the first MAX_OBSERVATIONS_PER_READING are carried). */
+  readonly observationsTotal: number;
+  /** Whether any carried observation was cut at MAX_OBSERVATION_CHARS. */
+  readonly cut: boolean;
+}
+
+/** What she was given, and what exists but was left out, so her memory is never silently partial. */
+export interface CarriedSet {
+  readonly readings: readonly CarriedReading[];
+  /** Readings of the chapters in play that exist (among the most recent searched). */
+  readonly relevant: number;
+  /** True when the search window was full, so more may exist than `relevant` counts. */
+  readonly searchFull: boolean;
 }
 
 type Row = { id: string; commissioned_lens: string; revision_number: number; read_state: { sections?: Record<string, { digest?: string }> }; coverage: { sections?: Record<string, string> }; observations: unknown; frozen_at: Date };
@@ -42,21 +55,26 @@ export function chaptersInPlay(question: string, locusId: string | null, section
   return [...selectSections({ level: 'work', question, locusId, sections, sizes: new Map() }).ids];
 }
 
-export async function loadCarriedReadings(manuscriptId: string, memberId: string, inPlay: readonly string[], sections: readonly SectionHeadLite[]): Promise<CarriedReading[]> {
+export const READINGS_SEARCHED = 30;
+
+export async function loadCarriedReadings(manuscriptId: string, memberId: string, inPlay: readonly string[], sections: readonly SectionHeadLite[]): Promise<CarriedSet> {
   let rows: Row[];
   try {
     rows = (await query<Row>(
       `SELECT id, commissioned_lens, revision_number, read_state, coverage, observations, frozen_at
          FROM developmental_readings
         WHERE manuscript_id = $1 AND member_id = $2 AND outcome = 'reading'
-        ORDER BY frozen_at DESC, id DESC LIMIT 30`, [manuscriptId, memberId])).rows;
-  } catch (e) { if ((e as { code?: string })?.code === '42P01') return []; throw e; }
+        ORDER BY frozen_at DESC, id DESC LIMIT ${READINGS_SEARCHED}`, [manuscriptId, memberId])).rows;
+  } catch (e) { if ((e as { code?: string })?.code === '42P01') return { readings: [], relevant: 0, searchFull: false }; throw e; }
   const shaped = rows.map((r) => ({
     row: r, lens: r.commissioned_lens, frozenAt: new Date(r.frozen_at).toISOString(),
     bodySectionIds: Object.entries(r.coverage?.sections ?? {}).filter(([, d]) => d === 'body').map(([id]) => id),
   }));
+  const want = new Set(inPlay);
+  const relevant = want.size === 0 ? shaped.length : shaped.filter((r) => r.bodySectionIds.some((id) => want.has(id))).length;
+  const searchFull = rows.length >= READINGS_SEARCHED;
   const picked = pickCarried(shaped, inPlay);
-  if (picked.length === 0) return [];
+  if (picked.length === 0) return { readings: [], relevant, searchFull };
 
   const ids = [...new Set(picked.flatMap((p) => p.bodySectionIds))];
   const now = new Map((await query<{ id: string; digest: string }>(
@@ -65,8 +83,9 @@ export async function loadCarriedReadings(manuscriptId: string, memberId: string
       WHERE d.manuscript_id = $1 AND d.member_id = $2 AND s.id = ANY($3::uuid[])`, [manuscriptId, memberId, ids])).rows.map((x) => [x.id, x.digest]));
   const label = (id: string) => sections.find((s) => s.id === id)?.heading ?? null;
 
-  return picked.map((p) => {
+  const readings = picked.map((p) => {
     const obs = Array.isArray(p.row.observations) ? (p.row.observations as { text?: unknown; doesNotEstablish?: unknown }[]) : [];
+    const real = obs.filter((o) => typeof o.text === 'string' && (o.text as string).trim());
     return {
       id: p.row.id, lens: p.lens, revisionNumber: p.row.revision_number, frozenAt: p.frozenAt,
       chapters: p.bodySectionIds.map((id) => {
@@ -75,9 +94,12 @@ export async function loadCarriedReadings(manuscriptId: string, memberId: string
         /* removed since = changed; no stored digest = cannot tell */
         return { id, label: label(id), changedSince: !was ? null : is === undefined ? true : is !== was };
       }),
-      observations: obs.filter((o) => typeof o.text === 'string' && o.text.trim()).slice(0, MAX_OBSERVATIONS_PER_READING)
+      observations: real.slice(0, MAX_OBSERVATIONS_PER_READING)
         .map((o) => ({ text: (o.text as string).trim().slice(0, MAX_OBSERVATION_CHARS),
           doesNotEstablish: Array.isArray(o.doesNotEstablish) ? (o.doesNotEstablish as unknown[]).filter((x): x is string => typeof x === 'string') : [] })),
+      observationsTotal: real.length,
+      cut: real.slice(0, MAX_OBSERVATIONS_PER_READING).some((o) => (o.text as string).trim().length > MAX_OBSERVATION_CHARS),
     };
   });
+  return { readings, relevant, searchFull };
 }

@@ -53,7 +53,7 @@ import {
 import { computeStaleness, frozenSideFor } from '@/lib/manuscript/ask/staleness';
 import { canonicalFingerprint } from '@/lib/manuscript/structure/canonicalFingerprint';
 import { askMaia, withoutCarriedReadings, type StandingRead } from '@/lib/manuscript/ask/askReader';
-import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests, recordTurnReads, recordTurnReadings } from '@/lib/disclosure/workReadScopeRead';
+import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests, recordTurnReads } from '@/lib/disclosure/workReadScopeRead';
 import { chaptersInPlay, loadCarriedReadings } from '@/lib/manuscript/ask/carriedReadings';
 import { selectSections, movedSince, MAX_READ_SECTIONS } from '@/lib/manuscript/ask/workReadScope';
 import { decisionContextForWork } from '@/lib/writersStudio/decisionRecord';
@@ -702,7 +702,7 @@ async function workTurn(input: {
     ? ANONYMISE_OFFER_INSTRUCTION : undefined;
   /* ⭐ G6 · her own completed readings (founder ruling 2026-11-09): latest per lens, for the chapters in play, labelled by revision and by
      whether each chapter changed since. Carried on the commission's consent; never chapter text; nothing in Sanctuary or an unstated posture. */
-  const carriedReadings = (posture.sanctuary || !postureKnown || !built.facts.manuscript) ? []
+  const carriedReadings = (posture.sanctuary || !postureKnown || !built.facts.manuscript) ? { readings: [], relevant: 0, searchFull: false }
     : await loadCarriedReadings(manuscriptId, memberId, chaptersInPlay(question, sectionId, built.facts.sections), built.facts.sections);
   const workCtx = { kind: 'work' as const, anchor, facts: factsWithDecisions, staleness, standingRead, practiceOffer, carriedReadings };
   let outcome = await askMaia(workCtx, workHistory, question);
@@ -712,8 +712,10 @@ async function workTurn(input: {
   if (outcome.ok) {
     /* Exactly what she was handed (system prompt + messages) — complete by construction. */
     /* Her earlier ACCOUNT never grounds a quotation of the writing: it is cut out of what she was handed before checking. */
-    const seenForQuotes = withoutCarriedReadings(outcome.seen ?? '');
-    const sources = [seenForQuotes, question, ...workHistory.map((h) => h.body), factsWithDecisions.writerUnderstanding];
+    /* Grounding = what she was handed MINUS her earlier account and MINUS her own earlier answers: a phrase she said before is not
+       the writer's text, so repeating it can never pass as a verified quotation of the manuscript. */
+    const seenForQuotes = withoutCarriedReadings(outcome.seenForQuotes ?? outcome.seen ?? '');
+    const sources = [seenForQuotes, question, ...workHistory.filter((h) => h.speaker === 'author').map((h) => h.body), factsWithDecisions.writerUnderstanding];
     const first = checkQuoteFidelity(outcome.answer, sources);
     if (!first.ok) {
       const again = await askMaia(workCtx, workHistory, question,
@@ -743,11 +745,12 @@ async function workTurn(input: {
 
   const maiaIndex = await appendTurn({
     threadId: liveThreadId, memberId, speaker: 'maia', body: outcome.answer,
-    staleness, answerProvenance: outcome.provenance,
+    staleness, answerProvenance: carriedReadings.readings.length > 0
+      ? { ...outcome.provenance, carriedReadings: carriedReadings.readings.map((r) => ({ readingId: r.id, revisionNumber: r.revisionNumber })) }
+      : outcome.provenance,
   });
   /* The turn is already saved: a failed read-record must never turn a good answer into a 500 (a retry would duplicate the turn). */
   if (supplied.length > 0) { try { await recordTurnReads(liveThreadId, memberId, maiaIndex, supplied); } catch { console.error('[WORK-READ] could not record what was supplied this turn'); } }
-  if (carriedReadings.length > 0) { try { await recordTurnReadings(liveThreadId, memberId, maiaIndex, carriedReadings.map((r) => ({ readingId: r.id, revisionNumber: r.revisionNumber }))); } catch { console.error('[WORK-READ] could not record which readings were carried this turn'); } }
 
   const thread = await loadThread(liveThreadId, memberId);
   /* ⭐ L8 · what she actually read stays visible: ids + headings only, never text. */

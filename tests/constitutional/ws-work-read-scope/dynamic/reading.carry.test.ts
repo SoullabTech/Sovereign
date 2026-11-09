@@ -70,9 +70,11 @@ d('G6 · a reading she made reaches the next conversation, labelled, on the comm
     expect(last()).toContain('Let MAIA read my saved work');
     expect(last()).toContain('Do NOT send them to "Read this chapter"');
     expect(last()).not.toContain('THE WRITER HAS GIVEN YOU STANDING PERMISSION');       // her reading never brings chapter text
-    const rec = await query<{ reading_id: string; revision_number: number }>(`SELECT reading_id, revision_number FROM ask_turn_readings WHERE thread_id=$1`, [r.json.threadId]);
-    expect(rec.rows).toHaveLength(1);
-    expect(rec.rows[0]!.revision_number).toBe(4);
+    // the record is in the SAME ROW as her answer: saved with it or not at all (no best-effort side table)
+    const rec = await query<{ p: { carriedReadings?: { readingId: string; revisionNumber: number }[] } }>(
+      `SELECT answer_provenance p FROM ask_turns WHERE thread_id=$1 AND speaker='maia' ORDER BY turn_index DESC LIMIT 1`, [r.json.threadId]);
+    expect(rec.rows[0]!.p.carriedReadings).toHaveLength(1);
+    expect(rec.rows[0]!.p.carriedReadings![0]!.revisionNumber).toBe(4);
   });
 
   it('Sanctuary, or an unstated posture, carries nothing', async () => {
@@ -117,6 +119,24 @@ d('G6 · a reading she made reaches the next conversation, labelled, on the comm
     answer = 'A plain answer.';
     const turns = await query<{ body: string }>(`SELECT body FROM ask_turns WHERE thread_id=$1 AND speaker='maia' ORDER BY turn_index DESC LIMIT 1`, [r.json.threadId]);
     expect(turns.rows[0]!.body).not.toContain('the lantern burned until the harbour forgot her name');
+  });
+
+  it('she is told what exists beyond what she was given, so her memory is never silently partial', async () => {
+    for (let i = 0; i < 3; i++) await reading({ lens: ['reader', 'structure', 'coherence'][i], sections: [sec[2]!], text: `Extra ${i}.`, at: `2026-11-09T14:0${i}:00Z` });
+    await post(A, { anchor: { on: 'work' }, question: 'Tell me about Return.', sectionId: sec[2], sanctuary: false });
+    expect(last()).toMatch(/You have made \d+ readings that cover these chapters; you were given 3/);
+    expect(last()).toContain('Do not speak as if you remember the ones you were not given.');
+  });
+
+  it('a phrase SHE said in an earlier answer never passes later as a quotation of the writing (second-turn test)', async () => {
+    answer = 'I wonder whether the harbour keeps every name it is given, and whether that is the heart of it.';   // her words, not a quotation
+    const first = await post(A, { anchor: { on: 'work' }, question: 'What might the heart of Return be?', sectionId: sec[2], sanctuary: false });
+    answer = 'In Return you wrote "the harbour keeps every name it is given".';
+    await post(A, { threadId: first.json.threadId, question: 'Quote that line from Return.', sectionId: sec[2], sanctuary: false });
+    answer = 'A plain answer.';
+    const turns = await query<{ body: string }>(`SELECT body FROM ask_turns WHERE thread_id=$1 AND speaker='maia' ORDER BY turn_index`, [first.json.threadId]);
+    expect(turns.rows[0]!.body).toContain('the harbour keeps every name it is given');        // she may wonder aloud
+    expect(turns.rows.at(-1)!.body).not.toContain('you wrote "the harbour keeps every name it is given"');   // but not present it as the writer's text
   });
 
   it('with reading permission she ALSO gets the text, as before; the reading stays labelled as her account', async () => {

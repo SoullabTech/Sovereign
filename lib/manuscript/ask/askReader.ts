@@ -18,7 +18,7 @@
  * be and where the author makes it, because the author makes it.
  */
 
-import type { CarriedReading } from './carriedReadings';
+import type { CarriedReading, CarriedSet } from './carriedReadings';
 import { createHash } from 'crypto';
 import { runStructured } from '../../ai/structured/router';
 import type { StructuredBlock, StructuredMessage } from '../../ai/structured/types';
@@ -118,11 +118,15 @@ export interface AskAnswerProvenance {
   promptHash: string;
   askerVersion: string;
   answeredAt: string;
+  /** G6 · which of her completed readings she was given for this answer (ids and revisions; never text). Saved with the answer, atomically. */
+  carriedReadings?: readonly { readingId: string; revisionNumber: number }[];
 }
 
 export type AskOutcome =
   /** `seen` is EVERYTHING she was handed (system prompt + messages) — the exact grounding set for the quote-existence gate. */
-  | { ok: true; answer: string; provenance: AskAnswerProvenance; seen?: string }
+  | { ok: true; answer: string; provenance: AskAnswerProvenance; seen?: string;
+      /** What may GROUND a quotation of the writing: the system prompt and the writer's own messages, never her earlier answers. */
+      seenForQuotes?: string }
   | { ok: false; refusal: 'unreachable' | 'empty_answer' };
 
 /**
@@ -189,7 +193,7 @@ export interface WorkContext {
   /** A helper's book, not yet offered: add the one gentle, once-only note about case stories (see practiceOffers). */
   practiceOffer?: string;
   /** G6 · her own completed readings (latest per lens), labelled by revision. Absent in Sanctuary. Never chapter text. */
-  carriedReadings?: readonly CarriedReading[];
+  carriedReadings?: CarriedSet;
 }
 
 export interface StandingRead {
@@ -216,14 +220,22 @@ export function withoutCarriedReadings(seen: string): string {
 }
 
 /** G6 · her own account from readings the writer commissioned, labelled so she can say which reading and which revision. */
-export function carriedReadingsSays(readings: readonly CarriedReading[]): string {
+export function carriedReadingsSays(set: CarriedSet): string {
+  const readings: readonly CarriedReading[] = set.readings;
   const lines = [
     `${CARRIED_READINGS_HEADER} (your own account, made when the writer asked you to read; it may be wrong; it is not the writer's view and not a fact about the text):`,
   ];
   for (const r of readings) {
     const chapters = r.chapters.map((c) => `${c.label ?? '(no heading)'}${c.changedSince === true ? ' (CHANGED since you read it)' : c.changedSince === false ? ' (unchanged since)' : ' (cannot tell whether it has changed)'}`).join('; ');
     lines.push('', `- Through the ${r.lens} lens, read ${r.frozenAt.slice(0, 10)}, from revision ${r.revisionNumber} of the saved writing. Read in full: ${chapters || '(none)'}.`);
+    if (r.observationsTotal > r.observations.length || r.cut) {
+      lines.push(`    (You are seeing ${r.observations.length} of the ${r.observationsTotal} observations in this reading${r.cut ? ', some shortened' : ''}; the rest are not in front of you.)`);
+    }
     for (const o of r.observations) lines.push(`    • ${o.text}${o.doesNotEstablish.length ? `  [this does not establish: ${o.doesNotEstablish.join(', ')}]` : ''}`);
+  }
+  const left = set.relevant - readings.length;
+  if (left > 0 || set.searchFull) {
+    lines.push('', `You have made ${set.searchFull ? 'at least ' : ''}${set.relevant} readings that cover these chapters; you were given ${readings.length} (the latest under each lens, at most three). ${set.searchFull ? 'Others may exist. ' : ''}Do not speak as if you remember the ones you were not given.`);
   }
   lines.push('',
     'Use them when the writer follows up: say which reading you mean and that it was made from that revision. If a chapter has changed since, say your reading may not fit it now.',
@@ -312,7 +324,7 @@ function workSays(ctx: WorkContext): string {
     ].join('\n'));
   }
   if (ctx.practiceOffer) parts.push(ctx.practiceOffer);
-  if (ctx.carriedReadings && ctx.carriedReadings.length > 0) parts.push(carriedReadingsSays(ctx.carriedReadings));
+  if (ctx.carriedReadings && ctx.carriedReadings.readings.length > 0) parts.push(carriedReadingsSays(ctx.carriedReadings));
   if (ctx.standingRead && ctx.standingRead.sections.length > 0) {
     parts.push(standingReadSays(ctx.standingRead));
   } else if (!locus) {
@@ -520,6 +532,7 @@ export async function askMaia(
       ok: true,
       answer: text,
       seen: [system, ...messages.map((m) => (typeof m.content === 'string' ? m.content : JSON.stringify(m.content)))].join('\n'),
+      seenForQuotes: [system, ...messages.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : JSON.stringify(m.content)))].join('\n'),
       provenance: {
         provider: 'anthropic',
         model,

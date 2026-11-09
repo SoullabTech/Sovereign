@@ -81,7 +81,6 @@ import {
   writeRelationshipReturnClient,
 } from '@/lib/writersStudio/rebuild/returnStateClient';
 import { editPlanClient, fetchPlan, linkStepClient } from '@/lib/writersStudio/planClient';
-import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 
 /** SHA-256 hex in the browser, matching the server's digest of the same projected text. */
 async function sha256Hex(text: string): Promise<string> {
@@ -1095,11 +1094,9 @@ export default function FlagshipWriteEditController() {
         const bodyHere = (id: string) => writingRef.current?.bodyOf(id);
         const stepChapter = view?.plan?.steps.find((x) => x.id === sid)?.chapterId;
         const localDigests = new Map<string, string>();
-        if (stepChapter && bodyHere(stepChapter) !== undefined) {
-          const sec = ctx.sections.find((x) => x.draftSectionId === stepChapter);
-          const split = sec ? splitStoredSection(bodyHere(stepChapter)!, sec.heading ?? null) : null;
-          if (split) localDigests.set(stepChapter, await sha256Hex(split.body));
-        }
+        /* The editor already holds each section WITHOUT its stored heading prefix (RebuildSection.body: "exact stored prefix removed"),
+           which is exactly the server's projection (splitStoredSection(...).body). Fingerprint it as it is; splitting it again fails. */
+        if (stepChapter && bodyHere(stepChapter) !== undefined) localDigests.set(stepChapter, await sha256Hex(bodyHere(stepChapter)!));
         if (!mounted) return;
         const d = decideHandoff({
           seq: mine, latestSeq: handoffSeq.current, view, stepId: sid,

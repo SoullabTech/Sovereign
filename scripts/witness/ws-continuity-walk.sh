@@ -29,13 +29,14 @@ write_stub() {
   cat > "$STATE/stub.mjs" <<'STUBJS'
 import http from 'node:http'; import fs from 'node:fs';
 const LOG = process.argv[2]; let n = 0;
+const issued = [];   // anchors this stand-in handed out in plans, newest last
 http.createServer((req, res) => { let b = ''; req.on('data', (c) => b += c); req.on('end', () => {
   let j = {}; try { j = JSON.parse(b); } catch {}
   const sys = typeof j.system === 'string' ? j.system : JSON.stringify(j.system ?? '');
   const marks = ['woke slowly', 'carried the nets', 'The letter came in March', 'leaving had been the long part', 'one claim: attention', 'clinic study', 'attention budget that interruptions', 'slowing down protects', 'two-hour block'];
   const allText = sys + '\n' + JSON.stringify(j.messages ?? []);
   const seen = ['The Harbour', 'Salt', 'The Letter', 'Return', 'The Scarce Resource', 'What the Clinic Found', 'The Attention Budget', 'Why Slowness Scales', 'What to Do on Monday'].filter((h, i) => allText.includes(marks[i]));
-  fs.appendFileSync(LOG, JSON.stringify({ at: new Date().toISOString(), tools: (j.tools ?? []).map((t) => t.name), chaptersInFrontOfMaia: seen, standingPermission: sys.includes('STANDING PERMISSION'), settled: /WHAT THE WRITER HAS SETTLED/.test(sys) }) + '\n');
+  fs.appendFileSync(LOG, JSON.stringify({ at: new Date().toISOString(), tools: (j.tools ?? []).map((t) => t.name), chaptersInFrontOfMaia: seen, standingPermission: sys.includes('STANDING PERMISSION'), settled: /WHAT THE WRITER HAS SETTLED/.test(sys), carriedReadings: sys.includes('YOUR EARLIER READINGS OF THIS WORK') }) + '\n');
   const base = { id: 'msg_stub', type: 'message', role: 'assistant', model: j.model ?? 'stub', stop_sequence: null, usage: { input_tokens: 1, output_tokens: 1 } };
   res.setHeader('content-type', 'application/json');
   if ((j.tools ?? []).some((t) => t.name === 'development_plan')) {
@@ -44,13 +45,19 @@ http.createServer((req, res) => { let b = ''; req.on('data', (c) => b += c); req
     const blocks = [...all.matchAll(/<chapter id="([0-9a-f-]{36})" heading="([^"]*)">\n([\s\S]*?)\n<\/chapter>/g)].map((m) => ({ h: m[2], id: m[1], text: m[3] }));
     const firstSentence = (t) => { const b = t.split('\n\n').slice(-1)[0]; const m = b.match(/^[^.!?]+[.!?]/); return (m ? m[0] : b.slice(0, 80)).trim(); };
     const steps = blocks.slice(0, 2).map((c) => ({ chapterId: c.id, anchor: firstSentence(c.text), direction: 'Try letting this opening answer what an earlier chapter promised.', why: 'It would tie the chapters together.' }));
+    for (const st of steps) issued.push(st.anchor);
     if (blocks[0]) steps.push({ chapterId: blocks[0].id, anchor: 'a lighthouse that never appears in this book', direction: 'invented', why: '' });
     res.end(JSON.stringify({ ...base, stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'toolu_plan' + (++n), name: 'development_plan',
       input: { summary: '[stand-in] A plan across ' + blocks.map((b) => b.h).join(', ') + '.', steps } }] }));
   } else if ((j.tools ?? []).length) {
     n++; const verbs = ['stirred', 'shifted', 'came to', 'opened', 'rose'];
-    const original = 'The harbour woke slowly, and the salt on the rails caught the first light before anyone spoke.';
-    const rep = original.replace('woke slowly', verbs[n % verbs.length] + ' slowly');
+    // Edit the passage actually held: the newest plan anchor present in this request, else the novel's opening sentence.
+    const all2 = sys + '\n' + JSON.stringify(j.messages ?? []);
+    const held = [...issued].reverse().find((a) => all2.includes(a));
+    const original = held ?? 'The harbour woke slowly, and the salt on the rails caught the first light before anyone spoke.';
+    const rep = held
+      ? (/ the /.test(held) ? held.replace(' the ', ' this ') : held.replace(/[.!?]$/, ', plainly.'))
+      : original.replace('woke slowly', verbs[n % verbs.length] + ' slowly');
     res.end(JSON.stringify({ ...base, stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'toolu_s' + n, name: (j.tool_choice && j.tool_choice.name) || j.tools[0].name,
       input: { kind: 'reply_with_proposal', reply: 'One small option, offered lightly. Your own wording may be better.', proposal: { replacementText: rep, rationale: 'Editorial purpose: Verb. A softer opening verb.' } } }] }));
   } else {
