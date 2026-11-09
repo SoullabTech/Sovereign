@@ -151,6 +151,9 @@ export async function POST(
       anchor: WORK_ANCHOR,
       facts: built.facts,
       staleness,
+      /* Walk defect 5, Living Work path (independent review 2026-11-09): in Sanctuary she is told so, and is not given the Studio guide
+         or the offers (reading permission, plan, keeping…), exactly as on the manuscript route. */
+      sanctuary: studioPosture.sanctuary === true,
     },
     historyFor(
       priorTurns.map((turn) => ({ speaker: turn.speaker, body: turn.body })),
