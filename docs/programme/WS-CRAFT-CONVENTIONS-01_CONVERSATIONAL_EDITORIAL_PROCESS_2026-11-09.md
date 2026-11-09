@@ -103,6 +103,24 @@ Never "you should now…".
 **3.6 Return paths.** Every descent keeps a way back: Back to the page, Back to the chapter, Develop
 ↔ desk (Zoom Law "always preserve a return path"; the handover in `72228a0c4`).
 
+**3.7 A level changes through the offers that already exist, on the writer's click.** There are no
+new controls and no parallel mechanism. The Develop conversation already has a standing founder
+rule: everything on Develop is askable through MAIA, as an offer the writer clicks
+(`lib/writersStudio/developAskable.ts`, whose test fails on any unmapped control). The offers are
+in `lib/writersStudio/studioActions.ts`. The closing question of §3.3 may carry one of them:
+
+| Movement | Existing offer |
+|---|---|
+| Whole → chapter | `go-chapter`, `read-chapter` / `read-this-chapter` (and `grant-reading` where she lacks the text) |
+| Chapter → plan | `make-plan`, `show` (plan) |
+| Chapter or passage → line work at the desk | `open-desk`; a selection hands its exact words over through `lib/writersStudio/passageHandoff.ts` |
+| Recording a decision at any level | `note-settled` |
+| Back up a level | the desk's "Back to the page", Develop's chapter selector, `develop-overview` |
+
+None of these is described to MAIA in Sanctuary, and that stays so: the levels directive adds no
+offer and changes none. Real-model checks of these offers are in the last section of
+`WS-DEVELOP_REAL_MAIA_WALK_EVIDENCE_2026-11-09.md` (other session).
+
 ## 4. The shape of one turn (unchanged, now explicit)
 
 Notice → why it matters here → what might help (as an option) → a question the writer steers by.
