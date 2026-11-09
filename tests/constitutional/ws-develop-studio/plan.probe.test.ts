@@ -9,11 +9,13 @@ import { query } from '@/lib/db/postgres';
 const ON = process.env.WS_READ_SCOPE_DYNAMIC === 'fictional-only' && /@(127\.0\.0\.1|localhost|\[::1\])[:/]/.test(process.env.DATABASE_URL ?? '');
 let CURRENT = '';
 let PLAN_INPUT: unknown = { summary: 'x', steps: [] };
+let FAIL_MODEL = false;
 const systems: string[] = [];
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: async () => CURRENT }));
 jest.mock('@/lib/ai/structured/router', () => ({
-  runStructured: async (req: { system: string; tools?: { name: string }[] }) => {
-    systems.push(req.system);
+  runStructured: async (req: { system: string; messages?: unknown; tools?: { name: string }[] }) => {
+    systems.push(req.system + '\n' + JSON.stringify(req.messages ?? []));
+    if (FAIL_MODEL) return { ok: false };
     return { ok: true, result: { content: [{ type: 'tool_use', id: 't1', name: req.tools?.[0]?.name ?? 'development_plan', input: PLAN_INPUT }] } };
   },
 }));
@@ -78,6 +80,8 @@ d('development plan · real database, real routes', () => {
     expect(r.json.dropped).toBe(2);
     expect(await receipts()).toBe(before + 2);                                  // one per chapter, both crossed
     expect(systems.at(-1)).toContain('Marta left a light on');
+    expect(systems.at(-1)!.split('\n[')[0]).not.toContain('Marta left a light on');      // never in the instructions
+    expect(systems.at(-1)).toContain('<chapter id=');
     expect((await query<{ content: string }>(`SELECT content FROM manuscript_working_drafts WHERE id=$1`, [dr])).rows[0].content).toBe(textBefore);
   });
 
@@ -125,6 +129,7 @@ d('development plan · real database, real routes', () => {
   });
 
   it('the server names a step it cannot verify (its chapter can no longer be read), so the hand-off refuses it', async () => {
+    await scope('grant', 'work');                                           // checking needs permission (review fix); the previous test revoked it
     const r = (await call(A, 'GET')).json;
     expect(r.unverifiedStepIds).toEqual([]);
     const sid = r.plan.steps[0].chapterId;
@@ -134,6 +139,71 @@ d('development plan · real database, real routes', () => {
     const after = (await call(A, 'GET')).json;
     expect(after.unverifiedStepIds).toEqual([r.plan.steps[0].id]);
     expect(after.staleStepIds).toEqual([]);                                // not claimed changed: unknown is not "changed"
+  });
+
+  it('review fixes: null body; a conversation from another manuscript is not used; a failed model call confirms no receipt', async () => {
+    CURRENT = A; const { POST } = await import('@/app/api/sovereign/manuscripts/[id]/plans/route');
+    const nul = await POST(new NextRequest('http://localhost/x', { method: 'POST', body: 'null' }), { params: Promise.resolve({ id: ms }) });
+    expect(nul.status).toBe(400);
+    await scope('grant', 'work');
+    // a thread on ANOTHER manuscript of the same writer
+    const other = (await query<{ id: string }>(`INSERT INTO member_manuscripts(member_id,title) VALUES ($1,'Elsewhere') RETURNING id`, [A])).rows[0].id;
+    const t = (await query<{ id: string }>(`INSERT INTO ask_threads (manuscript_id, member_id, anchor, canonical_at_open, initiated_by)
+      VALUES ($1,$2,'{"kind":"work"}'::jsonb,'x','author') RETURNING id`, [other, A])).rows[0]!.id;
+    // Fixture must exist, or this test proves nothing (a silent failure here once made it vacuous).
+    await query(`INSERT INTO ask_turns (thread_id, turn_index, speaker, body, staleness) VALUES ($1,0,'author','SECRET FROM ANOTHER BOOK','{}'::jsonb)`, [t]);
+    expect((await query(`SELECT 1 FROM ask_turns WHERE thread_id=$1`, [t])).rows.length).toBe(1);
+    PLAN_INPUT = { summary: 's', steps: [] };
+    const withThread = await call(A, 'POST', { ask: 'plan', sanctuary: false, threadId: t });
+    expect(withThread.status).toBe(200);
+    expect(systems.at(-1)).not.toContain('SECRET FROM ANOTHER BOOK');
+    // model failure: receipts stay 'attempted'
+    FAIL_MODEL = true;
+    const before = (await query<{ n: string }>(`SELECT COUNT(*)::text n FROM context_disclosure_receipts WHERE member_id=$1 AND crossed_at IS NOT NULL`, [A]).catch(async () =>
+      query<{ n: string }>(`SELECT COUNT(*)::text n FROM context_disclosure_receipts WHERE member_id=$1 AND status='crossed'`, [A]))).rows[0].n;
+    const r = await call(A, 'POST', { ask: 'plan', sanctuary: false });
+    FAIL_MODEL = false;
+    expect(r.status).toBe(502);
+    const after = (await query<{ n: string }>(`SELECT COUNT(*)::text n FROM context_disclosure_receipts WHERE member_id=$1 AND crossed_at IS NOT NULL`, [A]).catch(async () =>
+      query<{ n: string }>(`SELECT COUNT(*)::text n FROM context_disclosure_receipts WHERE member_id=$1 AND status='crossed'`, [A]))).rows[0].n;
+    expect(after).toBe(before);
+  });
+
+  it('review fixes: checking a plan without permission reads nothing and calls every step unverified', async () => {
+    PLAN_INPUT = { summary: 's', steps: [{ chapterId: s2, anchor: 'Marta left a light on in the hallway', direction: 'd' }] };
+    await call(A, 'POST', { ask: 'again', sanctuary: false });
+    await scope('revoke');
+    const v = (await call(A, 'GET')).json;
+    expect(v.plan.steps).toHaveLength(1);
+    expect(v.unverifiedStepIds).toEqual([v.plan.steps[0].id]);
+    expect(v.staleStepIds).toEqual([]);
+  });
+
+  it('review fixes: the database refuses an anchor change or an added step; a guarded status change respects the writer', async () => {
+    const plan = (await call(A, 'GET')).json.plan;
+    let blocked = false;
+    try { await query(`UPDATE development_plans SET steps = jsonb_set(steps, '{0,anchor}', '"EVIL"') WHERE id=$1`, [plan.id]); } catch { blocked = true; }
+    expect(blocked).toBe(true);
+    let added = false;
+    try { await query(`UPDATE development_plans SET steps = steps || '[{"id":"new","chapterId":"x","anchor":"y","direction":"z","why":"","status":"open"}]'::jsonb WHERE id=$1`, [plan.id]); } catch { added = true; }
+    expect(added).toBe(true);
+    const sid = plan.steps[0].id;
+    await call(A, 'PATCH', { edits: [{ id: sid, status: 'done' }] }, plan.id);
+    const g = await call(A, 'PATCH', { edits: [{ id: sid, status: 'working', ifStatus: 'open' }] }, plan.id);
+    expect(g.json.plan.steps[0].status).toBe('done');
+    expect((await call(A, 'PATCH', null as never, plan.id)).status).toBe(400);
+  });
+
+  it('review fixes: the writer can delete the plan; its history goes with it; the manuscript is untouched', async () => {
+    const plan = (await call(A, 'GET')).json.plan;
+    const text = (await query<{ content: string }>(`SELECT content FROM manuscript_working_drafts WHERE id=$1`, [dr])).rows[0].content;
+    CURRENT = B; const mod = await import('@/app/api/sovereign/manuscripts/[id]/plans/[planId]/route');
+    expect((await mod.DELETE(new NextRequest('http://localhost/x', { method: 'DELETE' }), { params: Promise.resolve({ id: ms, planId: plan.id }) })).status).toBe(404);
+    CURRENT = A;
+    expect((await mod.DELETE(new NextRequest('http://localhost/x', { method: 'DELETE' }), { params: Promise.resolve({ id: ms, planId: plan.id }) })).status).toBe(200);
+    expect((await query(`SELECT 1 FROM development_plans WHERE id=$1`, [plan.id])).rows.length).toBe(0);
+    expect((await query(`SELECT 1 FROM development_plan_history WHERE plan_id=$1`, [plan.id])).rows.length).toBe(0);
+    expect((await query<{ content: string }>(`SELECT content FROM manuscript_working_drafts WHERE id=$1`, [dr])).rows[0].content).toBe(text);
   });
 
   it('deleting the Work removes its plans with it', async () => {

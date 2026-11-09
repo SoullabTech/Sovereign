@@ -42,6 +42,12 @@ BEGIN
      OR NEW.manuscript_id IS DISTINCT FROM OLD.manuscript_id OR NEW.ask IS DISTINCT FROM OLD.ask OR NEW.basis IS DISTINCT FROM OLD.basis THEN
     RAISE EXCEPTION '[PLAN] only a plan''s steps and summary may change';
   END IF;
+  -- A step's anchor and chapter are fixed at creation, and no step is ever added afterwards: the writer edits wording, status or removes.
+  IF EXISTS (
+    SELECT 1 FROM jsonb_array_elements(NEW.steps) n
+     WHERE NOT EXISTS (SELECT 1 FROM jsonb_array_elements(OLD.steps) o
+                        WHERE o->>'id' = n->>'id' AND o->>'anchor' = n->>'anchor' AND o->>'chapterId' = n->>'chapterId')
+  ) THEN RAISE EXCEPTION '[PLAN] a step''s anchor and chapter cannot change, and steps cannot be added after the plan is made'; END IF;
   INSERT INTO development_plan_history (plan_id, rev, steps)
     SELECT OLD.id, COALESCE((SELECT MAX(rev) FROM development_plan_history WHERE plan_id = OLD.id), 0) + 1, OLD.steps;
   NEW.updated_at := NOW();

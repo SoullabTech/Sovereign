@@ -81,6 +81,13 @@ import {
   writeRelationshipReturnClient,
 } from '@/lib/writersStudio/rebuild/returnStateClient';
 import { editPlanClient, fetchPlan, linkStepClient } from '@/lib/writersStudio/planClient';
+import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
+
+/** SHA-256 hex in the browser, matching the server's digest of the same projected text. */
+async function sha256Hex(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
 import { decideHandoff, HANDOFF_REFUSAL_COPY, PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
 import { P4R1Pc3WriteEditView, UNDO_RESTORED_MESSAGES, type Pc3HeldPassage } from './P4R1Pc3WriteEditView';
 
@@ -1036,17 +1043,26 @@ export default function FlagshipWriteEditController() {
      Exactly one match is held (the desk then does the rest: propose, Use it, Undo). Anything else opens the chapter and says so. Nothing is written here. */
   /* The plan step that brought the writer to this passage. Only a pointer: when the desk records an apply on this section,
      its authorization is offered to the plan, and the SERVER decides whether it belongs to the step. Never marks a step resolved. */
-  const [planStepHere, setPlanStepHere] = useState<{ planId: string; stepId: string; sectionId: string } | null>(null);
+  const [planStepHere, setPlanStepHere] = useState<{ planId: string; stepId: string; sectionId: string; start: number; end: number; preexisting: string | null } | null>(null);
   const offeredLinks = useRef(new Set<string>());
+  const [openDeskForHeld, setOpenDeskForHeld] = useState(false);
+  useEffect(() => {
+    if (!openDeskForHeld || !planStepHere) return;
+    if (selectedPassage?.draftSectionId !== planStepHere.sectionId || selectedPassage.start !== planStepHere.start) return;
+    setOpenDeskForHeld(false);
+    openWorkspaceRef.current?.();
+  }, [openDeskForHeld, planStepHere, selectedPassage]);
   const handoffSeq = useRef(0);
   useEffect(() => { if (planStepHere && focusId && focusId !== planStepHere.sectionId) setPlanStepHere(null); }, [focusId, planStepHere]);
   useEffect(() => {
     const app = editorialThread?.application;
     if (!planStepHere || !context || !app || app.undone || focusId !== planStepHere.sectionId) return;
+    if (app.authorizationId === planStepHere.preexisting) return;
     const key = `${planStepHere.planId}:${planStepHere.stepId}:${app.authorizationId}`;
     if (offeredLinks.current.has(key)) return;
     offeredLinks.current.add(key);
-    void linkStepClient(context.manuscriptId, planStepHere.planId, planStepHere.stepId, app.authorizationId);
+    void linkStepClient(context.manuscriptId, planStepHere.planId, planStepHere.stepId, app.authorizationId)
+      .then((r) => { if (r === 'unreachable') offeredLinks.current.delete(key); });   // retried on the next change; a refusal is final
   }, [editorialThread, planStepHere, context, focusId]);
 
   // Idempotent by construction: the id is removed as it is read, so a repeated hand-off is a NEW hand-off and a reload is not a second one.
@@ -1070,16 +1086,27 @@ export default function FlagshipWriteEditController() {
       try { window.sessionStorage.removeItem(PLAN_HANDOFF_KEY(handoffManuscriptId)); } catch { /* ignore */ }
       const mine = ++handoffSeq.current;
       const sid = stepId;
-      void fetchPlan(handoffManuscriptId).then((view) => {
+      void fetchPlan(handoffManuscriptId).then(async (view) => {
         if (!mounted) return;
         const C = handoffLive.current;
         if (!C.context || C.context.manuscriptId !== handoffManuscriptId) return;
         const ctx = C.context;
+        // The text THIS editor holds — never a fallback copy. No editor yet means "not ready", not "clean".
+        const bodyHere = (id: string) => writingRef.current?.bodyOf(id);
+        const stepChapter = view?.plan?.steps.find((x) => x.id === sid)?.chapterId;
+        const localDigests = new Map<string, string>();
+        if (stepChapter && bodyHere(stepChapter) !== undefined) {
+          const sec = ctx.sections.find((x) => x.draftSectionId === stepChapter);
+          const split = sec ? splitStoredSection(bodyHere(stepChapter)!, sec.heading ?? null) : null;
+          if (split) localDigests.set(stepChapter, await sha256Hex(split.body));
+        }
+        if (!mounted) return;
         const d = decideHandoff({
           seq: mine, latestSeq: handoffSeq.current, view, stepId: sid,
           sectionIds: ctx.sections.map((x) => x.draftSectionId),
           saveStateOf: (id) => writingRef.current?.statusOf(id),
-          bodyOf: (id) => writingRef.current?.bodyOf(id) ?? ctx.sections.find((x) => x.draftSectionId === id)?.body ?? '',
+          bodyOf: (id) => bodyHere(id) ?? '',
+          localDigestOf: (id) => localDigests.get(id),
         });
         if (d.kind === 'superseded') return;
         if (d.kind === 'refuse') {
@@ -1090,11 +1117,13 @@ export default function FlagshipWriteEditController() {
         setPlanHandoffNotice(null);
         const section = ctx.sections.find((x) => x.draftSectionId === d.sectionId)!;
         C.holdPassage(section, d.start, d.end, d.text);
-        setPlanStepHere({ planId: view!.plan!.id, stepId: sid, sectionId: d.sectionId });
-        // The writer asked to WORK ON this passage: open the desk on it, exactly as a hand selection followed by Talk with MAIA does.
-        setTimeout(() => { openWorkspaceRef.current?.(); }, 0);
-        // Only after the passage is actually held may an open step become 'working'. A refused hand-off leaves it as it was.
-        if (d.markWorking) void editPlanClient(handoffManuscriptId, view!.plan!.id, [{ id: sid, status: 'working' }]);
+        // A change already applied on this thread before the hand-off is not this step's change.
+        setPlanStepHere({ planId: view!.plan!.id, stepId: sid, sectionId: d.sectionId, start: d.start, end: d.end,
+          preexisting: editorialThreadRef.current?.application?.authorizationId ?? null });
+        // The writer asked to WORK ON this passage: the desk opens once the held passage is in state (see the effect below).
+        setOpenDeskForHeld(true);
+        // Only after the passage is actually held may an open step become 'working'; the server applies it only if still open.
+        if (d.markWorking) void editPlanClient(handoffManuscriptId, view!.plan!.id, [{ id: sid, status: 'working', ifStatus: 'open' }]);
       });
     };
     consume();

@@ -55,6 +55,8 @@ export function DevelopStage(props: {
   onEditPlan: (edits: StepEdit[]) => void;
   /** open the passage desk on this step's exact words; the writer decides there */
   onWorkOnStep: (stepId: string) => void;
+  /** delete the whole plan, its earlier versions and its links; the manuscript is not touched */
+  onDeletePlan?: () => void;
   conversation: ReactNode;
 }) {
   const { sections } = props;
@@ -157,7 +159,10 @@ export function DevelopStage(props: {
           <div style={{ border: hair, borderRadius: 12, padding: '12px 16px' }}>
             <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .7 }}>Your plan</div>
             <p style={{ margin: '4px 0 2px', fontSize: 14 }}>{props.plan.plan.summary || 'Steps for your work.'}</p>
-            <p style={{ margin: '0 0 8px', fontSize: 12, opacity: .7 }}>You asked: “{props.plan.plan.ask}”. Nothing here changes your work; each step opens the passage so you decide.</p>
+            <p style={{ margin: '0 0 8px', fontSize: 12, opacity: .7 }}>You asked: “{props.plan.plan.ask}”. Nothing here changes your work; each step opens the passage so you decide.
+              {' '}Removing a step takes it out of the plan; earlier versions of the plan keep it until you{' '}
+              {props.onDeletePlan ? <button type="button" data-develop-plan-delete="true" onClick={() => { if (typeof window === 'undefined' || window.confirm('Delete this plan, its earlier versions and its record of changes you applied from it? Your manuscript is not touched.')) props.onDeletePlan!(); }}
+                style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', padding: 0 }}>delete the plan</button> : 'delete the plan'}.</p>
             {props.plan.plan.steps.length === 0 ? <p style={{ margin: 0, opacity: .8 }}>MAIA could not ground a step in your text this time.</p> : null}
             <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
               {props.plan.plan.steps.map((st, i) => {

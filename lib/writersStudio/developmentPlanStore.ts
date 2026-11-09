@@ -1,6 +1,6 @@
 /** WS-DEVELOP-STUDIO · M4 — plan store. Member-scoped in every statement. Missing table (migrate-before-swap) reads as "no plan", never an error. */
-import { query } from '@/lib/db/postgres';
-import type { PlanStep } from './developmentPlan';
+import { query, transaction } from '@/lib/db/postgres';
+import { applyStepEdits, type PlanStep, type StepEdit } from './developmentPlan';
 
 export interface StoredPlan {
   id: string; ask: string; summary: string; steps: PlanStep[]; basis: { sectionId: string; digest: string }[]; createdAt: string; updatedAt: string;
@@ -84,4 +84,23 @@ export async function stepEvents(memberId: string, planId: string): Promise<Reco
     for (const row of r.rows) out[row.step_id] = { state: Number(row.active) > 0 ? 'applied' : 'undone', at: new Date(row.last_at).toISOString(), applications: Number(row.total) };
     return out;
   } catch (e) { if (noTable(e)) return {}; throw e; }
+}
+
+/** Delete a plan the writer owns, on this manuscript. Its history and step links cascade with it. */
+export async function deletePlan(memberId: string, manuscriptId: string, planId: string): Promise<boolean> {
+  const r = await query<{ id: string }>(`DELETE FROM development_plans WHERE id = $1 AND member_id = $2 AND manuscript_id = $3 RETURNING id`, [planId, memberId, manuscriptId]);
+  return r.rows.length === 1;
+}
+
+/** Read-lock-modify-write in one transaction: two overlapping edits cannot lose each other, and a removed step cannot come back. */
+export async function editSteps(memberId: string, manuscriptId: string, planId: string, edits: readonly StepEdit[]): Promise<StoredPlan | null> {
+  return transaction(async (tx) => {
+    const cur = await tx.query<Row>(`SELECT id, ask, summary, steps, basis, created_at, updated_at FROM development_plans
+       WHERE id = $1 AND member_id = $2 AND manuscript_id = $3 FOR UPDATE`, [planId, memberId, manuscriptId]);
+    if (!cur.rows[0]) return null;
+    const next = applyStepEdits(cur.rows[0].steps, edits);
+    const r = await tx.query<Row>(`UPDATE development_plans SET steps = $2::jsonb WHERE id = $1 RETURNING id, ask, summary, steps, basis, created_at, updated_at`,
+      [planId, JSON.stringify(next)]);
+    return r.rows[0] ? shape(r.rows[0]) : null;
+  });
 }

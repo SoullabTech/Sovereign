@@ -30,7 +30,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const plan = await latestPlan(memberId, id);
   if (!plan) return NextResponse.json({ plan: null });
   const ids = [...new Set(plan.steps.map((s) => s.chapterId))];
-  const now = new Map((await loadSuppliedSections(id, memberId, ids)).map((s) => [s.id, s.digest]));
+  /* Checking a plan against the text is itself a read of the writer's chapters. Without a standing permission it is not done:
+     every step is reported UNVERIFIED (a verdict, not silence), so the hand-off refuses rather than guessing. */
+  const workId = await livingWorkIdForManuscript(id, memberId);
+  const grant = workId ? await loadActiveGrant(memberId, workId) : null;
+  const now = grant ? new Map((await loadSuppliedSections(id, memberId, ids)).map((s) => [s.id, s.digest])) : new Map<string, string>();
   return NextResponse.json({ plan, staleStepIds: staleStepIds(plan.steps, plan.basis, now),
     unverifiedStepIds: plan.steps.filter((s) => stepStanding(s, plan.basis, now) === 'unverified').map((s) => s.id),
     events: await stepEvents(memberId, plan.id) });
@@ -45,6 +49,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!workId) return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
   let b: Record<string, unknown>;
   try { b = (await req.json()) as Record<string, unknown>; } catch { return NextResponse.json({ refusal: 'malformed' }, { status: 400 }); }
+  if (!b || typeof b !== 'object' || Array.isArray(b)) return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   const ask = typeof b.ask === 'string' ? b.ask.trim().slice(0, 1000) : '';
   if (!ask) return NextResponse.json({ refusal: 'malformed', detail: 'say, in your own words, what the plan is for' }, { status: 400 });
   if (b.sanctuary !== false) return NextResponse.json({ refusal: 'sanctuary_unresolved', detail: 'A plan reads your saved work, so it needs Sanctuary to be known to be off.' }, { status: 409 });
@@ -60,7 +65,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (ids.length === 0) return NextResponse.json({ refusal: 'nothing_to_read' }, { status: 409 });
 
   const posture = TurnPosture.resolve({ sanctuary: false });
-  const requestId = randomUUID(); const minted: string[] = [];
+  const requestId = randomUUID(); const minted: { sid: string; disclosureId: string }[] = [];
   for (const sid of ids) {
     const o = await establishDisclosureBoundary({
       requestId, posture, memberId, sessionId: null,
@@ -68,19 +73,26 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         sourceRef: id, scopeKind: 'section', sectionRef: sid, gesture: 'standing_read_scope', scopeEventId: grant.id },
     });
     if (!mayCrossBoundary(o)) return NextResponse.json({ refusal: 'receipt_unavailable', detail: 'Nothing was read.' }, { status: 409 });
-    minted.push(o.disclosureId);
+    minted.push({ sid, disclosureId: o.disclosureId });
   }
   if ((await loadActiveGrant(memberId, workId))?.id !== grant.id) return NextResponse.json({ refusal: 'permission_required', detail: 'Your permission changed. Nothing was read.' }, { status: 409 });
 
   const supplied = await loadSuppliedSections(id, memberId, ids);
   const chapters = supplied.map((s) => ({ id: s.id, heading: s.label, text: s.body }));
-  const thread = typeof b.threadId === 'string' && UUID.test(b.threadId) ? await loadThread(b.threadId, memberId) : null;
+  // A conversation from another of the writer's manuscripts was read under another Work's permission: it never enters this plan.
+  const loaded = typeof b.threadId === 'string' && UUID.test(b.threadId) ? await loadThread(b.threadId, memberId) : null;
+  const thread = loaded && loaded.manuscriptId === id ? loaded : null;
   const history = (thread?.turns ?? []).slice(-8).map((t) => ({ speaker: t.speaker, body: t.body }));
   // Founder ruling 2026-11-09 ("Yes, same terms"): the plan reads the writer's settled decisions on the same terms as the Ask route.
   const settled = await decisionContextForWork(memberId, workId, id);
 
   const drafted = await draftPlan({ ask, chapters, settled, history });
-  for (const d of minted) { try { await confirmDisclosureCrossed(d); } catch { console.error('[PLAN] receipt confirmation threw'); } }
+  /* A receipt says a chapter CROSSED. Confirm it only when MAIA's answer came back, and only for chapters actually sent.
+     Otherwise it stays 'attempted', which is the truthful state when it is unknown what reached her. */
+  if (drafted.ok) {
+    const sent = new Set(supplied.map((x) => x.id));
+    for (const m of minted) if (sent.has(m.sid)) { try { await confirmDisclosureCrossed(m.disclosureId); } catch { console.error('[PLAN] receipt confirmation threw'); } }
+  }
   if (!drafted.ok) return NextResponse.json({ refusal: 'plan_unavailable', detail: 'MAIA could not make a plan just now. Nothing was changed.' }, { status: 502 });
 
   const grounded = groundSteps(drafted.steps, chapters, randomUUID);

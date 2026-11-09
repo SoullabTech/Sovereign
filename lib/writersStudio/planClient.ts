@@ -22,7 +22,8 @@ export async function makePlanClient(manuscriptId: string, ask: string, sanctuar
     const res = await apiFetch(base(manuscriptId), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ask, sanctuary }) });
     const j = (await res.json().catch(() => ({}))) as { plan?: StoredPlan; staleStepIds?: string[]; read?: { sectionId: string; label: string | null }[]; dropped?: number; refusal?: string; detail?: string };
     if (!res.ok || !j.plan) return { ok: false, refusal: j.refusal ?? `http_${res.status}`, detail: j.detail };
-    return { ok: true, view: { plan: j.plan, staleStepIds: j.staleStepIds ?? [], unverifiedStepIds: [], events: {}, verdict: false }, read: j.read ?? [], dropped: j.dropped ?? 0 };
+    return { ok: true, view: { plan: j.plan, staleStepIds: j.staleStepIds ?? [], unverifiedStepIds: (j as { unverifiedStepIds?: string[] }).unverifiedStepIds ?? [], events: {},
+      verdict: Array.isArray(j.staleStepIds) && Array.isArray((j as { unverifiedStepIds?: unknown }).unverifiedStepIds) }, read: j.read ?? [], dropped: j.dropped ?? 0 };
   } catch { return { ok: false, refusal: 'unreachable' }; }
 }
 
@@ -39,6 +40,10 @@ export async function linkStepClient(manuscriptId: string, planId: string, stepI
   try {
     const res = await apiFetch(`${base(manuscriptId)}/${encodeURIComponent(planId)}/links`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stepId, authorizationId }) });
     const j = (await res.json().catch(() => ({}))) as { outcome?: 'linked' | 'already' | 'refused' };
-    return j.outcome ?? (res.ok ? 'linked' : 'refused');
+    return j.outcome === 'linked' || j.outcome === 'already' || j.outcome === 'refused' ? j.outcome : 'refused';   // no answer is never 'linked'
   } catch { return 'unreachable'; }
+}
+
+export async function deletePlanClient(manuscriptId: string, planId: string): Promise<boolean> {
+  try { const res = await apiFetch(`${base(manuscriptId)}/${encodeURIComponent(planId)}`, { method: 'DELETE' }); return res.ok; } catch { return false; }
 }

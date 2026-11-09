@@ -45,7 +45,7 @@ import { DevelopStage, DevelopHoldings } from './DevelopStage';
 import { HANDOFF_REFUSAL_COPY, PLAN_HANDOFF_KEY, PLAN_HANDOFF_EVENT } from '@/lib/writersStudio/developmentPlan';
 import { startersFor, type WorkKind } from '@/lib/writersStudio/workKind';
 import { getWorkKindClient } from '@/lib/writersStudio/workKindClient';
-import { fetchPlan, makePlanClient, editPlanClient, type PlanView } from '@/lib/writersStudio/planClient';
+import { fetchPlan, makePlanClient, editPlanClient, type PlanView, deletePlanClient } from '@/lib/writersStudio/planClient';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import {
@@ -2161,6 +2161,11 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     const plan = await editPlanClient(stageManuscriptId, id, edits);
     if (plan) setPlanView((v) => (v ? { ...v, plan } : v)); else setPlanNote('That could not be saved just now. Your plan is as it was.');
   };
+  const deletePlan = async () => {
+    const id = planView?.plan?.id; if (!id || !stageManuscriptId) return;
+    if (await deletePlanClient(stageManuscriptId, id)) { setPlanView({ plan: null, staleStepIds: [], unverifiedStepIds: [], events: {}, verdict: true }); setPlanNote('The plan and its earlier versions are deleted. Your manuscript was not touched.'); }
+    else setPlanNote('The plan could not be deleted just now. Nothing was changed.');
+  };
   /** A plan step -> the passage desk. Leaves an id for Write and goes there. Changes nothing itself: no status, no manuscript. */
   const workOnStep = (stepId: string) => {
     if (!stageManuscriptId) return;
@@ -3311,6 +3316,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       onMakePlan={makePlan}
       onEditPlan={editPlan}
       onWorkOnStep={workOnStep}
+      onDeletePlan={deletePlan}
       conversation={(
         <WorkConversation
           key={attentionConversationDraft || 'develop-stage-conversation'}

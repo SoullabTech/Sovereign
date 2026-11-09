@@ -33,13 +33,15 @@ http.createServer((req, res) => { let b = ''; req.on('data', (c) => b += c); req
   let j = {}; try { j = JSON.parse(b); } catch {}
   const sys = typeof j.system === 'string' ? j.system : JSON.stringify(j.system ?? '');
   const marks = ['woke slowly', 'carried the nets', 'The letter came in March', 'leaving had been the long part', 'one claim: attention', 'clinic study', 'attention budget that interruptions', 'slowing down protects', 'two-hour block'];
-  const seen = ['The Harbour', 'Salt', 'The Letter', 'Return', 'The Scarce Resource', 'What the Clinic Found', 'The Attention Budget', 'Why Slowness Scales', 'What to Do on Monday'].filter((h, i) => sys.includes(marks[i]));
+  const allText = sys + '\n' + JSON.stringify(j.messages ?? []);
+  const seen = ['The Harbour', 'Salt', 'The Letter', 'Return', 'The Scarce Resource', 'What the Clinic Found', 'The Attention Budget', 'Why Slowness Scales', 'What to Do on Monday'].filter((h, i) => allText.includes(marks[i]));
   fs.appendFileSync(LOG, JSON.stringify({ at: new Date().toISOString(), tools: (j.tools ?? []).map((t) => t.name), chaptersInFrontOfMaia: seen, standingPermission: sys.includes('STANDING PERMISSION'), settled: /WHAT THE WRITER HAS SETTLED/.test(sys) }) + '\n');
   const base = { id: 'msg_stub', type: 'message', role: 'assistant', model: j.model ?? 'stub', stop_sequence: null, usage: { input_tokens: 1, output_tokens: 1 } };
   res.setHeader('content-type', 'application/json');
   if ((j.tools ?? []).some((t) => t.name === 'development_plan')) {
     // Plan: steps anchored to EXACT sentences from the chapters she was handed, plus one invented step that grounding must drop.
-    const blocks = [...sys.matchAll(/--- (.+?) \[([0-9a-f-]{36})\] ---\n([\s\S]*?)(?=\n\n--- |$)/g)].map((m) => ({ h: m[1], id: m[2], text: m[3] }));
+    const all = sys + '\n' + (j.messages ?? []).map((m) => typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).join('\n');
+    const blocks = [...all.matchAll(/<chapter id="([0-9a-f-]{36})" heading="([^"]*)">\n([\s\S]*?)\n<\/chapter>/g)].map((m) => ({ h: m[2], id: m[1], text: m[3] }));
     const firstSentence = (t) => { const b = t.split('\n\n').slice(-1)[0]; const m = b.match(/^[^.!?]+[.!?]/); return (m ? m[0] : b.slice(0, 80)).trim(); };
     const steps = blocks.slice(0, 2).map((c) => ({ chapterId: c.id, anchor: firstSentence(c.text), direction: 'Try letting this opening answer what an earlier chapter promised.', why: 'It would tie the chapters together.' }));
     if (blocks[0]) steps.push({ chapterId: blocks[0].id, anchor: 'a lighthouse that never appears in this book', direction: 'invented', why: '' });
