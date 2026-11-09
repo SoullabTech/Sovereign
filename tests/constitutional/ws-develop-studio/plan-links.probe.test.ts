@@ -1,7 +1,9 @@
 /**
  * WS-DEVELOP-STUDIO · M4c — a plan step ↔ the desk's own apply/undo records. Real database, real routes.
  * Disabled unless WS_READ_SCOPE_DYNAMIC=fictional-only and DATABASE_URL is loopback. Fictional data only.
- * Fixture note: desk authorization rows are inserted with session_replication_role=replica (their proposal-chain parents
+ * Fixture note: accepted_at defaults to the DATABASE clock (clock_timestamp()). It used JavaScript's millisecond clock, which made a
+ * change accepted in the same millisecond as the plan look older than it (µs vs ms) and be refused: the unexplained first-run failures.
+ * Desk authorization rows are inserted with session_replication_role=replica (their proposal-chain parents
  * are out of scope here). The link and event logic under test runs unmodified.
  */
 import { describe, expect, it, beforeAll, jest } from '@jest/globals';
@@ -22,7 +24,7 @@ d('plan step ↔ desk records', () => {
     const id = u();
     await query(`BEGIN; SET LOCAL session_replication_role = replica;
       INSERT INTO manuscript_revision_authorizations (id, member_id, proposal_chain_id, proposal_version_id, work_id, draft_id, base_version, target_section_id, expected_text, authorized_at, accepted_at, resulting_version)
-      VALUES ('${id}', '${o.member ?? A}', '${u()}', '${u()}', '${o.work ?? ms}', '${dr}', 1, '${o.section ?? s7}', 'x', NOW(), ${o.accepted === false ? 'NULL' : `'${o.at ?? new Date().toISOString()}'`}, ${o.accepted === false ? 'NULL' : '2'});
+      VALUES ('${id}', '${o.member ?? A}', '${u()}', '${u()}', '${o.work ?? ms}', '${dr}', 1, '${o.section ?? s7}', 'x', NOW(), ${o.accepted === false ? 'NULL' : o.at ? `'${o.at}'` : 'clock_timestamp()'}, ${o.accepted === false ? 'NULL' : '2'});
       INSERT INTO manuscript_application_recovery (authorization_id, before_body, after_body) VALUES ('${id}', 'a', 'b'); COMMIT;`);
     return id;
   };
