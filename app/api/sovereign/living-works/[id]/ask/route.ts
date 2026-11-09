@@ -8,6 +8,7 @@
  * ⛔ Declared Source/Idea bodies do not cross here merely because they belong
  * to the Work. This ordinary conversation receives Work declarations + C14.
  */
+import { isPostureDeclaration, resolveStudioPosture } from '@/lib/sanctuary/studioPosture';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
@@ -88,10 +89,10 @@ export async function POST(
 
   /* ⭐⭐ SANCTUARY CLOSURE (founder ruling 2026-11-09): a turn is kept ONLY when the request DECLARED an ordinary posture. Sanctuary, or a
      posture the client could not read (undeclared), answers in the moment and keeps nothing: no thread opened, no turn written. */
-  if (body.sanctuary !== undefined && typeof body.sanctuary !== 'boolean') {
+  if (body.sanctuary !== undefined && !isPostureDeclaration(body.sanctuary)) {
     return NextResponse.json({ refusal: 'malformed', detail: 'sanctuary' }, { status: 400 });
   }
-  const storing = body.sanctuary === false;
+  const storing = (await resolveStudioPosture(memberId, body)).keep;
 
   const requestedThreadId = typeof body.threadId === 'string' ? body.threadId : null;
   const existing = requestedThreadId

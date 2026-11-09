@@ -176,6 +176,54 @@ d('G6 · a reading she made reaches the next conversation, labelled, on the comm
     expect(systems.length).toBe(sys);                                                              // MAIA was never called
   });
 
+  it('SANCTUARY CLOSURE: a device with no saved setting uses the ACCOUNT default — Sanctuary keeps nothing; Continuity, or no settings row, keeps', async () => {
+    const m = async (n: string) => (await query<{ id: string }>(`INSERT INTO members(passkey,username,password_hash,name) VALUES ($1,$1,'x',$1) RETURNING id`, [`${n}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`])).rows[0].id;
+    const bookFor = async (who: string) => {
+      const lw = (await query<{ id: string }>(`INSERT INTO living_works(member_id,title) VALUES ($1,'Account default book') RETURNING id`, [who])).rows[0].id;
+      return lw;
+    };
+    const postLW = async (who: string, lw: string, body: Record<string, unknown>) => {
+      CURRENT = who; const { POST } = await import('@/app/api/sovereign/living-works/[id]/ask/route');
+      const res = await POST(new NextRequest('http://localhost/x', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }), { params: Promise.resolve({ id: lw }) });
+      return { status: res.status, json: await res.json() as Record<string, any> };
+    };
+    const turns = async (lw: string) => Number((await query<{ n: string }>(`SELECT COUNT(*)::text n FROM ask_turns t JOIN ask_threads h ON h.id=t.thread_id WHERE h.living_work_id=$1`, [lw])).rows[0]!.n);
+
+    const sanct = await m('acctS'); await query(`INSERT INTO member_settings(member_id, default_memory_mode) VALUES ($1,'sanctuary')`, [sanct]);
+    const lwS = await bookFor(sanct);
+    const s = await postLW(sanct, lwS, { question: 'New device.', sanctuary: 'no_live_settings' });
+    expect([s.status, s.json.sanctuary?.notKept]).toEqual([200, true]);
+    expect(await turns(lwS)).toBe(0);
+    // the explicit live switch still wins for this session (it is the member's own act on this device)
+    await postLW(sanct, lwS, { question: 'Turned Sanctuary off here.', sanctuary: false });
+    expect(await turns(lwS)).toBe(2);
+
+    const cont = await m('acctC'); await query(`INSERT INTO member_settings(member_id, default_memory_mode) VALUES ($1,'continuity')`, [cont]);
+    const lwC = await bookFor(cont);
+    await postLW(cont, lwC, { question: 'New device.', sanctuary: 'no_live_settings' });
+    expect(await turns(lwC)).toBe(2);
+
+    const none = await m('acctN');
+    const lwN = await bookFor(none);
+    await postLW(none, lwN, { question: 'New device, never chose.', sanctuary: 'no_live_settings' });
+    expect(await turns(lwN)).toBe(2);
+    expect((await query(`SELECT 1 FROM member_settings WHERE member_id=$1`, [none])).rows.length).toBe(0);   // read-only: no row created
+
+    // the Work conversation and readings honour the same account default
+    await query(`INSERT INTO member_settings(member_id, default_memory_mode) VALUES ($1,'sanctuary') ON CONFLICT (member_id) DO UPDATE SET default_memory_mode='sanctuary'`, [A]);
+    try {
+      const before = Number((await query<{ n: string }>(`SELECT COUNT(*)::text n FROM ask_turns t JOIN ask_threads h ON h.id=t.thread_id WHERE h.member_id=$1`, [A])).rows[0]!.n);
+      const w = await post(A, { anchor: { on: 'work' }, question: 'Account default, Work.', sectionId: sec[2], sanctuary: 'no_live_settings' });
+      expect(w.json.sanctuary?.notKept).toBe(true);
+      expect(Number((await query<{ n: string }>(`SELECT COUNT(*)::text n FROM ask_turns t JOIN ask_threads h ON h.id=t.thread_id WHERE h.member_id=$1`, [A])).rows[0]!.n)).toBe(before);
+      CURRENT = A; const { POST } = await import('@/app/api/sovereign/manuscripts/[id]/readings/route');
+      const r = await POST(new NextRequest('http://localhost/x', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lens: 'overview', sanctuary: 'no_live_settings' }) }), { params: Promise.resolve({ id: ms }) });
+      expect([r.status, (await r.json()).refusal]).toEqual([409, 'sanctuary_not_kept']);
+    } finally {
+      await query(`DELETE FROM member_settings WHERE member_id=$1`, [A]);
+    }
+  });
+
   it('Sanctuary, or an unstated posture, carries nothing', async () => {
     await post(A, { anchor: { on: 'work' }, question: 'Where does the hiker come back?', sectionId: sec[2], sanctuary: true });
     expect(last()).not.toContain('YOUR EARLIER READINGS');

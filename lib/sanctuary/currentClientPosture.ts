@@ -89,14 +89,16 @@ export function readCurrentSanctuaryPosture(
 /**
  * ⭐ What a request DECLARES about Sanctuary (founder ruling 2026-11-09, "yes"):
  *   - the member's saved posture, when it can be read;
- *   - `false` when no settings have ever been saved — canon: Sanctuary is OFF by default, an explicit opt-in;
+ *   - `'no_live_settings'` when this device has never saved a session setting — the server then uses the member's account default
+ *     (Sanctuary keeps nothing; otherwise ordinary, canon's default);
  *   - NOTHING when the posture exists but cannot be read (storage blocked, corrupt, not a boolean).
  * ⛔ An undeclared posture is never guessed here. The server keeps nothing for a request that declares none.
  */
 export function declaredSanctuaryPosture(
   storage: StorageLike | null | undefined = defaultStorage(),
-): { sanctuary: boolean } | Record<string, never> {
+): { sanctuary: boolean | 'no_live_settings' } | Record<string, never> {
   const read = readCurrentSanctuaryPosture(storage);
   if (read.resolved) return { sanctuary: read.sanctuary };
-  return read.reason === 'no_live_settings' ? { sanctuary: false } : {};
+  // Founder ruling 2026-11-09 (second): say "no setting on this device", and let the server use the member's ACCOUNT default.
+  return read.reason === 'no_live_settings' ? { sanctuary: 'no_live_settings' } : {};
 }

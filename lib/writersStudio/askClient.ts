@@ -97,7 +97,7 @@ export async function ask(input: {
    */
   sectionId?: string;
   /** The member's CURRENT Sanctuary posture. When omitted, the client declares it from saved settings (none saved ⇒ ordinary); unreadable ⇒ undeclared. */
-  sanctuary?: boolean;
+  sanctuary?: boolean | 'no_live_settings';
 }): Promise<AskOutcome> {
   try {
     const res = await apiFetch(url(input.manuscriptId), {
@@ -110,7 +110,7 @@ export async function ask(input: {
         question: input.question,
         ...(input.sectionId ? { sectionId: input.sectionId } : {}),
         // Every request to this route declares its Sanctuary posture when it can; the server keeps nothing for one that does not.
-        ...(typeof input.sanctuary === 'boolean' ? { sanctuary: input.sanctuary } : declaredSanctuaryPosture()),
+        ...(input.sanctuary !== undefined ? { sanctuary: input.sanctuary } : declaredSanctuaryPosture()),
       }),
     });
     const json = await res.json().catch(() => ({} as Record<string, unknown>));

@@ -79,6 +79,7 @@ import { deriveSectionOrientations } from '@/lib/manuscript/development/frozenOr
 import { mintAct, claimAct, recordCompletionWithClient } from '@/lib/disclosure/authorizationAct';
 import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
 import { confirmDisclosureCrossedWithClient } from '@/lib/disclosure/contextDisclosureReceipt';
+import { resolveStudioPosture } from '@/lib/sanctuary/studioPosture';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { transaction } from '@/lib/db/postgres';
 import { isExplanationDepth, type ExplanationDepth } from '@/lib/writersStudio/workingStyle';
@@ -333,8 +334,9 @@ export async function POST(
      A client with no saved settings declares ordinary (canon: Sanctuary is off by default); a posture that exists but cannot be
      read is undeclared, and an undeclared posture keeps nothing. The Work lane can answer without keeping (below). The reading-anchored
      lanes (structure, developmental) are built on kept records, so in Sanctuary or with an undeclared posture they refuse BEFORE any write. */
-  const postureDeclared = typeof (body as Record<string, unknown>).sanctuary === 'boolean';
-  const turnPosture = TurnPosture.resolve(body);
+  const studioPosture = await resolveStudioPosture(memberId, body as Record<string, unknown>);
+  const postureDeclared = studioPosture.declared;
+  const turnPosture = TurnPosture.resolve({ sanctuary: studioPosture.sanctuary });
   if (effectiveAnchor.on !== 'work' && (turnPosture.sanctuary || !postureDeclared)) {
     return NextResponse.json({ refusal: turnPosture.sanctuary ? 'sanctuary_not_kept' : 'posture_undeclared' }, { status: 409 });
   }

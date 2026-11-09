@@ -20,6 +20,7 @@
  * into its own table, and only through the commission.
  */
 
+import { resolveStudioPosture } from '@/lib/sanctuary/studioPosture';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
@@ -164,10 +165,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
   /* ⭐⭐ SANCTUARY CLOSURE (founder ruling 2026-11-09): a reading is a KEPT record of MAIA reading the writing. It is commissioned only
      when the request DECLARED an ordinary posture; Sanctuary or an undeclared posture reads nothing and writes nothing. */
-  const sanctuary = (body as { sanctuary?: unknown }).sanctuary;
-  if (sanctuary !== false) {
+  const posture = await resolveStudioPosture(memberId, body as Record<string, unknown>);
+  if (!posture.keep) {
     return NextResponse.json(
-      { refusal: sanctuary === true ? 'sanctuary_not_kept' : 'posture_undeclared', stage: 'capture' },
+      { refusal: posture.sanctuary ? 'sanctuary_not_kept' : 'posture_undeclared', stage: 'capture' },
       { status: 409 },
     );
   }

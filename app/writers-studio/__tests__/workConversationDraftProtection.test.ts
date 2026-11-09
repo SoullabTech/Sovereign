@@ -129,8 +129,8 @@ it('retains the exact draft after a transport refusal instead of clearing it bef
   mockAsk.mockResolvedValue({ ok: false, refusal: 'unreachable' });
   await mount(draft); await click('Send');
   expect(mockAsk).toHaveBeenCalledWith({ manuscriptId: 'fictional-manuscript', question: draft.trim(),
-    // No saved settings ⇒ the request declares ordinary (canon: Sanctuary off by default; founder ruling 2026-11-09).
-    anchor: { on: 'work' }, sectionId: 'section-a', sanctuary: false });
+    // No saved settings on this device ⇒ the request says so, and the server uses the member's account default (founder ruling 2026-11-09).
+    anchor: { on: 'work' }, sectionId: 'section-a', sanctuary: 'no_live_settings' });
   expect(input().value).toBe(draft); expect(host.textContent).toContain('That didn’t reach her');
 });
 it('retains the draft if the server records a thread but cannot produce an answer', async () => {
