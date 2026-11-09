@@ -36,14 +36,19 @@ const SCHEMA = {
   },
 } as const;
 
-export async function draftPlan(input: { ask: string; chapters: readonly PlanChapter[]; settled: string; history: readonly { speaker: 'author' | 'maia'; body: string }[] }):
+export async function draftPlan(input: { ask: string; chapters: readonly PlanChapter[]; settled: string; history: readonly { speaker: 'author' | 'maia'; body: string }[];
+  /** Chapters of the book she was NOT given this time (too much text at once). Named so she never speaks for the whole book. */
+  notRead?: readonly string[] }):
   Promise<{ ok: true; summary: string; steps: RawStep[] } | { ok: false; refusal: 'unreachable' | 'malformed' }> {
   /* The chapters are DATA, in the request, never in the instructions. Each is wrapped in a tag the text cannot close: any
      closing tag inside the writer's text is defused, so a passage cannot end its chapter and start speaking as an instruction. */
   const defuse = (t: string) => t.replace(/<\s*\/\s*chapter\s*>/gi, '</ chapter>');
   const attr = (t: string) => t.replace(/["<>\n]/g, ' ');
   const chapters = input.chapters.map((c) => `<chapter id="${attr(c.id)}" heading="${attr(c.heading ?? '(no heading)')}">\n${defuse(c.text)}\n</chapter>`).join('\n');
-  const system = [SYSTEM, input.settled ? `\n${input.settled}` : ''].join('\n');
+  const unread = input.notRead && input.notRead.length > 0
+    ? `\nYOU WERE NOT GIVEN these chapters this time (too much text at once): ${input.notRead.join('; ')}. Do not draw conclusions about them or about the whole book; say the plan covers only the chapters you read.`
+    : '';
+  const system = [SYSTEM, input.settled ? `\n${input.settled}` : '', unread].join('\n');
   const outcome = await runStructured({
     model: MODEL, maxTokens: 1600, system,
     messages: [...input.history.map((t) => ({ role: (t.speaker === 'author' ? 'user' : 'assistant') as 'user' | 'assistant', content: t.body })),

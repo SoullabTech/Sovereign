@@ -5,7 +5,9 @@ import type { StepEdit } from './developmentPlan';
 /** `verdict` is true only when the server explicitly returned both verification lists. Missing means unverified, never 'all fine'. */
 export type PlanView = { plan: StoredPlan | null; staleStepIds: string[]; unverifiedStepIds: string[]; events: Record<string, StepEvent>; verdict: boolean;
   /** true: the writer's settled decisions changed since the plan; false: unchanged; null: cannot be known now. */
-  decisionsChanged: boolean | null };
+  decisionsChanged: boolean | null;
+  /** Which chapters the plan was made from; long books may leave some unread. */
+  coverage?: { read: number; total: number; notRead: string[] } };
 const base = (m: string) => `/api/sovereign/manuscripts/${encodeURIComponent(m)}/plans`;
 
 export async function fetchPlan(manuscriptId: string): Promise<PlanView | undefined> {
@@ -15,6 +17,7 @@ export async function fetchPlan(manuscriptId: string): Promise<PlanView | undefi
     const j = (await res.json()) as { plan: StoredPlan | null; staleStepIds?: string[]; unverifiedStepIds?: string[]; events?: Record<string, StepEvent>; decisionsChanged?: boolean | null };
     return { plan: j.plan, staleStepIds: j.staleStepIds ?? [], unverifiedStepIds: j.unverifiedStepIds ?? [], events: j.events ?? {},
       verdict: Array.isArray(j.staleStepIds) && Array.isArray(j.unverifiedStepIds) && 'decisionsChanged' in j,
+      coverage: (j as { coverage?: { read: number; total: number; notRead: string[] } }).coverage,
       decisionsChanged: typeof j.decisionsChanged === 'boolean' ? j.decisionsChanged : null };
   } catch { return undefined; }
 }
@@ -27,7 +30,8 @@ export async function makePlanClient(manuscriptId: string, ask: string, sanctuar
     if (!res.ok || !j.plan) return { ok: false, refusal: j.refusal ?? `http_${res.status}`, detail: j.detail };
     return { ok: true, view: { plan: j.plan, staleStepIds: j.staleStepIds ?? [], unverifiedStepIds: (j as { unverifiedStepIds?: string[] }).unverifiedStepIds ?? [], events: {},
       verdict: Array.isArray(j.staleStepIds) && Array.isArray((j as { unverifiedStepIds?: unknown }).unverifiedStepIds),
-      decisionsChanged: (j as { decisionsChanged?: unknown }).decisionsChanged === false ? false : null }, read: j.read ?? [], dropped: j.dropped ?? 0 };
+      decisionsChanged: (j as { decisionsChanged?: unknown }).decisionsChanged === false ? false : null,
+      coverage: (j as { coverage?: { read: number; total: number; notRead: string[] } }).coverage }, read: j.read ?? [], dropped: j.dropped ?? 0 };
   } catch { return { ok: false, refusal: 'unreachable' }; }
 }
 

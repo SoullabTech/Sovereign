@@ -163,3 +163,12 @@ test('M4c a step MAIA cannot verify says so', () => {
   mount({ plan: { ...planOf([step('a')]), unverifiedStepIds: ['a'] } });
   expect(q('[data-develop-plan-step="a"]')!.textContent).toMatch(/can’t confirm this chapter is the one MAIA read/);
 });
+
+test('a plan made from part of a long book says which chapters it did not read', () => {
+  mount({ plan: { ...planOf([step('a')]), coverage: { read: 40, total: 45, notRead: ['C41', 'C42', 'C43', 'C44', 'C45', 'C46', 'C47'] } } });
+  expect(q('[data-develop-plan-coverage]')!.textContent).toMatch(/from 40 of your 45 chapters.*C41; C42; C43; C44; C45; C46, and 1 more/);
+});
+test('a plan that read every chapter shows no coverage note', () => {
+  mount({ plan: { ...planOf([step('a')]), coverage: { read: 3, total: 3, notRead: [] } } });
+  expect(q('[data-develop-plan-coverage]')).toBeNull();
+});

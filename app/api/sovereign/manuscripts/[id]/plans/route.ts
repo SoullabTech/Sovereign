@@ -38,7 +38,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   /* Were the writer's settled decisions the same when this plan was made? Same terms as reading: only with permission.
      true = changed (the hand-off refuses), false = unchanged, null = cannot be known now (treated as unverified). */
   const decisionsChanged = grant && workId ? digestOfText(await decisionContextForWork(memberId, workId, id)) !== plan.decisionsDigest : null;
-  return NextResponse.json({ plan, decisionsChanged, staleStepIds: staleStepIds(plan.steps, plan.basis, now),
+  /* Coverage: which chapters this plan was made from, and which it was not (long books exceed one reading). Headings only. */
+  const heads = await loadSectionHeads(id, memberId);
+  const readIds = new Set(plan.basis.map((b) => b.sectionId));
+  const coverage = { read: plan.basis.length, total: heads.length, notRead: heads.filter((h) => !readIds.has(h.id)).map((h) => h.heading ?? '(no heading)') };
+  return NextResponse.json({ plan, coverage, decisionsChanged, staleStepIds: staleStepIds(plan.steps, plan.basis, now),
     unverifiedStepIds: plan.steps.filter((s) => stepStanding(s, plan.basis, now) === 'unverified').map((s) => s.id),
     events: await stepEvents(memberId, plan.id) });
 }
@@ -89,7 +93,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Founder ruling 2026-11-09 ("Yes, same terms"): the plan reads the writer's settled decisions on the same terms as the Ask route.
   const settled = await decisionContextForWork(memberId, workId, id);
 
-  const drafted = await draftPlan({ ask, chapters, settled, history });
+  const sentIds = new Set(supplied.map((x) => x.id));
+  const notRead = heads.filter((h) => !sentIds.has(h.id)).map((h) => h.heading ?? '(no heading)');
+  const drafted = await draftPlan({ ask, chapters, settled, history, notRead });
   /* A receipt says a chapter CROSSED. Confirm it only when MAIA's answer came back, and only for chapters actually sent.
      Otherwise it stays 'attempted', which is the truthful state when it is unknown what reached her. */
   if (drafted.ok) {
@@ -102,5 +108,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const plan = await createPlan({ memberId, livingWorkId: workId, manuscriptId: id, ask, summary: drafted.summary, steps: grounded.steps,
     basis: supplied.map((s) => ({ sectionId: s.id, digest: s.digest || digestOfText(s.body) })), decisionsDigest: digestOfText(settled) });
   if (!plan) return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
-  return NextResponse.json({ plan, decisionsChanged: false, staleStepIds: [], unverifiedStepIds: [], events: {}, dropped: grounded.dropped.length, read: supplied.map((s) => ({ sectionId: s.id, label: s.label })) });
+  return NextResponse.json({ plan, coverage: { read: supplied.length, total: heads.length, notRead }, decisionsChanged: false, staleStepIds: [], unverifiedStepIds: [], events: {}, dropped: grounded.dropped.length, read: supplied.map((s) => ({ sectionId: s.id, label: s.label })) });
 }
