@@ -614,7 +614,13 @@ async function workTurn(input: {
     return NextResponse.json({ refusal: built.reason }, { status: 422 });
   }
 
-  const liveThreadId = existing ? existing.id : await openThread({
+  /* ⭐ SANCTUARY STORES NOTHING (founder ruling 2026-11-09, "do what is best", applying the Sanctuary invariant: "No content retention —
+     nothing from a Sanctuary session can be saved"). In Sanctuary the Work conversation is useful in the moment: no thread is created,
+     neither the question nor the answer is written, and no read happens beyond the passage the writer is at. Earlier ordinary turns of an
+     existing conversation may still inform her (reading is not storing). The writer's manuscript, edits, plans and decisions are untouched by
+     this. ⛔ An unstated posture is ordinary: Sanctuary is an explicit opt-in. */
+  const storing = !posture.sanctuary;
+  const liveThreadId = existing ? existing.id : !storing ? '' : await openThread({
     manuscriptId, memberId, anchor,
     /* ⛔ NULL, AND LAWFULLY SO. The column is nullable precisely for "a thread on
        a Work with no reading". */
@@ -625,7 +631,7 @@ async function workTurn(input: {
 
   const priorTurns = existing?.turns ?? [];
   const retryingHeld = isHeldRetry(priorTurns, question);
-  if (!retryingHeld) {
+  if (!retryingHeld && storing) {
     await appendTurn({
       threadId: liveThreadId, memberId, speaker: 'author', body: question, staleness,
     });
@@ -744,8 +750,18 @@ async function workTurn(input: {
   if (!outcome.ok) {
     /* The question is already recorded. A failed answer is reported as a
        failure, never rendered as one of hers. */
-    return NextResponse.json({ threadId: liveThreadId, refusal: outcome.refusal, staleness },
+    return NextResponse.json({ threadId: liveThreadId || null, refusal: outcome.refusal, staleness },
       { status: 502 });
+  }
+
+  if (!storing) {
+    /* Sanctuary: her answer is returned for this moment only and is not kept anywhere. The client shows it without a thread. */
+    return NextResponse.json({
+      threadId: existing ? existing.id : null,
+      thread: existing ? await loadThread(existing.id, memberId) : null,
+      sanctuary: { notKept: true, question, answer: outcome.answer },
+      staleness, read: [],
+    });
   }
 
   const maiaIndex = await appendTurn({

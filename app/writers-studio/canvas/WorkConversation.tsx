@@ -189,6 +189,8 @@ function ScopedWorkConversation({
   const [decision, setDecision] = useState<ResumeDecision | null>(null);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [thread, setThread] = useState<AskThreadView | null>(null);
+  /* Sanctuary exchanges: shown for this moment only, held in this component's memory, never stored anywhere. */
+  const [sanctuaryTurns, setSanctuaryTurns] = useState<{ question: string; answer: string }[]>([]);
 
   const [draft, setDraft] = useState(initialDraft);
   // The Studio's starter, as placed; never sent on its own.
@@ -381,6 +383,14 @@ function ScopedWorkConversation({
         // Text can be edited away and retyped identically. Compare edit
         // ownership, not string equality; read the live ref in the updater.
         setDraft((current) => draftRevisionRef.current === submittedRevision ? '' : current);
+        if (r.sanctuary) {
+          // Not kept: nothing was stored, so there is no thread to reload. Show the exchange here only.
+          setSanctuaryTurns((list) => [...list, { question: r.sanctuary!.question, answer: r.sanctuary!.answer }]);
+          if (r.threadId) { setThreadId(r.threadId); }
+          if (r.thread) setThread(r.thread);
+          if (onRead && manuscriptId) onRead([]);
+          return;
+        }
         setThreadId(r.threadId);
         setThread(r.thread);
         if (onRead && manuscriptId) onRead(r.read ?? []);
@@ -642,6 +652,19 @@ function ScopedWorkConversation({
                       {WRITER_CORRECTION_KINDS.map((kind) => (
                         <option key={kind} value={kind}>{WRITER_CORRECTION_LABEL[kind]}</option>
                       ))}
+        {sanctuaryTurns.length > 0 ? (
+          <div data-sanctuary-turns="true" style={{ borderTop: '1px solid color-mix(in srgb, currentColor 16%, transparent)', paddingTop: SPACE.base }}>
+            <StudioText role="metadata" tone="quiet" style={{ marginBottom: SPACE.base }}>Sanctuary · this exchange is not kept. When you leave, it is gone.</StudioText>
+            {sanctuaryTurns.map((t, i) => (
+              <div key={`s${i}`} style={{ marginBottom: SPACE.base }}>
+                <StudioText role="metadata" tone="quiet">You</StudioText>
+                <StudioText role="maiaReading" style={{ color: INK.secondary, fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap' }}>{t.question}</StudioText>
+                <StudioText role="metadata" tone="quiet" style={{ marginTop: SPACE.hairline }}>MAIA</StudioText>
+                <StudioText role="maiaReading" style={{ color: MAIA_ACCENT.reading, fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap' }}>{parseStudioActions(t.answer, 'work-conversation').text}</StudioText>
+              </div>
+            ))}
+          </div>
+        ) : null}
                     </select>
                     <textarea
                       aria-label="Your correction"

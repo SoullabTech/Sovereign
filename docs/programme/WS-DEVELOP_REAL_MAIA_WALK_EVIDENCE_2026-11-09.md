@@ -21,7 +21,7 @@ Run by Claude Code in the app's browser pane at the founder's request, on the lo
 | 1 | Carried readings read field `text`; the contract field is `observation` — real readings would have been carried with **no observations** (fixtures used the wrong shape) | **Fixed**; fixtures now use the contract shape; reading-carry 10/10 |
 | 2 | Plan forced its tool on the conversation model, which rejects forced tool choice (400) | **Fixed**: plans use the developmental reader's model; real plan succeeded |
 | 3 | When the passage the writer is at changes between turns, she blames herself for her earlier (correct) quotation | **Open**: the change is now recorded per answer (`answer_provenance.locus` digest) and stated to her; she still self-blames in a fresh conversation. Prompt-level notice is not enough; needs a stronger design (e.g. show what she said vs what is there now) and a real-model check |
-| 4 | **Sanctuary: the Work conversation stores the writer's question and MAIA's answer verbatim** | **STOP — founder ruling needed.** Pre-existing on canonical (its Ask route has no Sanctuary handling); this branch only added Sanctuary to what she is *given*. Conflicts with the project's Sanctuary invariant ("not stored, indexed…"). Not changed here |
+| 4 | **Sanctuary: the Work conversation stored the writer's question and MAIA's answer verbatim** | **Fixed under founder ruling (2026-11-09, "do what is best")**, applying the Sanctuary invariant as written. Inherited from canonical (its Ask route had no Sanctuary handling), not introduced by G6. Now in Sanctuary: no thread is created and no turn is written, fresh or continuing; the answer is returned once, marked not kept, and shown in the conversation without storage. The writer's manuscript, edits, plans and decisions are unaffected. Route test (fresh, ordinary→Sanctuary mid-conversation) passes and fails if storage is forced; real MAIA: answered, `threadId: null`, 0 rows stored |
 | 5 | In Sanctuary she suggested granting the reading permission (which Sanctuary suspends) | Open, small (guidance) |
 | 6 | The helper's-book "protect identities" note did not appear in two turns | Open; cause not established |
 | 7 | The new stage has no way to commission a reading; readings sit behind lens cards in the old view | Open — founder direction: all of these through conversation with MAIA (G4) |
@@ -29,3 +29,13 @@ Run by Claude Code in the app's browser pane at the founder's request, on the lo
 
 ## Next authorized gate
 Founder ruling on #4 (does Sanctuary govern Writer's Studio conversation retention?) · then G4 (readings and lenses through conversation) · fix #3 with a real-model check · the founder's own walk · independent Class A/R20 acceptance.
+
+## Sanctuary — what is settled and what is not
+- **PASS:** in Sanctuary nothing of the Work conversation is stored (route test with failure-proof; real-model check: 0 rows). No reading permission, no carried readings, no settled decisions reach her in Sanctuary (route tests).
+- **UNKNOWN / for the founder to confirm (not redefined here):** what she may still *see* in Sanctuary — the passage the writer is at, the earlier ordinary turns of a conversation being continued, and the writer's own declared notes about the Work. The Sanctuary invariant governs what is kept; whether these in-the-moment inputs are also excluded is a ruling, not an implementation choice. Recommended: keep them (they are the writer's own material, used only in the moment), but it is your call.
+- **Not changed:** Write-room (passage desk) conversations under Sanctuary are a separate route; not examined in this walk.
+
+## PASS / FAIL / UNKNOWN (this report)
+- PASS: G6 acceptance (persisted reading → later conversation, correct member/Work/revision/consent, provenance in the answer row) · isolation (non-secret metadata) · real plan · observation-field and plan-model fixes · Sanctuary stores nothing.
+- FAIL (open): MAIA self-blames when the passage changes between turns · the identity-protection note did not appear · no conversational way to commission a reading on the stage.
+- UNKNOWN: Sanctuary in-the-moment inputs (ruling) · Write-room Sanctuary behaviour · why the identity note did not appear.

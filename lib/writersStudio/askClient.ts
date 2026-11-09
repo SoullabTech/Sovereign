@@ -40,6 +40,8 @@ export interface AskThreadView {
 export type AskOutcome =
   | {
       ok: true; threadId: string; thread: AskThreadView; staleness: StalenessState;
+      /** Sanctuary: this exchange was answered for the moment and NOT kept (no thread row, no turn). Shown, never stored. */
+      sanctuary?: { notKept: true; question: string; answer: string };
       /** Which saved sections MAIA was handed for this answer (ids + headings only, never text). Present on the Work conversation. */
       read?: readonly { sectionId: string; label: string | null }[];
       /**
@@ -126,6 +128,7 @@ export async function ask(input: {
       thread: j.thread as AskThreadView,
       staleness: j.staleness as StalenessState,
       ...(Array.isArray(j.read) ? { read: j.read as { sectionId: string; label: string | null }[] } : {}),
+      ...(j.sanctuary && typeof j.sanctuary === 'object' ? { sanctuary: j.sanctuary as { notKept: true; question: string; answer: string } } : {}),
       location: j.location as CurrentLocation | undefined,
     };
   } catch {

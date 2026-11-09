@@ -59,6 +59,27 @@ d('G6 · a reading she made reaches the next conversation, labelled, on the comm
     await query(`UPDATE manuscript_working_drafts SET content=$2, section_addressable_at=NOW() WHERE id=$1`, [draft, texts.join('')]);
   });
 
+  it('SANCTUARY STORES NOTHING (founder ruling 2026-11-09): no thread, no turn — fresh or continuing — yet she answers; ordinary still stores', async () => {
+    const counts = async () => (await query<{ th: string; tu: string }>(
+      `SELECT (SELECT COUNT(*) FROM ask_threads WHERE member_id=$1)::text th,
+              (SELECT COUNT(*) FROM ask_turns t JOIN ask_threads h ON h.id=t.thread_id WHERE h.member_id=$1)::text tu`, [A])).rows[0]!;
+    const before = await counts();
+    const fresh = await post(A, { anchor: { on: 'work' }, question: 'In Sanctuary: tell me about Return.', sectionId: sec[2], sanctuary: true });
+    expect(fresh.status).toBe(200);
+    expect(fresh.json.sanctuary).toMatchObject({ notKept: true, question: 'In Sanctuary: tell me about Return.', answer: 'A plain answer.' });
+    expect(fresh.json.threadId).toBeNull();
+    expect(await counts()).toEqual(before);                                                   // nothing created, nothing written
+    const ordinary = await post(A, { anchor: { on: 'work' }, question: 'Ordinary now.', sectionId: sec[2], sanctuary: false });
+    const after1 = await counts();
+    expect(Number(after1.tu)).toBe(Number(before.tu) + 2);                                     // ordinary keeps both turns
+    const cont = await post(A, { threadId: ordinary.json.threadId, question: 'Switching to Sanctuary mid-conversation.', sectionId: sec[2], sanctuary: true });
+    expect(cont.status).toBe(200);
+    expect(cont.json.sanctuary?.notKept).toBe(true);
+    expect(await counts()).toEqual(after1);                                                    // continuing in Sanctuary writes nothing either
+    const rows = await query(`SELECT 1 FROM ask_turns t JOIN ask_threads h ON h.id=t.thread_id WHERE h.member_id=$1 AND t.body LIKE '%Sanctuary%'`, [A]);
+    expect(rows.rows.length).toBe(0);
+  });
+
   it('the Nov 8 case, WITHOUT reading permission: she has her reading of the chapter (lens, revision), no chapter text, and is pointed at the permission, not the button', async () => {
     await reading({ sections: [sec[2]!], text: 'The hiker with the map returns at the end, now absent.', at: '2026-11-08T10:00:00Z' });
     const r = await post(A, { anchor: { on: 'work' }, question: 'Where does the hiker with the map come back?', sectionId: sec[2], sanctuary: false });
