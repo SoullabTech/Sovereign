@@ -328,6 +328,20 @@ _run_lane() {
         wt="$(cmd_claim "$work_unit_id")"
     fi
     branch="$(jq -r '.branch' "$f")"
+    # The worker runs in the claimed worktree and nowhere else. On 2026-11-09 a claim
+    # failed on a full disk ("No space left on device"), the run carried on, and its
+    # result recorded the HEAD and the changed files of the checkout the command had
+    # been typed in. Refuse unless the path is a git worktree of its own, on the
+    # packet's branch.
+    local wt_real wt_top wt_branch
+    wt_real="$(cd "$wt" 2>/dev/null && pwd -P || true)"
+    wt_top="$(git -C "$wt" rev-parse --show-toplevel 2>/dev/null || true)"
+    wt_top="$(cd "${wt_top:-/nonexistent}" 2>/dev/null && pwd -P || true)"
+    wt_branch="$(git -C "$wt" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+    if [ -z "$wt" ] || [ -z "$wt_real" ] || [ "$wt_real" != "$wt_top" ] || [ "$wt_branch" != "$branch" ]; then
+        echo "🛑 [ain-delegate] refusing to run: '$wt' is not the claimed worktree on branch '$branch' (found top='${wt_top:-none}' branch='${wt_branch:-none}'). Free disk space or re-claim, then retry." >&2
+        exit 3
+    fi
     if [ "$lane" = "local" ]; then model="maia-coder:latest"
     elif [ "$lane" = "kimi" ]; then model="kimi-k2.7-code"
     elif [ "$lane" = "claude" ]; then
