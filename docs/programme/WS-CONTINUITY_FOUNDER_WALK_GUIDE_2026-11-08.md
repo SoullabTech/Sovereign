@@ -1,6 +1,8 @@
 # Founder walk — returning to your Work (guide)
 
-Candidate: branch `feature/ws-work-continuity-part-a-suite` (draft PR #2188). Nothing here touches production, your real database, or your real manuscripts.
+Candidate: branch `feature/ws-work-continuity-part-a-suite` at its pushed tip. **CORRECTION (verified 2026-11-08):** PR #2188 was MERGED to canonical at 18:15Z and carried only the
+first two commits (the history-grounding prompt fix, `532ad427b`, and the Part B test suite, `9b99cd83b`). Everything else on this branch — the standing reading scope, the decision record,
+the quote gates, the two migrations, the freeze guard, this harness — is **23 commits beyond canonical with NO open PR**. Earlier notes calling #2188 a draft were wrong. Nothing here touches production, your real database, or your real manuscripts.
 This is **your** evidence: how it feels, and whether MAIA is actually right. Everything Claude Code ran was a test double, a throwaway database, or a stand-in model.
 
 ## 0 · Start it (one command)
@@ -28,7 +30,7 @@ Do these in order. After each, note what you *felt*, not only what happened.
 | 3 | Press **Let MAIA read my saved work** | the line changes. **First time on this machine** it also says your Sanctuary setting could not be read. That is expected (see §3) | the line promises a read that does not happen |
 | 4 | Make the Sanctuary setting known (§3), reload, ask the same question | she now has Return (stand-in lists chapters). Real MAIA answers about Return *without* you opening Write | you still have to open the chapter first |
 | 5 | **Leave and return**: close the tab, reopen the Develop URL, choose the conversation, ask: *"What holds across the whole book?"* | she has all four chapters; the earlier thread is there | she forgets, or says she invented something she quoted before |
-| 6 | Edit a chapter in Write (change a sentence), come back, ask about it | she tells you that passage has changed since she last saw it | she quotes the old wording as current |
+| 6 | Edit a chapter in Write (change a sentence), come back, ask about it | she tells you that passage has changed since she last saw it. (This is the moved-text note on her READS; it is route-tested. It is **not** the version-binding of *decisions*, which is still unbuilt — a decision is not yet flagged stale when its passage changes.) | she quotes the old wording as current |
 | 7 | Press **Stop**, ask again | she is back to one passage, immediately | she still reads the book |
 | 8 | Ask her to quote a line that is not in the book | she should not invent it. The stand-in cannot test this; real MAIA can | an invented quotation |
 | 9 | Write room → select a passage → **Talk with MAIA** → **Show me an edit** → **Start with MAIA** | one proposed change with **Use it · Change it · Talk about it · Keep mine** | missing button, a dead end, lost text |
@@ -55,6 +57,9 @@ To test Sanctuary on, set `{ sanctuary: true }`, reload: MAIA should read only t
 ## 4 · What to tell me
 For each row that surprised you: the row number, what you expected, what happened, and one word for how it felt (e.g. *trusting, nagging, cold, confusing*).
 Also: did you ever feel MAIA was **deciding for you**? That is the failure this whole branch exists to prevent.
+
+## 4b · What this harness is not
+It builds its throwaway database by applying every historical migration and tolerating the ones that fail on a bare cluster (about 50). That is a bounded UI rehearsal, **not** evidence the two new migrations are safe to apply in production, and not a recovery, security or erasure acceptance. Those stay held (see the independent review record).
 
 ## 5 · What this walk does and does not authorize
 A good walk is evidence, not an act. It authorizes **no** merge, no applying the two migrations (`20261108000001`, `20261108000002`), and no deploy. Those remain your named acts.

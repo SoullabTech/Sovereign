@@ -28,3 +28,9 @@ Evidence class: INDEPENDENT REVIEW (reading), then fixes verified by unit tests 
 - **Member erasure — TRACED (read-only, 2026-11-08).** `POST /api/members/delete-account` is in REFUSE posture (`CONTAINMENT_POSTURE='refuse'`) and counts member-owned content from `GOVERNED_CONTENT`. `living_works` and the Work tables are not in that list either, and already name `members ON DELETE RESTRICT` — so the new tables add no new KIND of obstacle, but `writer_decision_events` (the writer's own words) and `work_reading_scope_events` were invisible to the preflight. **Fixed: both added to `GOVERNED_CONTENT`** so a member is told. `ask_turn_reads` has no member column and follows `ask_threads` by cascade. NOT done: the route's 'proceed' posture would still fail on RESTRICT for any member with Works — a pre-existing retention-lane matter, not changed. `delete-account/__tests__/route.test.ts` has one failure that exists on the branch base without this change.
 - Version-binding still unset; `Sanctuary=false` remains a client claim (as before this work).
 - Not re-walked in a browser after these fixes. Your walk is still owed.
+
+
+## Custody correction (2026-11-08, verified with `git` and `gh`)
+PR #2188 is MERGED (18:15Z). Canonical contains `532ad427b` (history grounding) and `9b99cd83b` (Part B suite, test doubles only). It does NOT contain the 23 later commits on
+`feature/ws-work-continuity-part-a-suite`: the standing-scope implementation, the decision record, the quote gates, migrations `20261108000001`/`20261108000002`, the freeze guard, the walk harness.
+No open PR carries them. Opening a new PR, merging, applying either migration, and deploying are each separate founder acts. Earlier records in this series that say "draft PR #2188" are superseded by this note.
