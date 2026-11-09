@@ -92,6 +92,26 @@ d('Work reading scope · physical witness', () => {
     expect(await rejects(`UPDATE ask_turn_reads SET body_digest='z' WHERE thread_id=$1`, [thread])).toBe(true);
   });
 
+  it('REVIEW FIX · a Work that has a standing-read receipt can still be removed (the receipt may dangle; it must not block)', async () => {
+    const wk = (await query<{ id: string }>(`INSERT INTO living_works(member_id,title) VALUES ($1,'Removable') RETURNING id`, [A])).rows[0].id;
+    const ev = (await query<{ id: string }>(`INSERT INTO work_reading_scope_events(member_id,living_work_id,event,level) VALUES ($1,$2,'grant','work') RETURNING id`, [A, wk])).rows[0].id;
+    const out = await mintAs({ scopeEventId: ev });
+    expect(out.kind).toBe('minted');
+    await query(`DELETE FROM living_works WHERE id=$1`, [wk]);                       // cascades the events; must not hit the receipt
+    expect((await query(`SELECT 1 FROM work_reading_scope_events WHERE living_work_id=$1`, [wk])).rows.length).toBe(0);
+    expect((await query(`SELECT 1 FROM context_disclosure_receipts WHERE scope_event_id=$1`, [ev])).rows.length).toBe(1); // the receipt survives, content-free
+  });
+
+  it('REVIEW FIX · a receipt cannot name another member\'s grant or a revoke or a non-existent event', async () => {
+    const ev = (await query<{ id: string }>(`SELECT id FROM work_reading_scope_events WHERE member_id=$1 AND event='grant' LIMIT 1`, [A])).rows[0].id;
+    const other = (await query<{ id: string }>(`INSERT INTO members(passkey,username,password_hash,name) VALUES ($1,$1,'x','o') RETURNING id`, [`oth-${Date.now()}`])).rows[0].id;
+    const otherWork = (await query<{ id: string }>(`INSERT INTO living_works(member_id,title) VALUES ($1,'O') RETURNING id`, [other])).rows[0].id;
+    const otherEv = (await query<{ id: string }>(`INSERT INTO work_reading_scope_events(member_id,living_work_id,event,level) VALUES ($1,$2,'grant','work') RETURNING id`, [other, otherWork])).rows[0].id;
+    expect((await mintAs({ scopeEventId: otherEv })).kind).toBe('unavailable');
+    expect((await mintAs({ scopeEventId: randomUUID() })).kind).toBe('unavailable');
+    expect((await mintAs({ scopeEventId: ev })).kind).toBe('minted');
+  });
+
   it('removing the Work removes its scope events with it (the only lawful deletion)', async () => {
     await appendScopeEvent({ memberId: B, livingWorkId: workB, event: 'grant', level: 'work' });
     await query(`DELETE FROM living_works WHERE id=$1`, [workB]);

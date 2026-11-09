@@ -28,6 +28,7 @@ import {
 } from '@/app/writers-studio/canvasIdentity';
 import RebuildWritingBoundary from '@/app/writers-studio/rebuild/RebuildWritingBoundary';
 import KeepNotePrompt from './KeepNotePrompt';
+import { QUOTE_NOT_IN_TEXT_DETAIL } from '@/lib/manuscript/editorialRuntime/editorialQuoteGate';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { locationForSection, replacePlaceAddress, resolveInitialSection, SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
@@ -151,7 +152,7 @@ export default function FlagshipWriteEditController() {
   const [context, setContext] = useState<ContextReady | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
   /* WS-DECISION-CONTINUITY: after "Keep mine", offer (never assume) to note the decision. */
-  const [keepNoteFor, setKeepNoteFor] = useState<string | null>(null);
+  const [keepNoteFor, setKeepNoteFor] = useState<{ sectionId: string; label: string | null } | null>(null);
   const [selectedPassage, setSelectedPassage] = useState<Pc3HeldPassage | null>(null);
   const writingRef = useRef<SectionWriting | null>(null);
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
@@ -1499,6 +1500,9 @@ export default function FlagshipWriteEditController() {
           setEditorialFailure('Editorial revision is unavailable in Sanctuary. Nothing was changed.');
         } else if (outcome.reason === 'accountability_unresolved') {
           setEditorialFailure('MAIA may have received the passage, but Soullab could not confirm the disclosure record. The response was withheld. Nothing was applied, and this request will not be retried automatically.');
+        } else if (outcome.detail === 'quote_not_in_text') {
+          // A CODE from the server, never prose: the copy below is this client's own.
+          setEditorialFailure(QUOTE_NOT_IN_TEXT_DETAIL);
         } else {
           // Server detail is for developers, never the writer (design pass 2026-11-05: a raw
           // "unknown field(s) … carry no standing here" reached the screen).
@@ -2356,8 +2360,8 @@ export default function FlagshipWriteEditController() {
     {keepNoteFor && work ? (
       <KeepNotePrompt
         workId={work.id}
-        sectionId={keepNoteFor}
-        passageLabel={focusSection?.heading ?? null}
+        sectionId={keepNoteFor.sectionId}
+        passageLabel={keepNoteFor.label}
         onDone={() => setKeepNoteFor(null)}
       />
     ) : null}
@@ -2481,7 +2485,7 @@ export default function FlagshipWriteEditController() {
               setSuggestedVersionId(null);
               setAdoptionOutcome(null);
               setEditorialFailure('Current wording retained. Your saved alternatives remain in the version list.');
-              if (focusId) setKeepNoteFor(focusId);
+              if (focusId) setKeepNoteFor({ sectionId: focusId, label: focusSection?.heading ?? null });
             }}
             onLatitude={setEditLatitude}
             onMayRemoveParagraphs={setMayRemoveParagraphs}

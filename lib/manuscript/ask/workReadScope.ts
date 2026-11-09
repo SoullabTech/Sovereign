@@ -75,7 +75,8 @@ export function selectSections(input: {
     const q = question.toLowerCase();
     for (const s of sections) {
       const h = s.heading?.trim().toLowerCase();
-      if (h && h.length >= 3 && q.includes(h)) add(s.id);
+      /* whole-word match: a short heading ("Air", "One") must not match "fair" or "someone" */
+      if (h && h.length >= 3 && new RegExp(`(^|[^\\p{L}\\p{N}])${h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^\\p{L}\\p{N}])`, 'u').test(q)) add(s.id);
     }
     if (WHOLE_WORK.test(question)) for (const s of sections) add(s.id);
   }

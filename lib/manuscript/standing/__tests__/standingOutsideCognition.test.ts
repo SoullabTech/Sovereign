@@ -20,6 +20,7 @@
  */
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
+import { createHash } from 'crypto';
 import { join, dirname, resolve } from 'path';
 
 const ROOT = join(__dirname, '..', '..', '..', '..');
@@ -209,6 +210,47 @@ function exceptionIsNarrow(code: string): { ok: boolean; why: string[] } {
   if (importsOf(code).some((sp) => sp.includes('standing/') || sp.startsWith('./'))) why.push('imports another standing module');
   return { ok: why.length === 0, why };
 }
+
+/* Independent review (2026-11-08): a regex over the module cannot stop `OR TRUE`, an extra selected column, or a different returned field, and
+   the exemption in `reachesStanding` applies to EVERY cognition root. So the exception is held by BYTES and by a closed list of readers. */
+const NARROW_EXCEPTION_BLOB = 'ce124973c87e4b8166da0791ad3c301fe8d18219';
+const DECISION_RECORD = 'lib/writersStudio/decisionRecord.ts';
+/** The only runtime modules that may import the shared decision read (and so, transitively, the exception). */
+const DECISION_RECORD_IMPORTERS = [
+  'app/api/sovereign/living-works/[id]/decisions/route.ts',
+  'app/api/sovereign/manuscripts/[id]/ask/route.ts',
+  'lib/manuscript/editorialRuntime/turn.ts',
+  /* the writer-gesture WRITER: imports TYPES only (asserted below); it reads nothing and reaches no cognition root */
+  'lib/writersStudio/decisionRecordWrite.ts',
+].sort();
+const gitBlobHash = (rel: string): string => {
+  const buf = readFileSync(join(ROOT, rel));
+  return createHash('sha1').update(`blob ${buf.length}\0`).update(buf).digest('hex');
+};
+
+describe('D5 narrow exception · pinned bytes and a closed list of readers', () => {
+  it('the exception module is byte-for-byte what the founder ruled (any edit needs a named founder act and a new pin)', () => {
+    expect(gitBlobHash(NARROW_EXCEPTION)).toBe(NARROW_EXCEPTION_BLOB);
+  });
+  it('only the Ask route, the editorial turn and the decisions route import the shared decision read', () => {
+    const importers = directImporters(realReader, (t) => t === DECISION_RECORD).filter((f) => !f.includes('__tests__')).sort();
+    expect(importers).toEqual(DECISION_RECORD_IMPORTERS);
+  });
+  it('the decision-record writer imports the shared module as TYPES only', () => {
+    const code = readFileSync(join(ROOT, 'lib/writersStudio/decisionRecordWrite.ts'), 'utf8');
+    expect(code).toMatch(/import type \{[^}]*\} from '\.\/decisionRecord'/);
+  });
+  it('FALSIFIER · a developmental reader that imports the decision read is seen', () => {
+    const intruder = 'lib/manuscript/developmentalReader/read.ts';
+    const read = overlayReader({ [intruder]: `import { decisionContextForWork } from '@/lib/writersStudio/decisionRecord';\n${readFileSync(join(ROOT, intruder), 'utf8')}` });
+    expect(directImporters(read, (t) => t === DECISION_RECORD, [intruder])).toContain(intruder);
+  });
+  it('FALSIFIER · an `OR TRUE` widening changes the pinned bytes', () => {
+    const doctored = readFileSync(join(ROOT, NARROW_EXCEPTION), 'utf8').replace("WHERE s.standing = 'dismiss'", "WHERE (s.standing = 'dismiss' OR TRUE)");
+    const buf = Buffer.from(doctored);
+    expect(createHash('sha1').update(`blob ${buf.length}\0`).update(buf).digest('hex')).not.toBe(NARROW_EXCEPTION_BLOB);
+  });
+});
 
 describe('D5 narrow exception · only a dismissal, read-only, one door', () => {
   it('the exception module is narrow', () => {

@@ -6,6 +6,7 @@
  * ⛔ Every query is member-scoped in the SQL. Sanctuary: callers do not read or write (see `decisionContextFor`).
  */
 import { query } from '@/lib/db/postgres';
+import { livingWorkIdForManuscript } from '@/lib/manuscript/ask/workOfManuscript';
 import { loadDismissedObservations } from '@/lib/manuscript/standing/dismissedForConversation';
 
 export type DecisionRoom = 'work_conversation' | 'passage_desk' | 'develop';
@@ -56,7 +57,8 @@ export function decisionContextText(decisions: readonly ActiveDecision[], dismis
   if (decisions.length === 0 && dismissed.length === 0) return '';
   return [
     'WHAT THE WRITER HAS SETTLED (their own words; they can withdraw any of these at any time):',
-    ...decisions.map((d) => `  - ${d.saidIn}`),
+    /* one line each: the writer's words can never open a new section of the prompt */
+    ...decisions.map((d) => `  - ${d.saidIn.replace(/\s*[\r\n]+\s*/g, ' ').trim()}`),
     ...(dismissed.length > 0
       ? ['The writer also set aside these earlier observations of yours in Develop (your words, not theirs; setting aside does not mean they are false):',
          ...dismissed.map((x) => `  - "${x}"`)]
@@ -72,12 +74,8 @@ export async function decisionContextForWork(memberId: string, livingWorkId: str
 }
 
 export async function decisionContextForManuscript(memberId: string, manuscriptId: string): Promise<string> {
-  const r = await query<{ living_work_id: string }>(
-    `SELECT e.living_work_id FROM living_work_expressions e
-       JOIN member_manuscripts m ON m.id = e.expression_id
-      WHERE e.expression_type = 'manuscript' AND e.expression_id = $1 AND m.member_id = $2 LIMIT 1`, [manuscriptId, memberId]);
-  const workId = r.rows[0]?.living_work_id;
-  return workId ? decisionContextForWork(memberId, workId, manuscriptId) : '';
+  const workId = await livingWorkIdForManuscript(manuscriptId, memberId);
+  return workId ? decisionContextForWork(memberId, workId) : '';
 }
 
 export async function listActiveDecisions(memberId: string, livingWorkId: string): Promise<ActiveDecision[]> {

@@ -43,6 +43,17 @@ describe('standing reading scope · decision', () => {
   });
 });
 
+describe('standing reading scope · after independent review', () => {
+  const sec = [
+    { id: 'a', position: 1, heading: 'Air' }, { id: 'b', position: 2, heading: 'One' }, { id: 'c', position: 3, heading: 'Return' },
+  ];
+  const sz = new Map([['a', 10], ['b', 10], ['c', 10]]);
+  it('a short heading matches only as a whole word ("Air" is not in "fair", "One" is not in "someone")', () => {
+    expect(selectSections({ level: 'work', question: 'is it fair to someone?', locusId: null, sections: sec, sizes: sz }).ids).toEqual([]);
+    expect(selectSections({ level: 'work', question: 'what does Air do? and one?', locusId: null, sections: sec, sizes: sz }).ids).toEqual(['a', 'b']);
+  });
+});
+
 describe('standing reading scope · route wiring (static)', () => {
   const route = readFileSync(join(__dirname, '..', '..', '..', '..', 'app/api/sovereign/manuscripts/[id]/ask/route.ts'), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '');

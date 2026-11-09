@@ -698,17 +698,13 @@ async function workTurn(input: {
      conversation's own words. Regenerate ONCE with a correction; if still ungrounded, a plain "I can't point to that
      wording" answer replaces it. ⛔ Checks that a quote EXISTS, not that her claim about it is true. */
   if (outcome.ok) {
-    const sources = [
-      question, ...workHistory.map((h) => h.body),
-      built.facts.locus?.body ?? '', factsWithDecisions.writerUnderstanding, built.facts.writerCorrections,
-      formatWorkSituationForPrompt(built.facts.work) ?? '',
-      ...built.facts.sections.map((x) => x.heading ?? ''),
-      ...(standingRead?.sections.map((x) => x.body) ?? []),
-    ];
+    /* Exactly what she was handed (system prompt + messages) — complete by construction. */
+    const sources = [outcome.seen ?? '', question, ...workHistory.map((h) => h.body), factsWithDecisions.writerUnderstanding];
     const first = checkQuoteFidelity(outcome.answer, sources);
     if (!first.ok) {
       const again = await askMaia(workCtx, workHistory, question,
         { correction: CORRECTION_NOTE.replace('QUOTES', first.ungrounded.map((q) => `"${q}"`).join(' ; ')) });
+      /* ⛔ judged against the ORIGINAL sources only: the correction note itself quotes the invented line and must never ground it */
       outcome = again.ok && checkQuoteFidelity(again.answer, sources).ok
         ? again
         : { ...outcome, answer: NO_TEXT_ANSWER };
@@ -735,7 +731,8 @@ async function workTurn(input: {
     threadId: liveThreadId, memberId, speaker: 'maia', body: outcome.answer,
     staleness, answerProvenance: outcome.provenance,
   });
-  if (supplied.length > 0) await recordTurnReads(liveThreadId, memberId, maiaIndex, supplied);
+  /* The turn is already saved: a failed read-record must never turn a good answer into a 500 (a retry would duplicate the turn). */
+  if (supplied.length > 0) { try { await recordTurnReads(liveThreadId, memberId, maiaIndex, supplied); } catch { console.error('[WORK-READ] could not record what was supplied this turn'); } }
 
   const thread = await loadThread(liveThreadId, memberId);
   /* ⭐ L8 · what she actually read stays visible: ids + headings only, never text. */

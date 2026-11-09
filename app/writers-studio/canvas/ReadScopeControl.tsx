@@ -1,33 +1,46 @@
 'use client';
 /**
- * WS-WORK-CONTINUITY · B — where the writer decides, once and revocably, whether MAIA
- * may read the saved text of this Work in conversation. Nothing is pre-selected and
- * nothing is inferred; the unset state is "MAIA reads only the passage you are in".
+ * WS-WORK-CONTINUITY · B — where the writer decides, once and revocably, whether MAIA may read the saved text of this Work in
+ * conversation. Nothing is pre-selected and nothing is inferred; the unset state is "MAIA reads only the passage you are in".
+ * It never promises a read the server will withhold: an unreadable or ON Sanctuary setting, a failed check and a failed change are all said.
  */
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getReadScope, setReadScope, type ReadScope } from '@/lib/writersStudio/readScopeClient';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 
 export default function ReadScopeControl({ manuscriptId }: { manuscriptId: string }) {
   const [scope, setScope] = useState<ReadScope | undefined>(undefined);
+  const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    let live = true;
-    void getReadScope(manuscriptId).then((s) => { if (live) setScope(s); });
-    return () => { live = false; };
-  }, [manuscriptId]);
-  if (scope === undefined) return null;
-  /* The server reads only when the member's Sanctuary setting is known. Say so, rather than promise a read that will not happen. */
-  const postureKnown = typeof window !== 'undefined' && readCurrentSanctuaryPosture().resolved;
+  const [note, setNote] = useState<string | null>(null);
+  const load = useCallback(() => { void getReadScope(manuscriptId).then((s) => { setScope(s); setChecked(true); }); }, [manuscriptId]);
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { const f = () => load(); window.addEventListener('focus', f); return () => window.removeEventListener('focus', f); }, [load]);
 
-  const change = async (c: Parameters<typeof setReadScope>[1]) => {
-    setBusy(true);
-    const next = await setReadScope(manuscriptId, c);
-    if (next !== undefined) setScope(next);
-    setBusy(false);
-  };
   const btn = { background: 'transparent', border: '1px solid currentColor', borderRadius: 6,
     padding: '2px 8px', font: 'inherit', cursor: 'pointer', opacity: busy ? 0.5 : 1 } as const;
+
+  if (!checked) return null;
+  if (scope === undefined) {
+    return (
+      <div data-read-scope-control="true" role="status" style={{ fontSize: 12 }}>
+        <span>Your reading setting could not be checked just now. </span>
+        <button type="button" style={btn} onClick={load}>Try again</button>
+      </div>
+    );
+  }
+
+  const change = async (c: Parameters<typeof setReadScope>[1]) => {
+    setBusy(true); setNote(null);
+    const next = await setReadScope(manuscriptId, c);
+    if (next !== undefined) setScope(next); else setNote('That could not be changed just now. Nothing was changed; your setting is as it was.');
+    setBusy(false);
+  };
+
+  const posture = typeof window !== 'undefined' ? readCurrentSanctuaryPosture() : { resolved: false as const };
+  const postureNote = !posture.resolved
+    ? 'Your Sanctuary setting could not be read on this device, so for now MAIA is reading only the passage you are in. Open MAIA here once, then try again.'
+    : posture.sanctuary ? 'Sanctuary is on, so MAIA is reading only the passage you are in. Your setting is kept for when Sanctuary is off.' : null;
 
   return (
     <div data-read-scope-control="true" style={{ fontSize: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -45,15 +58,12 @@ export default function ReadScopeControl({ manuscriptId }: { manuscriptId: strin
         <>
           <span>{scope.level === 'work'
             ? 'MAIA may read your saved work when your question needs it.'
-            : 'MAIA may read the saved passage you are in.'} You can stop this any time.</span>
-          {!postureKnown ? (
-            <span data-read-scope-posture-note="true">
-              Your Sanctuary setting could not be read on this device, so for now MAIA is reading only the passage you are in. Open MAIA here once, then try again.
-            </span>
-          ) : null}
+            : 'MAIA may read the saved version of the passage you are in.'} You can stop this any time.</span>
           <button type="button" disabled={busy} style={btn} onClick={() => change({ action: 'revoke' })}>Stop</button>
+          {postureNote ? <span data-read-scope-posture-note="true" role="status">{postureNote}</span> : null}
         </>
       )}
+      {note ? <span data-read-scope-change-note="true" role="status">{note}</span> : null}
     </div>
   );
 }

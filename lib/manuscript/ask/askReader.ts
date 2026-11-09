@@ -120,7 +120,8 @@ export interface AskAnswerProvenance {
 }
 
 export type AskOutcome =
-  | { ok: true; answer: string; provenance: AskAnswerProvenance }
+  /** `seen` is EVERYTHING she was handed (system prompt + messages) — the exact grounding set for the quote-existence gate. */
+  | { ok: true; answer: string; provenance: AskAnswerProvenance; seen?: string }
   | { ok: false; refusal: 'unreachable' | 'empty_answer' };
 
 /**
@@ -481,6 +482,7 @@ export async function askMaia(
     return {
       ok: true,
       answer: text,
+      seen: [system, ...messages.map((m) => (typeof m.content === 'string' ? m.content : JSON.stringify(m.content)))].join('\n'),
       provenance: {
         provider: 'anthropic',
         model,

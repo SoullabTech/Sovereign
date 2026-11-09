@@ -11,13 +11,17 @@ export const QUOTE_FLOOR = 25;
 const norm = (s: string): string => s
   .normalize('NFKC').replace(/[\u200B-\u200D\u2060\uFEFF]/g, '').replace(/[*_`~]/g, '')
   .replace(/[‘’‛]/g, "'").replace(/[“”‟]/g, '"')
-  .replace(/[–—]/g, '-').replace(/…/g, '...')
+  .replace(/[–—]/g, '-').replace(/…/g, '...').replace(/\.\s\.\s\./g, '...').replace(/--+/g, '-').replace(/[\[\]]/g, '')
   .replace(/\s+/g, ' ').trim().toLowerCase();
 
 /** Spans inside straight or curly double quotes. Single quotes are skipped (apostrophes make them ambiguous). */
 export function quotedSpans(answer: string): string[] {
   const out: string[] = [];
-  for (const m of answer.matchAll(/["“]([^"“”]{1,2000})["”]/g)) out.push(m[1]);
+  /* An ODD number of straight quotes (inches, a stray mark) cannot be paired reliably and would turn MAIA's own prose into a "quote":
+     only curly-paired and straight spans of a balanced answer are examined. */
+  const straight = (answer.match(/"/g) ?? []).length;
+  const pattern = straight % 2 === 1 ? /“([^“”]{1,2000})”/g : /["“]([^"“”]{1,2000})["”]/g;
+  for (const m of answer.matchAll(pattern)) out.push(m[1]);
   for (const m of answer.matchAll(/«([^«»]{1,2000})»/g)) out.push(m[1]);
   // block quotes: consecutive `>` lines are one quoted span
   for (const m of answer.matchAll(/(?:^>[^\n]*(?:\n|$))+/gm)) out.push(m[0].replace(/^>\s?/gm, ''));
@@ -40,7 +44,7 @@ export function checkQuoteFidelity(answer: string, sources: readonly string[]): 
 }
 
 export const NO_TEXT_ANSWER =
-  'I can’t point to that wording in the text I have in front of me, so I won’t quote it. '
+  'I started to quote wording that is not in the text I have in front of me, so I won’t. '
   + 'If you tell me where to look, or let me read the passage again, I can answer from the page itself.';
 
 export const CORRECTION_NOTE =

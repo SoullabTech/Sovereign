@@ -42,3 +42,16 @@ describe('A2 · hardening after independent review', () => {
       ['the **salt** on the rails caught the first\u200B light']).ok).toBe(true);
   });
 });
+
+
+describe('A2 · false-rejection hardening (independent review)', () => {
+  const page = 'He measured the door at 36 inches \u2014 and then waited, because nothing about the morning had been settled yet.';
+  it('treats -- as an em dash, . . . as an ellipsis and [brackets] as editorial marks', () => {
+    expect(checkQuoteFidelity('"36 inches -- and then waited, because [nothing] about the morning had been settled"', [page]).ok).toBe(true);
+    expect(checkQuoteFidelity('"he measured the door . . . nothing about the morning had been settled yet"', [page]).ok).toBe(true);
+  });
+  it('an odd count of straight quotes (a stray mark, inches) does not turn MAIA\'s own prose into a quote', () => {
+    const answer = 'The door is 36" wide, and I would leave the rest of this passage exactly as it stands today.';
+    expect(checkQuoteFidelity(answer, ['x']).ok).toBe(true);
+  });
+});

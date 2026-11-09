@@ -9,7 +9,7 @@ const controller = strip(readFileSync(join(root, 'app/dev/writers-studio-pc3-liv
 describe('Keep mine · writer-confirmed decision', () => {
   it('"Keep mine" itself records nothing: onKeep only opens the offer', () => {
     const onKeep = controller.slice(controller.indexOf('onKeep={() => {'), controller.indexOf('onLatitude='));
-    expect(onKeep).toContain('setKeepNoteFor(focusId)');
+    expect(onKeep).toContain('setKeepNoteFor({ sectionId: focusId');
     expect(onKeep).not.toMatch(/settleDecision|decisionClient|fetch\(|apiFetch/);
   });
   it('a decision is written only by the confirm button, with the text in the box', () => {

@@ -185,7 +185,7 @@ d('Work conversation · route walk (fictional manuscript)', () => {
 
     script = () => 'You wrote "the tide retreated like a held breath at dawn" which is lovely.';
     r = await post(A, { threadId: thread, question: 'Again, the tide line?', sectionId: sec[0] });
-    expect(r.json.thread.turns.at(-1).body).toContain('I won’t quote it');
+    expect(r.json.thread.turns.at(-1).body).toContain('so I won’t');
     expect(r.json.thread.turns.at(-1).body).not.toContain('held breath');
   });
 });

@@ -113,15 +113,35 @@ ALTER TABLE context_disclosure_receipts
     'standing_read_scope'
   ));
 
--- ── 3 · the authority a standing crossing was made under ────────────────────
+-- ── 3 · the authority a standing crossing was made under ───────────────────
+-- ⛔ DELIBERATELY NOT A FOREIGN KEY (independent review, 2026-11-08). Receipts are never pruned (their DELETE is refused without a custody manifest)
+-- while scope events cascade away with the Work; a FK would make a Work with any standing-read receipt IMPOSSIBLE TO REMOVE (23503). Receipts already
+-- reference Works by plain text (`source_ref`), never by FK, for exactly this reason. So `scope_event_id` is a plain UUID, checked at INSERT by a trigger
+-- (the event must exist and belong to the same member) and immutable thereafter. After a Work is removed it dangles by design: the content-free receipt
+-- outlives the permission record it was made under.
 ALTER TABLE context_disclosure_receipts
-  ADD COLUMN IF NOT EXISTS scope_event_id UUID REFERENCES work_reading_scope_events(id);
+  ADD COLUMN IF NOT EXISTS scope_event_id UUID;
 
 ALTER TABLE context_disclosure_receipts
   DROP CONSTRAINT IF EXISTS context_disclosure_receipts_standing_has_scope;
 ALTER TABLE context_disclosure_receipts
   ADD CONSTRAINT context_disclosure_receipts_standing_has_scope
   CHECK ((participation_basis = 'standing_authorization') = (scope_event_id IS NOT NULL));
+
+CREATE OR REPLACE FUNCTION context_disclosure_receipt_scope_valid() RETURNS trigger AS $$
+BEGIN
+  IF NEW.scope_event_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM work_reading_scope_events e
+     WHERE e.id = NEW.scope_event_id AND e.event = 'grant' AND e.member_id::text = NEW.member_id) THEN
+    RAISE EXCEPTION '[DISCLOSURE] scope_event_id must name a grant by the same member';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS context_disclosure_receipt_scope_valid_trigger ON context_disclosure_receipts;
+CREATE TRIGGER context_disclosure_receipt_scope_valid_trigger BEFORE INSERT ON context_disclosure_receipts
+  FOR EACH ROW EXECUTE FUNCTION context_disclosure_receipt_scope_valid();
 
 CREATE OR REPLACE FUNCTION context_disclosure_receipt_scope_immutable() RETURNS trigger AS $$
 BEGIN
@@ -133,8 +153,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS context_disclosure_receipt_scope_immutable_trigger ON context_disclosure_receipts;
-CREATE TRIGGER context_disclosure_receipt_scope_immutable_trigger
-  BEFORE UPDATE ON context_disclosure_receipts
+CREATE TRIGGER context_disclosure_receipt_scope_immutable_trigger BEFORE UPDATE ON context_disclosure_receipts
   FOR EACH ROW EXECUTE FUNCTION context_disclosure_receipt_scope_immutable();
 
 -- ── 4 · what was supplied on which turn ─────────────────────────────────────
@@ -163,7 +182,7 @@ COMMENT ON TABLE work_reading_scope_events IS
 'Append-only member grant/revoke of MAIA''s standing permission to read the saved text of a Work inside the Work conversation. State is derived from the latest event for (member, Work). Nothing inferred, no default grant. Distinct from, and does not mutate, the single-use S3 authorization.';
 
 COMMENT ON COLUMN context_disclosure_receipts.scope_event_id IS
-'The standing reading-scope grant under which this crossing was made. Present if and only if participation_basis = standing_authorization. Immutable.';
+'The standing reading-scope grant under which this crossing was made. Present if and only if participation_basis = standing_authorization. Immutable. Not a foreign key: it may dangle after the Work is removed, by design.';
 
 COMMENT ON TABLE ask_turn_reads IS
 'Which saved sections were supplied to MAIA on which Work-conversation turn, with a digest of the supplied bytes. Used only to tell the writer when a passage MAIA quoted earlier has since changed. Not a receipt and not a copy of the text.';

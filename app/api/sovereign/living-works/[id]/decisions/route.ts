@@ -7,6 +7,7 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { listActiveDecisions, type DecisionRoom, type DecisionSubjectKind } from '@/lib/writersStudio/decisionRecord';
 import { settleDecision, withdrawDecision } from '@/lib/writersStudio/decisionRecordWrite';
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ROOMS: readonly DecisionRoom[] = ['work_conversation', 'passage_desk', 'develop'];
 const KINDS: readonly DecisionSubjectKind[] = ['note', 'observation', 'wording', 'proposal'];
 
@@ -14,6 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  if (!UUID.test(id)) return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
   const decisions = await listActiveDecisions(memberId, id);
   return NextResponse.json({ decisions: decisions.map((d) => ({ id: d.id, room: d.room, saidIn: d.saidIn })) });
 }
@@ -22,10 +24,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  if (!UUID.test(id)) return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
   let b: Record<string, unknown>;
   try { b = (await req.json()) as Record<string, unknown>; } catch { return NextResponse.json({ refusal: 'malformed' }, { status: 400 }); }
 
-  if (b.action === 'withdraw' && typeof b.targetId === 'string') {
+  if (b.action === 'withdraw' && typeof b.targetId === 'string' && UUID.test(b.targetId)) {
     const ok = await withdrawDecision({ memberId, livingWorkId: id, targetId: b.targetId });
     return ok ? NextResponse.json({ ok: true }) : NextResponse.json({ refusal: 'not_found' }, { status: 404 });
   }

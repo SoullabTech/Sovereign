@@ -21,7 +21,18 @@ export const QUOTE_NOT_IN_TEXT_DETAIL =
   'MAIA quoted wording that is not in the text she was given, so nothing was shown or changed. '
   + 'Your own words are untouched. Try asking again, or point her to the exact passage.';
 
-const contentOf = (c: unknown): string => typeof c === 'string' ? c : JSON.stringify(c ?? '');
+/** Flatten structured message content to the TEXT it carries, so escaped newlines and quotes cannot make a faithful quote unmatchable. */
+const contentOf = (c: unknown): string => {
+  if (typeof c === 'string') return c;
+  if (Array.isArray(c)) return c.map(contentOf).join('\n');
+  if (c && typeof c === 'object') {
+    const o = c as Record<string, unknown>;
+    if (typeof o.text === 'string') return o.text;
+    if (typeof o.content === 'string' || Array.isArray(o.content)) return contentOf(o.content);
+    return Object.values(o).map(contentOf).join('\n');
+  }
+  return c === null || c === undefined ? '' : String(c);
+};
 
 export function judgeEditorialQuotes(request: StructuredRequest, outcome: QuotableOutcome): { ok: boolean; ungrounded: readonly string[] } {
   const sources = [
