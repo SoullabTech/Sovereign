@@ -26,3 +26,12 @@ Write-room desk: audited, no change needed — its client never sends an unreada
 
 ## Not established / still owed
 Server verification of the per-session switch (`SANCTUARY-INIT-GATE-01`, not built; until then the server trusts the device's explicit `true`/`false`) · G6/D5 founder ruling · manuscript import refusing Sanctuary (other lane; conflicts with the ruling) · independent Class A/R20 review · the founder walk · production schema read.
+
+## Re-run on `e2811581c` (Develop redesign + MAIA offers), 2026-11-09
+Run by the lane's owning session on its disposable DB: **DB suites 130/130** (ws-sanctuary-closure 8/8 + ws-work-read-scope + ws-develop-studio + ws-decision-continuity, in band); WorkConversation + `lib/sanctuary` **121/121**. ⚠️ The worktree also held another session's staged-but-uncommitted prompt-rule files (`editorialDepth.ts`, craft-convention tests and witness files) during the run; they change prompt rules only, not storage. So the evidence is for `e2811581c` plus those files, not `e2811581c` alone. ws-delete probes need a database named `ws_delete_fictional` and fail at HEAD on a fixture `passkey` issue (inherited).
+
+### Recipe (disposable DB)
+- PostgreSQL 16 at `/opt/homebrew/opt/postgresql@16`. Fresh cluster: `initdb -A trust -U fictional -E UTF8`; start on `127.0.0.1:54331` with `unix_socket_directories=/tmp/wsq` and `LC_ALL=en_US.UTF-8`; `createdb q`.
+- `DATABASE_URL=postgresql://fictional@127.0.0.1:54331/q bash scripts/bootstrap-database.sh`, then `scripts/run-sql-migrations.sh` with `/app/database/migrations` replaced by the checkout's path (90 applied, 0 errors).
+- `DATABASE_URL=postgresql://fictional@127.0.0.1:54331/q WS_READ_SCOPE_DYNAMIC=fictional-only npx jest --runInBand tests/constitutional/ws-sanctuary-closure tests/constitutional/ws-work-read-scope tests/constitutional/ws-develop-studio tests/constitutional/ws-decision-continuity`
+- Stop the cluster afterwards.
