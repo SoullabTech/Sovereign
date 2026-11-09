@@ -2,7 +2,11 @@
 
 ```
 STATUS:    Candidate document, on branch claude/ops-r20-host-preflight-20261108. Nothing in
-           it has been run on the host. It establishes no host fact.
+           it has been run on the host. It establishes no host fact. Edited in place on
+           2026-11-08 by PR-C (a draft candidate, branch claude/ops-r20-compose-wiring-20261108,
+           stacked on the branch above) to carry the decided names (section 0a) and the
+           witness step (step 4b). Those names are decisions TAKEN UNDER DELEGATION, NOT
+           FOUNDER RULINGS, and are revisable.
 STANDING:  R20 was reported NOT configured on the app container (REPORTED: founder readout of
            2026-11-06, names only; not re-read since; .env.production is not in the repository,
            so its contents are not established). Register line C1
@@ -10,8 +14,9 @@ STANDING:  R20 was reported NOT configured on the app container (REPORTED: found
            script it names, configure and deploy nothing and change nothing that persists
            (the script's one write is a probe file it creates and removes, step 4).
 OUTCOME:   Followed in full, R20 is intended to become FUNCTIONAL, NOT INDEPENDENT (section 0,
-           point 1). That it does depends on the compose wiring (PR-C, not built), the host
-           mapping, and Compose recreating a service whose env_file changed; none is witnessed.
+           point 1). That it does depends on the compose wiring (PR-C, a draft candidate: not
+           merged, not applied), the host mapping, and Compose recreating a service whose
+           env_file changed; none is witnessed.
 ```
 
 Source reads in this document are at commit:`b46113f8d41cce7703b631b614b1bb2e99742c1d`, the canonical commit this branch was
@@ -19,8 +24,10 @@ built on, unless another commit is named. Evidence classes are the register's: *
 in code or a tracked file at a named commit), **RECORD** (stated in a programme or ops record,
 cited by path), **REPORTED** (said by the founder or another session; not located in source). A
 claim about the live host carries one of these labels or is marked **not established**. Angle
-brackets are placeholders, never values. This document contains no real host path, host name,
-key or secret, and nothing recorded from its steps may contain one either.
+brackets are placeholders, never values. The only host paths in this document are the three
+decided host-side names of section 0a (and the two directories that hold them), which are
+names and not secrets. It contains no host name, key or secret, and nothing recorded from its
+steps may contain a key, a member, Work or file identifier, or any path other than those names.
 
 ## 0. Read this first
 
@@ -48,10 +55,16 @@ key or secret, and nothing recorded from its steps may contain one either.
 2. **This runbook and the preflight change nothing that persists.** They read and they instruct;
    the preflight's only write is one probe file that it creates and removes (step 4). The wiring
    that gives the app its three R20 names and its two host mounts is a **separate change
-   (PR-C, draft)**. PR-C must not merge until the preflight has passed on the host under PR-C's
-   exact host-side names (step 4). Merging is not applying, but it is latent deploy authorization: a later full `deploy` or `update` of a
-   commit that carries the compose applies it without a further act (lane record section
-   6.11; the 2026-09-07 finding).
+   (PR-C, a draft candidate)** and it, not this document, binds the names of section 0a. PR-C
+   must not merge until the preflight has passed on the host under the exact host-side names
+   that PR-C's compose binds (step 4), and until that run is recorded as the witness file of
+   step 4b. While the witness is absent or does not match, PR-C's own check fails, so its CI is
+   red by design (where that check runs in a gate pull requests must pass) and the change cannot
+   be merged, or auto-merged, by mistake. The witness is a
+   gate on a deliberate act, not proof of the host (step 4b). Merging is not applying, but it is
+   latent deploy authorization: a later full `deploy` or `update` of a commit that carries the
+   compose applies it without a further act (lane record sections 6.11 and 6.13; the 2026-09-07
+   finding).
 
 3. **The deploy tooling has no host-prerequisite check.** Nothing in
    `scripts/deploy-production.sh`, `scripts/deploy-context.sh` or `scripts/pre-deploy-gate.sh`
@@ -59,8 +72,10 @@ key or secret, and nothing recorded from its steps may contain one either.
    the SMTP and KMS file names, `create_host_path` and `/run/secrets` finds no check; its one
    hit is an unrelated comment about alert mail, `deploy-production.sh` line 403). The only
    guard is `create_host_path: false` on the two credential binds
-   (`docker-compose.production.yml` lines 212-217 and 219-224), which turns a missing source
-   into a failure when the container is created. In `deploy` that moment is `up -d`
+   (`docker-compose.production.yml` lines 212-217 and 219-224 at the base commit), which turns a
+   missing source into a failure when the container is created. PR-C adds two more binds that
+   lean on exactly that guard and nothing else (the authority directory and the key, section
+   0a). In `deploy` that moment is `up -d`
    (`scripts/deploy-production.sh` line 760), which comes AFTER the image build (739), the
    committed migrations (754) and the rollback-tag rotation (757); `update` runs the same order
    (build 828, migrations 841, tags 844, `up -d` 846). `set -e` (line 27) then ends the script
@@ -82,6 +97,34 @@ key or secret, and nothing recorded from its steps may contain one either.
    pass or fail, no member, Work or file identifier, no file content. The ledger holds
    identifiers (member, session and object ids, a manifest's authorized-by and note), not prose
    (`lib/recovery/r20DeletionLedger.ts` lines 19-37, 189, 228-258): treat it as private.
+
+## 0a. The names (decided under delegation, not founder rulings, revisable)
+
+These are decisions D1 to D4 of lane record section 6.13, **taken under the founder's delegation
+and not ruled by the founder**. Any of them can be changed, but a change to a name means a change
+to the compose in PR-C, a rerun of the preflight under the new names and a new witness (step 4b),
+because the witness binds the names.
+
+| What | Host side | Container side | Notes |
+|---|---|---|---|
+| R20 home directory | `/home/soullab/.config/soullab-r20` | not mounted | Created in step 2. Holds the authority directory and the key as siblings. Mode 0700, owner uid 1000 |
+| Authority directory | `/home/soullab/.config/soullab-r20/authority` | `/run/r20`, read-write | The bind source. Mode 0700, owner uid 1000. A DIRECTORY, because the module writes a temp file and renames it in the same directory |
+| Ledger file, `R20_LEDGER_FILE` | `/home/soullab/.config/soullab-r20/authority/ledger.json` | `/run/r20/ledger.json` | Not a bind source. Must not exist before the first seal creates it (step 2) |
+| High-water file, `R20_HIGH_WATER_FILE` | `/home/soullab/.config/soullab-r20/authority/high-water.json` | `/run/r20/high-water.json` | Not a bind source. Same rule as the ledger |
+| Key file, `R20_LEDGER_KEY_FILE` | `/home/soullab/.config/soullab-r20/ledger.key` | `/run/secrets/r20_ledger_key`, read-only | The bind source. A sibling of the authority directory, never inside it. Mode 0600, owner uid 1000 |
+
+- The precedent in the compose file is the SMTP and KMS binds of `maia`: long-form binds with
+  `create_host_path: false` under `/home/soullab/.config/soullab-*/`.
+- `R20_LEDGER_ALLOW_INITIALIZE` is **never** in the tracked compose. It is a one-shot line in the
+  untracked `.env.production`, set and removed in step 6.
+- **The compose is the authority for these names.** `node scripts/check-compose-r20-wiring.mjs
+  --print-preflight-command` prints the preflight command with the three host paths derived from
+  the compose, and `--print-names-digest` prints the digest of the same three paths. If the
+  printed paths differ from the table above, the compose governs and this table is stale: stop
+  and correct the document.
+- That the home directory is mode 0700 is a choice made in this runbook, not a decided name; the
+  preflight does not check the home directory, only the authority directory and the key.
+- Nothing in this table says that anything exists on the host. Step 0 finds out.
 
 ## 1. What the code needs (SOURCE)
 
@@ -202,6 +245,24 @@ test -e <candidate-high-water-file> && echo high-water-present || echo high-wate
 stat -c '%F %a %u' <candidate-key-file>            # type, mode, owner uid (never the content)
 ```
 
+The decided names of section 0a are candidates too. Run the same block with the candidate
+directory `/home/soullab/.config/soullab-r20/authority`, ledger
+`/home/soullab/.config/soullab-r20/authority/ledger.json`, high-water file
+`/home/soullab/.config/soullab-r20/authority/high-water.json` and key
+`/home/soullab/.config/soullab-r20/ledger.key`, and also look at the home directory itself:
+
+```
+test -L /home/soullab/.config/soullab-r20 && echo home-is-symlink      # a symlink here is a finding
+test -e /home/soullab/.config/soullab-r20 && echo home-present || echo home-absent
+stat -c '%F %a %u' /home/soullab/.config/soullab-r20      # prints an error and nothing else if absent
+```
+
+On a clean host all of them are absent. Anything present at those names is a finding that goes
+through the table below; none of them is yours to reuse silently. Because the names are decided,
+"a new directory and a new key" in the table's second row means a new directory and a new key at
+**different names**, and that is a change to PR-C, a rerun of step 4 and a new witness (section 0a),
+not something to do on the host by yourself.
+
 **A directory you cannot search shows every file in it as absent.** If any line above printed
 `Permission denied` or `UNREADABLE-STOP`, or the directory's owner uid is not yours, or a parent
 directory of any path is not searchable by you, then "absent" and `0` mean *unknown*, not *none*.
@@ -222,8 +283,11 @@ read-only readout of 2026-11-06 found no `R20_` variable names on `maia-sovereig
 | `Permission denied`, `UNREADABLE-STOP`, an owner uid that is not yours, or a parent you cannot search | Contents unknown, not absent: a pair may exist that you cannot see | Stop. Read it as the owner or as root first, then use the rows above. Treat it as the last row until then |
 | Both exist | The first seal takes the verify path, `R20_LEDGER_ALLOW_INITIALIZE` does nothing, and the key must be the one that sealed them, or every seal gives `R20_LEDGER_HMAC_INVALID` | Stop. Steps 1 to 3 do not apply. Founder decision on which pair and which key are current. Do not overwrite or remove a found pair to make the clean-host steps apply |
 
-**Step 1. Choose a location.** The authority directory and the key must be on a location that
-satisfies all of these. Record, for each, only yes or no, plus the filesystem type name:
+**Step 1. Check the location.** The location is decided (section 0a, under delegation); deciding it
+makes none of the following true. The authority directory and the key must be on a location that
+satisfies all of these. Record, for each, only yes or no, plus the filesystem type name. If any
+answer is no, stop: the names are revisable, but changing one means a compose change in PR-C and a
+new witness (step 4b), so take it to the founder rather than work around it:
 
 - Outside every path that a restore overwrites: the database restore (`scripts/restore-db.sh`,
   `scripts/restore-governed.sh`; SOURCE: neither mentions the ledger, the high-water file or
@@ -240,15 +304,17 @@ satisfies all of these. Record, for each, only yes or no, plus the filesystem ty
   permanent mismatch. **Directory fsync on CIFS or NFS is not established**; the repository
   models a CIFS backup destination only in an offline fixture
   (`scripts/ops/ws-backup-exact-shell-preflight-oci.sh` lines 55-63), which is not evidence
-  about this host. Record the type: `findmnt -no FSTYPE -T <authority-dir-parent>`. Do not use
-  tmpfs or any volatile location.
+  about this host. Record the type: `findmnt -no FSTYPE -T /home/soullab/.config`. Do not use
+  tmpfs or any volatile location. (The directory does not exist yet at this step, so ask about
+  its parent; `/home/soullab/.config` is where the SMTP and KMS credential binds already sit.
+  Whether it exists on this host is not established here.)
 - Whether any backup job copies the location is **not established**. The installed backup
   writer is not in the repository (only its hash is pinned,
   `scripts/ops/verify-ws-held-backup-source-order.mjs` lines 23-27). Find out before you rely
   on it either way, and read step 8.
 
-**Step 2. Create the authority directory** (a write on the host; mode 0700, owner uid 1000).
-The compose comment at `docker-compose.production.yml` line 210 says the credential files are
+**Step 2. Create the R20 home directory and the authority directory** (writes on the host; both
+mode 0700, owner uid 1000; names in section 0a). The compose comment at `docker-compose.production.yml` line 210 says the credential files are
 owned by uid 1000 and that the host user with that uid is `node` in the container. The Dockerfile
 says a user-namespace-remapped Docker
 maps container uid 1000 to a different host uid and that ownership is therefore unpredictable
@@ -267,25 +333,34 @@ the host uid that container uid 1000 maps to; stop and take it to the founder ra
 If the mapping is the identity and you are the host user with uid 1000:
 
 ```
-if test -e <authority-dir> || test -L <authority-dir>; then
+if test -e /home/soullab/.config/soullab-r20 || test -L /home/soullab/.config/soullab-r20 \
+   || test -e /home/soullab/.config/soullab-r20/authority || test -L /home/soullab/.config/soullab-r20/authority; then
   echo "EXISTS: stop and go back to step 0's table."     # nothing was created or changed
 else
   umask 077
-  mkdir -m 0700 <authority-dir>             # refuses an existing path; the parent must already exist
-  stat -c '%F %a %u:%g' <authority-dir>     # expect: directory, 700, 1000:<gid>
+  mkdir -m 0700 /home/soullab/.config/soullab-r20 &&      # refuses an existing path; /home/soullab/.config must already exist
+    mkdir -m 0700 /home/soullab/.config/soullab-r20/authority &&
+    stat -c '%F %a %u:%g' /home/soullab/.config/soullab-r20 /home/soullab/.config/soullab-r20/authority
+    # expect two lines: directory, 700, 1000:<gid>
 fi
 ```
 
+If the first `mkdir` succeeds and the second does not, the home directory is left behind. A rerun
+then prints `EXISTS`, and that is step 0's second row (a directory, no pair): do not remove it, and
+take it to the founder.
+
 If you must act as root, run the same test first and, only when it does not print `EXISTS`, use
-`install -d -m 0700 -o <uid> -g <gid> <authority-dir>` in place of `mkdir`, with the uid from
-above (`install -d` on a path that already exists would change its owner and mode). Every
-ancestor of the directory must also let that uid in (search permission), or the preflight in
+`install -d -m 0700 -o <uid> -g <gid> <dir>` in place of each `mkdir` (the home directory first, then
+`authority`), with the uid from above (`install -d` on a path that already exists would change its
+owner and mode). Every ancestor of the directory (`/home/soullab`, `/home/soullab/.config`, the
+home directory) must also let that uid in (search permission), or the preflight in
 step 4 cannot reach it and its pair-state line is then not to be trusted (it reads files it cannot
 see as absent; the result is still FAIL, because the directory check is false); the container
-itself sees only the mounted directory. If the test prints `EXISTS`, list the directory as its
-owner or as root (`ls -la <authority-dir>`; a `Permission denied` is *unreadable*, not *empty*):
-a symlink, or any entry at the ledger or high-water name, means stop and go back to step 0's
-table. The preflight reads a symlink that leads nowhere as absent (it mirrors the module's
+itself sees only the mounted directory. If the test prints `EXISTS`, list what is there as its
+owner or as root (`ls -la /home/soullab/.config/soullab-r20` and, if it exists,
+`ls -la /home/soullab/.config/soullab-r20/authority`; a `Permission denied` is *unreadable*, not
+*empty*): a symlink, or any entry at the ledger or high-water name, means stop and go back to
+step 0's table. The preflight reads a symlink that leads nowhere as absent (it mirrors the module's
 existence test), so it cannot be relied on to tell you. Do **not** create the ledger or the
 high-water file, now or later: an empty or
 garbage file in their place sends the first seal down the verify path and fails with
@@ -293,42 +368,44 @@ garbage file in their place sends the first seal down the verify path and fails 
 fails as the table in step 0 shows.
 
 **Step 3. Generate the key ON THE HOST** (a write on the host; mode 0600, owner uid 1000, outside
-the authority directory). It is generated on the machine that will hold it so that it never
+the authority directory; the name is `/home/soullab/.config/soullab-r20/ledger.key`, section 0a).
+It is generated on the machine that will hold it so that it never
 passes through a chat, a session, a clipboard or another machine's disk.
 
 ```
 (
   umask 077
-  if test -e <key-file> || test -L <key-file>; then
+  if test -e /home/soullab/.config/soullab-r20/ledger.key || test -L /home/soullab/.config/soullab-r20/ledger.key; then
     echo "REFUSED: the key file already exists. Stop."          # a literal; nothing was created or changed
   elif ! command -v openssl >/dev/null 2>&1; then
     echo "STOP: openssl is not installed. Nothing was created."
   else
-    tmp="$(mktemp <key-dir>/.r20-key-new.XXXXXX)" &&
+    tmp="$(mktemp /home/soullab/.config/soullab-r20/.r20-key-new.XXXXXX)" &&
       openssl rand -hex 32 > "$tmp" &&
-      ln "$tmp" <key-file> &&
+      ln "$tmp" /home/soullab/.config/soullab-r20/ledger.key &&
       echo "created"
     rm -f "$tmp"                            # the temporary name goes whether or not the link was made
   fi
 )
 ```
 
-`<key-dir>` is the directory that will hold the key file (it must already exist and be writable
-by you, and be on the same filesystem as the key file, which it is when it is that directory).
-The key is written to a new private temporary name and then hard-linked to the key path. `ln`
+`/home/soullab/.config/soullab-r20` is the R20 home directory that step 2 created (it must exist
+and be writable by you; the temporary name is made in it, so it is on the same filesystem as the key
+file, which `ln` needs). The temporary name is in the home directory and never in the authority
+directory. The key is written to a new private temporary name and then hard-linked to the key path. `ln`
 without `-f` refuses an existing path, a dangling symlink included, so the existence test and the
 write are one step and no empty or half-written file is ever left at the key path if `openssl`
 fails. `mktemp` creates the temporary file with mode 0600, and the link shares that mode.
 
 Only if that printed `created`, check the file (these three print modes, a count and a literal,
 never the key). If you did step 2 as root and are not the container user's host uid, make the key
-that uid's: `chown <uid>:<gid> <key-file>`, then read the owner uid from the first line below;
+that uid's: `chown <uid>:<gid> /home/soullab/.config/soullab-r20/ledger.key`, then read the owner uid from the first line below;
 a key owned by root with mode 0600 cannot be read by the container user:
 
 ```
-stat -c '%F %a %u' <key-file>               # expect: regular file, 600, the uid from step 2
-wc -c < <key-file>                          # expect: 65 (64 hex characters and a newline)
-grep -Eqx '[0-9a-f]{64}' <key-file> && echo hex64-ok     # prints only the literal
+stat -c '%F %a %u' /home/soullab/.config/soullab-r20/ledger.key               # expect: regular file, 600, the uid from step 2
+wc -c < /home/soullab/.config/soullab-r20/ledger.key                          # expect: 65 (64 hex characters and a newline)
+grep -Eqx '[0-9a-f]{64}' /home/soullab/.config/soullab-r20/ledger.key && echo hex64-ok     # prints only the literal
 ```
 
 The block refuses to overwrite because an existing key may be the only thing that can verify a
@@ -338,15 +415,16 @@ that exists is its second row, or its third or fourth if a ledger or high-water 
 too), do not overwrite, move or delete the file, and take it to the founder. A new key at a path
 that does not exist is lawful only on the second row, which leaves the old key untouched. If it
 printed `STOP`, or an error and no `created`, fix the cause (install `openssl`, or make
-`<key-dir>` exist and be writable) and run the block again: this step leaves nothing at the key
+the home directory of step 2 exist and be writable) and run the block again: this step leaves nothing at the key
 path unless it printed `created`.
 
 The hex form is chosen because the module trims surrounding whitespace before it matches it
 (line 99), so the newline `openssl` adds is harmless. **A raw key file must not carry a
 trailing newline** (33 bytes, rejected), and the unpadded 44-character base64 form is rejected
-whatever you do. Keep the key outside the authority directory: the proposal in lane record 6.10
-mounts the directory read-write and the key read-only as separate things, and a copy or restore
-of the directory then does not carry the key with it. Never print, paste, screenshot, commit or
+whatever you do. Keep the key outside the authority directory: PR-C mounts the directory
+read-write and the key read-only as separate things, and a copy or restore of the authority
+directory then does not carry the key with it. (A copy of the whole home directory would carry
+both; the key is a sibling of the authority directory, not on another filesystem.) Never print, paste, screenshot, commit or
 mail the key, and never put it in `.env.production` or any environment value. Whether and where
 the key is copied for safekeeping is a founder decision this document does not make: the key is
 the only thing that can verify the ledger, and there is no rotation path (step 8).
@@ -365,25 +443,45 @@ entries.) It reads at most 4096 bytes of the key file to classify its form and k
 it **as the host-side uid of the container user, not as root** (root bypasses mode bits, and as any
 other uid the write check cannot be evaluated), from a checkout that contains the script (whether
 the host's checkout does is not established), and invoke it with `bash`, so that it does not depend
-on the file's executable bit (it needs bash 4 or newer and refuses otherwise):
+on the file's executable bit (it needs bash 4 or newer and refuses otherwise).
+
+The command is **derived from PR-C's compose, not typed**. On any machine that has the PR-C commit and
+Node (the checker reads only the compose and prints text; it touches no host), print it, then copy
+that one line to the host:
 
 ```
-# as the host-side uid of the container user (step 2), not as root
-bash scripts/ops/check-r20-host-prerequisites.sh --ledger <ledger-file> --high-water <high-water-file> \
-  --key-file <key-file> --expect-uid <uid>
+node scripts/check-compose-r20-wiring.mjs --print-preflight-command
+```
+
+It must print exactly this line (section 0a; if it prints other paths the compose governs and this
+runbook is stale, so stop and correct it):
+
+```
+bash scripts/ops/check-r20-host-prerequisites.sh --ledger /home/soullab/.config/soullab-r20/authority/ledger.json --high-water /home/soullab/.config/soullab-r20/authority/high-water.json --key-file /home/soullab/.config/soullab-r20/ledger.key
+```
+
+Run **exactly the printed line**, as the host-side uid of the container user and not as root:
+
+```
+# as the host-side uid of the container user (step 2), not as root; paste the printed line, do not retype it
+<the printed line>
 echo "exit=$?"
 ```
 
-`<ledger-file>` and `<high-water-file>` are the paths the app's two names will carry inside the
+The printed line carries no `--expect-uid`. The script's default is 1000 and the witness of step 4b
+records `expect_uid` 1000, so this runbook covers the host whose container uid 1000 is host uid 1000
+(step 2). If step 2 showed a remapped host, stop: the owner needed is another uid, and the witness
+and the command are not written for it.
+
+The ledger and high-water paths are the names the app's two variables will carry inside the
 authority directory, as they appear on the host; neither file exists yet and neither is to be
 created (step 2). **The pair-state result is only meaningful for the exact file names the app will
-use.** It, and the owner check on any pair file, speak only about the paths you typed. Until PR-C
-exists, nothing binds the names you type here to the names the app will carry, and `both_absent`
-for names the app never uses says nothing about the names it does. So a pass under names chosen
-now is a rehearsal. **Before PR-C merges, run this step again with the exact host-side ledger,
-high-water and key paths that PR-C binds** (the host directory, and the file names that PR-C's
-`R20_LEDGER_FILE` and `R20_HIGH_WATER_FILE` carry inside it, as PR-C's description gives them; this
-runbook does not choose them). Only that run counts toward PR-C's gate.
+use.** It, and the owner check on any pair file, speak only about the paths it was given, and
+`both_absent` for names the app never uses says nothing about the names it does. That is why the
+command is derived from the compose: the names are decided and bound by PR-C, a change to a name in
+the compose changes the printed command and the digest of step 4b, and so makes an earlier run stop
+counting. A run typed by hand with other paths does not count toward PR-C's gate, and the witness
+cannot tell the difference (step 4b); do not do it.
 
 Exit 0 is PASS, 1 is FAIL (a named check is false), 3 is UNKNOWN (none false, at least one not
 determinable), 2 is misuse. Its output is one `<check_id> true|false|UNKNOWN` line per check, plus
@@ -432,12 +530,78 @@ directory holding both authority files, that directory's owner, mode and a probe
 expected uid, a consistent pair state (both absent is the reading this runbook expects; both
 present is scored as consistent and is still a stop, see above), and a key file of the right
 kind, owner, mode and form. It does **not** establish: that the container will see the same
-directory and key, because the mount does not exist yet; which uid the container really runs as
+directory and key, because the mounts are declared by PR-C's compose and neither rendered by Docker
+nor applied; which uid the container really runs as
 (step 2 reads that); that any file's contents verify, since no HMAC is computed and the key is never
 used; that directory fsync is honest on this filesystem; that the key is the one that sealed an
 existing pair; that no backup or restore will roll the pair back; that the deploy lane will not meet
 another missing bind source; or anything about independence. Rerun it immediately before the deploy
 in step 6: a pass is a reading at a time.
+
+**Step 4b. Record the witness.** Do this only when step 4 printed all three of
+`ledger_pair_state both_absent`, `key_form hex64` and `r20_host_preflight result=PASS` with
+`exit=0`: the clean-host reading. Any other combination is step 4's table, not a witness, and
+`result=PASS` beside `both_present` is a stop. The witness is a committed file,
+`docs/ops/R20_HOST_PREFLIGHT_WITNESS.json`, which PR-C's check requires (its law W8). While the file
+is absent or does not match, that check fails, so PR-C's CI is red by design and the change cannot be
+merged, or auto-merged, by mistake. (That holds only where the check runs in a gate that pull
+requests must pass and the merger honours; whether it does is lane record section 6.13's to say,
+and a check that runs in no gate fails nothing.)
+
+1. Copy the three lines named above, the exit code and the time of the run. They are the script's own
+   vocabulary: they contain no path and no key, and nothing else from the run is to be kept.
+2. On a machine with the PR-C commit checked out and the preflight script unmodified (the next
+   command hashes the working-tree file, and the checker hashes the committed bytes, so they agree
+   only on a clean tree), compute the two values the file binds:
+
+   ```
+   node scripts/check-compose-r20-wiring.mjs --print-names-digest     # names_digest: SHA-256, 64 hex characters
+   git hash-object scripts/ops/check-r20-host-prerequisites.sh        # preflight_script_blob: git blob SHA-1, 40 hex characters
+   ```
+
+   `names_digest` is the SHA-256 of the three host-side paths **as the compose binds them**, so a
+   name changed in the compose no longer matches. `preflight_script_blob` is the blob hash of the
+   committed script, so an edit to the preflight no longer matches.
+3. Write the file and commit it on PR-C's branch (placeholders in angle brackets):
+
+   ```
+   {
+     "schema": 1,
+     "result": "PASS",
+     "names_digest": "<64 hex characters printed by --print-names-digest>",
+     "preflight_script_blob": "<40 hex characters printed by git hash-object>",
+     "expect_uid": 1000,
+     "run_at": "<ISO-8601 UTC time of the preflight run>",
+     "run_by": "<a role, not a name or a secret>",
+     "output": [
+       "ledger_pair_state both_absent",
+       "key_form hex64",
+       "r20_host_preflight result=PASS"
+     ]
+   }
+   ```
+
+   The file contains no path and no key: `names_digest` is a hash of three paths, not a path, and the
+   `output` lines are the three above and nothing else.
+
+   The checker requires, beyond the digest and the blob hash: `result` `PASS`; `output` containing the
+   exact lines `ledger_pair_state both_absent`, `key_form hex64` and `r20_host_preflight result=PASS` (the
+   clean first-configuration reading; a pair that already exists is a step 0 stop, not a witness);
+   `expect_uid` an integer of at least 1 (uid 0 bypasses the permission checks the preflight exists to
+   make); and `run_at` an ISO-8601 UTC timestamp such as `2026-11-08T12:00:00Z`. It does not judge `run_by`
+   and cannot tell a real run from a typed one.
+
+**What the witness is, and is not.** It is evidence for a deliberate act: someone ran the
+preflight under the names the compose binds, saw a clean PASS, and wrote that down in a form the
+checker compares with the compose and with the script. It is a plain file that anyone can write or
+edit by hand, and the checker cannot tell a real run from a typed one. It proves nothing about the
+host at deploy time: a pass is a reading at a time, the directory and the key can change the next
+minute, and the container may not see what the preflight saw. It is not host state, not a
+deploy authorization, not a witness of independence, and not a substitute for the rerun that step 6
+requires on the day of the deploy. Committing it does not authorize the merge, which is the
+founder's decision, and merging is latent deploy authorization (section 0, point 2). If the compose
+changes a name, or the preflight script changes by a byte, the file stops matching and this step is
+done again from step 4.
 
 **Step 5. Read-only counts before the first seal.** When R20 is configured the two
 unfinished-upload discard paths stop answering 202 `removal_pending` and start destroying bytes
@@ -466,11 +630,15 @@ RECORD: `writer_source_landing_intents` held 0 rows on 2026-11-01 (section 5 of 
 is old and was a different observation. The count of `vault_erasure_queue` rows is register line
 C2 and is not part of this step.
 
-**Step 6. The first seal** (the host and the deploy lane change here; only after the preflight
-passed in step 4 under PR-C's exact host-side names, rerun that same day, and only with PR-C
-reviewed and merged by the person who owns that decision). This runbook does not define the container-side paths or the mounts; PR-C
-does, and its description is the authority for them. Do items 1 to 4, then step 7, then items 5
-and 6.
+**Step 6. The first seal** (the host and the deploy lane change here; only after the witness of
+step 4b is committed and PR-C's CI is green, after the preflight has been run again that same day
+with the same printed command, and only with PR-C reviewed and merged by the person who owns that
+decision). The container-side names are decision D1 (section 0a) and PR-C's compose carries them.
+**The initialise flag is one-shot, and it lives only in the untracked `.env.production`, never in
+the tracked compose (decision D3).** Its whole life is: set it (item 1); recreate `maia` through a
+lane deploy (item 2); wait for the first successful seal (item 4 and step 7); **remove it** (item
+5); recreate `maia` again through a lane deploy (item 5); read back that it is gone (item 5). Do
+items 1 to 4, then step 7, then items 5 and 6.
 
 1. Put exactly one line in `.env.production` (untracked; the `maia` service reads it as
    `env_file`, `docker-compose.production.yml` lines 107-108): `R20_LEDGER_ALLOW_INITIALIZE=true`.
@@ -488,9 +656,14 @@ and 6.
    values; that bypasses the lane (the KMS runbook cited in step 5, section 4 step 2; the 2026-09-07
    finding).
 3. Read back, names only: `docker exec <app-container> sh -c 'env | cut -d= -f1 | grep
-   "^R20_"'` should show the three names and the flag; the step 0b command should show the
-   authority directory read-write and the key read-only. If a name or a mount is absent, the
-   deploy did not apply it: stop. Do not hand-edit the container.
+   "^R20_"'` should show the three names (`R20_LEDGER_FILE`, `R20_HIGH_WATER_FILE`,
+   `R20_LEDGER_KEY_FILE`) and the flag; the step 0b command should show `/run/r20` read-write
+   (`rw=true`) and `/run/secrets/r20_ledger_key` read-only (`rw=false`). Then three literals, which
+   print no path content: `docker exec <app-container> sh -c 'test -d /run/r20 && echo dir-present;
+   test -w /run/r20 && echo dir-writable; test -r /run/secrets/r20_ledger_key && echo key-readable'`
+   should print all three (`test -w` only asks; it writes nothing). If a name, a mount or a literal
+   is absent, the deploy did not apply it, or the container user cannot use what it was given:
+   stop. Do not hand-edit the container.
 4. **The first seal happens at the next member deletion that reaches it.** No operator command
    seals on demand (SOURCE: the only callers of `sealR20DeletionLedger` are the four named
    above and two witness scripts under `scripts/witness/`; the only callers of
@@ -505,7 +678,9 @@ and 6.
    error. Read back with `docker exec <app-container> sh -c 'env | cut -d= -f1 | grep -c
    "^R20_LEDGER_ALLOW_INITIALIZE$"'`; the answer must be 0. Whether Compose recreates a service
    whose `env_file` content changed is Compose behaviour not witnessed here, so verify it; if the
-   name is still present the container was not recreated.
+   name is still present the container was not recreated. `cutover-maia` forces the recreate
+   (`up -d --force-recreate --no-deps maia`, `scripts/pre-deploy-gate.sh` line 305), so it does not
+   depend on Compose noticing a changed `env_file`; the read-back is decisive either way.
 6. ⚠️ If a deploy fails on a missing bind source, do not assume `rollback` rescues it: it
    composes from the shared checkout (section 0, point 3).
 
@@ -519,11 +694,13 @@ delete it through the product's own Delete door.
   `docker logs <app-container> --since <time-before-the-delete> 2>&1 | grep -c 'R20 recovery seal still owed'`
   should be 0.
 - The pair appears on the HOST, not only in the container:
-  `ls -1A <authority-dir> | wc -l` should be 2 and `ls -1A <authority-dir> | grep -c '^\.'` should
-  be 0 (no leftover temp file); `stat -c '%a %u' <ledger-file> <high-water-file>` should show 600
-  and the uid from step 2.
+  `ls -1A /home/soullab/.config/soullab-r20/authority | wc -l` should be 2 and
+  `ls -1A /home/soullab/.config/soullab-r20/authority | grep -c '^\.'` should be 0 (no leftover
+  temp file); `stat -c '%a %u' /home/soullab/.config/soullab-r20/authority/ledger.json
+  /home/soullab/.config/soullab-r20/authority/high-water.json` should show 600 and the uid from
+  step 2 for each.
 - Record the generation, from the **high-water file only** (it carries no identifiers; the ledger
-  does): `python3 -I -c "import json,sys; print(json.load(open(sys.argv[1]))['generation'])" <high-water-file>`.
+  does): `python3 -I -c "import json,sys; print(json.load(open(sys.argv[1]))['generation'])" /home/soullab/.config/soullab-r20/authority/high-water.json`.
   After the first seal expect 1; each later seal whose payload changed advances it by one.
 
 This is the first half of C1's closure condition: a production writing delete answers 200 with
@@ -558,6 +735,12 @@ would mean the ledger went into the container's own layer; that is why the host 
   or `R20_LEDGER_STALE_DIGEST`). Restoring the database without the ledger gives
   `R20_LEDGER_DATABASE_REGRESSION` until the rows are back.
 - **Retry or alert.** A failed seal is neither retried nor reported to a human.
+- **A check of the host at deploy time.** The witness of step 4b is a committed file that keeps PR-C's
+  CI red until someone records a run. It is hand-editable, it is checked only against the compose
+  and the script, and it says nothing about the host when the deploy runs. The deploy tooling still
+  has no host-prerequisite preflight (section 0, point 3); a failed `up -d` after the build, the
+  migrations and the rollback-tag rotation, and a `rollback` that composes from the shared
+  checkout, leave a state this runbook cannot establish or repair.
 - **A cleaned authority directory.** A failed write leaves its temp file behind; it is harmless to
   correctness and accumulates.
 
@@ -609,10 +792,15 @@ to 48 characters (`r20LedgerErrorCode`, lines 81-85).
 - Is a first seal on demand wanted? No operator command seals, so the ledger does not exist until a
   member deletes something. This document does not decide it.
 - Does the deploy lane get a host-prerequisite preflight of its own? Until it does, this runbook's
-  preflight is a ritual a person must remember (lane record section 6.12).
+  preflight is a ritual a person must remember (lane record section 6.12), and PR-C's witness file
+  is a gate on a merge, not a check at deploy time (step 4b; lane record section 6.13).
+- Do the decided names stand (section 0a)? They are decisions D1 to D4 taken under delegation, not
+  founder rulings; the founder may change any of them, at the cost of a compose change, a rerun of
+  step 4 and a new witness.
 
 ⛔ Not authorized by this document: running any step on the host, creating the directory or the
 key, editing `.env.production`, setting or removing the initialise flag, merging PR-C or any
-compose change, deploying or recreating any container, claiming that R20 is independent, lifting
+compose change, committing a witness that was not produced by a run of the preflight, deploying or
+recreating any container, claiming that R20 is independent, lifting
 the R105 hold on worker deployment or any upload hold, or closing register line C1, C2 or C4. It
 records what to do, in what order, and what each step does and does not establish.

@@ -121,6 +121,15 @@ services:
       # Writer original-file intake: KMS data-key credential, a host file mounted read-only below (never an env value).
       # WRITER_SOURCE_KEY_PROVIDER / _KMS_KEY_ARN / _KMS_REGION come from .env.production. See docs/programme/WRITER_SOURCE_KMS_RULING_AND_INTAKE_LIFT_RUNBOOK_2026-11-01.md
       AWS_SHARED_CREDENTIALS_FILE: "/run/secrets/writer_source_aws_credentials"
+      # R20 independent deletion ledger (WS-DELETE-01; lib/recovery/r20DeletionLedger.ts, r20LedgerPathsFromEnv). The module reads exactly these three names,
+      # each a required absolute path. Container-side names are decision D1 of the PR-C wiring change (a delegated, revisable decision, not a founder ruling):
+      # the authority DIRECTORY is bind-mounted read-write at /run/r20 and the key FILE read-only at /run/secrets/r20_ledger_key, both below.
+      # Both host sources must exist BEFORE this service is recreated (decision D2); the ledger and high-water FILES are not host sources and must not exist before
+      # the first seal. See docs/ops/R20_HOST_PREPARATION_RUNBOOK_2026-11-08.md. R20_LEDGER_ALLOW_INITIALIZE is deliberately NOT set in this file (decision D3):
+      # the first seal is a one-shot step through .env.production, removed again afterwards. scripts/check-compose-r20-wiring.mjs enforces all of this.
+      R20_LEDGER_FILE: "/run/r20/ledger.json"
+      R20_HIGH_WATER_FILE: "/run/r20/high-water.json"
+      R20_LEDGER_KEY_FILE: "/run/secrets/r20_ledger_key"
       # GIT_COMMIT is deliberately NOT set here. The IMAGE owns build provenance:
       # Dockerfile bakes ENV GIT_COMMIT from the build arg the deploy lane stamps
       # from the asserted SHA, and the container inherits it. A runtime override
@@ -219,6 +228,24 @@ services:
       - type: bind
         source: /home/soullab/.config/soullab-writer/aws-credentials
         target: /run/secrets/writer_source_aws_credentials
+        read_only: true
+        bind:
+          create_host_path: false
+      # R20 authority DIRECTORY (decisions D1 and D2): host directory, read-write, mode 0700, owner uid 1000. Mounted as a directory because every write is a temp
+      # file renamed over the target in the same directory. It holds only the ledger and high-water files, which the first seal creates; it must not hold the key.
+      # Must exist on the host BEFORE this service is recreated, and the host preflight (scripts/ops/check-r20-host-prerequisites.sh) must have passed under exactly
+      # these host-side names (node scripts/check-compose-r20-wiring.mjs --print-preflight-command prints the command). create_host_path: false makes a missing
+      # directory a loud failure instead of Docker silently creating a root-owned one there.
+      - type: bind
+        source: /home/soullab/.config/soullab-r20/authority
+        target: /run/r20
+        bind:
+          create_host_path: false
+      # R20 ledger key (decisions D1 and D2): host FILE, read-only, owner uid 1000, mode 0600, a sibling of the authority directory above and never inside it.
+      # Never an env value, never committed. Must exist on the host BEFORE this service is recreated.
+      - type: bind
+        source: /home/soullab/.config/soullab-r20/ledger.key
+        target: /run/secrets/r20_ledger_key
         read_only: true
         bind:
           create_host_path: false
