@@ -1055,6 +1055,14 @@ export default function FlagshipWriteEditController() {
     setOpenDeskForHeld(false);
     openWorkspaceRef.current?.();
   }, [openDeskForHeld, planStepHere, selectedPassage]);
+  /* Design 1B amendment 2 · open-desk: the passage handed over from the Develop conversation opens the desk once it is actually held. */
+  const [deskForPassage, setDeskForPassage] = useState<{ sectionId: string; start: number } | null>(null);
+  useEffect(() => {
+    if (!deskForPassage) return;
+    if (selectedPassage?.draftSectionId !== deskForPassage.sectionId || selectedPassage.start !== deskForPassage.start) return;
+    setDeskForPassage(null);
+    openWorkspaceRef.current?.();
+  }, [deskForPassage, selectedPassage]);
   const handoffSeq = useRef(0);
   useEffect(() => { if (planStepHere && focusId && focusId !== planStepHere.sectionId) setPlanStepHere(null); }, [focusId, planStepHere]);
   useEffect(() => {
@@ -1160,7 +1168,7 @@ export default function FlagshipWriteEditController() {
       setPlanHandoffNotice(null);
       const section = ctx.sections.find((x) => x.draftSectionId === d.sectionId)!;
       L.holdPassage(section, d.start, d.end, d.text);
-      setOpenDeskForHeld(true);
+      setDeskForPassage({ sectionId: d.sectionId, start: d.start });
     };
     consume();
     consumePassage();

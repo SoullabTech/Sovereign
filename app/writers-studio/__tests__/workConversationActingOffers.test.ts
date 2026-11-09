@@ -136,3 +136,11 @@ describe('standing rule: navigation offers', () => {
     expect(host.querySelector('[data-keeps-chooser]')).not.toBeNull();
   });
 });
+
+it('quiet mode: when the room asks which conversation to continue, starting a new one is not hidden behind More', async () => {
+  mockThreads.mockResolvedValue({ kind: 'threads', threads: [
+    { id: 'thread-a', anchor: { on: 'work' }, openedAt: '2026-11-09T10:00:00Z', turnCount: 2 },
+    { id: 'thread-b', anchor: { on: 'work' }, openedAt: '2026-11-09T11:00:00Z', turnCount: 2 } ] });
+  await act(async () => { root.render(React.createElement(WorkConversation, { work, manuscriptId: 'fictional-manuscript', sectionId: 's1', onClose: jest.fn(), quiet: true })); });
+  expect(host.querySelector('[data-start-fresh-quiet]')).not.toBeNull();
+});

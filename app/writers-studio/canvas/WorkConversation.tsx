@@ -1045,6 +1045,13 @@ function ScopedWorkConversation({
               <StudioText role="metadata" as="span">Open in MAIA →</StudioText>
             </Link>
           ) : null}
+          {quiet && decision?.kind === 'choose' && !moreOpen ? (
+            /* The room is asking which conversation to continue: starting a new one must not hide behind More (walk 2026-11-09). */
+            <button type="button" data-start-fresh-quiet="true" onClick={startFresh} disabled={!canStartFresh}
+              style={{ background: 'transparent', border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm, padding: `${SPACE.hairline}px ${SPACE.tight}px`, cursor: 'pointer', color: INK.secondary }}>
+              <StudioText role="metadata" as="span">Start a new conversation</StudioText>
+            </button>
+          ) : null}
           {quiet ? (
             <button type="button" data-conversation-more="true" aria-expanded={moreOpen} onClick={() => setMoreOpen((v) => !v)}
               style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: INK.secondary, padding: 0 }}>
