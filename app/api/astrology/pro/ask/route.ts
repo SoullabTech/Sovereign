@@ -2,7 +2,13 @@
  * Ask MAIA about a section of Pro (founder request 2026-11-07).
  *
  * POST /api/astrology/pro/ask
- * body: { section, subject, other?, houseSystem?, at?, dayStart?, direction?, question }
+ * body: { section, subject, other?, houseSystem?, at?, dayStart?, direction?, question,
+ *         mode?, view?, point? }
+ *
+ * From the cockpit's MAIA dock: `mode: 'mentor'` asks MAIA to teach a technique
+ * instead of reading the chart; `view` (one of a fixed list) and `point` (a
+ * body of this chart) tell MAIA what the astrologer has open. Neither carries
+ * free text into the prompt.
  *
  * Only chart ids travel; the server reads the verified owner's birth details,
  * recalculates the section and gives MAIA its facts — never a name, birth
@@ -18,6 +24,7 @@ import { analyzeSafetyCues } from '@/lib/comms/SafetyService';
 import { admitProCalculation } from '@/lib/astrology/proCalculationPolicy';
 import { calculateBirthChart, calculateTransits } from '@/lib/astrology/proEphemerisCalculator';
 import { chartBodies } from '@/lib/astrology/proChartGeometry';
+import { calculateDeclinations } from '@/lib/astrology/proDeclinations';
 import { transitBodies, transitToNatalAspects } from '@/lib/astrology/proTransits';
 import { chartAsOuterRing, compositeChart, crossAspects } from '@/lib/astrology/proComparison';
 import { calculateFourPillars } from '@/lib/astrology/proFourPillars';
@@ -27,7 +34,7 @@ import type { HouseSystem } from '@/lib/astrology/proEphemerisCalculator';
 import { loadSubjectBirth } from '@/lib/astrology/proSubjectBirth';
 import { ASK_MAIA_MAX_QUESTION, plainAnswer } from '@/lib/astrology/proAskMaia';
 import {
-  LIFE_CONTEXT_MAX, PRO_ASK_SAFETY_REPLY, PRO_DEEP_CONTEXT_NOTE, chartFacts, mayaFacts, proDeepSystemPrompt, contactFacts, fourPillarsFacts, isProAskSection, proAskSystemPrompt, thirdPersonConcern,
+  LIFE_CONTEXT_MAX, PRO_ASK_SAFETY_REPLY, PRO_DEEP_CONTEXT_NOTE, chartFacts, declinationFacts, isProAskView, mayaFacts, proDeepSystemPrompt, contactFacts, fourPillarsFacts, isProAskSection, proAskSystemPrompt, thirdPersonConcern,
   transitFacts,
 } from '@/lib/astrology/proAskMaiaSections';
 import { PRO_RESPONSE_HEADERS, proError, proOwnerStillCurrent, resolveProOwner } from '@/lib/astrology/proRouteAccess';
@@ -47,7 +54,7 @@ function allowed(memberId: string): boolean {
   return true;
 }
 
-const KEYS = ['section', 'subject', 'other', 'houseSystem', 'at', 'from', 'dayStart', 'direction', 'question', 'include', 'lifeContext'];
+const KEYS = ['section', 'subject', 'other', 'houseSystem', 'at', 'from', 'dayStart', 'direction', 'question', 'include', 'lifeContext', 'mode', 'view', 'point'];
 const DEEP_PARTS = ['four-pillars', 'maya', 'progressions'];
 
 export async function POST(request: NextRequest) {
@@ -84,6 +91,13 @@ export async function POST(request: NextRequest) {
       at.getTime() - from.getTime() > PROGRESSION_MAX_YEARS * 365.25 * 86_400_000)) {
     return proError(400, 'invalid_period');
   }
+  // The dock's mode and place. Both are closed lists; a point is checked against the chart below.
+  if (input.mode !== undefined && input.mode !== 'ask' && input.mode !== 'mentor') return proError(400, 'mode_unsupported');
+  const mode = input.mode === 'mentor' ? 'mentor' : 'ask';
+  if (input.view !== undefined && !isProAskView(input.view)) return proError(400, 'view_unsupported');
+  const view = isProAskView(input.view) ? input.view : undefined;
+  if (input.point !== undefined && typeof input.point !== 'string') return proError(400, 'point_unsupported');
+  if ((mode === 'mentor' || view || input.point !== undefined) && section === 'deep') return proError(400, 'unexpected_field');
   const twoCharts = section === 'biwheel' || section === 'composite';
   if (twoCharts && input.other === undefined) return proError(400, 'second_chart_required');
 
@@ -111,6 +125,11 @@ export async function POST(request: NextRequest) {
     if (!first.ok) return proError(first.status, first.error);
     const second = twoCharts ? await chartOf(input.other) : null;
     if (second && !second.ok) return proError(second.status, second.error);
+
+    // Only a body that is in this chart may be named to MAIA as the selected point.
+    const point = typeof input.point === 'string'
+      ? chartBodies(first.chart).find((b) => b.name === input.point)?.name : undefined;
+    if (input.point !== undefined && !point) return proError(400, 'point_unsupported');
 
     const place = { lat: first.birth.location.lat, lng: first.birth.location.lng };
     const birthUtc = new Date(first.utc);
@@ -163,12 +182,16 @@ export async function POST(request: NextRequest) {
       facts = fourPillarsFacts(fp, direction);
     }
 
+    // What the open view adds to the facts, where MAIA can be given it.
+    if (view === 'aspects') facts += `\n${declinationFacts(calculateDeclinations(first.utc))}`;
+    if (view === 'mayan') facts += `\n${mayaFacts(traditionalMaya(first.birth.date), 'Birth')}`;
+
     const deep = section === 'deep';
     const llm = await getLLMProvider().generateSimple({
       tier: deep ? 'deep' : 'core',
-      systemPrompt: deep ? proDeepSystemPrompt(facts, lifeContext || null) : proAskSystemPrompt(section, facts),
+      systemPrompt: deep ? proDeepSystemPrompt(facts, lifeContext || null) : proAskSystemPrompt(section, facts, { mode, view, point }),
       messages: [{ role: 'user', content: question }],
-      maxTokens: deep ? 2400 : 600,
+      maxTokens: deep ? 2400 : mode === 'mentor' ? 750 : 600,
       temperature: 0.6,
       // As with Soul Portrait: a professional reading goes to Claude. Under
       // LOCAL_TIER_ENABLED the deep tier would wait five minutes on the local

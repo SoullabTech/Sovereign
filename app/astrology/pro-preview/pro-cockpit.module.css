@@ -1,0 +1,149 @@
+/* The Pro cockpit: a status bar, a tool rail, the wheel as the centre
+   instrument, a deck of open tools and the MAIA dock. On a desktop nothing
+   scrolls as a page; each region scrolls on its own. Navy field, brass line. */
+
+.cockpit {
+  --line: rgba(213, 173, 103, .26);
+  --line-soft: rgba(177, 196, 205, .16);
+  --panel: #0f1620;
+  --panel-raised: #141d29;
+  --brass: #e2c48f;
+  --ink: #f3e8d5;
+  --ink-soft: #b7c4cc;
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  min-height: 560px;
+  overflow: hidden;
+  background: #090e15;
+  color: var(--ink);
+  color-scheme: dark;
+  scrollbar-color: rgba(226, 196, 143, .28) transparent;
+  scrollbar-width: thin;
+}
+.cockpit * { scrollbar-color: rgba(226, 196, 143, .28) transparent; scrollbar-width: thin; }
+
+/* ── Status bar ─────────────────────────────────────────────── */
+.statusBar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 54px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--line);
+  background: #0b1018;
+  flex: 0 0 auto;
+}
+.brand { display: inline-flex; align-items: center; gap: 8px; font-size: .86rem; letter-spacing: .08em; color: var(--brass); white-space: nowrap; }
+.brand b { font-weight: 600; }
+.identity { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+.identity h1 { margin: 0; font-family: Georgia, serif; font-weight: 400; font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 22ch; }
+.field { display: inline-flex; align-items: center; gap: 7px; font-size: .78rem; color: var(--ink-soft); white-space: nowrap; }
+.field select { font: inherit; color: var(--ink); background: var(--panel-raised); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+.field select:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.quiet { font-size: .8rem; white-space: nowrap; background: transparent; border: 1px solid var(--line-soft); border-radius: 6px; padding: 5px 10px; color: var(--ink-soft); }
+.quiet:hover { border-color: var(--line); color: var(--ink); }
+.iconButton { flex: 0 0 auto; display: inline-grid; place-items: center; width: 30px; height: 30px; background: transparent; border: 1px solid transparent; border-radius: 6px; color: var(--ink-soft); }
+.iconButton:hover, .iconButton[aria-expanded="true"] { border-color: var(--line); color: var(--brass); }
+
+.sky { display: flex; align-items: center; gap: 14px; margin-left: auto; flex: 1 1 0; min-width: 0; padding-left: 8px; overflow: hidden; font-size: .8rem; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.skyBody small { color: var(--ink-soft); font-size: .7rem; margin-right: 3px; }
+.skyAt { color: var(--ink-soft); font-size: .7rem; }
+.flag { font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); border: 1px solid var(--line-soft); border-radius: 50px; padding: 3px 9px; white-space: nowrap; }
+.maiaToggle { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; background: rgba(226, 196, 143, .1); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; color: var(--brass); }
+
+.method { flex: 0 0 auto; padding: 12px 18px; border-bottom: 1px solid var(--line); background: var(--panel); display: grid; gap: 6px; max-height: 40svh; overflow: auto; }
+.method p { margin: 0; font-size: .82rem; line-height: 1.5; color: var(--ink-soft); max-width: 110ch; }
+.method button { justify-self: start; }
+
+/* ── Body grid ──────────────────────────────────────────────── */
+.body { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 86px minmax(380px, 38fr) minmax(360px, 40fr) minmax(300px, 22fr); }
+.body[data-dock="closed"] { grid-template-columns: 86px minmax(380px, 44fr) minmax(360px, 56fr); }
+.body > * { min-height: 0; min-width: 0; }
+
+.rail { display: flex; flex-direction: column; gap: 2px; padding: 8px 6px; border-right: 1px solid var(--line); background: #0b1018; overflow-y: auto; }
+.rail button { color: var(--ink-soft); display: grid; justify-items: center; gap: 3px; padding: 8px 2px 6px; background: transparent; border: 1px solid transparent; border-radius: 8px; color: var(--ink-soft); }
+.rail button span { font-size: .66rem; line-height: 1.15; text-align: center; }
+.rail button:hover { color: var(--ink); background: rgba(255, 255, 255, .04); }
+.rail button.railOn { color: var(--brass); background: rgba(226, 196, 143, .1); border-color: var(--line); }
+
+.stage { overflow-y: auto; padding: 10px 16px 16px; background: radial-gradient(circle at 50% 42%, rgba(155, 118, 62, .1), transparent 62%), #0c1119; border-right: 1px solid var(--line); }
+.layers { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.layers > button { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; background: transparent; border: 1px solid var(--line-soft); border-radius: 50px; padding: 5px 10px; color: var(--ink-soft); }
+.layers > button[aria-pressed="true"] { border-color: var(--line); color: var(--brass); background: rgba(226, 196, 143, .08); }
+.bodies { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.bodies button { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; min-height: 32px; padding: 3px 9px; background: var(--panel-raised); border: 1px solid var(--line-soft); border-radius: 7px; color: var(--ink); }
+.bodies button span { font-size: 1.05rem; color: var(--brass); }
+.bodies button.bodyOn { background: var(--brass); border-color: var(--brass); color: #14202d; }
+.bodies button.bodyOn span { color: #14202d; }
+
+.invitation { min-height: 100%; display: grid; align-content: center; justify-items: center; gap: 10px; text-align: center; padding: 30px 16px; }
+.invitation h2 { margin: 0; font-family: Georgia, serif; font-weight: 400; font-size: 1.7rem; }
+.invitation p { margin: 0; max-width: 46ch; color: var(--ink-soft); font-size: .92rem; }
+.invitation p[role] { color: #f4daac; }
+.invitation a { text-decoration: underline; }
+.invitationActions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; margin: 8px 0; }
+.emptyRing { width: 132px; height: 132px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 2rem; color: var(--brass); box-shadow: inset 0 0 0 14px rgba(226, 196, 143, .05); margin-bottom: 8px; }
+
+/* ── Tool deck ──────────────────────────────────────────────── */
+.deck { overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 10px; background: #0a0f16; }
+.deckEmpty, .needsChart { margin: 0; padding: 14px; font-size: .88rem; color: var(--ink-soft); }
+.tool { border: 1px solid var(--line-soft); border-radius: 10px; background: var(--panel); min-width: 0; }
+.toolLead { border-color: var(--line); }
+.toolHead { display: flex; align-items: center; gap: 9px; padding: 7px 8px 7px 12px; color: var(--brass); position: sticky; top: -10px; z-index: 2; background: var(--panel); border-radius: 10px; }
+.toolFolded .toolHead { cursor: pointer; }
+.toolFolded .toolHead h2 { color: var(--ink-soft); }
+.toolHead h2 { margin: 0; font-size: .9rem; font-weight: 600; letter-spacing: .02em; color: var(--ink); white-space: nowrap; }
+.tabs { display: flex; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.tabs button { font-size: .78rem; white-space: nowrap; background: transparent; border: none; border-bottom: 2px solid transparent; padding: 5px 8px; color: var(--ink-soft); }
+.tabs button[aria-selected="true"] { color: var(--brass); border-bottom-color: var(--brass); }
+.toolActions { margin-left: auto; display: inline-flex; gap: 2px; flex: 0 0 auto; }
+.toolBody { padding: 2px 12px 12px; min-width: 0; overflow-x: auto; }
+.toolBody[hidden] { display: none; }
+/* Instruments were built as page sections; inside a tool they lose their outer frame. */
+.toolBody > section, .toolBody > div { margin-top: 0; margin-bottom: 0; }
+
+.point p { font-size: .9rem; line-height: 1.6; color: var(--ink-soft); }
+.subhead { margin: 16px 0 6px; font-size: .8rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
+.notes { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border-radius: 8px; background: #0b131d; color: var(--ink); border: 1px solid var(--line-soft); resize: vertical; }
+
+/* ── MAIA dock ──────────────────────────────────────────────── */
+.dock { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; border-left: 1px solid var(--line); background: linear-gradient(180deg, #131a17, #0e141d 40%); overflow-y: auto; font-size: .9rem; }
+.dockHead { display: flex; align-items: center; gap: 10px; }
+.dockTitle { display: inline-flex; align-items: center; gap: 7px; font-family: Georgia, serif; font-size: 1.1rem; color: var(--brass); }
+.segment { margin-left: auto; display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.segment button { font-size: .78rem; padding: 4px 11px; background: transparent; border: none; color: var(--ink-soft); }
+.segment button[aria-pressed="true"] { background: var(--brass); color: #14202d; }
+.dockAbout { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; font-size: .8rem; color: var(--ink-soft); }
+.dockAbout strong { color: var(--ink); font-weight: 600; }
+.dockAbout select { font: inherit; max-width: 100%; color: var(--ink); background: var(--panel-raised); border: 1px solid var(--line); border-radius: 6px; padding: 4px 7px; }
+.dockAbout button { font-size: .74rem; background: transparent; border: 1px solid var(--line-soft); border-radius: 6px; padding: 3px 8px; color: var(--ink-soft); }
+.dockWhere, .dockMode, .dockEmpty { margin: 0; font-size: .78rem; line-height: 1.45; color: var(--ink-soft); }
+.dockEmpty { padding-top: 8px; font-size: .88rem; }
+.dockBody { display: grid; gap: 10px; align-content: start; }
+.dockBody textarea { font: inherit; width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: #0b131d; resize: vertical; }
+
+/* ── Narrower screens: the regions stack and the page scrolls ─ */
+@media (max-width: 1240px) {
+  .body, .body[data-dock="closed"] { grid-template-columns: 86px minmax(340px, 1fr) minmax(340px, 1fr); }
+  .dock { grid-column: 2 / -1; border-left: none; border-top: 1px solid var(--line); max-height: 46svh; }
+  .body[data-dock="open"] { grid-template-rows: minmax(0, 1fr) auto; }
+  .sky .skyBody:nth-child(n+5) { display: none; }
+}
+@media (max-width: 900px) {
+  .cockpit { height: auto; overflow: visible; }
+  .statusBar { flex-wrap: wrap; gap: 10px; }
+  .identity { flex: 1 1 100%; flex-wrap: wrap; }
+  .identity h1 { max-width: 100%; }
+  .sky { flex: 1 1 100%; padding-left: 0; overflow-x: auto; }
+  .toolBody { overflow-x: auto; }
+  .body, .body[data-dock="closed"], .body[data-dock="open"] { display: block; }
+  .rail { flex-direction: row; position: sticky; top: 0; z-index: 5; border-right: none; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .rail button { min-width: 68px; }
+  .stage, .deck, .dock { overflow: visible; border: none; max-height: none; }
+  .dock { border-top: 1px solid var(--line); }
+  .toolHead { position: static; flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rail button, .tabs button, .iconButton { transition: color .12s, background-color .12s, border-color .12s; }
+}

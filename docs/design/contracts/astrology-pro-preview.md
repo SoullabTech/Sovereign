@@ -42,13 +42,27 @@ before anyone else can see it.
 
 ## Arrival
 
-> **Soullab Celestial Observatory · Chart Studio** — *Private natal instrument · current sky · member-led inquiry*, labelled *Professional workspace · Private preview*.
+> **Astrology Pro**, with the open chart's name beside it, the house system, the sky now and *Private preview*.
+
+**The cockpit (2026-11-09, founder direction).** The room is one screen, not a page to
+scroll. A status bar names the chart, the house system and the sky now. A rail of
+nine tools (Chart, Timing, Relationships, Places, Traditions, Readings, Research,
+Study, Saved charts) opens and closes panels beside the wheel; the wheel stays in
+place. A tool that needs a chart says so in one line instead of showing an empty
+block. One MAIA dock sits at the right and follows whatever is open.
+
+Not yet walked by the founder or on a phone. The 2026-10-30 verification above
+describes the earlier single-page layout and its screenshots are of that layout.
 
 ## Gestures
 
 | Gesture | Language used | Why this wording |
 |---|---|---|
-| Move between work areas | the area's name (Chart Studio, Relationships, Research, Study) | a professional's working vocabulary |
+| Open or close a tool | the tool's name on the rail (Chart, Timing, Relationships, Places, Traditions, Readings, Research, Study, Saved charts); keys 1–9 | a professional's working vocabulary |
+| Collapse or close an open tool | the chevron and the × on its header | the astrologer arranges the desk |
+| Ask MAIA | "Ask" in the dock, or "Ask MAIA about…" on an instrument | MAIA reads the chart with the astrologer |
+| Ask MAIA to teach | "Mentor" in the dock | the technique, with this chart only as the example |
+| Show or hide MAIA | "MAIA" in the status bar; key M | MAIA is available, never in the way |
 | Return to Astrology | "Return to Soullab Astrology" | the Free room stays the home |
 
 ## Known wart
@@ -61,6 +75,18 @@ The dark and non-founder responses carry HTTP 200 around the not-found page rath
 - presenting the preview as a member feature, tier or entitlement
 - MAIA speaking as astrological authority
 - sending chart material to MAIA
+
+## Contract drift, for founder ruling
+
+Two lines above, "MAIA speaking as astrological authority" and "sending chart material
+to MAIA", predate Ask MAIA inside Pro (founder request 2026-11-07, merged 2026-11-08),
+which sends a section's calculated facts to MAIA when the astrologer asks: never a name
+or birth details, nothing kept, and MAIA told the chart is symbolic and the astrologer
+is the author. The cockpit's dock uses that same route and adds a Mentor mode. The
+"Forbidden here" list has not been edited: whether it should now read "sending chart
+material to MAIA except as the astrologer's own question, facts only" is the founder's
+to rule. The separate hold on transferring a chart into the main MAIA conversation
+(R4F, #1817) is untouched; the dock does not use the main conversation or its memory.
 
 ## The two brand tests
 

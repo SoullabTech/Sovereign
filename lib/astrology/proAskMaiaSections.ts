@@ -18,6 +18,7 @@ import type { CrossAspect } from './proComparison';
 import type { TransitAspect } from './proTransits';
 import type { FourPillars, LuckDirection } from './proFourPillars';
 import type { TraditionalMaya } from './proTraditionalMaya';
+import { declinationPairs, type Declination } from './proDeclinations';
 
 export const PRO_ASK_SECTIONS = ['natal', 'transits', 'biwheel', 'composite', 'four-pillars', 'progressed', 'deep'] as const;
 export type ProAskSection = typeof PRO_ASK_SECTIONS[number];
@@ -149,12 +150,59 @@ ${lifeContext}` : ''}`;
 export const PRO_DEEP_CONTEXT_NOTE =
   'If anyone in this story is at risk right now, please reach a person who can help: your local emergency number, or in the US call or text 988. The reading follows.';
 
+/**
+ * The cockpit view the astrologer has open when they ask from the MAIA dock.
+ * A fixed list: the phrase MAIA is given comes from here, never from the
+ * browser. `sees` is false where MAIA is not given that view's own figures,
+ * so MAIA says so instead of guessing.
+ */
+export const PRO_ASK_VIEWS = {
+  wheel: { phrase: 'the chart wheel', sees: true },
+  point: { phrase: 'one selected point of the chart', sees: true },
+  aspects: { phrase: 'the aspect grid and declinations', sees: true },
+  'chart-views': { phrase: 'alternative views of the chart (sidereal, harmonic, chart points)', sees: false },
+  'house-wheel': { phrase: 'the Spiralogic house wheel', sees: false },
+  ephemeris: { phrase: 'the graphical ephemeris', sees: false },
+  'astro-map': { phrase: 'the astro map and relocated chart', sees: false },
+  vedic: { phrase: 'the Vedic (sidereal) view of the chart', sees: false },
+  mayan: { phrase: 'the Mayan view of the chart', sees: true },
+  'tradition-report': { phrase: 'the written report of what tradition says about the placements', sees: true },
+  'soul-portrait': { phrase: 'a Soul Portrait of this chart', sees: true },
+  relationships: { phrase: 'questions for relational awareness drawn from this chart', sees: true },
+  research: { phrase: 'a research snapshot of this chart', sees: true },
+  study: { phrase: 'a study lesson, using this chart as the example', sees: true },
+} as const;
+export type ProAskView = keyof typeof PRO_ASK_VIEWS;
+export function isProAskView(value: unknown): value is ProAskView {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(PRO_ASK_VIEWS, value);
+}
+
+export type ProAskMode = 'ask' | 'mentor';
+
+/** Declinations and the parallels between them — data, not a reading. */
+export function declinationFacts(declinations: readonly Declination[]): string {
+  if (!declinations.length) return 'Declinations: none calculated.';
+  const each = declinations.map((d) =>
+    `${d.body} ${Math.abs(d.declination).toFixed(2)}°${d.declination >= 0 ? 'N' : 'S'}${d.outOfBounds ? ' (out of bounds)' : ''}`);
+  const pairs = declinationPairs(declinations).map((p) => `${p.a} ${p.type} ${p.b} (orb ${p.orb.toFixed(2)}°)`);
+  return `Declinations: ${each.join('; ')}\nParallels within 1°: ${pairs.length ? pairs.join('; ') : 'none'}`;
+}
+
 /** The system prompt for MAIA speaking with the astrologer about one section. */
-export function proAskSystemPrompt(section: ProAskSection, facts: string): string {
-  return `You are MAIA, an AI companion in Soullab, speaking with a professional astrologer in their own workspace. They are asking about ${SECTION_FOCUS[section]}. You are MAIA, not the astrologer and not a person.
+export function proAskSystemPrompt(section: ProAskSection, facts: string,
+  where: { mode?: ProAskMode; view?: ProAskView; point?: string } = {}): string {
+  const view = where.view ? PRO_ASK_VIEWS[where.view] : null;
+  const looking = view
+    ? ` Right now they have ${view.phrase} open${where.point ? `, with ${where.point} selected` : ''}.${view.sees ? '' : ' You are not given that view\'s own figures: answer from the facts below and say plainly what you cannot see from here.'}`
+    : where.point ? ` They have ${where.point} selected.` : '';
+  const manner = where.mode === 'mentor'
+    ? `- You are here as a mentor in the craft. Teach the technique the astrologer asks about: what it is, how it is calculated, how different schools read it and where they disagree, and what to look at first. Use the chart below only as a worked example, and say that it is an example. Do not give a reading of the person.
+- Speak as one practitioner teaching another. Plain text only — no headings, bullet lists or markdown. Keep to a few short paragraphs (under about 300 words).`
+    : '- Speak to the astrologer as a knowledgeable colleague: you may use astrological terms. Plain text only — no headings, bullet lists or markdown. Keep to a few short paragraphs (under about 250 words).';
+  return `You are MAIA, an AI companion in Soullab, speaking with a professional astrologer in their own workspace. They are asking about ${SECTION_FOCUS[section]}.${looking} You are MAIA, not the astrologer and not a person.
 
 HOW YOU SPEAK:
-- Speak to the astrologer as a knowledgeable colleague: you may use astrological terms. Plain text only — no headings, bullet lists or markdown. Keep to a few short paragraphs (under about 250 words).
+${manner}
 - The chart is symbolic: patterns to work with, never a fate. Offer possibilities and hand meaning back to the astrologer and their client.
 - Use only the facts below. If something is not there, say you can't see it. The people are "the first chart" and "the second chart"; you do not know their names, and do not ask for them or for birth details.
 - Do not predict events, deaths, illness, accidents, pregnancies, legal or money outcomes, or their timing. Do not give medical, psychological, legal or financial advice.

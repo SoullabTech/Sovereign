@@ -1,4 +1,6 @@
 .closed { margin: 12px 0 4px; }
+.closed button { display: inline-flex; align-items: center; gap: 7px; }
+.closed button[aria-pressed="true"] { background: rgba(223, 189, 132, .22); }
 .closed button, .actions button, .head button { font: inherit; font-size: .86rem; color: #f3e6cd; background: rgba(223, 189, 132, .08); border: 1px solid rgba(223, 189, 132, .55); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
 .panel { display: grid; gap: 10px; margin: 12px 0 4px; padding: 12px 14px; border: 1px solid rgba(223, 189, 132, .4); border-radius: 10px; background: rgba(23, 32, 43, .75); color: #e9dfcc; font-size: .9rem; }
 .head { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: #f3e6cd; }
