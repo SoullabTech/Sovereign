@@ -1,0 +1,118 @@
+{
+  "schema": "rgr-grm01-candidate/v1",
+  "id": "RGR-GRM-01",
+  "programme": "RELATIONAL-GEOMETRY-REASONING",
+  "title": "Geometry of Relational Meaning — research design and finite synthetic compatibility witness",
+  "date": "2026-10-16",
+  "standing": "RESEARCH_DESIGN_CANDIDATE_NOT_FOUNDER_ADJUDICATED",
+  "class": "C",
+  "lineage": {
+    "scope_base": "2e836abc32853bf01bf8256062b561c2b7406378",
+    "canonical_rgr06_identity": "RGR-06_CONFIRMATORY_IMPLEMENTATION_LOCK_2026-09-19",
+    "canonical_rgr07_status": "NOT_OPENED",
+    "new_prefix": "RGR-GRM-01",
+    "rgr05a_source_branch": "feature/rgr-05a-flow-reducibility-20261007",
+    "rgr05b_source_branch": "feature/rgr-05b-reference-feasibility-20261007",
+    "rgrcf01_source_branch": "feature/rgr-cf01-governed-review-v1-20261012",
+    "rgreval_source_branch": "feature/rgr-eval-causal-methods-plan-20261012"
+  },
+  "founder_context": "User said Continue after proposal to progress research-only Geometry of Relational Meaning, but RGR-06 is a preexisting closed canonical gate. Continue supports this noncolliding preparatory design and finite hand-authored toy, not canonical gate adjudication or experiment/training/release.",
+  "no_duplicate_work_unit": true,
+  "authorized_for_this_packet": {
+    "documentation": true,
+    "isolated_worktree_only": true,
+    "finite_hand_authored_synthetic_reference_test": true,
+    "independent_source_review": false,
+    "broader_benchmark_generation": false,
+    "data_collection": false,
+    "external_inference": false,
+    "neural_model_training": false,
+    "model_performance_evaluation": false,
+    "member_or_private_data": false,
+    "maia_or_production_change": false,
+    "schema_or_migration": false,
+    "merge": false,
+    "deployment": false
+  },
+  "sublanes": {
+    "GRM-A": {
+      "name": "Relational invariance",
+      "status": "DESIGN_ONLY",
+      "hypothesis": "H-GRM-A",
+      "preregistered": false
+    },
+    "GRM-B": {
+      "name": "Local-to-global perspective coherence",
+      "status": "FINITE_HAND_AUTHORED_TOY_ONLY",
+      "hypothesis": "H-GRM-B",
+      "preregistered": false
+    },
+    "GRM-C": {
+      "name": "Typed dynamic FLOW_D",
+      "status": "DESIGN_ONLY",
+      "hypothesis": "H-GRM-C",
+      "preregistered": false
+    }
+  },
+  "labels": {
+    "meaning_invariant_empirically_established": false,
+    "sheaf_cohomology_computed": false,
+    "sophontic_proprietary_method_reproduced": false,
+    "weather_measured": false,
+    "elemental_operator_validated": false,
+    "benchmark_materialized": false,
+    "test_or_replication_executed": false
+  },
+  "toy_cases": {
+    "coherent_cycle": {
+      "local": true,
+      "pairwise": true,
+      "global_count": 2
+    },
+    "frustrated_cycle": {
+      "local": true,
+      "pairwise": true,
+      "global_count": 0
+    },
+    "underdetermined": {
+      "local": true,
+      "pairwise": true,
+      "global_count": 4
+    },
+    "overt_conflict": {
+      "local": true,
+      "pairwise": false,
+      "global_count": 0
+    }
+  },
+  "protected_paths": [
+    "docs/programme/RGR-00_RELATIONAL_GEOMETRY_RESEARCH_CONSTITUTION_2026-09-18.md",
+    "docs/programme/RGR-01_SOURCE_CORPUS_2026-09-18.md",
+    "docs/programme/RGR-02_FORMAL_VOCABULARY_CANDIDATE_STRUCTURES_2026-09-18.md",
+    "docs/programme/RGR-03_FALSIFICATION_CONTRACT_2026-09-18.md",
+    "docs/programme/RGR-04_PREREGISTRATION_LOCK_2026-09-18.md",
+    "docs/programme/RGR-05_PRE_MATERIALIZATION_FEASIBILITY_REPORT_2026-09-18.md",
+    "docs/programme/RGR-06_CONFIRMATORY_IMPLEMENTATION_LOCK_2026-09-19.md",
+    "docs/programme/RGR-06_WORK_UNIT_2026-09-19.json"
+  ],
+  "artifact_paths": [
+    "docs/programme/RGR-GRM-01_GEOMETRY_OF_RELATIONAL_MEANING_2026-10-16.md",
+    "docs/programme/RGR-GRM-01_HYPOTHESIS_AND_FALSIFICATION_CANDIDATES_2026-10-16.md",
+    "docs/programme/RGR-GRM-01_LINEAGE_AND_SOURCE_BOUNDARY_2026-10-16.md",
+    "docs/programme/RGR-GRM-01_WORK_UNIT_2026-10-16.json",
+    "docs/programme/RGR-GRM-01_VERIFICATION_RETURN_2026-10-16.md",
+    "scripts/research/rgr-grm01/local-global-toy.mjs",
+    "tests/constitutional/rgr-grm01/local-global-toy.test.mjs"
+  ],
+  "document_sha256": {
+    "docs/programme/RGR-GRM-01_GEOMETRY_OF_RELATIONAL_MEANING_2026-10-16.md": "63314a828dc79b009d3ab2b009f38f2d58cf316f00fd6eef4c56b3e97b0952f4",
+    "docs/programme/RGR-GRM-01_HYPOTHESIS_AND_FALSIFICATION_CANDIDATES_2026-10-16.md": "d99e7a6a9e32761d1d342927c5481804b4bda44428730eac52af2ae8b6cdfa0c",
+    "docs/programme/RGR-GRM-01_LINEAGE_AND_SOURCE_BOUNDARY_2026-10-16.md": "21fd3292081309199b3a71db7612dbdf92edf2bfabc59e223604eff010493e69"
+  },
+  "subsequent_gates": [
+    "Independent human/source review of the exact candidate",
+    "Founder adjudication of a noncanonical research label",
+    "New separately frozen GRM-A/B/C comparative benchmark design with baselines and calibrated uncertainty",
+    "Explicit authority for any benchmark materialization or training"
+  ]
+}
