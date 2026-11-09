@@ -116,9 +116,12 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/writers-studio', minTier: 'free', notes: "Writer's Studio Home (Layer 2) — same member-facing policy as /press/studio, whose address it inherited; unauthenticated visitors are redirected to sign-in before the door" },
   { prefix: '/writers-studio/', minTier: 'free', notes: "Writer's Studio member corridor — authenticated members of any tier before every Studio subroute; individual proving/lab surfaces may impose a stricter server-side gate after this outer boundary" },
 
-  // LISTEN-01 dark launch (2026-11-09) — Sound Studio review audio. Served by a route that
-  // repeats the /listen conditions (flag + verified member session); never a public asset.
-  { prefix: '/media/sound-studio/', minTier: 'free', notes: 'Sound Studio review audio — authenticated members only; route also requires SOULLAB_LISTEN_REVIEW_ENABLED=1 and 404s otherwise; exact allowlisted files only' },
+  // LISTEN-01 dark launch (2026-11-09) — Sound Studio review audio. PUBLIC AT THE PROXY ONLY so a
+  // cookie-less <audio> request carrying a media ticket (iOS shell) can reach the route. The route itself
+  // enforces everything: flag → identity (session OR valid media ticket) → named beta → allowlist + release.
+  // Never a public asset: no file is served without those checks (tests/listening/sound_studio_media_ticket.test.mjs).
+  { prefix: '/media/sound-studio/', public: true, notes: 'Sound Studio review audio — route-enforced: flag + session or media ticket + named beta + allowlist; 404 otherwise' },
+  { exact: '/api/listen/media-ticket', minTier: 'free', notes: 'Issue short-lived Sound Studio media tickets; flag + verified session + named beta' },
 
   // LISTEN-45 — exact authenticated Sound Field door and exact current-session
   // receipt. The page remains disabled-by-default behind

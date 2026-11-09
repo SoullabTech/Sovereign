@@ -101,7 +101,7 @@ test('deployment and platform wiring keep the audio private and web-only', () =>
   const docker = read('Dockerfile');
   assert.match(docker, /COPY --from=builder --chown=node:node \/app\/private-media \.\/private-media/);
   assert.doesNotMatch(docker, /private-media[^\n]*\.\/public/);
-  assert.match(read('config/accessMatrix.ts'), /prefix: '\/media\/sound-studio\/', minTier: 'free'/);
+  assert.match(read('config/accessMatrix.ts'), /prefix: '\/media\/sound-studio\/', public: true/);
   assert.match(read('scripts/capacitor-patch-routes.sh'), /^\s*"app\/media"\s*$/m);
   assert.match(read('lib/mobile/mobileAllowlist.ts'), /'\/media\/sound-studio\/'/);
   const dockerignore = fs.existsSync(path.join(root, '.dockerignore')) ? read('.dockerignore') : '';
@@ -136,7 +136,7 @@ test('the cohort module fails closed and is read only by the two Sound Studio do
   assert.doesNotMatch(mod, /getListenBetaCohortSize[\s\S]*return [^;]*LISTEN_BETA_MEMBER_IDS(?!\.size)/);
   const users = execFileSync('git', ['grep', '-l', 'listenBetaAccess', '--', 'app', 'components', 'lib'], { cwd: root, encoding: 'utf8' })
     .trim().split('\n').filter(f => f !== 'lib/listening/listenBetaAccess.ts').sort();
-  assert.deepEqual(users, ['app/listen/page.tsx', 'app/media/sound-studio/[...path]/route.ts']);
+  assert.deepEqual(users, ['app/api/listen/media-ticket/route.ts', 'app/listen/page.tsx', 'app/media/sound-studio/[...path]/route.ts']);
   const page = code(read('app/listen/page.tsx'));
   assert.ok(page.indexOf('requireMemberId()') < page.indexOf('hasListenBetaAccess(memberId)'), 'session before cohort');
   assert.match(page, /if \(!hasListenBetaAccess\(memberId\)\) notFound\(\)/);
