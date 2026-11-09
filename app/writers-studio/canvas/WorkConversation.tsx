@@ -273,6 +273,8 @@ function ScopedWorkConversation({
       : await loadLivingWorkAskThread(work.id, id);
     setThreadId(id);
     if (t) setThread(t);
+    // A not-kept Sanctuary exchange belongs to the moment it happened in, never to another conversation.
+    setSanctuaryTurns([]);
   }, [manuscriptId, work.id]);
 
   /* ⭐ Design 2A (founder ruling 2026-11-02): the writer may set this
@@ -290,6 +292,8 @@ function ScopedWorkConversation({
     setThreadId(null);
     setThread(null);
     setDecision({ kind: 'fresh' });
+    setSanctuaryTurns([]);
+    setChapterReading(null);
     setRefusal(null);
     setCorrectingTurn(null);
     setCorrectionStatus(null);

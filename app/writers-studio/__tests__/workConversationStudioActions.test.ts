@@ -219,3 +219,17 @@ describe('Sanctuary exchange is visible (it was rendered inside the correction m
     expect(shown?.closest('select')).toBeNull();
   });
 });
+
+describe('a not-kept exchange does not follow the writer into another conversation', () => {
+  afterEach(() => { try { localStorage.removeItem('maia_settings'); } catch { /* */ } });
+  it('Start a new conversation clears it', async () => {
+    localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: true }));
+    await mountWith(maiaThread('t1', ['Fresh start? [[studio:new-conversation]]']), jest.fn());
+    mockAsk.mockResolvedValueOnce({ ok: true, threadId: 't1', thread: maiaThread('t1', ['Fresh start? [[studio:new-conversation]]']), staleness: 'current', sanctuary: { notKept: true, question: 'private q', answer: 'private a' } });
+    type('private q');
+    await act(async () => { enter(); await flush(); });
+    expect(host.textContent).toContain('private a');
+    await act(async () => { host.querySelector<HTMLButtonElement>('[data-studio-action="new-conversation"]')!.click(); await flush(); });
+    expect(host.textContent).not.toContain('private a');
+  });
+});
