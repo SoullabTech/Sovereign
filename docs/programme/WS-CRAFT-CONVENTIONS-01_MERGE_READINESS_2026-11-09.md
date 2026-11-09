@@ -156,3 +156,12 @@ was then checked against the code by this session.
 
 **Effect on §5.** Gate 1 (independent review) is done for this lane's files, apart from finding 7 (the
 other lane's) and finding 8 (recorded). Gates 2–4 remain.
+
+## 8. Pushed (founder: "Push it", 2026-11-09)
+
+`feature/ws-work-continuity-part-a-suite` was pushed to origin: `72228a0c4..46b7b25ee`, 20 commits,
+local and remote now level. Gate 4 (§5) is done. Still owed:
+- gate 2: a non-founder writer walk;
+- gate 3: branch-level gates for the other lanes on this branch;
+
+then the founder's merge decision, and separately the deploy decision.
