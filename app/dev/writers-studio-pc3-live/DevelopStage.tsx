@@ -25,7 +25,19 @@ import type { WorkKind } from '@/lib/writersStudio/workKindShared';
 import type { StoredPlan, StepEvent } from '@/lib/writersStudio/developmentPlanStore';
 import { STEP_STATUS, type StepEdit, type StepStatus } from '@/lib/writersStudio/developmentPlan';
 
-export interface StageSection { draftSectionId: string; heading: string | null; body: string | null; position: number }
+export interface StageSection {
+  draftSectionId: string; heading: string | null; body: string | null; position: number;
+  /** The heading level from the writer's confirmed structure (1 = part/chapter … 3). Null/absent = unknown: shown flat, never guessed. */
+  headingDepth?: number | null;
+}
+
+/* Founder (2026-11-09): "this dropdown could work if it had proper organization, indentation". Indent by the CONFIRMED level only. */
+const INDENT = '\u00A0\u00A0\u00A0\u00A0';
+export const chapterOptionLabel = (s: StageSection): string => {
+  const d = s.headingDepth;
+  const label = s.heading?.trim() || `Section ${s.position + 1}`;
+  return typeof d === 'number' && d >= 1 && d <= 3 ? `${INDENT.repeat(d - 1)}${d === 1 ? label.toUpperCase() : label}` : label;
+};
 
 const stripHeading = (s: StageSection): string => {
   let body = s.body ?? '';
@@ -104,7 +116,7 @@ export function DevelopStage(props: {
         {sections.length > 0 ? (
           <select aria-label="Chapter" data-develop-chapter-select="true" value={current?.draftSectionId ?? ''} onChange={(e) => props.onSelect(e.target.value)}
             style={{ font: 'inherit', fontSize: 13, color: 'inherit', background: 'none', border: hair, borderRadius: 6, padding: '3px 6px', maxWidth: '40%' }}>
-            {sections.map((s, i) => <option key={s.draftSectionId} value={s.draftSectionId}>{i + 1} · {labelOf(s)}</option>)}
+            {sections.map((s) => <option key={s.draftSectionId} value={s.draftSectionId} data-depth={s.headingDepth ?? undefined}>{chapterOptionLabel(s)}</option>)}
           </select>
         ) : null}
         <span style={{ flex: 1 }} />

@@ -82,7 +82,7 @@ test('founder (live, 2026-11-09): More shows no truncated chapter strip and no r
   // chapters are reached by their full names: the chapter control lists every one, untruncated
   const opts = Array.from((q('[data-develop-chapter-select]') as HTMLSelectElement).options).map((o) => o.textContent);
   expect(opts).toHaveLength(60);
-  expect(opts[53]).toBe('54 · Chapter heading number 54');
+  expect(opts[53]).toBe('Chapter heading number 54');
 });
 
 test('the chapters she read are shown in place from the writer’s own copy; “Go there” moves, “Read it here” expands', () => {
@@ -215,4 +215,18 @@ test('MAIA’s “show” offer, clicked, opens More at that place', () => {
   act(() => root.render(React.createElement(DevelopStage, { ...p, openAt: { place: 'plan', n: 1 } } as any)));
   expect(q('[data-develop-more-panel]')).not.toBeNull();
   expect(q('[data-develop-place="plan"]')).not.toBeNull();
+});
+
+test('founder (2026-11-09): the chapter control shows the confirmed structure, indented by level; unknown levels stay flat', () => {
+  const book = [
+    { draftSectionId: 'p3', heading: 'Part Three — The Spiral', body: 'x', position: 0, headingDepth: 1 },
+    { draftSectionId: 'c10', heading: 'Chapter 10: The Living Spiral', body: 'x', position: 1, headingDepth: 2 },
+    { draftSectionId: 's1', heading: 'I. The Living Spiral', body: 'x', position: 2, headingDepth: 3 },
+    { draftSectionId: 'u', heading: 'Gathering the Fire', body: 'x', position: 3, headingDepth: null },
+  ];
+  mount({ sections: book, currentId: 'c10', closed: true });
+  const opts = Array.from((q('[data-develop-chapter-select]') as HTMLSelectElement).options).map((o) => o.textContent);
+  const NB = '\u00A0\u00A0\u00A0\u00A0';
+  expect(opts).toEqual(['PART THREE — THE SPIRAL', `${NB}Chapter 10: The Living Spiral`, `${NB}${NB}I. The Living Spiral`, 'Gathering the Fire']);
+  expect(opts.some((o) => /^\d+ · /.test(o ?? ''))).toBe(false);          // no flat running numbers
 });
