@@ -31,7 +31,7 @@ import { constellationReferralPrompt } from '@/lib/constellation/referralPrompt'
 import { type StalenessState, isCurrent, mustNotAssertCurrent } from './staleness';
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 import { studioActionsInstruction } from '@/lib/writersStudio/studioActions';
-import { CONVENTION_STANCE_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE } from '@/lib/writersStudio/editorialDepth';
+import { CONVENTION_STANCE_DIRECTIVE, EPISTEMIC_INTEGRITY_DIRECTIVE, TEXT_ACCURACY_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE } from '@/lib/writersStudio/editorialDepth';
 
 /**
  * WS-CRAFT-CONVENTIONS-01 · rulings 2 and 8 (founder, 2026-11-09), carried into the Work
@@ -40,6 +40,22 @@ import { CONVENTION_STANCE_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE } from '@/lib/w
  * work prompt hash below, so provenance names the prompt that actually ran.
  */
 export const WORK_CONVENTION_RULES = [CONVENTION_STANCE_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE].join(' ');
+
+/**
+ * WS-CRAFT-CONVENTIONS-01 · G-1 (founder: "Approve G-1", 2026-11-09). The Work conversation had no
+ * text-accuracy or epistemic-integrity rule: counts, sentence order and quotations went unchecked
+ * on the path writers use most. The existing directive is carried unchanged (it already includes
+ * TEXT_ACCURACY_DIRECTIVE), and is part of the work prompt hash.
+ *
+ * ⭐ Composed by situation, text unchanged: on a first turn there are no earlier turns, and law
+ * A2 (tests/constitutional/ws-work-continuity) forbids a first-turn prompt that talks about them.
+ * So a first turn carries TEXT_ACCURACY_DIRECTIVE (a strict part of the integrity directive), and
+ * every later turn carries the whole EPISTEMIC_INTEGRITY_DIRECTIVE.
+ */
+export const WORK_INTEGRITY_RULES = EPISTEMIC_INTEGRITY_DIRECTIVE;
+export function workIntegrityRules(hasHistory: boolean): string {
+  return hasHistory ? WORK_INTEGRITY_RULES : TEXT_ACCURACY_DIRECTIVE;
+}
 
 export const ASKER_VERSION = 'ws2-05b-8b-02c-2';
 
@@ -130,7 +146,7 @@ Do not use headings, bullets or lists. Write to them in prose. Be brief: a few s
 ${WRITERS_CONSTELLATION_REFERRAL}`;
 
 export function workAskPromptHash(): string {
-  return createHash('sha256').update(`${WORK_STANDING}\n${WORK_CONVENTION_RULES}`).digest('hex');
+  return createHash('sha256').update(`${WORK_STANDING}\n${WORK_CONVENTION_RULES}\n${WORK_INTEGRITY_RULES}`).digest('hex');
 }
 
 export interface AskAnswerProvenance {
@@ -524,7 +540,7 @@ export async function askMaia(
      the type. ⛔ A new shape earns the new branch; it is never inherited by
      absence. */
   const system = ctx.kind === 'work'
-    ? [WORK_STANDING, '', WORK_CONVENTION_RULES, '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
+    ? [WORK_STANDING, '', WORK_CONVENTION_RULES, '', workIntegrityRules(history.length > 0), '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
        '--- WHERE THEY ARE IN IT ---', workAnchorSays(ctx), '',
        '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness), '',
        ...(history.length > 0 ? [HISTORY_GROUNDING, ''] : []),

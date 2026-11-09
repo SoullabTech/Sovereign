@@ -12,9 +12,9 @@ jest.mock('@/lib/writersStudio/workSituation', () => ({
 import fs from 'node:fs';
 import path from 'node:path';
 import { runStructured } from '../../../ai/structured/router';
-import { askMaia, workAskPromptHash, WORK_CONVENTION_RULES, type AskContext } from '../askReader';
+import { askMaia, workAskPromptHash, workIntegrityRules, WORK_CONVENTION_RULES, WORK_INTEGRITY_RULES, type AskContext } from '../askReader';
 import { UNMEASURED } from '../staleness';
-import { CONVENTION_STANCE_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE } from '@/lib/writersStudio/editorialDepth';
+import { CONVENTION_STANCE_DIRECTIVE, EPISTEMIC_INTEGRITY_DIRECTIVE, TEXT_ACCURACY_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE } from '@/lib/writersStudio/editorialDepth';
 
 const mockRun = runStructured as jest.MockedFunction<typeof runStructured>;
 
@@ -57,12 +57,52 @@ describe('the Work conversation carries the convention rulings', () => {
     const { promptHash } = await systemFor(ctx(false));
     expect(promptHash).toBe(workAskPromptHash());
     const src = fs.readFileSync(path.join(process.cwd(), 'lib/manuscript/ask/askReader.ts'), 'utf8');
-    expect(src).toContain("update(`${WORK_STANDING}\\n${WORK_CONVENTION_RULES}`)");
+    expect(src).toContain("update(`${WORK_STANDING}\\n${WORK_CONVENTION_RULES}\\n${WORK_INTEGRITY_RULES}`)");
   });
 
   it('defeat candidate: the Work prompt as it was before (no rules) fails the guard', async () => {
     const { system } = await systemFor(ctx(false));
     const before = system.replace(`${WORK_CONVENTION_RULES}`, '');
     expect(before.includes(CONVENTION_STANCE_DIRECTIVE) || before.includes(WRITER_ATTENTION_DIRECTIVE)).toBe(false);
+  });
+});
+
+/** G-1 (founder: "Approve G-1", 2026-11-09): accuracy and integrity reach the Work conversation. */
+describe('the Work conversation carries the accuracy and integrity rules', () => {
+  const HISTORY = [
+    { speaker: 'author' as const, body: 'What is this doing?' },
+    { speaker: 'maia' as const, body: 'It holds the tide still.' },
+  ];
+  async function systemWith(history: typeof HISTORY | []): Promise<string> {
+    mockRun.mockReset();
+    mockRun.mockResolvedValue({
+      ok: true,
+      result: { content: [{ type: 'text', text: 'A reply.' }] as never, stopReason: 'end_turn',
+        usage: { inputTokens: 1, outputTokens: 1 }, provenance: { provider: 'anthropic', model: 'm', latencyMs: 1 } },
+    } as never);
+    const out = await askMaia(ctx(false), history, 'How many words is that sentence?');
+    expect(out.ok).toBe(true);
+    return mockRun.mock.calls[0]![0].system;
+  }
+
+  it('uses the existing directives, unchanged', () => {
+    expect(WORK_INTEGRITY_RULES).toBe(EPISTEMIC_INTEGRITY_DIRECTIVE);
+    expect(workIntegrityRules(true)).toBe(EPISTEMIC_INTEGRITY_DIRECTIVE);
+    expect(workIntegrityRules(false)).toBe(TEXT_ACCURACY_DIRECTIVE);
+  });
+
+  it('a first turn carries text accuracy, without talking about earlier turns (law A2)', async () => {
+    const system = await systemWith([]);
+    expect(system).toContain(TEXT_ACCURACY_DIRECTIVE);
+    expect(system).not.toContain(EPISTEMIC_INTEGRITY_DIRECTIVE);
+  });
+
+  it('a later turn carries the whole integrity directive', async () => {
+    expect(await systemWith(HISTORY)).toContain(EPISTEMIC_INTEGRITY_DIRECTIVE);
+  });
+
+  it('defeat candidate: the Work prompt as it was before G-1 fails the guard', async () => {
+    const system = await systemWith([]);
+    expect(system.replace(TEXT_ACCURACY_DIRECTIVE, '').includes(TEXT_ACCURACY_DIRECTIVE)).toBe(false);
   });
 });
