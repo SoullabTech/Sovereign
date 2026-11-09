@@ -4,6 +4,11 @@ Candidate: branch `feature/ws-work-continuity-part-a-suite` at product code `0c5
 Everything is local and fictional: a throwaway database on this Mac, three invented books, your own sign-in to the local copy only.
 ⛔ Nothing here touches production, your real manuscripts or real members. A good walk is evidence, not an act: it authorizes no merge, migration or deploy.
 
+**Founder acceptance question (verbatim; never paraphrase):**
+> Can I sit down with my own writing and experience MAIA as an attentive, knowledgeable, challenging, trustworthy editorial collaborator—without having to manage the software in order to reach her?
+
+Design basis for the redesigned stage: `docs/research/writers-studio/MENTOR_PRESENCE_UX_RESEARCH_2026-11-09.md` (design review OPEN; implementation not yet approved).
+
 ## 0 · Start it (about 2 minutes)
 From `/Users/soullab/worktrees/ws-work-continuity-part-a`. Type your key at a hidden prompt, so it never lands in the command line or your shell history:
 
