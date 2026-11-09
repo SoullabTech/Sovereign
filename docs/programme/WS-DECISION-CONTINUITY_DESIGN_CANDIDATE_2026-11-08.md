@@ -106,3 +106,8 @@ intact → 0; a comment appended to a frozen law → 1; restored → 0; a frozen
 Lawful afterwards: implementation fails suite → repair the implementation. Additive law lives at its own address. Editing a frozen file needs a named founder act with evidence the law or instrument was wrong.
 NOT frozen on purpose: the runners (`matrix.test.ts`, the Part A grounding test), the physical witnesses (`dynamic/**`), and all implementation and migration candidates.
 The guard is not wired into CI (`ci:sovereignty`); that adds a cost to every lane and is a separate decision. Freezing authorizes no merge, migration or deploy.
+
+
+## Review outcome (2026-11-08) — see `WS-CONTINUITY_INDEPENDENT_REVIEW_2026-11-08.md`
+Independent review: serious findings fixed (Work removal with standing receipts; D5 exception pinned; deterministic Work lookup; held-quote refusal status/copy; honest controls). Founder: dismissed observations need NO receipt — "leave it as ruled";
+the claim "every crossing is receipted" now reads: reads of the writer's saved text. Member-erasure trace done; both new member-owned tables added to the delete-account preflight list.

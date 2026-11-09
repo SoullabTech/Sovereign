@@ -134,6 +134,10 @@ const GOVERNED_CONTENT: ReadonlyArray<{ table: string; column: string; label: st
   // Retention may be shared by decision. It may not be shared by accident.
   // (docs/programme/FOCUS-DISCLOSURE-RECEIPT_CONTRACT_2026-09-09.md §5)
   { table: 'context_disclosure_receipts', column: 'member_id', label: 'records of when your context was shown to MAIA' },
+  // WS-WORK-CONTINUITY (found by the member-erasure trace, 2026-11-08): both are member-owned, both name `members` ON DELETE RESTRICT,
+  // so a member who has used them can never be deleted while this route says nothing — the preflight must tell them.
+  { table: 'writer_decision_events', column: 'member_id', label: 'what you settled about your Work, in your words' },
+  { table: 'work_reading_scope_events', column: 'member_id', label: 'your permission for MAIA to read your Work' },
 ];
 
 /**
