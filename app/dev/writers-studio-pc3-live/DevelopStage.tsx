@@ -18,6 +18,8 @@ import { useMemo, useState } from 'react';
 import { excerptOf, markTerm, recurringThreads } from '@/lib/writersStudio/recurringThreads';
 import { setWorkKindClient } from '@/lib/writersStudio/workKindClient';
 import type { WorkKind } from '@/lib/writersStudio/workKind';
+import type { StoredPlan } from '@/lib/writersStudio/developmentPlanStore';
+import { STEP_STATUS, type StepEdit, type StepStatus } from '@/lib/writersStudio/developmentPlan';
 
 export interface StageSection { draftSectionId: string; heading: string | null; body: string | null; position: number }
 
@@ -45,11 +47,20 @@ export function DevelopStage(props: {
   onMoreWays: () => void;
   /** the chapters MAIA was handed for her last answer (ids + headings); their text is shown here from the writer's own copy, in place */
   lastRead: readonly { sectionId: string; label: string | null }[] | null;
+  /** the writer's plan (MAIA's grounded steps, edited by the writer). A plan never changes the manuscript. */
+  plan: { plan: StoredPlan | null; staleStepIds: readonly string[] } | null;
+  planBusy: boolean;
+  planNote: string | null;
+  onMakePlan: (ask: string) => void;
+  onEditPlan: (edits: StepEdit[]) => void;
   conversation: ReactNode;
 }) {
   const { sections } = props;
   const [thread, setThread] = useState<string | null>(null);
   const [openExcerpt, setOpenExcerpt] = useState<string | null>(null);
+  const [focusAnchor, setFocusAnchor] = useState<string | null>(null);
+  const [asking, setAsking] = useState(false);
+  const [planAsk, setPlanAsk] = useState('');
   const threads = useMemo(() => recurringThreads(sections.map((s) => ({ id: s.draftSectionId, text: stripHeading(s) }))), [sections]);
   const activeThread = threads.find((t) => t.term === thread) ?? null;
   const idx = Math.max(0, sections.findIndex((s) => s.draftSectionId === props.currentId));
@@ -115,12 +126,71 @@ export function DevelopStage(props: {
           <p style={{ opacity: .75, margin: 0 }}>{current ? 'This chapter has no text yet.' : 'Choose a chapter on the left.'}</p>
         ) : paragraphs.map((p, i) => (
           <p key={i} style={{ margin: '0 0 14px', lineHeight: 1.75, fontSize: 17, maxWidth: '64ch', fontFamily: "'Iowan Old Style','Charter',Georgia,serif" }}>
-            {markTerm(p, thread).map((piece, k) => piece.hit
+            {markTerm(p, focusAnchor ?? thread).map((piece, k) => piece.hit
               ? <mark key={k} style={{ background: 'color-mix(in srgb, #d9a441 38%, transparent)', color: 'inherit', borderRadius: 3, padding: '0 1px' }}>{piece.text}</mark>
               : <span key={k}>{piece.text}</span>)}
           </p>
         ))}
       </article>
+
+      {/* the plan: MAIA's grounded steps, the writer's to edit. It never changes the manuscript; a step is opened in the passage desk. */}
+      <section aria-label="Your plan" data-develop-plan="true" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {!props.plan?.plan ? (
+          asking ? (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <label htmlFor="develop-plan-ask" style={{ fontSize: 12, opacity: .8, width: '100%' }}>In your words, what do you want a plan for?</label>
+              <input id="develop-plan-ask" value={planAsk} onChange={(e) => setPlanAsk(e.target.value)} maxLength={1000}
+                placeholder="e.g. help me connect Chapter 7 to what I set up earlier" style={{ flex: '1 1 260px', font: 'inherit', padding: '6px 10px', borderRadius: 8, border: hair, background: 'none', color: 'inherit' }} />
+              <button type="button" disabled={props.planBusy || planAsk.trim().length === 0} onClick={() => props.onMakePlan(planAsk.trim())}
+                style={{ font: 'inherit', cursor: 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '5px 14px' }}>{props.planBusy ? 'Making a plan…' : 'Make a plan'}</button>
+              <button type="button" onClick={() => setAsking(false)} style={{ font: 'inherit', cursor: 'pointer', color: 'inherit', background: 'none', border: 'none', textDecoration: 'underline', fontSize: 12 }}>Not now</button>
+            </div>
+          ) : (
+            <button type="button" onClick={() => setAsking(true)} data-develop-plan-start="true"
+              style={{ alignSelf: 'flex-start', font: 'inherit', fontSize: 13, cursor: 'pointer', color: 'inherit', background: 'none', border: hair, borderRadius: 999, padding: '5px 14px' }}>
+              Turn this into a plan
+            </button>
+          )
+        ) : (
+          <div style={{ border: hair, borderRadius: 12, padding: '12px 16px' }}>
+            <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .7 }}>Your plan</div>
+            <p style={{ margin: '4px 0 2px', fontSize: 14 }}>{props.plan.plan.summary || 'Steps for your work.'}</p>
+            <p style={{ margin: '0 0 8px', fontSize: 12, opacity: .7 }}>You asked: “{props.plan.plan.ask}”. Nothing here changes your work; each step opens the passage so you decide.</p>
+            {props.plan.plan.steps.length === 0 ? <p style={{ margin: 0, opacity: .8 }}>MAIA could not ground a step in your text this time.</p> : null}
+            <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {props.plan.plan.steps.map((st, i) => {
+                const sec = sections.find((x) => x.draftSectionId === st.chapterId);
+                const stale = props.plan!.staleStepIds.includes(st.id);
+                return (
+                  <li key={st.id} data-develop-plan-step={st.id} style={{ borderTop: i === 0 ? 'none' : hair, paddingTop: i === 0 ? 0 : 10, opacity: st.status === 'dropped' ? .55 : 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12 }}>
+                      <strong style={{ fontWeight: 500 }}>{i + 1}. {sec ? labelOf(sec) : 'A chapter'}</strong>
+                      <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <select aria-label={`Status of step ${i + 1}`} value={st.status} onChange={(e) => props.onEditPlan([{ id: st.id, status: e.target.value as StepStatus }])}
+                          style={{ font: 'inherit', fontSize: 12, background: 'none', color: 'inherit', border: hair, borderRadius: 6 }}>
+                          {STEP_STATUS.map((x) => <option key={x} value={x}>{x === 'open' ? 'To do' : x === 'working' ? 'Working on it' : x === 'done' ? 'Done' : 'Set aside'}</option>)}
+                        </select>
+                        <button type="button" onClick={() => props.onEditPlan([{ id: st.id, remove: true }])} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', fontSize: 12 }}>Remove</button>
+                      </span>
+                    </div>
+                    <blockquote style={{ margin: '6px 0', padding: '0 0 0 10px', borderLeft: hair, fontFamily: "'Iowan Old Style','Charter',Georgia,serif", fontSize: 15, opacity: .9 }}>“{st.anchor}”</blockquote>
+                    <textarea aria-label={`What to try in step ${i + 1}`} defaultValue={st.direction} rows={2} maxLength={500}
+                      onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== st.direction) props.onEditPlan([{ id: st.id, direction: v }]); }}
+                      style={{ width: '100%', font: 'inherit', fontSize: 14, padding: '6px 8px', borderRadius: 8, border: hair, background: 'none', color: 'inherit', boxSizing: 'border-box' }} />
+                    {st.why ? <p style={{ margin: '4px 0 0', fontSize: 12, opacity: .7 }}>Why: {st.why}</p> : null}
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4, fontSize: 12 }}>
+                      {sec ? <button type="button" onClick={() => { props.onSelect(sec.draftSectionId); setFocusAnchor(st.anchor); }} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}>Go to the passage</button> : null}
+                      {stale ? <span role="status" style={{ opacity: .85 }}>This chapter has changed since the plan was made; check the step still fits.</span> : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+            {focusAnchor ? <button type="button" onClick={() => setFocusAnchor(null)} style={{ marginTop: 8, background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', fontSize: 12 }}>Clear the highlight</button> : null}
+          </div>
+        )}
+        {props.planNote ? <p role="status" data-develop-plan-note="true" style={{ margin: 0, fontSize: 12, opacity: .85 }}>{props.planNote}</p> : null}
+      </section>
 
       {/* the chapters she read for her last answer, in place — from the writer's own copy; nothing is sent to show it */}
       {props.lastRead && props.lastRead.length > 0 ? (

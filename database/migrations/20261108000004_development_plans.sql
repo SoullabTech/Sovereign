@@ -1,0 +1,69 @@
+-- WS-DEVELOP-STUDIO · M4 — a development plan: MAIA's grounded steps for the writer's Work, edited by the writer.
+--
+-- Founder ruling 2026-11-09: plan steps become proposals through the EXISTING passage desk; no new change path. So a plan never changes the manuscript:
+-- a step is a direction anchored to an exact passage the writer can open. The plan is the writer's working document: they may edit a step's wording,
+-- set its status, or remove it. Every change keeps the previous version in an append-only history.
+--
+-- ⛔⛔ CANDIDATE ON A NON-CANONICAL BRANCH. Merging this file is latent schema-deploy authorization (2026-09-07 finding). Additive.
+
+BEGIN;
+SET LOCAL lock_timeout = '5s';
+
+CREATE TABLE IF NOT EXISTS development_plans (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  member_id      UUID NOT NULL REFERENCES members(id) ON DELETE RESTRICT,
+  living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE CASCADE,
+  manuscript_id  UUID NOT NULL REFERENCES member_manuscripts(id) ON DELETE CASCADE,
+  -- the WRITER's own sentence that asked for the plan
+  ask            TEXT NOT NULL CHECK (length(ask) BETWEEN 1 AND 1000),
+  summary        TEXT NOT NULL DEFAULT '' CHECK (length(summary) <= 1200),
+  -- [{ id, chapterId, anchor, direction, why, status }]
+  steps          JSONB NOT NULL CHECK (jsonb_typeof(steps) = 'array' AND jsonb_array_length(steps) <= 8),
+  -- [{ sectionId, digest }] — the saved text each step was made against; a changed digest marks a step stale
+  basis          JSONB NOT NULL CHECK (jsonb_typeof(basis) = 'array'),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS development_plans_member_manuscript_idx ON development_plans (member_id, manuscript_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS development_plan_history (
+  plan_id  UUID NOT NULL REFERENCES development_plans(id) ON DELETE CASCADE,
+  rev      INTEGER NOT NULL,
+  steps    JSONB NOT NULL,
+  saved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (plan_id, rev)
+);
+
+-- The previous version is kept on every edit; the history itself is never edited.
+CREATE OR REPLACE FUNCTION development_plans_keep_history() RETURNS trigger AS $$
+BEGIN
+  IF NEW.member_id IS DISTINCT FROM OLD.member_id OR NEW.living_work_id IS DISTINCT FROM OLD.living_work_id
+     OR NEW.manuscript_id IS DISTINCT FROM OLD.manuscript_id OR NEW.ask IS DISTINCT FROM OLD.ask OR NEW.basis IS DISTINCT FROM OLD.basis THEN
+    RAISE EXCEPTION '[PLAN] only a plan''s steps and summary may change';
+  END IF;
+  INSERT INTO development_plan_history (plan_id, rev, steps)
+    SELECT OLD.id, COALESCE((SELECT MAX(rev) FROM development_plan_history WHERE plan_id = OLD.id), 0) + 1, OLD.steps;
+  NEW.updated_at := NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS development_plans_keep_history_trigger ON development_plans;
+CREATE TRIGGER development_plans_keep_history_trigger BEFORE UPDATE ON development_plans
+  FOR EACH ROW EXECUTE FUNCTION development_plans_keep_history();
+
+CREATE OR REPLACE FUNCTION development_plan_history_no_edit() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' AND NOT EXISTS (SELECT 1 FROM development_plans WHERE id = OLD.plan_id) THEN RETURN OLD; END IF;
+  RAISE EXCEPTION '[PLAN] development_plan_history is append-only';
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS development_plan_history_no_edit_trigger ON development_plan_history;
+CREATE TRIGGER development_plan_history_no_edit_trigger BEFORE UPDATE OR DELETE ON development_plan_history
+  FOR EACH ROW EXECUTE FUNCTION development_plan_history_no_edit();
+
+COMMENT ON TABLE development_plans IS
+'The writer''s working plan for their Work: MAIA''s grounded steps, each anchored to an exact passage in the writer''s own text, edited by the writer. A plan never changes the manuscript; a step is opened in the existing passage desk.';
+
+COMMIT;
+DO $$ BEGIN RAISE NOTICE 'Migration 20261108000004: development_plans, development_plan_history'; END $$;

@@ -44,6 +44,8 @@ import { findLongerSibling } from './stubSibling';
 import { DevelopStage, DevelopHoldings } from './DevelopStage';
 import { startersFor, type WorkKind } from '@/lib/writersStudio/workKind';
 import { getWorkKindClient } from '@/lib/writersStudio/workKindClient';
+import { fetchPlan, makePlanClient, editPlanClient, type PlanView } from '@/lib/writersStudio/planClient';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import {
   DEFAULT_WORKING_STYLE,
@@ -2130,6 +2132,34 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     void getWorkKindClient(stageWorkId).then((k) => { if (live) setWorkKind(k); });
     return () => { live = false; };
   }, [stageWorkId]);
+  /* the writer's plan for this manuscript: loaded on return, made only by the writer's gesture */
+  const [planView, setPlanView] = useState<PlanView | null>(null);
+  const [planBusy, setPlanBusy] = useState(false);
+  const [planNote, setPlanNote] = useState<string | null>(null);
+  const stageManuscriptId = props.manuscriptId;
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_WS_DEVELOP_STAGE !== '1' || !stageManuscriptId) return;
+    let live = true;
+    void fetchPlan(stageManuscriptId).then((v) => { if (live && v) setPlanView(v); });
+    return () => { live = false; };
+  }, [stageManuscriptId]);
+  const makePlan = async (ask: string) => {
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved || posture.sanctuary) {
+      setPlanNote(posture.resolved ? 'Sanctuary is on, so MAIA is not reading your work and cannot make a plan.' : 'Your Sanctuary setting could not be read on this device, so no plan was made. Open MAIA here once, then try again.');
+      return;
+    }
+    setPlanBusy(true); setPlanNote(null);
+    const r = await makePlanClient(stageManuscriptId, ask, false);
+    setPlanBusy(false);
+    if (r.ok) { setPlanView(r.view); setLastRead(r.read); if (r.dropped > 0) setPlanNote(`${r.dropped} suggested step${r.dropped === 1 ? ' was' : 's were'} left out because ${r.dropped === 1 ? 'it' : 'they'} did not point at wording actually in your chapter.`); }
+    else setPlanNote(r.refusal === 'permission_required' ? 'A plan across chapters needs your permission for MAIA to read your saved work. Choose “Let MAIA read my saved work” on the right, then try again.' : r.detail ?? 'MAIA could not make a plan just now. Nothing was changed.');
+  };
+  const editPlan = async (edits: import('@/lib/writersStudio/developmentPlan').StepEdit[]) => {
+    const id = planView?.plan?.id; if (!id) return;
+    const plan = await editPlanClient(stageManuscriptId, id, edits);
+    if (plan) setPlanView((v) => (v ? { ...v, plan } : v)); else setPlanNote('That could not be saved just now. Your plan is as it was.');
+  };
   const [lastRead, setLastRead] = useState<readonly { sectionId: string; label: string | null }[] | null>(null);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
   const [stubDismissedFor, setStubDismissedFor] = useState<string | null>(null);
@@ -3261,6 +3291,11 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       onOpenWrite={() => navigateMode('write')}
       onMoreWays={() => chooseDevelopView('full')}
       lastRead={lastRead}
+      plan={planView}
+      planBusy={planBusy}
+      planNote={planNote}
+      onMakePlan={makePlan}
+      onEditPlan={editPlan}
       conversation={(
         <WorkConversation
           key={attentionConversationDraft || 'develop-stage-conversation'}

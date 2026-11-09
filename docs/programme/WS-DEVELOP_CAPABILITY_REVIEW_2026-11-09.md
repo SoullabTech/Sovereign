@@ -61,3 +61,11 @@ Smallest honest design (needs your ruling, §6): a plan step is *MAIA's suggeste
 2. **Observations and readings as notes on the text inside the stage?** (recommended: yes, as an optional layer, commissioned explicitly.)
 3. **When does the stage become the default Develop?** (recommended: after the draft-protection guards are re-expressed, the walk on both books is accepted, and the independent review passes.)
 4. **Where does a "move chapter" command live, and who may authorize it?** (separate lane; not required for M4.)
+
+
+## 7 · RULINGS (founder, 2026-11-09)
+1. **YES** — plan steps become passage proposals through the existing desk; no new change path. 2. **YES** — readings and observations become optional notes on the text inside the stage, commissioned explicitly.
+3. **As recommended** — the stage becomes the default Develop only after the draft-protection guards are re-expressed for it, the walk on both books is accepted, and the independent review passes.
+4. **Best practice requested; held as its own lane.** "Move a chapter": the writer's explicit gesture with a consequence preview (cross-references, numbering, contents) · MAIA may propose it as a plan step but only the writer applies it ·
+one atomic step with one exact Undo · order only, never text; renumbering opt-in · version-bound (stale refusal with the reason) · an append-only record of what moved, from, to, when · a keyboard path (Move up/down, Move to…) as well as drag · within one Work.
+Needs a named founder authorization, its own laws and wrong designs, before any build.
