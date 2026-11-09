@@ -120,7 +120,8 @@ test('beside the conversation, what she read stays visible (L8), and says so hon
   const convo = React.createElement('div', { 'data-fake-convo': true }, 'convo');
   act(() => root.render(React.createElement(DevelopCompanion, { conversation: convo, lastRead: null } as any)));
   expect(q('[data-develop-conversation] [data-fake-convo]')).not.toBeNull();
-  expect(q('[data-develop-she-read]')!.textContent).toContain('Nothing read yet');
+  expect(q('[data-develop-she-read]')!.textContent).toContain('After her next answer');
+  expect(q('[data-develop-she-read]')!.textContent).not.toMatch(/Nothing read/);   // a reloaded conversation must not be told she read nothing
   act(() => root.render(React.createElement(DevelopCompanion, { conversation: convo, lastRead: [{ sectionId: 's1', label: 'Harbour' }, { sectionId: 's3', label: 'Return' }] } as any)));
   expect(q('[data-develop-she-read]')!.textContent).toContain('Harbour · Return');
 });

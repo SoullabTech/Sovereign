@@ -309,18 +309,20 @@ export function DevelopStage(props: {
 
 /** MAIA beside the work: one conversation, and — always visible, never behind a menu (L8) — which chapters she was handed for her last answer. */
 export function DevelopCompanion(props: { conversation: ReactNode; lastRead: readonly { sectionId: string; label: string | null }[] | null }) {
+  /* At the top, not the bottom: the floating "Report a bug" control covered it there (founder screenshot 2026-11-09). */
   return (
     <div data-develop-companion="true" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, gap: 8, ...ink }}>
-      <section aria-label="Talk with MAIA about this chapter" data-develop-conversation="true" style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-        {props.conversation}
-      </section>
-      <p data-develop-she-read="true" aria-live="polite" style={{ flex: '0 0 auto', margin: 0, fontSize: 11, opacity: .75, borderTop: hair, paddingTop: 6 }}>
+      <p data-develop-she-read="true" aria-live="polite" style={{ flex: '0 0 auto', margin: 0, fontSize: 11, opacity: .75, borderBottom: hair, paddingBottom: 6 }}>
         {props.lastRead === null
-          ? 'MAIA reads only what you ask her to. Nothing read yet in this conversation.'
+          /* Before an answer in this visit we do not know what she was handed earlier, so we do not claim "nothing". */
+          ? 'MAIA reads only what you ask her to. After her next answer, this line shows exactly what she read for it.'
           : props.lastRead.length === 0
             ? 'Read for her last answer: only the chapter you were on.'
             : `Read for her last answer: ${props.lastRead.map((r) => r.label ?? 'a section').join(' · ')}`}
       </p>
+      <section aria-label="Talk with MAIA about this chapter" data-develop-conversation="true" style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        {props.conversation}
+      </section>
     </div>
   );
 }
