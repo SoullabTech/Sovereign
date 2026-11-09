@@ -198,3 +198,11 @@ format, label or badge.
 3. Approve, change or reject the §5a wording?
 4. Is the single "is this part staying?" question (§3.4) acceptable, or should MAIA never cue
    upward unasked?
+
+## 9. Rulings recorded
+
+| Item | Ruling | Effect |
+|---|---|---|
+| G-1 | **APPROVED** (founder: "Approve G-1", 2026-11-09) | Implemented in `3ea7aeb55`: text accuracy on every Develop/Work turn, and the whole integrity directive once there is history (law A2). Witness: stance record §8. |
+
+Still open: §8 questions 1, 3 and 4 (the level model, the §5a wording, the single upward question).
