@@ -51,15 +51,27 @@ The stage, the scales, the proposal-as-plan and the return are **identical**; wh
 MAIA shows the three excerpts, says what 7 relies on from 2 and 5, notes that 7 uses the term *attention budget* before Chapter 6 defines it, and proposes a plan: *(a) define the term in 7's first use · (b) cite Chapter 5's study where 7 asserts the effect · (c) leave the closing call to action*. Edit, remove, Apply, Undo, leave, return — exactly as for fiction.
 Honest limits for nonfiction: **source and quote verification, and citation formatting, have no substrate** (census); MAIA can say "this claim has no support in what you have shown me", never "this is true". A bibliography check is a separate lane.
 
+## 2c · The primary member: a helper writing about their own field (founder, 2026-11-09)
+Most Soullab members are helpers — coaches, counsellors, practitioners, healers, teachers — and most will write **nonfiction out of their own practice**. That is a distinct case of nonfiction and the studio is designed for it first.
+| | A helper's book |
+|---|---|
+| what chapters are made of | **a framework or model** · **a practice or exercise the reader does** · **case stories** (someone's experience, anonymised) · **teaching points** · **the writer's own lived and professional experience** · invitations and reflections for the reader |
+| relationships between chapters | which framework a practice belongs to · where a term is introduced and where it is used · which story illustrates which teaching point · what the reader is asked to do, and whether the book has prepared them |
+| "where does it lose me?" | a practice that arrives before the idea it needs · a story that does not earn its teaching point · a claim about what the method does with no support shown · jargon the lay reader has not been given |
+| a development plan step | move the framework before its first exercise · attach a story to the point it illustrates · define a term at first use · separate what you know from experience from what you cite |
+| what MAIA must not do | assert that a method works or heals · invent a case story, a client detail, a study or a quotation · give clinical or therapeutic advice as the author's voice · supply identifying details |
+**Care that is specific to this member.** Case stories are other people's lives. The studio never asks for identifying details, never invents any, and never treats a case as grounds for a claim about a person. Whether MAIA should *offer*, once and gently, a prompt about anonymising a case story is a founder decision (default: off; it is an offering, never a gate). Claims about outcomes are met with "no support shown in what you gave me", never "true" or "false". Reading permission matters most here: the writer may be holding confidential material, so what MAIA reads stays visible, revocable and receipted, and Sanctuary suspends it.
+The kind (`fiction` · `nonfiction` · `a helper's book`) is **declared by the writer**, never inferred from words like "client" in the text.
+
 ## 3 · Success criteria (observable; each has a law and a wrong design in the suite)
 D1 default Develop shows the focused chapter's actual text · D2 nothing (conversation, tool, disclosure, mobile sheet) makes the text disappear · D3 a cross-chapter question shows the relevant excerpts of every chapter named ·
 D4 with no permission MAIA says exactly what she can see and uses only that · D5 a proposal is an editable, comparable plan with its basis visible · D6 nothing changes without Apply; Undo restores exactly · D7 stale plans are refused ·
 D8 leaving and returning restores focus, conversation and open plan without re-introduction · D9 moving between scales never changes room or loses the conversation · D10 prompts never send themselves; only the writer's sentence is recorded ·
-D11 every proposal shows what it rests on · D12 the whole-work view shows relationships, not only titles · D13 the studio serves both fiction and nonfiction: relationship kinds and starters follow the writer's DECLARED kind, never story vocabulary for an argument and never an inferred genre.
+D11 every proposal shows what it rests on · D12 the whole-work view shows relationships, not only titles · D13 the studio serves fiction, nonfiction and a helper's book: relationship kinds and starters follow the writer's DECLARED kind, never story vocabulary for an argument and never an inferred genre.
 
 ## 4 · Wrong designs the tests must reject (each is a plausible, competent mistake)
 the intent-card dashboard (today's Develop) · chat in a narrow side panel that replaces the text · a conversation that overlays the text · a proposal that applies itself · a proposal that cannot be edited · Apply with no Undo · return that resets the conversation ·
-starters that auto-send · a cross-chapter question answered silently from one chapter · a permission promised but silently withheld · a whole-work view that is only titles · a mobile conversation that hides the manuscript · stale apply allowed · a proposal with no basis shown · a story-only studio (characters, scenes) offered to a nonfiction writer · a genre guessed from the text.
+starters that auto-send · a cross-chapter question answered silently from one chapter · a permission promised but silently withheld · a whole-work view that is only titles · a mobile conversation that hides the manuscript · stale apply allowed · a proposal with no basis shown · a story-only studio (characters, scenes) offered to a nonfiction writer · a genre guessed from the text · a helper's book treated as generic nonfiction (no frameworks, practices or case stories) · a helper's book inferred from the word "client".
 
 ## 5 · Substrate: what exists, what is missing (traced, not walked)
 | Need | State |

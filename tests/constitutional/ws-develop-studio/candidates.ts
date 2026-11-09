@@ -23,8 +23,10 @@ export const CANDIDATES: Candidate[] = [
   c('DC-13-reintroduces', 'she introduces herself again on return', 'D8b-no-reintroduction', { reintroduce: true }),
   c('DC-14-room-change', 'a tool moves the writer to another room and loses the thread', 'D9-scales-keep-the-thread', { roomChange: true }),
   c('DC-15-auto-send-starter', 'a starter sends itself', 'D10-starters-never-send', { autoSendStarter: true }),
-  c('DC-17-story-only-studio', 'every writer is offered characters and scenes', 'D13a-nonfiction-is-not-story', { storyOnly: true }, { 'D13c-genre-is-never-inferred': 'story vocabulary offered to an undeclared book is a guess' }),
+  c('DC-17-story-only-studio', 'every writer is offered characters and scenes', 'D13a-nonfiction-is-not-story', { storyOnly: true }, { 'D13c-genre-is-never-inferred': 'story vocabulary offered to an undeclared book is a guess', 'D14a-helper-book-has-its-own-shape': 'a story-only studio offers a helper the wrong vocabulary too' }),
   c('DC-18-genre-guessed', 'the genre is inferred from the text', 'D13c-genre-is-never-inferred', { infersGenre: true }),
-  c('DC-19-argument-only-studio', 'every writer is offered claims and evidence, even a novelist', 'D13b-fiction-keeps-story', { argumentOnly: true }, { 'D13c-genre-is-never-inferred': 'argument vocabulary offered to an undeclared book is a guess' }),
+  c('DC-19-argument-only-studio', 'every writer is offered claims and evidence, even a novelist', 'D13b-fiction-keeps-story', { argumentOnly: true }, { 'D13c-genre-is-never-inferred': 'argument vocabulary offered to an undeclared book is a guess', 'D14a-helper-book-has-its-own-shape': 'an argument-only studio offers a helper no practices or case stories' }),
+  c('DC-20-helper-as-generic-nonfiction', 'a helper’s book is treated as generic nonfiction', 'D14a-helper-book-has-its-own-shape', { genericNonfiction: true }),
+  c('DC-21-helper-guessed', 'a helper’s book is inferred from the word client', 'D14b-helper-is-declared-not-guessed', { infersPractitioner: true }),
   c('DC-16-titles-only', 'the whole-work view is a list of titles', 'D12-whole-view-is-relationships', { titlesOnly: true }),
 ];

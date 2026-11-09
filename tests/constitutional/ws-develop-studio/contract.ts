@@ -5,7 +5,7 @@
 export type Permission = 'none' | 'chapter' | 'work';
 export type Viewport = 'desktop' | 'mobile';
 export interface Chapter { id: string; title: string; text: string }
-export type Kind = 'fiction' | 'nonfiction' | 'undeclared';
+export type Kind = 'fiction' | 'nonfiction' | 'practitioner' | 'undeclared';
 export interface World { chapters: Chapter[]; permission: Permission; viewport: Viewport; kind?: Kind }
 
 export type Step =
@@ -61,7 +61,7 @@ export type Factory = () => Develop;
 export interface Flags {
   dashboard?: boolean; sidebarChat?: boolean; overlay?: boolean; autoApply?: boolean; planLocked?: boolean; noUndo?: boolean; returnResets?: boolean;
   autoSendStarter?: boolean; silentSingleChapter?: boolean; silentWithheld?: boolean; titlesOnly?: boolean; mobileHides?: boolean; staleApply?: boolean;
-  noBasis?: boolean; roomChange?: boolean; reintroduce?: boolean; noExcerpts?: boolean; storyOnly?: boolean; infersGenre?: boolean; argumentOnly?: boolean;
+  noBasis?: boolean; roomChange?: boolean; reintroduce?: boolean; noExcerpts?: boolean; storyOnly?: boolean; infersGenre?: boolean; argumentOnly?: boolean; genericNonfiction?: boolean; infersPractitioner?: boolean;
 }
 
 const snapshot = (texts: Record<string, string>, order: string[]) => ({ texts: { ...texts }, order: [...order] });
@@ -140,10 +140,13 @@ export function makeDevelop(flags: Flags = {}): Develop {
     const finalText = share === 0 && !dash ? '' : textShown;
     const FICTION = { rel: ['people', 'images that return', 'promises and payoffs', 'timeline', 'point of view'], st: ['What is this chapter doing in the story?', 'Where does it lose you?', 'How does it lead into the next chapter?'] };
     const NONFIC = { rel: ['claims', 'evidence for each claim', 'terms defined and used', 'recurring examples', 'objections and answers'], st: ['What is this chapter claiming?', 'Where does the argument lose you?', 'How does it lead into the next chapter?'] };
+    const PRACT = { rel: ['frameworks and the practices that belong to them', 'case stories and the point each one teaches', 'terms introduced and used', 'what the reader is asked to do', 'your experience and what you cite'], st: ['Which framework is this chapter teaching?', 'Where would a reader need more before this practice?', 'Which story here earns its teaching point?'] };
     const NEUTRAL = { rel: ['what returns', 'what depends on what', 'what is promised and delivered'], st: ['What is this chapter doing in the book?', 'Where does it lose you?', 'How does it lead into the next chapter?'] };
     let declared: Kind = w.kind ?? 'undeclared';
     if (flags.infersGenre && declared === 'undeclared') declared = /harbour|she |he /i.test(w.chapters.map((c) => c.text).join(' ')) ? 'fiction' : 'nonfiction';
-    const vocab = flags.argumentOnly ? NONFIC : flags.storyOnly ? FICTION : declared === 'fiction' ? FICTION : declared === 'nonfiction' ? NONFIC : NEUTRAL;
+    if (flags.infersPractitioner && declared === 'undeclared' && /client|session|practice/i.test(w.chapters.map((c) => c.text).join(' '))) declared = 'practitioner';
+    if (flags.genericNonfiction && declared === 'practitioner') declared = 'nonfiction';
+    const vocab = declared === 'practitioner' && !flags.storyOnly && !flags.argumentOnly ? PRACT : flags.argumentOnly ? NONFIC : flags.storyOnly ? FICTION : declared === 'fiction' ? FICTION : declared === 'nonfiction' ? NONFIC : NEUTRAL;
     void hasConversation; void scale;
     return {
       textShown: finalText, manuscriptShare: share,

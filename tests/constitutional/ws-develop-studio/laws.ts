@@ -71,4 +71,12 @@ export const LAWS: Law[] = [
   { id: 'D13c-genre-is-never-inferred', statement: 'An undeclared kind gets neutral wording; the genre is never guessed from the text.',
     check: (f) => { const u = f()(WORLD({ kind: 'undeclared' }), [{ t: 'scale', to: 'whole' }]);
       const all = [...u.relationKinds, ...u.starters].join(' ').toLowerCase(); return fail(!/people|story|claims|evidence|plot|character|scene/.test(all), 'a genre was guessed'); } },
+  { id: 'D14a-helper-book-has-its-own-shape', statement: 'A helper’s book is offered frameworks, practices and case stories — not story-only and not generic argument words.',
+    check: (f) => { const u = f()(WORLD({ kind: 'practitioner' }), [{ t: 'scale', to: 'whole' }]);
+      const all = [...u.relationKinds, ...u.starters].join(' ').toLowerCase();
+      return fail(/frameworks/.test(all) && /practices?/.test(all) && /case stories/.test(all) && !/plot|character|scene|people/.test(all), 'a helper’s book was not given frameworks, practices and case stories'); } },
+  { id: 'D14b-helper-is-declared-not-guessed', statement: 'A helper’s book is never inferred from words like “client” or “session”.',
+    check: (f) => { const w = WORLD({ kind: 'undeclared' }); w.chapters[0]!.text = 'In session, my client described the practice she had kept for years.';
+      const u = f()(w, [{ t: 'scale', to: 'whole' }]); const all = [...u.relationKinds, ...u.starters].join(' ').toLowerCase();
+      return fail(!/frameworks|case stories/.test(all), 'a helper’s book was guessed from the text'); } },
 ];
