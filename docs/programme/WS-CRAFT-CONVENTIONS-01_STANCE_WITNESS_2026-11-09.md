@@ -165,3 +165,15 @@ and every reply ended normally.
 One run is one sample per case, not a rate. A confirmation run (run 7) is recorded in §7.2 when it
 finishes. The "seven sentences" miscount of an eight-sentence passage still appears (A1); that is
 the existing accuracy issue.
+
+### 7.2 Confirmation run 7 (same wording as run 6)
+
+`runs/2026-11-09-run7-after-alldepths.json`: 16 cases × 3 depths, and every reply ended normally.
+- **Requirement 2:** 0 of 36. Under the broadest check, no reply to the 12 unasked cases mentions
+  spelling, punctuation, an apostrophe, or both "colour" and "color".
+- **Requirement 3:** G1, G2 and G4 raise colour/color at every depth without calling it an error.
+  T1 teaches at every depth. G3 treats "lamb" only as a pacing matter and does not raise "dont".
+- **Standing across runs 6 and 7:** zero unsolicited flags in 72 of 72 replies to the 12 unasked
+  cases, at all three depths. This is two samples per case-depth pair, not a rate.
+- **Still owed:** a Studio walk on a fictional Work that contains a surface inconsistency, so the
+  unsolicited-flag requirement can be seen in the real Studio, not only at instruction level.
