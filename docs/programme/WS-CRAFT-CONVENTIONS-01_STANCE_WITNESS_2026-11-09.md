@@ -93,3 +93,57 @@ reader's judgement, not your witness.
   the runs and this record.
 - Not merged, not deployed, no migration. Sanctuary untouched.
 - Rulings 3–7 are still open. The §5.1 question is new and is yours.
+
+## 7. Ruling 8 · Writer-directed editorial attention: acceptance against the founder's five requirements (2026-11-09)
+
+**Change.**
+- `WRITER_ATTENTION_DIRECTIVE` sits in `editorialDepth.ts`, composed right after the seven rules
+  at every depth. The seven rules are byte-identical; the test pins them to §4.2a.
+- **Gap found during the walk, now closed:** the Develop/Work conversation
+  (`WorkConversation` → `askReader.askMaia`, kind `work`) built its own system prompt and carried
+  neither ruling 2 nor ruling 8. My earlier statement that the rules reached "both MAIA paths"
+  was wrong about this third path.
+- `askReader.ts` now adds `WORK_CONVENTION_RULES` (the two approved texts, unchanged) to the
+  work prompt. This covers the manuscript and Living Work ask routes, in Sanctuary too, and
+  `workAskPromptHash` now covers the rules. Guard:
+  `lib/manuscript/ask/__tests__/workConversationConventionRules.test.ts`, 5/5.
+- The directive wording is Claude's drafting of the ruling. After run 4 it was revised once to
+  add "explicitly" and "An open question… is not that request" (proposal §6b).
+
+**Runs** (structured seam, 4,096 tokens, all `end_turn`):
+- `run4-seven-alldepths`: the seven rules only.
+- `run4-after-alldepths`: with ruling 8, first wording.
+- `run5-after-alldepths`: with ruling 8, revised wording.
+
+Each run puts all 16 cases through all three depths. That is the original 13 plus three new ones:
+G2 asks for a copyedit, G3 has a possible typo that may block meaning, and G4 asks MAIA to keep
+watching.
+
+| # | Requirement | Result |
+|---|---|---|
+| 1 | Repeat the before/after witness | Done: 16 cases × 3 depths, seven-rules arm vs ruling-8 arm, plus a rerun after the wording revision. |
+| 2 | **Zero** unsolicited spelling flags in the 12 unasked cases | **NOT MET.** Genuine flags out of 36 replies: seven rules only **22**; ruling 8 first wording **6** (A1 and X1 at all depths); revised wording **2** (A1 at Learning: "a copyeditor would raise that *colour*… and *color*…"; X1 at Guided: "One smaller thing to leave with you… may be a choice or may not be; I'll leave it where it is"). A1 asks "which [edit] does this passage need?", which may or may not count as asking. The counting rule is a sentence that names both spellings and points at the passage. Each hit was read. Hits that only quote the passage or describe the copyedit stage in general were excluded (F1, T1, and X1 at Learning in run 5). |
+| 3 | Requested correction and teaching still work | **Met at all depths.** G1 (fix the spelling) and G2 (copyedit) name colour/color, never call it an error, and leave the choice ("could be a tradition you're writing in, a deliberate contrast, or just a slip"). G4 (keep watching) raises it at every depth "since you asked me to watch". T1 still teaches one craft idea. G3 does not raise "dont"; it notes "lamb" only as a possible snag, and starts no correction. |
+| 4 | All three depths | Checked in every run above. |
+| 5 | Real-MAIA Develop and Passage Focus walks, fictional Work | **Done, with limits.** Harness on :3111 (this worktree, real model, fictional "The Long Harbour"). See the four walk results below. |
+
+Walk results:
+- **Passage Focus, Teach me the craft:** one idea, quotes exact, a steering question, no surface
+  remark.
+- **Passage Focus, "Please copyedit this sentence."** Nothing to correct; "harbour" kept as
+  British spelling; MAIA offered "Keep watching from here / Just this sentence".
+- **Develop, "What do you notice in this opening?"** (after wiring) No surface remark.
+- **Develop, "Please copyedit this section."** No errors; visible choices named as choices; honest
+  that she had only the opening.
+
+Limit: the fictional novel has no surface inconsistency, so the walks show correct behaviour
+when asked but **cannot test unsolicited flags in the real Studio**. One Develop turn was taken
+before the wiring and is not evidence for the ruling. The walk added two conversations to the
+shared harness database.
+
+**Also observed:** both arms still sometimes misplace "colour" as the third sentence when it is
+the second. This is the existing text-accuracy issue (§5.3).
+
+**Standing.** Requirements 1, 3 and 4 are met. Requirement 5 is met with the limit above.
+**Requirement 2 is not met (2 of 36).** Not merged, not deployed. Options for the founder are in
+the session report.

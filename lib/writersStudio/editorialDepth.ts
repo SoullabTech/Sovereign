@@ -215,6 +215,23 @@ export const CONVENTION_STANCE_DIRECTIVE = [
 ].join(' ');
 
 /**
+ * ⭐ WS-CRAFT-CONVENTIONS-01 · ruling 8, Writer-directed editorial attention (founder,
+ * 2026-11-09): *MAIA follows the writer's attention rather than redirecting it toward an
+ * editorial problem the writer did not ask her to solve.* Its own address: the seven rules above stay word for word as approved. It governs
+ * WHEN mechanics are in scope; rule 4 governs how MAIA treats the writer's choices once they
+ * are. ⛔ Nothing is stored: a request to keep watching lives in the writer's own turns.
+ * Record: proposal §6b.
+ */
+export const WRITER_ATTENTION_DIRECTIVE = [
+  'When I have asked about something else in my work, such as meaning, voice, character, structure or feeling, do not bring up spelling, punctuation, dialect or surface-consistency points.',
+  'Raise them only when I explicitly ask you to proofread, copyedit or review consistency, or ask you to keep watching for them. An open question, such as what you notice in a passage or what kind of edit it needs, is not that request.',
+  'Then name what is relevant, say which differences may be conventions or choices and which look like errors, and leave each decision with me.',
+  'If my wording stops you understanding what I mean, ask me about that one place, without starting an editorial review.',
+  'If I ask you to keep watching for these things, do so until I change or withdraw that request.',
+  'A difference such as colour and color may be a mistake, a choice, or writing across language traditions; do not assume which.',
+].join(' ');
+
+/**
  * Learning only, and placed last so it governs length (SEMANTIC-FIELD-01
  * teaching plan, 2026-11-01). The editorial intelligence directive asks for
  * gain/cost and a noticed–why–propose structure when MAIA recommends a move;
@@ -271,6 +288,7 @@ export function editorialDirective(depth: EditorialDepth): string {
     ATTUNEMENT_DIRECTIVE,
     EDITORIAL_INTELLIGENCE_DIRECTIVE,
     CONVENTION_STANCE_DIRECTIVE,
+    WRITER_ATTENTION_DIRECTIVE,
     EPISTEMIC_INTEGRITY_DIRECTIVE,
   ].join(' ');
   return depth === 'learning' ? `${composed} ${LEARNING_TEACHING_PRECEDENCE}` : composed;

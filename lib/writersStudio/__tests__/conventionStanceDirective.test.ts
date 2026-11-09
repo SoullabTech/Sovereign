@@ -5,6 +5,7 @@ import {
   DEPTH_DIRECTIVE,
   EDITORIAL_INTELLIGENCE_DIRECTIVE,
   EPISTEMIC_INTEGRITY_DIRECTIVE,
+  WRITER_ATTENTION_DIRECTIVE,
   editorialDirective,
   type EditorialDepth,
 } from '../editorialDepth';
@@ -66,5 +67,39 @@ describe('MAIA holds conventions as knowledge, never as a measure', () => {
   it('defeat candidate: the guard fails on the composition as it was before', () => {
     const before = editorialDirective('guided').replace(` ${CONVENTION_STANCE_DIRECTIVE}`, '');
     expect(carriesConventionStance(before)).toBe(false);
+  });
+});
+
+/** Ruling 8, exactly as recorded in proposal §6b. */
+function ruling8Text(): string {
+  const doc = fs.readFileSync(path.join(process.cwd(), RECORD), 'utf8');
+  const start = doc.indexOf('**Directive text** (`WRITER_ATTENTION_DIRECTIVE`');
+  const block = doc.slice(start, doc.indexOf('**One limit, stated.**', start));
+  return block.split('\n').filter((l) => l.startsWith('>')).map((l) => l.replace(/^>\s?/, '')).join(' ').replace(/\s+/g, ' ').trim();
+}
+
+describe('Ruling 8 · MAIA follows the writer\'s attention', () => {
+  it('is word for word the recorded ruling', () => {
+    expect(WRITER_ATTENTION_DIRECTIVE).toBe(ruling8Text());
+  });
+
+  it('sits beside the seven rules without changing them', () => {
+    expect(CONVENTION_STANCE_DIRECTIVE).not.toContain(WRITER_ATTENTION_DIRECTIVE);
+    expect(CONVENTION_STANCE_DIRECTIVE).toBe(approvedRules().join(' '));
+  });
+
+  it('reaches every depth, directly after the seven rules', () => {
+    for (const d of DEPTHS) {
+      expect(editorialDirective(d)).toContain(`${CONVENTION_STANCE_DIRECTIVE} ${WRITER_ATTENTION_DIRECTIVE} ${EPISTEMIC_INTEGRITY_DIRECTIVE}`);
+    }
+  });
+
+  it('names no level and ranks nothing', () => {
+    expect(WRITER_ATTENTION_DIRECTIVE).not.toMatch(/\b(level|beginner|novice|advanced|expert|skill(ed)?|competen\w*|best|better|worse|priority)\b/i);
+  });
+
+  it('defeat candidate: the composition without it fails', () => {
+    const without = editorialDirective('guided').replace(` ${WRITER_ATTENTION_DIRECTIVE}`, '');
+    expect(without.includes(WRITER_ATTENTION_DIRECTIVE)).toBe(false);
   });
 });

@@ -239,18 +239,85 @@ depth texts byte-identical.
 | § 6 item | Ruling | Date | Effect |
 |---|---|---|---|
 | 1. §3 principle | **APPROVED** ("Approve principle") | 2026-11-09 | When the writer asks, MAIA may answer about any convention from her general knowledge, under the stance law. Anything MAIA offers unprompted as a teaching moment comes only from the reviewed Academy library (ACAD-1 unchanged). |
+| 2. Stance directive: content and wording | **APPROVED** ("Approve wording"), §4.2a rules 1–7 exactly as drafted | 2026-11-09 | The text is fixed. Changing it means a new ruling, not an edit. |
+| 2 (cont.) Implement and witness | **AUTHORIZED** ("Implement and witness") | 2026-11-09 | Implemented in `editorialDepth.ts` (commit `2a49e3a34`). The instruction-level witness is in `WS-CRAFT-CONVENTIONS-01_STANCE_WITNESS_2026-11-09.md`. Not merged, not deployed. |
+| 8. Writer-directed editorial attention | **APPROVED** (founder, 2026-11-09; §6b) | 2026-11-09 | A separate ruling. **The seven approved rules are unchanged, word for word.** |
 
-| 2. Stance directive: content and wording | **APPROVED** ("Approve wording"), §4.2a rules 1–7 exactly as drafted | 2026-11-09 | The text is fixed. Changing it means a new ruling, not an edit. Still owed under item 2: writing it into `editorialDepth.ts` and running the before/after witness, which is a separate founder act. |
+Still open: items 3–7.
 
-| 2 (cont.) Implement and witness | **AUTHORIZED** ("Implement and witness") | 2026-11-09 | Implemented in `editorialDepth.ts`; instruction-level witness recorded in `WS-CRAFT-CONVENTIONS-01_STANCE_WITNESS_2026-11-09.md`. Not merged, not deployed; a Studio walk is still owed. |
+## 6b. Ruling 8 — Writer-directed editorial attention (founder, 2026-11-09)
 
-Still open: items 3–7, and the new question in the witness record §5.1 (unsolicited spelling flags). The stance directive (item 2)
-is not written or wired; ACAD-3 and ACAD-4 remain unauthorized.
+**Ruling (founder, verbatim):**
+> Approved — new ruling: Writer-directed editorial attention.
+> MAIA must not introduce unsolicited spelling, punctuation, dialect, or surface-consistency
+> observations when the writer has asked about another aspect of the work.
+> Such observations become appropriate only when the writer explicitly requests proofreading,
+> copyediting, consistency review, or continuing attention to those matters.
+> If wording prevents comprehension, MAIA may ask for clarification without initiating an
+> editorial review.
+> Preserve the seven approved stance rules unchanged. Record this as a separate ruling.
+
+**Principle (founder):** "MAIA follows the writer's attention rather than redirecting it toward an
+editorial problem the writer did not ask her to solve." And: "MAIA's editorial intelligence
+should be available without becoming intrusive. That is what makes her a companion to the writer
+rather than an automated critic."
+
+**Boundary (founder):**
+- When discussing meaning, voice, character, structure, or emotional depth: no unsolicited
+  spelling or copyediting observations.
+- When asked to proofread, copyedit, or check consistency: identify relevant issues, distinguish
+  conventions from errors, and preserve the writer's authority.
+- When a possible typo prevents understanding: ask for clarification rather than start a broader
+  correction.
+- When the writer explicitly requests continuing editorial vigilance: respect that scope until it
+  is changed or withdrawn.
+
+"A writer choosing colour and color differently may be making a mistake, exercising artistic
+judgment, or writing across linguistic traditions. MAIA should not assume which."
+
+**Acceptance requirements (founder):**
+1. Repeat the 13-case before-and-after witness.
+2. Zero unsolicited spelling flags in the 12 previously identified unasked-spelling cases.
+3. Explicitly requested correction and teaching still work.
+4. Check all three editorial depths.
+5. Complete the real-MAIA Develop and Passage Focus walks with fictional work.
+
+No merge or deploy until the remaining approvals and independent acceptance gates are satisfied.
+Founder references: SOULLAB-CONTINUITY-01 (#1982), the Writer's Studio owner record (#1800), and
+the release controls (#1938) remain in force.
+
+**Relation to the seven rules.** Ruling 8 sits beside them and edits none of them. It governs
+*when* surface matters are in scope. Rule 4 governs how MAIA treats the writer's choices once they
+are.
+
+**Directive text** (`WRITER_ATTENTION_DIRECTIVE`, composed right after the seven rules). Drafted by
+Claude from the ruling above, in the writer's voice like the others; the ruling, not this
+wording, is the authority:
+
+> When I have asked about something else in my work, such as meaning, voice, character,
+> structure or feeling, do not bring up spelling, punctuation, dialect or surface-consistency
+> points. Raise them only when I explicitly ask you to proofread, copyedit or review
+> consistency, or ask you to keep watching for them. An open question, such as what you notice
+> in a passage or what kind of edit it needs, is not that request. Then name what is relevant, say which differences may be
+> conventions or choices and which look like errors, and leave each decision with me. If my
+> wording stops you understanding what I mean, ask me about that one place, without starting an
+> editorial review. If I ask you to keep watching for these things, do so until I change or
+> withdraw that request. A difference such as colour and color may be a mistake, a choice, or
+> writing across language traditions; do not assume which.
+
+**Wording revision (same day, before any merge).** Run 4 of the witness left 6 unasked flags in
+36 replies, on open questions ("what do you notice", "which edit does it need"). The sentence
+"An open question… is not that request" and the word "explicitly" were added. Both restate the
+ruling ("only when the writer explicitly requests"); neither changes it.
+
+**One limit, stated.** "Until changed or withdrawn" holds within a conversation, because the
+request lives in the writer's own turns. Nothing about the writer is stored (rule 6). Vigilance
+that lasts across conversations would need a member-declared setting, which is not designed here.
 
 ## 7. Standing and what was not done
 
-- Census and proposal written. Nothing built; no directive or prompt text changed; no craft
-  idea drafted; no storage; no merge or deploy.
+- At proposal time: nothing built. Since then, rulings 2 and 8 are implemented (§6a); no craft idea
+  drafted; no storage; no merge or deploy.
 - Not verified: whether the Develop companion path composes `editorialDirective` today (the
   Ask reader composes Guided only, `lib/manuscript/ask/developmentalAskReader.ts:73`); confirm
   before item 2 is wired.

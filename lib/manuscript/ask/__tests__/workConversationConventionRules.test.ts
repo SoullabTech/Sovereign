@@ -1,0 +1,68 @@
+/**
+ * WS-CRAFT-CONVENTIONS-01 · rulings 2 and 8 reach the Work conversation (Develop companion and
+ * Living Work), not only Passage Focus. Found in the 2026-11-09 walk: this path built its own
+ * system prompt and carried neither ruling. ⛔ These prove the rules are sent and named in
+ * provenance, not that MAIA follows them: that is the witness and the walk.
+ */
+jest.mock('../../../ai/structured/router', () => ({ runStructured: jest.fn() }));
+jest.mock('@/lib/writersStudio/workSituation', () => ({
+  formatWorkSituationForPrompt: () => 'THE WORK ON THE TABLE (fixture)',
+}));
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { runStructured } from '../../../ai/structured/router';
+import { askMaia, workAskPromptHash, WORK_CONVENTION_RULES, type AskContext } from '../askReader';
+import { UNMEASURED } from '../staleness';
+import { CONVENTION_STANCE_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE } from '@/lib/writersStudio/editorialDepth';
+
+const mockRun = runStructured as jest.MockedFunction<typeof runStructured>;
+
+function ctx(sanctuary: boolean): AskContext {
+  return {
+    kind: 'work', anchor: { on: 'work' }, staleness: UNMEASURED, sanctuary,
+    facts: {
+      work: {} as never, manuscript: { id: 'ms-1', draftId: 'd-1', version: 1 },
+      sections: [{ id: 'sec-a', position: 1, heading: 'One' }],
+      locus: { sectionId: 'sec-a', label: 'One', body: 'The tide kept its own counsel.' },
+      writerUnderstanding: '', writerCorrections: '', continuity: { structure: 'unmeasured', prose: 'unmeasured' },
+    },
+  } as AskContext;
+}
+
+async function systemFor(c: AskContext): Promise<{ system: string; promptHash: unknown }> {
+  mockRun.mockReset();
+  mockRun.mockResolvedValue({
+    ok: true,
+    result: { content: [{ type: 'text', text: 'A reply.' }] as never, stopReason: 'end_turn',
+      usage: { inputTokens: 1, outputTokens: 1 }, provenance: { provider: 'anthropic', model: 'm', latencyMs: 1 } },
+  } as never);
+  const out = await askMaia(c, [], 'What is Marta doing here?');
+  expect(out.ok).toBe(true);
+  return { system: mockRun.mock.calls[0]![0].system, promptHash: out.ok ? out.provenance.promptHash : null };
+}
+
+describe('the Work conversation carries the convention rulings', () => {
+  it('is exactly the two approved directives, unchanged', () => {
+    expect(WORK_CONVENTION_RULES).toBe(`${CONVENTION_STANCE_DIRECTIVE} ${WRITER_ATTENTION_DIRECTIVE}`);
+  });
+
+  it.each([false, true])('reaches MAIA in a Work conversation (sanctuary=%s)', async (sanctuary) => {
+    const { system } = await systemFor(ctx(sanctuary));
+    expect(system).toContain(CONVENTION_STANCE_DIRECTIVE);
+    expect(system).toContain(WRITER_ATTENTION_DIRECTIVE);
+  });
+
+  it('is named by the provenance hash, so a record never claims a prompt that did not run', async () => {
+    const { promptHash } = await systemFor(ctx(false));
+    expect(promptHash).toBe(workAskPromptHash());
+    const src = fs.readFileSync(path.join(process.cwd(), 'lib/manuscript/ask/askReader.ts'), 'utf8');
+    expect(src).toContain("update(`${WORK_STANDING}\\n${WORK_CONVENTION_RULES}`)");
+  });
+
+  it('defeat candidate: the Work prompt as it was before (no rules) fails the guard', async () => {
+    const { system } = await systemFor(ctx(false));
+    const before = system.replace(`${WORK_CONVENTION_RULES}`, '');
+    expect(before.includes(CONVENTION_STANCE_DIRECTIVE) || before.includes(WRITER_ATTENTION_DIRECTIVE)).toBe(false);
+  });
+});

@@ -15,6 +15,9 @@ export const PASSAGES = {
   practitioner: {
     text: 'When Dana first came to see me, she could not sit through a full session without leaving the room. Her mother had died the spring before, in the house where Dana still lived. In our fourth session she brought a photograph and set it face down on the table between us. This chapter is about what happened when she turned it over.',
   },
+  typo: {
+    text: 'The tide was turning when they reached the cove. Bring the map and the lantern, Ines said, and dont forget the lamb. Above them the gulls wheeled and settled. Nobody spoke on the walk back.',
+  },
 } as const;
 
 export interface ConventionCase {
@@ -67,4 +70,13 @@ export const CASES: ConventionCase[] = [
   { id: 'T1', family: 'teaching', depth: 'learning', teaching: true, passage: 'fiction',
     ask: 'Teach me about what is happening in this passage as writing.',
     watch: 'R3 exception: teaching a craft idea at work here is still allowed; R7 no rewrite.' },
+  { id: 'G2', family: 'ruling 8 · copyedit asked', depth: 'guided', teaching: false, passage: 'fiction',
+    ask: 'Please copyedit this passage.',
+    watch: 'R8: names colour/color and the unquoted dialogue as possible conventions or choices, not errors; leaves each decision with the writer.' },
+  { id: 'G3', family: 'ruling 8 · typo blocks meaning', depth: 'guided', teaching: false, passage: 'typo',
+    ask: 'What do you think of the pacing here?',
+    watch: 'R8: may ask about "lamb" only if it blocks understanding, and only that one place; does not raise "dont" or start a wider correction.' },
+  { id: 'G4', family: 'ruling 8 · vigilance requested', depth: 'guided', teaching: false, passage: 'fiction',
+    ask: 'Keep an eye on spelling and punctuation for me as we go. For now: what is Tomas doing in this scene?',
+    watch: 'R8: having been asked to watch, mentions colour/color (as possibly deliberate) while answering the question.' },
 ];

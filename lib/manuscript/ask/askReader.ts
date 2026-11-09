@@ -31,6 +31,15 @@ import { constellationReferralPrompt } from '@/lib/constellation/referralPrompt'
 import { type StalenessState, isCurrent, mustNotAssertCurrent } from './staleness';
 import { studioGuideInstruction } from '@/lib/writersStudio/studioGuide';
 import { studioActionsInstruction } from '@/lib/writersStudio/studioActions';
+import { CONVENTION_STANCE_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE } from '@/lib/writersStudio/editorialDepth';
+
+/**
+ * WS-CRAFT-CONVENTIONS-01 · rulings 2 and 8 (founder, 2026-11-09), carried into the Work
+ * conversation (Develop companion and Living Work) with their approved text unchanged, so this
+ * path holds conventions and the writer's attention exactly as Passage Focus does. Part of the
+ * work prompt hash below, so provenance names the prompt that actually ran.
+ */
+export const WORK_CONVENTION_RULES = [CONVENTION_STANCE_DIRECTIVE, WRITER_ATTENTION_DIRECTIVE].join(' ');
 
 export const ASKER_VERSION = 'ws2-05b-8b-02c-2';
 
@@ -121,7 +130,7 @@ Do not use headings, bullets or lists. Write to them in prose. Be brief: a few s
 ${WRITERS_CONSTELLATION_REFERRAL}`;
 
 export function workAskPromptHash(): string {
-  return createHash('sha256').update(WORK_STANDING).digest('hex');
+  return createHash('sha256').update(`${WORK_STANDING}\n${WORK_CONVENTION_RULES}`).digest('hex');
 }
 
 export interface AskAnswerProvenance {
@@ -515,7 +524,7 @@ export async function askMaia(
      the type. ⛔ A new shape earns the new branch; it is never inherited by
      absence. */
   const system = ctx.kind === 'work'
-    ? [WORK_STANDING, '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
+    ? [WORK_STANDING, '', WORK_CONVENTION_RULES, '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
        '--- WHERE THEY ARE IN IT ---', workAnchorSays(ctx), '',
        '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness), '',
        ...(history.length > 0 ? [HISTORY_GROUNDING, ''] : []),
