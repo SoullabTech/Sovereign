@@ -43,10 +43,16 @@
 .field select:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 .quiet { font-size: .8rem; white-space: nowrap; background: transparent; border: 1px solid var(--line-soft); border-radius: 6px; padding: 5px 10px; color: var(--ink-soft); }
 .quiet:hover { border-color: var(--line); color: var(--ink); }
+.share { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; white-space: nowrap; background: rgba(226, 196, 143, .1); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; color: var(--brass); }
+.share[aria-expanded="true"] { background: var(--brass); color: #14202d; }
+/* One quiet focus ring. The page's wider ring was clipped into stray bars inside scrolling tab rows. */
+.cockpit.cockpit :is(a, button, select, textarea, input, summary):focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
+.cockpit.cockpit .tabs button:focus-visible { outline-offset: -2px; border-radius: 4px; }
 .iconButton { flex: 0 0 auto; display: inline-grid; place-items: center; width: 30px; height: 30px; background: transparent; border: 1px solid transparent; border-radius: 6px; color: var(--ink-soft); }
 .iconButton:hover, .iconButton[aria-expanded="true"] { border-color: var(--line); color: var(--brass); }
 
-.sky { display: flex; align-items: center; gap: 14px; margin-left: auto; flex: 1 1 0; min-width: 0; padding-left: 8px; overflow: hidden; font-size: .8rem; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* Planets that do not fit wrap to a second line, which is clipped: none is ever cut in half. */
+.sky { display: flex; flex-wrap: wrap; align-items: center; column-gap: 14px; row-gap: 20px; height: 1.5em; line-height: 1.5; margin-left: auto; flex: 1 1 0; min-width: 0; padding-left: 8px; overflow: hidden; font-size: .8rem; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .skyBody small { color: var(--ink-soft); font-size: .7rem; margin-right: 3px; }
 .skyAt { color: var(--ink-soft); font-size: .7rem; }
 .flag { font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); border: 1px solid var(--line-soft); border-radius: 50px; padding: 3px 9px; white-space: nowrap; }
@@ -114,7 +120,7 @@
 .talkBar { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; margin: 0 10px 10px; padding: 11px 14px; text-align: left; font-size: .92rem; color: var(--ink); background: linear-gradient(90deg, rgba(226, 196, 143, .13), rgba(226, 196, 143, .04)); border: 1px solid var(--line); border-radius: 10px; }
 .talkBar:hover { background: rgba(226, 196, 143, .16); }
 .talkBar svg { color: var(--brass); flex: 0 0 auto; }
-.talkBar span { flex: 1 1 auto; min-width: 0; }
+.talkBar span { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .talkBar b { font-weight: 600; color: var(--brass); }
 .talkBar small { color: var(--ink-soft); font-size: .74rem; white-space: nowrap; }
 /* The site's floating "Report a bug" button sits over the bottom-right corner. */
@@ -125,6 +131,7 @@
 .maiaHead { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-bottom: 1px solid var(--line-soft); }
 .back { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; background: transparent; border: 1px solid var(--line-soft); border-radius: 6px; padding: 5px 10px; color: var(--ink-soft); }
 .back:hover { border-color: var(--line); color: var(--ink); }
+.maiaHead { min-height: 50px; }
 .maiaTitle { display: inline-flex; align-items: center; gap: 8px; margin: 0 auto; font-family: Georgia, serif; font-size: 1.2rem; color: var(--brass); }
 .segment { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
 .segment button { font-size: .8rem; padding: 5px 13px; background: transparent; border: none; color: var(--ink-soft); }

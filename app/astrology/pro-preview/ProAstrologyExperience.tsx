@@ -18,7 +18,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   BookOpen, Bookmark, ChevronDown, ChevronRight, ChevronUp, CircleDot, Clock, Eye, EyeOff, FlaskConical, Globe2,
-  GraduationCap, Info, MapPin, Orbit, Sparkles, Users, X, type LucideIcon,
+  GraduationCap, Info, MapPin, Orbit, Send, Sparkles, Users, X, type LucideIcon,
 } from 'lucide-react';
 import type { BirthChart } from '@/lib/astrology/proEphemerisCalculator';
 import { apiFetch, apiUrl } from '@/lib/http/apiBase';
@@ -28,6 +28,7 @@ import ProResearchWorkbench from './ProResearchWorkbench';
 import ProStudyWorkbench from './ProStudyWorkbench';
 import ProRelationshipsWorkbench from './ProRelationshipsWorkbench';
 import ProSavedCharts, { type SavedChartSummary } from './ProSavedCharts';
+import ProChartSharePanel from './ProChartShareAction';
 import ProTransitPanel from './ProTransitPanel';
 import ProAspectGrid from './ProAspectGrid';
 import ProComparePanel from './ProComparePanel';
@@ -128,6 +129,8 @@ function Cockpit() {
   // A tab mounts when first shown and stays mounted (hidden) so its work is kept.
   const [shown, setShown] = useState<Record<string, true>>({});
   const [methodOpen, setMethodOpen] = useState(false);
+  // The client link for the open saved chart: make it, copy it, view the client's page, turn it off.
+  const [shareOpen, setShareOpen] = useState(false);
   const [chartStatus, setChartStatus] = useState<ChartStatus>('idle');
   const [chart, setChart] = useState<BirthChart | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
@@ -218,6 +221,7 @@ function Cockpit() {
     setCalculationQuality(null);
     setSystemsWork(null);
     setPortraitOpen(false);
+    setShareOpen(false);
     setChartStatus(reason);
   }
 
@@ -469,14 +473,17 @@ function Cockpit() {
     if (tab) setTabOf((current) => ({ ...current, [id]: tab }));
     setLead(id);
     if (id === 'timing' && !openTools.includes('timing')) setTransitRequest((n) => n + 1);
+    // Asking for a tool leaves the conversation with MAIA and shows the tools.
     dock?.focus(null, false);
+    dock?.setOpen(false);
   }
   function closeTool(id: ToolId) {
     setOpenTools((current) => current.filter((t) => t !== id));
     setLead((current) => (current === id ? openTools.find((t) => t !== id) ?? null : current));
   }
   function toggleTool(id: ToolId) {
-    if (openTools.includes(id)) closeTool(id);
+    // From the conversation, a tool on the rail is being asked for, never dismissed.
+    if (openTools.includes(id) && !dock?.open) closeTool(id);
     else openTool(id);
   }
 
@@ -709,6 +716,13 @@ function Cockpit() {
                 onClick={() => setMethodOpen((o) => !o)}>
                 <Info size={17} aria-hidden="true" />
               </button>
+              {savedSubject && (
+                <button type="button" className={cockpit.share} aria-expanded={shareOpen}
+                  title="Make, copy or view this person’s private chart link"
+                  onClick={() => setShareOpen((o) => !o)}>
+                  <Send size={15} aria-hidden="true" /> Share with client
+                </button>
+              )}
               <button type="button" className={cockpit.quiet} onClick={() => closePrivateChart()}>Close chart</button>
             </>
           )}
@@ -734,6 +748,16 @@ function Cockpit() {
           <Sparkles size={16} aria-hidden="true" /> {dockOpen ? 'Tools' : 'Talk with MAIA'}
         </button>
       </header>
+
+      {shareOpen && privateChart && savedSubject && (
+        <section className={cockpit.method} aria-label={`Share ${savedSubject.label}’s chart`}>
+          <p>
+            The client’s page shows this chart and its transits, view-only, with no account needed. “View” opens
+            exactly what they will see. The same link is under Saved charts.
+          </p>
+          <ProChartSharePanel chartId={savedSubject.id} label={savedSubject.label} onClose={() => setShareOpen(false)} />
+        </section>
+      )}
 
       {methodOpen && privateChart && (
         <section className={cockpit.method} aria-label="Calculation method and limits">

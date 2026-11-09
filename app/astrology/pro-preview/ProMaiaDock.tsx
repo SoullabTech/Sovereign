@@ -57,17 +57,18 @@ export default function ProMaiaStage({ chartOpen, whereLabel, preferSections }: 
           <ArrowLeft size={16} aria-hidden="true" /> Back to the tools
         </button>
         <span className={styles.maiaTitle}><Sparkles size={18} aria-hidden="true" /> MAIA</span>
-        <div className={styles.segment} role="group" aria-label="How MAIA answers">
+        {chartOpen && subject && <div className={styles.segment} role="group" aria-label="How MAIA answers">
           <button type="button" aria-pressed={mode === 'ask'} onClick={() => setMode('ask')}
             title="Ask reads the chart with you">Ask</button>
           <button type="button" aria-pressed={mode === 'mentor'} onClick={() => setMode('mentor')}
             title="Mentor teaches the technique and uses this chart only as an example">Mentor</button>
-        </div>
+        </div>}
       </header>
 
       {!chartOpen || !subject ? (
         <p className={styles.maiaEmpty}>
           Open a chart and MAIA can read it with you. Until then there is nothing for MAIA to see.
+          Use “Open my chart” beside the wheel, or Saved charts on the rail.
         </p>
       ) : (
         <div className={styles.maiaColumn}>
