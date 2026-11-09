@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`open defects against the rule are named (this list must shrink, never be hidden) 1`] = `
+[
+  "book-kind",
+  "change-chapter",
+  "close-conversation",
+  "delete-plan",
+  "edit-plan",
+  "focus",
+  "keeps",
+  "more",
+  "open-in-maia",
+  "recurring-words",
+  "revoke-reading",
+  "what-she-read",
+  "withdraw-settled",
+  "work-on-step",
+]
+`;

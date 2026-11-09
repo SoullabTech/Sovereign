@@ -9,6 +9,14 @@ Everything is local and fictional: a throwaway database on this Mac, three inven
 
 Design basis for the redesigned stage: `docs/research/writers-studio/MENTOR_PRESENCE_UX_RESEARCH_2026-11-09.md` (design review OPEN; implementation not yet approved).
 
+## ⭐ Standing founder rule — everything askable through MAIA (recorded 2026-11-09)
+
+Founder, repeatedly ("a truly interactive MAIA conversational driven field where more happens through her and conversation than a lot of buttons"; "all should be available through conversation with MAIA in Develop"; "i want it all"), and on 2026-11-09: *"this is not a new design request but one I have to continually ask for."*
+
+**Rule:** every capability on the Develop stage must be reachable by asking MAIA, as an offer the writer clicks (a Design 1B studio action; only the click performs it, never in Sanctuary), or must itself be a way of talking to her. **A capability that is not is a defect against this rule, not optional scope.**
+
+**Acceptance check (mechanical):** `lib/writersStudio/developAskable.ts` maps every control on the stage and in its conversation to its offer; `lib/writersStudio/__tests__/developAskable.test.ts` fails on any unmapped control and names the open defects. At `ff9163784`+: 14 open defects (book kind, change chapter, close, delete plan, edit plan, focus, keeps, More, open in MAIA, recurring words, revoke reading, what she read in place, withdraw settled, work on a plan step). The list must shrink; it is never hidden.
+
 ## 0 · Start it (about 2 minutes)
 From `/Users/soullab/worktrees/ws-work-continuity-part-a`. Type your key at a hidden prompt, so it never lands in the command line or your shell history:
 

@@ -188,6 +188,14 @@ Nothing here is a recommendation to build. The writers-studio steward rule (reco
 
 The clean, high-value combination is a margin-mark anchoring design reimplemented from AnchoredAI on Web Annotation selectors, plus an evaluation harness that MAIA's own law calls for. That harness would combine an MRBench-style rubric ("did MAIA write prose", "is it anchored", "is it an observation or a question", "does it import an external standard"), a local Prometheus or Claude judge with length control (the FOXGLOVE lesson), the paired-framing sycophancy probe, and an optional LUAR voice-drift measure over consenting writers' own drafts. Inference must stay on Anthropic or local Ollama. Judge models run locally.
 
+## ⭐ Standing founder rule — everything askable through MAIA (recorded 2026-11-09)
+
+Founder, repeatedly ("a truly interactive MAIA conversational driven field where more happens through her and conversation than a lot of buttons"; "all should be available through conversation with MAIA in Develop"; "i want it all"), and on 2026-11-09: *"this is not a new design request but one I have to continually ask for."*
+
+**Rule:** every capability on the Develop stage must be reachable by asking MAIA, as an offer the writer clicks (a Design 1B studio action; only the click performs it, never in Sanctuary), or must itself be a way of talking to her. **A capability that is not is a defect against this rule, not optional scope.**
+
+**Acceptance check (mechanical):** `lib/writersStudio/developAskable.ts` maps every control on the stage and in its conversation to its offer; `lib/writersStudio/__tests__/developAskable.test.ts` fails on any unmapped control and names the open defects. At `ff9163784`+: 14 open defects (book kind, change chapter, close, delete plan, edit plan, focus, keeps, More, open in MAIA, recurring words, revoke reading, what she read in place, withdraw settled, work on a plan step). The list must shrink; it is never hidden.
+
 ## Founder requirements for the design submission
 
 This section is founder-supplied and is the report's **design-acceptance frame**. Everything above is evidence and pattern material in service of it. Its disposition is research and experience design inside the existing Writer's Studio lane. The last verified candidate is `be05fc6c0`. No implementation, merge, migration or deploy is authorized, and no new lane is opened. The open-source findings above inform components only. They do not dictate the experience and do not open a lane.

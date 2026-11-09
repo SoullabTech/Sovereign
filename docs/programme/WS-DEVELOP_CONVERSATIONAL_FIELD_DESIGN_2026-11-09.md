@@ -3,6 +3,14 @@
 Status: **design candidate for founder ruling.** Same lane as everything since 2026-11-08 (Writer's Studio, owner record #1800, branch `feature/ws-work-continuity-part-a-suite`). Authorizes no build, migration, merge or deploy.
 Candidate at time of writing: `c09b28986`.
 
+## ⭐ Standing founder rule — everything askable through MAIA (recorded 2026-11-09)
+
+Founder, repeatedly ("a truly interactive MAIA conversational driven field where more happens through her and conversation than a lot of buttons"; "all should be available through conversation with MAIA in Develop"; "i want it all"), and on 2026-11-09: *"this is not a new design request but one I have to continually ask for."*
+
+**Rule:** every capability on the Develop stage must be reachable by asking MAIA, as an offer the writer clicks (a Design 1B studio action; only the click performs it, never in Sanctuary), or must itself be a way of talking to her. **A capability that is not is a defect against this rule, not optional scope.**
+
+**Acceptance check (mechanical):** `lib/writersStudio/developAskable.ts` maps every control on the stage and in its conversation to its offer; `lib/writersStudio/__tests__/developAskable.test.ts` fails on any unmapped control and names the open defects. At `ff9163784`+: 14 open defects (book kind, change chapter, close, delete plan, edit plan, focus, keeps, More, open in MAIA, recurring words, revoke reading, what she read in place, withdraw settled, work on a plan step). The list must shrink; it is never hidden.
+
 ## 0 · Why another design pass
 Re-reading the whole conversation against what is built: the founder's asks were, in order —
 1. "She should simply read the chapter/book and recall it." (continuity)

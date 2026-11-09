@@ -103,7 +103,7 @@ export function DevelopStage(props: {
           </select>
         ) : null}
         <span style={{ flex: 1 }} />
-        <button type="button" onClick={props.onOpenWrite} style={quiet}>Edit in Write</button>
+        <button type="button" data-develop-edit-in-write="true" onClick={props.onOpenWrite} style={quiet}>Edit in Write</button>
         <button type="button" data-develop-more="true" aria-expanded={more} onClick={() => setMore((v) => !v)}
           style={{ font: 'inherit', fontSize: 12, cursor: 'pointer', color: 'inherit', background: more ? 'color-mix(in srgb, currentColor 10%, transparent)' : 'none', border: hair, borderRadius: 999, padding: '3px 12px' }}>
           {more ? 'Back to the chapter' : 'More'}
