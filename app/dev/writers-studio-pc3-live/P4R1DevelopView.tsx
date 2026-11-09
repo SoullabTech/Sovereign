@@ -3297,7 +3297,9 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
      read, and what the writer has settled. Used for the plain overview with a Work declared. Observations, the Full view, themes and the
      other fields keep their existing rooms. */
   /* Behind a flag until the draft-protection guards are re-expressed for the stage and the founder has accepted it (design doc §6, M1). */
-  const useStage = process.env.NEXT_PUBLIC_WS_DEVELOP_STAGE === '1' && developView !== 'full' && props.field === 'overview' && !selectedObservation
+  /* Founder walk 2026-11-09: "I want to see my work. I want it to be center, not 50 buttons and options." A remembered "Full" depth
+     silently hid the whole stage, so the stage no longer depends on it: Develop opens on the work itself; lens tools stay one choice away. */
+  const useStage = process.env.NEXT_PUBLIC_WS_DEVELOP_STAGE === '1' && props.field === 'overview' && !selectedObservation
     && Boolean(props.work) && !props.preparing && !needsWork && props.sections.length > 0;
   const stageSection = props.sections.find((x) => x.draftSectionId === props.currentSectionId) ?? props.sections[0];
   const stageLabel = stageSection?.heading?.trim() || 'this chapter';

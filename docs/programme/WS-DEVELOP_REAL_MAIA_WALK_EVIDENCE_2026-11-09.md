@@ -105,3 +105,15 @@ Mapped every async path in `WorkConversation`: thread discovery and adoption, se
 - A send whose conversation changed underneath it would now also be dropped, leaving the writer's text in the box (defensive, same generation check).
 - Tests (component, fictional data): late reading after a fresh start · time order across Sanctuary off · clearing on adoption before a slow load. **Each fails on the previous component and passes now.** Writer's Studio and Develop suites 1748/1748; type gate clean. A standing guard (array position must never rank conversations) caught a `(t, i)` in the first version of fix 4; renamed, not weakened.
 - ⛔ Not covered: the Write-room passage desk conversation (a separate component and route) under Sanctuary.
+
+## Founder walk, 2026-11-09 — first impressions (verbatim, before any explanation)
+- "review this Develop page and explain how it is different now" → it was showing the OLD lens layout: a remembered "Full" depth silently hid the whole new stage. **Fixed:** the stage no longer depends on that setting.
+- "It isnt fucking working. I dont see what is differnt"
+- "where is the fucking manusscripts?" — the harness holds only fictional books and nothing said so.
+- "If I as the designer cant figure this shit out how can I expect members to?"
+- "I want to see my work. I want it to be center not 50 buttons and options"
+- On the stage itself: "this is shit design"
+- Asked MAIA "Can you show me an edited version" — no answer: the provider returned **401** (the key did not reach the app intact). Not a product failure, but the page showed nothing to say so.
+
+**Verdict: FAIL (founder witness).** The mechanisms work; the experience does not. Counted on screen: chapter tabs, recurring-word chips, plan prompt + Make a plan + Not now, three suggestion chips, More ways to explore, In relation to / Where are we? / Start a new conversation / Focus / ×, Keeps / Open in MAIA / Send, and a right column of eight more controls — around 25 controls around a passage shown in a small box.
+**Direction for the redesign (from the founder's words, not yet designed):** the work fills the centre; MAIA is one conversation beneath or beside it; everything else is reached by asking her or behind one quiet control. A failed MAIA call must say so on screen.
