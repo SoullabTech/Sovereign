@@ -11,11 +11,16 @@
  * a reading or pass, grants read permission, saves or applies text.
  * ⛔ "Go to section X" is deliberately absent: headings are not unique, so it
  * waits for section ids MAIA is given and cannot invent.
+ *
+ * ⭐ G4 AMENDMENT (founder, 2026-11-09, "Yes, start G4"): ONE action acts — `read-chapter`. MAIA may offer it; ONLY the writer's click
+ * starts her reading of the chapter the writer is in (optionally through a lens: `[[studio:read-chapter:arc]]`). The reading records her
+ * observations; nothing in the writing changes. Every other action stays navigation-only, exactly as ruled in Design 1B.
  */
 
 import { stripAnswerChoices } from '@/lib/writersStudio/answerChoices';
+import { DEVELOPMENTAL_LENSES, type DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 
-export type StudioActionId = 'develop-overview' | 'editorial-pass' | 'craftsmans-table' | 'new-conversation';
+export type StudioActionId = 'develop-overview' | 'editorial-pass' | 'craftsmans-table' | 'new-conversation' | 'read-chapter';
 export type StudioActionSurface = 'passage-focus' | 'work-conversation';
 
 export type StudioAction = {
@@ -31,6 +36,7 @@ export const STUDIO_ACTIONS: readonly StudioAction[] = [
   { id: 'develop-overview', label: 'Go to “Read this chapter”', does: 'opens Develop → Overview, where the writer can press "Read this chapter"', surfaces: ['passage-focus', 'work-conversation'] },
   { id: 'editorial-pass', label: 'Go to “Start an editorial pass”', does: 'opens Develop → More ways to explore → Edit with MAIA, where the writer can press "Start an editorial pass"', surfaces: ['passage-focus', 'work-conversation'] },
   { id: 'craftsmans-table', label: 'Open Craftsman’s Table here', does: 'opens Craftsman\'s Table on the passage already in Focus', surfaces: ['passage-focus'] },
+  { id: 'read-chapter', label: 'Read this chapter', does: 'when the writer clicks it, you read the whole chapter they are in (with a lens if you name one); your observations are kept for later conversations and nothing in their writing changes. Only their click starts it', surfaces: ['work-conversation'] },
   { id: 'new-conversation', label: 'Start a new conversation', does: 'sets this conversation aside (it stays saved) so the next question starts fresh', surfaces: ['passage-focus', 'work-conversation'] },
 ];
 
@@ -41,18 +47,25 @@ export type ParsedReply = {
   readonly text: string;
   /** At most one known action offered for this surface. */
   readonly action: StudioAction | null;
+  /** For `read-chapter`: the lens she named, only if it is a real reading lens (else the default overview). */
+  readonly lens?: DevelopmentalLens;
 };
 
 /** Strip every `[[studio:…]]` marker; keep the first one this surface allows. */
 export function parseStudioActions(body: string, surface: StudioActionSurface): ParsedReply {
   let action: StudioAction | null = null;
+  let lens: DevelopmentalLens | undefined;
   // Answer-choice markers are never shown as text anywhere (answerChoices.ts).
   const text = stripAnswerChoices(body).replace(MARKER, (_m, raw: string) => {
-    const found = STUDIO_ACTIONS.find((a) => a.id === raw.trim());
-    if (!action && found && found.surfaces.includes(surface)) action = found;
+    const [id, param] = raw.trim().split(':', 2) as [string, string | undefined];
+    const found = STUDIO_ACTIONS.find((a) => a.id === id && (param === undefined || a.id === 'read-chapter'));
+    if (!action && found && found.surfaces.includes(surface)) {
+      action = found;
+      if (found.id === 'read-chapter') lens = (DEVELOPMENTAL_LENSES as readonly string[]).includes(param ?? '') ? (param as DevelopmentalLens) : 'overview';
+    }
     return '';
   }).replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-  return { text, action };
+  return lens ? { text, action, lens } : { text, action };
 }
 
 /** Strip markers only, for surfaces that show replies but offer no buttons. */
@@ -89,5 +102,9 @@ export function studioActionsInstruction(surface: StudioActionSurface): string {
     'OFFERING A STUDIO CONTROL',
     'When pointing the writer to one of the controls below would genuinely help, you may end your reply with exactly one marker on its own line, and the Studio shows it as a button the writer can click. Use it only when you have just pointed to that control in your reply. Never more than one. Never invent a marker; anything not listed is removed and does nothing. The button only takes the writer there; it does not press anything.',
     ...allowed.map((a) => `- [[studio:${a.id}]] — ${a.does}.`),
+    ...(allowed.some((a) => a.id === 'read-chapter') ? [
+      `To offer a reading through a particular lens, write it after a colon: [[studio:read-chapter:arc]]. Lenses: ${DEVELOPMENTAL_LENSES.join(', ')}.`,
+      'Offer [[studio:read-chapter]] when the writer asks you to read the chapter they are in, or when reading it whole would genuinely help and you have no reading of it. Ask; never assume the answer. You never start a reading yourself.',
+    ] : []),
   ].join('\n');
 }

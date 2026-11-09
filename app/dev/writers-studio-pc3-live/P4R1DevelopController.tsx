@@ -1255,6 +1255,28 @@ export default function P4R1DevelopController() {
     await performChapterRead(revisionNumber);
   }, [context, chapterReviewBusy, performChapterRead]);
 
+  /* ⭐ G4 — MAIA offered "Read this chapter" in the conversation and the WRITER clicked it. Read the chapter the writer is in, through the
+     lens she named; save a draft revision first if the reading needs one (as "Save current draft & read" does). Nothing in the writing changes. */
+  const commissionChapterReading = useCallback(async (lens: DevelopmentalLens): Promise<{ ok: true; label: string } | { ok: false; message: string }> => {
+    if (!context || !currentChapter?.sections.length) return { ok: false, message: 'Open a chapter first, then ask MAIA to read it. Nothing was changed.' };
+    const ids = currentChapter.sections.map((section) => section.draftSectionId);
+    const scope: ReadingScope = { kind: 'range', fromSectionId: ids[0]!, toSectionId: ids[ids.length - 1]! };
+    const label = currentChapter.root.heading?.trim() || 'this chapter';
+    let result = await requestDevelopmentalReading(context.manuscriptId, lens, scope);
+    if (!result.ok && result.stage === 'capture' && (result.refusal === 'revision_not_current' || result.refusal === 'no_revision')) {
+      const saved = await checkpointServerDraft(apiFetch, context.manuscriptId, { baseRevisionId: context.version, idempotencyKey: newIdempotencyKey() });
+      if (saved.kind !== 'ok' || saved.revisionCount === null) {
+        return { ok: false, message: saved.kind === 'conflict'
+          ? 'The draft moved while MAIA was preparing to read it. Reload the chapter, then try again. Nothing was changed.'
+          : 'Your current draft could not be saved for reading just now. Your writing is unchanged.' };
+      }
+      setContext((previous) => previous ? { ...previous, version: saved.revisionId ?? previous.version, draftRevision: saved.revisionCount } : previous);
+      result = await requestDevelopmentalReading(context.manuscriptId, lens, scope);
+    }
+    await loadSummaries();
+    return result.ok ? { ok: true, label } : { ok: false, message: 'MAIA could not finish that reading just now. Nothing in your writing changed.' };
+  }, [context, currentChapter, loadSummaries]);
+
   const readChapterInBook = useCallback(async () => {
     if (!context || !chapterReview || chapterBookFitBusy || context.draftRevision === null) return;
     setChapterBookFitBusy(true);
@@ -1766,6 +1788,7 @@ export default function P4R1DevelopController() {
       onCheckpointAndCommission={() => void checkpointAndCommission()}
       onReadChapter={() => void readCurrentChapter()}
       onCheckpointAndReadChapter={() => void checkpointCurrentChapterAndRead()}
+      onCommissionChapterReading={commissionChapterReading}
       onReadChapterInBook={() => void readChapterInBook()}
       onReadChapterMovement={() => void readChapterMovement()}
       onScoreChapter={() => void scoreCurrentChapter()}

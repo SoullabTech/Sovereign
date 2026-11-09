@@ -253,6 +253,8 @@ export interface P4R1DevelopViewProps {
   onCheckpointAndCommission: () => void;
   onReadChapter: () => void;
   onCheckpointAndReadChapter: () => void;
+  /** G4: the writer clicked MAIA's "Read this chapter" offer in the conversation. */
+  onCommissionChapterReading?: (lens: import('@/lib/manuscript/developmentalReader/contract').DevelopmentalLens) => Promise<{ ok: true; label: string } | { ok: false; message: string }>;
   onReadChapterInBook: () => void;
   onReadChapterMovement: () => void;
   onScoreChapter: () => void;
@@ -3328,6 +3330,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
           onStudioPlace={onStudioPlace}
           hideHoldings
           onRead={setLastRead}
+          onReadChapter={props.onCommissionChapterReading}
           onClose={() => setAttentionConversationDraft('')}
         />
       )}

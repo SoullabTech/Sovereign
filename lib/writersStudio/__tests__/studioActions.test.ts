@@ -8,7 +8,8 @@ import { STUDIO_ACTIONS, parseStudioActions, stripStudioActions, studioActionsIn
 describe('the closed allowlist', () => {
   it('is exactly the approved v1 set, with no "go to section"', () => {
     // Craftsman's Table restored as a place to go (founder, 2026-11-04), passage Focus only.
-    expect(STUDIO_ACTIONS.map((a) => a.id).sort()).toEqual(['craftsmans-table', 'develop-overview', 'editorial-pass', 'new-conversation']);
+    // G4 (founder, 2026-11-09): read-chapter, Work conversation only, started by the writer's click.
+    expect(STUDIO_ACTIONS.map((a) => a.id).sort()).toEqual(['craftsmans-table', 'develop-overview', 'editorial-pass', 'new-conversation', 'read-chapter']);
     expect(JSON.stringify(STUDIO_ACTIONS)).not.toMatch(/section-|go-to-section/);
   });
 
@@ -69,5 +70,23 @@ describe('what MAIA is told', () => {
       'app/writers-studio/canvas/EditorialConversation.tsx',
       'app/writers-studio/canvas/WorkConversation.tsx',
     ]) expect(read(f)).toMatch(/parseStudioActions|stripStudioActions/);
+  });
+});
+
+describe('G4: Read this chapter, offered in conversation', () => {
+  it('parses with a real lens, defaults to overview, and never accepts an invented lens', () => {
+    expect(parseStudioActions('Shall I? [[studio:read-chapter:arc]]', 'work-conversation')).toMatchObject({ action: { id: 'read-chapter' }, lens: 'arc', text: 'Shall I?' });
+    expect(parseStudioActions('Shall I? [[studio:read-chapter]]', 'work-conversation').lens).toBe('overview');
+    expect(parseStudioActions('[[studio:read-chapter:rewrite-it]]', 'work-conversation').lens).toBe('overview');
+  });
+  it('is not offered in passage Focus, and no other action accepts a parameter', () => {
+    expect(parseStudioActions('[[studio:read-chapter]]', 'passage-focus').action).toBeNull();
+    expect(parseStudioActions('[[studio:develop-overview:arc]]', 'work-conversation').action).toBeNull();
+  });
+  it('MAIA is told only the click starts it, and the lenses she may name', () => {
+    const work = studioActionsInstruction('work-conversation');
+    expect(work).toContain('You never start a reading yourself');
+    expect(work).toContain('[[studio:read-chapter:arc]]');
+    expect(studioActionsInstruction('passage-focus')).not.toContain('read-chapter');
   });
 });

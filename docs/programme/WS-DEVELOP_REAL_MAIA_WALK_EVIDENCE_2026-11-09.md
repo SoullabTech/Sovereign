@@ -24,8 +24,9 @@ Run by Claude Code in the app's browser pane at the founder's request, on the lo
 | 4 | **Sanctuary: the Work conversation stored the writer's question and MAIA's answer verbatim** | **Fixed under founder ruling (2026-11-09, "do what is best")**, applying the Sanctuary invariant as written. Inherited from canonical (its Ask route had no Sanctuary handling), not introduced by G6. Now in Sanctuary: no thread is created and no turn is written, fresh or continuing; the answer is returned once, marked not kept, and shown in the conversation without storage. The writer's manuscript, edits, plans and decisions are unaffected. Route test (fresh, ordinary→Sanctuary mid-conversation) passes and fails if storage is forced; real MAIA: answered, `threadId: null`, 0 rows stored |
 | 5 | In Sanctuary she suggested granting the reading permission (which Sanctuary suspends) | Open, small (guidance) |
 | 6 | The helper's-book "protect identities" note did not appear in two turns | Open; cause not established |
-| 7 | The new stage has no way to commission a reading; readings sit behind lens cards in the old view | Open — founder direction: all of these through conversation with MAIA (G4) |
-| 8 | Harness books have no saved revision, so readings are refused until a save | Open (harness) |
+| 7 | The new stage has no way to commission a reading; readings sit behind lens cards in the old view | **G4 first slice built (founder, "Yes, start G4")** — see below. Not yet walked with real MAIA |
+| 8 | Harness books have no saved revision, so readings are refused until a save | Open (harness); the G4 path saves a draft revision first when a reading needs one |
+| 9 | **The Sanctuary exchange (fix #4) was rendered inside the "Correct MAIA" menu**, so in the page it never showed; nothing was stored either way | **Fixed**: moved to the end of the conversation. A display test fails on the earlier code and passes now. The real-model check had measured storage (0 rows), not display |
 
 ## Next authorized gate
 Founder ruling on #4 (does Sanctuary govern Writer's Studio conversation retention?) · then G4 (readings and lenses through conversation) · fix #3 with a real-model check · the founder's own walk · independent Class A/R20 acceptance.
@@ -40,3 +41,14 @@ Founder ruling on #4 (does Sanctuary govern Writer's Studio conversation retenti
 - FAIL (open): MAIA self-blames when the passage changes between turns · the identity-protection note did not appear · no conversational way to commission a reading on the stage.
 - UNKNOWN: Write-room Sanctuary behaviour · why the identity note did not appear.
 - RULED: Sanctuary in-the-moment inputs (founder, "Yes, in the moment").
+
+## G4 — readings through conversation (first slice, 2026-11-09)
+Founder ruling "Yes, start G4", recorded as a **narrow amendment to Design 1B**: one offered control acts — **Read this chapter**. Every other offer stays navigation-only.
+- MAIA may offer `[[studio:read-chapter]]` or name a lens (`[[studio:read-chapter:arc]]`); the lens must be one of the reading contract's own lenses (`DEVELOPMENTAL_LENSES`), anything else falls back to overview. Only the Work conversation offers it; passage Focus does not. No other action accepts a parameter.
+- **Only the writer's click starts a reading.** She is told she never starts one herself. The reading covers the chapter the writer is in; if it needs a saved revision, the draft is saved first (as "Save current draft & read" does). Nothing in the writing changes.
+- While it runs, the conversation shows honest elapsed time (the same `readingProgressText` as the old view); when done: "MAIA has read X. Ask her what she noticed." Nothing is sent to MAIA on the writer's behalf; the next answer carries the reading (G6).
+- **Sanctuary:** a reading is kept, so in Sanctuary the click reads nothing and says why. If the posture cannot be read (no saved settings), the reading proceeds (Sanctuary defaults off).
+- Where a room cannot start a reading (Write, Review, canvas), the offer becomes the existing navigation to Develop rather than a button that does nothing; with no handler at all, no button.
+- Tests: offer parsing and instruction (studioActions), click-only, lens passed, progress, success, refusal, Sanctuary, degraded rooms (workConversationStudioActions). Type gate: no regressions. Wider suites: only the 8 inherited failures.
+- ⚠️ Observed, not changed: the old Develop view's lens-card reading buttons do not check Sanctuary at all.
+- ⛔ Not yet: a real-model walk of this path; lenses beyond the current chapter (whole book, chosen chapters).

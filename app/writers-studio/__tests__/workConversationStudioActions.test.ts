@@ -106,12 +106,12 @@ function maiaThread(id: string, replies: string[]) {
   });
   return { id, anchor: { on: 'work' }, openedAt: '2026-10-30T00:00:00Z', turns };
 }
-async function mountWith(thread: any, onStudioPlace?: jest.Mock) {
+async function mountWith(thread: any, onStudioPlace?: jest.Mock, onReadChapter?: jest.Mock) {
   mockThreadsOn.mockResolvedValue({ kind: 'threads', threads: [{ id: thread.id, openedAt: thread.openedAt, turnCount: thread.turns.length }] });
   mockLoadThread.mockResolvedValue(thread);
   await act(async () => {
     root.render(React.createElement(WorkConversation, {
-      work: workA, manuscriptId: 'fictional-ms-a', sectionId: null, onClose: () => undefined, onStudioPlace,
+      work: workA, manuscriptId: 'fictional-ms-a', sectionId: null, onClose: () => undefined, onStudioPlace, onReadChapter,
     } as any));
     await flush();
   });
@@ -150,5 +150,72 @@ describe('Work conversation: offered controls (Design 1B)', () => {
     await mountWith(maiaThread('t1', ['Fresh start? [[studio:new-conversation]]']), jest.fn());
     await act(async () => { host.querySelector<HTMLButtonElement>('[data-studio-action="new-conversation"]')!.click(); await flush(); });
     expect(composer().getAttribute('data-send-mode')).toBe('open');
+  });
+});
+
+describe('G4: Read this chapter from the conversation', () => {
+  afterEach(() => { try { localStorage.removeItem('maia_settings'); } catch { /* */ } });
+
+  it('nothing is read until the writer clicks; the click reads through the named lens and asks MAIA nothing', async () => {
+    const d = deferred<{ ok: true; label: string }>();
+    const onReadChapter = jest.fn(() => d.promise);
+    localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
+    await mountWith(maiaThread('t1', ['Want me to read it through its arc? [[studio:read-chapter:arc]]']), jest.fn(), onReadChapter);
+    expect(onReadChapter).not.toHaveBeenCalled();
+    const b = host.querySelector<HTMLButtonElement>('[data-studio-action="read-chapter"]')!;
+    expect(b.textContent).toBe('Read this chapter');
+    await act(async () => { b.click(); await flush(); });
+    expect(onReadChapter).toHaveBeenCalledWith('arc');
+    expect(host.querySelector('[data-chapter-reading="running"]')?.textContent).toContain('MAIA is reading the chapter');
+    expect(b.disabled).toBe(true);
+    await act(async () => { d.resolve({ ok: true, label: 'Return' }); await flush(); });
+    expect(host.querySelector('[data-chapter-reading="done"]')?.textContent).toContain('MAIA has read Return. Ask her what she noticed.');
+    expect(mockAsk).not.toHaveBeenCalled();
+  });
+
+  it('in Sanctuary the click reads nothing and says why', async () => {
+    const onReadChapter = jest.fn();
+    localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: true }));
+    await mountWith(maiaThread('t1', ['Shall I? [[studio:read-chapter]]']), jest.fn(), onReadChapter);
+    await act(async () => { host.querySelector<HTMLButtonElement>('[data-studio-action="read-chapter"]')!.click(); await flush(); });
+    expect(onReadChapter).not.toHaveBeenCalled();
+    expect(host.querySelector('[data-chapter-reading="refused"]')?.textContent).toContain('Sanctuary is on');
+  });
+
+  it('a refused reading is said plainly', async () => {
+    localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false }));
+    const onReadChapter = jest.fn().mockResolvedValue({ ok: false, message: 'Open a chapter first, then ask MAIA to read it. Nothing was changed.' });
+    await mountWith(maiaThread('t1', ['Shall I? [[studio:read-chapter]]']), jest.fn(), onReadChapter);
+    await act(async () => { host.querySelector<HTMLButtonElement>('[data-studio-action="read-chapter"]')!.click(); await flush(); });
+    expect(host.querySelector('[data-chapter-reading="refused"]')?.textContent).toContain('Open a chapter first');
+  });
+
+  it('where the room cannot read, the offer becomes the navigation to where the writer can — never a dead button', async () => {
+    const onStudioPlace = jest.fn();
+    await mountWith(maiaThread('t1', ['Shall I? [[studio:read-chapter:voice]]']), onStudioPlace);
+    expect(host.querySelector('[data-studio-action="read-chapter"]')).toBeNull();
+    await act(async () => { host.querySelector<HTMLButtonElement>('[data-studio-action="develop-overview"]')!.click(); await flush(); });
+    expect(onStudioPlace).toHaveBeenCalledWith('develop-overview');
+  });
+
+  it('with neither handler, no button at all', async () => {
+    await mountWith(maiaThread('t1', ['Shall I? [[studio:read-chapter]]']));
+    expect(host.querySelector('[data-studio-action]')).toBeNull();
+    expect(host.textContent).not.toContain('[[studio:');
+  });
+});
+
+describe('Sanctuary exchange is visible (it was rendered inside the correction menu, so it never showed)', () => {
+  afterEach(() => { try { localStorage.removeItem('maia_settings'); } catch { /* */ } });
+  it('shows the not-kept exchange in the conversation, outside any menu', async () => {
+    localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: true }));
+    mockAsk.mockResolvedValueOnce({ ok: true, threadId: null, thread: null, staleness: 'current', sanctuary: { notKept: true, question: 'Is Dana too exposed?', answer: 'Perhaps. What does the reader need?' } });
+    await mount(workA, 'fictional-ms-a');
+    type('Is Dana too exposed?');
+    await act(async () => { enter(); await flush(); });
+    const shown = host.querySelector('[data-sanctuary-turns="true"]');
+    expect(shown?.textContent).toContain('this exchange is not kept');
+    expect(shown?.textContent).toContain('Perhaps. What does the reader need?');
+    expect(shown?.closest('select')).toBeNull();
   });
 });

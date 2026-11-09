@@ -5,6 +5,8 @@ import ReadScopeControl from './ReadScopeControl';
 import SettledDecisions from './SettledDecisions';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { parseStudioActions } from '@/lib/writersStudio/studioActions';
+import { readingProgressText } from '@/lib/writersStudio/readingProgress';
+import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import Link from 'next/link';
 import { GROUND, INK, MAIA_ACCENT, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText, typeStyle } from '../studio/StudioType';
@@ -165,6 +167,8 @@ export interface WorkConversationProps {
   hideHoldings?: boolean;
   /** Which saved sections MAIA was handed for the answer just received (ids + headings only). */
   onRead?: (read: readonly { sectionId: string; label: string | null }[]) => void;
+  /** G4: MAIA offered "Read this chapter" and the writer clicked it. Absent → no such button. Only the click starts a reading. */
+  onReadChapter?: (lens: DevelopmentalLens) => Promise<{ ok: true; label: string } | { ok: false; message: string }>;
   onClose: () => void;
 }
 
@@ -180,7 +184,7 @@ export default function WorkConversation(props: WorkConversationProps) {
 }
 
 function ScopedWorkConversation({
-  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, hideHoldings = false, onRead, identity,
+  work, manuscriptId, sectionId, initialDraft = '', onClose, onStudioPlace, hideHoldings = false, onRead, onReadChapter, identity,
 }: WorkConversationProps & { identity: ReturnType<typeof useMemberIdentity> }) {
   const { keeps } = useManuscriptKeeps(manuscriptId);
   const [showKeeps, setShowKeeps] = useState(false);
@@ -191,6 +195,28 @@ function ScopedWorkConversation({
   const [thread, setThread] = useState<AskThreadView | null>(null);
   /* Sanctuary exchanges: shown for this moment only, held in this component's memory, never stored anywhere. */
   const [sanctuaryTurns, setSanctuaryTurns] = useState<{ question: string; answer: string }[]>([]);
+  /* G4: a chapter reading the writer started from MAIA's offer. Shown here; MAIA is not asked anything until the writer asks. */
+  const [chapterReading, setChapterReading] = useState<{ phase: 'running'; startedAt: number; now: number } | { phase: 'done' | 'refused'; text: string } | null>(null);
+  useEffect(() => {
+    if (chapterReading?.phase !== 'running') return;
+    const t = window.setInterval(() => setChapterReading((r) => r?.phase === 'running' ? { ...r, now: Date.now() } : r), 1000);
+    return () => window.clearInterval(t);
+  }, [chapterReading?.phase]);
+  const startChapterReading = useCallback(async (lens: DevelopmentalLens) => {
+    if (!onReadChapter) return;
+    // Readings are kept (they are how MAIA remembers having read), so Sanctuary — which keeps nothing — never starts one.
+    const posture = readCurrentSanctuaryPosture();
+    if (posture.resolved && posture.sanctuary) {
+      setChapterReading({ phase: 'refused', text: 'Sanctuary is on, and a reading is kept, so MAIA will not read the chapter now. Turn Sanctuary off if you want her to. Nothing was read.' });
+      return;
+    }
+    const startedAt = Date.now();
+    setChapterReading({ phase: 'running', startedAt, now: startedAt });
+    const result = await onReadChapter(lens);
+    setChapterReading(result.ok
+      ? { phase: 'done', text: `MAIA has read ${result.label}. Ask her what she noticed. Nothing in your writing changed.` }
+      : { phase: 'refused', text: result.message });
+  }, [onReadChapter]);
 
   const [draft, setDraft] = useState(initialDraft);
   // The Studio's starter, as placed; never sent on its own.
@@ -587,15 +613,23 @@ function ScopedWorkConversation({
               /* Design 1B: only MAIA's latest reply may offer a control, and only
                  one this room can honour. Clicking only takes the writer there. */
               if (t.speaker !== 'maia' || t.index !== latestMaiaIndex) return null;
-              const offered = parseStudioActions(t.body, 'work-conversation').action;
+              const parsed = parseStudioActions(t.body, 'work-conversation');
+              /* Where the room cannot start a reading itself (no onReadChapter), MAIA's "Read this chapter" offer degrades to the
+                 Design 1B navigation that takes the writer to where they can start one — never to a button that silently does nothing. */
+              const offered = parsed.action?.id === 'read-chapter' && !onReadChapter
+                ? parseStudioActions('[[studio:develop-overview]]', 'work-conversation').action
+                : parsed.action;
               if (!offered) return null;
               const place = offered.id === 'develop-overview' || offered.id === 'editorial-pass' ? offered.id : null;
               if (place && !onStudioPlace) return null;
               const run = () => {
                 if (offered.id === 'new-conversation') { startFresh(); return; }
+                if (offered.id === 'read-chapter') { void startChapterReading(parsed.lens ?? 'overview'); return; }
                 if (place && requestConversationDeparture()) onStudioPlace?.(place);
               };
-              const enabled = offered.id === 'new-conversation' ? canStartFresh : pending === null;
+              const enabled = offered.id === 'new-conversation' ? canStartFresh
+                : offered.id === 'read-chapter' ? pending === null && chapterReading?.phase !== 'running'
+                : pending === null;
               return (
                 <button
                   type="button"
@@ -652,19 +686,6 @@ function ScopedWorkConversation({
                       {WRITER_CORRECTION_KINDS.map((kind) => (
                         <option key={kind} value={kind}>{WRITER_CORRECTION_LABEL[kind]}</option>
                       ))}
-        {sanctuaryTurns.length > 0 ? (
-          <div data-sanctuary-turns="true" style={{ borderTop: '1px solid color-mix(in srgb, currentColor 16%, transparent)', paddingTop: SPACE.base }}>
-            <StudioText role="metadata" tone="quiet" style={{ marginBottom: SPACE.base }}>Sanctuary · this exchange is not kept. When you leave, it is gone.</StudioText>
-            {sanctuaryTurns.map((t, i) => (
-              <div key={`s${i}`} style={{ marginBottom: SPACE.base }}>
-                <StudioText role="metadata" tone="quiet">You</StudioText>
-                <StudioText role="maiaReading" style={{ color: INK.secondary, fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap' }}>{t.question}</StudioText>
-                <StudioText role="metadata" tone="quiet" style={{ marginTop: SPACE.hairline }}>MAIA</StudioText>
-                <StudioText role="maiaReading" style={{ color: MAIA_ACCENT.reading, fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap' }}>{parseStudioActions(t.answer, 'work-conversation').text}</StudioText>
-              </div>
-            ))}
-          </div>
-        ) : null}
                     </select>
                     <textarea
                       aria-label="Your correction"
@@ -707,6 +728,29 @@ function ScopedWorkConversation({
             ) : null}
           </div>
         ))}
+
+        {chapterReading ? (
+          <div data-chapter-reading={chapterReading.phase} role="status" aria-live="polite" style={{ marginTop: SPACE.tight }}>
+            <StudioText role="metadata" tone="secondary">
+              {chapterReading.phase === 'running'
+                ? readingProgressText('MAIA is reading the chapter', chapterReading.now - chapterReading.startedAt)
+                : chapterReading.text}
+            </StudioText>
+          </div>
+        ) : null}
+        {sanctuaryTurns.length > 0 ? (
+          <div data-sanctuary-turns="true" style={{ borderTop: '1px solid color-mix(in srgb, currentColor 16%, transparent)', paddingTop: SPACE.base }}>
+            <StudioText role="metadata" tone="quiet" style={{ marginBottom: SPACE.base }}>Sanctuary · this exchange is not kept. When you leave, it is gone.</StudioText>
+            {sanctuaryTurns.map((t, i) => (
+              <div key={`s${i}`} style={{ marginBottom: SPACE.base }}>
+                <StudioText role="metadata" tone="quiet">You</StudioText>
+                <StudioText role="maiaReading" style={{ color: INK.secondary, fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap' }}>{t.question}</StudioText>
+                <StudioText role="metadata" tone="quiet" style={{ marginTop: SPACE.hairline }}>MAIA</StudioText>
+                <StudioText role="maiaReading" style={{ color: MAIA_ACCENT.reading, fontSize: '1rem', lineHeight: 1.7, maxWidth: '64ch', whiteSpace: 'pre-wrap' }}>{parseStudioActions(t.answer, 'work-conversation').text}</StudioText>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         {correctionStatus ? (
           <StudioText role="metadata" data-correction-status="true">{correctionStatus}</StudioText>
