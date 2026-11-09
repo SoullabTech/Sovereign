@@ -45,6 +45,8 @@ const COGNITION_ROOTS = [
   'lib/manuscript/ask/developmentalAskReader.ts',
   'lib/manuscript/ask/askReader.ts',
   'app/api/sovereign/manuscripts/[id]/ask/route.ts',
+  /* founder ruling 2026-11-09 ("Yes, same terms"): a development plan reads settled decisions on the same terms as the Ask route */
+  'app/api/sovereign/manuscripts/[id]/plans/route.ts',
   /* When 07G synthesis exists, its root is added HERE — so that permitting
      standing into a writer-initiated conversation requires a deliberate
      architectural change rather than one convenient import. */
@@ -219,6 +221,8 @@ const DECISION_RECORD = 'lib/writersStudio/decisionRecord.ts';
 const DECISION_RECORD_IMPORTERS = [
   'app/api/sovereign/living-works/[id]/decisions/route.ts',
   'app/api/sovereign/manuscripts/[id]/ask/route.ts',
+  /* founder ruling 2026-11-09 ("Yes, same terms"): a development plan reads settled decisions on the same terms as the Ask route */
+  'app/api/sovereign/manuscripts/[id]/plans/route.ts',
   'lib/manuscript/editorialRuntime/turn.ts',
   /* the writer-gesture WRITER: imports TYPES only (asserted below); it reads nothing and reaches no cognition root */
   'lib/writersStudio/decisionRecordWrite.ts',
@@ -232,7 +236,7 @@ describe('D5 narrow exception · pinned bytes and a closed list of readers', () 
   it('the exception module is byte-for-byte what the founder ruled (any edit needs a named founder act and a new pin)', () => {
     expect(gitBlobHash(NARROW_EXCEPTION)).toBe(NARROW_EXCEPTION_BLOB);
   });
-  it('only the Ask route, the editorial turn and the decisions route import the shared decision read', () => {
+  it('only the Ask route, the plans route, the editorial turn and the decisions route import the shared decision read', () => {
     const importers = directImporters(realReader, (t) => t === DECISION_RECORD).filter((f) => !f.includes('__tests__')).sort();
     expect(importers).toEqual(DECISION_RECORD_IMPORTERS);
   });

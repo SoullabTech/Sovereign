@@ -19,8 +19,8 @@ Evidence classes kept apart. ⛔ Not a founder walk, not an independent review, 
 - ⚠️ On one run straight after recreating the probe database, 2 of 12 failed; 3 later runs 12/12. **Not explained**; not reproduced.
 - Regression across Writer's Studio suites: 9 failing suites **also fail at `493f2d6da`** (pre-existing: listen ×6, KDP cover, askSourceCloseout, manuscriptImportWork). Two failures were this work's and are fixed: Remove copy now names "its plans" (drift guard + word-for-word copy test + mutation runner updated together); the plan no longer reads settled decisions (see Held).
 
-## Held for founder ruling
-- **Should plans read the writer's settled decisions?** The shared decision read carries the D5 narrow exception and its readers are a closed list. Adding the plans route widens it. Recommended: yes, same terms as the Ask route. Until ruled, a plan may re-propose something settled.
+## Founder ruling
+- **Plans read the writer's settled decisions — RULED 2026-11-09: "Yes, same terms"** (as the Ask route). The closed reader list in `standingOutsideCognition.test.ts` is widened by exactly the plans route, with the ruling cited beside it. Same terms hold by construction: the plans route refuses in Sanctuary or unstated Sanctuary before any read. The plan prompt skips settled items unless the writer asks to revisit them.
 - Review findings 1–4 on hand-off: fixed and unit-tested; finding 3 (unsaved buffer) and 4 (ordering) **not exercised in the browser**.
 
 ## Not done
