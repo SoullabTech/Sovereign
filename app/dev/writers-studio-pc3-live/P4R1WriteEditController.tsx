@@ -169,6 +169,8 @@ export default function FlagshipWriteEditController() {
   const { workId: carriedWorkId } = resolveH1Arrival(params, h1);
 
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  /* A plan hand-off that has chosen the chapter to show. Restoring the writer's last place must not override it. */
+  const planHandoffPlace = useRef<string | null>(null);
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
   const [arrivalInsight, setArrivalInsight] = useState<CanvasInsight | null>(null);
   const [editorialThread, setEditorialThread] = useState<RebuildEditorialThread | null>(null);
@@ -517,6 +519,7 @@ export default function FlagshipWriteEditController() {
       manuscriptId: context.manuscriptId,
     }).then((saved) => {
       if (cancelled || !saved.ok || !saved.sectionId) return;
+      if (planHandoffPlace.current) return;   // a plan hand-off already chose where the writer is
       if (!context.sections.some((section) => section.draftSectionId === saved.sectionId)) return;
       setFocusId(saved.sectionId);
       writingRef.current?.goToSection(saved.sectionId);
@@ -1107,12 +1110,19 @@ export default function FlagshipWriteEditController() {
         });
         if (d.kind === 'superseded') return;
         if (d.kind === 'refuse') {
-          if (d.focusSectionId) C.focusWritingSection(d.focusSectionId);
+          if (d.focusSectionId) {
+            // The editor follows its OWN active section: move it too, exactly as a rail click does (focus + goToSection).
+            planHandoffPlace.current = d.focusSectionId;
+            C.focusWritingSection(d.focusSectionId);
+            if (writingRef.current && writingRef.current.activeId !== d.focusSectionId) writingRef.current.goToSection(d.focusSectionId);
+          }
           setPlanHandoffNotice(HANDOFF_REFUSAL_COPY[d.reason]);
           return;
         }
         setPlanHandoffNotice(null);
         const section = ctx.sections.find((x) => x.draftSectionId === d.sectionId)!;
+        planHandoffPlace.current = d.sectionId;
+        if (writingRef.current && writingRef.current.activeId !== d.sectionId) writingRef.current.goToSection(d.sectionId);
         C.holdPassage(section, d.start, d.end, d.text);
         // A change already applied on this thread before the hand-off is not this step's change.
         setPlanStepHere({ planId: view!.plan!.id, stepId: sid, sectionId: d.sectionId, start: d.start, end: d.end,

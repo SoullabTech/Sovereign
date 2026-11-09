@@ -18,7 +18,7 @@ database tests. ⛔ Not real MAIA, not production, not the founder walk, not Cla
 
 ## Defects found by this walk
 - **A (mine, fixed):** the hand-off fingerprinted the editor's chapter text after stripping a heading the editor had already removed, so every hand-off refused "cannot confirm this chapter is the one MAIA read". It was introduced after the novel walk (in `17234b6d1`) and no browser run had covered it; the novel walk's step was on chapter 1 before that change. Unit tests could not see it (they stub the digest). Fixed: the editor's text is already in the server's projection.
-- **B (open):** a refused hand-off did not move the editor to the step's chapter (it stayed on chapter 1). Seen once, not yet diagnosed.
+- **B (fixed, same day):** a refused hand-off did not move the editor to the step's chapter. Reproduced deliberately (last place = chapter 1, refused hand-off for a chapter-2 step: the address moved, the page stayed on chapter 1). Two causes: the hand-off only set the controller's focus, while the editor follows its own active section (`writing.goToSection`, which a rail click also calls); and the writer's last place is restored asynchronously when a Work loads and could land afterwards. Fixed: the hand-off moves the editor too (only when it is on another chapter), and a place chosen by a hand-off is not overridden by the last-place restore. Re-walked from chapter 1: refusal shows the clinic chapter with its reason; the successful hand-off opens the desk on the clinic sentence; Back to the page lands on the clinic chapter.
 
 ## G6 review fixes (ChatGPT source review of `9efc0122b`)
 1. **Limits are stated to her**: how many readings of these chapters exist vs how many she was given ("at least" when the 30-reading search window is full), and per reading how many observations she sees and whether any were shortened. She is told not to speak as if she remembers the ones she was not given.
@@ -29,4 +29,4 @@ database tests. ⛔ Not real MAIA, not production, not the founder walk, not Cla
 `reading.carry` 9/9 · `route.walk` 9/9 · `scope.probe` 8/8 · `plan.probe` 13/13 · `plan-links` 4/4 · unit/jsdom pass; regression: the same 9 suites that fail at `493f2d6da`.
 
 ## Still open
-Defect B · real-MAIA walk (both books; sensitive case material in a helper's book) · the several-minute reading wait · silently disabled Send · unread-chapter coverage on plans for long books · readings as layers in the stage · the 9 pre-existing failures · migrations qualified in isolation · independent Class A/R20 acceptance.
+Real-MAIA walk (both books; sensitive case material in a helper's book) · the several-minute reading wait · silently disabled Send · unread-chapter coverage on plans for long books · readings as layers in the stage · the 9 pre-existing failures · migrations qualified in isolation · independent Class A/R20 acceptance.
