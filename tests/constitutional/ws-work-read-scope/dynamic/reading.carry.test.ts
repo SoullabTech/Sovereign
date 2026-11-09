@@ -39,7 +39,7 @@ d('G6 · a reading she made reaches the next conversation, labelled, on the comm
     await query(`BEGIN; SET LOCAL session_replication_role = replica;
       INSERT INTO developmental_readings (id, manuscript_id, member_id, draft_id, revision_number, commissioned_lens, scope, read_state, coverage, input_fingerprint, outcome, observations, reader_provenance, classifier_provenance, frozen_at)
       VALUES ('${id}', '${o.manuscript ?? ms}', '${o.member ?? A}', '${draft}', 4, '${o.lens ?? 'development'}', '{}'::jsonb, '${JSON.stringify(readState)}'::jsonb, '${JSON.stringify(coverage)}'::jsonb, 'fp', 'reading',
-        '${JSON.stringify([{ key: 'o1', text: o.text, doesNotEstablish: ['author-intent'] }]).replace(/'/g, "''")}'::jsonb, '{}'::jsonb, '{}'::jsonb, '${o.at}'); COMMIT;`);
+        '${JSON.stringify([{ key: 'o1', observation: o.text, doesNotEstablish: ['author-intent'] }]).replace(/'/g, "''")}'::jsonb, '{}'::jsonb, '{}'::jsonb, '${o.at}'); COMMIT;`);
     return id;
   };
   const last = () => systems.at(-1) ?? '';

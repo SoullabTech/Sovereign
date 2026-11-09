@@ -122,6 +122,8 @@ export interface AskAnswerProvenance {
   carriedReadings?: readonly { readingId: string; revisionNumber: number }[];
   /** Which saved sections' text she was supplied for this answer, with a digest of the exact bytes (never the text). Saved with the answer. */
   suppliedSections?: readonly { sectionId: string; digest: string }[];
+  /** The passage the writer was at this turn (digest only), to notice when it changes between turns. */
+  locus?: { sectionId: string; digest: string };
 }
 
 export type AskOutcome =
@@ -196,6 +198,8 @@ export interface WorkContext {
   practiceOffer?: string;
   /** G6 · her own completed readings (latest per lens), labelled by revision. Absent in Sanctuary. Never chapter text. */
   carriedReadings?: CarriedSet;
+  /** The passage the writer is at has changed since she was given it earlier in this conversation. */
+  locusMovedSinceEarlier?: boolean;
 }
 
 export interface StandingRead {
@@ -288,6 +292,9 @@ function workAnchorSays(ctx: WorkContext): string {
       '',
       'The passage they are at, as they are editing it now:',
       locus.body);
+    if (ctx.locusMovedSinceEarlier) {
+      lines.push('', 'THIS PASSAGE HAS CHANGED since you were given it earlier in this conversation: the writer edited it. If you quoted it before, your earlier quotation was right for the text as it was then; say that it has changed, not that you were mistaken.');
+    }
   } else {
     lines.push('They are not at any particular passage right now.');
   }

@@ -60,3 +60,14 @@ export async function loadEarlierDigests(threadId: string, memberId: string): Pr
   return new Map(r.rows.map((x) => [x.section_id, x.body_digest]));
 }
 
+
+/** The digest of the passage the writer was at, the last time she was given it in this thread (from her answers' own rows). */
+export async function loadEarlierLocusDigests(threadId: string, memberId: string): Promise<Map<string, string>> {
+  const r = await query<{ section_id: string; body_digest: string }>(
+    `SELECT DISTINCT ON (tu.answer_provenance->'locus'->>'sectionId') tu.answer_provenance->'locus'->>'sectionId' AS section_id,
+            tu.answer_provenance->'locus'->>'digest' AS body_digest
+       FROM ask_turns tu JOIN ask_threads t ON t.id = tu.thread_id
+      WHERE tu.thread_id = $1 AND t.member_id = $2 AND tu.speaker = 'maia' AND tu.answer_provenance ? 'locus'
+      ORDER BY tu.answer_provenance->'locus'->>'sectionId', tu.turn_index DESC`, [threadId, memberId]);
+  return new Map(r.rows.map((x) => [x.section_id, x.body_digest]));
+}

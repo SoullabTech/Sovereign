@@ -84,8 +84,10 @@ export async function loadCarriedReadings(manuscriptId: string, memberId: string
   const label = (id: string) => sections.find((s) => s.id === id)?.heading ?? null;
 
   const readings = picked.map((p) => {
-    const obs = Array.isArray(p.row.observations) ? (p.row.observations as { text?: unknown; doesNotEstablish?: unknown }[]) : [];
-    const real = obs.filter((o) => typeof o.text === 'string' && (o.text as string).trim());
+    /* The contract's field is `observation` (DevelopmentalObservation, "the reader's claim text, VERBATIM"). A real walk found the
+       loader reading `text`, which no real reading has: she would have been told she read a chapter, with none of what she noticed. */
+    const obs = Array.isArray(p.row.observations) ? (p.row.observations as { observation?: unknown; doesNotEstablish?: unknown }[]) : [];
+    const real = obs.filter((o) => typeof o.observation === 'string' && (o.observation as string).trim());
     return {
       id: p.row.id, lens: p.lens, revisionNumber: p.row.revision_number, frozenAt: p.frozenAt,
       chapters: p.bodySectionIds.map((id) => {
@@ -95,10 +97,10 @@ export async function loadCarriedReadings(manuscriptId: string, memberId: string
         return { id, label: label(id), changedSince: !was ? null : is === undefined ? true : is !== was };
       }),
       observations: real.slice(0, MAX_OBSERVATIONS_PER_READING)
-        .map((o) => ({ text: (o.text as string).trim().slice(0, MAX_OBSERVATION_CHARS),
+        .map((o) => ({ text: (o.observation as string).trim().slice(0, MAX_OBSERVATION_CHARS),
           doesNotEstablish: Array.isArray(o.doesNotEstablish) ? (o.doesNotEstablish as unknown[]).filter((x): x is string => typeof x === 'string') : [] })),
       observationsTotal: real.length,
-      cut: real.slice(0, MAX_OBSERVATIONS_PER_READING).some((o) => (o.text as string).trim().length > MAX_OBSERVATION_CHARS),
+      cut: real.slice(0, MAX_OBSERVATIONS_PER_READING).some((o) => (o.observation as string).trim().length > MAX_OBSERVATION_CHARS),
     };
   });
   return { readings, relevant, searchFull };

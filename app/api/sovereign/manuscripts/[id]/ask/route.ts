@@ -53,9 +53,9 @@ import {
 import { computeStaleness, frozenSideFor } from '@/lib/manuscript/ask/staleness';
 import { canonicalFingerprint } from '@/lib/manuscript/structure/canonicalFingerprint';
 import { askMaia, withoutCarriedReadings, type StandingRead } from '@/lib/manuscript/ask/askReader';
-import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests } from '@/lib/disclosure/workReadScopeRead';
+import { loadActiveGrant, loadSectionSizes, loadSuppliedSections, loadEarlierDigests, loadEarlierLocusDigests } from '@/lib/disclosure/workReadScopeRead';
 import { chaptersInPlay, loadCarriedReadings } from '@/lib/manuscript/ask/carriedReadings';
-import { selectSections, movedSince, MAX_READ_SECTIONS } from '@/lib/manuscript/ask/workReadScope';
+import { selectSections, movedSince, digestOf, MAX_READ_SECTIONS } from '@/lib/manuscript/ask/workReadScope';
 import { decisionContextForWork } from '@/lib/writersStudio/decisionRecord';
 import { livingWorkKind } from '@/lib/writersStudio/workKind';
 import { ANONYMISE_OFFER_INSTRUCTION, anonymiseOfferAlreadyMade } from '@/lib/writersStudio/practiceOffers';
@@ -704,7 +704,12 @@ async function workTurn(input: {
      whether each chapter changed since. Carried on the commission's consent; never chapter text; nothing in Sanctuary or an unstated posture. */
   const carriedReadings = (posture.sanctuary || !postureKnown || !built.facts.manuscript) ? { readings: [], relevant: 0, searchFull: false }
     : await loadCarriedReadings(manuscriptId, memberId, chaptersInPlay(question, sectionId, built.facts.sections), built.facts.sections);
-  const workCtx = { kind: 'work' as const, anchor, facts: factsWithDecisions, staleness, standingRead, practiceOffer, carriedReadings };
+  /* Walk finding (2026-11-09): when the passage the writer is at changed between turns, nothing told her, so she concluded her own
+     earlier quotation had been wrong. Compare with the digest recorded the last time she was given this passage in this conversation. */
+  const locusMovedSinceEarlier = Boolean(existing && built.facts.locus
+    && await (async () => { const was = (await loadEarlierLocusDigests(liveThreadId, memberId)).get(built.facts.locus!.sectionId);
+      return was !== undefined && was !== digestOf(built.facts.locus!.body); })());
+  const workCtx = { kind: 'work' as const, anchor, facts: factsWithDecisions, staleness, standingRead, practiceOffer, carriedReadings, locusMovedSinceEarlier };
   let outcome = await askMaia(workCtx, workHistory, question);
   /* ⭐ A2 · MECHANICAL QUOTE FIDELITY. A quotation must occur in text she was actually given this turn or in the
      conversation's own words. Regenerate ONCE with a correction; if still ungrounded, a plain "I can't point to that
@@ -752,6 +757,8 @@ async function workTurn(input: {
       ...outcome.provenance,
       ...(carriedReadings.readings.length > 0 ? { carriedReadings: carriedReadings.readings.map((r) => ({ readingId: r.id, revisionNumber: r.revisionNumber })) } : {}),
       ...(supplied.length > 0 ? { suppliedSections: supplied.map((x) => ({ sectionId: x.id, digest: x.digest })) } : {}),
+      /* The passage the writer is at, as she was given it this turn (digest only), so a later turn can tell her it changed. */
+      ...(built.facts.locus ? { locus: { sectionId: built.facts.locus.sectionId, digest: digestOf(built.facts.locus.body) } } : {}),
     },
   });
 
